@@ -22,8 +22,6 @@ import cx from 'classnames'
 import { Container, Layout, Text, Avatar, FlexExpander, useToaster, Utils, stringSubstitute } from '@harnessio/uicore'
 import { Icon, IconName } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
-import { Render } from 'react-jsx-match'
-import { useAppContext } from 'AppContext'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { useStrings } from 'framework/strings'
 import type { TypesPullReq, RepoRepositoryOutput, EnumPullReqReviewDecision, TypesScopesLabels } from 'services/code'
@@ -47,8 +45,6 @@ interface PullRequestSideBarProps {
 }
 
 const PullRequestSideBar = (props: PullRequestSideBarProps) => {
-  const { standalone, hooks } = useAppContext()
-  const { CODE_PULLREQ_LABELS: isLabelEnabled } = hooks?.useFeatureFlags()
   const [labelQuery, setLabelQuery] = useState<string>('')
   const { reviewers, repoMetadata, pullRequestMetadata, refetchReviewers, labels, refetchLabels, refetchActivities } =
     props
@@ -406,74 +402,73 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
             </Text>
           )} */}
         </Layout.Vertical>
-        <Render when={isLabelEnabled || standalone}>
-          <Layout.Vertical>
-            <Layout.Horizontal>
-              <Text style={{ lineHeight: '24px' }} font={{ variation: FontVariation.H6 }}>
-                {getString('labels.labels')}
-              </Text>
-              <FlexExpander />
 
-              <LabelSelector
-                pullRequestMetadata={pullRequestMetadata}
-                allLabelsData={labelsList}
-                refetchLabels={refetchLabels}
-                refetchlabelsList={refetchlabelsList}
-                repoMetadata={repoMetadata}
-                query={labelQuery}
-                setQuery={setLabelQuery}
-                labelListLoading={labelListLoading}
-                refetchActivities={refetchActivities}
-              />
+        <Layout.Vertical>
+          <Layout.Horizontal>
+            <Text style={{ lineHeight: '24px' }} font={{ variation: FontVariation.H6 }}>
+              {getString('labels.labels')}
+            </Text>
+            <FlexExpander />
+
+            <LabelSelector
+              pullRequestMetadata={pullRequestMetadata}
+              allLabelsData={labelsList}
+              refetchLabels={refetchLabels}
+              refetchlabelsList={refetchlabelsList}
+              repoMetadata={repoMetadata}
+              query={labelQuery}
+              setQuery={setLabelQuery}
+              labelListLoading={labelListLoading}
+              refetchActivities={refetchActivities}
+            />
+          </Layout.Horizontal>
+          <Container padding={{ top: 'medium', bottom: 'large' }}>
+            <Layout.Horizontal className={css.labelsLayout}>
+              {labels && labels.label_data?.length !== 0 ? (
+                labels?.label_data?.map((label, index) => (
+                  <Label
+                    key={index}
+                    name={label.key as string}
+                    label_color={label.color as ColorName}
+                    label_value={{
+                      name: label.assigned_value?.value as string,
+                      color: label.assigned_value?.color as ColorName
+                    }}
+                    scope={label.scope}
+                    removeLabelBtn={true}
+                    disableRemoveBtnTooltip={true}
+                    handleRemoveClick={() => {
+                      removeLabel({}, { pathParams: { label_id: label.id } })
+                        .then(() => {
+                          label.assigned_value?.value
+                            ? showSuccess(
+                                stringSubstitute(getString('labels.removedLabel'), {
+                                  label: `${label.key}:${label.assigned_value?.value}`
+                                }) as string
+                              )
+                            : showSuccess(
+                                stringSubstitute(getString('labels.removedLabel'), {
+                                  label: label.key
+                                }) as string
+                              )
+                          refetchActivities()
+                        })
+                        .catch(err => {
+                          showError(getErrorMessage(err))
+                        })
+                      refetchLabels()
+                    }}
+                  />
+                ))
+              ) : (
+                <Text color={Color.GREY_300} font={{ variation: FontVariation.BODY2_SEMI, size: 'small' }}>
+                  {getString('labels.noLabels')}
+                </Text>
+              )}
+              {removingLabel && <Spinner size={16} />}
             </Layout.Horizontal>
-            <Container padding={{ top: 'medium', bottom: 'large' }}>
-              <Layout.Horizontal className={css.labelsLayout}>
-                {labels && labels.label_data?.length !== 0 ? (
-                  labels?.label_data?.map((label, index) => (
-                    <Label
-                      key={index}
-                      name={label.key as string}
-                      label_color={label.color as ColorName}
-                      label_value={{
-                        name: label.assigned_value?.value as string,
-                        color: label.assigned_value?.color as ColorName
-                      }}
-                      scope={label.scope}
-                      removeLabelBtn={true}
-                      disableRemoveBtnTooltip={true}
-                      handleRemoveClick={() => {
-                        removeLabel({}, { pathParams: { label_id: label.id } })
-                          .then(() => {
-                            label.assigned_value?.value
-                              ? showSuccess(
-                                  stringSubstitute(getString('labels.removedLabel'), {
-                                    label: `${label.key}:${label.assigned_value?.value}`
-                                  }) as string
-                                )
-                              : showSuccess(
-                                  stringSubstitute(getString('labels.removedLabel'), {
-                                    label: label.key
-                                  }) as string
-                                )
-                            refetchActivities()
-                          })
-                          .catch(err => {
-                            showError(getErrorMessage(err))
-                          })
-                        refetchLabels()
-                      }}
-                    />
-                  ))
-                ) : (
-                  <Text color={Color.GREY_300} font={{ variation: FontVariation.BODY2_SEMI, size: 'small' }}>
-                    {getString('labels.noLabels')}
-                  </Text>
-                )}
-                {removingLabel && <Spinner size={16} />}
-              </Layout.Horizontal>
-            </Container>
-          </Layout.Vertical>
-        </Render>
+          </Container>
+        </Layout.Vertical>
       </Container>
     </Container>
   )

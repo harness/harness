@@ -40,8 +40,7 @@ export default function RepositorySettings() {
   const { repoMetadata, error, loading, refetch, settingSection, gitRef, resourcePath } = useGetRepositoryMetadata()
   const space = useGetSpaceParam()
   const history = useHistory()
-  const { routes, hooks, standalone } = useAppContext()
-  const { CODE_PULLREQ_LABELS: isLabelEnabled } = hooks?.useFeatureFlags()
+  const { routes } = useAppContext()
   const [activeTab, setActiveTab] = React.useState<string>(settingSection || SettingsTab.general)
   const { getString } = useStrings()
   const { isRepositoryEmpty } = useGetResourceContent({
@@ -66,22 +65,18 @@ export default function RepositorySettings() {
         </Container>
       )
     },
-    ...(isLabelEnabled || standalone
-      ? [
-          {
-            id: SettingsTab.labels,
-            title: getString('labels.labels'),
-            panel: (
-              <LabelsListing
-                activeTab={activeTab}
-                repoMetadata={repoMetadata}
-                currentPageScope={LabelsPageScope.REPOSITORY}
-                space={space}
-              />
-            )
-          }
-        ]
-      : []),
+    {
+      id: SettingsTab.labels,
+      title: getString('labels.labels'),
+      panel: (
+        <LabelsListing
+          activeTab={activeTab}
+          repoMetadata={repoMetadata}
+          currentPageScope={LabelsPageScope.REPOSITORY}
+          space={space}
+        />
+      )
+    },
     {
       id: SettingsTab.branchProtection,
       title: getString('branchProtection.title'),

@@ -28,7 +28,6 @@ import {
 } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { sortBy } from 'lodash-es'
-import { Render } from 'react-jsx-match'
 import { getConfig, getUsingFetch } from 'services/config'
 import { useStrings } from 'framework/strings'
 import { CodeIcon, GitInfoProps, makeDiffRefs, PullRequestFilterOption } from 'utils/GitUtils'
@@ -76,7 +75,6 @@ export function PullRequestsContentHeader({
   const [loadingAuthors, setLoadingAuthors] = useState<boolean>(false)
   const space = useGetSpaceParam()
   const { hooks, currentUser, standalone, routingId, routes } = useAppContext()
-  const { CODE_PULLREQ_LABELS: isLabelEnabled } = hooks?.useFeatureFlags()
   const permPushResult = hooks?.usePermissionTranslate?.(
     {
       resource: {
@@ -194,16 +192,16 @@ export function PullRequestsContentHeader({
           }}
         />
         <FlexExpander />
-        <Render when={isLabelEnabled || standalone}>
-          <LabelFilter
-            labelFilterOption={labelFilterOption}
-            setLabelFilterOption={setLabelFilterOption}
-            onPullRequestLabelFilterChanged={onPullRequestLabelFilterChanged}
-            bearerToken={bearerToken}
-            repoMetadata={repoMetadata}
-            spaceRef={space}
-          />
-        </Render>
+
+        <LabelFilter
+          labelFilterOption={labelFilterOption}
+          setLabelFilterOption={setLabelFilterOption}
+          onPullRequestLabelFilterChanged={onPullRequestLabelFilterChanged}
+          bearerToken={bearerToken}
+          repoMetadata={repoMetadata}
+          spaceRef={space}
+        />
+
         <DropDown
           value={authorFilterOption}
           items={() => getAuthorsPromise()}

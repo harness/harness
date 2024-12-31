@@ -100,8 +100,7 @@ export const Conversation: React.FC<ConversationProps> = ({
   refetchPullReq
 }) => {
   const { getString } = useStrings()
-  const { currentUser, routes, hooks } = useAppContext()
-  const { CODE_PULLREQ_LABELS: isLabelEnabled } = hooks?.useFeatureFlags()
+  const { currentUser, routes } = useAppContext()
   const location = useLocation()
   const activities = usePullReqActivities()
   const {
@@ -270,8 +269,7 @@ export const Conversation: React.FC<ConversationProps> = ({
     () =>
       activityBlocks?.map((commentItems, index) => {
         const threadId = commentItems[0].payload?.id
-        const renderLabelActivities =
-          commentItems[0].payload?.type !== CommentType.LABEL_MODIFY || isLabelEnabled || standalone
+        const renderLabelActivities = commentItems[0].payload?.type !== CommentType.LABEL_MODIFY
         if (isSystemComment(commentItems)) {
           return (
             <Render key={`thread-${threadId}`} when={renderLabelActivities}>

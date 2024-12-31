@@ -77,7 +77,6 @@ export default function PullRequests() {
   const { getString } = useStrings()
   const history = useHistory()
   const { routes, hooks, standalone, routingId } = useAppContext()
-  const { CODE_PULLREQ_LABELS: isLabelEnabled } = hooks?.useFeatureFlags()
   const [searchTerm, setSearchTerm] = useState<string | undefined>()
   const browserParams = useQueryParams<PageBrowserProps>()
   const [filter, setFilter] = useState(browserParams?.state || (PullRequestFilterOption.OPEN as string))
@@ -295,13 +294,7 @@ export default function PullRequests() {
                             </Text>
                           </Container>
                         </Layout.Horizontal>
-                        <Render
-                          when={
-                            (isLabelEnabled || standalone) &&
-                            row.original &&
-                            row.original.labels &&
-                            row.original.labels.length !== 0
-                          }>
+                        <Render when={row.original && row.original.labels && row.original.labels.length !== 0}>
                           {row.original?.labels?.map((label, index) => (
                             <Label
                               key={index}
@@ -441,8 +434,7 @@ export default function PullRequests() {
                     </Text>
                   </Render>
 
-                  {(isLabelEnabled || standalone) &&
-                    labelFilter &&
+                  {labelFilter &&
                     labelFilter?.length !== 0 &&
                     labelFilter?.map((label, index) => (
                       <Label

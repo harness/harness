@@ -33,21 +33,16 @@ export default function ManageRepositories() {
   const space = useGetSpaceParam()
   const pageScope = useGetCurrentPageScope()
   const history = useHistory()
-  const { routes, hooks, standalone } = useAppContext()
-  const { CODE_PULLREQ_LABELS: isLabelEnabled } = hooks?.useFeatureFlags()
+  const { routes } = useAppContext()
   const [activeTab, setActiveTab] = React.useState<string>(settingSection || SettingsTab.labels)
   const { getString } = useStrings()
 
   const tabListArray = [
-    ...(isLabelEnabled || standalone
-      ? [
-          {
-            id: SettingsTab.labels,
-            title: getString('labels.labels'),
-            panel: <LabelsListing activeTab={activeTab} currentPageScope={pageScope} space={space} />
-          }
-        ]
-      : []),
+    {
+      id: SettingsTab.labels,
+      title: getString('labels.labels'),
+      panel: <LabelsListing activeTab={activeTab} currentPageScope={pageScope} space={space} />
+    },
     {
       id: SettingsTab.branchProtection,
       title: getString('branchProtection.title'),
