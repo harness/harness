@@ -15,49 +15,46 @@
  */
 
 import React from 'react'
-import { Layout, Page } from '@harnessio/uicore'
+import { Page } from '@harnessio/uicore'
 import { useGetArtifactDetailsQuery } from '@harnessio/react-har-service-client'
 
 import { useDecodedParams, useGetSpaceRef } from '@ar/hooks'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
-import { VersionOverviewCard } from '@ar/pages/version-details/components/OverviewCards/types'
-import VersionOverviewCards from '@ar/pages/version-details/components/OverviewCards/OverviewCards'
 
 import type { GenericArtifactDetails } from '../../types'
-import GeneralInformationCard from './GeneralInformationCard'
+import GeneralInformationCard from '../overview/GeneralInformationCard'
 
-import genericStyles from '../../styles.module.scss'
+import css from './ossDetails.module.scss'
 
-export default function GenericOverviewPage() {
+export default function OSSGeneralInfoContent() {
   const pathParams = useDecodedParams<VersionDetailsPathParams>()
   const spaceRef = useGetSpaceRef()
-
   const {
     data,
     isFetching: loading,
     error,
     refetch
-  } = useGetArtifactDetailsQuery({
-    registry_ref: spaceRef,
-    artifact: pathParams.artifactIdentifier,
-    version: pathParams.versionIdentifier,
-    queryParams: {}
-  })
+  } = useGetArtifactDetailsQuery(
+    {
+      registry_ref: spaceRef,
+      artifact: pathParams.artifactIdentifier,
+      version: pathParams.versionIdentifier,
+      queryParams: {}
+    },
+    {
+      enabled: false
+    }
+  )
 
   const response = data?.content?.data as GenericArtifactDetails
 
   return (
     <Page.Body
-      className={genericStyles.pageBody}
+      className={css.pageBody}
       loading={loading}
       error={error?.message || error}
       retryOnError={() => refetch()}>
-      {response && (
-        <Layout.Vertical className={genericStyles.cardContainer} spacing="medium">
-          <VersionOverviewCards cards={[VersionOverviewCard.DEPLOYMENT, VersionOverviewCard.BUILD]} />
-          <GeneralInformationCard data={response} />
-        </Layout.Vertical>
-      )}
+      {response && <GeneralInformationCard className={css.cardContainer} data={response} />}
     </Page.Body>
   )
 }

@@ -27,6 +27,7 @@ import GenericVersionHeader from './GenericVersionHeader'
 import GenericOverviewPage from './pages/overview/OverviewPage'
 import GenericArtifactDetailsPage from './pages/artifact-details/GenericArtifactDetailsPage'
 import GenericArtifactDeploymentsPage from './pages/deployments/GenericArtifactDeploymentsPage'
+import OSSContentPage from './pages/oss-details/OSSContentPage'
 
 export class GenericVersionType extends VersionStep<ArtifactVersionSummary> {
   protected packageType = RepositoryPackageType.GENERIC
@@ -54,7 +55,7 @@ export class GenericVersionType extends VersionStep<ArtifactVersionSummary> {
       case VersionDetailsTab.DEPLOYMENTS:
         return <GenericArtifactDeploymentsPage />
       case VersionDetailsTab.OSS:
-        return <></>
+        return <OSSContentPage />
       default:
         return <String stringID="tabNotFound" />
     }
