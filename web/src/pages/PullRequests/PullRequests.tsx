@@ -93,8 +93,7 @@ export default function PullRequests() {
     queryParams: {
       accountIdentifier: routingId
     },
-    lazy: true,
-    debounce: 500
+    lazy: true
   })
 
   useEffect(() => {
