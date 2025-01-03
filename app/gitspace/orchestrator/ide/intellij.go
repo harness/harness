@@ -132,7 +132,7 @@ func (ij *Intellij) setupIntellijIDE(
 	}
 
 	err = exec.ExecuteCommandInHomeDirAndLog(ctx, intellijIDEScript,
-		true, gitspaceLogger, true)
+		false, gitspaceLogger, true)
 	if err != nil {
 		return fmt.Errorf("failed to setup intellij IDE: %w", err)
 	}
@@ -218,7 +218,7 @@ func (ij *Intellij) runRemoteIDE(
 			"failed to generate scipt to run intelliJ IDE from template %s: %w", templateRunSSHServer, err)
 	}
 
-	err = exec.ExecuteCommandInHomeDirAndLog(ctx, runSSHScript, true, gitspaceLogger, true)
+	err = exec.ExecuteCommandInHomeDirAndLog(ctx, runSSHScript, false, gitspaceLogger, true)
 	if err != nil {
 		return fmt.Errorf("failed to run intelliJ IDE: %w", err)
 	}

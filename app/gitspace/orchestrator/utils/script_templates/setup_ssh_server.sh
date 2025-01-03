@@ -10,8 +10,8 @@ if ! command -v sshd >/dev/null 2>&1; then
 
     case "$(distro)" in
         debian)
-            apt-get update
-            apt-get install -y openssh-server
+            export DEBIAN_FRONTEND=noninteractive && apt-get update
+            export DEBIAN_FRONTEND=noninteractive && apt-get install -y openssh-server
           ;;
         fedora)
             dnf install -y openssh-server

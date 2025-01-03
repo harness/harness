@@ -11,7 +11,7 @@ install_git() {
     echo "Git is not installed. Installing Git..."
     case "$(distro)" in
         debian)
-            apt-get update && apt-get install -y git
+            export DEBIAN_FRONTEND=noninteractive && apt-get update && apt-get install -y git
           ;;
         fedora)
             dnf install -y git

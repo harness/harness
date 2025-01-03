@@ -58,8 +58,8 @@ EXTRACTED_DIRNAME=$(basename "$(find "$INTELLIJ_PATH" -maxdepth 1 -type d)")
 mv "$INTELLIJ_PATH/$EXTRACTED_DIRNAME/"* "$INTELLIJ_PATH"
 rm -r "$INTELLIJ_PATH/$EXTRACTED_DIRNAME"
 
-if [ -d "$INTELLIJ_PATH" ]; then
-  chown -R "$username:$username" "$INTELLIJ_PATH"
+if [ -d "$USER_HOME" ]; then
+  chown -R "$username:$username" "$USER_HOME"
 fi
 
 # Cleanup

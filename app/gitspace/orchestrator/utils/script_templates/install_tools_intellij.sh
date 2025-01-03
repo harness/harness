@@ -19,7 +19,7 @@ install_tool() {
 
   case "$os_dist" in
     debian|ubuntu)
-      DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y "$tool"
+    export DEBIAN_FRONTEND=noninteractive && apt-get update && apt-get install -y "$tool"
       ;;
     fedora)
       dnf install -y "$tool"
