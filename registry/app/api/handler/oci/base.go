@@ -17,7 +17,6 @@ package oci
 import (
 	"context"
 	"net/http"
-	"net/url"
 	"strings"
 
 	usercontroller "github.com/harness/gitness/app/api/controller/user"
@@ -27,11 +26,13 @@ import (
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/api/controller/metadata"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/registry/app/common"
 	"github.com/harness/gitness/registry/app/dist_temp/dcontext"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/docker"
+	"github.com/harness/gitness/registry/request"
 
 	v2 "github.com/distribution/distribution/v3/registry/api/v2"
 	"github.com/opencontainers/go-digest"
@@ -110,16 +111,6 @@ func getRouteType(url string) routeType {
 	return Invalid
 }
 
-func GetQueryParamMap(queryParams url.Values) map[string]string {
-	queryMap := make(map[string]string)
-	for key, values := range queryParams {
-		if len(values) > 0 {
-			queryMap[key] = values[0]
-		}
-	}
-	return queryMap
-}
-
 // ExtractPathVars extracts registry, image, reference, digest and tag from the path
 // Path format: /v2/:rootSpace/:registry/:image/manifests/:reference (for ex:
 // /v2/myRootSpace/reg1/alpine/blobs/sha256:a258b2a6b59a7aa244d8ceab095c7f8df726f27075a69fca7ad8490f3f63148a).
@@ -178,11 +169,24 @@ func handleErrors(ctx context.Context, errors errcode.Errors, w http.ResponseWri
 	}
 }
 
+func getPathRoot(ctx context.Context) string {
+	originalURL := request.OriginalURLFrom(ctx)
+	pathRoot := ""
+	if originalURL != "" {
+		originalURL = strings.Trim(originalURL, "/")
+		segments := strings.Split(originalURL, "/")
+		if len(segments) > 1 {
+			pathRoot = segments[1]
+		}
+	}
+	return pathRoot
+}
+
 func (h *Handler) GetRegistryInfo(r *http.Request, remoteSupport bool) (pkg.RegistryInfo, error) {
 	ctx := r.Context()
 	queryParams := r.URL.Query()
 	path := r.URL.Path
-	paramMap := GetQueryParamMap(queryParams)
+	paramMap := common.ExtractFirstQueryParams(queryParams)
 	rootIdentifier, registryIdentifier, image, ref, dgst, tag := ExtractPathVars(path, paramMap)
 	if err := metadata.ValidateIdentifier(rootIdentifier); err != nil {
 		return pkg.RegistryInfo{}, err
@@ -207,9 +211,12 @@ func (h *Handler) GetRegistryInfo(r *http.Request, remoteSupport bool) (pkg.Regi
 		return pkg.RegistryInfo{}, errcode.ErrCodeParentNotFound
 	}
 
+	pathRoot := getPathRoot(r.Context())
+
 	info := &pkg.RegistryInfo{
 		ArtifactInfo: &pkg.ArtifactInfo{
 			BaseInfo: &pkg.BaseInfo{
+				PathRoot:       pathRoot,
 				RootIdentifier: rootIdentifier,
 				RootParentID:   rootSpace.ID,
 				ParentID:       registry.ParentID,

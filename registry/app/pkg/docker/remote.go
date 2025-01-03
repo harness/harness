@@ -213,7 +213,7 @@ func (r *RemoteRegistry) ManifestExist(
 		localRegistryIdentifier := ExtractRegistryIdentifierFromPath(artInfo.Path)
 		responseHeaders.Code = http.StatusMovedPermanently
 		responseHeaders.Headers = map[string]string{
-			"Location": defaultManifestURL(artInfo.RootIdentifier, localRegistryIdentifier, artInfo.Image,
+			"Location": defaultManifestURL(artInfo.PathRoot, localRegistryIdentifier, artInfo.Image,
 				registryInfo),
 		}
 		return responseHeaders, descriptor, manifestResult, errs
@@ -304,7 +304,7 @@ func (r *RemoteRegistry) PullManifest(
 		localRegistryIdentifier := ExtractRegistryIdentifierFromPath(artInfo.Path)
 		responseHeaders.Code = http.StatusMovedPermanently
 		responseHeaders.Headers = map[string]string{
-			"Location": defaultManifestURL(artInfo.RootIdentifier, localRegistryIdentifier, artInfo.Image,
+			"Location": defaultManifestURL(artInfo.PathRoot, localRegistryIdentifier, artInfo.Image,
 				registryInfo),
 		}
 		return responseHeaders, descriptor, manifestResult, errs
@@ -424,7 +424,7 @@ func (r *RemoteRegistry) fetchBlobInternal(
 		localRegistryIdentifier := ExtractRegistryIdentifierFromPath(info.Path)
 		responseHeaders.Code = http.StatusMovedPermanently
 		responseHeaders.Headers = map[string]string{
-			"Location": defaultBlobURL(info.RootIdentifier, localRegistryIdentifier, info.Image, info.Digest),
+			"Location": defaultBlobURL(info.PathRoot, localRegistryIdentifier, info.Image, info.Digest),
 		}
 		return responseHeaders, fr, size, readCloser, redirectURL, errs
 	}

@@ -71,7 +71,9 @@ func NewOCIHandler(handlerV2 *oci.Handler) RegistryOCIHandler {
 			http.MethodGet: NewHandlerBlock2(handlerV2.GetReferrers, false),
 		},
 	}
+
 	r.Route("/v2", func(r chi.Router) {
+		r.Use(middleware.StoreOriginalURL)
 		r.Use(middlewareauthn.Attempt(handlerV2.Authenticator))
 		r.Get("/token", func(w http.ResponseWriter, req *http.Request) {
 			handlerV2.GetToken(w, req)

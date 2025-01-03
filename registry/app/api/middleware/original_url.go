@@ -12,38 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pkg
+package middleware
 
 import (
-	v2 "github.com/distribution/distribution/v3/registry/api/v2"
+	"net/http"
+
+	"github.com/harness/gitness/registry/request"
 )
 
-type BaseInfo struct {
-	PathRoot       string
-	ParentID       int64
-	RootIdentifier string
-	RootParentID   int64
-}
-
-type ArtifactInfo struct {
-	*BaseInfo
-	RegIdentifier string
-	Image         string
-}
-
-type RegistryInfo struct {
-	*ArtifactInfo
-	Reference  string
-	Digest     string
-	Tag        string
-	URLBuilder *v2.URLBuilder
-	Path       string
-}
-
-func (r *RegistryInfo) SetReference(ref string) {
-	r.Reference = ref
-}
-
-func (a *ArtifactInfo) SetRepoKey(key string) {
-	a.RegIdentifier = key
+// StoreOriginalURL stores the original URL in the context.
+func StoreOriginalURL(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := request.WithOriginalURL(r.Context(), r.URL.Path)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }

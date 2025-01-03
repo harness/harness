@@ -12,38 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pkg
+package request
 
 import (
-	v2 "github.com/distribution/distribution/v3/registry/api/v2"
+	"context"
+
+	"github.com/rs/zerolog/log"
 )
 
-type BaseInfo struct {
-	PathRoot       string
-	ParentID       int64
-	RootIdentifier string
-	RootParentID   int64
+type contextKey string
+
+const OriginalURLKey contextKey = "originalURL"
+
+func OriginalURLFrom(ctx context.Context) string {
+	originalURL, ok := ctx.Value(OriginalURLKey).(string)
+	if !ok {
+		log.Ctx(ctx).Warn().Msg("Original URL not found in context")
+	}
+	return originalURL
 }
 
-type ArtifactInfo struct {
-	*BaseInfo
-	RegIdentifier string
-	Image         string
-}
-
-type RegistryInfo struct {
-	*ArtifactInfo
-	Reference  string
-	Digest     string
-	Tag        string
-	URLBuilder *v2.URLBuilder
-	Path       string
-}
-
-func (r *RegistryInfo) SetReference(ref string) {
-	r.Reference = ref
-}
-
-func (a *ArtifactInfo) SetRepoKey(key string) {
-	a.RegIdentifier = key
+func WithOriginalURL(parent context.Context, originalURL string) context.Context {
+	return context.WithValue(parent, OriginalURLKey, originalURL)
 }

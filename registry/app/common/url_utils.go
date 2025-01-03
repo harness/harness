@@ -70,3 +70,13 @@ func TrimURLScheme(urlStr string) string {
 	// Reconstruct the URL string without the scheme
 	return strings.TrimPrefix(u.String(), "//")
 }
+
+func ExtractFirstQueryParams(queryParams url.Values) map[string]string {
+	queryMap := make(map[string]string)
+	for key, values := range queryParams {
+		if len(values) > 0 {
+			queryMap[key] = values[0]
+		}
+	}
+	return queryMap
+}

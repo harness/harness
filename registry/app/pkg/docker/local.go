@@ -776,7 +776,7 @@ func (r *LocalRegistry) PutManifest(
 	}
 
 	// Construct a canonical url for the uploaded manifest.
-	name, _ := reference.WithName(fmt.Sprintf("%s/%s", artInfo.RegIdentifier, artInfo.Image))
+	name, _ := reference.WithName(fmt.Sprintf("%s/%s/%s", artInfo.PathRoot, artInfo.RegIdentifier, artInfo.Image))
 	canonicalRef, err := reference.WithDigest(name, d)
 	if err != nil {
 		errs = append(errs, errcode.ErrCodeUnknown.WithDetail(err))
@@ -1414,7 +1414,7 @@ func writeBlobCreatedHeaders(
 	headers *commons.ResponseHeaders,
 	info pkg.RegistryInfo,
 ) error {
-	path, err := reference.WithName(fmt.Sprintf("%s/%s/%s", info.RootIdentifier, info.RegIdentifier, info.Image))
+	path, err := reference.WithName(fmt.Sprintf("%s/%s/%s", info.PathRoot, info.RegIdentifier, info.Image))
 	if err != nil {
 		return err
 	}
@@ -1458,7 +1458,7 @@ func blobUploadResponse(
 		return err
 	}
 	image := info.Image
-	path, err := reference.WithName(fmt.Sprintf("%s/%s/%s", info.RootIdentifier, repoKey, image))
+	path, err := reference.WithName(fmt.Sprintf("%s/%s/%s", info.PathRoot, repoKey, image))
 	if err != nil {
 		return err
 	}
