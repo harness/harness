@@ -81,7 +81,7 @@ export default function useCreateUpstreamProxyModal(props: useCreateUpstreamProx
         />
       </ModalDialog>
     ),
-    [showOverlay]
+    [showOverlay, onSuccess]
   )
 
   return [showModal, hideModal]

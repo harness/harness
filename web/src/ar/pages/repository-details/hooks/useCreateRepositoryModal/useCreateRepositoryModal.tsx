@@ -85,7 +85,7 @@ export function useCreateRepositoryModal(props: useCreateRepositoryModalProps) {
         />
       </ModalDialog>
     ),
-    [showOverlay]
+    [showOverlay, onSuccess]
   )
 
   return [showModal, hideModal]
