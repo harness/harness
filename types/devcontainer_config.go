@@ -96,6 +96,10 @@ func (lc *LifecycleCommand) UnmarshalJSON(data []byte) error {
 }
 
 func (lc *LifecycleCommand) MarshalJSON() ([]byte, error) {
+	// If Discriminator is empty, return an empty JSON object (i.e., {} or no content)
+	if lc.Discriminator == "" || lc == nil {
+		return []byte("{}"), nil
+	}
 	switch lc.Discriminator {
 	case TypeString:
 		return json.Marshal(lc.CommandString)
@@ -110,6 +114,10 @@ func (lc *LifecycleCommand) MarshalJSON() ([]byte, error) {
 
 // ToCommandArray converts the LifecycleCommand into a slice of full commands.
 func (lc *LifecycleCommand) ToCommandArray() []string {
+	// If Discriminator is empty, return nil
+	if lc.Discriminator == "" || lc == nil {
+		return nil
+	}
 	switch lc.Discriminator {
 	case TypeString:
 		return []string{lc.CommandString}
