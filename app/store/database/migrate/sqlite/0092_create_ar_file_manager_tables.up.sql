@@ -16,7 +16,7 @@ create table if not exists nodes
 (
     node_id              TEXT PRIMARY KEY,
     node_name            TEXT    NOT NULL,
-    node_parent_id       INTEGER REFERENCES nodes (node_id),
+    node_parent_id       TEXT REFERENCES nodes (node_id),
     node_registry_id     INTEGER NOT NULL REFERENCES registries (registry_id),
     node_is_file         BOOLEAN NOT NULL,
     node_path            TEXT    NOT NULL,
