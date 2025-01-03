@@ -72,7 +72,7 @@ var artifactSortMap = map[string]string{
 	"repoKey":        "name",
 	"lastModified":   "updated_at",
 	"name":           "image_name",
-	"downloadsCount": "image_name",
+	"downloadsCount": "download_count",
 	"createdAt":      "created_at",
 }
 
@@ -88,7 +88,7 @@ var artifactVersionSortMap = map[string]string{
 	"name":           "name",
 	"size":           "name",
 	"pullCommand":    "name",
-	"downloadsCount": "name",
+	"downloadsCount": "download_count",
 	"lastModified":   "updated_at",
 	"createdAt":      "created_at",
 }

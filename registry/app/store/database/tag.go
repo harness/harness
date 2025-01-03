@@ -44,6 +44,7 @@ const (
 	greaterThan         string          = ">"
 	labelSeparatorStart string          = "%^_"
 	labelSeparatorEnd   string          = "^_%"
+	downloadCount       string          = "download_count"
 )
 
 type tagDao struct {
@@ -399,8 +400,11 @@ func (t tagDao) GetAllArtifactsByParentID(
 	if search != "" {
 		q = q.Where("tag_image_name LIKE ?", sqlPartialMatch(search))
 	}
-
-	q = q.OrderBy("tag_" + sortByField + " " + sortByOrder).Limit(uint64(limit)).Offset(uint64(offset))
+	sortField := "tag_" + sortByField
+	if sortByField == downloadCount {
+		sortField = downloadCount
+	}
+	q = q.OrderBy(sortField + " " + sortByOrder).Limit(uint64(limit)).Offset(uint64(offset))
 
 	sql, args, err := q.ToSql()
 	if err != nil {
@@ -754,7 +758,11 @@ func (t tagDao) GetAllArtifactsByRepo(
 		q = q.Where("'^_' || ar.image_labels || '^_' LIKE ?", labelsVal)
 	}
 
-	q = q.OrderBy("t.tag_" + sortByField + " " + sortByOrder).Limit(uint64(limit)).Offset(uint64(offset))
+	sortField := "t.tag_" + sortByField
+	if sortByField == downloadCount {
+		sortField = downloadCount
+	}
+	q = q.OrderBy(sortField + " " + sortByOrder).Limit(uint64(limit)).Offset(uint64(offset))
 
 	sql, args, err := q.ToSql()
 	if err != nil {
@@ -860,8 +868,11 @@ func (t tagDao) GetAllTagsByRepoAndImage(
 	if search != "" {
 		q = q.Where("tag_name LIKE ?", sqlPartialMatch(search))
 	}
-
-	q = q.OrderBy("tag_" + sortByField + " " + sortByOrder).Limit(uint64(limit)).Offset(uint64(offset))
+	sortField := "tag_" + sortByField
+	if sortByField == downloadCount {
+		sortField = downloadCount
+	}
+	q = q.OrderBy(sortField + " " + sortByOrder).Limit(uint64(limit)).Offset(uint64(offset))
 
 	sql, args, err := q.ToSql()
 	if err != nil {
