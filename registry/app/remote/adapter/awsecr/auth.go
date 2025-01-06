@@ -149,8 +149,8 @@ func getCreds(
 	if reg.UserName != "" {
 		return reg.UserName, secretKey, nil
 	}
-	accessKey, err := getSecretValue(ctx, spacePathStore, secretService, reg.SecretSpaceID,
-		reg.SecretIdentifier)
+	accessKey, err := getSecretValue(ctx, spacePathStore, secretService, reg.UserNameSecretSpaceID,
+		reg.UserNameSecretIdentifier)
 	if err != nil {
 		return "", "", err
 	}
