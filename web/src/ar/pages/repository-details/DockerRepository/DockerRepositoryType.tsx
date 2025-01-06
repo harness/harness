@@ -32,7 +32,7 @@ import UpstreamProxyActions from '@ar/pages/upstream-proxy-details/components/Up
 import UpstreamProxyConfigurationForm from '@ar/pages/upstream-proxy-details/components/Forms/UpstreamProxyConfigurationForm'
 import UpstreamProxyCreateFormContent from '@ar/pages/upstream-proxy-details/components/FormContent/UpstreamProxyCreateFormContent'
 import {
-  DockerRepositoryURLInputSource,
+  UpstreamRepositoryURLInputSource,
   UpstreamProxyAuthenticationMode,
   UpstreamRegistryRequest
 } from '@ar/pages/upstream-proxy-details/types'
@@ -51,6 +51,11 @@ export class DockerRepositoryType extends RepositoryStep<VirtualRegistryRequest>
   protected repositoryIcon: IconName = 'docker-step'
   protected supportedScanners = [Scanners.AQUA_TRIVY]
   protected supportsUpstreamProxy = true
+  protected supportedUpstreamURLSources = [
+    UpstreamRepositoryURLInputSource.Dockerhub,
+    UpstreamRepositoryURLInputSource.AwsEcr,
+    UpstreamRepositoryURLInputSource.Custom
+  ]
 
   protected defaultValues: VirtualRegistryRequest = {
     packageType: RepositoryPackageType.DOCKER,
@@ -68,7 +73,7 @@ export class DockerRepositoryType extends RepositoryStep<VirtualRegistryRequest>
     identifier: '',
     config: {
       type: RepositoryConfigType.UPSTREAM,
-      source: DockerRepositoryURLInputSource.Dockerhub,
+      source: UpstreamRepositoryURLInputSource.Dockerhub,
       url: '',
       authType: UpstreamProxyAuthenticationMode.ANONYMOUS
     },

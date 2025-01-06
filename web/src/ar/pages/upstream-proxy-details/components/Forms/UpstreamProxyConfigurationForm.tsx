@@ -17,9 +17,8 @@
 import React, { forwardRef, useContext } from 'react'
 import * as Yup from 'yup'
 import { Formik, FormikForm, getErrorInfoFromErrorObject, useToaster } from '@harnessio/uicore'
-import { Anonymous, UserPassword, useModifyRegistryMutation } from '@harnessio/react-har-service-client'
+import { useModifyRegistryMutation } from '@harnessio/react-har-service-client'
 
-import { URL_REGEX } from '@ar/constants'
 import { useAppStore, useGetSpaceRef } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import { queryClient } from '@ar/utils/queryClient'
@@ -35,13 +34,12 @@ import {
 } from '@ar/components/CleanupPolicyList/utils'
 
 import UpstreamProxyConfigurationFormContent from '../FormContent/UpstreamProxyConfigurationFormContent'
+import type { UpstreamRegistry, UpstreamRegistryRequest } from '../../types'
 import {
-  DockerRepositoryURLInputSource,
-  UpstreamProxyAuthenticationMode,
-  type UpstreamRegistry,
-  type UpstreamRegistryRequest
-} from '../../types'
-import { getFormattedFormDataForAuthType, getFormattedInitialValuesForAuthType } from './utils'
+  getFormattedFormDataForAuthType,
+  getFormattedInitialValuesForAuthType,
+  getValidationSchemaForUpstreamForm
+} from './utils'
 
 import css from './Forms.module.scss'
 
@@ -115,45 +113,7 @@ function UpstreamProxyConfigurationForm(
       }}
       formName="upstream-repository-form"
       initialValues={getInitialValues(data as UpstreamRegistry)}
-      validationSchema={Yup.object().shape({
-        config: Yup.object().shape({
-          authType: Yup.string()
-            .required()
-            .oneOf([UpstreamProxyAuthenticationMode.ANONYMOUS, UpstreamProxyAuthenticationMode.USER_NAME_AND_PASSWORD]),
-          auth: Yup.object()
-            .when(['authType'], {
-              is: (authType: UpstreamProxyAuthenticationMode) =>
-                authType === UpstreamProxyAuthenticationMode.USER_NAME_AND_PASSWORD,
-              then: (schema: Yup.ObjectSchema<UserPassword | Anonymous>) =>
-                schema.shape({
-                  userName: Yup.string().trim().required(getString('validationMessages.userNameRequired')),
-                  secretIdentifier: Yup.string().trim().required(getString('validationMessages.passwordRequired'))
-                }),
-              otherwise: Yup.object().optional().nullable()
-            })
-            .nullable(),
-          url: Yup.string().when(['source'], {
-            is: (source: DockerRepositoryURLInputSource) => source === DockerRepositoryURLInputSource.Custom,
-            then: (schema: Yup.StringSchema) =>
-              schema
-                .trim()
-                .required(getString('validationMessages.urlRequired'))
-                .matches(URL_REGEX, getString('validationMessages.urlPattern')),
-            otherwise: (schema: Yup.StringSchema) => schema.trim().notRequired()
-          })
-        }),
-        cleanupPolicy: Yup.array()
-          .of(
-            Yup.object().shape({
-              name: Yup.string().trim().required(getString('validationMessages.cleanupPolicy.nameRequired')),
-              expireDays: Yup.number()
-                .required(getString('validationMessages.cleanupPolicy.expireDaysRequired'))
-                .positive(getString('validationMessages.cleanupPolicy.positiveExpireDays'))
-            })
-          )
-          .optional()
-          .nullable()
-      })}>
+      validationSchema={Yup.object().shape(getValidationSchemaForUpstreamForm(getString))}>
       {formik => {
         setFormikRef(formikRef, formik)
         return (

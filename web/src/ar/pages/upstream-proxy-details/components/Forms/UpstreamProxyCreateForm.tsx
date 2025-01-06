@@ -27,18 +27,16 @@ import {
   getErrorInfoFromErrorObject,
   useToaster
 } from '@harnessio/uicore'
-import { Anonymous, UserPassword, useCreateRegistryMutation } from '@harnessio/react-har-service-client'
+import { useCreateRegistryMutation } from '@harnessio/react-har-service-client'
 
 import { useAppStore, useGetSpaceRef } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import { decodeRef } from '@ar/hooks/useGetSpaceRef'
 import { setFormikRef } from '@ar/common/utils'
-import { REPO_KEY_REGEX, URL_REGEX } from '@ar/constants'
+import { REPO_KEY_REGEX } from '@ar/constants'
 import { Separator } from '@ar/components/Separator/Separator'
 import { RepositoryConfigType, type FormikFowardRef } from '@ar/common/types'
 import {
-  DockerRepositoryURLInputSource,
-  UpstreamProxyAuthenticationMode,
   UpstreamProxyPackageType,
   UpstreamRegistry,
   UpstreamRegistryRequest
@@ -50,7 +48,7 @@ import repositoryFactory from '@ar/frameworks/RepositoryStep/RepositoryFactory'
 import { getFormattedFormDataForCleanupPolicy } from '@ar/components/CleanupPolicyList/utils'
 import type { RepositoryAbstractFactory } from '@ar/frameworks/RepositoryStep/RepositoryAbstractFactory'
 
-import { getFormattedFormDataForAuthType } from './utils'
+import { getFormattedFormDataForAuthType, getValidationSchemaForUpstreamForm } from './utils'
 import css from './Forms.module.scss'
 
 interface FormContentProps {
@@ -190,31 +188,7 @@ function UpstreamProxyCreateForm(props: UpstreamProxyCreateFormProps, formikRef:
         identifier: Yup.string()
           .required(getString('validationMessages.nameRequired'))
           .matches(REPO_KEY_REGEX, getString('validationMessages.repokeyRegExMessage')),
-        config: Yup.object().shape({
-          authType: Yup.string()
-            .required()
-            .oneOf([UpstreamProxyAuthenticationMode.ANONYMOUS, UpstreamProxyAuthenticationMode.USER_NAME_AND_PASSWORD]),
-          auth: Yup.object()
-            .when(['authType'], {
-              is: (authType: UpstreamProxyAuthenticationMode) =>
-                authType === UpstreamProxyAuthenticationMode.USER_NAME_AND_PASSWORD,
-              then: (schema: Yup.ObjectSchema<UserPassword | Anonymous>) =>
-                schema.shape({
-                  userName: Yup.string().trim().required(getString('validationMessages.userNameRequired')),
-                  secretIdentifier: Yup.string().trim().required(getString('validationMessages.passwordRequired'))
-                })
-            })
-            .nullable(),
-          url: Yup.string().when(['source'], {
-            is: (source: DockerRepositoryURLInputSource) => source === DockerRepositoryURLInputSource.Custom,
-            then: (schema: Yup.StringSchema) =>
-              schema
-                .trim()
-                .required(getString('validationMessages.urlRequired'))
-                .matches(URL_REGEX, getString('validationMessages.urlPattern')),
-            otherwise: (schema: Yup.StringSchema) => schema.trim().notRequired()
-          })
-        })
+        ...getValidationSchemaForUpstreamForm(getString)
       })}>
       {(formik: FormikProps<UpstreamRegistryRequest>) => {
         setFormikRef(formikRef, formik)

@@ -16,4 +16,6 @@
 
 /* eslint-disable */
 // This is an auto-generated file
+export declare const container: string
+export declare const containerWithoutLabel: string
 export declare const createNewBtn: string

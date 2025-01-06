@@ -15,11 +15,13 @@
  */
 
 import React from 'react'
+import { isEmpty } from 'lodash-es'
 import type { FormikProps } from 'formik'
 import { FormInput, Layout } from '@harnessio/uicore'
 
 import { useStrings } from '@ar/frameworks/strings/String'
-import RepositoryUrlInput from '../RepositoryUrlInput/RepositoryUrlInput'
+import { Description, Tags } from '@ar/components/NameDescriptionTags'
+
 import type { UpstreamRegistryRequest } from '../../types'
 
 interface UpstreamProxyDetailsFormContentProps {
@@ -31,7 +33,7 @@ interface UpstreamProxyDetailsFormContentProps {
 export default function UpstreamProxyDetailsFormContent(props: UpstreamProxyDetailsFormContentProps): JSX.Element {
   const { readonly, isEdit, formikProps } = props
   const { values } = formikProps
-  const { packageType } = values
+  const { description, labels } = values
   const { getString } = useStrings()
   return (
     <Layout.Vertical>
@@ -44,7 +46,8 @@ export default function UpstreamProxyDetailsFormContent(props: UpstreamProxyDeta
           autoFocus: true
         }}
       />
-      <RepositoryUrlInput packageType={packageType} readonly={readonly} />
+      <Description hasValue={!!description} disabled={readonly} />
+      <Tags name="labels" hasValue={!isEmpty(labels)} disabled={readonly} />
     </Layout.Vertical>
   )
 }

@@ -124,9 +124,12 @@ export interface StringsMap {
   'upstreamProxyDetails.actions.delete.contentText': string
   'upstreamProxyDetails.actions.delete.repositoryDeleted': string
   'upstreamProxyDetails.actions.delete.title': string
+  'upstreamProxyDetails.createForm.authentication.accessKey': string
+  'upstreamProxyDetails.createForm.authentication.accessKeyAndSecretKey': string
   'upstreamProxyDetails.createForm.authentication.anonymous': string
   'upstreamProxyDetails.createForm.authentication.anonymousSubLabel': string
   'upstreamProxyDetails.createForm.authentication.password': string
+  'upstreamProxyDetails.createForm.authentication.secretKey': string
   'upstreamProxyDetails.createForm.authentication.title': string
   'upstreamProxyDetails.createForm.authentication.userNameAndPassword': string
   'upstreamProxyDetails.createForm.authentication.username': string
@@ -135,6 +138,7 @@ export interface StringsMap {
   'upstreamProxyDetails.createForm.packageType': string
   'upstreamProxyDetails.createForm.source.custom': string
   'upstreamProxyDetails.createForm.source.dockerHub': string
+  'upstreamProxyDetails.createForm.source.ecr': string
   'upstreamProxyDetails.createForm.source.title': string
   'upstreamProxyDetails.createForm.title': string
   'upstreamProxyDetails.createForm.url': string
@@ -257,6 +261,7 @@ export interface StringsMap {
   descriptionPlaceholder: string
   discard: string
   download: string
+  encrypted: string
   enterPlaceholder: string
   failedToLoadData: string
   harLabel: string
@@ -277,6 +282,7 @@ export interface StringsMap {
   'packageTypes.dockerPackage': string
   'packageTypes.genericPackage': string
   'packageTypes.helmPackage': string
+  plaintext: string
   plusNewName: string
   prod: string
   prodCount: string
@@ -299,12 +305,14 @@ export interface StringsMap {
   'tags.latestVersion': string
   tagsLabel: string
   timeLabel: string
+  'validationMessages.accessKeyRequired': string
   'validationMessages.cleanupPolicy.expireDaysRequired': string
   'validationMessages.cleanupPolicy.nameRequired': string
   'validationMessages.cleanupPolicy.positiveExpireDays': string
   'validationMessages.nameRequired': string
   'validationMessages.passwordRequired': string
   'validationMessages.repokeyRegExMessage': string
+  'validationMessages.secretKeyRequired': string
   'validationMessages.urlPattern': string
   'validationMessages.urlRequired': string
   'validationMessages.userNameRequired': string

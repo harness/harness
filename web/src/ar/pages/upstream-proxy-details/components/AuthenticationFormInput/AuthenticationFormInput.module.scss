@@ -14,20 +14,16 @@
  * limitations under the License.
  */
 
-.container {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
+.authContainer {
+  padding-left: var(--spacing-xlarge) !important;
+  border-left: 1px solid var(--grey-200);
+}
 
-  .createNewBtn {
-    margin-top: 5px !important;
+.multiTypeSecretInput {
+  & .labelContainer {
+    width: var(--input-element-width) !important;
   }
-
-  &.containerWithoutLabel {
-    align-items: flex-start !important;
-
-    .createNewBtn {
-      margin-top: 0 !important;
-    }
+  & :global(.bp3-popover) {
+    width: 180px !important;
   }
 }

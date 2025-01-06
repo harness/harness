@@ -41,7 +41,7 @@ function UpstreamProxyCreateFormContent(
           {getString('upstreamProxyDetails.form.title')}
         </Text>
         <UpstreamProxyDetailsFormContent isEdit={isEdit} formikProps={formik} readonly={readonly} />
-        <UpstreamProxyAuthenticationFormContent formikProps={formik} readonly={readonly} />
+        <UpstreamProxyAuthenticationFormContent readonly={readonly} />
       </Layout.Vertical>
     </FormikForm>
   )

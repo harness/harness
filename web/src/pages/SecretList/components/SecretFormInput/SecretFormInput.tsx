@@ -16,6 +16,7 @@
 
 import React from 'react'
 import { get } from 'lodash-es'
+import classNames from 'classnames'
 import { useFormikContext } from 'formik'
 import { useMemo, useState } from 'react'
 import { ButtonVariation, FormInput, Layout, SelectOption } from '@harnessio/uicore'
@@ -73,7 +74,12 @@ export default function SecretFormInput(props: SecretFormInputProps) {
   const selectedValue = formikValue ? { label: formikValue, value: formikValue } : null
 
   return (
-    <Layout.Horizontal spacing="small" flex={{ justifyContent: 'flex-start', alignItems: 'center' }}>
+    <Layout.Horizontal
+      className={classNames(css.container, {
+        [css.containerWithoutLabel]: !label
+      })}
+      spacing="small"
+      flex={{ justifyContent: 'flex-start', alignItems: 'center' }}>
       <FormInput.Select
         name={name}
         label={label}

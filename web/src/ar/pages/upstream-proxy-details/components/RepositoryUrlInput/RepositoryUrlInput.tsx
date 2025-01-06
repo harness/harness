@@ -15,30 +15,57 @@
  */
 
 import React from 'react'
-import { FormInput } from '@harnessio/uicore'
-import type { PackageType } from '@harnessio/react-har-service-client'
+import { useFormikContext } from 'formik'
+import { FormInput, Layout } from '@harnessio/uicore'
 
 import { useStrings } from '@ar/frameworks/strings/String'
-import { UpstreamProxyPackageType } from '@ar/pages/upstream-proxy-details/types'
-import DockerRepositoryUrlInput from '@ar/pages/upstream-proxy-details/DockerRepository/DockerRepositoryUrlInput/DockerRepositoryUrlInput'
+import repositoryFactory from '@ar/frameworks/RepositoryStep/RepositoryFactory'
+
+import { UpstreamURLSourceConfig } from './constants'
+import { UpstreamProxyAuthenticationMode, UpstreamRegistryRequest, UpstreamRepositoryURLInputSource } from '../../types'
 
 interface RepositoryUrlInputProps {
   readonly: boolean
-  packageType: PackageType
 }
 
 export default function RepositoryUrlInput(props: RepositoryUrlInputProps): JSX.Element {
   const { getString } = useStrings()
-  const { readonly, packageType } = props
-  if (packageType === UpstreamProxyPackageType.DOCKER) {
-    return <DockerRepositoryUrlInput readonly={readonly} />
-  }
+  const { readonly } = props
+  const { values, setFieldValue } = useFormikContext<UpstreamRegistryRequest>()
+  const { packageType, config } = values
+  const { source } = config
+  const repositoryType = repositoryFactory.getRepositoryType(packageType)
+  const supportedURLSources = repositoryType?.getSupportedUpstreamURLSources() || []
+  const radioItems = supportedURLSources.map(each => UpstreamURLSourceConfig[each])
   return (
-    <FormInput.Text
-      name="config.url"
-      label={getString('upstreamProxyDetails.createForm.url')}
-      placeholder={getString('upstreamProxyDetails.createForm.url')}
-      disabled={readonly}
-    />
+    <Layout.Vertical spacing="small">
+      {radioItems.length ? (
+        <FormInput.RadioGroup
+          key={packageType}
+          name="config.source"
+          radioGroup={{ inline: true }}
+          disabled={readonly}
+          label={getString('upstreamProxyDetails.createForm.source.title')}
+          items={radioItems.map(each => ({ ...each, label: getString(each.label) }))}
+          onChange={e => {
+            const selectedValue = e.currentTarget.value as UpstreamRepositoryURLInputSource
+            if (source !== selectedValue) {
+              setFieldValue('config.url', '')
+              setFieldValue('config.authType', UpstreamProxyAuthenticationMode.ANONYMOUS)
+            }
+          }}
+        />
+      ) : null}
+      {[UpstreamRepositoryURLInputSource.Custom, UpstreamRepositoryURLInputSource.AwsEcr].includes(
+        source as UpstreamRepositoryURLInputSource
+      ) && (
+        <FormInput.Text
+          name="config.url"
+          label={getString('upstreamProxyDetails.createForm.url')}
+          placeholder={getString('upstreamProxyDetails.createForm.url')}
+          disabled={readonly}
+        />
+      )}
+    </Layout.Vertical>
   )
 }

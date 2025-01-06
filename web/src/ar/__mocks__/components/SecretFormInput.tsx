@@ -23,7 +23,7 @@ interface SecretFormInputProps<T> {
   name: string
   scope: Scope
   spaceIdFieldName: string
-  label: React.ReactNode
+  label?: React.ReactNode
   disabled?: boolean
   placeholder?: string
   formik?: FormikProps<T>

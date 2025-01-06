@@ -72,7 +72,7 @@ export default function UpstreamProxyConfigurationFormContent(
       <Card className={classNames(css.cardContainer, css.marginTopLarge)}>
         <Layout.Vertical>
           <UpstreamProxyDetailsFormContent isEdit formikProps={formikProps} readonly={readonly} />
-          <UpstreamProxyAuthenticationFormContent formikProps={formikProps} readonly={readonly} />
+          <UpstreamProxyAuthenticationFormContent readonly={readonly} />
         </Layout.Vertical>
       </Card>
       {parent === Parent.Enterprise && (

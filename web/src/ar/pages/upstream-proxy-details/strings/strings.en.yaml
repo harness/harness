@@ -10,14 +10,18 @@ createForm:
   source:
     title: Source
     dockerHub: Docker Hub
+    ecr: AWS ECR
     custom: Custom
   authentication:
     title: Authentication
     userNameAndPassword: Username and Password
+    accessKeyAndSecretKey: Access Key and Secret Key
     anonymous: Anonymous
     anonymousSubLabel: (No credentials required)
     username: Username
     password: Password
+    secretKey: Secret Key
+    accessKey: Access Key
   create: Create Upstream Proxy
 editForm:
   title: Update Upstream Proxy

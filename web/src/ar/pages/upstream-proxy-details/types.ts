@@ -24,13 +24,15 @@ export enum UpstreamProxyPackageType {
   MAVEN = 'MAVEN'
 }
 
-export enum DockerRepositoryURLInputSource {
+export enum UpstreamRepositoryURLInputSource {
   Dockerhub = 'Dockerhub',
+  AwsEcr = 'AwsEcr',
   Custom = 'Custom'
 }
 
 export enum UpstreamProxyAuthenticationMode {
   USER_NAME_AND_PASSWORD = 'UserPassword',
+  ACCESS_KEY_AND_SECRET_KEY = 'AccessKeySecretKey',
   ANONYMOUS = 'Anonymous'
 }
 

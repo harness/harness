@@ -79,7 +79,7 @@ export const Tags = (props: TagsComponentProps): JSX.Element => {
   }, [hasValue])
 
   return (
-    <Container>
+    <Container margin={{ bottom: isTagsOpen ? 'none' : 'small' }}>
       <Label className={cx(Classes.LABEL, css.descriptionLabel)} data-tooltip-id={props.dataTooltipId}>
         {isOptional ? getString('optionalField', { name: getString('tagsLabel') }) : getString('tagsLabel')}
         {props.dataTooltipId ? <HarnessDocTooltip useStandAlone={true} tooltipId={props.dataTooltipId} /> : null}

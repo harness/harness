@@ -32,7 +32,7 @@ import UpstreamProxyConfigurationForm from '@ar/pages/upstream-proxy-details/com
 import UpstreamProxyCreateFormContent from '@ar/pages/upstream-proxy-details/components/FormContent/UpstreamProxyCreateFormContent'
 import UpstreamProxyActions from '@ar/pages/upstream-proxy-details/components/UpstreamProxyActions/UpstreamProxyActions'
 import {
-  DockerRepositoryURLInputSource,
+  UpstreamRepositoryURLInputSource,
   UpstreamProxyAuthenticationMode,
   type UpstreamRegistryRequest
 } from '@ar/pages/upstream-proxy-details/types'
@@ -51,6 +51,10 @@ export class HelmRepositoryType extends RepositoryStep<VirtualRegistryRequest> {
   protected repositoryIcon: IconName = 'service-helm'
   protected supportedScanners = []
   protected supportsUpstreamProxy = true
+  protected supportedUpstreamURLSources = [
+    UpstreamRepositoryURLInputSource.AwsEcr,
+    UpstreamRepositoryURLInputSource.Custom
+  ]
 
   protected defaultValues: VirtualRegistryRequest = {
     packageType: RepositoryPackageType.HELM,
@@ -67,7 +71,7 @@ export class HelmRepositoryType extends RepositoryStep<VirtualRegistryRequest> {
     config: {
       type: RepositoryConfigType.UPSTREAM,
       authType: UpstreamProxyAuthenticationMode.ANONYMOUS,
-      source: DockerRepositoryURLInputSource.Custom,
+      source: UpstreamRepositoryURLInputSource.Custom,
       url: ''
     },
     cleanupPolicy: [],

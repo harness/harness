@@ -37,6 +37,8 @@ noDescription: No Description
 lastUpdated: Last Updated
 createdAt: Created At
 modifiedAt: Modified At
+plaintext: Plain Text
+encrypted: Encrypted
 tags:
   latest: LATEST
   latestVersion: LATEST VERSION
@@ -93,3 +95,5 @@ validationMessages:
   urlPattern: Remote registry URL must be valid
   userNameRequired: Username is required
   passwordRequired: Password is required
+  accessKeyRequired: Access key is required
+  secretKeyRequired: Secret key is required

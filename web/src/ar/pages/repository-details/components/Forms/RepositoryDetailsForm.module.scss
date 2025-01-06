@@ -23,6 +23,6 @@
   :global(.bp3-form-group .bp3-input),
   :global(.bp3-form-group .bp3-input-group),
   :global(.bp3-form-group .bp3-select-popover) {
-    width: 580px;
+    width: var(--input-element-width);
   }
 }

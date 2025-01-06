@@ -15,6 +15,7 @@
  */
 
 import type { IconName } from '@harnessio/icons'
+import type { UpstreamRepositoryURLInputSource } from '@ar/pages/upstream-proxy-details/types'
 import type { FormikFowardRef, RepositoryPackageType, RepositoryConfigType, PageType, Scanners } from '@ar/common/types'
 
 export interface CreateRepositoryFormProps {
@@ -56,6 +57,7 @@ export abstract class RepositoryStep<T, U = unknown> {
   protected repositoryIconColor?: string
   protected repositoryIconSize?: number
   protected supportedScanners?: Scanners[]
+  protected supportedUpstreamURLSources?: UpstreamRepositoryURLInputSource[]
 
   getPackageType(): string {
     return this.packageType
@@ -63,6 +65,10 @@ export abstract class RepositoryStep<T, U = unknown> {
 
   getSupportedScanners(): Scanners[] {
     return this.supportedScanners ?? []
+  }
+
+  getSupportedUpstreamURLSources(): UpstreamRepositoryURLInputSource[] {
+    return this.supportedUpstreamURLSources ?? []
   }
 
   getDefaultValues(initialValues: T): T {
