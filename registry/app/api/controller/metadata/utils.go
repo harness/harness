@@ -107,6 +107,7 @@ var validPackageTypes = []string{
 var validUpstreamSources = []string{
 	string(a.UpstreamConfigSourceCustom),
 	string(a.UpstreamConfigSourceDockerhub),
+	string(a.UpstreamConfigSourceAwsEcr),
 }
 
 func ValidatePackageTypes(packageTypes []string) error {

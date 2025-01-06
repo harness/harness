@@ -53,40 +53,44 @@ func NewUpstreamproxyDao(
 
 // upstreamProxyConfigDB holds the record of an upstream_proxy_config in DB.
 type upstreamProxyConfigDB struct {
-	ID               int64          `db:"upstream_proxy_config_id"`
-	RegistryID       int64          `db:"upstream_proxy_config_registry_id"`
-	Source           string         `db:"upstream_proxy_config_source"`
-	URL              string         `db:"upstream_proxy_config_url"`
-	AuthType         string         `db:"upstream_proxy_config_auth_type"`
-	UserName         string         `db:"upstream_proxy_config_user_name"`
-	SecretIdentifier sql.NullString `db:"upstream_proxy_config_secret_identifier"`
-	SecretSpaceID    sql.NullInt32  `db:"upstream_proxy_config_secret_space_id"`
-	Token            string         `db:"upstream_proxy_config_token"`
-	CreatedAt        int64          `db:"upstream_proxy_config_created_at"`
-	UpdatedAt        int64          `db:"upstream_proxy_config_updated_at"`
-	CreatedBy        int64          `db:"upstream_proxy_config_created_by"`
-	UpdatedBy        int64          `db:"upstream_proxy_config_updated_by"`
+	ID                       int64          `db:"upstream_proxy_config_id"`
+	RegistryID               int64          `db:"upstream_proxy_config_registry_id"`
+	Source                   string         `db:"upstream_proxy_config_source"`
+	URL                      string         `db:"upstream_proxy_config_url"`
+	AuthType                 string         `db:"upstream_proxy_config_auth_type"`
+	UserName                 string         `db:"upstream_proxy_config_user_name"`
+	SecretIdentifier         sql.NullString `db:"upstream_proxy_config_secret_identifier"`
+	SecretSpaceID            sql.NullInt32  `db:"upstream_proxy_config_secret_space_id"`
+	UserNameSecretIdentifier sql.NullString `db:"upstream_proxy_config_user_name_secret_identifier"`
+	UserNameSecretSpaceID    sql.NullInt32  `db:"upstream_proxy_config_user_name_secret_space_id"`
+	Token                    string         `db:"upstream_proxy_config_token"`
+	CreatedAt                int64          `db:"upstream_proxy_config_created_at"`
+	UpdatedAt                int64          `db:"upstream_proxy_config_updated_at"`
+	CreatedBy                int64          `db:"upstream_proxy_config_created_by"`
+	UpdatedBy                int64          `db:"upstream_proxy_config_updated_by"`
 }
 
 type upstreamProxyDB struct {
-	ID               int64                `db:"id"`
-	RegistryID       int64                `db:"registry_id"`
-	RepoKey          string               `db:"repo_key"`
-	ParentID         string               `db:"parent_id"`
-	PackageType      artifact.PackageType `db:"package_type"`
-	AllowedPattern   sql.NullString       `db:"allowed_pattern"`
-	BlockedPattern   sql.NullString       `db:"blocked_pattern"`
-	Source           string               `db:"source"`
-	RepoURL          string               `db:"repo_url"`
-	RepoAuthType     string               `db:"repo_auth_type"`
-	UserName         string               `db:"user_name"`
-	SecretIdentifier sql.NullString       `db:"secret_identifier"`
-	SecretSpaceID    sql.NullInt32        `db:"secret_space_id"`
-	Token            string               `db:"token"`
-	CreatedAt        int64                `db:"created_at"`
-	UpdatedAt        int64                `db:"updated_at"`
-	CreatedBy        sql.NullInt64        `db:"created_by"`
-	UpdatedBy        sql.NullInt64        `db:"updated_by"`
+	ID                       int64                `db:"id"`
+	RegistryID               int64                `db:"registry_id"`
+	RepoKey                  string               `db:"repo_key"`
+	ParentID                 string               `db:"parent_id"`
+	PackageType              artifact.PackageType `db:"package_type"`
+	AllowedPattern           sql.NullString       `db:"allowed_pattern"`
+	BlockedPattern           sql.NullString       `db:"blocked_pattern"`
+	Source                   string               `db:"source"`
+	RepoURL                  string               `db:"repo_url"`
+	RepoAuthType             string               `db:"repo_auth_type"`
+	UserName                 string               `db:"user_name"`
+	SecretIdentifier         sql.NullString       `db:"secret_identifier"`
+	SecretSpaceID            sql.NullInt32        `db:"secret_space_id"`
+	UserNameSecretIdentifier sql.NullString       `db:"user_name_secret_identifier"`
+	UserNameSecretSpaceID    sql.NullInt32        `db:"user_name_secret_space_id"`
+	Token                    string               `db:"token"`
+	CreatedAt                int64                `db:"created_at"`
+	UpdatedAt                int64                `db:"updated_at"`
+	CreatedBy                sql.NullInt64        `db:"created_by"`
+	UpdatedBy                sql.NullInt64        `db:"updated_by"`
 }
 
 func getUpstreamProxyQuery() squirrel.SelectBuilder {
@@ -104,6 +108,8 @@ func getUpstreamProxyQuery() squirrel.SelectBuilder {
 			" u.upstream_proxy_config_user_name as user_name," +
 			" u.upstream_proxy_config_secret_identifier as secret_identifier," +
 			" u.upstream_proxy_config_secret_space_id as secret_space_id," +
+			" u.upstream_proxy_config_user_name_secret_identifier as user_name_secret_identifier," +
+			" u.upstream_proxy_config_user_name_secret_space_id as user_name_secret_space_id," +
 			" u.upstream_proxy_config_token as token," +
 			" r.registry_created_at as created_at," +
 			" r.registry_updated_at as updated_at ").
@@ -189,6 +195,8 @@ func (r UpstreamproxyDao) Create(
 			,upstream_proxy_config_user_name
 			,upstream_proxy_config_secret_identifier
 			,upstream_proxy_config_secret_space_id
+			,upstream_proxy_config_user_name_secret_identifier
+			,upstream_proxy_config_user_name_secret_space_id
 			,upstream_proxy_config_token
 			,upstream_proxy_config_created_at
 			,upstream_proxy_config_updated_at
@@ -202,6 +210,8 @@ func (r UpstreamproxyDao) Create(
 			,:upstream_proxy_config_user_name
 			,:upstream_proxy_config_secret_identifier
 			,:upstream_proxy_config_secret_space_id
+			,:upstream_proxy_config_user_name_secret_identifier
+			,:upstream_proxy_config_user_name_secret_space_id
 			,:upstream_proxy_config_token
 			,:upstream_proxy_config_created_at
 			,:upstream_proxy_config_updated_at
@@ -360,19 +370,21 @@ func (r UpstreamproxyDao) mapToInternalUpstreamProxy(
 	in.UpdatedBy = session.Principal.ID
 
 	return &upstreamProxyConfigDB{
-		ID:               in.ID,
-		RegistryID:       in.RegistryID,
-		Source:           in.Source,
-		URL:              in.URL,
-		AuthType:         in.AuthType,
-		UserName:         in.UserName,
-		SecretIdentifier: util.GetEmptySQLString(in.SecretIdentifier),
-		SecretSpaceID:    util.GetEmptySQLInt32(in.SecretSpaceID),
-		Token:            in.Token,
-		CreatedAt:        in.CreatedAt.UnixMilli(),
-		UpdatedAt:        in.UpdatedAt.UnixMilli(),
-		CreatedBy:        in.CreatedBy,
-		UpdatedBy:        in.UpdatedBy,
+		ID:                       in.ID,
+		RegistryID:               in.RegistryID,
+		Source:                   in.Source,
+		URL:                      in.URL,
+		AuthType:                 in.AuthType,
+		UserName:                 in.UserName,
+		SecretIdentifier:         util.GetEmptySQLString(in.SecretIdentifier),
+		SecretSpaceID:            util.GetEmptySQLInt32(in.SecretSpaceID),
+		UserNameSecretSpaceID:    util.GetEmptySQLInt32(in.UserNameSecretSpaceID),
+		UserNameSecretIdentifier: util.GetEmptySQLString(in.UserNameSecretIdentifier),
+		Token:                    in.Token,
+		CreatedAt:                in.CreatedAt.UnixMilli(),
+		UpdatedAt:                in.UpdatedAt.UnixMilli(),
+		CreatedBy:                in.CreatedBy,
+		UpdatedBy:                in.UpdatedBy,
 	}
 }
 
@@ -406,26 +418,47 @@ func (r UpstreamproxyDao) mapToUpstreamProxy(
 		secretSpacePath = primary.Value
 	}
 
+	userNameSecretIdentifier := ""
+	userNameSecretSpaceID := int64(-1)
+	if dst.UserNameSecretIdentifier.Valid {
+		userNameSecretIdentifier = dst.UserNameSecretIdentifier.String
+	}
+	if dst.UserNameSecretSpaceID.Valid {
+		userNameSecretSpaceID = int64(dst.UserNameSecretSpaceID.Int32)
+	}
+
+	userNameSecretSpacePath := ""
+	if dst.UserNameSecretSpaceID.Valid {
+		primary, err := r.spacePathStore.FindPrimaryBySpaceID(ctx, int64(dst.UserNameSecretSpaceID.Int32))
+		if err != nil {
+			return nil, fmt.Errorf("failed to get secret space path: %w", err)
+		}
+		userNameSecretSpacePath = primary.Value
+	}
+
 	return &types.UpstreamProxy{
-		ID:               dst.ID,
-		RegistryID:       dst.RegistryID,
-		RepoKey:          dst.RepoKey,
-		ParentID:         dst.ParentID,
-		PackageType:      dst.PackageType,
-		AllowedPattern:   util.StringToArr(dst.AllowedPattern.String),
-		BlockedPattern:   util.StringToArr(dst.BlockedPattern.String),
-		Source:           dst.Source,
-		RepoURL:          dst.RepoURL,
-		RepoAuthType:     dst.RepoAuthType,
-		UserName:         dst.UserName,
-		SecretIdentifier: secretIdentifier,
-		SecretSpaceID:    secretSpaceID,
-		SecretSpacePath:  secretSpacePath,
-		Token:            dst.Token,
-		CreatedAt:        time.UnixMilli(dst.CreatedAt),
-		UpdatedAt:        time.UnixMilli(dst.UpdatedAt),
-		CreatedBy:        createdBy,
-		UpdatedBy:        updatedBy,
+		ID:                       dst.ID,
+		RegistryID:               dst.RegistryID,
+		RepoKey:                  dst.RepoKey,
+		ParentID:                 dst.ParentID,
+		PackageType:              dst.PackageType,
+		AllowedPattern:           util.StringToArr(dst.AllowedPattern.String),
+		BlockedPattern:           util.StringToArr(dst.BlockedPattern.String),
+		Source:                   dst.Source,
+		RepoURL:                  dst.RepoURL,
+		RepoAuthType:             dst.RepoAuthType,
+		UserName:                 dst.UserName,
+		SecretIdentifier:         secretIdentifier,
+		SecretSpaceID:            secretSpaceID,
+		SecretSpacePath:          secretSpacePath,
+		UserNameSecretIdentifier: userNameSecretIdentifier,
+		UserNameSecretSpaceID:    userNameSecretSpaceID,
+		UserNameSecretSpacePath:  userNameSecretSpacePath,
+		Token:                    dst.Token,
+		CreatedAt:                time.UnixMilli(dst.CreatedAt),
+		UpdatedAt:                time.UnixMilli(dst.UpdatedAt),
+		CreatedBy:                createdBy,
+		UpdatedBy:                updatedBy,
 	}, nil
 }
 

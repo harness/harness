@@ -29,6 +29,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"golang.org/x/net/context"
 
+	_ "github.com/harness/gitness/registry/app/remote/adapter/awsecr"    // This is required to init aws ecr adapter
 	_ "github.com/harness/gitness/registry/app/remote/adapter/dockerhub" // This is required to init docker adapter
 )
 
@@ -68,19 +69,19 @@ func NewRemoteHelper(
 		upstreamProxy: proxy,
 		secretService: secretService,
 	}
-	if err := r.init(ctx, spacePathStore); err != nil {
+	if err := r.init(ctx, spacePathStore, proxy.Source); err != nil {
 		return nil, err
 	}
 	return r, nil
 }
 
-func (r *remoteHelper) init(ctx context.Context, spacePathStore store.SpacePathStore) error {
+func (r *remoteHelper) init(ctx context.Context, spacePathStore store.SpacePathStore, proxyType string) error {
 	if r.registry != nil {
 		return nil
 	}
 
 	// TODO add health check.
-	factory, err := adapter.GetFactory("docker")
+	factory, err := adapter.GetFactory(proxyType)
 	if err != nil {
 		return err
 	}

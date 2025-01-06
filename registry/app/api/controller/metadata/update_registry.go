@@ -328,6 +328,7 @@ func UpdateRepoEntity(
 	return entity, nil
 }
 
+//nolint:gocognit,cyclop
 func (c *APIController) UpdateUpstreamProxyEntity(
 	ctx context.Context, dto artifact.RegistryRequest, parentID int64, rootParentID int64, u *types.UpstreamProxy,
 ) (*types.Registry, *types.UpstreamProxyConfig, error) {
@@ -379,7 +380,8 @@ func (c *APIController) UpdateUpstreamProxyEntity(
 	if u.ID != -1 {
 		upstreamProxyConfigEntity.ID = u.ID
 	}
-	if config.AuthType == artifact.AuthTypeUserPassword {
+	switch {
+	case config.AuthType == artifact.AuthTypeUserPassword:
 		res, err := config.Auth.AsUserPassword()
 		if err != nil {
 			return nil, nil, err
@@ -389,12 +391,47 @@ func (c *APIController) UpdateUpstreamProxyEntity(
 			return nil, nil, fmt.Errorf("failed to create upstream proxy: secret_identifier missing")
 		}
 
-		upstreamProxyConfigEntity.SecretSpaceID, err = c.getSecretID(ctx, res.SecretSpacePath)
+		if res.SecretSpacePath != nil && len(*res.SecretSpacePath) > 0 {
+			upstreamProxyConfigEntity.SecretSpaceID, err = c.getSecretID(ctx, res.SecretSpacePath)
+			if err != nil {
+				return nil, nil, err
+			}
+		} else if res.SecretSpaceId != nil {
+			upstreamProxyConfigEntity.SecretSpaceID = *res.SecretSpaceId
+		}
+		upstreamProxyConfigEntity.SecretIdentifier = *res.SecretIdentifier
+	case config.AuthType == artifact.AuthTypeAccessKeySecretKey:
+		res, err := config.Auth.AsAccessKeySecretKey()
 		if err != nil {
 			return nil, nil, err
 		}
-		upstreamProxyConfigEntity.SecretIdentifier = *res.SecretIdentifier
-	} else {
+		switch {
+		case res.AccessKey != nil && len(*res.AccessKey) > 0:
+			upstreamProxyConfigEntity.UserName = *res.AccessKey
+		case res.AccessKeySecretIdentifier == nil:
+			return nil, nil, fmt.Errorf("failed to create upstream proxy: access_key_secret_identifier missing")
+		default:
+			if res.AccessKeySecretSpacePath != nil && len(*res.AccessKeySecretSpacePath) > 0 {
+				upstreamProxyConfigEntity.UserNameSecretSpaceID, err = c.getSecretID(ctx, res.AccessKeySecretSpacePath)
+				if err != nil {
+					return nil, nil, err
+				}
+			} else if res.AccessKeySecretSpaceId != nil {
+				upstreamProxyConfigEntity.UserNameSecretSpaceID = *res.AccessKeySecretSpaceId
+			}
+			upstreamProxyConfigEntity.UserNameSecretIdentifier = *res.AccessKeySecretIdentifier
+		}
+
+		if res.SecretKeySpacePath != nil && len(*res.SecretKeySpacePath) > 0 {
+			upstreamProxyConfigEntity.SecretSpaceID, err = c.getSecretID(ctx, res.SecretKeySpacePath)
+			if err != nil {
+				return nil, nil, err
+			}
+		} else if res.SecretKeySpaceId != nil {
+			upstreamProxyConfigEntity.SecretSpaceID = *res.SecretKeySpaceId
+		}
+		upstreamProxyConfigEntity.SecretIdentifier = res.SecretKeyIdentifier
+	default:
 		upstreamProxyConfigEntity.UserName = ""
 		upstreamProxyConfigEntity.SecretIdentifier = ""
 		upstreamProxyConfigEntity.SecretSpaceID = 0

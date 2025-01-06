@@ -364,6 +364,18 @@ func CreateUpstreamProxyResponseJSONResponse(upstreamproxy *types.UpstreamProxy)
 		auth.SecretIdentifier = &upstreamproxy.SecretIdentifier
 		auth.SecretSpacePath = &upstreamproxy.SecretSpacePath
 		_ = configAuth.FromUserPassword(auth)
+	} else if api.AuthType(upstreamproxy.RepoAuthType) == api.AuthTypeAccessKeySecretKey {
+		auth := api.AccessKeySecretKey{}
+		auth.AccessKey = &upstreamproxy.UserName
+		auth.AccessKeySecretIdentifier = &upstreamproxy.UserNameSecretIdentifier
+		auth.AccessKeySecretSpacePath = &upstreamproxy.UserNameSecretSpacePath
+		auth.SecretKeyIdentifier = upstreamproxy.SecretIdentifier
+		auth.SecretKeySpacePath = &upstreamproxy.SecretSpacePath
+		err := configAuth.FromAccessKeySecretKey(auth)
+		if err != nil {
+			log.Warn().Msgf("error in converting auth config to access and secret key: %v", err)
+			return &api.RegistryResponseJSONResponse{}
+		}
 	}
 
 	source := api.UpstreamConfigSource(upstreamproxy.Source)

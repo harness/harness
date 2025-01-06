@@ -14,10 +14,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dockerhub
+package awsecr
 
 import (
 	"context"
+	"regexp"
 
 	store2 "github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
@@ -26,11 +27,21 @@ import (
 	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/secret"
 
+	awsecrapi "github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/rs/zerolog/log"
 )
 
+const (
+	//nolint:lll
+	ecrPattern = "https://(?:api|(\\d+)\\.dkr)\\.ecr(\\-fips)?\\.([\\w\\-]+)\\.(amazonaws\\.com(\\.cn)?|sc2s\\.sgov\\.gov|c2s\\.ic\\.gov)"
+)
+
+var (
+	ecrRegexp = regexp.MustCompile(ecrPattern)
+)
+
 func init() {
-	adapterType := string(artifact.UpstreamConfigSourceDockerhub)
+	adapterType := string(artifact.UpstreamConfigSourceAwsEcr)
 	if err := adp.RegisterFactory(adapterType, new(factory)); err != nil {
 		log.Error().Stack().Err(err).Msgf("Register adapter factory for %s", adapterType)
 		return
@@ -40,19 +51,20 @@ func init() {
 func newAdapter(
 	ctx context.Context, spacePathStore store2.SpacePathStore, service secret.Service, registry types.UpstreamProxy,
 ) (adp.Adapter, error) {
-	client, err := NewClient(registry)
+	accessKey, secretKey, err := getCreds(ctx, spacePathStore, service, registry)
 	if err != nil {
 		return nil, err
 	}
+	svc, err := getAwsSvc(accessKey, secretKey, registry)
+	if err != nil {
+		return nil, err
+	}
+	authorizer := NewAuth(accessKey, svc)
 
-	// TODO: get Upstream Credentials
 	return &adapter{
-		client:  client,
-		Adapter: native.NewAdapter(ctx, spacePathStore, service, registry),
+		cacheSvc: svc,
+		Adapter:  native.NewAdapterWithAuthorizer(registry, authorizer),
 	}, nil
-}
-
-type factory struct {
 }
 
 // Create ...
@@ -62,6 +74,14 @@ func (f *factory) Create(
 	return newAdapter(ctx, spacePathStore, service, record)
 }
 
+type factory struct {
+}
+
+// HealthCheck checks health status of a proxy.
+func (a *adapter) HealthCheck() (string, error) {
+	return "Not implemented", nil
+}
+
 var (
 	_ adp.Adapter          = (*adapter)(nil)
 	_ adp.ArtifactRegistry = (*adapter)(nil)
@@ -69,7 +89,7 @@ var (
 
 type adapter struct {
 	*native.Adapter
-	client *Client
+	cacheSvc *awsecrapi.ECR
 }
 
 // Ensure '*adapter' implements interface 'Adapter'.

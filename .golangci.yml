@@ -460,6 +460,10 @@ issues:
       linters: [ goheader ]
     - path: "^registry/app/remote/adapter/dockerhub/adapter.go"
       linters: [ goheader ]
+    - path: "^registry/app/remote/adapter/awsecr/adapter.go"
+      linters: [ goheader ]
+    - path: "^registry/app/remote/adapter/awsecr/auth.go"
+      linters: [ goheader ]
     - path: "^registry/app/remote/adapter/dockerhub/client.go"
       linters: [ goheader ]
     - path: "^registry/app/remote/adapter/dockerhub/consts.go"

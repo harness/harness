@@ -21,6 +21,7 @@ import (
 
 	"github.com/harness/gitness/app/store"
 	api "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/registry/app/common/lib"
 	"github.com/harness/gitness/registry/app/common/lib/errors"
 	adp "github.com/harness/gitness/registry/app/remote/adapter"
 	"github.com/harness/gitness/registry/app/remote/clients/registry"
@@ -56,6 +57,14 @@ func NewAdapter(
 	username, password, url := reg.UserName, password, reg.RepoURL
 	adapter.Client = registry.NewClient(url, username, password, false)
 	return adapter
+}
+
+// NewAdapterWithAuthorizer returns an instance of the Adapter with provided authorizer.
+func NewAdapterWithAuthorizer(reg types.UpstreamProxy, authorizer lib.Authorizer) *Adapter {
+	return &Adapter{
+		proxy:  reg,
+		Client: registry.NewClientWithAuthorizer(reg.RepoURL, authorizer, false),
+	}
 }
 
 // getPwd: lookup secrets.secret_data using secret_identifier & secret_space_id.

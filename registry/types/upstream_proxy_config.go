@@ -22,40 +22,45 @@ import (
 
 // UpstreamProxyConfig DTO object.
 type UpstreamProxyConfig struct {
-	ID               int64
-	RegistryID       int64
-	Source           string
-	URL              string
-	AuthType         string
-	UserName         string
-	Password         string
-	SecretIdentifier string
-	SecretSpaceID    int
-	Token            string
-	CreatedAt        time.Time
-	UpdatedAt        time.Time
-	CreatedBy        int64
-	UpdatedBy        int64
+	ID                       int64
+	RegistryID               int64
+	Source                   string
+	URL                      string
+	AuthType                 string
+	UserName                 string
+	UserNameSecretIdentifier string
+	UserNameSecretSpaceID    int
+	Password                 string
+	SecretIdentifier         string
+	SecretSpaceID            int
+	Token                    string
+	CreatedAt                time.Time
+	UpdatedAt                time.Time
+	CreatedBy                int64
+	UpdatedBy                int64
 }
 
 type UpstreamProxy struct {
-	ID               int64
-	RegistryID       int64
-	RepoKey          string
-	ParentID         string
-	PackageType      artifact.PackageType
-	AllowedPattern   []string
-	BlockedPattern   []string
-	Source           string
-	RepoURL          string
-	RepoAuthType     string
-	UserName         string
-	SecretIdentifier string
-	SecretSpaceID    int64
-	SecretSpacePath  string
-	Token            string
-	CreatedAt        time.Time
-	UpdatedAt        time.Time
-	CreatedBy        int64
-	UpdatedBy        int64
+	ID                       int64
+	RegistryID               int64
+	RepoKey                  string
+	ParentID                 string
+	PackageType              artifact.PackageType
+	AllowedPattern           []string
+	BlockedPattern           []string
+	Source                   string
+	RepoURL                  string
+	RepoAuthType             string
+	UserName                 string
+	UserNameSecretIdentifier string
+	UserNameSecretSpaceID    int64
+	UserNameSecretSpacePath  string
+	SecretIdentifier         string
+	SecretSpaceID            int64
+	SecretSpacePath          string
+	Token                    string
+	CreatedAt                time.Time
+	UpdatedAt                time.Time
+	CreatedBy                int64
+	UpdatedBy                int64
 }
