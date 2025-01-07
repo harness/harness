@@ -195,7 +195,7 @@ func ExtractLifecycleCommands(actionType PostAction, devcontainerConfig types.De
 	}
 }
 
-func ExtractIDECustomizations(
+func AddIDECustomizationsArg(
 	ideService ide.IDE,
 	devcontainerConfig types.DevcontainerConfig,
 	args map[gitspaceTypes.IDEArg]interface{},
@@ -208,7 +208,7 @@ func ExtractIDECustomizations(
 	return args
 }
 
-func ExtractIDEDownloadURL(
+func AddIDEDownloadURLArg(
 	ideService ide.IDE,
 	args map[gitspaceTypes.IDEArg]interface{},
 ) map[gitspaceTypes.IDEArg]interface{} {
@@ -222,7 +222,7 @@ func ExtractIDEDownloadURL(
 	return args
 }
 
-func ExtractIDEDirName(
+func AddIDEDirNameArg(
 	ideService ide.IDE,
 	args map[gitspaceTypes.IDEArg]interface{},
 ) map[gitspaceTypes.IDEArg]interface{} {

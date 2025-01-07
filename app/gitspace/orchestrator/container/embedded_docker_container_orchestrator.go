@@ -561,10 +561,10 @@ func (e *EmbeddedDockerOrchestrator) buildSetupSteps(
 			) error {
 				// Run IDE setup
 				args := make(map[gitspaceTypes.IDEArg]interface{})
-				args = ExtractIDECustomizations(ideService, resolvedRepoDetails.DevcontainerConfig, args)
+				args = AddIDECustomizationsArg(ideService, resolvedRepoDetails.DevcontainerConfig, args)
 				args[gitspaceTypes.IDERepoNameArg] = resolvedRepoDetails.RepoName
-				args = ExtractIDEDownloadURL(ideService, args)
-				args = ExtractIDEDirName(ideService, args)
+				args = AddIDEDownloadURLArg(ideService, args)
+				args = AddIDEDirNameArg(ideService, args)
 
 				return ideService.Setup(ctx, exec, args, gitspaceLogger)
 			},
@@ -579,7 +579,7 @@ func (e *EmbeddedDockerOrchestrator) buildSetupSteps(
 			) error {
 				args := make(map[gitspaceTypes.IDEArg]interface{})
 				args[gitspaceTypes.IDERepoNameArg] = resolvedRepoDetails.RepoName
-				args = ExtractIDEDirName(ideService, args)
+				args = AddIDEDirNameArg(ideService, args)
 				return ideService.Run(ctx, exec, args, gitspaceLogger)
 			},
 			StopOnFailure: true,

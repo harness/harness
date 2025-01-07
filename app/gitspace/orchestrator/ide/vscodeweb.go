@@ -21,6 +21,7 @@ import (
 	"embed"
 	"fmt"
 	"io"
+	"net/url"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -52,11 +53,15 @@ type VSCodeWebConfig struct {
 }
 
 type VSCodeWeb struct {
-	config *VSCodeWebConfig
+	urlScheme string
+	config    *VSCodeWebConfig
 }
 
-func NewVsCodeWebService(config *VSCodeWebConfig) *VSCodeWeb {
-	return &VSCodeWeb{config: config}
+func NewVsCodeWebService(config *VSCodeWebConfig, urlScheme string) *VSCodeWeb {
+	return &VSCodeWeb{
+		urlScheme: urlScheme,
+		config:    config,
+	}
 }
 
 // Setup runs the installScript which downloads the required version of the code-server binary.
@@ -266,4 +271,16 @@ func embedToTar(tarWriter *tar.Writer, baseDir, prefix string) error {
 	}
 
 	return nil
+}
+
+// GenerateURL returns the url to redirect user to ide(here to another ta).
+func (v *VSCodeWeb) GenerateURL(absoluteRepoPath, host, port, _ string) string {
+	relativeRepoPath := strings.TrimPrefix(absoluteRepoPath, "/")
+	ideURL := url.URL{
+		Scheme:   v.urlScheme,
+		Host:     host + ":" + port,
+		RawQuery: filepath.Join("folder=", relativeRepoPath),
+	}
+
+	return ideURL.String()
 }

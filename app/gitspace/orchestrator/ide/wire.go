@@ -26,7 +26,7 @@ var WireSet = wire.NewSet(
 )
 
 func ProvideVSCodeWebService(config *VSCodeWebConfig) *VSCodeWeb {
-	return NewVsCodeWebService(config)
+	return NewVsCodeWebService(config, "http")
 }
 
 func ProvideVSCodeService(config *VSCodeConfig) *VSCode {

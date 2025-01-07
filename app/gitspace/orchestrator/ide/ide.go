@@ -16,6 +16,7 @@ package ide
 
 import (
 	"context"
+	"strings"
 
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
 	gitspaceTypes "github.com/harness/gitness/app/gitspace/types"
@@ -51,4 +52,12 @@ type IDE interface {
 
 	// Type provides the IDE type to which the service belongs.
 	Type() enum.IDEType
+
+	// GenerateURL returns the url to redirect user to ide from gitspace
+	GenerateURL(absoluteRepoPath, host, port, user string) string
+}
+
+func getHomePath(absoluteRepoPath string) string {
+	pathList := strings.Split(absoluteRepoPath, "/")
+	return strings.Join(pathList[:len(pathList)-1], "/")
 }

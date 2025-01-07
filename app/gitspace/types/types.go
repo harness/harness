@@ -28,9 +28,6 @@ const (
 	IDERepoNameArg         IDEArg = "IDE_REPO_NAME"
 	IDEDownloadURLArg      IDEArg = "IDE_DOWNLOAD_URL"
 	IDEDIRNameArg          IDEArg = "IDE_DIR_NAME"
-
-	VSCodeURLScheme   string = "vscode-remote"
-	IntellijURLScheme string = "jetbrains-gateway"
 )
 
 type GitspaceLogger interface {

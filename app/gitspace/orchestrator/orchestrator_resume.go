@@ -17,17 +17,13 @@ package orchestrator
 import (
 	"context"
 	"fmt"
-	"net/url"
-	"path"
-	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/harness/gitness/app/gitspace/orchestrator/container"
+	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
 	"github.com/harness/gitness/app/gitspace/secret"
 	secretenum "github.com/harness/gitness/app/gitspace/secret/enum"
-	gitspaceTypes "github.com/harness/gitness/app/gitspace/types"
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -84,8 +80,6 @@ func (o Orchestrator) ResumeStartGitspace(
 			ErrorMessage: ptr.String(err.Error()),
 		}
 	}
-
-	idePort := ideSvc.Port()
 
 	err = o.infraProvisioner.PostInfraEventComplete(ctx, gitspaceConfig, provisionedInfra, enum.InfraEventProvision)
 	if err != nil {
@@ -172,7 +166,7 @@ func (o Orchestrator) ResumeStartGitspace(
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceCreationCompleted)
 
-	ideURLString := generateIDEURL(provisionedInfra, idePort, startResponse, gitspaceConfig)
+	ideURLString := generateIDEURL(provisionedInfra, ideSvc, startResponse)
 	gitspaceInstance.URL = &ideURLString
 
 	now := time.Now().UnixMilli()
@@ -188,12 +182,10 @@ func (o Orchestrator) ResumeStartGitspace(
 
 func generateIDEURL(
 	provisionedInfra types.Infrastructure,
-	idePort *types.GitspacePort,
+	ideSvc ide.IDE,
 	startResponse *container.StartResponse,
-	gitspaceConfig types.GitspaceConfig,
 ) string {
-	var ideURL url.URL
-
+	idePort := ideSvc.Port()
 	var forwardedPort string
 
 	if provisionedInfra.GitspacePortMappings[idePort.Port].PublishedPort == 0 {
@@ -202,59 +194,12 @@ func generateIDEURL(
 		forwardedPort = strconv.Itoa(provisionedInfra.GitspacePortMappings[idePort.Port].ForwardedPort)
 	}
 
-	scheme := provisionedInfra.GitspaceScheme
 	host := provisionedInfra.GitspaceHost
 	if provisionedInfra.ProxyGitspaceHost != "" {
 		host = provisionedInfra.ProxyGitspaceHost
 	}
 
-	relativeRepoPath := strings.TrimPrefix(startResponse.AbsoluteRepoPath, "/")
-
-	switch gitspaceConfig.IDE {
-	case enum.IDETypeVSCodeWeb:
-		ideURL = url.URL{
-			Scheme:   scheme,
-			Host:     host + ":" + forwardedPort,
-			RawQuery: filepath.Join("folder=", relativeRepoPath),
-		}
-	case enum.IDETypeVSCode:
-		// TODO: the following userID is hard coded and should be changed.
-		ideURL = url.URL{
-			Scheme: gitspaceTypes.VSCodeURLScheme,
-			Host:   "", // Empty since we include the host and port in the path
-			Path: fmt.Sprintf(
-				"ssh-remote+%s@%s:%s",
-				startResponse.RemoteUser,
-				host,
-				filepath.Join(forwardedPort, relativeRepoPath),
-			),
-		}
-	case enum.IDETypeIntellij:
-		homePath := getHomePath(startResponse.AbsoluteRepoPath)
-		idePath := path.Join(homePath, ".cache", "JetBrains", "RemoteDev", "dist", "intellij")
-		ideURL = url.URL{
-			Scheme: gitspaceTypes.IntellijURLScheme,
-			Host:   "", // Empty since we include the host and port in the path
-			Path:   "connect",
-			Fragment: fmt.Sprintf("idePath=%s&projectPath=%s&host=%s&port=%s&user=%s&type=%s&deploy=%s",
-				idePath,
-				startResponse.AbsoluteRepoPath,
-				host,
-				forwardedPort,
-				startResponse.RemoteUser,
-				"ssh",
-				"false",
-			),
-		}
-	}
-
-	ideURLString := ideURL.String()
-	return ideURLString
-}
-
-func getHomePath(absoluteRepoPath string) string {
-	pathList := strings.Split(absoluteRepoPath, "/")
-	return strings.Join(pathList[:len(pathList)-1], "/")
+	return ideSvc.GenerateURL(startResponse.AbsoluteRepoPath, host, forwardedPort, startResponse.RemoteUser)
 }
 
 func (o Orchestrator) getSecretResolver(accessType enum.GitspaceAccessType) (secret.Resolver, error) {

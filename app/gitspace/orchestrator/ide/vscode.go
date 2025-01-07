@@ -18,7 +18,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
+	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
 	"github.com/harness/gitness/app/gitspace/orchestrator/utils"
@@ -33,6 +36,8 @@ var _ IDE = (*VSCode)(nil)
 
 const (
 	templateSetupVSCodeExtensions string = "setup_vscode_extensions.sh"
+
+	vSCodeURLScheme string = "vscode-remote"
 )
 
 type VSCodeConfig struct {
@@ -222,4 +227,21 @@ func (v *VSCode) handleVSCodeCustomization(
 	payload.Extensions = string(jsonData)
 
 	return nil
+}
+
+// GenerateURL returns the url to redirect user to ide(here to vscode application).
+func (v *VSCode) GenerateURL(absoluteRepoPath, host, port, user string) string {
+	relativeRepoPath := strings.TrimPrefix(absoluteRepoPath, "/")
+	ideURL := url.URL{
+		Scheme: vSCodeURLScheme,
+		Host:   "", // Empty since we include the host and port in the path
+		Path: fmt.Sprintf(
+			"ssh-remote+%s@%s:%s",
+			user,
+			host,
+			filepath.Join(port, relativeRepoPath),
+		),
+	}
+
+	return ideURL.String()
 }

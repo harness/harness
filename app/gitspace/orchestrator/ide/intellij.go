@@ -17,6 +17,8 @@ package ide
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"path"
 	"strconv"
 
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
@@ -31,6 +33,8 @@ var _ IDE = (*Intellij)(nil)
 const (
 	templateSetupIntellij        string = "setup_intellij.sh"
 	templateRunRemoteIDEIntellij string = "run_intellij.sh"
+
+	intellijURLScheme string = "jetbrains-gateway"
 )
 
 type IntellijConfig struct {
@@ -232,6 +236,28 @@ func (ij *Intellij) Port() *types.GitspacePort {
 		Port:     ij.config.Port,
 		Protocol: enum.CommunicationProtocolSSH,
 	}
+}
+
+// GenerateURL returns the url to redirect user to ide(here to jetbrains gateway application).
+func (ij *Intellij) GenerateURL(absoluteRepoPath, host, port, user string) string {
+	homePath := getHomePath(absoluteRepoPath)
+	idePath := path.Join(homePath, ".cache", "JetBrains", "RemoteDev", "dist", "intellij")
+	ideURL := url.URL{
+		Scheme: intellijURLScheme,
+		Host:   "", // Empty since we include the host and port in the path
+		Path:   "connect",
+		Fragment: fmt.Sprintf("idePath=%s&projectPath=%s&host=%s&port=%s&user=%s&type=%s&deploy=%s",
+			idePath,
+			absoluteRepoPath,
+			host,
+			port,
+			user,
+			"ssh",
+			"false",
+		),
+	}
+
+	return ideURL.String()
 }
 
 func (ij *Intellij) Type() enum.IDEType {
