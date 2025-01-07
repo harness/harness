@@ -211,7 +211,7 @@ export const Editor = React.memo(function CodeMirrorReactEditor({
     })
 
   useEffect(() => {
-    fetchUsers('')
+    !readonly && fetchUsers('')
   }, [])
 
   useEffect(() => {
