@@ -20,7 +20,7 @@ type GeneratePipelineStageInput struct {
 }
 
 type PipelineStageData struct {
-	StageYaml string `json:"yaml_step"`
+	StageYaml string `json:"yaml_stage"`
 }
 
 type GeneratePipelineStageOutput struct {

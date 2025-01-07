@@ -15,7 +15,7 @@
 package types
 
 type PipelineStepData struct {
-	Yaml string `json:"yaml"`
+	Yaml string `json:"yaml_step"`
 }
 
 // create.
