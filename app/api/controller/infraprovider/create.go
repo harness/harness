@@ -66,7 +66,7 @@ func (c *Controller) Create(
 	if err := c.sanitizeCreateInput(in); err != nil {
 		return nil, fmt.Errorf("invalid input: %w", err)
 	}
-	parentSpace, err := c.spaceStore.FindByRef(ctx, in.SpaceRef)
+	parentSpace, err := c.spaceCache.Get(ctx, in.SpaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find parent by ref %q : %w", in.SpaceRef, err)
 	}

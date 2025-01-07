@@ -39,7 +39,7 @@ func (c *Controller) Events(
 	page int,
 	limit int,
 ) ([]*types.GitspaceEventResponse, int, error) {
-	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+	space, err := c.spaceCache.Get(ctx, spaceRef)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to find space: %w", err)
 	}
@@ -49,14 +49,19 @@ func (c *Controller) Events(
 		return nil, 0, fmt.Errorf("failed to authorize: %w", err)
 	}
 
-	filter := &types.GitspaceEventFilter{}
-	filter.QueryKey = identifier
-	filter.Page = page
-	filter.Size = limit
-	filter.SkipEvents = []enum.GitspaceEventType{
+	pagination := types.Pagination{
+		Page: page,
+		Size: limit,
+	}
+	skipEvents := []enum.GitspaceEventType{
 		enum.GitspaceEventTypeInfraCleanupStart,
 		enum.GitspaceEventTypeInfraCleanupCompleted,
 		enum.GitspaceEventTypeInfraCleanupFailed,
+	}
+	filter := &types.GitspaceEventFilter{
+		Pagination: pagination,
+		QueryKey:   identifier,
+		SkipEvents: skipEvents,
 	}
 	events, count, err := c.gitspaceEventStore.List(ctx, filter)
 	if err != nil {

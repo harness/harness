@@ -17,7 +17,7 @@ package infraprovider
 import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/infraprovider"
-	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/app/services/refcache"
 
 	"github.com/google/wire"
 )
@@ -29,8 +29,8 @@ var WireSet = wire.NewSet(
 
 func ProvideController(
 	authorizer authz.Authorizer,
-	spaceStore store.SpaceStore,
+	spaceCache refcache.SpaceCache,
 	infraproviderSvc *infraprovider.Service,
 ) *Controller {
-	return NewController(authorizer, spaceStore, infraproviderSvc)
+	return NewController(authorizer, spaceCache, infraproviderSvc)
 }

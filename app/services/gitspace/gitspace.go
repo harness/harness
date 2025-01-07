@@ -17,6 +17,7 @@ package gitspace
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	gitspaceevents "github.com/harness/gitness/app/events/gitspace"
 	"github.com/harness/gitness/app/gitspace/orchestrator"
@@ -68,13 +69,12 @@ type Service struct {
 	config                *types.Config
 }
 
-func (c *Service) ListGitspacesForSpace(
+func (c *Service) ListGitspacesWithInstance(
 	ctx context.Context,
-	space *types.Space,
 	filter types.GitspaceFilter,
 ) ([]*types.GitspaceConfig, int64, int64, error) {
 	var gitspaceConfigs []*types.GitspaceConfig
-	var filterCount, allGitspacesInSpaceCount int64
+	var filterCount, allGitspacesCount int64
 	err := c.tx.WithTx(ctx, func(ctx context.Context) (err error) {
 		gitspaceConfigs, err = c.gitspaceConfigStore.ListWithLatestInstance(ctx, &filter)
 		if err != nil {
@@ -86,13 +86,14 @@ func (c *Service) ListGitspacesForSpace(
 			return fmt.Errorf("failed to filterCount gitspaces in space: %w", err)
 		}
 		// Only filter from RBAC and Space is applied for this count, the user filter will be empty for admin users.
-		allGitspacesInSpaceCount, err = c.gitspaceConfigStore.Count(ctx, &types.GitspaceFilter{
-			Deleted:           filter.Deleted,
-			MarkedForDeletion: filter.MarkedForDeletion,
-			GitspaceInstanceFilter: types.GitspaceInstanceFilter{
-				UserIdentifier: filter.UserIdentifier,
-				SpaceIDs:       filter.SpaceIDs,
-			},
+		instanceFilter := types.GitspaceInstanceFilter{
+			UserIdentifier: filter.UserIdentifier,
+			SpaceIDs:       filter.SpaceIDs,
+		}
+		allGitspacesCount, err = c.gitspaceConfigStore.Count(ctx, &types.GitspaceFilter{
+			Deleted:                filter.Deleted,
+			MarkedForDeletion:      filter.MarkedForDeletion,
+			GitspaceInstanceFilter: instanceFilter,
 		})
 		if err != nil {
 			return fmt.Errorf("failed to count all gitspace configs in space: %w", err)
@@ -105,15 +106,18 @@ func (c *Service) ListGitspacesForSpace(
 	}
 
 	for _, gitspaceConfig := range gitspaceConfigs {
+		space, err := c.spaceStore.FindByRef(ctx, strconv.FormatInt(gitspaceConfig.SpaceID, 10))
+		if err != nil {
+			return nil, 0, 0, err
+		}
 		gitspaceConfig.SpacePath = space.Path
 		if gitspaceConfig.GitspaceInstance != nil {
 			gitspaceConfig.GitspaceInstance.SpacePath = space.Path
 		}
-
 		gitspaceConfig.BranchURL = c.GetBranchURL(ctx, gitspaceConfig)
 	}
 
-	return gitspaceConfigs, filterCount, allGitspacesInSpaceCount, nil
+	return gitspaceConfigs, filterCount, allGitspacesCount, nil
 }
 
 func (c *Service) GetBranchURL(ctx context.Context, config *types.GitspaceConfig) string {
@@ -125,4 +129,8 @@ func (c *Service) GetBranchURL(ctx context.Context, config *types.GitspaceConfig
 		branchURL = config.CodeRepo.URL
 	}
 	return branchURL
+}
+
+func (c *Service) Create(ctx context.Context, config *types.GitspaceConfig) error {
+	return c.gitspaceConfigStore.Create(ctx, config)
 }

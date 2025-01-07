@@ -30,17 +30,12 @@ func (c *Controller) Find(
 	spaceRef string,
 	identifier string,
 ) (*types.GitspaceConfig, error) {
-	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
-	if err != nil {
-		return nil, fmt.Errorf("failed to find space: %w", err)
-	}
-
-	err = apiauth.CheckGitspace(ctx, c.authorizer, session, space.Path, identifier, enum.PermissionGitspaceView)
+	err := apiauth.CheckGitspace(ctx, c.authorizer, session, spaceRef, identifier, enum.PermissionGitspaceView)
 	if err != nil {
 		return nil, fmt.Errorf("failed to authorize: %w", err)
 	}
 
-	res, err := c.gitspaceSvc.Find(ctx, space.Path, identifier)
+	res, err := c.gitspaceSvc.FindWithLatestInstance(ctx, spaceRef, identifier)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find gitspace: %w", err)
 	}

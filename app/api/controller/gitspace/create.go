@@ -65,7 +65,7 @@ func (c *Controller) Create(
 	session *auth.Session,
 	in *CreateInput,
 ) (*types.GitspaceConfig, error) {
-	space, err := c.spaceStore.FindByRef(ctx, in.SpaceRef)
+	space, err := c.spaceCache.Get(ctx, in.SpaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find parent by ref: %w", err)
 	}
@@ -109,12 +109,12 @@ func (c *Controller) Create(
 	identifier := strings.ToLower(in.Identifier + "-" + suffixUID)
 	now := time.Now().UnixMilli()
 	var gitspaceConfig *types.GitspaceConfig
-	resourceIdentifier := in.ResourceIdentifier
 	// assume resource to be in same space if it's not explicitly specified.
 	if in.ResourceSpaceRef == "" {
 		in.ResourceSpaceRef = in.SpaceRef
 	}
-	resourceSpace, err := c.spaceStore.FindByRef(ctx, in.ResourceSpaceRef)
+	resourceIdentifier := in.ResourceIdentifier
+	resourceSpace, err := c.spaceCache.Get(ctx, in.ResourceSpaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find parent by ref: %w", err)
 	}
@@ -168,7 +168,7 @@ func (c *Controller) Create(
 			GitspaceUser:       user,
 		}
 		gitspaceConfig.InfraProviderResource = *infraProviderResource
-		err = c.gitspaceConfigStore.Create(ctx, gitspaceConfig)
+		err = c.gitspaceSvc.Create(ctx, gitspaceConfig)
 		if err != nil {
 			return fmt.Errorf("failed to create gitspace config for : %q %w", identifier, err)
 		}

@@ -17,23 +17,23 @@ package infraprovider
 import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/infraprovider"
-	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/app/services/refcache"
 )
 
 type Controller struct {
 	authorizer       authz.Authorizer
-	spaceStore       store.SpaceStore
+	spaceCache       refcache.SpaceCache
 	infraproviderSvc *infraprovider.Service
 }
 
 func NewController(
 	authorizer authz.Authorizer,
-	spaceStore store.SpaceStore,
+	spaceCache refcache.SpaceCache,
 	infraproviderSvc *infraprovider.Service,
 ) *Controller {
 	return &Controller{
 		authorizer:       authorizer,
-		spaceStore:       spaceStore,
+		spaceCache:       spaceCache,
 		infraproviderSvc: infraproviderSvc,
 	}
 }

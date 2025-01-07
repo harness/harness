@@ -47,5 +47,5 @@ func (c *Controller) ListGitspaces(
 	filter.Deleted = &deleted
 	filter.MarkedForDeletion = &markedForDeletion
 
-	return c.gitspaceSvc.ListGitspacesForSpace(ctx, space, filter)
+	return c.gitspaceSvc.ListGitspacesWithInstance(ctx, filter)
 }

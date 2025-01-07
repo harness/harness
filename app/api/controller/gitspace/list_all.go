@@ -21,12 +21,11 @@ import (
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
-
-const spaceIsDeleted = "Failed to find space: resource not found"
 
 func (c *Controller) ListAllGitspaces( // nolint:gocognit
 	ctx context.Context,
@@ -35,18 +34,17 @@ func (c *Controller) ListAllGitspaces( // nolint:gocognit
 ) ([]*types.GitspaceConfig, error) {
 	var result []*types.GitspaceConfig
 	err := c.tx.WithTx(ctx, func(ctx context.Context) (err error) {
-		allGitspaceConfigs, err := c.gitspaceConfigStore.ListWithLatestInstance(ctx, filter)
+		allGitspaceConfigs, _, _, err := c.gitspaceSvc.ListGitspacesWithInstance(ctx, *filter)
 		if err != nil {
 			return fmt.Errorf("failed to list gitspace configs: %w", err)
 		}
 
 		var spacesMap = make(map[int64]string)
-
 		for idx := 0; idx < len(allGitspaceConfigs); idx++ {
 			if spacesMap[allGitspaceConfigs[idx].SpaceID] == "" {
-				space, findSpaceErr := c.spaceStore.Find(ctx, allGitspaceConfigs[idx].SpaceID)
+				space, findSpaceErr := c.spaceCache.Get(ctx, allGitspaceConfigs[idx].SpacePath)
 				if findSpaceErr != nil {
-					if findSpaceErr.Error() != spaceIsDeleted {
+					if !errors.Is(findSpaceErr, store.ErrResourceNotFound) {
 						return fmt.Errorf(
 							"error fetching space %d: %w", allGitspaceConfigs[idx].SpaceID, findSpaceErr)
 					}
@@ -54,7 +52,6 @@ func (c *Controller) ListAllGitspaces( // nolint:gocognit
 				}
 				spacesMap[allGitspaceConfigs[idx].SpaceID] = space.Path
 			}
-			allGitspaceConfigs[idx].SpacePath = spacesMap[allGitspaceConfigs[idx].SpaceID]
 		}
 
 		authorizedSpaceIDs, err := c.getAuthorizedSpaces(ctx, session, spacesMap)

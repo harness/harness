@@ -47,16 +47,12 @@ func (c *Controller) Update(
 	if err := c.sanitizeUpdateInput(in); err != nil {
 		return fmt.Errorf("failed to sanitize input: %w", err)
 	}
-	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
-	if err != nil {
-		return fmt.Errorf("failed to find space: %w", err)
-	}
-	err = apiauth.CheckGitspace(ctx, c.authorizer, session, space.Path, identifier, enum.PermissionGitspaceEdit)
+	err := apiauth.CheckGitspace(ctx, c.authorizer, session, spaceRef, identifier, enum.PermissionGitspaceEdit)
 	if err != nil {
 		return fmt.Errorf("failed to authorize: %w", err)
 	}
 
-	gitspaceConfig, err := c.gitspaceConfigStore.FindByIdentifier(ctx, space.ID, identifier)
+	gitspaceConfig, err := c.gitspaceSvc.FindWithLatestInstance(ctx, spaceRef, identifier)
 	if err != nil {
 		return fmt.Errorf("failed to find gitspace config: %w", err)
 	}

@@ -27,27 +27,23 @@ import (
 )
 
 type Controller struct {
-	authorizer            authz.Authorizer
-	infraProviderSvc      *infraprovider.Service
-	gitspaceConfigStore   store.GitspaceConfigStore
-	gitspaceInstanceStore store.GitspaceInstanceStore
-	spaceStore            store.SpaceStore
-	gitspaceEventStore    store.GitspaceEventStore
-	tx                    dbtx.Transactor
-	statefulLogger        *logutil.StatefulLogger
-	scm                   *scm.SCM
-	gitspaceSvc           *gitspace.Service
-	gitspaceLimiter       limiter.Gitspace
-	repoFinder            refcache.RepoFinder
+	authorizer         authz.Authorizer
+	infraProviderSvc   *infraprovider.Service
+	spaceCache         refcache.SpaceCache
+	gitspaceEventStore store.GitspaceEventStore
+	tx                 dbtx.Transactor
+	statefulLogger     *logutil.StatefulLogger
+	scm                *scm.SCM
+	gitspaceSvc        *gitspace.Service
+	gitspaceLimiter    limiter.Gitspace
+	repoFinder         refcache.RepoFinder
 }
 
 func NewController(
 	tx dbtx.Transactor,
 	authorizer authz.Authorizer,
 	infraProviderSvc *infraprovider.Service,
-	gitspaceConfigStore store.GitspaceConfigStore,
-	gitspaceInstanceStore store.GitspaceInstanceStore,
-	spaceStore store.SpaceStore,
+	spaceCache refcache.SpaceCache,
 	gitspaceEventStore store.GitspaceEventStore,
 	statefulLogger *logutil.StatefulLogger,
 	scm *scm.SCM,
@@ -56,17 +52,15 @@ func NewController(
 	repoFinder refcache.RepoFinder,
 ) *Controller {
 	return &Controller{
-		tx:                    tx,
-		authorizer:            authorizer,
-		infraProviderSvc:      infraProviderSvc,
-		gitspaceConfigStore:   gitspaceConfigStore,
-		gitspaceInstanceStore: gitspaceInstanceStore,
-		spaceStore:            spaceStore,
-		gitspaceEventStore:    gitspaceEventStore,
-		statefulLogger:        statefulLogger,
-		scm:                   scm,
-		gitspaceSvc:           gitspaceSvc,
-		gitspaceLimiter:       gitspaceLimiter,
-		repoFinder:            repoFinder,
+		tx:                 tx,
+		authorizer:         authorizer,
+		infraProviderSvc:   infraProviderSvc,
+		spaceCache:         spaceCache,
+		gitspaceEventStore: gitspaceEventStore,
+		statefulLogger:     statefulLogger,
+		scm:                scm,
+		gitspaceSvc:        gitspaceSvc,
+		gitspaceLimiter:    gitspaceLimiter,
+		repoFinder:         repoFinder,
 	}
 }

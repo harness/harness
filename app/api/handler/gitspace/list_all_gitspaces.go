@@ -36,6 +36,13 @@ func HandleListAllGitspaces(gitspaceCtrl *gitspace.Controller) http.HandlerFunc 
 			MarkedForDeletion:      &markedForDeletion,
 		}
 		filter.Owner = enum.GitspaceOwnerSelf
+		maxListing := types.Pagination{
+			Page: 0,
+			Size: 10000,
+		}
+		filter.QueryFilter = types.ListQueryFilter{
+			Pagination: maxListing,
+		}
 		gitspaces, err := gitspaceCtrl.ListAllGitspaces(ctx, session, filter)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)

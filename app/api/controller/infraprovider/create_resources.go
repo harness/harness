@@ -35,7 +35,7 @@ func (c *Controller) CreateTemplate(
 	spaceRef string,
 ) (*types.InfraProviderTemplate, error) {
 	now := time.Now().UnixMilli()
-	parentSpace, err := c.spaceStore.FindByRef(ctx, spaceRef)
+	parentSpace, err := c.spaceCache.Get(ctx, spaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find parent by ref: %w", err)
 	}
@@ -83,7 +83,7 @@ func (c *Controller) CreateResources(
 		return nil, fmt.Errorf("invalid input: %w", err)
 	}
 	now := time.Now().UnixMilli()
-	parentSpace, err := c.spaceStore.FindByRef(ctx, spaceRef)
+	parentSpace, err := c.spaceCache.Get(ctx, spaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find parent by ref: %w", err)
 	}

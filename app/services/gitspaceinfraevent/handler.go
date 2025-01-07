@@ -129,7 +129,7 @@ func (s *Service) getConfig(
 	spaceRef string,
 	identifier string,
 ) (*types.GitspaceConfig, error) {
-	config, err := s.gitspaceSvc.Find(ctx, spaceRef, identifier)
+	config, err := s.gitspaceSvc.FindWithLatestInstance(ctx, spaceRef, identifier)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"failed to find gitspace config during infra event handling, identifier %s: %w", identifier, err)

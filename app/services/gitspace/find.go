@@ -26,7 +26,7 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-func (c *Service) Find(
+func (c *Service) FindWithLatestInstance(
 	ctx context.Context,
 	spaceRef string,
 	identifier string,
@@ -78,7 +78,7 @@ func (c *Service) setInstance(
 	return nil
 }
 
-func (c *Service) FindByID(
+func (c *Service) FindWithLatestInstanceByID(
 	ctx context.Context,
 	id int64,
 	includeDeleted bool,
@@ -114,7 +114,7 @@ func (c *Service) FindAll(
 			return fmt.Errorf("failed to find gitspace config: %w", err)
 		}
 		for _, gitspaceConfig := range gitspaceConfigs {
-			// FindByRef method is backed by cache as opposed to Find()
+			// FindByRef method is backed by cache as opposed to Find
 			space, err := c.spaceStore.FindByRef(ctx, strconv.FormatInt(gitspaceConfig.SpaceID, 10))
 			if err != nil {
 				return fmt.Errorf("failed to find space: %w", err)

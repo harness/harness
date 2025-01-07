@@ -42,7 +42,7 @@ func (c *Controller) Action(
 	if err := c.sanitizeActionInput(in); err != nil {
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
-	space, err := c.spaceStore.FindByRef(ctx, in.SpaceRef)
+	space, err := c.spaceCache.Get(ctx, in.SpaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find space: %w", err)
 	}
@@ -51,14 +51,10 @@ func (c *Controller) Action(
 		return nil, fmt.Errorf("failed to authorize: %w", err)
 	}
 
-	gitspaceConfig, err := c.gitspaceConfigStore.FindByIdentifier(ctx, space.ID, in.Identifier)
+	gitspaceConfig, err := c.gitspaceSvc.FindWithLatestInstance(ctx, space.Path, in.Identifier)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find gitspace config: %w", err)
 	}
-
-	gitspaceConfig.SpacePath = space.Path
-	gitspaceConfig.SpaceID = space.ID
-
 	// check if it's an internal repo
 	if gitspaceConfig.CodeRepo.Type == enum.CodeRepoTypeGitness {
 		if gitspaceConfig.CodeRepo.Ref == nil {
