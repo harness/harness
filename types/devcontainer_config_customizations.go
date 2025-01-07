@@ -17,12 +17,15 @@ package types
 import (
 	"encoding/json"
 
+	"github.com/harness/gitness/types/enum"
+
 	"github.com/rs/zerolog/log"
 )
 
 const (
-	GitspaceCustomizationsKey CustomizationsKey = "harnessGitspaces"
-	VSCodeCustomizationsKey   CustomizationsKey = "vscode"
+	GitspaceCustomizationsKey  CustomizationsKey = "harnessGitspaces"
+	VSCodeCustomizationsKey    CustomizationsKey = "vscode"
+	JetBrainsCustomizationsKey CustomizationsKey = "jetbrains"
 )
 
 type CustomizationsKey string
@@ -31,7 +34,115 @@ func (ck CustomizationsKey) String() string {
 	return string(ck)
 }
 
+// DevContainerConfigCustomizations implements various Extract* function to extract out custom field defines in
+// customization field in devcontainer.json.
 type DevContainerConfigCustomizations map[string]interface{}
+
+// VSCodeCustomizationSpecs contains details about vscode customization.
+// eg:
+//
+//	"customizations": {
+//			// Configure properties specific to VS Code.
+//			"vscode": {
+//				"settings": {
+//	       "java.home": "/docker-java-home"
+//	     },
+//				"extensions": [
+//					"streetsidesoftware.code-spell-checker"
+//				]
+//			}
+//		}
+type VSCodeCustomizationSpecs struct {
+	Extensions []string               `json:"extensions"`
+	Settings   map[string]interface{} `json:"settings"`
+}
+
+// GitspaceCustomizationSpecs contains details about harness platform connectors.
+// eg:
+//
+//	"customizations": {
+//	  "harnessGitspaces": {
+//	    "connectors": [
+//	      {
+//	        "type": "DockerRegistry",
+//	        "identifier": "testharnessjfrog"
+//	      },
+//	      {
+//	        "type": "Artifactory",
+//	        "identifier": "testartifactoryconnector"
+//	      }
+//	    ]
+//	  }
+//	}
+type GitspaceCustomizationSpecs struct {
+	Connectors []struct {
+		Type string `json:"type"`
+		ID   string `json:"identifier"`
+	} `json:"connectors"`
+}
+
+type JetBrainsBackend string
+
+func (jb JetBrainsBackend) String() string {
+	return string(jb)
+}
+
+func (jb JetBrainsBackend) Valid() bool {
+	_, valid := ValidJetBrainsBackendSet[jb]
+
+	return valid
+}
+
+func (jb JetBrainsBackend) IdeType() enum.IDEType {
+	var ideType enum.IDEType
+	switch jb {
+	case IntelliJJetBrainsBackend:
+		ideType = enum.IDETypeIntelliJ
+	case GolandJetBrainsBackend:
+		ideType = enum.IDETypeGoland
+	case PyCharmJetBrainsBackend:
+		ideType = enum.IDETypePyCharm
+	case WebStormJetBrainsBackend:
+		ideType = enum.IDETypeWebStorm
+	case CLionJetBrainsBackend:
+		ideType = enum.IDETypeCLion
+	case PhpStormJetBrainsBackend:
+		ideType = enum.IDETypePHPStorm
+	case RubyMineJetBrainsBackend:
+		ideType = enum.IDETypeRubyMine
+	case RiderJetBrainsBackend:
+		ideType = enum.IDETypeRider
+	}
+
+	return ideType
+}
+
+const (
+	IntelliJJetBrainsBackend JetBrainsBackend = "IntelliJ"
+	GolandJetBrainsBackend   JetBrainsBackend = "Goland"
+	PyCharmJetBrainsBackend  JetBrainsBackend = "PyCharm"
+	WebStormJetBrainsBackend JetBrainsBackend = "WebStorm"
+	CLionJetBrainsBackend    JetBrainsBackend = "CLion"
+	PhpStormJetBrainsBackend JetBrainsBackend = "PhpStorm"
+	RubyMineJetBrainsBackend JetBrainsBackend = "RubyMine"
+	RiderJetBrainsBackend    JetBrainsBackend = "Rider"
+)
+
+var ValidJetBrainsBackendSet = map[JetBrainsBackend]struct{}{
+	IntelliJJetBrainsBackend: {},
+	GolandJetBrainsBackend:   {},
+	PyCharmJetBrainsBackend:  {},
+	WebStormJetBrainsBackend: {},
+	CLionJetBrainsBackend:    {},
+	PhpStormJetBrainsBackend: {},
+	RubyMineJetBrainsBackend: {},
+	RiderJetBrainsBackend:    {},
+}
+
+type JetBrainsCustomizationSpecs struct {
+	Backend JetBrainsBackend `json:"backend"`
+	Plugins []string         `json:"plugins"`
+}
 
 func (dcc DevContainerConfigCustomizations) ExtractGitspaceSpec() *GitspaceCustomizationSpecs {
 	val, ok := dcc[GitspaceCustomizationsKey.String()]
@@ -84,14 +195,28 @@ func (dcc DevContainerConfigCustomizations) ExtractVSCodeSpec() *VSCodeCustomiza
 	return &vsCodeCustomizationSpecs
 }
 
-type VSCodeCustomizationSpecs struct {
-	Extensions []string               `json:"extensions"`
-	Settings   map[string]interface{} `json:"settings"`
-}
+func (dcc DevContainerConfigCustomizations) ExtractJetBrainsSpecs() *JetBrainsCustomizationSpecs {
+	data, ok := dcc[JetBrainsCustomizationsKey.String()]
+	if !ok {
+		// Log that the key is missing, but return nil
+		log.Warn().Msgf("JetBrains customization key %q not found, returning empty struct",
+			JetBrainsCustomizationsKey)
+		return nil
+	}
 
-type GitspaceCustomizationSpecs struct {
-	Connectors []struct {
-		Type string `json:"type"`
-		ID   string `json:"identifier"`
-	} `json:"connectors"`
+	rawData, err := json.Marshal(data)
+	if err != nil {
+		// Log the error during marshalling and return nil
+		log.Printf("Failed to marshal data for key %q: %v", JetBrainsCustomizationsKey, err)
+		return nil
+	}
+
+	var jetbrainsSpecs JetBrainsCustomizationSpecs
+	if err := json.Unmarshal(rawData, &jetbrainsSpecs); err != nil {
+		// Log the error during unmarshalling and return nil
+		log.Printf("Failed to unmarshal data for key %q: %v", JetBrainsCustomizationsKey, err)
+		return nil
+	}
+
+	return &jetbrainsSpecs
 }

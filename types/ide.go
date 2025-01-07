@@ -14,7 +14,9 @@
 
 package types
 
-type IntellijDownloadURL struct {
-	Arm64 string
-	Amd64 string
+type IDEDownloadURLs struct {
+	Arm64Sha string
+	Amd64Sha string
+	Arm64    string
+	Amd64    string
 }

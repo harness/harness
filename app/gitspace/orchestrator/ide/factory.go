@@ -24,11 +24,22 @@ type Factory struct {
 	ides map[enum.IDEType]IDE
 }
 
-func NewFactory(vscode *VSCode, vscodeWeb *VSCodeWeb, intellij *Intellij) Factory {
+func NewFactory(
+	vscode *VSCode,
+	vscodeWeb *VSCodeWeb,
+	jetBrainsIDEsMap map[enum.IDEType]*JetBrainsIDE,
+) Factory {
 	ides := make(map[enum.IDEType]IDE)
 	ides[enum.IDETypeVSCode] = vscode
 	ides[enum.IDETypeVSCodeWeb] = vscodeWeb
-	ides[enum.IDETypeIntellij] = intellij
+	ides[enum.IDETypeIntelliJ] = jetBrainsIDEsMap[enum.IDETypeIntelliJ]
+	ides[enum.IDETypePyCharm] = jetBrainsIDEsMap[enum.IDETypePyCharm]
+	ides[enum.IDETypeGoland] = jetBrainsIDEsMap[enum.IDETypeGoland]
+	ides[enum.IDETypeWebStorm] = jetBrainsIDEsMap[enum.IDETypeWebStorm]
+	ides[enum.IDETypeCLion] = jetBrainsIDEsMap[enum.IDETypeCLion]
+	ides[enum.IDETypePHPStorm] = jetBrainsIDEsMap[enum.IDETypePHPStorm]
+	ides[enum.IDETypeRubyMine] = jetBrainsIDEsMap[enum.IDETypeRubyMine]
+	ides[enum.IDETypeRider] = jetBrainsIDEsMap[enum.IDETypeRider]
 	return Factory{ides: ides}
 }
 

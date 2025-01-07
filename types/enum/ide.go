@@ -16,12 +16,39 @@ package enum
 
 type IDEType string
 
-func (IDEType) Enum() []interface{} { return toInterfaceSlice(ideTypes) }
+func (i IDEType) Enum() []interface{} { return toInterfaceSlice(ideTypes) }
 
-var ideTypes = []IDEType{IDETypeVSCode, IDETypeVSCodeWeb, IDETypeIntellij}
+func (i IDEType) String() string { return string(i) }
+
+var ideTypes = []IDEType{IDETypeVSCode, IDETypeVSCodeWeb, IDETypeIntelliJ, IDETypePyCharm, IDETypeGoland,
+	IDETypeWebStorm, IDETypeCLion, IDETypePHPStorm, IDETypeRubyMine, IDETypeRider}
+
+var jetBrainsIDESet = map[IDEType]struct{}{
+	IDETypeIntelliJ: {},
+	IDETypePyCharm:  {},
+	IDETypeGoland:   {},
+	IDETypeWebStorm: {},
+	IDETypeCLion:    {},
+	IDETypePHPStorm: {},
+	IDETypeRubyMine: {},
+	IDETypeRider:    {},
+}
 
 const (
 	IDETypeVSCode    IDEType = "vs_code"
 	IDETypeVSCodeWeb IDEType = "vs_code_web"
-	IDETypeIntellij  IDEType = "intellij"
+	// all jetbrains IDEs.
+	IDETypeIntelliJ IDEType = "intellij"
+	IDETypePyCharm  IDEType = "pycharm"
+	IDETypeGoland   IDEType = "goland"
+	IDETypeWebStorm IDEType = "webstorm"
+	IDETypeCLion    IDEType = "clion"
+	IDETypePHPStorm IDEType = "phpstorm"
+	IDETypeRubyMine IDEType = "rubymine"
+	IDETypeRider    IDEType = "rider"
 )
+
+func IsJetBrainsIDE(t IDEType) bool {
+	_, exist := jetBrainsIDESet[t]
+	return exist
+}

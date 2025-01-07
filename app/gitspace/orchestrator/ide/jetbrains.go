@@ -28,54 +28,58 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-var _ IDE = (*Intellij)(nil)
+var _ IDE = (*JetBrainsIDE)(nil)
 
 const (
-	templateSetupIntellij        string = "setup_intellij.sh"
-	templateRunRemoteIDEIntellij string = "run_intellij.sh"
+	templateSetupJetBrainsIDE     string = "setup_jetbrains_ide.sh"
+	templateRunRemoteJetBrainsIDE string = "run_jetbrains_ide.sh"
 
 	intellijURLScheme string = "jetbrains-gateway"
 )
 
-type IntellijConfig struct {
+type JetBrainsIDEConfig struct {
 	Port int
 }
 
-type Intellij struct {
-	config IntellijConfig
+type JetBrainsIDE struct {
+	ideType enum.IDEType
+	config  JetBrainsIDEConfig
 }
 
-func NewIntellijService(config *IntellijConfig) *Intellij {
-	return &Intellij{config: *config}
+func NewJetBrainsIDEService(config *JetBrainsIDEConfig, ideType enum.IDEType) *JetBrainsIDE {
+	return &JetBrainsIDE{
+		ideType: ideType,
+		config:  *config,
+	}
 }
 
 // Setup installs the SSH server inside the container.
-func (ij *Intellij) Setup(
+func (jb *JetBrainsIDE) Setup(
 	ctx context.Context,
 	exec *devcontainer.Exec,
 	args map[gitspaceTypes.IDEArg]interface{},
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	gitspaceLogger.Info("Installing ssh-server inside container")
-	err := ij.setupSSHServer(ctx, exec, gitspaceLogger)
+	err := jb.setupSSHServer(ctx, exec, gitspaceLogger)
 	if err != nil {
 		return fmt.Errorf("failed to setup SSH server: %w", err)
 	}
 	gitspaceLogger.Info("Successfully installed ssh-server")
 
-	gitspaceLogger.Info("Installing intelliJ IDE inside container")
+	gitspaceLogger.Info(fmt.Sprintf("Installing %s IdeType inside container...", jb.ideType))
 	gitspaceLogger.Info("IDE setup output...")
-	err = ij.setupIntellijIDE(ctx, exec, args, gitspaceLogger)
+	err = jb.setupIntellijIDE(ctx, exec, args, gitspaceLogger)
 	if err != nil {
-		return fmt.Errorf("failed to setup IntelliJ IDE: %w", err)
+		return fmt.Errorf("failed to setup %s IdeType: %w", jb.ideType, err)
 	}
-	gitspaceLogger.Info("Successfully installed IntelliJ IDE")
+	gitspaceLogger.Info(fmt.Sprintf("Successfully installed %s IdeType", jb.ideType))
 	gitspaceLogger.Info("Successfully set up IDE inside container")
 
 	return nil
 }
 
-func (ij *Intellij) setupSSHServer(
+func (jb *JetBrainsIDE) setupSSHServer(
 	ctx context.Context,
 	exec *devcontainer.Exec,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
@@ -100,7 +104,7 @@ func (ij *Intellij) setupSSHServer(
 	return nil
 }
 
-func (ij *Intellij) setupIntellijIDE(
+func (jb *JetBrainsIDE) setupIntellijIDE(
 	ctx context.Context,
 	exec *devcontainer.Exec,
 	args map[gitspaceTypes.IDEArg]interface{},
@@ -126,11 +130,11 @@ func (ij *Intellij) setupIntellijIDE(
 	payload.IdeDirName = dirName
 
 	intellijIDEScript, err := utils.GenerateScriptFromTemplate(
-		templateSetupIntellij, &payload)
+		templateSetupJetBrainsIDE, &payload)
 	if err != nil {
 		return fmt.Errorf(
 			"failed to generate scipt to setup intellij idea from template %s: %w",
-			templateSetupIntellij,
+			templateSetupJetBrainsIDE,
 			err,
 		)
 	}
@@ -138,43 +142,43 @@ func (ij *Intellij) setupIntellijIDE(
 	err = exec.ExecuteCommandInHomeDirAndLog(ctx, intellijIDEScript,
 		false, gitspaceLogger, true)
 	if err != nil {
-		return fmt.Errorf("failed to setup intellij IDE: %w", err)
+		return fmt.Errorf("failed to setup intellij IdeType: %w", err)
 	}
 
 	return nil
 }
 
 // Run runs the SSH server inside the container.
-func (ij *Intellij) Run(
+func (jb *JetBrainsIDE) Run(
 	ctx context.Context,
 	exec *devcontainer.Exec,
 	args map[gitspaceTypes.IDEArg]interface{},
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	gitspaceLogger.Info("SSH server run output...")
-	err := ij.runSSHServer(ctx, exec, args, gitspaceLogger)
+	err := jb.runSSHServer(ctx, exec, args, gitspaceLogger)
 	if err != nil {
 		return err
 	}
 	gitspaceLogger.Info("Successfully run ssh-server")
-	gitspaceLogger.Info("Run Remote IntelliJ IDE...")
-	err = ij.runRemoteIDE(ctx, exec, args, gitspaceLogger)
+	gitspaceLogger.Info("Run Remote IntelliJ IdeType...")
+	err = jb.runRemoteIDE(ctx, exec, args, gitspaceLogger)
 	if err != nil {
 		return err
 	}
-	gitspaceLogger.Info("Successfully Run Remote IntelliJ IDE")
+	gitspaceLogger.Info("Successfully Run Remote IntelliJ IdeType")
 
 	return nil
 }
 
-func (ij *Intellij) runSSHServer(
+func (jb *JetBrainsIDE) runSSHServer(
 	ctx context.Context,
 	exec *devcontainer.Exec,
 	_ map[gitspaceTypes.IDEArg]interface{},
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	payload := gitspaceTypes.RunSSHServerPayload{
-		Port: strconv.Itoa(ij.config.Port),
+		Port: strconv.Itoa(jb.config.Port),
 	}
 	runSSHScript, err := utils.GenerateScriptFromTemplate(
 		templateRunSSHServer, &payload)
@@ -192,7 +196,7 @@ func (ij *Intellij) runSSHServer(
 	return nil
 }
 
-func (ij *Intellij) runRemoteIDE(
+func (jb *JetBrainsIDE) runRemoteIDE(
 	ctx context.Context,
 	exec *devcontainer.Exec,
 	args map[gitspaceTypes.IDEArg]interface{},
@@ -216,32 +220,36 @@ func (ij *Intellij) runRemoteIDE(
 	payload.IdeDirName = dirName
 
 	runSSHScript, err := utils.GenerateScriptFromTemplate(
-		templateRunRemoteIDEIntellij, &payload)
+		templateRunRemoteJetBrainsIDE, &payload)
 	if err != nil {
 		return fmt.Errorf(
-			"failed to generate scipt to run intelliJ IDE from template %s: %w", templateRunSSHServer, err)
+			"failed to generate scipt to run intelliJ IdeType from template %s: %w", templateRunSSHServer, err)
 	}
 
 	err = exec.ExecuteCommandInHomeDirAndLog(ctx, runSSHScript, false, gitspaceLogger, true)
 	if err != nil {
-		return fmt.Errorf("failed to run intelliJ IDE: %w", err)
+		return fmt.Errorf("failed to run intelliJ IdeType: %w", err)
 	}
 
 	return nil
 }
 
 // Port returns the port on which the ssh-server is listening.
-func (ij *Intellij) Port() *types.GitspacePort {
+func (jb *JetBrainsIDE) Port() *types.GitspacePort {
 	return &types.GitspacePort{
-		Port:     ij.config.Port,
+		Port:     jb.config.Port,
 		Protocol: enum.CommunicationProtocolSSH,
 	}
 }
 
+func (jb *JetBrainsIDE) Type() enum.IDEType {
+	return jb.ideType
+}
+
 // GenerateURL returns the url to redirect user to ide(here to jetbrains gateway application).
-func (ij *Intellij) GenerateURL(absoluteRepoPath, host, port, user string) string {
+func (jb *JetBrainsIDE) GenerateURL(absoluteRepoPath, host, port, user string) string {
 	homePath := getHomePath(absoluteRepoPath)
-	idePath := path.Join(homePath, ".cache", "JetBrains", "RemoteDev", "dist", "intellij")
+	idePath := path.Join(homePath, ".cache", "JetBrains", "RemoteDev", "dist", jb.ideType.String())
 	ideURL := url.URL{
 		Scheme: intellijURLScheme,
 		Host:   "", // Empty since we include the host and port in the path
@@ -258,8 +266,4 @@ func (ij *Intellij) GenerateURL(absoluteRepoPath, host, port, user string) strin
 	}
 
 	return ideURL.String()
-}
-
-func (ij *Intellij) Type() enum.IDEType {
-	return enum.IDETypeIntellij
 }

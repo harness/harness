@@ -442,9 +442,9 @@ func ProvideIDEVSCodeConfig(config *types.Config) *ide.VSCodeConfig {
 	}
 }
 
-// ProvideIDEIntellijConfig loads the Intellij IDE config from the main config.
-func ProvideIDEIntellijConfig(config *types.Config) *ide.IntellijConfig {
-	return &ide.IntellijConfig{
+// ProvideIDEIntellijConfig loads the IdeType IDE config from the main config.
+func ProvideIDEIntellijConfig(config *types.Config) *ide.JetBrainsIDEConfig {
+	return &ide.JetBrainsIDEConfig{
 		Port: config.IDE.Intellij.Port,
 	}
 }

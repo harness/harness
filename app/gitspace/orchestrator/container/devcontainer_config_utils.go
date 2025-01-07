@@ -200,9 +200,17 @@ func AddIDECustomizationsArg(
 	devcontainerConfig types.DevcontainerConfig,
 	args map[gitspaceTypes.IDEArg]interface{},
 ) map[gitspaceTypes.IDEArg]interface{} {
-	if ideService.Type() == enum.IDETypeVSCodeWeb || ideService.Type() == enum.IDETypeVSCode {
-		if devcontainerConfig.Customizations.ExtractVSCodeSpec() != nil {
-			args[gitspaceTypes.VSCodeCustomizationArg] = *devcontainerConfig.Customizations.ExtractVSCodeSpec()
+	switch ideService.Type() {
+	case enum.IDETypeVSCodeWeb, enum.IDETypeVSCode:
+		vscodeSpecs := devcontainerConfig.Customizations.ExtractVSCodeSpec()
+		if vscodeSpecs != nil {
+			args[gitspaceTypes.VSCodeCustomizationArg] = *vscodeSpecs
+		}
+	case enum.IDETypeIntelliJ, enum.IDETypePyCharm, enum.IDETypeGoland, enum.IDETypeWebStorm, enum.IDETypeCLion,
+		enum.IDETypePHPStorm, enum.IDETypeRubyMine, enum.IDETypeRider:
+		jetbrainsSpecs := devcontainerConfig.Customizations.ExtractJetBrainsSpecs()
+		if jetbrainsSpecs != nil {
+			args[gitspaceTypes.JetBrainsCustomizationArg] = *jetbrainsSpecs
 		}
 	}
 	return args
@@ -212,11 +220,18 @@ func AddIDEDownloadURLArg(
 	ideService ide.IDE,
 	args map[gitspaceTypes.IDEArg]interface{},
 ) map[gitspaceTypes.IDEArg]interface{} {
-	if ideService.Type() == enum.IDETypeIntellij {
-		args[gitspaceTypes.IDEDownloadURLArg] = types.IntellijDownloadURL{
-			Arm64: fmt.Sprintf(enum.IDEIntellijDownloadURLArm64Template, enum.IDEIntellijVer),
-			Amd64: fmt.Sprintf(enum.IDEIntellijDownloadURLAmd64Template, enum.IDEIntellijVer),
-		}
+	if !enum.IsJetBrainsIDE(ideService.Type()) {
+		// currently download url is only need for jetbrains IDEs
+		return args
+	}
+
+	ideType := ideService.Type()
+	ideDownloadURLTemplate := types.JetBrainsIDEDownloadURLTemplateMap[ideType]
+	args[gitspaceTypes.IDEDownloadURLArg] = types.IDEDownloadURLs{
+		Amd64Sha: ideDownloadURLTemplate.Amd64Sha,
+		Arm64Sha: ideDownloadURLTemplate.Arm64Sha,
+		Amd64:    fmt.Sprintf(ideDownloadURLTemplate.Amd64, ideDownloadURLTemplate.Version),
+		Arm64:    fmt.Sprintf(ideDownloadURLTemplate.Arm64, ideDownloadURLTemplate.Version),
 	}
 
 	return args
@@ -226,10 +241,15 @@ func AddIDEDirNameArg(
 	ideService ide.IDE,
 	args map[gitspaceTypes.IDEArg]interface{},
 ) map[gitspaceTypes.IDEArg]interface{} {
-	if ideService.Type() == enum.IDETypeIntellij {
-		dirname := path.Join(".cache", "JetBrains", "RemoteDev", "dist", "intellij")
-		args[gitspaceTypes.IDEDIRNameArg] = dirname
+	if !enum.IsJetBrainsIDE(ideService.Type()) {
+		// currently dirname is only need for jetbrains IDEs
+		return args
 	}
+
+	ideType := ideService.Type()
+
+	dirname := path.Join(".cache", "JetBrains", "RemoteDev", "dist", ideType.String())
+	args[gitspaceTypes.IDEDIRNameArg] = dirname
 
 	return args
 }

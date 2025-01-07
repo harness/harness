@@ -130,8 +130,9 @@ func getGitspaceScheme(ideType enum.IDEType, gitspaceSchemeFromMetadata string) 
 		return gitspaceSchemeFromMetadata, nil
 	case enum.IDETypeVSCode:
 		return "ssh", nil
-	case enum.IDETypeIntellij:
-		return gitspaceSchemeFromMetadata, nil
+	case enum.IDETypeIntelliJ, enum.IDETypePyCharm, enum.IDETypeGoland, enum.IDETypeWebStorm, enum.IDETypeCLion,
+		enum.IDETypePHPStorm, enum.IDETypeRubyMine, enum.IDETypeRider:
+		return "ssh", nil
 	default:
 		return "", fmt.Errorf("unknown ideType %s", ideType)
 	}

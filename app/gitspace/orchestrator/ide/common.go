@@ -23,18 +23,18 @@ import (
 
 func getIDEDownloadURL(
 	args map[gitspaceTypes.IDEArg]interface{},
-) (types.IntellijDownloadURL, error) {
+) (types.IDEDownloadURLs, error) {
 	downloadURL, exists := args[gitspaceTypes.IDEDownloadURLArg]
 	if !exists {
-		return types.IntellijDownloadURL{}, fmt.Errorf("ide download url not found")
+		return types.IDEDownloadURLs{}, fmt.Errorf("ide download url not found")
 	}
 
-	downloadURLStr, ok := downloadURL.(types.IntellijDownloadURL)
+	downloadURLs, ok := downloadURL.(types.IDEDownloadURLs)
 	if !ok {
-		return types.IntellijDownloadURL{}, fmt.Errorf("ide download url is not of type IntellijDownloadURL")
+		return types.IDEDownloadURLs{}, fmt.Errorf("ide download url is not of type JetBrainsSpecs")
 	}
 
-	return downloadURLStr, nil
+	return downloadURLs, nil
 }
 
 func getIDEDirName(args map[gitspaceTypes.IDEArg]interface{}) (string, error) {

@@ -612,7 +612,7 @@ func (e *EmbeddedDockerOrchestrator) buildSetupSteps(
 	}
 }
 
-// setupGitspaceAndIDE initializes Gitspace and IDE by registering and executing the setup steps.
+// setupGitspaceAndIDE initializes Gitspace and IdeType by registering and executing the setup steps.
 func (e *EmbeddedDockerOrchestrator) setupGitspaceAndIDE(
 	ctx context.Context,
 	exec *devcontainer.Exec,

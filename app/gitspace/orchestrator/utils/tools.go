@@ -42,8 +42,9 @@ func InstallTools(
 			return err
 		}
 		return nil
-	case enum.IDETypeIntellij:
-		err := InstallToolsForIntellij(ctx, exec, gitspaceLogger)
+	case enum.IDETypeIntelliJ, enum.IDETypePyCharm, enum.IDETypeGoland, enum.IDETypeWebStorm, enum.IDETypeCLion,
+		enum.IDETypePHPStorm, enum.IDETypeRubyMine, enum.IDETypeRider:
+		err := InstallToolsForJetBrains(ctx, exec, ideType, gitspaceLogger)
 		if err != nil {
 			return err
 		}
@@ -101,9 +102,10 @@ func InstallToolsForVsCode(
 	return nil
 }
 
-func InstallToolsForIntellij(
+func InstallToolsForJetBrains(
 	ctx context.Context,
 	exec *devcontainer.Exec,
+	ideType enum.IDEType,
 	gitspaceLogger types.GitspaceLogger,
 ) error {
 	script, err := GenerateScriptFromTemplate(
@@ -112,15 +114,15 @@ func InstallToolsForIntellij(
 		})
 	if err != nil {
 		return fmt.Errorf(
-			"failed to generate scipt to install tools for intellij from template %s: %w",
-			templateIntellijToolsInstallation, err)
+			"failed to generate scipt to install tools for %s from template %s: %w",
+			ideType, templateIntellijToolsInstallation, err)
 	}
 
-	gitspaceLogger.Info("Installing tools for intellij in container")
+	gitspaceLogger.Info(fmt.Sprintf("Installing tools for %s in container", ideType))
 	err = exec.ExecuteCommandInHomeDirAndLog(ctx, script, true, gitspaceLogger, false)
 	if err != nil {
-		return fmt.Errorf("failed to install tools for intellij: %w", err)
+		return fmt.Errorf("failed to install tools for %s: %w", ideType, err)
 	}
-	gitspaceLogger.Info("Successfully installed tools for intellij")
+	gitspaceLogger.Info(fmt.Sprintf("Successfully installed tools for %s in container", ideType))
 	return nil
 }

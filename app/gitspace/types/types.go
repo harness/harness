@@ -23,11 +23,12 @@ import (
 type IDEArg string
 
 const (
-	VSCodeCustomizationArg IDEArg = "VSCODE_CUSTOMIZATION"
-	VSCodeProxyURIArg      IDEArg = "VSCODE_PROXY_URI"
-	IDERepoNameArg         IDEArg = "IDE_REPO_NAME"
-	IDEDownloadURLArg      IDEArg = "IDE_DOWNLOAD_URL"
-	IDEDIRNameArg          IDEArg = "IDE_DIR_NAME"
+	VSCodeCustomizationArg    IDEArg = "VSCODE_CUSTOMIZATION"
+	JetBrainsCustomizationArg IDEArg = "JETBRAINS_CUSTOMIZATION"
+	VSCodeProxyURIArg         IDEArg = "VSCODE_PROXY_URI"
+	IDERepoNameArg            IDEArg = "IDE_REPO_NAME"
+	IDEDownloadURLArg         IDEArg = "IDE_DOWNLOAD_URL"
+	IDEDIRNameArg             IDEArg = "IDE_DIR_NAME"
 )
 
 type GitspaceLogger interface {

@@ -15,13 +15,15 @@
 package ide
 
 import (
+	"github.com/harness/gitness/types/enum"
+
 	"github.com/google/wire"
 )
 
 var WireSet = wire.NewSet(
 	ProvideVSCodeWebService,
 	ProvideVSCodeService,
-	ProvideIntellijService,
+	ProvideJetBrainsIDEsService,
 	ProvideIDEFactory,
 )
 
@@ -33,14 +35,23 @@ func ProvideVSCodeService(config *VSCodeConfig) *VSCode {
 	return NewVsCodeService(config)
 }
 
-func ProvideIntellijService(config *IntellijConfig) *Intellij {
-	return NewIntellijService(config)
+func ProvideJetBrainsIDEsService(config *JetBrainsIDEConfig) map[enum.IDEType]*JetBrainsIDE {
+	return map[enum.IDEType]*JetBrainsIDE{
+		enum.IDETypeIntelliJ: NewJetBrainsIDEService(config, enum.IDETypeIntelliJ),
+		enum.IDETypePyCharm:  NewJetBrainsIDEService(config, enum.IDETypePyCharm),
+		enum.IDETypeGoland:   NewJetBrainsIDEService(config, enum.IDETypeGoland),
+		enum.IDETypeWebStorm: NewJetBrainsIDEService(config, enum.IDETypeWebStorm),
+		enum.IDETypeCLion:    NewJetBrainsIDEService(config, enum.IDETypeCLion),
+		enum.IDETypePHPStorm: NewJetBrainsIDEService(config, enum.IDETypePHPStorm),
+		enum.IDETypeRubyMine: NewJetBrainsIDEService(config, enum.IDETypeRubyMine),
+		enum.IDETypeRider:    NewJetBrainsIDEService(config, enum.IDETypeRider),
+	}
 }
 
 func ProvideIDEFactory(
 	vscode *VSCode,
 	vscodeWeb *VSCodeWeb,
-	intellij *Intellij,
+	jetBrainsIDEsMap map[enum.IDEType]*JetBrainsIDE,
 ) Factory {
-	return NewFactory(vscode, vscodeWeb, intellij)
+	return NewFactory(vscode, vscodeWeb, jetBrainsIDEsMap)
 }
