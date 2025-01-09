@@ -21,4 +21,30 @@ type Suggestion struct {
 	Suggestion     string
 }
 
+// Enum type for Role.
+type Role string
+
+const (
+	RoleUser      Role = "user"
+	RoleAssistant Role = "assistant"
+)
+
+// Enum type for Message Type.
+type MessageType string
+
+const (
+	TypeText MessageType = "text"
+	TypeYAML MessageType = "yaml"
+)
+
+type Conversation struct {
+	Role    Role    `json:"role"`
+	Message Message `json:"message"`
+}
+
+type Message struct {
+	Type MessageType `json:"type"`
+	Data string      `json:"data"`
+}
+
 // Additional common structs can be defined here as needed.

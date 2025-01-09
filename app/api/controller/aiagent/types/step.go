@@ -20,7 +20,9 @@ type PipelineStepData struct {
 
 // create.
 type GeneratePipelineStepInput struct {
-	Prompt string `json:"prompt"`
+	Prompt       string            `json:"prompt"`
+	Metadata     map[string]string `json:"metadata"`
+	Conversation []Conversation    `json:"conversation"`
 }
 
 type GeneratePipelineStepOutput struct {
@@ -30,8 +32,9 @@ type GeneratePipelineStepOutput struct {
 
 // update.
 type UpdatePipelineStepInput struct {
-	Prompt string           `json:"prompt"`
-	Data   PipelineStepData `json:"data"`
+	Prompt       string           `json:"prompt"`
+	Data         PipelineStepData `json:"data"`
+	Conversation []Conversation   `json:"conversation"`
 }
 
 type UpdatePipelineStepOutput struct {

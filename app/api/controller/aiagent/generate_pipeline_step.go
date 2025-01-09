@@ -27,7 +27,9 @@ func (c *Controller) GeneratePipelineStep(
 	in *controllertypes.GeneratePipelineStepInput,
 ) (*controllertypes.GeneratePipelineStepOutput, error) {
 	generateRequest := &aitypes.PipelineStepGenerateRequest{
-		Prompt: in.Prompt,
+		Prompt:       in.Prompt,
+		Metadata:     in.Metadata,
+		Conversation: in.Conversation,
 	}
 
 	output, err := c.intelligence.GeneratePipelineStep(ctx, generateRequest)
