@@ -21,7 +21,6 @@ import (
 	"github.com/harness/gitness/app/api/openapi"
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/auth/authn"
-	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/web"
 
 	"github.com/go-chi/chi/v5"
@@ -33,34 +32,14 @@ import (
 
 // NewWebHandler returns a new WebHandler.
 func NewWebHandler(
-	config *types.Config,
 	authenticator authn.Authenticator,
 	openapi openapi.Service,
+	sec *secure.Secure,
+	publicResourceCreationEnabled bool,
+	uiSourceOverride string,
 ) http.Handler {
 	// Use go-chi router for inner routing
 	r := chi.NewRouter()
-	// create middleware to enforce security best practices for
-	// the user interface. note that theis middleware is only used
-	// when serving the user interface (not found handler, below).
-	sec := secure.New(
-		secure.Options{
-			AllowedHosts:          config.Secure.AllowedHosts,
-			HostsProxyHeaders:     config.Secure.HostsProxyHeaders,
-			SSLRedirect:           config.Secure.SSLRedirect,
-			SSLTemporaryRedirect:  config.Secure.SSLTemporaryRedirect,
-			SSLHost:               config.Secure.SSLHost,
-			SSLProxyHeaders:       config.Secure.SSLProxyHeaders,
-			STSSeconds:            config.Secure.STSSeconds,
-			STSIncludeSubdomains:  config.Secure.STSIncludeSubdomains,
-			STSPreload:            config.Secure.STSPreload,
-			ForceSTSHeader:        config.Secure.ForceSTSHeader,
-			FrameDeny:             config.Secure.FrameDeny,
-			ContentTypeNosniff:    config.Secure.ContentTypeNosniff,
-			BrowserXssFilter:      config.Secure.BrowserXSSFilter,
-			ContentSecurityPolicy: config.Secure.ContentSecurityPolicy,
-			ReferrerPolicy:        config.Secure.ReferrerPolicy,
-		},
-	)
 
 	// openapi endpoints
 	// TODO: this should not be generated and marshaled on the fly every time?
@@ -102,9 +81,9 @@ func NewWebHandler(
 	// which in turn serves the user interface.
 	r.With(
 		sec.Handler,
-		middlewareweb.PublicAccess(config.PublicResourceCreationEnabled, authenticator),
+		middlewareweb.PublicAccess(publicResourceCreationEnabled, authenticator),
 	).NotFound(
-		web.Handler(),
+		web.Handler(uiSourceOverride),
 	)
 
 	return r

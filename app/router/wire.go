@@ -136,7 +136,12 @@ func ProvideRouter(
 		infraProviderCtrl, migrateCtrl, gitspaceCtrl, aiagentCtrl, capabilitiesCtrl, usageSender)
 	routers[2] = NewAPIRouter(apiHandler)
 
-	webHandler := NewWebHandler(config, authenticator, openapi)
+	sec := NewSecure(config)
+	webHandler := NewWebHandler(
+		authenticator, openapi, sec,
+		config.PublicResourceCreationEnabled,
+		config.Development.UISourceOverride,
+	)
 	routers[3] = NewWebRouter(webHandler)
 
 	return NewRouter(routers)

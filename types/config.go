@@ -507,4 +507,8 @@ type Config struct {
 		ChunkSize  string `envconfig:"GITNESS_USAGE_METRICS_CHUNK_SIZE" default:"10MiB"`
 		MaxWorkers int    `envconfig:"GITNESS_USAGE_METRICS_MAX_WORKERS" default:"50"`
 	}
+
+	Development struct {
+		UISourceOverride string `envconfig:"GITNESS_DEVELOPMENT_UI_SOURCE_OVERRIDE"`
+	}
 }
