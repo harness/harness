@@ -488,6 +488,8 @@ issues:
       linters: [ goheader ]
     - path: "^registry/app/remote/adapter/native/adapter.go"
       linters: [ goheader ]
+    - path: "^registry/app/storage/blobStore.go"
+      linters: [ gosec ]
     #Registry Specific ends
     - text: "mnd: Magic number: \\d"
       linters:

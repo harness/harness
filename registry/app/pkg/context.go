@@ -40,6 +40,15 @@ type RegistryInfo struct {
 	Path       string
 }
 
+type FileInfo struct {
+	Size     int64
+	Sha1     string
+	Sha256   string
+	Sha512   string
+	MD5      string
+	Filename string
+}
+
 func (r *RegistryInfo) SetReference(ref string) {
 	r.Reference = ref
 }

@@ -25,6 +25,7 @@ import (
 
 	"github.com/harness/gitness/registry/app/driver"
 	"github.com/harness/gitness/registry/app/manifest"
+	"github.com/harness/gitness/registry/app/pkg"
 
 	"github.com/distribution/reference"
 	"github.com/opencontainers/go-digest"
@@ -170,7 +171,9 @@ type GenericBlobStore interface {
 	// returned handle can be written to and later resumed using an opaque
 	// identifier. With this approach, one can Close and Resume a BlobWriter
 	// multiple times until the BlobWriter is committed or cancelled.
-	Create(ctx context.Context) (driver.FileWriter, error)
+	Create(ctx context.Context, filePath string) (driver.FileWriter, error)
 
-	Write(w driver.FileWriter, file multipart.File) (int, error)
+	Write(ctx context.Context, w driver.FileWriter, file multipart.File) (pkg.FileInfo, error)
+	Move(ctx context.Context, srcPath string, dstPath string) error
+	Delete(ctx context.Context, filePath string) error
 }

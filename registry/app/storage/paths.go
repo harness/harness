@@ -71,6 +71,8 @@ func pathFor(spec pathSpec) (string, error) {
 		), nil
 	case repositoriesRootPathSpec:
 		return path.Join(rootPrefix...), nil
+	case uploadFilePathSpec:
+		return path.Join(append(rootPrefix, v.path)...), nil
 	default:
 		return "", fmt.Errorf("unknown path spec: %#v", v)
 	}
@@ -123,6 +125,14 @@ type uploadDataPathSpec struct {
 }
 
 func (uploadDataPathSpec) pathSpec() {}
+
+// uploadDataPathSpec defines the path parameters of the data file for
+// uploads.
+type uploadFilePathSpec struct {
+	path string
+}
+
+func (uploadFilePathSpec) pathSpec() {}
 
 // uploadHashStatePathSpec defines the path parameters for the file that stores
 // the hash function state of an upload at a specific byte offset. If `list` is
