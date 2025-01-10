@@ -333,7 +333,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	vsCode := ide.ProvideVSCodeService(vsCodeConfig)
 	vsCodeWebConfig := server.ProvideIDEVSCodeWebConfig(config)
 	vsCodeWeb := ide.ProvideVSCodeWebService(vsCodeWebConfig)
-	jetBrainsIDEConfig := server.ProvideIDEIntellijConfig(config)
+	jetBrainsIDEConfig := server.ProvideIDEJetBrainsConfig(config)
 	v := ide.ProvideJetBrainsIDEsService(jetBrainsIDEConfig)
 	ideFactory := ide.ProvideIDEFactory(vsCode, vsCodeWeb, v)
 	passwordResolver := secret.ProvidePasswordResolver()

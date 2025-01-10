@@ -38,7 +38,14 @@ const (
 )
 
 type JetBrainsIDEConfig struct {
-	Port int
+	IntelliJPort int
+	GolandPort   int
+	PyCharmPort  int
+	WebStormPort int
+	CLionPort    int
+	PHPStormPort int
+	RubyMinePort int
+	RiderPort    int
 }
 
 type JetBrainsIDE struct {
@@ -50,6 +57,35 @@ func NewJetBrainsIDEService(config *JetBrainsIDEConfig, ideType enum.IDEType) *J
 	return &JetBrainsIDE{
 		ideType: ideType,
 		config:  *config,
+	}
+}
+
+func (jb *JetBrainsIDE) port() int {
+	switch jb.ideType {
+	case enum.IDETypeIntelliJ:
+		return jb.config.IntelliJPort
+	case enum.IDETypeGoland:
+		return jb.config.GolandPort
+	case enum.IDETypePyCharm:
+		return jb.config.PyCharmPort
+	case enum.IDETypeWebStorm:
+		return jb.config.WebStormPort
+	case enum.IDETypeCLion:
+		return jb.config.CLionPort
+	case enum.IDETypePHPStorm:
+		return jb.config.PHPStormPort
+	case enum.IDETypeRubyMine:
+		return jb.config.RubyMinePort
+	case enum.IDETypeRider:
+		return jb.config.RiderPort
+	case enum.IDETypeVSCode:
+		// IDETypeVSCode is not JetBrainsIDE
+		return 0
+	case enum.IDETypeVSCodeWeb:
+		// IDETypeVSCodeWeb is not JetBrainsIDE
+		return 0
+	default:
+		return 0
 	}
 }
 
@@ -178,7 +214,7 @@ func (jb *JetBrainsIDE) runSSHServer(
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	payload := gitspaceTypes.RunSSHServerPayload{
-		Port: strconv.Itoa(jb.config.Port),
+		Port: strconv.Itoa(jb.port()),
 	}
 	runSSHScript, err := utils.GenerateScriptFromTemplate(
 		templateRunSSHServer, &payload)
@@ -237,7 +273,7 @@ func (jb *JetBrainsIDE) runRemoteIDE(
 // Port returns the port on which the ssh-server is listening.
 func (jb *JetBrainsIDE) Port() *types.GitspacePort {
 	return &types.GitspacePort{
-		Port:     jb.config.Port,
+		Port:     jb.port(),
 		Protocol: enum.CommunicationProtocolSSH,
 	}
 }

@@ -442,10 +442,16 @@ func ProvideIDEVSCodeConfig(config *types.Config) *ide.VSCodeConfig {
 	}
 }
 
-// ProvideIDEIntellijConfig loads the IdeType IDE config from the main config.
-func ProvideIDEIntellijConfig(config *types.Config) *ide.JetBrainsIDEConfig {
+// ProvideIDEJetBrainsConfig loads the IdeType IDE config from the main config.
+func ProvideIDEJetBrainsConfig(config *types.Config) *ide.JetBrainsIDEConfig {
 	return &ide.JetBrainsIDEConfig{
-		Port: config.IDE.Intellij.Port,
+		IntelliJPort: config.IDE.Intellij.Port,
+		GolandPort:   config.IDE.Goland.Port,
+		PyCharmPort:  config.IDE.PyCharm.Port,
+		WebStormPort: config.IDE.WebStorm.Port,
+		PHPStormPort: config.IDE.PHPStorm.Port,
+		CLionPort:    config.IDE.CLion.Port,
+		RubyMinePort: config.IDE.RubyMine.Port,
 	}
 }
 

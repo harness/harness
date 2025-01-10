@@ -413,8 +413,43 @@ type Config struct {
 		}
 
 		Intellij struct {
-			// Port is the port on which the SSH server for Intellij will be accessible.
-			Port int `envconfig:"GITNESS_IDE_INTELLIJ_PORT" default:"8090"`
+			// Port is the port on which the SSH server for IntelliJ will be accessible
+			Port int `envconfig:"CDE_MANAGER_GITSPACE_IDE_INTELLIJ_PORT" default:"8090"`
+		}
+
+		Goland struct {
+			// Port is the port on which the SSH server for Goland will be accessible
+			Port int `envconfig:"CDE_MANAGER_GITSPACE_IDE_GOLAND_PORT" default:"8091"`
+		}
+
+		PyCharm struct {
+			// Port is the port on which the SSH server for PyCharm will be accessible
+			Port int `envconfig:"CDE_MANAGER_GITSPACE_IDE_PYCHARM_PORT" default:"8092"`
+		}
+
+		WebStorm struct {
+			// Port is the port on which the SSH server for WebStorm will be accessible
+			Port int `envconfig:"CDE_MANAGER_GITSPACE_IDE_WEBSTORM_PORT" default:"8093"`
+		}
+
+		CLion struct {
+			// Port is the port on which the SSH server for CLion will be accessible
+			Port int `envconfig:"CDE_MANAGER_GITSPACE_IDE_CLION_PORT" default:"8094"`
+		}
+
+		PHPStorm struct {
+			// Port is the port on which the SSH server for PHPStorm will be accessible
+			Port int `envconfig:"CDE_MANAGER_GITSPACE_IDE_PHPSTORM_PORT" default:"8095"`
+		}
+
+		RubyMine struct {
+			// Port is the port on which the SSH server for RubyMine will be accessible
+			Port int `envconfig:"CDE_MANAGER_GITSPACE_IDE_RUBYMINE_PORT" default:"8096"`
+		}
+
+		Rider struct {
+			// Port is the port on which the SSH server for Rider will be accessible
+			Port int `envconfig:"CDE_MANAGER_GITSPACE_IDE_RIDER_PORT" default:"8097"`
 		}
 	}
 
