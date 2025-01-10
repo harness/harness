@@ -47,6 +47,7 @@ type UserGroup struct {
 	Description string `db:"usergroup_description"`
 	Created     int64  `db:"usergroup_created"`
 	Updated     int64  `db:"usergroup_updated"`
+	Scope       int64  `db:"usergroup_scope"`
 }
 
 const (
@@ -57,22 +58,11 @@ const (
 	,usergroup_description
 	,usergroup_space_id
 	,usergroup_created
-	,usergroup_updated`
+	,usergroup_updated
+	,usergroup_scope`
 
 	userGroupSelectBase = `SELECT ` + userGroupColumns + ` FROM usergroups`
 )
-
-func mapUserGroup(ug *UserGroup) *types.UserGroup {
-	return &types.UserGroup{
-		ID:          ug.ID,
-		Identifier:  ug.Identifier,
-		Name:        ug.Name,
-		Description: ug.Description,
-		SpaceID:     ug.SpaceID,
-		Created:     ug.Created,
-		Updated:     ug.Updated,
-	}
-}
 
 // FindByIdentifier returns a usergroup by its identifier.
 func (s *UserGroupStore) FindByIdentifier(
@@ -135,7 +125,7 @@ func (s *UserGroupStore) FindManyByIDs(ctx context.Context, ids []int64) ([]*typ
 	var result = make([]*types.UserGroup, len(dst))
 
 	for i, u := range dst {
-		result[i] = u.toUserGroupType()
+		result[i] = mapUserGroup(u)
 	}
 
 	return result, nil
@@ -178,17 +168,19 @@ func (s *UserGroupStore) Create(
 	INSERT INTO usergroups (
 		usergroup_identifier
 		,usergroup_name
-		,usergroup_description	
-		,usergroup_space_id	
+		,usergroup_description
+		,usergroup_space_id
 		,usergroup_created
 		,usergroup_updated
-	) values (	
+		,usergroup_scope
+	) values (
 		:usergroup_identifier
 		,:usergroup_name
 		,:usergroup_description
-		,:usergroup_space_id	
+		,:usergroup_space_id
 		,:usergroup_created
 		,:usergroup_updated
+		,:usergroup_scope
 	) RETURNING usergroup_id`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -214,17 +206,19 @@ func (s *UserGroupStore) CreateOrUpdate(
 	INSERT INTO usergroups (
 		usergroup_identifier
 		,usergroup_name
-		,usergroup_description	
-		,usergroup_space_id	
+		,usergroup_description
+		,usergroup_space_id
 		,usergroup_created
 		,usergroup_updated
-	) values (	
+		,usergroup_scope
+	) values (
 		:usergroup_identifier
 		,:usergroup_name
 		,:usergroup_description
-		,:usergroup_space_id	
+		,:usergroup_space_id
 		,:usergroup_created
 		,:usergroup_updated
+		,:usergroup_scope
 	) ON CONFLICT (usergroup_space_id, LOWER(usergroup_identifier)) DO UPDATE SET
 		usergroup_name = EXCLUDED.usergroup_name,
 		usergroup_description = EXCLUDED.usergroup_description,
@@ -245,25 +239,28 @@ func (s *UserGroupStore) CreateOrUpdate(
 	return nil
 }
 
-func mapInternalUserGroup(u *types.UserGroup, spaceID int64) *UserGroup {
-	return &UserGroup{
-		ID:          u.ID,
-		SpaceID:     spaceID,
-		Identifier:  u.Identifier,
-		Name:        u.Name,
-		Description: u.Description,
-		Created:     u.Created,
-		Updated:     u.Updated,
+func mapUserGroup(ug *UserGroup) *types.UserGroup {
+	return &types.UserGroup{
+		ID:          ug.ID,
+		Identifier:  ug.Identifier,
+		Name:        ug.Name,
+		Description: ug.Description,
+		SpaceID:     ug.SpaceID,
+		Created:     ug.Created,
+		Updated:     ug.Updated,
+		Scope:       ug.Scope,
 	}
 }
 
-func (u *UserGroup) toUserGroupType() *types.UserGroup {
-	return &types.UserGroup{
+func mapInternalUserGroup(u *types.UserGroup, spaceID int64) *UserGroup {
+	return &UserGroup{
 		ID:          u.ID,
 		Identifier:  u.Identifier,
 		Name:        u.Name,
 		Description: u.Description,
+		SpaceID:     spaceID,
 		Created:     u.Created,
 		Updated:     u.Updated,
+		Scope:       u.Scope,
 	}
 }
