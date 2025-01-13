@@ -20,7 +20,6 @@ import (
 	"strings"
 	"time"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	events "github.com/harness/gitness/app/events/pipeline"
@@ -57,14 +56,9 @@ func (c *Controller) Create(
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
-	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
+	repo, err := c.getRepoCheckPipelineAccess(ctx, session, repoRef, "", enum.PermissionPipelineEdit)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find repo by ref: %w", err)
-	}
-
-	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, "", enum.PermissionPipelineEdit)
-	if err != nil {
-		return nil, fmt.Errorf("failed to authorize pipeline: %w", err)
+		return nil, err
 	}
 
 	var pipeline *types.Pipeline

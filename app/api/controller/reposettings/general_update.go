@@ -33,7 +33,9 @@ func (c *Controller) GeneralUpdate(
 	repoRef string,
 	in *GeneralSettings,
 ) (*GeneralSettings, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
+	// migrating repos need to adjust repo settings (like file-size-limit) during the migration.
+	var additionalAllowedRepoStates = []enum.RepoState{enum.RepoStateMigrateGitPush}
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit, additionalAllowedRepoStates...)
 	if err != nil {
 		return nil, err
 	}

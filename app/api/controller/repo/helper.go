@@ -24,20 +24,24 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/refcache"
+	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
 	"golang.org/x/exp/slices"
 )
 
-var ActiveRepoStates = []enum.RepoState{enum.RepoStateActive}
+var importingStates = []enum.RepoState{
+	enum.RepoStateGitImport,
+	enum.RepoStateMigrateDataImport,
+	enum.RepoStateMigrateGitPush,
+}
 
 // GetRepo fetches an repository.
 func GetRepo(
 	ctx context.Context,
 	repoFinder refcache.RepoFinder,
 	repoRef string,
-	allowedStates []enum.RepoState,
 ) (*types.Repository, error) {
 	if repoRef == "" {
 		return nil, usererror.BadRequest("A valid repository reference must be provided.")
@@ -48,14 +52,10 @@ func GetRepo(
 		return nil, fmt.Errorf("failed to find repository: %w", err)
 	}
 
-	if len(allowedStates) > 0 && !slices.Contains(allowedStates, repo.State) {
-		return nil, usererror.BadRequest("Repository is not ready to use.")
-	}
-
 	return repo, nil
 }
 
-// GetRepoCheckAccess fetches an active repo (not one that is currently being imported)
+// GetRepoCheckAccess fetches a repo with option to enforce repo state check
 // and checks if the current user has permission to access it.
 func GetRepoCheckAccess(
 	ctx context.Context,
@@ -64,11 +64,15 @@ func GetRepoCheckAccess(
 	session *auth.Session,
 	repoRef string,
 	reqPermission enum.Permission,
-	allowedStates []enum.RepoState,
+	allowedRepoStates ...enum.RepoState,
 ) (*types.Repository, error) {
-	repo, err := GetRepo(ctx, repoFinder, repoRef, allowedStates)
+	repo, err := GetRepo(ctx, repoFinder, repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo: %w", err)
+	}
+
+	if err := apiauth.CheckRepoState(ctx, session, repo, reqPermission, allowedRepoStates...); err != nil {
+		return nil, err
 	}
 
 	if err = apiauth.CheckRepo(ctx, authorizer, session, repo, reqPermission); err != nil {
@@ -119,7 +123,8 @@ func GetRepoOutput(
 	return &RepositoryOutput{
 		Repository: *repo,
 		IsPublic:   isPublic,
-		Importing:  repo.State != enum.RepoStateActive,
+		Importing:  slices.Contains(importingStates, repo.State),
+		Archived:   repo.State == enum.RepoStateArchived,
 	}, nil
 }
 
@@ -131,6 +136,38 @@ func GetRepoOutputWithAccess(
 	return &RepositoryOutput{
 		Repository: *repo,
 		IsPublic:   isPublic,
-		Importing:  repo.State != enum.RepoStateActive,
+		Importing:  slices.Contains(importingStates, repo.State),
+		Archived:   repo.State == enum.RepoStateArchived,
 	}
+}
+
+// GetRepoCheckServiceAccountAccess fetches a repo with option to enforce repo state check
+// and checks if the current user has permission to access service accounts within repo.
+func GetRepoCheckServiceAccountAccess(
+	ctx context.Context,
+	session *auth.Session,
+	authorizer authz.Authorizer,
+	repoRef string,
+	reqPermission enum.Permission,
+	repoFinder refcache.RepoFinder,
+	repoStore store.RepoStore,
+	spaceStore store.SpaceStore,
+	allowedRepoStates ...enum.RepoState,
+) (*types.Repository, error) {
+	repo, err := GetRepo(ctx, repoFinder, repoRef)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find repo: %w", err)
+	}
+
+	if err := apiauth.CheckRepoState(ctx, session, repo, reqPermission, allowedRepoStates...); err != nil {
+		return nil, err
+	}
+
+	if err := apiauth.CheckServiceAccount(ctx, authorizer, session, spaceStore, repoStore,
+		enum.ParentResourceTypeRepo, repo.ID, "", reqPermission,
+	); err != nil {
+		return nil, fmt.Errorf("access check failed: %w", err)
+	}
+
+	return repo, nil
 }

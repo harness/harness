@@ -33,6 +33,9 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+// allowedRepoStatesForPush lists repository states that git push is allowed for internal and external calls.
+var allowedRepoStatesForPush = []enum.RepoState{enum.RepoStateActive, enum.RepoStateMigrateGitPush}
+
 // PreReceive executes the pre-receive hook for a git repository.
 func (c *Controller) PreReceive(
 	ctx context.Context,
@@ -47,8 +50,8 @@ func (c *Controller) PreReceive(
 		return hook.Output{}, err
 	}
 
-	if !in.Internal && repo.State != enum.RepoStateActive && repo.State != enum.RepoStateMigrateGitPush {
-		output.Error = ptr.String("Push not allowed in the current repository state")
+	if !in.Internal && !slices.Contains(allowedRepoStatesForPush, repo.State) {
+		output.Error = ptr.String(fmt.Sprintf("Push not allowed when repository is in '%s' state", repo.State))
 		return output, nil
 	}
 

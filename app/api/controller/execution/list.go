@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -32,14 +31,15 @@ func (c *Controller) List(
 	pipelineIdentifier string,
 	pagination types.Pagination,
 ) ([]*types.Execution, int64, error) {
-	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
+	repo, err := c.getRepoCheckPipelineAccess(
+		ctx,
+		session,
+		repoRef,
+		pipelineIdentifier,
+		enum.PermissionPipelineView,
+	)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to find repo by ref: %w", err)
-	}
-
-	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, pipelineIdentifier, enum.PermissionPipelineView)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to authorize: %w", err)
+		return nil, 0, err
 	}
 
 	pipeline, err := c.pipelineStore.FindByIdentifier(ctx, repo.ID, pipelineIdentifier)

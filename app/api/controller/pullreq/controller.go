@@ -185,18 +185,23 @@ func (c *Controller) getRepo(ctx context.Context, repoRef string) (*types.Reposi
 		return nil, fmt.Errorf("failed to find repository: %w", err)
 	}
 
-	if repo.State != enum.RepoStateActive {
-		return nil, usererror.BadRequest("Repository is not ready to use.")
-	}
-
 	return repo, nil
 }
 
-func (c *Controller) getRepoCheckAccess(ctx context.Context,
-	session *auth.Session, repoRef string, reqPermission enum.Permission,
+//nolint:unparam
+func (c *Controller) getRepoCheckAccess(
+	ctx context.Context,
+	session *auth.Session,
+	repoRef string,
+	reqPermission enum.Permission,
+	allowedRepoStates ...enum.RepoState,
 ) (*types.Repository, error) {
 	repo, err := c.getRepo(ctx, repoRef)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := apiauth.CheckRepoState(ctx, session, repo, reqPermission, allowedRepoStates...); err != nil {
 		return nil, err
 	}
 

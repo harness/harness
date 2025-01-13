@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -30,22 +29,16 @@ func (c *Controller) ListServiceAccounts(
 	session *auth.Session,
 	repoRef string,
 ) ([]*types.ServiceAccount, error) {
-	repo, err := c.getRepo(ctx, repoRef)
-	if err != nil {
-		return nil, fmt.Errorf("failed to find repo: %w", err)
-	}
-
-	if err := apiauth.CheckServiceAccount(
+	repo, err := GetRepoCheckServiceAccountAccess(
 		ctx,
-		c.authorizer,
 		session,
-		c.spaceStore,
-		c.repoStore,
-		enum.ParentResourceTypeRepo,
-		repo.ID,
-		"",
+		c.authorizer,
+		repoRef,
 		enum.PermissionServiceAccountView,
-	); err != nil {
+		c.repoFinder,
+		c.repoStore,
+		c.spaceStore)
+	if err != nil {
 		return nil, fmt.Errorf("access check failed: %w", err)
 	}
 

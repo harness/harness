@@ -32,10 +32,15 @@ func (c *Controller) ListPipelines(
 	repoRef string,
 	filter *types.ListPipelinesFilter,
 ) ([]*types.Pipeline, int64, error) {
-	repo, err := c.getRepo(ctx, repoRef)
+	repo, err := GetRepo(ctx, c.repoFinder, repoRef)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to find repo: %w", err)
 	}
+
+	if err := apiauth.CheckRepoState(ctx, session, repo, enum.PermissionPipelineView); err != nil {
+		return nil, 0, err
+	}
+
 	if err := apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, "", enum.PermissionPipelineView); err != nil {
 		return nil, 0, fmt.Errorf("access check failed: %w", err)
 	}

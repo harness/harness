@@ -17,14 +17,14 @@ package auth
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/paths"
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-
-	"github.com/pkg/errors"
 )
 
 // CheckRepo checks if a repo specific permission is granted for the current auth session
@@ -65,4 +65,56 @@ func IsRepoOwner(
 	}
 
 	return err == nil, nil
+}
+
+// CheckRepoState checks if requested permission is allowed given the state of the repository.
+func CheckRepoState(
+	_ context.Context,
+	_ *auth.Session,
+	repo *types.Repository,
+	reqPermission enum.Permission,
+	additionalAllowedRepoStates ...enum.RepoState,
+) error {
+	permissionsAllowedPerRepoState := map[enum.RepoState][]enum.Permission{
+		enum.RepoStateActive: {
+			enum.PermissionRepoView,
+			enum.PermissionRepoCreate,
+			enum.PermissionRepoEdit,
+			enum.PermissionRepoPush,
+			enum.PermissionRepoReview,
+			enum.PermissionRepoDelete,
+			enum.PermissionRepoReportCommitCheck,
+
+			enum.PermissionPipelineView,
+			enum.PermissionPipelineExecute,
+			enum.PermissionPipelineEdit,
+			enum.PermissionPipelineDelete,
+
+			enum.PermissionServiceAccountView,
+		},
+
+		enum.RepoStateArchived: {
+			enum.PermissionRepoView,
+
+			enum.PermissionPipelineView,
+
+			enum.PermissionServiceAccountView,
+		},
+
+		// allowed permissions for repos on transition states during import/migration are handled by their controller.
+		enum.RepoStateGitImport:         {},
+		enum.RepoStateMigrateDataImport: {},
+		enum.RepoStateMigrateGitPush:    {},
+	}
+
+	if len(additionalAllowedRepoStates) > 0 && slices.Contains(additionalAllowedRepoStates, repo.State) {
+		return nil
+	}
+
+	defaultAllowedPermissions := permissionsAllowedPerRepoState[repo.State]
+	if !slices.Contains(defaultAllowedPermissions, reqPermission) {
+		return errors.PreconditionFailed("Operation is not allowed for repository in state %s", repo.State)
+	}
+
+	return nil
 }

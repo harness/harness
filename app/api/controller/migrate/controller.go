@@ -108,6 +108,8 @@ func (c *Controller) getRepoCheckAccess(
 		return nil, fmt.Errorf("failed to find repo: %w", err)
 	}
 
+	// repo state check happens per operation as it varies given the stage of the migration.
+
 	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, reqPermission); err != nil {
 		return nil, fmt.Errorf("failed to verify authorization: %w", err)
 	}

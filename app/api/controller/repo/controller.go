@@ -51,12 +51,13 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-var errPublicRepoCreationDisabled = usererror.BadRequestf("Public repository creation is disabled.")
+var errPublicRepoCreationDisabled = usererror.BadRequest("Public repository creation is disabled.")
 
 type RepositoryOutput struct {
 	types.Repository
 	IsPublic  bool `json:"is_public" yaml:"is_public"`
 	Importing bool `json:"importing" yaml:"-"`
+	Archived  bool `json:"archived" yaml:"-"`
 }
 
 // TODO [CODE-1363]: remove after identifier migration.
@@ -187,26 +188,16 @@ func NewController(
 	}
 }
 
-// getRepo fetches an active repo (not one that is currently being imported).
-func (c *Controller) getRepo(
-	ctx context.Context,
-	repoRef string,
-) (*types.Repository, error) {
-	return GetRepo(
-		ctx,
-		c.repoFinder,
-		repoRef,
-		ActiveRepoStates,
-	)
-}
-
-// getRepoCheckAccess fetches an active repo (not one that is currently being imported)
+// getRepoCheckAccess fetches a repo, checks if repo state allows requested permission
 // and checks if the current user has permission to access it.
+//
+//nolint:unparam
 func (c *Controller) getRepoCheckAccess(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 	reqPermission enum.Permission,
+	allowedRepoStates ...enum.RepoState,
 ) (*types.Repository, error) {
 	return GetRepoCheckAccess(
 		ctx,
@@ -215,7 +206,7 @@ func (c *Controller) getRepoCheckAccess(
 		session,
 		repoRef,
 		reqPermission,
-		ActiveRepoStates,
+		allowedRepoStates...,
 	)
 }
 
@@ -234,7 +225,8 @@ func (c *Controller) getRepoCheckAccessForGit(
 		session,
 		repoRef,
 		reqPermission,
-		nil, // Any state allowed - we'll block in the pre-receive hook.
+		// importing/migrating states are allowed - we'll block in the pre-receive hook if needed.
+		enum.RepoStateGitImport, enum.RepoStateMigrateDataImport, enum.RepoStateMigrateGitPush,
 	)
 }
 

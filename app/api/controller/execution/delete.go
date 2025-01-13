@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types/enum"
 )
@@ -30,14 +29,15 @@ func (c *Controller) Delete(
 	pipelineIdentifier string,
 	executionNum int64,
 ) error {
-	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
+	repo, err := c.getRepoCheckPipelineAccess(
+		ctx,
+		session,
+		repoRef,
+		pipelineIdentifier,
+		enum.PermissionPipelineDelete,
+	)
 	if err != nil {
-		return fmt.Errorf("failed to find repo by ref: %w", err)
-	}
-
-	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, pipelineIdentifier, enum.PermissionPipelineDelete)
-	if err != nil {
-		return fmt.Errorf("failed to authorize: %w", err)
+		return err
 	}
 
 	pipeline, err := c.pipelineStore.FindByIdentifier(ctx, repo.ID, pipelineIdentifier)

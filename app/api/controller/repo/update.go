@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"strings"
 
+	apiauth "github.com/harness/gitness/app/api/auth"
+	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/audit"
@@ -27,15 +29,31 @@ import (
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
+	"golang.org/x/exp/slices"
 )
 
 // UpdateInput is used for updating a repo.
 type UpdateInput struct {
-	Description *string `json:"description"`
+	Description *string         `json:"description"`
+	State       *enum.RepoState `json:"state"`
+}
+
+var allowedRepoStateTransitions = map[enum.RepoState][]enum.RepoState{
+	enum.RepoStateActive:            {enum.RepoStateArchived, enum.RepoStateMigrateDataImport},
+	enum.RepoStateArchived:          {enum.RepoStateActive},
+	enum.RepoStateMigrateDataImport: {enum.RepoStateActive},
+	enum.RepoStateMigrateGitPush:    {enum.RepoStateActive, enum.RepoStateMigrateDataImport},
 }
 
 func (in *UpdateInput) hasChanges(repo *types.Repository) bool {
-	return in.Description != nil && *in.Description != repo.Description
+	if in.Description != nil && *in.Description != repo.Description {
+		return true
+	}
+	if in.State != nil && *in.State != repo.State {
+		return true
+	}
+
+	return false
 }
 
 // Update updates a repository.
@@ -44,9 +62,25 @@ func (c *Controller) Update(ctx context.Context,
 	repoRef string,
 	in *UpdateInput,
 ) (*RepositoryOutput, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
+	repo, err := GetRepo(ctx, c.repoFinder, repoRef)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find repo: %w", err)
+	}
+
+	var additionalAllowedRepoStates []enum.RepoState
+
+	if in.State != nil {
+		additionalAllowedRepoStates = []enum.RepoState{
+			enum.RepoStateArchived, enum.RepoStateMigrateDataImport, enum.RepoStateMigrateGitPush}
+	}
+
+	err = apiauth.CheckRepoState(ctx, session, repo, enum.PermissionRepoEdit, additionalAllowedRepoStates...)
 	if err != nil {
 		return nil, err
+	}
+
+	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoEdit); err != nil {
+		return nil, fmt.Errorf("access check failed: %w", err)
 	}
 
 	repoClone := repo.Clone()
@@ -59,16 +93,25 @@ func (c *Controller) Update(ctx context.Context,
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
+	if in.State != nil &&
+		!slices.Contains(allowedRepoStateTransitions[repo.State], *in.State) {
+		return nil, usererror.BadRequestf("Changing the state of a repository from %s to %s is not allowed.",
+			repo.State, *in.State)
+	}
+
 	repo, err = c.repoStore.UpdateOptLock(ctx, repo, func(repo *types.Repository) error {
 		// update values only if provided
 		if in.Description != nil {
 			repo.Description = *in.Description
 		}
+		if in.State != nil {
+			repo.State = *in.State
+		}
 
 		return nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to update the repo: %w", err)
 	}
 
 	err = c.auditService.Log(ctx,

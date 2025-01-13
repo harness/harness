@@ -92,8 +92,12 @@ func NewController(
 	}
 }
 
-func (c *Controller) getRepoCheckAccess(ctx context.Context,
-	_ *auth.Session, repoID int64, _ enum.Permission) (*types.Repository, error) {
+func (c *Controller) getRepoCheckAccess(
+	ctx context.Context,
+	_ *auth.Session,
+	repoID int64,
+	_ enum.Permission,
+) (*types.Repository, error) {
 	if repoID < 1 {
 		return nil, usererror.BadRequest("A valid repository reference must be provided.")
 	}
@@ -102,6 +106,7 @@ func (c *Controller) getRepoCheckAccess(ctx context.Context,
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo with id %d: %w", repoID, err)
 	}
+	// repo state check is done in pre-receive.
 
 	// TODO: execute permission check. block anything but Harness service?
 

@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types/enum"
 )
@@ -30,16 +29,9 @@ func (c *Controller) Delete(
 	pipelineIdentifier string,
 	triggerIdentifier string,
 ) error {
-	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
+	repo, err := c.getRepoCheckPipelineAccess(ctx, session, repoRef, pipelineIdentifier, enum.PermissionPipelineEdit)
 	if err != nil {
-		return fmt.Errorf("failed to find repo by ref: %w", err)
-	}
-
-	// Trigger permissions are associated with pipeline permissions. If a user has permissions
-	// to edit the pipeline, they will have permissions to remove a trigger as well.
-	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, pipelineIdentifier, enum.PermissionPipelineEdit)
-	if err != nil {
-		return fmt.Errorf("failed to authorize pipeline: %w", err)
+		return err
 	}
 
 	pipeline, err := c.pipelineStore.FindByIdentifier(ctx, repo.ID, pipelineIdentifier)

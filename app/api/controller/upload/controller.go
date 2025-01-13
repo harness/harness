@@ -17,7 +17,6 @@ package upload
 import (
 	"bufio"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -28,6 +27,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/blob"
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -61,10 +61,13 @@ func NewController(authorizer authz.Authorizer,
 		blobStore:  blobStore,
 	}
 }
+
+//nolint:unparam
 func (c *Controller) getRepoCheckAccess(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 	permission enum.Permission,
+	allowedRepoStates ...enum.RepoState,
 ) (*types.Repository, error) {
 	if repoRef == "" {
 		return nil, usererror.BadRequest("A valid repository reference must be provided.")
@@ -73,6 +76,10 @@ func (c *Controller) getRepoCheckAccess(ctx context.Context,
 	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo: %w", err)
+	}
+
+	if err := apiauth.CheckRepoState(ctx, session, repo, permission, allowedRepoStates...); err != nil {
+		return nil, err
 	}
 
 	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, permission); err != nil {

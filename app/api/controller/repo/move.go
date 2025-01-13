@@ -18,8 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
-	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -53,17 +51,9 @@ func (c *Controller) Move(ctx context.Context,
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
-	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
-		return nil, err
-	}
-
-	if repo.State != enum.RepoStateActive {
-		return nil, usererror.BadRequest("Can't move a repo that isn't ready to use.")
-	}
-
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoEdit); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to find or acquire access to repo: %w", err)
 	}
 
 	if !in.hasChanges(repo) {

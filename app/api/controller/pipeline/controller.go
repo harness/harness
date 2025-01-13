@@ -15,10 +15,17 @@
 package pipeline
 
 import (
+	"context"
+	"fmt"
+
+	apiauth "github.com/harness/gitness/app/api/auth"
+	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
 	events "github.com/harness/gitness/app/events/pipeline"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 type Controller struct {
@@ -44,4 +51,34 @@ func NewController(
 		pipelineStore: pipelineStore,
 		reporter:      reporter,
 	}
+}
+
+// getRepoCheckPipelineAccess fetches a repo, checks if operation is allowed given the repo state
+// and checks if the current user has permission to access pipelines of the repo.
+//
+//nolint:unparam
+func (c *Controller) getRepoCheckPipelineAccess(
+	ctx context.Context,
+	session *auth.Session,
+	repoRef string,
+	pipelineIdentifier string,
+	reqPermission enum.Permission,
+	allowedRepoStates ...enum.RepoState,
+) (*types.Repository, error) {
+	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find repo by ref: %w", err)
+	}
+
+	if err := apiauth.CheckRepoState(ctx, session, repo, reqPermission, allowedRepoStates...); err != nil {
+		return nil, err
+	}
+
+	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path,
+		pipelineIdentifier, reqPermission)
+	if err != nil {
+		return nil, fmt.Errorf("failed to authorize: %w", err)
+	}
+
+	return repo, nil
 }

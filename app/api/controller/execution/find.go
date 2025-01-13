@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -31,14 +30,15 @@ func (c *Controller) Find(
 	pipelineIdentifier string,
 	executionNum int64,
 ) (*types.Execution, error) {
-	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
+	repo, err := c.getRepoCheckPipelineAccess(
+		ctx,
+		session,
+		repoRef,
+		pipelineIdentifier,
+		enum.PermissionPipelineView,
+	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find repo by ref: %w", err)
-	}
-
-	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, pipelineIdentifier, enum.PermissionPipelineView)
-	if err != nil {
-		return nil, fmt.Errorf("failed to authorize: %w", err)
+		return nil, err
 	}
 
 	pipeline, err := c.pipelineStore.FindByIdentifier(ctx, repo.ID, pipelineIdentifier)

@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -31,16 +30,9 @@ func (c *Controller) List(
 	pipelineIdentifier string,
 	filter types.ListQueryFilter,
 ) ([]*types.Trigger, int64, error) {
-	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
+	repo, err := c.getRepoCheckPipelineAccess(ctx, session, repoRef, pipelineIdentifier, enum.PermissionPipelineView)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to find repo by ref: %w", err)
-	}
-
-	// Trigger permissions are associated with pipeline permissions. If a user has permissions
-	// to view the pipeline, they will have permissions to list triggers as well.
-	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, pipelineIdentifier, enum.PermissionPipelineView)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to authorize pipeline: %w", err)
+		return nil, 0, err
 	}
 
 	pipeline, err := c.pipelineStore.FindByIdentifier(ctx, repo.ID, pipelineIdentifier)

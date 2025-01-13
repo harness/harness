@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"strings"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
 	events "github.com/harness/gitness/app/events/pipeline"
 	"github.com/harness/gitness/types"
@@ -43,14 +42,9 @@ func (c *Controller) Update(
 	identifier string,
 	in *UpdateInput,
 ) (*types.Pipeline, error) {
-	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
+	repo, err := c.getRepoCheckPipelineAccess(ctx, session, repoRef, identifier, enum.PermissionPipelineEdit)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find repo by ref: %w", err)
-	}
-
-	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, identifier, enum.PermissionPipelineEdit)
-	if err != nil {
-		return nil, fmt.Errorf("failed to authorize pipeline: %w", err)
+		return nil, err
 	}
 
 	if err = c.sanitizeUpdateInput(in); err != nil {

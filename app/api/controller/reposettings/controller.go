@@ -16,7 +16,9 @@ package reposettings
 
 import (
 	"context"
+	"fmt"
 
+	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
@@ -48,22 +50,27 @@ func NewController(
 	}
 }
 
-// getRepoCheckAccess fetches an active repo (not one that is currently being imported)
+// getRepoCheckAccess fetches a repo, checks if operation is allowed given the repo state
 // and checks if the current user has permission to access it.
 func (c *Controller) getRepoCheckAccess(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 	reqPermission enum.Permission,
+	allowedRepoStates ...enum.RepoState,
 ) (*types.Repository, error) {
-	// migrating repositories need to adjust the repo settings during the import, hence expanding the allowedstates.
-	return repo.GetRepoCheckAccess(
-		ctx,
-		c.repoFinder,
-		c.authorizer,
-		session,
-		repoRef,
-		reqPermission,
-		[]enum.RepoState{enum.RepoStateActive, enum.RepoStateMigrateGitPush},
-	)
+	repo, err := repo.GetRepo(ctx, c.repoFinder, repoRef)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := apiauth.CheckRepoState(ctx, session, repo, reqPermission, allowedRepoStates...); err != nil {
+		return nil, err
+	}
+
+	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, reqPermission); err != nil {
+		return nil, fmt.Errorf("access check failed: %w", err)
+	}
+
+	return repo, nil
 }

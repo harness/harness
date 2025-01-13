@@ -60,6 +60,11 @@ func (c *Controller) ReviewerDelete(
 		reqPermission = enum.PermissionRepoEdit // RepoEdit permission is required to remove a submitted review.
 	}
 
+	// Make sure the repository state allows delete reviewer operation.
+	if err = apiauth.CheckRepoState(ctx, session, repo, reqPermission); err != nil {
+		return err
+	}
+
 	// Make sure the caller has the right permission even if the PR is merged, so that we can return the correct error.
 	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, reqPermission); err != nil {
 		return fmt.Errorf("access check failed: %w", err)

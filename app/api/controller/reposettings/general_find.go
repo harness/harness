@@ -28,7 +28,9 @@ func (c *Controller) GeneralFind(
 	session *auth.Session,
 	repoRef string,
 ) (*GeneralSettings, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
+	// migrating repos need to adjust repo settings (like file-size-limit) during the migration.
+	var additionalAllowedRepoStates = []enum.RepoState{enum.RepoStateMigrateGitPush}
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, additionalAllowedRepoStates...)
 	if err != nil {
 		return nil, err
 	}
