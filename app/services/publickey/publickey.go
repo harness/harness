@@ -28,7 +28,11 @@ import (
 )
 
 type Service interface {
-	ValidateKey(ctx context.Context, publicKey ssh.PublicKey, usage enum.PublicKeyUsage) (*types.PrincipalInfo, error)
+	ValidateKey(ctx context.Context,
+		username string,
+		publicKey ssh.PublicKey,
+		usage enum.PublicKeyUsage,
+	) (*types.PrincipalInfo, error)
 }
 
 func NewService(
@@ -50,6 +54,7 @@ type LocalService struct {
 // It updates the verified timestamp of the matched key to mark it as used.
 func (s LocalService) ValidateKey(
 	ctx context.Context,
+	_ string,
 	publicKey ssh.PublicKey,
 	usage enum.PublicKeyUsage,
 ) (*types.PrincipalInfo, error) {

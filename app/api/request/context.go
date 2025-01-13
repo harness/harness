@@ -22,6 +22,8 @@ import (
 
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
+
+	"github.com/gliderlabs/ssh"
 )
 
 type key int
@@ -118,4 +120,8 @@ func WithRequestID(parent context.Context, v string) context.Context {
 func RequestIDFrom(ctx context.Context) (string, bool) {
 	v, ok := ctx.Value(requestIDKey).(string)
 	return v, ok && v != ""
+}
+
+func WithRequestIDSSH(parent ssh.Context, v string) {
+	ssh.Context.SetValue(parent, requestIDKey, v)
 }

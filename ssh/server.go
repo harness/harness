@@ -31,6 +31,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/api/controller/repo"
+	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/publickey"
 	"github.com/harness/gitness/errors"
@@ -76,8 +77,7 @@ var (
 		"hmac-sha2-256",
 		"hmac-sha2-512",
 	}
-	defaultServerKeyPath = "ssh/gitness.rsa"
-	KeepAliveMsg         = "keepalive@openssh.com"
+	KeepAliveMsg = "keepalive@openssh.com"
 )
 
 type Server struct {
@@ -97,6 +97,8 @@ type Server struct {
 
 	Verifier publickey.Service
 	RepoCtrl *repo.Controller
+
+	ServerKeyPath string
 }
 
 func (s *Server) sanitize() error {
@@ -132,9 +134,17 @@ func (s *Server) ListenAndServe() error {
 		return fmt.Errorf("failed to sanitize server defaults: %w", err)
 	}
 	s.internal = &ssh.Server{
-		Addr:             net.JoinHostPort(s.Host, strconv.Itoa(s.Port)),
-		Handler:          s.sessionHandler,
-		PublicKeyHandler: s.publicKeyHandler,
+		Addr: net.JoinHostPort(s.Host, strconv.Itoa(s.Port)),
+		Handler: ChainMiddleware(
+			s.sessionHandler,
+			PanicRecoverMiddleware,
+			HLogRequestIDHandler,
+			HLogAccessLogHandler,
+		),
+		PublicKeyHandler: ChainPublicKeyMiddleware(
+			s.publicKeyHandler,
+			LogPublicKeyMiddleware,
+		),
 		PtyCallback: func(ssh.Context, ssh.Pty) bool {
 			return false
 		},
@@ -147,7 +157,6 @@ func (s *Server) ListenAndServe() error {
 			return config
 		},
 	}
-
 	err = s.setupHostKeys()
 	if err != nil {
 		return fmt.Errorf("failed to setup host keys: %w", err)
@@ -173,11 +182,11 @@ func (s *Server) setupHostKeys() error {
 
 	if len(keys) == 0 {
 		log.Debug().Msg("no host key provided - setup default key if it doesn't exist yet")
-		err := createKeyIfNotExists(defaultServerKeyPath)
+		err := createKeyIfNotExists(s.ServerKeyPath)
 		if err != nil {
-			return fmt.Errorf("failed to setup default key %q: %w", defaultServerKeyPath, err)
+			return fmt.Errorf("failed to setup default key %q: %w", s.ServerKeyPath, err)
 		}
-		keys = append(keys, defaultServerKeyPath)
+		keys = append(keys, s.ServerKeyPath)
 	}
 
 	// set keys to internal ssh server
@@ -247,12 +256,14 @@ func (s *Server) sessionHandler(session ssh.Session) {
 
 	ctx, cancel := context.WithCancel(session.Context())
 	defer cancel()
+	log := log.Logger.With().Logger()
+	ctx = request.WithRequestID(ctx, getRequestID(session.Context().SessionID()))
+	ctx = log.WithContext(ctx)
 
 	// set keep alive connection
 	if s.KeepAliveInterval > 0 {
 		go sendKeepAliveMsg(ctx, session, s.KeepAliveInterval)
 	}
-
 	err = s.RepoCtrl.GitServicePack(
 		ctx,
 		&auth.Session{
@@ -268,11 +279,12 @@ func (s *Server) sessionHandler(session ssh.Session) {
 		},
 		repoRef,
 		api.ServicePackOptions{
-			Service:  service,
-			Stdout:   session,
-			Stdin:    session,
-			Stderr:   session.Stderr(),
-			Protocol: gitProtocol,
+			Service:      service,
+			Stdout:       session,
+			Stdin:        session,
+			Stderr:       session.Stderr(),
+			Protocol:     gitProtocol,
+			StatelessRPC: false,
 		},
 	)
 	if err != nil {
@@ -304,6 +316,9 @@ func sendKeepAliveMsg(ctx context.Context, session ssh.Session, interval time.Du
 }
 
 func (s *Server) publicKeyHandler(ctx ssh.Context, key ssh.PublicKey) bool {
+	log := getLoggerWithRequestID(ctx.SessionID())
+	request.WithRequestIDSSH(ctx, getRequestID(ctx.SessionID()))
+
 	if slices.Contains(publickey.DisallowedTypes, key.Type()) {
 		log.Warn().Msgf("public key type not supported: %s", key.Type())
 		return false
@@ -316,7 +331,7 @@ func (s *Server) publicKeyHandler(ctx ssh.Context, key ssh.PublicKey) bool {
 		return false
 	}
 
-	principal, err := s.Verifier.ValidateKey(ctx, key, enum.PublicKeyUsageAuth)
+	principal, err := s.Verifier.ValidateKey(ctx, ctx.User(), key, enum.PublicKeyUsageAuth)
 	if errors.IsNotFound(err) {
 		log.Debug().Err(err).Msg("public key is unknown")
 		return false
@@ -325,6 +340,7 @@ func (s *Server) publicKeyHandler(ctx ssh.Context, key ssh.PublicKey) bool {
 		log.Warn().Err(err).Msg("failed to validate public key")
 		return false
 	}
+	log.Debug().Msg("public key verified")
 
 	// check if we have a certificate
 	if cert, ok := key.(*gossh.Certificate); ok {

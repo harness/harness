@@ -28,7 +28,7 @@ var WireSet = wire.NewSet(
 
 func ProvideServer(
 	config *types.Config,
-	vierifier publickey.Service,
+	verifier publickey.Service,
 	repoctrl *repo.Controller,
 ) *Server {
 	return &Server{
@@ -42,7 +42,8 @@ func ProvideServer(
 		TrustedUserCAKeys:       config.SSH.TrustedUserCAKeys,
 		TrustedUserCAKeysParsed: config.SSH.TrustedUserCAKeysParsed,
 		KeepAliveInterval:       config.SSH.KeepAliveInterval,
-		Verifier:                vierifier,
+		Verifier:                verifier,
 		RepoCtrl:                repoctrl,
+		ServerKeyPath:           config.SSH.ServerKeyPath,
 	}
 }

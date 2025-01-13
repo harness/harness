@@ -155,6 +155,7 @@ type Config struct {
 		TrustedUserCAKeysFile   string   `envconfig:"GITNESS_SSH_TRUSTED_USER_CA_KEYS_FILENAME"`
 		TrustedUserCAKeysParsed []gossh.PublicKey
 		KeepAliveInterval       time.Duration `envconfig:"GITNESS_SSH_KEEP_ALIVE_INTERVAL" default:"5s"`
+		ServerKeyPath           string        `envconfig:"GITNESS_SSH_SERVER_KEY_PATH" default:"ssh/gitness.rsa"`
 	}
 
 	// CI defines configuration related to build executions.
