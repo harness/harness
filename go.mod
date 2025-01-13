@@ -71,6 +71,7 @@ require (
 	github.com/swaggest/swgui v1.8.1
 	github.com/swaggo/http-swagger v1.3.4
 	github.com/swaggo/swag v1.16.2
+	github.com/tidwall/jsonc v0.3.2
 	github.com/unrolled/secure v1.15.0
 	github.com/zricethezav/gitleaks/v8 v8.18.5-0.20240912004812-e93a7c0d2604
 	go.starlark.net v0.0.0-20231121155337-90ade8b19d09
@@ -84,6 +85,7 @@ require (
 	google.golang.org/api v0.189.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/mail.v2 v2.3.1
+	oras.land/oras-go/v2 v2.5.0
 )
 
 require (
@@ -96,6 +98,7 @@ require (
 	github.com/99designs/httpsignatures-go v0.0.0-20170731043157-88528bf4ca7e // indirect
 	github.com/BobuSumisu/aho-corasick v1.0.3 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
+	github.com/Masterminds/semver/v3 v3.3.1 // indirect
 	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
 	github.com/antonmedv/expr v1.15.5 // indirect
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect

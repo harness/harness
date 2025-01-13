@@ -17,20 +17,34 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"strings"
+
+	"github.com/harness/gitness/types/enum"
+
+	"oras.land/oras-go/v2/registry"
 )
+
+const FeatureDefaultTag = "latest"
 
 //nolint:tagliatelle
 type DevcontainerConfig struct {
-	Image             string                           `json:"image,omitempty"`
-	PostCreateCommand LifecycleCommand                 `json:"postCreateCommand,omitempty"`
-	PostStartCommand  LifecycleCommand                 `json:"postStartCommand,omitempty"`
-	ForwardPorts      []json.Number                    `json:"forwardPorts,omitempty"`
-	ContainerEnv      map[string]string                `json:"containerEnv,omitempty"`
-	Customizations    DevContainerConfigCustomizations `json:"customizations,omitempty"`
-	RunArgs           []string                         `json:"runArgs,omitempty"`
-	ContainerUser     string                           `json:"containerUser,omitempty"`
-	RemoteUser        string                           `json:"remoteUser,omitempty"`
+	Image                       string                           `json:"image,omitempty"`
+	PostCreateCommand           LifecycleCommand                 `json:"postCreateCommand,omitempty"`
+	PostStartCommand            LifecycleCommand                 `json:"postStartCommand,omitempty"`
+	ForwardPorts                []json.Number                    `json:"forwardPorts,omitempty"`
+	ContainerEnv                map[string]string                `json:"containerEnv,omitempty"`
+	Customizations              DevContainerConfigCustomizations `json:"customizations,omitempty"`
+	RunArgs                     []string                         `json:"runArgs,omitempty"`
+	ContainerUser               string                           `json:"containerUser,omitempty"`
+	RemoteUser                  string                           `json:"remoteUser,omitempty"`
+	Features                    *Features                        `json:"features,omitempty"`
+	OverrideFeatureInstallOrder []string                         `json:"overrideFeatureInstallOrder,omitempty"`
+	Privileged                  bool                             `json:"privileged,omitempty"`
+	Init                        bool                             `json:"init,omitempty"`
+	CapAdd                      []string                         `json:"capAdd,omitempty"`
+	SecurityOpt                 []string                         `json:"securityOpt,omitempty"`
+	Mounts                      []*Mount                         `json:"mounts,omitempty"`
 }
 
 // Constants for discriminator values.
@@ -137,4 +151,96 @@ func (lc *LifecycleCommand) ToCommandArray() []string {
 	default:
 		return nil
 	}
+}
+
+type Features map[string]*FeatureValue
+
+type FeatureValue struct {
+	Source     string                 `json:"source,omitempty"`
+	SourceType enum.FeatureSourceType `json:"source_type,omitempty"`
+	Options    map[string]any         `json:"options,omitempty"`
+}
+
+func (f *FeatureValue) UnmarshalJSON(data []byte) error {
+	var version string
+	if err := json.Unmarshal(data, &version); err == nil {
+		f.Options = make(map[string]any)
+		f.Options["version"] = version
+		return nil
+	}
+
+	var options map[string]any
+	if err := json.Unmarshal(data, &options); err == nil {
+		for key, value := range options {
+			switch value.(type) {
+			case string, bool:
+				continue
+			default:
+				return fmt.Errorf("invalid type for option '%s': must be string or boolean, got %T", key, value)
+			}
+		}
+		f.Options = options
+		return nil
+	}
+
+	return nil
+}
+
+func (f *Features) UnmarshalJSON(data []byte) error {
+	if *f == nil {
+		*f = make(Features)
+	}
+
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+
+	for key, value := range raw {
+		sanitizedSource, sourceType, validationErr := validateFeatureSource(key)
+		if validationErr != nil {
+			return validationErr
+		}
+		feature := &FeatureValue{Source: sanitizedSource, SourceType: sourceType}
+		if err := json.Unmarshal(value, feature); err != nil {
+			return fmt.Errorf("failed to unmarshal feature '%s': %w", key, err)
+		}
+		(*f)[sanitizedSource] = feature
+	}
+
+	return nil
+}
+
+func validateFeatureSource(source string) (string, enum.FeatureSourceType, error) {
+	if _, err := registry.ParseReference(source); err == nil {
+		indexOfSeparator := strings.Index(source, ":")
+		if indexOfSeparator == -1 {
+			source += ":" + FeatureDefaultTag
+		}
+		return source, enum.FeatureSourceTypeOCI, nil
+	}
+	if err := validateTarballURL(source); err == nil {
+		return source, enum.FeatureSourceTypeTarball, nil
+	}
+	return source, enum.FeatureSourceTypeLocal, fmt.Errorf("unsupported feature source: %s", source)
+}
+
+func validateTarballURL(source string) error {
+	tarballURL, err := url.Parse(source)
+	if err != nil {
+		return fmt.Errorf("parsing feature URL: %w", err)
+	}
+	if tarballURL.Scheme != "http" && tarballURL.Scheme != "https" {
+		return fmt.Errorf("invalid feature URL: %s", tarballURL.String())
+	}
+	if !strings.HasSuffix(tarballURL.Path, ".tgz") {
+		return fmt.Errorf("invalid feature URL: %s", tarballURL.String())
+	}
+	return nil
+}
+
+type Mount struct {
+	Source string `json:"source,omitempty"`
+	Target string `json:"target,omitempty"`
+	Type   string `json:"type,omitempty"`
 }
