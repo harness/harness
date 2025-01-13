@@ -19,7 +19,7 @@ import { Layout, Text } from '@harnessio/uicore'
 import { BookmarkBook } from 'iconoir-react'
 
 import { FontVariation } from '@harnessio/design-system'
-import { RepoPublicLabel } from 'components/RepoPublicLabel/RepoPublicLabel'
+import { RepoTypeLabel } from 'components/RepoTypeLabel/RepoTypeLabel'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import type { RepoRepositoryOutput } from 'services/code'
@@ -45,7 +45,7 @@ export function RepositoryHeader(props: RepositoryHeaderProps) {
           <Text inline className={css.repoDropdown} font={{ variation: FontVariation.H4 }}>
             {repoMetadata.identifier}
           </Text>
-          <RepoPublicLabel isPublic={repoMetadata.is_public} />
+          <RepoTypeLabel isPublic={repoMetadata.is_public} isArchived={repoMetadata.archived} />
         </Layout.Horizontal>
       }
       dataTooltipId="repositoryTitle"

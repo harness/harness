@@ -38,6 +38,8 @@ export interface StringsMap {
   approve: string
   approved: string
   approvedBy: string
+  archive: string
+  archived: string
   artifacts: string
   ascending: string
   assignPeople: string
@@ -151,6 +153,7 @@ export interface StringsMap {
   cancelImport: string
   cancelImportConfirm: string
   cancelledImport: string
+  cautionZone: string
   changePassword: string
   changePasswordSuccessfully: string
   changeRepoVis: string
@@ -300,7 +303,8 @@ export interface StringsMap {
   customSecond: string
   customTime: string
   customizeMergeCommitMessage: string
-  dangerDeleteRepo: string
+  dangerDeletePipeline: string
+  dangerDeleteProject: string
   defaultBranch: string
   defaultBranchTitle: string
   delete: string
@@ -312,6 +316,8 @@ export interface StringsMap {
   deleteFile: string
   deleteImport: string
   deleteNotAllowed: string
+  deleteRepo: string
+  deleteRepoMsg: string
   deleteRepoText: string
   deleteRepoTitle: string
   deleteSpace: string
@@ -917,6 +923,16 @@ export interface StringsMap {
   replyAndReactivate: string
   replyAndResolve: string
   replyHere: string
+  'repoArchive.archive': string
+  'repoArchive.archiveInfo': string
+  'repoArchive.archiveWarning': string
+  'repoArchive.confirmButton': string
+  'repoArchive.infoText': string
+  'repoArchive.titleArchive': string
+  'repoArchive.titleUnarchive': string
+  'repoArchive.unarchive': string
+  'repoArchive.unarchiveInfo': string
+  'repoArchive.unarchiveWarning': string
   repoCloneHeader: string
   repoCloneLabel: string
   'repoDelete.deleteConfirm1': string
@@ -1109,6 +1125,7 @@ export interface StringsMap {
   'triggers.updateSuccess': string
   turnOnSemanticSearch: string
   unableToGetDivergence: string
+  unarchive: string
   unorderedList: string
   unrsolvedComment: string
   'unsavedChanges.leave': string

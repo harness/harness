@@ -14,15 +14,9 @@
  * limitations under the License.
  */
 
-.label {
-  font-size: 11px !important;
-  line-height: 18px !important;
-  font-weight: 500 !important;
-  background-color: var(--white) !important;
-  color: var(--grey-500) !important;
-  white-space: nowrap !important;
-  border: 1px solid var(--grey-200);
-  border-radius: 24px;
-  padding: 0 9px !important;
-  display: inline-block !important;
+.infoContainer {
+  background-color: var(--orange-100) !important;
+  padding: var(--spacing-small) var(--spacing-medium) !important;
+  width: 100% !important;
+  margin: 0 auto !important;
 }

@@ -14,6 +14,20 @@
  * limitations under the License.
  */
 
-/* eslint-disable */
-// This is an auto-generated file
-export declare const label: string
+.label {
+  font-size: 11px !important;
+  line-height: 18px !important;
+  font-weight: 500 !important;
+  background-color: var(--white) !important;
+  color: var(--grey-500) !important;
+  white-space: nowrap !important;
+  border: 1px solid var(--grey-200);
+  border-radius: 24px;
+  padding: 0 9px !important;
+  display: inline-block !important;
+}
+
+.labelArchived {
+  color: rgb(128, 92, 67, 1) !important;
+  border-color: rgb(128, 92, 67, 1) !important;
+}

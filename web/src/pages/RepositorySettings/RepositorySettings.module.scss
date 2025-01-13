@@ -104,9 +104,13 @@
   width: 80%;
 }
 
-.deleteContainer {
-  display: flex;
-  justify-content: space-between;
+.cautionContainer {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center;
+  width: 100% !important;
+  padding: var(--spacing-medium) var(--spacing-small) !important;
+  white-space: nowrap !important;
 }
 
 .text {

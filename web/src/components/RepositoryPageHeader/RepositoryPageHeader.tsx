@@ -25,6 +25,7 @@ import { useAppContext } from 'AppContext'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import type { CODEProps } from 'RouteDefinitions'
 import type { GitInfoProps } from 'utils/GitUtils'
+import { RepoArchivedBanner } from 'components/RepositoryArchivedBanner/RepositoryArchivedBanner'
 import css from './RepositoryPageHeader.module.scss'
 
 interface BreadcrumbLink {
@@ -54,45 +55,48 @@ export function RepositoryPageHeader({
   const { routes, isCurrentSessionPublic } = useAppContext()
 
   return (
-    <PageHeader
-      className={className}
-      content={content}
-      title=""
-      breadcrumbs={
-        <Container className={css.header}>
-          <Layout.Horizontal
-            spacing="small"
-            className={cx(css.breadcrumb, { [css.hideBreadcrumbs]: isCurrentSessionPublic })}>
-            <Link to={routes.toCODERepositories({ space })}>{getString('repositories')}</Link>
-            <Icon name="main-chevron-right" size={8} color={Color.GREY_500} />
-            <Link to={routes.toCODERepository({ repoPath: (repoMetadata?.path as string) || '', gitRef })}>
-              {repoMetadata?.identifier || ''}
-            </Link>
-            {extraBreadcrumbLinks.map(link => (
-              <Fragment key={link.url}>
-                <Icon name="main-chevron-right" size={8} color={Color.GREY_500} />
-                {/* This allows for outer most entities to not necessarily be links */}
-                {link.url ? (
-                  <Link to={link.url}>{link.label}</Link>
-                ) : (
-                  <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_500}>
-                    {link.label}
-                  </Text>
-                )}
-              </Fragment>
-            ))}
-          </Layout.Horizontal>
-          <Container padding={{ top: 'small', bottom: 'small' }}>
-            {typeof title === 'string' ? (
-              <Text tag="h1" font={{ variation: FontVariation.H4 }} tooltipProps={{ dataTooltipId }}>
-                {title}
-              </Text>
-            ) : (
-              title
-            )}
+    <>
+      <PageHeader
+        className={className}
+        content={content}
+        title=""
+        breadcrumbs={
+          <Container className={css.header}>
+            <Layout.Horizontal
+              spacing="small"
+              className={cx(css.breadcrumb, { [css.hideBreadcrumbs]: isCurrentSessionPublic })}>
+              <Link to={routes.toCODERepositories({ space })}>{getString('repositories')}</Link>
+              <Icon name="main-chevron-right" size={8} color={Color.GREY_500} />
+              <Link to={routes.toCODERepository({ repoPath: (repoMetadata?.path as string) || '', gitRef })}>
+                {repoMetadata?.identifier || ''}
+              </Link>
+              {extraBreadcrumbLinks.map(link => (
+                <Fragment key={link.url}>
+                  <Icon name="main-chevron-right" size={8} color={Color.GREY_500} />
+                  {/* This allows for outer most entities to not necessarily be links */}
+                  {link.url ? (
+                    <Link to={link.url}>{link.label}</Link>
+                  ) : (
+                    <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_500}>
+                      {link.label}
+                    </Text>
+                  )}
+                </Fragment>
+              ))}
+            </Layout.Horizontal>
+            <Container padding={{ top: 'small', bottom: 'small' }}>
+              {typeof title === 'string' ? (
+                <Text tag="h1" font={{ variation: FontVariation.H4 }} tooltipProps={{ dataTooltipId }}>
+                  {title}
+                </Text>
+              ) : (
+                title
+              )}
+            </Container>
           </Container>
-        </Container>
-      }
-    />
+        }
+      />
+      <RepoArchivedBanner isArchived={repoMetadata?.archived} updated={repoMetadata?.updated} />
+    </>
   )
 }

@@ -39,12 +39,13 @@ import { useStrings } from 'framework/strings'
 import type { RepoRepositoryOutput } from 'services/code'
 import { useAppContext } from 'AppContext'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
-import { RepoVisibility } from 'utils/GitUtils'
+import { RepoVisibility, RepoState } from 'utils/GitUtils'
 import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
 import { useModalHook } from 'hooks/useModalHook'
 import { usePublicResourceConfig } from 'hooks/usePublicResourceConfig'
 import useDeleteRepoModal from './DeleteRepoModal/DeleteRepoModal'
 import useDefaultBranchModal from './DefaultBranchModal/DefaultBranchModal'
+import useArchiveRepoModal from './ArchiveRepoModal/ArchiveRepoModal'
 import Private from '../../../icons/private.svg?url'
 import css from '../RepositorySettings.module.scss'
 
@@ -68,6 +69,8 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
   const { allowPublicResourceCreation } = usePublicResourceConfig()
   const { getString } = useStrings()
   const currRepoVisibility = repoMetadata?.is_public === true ? RepoVisibility.PUBLIC : RepoVisibility.PRIVATE
+  const repoState = repoMetadata?.archived === true ? RepoState.ARCHIVED : RepoState.UNARCHIVED
+  const { openModal: openArchiveRepoModal } = useArchiveRepoModal({ refetch })
   const [repoVis, setRepoVis] = useState<RepoVisibility>(currRepoVisibility)
 
   const { mutate } = useMutate({
@@ -186,7 +189,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
       {formik => {
         return (
           <Layout.Vertical padding={{ top: 'medium' }}>
-            <Container padding="large" margin={{ bottom: 'medium' }} className={css.generalContainer}>
+            <Container padding="medium" margin={{ bottom: 'medium' }} className={css.generalContainer}>
               <Layout.Horizontal padding={{ bottom: 'medium' }}>
                 <Container className={css.label}>
                   <Text color={Color.GREY_600} className={css.textSize}>
@@ -409,20 +412,51 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
                 </Layout.Horizontal>
               </Container>
             </Render>
-            <Container padding="medium" className={css.generalContainer}>
-              <Container className={css.deleteContainer}>
-                <Text icon="main-trash" color={Color.GREY_600} font={{ size: 'small' }}>
-                  {getString('dangerDeleteRepo')}
-                </Text>
-                <Button
-                  intent={Intent.DANGER}
-                  onClick={() => {
-                    openDeleteRepoModal()
-                  }}
-                  variation={ButtonVariation.SECONDARY}
-                  text={getString('delete')}
-                  {...permissionProps(permDeleteResult, standalone)}></Button>
-              </Container>
+            <Container padding="medium" margin={{ bottom: 'medium' }} className={css.generalContainer}>
+              <Layout.Horizontal padding={{ bottom: 'medium' }}>
+                <Container className={css.label}>
+                  <Text color={Color.GREY_600} className={css.textSize} margin={{ top: 'medium' }}>
+                    {getString('cautionZone')}
+                  </Text>
+                </Container>
+                <Layout.Vertical>
+                  <Container className={css.cautionContainer}>
+                    <Layout.Vertical spacing="small" padding={{ right: 'large' }}>
+                      <Text font={{ size: 'small' }} className={css.textSize}>
+                        {repoState === RepoState.ARCHIVED
+                          ? getString('repoArchive.unarchive')
+                          : getString('repoArchive.archive')}
+                      </Text>
+                      <Text font={{ variation: FontVariation.TINY }}>
+                        {repoState === RepoState.ARCHIVED
+                          ? getString('repoArchive.unarchiveInfo')
+                          : getString('repoArchive.archiveInfo')}
+                      </Text>
+                    </Layout.Vertical>
+                    <Button
+                      onClick={openArchiveRepoModal}
+                      variation={ButtonVariation.SECONDARY}
+                      text={repoState === RepoState.ARCHIVED ? getString('unarchive') : getString('archive')}
+                      {...permissionProps(permEditResult, standalone)}
+                    />
+                  </Container>
+                  <Container className={css.cautionContainer}>
+                    <Layout.Vertical spacing="small" padding={{ right: 'large' }}>
+                      <Text font={{ size: 'small' }} className={css.textSize}>
+                        {getString('deleteRepo')}
+                      </Text>
+                      <Text font={{ variation: FontVariation.TINY }}>{getString('deleteRepoMsg')}</Text>
+                    </Layout.Vertical>
+                    <Button
+                      intent={Intent.DANGER}
+                      onClick={openDeleteRepoModal}
+                      variation={ButtonVariation.SECONDARY}
+                      text={getString('delete')}
+                      {...permissionProps(permDeleteResult, standalone)}
+                    />
+                  </Container>
+                </Layout.Vertical>
+              </Layout.Horizontal>
             </Container>
           </Layout.Vertical>
         )

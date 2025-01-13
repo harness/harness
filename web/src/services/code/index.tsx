@@ -667,6 +667,7 @@ export interface OpenapiUpdateRepoPublicAccessRequest {
 
 export interface OpenapiUpdateRepoRequest {
   description?: string | null
+  state?: number | null
 }
 
 export interface OpenapiUpdateRepoWebhookRequest {
@@ -878,6 +879,7 @@ export interface RepoRepositoryOutput {
   importing?: boolean
   is_empty?: boolean
   is_public?: boolean
+  archived?: boolean
   num_closed_pulls?: number
   num_forks?: number
   num_merged_pulls?: number

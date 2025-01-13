@@ -103,6 +103,11 @@ export enum RepoVisibility {
   PRIVATE = 'private'
 }
 
+export enum RepoState {
+  ARCHIVED = 'archived',
+  UNARCHIVED = 'unarchived'
+}
+
 export enum RepoCreationType {
   IMPORT = 'import',
   CREATE = 'create',

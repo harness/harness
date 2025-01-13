@@ -111,7 +111,6 @@ const useDeleteRepoModal = () => {
               margin={{ top: 'small' }}
               onClick={async () => {
                 try {
-                  // this isn't implemented in the backend yet
                   await deleteRepo(`${repoMetadata?.path as string}/+/`)
                   setShowConfirmPage(false)
                   setDeleteConfirmString('')

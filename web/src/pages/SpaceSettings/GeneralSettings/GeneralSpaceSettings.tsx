@@ -479,7 +479,7 @@ export default function GeneralSpaceSettings() {
                     <Container className={css.deleteContainer}>
                       <Layout.Vertical className={css.verticalContainer}>
                         <Text icon="main-trash" color={Color.GREY_600} font={{ size: 'small' }}>
-                          {getString('dangerDeleteRepo')}
+                          {getString('dangerDeleteProject')}
                         </Text>
                         <Layout.Horizontal
                           padding={{ top: 'medium', left: 'medium' }}

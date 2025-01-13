@@ -12758,6 +12758,8 @@ components:
       type: object
     RepoRepositoryOutput:
       properties:
+        archived:
+          type: boolean
         created:
           type: integer
         created_by:

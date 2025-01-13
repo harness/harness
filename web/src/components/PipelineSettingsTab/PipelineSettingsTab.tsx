@@ -147,7 +147,7 @@ const PipelineSettingsTab = ({ pipeline, repoPath, yamlPath }: SettingsContentPr
       <Container padding={'large'} className={css.generalContainer}>
         <Layout.Vertical>
           <Text icon="main-trash" color={Color.GREY_600} font={{ size: 'normal' }}>
-            {getString('dangerDeleteRepo')}
+            {getString('dangerDeletePipeline')}
           </Text>
           <Layout.Horizontal padding={{ top: 'medium', left: 'medium' }} flex={{ justifyContent: 'space-between' }}>
             <Container intent="warning" padding={'small'} className={css.yellowContainer}>

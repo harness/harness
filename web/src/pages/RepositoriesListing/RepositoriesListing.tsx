@@ -49,7 +49,7 @@ import { useAppContext } from 'AppContext'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
-import { RepoPublicLabel } from 'components/RepoPublicLabel/RepoPublicLabel'
+import { RepoTypeLabel } from 'components/RepoTypeLabel/RepoTypeLabel'
 import KeywordSearch from 'components/CodeSearch/KeywordSearch'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { useConfirmAct } from 'hooks/useConfirmAction'
@@ -200,7 +200,11 @@ export default function RepositoriesListing() {
                 <Layout.Vertical flex className={css.name} ref={rowContainerRef}>
                   <Text className={css.repoName} width={nameTextWidth} lineClamp={2}>
                     <Keywords value={searchTerm}>{record.identifier}</Keywords>
-                    <RepoPublicLabel isPublic={row.original.is_public} margin={{ left: 'small' }} />
+                    <RepoTypeLabel
+                      isPublic={row.original.is_public}
+                      isArchived={row.original.archived}
+                      margin={{ left: 'small' }}
+                    />
                   </Text>
 
                   <Text className={css.desc} width={nameTextWidth} lineClamp={1}>
