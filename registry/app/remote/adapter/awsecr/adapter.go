@@ -51,15 +51,19 @@ func init() {
 func newAdapter(
 	ctx context.Context, spacePathStore store2.SpacePathStore, service secret.Service, registry types.UpstreamProxy,
 ) (adp.Adapter, error) {
-	accessKey, secretKey, err := getCreds(ctx, spacePathStore, service, registry)
+	accessKey, secretKey, isPublic, err := getCreds(ctx, spacePathStore, service, registry)
 	if err != nil {
 		return nil, err
 	}
-	svc, err := getAwsSvc(accessKey, secretKey, registry)
-	if err != nil {
-		return nil, err
+	var svc *awsecrapi.ECR
+	if !isPublic {
+		svc, err = getAwsSvc(accessKey, secretKey, registry)
+		if err != nil {
+			return nil, err
+		}
 	}
-	authorizer := NewAuth(accessKey, svc)
+
+	authorizer := NewAuth(accessKey, svc, isPublic)
 
 	return &adapter{
 		cacheSvc: svc,
