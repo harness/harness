@@ -189,11 +189,10 @@ func (r registryDao) FetchUpstreamProxyKeys(
 	return dst, nil
 }
 
-func (r registryDao) GetByIDIn(ctx context.Context, parentID int64, ids []int64) (*[]types.Registry, error) {
+func (r registryDao) GetByIDIn(ctx context.Context, ids []int64) (*[]types.Registry, error) {
 	stmt := databaseg.Builder.
 		Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(registryDB{}), ",")).
 		From("registries").
-		Where("registry_parent_id = ?", parentID).
 		Where(sq.Eq{"registry_id": ids})
 
 	db := dbtx.GetAccessor(ctx, r.db)
@@ -285,8 +284,10 @@ func (r registryDao) GetAll(
 			LeftJoin("upstream_proxy_configs u ON r.registry_id = u.upstream_proxy_config_registry_id").
 			LeftJoin(fmt.Sprintf("(%s) AS artifact_count ON r.registry_id = artifact_count.image_registry_id",
 				artifactCountSubquery)).
-			LeftJoin(fmt.Sprintf("(%s) AS blob_sizes ON r.registry_id = blob_sizes.rblob_registry_id", blobSizesSubquery)).
-			LeftJoin(fmt.Sprintf("(%s) AS download_stats ON r.registry_id = download_stats.registry_id", downloadStatsSubquery))
+			LeftJoin(fmt.Sprintf("(%s) AS blob_sizes ON r.registry_id = blob_sizes.rblob_registry_id",
+				blobSizesSubquery)).
+			LeftJoin(fmt.Sprintf("(%s) AS download_stats ON r.registry_id = download_stats.registry_id",
+				downloadStatsSubquery))
 	} else {
 		query = databaseg.Builder.
 			Select(selectFields).
@@ -294,8 +295,10 @@ func (r registryDao) GetAll(
 			LeftJoin("upstream_proxy_configs u ON r.registry_id = u.upstream_proxy_config_registry_id").
 			LeftJoin(fmt.Sprintf("(%s) AS artifact_count ON r.registry_id = artifact_count.image_registry_id",
 				artifactCountSubquery)).
-			LeftJoin(fmt.Sprintf("(%s) AS blob_sizes ON r.registry_id = blob_sizes.rblob_registry_id", blobSizesSubquery)).
-			LeftJoin(fmt.Sprintf("(%s) AS download_stats ON r.registry_id = download_stats.registry_id", downloadStatsSubquery)).
+			LeftJoin(fmt.Sprintf("(%s) AS blob_sizes ON r.registry_id = blob_sizes.rblob_registry_id",
+				blobSizesSubquery)).
+			LeftJoin(fmt.Sprintf("(%s) AS download_stats ON r.registry_id = download_stats.registry_id",
+				downloadStatsSubquery)).
 			Where("r.registry_parent_id = ?", parentID)
 	}
 	// Apply search filter

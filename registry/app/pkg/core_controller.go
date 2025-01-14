@@ -72,7 +72,7 @@ func (c *CoreController) GetOrderedRepos(
 		result = append(result, *registry)
 		proxies := registry.UpstreamProxies
 		if len(proxies) > 0 {
-			upstreamRepos, _ := c.RegistryDao.GetByIDIn(ctx, artInfo.ParentID, proxies)
+			upstreamRepos, _ := c.RegistryDao.GetByIDIn(ctx, proxies)
 			result = append(result, *upstreamRepos...)
 		}
 	} else {

@@ -338,8 +338,7 @@ type RegistryRepository interface {
 	Get(ctx context.Context, id int64) (repository *types.Registry, err error)
 	// GetByName gets the repository specified by name
 	GetByIDIn(
-		ctx context.Context, parentID int64,
-		ids []int64,
+		ctx context.Context, ids []int64,
 	) (registries *[]types.Registry, err error)
 	// GetByName gets the repository specified by parent id and name
 	GetByParentIDAndName(
