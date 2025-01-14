@@ -21,12 +21,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/harness/gitness/app/api/request"
 	store2 "github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/common/lib/errors"
 	"github.com/harness/gitness/registry/app/manifest"
 	"github.com/harness/gitness/registry/app/manifest/manifestlist"
@@ -92,46 +90,6 @@ type RemoteRegistry struct {
 
 func (r *RemoteRegistry) Base() error {
 	panic("Not implemented yet, will be done during Replication flows")
-}
-
-// defaultLibrary checks if we need to append "library/" to dockerhub images. For example, if the image is
-// "alpine" then we need to append "library/alpine" to the image.
-func (r *RemoteRegistry) defaultLibrary(ctx context.Context, artInfo pkg.RegistryInfo) (bool, error) {
-	upstreamProxy, err := r.upstreamProxyConfigRepo.GetByRegistryIdentifier(
-		ctx, artInfo.ParentID, artInfo.RegIdentifier,
-	)
-	if err != nil {
-		return false, err
-	}
-	if upstreamProxy.Source != string(artifact.UpstreamConfigSourceDockerhub) {
-		log.Ctx(ctx).Debug().Msg("upstream proxy source is not Dockerhub")
-		return false, nil
-	}
-	if strings.Contains(artInfo.Image, "/") {
-		log.Ctx(ctx).Debug().Msgf("image name %s contains a slash", artInfo.Image)
-		return false, nil
-	}
-	return true, nil
-}
-
-// defaultManifestURL return the real url for request with default project.
-func defaultManifestURL(rootIdentifier string, regIdentifier string, name string, a pkg.RegistryInfo) string {
-	return fmt.Sprintf("/v2/%s/%s/library/%s/manifests/%s", rootIdentifier, regIdentifier, name, a.Reference)
-}
-
-// defaultBlobURL return the real url for request with default project.
-func defaultBlobURL(rootIdentifier string, regIdentifier string, name string, digest string) string {
-	return fmt.Sprintf("/v2/%s/%s/library/%s/blobs/%s", rootIdentifier, regIdentifier, name, digest)
-}
-
-func ExtractRegistryIdentifierFromPath(path string) (registry string) {
-	registryIdentifier := ""
-	path = strings.Trim(path, "/")
-	segments := strings.Split(path, "/")
-	if len(segments) >= 2 {
-		registryIdentifier = segments[2]
-	}
-	return registryIdentifier
 }
 
 func proxyManifestHead(
@@ -203,21 +161,7 @@ func (r *RemoteRegistry) ManifestExist(
 	responseHeaders = &commons.ResponseHeaders{
 		Headers: make(map[string]string),
 	}
-	isDefault, err := r.defaultLibrary(ctx, artInfo)
-	if err != nil {
-		errs = append(errs, err)
-		return responseHeaders, descriptor, manifestResult, errs
-	}
 	registryInfo := artInfo
-	if isDefault {
-		localRegistryIdentifier := ExtractRegistryIdentifierFromPath(artInfo.Path)
-		responseHeaders.Code = http.StatusMovedPermanently
-		responseHeaders.Headers = map[string]string{
-			"Location": defaultManifestURL(artInfo.PathRoot, localRegistryIdentifier, artInfo.Image,
-				registryInfo),
-		}
-		return responseHeaders, descriptor, manifestResult, errs
-	}
 
 	if !canProxy() {
 		errs = append(errs, errors.New("Proxy is down"))
@@ -294,22 +238,8 @@ func (r *RemoteRegistry) PullManifest(
 	responseHeaders = &commons.ResponseHeaders{
 		Headers: make(map[string]string),
 	}
-	isDefault, err := r.defaultLibrary(ctx, artInfo)
-	if err != nil {
-		errs = append(errs, err)
-		return responseHeaders, descriptor, manifestResult, errs
-	}
-	registryInfo := artInfo
-	if isDefault {
-		localRegistryIdentifier := ExtractRegistryIdentifierFromPath(artInfo.Path)
-		responseHeaders.Code = http.StatusMovedPermanently
-		responseHeaders.Headers = map[string]string{
-			"Location": defaultManifestURL(artInfo.PathRoot, localRegistryIdentifier, artInfo.Image,
-				registryInfo),
-		}
-		return responseHeaders, descriptor, manifestResult, errs
-	}
 
+	registryInfo := artInfo
 	if !canProxy() {
 		errs = append(errs, errors.New("Proxy is down"))
 		return responseHeaders, descriptor, manifestResult, errs
@@ -413,22 +343,7 @@ func (r *RemoteRegistry) fetchBlobInternal(
 
 	log.Ctx(ctx).Info().Msgf("Proxy: %s", repoKey)
 
-	// Handle dockerhub request without library prefix.
-	isDefault, err := r.defaultLibrary(ctx, info)
-	if err != nil {
-		errs = append(errs, err)
-		return responseHeaders, fr, size, readCloser, redirectURL, errs
-	}
 	registryInfo := info
-	if isDefault {
-		localRegistryIdentifier := ExtractRegistryIdentifierFromPath(info.Path)
-		responseHeaders.Code = http.StatusMovedPermanently
-		responseHeaders.Headers = map[string]string{
-			"Location": defaultBlobURL(info.PathRoot, localRegistryIdentifier, info.Image, info.Digest),
-		}
-		return responseHeaders, fr, size, readCloser, redirectURL, errs
-	}
-
 	if !canProxy() {
 		errs = append(errs, errors.New("Blob not found"))
 	}
