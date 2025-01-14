@@ -32,7 +32,6 @@ type DevcontainerFeatureConfig struct {
 	ContainerEnv      map[string]string `json:"containerEnv,omitempty"`
 	Privileged        bool              `json:"privileged,omitempty"`
 	Init              bool              `json:"init,omitempty"`
-	Deprecated        bool              `json:"deprecated,omitempty"`
 	CapAdd            []string          `json:"capAdd,omitempty"`
 	SecurityOpt       []string          `json:"securityOpt,omitempty"`
 	Entrypoint        string            `json:"entrypoint,omitempty"`

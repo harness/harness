@@ -244,3 +244,13 @@ type Mount struct {
 	Target string `json:"target,omitempty"`
 	Type   string `json:"type,omitempty"`
 }
+
+func (m *Mount) UnmarshalJSON(data []byte) error {
+	// TODO: Add support for unmarshalling mount data from a string input
+	var mount Mount
+	err := json.Unmarshal(data, &mount)
+	if err != nil {
+		return err
+	}
+	return nil
+}

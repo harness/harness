@@ -27,6 +27,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -67,6 +68,10 @@ func DownloadFeatures(
 		downloadQueue <- featureSource{sourceURL: key, sourceType: value.SourceType}
 	}
 
+	// TODO: Add ctx based cancellations to the below goroutines.
+
+	// NOTE: The following logic might see performance issues with spikes in memory and CPU usage.
+	// If there are such issues, we can introduce throttling on the basis of memory, CPU, etc.
 	go func() {
 		for source := range downloadQueue {
 			startCh <- 1
@@ -102,6 +107,8 @@ waitLoop:
 		default:
 			if totalEnd > 0 && totalStart == totalEnd {
 				break waitLoop
+			} else {
+				time.Sleep(time.Millisecond * 10)
 			}
 		}
 	}
@@ -183,6 +190,7 @@ func downloadFeature(
 
 	downloadedFeature := types.DownloadedFeature{
 		FeatureFolderName:         featureFolderName,
+		Source:                    source.sourceURL,
 		SourceWithoutTag:          sourceWithoutTag,
 		Tag:                       featureTag,
 		CanonicalName:             canonicalName,
@@ -219,10 +227,13 @@ func getDevcontainerFeatureConfig(
 	if err != nil {
 		return nil, fmt.Errorf("error unpacking tarball for feature %s: %w", source.sourceURL, err)
 	}
+
+	// Delete the tarball to avoid unnecessary packaging and copying during docker build.
 	err = os.Remove(filepath.Join(downloadDirectory, tarballName))
 	if err != nil {
 		return nil, fmt.Errorf("error deleting tarball for feature %s: %w", source.sourceURL, err)
 	}
+
 	devcontainerFeatureRaw, err := os.ReadFile(filepath.Join(dst, "devcontainer-feature.json"))
 	if err != nil {
 		return nil, fmt.Errorf("error reading devcontainer-feature.json file for feature %s: %w",
@@ -251,9 +262,6 @@ func getFeatureDownloadDirectory(gitspaceInstanceIdentifier, featureFolderName, 
 }
 
 func getFeatureFolderNameWithTag(featureFolderName string, featureTag string) string {
-	if featureTag == "" {
-		return featureFolderName
-	}
 	return featureFolderName + "-" + featureTag
 }
 

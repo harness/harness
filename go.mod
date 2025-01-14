@@ -4,6 +4,7 @@ go 1.22.0
 
 require (
 	cloud.google.com/go/storage v1.43.0
+	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/Masterminds/squirrel v1.5.4
 	github.com/adrg/xdg v0.5.0
 	github.com/aws/aws-sdk-go v1.55.2
@@ -98,7 +99,6 @@ require (
 	github.com/99designs/httpsignatures-go v0.0.0-20170731043157-88528bf4ca7e // indirect
 	github.com/BobuSumisu/aho-corasick v1.0.3 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
-	github.com/Masterminds/semver/v3 v3.3.1 // indirect
 	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
 	github.com/antonmedv/expr v1.15.5 // indirect
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect

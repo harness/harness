@@ -15,6 +15,7 @@
 package types
 
 import (
+	"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -31,10 +32,19 @@ type ResolvedFeature struct {
 
 type DownloadedFeature struct {
 	FeatureFolderName         string                     `json:"feature_folder_name,omitempty"`
+	Source                    string                     `json:"source,omitempty"`
 	SourceWithoutTag          string                     `json:"source_without_tag,omitempty"`
 	Tag                       string                     `json:"tag,omitempty"`
 	CanonicalName             string                     `json:"canonical_name,omitempty"`
 	DevcontainerFeatureConfig *DevcontainerFeatureConfig `json:"devcontainer_feature_config,omitempty"`
+}
+
+func (r *ResolvedFeature) Print() string {
+	options := make([]string, 0, len(r.ResolvedOptions))
+	for key, value := range r.ResolvedOptions {
+		options = append(options, fmt.Sprintf("%s=%s", key, value))
+	}
+	return fmt.Sprintf("%s %+v", r.DownloadedFeature.Source, options)
 }
 
 // CompareResolvedFeature implements the following comparison rules.
