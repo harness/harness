@@ -169,7 +169,7 @@ export function ContentHeader({
           </>
         )}
       </Layout.Horizontal>
-      <div className={css.searchBoxCtn}>
+      <div className={cx(css.searchBoxCtn, { [css.searchBoxPositionArchivedRepo]: repoMetadata?.archived })}>
         {!standalone && !isCurrentSessionPublic ? <CodeSearch repoMetadata={repoMetadata} /> : null}
       </div>
     </Container>

@@ -23,3 +23,4 @@ export declare const mainContainer: string
 export declare const refRoot: string
 export declare const rootSlash: string
 export declare const searchBoxCtn: string
+export declare const searchBoxPositionArchivedRepo: string

@@ -100,6 +100,11 @@
   }
 }
 
+// to make space between the Archive banner and search box
+.searchBoxPositionArchivedRepo {
+  top: -70px !important;
+}
+
 .mainBorder {
   border-bottom: 1px solid var(--grey-200) !important;
 }
