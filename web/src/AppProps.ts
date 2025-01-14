@@ -91,5 +91,6 @@ export interface AppProps {
     repositoryIdentifier?: string
     artifactIdentifier?: string
     versionIdentifier?: string
+    repositoryType?: 'UPSTREAM' | 'VIRTUAL'
   }
 }

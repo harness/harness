@@ -22,13 +22,8 @@ export default function getARRouteDefinitions(routeParams: Record<string, string
     toAR: () => '/ar',
     toARRedirect: () => '/ar', // currently not used for gitness
     toARRepositories: () => '/',
-    toARRepositoryDetails: params => {
-      let url = `/${params?.repositoryIdentifier}?`
-      if (params.tab) {
-        url += `tab=${params.tab}`
-      }
-      return url
-    },
+    toARRepositoryDetails: params => `/${params?.repositoryIdentifier}`,
+    toARRepositoryDetailsTab: params => `/${params?.repositoryIdentifier}/${params?.tab}`,
     toARArtifacts: () => `/${routeParams?.repositoryIdentifier}?tab=packages`,
     toARArtifactDetails: params => `/${params?.repositoryIdentifier}/artifacts/${params?.artifactIdentifier}`,
     toARVersionDetails: params =>

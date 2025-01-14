@@ -101,7 +101,7 @@ export const RepositoryNameCell: CellType = ({ value }) => {
   const routes = useRoutes()
   return (
     <TableCells.LinkCell
-      linkTo={routes.toARRepositoryDetails({
+      linkTo={routes.toARRepositoryDetailsTab({
         repositoryIdentifier: value,
         tab: RepositoryDetailsTab.PACKAGES
       })}

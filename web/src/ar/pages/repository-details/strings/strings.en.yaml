@@ -37,6 +37,7 @@ repositoryForm:
 tabs:
   configuration: Configuration
   packages: '{{ $.artifactList.pageHeading }}'
+  webhooks: Webhooks
 upstreamProxiesSelectList:
   selectList:
     Title: Available upstream proxies ({{count}})

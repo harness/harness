@@ -43,7 +43,7 @@ function ArtifactDetailsHeader(): JSX.Element {
         <NGBreadcrumbs
           links={[
             {
-              url: routes.toARRepositoryDetails({
+              url: routes.toARRepositoryDetailsTab({
                 repositoryIdentifier,
                 tab: RepositoryDetailsTab.PACKAGES
               }),

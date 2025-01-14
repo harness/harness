@@ -31,7 +31,7 @@ export function CreateRepository(): JSX.Element {
 
   const handleRedirectToRepoDetails = (data: Repository): void => {
     history.push(
-      routes.toARRepositoryDetails({
+      routes.toARRepositoryDetailsTab({
         repositoryIdentifier: data.identifier,
         tab: RepositoryDetailsTab.CONFIGURATION
       })

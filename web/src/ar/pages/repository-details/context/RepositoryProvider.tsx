@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-import React, { useState, createContext } from 'react'
+import React, { useState, createContext, useEffect } from 'react'
 import type { FC, PropsWithChildren } from 'react'
 import { defaultTo, noop } from 'lodash-es'
 import { Page } from '@harnessio/uicore'
 import { useGetRegistryQuery } from '@harnessio/react-har-service-client'
 
+import { Parent } from '@ar/common/types'
 import { useStrings } from '@ar/frameworks/strings'
 import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
 import { useParentHooks, useDecodedParams, useAppStore, useGetSpaceRef } from '@ar/hooks'
@@ -55,7 +56,7 @@ const RepositoryProvider: FC<PropsWithChildren<{ className?: string }>> = ({ chi
   const [isUpdating, setIsUpdating] = useState(false)
   const { usePermission } = useParentHooks()
   const spaceRef = useGetSpaceRef()
-  const { scope } = useAppStore()
+  const { scope, updateAppStore, parent } = useAppStore()
   const { getString } = useStrings()
   const { accountId, orgIdentifier, projectIdentifier } = scope
 
@@ -84,7 +85,18 @@ const RepositoryProvider: FC<PropsWithChildren<{ className?: string }>> = ({ chi
   } = useGetRegistryQuery({
     registry_ref: spaceRef
   })
+
   const loading = isLoading || isDataLoading
+
+  useEffect(() => {
+    if (typeof updateAppStore === 'function' && parent === Parent.OSS && repositoryData) {
+      updateAppStore({
+        repositoryType: repositoryData.content?.data?.config?.type,
+        repositoryPackageType: repositoryData.content?.data?.packageType
+      })
+    }
+  }, [repositoryData, loading])
+
   return (
     <RepositoryProviderContext.Provider
       value={{

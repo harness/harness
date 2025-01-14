@@ -19,6 +19,7 @@ import type {
   ArtifactDetailsPathParams,
   RedirectPageQueryParams,
   RepositoryDetailsPathParams,
+  RepositoryDetailsTabPathParams,
   VersionDetailsPathParams,
   VersionDetailsTabPathParams
 } from './types'
@@ -28,6 +29,7 @@ export interface ARRouteDefinitionsReturn {
   toARRedirect: (params?: RedirectPageQueryParams) => string
   toARRepositories: () => string
   toARRepositoryDetails: (params: RepositoryDetailsPathParams) => string
+  toARRepositoryDetailsTab: (params: RepositoryDetailsTabPathParams) => string
   toARArtifacts: () => string
   toARArtifactDetails: (params: ArtifactDetailsPathParams) => string
   toARVersionDetails: (params: VersionDetailsPathParams) => string
@@ -50,13 +52,8 @@ export const routeDefinitions: ARRouteDefinitionsReturn = {
     return '/redirect'
   },
   toARRepositories: () => '/registries',
-  toARRepositoryDetails: params => {
-    let url = `/registries/${params?.repositoryIdentifier}?`
-    if (params.tab) {
-      url += `tab=${params.tab}`
-    }
-    return url
-  },
+  toARRepositoryDetails: params => `/registries/${params?.repositoryIdentifier}`,
+  toARRepositoryDetailsTab: params => `/registries/${params?.repositoryIdentifier}/${params?.tab}`,
   toARArtifacts: () => '/artifacts',
   toARArtifactDetails: params => `/registries/${params?.repositoryIdentifier}/artifacts/${params?.artifactIdentifier}`,
   toARVersionDetails: params =>

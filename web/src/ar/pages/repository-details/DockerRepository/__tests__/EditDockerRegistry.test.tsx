@@ -195,15 +195,10 @@ describe('Verify configuration form', () => {
 
   test('should render form correctly with all data prefilled', async () => {
     const { container } = render(
-      <ArTestWrapper queryParams={{ tab: 'configuration' }}>
+      <ArTestWrapper path="/registries/abcd/:tab" pathParams={{ tab: 'configuration' }}>
         <RepositoryDetailsPage />
       </ArTestWrapper>
     )
-
-    const tabPannel = container.querySelector(
-      'div[role=tabpanel][aria-labelledby=bp3-tab-title_repositoryTabDetails_configuration][aria-hidden=false]'
-    )
-    expect(tabPannel).toBeInTheDocument()
 
     // Artifact registry defination section
     const registryDefinitionSection = getByTestId(container, 'registry-definition')
@@ -280,7 +275,7 @@ describe('Verify configuration form', () => {
 
   test('should able to submit the form with updated data', async () => {
     const { container } = render(
-      <ArTestWrapper queryParams={{ tab: 'configuration' }}>
+      <ArTestWrapper path="/registries/abcd/:tab" pathParams={{ tab: 'configuration' }}>
         <RepositoryDetailsPage />
       </ArTestWrapper>
     )
@@ -302,14 +297,14 @@ describe('Verify configuration form', () => {
           ...MockGetDockerRegistryResponseWithAllData.content.data,
           description: 'updated description'
         },
-        registry_ref: 'undefined/+'
+        registry_ref: 'undefined/abcd/+'
       })
     })
   })
 
   test('should able to discard the changes', async () => {
     const { container } = render(
-      <ArTestWrapper queryParams={{ tab: 'configuration' }}>
+      <ArTestWrapper path="/registries/abcd/:tab" pathParams={{ tab: 'configuration' }}>
         <RepositoryDetailsPage />
       </ArTestWrapper>
     )

@@ -21,7 +21,8 @@ import type { Scanners } from '@ar/common/types'
 
 export enum RepositoryDetailsTab {
   PACKAGES = 'packages',
-  CONFIGURATION = 'configuration'
+  CONFIGURATION = 'configuration',
+  WEBHOOKS = 'webhooks'
 }
 
 export interface ScannerConfigSpec {

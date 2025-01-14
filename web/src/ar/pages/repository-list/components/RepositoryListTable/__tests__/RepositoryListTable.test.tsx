@@ -141,7 +141,7 @@ describe('Verify Reppository List Table', () => {
     const tableRow = getTableRow(1)
     await userEvent.click(tableRow!)
     await waitFor(() => {
-      expect(mockHistoryPush).toHaveBeenCalledWith('/registries/repo1?tab=packages')
+      expect(mockHistoryPush).toHaveBeenCalledWith('/registries/repo1/packages')
     })
   })
 

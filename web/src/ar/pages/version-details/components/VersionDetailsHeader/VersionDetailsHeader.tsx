@@ -49,7 +49,7 @@ export function VersionDetailsHeader(props: VersionDetailsHeaderProps): JSX.Elem
         <NGBreadcrumbs
           links={[
             {
-              url: routes.toARRepositoryDetails({
+              url: routes.toARRepositoryDetailsTab({
                 repositoryIdentifier,
                 tab: RepositoryDetailsTab.PACKAGES
               }),

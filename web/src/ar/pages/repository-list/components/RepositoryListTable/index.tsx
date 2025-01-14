@@ -141,7 +141,7 @@ export function RepositoryListTable(props: RepositoryListTableProps): JSX.Elemen
       getRowClassName={() => css.tableRow}
       onRowClick={rowDetails =>
         history.push(
-          routes.toARRepositoryDetails({
+          routes.toARRepositoryDetailsTab({
             repositoryIdentifier: rowDetails.identifier,
             tab: RepositoryDetailsTab.PACKAGES
           })

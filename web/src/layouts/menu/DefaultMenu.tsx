@@ -23,6 +23,7 @@ import { Icon } from '@harnessio/icons'
 import { Container, Layout } from '@harnessio/uicore'
 
 import { useGet } from 'restful-react'
+import { useFeatureFlags } from 'hooks/useFeatureFlag'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import type { SpaceSpaceOutput } from 'services/code'
@@ -35,10 +36,11 @@ import css from './DefaultMenu.module.scss'
 export const DefaultMenu: React.FC = () => {
   const history = useHistory()
   const { routes, standalone, isCurrentSessionPublic, arAppStore } = useAppContext()
-  const { repositoryIdentifier } = arAppStore || {}
+  const { repositoryIdentifier, repositoryType } = arAppStore || {}
   const [selectedSpace, setSelectedSpace] = useState<SpaceSpaceOutput | undefined>()
   const { repoMetadata, gitRef, commitRef } = useGetRepositoryMetadata()
   const { getString } = useStrings()
+  const { HAR_TRIGGERS } = useFeatureFlags()
   const repoPath = useMemo(() => repoMetadata?.path || '', [repoMetadata])
   const routeMatch = useRouteMatch()
   const isCommitSelected = useMemo(() => routeMatch.path === '/:space*/:repoName/commit/:commitRef*', [routeMatch])
@@ -202,6 +204,16 @@ export const DefaultMenu: React.FC = () => {
                   repositoryIdentifier: repositoryIdentifier as string
                 })}
               />
+              {HAR_TRIGGERS && repositoryType !== 'UPSTREAM' && (
+                <NavMenuItem
+                  isSubLink
+                  label={getString('webhooks')}
+                  to={routes.toARRepositoryWebhooks({
+                    space: selectedSpace?.path as string,
+                    repositoryIdentifier: repositoryIdentifier as string
+                  })}
+                />
+              )}
             </Layout.Vertical>
           </Container>
         </Render>

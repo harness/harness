@@ -20,7 +20,10 @@ import type { VersionDetailsTab } from '@ar/pages/version-details/components/Ver
 
 export interface RepositoryDetailsPathParams {
   repositoryIdentifier: string
-  tab?: RepositoryDetailsTab
+}
+
+export interface RepositoryDetailsTabPathParams extends RepositoryDetailsPathParams {
+  tab: RepositoryDetailsTab
 }
 
 export interface ArtifactDetailsPathParams extends RepositoryDetailsPathParams {

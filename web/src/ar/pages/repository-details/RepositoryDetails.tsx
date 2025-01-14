@@ -14,41 +14,45 @@
  * limitations under the License.
  */
 
-import React, { useCallback, useContext } from 'react'
+import React, { useContext, useState } from 'react'
 import type { FormikProps } from 'formik'
 import { Expander } from '@blueprintjs/core'
+import { Redirect, Switch, useHistory } from 'react-router-dom'
 import { Button, ButtonVariation, Container, Layout, Tab, Tabs } from '@harnessio/uicore'
 
-import type { RepositoryDetailsPathParams } from '@ar/routes/types'
-import { useDecodedParams, useParentComponents, useParentHooks } from '@ar/hooks'
-import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
 import { useStrings } from '@ar/frameworks/strings'
-import type { RepositoryConfigType, RepositoryPackageType } from '@ar/common/types'
+import type { RepositoryDetailsPathParams } from '@ar/routes/types'
+import RouteProvider from '@ar/components/RouteProvider/RouteProvider'
+import { useDecodedParams, useFeatureFlags, useParentComponents, useRoutes } from '@ar/hooks'
+import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
+import { RepositoryConfigType, RepositoryPackageType } from '@ar/common/types'
 import RepositoryDetailsHeaderWidget from '@ar/frameworks/RepositoryStep/RepositoryDetailsHeaderWidget'
-import RepositoryConfigurationFormWidget from '@ar/frameworks/RepositoryStep/RepositoryConfigurationFormWidget'
+import { repositoryDetailsPathProps, repositoryDetailsTabPathProps } from '@ar/routes/RouteDestinations'
 
 import { RepositoryDetailsTab } from './constants'
+import RepositoryDetailsTabPage from './RepositoryDetailsTabPage'
 import { RepositoryProviderContext } from './context/RepositoryProvider'
-import RegistryArtifactListPage from '../artifact-list/RegistryArtifactListPage'
 import css from './RepositoryDetailsPage.module.scss'
 
 export default function RepositoryDetails(): JSX.Element | null {
-  const { useUpdateQueryParams, useQueryParams } = useParentHooks()
-  const { updateQueryParams } = useUpdateQueryParams()
   const { RbacButton } = useParentComponents()
   const { getString } = useStrings()
-  const { repositoryIdentifier } = useDecodedParams<RepositoryDetailsPathParams>()
-  const { tab: selectedTabId = RepositoryDetailsTab.PACKAGES } = useQueryParams<{ tab: RepositoryDetailsTab }>()
+  const { HAR_TRIGGERS } = useFeatureFlags()
+  const pathParams = useDecodedParams<RepositoryDetailsPathParams>()
+  const { repositoryIdentifier } = pathParams
+  const [activeTab, setActiveTab] = useState(RepositoryDetailsTab.PACKAGES)
   const stepRef = React.useRef<FormikProps<unknown> | null>(null)
 
-  const { isDirty, data, isReadonly, isUpdating } = useContext(RepositoryProviderContext)
+  const routeDefinitions = useRoutes(true)
+  const history = useHistory()
+  const routes = useRoutes()
 
-  const handleTabChange = useCallback(
-    (nextTab: RepositoryDetailsTab): void => {
-      updateQueryParams({ tab: nextTab })
-    },
-    [updateQueryParams]
-  )
+  const { isDirty, data, isUpdating } = useContext(RepositoryProviderContext)
+
+  const handleTabChange = (nextTab: RepositoryDetailsTab): void => {
+    setActiveTab(nextTab)
+    history.push(routes.toARRepositoryDetailsTab({ ...pathParams, tab: nextTab }))
+  }
 
   const handleSubmitForm = (): void => {
     stepRef.current?.submitForm()
@@ -86,6 +90,8 @@ export default function RepositoryDetails(): JSX.Element | null {
 
   if (!data) return null
 
+  const isNotUpstreamRegistry = data.config.type !== RepositoryConfigType.UPSTREAM
+
   return (
     <>
       <RepositoryDetailsHeaderWidget
@@ -94,31 +100,30 @@ export default function RepositoryDetails(): JSX.Element | null {
         type={data.config.type as RepositoryConfigType}
       />
       <Container className={css.tabsContainer}>
-        <Tabs id="repositoryTabDetails" selectedTabId={selectedTabId} onChange={handleTabChange}>
-          <Tab
-            id={RepositoryDetailsTab.PACKAGES}
-            title={getString('repositoryDetails.tabs.packages')}
-            panel={
-              <Container>
-                <RegistryArtifactListPage pageBodyClassName={css.packagesPageBody} />
-              </Container>
-            }
-          />
-          <Tab
-            id={RepositoryDetailsTab.CONFIGURATION}
-            title={getString('repositoryDetails.tabs.configuration')}
-            panel={
-              <RepositoryConfigurationFormWidget
-                packageType={data.packageType as RepositoryPackageType}
-                type={data.config.type as RepositoryConfigType}
-                ref={stepRef}
-                readonly={isReadonly}
-              />
-            }
-          />
+        <Tabs id="repositoryTabDetails" selectedTabId={activeTab} onChange={handleTabChange}>
+          <Tab id={RepositoryDetailsTab.PACKAGES} title={getString('repositoryDetails.tabs.packages')} />
+          <Tab id={RepositoryDetailsTab.CONFIGURATION} title={getString('repositoryDetails.tabs.configuration')} />
+          {HAR_TRIGGERS && isNotUpstreamRegistry && (
+            <Tab id={RepositoryDetailsTab.WEBHOOKS} title={getString('repositoryDetails.tabs.webhooks')} />
+          )}
           <Expander />
-          {selectedTabId === RepositoryDetailsTab.CONFIGURATION && renderActionBtns()}
+          {activeTab === RepositoryDetailsTab.CONFIGURATION && renderActionBtns()}
         </Tabs>
+        <Switch>
+          <RouteProvider exact path={routeDefinitions.toARRepositoryDetails({ ...repositoryDetailsPathProps })}>
+            <Redirect
+              to={routes.toARRepositoryDetailsTab({ ...pathParams, tab: RepositoryDetailsTab.CONFIGURATION })}
+            />
+          </RouteProvider>
+          <RouteProvider exact path={[routeDefinitions.toARRepositoryDetailsTab({ ...repositoryDetailsTabPathProps })]}>
+            <RepositoryDetailsTabPage
+              onInit={nextTab => {
+                setActiveTab(nextTab)
+              }}
+              stepRef={stepRef}
+            />
+          </RouteProvider>
+        </Switch>
       </Container>
     </>
   )

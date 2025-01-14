@@ -56,10 +56,10 @@ describe('Verify CreateRepository component', () => {
     const mainBtn = container.querySelector('button[aria-label="repositoryList.newRepository"]')
     expect(mainBtn!).toBeInTheDocument()
     await userEvent.click(mainBtn!)
-    expect(mockHistoryPush).toHaveBeenLastCalledWith('/registries/repo1?tab=configuration')
+    expect(mockHistoryPush).toHaveBeenLastCalledWith('/registries/repo1/configuration')
 
     const dropDownBtn = container.querySelector('span[icon="chevron-down"]') as HTMLElement
     await testSelectChange(dropDownBtn!, 'repositoryList.upstreamProxy.label', '', 'bp3-popover')
-    expect(mockHistoryPush).toHaveBeenLastCalledWith('/registries/upstreamRepo1?tab=configuration')
+    expect(mockHistoryPush).toHaveBeenLastCalledWith('/registries/upstreamRepo1/configuration')
   })
 })

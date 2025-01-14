@@ -32,7 +32,7 @@ export default function EditRepositoryMenuItem({ repoKey }: ArtifactActionProps)
 
   const handleOpenRepository = (): void => {
     history.push(
-      routes.toARRepositoryDetails({
+      routes.toARRepositoryDetailsTab({
         repositoryIdentifier: repoKey,
         tab: RepositoryDetailsTab.CONFIGURATION
       })

@@ -29,9 +29,11 @@ export interface ARArtifactsProps extends ARProps {
 export interface ARRoutes {
   toAR: (args: ARProps) => string
   toARArtifacts: (args: ARArtifactsProps) => string
+  toARRepositoryWebhooks: (args: ARArtifactsProps) => string
 }
 
 export const routes: ARRoutes = {
   toAR: ({ space }) => `/spaces/${space}/registries`,
-  toARArtifacts: params => `/spaces/${params.space}/registries/${params?.repositoryIdentifier}?tab=packages`
+  toARArtifacts: params => `/spaces/${params.space}/registries/${params?.repositoryIdentifier}/packages`,
+  toARRepositoryWebhooks: params => `/spaces/${params.space}/registries/${params?.repositoryIdentifier}/webhooks`
 }

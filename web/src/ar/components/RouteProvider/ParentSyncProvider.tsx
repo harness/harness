@@ -26,7 +26,11 @@ export default function ParentSyncProvider(props: PropsWithChildren<unknown>) {
 
   useDeepCompareEffect(() => {
     if (typeof updateAppStore === 'function' && parent !== Parent.Enterprise) {
-      updateAppStore(pathParams)
+      updateAppStore({
+        repositoryIdentifier: pathParams?.repositoryIdentifier as string,
+        artifactIdentifier: pathParams?.artifactIdentifier as string,
+        versionIdentifier: pathParams?.versionIdentifier as string
+      })
     }
   }, [pathParams, parent])
 

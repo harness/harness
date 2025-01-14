@@ -20,9 +20,12 @@ import { Redirect, Switch } from 'react-router-dom'
 import { Parent } from '@ar/common/types'
 import { useAppStore, useRoutes } from '@ar/hooks'
 import RedirectPage from '@ar/pages/redirect-page/RedirectPage'
+import type { RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
+
 import type {
   ArtifactDetailsPathParams,
   RepositoryDetailsPathParams,
+  RepositoryDetailsTabPathParams,
   VersionDetailsPathParams,
   VersionDetailsTabPathParams
 } from './types'
@@ -35,8 +38,13 @@ const VersionDetailsPage = React.lazy(() => import('@ar/pages/version-details/Ve
 const OSSVersionDetailsPage = React.lazy(() => import('@ar/pages/version-details/OSSVersionDetailsPage'))
 const RouteProvider = React.lazy(() => import('@ar/components/RouteProvider/RouteProvider'))
 
-const repositoryDetailsPathProps: RepositoryDetailsPathParams = {
+export const repositoryDetailsPathProps: RepositoryDetailsPathParams = {
   repositoryIdentifier: ':repositoryIdentifier'
+}
+
+export const repositoryDetailsTabPathProps: RepositoryDetailsTabPathParams = {
+  ...repositoryDetailsPathProps,
+  tab: ':tab' as RepositoryDetailsTab
 }
 
 const artifactDetailsPathProps: ArtifactDetailsPathParams = {
@@ -80,9 +88,6 @@ const RouteDestinations = (): JSX.Element => {
       <RouteProvider exact path={routes.toARRepositories()}>
         <RepositoryListPage />
       </RouteProvider>
-      <RouteProvider exact path={routes.toARRepositoryDetails({ ...repositoryDetailsPathProps })}>
-        <RepositoryDetailsPage />
-      </RouteProvider>
       <RouteProvider exact path={routes.toARArtifacts()}>
         <ArtifactListPage />
       </RouteProvider>
@@ -105,6 +110,9 @@ const RouteDestinations = (): JSX.Element => {
           <VersionDetailsPage />
         </RouteProvider>
       )}
+      <RouteProvider path={routes.toARRepositoryDetails({ ...repositoryDetailsPathProps })}>
+        <RepositoryDetailsPage />
+      </RouteProvider>
     </Switch>
   )
 }

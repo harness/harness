@@ -88,6 +88,7 @@ export interface StringsMap {
   'repositoryDetails.repositoryForm.upstreamProxiesTitle': string
   'repositoryDetails.tabs.configuration': string
   'repositoryDetails.tabs.packages': string
+  'repositoryDetails.tabs.webhooks': string
   'repositoryDetails.upstreamProxiesSelectList.addUpstreamProxies': string
   'repositoryDetails.upstreamProxiesSelectList.newUpstreamProxyLabel': string
   'repositoryDetails.upstreamProxiesSelectList.selectList.Title': string

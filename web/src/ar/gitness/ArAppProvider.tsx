@@ -31,12 +31,13 @@ interface ArAppProviderProps {
 
 export function ArAppProvider({ children }: PropsWithChildren<ArAppProviderProps>) {
   const appContext = useAppContext()
+  const { arAppStore } = appContext
   return (
     <ArAppContext.Provider
       value={{
         updateAppStore: val => {
           appContext.setAppContext({
-            arAppStore: val
+            arAppStore: { ...arAppStore, ...val }
           })
         },
         featureFlags: {
