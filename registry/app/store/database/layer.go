@@ -56,8 +56,10 @@ type layersDB struct {
 	UpdatedBy   int64 `db:"layer_updated_by"`
 }
 
-func (l layersDao) AssociateLayerBlob(ctx context.Context, m *types.Manifest,
-	b *types.Blob) error {
+func (l layersDao) AssociateLayerBlob(
+	ctx context.Context, m *types.Manifest,
+	b *types.Blob,
+) error {
 	const sqlQuery = `
 		INSERT INTO layers ( 
 				layer_registry_id
@@ -80,7 +82,7 @@ func (l layersDao) AssociateLayerBlob(ctx context.Context, m *types.Manifest,
 						,:layer_created_by
 						,:layer_updated_by
 		    ) ON CONFLICT (layer_registry_id, layer_manifest_id, layer_blob_id)
-			DO NOTHING
+			DO UPDATE SET layer_registry_id = EXCLUDED.layer_registry_id
 			RETURNING layer_id`
 
 	mediaTypeID, err := l.mtRepository.MapMediaType(ctx, b.MediaType)
