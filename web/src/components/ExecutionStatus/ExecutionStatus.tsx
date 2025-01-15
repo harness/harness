@@ -68,7 +68,7 @@ export const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
       },
       [ExecutionState.RUNNING]: {
         icon: 'running-filled',
-        css: isCi ? css.runningBlue : css.running,
+        css: css.runningBlue,
         title: getString('running').toLocaleUpperCase()
       },
       [ExecutionState.SUCCESS]: {
@@ -108,7 +108,7 @@ export const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
       },
       [ExecutionStateExtended.ASYNCWAITING]: {
         icon: 'running-filled',
-        css: css.running,
+        css: css.runningBlue,
         title: getString('running').toLocaleUpperCase()
       }
     }),

@@ -77,8 +77,8 @@ export function usePRChecksDecision({
         setMessage(stringSubstitute(getString('prChecks.killed'), { count: _count.killed, total }) as string)
       } else if (_count.running) {
         _status = ExecutionState.RUNNING
-        setColor(Color.ORANGE_900)
-        setBackground(Color.ORANGE_100)
+        setColor(Color.PRIMARY_7)
+        setBackground(Color.PRIMARY_1)
         setMessage(stringSubstitute(getString('prChecks.running'), { count: _count.running, total }) as string)
       } else if (_count.pending) {
         _status = ExecutionState.PENDING
