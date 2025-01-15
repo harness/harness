@@ -20,6 +20,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	corestore "github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
+	mavenhandler "github.com/harness/gitness/registry/app/api/handler/maven"
 	ocihandler "github.com/harness/gitness/registry/app/api/handler/oci"
 	"github.com/harness/gitness/registry/app/api/router"
 	storagedriver "github.com/harness/gitness/registry/app/driver"
@@ -28,6 +29,7 @@ import (
 	"github.com/harness/gitness/registry/app/driver/s3-aws"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/docker"
+	"github.com/harness/gitness/registry/app/pkg/maven"
 	"github.com/harness/gitness/registry/app/store/database"
 	"github.com/harness/gitness/registry/config"
 	"github.com/harness/gitness/registry/gc"
@@ -82,12 +84,29 @@ func NewHandlerProvider(
 	)
 }
 
+func NewMavenHandlerProvider(
+	controller *maven.Controller, spaceStore corestore.SpaceStore,
+	tokenStore corestore.TokenStore, userCtrl *usercontroller.Controller, authenticator authn.Authenticator,
+	authorizer authz.Authorizer,
+) *mavenhandler.Handler {
+	return mavenhandler.NewHandler(
+		controller,
+		spaceStore,
+		tokenStore,
+		userCtrl,
+		authenticator,
+		authorizer,
+	)
+}
+
 var WireSet = wire.NewSet(
 	BlobStorageProvider,
 	NewHandlerProvider,
+	NewMavenHandlerProvider,
 	database.WireSet,
 	pkg.WireSet,
 	docker.WireSet,
+	maven.WireSet,
 	router.WireSet,
 	gc.WireSet,
 )

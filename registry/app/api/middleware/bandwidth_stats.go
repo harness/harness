@@ -136,7 +136,7 @@ func dbBandwidthStat(
 }
 
 func getImageFromUpstreamProxy(ctx context.Context, c *docker.Controller, info pkg.RegistryInfo) (*types.Image, error) {
-	repos, err := c.GetOrderedRepos(ctx, info.RegIdentifier, info)
+	repos, err := c.GetOrderedRepos(ctx, info.RegIdentifier, *info.BaseInfo)
 	if err != nil {
 		return nil, err
 	}

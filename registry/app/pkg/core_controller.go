@@ -65,7 +65,7 @@ func (c *CoreController) GetArtifact(registry types.Registry) Artifact {
 func (c *CoreController) GetOrderedRepos(
 	ctx context.Context,
 	repoKey string,
-	artInfo RegistryInfo,
+	artInfo BaseInfo,
 ) ([]types.Registry, error) {
 	var result []types.Registry
 	if registry, err := c.RegistryDao.GetByParentIDAndName(ctx, artInfo.ParentID, repoKey); err == nil {

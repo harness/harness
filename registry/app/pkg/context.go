@@ -56,3 +56,18 @@ func (r *RegistryInfo) SetReference(ref string) {
 func (a *ArtifactInfo) SetRepoKey(key string) {
 	a.RegIdentifier = key
 }
+
+type MavenArtifactInfo struct {
+	*BaseInfo
+	RegIdentifier string
+	RegistryID    int64
+	GroupID       string
+	ArtifactID    string
+	Version       string
+	FileName      string
+	Path          string
+}
+
+func (a *MavenArtifactInfo) SetMavenRepoKey(key string) {
+	a.RegIdentifier = key
+}

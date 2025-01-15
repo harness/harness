@@ -26,7 +26,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"reflect"
 
 	"github.com/harness/gitness/app/auth/authz"
 	corestore "github.com/harness/gitness/app/store"
@@ -105,13 +104,6 @@ func NewDBStore(
 	}
 }
 
-func isEmpty(slice interface{}) bool {
-	if slice == nil {
-		return true
-	}
-	return reflect.ValueOf(slice).Len() == 0
-}
-
 const (
 	ResourceTypeBlob     = "blob"
 	ResourceTypeManifest = "manifest"
@@ -132,7 +124,7 @@ func (c *Controller) ProxyWrapper(
 	var response Response
 	requestRepoKey := info.RegIdentifier
 	imageName := info.Image
-	if repos, err := c.GetOrderedRepos(ctx, requestRepoKey, info); err == nil {
+	if repos, err := c.GetOrderedRepos(ctx, requestRepoKey, *info.BaseInfo); err == nil {
 		for _, registry := range repos {
 			log.Ctx(ctx).Info().Msgf("Using Repository: %s, Type: %s", registry.Name, registry.Type)
 			artifact, ok := c.GetArtifact(registry).(Registry)
@@ -142,7 +134,7 @@ func (c *Controller) ProxyWrapper(
 			}
 			if artifact != nil {
 				response = f(registry, imageName, artifact)
-				if isEmpty(response.GetErrors()) {
+				if pkg.IsEmpty(response.GetErrors()) {
 					return response
 				}
 				log.Ctx(ctx).Warn().Msgf("Repository: %s, Type: %s, errors: %v", registry.Name, registry.Type,
@@ -150,7 +142,7 @@ func (c *Controller) ProxyWrapper(
 			}
 		}
 	}
-	if response != nil && !isEmpty(response.GetErrors()) {
+	if response != nil && !pkg.IsEmpty(response.GetErrors()) {
 		switch resourceType {
 		case ResourceTypeManifest:
 			response.SetError(errcode.ErrCodeManifestUnknown)
@@ -169,7 +161,7 @@ func (c *Controller) HeadManifest(
 	acceptHeaders []string,
 	ifNoneMatchHeader []string,
 ) Response {
-	err := GetRegistryCheckAccess(
+	err := pkg.GetRegistryCheckAccess(
 		ctx, c.RegistryDao, c.authorizer, c.spaceStore, art.RegIdentifier, art.ParentID,
 		enum.PermissionArtifactsDownload,
 	)
@@ -196,7 +188,7 @@ func (c *Controller) PullManifest(
 	acceptHeaders []string,
 	ifNoneMatchHeader []string,
 ) Response {
-	err := GetRegistryCheckAccess(
+	err := pkg.GetRegistryCheckAccess(
 		ctx, c.RegistryDao, c.authorizer, c.spaceStore, art.RegIdentifier, art.ParentID,
 		enum.PermissionArtifactsDownload,
 	)
@@ -223,7 +215,7 @@ func (c *Controller) PutManifest(
 	body io.ReadCloser,
 	length int64,
 ) (responseHeaders *commons.ResponseHeaders, errs []error) {
-	err := GetRegistryCheckAccess(
+	err := pkg.GetRegistryCheckAccess(
 		ctx, c.RegistryDao, c.authorizer, c.spaceStore, artInfo.RegIdentifier,
 		artInfo.ParentID, enum.PermissionArtifactsUpload, enum.PermissionArtifactsDownload,
 	)
@@ -237,7 +229,7 @@ func (c *Controller) DeleteManifest(
 	ctx context.Context,
 	artInfo pkg.RegistryInfo,
 ) (errs []error, responseHeaders *commons.ResponseHeaders) {
-	err := GetRegistryCheckAccess(
+	err := pkg.GetRegistryCheckAccess(
 		ctx, c.RegistryDao, c.authorizer, c.spaceStore, artInfo.RegIdentifier, artInfo.ParentID,
 		enum.PermissionArtifactsDelete,
 	)
@@ -254,7 +246,7 @@ func (c *Controller) HeadBlob(
 	responseHeaders *commons.ResponseHeaders, fr *storage.FileReader, size int64, readCloser io.ReadCloser,
 	redirectURL string, errs []error,
 ) {
-	err := GetRegistryCheckAccess(
+	err := pkg.GetRegistryCheckAccess(
 		ctx, c.RegistryDao, c.authorizer, c.spaceStore, info.RegIdentifier, info.ParentID,
 		enum.PermissionArtifactsDownload,
 	)
@@ -265,7 +257,7 @@ func (c *Controller) HeadBlob(
 }
 
 func (c *Controller) GetBlob(ctx context.Context, info pkg.RegistryInfo) Response {
-	err := GetRegistryCheckAccess(
+	err := pkg.GetRegistryCheckAccess(
 		ctx, c.RegistryDao, c.authorizer, c.spaceStore, info.RegIdentifier, info.ParentID,
 		enum.PermissionArtifactsDownload,
 	)
@@ -289,7 +281,7 @@ func (c *Controller) InitiateUploadBlob(
 	fromImageRef string,
 	mountDigest string,
 ) (*commons.ResponseHeaders, []error) {
-	err := GetRegistryCheckAccess(
+	err := pkg.GetRegistryCheckAccess(
 		ctx, c.RegistryDao, c.authorizer, c.spaceStore, info.RegIdentifier, info.ParentID,
 		enum.PermissionArtifactsUpload,
 		enum.PermissionArtifactsDownload,
@@ -305,7 +297,7 @@ func (c *Controller) GetUploadBlobStatus(
 	info pkg.RegistryInfo,
 	token string,
 ) (responseHeaders *commons.ResponseHeaders, errs []error) {
-	err := GetRegistryCheckAccess(
+	err := pkg.GetRegistryCheckAccess(
 		ctx, c.RegistryDao, c.authorizer, c.spaceStore, info.RegIdentifier, info.ParentID,
 		enum.PermissionArtifactsDownload,
 	)
@@ -327,7 +319,7 @@ func (c *Controller) PatchBlobUpload(
 	body io.ReadCloser,
 ) (responseHeaders *commons.ResponseHeaders, errors []error) {
 	blobCtx := c.local.App.GetBlobsContext(ctx, info)
-	err := GetRegistryCheckAccess(
+	err := pkg.GetRegistryCheckAccess(
 		ctx, c.RegistryDao, c.authorizer, c.spaceStore, info.RegIdentifier, info.ParentID,
 		enum.PermissionArtifactsDownload,
 		enum.PermissionArtifactsUpload,
@@ -358,7 +350,7 @@ func (c *Controller) CompleteBlobUpload(
 	length int64,
 	stateToken string,
 ) (responseHeaders *commons.ResponseHeaders, errs []error) {
-	err := GetRegistryCheckAccess(
+	err := pkg.GetRegistryCheckAccess(
 		ctx, c.RegistryDao, c.authorizer, c.spaceStore, info.RegIdentifier, info.ParentID,
 		enum.PermissionArtifactsUpload,
 		enum.PermissionArtifactsDownload,
@@ -374,7 +366,7 @@ func (c *Controller) CancelBlobUpload(
 	info pkg.RegistryInfo,
 	stateToken string,
 ) (responseHeaders *commons.ResponseHeaders, errors []error) {
-	err := GetRegistryCheckAccess(
+	err := pkg.GetRegistryCheckAccess(
 		ctx, c.RegistryDao, c.authorizer, c.spaceStore, info.RegIdentifier, info.ParentID,
 		enum.PermissionArtifactsDelete,
 	)
@@ -415,7 +407,7 @@ func (c *Controller) DeleteBlob(
 	ctx context.Context,
 	info pkg.RegistryInfo,
 ) (responseHeaders *commons.ResponseHeaders, errs []error) {
-	err := GetRegistryCheckAccess(
+	err := pkg.GetRegistryCheckAccess(
 		ctx, c.RegistryDao, c.authorizer, c.spaceStore, info.RegIdentifier, info.ParentID,
 		enum.PermissionArtifactsDelete,
 	)
@@ -433,7 +425,7 @@ func (c *Controller) GetTags(
 	origURL string,
 	artInfo pkg.RegistryInfo,
 ) (*commons.ResponseHeaders, []string, error) {
-	err := GetRegistryCheckAccess(
+	err := pkg.GetRegistryCheckAccess(
 		ctx, c.RegistryDao, c.authorizer, c.spaceStore, artInfo.RegIdentifier,
 		artInfo.ParentID, enum.PermissionArtifactsDownload,
 	)
@@ -452,7 +444,7 @@ func (c *Controller) GetReferrers(
 	artInfo pkg.RegistryInfo,
 	artifactType string,
 ) (index *v1.Index, responseHeaders *commons.ResponseHeaders, err error) {
-	accessErr := GetRegistryCheckAccess(
+	accessErr := pkg.GetRegistryCheckAccess(
 		ctx, c.RegistryDao, c.authorizer, c.spaceStore, artInfo.RegIdentifier,
 		artInfo.ParentID, enum.PermissionArtifactsDownload,
 	)

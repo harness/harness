@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/app/api/middleware/logging"
 	"github.com/harness/gitness/registry/app/api/handler/swagger"
 	"github.com/harness/gitness/registry/app/api/router/harness"
+	"github.com/harness/gitness/registry/app/api/router/maven"
 	"github.com/harness/gitness/registry/app/api/router/oci"
 
 	"github.com/go-chi/chi/v5"
@@ -36,6 +37,7 @@ func GetAppRouter(
 	ociHandler oci.RegistryOCIHandler,
 	appHandler harness.APIHandler,
 	baseURL string,
+	mavenHandler maven.Handler,
 ) AppRouter {
 	r := chi.NewRouter()
 	r.Use(hlog.URLHandler("http.url"))
@@ -47,6 +49,7 @@ func GetAppRouter(
 	r.Group(func(r chi.Router) {
 		r.Handle(fmt.Sprintf("%s/*", baseURL), appHandler)
 		r.Handle("/v2/*", ociHandler)
+		r.Handle("/maven/*", mavenHandler)
 
 		r.Handle("/registry/swagger*", swagger.GetSwaggerHandler("/registry"))
 	})

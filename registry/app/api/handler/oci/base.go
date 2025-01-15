@@ -25,6 +25,7 @@ import (
 	corestore "github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/api/controller/metadata"
+	"github.com/harness/gitness/registry/app/api/handler/utils"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/common"
 	"github.com/harness/gitness/registry/app/dist_temp/dcontext"
@@ -243,7 +244,7 @@ func (h *Handler) GetRegistryInfo(r *http.Request, remoteSupport bool) (pkg.Regi
 	}
 
 	if !commons.IsEmpty(info.Image) && !commons.IsEmpty(info.Tag) {
-		flag, err2 := MatchArtifactFilter(registry.AllowedPattern, registry.BlockedPattern, info.Image+":"+info.Tag)
+		flag, err2 := utils.MatchArtifactFilter(registry.AllowedPattern, registry.BlockedPattern, info.Image+":"+info.Tag)
 		if !flag || err2 != nil {
 			return pkg.RegistryInfo{}, errcode.ErrCodeDenied
 		}

@@ -127,6 +127,7 @@ import (
 	"github.com/harness/gitness/registry/app/api/router"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/docker"
+	"github.com/harness/gitness/registry/app/pkg/maven"
 	database2 "github.com/harness/gitness/registry/app/store/database"
 	"github.com/harness/gitness/registry/gc"
 	"github.com/harness/gitness/ssh"
@@ -480,7 +481,13 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	registryOCIHandler := router.OCIHandlerProvider(handler)
 	cleanupPolicyRepository := database2.ProvideCleanupPolicyDao(db, transactor)
 	apiHandler := router.APIHandlerProvider(registryRepository, upstreamProxyConfigRepository, tagRepository, manifestRepository, cleanupPolicyRepository, imageRepository, storageDriver, spaceStore, transactor, authenticator, provider, authorizer, auditService, spacePathStore)
-	appRouter := router.AppRouterProvider(registryOCIHandler, apiHandler)
+	mavenDBStore := maven.DBStoreProvider(registryRepository, imageRepository, artifactRepository, spaceStore, bandwidthStatRepository, downloadStatRepository)
+	mavenLocalRegistry := maven.LocalRegistryProvider(mavenDBStore, transactor)
+	mavenRemoteRegistry := maven.RemoteRegistryProvider(mavenDBStore, transactor)
+	mavenController := maven.ControllerProvider(mavenLocalRegistry, mavenRemoteRegistry, authorizer, mavenDBStore)
+	mavenHandler := api2.NewMavenHandlerProvider(mavenController, spaceStore, tokenStore, controller, authenticator, authorizer)
+	handler2 := router.MavenHandlerProvider(mavenHandler)
+	appRouter := router.AppRouterProvider(registryOCIHandler, apiHandler, handler2)
 	sender := usage.ProvideMediator(ctx, config, spaceStore, usageMetricStore)
 	routerRouter := router2.ProvideRouter(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, usergroupController, checkController, systemController, uploadController, keywordsearchController, infraproviderController, gitspaceController, migrateController, aiagentController, capabilitiesController, provider, openapiService, appRouter, sender)
 	serverServer := server2.ProvideServer(config, routerRouter)

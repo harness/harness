@@ -41,7 +41,7 @@ func (r *RegistryRouter) IsEligibleTraffic(req *http.Request) bool {
 	if req.URL.RawPath != "" {
 		urlPath = req.URL.RawPath
 	}
-	if utils.HasAnyPrefix(urlPath, []string{RegistryMount, "/v2/", "/registry/"}) ||
+	if utils.HasAnyPrefix(urlPath, []string{RegistryMount, "/v2/", "/registry/", "/maven/"}) ||
 		(strings.HasPrefix(urlPath, APIMount+"/v1/spaces/") &&
 			utils.HasAnySuffix(urlPath, []string{"/artifacts", "/registries"})) {
 		return true
