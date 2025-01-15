@@ -182,7 +182,7 @@ func (s *Server) setupHostKeys() error {
 
 	if len(keys) == 0 {
 		log.Debug().Msg("no host key provided - setup default key if it doesn't exist yet")
-		err := createKeyIfNotExists(s.ServerKeyPath)
+		err := CreateKeyIfNotExists(s.ServerKeyPath)
 		if err != nil {
 			return fmt.Errorf("failed to setup default key %q: %w", s.ServerKeyPath, err)
 		}
@@ -370,7 +370,7 @@ func sshConnectionFailed(conn net.Conn, err error) {
 	log.Err(err).Msgf("failed connection from %s with error: %v", conn.RemoteAddr(), err)
 }
 
-func createKeyIfNotExists(path string) error {
+func CreateKeyIfNotExists(path string) error {
 	_, err := os.Stat(path)
 	if err == nil {
 		// if the path already exists there's nothing we have to do
