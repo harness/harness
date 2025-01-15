@@ -26,6 +26,8 @@ import (
 	"github.com/harness/gitness/git/command"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/tidwall/jsonc"
 )
 
 var (
@@ -100,13 +102,6 @@ func (s *SCM) GetSCMRepoDetails(
 		DevcontainerConfig:  devcontainerConfig,
 	}
 	return resolvedDetails, nil
-}
-
-func removeComments(input []byte) []byte {
-	blockCommentRegex := regexp.MustCompile(`(?s)/\*.*?\*/`)
-	input = blockCommentRegex.ReplaceAll(input, nil)
-	lineCommentRegex := regexp.MustCompile(`//.*`)
-	return lineCommentRegex.ReplaceAll(input, nil)
 }
 
 func detectDefaultGitBranch(ctx context.Context, gitRepoDir string) (string, error) {
@@ -192,8 +187,7 @@ func (s *SCM) getDevcontainerConfig(
 		return config, nil // Return an empty config if the file is empty
 	}
 
-	sanitizedJSON := removeComments(catFileOutputBytes)
-	if err = json.Unmarshal(sanitizedJSON, &config); err != nil {
+	if err = json.Unmarshal(jsonc.ToJSON(catFileOutputBytes), &config); err != nil {
 		return config, fmt.Errorf("failed to parse devcontainer JSON: %w", err)
 	}
 
