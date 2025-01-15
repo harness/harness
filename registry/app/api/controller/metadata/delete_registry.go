@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
@@ -118,6 +119,10 @@ func (c *APIController) DeleteRegistry(
 		)
 	}
 	if err != nil {
+		if strings.Contains(err.Error(), "delete query failed") {
+			msg := "Internal Error"
+			err = fmt.Errorf("failed to delete registry: %s", msg)
+		}
 		//nolint:nilerr
 		return throwDeleteRegistry500Error(err), nil
 	}
