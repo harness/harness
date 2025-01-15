@@ -55,7 +55,8 @@ func (PipelineContext) GetType() capabilities2.AIContextPayloadType {
 const AIContextPayloadTypeStepContext capabilities2.AIContextPayloadType = "other"
 
 type StepContext struct {
-	Yaml string `json:"step_yaml"`
+	Yaml      string `json:"step_yaml"`
+	StageType string `json:"stage_type"`
 }
 
 func (StepContext) GetName() string {
