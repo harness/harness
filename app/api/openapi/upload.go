@@ -20,26 +20,24 @@ import (
 	"github.com/harness/gitness/app/api/controller/upload"
 	"github.com/harness/gitness/app/api/usererror"
 
+	"github.com/gotidy/ptr"
 	"github.com/swaggest/openapi-go/openapi3"
 )
-
-type UploadRequest struct {
-	repoRequest
-	// Note: Below line won't produce the file upload interface in Swagger UI,
-	// ref: https://swagger.io/docs/specification/2-0/file-upload/
-	Content string `json:"-" format:"binary" description:"Binary file to upload"`
-}
-
-type DownloadRequest struct {
-	repoRequest
-	FilePathRef string `path:"file_ref"`
-}
 
 func uploadOperations(reflector *openapi3.Reflector) {
 	opUpload := openapi3.Operation{}
 	opUpload.WithTags("upload")
 	opUpload.WithMapOfAnything(map[string]interface{}{"operationId": "repoArtifactUpload"})
-	_ = reflector.SetRequest(&opUpload, new(UploadRequest), http.MethodPost)
+	opUpload.WithRequestBody(openapi3.RequestBodyOrRef{
+		RequestBody: &openapi3.RequestBody{
+			Description: ptr.String("Binary file to upload"),
+			Content: map[string]openapi3.MediaType{
+				"application/octet-stream": {Schema: &openapi3.SchemaOrRef{}},
+			},
+			Required: ptr.Bool(true),
+		},
+	})
+	_ = reflector.SetRequest(&opUpload, repoRequest{}, http.MethodPost)
 	_ = reflector.SetJSONResponse(&opUpload, new(upload.Result), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opUpload, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opUpload, new(usererror.Error), http.StatusNotFound)
@@ -52,7 +50,10 @@ func uploadOperations(reflector *openapi3.Reflector) {
 	downloadOp := openapi3.Operation{}
 	downloadOp.WithTags("upload")
 	downloadOp.WithMapOfAnything(map[string]interface{}{"operationId": "repoArtifactDownload"})
-	_ = reflector.SetRequest(&downloadOp, new(DownloadRequest), http.MethodGet)
+	_ = reflector.SetRequest(&downloadOp, struct {
+		repoRequest
+		FilePathRef string `path:"file_ref"`
+	}{}, http.MethodGet)
 	_ = reflector.SetJSONResponse(&downloadOp, nil, http.StatusTemporaryRedirect)
 	_ = reflector.SetJSONResponse(&downloadOp, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.SetJSONResponse(&downloadOp, new(usererror.Error), http.StatusBadRequest)
