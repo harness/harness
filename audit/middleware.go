@@ -36,6 +36,7 @@ func Middleware() func(next http.Handler) http.Handler {
 				ctx = context.WithValue(ctx, realIPKey, rip)
 			}
 
+			ctx = context.WithValue(ctx, pathKey, r.URL.Path)
 			ctx = context.WithValue(ctx, requestMethod, r.Method)
 			ctx = context.WithValue(ctx, requestID, w.Header().Get("X-Request-Id"))
 

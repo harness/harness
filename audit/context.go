@@ -22,6 +22,7 @@ const (
 	realIPKey key = iota
 	requestID
 	requestMethod
+	pathKey
 )
 
 // GetRealIP returns IP address from context.
@@ -32,6 +33,16 @@ func GetRealIP(ctx context.Context) string {
 	}
 
 	return ip
+}
+
+// GetPath returns Path from context.
+func GetPath(ctx context.Context) string {
+	path, ok := ctx.Value(pathKey).(string)
+	if !ok {
+		return ""
+	}
+
+	return path
 }
 
 // GetRequestID returns requestID from context.
