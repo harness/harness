@@ -16,6 +16,7 @@ package container
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"sync"
@@ -28,9 +29,10 @@ import (
 )
 
 const (
-	linuxHome               = "/home"
-	deprecatedRemoteUser    = "harness"
-	gitspaceRemoteUserLabel = "gitspace.remote.user"
+	linuxHome                   = "/home"
+	deprecatedRemoteUser        = "harness"
+	gitspaceRemoteUserLabel     = "gitspace.remote.user"
+	gitspaceLifeCycleHooksLabel = "gitspace.lifecycle.hooks"
 )
 
 func GetGitspaceContainerName(config types.GitspaceConfig) string {
@@ -83,6 +85,20 @@ func ExtractRemoteUserFromLabels(inspectResp dockerTypes.ContainerJSON) string {
 		remoteUser = remoteUserValue
 	}
 	return remoteUser
+}
+
+func ExtractLifecycleHooksFromLabels(
+	inspectResp dockerTypes.ContainerJSON,
+) (map[PostAction][]*LifecycleHookStep, error) {
+	var lifecycleHooks = make(map[PostAction][]*LifecycleHookStep)
+
+	if lifecycleHooksStr, ok := inspectResp.Config.Labels[gitspaceLifeCycleHooksLabel]; ok {
+		err := json.Unmarshal([]byte(lifecycleHooksStr), &lifecycleHooks)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return lifecycleHooks, nil
 }
 
 // ExecuteLifecycleCommands executes commands in parallel, logs with numbers, and prefixes all logs.

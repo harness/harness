@@ -15,9 +15,11 @@
 package types
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"path/filepath"
 	"strings"
 
 	"github.com/harness/gitness/types/enum"
@@ -40,8 +42,8 @@ type DevcontainerConfig struct {
 	RemoteUser                  string                           `json:"remoteUser,omitempty"`
 	Features                    *Features                        `json:"features,omitempty"`
 	OverrideFeatureInstallOrder []string                         `json:"overrideFeatureInstallOrder,omitempty"`
-	Privileged                  bool                             `json:"privileged,omitempty"`
-	Init                        bool                             `json:"init,omitempty"`
+	Privileged                  *bool                            `json:"privileged,omitempty"`
+	Init                        *bool                            `json:"init,omitempty"`
 	CapAdd                      []string                         `json:"capAdd,omitempty"`
 	SecurityOpt                 []string                         `json:"securityOpt,omitempty"`
 	Mounts                      []*Mount                         `json:"mounts,omitempty"`
@@ -246,11 +248,79 @@ type Mount struct {
 }
 
 func (m *Mount) UnmarshalJSON(data []byte) error {
-	// TODO: Add support for unmarshalling mount data from a string input
-	var mount Mount
-	err := json.Unmarshal(data, &mount)
+	if err := json.Unmarshal(data, m); err == nil {
+		return nil
+	}
+	dst, err := stringToObject(string(data))
 	if err != nil {
 		return err
 	}
+	*m = *dst
 	return nil
+}
+
+func ParseMountsFromRawSlice(values []any) ([]*Mount, error) {
+	var mounts []*Mount
+	for _, value := range values {
+		if mountValue, isObject := value.(*Mount); isObject {
+			mounts = append(mounts, mountValue)
+		} else if strVal, isString := value.(string); isString {
+			dst, err := stringToObject(strVal)
+			if err != nil {
+				return nil, err
+			}
+			mounts = append(mounts, dst)
+		} else {
+			return nil, fmt.Errorf("invalid mount value: %+v", value)
+		}
+	}
+	return mounts, nil
+}
+
+func ParseMountsFromStringSlice(values []string) ([]*Mount, error) {
+	var mounts []*Mount
+	for _, value := range values {
+		dst, err := stringToObject(value)
+		if err != nil {
+			return nil, err
+		}
+		mounts = append(mounts, dst)
+	}
+	return mounts, nil
+}
+
+func stringToObject(mountStr string) (*Mount, error) {
+	csvReader := csv.NewReader(strings.NewReader(mountStr))
+	fields, err := csvReader.Read()
+	if err != nil {
+		return nil, err
+	}
+
+	newMount := Mount{Type: "volume"}
+	for _, field := range fields {
+		key, val, ok := strings.Cut(field, "=")
+
+		key = strings.ToLower(key)
+
+		if !ok {
+			return nil, fmt.Errorf("invalid format for mount field: %s", field)
+		}
+
+		switch key {
+		case "type":
+			newMount.Type = strings.ToLower(val)
+		case "source", "src":
+			newMount.Source = val
+			if strings.HasPrefix(val, "."+string(filepath.Separator)) || val == "." {
+				if abs, err := filepath.Abs(val); err == nil {
+					newMount.Source = abs
+				}
+			}
+		case "target", "dst", "destination":
+			newMount.Target = val
+		default:
+			return nil, fmt.Errorf("unexpected key '%s' in '%s'", key, field)
+		}
+	}
+	return &newMount, nil
 }

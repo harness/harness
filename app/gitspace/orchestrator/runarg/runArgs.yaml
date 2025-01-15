@@ -36,7 +36,7 @@
 
 - name: --cap-add
   short_hand:
-  supported: false
+  supported: true
   blocked_values: { }
   allowed_values: { }
   allow_multiple_occurrences: true
@@ -396,6 +396,7 @@
   supported: true
   blocked_values:
     ^gitspace\.remote\.user=: true
+    ^gitspace\.lifecycle\.hooks=: true
   allowed_values: { }
   allow_multiple_occurrences: true
 
@@ -471,7 +472,7 @@
 
 - name: --mount
   short_hand:
-  supported: false
+  supported: true
   blocked_values: { }
   allowed_values: { }
   allow_multiple_occurrences: true
@@ -543,7 +544,7 @@
 
 - name: --privileged
   short_hand:
-  supported: false
+  supported: true
   blocked_values: { }
   allowed_values: { }
   allow_multiple_occurrences: true

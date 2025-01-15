@@ -68,21 +68,24 @@ func DownloadFeatures(
 		downloadQueue <- featureSource{sourceURL: key, sourceType: value.SourceType}
 	}
 
-	// TODO: Add ctx based cancellations to the below goroutines.
-
 	// NOTE: The following logic might see performance issues with spikes in memory and CPU usage.
 	// If there are such issues, we can introduce throttling on the basis of memory, CPU, etc.
-	go func() {
+	go func(ctx context.Context) {
 		for source := range downloadQueue {
-			startCh <- 1
-			go func(source featureSource) {
-				defer func(endCh chan int) { endCh <- 1 }(endCh)
-				err := downloadFeature(ctx, gitspaceInstanceIdentifier, &source, &featuresToBeDownloaded,
-					downloadQueue, &downloadedFeatures)
-				errorCh <- err
-			}(source)
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				startCh <- 1
+				go func(source featureSource) {
+					defer func(endCh chan int) { endCh <- 1 }(endCh)
+					err := downloadFeature(ctx, gitspaceInstanceIdentifier, &source, &featuresToBeDownloaded,
+						downloadQueue, &downloadedFeatures)
+					errorCh <- err
+				}(source)
+			}
 		}
-	}()
+	}(ctx)
 
 	var totalStart int
 	var totalEnd int
@@ -90,6 +93,8 @@ func DownloadFeatures(
 waitLoop:
 	for {
 		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
 		case start := <-startCh:
 			totalStart += start
 		case end := <-endCh:
@@ -116,6 +121,7 @@ waitLoop:
 	close(startCh)
 	close(endCh)
 	close(downloadQueue)
+	close(errorCh)
 
 	if downloadError != nil {
 		return nil, downloadError

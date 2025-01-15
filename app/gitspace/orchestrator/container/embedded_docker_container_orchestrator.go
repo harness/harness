@@ -53,6 +53,13 @@ type step struct {
 	StopOnFailure bool // Flag to control whether execution should stop on failure
 }
 
+type LifecycleHookStep struct {
+	Source        string                 `json:"source,omitempty"`
+	Command       types.LifecycleCommand `json:"command,omitempty"`
+	ActionType    PostAction             `json:"action_type,omitempty"`
+	StopOnFailure bool                   `json:"stop_on_failure,omitempty"`
+}
+
 // ExecuteSteps executes all registered steps in sequence, respecting stopOnFailure flag.
 func (e *EmbeddedDockerOrchestrator) ExecuteSteps(
 	ctx context.Context,
@@ -181,7 +188,7 @@ func (e *EmbeddedDockerOrchestrator) startStoppedGitspace(
 	}
 	defer e.flushLogStream(logStreamInstance, gitspaceConfig.ID)
 
-	remoteUser, err := GetRemoteUserFromContainerLabel(ctx, containerName, dockerClient)
+	remoteUser, lifecycleHooks, err := GetGitspaceInfoFromContainerLabels(ctx, containerName, dockerClient)
 	if err != nil {
 		return fmt.Errorf("error getting remote user for gitspace instance %s: %w",
 			gitspaceConfig.GitspaceInstance.Identifier, err)
@@ -217,13 +224,24 @@ func (e *EmbeddedDockerOrchestrator) startStoppedGitspace(
 		return err
 	}
 
-	// Execute post-start command
-	devcontainerConfig := resolvedRepoDetails.DevcontainerConfig
-	command := ExtractLifecycleCommands(PostStartAction, devcontainerConfig)
-	startErr = ExecuteLifecycleCommands(ctx, *exec, codeRepoDir, logStreamInstance, command, PostStartAction)
-	if startErr != nil {
-		log.Warn().Msgf("Error is post-start command, continuing : %s", startErr.Error())
+	if len(lifecycleHooks) > 0 && len(lifecycleHooks[PostStartAction]) > 0 {
+		for _, lifecycleHook := range lifecycleHooks[PostStartAction] {
+			startErr = ExecuteLifecycleCommands(ctx, *exec, codeRepoDir, logStreamInstance,
+				lifecycleHook.Command.ToCommandArray(), PostStartAction)
+			if startErr != nil {
+				log.Warn().Msgf("Error in post-start command, continuing : %s", startErr.Error())
+			}
+		}
+	} else {
+		// Execute post-start command for the containers before this label was introduced
+		devcontainerConfig := resolvedRepoDetails.DevcontainerConfig
+		command := ExtractLifecycleCommands(PostStartAction, devcontainerConfig)
+		startErr = ExecuteLifecycleCommands(ctx, *exec, codeRepoDir, logStreamInstance, command, PostStartAction)
+		if startErr != nil {
+			log.Warn().Msgf("Error in post-start command, continuing : %s", startErr.Error())
+		}
 	}
+
 	return nil
 }
 
@@ -422,26 +440,43 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 	containerUser := GetContainerUser(runArgsMap, devcontainerConfig, metadataFromImage, imageUser)
 	remoteUser := GetRemoteUser(devcontainerConfig, metadataFromImage, containerUser)
 
-	homeDir := GetUserHomeDir(remoteUser)
+	containerUserHomeDir := GetUserHomeDir(containerUser)
+	remoteUserHomeDir := GetUserHomeDir(remoteUser)
 
 	gitspaceLogger.Info(fmt.Sprintf("Container user: %s", containerUser))
 	gitspaceLogger.Info(fmt.Sprintf("Remote user: %s", remoteUser))
+	var features []*types.ResolvedFeature
+	if devcontainerConfig.Features != nil && len(*devcontainerConfig.Features) > 0 {
+		sortedFeatures, newImageName, err := InstallFeatures(ctx, gitspaceConfig.GitspaceInstance.Identifier,
+			dockerClient, *devcontainerConfig.Features, devcontainerConfig.OverrideFeatureInstallOrder, imageName,
+			containerUser, remoteUser, containerUserHomeDir, remoteUserHomeDir, gitspaceLogger)
+		if err != nil {
+			return err
+		}
+		features = sortedFeatures
+		imageName = newImageName
+	} else {
+		gitspaceLogger.Info("No features found")
+	}
 
 	// Create the container
-	err = CreateContainer(
+	lifecycleHookSteps, err := CreateContainer(
 		ctx,
 		dockerClient,
 		imageName,
 		containerName,
 		gitspaceLogger,
 		storage,
-		homeDir,
+		remoteUserHomeDir,
 		mount.TypeVolume,
 		portMappings,
 		environment,
 		runArgsMap,
 		containerUser,
 		remoteUser,
+		features,
+		resolvedRepoDetails.DevcontainerConfig,
+		metadataFromImage,
 	)
 	if err != nil {
 		return err
@@ -456,7 +491,7 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 	exec := &devcontainer.Exec{
 		ContainerName:     containerName,
 		DockerClient:      dockerClient,
-		DefaultWorkingDir: homeDir,
+		DefaultWorkingDir: remoteUserHomeDir,
 		RemoteUser:        remoteUser,
 		AccessKey:         *gitspaceConfig.GitspaceInstance.AccessKey,
 		AccessType:        gitspaceConfig.GitspaceInstance.AccessType,
@@ -471,6 +506,7 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 		resolvedRepoDetails,
 		defaultBaseImage,
 		environment,
+		lifecycleHookSteps,
 	); err != nil {
 		return logStreamWrapError(gitspaceLogger, "Error while setting up gitspace", err)
 	}
@@ -478,18 +514,65 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 	return nil
 }
 
+func InstallFeatures(
+	ctx context.Context,
+	gitspaceInstanceIdentifier string,
+	dockerClient *client.Client,
+	features types.Features,
+	overrideFeatureInstallOrder []string,
+	imageName string,
+	containerUser string,
+	remoteUser string,
+	containerUserHomeDir string,
+	remoteUserHomeDir string,
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
+) ([]*types.ResolvedFeature, string, error) {
+	gitspaceLogger.Info("Downloading features...")
+	downloadedFeatures, err := utils.DownloadFeatures(ctx, gitspaceInstanceIdentifier, features)
+	if err != nil {
+		return nil, "", logStreamWrapError(gitspaceLogger, "Error downloading features", err)
+	}
+	gitspaceLogger.Info(fmt.Sprintf("Downloaded %d features", len(*downloadedFeatures)))
+
+	gitspaceLogger.Info("Resolving features...")
+	resolvedFeatures, err := utils.ResolveFeatures(features, *downloadedFeatures)
+	if err != nil {
+		return nil, "", logStreamWrapError(gitspaceLogger, "Error resolving features", err)
+	}
+	gitspaceLogger.Info(fmt.Sprintf("Resolved to %d features", len(resolvedFeatures)))
+
+	gitspaceLogger.Info("Determining feature installation order...")
+	sortedFeatures, err := utils.SortFeatures(resolvedFeatures, overrideFeatureInstallOrder)
+	if err != nil {
+		return nil, "", logStreamWrapError(gitspaceLogger, "Error sorting features", err)
+	}
+	gitspaceLogger.Info("Feature installation order is:")
+	for index, feature := range sortedFeatures {
+		gitspaceLogger.Info(fmt.Sprintf("%d. %s", index, feature.Print()))
+	}
+
+	gitspaceLogger.Info("Installing features...")
+	imageName, err = utils.BuildWithFeatures(ctx, dockerClient, imageName, sortedFeatures, gitspaceInstanceIdentifier,
+		containerUser, remoteUser, containerUserHomeDir, remoteUserHomeDir)
+	if err != nil {
+		return nil, "", logStreamWrapError(gitspaceLogger, "Error building with features", err)
+	}
+	gitspaceLogger.Info(fmt.Sprintf("Installed features, built new docker image %s", imageName))
+
+	return sortedFeatures, imageName, nil
+}
+
 // buildSetupSteps constructs the steps to be executed in the setup process.
 func (e *EmbeddedDockerOrchestrator) buildSetupSteps(
-	_ context.Context,
 	ideService ide.IDE,
 	gitspaceConfig types.GitspaceConfig,
 	resolvedRepoDetails scm.ResolvedDetails,
 	defaultBaseImage string,
 	environment []string,
-	devcontainerConfig types.DevcontainerConfig,
 	codeRepoDir string,
+	lifecycleHookSteps map[PostAction][]*LifecycleHookStep,
 ) []step {
-	return []step{
+	steps := []step{
 		{
 			Name:          "Validate Supported OS",
 			Execute:       utils.ValidateSupportedOS,
@@ -583,33 +666,41 @@ func (e *EmbeddedDockerOrchestrator) buildSetupSteps(
 				return ideService.Run(ctx, exec, args, gitspaceLogger)
 			},
 			StopOnFailure: true,
-		},
-		// Post-create and Post-start steps
-		{
-			Name: "Execute PostCreate Command",
+		}}
+
+	// Add the postCreateCommand lifecycle hooks to the steps
+	for _, lifecycleHook := range lifecycleHookSteps[PostCreateAction] {
+		steps = append(steps, step{
+			Name: fmt.Sprintf("Execute postCreateCommand from %s", lifecycleHook.Source),
 			Execute: func(
 				ctx context.Context,
 				exec *devcontainer.Exec,
 				gitspaceLogger gitspaceTypes.GitspaceLogger,
 			) error {
-				command := ExtractLifecycleCommands(PostCreateAction, devcontainerConfig)
-				return ExecuteLifecycleCommands(ctx, *exec, codeRepoDir, gitspaceLogger, command, PostCreateAction)
+				return ExecuteLifecycleCommands(ctx, *exec, codeRepoDir, gitspaceLogger,
+					lifecycleHook.Command.ToCommandArray(), PostCreateAction)
 			},
-			StopOnFailure: false,
-		},
-		{
-			Name: "Execute PostStart Command",
-			Execute: func(
-				ctx context.Context,
-				exec *devcontainer.Exec,
-				gitspaceLogger gitspaceTypes.GitspaceLogger,
-			) error {
-				command := ExtractLifecycleCommands(PostStartAction, devcontainerConfig)
-				return ExecuteLifecycleCommands(ctx, *exec, codeRepoDir, gitspaceLogger, command, PostStartAction)
-			},
-			StopOnFailure: false,
-		},
+			StopOnFailure: lifecycleHook.StopOnFailure,
+		})
 	}
+
+	// Add the postStartCommand lifecycle hooks to the steps
+	for _, lifecycleHook := range lifecycleHookSteps[PostStartAction] {
+		steps = append(steps, step{
+			Name: fmt.Sprintf("Execute postStartCommand from %s", lifecycleHook.Source),
+			Execute: func(
+				ctx context.Context,
+				exec *devcontainer.Exec,
+				gitspaceLogger gitspaceTypes.GitspaceLogger,
+			) error {
+				return ExecuteLifecycleCommands(ctx, *exec, codeRepoDir, gitspaceLogger,
+					lifecycleHook.Command.ToCommandArray(), PostStartAction)
+			},
+			StopOnFailure: lifecycleHook.StopOnFailure,
+		})
+	}
+
+	return steps
 }
 
 // setupGitspaceAndIDE initializes Gitspace and IdeType by registering and executing the setup steps.
@@ -622,20 +713,20 @@ func (e *EmbeddedDockerOrchestrator) setupGitspaceAndIDE(
 	resolvedRepoDetails scm.ResolvedDetails,
 	defaultBaseImage string,
 	environment []string,
+	lifecycleHookSteps map[PostAction][]*LifecycleHookStep,
 ) error {
 	homeDir := GetUserHomeDir(exec.RemoteUser)
-	devcontainerConfig := resolvedRepoDetails.DevcontainerConfig
 	codeRepoDir := filepath.Join(homeDir, resolvedRepoDetails.RepoName)
 
 	steps := e.buildSetupSteps(
-		ctx,
 		ideService,
 		gitspaceConfig,
 		resolvedRepoDetails,
 		defaultBaseImage,
 		environment,
-		devcontainerConfig,
-		codeRepoDir)
+		codeRepoDir,
+		lifecycleHookSteps,
+	)
 
 	// Execute the registered steps
 	if err := e.ExecuteSteps(ctx, exec, gitspaceLogger, steps); err != nil {

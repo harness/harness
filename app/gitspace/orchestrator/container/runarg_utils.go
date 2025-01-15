@@ -159,6 +159,10 @@ func getNetworkMode(runArgsMap map[types.RunArg]*types.RunArgValue) container.Ne
 	return container.NetworkMode(getArgValueString(runArgsMap, types.RunArgNetwork))
 }
 
+func getCapAdd(runArgsMap map[types.RunArg]*types.RunArgValue) strslice.StrSlice {
+	return getArgValueStringSlice(runArgsMap, types.RunArgCapAdd)
+}
+
 func getCapDrop(runArgsMap map[types.RunArg]*types.RunArgValue) strslice.StrSlice {
 	return getArgValueStringSlice(runArgsMap, types.RunArgCapDrop)
 }
@@ -253,6 +257,10 @@ func getAutoRemove(runArgsMap map[types.RunArg]*types.RunArgValue) bool {
 	return getArgValueBool(runArgsMap, types.RunArgRm)
 }
 
+func getPrivileged(runArgsMap map[types.RunArg]*types.RunArgValue) *bool {
+	return getArgValueBoolPtr(runArgsMap, types.RunArgPrivileged)
+}
+
 func getInit(runArgsMap map[types.RunArg]*types.RunArgValue) *bool {
 	return getArgValueBoolPtr(runArgsMap, types.RunArgInit)
 }
@@ -327,6 +335,19 @@ func getUser(runArgsMap map[types.RunArg]*types.RunArgValue) string {
 
 func getEntrypoint(runArgsMap map[types.RunArg]*types.RunArgValue) []string {
 	return getArgValueStringSlice(runArgsMap, types.RunArgEntrypoint)
+}
+
+func getMounts(runArgsMap map[types.RunArg]*types.RunArgValue) ([]*types.Mount, error) {
+	rawMounts, ok := runArgsMap[types.RunArgMount]
+	var mounts []*types.Mount
+	if ok {
+		parsedMounts, err := types.ParseMountsFromStringSlice(rawMounts.Values)
+		if err != nil {
+			return nil, err
+		}
+		return parsedMounts, nil
+	}
+	return mounts, nil
 }
 
 func getHealthCheckConfig(runArgsMap map[types.RunArg]*types.RunArgValue) (*container.HealthConfig, error) {

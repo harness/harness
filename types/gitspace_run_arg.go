@@ -82,6 +82,9 @@ const (
 	RunArgSysctl              = RunArg("--sysctl")
 	RunArgUlimit              = RunArg("--ulimit")
 	RunArgUser                = RunArg("--user")
+	RunArgPrivileged          = RunArg("--privileged")
+	RunArgCapAdd              = RunArg("--cap-add")
+	RunArgMount               = RunArg("--mount")
 )
 
 type RunArgDefinition struct {

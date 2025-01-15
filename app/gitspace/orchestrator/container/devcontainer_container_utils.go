@@ -40,6 +40,7 @@ import (
 	"github.com/docker/docker/api/types/strslice"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
+	"github.com/gotidy/ptr"
 	"github.com/rs/zerolog/log"
 )
 
@@ -142,34 +143,48 @@ func CreateContainer(
 	runArgsMap map[types.RunArg]*types.RunArgValue,
 	containerUser string,
 	remoteUser string,
-) error {
+	features []*types.ResolvedFeature,
+	devcontainerConfig types.DevcontainerConfig,
+	metadataFromImage map[string]any,
+) (map[PostAction][]*LifecycleHookStep, error) {
 	exposedPorts, portBindings := applyPortMappings(portMappings)
 
-	gitspaceLogger.Info("Creating container: " + containerName)
+	gitspaceLogger.Info(fmt.Sprintf("Creating container %s with image %s", containerName, imageName))
 
-	hostConfig, err := prepareHostConfig(bindMountSource, bindMountTarget, mountType, portBindings, runArgsMap)
+	hostConfig, err := prepareHostConfig(bindMountSource, bindMountTarget, mountType, portBindings, runArgsMap,
+		features, devcontainerConfig, metadataFromImage)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	healthCheckConfig, err := getHealthCheckConfig(runArgsMap)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	stopTimeout, err := getStopTimeout(runArgsMap)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	entrypoint := getEntrypoint(runArgsMap)
+	entrypoint := mergeEntrypoints(features, runArgsMap)
 	var cmd strslice.StrSlice
 	if len(entrypoint) == 0 {
 		entrypoint = []string{"/bin/sh"}
 		cmd = []string{"-c", "trap 'exit 0' 15; sleep infinity & wait $!"}
 	}
 
+	lifecycleHookSteps := mergeLifeCycleHooks(devcontainerConfig, features)
+	lifecycleHookStepsStr, err := json.Marshal(lifecycleHookSteps)
+	if err != nil {
+		return nil, err
+	}
+
 	labels := getLabels(runArgsMap)
+
 	// Setting the following so that it can be read later to form gitspace URL.
 	labels[gitspaceRemoteUserLabel] = remoteUser
+
+	// Setting the following so that it can be read later to run the postStartCommands during restarts.
+	labels[gitspaceLifeCycleHooksLabel] = string(lifecycleHookStepsStr)
 
 	// Create the container
 	containerConfig := &container.Config{
@@ -190,10 +205,74 @@ func CreateContainer(
 
 	_, err = dockerClient.ContainerCreate(ctx, containerConfig, hostConfig, nil, nil, containerName)
 	if err != nil {
-		return logStreamWrapError(gitspaceLogger, "Error while creating container", err)
+		return nil, logStreamWrapError(gitspaceLogger, "Error while creating container", err)
 	}
 
-	return nil
+	return lifecycleHookSteps, nil
+}
+
+func mergeLifeCycleHooks(
+	devcontainerConfig types.DevcontainerConfig,
+	features []*types.ResolvedFeature,
+) map[PostAction][]*LifecycleHookStep {
+	var postCreateHooks []*LifecycleHookStep
+	var postStartHooks []*LifecycleHookStep
+	for _, feature := range features {
+		if len(feature.DownloadedFeature.DevcontainerFeatureConfig.PostCreateCommand.ToCommandArray()) > 0 {
+			postCreateHooks = append(postCreateHooks, &LifecycleHookStep{
+				Source:        feature.DownloadedFeature.Source,
+				Command:       feature.DownloadedFeature.DevcontainerFeatureConfig.PostCreateCommand,
+				ActionType:    PostCreateAction,
+				StopOnFailure: true,
+			})
+		}
+		if len(feature.DownloadedFeature.DevcontainerFeatureConfig.PostStartCommand.ToCommandArray()) > 0 {
+			postStartHooks = append(postStartHooks, &LifecycleHookStep{
+				Source:        feature.DownloadedFeature.Source,
+				Command:       feature.DownloadedFeature.DevcontainerFeatureConfig.PostStartCommand,
+				ActionType:    PostStartAction,
+				StopOnFailure: true,
+			})
+		}
+	}
+
+	if len(devcontainerConfig.PostCreateCommand.ToCommandArray()) > 0 {
+		postCreateHooks = append(postCreateHooks, &LifecycleHookStep{
+			Source:        "devcontainer.json",
+			Command:       devcontainerConfig.PostCreateCommand,
+			ActionType:    PostCreateAction,
+			StopOnFailure: false,
+		})
+	}
+
+	if len(devcontainerConfig.PostStartCommand.ToCommandArray()) > 0 {
+		postStartHooks = append(postStartHooks, &LifecycleHookStep{
+			Source:        "devcontainer.json",
+			Command:       devcontainerConfig.PostStartCommand,
+			ActionType:    PostStartAction,
+			StopOnFailure: false,
+		})
+	}
+
+	return map[PostAction][]*LifecycleHookStep{
+		PostCreateAction: postCreateHooks,
+		PostStartAction:  postStartHooks,
+	}
+}
+
+func mergeEntrypoints(
+	features []*types.ResolvedFeature,
+	runArgsMap map[types.RunArg]*types.RunArgValue,
+) strslice.StrSlice {
+	entrypoints := strslice.StrSlice{}
+	for _, feature := range features {
+		entrypoint := feature.DownloadedFeature.DevcontainerFeatureConfig.Entrypoint
+		if entrypoint != "" {
+			entrypoints = append(entrypoints, entrypoint)
+		}
+	}
+	entrypoints = append(entrypoints, getEntrypoint(runArgsMap)...)
+	return entrypoints
 }
 
 // Prepare port mappings for container creation.
@@ -221,6 +300,9 @@ func prepareHostConfig(
 	mountType mount.Type,
 	portBindings nat.PortMap,
 	runArgsMap map[types.RunArg]*types.RunArgValue,
+	features []*types.ResolvedFeature,
+	devcontainerConfig types.DevcontainerConfig,
+	metadataFromImage map[string]any,
 ) (*container.HostConfig, error) {
 	hostResources, err := getHostResources(runArgsMap)
 	if err != nil {
@@ -247,21 +329,27 @@ func prepareHostConfig(
 		return nil, err
 	}
 
+	defaultMount := mount.Mount{
+		Type:   mountType,
+		Source: bindMountSource,
+		Target: bindMountTarget,
+	}
+
+	mergedMounts, err := mergeMounts(devcontainerConfig, runArgsMap, features, defaultMount, metadataFromImage)
+	if err != nil {
+		return nil, fmt.Errorf("failed to merge mounts: %w", err)
+	}
+
 	hostConfig := &container.HostConfig{
-		PortBindings: portBindings,
-		Mounts: []mount.Mount{
-			{
-				Type:   mountType,
-				Source: bindMountSource,
-				Target: bindMountTarget,
-			},
-		},
+		PortBindings:  portBindings,
+		Mounts:        mergedMounts,
 		Resources:     hostResources,
 		Annotations:   getAnnotations(runArgsMap),
 		ExtraHosts:    extraHosts,
 		NetworkMode:   getNetworkMode(runArgsMap),
 		RestartPolicy: restartPolicy,
 		AutoRemove:    getAutoRemove(runArgsMap),
+		CapAdd:        mergeCapAdd(devcontainerConfig, runArgsMap, features, metadataFromImage),
 		CapDrop:       getCapDrop(runArgsMap),
 		CgroupnsMode:  getCgroupNSMode(runArgsMap),
 		DNS:           getDNS(runArgsMap),
@@ -269,18 +357,199 @@ func prepareHostConfig(
 		DNSSearch:     getDNSSearch(runArgsMap),
 		IpcMode:       getIPCMode(runArgsMap),
 		Isolation:     getIsolation(runArgsMap),
-		Init:          getInit(runArgsMap),
+		Init:          mergeInit(devcontainerConfig, runArgsMap, features, metadataFromImage),
 		Links:         getLinks(runArgsMap),
 		OomScoreAdj:   oomScoreAdj,
 		PidMode:       getPIDMode(runArgsMap),
+		Privileged:    mergePriviledged(devcontainerConfig, runArgsMap, features, metadataFromImage),
 		Runtime:       getRuntime(runArgsMap),
-		SecurityOpt:   getSecurityOpt(runArgsMap),
+		SecurityOpt:   mergeSecurityOpts(devcontainerConfig, runArgsMap, features, metadataFromImage),
 		StorageOpt:    getStorageOpt(runArgsMap),
 		ShmSize:       shmSize,
 		Sysctls:       getSysctls(runArgsMap),
 	}
 
 	return hostConfig, nil
+}
+
+func mergeMounts(
+	devcontainerConfig types.DevcontainerConfig,
+	runArgsMap map[types.RunArg]*types.RunArgValue,
+	features []*types.ResolvedFeature,
+	defaultMount mount.Mount,
+	metadataFromImage map[string]any,
+) ([]mount.Mount, error) {
+	var allMountsRaw []*types.Mount
+	for _, feature := range features {
+		if len(feature.DownloadedFeature.DevcontainerFeatureConfig.Mounts) > 0 {
+			allMountsRaw = append(allMountsRaw, feature.DownloadedFeature.DevcontainerFeatureConfig.Mounts...)
+		}
+	}
+
+	mountsFromRunArgs, err := getMounts(runArgsMap)
+	if err != nil {
+		return nil, err
+	}
+
+	// First check if mounts have been overridden in the runArgs, then check if the devcontainer.json
+	// provides any security options, if not, only then check the image metadata.
+	switch {
+	case len(mountsFromRunArgs) > 0:
+		allMountsRaw = append(allMountsRaw, mountsFromRunArgs...)
+	case len(devcontainerConfig.Mounts) > 0:
+		allMountsRaw = append(allMountsRaw, devcontainerConfig.Mounts...)
+	default:
+		if values, ok := metadataFromImage["mounts"].([]any); ok {
+			parsedMounts, err := types.ParseMountsFromRawSlice(values)
+			if err != nil {
+				return nil, err
+			}
+			allMountsRaw = append(allMountsRaw, parsedMounts...)
+		}
+	}
+
+	var allMounts []mount.Mount
+	for _, rawMount := range allMountsRaw {
+		if rawMount.Type == "" {
+			rawMount.Type = string(mount.TypeVolume)
+		}
+		parsedMount := mount.Mount{
+			Type:   mount.Type(rawMount.Type),
+			Source: rawMount.Source,
+			Target: rawMount.Target,
+		}
+		allMounts = append(allMounts, parsedMount)
+	}
+
+	allMounts = append(allMounts, defaultMount)
+
+	return allMounts, nil
+}
+
+func mergeSecurityOpts(
+	devcontainerConfig types.DevcontainerConfig,
+	runArgsMap map[types.RunArg]*types.RunArgValue,
+	features []*types.ResolvedFeature,
+	metadataFromImage map[string]any,
+) []string {
+	var allOpts []string
+	for _, feature := range features {
+		allOpts = append(allOpts, feature.DownloadedFeature.DevcontainerFeatureConfig.SecurityOpt...)
+	}
+
+	// First check if security options have been overridden in the runArgs, then check if the devcontainer.json
+	// provides any security options, if not, only then check the image metadata.
+	securityOptsFromRunArgs := getSecurityOpt(runArgsMap)
+	switch {
+	case len(securityOptsFromRunArgs) > 0:
+		allOpts = append(allOpts, securityOptsFromRunArgs...)
+	case len(devcontainerConfig.SecurityOpt) > 0:
+		allOpts = append(allOpts, devcontainerConfig.SecurityOpt...)
+	default:
+		if value, ok := metadataFromImage["securityOpt"].([]string); ok {
+			allOpts = append(allOpts, value...)
+		}
+	}
+
+	return allOpts
+}
+
+func mergeCapAdd(
+	devcontainerConfig types.DevcontainerConfig,
+	runArgsMap map[types.RunArg]*types.RunArgValue,
+	features []*types.ResolvedFeature,
+	metadataFromImage map[string]any,
+) strslice.StrSlice {
+	allCaps := strslice.StrSlice{}
+	for _, feature := range features {
+		allCaps = append(allCaps, feature.DownloadedFeature.DevcontainerFeatureConfig.CapAdd...)
+	}
+
+	// First check if capAdd have been overridden in the runArgs, then check if the devcontainer.json
+	// provides any capAdd, if not, only then check the image metadata.
+	capAddFromRunArgs := getCapAdd(runArgsMap)
+	switch {
+	case len(capAddFromRunArgs) > 0:
+		allCaps = append(allCaps, capAddFromRunArgs...)
+	case len(devcontainerConfig.CapAdd) > 0:
+		allCaps = append(allCaps, devcontainerConfig.CapAdd...)
+	default:
+		if value, ok := metadataFromImage["capAdd"].([]string); ok {
+			allCaps = append(allCaps, value...)
+		}
+	}
+
+	return allCaps
+}
+
+func mergeInit(
+	devcontainerConfig types.DevcontainerConfig,
+	runArgsMap map[types.RunArg]*types.RunArgValue,
+	features []*types.ResolvedFeature,
+	metadataFromImage map[string]any,
+) *bool {
+	// First check if init has been overridden in the runArgs, if not, then check in the devcontainer.json
+	// lastly check in the image metadata.
+	var initPtr = getInit(runArgsMap)
+
+	if initPtr == nil {
+		if devcontainerConfig.Init != nil {
+			initPtr = devcontainerConfig.Init
+		} else {
+			if value, ok := metadataFromImage["init"].(bool); ok {
+				initPtr = ptr.Bool(value)
+			}
+		}
+	}
+
+	var init = ptr.ToBool(initPtr)
+
+	// Merge this valye with the value from the features.
+	if !init {
+		for _, feature := range features {
+			if feature.DownloadedFeature.DevcontainerFeatureConfig.Init {
+				init = true
+				break
+			}
+		}
+	}
+
+	return ptr.Bool(init)
+}
+
+func mergePriviledged(
+	devcontainerConfig types.DevcontainerConfig,
+	runArgsMap map[types.RunArg]*types.RunArgValue,
+	features []*types.ResolvedFeature,
+	metadataFromImage map[string]any,
+) bool {
+	// First check if privileged has been overridden in the runArgs, if not, then check in the devcontainer.json
+	// lastly check in the image metadata.
+	var privilegedPtr = getPrivileged(runArgsMap)
+
+	if privilegedPtr == nil {
+		if devcontainerConfig.Privileged != nil {
+			privilegedPtr = devcontainerConfig.Privileged
+		} else {
+			if value, ok := metadataFromImage["privileged"].(bool); ok {
+				privilegedPtr = ptr.Bool(value)
+			}
+		}
+	}
+
+	var privileged = ptr.ToBool(privilegedPtr)
+
+	// Merge this valye with the value from the features.
+	if !privileged {
+		for _, feature := range features {
+			if feature.DownloadedFeature.DevcontainerFeatureConfig.Privileged {
+				privileged = true
+				break
+			}
+		}
+	}
+
+	return privileged
 }
 
 func GetContainerInfo(
@@ -542,17 +811,22 @@ func GetContainerResponse(
 	}, nil
 }
 
-func GetRemoteUserFromContainerLabel(
+func GetGitspaceInfoFromContainerLabels(
 	ctx context.Context,
 	containerName string,
 	dockerClient *client.Client,
-) (string, error) {
+) (string, map[PostAction][]*LifecycleHookStep, error) {
 	inspectResp, err := dockerClient.ContainerInspect(ctx, containerName)
 	if err != nil {
-		return "", fmt.Errorf("could not inspect container %s: %w", containerName, err)
+		return "", nil, fmt.Errorf("could not inspect container %s: %w", containerName, err)
 	}
 
-	return ExtractRemoteUserFromLabels(inspectResp), nil
+	remoteUser := ExtractRemoteUserFromLabels(inspectResp)
+	lifecycleHooks, err := ExtractLifecycleHooksFromLabels(inspectResp)
+	if err != nil {
+		return "", nil, fmt.Errorf("could not extract lifecycle hooks: %w", err)
+	}
+	return remoteUser, lifecycleHooks, nil
 }
 
 // Helper function to encode the AuthConfig into a Base64 string.

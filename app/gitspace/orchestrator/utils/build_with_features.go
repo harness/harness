@@ -172,7 +172,12 @@ func generateDockerFileWithFeatures(
 	containerUserHomeDir string,
 	remoteUserHomeDir string,
 ) error {
-	dockerFile := fmt.Sprintf("FROM %s\nARG %s=%s\nARG %s=%s\nARG %s=%s\nARG %s=%s\nCOPY ./devcontainer-features %s",
+	dockerFile := fmt.Sprintf(`FROM %s
+ARG %s=%s
+ARG %s=%s
+ARG %s=%s
+ARG %s=%s
+COPY ./devcontainer-features %s`,
 		imageName, convertOptionsToEnvVariables("_CONTAINER_USER"), containerUser,
 		convertOptionsToEnvVariables("_REMOTE_USER"), remoteUser,
 		convertOptionsToEnvVariables("_CONTAINER_USER_HOME"), containerUserHomeDir,
