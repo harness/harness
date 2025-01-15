@@ -37,6 +37,17 @@ type PortMapping struct {
 	ForwardedPort int
 }
 
+type InstanceInfo struct {
+	ID        string
+	Name      string
+	IPAddress string
+	Port      int64
+	OS        string
+	Arch      string
+	Provider  string
+	PoolName  string
+}
+
 type Infrastructure struct {
 	// Identifier identifies the provisioned infra.
 	Identifier string
@@ -75,4 +86,8 @@ type Infrastructure struct {
 	Storage string
 	// GitspacePortMappings contains the ports assigned for every requested port.
 	GitspacePortMappings map[int]*PortMapping
+	// VM Instance information from the init task
+	// that are required for execute (start/stop, publish) and cleanup tasks
+	// to make the runner stateless
+	InstanceInfo InstanceInfo
 }
