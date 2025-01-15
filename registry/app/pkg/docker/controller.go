@@ -173,6 +173,7 @@ func (c *Controller) HeadManifest(
 
 	f := func(registry registrytypes.Registry, _ string, a pkg.Artifact) Response {
 		art.SetRepoKey(registry.Name)
+		art.ParentID = registry.ParentID
 		headers, desc, man, e := a.(Registry).ManifestExist(ctx, art, acceptHeaders, ifNoneMatchHeader)
 		response := &GetManifestResponse{e, headers, desc, man}
 		return response
@@ -199,6 +200,7 @@ func (c *Controller) PullManifest(
 	}
 	f := func(registry registrytypes.Registry, _ string, a pkg.Artifact) Response {
 		art.SetRepoKey(registry.Name)
+		art.ParentID = registry.ParentID
 		headers, desc, man, e := a.(Registry).PullManifest(ctx, art, acceptHeaders, ifNoneMatchHeader)
 		response := &GetManifestResponse{e, headers, desc, man}
 		return response
@@ -268,6 +270,7 @@ func (c *Controller) GetBlob(ctx context.Context, info pkg.RegistryInfo) Respons
 	}
 	f := func(registry registrytypes.Registry, _ string, a pkg.Artifact) Response {
 		info.SetRepoKey(registry.Name)
+		info.ParentID = registry.ParentID
 		headers, body, size, readCloser, redirectURL, errs := a.(Registry).GetBlob(ctx, info)
 		return &GetBlobResponse{errs, headers, body, size, readCloser, redirectURL}
 	}
