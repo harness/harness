@@ -837,6 +837,39 @@ paths:
       tags:
         - infraproviders
   /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/infraproviders/{infraprovider_identifier}:
+    delete:
+      operationId: deleteInfraProvider
+      parameters:
+        - description: account identifier.
+          in: path
+          name: accountIdentifier
+          required: true
+          schema:
+            type: string
+        - description: org identifier.
+          in: path
+          name: orgIdentifier
+          required: true
+          schema:
+            type: string
+        - description: project identifier.
+          in: path
+          name: projectIdentifier
+          required: true
+          schema:
+            type: string
+        - description: infra Provider Config Identifier.
+          in: path
+          name: infraprovider_identifier
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No Content
+      summary: Delete infraProviderConfig
+      tags:
+        - infraproviders
     get:
       operationId: getInfraProvider
       parameters:
@@ -892,6 +925,66 @@ paths:
       summary: Get infraProviderConfig
       tags:
         - infraproviders
+    put:
+      operationId: updateInfraProvider
+      parameters:
+        - description: account identifier.
+          in: path
+          name: accountIdentifier
+          required: true
+          schema:
+            type: string
+        - description: org identifier.
+          in: path
+          name: orgIdentifier
+          required: true
+          schema:
+            type: string
+        - description: project identifier.
+          in: path
+          name: projectIdentifier
+          required: true
+          schema:
+            type: string
+        - description: infra Provider Config Identifier.
+          in: path
+          name: infraprovider_identifier
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiUpdateInfraProviderConfigRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesInfraProviderConfig'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      summary: Update infraProviderConfig
+      tags:
+        - infraproviders
   /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/infraproviders/{infraprovider_identifier}/resources:
     post:
       operationId: createInfraProviderResource
@@ -932,6 +1025,154 @@ paths:
       summary: Create InfraProvider Resource
       tags:
         - infraproviderresources
+  /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/infraproviders/{infraprovider_identifier}/sync:
+    get:
+      operationId: syncInfraProvider
+      parameters:
+        - description: account identifier.
+          in: path
+          name: accountIdentifier
+          required: true
+          schema:
+            type: string
+        - description: org identifier.
+          in: path
+          name: orgIdentifier
+          required: true
+          schema:
+            type: string
+        - description: project identifier.
+          in: path
+          name: projectIdentifier
+          required: true
+          schema:
+            type: string
+        - description: infra Provider Config Identifier.
+          in: path
+          name: infraprovider_identifier
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesInfraProviderConfig'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      summary: Sync infraProviderConfig
+      tags:
+        - infraproviders
+  /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/infraproviders/{infraprovider_identifier}/templates:
+    post:
+      operationId: createInfraProviderTemplate
+      parameters:
+        - description: account identifier.
+          in: path
+          name: accountIdentifier
+          required: true
+          schema:
+            type: string
+        - description: org identifier.
+          in: path
+          name: orgIdentifier
+          required: true
+          schema:
+            type: string
+        - description: project identifier.
+          in: path
+          name: projectIdentifier
+          required: true
+          schema:
+            type: string
+        - description: infra Provider Config Identifier.
+          in: path
+          name: infraprovider_identifier
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiCreateInfraProviderTemplateRequest'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesInfraProviderTemplate'
+          description: Created
+      summary: Create InfraProvider Template
+      tags:
+        - infraproviders
+  /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/infraproviders/{infraprovider_identifier}/templates/{template_identifier}:
+    put:
+      operationId: updateInfraProviderTemplate
+      parameters:
+        - description: account identifier.
+          in: path
+          name: accountIdentifier
+          required: true
+          schema:
+            type: string
+        - description: org identifier.
+          in: path
+          name: orgIdentifier
+          required: true
+          schema:
+            type: string
+        - description: project identifier.
+          in: path
+          name: projectIdentifier
+          required: true
+          schema:
+            type: string
+        - description: infra Provider Config Identifier.
+          in: path
+          name: infraprovider_identifier
+          required: true
+          schema:
+            type: string
+        - description: infra Provider Template Identifier.
+          in: path
+          name: template_identifier
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiUpdateInfraProviderTemplateRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesInfraProviderTemplate'
+          description: OK
+      summary: Update InfraProvider Template
+      tags:
+        - infraproviders
 components:
   schemas:
     EnumGitspaceAccessType:
@@ -1038,6 +1279,13 @@ components:
         - vs_code
         - vs_code_web
         - intellij
+        - pycharm
+        - goland
+        - webstorm
+        - clion
+        - phpstorm
+        - rubymine
+        - rider
       type: string
     EnumInfraProviderType:
       enum:
@@ -1188,6 +1436,50 @@ components:
           type: object
         name:
           type: string
+      type: object
+    OpenapiUpdateInfraProviderConfigRequest:
+      properties:
+        created:
+          type: integer
+        identifier:
+          type: string
+        metadata:
+          additionalProperties:
+            type: string
+          nullable: true
+          type: object
+        name:
+          type: string
+        resources:
+          items:
+            $ref: '#/components/schemas/TypesInfraProviderResource'
+          nullable: true
+          type: array
+        space_path:
+          type: string
+        type:
+          $ref: '#/components/schemas/EnumInfraProviderType'
+        updated:
+          type: integer
+      type: object
+    OpenapiUpdateInfraProviderTemplateRequest:
+      properties:
+        config_identifier:
+          type: string
+        created:
+          type: integer
+        data:
+          type: string
+        description:
+          type: string
+        identifier:
+          type: string
+        space_id:
+          type: integer
+        space_path:
+          type: string
+        updated:
+          type: integer
       type: object
     ScmCodeRepositoryResponse:
       properties:

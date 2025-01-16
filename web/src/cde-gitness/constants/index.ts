@@ -16,6 +16,13 @@
 import vsCodeWebIcon from 'cde-gitness/assests/vsCodeWeb.svg?url'
 import vsCodeIcon from 'cde-gitness/assests/VSCode.svg?url'
 import intellijIcon from 'cde-gitness/assests/intellij.svg?url'
+import cLionIcon from 'cde-gitness/assests/clion.svg?url'
+import phpStormIcon from 'cde-gitness/assests/phpStorm.svg?url'
+import pyCharmIcon from 'cde-gitness/assests/pyCharm.svg?url'
+import rubyMineIcon from 'cde-gitness/assests/rubyMine.svg?url'
+import webStormIcon from 'cde-gitness/assests/webStorm.svg?url'
+import goLandIcon from 'cde-gitness/assests/goLand.svg?url'
+import riderIcon from 'cde-gitness/assests/rider.svg?url'
 import type { StringsMap } from 'framework/strings/stringTypes'
 
 export const docLink = 'https://developer.harness.io/docs/cloud-development-environments'
@@ -23,7 +30,14 @@ export const docLink = 'https://developer.harness.io/docs/cloud-development-envi
 export enum IDEType {
   VSCODE = 'vs_code',
   VSCODEWEB = 'vs_code_web',
-  INTELLIJ = 'intellij'
+  INTELLIJ = 'intellij',
+  PYCHARM = 'pycharm',
+  GOLAND = 'goland',
+  WEBSTORM = 'webstorm',
+  CLION = 'clion',
+  PHPSTORM = 'phpstorm',
+  RUBYMINE = 'rubymine',
+  RIDER = 'rider'
 }
 
 export interface ideType {
@@ -32,21 +46,90 @@ export interface ideType {
   icon: any
 }
 
+export const groupEnums = {
+  VSCODE: 'vscode',
+  JETBRAIN: 'jetbrain'
+}
+
 export const getIDETypeOptions = (getString: any) => [
-  {
-    label: getString('cde.ide.desktop'),
-    value: IDEType.VSCODE,
-    icon: vsCodeIcon
-  },
   {
     label: getString('cde.ide.browser'),
     value: IDEType.VSCODEWEB,
-    icon: vsCodeWebIcon
+    icon: vsCodeWebIcon,
+    group: groupEnums.VSCODE,
+    buttonText: getString('cde.details.openBrowser')
+  },
+  {
+    label: getString('cde.ide.desktop'),
+    value: IDEType.VSCODE,
+    icon: vsCodeIcon,
+    allowSSH: true,
+    group: groupEnums.VSCODE,
+    buttonText: getString('cde.details.openEditor')
+  },
+  {
+    label: getString('cde.ide.clion'),
+    value: IDEType.CLION,
+    icon: cLionIcon,
+    allowSSH: true,
+    group: groupEnums.JETBRAIN,
+    buttonText: getString('cde.details.openJetBrain')
+  },
+  {
+    label: getString('cde.ide.goland'),
+    value: IDEType.GOLAND,
+    icon: goLandIcon,
+    allowSSH: true,
+    group: groupEnums.JETBRAIN,
+    buttonText: getString('cde.details.openJetBrain')
   },
   {
     label: getString('cde.ide.intellij'),
     value: IDEType.INTELLIJ,
-    icon: intellijIcon
+    icon: intellijIcon,
+    allowSSH: true,
+    group: groupEnums.JETBRAIN,
+    buttonText: getString('cde.details.openJetBrain')
+  },
+  {
+    label: getString('cde.ide.phpstorm'),
+    value: IDEType.PHPSTORM,
+    icon: phpStormIcon,
+    allowSSH: true,
+    group: groupEnums.JETBRAIN,
+    buttonText: getString('cde.details.openJetBrain')
+  },
+  {
+    label: getString('cde.ide.pycharm'),
+    value: IDEType.PYCHARM,
+    icon: pyCharmIcon,
+    allowSSH: true,
+    group: groupEnums.JETBRAIN,
+    buttonText: getString('cde.details.openJetBrain')
+  },
+  {
+    label: getString('cde.ide.rider'),
+    value: IDEType.RIDER,
+    icon: riderIcon,
+    allowSSH: true,
+    group: groupEnums.JETBRAIN,
+    buttonText: getString('cde.details.openJetBrain')
+  },
+  {
+    label: getString('cde.ide.rubymine'),
+    value: IDEType.RUBYMINE,
+    icon: rubyMineIcon,
+    allowSSH: true,
+    group: groupEnums.JETBRAIN,
+    buttonText: getString('cde.details.openJetBrain')
+  },
+  {
+    label: getString('cde.ide.webstorm'),
+    value: IDEType.WEBSTORM,
+    icon: webStormIcon,
+    allowSSH: true,
+    group: groupEnums.JETBRAIN,
+    buttonText: getString('cde.details.openJetBrain')
   }
 ]
 

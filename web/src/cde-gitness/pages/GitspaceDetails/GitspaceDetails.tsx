@@ -201,7 +201,7 @@ const GitspaceDetails = () => {
 
   const accordionRef = useRef<AccordionHandle | null>(null)
   const myRef = useRef<any | null>(null)
-  const ideItem = getIDEOption(data?.ide, getString)
+  const selectedIde = getIDEOption(data?.ide, getString)
 
   useEffect(() => {
     if (standalone ? formattedlogsdata.data : responseData) {
@@ -247,7 +247,7 @@ const GitspaceDetails = () => {
           <Container>
             {data && (
               <Layout.Horizontal spacing="small">
-                <img src={ideItem?.icon} className={css.gitspaceIcon} height={32} width={32} />
+                <img src={selectedIde?.icon} className={css.gitspaceIcon} height={32} width={32} />
                 <Layout.Vertical spacing="none" className={css.gitspaceIdContainer}>
                   <Text font={{ variation: FontVariation.H3 }}>{data?.name}</Text>
                   <Layout.Horizontal spacing={'xsmall'} flex={{ alignItems: 'center', justifyContent: 'start' }}>
@@ -343,58 +343,71 @@ const GitspaceDetails = () => {
                 }>
                 {getString('cde.details.actions')}
               </Button>
-              {(data?.state === GitspaceStatus.RUNNING ||
-                data?.state === GitspaceStatus.STARTING ||
-                data?.state === GitspaceStatus.STOPPING) &&
-              data?.ide ? (
-                <Button
-                  disabled={disabledActionButtons}
-                  variation={ButtonVariation.PRIMARY}
-                  tooltip={
-                    disabledActionButtons ? (
-                      <Container width={300} padding="medium">
-                        <Layout.Vertical spacing="small">
-                          <Text color={Color.WHITE} font="small">
-                            We are provisioning the Gitspace
-                          </Text>
-                          <Text color={Color.WHITE} font="small">
-                            Please wait for a few minutes before the{' '}
-                            {data.ide === 'vs_code_web' ? `VS Code Online` : `VS Code Desktop`} can be launched
-                          </Text>
-                        </Layout.Vertical>
-                      </Container>
-                    ) : undefined
-                  }
-                  tooltipProps={{ isDark: true, position: PopoverPosition.BOTTOM_LEFT }}
-                  onClick={e => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    if (data?.ide === IDEType.VSCODE) {
-                      const params = standalone ? '?gitness' : ''
-                      const projectOrSpace = standalone ? space : projectIdentifier
-                      const vscodeExtensionCode = standalone ? 'harness-inc.oss-gitspaces' : 'harness-inc.gitspaces'
-                      const vsCodeURL = `vscode://${vscodeExtensionCode}/${projectOrSpace}/${data?.identifier}${params}`
-                      window.open(vsCodeURL, '_blank')
-                    } else {
-                      if (standalone) {
-                        window.open(data?.instance?.url || '', '_blank')
-                      } else {
-                        setSelectedRowUrl(data?.instance?.url || '')
-                        refetchToken({
-                          pathParams: {
-                            accountIdentifier,
-                            projectIdentifier,
-                            orgIdentifier,
-                            gitspace_identifier: data?.identifier || ''
-                          }
-                        })
+              {data ? (
+                <>
+                  {(data?.state === GitspaceStatus.RUNNING ||
+                    data?.state === GitspaceStatus.STARTING ||
+                    data?.state === GitspaceStatus.STOPPING) &&
+                  data?.ide ? (
+                    <Button
+                      disabled={disabledActionButtons}
+                      variation={ButtonVariation.PRIMARY}
+                      tooltip={
+                        disabledActionButtons ? (
+                          <Container width={300} padding="medium">
+                            <Layout.Vertical spacing="small">
+                              <Text color={Color.WHITE} font="small">
+                                We are provisioning the Gitspace
+                              </Text>
+                              <Text color={Color.WHITE} font="small">
+                                Please wait for a few minutes before the {selectedIde?.label} can be launched
+                              </Text>
+                            </Layout.Vertical>
+                          </Container>
+                        ) : undefined
                       }
-                    }
-                  }}>
-                  {data?.ide === IDEType.VSCODE && getString('cde.details.openEditor')}
-                  {data?.ide === IDEType.VSCODEWEB && getString('cde.details.openBrowser')}
-                  {data?.ide === IDEType.INTELLIJ && getString('cde.details.openIntellij')}
-                </Button>
+                      tooltipProps={{ isDark: true, position: PopoverPosition.BOTTOM_LEFT }}
+                      onClick={e => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        if (data?.ide === IDEType.VSCODE) {
+                          const params = standalone ? '?gitness' : ''
+                          const projectOrSpace = standalone ? space : projectIdentifier
+                          const vscodeExtensionCode = standalone ? 'harness-inc.oss-gitspaces' : 'harness-inc.gitspaces'
+                          const vsCodeURL = `vscode://${vscodeExtensionCode}/${projectOrSpace}/${data?.identifier}${params}`
+                          window.open(vsCodeURL, '_blank')
+                        } else {
+                          if (standalone) {
+                            window.open(data?.instance?.url || '', '_blank')
+                          } else {
+                            setSelectedRowUrl(data?.instance?.url || '')
+                            refetchToken({
+                              pathParams: {
+                                accountIdentifier,
+                                projectIdentifier,
+                                orgIdentifier,
+                                gitspace_identifier: data?.identifier || ''
+                              }
+                            })
+                          }
+                        }
+                      }}>
+                      {selectedIde?.buttonText}
+                    </Button>
+                  ) : (
+                    <Button
+                      loading={mutateLoading}
+                      disabled={mutateLoading || disabledActionButtons}
+                      icon="run-pipeline"
+                      variation={ButtonVariation.PRIMARY}
+                      intent="success"
+                      onClick={async () => {
+                        triggerGitspace()
+                      }}>
+                      {getString('cde.details.startGitspace')}
+                    </Button>
+                  )}
+                </>
               ) : (
                 <Button
                   loading={mutateLoading}

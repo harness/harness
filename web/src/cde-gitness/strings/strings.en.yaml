@@ -97,7 +97,7 @@ details:
   actions: More Actions
   openEditor: Open VS Code Editor
   openBrowser: Open VS Code Online
-  openIntellij: Open IntelliJ Gateway
+  openJetBrain: Open JetBrains Gateway
   goToDashboard: Go To Dashboard
   startGitspace: Start Gitspace
   stopProvising: Stop Provising
@@ -127,7 +127,16 @@ repository:
 ide:
   browser: VS Code Browser
   desktop: VS Code Desktop
-  intellij: IntelliJ
+  intellij: IntelliJ IDEA
+  goland: GoLand
+  webstorm: WebStorm
+  clion: CLion
+  phpstorm: PhpStorm
+  rubymine: RubyMine
+  pycharm: PyCharm
+  rider: Rider
+  bymircosoft: By Microsoft
+  byjetbrain: By JetBrains
   title: IDE
   selectIDE: Select IDE
   vsCode: VS Code

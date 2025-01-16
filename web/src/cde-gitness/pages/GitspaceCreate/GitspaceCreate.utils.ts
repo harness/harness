@@ -16,7 +16,7 @@
 
 import * as yup from 'yup'
 import type { UseStringsReturn } from 'framework/strings'
-import { IDEType } from 'cde-gitness/constants'
+import { getIDEOption } from 'cde-gitness/constants'
 
 export const validateGitnessForm = (getString: UseStringsReturn['getString'], isCDE = false) =>
   yup.object().shape({
@@ -27,7 +27,10 @@ export const validateGitnessForm = (getString: UseStringsReturn['getString'], is
     resource_identifier: yup.string().trim().required(getString('cde.machineValidationMessage')),
     name: yup.string().trim().required(),
     ssh_token_identifier: yup.string().when('ide', {
-      is: ide => (ide === IDEType.VSCODE || ide === IDEType.INTELLIJ) && isCDE,
+      is: ide => {
+        const selectedIDE = getIDEOption(ide, getString)
+        return selectedIDE?.allowSSH && isCDE
+      },
       then: yup.string().required(getString('cde.sshValidationMessage'))
     })
   })

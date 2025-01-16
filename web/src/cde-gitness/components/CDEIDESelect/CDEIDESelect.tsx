@@ -16,11 +16,13 @@
 
 import React from 'react'
 import { Layout, Text } from '@harnessio/uicore'
-import { Menu, MenuItem } from '@blueprintjs/core'
+import { Menu } from '@blueprintjs/core'
 import { Code } from 'iconoir-react'
-import { getIDETypeOptions } from 'cde-gitness/constants'
+import { getIDETypeOptions, groupEnums } from 'cde-gitness/constants'
 import { useStrings } from 'framework/strings'
 import { CDECustomDropdown } from '../CDECustomDropdown/CDECustomDropdown'
+import { CustomIDESection } from '../IDEDropdownSection/IDEDropdownSection'
+import css from './CDEIDESelect.module.scss'
 
 export const CDEIDESelect = ({
   onChange,
@@ -36,6 +38,7 @@ export const CDEIDESelect = ({
 
   return (
     <CDECustomDropdown
+      ideDropdown={true}
       leftElement={
         <Layout.Horizontal>
           <Code height={20} width={20} style={{ marginRight: '8px', alignItems: 'center' }} />
@@ -53,84 +56,21 @@ export const CDEIDESelect = ({
       }
       menu={
         <Menu>
-          {ideOptions.map(item => {
-            return (
-              <MenuItem
-                key={item.value}
-                text={
-                  <Layout.Horizontal
-                    width="90%"
-                    spacing="medium"
-                    flex={{ alignItems: 'center', justifyContent: 'start' }}>
-                    <img height={16} width={16} src={item.icon} />
-                    <Text>{item.label}</Text>
-                  </Layout.Horizontal>
-                }
-                onClick={() => {
-                  onChange('ide', item.value)
-                }}
-              />
-            )
-          })}
+          <CustomIDESection
+            options={ideOptions.filter(val => val.group === groupEnums.VSCODE)}
+            heading={getString('cde.ide.bymircosoft')}
+            value={selectedIde}
+            onChange={onChange}
+          />
+          <hr className={css.divider} />
+          <CustomIDESection
+            options={ideOptions.filter(val => val.group === groupEnums.JETBRAIN)}
+            heading={getString('cde.ide.byjetbrain')}
+            value={selectedIde}
+            onChange={onChange}
+          />
         </Menu>
       }
     />
   )
-
-  // return (
-  //   <Layout.Horizontal className={css.main}>
-  //     <Container width="70%">
-  //       <Layout.Vertical>
-  //         <Text icon="code">IDE</Text>
-  //         <Text margin={{ left: 'large' }} font="small">
-  //           Your Gitspace will open in the selected IDE to code
-  //         </Text>
-  //       </Layout.Vertical>
-  //     </Container>
-  //     <Container width="30%">
-  //       <Button
-  //         height="45px"
-  //         width="100%"
-  //         className={css.button}
-  //         text={
-  //           <Layout.Horizontal width="90%" flex={{ alignItems: 'center', justifyContent: 'space-between' }}>
-  //             <img height={16} width={16} src={img} />
-  //             <Text>{label}</Text>
-  //           </Layout.Horizontal>
-  //         }
-  //         rightIcon={'chevron-down'}
-  //         variation={ButtonVariation.TERTIARY}
-  //         iconProps={{ size: 14 }}
-  //         tooltipProps={{
-  //           fill: true,
-  //           interactionKind: PopoverInteractionKind.CLICK,
-  //           position: PopoverPosition.BOTTOM_LEFT,
-  //           popoverClassName: css.popover
-  //         }}
-  //         tooltip={
-  //           <Container className={css.listContainer} width="100%">
-  //             <Menu>
-  //               {ideOptions.map(item => {
-  //                 return (
-  //                   <MenuItem
-  //                     key={item.value}
-  //                     text={
-  //                       <Layout.Horizontal>
-  //                         <img height={16} width={16} src={item.img} />
-  //                         <Text>{item.label}</Text>
-  //                       </Layout.Horizontal>
-  //                     }
-  //                     onClick={() => {
-  //                       onChange('ide', item.value)
-  //                     }}
-  //                   />
-  //                 )
-  //               })}
-  //             </Menu>
-  //           </Container>
-  //         }
-  //       />
-  //     </Container>
-  //   </Layout.Horizontal>
-  // )
 }

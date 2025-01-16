@@ -16,8 +16,4 @@
 
 /* eslint-disable */
 // This is an auto-generated file
-export declare const button: string
 export declare const divider: string
-export declare const listContainer: string
-export declare const main: string
-export declare const popover: string

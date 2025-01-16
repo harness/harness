@@ -25,6 +25,7 @@ interface CDECustomDropdownProps {
   menu: React.ReactNode
   overridePopOverWidth?: boolean
   formikName?: string
+  ideDropdown?: boolean
 }
 
 export const CDECustomDropdown = ({
@@ -32,7 +33,8 @@ export const CDECustomDropdown = ({
   menu,
   leftElement,
   overridePopOverWidth,
-  formikName = ''
+  formikName = '',
+  ideDropdown = false
 }: CDECustomDropdownProps) => {
   const buttonRef = useRef<HTMLDivElement | null>(null)
   const [popoverWidth, setPopoverWidth] = useState(0)
@@ -69,7 +71,9 @@ export const CDECustomDropdown = ({
                   popoverClassName: css.popover
                 }}
                 tooltip={
-                  <Container className={css.listContainer} width={overridePopOverWidth ? '100%' : popoverWidth}>
+                  <Container
+                    className={ideDropdown ? css.ideListContainer : css.listContainer}
+                    width={overridePopOverWidth ? '100%' : popoverWidth}>
                     {menu}
                   </Container>
                 }

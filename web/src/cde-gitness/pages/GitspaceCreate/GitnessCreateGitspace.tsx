@@ -26,7 +26,7 @@ import { useAppContext } from 'AppContext'
 import { getErrorMessage } from 'utils/Utils'
 import { GitnessRepoImportForm } from 'cde-gitness/components/GitnessRepoImportForm/GitnessRepoImportForm'
 import { ThirdPartyRepoImportForm } from 'cde-gitness/components/ThirdPartyRepoImportForm/ThirdPartyRepoImportForm'
-import { SelectIDE } from 'cde-gitness/components/SelectIDE/SelectIDE'
+import { CDEIDESelect } from 'cde-gitness/components/CDEIDESelect/CDEIDESelect'
 import { gitnessFormInitialValues } from './GitspaceCreate.constants'
 import { validateGitnessForm } from './GitspaceCreate.utils'
 import css from './GitspaceCreate.module.scss'
@@ -96,7 +96,7 @@ export const GitnessCreateGitspace = () => {
                 )}
               </Container>
               <Container className={css.formOuterContainer}>
-                <SelectIDE />
+                <CDEIDESelect onChange={formik.setFieldValue} selectedIde={formik.values.ide} />
                 <Button width={'100%'} variation={ButtonVariation.PRIMARY} height={50} type="submit">
                   {getString('cde.createGitspace')}
                 </Button>

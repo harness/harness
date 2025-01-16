@@ -67,4 +67,27 @@
       }
     }
   }
+
+  .ideListContainer {
+    min-height: 50px;
+    overflow-y: auto;
+
+    :global {
+      .bp3-menu {
+        li {
+          padding: var(--spacing-xsmall) 0 !important;
+        }
+      }
+
+      a.bp3-menu-item {
+        padding: 5px var(--spacing-4) !important;
+      }
+
+      a.bp3-menu-item:hover,
+      .bp3-active {
+        background: var(--primary-1) !important;
+        color: var(--grey-1000) !important;
+      }
+    }
+  }
 }

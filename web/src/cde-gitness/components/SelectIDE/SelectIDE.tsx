@@ -15,13 +15,15 @@
  */
 
 import React from 'react'
-import { Menu, MenuItem } from '@blueprintjs/core'
+import { Menu } from '@blueprintjs/core'
 import { Layout, Text, Container } from '@harnessio/uicore'
 import { useFormikContext } from 'formik'
 import { GitspaceSelect } from 'cde-gitness/components/GitspaceSelect/GitspaceSelect'
 import { useStrings } from 'framework/strings'
 import type { OpenapiCreateGitspaceRequest } from 'services/cde'
-import { getIDEOption, getIDETypeOptions } from 'cde-gitness/constants'
+import { getIDEOption, getIDETypeOptions, groupEnums } from 'cde-gitness/constants'
+import { CustomIDESection } from '../IDEDropdownSection/IDEDropdownSection'
+import css from './SelectIDE.module.scss'
 
 export const SelectIDE = () => {
   const { values, errors, setFieldValue: onChange } = useFormikContext<OpenapiCreateGitspaceRequest>()
@@ -51,23 +53,19 @@ export const SelectIDE = () => {
       renderMenu={
         <Container padding={{ top: 'small', bottom: 'small' }}>
           <Menu>
-            {IDESelectItems.map(({ label, value }) => {
-              return (
-                <MenuItem
-                  key={label}
-                  active={value === ide}
-                  text={
-                    <Layout.Vertical spacing="small">
-                      <Text font={{ size: 'normal', weight: 'bold' }}>{label}</Text>
-                      <Text font="small">1.81.0</Text>
-                    </Layout.Vertical>
-                  }
-                  onClick={() => {
-                    onChange('ide', value)
-                  }}
-                />
-              )
-            })}
+            <CustomIDESection
+              options={IDESelectItems.filter(val => val.group === groupEnums.VSCODE)}
+              heading={getString('cde.ide.bymircosoft')}
+              value={ide}
+              onChange={onChange}
+            />
+            <hr className={css.divider} />
+            <CustomIDESection
+              options={IDESelectItems.filter(val => val.group === groupEnums.JETBRAIN)}
+              heading={getString('cde.ide.byjetbrain')}
+              value={ide}
+              onChange={onChange}
+            />
           </Menu>
         </Container>
       }

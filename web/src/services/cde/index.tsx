@@ -67,7 +67,17 @@ export type EnumGitspaceSort = 'created' | 'last_activated' | 'last_used'
 
 export type EnumGitspaceStateType = 'running' | 'stopped' | 'error' | 'uninitialized' | 'starting' | 'stopping'
 
-export type EnumIDEType = 'vs_code' | 'vs_code_web' | 'intellij'
+export type EnumIDEType =
+  | 'vs_code'
+  | 'vs_code_web'
+  | 'intellij'
+  | 'pycharm'
+  | 'goland'
+  | 'webstorm'
+  | 'clion'
+  | 'phpstorm'
+  | 'rubymine'
+  | 'rider'
 
 export type EnumInfraProviderType = 'docker' | 'harness_gcp' | 'harness_cloud' | 'hybrid_vm_gcp'
 
@@ -148,6 +158,30 @@ export interface OpenapiUpdateGitspaceRequest {
     [key: string]: string
   } | null
   name?: string
+}
+
+export interface OpenapiUpdateInfraProviderConfigRequest {
+  created?: number
+  identifier?: string
+  metadata?: {
+    [key: string]: string
+  } | null
+  name?: string
+  resources?: TypesInfraProviderResource[] | null
+  space_path?: string
+  type?: EnumInfraProviderType
+  updated?: number
+}
+
+export interface OpenapiUpdateInfraProviderTemplateRequest {
+  config_identifier?: string
+  created?: number
+  data?: string
+  description?: string
+  identifier?: string
+  space_id?: number
+  space_path?: string
+  updated?: number
 }
 
 export interface ScmCodeRepositoryResponse {
@@ -1331,6 +1365,66 @@ export const useCreateInfraProvider = ({
     { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier, orgIdentifier, projectIdentifier }, ...props }
   )
 
+export interface DeleteInfraProviderPathParams {
+  /**
+   * account identifier.
+   */
+  accountIdentifier: string
+  /**
+   * org identifier.
+   */
+  orgIdentifier: string
+  /**
+   * project identifier.
+   */
+  projectIdentifier: string
+}
+
+export type DeleteInfraProviderProps = Omit<
+  MutateProps<void, unknown, void, string, DeleteInfraProviderPathParams>,
+  'path' | 'verb'
+> &
+  DeleteInfraProviderPathParams
+
+/**
+ * Delete infraProviderConfig
+ */
+export const DeleteInfraProvider = ({
+  accountIdentifier,
+  orgIdentifier,
+  projectIdentifier,
+  ...props
+}: DeleteInfraProviderProps) => (
+  <Mutate<void, unknown, void, string, DeleteInfraProviderPathParams>
+    verb="DELETE"
+    path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/infraproviders`}
+    base={getConfig('cde/api/v1')}
+    {...props}
+  />
+)
+
+export type UseDeleteInfraProviderProps = Omit<
+  UseMutateProps<void, unknown, void, string, DeleteInfraProviderPathParams>,
+  'path' | 'verb'
+> &
+  DeleteInfraProviderPathParams
+
+/**
+ * Delete infraProviderConfig
+ */
+export const useDeleteInfraProvider = ({
+  accountIdentifier,
+  orgIdentifier,
+  projectIdentifier,
+  ...props
+}: UseDeleteInfraProviderProps) =>
+  useMutate<void, unknown, void, string, DeleteInfraProviderPathParams>(
+    'DELETE',
+    (paramsInPath: DeleteInfraProviderPathParams) =>
+      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/infraproviders`,
+    { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier, orgIdentifier, projectIdentifier }, ...props }
+  )
+
 export interface GetInfraProviderPathParams {
   /**
    * account identifier.
@@ -1391,6 +1485,100 @@ export const useGetInfraProvider = ({
 }: UseGetInfraProviderProps) =>
   useGet<TypesInfraProviderConfig, UsererrorError, void, GetInfraProviderPathParams>(
     (paramsInPath: GetInfraProviderPathParams) =>
+      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/infraproviders/${paramsInPath.infraprovider_identifier}`,
+    {
+      base: getConfig('cde/api/v1'),
+      pathParams: { accountIdentifier, orgIdentifier, projectIdentifier, infraprovider_identifier },
+      ...props
+    }
+  )
+
+export interface UpdateInfraProviderPathParams {
+  /**
+   * account identifier.
+   */
+  accountIdentifier: string
+  /**
+   * org identifier.
+   */
+  orgIdentifier: string
+  /**
+   * project identifier.
+   */
+  projectIdentifier: string
+  /**
+   * infra Provider Config Identifier.
+   */
+  infraprovider_identifier: string
+}
+
+export type UpdateInfraProviderProps = Omit<
+  MutateProps<
+    TypesInfraProviderConfig,
+    UsererrorError,
+    void,
+    OpenapiUpdateInfraProviderConfigRequest,
+    UpdateInfraProviderPathParams
+  >,
+  'path' | 'verb'
+> &
+  UpdateInfraProviderPathParams
+
+/**
+ * Update infraProviderConfig
+ */
+export const UpdateInfraProvider = ({
+  accountIdentifier,
+  orgIdentifier,
+  projectIdentifier,
+  infraprovider_identifier,
+  ...props
+}: UpdateInfraProviderProps) => (
+  <Mutate<
+    TypesInfraProviderConfig,
+    UsererrorError,
+    void,
+    OpenapiUpdateInfraProviderConfigRequest,
+    UpdateInfraProviderPathParams
+  >
+    verb="PUT"
+    path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/infraproviders/${infraprovider_identifier}`}
+    base={getConfig('cde/api/v1')}
+    {...props}
+  />
+)
+
+export type UseUpdateInfraProviderProps = Omit<
+  UseMutateProps<
+    TypesInfraProviderConfig,
+    UsererrorError,
+    void,
+    OpenapiUpdateInfraProviderConfigRequest,
+    UpdateInfraProviderPathParams
+  >,
+  'path' | 'verb'
+> &
+  UpdateInfraProviderPathParams
+
+/**
+ * Update infraProviderConfig
+ */
+export const useUpdateInfraProvider = ({
+  accountIdentifier,
+  orgIdentifier,
+  projectIdentifier,
+  infraprovider_identifier,
+  ...props
+}: UseUpdateInfraProviderProps) =>
+  useMutate<
+    TypesInfraProviderConfig,
+    UsererrorError,
+    void,
+    OpenapiUpdateInfraProviderConfigRequest,
+    UpdateInfraProviderPathParams
+  >(
+    'PUT',
+    (paramsInPath: UpdateInfraProviderPathParams) =>
       `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/infraproviders/${paramsInPath.infraprovider_identifier}`,
     {
       base: getConfig('cde/api/v1'),
@@ -1465,6 +1653,274 @@ export const useCreateInfraProviderResource = ({
     {
       base: getConfig('cde/api/v1'),
       pathParams: { accountIdentifier, orgIdentifier, projectIdentifier, infraprovider_identifier },
+      ...props
+    }
+  )
+
+export interface SyncInfraProviderPathParams {
+  /**
+   * account identifier.
+   */
+  accountIdentifier: string
+  /**
+   * org identifier.
+   */
+  orgIdentifier: string
+  /**
+   * project identifier.
+   */
+  projectIdentifier: string
+  /**
+   * infra Provider Config Identifier.
+   */
+  infraprovider_identifier: string
+}
+
+export type SyncInfraProviderProps = Omit<
+  GetProps<TypesInfraProviderConfig, UsererrorError, void, SyncInfraProviderPathParams>,
+  'path'
+> &
+  SyncInfraProviderPathParams
+
+/**
+ * Sync infraProviderConfig
+ */
+export const SyncInfraProvider = ({
+  accountIdentifier,
+  orgIdentifier,
+  projectIdentifier,
+  infraprovider_identifier,
+  ...props
+}: SyncInfraProviderProps) => (
+  <Get<TypesInfraProviderConfig, UsererrorError, void, SyncInfraProviderPathParams>
+    path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/infraproviders/${infraprovider_identifier}/sync`}
+    base={getConfig('cde/api/v1')}
+    {...props}
+  />
+)
+
+export type UseSyncInfraProviderProps = Omit<
+  UseGetProps<TypesInfraProviderConfig, UsererrorError, void, SyncInfraProviderPathParams>,
+  'path'
+> &
+  SyncInfraProviderPathParams
+
+/**
+ * Sync infraProviderConfig
+ */
+export const useSyncInfraProvider = ({
+  accountIdentifier,
+  orgIdentifier,
+  projectIdentifier,
+  infraprovider_identifier,
+  ...props
+}: UseSyncInfraProviderProps) =>
+  useGet<TypesInfraProviderConfig, UsererrorError, void, SyncInfraProviderPathParams>(
+    (paramsInPath: SyncInfraProviderPathParams) =>
+      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/infraproviders/${paramsInPath.infraprovider_identifier}/sync`,
+    {
+      base: getConfig('cde/api/v1'),
+      pathParams: { accountIdentifier, orgIdentifier, projectIdentifier, infraprovider_identifier },
+      ...props
+    }
+  )
+
+export interface CreateInfraProviderTemplatePathParams {
+  /**
+   * account identifier.
+   */
+  accountIdentifier: string
+  /**
+   * org identifier.
+   */
+  orgIdentifier: string
+  /**
+   * project identifier.
+   */
+  projectIdentifier: string
+  /**
+   * infra Provider Config Identifier.
+   */
+  infraprovider_identifier: string
+}
+
+export type CreateInfraProviderTemplateProps = Omit<
+  MutateProps<
+    TypesInfraProviderTemplate,
+    unknown,
+    void,
+    OpenapiCreateInfraProviderTemplateRequest,
+    CreateInfraProviderTemplatePathParams
+  >,
+  'path' | 'verb'
+> &
+  CreateInfraProviderTemplatePathParams
+
+/**
+ * Create InfraProvider Template
+ */
+export const CreateInfraProviderTemplate = ({
+  accountIdentifier,
+  orgIdentifier,
+  projectIdentifier,
+  infraprovider_identifier,
+  ...props
+}: CreateInfraProviderTemplateProps) => (
+  <Mutate<
+    TypesInfraProviderTemplate,
+    unknown,
+    void,
+    OpenapiCreateInfraProviderTemplateRequest,
+    CreateInfraProviderTemplatePathParams
+  >
+    verb="POST"
+    path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/infraproviders/${infraprovider_identifier}/templates`}
+    base={getConfig('cde/api/v1')}
+    {...props}
+  />
+)
+
+export type UseCreateInfraProviderTemplateProps = Omit<
+  UseMutateProps<
+    TypesInfraProviderTemplate,
+    unknown,
+    void,
+    OpenapiCreateInfraProviderTemplateRequest,
+    CreateInfraProviderTemplatePathParams
+  >,
+  'path' | 'verb'
+> &
+  CreateInfraProviderTemplatePathParams
+
+/**
+ * Create InfraProvider Template
+ */
+export const useCreateInfraProviderTemplate = ({
+  accountIdentifier,
+  orgIdentifier,
+  projectIdentifier,
+  infraprovider_identifier,
+  ...props
+}: UseCreateInfraProviderTemplateProps) =>
+  useMutate<
+    TypesInfraProviderTemplate,
+    unknown,
+    void,
+    OpenapiCreateInfraProviderTemplateRequest,
+    CreateInfraProviderTemplatePathParams
+  >(
+    'POST',
+    (paramsInPath: CreateInfraProviderTemplatePathParams) =>
+      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/infraproviders/${paramsInPath.infraprovider_identifier}/templates`,
+    {
+      base: getConfig('cde/api/v1'),
+      pathParams: { accountIdentifier, orgIdentifier, projectIdentifier, infraprovider_identifier },
+      ...props
+    }
+  )
+
+export interface UpdateInfraProviderTemplatePathParams {
+  /**
+   * account identifier.
+   */
+  accountIdentifier: string
+  /**
+   * org identifier.
+   */
+  orgIdentifier: string
+  /**
+   * project identifier.
+   */
+  projectIdentifier: string
+  /**
+   * infra Provider Config Identifier.
+   */
+  infraprovider_identifier: string
+  /**
+   * infra Provider Template Identifier.
+   */
+  template_identifier: string
+}
+
+export type UpdateInfraProviderTemplateProps = Omit<
+  MutateProps<
+    TypesInfraProviderTemplate,
+    unknown,
+    void,
+    OpenapiUpdateInfraProviderTemplateRequest,
+    UpdateInfraProviderTemplatePathParams
+  >,
+  'path' | 'verb'
+> &
+  UpdateInfraProviderTemplatePathParams
+
+/**
+ * Update InfraProvider Template
+ */
+export const UpdateInfraProviderTemplate = ({
+  accountIdentifier,
+  orgIdentifier,
+  projectIdentifier,
+  infraprovider_identifier,
+  template_identifier,
+  ...props
+}: UpdateInfraProviderTemplateProps) => (
+  <Mutate<
+    TypesInfraProviderTemplate,
+    unknown,
+    void,
+    OpenapiUpdateInfraProviderTemplateRequest,
+    UpdateInfraProviderTemplatePathParams
+  >
+    verb="PUT"
+    path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/infraproviders/${infraprovider_identifier}/templates/${template_identifier}`}
+    base={getConfig('cde/api/v1')}
+    {...props}
+  />
+)
+
+export type UseUpdateInfraProviderTemplateProps = Omit<
+  UseMutateProps<
+    TypesInfraProviderTemplate,
+    unknown,
+    void,
+    OpenapiUpdateInfraProviderTemplateRequest,
+    UpdateInfraProviderTemplatePathParams
+  >,
+  'path' | 'verb'
+> &
+  UpdateInfraProviderTemplatePathParams
+
+/**
+ * Update InfraProvider Template
+ */
+export const useUpdateInfraProviderTemplate = ({
+  accountIdentifier,
+  orgIdentifier,
+  projectIdentifier,
+  infraprovider_identifier,
+  template_identifier,
+  ...props
+}: UseUpdateInfraProviderTemplateProps) =>
+  useMutate<
+    TypesInfraProviderTemplate,
+    unknown,
+    void,
+    OpenapiUpdateInfraProviderTemplateRequest,
+    UpdateInfraProviderTemplatePathParams
+  >(
+    'PUT',
+    (paramsInPath: UpdateInfraProviderTemplatePathParams) =>
+      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/infraproviders/${paramsInPath.infraprovider_identifier}/templates/${paramsInPath.template_identifier}`,
+    {
+      base: getConfig('cde/api/v1'),
+      pathParams: {
+        accountIdentifier,
+        orgIdentifier,
+        projectIdentifier,
+        infraprovider_identifier,
+        template_identifier
+      },
       ...props
     }
   )

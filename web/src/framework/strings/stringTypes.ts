@@ -1273,7 +1273,7 @@ export interface StringsMap {
   'cde.details.noLogsFound': string
   'cde.details.openBrowser': string
   'cde.details.openEditor': string
-  'cde.details.openIntellij': string
+  'cde.details.openJetBrain': string
   'cde.details.provisioningGitspace': string
   'cde.details.startGitspace': string
   'cde.details.stopGitspace': string
@@ -1307,13 +1307,22 @@ export interface StringsMap {
   'cde.hours': string
   'cde.id': string
   'cde.ide.browser': string
+  'cde.ide.byjetbrain': string
+  'cde.ide.bymircosoft': string
+  'cde.ide.clion': string
   'cde.ide.desktop': string
+  'cde.ide.goland': string
   'cde.ide.intellij': string
   'cde.ide.openBrowser': string
   'cde.ide.openVSCode': string
+  'cde.ide.phpstorm': string
+  'cde.ide.pycharm': string
+  'cde.ide.rider': string
+  'cde.ide.rubymine': string
   'cde.ide.selectIDE': string
   'cde.ide.title': string
   'cde.ide.vsCode': string
+  'cde.ide.webstorm': string
   'cde.importInto': string
   'cde.infraProvider': string
   'cde.introText1': string
