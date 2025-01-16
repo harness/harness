@@ -150,7 +150,7 @@ type getPullReqChecksRequest struct {
 
 type pullReqAssignLabelInput struct {
 	pullReqRequest
-	types.PullReqCreateInput
+	types.PullReqLabelAssignInput
 }
 
 var queryParameterQueryPullRequest = openapi3.ParameterOrRef{

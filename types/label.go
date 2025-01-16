@@ -215,7 +215,7 @@ func (in *UpdateValueInput) Sanitize() error {
 	return nil
 }
 
-type PullReqCreateInput struct {
+type PullReqLabelAssignInput struct {
 	LabelID int64  `json:"label_id"`
 	ValueID *int64 `json:"value_id"`
 	Value   string `json:"value"`
@@ -225,7 +225,7 @@ type PullReqUpdateInput struct {
 	LabelValueID *int64 `json:"label_value_id,omitempty"`
 }
 
-func (in PullReqCreateInput) Validate() error {
+func (in PullReqLabelAssignInput) Validate() error {
 	if (in.ValueID != nil && *in.ValueID > 0) && in.Value != "" {
 		return errors.InvalidArgument("cannot accept both value id and value")
 	}

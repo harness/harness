@@ -43,7 +43,10 @@ const (
 		,label_created_by
 		,label_updated_by`
 
-	labelSelectBase = `SELECT label_id, ` + labelColumns + ` FROM labels`
+	labelColumnsWithIDAndValueCount = labelColumns + `,label_id ,label_value_count`
+
+	//nolint:goconst
+	labelSelectBase = `SELECT ` + labelColumnsWithIDAndValueCount + ` FROM labels`
 )
 
 type label struct {
@@ -216,7 +219,7 @@ func (s *labelStore) List(
 	filter *types.LabelFilter,
 ) ([]*types.Label, error) {
 	stmt := database.Builder.
-		Select(`label_id, ` + labelColumns + `, label_value_count`).
+		Select(labelColumnsWithIDAndValueCount).
 		From("labels").
 		OrderBy("label_key")
 
@@ -250,7 +253,7 @@ func (s *labelStore) ListInScopes(
 	filter *types.LabelFilter,
 ) ([]*types.Label, error) {
 	stmt := database.Builder.
-		Select(`label_id, ` + labelColumns + `, label_value_count`).
+		Select(labelColumnsWithIDAndValueCount).
 		From("labels")
 
 	stmt = stmt.Where(squirrel.Or{

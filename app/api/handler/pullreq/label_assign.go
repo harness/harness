@@ -41,7 +41,7 @@ func HandleAssignLabel(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 			return
 		}
 
-		in := new(types.PullReqCreateInput)
+		in := new(types.PullReqLabelAssignInput)
 		err = json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
 			render.BadRequestf(ctx, w, "Invalid request body: %s.", err)

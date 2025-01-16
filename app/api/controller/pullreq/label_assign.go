@@ -33,7 +33,7 @@ func (c *Controller) AssignLabel(
 	session *auth.Session,
 	repoRef string,
 	pullreqNum int64,
-	in *types.PullReqCreateInput,
+	in *types.PullReqLabelAssignInput,
 ) (*types.PullReqLabel, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoReview)
 	if err != nil {

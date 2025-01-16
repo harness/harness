@@ -37,16 +37,39 @@ type AssignToPullReqOut struct {
 	ActivityType  enum.PullReqLabelActivityType
 }
 
+func (out *AssignToPullReqOut) ToLabelPullReqAssignmentInfo() *types.LabelPullReqAssignmentInfo {
+	var valueID *int64
+	var value *string
+	var valueColor *enum.LabelColor
+	if out.NewLabelValue != nil {
+		valueID = &out.NewLabelValue.ID
+		value = &out.NewLabelValue.Value
+		valueColor = &out.NewLabelValue.Color
+	}
+
+	assignmentInfo := &types.LabelPullReqAssignmentInfo{
+		PullReqID:  out.PullReqLabel.PullReqID,
+		LabelID:    out.Label.ID,
+		LabelKey:   out.Label.Key,
+		LabelColor: out.Label.Color,
+		LabelScope: out.Label.Scope,
+		ValueCount: out.Label.ValueCount,
+		ValueID:    valueID,
+		Value:      value,
+		ValueColor: valueColor,
+	}
+
+	return assignmentInfo
+}
+
 func (s *Service) AssignToPullReq(
 	ctx context.Context,
 	principalID int64,
 	pullreqID int64,
 	repoID int64,
 	repoParentID int64,
-	in *types.PullReqCreateInput,
-) (*AssignToPullReqOut,
-	error,
-) {
+	in *types.PullReqLabelAssignInput,
+) (*AssignToPullReqOut, error) {
 	label, err := s.labelStore.FindByID(ctx, in.LabelID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find label by id: %w", err)
@@ -145,6 +168,57 @@ func (s *Service) AssignToPullReq(
 	}, nil
 }
 
+func (s *Service) AssignToPullReqOnCreation(
+	ctx context.Context,
+	principalID int64,
+	pullreqID int64,
+	repoID int64,
+	repoParentID int64,
+	in *types.PullReqLabelAssignInput,
+) (*AssignToPullReqOut, error) {
+	label, err := s.labelStore.FindByID(ctx, in.LabelID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find label by id: %w", err)
+	}
+
+	if err := s.checkPullreqLabelInScope(ctx, repoParentID, repoID, label); err != nil {
+		return nil, err
+	}
+
+	var labelValue *types.LabelValue
+	if in.ValueID != nil {
+		labelValue, err = s.labelValueStore.FindByID(ctx, *in.ValueID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to find label value by id: %w", err)
+		}
+		if label.ID != labelValue.LabelID {
+			return nil, errors.InvalidArgument("label value is not associated with label")
+		}
+	} else if in.Value != "" {
+		labelValue, err = s.getOrDefineValue(ctx, principalID, label, in.Value)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	pullreqLabel := newPullReqLabel(pullreqID, principalID, in)
+	if labelValue != nil {
+		pullreqLabel.ValueID = &labelValue.ID
+	}
+
+	err = s.pullReqLabelAssignmentStore.Assign(ctx, pullreqLabel)
+	if err != nil {
+		return nil, fmt.Errorf("failed to assign label to pullreq: %w", err)
+	}
+
+	return &AssignToPullReqOut{
+		Label:         label,
+		PullReqLabel:  pullreqLabel,
+		NewLabelValue: labelValue,
+		ActivityType:  enum.LabelActivityAssign,
+	}, nil
+}
+
 func (s *Service) getOrDefineValue(
 	ctx context.Context,
 	principalID int64,
@@ -175,6 +249,7 @@ func (s *Service) getOrDefineValue(
 	if err != nil {
 		return nil, fmt.Errorf("failed to create label value: %w", err)
 	}
+	label.ValueCount++
 
 	return labelValue, nil
 }
@@ -360,7 +435,7 @@ func createScopeLabels(
 func newPullReqLabel(
 	pullreqID int64,
 	principalID int64,
-	in *types.PullReqCreateInput,
+	in *types.PullReqLabelAssignInput,
 ) *types.PullReqLabel {
 	now := time.Now().UnixMilli()
 	return &types.PullReqLabel{

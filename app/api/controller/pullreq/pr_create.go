@@ -46,6 +46,8 @@ type CreateInput struct {
 	TargetBranch  string `json:"target_branch"`
 
 	ReviewerIDs []int64 `json:"reviewer_ids"`
+
+	Labels []*types.PullReqLabelAssignInput `json:"labels"`
 }
 
 func (in *CreateInput) Sanitize() error {
@@ -161,6 +163,12 @@ func (c *Controller) Create(
 			return err
 		}
 
+		if err := c.assignLabels(
+			ctx, session.Principal.ID, pr, targetRepo.ID, targetRepo.ParentID, in.Labels,
+		); err != nil {
+			return err
+		}
+
 		return nil
 	}, controller.TxOptionResetFunc(func() {
 		targetRepo = nil // on the version conflict error force re-fetch of the target repo
@@ -252,6 +260,40 @@ func (c *Controller) createReviewers(
 			return fmt.Errorf("failed to create pull request reviewer: %w", err)
 		}
 	}
+
+	return nil
+}
+
+func (c *Controller) assignLabels(
+	ctx context.Context,
+	principalID int64,
+	pullreq *types.PullReq,
+	repoID int64,
+	repoParentID int64,
+	labels []*types.PullReqLabelAssignInput,
+) error {
+	if len(labels) == 0 {
+		return nil
+	}
+
+	assignmentInfos := make([]*types.LabelPullReqAssignmentInfo, len(labels))
+	for i, label := range labels {
+		out, err := c.labelSvc.AssignToPullReqOnCreation(
+			ctx,
+			principalID,
+			pullreq.ID,
+			repoID,
+			repoParentID,
+			label,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to assign label to pullreq: %w", err)
+		}
+
+		assignmentInfos[i] = out.ToLabelPullReqAssignmentInfo()
+	}
+
+	pullreq.Labels = assignmentInfos
 
 	return nil
 }
