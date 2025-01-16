@@ -229,7 +229,7 @@ paths:
       description: Get Artifact Stats.
       operationId: GetArtifactStatsForSpace
       tags:
-        - Artifacts
+        - Spaces
       parameters:
         - $ref: "#/components/parameters/spaceRefPathParam"
         - $ref: "#/components/parameters/fromDateParam"
@@ -458,6 +458,56 @@ paths:
       responses:
         200:
           $ref: "#/components/responses/ArtifactVersionSummaryResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/{artifact}/version/{version}/details:
+    get:
+      summary: Describe Artifact Details
+      description: Get Artifact Details
+      operationId: GetArtifactDetails
+      tags:
+        - Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/versionPathParam"
+        - $ref: "#/components/parameters/childVersionParam"
+      responses:
+        200:
+          $ref: "#/components/responses/ArtifactDetailResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+  /registry/{registry_ref}/artifact/{artifact}/version/{version}/files:
+    get:
+      summary: Describe Artifact files
+      description: Get Artifact files
+      operationId: GetArtifactFiles
+      tags:
+        - Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/versionPathParam"
+      responses:
+        200:
+          $ref: "#/components/responses/FileDetailResponse"
         400:
           $ref: "#/components/responses/BadRequest"
         401:
@@ -700,6 +750,57 @@ components:
             required:
               - status
               - data
+    ArtifactDetailResponse:
+      description: response to get artifact details
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/ArtifactDetail"
+            required:
+              - status
+              - data
+    FileDetailResponse:
+      description: response to get artifact files
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              pageCount:
+                type: integer
+                format: int64
+                description: The total number of pages
+                example: 100
+              itemCount:
+                type: integer
+                format: int64
+                description: The total number of items
+                example: 1
+              pageSize:
+                type: integer
+                description: The number of items per page
+                example: 1
+              pageIndex:
+                type: integer
+                format: int64
+                description: The current page
+                example: 0
+              status:
+                $ref: "#/components/schemas/Status"
+              files:
+                type: array
+                description: A list of Harness Artifact Files
+                items:
+                  $ref: "#/components/schemas/FileDetail"
+            required:
+              - status
+              - data
+              - files
     HelmArtifactDetailResponse:
       description: response to get helm artifact detail
       content:
@@ -1225,6 +1326,9 @@ components:
         downloadsCount:
           type: integer
           format: int64
+        fileCount:
+          type: integer
+          format: int64
         islatestVersion:
           type: boolean
         lastModified:
@@ -1276,6 +1380,71 @@ components:
         - type
         - url
         - packageType
+    ArtifactDetail:
+      type: object
+      description: Artifact Detail
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+        size:
+          type: string
+        downloadCount:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+        modifiedAt:
+          type: string
+        createdBy:
+          type: string
+        packageType:
+          $ref: "#/components/schemas/PackageType"
+      discriminator:
+        propertyName: packageType
+        mapping:
+          DOCKER: "#/components/schemas/DockerArtifactDetailConfig"
+          HELM: "#/components/schemas/HelmArtifactDetailConfig"
+          GENERIC: "#/components/schemas/GenericArtifactDetailConfig"
+          MAVEN: "#/components/schemas/MavenArtifactDetailConfig"
+      oneOf:
+        - $ref: "#/components/schemas/DockerArtifactDetailConfig"
+        - $ref: "#/components/schemas/HelmArtifactDetailConfig"
+        - $ref: "#/components/schemas/GenericArtifactDetailConfig"
+        - $ref: "#/components/schemas/MavenArtifactDetailConfig"
+      required:
+        - imageName
+        - version
+        - registryPath
+        - url
+        - packageType
+    DockerArtifactDetailConfig:
+      type: object
+      description: Config for docker artifact details
+      properties:
+        pullCommand:
+          type: string
+    GenericArtifactDetailConfig:
+      type: object
+      description: Config for generic artifact details
+      properties:
+        description:
+          type: string
+    MavenArtifactDetailConfig:
+      type: object
+      description: Config for generic artifact details
+      properties:
+        groupId:
+          type: string
+        artifactId:
+          type: string
+    HelmArtifactDetailConfig:
+      type: object
+      description: Config for helm artifact details
+      properties:
+        pullCommand:
+          type: string
     DockerArtifactDetail:
       type: object
       description: Docker Artifact Detail
@@ -1309,6 +1478,28 @@ components:
         - registryPath
         - url
         - packageType
+    FileDetail:
+      type: object
+      description: File Detail
+      properties:
+        name:
+          type: string
+        size:
+          type: string
+        checksums:
+          type: array
+          items:
+            type: string
+        downloadCommand:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - name
+        - size
+        - checksums
+        - downloadCommand
+        - createdAt
     HelmArtifactDetail:
       type: object
       description: Helm Artifact Detail
@@ -1751,6 +1942,13 @@ components:
       in: query
       required: true
       description: Digest.
+      schema:
+        type: string
+    childVersionParam:
+      name: childVersion
+      in: query
+      required: false
+      description: Child version incase of Docker artifacts.
       schema:
         type: string
     searchTerm:

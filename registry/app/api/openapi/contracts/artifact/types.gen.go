@@ -78,6 +78,21 @@ type AccessKeySecretKey struct {
 // Anonymous defines model for Anonymous.
 type Anonymous interface{}
 
+// ArtifactDetail Artifact Detail
+type ArtifactDetail struct {
+	CreatedAt     *string `json:"createdAt,omitempty"`
+	CreatedBy     *string `json:"createdBy,omitempty"`
+	DownloadCount *int64  `json:"downloadCount,omitempty"`
+	ModifiedAt    *string `json:"modifiedAt,omitempty"`
+	Name          *string `json:"name,omitempty"`
+
+	// PackageType refers to package
+	PackageType PackageType `json:"packageType"`
+	Size        *string     `json:"size,omitempty"`
+	Version     string      `json:"version"`
+	union       json.RawMessage
+}
+
 // ArtifactLabelRequest defines model for ArtifactLabelRequest.
 type ArtifactLabelRequest struct {
 	Labels []string `json:"labels"`
@@ -122,6 +137,7 @@ type ArtifactSummary struct {
 type ArtifactVersionMetadata struct {
 	DigestCount     *int    `json:"digestCount,omitempty"`
 	DownloadsCount  *int64  `json:"downloadsCount,omitempty"`
+	FileCount       *int64  `json:"fileCount,omitempty"`
 	IslatestVersion *bool   `json:"islatestVersion,omitempty"`
 	LastModified    *string `json:"lastModified,omitempty"`
 	Name            string  `json:"name"`
@@ -203,6 +219,11 @@ type DockerArtifactDetail struct {
 	Version      string      `json:"version"`
 }
 
+// DockerArtifactDetailConfig Config for docker artifact details
+type DockerArtifactDetailConfig struct {
+	PullCommand *string `json:"pullCommand,omitempty"`
+}
+
 // DockerArtifactManifest Docker Artifact Manifest
 type DockerArtifactManifest struct {
 	Manifest string `json:"manifest"`
@@ -250,6 +271,20 @@ type Error struct {
 	Message string `json:"message"`
 }
 
+// FileDetail File Detail
+type FileDetail struct {
+	Checksums       []string `json:"checksums"`
+	CreatedAt       string   `json:"createdAt"`
+	DownloadCommand string   `json:"downloadCommand"`
+	Name            string   `json:"name"`
+	Size            string   `json:"size"`
+}
+
+// GenericArtifactDetailConfig Config for generic artifact details
+type GenericArtifactDetailConfig struct {
+	Description *string `json:"description,omitempty"`
+}
+
 // HelmArtifactDetail Helm Artifact Detail
 type HelmArtifactDetail struct {
 	Artifact        *string `json:"artifact,omitempty"`
@@ -265,6 +300,11 @@ type HelmArtifactDetail struct {
 	Size         *string     `json:"size,omitempty"`
 	Url          string      `json:"url"`
 	Version      string      `json:"version"`
+}
+
+// HelmArtifactDetailConfig Config for helm artifact details
+type HelmArtifactDetailConfig struct {
+	PullCommand *string `json:"pullCommand,omitempty"`
 }
 
 // HelmArtifactManifest Helm Artifact Manifest
@@ -358,6 +398,12 @@ type ListRegistryArtifact struct {
 
 	// PageSize The number of items per page
 	PageSize *int `json:"pageSize,omitempty"`
+}
+
+// MavenArtifactDetailConfig Config for generic artifact details
+type MavenArtifactDetailConfig struct {
+	ArtifactId *string `json:"artifactId,omitempty"`
+	GroupId    *string `json:"groupId,omitempty"`
 }
 
 // PackageType refers to package
@@ -491,6 +537,9 @@ type ArtifactParam string
 // ArtifactPathParam defines model for artifactPathParam.
 type ArtifactPathParam string
 
+// ChildVersionParam defines model for childVersionParam.
+type ChildVersionParam string
+
 // DigestParam defines model for digestParam.
 type DigestParam string
 
@@ -538,6 +587,15 @@ type VersionParam string
 
 // VersionPathParam defines model for versionPathParam.
 type VersionPathParam string
+
+// ArtifactDetailResponse defines model for ArtifactDetailResponse.
+type ArtifactDetailResponse struct {
+	// Data Artifact Detail
+	Data ArtifactDetail `json:"data"`
+
+	// Status Indicates if the request was successful or not
+	Status Status `json:"status"`
+}
 
 // ArtifactLabelResponse defines model for ArtifactLabelResponse.
 type ArtifactLabelResponse struct {
@@ -618,6 +676,27 @@ type DockerLayersResponse struct {
 type DockerManifestsResponse struct {
 	// Data Harness Manifests
 	Data DockerManifests `json:"data"`
+
+	// Status Indicates if the request was successful or not
+	Status Status `json:"status"`
+}
+
+// FileDetailResponse defines model for FileDetailResponse.
+type FileDetailResponse struct {
+	// Files A list of Harness Artifact Files
+	Files []FileDetail `json:"files"`
+
+	// ItemCount The total number of items
+	ItemCount *int64 `json:"itemCount,omitempty"`
+
+	// PageCount The total number of pages
+	PageCount *int64 `json:"pageCount,omitempty"`
+
+	// PageIndex The current page
+	PageIndex *int64 `json:"pageIndex,omitempty"`
+
+	// PageSize The number of items per page
+	PageSize *int `json:"pageSize,omitempty"`
 
 	// Status Indicates if the request was successful or not
 	Status Status `json:"status"`
@@ -747,6 +826,12 @@ type GetArtifactStatsParams struct {
 
 	// To Date. Format - MM/DD/YYYY
 	To *ToDateParam `form:"to,omitempty" json:"to,omitempty"`
+}
+
+// GetArtifactDetailsParams defines parameters for GetArtifactDetails.
+type GetArtifactDetailsParams struct {
+	// ChildVersion Child version incase of Docker artifacts.
+	ChildVersion *ChildVersionParam `form:"childVersion,omitempty" json:"childVersion,omitempty"`
 }
 
 // GetDockerArtifactDetailsParams defines parameters for GetDockerArtifactDetails.
@@ -889,6 +974,292 @@ type ModifyRegistryJSONRequestBody RegistryRequest
 
 // UpdateArtifactLabelsJSONRequestBody defines body for UpdateArtifactLabels for application/json ContentType.
 type UpdateArtifactLabelsJSONRequestBody ArtifactLabelRequest
+
+// AsDockerArtifactDetailConfig returns the union data inside the ArtifactDetail as a DockerArtifactDetailConfig
+func (t ArtifactDetail) AsDockerArtifactDetailConfig() (DockerArtifactDetailConfig, error) {
+	var body DockerArtifactDetailConfig
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromDockerArtifactDetailConfig overwrites any union data inside the ArtifactDetail as the provided DockerArtifactDetailConfig
+func (t *ArtifactDetail) FromDockerArtifactDetailConfig(v DockerArtifactDetailConfig) error {
+	t.PackageType = "DOCKER"
+
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeDockerArtifactDetailConfig performs a merge with any union data inside the ArtifactDetail, using the provided DockerArtifactDetailConfig
+func (t *ArtifactDetail) MergeDockerArtifactDetailConfig(v DockerArtifactDetailConfig) error {
+	t.PackageType = "DOCKER"
+
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsHelmArtifactDetailConfig returns the union data inside the ArtifactDetail as a HelmArtifactDetailConfig
+func (t ArtifactDetail) AsHelmArtifactDetailConfig() (HelmArtifactDetailConfig, error) {
+	var body HelmArtifactDetailConfig
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromHelmArtifactDetailConfig overwrites any union data inside the ArtifactDetail as the provided HelmArtifactDetailConfig
+func (t *ArtifactDetail) FromHelmArtifactDetailConfig(v HelmArtifactDetailConfig) error {
+	t.PackageType = "HELM"
+
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeHelmArtifactDetailConfig performs a merge with any union data inside the ArtifactDetail, using the provided HelmArtifactDetailConfig
+func (t *ArtifactDetail) MergeHelmArtifactDetailConfig(v HelmArtifactDetailConfig) error {
+	t.PackageType = "HELM"
+
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsGenericArtifactDetailConfig returns the union data inside the ArtifactDetail as a GenericArtifactDetailConfig
+func (t ArtifactDetail) AsGenericArtifactDetailConfig() (GenericArtifactDetailConfig, error) {
+	var body GenericArtifactDetailConfig
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromGenericArtifactDetailConfig overwrites any union data inside the ArtifactDetail as the provided GenericArtifactDetailConfig
+func (t *ArtifactDetail) FromGenericArtifactDetailConfig(v GenericArtifactDetailConfig) error {
+	t.PackageType = "GENERIC"
+
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeGenericArtifactDetailConfig performs a merge with any union data inside the ArtifactDetail, using the provided GenericArtifactDetailConfig
+func (t *ArtifactDetail) MergeGenericArtifactDetailConfig(v GenericArtifactDetailConfig) error {
+	t.PackageType = "GENERIC"
+
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsMavenArtifactDetailConfig returns the union data inside the ArtifactDetail as a MavenArtifactDetailConfig
+func (t ArtifactDetail) AsMavenArtifactDetailConfig() (MavenArtifactDetailConfig, error) {
+	var body MavenArtifactDetailConfig
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromMavenArtifactDetailConfig overwrites any union data inside the ArtifactDetail as the provided MavenArtifactDetailConfig
+func (t *ArtifactDetail) FromMavenArtifactDetailConfig(v MavenArtifactDetailConfig) error {
+	t.PackageType = "MAVEN"
+
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeMavenArtifactDetailConfig performs a merge with any union data inside the ArtifactDetail, using the provided MavenArtifactDetailConfig
+func (t *ArtifactDetail) MergeMavenArtifactDetailConfig(v MavenArtifactDetailConfig) error {
+	t.PackageType = "MAVEN"
+
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t ArtifactDetail) Discriminator() (string, error) {
+	var discriminator struct {
+		Discriminator string `json:"packageType"`
+	}
+	err := json.Unmarshal(t.union, &discriminator)
+	return discriminator.Discriminator, err
+}
+
+func (t ArtifactDetail) ValueByDiscriminator() (interface{}, error) {
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return nil, err
+	}
+	switch discriminator {
+	case "DOCKER":
+		return t.AsDockerArtifactDetailConfig()
+	case "GENERIC":
+		return t.AsGenericArtifactDetailConfig()
+	case "HELM":
+		return t.AsHelmArtifactDetailConfig()
+	case "MAVEN":
+		return t.AsMavenArtifactDetailConfig()
+	default:
+		return nil, errors.New("unknown discriminator value: " + discriminator)
+	}
+}
+
+func (t ArtifactDetail) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	object := make(map[string]json.RawMessage)
+	if t.union != nil {
+		err = json.Unmarshal(b, &object)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if t.CreatedAt != nil {
+		object["createdAt"], err = json.Marshal(t.CreatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'createdAt': %w", err)
+		}
+	}
+
+	if t.CreatedBy != nil {
+		object["createdBy"], err = json.Marshal(t.CreatedBy)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'createdBy': %w", err)
+		}
+	}
+
+	if t.DownloadCount != nil {
+		object["downloadCount"], err = json.Marshal(t.DownloadCount)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'downloadCount': %w", err)
+		}
+	}
+
+	if t.ModifiedAt != nil {
+		object["modifiedAt"], err = json.Marshal(t.ModifiedAt)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'modifiedAt': %w", err)
+		}
+	}
+
+	if t.Name != nil {
+		object["name"], err = json.Marshal(t.Name)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'name': %w", err)
+		}
+	}
+
+	object["packageType"], err = json.Marshal(t.PackageType)
+	if err != nil {
+		return nil, fmt.Errorf("error marshaling 'packageType': %w", err)
+	}
+
+	if t.Size != nil {
+		object["size"], err = json.Marshal(t.Size)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'size': %w", err)
+		}
+	}
+
+	object["version"], err = json.Marshal(t.Version)
+	if err != nil {
+		return nil, fmt.Errorf("error marshaling 'version': %w", err)
+	}
+
+	b, err = json.Marshal(object)
+	return b, err
+}
+
+func (t *ArtifactDetail) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	if err != nil {
+		return err
+	}
+	object := make(map[string]json.RawMessage)
+	err = json.Unmarshal(b, &object)
+	if err != nil {
+		return err
+	}
+
+	if raw, found := object["createdAt"]; found {
+		err = json.Unmarshal(raw, &t.CreatedAt)
+		if err != nil {
+			return fmt.Errorf("error reading 'createdAt': %w", err)
+		}
+	}
+
+	if raw, found := object["createdBy"]; found {
+		err = json.Unmarshal(raw, &t.CreatedBy)
+		if err != nil {
+			return fmt.Errorf("error reading 'createdBy': %w", err)
+		}
+	}
+
+	if raw, found := object["downloadCount"]; found {
+		err = json.Unmarshal(raw, &t.DownloadCount)
+		if err != nil {
+			return fmt.Errorf("error reading 'downloadCount': %w", err)
+		}
+	}
+
+	if raw, found := object["modifiedAt"]; found {
+		err = json.Unmarshal(raw, &t.ModifiedAt)
+		if err != nil {
+			return fmt.Errorf("error reading 'modifiedAt': %w", err)
+		}
+	}
+
+	if raw, found := object["name"]; found {
+		err = json.Unmarshal(raw, &t.Name)
+		if err != nil {
+			return fmt.Errorf("error reading 'name': %w", err)
+		}
+	}
+
+	if raw, found := object["packageType"]; found {
+		err = json.Unmarshal(raw, &t.PackageType)
+		if err != nil {
+			return fmt.Errorf("error reading 'packageType': %w", err)
+		}
+	}
+
+	if raw, found := object["size"]; found {
+		err = json.Unmarshal(raw, &t.Size)
+		if err != nil {
+			return fmt.Errorf("error reading 'size': %w", err)
+		}
+	}
+
+	if raw, found := object["version"]; found {
+		err = json.Unmarshal(raw, &t.Version)
+		if err != nil {
+			return fmt.Errorf("error reading 'version': %w", err)
+		}
+	}
+
+	return err
+}
 
 // AsVirtualConfig returns the union data inside the RegistryConfig as a VirtualConfig
 func (t RegistryConfig) AsVirtualConfig() (VirtualConfig, error) {
