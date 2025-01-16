@@ -69,7 +69,7 @@ var JetBrainsIDEDownloadURLTemplateMap = map[enum.IDEType]JetBrainsIDEDownloadUR
 	},
 	enum.IDETypeRider: {
 		// list of versions: https://www.jetbrains.com/ruby/download/other.html
-		Version: "2024.3.1.1",
+		Version: "2024.3.3",
 		Amd64:   "https://download.jetbrains.com/rider/JetBrains.Rider-%s.tar.gz",
 		Arm64:   "https://download.jetbrains.com/rider/JetBrains.Rider-%s-aarch64.tar.gz",
 	},

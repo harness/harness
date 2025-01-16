@@ -452,6 +452,7 @@ func ProvideIDEJetBrainsConfig(config *types.Config) *ide.JetBrainsIDEConfig {
 		PHPStormPort: config.IDE.PHPStorm.Port,
 		CLionPort:    config.IDE.CLion.Port,
 		RubyMinePort: config.IDE.RubyMine.Port,
+		RiderPort:    config.IDE.Rider.Port,
 	}
 }
 

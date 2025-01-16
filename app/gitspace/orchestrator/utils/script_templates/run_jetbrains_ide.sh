@@ -41,8 +41,8 @@ is_ide_running(){
 
 echo "waiting for ide to run..."
 if is_ide_running; then
-  echo "intellij ide is running"
+  echo "ide is running"
 else
-  echo "intellij ide is not running"
+  echo "ide is not running"
   exit 1
 fi

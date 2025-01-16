@@ -220,7 +220,10 @@ func (e *EmbeddedDockerOrchestrator) startStoppedGitspace(
 	}
 
 	// Run IDE setup
-	if err = ideService.Run(ctx, exec, nil, logStreamInstance); err != nil {
+	runIDEArgs := make(map[gitspaceTypes.IDEArg]interface{})
+	runIDEArgs[gitspaceTypes.IDERepoNameArg] = resolvedRepoDetails.RepoName
+	runIDEArgs = AddIDEDirNameArg(ideService, runIDEArgs)
+	if err = ideService.Run(ctx, exec, runIDEArgs, logStreamInstance); err != nil {
 		return err
 	}
 

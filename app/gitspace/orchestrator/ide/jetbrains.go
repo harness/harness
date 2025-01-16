@@ -197,12 +197,12 @@ func (jb *JetBrainsIDE) Run(
 		return err
 	}
 	gitspaceLogger.Info("Successfully run ssh-server")
-	gitspaceLogger.Info("Run Remote IntelliJ IdeType...")
+	gitspaceLogger.Info(fmt.Sprintf("Remote %s ide run output...", jb.ideType))
 	err = jb.runRemoteIDE(ctx, exec, args, gitspaceLogger)
 	if err != nil {
 		return err
 	}
-	gitspaceLogger.Info("Successfully Run Remote IntelliJ IdeType")
+	gitspaceLogger.Info(fmt.Sprintf("Successfully run %s ide", jb.ideType))
 
 	return nil
 }
