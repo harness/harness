@@ -26,6 +26,9 @@ import (
 * Find finds a space.
  */
 func (c *Controller) Find(ctx context.Context, session *auth.Session, spaceRef string) (*SpaceOutput, error) {
+	if c == nil {
+		return nil, fmt.Errorf("controller instance is nil")
+	}
 	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceView)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to space: %w", err)
