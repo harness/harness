@@ -1247,6 +1247,11 @@ type (
 		// FindValueByLabelID finds a value assigned to a pullreq label.
 		FindValueByLabelID(ctx context.Context, pullreqID int64, labelID int64) (*types.LabelValue, error)
 
+		CountPullreqAssignments(
+			ctx context.Context,
+			labelIDs []int64,
+		) (map[int64]int64, error)
+
 		// ListAssignedByPullreqIDs list labels assigned to specified pullreqs.
 		ListAssignedByPullreqIDs(
 			ctx context.Context,

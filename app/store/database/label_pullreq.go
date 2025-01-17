@@ -242,6 +242,39 @@ func (s *pullReqLabelStore) FindValueByLabelID(
 	return mapLabelValue(&dst), nil
 }
 
+func (s *pullReqLabelStore) CountPullreqAssignments(
+	ctx context.Context,
+	labelIDs []int64,
+) (map[int64]int64, error) {
+	stmt := database.Builder.Select("pullreq_label_label_id, COUNT(pullreq_label_pullreq_id)").
+		From("pullreq_labels").
+		Where(squirrel.Eq{"pullreq_label_label_id": labelIDs}).
+		GroupBy("pullreq_label_label_id")
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var dst []struct {
+		LabelID int64 `db:"pullreq_label_label_id"`
+		Count   int64 `db:"count"`
+	}
+
+	if err := db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "failed to count PR label assignments")
+	}
+
+	counts := make(map[int64]int64, len(dst))
+	for _, res := range dst {
+		counts[res.LabelID] = res.Count
+	}
+
+	return counts, nil
+}
+
 func mapInternalPullReqLabel(lbl *types.PullReqLabel) *pullReqLabel {
 	return &pullReqLabel{
 		PullReqID:    lbl.PullReqID,

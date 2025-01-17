@@ -470,3 +470,24 @@ func (s *Service) checkPullreqLabelInScope(
 
 	return nil
 }
+
+func (s *Service) backfillPullreqCount(
+	ctx context.Context,
+	labels []*types.Label,
+) error {
+	ids := make([]int64, len(labels))
+	for i, label := range labels {
+		ids[i] = label.ID
+	}
+
+	counts, err := s.pullReqLabelAssignmentStore.CountPullreqAssignments(ctx, ids)
+	if err != nil {
+		return fmt.Errorf("failed to count pullreq assignments: %w", err)
+	}
+
+	for _, label := range labels {
+		label.PullreqCount = counts[label.ID]
+	}
+
+	return nil
+}

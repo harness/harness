@@ -46,9 +46,15 @@ func ParseLabelFilter(r *http.Request) (*types.LabelFilter, error) {
 		return nil, err
 	}
 
+	includeCount, err := ParseIncludePullreqCountFromQuery(r)
+	if err != nil {
+		return nil, err
+	}
+
 	return &types.LabelFilter{
-		Inherited:       inherited,
-		ListQueryFilter: ParseListQueryFilterFromRequest(r),
+		ListQueryFilter:     ParseListQueryFilterFromRequest(r),
+		Inherited:           inherited,
+		IncludePullreqCount: includeCount,
 	}, nil
 }
 

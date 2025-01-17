@@ -215,11 +215,25 @@ func (s *Service) List(
 	spaceID, repoID *int64,
 	filter *types.LabelFilter,
 ) ([]*types.Label, int64, error) {
+	var labels []*types.Label
+	var count int64
+	var err error
 	if filter.Inherited {
-		return s.listInScopes(ctx, spaceID, repoID, filter)
+		labels, count, err = s.listInScopes(ctx, spaceID, repoID, filter)
+	} else {
+		labels, count, err = s.list(ctx, spaceID, repoID, filter)
+	}
+	if err != nil {
+		return nil, 0, err
 	}
 
-	return s.list(ctx, spaceID, repoID, filter)
+	if filter.IncludePullreqCount {
+		if err := s.backfillPullreqCount(ctx, labels); err != nil {
+			return nil, 0, err
+		}
+	}
+
+	return labels, count, nil
 }
 
 func (s *Service) list(

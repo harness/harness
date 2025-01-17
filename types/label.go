@@ -28,19 +28,20 @@ const (
 )
 
 type Label struct {
-	ID          int64           `json:"id"`
-	SpaceID     *int64          `json:"space_id,omitempty"`
-	RepoID      *int64          `json:"repo_id,omitempty"`
-	Scope       int64           `json:"scope"`
-	Key         string          `json:"key"`
-	Description string          `json:"description"`
-	Type        enum.LabelType  `json:"type"`
-	Color       enum.LabelColor `json:"color"`
-	ValueCount  int64           `json:"value_count"`
-	Created     int64           `json:"created"`
-	Updated     int64           `json:"updated"`
-	CreatedBy   int64           `json:"created_by"`
-	UpdatedBy   int64           `json:"updated_by"`
+	ID           int64           `json:"id"`
+	SpaceID      *int64          `json:"space_id,omitempty"`
+	RepoID       *int64          `json:"repo_id,omitempty"`
+	Scope        int64           `json:"scope"`
+	Key          string          `json:"key"`
+	Description  string          `json:"description"`
+	Type         enum.LabelType  `json:"type"`
+	Color        enum.LabelColor `json:"color"`
+	ValueCount   int64           `json:"value_count"`
+	Created      int64           `json:"created"`
+	Updated      int64           `json:"updated"`
+	CreatedBy    int64           `json:"created_by"`
+	UpdatedBy    int64           `json:"updated_by"`
+	PullreqCount int64           `json:"pullreq_count,omitempty"`
 }
 
 type LabelValue struct {
@@ -126,7 +127,8 @@ type AssignableLabelFilter struct {
 }
 type LabelFilter struct {
 	ListQueryFilter
-	Inherited bool `json:"inherited,omitempty"`
+	Inherited           bool `json:"inherited,omitempty"`
+	IncludePullreqCount bool `json:"pullreq_count,omitempty"`
 }
 
 type DefineLabelInput struct {

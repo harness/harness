@@ -56,8 +56,9 @@ const (
 	PerPageDefault  = 30
 	PerPageMax      = 100
 
-	QueryParamInherited  = "inherited"
-	QueryParamAssignable = "assignable"
+	QueryParamInherited           = "inherited"
+	QueryParamAssignable          = "assignable"
+	QueryParamIncludePullreqCount = "include_pullreq_count"
 
 	// TODO: have shared constants across all services?
 	HeaderRequestID       = "X-Request-Id"
@@ -216,6 +217,11 @@ func ParseRecursiveFromQuery(r *http.Request) (bool, error) {
 // ParseInheritedFromQuery extracts the inherited option from the URL query.
 func ParseInheritedFromQuery(r *http.Request) (bool, error) {
 	return QueryParamAsBoolOrDefault(r, QueryParamInherited, false)
+}
+
+// ParseIncludePullreqCountFromQuery extracts the pullreq assignment count option from the URL query.
+func ParseIncludePullreqCountFromQuery(r *http.Request) (bool, error) {
+	return QueryParamAsBoolOrDefault(r, QueryParamIncludePullreqCount, false)
 }
 
 // ParseAssignableFromQuery extracts the assignable option from the URL query.
