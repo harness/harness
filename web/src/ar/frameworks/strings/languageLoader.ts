@@ -27,6 +27,7 @@ import repositoryList from '@ar/pages/repository-list/strings/strings.en.yaml'
 import upstreamProxyDetails from '@ar/pages/upstream-proxy-details/strings/strings.en.yaml'
 import versionDetails from '@ar/pages/version-details/strings/strings.en.yaml'
 import versionList from '@ar/pages/version-list/strings/strings.en.yaml'
+import webhookList from '@ar/pages/webhook-list/strings/strings.en.yaml'
 
 export default function languageLoader() {
   return {
@@ -37,6 +38,7 @@ export default function languageLoader() {
     repositoryList,
     upstreamProxyDetails,
     versionDetails,
-    versionList
+    versionList,
+    webhookList
   }
 }

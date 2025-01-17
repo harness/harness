@@ -228,6 +228,13 @@ export interface StringsMap {
   'versionList.table.columns.size': string
   'versionList.table.columns.version': string
   'versionList.table.noVersionsTitle': string
+  'webhookList.newWebhook': string
+  'webhookList.table.columns.name': string
+  'webhookList.table.columns.trigger': string
+  'webhookList.table.noWebhooksTitle': string
+  'webhookList.triggers.artifactCreation': string
+  'webhookList.triggers.artifactDeletion': string
+  'webhookList.triggers.artifactModification': string
   'actions.delete': string
   'actions.edit': string
   'actions.quarantine': string
@@ -235,6 +242,7 @@ export interface StringsMap {
   'actions.scan': string
   'actions.setupClient': string
   add: string
+  all: string
   'badges.artifactRegistry': string
   'badges.upstreamProxy': string
   'breadcrumbs.artifacts': string

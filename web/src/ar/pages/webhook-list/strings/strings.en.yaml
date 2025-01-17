@@ -1,0 +1,10 @@
+newWebhook: New Webhook
+triggers:
+  artifactCreation: 'Artifact Creation'
+  artifactDeletion: 'Artifact Deletion'
+  artifactModification: 'Artifact Modification'
+table:
+  columns:
+    name: Webhook
+    trigger: Event
+  noWebhooksTitle: There are no webhooks available

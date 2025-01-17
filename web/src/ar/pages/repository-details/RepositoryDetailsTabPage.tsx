@@ -26,6 +26,7 @@ import type { RepositoryConfigType, RepositoryPackageType } from '@ar/common/typ
 import RepositoryConfigurationFormWidget from '@ar/frameworks/RepositoryStep/RepositoryConfigurationFormWidget'
 
 import { RepositoryDetailsTab } from './constants'
+import WebhookListPage from '../webhook-list/WebhookListPage'
 import { RepositoryProviderContext } from './context/RepositoryProvider'
 import RegistryArtifactListPage from '../artifact-list/RegistryArtifactListPage'
 
@@ -58,6 +59,8 @@ export default function RepositoryDetailsTabPage(props: RepositoryDetailsTabPage
           readonly={isReadonly}
         />
       )
+    case RepositoryDetailsTab.WEBHOOKS:
+      return <WebhookListPage />
     default:
       return <Text intent="warning">{getString('stepNotFound')}</Text>
   }
