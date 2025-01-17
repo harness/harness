@@ -76,6 +76,14 @@ func (storage *Service) OciBlobsStore(ctx context.Context, repoKey string, rootP
 	}
 }
 
+func (storage *Service) GenericBlobsStore(repoKey string, rootParentRef string) GenericBlobStore {
+	return &genericBlobStore{
+		repoKey:       repoKey,
+		driver:        storage.driver,
+		rootParentRef: rootParentRef,
+	}
+}
+
 // path returns the canonical path for the blob identified by digest. The blob
 // may or may not exist.
 func PathFn(pathPrefix string, dgst digest.Digest) (string, error) {

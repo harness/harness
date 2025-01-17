@@ -496,15 +496,20 @@ type NodesRepository interface {
 	// Create a node
 	Create(ctx context.Context, node *types.Node) error
 	// delete a node
-	deleteById(ctx context.Context, id int64) (err error)
+	DeleteById(ctx context.Context, id int64) (err error)
+
+	GetByPathAndRegistryId(
+		ctx context.Context, registryID int64,
+		path string,
+	) (*types.Node, error)
 }
 
 type GenericBlobRepository interface {
-	FindByID(ctx context.Context, id int64) (*types.GenericBlob, error)
+	FindByID(ctx context.Context, id string) (*types.GenericBlob, error)
 	FindBySha256AndRootParentID(
 		ctx context.Context, sha256 string,
 		rootParentID int64,
 	) (*types.GenericBlob, error)
-	Create(ctx context.Context, gb *types.GenericBlob) (*types.GenericBlob, error)
-	DeleteByID(ctx context.Context, id int64) error
+	Create(ctx context.Context, gb *types.GenericBlob) error
+	DeleteByID(ctx context.Context, id string) error
 }

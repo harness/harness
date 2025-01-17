@@ -176,4 +176,6 @@ type GenericBlobStore interface {
 	Write(ctx context.Context, w driver.FileWriter, file multipart.File) (pkg.FileInfo, error)
 	Move(ctx context.Context, srcPath string, dstPath string) error
 	Delete(ctx context.Context, filePath string) error
+
+	Get(ctx context.Context, filePath string, size int64) (*FileReader, error)
 }
