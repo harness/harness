@@ -46,6 +46,7 @@ type InstanceInfo struct {
 	Arch      string
 	Provider  string
 	PoolName  string
+	Zone      string
 }
 
 type Infrastructure struct {
