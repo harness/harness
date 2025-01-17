@@ -89,6 +89,10 @@ func Handler(uiSourceOverride string) http.HandlerFunc {
 			r.URL.Path = "/index_public.html"
 		}
 
+		const (
+			maxAgeOneYear = 31536000 // 1 year in seconds
+		)
+
 		// Disable caching and sniffing via HTTP headers for UI main entry resources
 		if r.URL.Path == "/" ||
 			r.URL.Path == remoteEntryJSFullPath ||
@@ -97,6 +101,9 @@ func Handler(uiSourceOverride string) http.HandlerFunc {
 			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0")
 			w.Header().Set("pragma", "no-cache")
 			w.Header().Set("X-Content-Type-Options", "nosniff")
+		} else {
+			// Apply long-term caching for static assets
+			w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d, immutable", maxAgeOneYear))
 		}
 
 		// Serve /remoteEntry.js from memory
