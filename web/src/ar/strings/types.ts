@@ -228,6 +228,23 @@ export interface StringsMap {
   'versionList.table.columns.size': string
   'versionList.table.columns.version': string
   'versionList.table.noVersionsTitle': string
+  'webhookList.formFields.SSLVerification': string
+  'webhookList.formFields.addNewKeyValuePair': string
+  'webhookList.formFields.advanced': string
+  'webhookList.formFields.allTrigger': string
+  'webhookList.formFields.customTrigger': string
+  'webhookList.formFields.description': string
+  'webhookList.formFields.enableSSLVerification': string
+  'webhookList.formFields.enabled': string
+  'webhookList.formFields.extraHeader': string
+  'webhookList.formFields.extraHeaderPlaceholder': string
+  'webhookList.formFields.extraValue': string
+  'webhookList.formFields.extraValuePlaceholder': string
+  'webhookList.formFields.id': string
+  'webhookList.formFields.name': string
+  'webhookList.formFields.secret': string
+  'webhookList.formFields.triggerLabel': string
+  'webhookList.formFields.url': string
   'webhookList.newWebhook': string
   'webhookList.table.columns.name': string
   'webhookList.table.columns.trigger': string
@@ -235,6 +252,7 @@ export interface StringsMap {
   'webhookList.triggers.artifactCreation': string
   'webhookList.triggers.artifactDeletion': string
   'webhookList.triggers.artifactModification': string
+  'webhookList.webhookCreated': string
   'actions.delete': string
   'actions.edit': string
   'actions.quarantine': string
@@ -318,9 +336,12 @@ export interface StringsMap {
   'validationMessages.cleanupPolicy.expireDaysRequired': string
   'validationMessages.cleanupPolicy.nameRequired': string
   'validationMessages.cleanupPolicy.positiveExpireDays': string
+  'validationMessages.genericURLPattern': string
+  'validationMessages.identifierRequired': string
   'validationMessages.nameRequired': string
   'validationMessages.passwordRequired': string
   'validationMessages.repokeyRegExMessage': string
+  'validationMessages.required': string
   'validationMessages.secretKeyRequired': string
   'validationMessages.urlPattern': string
   'validationMessages.urlRequired': string

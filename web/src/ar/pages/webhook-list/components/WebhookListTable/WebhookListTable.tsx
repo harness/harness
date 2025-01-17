@@ -23,7 +23,6 @@ import type { ListWebhooks, Webhook } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
 import { useParentHooks, useRoutes } from '@ar/hooks'
-import { RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
 
 import {
   WebhookActionsCell,
@@ -115,11 +114,10 @@ export default function WebhookListTable(props: WebhookListTableProps): JSX.Elem
       sortable
       getRowClassName={() => css.tableRow}
       onRowClick={rowDetails => {
-        // TODO: navigate to webhook details page
         history.push(
-          routes.toARRepositoryDetailsTab({
+          routes.toARRepositoryWebhookDetails({
             repositoryIdentifier: rowDetails.identifier,
-            tab: RepositoryDetailsTab.WEBHOOKS
+            webhookIdentifier: rowDetails.identifier
           })
         )
       }}

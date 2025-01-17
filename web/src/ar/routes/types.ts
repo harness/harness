@@ -52,3 +52,7 @@ export interface RedirectPageQueryParams {
   versionId?: string
   versionDetailsTab?: VersionDetailsTab
 }
+
+export interface RepositoryWebhookDetailsPathParams extends RepositoryDetailsPathParams {
+  webhookIdentifier: string
+}

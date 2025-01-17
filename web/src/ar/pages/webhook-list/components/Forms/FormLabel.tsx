@@ -14,24 +14,14 @@
  * limitations under the License.
  */
 
-.container {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
+import React, { type PropsWithChildren } from 'react'
+import { Text, type TextProps } from '@harnessio/uicore'
+import { Color, FontVariation } from '@harnessio/design-system'
 
-  .createNewBtn {
-    margin-top: 5px !important;
-  }
-
-  .selectInput {
-    min-width: 265px;
-  }
-
-  &.containerWithoutLabel {
-    align-items: flex-start !important;
-
-    .createNewBtn {
-      margin-top: 0 !important;
-    }
-  }
+export default function FormLabel(props: PropsWithChildren<TextProps>) {
+  return (
+    <Text font={{ variation: FontVariation.FORM_LABEL, weight: 'bold' }} color={Color.GREY_900} {...props}>
+      {props.children}
+    </Text>
+  )
 }

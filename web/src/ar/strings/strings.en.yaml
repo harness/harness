@@ -86,14 +86,17 @@ badges:
   artifactRegistry: '{{ $.repositoryList.artifactRegistry.label }}'
   upstreamProxy: '{{ $.repositoryList.upstreamProxy.label }}'
 validationMessages:
+  required: Required
   repokeyRegExMessage: Registry name must start with letter and can only contain lowercase alphanumerics, _, . and -
-  nameRequired: Registry name is required
+  nameRequired: Name is required
+  identifierRequired: Identifier is required
   cleanupPolicy:
     nameRequired: Cleanup policy name is required
     expireDaysRequired: Expire days is required
     positiveExpireDays: Expire days must be greater than 0
-  urlRequired: Remote registry URL is required
-  urlPattern: Remote registry URL must be valid
+  urlRequired: URL is required
+  urlPattern: URL must be valid and start with https://
+  genericURLPattern: URL must be valid and start with http:// or https://
   userNameRequired: Username is required
   passwordRequired: Password is required
   accessKeyRequired: Access key is required

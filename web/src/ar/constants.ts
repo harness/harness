@@ -28,6 +28,7 @@ export const DEFAULT_DATE_TIME_FORMAT = `${DEFAULT_DATE_FORMAT} ${DEFAULT_TIME_F
 
 export const REPO_KEY_REGEX = /^[a-z0-9]+(?:[._-][a-z0-9]+)*$/
 export const URL_REGEX = /^https:\/\/([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,6}(:[0-9]{1,5})?(\/[^\s]*)?$/
+export const GENERIC_URL_REGEX = /^(https?):\/\/([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,6}(:[0-9]{1,5})?(\/[^\s]*)?$/
 
 export enum PreferenceScope {
   USER = 'USER',

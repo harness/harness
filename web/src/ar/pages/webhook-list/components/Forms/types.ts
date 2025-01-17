@@ -14,24 +14,6 @@
  * limitations under the License.
  */
 
-.container {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
+import type { WebhookRequest } from '@harnessio/react-har-service-client'
 
-  .createNewBtn {
-    margin-top: 5px !important;
-  }
-
-  .selectInput {
-    min-width: 265px;
-  }
-
-  &.containerWithoutLabel {
-    align-items: flex-start !important;
-
-    .createNewBtn {
-      margin-top: 0 !important;
-    }
-  }
-}
+export type WebhookRequestUI = WebhookRequest & { triggerType: 'all' | 'custom' }

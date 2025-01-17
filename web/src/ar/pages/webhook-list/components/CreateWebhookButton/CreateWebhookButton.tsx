@@ -15,14 +15,38 @@
  */
 
 import React from 'react'
-import { Button, ButtonVariation } from '@harnessio/uicore'
+import { useHistory, useParams } from 'react-router-dom'
+import type { Webhook } from '@harnessio/react-har-service-client'
+import { Button, ButtonVariation, useToggleOpen } from '@harnessio/uicore'
+
+import { useRoutes } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
+import type { RepositoryDetailsTabPathParams } from '@ar/routes/types'
+
+import CreateWebhookModal from './CreateWebhookModal'
 
 export default function CreateWebhookButton() {
+  const { isOpen, close, open } = useToggleOpen()
   const { getString } = useStrings()
+  const { repositoryIdentifier } = useParams<RepositoryDetailsTabPathParams>()
+
+  const routes = useRoutes()
+  const history = useHistory()
+
+  const handleAfterCreateWebhook = (data: Webhook) => {
+    history.push(
+      routes.toARRepositoryWebhookDetails({
+        repositoryIdentifier,
+        webhookIdentifier: data.identifier
+      })
+    )
+  }
   return (
-    <Button variation={ButtonVariation.PRIMARY} icon="plus" iconProps={{ size: 10 }}>
-      {getString('webhookList.newWebhook')}
-    </Button>
+    <>
+      <Button variation={ButtonVariation.PRIMARY} icon="plus" iconProps={{ size: 10 }} onClick={open}>
+        {getString('webhookList.newWebhook')}
+      </Button>
+      <CreateWebhookModal isOpen={isOpen} onClose={close} onSubmit={handleAfterCreateWebhook} />
+    </>
   )
 }

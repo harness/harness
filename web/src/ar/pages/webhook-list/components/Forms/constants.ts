@@ -14,24 +14,17 @@
  * limitations under the License.
  */
 
-.container {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
+import type { Trigger } from '@harnessio/react-har-service-client'
+import type { StringKeys } from '@ar/frameworks/strings'
 
-  .createNewBtn {
-    margin-top: 5px !important;
-  }
-
-  .selectInput {
-    min-width: 265px;
-  }
-
-  &.containerWithoutLabel {
-    align-items: flex-start !important;
-
-    .createNewBtn {
-      margin-top: 0 !important;
-    }
-  }
+interface TriggerLabelOption {
+  label: StringKeys
+  value: Trigger
+  disabled?: boolean
 }
+
+export const TriggerLabelOptions: TriggerLabelOption[] = [
+  { label: 'webhookList.triggers.artifactCreation', value: 'ARTIFACT_CREATION' },
+  { label: 'webhookList.triggers.artifactDeletion', value: 'ARTIFACT_DELETION' },
+  { label: 'webhookList.triggers.artifactModification', value: 'ARTIFACT_MODIFICATION' }
+]

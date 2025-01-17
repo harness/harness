@@ -24,6 +24,7 @@ export default function getARRouteDefinitions(routeParams: Record<string, string
     toARRepositories: () => '/',
     toARRepositoryDetails: params => `/${params?.repositoryIdentifier}`,
     toARRepositoryDetailsTab: params => `/${params?.repositoryIdentifier}/${params?.tab}`,
+    toARRepositoryWebhookDetails: params => `/${params?.repositoryIdentifier}/webhooks/${params?.webhookIdentifier}`,
     toARArtifacts: () => `/${routeParams?.repositoryIdentifier}?tab=packages`,
     toARArtifactDetails: params => `/${params?.repositoryIdentifier}/artifacts/${params?.artifactIdentifier}`,
     toARVersionDetails: params =>

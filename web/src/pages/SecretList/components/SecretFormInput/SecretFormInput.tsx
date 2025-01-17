@@ -81,6 +81,7 @@ export default function SecretFormInput(props: SecretFormInputProps) {
       spacing="small"
       flex={{ justifyContent: 'flex-start', alignItems: 'center' }}>
       <FormInput.Select
+        className={css.selectInput}
         name={name}
         label={label}
         disabled={disabled}

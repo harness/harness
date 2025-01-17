@@ -14,7 +14,18 @@
  * limitations under the License.
  */
 
-import type { FormikProps } from 'formik'
+import type { DataTooltipInterface } from '@harnessio/uicore'
+import type { FormikContextType, FormikProps } from 'formik'
+
+export interface FormikExtended<T> extends FormikContextType<T> {
+  disabled?: boolean
+  formName: string
+}
+
+export interface FormikContextProps<T> {
+  formik?: FormikExtended<T>
+  tooltipProps?: DataTooltipInterface
+}
 
 export enum Parent {
   OSS = 'OSS',

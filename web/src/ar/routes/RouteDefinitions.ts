@@ -20,6 +20,7 @@ import type {
   RedirectPageQueryParams,
   RepositoryDetailsPathParams,
   RepositoryDetailsTabPathParams,
+  RepositoryWebhookDetailsPathParams,
   VersionDetailsPathParams,
   VersionDetailsTabPathParams
 } from './types'
@@ -34,6 +35,7 @@ export interface ARRouteDefinitionsReturn {
   toARArtifactDetails: (params: ArtifactDetailsPathParams) => string
   toARVersionDetails: (params: VersionDetailsPathParams) => string
   toARVersionDetailsTab: (params: VersionDetailsTabPathParams) => string
+  toARRepositoryWebhookDetails: (params: RepositoryWebhookDetailsPathParams) => string
 }
 
 export const routeDefinitions: ARRouteDefinitionsReturn = {
@@ -66,5 +68,7 @@ export const routeDefinitions: ARRouteDefinitionsReturn = {
       return `/registries/${params?.repositoryIdentifier}/artifacts/${params?.artifactIdentifier}/versions/${params?.versionIdentifier}/pipelines/${params.pipelineIdentifier}/executions/${params.executionIdentifier}/${params.versionTab}`
     }
     return `/registries/${params?.repositoryIdentifier}/artifacts/${params?.artifactIdentifier}/versions/${params?.versionIdentifier}/${params.versionTab}`
-  }
+  },
+  toARRepositoryWebhookDetails: params =>
+    `/registries/${params?.repositoryIdentifier}/webhooks/${params?.webhookIdentifier}`
 }

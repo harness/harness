@@ -58,6 +58,7 @@ const prodConfig = {
     }),
     new CircularDependencyPlugin({
       exclude: /node_modules/,
+      include: /src\/ar/,
       failOnError: true
     }),
     new RetryChunkLoadPlugin({

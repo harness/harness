@@ -1,4 +1,5 @@
 newWebhook: New Webhook
+webhookCreated: Webhook created successfully
 triggers:
   artifactCreation: 'Artifact Creation'
   artifactDeletion: 'Artifact Deletion'
@@ -8,3 +9,21 @@ table:
     name: Webhook
     trigger: Event
   noWebhooksTitle: There are no webhooks available
+formFields:
+  name: Name
+  id: Id
+  description: Description
+  url: Payload URL
+  secret: Secret
+  triggerLabel: Which events do you like to trigger this webhook?
+  allTrigger: Send me everything
+  customTrigger: Let me select individual events
+  SSLVerification: SSL Verification
+  enableSSLVerification: Enable SSL Verification
+  advanced: Advanced
+  extraHeader: Key
+  extraHeaderPlaceholder: Enter Header
+  extraValue: Value
+  extraValuePlaceholder: Enter Value
+  addNewKeyValuePair: Add New Key Value Pair
+  enabled: Enabled
