@@ -77,6 +77,21 @@ func (c *APIController) DeleteArtifact(ctx context.Context, r artifact.DeleteArt
 	}
 
 	artifactName := string(r.Artifact)
+	artifactDetails, err := c.ImageStore.GetByName(ctx, regInfo.RegistryID, artifactName)
+	if err != nil || artifactDetails == nil {
+		return artifact.DeleteArtifact404JSONResponse{
+			NotFoundJSONResponse: artifact.NotFoundJSONResponse(
+				*GetErrorResponse(http.StatusNotFound, "artifact doesn't exist with this key"),
+			),
+		}, err
+	}
+	if !artifactDetails.Enabled {
+		return artifact.DeleteArtifact404JSONResponse{
+			NotFoundJSONResponse: artifact.NotFoundJSONResponse(
+				*GetErrorResponse(http.StatusNotFound, "artifact is already deleted"),
+			),
+		}, nil
+	}
 	err = c.tx.WithTx(
 		ctx, func(ctx context.Context) error {
 			err = c.disableImageStatus(
