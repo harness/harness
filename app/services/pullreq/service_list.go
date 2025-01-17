@@ -160,12 +160,6 @@ func (c *ListService) ListForSpace(
 		return nil, fmt.Errorf("failed to backfill labels assigned to pull requests: %w", err)
 	}
 
-	for _, pr := range list {
-		if err := c.BackfillStats(ctx, pr); err != nil {
-			log.Ctx(ctx).Warn().Err(err).Msg("failed to backfill PR stats")
-		}
-	}
-
 	response := make([]types.PullReqRepo, len(list))
 	for i := range list {
 		response[i] = types.PullReqRepo{
@@ -216,33 +210,46 @@ func (c *ListService) streamPullReqs(
 	return pullReqs, repoUnchecked, nil
 }
 
-func (c *ListService) BackfillStats(ctx context.Context, pr *types.PullReq) error {
-	s := pr.Stats.DiffStats
-	if s.Commits != nil && s.FilesChanged != nil && s.Additions != nil && s.Deletions != nil {
-		return nil
+func clearStats(list []types.PullReqRepo) {
+	for _, entry := range list {
+		entry.PullRequest.Stats.DiffStats = types.DiffStats{}
 	}
+}
 
-	repoGitInfo, err := c.repoGitInfoCache.Get(ctx, pr.TargetRepoID)
-	if err != nil {
-		return fmt.Errorf("failed get repo git info to fetch diff stats: %w", err)
+func (c *ListService) backfillStats(
+	ctx context.Context,
+	list []types.PullReqRepo,
+) error {
+	for _, entry := range list {
+		pr := entry.PullRequest
+
+		s := pr.Stats.DiffStats
+		if s.Commits != nil && s.FilesChanged != nil && s.Additions != nil && s.Deletions != nil {
+			return nil
+		}
+
+		repoGitInfo, err := c.repoGitInfoCache.Get(ctx, pr.TargetRepoID)
+		if err != nil {
+			return fmt.Errorf("failed get repo git info to fetch diff stats: %w", err)
+		}
+
+		output, err := c.git.DiffStats(ctx, &git.DiffParams{
+			ReadParams: git.CreateReadParams(repoGitInfo),
+			BaseRef:    pr.MergeBaseSHA,
+			HeadRef:    pr.SourceSHA,
+		})
+		if err != nil {
+			return fmt.Errorf("failed get diff stats: %w", err)
+		}
+
+		pr.Stats.DiffStats = types.NewDiffStats(output.Commits, output.FilesChanged, output.Additions, output.Deletions)
 	}
-
-	output, err := c.git.DiffStats(ctx, &git.DiffParams{
-		ReadParams: git.CreateReadParams(repoGitInfo),
-		BaseRef:    pr.MergeBaseSHA,
-		HeadRef:    pr.SourceSHA,
-	})
-	if err != nil {
-		return fmt.Errorf("failed get diff stats: %w", err)
-	}
-
-	pr.Stats.DiffStats = types.NewDiffStats(output.Commits, output.FilesChanged, output.Additions, output.Deletions)
 
 	return nil
 }
 
-// BackfillChecks collects the check metadata for the provided list of pull requests.
-func (c *ListService) BackfillChecks(
+// backfillChecks collects the check metadata for the provided list of pull requests.
+func (c *ListService) backfillChecks(
 	ctx context.Context,
 	list []types.PullReqRepo,
 ) error {
@@ -284,8 +291,8 @@ func (c *ListService) BackfillChecks(
 	return nil
 }
 
-// BackfillRules collects the rule metadata for the provided list of pull requests.
-func (c *ListService) BackfillRules(
+// backfillRules collects the rule metadata for the provided list of pull requests.
+func (c *ListService) backfillRules(
 	ctx context.Context,
 	list []types.PullReqRepo,
 ) error {
@@ -344,20 +351,24 @@ func (c *ListService) BackfillMetadata(
 	list []types.PullReqRepo,
 	options types.PullReqMetadataOptions,
 ) error {
-	if options.IsAllFalse() {
-		return nil
-	}
-
 	if options.IncludeChecks {
-		if err := c.BackfillChecks(ctx, list); err != nil {
+		if err := c.backfillChecks(ctx, list); err != nil {
 			return fmt.Errorf("failed to backfill checks")
 		}
 	}
 
 	if options.IncludeRules {
-		if err := c.BackfillRules(ctx, list); err != nil {
+		if err := c.backfillRules(ctx, list); err != nil {
 			return fmt.Errorf("failed to backfill rules")
 		}
+	}
+
+	if options.IncludeGitStats {
+		if err := c.backfillStats(ctx, list); err != nil {
+			log.Ctx(ctx).Warn().Err(err).Msg("failed to backfill PR stats")
+		}
+	} else {
+		clearStats(list)
 	}
 
 	return nil
@@ -366,34 +377,18 @@ func (c *ListService) BackfillMetadata(
 func (c *ListService) BackfillMetadataForRepo(
 	ctx context.Context,
 	repo *types.Repository,
-	list []*types.PullReq,
+	pullReqs []*types.PullReq,
 	options types.PullReqMetadataOptions,
 ) error {
-	if options.IsAllFalse() {
-		return nil
-	}
-
-	listPullReqRepo := make([]types.PullReqRepo, len(list))
-	for i, pr := range list {
-		listPullReqRepo[i] = types.PullReqRepo{
+	list := make([]types.PullReqRepo, len(pullReqs))
+	for i, pr := range pullReqs {
+		list[i] = types.PullReqRepo{
 			PullRequest: pr,
 			Repository:  repo,
 		}
 	}
 
-	if options.IncludeChecks {
-		if err := c.BackfillChecks(ctx, listPullReqRepo); err != nil {
-			return fmt.Errorf("failed to backfill checks")
-		}
-	}
-
-	if options.IncludeRules {
-		if err := c.BackfillRules(ctx, listPullReqRepo); err != nil {
-			return fmt.Errorf("failed to backfill rules")
-		}
-	}
-
-	return nil
+	return c.BackfillMetadata(ctx, list, options)
 }
 
 func (c *ListService) BackfillMetadataForPullReq(
@@ -402,26 +397,10 @@ func (c *ListService) BackfillMetadataForPullReq(
 	pr *types.PullReq,
 	options types.PullReqMetadataOptions,
 ) error {
-	if options.IsAllFalse() {
-		return nil
-	}
-
 	list := []types.PullReqRepo{{
 		PullRequest: pr,
 		Repository:  repo,
 	}}
 
-	if options.IncludeChecks {
-		if err := c.BackfillChecks(ctx, list); err != nil {
-			return fmt.Errorf("failed to backfill checks")
-		}
-	}
-
-	if options.IncludeRules {
-		if err := c.BackfillRules(ctx, list); err != nil {
-			return fmt.Errorf("failed to backfill rules")
-		}
-	}
-
-	return nil
+	return c.BackfillMetadata(ctx, list, options)
 }

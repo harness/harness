@@ -111,6 +111,15 @@ func parseReviewDecisions(r *http.Request) []enum.PullReqReviewDecision {
 }
 
 func ParsePullReqMetadataOptions(r *http.Request) (types.PullReqMetadataOptions, error) {
+	// TODO: Remove the "includeGitStats := true" line and uncomment the following code block.
+	// Because introduction of "include_git_stats" parameter is a breaking API change,
+	// we should remove this line only after other teams who need PR stats include the include_stats=true in API calls.
+	includeGitStats := true
+	/*includeGitStats, err := GetIncludeGitStatsFromQueryOrDefault(r, false)
+	if err != nil {
+		return types.PullReqMetadataOptions{}, err
+	}*/
+
 	includeChecks, err := GetIncludeChecksFromQueryOrDefault(r, false)
 	if err != nil {
 		return types.PullReqMetadataOptions{}, err
@@ -122,8 +131,9 @@ func ParsePullReqMetadataOptions(r *http.Request) (types.PullReqMetadataOptions,
 	}
 
 	return types.PullReqMetadataOptions{
-		IncludeChecks: includeChecks,
-		IncludeRules:  includeRules,
+		IncludeGitStats: includeGitStats,
+		IncludeChecks:   includeChecks,
+		IncludeRules:    includeRules,
 	}, nil
 }
 

@@ -41,7 +41,11 @@ func HandleMetadata(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 			return
 		}
 
-		pr, err := pullreqCtrl.Find(ctx, session, repoRef, pullreqNumber, types.PullReqMetadataOptions{})
+		options := types.PullReqMetadataOptions{
+			IncludeGitStats: true,
+		}
+
+		pr, err := pullreqCtrl.Find(ctx, session, repoRef, pullreqNumber, options)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return

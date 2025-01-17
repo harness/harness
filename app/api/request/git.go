@@ -50,6 +50,7 @@ const (
 	QueryParamService      = "service"
 	QueryParamCommitSHA    = "commit_sha"
 
+	QueryParamIncludeGitStats = "include_git_stats"
 	QueryParamIncludeChecks   = "include_checks"
 	QueryParamIncludeRules    = "include_rules"
 	QueryParamIncludePullReqs = "include_pullreqs"
@@ -62,6 +63,14 @@ func GetGitRefFromQueryOrDefault(r *http.Request, deflt string) string {
 
 func GetIncludeCommitFromQueryOrDefault(r *http.Request, deflt bool) (bool, error) {
 	return QueryParamAsBoolOrDefault(r, QueryParamIncludeCommit, deflt)
+}
+
+func GetIncludeStatsFromQueryOrDefault(r *http.Request, deflt bool) (bool, error) {
+	return QueryParamAsBoolOrDefault(r, QueryParamIncludeStats, deflt)
+}
+
+func GetIncludeGitStatsFromQueryOrDefault(r *http.Request, deflt bool) (bool, error) {
+	return QueryParamAsBoolOrDefault(r, QueryParamIncludeGitStats, deflt)
 }
 
 func GetIncludeChecksFromQueryOrDefault(r *http.Request, deflt bool) (bool, error) {
@@ -181,7 +190,7 @@ func ParseCommitFilter(r *http.Request) (*types.CommitFilter, error) {
 	if err != nil {
 		return nil, err
 	}
-	includeStats, err := QueryParamAsBoolOrDefault(r, QueryParamIncludeStats, false)
+	includeStats, err := GetIncludeStatsFromQueryOrDefault(r, false)
 	if err != nil {
 		return nil, err
 	}

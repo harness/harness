@@ -505,7 +505,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 		QueryParameterLabelID, QueryParameterValueID,
 		queryParameterAuthorID, queryParameterCommenterID, queryParameterMentionedID,
 		queryParameterReviewerID, queryParameterReviewDecision,
-		queryParameterIncludeChecks, queryParameterIncludeRules)
+		queryParamIncludeGitStats, queryParameterIncludeChecks, queryParameterIncludeRules)
 	_ = reflector.SetRequest(&listPullReq, new(listPullReqRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&listPullReq, new([]types.PullReq), http.StatusOK)
 	_ = reflector.SetJSONResponse(&listPullReq, new(usererror.Error), http.StatusBadRequest)

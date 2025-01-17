@@ -301,6 +301,22 @@ var queryParameterIncludeCommit = openapi3.ParameterOrRef{
 	},
 }
 
+var queryParamIncludeGitStats = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name: request.QueryParamIncludeStats,
+		In:   openapi3.ParameterInQuery,
+		Description: ptr.String(
+			"If true, the git diff stats would be included in the response."),
+		Required: ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeBoolean),
+				Default: ptrptr(false),
+			},
+		},
+	},
+}
+
 var queryParameterIncludeChecks = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name: request.QueryParamIncludeChecks,

@@ -16,6 +16,8 @@ package types
 
 import (
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/gotidy/ptr"
 )
 
 // PullReq represents a pull request.
@@ -116,24 +118,21 @@ func (pr *PullReq) MarkAsMerged() {
 	pr.RebaseConflicts = nil
 }
 
-// DiffStats shows total number of commits and modified files.
+// DiffStats holds summary of changes in git:
+// total number of commits, number modified files and number of line changes.
 type DiffStats struct {
 	Commits      *int64 `json:"commits,omitempty"`
 	FilesChanged *int64 `json:"files_changed,omitempty"`
-	Additions    *int64 `json:"additions"`
-	Deletions    *int64 `json:"deletions"`
+	Additions    *int64 `json:"additions,omitempty"`
+	Deletions    *int64 `json:"deletions,omitempty"`
 }
 
 func NewDiffStats(commitCount, fileCount, additions, deletions int) DiffStats {
-	cc := int64(commitCount)
-	fc := int64(fileCount)
-	add := int64(additions)
-	del := int64(deletions)
 	return DiffStats{
-		Commits:      &cc,
-		FilesChanged: &fc,
-		Additions:    &add,
-		Deletions:    &del,
+		Commits:      ptr.Int64(int64(commitCount)),
+		FilesChanged: ptr.Int64(int64(fileCount)),
+		Additions:    ptr.Int64(int64(additions)),
+		Deletions:    ptr.Int64(int64(deletions)),
 	}
 }
 
@@ -177,12 +176,9 @@ type PullReqFilter struct {
 }
 
 type PullReqMetadataOptions struct {
-	IncludeChecks bool `json:"include_checks"`
-	IncludeRules  bool `json:"include_rules"`
-}
-
-func (options PullReqMetadataOptions) IsAllFalse() bool {
-	return !options.IncludeChecks && !options.IncludeRules
+	IncludeGitStats bool `json:"include_git_stats"`
+	IncludeChecks   bool `json:"include_checks"`
+	IncludeRules    bool `json:"include_rules"`
 }
 
 // PullReqReview holds pull request review.

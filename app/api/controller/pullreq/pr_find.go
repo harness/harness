@@ -22,8 +22,6 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-
-	"github.com/rs/zerolog/log"
 )
 
 // Find returns a pull request from the provided repository.
@@ -55,10 +53,6 @@ func (c *Controller) Find(
 
 	if err := c.pullreqListService.BackfillMetadataForPullReq(ctx, repo, pr, options); err != nil {
 		return nil, fmt.Errorf("failed to backfill pull request metadata: %w", err)
-	}
-
-	if err := c.pullreqListService.BackfillStats(ctx, pr); err != nil {
-		log.Ctx(ctx).Warn().Err(err).Msg("failed to backfill PR stats")
 	}
 
 	return pr, nil
