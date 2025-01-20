@@ -229,19 +229,19 @@ func newWorker(id int, queue *queue) *worker {
 }
 
 func (w *worker) start(ctx context.Context, fn func(context.Context, *Metric)) {
-	log.Ctx(ctx).Info().Int("worker", w.id).Msg("starting worker")
+	log.Ctx(ctx).Info().Int("usage-worker", w.id).Msg("usage metrics starting worker")
 	for {
 		select {
 		case <-ctx.Done():
 			log.Ctx(ctx).Err(ctx.Err()).Msg("context canceled")
 			return
 		case <-w.stopCh:
-			log.Ctx(ctx).Warn().Int("worker", w.id).Msg("worker is stopped")
+			log.Ctx(ctx).Warn().Int("usage-worker", w.id).Msg("worker is stopped")
 			return
 		default:
 			payload, err := w.queue.Pop(ctx)
 			if err != nil {
-				log.Ctx(ctx).Err(err).Msg("failed to consume the queue")
+				log.Ctx(ctx).Err(err).Int("usage-worker", w.id).Msg("failed to consume the queue")
 				return
 			}
 			fn(ctx, payload)
