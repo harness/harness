@@ -35,6 +35,8 @@ import (
 	"github.com/harness/gitness/registry/app/manifest"
 	"github.com/harness/gitness/registry/app/manifest/manifestlist"
 	"github.com/harness/gitness/registry/app/manifest/schema2"
+	"github.com/harness/gitness/registry/app/pkg/commons"
+	"github.com/harness/gitness/registry/app/pkg/maven/utils"
 	"github.com/harness/gitness/registry/app/remote/clients/registry/auth"
 	"github.com/harness/gitness/registry/app/remote/clients/registry/interceptor"
 
@@ -150,6 +152,12 @@ type Client interface {
 	Copy(srcRepository, srcReference, dstRepository, dstReference string, override bool) (err error)
 	// Do send generic HTTP requests to the target registry service
 	Do(req *http.Request) (*http.Response, error)
+
+	// Download the file
+	GetFile(filePath string) (*commons.ResponseHeaders, io.ReadCloser, error)
+
+	// Check existence of file
+	HeadFile(filePath string) (*commons.ResponseHeaders, bool, error)
 }
 
 // NewClient creates a registry client with the default authorizer which determines the auth scheme
@@ -822,4 +830,40 @@ func buildMonolithicBlobUploadURL(endpoint, location, digest string) (string, er
 	}
 	// the "relativeurls" is enabled in registry
 	return endpoint + url.String(), nil
+}
+
+func (c *client) GetFile(filePath string) (*commons.ResponseHeaders, io.ReadCloser, error) {
+	req, err := http.NewRequestWithContext(context.TODO(), http.MethodGet,
+		buildFileURL(c.url, filePath), nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer resp.Body.Close()
+	responseHeaders := utils.ParseResponseHeaders(resp)
+	return responseHeaders, resp.Body, nil
+}
+
+func (c *client) HeadFile(filePath string) (*commons.ResponseHeaders, bool, error) {
+	req, err := http.NewRequestWithContext(context.TODO(), http.MethodHead,
+		buildFileURL(c.url, filePath), nil)
+	if err != nil {
+		return nil, false, err
+	}
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, false, err
+	}
+	defer resp.Body.Close()
+	responseHeaders := utils.ParseResponseHeaders(resp)
+	return responseHeaders, true, err
+}
+
+func buildFileURL(endpoint, filePath string) string {
+	return fmt.Sprintf("%s/%s", endpoint, filePath)
 }

@@ -16,8 +16,58 @@ package maven
 
 import (
 	"net/http"
+	"time"
+
+	"github.com/harness/gitness/registry/app/pkg"
+	"github.com/harness/gitness/registry/app/pkg/commons"
+	"github.com/harness/gitness/registry/app/pkg/maven"
+	"github.com/harness/gitness/registry/app/storage"
+
+	"github.com/rs/zerolog/log"
 )
 
-func (h *Handler) GetArtifact(_ http.ResponseWriter, _ *http.Request) {
-	// ctx := r.Context()
+func (h *Handler) GetArtifact(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	info, err := h.GetArtifactInfo(r, true)
+	if err != nil {
+		handleErrors(ctx, []error{err}, w)
+		return
+	}
+	result := h.Controller.GetArtifact(
+		ctx,
+		info,
+	)
+	if !commons.IsEmpty(result.GetErrors()) {
+		handleErrors(ctx, result.GetErrors(), w)
+		return
+	}
+	response, ok := result.(*maven.GetArtifactResponse)
+	if !ok {
+		log.Ctx(ctx).Error().Msg("Failed to cast result to GetArtifactResponse")
+		return
+	}
+
+	defer func() {
+		if response.Body != nil {
+			err := response.Body.Close()
+			if err != nil {
+				log.Ctx(ctx).Error().Msgf("Failed to close body: %v", err)
+			}
+		}
+	}()
+
+	if !commons.IsEmpty(response.RedirectURL) {
+		http.Redirect(w, r, response.RedirectURL, http.StatusTemporaryRedirect)
+		return
+	}
+	h.serveContent(w, r, response.Body, info)
+	response.ResponseHeaders.WriteToResponse(w)
+}
+
+func (h *Handler) serveContent(
+	w http.ResponseWriter, r *http.Request, fileReader *storage.FileReader, info pkg.MavenArtifactInfo,
+) {
+	if fileReader != nil {
+		http.ServeContent(w, r, info.FileName, time.Time{}, fileReader)
+	}
 }

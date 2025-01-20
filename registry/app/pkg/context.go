@@ -15,6 +15,8 @@
 package pkg
 
 import (
+	"time"
+
 	v2 "github.com/distribution/distribution/v3/registry/api/v2"
 )
 
@@ -41,12 +43,13 @@ type RegistryInfo struct {
 }
 
 type FileInfo struct {
-	Size     int64
-	Sha1     string
-	Sha256   string
-	Sha512   string
-	MD5      string
-	Filename string
+	Size      int64
+	Sha1      string
+	Sha256    string
+	Sha512    string
+	MD5       string
+	Filename  string
+	CreatedAt time.Time
 }
 
 func (r *RegistryInfo) SetReference(ref string) {

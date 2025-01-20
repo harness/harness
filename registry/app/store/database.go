@@ -502,6 +502,11 @@ type NodesRepository interface {
 		ctx context.Context, registryID int64,
 		path string,
 	) (*types.Node, error)
+
+	FindByPathAndRegistryId(
+		ctx context.Context, registryID int64,
+		path string,
+	) (*types.Node, error)
 }
 
 type GenericBlobRepository interface {

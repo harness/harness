@@ -47,9 +47,10 @@ const (
 
 // Defines values for UpstreamConfigSource.
 const (
-	UpstreamConfigSourceAwsEcr    UpstreamConfigSource = "AwsEcr"
-	UpstreamConfigSourceCustom    UpstreamConfigSource = "Custom"
-	UpstreamConfigSourceDockerhub UpstreamConfigSource = "Dockerhub"
+	UpstreamConfigSourceAwsEcr       UpstreamConfigSource = "AwsEcr"
+	UpstreamConfigSourceCustom       UpstreamConfigSource = "Custom"
+	UpstreamConfigSourceDockerhub    UpstreamConfigSource = "Dockerhub"
+	UpstreamConfigSourceMavenCentral UpstreamConfigSource = "MavenCentral"
 )
 
 // Defines values for RegistryTypeParam.

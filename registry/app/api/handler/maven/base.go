@@ -16,6 +16,7 @@ package maven
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -25,6 +26,7 @@ import (
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/auth/authz"
 	corestore "github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/registry/app/api/controller/metadata"
 	"github.com/harness/gitness/registry/app/api/handler/utils"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
@@ -166,14 +168,14 @@ func ExtractPathVars(path string) (rootIdentifier, registry, groupID, artifactID
 	registry = segments[2]
 	fileName = segments[len(segments)-1]
 
-	segments = segments[:len(segments)-1]
+	segments = segments[3 : len(segments)-1]
 
 	version = segments[len(segments)-1]
 	if isMetadataFile(fileName) && !strings.HasSuffix(version, "-SNAPSHOT") {
 		version = ""
 	} else {
 		segments = segments[:len(segments)-1]
-		if len(segments) < 5 {
+		if len(segments) < 2 {
 			err = fmt.Errorf(invalidPathFormat, path)
 			return rootIdentifier, registry, groupID, artifactID, version, fileName, err
 		}
@@ -209,6 +211,26 @@ func getPathRoot(ctx context.Context) string {
 		}
 	}
 	return pathRoot
+}
+
+func handleErrors(ctx context.Context, errs errcode.Errors, w http.ResponseWriter) {
+	if !commons.IsEmpty(errs) {
+		LogError(errs)
+		log.Ctx(ctx).Error().Errs("errs occurred during maven operation: ", errs).Msgf("Error occurred")
+		err := errs[0]
+		var e *commons.Error
+		if errors.As(err, &e) {
+			code := e.Status
+			w.WriteHeader(code)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(errs)
+		if err != nil {
+			log.Ctx(ctx).Error().Err(err).Msgf("Error occurred during maven error encoding")
+		}
+	}
 }
 
 func LogError(errList errcode.Errors) {

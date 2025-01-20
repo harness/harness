@@ -106,6 +106,7 @@ var WireSet = wire.NewSet(
 	database.WireSet,
 	pkg.WireSet,
 	docker.WireSet,
+	// filemanager.WireSet,
 	maven.WireSet,
 	router.WireSet,
 	gc.WireSet,

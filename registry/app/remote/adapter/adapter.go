@@ -24,6 +24,7 @@ import (
 
 	store2 "github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/registry/app/manifest"
+	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/secret"
 )
@@ -77,6 +78,12 @@ type ArtifactRegistry interface {
 	) (mount bool, repository string, err error) // check whether the blob can be mounted from the remote registry
 	DeleteTag(repository, tag string) error
 	ListTags(repository string) (tags []string, err error)
+
+	// Download the file
+	GetFile(filePath string) (*commons.ResponseHeaders, io.ReadCloser, error)
+
+	// Check existence of file
+	HeadFile(filePath string) (*commons.ResponseHeaders, bool, error)
 }
 
 // RegisterFactory registers one adapter factory to the registry.

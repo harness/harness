@@ -89,6 +89,27 @@ func CheckAuth() func(http.Handler) http.Handler {
 	}
 }
 
+func CheckMavenAuth() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				ctx := r.Context()
+				session, _ := request.AuthSessionFrom(ctx)
+				if session.Principal == auth.AnonymousPrincipal {
+					setMavenHeaders(w)
+					render.Unauthorized(ctx, w)
+					return
+				}
+				next.ServeHTTP(w, r)
+			},
+		)
+	}
+}
+
+func setMavenHeaders(w http.ResponseWriter) {
+	w.Header().Set("WWW-Authenticate", "Basic realm=\"Maven API\"")
+}
+
 func getRefsFromName(name string) (spaceRef, repoRef string) {
 	name = strings.Trim(name, "/")
 	refs := strings.Split(name, "/")

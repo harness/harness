@@ -44,7 +44,8 @@ func (r *HeadArtifactResponse) SetError(err error) {
 type GetArtifactResponse struct {
 	Errors          []error
 	ResponseHeaders *commons.ResponseHeaders
-	body            *storage.FileReader
+	RedirectURL     string
+	Body            *storage.FileReader
 }
 
 func (r *GetArtifactResponse) GetErrors() []error {

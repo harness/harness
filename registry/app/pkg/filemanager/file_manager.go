@@ -17,6 +17,7 @@ package filemanager
 import (
 	"context"
 	"fmt"
+	"io"
 	"mime/multipart"
 	"path"
 	"strings"
@@ -67,6 +68,7 @@ func (f *FileManager) UploadFile(
 	rootParentID int64,
 	rootIdentifier string,
 	file multipart.File,
+	fileReader io.Reader,
 	filename string,
 ) (pkg.FileInfo, error) {
 	// uploading the file to temporary path in file storage
@@ -83,7 +85,7 @@ func (f *FileManager) UploadFile(
 	}
 	defer fw.Close()
 
-	fileInfo, err := blobContext.genericBlobStore.Write(ctx, fw, file)
+	fileInfo, err := blobContext.genericBlobStore.Write(ctx, fw, file, fileReader)
 	if err != nil {
 		log.Error().Msgf("failed to upload the file on temparary location"+
 			" with name : %s with error : %s", filename, err.Error())

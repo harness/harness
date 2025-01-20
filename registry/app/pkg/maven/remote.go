@@ -16,45 +16,78 @@ package maven
 
 import (
 	"context"
+	"io"
 
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
+	"github.com/harness/gitness/registry/app/remote/controller/proxy/maven"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/store/database/dbtx"
+
+	"github.com/rs/zerolog/log"
 )
 
 const (
 	ArtifactTypeRemoteRegistry = "Remote Registry"
 )
 
-func NewRemoteRegistry(dBStore *DBStore, tx dbtx.Transactor,
+func NewRemoteRegistry(dBStore *DBStore, tx dbtx.Transactor, local *LocalRegistry,
+	proxyController maven.Controller,
 ) Registry {
 	return &RemoteRegistry{
-		DBStore: dBStore,
-		tx:      tx,
+		DBStore:         dBStore,
+		tx:              tx,
+		local:           local,
+		proxyController: proxyController,
 	}
 }
 
 type RemoteRegistry struct {
-	DBStore *DBStore
-	tx      dbtx.Transactor
+	local           *LocalRegistry
+	proxyController maven.Controller
+	DBStore         *DBStore
+	tx              dbtx.Transactor
 }
 
 func (r *RemoteRegistry) GetMavenArtifactType() string {
 	return ArtifactTypeRemoteRegistry
 }
 
-func (r *RemoteRegistry) HeadArtifact(_ context.Context, _ pkg.MavenArtifactInfo) (
+func (r *RemoteRegistry) HeadArtifact(ctx context.Context, info pkg.MavenArtifactInfo) (
 	responseHeaders *commons.ResponseHeaders, errs []error) {
-	return nil, nil
+	responseHeaders, _, errs = r.FetchArtifact(ctx, info, false)
+	return responseHeaders, errs
 }
 
-func (r *RemoteRegistry) GetArtifact(_ context.Context, _ pkg.MavenArtifactInfo) (
+func (r *RemoteRegistry) GetArtifact(ctx context.Context, info pkg.MavenArtifactInfo) (
 	responseHeaders *commons.ResponseHeaders, body *storage.FileReader, errs []error) {
-	return nil, nil, nil
+	return r.FetchArtifact(ctx, info, true)
 }
 
-func (r *RemoteRegistry) PutArtifact(_ context.Context, _ pkg.MavenArtifactInfo) (
+func (r *RemoteRegistry) PutArtifact(_ context.Context, _ pkg.MavenArtifactInfo, _ io.Reader) (
 	responseHeaders *commons.ResponseHeaders, errs []error) {
 	return nil, nil
+}
+
+func (r *RemoteRegistry) FetchArtifact(ctx context.Context, info pkg.MavenArtifactInfo, serveFile bool) (
+	responseHeaders *commons.ResponseHeaders, body *storage.FileReader, errs []error) {
+	log.Ctx(ctx).Info().Msgf("Maven Proxy: %s", info.RegIdentifier)
+
+	responseHeaders, body, useLocal := r.proxyController.UseLocalFile(ctx, info)
+	if useLocal {
+		return responseHeaders, body, errs
+	}
+
+	upstreamProxy, err := r.DBStore.UpstreamProxyDao.GetByRegistryIdentifier(ctx, info.ParentID, info.RootIdentifier)
+	if err != nil {
+		errs = append(errs, err)
+	}
+
+	// This is start of proxy Code.
+	responseHeaders, _, err = r.proxyController.ProxyFile(ctx, info, *upstreamProxy, serveFile)
+	if err != nil {
+		errs = append(errs, err)
+		return responseHeaders, nil, errs
+	}
+	return responseHeaders, nil, errs
 }

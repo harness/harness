@@ -173,7 +173,7 @@ type GenericBlobStore interface {
 	// multiple times until the BlobWriter is committed or cancelled.
 	Create(ctx context.Context, filePath string) (driver.FileWriter, error)
 
-	Write(ctx context.Context, w driver.FileWriter, file multipart.File) (pkg.FileInfo, error)
+	Write(ctx context.Context, w driver.FileWriter, file multipart.File, fileReader io.Reader) (pkg.FileInfo, error)
 	Move(ctx context.Context, srcPath string, dstPath string) error
 	Delete(ctx context.Context, filePath string) error
 

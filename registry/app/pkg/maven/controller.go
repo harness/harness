@@ -16,6 +16,7 @@ package maven
 
 import (
 	"context"
+	"io"
 
 	"github.com/harness/gitness/app/auth/authz"
 	corestore "github.com/harness/gitness/app/store"
@@ -57,6 +58,8 @@ type DBStore struct {
 	SpaceStore       corestore.SpaceStore
 	BandwidthStatDao store.BandwidthStatRepository
 	DownloadStatDao  store.DownloadStatRepository
+	NodeDao          store.NodesRepository
+	UpstreamProxyDao store.UpstreamProxyConfigRepository
 }
 
 func NewController(
@@ -84,6 +87,8 @@ func NewDBStore(
 	spaceStore corestore.SpaceStore,
 	bandwidthStatDao store.BandwidthStatRepository,
 	downloadStatDao store.DownloadStatRepository,
+	// nodeDao store.NodesRepository,
+	upstreamProxyDao store.UpstreamProxyConfigRepository,
 ) *DBStore {
 	return &DBStore{
 		RegistryDao:      registryDao,
@@ -92,6 +97,8 @@ func NewDBStore(
 		ArtifactDao:      artifactDao,
 		BandwidthStatDao: bandwidthStatDao,
 		DownloadStatDao:  downloadStatDao,
+		//NodeDao:          nodeDao,
+		UpstreamProxyDao: upstreamProxyDao,
 	}
 }
 
@@ -128,9 +135,46 @@ func (c *Controller) GetArtifact(ctx context.Context, info pkg.MavenArtifactInfo
 	f := func(registry registrytypes.Registry, a Artifact) Response {
 		info.SetMavenRepoKey(registry.Name)
 		headers, body, e := a.(Registry).GetArtifact(ctx, info)
-		return &GetArtifactResponse{e, headers, body}
+		return &GetArtifactResponse{e, headers, "", body}
 	}
 	return c.ProxyWrapper(ctx, f, info)
+}
+
+func (c *Controller) HeadArtifact(ctx context.Context, info pkg.MavenArtifactInfo) Response {
+	err := pkg.GetRegistryCheckAccess(
+		ctx, c.DBStore.RegistryDao, c.authorizer, c.DBStore.SpaceStore, info.RegIdentifier, info.ParentID,
+		enum.PermissionArtifactsDownload,
+	)
+	if err != nil {
+		return &HeadArtifactResponse{
+			Errors: []error{errcode.ErrCodeDenied},
+		}
+	}
+
+	f := func(registry registrytypes.Registry, a Artifact) Response {
+		info.SetMavenRepoKey(registry.Name)
+		headers, e := a.(Registry).HeadArtifact(ctx, info)
+		return &HeadArtifactResponse{e, headers}
+	}
+	return c.ProxyWrapper(ctx, f, info)
+}
+
+func (c *Controller) PutArtifact(ctx context.Context, info pkg.MavenArtifactInfo, fileReader io.Reader) Response {
+	err := pkg.GetRegistryCheckAccess(
+		ctx, c.DBStore.RegistryDao, c.authorizer, c.DBStore.SpaceStore, info.RegIdentifier, info.ParentID,
+		enum.PermissionArtifactsUpload,
+	)
+	if err != nil {
+		return &PutArtifactResponse{
+			Errors: []error{errcode.ErrCodeDenied},
+		}
+	}
+
+	responseHeaders, errs := c.local.PutArtifact(ctx, info, fileReader)
+	return &PutArtifactResponse{
+		ResponseHeaders: responseHeaders,
+		Errors:          errs,
+	}
 }
 
 func (c *Controller) ProxyWrapper(

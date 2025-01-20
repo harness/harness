@@ -17,7 +17,9 @@ package maven
 import (
 	"github.com/harness/gitness/app/auth/authz"
 	corestore "github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/registry/app/remote/controller/proxy/maven"
 	"github.com/harness/gitness/registry/app/store"
+	"github.com/harness/gitness/secret"
 	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/google/wire"
@@ -26,15 +28,21 @@ import (
 func LocalRegistryProvider(
 	dBStore *DBStore,
 	tx dbtx.Transactor,
+	// fileManager filemanager.FileManager,
 ) *LocalRegistry {
-	return NewLocalRegistry(dBStore, tx).(*LocalRegistry)
+	return NewLocalRegistry(dBStore,
+		tx,
+		// fileManager
+	).(*LocalRegistry)
 }
 
 func RemoteRegistryProvider(
 	dBStore *DBStore,
 	tx dbtx.Transactor,
+	local *LocalRegistry,
+	proxyController maven.Controller,
 ) *RemoteRegistry {
-	return NewRemoteRegistry(dBStore, tx).(*RemoteRegistry)
+	return NewRemoteRegistry(dBStore, tx, local, proxyController).(*RemoteRegistry)
 }
 
 func ControllerProvider(
@@ -53,11 +61,24 @@ func DBStoreProvider(
 	spaceStore corestore.SpaceStore,
 	bandwidthStatDao store.BandwidthStatRepository,
 	downloadStatDao store.DownloadStatRepository,
+	// nodeDao store.NodesRepository,
+	upstreamProxyDao store.UpstreamProxyConfigRepository,
 ) *DBStore {
-	return NewDBStore(registryDao, imageDao, artifactDao, spaceStore, bandwidthStatDao, downloadStatDao)
+	return NewDBStore(registryDao, imageDao, artifactDao, spaceStore, bandwidthStatDao,
+		downloadStatDao,
+		// nodeDao,
+		upstreamProxyDao)
+}
+
+func ProvideProxyController(
+	registry *LocalRegistry, secretService secret.Service,
+	spacePathStore corestore.SpacePathStore,
+) maven.Controller {
+	return maven.NewProxyController(registry, secretService, spacePathStore)
 }
 
 var ControllerSet = wire.NewSet(ControllerProvider)
 var DBStoreSet = wire.NewSet(DBStoreProvider)
 var RegistrySet = wire.NewSet(LocalRegistryProvider, RemoteRegistryProvider)
-var WireSet = wire.NewSet(ControllerSet, DBStoreSet, RegistrySet)
+var ProxySet = wire.NewSet(ProvideProxyController)
+var WireSet = wire.NewSet(ControllerSet, DBStoreSet, RegistrySet, ProxySet)

@@ -1690,6 +1690,7 @@ components:
             - Dockerhub
             - Custom
             - AwsEcr
+            - MavenCentral
       x-discriminator-value: UPSTREAM
       required:
         - authType

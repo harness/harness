@@ -80,8 +80,10 @@ func (bs *genericBlobStore) newBlobUpload(
 	return fw, nil
 }
 
-// Write takes a file writer and a multipart form file, streams the file to the writer, and calculates hashes.
-func (bs *genericBlobStore) Write(ctx context.Context, w driver.FileWriter, file multipart.File) (pkg.FileInfo, error) {
+// Write takes a file writer and a multipart form file or file reader,
+// streams the file to the writer, and calculates hashes.
+func (bs *genericBlobStore) Write(ctx context.Context, w driver.FileWriter, file multipart.File,
+	fileReader io.Reader) (pkg.FileInfo, error) {
 	// Create new hash.Hash instances for SHA256 and SHA512
 	sha1Hasher := sha1.New()
 	sha256Hasher := sha256.New()
@@ -91,7 +93,13 @@ func (bs *genericBlobStore) Write(ctx context.Context, w driver.FileWriter, file
 	// Create a MultiWriter to write to both hashers simultaneously
 	mw := io.MultiWriter(sha1Hasher, sha256Hasher, sha512Hasher, md5Hasher, w)
 	// Copy the data from S3 object stream to the MultiWriter
-	totalBytesWritten, err := io.Copy(mw, file)
+	var err error
+	var totalBytesWritten int64
+	if fileReader != nil {
+		totalBytesWritten, err = io.Copy(mw, fileReader)
+	} else {
+		totalBytesWritten, err = io.Copy(mw, file)
+	}
 	if err != nil {
 		return pkg.FileInfo{}, fmt.Errorf("failed to copy file to s3: %w", err)
 	}

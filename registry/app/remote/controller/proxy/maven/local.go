@@ -23,15 +23,13 @@ import (
 	"github.com/harness/gitness/registry/app/storage"
 )
 
-type Registry interface {
-	Artifact
-
-	HeadArtifact(ctx context.Context, artInfo pkg.MavenArtifactInfo) (
+type registryInterface interface {
+	HeadArtifact(ctx context.Context, info pkg.MavenArtifactInfo) (
 		responseHeaders *commons.ResponseHeaders, errs []error)
 
-	GetArtifact(ctx context.Context, artInfo pkg.MavenArtifactInfo) (
+	GetArtifact(ctx context.Context, info pkg.MavenArtifactInfo) (
 		responseHeaders *commons.ResponseHeaders, body *storage.FileReader, errs []error)
 
-	PutArtifact(ctx context.Context, artInfo pkg.MavenArtifactInfo, fileReader io.Reader) (
+	PutArtifact(ctx context.Context, info pkg.MavenArtifactInfo, fileReader io.Reader) (
 		responseHeaders *commons.ResponseHeaders, errs []error)
 }
