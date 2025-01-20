@@ -25,7 +25,7 @@ import type { ArtifactMetadata, StoDigestMetadata } from '@harnessio/react-har-s
 
 import { useParentComponents, useRoutes } from '@ar/hooks'
 import TableCells from '@ar/components/TableCells/TableCells'
-import type { RepositoryPackageType } from '@ar/common/types'
+import { RepositoryPackageType } from '@ar/common/types'
 import LabelsPopover from '@ar/components/LabelsPopover/LabelsPopover'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import { useStrings } from '@ar/frameworks/strings'
@@ -101,9 +101,27 @@ export const ArtifactDeploymentsCell: CellType = ({ row }) => {
   return <TableCells.DeploymentsCell prodCount={prodEnvCount} nonProdCount={nonProdEnvCount} />
 }
 
-export const ArtifactListPullCommandCell: CellType = ({ value }) => {
+export const ArtifactListPullCommandCell: CellType = ({ value, row }) => {
+  const { original } = row
+  const routes = useRoutes()
+  const { packageType } = original
   const { getString } = useStrings()
-  return <TableCells.CopyTextCell value={value}>{getString('copy')}</TableCells.CopyTextCell>
+  switch (packageType) {
+    case RepositoryPackageType.GENERIC:
+      return (
+        <TableCells.LinkCell
+          linkTo={routes.toARVersionDetailsTab({
+            repositoryIdentifier: original.registryIdentifier,
+            artifactIdentifier: original.name,
+            versionIdentifier: original.version as string,
+            versionTab: VersionDetailsTab.ARTIFACT_DETAILS
+          })}
+          label={getString('artifactList.viewArtifactDetails')}
+        />
+      )
+    default:
+      return <TableCells.CopyTextCell value={value}>{getString('copy')}</TableCells.CopyTextCell>
+  }
 }
 
 export const ArtifactListVulnerabilitiesCell: CellType = ({ row }) => {

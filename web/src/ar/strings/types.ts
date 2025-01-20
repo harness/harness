@@ -39,6 +39,7 @@ export interface StringsMap {
   'artifactList.table.columns.tags': string
   'artifactList.table.latestVersions': string
   'artifactList.table.noArtifactsTitle': string
+  'artifactList.viewArtifactDetails': string
   'digestList.page': string
   'digestList.table.aboutDigest': string
   'digestList.table.columns.digest': string

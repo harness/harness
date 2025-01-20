@@ -1,6 +1,7 @@
 page: Artifact List Page
 pageHeading: Artifacts
 deployedArtifacts: Deployed Artifacts
+viewArtifactDetails: View Artifact Details
 table:
   noArtifactsTitle: There are no artifacts available.
   allRepositories: Registries

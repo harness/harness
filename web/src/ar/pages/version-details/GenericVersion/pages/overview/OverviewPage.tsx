@@ -20,8 +20,6 @@ import { useGetArtifactDetailsQuery } from '@harnessio/react-har-service-client'
 
 import { useDecodedParams, useGetSpaceRef } from '@ar/hooks'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
-import { VersionOverviewCard } from '@ar/pages/version-details/components/OverviewCards/types'
-import VersionOverviewCards from '@ar/pages/version-details/components/OverviewCards/OverviewCards'
 
 import type { GenericArtifactDetails } from '../../types'
 import GeneralInformationCard from './GeneralInformationCard'
@@ -54,7 +52,6 @@ export default function GenericOverviewPage() {
       retryOnError={() => refetch()}>
       {response && (
         <Layout.Vertical className={genericStyles.cardContainer} spacing="medium">
-          <VersionOverviewCards cards={[VersionOverviewCard.DEPLOYMENT, VersionOverviewCard.BUILD]} />
           <GeneralInformationCard data={response} />
         </Layout.Vertical>
       )}

@@ -30,7 +30,7 @@ import {
   VersionPublishedAtCell
 } from '../../components/VersionListTable/VersionListCell'
 
-import css from '@ar/pages/version-list/components/VersionListTable/VersionListTable.module.scss'
+import css from './GenericVersionListTable.module.scss'
 
 export interface IGenericVersionListTableProps {
   data: ListArtifactVersion
@@ -87,7 +87,7 @@ function GenericVersionListTable({
         accessor: 'deployments',
         Cell: VersionDeploymentsCell,
         serverSortProps: getServerSortProps('deployments'),
-        hidden: parent === Parent.OSS
+        hidden: true
       },
       {
         Header: getString('versionList.table.columns.fileCount'),
@@ -101,7 +101,9 @@ function GenericVersionListTable({
         Cell: VersionPublishedAtCell,
         serverSortProps: getServerSortProps('lastModified')
       }
-    ].filter(Boolean) as Column<ArtifactVersionMetadata>[]
+    ]
+      .filter(Boolean)
+      .filter(each => !each.hidden) as Column<ArtifactVersionMetadata>[]
   }, [currentSort, currentOrder, getString, setSortBy])
 
   return (

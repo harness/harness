@@ -23,13 +23,22 @@
   [role='cell'],
   [role='columnheader'] {
     width: auto !important;
-    padding-right: var(--spacing-large);
+    padding-right: var(--spacing-small);
   }
+}
 
+.ossTable {
   div[class*='TableV2--cells'],
   div[class*='TableV2--header'] {
     display: grid !important;
-    width: 100%; /* Ensure the container doesn't exceed 100% width */
-    grid-template-columns: minmax(var(--har-table-name-column-min-width), 15rem) 6rem 20rem minmax(0, 1fr) 8rem;
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.enterpriseTable {
+  div[class*='TableV2--cells'],
+  div[class*='TableV2--header'] {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr);
   }
 }
