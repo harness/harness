@@ -17,6 +17,7 @@
 import type { RepositoryPackageType } from '@ar/common/types'
 import type { RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
 import type { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
+import type { WebhookDetailsTab } from '@ar/pages/webhook-details/constants'
 
 export interface RepositoryDetailsPathParams {
   repositoryIdentifier: string
@@ -55,4 +56,8 @@ export interface RedirectPageQueryParams {
 
 export interface RepositoryWebhookDetailsPathParams extends RepositoryDetailsPathParams {
   webhookIdentifier: string
+}
+
+export interface RepositoryWebhookDetailsTabPathParams extends RepositoryWebhookDetailsPathParams {
+  tab: WebhookDetailsTab
 }

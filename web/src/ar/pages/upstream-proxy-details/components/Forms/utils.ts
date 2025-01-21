@@ -123,7 +123,7 @@ export function getFormattedFormDataForAuthType(
   })
 }
 
-function getSecretScopeDetailsByIdentifier(identifier: string, secretSpacePath: string) {
+export function getSecretScopeDetailsByIdentifier(identifier: string, secretSpacePath: string) {
   const referenceString = getReferenceStringFromSecretSpacePath(identifier, secretSpacePath)
   const [, orgIdentifier, projectIdentifier] = secretSpacePath.split('/')
   return {

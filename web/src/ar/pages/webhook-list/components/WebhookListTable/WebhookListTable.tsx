@@ -17,12 +17,13 @@
 import React from 'react'
 import classNames from 'classnames'
 import type { Column } from 'react-table'
-import { useHistory } from 'react-router-dom'
+import { useHistory, useParams } from 'react-router-dom'
 import { type PaginationProps, TableV2 } from '@harnessio/uicore'
 import type { ListWebhooks, Webhook } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
 import { useParentHooks, useRoutes } from '@ar/hooks'
+import type { RepositoryDetailsTabPathParams } from '@ar/routes/types'
 
 import {
   WebhookActionsCell,
@@ -50,6 +51,7 @@ export interface WebhookListTableProps extends WebhookListColumnActions {
 export default function WebhookListTable(props: WebhookListTableProps): JSX.Element {
   const { data, gotoPage, onPageSizeChange, readonly, sortBy, setSortBy } = props
   const { useDefaultPaginationProps } = useParentHooks()
+  const { repositoryIdentifier } = useParams<RepositoryDetailsTabPathParams>()
   const { getString } = useStrings()
   const history = useHistory()
   const routes = useRoutes()
@@ -116,7 +118,7 @@ export default function WebhookListTable(props: WebhookListTableProps): JSX.Elem
       onRowClick={rowDetails => {
         history.push(
           routes.toARRepositoryWebhookDetails({
-            repositoryIdentifier: rowDetails.identifier,
+            repositoryIdentifier,
             webhookIdentifier: rowDetails.identifier
           })
         )

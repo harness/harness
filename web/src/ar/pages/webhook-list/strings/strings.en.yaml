@@ -1,5 +1,6 @@
 newWebhook: New Webhook
 webhookCreated: Webhook created successfully
+webhookUpdated: Webhook updated successfully
 triggers:
   artifactCreation: 'Artifact Creation'
   artifactDeletion: 'Artifact Deletion'

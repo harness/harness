@@ -16,11 +16,14 @@
 
 import produce from 'immer'
 import { get, set } from 'lodash-es'
-import type { WebhookRequest } from '@harnessio/react-har-service-client'
+import type { WebhookRequest, Webhook } from '@harnessio/react-har-service-client'
 
 import type { Scope } from '@ar/MFEAppTypes'
 import { Parent } from '@ar/common/types'
-import { getSecretSpacePath } from '@ar/pages/upstream-proxy-details/components/Forms/utils'
+import {
+  getSecretScopeDetailsByIdentifier,
+  getSecretSpacePath
+} from '@ar/pages/upstream-proxy-details/components/Forms/utils'
 
 import type { WebhookRequestUI } from './types'
 
@@ -53,4 +56,27 @@ export function transformFormValuesToSubmitValues(
     set(draft, 'triggerType', undefined)
     return draft
   })
+}
+
+function convertFormFieldsToSecreteInput(formData: Webhook, secretField: string, secretSpacePathField: string) {
+  const secretIdentifier = get(formData, secretField, '')
+  const secretSpacePath = get(formData, secretSpacePathField, '')
+  set(formData, secretField, getSecretScopeDetailsByIdentifier(secretIdentifier, secretSpacePath))
+}
+
+export function transformWebhookDataToFormValues(data: Webhook, parent: Parent): WebhookRequestUI {
+  return produce(data, draft => {
+    if (draft.triggers?.length) {
+      set(draft, 'triggerType', 'custom')
+    } else {
+      set(draft, 'triggerType', 'all')
+    }
+    if (!draft.extraHeaders?.length) {
+      set(draft, 'extraHeaders', [{ key: '', value: '' }])
+    }
+    if (parent === Parent.Enterprise) {
+      convertFormFieldsToSecreteInput(draft, 'secretIdentifier', 'secretSpacePath')
+    }
+    return draft
+  }) as WebhookRequestUI
 }

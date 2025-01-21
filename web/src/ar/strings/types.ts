@@ -229,6 +229,8 @@ export interface StringsMap {
   'versionList.table.columns.size': string
   'versionList.table.columns.version': string
   'versionList.table.noVersionsTitle': string
+  'webhookDetails.tabs.configuration': string
+  'webhookDetails.tabs.executions': string
   'webhookList.formFields.SSLVerification': string
   'webhookList.formFields.addNewKeyValuePair': string
   'webhookList.formFields.advanced': string
@@ -254,6 +256,7 @@ export interface StringsMap {
   'webhookList.triggers.artifactDeletion': string
   'webhookList.triggers.artifactModification': string
   'webhookList.webhookCreated': string
+  'webhookList.webhookUpdated': string
   'actions.delete': string
   'actions.edit': string
   'actions.quarantine': string

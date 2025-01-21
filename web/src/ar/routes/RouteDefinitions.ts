@@ -21,6 +21,7 @@ import type {
   RepositoryDetailsPathParams,
   RepositoryDetailsTabPathParams,
   RepositoryWebhookDetailsPathParams,
+  RepositoryWebhookDetailsTabPathParams,
   VersionDetailsPathParams,
   VersionDetailsTabPathParams
 } from './types'
@@ -36,6 +37,7 @@ export interface ARRouteDefinitionsReturn {
   toARVersionDetails: (params: VersionDetailsPathParams) => string
   toARVersionDetailsTab: (params: VersionDetailsTabPathParams) => string
   toARRepositoryWebhookDetails: (params: RepositoryWebhookDetailsPathParams) => string
+  toARRepositoryWebhookDetailsTab: (params: RepositoryWebhookDetailsTabPathParams) => string
 }
 
 export const routeDefinitions: ARRouteDefinitionsReturn = {
@@ -70,5 +72,7 @@ export const routeDefinitions: ARRouteDefinitionsReturn = {
     return `/registries/${params?.repositoryIdentifier}/artifacts/${params?.artifactIdentifier}/versions/${params?.versionIdentifier}/${params.versionTab}`
   },
   toARRepositoryWebhookDetails: params =>
-    `/registries/${params?.repositoryIdentifier}/webhooks/${params?.webhookIdentifier}`
+    `/registries/${params?.repositoryIdentifier}/webhooks/${params?.webhookIdentifier}`,
+  toARRepositoryWebhookDetailsTab: params =>
+    `/registries/${params?.repositoryIdentifier}/webhooks/${params?.webhookIdentifier}/${params.tab}`
 }

@@ -17,7 +17,7 @@
 import React, { forwardRef, useMemo } from 'react'
 import * as Yup from 'yup'
 import { Formik } from '@harnessio/uicore'
-import type { WebhookRequest } from '@harnessio/react-har-service-client'
+import type { Webhook, WebhookRequest } from '@harnessio/react-har-service-client'
 
 import { useAppStore } from '@ar/hooks'
 import { GENERIC_URL_REGEX } from '@ar/constants'
@@ -27,19 +27,24 @@ import type { FormikFowardRef } from '@ar/common/types'
 
 import type { WebhookRequestUI } from './types'
 import WebhookFormContent from './WebhookFormContent'
-import { transformFormValuesToSubmitValues } from './utils'
+import { transformFormValuesToSubmitValues, transformWebhookDataToFormValues } from './utils'
 
 interface CreateWebhookFormProps {
+  data?: Webhook
   onSubmit: (values: WebhookRequest) => void
+  setDirty?: (dirty: boolean) => void
   readonly?: boolean
   isEdit?: boolean
 }
 
 function WebhookForm(props: CreateWebhookFormProps, formikRef: FormikFowardRef<WebhookRequestUI>) {
-  const { onSubmit, readonly, isEdit } = props
+  const { onSubmit, readonly, isEdit, data, setDirty } = props
   const { getString } = useStrings()
   const { parent, scope } = useAppStore()
   const initialValues: WebhookRequestUI = useMemo(() => {
+    if (isEdit && data) {
+      return transformWebhookDataToFormValues(data, parent)
+    }
     return {
       identifier: '',
       name: '',
@@ -74,6 +79,7 @@ function WebhookForm(props: CreateWebhookFormProps, formikRef: FormikFowardRef<W
       onSubmit={handleSubmit}
       initialValues={initialValues}>
       {formik => {
+        setDirty?.(formik.dirty)
         setFormikRef(formikRef, formik)
         return <WebhookFormContent formikProps={formik} isEdit={isEdit} readonly={readonly} />
       }}

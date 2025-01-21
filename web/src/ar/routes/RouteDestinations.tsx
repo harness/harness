@@ -20,12 +20,15 @@ import { Redirect, Switch } from 'react-router-dom'
 import { Parent } from '@ar/common/types'
 import { useAppStore, useRoutes } from '@ar/hooks'
 import RedirectPage from '@ar/pages/redirect-page/RedirectPage'
+import type { WebhookDetailsTab } from '@ar/pages/webhook-details/constants'
 import type { RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
 
 import type {
   ArtifactDetailsPathParams,
   RepositoryDetailsPathParams,
   RepositoryDetailsTabPathParams,
+  RepositoryWebhookDetailsPathParams,
+  RepositoryWebhookDetailsTabPathParams,
   VersionDetailsPathParams,
   VersionDetailsTabPathParams
 } from './types'
@@ -37,6 +40,7 @@ const ArtifactDetailsPage = React.lazy(() => import('@ar/pages/artifact-details/
 const VersionDetailsPage = React.lazy(() => import('@ar/pages/version-details/VersionDetailsPage'))
 const OSSVersionDetailsPage = React.lazy(() => import('@ar/pages/version-details/OSSVersionDetailsPage'))
 const RouteProvider = React.lazy(() => import('@ar/components/RouteProvider/RouteProvider'))
+const WebhookDetailsPage = React.lazy(() => import('@ar/pages/webhook-details/WebhookDetailsPage'))
 
 export const repositoryDetailsPathProps: RepositoryDetailsPathParams = {
   repositoryIdentifier: ':repositoryIdentifier'
@@ -72,6 +76,16 @@ export const versionDetailsTabWithSSCADetailsPathParams: VersionDetailsTabPathPa
   ...versionDetailsTabPathParams,
   sourceId: ':sourceId',
   artifactId: ':artifactId'
+}
+
+export const repositoryWebhookDetailsPathParams: RepositoryWebhookDetailsPathParams = {
+  ...repositoryDetailsPathProps,
+  webhookIdentifier: ':webhookIdentifier'
+}
+
+export const repositoryWebhookDetailsTabPathParams: RepositoryWebhookDetailsTabPathParams = {
+  ...repositoryWebhookDetailsPathParams,
+  tab: ':tab' as WebhookDetailsTab
 }
 
 const RouteDestinations = (): JSX.Element => {
@@ -110,6 +124,9 @@ const RouteDestinations = (): JSX.Element => {
           <VersionDetailsPage />
         </RouteProvider>
       )}
+      <RouteProvider path={routes.toARRepositoryWebhookDetails({ ...repositoryWebhookDetailsPathParams })}>
+        <WebhookDetailsPage />
+      </RouteProvider>
       <RouteProvider path={routes.toARRepositoryDetails({ ...repositoryDetailsPathProps })}>
         <RepositoryDetailsPage />
       </RouteProvider>

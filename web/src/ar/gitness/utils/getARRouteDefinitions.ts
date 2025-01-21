@@ -31,6 +31,8 @@ export default function getARRouteDefinitions(routeParams: Record<string, string
       `/${params?.repositoryIdentifier}/artifacts/${params?.artifactIdentifier}/versions/${params?.versionIdentifier}`,
     // anything random, as this route will not be used in gitness
     toARVersionDetailsTab: params =>
-      `/${params?.repositoryIdentifier}/artifacts/${params?.artifactIdentifier}/versions/${params?.versionIdentifier}`
+      `/${params?.repositoryIdentifier}/artifacts/${params?.artifactIdentifier}/versions/${params?.versionIdentifier}`,
+    toARRepositoryWebhookDetailsTab: params =>
+      `/${params?.repositoryIdentifier}/webhooks/${params?.webhookIdentifier}/${params?.tab}`
   }
 }
