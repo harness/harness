@@ -14,18 +14,26 @@
  * limitations under the License.
  */
 
-import type { KVO } from '@harnessio/design-system'
-
-export const DEFAULT_LAYER_SIZE = '0 B'
-
-export function prettifyManifestJSON(manifest: string | KVO): string {
-  if (typeof manifest === 'string') {
-    try {
-      return JSON.stringify(JSON.parse(manifest), null, 2)
-    } catch (e) {
-      return manifest
+.tabsContainer {
+  position: relative !important;
+  & > :global(.bp3-tabs > .bp3-tab-list) {
+    border-bottom: 1px solid var(--grey-200);
+  }
+  :global {
+    .bp3-tab-panel {
+      margin-top: 0;
     }
-  } else {
-    return JSON.stringify(manifest, null, 2)
+
+    .bp3-tab-list {
+      background-color: var(--white);
+      width: 100%;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.13);
+      align-items: center;
+      padding: var(--spacing-small) var(--spacing-xlarge);
+
+      position: sticky;
+      top: 0px;
+      z-index: 2;
+    }
   }
 }

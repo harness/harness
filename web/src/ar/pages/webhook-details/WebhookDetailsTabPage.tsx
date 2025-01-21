@@ -16,12 +16,15 @@
 
 import React, { useEffect } from 'react'
 import type { FormikProps } from 'formik'
+import { Text } from '@harnessio/uicore'
 import { useParams } from 'react-router-dom'
 import type { WebhookRequest } from '@harnessio/react-har-service-client'
 
+import { useStrings } from '@ar/frameworks/strings'
 import type { RepositoryWebhookDetailsTabPathParams } from '@ar/routes/types'
 
 import { WebhookDetailsTab } from './constants'
+import WebhookExecutionListPage from '../webhook-execution-list/WebhookExecutionListPage'
 import WebhookConfigurationForm from './components/WebhookConfigurationForm/WebhookConfigurationForm'
 
 interface WebhookDetailsTabPageProps {
@@ -33,6 +36,7 @@ export default function WebhookDetailsTabPage(props: WebhookDetailsTabPageProps)
   const { onInit, formRef } = props
   const params = useParams<RepositoryWebhookDetailsTabPathParams>()
   const { tab } = params
+  const { getString } = useStrings()
 
   useEffect(() => {
     onInit(tab)
@@ -42,8 +46,8 @@ export default function WebhookDetailsTabPage(props: WebhookDetailsTabPageProps)
     case WebhookDetailsTab.Configuration:
       return <WebhookConfigurationForm formRef={formRef} />
     case WebhookDetailsTab.Executions:
-      return <>Executions Page</>
+      return <WebhookExecutionListPage />
     default:
-      return <>Not Found</>
+      return <Text intent="warning">{getString('stepNotFound')}</Text>
   }
 }

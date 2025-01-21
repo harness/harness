@@ -1,11 +1,11 @@
 /*
- * Copyright 2024 Harness, Inc.
+ * Copyright 2023 Harness, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,18 +14,6 @@
  * limitations under the License.
  */
 
-import type { KVO } from '@harnessio/design-system'
-
-export const DEFAULT_LAYER_SIZE = '0 B'
-
-export function prettifyManifestJSON(manifest: string | KVO): string {
-  if (typeof manifest === 'string') {
-    try {
-      return JSON.stringify(JSON.parse(manifest), null, 2)
-    } catch (e) {
-      return manifest
-    }
-  } else {
-    return JSON.stringify(manifest, null, 2)
-  }
-}
+/* eslint-disable */
+// This is an auto-generated file
+export declare const tabsContainer: string

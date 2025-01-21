@@ -231,6 +231,22 @@ export interface StringsMap {
   'versionList.table.noVersionsTitle': string
   'webhookDetails.tabs.configuration': string
   'webhookDetails.tabs.executions': string
+  'webhookExecutionList.executionDetailsDrawer.at': string
+  'webhookExecutionList.executionDetailsDrawer.duration': string
+  'webhookExecutionList.executionDetailsDrawer.durationValue': string
+  'webhookExecutionList.executionDetailsDrawer.error': string
+  'webhookExecutionList.executionDetailsDrawer.payload': string
+  'webhookExecutionList.executionDetailsDrawer.response': string
+  'webhookExecutionList.executionDetailsDrawer.status': string
+  'webhookExecutionList.executionDetailsDrawer.triggeredEvent': string
+  'webhookExecutionList.retriggerExecution': string
+  'webhookExecutionList.retriggerExecutionSuccess': string
+  'webhookExecutionList.table.columns.event': string
+  'webhookExecutionList.table.columns.id': string
+  'webhookExecutionList.table.columns.lastTriggered': string
+  'webhookExecutionList.table.columns.payload': string
+  'webhookExecutionList.table.columns.response': string
+  'webhookExecutionList.table.columns.status': string
   'webhookList.formFields.SSLVerification': string
   'webhookList.formFields.addNewKeyValuePair': string
   'webhookList.formFields.advanced': string
@@ -294,6 +310,7 @@ export interface StringsMap {
   download: string
   encrypted: string
   enterPlaceholder: string
+  failed: string
   failedToLoadData: string
   harLabel: string
   harnessAI: string
@@ -325,17 +342,20 @@ export interface StringsMap {
   'repositoryTypes.npm': string
   'repositoryTypes.nuget': string
   'repositoryTypes.pypi': string
+  retriableError: string
   save: string
   search: string
   'sideNav.artifacts': string
   'sideNav.repositories': string
   'sideNav.upstreamProxies': string
   stepNotFound: string
+  success: string
   tabNotFound: string
   'tags.latest': string
   'tags.latestVersion': string
   tagsLabel: string
   timeLabel: string
+  unknown: string
   'validationMessages.accessKeyRequired': string
   'validationMessages.cleanupPolicy.expireDaysRequired': string
   'validationMessages.cleanupPolicy.nameRequired': string
@@ -350,4 +370,5 @@ export interface StringsMap {
   'validationMessages.urlPattern': string
   'validationMessages.urlRequired': string
   'validationMessages.userNameRequired': string
+  view: string
 }

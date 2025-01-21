@@ -14,18 +14,25 @@
  * limitations under the License.
  */
 
-import type { KVO } from '@harnessio/design-system'
+.table {
+  --typography-size: 12px;
+  --typography-weight: 400;
+  --line-height: 20px;
+  padding: var(--spacing-large);
 
-export const DEFAULT_LAYER_SIZE = '0 B'
-
-export function prettifyManifestJSON(manifest: string | KVO): string {
-  if (typeof manifest === 'string') {
-    try {
-      return JSON.stringify(JSON.parse(manifest), null, 2)
-    } catch (e) {
-      return manifest
-    }
-  } else {
-    return JSON.stringify(manifest, null, 2)
+  [role='cell'],
+  [role='columnheader'] {
+    width: auto !important;
+    padding-right: var(--spacing-small);
   }
+
+  div[class*='TableV2--cells'],
+  div[class*='TableV2--header'] {
+    display: grid !important;
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+.tableRow {
+  position: relative;
 }

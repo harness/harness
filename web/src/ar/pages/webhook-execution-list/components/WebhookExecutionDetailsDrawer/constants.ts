@@ -14,18 +14,7 @@
  * limitations under the License.
  */
 
-import type { KVO } from '@harnessio/design-system'
-
-export const DEFAULT_LAYER_SIZE = '0 B'
-
-export function prettifyManifestJSON(manifest: string | KVO): string {
-  if (typeof manifest === 'string') {
-    try {
-      return JSON.stringify(JSON.parse(manifest), null, 2)
-    } catch (e) {
-      return manifest
-    }
-  } else {
-    return JSON.stringify(manifest, null, 2)
-  }
+export enum WebhookExecutionDetailsTab {
+  Payload = 'Payload',
+  ServerResponse = 'ServerResponse'
 }

@@ -30,7 +30,6 @@ import { repositoryWebhookDetailsPathParams, repositoryWebhookDetailsTabPathPara
 
 import { WebhookDetailsTab } from './constants'
 import WebhookDetailsTabPage from './WebhookDetailsTabPage'
-// import { MOCK_WEBHOK_LIST_TABLE } from '../webhook-list/mockData'
 import { WebhookDetailsContext } from './context/WebhookDetailsContext'
 import { WebhookDetailsPageHeader } from './components/WebhookDetailsPageHeader/WebhookDetailsPageHeader'
 
@@ -87,7 +86,6 @@ export default function WebhookDetailsPage() {
   )
 
   const response = data?.content.data
-  // const response = MOCK_WEBHOK_LIST_TABLE.webhooks[0]
 
   return (
     <WebhookDetailsContext.Provider value={{ data: response, loading: isFetching, setDirty: setIsDirty, setUpdating }}>
