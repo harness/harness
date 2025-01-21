@@ -70,7 +70,7 @@ func ParseRepoFilter(r *http.Request) (*types.RepoFilter, error) {
 		Order:             ParseOrder(r),
 		Page:              ParsePage(r),
 		Sort:              ParseSortRepo(r),
-		Size:              ParseLimit1000(r),
+		Size:              ParseLimit(r),
 		Recursive:         recursive,
 		DeletedAt:         deletedAt,
 		DeletedBeforeOrAt: deletedBeforeOrAt,

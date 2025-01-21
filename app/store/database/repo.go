@@ -15,7 +15,6 @@
 package database
 
 import (
-	"cmp"
 	"context"
 	"fmt"
 	"time"
@@ -870,7 +869,7 @@ func applyQueryFilter(stmt squirrel.SelectBuilder, filter *types.RepoFilter) squ
 }
 
 func applySortFilter(stmt squirrel.SelectBuilder, filter *types.RepoFilter) squirrel.SelectBuilder {
-	stmt = stmt.Limit(uint64(cmp.Or(filter.Size, 500)))
+	stmt = stmt.Limit(database.Limit(filter.Size))
 	stmt = stmt.Offset(database.Offset(filter.Page, filter.Size))
 
 	switch filter.Sort {

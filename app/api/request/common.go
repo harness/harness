@@ -109,19 +109,6 @@ func ParseLimit(r *http.Request) int {
 	return i
 }
 
-// ParseLimit1000 extracts the limit parameter from the url.
-// TODO: remove this ASAP, quick fix for issue: CODE-2875
-func ParseLimit1000(r *http.Request) int {
-	s := r.URL.Query().Get(QueryParamLimit)
-	i, _ := strconv.Atoi(s)
-	if i <= 0 {
-		i = 500
-	} else if i > PerPageMax {
-		i = PerPageMax
-	}
-	return i
-}
-
 // ParseOrder extracts the order parameter from the url.
 func ParseOrder(r *http.Request) enum.Order {
 	return enum.ParseOrder(
