@@ -69,7 +69,7 @@ var (
 
 // const definition.
 const (
-	UserAgent = "harbor-registry-client"
+	UserAgent = "gitness-registry-client"
 	// DefaultHTTPClientTimeout is the default timeout for registry http client.
 	DefaultHTTPClientTimeout = 30 * time.Minute
 	// MediaTypeManifest specifies the mediaType for the current version. Note
@@ -839,11 +839,10 @@ func (c *client) GetFile(filePath string) (*commons.ResponseHeaders, io.ReadClos
 		return nil, nil, err
 	}
 
-	resp, err := c.client.Do(req)
+	resp, err := c.Do(req)
 	if err != nil {
 		return nil, nil, err
 	}
-	defer resp.Body.Close()
 	responseHeaders := utils.ParseResponseHeaders(resp)
 	return responseHeaders, resp.Body, nil
 }
@@ -855,7 +854,7 @@ func (c *client) HeadFile(filePath string) (*commons.ResponseHeaders, bool, erro
 		return nil, false, err
 	}
 
-	resp, err := c.client.Do(req)
+	resp, err := c.Do(req)
 	if err != nil {
 		return nil, false, err
 	}

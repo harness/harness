@@ -462,6 +462,8 @@ issues:
       linters: [ goheader ]
     - path: "^registry/app/remote/adapter/awsecr/adapter.go"
       linters: [ goheader ]
+    - path: "^registry/app/remote/adapter/maven/adapter.go"
+      linters: [ goheader ]
     - path: "^registry/app/remote/adapter/awsecr/auth.go"
       linters: [ goheader ]
     - path: "^registry/app/remote/adapter/dockerhub/client.go"

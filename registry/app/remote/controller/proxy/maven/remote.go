@@ -26,6 +26,8 @@ import (
 	"github.com/harness/gitness/secret"
 
 	"github.com/rs/zerolog/log"
+
+	_ "github.com/harness/gitness/registry/app/remote/adapter/maven" // This is required to init maven adapter
 )
 
 const MavenCentralURL = "https://repo1.maven.org/maven2"
@@ -58,7 +60,7 @@ func NewRemoteHelper(
 		upstreamProxy: proxy,
 		secretService: secretService,
 	}
-	if err := r.init(ctx, spacePathStore, string(api.UpstreamConfigSourceCustom)); err != nil {
+	if err := r.init(ctx, spacePathStore, string(api.UpstreamConfigSourceMavenCentral)); err != nil {
 		return nil, err
 	}
 	return r, nil

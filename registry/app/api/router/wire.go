@@ -56,6 +56,7 @@ func APIHandlerProvider(
 	authorizer authz.Authorizer,
 	auditService audit.Service,
 	spacePathStore corestore.SpacePathStore,
+	artifactStore store.ArtifactRepository,
 ) harness.APIHandler {
 	return harness.NewAPIHandler(
 		repoDao,
@@ -73,6 +74,7 @@ func APIHandlerProvider(
 		authorizer,
 		auditService,
 		spacePathStore,
+		artifactStore,
 	)
 }
 

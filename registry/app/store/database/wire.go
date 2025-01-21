@@ -87,6 +87,14 @@ func ProvideCleanupPolicyDao(db *sqlx.DB, tx dbtx.Transactor) store.CleanupPolic
 	return NewCleanupPolicyDao(db, tx)
 }
 
+func ProvideNodeDao(db *sqlx.DB) store.NodesRepository {
+	return NewNodeDao(db)
+}
+
+func ProvideGenericBlobDao(db *sqlx.DB) store.GenericBlobRepository {
+	return NewGenericBlobDao(db)
+}
+
 var WireSet = wire.NewSet(
 	ProvideUpstreamDao,
 	ProvideRepoDao,
@@ -103,4 +111,6 @@ var WireSet = wire.NewSet(
 	ProvideArtifactDao,
 	ProvideDownloadStatDao,
 	ProvideBandwidthStatDao,
+	ProvideNodeDao,
+	ProvideGenericBlobDao,
 )

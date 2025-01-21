@@ -37,12 +37,12 @@ const (
 
 func NewLocalRegistry(dBStore *DBStore, tx dbtx.Transactor,
 
-// fileManager filemanager.FileManager,
+	fileManager filemanager.FileManager,
 ) Registry {
 	return &LocalRegistry{
-		DBStore: dBStore,
-		tx:      tx,
-		//fileManager: fileManager,
+		DBStore:     dBStore,
+		tx:          tx,
+		fileManager: fileManager,
 	}
 }
 
@@ -58,17 +58,17 @@ func (r *LocalRegistry) GetMavenArtifactType() string {
 
 func (r *LocalRegistry) HeadArtifact(ctx context.Context, info pkg.MavenArtifactInfo) (
 	responseHeaders *commons.ResponseHeaders, errs []error) {
-	responseHeaders, _, errs = r.FetchArtifact(ctx, info, false)
+	responseHeaders, _, _, errs = r.FetchArtifact(ctx, info, false)
 	return responseHeaders, errs
 }
 
 func (r *LocalRegistry) GetArtifact(ctx context.Context, info pkg.MavenArtifactInfo) (
-	responseHeaders *commons.ResponseHeaders, body *storage.FileReader, errs []error) {
+	responseHeaders *commons.ResponseHeaders, body *storage.FileReader, readCloser io.ReadCloser, errs []error) {
 	return r.FetchArtifact(ctx, info, true)
 }
 
 func (r *LocalRegistry) FetchArtifact(ctx context.Context, info pkg.MavenArtifactInfo, serveFile bool) (
-	responseHeaders *commons.ResponseHeaders, body *storage.FileReader, errs []error) {
+	responseHeaders *commons.ResponseHeaders, body *storage.FileReader, readCloser io.ReadCloser, errs []error) {
 	filePath := utils.GetFilePath(info)
 	name := info.GroupID + ":" + info.ArtifactID
 	dbImage, err2 := r.DBStore.ImageDao.GetByName(ctx, info.RegistryID, name)
@@ -103,7 +103,7 @@ func (r *LocalRegistry) FetchArtifact(ctx context.Context, info pkg.MavenArtifac
 		}
 	}
 	responseHeaders = utils.SetHeaders(info, fileInfo)
-	return responseHeaders, fileReader, nil
+	return responseHeaders, fileReader, nil, nil
 }
 
 func (r *LocalRegistry) PutArtifact(ctx context.Context, info pkg.MavenArtifactInfo, fileReader io.Reader) (
@@ -156,9 +156,9 @@ func (r *LocalRegistry) PutArtifact(ctx context.Context, info pkg.MavenArtifactI
 }
 
 func processError(err error) (
-	responseHeaders *commons.ResponseHeaders, body *storage.FileReader, errs []error) {
+	responseHeaders *commons.ResponseHeaders, body *storage.FileReader, readCloser io.ReadCloser, errs []error) {
 	if strings.Contains(err.Error(), sql.ErrNoRows.Error()) || strings.Contains(err.Error(), "resource not found") {
-		return responseHeaders, nil, []error{commons.NotFoundError(err.Error(), err)}
+		return responseHeaders, nil, nil, []error{commons.NotFoundError(err.Error(), err)}
 	}
-	return responseHeaders, nil, []error{errcode.ErrCodeUnknown.WithDetail(err)}
+	return responseHeaders, nil, nil, []error{errcode.ErrCodeUnknown.WithDetail(err)}
 }

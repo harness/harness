@@ -15,6 +15,8 @@
 package maven
 
 import (
+	"io"
+
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/storage"
 )
@@ -46,6 +48,7 @@ type GetArtifactResponse struct {
 	ResponseHeaders *commons.ResponseHeaders
 	RedirectURL     string
 	Body            *storage.FileReader
+	ReadCloser      io.ReadCloser
 }
 
 func (r *GetArtifactResponse) GetErrors() []error {

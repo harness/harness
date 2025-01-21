@@ -15,13 +15,14 @@
 package maven
 
 import (
+	"errors"
+	"io"
 	"net/http"
 	"time"
 
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/maven"
-	"github.com/harness/gitness/registry/app/storage"
 
 	"github.com/rs/zerolog/log"
 )
@@ -54,20 +55,34 @@ func (h *Handler) GetArtifact(w http.ResponseWriter, r *http.Request) {
 				log.Ctx(ctx).Error().Msgf("Failed to close body: %v", err)
 			}
 		}
+		if response.ReadCloser != nil {
+			err := response.ReadCloser.Close()
+			if err != nil {
+				log.Ctx(ctx).Error().Msgf("Failed to close readCloser: %v", err)
+			}
+		}
 	}()
 
 	if !commons.IsEmpty(response.RedirectURL) {
 		http.Redirect(w, r, response.RedirectURL, http.StatusTemporaryRedirect)
 		return
 	}
-	h.serveContent(w, r, response.Body, info)
+	response.ResponseHeaders.WriteHeadersToResponse(w)
+	h.serveContent(w, r, response, info)
 	response.ResponseHeaders.WriteToResponse(w)
 }
 
 func (h *Handler) serveContent(
-	w http.ResponseWriter, r *http.Request, fileReader *storage.FileReader, info pkg.MavenArtifactInfo,
+	w http.ResponseWriter, r *http.Request, response *maven.GetArtifactResponse, info pkg.MavenArtifactInfo,
 ) {
-	if fileReader != nil {
-		http.ServeContent(w, r, info.FileName, time.Time{}, fileReader)
+	if response.Body != nil {
+		http.ServeContent(w, r, info.FileName, time.Time{}, response.Body)
+	} else {
+		w.Header().Set("Transfer-Encoding", "chunked")
+		_, err2 := io.Copy(w, response.ReadCloser)
+		if err2 != nil {
+			response.Errors = append(response.Errors, errors.New("error copying file to response"))
+			log.Ctx(r.Context()).Error().Msg("error copying file to response:")
+		}
 	}
 }

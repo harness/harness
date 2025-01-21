@@ -17,6 +17,7 @@ package maven
 import (
 	"github.com/harness/gitness/app/auth/authz"
 	corestore "github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/remote/controller/proxy/maven"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/secret"
@@ -28,11 +29,11 @@ import (
 func LocalRegistryProvider(
 	dBStore *DBStore,
 	tx dbtx.Transactor,
-	// fileManager filemanager.FileManager,
+	fileManager filemanager.FileManager,
 ) *LocalRegistry {
 	return NewLocalRegistry(dBStore,
 		tx,
-		// fileManager
+		fileManager,
 	).(*LocalRegistry)
 }
 
@@ -61,12 +62,12 @@ func DBStoreProvider(
 	spaceStore corestore.SpaceStore,
 	bandwidthStatDao store.BandwidthStatRepository,
 	downloadStatDao store.DownloadStatRepository,
-	// nodeDao store.NodesRepository,
+	nodeDao store.NodesRepository,
 	upstreamProxyDao store.UpstreamProxyConfigRepository,
 ) *DBStore {
 	return NewDBStore(registryDao, imageDao, artifactDao, spaceStore, bandwidthStatDao,
 		downloadStatDao,
-		// nodeDao,
+		nodeDao,
 		upstreamProxyDao)
 }
 

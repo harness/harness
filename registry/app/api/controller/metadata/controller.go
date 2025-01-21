@@ -39,6 +39,7 @@ type APIController struct {
 	Authorizer         authz.Authorizer
 	AuditService       audit.Service
 	spacePathStore     corestore.SpacePathStore
+	ArtifactStore      store.ArtifactRepository
 }
 
 func NewAPIController(
@@ -55,6 +56,7 @@ func NewAPIController(
 	authorizer authz.Authorizer,
 	auditService audit.Service,
 	spacePathStore corestore.SpacePathStore,
+	artifactStore store.ArtifactRepository,
 ) *APIController {
 	return &APIController{
 		RegistryRepository: repositoryStore,
@@ -70,5 +72,6 @@ func NewAPIController(
 		Authorizer:         authorizer,
 		AuditService:       auditService,
 		spacePathStore:     spacePathStore,
+		ArtifactStore:      artifactStore,
 	}
 }

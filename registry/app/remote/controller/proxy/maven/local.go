@@ -28,7 +28,7 @@ type registryInterface interface {
 		responseHeaders *commons.ResponseHeaders, errs []error)
 
 	GetArtifact(ctx context.Context, info pkg.MavenArtifactInfo) (
-		responseHeaders *commons.ResponseHeaders, body *storage.FileReader, errs []error)
+		responseHeaders *commons.ResponseHeaders, body *storage.FileReader, fileReader io.ReadCloser, errs []error)
 
 	PutArtifact(ctx context.Context, info pkg.MavenArtifactInfo, fileReader io.Reader) (
 		responseHeaders *commons.ResponseHeaders, errs []error)

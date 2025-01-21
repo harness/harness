@@ -87,7 +87,7 @@ func NewDBStore(
 	spaceStore corestore.SpaceStore,
 	bandwidthStatDao store.BandwidthStatRepository,
 	downloadStatDao store.DownloadStatRepository,
-	// nodeDao store.NodesRepository,
+	nodeDao store.NodesRepository,
 	upstreamProxyDao store.UpstreamProxyConfigRepository,
 ) *DBStore {
 	return &DBStore{
@@ -97,7 +97,7 @@ func NewDBStore(
 		ArtifactDao:      artifactDao,
 		BandwidthStatDao: bandwidthStatDao,
 		DownloadStatDao:  downloadStatDao,
-		//NodeDao:          nodeDao,
+		NodeDao:          nodeDao,
 		UpstreamProxyDao: upstreamProxyDao,
 	}
 }
@@ -134,8 +134,9 @@ func (c *Controller) GetArtifact(ctx context.Context, info pkg.MavenArtifactInfo
 
 	f := func(registry registrytypes.Registry, a Artifact) Response {
 		info.SetMavenRepoKey(registry.Name)
-		headers, body, e := a.(Registry).GetArtifact(ctx, info)
-		return &GetArtifactResponse{e, headers, "", body}
+		info.RegistryID = registry.ID
+		headers, body, fileReader, e := a.(Registry).GetArtifact(ctx, info)
+		return &GetArtifactResponse{e, headers, "", body, fileReader}
 	}
 	return c.ProxyWrapper(ctx, f, info)
 }
@@ -153,6 +154,7 @@ func (c *Controller) HeadArtifact(ctx context.Context, info pkg.MavenArtifactInf
 
 	f := func(registry registrytypes.Registry, a Artifact) Response {
 		info.SetMavenRepoKey(registry.Name)
+		info.RegistryID = registry.ID
 		headers, e := a.(Registry).HeadArtifact(ctx, info)
 		return &HeadArtifactResponse{e, headers}
 	}

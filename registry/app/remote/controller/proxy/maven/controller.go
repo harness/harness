@@ -60,8 +60,8 @@ func NewProxyController(
 
 func (c *controller) UseLocalFile(ctx context.Context, info pkg.MavenArtifactInfo) (
 	responseHeaders *commons.ResponseHeaders, fileReader *storage.FileReader, useLocal bool) {
-	responseHeaders, fileReader, e := c.localRegistry.GetArtifact(ctx, info)
-	return responseHeaders, fileReader, len(e) == 0
+	responseHeaders, body, _, e := c.localRegistry.GetArtifact(ctx, info)
+	return responseHeaders, body, len(e) == 0
 }
 
 func (c *controller) ProxyFile(
@@ -102,7 +102,7 @@ func (c *controller) ProxyFile(
 		}
 		ctx2 := request.WithAuthSession(context.Background(), session)
 
-		err = c.putFileToLocal(ctx, info, rHelper)
+		err = c.putFileToLocal(ctx2, info, rHelper)
 		if err != nil {
 			log.Ctx(ctx2).Error().Str("goRoutine",
 				"AddMavenFile").Stack().Err(err).Msgf("error while putting file to localRegistry, %v", err)

@@ -50,6 +50,18 @@ func GetRegistryArtifactMetadata(artifacts []types.ArtifactMetadata) []artifacta
 	return artifactMetadataList
 }
 
+func GetArtifactDetail(image *types.Image, artifact *types.Artifact) artifactapi.ArtifactDetail {
+	createdAt := GetTimeInMs(artifact.CreatedAt)
+	modifiedAt := GetTimeInMs(artifact.UpdatedAt)
+	artifactDetail := &artifactapi.ArtifactDetail{
+		CreatedAt:  &createdAt,
+		ModifiedAt: &modifiedAt,
+		Name:       &image.Name,
+		Version:    artifact.Version,
+	}
+	return *artifactDetail
+}
+
 func mapToArtifactMetadata(
 	artifact types.ArtifactMetadata,
 	registryURL string,

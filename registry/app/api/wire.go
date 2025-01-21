@@ -29,6 +29,7 @@ import (
 	"github.com/harness/gitness/registry/app/driver/s3-aws"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/docker"
+	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/maven"
 	"github.com/harness/gitness/registry/app/store/database"
 	"github.com/harness/gitness/registry/config"
@@ -106,7 +107,7 @@ var WireSet = wire.NewSet(
 	database.WireSet,
 	pkg.WireSet,
 	docker.WireSet,
-	// filemanager.WireSet,
+	filemanager.WireSet,
 	maven.WireSet,
 	router.WireSet,
 	gc.WireSet,

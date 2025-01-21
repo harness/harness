@@ -127,6 +127,7 @@ import (
 	"github.com/harness/gitness/registry/app/api/router"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/docker"
+	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/maven"
 	database2 "github.com/harness/gitness/registry/app/store/database"
 	"github.com/harness/gitness/registry/gc"
@@ -480,9 +481,13 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	handler := api2.NewHandlerProvider(dockerController, spaceStore, tokenStore, controller, authenticator, provider, authorizer, config)
 	registryOCIHandler := router.OCIHandlerProvider(handler)
 	cleanupPolicyRepository := database2.ProvideCleanupPolicyDao(db, transactor)
-	apiHandler := router.APIHandlerProvider(registryRepository, upstreamProxyConfigRepository, tagRepository, manifestRepository, cleanupPolicyRepository, imageRepository, storageDriver, spaceStore, transactor, authenticator, provider, authorizer, auditService, spacePathStore)
-	mavenDBStore := maven.DBStoreProvider(registryRepository, imageRepository, artifactRepository, spaceStore, bandwidthStatRepository, downloadStatRepository, upstreamProxyConfigRepository)
-	mavenLocalRegistry := maven.LocalRegistryProvider(mavenDBStore, transactor)
+	apiHandler := router.APIHandlerProvider(registryRepository, upstreamProxyConfigRepository, tagRepository, manifestRepository, cleanupPolicyRepository, imageRepository, storageDriver, spaceStore, transactor, authenticator, provider, authorizer, auditService, spacePathStore, artifactRepository)
+	nodesRepository := database2.ProvideNodeDao(db)
+	mavenDBStore := maven.DBStoreProvider(registryRepository, imageRepository, artifactRepository, spaceStore, bandwidthStatRepository, downloadStatRepository, nodesRepository, upstreamProxyConfigRepository)
+	filemanagerApp := filemanager.NewApp(ctx, config, storageService)
+	genericBlobRepository := database2.ProvideGenericBlobDao(db)
+	fileManager := filemanager.Provider(filemanagerApp, registryRepository, genericBlobRepository, nodesRepository, transactor)
+	mavenLocalRegistry := maven.LocalRegistryProvider(mavenDBStore, transactor, fileManager)
 	mavenController := maven.ProvideProxyController(mavenLocalRegistry, secretService, spacePathStore)
 	mavenRemoteRegistry := maven.RemoteRegistryProvider(mavenDBStore, transactor, mavenLocalRegistry, mavenController)
 	controller2 := maven.ControllerProvider(mavenLocalRegistry, mavenRemoteRegistry, authorizer, mavenDBStore)

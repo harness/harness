@@ -55,12 +55,12 @@ func (r *RemoteRegistry) GetMavenArtifactType() string {
 
 func (r *RemoteRegistry) HeadArtifact(ctx context.Context, info pkg.MavenArtifactInfo) (
 	responseHeaders *commons.ResponseHeaders, errs []error) {
-	responseHeaders, _, errs = r.FetchArtifact(ctx, info, false)
+	responseHeaders, _, _, errs = r.FetchArtifact(ctx, info, false)
 	return responseHeaders, errs
 }
 
 func (r *RemoteRegistry) GetArtifact(ctx context.Context, info pkg.MavenArtifactInfo) (
-	responseHeaders *commons.ResponseHeaders, body *storage.FileReader, errs []error) {
+	responseHeaders *commons.ResponseHeaders, body *storage.FileReader, readCloser io.ReadCloser, errs []error) {
 	return r.FetchArtifact(ctx, info, true)
 }
 
@@ -70,24 +70,24 @@ func (r *RemoteRegistry) PutArtifact(_ context.Context, _ pkg.MavenArtifactInfo,
 }
 
 func (r *RemoteRegistry) FetchArtifact(ctx context.Context, info pkg.MavenArtifactInfo, serveFile bool) (
-	responseHeaders *commons.ResponseHeaders, body *storage.FileReader, errs []error) {
+	responseHeaders *commons.ResponseHeaders, body *storage.FileReader, readCloser io.ReadCloser, errs []error) {
 	log.Ctx(ctx).Info().Msgf("Maven Proxy: %s", info.RegIdentifier)
 
 	responseHeaders, body, useLocal := r.proxyController.UseLocalFile(ctx, info)
 	if useLocal {
-		return responseHeaders, body, errs
+		return responseHeaders, body, readCloser, errs
 	}
 
-	upstreamProxy, err := r.DBStore.UpstreamProxyDao.GetByRegistryIdentifier(ctx, info.ParentID, info.RootIdentifier)
+	upstreamProxy, err := r.DBStore.UpstreamProxyDao.GetByRegistryIdentifier(ctx, info.ParentID, info.RegIdentifier)
 	if err != nil {
 		errs = append(errs, err)
 	}
 
 	// This is start of proxy Code.
-	responseHeaders, _, err = r.proxyController.ProxyFile(ctx, info, *upstreamProxy, serveFile)
+	responseHeaders, readCloser, err = r.proxyController.ProxyFile(ctx, info, *upstreamProxy, serveFile)
 	if err != nil {
 		errs = append(errs, err)
-		return responseHeaders, nil, errs
+		return responseHeaders, nil, readCloser, errs
 	}
-	return responseHeaders, nil, errs
+	return responseHeaders, nil, readCloser, errs
 }

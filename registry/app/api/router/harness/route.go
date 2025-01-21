@@ -66,6 +66,7 @@ func NewAPIHandler(
 	authorizer authz.Authorizer,
 	auditService audit.Service,
 	spacePathStore corestore.SpacePathStore,
+	artifactStore store.ArtifactRepository,
 ) APIHandler {
 	r := chi.NewRouter()
 	r.Use(audit.Middleware())
@@ -85,6 +86,7 @@ func NewAPIHandler(
 		authorizer,
 		auditService,
 		spacePathStore,
+		artifactStore,
 	)
 	handler := artifact.NewStrictHandler(apiController, []artifact.StrictMiddlewareFunc{})
 	muxHandler := artifact.HandlerFromMuxWithBaseURL(handler, r, baseURL)

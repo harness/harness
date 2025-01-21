@@ -69,7 +69,11 @@ func NewRemoteHelper(
 		upstreamProxy: proxy,
 		secretService: secretService,
 	}
-	if err := r.init(ctx, spacePathStore, proxy.Source); err != nil {
+	adapterType := proxy.Source
+	if proxy.Source == string(api.UpstreamConfigSourceCustom) {
+		adapterType = string(api.UpstreamConfigSourceDockerhub)
+	}
+	if err := r.init(ctx, spacePathStore, adapterType); err != nil {
 		return nil, err
 	}
 	return r, nil
