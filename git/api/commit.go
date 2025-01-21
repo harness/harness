@@ -188,13 +188,16 @@ func (g *Git) listCommitSHAs(
 	}
 	output := &bytes.Buffer{}
 	err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(output))
-	if cErr := command.AsError(err); cErr != nil {
-		if cErr.IsExitCode(128) && cErr.IsAmbiguousArgErr() {
+	if cErr := command.AsError(err); cErr != nil && cErr.IsExitCode(128) {
+		if cErr.IsAmbiguousArgErr() {
 			return nil, errors.NotFound("reference %q is ambiguous", ref)
 		}
-		if cErr.IsExitCode(128) && cErr.IsBadObject() {
+		if cErr.IsBadObject() {
 			return nil, errors.NotFound("commit not found")
 		}
+	}
+
+	if err != nil {
 		return nil, processGitErrorf(err, "failed to trigger rev-list command")
 	}
 

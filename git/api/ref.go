@@ -240,6 +240,9 @@ func (g *Git) GetRef(
 		if cErr.IsExitCode(128) && cErr.IsInvalidRefErr() {
 			return sha.None, errors.NotFound("reference %q not found", ref)
 		}
+	}
+
+	if err != nil {
 		return sha.None, err
 	}
 

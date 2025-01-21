@@ -331,7 +331,7 @@ func (r *SharedRepo) MergeTree(
 	}
 
 	// exit code=1: the output is the tree object SHA, and list of files in conflict.
-	if cErr := command.AsError(err); cErr != nil && cErr.ExitCode() == 1 {
+	if cErr := command.AsError(err); cErr != nil && cErr.IsExitCode(1) {
 		output := strings.TrimSpace(stdout.String())
 		lines := strings.Split(output, "\n")
 		if len(lines) < 2 {

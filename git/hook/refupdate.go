@@ -290,10 +290,11 @@ func (u *RefUpdater) getRef(ctx context.Context) (sha.SHA, error) {
 	)
 	output := &bytes.Buffer{}
 	err := cmd.Run(ctx, command.WithDir(u.repoPath), command.WithStdout(output))
-	if cErr := command.AsError(err); cErr != nil {
-		if cErr.IsExitCode(128) && cErr.IsInvalidRefErr() {
-			return sha.None, errors.NotFound("reference %q not found", u.ref)
-		}
+	if cErr := command.AsError(err); cErr != nil && cErr.IsExitCode(128) && cErr.IsInvalidRefErr() {
+		return sha.None, errors.NotFound("reference %q not found", u.ref)
+	}
+
+	if err != nil {
 		return sha.None, err
 	}
 
