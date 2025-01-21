@@ -618,7 +618,7 @@ export function MarkdownEditorWithPreview({
               type="submit"
               text={getString('imageUpload.upload')}
               variation={ButtonVariation.PRIMARY}
-              disabled={false}
+              disabled={!file}
               onClick={() => {
                 if (file !== undefined) {
                   handleUpload(file as File, setMarkdownContent, repoMetadata, showError, standalone, routingId)
