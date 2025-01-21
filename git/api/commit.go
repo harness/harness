@@ -192,6 +192,9 @@ func (g *Git) listCommitSHAs(
 		if cErr.IsExitCode(128) && cErr.IsAmbiguousArgErr() {
 			return nil, errors.NotFound("reference %q is ambiguous", ref)
 		}
+		if cErr.IsExitCode(128) && cErr.IsBadObject() {
+			return nil, errors.NotFound("commit not found")
+		}
 		return nil, processGitErrorf(err, "failed to trigger rev-list command")
 	}
 

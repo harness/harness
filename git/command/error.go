@@ -57,6 +57,10 @@ func (e *Error) IsAmbiguousArgErr() bool {
 	return strings.Contains(e.Error(), "ambiguous argument")
 }
 
+func (e *Error) IsBadObject() bool {
+	return strings.Contains(e.Error(), "bad object")
+}
+
 func (e *Error) IsInvalidRefErr() bool {
 	return strings.Contains(e.Error(), "not a valid ref")
 }

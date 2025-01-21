@@ -156,6 +156,7 @@ func cutLinesFromFullFileDiff(w io.Writer, r io.Reader, startLine, endLine int) 
 	return scanner.Err()
 }
 
+//nolint:gocognit
 func (g *Git) RawDiff(
 	ctx context.Context,
 	w io.Writer,
@@ -235,11 +236,14 @@ again:
 			_ = pipeWrite.CloseWithError(err)
 		}()
 
-		if err = newCmd.Run(ctx,
-			command.WithDir(repoPath),
-			command.WithStdout(pipeWrite),
-		); err != nil {
+		err = newCmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(pipeWrite))
+		if err != nil {
 			err = processGitErrorf(err, "git diff failed between %q and %q", baseRef, headRef)
+			if cErr := command.AsError(err); cErr != nil {
+				if cErr.IsExitCode(128) && cErr.IsBadObject() {
+					err = errors.NotFound("commit not found")
+				}
+			}
 		}
 	}()
 
