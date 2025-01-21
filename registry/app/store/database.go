@@ -489,21 +489,19 @@ type NodesRepository interface {
 	// Get a node specified by ID
 	Get(ctx context.Context, id int64) (*types.Node, error)
 	// Get a node specified by node Name and registry id
-	GetByNameAndRegistryId(
+	GetByNameAndRegistryID(
 		ctx context.Context, registryID int64,
 		name string,
+	) (*types.Node, error)
+
+	FindByPathAndRegistryID(ctx context.Context, registryID int64, path string,
 	) (*types.Node, error)
 	// Create a node
 	Create(ctx context.Context, node *types.Node) error
 	// delete a node
-	DeleteById(ctx context.Context, id int64) (err error)
+	DeleteByID(ctx context.Context, id int64) (err error)
 
-	GetByPathAndRegistryId(
-		ctx context.Context, registryID int64,
-		path string,
-	) (*types.Node, error)
-
-	FindByPathAndRegistryId(
+	GetByPathAndRegistryID(
 		ctx context.Context, registryID int64,
 		path string,
 	) (*types.Node, error)

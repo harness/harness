@@ -76,7 +76,7 @@ func (r *LocalRegistry) FetchArtifact(ctx context.Context, info pkg.MavenArtifac
 		return processError(err2)
 	}
 	if utils.IsSnapshotVersion(info) {
-		node, err := r.DBStore.NodeDao.FindByPathAndRegistryId(ctx, info.RegistryID, utils.AddLikeBeforeExtension(info))
+		node, err := r.DBStore.NodeDao.FindByPathAndRegistryID(ctx, info.RegistryID, utils.AddLikeBeforeExtension(info))
 		if err != nil {
 			return processError(err)
 		}

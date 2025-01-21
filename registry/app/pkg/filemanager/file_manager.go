@@ -198,7 +198,7 @@ func (f *FileManager) DownloadFile(
 	regInfo types.Registry,
 	rootIdentifier string,
 ) (fileReader *storage.FileReader, size int64, err error) {
-	node, err := f.nodesDao.GetByPathAndRegistryId(ctx, regInfo.ID, filePath)
+	node, err := f.nodesDao.GetByPathAndRegistryID(ctx, regInfo.ID, filePath)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to get the node for path: %s, "+
 			"with registry: %s, with error %s", filePath, regInfo.Name, err)
@@ -236,7 +236,7 @@ func (f *FileManager) HeadFile(
 	filePath string,
 	regID int64,
 ) (string, error) {
-	node, err := f.nodesDao.GetByPathAndRegistryId(ctx, regID, filePath)
+	node, err := f.nodesDao.GetByPathAndRegistryID(ctx, regID, filePath)
 
 	if err != nil {
 		return "", fmt.Errorf("failed to get the node path mapping for path: %s, "+
@@ -256,7 +256,7 @@ func (f *FileManager) GetFileMetadata(
 	filePath string,
 	regID int64,
 ) (pkg.FileInfo, error) {
-	node, err := f.nodesDao.GetByPathAndRegistryId(ctx, regID, filePath)
+	node, err := f.nodesDao.GetByPathAndRegistryID(ctx, regID, filePath)
 
 	if err != nil {
 		return pkg.FileInfo{}, fmt.Errorf("failed to get the node path mapping "+
