@@ -16,12 +16,15 @@
 
 import React from 'react'
 import { Intent } from '@blueprintjs/core'
+import { useParams } from 'react-router-dom'
 import { getErrorInfoFromErrorObject, useToaster } from '@harnessio/uicore'
 import { deleteWebhook, type Webhook } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
 import { queryClient } from '@ar/utils/queryClient'
 import { useGetSpaceRef, useParentComponents } from '@ar/hooks'
+import type { RepositoryDetailsTabPathParams } from '@ar/routes/types'
+import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
 import { useConfirmationDialog } from 'hooks/useConfirmationDialog'
 
 interface DeleteWebhookActionProps {
@@ -35,6 +38,7 @@ export default function DeleteWebhookAction(props: DeleteWebhookActionProps) {
   const { getString } = useStrings()
   const registryRef = useGetSpaceRef()
   const { showError, showSuccess, clear } = useToaster()
+  const params = useParams<RepositoryDetailsTabPathParams>()
 
   const handleDeleteWebhook = async (isConfirmed: boolean) => {
     if (!isConfirmed) {
@@ -74,6 +78,13 @@ export default function DeleteWebhookAction(props: DeleteWebhookActionProps) {
           openDialog()
         }}
         text={getString('actions.delete')}
+        permission={{
+          resource: {
+            resourceType: ResourceType.ARTIFACT_REGISTRY,
+            resourceIdentifier: params.repositoryIdentifier
+          },
+          permission: PermissionIdentifier.DELETE_ARTIFACT_REGISTRY
+        }}
       />
     </>
   )

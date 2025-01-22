@@ -23,6 +23,7 @@ import { useParentComponents, useRoutes } from '@ar/hooks'
 import type { RepositoryDetailsTabPathParams } from '@ar/routes/types'
 import ActionButton from '@ar/components/ActionButton/ActionButton'
 import { WebhookDetailsTab } from '@ar/pages/webhook-details/constants'
+import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
 
 import DeleteWebhookAction from './DeleteAction'
 
@@ -58,6 +59,13 @@ export default function WebhookActions(props: WebhookActionsProps) {
           setOpen(false)
           handleEdit(WebhookDetailsTab.Configuration)
         }}
+        permission={{
+          resource: {
+            resourceType: ResourceType.ARTIFACT_REGISTRY,
+            resourceIdentifier: params.repositoryIdentifier
+          },
+          permission: PermissionIdentifier.VIEW_ARTIFACT_REGISTRY
+        }}
       />
       <RbacMenuItem
         icon="execution"
@@ -65,6 +73,13 @@ export default function WebhookActions(props: WebhookActionsProps) {
         onClick={() => {
           setOpen(false)
           handleEdit(WebhookDetailsTab.Executions)
+        }}
+        permission={{
+          resource: {
+            resourceType: ResourceType.ARTIFACT_REGISTRY,
+            resourceIdentifier: params.repositoryIdentifier
+          },
+          permission: PermissionIdentifier.VIEW_ARTIFACT_REGISTRY
         }}
       />
       <DeleteWebhookAction

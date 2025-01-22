@@ -17,17 +17,19 @@
 import React from 'react'
 import { useHistory, useParams } from 'react-router-dom'
 import type { Webhook } from '@harnessio/react-har-service-client'
-import { Button, ButtonVariation, useToggleOpen } from '@harnessio/uicore'
+import { ButtonVariation, useToggleOpen } from '@harnessio/uicore'
 
-import { useRoutes } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
+import { useParentComponents, useRoutes } from '@ar/hooks'
 import type { RepositoryDetailsTabPathParams } from '@ar/routes/types'
+import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
 
 import CreateWebhookModal from './CreateWebhookModal'
 
 export default function CreateWebhookButton() {
   const { isOpen, close, open } = useToggleOpen()
   const { getString } = useStrings()
+  const { RbacButton } = useParentComponents()
   const { repositoryIdentifier } = useParams<RepositoryDetailsTabPathParams>()
 
   const routes = useRoutes()
@@ -43,9 +45,19 @@ export default function CreateWebhookButton() {
   }
   return (
     <>
-      <Button variation={ButtonVariation.PRIMARY} icon="plus" iconProps={{ size: 10 }} onClick={open}>
+      <RbacButton
+        permission={{
+          resource: {
+            resourceType: ResourceType.ARTIFACT_REGISTRY
+          },
+          permission: PermissionIdentifier.EDIT_ARTIFACT_REGISTRY
+        }}
+        variation={ButtonVariation.PRIMARY}
+        icon="plus"
+        iconProps={{ size: 10 }}
+        onClick={open}>
         {getString('webhookList.newWebhook')}
-      </Button>
+      </RbacButton>
       <CreateWebhookModal isOpen={isOpen} onClose={close} onSubmit={handleAfterCreateWebhook} />
     </>
   )

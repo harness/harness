@@ -20,11 +20,12 @@ import { useParams } from 'react-router-dom'
 import { updateWebhook, WebhookRequest } from '@harnessio/react-har-service-client'
 import { Container, getErrorInfoFromErrorObject, useToaster } from '@harnessio/uicore'
 
-import { useGetSpaceRef } from '@ar/hooks'
+import { useAppStore, useGetSpaceRef, useParentHooks } from '@ar/hooks'
 import { queryClient } from '@ar/utils/queryClient'
 import { useStrings } from '@ar/frameworks/strings'
 import WebhookForm from '@ar/pages/webhook-list/components/Forms/WebhookForm'
 import type { RepositoryWebhookDetailsTabPathParams } from '@ar/routes/types'
+import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
 
 import { WebhookDetailsContext } from '../../context/WebhookDetailsContext'
 import css from './WebhookConfigurationForm.module.scss'
@@ -37,10 +38,29 @@ export default function WebhookConfigurationForm(props: WebhookConfigurationForm
   const { formRef } = props
   const { showError, showSuccess, clear } = useToaster()
   const { getString } = useStrings()
+  const { usePermission } = useParentHooks()
+  const { scope } = useAppStore()
+  const { accountId, orgIdentifier, projectIdentifier } = scope
 
   const { data, setDirty, setUpdating } = useContext(WebhookDetailsContext)
   const registryRef = useGetSpaceRef()
-  const { webhookIdentifier } = useParams<RepositoryWebhookDetailsTabPathParams>()
+  const { webhookIdentifier, repositoryIdentifier } = useParams<RepositoryWebhookDetailsTabPathParams>()
+
+  const [isEditPermission] = usePermission(
+    {
+      resourceScope: {
+        accountIdentifier: accountId,
+        orgIdentifier,
+        projectIdentifier
+      },
+      resource: {
+        resourceType: ResourceType.ARTIFACT_REGISTRY,
+        resourceIdentifier: repositoryIdentifier
+      },
+      permissions: [PermissionIdentifier.EDIT_ARTIFACT_REGISTRY]
+    },
+    [accountId, projectIdentifier, orgIdentifier, repositoryIdentifier]
+  )
 
   const handleUpdateWebhook = async (values: WebhookRequest) => {
     try {
@@ -63,7 +83,14 @@ export default function WebhookConfigurationForm(props: WebhookConfigurationForm
   if (!data) return <></>
   return (
     <Container className={css.formContainer} padding="xlarge">
-      <WebhookForm data={data} ref={formRef} isEdit onSubmit={handleUpdateWebhook} setDirty={setDirty} />
+      <WebhookForm
+        data={data}
+        ref={formRef}
+        readonly={!isEditPermission}
+        isEdit
+        onSubmit={handleUpdateWebhook}
+        setDirty={setDirty}
+      />
     </Container>
   )
 }

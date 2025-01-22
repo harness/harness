@@ -16,11 +16,11 @@
 
 import React from 'react'
 import moment from 'moment'
+import { useParams } from 'react-router-dom'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { reTriggerWebhookExecution, WebhookExecution } from '@harnessio/react-har-service-client'
 import { Drawer, Expander, IDrawerProps, Position, Tab } from '@blueprintjs/core'
 import {
-  Button,
   ButtonVariation,
   Container,
   getErrorInfoFromErrorObject,
@@ -30,12 +30,14 @@ import {
   useToaster
 } from '@harnessio/uicore'
 
-import { useGetSpaceRef } from '@ar/hooks'
+import { useGetSpaceRef, useParentComponents } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import { DEFAULT_DATE_TIME_FORMAT } from '@ar/constants'
 import CommandBlock from '@ar/components/CommandBlock/CommandBlock'
 import { prettifyManifestJSON } from '@ar/pages/version-details/utils'
+import type { RepositoryWebhookDetailsTabPathParams } from '@ar/routes/types'
 import { WebhookTriggerLabelMap } from '@ar/pages/webhook-list/constants'
+import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
 
 import { WebhookExecutionDetailsTab } from './constants'
 import ExecutionStatus from '../ExecutionStatus/ExecutionStatus'
@@ -56,6 +58,8 @@ export default function WebhookExecutionDetailsDrawer(props: WebhookExecutionDet
   const { getString } = useStrings()
   const registryRef = useGetSpaceRef()
   const { showSuccess, showError, clear } = useToaster()
+  const { RbacButton } = useParentComponents()
+  const { repositoryIdentifier } = useParams<RepositoryWebhookDetailsTabPathParams>()
 
   const handleRetrigger = async () => {
     try {
@@ -90,13 +94,20 @@ export default function WebhookExecutionDetailsDrawer(props: WebhookExecutionDet
           </Text>
           {data?.result && <ExecutionStatus status={data?.result} />}
           <Expander />
-          <Button
+          <RbacButton
             disabled={!data?.retriggerable}
             loading={loading}
             onClick={handleRetrigger}
-            variation={ButtonVariation.SECONDARY}>
+            variation={ButtonVariation.SECONDARY}
+            permission={{
+              resource: {
+                resourceType: ResourceType.ARTIFACT_REGISTRY,
+                resourceIdentifier: repositoryIdentifier
+              },
+              permission: PermissionIdentifier.EDIT_ARTIFACT_REGISTRY
+            }}>
             {getString('webhookExecutionList.retriggerExecution')}
-          </Button>
+          </RbacButton>
         </Layout.Horizontal>
       }>
       <Container>
