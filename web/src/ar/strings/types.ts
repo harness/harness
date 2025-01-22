@@ -247,6 +247,8 @@ export interface StringsMap {
   'webhookExecutionList.table.columns.payload': string
   'webhookExecutionList.table.columns.response': string
   'webhookExecutionList.table.columns.status': string
+  'webhookList.deleteModal.message': string
+  'webhookList.deleteModal.title': string
   'webhookList.formFields.SSLVerification': string
   'webhookList.formFields.addNewKeyValuePair': string
   'webhookList.formFields.advanced': string
@@ -272,9 +274,11 @@ export interface StringsMap {
   'webhookList.triggers.artifactDeletion': string
   'webhookList.triggers.artifactModification': string
   'webhookList.webhookCreated': string
+  'webhookList.webhookDeleted': string
   'webhookList.webhookUpdated': string
   'actions.delete': string
   'actions.edit': string
+  'actions.executions': string
   'actions.quarantine': string
   'actions.restore': string
   'actions.scan': string

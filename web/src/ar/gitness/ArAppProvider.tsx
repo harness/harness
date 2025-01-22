@@ -40,9 +40,7 @@ export function ArAppProvider({ children }: PropsWithChildren<ArAppProviderProps
             arAppStore: { ...arAppStore, ...val }
           })
         },
-        featureFlags: {
-          HAR_GENERIC_ARTIFACT_ENABLED: false
-        }
+        featureFlags: FF_LIST
       }}>
       {children}
     </ArAppContext.Provider>

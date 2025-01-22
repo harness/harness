@@ -16,6 +16,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 declare const __DEV__: boolean
+declare const FF_LIST: Record<string, boolean>
 
 declare module '*.png' {
   const value: string

@@ -61,7 +61,11 @@ export function transformFormValuesToSubmitValues(
 function convertFormFieldsToSecreteInput(formData: Webhook, secretField: string, secretSpacePathField: string) {
   const secretIdentifier = get(formData, secretField, '')
   const secretSpacePath = get(formData, secretSpacePathField, '')
-  set(formData, secretField, getSecretScopeDetailsByIdentifier(secretIdentifier, secretSpacePath))
+  if (secretIdentifier) {
+    set(formData, secretField, getSecretScopeDetailsByIdentifier(secretIdentifier, secretSpacePath))
+  } else {
+    set(formData, secretField, undefined)
+  }
 }
 
 export function transformWebhookDataToFormValues(data: Webhook, parent: Parent): WebhookRequestUI {

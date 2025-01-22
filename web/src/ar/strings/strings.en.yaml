@@ -59,6 +59,7 @@ actions:
   restore: Restore
   scan: Scan
   setupClient: Set Up Client
+  executions: Executions
 cleanupPolicy:
   name: Cleanup Policy Name
   addBtn: Add Cleanup Policy

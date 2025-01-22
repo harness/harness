@@ -24,8 +24,8 @@ import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance } fr
 import { useGetSpaceRef } from '@ar/hooks'
 import { killEvent } from '@ar/common/utils'
 import { useStrings } from '@ar/frameworks/strings'
-import ActionButton from '@ar/components/ActionButton/ActionButton'
 
+import WebhookActions from '../Actions/WebhookActions'
 import { DefaultStatusIconMap, WebhookStatusIconMap, WebhookTriggerLabelMap } from '../../constants'
 
 type CellTypeWithActions<D extends Record<string, any>, V = any> = TableInstance<D> & {
@@ -112,12 +112,6 @@ export const WebhookStatusCell: CellType = ({ row }) => {
   return <Icon {...iconProps} size={18} />
 }
 
-export const WebhookActionsCell: CellType = () => {
-  const [open, setOpen] = useState(false)
-  return (
-    <ActionButton isOpen={open} setOpen={setOpen}>
-      {/* TODO: Add webhook actions here */}
-      <>Option 1</>
-    </ActionButton>
-  )
+export const WebhookActionsCell: CellType = ({ row }) => {
+  return <WebhookActions data={row.original} />
 }

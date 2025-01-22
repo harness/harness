@@ -31,6 +31,9 @@ const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin')
 const moduleFederationConfig = require('./moduleFederation.config')
 const CONTEXT = process.cwd()
 const DEV = process.env.NODE_ENV === 'development'
+const FF_LIST = Object.keys(process.env)
+  .filter(f => f.startsWith('FF_'))
+  .reduce((obj, key) => ({ ...obj, [key.replace(/^FF_/, '')]: process.env[key] === 'true' }), {})
 
 module.exports = {
   target: 'web',
@@ -215,7 +218,8 @@ module.exports = {
     new ModuleFederationPlugin(moduleFederationConfig),
     new DefinePlugin({
       'process.env': '{}', // required for @blueprintjs/core
-      __DEV__: DEV
+      __DEV__: DEV,
+      FF_LIST: JSON.stringify(FF_LIST)
     }),
     new GenerateStringTypesPlugin(),
     new GenerateArStringTypesPlugin(),
