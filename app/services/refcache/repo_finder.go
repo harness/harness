@@ -18,15 +18,19 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/cache"
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/types"
 )
 
 type RepoFinder struct {
 	repoStore  store.RepoStore
 	spaceCache SpaceCache
+	repoCache  repoCache
 }
 
 func NewRepoFinder(
@@ -36,6 +40,7 @@ func NewRepoFinder(
 	return RepoFinder{
 		repoStore:  repoStore,
 		spaceCache: spaceCache,
+		repoCache:  newRepoCache(repoStore),
 	}
 }
 
@@ -59,7 +64,20 @@ func (r RepoFinder) FindByRef(ctx context.Context, repoRef string) (*types.Repos
 		return nil, fmt.Errorf("failed to get space from cache: %w", err)
 	}
 
-	repo, err := r.repoStore.FindActiveByUID(ctx, space.ID, repoIdentifier)
+	if id, err := strconv.ParseInt(repoIdentifier, 10, 64); err == nil && id > 0 {
+		repo, err := r.repoStore.Find(ctx, id)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get repository by space path and ID: %w", err)
+		}
+
+		if repo.ParentID != space.ID {
+			return nil, errors.NotFound("Repository not found")
+		}
+
+		return repo, nil
+	}
+
+	repo, err := r.repoCache.Get(ctx, repoCacheKey{spaceID: space.ID, repoIdentifier: repoIdentifier})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get repository by parent space ID and UID: %w", err)
 	}
@@ -97,4 +115,28 @@ func (r RepoFinder) FindDeletedByRef(ctx context.Context, repoRef string, delete
 	repo.Version = -1 // destroy the repo version so that it can't be used for update
 
 	return repo, nil
+}
+
+// repoCache holds Repository objects fetched by spaceID and repository identifier.
+type repoCache cache.Cache[repoCacheKey, *types.Repository]
+
+type repoCacheKey struct {
+	spaceID        int64
+	repoIdentifier string
+}
+
+func newRepoCache(
+	repoStore store.RepoStore,
+) repoCache {
+	return cache.New[repoCacheKey, *types.Repository](
+		repoCacheGetter{repoStore: repoStore},
+		1*time.Minute)
+}
+
+type repoCacheGetter struct {
+	repoStore store.RepoStore
+}
+
+func (c repoCacheGetter) Find(ctx context.Context, key repoCacheKey) (*types.Repository, error) {
+	return c.repoStore.FindActiveByUID(ctx, key.spaceID, key.repoIdentifier)
 }
