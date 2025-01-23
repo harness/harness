@@ -54,5 +54,9 @@ export const URLSourceToSupportedAuthTypesMapping: Record<
   [UpstreamRepositoryURLInputSource.Custom]: [
     UpstreamProxyAuthenticationMode.USER_NAME_AND_PASSWORD,
     UpstreamProxyAuthenticationMode.ANONYMOUS
+  ],
+  [UpstreamRepositoryURLInputSource.MavenCentral]: [
+    UpstreamProxyAuthenticationMode.USER_NAME_AND_PASSWORD,
+    UpstreamProxyAuthenticationMode.ANONYMOUS
   ]
 }

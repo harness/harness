@@ -26,6 +26,7 @@ export enum UpstreamProxyPackageType {
 
 export enum UpstreamRepositoryURLInputSource {
   Dockerhub = 'Dockerhub',
+  MavenCentral = 'MavenCentral',
   AwsEcr = 'AwsEcr',
   Custom = 'Custom'
 }

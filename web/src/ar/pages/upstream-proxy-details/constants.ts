@@ -14,37 +14,6 @@
  * limitations under the License.
  */
 
-import type { IconName } from '@harnessio/icons'
-import type { StringsMap } from '@ar/strings/types'
-import { UpstreamProxyPackageType } from './types'
-
-interface UpstreamProxyPackageTypeListType {
-  label: keyof StringsMap
-  value: UpstreamProxyPackageType
-  icon: IconName
-  disabled?: boolean
-  tooltip?: string
-}
-export const UpstreamProxyPackageTypeList: UpstreamProxyPackageTypeListType[] = [
-  {
-    label: 'repositoryTypes.docker',
-    value: UpstreamProxyPackageType.DOCKER,
-    icon: 'docker-step'
-  },
-  {
-    label: 'repositoryTypes.helm',
-    value: UpstreamProxyPackageType.HELM,
-    icon: 'service-helm'
-  },
-  {
-    label: 'repositoryTypes.maven',
-    value: UpstreamProxyPackageType.MAVEN,
-    icon: 'maven-repository-type',
-    tooltip: 'Comming Soon!',
-    disabled: true
-  }
-]
-
 export enum UpstreamProxyDetailsTab {
   PACKAGES = 'packages',
   CONFIGURATION = 'configuration'

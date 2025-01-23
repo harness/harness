@@ -117,7 +117,11 @@ export function getFormattedFormDataForAuthType(
     } else if (draft.config.authType === UpstreamProxyAuthenticationMode.ANONYMOUS) {
       set(draft, 'config.auth', null)
     }
-    if (draft.config.source === UpstreamRepositoryURLInputSource.Dockerhub) {
+    if (
+      [UpstreamRepositoryURLInputSource.Dockerhub, UpstreamRepositoryURLInputSource.MavenCentral].includes(
+        draft.config.source as UpstreamRepositoryURLInputSource
+      )
+    ) {
       set(draft, 'config.url', '')
     }
   })

@@ -16,9 +16,11 @@
 
 import repositoryFactory from '@ar/frameworks/RepositoryStep/RepositoryFactory'
 import { DockerRepositoryType } from './DockerRepository/DockerRepositoryType'
+import { MavenRepositoryType } from './MavenRepository/MavenRepository'
 import { HelmRepositoryType } from './HelmRepository/HelmRepositoryType'
 import { GenericRepositoryType } from './GenericRepository/GenericRepositoryType'
 
 repositoryFactory.registerStep(new DockerRepositoryType())
 repositoryFactory.registerStep(new HelmRepositoryType())
 repositoryFactory.registerStep(new GenericRepositoryType())
+repositoryFactory.registerStep(new MavenRepositoryType())

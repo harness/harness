@@ -33,5 +33,9 @@ export const UpstreamURLSourceConfig: Record<UpstreamRepositoryURLInputSource, R
   [UpstreamRepositoryURLInputSource.Custom]: {
     label: 'upstreamProxyDetails.createForm.source.custom',
     value: UpstreamRepositoryURLInputSource.Custom
+  },
+  [UpstreamRepositoryURLInputSource.MavenCentral]: {
+    label: 'upstreamProxyDetails.createForm.source.mavenCentral',
+    value: UpstreamRepositoryURLInputSource.MavenCentral
   }
 }

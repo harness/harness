@@ -141,6 +141,7 @@ export interface StringsMap {
   'upstreamProxyDetails.createForm.source.custom': string
   'upstreamProxyDetails.createForm.source.dockerHub': string
   'upstreamProxyDetails.createForm.source.ecr': string
+  'upstreamProxyDetails.createForm.source.mavenCentral': string
   'upstreamProxyDetails.createForm.source.title': string
   'upstreamProxyDetails.createForm.title': string
   'upstreamProxyDetails.createForm.url': string

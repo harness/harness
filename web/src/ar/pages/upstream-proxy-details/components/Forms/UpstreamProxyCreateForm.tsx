@@ -29,7 +29,7 @@ import {
 } from '@harnessio/uicore'
 import { useCreateRegistryMutation } from '@harnessio/react-har-service-client'
 
-import { useAppStore, useGetSpaceRef } from '@ar/hooks'
+import { useAppStore, useGetSpaceRef, useGetUpstreamRepositoryPackageTypes } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import { decodeRef } from '@ar/hooks/useGetSpaceRef'
 import { setFormikRef } from '@ar/common/utils'
@@ -41,7 +41,6 @@ import {
   UpstreamRegistry,
   UpstreamRegistryRequest
 } from '@ar/pages/upstream-proxy-details/types'
-import { UpstreamProxyPackageTypeList } from '@ar/pages/upstream-proxy-details/constants'
 
 import CreateRepositoryWidget from '@ar/frameworks/RepositoryStep/CreateRepositoryWidget'
 import repositoryFactory from '@ar/frameworks/RepositoryStep/RepositoryFactory'
@@ -67,6 +66,7 @@ function FormContent(props: FormContentProps): JSX.Element {
   const { getString } = useStrings()
   const { values } = formikProps
   const { packageType } = values
+  const packageTypeList = useGetUpstreamRepositoryPackageTypes()
 
   return (
     <Container>
@@ -77,7 +77,7 @@ function FormContent(props: FormContentProps): JSX.Element {
         <Container>
           <ThumbnailSelect
             name="packageType"
-            items={UpstreamProxyPackageTypeList.map(each => ({
+            items={packageTypeList.map(each => ({
               ...each,
               label: getString(each.label)
             }))}

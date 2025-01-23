@@ -12,6 +12,7 @@ createForm:
     dockerHub: Docker Hub
     ecr: AWS ECR
     custom: Custom
+    mavenCentral: Maven Central
   authentication:
     title: Authentication
     userNameAndPassword: Username and Password

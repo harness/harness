@@ -15,24 +15,26 @@
  */
 
 import type { IconName } from '@harnessio/icons'
+
 import { FeatureFlags } from '@ar/MFEAppTypes'
 import type { StringsMap } from '@ar/frameworks/strings'
-import { RepositoryPackageType } from '@ar/common/types'
+import { UpstreamProxyPackageType } from '@ar/pages/upstream-proxy-details/types'
+
 import { useFeatureFlags } from './useFeatureFlag'
 
-export interface RepositoryTypeListItem {
+export interface UpstreamRepositoryPackageTypeListItem {
   label: keyof StringsMap
-  value: RepositoryPackageType
+  value: UpstreamProxyPackageType
   icon: IconName
   disabled?: boolean
   tooltip?: string
   featureFlag?: FeatureFlags
 }
 
-export const useGetRepositoryTypes = (): RepositoryTypeListItem[] => {
+export const useGetUpstreamRepositoryPackageTypes = (): UpstreamRepositoryPackageTypeListItem[] => {
   const featureFlags = useFeatureFlags()
 
-  return RepositoryTypes.map(repo => {
+  return UpstreamProxyPackageTypeList.map(repo => {
     if (repo.disabled && repo.featureFlag && featureFlags[repo.featureFlag]) {
       return {
         ...repo,
@@ -44,58 +46,22 @@ export const useGetRepositoryTypes = (): RepositoryTypeListItem[] => {
   })
 }
 
-const RepositoryTypes: RepositoryTypeListItem[] = [
+export const UpstreamProxyPackageTypeList: UpstreamRepositoryPackageTypeListItem[] = [
   {
     label: 'repositoryTypes.docker',
-    value: RepositoryPackageType.DOCKER,
+    value: UpstreamProxyPackageType.DOCKER,
     icon: 'docker-step'
   },
   {
     label: 'repositoryTypes.helm',
-    value: RepositoryPackageType.HELM,
+    value: UpstreamProxyPackageType.HELM,
     icon: 'service-helm'
   },
   {
-    label: 'repositoryTypes.generic',
-    value: RepositoryPackageType.GENERIC,
-    icon: 'generic-repository-type',
-    featureFlag: FeatureFlags.HAR_GENERIC_ARTIFACT_ENABLED,
-    tooltip: 'Coming Soon!',
-    disabled: true
-  },
-  {
     label: 'repositoryTypes.maven',
-    value: RepositoryPackageType.MAVEN,
-    icon: 'maven-repository-type',
+    value: UpstreamProxyPackageType.MAVEN,
     featureFlag: FeatureFlags.HAR_MAVEN_ARTIFACT_ENABLED,
-    tooltip: 'Coming Soon!',
-    disabled: true
-  },
-  {
-    label: 'repositoryTypes.npm',
-    value: RepositoryPackageType.NPM,
-    icon: 'npm-repository-type',
-    tooltip: 'Coming Soon!',
-    disabled: true
-  },
-  {
-    label: 'repositoryTypes.gradle',
-    value: RepositoryPackageType.GRADLE,
-    icon: 'gradle-repository-type',
-    tooltip: 'Coming Soon!',
-    disabled: true
-  },
-  {
-    label: 'repositoryTypes.pypi',
-    value: RepositoryPackageType.PYPI,
-    icon: 'python',
-    tooltip: 'Coming Soon!',
-    disabled: true
-  },
-  {
-    label: 'repositoryTypes.nuget',
-    value: RepositoryPackageType.NUGET,
-    icon: 'nuget-repository-type',
+    icon: 'maven-repository-type',
     tooltip: 'Coming Soon!',
     disabled: true
   }
