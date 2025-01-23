@@ -40,6 +40,7 @@ type APIController struct {
 	AuditService       audit.Service
 	spacePathStore     corestore.SpacePathStore
 	ArtifactStore      store.ArtifactRepository
+	WebhooksRepository store.WebhooksRepository
 }
 
 func NewAPIController(
@@ -57,6 +58,7 @@ func NewAPIController(
 	auditService audit.Service,
 	spacePathStore corestore.SpacePathStore,
 	artifactStore store.ArtifactRepository,
+	webhooksRepository store.WebhooksRepository,
 ) *APIController {
 	return &APIController{
 		RegistryRepository: repositoryStore,
@@ -73,5 +75,6 @@ func NewAPIController(
 		AuditService:       auditService,
 		spacePathStore:     spacePathStore,
 		ArtifactStore:      artifactStore,
+		WebhooksRepository: webhooksRepository,
 	}
 }

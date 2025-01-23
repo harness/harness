@@ -92,6 +92,30 @@ type ServerInterface interface {
 	// Returns CLI Client Setup Details
 	// (GET /registry/{registry_ref}/client-setup-details)
 	GetClientSetupDetails(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, params GetClientSetupDetailsParams)
+	// ListWebhooks
+	// (GET /registry/{registry_ref}/webhooks)
+	ListWebhooks(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, params ListWebhooksParams)
+	// CreateWebhook
+	// (POST /registry/{registry_ref}/webhooks)
+	CreateWebhook(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam)
+	// DeleteWebhook
+	// (DELETE /registry/{registry_ref}/webhooks/{webhook_identifier})
+	DeleteWebhook(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, webhookIdentifier WebhookIdentifierPathParam)
+	// GetWebhook
+	// (GET /registry/{registry_ref}/webhooks/{webhook_identifier})
+	GetWebhook(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, webhookIdentifier WebhookIdentifierPathParam)
+	// UpdateWebhook
+	// (PUT /registry/{registry_ref}/webhooks/{webhook_identifier})
+	UpdateWebhook(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, webhookIdentifier WebhookIdentifierPathParam)
+	// ListWebhookExecutions
+	// (GET /registry/{registry_ref}/webhooks/{webhook_identifier}/executions)
+	ListWebhookExecutions(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, webhookIdentifier WebhookIdentifierPathParam, params ListWebhookExecutionsParams)
+	// GetWebhookExecution
+	// (GET /registry/{registry_ref}/webhooks/{webhook_identifier}/executions/{webhook_execution_id})
+	GetWebhookExecution(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, webhookIdentifier WebhookIdentifierPathParam, webhookExecutionId WebhookExecutionIdPathParam)
+	// ReTriggerWebhookExecution
+	// (GET /registry/{registry_ref}/webhooks/{webhook_identifier}/executions/{webhook_execution_id}/retrigger)
+	ReTriggerWebhookExecution(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, webhookIdentifier WebhookIdentifierPathParam, webhookExecutionId WebhookExecutionIdPathParam)
 	// Get Artifact Stats
 	// (GET /spaces/{space_ref}/artifact/stats)
 	GetArtifactStatsForSpace(w http.ResponseWriter, r *http.Request, spaceRef SpaceRefPathParam, params GetArtifactStatsForSpaceParams)
@@ -242,6 +266,54 @@ func (_ Unimplemented) GetAllArtifactsByRegistry(w http.ResponseWriter, r *http.
 // Returns CLI Client Setup Details
 // (GET /registry/{registry_ref}/client-setup-details)
 func (_ Unimplemented) GetClientSetupDetails(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, params GetClientSetupDetailsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListWebhooks
+// (GET /registry/{registry_ref}/webhooks)
+func (_ Unimplemented) ListWebhooks(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, params ListWebhooksParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CreateWebhook
+// (POST /registry/{registry_ref}/webhooks)
+func (_ Unimplemented) CreateWebhook(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DeleteWebhook
+// (DELETE /registry/{registry_ref}/webhooks/{webhook_identifier})
+func (_ Unimplemented) DeleteWebhook(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, webhookIdentifier WebhookIdentifierPathParam) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetWebhook
+// (GET /registry/{registry_ref}/webhooks/{webhook_identifier})
+func (_ Unimplemented) GetWebhook(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, webhookIdentifier WebhookIdentifierPathParam) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// UpdateWebhook
+// (PUT /registry/{registry_ref}/webhooks/{webhook_identifier})
+func (_ Unimplemented) UpdateWebhook(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, webhookIdentifier WebhookIdentifierPathParam) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListWebhookExecutions
+// (GET /registry/{registry_ref}/webhooks/{webhook_identifier}/executions)
+func (_ Unimplemented) ListWebhookExecutions(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, webhookIdentifier WebhookIdentifierPathParam, params ListWebhookExecutionsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetWebhookExecution
+// (GET /registry/{registry_ref}/webhooks/{webhook_identifier}/executions/{webhook_execution_id})
+func (_ Unimplemented) GetWebhookExecution(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, webhookIdentifier WebhookIdentifierPathParam, webhookExecutionId WebhookExecutionIdPathParam) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ReTriggerWebhookExecution
+// (GET /registry/{registry_ref}/webhooks/{webhook_identifier}/executions/{webhook_execution_id}/retrigger)
+func (_ Unimplemented) ReTriggerWebhookExecution(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, webhookIdentifier WebhookIdentifierPathParam, webhookExecutionId WebhookExecutionIdPathParam) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -1340,6 +1412,348 @@ func (siw *ServerInterfaceWrapper) GetClientSetupDetails(w http.ResponseWriter, 
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
+// ListWebhooks operation middleware
+func (siw *ServerInterfaceWrapper) ListWebhooks(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "registry_ref" -------------
+	var registryRef RegistryRefPathParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "registry_ref", chi.URLParam(r, "registry_ref"), &registryRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "registry_ref", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListWebhooksParams
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "page", r.URL.Query(), &params.Page)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "page", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "size" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "size", r.URL.Query(), &params.Size)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "size", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "sort_order" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "sort_order", r.URL.Query(), &params.SortOrder)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sort_order", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "sort_field" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "sort_field", r.URL.Query(), &params.SortField)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sort_field", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "search_term" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "search_term", r.URL.Query(), &params.SearchTerm)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "search_term", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListWebhooks(w, r, registryRef, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// CreateWebhook operation middleware
+func (siw *ServerInterfaceWrapper) CreateWebhook(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "registry_ref" -------------
+	var registryRef RegistryRefPathParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "registry_ref", chi.URLParam(r, "registry_ref"), &registryRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "registry_ref", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateWebhook(w, r, registryRef)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// DeleteWebhook operation middleware
+func (siw *ServerInterfaceWrapper) DeleteWebhook(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "registry_ref" -------------
+	var registryRef RegistryRefPathParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "registry_ref", chi.URLParam(r, "registry_ref"), &registryRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "registry_ref", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "webhook_identifier" -------------
+	var webhookIdentifier WebhookIdentifierPathParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "webhook_identifier", chi.URLParam(r, "webhook_identifier"), &webhookIdentifier, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "webhook_identifier", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteWebhook(w, r, registryRef, webhookIdentifier)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// GetWebhook operation middleware
+func (siw *ServerInterfaceWrapper) GetWebhook(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "registry_ref" -------------
+	var registryRef RegistryRefPathParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "registry_ref", chi.URLParam(r, "registry_ref"), &registryRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "registry_ref", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "webhook_identifier" -------------
+	var webhookIdentifier WebhookIdentifierPathParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "webhook_identifier", chi.URLParam(r, "webhook_identifier"), &webhookIdentifier, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "webhook_identifier", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetWebhook(w, r, registryRef, webhookIdentifier)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// UpdateWebhook operation middleware
+func (siw *ServerInterfaceWrapper) UpdateWebhook(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "registry_ref" -------------
+	var registryRef RegistryRefPathParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "registry_ref", chi.URLParam(r, "registry_ref"), &registryRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "registry_ref", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "webhook_identifier" -------------
+	var webhookIdentifier WebhookIdentifierPathParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "webhook_identifier", chi.URLParam(r, "webhook_identifier"), &webhookIdentifier, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "webhook_identifier", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateWebhook(w, r, registryRef, webhookIdentifier)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// ListWebhookExecutions operation middleware
+func (siw *ServerInterfaceWrapper) ListWebhookExecutions(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "registry_ref" -------------
+	var registryRef RegistryRefPathParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "registry_ref", chi.URLParam(r, "registry_ref"), &registryRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "registry_ref", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "webhook_identifier" -------------
+	var webhookIdentifier WebhookIdentifierPathParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "webhook_identifier", chi.URLParam(r, "webhook_identifier"), &webhookIdentifier, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "webhook_identifier", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListWebhookExecutionsParams
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "page", r.URL.Query(), &params.Page)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "page", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "size" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "size", r.URL.Query(), &params.Size)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "size", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListWebhookExecutions(w, r, registryRef, webhookIdentifier, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// GetWebhookExecution operation middleware
+func (siw *ServerInterfaceWrapper) GetWebhookExecution(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "registry_ref" -------------
+	var registryRef RegistryRefPathParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "registry_ref", chi.URLParam(r, "registry_ref"), &registryRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "registry_ref", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "webhook_identifier" -------------
+	var webhookIdentifier WebhookIdentifierPathParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "webhook_identifier", chi.URLParam(r, "webhook_identifier"), &webhookIdentifier, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "webhook_identifier", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "webhook_execution_id" -------------
+	var webhookExecutionId WebhookExecutionIdPathParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "webhook_execution_id", chi.URLParam(r, "webhook_execution_id"), &webhookExecutionId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "webhook_execution_id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetWebhookExecution(w, r, registryRef, webhookIdentifier, webhookExecutionId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// ReTriggerWebhookExecution operation middleware
+func (siw *ServerInterfaceWrapper) ReTriggerWebhookExecution(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "registry_ref" -------------
+	var registryRef RegistryRefPathParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "registry_ref", chi.URLParam(r, "registry_ref"), &registryRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "registry_ref", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "webhook_identifier" -------------
+	var webhookIdentifier WebhookIdentifierPathParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "webhook_identifier", chi.URLParam(r, "webhook_identifier"), &webhookIdentifier, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "webhook_identifier", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "webhook_execution_id" -------------
+	var webhookExecutionId WebhookExecutionIdPathParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "webhook_execution_id", chi.URLParam(r, "webhook_execution_id"), &webhookExecutionId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "webhook_execution_id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ReTriggerWebhookExecution(w, r, registryRef, webhookIdentifier, webhookExecutionId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
 // GetArtifactStatsForSpace operation middleware
 func (siw *ServerInterfaceWrapper) GetArtifactStatsForSpace(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -1754,6 +2168,30 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/registry/{registry_ref}/client-setup-details", wrapper.GetClientSetupDetails)
 	})
 	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/registry/{registry_ref}/webhooks", wrapper.ListWebhooks)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/registry/{registry_ref}/webhooks", wrapper.CreateWebhook)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/registry/{registry_ref}/webhooks/{webhook_identifier}", wrapper.DeleteWebhook)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/registry/{registry_ref}/webhooks/{webhook_identifier}", wrapper.GetWebhook)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/registry/{registry_ref}/webhooks/{webhook_identifier}", wrapper.UpdateWebhook)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/registry/{registry_ref}/webhooks/{webhook_identifier}/executions", wrapper.ListWebhookExecutions)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/registry/{registry_ref}/webhooks/{webhook_identifier}/executions/{webhook_execution_id}", wrapper.GetWebhookExecution)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/registry/{registry_ref}/webhooks/{webhook_identifier}/executions/{webhook_execution_id}/retrigger", wrapper.ReTriggerWebhookExecution)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/spaces/{space_ref}/artifact/stats", wrapper.GetArtifactStatsForSpace)
 	})
 	r.Group(func(r chi.Router) {
@@ -1926,6 +2364,22 @@ type ListRegistryResponseJSONResponse struct {
 	Status Status `json:"status"`
 }
 
+type ListWebhooksExecutionResponseJSONResponse struct {
+	// Data A list of Harness Registries webhooks executions
+	Data ListWebhooksExecutions `json:"data"`
+
+	// Status Indicates if the request was successful or not
+	Status Status `json:"status"`
+}
+
+type ListWebhooksResponseJSONResponse struct {
+	// Data A list of Harness Registries webhooks
+	Data ListWebhooks `json:"data"`
+
+	// Status Indicates if the request was successful or not
+	Status Status `json:"status"`
+}
+
 type NotFoundJSONResponse Error
 
 type RegistryResponseJSONResponse struct {
@@ -1944,6 +2398,22 @@ type SuccessJSONResponse struct {
 type UnauthenticatedJSONResponse Error
 
 type UnauthorizedJSONResponse Error
+
+type WebhookExecutionResponseJSONResponse struct {
+	// Data Harness Regstries Webhook Execution
+	Data WebhookExecution `json:"data"`
+
+	// Status Indicates if the request was successful or not
+	Status Status `json:"status"`
+}
+
+type WebhookResponseJSONResponse struct {
+	// Data Harness Regstries Webhook
+	Data Webhook `json:"data"`
+
+	// Status Indicates if the request was successful or not
+	Status Status `json:"status"`
+}
 
 type CreateRegistryRequestObject struct {
 	Params CreateRegistryParams
@@ -3478,6 +3948,475 @@ func (response GetClientSetupDetails500JSONResponse) VisitGetClientSetupDetailsR
 	return json.NewEncoder(w).Encode(response)
 }
 
+type ListWebhooksRequestObject struct {
+	RegistryRef RegistryRefPathParam `json:"registry_ref"`
+	Params      ListWebhooksParams
+}
+
+type ListWebhooksResponseObject interface {
+	VisitListWebhooksResponse(w http.ResponseWriter) error
+}
+
+type ListWebhooks200JSONResponse struct {
+	ListWebhooksResponseJSONResponse
+}
+
+func (response ListWebhooks200JSONResponse) VisitListWebhooksResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListWebhooks400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response ListWebhooks400JSONResponse) VisitListWebhooksResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListWebhooks401JSONResponse struct{ UnauthenticatedJSONResponse }
+
+func (response ListWebhooks401JSONResponse) VisitListWebhooksResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListWebhooks403JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ListWebhooks403JSONResponse) VisitListWebhooksResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListWebhooks500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response ListWebhooks500JSONResponse) VisitListWebhooksResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateWebhookRequestObject struct {
+	RegistryRef RegistryRefPathParam `json:"registry_ref"`
+	Body        *CreateWebhookJSONRequestBody
+}
+
+type CreateWebhookResponseObject interface {
+	VisitCreateWebhookResponse(w http.ResponseWriter) error
+}
+
+type CreateWebhook201JSONResponse struct{ WebhookResponseJSONResponse }
+
+func (response CreateWebhook201JSONResponse) VisitCreateWebhookResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateWebhook400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response CreateWebhook400JSONResponse) VisitCreateWebhookResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateWebhook401JSONResponse struct{ UnauthenticatedJSONResponse }
+
+func (response CreateWebhook401JSONResponse) VisitCreateWebhookResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateWebhook403JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response CreateWebhook403JSONResponse) VisitCreateWebhookResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateWebhook500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response CreateWebhook500JSONResponse) VisitCreateWebhookResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteWebhookRequestObject struct {
+	RegistryRef       RegistryRefPathParam       `json:"registry_ref"`
+	WebhookIdentifier WebhookIdentifierPathParam `json:"webhook_identifier"`
+}
+
+type DeleteWebhookResponseObject interface {
+	VisitDeleteWebhookResponse(w http.ResponseWriter) error
+}
+
+type DeleteWebhook200JSONResponse struct{ SuccessJSONResponse }
+
+func (response DeleteWebhook200JSONResponse) VisitDeleteWebhookResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteWebhook400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response DeleteWebhook400JSONResponse) VisitDeleteWebhookResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteWebhook401JSONResponse struct{ UnauthenticatedJSONResponse }
+
+func (response DeleteWebhook401JSONResponse) VisitDeleteWebhookResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteWebhook403JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response DeleteWebhook403JSONResponse) VisitDeleteWebhookResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteWebhook404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response DeleteWebhook404JSONResponse) VisitDeleteWebhookResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteWebhook500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response DeleteWebhook500JSONResponse) VisitDeleteWebhookResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetWebhookRequestObject struct {
+	RegistryRef       RegistryRefPathParam       `json:"registry_ref"`
+	WebhookIdentifier WebhookIdentifierPathParam `json:"webhook_identifier"`
+}
+
+type GetWebhookResponseObject interface {
+	VisitGetWebhookResponse(w http.ResponseWriter) error
+}
+
+type GetWebhook200JSONResponse struct{ WebhookResponseJSONResponse }
+
+func (response GetWebhook200JSONResponse) VisitGetWebhookResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetWebhook400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response GetWebhook400JSONResponse) VisitGetWebhookResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetWebhook401JSONResponse struct{ UnauthenticatedJSONResponse }
+
+func (response GetWebhook401JSONResponse) VisitGetWebhookResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetWebhook403JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response GetWebhook403JSONResponse) VisitGetWebhookResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetWebhook500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response GetWebhook500JSONResponse) VisitGetWebhookResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateWebhookRequestObject struct {
+	RegistryRef       RegistryRefPathParam       `json:"registry_ref"`
+	WebhookIdentifier WebhookIdentifierPathParam `json:"webhook_identifier"`
+	Body              *UpdateWebhookJSONRequestBody
+}
+
+type UpdateWebhookResponseObject interface {
+	VisitUpdateWebhookResponse(w http.ResponseWriter) error
+}
+
+type UpdateWebhook201JSONResponse struct{ WebhookResponseJSONResponse }
+
+func (response UpdateWebhook201JSONResponse) VisitUpdateWebhookResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateWebhook400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response UpdateWebhook400JSONResponse) VisitUpdateWebhookResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateWebhook401JSONResponse struct{ UnauthenticatedJSONResponse }
+
+func (response UpdateWebhook401JSONResponse) VisitUpdateWebhookResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateWebhook403JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response UpdateWebhook403JSONResponse) VisitUpdateWebhookResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateWebhook500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response UpdateWebhook500JSONResponse) VisitUpdateWebhookResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListWebhookExecutionsRequestObject struct {
+	RegistryRef       RegistryRefPathParam       `json:"registry_ref"`
+	WebhookIdentifier WebhookIdentifierPathParam `json:"webhook_identifier"`
+	Params            ListWebhookExecutionsParams
+}
+
+type ListWebhookExecutionsResponseObject interface {
+	VisitListWebhookExecutionsResponse(w http.ResponseWriter) error
+}
+
+type ListWebhookExecutions200JSONResponse struct {
+	ListWebhooksExecutionResponseJSONResponse
+}
+
+func (response ListWebhookExecutions200JSONResponse) VisitListWebhookExecutionsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListWebhookExecutions400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response ListWebhookExecutions400JSONResponse) VisitListWebhookExecutionsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListWebhookExecutions401JSONResponse struct{ UnauthenticatedJSONResponse }
+
+func (response ListWebhookExecutions401JSONResponse) VisitListWebhookExecutionsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListWebhookExecutions403JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ListWebhookExecutions403JSONResponse) VisitListWebhookExecutionsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListWebhookExecutions500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response ListWebhookExecutions500JSONResponse) VisitListWebhookExecutionsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetWebhookExecutionRequestObject struct {
+	RegistryRef        RegistryRefPathParam        `json:"registry_ref"`
+	WebhookIdentifier  WebhookIdentifierPathParam  `json:"webhook_identifier"`
+	WebhookExecutionId WebhookExecutionIdPathParam `json:"webhook_execution_id"`
+}
+
+type GetWebhookExecutionResponseObject interface {
+	VisitGetWebhookExecutionResponse(w http.ResponseWriter) error
+}
+
+type GetWebhookExecution200JSONResponse struct {
+	WebhookExecutionResponseJSONResponse
+}
+
+func (response GetWebhookExecution200JSONResponse) VisitGetWebhookExecutionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetWebhookExecution400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response GetWebhookExecution400JSONResponse) VisitGetWebhookExecutionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetWebhookExecution401JSONResponse struct{ UnauthenticatedJSONResponse }
+
+func (response GetWebhookExecution401JSONResponse) VisitGetWebhookExecutionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetWebhookExecution403JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response GetWebhookExecution403JSONResponse) VisitGetWebhookExecutionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetWebhookExecution500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response GetWebhookExecution500JSONResponse) VisitGetWebhookExecutionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReTriggerWebhookExecutionRequestObject struct {
+	RegistryRef        RegistryRefPathParam        `json:"registry_ref"`
+	WebhookIdentifier  WebhookIdentifierPathParam  `json:"webhook_identifier"`
+	WebhookExecutionId WebhookExecutionIdPathParam `json:"webhook_execution_id"`
+}
+
+type ReTriggerWebhookExecutionResponseObject interface {
+	VisitReTriggerWebhookExecutionResponse(w http.ResponseWriter) error
+}
+
+type ReTriggerWebhookExecution200JSONResponse struct {
+	WebhookExecutionResponseJSONResponse
+}
+
+func (response ReTriggerWebhookExecution200JSONResponse) VisitReTriggerWebhookExecutionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReTriggerWebhookExecution400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response ReTriggerWebhookExecution400JSONResponse) VisitReTriggerWebhookExecutionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReTriggerWebhookExecution401JSONResponse struct{ UnauthenticatedJSONResponse }
+
+func (response ReTriggerWebhookExecution401JSONResponse) VisitReTriggerWebhookExecutionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReTriggerWebhookExecution403JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ReTriggerWebhookExecution403JSONResponse) VisitReTriggerWebhookExecutionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReTriggerWebhookExecution500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response ReTriggerWebhookExecution500JSONResponse) VisitReTriggerWebhookExecutionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetArtifactStatsForSpaceRequestObject struct {
 	SpaceRef SpaceRefPathParam `json:"space_ref"`
 	Params   GetArtifactStatsForSpaceParams
@@ -3750,6 +4689,30 @@ type StrictServerInterface interface {
 	// Returns CLI Client Setup Details
 	// (GET /registry/{registry_ref}/client-setup-details)
 	GetClientSetupDetails(ctx context.Context, request GetClientSetupDetailsRequestObject) (GetClientSetupDetailsResponseObject, error)
+	// ListWebhooks
+	// (GET /registry/{registry_ref}/webhooks)
+	ListWebhooks(ctx context.Context, request ListWebhooksRequestObject) (ListWebhooksResponseObject, error)
+	// CreateWebhook
+	// (POST /registry/{registry_ref}/webhooks)
+	CreateWebhook(ctx context.Context, request CreateWebhookRequestObject) (CreateWebhookResponseObject, error)
+	// DeleteWebhook
+	// (DELETE /registry/{registry_ref}/webhooks/{webhook_identifier})
+	DeleteWebhook(ctx context.Context, request DeleteWebhookRequestObject) (DeleteWebhookResponseObject, error)
+	// GetWebhook
+	// (GET /registry/{registry_ref}/webhooks/{webhook_identifier})
+	GetWebhook(ctx context.Context, request GetWebhookRequestObject) (GetWebhookResponseObject, error)
+	// UpdateWebhook
+	// (PUT /registry/{registry_ref}/webhooks/{webhook_identifier})
+	UpdateWebhook(ctx context.Context, request UpdateWebhookRequestObject) (UpdateWebhookResponseObject, error)
+	// ListWebhookExecutions
+	// (GET /registry/{registry_ref}/webhooks/{webhook_identifier}/executions)
+	ListWebhookExecutions(ctx context.Context, request ListWebhookExecutionsRequestObject) (ListWebhookExecutionsResponseObject, error)
+	// GetWebhookExecution
+	// (GET /registry/{registry_ref}/webhooks/{webhook_identifier}/executions/{webhook_execution_id})
+	GetWebhookExecution(ctx context.Context, request GetWebhookExecutionRequestObject) (GetWebhookExecutionResponseObject, error)
+	// ReTriggerWebhookExecution
+	// (GET /registry/{registry_ref}/webhooks/{webhook_identifier}/executions/{webhook_execution_id}/retrigger)
+	ReTriggerWebhookExecution(ctx context.Context, request ReTriggerWebhookExecutionRequestObject) (ReTriggerWebhookExecutionResponseObject, error)
 	// Get Artifact Stats
 	// (GET /spaces/{space_ref}/artifact/stats)
 	GetArtifactStatsForSpace(ctx context.Context, request GetArtifactStatsForSpaceRequestObject) (GetArtifactStatsForSpaceResponseObject, error)
@@ -4444,6 +5407,238 @@ func (sh *strictHandler) GetClientSetupDetails(w http.ResponseWriter, r *http.Re
 	}
 }
 
+// ListWebhooks operation middleware
+func (sh *strictHandler) ListWebhooks(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, params ListWebhooksParams) {
+	var request ListWebhooksRequestObject
+
+	request.RegistryRef = registryRef
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListWebhooks(ctx, request.(ListWebhooksRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListWebhooks")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListWebhooksResponseObject); ok {
+		if err := validResponse.VisitListWebhooksResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateWebhook operation middleware
+func (sh *strictHandler) CreateWebhook(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam) {
+	var request CreateWebhookRequestObject
+
+	request.RegistryRef = registryRef
+
+	var body CreateWebhookJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateWebhook(ctx, request.(CreateWebhookRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateWebhook")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreateWebhookResponseObject); ok {
+		if err := validResponse.VisitCreateWebhookResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteWebhook operation middleware
+func (sh *strictHandler) DeleteWebhook(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, webhookIdentifier WebhookIdentifierPathParam) {
+	var request DeleteWebhookRequestObject
+
+	request.RegistryRef = registryRef
+	request.WebhookIdentifier = webhookIdentifier
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteWebhook(ctx, request.(DeleteWebhookRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteWebhook")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DeleteWebhookResponseObject); ok {
+		if err := validResponse.VisitDeleteWebhookResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetWebhook operation middleware
+func (sh *strictHandler) GetWebhook(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, webhookIdentifier WebhookIdentifierPathParam) {
+	var request GetWebhookRequestObject
+
+	request.RegistryRef = registryRef
+	request.WebhookIdentifier = webhookIdentifier
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetWebhook(ctx, request.(GetWebhookRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetWebhook")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetWebhookResponseObject); ok {
+		if err := validResponse.VisitGetWebhookResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateWebhook operation middleware
+func (sh *strictHandler) UpdateWebhook(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, webhookIdentifier WebhookIdentifierPathParam) {
+	var request UpdateWebhookRequestObject
+
+	request.RegistryRef = registryRef
+	request.WebhookIdentifier = webhookIdentifier
+
+	var body UpdateWebhookJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateWebhook(ctx, request.(UpdateWebhookRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateWebhook")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(UpdateWebhookResponseObject); ok {
+		if err := validResponse.VisitUpdateWebhookResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListWebhookExecutions operation middleware
+func (sh *strictHandler) ListWebhookExecutions(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, webhookIdentifier WebhookIdentifierPathParam, params ListWebhookExecutionsParams) {
+	var request ListWebhookExecutionsRequestObject
+
+	request.RegistryRef = registryRef
+	request.WebhookIdentifier = webhookIdentifier
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListWebhookExecutions(ctx, request.(ListWebhookExecutionsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListWebhookExecutions")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListWebhookExecutionsResponseObject); ok {
+		if err := validResponse.VisitListWebhookExecutionsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetWebhookExecution operation middleware
+func (sh *strictHandler) GetWebhookExecution(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, webhookIdentifier WebhookIdentifierPathParam, webhookExecutionId WebhookExecutionIdPathParam) {
+	var request GetWebhookExecutionRequestObject
+
+	request.RegistryRef = registryRef
+	request.WebhookIdentifier = webhookIdentifier
+	request.WebhookExecutionId = webhookExecutionId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetWebhookExecution(ctx, request.(GetWebhookExecutionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetWebhookExecution")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetWebhookExecutionResponseObject); ok {
+		if err := validResponse.VisitGetWebhookExecutionResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ReTriggerWebhookExecution operation middleware
+func (sh *strictHandler) ReTriggerWebhookExecution(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, webhookIdentifier WebhookIdentifierPathParam, webhookExecutionId WebhookExecutionIdPathParam) {
+	var request ReTriggerWebhookExecutionRequestObject
+
+	request.RegistryRef = registryRef
+	request.WebhookIdentifier = webhookIdentifier
+	request.WebhookExecutionId = webhookExecutionId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ReTriggerWebhookExecution(ctx, request.(ReTriggerWebhookExecutionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ReTriggerWebhookExecution")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ReTriggerWebhookExecutionResponseObject); ok {
+		if err := validResponse.VisitReTriggerWebhookExecutionResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // GetArtifactStatsForSpace operation middleware
 func (sh *strictHandler) GetArtifactStatsForSpace(w http.ResponseWriter, r *http.Request, spaceRef SpaceRefPathParam, params GetArtifactStatsForSpaceParams) {
 	var request GetArtifactStatsForSpaceRequestObject
@@ -4528,80 +5723,94 @@ func (sh *strictHandler) GetAllRegistries(w http.ResponseWriter, r *http.Request
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
-	"hHeftTu9jB4b3yVevrz8JwAA//8i9KM57rIAAA==",
+	"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",
+	"6st9/PXj+v8DAAD//9MnwuCj3gAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

@@ -516,3 +516,25 @@ type GenericBlobRepository interface {
 	Create(ctx context.Context, gb *types.GenericBlob) error
 	DeleteByID(ctx context.Context, id string) error
 }
+
+type WebhooksRepository interface {
+	Create(ctx context.Context, webhook *types.Webhook) error
+	GetByRegistryAndIdentifier(ctx context.Context, registryID int64, webhookIdentifier string) (*types.Webhook, error)
+	ListByRegistry(
+		ctx context.Context,
+		sortByField string,
+		sortByOrder string,
+		limit int,
+		offset int,
+		search string,
+		registryID int64,
+	) (*[]types.Webhook, error)
+	CountAllByRegistry(
+		ctx context.Context,
+		registryID int64,
+		search string,
+	) (int64, error)
+
+	Update(ctx context.Context, webhook *types.Webhook) error
+	DeleteByRegistryAndIdentifier(ctx context.Context, registryID int64, webhookIdentifier string) error
+}

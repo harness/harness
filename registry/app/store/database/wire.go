@@ -71,6 +71,10 @@ func ProvideManifestDao(sqlDB *sqlx.DB, mtRepository store.MediaTypesRepository)
 	return NewManifestDao(sqlDB, mtRepository)
 }
 
+func ProvideWebhookDao(sqlDB *sqlx.DB) store.WebhooksRepository {
+	return NewWebhookDao(sqlDB)
+}
+
 func ProvideManifestRefDao(db *sqlx.DB) store.ManifestReferenceRepository {
 	return NewManifestReferenceDao(db)
 }
@@ -113,4 +117,5 @@ var WireSet = wire.NewSet(
 	ProvideBandwidthStatDao,
 	ProvideNodeDao,
 	ProvideGenericBlobDao,
+	ProvideWebhookDao,
 )

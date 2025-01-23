@@ -15,6 +15,8 @@ tags:
     description: APIs to get details of docker artifacts
   - name: Helm Artifacts
     description: APIs to get details of helm artifacts
+  - name: Webhooks
+    description: APIs to create, update, list webhooks
 
 
 servers:
@@ -665,6 +667,184 @@ paths:
           $ref: "#/components/responses/NotFound"
         500:
           $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/webhooks:
+    post:
+      summary: CreateWebhook
+      description: Returns Webhook Details
+      operationId: CreateWebhook
+      tags:
+        - Webhooks
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+      requestBody:
+        $ref: "#/components/requestBodies/WebhookRequest"
+      responses:
+        201:
+          $ref: "#/components/responses/WebhookResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+    get:
+      summary: ListWebhooks
+      description: Returns List of Webhook Details
+      operationId: ListWebhooks
+      tags:
+        - Webhooks
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/pageNumber"
+        - $ref: "#/components/parameters/pageSize"
+        - $ref: "#/components/parameters/sortOrder"
+        - $ref: "#/components/parameters/sortField"
+        - $ref: "#/components/parameters/searchTerm"
+      responses:
+        200:
+          $ref: "#/components/responses/ListWebhooksResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/webhooks/{webhook_identifier}:
+    put:
+      summary: UpdateWebhook
+      description: Returns Webhook Details
+      operationId: UpdateWebhook
+      tags:
+        - Webhooks
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/webhookIdentifierPathParam"
+      requestBody:
+        $ref: "#/components/requestBodies/WebhookRequest"
+      responses:
+        201:
+          $ref: "#/components/responses/WebhookResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+    get:
+      summary: GetWebhook
+      description: Returns Webhook Details
+      operationId: GetWebhook
+      tags:
+        - Webhooks
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/webhookIdentifierPathParam"
+      responses:
+        200:
+          $ref: "#/components/responses/WebhookResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      summary: DeleteWebhook
+      description: Delete a Webhook
+      operationId: DeleteWebhook
+      tags:
+        - Webhooks
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/webhookIdentifierPathParam"
+      responses:
+        200:
+          $ref: "#/components/responses/Success"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/webhooks/{webhook_identifier}/executions:
+    get:
+      summary: ListWebhookExecutions
+      description: Returns Webhook Execution Details List
+      operationId: ListWebhookExecutions
+      tags:
+        - Webhooks
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/webhookIdentifierPathParam"
+        - $ref: "#/components/parameters/pageNumber"
+        - $ref: "#/components/parameters/pageSize"
+      responses:
+        200:
+          $ref: "#/components/responses/ListWebhooksExecutionResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/webhooks/{webhook_identifier}/executions/{webhook_execution_id}:
+    get:
+      summary: GetWebhookExecution
+      description: Returns Webhook Execution Details
+      operationId: GetWebhookExecution
+      tags:
+        - Webhooks
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/webhookIdentifierPathParam"
+        - $ref: "#/components/parameters/webhookExecutionIdPathParam"
+      responses:
+        200:
+          $ref: "#/components/responses/WebhookExecutionResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/webhooks/{webhook_identifier}/executions/{webhook_execution_id}/retrigger:
+    get:
+      summary: ReTriggerWebhookExecution
+      description: Retrigger Webhook Execution
+      operationId: ReTriggerWebhookExecution
+      tags:
+        - Webhooks
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/webhookIdentifierPathParam"
+        - $ref: "#/components/parameters/webhookExecutionIdPathParam"
+      responses:
+        200:
+          $ref: "#/components/responses/WebhookExecutionResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        500:
+          $ref: "#/components/responses/InternalServerError"
 components:
   requestBodies:
     RegistryRequest:
@@ -679,6 +859,12 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/ArtifactLabelRequest"
+    WebhookRequest:
+      description: request for create and update webhook
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/WebhookRequest"
   responses:
     ArtifactStatsResponse:
       description: response to get artifact stats response
@@ -733,6 +919,48 @@ components:
                 $ref: "#/components/schemas/Status"
               data:
                 $ref: "#/components/schemas/Registry"
+            required:
+              - status
+              - data
+    WebhookResponse:
+      description: response for create, get and update webhook
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/Webhook"
+            required:
+              - status
+              - data
+    ListWebhooksExecutionResponse:
+      description: list webhooks executions response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/ListWebhooksExecutions"
+            required:
+              - status
+              - data
+    WebhookExecutionResponse:
+      description: webhook execution response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/WebhookExecution"
             required:
               - status
               - data
@@ -927,6 +1155,20 @@ components:
             required:
               - status
               - data
+    ListWebhooksResponse:
+      description: response for list webhooks
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/ListWebhooks"
+            required:
+              - status
+              - data
     ListArtifactResponse:
       description: response for list artifact
       content:
@@ -1057,6 +1299,66 @@ components:
             $ref: "#/components/schemas/RegistryMetadata"
       required:
         - registries
+    ListWebhooks:
+      type: object
+      description: A list of Harness Registries webhooks
+      properties:
+        pageCount:
+          type: integer
+          format: int64
+          description: The total number of pages
+          example: 100
+        itemCount:
+          type: integer
+          format: int64
+          description: The total number of items
+          example: 1
+        pageSize:
+          type: integer
+          description: The number of items per page
+          example: 1
+        pageIndex:
+          type: integer
+          format: int64
+          description: The current page
+          example: 0
+        webhooks:
+          type: array
+          description: A list of Registries webhooks
+          items:
+            $ref: "#/components/schemas/Webhook"
+      required:
+        - webhooks
+    ListWebhooksExecutions:
+      type: object
+      description: A list of Harness Registries webhooks executions
+      properties:
+        pageCount:
+          type: integer
+          format: int64
+          description: The total number of pages
+          example: 100
+        itemCount:
+          type: integer
+          format: int64
+          description: The total number of items
+          example: 1
+        pageSize:
+          type: integer
+          description: The number of items per page
+          example: 1
+        pageIndex:
+          type: integer
+          format: int64
+          description: The current page
+          example: 0
+        executions:
+          type: array
+          description: A list of Registries webhooks executions
+          items:
+            $ref: "#/components/schemas/WebhookExecution"
+      required:
+        - executions
     ListArtifact:
       type: object
       description: A list of Artifacts
@@ -1445,6 +1747,109 @@ components:
       properties:
         pullCommand:
           type: string
+    Webhook:
+      type: object
+      description: Harness Regstries Webhook
+      properties:
+        version:
+          type: integer
+          format: int64
+        identifier:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        url:
+          type: string
+        createdAt:
+          type: string
+        createdBy:
+          type: integer
+          format: int64
+        modifiedAt:
+          type: string
+        enabled:
+          type: boolean
+        internal:
+          type: boolean
+        secretIdentifier:
+          type: string
+        secretSpacePath:
+          type: string
+        secretSpaceId:
+          type: integer
+        insecure:
+          type: boolean
+        triggers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Trigger"
+        latestExecutionResult:
+          $ref: "#/components/schemas/WebhookExecResult"
+        extraHeaders:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExtraHeader"
+      required:
+        - identifier
+        - url
+        - name
+        - enabled
+        - insecure
+    WebhookExecution:
+      type: object
+      description: Harness Regstries Webhook Execution
+      properties:
+        id:
+          type: integer
+          format: int64
+        retriggerOf:
+          type: integer
+          format: int64
+        retriggerable:
+          type: boolean
+        created:
+          type: integer
+          format: int64
+        webhookId:
+          type: integer
+          format: int64
+        triggerType:
+          $ref: "#/components/schemas/Trigger"
+        result:
+          $ref: "#/components/schemas/WebhookExecResult"
+        duration:
+          type: integer
+          format: int64
+        error:
+          type: string
+        request:
+          $ref: "#/components/schemas/WebhookExecRequest"
+        response:
+          $ref: "#/components/schemas/WebhookExecResponse"
+    WebhookExecRequest:
+      type: object
+      description: Harness Regstries HTTP Webhook Request
+      properties:
+        url:
+          type: string
+        headers:
+          type: string
+        body:
+          type: string
+    WebhookExecResponse:
+      type: object
+      description: Harness Regstries HTTP Webhook Response
+      properties:
+        statusCode:
+          type: integer
+        status:
+          type: string
+        headers:
+          type: string
+        body:
+          type: string
     DockerArtifactDetail:
       type: object
       description: Docker Artifact Detail
@@ -1710,6 +2115,28 @@ components:
           type: array
           items:
             type: string
+    Trigger:
+      type: string
+      description: refers to trigger
+      enum:
+        - ARTIFACT_CREATION
+        - ARTIFACT_MODIFICATION
+        - ARTIFACT_DELETION
+    ExtraHeader:
+      type: object
+      description: Webhook Extra Header
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+    WebhookExecResult:
+      type: string
+      description: refers to webhook execution
+      enum:
+        - SUCCESS
+        - RETRIABLE_ERROR
+        - FATAL_ERROR
     RegistryType:
       type: string
       description: refers to type of registry i.e virtual or upstream
@@ -1803,6 +2230,41 @@ components:
         - identifier
         - type
         - packageType
+    WebhookRequest:
+      type: object
+      properties:
+        identifier:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        url:
+          type: string
+        enabled:
+          type: boolean
+        insecure:
+          type: boolean
+        secretIdentifier:
+          type: string
+        secretSpacePath:
+          type: string
+        secretSpaceId:
+          type: integer
+        triggers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Trigger"
+        extraHeaders:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExtraHeader"
+      required:
+        - insecure
+        - enabled
+        - identifier
+        - url
+        - name
     ArtifactLabelRequest:
       type: object
       properties:
@@ -1908,6 +2370,20 @@ components:
       in: path
       required: true
       description: Unique registry path.
+      schema:
+        type: string
+    webhookIdentifierPathParam:
+      name: webhook_identifier
+      in: path
+      required: true
+      description: Unique webhook identifier.
+      schema:
+        type: string
+    webhookExecutionIdPathParam:
+      name: webhook_execution_id
+      in: path
+      required: true
+      description: Unique webhook execution identifier.
       schema:
         type: string
     artifactParam:

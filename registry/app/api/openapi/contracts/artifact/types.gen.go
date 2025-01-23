@@ -45,12 +45,26 @@ const (
 	StatusSUCCESS Status = "SUCCESS"
 )
 
+// Defines values for Trigger.
+const (
+	TriggerARTIFACTCREATION     Trigger = "ARTIFACT_CREATION"
+	TriggerARTIFACTDELETION     Trigger = "ARTIFACT_DELETION"
+	TriggerARTIFACTMODIFICATION Trigger = "ARTIFACT_MODIFICATION"
+)
+
 // Defines values for UpstreamConfigSource.
 const (
 	UpstreamConfigSourceAwsEcr       UpstreamConfigSource = "AwsEcr"
 	UpstreamConfigSourceCustom       UpstreamConfigSource = "Custom"
 	UpstreamConfigSourceDockerhub    UpstreamConfigSource = "Dockerhub"
 	UpstreamConfigSourceMavenCentral UpstreamConfigSource = "MavenCentral"
+)
+
+// Defines values for WebhookExecResult.
+const (
+	WebhookExecResultFATALERROR     WebhookExecResult = "FATAL_ERROR"
+	WebhookExecResultRETRIABLEERROR WebhookExecResult = "RETRIABLE_ERROR"
+	WebhookExecResultSUCCESS        WebhookExecResult = "SUCCESS"
 )
 
 // Defines values for RegistryTypeParam.
@@ -272,6 +286,12 @@ type Error struct {
 	Message string `json:"message"`
 }
 
+// ExtraHeader Webhook Extra Header
+type ExtraHeader struct {
+	Key   *string `json:"key,omitempty"`
+	Value *string `json:"value,omitempty"`
+}
+
 // FileDetail File Detail
 type FileDetail struct {
 	Checksums       []string `json:"checksums"`
@@ -401,6 +421,42 @@ type ListRegistryArtifact struct {
 	PageSize *int `json:"pageSize,omitempty"`
 }
 
+// ListWebhooks A list of Harness Registries webhooks
+type ListWebhooks struct {
+	// ItemCount The total number of items
+	ItemCount *int64 `json:"itemCount,omitempty"`
+
+	// PageCount The total number of pages
+	PageCount *int64 `json:"pageCount,omitempty"`
+
+	// PageIndex The current page
+	PageIndex *int64 `json:"pageIndex,omitempty"`
+
+	// PageSize The number of items per page
+	PageSize *int `json:"pageSize,omitempty"`
+
+	// Webhooks A list of Registries webhooks
+	Webhooks []Webhook `json:"webhooks"`
+}
+
+// ListWebhooksExecutions A list of Harness Registries webhooks executions
+type ListWebhooksExecutions struct {
+	// Executions A list of Registries webhooks executions
+	Executions []WebhookExecution `json:"executions"`
+
+	// ItemCount The total number of items
+	ItemCount *int64 `json:"itemCount,omitempty"`
+
+	// PageCount The total number of pages
+	PageCount *int64 `json:"pageCount,omitempty"`
+
+	// PageIndex The current page
+	PageIndex *int64 `json:"pageIndex,omitempty"`
+
+	// PageSize The number of items per page
+	PageSize *int `json:"pageSize,omitempty"`
+}
+
 // MavenArtifactDetailConfig Config for generic artifact details
 type MavenArtifactDetailConfig struct {
 	ArtifactId *string `json:"artifactId,omitempty"`
@@ -492,6 +548,9 @@ type RegistryType string
 // Status Indicates if the request was successful or not
 type Status string
 
+// Trigger refers to trigger
+type Trigger string
+
 // UpstreamConfig Configuration for Harness Artifact UpstreamProxies
 type UpstreamConfig struct {
 	Auth *UpstreamConfig_Auth `json:"auth,omitempty"`
@@ -521,6 +580,85 @@ type UserPassword struct {
 // VirtualConfig Configuration for Harness Virtual Artifact Registries
 type VirtualConfig struct {
 	UpstreamProxies *[]string `json:"upstreamProxies,omitempty"`
+}
+
+// Webhook Harness Regstries Webhook
+type Webhook struct {
+	CreatedAt    *string        `json:"createdAt,omitempty"`
+	CreatedBy    *int64         `json:"createdBy,omitempty"`
+	Description  *string        `json:"description,omitempty"`
+	Enabled      bool           `json:"enabled"`
+	ExtraHeaders *[]ExtraHeader `json:"extraHeaders,omitempty"`
+	Identifier   string         `json:"identifier"`
+	Insecure     bool           `json:"insecure"`
+	Internal     *bool          `json:"internal,omitempty"`
+
+	// LatestExecutionResult refers to webhook execution
+	LatestExecutionResult *WebhookExecResult `json:"latestExecutionResult,omitempty"`
+	ModifiedAt            *string            `json:"modifiedAt,omitempty"`
+	Name                  string             `json:"name"`
+	SecretIdentifier      *string            `json:"secretIdentifier,omitempty"`
+	SecretSpaceId         *int               `json:"secretSpaceId,omitempty"`
+	SecretSpacePath       *string            `json:"secretSpacePath,omitempty"`
+	Triggers              *[]Trigger         `json:"triggers,omitempty"`
+	Url                   string             `json:"url"`
+	Version               *int64             `json:"version,omitempty"`
+}
+
+// WebhookExecRequest Harness Regstries HTTP Webhook Request
+type WebhookExecRequest struct {
+	Body    *string `json:"body,omitempty"`
+	Headers *string `json:"headers,omitempty"`
+	Url     *string `json:"url,omitempty"`
+}
+
+// WebhookExecResponse Harness Regstries HTTP Webhook Response
+type WebhookExecResponse struct {
+	Body       *string `json:"body,omitempty"`
+	Headers    *string `json:"headers,omitempty"`
+	Status     *string `json:"status,omitempty"`
+	StatusCode *int    `json:"statusCode,omitempty"`
+}
+
+// WebhookExecResult refers to webhook execution
+type WebhookExecResult string
+
+// WebhookExecution Harness Regstries Webhook Execution
+type WebhookExecution struct {
+	Created  *int64  `json:"created,omitempty"`
+	Duration *int64  `json:"duration,omitempty"`
+	Error    *string `json:"error,omitempty"`
+	Id       *int64  `json:"id,omitempty"`
+
+	// Request Harness Regstries HTTP Webhook Request
+	Request *WebhookExecRequest `json:"request,omitempty"`
+
+	// Response Harness Regstries HTTP Webhook Response
+	Response *WebhookExecResponse `json:"response,omitempty"`
+
+	// Result refers to webhook execution
+	Result        *WebhookExecResult `json:"result,omitempty"`
+	RetriggerOf   *int64             `json:"retriggerOf,omitempty"`
+	Retriggerable *bool              `json:"retriggerable,omitempty"`
+
+	// TriggerType refers to trigger
+	TriggerType *Trigger `json:"triggerType,omitempty"`
+	WebhookId   *int64   `json:"webhookId,omitempty"`
+}
+
+// WebhookRequest defines model for WebhookRequest.
+type WebhookRequest struct {
+	Description      *string        `json:"description,omitempty"`
+	Enabled          bool           `json:"enabled"`
+	ExtraHeaders     *[]ExtraHeader `json:"extraHeaders,omitempty"`
+	Identifier       string         `json:"identifier"`
+	Insecure         bool           `json:"insecure"`
+	Name             string         `json:"name"`
+	SecretIdentifier *string        `json:"secretIdentifier,omitempty"`
+	SecretSpaceId    *int           `json:"secretSpaceId,omitempty"`
+	SecretSpacePath  *string        `json:"secretSpacePath,omitempty"`
+	Triggers         *[]Trigger     `json:"triggers,omitempty"`
+	Url              string         `json:"url"`
 }
 
 // LabelsParam defines model for LabelsParam.
@@ -588,6 +726,12 @@ type VersionParam string
 
 // VersionPathParam defines model for versionPathParam.
 type VersionPathParam string
+
+// WebhookExecutionIdPathParam defines model for webhookExecutionIdPathParam.
+type WebhookExecutionIdPathParam string
+
+// WebhookIdentifierPathParam defines model for webhookIdentifierPathParam.
+type WebhookIdentifierPathParam string
 
 // ArtifactDetailResponse defines model for ArtifactDetailResponse.
 type ArtifactDetailResponse struct {
@@ -769,6 +913,24 @@ type ListRegistryResponse struct {
 	Status Status `json:"status"`
 }
 
+// ListWebhooksExecutionResponse defines model for ListWebhooksExecutionResponse.
+type ListWebhooksExecutionResponse struct {
+	// Data A list of Harness Registries webhooks executions
+	Data ListWebhooksExecutions `json:"data"`
+
+	// Status Indicates if the request was successful or not
+	Status Status `json:"status"`
+}
+
+// ListWebhooksResponse defines model for ListWebhooksResponse.
+type ListWebhooksResponse struct {
+	// Data A list of Harness Registries webhooks
+	Data ListWebhooks `json:"data"`
+
+	// Status Indicates if the request was successful or not
+	Status Status `json:"status"`
+}
+
 // NotFound defines model for NotFound.
 type NotFound Error
 
@@ -792,6 +954,24 @@ type Unauthenticated Error
 
 // Unauthorized defines model for Unauthorized.
 type Unauthorized Error
+
+// WebhookExecutionResponse defines model for WebhookExecutionResponse.
+type WebhookExecutionResponse struct {
+	// Data Harness Regstries Webhook Execution
+	Data WebhookExecution `json:"data"`
+
+	// Status Indicates if the request was successful or not
+	Status Status `json:"status"`
+}
+
+// WebhookResponse defines model for WebhookResponse.
+type WebhookResponse struct {
+	// Data Harness Regstries Webhook
+	Data Webhook `json:"data"`
+
+	// Status Indicates if the request was successful or not
+	Status Status `json:"status"`
+}
 
 // CreateRegistryParams defines parameters for CreateRegistry.
 type CreateRegistryParams struct {
@@ -901,6 +1081,33 @@ type GetClientSetupDetailsParams struct {
 	Version *VersionParam `form:"version,omitempty" json:"version,omitempty"`
 }
 
+// ListWebhooksParams defines parameters for ListWebhooks.
+type ListWebhooksParams struct {
+	// Page Current page number
+	Page *PageNumber `form:"page,omitempty" json:"page,omitempty"`
+
+	// Size Number of items per page
+	Size *PageSize `form:"size,omitempty" json:"size,omitempty"`
+
+	// SortOrder sortOrder
+	SortOrder *SortOrder `form:"sort_order,omitempty" json:"sort_order,omitempty"`
+
+	// SortField sortField
+	SortField *SortField `form:"sort_field,omitempty" json:"sort_field,omitempty"`
+
+	// SearchTerm search Term.
+	SearchTerm *SearchTerm `form:"search_term,omitempty" json:"search_term,omitempty"`
+}
+
+// ListWebhookExecutionsParams defines parameters for ListWebhookExecutions.
+type ListWebhookExecutionsParams struct {
+	// Page Current page number
+	Page *PageNumber `form:"page,omitempty" json:"page,omitempty"`
+
+	// Size Number of items per page
+	Size *PageSize `form:"size,omitempty" json:"size,omitempty"`
+}
+
 // GetArtifactStatsForSpaceParams defines parameters for GetArtifactStatsForSpace.
 type GetArtifactStatsForSpaceParams struct {
 	// From Date. Format - MM/DD/YYYY
@@ -975,6 +1182,12 @@ type ModifyRegistryJSONRequestBody RegistryRequest
 
 // UpdateArtifactLabelsJSONRequestBody defines body for UpdateArtifactLabels for application/json ContentType.
 type UpdateArtifactLabelsJSONRequestBody ArtifactLabelRequest
+
+// CreateWebhookJSONRequestBody defines body for CreateWebhook for application/json ContentType.
+type CreateWebhookJSONRequestBody WebhookRequest
+
+// UpdateWebhookJSONRequestBody defines body for UpdateWebhook for application/json ContentType.
+type UpdateWebhookJSONRequestBody WebhookRequest
 
 // AsDockerArtifactDetailConfig returns the union data inside the ArtifactDetail as a DockerArtifactDetailConfig
 func (t ArtifactDetail) AsDockerArtifactDetailConfig() (DockerArtifactDetailConfig, error) {

@@ -26,7 +26,7 @@ import (
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/app/store/database/util"
 	"github.com/harness/gitness/registry/types"
-	gitness_store "github.com/harness/gitness/store"
+	gitnessstore "github.com/harness/gitness/store"
 	databaseg "github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
 
@@ -236,7 +236,6 @@ func (r registryDao) GetAll(
 	repoType string,
 	recursive bool,
 ) (repos *[]store.RegistryMetadata, err error) {
-	// Select only required fields
 	selectFields := `
 		r.registry_id AS registry_id,
 		r.registry_name AS reg_identifier,
@@ -620,7 +619,7 @@ func (r registryDao) Update(ctx context.Context, registry *types.Registry) (err 
 	}
 
 	if count == 0 {
-		return gitness_store.ErrVersionConflict
+		return gitnessstore.ErrVersionConflict
 	}
 
 	return nil

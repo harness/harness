@@ -28,6 +28,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/types"
+	registryenum "github.com/harness/gitness/registry/types/enum"
 
 	digest "github.com/opencontainers/go-digest"
 	"github.com/rs/zerolog/log"
@@ -47,6 +48,8 @@ type RegistryRequestBaseInfo struct {
 
 	ParentRef string
 	parentID  int64
+
+	RegistryType api.RegistryType
 }
 
 type RegistryRequestInfo struct {
@@ -129,6 +132,7 @@ func (c *APIController) GetRegistryRequestBaseInfo(
 		baseInfo.RegistryRef = regRef
 		baseInfo.RegistryIdentifier = regIdentifier
 		baseInfo.RegistryID = reg.ID
+		baseInfo.RegistryType = reg.Type
 	}
 
 	return baseInfo, nil
@@ -403,4 +407,106 @@ func CreateUpstreamProxyResponseJSONResponse(upstreamproxy *types.UpstreamProxy)
 		Status: api.StatusSUCCESS,
 	}
 	return response
+}
+
+func (c *APIController) mapToWebhookResponseEntity(
+	ctx context.Context,
+	createdWebhook types.Webhook,
+) (*api.Webhook, error) {
+	createdAt := GetTimeInMs(createdWebhook.CreatedAt)
+	modifiedAt := GetTimeInMs(createdWebhook.UpdatedAt)
+	webhookResponseEntity := &api.Webhook{
+		Identifier:            createdWebhook.Identifier,
+		Name:                  createdWebhook.Name,
+		Description:           &createdWebhook.Description,
+		Url:                   createdWebhook.URL,
+		Version:               &createdWebhook.Version,
+		Enabled:               createdWebhook.Enabled,
+		Internal:              &createdWebhook.Internal,
+		Insecure:              createdWebhook.Insecure,
+		Triggers:              &createdWebhook.Triggers,
+		CreatedBy:             &createdWebhook.CreatedBy,
+		CreatedAt:             &createdAt,
+		ModifiedAt:            &modifiedAt,
+		LatestExecutionResult: createdWebhook.LatestExecutionResult,
+	}
+	if createdWebhook.ExtraHeaders != nil {
+		webhookResponseEntity.ExtraHeaders = &createdWebhook.ExtraHeaders
+	}
+	secretSpacePath := ""
+	if createdWebhook.SecretSpaceID > 0 {
+		primary, err := c.spacePathStore.FindPrimaryBySpaceID(ctx, int64(createdWebhook.SecretSpaceID))
+		if err != nil {
+			return nil, fmt.Errorf("failed to get secret space path: %w", err)
+		}
+		secretSpacePath = primary.Value
+	}
+	if createdWebhook.SecretIdentifier != "" {
+		webhookResponseEntity.SecretIdentifier = &createdWebhook.SecretIdentifier
+	}
+	if secretSpacePath != "" {
+		webhookResponseEntity.SecretSpacePath = &secretSpacePath
+	}
+	if createdWebhook.SecretSpaceID > 0 {
+		webhookResponseEntity.SecretSpaceId = &createdWebhook.SecretSpaceID
+	}
+
+	return webhookResponseEntity, nil
+}
+
+func (c *APIController) mapToWebhook(
+	ctx context.Context,
+	webhookRequest api.WebhookRequest,
+	regInfo *RegistryRequestBaseInfo,
+) (*types.Webhook, error) {
+	webhook := &types.Webhook{
+		Name:       webhookRequest.Identifier,
+		ParentType: registryenum.WebhookParentRegistry,
+		ParentID:   regInfo.RegistryID,
+		Scope:      webhookScopeRegistry,
+		Identifier: webhookRequest.Identifier,
+		URL:        webhookRequest.Url,
+		Enabled:    webhookRequest.Enabled,
+		Insecure:   webhookRequest.Insecure,
+		Triggers:   deduplicateTriggers(*webhookRequest.Triggers),
+	}
+	if webhookRequest.Description != nil {
+		webhook.Description = *webhookRequest.Description
+	}
+	if webhookRequest.SecretIdentifier != nil {
+		webhook.SecretIdentifier = *webhookRequest.SecretIdentifier
+	}
+	if webhookRequest.ExtraHeaders != nil {
+		webhook.ExtraHeaders = *webhookRequest.ExtraHeaders
+	}
+
+	if webhookRequest.SecretSpacePath != nil && len(*webhookRequest.SecretSpacePath) > 0 {
+		secretSpaceID, err := c.getSecretSpaceID(ctx, webhookRequest.SecretSpacePath)
+		if err != nil {
+			return nil, err
+		}
+		webhook.SecretSpaceID = secretSpaceID
+	} else if webhookRequest.SecretSpaceId != nil {
+		webhook.SecretSpaceID = *webhookRequest.SecretSpaceId
+	}
+	return webhook, nil
+}
+
+// deduplicateTriggers de-duplicates the triggers provided by the user.
+func deduplicateTriggers(in []api.Trigger) []api.Trigger {
+	if len(in) == 0 {
+		return []api.Trigger{}
+	}
+
+	triggerSet := make(map[api.Trigger]bool, len(in))
+	out := make([]api.Trigger, 0, len(in))
+	for _, trigger := range in {
+		if triggerSet[trigger] {
+			continue
+		}
+		triggerSet[trigger] = true
+		out = append(out, trigger)
+	}
+
+	return out
 }
