@@ -1535,10 +1535,46 @@ components:
       properties:
         header:
           type: string
+        secHeader:
+          type: string
+        type:
+          $ref: "#/components/schemas/SectionType"
+      discriminator:
+        propertyName: type
+        mapping:
+          INLINE: "#/components/schemas/ClientSetupStepConfig"
+          TABS: "#/components/schemas/TabSetupStepConfig"
+      oneOf:
+        - $ref: "#/components/schemas/ClientSetupStepConfig"
+        - $ref: "#/components/schemas/TabSetupStepConfig"
+      required:
+        - type
+    TabSetupStepConfig:
+      type: object
+      description: Tab Setup step config
+      properties:
+        tabs:
+          type: array
+          items:
+            $ref: "#/components/schemas/TabSetupStep"
+    ClientSetupStepConfig:
+      type: object
+      description: Client Setup Step
+      properties:
         steps:
           type: array
           items:
             $ref: "#/components/schemas/ClientSetupStep"
+    TabSetupStep:
+      type: object
+      description: Tab Setup step
+      properties:
+        header:
+          type: string
+        sections:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClientSetupSection"
     ClientSetupStep:
       type: object
       description: Client Setup Step
@@ -2153,6 +2189,14 @@ components:
         - MAVEN
         - GENERIC
         - HELM
+    SectionType:
+      type: string
+      description: refers to client setup section type
+      enum:
+        - INLINE
+        - TABS
+      discriminator:
+        propertyName: type
     Status:
       type: string
       description: "Indicates if the request was successful or not"

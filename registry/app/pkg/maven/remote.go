@@ -80,14 +80,13 @@ func (r *RemoteRegistry) FetchArtifact(ctx context.Context, info pkg.MavenArtifa
 
 	upstreamProxy, err := r.DBStore.UpstreamProxyDao.GetByRegistryIdentifier(ctx, info.ParentID, info.RegIdentifier)
 	if err != nil {
-		errs = append(errs, err)
+		return processError(err)
 	}
 
 	// This is start of proxy Code.
 	responseHeaders, readCloser, err = r.proxyController.ProxyFile(ctx, info, *upstreamProxy, serveFile)
 	if err != nil {
-		errs = append(errs, err)
-		return responseHeaders, nil, readCloser, errs
+		return processError(err)
 	}
 	return responseHeaders, nil, readCloser, errs
 }

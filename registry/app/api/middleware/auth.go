@@ -107,7 +107,7 @@ func CheckMavenAuth() func(http.Handler) http.Handler {
 }
 
 func setMavenHeaders(w http.ResponseWriter) {
-	w.Header().Set("WWW-Authenticate", "Basic realm=\"Maven API\"")
+	w.Header().Set("WWW-Authenticate", "Basic realm=\"Harness Registry\"")
 }
 
 func getRefsFromName(name string) (spaceRef, repoRef string) {

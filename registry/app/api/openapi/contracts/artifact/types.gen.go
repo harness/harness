@@ -38,6 +38,12 @@ const (
 	RegistryTypeVIRTUAL  RegistryType = "VIRTUAL"
 )
 
+// Defines values for SectionType.
+const (
+	SectionTypeINLINE SectionType = "INLINE"
+	SectionTypeTABS   SectionType = "TABS"
+)
+
 // Defines values for Status.
 const (
 	StatusERROR   Status = "ERROR"
@@ -195,8 +201,12 @@ type ClientSetupDetails struct {
 
 // ClientSetupSection Client Setup Section
 type ClientSetupSection struct {
-	Header *string            `json:"header,omitempty"`
-	Steps  *[]ClientSetupStep `json:"steps,omitempty"`
+	Header    *string `json:"header,omitempty"`
+	SecHeader *string `json:"secHeader,omitempty"`
+
+	// Type refers to client setup section type
+	Type  SectionType `json:"type"`
+	union json.RawMessage
 }
 
 // ClientSetupStep Client Setup Step
@@ -212,6 +222,11 @@ type ClientSetupStep struct {
 type ClientSetupStepCommand struct {
 	Label *string `json:"label,omitempty"`
 	Value *string `json:"value,omitempty"`
+}
+
+// ClientSetupStepConfig Client Setup Step
+type ClientSetupStepConfig struct {
+	Steps *[]ClientSetupStep `json:"steps,omitempty"`
 }
 
 // ClientSetupStepType ClientSetupStepType type
@@ -545,8 +560,22 @@ type RegistryRequest struct {
 // RegistryType refers to type of registry i.e virtual or upstream
 type RegistryType string
 
+// SectionType refers to client setup section type
+type SectionType string
+
 // Status Indicates if the request was successful or not
 type Status string
+
+// TabSetupStep Tab Setup step
+type TabSetupStep struct {
+	Header   *string               `json:"header,omitempty"`
+	Sections *[]ClientSetupSection `json:"sections,omitempty"`
+}
+
+// TabSetupStepConfig Tab Setup step config
+type TabSetupStepConfig struct {
+	Tabs *[]TabSetupStep `json:"tabs,omitempty"`
+}
 
 // Trigger refers to trigger
 type Trigger string
@@ -1469,6 +1498,160 @@ func (t *ArtifactDetail) UnmarshalJSON(b []byte) error {
 		err = json.Unmarshal(raw, &t.Version)
 		if err != nil {
 			return fmt.Errorf("error reading 'version': %w", err)
+		}
+	}
+
+	return err
+}
+
+// AsClientSetupStepConfig returns the union data inside the ClientSetupSection as a ClientSetupStepConfig
+func (t ClientSetupSection) AsClientSetupStepConfig() (ClientSetupStepConfig, error) {
+	var body ClientSetupStepConfig
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromClientSetupStepConfig overwrites any union data inside the ClientSetupSection as the provided ClientSetupStepConfig
+func (t *ClientSetupSection) FromClientSetupStepConfig(v ClientSetupStepConfig) error {
+	t.Type = "INLINE"
+
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeClientSetupStepConfig performs a merge with any union data inside the ClientSetupSection, using the provided ClientSetupStepConfig
+func (t *ClientSetupSection) MergeClientSetupStepConfig(v ClientSetupStepConfig) error {
+	t.Type = "INLINE"
+
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsTabSetupStepConfig returns the union data inside the ClientSetupSection as a TabSetupStepConfig
+func (t ClientSetupSection) AsTabSetupStepConfig() (TabSetupStepConfig, error) {
+	var body TabSetupStepConfig
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromTabSetupStepConfig overwrites any union data inside the ClientSetupSection as the provided TabSetupStepConfig
+func (t *ClientSetupSection) FromTabSetupStepConfig(v TabSetupStepConfig) error {
+	t.Type = "TABS"
+
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeTabSetupStepConfig performs a merge with any union data inside the ClientSetupSection, using the provided TabSetupStepConfig
+func (t *ClientSetupSection) MergeTabSetupStepConfig(v TabSetupStepConfig) error {
+	t.Type = "TABS"
+
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t ClientSetupSection) Discriminator() (string, error) {
+	var discriminator struct {
+		Discriminator string `json:"type"`
+	}
+	err := json.Unmarshal(t.union, &discriminator)
+	return discriminator.Discriminator, err
+}
+
+func (t ClientSetupSection) ValueByDiscriminator() (interface{}, error) {
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return nil, err
+	}
+	switch discriminator {
+	case "INLINE":
+		return t.AsClientSetupStepConfig()
+	case "TABS":
+		return t.AsTabSetupStepConfig()
+	default:
+		return nil, errors.New("unknown discriminator value: " + discriminator)
+	}
+}
+
+func (t ClientSetupSection) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	object := make(map[string]json.RawMessage)
+	if t.union != nil {
+		err = json.Unmarshal(b, &object)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if t.Header != nil {
+		object["header"], err = json.Marshal(t.Header)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'header': %w", err)
+		}
+	}
+
+	if t.SecHeader != nil {
+		object["secHeader"], err = json.Marshal(t.SecHeader)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'secHeader': %w", err)
+		}
+	}
+
+	object["type"], err = json.Marshal(t.Type)
+	if err != nil {
+		return nil, fmt.Errorf("error marshaling 'type': %w", err)
+	}
+
+	b, err = json.Marshal(object)
+	return b, err
+}
+
+func (t *ClientSetupSection) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	if err != nil {
+		return err
+	}
+	object := make(map[string]json.RawMessage)
+	err = json.Unmarshal(b, &object)
+	if err != nil {
+		return err
+	}
+
+	if raw, found := object["header"]; found {
+		err = json.Unmarshal(raw, &t.Header)
+		if err != nil {
+			return fmt.Errorf("error reading 'header': %w", err)
+		}
+	}
+
+	if raw, found := object["secHeader"]; found {
+		err = json.Unmarshal(raw, &t.SecHeader)
+		if err != nil {
+			return fmt.Errorf("error reading 'secHeader': %w", err)
+		}
+	}
+
+	if raw, found := object["type"]; found {
+		err = json.Unmarshal(raw, &t.Type)
+		if err != nil {
+			return fmt.Errorf("error reading 'type': %w", err)
 		}
 	}
 

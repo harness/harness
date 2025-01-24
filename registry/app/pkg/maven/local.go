@@ -157,7 +157,9 @@ func (r *LocalRegistry) PutArtifact(ctx context.Context, info pkg.MavenArtifactI
 
 func processError(err error) (
 	responseHeaders *commons.ResponseHeaders, body *storage.FileReader, readCloser io.ReadCloser, errs []error) {
-	if strings.Contains(err.Error(), sql.ErrNoRows.Error()) || strings.Contains(err.Error(), "resource not found") {
+	if strings.Contains(err.Error(), sql.ErrNoRows.Error()) ||
+		strings.Contains(err.Error(), "resource not found") ||
+		strings.Contains(err.Error(), "http status code: 404") {
 		return responseHeaders, nil, nil, []error{commons.NotFoundError(err.Error(), err)}
 	}
 	return responseHeaders, nil, nil, []error{errcode.ErrCodeUnknown.WithDetail(err)}
