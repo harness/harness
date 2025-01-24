@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/harness/gitness/app/gitspace/logutil"
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
@@ -35,6 +36,7 @@ import (
 )
 
 var _ Orchestrator = (*EmbeddedDockerOrchestrator)(nil)
+var loggingDivider = "\n" + strings.Repeat("=", 100) + "\n"
 
 const (
 	loggingKey = "gitspace.container"
@@ -555,14 +557,15 @@ func InstallFeatures(
 	}
 
 	gitspaceLogger.Info("Installing features...")
-	imageName, err = utils.BuildWithFeatures(ctx, dockerClient, imageName, sortedFeatures, gitspaceInstanceIdentifier,
-		containerUser, remoteUser, containerUserHomeDir, remoteUserHomeDir)
+	newImageName, dockerFileContent, err := utils.BuildWithFeatures(ctx, dockerClient, imageName, sortedFeatures,
+		gitspaceInstanceIdentifier, containerUser, remoteUser, containerUserHomeDir, remoteUserHomeDir)
+	gitspaceLogger.Info(fmt.Sprintf("Using dockerfile%s%s%s", loggingDivider, dockerFileContent, loggingDivider))
 	if err != nil {
 		return nil, "", logStreamWrapError(gitspaceLogger, "Error building with features", err)
 	}
-	gitspaceLogger.Info(fmt.Sprintf("Installed features, built new docker image %s", imageName))
+	gitspaceLogger.Info(fmt.Sprintf("Installed features, built new docker image %s", newImageName))
 
-	return sortedFeatures, imageName, nil
+	return sortedFeatures, newImageName, nil
 }
 
 // buildSetupSteps constructs the steps to be executed in the setup process.

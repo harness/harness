@@ -65,7 +65,7 @@ func BuildWithFeatures(
 	remoteUser string,
 	containerUserHomeDir string,
 	remoteUserHomeDir string,
-) (string, error) {
+) (string, string, error) {
 	buildContextPath := getGitspaceInstanceDirectory(gitspaceInstanceIdentifier)
 
 	defer func() {
@@ -75,15 +75,15 @@ func BuildWithFeatures(
 		}
 	}()
 
-	err := generateDockerFileWithFeatures(imageName, features, buildContextPath, containerUser,
+	dockerFileContent, err := generateDockerFileWithFeatures(imageName, features, buildContextPath, containerUser,
 		containerUserHomeDir, remoteUser, remoteUserHomeDir)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	buildContext, err := packBuildContextDirectory(buildContextPath)
 	if err != nil {
-		return "", err
+		return "", dockerFileContent, err
 	}
 
 	newImageName := "gitspace-with-features:" + gitspaceInstanceIdentifier
@@ -103,14 +103,23 @@ func BuildWithFeatures(
 	}()
 
 	if imageBuildErr != nil {
-		return "", imageBuildErr
+		return "", dockerFileContent, imageBuildErr
 	}
 
 	_, err = io.Copy(io.Discard, buildRes.Body)
 	if err != nil {
-		return "", err
+		return "", dockerFileContent, err
 	}
-	return newImageName, nil
+
+	imagePresentLocally, err := IsImagePresentLocally(ctx, newImageName, dockerClient)
+	if err != nil {
+		return "", dockerFileContent, err
+	}
+	if !imagePresentLocally {
+		return "", dockerFileContent, fmt.Errorf("error during docker build, image %s not present", newImageName)
+	}
+
+	return newImageName, dockerFileContent, nil
 }
 
 func packBuildContextDirectory(path string) (io.Reader, error) {
@@ -171,7 +180,7 @@ func generateDockerFileWithFeatures(
 	remoteUser string,
 	containerUserHomeDir string,
 	remoteUserHomeDir string,
-) error {
+) (string, error) {
 	dockerFile := fmt.Sprintf(`FROM %s
 ARG %s=%s
 ARG %s=%s
@@ -214,14 +223,14 @@ COPY ./devcontainer-features %s`,
 
 	file, err := os.OpenFile(filepath.Join(buildContextPath, "Dockerfile"), os.O_CREATE|os.O_RDWR, 0666)
 	if err != nil {
-		return fmt.Errorf("failed to create Dockerfile: %w", err)
+		return "", fmt.Errorf("failed to create Dockerfile: %w", err)
 	}
 	defer file.Close()
 
 	_, err = file.WriteString(dockerFile)
 	if err != nil {
-		return fmt.Errorf("failed to write content to Dockerfile: %w", err)
+		return "", fmt.Errorf("failed to write content to Dockerfile: %w", err)
 	}
 
-	return nil
+	return dockerFile, nil
 }

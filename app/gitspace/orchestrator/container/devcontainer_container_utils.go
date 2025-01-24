@@ -29,6 +29,7 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/app/gitspace/orchestrator/runarg"
+	"github.com/harness/gitness/app/gitspace/orchestrator/utils"
 	gitspaceTypes "github.com/harness/gitness/app/gitspace/types"
 	"github.com/harness/gitness/types"
 
@@ -626,7 +627,7 @@ func CopyImage(
 		return nil
 	}
 	if imagePullRunArg == imagePullRunArgMissing {
-		imagePresentLocally, err := isImagePresentLocally(ctx, imageName, dockerClient)
+		imagePresentLocally, err := utils.IsImagePresentLocally(ctx, imageName, dockerClient)
 		if err != nil {
 			return err
 		}
@@ -714,7 +715,7 @@ func PullImage(
 	}
 	if imagePullRunArg == imagePullRunArgMissing {
 		gitspaceLogger.Info("Checking if image " + imageName + " is present locally")
-		imagePresentLocally, err := isImagePresentLocally(ctx, imageName, dockerClient)
+		imagePresentLocally, err := utils.IsImagePresentLocally(ctx, imageName, dockerClient)
 		if err != nil {
 			gitspaceLogger.Error("Error listing images locally", err)
 			return err
@@ -866,18 +867,6 @@ func processImagePullResponse(pullResponse io.ReadCloser, gitspaceLogger gitspac
 		}
 	}
 	return nil
-}
-
-func isImagePresentLocally(ctx context.Context, imageName string, dockerClient *client.Client) (bool, error) {
-	filterArgs := filters.NewArgs()
-	filterArgs.Add("reference", imageName)
-
-	images, err := dockerClient.ImageList(ctx, image.ListOptions{Filters: filterArgs})
-	if err != nil {
-		return false, err
-	}
-
-	return len(images) > 0, nil
 }
 
 func buildImagePullOptions(
