@@ -107,6 +107,7 @@ export const ArtifactListPullCommandCell: CellType = ({ value, row }) => {
   const { packageType } = original
   const { getString } = useStrings()
   switch (packageType) {
+    case RepositoryPackageType.MAVEN:
     case RepositoryPackageType.GENERIC:
       return (
         <TableCells.LinkCell

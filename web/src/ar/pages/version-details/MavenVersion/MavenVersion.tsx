@@ -29,6 +29,7 @@ import {
 import { MavenVersionListPage } from './pages/list/MavenVersionListPage'
 import { VersionDetailsTab } from '../components/VersionDetailsTabs/constants'
 import MavenArtifactOverviewPage from './pages/overview/MavenArtifactOverviewPage'
+import MavenArtifactDetailsPage from './pages/artifact-details/MavenArtifactDetailsPage'
 import VersionDetailsHeaderContent from '../components/VersionDetailsHeaderContent/VersionDetailsHeaderContent'
 
 export class GenericVersionType extends VersionStep<ArtifactVersionSummary> {
@@ -51,6 +52,8 @@ export class GenericVersionType extends VersionStep<ArtifactVersionSummary> {
     switch (props.tab) {
       case VersionDetailsTab.OVERVIEW:
         return <MavenArtifactOverviewPage />
+      case VersionDetailsTab.ARTIFACT_DETAILS:
+        return <MavenArtifactDetailsPage />
       default:
         return <String stringID="tabNotFound" />
     }
