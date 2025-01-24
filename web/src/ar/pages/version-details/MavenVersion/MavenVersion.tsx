@@ -17,11 +17,19 @@
 import React from 'react'
 import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client'
 
+import { String } from '@ar/frameworks/strings'
 import { RepositoryPackageType } from '@ar/common/types'
-import { type VersionListTableProps, VersionStep } from '@ar/frameworks/Version/Version'
+import {
+  type VersionDetailsHeaderProps,
+  VersionDetailsTabProps,
+  type VersionListTableProps,
+  VersionStep
+} from '@ar/frameworks/Version/Version'
 
 import { MavenVersionListPage } from './pages/list/MavenVersionListPage'
 import { VersionDetailsTab } from '../components/VersionDetailsTabs/constants'
+import MavenArtifactOverviewPage from './pages/overview/MavenArtifactOverviewPage'
+import VersionDetailsHeaderContent from '../components/VersionDetailsHeaderContent/VersionDetailsHeaderContent'
 
 export class GenericVersionType extends VersionStep<ArtifactVersionSummary> {
   protected packageType = RepositoryPackageType.MAVEN
@@ -35,11 +43,16 @@ export class GenericVersionType extends VersionStep<ArtifactVersionSummary> {
     return <MavenVersionListPage {...props} />
   }
 
-  renderVersionDetailsHeader(): JSX.Element {
-    return <></>
+  renderVersionDetailsHeader(props: VersionDetailsHeaderProps<ArtifactVersionSummary>): JSX.Element {
+    return <VersionDetailsHeaderContent {...props} />
   }
 
-  renderVersionDetailsTab(): JSX.Element {
-    return <></>
+  renderVersionDetailsTab(props: VersionDetailsTabProps): JSX.Element {
+    switch (props.tab) {
+      case VersionDetailsTab.OVERVIEW:
+        return <MavenArtifactOverviewPage />
+      default:
+        return <String stringID="tabNotFound" />
+    }
   }
 }

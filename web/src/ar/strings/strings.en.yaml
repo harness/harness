@@ -75,6 +75,7 @@ packageTypes:
   dockerPackage: Docker Package
   helmPackage: Helm Package
   genericPackage: Generic
+  mavenPackage: Maven Package
 repositoryTypes:
   docker: Docker
   helm: Helm

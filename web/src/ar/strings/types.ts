@@ -335,6 +335,7 @@ export interface StringsMap {
   'packageTypes.dockerPackage': string
   'packageTypes.genericPackage': string
   'packageTypes.helmPackage': string
+  'packageTypes.mavenPackage': string
   plaintext: string
   plusNewName: string
   prod: string
