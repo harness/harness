@@ -12,27 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package types
+package enum
 
-import (
-	"github.com/harness/gitness/app/api/controller/aiagent/types/enum"
+type StageType string
+
+const (
+	Build          StageType = "Build"
+	Deploy         StageType = "Deploy"
+	Approval       StageType = "Approval"
+	Security       StageType = "Security"
+	Pipeline       StageType = "Pipeline"
+	Custom         StageType = "Custom"
+	Infrastructure StageType = "IACM"
+	Developer      StageType = "IDP"
+	FeatureFlag    StageType = "FeatureFlag"
 )
 
-type Suggestion struct {
-	ID             string
-	Prompt         string
-	UserSuggestion string
-	Suggestion     string
+func (st StageType) IsValid() bool {
+	switch st {
+	case Build, Deploy, Approval, Security, Pipeline, Custom, Infrastructure, Developer, FeatureFlag:
+		return true
+	}
+	return false
 }
-
-type Conversation struct {
-	Role    enum.Role `json:"role"`
-	Message Message   `json:"message"`
-}
-
-type Message struct {
-	Type enum.MessageType `json:"type"`
-	Data string           `json:"data"`
-}
-
-// Additional common structs can be defined here as needed.

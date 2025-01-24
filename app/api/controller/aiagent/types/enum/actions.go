@@ -12,27 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package types
+package enum
 
 import (
-	"github.com/harness/gitness/app/api/controller/aiagent/types/enum"
+	"github.com/harness/gitness/types/enum"
 )
 
-type Suggestion struct {
-	ID             string
-	Prompt         string
-	UserSuggestion string
-	Suggestion     string
+type Action string
+
+const (
+	Accept     Action = "ACCEPT"
+	Regenerate Action = "REGENERATE"
+)
+
+func (a Action) Sanitize() (Action, bool) {
+	return enum.Sanitize(a, GetAllActions)
 }
 
-type Conversation struct {
-	Role    enum.Role `json:"role"`
-	Message Message   `json:"message"`
+func GetAllActions() ([]Action, Action) {
+	return Actions, ""
 }
 
-type Message struct {
-	Type enum.MessageType `json:"type"`
-	Data string           `json:"data"`
-}
-
-// Additional common structs can be defined here as needed.
+var Actions = ([]Action{
+	Accept,
+	Regenerate,
+})
