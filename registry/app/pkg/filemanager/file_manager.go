@@ -37,6 +37,7 @@ const (
 	tmp            = "tmp"
 	files          = "files"
 	nodeLimit      = 1000
+	pathFormat     = "for path: %s, with error %w"
 )
 
 func NewFileManager(app *App, registryDao store.RegistryRepository, genericBlobDao store.GenericBlobRepository,
@@ -260,7 +261,7 @@ func (f *FileManager) GetFileMetadata(
 
 	if err != nil {
 		return pkg.FileInfo{}, fmt.Errorf("failed to get the node path mapping "+
-			"for path: %s, with error %w", filePath, err)
+			pathFormat, filePath, err)
 	}
 	blob, err := f.genericBlobDao.FindByID(ctx, node.BlobID)
 
@@ -276,4 +277,55 @@ func (f *FileManager) GetFileMetadata(
 		MD5:      blob.MD5,
 		Filename: node.Name,
 	}, nil
+}
+
+func (f *FileManager) DeleteFileByRegistryID(
+	ctx context.Context,
+	regID int64,
+	regName string,
+) error {
+	err := f.nodesDao.DeleteByRegistryID(ctx, regID)
+	if err != nil {
+		return fmt.Errorf("failed to delete all the files for registry with name: %s, with error %w", regName, err)
+	}
+	return nil
+}
+
+func (f *FileManager) GetFilesMetadata(
+	ctx context.Context,
+	filePath string,
+	regID int64,
+	sortByField string,
+	sortByOrder string,
+	limit int,
+	offset int,
+	search string,
+) (*[]types.FileNodeMetadata, error) {
+	node, err := f.nodesDao.GetFilesMetadataByPathAndRegistryID(ctx, regID, filePath,
+		sortByField,
+		sortByOrder,
+		limit,
+		offset,
+		search)
+
+	if err != nil {
+		return &[]types.FileNodeMetadata{}, fmt.Errorf("failed to get the files "+
+			pathFormat, filePath, err)
+	}
+	return node, nil
+}
+
+func (f *FileManager) CountFilesByPath(
+	ctx context.Context,
+	filePath string,
+	regID int64,
+) (int64, error) {
+	count, err := f.nodesDao.CountByPathAndRegistryID(ctx, regID, filePath)
+
+	if err != nil {
+		return -1, fmt.Errorf("failed to get the count of files"+
+			pathFormat, filePath, err)
+	}
+
+	return count, nil
 }

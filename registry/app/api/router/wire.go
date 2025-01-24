@@ -27,6 +27,7 @@ import (
 	mavenRouter "github.com/harness/gitness/registry/app/api/router/maven"
 	"github.com/harness/gitness/registry/app/api/router/oci"
 	storagedriver "github.com/harness/gitness/registry/app/driver"
+	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
 
@@ -44,6 +45,7 @@ func AppRouterProvider(
 func APIHandlerProvider(
 	repoDao store.RegistryRepository,
 	upstreamproxyDao store.UpstreamProxyConfigRepository,
+	fileManager filemanager.FileManager,
 	tagDao store.TagRepository,
 	manifestDao store.ManifestRepository,
 	cleanupPolicyDao store.CleanupPolicyRepository,
@@ -61,6 +63,7 @@ func APIHandlerProvider(
 ) harness.APIHandler {
 	return harness.NewAPIHandler(
 		repoDao,
+		fileManager,
 		upstreamproxyDao,
 		tagDao,
 		manifestDao,

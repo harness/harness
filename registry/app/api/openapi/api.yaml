@@ -507,6 +507,11 @@ paths:
         - $ref: "#/components/parameters/registryRefPathParam"
         - $ref: "#/components/parameters/artifactPathParam"
         - $ref: "#/components/parameters/versionPathParam"
+        - $ref: "#/components/parameters/pageNumber"
+        - $ref: "#/components/parameters/pageSize"
+        - $ref: "#/components/parameters/sortOrder"
+        - $ref: "#/components/parameters/sortField"
+        - $ref: "#/components/parameters/searchTerm"
       responses:
         200:
           $ref: "#/components/responses/FileDetailResponse"

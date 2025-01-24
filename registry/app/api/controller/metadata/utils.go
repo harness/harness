@@ -46,6 +46,7 @@ const (
 	RepositoryResource         = "repository"
 	ArtifactResource           = "artifact"
 	ArtifactVersionResource    = "artifactversion"
+	ArtifactFilesResource      = "artifactFiles"
 	RegistryIdentifierErrorMsg = "registry name should be 1~255 characters long with lower case characters, numbers " +
 		"and ._- and must be start with numbers or characters"
 	RegexIdentifierPattern = "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"
@@ -84,6 +85,12 @@ var artifactVersionSort = []string{
 	"lastModified",
 }
 
+var artifactFilesSort = []string{
+	"name",
+	"size",
+	"createdAt",
+}
+
 var artifactVersionSortMap = map[string]string{
 	"name":           "name",
 	"size":           "name",
@@ -91,6 +98,12 @@ var artifactVersionSortMap = map[string]string{
 	"downloadsCount": "download_count",
 	"lastModified":   "updated_at",
 	"createdAt":      "created_at",
+}
+
+var artifactFilesSortMap = map[string]string{
+	"name":      "name",
+	"size":      "size",
+	"createdAt": "created_at",
 }
 
 var validRepositoryTypes = []string{
@@ -266,6 +279,9 @@ func GetSortByField(sortByField string, resource string) string {
 	case ArtifactVersionResource:
 		sortkey := sortKey(artifactVersionSort, sortByField)
 		return artifactVersionSortMap[sortkey]
+	case ArtifactFilesResource:
+		sortkey := sortKey(artifactFilesSort, sortByField)
+		return artifactFilesSortMap[sortkey]
 	}
 	return "created_at"
 }
@@ -343,12 +359,16 @@ func GetPullCommand(
 	image string, tag string,
 	packageType string, registryURL string,
 ) string {
-	if packageType == "DOCKER" {
+	switch packageType {
+	case string(a.PackageTypeDOCKER):
 		return GetDockerPullCommand(image, tag, registryURL)
-	} else if packageType == "HELM" {
+	case string(a.PackageTypeHELM):
 		return GetHelmPullCommand(image, tag, registryURL)
+	case string(a.PackageTypeGENERIC):
+		return GetGenericArtifactFileDownloadCommand(registryURL, image, tag, "<FILENAME>")
+	default:
+		return ""
 	}
-	return ""
 }
 
 func GetDockerPullCommand(
@@ -360,6 +380,25 @@ func GetDockerPullCommand(
 
 func GetHelmPullCommand(image string, tag string, registryURL string) string {
 	return "helm pull oci://" + GetRepoURLWithoutProtocol(registryURL) + "/" + image + ":" + tag
+}
+
+func GetGenericArtifactFileDownloadCommand(regURL, artifact, version, filename string) string {
+	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>:<VERSION>:<FILENAME>' --header 'x-api-key: <API_KEY>'" +
+		" --output <TARGET_FILENAME>"
+
+	// Replace the placeholders with the actual values
+	replacements := map[string]string{
+		"<HOSTNAME>": regURL,
+		"<ARTIFACT>": artifact,
+		"<VERSION>":  version,
+		"<FILENAME>": filename,
+	}
+
+	for placeholder, value := range replacements {
+		downloadCommand = strings.ReplaceAll(downloadCommand, placeholder, value)
+	}
+
+	return downloadCommand
 }
 
 // CleanURLPath removes leading and trailing spaces and trailing slashes from the given URL string.

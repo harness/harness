@@ -27,3 +27,14 @@ type Node struct {
 	CreatedAt    time.Time
 	CreatedBy    int64
 }
+
+type FileNodeMetadata struct {
+	Name      string
+	Path      string
+	Size      int64
+	Sha1      string
+	Sha256    string
+	Sha512    string
+	MD5       string
+	CreatedAt int64
+}

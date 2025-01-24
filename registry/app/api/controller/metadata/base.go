@@ -81,6 +81,16 @@ type RegistryRequestParams struct {
 	recursive         bool
 }
 
+type ArtifactFilesRequestInfo struct {
+	RegistryRequestBaseInfo
+	sortByField string
+	sortByOrder string
+	offset      int
+	limit       int
+	pageNumber  int64
+	searchTerm  string
+}
+
 // GetRegistryRequestBaseInfo returns the base info for the registry request
 // One of the regRefParam or (parentRefParam + regIdentifierParam) should be provided.
 func (c *APIController) GetRegistryRequestBaseInfo(
@@ -509,4 +519,47 @@ func deduplicateTriggers(in []api.Trigger) []api.Trigger {
 	}
 
 	return out
+}
+
+func (c *APIController) GetArtifactFilesRequestInfo(
+	ctx context.Context,
+	r api.GetArtifactFilesRequestObject,
+) (*ArtifactFilesRequestInfo, error) {
+	sortByField := ""
+	sortByOrder := ""
+	if r.Params.SortOrder != nil {
+		sortByOrder = string(*r.Params.SortOrder)
+	}
+
+	if r.Params.SortField != nil {
+		sortByField = string(*r.Params.SortField)
+	}
+
+	sortByField = GetSortByField(sortByField, ArtifactFilesResource)
+	sortByOrder = GetSortByOrder(sortByOrder)
+
+	offset := GetOffset(r.Params.Size, r.Params.Page)
+	limit := GetPageLimit(r.Params.Size)
+	pageNumber := GetPageNumber(r.Params.Page)
+
+	searchTerm := ""
+	if r.Params.SearchTerm != nil {
+		searchTerm = string(*r.Params.SearchTerm)
+	}
+
+	baseInfo, err := c.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &ArtifactFilesRequestInfo{
+		RegistryRequestBaseInfo: *baseInfo,
+		sortByField:             sortByField,
+		sortByOrder:             sortByOrder,
+		offset:                  offset,
+		limit:                   limit,
+		pageNumber:              pageNumber,
+		searchTerm:              searchTerm,
+	}, nil
 }

@@ -496,15 +496,28 @@ type NodesRepository interface {
 
 	FindByPathAndRegistryID(ctx context.Context, registryID int64, path string,
 	) (*types.Node, error)
+
+	CountByPathAndRegistryID(ctx context.Context, registryID int64, path string,
+	) (int64, error)
 	// Create a node
 	Create(ctx context.Context, node *types.Node) error
 	// delete a node
 	DeleteByID(ctx context.Context, id int64) (err error)
 
+	DeleteByRegistryID(ctx context.Context, id int64) (err error)
+
 	GetByPathAndRegistryID(
 		ctx context.Context, registryID int64,
 		path string,
 	) (*types.Node, error)
+
+	GetFilesMetadataByPathAndRegistryID(ctx context.Context, registryID int64, path string,
+		sortByField string,
+		sortByOrder string,
+		limit int,
+		offset int,
+		search string,
+	) (*[]types.FileNodeMetadata, error)
 }
 
 type GenericBlobRepository interface {

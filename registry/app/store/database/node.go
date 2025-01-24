@@ -17,6 +17,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/harness/gitness/app/api/request"
@@ -122,6 +123,28 @@ func (n NodeDao) FindByPathAndRegistryID(ctx context.Context, registryID int64, 
 	return n.mapToNode(ctx, dst)
 }
 
+func (n NodeDao) CountByPathAndRegistryID(ctx context.Context, registryID int64, path string,
+) (int64, error) {
+	q := databaseg.Builder.
+		Select("COUNT(*)").
+		From("nodes").
+		Where("node_is_file = true AND node_path LIKE ? AND node_registry_id = ?", path, registryID)
+
+	db := dbtx.GetAccessor(ctx, n.sqlDB)
+
+	sql, args, err := q.ToSql()
+	if err != nil {
+		return -1, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	var count int64
+	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
+	if err != nil {
+		return 0, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing count query")
+	}
+	return count, nil
+}
+
 func (n NodeDao) Create(ctx context.Context, node *types.Node) error {
 	const sqlQuery = `
 		INSERT INTO nodes ( 
@@ -167,6 +190,24 @@ func (n NodeDao) Create(ctx context.Context, node *types.Node) error {
 func (n NodeDao) DeleteByID(_ context.Context, _ int64) (err error) {
 	// TODO implement me
 	panic("implement me")
+}
+
+func (n NodeDao) DeleteByRegistryID(ctx context.Context, regID int64) (err error) {
+	db := dbtx.GetAccessor(ctx, n.sqlDB)
+	delStmt := databaseg.Builder.Delete("nodes").
+		Where("node_registry_id = ?", regID)
+
+	delQuery, delArgs, err := delStmt.ToSql()
+	if err != nil {
+		return fmt.Errorf("failed to convert purge query to sql: %w", err)
+	}
+
+	_, err = db.ExecContext(ctx, delQuery, delArgs...)
+	if err != nil {
+		return databaseg.ProcessSQLErrorf(ctx, err, "the delete query failed")
+	}
+
+	return nil
 }
 
 func (n NodeDao) mapToNode(_ context.Context, dst *Nodes) (*types.Node, error) {
@@ -226,6 +267,69 @@ func (n NodeDao) mapToInternalNode(ctx context.Context, node *types.Node) interf
 	}
 }
 
+func (n NodeDao) GetFilesMetadataByPathAndRegistryID(ctx context.Context, registryID int64, path string,
+	sortByField string,
+	sortByOrder string,
+	limit int,
+	offset int,
+	search string,
+) (*[]types.FileNodeMetadata, error) {
+	q := databaseg.Builder.
+		Select(`n.node_name AS name,
+		n.node_created_at AS created_at,
+        n.node_path AS path,
+		gb.generic_blob_sha_1  AS sha1,
+		gb.generic_blob_sha_256  AS sha256,
+		gb.generic_blob_sha_512  AS sha512,
+        gb.generic_blob_md5   AS md5,
+		 gb.generic_blob_size  AS size`).
+		From("nodes n").
+		Where("n.node_is_file = true").
+		Join("generic_blobs gb ON gb.generic_blob_id = n.node_generic_blob_id").
+		Where("n.node_is_file = true AND n.node_path LIKE ? AND n.node_registry_id = ?", path, registryID)
+
+	db := dbtx.GetAccessor(ctx, n.sqlDB)
+
+	q = q.OrderBy(sortByField + " " + sortByOrder).Limit(uint64(limit)).Offset(uint64(offset))
+
+	if search != "" {
+		q = q.Where("name LIKE ?", sqlPartialMatch(search))
+	}
+	dst := []*FileNodeMetadataDB{}
+	sql, args, err := q.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to find node with registry id %d", registryID)
+	}
+
+	return n.mapToNodesMetadata(dst)
+}
+
+func (n NodeDao) mapToNodesMetadata(dst []*FileNodeMetadataDB) (*[]types.FileNodeMetadata, error) {
+	nodes := make([]types.FileNodeMetadata, 0, len(dst))
+	for _, d := range dst {
+		node := n.mapToNodeMetadata(d)
+		nodes = append(nodes, *node)
+	}
+	return &nodes, nil
+}
+
+func (n NodeDao) mapToNodeMetadata(d *FileNodeMetadataDB) *types.FileNodeMetadata {
+	return &types.FileNodeMetadata{
+		Name:      d.Name,
+		Path:      d.Path,
+		Size:      d.Size,
+		MD5:       d.MD5,
+		Sha1:      d.Sha1,
+		Sha256:    d.Sha256,
+		Sha512:    d.Sha512,
+		CreatedAt: d.CreatedAt,
+	}
+}
+
 func NewNodeDao(sqlDB *sqlx.DB) store.NodesRepository {
 	return &NodeDao{sqlDB: sqlDB}
 }
@@ -240,4 +344,15 @@ type Nodes struct {
 	ParentNodeID *string `db:"node_parent_id"`
 	CreatedAt    int64   `db:"node_created_at"`
 	CreatedBy    int64   `db:"node_created_by"`
+}
+
+type FileNodeMetadataDB struct {
+	Name      string `db:"name"`
+	CreatedAt int64  `db:"created_at"`
+	Path      string `db:"path"`
+	Sha1      string `db:"sha1"`
+	Sha256    string `db:"sha256"`
+	Sha512    string `db:"sha512"`
+	MD5       string `db:"md5"`
+	Size      int64  `db:"size"`
 }

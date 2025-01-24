@@ -20,6 +20,7 @@ import (
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/audit"
 	storagedriver "github.com/harness/gitness/registry/app/driver"
+	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
 )
@@ -27,6 +28,7 @@ import (
 // APIController simple struct.
 type APIController struct {
 	ImageStore         store.ImageRepository
+	fileManager        filemanager.FileManager
 	RegistryRepository store.RegistryRepository
 	UpstreamProxyStore store.UpstreamProxyConfigRepository
 	TagStore           store.TagRepository
@@ -45,6 +47,7 @@ type APIController struct {
 
 func NewAPIController(
 	repositoryStore store.RegistryRepository,
+	fileManager filemanager.FileManager,
 	upstreamProxyStore store.UpstreamProxyConfigRepository,
 	tagStore store.TagRepository,
 	manifestStore store.ManifestRepository,
@@ -61,6 +64,7 @@ func NewAPIController(
 	webhooksRepository store.WebhooksRepository,
 ) *APIController {
 	return &APIController{
+		fileManager:        fileManager,
 		RegistryRepository: repositoryStore,
 		UpstreamProxyStore: upstreamProxyStore,
 		TagStore:           tagStore,

@@ -28,6 +28,7 @@ import (
 	"github.com/harness/gitness/registry/app/api/middleware"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	storagedriver "github.com/harness/gitness/registry/app/driver"
+	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
 
@@ -52,6 +53,7 @@ type APIHandler interface {
 
 func NewAPIHandler(
 	repoDao store.RegistryRepository,
+	fileManager filemanager.FileManager,
 	upstreamproxyDao store.UpstreamProxyConfigRepository,
 	tagDao store.TagRepository,
 	manifestDao store.ManifestRepository,
@@ -75,6 +77,7 @@ func NewAPIHandler(
 	r.Use(middleware.CheckAuth())
 	apiController := metadata.NewAPIController(
 		repoDao,
+		fileManager,
 		upstreamproxyDao,
 		tagDao,
 		manifestDao,
