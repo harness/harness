@@ -15,7 +15,10 @@
 package types
 
 import (
+	"encoding/json"
 	"time"
+
+	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 )
 
 // Artifact DTO object.
@@ -23,8 +26,19 @@ type Artifact struct {
 	ID        int64
 	Version   string
 	ImageID   int64
+	Metadata  json.RawMessage
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	CreatedBy int64
 	UpdatedBy int64
+}
+
+type NonOCIArtifactMetadata struct {
+	Name            string
+	Size            string
+	PackageType     artifact.PackageType
+	FileCount       int64
+	IsLatestVersion bool
+	ModifiedAt      time.Time
+	DownloadCount   int64
 }

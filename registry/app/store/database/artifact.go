@@ -158,3 +158,15 @@ func (a ArtifactDao) mapToArtifact(_ context.Context, dst *artifactDB) (*types.A
 		UpdatedBy: updatedBy,
 	}, nil
 }
+
+type GenericMetadata struct {
+	Files       []File `json:"files"`
+	Description string `json:"desc"`
+	FileCount   int64  `json:"file_count"`
+}
+
+type File struct {
+	Size      int64  `json:"size"`
+	Filename  string `json:"file_name"`
+	CreatedAt int64  `json:"created_at"`
+}

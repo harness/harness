@@ -71,6 +71,14 @@ type MavenArtifactInfo struct {
 	Path          string
 }
 
+type GenericArtifactInfo struct {
+	*ArtifactInfo
+	FileName    string
+	Version     string
+	RegistryID  int64
+	Description string
+}
+
 func (a *MavenArtifactInfo) SetMavenRepoKey(key string) {
 	a.RegIdentifier = key
 }
