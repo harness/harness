@@ -210,6 +210,11 @@ func (c *APIController) deleteRegistryWithAudit(
 		return err
 	}
 
+	err = c.fileManager.DeleteFileByRegistryID(ctx, regInfo.RegistryID, regInfo.RegistryIdentifier)
+	if err != nil {
+		return err
+	}
+
 	err = c.RegistryRepository.Delete(ctx, regInfo.parentID, regInfo.RegistryIdentifier)
 	if err != nil {
 		return err

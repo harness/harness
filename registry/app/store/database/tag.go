@@ -45,6 +45,8 @@ const (
 	labelSeparatorStart string          = "%^_"
 	labelSeparatorEnd   string          = "^_%"
 	downloadCount       string          = "download_count"
+	imageName           string          = "image_name"
+	name                string          = "name"
 )
 
 type tagDao struct {
@@ -79,6 +81,7 @@ type artifactMetadataDB struct {
 	LatestVersion string               `db:"latest_version"`
 	CreatedAt     int64                `db:"created_at"`
 	ModifiedAt    int64                `db:"modified_at"`
+	Tag           *string              `db:"tag"`
 	Version       string               `db:"version"`
 }
 
@@ -353,40 +356,57 @@ func (t tagDao) GetAllArtifactsByParentID(
 ) (*[]types.ArtifactMetadata, error) {
 	q := databaseg.Builder.Select(
 		`r.registry_name as repo_name, 
-		t.tag_image_name as name, 
+		i.image_name as name, 
 		r.registry_package_type as package_type, 
-		t.tag_name as version, 
-		t.tag_updated_at as modified_at, 
-		ar.image_labels as labels, 
-		COALESCE(t2.download_count,0) as download_count `,
+        tag_q.tag_name AS tag,
+		ar.artifact_version as version, 
+		ar.artifact_updated_at as modified_at, 
+		i.image_labels as labels, 
+		COALESCE(t2.download_count, 0) as download_count `,
 	).
-		From("tags t").
-		Join("registries r ON t.tag_registry_id = r.registry_id").
+		From("artifacts ar").
+		Join("images i ON i.image_id = ar.artifact_image_id").
+		Join("registries r ON i.image_registry_id = r.registry_id").
 		Where("r.registry_parent_id = ?", parentID).
-		Join(
-			"images ar ON ar.image_registry_id = t.tag_registry_id AND"+
-				" ar.image_name = t.tag_image_name",
-		).
 		LeftJoin(
-			`( SELECT i.image_name, SUM(COALESCE(t1.download_count, 0)) as download_count FROM 
-			( SELECT a.artifact_image_id, COUNT(d.download_stat_id) as download_count 
+			`( SELECT a.artifact_version, SUM(COALESCE(t1.download_count, 0)) as download_count FROM 
+			( SELECT a.artifact_id, COUNT(d.download_stat_id) as download_count 
 			FROM artifacts a JOIN download_stats d ON d.download_stat_artifact_id = a.artifact_id 
-			GROUP BY a.artifact_image_id ) as t1 
-			JOIN images i ON i.image_id = t1.artifact_image_id 
+			GROUP BY a.artifact_id ) as t1 
+            JOIN artifacts a ON a.artifact_id = t1.artifact_id 
+			JOIN images i ON i.image_id = a.artifact_image_id 
 			JOIN registries r ON r.registry_id = i.image_registry_id 
-			WHERE r.registry_parent_id = ? GROUP BY i.image_name) as t2 
-			ON t.tag_image_name = t2.image_name`, parentID,
+			WHERE r.registry_parent_id = ? GROUP BY a.artifact_version) as t2 
+			ON ar.artifact_version = t2.artifact_version`, parentID,
 		)
 
 	if latestVersion {
 		q = q.Join(
-			`(SELECT t.tag_id as id, ROW_NUMBER() OVER (PARTITION BY t.tag_registry_id, t.tag_image_name 
-			ORDER BY t.tag_updated_at DESC) AS rank FROM tags t 
-			JOIN registries r ON t.tag_registry_id = r.registry_id 
+			`(SELECT ar.artifact_id as id, ROW_NUMBER() OVER (PARTITION BY ar.artifact_image_id 
+			ORDER BY ar.artifact_updated_at DESC) AS rank FROM artifacts ar 
+            JOIN images i ON i.image_id = ar.artifact_image_id 
+			JOIN registries r ON i.image_registry_id = r.registry_id 
 			WHERE r.registry_parent_id = ? ) AS a 
-			ON t.tag_id = a.id`, parentID, // nolint:goconst
+			ON ar.artifact_id = a.id`, parentID, // nolint:goconst
 		).
-			Where("a.rank = 1")
+			Where("a.rank = 1").
+			LeftJoin(
+				`(SELECT t.tag_name, t.tag_image_name, t.tag_registry_id, m.manifest_digest, 
+            ROW_NUMBER() OVER (PARTITION BY t.tag_image_name, 
+     t.tag_registry_id ORDER BY t.tag_updated_at DESC) AS tag_rank 
+     FROM tags t 
+     JOIN manifests m ON t.tag_manifest_id = m.manifest_id) AS tag_q
+     ON decode(ar.artifact_version, 'hex') = tag_q.manifest_digest 
+     AND i.image_name = tag_q.tag_image_name 
+     AND i.image_registry_id = tag_q.tag_registry_id AND tag_q.tag_rank = 1`,
+			)
+	} else {
+		q = q.LeftJoin(
+			`(SELECT t.tag_name, t.tag_image_name, t.tag_registry_id, m.manifest_digest FROM tags t 
+          JOIN manifests m ON t.tag_manifest_id = m.manifest_id) AS tag_q
+         ON  decode(ar.artifact_version, 'hex') = tag_q.manifest_digest AND
+         i.image_name = tag_q.tag_image_name AND i.image_registry_id = tag_q.tag_registry_id`,
+		)
 	}
 
 	if len(*registryIDs) > 0 {
@@ -398,15 +418,19 @@ func (t tagDao) GetAllArtifactsByParentID(
 	}
 
 	if search != "" {
-		q = q.Where("tag_image_name LIKE ?", sqlPartialMatch(search))
+		q = q.Where("i.image_name LIKE ?", sqlPartialMatch(search))
 	}
-	sortField := "tag_" + sortByField
+	sortField := "image_" + sortByField
 	if sortByField == downloadCount {
 		sortField = downloadCount
+	} else if sortByField == imageName {
+		sortField = name
 	}
+
 	q = q.OrderBy(sortField + " " + sortByOrder).Limit(uint64(limit)).Offset(uint64(offset))
 
 	sql, args, err := q.ToSql()
+
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to convert query to sql")
 	}
@@ -426,29 +450,32 @@ func (t tagDao) CountAllArtifactsByParentID(
 ) (int64, error) {
 	// nolint:goconst
 	q := databaseg.Builder.Select("COUNT(*)").
-		From("tags t").
-		Join("registries r ON t.tag_registry_id = r.registry_id"). // nolint:goconst
+		From("artifacts ar").
+		Join("images i ON i.image_id = ar.artifact_image_id").
+		Join("registries r ON i.image_registry_id = r.registry_id").
 		Where("r.registry_parent_id = ?", parentID).
-		Join(
-			"images ar ON ar.image_registry_id = t.tag_registry_id" +
-				" AND ar.image_name = t.tag_image_name",
-		)
+		LeftJoin(
+			"tags t ON i.image_name = t.tag_image_name AND  " +
+				"i.image_registry_id = t.tag_registry_id AND ar.artifact_version = t.tag_name",
+		) // nolint:goconst
 
 	if latestVersion {
 		q = q.Join(
-			`(SELECT t.tag_id as id, ROW_NUMBER() OVER (PARTITION BY t.tag_registry_id, t.tag_image_name 
-			ORDER BY t.tag_updated_at DESC) AS rank FROM tags t 
-			JOIN registries r ON t.tag_registry_id = r.registry_id 
+			`(SELECT ar.artifact_id as id, ROW_NUMBER() OVER (PARTITION BY ar.artifact_image_id 
+			ORDER BY ar.artifact_updated_at DESC) AS rank FROM artifacts ar 
+            JOIN images i ON i.image_id = ar.artifact_image_id 
+			JOIN registries r ON i.image_registry_id = r.registry_id 
 			WHERE r.registry_parent_id = ? ) AS a 
-			ON t.tag_id = a.id`, parentID, // nolint:goconst
-		).Where("a.rank = 1")
+			ON ar.artifact_id = a.id`, parentID, // nolint:goconst
+		).
+			Where("a.rank = 1")
 	}
 	if len(*registryIDs) > 0 {
 		q = q.Where(sq.Eq{"r.registry_name": registryIDs})
 	}
 
 	if search != "" {
-		q = q.Where("tag_image_name LIKE ?", sqlPartialMatch(search))
+		q = q.Where("image_name LIKE ?", sqlPartialMatch(search))
 	}
 
 	if len(packageTypes) > 0 {
@@ -1022,6 +1049,10 @@ func (t tagDao) mapToArtifactMetadata(
 	_ context.Context,
 	dst *artifactMetadataDB,
 ) (*types.ArtifactMetadata, error) {
+	version := dst.Version
+	if dst.Tag != nil {
+		version = *dst.Tag
+	}
 	return &types.ArtifactMetadata{
 		Name:          dst.Name,
 		RepoName:      dst.RepoName,
@@ -1031,7 +1062,7 @@ func (t tagDao) mapToArtifactMetadata(
 		Labels:        util.StringToArr(dst.Labels.String),
 		CreatedAt:     time.UnixMilli(dst.CreatedAt),
 		ModifiedAt:    time.UnixMilli(dst.ModifiedAt),
-		Version:       dst.Version,
+		Version:       version,
 	}, nil
 }
 

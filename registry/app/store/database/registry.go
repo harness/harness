@@ -211,17 +211,18 @@ func (r registryDao) GetByIDIn(ctx context.Context, ids []int64) (*[]types.Regis
 }
 
 type RegistryMetadataDB struct {
-	RegID         string                `db:"registry_id"`
-	RegIdentifier string                `db:"reg_identifier"`
-	Description   sql.NullString        `db:"description"`
-	PackageType   artifact.PackageType  `db:"package_type"`
-	Type          artifact.RegistryType `db:"type"`
-	LastModified  int64                 `db:"last_modified"`
-	URL           sql.NullString        `db:"url"`
-	ArtifactCount int64                 `db:"artifact_count"`
-	DownloadCount int64                 `db:"download_count"`
-	Size          int64                 `db:"size"`
-	Labels        sql.NullString        `db:"registry_labels"`
+	RegID           string                `db:"registry_id"`
+	RegIdentifier   string                `db:"reg_identifier"`
+	Description     sql.NullString        `db:"description"`
+	PackageType     artifact.PackageType  `db:"package_type"`
+	Type            artifact.RegistryType `db:"type"`
+	LastModified    int64                 `db:"last_modified"`
+	URL             sql.NullString        `db:"url"`
+	ArtifactCount   int64                 `db:"artifact_count"`
+	DownloadCount   int64                 `db:"download_count"`
+	Size            int64                 `db:"size"`
+	GenericBlobSize int64                 `db:"generic_blob_size"`
+	Labels          sql.NullString        `db:"registry_labels"`
 }
 
 func (r registryDao) GetAll(
@@ -246,6 +247,7 @@ func (r registryDao) GetAll(
 		COALESCE(u.upstream_proxy_config_url, '') AS url, 
 		COALESCE(artifact_count.count, 0) AS artifact_count,
 		COALESCE(blob_sizes.total_size, 0) AS size,
+        COALESCE(generic_blob_sizes.total_size, 0) AS generic_blob_size,
 		r.registry_labels,
 		COALESCE(download_stats.download_count, 0) AS download_count
 	`
@@ -265,6 +267,12 @@ func (r registryDao) GetAll(
 		GROUP BY 1
 	`
 
+	genericBlobSizesSubquery := `
+		SELECT node_registry_id AS node_registry_id, SUM(gb.generic_blob_size) AS total_size
+		FROM nodes n
+		JOIN generic_blobs gb ON  n.node_is_file = TRUE AND gb.generic_blob_id = n.node_generic_blob_id
+		GROUP BY 1
+	`
 	downloadStatsSubquery := `
 		SELECT i.image_registry_id AS registry_id, COUNT(d.download_stat_id) AS download_count
 		FROM download_stats d
@@ -283,10 +291,10 @@ func (r registryDao) GetAll(
 			LeftJoin("upstream_proxy_configs u ON r.registry_id = u.upstream_proxy_config_registry_id").
 			LeftJoin(fmt.Sprintf("(%s) AS artifact_count ON r.registry_id = artifact_count.image_registry_id",
 				artifactCountSubquery)).
-			LeftJoin(fmt.Sprintf("(%s) AS blob_sizes ON r.registry_id = blob_sizes.rblob_registry_id",
-				blobSizesSubquery)).
-			LeftJoin(fmt.Sprintf("(%s) AS download_stats ON r.registry_id = download_stats.registry_id",
-				downloadStatsSubquery))
+			LeftJoin(fmt.Sprintf("(%s) AS blob_sizes ON r.registry_id = blob_sizes.rblob_registry_id", blobSizesSubquery)).
+			//nolint:lll
+			LeftJoin(fmt.Sprintf("(%s) AS generic_blob_sizes ON r.registry_id = generic_blob_sizes.node_registry_id", genericBlobSizesSubquery)).
+			LeftJoin(fmt.Sprintf("(%s) AS download_stats ON r.registry_id = download_stats.registry_id", downloadStatsSubquery))
 	} else {
 		query = databaseg.Builder.
 			Select(selectFields).
@@ -294,10 +302,10 @@ func (r registryDao) GetAll(
 			LeftJoin("upstream_proxy_configs u ON r.registry_id = u.upstream_proxy_config_registry_id").
 			LeftJoin(fmt.Sprintf("(%s) AS artifact_count ON r.registry_id = artifact_count.image_registry_id",
 				artifactCountSubquery)).
-			LeftJoin(fmt.Sprintf("(%s) AS blob_sizes ON r.registry_id = blob_sizes.rblob_registry_id",
-				blobSizesSubquery)).
-			LeftJoin(fmt.Sprintf("(%s) AS download_stats ON r.registry_id = download_stats.registry_id",
-				downloadStatsSubquery)).
+			LeftJoin(fmt.Sprintf("(%s) AS blob_sizes ON r.registry_id = blob_sizes.rblob_registry_id", blobSizesSubquery)).
+			//nolint:lll
+			LeftJoin(fmt.Sprintf("(%s) AS generic_blob_sizes ON r.registry_id = generic_blob_sizes.node_registry_id", genericBlobSizesSubquery)).
+			LeftJoin(fmt.Sprintf("(%s) AS download_stats ON r.registry_id = download_stats.registry_id", downloadStatsSubquery)).
 			Where("r.registry_parent_id = ?", parentID)
 	}
 	// Apply search filter
@@ -722,6 +730,10 @@ func (r registryDao) mapToRegistryMetadataList(
 }
 
 func (r registryDao) mapToRegistryMetadata(_ context.Context, dst *RegistryMetadataDB) *store.RegistryMetadata {
+	size := dst.Size
+	if size == 0 {
+		size = dst.GenericBlobSize
+	}
 	return &store.RegistryMetadata{
 		RegID:         dst.RegID,
 		RegIdentifier: dst.RegIdentifier,
@@ -732,7 +744,7 @@ func (r registryDao) mapToRegistryMetadata(_ context.Context, dst *RegistryMetad
 		URL:           dst.URL.String,
 		ArtifactCount: dst.ArtifactCount,
 		DownloadCount: dst.DownloadCount,
-		Size:          dst.Size,
+		Size:          size,
 		Labels:        util.StringToArr(dst.Labels.String),
 	}
 }

@@ -478,15 +478,16 @@ func GetArtifactSummary(artifact types.ArtifactMetadata) *artifactapi.ArtifactSu
 }
 
 func GetArtifactVersionSummary(
-	tag *types.TagMetadata,
 	artifactName string,
+	packageType artifactapi.PackageType,
+	version string,
 	isLatestTag bool,
 ) *artifactapi.ArtifactVersionSummaryResponseJSONResponse {
 	artifactVersionSummary := &artifactapi.ArtifactVersionSummary{
 		ImageName:       artifactName,
 		IsLatestVersion: &isLatestTag,
-		PackageType:     tag.PackageType,
-		Version:         tag.Name,
+		PackageType:     packageType,
+		Version:         version,
 	}
 	response := &artifactapi.ArtifactVersionSummaryResponseJSONResponse{
 		Data:   *artifactVersionSummary,

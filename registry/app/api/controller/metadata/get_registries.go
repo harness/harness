@@ -173,6 +173,11 @@ func GetRegistryMetadata(
 		if reg.DownloadCount != 0 {
 			downloadCount = ptr.Int64(reg.DownloadCount)
 		}
+
+		regURL := urlProvider.RegistryURL(ctx, rootIdentifier, reg.RegIdentifier)
+		if reg.PackageType == artifact.PackageTypeGENERIC {
+			regURL = urlProvider.RegistryURL(ctx, rootIdentifier, "generic", reg.RegIdentifier)
+		}
 		// fix: refactor it
 		size := GetSize(reg.Size)
 		repoMetadata := artifact.RegistryMetadata{
@@ -181,7 +186,7 @@ func GetRegistryMetadata(
 			PackageType:    reg.PackageType,
 			Type:           reg.Type,
 			LastModified:   &modifiedAt,
-			Url:            urlProvider.RegistryURL(ctx, rootIdentifier, reg.RegIdentifier),
+			Url:            regURL,
 			ArtifactsCount: artifactCount,
 			DownloadsCount: downloadCount,
 			RegistrySize:   &size,

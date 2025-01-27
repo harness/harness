@@ -114,6 +114,7 @@ var validRepositoryTypes = []string{
 var validPackageTypes = []string{
 	string(a.PackageTypeDOCKER),
 	string(a.PackageTypeHELM),
+	string(a.PackageTypeGENERIC),
 	string(a.PackageTypeMAVEN),
 }
 

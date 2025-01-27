@@ -134,7 +134,10 @@ func (c *APIController) createVirtualRegistry(
 	if err != nil {
 		return throwCreateRegistry400Error(err), nil
 	}
-	err = c.setUpstreamProxyIDs(ctx, registry, registryRequest, regInfo.parentID)
+
+	if registry.PackageType != artifact.PackageTypeGENERIC {
+		err = c.setUpstreamProxyIDs(ctx, registry, registryRequest, regInfo.parentID)
+	}
 	if err != nil {
 		return throwCreateRegistry400Error(err), nil
 	}

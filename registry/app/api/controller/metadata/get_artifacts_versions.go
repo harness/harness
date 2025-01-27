@@ -77,29 +77,57 @@ func (c *APIController) GetAllArtifactVersions(
 
 	image := string(r.Artifact)
 
-	tags, err := c.TagStore.GetAllTagsByRepoAndImage(
+	registry, err := c.RegistryRepository.Get(ctx, regInfo.RegistryID)
+	if err != nil {
+		return throw500Error(err)
+	}
+
+	if registry.PackageType == artifact.PackageTypeDOCKER || registry.PackageType == artifact.PackageTypeHELM {
+		tags, err := c.TagStore.GetAllTagsByRepoAndImage(
+			ctx, regInfo.parentID, regInfo.RegistryIdentifier,
+			image, regInfo.sortByField, regInfo.sortByOrder, regInfo.limit, regInfo.offset, regInfo.searchTerm,
+		)
+
+		latestTag, _ := c.TagStore.GetLatestTagName(ctx, regInfo.parentID, regInfo.RegistryIdentifier, image)
+
+		count, _ := c.TagStore.CountAllTagsByRepoAndImage(
+			ctx, regInfo.parentID, regInfo.RegistryIdentifier,
+			image, regInfo.searchTerm,
+		)
+
+		if err != nil {
+			return throw500Error(err)
+		}
+		err = setDigestCount(ctx, *tags)
+		if err != nil {
+			return throw500Error(err)
+		}
+
+		return artifact.GetAllArtifactVersions200JSONResponse{
+			ListArtifactVersionResponseJSONResponse: *GetAllArtifactVersionResponse(
+				ctx, tags, latestTag, image, count, regInfo.pageNumber, regInfo.limit,
+				c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, regInfo.RegistryIdentifier),
+			),
+		}, nil
+	}
+	metadata, err := c.ArtifactStore.GetAllVersionsByRepoAndImage(
 		ctx, regInfo.parentID, regInfo.RegistryIdentifier,
 		image, regInfo.sortByField, regInfo.sortByOrder, regInfo.limit, regInfo.offset, regInfo.searchTerm,
 	)
+	if err != nil {
+		return throw500Error(err)
+	}
 
-	latestTag, _ := c.TagStore.GetLatestTagName(ctx, regInfo.parentID, regInfo.RegistryIdentifier, image)
+	latestVersion, _ := c.ArtifactStore.GetLatestVersionName(ctx, regInfo.parentID, regInfo.RegistryIdentifier, image)
 
-	count, _ := c.TagStore.CountAllTagsByRepoAndImage(
+	cnt, _ := c.ArtifactStore.CountAllVersionsByRepoAndImage(
 		ctx, regInfo.parentID, regInfo.RegistryIdentifier,
 		image, regInfo.searchTerm,
 	)
 
-	if err != nil {
-		return throw500Error(err)
-	}
-	err = setDigestCount(ctx, *tags)
-	if err != nil {
-		return throw500Error(err)
-	}
-
 	return artifact.GetAllArtifactVersions200JSONResponse{
-		ListArtifactVersionResponseJSONResponse: *GetAllArtifactVersionResponse(
-			ctx, tags, latestTag, image, count, regInfo.pageNumber, regInfo.limit,
+		ListArtifactVersionResponseJSONResponse: *GetNonOCIAllArtifactVersionResponse(
+			ctx, metadata, latestVersion, image, cnt, regInfo.pageNumber, regInfo.limit,
 			c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, regInfo.RegistryIdentifier),
 		),
 	}, nil

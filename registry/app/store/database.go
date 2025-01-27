@@ -441,6 +441,34 @@ type ArtifactRepository interface {
 	// Create an Artifact
 	CreateOrUpdate(ctx context.Context, artifact *types.Artifact) error
 	Count(ctx context.Context) (int64, error)
+	GetAllArtifactsByParentID(ctx context.Context, id int64,
+		i *[]string, field string, order string,
+		limit int, offset int, term string,
+		version bool, packageTypes []string) (*[]types.ArtifactMetadata, error)
+	CountAllArtifactsByParentID(
+		ctx context.Context, parentID int64,
+		registryIDs *[]string, search string, latestVersion bool, packageTypes []string,
+	) (int64, error)
+	GetAllArtifactsByRepo(
+		ctx context.Context, parentID int64, repoKey string,
+		sortByField string, sortByOrder string, limit int, offset int, search string,
+		labels []string,
+	) (*[]types.ArtifactMetadata, error)
+	CountAllArtifactsByRepo(
+		ctx context.Context, parentID int64, repoKey string,
+		search string, labels []string,
+	) (int64, error)
+	GetLatestArtifactMetadata(ctx context.Context, id int64, identifier string,
+		image string) (*types.ArtifactMetadata, error)
+	GetAllVersionsByRepoAndImage(ctx context.Context, id int64, identifier string, image string,
+		field string, order string, limit int, offset int, term string) (*[]types.NonOCIArtifactMetadata, error)
+	GetLatestVersionName(ctx context.Context, id int64, identifier string, image string) (string, error)
+	CountAllVersionsByRepoAndImage(
+		ctx context.Context, parentID int64,
+		repoKey string, image string, search string,
+	) (int64, error)
+	GetArtifactMetadata(ctx context.Context, id int64, identifier string,
+		image string, version string) (*types.ArtifactMetadata, error)
 }
 
 type DownloadStatRepository interface {

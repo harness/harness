@@ -21,6 +21,7 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -69,20 +70,48 @@ func (c *APIController) GetAllArtifactsByRegistry(
 			),
 		}, nil
 	}
-	artifacts, err := c.TagStore.GetAllArtifactsByRepo(
-		ctx, regInfo.parentID, regInfo.RegistryIdentifier,
-		regInfo.sortByField, regInfo.sortByOrder, regInfo.limit, regInfo.offset, regInfo.searchTerm, regInfo.labels,
-	)
-	count, _ := c.TagStore.CountAllArtifactsByRepo(
-		ctx, regInfo.parentID, regInfo.RegistryIdentifier,
-		regInfo.searchTerm, regInfo.labels,
-	)
+
+	registry, err := c.RegistryRepository.GetByParentIDAndName(ctx, space.ID, regInfo.RegistryIdentifier)
 	if err != nil {
 		return artifact.GetAllArtifactsByRegistry500JSONResponse{
 			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
 				*GetErrorResponse(http.StatusInternalServerError, err.Error()),
 			),
 		}, nil
+	}
+
+	var artifacts *[]types.ArtifactMetadata
+	var count int64
+	if registry.PackageType == artifact.PackageTypeDOCKER || registry.PackageType == artifact.PackageTypeHELM {
+		artifacts, err = c.TagStore.GetAllArtifactsByRepo(
+			ctx, regInfo.parentID, regInfo.RegistryIdentifier,
+			regInfo.sortByField, regInfo.sortByOrder, regInfo.limit, regInfo.offset, regInfo.searchTerm, regInfo.labels,
+		)
+		count, _ = c.TagStore.CountAllArtifactsByRepo(
+			ctx, regInfo.parentID, regInfo.RegistryIdentifier,
+			regInfo.searchTerm, regInfo.labels,
+		)
+		if err != nil {
+			return artifact.GetAllArtifactsByRegistry500JSONResponse{
+				InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
+					*GetErrorResponse(http.StatusInternalServerError, err.Error()),
+				),
+			}, nil
+		}
+	} else {
+		artifacts, err = c.ArtifactStore.GetAllArtifactsByRepo(
+			ctx, regInfo.parentID, regInfo.RegistryIdentifier,
+			regInfo.sortByField, regInfo.sortByOrder, regInfo.limit, regInfo.offset, regInfo.searchTerm, regInfo.labels)
+		count, _ = c.ArtifactStore.CountAllArtifactsByRepo(
+			ctx, regInfo.parentID, regInfo.RegistryIdentifier,
+			regInfo.searchTerm, regInfo.labels)
+		if err != nil {
+			return artifact.GetAllArtifactsByRegistry500JSONResponse{
+				InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
+					*GetErrorResponse(http.StatusInternalServerError, err.Error()),
+				),
+			}, nil
+		}
 	}
 	return artifact.GetAllArtifactsByRegistry200JSONResponse{
 		ListRegistryArtifactResponseJSONResponse: *GetAllArtifactByRegistryResponse(

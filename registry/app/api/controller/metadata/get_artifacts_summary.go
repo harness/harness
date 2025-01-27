@@ -21,6 +21,7 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -62,8 +63,7 @@ func (c *APIController) GetArtifactSummary(
 	}
 
 	image := string(r.Artifact)
-
-	tag, err := c.TagStore.GetLatestTagMetadata(ctx, regInfo.parentID, regInfo.RegistryIdentifier, image)
+	registry, err := c.RegistryRepository.Get(ctx, regInfo.RegistryID)
 
 	if err != nil {
 		return artifact.GetArtifactSummary500JSONResponse{
@@ -72,7 +72,30 @@ func (c *APIController) GetArtifactSummary(
 			),
 		}, nil
 	}
+
+	var metadata *types.ArtifactMetadata
+	if registry.PackageType == artifact.PackageTypeDOCKER || registry.PackageType == artifact.PackageTypeHELM {
+		metadata, err = c.TagStore.GetLatestTagMetadata(ctx, regInfo.parentID, regInfo.RegistryIdentifier, image)
+
+		if err != nil {
+			return artifact.GetArtifactSummary500JSONResponse{
+				InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
+					*GetErrorResponse(http.StatusInternalServerError, err.Error()),
+				),
+			}, nil
+		}
+	} else {
+		metadata, err = c.ArtifactStore.GetLatestArtifactMetadata(ctx, regInfo.parentID, regInfo.RegistryIdentifier, image)
+
+		if err != nil {
+			return artifact.GetArtifactSummary500JSONResponse{
+				InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
+					*GetErrorResponse(http.StatusInternalServerError, err.Error()),
+				),
+			}, nil
+		}
+	}
 	return artifact.GetArtifactSummary200JSONResponse{
-		ArtifactSummaryResponseJSONResponse: *GetArtifactSummary(*tag),
+		ArtifactSummaryResponseJSONResponse: *GetArtifactSummary(*metadata),
 	}, nil
 }
