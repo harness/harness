@@ -30,6 +30,7 @@ const (
 	RepoAttrCreated
 	RepoAttrUpdated
 	RepoAttrDeleted
+	RepoAttrLastGITPush
 )
 
 // ParseRepoAttr parses the repo attribute string
@@ -47,6 +48,8 @@ func ParseRepoAttr(s string) RepoAttr {
 		return RepoAttrUpdated
 	case deleted, deletedAt:
 		return RepoAttrDeleted
+	case lastGITPush:
+		return RepoAttrLastGITPush
 	default:
 		return RepoAttrNone
 	}
@@ -66,6 +69,8 @@ func (a RepoAttr) String() string {
 		return updated
 	case RepoAttrDeleted:
 		return deleted
+	case RepoAttrLastGITPush:
+		return lastGITPush
 	case RepoAttrNone:
 		return ""
 	default:

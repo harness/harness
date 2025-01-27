@@ -17,7 +17,9 @@ package githook
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
+	"time"
 
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
@@ -61,7 +63,10 @@ func (c *Controller) PostReceive(
 	// as the branch could be different than the configured default value.
 	c.handleEmptyRepoPush(ctx, repo, in.PostReceiveInput, &out)
 
-	// report ref events if repo is in an active state (best effort)
+	// always update last git push time - best effort
+	c.updateLastGITPushTime(ctx, repo, in)
+
+	// report ref events if repo is in an active state - best effort
 	if repo.State == enum.RepoStateActive {
 		c.reportReferenceEvents(ctx, rgit, repo, in.PrincipalID, in.PostReceiveInput)
 	}
@@ -336,4 +341,30 @@ func (c *Controller) handleEmptyRepoPush(
 			NewName:     repo.DefaultBranch,
 		})
 	}
+}
+
+// updateLastGITPushTime updates the repo's last git push time.
+func (c *Controller) updateLastGITPushTime(
+	ctx context.Context,
+	repo *types.Repository,
+	in types.GithookPostReceiveInput,
+) {
+	isNonePRRefFn := func(refUpdate hook.ReferenceUpdate) bool {
+		return !strings.HasPrefix(refUpdate.Ref, gitReferenceNamePullReq)
+	}
+	// ignore push that only contains pr refs for last git push time updates
+	if !slices.ContainsFunc(in.RefUpdates, isNonePRRefFn) {
+		return
+	}
+
+	newRepo, err := c.repoStore.UpdateOptLock(ctx, repo, func(r *types.Repository) error {
+		r.LastGITPush = time.Now().UnixMilli()
+		return nil
+	})
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msgf("failed to update last git push time for repo %q", repo.Path)
+		return
+	}
+
+	*repo = *newRepo
 }

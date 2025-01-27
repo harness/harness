@@ -31,6 +31,7 @@ type Repository struct {
 	Created     int64  `json:"created" yaml:"created"`
 	Updated     int64  `json:"updated" yaml:"updated"`
 	Deleted     *int64 `json:"deleted,omitempty" yaml:"deleted"`
+	LastGITPush int64  `json:"last_git_push" yaml:"last_git_push"`
 
 	// Size of the repository in KiB.
 	Size int64 `json:"size" yaml:"size"`

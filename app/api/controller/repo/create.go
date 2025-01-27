@@ -116,6 +116,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 			CreatedBy:     session.Principal.ID,
 			Created:       now,
 			Updated:       now,
+			LastGITPush:   now, // even in case of an empty repo, the git repo got created.
 			ForkID:        in.ForkID,
 			DefaultBranch: in.DefaultBranch,
 			IsEmpty:       isEmpty,

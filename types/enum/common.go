@@ -64,6 +64,7 @@ const (
 	value         = "value"
 	lastUsed      = "last_used"
 	lastActivated = "last_activated"
+	lastGITPush   = "last_git_push"
 )
 
 func toInterfaceSlice[T interface{}](vals []T) []interface{} {

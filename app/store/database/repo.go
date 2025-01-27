@@ -69,6 +69,7 @@ type repository struct {
 	Created     int64    `db:"repo_created"`
 	Updated     int64    `db:"repo_updated"`
 	Deleted     null.Int `db:"repo_deleted"`
+	LastGITPush int64    `db:"repo_last_git_push"`
 
 	Size        int64 `db:"repo_size"`
 	SizeUpdated int64 `db:"repo_size_updated"`
@@ -99,6 +100,7 @@ const (
 		,repo_created
 		,repo_updated
 		,repo_deleted
+		,repo_last_git_push
 		,repo_size
 		,repo_size_updated
 		,repo_git_uid
@@ -208,7 +210,7 @@ func (s *RepoStore) FindDeletedByUID(
 func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 	const sqlQuery = `
 		INSERT INTO repositories (
-			repo_version                      
+			repo_version
 			,repo_parent_id
 			,repo_uid
 			,repo_description
@@ -216,8 +218,9 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 			,repo_created
 			,repo_updated
 			,repo_deleted
+			,repo_last_git_push
 			,repo_size
-			,repo_size_updated	
+			,repo_size_updated
 			,repo_git_uid
 			,repo_default_branch
 			,repo_fork_id
@@ -238,6 +241,7 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 			,:repo_created
 			,:repo_updated
 			,:repo_deleted
+			,:repo_last_git_push
 			,:repo_size
 			,:repo_size_updated
 			,:repo_git_uid
@@ -281,6 +285,7 @@ func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 			 repo_version = :repo_version
 			,repo_updated = :repo_updated
 			,repo_deleted = :repo_deleted
+			,repo_last_git_push = :repo_last_git_push
 			,repo_parent_id = :repo_parent_id
 			,repo_uid = :repo_uid
 			,repo_git_uid = :repo_git_uid
@@ -754,6 +759,7 @@ func (s *RepoStore) mapToRepo(
 		CreatedBy:      in.CreatedBy,
 		Updated:        in.Updated,
 		Deleted:        in.Deleted.Ptr(),
+		LastGITPush:    in.LastGITPush,
 		Size:           in.Size,
 		SizeUpdated:    in.SizeUpdated,
 		GitUID:         in.GitUID,
@@ -837,6 +843,7 @@ func mapToInternalRepo(in *types.Repository) *repository {
 		CreatedBy:      in.CreatedBy,
 		Updated:        in.Updated,
 		Deleted:        null.IntFromPtr(in.Deleted),
+		LastGITPush:    in.LastGITPush,
 		Size:           in.Size,
 		SizeUpdated:    in.SizeUpdated,
 		GitUID:         in.GitUID,
@@ -885,6 +892,8 @@ func applySortFilter(stmt squirrel.SelectBuilder, filter *types.RepoFilter) squi
 		stmt = stmt.OrderBy("repo_updated " + filter.Order.String())
 	case enum.RepoAttrDeleted:
 		stmt = stmt.OrderBy("repo_deleted " + filter.Order.String())
+	case enum.RepoAttrLastGITPush:
+		stmt = stmt.OrderBy("repo_last_git_push " + filter.Order.String())
 	}
 
 	return stmt

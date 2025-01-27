@@ -113,6 +113,7 @@ func (c *Controller) CreateRepo(
 			CreatedBy:     session.Principal.ID,
 			Created:       now.UnixMilli(),
 			Updated:       now.UnixMilli(),
+			LastGITPush:   now.UnixMilli(), // even in case of an empty repo, the git repo got created.
 			DefaultBranch: in.DefaultBranch,
 			IsEmpty:       true,
 			State:         enum.RepoStateMigrateGitPush,

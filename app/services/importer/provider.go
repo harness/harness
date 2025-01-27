@@ -99,6 +99,7 @@ func (r *RepositoryInfo) ToRepo(
 		CreatedBy:     principal.ID,
 		Created:       now,
 		Updated:       now,
+		LastGITPush:   now, // even in case of an empty repo, the git repo got created.
 		ForkID:        0,
 		DefaultBranch: r.DefaultBranch,
 		State:         enum.RepoStateGitImport,
