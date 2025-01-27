@@ -19,24 +19,15 @@ import { Avatar, Button, ButtonVariation, Container, Layout, Page, TableV2, Text
 import { Color, FontVariation } from '@harnessio/design-system'
 import type { CellProps, Column } from 'react-table'
 
-import { StringKeys, useStrings } from 'framework/strings'
+import { useStrings } from 'framework/strings'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
-import { EnumMembershipRole, TypesMembershipUser, useMembershipDelete, useMembershipList } from 'services/code'
-import { getErrorMessage } from 'utils/Utils'
+import { TypesMembershipUser, useMembershipDelete, useMembershipList } from 'services/code'
+import { getErrorMessage, roleStringKeyMap } from 'utils/Utils'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
-
 import useAddNewMember from './AddNewMember/AddNewMember'
-
 import css from './SpaceAccessControl.module.scss'
-
-export const roleStringKeyMap: Record<EnumMembershipRole, StringKeys> = {
-  contributor: 'contributor',
-  executor: 'executor',
-  reader: 'reader',
-  space_owner: 'owner'
-}
 
 const SpaceAccessControl = () => {
   const { getString } = useStrings()

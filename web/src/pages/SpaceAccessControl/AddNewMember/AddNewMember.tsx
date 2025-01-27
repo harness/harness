@@ -28,9 +28,8 @@ import {
   useMembershipAdd,
   useMembershipUpdate
 } from 'services/code'
-import { getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
+import { getErrorMessage, LIST_FETCHING_LIMIT, roleStringKeyMap } from 'utils/Utils'
 import { useModalHook } from 'hooks/useModalHook'
-import { roleStringKeyMap } from '../SpaceAccessControl'
 
 const roles = ['reader', 'executor', 'contributor', 'space_owner'] as const
 

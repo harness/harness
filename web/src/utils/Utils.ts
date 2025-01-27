@@ -31,9 +31,11 @@ import type {
   TypesLabelValue,
   TypesPullReq,
   TypesOwnerEvaluation,
-  TypesPrincipalInfo
+  TypesPrincipalInfo,
+  EnumMembershipRole
 } from 'services/code'
 import { PullReqReviewDecision } from 'pages/PullRequest/PullRequestUtils'
+import type { StringKeys } from 'framework/strings'
 
 export enum ACCESS_MODES {
   VIEW,
@@ -1114,3 +1116,10 @@ export const replaceMentionEmailWithId = (
     [x: string]: TypesPrincipalInfo
   }
 ) => input.replace(/@\[(\S+@\S+\.\S+)\]/g, (match, email) => (emailMap[email] ? `@[${emailMap[email].id}]` : match))
+
+export const roleStringKeyMap: Record<EnumMembershipRole, StringKeys> = {
+  contributor: 'contributor',
+  executor: 'executor',
+  reader: 'reader',
+  space_owner: 'owner'
+}
