@@ -71,7 +71,7 @@ func (c *APIController) GetClientSetupDetails(
 	}
 
 	if imageParam != nil {
-		_, err := c.ImageStore.GetByName(ctx, reg.ID, string(*imageParam))
+		image, err := c.ImageStore.GetByName(ctx, reg.ID, string(*imageParam))
 		if err != nil {
 			return artifact.GetClientSetupDetails404JSONResponse{
 				NotFoundJSONResponse: artifact.NotFoundJSONResponse(
@@ -80,7 +80,7 @@ func (c *APIController) GetClientSetupDetails(
 			}, err
 		}
 		if tagParam != nil {
-			_, err := c.TagStore.FindTag(ctx, reg.ID, string(*imageParam), string(*tagParam))
+			_, err := c.ArtifactStore.GetByName(ctx, image.ID, string(*tagParam))
 			if err != nil {
 				return artifact.GetClientSetupDetails404JSONResponse{
 					NotFoundJSONResponse: artifact.NotFoundJSONResponse(
@@ -113,96 +113,14 @@ func (c *APIController) GenerateClientSetupDetails(
 	loginUsernameValue := "<USERNAME>"
 	loginPasswordLabel := "Password: *see step 2*"
 	blankString := ""
-	if packageType == string(artifact.PackageTypeMAVEN) {
+	switch packageType {
+	case string(artifact.PackageTypeMAVEN):
 		return c.generateMavenClientSetupDetail(ctx, image, tag, registryRef, username)
-	} else if packageType == string(artifact.PackageTypeHELM) {
-		header1 := "Login to Helm"
-		section1step1Header := "Run this Helm command in your terminal to authenticate the client."
-		helmLoginValue := "helm registry login <LOGIN_HOSTNAME>"
-		section1step1Commands := []artifact.ClientSetupStepCommand{
-			{Label: &blankString, Value: &helmLoginValue},
-			{Label: &loginUsernameLabel, Value: &loginUsernameValue},
-			{Label: &loginPasswordLabel, Value: &blankString},
-		}
-		section1step1Type := artifact.ClientSetupStepTypeStatic
-		section1step2Header := "For the Password field above, generate an identity token"
-		section1step2Type := artifact.ClientSetupStepTypeGenerateToken
-		section1Steps := []artifact.ClientSetupStep{
-			{
-				Header:   &section1step1Header,
-				Commands: &section1step1Commands,
-				Type:     &section1step1Type,
-			},
-			{
-				Header: &section1step2Header,
-				Type:   &section1step2Type,
-			},
-		}
-		section1 := artifact.ClientSetupSection{
-			Header: &header1,
-		}
-		_ = section1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
-			Steps: &section1Steps,
-		})
-
-		header2 := "Push a version"
-		section2step1Header := "Run this Helm push command in your terminal to push a chart in OCI form." +
-			" Note: Make sure you add oci:// prefix to the repository URL."
-		helmPushValue := "helm push <CHART_TGZ_FILE> oci://<HOSTNAME>/<REGISTRY_NAME>"
-		section2step1Commands := []artifact.ClientSetupStepCommand{
-			{Label: &blankString, Value: &helmPushValue},
-		}
-		section2step1Type := artifact.ClientSetupStepTypeStatic
-		section2Steps := []artifact.ClientSetupStep{
-			{
-				Header:   &section2step1Header,
-				Commands: &section2step1Commands,
-				Type:     &section2step1Type,
-			},
-		}
-		section2 := artifact.ClientSetupSection{
-			Header: &header2,
-		}
-		_ = section2.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
-			Steps: &section2Steps,
-		})
-
-		header3 := "Pull a version"
-		section3step1Header := "Run this Helm command in your terminal to pull a specific chart version."
-		helmPullValue := "helm pull oci://<HOSTNAME>/<REGISTRY_NAME>/<IMAGE_NAME> --version <TAG>"
-		section3step1Commands := []artifact.ClientSetupStepCommand{
-			{Label: &blankString, Value: &helmPullValue},
-		}
-		section3step1Type := artifact.ClientSetupStepTypeStatic
-		section3Steps := []artifact.ClientSetupStep{
-			{
-				Header:   &section3step1Header,
-				Commands: &section3step1Commands,
-				Type:     &section3step1Type,
-			},
-		}
-		section3 := artifact.ClientSetupSection{
-			Header: &header3,
-		}
-		_ = section3.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
-			Steps: &section3Steps,
-		})
-		clientSetupDetails := artifact.ClientSetupDetails{
-			MainHeader: "Helm Client Setup",
-			SecHeader:  "Follow these instructions to install/use Helm artifacts or compatible packages.",
-			Sections: []artifact.ClientSetupSection{
-				section1,
-				section2,
-				section3,
-			},
-		}
-
-		c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, image, tag, "", "")
-
-		return &artifact.ClientSetupDetailsResponseJSONResponse{
-			Data:   clientSetupDetails,
-			Status: artifact.StatusSUCCESS,
-		}
+	case string(artifact.PackageTypeHELM):
+		return c.generateHelmClientSetupDetail(ctx, blankString, loginUsernameLabel, loginUsernameValue,
+			loginPasswordLabel, username, registryRef, image, tag)
+	case string(artifact.PackageTypeGENERIC):
+		return c.generateGenericClientSetupDetail(ctx, blankString, registryRef, image, tag)
 	}
 	header1 := "Login to Docker"
 	section1step1Header := "Run this Docker command in your terminal to authenticate the client."
@@ -293,7 +211,179 @@ func (c *APIController) GenerateClientSetupDetails(
 		},
 	}
 
-	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, image, tag, "", "")
+	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, image, tag, "", "", "")
+
+	return &artifact.ClientSetupDetailsResponseJSONResponse{
+		Data:   clientSetupDetails,
+		Status: artifact.StatusSUCCESS,
+	}
+}
+
+//nolint:lll
+func (c *APIController) generateGenericClientSetupDetail(ctx context.Context, blankString string,
+	registryRef string, image *artifact.ArtifactParam, tag *artifact.VersionParam) *artifact.ClientSetupDetailsResponseJSONResponse {
+	header1 := "Generate identity token"
+	section1Header := "An identity token will serve as the password for uploading and downloading artifact."
+	section1Type := artifact.ClientSetupStepTypeGenerateToken
+	section1steps := []artifact.ClientSetupStep{
+		{
+			Header: &section1Header,
+			Type:   &section1Type,
+		},
+	}
+	section1 := artifact.ClientSetupSection{
+		Header: &header1,
+	}
+	_ = section1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &section1steps,
+	})
+
+	header2 := "Upload Artifact"
+	section2step1Header := "Run this curl command in your terminal to push the artifact."
+	//nolint:lll
+	pushValue := "curl --location --request PUT '<HOSTNAME>/<REGISTRY_NAME>/<ARTIFACT_NAME>/<VERSION>' \\\n--form 'filename=\"<FILENAME>\"' \\\n--form 'file=@\"<FILE_PATH>\"'\n--header 'x-api-key: <API_KEY>'"
+	section2step1Commands := []artifact.ClientSetupStepCommand{
+		{Label: &blankString, Value: &pushValue},
+	}
+	section2step1Type := artifact.ClientSetupStepTypeStatic
+	section2steps := []artifact.ClientSetupStep{
+		{
+			Header:   &section2step1Header,
+			Commands: &section2step1Commands,
+			Type:     &section2step1Type,
+		},
+	}
+	section2 := artifact.ClientSetupSection{
+		Header: &header2,
+	}
+	_ = section2.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &section2steps,
+	})
+	header3 := "Download Artifact"
+	section3step1Header := "Run this command in your terminal to download the artifact."
+	//nolint:lll
+	pullValue := "curl --location '<HOSTNAME>/<REGISTRY_NAME>/<ARTIFACT_NAME>:<VERSION>:<FILENAME>' --header 'x-api-key: <API_KEY>' " +
+		"--O"
+	section3step1Commands := []artifact.ClientSetupStepCommand{
+		{Label: &blankString, Value: &pullValue},
+	}
+	section3step1Type := artifact.ClientSetupStepTypeStatic
+	section3steps := []artifact.ClientSetupStep{
+		{
+			Header:   &section3step1Header,
+			Commands: &section3step1Commands,
+			Type:     &section3step1Type,
+		},
+	}
+	section3 := artifact.ClientSetupSection{
+		Header: &header3,
+	}
+	_ = section3.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &section3steps,
+	})
+
+	clientSetupDetails := artifact.ClientSetupDetails{
+		MainHeader: "Generic Client Setup",
+		SecHeader:  "Follow these instructions to install/use Generic artifacts or compatible packages.",
+		Sections: []artifact.ClientSetupSection{
+			section1,
+			section2,
+			section3,
+		},
+	}
+	//nolint:lll
+	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, "", registryRef, image, tag, "", "", string(artifact.PackageTypeGENERIC))
+	return &artifact.ClientSetupDetailsResponseJSONResponse{
+		Data:   clientSetupDetails,
+		Status: artifact.StatusSUCCESS,
+	}
+}
+
+//nolint:lll
+func (c *APIController) generateHelmClientSetupDetail(ctx context.Context, blankString string,
+	loginUsernameLabel string, loginUsernameValue string, loginPasswordLabel string, username string, registryRef string, image *artifact.ArtifactParam, tag *artifact.VersionParam) *artifact.ClientSetupDetailsResponseJSONResponse {
+	header1 := "Login to Helm"
+	section1step1Header := "Run this Helm command in your terminal to authenticate the client."
+	helmLoginValue := "helm registry login <LOGIN_HOSTNAME>"
+	section1step1Commands := []artifact.ClientSetupStepCommand{
+		{Label: &blankString, Value: &helmLoginValue},
+		{Label: &loginUsernameLabel, Value: &loginUsernameValue},
+		{Label: &loginPasswordLabel, Value: &blankString},
+	}
+	section1step1Type := artifact.ClientSetupStepTypeStatic
+	section1step2Header := "For the Password field above, generate an identity token"
+	section1step2Type := artifact.ClientSetupStepTypeGenerateToken
+	section1Steps := []artifact.ClientSetupStep{
+		{
+			Header:   &section1step1Header,
+			Commands: &section1step1Commands,
+			Type:     &section1step1Type,
+		},
+		{
+			Header: &section1step2Header,
+			Type:   &section1step2Type,
+		},
+	}
+	section1 := artifact.ClientSetupSection{
+		Header: &header1,
+	}
+	_ = section1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &section1Steps,
+	})
+
+	header2 := "Push a version"
+	section2step1Header := "Run this Helm push command in your terminal to push a chart in OCI form." +
+		" Note: Make sure you add oci:// prefix to the repository URL."
+	helmPushValue := "helm push <CHART_TGZ_FILE> oci://<HOSTNAME>/<REGISTRY_NAME>"
+	section2step1Commands := []artifact.ClientSetupStepCommand{
+		{Label: &blankString, Value: &helmPushValue},
+	}
+	section2step1Type := artifact.ClientSetupStepTypeStatic
+	section2Steps := []artifact.ClientSetupStep{
+		{
+			Header:   &section2step1Header,
+			Commands: &section2step1Commands,
+			Type:     &section2step1Type,
+		},
+	}
+	section2 := artifact.ClientSetupSection{
+		Header: &header2,
+	}
+	_ = section2.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &section2Steps,
+	})
+
+	header3 := "Pull a version"
+	section3step1Header := "Run this Helm command in your terminal to pull a specific chart version."
+	helmPullValue := "helm pull oci://<HOSTNAME>/<REGISTRY_NAME>/<IMAGE_NAME> --version <TAG>"
+	section3step1Commands := []artifact.ClientSetupStepCommand{
+		{Label: &blankString, Value: &helmPullValue},
+	}
+	section3step1Type := artifact.ClientSetupStepTypeStatic
+	section3Steps := []artifact.ClientSetupStep{
+		{
+			Header:   &section3step1Header,
+			Commands: &section3step1Commands,
+			Type:     &section3step1Type,
+		},
+	}
+	section3 := artifact.ClientSetupSection{
+		Header: &header3,
+	}
+	_ = section3.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &section3Steps,
+	})
+	clientSetupDetails := artifact.ClientSetupDetails{
+		MainHeader: "Helm Client Setup",
+		SecHeader:  "Follow these instructions to install/use Helm artifacts or compatible packages.",
+		Sections: []artifact.ClientSetupSection{
+			section1,
+			section2,
+			section3,
+		},
+	}
+
+	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, image, tag, "", "", "")
 
 	return &artifact.ClientSetupDetailsResponseJSONResponse{
 		Data:   clientSetupDetails,
@@ -614,7 +704,7 @@ func (c *APIController) generateMavenClientSetupDetail(
 	registryURL := c.URLProvider.RegistryURL(ctx, "maven", rootSpace)
 
 	//nolint:lll
-	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, artifactName, version, registryURL, groupID)
+	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, artifactName, version, registryURL, groupID, "")
 
 	return &artifact.ClientSetupDetailsResponseJSONResponse{
 		Data:   clientSetupDetails,
@@ -631,14 +721,16 @@ func (c *APIController) replacePlaceholders(
 	tag *artifact.VersionParam,
 	registryURL string,
 	groupID string,
+	pkgType string,
 ) {
 	for i := range *clientSetupSections {
 		tab, err := (*clientSetupSections)[i].AsTabSetupStepConfig()
 		if err != nil || tab.Tabs == nil {
-			c.replacePlaceholdersInSection(ctx, &(*clientSetupSections)[i], username, regRef, image, tag, groupID, registryURL)
+			//nolint:lll
+			c.replacePlaceholdersInSection(ctx, &(*clientSetupSections)[i], username, regRef, image, tag, pkgType, groupID, registryURL)
 		} else {
 			for j := range *tab.Tabs {
-				c.replacePlaceholders(ctx, (*tab.Tabs)[j].Sections, username, regRef, image, tag, groupID, registryURL)
+				c.replacePlaceholders(ctx, (*tab.Tabs)[j].Sections, username, regRef, image, tag, groupID, registryURL, pkgType)
 			}
 			_ = (*clientSetupSections)[i].FromTabSetupStepConfig(tab)
 		}
@@ -652,12 +744,18 @@ func (c *APIController) replacePlaceholdersInSection(
 	regRef string,
 	image *artifact.ArtifactParam,
 	tag *artifact.VersionParam,
+	pkgType string,
 	registryURL string,
 	groupID string,
 ) {
 	rootSpace, _, _ := paths.DisectRoot(regRef)
 	_, registryName, _ := paths.DisectLeaf(regRef)
-	hostname := common.TrimURLScheme(c.URLProvider.RegistryURL(ctx, rootSpace))
+	var hostname string
+	if pkgType == string(artifact.PackageTypeGENERIC) {
+		hostname = c.URLProvider.RegistryURL(ctx, rootSpace, "generic")
+	} else {
+		hostname = common.TrimURLScheme(c.URLProvider.RegistryURL(ctx, rootSpace))
+	}
 
 	sec, err := clientSetupSection.AsClientSetupStepConfig()
 	if err != nil || sec.Steps == nil {
@@ -710,6 +808,7 @@ func replaceText(
 	if image != nil {
 		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<IMAGE_NAME>", string(*image)))
 		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<ARTIFACT_ID>", string(*image)))
+		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<ARTIFACT_NAME>", string(*image)))
 	}
 	if tag != nil {
 		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<TAG>", string(*tag)))

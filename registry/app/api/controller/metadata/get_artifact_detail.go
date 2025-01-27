@@ -16,11 +16,13 @@ package metadata
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/registry/app/store/database"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -73,7 +75,7 @@ func (c *APIController) GetArtifactDetails(
 			),
 		}, nil
 	}
-	img, err := c.ImageStore.GetByName(ctx, regInfo.parentID, image)
+	img, err := c.ImageStore.GetByName(ctx, regInfo.RegistryID, image)
 
 	if err != nil {
 		return artifact.GetArtifactDetails500JSONResponse{
@@ -96,6 +98,17 @@ func (c *APIController) GetArtifactDetails(
 
 	if artifact.PackageTypeMAVEN == registry.PackageType {
 		artifactDetails = GetArtifactDetail(img, art)
+	} else if artifact.PackageTypeGENERIC == registry.PackageType {
+		var metadata database.GenericMetadata
+		err := json.Unmarshal(art.Metadata, &metadata)
+		if err != nil {
+			return artifact.GetArtifactDetails500JSONResponse{
+				InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
+					*GetErrorResponse(http.StatusInternalServerError, err.Error()),
+				),
+			}, nil
+		}
+		artifactDetails = GetGenericArtifactDetail(img, art, metadata)
 	}
 	return artifact.GetArtifactDetails200JSONResponse{
 		ArtifactDetailResponseJSONResponse: artifact.ArtifactDetailResponseJSONResponse{
