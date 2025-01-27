@@ -137,6 +137,16 @@ var (
 			HTTPStatusCode: http.StatusBadRequest,
 		},
 	)
+
+	// ErrCodeInvalidRequest provides an error when the request is invalid.
+	ErrCodeInvalidRequest = register(
+		"errcode", ErrorDescriptor{
+			Value:          "INVALID REQUEST",
+			Message:        "invalid request",
+			Description:    "Returned when the request is invalid",
+			HTTPStatusCode: http.StatusBadRequest,
+		},
+	)
 )
 
 const errGroup = "registry.api.v2"

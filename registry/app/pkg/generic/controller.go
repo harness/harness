@@ -16,12 +16,11 @@ package generic
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"mime/multipart"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/harness/gitness/app/auth/authz"
@@ -90,7 +89,7 @@ func NewDBStore(
 const regNameFormat = "registry : [%s]"
 
 func (c Controller) UploadArtifact(ctx context.Context, info pkg.GenericArtifactInfo,
-	file multipart.File) (*commons.ResponseHeaders, []error) {
+	file multipart.File) (*commons.ResponseHeaders, errcode.Error) {
 	responseHeaders := &commons.ResponseHeaders{
 		Headers: make(map[string]string),
 		Code:    0,
@@ -100,14 +99,14 @@ func (c Controller) UploadArtifact(ctx context.Context, info pkg.GenericArtifact
 		enum.PermissionArtifactsUpload,
 	)
 	if err != nil {
-		return nil, []error{errcode.ErrCodeDenied, err}
+		return nil, errcode.ErrCodeDenied.WithDetail(err)
 	}
 
 	path := info.Image + "/" + info.Version + "/" + info.FileName
 	fileInfo, err := c.fileManager.UploadFile(ctx, path, info.RegIdentifier, info.RegistryID,
 		info.RootParentID, info.RootIdentifier, file, nil, info.FileName)
 	if err != nil {
-		return responseHeaders, []error{errcode.ErrCodeUnknown.WithDetail(err)}
+		return responseHeaders, errcode.ErrCodeUnknown.WithDetail(err)
 	}
 	err = c.tx.WithTx(
 		ctx, func(ctx context.Context) error {
@@ -124,7 +123,7 @@ func (c Controller) UploadArtifact(ctx context.Context, info pkg.GenericArtifact
 
 			dbArtifact, err := c.DBStore.ArtifactDao.GetByName(ctx, image.ID, info.Version)
 
-			if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			if err != nil && !strings.Contains(err.Error(), "resource not found") {
 				return fmt.Errorf("failed to fetch artifact : [%s] with "+
 					regNameFormat, info.Image, info.RegIdentifier)
 			}
@@ -158,10 +157,10 @@ func (c Controller) UploadArtifact(ctx context.Context, info pkg.GenericArtifact
 		})
 
 	if err != nil {
-		return responseHeaders, []error{errcode.ErrCodeUnknown.WithDetail(err)}
+		return responseHeaders, errcode.ErrCodeUnknown.WithDetail(err)
 	}
 	responseHeaders.Code = http.StatusCreated
-	return responseHeaders, nil
+	return responseHeaders, errcode.Error{}
 }
 
 func (c Controller) updateMetadata(dbArtifact *types.Artifact, metadata *database.GenericMetadata,
@@ -194,9 +193,8 @@ func (c Controller) updateMetadata(dbArtifact *types.Artifact, metadata *databas
 	return nil
 }
 
-func (c Controller) PullArtifact(ctx context.Context,
-	info pkg.GenericArtifactInfo) (*commons.ResponseHeaders,
-	*storage.FileReader, []error) {
+func (c Controller) PullArtifact(ctx context.Context, info pkg.GenericArtifactInfo) (*commons.ResponseHeaders,
+	*storage.FileReader, string, errcode.Error) {
 	responseHeaders := &commons.ResponseHeaders{
 		Headers: make(map[string]string),
 		Code:    0,
@@ -206,17 +204,17 @@ func (c Controller) PullArtifact(ctx context.Context,
 		enum.PermissionArtifactsDownload,
 	)
 	if err != nil {
-		return nil, nil, []error{errcode.ErrCodeDenied}
+		return nil, nil, "", errcode.ErrCodeDenied.WithDetail(err)
 	}
 
 	path := "/" + info.Image + "/" + info.Version + "/" + info.FileName
-	fileReader, _, err := c.fileManager.DownloadFile(ctx, path, types.Registry{
+	fileReader, _, redirectURL, err := c.fileManager.DownloadFile(ctx, path, types.Registry{
 		ID:   info.RegistryID,
 		Name: info.RootIdentifier,
 	}, info.RootIdentifier)
 	if err != nil {
-		return responseHeaders, nil, []error{errcode.ErrCodeUnknown.WithDetail(err)}
+		return responseHeaders, nil, "", errcode.ErrCodeUnknown.WithDetail(err)
 	}
 	responseHeaders.Code = http.StatusOK
-	return responseHeaders, fileReader, nil
+	return responseHeaders, fileReader, redirectURL, errcode.Error{}
 }

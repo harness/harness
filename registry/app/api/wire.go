@@ -20,6 +20,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	corestore "github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/registry/app/api/handler/generic"
 	mavenhandler "github.com/harness/gitness/registry/app/api/handler/maven"
 	ocihandler "github.com/harness/gitness/registry/app/api/handler/oci"
 	"github.com/harness/gitness/registry/app/api/router"
@@ -30,6 +31,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/docker"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
+	generic2 "github.com/harness/gitness/registry/app/pkg/generic"
 	"github.com/harness/gitness/registry/app/pkg/maven"
 	"github.com/harness/gitness/registry/app/store/database"
 	"github.com/harness/gitness/registry/config"
@@ -100,10 +102,27 @@ func NewMavenHandlerProvider(
 	)
 }
 
+func NewGenericHandlerProvider(
+	spaceStore corestore.SpaceStore, controller *generic2.Controller, tokenStore corestore.TokenStore,
+	userCtrl *usercontroller.Controller, authenticator authn.Authenticator, urlProvider urlprovider.Provider,
+	authorizer authz.Authorizer,
+) *generic.Handler {
+	return generic.NewGenericArtifactHandler(
+		spaceStore,
+		controller,
+		tokenStore,
+		userCtrl,
+		authenticator,
+		urlProvider,
+		authorizer,
+	)
+}
+
 var WireSet = wire.NewSet(
 	BlobStorageProvider,
 	NewHandlerProvider,
 	NewMavenHandlerProvider,
+	NewGenericHandlerProvider,
 	database.WireSet,
 	pkg.WireSet,
 	docker.WireSet,
@@ -111,6 +130,7 @@ var WireSet = wire.NewSet(
 	maven.WireSet,
 	router.WireSet,
 	gc.WireSet,
+	generic2.WireSet,
 )
 
 func Wire(_ *types.Config) (RegistryApp, error) {

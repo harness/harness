@@ -16,13 +16,19 @@ package middleware
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 
+	"github.com/harness/gitness/registry/app/api/handler/generic"
 	"github.com/harness/gitness/registry/app/api/handler/oci"
 	"github.com/harness/gitness/registry/app/api/router/utils"
+	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/pkg"
+	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/docker"
+	generic2 "github.com/harness/gitness/registry/app/pkg/generic"
+	"github.com/harness/gitness/registry/app/store/database"
 	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/store"
 
@@ -96,6 +102,99 @@ func TrackBandwidthStat(h *oci.Handler) func(http.Handler) http.Handler {
 			},
 		)
 	}
+}
+
+func TrackBandwidthStatForGenericArtifacts(h *generic.Handler) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				methodType := r.Method
+
+				sw := &StatusWriter{ResponseWriter: w}
+
+				var bandwidthType types.BandwidthType
+				//nolint:gocritic
+				if http.MethodGet == methodType {
+					next.ServeHTTP(sw, r)
+					bandwidthType = types.BandwidthTypeDOWNLOAD
+				} else if http.MethodPut == methodType {
+					bandwidthType = types.BandwidthTypeUPLOAD
+					next.ServeHTTP(sw, r)
+				} else {
+					next.ServeHTTP(w, r)
+					return
+				}
+
+				if types.BandwidthTypeUPLOAD == bandwidthType && sw.StatusCode != http.StatusCreated {
+					return
+				} else if types.BandwidthTypeDOWNLOAD == bandwidthType && sw.StatusCode != http.StatusOK &&
+					sw.StatusCode != http.StatusTemporaryRedirect {
+					return
+				}
+				ctx := r.Context()
+
+				info, err := h.GetArtifactInfo(r)
+				if !commons.IsEmptyError(err) {
+					log.Ctx(ctx).Error().Stack().Str("middleware",
+						"TrackBandwidthStat").Err(err).Msgf("error while putting bandwidth stat for artifact, %v",
+						err)
+					return
+				}
+
+				err = dbBandwidthStatForGenericArtifact(ctx, h.Controller, info, bandwidthType)
+				if !commons.IsEmptyError(err) {
+					log.Ctx(ctx).Error().Stack().Str("middleware",
+						"TrackBandwidthStat").Err(err).Msgf("error while putting bandwidth stat for artifact [%s:%s], %v",
+						info.RegIdentifier, info.Image, err)
+					return
+				}
+			},
+		)
+	}
+}
+
+func dbBandwidthStatForGenericArtifact(
+	ctx context.Context,
+	c *generic2.Controller,
+	info pkg.GenericArtifactInfo,
+	bandwidthType types.BandwidthType,
+) errcode.Error {
+	registry, err := c.DBStore.RegistryDao.GetByParentIDAndName(ctx, info.ParentID, info.RegIdentifier)
+	if err != nil {
+		return errcode.ErrCodeInvalidRequest.WithDetail(err)
+	}
+
+	image, err := c.DBStore.ImageDao.GetByName(ctx, registry.ID, info.Image)
+	if err != nil {
+		return errcode.ErrCodeInvalidRequest.WithDetail(err)
+	}
+
+	art, err := c.DBStore.ArtifactDao.GetByName(ctx, image.ID, info.Version)
+	if err != nil {
+		return errcode.ErrCodeInvalidRequest.WithDetail(err)
+	}
+
+	var metadata database.GenericMetadata
+	err = json.Unmarshal(art.Metadata, &metadata)
+
+	if err != nil {
+		return errcode.ErrCodeNameUnknown.WithDetail(err)
+	}
+
+	var size int64
+	for _, files := range metadata.Files {
+		size += files.Size
+	}
+	bandwidthStat := &types.BandwidthStat{
+		ImageID: image.ID,
+		Type:    bandwidthType,
+		Bytes:   size,
+	}
+
+	if err := c.DBStore.BandwidthStatDao.Create(ctx, bandwidthStat); err != nil {
+		return errcode.ErrCodeNameUnknown.WithDetail(err)
+	}
+	return errcode.Error{}
 }
 
 func dbBandwidthStat(

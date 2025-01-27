@@ -21,8 +21,10 @@ import (
 	corestore "github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/audit"
+	"github.com/harness/gitness/registry/app/api/handler/generic"
 	"github.com/harness/gitness/registry/app/api/handler/maven"
 	hoci "github.com/harness/gitness/registry/app/api/handler/oci"
+	generic2 "github.com/harness/gitness/registry/app/api/router/generic"
 	"github.com/harness/gitness/registry/app/api/router/harness"
 	mavenRouter "github.com/harness/gitness/registry/app/api/router/maven"
 	"github.com/harness/gitness/registry/app/api/router/oci"
@@ -91,4 +93,9 @@ func MavenHandlerProvider(handler *maven.Handler) mavenRouter.Handler {
 	return mavenRouter.NewMavenHandler(handler)
 }
 
-var WireSet = wire.NewSet(APIHandlerProvider, OCIHandlerProvider, AppRouterProvider, MavenHandlerProvider)
+func GenericHandlerProvider(handler *generic.Handler) generic2.Handler {
+	return generic2.NewGenericArtifactHandler(handler)
+}
+
+var WireSet = wire.NewSet(APIHandlerProvider, OCIHandlerProvider, AppRouterProvider,
+	MavenHandlerProvider, GenericHandlerProvider)

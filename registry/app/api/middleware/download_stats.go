@@ -19,10 +19,14 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/harness/gitness/registry/app/api/handler/generic"
 	"github.com/harness/gitness/registry/app/api/handler/oci"
 	"github.com/harness/gitness/registry/app/api/router/utils"
+	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/pkg"
+	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/docker"
+	generic2 "github.com/harness/gitness/registry/app/pkg/generic"
 	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/store"
 
@@ -109,4 +113,73 @@ func dbDownloadStat(
 		return err
 	}
 	return nil
+}
+
+func TrackDownloadStatForGenericArtifact(h *generic.Handler) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				methodType := r.Method
+				ctx := r.Context()
+				sw := &StatusWriter{ResponseWriter: w}
+
+				if http.MethodGet == methodType {
+					next.ServeHTTP(sw, r)
+				} else {
+					next.ServeHTTP(w, r)
+					return
+				}
+
+				if sw.StatusCode != http.StatusOK && sw.StatusCode != http.StatusTemporaryRedirect {
+					return
+				}
+
+				info, err := h.GetArtifactInfo(r)
+				if !commons.IsEmptyError(err) {
+					log.Ctx(ctx).Error().Stack().Str("middleware",
+						"TrackDownloadStat").Err(err).Msgf("error while putting download stat of artifact, %v",
+						err)
+					return
+				}
+
+				err = dbDownloadStatForGenericArtifact(ctx, h.Controller, info)
+				if !commons.IsEmptyError(err) {
+					log.Ctx(ctx).Error().Stack().Str("middleware",
+						"TrackDownloadStat").Err(err).Msgf("error while putting download stat of artifact, %v",
+						err)
+					return
+				}
+			},
+		)
+	}
+}
+
+func dbDownloadStatForGenericArtifact(
+	ctx context.Context,
+	c *generic2.Controller,
+	info pkg.GenericArtifactInfo,
+) errcode.Error {
+	registry, err := c.DBStore.RegistryDao.GetByParentIDAndName(ctx, info.ParentID, info.RegIdentifier)
+	if err != nil {
+		return errcode.ErrCodeInvalidRequest.WithDetail(err)
+	}
+
+	image, err := c.DBStore.ImageDao.GetByName(ctx, registry.ID, info.Image)
+	if err != nil {
+		return errcode.ErrCodeInvalidRequest.WithDetail(err)
+	}
+
+	artifact, err := c.DBStore.ArtifactDao.GetByName(ctx, image.ID, info.Version)
+	if err != nil {
+		return errcode.ErrCodeInvalidRequest.WithDetail(err)
+	}
+
+	downloadStat := &types.DownloadStat{
+		ArtifactID: artifact.ID,
+	}
+
+	if err := c.DBStore.DownloadStatDao.Create(ctx, downloadStat); err != nil {
+		return errcode.ErrCodeNameUnknown.WithDetail(err)
+	}
+	return errcode.Error{}
 }

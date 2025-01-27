@@ -17,6 +17,8 @@ package commons
 import (
 	"net/http"
 	"reflect"
+
+	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 )
 
 const (
@@ -60,6 +62,10 @@ func IsEmpty(slice interface{}) bool {
 	}
 
 	return val.Len() == 0
+}
+
+func IsEmptyError(err errcode.Error) bool {
+	return err.Code == 0
 }
 
 func (r *ResponseHeaders) WriteToResponse(w http.ResponseWriter) {

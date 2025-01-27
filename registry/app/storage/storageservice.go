@@ -80,6 +80,7 @@ func (storage *Service) GenericBlobsStore(repoKey string, rootParentRef string) 
 	return &genericBlobStore{
 		repoKey:       repoKey,
 		driver:        storage.driver,
+		redirect:      storage.redirect,
 		rootParentRef: rootParentRef,
 	}
 }

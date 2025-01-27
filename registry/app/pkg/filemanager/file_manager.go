@@ -198,29 +198,34 @@ func (f *FileManager) DownloadFile(
 	filePath string,
 	regInfo types.Registry,
 	rootIdentifier string,
-) (fileReader *storage.FileReader, size int64, err error) {
+) (fileReader *storage.FileReader, size int64, redirectURL string, err error) {
 	node, err := f.nodesDao.GetByPathAndRegistryID(ctx, regInfo.ID, filePath)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to get the node for path: %s, "+
+		return nil, 0, "", fmt.Errorf("failed to get the node for path: %s, "+
 			"with registry: %s, with error %s", filePath, regInfo.Name, err)
 	}
 	blob, err := f.genericBlobDao.FindByID(ctx, node.BlobID)
 
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to get the blob for path: %s, "+
+		return nil, 0, "", fmt.Errorf("failed to get the blob for path: %s, "+
 			"with blob id: %s, with error %s", filePath, blob.ID, err)
 	}
 
 	completeFilaPath := path.Join(rootPathString + rootIdentifier + rootPathString + files + rootPathString + blob.Sha256)
 	//
 	blobContext := f.App.GetBlobsContext(ctx, regInfo.Name, rootIdentifier)
-	reader, err := blobContext.genericBlobStore.Get(ctx, completeFilaPath, blob.Size)
+	reader, redirectURL, err := blobContext.genericBlobStore.Get(ctx, completeFilaPath, blob.Size)
 
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to get the file for path: %s, "+
+		return nil, 0, "", fmt.Errorf("failed to get the file for path: %s, "+
 			" with error %w", completeFilaPath, err)
 	}
-	return reader, blob.Size, nil
+
+	if redirectURL != "" {
+		return reader, blob.Size, redirectURL, nil
+	}
+
+	return reader, blob.Size, "", nil
 }
 
 func (f *FileManager) DeleteFile(

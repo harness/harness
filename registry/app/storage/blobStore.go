@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
+	"net/http"
 
 	"github.com/harness/gitness/registry/app/dist_temp/dcontext"
 	"github.com/harness/gitness/registry/app/driver"
@@ -35,20 +36,33 @@ type genericBlobStore struct {
 	repoKey       string
 	driver        driver.StorageDriver
 	rootParentRef string
+	redirect      bool
 }
 
 func (bs *genericBlobStore) Info() string {
 	return bs.rootParentRef + " " + bs.repoKey
 }
 
-func (bs *genericBlobStore) Get(ctx context.Context, filePath string, size int64) (*FileReader, error) {
+func (bs *genericBlobStore) Get(ctx context.Context, filePath string, size int64) (*FileReader, string, error) {
 	dcontext.GetLogger(ctx, log.Ctx(ctx).Debug()).Msg("(*genericBlobStore).Get")
 
+	if bs.redirect {
+		redirectURL, err := bs.driver.RedirectURL(ctx, http.MethodGet, filePath)
+		if err != nil {
+			return nil, "", err
+		}
+		if redirectURL != "" {
+			// Redirect to storage URL.
+			// http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
+			return nil, redirectURL, nil
+		}
+		// Fallback to serving the content directly.
+	}
 	br, err := NewFileReader(ctx, bs.driver, filePath, size)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
-	return br, nil
+	return br, "", nil
 }
 
 var _ GenericBlobStore = &genericBlobStore{}
