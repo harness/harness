@@ -128,9 +128,7 @@ func New(ctx context.Context,
 					stream.WithMaxRetries(3),
 				))
 
-			_ = r.RegisterCreated(service.createHeadRefOnCreated)
 			_ = r.RegisterBranchUpdated(service.updateHeadRefOnBranchUpdate)
-			_ = r.RegisterReopened(service.updateHeadRefOnReopen)
 
 			return nil
 		})

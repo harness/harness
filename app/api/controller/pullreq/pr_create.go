@@ -17,6 +17,7 @@ package pullreq
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -28,6 +29,7 @@ import (
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
+	gitenum "github.com/harness/gitness/git/enum"
 	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -107,6 +109,11 @@ func (c *Controller) Create(
 		return nil, err
 	}
 
+	targetWriteParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, targetRepo)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create RPC write params: %w", err)
+	}
+
 	mergeBaseResult, err := c.git.MergeBase(ctx, git.MergeBaseParams{
 		ReadParams: git.ReadParams{RepoUID: sourceRepo.GitUID},
 		Ref1:       in.SourceBranch,
@@ -134,18 +141,22 @@ func (c *Controller) Create(
 	var pr *types.PullReq
 	targetRepoID := targetRepo.ID
 	err = controller.TxOptLock(ctx, c.tx, func(ctx context.Context) error {
-		if targetRepo == nil {
-			targetRepo, err = c.repoStore.Find(ctx, targetRepoID)
-			if err != nil {
-				return fmt.Errorf("failed to increment pullreq sequence number: %w", err)
-			}
+		// Always re-fetch at the start of the transaction because the repo we have is from a cache.
+
+		targetRepo, err = c.repoStore.Find(ctx, targetRepoID)
+		if err != nil {
+			return fmt.Errorf("failed to find repository: %w", err)
 		}
+
+		// Update the repository's pull request sequence number
 
 		targetRepo.PullReqSeq++
 		err = c.repoStore.Update(ctx, targetRepo)
 		if err != nil {
 			return fmt.Errorf("failed to update pullreq sequence number: %w", err)
 		}
+
+		// Create pull request in the DB
 
 		pr = newPullReq(session, targetRepo.PullReqSeq, sourceRepo, targetRepo, in, sourceSHA, mergeBaseSHA)
 		pr.Stats = types.PullReqStats{
@@ -159,6 +170,8 @@ func (c *Controller) Create(
 			return fmt.Errorf("pullreq creation failed: %w", err)
 		}
 
+		// Assign reviewers and labels if any
+
 		if err := c.createReviewers(ctx, session, in.ReviewerIDs, targetRepo, pr); err != nil {
 			return err
 		}
@@ -169,10 +182,21 @@ func (c *Controller) Create(
 			return err
 		}
 
+		// Create PR head reference in the git repository
+
+		err = c.git.UpdateRef(ctx, git.UpdateRefParams{
+			WriteParams: targetWriteParams,
+			Name:        strconv.FormatInt(targetRepo.PullReqSeq, 10),
+			Type:        gitenum.RefTypePullReqHead,
+			NewValue:    sourceSHA,
+			OldValue:    sha.None, // this is a new pull request, so we expect that the ref doesn't exist
+		})
+		if err != nil {
+			return fmt.Errorf("failed to create PR head ref: %w", err)
+		}
+
 		return nil
-	}, controller.TxOptionResetFunc(func() {
-		targetRepo = nil // on the version conflict error force re-fetch of the target repo
-	}))
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create pullreq: %w", err)
 	}

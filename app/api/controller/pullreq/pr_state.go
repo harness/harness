@@ -17,13 +17,16 @@ package pullreq
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
+	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/git"
+	gitenum "github.com/harness/gitness/git/enum"
 	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -71,6 +74,8 @@ func (c *Controller) State(ctx context.Context,
 	if err != nil {
 		return nil, fmt.Errorf("failed to get pull request by number: %w", err)
 	}
+
+	id := pr.ID
 
 	sourceRepo := targetRepo
 	if pr.SourceRepoID != pr.TargetRepoID {
@@ -137,7 +142,19 @@ func (c *Controller) State(ctx context.Context,
 		stateChange = changeClose
 	}
 
-	pr, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
+	targetWriteParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, targetRepo)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create RPC write params: %w", err)
+	}
+
+	err = controller.TxOptLock(ctx, c.tx, func(ctx context.Context) error {
+		if pr == nil {
+			pr, err = c.pullreqStore.Find(ctx, id)
+			if err != nil {
+				return fmt.Errorf("failed to find pull request by id: %w", err)
+			}
+		}
+
 		pr.State = in.State
 		pr.IsDraft = in.IsDraft
 
@@ -155,11 +172,30 @@ func (c *Controller) State(ctx context.Context,
 			pr.SourceSHA = sourceSHA.String()
 			pr.MergeBaseSHA = mergeBaseSHA.String()
 			pr.Closed = nil
+
+			err = c.git.UpdateRef(ctx, git.UpdateRefParams{
+				WriteParams: targetWriteParams,
+				Name:        strconv.FormatInt(pr.Number, 10),
+				Type:        gitenum.RefTypePullReqHead,
+				NewValue:    sourceSHA,
+				OldValue:    sha.None, // the request is re-opened, so anything can be the old value
+			})
+			if err != nil {
+				return fmt.Errorf("failed to set value of PR head ref: %w", err)
+			}
 		}
 
 		pr.ActivitySeq++ // because we need to add the activity entry
+
+		err = c.pullreqStore.Update(ctx, pr)
+		if err != nil {
+			return fmt.Errorf("failed to update pull request: %w", err)
+		}
+
 		return nil
-	})
+	}, controller.TxOptionResetFunc(func() {
+		pr = nil // on the version conflict error force re-fetch of the pull request
+	}))
 	if err != nil {
 		return nil, fmt.Errorf("failed to update pull request: %w", err)
 	}
