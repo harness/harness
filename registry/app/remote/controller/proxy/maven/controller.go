@@ -39,7 +39,7 @@ type controller struct {
 
 type Controller interface {
 	UseLocalFile(ctx context.Context, info pkg.MavenArtifactInfo) (
-		responseHeaders *commons.ResponseHeaders, fileReader *storage.FileReader, useLocal bool)
+		responseHeaders *commons.ResponseHeaders, fileReader *storage.FileReader, redirectURL string, useLocal bool)
 
 	ProxyFile(
 		ctx context.Context, info pkg.MavenArtifactInfo, proxy types.UpstreamProxy, serveFile bool,
@@ -59,9 +59,9 @@ func NewProxyController(
 }
 
 func (c *controller) UseLocalFile(ctx context.Context, info pkg.MavenArtifactInfo) (
-	responseHeaders *commons.ResponseHeaders, fileReader *storage.FileReader, useLocal bool) {
-	responseHeaders, body, _, e := c.localRegistry.GetArtifact(ctx, info)
-	return responseHeaders, body, len(e) == 0
+	responseHeaders *commons.ResponseHeaders, fileReader *storage.FileReader, redirectURL string, useLocal bool) {
+	responseHeaders, body, _, redirectURL, e := c.localRegistry.GetArtifact(ctx, info)
+	return responseHeaders, body, redirectURL, len(e) == 0
 }
 
 func (c *controller) ProxyFile(

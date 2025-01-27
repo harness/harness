@@ -135,8 +135,9 @@ func (c *Controller) GetArtifact(ctx context.Context, info pkg.MavenArtifactInfo
 	f := func(registry registrytypes.Registry, a Artifact) Response {
 		info.SetMavenRepoKey(registry.Name)
 		info.RegistryID = registry.ID
-		headers, body, fileReader, e := a.(Registry).GetArtifact(ctx, info)
-		return &GetArtifactResponse{e, headers, "", body, fileReader}
+		headers, body, fileReader, redirectURL, e := a.(Registry).GetArtifact(ctx, info)
+		return &GetArtifactResponse{e, headers, redirectURL,
+			body, fileReader}
 	}
 	return c.ProxyWrapper(ctx, f, info)
 }

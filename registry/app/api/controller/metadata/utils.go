@@ -402,6 +402,25 @@ func GetGenericArtifactFileDownloadCommand(regURL, artifact, version, filename s
 	return downloadCommand
 }
 
+func GetMavenArtifactFileDownloadCommand(regURL, artifact, version, filename string) string {
+	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>/<VERSION>/<FILENAME>'" +
+		" --header 'Authorization: <IDENTITY_TOKEN>'"
+
+	// Replace the placeholders with the actual values
+	replacements := map[string]string{
+		"<HOSTNAME>": regURL,
+		"<ARTIFACT>": artifact,
+		"<VERSION>":  version,
+		"<FILENAME>": filename,
+	}
+
+	for placeholder, value := range replacements {
+		downloadCommand = strings.ReplaceAll(downloadCommand, placeholder, value)
+	}
+
+	return downloadCommand
+}
+
 // CleanURLPath removes leading and trailing spaces and trailing slashes from the given URL string.
 func CleanURLPath(input *string) {
 	if input == nil {

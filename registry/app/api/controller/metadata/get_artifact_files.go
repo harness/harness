@@ -96,9 +96,15 @@ func (c *APIController) GetArtifactFiles(
 		}, nil
 	}
 
-	registryURL := c.URLProvider.RegistryURL(ctx, reqInfo.RootIdentifier,
-		strings.ToLower(string(registry.PackageType)), reqInfo.RegistryIdentifier)
+	registryURL := c.URLProvider.RegistryURL(ctx,
+		reqInfo.RootIdentifier, strings.ToLower(string(registry.PackageType)), reqInfo.RegistryIdentifier)
 	filePathPrefix := "/" + img.Name + "/" + art.Version + "%"
+
+	if artifact.PackageTypeMAVEN == registry.PackageType {
+		artifactName := strings.ReplaceAll(img.Name, ".", "/")
+		artifactName = strings.ReplaceAll(artifactName, ":", "/")
+		filePathPrefix = "/" + artifactName + "/" + art.Version + "%"
+	}
 	fileMetadataList, err := c.fileManager.GetFilesMetadata(ctx, filePathPrefix, img.RegistryID,
 		reqInfo.sortByField, reqInfo.sortByOrder, reqInfo.limit, reqInfo.offset, reqInfo.searchTerm)
 
@@ -126,10 +132,11 @@ func (c *APIController) GetArtifactFiles(
 
 	//nolint:exhaustive
 	switch registry.PackageType {
-	case artifact.PackageTypeGENERIC:
+	case artifact.PackageTypeGENERIC, artifact.PackageTypeMAVEN:
 		return artifact.GetArtifactFiles200JSONResponse{
 			FileDetailResponseJSONResponse: *GetAllArtifactFilesResponse(
-				fileMetadataList, count, reqInfo.pageNumber, reqInfo.limit, registryURL, img.Name, art.Version),
+				fileMetadataList, count, reqInfo.pageNumber, reqInfo.limit, registryURL, img.Name, art.Version,
+				registry.PackageType),
 		}, nil
 	default:
 		return artifact.GetArtifactFiles400JSONResponse{

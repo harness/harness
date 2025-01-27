@@ -190,12 +190,13 @@ func GetAllArtifactFilesResponse(
 	registryURL string,
 	artifactName string,
 	version string,
+	packageType artifactapi.PackageType,
 ) *artifactapi.FileDetailResponseJSONResponse {
 	var fileMetadataList []artifactapi.FileDetail
 	if files == nil {
 		fileMetadataList = make([]artifactapi.FileDetail, 0)
 	} else {
-		fileMetadataList = GetArtifactFilesMetadata(files, registryURL, artifactName, version)
+		fileMetadataList = GetArtifactFilesMetadata(files, registryURL, artifactName, version, packageType)
 	}
 	pageCount := GetPageCount(count, pageSize)
 	return &artifactapi.FileDetailResponseJSONResponse{
@@ -208,18 +209,32 @@ func GetAllArtifactFilesResponse(
 	}
 }
 
-func GetArtifactFilesMetadata(metadata *[]types.FileNodeMetadata, registryURL string,
-	artifactName string, version string) []artifactapi.FileDetail {
+func GetArtifactFilesMetadata(metadata *[]types.FileNodeMetadata,
+	registryURL string,
+	artifactName string,
+	version string,
+	packageType artifactapi.PackageType,
+) []artifactapi.FileDetail {
 	var files []artifactapi.FileDetail
 	for _, file := range *metadata {
 		filePathPrefix := "/" + artifactName + "/" + version + "/"
 		filename := strings.Replace(file.Path, filePathPrefix, "", 1)
+		var downloadCommand string
+		if artifactapi.PackageTypeGENERIC == packageType {
+			downloadCommand = GetGenericArtifactFileDownloadCommand(registryURL, artifactName, version, filename)
+		} else if artifactapi.PackageTypeMAVEN == packageType {
+			artifactName = strings.ReplaceAll(artifactName, ".", "/")
+			artifactName = strings.ReplaceAll(artifactName, ":", "/")
+			filePathPrefix = "/" + artifactName + "/" + version + "/"
+			filename = strings.Replace(file.Path, filePathPrefix, "", 1)
+			downloadCommand = GetMavenArtifactFileDownloadCommand(registryURL, artifactName, version, filename)
+		}
 		files = append(files, artifactapi.FileDetail{
 			Checksums:       getCheckSums(file),
 			Size:            GetSize(file.Size),
 			CreatedAt:       fmt.Sprint(file.CreatedAt),
 			Name:            filename,
-			DownloadCommand: GetGenericArtifactFileDownloadCommand(registryURL, artifactName, version, filename),
+			DownloadCommand: downloadCommand,
 		})
 	}
 	return files

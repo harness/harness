@@ -55,12 +55,13 @@ func (r *RemoteRegistry) GetMavenArtifactType() string {
 
 func (r *RemoteRegistry) HeadArtifact(ctx context.Context, info pkg.MavenArtifactInfo) (
 	responseHeaders *commons.ResponseHeaders, errs []error) {
-	responseHeaders, _, _, errs = r.FetchArtifact(ctx, info, false)
+	responseHeaders, _, _, _, errs = r.FetchArtifact(ctx, info, false)
 	return responseHeaders, errs
 }
 
 func (r *RemoteRegistry) GetArtifact(ctx context.Context, info pkg.MavenArtifactInfo) (
-	responseHeaders *commons.ResponseHeaders, body *storage.FileReader, readCloser io.ReadCloser, errs []error) {
+	responseHeaders *commons.ResponseHeaders, body *storage.FileReader, readCloser io.ReadCloser,
+	redirectURL string, errs []error) {
 	return r.FetchArtifact(ctx, info, true)
 }
 
@@ -70,12 +71,13 @@ func (r *RemoteRegistry) PutArtifact(_ context.Context, _ pkg.MavenArtifactInfo,
 }
 
 func (r *RemoteRegistry) FetchArtifact(ctx context.Context, info pkg.MavenArtifactInfo, serveFile bool) (
-	responseHeaders *commons.ResponseHeaders, body *storage.FileReader, readCloser io.ReadCloser, errs []error) {
+	responseHeaders *commons.ResponseHeaders, body *storage.FileReader, readCloser io.ReadCloser,
+	redirectURL string, errs []error) {
 	log.Ctx(ctx).Info().Msgf("Maven Proxy: %s", info.RegIdentifier)
 
-	responseHeaders, body, useLocal := r.proxyController.UseLocalFile(ctx, info)
+	responseHeaders, body, redirectURL, useLocal := r.proxyController.UseLocalFile(ctx, info)
 	if useLocal {
-		return responseHeaders, body, readCloser, errs
+		return responseHeaders, body, readCloser, redirectURL, errs
 	}
 
 	upstreamProxy, err := r.DBStore.UpstreamProxyDao.GetByRegistryIdentifier(ctx, info.ParentID, info.RegIdentifier)
@@ -88,5 +90,5 @@ func (r *RemoteRegistry) FetchArtifact(ctx context.Context, info pkg.MavenArtifa
 	if err != nil {
 		return processError(err)
 	}
-	return responseHeaders, nil, readCloser, errs
+	return responseHeaders, nil, readCloser, "", errs
 }

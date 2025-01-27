@@ -30,7 +30,8 @@ type Registry interface {
 		responseHeaders *commons.ResponseHeaders, errs []error)
 
 	GetArtifact(ctx context.Context, artInfo pkg.MavenArtifactInfo) (
-		responseHeaders *commons.ResponseHeaders, body *storage.FileReader, readCloser io.ReadCloser, errs []error)
+		responseHeaders *commons.ResponseHeaders, body *storage.FileReader, readCloser io.ReadCloser,
+		redirectURL string, errs []error)
 
 	PutArtifact(ctx context.Context, artInfo pkg.MavenArtifactInfo, fileReader io.Reader) (
 		responseHeaders *commons.ResponseHeaders, errs []error)

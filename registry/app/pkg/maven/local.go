@@ -58,17 +58,22 @@ func (r *LocalRegistry) GetMavenArtifactType() string {
 
 func (r *LocalRegistry) HeadArtifact(ctx context.Context, info pkg.MavenArtifactInfo) (
 	responseHeaders *commons.ResponseHeaders, errs []error) {
-	responseHeaders, _, _, errs = r.FetchArtifact(ctx, info, false)
+	responseHeaders, _, _, _, errs = r.FetchArtifact(ctx, info, false)
 	return responseHeaders, errs
 }
 
 func (r *LocalRegistry) GetArtifact(ctx context.Context, info pkg.MavenArtifactInfo) (
-	responseHeaders *commons.ResponseHeaders, body *storage.FileReader, readCloser io.ReadCloser, errs []error) {
+	responseHeaders *commons.ResponseHeaders, body *storage.FileReader, readCloser io.ReadCloser,
+	redirectURL string, errs []error) {
 	return r.FetchArtifact(ctx, info, true)
 }
 
 func (r *LocalRegistry) FetchArtifact(ctx context.Context, info pkg.MavenArtifactInfo, serveFile bool) (
-	responseHeaders *commons.ResponseHeaders, body *storage.FileReader, readCloser io.ReadCloser, errs []error) {
+	responseHeaders *commons.ResponseHeaders,
+	body *storage.FileReader,
+	readCloser io.ReadCloser,
+	redirectURL string,
+	errs []error) {
 	filePath := utils.GetFilePath(info)
 	name := info.GroupID + ":" + info.ArtifactID
 	dbImage, err2 := r.DBStore.ImageDao.GetByName(ctx, info.RegistryID, name)
@@ -94,7 +99,7 @@ func (r *LocalRegistry) FetchArtifact(ctx context.Context, info pkg.MavenArtifac
 	}
 	var fileReader *storage.FileReader
 	if serveFile {
-		fileReader, _, _, err = r.fileManager.DownloadFile(ctx, filePath, types.Registry{
+		fileReader, _, redirectURL, err = r.fileManager.DownloadFile(ctx, filePath, types.Registry{
 			ID:   info.RegistryID,
 			Name: info.RootIdentifier,
 		}, info.RootIdentifier)
@@ -103,7 +108,7 @@ func (r *LocalRegistry) FetchArtifact(ctx context.Context, info pkg.MavenArtifac
 		}
 	}
 	responseHeaders = utils.SetHeaders(info, fileInfo)
-	return responseHeaders, fileReader, nil, nil
+	return responseHeaders, fileReader, nil, redirectURL, nil
 }
 
 func (r *LocalRegistry) PutArtifact(ctx context.Context, info pkg.MavenArtifactInfo, fileReader io.Reader) (
@@ -156,11 +161,12 @@ func (r *LocalRegistry) PutArtifact(ctx context.Context, info pkg.MavenArtifactI
 }
 
 func processError(err error) (
-	responseHeaders *commons.ResponseHeaders, body *storage.FileReader, readCloser io.ReadCloser, errs []error) {
+	responseHeaders *commons.ResponseHeaders, body *storage.FileReader, readCloser io.ReadCloser,
+	redirectURL string, errs []error) {
 	if strings.Contains(err.Error(), sql.ErrNoRows.Error()) ||
 		strings.Contains(err.Error(), "resource not found") ||
 		strings.Contains(err.Error(), "http status code: 404") {
-		return responseHeaders, nil, nil, []error{commons.NotFoundError(err.Error(), err)}
+		return responseHeaders, nil, nil, "", []error{commons.NotFoundError(err.Error(), err)}
 	}
-	return responseHeaders, nil, nil, []error{errcode.ErrCodeUnknown.WithDetail(err)}
+	return responseHeaders, nil, nil, "", []error{errcode.ErrCodeUnknown.WithDetail(err)}
 }

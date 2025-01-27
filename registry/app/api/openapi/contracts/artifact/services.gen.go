@@ -4768,8 +4768,8 @@ type StrictServerInterface interface {
 	GetAllRegistries(ctx context.Context, request GetAllRegistriesRequestObject) (GetAllRegistriesResponseObject, error)
 }
 
-type StrictHandlerFunc = strictnethttp.StrictHttpHandlerFunc
-type StrictMiddlewareFunc = strictnethttp.StrictHttpMiddlewareFunc
+type StrictHandlerFunc = strictnethttp.StrictHTTPHandlerFunc
+type StrictMiddlewareFunc = strictnethttp.StrictHTTPMiddlewareFunc
 
 type StrictHTTPServerOptions struct {
 	RequestErrorHandlerFunc  func(w http.ResponseWriter, r *http.Request, err error)
