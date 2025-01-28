@@ -29,7 +29,6 @@ import {
 import { useLocation } from 'react-router-dom'
 import { useGet, useMutate } from 'restful-react'
 import { get, orderBy } from 'lodash-es'
-import { Render } from 'react-jsx-match'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
@@ -52,7 +51,7 @@ import {
   filenameToLanguage,
   PRCommentFilterType
 } from 'utils/Utils'
-import { CommentType, activitiesToDiffCommentItems, activityToCommentItem } from 'components/DiffViewer/DiffViewerUtils'
+import { activitiesToDiffCommentItems, activityToCommentItem } from 'components/DiffViewer/DiffViewerUtils'
 import { NavigationCheck } from 'components/NavigationCheck/NavigationCheck'
 import { ThreadSection } from 'components/ThreadSection/ThreadSection'
 import { CodeCommentStatusSelect } from 'components/CodeCommentStatusSelect/CodeCommentStatusSelect'
@@ -269,23 +268,20 @@ export const Conversation: React.FC<ConversationProps> = ({
     () =>
       activityBlocks?.map((commentItems, index) => {
         const threadId = commentItems[0].payload?.id
-        const renderLabelActivities = commentItems[0].payload?.type !== CommentType.LABEL_MODIFY
         if (isSystemComment(commentItems)) {
           return (
-            <Render key={`thread-${threadId}`} when={renderLabelActivities}>
-              <ThreadSection
-                key={`thread-${threadId}`}
-                onlyTitle
-                lastItem={activityBlocks.length - 1 === index}
-                title={
-                  <SystemComment
-                    key={`system-${threadId}`}
-                    pullReqMetadata={pullReqMetadata}
-                    commentItems={commentItems}
-                    repoMetadataPath={repoMetadata.path}
-                  />
-                }></ThreadSection>
-            </Render>
+            <ThreadSection
+              key={`thread-${threadId}`}
+              onlyTitle
+              lastItem={activityBlocks.length - 1 === index}
+              title={
+                <SystemComment
+                  key={`system-${threadId}`}
+                  pullReqMetadata={pullReqMetadata}
+                  commentItems={commentItems}
+                  repoMetadataPath={repoMetadata.path}
+                />
+              }></ThreadSection>
           )
         }
 
