@@ -385,7 +385,7 @@ func GetHelmPullCommand(image string, tag string, registryURL string) string {
 
 func GetGenericArtifactFileDownloadCommand(regURL, artifact, version, filename string) string {
 	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>:<VERSION>:<FILENAME>' --header 'x-api-key: <API_KEY>'" +
-		" --output <TARGET_FILENAME>"
+		" -J -O"
 
 	// Replace the placeholders with the actual values
 	replacements := map[string]string{

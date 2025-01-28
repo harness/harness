@@ -396,7 +396,10 @@ func (t tagDao) GetAllArtifactsByParentID(
      t.tag_registry_id ORDER BY t.tag_updated_at DESC) AS tag_rank 
      FROM tags t 
      JOIN manifests m ON t.tag_manifest_id = m.manifest_id) AS tag_q
-     ON decode(ar.artifact_version, 'hex') = tag_q.manifest_digest 
+     ON CASE
+       WHEN ar.artifact_version ~ '^[0-9A-Fa-f]+$' THEN decode(ar.artifact_version, 'hex')
+       ELSE NULL
+   END = tag_q.manifest_digest 
      AND i.image_name = tag_q.tag_image_name 
      AND i.image_registry_id = tag_q.tag_registry_id AND tag_q.tag_rank = 1`,
 			)

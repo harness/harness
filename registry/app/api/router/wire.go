@@ -40,8 +40,9 @@ func AppRouterProvider(
 	ocir oci.RegistryOCIHandler,
 	appHandler harness.APIHandler,
 	mavenHandler mavenRouter.Handler,
+	genericHandler generic2.Handler,
 ) AppRouter {
-	return GetAppRouter(ocir, appHandler, config.APIURL, mavenHandler)
+	return GetAppRouter(ocir, appHandler, config.APIURL, mavenHandler, genericHandler)
 }
 
 func APIHandlerProvider(
