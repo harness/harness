@@ -23,7 +23,6 @@ import { RepositoryPackageType } from '@ar/common/types'
 import ArTestWrapper from '@ar/utils/testUtils/ArTestWrapper'
 import repositoryFactory from '@ar/frameworks/RepositoryStep/RepositoryFactory'
 import { CreateRepository } from '@ar/pages/repository-list/components/CreateRepository/CreateRepository'
-import { FeatureFlags } from '@ar/MFEAppTypes'
 
 import { queryByNameAttribute } from 'utils/test/testUtils'
 import { HelmRepositoryType } from '../../HelmRepository/HelmRepositoryType'
@@ -143,7 +142,7 @@ describe('Verify CreateRepositoryModal', () => {
 
   test('should render modal with allowed types correctly', async () => {
     const { container } = render(
-      <ArTestWrapper featureFlags={{ [FeatureFlags.HAR_GENERIC_ARTIFACT_ENABLED]: true }}>
+      <ArTestWrapper>
         <CustomCreateRepositoryModal onSuccess={jest.fn()} allowedPackageTypes={[RepositoryPackageType.HELM]} />
       </ArTestWrapper>
     )

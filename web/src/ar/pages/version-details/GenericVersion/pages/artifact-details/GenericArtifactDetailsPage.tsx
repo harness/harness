@@ -19,6 +19,7 @@ import { Page } from '@harnessio/uicore'
 import { useGetArtifactFilesQuery } from '@harnessio/react-har-service-client'
 
 import { DEFAULT_PAGE_INDEX } from '@ar/constants'
+import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 import { useDecodedParams, useGetSpaceRef, useParentHooks } from '@ar/hooks'
 import {
@@ -47,7 +48,7 @@ export default function GenericArtifactDetailsPage() {
     refetch
   } = useGetArtifactFilesQuery({
     registry_ref: registryRef,
-    artifact: pathParams.artifactIdentifier,
+    artifact: encodeRef(pathParams.artifactIdentifier),
     version: pathParams.versionIdentifier,
     queryParams: {
       searchTerm,

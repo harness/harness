@@ -65,6 +65,13 @@ function RepositoryConfigurationFormContent(
     return isUpstreamProxiesSelected || isIncludesPatternAdded || isExcludesPatternAdded || isCleanupPoliciesAdded
   }
 
+  const shouldShowAdvancedConfig = () => {
+    if (parent === Parent.OSS) {
+      return repositoryType?.getSupportsUpstreamProxy()
+    }
+    return true
+  }
+
   return (
     <Container padding="xxlarge">
       <Container>
@@ -78,33 +85,35 @@ function RepositoryConfigurationFormContent(
       {parent === Parent.Enterprise && (
         <SelectContainerScannersFormSection packageType={packageType as RepositoryPackageType} />
       )}
-      <CollapseContainer
-        className={css.marginTopLarge}
-        title={getString('repositoryDetails.repositoryForm.advancedOptionsTitle')}
-        subTitle={
-          parent === Parent.Enterprise
-            ? getString('repositoryDetails.repositoryForm.enterpriseAdvancedOptionsSubTitle')
-            : getString('repositoryDetails.repositoryForm.ossAdvancedOptionsSubTitle')
-        }
-        initialState={isCollapsedAdvancedConfig}>
-        <Card className={classNames(css.cardContainer)}>
-          {repositoryType?.getSupportsUpstreamProxy() && (
-            <Container className={css.upstreamProxiesContainer}>
-              <RepositoryUpstreamProxiesFormContent isEdit disabled={readonly} />
-            </Container>
-          )}
-          {parent === Parent.Enterprise && (
-            <>
-              <Separator />
-              <RepositoryIncludeExcludePatternFormContent isEdit disabled={readonly} />
-              <Separator />
+      {shouldShowAdvancedConfig() && (
+        <CollapseContainer
+          className={css.marginTopLarge}
+          title={getString('repositoryDetails.repositoryForm.advancedOptionsTitle')}
+          subTitle={
+            parent === Parent.Enterprise
+              ? getString('repositoryDetails.repositoryForm.enterpriseAdvancedOptionsSubTitle')
+              : getString('repositoryDetails.repositoryForm.ossAdvancedOptionsSubTitle')
+          }
+          initialState={isCollapsedAdvancedConfig}>
+          <Card className={classNames(css.cardContainer)}>
+            {repositoryType?.getSupportsUpstreamProxy() && (
               <Container className={css.upstreamProxiesContainer}>
-                <RepositoryCleanupPoliciesFormContent isEdit disabled />
+                <RepositoryUpstreamProxiesFormContent isEdit disabled={readonly} />
               </Container>
-            </>
-          )}
-        </Card>
-      </CollapseContainer>
+            )}
+            {parent === Parent.Enterprise && (
+              <>
+                <Separator />
+                <RepositoryIncludeExcludePatternFormContent isEdit disabled={readonly} />
+                <Separator />
+                <Container className={css.upstreamProxiesContainer}>
+                  <RepositoryCleanupPoliciesFormContent isEdit disabled />
+                </Container>
+              </>
+            )}
+          </Card>
+        </CollapseContainer>
+      )}
     </Container>
   )
 }

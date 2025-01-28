@@ -87,7 +87,7 @@ describe('Verify RepositoryCreateForm', () => {
     const formikRef = React.createRef<FormikProps<unknown>>()
 
     const { container } = render(
-      <ArTestWrapper featureFlags={{ HAR_GENERIC_ARTIFACT_ENABLED: true }}>
+      <ArTestWrapper>
         <RepositoryCreateForm setShowOverlay={setShowOverlay} onSuccess={onSuccess} ref={formikRef} />
       </ArTestWrapper>
     )
@@ -131,19 +131,6 @@ describe('Verify RepositoryCreateForm', () => {
     await waitFor(() => {
       expect(onSuccess).toHaveBeenCalledWith({ identifier: '1234' })
     })
-  })
-
-  test('Should disable Generic type artifact option if HAR_GENERIC_ARTIFACT_ENABLED is false', async () => {
-    const setShowOverlay = jest.fn()
-    const onSuccess = jest.fn()
-    const { container } = render(
-      <ArTestWrapper featureFlags={{ HAR_GENERIC_ARTIFACT_ENABLED: false }}>
-        <RepositoryCreateForm setShowOverlay={setShowOverlay} onSuccess={onSuccess} />
-      </ArTestWrapper>
-    )
-
-    const genericType = container.querySelector('input[type="checkbox"][name="packageType"][value="GENERIC"]')
-    expect(genericType).toBeDisabled()
   })
 
   test('Should work form validations correctly', async () => {

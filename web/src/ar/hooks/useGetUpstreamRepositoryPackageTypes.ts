@@ -16,7 +16,7 @@
 
 import type { IconName } from '@harnessio/icons'
 
-import { FeatureFlags } from '@ar/MFEAppTypes'
+import type { FeatureFlags } from '@ar/MFEAppTypes'
 import type { StringsMap } from '@ar/frameworks/strings'
 import { UpstreamProxyPackageType } from '@ar/pages/upstream-proxy-details/types'
 
@@ -60,9 +60,6 @@ export const UpstreamProxyPackageTypeList: UpstreamRepositoryPackageTypeListItem
   {
     label: 'repositoryTypes.maven',
     value: UpstreamProxyPackageType.MAVEN,
-    featureFlag: FeatureFlags.HAR_MAVEN_ARTIFACT_ENABLED,
-    icon: 'maven-repository-type',
-    tooltip: 'Coming Soon!',
-    disabled: true
+    icon: 'maven-repository-type'
   }
 ]

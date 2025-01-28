@@ -18,6 +18,7 @@ import React from 'react'
 import { Layout, Page } from '@harnessio/uicore'
 import { useGetArtifactDetailsQuery } from '@harnessio/react-har-service-client'
 
+import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import { useDecodedParams, useGetSpaceRef } from '@ar/hooks'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 
@@ -37,7 +38,7 @@ export default function GenericOverviewPage() {
     refetch
   } = useGetArtifactDetailsQuery({
     registry_ref: spaceRef,
-    artifact: pathParams.artifactIdentifier,
+    artifact: encodeRef(pathParams.artifactIdentifier),
     version: pathParams.versionIdentifier,
     queryParams: {}
   })

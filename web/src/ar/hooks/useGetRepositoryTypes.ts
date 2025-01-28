@@ -15,7 +15,7 @@
  */
 
 import type { IconName } from '@harnessio/icons'
-import { FeatureFlags } from '@ar/MFEAppTypes'
+import type { FeatureFlags } from '@ar/MFEAppTypes'
 import type { StringsMap } from '@ar/frameworks/strings'
 import { RepositoryPackageType } from '@ar/common/types'
 import { useFeatureFlags } from './useFeatureFlag'
@@ -58,18 +58,12 @@ const RepositoryTypes: RepositoryTypeListItem[] = [
   {
     label: 'repositoryTypes.generic',
     value: RepositoryPackageType.GENERIC,
-    icon: 'generic-repository-type',
-    featureFlag: FeatureFlags.HAR_GENERIC_ARTIFACT_ENABLED,
-    tooltip: 'Coming Soon!',
-    disabled: true
+    icon: 'generic-repository-type'
   },
   {
     label: 'repositoryTypes.maven',
     value: RepositoryPackageType.MAVEN,
-    icon: 'maven-repository-type',
-    featureFlag: FeatureFlags.HAR_MAVEN_ARTIFACT_ENABLED,
-    tooltip: 'Coming Soon!',
-    disabled: true
+    icon: 'maven-repository-type'
   },
   {
     label: 'repositoryTypes.npm',
