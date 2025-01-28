@@ -37,9 +37,48 @@ const (
 	contentTypePlainText = "text/plain"
 )
 
+const (
+	Jar   = ".jar"
+	War   = ".war"
+	Ear   = ".ear"
+	Zip   = ".zip"
+	TarGz = ".tar.gz"
+	So    = ".so"
+	Dll   = ".dll"
+	Dylib = ".dylib"
+	Rpm   = ".rpm"
+	Deb   = ".deb"
+	Exe   = ".exe"
+)
+
+var MainArtifactFileExtensions = []string{
+	Jar,
+	War,
+	Ear,
+	Zip,
+	TarGz,
+	So,
+	Dll,
+	Dylib,
+	Rpm,
+	Deb,
+	Exe,
+}
+
 func GetFilePath(info pkg.MavenArtifactInfo) string {
 	groupIDPath := strings.ReplaceAll(info.GroupID, ".", "/")
 	return "/" + groupIDPath + "/" + info.ArtifactID + "/" + info.Version + "/" + info.FileName
+}
+
+func IsMainArtifactFile(info pkg.MavenArtifactInfo) bool {
+	filePath := GetFilePath(info)
+	fileExtension := strings.ToLower(filepath.Ext(filePath))
+	for _, ext := range MainArtifactFileExtensions {
+		if ext == fileExtension {
+			return true
+		}
+	}
+	return false
 }
 
 func SetHeaders(info pkg.MavenArtifactInfo,

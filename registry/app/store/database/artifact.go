@@ -757,6 +757,11 @@ type GenericMetadata struct {
 	FileCount   int64  `json:"file_count"`
 }
 
+type MavenMetadata struct {
+	Files     []File `json:"files"`
+	FileCount int64  `json:"file_count"`
+}
+
 type File struct {
 	Size      int64  `json:"size"`
 	Filename  string `json:"file_name"`

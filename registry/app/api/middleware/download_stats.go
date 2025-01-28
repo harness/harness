@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	"github.com/harness/gitness/registry/app/api/handler/generic"
+	"github.com/harness/gitness/registry/app/api/handler/maven"
 	"github.com/harness/gitness/registry/app/api/handler/oci"
 	"github.com/harness/gitness/registry/app/api/router/utils"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
@@ -27,6 +28,8 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/docker"
 	generic2 "github.com/harness/gitness/registry/app/pkg/generic"
+	maven2 "github.com/harness/gitness/registry/app/pkg/maven"
+	mavenutils "github.com/harness/gitness/registry/app/pkg/maven/utils"
 	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/store"
 
@@ -154,6 +157,49 @@ func TrackDownloadStatForGenericArtifact(h *generic.Handler) func(http.Handler) 
 	}
 }
 
+func TrackDownloadStatForMavenArtifact(h *maven.Handler) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				methodType := r.Method
+				ctx := r.Context()
+				sw := &StatusWriter{ResponseWriter: w}
+
+				if http.MethodGet == methodType {
+					next.ServeHTTP(sw, r)
+				} else {
+					next.ServeHTTP(w, r)
+					return
+				}
+
+				if sw.StatusCode != http.StatusOK && sw.StatusCode != http.StatusTemporaryRedirect {
+					return
+				}
+
+				info, err := h.GetArtifactInfo(r, true)
+				if !commons.IsEmpty(err) {
+					log.Ctx(ctx).Error().Stack().Str("middleware",
+						"TrackDownloadStat").Err(err).Msgf("error while putting download stat of artifact, %v",
+						err)
+					return
+				}
+
+				if !mavenutils.IsMainArtifactFile(info) {
+					return
+				}
+
+				err = dbDownloadStatForMavenArtifact(ctx, h.Controller, info)
+				if !commons.IsEmpty(err) {
+					log.Ctx(ctx).Error().Stack().Str("middleware",
+						"TrackDownloadStat").Err(err).Msgf("error while putting download stat of artifact, %v",
+						err)
+					return
+				}
+			},
+		)
+	}
+}
+
 func dbDownloadStatForGenericArtifact(
 	ctx context.Context,
 	c *generic2.Controller,
@@ -165,6 +211,37 @@ func dbDownloadStatForGenericArtifact(
 	}
 
 	image, err := c.DBStore.ImageDao.GetByName(ctx, registry.ID, info.Image)
+	if err != nil {
+		return errcode.ErrCodeInvalidRequest.WithDetail(err)
+	}
+
+	artifact, err := c.DBStore.ArtifactDao.GetByName(ctx, image.ID, info.Version)
+	if err != nil {
+		return errcode.ErrCodeInvalidRequest.WithDetail(err)
+	}
+
+	downloadStat := &types.DownloadStat{
+		ArtifactID: artifact.ID,
+	}
+
+	if err := c.DBStore.DownloadStatDao.Create(ctx, downloadStat); err != nil {
+		return errcode.ErrCodeNameUnknown.WithDetail(err)
+	}
+	return errcode.Error{}
+}
+
+func dbDownloadStatForMavenArtifact(
+	ctx context.Context,
+	c *maven2.Controller,
+	info pkg.MavenArtifactInfo,
+) errcode.Error {
+	imageName := info.GroupID + ":" + info.ArtifactID
+	registry, err := c.DBStore.RegistryDao.GetByParentIDAndName(ctx, info.ParentID, info.RegIdentifier)
+	if err != nil {
+		return errcode.ErrCodeInvalidRequest.WithDetail(err)
+	}
+
+	image, err := c.DBStore.ImageDao.GetByName(ctx, registry.ID, imageName)
 	if err != nil {
 		return errcode.ErrCodeInvalidRequest.WithDetail(err)
 	}

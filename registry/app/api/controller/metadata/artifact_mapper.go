@@ -56,14 +56,21 @@ func GetRegistryArtifactMetadata(artifacts []types.ArtifactMetadata) []artifacta
 	return artifactMetadataList
 }
 
-func GetArtifactDetail(image *types.Image, artifact *types.Artifact) artifactapi.ArtifactDetail {
+func GetMavenArtifactDetail(image *types.Image, artifact *types.Artifact,
+	metadata database.MavenMetadata) artifactapi.ArtifactDetail {
 	createdAt := GetTimeInMs(artifact.CreatedAt)
 	modifiedAt := GetTimeInMs(artifact.UpdatedAt)
+	var size int64
+	for _, file := range metadata.Files {
+		size += file.Size
+	}
+	sizeVal := GetSize(size)
 	artifactDetail := &artifactapi.ArtifactDetail{
 		CreatedAt:  &createdAt,
 		ModifiedAt: &modifiedAt,
 		Name:       &image.Name,
 		Version:    artifact.Version,
+		Size:       &sizeVal,
 	}
 	return *artifactDetail
 }

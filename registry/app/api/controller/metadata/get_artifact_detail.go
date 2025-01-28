@@ -97,7 +97,16 @@ func (c *APIController) GetArtifactDetails(
 	var artifactDetails artifact.ArtifactDetail
 
 	if artifact.PackageTypeMAVEN == registry.PackageType {
-		artifactDetails = GetArtifactDetail(img, art)
+		var metadata database.MavenMetadata
+		err := json.Unmarshal(art.Metadata, &metadata)
+		if err != nil {
+			return artifact.GetArtifactDetails500JSONResponse{
+				InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
+					*GetErrorResponse(http.StatusInternalServerError, err.Error()),
+				),
+			}, nil
+		}
+		artifactDetails = GetMavenArtifactDetail(img, art, metadata)
 	} else if artifact.PackageTypeGENERIC == registry.PackageType {
 		var metadata database.GenericMetadata
 		err := json.Unmarshal(art.Metadata, &metadata)

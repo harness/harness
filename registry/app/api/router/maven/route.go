@@ -42,8 +42,8 @@ func NewMavenHandler(handler *maven.Handler) Handler {
 		r.Use(middleware.StoreOriginalURL)
 		r.Use(middlewareauthn.Attempt(handler.Authenticator))
 		r.Use(middleware.CheckMavenAuth())
-		//todo: r.Use(middleware.TrackDownloadStat(handler))
-		//todo: r.Use(middleware.TrackBandwidthStat(handler))
+		r.Use(middleware.TrackDownloadStatForMavenArtifact(handler))
+		r.Use(middleware.TrackBandwidthStatForMavenArtifacts(handler))
 
 		r.Handle("/*", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			methodType := req.Method

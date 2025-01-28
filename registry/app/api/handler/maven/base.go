@@ -86,7 +86,7 @@ func (h *Handler) GetArtifactInfo(r *http.Request, remoteSupport bool) (pkg.Mave
 	if err != nil {
 		return pkg.MavenArtifactInfo{}, err
 	}
-	if err = metadata.ValidateIdentifier(rootIdentifier); err != nil {
+	if err = metadata.ValidateIdentifier(registryIdentifier); err != nil {
 		return pkg.MavenArtifactInfo{}, err
 	}
 
