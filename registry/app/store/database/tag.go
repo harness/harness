@@ -407,7 +407,10 @@ func (t tagDao) GetAllArtifactsByParentID(
 		q = q.LeftJoin(
 			`(SELECT t.tag_name, t.tag_image_name, t.tag_registry_id, m.manifest_digest FROM tags t 
           JOIN manifests m ON t.tag_manifest_id = m.manifest_id) AS tag_q
-         ON  decode(ar.artifact_version, 'hex') = tag_q.manifest_digest AND
+         ON CASE
+       WHEN ar.artifact_version ~ '^[0-9A-Fa-f]+$' THEN decode(ar.artifact_version, 'hex')
+       ELSE NULL
+   END = tag_q.manifest_digest AND
          i.image_name = tag_q.tag_image_name AND i.image_registry_id = tag_q.tag_registry_id`,
 		)
 	}
