@@ -33,7 +33,7 @@ import MavenArtifactDetailsPage from './pages/artifact-details/MavenArtifactDeta
 import VersionDetailsHeaderContent from '../components/VersionDetailsHeaderContent/VersionDetailsHeaderContent'
 import OSSContentPage from './pages/oss-details/OSSContentPage'
 
-export class GenericVersionType extends VersionStep<ArtifactVersionSummary> {
+export class MavenVersionType extends VersionStep<ArtifactVersionSummary> {
   protected packageType = RepositoryPackageType.MAVEN
   protected allowedVersionDetailsTabs: VersionDetailsTab[] = [
     VersionDetailsTab.OVERVIEW,

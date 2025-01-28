@@ -21,4 +21,5 @@ export declare const generateTokenBtn: string
 export declare const label: string
 export declare const pageBody: string
 export declare const stepGridContainer: string
+export declare const tabsContainer: string
 export declare const titleContainer: string

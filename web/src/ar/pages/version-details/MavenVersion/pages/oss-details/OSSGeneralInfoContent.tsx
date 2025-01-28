@@ -18,6 +18,7 @@ import React from 'react'
 import { Page } from '@harnessio/uicore'
 import { ArtifactDetail, useGetArtifactDetailsQuery } from '@harnessio/react-har-service-client'
 
+import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import { useDecodedParams, useGetSpaceRef } from '@ar/hooks'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 
@@ -33,17 +34,12 @@ export default function OSSGeneralInfoContent() {
     isFetching: loading,
     error,
     refetch
-  } = useGetArtifactDetailsQuery(
-    {
-      registry_ref: spaceRef,
-      artifact: pathParams.artifactIdentifier,
-      version: pathParams.versionIdentifier,
-      queryParams: {}
-    },
-    {
-      enabled: false
-    }
-  )
+  } = useGetArtifactDetailsQuery({
+    registry_ref: spaceRef,
+    artifact: encodeRef(pathParams.artifactIdentifier),
+    version: pathParams.versionIdentifier,
+    queryParams: {}
+  })
 
   const response = data?.content?.data as ArtifactDetail
 

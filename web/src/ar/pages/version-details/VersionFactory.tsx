@@ -18,7 +18,9 @@ import versionFactory from '@ar/frameworks/Version/VersionFactory'
 import { DockerVersionType } from './DockerVersion/DockerVersionType'
 import { HelmVersionType } from './HelmVersion/HelmVersionType'
 import { GenericVersionType } from './GenericVersion/GenericVersionType'
+import { MavenVersionType } from './MavenVersion/MavenVersion'
 
 versionFactory.registerStep(new DockerVersionType())
 versionFactory.registerStep(new HelmVersionType())
 versionFactory.registerStep(new GenericVersionType())
+versionFactory.registerStep(new MavenVersionType())
