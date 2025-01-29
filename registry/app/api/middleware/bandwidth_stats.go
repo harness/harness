@@ -184,7 +184,7 @@ func TrackBandwidthStatForMavenArtifacts(h *maven.Handler) func(http.Handler) ht
 				}
 				ctx := r.Context()
 
-				info, err := h.GetArtifactInfo(r, false)
+				info, err := h.GetArtifactInfo(r, true)
 				if !commons.IsEmpty(err) {
 					log.Ctx(ctx).Error().Stack().Str("middleware",
 						"TrackBandwidthStat").Err(err).Msgf("error while putting bandwidth stat for artifact, %v",
@@ -261,6 +261,9 @@ func dbBandwidthStatForMavenArtifact(
 	}
 
 	image, err := c.DBStore.ImageDao.GetByName(ctx, registry.ID, imageName)
+	if errors.Is(err, store.ErrResourceNotFound) {
+		image, err = getMavenArtifactFromUpstreamProxy(ctx, c, info)
+	}
 	if err != nil {
 		return errcode.ErrCodeInvalidRequest.WithDetail(err)
 	}
@@ -270,7 +273,7 @@ func dbBandwidthStatForMavenArtifact(
 		return errcode.ErrCodeInvalidRequest.WithDetail(err)
 	}
 
-	var metadata database.GenericMetadata
+	var metadata database.MavenMetadata
 	err = json.Unmarshal(art.Metadata, &metadata)
 
 	if err != nil {
@@ -278,8 +281,11 @@ func dbBandwidthStatForMavenArtifact(
 	}
 
 	var size int64
-	for _, files := range metadata.Files {
-		size += files.Size
+	for _, file := range metadata.Files {
+		if file.Filename == info.FileName {
+			size = file.Size
+			break
+		}
 	}
 	bandwidthStat := &types.BandwidthStat{
 		ImageID: image.ID,
@@ -343,4 +349,22 @@ func getImageFromUpstreamProxy(ctx context.Context, c *docker.Controller, info p
 		}
 	}
 	return nil, errors.New("image not found in upstream proxy")
+}
+
+func getMavenArtifactFromUpstreamProxy(ctx context.Context,
+	c *maven2.Controller,
+	info pkg.MavenArtifactInfo,
+) (*types.Image, error) {
+	repos, err := c.GetOrderedRepos(ctx, info.RegIdentifier, *info.BaseInfo)
+	if err != nil {
+		return nil, err
+	}
+	for _, registry := range repos {
+		log.Ctx(ctx).Info().Msgf("Using Repository: %s, Type: %s", registry.Name, registry.Type)
+		image, err := c.DBStore.ImageDao.GetByName(ctx, registry.ID, info.GroupID+":"+info.ArtifactID)
+		if err == nil && image != nil {
+			return image, nil
+		}
+	}
+	return nil, errors.New("artifact not found in upstream proxy")
 }

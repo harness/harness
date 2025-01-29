@@ -404,7 +404,7 @@ func GetGenericArtifactFileDownloadCommand(regURL, artifact, version, filename s
 
 func GetMavenArtifactFileDownloadCommand(regURL, artifact, version, filename string) string {
 	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>/<VERSION>/<FILENAME>'" +
-		" --header 'Authorization: <IDENTITY_TOKEN>'"
+		" --header 'x-api-key: <IDENTITY_TOKEN>' -O"
 
 	// Replace the placeholders with the actual values
 	replacements := map[string]string{

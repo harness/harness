@@ -432,7 +432,7 @@ func (c *APIController) generateMavenClientSetupDetail(
 			},
 			{
 				//nolint:lll
-				Header: stringPtr("Copy the following your ~/ .m2/setting.xml file for MacOs, or $USERPROFILE$\\ .m2\\settings.xml for Windows to authenticate with token to pull from your Maven registry."),
+				Header: stringPtr("Copy the following your ~/ .m2/settings.xml file for MacOs, or $USERPROFILE$\\ .m2\\settings.xml for Windows to authenticate with token to pull from your Maven registry."),
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{

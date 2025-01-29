@@ -188,8 +188,8 @@ func TrackDownloadStatForMavenArtifact(h *maven.Handler) func(http.Handler) http
 					return
 				}
 
-				err = dbDownloadStatForMavenArtifact(ctx, h.Controller, info)
-				if !commons.IsEmpty(err) {
+				err2 := dbDownloadStatForMavenArtifact(ctx, h.Controller, info)
+				if !commons.IsEmptyError(err2) {
 					log.Ctx(ctx).Error().Stack().Str("middleware",
 						"TrackDownloadStat").Err(err).Msgf("error while putting download stat of artifact, %v",
 						err)
@@ -242,6 +242,9 @@ func dbDownloadStatForMavenArtifact(
 	}
 
 	image, err := c.DBStore.ImageDao.GetByName(ctx, registry.ID, imageName)
+	if errors.Is(err, store.ErrResourceNotFound) {
+		image, err = getMavenArtifactFromUpstreamProxy(ctx, c, info)
+	}
 	if err != nil {
 		return errcode.ErrCodeInvalidRequest.WithDetail(err)
 	}
