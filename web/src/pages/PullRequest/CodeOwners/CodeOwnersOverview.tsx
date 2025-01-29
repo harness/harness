@@ -38,8 +38,8 @@ import { ExecutionState, ExecutionStatus } from 'components/ExecutionStatus/Exec
 import { useShowRequestError } from 'hooks/useShowRequestError'
 import type { TypesCodeOwnerEvaluation, TypesCodeOwnerEvaluationEntry } from 'services/code'
 import type { PRChecksDecisionResult } from 'hooks/usePRChecksDecision'
-import { CodeOwnerReqDecision, findChangeReqDecisions, findWaitingDecisions } from 'utils/Utils'
-import { PullReqReviewDecision } from '../PullRequestUtils'
+import { CodeOwnerReqDecision, findChangeReqDecisions } from 'utils/Utils'
+import { PullReqReviewDecision, findWaitingDecisions } from '../PullRequestUtils'
 import css from './CodeOwnersOverview.module.scss'
 
 interface ChecksOverviewProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'> {
@@ -65,9 +65,9 @@ export function CodeOwnersOverview({
 
   const changeReqEntries = findChangeReqDecisions(codeOwners?.evaluation_entries, CodeOwnerReqDecision.CHANGEREQ)
   const waitingEntries = findWaitingDecisions(
-    codeOwners?.evaluation_entries,
     pullReqMetadata,
-    reqCodeOwnerLatestApproval
+    reqCodeOwnerLatestApproval,
+    codeOwners?.evaluation_entries
   )
 
   const approvalEntries = findChangeReqDecisions(codeOwners?.evaluation_entries, CodeOwnerReqDecision.APPROVED)

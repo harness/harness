@@ -20,25 +20,11 @@ import { get } from 'lodash-es'
 import type { CommentItem } from 'components/CommentBox/CommentBox'
 import type { TypesPullReqActivity } from 'services/code'
 import { FILE_VIEWED_OBSOLETE_SHA } from 'utils/GitUtils'
+import type { CommentType } from 'pages/PullRequest/PullRequestUtils'
 
 export enum ViewStyle {
   SIDE_BY_SIDE = 'side-by-side',
   LINE_BY_LINE = 'line-by-line'
-}
-
-export enum CommentType {
-  COMMENT = 'comment',
-  CODE_COMMENT = 'code-comment',
-  TITLE_CHANGE = 'title-change',
-  REVIEW_SUBMIT = 'review-submit',
-  MERGE = 'merge',
-  BRANCH_UPDATE = 'branch-update',
-  BRANCH_DELETE = 'branch-delete',
-  BRANCH_RESTORE = 'branch-restore',
-  STATE_CHANGE = 'state-change',
-  LABEL_MODIFY = 'label-modify',
-  REVIEWER_ADD = 'reviewer-add',
-  REVIEWER_DELETE = 'reviewer-delete'
 }
 
 export enum LabelActivity {

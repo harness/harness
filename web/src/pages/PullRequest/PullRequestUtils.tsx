@@ -17,10 +17,16 @@
 import type { SelectOption } from '@harnessio/uicore'
 import type { UseStringsReturn } from 'framework/strings'
 import type { CommentItem } from 'components/CommentBox/CommentBox'
-import { CommentType } from 'components/DiffViewer/DiffViewerUtils'
 import type { PullRequestSection } from 'utils/Utils'
 import { MergeStrategy } from 'utils/GitUtils'
-import type { EnumMergeMethod, EnumPullReqReviewDecision, TypesPullReqActivity } from 'services/code'
+import type {
+  EnumMergeMethod,
+  EnumPullReqReviewDecision,
+  TypesCodeOwnerEvaluationEntry,
+  TypesOwnerEvaluation,
+  TypesPullReq,
+  TypesPullReqActivity
+} from 'services/code'
 
 export interface PRMergeOption extends SelectOption {
   method: EnumMergeMethod | 'close'
@@ -34,6 +40,21 @@ export interface PRDraftOption {
   title: string
   desc: string
   disabled?: boolean
+}
+
+export enum CommentType {
+  COMMENT = 'comment',
+  CODE_COMMENT = 'code-comment',
+  TITLE_CHANGE = 'title-change',
+  REVIEW_SUBMIT = 'review-submit',
+  MERGE = 'merge',
+  BRANCH_UPDATE = 'branch-update',
+  BRANCH_DELETE = 'branch-delete',
+  BRANCH_RESTORE = 'branch-restore',
+  STATE_CHANGE = 'state-change',
+  LABEL_MODIFY = 'label-modify',
+  REVIEWER_ADD = 'reviewer-add',
+  REVIEWER_DELETE = 'reviewer-delete'
 }
 
 export function isCodeComment(commentItems: CommentItem<TypesPullReqActivity>[]) {
@@ -53,6 +74,32 @@ export enum PullReqReviewDecision {
   CHANGEREQ = 'changereq',
   PENDING = 'pending',
   OUTDATED = 'outdated'
+}
+
+export const findWaitingDecisions = (
+  pullReqMetadata: TypesPullReq,
+  reqCodeOwnerLatestApproval: boolean,
+  entries?: TypesCodeOwnerEvaluationEntry[] | null
+) => {
+  if (entries === null || entries === undefined) {
+    return []
+  } else {
+    return entries.filter((entry: TypesCodeOwnerEvaluationEntry) => {
+      const hasNoReview = entry?.owner_evaluations?.every(
+        (evaluation: TypesOwnerEvaluation | { review_decision: string }) => evaluation.review_decision === ''
+      )
+
+      // add entry if no review found from codeowners
+      if (hasNoReview) return true
+      // add entry to waiting decision array if approved changes are outdated or no approvals are found for the given entry
+      const hasApprovedDecision = entry?.owner_evaluations?.some(
+        evaluation =>
+          evaluation.review_decision === PullReqReviewDecision.APPROVED &&
+          (reqCodeOwnerLatestApproval ? evaluation.review_sha === pullReqMetadata.source_sha : true)
+      )
+      return !hasApprovedDecision
+    })
+  }
 }
 
 export const processReviewDecision = (

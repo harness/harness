@@ -35,11 +35,11 @@ import { CodeCommentStatusSelect } from 'components/CodeCommentStatusSelect/Code
 import { dispatchCustomEvent } from 'hooks/useEventListener'
 import { UseGetPullRequestInfoResult, usePullReqActivities } from 'pages/PullRequest/useGetPullRequestInfo'
 import { CommentThreadTopDecoration } from 'components/CommentThreadTopDecoration/CommentThreadTopDecoration'
+import { CommentType } from 'pages/PullRequest/PullRequestUtils'
 import type { DiffViewerExchangeState } from './DiffViewer'
 import {
   activitiesToDiffCommentItems,
   activityToCommentItem,
-  CommentType,
   DiffCommentItem,
   getCommentLineInfo,
   createCommentOppositePlaceHolder,

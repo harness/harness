@@ -29,12 +29,9 @@ import type {
   RepoRepositoryOutput,
   TypesLabel,
   TypesLabelValue,
-  TypesPullReq,
-  TypesOwnerEvaluation,
   TypesPrincipalInfo,
   EnumMembershipRole
 } from 'services/code'
-import { PullReqReviewDecision } from 'pages/PullRequest/PullRequestUtils'
 import type { StringKeys } from 'framework/strings'
 
 export enum ACCESS_MODES {
@@ -323,32 +320,6 @@ export const findChangeReqDecisions = (
         }
       }) // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .filter((entry: any) => entry !== null && entry !== undefined) // Filter out the null entries
-  }
-}
-
-export const findWaitingDecisions = (
-  entries: TypesCodeOwnerEvaluationEntry[] | null | undefined,
-  pullReqMetadata: TypesPullReq,
-  reqCodeOwnerLatestApproval: boolean
-) => {
-  if (entries === null || entries === undefined) {
-    return []
-  } else {
-    return entries.filter((entry: TypesCodeOwnerEvaluationEntry) => {
-      const hasNoReview = entry?.owner_evaluations?.every(
-        (evaluation: TypesOwnerEvaluation | { review_decision: string }) => evaluation.review_decision === ''
-      )
-
-      // add entry if no review found from codeowners
-      if (hasNoReview) return true
-      // add entry to waiting decision array if approved changes are outdated or no approvals are found for the given entry
-      const hasApprovedDecision = entry?.owner_evaluations?.some(
-        evaluation =>
-          evaluation.review_decision === PullReqReviewDecision.APPROVED &&
-          (reqCodeOwnerLatestApproval ? evaluation.review_sha === pullReqMetadata.source_sha : true)
-      )
-      return !hasApprovedDecision
-    })
   }
 }
 

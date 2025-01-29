@@ -30,7 +30,7 @@ import { Render } from 'react-jsx-match'
 import { isEmpty } from 'lodash-es'
 import type { IconName } from '@blueprintjs/core'
 import { Icon } from '@harnessio/icons'
-import { CodeOwnerReqDecision, findChangeReqDecisions, findWaitingDecisions } from 'utils/Utils'
+import { CodeOwnerReqDecision, findChangeReqDecisions } from 'utils/Utils'
 import { CodeOwnerSection } from 'pages/PullRequest/CodeOwners/CodeOwnersOverview'
 import { useStrings } from 'framework/strings'
 import type {
@@ -41,6 +41,7 @@ import type {
   RepoRepositoryOutput
 } from 'services/code'
 import { capitalizeFirstLetter } from 'pages/PullRequest/Checks/ChecksUtils'
+import { findWaitingDecisions } from 'pages/PullRequest/PullRequestUtils'
 import greyCircle from '../../../../../icons/greyCircle.svg?url'
 import emptyStatus from '../../../../../icons/emptyStatus.svg?url'
 import Success from '../../../../../icons/code-success.svg?url'
@@ -122,9 +123,9 @@ const ChangesSection = (props: ChangesSectionProps) => {
     .filter((entry: any) => entry !== null && entry !== undefined) // Filter out the null entries
 
   const codeOwnerPendingEntries = findWaitingDecisions(
-    codeOwners?.evaluation_entries,
     pullReqMetadata,
-    reqCodeOwnerLatestApproval
+    reqCodeOwnerLatestApproval,
+    codeOwners?.evaluation_entries
   )
   const approvedEvaluations = reviewers?.filter(evaluation => evaluation.review_decision === 'approved')
   const latestApprovalArr = approvedEvaluations?.filter(
