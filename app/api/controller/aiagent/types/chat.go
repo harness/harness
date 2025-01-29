@@ -22,7 +22,7 @@ import (
 
 // Chat represents a chat conversation with a unique ID, prompt, metadata, and conversation history.
 type Chat struct {
-	ConversationID uuid.UUID         `json:"conversation_uuid"`
+	ConversationID uuid.UUID         `json:"conversation_uuid,omitempty"`
 	Prompt         string            `json:"prompt"`
 	Metadata       map[string]string `json:"metadata"`
 	Conversation   []Conversation    `json:"conversation"`
