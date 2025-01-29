@@ -91,8 +91,14 @@ function RepositoryConfigurationFormContent(
           title={getString('repositoryDetails.repositoryForm.advancedOptionsTitle')}
           subTitle={
             parent === Parent.Enterprise
-              ? getString('repositoryDetails.repositoryForm.enterpriseAdvancedOptionsSubTitle')
-              : getString('repositoryDetails.repositoryForm.ossAdvancedOptionsSubTitle')
+              ? getString(
+                  repositoryType?.enterpriseAdvancedOptionSubTitle ??
+                    'repositoryDetails.repositoryForm.enterpriseAdvancedOptionsSubTitle'
+                )
+              : getString(
+                  repositoryType?.ossAdvancedOptionSubTitle ??
+                    'repositoryDetails.repositoryForm.ossAdvancedOptionsSubTitle'
+                )
           }
           initialState={isCollapsedAdvancedConfig}>
           <Card className={classNames(css.cardContainer)}>

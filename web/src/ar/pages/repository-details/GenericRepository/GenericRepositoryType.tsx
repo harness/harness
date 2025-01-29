@@ -16,6 +16,8 @@
 
 import React from 'react'
 import type { IconName } from '@harnessio/icons'
+
+import type { StringKeys } from '@ar/frameworks/strings'
 import { RepositoryConfigType, RepositoryPackageType } from '@ar/common/types'
 import {
   RepositoryActionsProps,
@@ -38,6 +40,8 @@ export class GenericRepositoryType extends RepositoryStep<VirtualRegistryRequest
   protected repositoryIcon: IconName = 'generic-repository-type'
   protected supportedScanners = []
   protected supportsUpstreamProxy = false
+  enterpriseAdvancedOptionSubTitle: StringKeys =
+    'repositoryDetails.repositoryForm.enterpriseAdvancedWithoutUpstreamOptionsSubTitle'
 
   protected defaultValues: VirtualRegistryRequest = {
     packageType: RepositoryPackageType.GENERIC,

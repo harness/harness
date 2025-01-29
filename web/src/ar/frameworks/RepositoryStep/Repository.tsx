@@ -17,6 +17,7 @@
 import type { IconName } from '@harnessio/icons'
 import type { UpstreamRepositoryURLInputSource } from '@ar/pages/upstream-proxy-details/types'
 import type { FormikFowardRef, RepositoryPackageType, RepositoryConfigType, PageType, Scanners } from '@ar/common/types'
+import type { StringKeys } from '../strings'
 
 export interface CreateRepositoryFormProps {
   type: RepositoryConfigType
@@ -58,6 +59,8 @@ export abstract class RepositoryStep<T, U = unknown> {
   protected repositoryIconSize?: number
   protected supportedScanners?: Scanners[]
   protected supportedUpstreamURLSources?: UpstreamRepositoryURLInputSource[]
+  enterpriseAdvancedOptionSubTitle?: StringKeys
+  ossAdvancedOptionSubTitle?: StringKeys
 
   getPackageType(): string {
     return this.packageType

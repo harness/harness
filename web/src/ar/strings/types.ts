@@ -60,6 +60,7 @@ export interface StringsMap {
   'repositoryDetails.repositoryForm.cleanupPoliciesTitle': string
   'repositoryDetails.repositoryForm.create': string
   'repositoryDetails.repositoryForm.enterpriseAdvancedOptionsSubTitle': string
+  'repositoryDetails.repositoryForm.enterpriseAdvancedWithoutUpstreamOptionsSubTitle': string
   'repositoryDetails.repositoryForm.environment': string
   'repositoryDetails.repositoryForm.environmentPlaceholder': string
   'repositoryDetails.repositoryForm.excludePatternsLabel': string

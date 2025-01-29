@@ -70,7 +70,7 @@ export class MavenRepositoryType extends RepositoryStep<VirtualRegistryRequest> 
     config: {
       type: RepositoryConfigType.UPSTREAM,
       authType: UpstreamProxyAuthenticationMode.ANONYMOUS,
-      source: UpstreamRepositoryURLInputSource.Custom,
+      source: UpstreamRepositoryURLInputSource.MavenCentral,
       url: ''
     },
     cleanupPolicy: [],

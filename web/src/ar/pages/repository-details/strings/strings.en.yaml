@@ -11,6 +11,7 @@ repositoryForm:
   advancedOptionsTitle: Advanced (Optional)
   ossAdvancedOptionsSubTitle: Configure Upstream Proxies.
   enterpriseAdvancedOptionsSubTitle: Configure Upstream Proxies, Artifact Filtering rules and Cleanup policies for the Artifact Registry.
+  enterpriseAdvancedWithoutUpstreamOptionsSubTitle: Configure Artifact Filtering rules and Cleanup policies for the Artifact Registry.
   includeExcludePatternsTitle: Artifact Filtering Rules
   includeExcludePatternsSubTitle: Define patterns to control which artifacts are allowed or blocked in this registry.
   addPatterns: Specify Allowed Patterns
