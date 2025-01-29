@@ -15,7 +15,6 @@
 package genai
 
 import (
-	"github.com/harness/gitness/app/api/controller/aiagent/types/enum"
 	capabilities2 "github.com/harness/gitness/types/capabilities"
 )
 
@@ -56,8 +55,8 @@ func (PipelineContext) GetType() capabilities2.AIContextPayloadType {
 const AIContextPayloadTypeStepContext capabilities2.AIContextPayloadType = "other"
 
 type StepContext struct {
-	Yaml      string         `json:"step_yaml"`
-	StageType enum.StageType `json:"stage_type"`
+	Yaml      string `json:"step_yaml"`
+	StageType string `json:"stage_type"`
 }
 
 func (StepContext) GetName() string {
