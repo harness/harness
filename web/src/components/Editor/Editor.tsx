@@ -202,7 +202,7 @@ export const Editor = React.memo(function CodeMirrorReactEditor({
           const beforeAtChar =
             beforeAtIndex >= 0 && context.state.doc.slice(beforeAtIndex, beforeAtIndex + 1).toString()
 
-          if (beforeAtChar && beforeAtChar !== ' ') return null
+          if (beforeAtChar && beforeAtChar !== ' ' && beforeAtChar !== '\n') return null
           const query = word.text.substring(1) // Extract text after '@'
           const usersList = await fetchUsers(query)
           setFetchedUsers?.(usersList || [])
