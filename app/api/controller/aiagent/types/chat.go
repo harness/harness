@@ -22,28 +22,28 @@ import (
 
 // Chat represents a chat conversation with a unique ID, prompt, metadata, and conversation history.
 type Chat struct {
-	ConversationID uuid.UUID         `json:"conversation_uuid,omitempty"`
-	Prompt         string            `json:"prompt"`
-	Metadata       map[string]string `json:"metadata"`
+	ConversationID uuid.UUID         `json:"conversation_id,omitempty"`
+	Prompt         string            `json:"prompt" required:"true"`
+	Metadata       map[string]string `json:"metadata" required:"true"`
 	Conversation   []Conversation    `json:"conversation"`
 }
 
 // ChatOutput represents the output of a chat request, including the conversation ID, explanation, and response.
 type ChatOutput struct {
-	ConversationID uuid.UUID      `json:"conversation_uuid"`
+	ConversationID uuid.UUID      `json:"conversation_id" required:"true"`
 	Explanation    string         `json:"explanation,omitempty"`
-	Response       []ChatResponse `json:"response"`
+	Response       []ChatResponse `json:"response" required:"true"`
 }
 
 // ChatResponse represents a response in a chat conversation, including the role and message.
 type ChatResponse struct {
-	Role    enum.Role       `json:"role"`
-	Message ResponseMessage `json:"message"`
+	Role    enum.Role       `json:"role" required:"true"`
+	Message ResponseMessage `json:"message" required:"true"`
 }
 
 // ResponseMessage represents a message in a chat response, including the type, data, and actions.
 type ResponseMessage struct {
-	Type    enum.MessageType `json:"type"`
-	Data    string           `json:"data"`
+	Type    enum.MessageType `json:"type" required:"true"`
+	Data    string           `json:"data" required:"true"`
 	Actions []enum.Action    `json:"actions,omitempty"`
 }
