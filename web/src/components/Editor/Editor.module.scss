@@ -84,12 +84,15 @@
       border: 1px solid var(--grey-200);
       border-radius: var(--spacing-3);
       overflow: hidden;
-      z-index: 3000 !important;
     }
 
     .cm-tooltip-autocomplete ul li {
       border-bottom: 1px solid var(--grey-200);
       padding: 5px 0 !important;
+    }
+
+    .cm-tooltip.cm-tooltip-autocomplete > ul {
+      max-height: 7.5rem;
     }
 
     .cm-completionDetail {

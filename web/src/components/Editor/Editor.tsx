@@ -163,7 +163,7 @@ export const Editor = React.memo(function CodeMirrorReactEditor({
   )
 
   const applyUserMention = (user: TypesPrincipalInfo, viewState: EditorView) => {
-    const replacementText = `@[${user.email}]`
+    const replacementText = `@[${user.email}] `
     const { from, to } = viewState.state.selection.main
 
     // Locate the position of `@` and calculate the range to replace
@@ -198,6 +198,11 @@ export const Editor = React.memo(function CodeMirrorReactEditor({
           if (!word) return null
           if (word && word.from === word.to && !context.explicit) return null
 
+          const beforeAtIndex = word.from - 1
+          const beforeAtChar =
+            beforeAtIndex >= 0 && context.state.doc.slice(beforeAtIndex, beforeAtIndex + 1).toString()
+
+          if (beforeAtChar && beforeAtChar !== ' ') return null
           const query = word.text.substring(1) // Extract text after '@'
           const usersList = await fetchUsers(query)
           setFetchedUsers?.(usersList || [])
