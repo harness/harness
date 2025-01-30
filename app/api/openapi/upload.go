@@ -54,6 +54,10 @@ func uploadOperations(reflector *openapi3.Reflector) {
 		repoRequest
 		FilePathRef string `path:"file_ref"`
 	}{}, http.MethodGet)
+	_ = reflector.SetupResponse(openapi3.OperationContext{
+		Operation:  &downloadOp,
+		HTTPStatus: http.StatusOK,
+	})
 	_ = reflector.SetJSONResponse(&downloadOp, nil, http.StatusTemporaryRedirect)
 	_ = reflector.SetJSONResponse(&downloadOp, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.SetJSONResponse(&downloadOp, new(usererror.Error), http.StatusBadRequest)
