@@ -17,10 +17,10 @@ package enum
 type StageType string
 
 const (
-	Build          StageType = "Build"
-	Deploy         StageType = "Deploy"
+	Build          StageType = "CI"
+	Deploy         StageType = "Deployment"
 	Approval       StageType = "Approval"
-	Security       StageType = "Security"
+	Security       StageType = "SecurityTests"
 	Pipeline       StageType = "Pipeline"
 	Custom         StageType = "Custom"
 	Infrastructure StageType = "IACM"
