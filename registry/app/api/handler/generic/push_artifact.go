@@ -38,9 +38,14 @@ func (h *Handler) PushArtifact(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx := r.Context()
 	defer file.Close()
-	headers, err := h.Controller.UploadArtifact(ctx, info, file)
+	headers, sha256, err := h.Controller.UploadArtifact(ctx, info, file)
 	if commons.IsEmptyError(err) {
 		headers.WriteToResponse(w)
+		_, err := w.Write([]byte(fmt.Sprintf("Pushed.\nSha256: %s", sha256)))
+		if err != nil {
+			handleErrors(r.Context(), errcode.ErrCodeUnknown.WithDetail(err), w)
+			return
+		}
 	}
 	handleErrors(r.Context(), err, w)
 }

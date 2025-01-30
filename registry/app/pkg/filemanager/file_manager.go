@@ -201,8 +201,8 @@ func (f *FileManager) DownloadFile(
 ) (fileReader *storage.FileReader, size int64, redirectURL string, err error) {
 	node, err := f.nodesDao.GetByPathAndRegistryID(ctx, regInfo.ID, filePath)
 	if err != nil {
-		return nil, 0, "", fmt.Errorf("failed to get the node for path: %s, "+
-			"with registry: %s, with error %s", filePath, regInfo.Name, err)
+		return nil, 0, "", fmt.Errorf("failed to get the file for path: %s, "+
+			"with registry: %s", filePath, regInfo.Name)
 	}
 	blob, err := f.genericBlobDao.FindByID(ctx, node.BlobID)
 

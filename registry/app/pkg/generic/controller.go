@@ -89,7 +89,7 @@ func NewDBStore(
 const regNameFormat = "registry : [%s]"
 
 func (c Controller) UploadArtifact(ctx context.Context, info pkg.GenericArtifactInfo,
-	file multipart.File) (*commons.ResponseHeaders, errcode.Error) {
+	file multipart.File) (*commons.ResponseHeaders, string, errcode.Error) {
 	responseHeaders := &commons.ResponseHeaders{
 		Headers: make(map[string]string),
 		Code:    0,
@@ -99,14 +99,20 @@ func (c Controller) UploadArtifact(ctx context.Context, info pkg.GenericArtifact
 		enum.PermissionArtifactsUpload,
 	)
 	if err != nil {
-		return nil, errcode.ErrCodeDenied.WithDetail(err)
+		return nil, "", errcode.ErrCodeDenied.WithDetail(err)
+	}
+
+	err = c.CheckIfFileAlreadyExist(ctx, info)
+
+	if err != nil {
+		return nil, "", errcode.ErrCodeInvalidRequest.WithDetail(err)
 	}
 
 	path := info.Image + "/" + info.Version + "/" + info.FileName
 	fileInfo, err := c.fileManager.UploadFile(ctx, path, info.RegIdentifier, info.RegistryID,
 		info.RootParentID, info.RootIdentifier, file, nil, info.FileName)
 	if err != nil {
-		return responseHeaders, errcode.ErrCodeUnknown.WithDetail(err)
+		return responseHeaders, "", errcode.ErrCodeUnknown.WithDetail(err)
 	}
 	err = c.tx.WithTx(
 		ctx, func(ctx context.Context) error {
@@ -157,10 +163,10 @@ func (c Controller) UploadArtifact(ctx context.Context, info pkg.GenericArtifact
 		})
 
 	if err != nil {
-		return responseHeaders, errcode.ErrCodeUnknown.WithDetail(err)
+		return responseHeaders, "", errcode.ErrCodeUnknown.WithDetail(err)
 	}
 	responseHeaders.Code = http.StatusCreated
-	return responseHeaders, errcode.Error{}
+	return responseHeaders, fileInfo.Sha256, errcode.Error{}
 }
 
 func (c Controller) updateMetadata(dbArtifact *types.Artifact, metadata *database.GenericMetadata,
@@ -210,11 +216,47 @@ func (c Controller) PullArtifact(ctx context.Context, info pkg.GenericArtifactIn
 	path := "/" + info.Image + "/" + info.Version + "/" + info.FileName
 	fileReader, _, redirectURL, err := c.fileManager.DownloadFile(ctx, path, types.Registry{
 		ID:   info.RegistryID,
-		Name: info.RootIdentifier,
+		Name: info.RegIdentifier,
 	}, info.RootIdentifier)
 	if err != nil {
-		return responseHeaders, nil, "", errcode.ErrCodeUnknown.WithDetail(err)
+		return responseHeaders, nil, "", errcode.ErrCodeRootNotFound.WithDetail(err)
 	}
 	responseHeaders.Code = http.StatusOK
 	return responseHeaders, fileReader, redirectURL, errcode.Error{}
+}
+
+func (c Controller) CheckIfFileAlreadyExist(ctx context.Context, info pkg.GenericArtifactInfo) error {
+	image, err := c.DBStore.ImageDao.GetByName(ctx, info.RegistryID, info.Image)
+	if err != nil && !strings.Contains(err.Error(), "resource not found") {
+		return fmt.Errorf("failed to fetch the image for artifact : [%s] with "+
+			regNameFormat, info.Image, info.RegIdentifier)
+	}
+	if image == nil {
+		return nil
+	}
+
+	dbArtifact, err := c.DBStore.ArtifactDao.GetByName(ctx, image.ID, info.Version)
+
+	if err != nil && !strings.Contains(err.Error(), "resource not found") {
+		return fmt.Errorf("failed to fetch artifact : [%s] with "+
+			regNameFormat, info.Image, info.RegIdentifier)
+	}
+
+	if dbArtifact == nil {
+		return nil
+	}
+
+	metadata := &database.GenericMetadata{}
+
+	err = json.Unmarshal(dbArtifact.Metadata, metadata)
+
+	if err == nil {
+		for _, file := range metadata.Files {
+			if file.Filename == info.FileName {
+				return fmt.Errorf("file: [%s] with Artifact: [%s], Version: [%s] and registry: [%s] already exist",
+					info.FileName, info.Image, info.Version, info.RegIdentifier)
+			}
+		}
+	}
+	return nil
 }

@@ -354,11 +354,111 @@ func (t tagDao) GetAllArtifactsByParentID(
 	latestVersion bool,
 	packageTypes []string,
 ) (*[]types.ArtifactMetadata, error) {
-	q := databaseg.Builder.Select(
+	q1 := t.GetAllArtifactOnParentIDQueryForNonOCI(parentID, latestVersion, registryIDs, packageTypes, search)
+
+	q2 := t.GetAllArtifactsQueryByParentIDForOCI(parentID, latestVersion, registryIDs, packageTypes, search)
+
+	q1SQL, q1Args, err := q1.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	q2SQL, _, err := q2.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	// Combine q1 and q2 with UNION ALL
+	finalQuery := fmt.Sprintf(`
+    SELECT repo_name, name, package_type, version, modified_at, labels, download_count
+    FROM (%s UNION ALL %s) AS combined
+`, q1SQL, q2SQL)
+
+	// Combine query arguments
+	finalArgs := q1Args
+
+	// Apply sorting based on provided field
+	sortField := "modified_at"
+	if sortByField == downloadCount {
+		sortField = "download_count"
+	} else if sortByField == imageName {
+		sortField = "name"
+	}
+
+	finalQuery = fmt.Sprintf("%s ORDER BY %s %s", finalQuery, sortField, sortByOrder)
+
+	// Add pagination (LIMIT and OFFSET) **after** the WHERE and ORDER BY clauses
+	finalQuery = fmt.Sprintf("%s LIMIT %d OFFSET %d", finalQuery, limit, offset)
+
+	db := dbtx.GetAccessor(ctx, t.db)
+
+	dst := []*artifactMetadataDB{}
+	if err = db.SelectContext(ctx, &dst, finalQuery, finalArgs...); err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
+	}
+	return t.mapToArtifactMetadataList(ctx, dst)
+}
+
+func (t tagDao) GetAllArtifactsQueryByParentIDForOCI(parentID int64, latestVersion bool, registryIDs *[]string,
+	packageTypes []string, search string) sq.SelectBuilder {
+	q2 := databaseg.Builder.Select(
+		`r.registry_name as repo_name, 
+		t.tag_image_name as name, 
+		r.registry_package_type as package_type, 
+		t.tag_name as version, 
+		t.tag_updated_at as modified_at, 
+		i.image_labels as labels, 
+		COALESCE(t2.download_count,0) as download_count `,
+	).
+		From("tags t").
+		Join("registries r ON t.tag_registry_id = r.registry_id").
+		Where("r.registry_parent_id = ?", parentID).
+		Join(
+			"images i ON i.image_registry_id = t.tag_registry_id AND"+
+				" i.image_name = t.tag_image_name",
+		).
+		LeftJoin(
+			`( SELECT i.image_name, SUM(COALESCE(t1.download_count, 0)) as download_count FROM 
+			( SELECT a.artifact_image_id, COUNT(d.download_stat_id) as download_count 
+			FROM artifacts a JOIN download_stats d ON d.download_stat_artifact_id = a.artifact_id 
+			GROUP BY a.artifact_image_id ) as t1 
+			JOIN images i ON i.image_id = t1.artifact_image_id 
+			JOIN registries r ON r.registry_id = i.image_registry_id 
+			WHERE r.registry_parent_id = ? GROUP BY i.image_name) as t2 
+			ON t.tag_image_name = t2.image_name`, parentID,
+		)
+
+	if latestVersion {
+		q2 = q2.Join(
+			`(SELECT t.tag_id as id, ROW_NUMBER() OVER (PARTITION BY t.tag_registry_id, t.tag_image_name 
+			ORDER BY t.tag_updated_at DESC) AS rank FROM tags t 
+			JOIN registries r ON t.tag_registry_id = r.registry_id 
+			WHERE r.registry_parent_id = ? ) AS a 
+			ON t.tag_id = a.id`, parentID, // nolint:goconst
+		).
+			Where("a.rank = 1")
+	}
+
+	if len(*registryIDs) > 0 {
+		q2 = q2.Where(sq.Eq{"r.registry_name": registryIDs})
+	}
+
+	if len(packageTypes) > 0 {
+		q2 = q2.Where(sq.Eq{"r.registry_package_type": packageTypes})
+	}
+
+	if search != "" {
+		q2 = q2.Where("t.tag_image_name LIKE ?", sqlPartialMatch(search))
+	}
+	return q2
+}
+
+func (t tagDao) GetAllArtifactOnParentIDQueryForNonOCI(parentID int64, latestVersion bool, registryIDs *[]string,
+	packageTypes []string, search string) sq.SelectBuilder {
+	q1 := databaseg.Builder.Select(
 		`r.registry_name as repo_name, 
 		i.image_name as name, 
-		r.registry_package_type as package_type, 
-        tag_q.tag_name AS tag,
+		r.registry_package_type as package_type,
 		ar.artifact_version as version, 
 		ar.artifact_updated_at as modified_at, 
 		i.image_labels as labels, 
@@ -367,7 +467,7 @@ func (t tagDao) GetAllArtifactsByParentID(
 		From("artifacts ar").
 		Join("images i ON i.image_id = ar.artifact_image_id").
 		Join("registries r ON i.image_registry_id = r.registry_id").
-		Where("r.registry_parent_id = ?", parentID).
+		Where("r.registry_parent_id = ? AND r.registry_package_type NOT IN ('DOCKER', 'HELM')", parentID).
 		LeftJoin(
 			`( SELECT a.artifact_version, SUM(COALESCE(t1.download_count, 0)) as download_count FROM 
 			( SELECT a.artifact_id, COUNT(d.download_stat_id) as download_count 
@@ -381,7 +481,7 @@ func (t tagDao) GetAllArtifactsByParentID(
 		)
 
 	if latestVersion {
-		q = q.Join(
+		q1 = q1.Join(
 			`(SELECT ar.artifact_id as id, ROW_NUMBER() OVER (PARTITION BY ar.artifact_image_id 
 			ORDER BY ar.artifact_updated_at DESC) AS rank FROM artifacts ar 
             JOIN images i ON i.image_id = ar.artifact_image_id 
@@ -389,65 +489,21 @@ func (t tagDao) GetAllArtifactsByParentID(
 			WHERE r.registry_parent_id = ? ) AS a 
 			ON ar.artifact_id = a.id`, parentID, // nolint:goconst
 		).
-			Where("a.rank = 1").
-			LeftJoin(
-				`(SELECT t.tag_name, t.tag_image_name, t.tag_registry_id, m.manifest_digest, 
-            ROW_NUMBER() OVER (PARTITION BY t.tag_image_name, 
-     t.tag_registry_id ORDER BY t.tag_updated_at DESC) AS tag_rank 
-     FROM tags t 
-     JOIN manifests m ON t.tag_manifest_id = m.manifest_id) AS tag_q
-     ON CASE
-       WHEN ar.artifact_version ~ '^[0-9A-Fa-f]+$' THEN decode(ar.artifact_version, 'hex')
-       ELSE NULL
-   END = tag_q.manifest_digest 
-     AND i.image_name = tag_q.tag_image_name 
-     AND i.image_registry_id = tag_q.tag_registry_id AND tag_q.tag_rank = 1`,
-			)
-	} else {
-		q = q.LeftJoin(
-			`(SELECT t.tag_name, t.tag_image_name, t.tag_registry_id, m.manifest_digest FROM tags t 
-          JOIN manifests m ON t.tag_manifest_id = m.manifest_id) AS tag_q
-         ON CASE
-       WHEN ar.artifact_version ~ '^[0-9A-Fa-f]+$' THEN decode(ar.artifact_version, 'hex')
-       ELSE NULL
-   END = tag_q.manifest_digest AND
-         i.image_name = tag_q.tag_image_name AND i.image_registry_id = tag_q.tag_registry_id`,
-		)
+			Where("a.rank = 1")
 	}
 
 	if len(*registryIDs) > 0 {
-		q = q.Where(sq.Eq{"r.registry_name": registryIDs})
+		q1 = q1.Where(sq.Eq{"r.registry_name": registryIDs})
 	}
 
 	if len(packageTypes) > 0 {
-		q = q.Where(sq.Eq{"r.registry_package_type": packageTypes})
+		q1 = q1.Where(sq.Eq{"r.registry_package_type": packageTypes})
 	}
 
 	if search != "" {
-		q = q.Where("i.image_name LIKE ?", sqlPartialMatch(search))
+		q1 = q1.Where("i.image_name LIKE ?", sqlPartialMatch(search))
 	}
-	sortField := "image_" + sortByField
-	if sortByField == downloadCount {
-		sortField = downloadCount
-	} else if sortByField == imageName {
-		sortField = name
-	}
-
-	q = q.OrderBy(sortField + " " + sortByOrder).Limit(uint64(limit)).Offset(uint64(offset))
-
-	sql, args, err := q.ToSql()
-
-	if err != nil {
-		return nil, errors.Wrap(err, "Failed to convert query to sql")
-	}
-
-	db := dbtx.GetAccessor(ctx, t.db)
-
-	dst := []*artifactMetadataDB{}
-	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
-	}
-	return t.mapToArtifactMetadataList(ctx, dst)
+	return q1
 }
 
 func (t tagDao) CountAllArtifactsByParentID(

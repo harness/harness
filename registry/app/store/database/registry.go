@@ -211,18 +211,17 @@ func (r registryDao) GetByIDIn(ctx context.Context, ids []int64) (*[]types.Regis
 }
 
 type RegistryMetadataDB struct {
-	RegID           string                `db:"registry_id"`
-	RegIdentifier   string                `db:"reg_identifier"`
-	Description     sql.NullString        `db:"description"`
-	PackageType     artifact.PackageType  `db:"package_type"`
-	Type            artifact.RegistryType `db:"type"`
-	LastModified    int64                 `db:"last_modified"`
-	URL             sql.NullString        `db:"url"`
-	ArtifactCount   int64                 `db:"artifact_count"`
-	DownloadCount   int64                 `db:"download_count"`
-	Size            int64                 `db:"size"`
-	GenericBlobSize int64                 `db:"generic_blob_size"`
-	Labels          sql.NullString        `db:"registry_labels"`
+	RegID         string                `db:"registry_id"`
+	RegIdentifier string                `db:"reg_identifier"`
+	Description   sql.NullString        `db:"description"`
+	PackageType   artifact.PackageType  `db:"package_type"`
+	Type          artifact.RegistryType `db:"type"`
+	LastModified  int64                 `db:"last_modified"`
+	URL           sql.NullString        `db:"url"`
+	ArtifactCount int64                 `db:"artifact_count"`
+	DownloadCount int64                 `db:"download_count"`
+	Size          int64                 `db:"size"`
+	Labels        sql.NullString        `db:"registry_labels"`
 }
 
 func (r registryDao) GetAll(
@@ -246,8 +245,10 @@ func (r registryDao) GetAll(
 		r.registry_updated_at AS last_modified, 
 		COALESCE(u.upstream_proxy_config_url, '') AS url, 
 		COALESCE(artifact_count.count, 0) AS artifact_count,
-		COALESCE(blob_sizes.total_size, 0) AS size,
-        COALESCE(generic_blob_sizes.total_size, 0) AS generic_blob_size,
+		CASE 
+			WHEN COALESCE(blob_sizes.total_size, 0) = 0 THEN COALESCE(generic_blob_sizes.total_size, 0)
+			ELSE COALESCE(blob_sizes.total_size, 0)
+		END AS size,
 		r.registry_labels,
 		COALESCE(download_stats.download_count, 0) AS download_count
 	`
@@ -730,10 +731,6 @@ func (r registryDao) mapToRegistryMetadataList(
 }
 
 func (r registryDao) mapToRegistryMetadata(_ context.Context, dst *RegistryMetadataDB) *store.RegistryMetadata {
-	size := dst.Size
-	if size == 0 {
-		size = dst.GenericBlobSize
-	}
 	return &store.RegistryMetadata{
 		RegID:         dst.RegID,
 		RegIdentifier: dst.RegIdentifier,
@@ -744,7 +741,7 @@ func (r registryDao) mapToRegistryMetadata(_ context.Context, dst *RegistryMetad
 		URL:           dst.URL.String,
 		ArtifactCount: dst.ArtifactCount,
 		DownloadCount: dst.DownloadCount,
-		Size:          size,
+		Size:          dst.Size,
 		Labels:        util.StringToArr(dst.Labels.String),
 	}
 }

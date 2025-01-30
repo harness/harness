@@ -33,6 +33,7 @@ func (h *Handler) PullArtifact(w http.ResponseWriter, r *http.Request) {
 
 	headers, fileReader, redirectURL, err := h.Controller.PullArtifact(ctx, info)
 	if commons.IsEmptyError(err) {
+		w.Header().Set("Content-Disposition", "attachment; filename="+info.FileName)
 		if redirectURL != "" {
 			http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 			return
@@ -48,7 +49,6 @@ func (h *Handler) serveContent(
 	w http.ResponseWriter, r *http.Request, fileReader *storage.FileReader, info pkg.GenericArtifactInfo,
 ) {
 	if fileReader != nil {
-		w.Header().Set("Content-Disposition", "attachment; filename="+info.FileName)
 		http.ServeContent(w, r, info.FileName, time.Time{}, fileReader)
 	}
 }

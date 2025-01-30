@@ -341,7 +341,7 @@ func (a ArtifactDao) GetAllArtifactsByRepo(
 		Where("a1.rank = 1 ")
 
 	if search != "" {
-		q = q.Where("image_name LIKE ?", sqlPartialMatch(search))
+		q = q.Where("i.image_name LIKE ?", sqlPartialMatch(search))
 	}
 
 	if len(labels) > 0 {
