@@ -17,6 +17,7 @@ package api
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"regexp"
 	"strconv"
@@ -122,4 +123,9 @@ func packetWrite(str string) []byte {
 		s = strings.Repeat("0", 4-len(s)%4) + s
 	}
 	return []byte(s + str)
+}
+
+func PktError(w io.Writer, err error) {
+	strErr := fmt.Sprintf("ERR %s\n", err.Error())
+	_, _ = w.Write(packetWrite(strErr))
 }

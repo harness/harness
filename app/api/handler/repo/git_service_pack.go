@@ -43,7 +43,7 @@ func HandleGitServicePack(
 		session, _ := request.AuthSessionFrom(ctx)
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(ctx, w, err)
+			pktError(ctx, w, err)
 			return
 		}
 
@@ -55,7 +55,7 @@ func HandleGitServicePack(
 		if contentEncoding == "gzip" {
 			gzipReader, err := gzip.NewReader(dataReader)
 			if err != nil {
-				render.TranslatedUserError(ctx, w, fmt.Errorf("failed to create new gzip reader: %w", err))
+				pktError(ctx, w, fmt.Errorf("failed to create new gzip reader: %w", err))
 				return
 			}
 			defer func() {
@@ -84,7 +84,7 @@ func HandleGitServicePack(
 			return
 		}
 		if err != nil {
-			render.TranslatedUserError(ctx, w, err)
+			pktError(ctx, w, err)
 			return
 		}
 	}
