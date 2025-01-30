@@ -60,6 +60,11 @@ type restoreSpaceRequest struct {
 	space.RestoreInput
 }
 
+type importRepositoriesRequest struct {
+	spaceRequest
+	space.ImportRepositoriesInput
+}
+
 var queryParameterSortRepo = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamSort,
@@ -218,7 +223,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opImport := openapi3.Operation{}
 	opImport.WithTags("space")
 	opImport.WithMapOfAnything(map[string]interface{}{"operationId": "importSpace"})
-	_ = reflector.SetRequest(&opImport, &struct{ space.ImportInput }{}, http.MethodPost)
+	_ = reflector.SetRequest(&opImport, new(space.ImportInput), http.MethodPost)
 	_ = reflector.SetJSONResponse(&opImport, new(space.SpaceOutput), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opImport, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opImport, new(usererror.Error), http.StatusInternalServerError)
@@ -229,7 +234,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opImportRepositories := openapi3.Operation{}
 	opImportRepositories.WithTags("space")
 	opImportRepositories.WithMapOfAnything(map[string]interface{}{"operationId": "importSpaceRepositories"})
-	_ = reflector.SetRequest(&opImportRepositories, &struct{ space.ImportRepositoriesInput }{}, http.MethodPost)
+	_ = reflector.SetRequest(&opImportRepositories, new(importRepositoriesRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&opImportRepositories, new(space.ImportRepositoriesOutput), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opImportRepositories, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opImportRepositories, new(usererror.Error), http.StatusInternalServerError)
