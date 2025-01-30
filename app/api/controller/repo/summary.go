@@ -35,6 +35,12 @@ func (c *Controller) Summary(
 		return nil, fmt.Errorf("access check failed: %w", err)
 	}
 
+	// fetch the repo because the one we have probably comes from the cache.
+	repo, err = c.repoStore.Find(ctx, repo.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get the repo: %w", err)
+	}
+
 	summary, err := c.git.Summary(ctx, git.SummaryParams{ReadParams: git.CreateReadParams(repo)})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get repo summary: %w", err)
