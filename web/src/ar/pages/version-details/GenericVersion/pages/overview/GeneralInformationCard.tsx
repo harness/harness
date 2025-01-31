@@ -15,7 +15,7 @@
  */
 
 import React from 'react'
-import { defaultTo } from 'lodash-es'
+import { isEmpty } from 'lodash-es'
 import { FontVariation } from '@harnessio/design-system'
 import { Card, Container, Layout, Text } from '@harnessio/uicore'
 
@@ -65,7 +65,7 @@ export default function GeneralInformationCard(props: GeneralInformationCardProp
           />
           <LabelValueContent
             label={getString('versionDetails.overview.generalInformation.description')}
-            value={defaultTo(data.description, getString('na'))}
+            value={isEmpty(data.description) ? getString('na') : data.description}
           />
         </Container>
       </Layout.Vertical>

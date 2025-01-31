@@ -20,6 +20,7 @@ import type { Webhook } from '@harnessio/react-har-service-client'
 interface WebhookDetailsContextSpec {
   data?: Webhook
   loading?: boolean
+  isInternalWebhook?: boolean
   setDirty?: (dirty: boolean) => void
   setUpdating?: (updating: boolean) => void
 }

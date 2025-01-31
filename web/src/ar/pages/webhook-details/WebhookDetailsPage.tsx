@@ -61,13 +61,15 @@ export default function WebhookDetailsPage() {
     history.push(routes.toARRepositoryWebhookDetailsTab({ ...params, tab: nextTab }))
   }
 
+  const isInternalWebhook = data?.content.data.internal
+
   const renderActionBtns = (): JSX.Element => (
     <Layout.Horizontal spacing="medium">
       <RbacButton
         text={getString('save')}
         variation={ButtonVariation.PRIMARY}
         onClick={stepRef.current?.submitForm}
-        disabled={!isDirty || isUpdating}
+        disabled={!isDirty || isUpdating || isInternalWebhook}
         permission={{
           permission: PermissionIdentifier.EDIT_ARTIFACT_REGISTRY,
           resource: {
@@ -88,7 +90,8 @@ export default function WebhookDetailsPage() {
   const response = data?.content.data
 
   return (
-    <WebhookDetailsContext.Provider value={{ data: response, loading: isFetching, setDirty: setIsDirty, setUpdating }}>
+    <WebhookDetailsContext.Provider
+      value={{ data: response, loading: isFetching, setDirty: setIsDirty, setUpdating, isInternalWebhook }}>
       <Page.Body loading={isFetching} error={error} retryOnError={() => refetch()}>
         {response && !isFetching && (
           <Container>

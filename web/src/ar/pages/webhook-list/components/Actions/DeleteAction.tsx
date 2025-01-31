@@ -78,6 +78,7 @@ export default function DeleteWebhookAction(props: DeleteWebhookActionProps) {
           openDialog()
         }}
         text={getString('actions.delete')}
+        disabled={data.internal}
         permission={{
           resource: {
             resourceType: ResourceType.ARTIFACT_REGISTRY,

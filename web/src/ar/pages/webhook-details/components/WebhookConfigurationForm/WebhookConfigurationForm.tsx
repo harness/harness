@@ -42,7 +42,7 @@ export default function WebhookConfigurationForm(props: WebhookConfigurationForm
   const { scope } = useAppStore()
   const { accountId, orgIdentifier, projectIdentifier } = scope
 
-  const { data, setDirty, setUpdating } = useContext(WebhookDetailsContext)
+  const { data, setDirty, setUpdating, isInternalWebhook } = useContext(WebhookDetailsContext)
   const registryRef = useGetSpaceRef()
   const { webhookIdentifier, repositoryIdentifier } = useParams<RepositoryWebhookDetailsTabPathParams>()
 
@@ -86,7 +86,7 @@ export default function WebhookConfigurationForm(props: WebhookConfigurationForm
       <WebhookForm
         data={data}
         ref={formRef}
-        readonly={!isEditPermission}
+        readonly={!isEditPermission || isInternalWebhook}
         isEdit
         onSubmit={handleUpdateWebhook}
         setDirty={setDirty}
