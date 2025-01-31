@@ -19,13 +19,13 @@ import (
 	"github.com/harness/gitness/app/store"
 )
 
-type controller struct {
+type Controller struct {
 	principalStore store.PrincipalStore
 	authorizer     authz.Authorizer
 }
 
-func newController(principalStore store.PrincipalStore, authorizer authz.Authorizer) *controller {
-	return &controller{
+func newController(principalStore store.PrincipalStore, authorizer authz.Authorizer) Controller {
+	return Controller{
 		principalStore: principalStore,
 		authorizer:     authorizer,
 	}

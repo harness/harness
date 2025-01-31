@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/rs/zerolog/log"
 )
 
@@ -77,6 +78,40 @@ func (s *PrincipalStore) FindServiceAccountByUID(ctx context.Context, uid string
 	}
 
 	return s.mapDBServiceAccount(dst), nil
+}
+
+func (s *PrincipalStore) FindManyServiceAccountByUID(
+	ctx context.Context,
+	uids []string,
+) ([]*types.ServiceAccount, error) {
+	uniqueUIDs := make([]string, len(uids))
+	var err error
+	for i, uid := range uids {
+		uniqueUIDs[i], err = s.uidTransformation(uid)
+		if err != nil {
+			log.Ctx(ctx).Debug().Msgf("failed to transform uid '%s': %s", uid, err.Error())
+			return nil, gitness_store.ErrResourceNotFound
+		}
+	}
+
+	stmt := database.Builder.
+		Select(serviceAccountColumns).
+		From("principals").
+		Where("principal_type = ?", enum.PrincipalTypeServiceAccount).
+		Where(squirrel.Eq{"principal_uid_unique": uniqueUIDs})
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	sqlQuery, params, err := stmt.ToSql()
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "failed to generate find many service accounts query")
+	}
+
+	dst := []*serviceAccount{}
+	if err := db.SelectContext(ctx, &dst, sqlQuery, params...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "find many service accounts failed")
+	}
+
+	return s.mapDBServiceAccounts(dst), nil
 }
 
 // CreateServiceAccount saves the service account.
@@ -178,17 +213,39 @@ func (s *PrincipalStore) DeleteServiceAccount(ctx context.Context, id int64) err
 }
 
 // ListServiceAccounts returns a list of service accounts for a specific parent.
-func (s *PrincipalStore) ListServiceAccounts(ctx context.Context, parentType enum.ParentResourceType,
-	parentID int64) ([]*types.ServiceAccount, error) {
-	const sqlQuery = serviceAccountSelectBase + `
-		WHERE principal_type = 'serviceaccount' AND principal_sa_parent_type = $1 AND principal_sa_parent_id = $2
-		ORDER BY principal_uid ASC`
+func (s *PrincipalStore) ListServiceAccounts(
+	ctx context.Context,
+	parentInfos []*types.ServiceAccountParentInfo,
+	opts *types.PrincipalFilter,
+) ([]*types.ServiceAccount, error) {
+	stmt := database.Builder.
+		Select(serviceAccountColumns).
+		From("principals").
+		Where("principal_type = ?", enum.PrincipalTypeServiceAccount)
+
+	stmt, err := selectServiceAccountParents(parentInfos, stmt)
+	if err != nil {
+		return nil, fmt.Errorf("failed to select service account parents: %w", err)
+	}
+
+	stmt = stmt.Limit(database.Limit(opts.Size))
+	stmt = stmt.Offset(database.Offset(opts.Page, opts.Size))
+
+	if opts.Query != "" {
+		stmt = stmt.Where(PartialMatch("principal_display_name", opts.Query))
+	}
+
+	sqlQuery, params, err := stmt.ToSql()
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(
+			ctx, err, "failed to generate list service accounts query",
+		)
+	}
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	dst := []*serviceAccount{}
-	err := db.SelectContext(ctx, &dst, sqlQuery, parentType, parentID)
-	if err != nil {
+	if err := db.SelectContext(ctx, &dst, sqlQuery, params...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing default list query")
 	}
 
@@ -196,18 +253,36 @@ func (s *PrincipalStore) ListServiceAccounts(ctx context.Context, parentType enu
 }
 
 // CountServiceAccounts returns a count of service accounts for a specific parent.
-func (s *PrincipalStore) CountServiceAccounts(ctx context.Context,
-	parentType enum.ParentResourceType, parentID int64) (int64, error) {
-	const sqlQuery = `
-		SELECT count(*)
-		FROM principals
-		WHERE principal_type = 'serviceaccount' and principal_sa_parentType = $1 and principal_sa_parentId = $2`
+func (s *PrincipalStore) CountServiceAccounts(
+	ctx context.Context,
+	parentInfos []*types.ServiceAccountParentInfo,
+	opts *types.PrincipalFilter,
+) (int64, error) {
+	stmt := database.Builder.
+		Select("count(*)").
+		From("principals").
+		Where("principal_type = ?", enum.PrincipalTypeServiceAccount)
+
+	if opts.Query != "" {
+		stmt = stmt.Where(PartialMatch("principal_display_name", opts.Query))
+	}
+
+	stmt, err := selectServiceAccountParents(parentInfos, stmt)
+	if err != nil {
+		return 0, fmt.Errorf("failed to select service account parents: %w", err)
+	}
+
+	sqlQuery, params, err := stmt.ToSql()
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(
+			ctx, err, "failed to generate count service accounts query",
+		)
+	}
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	var count int64
-	err := db.QueryRowContext(ctx, sqlQuery, parentType, parentID).Scan(&count)
-	if err != nil {
+	if err = db.QueryRowContext(ctx, sqlQuery, params...).Scan(&count); err != nil {
 		return 0, database.ProcessSQLErrorf(ctx, err, "Failed executing count query")
 	}
 
@@ -242,4 +317,29 @@ func (s *PrincipalStore) mapToDBserviceAccount(sa *types.ServiceAccount) (*servi
 	}
 
 	return dbSA, nil
+}
+
+func selectServiceAccountParents(
+	parents []*types.ServiceAccountParentInfo,
+	stmt squirrel.SelectBuilder,
+) (squirrel.SelectBuilder, error) {
+	var typeSelector squirrel.Or
+	for _, parent := range parents {
+		switch parent.Type {
+		case enum.ParentResourceTypeRepo:
+			typeSelector = append(typeSelector, squirrel.Eq{
+				"principal_sa_parent_type": enum.ParentResourceTypeRepo,
+				"principal_sa_parent_id":   parent.ID,
+			})
+		case enum.ParentResourceTypeSpace:
+			typeSelector = append(typeSelector, squirrel.Eq{
+				"principal_sa_parent_type": enum.ParentResourceTypeSpace,
+				"principal_sa_parent_id":   parent.ID,
+			})
+		default:
+			return squirrel.SelectBuilder{}, fmt.Errorf("service account parent type '%s' is not supported", parent.Type)
+		}
+	}
+
+	return stmt.Where(typeSelector), nil
 }

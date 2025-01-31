@@ -25,7 +25,7 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-func (c controller) Find(
+func (c Controller) Find(
 	ctx context.Context,
 	session *auth.Session,
 	principalID int64,

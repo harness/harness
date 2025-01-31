@@ -85,6 +85,8 @@ type (
 		// FindServiceAccountByUID finds the service account by uid.
 		FindServiceAccountByUID(ctx context.Context, uid string) (*types.ServiceAccount, error)
 
+		FindManyServiceAccountByUID(ctx context.Context, uid []string) ([]*types.ServiceAccount, error)
+
 		// CreateServiceAccount saves the service account.
 		CreateServiceAccount(ctx context.Context, sa *types.ServiceAccount) error
 
@@ -97,13 +99,15 @@ type (
 		// ListServiceAccounts returns a list of service accounts for a specific parent.
 		ListServiceAccounts(
 			ctx context.Context,
-			parentType enum.ParentResourceType, parentID int64,
+			parentInfos []*types.ServiceAccountParentInfo,
+			opts *types.PrincipalFilter,
 		) ([]*types.ServiceAccount, error)
 
 		// CountServiceAccounts returns a count of service accounts for a specific parent.
 		CountServiceAccounts(
 			ctx context.Context,
-			parentType enum.ParentResourceType, parentID int64,
+			parentInfos []*types.ServiceAccountParentInfo,
+			opts *types.PrincipalFilter,
 		) (int64, error)
 
 		/*
@@ -185,6 +189,7 @@ type (
 		GetRootSpace(ctx context.Context, spaceID int64) (*types.Space, error)
 
 		// GetAncestorIDs returns a list of all space IDs along the recursive path to the root space.
+		// NB: it returns also the spaceID itself in the []int64 slice.
 		GetAncestorIDs(ctx context.Context, spaceID int64) ([]int64, error)
 
 		// GetTreeLevel returns the level of a space in a space tree.

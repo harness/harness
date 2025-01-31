@@ -27,7 +27,7 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-func (c controller) List(
+func (c Controller) List(
 	ctx context.Context,
 	session *auth.Session,
 	opts *types.PrincipalFilter,

@@ -26,6 +26,9 @@ var WireSet = wire.NewSet(
 	ProvideController,
 )
 
-func ProvideController(principalStore store.PrincipalStore, authorizer authz.Authorizer) Controller {
+func ProvideController(
+	principalStore store.PrincipalStore,
+	authorizer authz.Authorizer,
+) Controller {
 	return newController(principalStore, authorizer)
 }

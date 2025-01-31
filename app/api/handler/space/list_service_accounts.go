@@ -33,13 +33,23 @@ func HandleListServiceAccounts(spaceCtrl *space.Controller) http.HandlerFunc {
 			return
 		}
 
-		sas, err := spaceCtrl.ListServiceAccounts(ctx, session, spaceRef)
+		filter := request.ParsePrincipalFilter(r)
+
+		inherited, err := request.ParseInheritedFromQuery(r)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		// TODO: do we need pagination? we should block that many service accounts in the first place.
-		render.JSON(w, http.StatusOK, sas)
+		serviceAccountInfos, count, err := spaceCtrl.ListServiceAccounts(
+			ctx, session, spaceRef, inherited, filter,
+		)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+
+		render.Pagination(r, w, filter.Page, filter.Size, int(count))
+		render.JSON(w, http.StatusOK, serviceAccountInfos)
 	}
 }

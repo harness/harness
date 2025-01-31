@@ -24,8 +24,11 @@ import (
 )
 
 // Find tries to find the provided service account.
-func (c *Controller) Find(ctx context.Context, session *auth.Session,
-	saUID string) (*types.ServiceAccount, error) {
+func (c *Controller) Find(
+	ctx context.Context,
+	session *auth.Session,
+	saUID string,
+) (*types.ServiceAccount, error) {
 	sa, err := c.FindNoAuth(ctx, saUID)
 	if err != nil {
 		return nil, err

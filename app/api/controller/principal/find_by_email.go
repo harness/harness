@@ -26,7 +26,7 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-func (c controller) CheckExistenceByEmails(
+func (c Controller) CheckExistenceByEmails(
 	ctx context.Context,
 	session *auth.Session,
 	in *CheckUsersInput,

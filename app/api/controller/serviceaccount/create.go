@@ -80,8 +80,9 @@ func (c *Controller) CreateNoAuth(ctx context.Context,
 		Salt:        uniuri.NewLen(uniuri.UUIDLen),
 		Created:     time.Now().UnixMilli(),
 		Updated:     time.Now().UnixMilli(),
-		ParentType:  in.ParentType,
-		ParentID:    in.ParentID,
+
+		ParentType: in.ParentType,
+		ParentID:   in.ParentID,
 	}
 
 	err := c.principalStore.CreateServiceAccount(ctx, sa)

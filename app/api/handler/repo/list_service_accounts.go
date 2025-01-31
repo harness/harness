@@ -35,13 +35,23 @@ func HandleListServiceAccounts(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		sas, err := repoCtrl.ListServiceAccounts(ctx, session, repoRef)
+		filter := request.ParsePrincipalFilter(r)
+
+		inherited, err := request.ParseInheritedFromQuery(r)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		// TODO: implement pagination - or should we block that many service accounts in the first place.
-		render.JSON(w, http.StatusOK, sas)
+		serviceAccountInfos, count, err := repoCtrl.ListServiceAccounts(
+			ctx, session, repoRef, inherited, filter,
+		)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+
+		render.Pagination(r, w, filter.Page, filter.Size, int(count))
+		render.JSON(w, http.StatusOK, serviceAccountInfos)
 	}
 }

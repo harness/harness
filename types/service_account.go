@@ -43,6 +43,12 @@ type (
 		ParentType  *enum.ParentResourceType `json:"parent_type"`
 		ParentID    *int64                   `json:"parent_id"`
 	}
+
+	ServiceAccountInfo struct {
+		PrincipalInfo
+		ParentType enum.ParentResourceType `json:"parent_type"`
+		ParentID   int64                   `json:"parent_id"`
+	}
 )
 
 func (s *ServiceAccount) ToPrincipal() *Principal {
@@ -62,4 +68,17 @@ func (s *ServiceAccount) ToPrincipal() *Principal {
 
 func (s *ServiceAccount) ToPrincipalInfo() *PrincipalInfo {
 	return s.ToPrincipal().ToPrincipalInfo()
+}
+
+func (s *ServiceAccount) ToServiceAccountInfo() *ServiceAccountInfo {
+	return &ServiceAccountInfo{
+		PrincipalInfo: *s.ToPrincipalInfo(),
+		ParentType:    s.ParentType,
+		ParentID:      s.ParentID,
+	}
+}
+
+type ServiceAccountParentInfo struct {
+	Type enum.ParentResourceType `json:"type"`
+	ID   int64                   `json:"id"`
 }
