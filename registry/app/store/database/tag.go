@@ -506,6 +506,55 @@ func (t tagDao) GetAllArtifactOnParentIDQueryForNonOCI(parentID int64, latestVer
 	return q1
 }
 
+func (t tagDao) CountAllOCIArtifactsByParentID(
+	ctx context.Context, parentID int64,
+	registryIDs *[]string, search string, latestVersion bool, packageTypes []string,
+) (int64, error) {
+	// nolint:goconst
+	q := databaseg.Builder.Select("COUNT(*)").
+		From("tags t").
+		Join("registries r ON t.tag_registry_id = r.registry_id"). // nolint:goconst
+		Where("r.registry_parent_id = ?", parentID).
+		Join(
+			"images ar ON ar.image_registry_id = t.tag_registry_id" +
+				" AND ar.image_name = t.tag_image_name",
+		)
+
+	if latestVersion {
+		q = q.Join(
+			`(SELECT t.tag_id as id, ROW_NUMBER() OVER (PARTITION BY t.tag_registry_id, t.tag_image_name 
+			ORDER BY t.tag_updated_at DESC) AS rank FROM tags t 
+			JOIN registries r ON t.tag_registry_id = r.registry_id 
+			WHERE r.registry_parent_id = ? ) AS a 
+			ON t.tag_id = a.id`, parentID, // nolint:goconst
+		).Where("a.rank = 1")
+	}
+	if len(*registryIDs) > 0 {
+		q = q.Where(sq.Eq{"r.registry_name": registryIDs})
+	}
+
+	if search != "" {
+		q = q.Where("image_name LIKE ?", sqlPartialMatch(search))
+	}
+
+	if len(packageTypes) > 0 {
+		q = q.Where(sq.Eq{"registry_package_type": packageTypes})
+	}
+
+	sql, args, err := q.ToSql()
+	if err != nil {
+		return -1, errors.Wrap(err, "Failed to convert query to sql")
+	}
+	db := dbtx.GetAccessor(ctx, t.db)
+
+	var count int64
+	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
+	if err != nil {
+		return 0, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing count query")
+	}
+	return count, nil
+}
+
 func (t tagDao) CountAllArtifactsByParentID(
 	ctx context.Context, parentID int64,
 	registryIDs *[]string, search string, latestVersion bool, packageTypes []string,
@@ -515,11 +564,7 @@ func (t tagDao) CountAllArtifactsByParentID(
 		From("artifacts ar").
 		Join("images i ON i.image_id = ar.artifact_image_id").
 		Join("registries r ON i.image_registry_id = r.registry_id").
-		Where("r.registry_parent_id = ?", parentID).
-		LeftJoin(
-			"tags t ON i.image_name = t.tag_image_name AND  " +
-				"i.image_registry_id = t.tag_registry_id AND ar.artifact_version = t.tag_name",
-		) // nolint:goconst
+		Where("r.registry_parent_id = ? AND r.registry_package_type NOT IN ('DOCKER', 'HELM')", parentID)
 
 	if latestVersion {
 		q = q.Join(
@@ -555,7 +600,11 @@ func (t tagDao) CountAllArtifactsByParentID(
 	if err != nil {
 		return 0, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing count query")
 	}
-	return count, nil
+	ociCount, err := t.CountAllOCIArtifactsByParentID(ctx, parentID, registryIDs, search, latestVersion, packageTypes)
+	if err != nil {
+		return 0, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing count query")
+	}
+	return count + ociCount, nil
 }
 
 func (t tagDao) GetTagDetail(

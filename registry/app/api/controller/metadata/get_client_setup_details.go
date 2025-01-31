@@ -70,6 +70,7 @@ func (c *APIController) GetClientSetupDetails(
 		}, err
 	}
 
+	//nolint:nestif
 	if imageParam != nil {
 		image, err := c.ImageStore.GetByName(ctx, reg.ID, string(*imageParam))
 		if err != nil {
@@ -79,8 +80,17 @@ func (c *APIController) GetClientSetupDetails(
 				),
 			}, err
 		}
-		if tagParam != nil {
+		if reg.PackageType != artifact.PackageTypeDOCKER && reg.PackageType != artifact.PackageTypeHELM && tagParam != nil {
 			_, err := c.ArtifactStore.GetByName(ctx, image.ID, string(*tagParam))
+			if err != nil {
+				return artifact.GetClientSetupDetails404JSONResponse{
+					NotFoundJSONResponse: artifact.NotFoundJSONResponse(
+						*GetErrorResponse(http.StatusNotFound, "tag doesn't exist"),
+					),
+				}, err
+			}
+		} else if tagParam != nil {
+			_, err := c.TagStore.FindTag(ctx, reg.ID, string(*imageParam), string(*tagParam))
 			if err != nil {
 				return artifact.GetClientSetupDetails404JSONResponse{
 					NotFoundJSONResponse: artifact.NotFoundJSONResponse(
