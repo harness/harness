@@ -121,6 +121,11 @@ type GetCommitRequest struct {
 	CommitSHA string `path:"commit_sha"`
 }
 
+type GetCommitDiffRequest struct {
+	GetCommitRequest
+	IgnoreWhitespace bool `query:"ignore_whitespace" required:"false" default:"false"`
+}
+
 type calculateCommitDivergenceRequest struct {
 	repoRequest
 	repo.GetCommitDivergencesInput
@@ -160,14 +165,16 @@ type deleteTagRequest struct {
 
 type getRawDiffRequest struct {
 	repoRequest
-	Range string   `path:"range" example:"main..dev"`
-	Path  []string `query:"path" description:"provide path for diff operation"`
+	Range            string   `path:"range" example:"main..dev"`
+	Path             []string `query:"path" description:"provide path for diff operation"`
+	IgnoreWhitespace bool     `query:"ignore_whitespace" required:"false" default:"false"`
 }
 
 type postRawDiffRequest struct {
 	repoRequest
 	gittypes.FileDiffRequests
-	Range string `path:"range" example:"main..dev"`
+	Range            string `path:"range" example:"main..dev"`
+	IgnoreWhitespace bool   `query:"ignore_whitespace" required:"false" default:"false"`
 }
 
 type codeOwnersValidate struct {
@@ -1104,7 +1111,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opCommitDiff := openapi3.Operation{}
 	opCommitDiff.WithTags("repository")
 	opCommitDiff.WithMapOfAnything(map[string]interface{}{"operationId": "getCommitDiff"})
-	_ = reflector.SetRequest(&opCommitDiff, new(GetCommitRequest), http.MethodGet)
+	_ = reflector.SetRequest(&opCommitDiff, new(GetCommitDiffRequest), http.MethodGet)
 	_ = reflector.SetStringResponse(&opCommitDiff, http.StatusOK, "text/plain")
 	_ = reflector.SetJSONResponse(&opCommitDiff, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opCommitDiff, new(usererror.Error), http.StatusUnauthorized)

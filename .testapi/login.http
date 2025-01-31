@@ -1,0 +1,7 @@
+POST {{baseurl}}/login
+Content-Type: application/json
+
+{
+  "login_identifier": "{{login_identifier}}",
+  "password": "{{password}}"
+}

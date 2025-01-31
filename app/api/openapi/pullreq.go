@@ -136,12 +136,14 @@ type fileViewDeletePullReqRequest struct {
 
 type getRawPRDiffRequest struct {
 	pullReqRequest
-	Path []string `query:"path" description:"provide path for diff operation"`
+	Path             []string `query:"path" description:"provide path for diff operation"`
+	IgnoreWhitespace bool     `query:"ignore_whitespace" required:"false" default:"false"`
 }
 
 type postRawPRDiffRequest struct {
 	pullReqRequest
 	gittypes.FileDiffRequests
+	IgnoreWhitespace bool `query:"ignore_whitespace" required:"false" default:"false"`
 }
 
 type getPullReqChecksRequest struct {

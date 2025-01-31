@@ -209,7 +209,14 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 
 	// find short stat and number of commits
 
-	shortStat, err := s.git.DiffShortStat(ctx, repoPath, baseCommitSHA.String(), headCommitSHA.String(), true)
+	shortStat, err := s.git.DiffShortStat(
+		ctx,
+		repoPath,
+		baseCommitSHA.String(),
+		headCommitSHA.String(),
+		true,
+		false,
+	)
 	if err != nil {
 		return MergeOutput{}, errors.Internal(err,
 			"failed to find short stat between %s and %s", baseCommitSHA, headCommitSHA)

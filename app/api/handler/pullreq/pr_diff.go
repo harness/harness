@@ -70,8 +70,26 @@ func HandleDiff(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 			return
 		}
 
-		_, includePatch := request.QueryParam(r, "include_patch")
-		stream, err := pullreqCtrl.Diff(ctx, session, repoRef, pullreqNumber, setSHAs, includePatch, files...)
+		includePatch, err := request.QueryParamAsBoolOrDefault(r, "include_patch", false)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+		ignoreWhitespace, err := request.QueryParamAsBoolOrDefault(r, request.QueryParamIgnoreWhitespace, false)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+		stream, err := pullreqCtrl.Diff(
+			ctx,
+			session,
+			repoRef,
+			pullreqNumber,
+			setSHAs,
+			includePatch,
+			ignoreWhitespace,
+			files...,
+		)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return

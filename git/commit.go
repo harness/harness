@@ -39,7 +39,8 @@ func CommitMessage(subject, body string) string {
 
 type GetCommitParams struct {
 	ReadParams
-	Revision string
+	Revision         string
+	IgnoreWhitespace bool
 }
 
 type Commit struct {

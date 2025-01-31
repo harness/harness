@@ -65,6 +65,7 @@ func (c *Controller) Diff(
 	pullreqNum int64,
 	setSHAs func(sourceSHA, mergeBaseSHA string),
 	includePatch bool,
+	ignoreWhitespace bool,
 	files ...gittypes.FileDiffRequest,
 ) (types.Stream[*git.FileDiff], error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
@@ -82,11 +83,12 @@ func (c *Controller) Diff(
 	}
 
 	reader := git.NewStreamReader(c.git.Diff(ctx, &git.DiffParams{
-		ReadParams:   git.CreateReadParams(repo),
-		BaseRef:      pr.MergeBaseSHA,
-		HeadRef:      pr.SourceSHA,
-		MergeBase:    true,
-		IncludePatch: includePatch,
+		ReadParams:       git.CreateReadParams(repo),
+		BaseRef:          pr.MergeBaseSHA,
+		HeadRef:          pr.SourceSHA,
+		MergeBase:        true,
+		IncludePatch:     includePatch,
+		IgnoreWhitespace: ignoreWhitespace,
 	}, files...))
 
 	return reader, nil

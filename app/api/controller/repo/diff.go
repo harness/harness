@@ -34,6 +34,7 @@ func (c *Controller) RawDiff(
 	session *auth.Session,
 	repoRef string,
 	path string,
+	ignoreWhitespace bool,
 	files ...gittypes.FileDiffRequest,
 ) error {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
@@ -47,10 +48,11 @@ func (c *Controller) RawDiff(
 	}
 
 	return c.git.RawDiff(ctx, w, &git.DiffParams{
-		ReadParams: git.CreateReadParams(repo),
-		BaseRef:    info.BaseRef,
-		HeadRef:    info.HeadRef,
-		MergeBase:  info.MergeBase,
+		ReadParams:       git.CreateReadParams(repo),
+		BaseRef:          info.BaseRef,
+		HeadRef:          info.HeadRef,
+		MergeBase:        info.MergeBase,
+		IgnoreWhitespace: ignoreWhitespace,
 	}, files...)
 }
 
@@ -59,6 +61,7 @@ func (c *Controller) CommitDiff(
 	session *auth.Session,
 	repoRef string,
 	rev string,
+	ignoreWhitespace bool,
 	w io.Writer,
 ) error {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
@@ -67,8 +70,9 @@ func (c *Controller) CommitDiff(
 	}
 
 	return c.git.CommitDiff(ctx, &git.GetCommitParams{
-		ReadParams: git.CreateReadParams(repo),
-		Revision:   rev,
+		ReadParams:       git.CreateReadParams(repo),
+		Revision:         rev,
+		IgnoreWhitespace: ignoreWhitespace,
 	}, w)
 }
 
@@ -98,6 +102,7 @@ func (c *Controller) DiffStats(
 	session *auth.Session,
 	repoRef string,
 	path string,
+	ignoreWhitespace bool,
 ) (types.DiffStats, error) {
 	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
 	if err != nil {
@@ -114,10 +119,11 @@ func (c *Controller) DiffStats(
 	}
 
 	output, err := c.git.DiffStats(ctx, &git.DiffParams{
-		ReadParams: git.CreateReadParams(repo),
-		BaseRef:    info.BaseRef,
-		HeadRef:    info.HeadRef,
-		MergeBase:  info.MergeBase,
+		ReadParams:       git.CreateReadParams(repo),
+		BaseRef:          info.BaseRef,
+		HeadRef:          info.HeadRef,
+		MergeBase:        info.MergeBase,
+		IgnoreWhitespace: ignoreWhitespace,
 	})
 	if err != nil {
 		return types.DiffStats{}, err
@@ -132,6 +138,7 @@ func (c *Controller) Diff(
 	repoRef string,
 	path string,
 	includePatch bool,
+	ignoreWhitespace bool,
 	files ...gittypes.FileDiffRequest,
 ) (types.Stream[*git.FileDiff], error) {
 	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
@@ -149,11 +156,12 @@ func (c *Controller) Diff(
 	}
 
 	reader := git.NewStreamReader(c.git.Diff(ctx, &git.DiffParams{
-		ReadParams:   git.CreateReadParams(repo),
-		BaseRef:      info.BaseRef,
-		HeadRef:      info.HeadRef,
-		MergeBase:    info.MergeBase,
-		IncludePatch: includePatch,
+		ReadParams:       git.CreateReadParams(repo),
+		BaseRef:          info.BaseRef,
+		HeadRef:          info.HeadRef,
+		MergeBase:        info.MergeBase,
+		IncludePatch:     includePatch,
+		IgnoreWhitespace: ignoreWhitespace,
 	}, files...))
 
 	return reader, nil

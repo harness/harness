@@ -53,16 +53,41 @@ func HandleDiff(repoCtrl *repo.Controller) http.HandlerFunc {
 			files = request.GetFileDiffFromQuery(r)
 		}
 
+		ignoreWhitespace, err := request.QueryParamAsBoolOrDefault(r, request.QueryParamIgnoreWhitespace, false)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
 		if strings.HasPrefix(r.Header.Get("Accept"), "text/plain") {
-			err := repoCtrl.RawDiff(ctx, w, session, repoRef, path, files...)
+			err := repoCtrl.RawDiff(
+				ctx,
+				w,
+				session,
+				repoRef,
+				path,
+				ignoreWhitespace,
+				files...,
+			)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusOK)
 			}
 			return
 		}
 
-		_, includePatch := request.QueryParam(r, "include_patch")
-		stream, err := repoCtrl.Diff(ctx, session, repoRef, path, includePatch, files...)
+		includePatch, err := request.QueryParamAsBoolOrDefault(r, request.QueryParamIncludePatch, false)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+		stream, err := repoCtrl.Diff(
+			ctx,
+			session,
+			repoRef,
+			path,
+			includePatch,
+			ignoreWhitespace,
+			files...,
+		)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
@@ -89,7 +114,19 @@ func HandleCommitDiff(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		err = repoCtrl.CommitDiff(ctx, session, repoRef, commitSHA, w)
+		ignoreWhitespace, err := request.QueryParamAsBoolOrDefault(r, request.QueryParamIgnoreWhitespace, false)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+		err = repoCtrl.CommitDiff(
+			ctx,
+			session,
+			repoRef,
+			commitSHA,
+			ignoreWhitespace,
+			w,
+		)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
@@ -110,7 +147,18 @@ func HandleDiffStats(repoCtrl *repo.Controller) http.HandlerFunc {
 
 		path := request.GetOptionalRemainderFromPath(r)
 
-		output, err := repoCtrl.DiffStats(ctx, session, repoRef, path)
+		ignoreWhitespace, err := request.QueryParamAsBoolOrDefault(r, request.QueryParamIgnoreWhitespace, false)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+		output, err := repoCtrl.DiffStats(
+			ctx,
+			session,
+			repoRef,
+			path,
+			ignoreWhitespace,
+		)
 		if uErr := gittypes.AsUnrelatedHistoriesError(err); uErr != nil {
 			render.JSON(w, http.StatusOK, &usererror.Error{
 				Message: uErr.Error(),
