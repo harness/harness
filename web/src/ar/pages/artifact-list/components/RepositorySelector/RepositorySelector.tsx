@@ -15,12 +15,13 @@
  */
 
 import React, { useMemo } from 'react'
+import { Menu, MenuItem } from '@blueprintjs/core'
 import type { SelectOption } from '@harnessio/uicore'
-import { MultiSelectDropDown } from '@harnessio/uicore'
-import { getAllRegistries } from '@harnessio/react-har-service-client'
+import { useGetAllRegistriesQuery } from '@harnessio/react-har-service-client'
+import { getErrorInfoFromErrorObject, MultiSelectDropDown } from '@harnessio/uicore'
 
-import { useStrings } from '@ar/frameworks/strings'
 import { useGetSpaceRef } from '@ar/hooks'
+import { useStrings } from '@ar/frameworks/strings'
 
 export interface RepositorySelectorProps {
   value?: string[]
@@ -32,25 +33,31 @@ export default function RepositorySelector(props: RepositorySelectorProps): JSX.
   const { getString } = useStrings()
   const spaceRef = useGetSpaceRef()
 
-  const queryRepositories = async (): Promise<SelectOption[]> => {
-    return getAllRegistries({
-      space_ref: spaceRef,
-      queryParams: {
-        size: 10,
-        page: 0,
-        search_term: query
-      }
-    })
-      .then(result => {
-        const selectItems = result?.content?.data?.registries?.map(item => {
-          return { label: item.identifier, value: item.identifier }
-        }) as SelectOption[]
-        return selectItems || []
-      })
-      .catch(() => {
-        return []
-      })
-  }
+  const { data, isFetching, error } = useGetAllRegistriesQuery({
+    space_ref: spaceRef,
+    queryParams: {
+      size: 10,
+      page: 0,
+      search_term: query
+    }
+  })
+
+  const items: SelectOption[] = useMemo(() => {
+    if (isFetching) {
+      return [{ label: getString('loading'), value: '-1', disabled: true }]
+    }
+    if (error) {
+      return [{ label: getErrorInfoFromErrorObject(error), value: '-1', disabled: true }]
+    }
+    if (data?.content.data.registries.length === 0) {
+      return [{ label: getString('noResultsFound'), value: '-1', disabled: true }]
+    }
+    return (
+      data?.content.data.registries?.map(item => {
+        return { label: item.identifier, value: item.identifier }
+      }) || []
+    )
+  }, [data, isFetching, error])
 
   const selectedValues = useMemo(() => {
     if (Array.isArray(props.value)) {
@@ -74,12 +81,27 @@ export default function RepositorySelector(props: RepositorySelectorProps): JSX.
         props.onChange(options.map(each => each.value as string))
       }}
       value={selectedValues}
-      items={queryRepositories}
+      items={items}
       usePortal={true}
-      query={query}
       allowSearch
-      onQueryChange={setQuery}
+      expandingSearchInputProps={{
+        defaultValue: query,
+        onChange: q => setQuery(q)
+      }}
+      itemListRenderer={itemListProps => {
+        return (
+          <Menu>
+            {itemListProps.items.map((item, idx) => {
+              if (item.disabled) {
+                return <MenuItem key={item.label} text={item.label} disabled />
+              }
+              return itemListProps.renderItem(item, idx)
+            })}
+          </Menu>
+        )
+      }}
       placeholder={getString('artifactList.table.allRepositories')}
+      onPopoverClose={() => setQuery('')}
     />
   )
 }

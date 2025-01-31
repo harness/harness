@@ -37,7 +37,7 @@ export default function GenericArtifactDetailsPage() {
   const pathParams = useDecodedParams<VersionDetailsPathParams>()
   const queryParamOptions = useArtifactFileListQueryParamOptions()
   const queryParams = useQueryParams<ArtifactFileListPageQueryParams>(queryParamOptions)
-  const { searchTerm, page, size, sort } = queryParams
+  const { page, size, sort } = queryParams
 
   const [sortField, sortOrder] = sort || []
 
@@ -51,11 +51,10 @@ export default function GenericArtifactDetailsPage() {
     artifact: encodeRef(pathParams.artifactIdentifier),
     version: pathParams.versionIdentifier,
     queryParams: {
-      searchTerm,
       page,
       size,
-      sortField,
-      sortOrder
+      sort_field: sortField,
+      sort_order: sortOrder
     }
   })
   const response = data?.content

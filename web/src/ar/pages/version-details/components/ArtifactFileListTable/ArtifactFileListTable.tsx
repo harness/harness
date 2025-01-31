@@ -51,12 +51,12 @@ export default function ArtifactFileListTable(props: ArtifactFileListTableProps)
   const { useDefaultPaginationProps } = useParentHooks()
   const { getString } = useStrings()
 
-  const { files } = data
+  const { files, itemCount = 0, pageCount = 0, pageIndex, pageSize = 0 } = data
   const paginationProps = useDefaultPaginationProps({
-    itemCount: 0,
-    pageSize: 100,
-    pageCount: 1,
-    pageIndex: 1,
+    itemCount,
+    pageSize,
+    pageCount,
+    pageIndex,
     gotoPage,
     onPageSizeChange
   })

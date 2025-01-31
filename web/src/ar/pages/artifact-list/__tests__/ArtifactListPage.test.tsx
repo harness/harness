@@ -19,7 +19,7 @@ import { fireEvent, render, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import {
   useGetAllHarnessArtifactsQuery as _useGetAllHarnessArtifactsQuery,
-  getAllRegistries as _getAllRegistries
+  useGetAllRegistriesQuery as _useGetAllRegistriesQuery
 } from '@harnessio/react-har-service-client'
 import ArTestWrapper from '@ar/utils/testUtils/ArTestWrapper'
 import repositoryFactory from '@ar/frameworks/RepositoryStep/RepositoryFactory'
@@ -36,11 +36,16 @@ import {
 } from './__mockData__'
 
 const useGetAllHarnessArtifactsQuery = _useGetAllHarnessArtifactsQuery as jest.Mock
-const getAllRegistries = _getAllRegistries as jest.Mock
+const useGetAllRegistriesQuery = _useGetAllRegistriesQuery as jest.Mock
 
 jest.mock('@harnessio/react-har-service-client', () => ({
   useGetAllHarnessArtifactsQuery: jest.fn(),
-  getAllRegistries: jest.fn()
+  useGetAllRegistriesQuery: jest.fn().mockImplementation(() => ({
+    isFetching: false,
+    data: mockGetAllRegistriesResponse,
+    refetch: jest.fn(),
+    error: null
+  }))
 }))
 
 describe('Test Artifact List Page', () => {
@@ -52,12 +57,10 @@ describe('Test Artifact List Page', () => {
     useGetAllHarnessArtifactsQuery.mockImplementation(() => {
       return mockUseGetAllHarnessArtifactsQueryResponse
     })
-    getAllRegistries.mockImplementation(() => new Promise(resolve => resolve(mockGetAllRegistriesResponse)))
   })
 
   test('Should render proper empty list if artifacts reponse is empty', async () => {
     useGetAllHarnessArtifactsQuery.mockImplementationOnce(() => mockEmptyUseGetAllHarnessArtifactsQueryResponse)
-    getAllRegistries.mockImplementationOnce(() => new Promise(resolve => resolve(mockEmptyGetAllRegistriesResponse)))
 
     const { container, getByText } = render(
       <ArTestWrapper>
@@ -197,7 +200,7 @@ describe('Test Artifact List Page', () => {
     )
 
     useGetAllHarnessArtifactsQuery.mockImplementationOnce(() => mockEmptyUseGetAllHarnessArtifactsQueryResponse)
-    getAllRegistries.mockImplementationOnce(() => new Promise(resolve => resolve(mockEmptyGetAllRegistriesResponse)))
+    useGetAllRegistriesQuery.mockImplementationOnce(() => mockEmptyGetAllRegistriesResponse)
 
     const latestVersionTab = getByText('artifactList.table.latestVersions')
     await userEvent.click(latestVersionTab)
