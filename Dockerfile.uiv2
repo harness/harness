@@ -3,7 +3,7 @@
 # ---------------------------------------------------------#
 
 # opensource-ui is only pushed as linux/arm64 - okay since we only copy files.
-FROM --platform=linux/arm64 harness/opensource-ui:alpha.453 as uiv2
+FROM --platform=linux/arm64 harness/opensource-ui:standalone.alpha.467 as uiv2
 
 # ---------------------------------------------------------#
 #                   Build Harness image                    #
