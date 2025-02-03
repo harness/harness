@@ -17,8 +17,7 @@ package enum
 type RefType int
 
 const (
-	RefTypeUndefined RefType = iota
-	RefTypeRaw
+	RefTypeRaw RefType = iota
 	RefTypeBranch
 	RefTypeTag
 	RefTypePullReqHead
@@ -37,8 +36,6 @@ func (t RefType) String() string {
 		return "head"
 	case RefTypePullReqMerge:
 		return "merge"
-	case RefTypeUndefined:
-		fallthrough
 	default:
 		return ""
 	}

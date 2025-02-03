@@ -26,6 +26,7 @@ import (
 	"github.com/harness/gitness/git/merge"
 	"github.com/harness/gitness/git/parser"
 	"github.com/harness/gitness/git/sha"
+	"github.com/harness/gitness/git/sharedrepo"
 )
 
 // MergeParams is input structure object for merging operation.
@@ -56,8 +57,7 @@ type MergeParams struct {
 	// (optional, default: committer date)
 	AuthorDate *time.Time
 
-	RefType enum.RefType
-	RefName string
+	Refs []RefUpdate
 
 	// HeadExpectedSHA is commit sha on the head branch, if HeadExpectedSHA is older
 	// than the HeadBranch latest sha then merge will fail.
@@ -67,6 +67,19 @@ type MergeParams struct {
 	DeleteHeadBranch bool
 
 	Method enum.MergeMethod
+}
+
+type RefUpdate struct {
+	// Name is the full name of the reference.
+	Name string
+
+	// Old is the expected current value of the reference.
+	// If it's empty, the old value of the reference can be any value.
+	Old sha.SHA
+
+	// New is the desired value for the reference.
+	// If it's empty, the reference would be set to the resulting commit SHA of the merge.
+	New sha.SHA
 }
 
 func (p *MergeParams) Validate() error {
@@ -82,9 +95,12 @@ func (p *MergeParams) Validate() error {
 		return errors.InvalidArgument("head branch is mandatory")
 	}
 
-	if p.RefType != enum.RefTypeUndefined && p.RefName == "" {
-		return errors.InvalidArgument("ref name has to be provided if type is defined")
+	for _, ref := range p.Refs {
+		if ref.Name == "" {
+			return errors.InvalidArgument("ref name has to be provided")
+		}
 	}
+
 	return nil
 }
 
@@ -151,27 +167,6 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 	default:
 		// should not happen, the call to Sanitize above should handle this case.
 		panic("unsupported merge method")
-	}
-
-	// set up the target reference
-
-	var refPath string
-	var refOldValue sha.SHA
-
-	if params.RefType != enum.RefTypeUndefined {
-		refPath, err = GetRefPath(params.RefName, params.RefType)
-		if err != nil {
-			return MergeOutput{}, fmt.Errorf(
-				"failed to generate full reference for type '%s' and name '%s' for merge operation: %w",
-				params.RefType, params.RefName, err)
-		}
-
-		refOldValue, err = s.git.GetFullCommitID(ctx, repoPath, refPath)
-		if errors.IsNotFound(err) {
-			refOldValue = sha.Nil
-		} else if err != nil {
-			return MergeOutput{}, fmt.Errorf("failed to resolve %q: %w", refPath, err)
-		}
 	}
 
 	// find the commit SHAs
@@ -259,35 +254,66 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 		message = parser.CleanUpWhitespace(params.Message)
 	}
 
-	// merge
+	// create merge commit and update the references
 
-	var refUpdater *hook.RefUpdater
-
-	if params.RefType != enum.RefTypeUndefined {
-		refUpdater, err = hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath, refPath)
-		if err != nil {
-			return MergeOutput{}, errors.Internal(err, "failed to create ref updater object")
-		}
-
-		if err := refUpdater.InitOld(ctx, refOldValue); err != nil {
-			return MergeOutput{}, errors.Internal(err, "failed to set old reference value for ref updater")
-		}
+	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath)
+	if err != nil {
+		return MergeOutput{}, fmt.Errorf("failed to create reference updater: %w", err)
 	}
 
-	mergeCommitSHA, conflicts, err := mergeFunc(
-		ctx,
-		refUpdater,
-		repoPath, s.tmpDir,
-		&author, &committer,
-		message,
-		mergeBaseCommitSHA, baseCommitSHA, headCommitSHA)
+	var mergeCommitSHA sha.SHA
+	var conflicts []string
+
+	err = sharedrepo.Run(ctx, refUpdater, s.tmpDir, repoPath, func(s *sharedrepo.SharedRepo) error {
+		mergeCommitSHA, conflicts, err = mergeFunc(
+			ctx,
+			s,
+			merge.Params{
+				Author:       &author,
+				Committer:    &committer,
+				Message:      message,
+				MergeBaseSHA: mergeBaseCommitSHA,
+				TargetSHA:    baseCommitSHA,
+				SourceSHA:    headCommitSHA,
+			})
+		if err != nil {
+			return fmt.Errorf("failed to create merge commit: %w", err)
+		}
+
+		if mergeCommitSHA.IsEmpty() || len(conflicts) > 0 {
+			return refUpdater.Init(ctx, nil) // update nothing
+		}
+
+		refUpdates := make([]hook.ReferenceUpdate, len(params.Refs))
+		for i, ref := range params.Refs {
+			oldValue := ref.Old
+			newValue := ref.New
+
+			if newValue.IsEmpty() { // replace all empty new values to the result of the merge
+				newValue = mergeCommitSHA
+			}
+
+			refUpdates[i] = hook.ReferenceUpdate{
+				Ref: ref.Name,
+				Old: oldValue,
+				New: newValue,
+			}
+		}
+
+		err = refUpdater.Init(ctx, refUpdates)
+		if err != nil {
+			return fmt.Errorf("failed to init values of references (%v): %w", refUpdates, err)
+		}
+
+		return nil
+	})
 	if errors.IsConflict(err) {
 		return MergeOutput{}, fmt.Errorf("failed to merge %q to %q in %q using the %q merge method: %w",
 			params.HeadBranch, params.BaseBranch, params.RepoUID, mergeMethod, err)
 	}
 	if err != nil {
-		return MergeOutput{}, errors.Internal(err, "failed to merge %q to %q in %q using the %q merge method",
-			params.HeadBranch, params.BaseBranch, params.RepoUID, mergeMethod)
+		return MergeOutput{}, fmt.Errorf("failed to merge %q to %q in %q using the %q merge method: %w",
+			params.HeadBranch, params.BaseBranch, params.RepoUID, mergeMethod, err)
 	}
 	if len(conflicts) > 0 {
 		return MergeOutput{

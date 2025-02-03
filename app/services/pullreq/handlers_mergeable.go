@@ -79,46 +79,6 @@ func (s *Service) mergeCheckOnReopen(ctx context.Context,
 	)
 }
 
-// mergeCheckOnClosed deletes the merge ref.
-func (s *Service) mergeCheckOnClosed(ctx context.Context,
-	event *events.Event[*pullreqevents.ClosedPayload],
-) error {
-	return s.deleteMergeRef(ctx, event.Payload.SourceRepoID, event.Payload.Number)
-}
-
-// mergeCheckOnMerged deletes the merge ref.
-func (s *Service) mergeCheckOnMerged(ctx context.Context,
-	event *events.Event[*pullreqevents.MergedPayload],
-) error {
-	return s.deleteMergeRef(ctx, event.Payload.SourceRepoID, event.Payload.Number)
-}
-
-func (s *Service) deleteMergeRef(ctx context.Context, repoID int64, prNum int64) error {
-	repo, err := s.repoGitInfoCache.Get(ctx, repoID)
-	if err != nil {
-		return fmt.Errorf("failed to get repo with ID %d: %w", repoID, err)
-	}
-
-	writeParams, err := createSystemRPCWriteParams(ctx, s.urlProvider, repo.ID, repo.GitUID)
-	if err != nil {
-		return fmt.Errorf("failed to generate rpc write params: %w", err)
-	}
-
-	// TODO: This doesn't work for forked repos
-	err = s.git.UpdateRef(ctx, git.UpdateRefParams{
-		WriteParams: writeParams,
-		Name:        strconv.Itoa(int(prNum)),
-		Type:        gitenum.RefTypePullReqMerge,
-		NewValue:    sha.None, // when NewValue is empty will delete the ref.
-		OldValue:    sha.None, // we don't care about the old value
-	})
-	if err != nil {
-		return fmt.Errorf("failed to remove PR merge ref: %w", err)
-	}
-
-	return nil
-}
-
 //nolint:funlen // refactor if required.
 func (s *Service) updateMergeData(
 	ctx context.Context,
@@ -186,6 +146,19 @@ func (s *Service) updateMergeData(
 		return fmt.Errorf("failed to generate rpc write params: %w", err)
 	}
 
+	refName, err := git.GetRefPath(strconv.Itoa(int(pr.Number)), gitenum.RefTypePullReqMerge)
+	if err != nil {
+		return fmt.Errorf("failed to generate pull request merge ref name: %w", err)
+	}
+
+	refs := []git.RefUpdate{
+		{
+			Name: refName,
+			Old:  sha.SHA{}, // no matter what the value of the reference is
+			New:  sha.SHA{}, // update it to point to result of the merge
+		},
+	}
+
 	// call merge and store output in pr merge reference.
 	now := time.Now()
 	mergeOutput, err := s.git.Merge(ctx, &git.MergeParams{
@@ -193,8 +166,7 @@ func (s *Service) updateMergeData(
 		BaseBranch:      pr.TargetBranch,
 		HeadRepoUID:     sourceRepo.GitUID,
 		HeadBranch:      pr.SourceBranch,
-		RefType:         gitenum.RefTypePullReqMerge,
-		RefName:         strconv.Itoa(int(pr.Number)),
+		Refs:            refs,
 		HeadExpectedSHA: sha.Must(newSHA),
 		Force:           true,
 

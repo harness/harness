@@ -135,6 +135,11 @@ func (c *Controller) Squash(
 			in.HeadCommitSHA, headBranch.Branch.Name)
 	}
 
+	headBranchRef, err := git.GetRefPath(in.HeadBranch, gitenum.RefTypeBranch)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to gerenere ref name: %w", err)
+	}
+
 	baseCommitSHA := in.BaseCommitSHA
 	if baseCommitSHA.IsEmpty() {
 		baseBranch, err := c.git.GetBranch(ctx, &git.GetBranchParams{
@@ -153,11 +158,13 @@ func (c *Controller) Squash(
 		return nil, nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}
 
-	refType := gitenum.RefTypeBranch
-	refName := in.HeadBranch
-	if in.DryRun {
-		refType = gitenum.RefTypeUndefined
-		refName = ""
+	var refs []git.RefUpdate
+	if !in.DryRun {
+		refs = append(refs, git.RefUpdate{
+			Name: headBranchRef,
+			Old:  headBranch.Branch.SHA,
+			New:  sha.SHA{}, // update to the result of the merge
+		})
 	}
 
 	mergeBase, err := c.git.MergeBase(ctx, git.MergeBaseParams{
@@ -223,8 +230,7 @@ func (c *Controller) Squash(
 		HeadRepoUID:     repo.GitUID,
 		HeadBranch:      in.HeadBranch,
 		Message:         git.CommitMessage(in.Title, in.Message),
-		RefType:         refType,
-		RefName:         refName,
+		Refs:            refs,
 		Committer:       committer,
 		CommitterDate:   &now,
 		Author:          author,

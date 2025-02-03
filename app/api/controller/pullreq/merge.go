@@ -177,13 +177,7 @@ func (c *Controller) Merge(
 	}
 
 	sourceRepo := targetRepo
-	sourceWriteParams := targetWriteParams
 	if pr.SourceRepoID != pr.TargetRepoID {
-		sourceWriteParams, err = controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, sourceRepo)
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to create RPC write params: %w", err)
-		}
-
 		sourceRepo, err = c.repoStore.Find(ctx, pr.SourceRepoID)
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to get source repository: %w", err)
@@ -195,7 +189,7 @@ func (c *Controller) Merge(
 		return nil, nil, fmt.Errorf("failed to fetch rules: %w", err)
 	}
 
-	checkResults, err := c.checkStore.ListResults(ctx, targetRepo.ID, pr.SourceSHA)
+	checkResults, err := c.checkStore.ListResults(ctx, targetRepo.ID, in.SourceSHA)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to list status checks: %w", err)
 	}
@@ -292,7 +286,7 @@ func (c *Controller) Merge(
 				BaseBranch:      pr.TargetBranch,
 				HeadRepoUID:     sourceRepo.GitUID,
 				HeadBranch:      pr.SourceBranch,
-				RefType:         gitenum.RefTypeUndefined, // update no refs -> no commit will be created
+				Refs:            nil, // update no refs -> no commit will be created
 				HeadExpectedSHA: sha.Must(in.SourceSHA),
 				Method:          gitenum.MergeMethod(in.Method),
 			})
@@ -425,6 +419,65 @@ func (c *Controller) Merge(
 
 	log.Ctx(ctx).Debug().Msgf("all pre-check passed, merge PR")
 
+	sourceBranchSHA, err := sha.New(in.SourceSHA)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to convert source SHA: %w", err)
+	}
+
+	refSourceBranch, err := git.GetRefPath(pr.SourceBranch, gitenum.RefTypeBranch)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to generate source branch ref name: %w", err)
+	}
+
+	refTargetBranch, err := git.GetRefPath(pr.TargetBranch, gitenum.RefTypeBranch)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to generate target branch ref name: %w", err)
+	}
+
+	prNumber := strconv.FormatInt(pr.Number, 10)
+
+	refPullReqHead, err := git.GetRefPath(prNumber, gitenum.RefTypePullReqHead)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to generate pull request head ref name: %w", err)
+	}
+
+	refPullReqMerge, err := git.GetRefPath(prNumber, gitenum.RefTypePullReqMerge)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to generate pull requert merge ref name: %w", err)
+	}
+
+	refUpdates := make([]git.RefUpdate, 0, 4)
+
+	// Update the target branch to the result of the merge.
+	refUpdates = append(refUpdates, git.RefUpdate{
+		Name: refTargetBranch,
+		Old:  sha.SHA{}, // don't care about the current commit SHA of the target branch.
+		New:  sha.SHA{}, // update to the result of the merge.
+	})
+
+	// Make sure the PR head ref points to the correct commit after the merge.
+	refUpdates = append(refUpdates, git.RefUpdate{
+		Name: refPullReqHead,
+		Old:  sha.SHA{}, // don't care about the old value.
+		New:  sourceBranchSHA,
+	})
+
+	// Delete the PR merge reference.
+	refUpdates = append(refUpdates, git.RefUpdate{
+		Name: refPullReqMerge,
+		Old:  sha.SHA{},
+		New:  sha.Nil,
+	})
+
+	if ruleOut.DeleteSourceBranch {
+		// Delete the source branch.
+		refUpdates = append(refUpdates, git.RefUpdate{
+			Name: refSourceBranch,
+			Old:  sourceBranchSHA,
+			New:  sha.Nil,
+		})
+	}
+
 	now := time.Now()
 	mergeOutput, err := c.git.Merge(ctx, &git.MergeParams{
 		WriteParams:     targetWriteParams,
@@ -436,8 +489,7 @@ func (c *Controller) Merge(
 		CommitterDate:   &now,
 		Author:          author,
 		AuthorDate:      &now,
-		RefType:         gitenum.RefTypeBranch,
-		RefName:         pr.TargetBranch,
+		Refs:            refUpdates,
 		HeadExpectedSHA: sha.Must(in.SourceSHA),
 		Method:          gitenum.MergeMethod(in.Method),
 	})
@@ -545,27 +597,13 @@ func (c *Controller) Merge(
 		SourceSHA:   mergeOutput.HeadSHA.String(),
 	})
 
-	var branchDeleted bool
 	if ruleOut.DeleteSourceBranch {
-		errDelete := c.git.DeleteBranch(ctx, &git.DeleteBranchParams{
-			WriteParams: sourceWriteParams,
-			BranchName:  pr.SourceBranch,
-		})
-		if errDelete != nil {
+		pr.ActivitySeq = activitySeqBranchDeleted
+		if _, errAct := c.activityStore.CreateWithPayload(ctx, pr, mergedBy,
+			&types.PullRequestActivityPayloadBranchDelete{SHA: in.SourceSHA}, nil); errAct != nil {
 			// non-critical error
-			log.Ctx(ctx).Err(errDelete).Msgf("failed to delete source branch after merging")
-		} else {
-			branchDeleted = true
-
-			// NOTE: there is a chance someone pushed on the branch between merge and delete.
-			// Either way, we'll use the SHA that was merged with for the activity to be consistent from PR perspective.
-			pr.ActivitySeq = activitySeqBranchDeleted
-			if _, errAct := c.activityStore.CreateWithPayload(ctx, pr, mergedBy,
-				&types.PullRequestActivityPayloadBranchDelete{SHA: in.SourceSHA}, nil); errAct != nil {
-				// non-critical error
-				log.Ctx(ctx).Err(errAct).
-					Msgf("failed to write pull request activity for successful automatic branch delete")
-			}
+			log.Ctx(ctx).Err(errAct).
+				Msgf("failed to write pull request activity for successful automatic branch delete")
 		}
 	}
 
@@ -621,7 +659,7 @@ func (c *Controller) Merge(
 	}
 	return &types.MergeResponse{
 		SHA:            mergeOutput.MergeSHA.String(),
-		BranchDeleted:  branchDeleted,
+		BranchDeleted:  ruleOut.DeleteSourceBranch,
 		RuleViolations: violations,
 	}, nil, nil
 }

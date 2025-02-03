@@ -168,11 +168,21 @@ func (c *Controller) State(ctx context.Context,
 			pr.Closed = &nowMilli
 			pr.MarkAsMergeUnchecked()
 
+			// delete the merge pull request reference
+			err = c.git.UpdateRef(ctx, git.UpdateRefParams{
+				WriteParams: targetWriteParams,
+				Name:        strconv.FormatInt(pr.Number, 10),
+				Type:        gitenum.RefTypePullReqMerge,
+				NewValue:    sha.Nil,
+				OldValue:    sha.None, // we don't care about the old value
+			})
+
 		case changeReopen:
 			pr.SourceSHA = sourceSHA.String()
 			pr.MergeBaseSHA = mergeBaseSHA.String()
 			pr.Closed = nil
 
+			// create the head pull request reference
 			err = c.git.UpdateRef(ctx, git.UpdateRefParams{
 				WriteParams: targetWriteParams,
 				Name:        strconv.FormatInt(pr.Number, 10),

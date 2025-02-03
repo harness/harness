@@ -189,7 +189,7 @@ func (c *Controller) Create(
 			Name:        strconv.FormatInt(targetRepo.PullReqSeq, 10),
 			Type:        gitenum.RefTypePullReqHead,
 			NewValue:    sourceSHA,
-			OldValue:    sha.None, // this is a new pull request, so we expect that the ref doesn't exist
+			OldValue:    sha.None, // we don't care about the old value
 		})
 		if err != nil {
 			return fmt.Errorf("failed to create PR head ref: %w", err)

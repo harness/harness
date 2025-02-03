@@ -104,14 +104,14 @@ func (s *Service) CreateBranch(ctx context.Context, params *CreateBranchParams) 
 		return nil, fmt.Errorf("failed to get target commit: %w", err)
 	}
 
-	branchRef := api.GetReferenceFromBranchName(params.BranchName)
-
-	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath, branchRef)
+	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create ref updater to create the branch: %w", err)
 	}
 
-	err = refUpdater.Do(ctx, sha.Nil, targetCommit.SHA)
+	branchRef := api.GetReferenceFromBranchName(params.BranchName)
+
+	err = refUpdater.DoOne(ctx, branchRef, sha.Nil, targetCommit.SHA)
 	if errors.IsConflict(err) {
 		return nil, errors.Conflict("branch %q already exists", params.BranchName)
 	}
@@ -162,15 +162,16 @@ func (s *Service) DeleteBranch(ctx context.Context, params *DeleteBranchParams) 
 	}
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
-	branchRef := api.GetReferenceFromBranchName(params.BranchName)
 	commitSha, _ := sha.NewOrEmpty(params.SHA)
 
-	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath, branchRef)
+	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath)
 	if err != nil {
 		return fmt.Errorf("failed to create ref updater to create the branch: %w", err)
 	}
 
-	err = refUpdater.Do(ctx, commitSha, sha.Nil)
+	branchRef := api.GetReferenceFromBranchName(params.BranchName)
+
+	err = refUpdater.DoOne(ctx, branchRef, commitSha, sha.Nil)
 	if errors.IsNotFound(err) {
 		return errors.NotFound("branch %q does not exist", params.BranchName)
 	}

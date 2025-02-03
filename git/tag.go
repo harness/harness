@@ -278,7 +278,7 @@ func (s *Service) CreateCommitTag(ctx context.Context, params *CreateCommitTagPa
 
 	// ref updater
 
-	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath, tagRef)
+	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create ref updater to create the tag: %w", err)
 	}
@@ -295,7 +295,13 @@ func (s *Service) CreateCommitTag(ctx context.Context, params *CreateCommitTagPa
 			return fmt.Errorf("failed to read annotated tag after creation: %w", err)
 		}
 
-		if err := refUpdater.Init(ctx, sha.Nil, tag.Sha); err != nil {
+		ref := hook.ReferenceUpdate{
+			Ref: tagRef,
+			Old: sha.Nil,
+			New: tag.Sha,
+		}
+
+		if err := refUpdater.Init(ctx, []hook.ReferenceUpdate{ref}); err != nil {
 			return fmt.Errorf("failed to init ref updater: %w", err)
 		}
 
@@ -337,14 +343,15 @@ func (s *Service) DeleteTag(ctx context.Context, params *DeleteTagParams) error 
 	}
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
-	tagRef := api.GetReferenceFromTagName(params.Name)
 
-	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath, tagRef)
+	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath)
 	if err != nil {
 		return fmt.Errorf("failed to create ref updater to delete the tag: %w", err)
 	}
 
-	err = refUpdater.Do(ctx, sha.None, sha.Nil) // delete whatever is there
+	tagRef := api.GetReferenceFromTagName(params.Name)
+
+	err = refUpdater.DoOne(ctx, tagRef, sha.None, sha.Nil) // delete whatever is there
 	if errors.IsNotFound(err) {
 		return errors.NotFound("tag %q does not exist", params.Name)
 	}

@@ -157,11 +157,18 @@ func (c *Controller) Rebase(
 		return nil, nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}
 
-	refType := gitenum.RefTypeBranch
-	refName := in.HeadBranch
-	if in.DryRun {
-		refType = gitenum.RefTypeUndefined
-		refName = ""
+	var refs []git.RefUpdate
+	if !in.DryRun {
+		headBranchRef, err := git.GetRefPath(in.HeadBranch, gitenum.RefTypeBranch)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to gerenere ref name: %w", err)
+		}
+
+		refs = append(refs, git.RefUpdate{
+			Name: headBranchRef,
+			Old:  headBranch.Branch.SHA,
+			New:  sha.SHA{}, // update to the result of the merge
+		})
 	}
 
 	mergeOutput, err := c.git.Merge(ctx, &git.MergeParams{
@@ -169,8 +176,7 @@ func (c *Controller) Rebase(
 		BaseSHA:         baseCommitSHA,
 		HeadRepoUID:     repo.GitUID,
 		HeadBranch:      in.HeadBranch,
-		RefType:         refType,
-		RefName:         refName,
+		Refs:            refs,
 		HeadExpectedSHA: in.HeadCommitSHA,
 		Method:          gitenum.MergeMethodRebase,
 	})

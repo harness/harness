@@ -144,7 +144,7 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 		refOldSHA = commit.SHA
 	}
 
-	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath, branchRef)
+	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath)
 	if err != nil {
 		return CommitFilesResponse{}, fmt.Errorf("failed to create ref updater: %w", err)
 	}
@@ -222,7 +222,13 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 
 		refNewSHA = commitSHA
 
-		if err := refUpdater.Init(ctx, refOldSHA, refNewSHA); err != nil {
+		ref := hook.ReferenceUpdate{
+			Ref: branchRef,
+			Old: refOldSHA,
+			New: refNewSHA,
+		}
+
+		if err := refUpdater.Init(ctx, []hook.ReferenceUpdate{ref}); err != nil {
 			return fmt.Errorf("failed to init ref updater old=%s new=%s: %w", refOldSHA, refNewSHA, err)
 		}
 

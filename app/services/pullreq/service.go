@@ -194,8 +194,6 @@ func New(ctx context.Context,
 			_ = r.RegisterCreated(service.mergeCheckOnCreated)
 			_ = r.RegisterBranchUpdated(service.mergeCheckOnBranchUpdate)
 			_ = r.RegisterReopened(service.mergeCheckOnReopen)
-			_ = r.RegisterClosed(service.mergeCheckOnClosed)
-			_ = r.RegisterMerged(service.mergeCheckOnMerged)
 
 			return nil
 		})

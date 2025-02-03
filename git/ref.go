@@ -89,15 +89,15 @@ func (s *Service) UpdateRef(ctx context.Context, params UpdateRefParams) error {
 
 	reference, err := GetRefPath(params.Name, params.Type)
 	if err != nil {
-		return fmt.Errorf("UpdateRef: failed to fetch reference '%s': %w", params.Name, err)
+		return fmt.Errorf("failed to create reference '%s': %w", params.Name, err)
 	}
 
-	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath, reference)
+	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath)
 	if err != nil {
-		return fmt.Errorf("UpdateRef: failed to create ref updater: %w", err)
+		return fmt.Errorf("failed to create ref updater: %w", err)
 	}
 
-	if err := refUpdater.Do(ctx, params.OldValue, params.NewValue); err != nil {
+	if err := refUpdater.DoOne(ctx, reference, params.OldValue, params.NewValue); err != nil {
 		return fmt.Errorf("failed to update ref: %w", err)
 	}
 
@@ -122,8 +122,6 @@ func GetRefPath(refName string, refType enum.RefType) (string, error) {
 		return refPullReqPrefix + refName + refPullReqHeadSuffix, nil
 	case enum.RefTypePullReqMerge:
 		return refPullReqPrefix + refName + refPullReqMergeSuffix, nil
-	case enum.RefTypeUndefined:
-		fallthrough
 	default:
 		return "", errors.InvalidArgument("provided reference type '%s' is invalid", refType)
 	}
