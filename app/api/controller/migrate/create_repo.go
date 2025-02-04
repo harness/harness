@@ -47,7 +47,7 @@ func (c *Controller) CreateRepo(
 	session *auth.Session,
 	in *CreateRepoInput,
 ) (*repoCtrl.RepositoryOutput, error) {
-	if err := c.sanitizeCreateRepoInput(in); err != nil {
+	if err := c.sanitizeCreateRepoInput(in, session); err != nil {
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
@@ -193,12 +193,12 @@ func (c *Controller) spaceCheckAuth(
 	return space, nil
 }
 
-func (c *Controller) sanitizeCreateRepoInput(in *CreateRepoInput) error {
+func (c *Controller) sanitizeCreateRepoInput(in *CreateRepoInput, session *auth.Session) error {
 	if err := repoCtrl.ValidateParentRef(in.ParentRef); err != nil {
 		return err
 	}
 
-	if err := c.identifierCheck(in.Identifier); err != nil {
+	if err := c.identifierCheck(in.Identifier, session); err != nil {
 		return err
 	}
 

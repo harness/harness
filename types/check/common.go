@@ -19,6 +19,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
 )
 
@@ -129,10 +130,10 @@ func Identifier(identifier string) error {
 	return nil
 }
 
-type RepoIdentifier func(identifier string) error
+type RepoIdentifier func(identifier string, session *auth.Session) error
 
 // RepoIdentifierDefault performs the default Identifier check and also blocks illegal repo identifiers.
-func RepoIdentifierDefault(identifier string) error {
+func RepoIdentifierDefault(identifier string, _ *auth.Session) error {
 	if err := Identifier(identifier); err != nil {
 		return err
 	}
