@@ -29,17 +29,17 @@ func (c *Controller) ListLabelValues(
 	session *auth.Session,
 	spaceRef string,
 	key string,
-	filter *types.ListQueryFilter,
-) ([]*types.LabelValue, error) {
+	filter types.ListQueryFilter,
+) ([]*types.LabelValue, int64, error) {
 	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceView)
 	if err != nil {
-		return nil, fmt.Errorf("failed to acquire access to space: %w", err)
+		return nil, 0, fmt.Errorf("failed to acquire access to space: %w", err)
 	}
 
-	values, err := c.labelSvc.ListValues(ctx, &space.ID, nil, key, filter)
+	values, count, err := c.labelSvc.ListValues(ctx, &space.ID, nil, key, filter)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list space label values: %w", err)
+		return nil, 0, fmt.Errorf("failed to list space label values: %w", err)
 	}
 
-	return values, nil
+	return values, count, nil
 }

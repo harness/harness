@@ -556,6 +556,22 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opListLabels, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{space_ref}/labels", opListLabels)
 
+	opFindLabel := openapi3.Operation{}
+	opFindLabel.WithTags("space")
+	opFindLabel.WithMapOfAnything(map[string]interface{}{"operationId": "findSpaceLabel"})
+	opFindLabel.WithParameters(queryParameterIncludeValues)
+	_ = reflector.SetRequest(&opFindLabel, &struct {
+		spaceRequest
+		Key string `path:"key"`
+	}{}, http.MethodGet)
+	_ = reflector.SetJSONResponse(&opFindLabel, new(types.LabelWithValues), http.StatusCreated)
+	_ = reflector.SetJSONResponse(&opFindLabel, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opFindLabel, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opFindLabel, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opFindLabel, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opFindLabel, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{space_ref}/labels/{key}", opFindLabel)
+
 	opDeleteLabel := openapi3.Operation{}
 	opDeleteLabel.WithTags("space")
 	opDeleteLabel.WithMapOfAnything(

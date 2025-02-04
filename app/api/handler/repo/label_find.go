@@ -12,22 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package space
+package repo
 
 import (
 	"net/http"
 
-	"github.com/harness/gitness/app/api/controller/space"
+	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
 )
 
-func HandleListLabelValues(labelValueCtrl *space.Controller) http.HandlerFunc {
+func HandleFindLabel(repoCtrl *repo.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
 
-		spaceRef, err := request.GetSpaceRefFromPath(r)
+		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
@@ -39,16 +39,18 @@ func HandleListLabelValues(labelValueCtrl *space.Controller) http.HandlerFunc {
 			return
 		}
 
-		filter := request.ParseListQueryFilterFromRequest(r)
-
-		labels, count, err := labelValueCtrl.ListLabelValues(
-			ctx, session, spaceRef, key, filter)
+		includeValues, err := request.ParseIncludeValuesFromQuery(r)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		render.Pagination(r, w, filter.Page, filter.Size, int(count))
-		render.JSON(w, http.StatusOK, labels)
+		label, err := repoCtrl.FindLabel(ctx, session, repoRef, key, includeValues)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+
+		render.JSON(w, http.StatusOK, label)
 	}
 }

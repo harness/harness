@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/app/store/database"
 	"github.com/harness/gitness/errors"
 	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -125,7 +126,15 @@ func (migrate Label) defineLabelsAndValues(
 		return fmt.Errorf("failed to find the label: %w", err)
 	}
 
-	values, err := migrate.labelValueStore.List(ctx, label.ID, &types.ListQueryFilter{})
+	values, err := migrate.labelValueStore.List(
+		ctx,
+		label.ID,
+		types.ListQueryFilter{
+			Pagination: types.Pagination{
+				Size: database.MaxLabelValueSize,
+			},
+		},
+	)
 	if err != nil {
 		return fmt.Errorf("failed to list label values: %w", err)
 	}

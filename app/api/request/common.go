@@ -59,6 +59,7 @@ const (
 	QueryParamInherited           = "inherited"
 	QueryParamAssignable          = "assignable"
 	QueryParamIncludePullreqCount = "include_pullreq_count"
+	QueryParamIncludeValues       = "include_values"
 
 	// TODO: have shared constants across all services?
 	HeaderRequestID       = "X-Request-Id"
@@ -209,6 +210,11 @@ func ParseInheritedFromQuery(r *http.Request) (bool, error) {
 // ParseIncludePullreqCountFromQuery extracts the pullreq assignment count option from the URL query.
 func ParseIncludePullreqCountFromQuery(r *http.Request) (bool, error) {
 	return QueryParamAsBoolOrDefault(r, QueryParamIncludePullreqCount, false)
+}
+
+// ParseIncludeValuesFromQuery extracts the inclue values option from the URL query.
+func ParseIncludeValuesFromQuery(r *http.Request) (bool, error) {
+	return QueryParamAsBoolOrDefault(r, QueryParamIncludeValues, false)
 }
 
 // ParseAssignableFromQuery extracts the assignable option from the URL query.

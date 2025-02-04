@@ -41,12 +41,13 @@ func HandleListLabelValues(repoCtrl *repo.Controller) http.HandlerFunc {
 
 		filter := request.ParseListQueryFilterFromRequest(r)
 
-		labels, err := repoCtrl.ListLabelValues(ctx, session, repoRef, key, &filter)
+		labels, count, err := repoCtrl.ListLabelValues(ctx, session, repoRef, key, filter)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
+		render.Pagination(r, w, filter.Page, filter.Size, int(count))
 		render.JSON(w, http.StatusOK, labels)
 	}
 }

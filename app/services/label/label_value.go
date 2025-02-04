@@ -112,14 +112,38 @@ func (s *Service) ListValues(
 	ctx context.Context,
 	spaceID, repoID *int64,
 	labelKey string,
-	filter *types.ListQueryFilter,
-) ([]*types.LabelValue, error) {
-	label, err := s.labelStore.Find(ctx, spaceID, repoID, labelKey)
+	filter types.ListQueryFilter,
+) ([]*types.LabelValue, int64, error) {
+	var count int64
+	var values []*types.LabelValue
+	err := s.tx.WithTx(ctx, func(ctx context.Context) error {
+		label, err := s.labelStore.Find(ctx, spaceID, repoID, labelKey)
+		if err != nil {
+			return fmt.Errorf("failed to find label: %w", err)
+		}
+
+		values, err = s.labelValueStore.List(ctx, label.ID, filter)
+		if err != nil {
+			return fmt.Errorf("failed to list label values: %w", err)
+		}
+
+		if filter.Page == 1 && len(values) < filter.Size {
+			count = int64(len(values))
+			return nil
+		}
+
+		count, err = s.labelValueStore.Count(ctx, label.ID, filter)
+		if err != nil {
+			return fmt.Errorf("failed to count label values: %w", err)
+		}
+
+		return nil
+	})
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return s.labelValueStore.List(ctx, label.ID, filter)
+	return values, count, nil
 }
 
 func (s *Service) DeleteValue(

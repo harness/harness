@@ -30,6 +30,8 @@ import (
 )
 
 const (
+	MaxLabelValueSize = 10e6
+
 	labelValueColumns = `
 		 label_value_label_id
 		,label_value_value
@@ -166,11 +168,43 @@ func (s *labelValueStore) DeleteMany(
 	return nil
 }
 
+// Count returns a count of label values for a specified label.
+func (s *labelValueStore) Count(
+	ctx context.Context,
+	labelID int64,
+	opts types.ListQueryFilter,
+) (int64, error) {
+	stmt := database.Builder.
+		Select("count(*)").
+		From("label_values")
+
+	stmt = stmt.Where("label_value_label_id = ?", labelID)
+
+	if opts.Query != "" {
+		stmt = stmt.Where(PartialMatch("label_value_value", opts.Query))
+	}
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return 0, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var count int64
+	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "Failed executing count query")
+	}
+
+	return count, nil
+}
+
 // List returns a list of label values for a specified label.
 func (s *labelValueStore) List(
 	ctx context.Context,
 	labelID int64,
-	opts *types.ListQueryFilter,
+	opts types.ListQueryFilter,
 ) ([]*types.LabelValue, error) {
 	stmt := database.Builder.
 		Select(`label_value_id, ` + labelValueColumns).
@@ -180,6 +214,10 @@ func (s *labelValueStore) List(
 
 	stmt = stmt.Limit(database.Limit(opts.Size))
 	stmt = stmt.Offset(database.Offset(opts.Page, opts.Size))
+
+	if opts.Query != "" {
+		stmt = stmt.Where(PartialMatch("label_value_value", opts.Query))
+	}
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {

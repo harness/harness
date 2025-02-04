@@ -1216,8 +1216,15 @@ type (
 		List(
 			ctx context.Context,
 			labelID int64,
-			opts *types.ListQueryFilter,
+			opts types.ListQueryFilter,
 		) ([]*types.LabelValue, error)
+
+		// Count returns a count of label values for a specified label.
+		Count(
+			ctx context.Context,
+			labelID int64,
+			opts types.ListQueryFilter,
+		) (int64, error)
 
 		// FindByID finds label value with a specified id.
 		FindByID(ctx context.Context, id int64) (*types.LabelValue, error)

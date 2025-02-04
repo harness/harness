@@ -20,6 +20,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/harness/gitness/app/store/database"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
@@ -123,7 +124,15 @@ func (s *Service) Save(
 			}
 		}
 
-		existingValues, err := s.labelValueStore.List(ctx, label.ID, &types.ListQueryFilter{})
+		existingValues, err := s.labelValueStore.List(
+			ctx,
+			label.ID,
+			types.ListQueryFilter{
+				Pagination: types.Pagination{
+					Size: database.MaxLabelValueSize,
+				},
+			},
+		)
 		if err != nil {
 			return err
 		}
@@ -204,6 +213,39 @@ func (s *Service) Find(
 	key string,
 ) (*types.Label, error) {
 	return s.labelStore.Find(ctx, spaceID, repoID, key)
+}
+
+func (s *Service) FindWithValues(
+	ctx context.Context,
+	spaceID, repoID *int64,
+	key string,
+) (*types.LabelWithValues, error) {
+	var label *types.Label
+	var values []*types.LabelValue
+	var err error
+
+	label, err = s.labelStore.Find(ctx, spaceID, repoID, key)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find label: %w", err)
+	}
+
+	values, err = s.labelValueStore.List(
+		ctx,
+		label.ID,
+		types.ListQueryFilter{
+			Pagination: types.Pagination{
+				Size: database.MaxLabelValueSize,
+			},
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list label values: %w", err)
+	}
+
+	return &types.LabelWithValues{
+		Label:  *label,
+		Values: values,
+	}, nil
 }
 
 func (s *Service) FindByID(ctx context.Context, labelID int64) (*types.Label, error) {

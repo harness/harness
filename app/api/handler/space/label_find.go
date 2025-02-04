@@ -22,7 +22,7 @@ import (
 	"github.com/harness/gitness/app/api/request"
 )
 
-func HandleListLabelValues(labelValueCtrl *space.Controller) http.HandlerFunc {
+func HandleFindLabel(labelCtrl *space.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
@@ -39,16 +39,18 @@ func HandleListLabelValues(labelValueCtrl *space.Controller) http.HandlerFunc {
 			return
 		}
 
-		filter := request.ParseListQueryFilterFromRequest(r)
-
-		labels, count, err := labelValueCtrl.ListLabelValues(
-			ctx, session, spaceRef, key, filter)
+		includeValues, err := request.ParseIncludeValuesFromQuery(r)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		render.Pagination(r, w, filter.Page, filter.Size, int(count))
-		render.JSON(w, http.StatusOK, labels)
+		label, err := labelCtrl.FindLabel(ctx, session, spaceRef, key, includeValues)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+
+		render.JSON(w, http.StatusOK, label)
 	}
 }

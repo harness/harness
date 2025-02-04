@@ -313,6 +313,7 @@ func SetupSpaceLabels(r chi.Router, spaceCtrl *space.Controller) {
 		r.Put("/", handlerspace.HandleSaveLabel(spaceCtrl))
 
 		r.Route(fmt.Sprintf("/{%s}", request.PathParamLabelKey), func(r chi.Router) {
+			r.Get("/", handlerspace.HandleFindLabel(spaceCtrl))
 			r.Delete("/", handlerspace.HandleDeleteLabel(spaceCtrl))
 			r.Patch("/", handlerspace.HandleUpdateLabel(spaceCtrl))
 
@@ -501,6 +502,7 @@ func SetupRepoLabels(r chi.Router, repoCtrl *repo.Controller) {
 		r.Put("/", handlerrepo.HandleSaveLabel(repoCtrl))
 
 		r.Route(fmt.Sprintf("/{%s}", request.PathParamLabelKey), func(r chi.Router) {
+			r.Get("/", handlerrepo.HandleFindLabel(repoCtrl))
 			r.Delete("/", handlerrepo.HandleDeleteLabel(repoCtrl))
 			r.Patch("/", handlerrepo.HandleUpdateLabel(repoCtrl))
 

@@ -741,6 +741,21 @@ var QueryParameterQueryLabel = openapi3.ParameterOrRef{
 	},
 }
 
+var queryParameterIncludeValues = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamIncludeValues,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The result should include label values."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeBoolean),
+				Default: ptrptr(false),
+			},
+		},
+	},
+}
+
 //nolint:funlen
 func repoOperations(reflector *openapi3.Reflector) {
 	createRepository := openapi3.Operation{}
@@ -1307,6 +1322,23 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opDeleteLabel, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(
 		http.MethodDelete, "/repos/{repo_ref}/labels/{key}", opDeleteLabel)
+
+	opFindLabel := openapi3.Operation{}
+	opFindLabel.WithTags("repository")
+	opFindLabel.WithMapOfAnything(
+		map[string]interface{}{"operationId": "findRepoLabel"})
+	opFindLabel.WithParameters(queryParameterIncludeValues)
+	_ = reflector.SetRequest(&opFindLabel, &struct {
+		repoRequest
+		Key string `path:"key"`
+	}{}, http.MethodGet)
+	_ = reflector.SetJSONResponse(&opFindLabel, new(types.LabelWithValues), http.StatusCreated)
+	_ = reflector.SetJSONResponse(&opFindLabel, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opFindLabel, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opFindLabel, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opFindLabel, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opFindLabel, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/labels/{key}", opFindLabel)
 
 	opUpdateLabel := openapi3.Operation{}
 	opUpdateLabel.WithTags("repository")

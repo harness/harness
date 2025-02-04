@@ -57,7 +57,7 @@ type LabelValue struct {
 
 type LabelWithValues struct {
 	Label  `json:"label"`
-	Values []*LabelValue `json:"values"`
+	Values []*LabelValue `json:"values,omitempty"`
 }
 
 // Used to assign label to pullreq.

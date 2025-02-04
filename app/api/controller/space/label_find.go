@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package repo
+package space
 
 import (
 	"context"
@@ -23,23 +23,34 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-// ListLabelValues lists all label values defined for the specified repository.
-func (c *Controller) ListLabelValues(
+// FindLabel finds a label for the specified space.
+func (c *Controller) FindLabel(
 	ctx context.Context,
 	session *auth.Session,
-	repoRef string,
+	spaceRef string,
 	key string,
-	filter types.ListQueryFilter,
-) ([]*types.LabelValue, int64, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
+	includeValues bool,
+) (*types.LabelWithValues, error) {
+	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceView)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to acquire access to repo: %w", err)
+		return nil, fmt.Errorf("failed to acquire access to space: %w", err)
 	}
 
-	values, count, err := c.labelSvc.ListValues(ctx, nil, &repo.ID, key, filter)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to list repo label values: %w", err)
+	var labelWithValues *types.LabelWithValues
+	if includeValues {
+		labelWithValues, err = c.labelSvc.FindWithValues(ctx, &space.ID, nil, key)
+		if err != nil {
+			return nil, fmt.Errorf("failed to find space label with values: %w", err)
+		}
+	} else {
+		label, err := c.labelSvc.Find(ctx, &space.ID, nil, key)
+		if err != nil {
+			return nil, fmt.Errorf("failed to find space label: %w", err)
+		}
+		labelWithValues = &types.LabelWithValues{
+			Label: *label,
+		}
 	}
 
-	return values, count, nil
+	return labelWithValues, nil
 }
