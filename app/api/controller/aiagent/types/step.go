@@ -14,14 +14,6 @@
 
 package types
 
-import (
-	"fmt"
-	"strings"
-
-	"github.com/harness/gitness/app/api/controller/aiagent/types/enum"
-	"github.com/harness/gitness/app/api/usererror"
-)
-
 type PipelineStepData struct {
 	Yaml string `json:"yaml_step"`
 }
@@ -50,49 +42,14 @@ type UpdatePipelineStepOutput struct {
 	Data  PipelineStepData `json:"data"`
 }
 
-func (in *GeneratePipelineStepInput) Sanitize() error {
-	for _, c := range in.Conversation {
-		if c.Role == "" {
-			return usererror.BadRequest("role must be provided")
-		}
-
-		sanitizedRole, valid := c.Role.Sanitize()
-		if !valid {
-			rolesStr := toString(enum.GetAllRoles)
-			return usererror.BadRequestf(
-				"invalid type given for Role: %s, allowed values are '%s'", c.Role, rolesStr)
-		}
-		c.Role = sanitizedRole
-
-		if c.Message.Type == "" && c.Message.Data == "" {
-			continue
-		}
-
-		if c.Message.Type == "" {
-			return usererror.BadRequestf("message type must be provided")
-		}
-
-		sanitizedType, valid := c.Message.Type.Sanitize()
-		if !valid {
-			messageTypeStr := toString(enum.GetAllMessageTypes)
-			return usererror.BadRequestf(
-				"invalid type given for message type: %s, allowed values are %s", c.Message.Type, messageTypeStr)
-		}
-		c.Message.Type = sanitizedType
-
-		if c.Message.Data == "" {
-			return usererror.BadRequest("message data must be provided")
-		}
-	}
-
-	return nil
+func (in *GeneratePipelineStepInput) GetConversation() []Conversation {
+	return in.Conversation
 }
 
-func toString[T any](getAll func() ([]T, T)) string {
-	values, _ := getAll()
-	strValues := make([]string, len(values))
-	for i, value := range values {
-		strValues[i] = fmt.Sprintf("%v", value)
-	}
-	return strings.Join(strValues, ", ")
+func (in *GeneratePipelineStepInput) GetPrompt() string {
+	return in.Prompt
+}
+
+func (in *GeneratePipelineStepInput) GetValidationPrompt() string {
+	return "Create a step-yaml with the following query: " + in.GetPrompt()
 }

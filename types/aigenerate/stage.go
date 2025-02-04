@@ -14,9 +14,14 @@
 
 package types
 
+import (
+	"github.com/harness/gitness/app/api/controller/aiagent/types"
+)
+
 type PipelineStageGenerateRequest struct {
-	Prompt  string
-	RepoRef string
+	Prompt       string
+	Metadata     map[string]string    `json:"metadata"`
+	Conversation []types.Conversation `json:"conversation"`
 }
 
 type PipelineStageGenerateResponse struct {
@@ -24,9 +29,10 @@ type PipelineStageGenerateResponse struct {
 }
 
 type PipelineStageUpdateRequest struct {
-	Prompt  string
-	RepoRef string
-	Stage   string
+	Prompt       string
+	Stage        string
+	Metadata     map[string]string    `json:"metadata"`
+	Conversation []types.Conversation `json:"conversation"`
 }
 
 type PipelineStageUpdateResponse struct {

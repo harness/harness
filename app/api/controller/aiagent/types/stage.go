@@ -15,8 +15,9 @@
 package types
 
 type GeneratePipelineStageInput struct {
-	Prompt  string `json:"prompt"`
-	RepoRef string `json:"repo_ref"`
+	Prompt       string            `json:"prompt"`
+	Metadata     map[string]string `json:"metadata"`
+	Conversation []Conversation    `json:"conversation"`
 }
 
 type PipelineStageData struct {
@@ -26,4 +27,16 @@ type PipelineStageData struct {
 type GeneratePipelineStageOutput struct {
 	Error string            `json:"error"`
 	Data  PipelineStageData `json:"data"`
+}
+
+func (in *GeneratePipelineStageInput) GetConversation() []Conversation {
+	return in.Conversation
+}
+
+func (in *GeneratePipelineStageInput) GetPrompt() string {
+	return in.Prompt
+}
+
+func (in *GeneratePipelineStageInput) GetValidationPrompt() string {
+	return "Create a stage-yaml with the following query: " + in.GetPrompt()
 }
