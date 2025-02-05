@@ -22,7 +22,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/harness/gitness/app/services/system"
+	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/job"
 	store2 "github.com/harness/gitness/registry/app/store"
@@ -51,10 +51,12 @@ type metricData struct {
 }
 
 type Collector struct {
-	hostname            string
-	enabled             bool
-	endpoint            string
-	token               string
+	hostname  string
+	enabled   bool
+	endpoint  string
+	token     string
+	installID string
+
 	userStore           store.PrincipalStore
 	repoStore           store.RepoStore
 	pipelineStore       store.PipelineStore
@@ -63,8 +65,7 @@ type Collector struct {
 	gitspaceConfigStore store.GitspaceConfigStore
 	registryStore       store2.RegistryRepository
 	artifactStore       store2.ArtifactRepository
-	system              *system.Service
-	systemSettings      *system.Settings
+	settings            *settings.Service
 }
 
 func (c *Collector) Register(ctx context.Context) error {
@@ -72,22 +73,17 @@ func (c *Collector) Register(ctx context.Context) error {
 		return nil
 	}
 
-	settings, err := c.system.Find(ctx)
+	ok, err := c.settings.SystemGet(ctx, settings.KeyInstallID, &c.installID)
 	if err != nil {
-		return fmt.Errorf("failed to find system settings: %w", err)
+		return fmt.Errorf("failed to find install id: %w", err)
 	}
-
-	if settings.InstallID == nil || *settings.InstallID == "" {
-		id := uuid.New().String()
-		settings = &system.Settings{
-			InstallID: &id,
-		}
-		settings, err = c.system.Update(ctx, settings)
+	if !ok || c.installID == "" {
+		c.installID = uuid.New().String()
+		err = c.settings.SystemSet(ctx, settings.KeyInstallID, c.installID)
 		if err != nil {
 			return fmt.Errorf("failed to update system settings: %w", err)
 		}
 	}
-	c.systemSettings = settings
 
 	err = c.scheduler.AddRecurring(ctx, jobType, jobType, "0 0 * * *", time.Minute)
 	if err != nil {
@@ -156,7 +152,7 @@ func (c *Collector) Handle(ctx context.Context, _ string, _ job.ProgressReporter
 
 	data := metricData{
 		Hostname:       c.hostname,
-		InstallID:      *c.systemSettings.InstallID,
+		InstallID:      c.installID,
 		Installer:      users[0].Email,
 		Installed:      time.UnixMilli(users[0].Created).Format("2006-01-02 15:04:05"),
 		Version:        version.Version.String(),

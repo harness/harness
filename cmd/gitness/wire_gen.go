@@ -99,7 +99,6 @@ import (
 	"github.com/harness/gitness/app/services/rules"
 	secret3 "github.com/harness/gitness/app/services/secret"
 	"github.com/harness/gitness/app/services/settings"
-	system2 "github.com/harness/gitness/app/services/system"
 	trigger2 "github.com/harness/gitness/app/services/trigger"
 	"github.com/harness/gitness/app/services/usage"
 	"github.com/harness/gitness/app/services/usergroup"
@@ -518,8 +517,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	systemService := system2.ProvideService(settingsService)
-	collector, err := metric.ProvideCollector(config, principalStore, repoStore, pipelineStore, executionStore, jobScheduler, executor, gitspaceConfigStore, systemService, registryRepository, artifactRepository)
+	collector, err := metric.ProvideCollector(config, principalStore, repoStore, pipelineStore, executionStore, jobScheduler, executor, gitspaceConfigStore, settingsService, registryRepository, artifactRepository)
 	if err != nil {
 		return nil, err
 	}

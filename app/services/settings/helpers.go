@@ -60,3 +60,43 @@ func RepoGetRequired[T any](
 
 	return out, nil
 }
+
+// SystemGet is a helper method for getting a setting of a specific type for the system.
+func SystemGet[T any](
+	ctx context.Context,
+	s *Service,
+	key Key,
+	dflt T,
+) (T, error) {
+	var out T
+	ok, err := s.SystemGet(ctx, key, &out)
+	if err != nil {
+		return out, err
+	}
+
+	if !ok {
+		return dflt, nil
+	}
+
+	return out, nil
+}
+
+// SystemGetRequired is a helper method for getting a setting of a specific type for the system.
+// If the setting isn't found, an error is returned.
+func SystemGetRequired[T any](
+	ctx context.Context,
+	s *Service,
+	key Key,
+) (T, error) {
+	var out T
+	ok, err := s.SystemGet(ctx, key, &out)
+	if err != nil {
+		return out, err
+	}
+
+	if !ok {
+		return out, fmt.Errorf("setting %q not found", key)
+	}
+
+	return out, nil
+}
