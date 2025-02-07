@@ -41,7 +41,7 @@ export default function RepositoryIcon(props: RepositoryIconProps): JSX.Element 
     <Icon
       key={packageType}
       name={repositoryType.getIconName()}
-      size={defaultTo(iconProps?.size, 16)}
+      size={defaultTo(iconProps?.size, 24)}
       inverse={iconProps?.inverse}
     />
   )

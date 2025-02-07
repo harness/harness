@@ -56,7 +56,7 @@ export default function GeneralInformationCard(props: GeneralInformationCardProp
           <Text font={{ variation: FontVariation.SMALL_BOLD }}>
             {getString('versionDetails.overview.generalInformation.packageType')}
           </Text>
-          <Text icon="generic-repository-type" iconProps={{ size: 16 }} font={{ variation: FontVariation.SMALL }}>
+          <Text icon="generic-repository-type" iconProps={{ size: 20 }} font={{ variation: FontVariation.SMALL }}>
             {getString('packageTypes.genericPackage')}
           </Text>
           <LabelValueContent

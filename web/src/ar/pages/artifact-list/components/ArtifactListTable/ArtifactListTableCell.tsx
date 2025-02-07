@@ -59,7 +59,7 @@ export const ArtifactNameCell: Renderer<{
   return (
     <Layout.Vertical>
       <TableCells.LinkCell
-        prefix={<RepositoryIcon packageType={original.packageType as RepositoryPackageType} iconProps={{ size: 24 }} />}
+        prefix={<RepositoryIcon packageType={original.packageType as RepositoryPackageType} />}
         linkTo={routes.toARRedirect({
           packageType: packageType as RepositoryPackageType,
           registryId: registryIdentifier,

@@ -54,7 +54,7 @@ export const RegistryArtifactNameCell: Renderer<{
   const value = original.name
   return (
     <TableCells.LinkCell
-      prefix={<RepositoryIcon packageType={original.packageType as RepositoryPackageType} iconProps={{ size: 24 }} />}
+      prefix={<RepositoryIcon packageType={original.packageType as RepositoryPackageType} />}
       linkTo={routes.toARArtifactDetails({
         repositoryIdentifier: original.registryIdentifier,
         artifactIdentifier: value

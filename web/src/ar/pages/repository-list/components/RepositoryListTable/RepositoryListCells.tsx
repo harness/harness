@@ -45,7 +45,7 @@ export const RepositoryNameCell: CellType = ({ value, row }) => {
   const { labels, description, packageType } = original
   return (
     <Layout.Horizontal className={css.nameCellContainer} spacing="small">
-      <RepositoryIcon packageType={packageType as RepositoryPackageType} iconProps={{ size: 20 }} />
+      <RepositoryIcon packageType={packageType as RepositoryPackageType} />
       <Text lineClamp={1} color={Color.GREY_900} font={{ size: 'small' }}>
         {value}
       </Text>

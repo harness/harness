@@ -61,7 +61,7 @@ export default function SetupClientContent(props: SetupClientContentProps): JSX.
       {responseData && (
         <Layout.Vertical>
           <Layout.Horizontal data-testid="setup-client-header" className={css.titleContainer} spacing="medium">
-            <RepositoryIcon packageType={packageType as RepositoryPackageType} iconProps={{ size: 28 }} />
+            <RepositoryIcon packageType={packageType as RepositoryPackageType} iconProps={{ size: 40 }} />
             <Text font={{ variation: FontVariation.H3 }}>{responseData.mainHeader}</Text>
           </Layout.Horizontal>
           <Layout.Vertical data-testid="setup-client-body" className={css.contentContainer} spacing="medium">

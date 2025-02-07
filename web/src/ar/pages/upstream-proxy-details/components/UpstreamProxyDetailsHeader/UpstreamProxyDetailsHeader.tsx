@@ -35,7 +35,7 @@ export default function UpstreamProxyDetailsHeader(props: UpstreamProxyDetailsHe
 
   return (
     <Page.Header
-      title={<UpstreamProxyDetailsHeaderContent data={data} iconSize={40} />}
+      title={<UpstreamProxyDetailsHeaderContent data={data} />}
       className={classNames(css.header)}
       size="xlarge"
       breadcrumbs={

@@ -34,7 +34,7 @@ interface GenericVersionHeaderProps {
 }
 
 export default function GenericVersionHeader(props: GenericVersionHeaderProps): JSX.Element {
-  const { iconSize = 30, data } = props
+  const { iconSize = 40, data } = props
   const { imageName, version, isLatestVersion = false, packageType } = data
   const pathParams = useDecodedParams<VersionDetailsPathParams>()
   const { getString } = useStrings()

@@ -40,7 +40,7 @@ export const DockerVersionNameCell: CellType = ({ value, row }) => {
   const { getString } = useStrings()
   return (
     <Layout.Horizontal className={css.nameCellContainer} spacing="small">
-      <Icon name="store-artifact-bundle" size={18} />
+      <Icon name="store-artifact-bundle" size={24} />
       <TableCells.TextCell value={value} />
       {original.islatestVersion && <Tag isVersionTag>{getString('tags.latest')}</Tag>}
     </Layout.Horizontal>

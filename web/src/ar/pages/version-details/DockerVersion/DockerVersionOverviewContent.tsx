@@ -97,7 +97,7 @@ export default function DockerVersionOverviewContent(): JSX.Element {
                 <Text font={{ variation: FontVariation.SMALL_BOLD }}>
                   {getString('versionDetails.overview.generalInformation.packageType')}
                 </Text>
-                <Text icon="docker-step" iconProps={{ size: 16 }} font={{ variation: FontVariation.SMALL }}>
+                <Text icon="docker-step" iconProps={{ size: 20 }} font={{ variation: FontVariation.SMALL }}>
                   {getString('packageTypes.dockerPackage')}
                 </Text>
                 <LabelValueContent

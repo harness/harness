@@ -38,7 +38,7 @@ export default function RepositoryDetailsHeader(props: RepositoryDetailsHeaderPr
 
   return (
     <Page.Header
-      title={<RepositoryDetailsHeaderContent data={data} iconSize={40} />}
+      title={<RepositoryDetailsHeaderContent data={data} />}
       className={cx(css.header)}
       size="xlarge"
       breadcrumbs={

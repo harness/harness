@@ -37,7 +37,7 @@ interface UpstreamProxyDetailsHeaderContentProps {
 }
 
 export default function UpstreamProxyDetailsHeaderContent(props: UpstreamProxyDetailsHeaderContentProps): JSX.Element {
-  const { data, iconSize = 18 } = props
+  const { data, iconSize = 40 } = props
   const { identifier, modifiedAt, packageType } = data
   const { getString } = useStrings()
   return (

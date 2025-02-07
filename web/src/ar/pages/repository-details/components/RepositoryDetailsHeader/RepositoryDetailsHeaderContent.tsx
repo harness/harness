@@ -40,7 +40,7 @@ interface RepositoryDetailsHeaderContentProps {
 }
 
 export default function RepositoryDetailsHeaderContent(props: RepositoryDetailsHeaderContentProps): JSX.Element {
-  const { data, iconSize = 18 } = props
+  const { data, iconSize = 40 } = props
   const { identifier, labels, description, modifiedAt, packageType } = data || {}
   const { getString } = useStrings()
   const [showSetupClientModal] = useSetupClientModal({
@@ -87,7 +87,7 @@ export default function RepositoryDetailsHeaderContent(props: RepositoryDetailsH
         <Expander />
         <Layout.Horizontal>
           <Button
-            variation={ButtonVariation.PRIMARY}
+            variation={ButtonVariation.SECONDARY}
             text={getString('actions.setupClient')}
             onClick={() => {
               showSetupClientModal()

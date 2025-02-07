@@ -55,7 +55,7 @@ export default function MavnGeneralInformationCard(props: MavnGeneralInformation
           <Text font={{ variation: FontVariation.SMALL_BOLD }}>
             {getString('versionDetails.overview.generalInformation.packageType')}
           </Text>
-          <Text icon="generic-repository-type" iconProps={{ size: 16 }} font={{ variation: FontVariation.SMALL }}>
+          <Text icon="generic-repository-type" iconProps={{ size: 20 }} font={{ variation: FontVariation.SMALL }}>
             {getString('packageTypes.mavenPackage')}
           </Text>
           <LabelValueContent label={getString('versionDetails.overview.generalInformation.size')} value={data.size} />
