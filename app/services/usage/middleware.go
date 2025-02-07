@@ -23,7 +23,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func Middleware(intf Sender, isStorage bool) func(http.Handler) http.Handler {
+func Middleware(intf Sender, trackUpload bool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ref, err := request.GetRepoRefFromPath(r)
@@ -38,22 +38,30 @@ func Middleware(intf Sender, isStorage bool) func(http.Handler) http.Handler {
 				next.ServeHTTP(w, r)
 				return
 			}
-			writer := newWriter(
-				r.Context(),
-				w,
-				rootSpace,
-				intf,
-				isStorage,
-			)
-			reader := newReader(
-				r.Context(),
-				r.Body,
-				rootSpace,
-				intf,
-				isStorage,
-			)
-			r.Body = reader
+
+			writer := newWriter(w)
+			reader := newReader(r.Body)
+
+			if trackUpload {
+				r.Body = reader
+			}
+
 			next.ServeHTTP(writer, r)
+
+			// send usage metrics
+			m := Metric{
+				SpaceRef: rootSpace,
+				Bandwidth: Bandwidth{
+					Out: writer.n,
+					In:  reader.n,
+				},
+			}
+
+			err = intf.Send(r.Context(), m)
+			if err != nil {
+				log.Ctx(r.Context()).Warn().Err(err).Msg("unable to send usage metric")
+				return
+			}
 		})
 	}
 }

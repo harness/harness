@@ -33,15 +33,15 @@ func TestMiddleware(t *testing.T) {
 	var m Metric
 	mock := &mockInterface{
 		SendFunc: func(_ context.Context, payload Metric) error {
-			m.Bandwidth += payload.Bandwidth
-			m.Storage += payload.Storage
+			m.Out += payload.Out
+			m.In += payload.In
 			return nil
 		},
 	}
 
 	r := chi.NewRouter()
 	r.Route(fmt.Sprintf("/testing/{%s}", request.PathParamRepoRef), func(r chi.Router) {
-		r.Use(Middleware(mock, false))
+		r.Use(Middleware(mock, true))
 		r.Post("/", func(w http.ResponseWriter, r *http.Request) {
 			// read from body
 			_, _ = io.Copy(io.Discard, r.Body)
@@ -57,8 +57,8 @@ func TestMiddleware(t *testing.T) {
 
 	_, _ = testRequest(t, ts, http.MethodPost, "/testing/"+spaceRef, bytes.NewReader(body))
 
-	// here we calculate upload/download so it is double size expected
-	require.Equal(t, int64(sampleLength*2), m.Bandwidth)
+	require.Equal(t, int64(sampleLength), m.Out)
+	require.Equal(t, int64(sampleLength), m.In)
 }
 
 func testRequest(t *testing.T, ts *httptest.Server, method, path string, body io.Reader) (*http.Response, string) {

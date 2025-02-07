@@ -15,53 +15,24 @@
 package usage
 
 import (
-	"context"
 	"io"
 	"net/http"
 )
 
 type writeCounter struct {
-	ctx       context.Context
-	w         http.ResponseWriter
-	spaceRef  string
-	intf      Sender
-	isStorage bool
+	w http.ResponseWriter
+	n int64
 }
 
-func newWriter(
-	ctx context.Context,
-	w http.ResponseWriter,
-	spaceRef string,
-	intf Sender,
-	isStorage bool,
-) *writeCounter {
+func newWriter(w http.ResponseWriter) *writeCounter {
 	return &writeCounter{
-		ctx:       ctx,
-		w:         w,
-		spaceRef:  spaceRef,
-		intf:      intf,
-		isStorage: isStorage,
+		w: w,
 	}
 }
 
 func (c *writeCounter) Write(data []byte) (n int, err error) {
 	n, err = c.w.Write(data)
-
-	m := Metric{
-		SpaceRef: c.spaceRef,
-		Size: Size{
-			Bandwidth: int64(n),
-		},
-	}
-	if c.isStorage {
-		m.Storage = int64(n)
-	}
-
-	sendErr := c.intf.Send(c.ctx, m)
-	if sendErr != nil {
-		return n, sendErr
-	}
-
+	c.n += int64(n)
 	return n, err
 }
 
@@ -74,47 +45,19 @@ func (c *writeCounter) WriteHeader(statusCode int) {
 }
 
 type readCounter struct {
-	ctx       context.Context
-	r         io.ReadCloser
-	spaceRef  string
-	intf      Sender
-	isStorage bool
+	n int64
+	r io.ReadCloser
 }
 
-func newReader(
-	ctx context.Context,
-	r io.ReadCloser,
-	spaceRef string,
-	intf Sender,
-	isStorage bool,
-) *readCounter {
+func newReader(r io.ReadCloser) *readCounter {
 	return &readCounter{
-		ctx:       ctx,
-		r:         r,
-		spaceRef:  spaceRef,
-		intf:      intf,
-		isStorage: isStorage,
+		r: r,
 	}
 }
 
 func (c *readCounter) Read(p []byte) (int, error) {
 	n, err := c.r.Read(p)
-
-	m := Metric{
-		SpaceRef: c.spaceRef,
-		Size: Size{
-			Bandwidth: int64(n),
-		},
-	}
-	if c.isStorage {
-		m.Storage = int64(n)
-	}
-
-	sendErr := c.intf.Send(c.ctx, m)
-	if sendErr != nil {
-		return n, sendErr
-	}
-
+	c.n += int64(n)
 	return n, err
 }
 

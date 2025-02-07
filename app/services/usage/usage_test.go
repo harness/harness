@@ -39,18 +39,18 @@ func TestMediator_basic(t *testing.T) {
 			return []*types.Space{space}, nil
 		},
 	}
-	initialBandwidth := int64(1024)
-	initialStorage := int64(1024)
-	bandwidth := atomic.Int64{}
-	storage := atomic.Int64{}
+
+	out := atomic.Int64{}
+	in := atomic.Int64{}
 	counter := atomic.Int64{}
+
 	usageMock := &MetricsMock{
-		UpsertOptimisticFn: func(_ context.Context, in *types.UsageMetric) error {
-			if in.RootSpaceID != space.ID {
-				return fmt.Errorf("expected root space id to be %d, got %d", space.ID, in.RootSpaceID)
+		UpsertOptimisticFn: func(_ context.Context, metric *types.UsageMetric) error {
+			if metric.RootSpaceID != space.ID {
+				return fmt.Errorf("expected root space id to be %d, got %d", space.ID, metric.RootSpaceID)
 			}
-			bandwidth.Add(in.Bandwidth)
-			storage.Add(in.Storage)
+			out.Add(metric.Bandwidth)
+			in.Add(metric.Storage)
 			counter.Add(1)
 			return nil
 		},
@@ -61,20 +61,12 @@ func TestMediator_basic(t *testing.T) {
 			int64, // endDate
 		) (*types.UsageMetric, error) {
 			return &types.UsageMetric{
-				Bandwidth: bandwidth.Load(),
-				Storage:   storage.Load(),
+				Bandwidth: out.Load(),
+				Storage:   in.Load(),
 			}, nil
 		},
 		ListFn: func(context.Context, int64, int64) ([]types.UsageMetric, error) {
-			bandwidth.Add(initialBandwidth)
-			storage.Add(initialStorage)
-			return []types.UsageMetric{
-				{
-					RootSpaceID: space.ID,
-					Bandwidth:   initialBandwidth,
-					Storage:     initialStorage,
-				},
-			}, nil
+			return []types.UsageMetric{}, nil
 		},
 	}
 
@@ -85,8 +77,7 @@ func TestMediator_basic(t *testing.T) {
 		spaceMock,
 		usageMock,
 		Config{
-			ChunkSize:  1024,
-			MaxWorkers: 10,
+			MaxWorkers: 5,
 		},
 	)
 	wg := sync.WaitGroup{}
@@ -96,9 +87,9 @@ func TestMediator_basic(t *testing.T) {
 			defer wg.Done()
 			_ = mediator.Send(context.Background(), Metric{
 				SpaceRef: space.Identifier,
-				Size: Size{
-					Bandwidth: int64(defaultSize),
-					Storage:   int64(defaultSize),
+				Bandwidth: Bandwidth{
+					Out: int64(defaultSize),
+					In:  int64(defaultSize),
 				},
 			})
 		}()
@@ -107,7 +98,6 @@ func TestMediator_basic(t *testing.T) {
 	wg.Wait()
 	mediator.Wait()
 
-	require.Equal(t, int64(numRoutines*defaultSize/int(mediator.config.ChunkSize)), counter.Load())
-	require.Equal(t, initialBandwidth+int64(numRoutines*defaultSize), bandwidth.Load())
-	require.Equal(t, initialStorage+int64(numRoutines*defaultSize), storage.Load())
+	require.Equal(t, int64(numRoutines*defaultSize), out.Load())
+	require.Equal(t, int64(numRoutines*defaultSize), in.Load())
 }

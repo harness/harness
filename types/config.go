@@ -540,8 +540,8 @@ type Config struct {
 	}
 
 	UsageMetrics struct {
-		ChunkSize  string `envconfig:"GITNESS_USAGE_METRICS_CHUNK_SIZE" default:"10MiB"`
-		MaxWorkers int    `envconfig:"GITNESS_USAGE_METRICS_MAX_WORKERS" default:"50"`
+		Enabled    bool `envconfig:"GITNESS_USAGE_METRICS_ENABLED" default:"false"`
+		MaxWorkers int  `envconfig:"GITNESS_USAGE_METRICS_MAX_WORKERS" default:"5"`
 	}
 
 	Development struct {

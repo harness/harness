@@ -14,7 +14,11 @@
 
 package usage
 
-import "context"
+import (
+	"context"
+
+	"github.com/rs/zerolog/log"
+)
 
 type queue struct {
 	ch chan Metric
@@ -22,7 +26,7 @@ type queue struct {
 
 func newQueue() *queue {
 	return &queue{
-		ch: make(chan Metric, 1024),
+		ch: make(chan Metric, 256),
 	}
 }
 
@@ -35,6 +39,7 @@ func (q *queue) Add(ctx context.Context, payload Metric) {
 		// queue is full then wait in new go routine
 		// until one of consumer read from channel,
 		// we dont want to block caller goroutine
+		log.Ctx(ctx).Warn().Msg("usage metric queue full")
 		go func() {
 			q.ch <- payload
 		}()

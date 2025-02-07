@@ -16,36 +16,20 @@ package usage
 
 import (
 	"github.com/harness/gitness/types"
-
-	"github.com/alecthomas/units"
 )
 
 type Config struct {
-	ChunkSize  int64
 	MaxWorkers int
 }
 
 func NewConfig(global *types.Config) Config {
-	var err error
-	var n units.Base2Bytes
 	cfg := Config{
 		MaxWorkers: global.UsageMetrics.MaxWorkers,
 	}
 
 	if cfg.MaxWorkers == 0 {
-		cfg.MaxWorkers = 50
+		cfg.MaxWorkers = 5
 	}
-
-	chunkSize := global.UsageMetrics.ChunkSize
-	if chunkSize == "" {
-		chunkSize = "10MiB"
-	}
-
-	n, err = units.ParseBase2Bytes(chunkSize)
-	if err != nil {
-		panic(err)
-	}
-	cfg.ChunkSize = int64(n)
 
 	return cfg
 }

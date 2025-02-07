@@ -16,6 +16,7 @@ package usage
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -24,14 +25,14 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type Size struct {
-	Bandwidth int64
-	Storage   int64
+type Bandwidth struct {
+	Out int64
+	In  int64
 }
 
 type Metric struct {
 	SpaceRef string
-	Size
+	Bandwidth
 }
 
 type SpaceStore interface {
@@ -54,16 +55,9 @@ type MetricStore interface {
 	) ([]types.UsageMetric, error)
 }
 
-type LicenseFetcher interface {
-	Fetch(ctx context.Context, spaceID int64) (*Size, error)
-}
-
 type Mediator struct {
 	queue *queue
 
-	mux     sync.RWMutex
-	chunks  map[string]Size
-	spaces  map[string]Size
 	workers []*worker
 
 	spaceStore   SpaceStore
@@ -82,15 +76,12 @@ func NewMediator(
 ) *Mediator {
 	m := &Mediator{
 		queue:        newQueue(),
-		chunks:       make(map[string]Size),
-		spaces:       make(map[string]Size),
 		spaceStore:   spaceStore,
 		metricsStore: usageMetricsStore,
 		workers:      make([]*worker, config.MaxWorkers),
 		config:       config,
 	}
 
-	m.initialize(ctx)
 	m.Start(ctx)
 
 	return m
@@ -120,43 +111,20 @@ func (m *Mediator) Wait() {
 	m.wg.Wait()
 }
 
-func (m *Mediator) Size(space string) Size {
-	m.mux.RLock()
-	defer m.mux.RUnlock()
-	return m.spaces[space]
-}
-
-// initialize will load when app is started all metrics for last 30 days.
-func (m *Mediator) initialize(ctx context.Context) {
-	m.mux.Lock()
-	defer m.mux.Unlock()
-
+func (m *Mediator) Size(ctx context.Context, spaceRef string) (Bandwidth, error) {
+	space, err := m.spaceStore.FindByRef(ctx, spaceRef)
+	if err != nil {
+		return Bandwidth{}, fmt.Errorf("could not find space: %w", err)
+	}
 	now := time.Now()
-
-	metrics, err := m.metricsStore.List(ctx, now.Add(-m.days30()).UnixMilli(), now.UnixMilli())
+	metric, err := m.metricsStore.GetMetrics(ctx, space.ID, now.Add(-m.days30()).UnixMilli(), now.UnixMilli())
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("failed to list usage metrics")
-		return
+		return Bandwidth{}, err
 	}
-
-	ids := make([]int64, len(metrics))
-	values := make(map[int64]Size, len(metrics))
-	for i, metric := range metrics {
-		ids[i] = metric.RootSpaceID
-		values[metric.RootSpaceID] = Size{
-			Bandwidth: metric.Bandwidth,
-			Storage:   metric.Storage,
-		}
-	}
-
-	spaces, err := m.spaceStore.FindByIDs(ctx, ids...)
-	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("failed to find spaces by id")
-	}
-
-	for _, space := range spaces {
-		m.spaces[space.Identifier] = values[space.ID]
-	}
+	return Bandwidth{
+		Out: metric.Bandwidth,
+		In:  metric.Storage,
+	}, nil
 }
 
 func (m *Mediator) days30() time.Duration {
@@ -166,21 +134,6 @@ func (m *Mediator) days30() time.Duration {
 func (m *Mediator) process(ctx context.Context, payload *Metric) {
 	defer m.wg.Done()
 
-	m.mux.Lock()
-	defer m.mux.Unlock()
-
-	size := m.chunks[payload.SpaceRef]
-	m.chunks[payload.SpaceRef] = Size{
-		Bandwidth: size.Bandwidth + payload.Size.Bandwidth,
-		Storage:   size.Storage + payload.Size.Storage,
-	}
-
-	newSize := m.chunks[payload.SpaceRef]
-
-	if newSize.Bandwidth < m.config.ChunkSize && newSize.Storage < m.config.ChunkSize {
-		return
-	}
-
 	space, err := m.spaceStore.FindByRef(ctx, payload.SpaceRef)
 	if err != nil {
 		log.Ctx(ctx).Err(err).Msg("failed to find space")
@@ -189,28 +142,10 @@ func (m *Mediator) process(ctx context.Context, payload *Metric) {
 
 	if err = m.metricsStore.UpsertOptimistic(ctx, &types.UsageMetric{
 		RootSpaceID: space.ID,
-		Bandwidth:   newSize.Bandwidth,
-		Storage:     newSize.Storage,
+		Bandwidth:   payload.Out,
+		Storage:     payload.In,
 	}); err != nil {
 		log.Ctx(ctx).Err(err).Msg("failed to upsert usage metrics")
-	}
-
-	m.chunks[payload.SpaceRef] = Size{
-		Bandwidth: 0,
-		Storage:   0,
-	}
-
-	now := time.Now()
-
-	metric, err := m.metricsStore.GetMetrics(ctx, space.ID, now.Add(-m.days30()).UnixMilli(), now.UnixMilli())
-	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("failed to get usage metrics")
-		return
-	}
-
-	m.spaces[space.Identifier] = Size{
-		Bandwidth: metric.Bandwidth,
-		Storage:   metric.Storage,
 	}
 }
 
@@ -252,4 +187,13 @@ func (w *worker) start(ctx context.Context, fn func(context.Context, *Metric)) {
 func (w *worker) stop() {
 	defer close(w.stopCh)
 	w.stopCh <- struct{}{}
+}
+
+type Noop struct{}
+
+func (n *Noop) Send(
+	context.Context,
+	Metric,
+) error {
+	return nil
 }

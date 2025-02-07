@@ -33,6 +33,9 @@ func ProvideMediator(
 	spaceStore store.SpaceStore,
 	metricsStore store.UsageMetricStore,
 ) Sender {
+	if !config.UsageMetrics.Enabled {
+		return &Noop{}
+	}
 	return NewMediator(
 		ctx,
 		spaceStore,

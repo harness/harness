@@ -16,7 +16,6 @@ package usage
 
 import (
 	"bytes"
-	"context"
 	"io"
 	"net/http/httptest"
 	"testing"
@@ -26,24 +25,10 @@ import (
 
 func Test_writeCounter_Write(t *testing.T) {
 	size := 1 << 16
-	var m Metric
-	mock := &mockInterface{
-		SendFunc: func(_ context.Context, payload Metric) error {
-			m.Bandwidth += payload.Bandwidth
-			m.Storage += payload.Storage
-			return nil
-		},
-	}
 
 	// Create a buffer to hold the payload.
 	buffer := httptest.NewRecorder()
-	writer := newWriter(
-		context.Background(),
-		buffer,
-		spaceRef,
-		mock,
-		false,
-	)
+	writer := newWriter(buffer)
 
 	expected := &bytes.Buffer{}
 	for i := 0; i < size; i += sampleLength {
@@ -57,30 +42,15 @@ func Test_writeCounter_Write(t *testing.T) {
 		expected.WriteString(sampleText)
 	}
 
-	require.Equal(t, int64(size), m.Bandwidth, "expected %d, got %d", size, m.Bandwidth)
-	require.Equal(t, int64(0), m.Storage, "expected %d, got %d", size, m.Storage)
+	require.Equal(t, int64(size), writer.n, "expected %d, got %d", size, writer.n)
 	require.Equal(t, expected.Bytes(), buffer.Body.Bytes())
 }
 
 func Test_readCounter_Read(t *testing.T) {
 	size := 1 << 16
-	var m Metric
-	mock := &mockInterface{
-		SendFunc: func(_ context.Context, payload Metric) error {
-			m.Bandwidth += payload.Bandwidth
-			m.Storage += payload.Storage
-			return nil
-		},
-	}
 
 	buffer := &bytes.Buffer{}
-	reader := newReader(
-		context.Background(),
-		io.NopCloser(buffer),
-		spaceRef,
-		mock,
-		true,
-	)
+	reader := newReader(io.NopCloser(buffer))
 
 	for i := 0; i < size; i += sampleLength {
 		if size-i < sampleLength {
@@ -97,7 +67,6 @@ func Test_readCounter_Read(t *testing.T) {
 	_, err := io.Copy(got, reader)
 	require.NoError(t, err)
 
-	require.Equal(t, int64(size), m.Bandwidth, "expected %d, got %d", size, m.Bandwidth)
-	require.Equal(t, int64(size), m.Storage, "expected %d, got %d", size, m.Storage)
+	require.Equal(t, int64(size), reader.n, "expected %d, got %d", size, reader.n)
 	require.Equal(t, expected, got.Bytes())
 }
