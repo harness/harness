@@ -427,7 +427,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	keywordsearchController := keywordsearch2.ProvideController(authorizer, searcher, repoController, spaceController)
 	infraproviderController := infraprovider3.ProvideController(authorizer, spaceCache, infraproviderService)
 	limiterGitspace := limiter.ProvideGitspaceLimiter()
-	gitspaceController := gitspace2.ProvideController(transactor, authorizer, infraproviderService, spaceCache, gitspaceEventStore, statefulLogger, scmSCM, gitspaceService, limiterGitspace, repoFinder)
+	gitspaceController := gitspace2.ProvideController(transactor, authorizer, infraproviderService, spaceCache, spaceStore, gitspaceEventStore, statefulLogger, scmSCM, gitspaceService, limiterGitspace, repoFinder)
 	rule := migrate.ProvideRuleImporter(ruleStore, transactor, principalStore)
 	migrateWebhook := migrate.ProvideWebhookImporter(webhookConfig, transactor, webhookStore)
 	migrateLabel := migrate.ProvideLabelImporter(transactor, labelStore, labelValueStore, spaceStore)

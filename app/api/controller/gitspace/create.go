@@ -24,6 +24,7 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/services/gitspace"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/store"
@@ -111,7 +112,11 @@ func (c *Controller) Create(
 	var gitspaceConfig *types.GitspaceConfig
 	// assume resource to be in same space if it's not explicitly specified.
 	if in.ResourceSpaceRef == "" {
-		in.ResourceSpaceRef = in.SpaceRef
+		rootSpaceRef, _, err := paths.DisectRoot(in.SpaceRef)
+		if err != nil {
+			return nil, fmt.Errorf("unable to find root space path for %s: %w", in.SpaceRef, err)
+		}
+		in.ResourceSpaceRef = rootSpaceRef
 	}
 	resourceIdentifier := in.ResourceIdentifier
 	resourceSpace, err := c.spaceCache.Get(ctx, in.ResourceSpaceRef)
@@ -127,18 +132,11 @@ func (c *Controller) Create(
 		enum.PermissionInfraProviderAccess); err != nil {
 		return nil, err
 	}
-	err = c.createOrFindInfraProviderResource(ctx, resourceSpace, resourceIdentifier, now)
+	infraProviderResource, err := c.createOrFindInfraProviderResource(ctx, resourceSpace, resourceIdentifier, now)
 	if err != nil {
 		return nil, err
 	}
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
-		infraProviderResource, err := c.infraProviderSvc.FindResourceByIdentifier(
-			ctx,
-			resourceSpace.ID,
-			resourceIdentifier)
-		if err != nil {
-			return fmt.Errorf("could not find infra provider resource : %q %w", resourceIdentifier, err)
-		}
 		codeRepo := types.CodeRepo{
 			URL:              in.CodeRepoURL,
 			Ref:              in.CodeRepoRef,
@@ -183,34 +181,43 @@ func (c *Controller) Create(
 
 func (c *Controller) createOrFindInfraProviderResource(
 	ctx context.Context,
-	parentSpace *types.Space,
+	resourceSpace *types.Space,
 	resourceIdentifier string,
 	now int64,
-) error {
-	_, err := c.infraProviderSvc.FindResourceByIdentifier(
-		ctx,
-		parentSpace.ID,
-		resourceIdentifier)
-	if err != nil &&
-		errors.Is(err, store.ErrResourceNotFound) &&
-		resourceIdentifier == defaultResourceIdentifier {
-		err = c.autoCreateDefaultResource(ctx, parentSpace, now)
+) (*types.InfraProviderResource, error) {
+	var resource *types.InfraProviderResource
+	var err error
+
+	resource, err = c.infraProviderSvc.FindResourceByIdentifier(ctx, resourceSpace.ID, resourceIdentifier)
+	if err != nil && errors.Is(err, store.ErrResourceNotFound) && resourceIdentifier == defaultResourceIdentifier {
+		resource, err = c.autoCreateDefaultResource(ctx, resourceSpace, now)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	} else if err != nil {
-		return fmt.Errorf("could not find infra provider resource : %q %w", resourceIdentifier, err)
+		return nil, fmt.Errorf("could not find infra provider resource : %q %w", resourceIdentifier, err)
 	}
-	return err
+
+	return resource, err
 }
 
-func (c *Controller) autoCreateDefaultResource(ctx context.Context, parentSpace *types.Space, now int64) error {
+func (c *Controller) autoCreateDefaultResource(
+	ctx context.Context,
+	currentSpace *types.Space,
+	now int64,
+) (*types.InfraProviderResource, error) {
+	rootSpace, err := c.spaceStore.GetRootSpace(ctx, currentSpace.ID)
+	if err != nil {
+		return nil, fmt.Errorf("could not get root space for space %s while autocreating default docker "+
+			"resource: %w", currentSpace.Path, err)
+	}
+
 	defaultDockerConfig := &types.InfraProviderConfig{
 		Identifier: defaultResourceIdentifier,
 		Name:       "default docker infrastructure",
 		Type:       enum.InfraProviderTypeDocker,
-		SpaceID:    parentSpace.ID,
-		SpacePath:  parentSpace.Path,
+		SpaceID:    rootSpace.ID,
+		SpacePath:  rootSpace.Path,
 		Created:    now,
 		Updated:    now,
 	}
@@ -223,17 +230,24 @@ func (c *Controller) autoCreateDefaultResource(ctx context.Context, parentSpace 
 		Memory:                        wrapString("any"),
 		Disk:                          wrapString("any"),
 		Network:                       wrapString("standard"),
-		SpaceID:                       parentSpace.ID,
-		SpacePath:                     parentSpace.Path,
+		SpaceID:                       rootSpace.ID,
+		SpacePath:                     rootSpace.Path,
 		Created:                       now,
 		Updated:                       now,
 	}
 	defaultDockerConfig.Resources = []types.InfraProviderResource{defaultResource}
-	err := c.infraProviderSvc.CreateInfraProvider(ctx, defaultDockerConfig)
+
+	err = c.infraProviderSvc.CreateInfraProvider(ctx, defaultDockerConfig)
 	if err != nil {
-		return fmt.Errorf("could not auto-create the infra provider: %w", err)
+		return nil, fmt.Errorf("could not auto-create the infra provider: %w", err)
 	}
-	return nil
+
+	resource, err := c.infraProviderSvc.FindResourceByIdentifier(ctx, rootSpace.ID, defaultResourceIdentifier)
+	if err != nil {
+		return nil, fmt.Errorf("could not find infra provider resource : %q %w", defaultResourceIdentifier, err)
+	}
+
+	return resource, nil
 }
 
 func wrapString(str string) *string {
