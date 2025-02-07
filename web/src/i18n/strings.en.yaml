@@ -1080,6 +1080,7 @@ approved: Approved
 comingSoon: Coming soon...
 enterANumber: Enter a number
 selectUsers: Select Users
+selectUsersAndServiceAcc: Select Users and Service Accounts
 selectStatuses: Select Statuses
 featureRoadmap: Feature Roadmap
 pipelineConfig:

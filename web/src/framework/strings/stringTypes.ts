@@ -1032,6 +1032,7 @@ export interface StringsMap {
   selectStatuses: string
   selectToViewMore: string
   selectUsers: string
+  selectUsersAndServiceAcc: string
   'semanticSearch.sampleQueries': string
   serverResponse: string
   setAsAdmin: string

@@ -83,6 +83,7 @@ const BranchProtectionForm = (props: {
   const [searchTerm, setSearchTerm] = useState('')
   const [searchStatusTerm, setSearchStatusTerm] = useState('')
   const { scopeRef } = currentRule?.scope ? getScopeData(space, currentRule?.scope, standalone) : { scopeRef: space }
+  const [accountIdentifier, orgIdentifier, projectIdentifier] = scopeRef?.split('/') || []
 
   const getUpdateRulePath = () =>
     currentRule?.scope === 0 && repoMetadata
@@ -111,14 +112,21 @@ const BranchProtectionForm = (props: {
     base: getConfig('code/api/v1'),
     path: getUpdateRulePath()
   })
-  const { data: users } = useGet<TypesPrincipalInfo[]>({
+
+  const { data: principals } = useGet<TypesPrincipalInfo[]>({
     path: `/api/v1/principals`,
     queryParams: {
       query: searchTerm,
-      type: 'user',
-      accountIdentifier: routingId,
-      debounce: 500
-    }
+      type: standalone ? 'user' : ['user', 'serviceaccount'],
+      ...(!standalone && { inherited: true }),
+      accountIdentifier: accountIdentifier || routingId,
+      orgIdentifier,
+      projectIdentifier
+    },
+    queryParamStringifyOptions: {
+      arrayFormat: 'repeat'
+    },
+    debounce: 500
   })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const transformDataToArray = (data: any) => {
@@ -156,13 +164,13 @@ const BranchProtectionForm = (props: {
       })) || [],
     [statuses]
   )
-  const userOptions: SelectOption[] = useMemo(
+  const principalOptions: SelectOption[] = useMemo(
     () =>
-      users?.map(user => ({
-        value: `${user.id?.toString() as string} ${user.uid}`,
-        label: (user.display_name || user.email) as string
+      principals?.map(principal => ({
+        value: `${principal.id?.toString() as string} ${principal.uid}`,
+        label: `${principal.display_name} (${principal.email})` as string
       })) || [],
-    [users]
+    [principals]
   )
 
   const handleSubmit = async (operation: Promise<OpenapiRule>, successMessage: string, resetForm: () => void) => {
@@ -218,7 +226,9 @@ const BranchProtectionForm = (props: {
       const finalArray = [...includeArr, ...excludeArr]
       const usersArray = transformDataToArray(rule.users)
       const bypassList =
-        userArrayState.length > 0 ? userArrayState : usersArray?.map(user => `${user.id} ${user.display_name}`)
+        userArrayState.length > 0
+          ? userArrayState
+          : usersArray?.map(user => `${user.id} ${user.display_name} (${user.email})`)
 
       return {
         name: rule?.identifier,
@@ -263,7 +273,7 @@ const BranchProtectionForm = (props: {
     }
 
     return rulesFormInitialPayload // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editMode, rule, currentRule, users])
+  }, [editMode, rule, currentRule, principals])
 
   const permPushResult = hooks?.usePermissionTranslate(
     getEditPermissionRequestFromScope(space, currentRule?.scope ?? 0, repoMetadata),
@@ -358,7 +368,7 @@ const BranchProtectionForm = (props: {
         const limitMergeStrats = formik.values.limitMergeStrategies
         const requireStatusChecks = formik.values.requireStatusChecks
 
-        const filteredUserOptions = userOptions.filter(
+        const filteredPrincipalOptions = principalOptions.filter(
           (item: SelectOption) => !bypassList?.includes(item.value as string)
         )
 
@@ -509,11 +519,11 @@ const BranchProtectionForm = (props: {
                 </Text>
                 <FormInput.CheckBox label={getString('branchProtection.allRepoOwners')} name={'allRepoOwners'} />
                 <FormInput.Select
-                  items={filteredUserOptions}
+                  items={filteredPrincipalOptions}
                   onQueryChange={setSearchTerm}
                   className={css.widthContainer}
                   value={{ label: '', value: '' }}
-                  placeholder={getString('selectUsers')}
+                  placeholder={standalone ? getString('selectUsers') : getString('selectUsersAndServiceAcc')}
                   onChange={item => {
                     const id = item.value?.toString().split(' ')[0]
                     const displayName = item.label
