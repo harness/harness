@@ -15,13 +15,13 @@
  */
 
 import React, { useState } from 'react'
-import { DropDown, SelectOption } from '@harnessio/uicore'
+import { FontVariation } from '@harnessio/design-system'
+import { DropDown, SelectOption, Text } from '@harnessio/uicore'
 import { GetAllArtifactVersionsOkResponse, getAllArtifactVersions } from '@harnessio/react-har-service-client'
 
 import { useDecodedParams, useGetSpaceRef } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
-import HeaderTitle from '@ar/components/Header/Title'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 
 import css from './VersionSelector.module.scss'
@@ -83,12 +83,7 @@ export default function VersionSelector(props: VersionSelectorProps): JSX.Elemen
       query={query}
       onQueryChange={setQuery}
       placeholder={getString('artifactList.table.allRepositories')}
-      isLabel
-      getCustomLabel={option => (
-        <HeaderTitle tag="span" className={css.primaryColor}>
-          {option.label}
-        </HeaderTitle>
-      )}
+      getCustomLabel={option => <Text font={{ variation: FontVariation.BODY }}>{option.label}</Text>}
     />
   )
 }

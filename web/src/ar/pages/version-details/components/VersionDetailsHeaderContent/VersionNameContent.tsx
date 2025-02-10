@@ -35,7 +35,7 @@ export default function VersionNameContent(props: VersionNameContentProps): JSX.
 
   return (
     <Layout.Horizontal spacing="small" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
-      <HeaderTitle>{name}:</HeaderTitle>
+      <HeaderTitle>{name}</HeaderTitle>
       <VersionSelector value={version} onChange={onChangeVersion} />
       {isLatestVersion && <Tag isVersionTag>{getString('tags.latestVersion')}</Tag>}
     </Layout.Horizontal>

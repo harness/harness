@@ -16,7 +16,6 @@
 
 import React from 'react'
 import { Layout } from '@harnessio/uicore'
-import { Icon } from '@harnessio/icons'
 
 import Tag from '@ar/components/Tag/Tag'
 import { useStrings } from '@ar/frameworks/strings'
@@ -40,10 +39,9 @@ export default function DockerVersionName(props: DockerVersionNameProps): JSX.El
   const { getString } = useStrings()
 
   return (
-    <Layout.Horizontal spacing="small" className={css.headerWrapper}>
-      <HeaderTitle>{name}:</HeaderTitle>
+    <Layout.Horizontal spacing="medium" className={css.headerWrapper}>
+      <HeaderTitle>{name}</HeaderTitle>
       <VersionSelector value={version} onChange={onChangeVersion} />
-      <Icon name="chevron-right" size={18} />
       <ArchitectureSelector version={version} value={digest} onChange={onChangeDigest} shouldSelectFirstByDefault />
       {isLatestVersion && <Tag isVersionTag>{getString('tags.latestVersion')}</Tag>}
     </Layout.Horizontal>

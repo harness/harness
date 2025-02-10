@@ -16,13 +16,13 @@
 
 import React, { useEffect, useMemo } from 'react'
 import { debounce } from 'lodash-es'
-import { DropDown, SelectOption } from '@harnessio/uicore'
+import { FontVariation } from '@harnessio/design-system'
+import { DropDown, SelectOption, Text } from '@harnessio/uicore'
 import { useGetDockerArtifactManifestsQuery } from '@harnessio/react-har-service-client'
 
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import { useDecodedParams, useGetSpaceRef } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
-import HeaderTitle from '@ar/components/Header/Title'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 
 import css from './ArchitectureSelector.module.scss'
@@ -91,12 +91,7 @@ export default function ArchitectureSelector(props: ArchitectureSelectorProps): 
       addClearBtn={false}
       itemDisabled={item => !item.value}
       placeholder={loading ? getString('loading') : getString('versionDetails.selectDigestPlaceholder')}
-      isLabel
-      getCustomLabel={option => (
-        <HeaderTitle tag="span" className={css.primaryColor}>
-          {option.label}
-        </HeaderTitle>
-      )}
+      getCustomLabel={option => <Text font={{ variation: FontVariation.BODY }}>{option.label}</Text>}
     />
   )
 }
