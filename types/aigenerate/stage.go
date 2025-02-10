@@ -25,7 +25,8 @@ type PipelineStageGenerateRequest struct {
 }
 
 type PipelineStageGenerateResponse struct {
-	YAML string
+	YAML  string
+	Error string
 }
 
 type PipelineStageUpdateRequest struct {

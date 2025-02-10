@@ -27,7 +27,7 @@ type Suggestion struct {
 
 type Conversation struct {
 	Role    enum.Role `json:"role"`
-	Message Message   `json:"message"`
+	Message *Message  `json:"message"`
 }
 
 type Message struct {

@@ -47,7 +47,7 @@ func TestSanitizeConversation(t *testing.T) {
 				conversations: []types.Conversation{
 					{
 						Role: enum.RoleUser,
-						Message: types.Message{
+						Message: &types.Message{
 							Type: enum.TypeText,
 							Data: "data",
 						},
@@ -62,7 +62,7 @@ func TestSanitizeConversation(t *testing.T) {
 				conversations: []types.Conversation{
 					{
 						Role: "",
-						Message: types.Message{
+						Message: &types.Message{
 							Type: enum.TypeText,
 							Data: "data",
 						},
@@ -77,7 +77,7 @@ func TestSanitizeConversation(t *testing.T) {
 				conversations: []types.Conversation{
 					{
 						Role: "invalidRole",
-						Message: types.Message{
+						Message: &types.Message{
 							Type: enum.TypeText,
 							Data: "data",
 						},
@@ -93,7 +93,7 @@ func TestSanitizeConversation(t *testing.T) {
 				conversations: []types.Conversation{
 					{
 						Role: enum.RoleUser,
-						Message: types.Message{
+						Message: &types.Message{
 							Type: "",
 							Data: "data",
 						},
@@ -108,7 +108,7 @@ func TestSanitizeConversation(t *testing.T) {
 				conversations: []types.Conversation{
 					{
 						Role: enum.RoleUser,
-						Message: types.Message{
+						Message: &types.Message{
 							Type: "invalidMessageType",
 							Data: "data",
 						},
@@ -124,7 +124,7 @@ func TestSanitizeConversation(t *testing.T) {
 				conversations: []types.Conversation{
 					{
 						Role: enum.RoleUser,
-						Message: types.Message{
+						Message: &types.Message{
 							Type: enum.TypeText,
 							Data: "",
 						},
