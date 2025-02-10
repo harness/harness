@@ -37,6 +37,7 @@ func (c *Controller) GeneratePipelineStage(
 		return nil, fmt.Errorf("error generating stage: %w", err)
 	}
 	return &controllertypes.GeneratePipelineStageOutput{
+		Error: output.Error,
 		Data: controllertypes.PipelineStageData{
 			StageYaml: output.YAML,
 		},
