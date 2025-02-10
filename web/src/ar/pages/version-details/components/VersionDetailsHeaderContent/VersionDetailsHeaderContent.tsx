@@ -17,15 +17,14 @@
 import React from 'react'
 import { Expander } from '@blueprintjs/core'
 import { useHistory } from 'react-router-dom'
-import { Button, ButtonVariation, Layout } from '@harnessio/uicore'
+import { Layout } from '@harnessio/uicore'
 import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client'
 
-import { useStrings } from '@ar/frameworks/strings'
 import { useDecodedParams, useRoutes } from '@ar/hooks'
 import type { RepositoryPackageType } from '@ar/common/types'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
-import { useSetupClientModal } from '@ar/pages/repository-details/hooks/useSetupClientModal/useSetupClientModal'
+import SetupClientButton from '@ar/components/SetupClientButton/SetupClientButton'
 
 import VersionNameContent from './VersionNameContent'
 
@@ -38,16 +37,8 @@ export default function VersionDetailsHeaderContent(props: VersionDetailsHeaderC
   const { iconSize = 40, data } = props
   const { imageName, version, isLatestVersion = false, packageType } = data
   const pathParams = useDecodedParams<VersionDetailsPathParams>()
-  const { getString } = useStrings()
   const history = useHistory()
   const routes = useRoutes()
-
-  const [showSetupClientModal] = useSetupClientModal({
-    repoKey: pathParams.repositoryIdentifier,
-    artifactKey: pathParams.artifactIdentifier,
-    versionKey: pathParams.versionIdentifier,
-    packageType: packageType as RepositoryPackageType
-  })
 
   const handleChangeVersion = (newVersion: string) => {
     history.push(
@@ -69,13 +60,11 @@ export default function VersionDetailsHeaderContent(props: VersionDetailsHeaderC
         isLatestVersion={isLatestVersion}
       />
       <Expander />
-      <Button
-        variation={ButtonVariation.PRIMARY}
-        text={getString('actions.setupClient')}
-        icon="setting"
-        onClick={() => {
-          showSetupClientModal()
-        }}
+      <SetupClientButton
+        repositoryIdentifier={pathParams.repositoryIdentifier}
+        artifactIdentifier={pathParams.artifactIdentifier}
+        versionIdentifier={pathParams.versionIdentifier}
+        packageType={packageType as RepositoryPackageType}
       />
     </Layout.Horizontal>
   )

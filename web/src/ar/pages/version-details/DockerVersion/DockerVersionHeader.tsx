@@ -17,19 +17,17 @@
 import React from 'react'
 import { Expander } from '@blueprintjs/core'
 import { useHistory } from 'react-router-dom'
-import { Button, ButtonVariation, Layout } from '@harnessio/uicore'
+import { Layout } from '@harnessio/uicore'
 import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client'
 
-import { useStrings } from '@ar/frameworks/strings'
-import { RepositoryPackageType } from '@ar/common/types'
+import type { RepositoryPackageType } from '@ar/common/types'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 import { useDecodedParams, useParentHooks, useRoutes } from '@ar/hooks'
-import { useSetupClientModal } from '@ar/pages/repository-details/hooks/useSetupClientModal/useSetupClientModal'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
+import SetupClientButton from '@ar/components/SetupClientButton/SetupClientButton'
 
 import DockerVersionName from './components/DockerVersionName/DockerVersionName'
 import type { DockerVersionDetailsQueryParams } from './types'
-import css from './DockerVersion.module.scss'
 
 interface DockerVersionHeaderProps {
   data: ArtifactVersionSummary
@@ -43,16 +41,8 @@ export default function DockerVersionHeader(props: DockerVersionHeaderProps): JS
   const { useUpdateQueryParams, useQueryParams } = useParentHooks()
   const { updateQueryParams } = useUpdateQueryParams()
   const { digest } = useQueryParams<DockerVersionDetailsQueryParams>()
-  const { getString } = useStrings()
   const history = useHistory()
   const routes = useRoutes()
-
-  const [showSetupClientModal] = useSetupClientModal({
-    repoKey: pathParams.repositoryIdentifier,
-    artifactKey: pathParams.artifactIdentifier,
-    versionKey: pathParams.versionIdentifier,
-    packageType: RepositoryPackageType.DOCKER
-  })
 
   const handleChangeVersion = (newVersion: string) => {
     history.push(
@@ -82,14 +72,11 @@ export default function DockerVersionHeader(props: DockerVersionHeaderProps): JS
         isLatestVersion={isLatestVersion}
       />
       <Expander />
-      <Button
-        className={css.setupClientBtn}
-        variation={ButtonVariation.PRIMARY}
-        text={getString('actions.setupClient')}
-        icon="setting"
-        onClick={() => {
-          showSetupClientModal()
-        }}
+      <SetupClientButton
+        repositoryIdentifier={pathParams.repositoryIdentifier}
+        artifactIdentifier={pathParams.artifactIdentifier}
+        versionIdentifier={pathParams.versionIdentifier}
+        packageType={packageType as RepositoryPackageType}
       />
     </Layout.Horizontal>
   )

@@ -16,7 +16,7 @@
 
 import React, { useContext } from 'react'
 import { Expander } from '@blueprintjs/core'
-import { Button, ButtonVariation, Layout } from '@harnessio/uicore'
+import { Layout } from '@harnessio/uicore'
 import type { ArtifactSummary } from '@harnessio/react-har-service-client'
 
 import { useDecodedParams } from '@ar/hooks'
@@ -26,7 +26,7 @@ import type { ArtifactDetailsPathParams } from '@ar/routes/types'
 import WeeklyDownloads from '@ar/components/PageTitle/WeeklyDownloads'
 import CreatedAndModifiedAt from '@ar/components/PageTitle/CreatedAndModifiedAt'
 import NameAndDescription from '@ar/components/PageTitle/NameAndDescription'
-import { useSetupClientModal } from '@ar/pages/repository-details/hooks/useSetupClientModal/useSetupClientModal'
+import SetupClientButton from '@ar/components/SetupClientButton/SetupClientButton'
 
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import { ArtifactProviderContext } from '../../context/ArtifactProvider'
@@ -46,12 +46,6 @@ function ArtifactDetailsHeaderContent(props: ArtifactDetailsHeaderContentProps):
   const { repositoryIdentifier, artifactIdentifier } = pathParams
   const { packageType, imageName, modifiedAt, createdAt, downloadsCount } = data as ArtifactSummary
 
-  const [showSetupClientModal] = useSetupClientModal({
-    repoKey: repositoryIdentifier,
-    artifactKey: artifactIdentifier,
-    packageType: packageType as RepositoryPackageType
-  })
-
   return (
     <Layout.Vertical spacing="small" className={css.headerContainer}>
       <Layout.Horizontal spacing="small" className={css.horizontalContainer}>
@@ -70,13 +64,10 @@ function ArtifactDetailsHeaderContent(props: ArtifactDetailsHeaderContentProps):
           flex={{ justifyContent: 'space-between', alignItems: 'flex-end' }}>
           <Layout.Horizontal spacing="large">
             <CreatedAndModifiedAt createdAt={Number(createdAt)} modifiedAt={Number(modifiedAt)} />
-            <Button
-              variation={ButtonVariation.PRIMARY}
-              text={getString('actions.setupClient')}
-              onClick={() => {
-                showSetupClientModal()
-              }}
-              icon="setting"
+            <SetupClientButton
+              repositoryIdentifier={repositoryIdentifier}
+              artifactIdentifier={artifactIdentifier}
+              packageType={packageType as RepositoryPackageType}
             />
           </Layout.Horizontal>
         </Layout.Vertical>

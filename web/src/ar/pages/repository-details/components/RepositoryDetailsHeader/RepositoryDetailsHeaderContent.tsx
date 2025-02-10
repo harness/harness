@@ -17,7 +17,7 @@
 import React from 'react'
 import { defaultTo, isEmpty } from 'lodash-es'
 import { Color } from '@harnessio/design-system'
-import { Button, ButtonVariation, Container, Layout, Text } from '@harnessio/uicore'
+import { Container, Layout, Text } from '@harnessio/uicore'
 import { Expander, Position } from '@blueprintjs/core'
 
 import { useStrings } from '@ar/frameworks/strings'
@@ -26,8 +26,8 @@ import HeaderTitle from '@ar/components/Header/Title'
 import { DEFAULT_DATE_TIME_FORMAT } from '@ar/constants'
 import { getReadableDateTime } from '@ar/common/dateUtils'
 import LabelsPopover from '@ar/components/LabelsPopover/LabelsPopover'
+import SetupClientButton from '@ar/components/SetupClientButton/SetupClientButton'
 import RepositoryLocationBadge from '@ar/components/Badge/RepositoryLocationBadge'
-import { useSetupClientModal } from '@ar/pages/repository-details/hooks/useSetupClientModal/useSetupClientModal'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import RepositoryActionsWidget from '@ar/frameworks/RepositoryStep/RepositoryActionsWidget'
 import type { Repository } from '@ar/pages/repository-details/types'
@@ -43,10 +43,6 @@ export default function RepositoryDetailsHeaderContent(props: RepositoryDetailsH
   const { data, iconSize = 40 } = props
   const { identifier, labels, description, modifiedAt, packageType } = data || {}
   const { getString } = useStrings()
-  const [showSetupClientModal] = useSetupClientModal({
-    repoKey: identifier,
-    packageType: packageType as RepositoryPackageType
-  })
   return (
     <Container>
       <Layout.Horizontal data-testid="registry-header-container" spacing="medium" flex={{ alignItems: 'center' }}>
@@ -86,14 +82,7 @@ export default function RepositoryDetailsHeaderContent(props: RepositoryDetailsH
         </Layout.Vertical>
         <Expander />
         <Layout.Horizontal>
-          <Button
-            variation={ButtonVariation.SECONDARY}
-            text={getString('actions.setupClient')}
-            onClick={() => {
-              showSetupClientModal()
-            }}
-            icon="setting"
-          />
+          <SetupClientButton repositoryIdentifier={identifier} packageType={packageType as RepositoryPackageType} />
           <RepositoryActionsWidget
             type={RepositoryConfigType.VIRTUAL}
             packageType={data.packageType as RepositoryPackageType}
