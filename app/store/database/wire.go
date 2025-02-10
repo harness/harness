@@ -117,8 +117,9 @@ func ProvidePrincipalInfoView(db *sqlx.DB) store.PrincipalInfoView {
 }
 
 // ProvideInfraProviderResourceView provides a principal info store.
-func ProvideInfraProviderResourceView(db *sqlx.DB) store.InfraProviderResourceView {
-	return NewInfraProviderResourceView(db)
+func ProvideInfraProviderResourceView(db *sqlx.DB, spaceStore store.SpaceStore,
+) store.InfraProviderResourceView {
+	return NewInfraProviderResourceView(db, spaceStore)
 }
 
 // ProvideSpacePathStore provides a space path store.

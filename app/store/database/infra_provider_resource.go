@@ -293,14 +293,16 @@ var _ store.InfraProviderResourceView = (*InfraProviderResourceView)(nil)
 
 // NewInfraProviderResourceView returns a new InfraProviderResourceView.
 // It's used by the infraprovider resource cache.
-func NewInfraProviderResourceView(db *sqlx.DB) *InfraProviderResourceView {
+func NewInfraProviderResourceView(db *sqlx.DB, spaceStore store.SpaceStore) *InfraProviderResourceView {
 	return &InfraProviderResourceView{
-		db: db,
+		db:         db,
+		spaceStore: spaceStore,
 	}
 }
 
 type InfraProviderResourceView struct {
-	db *sqlx.DB
+	db         *sqlx.DB
+	spaceStore store.SpaceStore
 }
 
 func (i InfraProviderResourceView) Find(ctx context.Context, id int64) (*types.InfraProviderResource, error) {
@@ -316,9 +318,41 @@ func (i InfraProviderResourceView) Find(ctx context.Context, id int64) (*types.I
 	dst := new(infraProviderResource)
 	db := dbtx.GetAccessor(ctx, i.db)
 	if err := db.GetContext(ctx, dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraprovider resource %d", id)
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraprovider providerResource %d", id)
 	}
-	return mapToInfraProviderResource(ctx, dst)
+	providerResource, err := mapToInfraProviderResource(ctx, dst)
+	if err != nil {
+		return nil, err
+	}
+	providerConfig, err := i.findInfraProviderConfig(ctx, providerResource.InfraProviderConfigID)
+	if err == nil && providerConfig != nil {
+		providerResource.InfraProviderConfigIdentifier = providerConfig.Identifier
+	}
+	resourceSpace, err := i.spaceStore.Find(ctx, providerResource.SpaceID)
+	if err == nil {
+		providerResource.SpacePath = resourceSpace.Path
+	}
+	return providerResource, err
+}
+
+func (i InfraProviderResourceView) findInfraProviderConfig(
+	ctx context.Context,
+	id int64,
+) (*infraProviderConfig, error) {
+	stmt := database.Builder.
+		Select(infraProviderConfigSelectColumns).
+		From(infraProviderConfigTable).
+		Where(infraProviderConfigIDColumn+" = $1", id) //nolint:goconst
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")
+	}
+	dst := new(infraProviderConfig)
+	db := dbtx.GetAccessor(ctx, i.db)
+	if err := db.GetContext(ctx, dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraprovider config %d", id)
+	}
+	return dst, nil
 }
 
 func (i InfraProviderResourceView) FindMany(ctx context.Context, ids []int64) ([]*types.InfraProviderResource, error) {

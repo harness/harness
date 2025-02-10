@@ -288,7 +288,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	infraProviderResourceView := database.ProvideInfraProviderResourceView(db)
+	infraProviderResourceView := database.ProvideInfraProviderResourceView(db, spaceStore)
 	infraProviderResourceCache := cache.ProvideInfraProviderResourceCache(infraProviderResourceView)
 	gitspaceConfigStore := database.ProvideGitspaceConfigStore(db, principalInfoCache, infraProviderResourceCache)
 	gitspaceInstanceStore := database.ProvideGitspaceInstanceStore(db)
