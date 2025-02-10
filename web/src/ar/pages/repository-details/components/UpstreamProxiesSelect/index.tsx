@@ -134,7 +134,7 @@ function UpstreamProxiesSelect(props: UpstreamProxiesSelectProps): JSX.Element {
   }
 
   return (
-    <Container>
+    <Container width="100%">
       <ReorderSelect
         className={className}
         items={items}

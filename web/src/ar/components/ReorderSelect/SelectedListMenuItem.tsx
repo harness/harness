@@ -17,6 +17,7 @@
 import React from 'react'
 import { Expander, Menu } from '@blueprintjs/core'
 import { Layout, Text } from '@harnessio/uicore'
+import { Color } from '@harnessio/design-system'
 import { Icon } from '@harnessio/icons'
 
 import { useStrings } from '@ar/frameworks/strings'
@@ -49,7 +50,9 @@ function SelectedListMenuItem(props: SelectedListMenuItemProps): JSX.Element {
       text={
         <Layout.Horizontal spacing="small" flex={{ justifyContent: 'flex-start', alignItems: 'center' }}>
           {!disabled && <Icon name="drag-handle-vertical" size={12} />}
-          <Text color="black">{label ? label : getString('na')}</Text>
+          <Text lineClamp={1} color={Color.GREY_900}>
+            {label ? label : getString('na')}
+          </Text>
           <Expander />
           {!disabled && (
             <MenuItemAction

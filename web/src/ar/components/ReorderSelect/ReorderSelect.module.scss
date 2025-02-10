@@ -47,7 +47,7 @@
     color: var(--black);
 
     .addBtn {
-      display: block !important;
+      display: inline-flex !important;
     }
   }
 }
@@ -57,5 +57,5 @@
   min-height: 20px !important;
   height: 20px !important;
   display: none !important;
-  min-width: 10px !important;
+  min-width: 50px !important;
 }

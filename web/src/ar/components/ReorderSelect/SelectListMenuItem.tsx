@@ -17,6 +17,7 @@
 import React from 'react'
 import { Menu } from '@blueprintjs/core'
 import { Layout, Text } from '@harnessio/uicore'
+import { Color } from '@harnessio/design-system'
 
 import { useStrings } from '@ar/frameworks/strings'
 import MenuItemAction from './MenuItemAction'
@@ -41,7 +42,9 @@ function SelectListMenuItem(props: SelectListMenuItemProps): JSX.Element {
       disabled={disabled}
       text={
         <Layout.Horizontal flex={{ justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text color="black">{label ? label : getString('na')}</Text>
+          <Text color={Color.GREY_900} lineClamp={1}>
+            {label ? label : getString('na')}
+          </Text>
           {!disabled && <MenuItemAction rightIcon="main-chevron-right" text={getString('add')} />}
         </Layout.Horizontal>
       }
