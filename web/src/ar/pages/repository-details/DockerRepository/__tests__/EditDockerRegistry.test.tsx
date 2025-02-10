@@ -20,7 +20,7 @@ import { fireEvent, getByTestId, getByText, render, waitFor } from '@testing-lib
 import { useGetClientSetupDetailsQuery, useGetRegistryQuery } from '@harnessio/react-har-service-client'
 
 import { DEFAULT_DATE_TIME_FORMAT } from '@ar/constants'
-import { RepositoryPackageType } from '@ar/common/types'
+import { Parent, RepositoryPackageType } from '@ar/common/types'
 import { getReadableDateTime } from '@ar/common/dateUtils'
 import ArTestWrapper from '@ar/utils/testUtils/ArTestWrapper'
 import repositoryFactory from '@ar/frameworks/RepositoryStep/RepositoryFactory'
@@ -41,6 +41,15 @@ const modifyRepository = jest.fn().mockImplementation(
       onSuccess({ content: { status: 'SUCCESS' } })
     })
 )
+
+const mockHistoryPush = jest.fn()
+// eslint-disable-next-line jest-no-mock
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useHistory: () => ({
+    push: mockHistoryPush
+  })
+}))
 
 jest.mock('@harnessio/react-har-service-client', () => ({
   useGetRegistryQuery: jest.fn().mockImplementation(() => ({
@@ -84,7 +93,7 @@ describe('Verify header section for docker artifact registry', () => {
 
   test('Verify breadcrumbs', async () => {
     const { container } = render(
-      <ArTestWrapper>
+      <ArTestWrapper parent={Parent.OSS}>
         <RepositoryDetailsPage />
       </ArTestWrapper>
     )
@@ -166,7 +175,9 @@ describe('Verify header section for docker artifact registry', () => {
 
   test('Verify tab selection status', async () => {
     const { container } = render(
-      <ArTestWrapper>
+      <ArTestWrapper
+        path="/registries/:repositoryIdentifier/:tab"
+        pathParams={{ repositoryIdentifier: 'abcd', tab: 'packages' }}>
         <RepositoryDetailsPage />
       </ArTestWrapper>
     )
@@ -181,10 +192,7 @@ describe('Verify header section for docker artifact registry', () => {
     expect(configurationTab).toBeInTheDocument()
 
     await userEvent.click(configurationTab!)
-    await waitFor(() => {
-      expect(tabList?.querySelector('div[data-tab-id=configuration][aria-selected=true]')).toBeInTheDocument()
-      expect(tabList?.querySelector('div[data-tab-id=packages][aria-selected=false]')).toBeInTheDocument()
-    })
+    expect(mockHistoryPush).toHaveBeenCalledWith('/registries/abcd/configuration')
   })
 })
 

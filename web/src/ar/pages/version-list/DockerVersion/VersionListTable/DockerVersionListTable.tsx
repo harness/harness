@@ -56,7 +56,7 @@ function DockerVersionListTable(props: DockerVersionListTableProps): JSX.Element
   const { getString } = useStrings()
   const [expandedRows, setExpandedRows] = React.useState<Set<string>>(new Set())
 
-  const { artifactVersions = [], itemCount = 0, pageCount = 0, pageIndex, pageSize = 0 } = data || {}
+  const { artifactVersions = [], itemCount = 0, pageCount = 0, pageIndex = 0, pageSize = 0 } = data || {}
   const paginationProps = useDefaultPaginationProps({
     itemCount,
     pageSize,

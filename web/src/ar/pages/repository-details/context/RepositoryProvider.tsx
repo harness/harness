@@ -91,8 +91,8 @@ const RepositoryProvider: FC<PropsWithChildren<{ className?: string }>> = ({ chi
   useEffect(() => {
     if (typeof updateAppStore === 'function' && parent === Parent.OSS && repositoryData) {
       updateAppStore({
-        repositoryType: repositoryData.content?.data?.config?.type,
-        repositoryPackageType: repositoryData.content?.data?.packageType
+        repositoryType: repositoryData.content.data.config?.type,
+        repositoryPackageType: repositoryData.content.data.packageType
       })
     }
   }, [repositoryData, loading])

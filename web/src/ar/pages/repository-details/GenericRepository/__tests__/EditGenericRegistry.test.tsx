@@ -26,9 +26,9 @@ import { queryByNameAttribute } from 'utils/test/testUtils'
 
 import RepositoryDetailsPage from '../../RepositoryDetailsPage'
 import {
-  MockGetHelmArtifactsByRegistryResponse,
-  MockGetHelmRegistryResponseWithAllData,
-  MockGetHelmSetupClientOnRegistryConfigPageResponse
+  MockGetGenericArtifactsByRegistryResponse,
+  MockGetGenericRegistryResponseWithAllData,
+  MockGetGenericSetupClientOnRegistryConfigPageResponse
 } from './__mockData__'
 import '../../RepositoryFactory'
 
@@ -53,19 +53,19 @@ jest.mock('@harnessio/react-har-service-client', () => ({
     isFetching: false,
     refetch: jest.fn(),
     error: false,
-    data: MockGetHelmRegistryResponseWithAllData
+    data: MockGetGenericRegistryResponseWithAllData
   })),
   useGetAllArtifactsByRegistryQuery: jest.fn().mockImplementation(() => ({
     isFetching: false,
     refetch: jest.fn(),
     error: false,
-    data: MockGetHelmArtifactsByRegistryResponse
+    data: MockGetGenericArtifactsByRegistryResponse
   })),
   useGetClientSetupDetailsQuery: jest.fn().mockImplementation(() => ({
     isFetching: false,
     refetch: jest.fn(),
     error: false,
-    data: MockGetHelmSetupClientOnRegistryConfigPageResponse
+    data: MockGetGenericSetupClientOnRegistryConfigPageResponse
   })),
   useDeleteRegistryMutation: jest.fn().mockImplementation(() => ({
     isLoading: false,
@@ -83,7 +83,7 @@ jest.mock('@harnessio/react-har-service-client', () => ({
   }))
 }))
 
-describe('Verify header section for helm artifact registry', () => {
+describe('Verify header section for generic artifact registry', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
@@ -113,8 +113,8 @@ describe('Verify header section for helm artifact registry', () => {
     const pageHeader = getByTestId(container, 'registry-header-container')
     expect(pageHeader).toBeInTheDocument()
 
-    expect(pageHeader?.querySelector('span[data-icon=service-helm]')).toBeInTheDocument()
-    const data = MockGetHelmRegistryResponseWithAllData.content.data
+    expect(pageHeader?.querySelector('span[data-icon=generic-repository-type]')).toBeInTheDocument()
+    const data = MockGetGenericRegistryResponseWithAllData.content.data
 
     const title = getByTestId(container, 'registry-title')
     expect(title).toHaveTextContent(data.identifier)
@@ -142,7 +142,7 @@ describe('Verify header section for helm artifact registry', () => {
     await waitFor(() => {
       expect(useGetClientSetupDetailsQuery).toHaveBeenLastCalledWith({
         queryParams: { artifact: undefined, version: undefined },
-        registry_ref: 'undefined/helm-repo/+'
+        registry_ref: 'undefined/generic-repo/+'
       })
     })
   })
@@ -210,16 +210,16 @@ describe('Verify configuration form', () => {
     const nameField = queryByNameAttribute('identifier', registryDefinitionSection)
     expect(nameField).toBeInTheDocument()
     expect(nameField).toBeDisabled()
-    expect(nameField).toHaveAttribute('value', MockGetHelmRegistryResponseWithAllData.content.data.identifier)
+    expect(nameField).toHaveAttribute('value', MockGetGenericRegistryResponseWithAllData.content.data.identifier)
 
     const descriptionField = queryByNameAttribute('description', registryDefinitionSection)
     expect(descriptionField).toBeInTheDocument()
     expect(descriptionField).not.toBeDisabled()
-    expect(descriptionField).toHaveTextContent(MockGetHelmRegistryResponseWithAllData.content.data.description)
+    expect(descriptionField).toHaveTextContent(MockGetGenericRegistryResponseWithAllData.content.data.description)
 
     const tags = registryDefinitionSection.querySelectorAll('div.bp3-tag-input-values .bp3-tag')
     tags.forEach((each, idx) => {
-      expect(each).toHaveTextContent(MockGetHelmRegistryResponseWithAllData.content.data.labels[idx])
+      expect(each).toHaveTextContent(MockGetGenericRegistryResponseWithAllData.content.data.labels[idx])
     })
 
     // Security scan section
@@ -227,12 +227,8 @@ describe('Verify configuration form', () => {
     expect(securityScanSection).not.toBeInTheDocument()
 
     // upstream proxy section
-    const upstreamProxySection = getByTestId(container, 'upstream-proxy-section')
-    expect(upstreamProxySection).toBeInTheDocument()
-    const selectedItemList = upstreamProxySection.querySelectorAll('ul[aria-label=orderable-list] .bp3-menu-item')
-    selectedItemList.forEach((each, idx) => {
-      expect(each).toHaveTextContent(MockGetHelmRegistryResponseWithAllData.content.data.config.upstreamProxies[idx])
-    })
+    const upstreamProxySection = queryByTestId(container, 'upstream-proxy-section')
+    expect(upstreamProxySection).not.toBeInTheDocument()
 
     // artifact filtering rules
     const filteringRulesSection = getByTestId(container, 'include-exclude-patterns-section')
@@ -241,13 +237,13 @@ describe('Verify configuration form', () => {
     const allowedPatternsSection = filteringRulesSection.querySelectorAll('div.bp3-form-group')[0]
     const allowedPatterns = allowedPatternsSection.querySelectorAll('div.bp3-tag-input-values .bp3-tag')
     allowedPatterns.forEach((each, idx) => {
-      expect(each).toHaveTextContent(MockGetHelmRegistryResponseWithAllData.content.data.allowedPattern[idx])
+      expect(each).toHaveTextContent(MockGetGenericRegistryResponseWithAllData.content.data.allowedPattern[idx])
     })
 
     const blockedPatternsSection = filteringRulesSection.querySelectorAll('div.bp3-form-group')[1]
     const blockedPatterns = blockedPatternsSection.querySelectorAll('div.bp3-tag-input-values .bp3-tag')
     blockedPatterns.forEach((each, idx) => {
-      expect(each).toHaveTextContent(MockGetHelmRegistryResponseWithAllData.content.data.blockedPattern[idx])
+      expect(each).toHaveTextContent(MockGetGenericRegistryResponseWithAllData.content.data.blockedPattern[idx])
     })
 
     // cleanup policy section
@@ -288,7 +284,7 @@ describe('Verify configuration form', () => {
     await waitFor(() => {
       expect(modifyRepository).toHaveBeenCalledWith({
         body: {
-          ...MockGetHelmRegistryResponseWithAllData.content.data,
+          ...MockGetGenericRegistryResponseWithAllData.content.data,
           description: 'updated description'
         },
         registry_ref: 'undefined/abcd/+'
@@ -317,7 +313,7 @@ describe('Verify configuration form', () => {
     await waitFor(() => {
       expect(saveBtn).toBeDisabled()
       expect(discardBtn).toBeDisabled()
-      expect(descriptionField).toHaveTextContent(MockGetHelmRegistryResponseWithAllData.content.data.description)
+      expect(descriptionField).toHaveTextContent(MockGetGenericRegistryResponseWithAllData.content.data.description)
     })
   })
 

@@ -18,31 +18,41 @@ import React from 'react'
 import userEvent from '@testing-library/user-event'
 import { useGetAllArtifactsByRegistryQuery as _useGetAllArtifactsByRegistryQuery } from '@harnessio/react-har-service-client'
 import { fireEvent, render, waitFor } from '@testing-library/react'
+
 import ArTestWrapper from '@ar/utils/testUtils/ArTestWrapper'
+import { RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
+import RepositoryDetailsPage from '@ar/pages/repository-details/RepositoryDetailsPage'
+import { MockGetDockerRegistryResponseWithAllData } from '@ar/pages/repository-details/DockerRepository/__tests__/__mockData__'
+
 import {
   mockUseGetAllArtifactsByRegistryQuery,
   mockEmptyUseGetAllArtifactsByRegistryQuery,
   mockErrorUseGetAllHarnessArtifactsQueryResponse
 } from './__mockData__'
-import RegistryArtifactListPage from '../RegistryArtifactListPage'
 
 const useGetAllArtifactsByRegistryQuery = _useGetAllArtifactsByRegistryQuery as jest.Mock
 
 jest.mock('@harnessio/react-har-service-client', () => ({
   useGetAllArtifactsByRegistryQuery: jest.fn(),
-  useGetArtifactSummaryQuery: jest.fn()
+  useGetArtifactSummaryQuery: jest.fn(),
+  useGetRegistryQuery: jest.fn().mockImplementation(() => ({
+    isFetching: false,
+    refetch: jest.fn(),
+    error: false,
+    data: MockGetDockerRegistryResponseWithAllData
+  }))
 }))
 
 describe('Test Registry Artifact List Page', () => {
-  beforeAll(() => {
+  beforeEach(() => {
     useGetAllArtifactsByRegistryQuery.mockImplementation(() => mockUseGetAllArtifactsByRegistryQuery)
   })
 
   test('Should render empty list if artifacts response is empty', () => {
-    useGetAllArtifactsByRegistryQuery.mockImplementationOnce(() => mockEmptyUseGetAllArtifactsByRegistryQuery)
+    useGetAllArtifactsByRegistryQuery.mockImplementation(() => mockEmptyUseGetAllArtifactsByRegistryQuery)
     const { getByText } = render(
-      <ArTestWrapper>
-        <RegistryArtifactListPage />
+      <ArTestWrapper path="/registries/abcd/:tab" pathParams={{ tab: RepositoryDetailsTab.PACKAGES }}>
+        <RepositoryDetailsPage />
       </ArTestWrapper>
     )
     const noResultsText = getByText('artifactList.table.noArtifactsTitle')
@@ -51,8 +61,8 @@ describe('Test Registry Artifact List Page', () => {
 
   test('Should render artifacts list', () => {
     const { container } = render(
-      <ArTestWrapper>
-        <RegistryArtifactListPage />
+      <ArTestWrapper path="/registries/abcd/:tab" pathParams={{ tab: RepositoryDetailsTab.PACKAGES }}>
+        <RepositoryDetailsPage />
       </ArTestWrapper>
     )
     const table = container.querySelector('[class*="TableV2--table"]')
@@ -64,15 +74,15 @@ describe('Test Registry Artifact List Page', () => {
 
   test('Should show error message if listing api fails', async () => {
     const mockRefetchFn = jest.fn().mockImplementation()
-    useGetAllArtifactsByRegistryQuery.mockImplementationOnce(() => {
+    useGetAllArtifactsByRegistryQuery.mockImplementation(() => {
       return {
         ...mockErrorUseGetAllHarnessArtifactsQueryResponse,
         refetch: mockRefetchFn
       }
     })
     const { getByText } = render(
-      <ArTestWrapper>
-        <RegistryArtifactListPage />
+      <ArTestWrapper path="/registries/abcd/:tab" pathParams={{ tab: RepositoryDetailsTab.PACKAGES }}>
+        <RepositoryDetailsPage />
       </ArTestWrapper>
     )
 
@@ -86,12 +96,12 @@ describe('Test Registry Artifact List Page', () => {
   })
 
   test('Should be able to search', async () => {
+    useGetAllArtifactsByRegistryQuery.mockImplementation(() => mockEmptyUseGetAllArtifactsByRegistryQuery)
     const { getByText, getByPlaceholderText } = render(
-      <ArTestWrapper>
-        <RegistryArtifactListPage />
+      <ArTestWrapper path="/registries/abcd/:tab" pathParams={{ tab: RepositoryDetailsTab.PACKAGES }}>
+        <RepositoryDetailsPage />
       </ArTestWrapper>
     )
-    useGetAllArtifactsByRegistryQuery.mockImplementationOnce(() => mockEmptyUseGetAllArtifactsByRegistryQuery)
 
     const searchInput = getByPlaceholderText('search')
     expect(searchInput).toBeInTheDocument()
@@ -99,7 +109,7 @@ describe('Test Registry Artifact List Page', () => {
     fireEvent.change(searchInput, { target: { value: 'pod' } })
     await waitFor(() =>
       expect(useGetAllArtifactsByRegistryQuery).toHaveBeenLastCalledWith({
-        registry_ref: 'undefined/+',
+        registry_ref: 'undefined/abcd/+',
         queryParams: {
           page: 0,
           size: 50,
@@ -114,7 +124,7 @@ describe('Test Registry Artifact List Page', () => {
     const clearAllFiltersBtn = getByText('clearFilters')
     await userEvent.click(clearAllFiltersBtn)
     expect(useGetAllArtifactsByRegistryQuery).toHaveBeenLastCalledWith({
-      registry_ref: 'undefined/+',
+      registry_ref: 'undefined/abcd/+',
       queryParams: {
         page: 0,
         size: 50,
@@ -127,8 +137,8 @@ describe('Test Registry Artifact List Page', () => {
 
   test('Sorting should work', async () => {
     const { getByText } = render(
-      <ArTestWrapper>
-        <RegistryArtifactListPage />
+      <ArTestWrapper path="/registries/abcd/:tab" pathParams={{ tab: RepositoryDetailsTab.PACKAGES }}>
+        <RepositoryDetailsPage />
       </ArTestWrapper>
     )
 
@@ -136,7 +146,7 @@ describe('Test Registry Artifact List Page', () => {
     await userEvent.click(artifactNameSortIcon)
 
     expect(useGetAllArtifactsByRegistryQuery).toHaveBeenLastCalledWith({
-      registry_ref: 'undefined/+',
+      registry_ref: 'undefined/abcd/+',
       queryParams: {
         page: 0,
         size: 50,
@@ -150,7 +160,7 @@ describe('Test Registry Artifact List Page', () => {
     await userEvent.click(repositorySortIcon)
 
     expect(useGetAllArtifactsByRegistryQuery).toHaveBeenLastCalledWith({
-      registry_ref: 'undefined/+',
+      registry_ref: 'undefined/abcd/+',
       queryParams: {
         page: 0,
         size: 50,
@@ -164,7 +174,7 @@ describe('Test Registry Artifact List Page', () => {
     await userEvent.click(downloadsSortIcon)
 
     expect(useGetAllArtifactsByRegistryQuery).toHaveBeenLastCalledWith({
-      registry_ref: 'undefined/+',
+      registry_ref: 'undefined/abcd/+',
       queryParams: {
         page: 0,
         size: 50,
@@ -179,7 +189,7 @@ describe('Test Registry Artifact List Page', () => {
     await userEvent.click(lastUpdatedSortIcon)
 
     expect(useGetAllArtifactsByRegistryQuery).toHaveBeenLastCalledWith({
-      registry_ref: 'undefined/+',
+      registry_ref: 'undefined/abcd/+',
       queryParams: {
         page: 0,
         size: 50,
@@ -192,8 +202,8 @@ describe('Test Registry Artifact List Page', () => {
 
   test('Pagination should work', async () => {
     const { getByText, getByTestId } = render(
-      <ArTestWrapper>
-        <RegistryArtifactListPage />
+      <ArTestWrapper path="/registries/abcd/:tab" pathParams={{ tab: RepositoryDetailsTab.PACKAGES }}>
+        <RepositoryDetailsPage />
       </ArTestWrapper>
     )
 
@@ -201,7 +211,7 @@ describe('Test Registry Artifact List Page', () => {
     await userEvent.click(nextPageBtn)
 
     expect(useGetAllArtifactsByRegistryQuery).toHaveBeenLastCalledWith({
-      registry_ref: 'undefined/+',
+      registry_ref: 'undefined/abcd/+',
       queryParams: {
         page: 1,
         size: 50,
@@ -217,7 +227,7 @@ describe('Test Registry Artifact List Page', () => {
     await userEvent.click(pageSize20option)
 
     expect(useGetAllArtifactsByRegistryQuery).toHaveBeenLastCalledWith({
-      registry_ref: 'undefined/+',
+      registry_ref: 'undefined/abcd/+',
       queryParams: {
         page: 0,
         size: 20,

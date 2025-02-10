@@ -40,7 +40,7 @@ export default function RepositoryDetails(): JSX.Element | null {
   const { HAR_TRIGGERS } = useFeatureFlags()
   const pathParams = useDecodedParams<RepositoryDetailsPathParams>()
   const { repositoryIdentifier } = pathParams
-  const [activeTab, setActiveTab] = useState(RepositoryDetailsTab.PACKAGES)
+  const [activeTab, setActiveTab] = useState('')
   const stepRef = React.useRef<FormikProps<unknown> | null>(null)
 
   const routeDefinitions = useRoutes(true)

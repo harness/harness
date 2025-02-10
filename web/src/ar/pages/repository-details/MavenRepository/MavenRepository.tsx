@@ -110,7 +110,7 @@ export class MavenRepositoryType extends RepositoryStep<VirtualRegistryRequest> 
         artifactKey={artifactKey}
         versionKey={versionKey}
         onClose={onClose}
-        packageType={RepositoryPackageType.GENERIC}
+        packageType={RepositoryPackageType.MAVEN}
       />
     )
   }
