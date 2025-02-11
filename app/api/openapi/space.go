@@ -693,13 +693,13 @@ func spaceOperations(reflector *openapi3.Reflector) {
 		queryParameterAuthorID, queryParameterCommenterID, queryParameterMentionedID,
 		queryParameterReviewerID, queryParameterReviewDecision,
 		queryParamIncludeGitStats, queryParameterIncludeChecks, queryParameterIncludeRules)
-	_ = reflector.SetRequest(&listPullReq, new(listPullReqRequest), http.MethodGet)
+	_ = reflector.SetRequest(&listPullReq, new(spaceRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&listPullReq, new([]types.PullReqRepo), http.StatusOK)
 	_ = reflector.SetJSONResponse(&listPullReq, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&listPullReq, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&listPullReq, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&listPullReq, new(usererror.Error), http.StatusForbidden)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{repo_ref}/pullreq", listPullReq)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{space_ref}/pullreq", listPullReq)
 
 	opGetUsageMetrics := openapi3.Operation{}
 	opGetUsageMetrics.WithTags("space")

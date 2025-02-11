@@ -204,6 +204,10 @@ func ParsePullReqFilter(r *http.Request) (*types.PullReqFilter, error) {
 		return nil, err
 	}
 
+	if authorID > 0 {
+		createdBy = append(createdBy, authorID)
+	}
+
 	return &types.PullReqFilter{
 		Page:                   ParsePage(r),
 		Size:                   ParseLimit(r),
@@ -217,7 +221,6 @@ func ParsePullReqFilter(r *http.Request) (*types.PullReqFilter, error) {
 		Order:                  ParseOrder(r),
 		LabelID:                labelID,
 		ValueID:                valueID,
-		AuthorID:               authorID,
 		CommenterID:            commenterID,
 		ReviewerID:             reviewerID,
 		ReviewDecisions:        reviewDecisions,

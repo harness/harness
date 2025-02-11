@@ -159,7 +159,6 @@ type PullReqFilter struct {
 	Order              enum.Order                   `json:"order"`
 	LabelID            []int64                      `json:"label_id"`
 	ValueID            []int64                      `json:"value_id"`
-	AuthorID           int64                        `json:"author_id"`
 	CommenterID        int64                        `json:"commenter_id"`
 	ReviewerID         int64                        `json:"reviewer_id"`
 	ReviewDecisions    []enum.PullReqReviewDecision `json:"review_decisions"`

@@ -31,6 +31,7 @@ import (
 	"github.com/Masterminds/squirrel"
 	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	"github.com/rs/zerolog/log"
 )
 
@@ -638,10 +639,6 @@ func (s *PullReqStore) applyFilter(stmt *squirrel.SelectBuilder, opts *types.Pul
 		*stmt = stmt.Where(PartialMatch("pullreq_title", opts.Query))
 	}
 
-	if len(opts.CreatedBy) > 0 {
-		*stmt = stmt.Where(squirrel.Eq{"pullreq_created_by": opts.CreatedBy})
-	}
-
 	if opts.CreatedLt > 0 {
 		*stmt = stmt.Where("pullreq_created < ?", opts.CreatedLt)
 	}
@@ -671,17 +668,34 @@ func (s *PullReqStore) applyFilter(stmt *squirrel.SelectBuilder, opts *types.Pul
 		*stmt = stmt.Where("repo_parent_id = ?", opts.SpaceIDs[0])
 	} else if len(opts.SpaceIDs) > 1 {
 		*stmt = stmt.InnerJoin("repositories ON repo_id = pullreq_target_repo_id")
-		*stmt = stmt.Where(squirrel.Eq{"repo_parent_id": opts.SpaceIDs})
+		switch s.db.DriverName() {
+		case SqliteDriverName:
+			*stmt = stmt.Where(squirrel.Eq{"repo_parent_id": opts.SpaceIDs})
+		case PostgresDriverName:
+			*stmt = stmt.Where("repo_parent_id = ANY(?)", pq.Array(opts.SpaceIDs))
+		}
 	}
 
 	if len(opts.RepoIDBlacklist) == 1 {
 		*stmt = stmt.Where("pullreq_target_repo_id <> ?", opts.RepoIDBlacklist[0])
 	} else if len(opts.RepoIDBlacklist) > 1 {
-		*stmt = stmt.Where(squirrel.NotEq{"pullreq_target_repo_id": opts.RepoIDBlacklist})
+		switch s.db.DriverName() {
+		case SqliteDriverName:
+			*stmt = stmt.Where(squirrel.NotEq{"pullreq_target_repo_id": opts.RepoIDBlacklist})
+		case PostgresDriverName:
+			*stmt = stmt.Where("pullreq_target_repo_id <> ALL(?)", pq.Array(opts.RepoIDBlacklist))
+		}
 	}
 
-	if opts.AuthorID > 0 {
-		*stmt = stmt.Where("pullreq_created_by = ?", opts.AuthorID)
+	if len(opts.CreatedBy) == 1 {
+		*stmt = stmt.Where("pullreq_created_by = ?", opts.CreatedBy[0])
+	} else if len(opts.CreatedBy) > 1 {
+		switch s.db.DriverName() {
+		case SqliteDriverName:
+			*stmt = stmt.Where(squirrel.Eq{"pullreq_created_by": opts.CreatedBy})
+		case PostgresDriverName:
+			*stmt = stmt.Where("pullreq_created_by = ANY(?)", pq.Array(opts.CreatedBy))
+		}
 	}
 
 	if opts.CommenterID > 0 {
