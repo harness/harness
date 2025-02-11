@@ -15,11 +15,8 @@
  */
 
 import React from 'react'
-import { FontVariation } from '@harnessio/design-system'
-import { Container, Layout, Text } from '@harnessio/uicore'
-import { Icon } from '@harnessio/icons'
-
-import css from './PageTitle.module.scss'
+import { Layout, Text } from '@harnessio/uicore'
+import { Color, FontVariation } from '@harnessio/design-system'
 
 interface WeeklyDownloadsProps {
   downloads: number | undefined
@@ -28,13 +25,14 @@ interface WeeklyDownloadsProps {
 
 function WeeklyDownloads(props: WeeklyDownloadsProps): JSX.Element {
   return (
-    <Container flex={{ alignItems: 'flex-end' }}>
-      <Icon name="bar-chart" size={40} />
-      <Layout.Vertical className={css.weeklyDownloadContent}>
-        <Text font={{ variation: FontVariation.H5 }}>{props.downloads || 0}</Text>
-        <Text font={{ variation: FontVariation.SMALL }}>{props.label}</Text>
-      </Layout.Vertical>
-    </Container>
+    <Layout.Horizontal spacing="small">
+      <Text font={{ variation: FontVariation.BODY, weight: 'semi-bold' }} color={Color.GREY_500}>
+        {props.label}
+      </Text>
+      <Text font={{ variation: FontVariation.BODY, weight: 'semi-bold' }} color={Color.GREY_900}>
+        {props.downloads || 0}
+      </Text>
+    </Layout.Horizontal>
   )
 }
 

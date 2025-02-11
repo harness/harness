@@ -17,21 +17,12 @@
 .header {
   align-items: flex-start !important;
   height: auto !important;
-  max-height: 200px !important;
   & > div {
     width: 100% !important;
   }
 
   .cursor {
     cursor: pointer;
-  }
-
-  .headerContainer {
-    height: 138px;
-  }
-
-  .horizontalContainer {
-    height: 100%;
   }
 
   .nameAndDescriptionContainer {

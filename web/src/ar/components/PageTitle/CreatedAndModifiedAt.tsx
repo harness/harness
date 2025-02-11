@@ -24,8 +24,8 @@ import { useStrings } from '@ar/frameworks/strings'
 import css from './PageTitle.module.scss'
 
 interface CreatedAndModifiedAtProps {
-  createdAt: number | undefined
-  modifiedAt: number | undefined
+  createdAt?: number
+  modifiedAt?: number
 }
 
 export default function CreatedAndModifiedAt(props: CreatedAndModifiedAtProps): JSX.Element {
@@ -33,14 +33,22 @@ export default function CreatedAndModifiedAt(props: CreatedAndModifiedAtProps): 
   const { createdAt, modifiedAt } = props
   return (
     <Container className={css.modificationContainer}>
-      <Text font={{ variation: FontVariation.SMALL_BOLD }}>{getString('createdAt')}:</Text>
-      <Text font={{ variation: FontVariation.SMALL }}>
-        {createdAt ? getReadableDateTime(Number(createdAt), DEFAULT_DATE_TIME_FORMAT) : getString('na')}
-      </Text>
-      <Text font={{ variation: FontVariation.SMALL_BOLD }}>{getString('modifiedAt')}:</Text>
-      <Text font={{ variation: FontVariation.SMALL }}>
-        {modifiedAt ? getReadableDateTime(Number(modifiedAt), DEFAULT_DATE_TIME_FORMAT) : getString('na')}
-      </Text>
+      {createdAt && (
+        <>
+          <Text font={{ variation: FontVariation.SMALL_BOLD }}>{getString('createdAt')}:</Text>
+          <Text font={{ variation: FontVariation.SMALL }}>
+            {createdAt ? getReadableDateTime(Number(createdAt), DEFAULT_DATE_TIME_FORMAT) : getString('na')}
+          </Text>
+        </>
+      )}
+      {modifiedAt && (
+        <>
+          <Text font={{ variation: FontVariation.SMALL_BOLD }}>{getString('modifiedAt')}:</Text>
+          <Text font={{ variation: FontVariation.SMALL }}>
+            {modifiedAt ? getReadableDateTime(Number(modifiedAt), DEFAULT_DATE_TIME_FORMAT) : getString('na')}
+          </Text>
+        </>
+      )}
     </Container>
   )
 }

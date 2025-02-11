@@ -19,6 +19,4 @@
 export declare const actionContainer: string
 export declare const cursor: string
 export declare const header: string
-export declare const headerContainer: string
-export declare const horizontalContainer: string
 export declare const nameAndDescriptionContainer: string

@@ -44,11 +44,11 @@ function ArtifactDetailsHeaderContent(props: ArtifactDetailsHeaderContentProps):
   const pathParams = useDecodedParams<ArtifactDetailsPathParams>()
 
   const { repositoryIdentifier, artifactIdentifier } = pathParams
-  const { packageType, imageName, modifiedAt, createdAt, downloadsCount } = data as ArtifactSummary
+  const { packageType, imageName, modifiedAt, downloadsCount, createdAt } = data as ArtifactSummary
 
   return (
-    <Layout.Vertical spacing="small" className={css.headerContainer}>
-      <Layout.Horizontal spacing="small" className={css.horizontalContainer}>
+    <Layout.Vertical spacing="small">
+      <Layout.Horizontal spacing="small">
         <RepositoryIcon packageType={packageType as RepositoryPackageType} iconProps={{ size: iconSize }} />
         <Layout.Vertical
           className={css.nameAndDescriptionContainer}
