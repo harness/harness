@@ -26,11 +26,11 @@ import {
   VersionListTableProps,
   VersionStep
 } from '@ar/frameworks/Version/Version'
-import HelmVersionHeader from './HelmVersionHeader'
 import { VersionDetailsTab } from '../components/VersionDetailsTabs/constants'
 import HelmVersionOverviewContent from './HelmVersionOverviewContent'
 import HelmArtifactDetailsContent from './HelmArtifactDetailsContent'
 import HelmVersionOSSContent from './HelmVersionOSSContent/HelmVersionOSSContent'
+import VersionDetailsHeaderContent from '../components/VersionDetailsHeaderContent/VersionDetailsHeaderContent'
 
 export class HelmVersionType extends VersionStep<ArtifactVersionSummary> {
   protected packageType = RepositoryPackageType.HELM
@@ -45,7 +45,7 @@ export class HelmVersionType extends VersionStep<ArtifactVersionSummary> {
   }
 
   renderVersionDetailsHeader(props: VersionDetailsHeaderProps<ArtifactVersionSummary>): JSX.Element {
-    return <HelmVersionHeader data={props.data} />
+    return <VersionDetailsHeaderContent data={props.data} />
   }
 
   renderVersionDetailsTab(props: VersionDetailsTabProps): JSX.Element {

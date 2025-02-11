@@ -23,10 +23,10 @@ import GenericVersionListTable, {
 } from '@ar/pages/version-list/GenericVersion/VersionListTable/GenericVersionListTable'
 import { String } from '@ar/frameworks/strings'
 import { VersionDetailsTab } from '../components/VersionDetailsTabs/constants'
-import GenericVersionHeader from './GenericVersionHeader'
 import GenericOverviewPage from './pages/overview/OverviewPage'
-import GenericArtifactDetailsPage from './pages/artifact-details/GenericArtifactDetailsPage'
 import OSSContentPage from './pages/oss-details/OSSContentPage'
+import GenericArtifactDetailsPage from './pages/artifact-details/GenericArtifactDetailsPage'
+import VersionDetailsHeaderContent from '../components/VersionDetailsHeaderContent/VersionDetailsHeaderContent'
 
 export class GenericVersionType extends VersionStep<ArtifactVersionSummary> {
   protected packageType = RepositoryPackageType.GENERIC
@@ -41,7 +41,7 @@ export class GenericVersionType extends VersionStep<ArtifactVersionSummary> {
   }
 
   renderVersionDetailsHeader(props: VersionDetailsHeaderProps<ArtifactVersionSummary>): JSX.Element {
-    return <GenericVersionHeader data={props.data} />
+    return <VersionDetailsHeaderContent data={props.data} />
   }
 
   renderVersionDetailsTab(props: VersionDetailsTabProps): JSX.Element {
