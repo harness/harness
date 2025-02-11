@@ -30,6 +30,7 @@ import LabelsPopover from '@ar/components/LabelsPopover/LabelsPopover'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import type { RepositoryPackageType } from '@ar/common/types'
 import { RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
+import { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
 
 type CellTypeWithActions<D extends Record<string, any>, V = any> = TableInstance<D> & {
   column: ColumnInstance<D>
@@ -115,6 +116,7 @@ export const RegistryArtifactDownloadsCell: CellType = ({ value }) => {
 }
 
 export const RegistryArtifactLatestUpdatedCell: CellType = ({ row }) => {
+  const routes = useRoutes()
   const { getString } = useStrings()
   const { original } = row
   const { latestVersion, lastModified } = original || {}
@@ -127,9 +129,16 @@ export const RegistryArtifactLatestUpdatedCell: CellType = ({ row }) => {
   }
   return (
     <Layout.Vertical spacing="small">
-      <Text lineClamp={1} color={Color.PRIMARY_7} font={{ size: 'small' }}>
-        {latestVersion}
-      </Text>
+      <TableCells.LinkCell
+        linkTo={routes.toARRedirect({
+          registryId: original.registryIdentifier,
+          packageType: original.packageType as RepositoryPackageType,
+          artifactId: original.name,
+          versionId: latestVersion,
+          versionDetailsTab: VersionDetailsTab.OVERVIEW
+        })}
+        label={latestVersion}
+      />
       <TableCells.LastModifiedCell value={defaultTo(lastModified, 0)} />
     </Layout.Vertical>
   )

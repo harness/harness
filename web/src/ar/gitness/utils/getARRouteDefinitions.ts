@@ -14,13 +14,26 @@
  * limitations under the License.
  */
 
+import { defaultTo, isEmpty } from 'lodash-es'
 import type { ARRouteDefinitionsReturn } from '@ar/routes/RouteDefinitions'
 
 export default function getARRouteDefinitions(routeParams: Record<string, string>): ARRouteDefinitionsReturn {
   return {
     // anything random, as this route will not be used in gitness
     toAR: () => '/ar',
-    toARRedirect: () => '/ar', // currently not used for gitness
+    toARRedirect: params => {
+      if (!isEmpty(params)) {
+        const queryParams = new URLSearchParams({
+          packageType: defaultTo(params?.packageType, ''),
+          registryId: defaultTo(params?.registryId, ''),
+          artifactId: defaultTo(params?.artifactId, ''),
+          versionId: defaultTo(params?.versionId, ''),
+          versionDetailsTab: defaultTo(params?.versionDetailsTab, '')
+        })
+        return `/redirect?${queryParams.toString()}`
+      }
+      return '/redirect'
+    },
     toARRepositories: () => '/',
     toARRepositoryDetails: params => `/${params?.repositoryIdentifier}`,
     toARRepositoryDetailsTab: params => `/${params?.repositoryIdentifier}/${params?.tab}`,
