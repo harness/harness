@@ -28,7 +28,7 @@ export default function UpstreamProxyAuthenticationFormContent({
   readonly
 }: UpstreamProxyAuthenticationFormContentProps): JSX.Element {
   return (
-    <Layout.Vertical spacing="small">
+    <Layout.Vertical data-testid="upstream-source-auth-definition" spacing="small">
       <RepositoryUrlInput readonly={readonly} />
       <AuthenticationFormInput readonly={readonly} />
     </Layout.Vertical>

@@ -35,7 +35,7 @@ export default function UpstreamProxyIncludeExcludePatternFormContent(
   const { isEdit, readonly, formikProps } = props
   const { getString } = useStrings()
   return (
-    <Layout.Vertical spacing="small">
+    <Layout.Vertical spacing="small" data-testid="include-exclude-patterns-section">
       <Text font={{ variation: FontVariation.CARD_TITLE }}>
         {getString('repositoryDetails.repositoryForm.includeExcludePatternsTitle')}
       </Text>

@@ -332,3 +332,26 @@ export const MockGetMavenSetupClientOnRegistryConfigPageResponse = {
     status: 'SUCCESS'
   }
 }
+
+export const MockGetMavenUpstreamRegistryResponseWithMavenCentralSourceAllData = {
+  content: {
+    data: {
+      allowedPattern: ['test1', 'test2'],
+      blockedPattern: ['test3', 'test4'],
+      config: {
+        auth: null,
+        authType: 'Anonymous',
+        source: 'MavenCentral',
+        type: 'UPSTREAM',
+        url: ''
+      },
+      createdAt: '1738516362995',
+      identifier: 'maven-up-repo',
+      description: 'test description',
+      packageType: 'MAVEN',
+      labels: ['label1', 'label2', 'label3', 'label4'],
+      url: ''
+    },
+    status: 'SUCCESS'
+  }
+}

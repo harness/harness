@@ -42,7 +42,10 @@ export default function UpstreamProxyDetailsHeaderContent(props: UpstreamProxyDe
   const { getString } = useStrings()
   return (
     <Container>
-      <Layout.Horizontal spacing="medium" flex={{ alignItems: 'center' }}>
+      <Layout.Horizontal
+        data-testid="upstream-registry-header-container"
+        spacing="medium"
+        flex={{ alignItems: 'center' }}>
         <RepositoryIcon packageType={packageType as RepositoryPackageType} iconProps={{ size: iconSize }} />
         <Layout.Vertical spacing="small" className={css.nameContainer}>
           <Layout.Horizontal spacing="small" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>

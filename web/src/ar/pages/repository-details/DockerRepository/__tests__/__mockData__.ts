@@ -120,3 +120,26 @@ export const MockGetSetupClientOnRegistryConfigPageResponse = {
     status: 'SUCCESS'
   }
 }
+
+export const MockGetDockerUpstreamRegistryResponseWithDockerhubSourceAllData = {
+  content: {
+    data: {
+      blockedPattern: ['test3', 'test4'],
+      config: {
+        auth: null,
+        authType: 'Anonymous',
+        source: 'Dockerhub',
+        type: 'UPSTREAM',
+        url: ''
+      },
+      createdAt: '1738516362995',
+      identifier: 'docker-up-repo',
+      description: 'test description',
+      modifiedAt: '1738516362995',
+      packageType: 'DOCKER',
+      labels: ['label1', 'label2', 'label3', 'label4'],
+      url: ''
+    },
+    status: 'SUCCESS'
+  }
+}

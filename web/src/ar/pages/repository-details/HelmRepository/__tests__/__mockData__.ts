@@ -110,3 +110,27 @@ export const MockGetHelmSetupClientOnRegistryConfigPageResponse = {
     status: 'SUCCESS'
   }
 }
+
+export const MockGetHelmUpstreamRegistryResponseWithCustomSourceAllData = {
+  content: {
+    data: {
+      allowedPattern: ['test1', 'test2'],
+      cleanupPolicy: [],
+      config: {
+        auth: null,
+        authType: 'Anonymous',
+        source: 'Custom',
+        type: 'UPSTREAM',
+        url: 'https://aws.ecr.com'
+      },
+      createdAt: '1738516362995',
+      identifier: 'helm-up-repo',
+      description: 'test description',
+      modifiedAt: '1738516362995',
+      packageType: 'HELM',
+      labels: ['label1', 'label2', 'label3', 'label4'],
+      url: ''
+    },
+    status: 'SUCCESS'
+  }
+}

@@ -36,7 +36,7 @@ export default function UpstreamProxyDetailsFormContent(props: UpstreamProxyDeta
   const { description, labels } = values
   const { getString } = useStrings()
   return (
-    <Layout.Vertical>
+    <Layout.Vertical data-testid="upstream-registry-definition">
       <FormInput.Text
         name="identifier"
         label={getString('upstreamProxyDetails.createForm.key')}
