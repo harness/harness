@@ -14,7 +14,27 @@
  * limitations under the License.
  */
 
+import type { CellProps, Renderer } from 'react-table'
+import type { StringsMap } from '@ar/strings/types'
+
 export interface VersionListExpandedColumnProps {
   expandedRows: Set<string>
   setExpandedRows: React.Dispatch<React.SetStateAction<Set<string>>>
+}
+
+export enum VersionListColumnEnum {
+  Name = 'Name',
+  Size = 'Size',
+  DownloadCount = 'DownloadCount',
+  FileCount = 'FileCount',
+  LastModified = 'LastModified',
+  PullCommand = 'PullCommand'
+}
+
+export interface IVersionListTableColumnConfigType<T = unknown> {
+  Header: keyof StringsMap
+  accessor: string
+  Cell: Renderer<CellProps<{}, T>>
+  hidden?: boolean
+  width?: string
 }

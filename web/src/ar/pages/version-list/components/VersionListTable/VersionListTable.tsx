@@ -14,43 +14,36 @@
  * limitations under the License.
  */
 
-import React from 'react'
-import classNames from 'classnames'
+import React, { useCallback } from 'react'
 import type { Column } from 'react-table'
 import { PaginationProps, TableV2 } from '@harnessio/uicore'
 import type { ArtifactVersionMetadata, ListArtifactVersion } from '@harnessio/react-har-service-client'
 
-import { Parent } from '@ar/common/types'
-import { useAppStore, useParentHooks } from '@ar/hooks'
+import { useParentHooks } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import type { SortByType } from '@ar/frameworks/Version/Version'
-import {
-  PullCommandCell,
-  VersionDownloadsCell,
-  VersionNameCell,
-  VersionPublishedAtCell,
-  VersionSizeCell
-} from './VersionListCell'
+import type { IVersionListTableColumnConfigType, VersionListColumnEnum } from './types'
 
+import { getVersionListTableCellConfigs } from './utils'
 import css from './VersionListTable.module.scss'
 
 export interface ArtifactVersionListColumnActions {
   refetchList?: () => void
 }
-export interface VersionListTableProps extends ArtifactVersionListColumnActions {
+export interface CommonVersionListTableProps extends ArtifactVersionListColumnActions {
   data: ListArtifactVersion
   gotoPage: (pageNumber: number) => void
   onPageSizeChange?: PaginationProps['onPageSizeChange']
   setSortBy: (sortBy: SortByType) => void
   sortBy: SortByType
   minimal?: boolean
+  columnConfigs: Partial<Record<VersionListColumnEnum, Partial<IVersionListTableColumnConfigType>>>
 }
 
-function VersionListTable(props: VersionListTableProps): JSX.Element {
-  const { data, gotoPage, onPageSizeChange, sortBy, setSortBy } = props
+function VersionListTable(props: CommonVersionListTableProps): JSX.Element {
+  const { data, gotoPage, onPageSizeChange, sortBy, setSortBy, columnConfigs } = props
   const { useDefaultPaginationProps } = useParentHooks()
   const { getString } = useStrings()
-  const { parent } = useAppStore()
 
   const { artifactVersions = [], itemCount = 0, pageCount = 0, pageIndex, pageSize = 0 } = data || {}
   const paginationProps = useDefaultPaginationProps({
@@ -63,8 +56,8 @@ function VersionListTable(props: VersionListTableProps): JSX.Element {
   })
   const [currentSort, currentOrder] = sortBy
 
-  const columns: Column<ArtifactVersionMetadata>[] = React.useMemo(() => {
-    const getServerSortProps = (id: string) => {
+  const getServerSortProps = useCallback(
+    (id: string) => {
       return {
         enableServerSort: true,
         isServerSorted: currentSort === id,
@@ -73,52 +66,25 @@ function VersionListTable(props: VersionListTableProps): JSX.Element {
           setSortBy([sort, currentOrder === 'DESC' ? 'ASC' : 'DESC'])
         }
       }
-    }
-    return [
-      {
-        Header: getString('versionList.table.columns.version'),
-        accessor: 'name',
-        Cell: VersionNameCell,
-        serverSortProps: getServerSortProps('name')
-      },
-      {
-        Header: getString('versionList.table.columns.size'),
-        accessor: 'size',
-        Cell: VersionSizeCell,
-        serverSortProps: getServerSortProps('size')
-      },
-      {
-        Header: getString('versionList.table.columns.downloads'),
-        accessor: 'downloadsCount',
-        Cell: VersionDownloadsCell,
-        serverSortProps: getServerSortProps('downloadsCount')
-      },
-      {
-        Header: getString('versionList.table.columns.publishedByAt'),
-        accessor: 'lastModified',
-        Cell: VersionPublishedAtCell,
-        serverSortProps: getServerSortProps('lastModified')
-      },
-      {
-        Header: getString('versionList.table.columns.pullCommand'),
-        accessor: 'pullCommand',
-        Cell: PullCommandCell,
-        serverSortProps: getServerSortProps('pullCommand')
-      }
-    ].filter(Boolean) as Column<ArtifactVersionMetadata>[]
-  }, [currentOrder, currentSort, getString])
+    },
+    [currentOrder, currentSort]
+  )
+
+  const columns: Column<ArtifactVersionMetadata>[] = React.useMemo(() => {
+    return getVersionListTableCellConfigs(
+      columnConfigs,
+      getServerSortProps,
+      getString
+    ) as Column<ArtifactVersionMetadata>[]
+  }, [getServerSortProps, columnConfigs, getString])
 
   return (
     <TableV2<ArtifactVersionMetadata>
-      className={classNames(css.table, {
-        [css.ossTable]: parent === Parent.OSS,
-        [css.enterpriseTable]: parent === Parent.Enterprise
-      })}
+      className={css.table}
       columns={columns}
       data={artifactVersions}
       pagination={paginationProps}
       sortable
-      getRowClassName={() => css.tableRow}
     />
   )
 }

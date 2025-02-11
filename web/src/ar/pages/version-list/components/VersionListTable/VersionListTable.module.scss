@@ -19,28 +19,6 @@
   --typography-weight: 400;
   --line-height: 20px;
   padding: var(--spacing-large);
-
-  [role='cell'],
-  [role='columnheader'] {
-    width: auto !important;
-    padding-right: var(--spacing-small);
-  }
-}
-
-.ossTable {
-  div[class*='TableV2--cells'],
-  div[class*='TableV2--header'] {
-    display: grid !important;
-    grid-template-columns: minmax(var(--har-table-name-column-min-width), 1fr) 8rem 8rem 10rem 35rem;
-  }
-}
-
-.enterpriseTable {
-  div[class*='TableV2--cells'],
-  div[class*='TableV2--header'] {
-    display: grid !important;
-    grid-template-columns: minmax(200px, 1fr) 8rem 8rem 10rem 35rem;
-  }
 }
 
 .tableRow {

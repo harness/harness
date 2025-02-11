@@ -17,10 +17,8 @@
 /* eslint-disable */
 // This is an auto-generated file
 export declare const deploymentsRow: string
-export declare const enterpriseTable: string
 export declare const nameCellContainer: string
 export declare const nonProd: string
-export declare const ossTable: string
 export declare const prod: string
 export declare const table: string
 export declare const tableRow: string

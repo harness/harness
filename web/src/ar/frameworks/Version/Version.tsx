@@ -17,7 +17,7 @@
 import type { PaginationProps } from '@harnessio/uicore'
 import type { ListArtifactVersion } from '@harnessio/react-har-service-client'
 import type { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
-import type { RepositoryPackageType } from '@ar/common/types'
+import type { Parent, RepositoryPackageType } from '@ar/common/types'
 
 export interface VersionDetailsHeaderProps<T> {
   data: T
@@ -36,6 +36,7 @@ export interface VersionListTableProps {
   setSortBy: (sortBy: SortByType) => void
   sortBy: SortByType
   minimal?: boolean
+  parent: Parent
 }
 
 export abstract class VersionStep<T> {

@@ -22,7 +22,7 @@ import { PackageType, useGetAllArtifactVersionsQuery } from '@harnessio/react-ha
 
 import { useStrings } from '@ar/frameworks/strings'
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
-import { useParentHooks, useDecodedParams, useGetSpaceRef } from '@ar/hooks'
+import { useParentHooks, useDecodedParams, useGetSpaceRef, useAppStore } from '@ar/hooks'
 import type { RepositoryPackageType } from '@ar/common/types'
 import type { ArtifactDetailsPathParams } from '@ar/routes/types'
 import { DEFAULT_PAGE_INDEX, PreferenceScope } from '@ar/constants'
@@ -46,6 +46,7 @@ function VersionListPage(props: VersionListPageProps): JSX.Element {
   const { searchTerm, isDeployedArtifacts, page, size } = queryParams
   const { getString } = useStrings()
   const spaceRef = useGetSpaceRef()
+  const { parent } = useAppStore()
 
   const { preference: sortingPreference, setPreference: setSortingPreference } = usePreferenceStore<string | undefined>(
     PreferenceScope.USER,
@@ -133,6 +134,7 @@ function VersionListPage(props: VersionListPageProps): JSX.Element {
         }}>
         {responseData && (
           <VersionListTableWidget
+            parent={parent}
             packageType={packageType as RepositoryPackageType}
             data={responseData}
             gotoPage={pageNumber => updateQueryParams({ page: pageNumber })}

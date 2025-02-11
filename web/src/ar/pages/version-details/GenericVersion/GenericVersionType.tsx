@@ -16,12 +16,18 @@
 
 import React from 'react'
 import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client'
-import { VersionDetailsHeaderProps, type VersionDetailsTabProps, VersionStep } from '@ar/frameworks/Version/Version'
-import { RepositoryPackageType } from '@ar/common/types'
-import GenericVersionListTable, {
-  type IGenericVersionListTableProps
-} from '@ar/pages/version-list/GenericVersion/VersionListTable/GenericVersionListTable'
+import {
+  type VersionDetailsHeaderProps,
+  type VersionDetailsTabProps,
+  type VersionListTableProps,
+  VersionStep
+} from '@ar/frameworks/Version/Version'
 import { String } from '@ar/frameworks/strings'
+import { RepositoryPackageType } from '@ar/common/types'
+import VersionListTable, {
+  type CommonVersionListTableProps
+} from '@ar/pages/version-list/components/VersionListTable/VersionListTable'
+import { VersionListColumnEnum } from '@ar/pages/version-list/components/VersionListTable/types'
 import { VersionDetailsTab } from '../components/VersionDetailsTabs/constants'
 import GenericOverviewPage from './pages/overview/OverviewPage'
 import OSSContentPage from './pages/oss-details/OSSContentPage'
@@ -36,8 +42,15 @@ export class GenericVersionType extends VersionStep<ArtifactVersionSummary> {
     VersionDetailsTab.CODE
   ]
 
-  renderVersionListTable(props: IGenericVersionListTableProps): JSX.Element {
-    return <GenericVersionListTable {...props} />
+  versionListTableColumnConfig: CommonVersionListTableProps['columnConfigs'] = {
+    [VersionListColumnEnum.Name]: { width: '30%' },
+    [VersionListColumnEnum.Size]: { width: '30%' },
+    [VersionListColumnEnum.FileCount]: { width: '20%' },
+    [VersionListColumnEnum.LastModified]: { width: '20%' }
+  }
+
+  renderVersionListTable(props: VersionListTableProps): JSX.Element {
+    return <VersionListTable {...props} columnConfigs={this.versionListTableColumnConfig} />
   }
 
   renderVersionDetailsHeader(props: VersionDetailsHeaderProps<ArtifactVersionSummary>): JSX.Element {

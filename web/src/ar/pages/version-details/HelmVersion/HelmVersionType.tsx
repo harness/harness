@@ -19,7 +19,10 @@ import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client
 
 import { String } from '@ar/frameworks/strings'
 import { RepositoryPackageType } from '@ar/common/types'
-import VersionListTable from '@ar/pages/version-list/components/VersionListTable/VersionListTable'
+import { VersionListColumnEnum } from '@ar/pages/version-list/components/VersionListTable/types'
+import VersionListTable, {
+  CommonVersionListTableProps
+} from '@ar/pages/version-list/components/VersionListTable/VersionListTable'
 import {
   VersionDetailsHeaderProps,
   VersionDetailsTabProps,
@@ -39,9 +42,16 @@ export class HelmVersionType extends VersionStep<ArtifactVersionSummary> {
     VersionDetailsTab.ARTIFACT_DETAILS,
     VersionDetailsTab.CODE
   ]
+  versionListTableColumnConfig: CommonVersionListTableProps['columnConfigs'] = {
+    [VersionListColumnEnum.Name]: { width: '30%' },
+    [VersionListColumnEnum.Size]: { width: '8%' },
+    [VersionListColumnEnum.DownloadCount]: { width: '10%' },
+    [VersionListColumnEnum.LastModified]: { width: '12%' },
+    [VersionListColumnEnum.PullCommand]: { width: '40%' }
+  }
 
   renderVersionListTable(props: VersionListTableProps): JSX.Element {
-    return <VersionListTable {...props} />
+    return <VersionListTable {...props} columnConfigs={this.versionListTableColumnConfig} />
   }
 
   renderVersionDetailsHeader(props: VersionDetailsHeaderProps<ArtifactVersionSummary>): JSX.Element {

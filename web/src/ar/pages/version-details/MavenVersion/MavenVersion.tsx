@@ -19,6 +19,10 @@ import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client
 
 import { String } from '@ar/frameworks/strings'
 import { RepositoryPackageType } from '@ar/common/types'
+import { VersionListColumnEnum } from '@ar/pages/version-list/components/VersionListTable/types'
+import VersionListTable, {
+  type CommonVersionListTableProps
+} from '@ar/pages/version-list/components/VersionListTable/VersionListTable'
 import {
   type VersionDetailsHeaderProps,
   VersionDetailsTabProps,
@@ -26,7 +30,6 @@ import {
   VersionStep
 } from '@ar/frameworks/Version/Version'
 
-import { MavenVersionListPage } from './pages/list/MavenVersionListPage'
 import { VersionDetailsTab } from '../components/VersionDetailsTabs/constants'
 import MavenArtifactOverviewPage from './pages/overview/MavenArtifactOverviewPage'
 import MavenArtifactDetailsPage from './pages/artifact-details/MavenArtifactDetailsPage'
@@ -41,8 +44,15 @@ export class MavenVersionType extends VersionStep<ArtifactVersionSummary> {
     VersionDetailsTab.CODE
   ]
 
+  versionListTableColumnConfig: CommonVersionListTableProps['columnConfigs'] = {
+    [VersionListColumnEnum.Name]: { width: '30%' },
+    [VersionListColumnEnum.Size]: { width: '30%' },
+    [VersionListColumnEnum.FileCount]: { width: '20%' },
+    [VersionListColumnEnum.LastModified]: { width: '20%' }
+  }
+
   renderVersionListTable(props: VersionListTableProps): JSX.Element {
-    return <MavenVersionListPage {...props} />
+    return <VersionListTable {...props} columnConfigs={this.versionListTableColumnConfig} />
   }
 
   renderVersionDetailsHeader(props: VersionDetailsHeaderProps<ArtifactVersionSummary>): JSX.Element {

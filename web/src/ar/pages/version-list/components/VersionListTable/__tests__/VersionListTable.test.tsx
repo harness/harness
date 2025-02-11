@@ -28,12 +28,20 @@ import { HelmRepositoryType } from '@ar/pages/repository-details/HelmRepository/
 import ArTestWrapper from '@ar/utils/testUtils/ArTestWrapper'
 import { getTableColumn } from '@ar/utils/testUtils/utils'
 import VersionListTable from '../VersionListTable'
+import { VersionListColumnEnum } from '../types'
 
 jest.mock('clipboard-copy', () => ({
   __esModule: true,
   default: jest.fn()
 }))
 
+const mockColumnConfigs = {
+  [VersionListColumnEnum.Name]: { width: '30%' },
+  [VersionListColumnEnum.Size]: { width: '8%' },
+  [VersionListColumnEnum.DownloadCount]: { width: '10%' },
+  [VersionListColumnEnum.PullCommand]: { width: '40%' },
+  [VersionListColumnEnum.LastModified]: { width: '12%' }
+}
 describe('Verify Version List Table', () => {
   beforeAll(() => {
     repositoryFactory.registerStep(new HelmRepositoryType())
@@ -51,6 +59,7 @@ describe('Verify Version List Table', () => {
           gotoPage={jest.fn()}
           setSortBy={jest.fn()}
           sortBy={['name', 'DESC']}
+          columnConfigs={mockColumnConfigs}
         />
       </ArTestWrapper>
     )
@@ -70,7 +79,7 @@ describe('Verify Version List Table', () => {
       mockHelmLatestVersionListTableData.artifactVersions?.[0].downloadsCount as number
     )
     expect(downloadsValue).toBeInTheDocument()
-    const curlColumn = getFirstRowColumn(5)
+    const curlColumn = getFirstRowColumn(4)
     expect(curlColumn).toHaveTextContent('copy')
     const copyCurlBtn = curlColumn.querySelector('[data-icon="code-copy"]') as HTMLElement
     expect(copyCurlBtn).toBeInTheDocument()
@@ -86,11 +95,12 @@ describe('Verify Version List Table', () => {
           gotoPage={jest.fn()}
           setSortBy={jest.fn()}
           sortBy={['name', 'DESC']}
+          columnConfigs={mockColumnConfigs}
         />
       </ArTestWrapper>
     )
 
-    const curlColumn = getTableColumn(1, 5) as HTMLElement
+    const curlColumn = getTableColumn(1, 4) as HTMLElement
     const naCurl = getByText(curlColumn, 'na')
     expect(naCurl).toBeInTheDocument()
 
@@ -106,6 +116,7 @@ describe('Verify Version List Table', () => {
           gotoPage={jest.fn()}
           setSortBy={jest.fn()}
           sortBy={['name', 'DESC']}
+          columnConfigs={mockColumnConfigs}
         />
       </ArTestWrapper>
     )
@@ -117,7 +128,13 @@ describe('Verify Version List Table', () => {
   test('Should show no rows if no data is provided', () => {
     const { container } = render(
       <ArTestWrapper>
-        <VersionListTable data={null as any} gotoPage={jest.fn()} setSortBy={jest.fn()} sortBy={['name', 'DESC']} />
+        <VersionListTable
+          data={null as any}
+          gotoPage={jest.fn()}
+          setSortBy={jest.fn()}
+          sortBy={['name', 'DESC']}
+          columnConfigs={mockColumnConfigs}
+        />
       </ArTestWrapper>
     )
     const table = container.querySelector('[class*="TableV2--table"]')
@@ -137,6 +154,7 @@ describe('Verify Version List Table', () => {
           gotoPage={jest.fn()}
           setSortBy={setSortBy}
           sortBy={['name', 'DESC']}
+          columnConfigs={mockColumnConfigs}
         />
       </ArTestWrapper>
     )
