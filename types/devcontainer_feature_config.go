@@ -58,11 +58,18 @@ func (o *OptionDefinition) ValidateValue(optionValue any, optionKey string, feat
 	switch o.Type {
 	case enum.FeatureOptionValueTypeBoolean:
 		boolValue, ok := optionValue.(bool)
-		if !ok {
-			return "", fmt.Errorf("error during resolving feature %s, option Id %s "+
-				"expects boolean, got %s ", featureSource, optionKey, optionValue)
+		if ok {
+			return strconv.FormatBool(boolValue), nil
 		}
-		return strconv.FormatBool(boolValue), nil
+		stringValue, ok := optionValue.(string)
+		if ok {
+			parsedBoolValue, err := strconv.ParseBool(stringValue)
+			if err == nil {
+				return strconv.FormatBool(parsedBoolValue), nil
+			}
+		}
+		return "", fmt.Errorf("error during resolving feature %s, option Id %s "+
+			"expects boolean, got %s ", featureSource, optionKey, optionValue)
 	case enum.FeatureOptionValueTypeString:
 		stringValue, ok := optionValue.(string)
 		if !ok {

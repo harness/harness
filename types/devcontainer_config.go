@@ -188,6 +188,10 @@ func (f *FeatureValue) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (f *FeatureValue) MarshalJSON() ([]byte, error) {
+	return json.Marshal(f.Options)
+}
+
 func (f *Features) UnmarshalJSON(data []byte) error {
 	if *f == nil {
 		*f = make(Features)
@@ -248,15 +252,27 @@ type Mount struct {
 }
 
 func (m *Mount) UnmarshalJSON(data []byte) error {
-	if err := json.Unmarshal(data, m); err == nil {
+	type Alias Mount
+	aux := &struct {
+		*Alias
+	}{
+		Alias: (*Alias)(m),
+	}
+	if err := json.Unmarshal(data, &aux); err == nil {
 		return nil
 	}
-	dst, err := stringToObject(string(data))
-	if err != nil {
-		return err
+
+	var str string
+	if err := json.Unmarshal(data, &str); err == nil {
+		dst, err := stringToObject(str)
+		if err != nil {
+			return err
+		}
+		*m = *dst
+		return nil
 	}
-	*m = *dst
-	return nil
+
+	return fmt.Errorf("failed to unmarshal JSON: %s", string(data))
 }
 
 func ParseMountsFromRawSlice(values []any) ([]*Mount, error) {
@@ -318,8 +334,6 @@ func stringToObject(mountStr string) (*Mount, error) {
 			}
 		case "target", "dst", "destination":
 			newMount.Target = val
-		default:
-			return nil, fmt.Errorf("unexpected key '%s' in '%s'", key, field)
 		}
 	}
 	return &newMount, nil
