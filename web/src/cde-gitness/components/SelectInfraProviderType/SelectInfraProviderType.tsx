@@ -50,6 +50,7 @@ const SelectInfraProviderType = () => {
                     onChange('metadata.infraProvider', value)
                     onChange('metadata.region', undefined)
                     onChange('resource_identifier', undefined)
+                    onChange('resource_space_ref', undefined)
                   }}
                 />
               )

@@ -95,6 +95,7 @@ export const SelectRegion = ({ options, disabled, defaultValue }: SelectRegionIn
                   onClick={() => {
                     onChange('metadata.region', label.toLowerCase())
                     onChange('resource_identifier', undefined)
+                    onChange('resource_space_ref', undefined)
                   }}
                   onMouseOver={(e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
                     setRegionState(e.currentTarget.innerText)

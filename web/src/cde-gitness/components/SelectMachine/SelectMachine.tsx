@@ -48,19 +48,21 @@ export const SelectMachine = ({ options, defaultValue }: SelectMachineInterface)
   const { gitspaceId = '' } = useParams<{ gitspaceId?: string }>()
 
   const machineTypes = options.map(item => {
-    const { cpu, disk, memory, identifier, name } = item
+    const { cpu, disk, memory, identifier, name, space_path } = item
     return {
       identifier,
       label: name,
       cpu,
       disk,
-      memory
+      memory,
+      space_path
     }
   })
 
   useEffect(() => {
     if (defaultValue && !gitspaceId) {
       onChange('resource_identifier', defaultValue.identifier)
+      onChange('resource_space_ref', defaultValue.space_path)
     }
   }, [defaultValue?.identifier, gitspaceId])
 
@@ -114,6 +116,7 @@ export const SelectMachine = ({ options, defaultValue }: SelectMachineInterface)
                         }
                         onClick={() => {
                           onChange('resource_identifier', item.identifier || '')
+                          onChange('resource_space_ref', item.space_path || '')
                         }}
                       />
                     )
