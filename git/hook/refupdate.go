@@ -166,10 +166,6 @@ func (u *RefUpdater) Init(ctx context.Context, refs []ReferenceUpdate) error {
 		})
 	}
 
-	if len(refs) > 0 && len(u.refs) == 0 {
-		return errors.New("updating zero references")
-	}
-
 	sort.Slice(u.refs, func(i, j int) bool {
 		return u.refs[i].Ref < u.refs[j].Ref
 	})
