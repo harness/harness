@@ -26,7 +26,7 @@ interface CopyButtonProps extends ButtonProps {
   primaryBtn?: boolean
 }
 
-const CopyButton: React.FC<CopyButtonProps> = ({ textToCopy, onCopySuccess, ...rest }): JSX.Element => {
+const CopyButton: React.FC<CopyButtonProps> = ({ textToCopy, onCopySuccess, iconProps, ...rest }): JSX.Element => {
   const { getString } = useStrings()
   const [openTooltip, setOpenTooltip] = useState(false)
   const showCopySuccess = (): void => {
@@ -41,10 +41,14 @@ const CopyButton: React.FC<CopyButtonProps> = ({ textToCopy, onCopySuccess, ...r
 
   return (
     <Button
-      variation={rest.primaryBtn ? ButtonVariation.PRIMARY : undefined}
+      variation={rest.primaryBtn ? ButtonVariation.PRIMARY : ButtonVariation.LINK}
       minimal
-      iconProps={{ color: rest.primaryBtn ? Color.WHITE : undefined }}
-      icon="duplicate"
+      iconProps={{
+        color: rest.primaryBtn ? Color.WHITE : undefined,
+        size: 20,
+        ...(iconProps || {})
+      }}
+      icon="code-copy"
       onClick={evt => {
         copy(textToCopy)
         showCopySuccess()
@@ -52,7 +56,6 @@ const CopyButton: React.FC<CopyButtonProps> = ({ textToCopy, onCopySuccess, ...r
           onCopySuccess(evt)
         }
       }}
-      withoutCurrentColor
       tooltip={getString('copied')}
       tooltipProps={{ isOpen: openTooltip, isDark: true }}
       {...rest}

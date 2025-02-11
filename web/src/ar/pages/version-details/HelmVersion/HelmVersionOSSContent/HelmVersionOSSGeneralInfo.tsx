@@ -24,6 +24,7 @@ import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 import { useDecodedParams, useGetSpaceRef } from '@ar/hooks'
 
+import { LabelValueTypeEnum } from '../../components/LabelValueContent/type'
 import { LabelValueContent } from '../../components/LabelValueContent/LabelValueContent'
 
 import css from '../HelmVersion.module.scss'
@@ -60,26 +61,26 @@ export default function HelmVersionOSSGeneralInfo(props: HelmVersionOSSGeneralIn
               {getString('versionDetails.overview.generalInformation.title')}
             </Text>
             <Container className={css.gridContainer}>
-              <Text font={{ variation: FontVariation.SMALL_BOLD }}>
-                {getString('versionDetails.overview.generalInformation.packageType')}
-              </Text>
-              <Text icon="service-helm" iconProps={{ size: 20 }} font={{ variation: FontVariation.SMALL }}>
-                {getString('packageTypes.helmPackage')}
-              </Text>
+              <LabelValueContent
+                label={getString('versionDetails.overview.generalInformation.packageType')}
+                value={getString('packageTypes.helmPackage')}
+                type={LabelValueTypeEnum.PackageType}
+                icon="service-helm"
+              />
               <LabelValueContent
                 label={getString('versionDetails.overview.generalInformation.repositoryPath')}
                 value={response.registryPath}
-                withCopyText
+                type={LabelValueTypeEnum.CopyText}
               />
               <LabelValueContent
                 label={getString('versionDetails.overview.generalInformation.url')}
                 value={response.url}
-                withCopyText
+                type={LabelValueTypeEnum.CopyText}
               />
               <LabelValueContent
                 label={getString('versionDetails.overview.generalInformation.pullCommand')}
                 value={response.pullCommand}
-                withCodeBlock
+                type={LabelValueTypeEnum.CommandBlock}
               />
             </Container>
           </Layout.Vertical>

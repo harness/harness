@@ -15,14 +15,13 @@
  */
 
 import React from 'react'
-import { Layout } from '@harnessio/uicore'
+import { ButtonSize, ButtonVariation, Layout } from '@harnessio/uicore'
 import type { FileDetail } from '@harnessio/react-har-service-client'
 import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance } from 'react-table'
 
-import { killEvent } from '@ar/common/utils'
 import { useStrings } from '@ar/frameworks/strings'
 import TableCells from '@ar/components/TableCells/TableCells'
-import CommandBlock from '@ar/components/CommandBlock/CommandBlock'
+import css from './ArtifactFileListTable.module.scss'
 
 type CellTypeWithActions<D extends Record<string, any>, V = any> = TableInstance<D> & {
   column: ColumnInstance<D>
@@ -41,15 +40,28 @@ export const FileSizeCell: CellType = ({ value }) => {
   return <TableCells.SizeCell value={value} />
 }
 
-export const FileChecksumListCell: CellType = ({ value }) => {
+export const FileChecksumListCell: CellType = ({ row }) => {
+  const { original } = row
+  const { checksums: value } = original
   const { getString } = useStrings()
   if (Array.isArray(value) && value.length) {
     return (
-      <Layout.Vertical spacing="xsmall">
-        {value.map(each => (
-          <TableCells.TextCell key={each} value={each} />
-        ))}
-      </Layout.Vertical>
+      <Layout.Horizontal className={css.checksumContainer}>
+        {value.map(each => {
+          const [label, val] = each.split(': ')
+          return (
+            <TableCells.CopyTextCell
+              key={val}
+              className={css.copyChecksumBtn}
+              minimal={false}
+              value={val}
+              variation={ButtonVariation.TERTIARY}
+              size={ButtonSize.SMALL}>
+              {`${getString('copy')} ${label}`}
+            </TableCells.CopyTextCell>
+          )
+        })}
+      </Layout.Horizontal>
     )
   }
   return <TableCells.TextCell value={getString('na')} />
@@ -62,5 +74,5 @@ export const FileCreatedCell: CellType = ({ value }) => {
 export const FileDownloadCommandCell: CellType = ({ value }) => {
   const { getString } = useStrings()
   if (!value) return <TableCells.TextCell value={getString('na')} />
-  return <CommandBlock noWrap commandSnippet={value} allowCopy onCopy={killEvent} />
+  return <TableCells.CopyTextCell value={value}>{getString('copy')}</TableCells.CopyTextCell>
 }

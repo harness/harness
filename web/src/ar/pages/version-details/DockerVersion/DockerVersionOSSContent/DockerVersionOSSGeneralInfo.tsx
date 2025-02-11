@@ -25,6 +25,7 @@ import type { VersionDetailsPathParams } from '@ar/routes/types'
 import { useDecodedParams, useGetSpaceRef, useParentHooks } from '@ar/hooks'
 
 import type { DockerVersionDetailsQueryParams } from '../types'
+import { LabelValueTypeEnum } from '../../components/LabelValueContent/type'
 import { LabelValueContent } from '../../components/LabelValueContent/LabelValueContent'
 
 import css from '../DockerVersion.module.scss'
@@ -70,26 +71,26 @@ export default function DockerVersionOSSGeneralInfo({ className }: DockerVersion
               {getString('versionDetails.overview.generalInformation.title')}
             </Text>
             <Container className={css.gridContainer}>
-              <Text font={{ variation: FontVariation.SMALL_BOLD }}>
-                {getString('versionDetails.overview.generalInformation.packageType')}
-              </Text>
-              <Text icon="docker-step" iconProps={{ size: 20 }} font={{ variation: FontVariation.SMALL }}>
-                {getString('packageTypes.dockerPackage')}
-              </Text>
+              <LabelValueContent
+                icon="docker-step"
+                label={getString('versionDetails.overview.generalInformation.packageType')}
+                value={getString('packageTypes.dockerPackage')}
+                type={LabelValueTypeEnum.PackageType}
+              />
               <LabelValueContent
                 label={getString('versionDetails.overview.generalInformation.repositoryPath')}
                 value={response.registryPath}
-                withCopyText
+                type={LabelValueTypeEnum.CopyText}
               />
               <LabelValueContent
                 label={getString('versionDetails.overview.generalInformation.url')}
                 value={response.url}
-                withCopyText
+                type={LabelValueTypeEnum.CopyText}
               />
               <LabelValueContent
                 label={getString('versionDetails.overview.generalInformation.pullCommand')}
                 value={response.pullCommand}
-                withCodeBlock
+                type={LabelValueTypeEnum.CommandBlock}
               />
             </Container>
           </Layout.Vertical>

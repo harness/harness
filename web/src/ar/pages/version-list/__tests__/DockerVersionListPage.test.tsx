@@ -120,10 +120,8 @@ describe('Verify Version List Page', () => {
     expect(digestValue).toBeInTheDocument()
 
     const curlColumn = getFirstRowColumn(6)
-    const curlValue = getByText(curlColumn, artifact.pullCommand as string)
-    expect(curlValue).toBeInTheDocument()
-
-    const copyCurlBtn = curlColumn.querySelector('[data-icon="duplicate"]') as HTMLElement
+    expect(curlColumn).toHaveTextContent('copy')
+    const copyCurlBtn = curlColumn.querySelector('[data-icon="code-copy"]') as HTMLElement
     expect(copyCurlBtn).toBeInTheDocument()
     await userEvent.click(copyCurlBtn)
     expect(copy).toHaveBeenCalled()

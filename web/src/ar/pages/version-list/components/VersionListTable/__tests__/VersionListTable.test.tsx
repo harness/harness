@@ -71,12 +71,8 @@ describe('Verify Version List Table', () => {
     )
     expect(downloadsValue).toBeInTheDocument()
     const curlColumn = getFirstRowColumn(5)
-    const curlValue = getByText(
-      curlColumn,
-      mockHelmLatestVersionListTableData.artifactVersions?.[0].pullCommand as string
-    )
-    expect(curlValue).toBeInTheDocument()
-    const copyCurlBtn = curlColumn.querySelector('[data-icon="duplicate"]') as HTMLElement
+    expect(curlColumn).toHaveTextContent('copy')
+    const copyCurlBtn = curlColumn.querySelector('[data-icon="code-copy"]') as HTMLElement
     expect(copyCurlBtn).toBeInTheDocument()
     await userEvent.click(copyCurlBtn)
     expect(copy).toHaveBeenCalled()

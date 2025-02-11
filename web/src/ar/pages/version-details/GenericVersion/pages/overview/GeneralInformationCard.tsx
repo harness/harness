@@ -22,6 +22,7 @@ import { Card, Container, Layout, Text } from '@harnessio/uicore'
 import { useStrings } from '@ar/frameworks/strings'
 import { DEFAULT_DATE_TIME_FORMAT } from '@ar/constants'
 import { getReadableDateTime } from '@ar/common/dateUtils'
+import { LabelValueTypeEnum } from '@ar/pages/version-details/components/LabelValueContent/type'
 import { LabelValueContent } from '@ar/pages/version-details/components/LabelValueContent/LabelValueContent'
 
 import type { GenericArtifactDetails } from '../../types'
@@ -46,26 +47,28 @@ export default function GeneralInformationCard(props: GeneralInformationCardProp
           <LabelValueContent
             label={getString('versionDetails.overview.generalInformation.name')}
             value={data.name}
-            withCopyText
+            type={LabelValueTypeEnum.CopyText}
           />
           <LabelValueContent
             label={getString('versionDetails.overview.generalInformation.version')}
             value={data.version}
-            withCopyText
+            type={LabelValueTypeEnum.CopyText}
           />
-          <Text font={{ variation: FontVariation.SMALL_BOLD }}>
-            {getString('versionDetails.overview.generalInformation.packageType')}
-          </Text>
-          <Text icon="generic-repository-type" iconProps={{ size: 20 }} font={{ variation: FontVariation.SMALL }}>
-            {getString('packageTypes.genericPackage')}
-          </Text>
+          <LabelValueContent
+            label={getString('versionDetails.overview.generalInformation.packageType')}
+            value={getString('packageTypes.genericPackage')}
+            type={LabelValueTypeEnum.PackageType}
+            icon="generic-repository-type"
+          />
           <LabelValueContent
             label={getString('versionDetails.overview.generalInformation.uploadedBy')}
             value={getReadableDateTime(Number(data.modifiedAt), DEFAULT_DATE_TIME_FORMAT)}
+            type={LabelValueTypeEnum.Text}
           />
           <LabelValueContent
             label={getString('versionDetails.overview.generalInformation.description')}
             value={isEmpty(data.description) ? getString('na') : data.description}
+            type={LabelValueTypeEnum.Text}
           />
         </Container>
       </Layout.Vertical>

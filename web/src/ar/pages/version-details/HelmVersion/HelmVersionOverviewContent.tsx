@@ -27,6 +27,7 @@ import { getReadableDateTime } from '@ar/common/dateUtils'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 import { useDecodedParams, useGetSpaceRef } from '@ar/hooks'
 
+import { LabelValueTypeEnum } from '../components/LabelValueContent/type'
 import { LabelValueContent } from '../components/LabelValueContent/LabelValueContent'
 
 import css from './HelmVersion.module.scss'
@@ -62,35 +63,38 @@ export default function HelmVersionOverviewContent(): JSX.Element {
                 <LabelValueContent
                   label={getString('versionDetails.overview.generalInformation.name')}
                   value={response.artifact}
-                  withCopyText
+                  type={LabelValueTypeEnum.CopyText}
                 />
                 <LabelValueContent
                   label={getString('versionDetails.overview.generalInformation.version')}
                   value={response.version}
-                  withCopyText
+                  type={LabelValueTypeEnum.CopyText}
                 />
-                <Text font={{ variation: FontVariation.SMALL_BOLD }}>
-                  {getString('versionDetails.overview.generalInformation.packageType')}
-                </Text>
-                <Text icon="service-helm" iconProps={{ size: 20 }} font={{ variation: FontVariation.SMALL }}>
-                  {getString('packageTypes.helmPackage')}
-                </Text>
+                <LabelValueContent
+                  label={getString('versionDetails.overview.generalInformation.packageType')}
+                  value={getString('packageTypes.helmPackage')}
+                  type={LabelValueTypeEnum.PackageType}
+                  icon="service-helm"
+                />
                 <LabelValueContent
                   label={getString('versionDetails.overview.generalInformation.size')}
                   value={response.size}
+                  type={LabelValueTypeEnum.Text}
                 />
                 <LabelValueContent
                   label={getString('versionDetails.overview.generalInformation.downloads')}
                   value={defaultTo(response.downloadsCount?.toLocaleString(), 0)}
+                  type={LabelValueTypeEnum.Text}
                 />
                 <LabelValueContent
                   label={getString('versionDetails.overview.generalInformation.uploadedBy')}
                   value={getReadableDateTime(Number(response.modifiedAt), DEFAULT_DATE_TIME_FORMAT)}
+                  type={LabelValueTypeEnum.Text}
                 />
                 <LabelValueContent
                   label={getString('versionDetails.overview.generalInformation.pullCommand')}
                   value={response.pullCommand}
-                  withCodeBlock
+                  type={LabelValueTypeEnum.CommandBlock}
                 />
               </Container>
             </Layout.Vertical>

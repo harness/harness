@@ -88,17 +88,17 @@ export const CopyUrlCell: FC<PropsWithChildren<CopyUrlCellProps>> = ({ value, ch
   )
 }
 
-interface CopyTextCellProps {
+interface CopyTextCellProps extends ButtonProps {
   value: string
-  icon?: ButtonProps['rightIcon']
-  iconProps?: ButtonProps['iconProps']
+  icon?: IconName
 }
 
 export const CopyTextCell: FC<PropsWithChildren<CopyTextCellProps>> = ({
   value,
   icon,
   iconProps,
-  children
+  children,
+  ...rest
 }): JSX.Element => {
   const { getString } = useStrings()
   const [openTooltip, setOpenTooltip] = useState(false)
@@ -121,8 +121,9 @@ export const CopyTextCell: FC<PropsWithChildren<CopyTextCellProps>> = ({
         copy(value)
         showCopySuccess()
       }}
-      tooltip={getString('copied')}
-      tooltipProps={{ isOpen: openTooltip, isDark: true }}>
+      tooltip={openTooltip ? getString('copied') : undefined}
+      tooltipProps={{ isOpen: openTooltip, isDark: true }}
+      {...rest}>
       {children}
     </Button>
   )

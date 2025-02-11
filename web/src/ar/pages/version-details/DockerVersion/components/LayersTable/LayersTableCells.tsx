@@ -17,9 +17,10 @@
 import React from 'react'
 import classNames from 'classnames'
 import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance } from 'react-table'
-import { FontVariation } from '@harnessio/design-system'
-import { CopyToClipboard, Text } from '@harnessio/uicore'
+import { Text } from '@harnessio/uicore'
+import { Color, FontVariation } from '@harnessio/design-system'
 
+import CopyButton from '@ar/components/CopyButton/CopyButton'
 import css from './LayersTable.module.scss'
 
 type CellTypeWithActions<D extends Record<string, any>, V = any> = TableInstance<D> & {
@@ -58,5 +59,5 @@ export const LayerSizeCell: CellType = ({ value }) => {
 export const LayerActionCell: CellType = ({ row }) => {
   const { original } = row
   const { code } = original
-  return <CopyToClipboard content={code} showFeedback iconSize={18} />
+  return <CopyButton textToCopy={code} iconProps={{ color: Color.PRIMARY_7 }} />
 }

@@ -28,6 +28,7 @@ import { useDecodedParams, useGetSpaceRef, useParentHooks } from '@ar/hooks'
 
 import type { DockerVersionDetailsQueryParams } from './types'
 import { VersionOverviewCard } from '../components/OverviewCards/types'
+import { LabelValueTypeEnum } from '../components/LabelValueContent/type'
 import VersionOverviewCards from '../components/OverviewCards/OverviewCards'
 import { LabelValueContent } from '../components/LabelValueContent/LabelValueContent'
 
@@ -87,40 +88,43 @@ export default function DockerVersionOverviewContent(): JSX.Element {
                 <LabelValueContent
                   label={getString('versionDetails.overview.generalInformation.name')}
                   value={response.imageName}
-                  withCopyText
+                  type={LabelValueTypeEnum.CopyText}
                 />
                 <LabelValueContent
                   label={getString('versionDetails.overview.generalInformation.version')}
                   value={response.version}
-                  withCopyText
+                  type={LabelValueTypeEnum.CopyText}
                 />
-                <Text font={{ variation: FontVariation.SMALL_BOLD }}>
-                  {getString('versionDetails.overview.generalInformation.packageType')}
-                </Text>
-                <Text icon="docker-step" iconProps={{ size: 20 }} font={{ variation: FontVariation.SMALL }}>
-                  {getString('packageTypes.dockerPackage')}
-                </Text>
+                <LabelValueContent
+                  label={getString('versionDetails.overview.generalInformation.packageType')}
+                  value={getString('packageTypes.dockerPackage')}
+                  type={LabelValueTypeEnum.PackageType}
+                  icon="docker-step"
+                />
                 <LabelValueContent
                   label={getString('versionDetails.overview.generalInformation.digest')}
                   value={digest}
-                  withCopyText
+                  type={LabelValueTypeEnum.CopyText}
                 />
                 <LabelValueContent
                   label={getString('versionDetails.overview.generalInformation.size')}
                   value={response.size}
+                  type={LabelValueTypeEnum.Text}
                 />
                 <LabelValueContent
                   label={getString('versionDetails.overview.generalInformation.downloads')}
                   value={response.downloadsCount?.toString()}
+                  type={LabelValueTypeEnum.Text}
                 />
                 <LabelValueContent
                   label={getString('versionDetails.overview.generalInformation.uploadedBy')}
                   value={getReadableDateTime(Number(response.modifiedAt), DEFAULT_DATE_TIME_FORMAT)}
+                  type={LabelValueTypeEnum.Text}
                 />
                 <LabelValueContent
                   label={getString('versionDetails.overview.generalInformation.pullCommand')}
                   value={response.pullCommand}
-                  withCodeBlock
+                  type={LabelValueTypeEnum.CommandBlock}
                 />
               </Container>
             </Layout.Vertical>

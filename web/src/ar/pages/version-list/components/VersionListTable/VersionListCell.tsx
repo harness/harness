@@ -25,13 +25,11 @@ import type { ArtifactVersionMetadata } from '@harnessio/react-har-service-clien
 
 import Tag from '@ar/components/Tag/Tag'
 import { useStrings } from '@ar/frameworks/strings'
-import type { ArtifactDetailsPathParams } from '@ar/routes/types'
 import { useDecodedParams, useRoutes } from '@ar/hooks'
-
 import TableCells from '@ar/components/TableCells/TableCells'
-import CommandBlock from '@ar/components/CommandBlock/CommandBlock'
-import { killEvent } from '@ar/common/utils'
+import type { ArtifactDetailsPathParams } from '@ar/routes/types'
 import { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
+
 import type { VersionListExpandedColumnProps } from './types'
 import css from './VersionListTable.module.scss'
 
@@ -111,7 +109,7 @@ export const VersionFileCountCell: CellType = ({ value }) => {
 export const PullCommandCell: CellType = ({ value }) => {
   const { getString } = useStrings()
   if (!value) return <>{getString('na')}</>
-  return <CommandBlock noWrap commandSnippet={value} allowCopy onCopy={killEvent} />
+  return <TableCells.CopyTextCell value={value}>{getString('copy')}</TableCells.CopyTextCell>
 }
 
 export const VersionDownloadsCell: CellType = ({ value }) => {

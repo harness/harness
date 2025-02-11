@@ -23,6 +23,7 @@ import type { ArtifactDetail } from '@harnessio/react-har-service-client'
 import { useStrings } from '@ar/frameworks/strings'
 import { DEFAULT_DATE_TIME_FORMAT } from '@ar/constants'
 import { getReadableDateTime } from '@ar/common/dateUtils'
+import { LabelValueTypeEnum } from '@ar/pages/version-details/components/LabelValueContent/type'
 import { LabelValueContent } from '@ar/pages/version-details/components/LabelValueContent/LabelValueContent'
 
 import css from './overview.module.scss'
@@ -45,27 +46,33 @@ export default function MavnGeneralInformationCard(props: MavnGeneralInformation
           <LabelValueContent
             label={getString('versionDetails.overview.generalInformation.name')}
             value={data.name}
-            withCopyText
+            type={LabelValueTypeEnum.CopyText}
           />
           <LabelValueContent
             label={getString('versionDetails.overview.generalInformation.version')}
             value={data.version}
-            withCopyText
+            type={LabelValueTypeEnum.CopyText}
           />
-          <Text font={{ variation: FontVariation.SMALL_BOLD }}>
-            {getString('versionDetails.overview.generalInformation.packageType')}
-          </Text>
-          <Text icon="generic-repository-type" iconProps={{ size: 20 }} font={{ variation: FontVariation.SMALL }}>
-            {getString('packageTypes.mavenPackage')}
-          </Text>
-          <LabelValueContent label={getString('versionDetails.overview.generalInformation.size')} value={data.size} />
+          <LabelValueContent
+            label={getString('versionDetails.overview.generalInformation.packageType')}
+            value={getString('packageTypes.mavenPackage')}
+            type={LabelValueTypeEnum.PackageType}
+            icon="maven-repository-type"
+          />
+          <LabelValueContent
+            label={getString('versionDetails.overview.generalInformation.size')}
+            value={data.size}
+            type={LabelValueTypeEnum.Text}
+          />
           <LabelValueContent
             label={getString('versionDetails.overview.generalInformation.downloads')}
             value={defaultTo(data.downloadCount?.toLocaleString(), 0)}
+            type={LabelValueTypeEnum.Text}
           />
           <LabelValueContent
             label={getString('versionDetails.overview.generalInformation.uploadedBy')}
             value={getReadableDateTime(Number(data.modifiedAt), DEFAULT_DATE_TIME_FORMAT)}
+            type={LabelValueTypeEnum.Text}
           />
         </Container>
       </Layout.Vertical>
