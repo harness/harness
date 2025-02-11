@@ -37,6 +37,11 @@ type AssignToPullReqOut struct {
 	ActivityType  enum.PullReqLabelActivityType
 }
 
+type WithValue struct {
+	Label *types.Label
+	Value *types.LabelValue
+}
+
 func (out *AssignToPullReqOut) ToLabelPullReqAssignmentInfo() *types.LabelPullReqAssignmentInfo {
 	var valueID *int64
 	var value *string
@@ -168,53 +173,64 @@ func (s *Service) AssignToPullReq(
 	}, nil
 }
 
-func (s *Service) AssignToPullReqOnCreation(
+func (s *Service) PreparePullReqLabel(
 	ctx context.Context,
 	principalID int64,
-	pullreqID int64,
 	repoID int64,
 	repoParentID int64,
 	in *types.PullReqLabelAssignInput,
-) (*AssignToPullReqOut, error) {
+) (WithValue, error) {
 	label, err := s.labelStore.FindByID(ctx, in.LabelID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find label by id: %w", err)
+		return WithValue{}, fmt.Errorf("failed to find label by id: %w", err)
 	}
 
 	if err := s.checkPullreqLabelInScope(ctx, repoParentID, repoID, label); err != nil {
-		return nil, err
+		return WithValue{}, err
 	}
 
-	var labelValue *types.LabelValue
+	var value *types.LabelValue
 	if in.ValueID != nil {
-		labelValue, err = s.labelValueStore.FindByID(ctx, *in.ValueID)
+		value, err = s.labelValueStore.FindByID(ctx, *in.ValueID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to find label value by id: %w", err)
+			return WithValue{}, fmt.Errorf("failed to find label value by id: %w", err)
 		}
-		if label.ID != labelValue.LabelID {
-			return nil, errors.InvalidArgument("label value is not associated with label")
+		if label.ID != value.LabelID {
+			return WithValue{}, errors.InvalidArgument("label value is not associated with label")
 		}
 	} else if in.Value != "" {
-		labelValue, err = s.getOrDefineValue(ctx, principalID, label, in.Value)
+		value, err = s.getOrDefineValue(ctx, principalID, label, in.Value)
 		if err != nil {
-			return nil, err
+			return WithValue{}, err
 		}
 	}
 
-	pullreqLabel := newPullReqLabel(pullreqID, principalID, in)
-	if labelValue != nil {
-		pullreqLabel.ValueID = &labelValue.ID
+	return WithValue{
+		Label: label,
+		Value: value,
+	}, nil
+}
+func (s *Service) AssignToPullReqOnCreation(
+	ctx context.Context,
+	pullreqID int64,
+	principalID int64,
+	labelWithValue *WithValue,
+	labelAssignInput *types.PullReqLabelAssignInput,
+) (*AssignToPullReqOut, error) {
+	pullReqLabel := newPullReqLabel(pullreqID, principalID, labelAssignInput)
+	if labelWithValue.Value != nil {
+		pullReqLabel.ValueID = &labelWithValue.Value.ID
 	}
 
-	err = s.pullReqLabelAssignmentStore.Assign(ctx, pullreqLabel)
+	err := s.pullReqLabelAssignmentStore.Assign(ctx, pullReqLabel)
 	if err != nil {
 		return nil, fmt.Errorf("failed to assign label to pullreq: %w", err)
 	}
 
 	return &AssignToPullReqOut{
-		Label:         label,
-		PullReqLabel:  pullreqLabel,
-		NewLabelValue: labelValue,
+		Label:         labelWithValue.Label,
+		PullReqLabel:  pullReqLabel,
+		NewLabelValue: labelWithValue.Value,
 		ActivityType:  enum.LabelActivityAssign,
 	}, nil
 }

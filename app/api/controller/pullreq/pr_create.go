@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/app/auth"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/app/services/instrument"
+	labelsvc "github.com/harness/gitness/app/services/label"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
 	gitenum "github.com/harness/gitness/git/enum"
@@ -140,6 +141,12 @@ func (c *Controller) Create(
 
 	var pr *types.PullReq
 	targetRepoID := targetRepo.ID
+
+	labelAssignInputMap, err := c.prepareLabels(
+		ctx, in.Labels, session.Principal.ID, targetRepo.ID, targetRepo.ParentID,
+	)
+	var labelAssignOuts []*labelsvc.AssignToPullReqOut
+
 	err = controller.TxOptLock(ctx, c.tx, func(ctx context.Context) error {
 		// Always re-fetch at the start of the transaction because the repo we have is from a cache.
 
@@ -165,6 +172,9 @@ func (c *Controller) Create(
 			UnresolvedCount: 0,
 		}
 
+		// Calculate the activity sequence
+		pr.ActivitySeq = int64(len(in.Labels) + len(in.ReviewerIDs))
+
 		err = c.pullreqStore.Create(ctx, pr)
 		if err != nil {
 			return fmt.Errorf("pullreq creation failed: %w", err)
@@ -176,11 +186,11 @@ func (c *Controller) Create(
 			return err
 		}
 
-		if err := c.assignLabels(
-			ctx, session.Principal.ID, pr, targetRepo.ID, targetRepo.ParentID, in.Labels,
-		); err != nil {
+		if labelAssignOuts, err = c.assignLabels(ctx, pr, session.Principal.ID, labelAssignInputMap); err != nil {
 			return err
 		}
+
+		c.storeLabelAssignActivity(ctx, pr, session.Principal.ID, labelAssignOuts)
 
 		// Create PR head reference in the git repository
 
@@ -200,6 +210,8 @@ func (c *Controller) Create(
 	if err != nil {
 		return nil, fmt.Errorf("failed to create pullreq: %w", err)
 	}
+
+	backfillWithLabelAssignInfo(pr, labelAssignOuts)
 
 	c.eventReporter.Created(ctx, &pullreqevents.CreatedPayload{
 		Base:         eventBase(pr, &session.Principal),
@@ -288,38 +300,91 @@ func (c *Controller) createReviewers(
 	return nil
 }
 
-func (c *Controller) assignLabels(
+// prepareLabels fetches data (labels and label values) necessary for the pr label assignment.
+// The data recency is not critical: labels/values might change and the op will either be valid or fail.
+// Because it makes db calls, we use it before, i.e. outside of the PR creation tx.
+func (c *Controller) prepareLabels(
 	ctx context.Context,
+	labelAssignInputs []*types.PullReqLabelAssignInput,
 	principalID int64,
-	pullreq *types.PullReq,
 	repoID int64,
 	repoParentID int64,
-	labels []*types.PullReqLabelAssignInput,
-) error {
-	if len(labels) == 0 {
-		return nil
-	}
+) (map[*types.PullReqLabelAssignInput]*labelsvc.WithValue, error) {
+	labelAssignInputMap := make(
+		map[*types.PullReqLabelAssignInput]*labelsvc.WithValue,
+		len(labelAssignInputs),
+	)
 
-	assignmentInfos := make([]*types.LabelPullReqAssignmentInfo, len(labels))
-	for i, label := range labels {
-		out, err := c.labelSvc.AssignToPullReqOnCreation(
+	for _, labelAssignInput := range labelAssignInputs {
+		labelWithValue, err := c.labelSvc.PreparePullReqLabel(
 			ctx,
-			principalID,
-			pullreq.ID,
-			repoID,
-			repoParentID,
-			label,
+			principalID, repoID, repoParentID,
+			labelAssignInput,
 		)
 		if err != nil {
-			return fmt.Errorf("failed to assign label to pullreq: %w", err)
+			return nil, fmt.Errorf("failed to prepare label assignment data: %w", err)
 		}
 
-		assignmentInfos[i] = out.ToLabelPullReqAssignmentInfo()
+		labelAssignInputMap[labelAssignInput] = &labelWithValue
 	}
 
-	pullreq.Labels = assignmentInfos
+	return labelAssignInputMap, nil
+}
 
-	return nil
+// assignLabels is a critical op for PR creation, so we use it in the PR creation tx.
+func (c *Controller) assignLabels(
+	ctx context.Context,
+	pr *types.PullReq,
+	principalID int64,
+	labelAssignInputMap map[*types.PullReqLabelAssignInput]*labelsvc.WithValue,
+) ([]*labelsvc.AssignToPullReqOut, error) {
+	assignOuts := make([]*labelsvc.AssignToPullReqOut, len(labelAssignInputMap))
+
+	var err error
+	var i int
+	for labelAssignInput, labelWithValue := range labelAssignInputMap {
+		assignOuts[i], err = c.labelSvc.AssignToPullReqOnCreation(
+			ctx,
+			pr.ID,
+			principalID,
+			labelWithValue,
+			labelAssignInput,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to assign label to pullreq: %w", err)
+		}
+
+		i++
+	}
+
+	return assignOuts, nil
+}
+
+func backfillWithLabelAssignInfo(
+	pr *types.PullReq,
+	labelAssignOuts []*labelsvc.AssignToPullReqOut,
+) {
+	pr.Labels = make([]*types.LabelPullReqAssignmentInfo, len(labelAssignOuts))
+	for i, assignOut := range labelAssignOuts {
+		pr.Labels[i] = assignOut.ToLabelPullReqAssignmentInfo()
+	}
+}
+
+func (c *Controller) storeLabelAssignActivity(
+	ctx context.Context,
+	pr *types.PullReq,
+	principalID int64,
+	labelAssignOuts []*labelsvc.AssignToPullReqOut,
+) {
+	for _, out := range labelAssignOuts {
+		payload := activityPayload(out)
+		pr.ActivitySeq++
+		if _, err := c.activityStore.CreateWithPayload(
+			ctx, pr, principalID, payload, nil,
+		); err != nil {
+			log.Ctx(ctx).Err(err).Msg("failed to write label assign pull req activity")
+		}
+	}
 }
 
 // newPullReq creates new pull request object.

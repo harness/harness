@@ -229,8 +229,12 @@ func (s *PullReqActivityStore) Create(ctx context.Context, act *types.PullReqAct
 	return nil
 }
 
-func (s *PullReqActivityStore) CreateWithPayload(ctx context.Context,
-	pr *types.PullReq, principalID int64, payload types.PullReqActivityPayload, metadata *types.PullReqActivityMetadata,
+func (s *PullReqActivityStore) CreateWithPayload(
+	ctx context.Context,
+	pr *types.PullReq,
+	principalID int64,
+	payload types.PullReqActivityPayload,
+	metadata *types.PullReqActivityMetadata,
 ) (*types.PullReqActivity, error) {
 	now := time.Now().UnixMilli()
 	act := &types.PullReqActivity{

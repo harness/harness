@@ -67,7 +67,7 @@ func (c *Controller) AssignLabel(
 	payload := activityPayload(out)
 	if _, err := c.activityStore.CreateWithPayload(
 		ctx, pullreq, session.Principal.ID, payload, nil); err != nil {
-		log.Ctx(ctx).Err(err).Msgf("failed to write pull request activity after label unassign")
+		log.Ctx(ctx).Err(err).Msg("failed to write pull request activity after label assign")
 	}
 
 	// if the label has no value, the newValueID will be nil

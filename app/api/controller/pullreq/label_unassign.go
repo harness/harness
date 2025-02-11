@@ -70,7 +70,7 @@ func (c *Controller) UnassignLabel(
 	}
 	if _, err := c.activityStore.CreateWithPayload(
 		ctx, pullreq, session.Principal.ID, payload, nil); err != nil {
-		log.Ctx(ctx).Err(err).Msgf("failed to write pull request activity after label unassign")
+		log.Ctx(ctx).Err(err).Msg("failed to write pull request activity after label unassign")
 	}
 
 	return nil
