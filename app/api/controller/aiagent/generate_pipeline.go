@@ -27,16 +27,19 @@ func (c *Controller) GeneratePipeline(
 	in *controllertypes.GeneratePipelineInput,
 ) (*controllertypes.GeneratePipelineOutput, error) {
 	generateRequest := &aitypes.PipelineGenerateRequest{
-		Prompt: in.Prompt,
+		Prompt:       in.Prompt,
+		Metadata:     in.Metadata,
+		Conversation: in.Conversation,
 	}
 
 	output, err := c.intelligence.GeneratePipeline(ctx, generateRequest)
 	if err != nil {
-		return nil, fmt.Errorf("generate pipeline: %w", err)
+		return nil, fmt.Errorf("error generate pipeline: %w", err)
 	}
 	return &controllertypes.GeneratePipelineOutput{
+		Error: output.Error,
 		Data: controllertypes.PipelineData{
-			YamlPipeline: output.YAML,
+			PipelineYaml: output.YAML,
 		},
 	}, nil
 }

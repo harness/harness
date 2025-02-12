@@ -15,12 +15,14 @@
 package types
 
 type PipelineData struct {
-	YamlPipeline string `json:"yaml_pipeline"`
+	PipelineYaml string `json:"yaml_pipeline"`
 }
 
 // create.
 type GeneratePipelineInput struct {
-	Prompt string `json:"prompt"`
+	Prompt       string            `json:"prompt"`
+	Metadata     map[string]string `json:"metadata"`
+	Conversation []Conversation    `json:"conversation"`
 }
 
 type GeneratePipelineOutput struct {
@@ -46,4 +48,16 @@ type UpdatePipelineInput struct {
 type UpdatePipelineOutput struct {
 	Error string       `json:"error"`
 	Data  PipelineData `json:"data"`
+}
+
+func (in *GeneratePipelineInput) GetConversation() []Conversation {
+	return in.Conversation
+}
+
+func (in *GeneratePipelineInput) GetPrompt() string {
+	return in.Prompt
+}
+
+func (in *GeneratePipelineInput) GetValidationPrompt() string {
+	return "Create a pipeline-yaml with the following query: " + in.GetPrompt()
 }
