@@ -31,7 +31,6 @@ type Chat struct {
 // ChatOutput represents the output of a chat request, including the conversation ID, explanation, and response.
 type ChatOutput struct {
 	ConversationID uuid.UUID      `json:"conversation_id" required:"true"`
-	Explanation    string         `json:"explanation,omitempty"`
 	Response       []ChatResponse `json:"response" required:"true"`
 }
 
