@@ -36,6 +36,7 @@ type GitspaceConfig struct {
 	Updated               int64                  `json:"updated"`
 	SSHTokenIdentifier    string                 `json:"ssh_token_identifier"`
 	InfraProviderResource InfraProviderResource  `json:"resource"`
+	LogKey                string                 `json:"log_key"`
 	CodeRepo
 	GitspaceUser
 	Connectors []PlatformConnector `json:"-"`
