@@ -43,11 +43,11 @@ export class HelmVersionType extends VersionStep<ArtifactVersionSummary> {
     VersionDetailsTab.CODE
   ]
   versionListTableColumnConfig: CommonVersionListTableProps['columnConfigs'] = {
-    [VersionListColumnEnum.Name]: { width: '30%' },
-    [VersionListColumnEnum.Size]: { width: '8%' },
-    [VersionListColumnEnum.DownloadCount]: { width: '10%' },
-    [VersionListColumnEnum.LastModified]: { width: '12%' },
-    [VersionListColumnEnum.PullCommand]: { width: '40%' }
+    [VersionListColumnEnum.Name]: { width: '100%' },
+    [VersionListColumnEnum.Size]: { width: '100%' },
+    [VersionListColumnEnum.DownloadCount]: { width: '100%' },
+    [VersionListColumnEnum.LastModified]: { width: '100%' },
+    [VersionListColumnEnum.PullCommand]: { width: '100%' }
   }
 
   renderVersionListTable(props: VersionListTableProps): JSX.Element {

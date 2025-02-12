@@ -98,14 +98,20 @@ export const getTableHeaderColumn = (column: number) => {
   return document.querySelector(`div[class*="TableV2--header--"] [class*="TableV2--cell"]:nth-child(${column})`)
 }
 
-export const getTableRow = (row: number) => {
-  return document.querySelector(`div[class*="TableV2--body--"] [class*="TableV2--row"]:nth-child(${row})`)
+export const getTableRow = (row: number, container: Document | Element = document): HTMLDivElement | null => {
+  return container.querySelector(`div[class*="TableV2--body--"] [class*="TableV2--row"]:nth-child(${row})`)
 }
 
-export const getTableColumn = (row: number, column: number): HTMLDivElement | null => {
-  return document.querySelector(
-    `div[class*="TableV2--body--"] [class*="TableV2--row"]:nth-child(${row}) [class*="TableV2--cell--"]:nth-child(${column})`
-  )
+export const getTableColumn = (
+  row: number,
+  column: number,
+  container: Document | Element = document
+): HTMLDivElement | null => {
+  const rowElement = getTableRow(row, container)
+  if (rowElement) {
+    return rowElement.querySelector(`[class*="TableV2--cell--"]:nth-child(${column})`)
+  }
+  return null
 }
 
 export const testSelectChange = async (

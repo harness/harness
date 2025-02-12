@@ -45,10 +45,10 @@ export class MavenVersionType extends VersionStep<ArtifactVersionSummary> {
   ]
 
   versionListTableColumnConfig: CommonVersionListTableProps['columnConfigs'] = {
-    [VersionListColumnEnum.Name]: { width: '30%' },
-    [VersionListColumnEnum.Size]: { width: '30%' },
-    [VersionListColumnEnum.FileCount]: { width: '20%' },
-    [VersionListColumnEnum.LastModified]: { width: '20%' }
+    [VersionListColumnEnum.Name]: { width: '100%' },
+    [VersionListColumnEnum.Size]: { width: '100%' },
+    [VersionListColumnEnum.FileCount]: { width: '100%' },
+    [VersionListColumnEnum.LastModified]: { width: '100%' }
   }
 
   renderVersionListTable(props: VersionListTableProps): JSX.Element {

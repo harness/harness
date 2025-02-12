@@ -14,13 +14,25 @@
  * limitations under the License.
  */
 
-import type { ArtifactSummary } from '@harnessio/react-har-service-client'
+import type { ListArtifactVersion } from '@harnessio/react-har-service-client'
 
-export const ArtifactDetailsSummary: ArtifactSummary = {
-  imageName: 'Artifact 1',
-  labels: ['label1', 'label2'],
-  packageType: 'DOCKER',
-  downloadsCount: 1000,
-  createdAt: '1713247878550',
-  modifiedAt: '1713247878550'
+export const mockHelmLatestVersionListTableData: ListArtifactVersion = {
+  artifactVersions: [
+    {
+      digestCount: 1,
+      downloadsCount: 100,
+      islatestVersion: true,
+      lastModified: '1730978736333',
+      name: '1.0.0',
+      packageType: 'HELM',
+      pullCommand: 'docker pull pkg.qa.harness.io/iwnhltqp7q/docker-repo/podinfo-artifact:1.0.0',
+      registryIdentifier: '',
+      registryPath: '',
+      size: '69.56MB'
+    }
+  ],
+  itemCount: 55,
+  pageCount: 2,
+  pageIndex: 0,
+  pageSize: 50
 }
