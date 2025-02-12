@@ -326,11 +326,6 @@ type (
 		) error
 	}
 
-	// RepoGitInfoView defines the repository GitUID view.
-	RepoGitInfoView interface {
-		Find(ctx context.Context, id int64) (*types.RepositoryGitInfo, error)
-	}
-
 	// MembershipStore defines the membership data storage.
 	MembershipStore interface {
 		Find(ctx context.Context, key types.MembershipKey) (*types.Membership, error)

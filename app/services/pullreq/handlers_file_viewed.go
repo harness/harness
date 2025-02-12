@@ -34,7 +34,7 @@ import (
 func (s *Service) handleFileViewedOnBranchUpdate(ctx context.Context,
 	event *events.Event[*pullreqevents.BranchUpdatedPayload],
 ) error {
-	repoGit, err := s.repoGitInfoCache.Get(ctx, event.Payload.TargetRepoID)
+	repoGit, err := s.repoFinder.FindByID(ctx, event.Payload.TargetRepoID)
 	if err != nil {
 		return fmt.Errorf("failed to get repo git info: %w", err)
 	}

@@ -128,14 +128,14 @@ func (s *Service) updateMergeData(
 	}()
 
 	// load repository objects
-	targetRepo, err := s.repoGitInfoCache.Get(ctx, pr.TargetRepoID)
+	targetRepo, err := s.repoFinder.FindByID(ctx, pr.TargetRepoID)
 	if err != nil {
 		return err
 	}
 
 	sourceRepo := targetRepo
 	if pr.TargetRepoID != pr.SourceRepoID {
-		sourceRepo, err = s.repoGitInfoCache.Get(ctx, pr.SourceRepoID)
+		sourceRepo, err = s.repoFinder.FindByID(ctx, pr.SourceRepoID)
 		if err != nil {
 			return err
 		}

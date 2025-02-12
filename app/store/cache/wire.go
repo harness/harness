@@ -28,7 +28,6 @@ import (
 var WireSet = wire.NewSet(
 	ProvidePrincipalInfoCache,
 	ProvidePathCache,
-	ProvideRepoGitInfoCache,
 	ProvideInfraProviderResourceCache,
 )
 
@@ -43,11 +42,6 @@ func ProvidePathCache(
 	spacePathTransformation store.SpacePathTransformation,
 ) store.SpacePathCache {
 	return New(pathStore, spacePathTransformation)
-}
-
-// ProvideRepoGitInfoCache provides a cache for storing types.RepositoryGitInfo objects.
-func ProvideRepoGitInfoCache(getter store.RepoGitInfoView) store.RepoGitInfoCache {
-	return cache.New[int64, *types.RepositoryGitInfo](getter, 15*time.Minute)
 }
 
 // ProvideInfraProviderResourceCache provides a cache for storing types.InfraProviderResource objects.

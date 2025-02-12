@@ -43,7 +43,7 @@ func (s *Service) updateCodeComments(ctx context.Context,
 	targetRepoID, pullreqID int64,
 	newSourceSHA, newMergeBaseSHA string,
 ) error {
-	repoGit, err := s.repoGitInfoCache.Get(ctx, targetRepoID)
+	repoGit, err := s.repoFinder.FindByID(ctx, targetRepoID)
 	if err != nil {
 		return fmt.Errorf("failed to get repo git info: %w", err)
 	}

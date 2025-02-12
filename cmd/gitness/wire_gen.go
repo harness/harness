@@ -285,9 +285,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	spaceIdentifier := check.ProvideSpaceIdentifierCheck()
 	secretStore := database.ProvideSecretStore(db)
 	connectorStore := database.ProvideConnectorStore(db, secretStore)
-	repoGitInfoView := database.ProvideRepoGitInfoView(db)
-	repoGitInfoCache := cache.ProvideRepoGitInfoCache(repoGitInfoView)
-	listService := pullreq.ProvideListService(transactor, gitInterface, authorizer, spaceStore, repoGitInfoCache, pullReqStore, checkStore, repoFinder, labelService, protectionManager)
+	listService := pullreq.ProvideListService(transactor, gitInterface, authorizer, spaceStore, pullReqStore, checkStore, repoFinder, labelService, protectionManager)
 	exporterRepository, err := exporter.ProvideSpaceExporter(provider, gitInterface, repoStore, jobScheduler, executor, encrypter, streamer)
 	if err != nil {
 		return nil, err
@@ -379,7 +377,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	pullreqService, err := pullreq.ProvideService(ctx, config, readerFactory, eventsReaderFactory, reporter4, gitInterface, repoGitInfoCache, repoStore, pullReqStore, pullReqActivityStore, principalInfoCache, codeCommentView, migrator, pullReqFileViewStore, pubSub, provider, streamer)
+	pullreqService, err := pullreq.ProvideService(ctx, config, readerFactory, eventsReaderFactory, reporter4, gitInterface, repoFinder, repoStore, pullReqStore, pullReqActivityStore, principalInfoCache, codeCommentView, migrator, pullReqFileViewStore, pubSub, provider, streamer)
 	if err != nil {
 		return nil, err
 	}

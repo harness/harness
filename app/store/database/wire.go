@@ -44,7 +44,6 @@ var WireSet = wire.NewSet(
 	ProvideStageStore,
 	ProvideStepStore,
 	ProvideSecretStore,
-	ProvideRepoGitInfoView,
 	ProvideMembershipStore,
 	ProvideTokenStore,
 	ProvidePullReqStore,
@@ -229,11 +228,6 @@ func ProvideExecutionStore(db *sqlx.DB) store.ExecutionStore {
 // ProvidePluginStore provides a plugin store.
 func ProvidePluginStore(db *sqlx.DB) store.PluginStore {
 	return NewPluginStore(db)
-}
-
-// ProvideRepoGitInfoView provides a repo git UID view.
-func ProvideRepoGitInfoView(db *sqlx.DB) store.RepoGitInfoView {
-	return NewRepoGitInfoView(db)
 }
 
 func ProvideMembershipStore(

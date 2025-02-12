@@ -41,7 +41,6 @@ type ListService struct {
 	git               git.Interface
 	authorizer        authz.Authorizer
 	spaceStore        store.SpaceStore
-	repoGitInfoCache  store.RepoGitInfoCache
 	pullreqStore      store.PullReqStore
 	checkStore        store.CheckStore
 	repoFinder        refcache.RepoFinder
@@ -54,7 +53,6 @@ func NewListService(
 	git git.Interface,
 	authorizer authz.Authorizer,
 	spaceStore store.SpaceStore,
-	repoGitInfoCache store.RepoGitInfoCache,
 	pullreqStore store.PullReqStore,
 	checkStore store.CheckStore,
 	repoFinder refcache.RepoFinder,
@@ -66,7 +64,6 @@ func NewListService(
 		git:               git,
 		authorizer:        authorizer,
 		spaceStore:        spaceStore,
-		repoGitInfoCache:  repoGitInfoCache,
 		pullreqStore:      pullreqStore,
 		checkStore:        checkStore,
 		repoFinder:        repoFinder,
@@ -229,13 +226,13 @@ func (c *ListService) backfillStats(
 			return nil
 		}
 
-		repoGitInfo, err := c.repoGitInfoCache.Get(ctx, pr.TargetRepoID)
+		repo, err := c.repoFinder.FindByID(ctx, pr.TargetRepoID)
 		if err != nil {
 			return fmt.Errorf("failed get repo git info to fetch diff stats: %w", err)
 		}
 
 		output, err := c.git.DiffStats(ctx, &git.DiffParams{
-			ReadParams: git.CreateReadParams(repoGitInfo),
+			ReadParams: git.CreateReadParams(repo),
 			BaseRef:    pr.MergeBaseSHA,
 			HeadRef:    pr.SourceSHA,
 		})

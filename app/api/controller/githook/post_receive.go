@@ -374,7 +374,5 @@ func (c *Controller) updateLastGITPushTime(
 		return
 	}
 
-	c.repoFinder.MarkChanged(ctx, repo.ID)
-
 	*repo = *newRepo
 }

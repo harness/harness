@@ -25,6 +25,7 @@ import (
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/app/githook"
 	"github.com/harness/gitness/app/services/codecomments"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
@@ -38,7 +39,7 @@ import (
 type Service struct {
 	pullreqEvReporter   *pullreqevents.Reporter
 	git                 git.Interface
-	repoGitInfoCache    store.RepoGitInfoCache
+	repoFinder          refcache.RepoFinder
 	repoStore           store.RepoStore
 	pullreqStore        store.PullReqStore
 	activityStore       store.PullReqActivityStore
@@ -62,7 +63,7 @@ func New(ctx context.Context,
 	pullreqEvReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
 	pullreqEvReporter *pullreqevents.Reporter,
 	git git.Interface,
-	repoGitInfoCache store.RepoGitInfoCache,
+	repoFinder refcache.RepoFinder,
 	repoStore store.RepoStore,
 	pullreqStore store.PullReqStore,
 	activityStore store.PullReqActivityStore,
@@ -77,7 +78,7 @@ func New(ctx context.Context,
 	service := &Service{
 		pullreqEvReporter:   pullreqEvReporter,
 		git:                 git,
-		repoGitInfoCache:    repoGitInfoCache,
+		repoFinder:          repoFinder,
 		repoStore:           repoStore,
 		pullreqStore:        pullreqStore,
 		activityStore:       activityStore,

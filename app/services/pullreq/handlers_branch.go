@@ -58,7 +58,7 @@ func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
 
 	var commitTitle string
 	err := func() error {
-		repo, err := s.repoGitInfoCache.Get(ctx, event.Payload.RepoID)
+		repo, err := s.repoFinder.FindByID(ctx, event.Payload.RepoID)
 		if err != nil {
 			return fmt.Errorf("failed to get repo git info: %w", err)
 		}
@@ -86,7 +86,7 @@ func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
 	s.forEveryOpenPR(ctx, event.Payload.RepoID, event.Payload.Ref, func(pr *types.PullReq) error {
 		// First check if the merge base has changed
 
-		targetRepo, err := s.repoGitInfoCache.Get(ctx, pr.TargetRepoID)
+		targetRepo, err := s.repoFinder.FindByID(ctx, pr.TargetRepoID)
 		if err != nil {
 			return fmt.Errorf("failed to get target repo git info: %w", err)
 		}
@@ -178,7 +178,7 @@ func (s *Service) closePullReqOnBranchDelete(ctx context.Context,
 	event *events.Event[*gitevents.BranchDeletedPayload],
 ) error {
 	s.forEveryOpenPR(ctx, event.Payload.RepoID, event.Payload.Ref, func(pr *types.PullReq) error {
-		targetRepo, err := s.repoGitInfoCache.Get(ctx, pr.TargetRepoID)
+		targetRepo, err := s.repoFinder.FindByID(ctx, pr.TargetRepoID)
 		if err != nil {
 			return fmt.Errorf("failed to get repo info: %w", err)
 		}

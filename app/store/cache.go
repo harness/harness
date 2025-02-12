@@ -26,9 +26,6 @@ type (
 	// SpacePathCache caches a raw path to a space path.
 	SpacePathCache cache.Cache[string, *types.SpacePath]
 
-	// RepoGitInfoCache caches repository IDs to values GitUID.
-	RepoGitInfoCache cache.Cache[int64, *types.RepositoryGitInfo]
-
 	// InfraProviderResourceCache caches infraprovider resourceIDs to infraprovider resource.
 	InfraProviderResourceCache cache.ExtendedCache[int64, *types.InfraProviderResource]
 )
