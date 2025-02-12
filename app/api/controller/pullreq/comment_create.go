@@ -371,7 +371,7 @@ func setAsCodeComment(a *types.PullReqActivity, cut git.DiffCutOutput, path, sou
 
 func (c *Controller) fetchDiffCut(
 	ctx context.Context,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	in *CommentCreateInput,
 ) (git.DiffCutOutput, error) {
 	// maxDiffLineCount restricts the total length of a code comment diff to 1000 lines.
@@ -401,7 +401,7 @@ func (c *Controller) fetchDiffCut(
 
 func (c *Controller) migrateCodeComment(
 	ctx context.Context,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	pr *types.PullReq,
 	in *CommentCreateInput,
 	cc *types.CodeComment,

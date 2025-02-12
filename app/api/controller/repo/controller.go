@@ -93,7 +93,7 @@ type Controller struct {
 	userGroupService   usergroup.SearchService
 	protectionManager  *protection.Manager
 	git                git.Interface
-	spaceCache         refcache.SpaceCache
+	spaceFinder        refcache.SpaceFinder
 	repoFinder         refcache.RepoFinder
 	importer           *importer.Repository
 	codeOwners         *codeowners.Service
@@ -129,7 +129,7 @@ func NewController(
 	principalInfoCache store.PrincipalInfoCache,
 	protectionManager *protection.Manager,
 	git git.Interface,
-	spaceCache refcache.SpaceCache,
+	spaceFinder refcache.SpaceFinder,
 	repoFinder refcache.RepoFinder,
 	importer *importer.Repository,
 	codeOwners *codeowners.Service,
@@ -166,7 +166,7 @@ func NewController(
 		principalInfoCache: principalInfoCache,
 		protectionManager:  protectionManager,
 		git:                git,
-		spaceCache:         spaceCache,
+		spaceFinder:        spaceFinder,
 		repoFinder:         repoFinder,
 		importer:           importer,
 		codeOwners:         codeOwners,
@@ -198,7 +198,7 @@ func (c *Controller) getRepoCheckAccess(
 	repoRef string,
 	reqPermission enum.Permission,
 	allowedRepoStates ...enum.RepoState,
-) (*types.Repository, error) {
+) (*types.RepositoryCore, error) {
 	return GetRepoCheckAccess(
 		ctx,
 		c.repoFinder,
@@ -217,7 +217,7 @@ func (c *Controller) getRepoCheckAccessForGit(
 	session *auth.Session,
 	repoRef string,
 	reqPermission enum.Permission,
-) (*types.Repository, error) {
+) (*types.RepositoryCore, error) {
 	return GetRepoCheckAccess(
 		ctx,
 		c.repoFinder,
@@ -234,8 +234,8 @@ func (c *Controller) getSpaceCheckAuthRepoCreation(
 	ctx context.Context,
 	session *auth.Session,
 	parentRef string,
-) (*types.Space, error) {
-	return GetSpaceCheckAuthRepoCreation(ctx, c.spaceCache, c.authorizer, session, parentRef)
+) (*types.SpaceCore, error) {
+	return GetSpaceCheckAuthRepoCreation(ctx, c.spaceFinder, c.authorizer, session, parentRef)
 }
 
 func ValidateParentRef(parentRef string) error {
@@ -250,7 +250,7 @@ func ValidateParentRef(parentRef string) error {
 func (c *Controller) fetchRules(
 	ctx context.Context,
 	session *auth.Session,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 ) (protection.Protection, bool, error) {
 	isRepoOwner, err := apiauth.IsRepoOwner(ctx, c.authorizer, session, repo)
 	if err != nil {

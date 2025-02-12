@@ -22,6 +22,7 @@ import (
 type Cache[K any, V any] interface {
 	Stats() (int64, int64)
 	Get(ctx context.Context, key K) (V, error)
+	Evict(ctx context.Context, key K)
 }
 
 // ExtendedCache is an extension of the simple cache abstraction that adds mapping functionality.

@@ -17,6 +17,7 @@ package importer
 import (
 	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/services/publicaccess"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
@@ -42,6 +43,7 @@ func ProvideRepoImporter(
 	repoStore store.RepoStore,
 	pipelineStore store.PipelineStore,
 	triggerStore store.TriggerStore,
+	repoFinder refcache.RepoFinder,
 	encrypter encrypt.Encrypter,
 	scheduler *job.Scheduler,
 	executor *job.Executor,
@@ -58,6 +60,7 @@ func ProvideRepoImporter(
 		repoStore:     repoStore,
 		pipelineStore: pipelineStore,
 		triggerStore:  triggerStore,
+		repoFinder:    repoFinder,
 		encrypter:     encrypter,
 		scheduler:     scheduler,
 		sseStreamer:   sseStreamer,

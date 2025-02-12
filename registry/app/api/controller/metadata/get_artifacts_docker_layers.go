@@ -49,7 +49,7 @@ func (c *APIController) GetDockerArtifactLayers(
 ) (artifact.GetDockerArtifactLayersResponseObject, error) {
 	regInfo, _ := c.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
 
-	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
+	space, err := c.SpaceFinder.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
 		return artifact.GetDockerArtifactLayers400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(

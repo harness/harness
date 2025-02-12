@@ -46,7 +46,7 @@ func (c *Controller) Restore(
 		return nil, fmt.Errorf("failed to find repository: %w", err)
 	}
 
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoCreate); err != nil {
+	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo.Core(), enum.PermissionRepoCreate); err != nil {
 		return nil, fmt.Errorf("access check failed: %w", err)
 	}
 

@@ -41,7 +41,7 @@ func (c *APIController) GetArtifactFiles(
 		}, nil
 	}
 
-	space, err := c.SpaceStore.FindByRef(ctx, reqInfo.ParentRef)
+	space, err := c.SpaceFinder.FindByRef(ctx, reqInfo.ParentRef)
 	if err != nil {
 		return artifact.GetArtifactFiles400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(

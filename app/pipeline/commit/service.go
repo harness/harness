@@ -26,9 +26,9 @@ type (
 	// be extendible to any SCM provider.
 	Service interface {
 		// ref is the ref to fetch the commit from, eg refs/heads/master
-		FindRef(ctx context.Context, repo *types.Repository, ref string) (*types.Commit, error)
+		FindRef(ctx context.Context, repo *types.RepositoryCore, ref string) (*types.Commit, error)
 
 		// FindCommit returns information about a commit in a repo.
-		FindCommit(ctx context.Context, repo *types.Repository, sha string) (*types.Commit, error)
+		FindCommit(ctx context.Context, repo *types.RepositoryCore, sha string) (*types.Commit, error)
 	}
 )

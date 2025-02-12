@@ -169,7 +169,7 @@ func (c *Controller) reportReviewerAddition(
 // newPullReqReviewer creates new pull request reviewer object.
 func newPullReqReviewer(
 	session *auth.Session, pullReq *types.PullReq,
-	repo *types.Repository, reviewerInfo, addedByInfo *types.PrincipalInfo,
+	repo *types.RepositoryCore, reviewerInfo, addedByInfo *types.PrincipalInfo,
 	reviewerType enum.PullReqReviewerType, in *ReviewerAddInput,
 ) *types.PullReqReviewer {
 	now := time.Now().UnixMilli()

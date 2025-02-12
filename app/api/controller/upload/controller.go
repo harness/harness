@@ -68,7 +68,7 @@ func (c *Controller) getRepoCheckAccess(ctx context.Context,
 	repoRef string,
 	permission enum.Permission,
 	allowedRepoStates ...enum.RepoState,
-) (*types.Repository, error) {
+) (*types.RepositoryCore, error) {
 	if repoRef == "" {
 		return nil, usererror.BadRequest("A valid repository reference must be provided.")
 	}

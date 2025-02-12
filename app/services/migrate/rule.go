@@ -63,7 +63,7 @@ func NewRule(
 func (migrate Rule) Import(
 	ctx context.Context,
 	migrator types.Principal,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	typ ExternalRuleType,
 	extRules []*ExternalRule,
 ) ([]*types.Rule, error) {

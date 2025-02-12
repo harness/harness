@@ -45,23 +45,31 @@ func (c *Controller) UpdateRepoState(
 		return nil, fmt.Errorf("failed to acquire access to repo: %w", err)
 	}
 
-	if !stateTransitionValid(repo, in.State) {
-		return nil, usererror.BadRequestf("Changing repo state from %s to %s is not allowed.", repo.State, in.State)
+	repoFull, err := c.repoStore.Find(ctx, repo.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find repo by ID: %w", err)
 	}
 
-	repo, err = c.repoStore.UpdateOptLock(ctx, repo, func(r *types.Repository) error {
+	repoFull, err = c.repoStore.UpdateOptLock(ctx, repoFull, func(r *types.Repository) error {
+		if !stateTransitionValid(r.State, in.State) {
+			return usererror.BadRequestf("Changing repo state from %s to %s is not allowed.", r.State, in.State)
+		}
+
 		r.State = in.State
+
 		return nil
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to update the repo state: %w", err)
 	}
 
-	return repo, nil
+	c.repoFinder.MarkChanged(ctx, repo.ID)
+
+	return repoFull, nil
 }
 
-func stateTransitionValid(repo *types.Repository, newState enum.RepoState) bool {
-	for _, validState := range validTransitions[repo.State] {
+func stateTransitionValid(currentState enum.RepoState, newState enum.RepoState) bool {
+	for _, validState := range validTransitions[currentState] {
 		if validState == newState {
 			return true
 		}

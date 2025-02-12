@@ -50,7 +50,7 @@ func ProvideController(
 	tx dbtx.Transactor,
 	spaceStore store.SpaceStore,
 	repoStore store.RepoStore,
-	spaceCache refcache.SpaceCache,
+	spaceFinder refcache.SpaceFinder,
 	repoFinder refcache.RepoFinder,
 ) *Controller {
 	return NewController(
@@ -68,7 +68,7 @@ func ProvideController(
 		tx,
 		spaceStore,
 		repoStore,
-		spaceCache,
+		spaceFinder,
 		repoFinder,
 	)
 }

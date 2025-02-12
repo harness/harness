@@ -31,12 +31,13 @@ func (c *Service) FindWithLatestInstance(
 	spaceRef string,
 	identifier string,
 ) (*types.GitspaceConfig, error) {
+	space, err := c.spaceFinder.FindByRef(ctx, spaceRef)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find space: %w", err)
+	}
+
 	var gitspaceConfigResult *types.GitspaceConfig
 	txErr := c.tx.WithTx(ctx, func(ctx context.Context) error {
-		space, err := c.spaceStore.FindByRef(ctx, spaceRef)
-		if err != nil {
-			return fmt.Errorf("failed to find space: %w", err)
-		}
 		gitspaceConfig, err := c.gitspaceConfigStore.FindByIdentifier(ctx, space.ID, identifier)
 		if err != nil {
 			return fmt.Errorf("failed to find gitspace config: %w", err)
@@ -57,7 +58,7 @@ func (c *Service) FindWithLatestInstance(
 func (c *Service) setInstance(
 	ctx context.Context,
 	gitspaceConfig *types.GitspaceConfig,
-	space *types.Space,
+	space *types.SpaceCore,
 ) error {
 	instance, err := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, gitspaceConfig.ID)
 	if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
@@ -90,7 +91,7 @@ func (c *Service) FindWithLatestInstanceByID(
 		if err != nil {
 			return fmt.Errorf("failed to find gitspace config: %w", err)
 		}
-		space, err := c.spaceStore.Find(ctx, gitspaceConfigResult.SpaceID)
+		space, err := c.spaceFinder.FindByID(ctx, gitspaceConfigResult.SpaceID)
 		if err != nil {
 			return fmt.Errorf("failed to find space: %w", err)
 		}
@@ -115,7 +116,7 @@ func (c *Service) FindAll(
 		}
 		for _, gitspaceConfig := range gitspaceConfigs {
 			// FindByRef method is backed by cache as opposed to Find
-			space, err := c.spaceStore.FindByRef(ctx, strconv.FormatInt(gitspaceConfig.SpaceID, 10))
+			space, err := c.spaceFinder.FindByRef(ctx, strconv.FormatInt(gitspaceConfig.SpaceID, 10))
 			if err != nil {
 				return fmt.Errorf("failed to find space: %w", err)
 			}
@@ -137,7 +138,7 @@ func (c *Service) FindInstanceByIdentifier(
 ) (*types.GitspaceInstance, error) {
 	var gitspaceInstanceResult *types.GitspaceInstance
 	txErr := c.tx.WithTx(ctx, func(ctx context.Context) error {
-		space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+		space, err := c.spaceFinder.FindByRef(ctx, spaceRef)
 		if err != nil {
 			return fmt.Errorf("failed to find space: %w", err)
 		}

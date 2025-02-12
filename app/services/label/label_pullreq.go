@@ -292,19 +292,22 @@ func (s *Service) UnassignFromPullReq(
 
 func (s *Service) ListPullReqLabels(
 	ctx context.Context,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	spaceID int64,
 	pullreqID int64,
 	filter *types.AssignableLabelFilter,
 ) (*types.ScopesLabels, int64, error) {
-	spaces, err := s.spaceStore.GetAncestors(ctx, spaceID)
+	spaceIDs, err := s.spaceStore.GetAncestorIDs(ctx, spaceID)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to get space hierarchy: %w", err)
 	}
 
-	spaceIDs := make([]int64, len(spaces))
-	for i, space := range spaces {
-		spaceIDs[i] = space.ID
+	spaces := make([]*types.SpaceCore, len(spaceIDs))
+	for i, id := range spaceIDs {
+		spaces[i], err = s.spaceFinder.FindByID(ctx, id)
+		if err != nil {
+			return nil, 0, fmt.Errorf("failed to find space by ID: %w", err)
+		}
 	}
 
 	scopeLabelsMap := make(map[int64]*types.ScopeData)
@@ -408,8 +411,8 @@ func (s *Service) BackfillMany(
 func populateScopeLabelsMap(
 	assignments []*types.LabelAssignment,
 	scopeLabelsMap map[int64]*types.ScopeData,
-	repo *types.Repository,
-	spaces []*types.Space,
+	repo *types.RepositoryCore,
+	spaces []*types.SpaceCore,
 ) {
 	for _, assignment := range assignments {
 		_, ok := scopeLabelsMap[assignment.Scope]

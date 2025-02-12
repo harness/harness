@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/errors"
@@ -48,6 +49,7 @@ type PullReq struct {
 	labelStore                  store.LabelStore
 	labelValueStore             store.LabelValueStore
 	pullReqLabelAssignmentStore store.PullReqLabelAssignmentStore
+	repoFinder                  refcache.RepoFinder
 	tx                          dbtx.Transactor
 	mtxManager                  lock.MutexManager
 }
@@ -63,6 +65,7 @@ func NewPullReq(
 	labelStore store.LabelStore,
 	labelValueStore store.LabelValueStore,
 	pullReqLabelAssignmentStore store.PullReqLabelAssignmentStore,
+	repoFinder refcache.RepoFinder,
 	tx dbtx.Transactor,
 	mtxManager lock.MutexManager,
 ) *PullReq {
@@ -77,6 +80,7 @@ func NewPullReq(
 		labelStore:                  labelStore,
 		labelValueStore:             labelValueStore,
 		pullReqLabelAssignmentStore: pullReqLabelAssignmentStore,
+		repoFinder:                  repoFinder,
 		tx:                          tx,
 		mtxManager:                  mtxManager,
 	}
@@ -106,7 +110,7 @@ type repoImportState struct {
 func (migrate PullReq) Import(
 	ctx context.Context,
 	migrator types.Principal,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	extPullReqs []*ExternalPullRequest,
 ) ([]*types.PullReq, error) {
 	readParams := git.ReadParams{RepoUID: repo.GitUID}
@@ -234,13 +238,15 @@ func (migrate PullReq) Import(
 		return nil, err
 	}
 
+	migrate.repoFinder.MarkChanged(ctx, repo.ID)
+
 	return pullReqs, nil
 }
 
 // convertPullReq analyses external pull request object and creates types.PullReq object out of it.
 func (r *repoImportState) convertPullReq(
 	ctx context.Context,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	extPullReqData *ExternalPullRequest,
 ) (*types.PullReq, error) {
 	extPullReq := extPullReqData.PullRequest
@@ -379,7 +385,7 @@ func (r *repoImportState) convertPullReq(
 // It will mutate the pull request object to update counter fields.
 func (r *repoImportState) createComments(
 	ctx context.Context,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	pullReq *types.PullReq,
 	extComments []ExternalComment,
 ) ([]*types.PullReqActivity, error) {
@@ -427,7 +433,7 @@ func (r *repoImportState) createComments(
 // It will mutate the pull request object to update counter fields.
 func (r *repoImportState) createComment(
 	ctx context.Context,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	pullReq *types.PullReq,
 	parentID *int64,
 	order, subOrder, replySeq int,
@@ -528,7 +534,7 @@ func (r *repoImportState) createComment(
 // if any of the principals were replaced with the migrator.
 func (r *repoImportState) createInfoComment(
 	ctx context.Context,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	pullReq *types.PullReq,
 ) (*types.PullReqActivity, error) {
 	var unknownEmails []string

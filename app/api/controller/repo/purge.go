@@ -42,7 +42,7 @@ func (c *Controller) Purge(
 		return fmt.Errorf("failed to find the repo (deleted at %d): %w", deletedAt, err)
 	}
 
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoDelete); err != nil {
+	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo.Core(), enum.PermissionRepoDelete); err != nil {
 		return err
 	}
 

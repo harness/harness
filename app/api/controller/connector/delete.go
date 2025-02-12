@@ -29,7 +29,7 @@ func (c *Controller) Delete(
 	spaceRef string,
 	identifier string,
 ) error {
-	space, err := c.spaceCache.Get(ctx, spaceRef)
+	space, err := c.spaceFinder.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return fmt.Errorf("failed to find space: %w", err)
 	}

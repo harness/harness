@@ -60,7 +60,7 @@ func NewLabel(
 func (migrate Label) Import(
 	ctx context.Context,
 	migrator types.Principal,
-	space *types.Space,
+	space *types.SpaceCore,
 	extLabels []*ExternalLabel,
 ) ([]*types.Label, error) {
 	labels := make([]*types.Label, len(extLabels))

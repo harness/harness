@@ -32,7 +32,7 @@ import (
 
 type Controller struct {
 	authorizer     authz.Authorizer
-	spaceCache     refcache.SpaceCache
+	spaceFinder    refcache.SpaceFinder
 	repoFinder     refcache.RepoFinder
 	webhookService *webhook.Service
 	encrypter      encrypt.Encrypter
@@ -41,7 +41,7 @@ type Controller struct {
 
 func NewController(
 	authorizer authz.Authorizer,
-	spaceCache refcache.SpaceCache,
+	spaceFinder refcache.SpaceFinder,
 	repoFinder refcache.RepoFinder,
 	webhookService *webhook.Service,
 	encrypter encrypt.Encrypter,
@@ -49,7 +49,7 @@ func NewController(
 ) *Controller {
 	return &Controller{
 		authorizer:     authorizer,
-		spaceCache:     spaceCache,
+		spaceFinder:    spaceFinder,
 		repoFinder:     repoFinder,
 		webhookService: webhookService,
 		encrypter:      encrypter,
@@ -64,7 +64,7 @@ func (c *Controller) getRepoCheckAccess(
 	repoRef string,
 	reqPermission enum.Permission,
 	allowedRepoStates ...enum.RepoState,
-) (*types.Repository, error) {
+) (*types.RepositoryCore, error) {
 	if repoRef == "" {
 		return nil, errors.InvalidArgument("A valid repository reference must be provided.")
 	}
@@ -90,6 +90,6 @@ func (c *Controller) getSpaceCheckAccess(
 	session *auth.Session,
 	spaceRef string,
 	permission enum.Permission,
-) (*types.Space, error) {
-	return space.GetSpaceCheckAuth(ctx, c.spaceCache, c.authorizer, session, spaceRef, permission)
+) (*types.SpaceCore, error) {
+	return space.GetSpaceCheckAuth(ctx, c.spaceFinder, c.authorizer, session, spaceRef, permission)
 }

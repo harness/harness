@@ -32,7 +32,7 @@ func (c *Controller) ListSecrets(
 	spaceRef string,
 	filter types.ListQueryFilter,
 ) ([]*types.Secret, int64, error) {
-	space, err := c.spaceCache.Get(ctx, spaceRef)
+	space, err := c.spaceFinder.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to find parent space: %w", err)
 	}

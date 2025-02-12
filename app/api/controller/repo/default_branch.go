@@ -49,7 +49,6 @@ func (c *Controller) UpdateDefaultBranch(
 		return nil, err
 	}
 
-	repoClone := repo.Clone()
 	// the max time we give an update default branch to succeed
 	const timeout = 2 * time.Minute
 
@@ -79,6 +78,11 @@ func (c *Controller) UpdateDefaultBranch(
 	)
 	defer cancel()
 
+	repoFull, err := c.repoStore.Find(ctx, repo.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find repo by ID: %w", err)
+	}
+
 	err = c.git.UpdateDefaultBranch(ctx, &git.UpdateDefaultBranchParams{
 		WriteParams: writeParams,
 		BranchName:  in.Name,
@@ -87,16 +91,24 @@ func (c *Controller) UpdateDefaultBranch(
 		return nil, fmt.Errorf("failed to update the repo default branch: %w", err)
 	}
 
-	oldName := repo.DefaultBranch
-	repo, err = c.repoStore.UpdateOptLock(ctx, repo, func(r *types.Repository) error {
+	var oldName string
+	var repoClone types.Repository
+
+	repoFull, err = c.repoStore.UpdateOptLock(ctx, repoFull, func(r *types.Repository) error {
+		repoClone = *repoFull
+
+		oldName = repoFull.DefaultBranch
 		r.DefaultBranch = in.Name
+
 		return nil
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to update the repo default branch on db:%w", err)
 	}
 
-	repoOutput, err := GetRepoOutput(ctx, c.publicAccess, repo)
+	c.repoFinder.MarkChanged(ctx, repo.ID)
+
+	repoOutput, err := GetRepoOutput(ctx, c.publicAccess, repoFull)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get repo output: %w", err)
 	}
@@ -111,7 +123,7 @@ func (c *Controller) UpdateDefaultBranch(
 			IsPublic:   repoOutput.IsPublic,
 		}),
 		audit.WithNewObject(audit.RepositoryObject{
-			Repository: *repo,
+			Repository: *repoFull,
 			IsPublic:   repoOutput.IsPublic,
 		}),
 	)

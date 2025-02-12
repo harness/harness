@@ -22,17 +22,17 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-/*
-* Find finds a space.
- */
+// Find finds a space.
 func (c *Controller) Find(ctx context.Context, session *auth.Session, spaceRef string) (*SpaceOutput, error) {
-	if c == nil {
-		return nil, fmt.Errorf("controller instance is nil")
-	}
 	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceView)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to space: %w", err)
 	}
 
-	return GetSpaceOutput(ctx, c.publicAccess, space)
+	spaceFull, err := c.spaceStore.Find(ctx, space.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find space by ID: %w", err)
+	}
+
+	return GetSpaceOutput(ctx, c.publicAccess, spaceFull)
 }

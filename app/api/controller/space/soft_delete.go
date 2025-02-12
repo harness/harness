@@ -35,9 +35,14 @@ func (c *Controller) SoftDelete(
 	session *auth.Session,
 	spaceRef string,
 ) (*SoftDeleteResponse, error) {
-	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceDelete)
+	spaceCore, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceDelete)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to space: %w", err)
+	}
+
+	space, err := c.spaceStore.Find(ctx, spaceCore.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find space by ID: %w", err)
 	}
 
 	return c.SoftDeleteNoAuth(ctx, session, space)

@@ -36,7 +36,7 @@ func (c *APIController) GetRegistry(
 			),
 		}, nil
 	}
-	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
+	space, err := c.SpaceFinder.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
 		return artifact.GetRegistry400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(

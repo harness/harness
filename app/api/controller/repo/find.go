@@ -16,6 +16,7 @@ package repo
 
 import (
 	"context"
+	"fmt"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
@@ -25,13 +26,18 @@ import (
 // Find finds a repo.
 func (c *Controller) Find(ctx context.Context, session *auth.Session, repoRef string) (*RepositoryOutput, error) {
 	// note: can't use c.getRepoCheckAccess because even repositories that are currently being imported can be fetched.
-	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
+	repoCore, err := c.repoFinder.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView); err != nil {
+	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repoCore, enum.PermissionRepoView); err != nil {
 		return nil, err
+	}
+
+	repo, err := c.repoStore.Find(ctx, repoCore.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch repo by ID: %w", err)
 	}
 
 	// backfill clone url

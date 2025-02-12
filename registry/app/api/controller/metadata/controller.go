@@ -16,6 +16,7 @@ package metadata
 
 import (
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/refcache"
 	corestore "github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/audit"
@@ -34,7 +35,7 @@ type APIController struct {
 	TagStore           store.TagRepository
 	ManifestStore      store.ManifestRepository
 	CleanupPolicyStore store.CleanupPolicyRepository
-	SpaceStore         corestore.SpaceStore
+	SpaceFinder        refcache.SpaceFinder
 	tx                 dbtx.Transactor
 	StorageDriver      storagedriver.StorageDriver
 	URLProvider        urlprovider.Provider
@@ -54,7 +55,7 @@ func NewAPIController(
 	cleanupPolicyStore store.CleanupPolicyRepository,
 	imageStore store.ImageRepository,
 	driver storagedriver.StorageDriver,
-	spaceStore corestore.SpaceStore,
+	spaceFinder refcache.SpaceFinder,
 	tx dbtx.Transactor,
 	urlProvider urlprovider.Provider,
 	authorizer authz.Authorizer,
@@ -71,7 +72,7 @@ func NewAPIController(
 		ManifestStore:      manifestStore,
 		CleanupPolicyStore: cleanupPolicyStore,
 		ImageStore:         imageStore,
-		SpaceStore:         spaceStore,
+		SpaceFinder:        spaceFinder,
 		StorageDriver:      driver,
 		tx:                 tx,
 		URLProvider:        urlProvider,

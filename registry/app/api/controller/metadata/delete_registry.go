@@ -44,7 +44,7 @@ func (c *APIController) DeleteRegistry(
 			),
 		}, err
 	}
-	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
+	space, err := c.SpaceFinder.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
 		return artifact.DeleteRegistry400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
@@ -158,7 +158,7 @@ func (c *APIController) deleteUpstreamProxyWithAudit(
 				log.Ctx(ctx).Error().Msgf("failed to fetch registry: %s", err)
 				return fmt.Errorf("failed to fetch registry :%w", err)
 			}
-			spaceDetails, err := c.SpaceStore.Find(ctx, registry.ParentID)
+			spaceDetails, err := c.SpaceFinder.FindByID(ctx, registry.ParentID)
 			if err != nil {
 				return fmt.Errorf("failed to fetch space details: %w", err)
 			}

@@ -32,14 +32,21 @@ func (c *Controller) UpdatePublicAccess(ctx context.Context,
 	spaceRef string,
 	in *UpdatePublicAccessInput,
 ) (*SpaceOutput, error) {
-	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceEdit)
+	spaceCore, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceEdit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to space: %w", err)
 	}
+
+	space, err := c.spaceStore.Find(ctx, spaceCore.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find space by ID: %w", err)
+	}
+
 	parentPath, _, err := paths.DisectLeaf(space.Path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to disect path %q: %w", space.Path, err)
 	}
+
 	isPublicAccessSupported, err := c.publicAccess.IsPublicAccessSupported(ctx, parentPath)
 	if err != nil {
 		return nil, fmt.Errorf(

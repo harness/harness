@@ -149,7 +149,7 @@ func (c *Controller) blockPullReqRefUpdate(refUpdates changedRefs, state enum.Re
 func (c *Controller) checkProtectionRules(
 	ctx context.Context,
 	session *auth.Session,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	refUpdates changedRefs,
 	output *hook.Output,
 ) error {

@@ -51,9 +51,14 @@ func (c *Controller) CreateRepo(
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
-	parentSpace, err := c.spaceCheckAuth(ctx, session, in.ParentRef)
+	parentSpaceCore, err := c.spaceCheckAuth(ctx, session, in.ParentRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check auth in parent '%s': %w", in.ParentRef, err)
+	}
+
+	parentSpace, err := c.spaceStore.Find(ctx, parentSpaceCore.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find space by ID: %w", err)
 	}
 
 	// generate envars (add everything githook CLI needs for execution)
@@ -172,8 +177,8 @@ func (c *Controller) spaceCheckAuth(
 	ctx context.Context,
 	session *auth.Session,
 	parentRef string,
-) (*types.Space, error) {
-	space, err := c.spaceCache.Get(ctx, parentRef)
+) (*types.SpaceCore, error) {
+	space, err := c.spaceFinder.FindByRef(ctx, parentRef)
 	if err != nil {
 		return nil, fmt.Errorf("parent space not found: %w", err)
 	}

@@ -71,7 +71,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 		}
 
 		// lock the space for update during repo creation to prevent racing conditions with space soft delete.
-		parentSpace, err = c.spaceStore.FindForUpdate(ctx, parentSpace.ID)
+		_, err = c.spaceStore.FindForUpdate(ctx, parentSpace.ID)
 		if err != nil {
 			return fmt.Errorf("failed to find the parent space: %w", err)
 		}

@@ -53,7 +53,7 @@ func NewWebhook(
 func (migrate Webhook) Import(
 	ctx context.Context,
 	migrator types.Principal,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	extWebhooks []*ExternalWebhook,
 ) ([]*types.Webhook, error) {
 	now := time.Now().UnixMilli()

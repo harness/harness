@@ -32,21 +32,21 @@ var _ Service = (*service)(nil)
 type service struct {
 	publicResourceCreationEnabled bool
 	publicAccessStore             store.PublicAccessStore
-	spaceCache                    refcache.SpaceCache
+	spaceFinder                   refcache.SpaceFinder
 	repoFinder                    refcache.RepoFinder
 }
 
 func NewService(
 	publicResourceCreationEnabled bool,
 	publicAccessStore store.PublicAccessStore,
-	spaceCache refcache.SpaceCache,
+	spaceFinder refcache.SpaceFinder,
 	repoFinder refcache.RepoFinder,
 ) Service {
 	return &service{
 		publicResourceCreationEnabled: publicResourceCreationEnabled,
 
 		publicAccessStore: publicAccessStore,
-		spaceCache:        spaceCache,
+		spaceFinder:       spaceFinder,
 		repoFinder:        repoFinder,
 	}
 }

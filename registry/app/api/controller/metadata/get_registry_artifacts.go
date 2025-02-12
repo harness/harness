@@ -47,7 +47,7 @@ func (c *APIController) GetAllArtifactsByRegistry(
 		return c.getAllArtifactsByRegistry400JsonResponse(err)
 	}
 
-	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
+	space, err := c.SpaceFinder.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
 		return artifact.GetAllArtifactsByRegistry400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(

@@ -16,6 +16,7 @@ package template
 
 import (
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 
 	"github.com/google/wire"
@@ -29,7 +30,7 @@ var WireSet = wire.NewSet(
 func ProvideController(
 	templateStore store.TemplateStore,
 	authorizer authz.Authorizer,
-	spaceStore store.SpaceStore,
+	spaceFinder refcache.SpaceFinder,
 ) *Controller {
-	return NewController(authorizer, templateStore, spaceStore)
+	return NewController(authorizer, templateStore, spaceFinder)
 }

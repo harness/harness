@@ -86,5 +86,6 @@ func (s *Service) updatePRNumbers(ctx context.Context, repoID int64,
 		repo.NumMergedPulls += deltaMerged
 		return nil
 	})
+
 	return err
 }

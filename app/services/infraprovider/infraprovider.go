@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/infraprovider"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -31,7 +32,7 @@ func NewService(
 	configStore store.InfraProviderConfigStore,
 	templateStore store.InfraProviderTemplateStore,
 	factory infraprovider.Factory,
-	spaceStore store.SpaceStore,
+	spaceFinder refcache.SpaceFinder,
 ) *Service {
 	return &Service{
 		tx:                         tx,
@@ -39,22 +40,22 @@ func NewService(
 		infraProviderConfigStore:   configStore,
 		infraProviderTemplateStore: templateStore,
 		infraProviderFactory:       factory,
-		spaceStore:                 spaceStore,
+		spaceFinder:                spaceFinder,
 	}
 }
 
 type Service struct {
+	tx                         dbtx.Transactor
 	infraProviderResourceStore store.InfraProviderResourceStore
 	infraProviderConfigStore   store.InfraProviderConfigStore
 	infraProviderTemplateStore store.InfraProviderTemplateStore
 	infraProviderFactory       infraprovider.Factory
-	spaceStore                 store.SpaceStore
-	tx                         dbtx.Transactor
+	spaceFinder                refcache.SpaceFinder
 }
 
 func (c *Service) Find(
 	ctx context.Context,
-	space *types.Space,
+	space *types.SpaceCore,
 	identifier string,
 ) (*types.InfraProviderConfig, error) {
 	infraProviderConfig, err := c.infraProviderConfigStore.FindByIdentifier(ctx, space.ID, identifier)
@@ -83,7 +84,7 @@ func (c *Service) Find(
 
 func (c *Service) FindTemplate(
 	ctx context.Context,
-	space *types.Space,
+	space *types.SpaceCore,
 	identifier string,
 ) (*types.InfraProviderTemplate, error) {
 	infraProviderTemplate, err := c.infraProviderTemplateStore.FindByIdentifier(ctx, space.ID, identifier)

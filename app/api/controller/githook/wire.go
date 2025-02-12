@@ -20,6 +20,7 @@ import (
 	eventsgit "github.com/harness/gitness/app/events/git"
 	eventsrepo "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/services/protection"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
@@ -45,6 +46,7 @@ func ProvideController(
 	authorizer authz.Authorizer,
 	principalStore store.PrincipalStore,
 	repoStore store.RepoStore,
+	repoFinder refcache.RepoFinder,
 	gitReporter *eventsgit.Reporter,
 	repoReporter *eventsrepo.Reporter,
 	git git.Interface,
@@ -63,6 +65,7 @@ func ProvideController(
 		authorizer,
 		principalStore,
 		repoStore,
+		repoFinder,
 		gitReporter,
 		repoReporter,
 		git,

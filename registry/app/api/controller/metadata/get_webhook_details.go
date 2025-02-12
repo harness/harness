@@ -37,7 +37,7 @@ func (c *APIController) GetWebhook(
 		return getWebhookInternalErrorResponse(err)
 	}
 
-	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
+	space, err := c.SpaceFinder.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("failed to find space: %v", err)
 		return getWebhookInternalErrorResponse(err)

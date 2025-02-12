@@ -42,7 +42,7 @@ func (c *Controller) ListAllGitspaces( // nolint:gocognit
 		var spacesMap = make(map[int64]string)
 		for idx := 0; idx < len(allGitspaceConfigs); idx++ {
 			if spacesMap[allGitspaceConfigs[idx].SpaceID] == "" {
-				space, findSpaceErr := c.spaceCache.Get(ctx, allGitspaceConfigs[idx].SpacePath)
+				space, findSpaceErr := c.spaceFinder.FindByRef(ctx, allGitspaceConfigs[idx].SpacePath)
 				if findSpaceErr != nil {
 					if !errors.Is(findSpaceErr, store.ErrResourceNotFound) {
 						return fmt.Errorf(

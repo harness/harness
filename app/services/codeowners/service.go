@@ -184,7 +184,7 @@ func New(
 
 func (s *Service) get(
 	ctx context.Context,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	ref string,
 ) (*CodeOwners, error) {
 	codeOwnerFile, err := s.getCodeOwnerFile(ctx, repo, ref)
@@ -283,7 +283,7 @@ func (s *Service) parseCodeOwner(codeOwnersContent string) ([]Entry, error) {
 
 func (s *Service) getCodeOwnerFile(
 	ctx context.Context,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	ref string,
 ) (*File, error) {
 	params := git.CreateReadParams(repo)
@@ -358,7 +358,7 @@ func (s *Service) getCodeOwnerFileNode(
 
 func (s *Service) getApplicableCodeOwnersForPR(
 	ctx context.Context,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	pr *types.PullReq,
 ) (*CodeOwners, error) {
 	codeOwners, err := s.get(ctx, repo, pr.TargetBranch)
@@ -411,7 +411,7 @@ func (s *Service) getApplicableCodeOwnersForPR(
 //nolint:gocognit
 func (s *Service) Evaluate(
 	ctx context.Context,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	pr *types.PullReq,
 	reviewers []*types.PullReqReviewer,
 ) (*Evaluation, error) {
@@ -536,7 +536,7 @@ func (s *Service) resolveUserCodeOwnerByEmail(
 
 func (s *Service) Validate(
 	ctx context.Context,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	branch string,
 ) (*types.CodeOwnersValidation, error) {
 	var codeOwnerValidation types.CodeOwnersValidation

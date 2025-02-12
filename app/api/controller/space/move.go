@@ -49,13 +49,18 @@ func (c *Controller) Move(
 	spaceRef string,
 	in *MoveInput,
 ) (*SpaceOutput, error) {
-	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceEdit)
+	spaceCore, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceEdit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to space: %w", err)
 	}
 
-	if err = c.sanitizeMoveInput(in, space.ParentID == 0); err != nil {
+	if err = c.sanitizeMoveInput(in, spaceCore.ParentID == 0); err != nil {
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
+	}
+
+	space, err := c.spaceStore.Find(ctx, spaceCore.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find space by ID: %w", err)
 	}
 
 	// exit early if there are no changes
@@ -128,6 +133,8 @@ func (c *Controller) moveInner(
 		if err != nil {
 			return fmt.Errorf("failed to update the space in the db: %w", err)
 		}
+
+		c.spaceFinder.MarkChanged(ctx, space.ID)
 
 		return nil
 	})

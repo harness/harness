@@ -150,7 +150,7 @@ func NewController(
 }
 
 func (c *Controller) verifyBranchExistence(ctx context.Context,
-	repo *types.Repository, branch string,
+	repo *types.RepositoryCore, branch string,
 ) (sha.SHA, error) {
 	if branch == "" {
 		return sha.SHA{}, usererror.BadRequest("branch name can't be empty")
@@ -175,7 +175,7 @@ func (c *Controller) verifyBranchExistence(ctx context.Context,
 	return ref.SHA, nil
 }
 
-func (c *Controller) getRepo(ctx context.Context, repoRef string) (*types.Repository, error) {
+func (c *Controller) getRepo(ctx context.Context, repoRef string) (*types.RepositoryCore, error) {
 	if repoRef == "" {
 		return nil, usererror.BadRequest("A valid repository reference must be provided.")
 	}
@@ -195,7 +195,7 @@ func (c *Controller) getRepoCheckAccess(
 	repoRef string,
 	reqPermission enum.Permission,
 	allowedRepoStates ...enum.RepoState,
-) (*types.Repository, error) {
+) (*types.RepositoryCore, error) {
 	repo, err := c.getRepo(ctx, repoRef)
 	if err != nil {
 		return nil, err
@@ -215,7 +215,7 @@ func (c *Controller) getRepoCheckAccess(
 func (c *Controller) fetchRules(
 	ctx context.Context,
 	session *auth.Session,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 ) (protection.Protection, bool, error) {
 	isRepoOwner, err := apiauth.IsRepoOwner(ctx, c.authorizer, session, repo)
 	if err != nil {

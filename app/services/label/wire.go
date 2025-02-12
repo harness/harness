@@ -15,6 +15,7 @@
 package label
 
 import (
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
 
@@ -31,6 +32,7 @@ func ProvideLabel(
 	labelStore store.LabelStore,
 	labelValueStore store.LabelValueStore,
 	pullReqLabelStore store.PullReqLabelAssignmentStore,
+	spaceFinder refcache.SpaceFinder,
 ) *Service {
-	return New(tx, spaceStore, labelStore, labelValueStore, pullReqLabelStore)
+	return New(tx, spaceStore, labelStore, labelValueStore, pullReqLabelStore, spaceFinder)
 }

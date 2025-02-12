@@ -30,7 +30,7 @@ func (c *Controller) Find(
 	spaceRef string,
 	identifier string,
 ) (*types.Secret, error) {
-	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+	space, err := c.spaceFinder.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find space: %w", err)
 	}

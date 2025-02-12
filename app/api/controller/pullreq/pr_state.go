@@ -79,7 +79,7 @@ func (c *Controller) State(ctx context.Context,
 
 	sourceRepo := targetRepo
 	if pr.SourceRepoID != pr.TargetRepoID {
-		sourceRepo, err = c.repoStore.Find(ctx, pr.SourceRepoID)
+		sourceRepo, err = c.repoFinder.FindByID(ctx, pr.SourceRepoID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get source repo by id: %w", err)
 		}

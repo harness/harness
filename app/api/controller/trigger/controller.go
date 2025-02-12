@@ -59,7 +59,7 @@ func (c *Controller) getRepoCheckPipelineAccess(
 	pipelineIdentifier string,
 	reqPermission enum.Permission,
 	allowedRepoStates ...enum.RepoState,
-) (*types.Repository, error) {
+) (*types.RepositoryCore, error) {
 	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo by ref: %w", err)

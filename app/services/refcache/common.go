@@ -12,28 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cache
+package refcache
 
-import (
-	"context"
+import "time"
+
+const (
+	pubsubNamespace        = "refcache"
+	pubsubTopicRepoUpdate  = "repo-update"
+	pubsubTopicSpaceUpdate = "space-update"
 )
 
-type NoCache[K any, V any] struct {
-	getter Getter[K, V]
-}
-
-func NewNoCache[K any, V any](getter Getter[K, V]) NoCache[K, V] {
-	return NoCache[K, V]{
-		getter: getter,
-	}
-}
-
-func (c NoCache[K, V]) Stats() (int64, int64) {
-	return 0, 0
-}
-
-func (c NoCache[K, V]) Get(ctx context.Context, key K) (V, error) {
-	return c.getter.Find(ctx, key)
-}
-
-func (c NoCache[K, V]) Evict(context.Context, K) {}
+const cacheDuration = 15 * time.Minute

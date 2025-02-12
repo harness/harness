@@ -48,7 +48,7 @@ func (c *APIController) CreateRegistry(
 		}, err
 	}
 
-	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
+	space, err := c.SpaceFinder.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
 		return artifact.CreateRegistry400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
@@ -398,7 +398,7 @@ func (c *APIController) handleDuplicateRegistryError(ctx context.Context, regist
 		return fmt.Errorf("failed to fetch existing registry details: %w", err)
 	}
 
-	parentSpace, err := c.SpaceStore.Find(ctx, registryData.ParentID)
+	parentSpace, err := c.SpaceFinder.FindByID(ctx, registryData.ParentID)
 	if err != nil {
 		return fmt.Errorf("failed to fetch space details: %w", err)
 	}

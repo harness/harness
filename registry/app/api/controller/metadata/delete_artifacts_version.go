@@ -38,7 +38,7 @@ func (c *APIController) DeleteArtifactVersion(ctx context.Context, r artifact.De
 			),
 		}, err
 	}
-	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
+	space, err := c.SpaceFinder.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
 		return artifact.DeleteArtifactVersion400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(

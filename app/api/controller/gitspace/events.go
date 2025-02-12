@@ -39,7 +39,7 @@ func (c *Controller) Events(
 	page int,
 	limit int,
 ) ([]*types.GitspaceEventResponse, int, error) {
-	space, err := c.spaceCache.Get(ctx, spaceRef)
+	space, err := c.spaceFinder.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to find space: %w", err)
 	}

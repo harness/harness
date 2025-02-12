@@ -45,7 +45,7 @@ func (c *APIController) GetArtifactStatsForSpace(
 		}, nil
 	}
 
-	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
+	space, err := c.SpaceFinder.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
 		return artifact.GetArtifactStatsForSpace400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
@@ -84,7 +84,7 @@ func (c *APIController) GetArtifactStatsForRegistry(
 		}, nil
 	}
 
-	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
+	space, err := c.SpaceFinder.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
 		return artifact.GetArtifactStatsForRegistry400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(

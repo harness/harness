@@ -29,8 +29,8 @@ var WireSet = wire.NewSet(
 
 func ProvideController(
 	authorizer authz.Authorizer,
-	spaceCache refcache.SpaceCache,
+	spaceFinder refcache.SpaceFinder,
 	infraproviderSvc *infraprovider.Service,
 ) *Controller {
-	return NewController(authorizer, spaceCache, infraproviderSvc)
+	return NewController(authorizer, spaceFinder, infraproviderSvc)
 }

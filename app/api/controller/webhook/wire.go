@@ -29,12 +29,12 @@ var WireSet = wire.NewSet(
 )
 
 func ProvideController(authorizer authz.Authorizer,
-	spaceCache refcache.SpaceCache, repoFinder refcache.RepoFinder,
+	spaceFinder refcache.SpaceFinder, repoFinder refcache.RepoFinder,
 	webhookService *webhook.Service, encrypter encrypt.Encrypter,
 	preprocessor Preprocessor,
 ) *Controller {
 	return NewController(
-		authorizer, spaceCache, repoFinder, webhookService, encrypter, preprocessor)
+		authorizer, spaceFinder, repoFinder, webhookService, encrypter, preprocessor)
 }
 
 func ProvidePreprocessor() Preprocessor {

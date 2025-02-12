@@ -112,11 +112,11 @@ func (c *APIController) GetRegistryRequestBaseInfo(
 		return nil, fmt.Errorf("invalid parent reference: %w", err)
 	}
 
-	rootSpace, err := c.SpaceStore.FindByRef(ctx, rootIdentifier)
+	rootSpace, err := c.SpaceFinder.FindByRef(ctx, rootIdentifier)
 	if err != nil {
 		return nil, fmt.Errorf("root space not found: %w", err)
 	}
-	parentSpace, err := c.SpaceStore.FindByRef(ctx, parentRef)
+	parentSpace, err := c.SpaceFinder.FindByRef(ctx, parentRef)
 	if err != nil {
 		return nil, fmt.Errorf("parent space not found: %w", err)
 	}

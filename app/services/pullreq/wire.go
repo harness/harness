@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/app/services/codecomments"
 	"github.com/harness/gitness/app/services/label"
 	"github.com/harness/gitness/app/services/protection"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
@@ -83,10 +84,10 @@ func ProvideListService(
 	git git.Interface,
 	authorizer authz.Authorizer,
 	spaceStore store.SpaceStore,
-	repoStore store.RepoStore,
 	repoGitInfoCache store.RepoGitInfoCache,
 	pullreqStore store.PullReqStore,
 	checkStore store.CheckStore,
+	repoFinder refcache.RepoFinder,
 	labelSvc *label.Service,
 	protectionManager *protection.Manager,
 ) *ListService {
@@ -95,10 +96,10 @@ func ProvideListService(
 		git,
 		authorizer,
 		spaceStore,
-		repoStore,
 		repoGitInfoCache,
 		pullreqStore,
 		checkStore,
+		repoFinder,
 		labelSvc,
 		protectionManager,
 	)

@@ -33,7 +33,7 @@ func (c *Service) updateConfig(ctx context.Context, infraProviderConfig *types.I
 
 func (c *Service) UpdateResource(ctx context.Context, resource types.InfraProviderResource) error {
 	err := c.tx.WithTx(ctx, func(ctx context.Context) error {
-		space, err := c.spaceStore.FindByRef(ctx, resource.SpacePath)
+		space, err := c.spaceFinder.FindByRef(ctx, resource.SpacePath)
 		if err != nil {
 			return err
 		}
@@ -56,7 +56,7 @@ func (c *Service) UpdateResource(ctx context.Context, resource types.InfraProvid
 
 func (c *Service) UpdateTemplate(ctx context.Context, template types.InfraProviderTemplate) error {
 	err := c.tx.WithTx(ctx, func(ctx context.Context) error {
-		space, err := c.spaceStore.FindByRef(ctx, template.SpacePath)
+		space, err := c.spaceFinder.FindByRef(ctx, template.SpacePath)
 		if err != nil {
 			return err
 		}

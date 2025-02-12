@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/label"
 	"github.com/harness/gitness/app/services/protection"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
@@ -40,10 +41,10 @@ type ListService struct {
 	git               git.Interface
 	authorizer        authz.Authorizer
 	spaceStore        store.SpaceStore
-	repoStore         store.RepoStore
 	repoGitInfoCache  store.RepoGitInfoCache
 	pullreqStore      store.PullReqStore
 	checkStore        store.CheckStore
+	repoFinder        refcache.RepoFinder
 	labelSvc          *label.Service
 	protectionManager *protection.Manager
 }
@@ -53,10 +54,10 @@ func NewListService(
 	git git.Interface,
 	authorizer authz.Authorizer,
 	spaceStore store.SpaceStore,
-	repoStore store.RepoStore,
 	repoGitInfoCache store.RepoGitInfoCache,
 	pullreqStore store.PullReqStore,
 	checkStore store.CheckStore,
+	repoFinder refcache.RepoFinder,
 	labelSvc *label.Service,
 	protectionManager *protection.Manager,
 ) *ListService {
@@ -65,10 +66,10 @@ func NewListService(
 		git:               git,
 		authorizer:        authorizer,
 		spaceStore:        spaceStore,
-		repoStore:         repoStore,
 		repoGitInfoCache:  repoGitInfoCache,
 		pullreqStore:      pullreqStore,
 		checkStore:        checkStore,
+		repoFinder:        repoFinder,
 		labelSvc:          labelSvc,
 		protectionManager: protectionManager,
 	}
@@ -80,7 +81,7 @@ func NewListService(
 func (c *ListService) ListForSpace(
 	ctx context.Context,
 	session *auth.Session,
-	space *types.Space,
+	space *types.SpaceCore,
 	includeSubspaces bool,
 	filter *types.PullReqFilter,
 ) ([]types.PullReqRepo, error) {
@@ -107,7 +108,7 @@ func (c *ListService) ListForSpace(
 	repoWhitelist := make(map[int64]struct{})
 
 	list := make([]*types.PullReq, 0, 16)
-	repoMap := make(map[int64]*types.Repository)
+	repoMap := make(map[int64]*types.RepositoryCore)
 
 	for loadMore := true; loadMore; {
 		const prLimit = 100
@@ -124,7 +125,7 @@ func (c *ListService) ListForSpace(
 		}
 
 		for repoID := range repoUnchecked {
-			repo, err := c.repoStore.Find(ctx, repoID)
+			repo, err := c.repoFinder.FindByID(ctx, repoID)
 			if errors.Is(err, gitness_store.ErrResourceNotFound) {
 				filter.RepoIDBlacklist = append(filter.RepoIDBlacklist, repoID)
 				continue
@@ -376,7 +377,7 @@ func (c *ListService) BackfillMetadata(
 
 func (c *ListService) BackfillMetadataForRepo(
 	ctx context.Context,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	pullReqs []*types.PullReq,
 	options types.PullReqMetadataOptions,
 ) error {
@@ -393,7 +394,7 @@ func (c *ListService) BackfillMetadataForRepo(
 
 func (c *ListService) BackfillMetadataForPullReq(
 	ctx context.Context,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	pr *types.PullReq,
 	options types.PullReqMetadataOptions,
 ) error {

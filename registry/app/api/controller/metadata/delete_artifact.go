@@ -39,7 +39,7 @@ func (c *APIController) DeleteArtifact(ctx context.Context, r artifact.DeleteArt
 			),
 		}, err
 	}
-	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
+	space, err := c.SpaceFinder.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
 		return artifact.DeleteArtifact400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(

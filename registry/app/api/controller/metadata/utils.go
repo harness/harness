@@ -443,7 +443,7 @@ func CleanURLPath(input *string) {
 }
 
 func GetPermissionChecks(
-	space *types.Space,
+	space *types.SpaceCore,
 	registryIdentifier string,
 	permission enum.Permission,
 ) []types.PermissionCheck {

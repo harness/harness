@@ -80,7 +80,7 @@ func (c *Controller) ListBranches(ctx context.Context,
 // Each of these would be returned only if the corresponding option is true.
 func (c *Controller) collectBranchMetadata(
 	ctx context.Context,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	branches []git.Branch,
 	options types.BranchMetadataOptions,
 ) (branchMetadataOutput, error) {

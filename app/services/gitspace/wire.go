@@ -19,6 +19,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/orchestrator"
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/app/services/infraprovider"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -36,12 +37,12 @@ func ProvideGitspace(
 	gitspaceInstanceStore store.GitspaceInstanceStore,
 	eventReporter *gitspaceevents.Reporter,
 	gitspaceEventStore store.GitspaceEventStore,
-	spaceStore store.SpaceStore,
+	spaceFinder refcache.SpaceFinder,
 	infraProviderSvc *infraprovider.Service,
 	orchestrator orchestrator.Orchestrator,
 	scm *scm.SCM,
 	config *types.Config,
 ) *Service {
 	return NewService(tx, gitspaceStore, gitspaceInstanceStore, eventReporter,
-		gitspaceEventStore, spaceStore, infraProviderSvc, orchestrator, scm, config)
+		gitspaceEventStore, spaceFinder, infraProviderSvc, orchestrator, scm, config)
 }

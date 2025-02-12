@@ -52,7 +52,7 @@ func (c *Controller) Create(
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
-	parentSpace, err := c.spaceCache.Get(ctx, in.SpaceRef)
+	parentSpace, err := c.spaceFinder.FindByRef(ctx, in.SpaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find parent by ref: %w", err)
 	}

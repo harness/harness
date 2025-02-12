@@ -18,6 +18,13 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
+type SpaceCore struct {
+	ID         int64  `json:"id"`
+	ParentID   int64  `json:"parent_id"`
+	Path       string `json:"path"`
+	Identifier string `json:"identifier"`
+}
+
 /*
 Space represents a space.
 There isn't a one-solves-all hierarchical data structure for DBs,
@@ -41,6 +48,15 @@ type Space struct {
 	Created     int64  `json:"created"`
 	Updated     int64  `json:"updated"`
 	Deleted     *int64 `json:"deleted,omitempty"`
+}
+
+func (s *Space) Core() *SpaceCore {
+	return &SpaceCore{
+		ID:         s.ID,
+		ParentID:   s.ParentID,
+		Path:       s.Path,
+		Identifier: s.Identifier,
+	}
 }
 
 type SpaceParentData struct {

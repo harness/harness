@@ -42,7 +42,7 @@ func (c *Controller) Action(
 	if err := c.sanitizeActionInput(in); err != nil {
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
-	space, err := c.spaceCache.Get(ctx, in.SpaceRef)
+	space, err := c.spaceFinder.FindByRef(ctx, in.SpaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find space: %w", err)
 	}

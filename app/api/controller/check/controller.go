@@ -37,7 +37,7 @@ type Controller struct {
 	authorizer  authz.Authorizer
 	spaceStore  store.SpaceStore
 	checkStore  store.CheckStore
-	spaceCache  refcache.SpaceCache
+	spaceFinder refcache.SpaceFinder
 	repoFinder  refcache.RepoFinder
 	git         git.Interface
 	sanitizers  map[enum.CheckPayloadKind]func(in *ReportInput, s *auth.Session) error
@@ -49,7 +49,7 @@ func NewController(
 	authorizer authz.Authorizer,
 	spaceStore store.SpaceStore,
 	checkStore store.CheckStore,
-	spaceCache refcache.SpaceCache,
+	spaceFinder refcache.SpaceFinder,
 	repoFinder refcache.RepoFinder,
 	git git.Interface,
 	sanitizers map[enum.CheckPayloadKind]func(in *ReportInput, s *auth.Session) error,
@@ -60,7 +60,7 @@ func NewController(
 		authorizer:  authorizer,
 		spaceStore:  spaceStore,
 		checkStore:  checkStore,
-		spaceCache:  spaceCache,
+		spaceFinder: spaceFinder,
 		repoFinder:  repoFinder,
 		git:         git,
 		sanitizers:  sanitizers,
@@ -75,7 +75,7 @@ func (c *Controller) getRepoCheckAccess(
 	repoRef string,
 	reqPermission enum.Permission,
 	allowedRepoStates ...enum.RepoState,
-) (*types.Repository, error) {
+) (*types.RepositoryCore, error) {
 	if repoRef == "" {
 		return nil, usererror.BadRequest("A valid repository reference must be provided.")
 	}
@@ -101,6 +101,6 @@ func (c *Controller) getSpaceCheckAccess(
 	session *auth.Session,
 	spaceRef string,
 	permission enum.Permission,
-) (*types.Space, error) {
-	return space.GetSpaceCheckAuth(ctx, c.spaceCache, c.authorizer, session, spaceRef, permission)
+) (*types.SpaceCore, error) {
+	return space.GetSpaceCheckAuth(ctx, c.spaceFinder, c.authorizer, session, spaceRef, permission)
 }

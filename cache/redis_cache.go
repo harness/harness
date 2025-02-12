@@ -104,3 +104,11 @@ func (c *Redis[K, V]) Get(ctx context.Context, key K) (V, error) {
 
 	return item, nil
 }
+
+func (c *Redis[K, V]) Evict(ctx context.Context, key K) {
+	strKey := c.keyEncoder(key)
+	err := c.client.Del(ctx, strKey).Err()
+	if err != nil && c.logErrFn != nil {
+		c.logErrFn(ctx, err)
+	}
+}

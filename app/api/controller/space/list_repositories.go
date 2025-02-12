@@ -33,7 +33,7 @@ func (c *Controller) ListRepositories(
 	spaceRef string,
 	filter *types.RepoFilter,
 ) ([]*repoCtrl.RepositoryOutput, int64, error) {
-	space, err := c.spaceCache.Get(ctx, spaceRef)
+	space, err := c.spaceFinder.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, 0, err
 	}

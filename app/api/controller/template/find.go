@@ -31,17 +31,20 @@ func (c *Controller) Find(
 	identifier string,
 	resolverType enum.ResolverType,
 ) (*types.Template, error) {
-	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+	space, err := c.spaceFinder.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find space: %w", err)
 	}
+
 	err = apiauth.CheckTemplate(ctx, c.authorizer, session, space.Path, identifier, enum.PermissionTemplateView)
 	if err != nil {
 		return nil, fmt.Errorf("failed to authorize: %w", err)
 	}
+
 	template, err := c.templateStore.FindByIdentifierAndType(ctx, space.ID, identifier, resolverType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find template: %w", err)
 	}
+
 	return template, nil
 }

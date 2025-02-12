@@ -32,7 +32,7 @@ func CheckSpace(
 	ctx context.Context,
 	authorizer authz.Authorizer,
 	session *auth.Session,
-	space *types.Space,
+	space *types.SpaceCore,
 	permission enum.Permission,
 ) error {
 	parentSpace, name, err := paths.DisectLeaf(space.Path)
@@ -56,7 +56,7 @@ func CheckSpaceScope(
 	ctx context.Context,
 	authorizer authz.Authorizer,
 	session *auth.Session,
-	space *types.Space,
+	space *types.SpaceCore,
 	resourceType enum.ResourceType,
 	permission enum.Permission,
 ) error {

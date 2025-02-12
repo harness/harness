@@ -46,7 +46,7 @@ func (c *Controller) Update(
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
-	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+	space, err := c.spaceFinder.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find space: %w", err)
 	}

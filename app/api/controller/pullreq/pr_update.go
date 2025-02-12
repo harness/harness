@@ -67,9 +67,9 @@ func (c *Controller) Update(ctx context.Context,
 	}
 
 	if pr.SourceRepoID != pr.TargetRepoID {
-		var sourceRepo *types.Repository
+		var sourceRepo *types.RepositoryCore
 
-		sourceRepo, err = c.repoStore.Find(ctx, pr.SourceRepoID)
+		sourceRepo, err = c.repoFinder.FindByID(ctx, pr.SourceRepoID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get source repo by id: %w", err)
 		}

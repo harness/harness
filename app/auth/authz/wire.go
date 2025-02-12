@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/services/publicaccess"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 
 	"github.com/google/wire"
@@ -31,16 +32,16 @@ var WireSet = wire.NewSet(
 
 func ProvideAuthorizer(
 	pCache PermissionCache,
-	spaceStore store.SpaceStore,
+	spaceFinder refcache.SpaceFinder,
 	publicAccess publicaccess.Service,
 ) Authorizer {
-	return NewMembershipAuthorizer(pCache, spaceStore, publicAccess)
+	return NewMembershipAuthorizer(pCache, spaceFinder, publicAccess)
 }
 
 func ProvidePermissionCache(
-	spaceStore store.SpaceStore,
+	spaceFinder refcache.SpaceFinder,
 	membershipStore store.MembershipStore,
 ) PermissionCache {
 	const permissionCacheTimeout = time.Second * 15
-	return NewPermissionCache(spaceStore, membershipStore, permissionCacheTimeout)
+	return NewPermissionCache(spaceFinder, membershipStore, permissionCacheTimeout)
 }

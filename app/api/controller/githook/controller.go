@@ -25,6 +25,7 @@ import (
 	eventsgit "github.com/harness/gitness/app/events/git"
 	eventsrepo "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/services/protection"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
@@ -42,6 +43,7 @@ type Controller struct {
 	authorizer          authz.Authorizer
 	principalStore      store.PrincipalStore
 	repoStore           store.RepoStore
+	repoFinder          refcache.RepoFinder
 	gitReporter         *eventsgit.Reporter
 	repoReporter        *eventsrepo.Reporter
 	git                 git.Interface
@@ -60,6 +62,7 @@ func NewController(
 	authorizer authz.Authorizer,
 	principalStore store.PrincipalStore,
 	repoStore store.RepoStore,
+	repoFinder refcache.RepoFinder,
 	gitReporter *eventsgit.Reporter,
 	repoReporter *eventsrepo.Reporter,
 	git git.Interface,
@@ -77,6 +80,7 @@ func NewController(
 		authorizer:          authorizer,
 		principalStore:      principalStore,
 		repoStore:           repoStore,
+		repoFinder:          repoFinder,
 		gitReporter:         gitReporter,
 		repoReporter:        repoReporter,
 		git:                 git,
@@ -97,12 +101,12 @@ func (c *Controller) getRepoCheckAccess(
 	_ *auth.Session,
 	repoID int64,
 	_ enum.Permission,
-) (*types.Repository, error) {
+) (*types.RepositoryCore, error) {
 	if repoID < 1 {
 		return nil, usererror.BadRequest("A valid repository reference must be provided.")
 	}
 
-	repo, err := c.repoStore.Find(ctx, repoID)
+	repo, err := c.repoFinder.FindByID(ctx, repoID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo with id %d: %w", repoID, err)
 	}
@@ -120,7 +124,7 @@ func (c *Controller) getRepoCheckAccess(
 func GetBaseSHAForScanningChanges(
 	ctx context.Context,
 	rgit RestrictedGIT,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	env hook.Environment,
 	refUpdates []hook.ReferenceUpdate,
 	findBaseFor hook.ReferenceUpdate,

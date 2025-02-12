@@ -32,7 +32,7 @@ func createRPCWriteParams(
 	ctx context.Context,
 	urlProvider url.Provider,
 	session *auth.Session,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	isInternal bool,
 ) (git.WriteParams, error) {
 	// generate envars (add everything githook CLI needs for execution)
@@ -64,7 +64,7 @@ func CreateRPCExternalWriteParams(
 	ctx context.Context,
 	urlProvider url.Provider,
 	session *auth.Session,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 ) (git.WriteParams, error) {
 	return createRPCWriteParams(ctx, urlProvider, session, repo, false)
 }
@@ -75,7 +75,7 @@ func CreateRPCInternalWriteParams(
 	ctx context.Context,
 	urlProvider url.Provider,
 	session *auth.Session,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 ) (git.WriteParams, error) {
 	return createRPCWriteParams(ctx, urlProvider, session, repo, true)
 }

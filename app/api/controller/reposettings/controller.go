@@ -58,7 +58,7 @@ func (c *Controller) getRepoCheckAccess(
 	repoRef string,
 	reqPermission enum.Permission,
 	allowedRepoStates ...enum.RepoState,
-) (*types.Repository, error) {
+) (*types.RepositoryCore, error) {
 	repo, err := repo.GetRepo(ctx, c.repoFinder, repoRef)
 	if err != nil {
 		return nil, err

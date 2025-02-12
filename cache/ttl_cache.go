@@ -117,6 +117,12 @@ func (c *TTLCache[K, V]) Stats() (int64, int64) {
 	return c.countHit.Load(), c.countMiss.Load()
 }
 
+func (c *TTLCache[K, V]) Evict(_ context.Context, key K) {
+	c.mx.Lock()
+	delete(c.cache, key)
+	c.mx.Unlock()
+}
+
 func (c *TTLCache[K, V]) fetch(key K, now time.Time) (V, bool) {
 	c.mx.RLock()
 	defer c.mx.RUnlock()

@@ -18,6 +18,7 @@ import (
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/config"
+	"github.com/harness/gitness/app/services/refcache"
 	corestore "github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/audit"
@@ -54,7 +55,7 @@ func APIHandlerProvider(
 	cleanupPolicyDao store.CleanupPolicyRepository,
 	imageDao store.ImageRepository,
 	driver storagedriver.StorageDriver,
-	spaceStore corestore.SpaceStore,
+	spaceFinder refcache.SpaceFinder,
 	tx dbtx.Transactor,
 	authenticator authn.Authenticator,
 	urlProvider urlprovider.Provider,
@@ -74,7 +75,7 @@ func APIHandlerProvider(
 		imageDao,
 		driver,
 		config.APIURL,
-		spaceStore,
+		spaceFinder,
 		tx,
 		authenticator,
 		urlProvider,

@@ -49,7 +49,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
-	parentSpace, err := c.spaceStore.FindByRef(ctx, in.SpaceRef)
+	parentSpace, err := c.spaceFinder.FindByRef(ctx, in.SpaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find parent by ref: %w", err)
 	}

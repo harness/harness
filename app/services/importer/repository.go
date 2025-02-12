@@ -29,6 +29,7 @@ import (
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/services/publicaccess"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	gitnessurl "github.com/harness/gitness/app/url"
@@ -62,6 +63,7 @@ type Repository struct {
 	repoStore     store.RepoStore
 	pipelineStore store.PipelineStore
 	triggerStore  store.TriggerStore
+	repoFinder    refcache.RepoFinder
 	encrypter     encrypt.Encrypter
 	scheduler     *job.Scheduler
 	sseStreamer   sse.Streamer
@@ -312,6 +314,8 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 			return fmt.Errorf("failed to update repository prior to the import: %w", err)
 		}
 
+		r.repoFinder.MarkChanged(ctx, repo.ID)
+
 		log.Info().Msg("sync repository")
 
 		err = r.syncGitRepository(ctx, &systemPrincipal, repo, cloneURLWithAuth)
@@ -336,6 +340,8 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		if err != nil {
 			return fmt.Errorf("failed to update repository after import: %w", err)
 		}
+
+		r.repoFinder.MarkChanged(ctx, repo.ID)
 
 		if input.Pipelines != PipelineOptionConvert {
 			return nil // assumes the value is enum.PipelineOptionIgnore
@@ -374,7 +380,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 	return "", nil
 }
 
-func (r *Repository) GetProgress(ctx context.Context, repo *types.Repository) (job.Progress, error) {
+func (r *Repository) GetProgress(ctx context.Context, repo *types.RepositoryCore) (job.Progress, error) {
 	progress, err := r.scheduler.GetJobProgress(ctx, JobIDFromRepoID(repo.ID))
 	if errors.Is(err, gitness_store.ErrResourceNotFound) {
 		if repo.State == enum.RepoStateGitImport {

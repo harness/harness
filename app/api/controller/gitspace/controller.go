@@ -29,8 +29,8 @@ import (
 type Controller struct {
 	authorizer         authz.Authorizer
 	infraProviderSvc   *infraprovider.Service
-	spaceCache         refcache.SpaceCache
 	spaceStore         store.SpaceStore
+	spaceFinder        refcache.SpaceFinder
 	gitspaceEventStore store.GitspaceEventStore
 	tx                 dbtx.Transactor
 	statefulLogger     *logutil.StatefulLogger
@@ -44,8 +44,8 @@ func NewController(
 	tx dbtx.Transactor,
 	authorizer authz.Authorizer,
 	infraProviderSvc *infraprovider.Service,
-	spaceCache refcache.SpaceCache,
 	spaceStore store.SpaceStore,
+	spaceFinder refcache.SpaceFinder,
 	gitspaceEventStore store.GitspaceEventStore,
 	statefulLogger *logutil.StatefulLogger,
 	scm *scm.SCM,
@@ -57,8 +57,8 @@ func NewController(
 		tx:                 tx,
 		authorizer:         authorizer,
 		infraProviderSvc:   infraProviderSvc,
-		spaceCache:         spaceCache,
 		spaceStore:         spaceStore,
+		spaceFinder:        spaceFinder,
 		gitspaceEventStore: gitspaceEventStore,
 		statefulLogger:     statefulLogger,
 		scm:                scm,

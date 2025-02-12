@@ -41,9 +41,14 @@ func (c *Controller) Update(
 	spaceRef string,
 	in *UpdateInput,
 ) (*SpaceOutput, error) {
-	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceEdit)
+	spaceCore, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceEdit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to space: %w", err)
+	}
+
+	space, err := c.spaceStore.Find(ctx, spaceCore.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find space by ID: %w", err)
 	}
 
 	if !in.hasChanges(space) {

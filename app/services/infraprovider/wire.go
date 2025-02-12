@@ -15,6 +15,7 @@
 package infraprovider
 
 import (
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/infraprovider"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -32,7 +33,7 @@ func ProvideInfraProvider(
 	configStore store.InfraProviderConfigStore,
 	templateStore store.InfraProviderTemplateStore,
 	infraProviderFactory infraprovider.Factory,
-	spaceStore store.SpaceStore,
+	spaceFinder refcache.SpaceFinder,
 ) *Service {
-	return NewService(tx, resourceStore, configStore, templateStore, infraProviderFactory, spaceStore)
+	return NewService(tx, resourceStore, configStore, templateStore, infraProviderFactory, spaceFinder)
 }

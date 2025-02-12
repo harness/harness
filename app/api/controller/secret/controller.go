@@ -16,6 +16,7 @@ package secret
 
 import (
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/encrypt"
 )
@@ -24,19 +25,19 @@ type Controller struct {
 	encrypter   encrypt.Encrypter
 	secretStore store.SecretStore
 	authorizer  authz.Authorizer
-	spaceStore  store.SpaceStore
+	spaceFinder refcache.SpaceFinder
 }
 
 func NewController(
 	authorizer authz.Authorizer,
 	encrypter encrypt.Encrypter,
 	secretStore store.SecretStore,
-	spaceStore store.SpaceStore,
+	spaceFinder refcache.SpaceFinder,
 ) *Controller {
 	return &Controller{
 		encrypter:   encrypter,
 		secretStore: secretStore,
 		authorizer:  authorizer,
-		spaceStore:  spaceStore,
+		spaceFinder: spaceFinder,
 	}
 }

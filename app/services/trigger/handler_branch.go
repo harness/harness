@@ -76,19 +76,22 @@ func (s *Service) augmentCommitInfo(
 	repoID int64,
 	sha string,
 ) error {
-	repo, err := s.repoStore.Find(ctx, repoID)
+	repo, err := s.repoFinder.FindByID(ctx, repoID)
 	if err != nil {
 		return fmt.Errorf("could not find repo: %w", err)
 	}
+
 	commit, err := s.commitSvc.FindCommit(ctx, repo, sha)
 	if err != nil {
 		return fmt.Errorf("could not find commit info")
 	}
+
 	hook.AuthorName = commit.Author.Identity.Name
 	hook.Title = commit.Title
 	hook.Timestamp = commit.Committer.When.UnixMilli()
 	hook.AuthorLogin = commit.Author.Identity.Name
 	hook.AuthorEmail = commit.Author.Identity.Email
 	hook.Message = commit.Message
+
 	return nil
 }

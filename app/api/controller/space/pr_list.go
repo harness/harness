@@ -30,7 +30,7 @@ func (c *Controller) ListPullReqs(
 	includeSubspaces bool,
 	filter *types.PullReqFilter,
 ) ([]types.PullReqRepo, error) {
-	space, err := c.spaceCache.Get(ctx, spaceRef)
+	space, err := c.spaceFinder.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("space not found: %w", err)
 	}

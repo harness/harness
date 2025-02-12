@@ -30,13 +30,13 @@ import (
 // GetSpaceCheckAuth checks whether the user has the requested permission on the provided space and returns the space.
 func GetSpaceCheckAuth(
 	ctx context.Context,
-	spaceCache refcache.SpaceCache,
+	spaceFinder refcache.SpaceFinder,
 	authorizer authz.Authorizer,
 	session *auth.Session,
 	spaceRef string,
 	permission enum.Permission,
-) (*types.Space, error) {
-	space, err := spaceCache.Get(ctx, spaceRef)
+) (*types.SpaceCore, error) {
+	space, err := spaceFinder.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("parent space not found: %w", err)
 	}

@@ -29,7 +29,7 @@ import (
 func (c *Controller) checkFileSizeLimit(
 	ctx context.Context,
 	rgit RestrictedGIT,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	in types.GithookPreReceiveInput,
 	output *hook.Output,
 ) error {

@@ -39,7 +39,7 @@ func (c *Controller) List(
 	if filter.SourceRepoRef == repoRef {
 		filter.SourceRepoID = repo.ID
 	} else if filter.SourceRepoRef != "" {
-		var sourceRepo *types.Repository
+		var sourceRepo *types.RepositoryCore
 		sourceRepo, err = c.getRepoCheckAccess(ctx, session, filter.SourceRepoRef, enum.PermissionRepoView)
 		if err != nil {
 			return nil, 0, fmt.Errorf("failed to acquire access to source repo: %w", err)

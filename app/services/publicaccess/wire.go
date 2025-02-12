@@ -29,8 +29,8 @@ var WireSet = wire.NewSet(
 func ProvidePublicAccess(
 	config *types.Config,
 	publicAccessStore store.PublicAccessStore,
-	spaceCache refcache.SpaceCache,
+	spaceFinder refcache.SpaceFinder,
 	repoFinder refcache.RepoFinder,
 ) Service {
-	return NewService(config.PublicResourceCreationEnabled, publicAccessStore, spaceCache, repoFinder)
+	return NewService(config.PublicResourceCreationEnabled, publicAccessStore, spaceFinder, repoFinder)
 }

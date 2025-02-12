@@ -60,7 +60,7 @@ func (s *service) getResourceSpace(
 	ctx context.Context,
 	path string,
 ) (int64, error) {
-	space, err := s.spaceCache.Get(ctx, path)
+	space, err := s.spaceFinder.FindByRef(ctx, path)
 	if err != nil {
 		return 0, fmt.Errorf("failed to find space: %w", err)
 	}

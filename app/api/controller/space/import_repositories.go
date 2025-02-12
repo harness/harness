@@ -90,7 +90,7 @@ func (c *Controller) ImportRepositories(
 
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
 		// lock the space for update during repo creation to prevent racing conditions with space soft delete.
-		space, err = c.spaceStore.FindForUpdate(ctx, space.ID)
+		_, err = c.spaceStore.FindForUpdate(ctx, space.ID)
 		if err != nil {
 			return fmt.Errorf("failed to find the parent space: %w", err)
 		}

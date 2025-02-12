@@ -90,7 +90,7 @@ type Files struct {
 
 func (c *Controller) commit(ctx context.Context,
 	session *auth.Session,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	payload *CommitPayload) (types.CommitFilesResponse, error) {
 	files := payload.Files
 	actions := make([]git.CommitFileAction, len(files))

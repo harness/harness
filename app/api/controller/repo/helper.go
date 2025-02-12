@@ -37,12 +37,12 @@ var importingStates = []enum.RepoState{
 	enum.RepoStateMigrateGitPush,
 }
 
-// GetRepo fetches an repository.
+// GetRepo fetches a repository.
 func GetRepo(
 	ctx context.Context,
 	repoFinder refcache.RepoFinder,
 	repoRef string,
-) (*types.Repository, error) {
+) (*types.RepositoryCore, error) {
 	if repoRef == "" {
 		return nil, usererror.BadRequest("A valid repository reference must be provided.")
 	}
@@ -65,7 +65,7 @@ func GetRepoCheckAccess(
 	repoRef string,
 	reqPermission enum.Permission,
 	allowedRepoStates ...enum.RepoState,
-) (*types.Repository, error) {
+) (*types.RepositoryCore, error) {
 	repo, err := GetRepo(ctx, repoFinder, repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo: %w", err)
@@ -84,12 +84,12 @@ func GetRepoCheckAccess(
 
 func GetSpaceCheckAuthRepoCreation(
 	ctx context.Context,
-	spaceCache refcache.SpaceCache,
+	spaceFinder refcache.SpaceFinder,
 	authorizer authz.Authorizer,
 	session *auth.Session,
 	parentRef string,
-) (*types.Space, error) {
-	space, err := spaceCache.Get(ctx, parentRef)
+) (*types.SpaceCore, error) {
+	space, err := spaceFinder.FindByRef(ctx, parentRef)
 	if err != nil {
 		return nil, fmt.Errorf("parent space not found: %w", err)
 	}
@@ -153,7 +153,7 @@ func GetRepoCheckServiceAccountAccess(
 	repoStore store.RepoStore,
 	spaceStore store.SpaceStore,
 	allowedRepoStates ...enum.RepoState,
-) (*types.Repository, error) {
+) (*types.RepositoryCore, error) {
 	repo, err := GetRepo(ctx, repoFinder, repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo: %w", err)

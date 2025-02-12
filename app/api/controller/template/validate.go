@@ -30,9 +30,11 @@ func parseResolverType(data string) (enum.ResolverType, error) {
 	if err != nil {
 		return "", check.NewValidationError(fmt.Sprintf("could not parse template data: %s", err))
 	}
+
 	resolverTypeEnum, err := enum.ParseResolverType(config.Type)
 	if err != nil {
 		return "", check.NewValidationError(fmt.Sprintf("could not parse template type: %s", config.Type))
 	}
+
 	return resolverTypeEnum, nil
 }

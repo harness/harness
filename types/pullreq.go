@@ -277,6 +277,6 @@ type MergeViolations struct {
 }
 
 type PullReqRepo struct {
-	PullRequest *PullReq    `json:"pull_request"`
-	Repository  *Repository `json:"repository"`
+	PullRequest *PullReq        `json:"pull_request"`
+	Repository  *RepositoryCore `json:"repository"`
 }

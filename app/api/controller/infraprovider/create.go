@@ -66,7 +66,7 @@ func (c *Controller) Create(
 	if err := c.sanitizeCreateInput(in); err != nil {
 		return nil, fmt.Errorf("invalid input: %w", err)
 	}
-	parentSpace, err := c.spaceCache.Get(ctx, in.SpaceRef)
+	parentSpace, err := c.spaceFinder.FindByRef(ctx, in.SpaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find parent by ref %q : %w", in.SpaceRef, err)
 	}
@@ -90,7 +90,7 @@ func (c *Controller) Create(
 
 func (c *Controller) MapToInfraProviderConfig(
 	in CreateInput,
-	parentSpace *types.Space,
+	parentSpace *types.SpaceCore,
 	now int64,
 ) *types.InfraProviderConfig {
 	infraProviderConfig := &types.InfraProviderConfig{
@@ -102,7 +102,7 @@ func (c *Controller) MapToInfraProviderConfig(
 		Created:    now,
 		Updated:    now,
 	}
-	infraProviderConfig.Resources = mapToResourceEntity(in.Resources, *parentSpace, now)
+	infraProviderConfig.Resources = mapToResourceEntity(in.Resources, parentSpace, now)
 	return infraProviderConfig
 }
 

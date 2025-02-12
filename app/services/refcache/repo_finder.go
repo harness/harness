@@ -16,80 +16,104 @@ package refcache
 
 import (
 	"context"
+	"encoding/binary"
 	"fmt"
 	"strconv"
-	"time"
 
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/cache"
-	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/pubsub"
 	"github.com/harness/gitness/types"
+
+	"github.com/rs/zerolog/log"
 )
 
 type RepoFinder struct {
-	repoStore  store.RepoStore
-	spaceCache SpaceCache
-	repoCache  repoCache
+	repoStore     store.RepoStore
+	spaceRefCache SpaceRefCache
+	repoIDCache   RepoIDCache
+	repoRefCache  RepoRefCache
+	pubsub        pubsub.PubSub
 }
 
 func NewRepoFinder(
 	repoStore store.RepoStore,
-	spaceCache SpaceCache,
+	spaceRefCache SpaceRefCache,
+	repoIDCache RepoIDCache,
+	repoRefCache RepoRefCache,
+	bus pubsub.PubSub,
 ) RepoFinder {
-	return RepoFinder{
-		repoStore:  repoStore,
-		spaceCache: spaceCache,
-		repoCache:  newRepoCache(repoStore),
+	r := RepoFinder{
+		repoStore:     repoStore,
+		spaceRefCache: spaceRefCache,
+		repoIDCache:   repoIDCache,
+		repoRefCache:  repoRefCache,
+		pubsub:        bus,
+	}
+
+	ctx := context.Background()
+
+	_ = bus.Subscribe(ctx, pubsubTopicRepoUpdate, func(payload []byte) error {
+		repoID := int64(binary.LittleEndian.Uint64(payload))
+		repo, err := r.repoIDCache.Get(ctx, repoID)
+		if err != nil {
+			log.Ctx(ctx).Warn().Err(err).Msg("repoFinder: pubsub subscriber: failed to get repo by ID from cache")
+			return err
+		}
+
+		r.repoRefCache.Evict(ctx, RepoCacheKey{spaceID: repo.ParentID, repoIdentifier: repo.Identifier})
+		r.repoIDCache.Evict(ctx, repoID)
+
+		return nil
+	}, pubsub.WithChannelNamespace(pubsubNamespace))
+
+	return r
+}
+
+func (r RepoFinder) MarkChanged(ctx context.Context, repoID int64) {
+	var buff [8]byte
+	binary.LittleEndian.PutUint64(buff[:], uint64(repoID))
+	err := r.pubsub.Publish(ctx, pubsubTopicRepoUpdate, buff[:], pubsub.WithPublishNamespace(pubsubNamespace))
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("failed to publish repo update event")
 	}
 }
 
-func (r RepoFinder) FindByRef(ctx context.Context, repoRef string) (*types.Repository, error) {
-	if id, err := strconv.ParseInt(repoRef, 10, 64); err == nil && id > 0 {
-		repo, err := r.repoStore.Find(ctx, id)
+func (r RepoFinder) FindByID(ctx context.Context, repoID int64) (*types.RepositoryCore, error) {
+	return r.repoIDCache.Get(ctx, repoID)
+}
+
+func (r RepoFinder) FindByRef(ctx context.Context, repoRef string) (*types.RepositoryCore, error) {
+	repoID, err := strconv.ParseInt(repoRef, 10, 64)
+	if err != nil || repoID <= 0 {
+		spacePath, repoIdentifier, err := paths.DisectLeaf(repoRef)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get repository by ID: %w", err)
+			return nil, fmt.Errorf("failed to disect extract repo idenfifier from path: %w", err)
 		}
 
-		return repo, nil
-	}
-
-	spacePath, repoIdentifier, err := paths.DisectLeaf(repoRef)
-	if err != nil {
-		return nil, fmt.Errorf("failed to disect extract repo idenfifier from path: %w", err)
-	}
-
-	space, err := r.spaceCache.Get(ctx, spacePath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get space from cache: %w", err)
-	}
-
-	if id, err := strconv.ParseInt(repoIdentifier, 10, 64); err == nil && id > 0 {
-		repo, err := r.repoStore.Find(ctx, id)
+		spaceID, err := r.spaceRefCache.Get(ctx, spacePath)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get repository by space path and ID: %w", err)
+			return nil, fmt.Errorf("failed to get space from cache: %w", err)
 		}
 
-		if repo.ParentID != space.ID {
-			return nil, errors.NotFound("Repository not found")
+		repoID, err = r.repoRefCache.Get(ctx, RepoCacheKey{spaceID: spaceID, repoIdentifier: repoIdentifier})
+		if err != nil {
+			return nil, fmt.Errorf("failed to get repository ID by space ID and repo identifier: %w", err)
 		}
-
-		return repo, nil
 	}
 
-	repo, err := r.repoCache.Get(ctx, repoCacheKey{spaceID: space.ID, repoIdentifier: repoIdentifier})
+	repoCore, err := r.repoIDCache.Get(ctx, repoID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get repository by parent space ID and UID: %w", err)
+		return nil, fmt.Errorf("failed to get repository by ID: %w", err)
 	}
 
-	repo.Version = -1 // destroy the repo version so that it can't be used for update
-
-	return repo, nil
+	return repoCore, nil
 }
 
 func (r RepoFinder) FindDeletedByRef(ctx context.Context, repoRef string, deleted int64) (*types.Repository, error) {
-	if id, err := strconv.ParseInt(repoRef, 10, 64); err == nil && id > 0 {
-		repo, err := r.repoStore.FindDeleted(ctx, id, &deleted)
+	repoID, err := strconv.ParseInt(repoRef, 10, 64)
+	if err == nil && repoID >= 0 {
+		repo, err := r.repoStore.FindDeleted(ctx, repoID, &deleted)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get repository by ID: %w", err)
 		}
@@ -97,46 +121,20 @@ func (r RepoFinder) FindDeletedByRef(ctx context.Context, repoRef string, delete
 		return repo, nil
 	}
 
-	spacePath, repoIdentifier, err := paths.DisectLeaf(repoRef)
+	spaceRef, repoIdentifier, err := paths.DisectLeaf(repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to disect extract repo idenfifier from path: %w", err)
 	}
 
-	space, err := r.spaceCache.Get(ctx, spacePath)
+	spaceID, err := r.spaceRefCache.Get(ctx, spaceRef)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get space from cache: %w", err)
+		return nil, fmt.Errorf("failed to get space ID by space ref from cache: %w", err)
 	}
 
-	repo, err := r.repoStore.FindDeletedByUID(ctx, space.ID, repoIdentifier, deleted)
+	repo, err := r.repoStore.FindDeletedByUID(ctx, spaceID, repoIdentifier, deleted)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get deleted repository by parent space ID and UID: %w", err)
+		return nil, fmt.Errorf("failed to get deleted repository ID by space ID and repo identifier: %w", err)
 	}
-
-	repo.Version = -1 // destroy the repo version so that it can't be used for update
 
 	return repo, nil
-}
-
-// repoCache holds Repository objects fetched by spaceID and repository identifier.
-type repoCache cache.Cache[repoCacheKey, *types.Repository]
-
-type repoCacheKey struct {
-	spaceID        int64
-	repoIdentifier string
-}
-
-func newRepoCache(
-	repoStore store.RepoStore,
-) repoCache {
-	return cache.New[repoCacheKey, *types.Repository](
-		repoCacheGetter{repoStore: repoStore},
-		1*time.Minute)
-}
-
-type repoCacheGetter struct {
-	repoStore store.RepoStore
-}
-
-func (c repoCacheGetter) Find(ctx context.Context, key repoCacheKey) (*types.Repository, error) {
-	return c.repoStore.FindActiveByUID(ctx, key.spaceID, key.repoIdentifier)
 }

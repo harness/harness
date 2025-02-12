@@ -16,23 +16,24 @@ package template
 
 import (
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 )
 
 type Controller struct {
 	templateStore store.TemplateStore
 	authorizer    authz.Authorizer
-	spaceStore    store.SpaceStore
+	spaceFinder   refcache.SpaceFinder
 }
 
 func NewController(
 	authorizer authz.Authorizer,
 	templateStore store.TemplateStore,
-	spaceStore store.SpaceStore,
+	spaceFinder refcache.SpaceFinder,
 ) *Controller {
 	return &Controller{
 		templateStore: templateStore,
 		authorizer:    authorizer,
-		spaceStore:    spaceStore,
+		spaceFinder:   spaceFinder,
 	}
 }

@@ -30,7 +30,7 @@ type (
 		Actor              *types.Principal
 		AllowBypass        bool
 		IsRepoOwner        bool
-		Repo               *types.Repository
+		Repo               *types.RepositoryCore
 		RefAction          RefAction
 		RefType            RefType
 		RefNames           []string

@@ -62,7 +62,7 @@ func (c *Controller) Update(ctx context.Context,
 	repoRef string,
 	in *UpdateInput,
 ) (*RepositoryOutput, error) {
-	repo, err := GetRepo(ctx, c.repoFinder, repoRef)
+	repoCore, err := GetRepo(ctx, c.repoFinder, repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo: %w", err)
 	}
@@ -74,13 +74,18 @@ func (c *Controller) Update(ctx context.Context,
 			enum.RepoStateArchived, enum.RepoStateMigrateDataImport, enum.RepoStateMigrateGitPush}
 	}
 
-	err = apiauth.CheckRepoState(ctx, session, repo, enum.PermissionRepoEdit, additionalAllowedRepoStates...)
+	err = apiauth.CheckRepoState(ctx, session, repoCore, enum.PermissionRepoEdit, additionalAllowedRepoStates...)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoEdit); err != nil {
+	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repoCore, enum.PermissionRepoEdit); err != nil {
 		return nil, fmt.Errorf("access check failed: %w", err)
+	}
+
+	repo, err := c.repoStore.Find(ctx, repoCore.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find repository by ID: %w", err)
 	}
 
 	repoClone := repo.Clone()
@@ -113,6 +118,8 @@ func (c *Controller) Update(ctx context.Context,
 	if err != nil {
 		return nil, fmt.Errorf("failed to update the repo: %w", err)
 	}
+
+	c.repoFinder.MarkChanged(ctx, repo.ID)
 
 	err = c.auditService.Log(ctx,
 		session.Principal,

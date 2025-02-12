@@ -54,7 +54,7 @@ func (c *APIController) FetchArtifactSummary(
 		return "", "", "", false, fmt.Errorf("failed to get registry request base info: %w", err)
 	}
 
-	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
+	space, err := c.SpaceFinder.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
 		return "", "", "", false, err
 	}

@@ -22,18 +22,18 @@ import (
 
 type Controller struct {
 	authorizer       authz.Authorizer
-	spaceCache       refcache.SpaceCache
+	spaceFinder      refcache.SpaceFinder
 	infraproviderSvc *infraprovider.Service
 }
 
 func NewController(
 	authorizer authz.Authorizer,
-	spaceCache refcache.SpaceCache,
+	spaceFinder refcache.SpaceFinder,
 	infraproviderSvc *infraprovider.Service,
 ) *Controller {
 	return &Controller{
 		authorizer:       authorizer,
-		spaceCache:       spaceCache,
+		spaceFinder:      spaceFinder,
 		infraproviderSvc: infraproviderSvc,
 	}
 }

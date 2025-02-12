@@ -27,7 +27,7 @@ type PreReceiveExtender interface {
 		context.Context,
 		RestrictedGIT,
 		*auth.Session,
-		*types.Repository,
+		*types.RepositoryCore,
 		types.GithookPreReceiveInput,
 		*hook.Output,
 	) error
@@ -38,7 +38,7 @@ type UpdateExtender interface {
 		context.Context,
 		RestrictedGIT,
 		*auth.Session,
-		*types.Repository,
+		*types.RepositoryCore,
 		types.GithookUpdateInput,
 		*hook.Output,
 	) error
@@ -49,7 +49,7 @@ type PostReceiveExtender interface {
 		context.Context,
 		RestrictedGIT,
 		*auth.Session,
-		*types.Repository,
+		*types.RepositoryCore,
 		types.GithookPostReceiveInput,
 		*hook.Output,
 	) error
@@ -66,7 +66,7 @@ func (NoOpPreReceiveExtender) Extend(
 	context.Context,
 	RestrictedGIT,
 	*auth.Session,
-	*types.Repository,
+	*types.RepositoryCore,
 	types.GithookPreReceiveInput,
 	*hook.Output,
 ) error {
@@ -84,7 +84,7 @@ func (NoOpUpdateExtender) Extend(
 	context.Context,
 	RestrictedGIT,
 	*auth.Session,
-	*types.Repository,
+	*types.RepositoryCore,
 	types.GithookUpdateInput,
 	*hook.Output,
 ) error {
@@ -102,7 +102,7 @@ func (NoOpPostReceiveExtender) Extend(
 	context.Context,
 	RestrictedGIT,
 	*auth.Session,
-	*types.Repository,
+	*types.RepositoryCore,
 	types.GithookPostReceiveInput,
 	*hook.Output,
 ) error {

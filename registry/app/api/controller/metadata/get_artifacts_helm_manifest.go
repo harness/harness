@@ -35,7 +35,7 @@ func (c *APIController) GetHelmArtifactManifest(
 		return c.get400Error(err)
 	}
 
-	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
+	space, err := c.SpaceFinder.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
 		return artifact.GetHelmArtifactManifest400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(

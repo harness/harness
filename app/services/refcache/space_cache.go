@@ -17,8 +17,6 @@ package refcache
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"time"
 
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/store"
@@ -26,19 +24,43 @@ import (
 	"github.com/harness/gitness/types"
 )
 
-// SpaceCache holds Space objects fetched by space reference.
-// Whenever a space object needs be fetched by the full path and used only for read operations,
-// it should be fetched using this cache.
-type SpaceCache cache.Cache[string, *types.Space]
+type (
+	// SpaceIDCache holds the immutable part of Space objects fetched by space ID.
+	SpaceIDCache cache.Cache[int64, *types.SpaceCore]
+
+	// SpaceRefCache holds the space ID fetched by space reference.
+	SpaceRefCache cache.Cache[string, int64]
+)
+
+func NewSpaceIDCache(
+	spaceStore store.SpaceStore,
+) SpaceIDCache {
+	return cache.New[int64, *types.SpaceCore](spaceIDCacheGetter{spaceStore: spaceStore}, cacheDuration)
+}
+
+type spaceIDCacheGetter struct {
+	spaceStore store.SpaceStore
+}
+
+func (g spaceIDCacheGetter) Find(ctx context.Context, spaceID int64) (*types.SpaceCore, error) {
+	space, err := g.spaceStore.Find(ctx, spaceID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find space by id: %w", err)
+	}
+
+	return space.Core(), nil
+}
 
 // spaceCache is a decorator of a Cache required to handle path transformations.
-type spaceCache struct {
-	inner                   SpaceCache
+type spaceRefCache struct {
+	inner                   SpaceRefCache
 	spacePathTransformation store.SpacePathTransformation
 }
 
-func (c spaceCache) Get(ctx context.Context, key string) (*types.Space, error) {
-	segments := paths.Segments(key)
+var _ cache.Cache[string, int64] = spaceRefCache{}
+
+func (c spaceRefCache) Get(ctx context.Context, spaceRef string) (int64, error) {
+	segments := paths.Segments(spaceRef)
 	uniqueKey := ""
 	for i, segment := range segments {
 		uniqueKey = paths.Concatenate(uniqueKey, c.spacePathTransformation(segment, i == 0))
@@ -47,50 +69,37 @@ func (c spaceCache) Get(ctx context.Context, key string) (*types.Space, error) {
 	return c.inner.Get(ctx, uniqueKey)
 }
 
-func (c spaceCache) Stats() (int64, int64) {
+func (c spaceRefCache) Stats() (int64, int64) {
 	return c.inner.Stats()
 }
 
-func NewSpaceCache(
+func (c spaceRefCache) Evict(ctx context.Context, spaceRef string) {
+	c.inner.Evict(ctx, spaceRef)
+}
+
+func NewSpaceRefCache(
 	spacePathStore store.SpacePathStore,
-	spaceStore store.SpaceStore,
 	spacePathTransformation store.SpacePathTransformation,
-) SpaceCache {
-	return &spaceCache{
-		inner: cache.New[string, *types.Space](
+) SpaceRefCache {
+	return &spaceRefCache{
+		inner: cache.New[string, int64](
 			pathToSpaceCacheGetter{
 				spacePathStore: spacePathStore,
-				spaceStore:     spaceStore,
 			},
-			1*time.Minute),
+			cacheDuration),
 		spacePathTransformation: spacePathTransformation,
 	}
 }
 
 type pathToSpaceCacheGetter struct {
 	spacePathStore store.SpacePathStore
-	spaceStore     store.SpaceStore
 }
 
-func (g pathToSpaceCacheGetter) Find(ctx context.Context, spaceRef string) (*types.Space, error) {
-	// ASSUMPTION: digits only is not a valid space path
-	id, err := strconv.ParseInt(spaceRef, 10, 64)
+func (g pathToSpaceCacheGetter) Find(ctx context.Context, spaceRef string) (int64, error) {
+	path, err := g.spacePathStore.FindByPath(ctx, spaceRef)
 	if err != nil {
-		var path *types.SpacePath
-		path, err = g.spacePathStore.FindByPath(ctx, spaceRef)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get path: %w", err)
-		}
-
-		id = path.SpaceID
+		return 0, fmt.Errorf("failed to get space path by space ref: %w", err)
 	}
 
-	space, err := g.spaceStore.Find(ctx, id)
-	if err != nil {
-		return nil, fmt.Errorf("failed to find space by id: %w", err)
-	}
-
-	space.Version = -1 // destroy the space version so that it can't be used for update
-
-	return space, nil
+	return path.SpaceID, nil
 }

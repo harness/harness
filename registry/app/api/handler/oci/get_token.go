@@ -118,7 +118,7 @@ func (h *Handler) getAccessPermissionList(
 			ctx,
 			h.Authorizer,
 			session,
-			space,
+			space.Core(),
 			enum.ResourceTypeRegistry,
 			permission,
 		)

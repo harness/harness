@@ -35,7 +35,7 @@ func CheckRepo(
 	ctx context.Context,
 	authorizer authz.Authorizer,
 	session *auth.Session,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	permission enum.Permission,
 ) error {
 	parentSpace, name, err := paths.DisectLeaf(repo.Path)
@@ -56,7 +56,7 @@ func IsRepoOwner(
 	ctx context.Context,
 	authorizer authz.Authorizer,
 	session *auth.Session,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 ) (bool, error) {
 	// for now we use repoedit as permission to verify if someone is a SpaceOwner and hence a RepoOwner.
 	err := CheckRepo(ctx, authorizer, session, repo, enum.PermissionRepoEdit)
@@ -71,7 +71,7 @@ func IsRepoOwner(
 func CheckRepoState(
 	_ context.Context,
 	_ *auth.Session,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	reqPermission enum.Permission,
 	additionalAllowedRepoStates ...enum.RepoState,
 ) error {

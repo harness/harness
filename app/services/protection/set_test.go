@@ -39,7 +39,7 @@ func TestRuleSet_MergeVerify(t *testing.T) {
 			input: MergeVerifyInput{
 				Actor:      &types.Principal{ID: 1},
 				Method:     enum.MergeMethodRebase,
-				TargetRepo: &types.Repository{ID: 1, DefaultBranch: "main"},
+				TargetRepo: &types.RepositoryCore{ID: 1, DefaultBranch: "main"},
 				PullReq:    &types.PullReq{ID: 1, SourceBranch: "pr", TargetBranch: "main"},
 			},
 			expOut: MergeVerifyOutput{
@@ -53,7 +53,7 @@ func TestRuleSet_MergeVerify(t *testing.T) {
 			rules: []types.RuleInfoInternal{},
 			input: MergeVerifyInput{
 				Actor:      &types.Principal{ID: 1},
-				TargetRepo: &types.Repository{ID: 1, DefaultBranch: "main"},
+				TargetRepo: &types.RepositoryCore{ID: 1, DefaultBranch: "main"},
 				PullReq:    &types.PullReq{ID: 1, SourceBranch: "pr", TargetBranch: "main"},
 			},
 			expOut: MergeVerifyOutput{
@@ -92,7 +92,7 @@ func TestRuleSet_MergeVerify(t *testing.T) {
 			},
 			input: MergeVerifyInput{
 				Actor:      &types.Principal{ID: 1},
-				TargetRepo: &types.Repository{ID: 1, DefaultBranch: "main"},
+				TargetRepo: &types.RepositoryCore{ID: 1, DefaultBranch: "main"},
 				PullReq:    &types.PullReq{ID: 1, SourceBranch: "pr", TargetBranch: "main"},
 				Method:     enum.MergeMethodRebase,
 			},
@@ -162,7 +162,7 @@ func TestRuleSet_MergeVerify(t *testing.T) {
 			},
 			input: MergeVerifyInput{
 				Actor:      &types.Principal{ID: 1},
-				TargetRepo: &types.Repository{ID: 1, DefaultBranch: "main"},
+				TargetRepo: &types.RepositoryCore{ID: 1, DefaultBranch: "main"},
 				PullReq:    &types.PullReq{ID: 1, SourceBranch: "pr", TargetBranch: "main"},
 			},
 			expOut: MergeVerifyOutput{
@@ -261,7 +261,7 @@ func TestRuleSet_MergeVerify(t *testing.T) {
 			},
 			input: MergeVerifyInput{
 				Actor:      &types.Principal{ID: 1},
-				TargetRepo: &types.Repository{ID: 1, DefaultBranch: "main"},
+				TargetRepo: &types.RepositoryCore{ID: 1, DefaultBranch: "main"},
 				PullReq:    &types.PullReq{ID: 1, SourceBranch: "pr", TargetBranch: "main"},
 				CodeOwners: &codeowners.Evaluation{},
 				Reviewers:  []*types.PullReqReviewer{},
@@ -384,7 +384,7 @@ func TestRuleSet_RequiredChecks(t *testing.T) {
 			rules: []types.RuleInfoInternal{},
 			input: RequiredChecksInput{
 				Actor:   &types.Principal{ID: 1},
-				Repo:    &types.Repository{ID: 1, DefaultBranch: "main"},
+				Repo:    &types.RepositoryCore{ID: 1, DefaultBranch: "main"},
 				PullReq: &types.PullReq{ID: 1, SourceBranch: "pr", TargetBranch: "main"},
 			},
 			expOut: RequiredChecksOutput{
@@ -426,7 +426,7 @@ func TestRuleSet_RequiredChecks(t *testing.T) {
 			input: RequiredChecksInput{
 				Actor:       &types.Principal{ID: 1},
 				IsRepoOwner: true,
-				Repo:        &types.Repository{ID: 1, DefaultBranch: "main"},
+				Repo:        &types.RepositoryCore{ID: 1, DefaultBranch: "main"},
 				PullReq:     &types.PullReq{ID: 1, SourceBranch: "pr", TargetBranch: "main"},
 			},
 			expOut: RequiredChecksOutput{

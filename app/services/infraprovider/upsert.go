@@ -29,11 +29,12 @@ func (c *Service) UpsertInfraProvider(
 	ctx context.Context,
 	infraProviderConfig *types.InfraProviderConfig,
 ) error {
-	err := c.tx.WithTx(ctx, func(ctx context.Context) error {
-		space, err := c.spaceStore.FindByRef(ctx, infraProviderConfig.SpacePath)
-		if err != nil {
-			return err
-		}
+	space, err := c.spaceFinder.FindByRef(ctx, infraProviderConfig.SpacePath)
+	if err != nil {
+		return fmt.Errorf("failed to find space by ref: %w", err)
+	}
+
+	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
 		return c.upsertConfig(ctx, space, infraProviderConfig)
 	})
 	if err != nil {
@@ -44,7 +45,7 @@ func (c *Service) UpsertInfraProvider(
 
 func (c *Service) upsertConfig(
 	ctx context.Context,
-	space *types.Space,
+	space *types.SpaceCore,
 	infraProviderConfig *types.InfraProviderConfig,
 ) error {
 	providerConfigInDB, err := c.Find(ctx, space, infraProviderConfig.Identifier)

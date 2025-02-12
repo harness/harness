@@ -109,9 +109,9 @@ type LabelPullReqAssignmentInfo struct {
 
 type ScopeData struct {
 	// Scope = 0 is repo, scope >= 1 is a depth level of a space
-	Scope int64       `json:"scope"`
-	Space *Space      `json:"space,omitempty"`
-	Repo  *Repository `json:"repository,omitempty"`
+	Scope int64           `json:"scope"`
+	Space *SpaceCore      `json:"space,omitempty"`
+	Repo  *RepositoryCore `json:"repository,omitempty"`
 }
 
 // Used to fetch label and values from a repo and space hierarchy.

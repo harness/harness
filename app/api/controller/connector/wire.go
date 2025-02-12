@@ -32,7 +32,7 @@ func ProvideController(
 	connectorStore store.ConnectorStore,
 	connectorService *connector.Service,
 	authorizer authz.Authorizer,
-	spaceCache refcache.SpaceCache,
+	spaceFinder refcache.SpaceFinder,
 ) *Controller {
-	return NewController(authorizer, connectorStore, connectorService, spaceCache)
+	return NewController(authorizer, connectorStore, connectorService, spaceFinder)
 }

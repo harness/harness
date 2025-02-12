@@ -37,7 +37,7 @@ func (c *APIController) GetClientSetupDetails(
 
 	regInfo, _ := c.GetRegistryRequestBaseInfo(ctx, "", string(regRefParam))
 
-	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
+	space, err := c.SpaceFinder.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
 		return artifact.GetClientSetupDetails400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(

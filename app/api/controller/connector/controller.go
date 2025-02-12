@@ -24,7 +24,7 @@ import (
 type Controller struct {
 	connectorStore   store.ConnectorStore
 	connectorService *connector.Service
-	spaceCache       refcache.SpaceCache
+	spaceFinder      refcache.SpaceFinder
 	authorizer       authz.Authorizer
 }
 
@@ -32,12 +32,12 @@ func NewController(
 	authorizer authz.Authorizer,
 	connectorStore store.ConnectorStore,
 	connectorService *connector.Service,
-	spaceCache refcache.SpaceCache,
+	spaceFinder refcache.SpaceFinder,
 ) *Controller {
 	return &Controller{
 		connectorStore:   connectorStore,
 		connectorService: connectorService,
-		spaceCache:       spaceCache,
+		spaceFinder:      spaceFinder,
 		authorizer:       authorizer,
 	}
 }

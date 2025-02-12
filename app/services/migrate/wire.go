@@ -15,6 +15,7 @@
 package migrate
 
 import (
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
@@ -43,12 +44,13 @@ func ProvidePullReqImporter(
 	labelStore store.LabelStore,
 	labelValueStore store.LabelValueStore,
 	pullReqLabelAssignmentStore store.PullReqLabelAssignmentStore,
+	repoFinder refcache.RepoFinder,
 	tx dbtx.Transactor,
 	mtxManager lock.MutexManager,
 ) *PullReq {
 	return NewPullReq(
 		urlProvider, git, principalStore, spaceStore, repoStore, pullReqStore, pullReqActStore,
-		labelStore, labelValueStore, pullReqLabelAssignmentStore, tx, mtxManager)
+		labelStore, labelValueStore, pullReqLabelAssignmentStore, repoFinder, tx, mtxManager)
 }
 
 func ProvideRuleImporter(

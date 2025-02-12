@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/orchestrator"
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/app/services/infraprovider"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -36,7 +37,7 @@ func NewService(
 	gitspaceInstanceStore store.GitspaceInstanceStore,
 	eventReporter *gitspaceevents.Reporter,
 	gitspaceEventStore store.GitspaceEventStore,
-	spaceStore store.SpaceStore,
+	spaceFinder refcache.SpaceFinder,
 	infraProviderSvc *infraprovider.Service,
 	orchestrator orchestrator.Orchestrator,
 	scm *scm.SCM,
@@ -48,7 +49,7 @@ func NewService(
 		gitspaceInstanceStore: gitspaceInstanceStore,
 		eventReporter:         eventReporter,
 		gitspaceEventStore:    gitspaceEventStore,
-		spaceStore:            spaceStore,
+		spaceFinder:           spaceFinder,
 		infraProviderSvc:      infraProviderSvc,
 		orchestrator:          orchestrator,
 		scm:                   scm,
@@ -61,7 +62,7 @@ type Service struct {
 	gitspaceInstanceStore store.GitspaceInstanceStore
 	eventReporter         *gitspaceevents.Reporter
 	gitspaceEventStore    store.GitspaceEventStore
-	spaceStore            store.SpaceStore
+	spaceFinder           refcache.SpaceFinder
 	tx                    dbtx.Transactor
 	infraProviderSvc      *infraprovider.Service
 	orchestrator          orchestrator.Orchestrator
@@ -106,7 +107,7 @@ func (c *Service) ListGitspacesWithInstance(
 	}
 
 	for _, gitspaceConfig := range gitspaceConfigs {
-		space, err := c.spaceStore.FindByRef(ctx, strconv.FormatInt(gitspaceConfig.SpaceID, 10))
+		space, err := c.spaceFinder.FindByRef(ctx, strconv.FormatInt(gitspaceConfig.SpaceID, 10))
 		if err != nil {
 			return nil, 0, 0, err
 		}

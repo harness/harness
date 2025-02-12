@@ -51,7 +51,7 @@ func (c *APIController) ListArtifactLabels(
 		}, nil
 	}
 
-	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
+	space, err := c.SpaceFinder.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
 		return artifact.ListArtifactLabels400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(

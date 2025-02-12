@@ -65,7 +65,7 @@ func addReviewerUserGroup(
 	ctx context.Context,
 	session *auth.Session,
 	c *Controller,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	pr *types.PullReq,
 	in *UserGroupReviewerAddInput,
 ) (*types.UserGroupReviewer, error) {
@@ -107,7 +107,7 @@ func addReviewerUserGroup(
 func newPullReqUserGroupReviewer(
 	session *auth.Session,
 	pullReq *types.PullReq,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	userGroupReviewerInfo types.UserGroupInfo,
 	addedByInfo *types.PrincipalInfo,
 	in *UserGroupReviewerAddInput,

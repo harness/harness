@@ -41,13 +41,18 @@ func (c *Controller) SoftDelete(
 	repoRef string,
 ) (*SoftDeleteResponse, error) {
 	// note: can't use c.getRepoCheckAccess because import job for repositories being imported must be cancelled.
-	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
+	repoCore, err := c.repoFinder.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find the repo for soft delete: %w", err)
 	}
 
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoDelete); err != nil {
+	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repoCore, enum.PermissionRepoDelete); err != nil {
 		return nil, fmt.Errorf("access check failed: %w", err)
+	}
+
+	repo, err := c.repoStore.Find(ctx, repoCore.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find the repo by ID: %w", err)
 	}
 
 	if repo.Deleted != nil {
@@ -104,6 +109,8 @@ func (c *Controller) SoftDeleteNoAuth(
 	if err := c.repoStore.SoftDelete(ctx, repo, deletedAt); err != nil {
 		return fmt.Errorf("failed to soft delete repo from db: %w", err)
 	}
+
+	c.repoFinder.MarkChanged(ctx, repo.ID)
 
 	return nil
 }

@@ -37,7 +37,7 @@ type secretFinding struct {
 func (c *Controller) scanSecrets(
 	ctx context.Context,
 	rgit RestrictedGIT,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	in types.GithookPreReceiveInput,
 	output *hook.Output,
 ) error {
@@ -81,7 +81,7 @@ func (c *Controller) scanSecrets(
 
 func scanSecretsInternal(ctx context.Context,
 	rgit RestrictedGIT,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	in types.GithookPreReceiveInput,
 ) ([]secretFinding, error) {
 	var baseRevFallBack *string

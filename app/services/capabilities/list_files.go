@@ -95,9 +95,10 @@ func ListFiles(
 func listFiles(
 	ctx context.Context,
 	gitI git.Interface,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	gitRef string,
-	path string) (*ListFilesOutput, error) {
+	path string,
+) (*ListFilesOutput, error) {
 	files := make([]string, 0)
 	directories := make([]string, 0)
 	tree, err := gitI.ListTreeNodes(ctx, &git.ListTreeNodeParams{

@@ -35,7 +35,7 @@ func newService(git git.Interface) Service {
 // when needed to take any ref (like sha, tag).
 func (f *service) FindRef(
 	ctx context.Context,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	branch string,
 ) (*types.Commit, error) {
 	readParams := git.ReadParams{
@@ -56,7 +56,7 @@ func (f *service) FindRef(
 // FindCommit finds information about a commit in Harness for the git SHA.
 func (f *service) FindCommit(
 	ctx context.Context,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	rawSHA string,
 ) (*types.Commit, error) {
 	readParams := git.ReadParams{

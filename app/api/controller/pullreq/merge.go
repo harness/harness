@@ -178,7 +178,7 @@ func (c *Controller) Merge(
 
 	sourceRepo := targetRepo
 	if pr.SourceRepoID != pr.TargetRepoID {
-		sourceRepo, err = c.repoStore.Find(ctx, pr.SourceRepoID)
+		sourceRepo, err = c.repoFinder.FindByID(ctx, pr.SourceRepoID)
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to get source repository: %w", err)
 		}

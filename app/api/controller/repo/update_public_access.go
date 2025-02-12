@@ -35,15 +35,16 @@ func (c *Controller) UpdatePublicAccess(ctx context.Context,
 	repoRef string,
 	in *UpdatePublicAccessInput,
 ) (*RepositoryOutput, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
+	repoCore, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
 		return nil, err
 	}
 
-	parentPath, _, err := paths.DisectLeaf(repo.Path)
+	parentPath, _, err := paths.DisectLeaf(repoCore.Path)
 	if err != nil {
-		return nil, fmt.Errorf("failed to disect path %q: %w", repo.Path, err)
+		return nil, fmt.Errorf("failed to disect path %q: %w", repoCore.Path, err)
 	}
+
 	isPublicAccessSupported, err := c.publicAccess.IsPublicAccessSupported(ctx, parentPath)
 	if err != nil {
 		return nil, fmt.Errorf(
@@ -56,9 +57,14 @@ func (c *Controller) UpdatePublicAccess(ctx context.Context,
 		return nil, errPublicRepoCreationDisabled
 	}
 
-	isPublic, err := c.publicAccess.Get(ctx, enum.PublicResourceTypeRepo, repo.Path)
+	isPublic, err := c.publicAccess.Get(ctx, enum.PublicResourceTypeRepo, repoCore.Path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check current public access status: %w", err)
+	}
+
+	repo, err := c.repoStore.Find(ctx, repoCore.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find repo by ID: %w", err)
 	}
 
 	// no op

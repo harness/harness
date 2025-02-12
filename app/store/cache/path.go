@@ -73,3 +73,7 @@ func (c *pathCache) Get(ctx context.Context, key string) (*types.SpacePath, erro
 func (c *pathCache) Stats() (int64, int64) {
 	return c.inner.Stats()
 }
+
+func (c *pathCache) Evict(ctx context.Context, key string) {
+	c.inner.Evict(ctx, key)
+}

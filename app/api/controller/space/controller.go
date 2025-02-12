@@ -90,7 +90,7 @@ type Controller struct {
 	repoCtrl         *repo.Controller
 	membershipStore  store.MembershipStore
 	prListService    *pullreq.ListService
-	spaceCache       refcache.SpaceCache
+	spaceFinder      refcache.SpaceFinder
 	importer         *importer.Repository
 	exporter         *exporter.Repository
 	resourceLimiter  limiter.ResourceLimiter
@@ -110,7 +110,7 @@ func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Pro
 	connectorStore store.ConnectorStore, templateStore store.TemplateStore, spaceStore store.SpaceStore,
 	repoStore store.RepoStore, principalStore store.PrincipalStore, repoCtrl *repo.Controller,
 	membershipStore store.MembershipStore, prListService *pullreq.ListService,
-	spaceCache refcache.SpaceCache,
+	spaceFinder refcache.SpaceFinder,
 	importer *importer.Repository, exporter *exporter.Repository,
 	limiter limiter.ResourceLimiter, publicAccess publicaccess.Service, auditService audit.Service,
 	gitspaceSvc *gitspace.Service, labelSvc *label.Service,
@@ -135,7 +135,7 @@ func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Pro
 		repoCtrl:            repoCtrl,
 		membershipStore:     membershipStore,
 		prListService:       prListService,
-		spaceCache:          spaceCache,
+		spaceFinder:         spaceFinder,
 		importer:            importer,
 		exporter:            exporter,
 		resourceLimiter:     limiter,
@@ -156,23 +156,23 @@ func (c *Controller) getSpaceCheckAuth(
 	session *auth.Session,
 	spaceRef string,
 	permission enum.Permission,
-) (*types.Space, error) {
-	return GetSpaceCheckAuth(ctx, c.spaceCache, c.authorizer, session, spaceRef, permission)
+) (*types.SpaceCore, error) {
+	return GetSpaceCheckAuth(ctx, c.spaceFinder, c.authorizer, session, spaceRef, permission)
 }
 
 func (c *Controller) getSpaceCheckAuthRepoCreation(
 	ctx context.Context,
 	session *auth.Session,
 	parentRef string,
-) (*types.Space, error) {
-	return repo.GetSpaceCheckAuthRepoCreation(ctx, c.spaceCache, c.authorizer, session, parentRef)
+) (*types.SpaceCore, error) {
+	return repo.GetSpaceCheckAuthRepoCreation(ctx, c.spaceFinder, c.authorizer, session, parentRef)
 }
 
 func (c *Controller) getSpaceCheckAuthSpaceCreation(
 	ctx context.Context,
 	session *auth.Session,
 	parentRef string,
-) (*types.Space, error) {
+) (*types.SpaceCore, error) {
 	parentRefAsID, err := strconv.ParseInt(parentRef, 10, 64)
 	if (parentRefAsID <= 0 && err == nil) || (len(strings.TrimSpace(parentRef)) == 0) {
 		// TODO: Restrict top level space creation - should be move to authorizer?
@@ -180,10 +180,10 @@ func (c *Controller) getSpaceCheckAuthSpaceCreation(
 			return nil, fmt.Errorf("anonymous user not allowed to create top level spaces: %w", usererror.ErrUnauthorized)
 		}
 
-		return &types.Space{}, nil
+		return &types.SpaceCore{}, nil
 	}
 
-	parentSpace, err := c.spaceCache.Get(ctx, parentRef)
+	parentSpace, err := c.spaceFinder.FindByRef(ctx, parentRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get parent space: %w", err)
 	}

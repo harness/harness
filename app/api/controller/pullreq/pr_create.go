@@ -140,37 +140,44 @@ func (c *Controller) Create(
 	}
 
 	var pr *types.PullReq
+
 	targetRepoID := targetRepo.ID
 
 	labelAssignInputMap, err := c.prepareLabels(
 		ctx, in.Labels, session.Principal.ID, targetRepo.ID, targetRepo.ParentID,
 	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to prepare labels: %w", err)
+	}
+
 	var labelAssignOuts []*labelsvc.AssignToPullReqOut
 
 	err = controller.TxOptLock(ctx, c.tx, func(ctx context.Context) error {
 		// Always re-fetch at the start of the transaction because the repo we have is from a cache.
 
-		targetRepo, err = c.repoStore.Find(ctx, targetRepoID)
+		targetRepoFull, err := c.repoStore.Find(ctx, targetRepoID)
 		if err != nil {
 			return fmt.Errorf("failed to find repository: %w", err)
 		}
 
 		// Update the repository's pull request sequence number
 
-		targetRepo.PullReqSeq++
-		err = c.repoStore.Update(ctx, targetRepo)
+		targetRepoFull.PullReqSeq++
+		err = c.repoStore.Update(ctx, targetRepoFull)
 		if err != nil {
 			return fmt.Errorf("failed to update pullreq sequence number: %w", err)
 		}
 
 		// Create pull request in the DB
 
-		pr = newPullReq(session, targetRepo.PullReqSeq, sourceRepo, targetRepo, in, sourceSHA, mergeBaseSHA)
+		pr = newPullReq(session, targetRepoFull.PullReqSeq, sourceRepo.ID, targetRepo.ID, in, sourceSHA, mergeBaseSHA)
 		pr.Stats = types.PullReqStats{
 			DiffStats:       types.NewDiffStats(prStats.Commits, prStats.FilesChanged, prStats.Additions, prStats.Deletions),
 			Conversations:   0,
 			UnresolvedCount: 0,
 		}
+
+		targetRepo = targetRepoFull.Core()
 
 		// Calculate the activity sequence
 		pr.ActivitySeq = int64(len(in.Labels) + len(in.ReviewerIDs))
@@ -196,7 +203,7 @@ func (c *Controller) Create(
 
 		err = c.git.UpdateRef(ctx, git.UpdateRefParams{
 			WriteParams: targetWriteParams,
-			Name:        strconv.FormatInt(targetRepo.PullReqSeq, 10),
+			Name:        strconv.FormatInt(targetRepoFull.PullReqSeq, 10),
 			Type:        gitenum.RefTypePullReqHead,
 			NewValue:    sourceSHA,
 			OldValue:    sha.None, // we don't care about the old value
@@ -243,7 +250,7 @@ func (c *Controller) createReviewers(
 	ctx context.Context,
 	session *auth.Session,
 	reviewers []int64,
-	repo *types.Repository,
+	repo *types.RepositoryCore,
 	pr *types.PullReq,
 ) error {
 	if len(reviewers) == 0 {
@@ -391,8 +398,8 @@ func (c *Controller) storeLabelAssignActivity(
 func newPullReq(
 	session *auth.Session,
 	number int64,
-	sourceRepo *types.Repository,
-	targetRepo *types.Repository,
+	sourceRepoID int64,
+	targetRepoID int64,
 	in *CreateInput,
 	sourceSHA, mergeBaseSHA sha.SHA,
 ) *types.PullReq {
@@ -409,10 +416,10 @@ func newPullReq(
 		IsDraft:           in.IsDraft,
 		Title:             in.Title,
 		Description:       in.Description,
-		SourceRepoID:      sourceRepo.ID,
+		SourceRepoID:      sourceRepoID,
 		SourceBranch:      in.SourceBranch,
 		SourceSHA:         sourceSHA.String(),
-		TargetRepoID:      targetRepo.ID,
+		TargetRepoID:      targetRepoID,
 		TargetBranch:      in.TargetBranch,
 		ActivitySeq:       0,
 		MergedBy:          nil,

@@ -21,6 +21,7 @@ import (
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/app/pipeline/commit"
 	"github.com/harness/gitness/app/pipeline/triggerer"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/events"
 
@@ -37,12 +38,12 @@ func ProvideService(
 	triggerStore store.TriggerStore,
 	commitSvc commit.Service,
 	pullReqStore store.PullReqStore,
-	repoStore store.RepoStore,
+	repoFinder refcache.RepoFinder,
 	pipelineStore store.PipelineStore,
 	triggerSvc triggerer.Triggerer,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
 	pullReqEvFactory *events.ReaderFactory[*pullreqevents.Reader],
 ) (*Service, error) {
-	return New(ctx, config, triggerStore, pullReqStore, repoStore, pipelineStore, triggerSvc,
+	return New(ctx, config, triggerStore, pullReqStore, repoFinder, pipelineStore, triggerSvc,
 		commitSvc, gitReaderFactory, pullReqEvFactory)
 }

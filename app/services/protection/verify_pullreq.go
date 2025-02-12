@@ -39,8 +39,8 @@ type (
 		Actor              *types.Principal
 		AllowBypass        bool
 		IsRepoOwner        bool
-		TargetRepo         *types.Repository
-		SourceRepo         *types.Repository
+		TargetRepo         *types.RepositoryCore
+		SourceRepo         *types.RepositoryCore
 		PullReq            *types.PullReq
 		Reviewers          []*types.PullReqReviewer
 		Method             enum.MergeMethod
@@ -63,7 +63,7 @@ type (
 		ResolveUserGroupID func(ctx context.Context, userGroupIDs []int64) ([]int64, error)
 		Actor              *types.Principal
 		IsRepoOwner        bool
-		Repo               *types.Repository
+		Repo               *types.RepositoryCore
 		PullReq            *types.PullReq
 	}
 

@@ -35,7 +35,7 @@ func (c *Controller) CreateTemplate(
 	spaceRef string,
 ) (*types.InfraProviderTemplate, error) {
 	now := time.Now().UnixMilli()
-	parentSpace, err := c.spaceCache.Get(ctx, spaceRef)
+	parentSpace, err := c.spaceFinder.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find parent by ref: %w", err)
 	}
@@ -83,7 +83,7 @@ func (c *Controller) CreateResources(
 		return nil, fmt.Errorf("invalid input: %w", err)
 	}
 	now := time.Now().UnixMilli()
-	parentSpace, err := c.spaceCache.Get(ctx, spaceRef)
+	parentSpace, err := c.spaceFinder.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find parent by ref: %w", err)
 	}
@@ -100,7 +100,7 @@ func (c *Controller) CreateResources(
 	if err != nil {
 		return nil, fmt.Errorf("failed to find infraprovider config by ref: %q %w", infraProviderConfig.Identifier, err)
 	}
-	resources := mapToResourceEntity(in, *parentSpace, now)
+	resources := mapToResourceEntity(in, parentSpace, now)
 	err = c.infraproviderSvc.CreateResources(ctx, resources, infraProviderConfig.ID)
 	if err != nil {
 		return nil, err
@@ -108,7 +108,7 @@ func (c *Controller) CreateResources(
 	return resources, nil
 }
 
-func mapToResourceEntity(in []ResourceInput, parentSpace types.Space, now int64) []types.InfraProviderResource {
+func mapToResourceEntity(in []ResourceInput, parentSpace *types.SpaceCore, now int64) []types.InfraProviderResource {
 	var resources []types.InfraProviderResource
 	for _, res := range in {
 		infraProviderResource := types.InfraProviderResource{

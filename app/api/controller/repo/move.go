@@ -51,9 +51,14 @@ func (c *Controller) Move(ctx context.Context,
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
+	repoCore, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find or acquire access to repo: %w", err)
+	}
+
+	repo, err := c.repoStore.Find(ctx, repoCore.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find repo by ID: %w", err)
 	}
 
 	if !in.hasChanges(repo) {
@@ -87,6 +92,8 @@ func (c *Controller) Move(ctx context.Context,
 		return nil, fmt.Errorf("failed to update repo: %w", err)
 	}
 
+	c.repoFinder.MarkChanged(ctx, repo.ID)
+
 	// set public access for the new repo path
 	if err := c.publicAccess.Set(ctx, enum.PublicResourceTypeRepo, repo.Path, isPublic); err != nil {
 		// ensure public access for new repo path is cleaned up first or we risk leaking it
@@ -107,6 +114,8 @@ func (c *Controller) Move(ctx context.Context,
 				err,
 			)
 		}
+
+		c.repoFinder.MarkChanged(ctx, repo.ID)
 
 		// revert public access changes only after we successfully restored original path
 		if dErr = c.publicAccess.Set(ctx, enum.PublicResourceTypeRepo, repo.Path, isPublic); dErr != nil {

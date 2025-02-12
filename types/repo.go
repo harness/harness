@@ -18,6 +18,20 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
+type RepositoryCore struct {
+	ID            int64          `json:"id" yaml:"id"`
+	ParentID      int64          `json:"parent_id" yaml:"parent_id"`
+	Identifier    string         `json:"identifier" yaml:"identifier"`
+	Path          string         `json:"path" yaml:"path"`
+	GitUID        string         `json:"-" yaml:"-"`
+	DefaultBranch string         `json:"default_branch" yaml:"default_branch"`
+	State         enum.RepoState `json:"-" yaml:"-"`
+}
+
+func (r *RepositoryCore) GetGitUID() string {
+	return r.GitUID
+}
+
 // Repository represents a code repository.
 type Repository struct {
 	// TODO: int64 ID doesn't match DB
@@ -55,6 +69,18 @@ type Repository struct {
 	// git urls
 	GitURL    string `json:"git_url" yaml:"-"`
 	GitSSHURL string `json:"git_ssh_url,omitempty" yaml:"-"`
+}
+
+func (r *Repository) Core() *RepositoryCore {
+	return &RepositoryCore{
+		ID:            r.ID,
+		ParentID:      r.ParentID,
+		Identifier:    r.Identifier,
+		Path:          r.Path,
+		GitUID:        r.GitUID,
+		DefaultBranch: r.DefaultBranch,
+		State:         r.State,
+	}
 }
 
 // Clone makes deep copy of repository object.

@@ -34,6 +34,7 @@ func (c *Controller) CodeOwners(
 	if err != nil {
 		return types.CodeOwnerEvaluation{}, fmt.Errorf("failed to acquire access to repo: %w", err)
 	}
+
 	pr, err := c.pullreqStore.FindByNumber(ctx, repo.ID, pullreqNum)
 	if err != nil {
 		return types.CodeOwnerEvaluation{}, fmt.Errorf("failed to get pull request by number: %w", err)

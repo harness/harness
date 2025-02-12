@@ -21,7 +21,7 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/services/publicaccess"
-	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -33,18 +33,18 @@ var _ Authorizer = (*MembershipAuthorizer)(nil)
 
 type MembershipAuthorizer struct {
 	permissionCache PermissionCache
-	spaceStore      store.SpaceStore
+	spaceFinder     refcache.SpaceFinder
 	publicAccess    publicaccess.Service
 }
 
 func NewMembershipAuthorizer(
 	permissionCache PermissionCache,
-	spaceStore store.SpaceStore,
+	spaceFinder refcache.SpaceFinder,
 	publicAccess publicaccess.Service,
 ) *MembershipAuthorizer {
 	return &MembershipAuthorizer{
 		permissionCache: permissionCache,
-		spaceStore:      spaceStore,
+		spaceFinder:     spaceFinder,
 		publicAccess:    publicAccess,
 	}
 }
@@ -182,7 +182,7 @@ func (a *MembershipAuthorizer) checkWithMembershipMetadata(
 	requestedSpacePath string,
 	requestedPermission enum.Permission,
 ) (bool, error) {
-	space, err := a.spaceStore.Find(ctx, membershipMetadata.SpaceID)
+	space, err := a.spaceFinder.FindByID(ctx, membershipMetadata.SpaceID)
 	if err != nil {
 		return false, fmt.Errorf("failed to find space: %w", err)
 	}
@@ -214,7 +214,7 @@ func (a *MembershipAuthorizer) checkWithAccessPermissionMetadata(
 	requestedSpacePath string,
 	requestedPermission enum.Permission,
 ) (bool, error) {
-	space, err := a.spaceStore.FindByRef(ctx, requestedSpacePath)
+	space, err := a.spaceFinder.FindByRef(ctx, requestedSpacePath)
 	if err != nil {
 		return false, fmt.Errorf("failed to find space by ref: %w", err)
 	}

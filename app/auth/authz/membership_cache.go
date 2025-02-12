@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/paths"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/cache"
 	gitness_store "github.com/harness/gitness/store"
@@ -38,18 +39,18 @@ type PermissionCacheKey struct {
 type PermissionCache cache.Cache[PermissionCacheKey, bool]
 
 func NewPermissionCache(
-	spaceStore store.SpaceStore,
+	spaceFinder refcache.SpaceFinder,
 	membershipStore store.MembershipStore,
 	cacheDuration time.Duration,
 ) PermissionCache {
 	return cache.New[PermissionCacheKey, bool](permissionCacheGetter{
-		spaceStore:      spaceStore,
+		spaceFinder:     spaceFinder,
 		membershipStore: membershipStore,
 	}, cacheDuration)
 }
 
 type permissionCacheGetter struct {
-	spaceStore      store.SpaceStore
+	spaceFinder     refcache.SpaceFinder
 	membershipStore store.MembershipStore
 }
 
@@ -93,7 +94,7 @@ func (g permissionCacheGetter) Find(ctx context.Context, key PermissionCacheKey)
 			return false, nil
 		}
 
-		space, err = g.spaceStore.Find(ctx, space.ParentID)
+		space, err = g.spaceFinder.FindByID(ctx, space.ParentID)
 		if err != nil {
 			return false, fmt.Errorf("failed to find parent space with id %d: %w", space.ParentID, err)
 		}
@@ -108,9 +109,9 @@ func roleHasPermission(role enum.MembershipRole, permission enum.Permission) boo
 }
 
 // findFirstExistingSpace returns the initial or first existing ancestor space (permissions are inherited).
-func (g permissionCacheGetter) findFirstExistingSpace(ctx context.Context, spaceRef string) (*types.Space, error) {
+func (g permissionCacheGetter) findFirstExistingSpace(ctx context.Context, spaceRef string) (*types.SpaceCore, error) {
 	for {
-		space, err := g.spaceStore.FindByRef(ctx, spaceRef)
+		space, err := g.spaceFinder.FindByRef(ctx, spaceRef)
 		if err == nil {
 			return space, nil
 		}

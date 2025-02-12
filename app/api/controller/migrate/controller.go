@@ -51,7 +51,7 @@ type Controller struct {
 	tx              dbtx.Transactor
 	spaceStore      store.SpaceStore
 	repoStore       store.RepoStore
-	spaceCache      refcache.SpaceCache
+	spaceFinder     refcache.SpaceFinder
 	repoFinder      refcache.RepoFinder
 }
 
@@ -70,7 +70,7 @@ func NewController(
 	tx dbtx.Transactor,
 	spaceStore store.SpaceStore,
 	repoStore store.RepoStore,
-	spaceCache refcache.SpaceCache,
+	spaceFinder refcache.SpaceFinder,
 	repoFinder refcache.RepoFinder,
 ) *Controller {
 	return &Controller{
@@ -88,7 +88,7 @@ func NewController(
 		tx:              tx,
 		spaceStore:      spaceStore,
 		repoStore:       repoStore,
-		spaceCache:      spaceCache,
+		spaceFinder:     spaceFinder,
 		repoFinder:      repoFinder,
 	}
 }
@@ -98,7 +98,7 @@ func (c *Controller) getRepoCheckAccess(
 	session *auth.Session,
 	repoRef string,
 	reqPermission enum.Permission,
-) (*types.Repository, error) {
+) (*types.RepositoryCore, error) {
 	if repoRef == "" {
 		return nil, usererror.BadRequest("A valid repository reference must be provided.")
 	}
@@ -122,8 +122,8 @@ func (c *Controller) getSpaceCheckAccess(
 	session *auth.Session,
 	parentRef string,
 	reqPermission enum.Permission,
-) (*types.Space, error) {
-	space, err := c.spaceCache.Get(ctx, parentRef)
+) (*types.SpaceCore, error) {
+	space, err := c.spaceFinder.FindByRef(ctx, parentRef)
 	if err != nil {
 		return nil, fmt.Errorf("parent space not found: %w", err)
 	}

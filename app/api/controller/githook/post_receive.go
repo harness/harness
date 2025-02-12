@@ -52,10 +52,16 @@ func (c *Controller) PostReceive(
 	session *auth.Session,
 	in types.GithookPostReceiveInput,
 ) (hook.Output, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, in.RepoID, enum.PermissionRepoPush)
+	repoCore, err := c.getRepoCheckAccess(ctx, session, in.RepoID, enum.PermissionRepoPush)
 	if err != nil {
 		return hook.Output{}, err
 	}
+
+	repo, err := c.repoStore.Find(ctx, repoCore.ID)
+	if err != nil {
+		return hook.Output{}, err
+	}
+
 	// create output object and have following messages fill its messages
 	out := hook.Output{}
 
@@ -74,7 +80,7 @@ func (c *Controller) PostReceive(
 	// handle branch updates related to PRs - best effort
 	c.handlePRMessaging(ctx, repo, in.PostReceiveInput, &out)
 
-	err = c.postReceiveExtender.Extend(ctx, rgit, session, repo, in, &out)
+	err = c.postReceiveExtender.Extend(ctx, rgit, session, repo.Core(), in, &out)
 	if err != nil {
 		return hook.Output{}, fmt.Errorf("failed to extend post-receive hook: %w", err)
 	}
@@ -333,6 +339,8 @@ func (c *Controller) handleEmptyRepoPush(
 		return
 	}
 
+	c.repoFinder.MarkChanged(ctx, repo.ID)
+
 	if repo.DefaultBranch != oldName {
 		c.repoReporter.DefaultBranchUpdated(ctx, &repoevents.DefaultBranchUpdatedPayload{
 			RepoID:      repo.ID,
@@ -365,6 +373,8 @@ func (c *Controller) updateLastGITPushTime(
 		log.Ctx(ctx).Warn().Err(err).Msgf("failed to update last git push time for repo %q", repo.Path)
 		return
 	}
+
+	c.repoFinder.MarkChanged(ctx, repo.ID)
 
 	*repo = *newRepo
 }

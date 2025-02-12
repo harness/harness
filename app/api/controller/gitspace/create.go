@@ -66,7 +66,7 @@ func (c *Controller) Create(
 	session *auth.Session,
 	in *CreateInput,
 ) (*types.GitspaceConfig, error) {
-	space, err := c.spaceCache.Get(ctx, in.SpaceRef)
+	space, err := c.spaceFinder.FindByRef(ctx, in.SpaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find parent by ref: %w", err)
 	}
@@ -119,7 +119,7 @@ func (c *Controller) Create(
 		in.ResourceSpaceRef = rootSpaceRef
 	}
 	resourceIdentifier := in.ResourceIdentifier
-	resourceSpace, err := c.spaceCache.Get(ctx, in.ResourceSpaceRef)
+	resourceSpace, err := c.spaceFinder.FindByRef(ctx, in.ResourceSpaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find parent by ref: %w", err)
 	}
@@ -181,7 +181,7 @@ func (c *Controller) Create(
 
 func (c *Controller) createOrFindInfraProviderResource(
 	ctx context.Context,
-	resourceSpace *types.Space,
+	resourceSpace *types.SpaceCore,
 	resourceIdentifier string,
 	now int64,
 ) (*types.InfraProviderResource, error) {
@@ -203,7 +203,7 @@ func (c *Controller) createOrFindInfraProviderResource(
 
 func (c *Controller) autoCreateDefaultResource(
 	ctx context.Context,
-	currentSpace *types.Space,
+	currentSpace *types.SpaceCore,
 	now int64,
 ) (*types.InfraProviderResource, error) {
 	rootSpace, err := c.spaceStore.GetRootSpace(ctx, currentSpace.ID)

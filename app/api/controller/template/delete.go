@@ -30,7 +30,7 @@ func (c *Controller) Delete(
 	identifier string,
 	resolverType enum.ResolverType,
 ) error {
-	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+	space, err := c.spaceFinder.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return fmt.Errorf("failed to find space: %w", err)
 	}
@@ -39,9 +39,11 @@ func (c *Controller) Delete(
 	if err != nil {
 		return fmt.Errorf("failed to authorize: %w", err)
 	}
+
 	err = c.templateStore.DeleteByIdentifierAndType(ctx, space.ID, identifier, resolverType)
 	if err != nil {
 		return fmt.Errorf("could not delete template: %w", err)
 	}
+
 	return nil
 }

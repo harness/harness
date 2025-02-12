@@ -33,7 +33,7 @@ func (c *Controller) Test(
 	spaceRef string,
 	identifier string,
 ) (types.ConnectorTestResponse, error) {
-	space, err := c.spaceCache.Get(ctx, spaceRef)
+	space, err := c.spaceFinder.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return types.ConnectorTestResponse{}, fmt.Errorf("failed to find space: %w", err)
 	}
