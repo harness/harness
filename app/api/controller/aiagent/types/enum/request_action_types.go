@@ -29,6 +29,16 @@ const (
 	UpdatePipeline RequestAction = "UPDATE_PIPELINE"
 )
 
+func (a RequestAction) IsValid() bool {
+	validTypes, _ := GetAllRequestActions()
+	for _, validType := range validTypes {
+		if a == validType {
+			return true
+		}
+	}
+	return false
+}
+
 func (a RequestAction) Sanitize() (RequestAction, bool) {
 	return enum.Sanitize(a, GetAllRequestActions)
 }

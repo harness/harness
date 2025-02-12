@@ -29,9 +29,24 @@ const (
 )
 
 func (st StageType) IsValid() bool {
-	switch st {
-	case Build, Deploy, Approval, Security, Pipeline, Custom, Infrastructure, Developer, FeatureFlag:
-		return true
+	for _, validType := range GetAllStageTypes() {
+		if st == validType {
+			return true
+		}
 	}
 	return false
+}
+
+func GetAllStageTypes() []StageType {
+	return []StageType{
+		Build,
+		Deploy,
+		Approval,
+		Security,
+		Pipeline,
+		Custom,
+		Infrastructure,
+		Developer,
+		FeatureFlag,
+	}
 }
