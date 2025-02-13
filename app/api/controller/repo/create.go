@@ -63,7 +63,7 @@ type CreateInput struct {
 //
 //nolint:gocognit
 func (c *Controller) Create(ctx context.Context, session *auth.Session, in *CreateInput) (*RepositoryOutput, error) {
-	if err := c.sanitizeCreateInput(in, session); err != nil {
+	if err := c.sanitizeCreateInput(in); err != nil {
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
@@ -189,7 +189,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	return repoOutput, nil
 }
 
-func (c *Controller) sanitizeCreateInput(in *CreateInput, session *auth.Session) error {
+func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
 	// TODO [CODE-1363]: remove after identifier migration.
 	if in.Identifier == "" {
 		in.Identifier = in.UID
@@ -199,7 +199,7 @@ func (c *Controller) sanitizeCreateInput(in *CreateInput, session *auth.Session)
 		return err
 	}
 
-	if err := c.identifierCheck(in.Identifier, session); err != nil {
+	if err := c.identifierCheck(in.Identifier); err != nil {
 		return err
 	}
 

@@ -43,7 +43,7 @@ type ImportInput struct {
 
 // Import creates a new empty repository and starts git import to it from a remote repository.
 func (c *Controller) Import(ctx context.Context, session *auth.Session, in *ImportInput) (*RepositoryOutput, error) {
-	if err := c.sanitizeImportInput(in, session); err != nil {
+	if err := c.sanitizeImportInput(in); err != nil {
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
@@ -131,7 +131,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 	return GetRepoOutputWithAccess(ctx, false, repo), nil
 }
 
-func (c *Controller) sanitizeImportInput(in *ImportInput, session *auth.Session) error {
+func (c *Controller) sanitizeImportInput(in *ImportInput) error {
 	// TODO [CODE-1363]: remove after identifier migration.
 	if in.Identifier == "" {
 		in.Identifier = in.UID
@@ -141,7 +141,7 @@ func (c *Controller) sanitizeImportInput(in *ImportInput, session *auth.Session)
 		return err
 	}
 
-	if err := c.identifierCheck(in.Identifier, session); err != nil {
+	if err := c.identifierCheck(in.Identifier); err != nil {
 		return err
 	}
 
