@@ -45,7 +45,7 @@ export default function DeploymentsCard(props: DeploymentsCardProps) {
   const { scope } = useAppStore()
   const { getRouteToPipelineExecutionView } = useParentUtils()
   return (
-    <Card className={className} onClick={onClick}>
+    <Card data-testid="integration-deployment-card" className={className} onClick={onClick}>
       <Layout.Horizontal className={css.container}>
         <Layout.Vertical spacing="medium">
           <Text font={{ variation: FontVariation.CARD_TITLE }}>

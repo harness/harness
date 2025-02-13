@@ -79,7 +79,10 @@ export default function DockerVersionOverviewContent(): JSX.Element {
             ]}
             digest={digest}
           />
-          <Card title={getString('versionDetails.overview.generalInformation.title')} className={css.card}>
+          <Card
+            data-testid="general-information-card"
+            title={getString('versionDetails.overview.generalInformation.title')}
+            className={css.card}>
             <Layout.Vertical spacing="medium">
               <Text font={{ variation: FontVariation.CARD_TITLE }}>
                 {getString('versionDetails.overview.generalInformation.title')}

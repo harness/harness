@@ -45,7 +45,7 @@ export default function SupplyChainCard(props: SupplyChainCardProps) {
   const { download, loading } = useDownloadSBOM()
 
   return (
-    <Card className={className} onClick={onClick}>
+    <Card data-testid="integration-supply-chain-card" className={className} onClick={onClick}>
       <Layout.Vertical>
         <Text font={{ variation: FontVariation.CARD_TITLE }}>
           {title ?? getString('versionDetails.cards.supplyChain.title')}

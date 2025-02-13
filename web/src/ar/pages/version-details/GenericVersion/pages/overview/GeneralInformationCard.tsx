@@ -38,7 +38,10 @@ export default function GeneralInformationCard(props: GeneralInformationCardProp
   const { data, className } = props
   const { getString } = useStrings()
   return (
-    <Card className={className} title={getString('versionDetails.overview.generalInformation.title')}>
+    <Card
+      data-testid="general-information-card"
+      className={className}
+      title={getString('versionDetails.overview.generalInformation.title')}>
       <Layout.Vertical spacing="medium">
         <Text font={{ variation: FontVariation.CARD_TITLE }}>
           {getString('versionDetails.overview.generalInformation.title')}

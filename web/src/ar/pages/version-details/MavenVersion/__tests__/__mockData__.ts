@@ -14,7 +14,12 @@
  * limitations under the License.
  */
 
-import type { ListArtifactVersion } from '@harnessio/react-har-service-client'
+import type {
+  ArtifactDetailResponseResponse,
+  ArtifactVersionSummaryResponseResponse,
+  ListArtifactVersion,
+  ListArtifactVersionResponseResponse
+} from '@harnessio/react-har-service-client'
 
 export const mockMavenLatestVersionListTableData: ListArtifactVersion = {
   artifactVersions: [
@@ -32,4 +37,87 @@ export const mockMavenLatestVersionListTableData: ListArtifactVersion = {
   pageCount: 2,
   pageIndex: 0,
   pageSize: 50
+}
+
+export const mockMavenVersionSummary: ArtifactVersionSummaryResponseResponse = {
+  data: {
+    imageName: 'maven-app',
+    isLatestVersion: false,
+    packageType: 'MAVEN',
+    version: '1.0.0'
+  },
+  status: 'SUCCESS'
+}
+
+export const mockMavenVersionList: ListArtifactVersionResponseResponse = {
+  data: {
+    artifactVersions: [
+      {
+        deploymentMetadata: {
+          nonProdEnvCount: 0,
+          prodEnvCount: 0
+        },
+        digestCount: 1,
+        downloadsCount: 11,
+        islatestVersion: false,
+        lastModified: '1738923119434',
+        name: '1.0.0',
+        packageType: 'MAVEN',
+        pullCommand: 'helm pull pkg.qa.harness.io/iwnhltqot7gft7r-f_zp7q/docker-repo/maven-app:1.0.0',
+        registryIdentifier: '',
+        registryPath: '',
+        size: '246.43MB'
+      },
+      {
+        deploymentMetadata: {
+          nonProdEnvCount: 0,
+          prodEnvCount: 0
+        },
+        digestCount: 1,
+        downloadsCount: 11,
+        islatestVersion: false,
+        lastModified: '1738923402541',
+        name: '1.0.1',
+        packageType: 'MAVEN',
+        pullCommand: 'helm pull pkg.qa.harness.io/iwnhltqot7gft7r-f_zp7q/docker-repo/maven-app:1.0.1',
+        registryIdentifier: '',
+        registryPath: '',
+        size: '246.89MB'
+      },
+      {
+        deploymentMetadata: {
+          nonProdEnvCount: 0,
+          prodEnvCount: 0
+        },
+        digestCount: 1,
+        downloadsCount: 11,
+        islatestVersion: true,
+        lastModified: '1738924148637',
+        name: '1.0.2',
+        packageType: 'MAVEN',
+        pullCommand: 'helm pull pkg.qa.harness.io/iwnhltqot7gft7r-f_zp7q/docker-repo/maven-app:1.0.2',
+        registryIdentifier: '',
+        registryPath: '',
+        size: '246.89MB'
+      }
+    ],
+    itemCount: 3,
+    pageCount: 1,
+    pageIndex: 0,
+    pageSize: 100
+  },
+  status: 'SUCCESS'
+}
+
+export const mockMavenArtifactDetails: ArtifactDetailResponseResponse = {
+  data: {
+    createdAt: '1738152289788',
+    modifiedAt: '1738152289788',
+    name: 'com.example:my-maven-project',
+    packageType: 'MAVEN',
+    size: '6.81KB',
+    version: '1.0-SNAPSHOT',
+    downloadCount: 0
+  },
+  status: 'SUCCESS'
 }

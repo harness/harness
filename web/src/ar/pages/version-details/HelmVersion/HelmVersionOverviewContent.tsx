@@ -53,7 +53,7 @@ export default function HelmVersionOverviewContent(): JSX.Element {
   return (
     <Page.Body className={css.pageBody} loading={loading} error={error?.message} retryOnError={() => refetch()}>
       {response && (
-        <Layout.Vertical className={css.cardContainer} spacing="medium">
+        <Layout.Vertical data-testid="general-information-card" className={css.cardContainer} spacing="medium">
           <Card title="General Information">
             <Layout.Vertical spacing="medium">
               <Text font={{ variation: FontVariation.CARD_TITLE }}>

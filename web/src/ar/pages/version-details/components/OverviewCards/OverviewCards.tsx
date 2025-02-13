@@ -92,7 +92,7 @@ export default function VersionOverviewCards(props: VersionOverviewCardsProps) {
       retryOnError={() => refetch()}
       error={typeof error === 'string' ? error : error?.message}>
       {responseData && (
-        <Container className={css.cardsContainer} width="100%">
+        <Container data-testid="integration-cards" className={css.cardsContainer} width="100%">
           {cards.includes(VersionOverviewCard.DEPLOYMENT) && (
             <DeploymentsCard
               className={classNames(css.card)}

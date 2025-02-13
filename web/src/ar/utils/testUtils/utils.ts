@@ -73,7 +73,8 @@ MockTestUtils.components = {
 MockTestUtils.utils = {
   getCustomHeaders,
   getApiBaseUrl,
-  generateToken: jest.fn()
+  generateToken: jest.fn(),
+  getRouteToPipelineExecutionView: jest.fn()
 }
 
 export const MockLicenseContext = createContext({

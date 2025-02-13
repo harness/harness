@@ -38,7 +38,7 @@ export default function SecurityTestsCard(props: SecurityTestsCardProps) {
   const { getString } = useStrings()
 
   return (
-    <Card className={className} onClick={onClick}>
+    <Card data-testid="integration-security-tests-card" className={className} onClick={onClick}>
       <Layout.Vertical spacing="medium">
         <Text font={{ variation: FontVariation.CARD_TITLE }}>
           {title ?? getString('versionDetails.cards.securityTests.title')}
