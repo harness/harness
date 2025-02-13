@@ -294,6 +294,31 @@ func (s *SpaceStore) GetRootSpace(ctx context.Context, spaceID int64) (*types.Sp
 	return s.Find(ctx, rootID)
 }
 
+// GetRootSpaces returns all spaces where space_parent_id is NULL.
+func (s *SpaceStore) GetAllRootSpaces(ctx context.Context, opts *types.SpaceFilter) ([]*types.Space, error) {
+	stmt := database.Builder.
+		Select(spaceColumns).
+		From("spaces").
+		Where(squirrel.Expr("space_parent_id IS NULL"))
+
+	stmt = s.applyQueryFilter(stmt, opts)
+	stmt = s.applySortFilter(stmt, opts)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var dst []*space
+	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
+	}
+
+	return s.mapToSpaces(ctx, s.db, dst)
+}
+
 // GetAncestorIDs returns a list of all space IDs along the recursive path to the root space.
 func (s *SpaceStore) GetAncestorIDs(ctx context.Context, spaceID int64) ([]int64, error) {
 	query := spaceAncestorsQuery + `

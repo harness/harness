@@ -64,6 +64,7 @@ func (c *Service) setInstance(
 	if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
 		return err
 	}
+	gitspaceConfig.SpacePath = space.Path
 	if instance != nil {
 		gitspaceConfig.GitspaceInstance = instance
 		instance.SpacePath = gitspaceConfig.SpacePath
@@ -75,7 +76,6 @@ func (c *Service) setInstance(
 	} else {
 		gitspaceConfig.State = enum.GitspaceStateUninitialized
 	}
-	gitspaceConfig.SpacePath = space.Path
 	return nil
 }
 
