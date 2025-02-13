@@ -18,10 +18,12 @@ import (
 	"context"
 
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/types"
 )
 
 // Check defines the interface for adding extra checks during repository operations.
 type Check interface {
 	// Create allows adding extra check during create repo operations
 	Create(ctx context.Context, session *auth.Session, in *CreateInput) error
+	LifecycleRestriction(ctx context.Context, session *auth.Session, repo *types.RepositoryCore) error
 }

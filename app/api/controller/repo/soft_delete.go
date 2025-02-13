@@ -50,6 +50,10 @@ func (c *Controller) SoftDelete(
 		return nil, fmt.Errorf("access check failed: %w", err)
 	}
 
+	if err = c.repoCheck.LifecycleRestriction(ctx, session, repoCore); err != nil {
+		return nil, err
+	}
+
 	repo, err := c.repoStore.Find(ctx, repoCore.ID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find the repo by ID: %w", err)

@@ -46,6 +46,10 @@ func (c *Controller) Purge(
 		return err
 	}
 
+	if err = c.repoCheck.LifecycleRestriction(ctx, session, repo.Core()); err != nil {
+		return err
+	}
+
 	log.Ctx(ctx).Info().
 		Int64("repo.id", repo.ID).
 		Str("repo.path", repo.Path).

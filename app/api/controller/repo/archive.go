@@ -36,6 +36,10 @@ func (c *Controller) Archive(
 		return err
 	}
 
+	if err = c.repoCheck.LifecycleRestriction(ctx, session, repo); err != nil {
+		return err
+	}
+
 	return c.git.Archive(ctx, git.ArchiveParams{
 		ReadParams:    git.CreateReadParams(repo),
 		ArchiveParams: params,

@@ -50,6 +50,10 @@ func (c *Controller) Restore(
 		return nil, fmt.Errorf("access check failed: %w", err)
 	}
 
+	if err = c.repoCheck.LifecycleRestriction(ctx, session, repo.Core()); err != nil {
+		return nil, err
+	}
+
 	if repo.Deleted == nil {
 		return nil, usererror.BadRequest("cannot restore a repo that hasn't been deleted")
 	}

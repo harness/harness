@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/types"
 )
 
 var _ Check = (*NoOpRepoChecks)(nil)
@@ -30,5 +31,9 @@ func NewNoOpRepoChecks() *NoOpRepoChecks {
 }
 
 func (c *NoOpRepoChecks) Create(_ context.Context, _ *auth.Session, _ *CreateInput) error {
+	return nil
+}
+
+func (c *NoOpRepoChecks) LifecycleRestriction(_ context.Context, _ *auth.Session, _ *types.RepositoryCore) error {
 	return nil
 }
