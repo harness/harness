@@ -109,22 +109,20 @@ export default function RepositoryDetails(): JSX.Element | null {
           <Expander />
           {activeTab === RepositoryDetailsTab.CONFIGURATION && renderActionBtns()}
         </Tabs>
-        <Switch>
-          <RouteProvider exact path={routeDefinitions.toARRepositoryDetails({ ...repositoryDetailsPathProps })}>
-            <Redirect
-              to={routes.toARRepositoryDetailsTab({ ...pathParams, tab: RepositoryDetailsTab.CONFIGURATION })}
-            />
-          </RouteProvider>
-          <RouteProvider exact path={[routeDefinitions.toARRepositoryDetailsTab({ ...repositoryDetailsTabPathProps })]}>
-            <RepositoryDetailsTabPage
-              onInit={nextTab => {
-                setActiveTab(nextTab)
-              }}
-              stepRef={stepRef}
-            />
-          </RouteProvider>
-        </Switch>
       </Container>
+      <Switch>
+        <RouteProvider exact path={routeDefinitions.toARRepositoryDetails({ ...repositoryDetailsPathProps })}>
+          <Redirect to={routes.toARRepositoryDetailsTab({ ...pathParams, tab: RepositoryDetailsTab.CONFIGURATION })} />
+        </RouteProvider>
+        <RouteProvider exact path={[routeDefinitions.toARRepositoryDetailsTab({ ...repositoryDetailsTabPathProps })]}>
+          <RepositoryDetailsTabPage
+            onInit={nextTab => {
+              setActiveTab(nextTab)
+            }}
+            stepRef={stepRef}
+          />
+        </RouteProvider>
+      </Switch>
     </>
   )
 }

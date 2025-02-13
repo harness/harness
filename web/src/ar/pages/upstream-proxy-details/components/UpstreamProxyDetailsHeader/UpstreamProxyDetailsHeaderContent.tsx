@@ -15,7 +15,8 @@
  */
 
 import React from 'react'
-import { Expander } from '@blueprintjs/core'
+import { defaultTo, isEmpty } from 'lodash-es'
+import { Expander, Position } from '@blueprintjs/core'
 import { Color } from '@harnessio/design-system'
 import { Container, Layout, Text } from '@harnessio/uicore'
 
@@ -24,6 +25,7 @@ import { DEFAULT_DATE_TIME_FORMAT } from '@ar/constants'
 import HeaderTitle from '@ar/components/Header/Title'
 import { getReadableDateTime } from '@ar/common/dateUtils'
 import type { Repository } from '@ar/pages/repository-details/types'
+import LabelsPopover from '@ar/components/LabelsPopover/LabelsPopover'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import RepositoryLocationBadge from '@ar/components/Badge/RepositoryLocationBadge'
 import { PageType, RepositoryConfigType, RepositoryPackageType } from '@ar/common/types'
@@ -38,7 +40,7 @@ interface UpstreamProxyDetailsHeaderContentProps {
 
 export default function UpstreamProxyDetailsHeaderContent(props: UpstreamProxyDetailsHeaderContentProps): JSX.Element {
   const { data, iconSize = 40 } = props
-  const { identifier, modifiedAt, packageType } = data
+  const { identifier, modifiedAt, packageType, labels, description } = data
   const { getString } = useStrings()
   return (
     <Container>
@@ -51,7 +53,26 @@ export default function UpstreamProxyDetailsHeaderContent(props: UpstreamProxyDe
           <Layout.Horizontal spacing="small" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
             <HeaderTitle>{identifier}</HeaderTitle>
             <RepositoryLocationBadge type={RepositoryConfigType.UPSTREAM} />
+            {!isEmpty(labels) && (
+              <LabelsPopover
+                withCount
+                iconProps={{ size: 14, color: Color.GREY_600 }}
+                labels={defaultTo(labels, [])}
+                popoverProps={{
+                  position: Position.RIGHT
+                }}
+                tagsTitle={getString('tagsLabel')}
+              />
+            )}
           </Layout.Horizontal>
+          <Text
+            data-testid="registry-description"
+            font={{ size: 'small' }}
+            color={Color.GREY_500}
+            width={800}
+            lineClamp={1}>
+            {description || getString('noDescription')}
+          </Text>
           <Layout.Horizontal spacing="small">
             <Text font={{ size: 'small', weight: 'semi-bold' }} color={Color.BLACK} margin={{ right: 'small' }}>
               {getString('lastUpdated')}:

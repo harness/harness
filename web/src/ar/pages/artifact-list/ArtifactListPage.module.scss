@@ -20,10 +20,18 @@
   background-color: var(--primary-bg) !important;
 }
 
-.subHeader {
+.pageHeader {
+  background-color: var(--grey-0) !important;
+  height: var(--har-artifact-list-page-header-height) !important;
   position: sticky;
   top: 0;
-  z-index: 3;
+  z-index: 5;
+}
+
+.subHeader {
+  position: sticky;
+  top: var(--har-artifact-list-page-header-height);
+  z-index: 5;
   border: none;
   box-shadow: var(--elevation-2);
 

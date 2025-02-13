@@ -15,16 +15,13 @@
  */
 
 import React, { FC, PropsWithChildren, createContext } from 'react'
-import classNames from 'classnames'
-import { Page } from '@harnessio/uicore'
+import { PageError, PageSpinner } from '@harnessio/uicore'
 import { ArtifactVersionSummary, useGetArtifactVersionSummaryQuery } from '@harnessio/react-har-service-client'
 
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import { useGetSpaceRef, useParentHooks } from '@ar/hooks'
 
 import type { DockerVersionDetailsQueryParams } from '../DockerVersion/types'
-
-import css from '../VersionDetails.module.scss'
 
 interface VersionProviderProps {
   data: ArtifactVersionSummary | undefined
@@ -38,15 +35,13 @@ interface VersionProviderSpcs {
   repoKey: string
   artifactKey: string
   versionKey: string
-  className?: string
 }
 
 const VersionProvider: FC<PropsWithChildren<VersionProviderSpcs>> = ({
   children,
   repoKey,
   artifactKey,
-  versionKey,
-  className
+  versionKey
 }): JSX.Element => {
   const spaceRef = useGetSpaceRef(repoKey)
   const { useQueryParams } = useParentHooks()
@@ -70,15 +65,9 @@ const VersionProvider: FC<PropsWithChildren<VersionProviderSpcs>> = ({
 
   return (
     <VersionProviderContext.Provider value={{ data: responseData, isReadonly: false, refetch }}>
-      <Page.Body
-        className={classNames(className, {
-          [css.pageBody]: !error?.message
-        })}
-        loading={loading}
-        error={error?.message}
-        retryOnError={() => refetch()}>
-        {loading ? null : children}
-      </Page.Body>
+      {loading ? <PageSpinner /> : null}
+      {error && !loading ? <PageError message={error.message} onClick={() => refetch()} /> : null}
+      {!error && !loading ? children : null}
     </VersionProviderContext.Provider>
   )
 }

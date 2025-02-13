@@ -20,12 +20,15 @@
 }
 
 .pageHeader {
+  height: var(--har-repository-list-page-header-height) !important;
   background-color: var(--white) !important;
+  position: sticky;
+  top: 0;
 }
 
 .subHeader {
   position: sticky;
-  top: 0;
+  top: var(--har-repository-list-page-header-height);
   z-index: 3;
   border: none;
   box-shadow: var(--elevation-2);

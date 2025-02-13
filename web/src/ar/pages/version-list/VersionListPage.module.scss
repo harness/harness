@@ -21,7 +21,7 @@
 
 .subHeader {
   position: sticky;
-  top: 0;
+  top: var(--har-artifact-details-page-header-height);
   z-index: 3;
   border: none;
   box-shadow: var(--elevation-2);

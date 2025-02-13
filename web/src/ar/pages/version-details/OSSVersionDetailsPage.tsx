@@ -16,7 +16,7 @@
 
 import React, { useEffect } from 'react'
 import { useHistory } from 'react-router-dom'
-import { Button } from '@harnessio/uicore'
+import { Button, Container } from '@harnessio/uicore'
 import { Drawer, Position } from '@blueprintjs/core'
 
 import { useDecodedParams, useParentHooks, useRoutes } from '@ar/hooks'
@@ -56,10 +56,11 @@ export default function OSSVersionDetailsPage() {
         <VersionProvider
           repoKey={pathParams.repositoryIdentifier}
           artifactKey={pathParams.artifactIdentifier}
-          versionKey={pathParams.versionIdentifier}
-          className={css.ossVersionDetailsModal}>
-          <Button minimal className={css.closeBtn} icon="cross" withoutBoxShadow onClick={hideModal} />
-          <OSSVersionDetails />
+          versionKey={pathParams.versionIdentifier}>
+          <Container className={css.ossVersionDetailsModal}>
+            <Button minimal className={css.closeBtn} icon="cross" withoutBoxShadow onClick={hideModal} />
+            <OSSVersionDetails />
+          </Container>
         </VersionProvider>
       </Drawer>
     )

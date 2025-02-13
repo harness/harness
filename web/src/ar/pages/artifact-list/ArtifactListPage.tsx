@@ -109,6 +109,7 @@ function ArtifactListPage(): JSX.Element {
   return (
     <>
       <Page.Header
+        className={css.pageHeader}
         title={
           <div className="ng-tooltip-native">
             <h2 data-tooltip-id="artifactsPageHeading">{getString('artifactList.pageHeading')}</h2>

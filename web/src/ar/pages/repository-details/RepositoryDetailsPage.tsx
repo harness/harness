@@ -18,12 +18,11 @@ import React from 'react'
 import RepositoryDetails from './RepositoryDetails'
 import RepositoryProvider from './context/RepositoryProvider'
 
-import css from './RepositoryDetailsPage.module.scss'
 import './RepositoryFactory'
 
 export default function RepositoryDetailsPage(): JSX.Element {
   return (
-    <RepositoryProvider className={css.pageBody}>
+    <RepositoryProvider>
       <RepositoryDetails />
     </RepositoryProvider>
   )

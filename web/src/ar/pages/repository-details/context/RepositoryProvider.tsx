@@ -16,8 +16,8 @@
 
 import React, { useState, createContext, useEffect } from 'react'
 import type { FC, PropsWithChildren } from 'react'
-import { defaultTo, noop } from 'lodash-es'
-import { Page } from '@harnessio/uicore'
+import { noop } from 'lodash-es'
+import { PageError, PageSpinner } from '@harnessio/uicore'
 import { useGetRegistryQuery } from '@harnessio/react-har-service-client'
 
 import { Parent } from '@ar/common/types'
@@ -49,7 +49,7 @@ export const RepositoryProviderContext = createContext<RepositoryProviderProps>(
   refetch: noop
 })
 
-const RepositoryProvider: FC<PropsWithChildren<{ className?: string }>> = ({ children, className }): JSX.Element => {
+const RepositoryProvider: FC<PropsWithChildren<unknown>> = ({ children }): JSX.Element => {
   const { repositoryIdentifier } = useDecodedParams<RepositoryDetailsPathParams>()
   const [isDirty, setIsDirty] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -78,7 +78,6 @@ const RepositoryProvider: FC<PropsWithChildren<{ className?: string }>> = ({ chi
 
   const {
     data: repositoryData,
-    isError,
     error,
     isFetching: isDataLoading,
     refetch
@@ -109,13 +108,11 @@ const RepositoryProvider: FC<PropsWithChildren<{ className?: string }>> = ({ chi
         isReadonly: !isEdit,
         refetch
       }}>
-      <Page.Body
-        className={className}
-        loading={loading}
-        error={isError && defaultTo(error?.message, getString('failedToLoadData'))}
-        retryOnError={() => refetch()}>
-        {loading ? null : children}
-      </Page.Body>
+      {loading ? <PageSpinner /> : null}
+      {error && !loading ? (
+        <PageError message={error.message || getString('failedToLoadData')} onClick={() => refetch()} />
+      ) : null}
+      {!error && !loading ? children : null}
     </RepositoryProviderContext.Provider>
   )
 }

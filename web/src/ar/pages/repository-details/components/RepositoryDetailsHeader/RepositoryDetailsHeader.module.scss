@@ -16,6 +16,10 @@
 
 .header {
   align-items: flex-start !important;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  height: var(--har-repository-details-page-header-height) !important;
   & > div {
     width: 100% !important;
   }

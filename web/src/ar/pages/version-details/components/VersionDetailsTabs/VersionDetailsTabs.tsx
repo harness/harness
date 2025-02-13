@@ -90,12 +90,14 @@ export default function VersionDetailsTabs(): JSX.Element {
 
   if (!data) return <></>
   return (
-    <Container className={css.tabsContainer}>
-      <Tabs id="versionDetailsTab" selectedTabId={tab} onChange={handleTabChange}>
-        {tabList.map(each => (
-          <Tab key={each.value} id={each.value} disabled={each.disabled} title={getString(each.label)} />
-        ))}
-      </Tabs>
+    <>
+      <Container className={css.tabsContainer}>
+        <Tabs id="versionDetailsTab" selectedTabId={tab} onChange={handleTabChange}>
+          {tabList.map(each => (
+            <Tab key={each.value} id={each.value} disabled={each.disabled} title={getString(each.label)} />
+          ))}
+        </Tabs>
+      </Container>
       <Switch>
         <RouteProvider exact path={routeDefinitions.toARVersionDetails({ ...versionDetailsPathParams })}>
           <Redirect to={routes.toARVersionDetailsTab({ ...pathParams, versionTab: VersionDetailsTab.OVERVIEW })} />
@@ -110,6 +112,6 @@ export default function VersionDetailsTabs(): JSX.Element {
           <VersionDetailsTabWidget onInit={setTab} packageType={data.packageType as RepositoryPackageType} tab={tab} />
         </RouteProvider>
       </Switch>
-    </Container>
+    </>
   )
 }

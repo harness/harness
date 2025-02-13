@@ -20,6 +20,7 @@
 }
 
 .ossVersionDetailsModal {
+  overflow: auto;
   .ossVersionDetailsContainer {
     background-color: var(--primary-bg) !important;
 

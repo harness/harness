@@ -16,12 +16,10 @@
 
 import React, { createContext, type FC, type PropsWithChildren } from 'react'
 import { ArtifactSummary, useGetArtifactSummaryQuery } from '@harnessio/react-har-service-client'
-import { Page } from '@harnessio/uicore'
+import { PageError, PageSpinner } from '@harnessio/uicore'
 
 import { useGetSpaceRef } from '@ar/hooks'
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
-
-import css from './ArtifactProvider.module.scss'
 
 export interface ArtifactProviderProps {
   data: ArtifactSummary | undefined
@@ -50,9 +48,9 @@ const ArtifactProvider: FC<PropsWithChildren<{ repoKey: string; artifact: string
   const responseData = data?.content?.data
   return (
     <ArtifactProviderContext.Provider value={{ data: responseData, isReadonly: false, refetch }}>
-      <Page.Body className={css.pageBody} loading={loading} error={error?.message} retryOnError={() => refetch()}>
-        {loading ? null : children}
-      </Page.Body>
+      {loading ? <PageSpinner /> : null}
+      {error && !loading ? <PageError message={error.message} onClick={() => refetch()} /> : null}
+      {!error && !loading ? children : null}
     </ArtifactProviderContext.Provider>
   )
 }

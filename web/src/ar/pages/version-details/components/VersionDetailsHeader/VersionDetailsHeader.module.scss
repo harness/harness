@@ -16,8 +16,11 @@
 
 .header {
   align-items: flex-start !important;
-  height: auto !important;
-  max-height: 120px !important;
+  height: var(--har-version-details-page-header-height) !important;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+
   & > div {
     width: 100% !important;
   }

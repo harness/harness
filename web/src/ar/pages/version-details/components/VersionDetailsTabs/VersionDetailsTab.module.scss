@@ -15,7 +15,10 @@
  */
 
 .tabsContainer {
-  position: relative !important;
+  position: sticky;
+  top: var(--har-version-details-page-header-height);
+  z-index: 5;
+  background-color: var(--grey-0) !important;
   & > :global(.bp3-tabs > .bp3-tab-list) {
     border-bottom: 1px solid var(--grey-200);
   }

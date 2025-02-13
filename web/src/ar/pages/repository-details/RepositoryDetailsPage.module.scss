@@ -23,7 +23,11 @@
 }
 
 .tabsContainer {
-  position: relative !important;
+  position: sticky;
+  top: var(--har-repository-details-page-header-height);
+  background-color: var(--white);
+  z-index: 10;
+
   & > :global(.bp3-tabs > .bp3-tab-list) {
     border-bottom: 1px solid var(--grey-200);
   }
@@ -39,10 +43,6 @@
       box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.13);
       align-items: center;
       padding: 0 var(--spacing-xlarge);
-
-      position: sticky;
-      top: 0px;
-      z-index: 2;
     }
   }
   .btnContainer {
