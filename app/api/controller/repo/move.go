@@ -47,7 +47,7 @@ func (c *Controller) Move(ctx context.Context,
 	repoRef string,
 	in *MoveInput,
 ) (*RepositoryOutput, error) {
-	if err := c.sanitizeMoveInput(in); err != nil {
+	if err := c.sanitizeMoveInput(in, session); err != nil {
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
@@ -135,14 +135,14 @@ func (c *Controller) Move(ctx context.Context,
 	return GetRepoOutput(ctx, c.publicAccess, repo)
 }
 
-func (c *Controller) sanitizeMoveInput(in *MoveInput) error {
+func (c *Controller) sanitizeMoveInput(in *MoveInput, session *auth.Session) error {
 	// TODO [CODE-1363]: remove after identifier migration.
 	if in.Identifier == nil {
 		in.Identifier = in.UID
 	}
 
 	if in.Identifier != nil {
-		if err := c.identifierCheck(*in.Identifier); err != nil {
+		if err := c.identifierCheck(*in.Identifier, session); err != nil {
 			return err
 		}
 	}
