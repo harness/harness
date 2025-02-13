@@ -102,9 +102,18 @@ sec:
 	@echo "Vulnerability detection $(1)"
 	@govulncheck ./...
 
-lint: tools generate # lint the golang code
+lint: tools generate # lint the golang code - CI
+	@echo "Linting $(1)"
+	@golangci-lint run --timeout=3m --verbose --new-from-rev=HEAD~
+
+lint-full: tools generate # full linting the golang code
 	@echo "Linting $(1)"
 	@golangci-lint run --timeout=3m --verbose
+
+lint-local: tools generate # lint the golang code - only untracked and staged changes
+	@echo "Linting $(1)"
+	@golangci-lint run --new --timeout=3m --verbose --whole-files
+
 
 ###############################################################################
 # Code Generation
@@ -139,7 +148,7 @@ delete-tools: ## Delete the tools
 # Install golangci-lint
 $(GOBIN)/golangci-lint:
 	@echo "🔘 Installing golangci-lint... (`date '+%H:%M:%S'`)"
-	@curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOBIN) v1.56.2
+	@curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOBIN) v1.63.4
 
 # Install goimports to format code
 $(GOBIN)/goimports:
