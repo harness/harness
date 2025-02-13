@@ -27,16 +27,13 @@ import (
 )
 
 func TestMediator_basic(t *testing.T) {
-	space := &types.Space{
+	space := &types.SpaceCore{
 		ID:         1,
 		Identifier: "space",
 	}
-	spaceMock := &SpaceStoreMock{
-		FindByRefFn: func(context.Context, string) (*types.Space, error) {
+	spaceFinderMock := &SpaceFinderMock{
+		FindByRefFn: func(context.Context, string) (*types.SpaceCore, error) {
 			return space, nil
-		},
-		FindByIDsFn: func(context.Context, ...int64) ([]*types.Space, error) {
-			return []*types.Space{space}, nil
 		},
 	}
 
@@ -74,7 +71,7 @@ func TestMediator_basic(t *testing.T) {
 	defaultSize := 512
 	mediator := NewMediator(
 		context.Background(),
-		spaceMock,
+		spaceFinderMock,
 		usageMock,
 		Config{
 			MaxWorkers: 5,

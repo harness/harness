@@ -17,6 +17,7 @@ package usage
 import (
 	"context"
 
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/types"
 
@@ -30,7 +31,7 @@ var WireSet = wire.NewSet(
 func ProvideMediator(
 	ctx context.Context,
 	config *types.Config,
-	spaceStore store.SpaceStore,
+	spaceFinder refcache.SpaceFinder,
 	metricsStore store.UsageMetricStore,
 ) Sender {
 	if !config.UsageMetrics.Enabled {
@@ -38,7 +39,7 @@ func ProvideMediator(
 	}
 	return NewMediator(
 		ctx,
-		spaceStore,
+		spaceFinder,
 		metricsStore,
 		NewConfig(config),
 	)

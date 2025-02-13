@@ -35,9 +35,8 @@ type Metric struct {
 	Bandwidth
 }
 
-type SpaceStore interface {
-	FindByRef(ctx context.Context, spaceRef string) (*types.Space, error)
-	FindByIDs(ctx context.Context, spaceIDs ...int64) ([]*types.Space, error)
+type SpaceFinder interface {
+	FindByRef(ctx context.Context, spaceRef string) (*types.SpaceCore, error)
 }
 
 type MetricStore interface {
@@ -60,7 +59,7 @@ type Mediator struct {
 
 	workers []*worker
 
-	spaceStore   SpaceStore
+	spaceFinder  SpaceFinder
 	metricsStore MetricStore
 
 	wg sync.WaitGroup
@@ -70,13 +69,13 @@ type Mediator struct {
 
 func NewMediator(
 	ctx context.Context,
-	spaceStore SpaceStore,
+	spaceFinder SpaceFinder,
 	usageMetricsStore MetricStore,
 	config Config,
 ) *Mediator {
 	m := &Mediator{
 		queue:        newQueue(),
-		spaceStore:   spaceStore,
+		spaceFinder:  spaceFinder,
 		metricsStore: usageMetricsStore,
 		workers:      make([]*worker, config.MaxWorkers),
 		config:       config,
@@ -112,7 +111,7 @@ func (m *Mediator) Wait() {
 }
 
 func (m *Mediator) Size(ctx context.Context, spaceRef string) (Bandwidth, error) {
-	space, err := m.spaceStore.FindByRef(ctx, spaceRef)
+	space, err := m.spaceFinder.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return Bandwidth{}, fmt.Errorf("could not find space: %w", err)
 	}
@@ -134,7 +133,7 @@ func (m *Mediator) days30() time.Duration {
 func (m *Mediator) process(ctx context.Context, payload *Metric) {
 	defer m.wg.Done()
 
-	space, err := m.spaceStore.FindByRef(ctx, payload.SpaceRef)
+	space, err := m.spaceFinder.FindByRef(ctx, payload.SpaceRef)
 	if err != nil {
 		log.Ctx(ctx).Err(err).Msg("failed to find space")
 		return

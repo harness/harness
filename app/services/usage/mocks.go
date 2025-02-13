@@ -40,29 +40,18 @@ func (i *mockInterface) Send(
 	return i.SendFunc(ctx, payload)
 }
 
-type SpaceStoreMock struct {
+type SpaceFinderMock struct {
 	FindByRefFn func(
 		ctx context.Context,
 		spaceRef string,
-	) (*types.Space, error)
-	FindByIDsFn func(
-		ctx context.Context,
-		ids ...int64,
-	) ([]*types.Space, error)
+	) (*types.SpaceCore, error)
 }
 
-func (s *SpaceStoreMock) FindByRef(
+func (s *SpaceFinderMock) FindByRef(
 	ctx context.Context,
 	spaceRef string,
-) (*types.Space, error) {
+) (*types.SpaceCore, error) {
 	return s.FindByRefFn(ctx, spaceRef)
-}
-
-func (s *SpaceStoreMock) FindByIDs(
-	ctx context.Context,
-	ids ...int64,
-) ([]*types.Space, error) {
-	return s.FindByIDsFn(ctx, ids...)
 }
 
 type MetricsMock struct {

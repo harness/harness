@@ -501,7 +501,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	genericHandler := api2.NewGenericHandlerProvider(spaceStore, genericController, tokenStore, controller, authenticator, provider, authorizer)
 	handler3 := router.GenericHandlerProvider(genericHandler)
 	appRouter := router.AppRouterProvider(registryOCIHandler, apiHandler, handler2, handler3)
-	sender := usage.ProvideMediator(ctx, config, spaceStore, usageMetricStore)
+	sender := usage.ProvideMediator(ctx, config, spaceFinder, usageMetricStore)
 	routerRouter := router2.ProvideRouter(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, usergroupController, checkController, systemController, uploadController, keywordsearchController, infraproviderController, gitspaceController, migrateController, aiagentController, capabilitiesController, provider, openapiService, appRouter, sender)
 	serverServer := server2.ProvideServer(config, routerRouter)
 	publickeyService := publickey.ProvidePublicKey(publicKeyStore, principalInfoCache)
