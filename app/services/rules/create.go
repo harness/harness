@@ -118,8 +118,10 @@ func (s *Service) Create(ctx context.Context,
 		CreatedByInfo: types.PrincipalInfo{},
 	}
 
+	spacePath := path
 	nameKey := audit.RepoName
 	if parentType == enum.RuleParentRepo {
+		spacePath = paths.Parent(path)
 		rule.RepoID = &parentID
 	} else if parentType == enum.RuleParentSpace {
 		nameKey = audit.SpaceName
@@ -135,7 +137,7 @@ func (s *Service) Create(ctx context.Context,
 		*principal,
 		audit.NewResource(audit.ResourceTypeBranchRule, rule.Identifier, nameKey, scopeIdentifier),
 		audit.ActionCreated,
-		paths.Parent(path),
+		spacePath,
 		audit.WithNewObject(rule),
 	)
 	if err != nil {
