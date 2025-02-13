@@ -143,14 +143,23 @@ func (c *Controller) Create(
 
 	targetRepoID := targetRepo.ID
 
+	// Prepare label assign and create reviewer input
+
+	var reviewers []*types.PullReqReviewer
+
+	reviewerInput, err := c.prepareReviewers(ctx, session, in.ReviewerIDs, targetRepo)
+	if err != nil {
+		return nil, err
+	}
+
+	var labelAssignOuts []*labelsvc.AssignToPullReqOut
+
 	labelAssignInputMap, err := c.prepareLabels(
 		ctx, in.Labels, session.Principal.ID, targetRepo.ID, targetRepo.ParentID,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare labels: %w", err)
 	}
-
-	var labelAssignOuts []*labelsvc.AssignToPullReqOut
 
 	err = controller.TxOptLock(ctx, c.tx, func(ctx context.Context) error {
 		// Always re-fetch at the start of the transaction because the repo we have is from a cache.
@@ -187,17 +196,19 @@ func (c *Controller) Create(
 			return fmt.Errorf("pullreq creation failed: %w", err)
 		}
 
-		// Assign reviewers and labels if any
+		// reset pr activity seq: we increment pr.ActivitySeq on activity creation
+		pr.ActivitySeq = 0
 
-		if err := c.createReviewers(ctx, session, in.ReviewerIDs, targetRepo, pr); err != nil {
+		// Create reviewers and assign labels
+
+		reviewers, err = c.createReviewers(ctx, session, reviewerInput, targetRepo, pr)
+		if err != nil {
 			return err
 		}
 
 		if labelAssignOuts, err = c.assignLabels(ctx, pr, session.Principal.ID, labelAssignInputMap); err != nil {
 			return err
 		}
-
-		c.storeLabelAssignActivity(ctx, pr, session.Principal.ID, labelAssignOuts)
 
 		// Create PR head reference in the git repository
 
@@ -219,6 +230,9 @@ func (c *Controller) Create(
 	}
 
 	backfillWithLabelAssignInfo(pr, labelAssignOuts)
+
+	c.storeCreateReviewerActivity(ctx, pr, session.Principal.ID, reviewers)
+	c.storeLabelAssignActivity(ctx, pr, session.Principal.ID, labelAssignOuts)
 
 	c.eventReporter.Created(ctx, &pullreqevents.CreatedPayload{
 		Base:         eventBase(pr, &session.Principal),
@@ -246,28 +260,29 @@ func (c *Controller) Create(
 	return pr, nil
 }
 
-func (c *Controller) createReviewers(
+// prepareReviewers fetches principal data and checks principal repo access and permissions.
+// The data recency is not critical: principals might change and the op will either be valid or fail.
+// Because it makes db calls, we use it before, i.e. outside of the PR creation tx.
+func (c *Controller) prepareReviewers(
 	ctx context.Context,
 	session *auth.Session,
 	reviewers []int64,
 	repo *types.RepositoryCore,
-	pr *types.PullReq,
-) error {
+) ([]*types.Principal, error) {
 	if len(reviewers) == 0 {
-		return nil
+		return []*types.Principal{}, nil
 	}
 
-	addedByInfo := session.Principal.ToPrincipalInfo()
-	reviewerType := enum.PullReqReviewerTypeRequested
+	principals := make([]*types.Principal, len(reviewers))
 
-	for _, id := range reviewers {
-		if id == addedByInfo.ID {
-			return usererror.BadRequest("PR creator cannot be added as a reviewer.")
+	for i, id := range reviewers {
+		if id == session.Principal.ID {
+			return nil, usererror.BadRequest("PR creator cannot be added as a reviewer.")
 		}
 
 		reviewerPrincipal, err := c.principalStore.Find(ctx, id)
 		if err != nil {
-			return usererror.BadRequest("Failed to find principal reviewer.")
+			return nil, usererror.BadRequest("Failed to find principal reviewer.")
 		}
 
 		// TODO: To check the reviewer's access to the repo we create a dummy session object. Fix it.
@@ -282,29 +297,78 @@ func (c *Controller) createReviewers(
 			enum.PermissionRepoReview,
 		); err != nil {
 			if errors.Is(err, apiauth.ErrNotAuthorized) {
-				return usererror.BadRequest(
+				return nil, usererror.BadRequest(
 					"The reviewer doesn't have enough permissions for the repository.",
 				)
 			}
-			return fmt.Errorf(
-				"reviewer principal: %s access error: %w", reviewerPrincipal.UID, err)
+			return nil, fmt.Errorf(
+				"reviewer principal %s access error: %w", reviewerPrincipal.UID, err)
 		}
 
+		principals[i] = reviewerPrincipal
+	}
+
+	return principals, nil
+}
+
+func (c *Controller) createReviewers(
+	ctx context.Context,
+	session *auth.Session,
+	principals []*types.Principal,
+	repo *types.RepositoryCore,
+	pr *types.PullReq,
+) ([]*types.PullReqReviewer, error) {
+	if len(principals) == 0 {
+		return []*types.PullReqReviewer{}, nil
+	}
+
+	reviewers := make([]*types.PullReqReviewer, len(principals))
+
+	for i, principal := range principals {
 		reviewer := newPullReqReviewer(
 			session, pr, repo,
-			reviewerPrincipal.ToPrincipalInfo(),
-			addedByInfo, reviewerType,
+			principal.ToPrincipalInfo(),
+			session.Principal.ToPrincipalInfo(),
+			enum.PullReqReviewerTypeRequested,
 			&ReviewerAddInput{
-				ReviewerID: id,
+				ReviewerID: principal.ID,
 			},
 		)
 
-		if err = c.reviewerStore.Create(ctx, reviewer); err != nil {
-			return fmt.Errorf("failed to create pull request reviewer: %w", err)
+		if err := c.reviewerStore.Create(ctx, reviewer); err != nil {
+			return nil, fmt.Errorf("failed to create pull request reviewer: %w", err)
 		}
+
+		reviewers[i] = reviewer
 	}
 
-	return nil
+	return reviewers, nil
+}
+
+func (c *Controller) storeCreateReviewerActivity(
+	ctx context.Context,
+	pr *types.PullReq,
+	principalID int64,
+	reviewers []*types.PullReqReviewer,
+) {
+	for _, reviewer := range reviewers {
+		pr.ActivitySeq++
+
+		payload := &types.PullRequestActivityPayloadReviewerAdd{
+			PrincipalID:  reviewer.PrincipalID,
+			ReviewerType: enum.PullReqReviewerTypeRequested,
+		}
+
+		metadata := &types.PullReqActivityMetadata{
+			Mentions: &types.PullReqActivityMentionsMetadata{IDs: []int64{reviewer.PrincipalID}},
+		}
+
+		if _, err := c.activityStore.CreateWithPayload(
+			ctx, pr, principalID, payload, metadata,
+		); err != nil {
+			log.Ctx(ctx).Err(err).Msg("failed to write create reviewer pull req activity")
+		}
+	}
 }
 
 // prepareLabels fetches data (labels and label values) necessary for the pr label assignment.
