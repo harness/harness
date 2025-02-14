@@ -38,7 +38,7 @@ export default function DockerDeploymentsCard() {
     version: params.versionIdentifier
   })
   return (
-    <Card className={css.containerDetailsCard}>
+    <Card className={css.containerDetailsCard} data-testid="docker-deployments-card">
       <Layout.Vertical spacing="large">
         <Text font={{ variation: FontVariation.CARD_TITLE }}>{getString('versionDetails.cards.container.title')}</Text>
         <Layout.Vertical spacing="small">

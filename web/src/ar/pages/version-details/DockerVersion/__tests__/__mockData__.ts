@@ -15,6 +15,7 @@
  */
 
 import type {
+  ArtifactDeploymentsResponseResponse,
   ArtifactVersionSummaryResponseResponse,
   DockerArtifactDetailIntegrationResponseResponse,
   DockerArtifactDetailResponseResponse,
@@ -325,4 +326,40 @@ export const mockDockerArtifactManifest: DockerArtifactManifestResponseResponse 
 
 export const mockDockerSbomData = {
   sbom: 'Test Data'
+}
+
+export const mockDockerDeploymentsData: ArtifactDeploymentsResponseResponse = {
+  data: {
+    deployments: {
+      deployments: [
+        {
+          count: 1,
+          envIdentifier: 'dev',
+          envName: 'dev',
+          envType: 'PreProduction',
+          infraIdentifier: 'devinfra',
+          infraName: 'dev-infra',
+          lastDeployedAt: '1739479415198',
+          lastDeployedById: '8HaI_2s5TEakX7hIl4cOrQ',
+          lastDeployedByName: 'Shankaranand Hariharan',
+          lastPipelineExecutionId: 'wMrILuoHTWSMzLD40Sbm2Q',
+          lastPipelineExecutionName: 'mavenappdemo',
+          orgIdentifier: 'default',
+          pipelineId: 'mavenappdemo',
+          projectIdentifier: 'hardemo',
+          serviceIdentifier: 'samplejavaservice',
+          serviceName: 'sample-java-service'
+        }
+      ],
+      itemCount: 1,
+      pageCount: 3,
+      pageIndex: 0,
+      pageSize: 10
+    },
+    deploymentsStats: {
+      PreProduction: 1,
+      Production: 0
+    }
+  },
+  status: 'SUCCESS'
 }

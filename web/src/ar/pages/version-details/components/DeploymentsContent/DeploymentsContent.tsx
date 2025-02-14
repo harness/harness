@@ -67,13 +67,19 @@ export default function DeploymentsContent(props: DeploymentsContentProps) {
     [queryParams.sort, sortingPreference]
   )
 
+  const [sortField, sortOrder] = sort || []
+
   const { data, isFetching, error, refetch } = useGetArtifactDeploymentsQuery({
     registry_ref: registryRef,
     artifact: encodeRef(params.artifactIdentifier),
     version: params.versionIdentifier,
     queryParams: {
       search_term: searchTerm,
-      env_type: environmentTypes.length === 1 ? environmentTypes[0] : undefined
+      env_type: environmentTypes.length === 1 ? environmentTypes[0] : undefined,
+      page: queryParams.page,
+      size: queryParams.size,
+      sort_field: sortField,
+      sort_order: sortOrder
     }
   })
 
