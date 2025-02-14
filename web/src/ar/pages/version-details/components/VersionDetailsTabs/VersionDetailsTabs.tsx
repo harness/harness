@@ -39,7 +39,7 @@ import type { DockerVersionDetailsQueryParams } from '../../DockerVersion/types'
 import css from './VersionDetailsTab.module.scss'
 
 export default function VersionDetailsTabs(): JSX.Element {
-  const [tab, setTab] = useState(VersionDetailsTab.OVERVIEW)
+  const [tab, setTab] = useState('')
 
   const routes = useRoutes()
   const history = useHistory()
@@ -109,7 +109,11 @@ export default function VersionDetailsTabs(): JSX.Element {
             routeDefinitions.toARVersionDetailsTab({ ...versionDetailsTabWithSSCADetailsPathParams }),
             routeDefinitions.toARVersionDetailsTab({ ...versionDetailsTabWithPipelineDetailsPathParams })
           ]}>
-          <VersionDetailsTabWidget onInit={setTab} packageType={data.packageType as RepositoryPackageType} tab={tab} />
+          <VersionDetailsTabWidget
+            onInit={setTab}
+            packageType={data.packageType as RepositoryPackageType}
+            tab={tab as VersionDetailsTab}
+          />
         </RouteProvider>
       </Switch>
     </>

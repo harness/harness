@@ -20,6 +20,7 @@ import { getByTestId, render, waitFor } from '@testing-library/react'
 import {
   type DockerManifestDetails,
   getAllArtifactVersions,
+  useGetArtifactVersionSummaryQuery,
   useGetDockerArtifactManifestsQuery
 } from '@harnessio/react-har-service-client'
 
@@ -29,7 +30,12 @@ import { testSelectChange } from '@ar/utils/testUtils/utils'
 import ArTestWrapper from '@ar/utils/testUtils/ArTestWrapper'
 
 import VersionDetailsPage from '../../VersionDetailsPage'
-import { mockDockerManifestList, mockDockerVersionList, mockDockerVersionSummary } from './__mockData__'
+import {
+  mockDockerManifestList,
+  mockDockerVersionList,
+  mockDockerVersionSummary,
+  mockDockerVersionSummaryWithoutSscaAndStoData
+} from './__mockData__'
 
 const mockHistoryPush = jest.fn()
 // eslint-disable-next-line jest-no-mock
@@ -124,7 +130,7 @@ describe('Verify DockerVersionHeader component render', () => {
     await testSelectChange(versionSelector, '1.0.1', data.version)
 
     await waitFor(() => {
-      expect(mockHistoryPush).toHaveBeenLastCalledWith('/registries/artifacts/versions/1.0.1')
+      expect(mockHistoryPush).toHaveBeenCalledWith('/registries/artifacts/versions/1.0.1')
     })
   })
 
@@ -261,5 +267,81 @@ describe('Verify DockerVersionHeader component render', () => {
     await waitFor(() => expect(dialogs).toHaveLength(1))
     const selectPopover = dialogs[0] as HTMLElement
     expect(selectPopover).toHaveTextContent('No items found')
+  })
+
+  test('verify tab navigation with ssca and sto data', async () => {
+    const { container } = render(
+      <ArTestWrapper
+        queryParams={{
+          digest: 'sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
+        }}>
+        <VersionDetailsPage />
+      </ArTestWrapper>
+    )
+
+    const overviewTab = container.querySelector('div[data-tab-id=overview]')
+    await userEvent.click(overviewTab!)
+    expect(mockHistoryPush).toHaveBeenLastCalledWith(
+      '/registries/undefined/artifacts/undefined/versions/undefined/overview?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
+    )
+
+    const artifactDetailsTab = container.querySelector('div[data-tab-id=artifact_details]')
+    await userEvent.click(artifactDetailsTab!)
+    expect(mockHistoryPush).toHaveBeenLastCalledWith(
+      '/registries/undefined/artifacts/undefined/versions/undefined/artifact_details?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
+    )
+
+    const sscaTab = container.querySelector('div[data-tab-id=supply_chain]')
+    await userEvent.click(sscaTab!)
+    expect(mockHistoryPush).toHaveBeenLastCalledWith(
+      '/registries/undefined/artifacts/undefined/versions/undefined/artifact-sources/67a5dccf6d75916b0c3ea1b5/artifacts/67a5dccf6d75916b0c3ea1b6/supply_chain?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
+    )
+
+    const stoTab = container.querySelector('div[data-tab-id=security_tests]')
+    await userEvent.click(stoTab!)
+    expect(mockHistoryPush).toHaveBeenLastCalledWith(
+      '/registries/undefined/artifacts/undefined/versions/undefined/pipelines/HARNESS_ARTIFACT_SCAN_PIPELINE/executions/Tbi7s6nETjmOMKU3Qrnm7A/security_tests?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
+    )
+  })
+
+  test('verify tab navigation with ssca and sto data', async () => {
+    ;(useGetArtifactVersionSummaryQuery as jest.Mock).mockImplementation(() => ({
+      data: { content: mockDockerVersionSummaryWithoutSscaAndStoData },
+      error: null,
+      isLoading: false,
+      refetch: jest.fn()
+    }))
+    const { container } = render(
+      <ArTestWrapper
+        queryParams={{
+          digest: 'sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
+        }}>
+        <VersionDetailsPage />
+      </ArTestWrapper>
+    )
+
+    const overviewTab = container.querySelector('div[data-tab-id=overview]')
+    await userEvent.click(overviewTab!)
+    expect(mockHistoryPush).toHaveBeenLastCalledWith(
+      '/registries/undefined/artifacts/undefined/versions/undefined/overview?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
+    )
+
+    const artifactDetailsTab = container.querySelector('div[data-tab-id=artifact_details]')
+    await userEvent.click(artifactDetailsTab!)
+    expect(mockHistoryPush).toHaveBeenLastCalledWith(
+      '/registries/undefined/artifacts/undefined/versions/undefined/artifact_details?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
+    )
+
+    const sscaTab = container.querySelector('div[data-tab-id=supply_chain]')
+    await userEvent.click(sscaTab!)
+    expect(mockHistoryPush).toHaveBeenLastCalledWith(
+      '/registries/undefined/artifacts/undefined/versions/undefined/supply_chain?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
+    )
+
+    const stoTab = container.querySelector('div[data-tab-id=security_tests]')
+    await userEvent.click(stoTab!)
+    expect(mockHistoryPush).toHaveBeenLastCalledWith(
+      '/registries/undefined/artifacts/undefined/versions/undefined/security_tests?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
+    )
   })
 })

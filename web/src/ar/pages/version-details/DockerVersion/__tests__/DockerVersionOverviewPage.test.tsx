@@ -21,6 +21,7 @@ import {
   useGetDockerArtifactDetailsQuery,
   useGetDockerArtifactIntegrationDetailsQuery
 } from '@harnessio/react-har-service-client'
+import { downloadSbom } from '@harnessio/react-ssca-manager-client'
 
 import ArTestWrapper from '@ar/utils/testUtils/ArTestWrapper'
 
@@ -34,9 +35,30 @@ import {
   mockDockerArtifactDetails,
   mockDockerArtifactIntegrationDetails,
   mockDockerManifestList,
+  mockDockerSbomData,
   mockDockerVersionList,
   mockDockerVersionSummary
 } from './__mockData__'
+
+const mockHistoryPush = jest.fn()
+// eslint-disable-next-line jest-no-mock
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useHistory: () => ({
+    push: mockHistoryPush
+  })
+}))
+
+const showErrorToast = jest.fn()
+
+jest.mock('@harnessio/uicore', () => ({
+  ...jest.requireActual('@harnessio/uicore'),
+  useToaster: jest.fn().mockImplementation(() => ({
+    showSuccess: jest.fn(),
+    showError: showErrorToast,
+    clear: jest.fn()
+  }))
+}))
 
 jest.mock('@harnessio/react-har-service-client', () => ({
   useGetArtifactVersionSummaryQuery: jest.fn().mockImplementation(() => ({
@@ -71,6 +93,15 @@ jest.mock('@harnessio/react-har-service-client', () => ({
   }))
 }))
 
+jest.mock('@harnessio/react-ssca-manager-client', () => ({
+  downloadSbom: jest.fn().mockImplementation(
+    () =>
+      new Promise(success => {
+        success({ content: mockDockerSbomData })
+      })
+  )
+}))
+
 describe('Verify docker version overview page', () => {
   beforeAll(() => {
     jest.clearAllMocks()
@@ -99,12 +130,24 @@ describe('Verify docker version overview page', () => {
     expect(deploymentCard).toHaveTextContent(data.deploymentsDetails?.totalDeployment?.toString() as string)
     expect(deploymentCard).toHaveTextContent(data.buildDetails?.pipelineDisplayName as string)
     expect(deploymentCard).toHaveTextContent(data.buildDetails?.pipelineExecutionId as string)
+    await userEvent.click(deploymentCard)
+    await waitFor(() => {
+      expect(mockHistoryPush).toHaveBeenCalledWith(
+        '/registries/1/artifacts/1/versions/1/deployments?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
+      )
+    })
 
     const sscaCard = getByTestId(container, 'integration-supply-chain-card')
     expect(sscaCard).toBeInTheDocument()
     expect(sscaCard).toHaveTextContent(data.sbomDetails?.componentsCount?.toString() as string)
     expect(sscaCard).toHaveTextContent(Number(data.sbomDetails?.avgScore).toFixed(2) as string)
     expect(getByText(sscaCard, 'versionDetails.cards.supplyChain.downloadSbom')).toBeInTheDocument()
+    await userEvent.click(sscaCard)
+    await waitFor(() => {
+      expect(mockHistoryPush).toHaveBeenCalledWith(
+        '/registries/1/artifacts/1/versions/1/artifact-sources/67a5dccf6d75916b0c3ea1b5/artifacts/67a5dccf6d75916b0c3ea1b6/supply_chain?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
+      )
+    })
 
     const securityTestsCard = getByTestId(container, 'integration-security-tests-card')
     expect(securityTestsCard).toBeInTheDocument()
@@ -113,6 +156,62 @@ describe('Verify docker version overview page', () => {
     expect(securityTestsCard).toHaveTextContent(data.stoDetails?.high?.toString() as string)
     expect(securityTestsCard).toHaveTextContent(data.stoDetails?.medium?.toString() as string)
     expect(securityTestsCard).toHaveTextContent(data.stoDetails?.low?.toString() as string)
+    await userEvent.click(securityTestsCard)
+    await waitFor(() => {
+      expect(mockHistoryPush).toHaveBeenCalledWith(
+        '/registries/1/artifacts/1/versions/1/pipelines/HARNESS_ARTIFACT_SCAN_PIPELINE/executions/Tbi7s6nETjmOMKU3Qrnm7A/security_tests?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
+      )
+    })
+  })
+
+  test('Verify action button on ssca card', async () => {
+    const { container } = render(
+      <ArTestWrapper
+        path="/registries/:repositoryIdentifier/artifacts/:artifactIdentifier/versions/:versionIdentifier/:versionTab"
+        pathParams={{
+          repositoryIdentifier: '1',
+          artifactIdentifier: '1',
+          versionIdentifier: '1',
+          versionTab: 'overview'
+        }}
+        queryParams={{ digest: 'sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d' }}>
+        <VersionDetailsPage />
+      </ArTestWrapper>
+    )
+
+    expect(getByTestId(container, 'integration-cards')).toBeInTheDocument()
+
+    const sscaCard = getByTestId(container, 'integration-supply-chain-card')
+    const downloadSbomBtn = getByText(sscaCard, 'versionDetails.cards.supplyChain.downloadSbom')
+    expect(downloadSbomBtn).toBeInTheDocument()
+    await userEvent.click(downloadSbomBtn)
+    await waitFor(() => {
+      expect(downloadSbom).toHaveBeenCalledWith({ 'orchestration-id': 'yw0D70fiTqetxx0HIyvEUQ', org: '', project: '' })
+    })
+
+    // empty response scenario
+    ;(downloadSbom as jest.Mock).mockImplementationOnce(
+      () =>
+        new Promise(success => {
+          success({ content: { sbom: null } })
+        })
+    )
+    await userEvent.click(downloadSbomBtn)
+    await waitFor(() => {
+      expect(showErrorToast).toHaveBeenCalledWith('versionDetails.cards.supplyChain.SBOMDataNotAvailable')
+    })
+
+    // error scenario
+    ;(downloadSbom as jest.Mock).mockImplementationOnce(
+      () =>
+        new Promise((_, reject) => {
+          reject({ message: 'error message' })
+        })
+    )
+    await userEvent.click(downloadSbomBtn)
+    await waitFor(() => {
+      expect(showErrorToast).toHaveBeenCalledWith('error message')
+    })
   })
 
   test('should show error message if failed to load integration data', async () => {

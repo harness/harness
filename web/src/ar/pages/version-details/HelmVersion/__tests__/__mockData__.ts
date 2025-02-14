@@ -17,6 +17,7 @@
 import type {
   ArtifactVersionSummaryResponseResponse,
   HelmArtifactDetailResponseResponse,
+  HelmArtifactManifestResponseResponse,
   ListArtifactVersion,
   ListArtifactVersionResponseResponse
 } from '@harnessio/react-har-service-client'
@@ -125,6 +126,14 @@ export const mockHelmArtifactDetails: HelmArtifactDetailResponseResponse = {
     size: '8.62KB',
     url: 'https://pkg.qa.harness.io/iwnhltqot7gft7r-f_zp7q/helm-repo-1/production/1.0.15',
     version: '1.0.15'
+  },
+  status: 'SUCCESS'
+}
+
+export const mockHelmArtifactManifest: HelmArtifactManifestResponseResponse = {
+  data: {
+    manifest:
+      '{"schemaVersion":2,"config":{"mediaType":"application/vnd.cncf.helm.config.v1+json","digest":"sha256:3d3ca122368140982b0a494f4f357fff2fa9894f9adcc8809fa8e74e2a327d94","size":161},"layers":[{"mediaType":"application/vnd.cncf.helm.chart.content.v1.tar+gzip","digest":"sha256:a8b12f90950f22927e8c2e4f3e9b32655ae5287e95ae801662cef7cf66bd9be3","size":8062}],"annotations":{"org.opencontainers.image.created":"2024-10-25T18:43:34+05:30","org.opencontainers.image.description":"A Helm chart for deploying harness-delegate","org.opencontainers.image.title":"production","org.opencontainers.image.version":"1.0.15"}}'
   },
   status: 'SUCCESS'
 }

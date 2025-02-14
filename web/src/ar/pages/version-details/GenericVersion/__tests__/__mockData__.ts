@@ -17,6 +17,8 @@
 import type {
   ArtifactDetailResponseResponse,
   ArtifactVersionSummaryResponseResponse,
+  FileDetail,
+  FileDetailResponseResponse,
   ListArtifactVersion,
   ListArtifactVersionResponseResponse
 } from '@harnessio/react-har-service-client'
@@ -117,5 +119,33 @@ export const mockGenericArtifactDetails: ArtifactDetailResponseResponse = {
     packageType: 'GENERIC',
     version: 'v1'
   },
+  status: 'SUCCESS'
+}
+
+export const mockGenericArtifactFiles: FileDetailResponseResponse = {
+  files: [
+    {
+      checksums: [
+        'SHA-512: ebfd0613c1c298d97fd7743ecd731b96a9c0a7f7cdbfdd9f19ec4682f9b4ceb400420a6191c9671bfb3e1cc5a9fef873ea1ad78f1b30794989a0fdb591f847cd',
+        'SHA-256: cc5ac7831841b65901c5578a47d6b125259f9a4364d1d73b0b5d8891ad3b7d34',
+        'SHA-1: b0e3200eb5eaca07d773916e306cd1ed9866d3a4',
+        'MD5: cc576cbab9119ad7589cae7b57146af6'
+      ],
+      createdAt: '1738258177381',
+      downloadCommand:
+        "curl --location 'https://pkg.qa.harness.io/generic/iWnhltqOT7GFt7R-F_zP7Q/generic-registry/artifact:v1:image.png' --header 'x-api-key: \u003cAPI_KEY\u003e' -J -O",
+      name: 'image.png',
+      size: '170.18KB'
+    },
+    {
+      createdAt: '1738085520008',
+      name: 'hello.yaml',
+      size: '2.79MB'
+    } as FileDetail
+  ],
+  itemCount: 2,
+  pageCount: 4,
+  pageIndex: 0,
+  pageSize: 50,
   status: 'SUCCESS'
 }
