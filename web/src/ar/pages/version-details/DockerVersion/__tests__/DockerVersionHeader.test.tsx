@@ -182,7 +182,7 @@ describe('Verify DockerVersionHeader component render', () => {
     await testSelectChange(archSelector, 'linux/amd64', 'linux/arm64')
 
     await waitFor(() => {
-      expect(mockHistoryPush).toHaveBeenLastCalledWith(
+      expect(mockHistoryPush).toHaveBeenCalledWith(
         '/?digest=sha256%3A112cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
       )
     })

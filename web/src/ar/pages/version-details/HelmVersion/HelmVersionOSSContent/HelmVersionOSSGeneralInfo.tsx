@@ -55,7 +55,7 @@ export default function HelmVersionOSSGeneralInfo(props: HelmVersionOSSGeneralIn
   return (
     <Page.Body className={className} loading={loading} error={error?.message} retryOnError={() => refetch()}>
       {response && (
-        <Card className={css.cardContainer} title="General Information">
+        <Card data-testid="general-information-card" className={css.cardContainer} title="General Information">
           <Layout.Vertical spacing="medium">
             <Text font={{ variation: FontVariation.CARD_TITLE }}>
               {getString('versionDetails.overview.generalInformation.title')}

@@ -65,7 +65,7 @@ export default function DockerVersionOSSGeneralInfo({ className }: DockerVersion
   return (
     <Page.Body className={className} loading={loading || !digest} error={error?.message} retryOnError={() => refetch()}>
       {response && (
-        <Card className={css.cardContainer} title="General Information">
+        <Card data-testid="general-information-card" className={css.cardContainer} title="General Information">
           <Layout.Vertical spacing="medium">
             <Text font={{ variation: FontVariation.CARD_TITLE }}>
               {getString('versionDetails.overview.generalInformation.title')}
