@@ -16,7 +16,7 @@
 
 import React, { useEffect, useMemo, useReducer, useState } from 'react'
 import { Falsy, Match, Render, Truthy } from 'react-jsx-match'
-import { get } from 'lodash-es'
+import { defaultTo, get } from 'lodash-es'
 import cx from 'classnames'
 import { useHistory } from 'react-router-dom'
 import { Container, Layout, Text, FlexExpander, Button, ButtonVariation, ButtonSize } from '@harnessio/uicore'
@@ -130,6 +130,25 @@ export const Checks: React.FC<ChecksProps> = ({ repoMetadata, pullReqMetadata, p
     return null
   }
 
+  const getTaskFromExecutableResponse = (node: any): any => {
+    /**
+     * task object must always be picked from the first entry
+     * in `executableResponses`
+     *
+     * It can be either be a `taskChain`, `task` or `sync`
+     */
+    const executableResponse = defaultTo(node?.executableResponses?.[0], {})
+    return (
+      executableResponse.taskChain ||
+      executableResponse.task ||
+      executableResponse.asyncChain ||
+      executableResponse.sync ||
+      executableResponse.async ||
+      executableResponse.child ||
+      executableResponse.children
+    )
+  }
+
   const processExecutionData = (curQueue: string[]) => {
     const newQueue = [...curQueue]
     const newEntries = []
@@ -151,10 +170,11 @@ export const Checks: React.FC<ChecksProps> = ({ repoMetadata, pullReqMetadata, p
         }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const nodeMapItem = (executionApiCallData.data.executionGraph.nodeMap as any)[item]
+        const logKey = getTaskFromExecutableResponse(nodeMapItem)?.logKeys?.[0]
         if (nodeMapItem && nodeMapItem?.stepParameters) {
           // Assume that you generate a key-yarn value pair for the map here
           const key = nodeMapItem.stepParameters.name ? nodeMapItem.stepParameters.name : ''
-          const logBaseKey = nodeMapItem.logBaseKey
+          const logBaseKey = logKey || nodeMapItem.logBaseKey
           const status = nodeMapItem.status
           const timeStart = nodeMapItem.startTs
           const timeEnd = nodeMapItem.endTs
