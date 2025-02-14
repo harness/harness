@@ -33,7 +33,7 @@ type CreateInput struct {
 	SpaceRef   string                 `json:"space_ref" yaml:"space_ref"` // Ref of the parent space
 	Name       string                 `json:"name" yaml:"name"`
 	Type       enum.InfraProviderType `json:"type" yaml:"type"`
-	Metadata   map[string]string      `json:"metadata" yaml:"metadata"`
+	Metadata   map[string]any         `json:"metadata" yaml:"metadata"`
 	Resources  []ResourceInput        `json:"resources" yaml:"resources"`
 }
 
@@ -101,6 +101,7 @@ func (c *Controller) MapToInfraProviderConfig(
 		Type:       in.Type,
 		Created:    now,
 		Updated:    now,
+		Metadata:   in.Metadata,
 	}
 	infraProviderConfig.Resources = mapToResourceEntity(in.Resources, parentSpace, now)
 	return infraProviderConfig

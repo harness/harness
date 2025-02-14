@@ -98,7 +98,7 @@ func (s infraProviderResourceStore) List(ctx context.Context, infraProviderConfi
 	if err := db.SelectContext(ctx, dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to list infraprovider resources")
 	}
-	return mapToInfraProviderResources(ctx, *dst)
+	return mapToInfraProviderResources(*dst)
 }
 
 func (s infraProviderResourceStore) Find(ctx context.Context, id int64) (*types.InfraProviderResource, error) {
@@ -116,7 +116,7 @@ func (s infraProviderResourceStore) Find(ctx context.Context, id int64) (*types.
 	if err := db.GetContext(ctx, dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraprovider resource %d", id)
 	}
-	return mapToInfraProviderResource(ctx, dst)
+	return mapToInfraProviderResource(dst)
 }
 
 func (s infraProviderResourceStore) FindByIdentifier(
@@ -138,7 +138,7 @@ func (s infraProviderResourceStore) FindByIdentifier(
 	if err := db.GetContext(ctx, dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraprovider resource %s", identifier)
 	}
-	return mapToInfraProviderResource(ctx, dst)
+	return mapToInfraProviderResource(dst)
 }
 
 func (s infraProviderResourceStore) Create(
@@ -184,7 +184,7 @@ func (s infraProviderResourceStore) Update(
 	ctx context.Context,
 	infraProviderResource *types.InfraProviderResource,
 ) error {
-	dbinfraProviderResource, err := s.mapToInternalInfraProviderResource(ctx, infraProviderResource)
+	dbinfraProviderResource, err := s.mapToInternalInfraProviderResource(infraProviderResource)
 	if err != nil {
 		return fmt.Errorf(
 			"failed to map to DB Obj for infraprovider resource %s", infraProviderResource.UID)
@@ -228,8 +228,7 @@ func (s infraProviderResourceStore) DeleteByIdentifier(ctx context.Context, spac
 	return nil
 }
 
-func mapToInfraProviderResource(_ context.Context,
-	in *infraProviderResource) (*types.InfraProviderResource, error) {
+func mapToInfraProviderResource(in *infraProviderResource) (*types.InfraProviderResource, error) {
 	metadataParamsMap := make(map[string]string)
 	marshalErr := json.Unmarshal(in.OpenTofuParams, &metadataParamsMap)
 	if marshalErr != nil {
@@ -253,8 +252,9 @@ func mapToInfraProviderResource(_ context.Context,
 	}, nil
 }
 
-func (s infraProviderResourceStore) mapToInternalInfraProviderResource(_ context.Context,
-	in *types.InfraProviderResource) (*infraProviderResource, error) {
+func (s infraProviderResourceStore) mapToInternalInfraProviderResource(
+	in *types.InfraProviderResource,
+) (*infraProviderResource, error) {
 	jsonBytes, marshalErr := json.Marshal(in.Metadata)
 	if marshalErr != nil {
 		return nil, marshalErr
@@ -276,12 +276,11 @@ func (s infraProviderResourceStore) mapToInternalInfraProviderResource(_ context
 	}, nil
 }
 
-func mapToInfraProviderResources(ctx context.Context,
-	resources []infraProviderResource) ([]*types.InfraProviderResource, error) {
+func mapToInfraProviderResources(resources []infraProviderResource) ([]*types.InfraProviderResource, error) {
 	var err error
 	res := make([]*types.InfraProviderResource, len(resources))
 	for i := range resources {
-		res[i], err = mapToInfraProviderResource(ctx, &resources[i])
+		res[i], err = mapToInfraProviderResource(&resources[i])
 		if err != nil {
 			return nil, err
 		}
@@ -320,7 +319,7 @@ func (i InfraProviderResourceView) Find(ctx context.Context, id int64) (*types.I
 	if err := db.GetContext(ctx, dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraprovider providerResource %d", id)
 	}
-	providerResource, err := mapToInfraProviderResource(ctx, dst)
+	providerResource, err := mapToInfraProviderResource(dst)
 	if err != nil {
 		return nil, err
 	}
@@ -370,5 +369,5 @@ func (i InfraProviderResourceView) FindMany(ctx context.Context, ids []int64) ([
 	if err := db.GetContext(ctx, dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraprovider resources")
 	}
-	return mapToInfraProviderResources(ctx, *dst)
+	return mapToInfraProviderResources(*dst)
 }

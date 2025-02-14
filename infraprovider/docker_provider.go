@@ -329,3 +329,7 @@ func volumeName(spacePath string, resourceKey string) string {
 	name := "gitspace-" + strings.ReplaceAll(spacePath, "/", "-") + "-" + resourceKey
 	return name
 }
+
+func (d DockerProvider) ValidateConfigAndResources(_ *types.InfraProviderConfig) error {
+	return nil
+}

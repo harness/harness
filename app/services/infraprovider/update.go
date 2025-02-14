@@ -23,11 +23,17 @@ import (
 )
 
 func (c *Service) updateConfig(ctx context.Context, infraProviderConfig *types.InfraProviderConfig) error {
-	infraProviderConfig.Updated = time.Now().UnixMilli()
-	err := c.infraProviderConfigStore.Update(ctx, infraProviderConfig)
+	err := c.validateConfigAndResources(infraProviderConfig)
 	if err != nil {
-		return fmt.Errorf("failed to update infraprovider config for : %q %w", infraProviderConfig.Identifier, err)
+		return err
 	}
+
+	infraProviderConfig.Updated = time.Now().UnixMilli()
+	err = c.infraProviderConfigStore.Update(ctx, infraProviderConfig)
+	if err != nil {
+		return fmt.Errorf("failed to update infraprovider config for %s: %w", infraProviderConfig.Identifier, err)
+	}
+
 	return nil
 }
 

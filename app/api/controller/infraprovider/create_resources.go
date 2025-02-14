@@ -101,7 +101,7 @@ func (c *Controller) CreateResources(
 		return nil, fmt.Errorf("failed to find infraprovider config by ref: %q %w", infraProviderConfig.Identifier, err)
 	}
 	resources := mapToResourceEntity(in, parentSpace, now)
-	err = c.infraproviderSvc.CreateResources(ctx, resources, infraProviderConfig.ID)
+	err = c.infraproviderSvc.CreateResources(ctx, resources, infraProviderConfig.ID, infraProviderConfig.Identifier)
 	if err != nil {
 		return nil, err
 	}

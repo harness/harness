@@ -29,7 +29,7 @@ type InfraProviderConfig struct {
 	Identifier string                  `json:"identifier"`
 	Name       string                  `json:"name"`
 	Type       enum.InfraProviderType  `json:"type"`
-	Metadata   map[string]string       `json:"metadata"`
+	Metadata   map[string]any          `json:"metadata"`
 	Resources  []InfraProviderResource `json:"resources"`
 	SpaceID    int64                   `json:"-"`
 	SpacePath  string                  `json:"space_path"`

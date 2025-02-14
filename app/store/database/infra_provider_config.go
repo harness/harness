@@ -16,6 +16,7 @@ package database
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database"
@@ -35,7 +36,8 @@ const (
 		ipconf_type,
 		ipconf_space_id,
 		ipconf_created,
-		ipconf_updated
+		ipconf_updated,
+		ipconf_metadata
 	`
 	infraProviderConfigSelectColumns = "ipconf_id," + infraProviderConfigInsertColumns
 	infraProviderConfigTable         = `infra_provider_configs`
@@ -46,6 +48,7 @@ type infraProviderConfig struct {
 	Identifier string                 `db:"ipconf_uid"`
 	Name       string                 `db:"ipconf_display_name"`
 	Type       enum.InfraProviderType `db:"ipconf_type"`
+	Metadata   []byte                 `db:"ipconf_metadata"`
 	SpaceID    int64                  `db:"ipconf_space_id"`
 	Created    int64                  `db:"ipconf_created"`
 	Updated    int64                  `db:"ipconf_updated"`
@@ -53,7 +56,6 @@ type infraProviderConfig struct {
 
 var _ store.InfraProviderConfigStore = (*infraProviderConfigStore)(nil)
 
-// NewGitspaceConfigStore returns a new GitspaceConfigStore.
 func NewInfraProviderConfigStore(db *sqlx.DB) store.InfraProviderConfigStore {
 	return &infraProviderConfigStore{
 		db: db,
@@ -65,11 +67,15 @@ type infraProviderConfigStore struct {
 }
 
 func (i infraProviderConfigStore) Update(ctx context.Context, infraProviderConfig *types.InfraProviderConfig) error {
-	dbinfraProviderConfig := i.mapToInternalInfraProviderConfig(ctx, infraProviderConfig)
+	dbinfraProviderConfig, err := i.mapToInternalInfraProviderConfig(infraProviderConfig)
+	if err != nil {
+		return err
+	}
 	stmt := database.Builder.
 		Update(infraProviderConfigTable).
 		Set("ipconf_display_name", dbinfraProviderConfig.Name).
 		Set("ipconf_updated", dbinfraProviderConfig.Updated).
+		Set("ipconf_metadata", dbinfraProviderConfig.Metadata).
 		Where("ipconf_id = ?", infraProviderConfig.ID)
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -97,7 +103,30 @@ func (i infraProviderConfigStore) Find(ctx context.Context, id int64) (*types.In
 	if err := db.GetContext(ctx, dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraprovider config %d", id)
 	}
-	return i.mapToInfraProviderConfig(ctx, dst), nil
+	return i.mapToInfraProviderConfig(dst)
+}
+
+func (i infraProviderConfigStore) FindByType(
+	ctx context.Context,
+	spaceID int64,
+	infraProviderType enum.InfraProviderType,
+) ([]*types.InfraProviderConfig, error) {
+	stmt := database.Builder.
+		Select(infraProviderConfigSelectColumns).
+		From(infraProviderConfigTable).
+		Where("ipconf_type = $1", infraProviderType). //nolint:goconst
+		Where("ipconf_space_id = $2", spaceID)
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, i.db)
+	dst := new([]*infraProviderConfig)
+	if err := db.SelectContext(ctx, dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to list infraprovider resources")
+	}
+	return i.mapToInfraProviderConfigs(*dst)
 }
 
 func (i infraProviderConfigStore) FindByIdentifier(
@@ -119,20 +148,25 @@ func (i infraProviderConfigStore) FindByIdentifier(
 	if err := db.GetContext(ctx, dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraprovider config %s", identifier)
 	}
-	return i.mapToInfraProviderConfig(ctx, dst), nil
+	return i.mapToInfraProviderConfig(dst)
 }
 
 func (i infraProviderConfigStore) Create(ctx context.Context, infraProviderConfig *types.InfraProviderConfig) error {
+	dbinfraProviderConfig, err := i.mapToInternalInfraProviderConfig(infraProviderConfig)
+	if err != nil {
+		return err
+	}
 	stmt := database.Builder.
 		Insert(infraProviderConfigTable).
 		Columns(infraProviderConfigInsertColumns).
 		Values(
-			infraProviderConfig.Identifier,
-			infraProviderConfig.Name,
-			infraProviderConfig.Type,
-			infraProviderConfig.SpaceID,
-			infraProviderConfig.Created,
-			infraProviderConfig.Updated,
+			dbinfraProviderConfig.Identifier,
+			dbinfraProviderConfig.Name,
+			dbinfraProviderConfig.Type,
+			dbinfraProviderConfig.SpaceID,
+			dbinfraProviderConfig.Created,
+			dbinfraProviderConfig.Updated,
+			dbinfraProviderConfig.Metadata,
 		).
 		Suffix(ReturningClause + infraProviderConfigIDColumn)
 	sql, args, err := stmt.ToSql()
@@ -140,31 +174,55 @@ func (i infraProviderConfigStore) Create(ctx context.Context, infraProviderConfi
 		return errors.Wrap(err, "Failed to convert squirrel builder to sql")
 	}
 	db := dbtx.GetAccessor(ctx, i.db)
-	if err = db.QueryRowContext(ctx, sql, args...).Scan(&infraProviderConfig.ID); err != nil {
+	if err = db.QueryRowContext(ctx, sql, args...).Scan(&dbinfraProviderConfig.ID); err != nil {
 		return database.ProcessSQLErrorf(
-			ctx, err, "infraprovider config create query failed for %s", infraProviderConfig.Identifier)
+			ctx, err, "infraprovider config create query failed for %s", dbinfraProviderConfig.Identifier)
 	}
 	return nil
 }
 
 func (i infraProviderConfigStore) mapToInfraProviderConfig(
-	_ context.Context,
-	in *infraProviderConfig) *types.InfraProviderConfig {
+	in *infraProviderConfig,
+) (*types.InfraProviderConfig, error) {
+	metadataMap := make(map[string]any)
+	marshalErr := json.Unmarshal(in.Metadata, &metadataMap)
+	if marshalErr != nil {
+		return nil, marshalErr
+	}
 	infraProviderConfigEntity := &types.InfraProviderConfig{
 		ID:         in.ID,
 		Identifier: in.Identifier,
 		Name:       in.Name,
 		Type:       in.Type,
+		Metadata:   metadataMap,
 		SpaceID:    in.SpaceID,
 		Created:    in.Created,
 		Updated:    in.Updated,
 	}
-	return infraProviderConfigEntity
+	return infraProviderConfigEntity, nil
+}
+
+func (i infraProviderConfigStore) mapToInfraProviderConfigs(
+	in []*infraProviderConfig,
+) ([]*types.InfraProviderConfig, error) {
+	var err error
+	res := make([]*types.InfraProviderConfig, len(in))
+	for index := range in {
+		res[index], err = i.mapToInfraProviderConfig(in[index])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
 func (i infraProviderConfigStore) mapToInternalInfraProviderConfig(
-	_ context.Context,
-	in *types.InfraProviderConfig) *infraProviderConfig {
+	in *types.InfraProviderConfig,
+) (*infraProviderConfig, error) {
+	jsonBytes, marshalErr := json.Marshal(in.Metadata)
+	if marshalErr != nil {
+		return nil, marshalErr
+	}
 	infraProviderConfigEntity := &infraProviderConfig{
 		Identifier: in.Identifier,
 		Name:       in.Name,
@@ -172,6 +230,7 @@ func (i infraProviderConfigStore) mapToInternalInfraProviderConfig(
 		SpaceID:    in.SpaceID,
 		Created:    in.Created,
 		Updated:    in.Updated,
+		Metadata:   jsonBytes,
 	}
-	return infraProviderConfigEntity
+	return infraProviderConfigEntity, nil
 }

@@ -750,6 +750,13 @@ type (
 		// FindByIdentifier returns a infra provider config with a given UID in a space
 		FindByIdentifier(ctx context.Context, spaceID int64, identifier string) (*types.InfraProviderConfig, error)
 
+		// FindByType returns a infra provider config with a given type in a space
+		FindByType(
+			ctx context.Context,
+			spaceID int64,
+			infraProviderType enum.InfraProviderType,
+		) ([]*types.InfraProviderConfig, error)
+
 		// Create creates a new infra provider config in the datastore.
 		Create(ctx context.Context, infraProviderConfig *types.InfraProviderConfig) error
 
