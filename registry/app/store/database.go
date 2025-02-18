@@ -46,6 +46,7 @@ type BlobRepository interface {
 		ctx context.Context, repoID int64, d digest.Digest,
 		image string,
 	) (bool, error)
+	TotalSizeByRootParentID(ctx context.Context, id int64) (int64, error)
 }
 
 type CleanupPolicyRepository interface {
@@ -556,6 +557,7 @@ type GenericBlobRepository interface {
 	) (*types.GenericBlob, error)
 	Create(ctx context.Context, gb *types.GenericBlob) error
 	DeleteByID(ctx context.Context, id string) error
+	TotalSizeByRootParentID(ctx context.Context, id int64) (int64, error)
 }
 
 type WebhooksRepository interface {

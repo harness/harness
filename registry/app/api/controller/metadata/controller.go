@@ -30,6 +30,8 @@ import (
 type APIController struct {
 	ImageStore         store.ImageRepository
 	fileManager        filemanager.FileManager
+	BlobStore          store.BlobRepository
+	GenericBlobStore   store.GenericBlobRepository
 	RegistryRepository store.RegistryRepository
 	UpstreamProxyStore store.UpstreamProxyConfigRepository
 	TagStore           store.TagRepository
@@ -49,6 +51,8 @@ type APIController struct {
 func NewAPIController(
 	repositoryStore store.RegistryRepository,
 	fileManager filemanager.FileManager,
+	blobStore store.BlobRepository,
+	genericBlobStore store.GenericBlobRepository,
 	upstreamProxyStore store.UpstreamProxyConfigRepository,
 	tagStore store.TagRepository,
 	manifestStore store.ManifestRepository,
@@ -66,6 +70,8 @@ func NewAPIController(
 ) *APIController {
 	return &APIController{
 		fileManager:        fileManager,
+		GenericBlobStore:   genericBlobStore,
+		BlobStore:          blobStore,
 		RegistryRepository: repositoryStore,
 		UpstreamProxyStore: upstreamProxyStore,
 		TagStore:           tagStore,

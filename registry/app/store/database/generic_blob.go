@@ -57,6 +57,28 @@ func (g GenericBlobDao) FindByID(ctx context.Context, id string) (*types.Generic
 	return g.mapToGenericBlob(ctx, dst)
 }
 
+func (g GenericBlobDao) TotalSizeByRootParentID(ctx context.Context, rootID int64) (int64, error) {
+	q := databaseg.Builder.
+		Select("SUM(generic_blob_size) AS size").
+		From("generic_blobs").
+		Where("generic_blob_root_parent_id = ?", rootID)
+
+	db := dbtx.GetAccessor(ctx, g.sqlDB)
+
+	var size int64
+	sqlQuery, args, err := q.ToSql()
+	if err != nil {
+		return 0, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	if err = db.QueryRowContext(ctx, sqlQuery, args...).Scan(&size); err != nil &&
+		!errors.Is(err, sql.ErrNoRows) {
+		return 0,
+			databaseg.ProcessSQLErrorf(ctx, err, "Failed to find total blob size for root parent with id %d", rootID)
+	}
+	return size, nil
+}
+
 func (g GenericBlobDao) FindBySha256AndRootParentID(ctx context.Context,
 	sha256 string, rootParentID int64) (
 	*types.GenericBlob, error) {

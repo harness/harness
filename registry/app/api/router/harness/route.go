@@ -79,6 +79,8 @@ func NewAPIHandler(
 	apiController := metadata.NewAPIController(
 		repoDao,
 		fileManager,
+		nil,
+		nil,
 		upstreamproxyDao,
 		tagDao,
 		manifestDao,

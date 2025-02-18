@@ -16,6 +16,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"time"
 
@@ -97,6 +98,27 @@ func (bd blobDao) FindByDigestAndRootParentID(ctx context.Context, d digest.Dige
 	}
 
 	return bd.mapToBlob(dst)
+}
+
+func (bd blobDao) TotalSizeByRootParentID(ctx context.Context, rootID int64) (int64, error) {
+	q := database.Builder.Select("SUM(blob_size) AS size").
+		From("blobs").
+		Where("blob_root_parent_id = ?", rootID)
+
+	db := dbtx.GetAccessor(ctx, bd.db)
+
+	var size int64
+	sqlQuery, args, err := q.ToSql()
+	if err != nil {
+		return 0, errors2.Wrap(err, "Failed to convert query to sql")
+	}
+
+	if err = db.QueryRowContext(ctx, sqlQuery, args...).Scan(&size); err != nil &&
+		!errors2.Is(err, sql.ErrNoRows) {
+		return 0,
+			database.ProcessSQLErrorf(ctx, err, "Failed to find total blob size for root parent with id %d", rootID)
+	}
+	return size, nil
 }
 
 func (bd blobDao) FindByID(ctx context.Context, id int64) (*types.Blob, error) {
