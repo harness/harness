@@ -145,6 +145,11 @@ func RequestTooLargef(format string, args ...any) *Error {
 	return Newf(http.StatusRequestEntityTooLarge, format, args...)
 }
 
+// UnprocessableEntity returns a new user facing unprocessable entity error.
+func UnprocessableEntity(message string) *Error {
+	return New(http.StatusUnprocessableEntity, message)
+}
+
 // UnprocessableEntityf returns a new user facing unprocessable entity error.
 func UnprocessableEntityf(format string, args ...any) *Error {
 	return Newf(http.StatusUnprocessableEntity, format, args...)

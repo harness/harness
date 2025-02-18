@@ -46,7 +46,7 @@ func Translate(ctx context.Context, err error) *Error {
 	)
 
 	// print original error for debugging purposes
-	log.Ctx(ctx).Debug().Err(err).Msgf("translating error to user facing error")
+	log.Ctx(ctx).Info().Err(err).Msgf("translating error to user facing error")
 
 	// TODO: Improve performance of checking multiple errors with errors.Is
 
@@ -113,7 +113,7 @@ func Translate(ctx context.Context, err error) *Error {
 	case errors.Is(err, codeowners.ErrNotFound):
 		return ErrCodeOwnersNotFound
 	case errors.As(err, &codeOwnersTooLargeError):
-		return UnprocessableEntityf(codeOwnersTooLargeError.Error())
+		return UnprocessableEntity(codeOwnersTooLargeError.Error())
 	case errors.As(err, &codeOwnersFileParseError):
 		return NewWithPayload(
 			http.StatusUnprocessableEntity,
