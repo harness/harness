@@ -110,7 +110,7 @@ export default function WebhookExecutionDetailsDrawer(props: WebhookExecutionDet
           </RbacButton>
         </Layout.Horizontal>
       }>
-      <Container>
+      <Container className={css.drawerContainer}>
         <Layout.Vertical padding="large" spacing="medium">
           <Layout.Horizontal spacing="small" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
             <Text font={{ variation: FontVariation.CARD_TITLE }}>
@@ -166,7 +166,7 @@ export default function WebhookExecutionDetailsDrawer(props: WebhookExecutionDet
                 <CommandBlock
                   darkmode
                   ignoreWhiteSpaces={false}
-                  commandSnippet={prettifyManifestJSON(data?.request ?? {})}
+                  commandSnippet={prettifyManifestJSON(data?.request?.body ?? {})}
                 />
               }
             />
@@ -177,7 +177,7 @@ export default function WebhookExecutionDetailsDrawer(props: WebhookExecutionDet
                 <CommandBlock
                   darkmode
                   ignoreWhiteSpaces={false}
-                  commandSnippet={prettifyManifestJSON(data?.response ?? {})}
+                  commandSnippet={prettifyManifestJSON(data?.response?.body ?? {})}
                 />
               }
             />
