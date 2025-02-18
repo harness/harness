@@ -18,8 +18,6 @@ import (
 	"context"
 	"strings"
 
-	"github.com/harness/gitness/app/api/controller/aiagent"
-	"github.com/harness/gitness/app/api/controller/capabilities"
 	"github.com/harness/gitness/app/api/controller/check"
 	"github.com/harness/gitness/app/api/controller/connector"
 	"github.com/harness/gitness/app/api/controller/execution"
@@ -108,8 +106,6 @@ func ProvideRouter(
 	infraProviderCtrl *infraprovider.Controller,
 	gitspaceCtrl *gitspace.Controller,
 	migrateCtrl *migrate.Controller,
-	aiagentCtrl *aiagent.Controller,
-	capabilitiesCtrl *capabilities.Controller,
 	urlProvider url.Provider,
 	openapi openapi.Service,
 	registryRouter router.AppRouter,
@@ -133,7 +129,7 @@ func ProvideRouter(
 		authenticator, repoCtrl, repoSettingsCtrl, executionCtrl, logCtrl, spaceCtrl, pipelineCtrl,
 		secretCtrl, triggerCtrl, connectorCtrl, templateCtrl, pluginCtrl, pullreqCtrl, webhookCtrl,
 		githookCtrl, git, saCtrl, userCtrl, principalCtrl, userGroupCtrl, checkCtrl, sysCtrl, blobCtrl, searchCtrl,
-		infraProviderCtrl, migrateCtrl, gitspaceCtrl, aiagentCtrl, capabilitiesCtrl, usageSender)
+		infraProviderCtrl, migrateCtrl, gitspaceCtrl, usageSender)
 	routers[2] = NewAPIRouter(apiHandler)
 
 	sec := NewSecure(config)

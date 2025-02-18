@@ -20,8 +20,6 @@ package main
 import (
 	"context"
 
-	"github.com/harness/gitness/app/api/controller/aiagent"
-	"github.com/harness/gitness/app/api/controller/capabilities"
 	checkcontroller "github.com/harness/gitness/app/api/controller/check"
 	"github.com/harness/gitness/app/api/controller/connector"
 	"github.com/harness/gitness/app/api/controller/execution"
@@ -81,8 +79,6 @@ import (
 	"github.com/harness/gitness/app/router"
 	"github.com/harness/gitness/app/server"
 	"github.com/harness/gitness/app/services"
-	aiagentservice "github.com/harness/gitness/app/services/aiagent"
-	capabilitiesservice "github.com/harness/gitness/app/services/capabilities"
 	"github.com/harness/gitness/app/services/cleanup"
 	"github.com/harness/gitness/app/services/codecomments"
 	"github.com/harness/gitness/app/services/codeowners"
@@ -94,7 +90,6 @@ import (
 	"github.com/harness/gitness/app/services/keywordsearch"
 	svclabel "github.com/harness/gitness/app/services/label"
 	locker "github.com/harness/gitness/app/services/locker"
-	messagingservice "github.com/harness/gitness/app/services/messaging"
 	"github.com/harness/gitness/app/services/metric"
 	migrateservice "github.com/harness/gitness/app/services/migrate"
 	"github.com/harness/gitness/app/services/notification"
@@ -273,13 +268,8 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		cliserver.ProvideIDEVSCodeConfig,
 		cliserver.ProvideIDEJetBrainsConfig,
 		instrument.WireSet,
-		aiagentservice.WireSet,
-		aiagent.WireSet,
-		capabilities.WireSet,
-		capabilitiesservice.WireSet,
 		docker.ProvideReporter,
 		secretservice.WireSet,
-		messagingservice.WireSet,
 		runarg.WireSet,
 		usage.WireSet,
 	)

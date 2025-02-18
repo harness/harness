@@ -9,8 +9,6 @@ package main
 import (
 	"context"
 
-	aiagent2 "github.com/harness/gitness/app/api/controller/aiagent"
-	capabilities2 "github.com/harness/gitness/app/api/controller/capabilities"
 	check2 "github.com/harness/gitness/app/api/controller/check"
 	connector2 "github.com/harness/gitness/app/api/controller/connector"
 	"github.com/harness/gitness/app/api/controller/execution"
@@ -70,8 +68,6 @@ import (
 	router2 "github.com/harness/gitness/app/router"
 	server2 "github.com/harness/gitness/app/server"
 	"github.com/harness/gitness/app/services"
-	"github.com/harness/gitness/app/services/aiagent"
-	"github.com/harness/gitness/app/services/capabilities"
 	"github.com/harness/gitness/app/services/cleanup"
 	"github.com/harness/gitness/app/services/codecomments"
 	"github.com/harness/gitness/app/services/codeowners"
@@ -85,7 +81,6 @@ import (
 	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/services/label"
 	"github.com/harness/gitness/app/services/locker"
-	"github.com/harness/gitness/app/services/messaging"
 	"github.com/harness/gitness/app/services/metric"
 	"github.com/harness/gitness/app/services/migrate"
 	"github.com/harness/gitness/app/services/notification"
@@ -434,20 +429,6 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	migrateWebhook := migrate.ProvideWebhookImporter(webhookConfig, transactor, webhookStore)
 	migrateLabel := migrate.ProvideLabelImporter(transactor, labelStore, labelValueStore, spaceStore)
 	migrateController := migrate2.ProvideController(authorizer, publicaccessService, gitInterface, provider, pullReq, rule, migrateWebhook, migrateLabel, resourceLimiter, auditService, repoIdentifier, transactor, spaceStore, repoStore, spaceFinder, repoFinder)
-	registry, err := capabilities.ProvideCapabilities()
-	if err != nil {
-		return nil, err
-	}
-	capabilitiesController := capabilities2.ProvideController(registry)
-	intelligence, err := aiagent.ProvideAiAgent(authorizer, registry, capabilitiesController)
-	if err != nil {
-		return nil, err
-	}
-	slack, err := messaging.ProvideSlack(repoStore, gitInterface)
-	if err != nil {
-		return nil, err
-	}
-	aiagentController := aiagent2.ProvideController(authorizer, intelligence, repoFinder, pipelineStore, executionStore, gitInterface, provider, slack)
 	openapiService := openapi.ProvideOpenAPIService()
 	storageDriver, err := api2.BlobStorageProvider(config)
 	if err != nil {
@@ -502,7 +483,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	handler3 := router.GenericHandlerProvider(genericHandler)
 	appRouter := router.AppRouterProvider(registryOCIHandler, apiHandler, handler2, handler3)
 	sender := usage.ProvideMediator(ctx, config, spaceFinder, usageMetricStore)
-	routerRouter := router2.ProvideRouter(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, usergroupController, checkController, systemController, uploadController, keywordsearchController, infraproviderController, gitspaceController, migrateController, aiagentController, capabilitiesController, provider, openapiService, appRouter, sender)
+	routerRouter := router2.ProvideRouter(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, usergroupController, checkController, systemController, uploadController, keywordsearchController, infraproviderController, gitspaceController, migrateController, provider, openapiService, appRouter, sender)
 	serverServer := server2.ProvideServer(config, routerRouter)
 	publickeyService := publickey.ProvidePublicKey(publicKeyStore, principalInfoCache)
 	sshServer := ssh.ProvideServer(config, publickeyService, repoController)

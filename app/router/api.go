@@ -19,8 +19,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/harness/gitness/app/api/controller/aiagent"
-	"github.com/harness/gitness/app/api/controller/capabilities"
 	"github.com/harness/gitness/app/api/controller/check"
 	"github.com/harness/gitness/app/api/controller/connector"
 	"github.com/harness/gitness/app/api/controller/execution"
@@ -47,8 +45,6 @@ import (
 	"github.com/harness/gitness/app/api/controller/usergroup"
 	"github.com/harness/gitness/app/api/controller/webhook"
 	"github.com/harness/gitness/app/api/handler/account"
-	handleraiagent "github.com/harness/gitness/app/api/handler/aiagent"
-	handlercapabilities "github.com/harness/gitness/app/api/handler/capabilities"
 	handlercheck "github.com/harness/gitness/app/api/handler/check"
 	handlerconnector "github.com/harness/gitness/app/api/handler/connector"
 	handlerexecution "github.com/harness/gitness/app/api/handler/execution"
@@ -135,8 +131,6 @@ func NewAPIHandler(
 	infraProviderCtrl *infraprovider.Controller,
 	migrateCtrl *migrate.Controller,
 	gitspaceCtrl *gitspace.Controller,
-	aiagentCtrl *aiagent.Controller,
-	capabilitiesCtrl *capabilities.Controller,
 	usageSender usage.Sender,
 ) http.Handler {
 	// Use go-chi router for inner routing.
@@ -170,7 +164,7 @@ func NewAPIHandler(
 			setupRoutesV1WithAuth(r, appCtx, config, repoCtrl, repoSettingsCtrl, executionCtrl, triggerCtrl, logCtrl,
 				pipelineCtrl, connectorCtrl, templateCtrl, pluginCtrl, secretCtrl, spaceCtrl, pullreqCtrl,
 				webhookCtrl, githookCtrl, git, saCtrl, userCtrl, principalCtrl, userGroupCtrl, checkCtrl, uploadCtrl,
-				searchCtrl, gitspaceCtrl, infraProviderCtrl, migrateCtrl, aiagentCtrl, capabilitiesCtrl, usageSender)
+				searchCtrl, gitspaceCtrl, infraProviderCtrl, migrateCtrl, usageSender)
 		})
 	})
 
@@ -220,8 +214,6 @@ func setupRoutesV1WithAuth(r chi.Router,
 	gitspaceCtrl *gitspace.Controller,
 	infraProviderCtrl *infraprovider.Controller,
 	migrateCtrl *migrate.Controller,
-	aiagentCtrl *aiagent.Controller,
-	capabilitiesCtrl *capabilities.Controller,
 	usageSender usage.Sender,
 ) {
 	setupAccountWithAuth(r, userCtrl, config)
@@ -231,7 +223,6 @@ func setupRoutesV1WithAuth(r chi.Router,
 	setupConnectors(r, connectorCtrl)
 	setupTemplates(r, templateCtrl)
 	setupSecrets(r, secretCtrl)
-	setupAiAgent(r, aiagentCtrl, capabilitiesCtrl)
 	setupUser(r, userCtrl)
 	setupServiceAccounts(r, saCtrl)
 	setupPrincipals(r, principalCtrl)
@@ -576,18 +567,6 @@ func setupTemplates(
 				r.Patch("/", handlertemplate.HandleUpdate(templateCtrl))
 				r.Delete("/", handlertemplate.HandleDelete(templateCtrl))
 			})
-	})
-}
-
-func setupAiAgent(r chi.Router, aiagentCtrl *aiagent.Controller, capabilitiesCtrl *capabilities.Controller) {
-	r.Route("/harness-intelligence", func(r chi.Router) {
-		r.Post("/generate-pipeline-step", handleraiagent.HandleGeneratePipelineStep(aiagentCtrl))
-		r.Post("/generate-pipeline", handleraiagent.HandleGeneratePipeline(aiagentCtrl))
-		r.Post("/update-pipeline", handleraiagent.HandleUpdatePipeline(aiagentCtrl))
-		r.Post("/capabilities", handlercapabilities.HandleRunCapabilities(capabilitiesCtrl))
-		r.Post("/suggest-pipeline", handleraiagent.HandleSuggestPipelines(aiagentCtrl))
-		r.Post("/analyse-execution", handleraiagent.HandleAnalyse(aiagentCtrl))
-		r.Post("/slackbot", handleraiagent.HandleSlackMessage(aiagentCtrl))
 	})
 }
 
