@@ -73,13 +73,6 @@ const RepositoryTypes: RepositoryTypeListItem[] = [
     disabled: true
   },
   {
-    label: 'repositoryTypes.gradle',
-    value: RepositoryPackageType.GRADLE,
-    icon: 'gradle-repository-type',
-    tooltip: 'Coming Soon!',
-    disabled: true
-  },
-  {
     label: 'repositoryTypes.pypi',
     value: RepositoryPackageType.PYPI,
     icon: 'python',
