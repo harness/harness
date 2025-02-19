@@ -101,7 +101,7 @@ func (bd blobDao) FindByDigestAndRootParentID(ctx context.Context, d digest.Dige
 }
 
 func (bd blobDao) TotalSizeByRootParentID(ctx context.Context, rootID int64) (int64, error) {
-	q := database.Builder.Select("SUM(blob_size) AS size").
+	q := database.Builder.Select("COALESCE(SUM(blob_size), 0) AS size").
 		From("blobs").
 		Where("blob_root_parent_id = ?", rootID)
 

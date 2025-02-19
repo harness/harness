@@ -59,7 +59,7 @@ func (g GenericBlobDao) FindByID(ctx context.Context, id string) (*types.Generic
 
 func (g GenericBlobDao) TotalSizeByRootParentID(ctx context.Context, rootID int64) (int64, error) {
 	q := databaseg.Builder.
-		Select("SUM(generic_blob_size) AS size").
+		Select("COALESCE(SUM(generic_blob_size), 0) AS size").
 		From("generic_blobs").
 		Where("generic_blob_root_parent_id = ?", rootID)
 
