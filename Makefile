@@ -112,7 +112,7 @@ lint-full: tools generate # full linting the golang code
 
 lint-local: tools generate # lint the golang code - only untracked and staged changes
 	@echo "Linting $(1)"
-	@golangci-lint run --new --timeout=3m --verbose --whole-files
+	@golangci-lint run --new-from-merge-base=main --new --timeout=3m --verbose --whole-files
 
 
 ###############################################################################
