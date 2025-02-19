@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/git"
 	gittypes "github.com/harness/gitness/git/api"
+	"github.com/harness/gitness/job"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -950,6 +951,17 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opGetBlame, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opGetBlame, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/blame/{path}", opGetBlame)
+
+	importProgressRepository := openapi3.Operation{}
+	importProgressRepository.WithTags("repository")
+	importProgressRepository.WithMapOfAnything(map[string]interface{}{"operationId": "importProgressRepository"})
+	_ = reflector.SetRequest(&importProgressRepository, new(repoRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&importProgressRepository, job.Progress{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&importProgressRepository, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&importProgressRepository, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&importProgressRepository, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&importProgressRepository, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/import-progress", importProgressRepository)
 
 	opListCommits := openapi3.Operation{}
 	opListCommits.WithTags("repository")
