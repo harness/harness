@@ -54,6 +54,8 @@ type InfraProviderResource struct {
 	InfraProviderType             enum.InfraProviderType `json:"infra_provider_type"`
 	Created                       int64                  `json:"created"`
 	Updated                       int64                  `json:"updated"`
+	IsDeleted                     bool                   `json:"is_deleted,omitempty"`
+	Deleted                       *int64                 `json:"deleted,omitempty"`
 }
 
 func (i *InfraProviderResource) Identifier() int64 {

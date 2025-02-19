@@ -25,7 +25,7 @@ import (
 )
 
 type createInfraProviderConfigRequest struct {
-	infraprovider.CreateInput
+	infraprovider.ConfigInput
 }
 
 type getInfraProviderRequest struct {

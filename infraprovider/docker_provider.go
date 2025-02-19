@@ -330,6 +330,6 @@ func volumeName(spacePath string, resourceKey string) string {
 	return name
 }
 
-func (d DockerProvider) ValidateConfigAndResources(_ *types.InfraProviderConfig) error {
+func (d DockerProvider) ValidateConfig(_ *types.InfraProviderConfig) error {
 	return nil
 }

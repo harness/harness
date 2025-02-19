@@ -15,19 +15,15 @@
 package infraprovider
 
 import (
-	"context"
-	"fmt"
-	"slices"
-
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/infraprovider"
 	"github.com/harness/gitness/store/database/dbtx"
-	"github.com/harness/gitness/types"
 )
 
 func NewService(
 	tx dbtx.Transactor,
+	gitspaceConfigStore store.GitspaceConfigStore,
 	resourceStore store.InfraProviderResourceStore,
 	configStore store.InfraProviderConfigStore,
 	templateStore store.InfraProviderTemplateStore,
@@ -41,66 +37,16 @@ func NewService(
 		infraProviderTemplateStore: templateStore,
 		infraProviderFactory:       factory,
 		spaceFinder:                spaceFinder,
+		gitspaceConfigStore:        gitspaceConfigStore,
 	}
 }
 
 type Service struct {
 	tx                         dbtx.Transactor
+	gitspaceConfigStore        store.GitspaceConfigStore
 	infraProviderResourceStore store.InfraProviderResourceStore
 	infraProviderConfigStore   store.InfraProviderConfigStore
 	infraProviderTemplateStore store.InfraProviderTemplateStore
 	infraProviderFactory       infraprovider.Factory
 	spaceFinder                refcache.SpaceFinder
-}
-
-func (c *Service) Find(
-	ctx context.Context,
-	space *types.SpaceCore,
-	identifier string,
-) (*types.InfraProviderConfig, error) {
-	infraProviderConfig, err := c.infraProviderConfigStore.FindByIdentifier(ctx, space.ID, identifier)
-	if err != nil {
-		return nil, fmt.Errorf("failed to find infraprovider config: %q %w", identifier, err)
-	}
-	resources, err := c.infraProviderResourceStore.List(ctx, infraProviderConfig.ID, types.ListQueryFilter{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to find infraprovider resources for config: %q %w",
-			infraProviderConfig.Identifier, err)
-	}
-	infraProviderConfig.SpacePath = space.Path
-	if len(resources) > 0 {
-		providerResources := make([]types.InfraProviderResource, len(resources))
-		for i, resource := range resources {
-			if resource != nil {
-				providerResources[i] = *resource
-				providerResources[i].SpacePath = space.Path
-			}
-		}
-		slices.SortFunc(providerResources, types.CompareInfraProviderResource)
-		infraProviderConfig.Resources = providerResources
-	}
-	return infraProviderConfig, nil
-}
-
-func (c *Service) FindTemplate(
-	ctx context.Context,
-	space *types.SpaceCore,
-	identifier string,
-) (*types.InfraProviderTemplate, error) {
-	infraProviderTemplate, err := c.infraProviderTemplateStore.FindByIdentifier(ctx, space.ID, identifier)
-	if err != nil {
-		return nil, fmt.Errorf("failed to find infraprovider template: %q %w", identifier, err)
-	}
-	return infraProviderTemplate, nil
-}
-
-func (c *Service) FindResourceByIdentifier(
-	ctx context.Context,
-	spaceID int64,
-	identifier string) (*types.InfraProviderResource, error) {
-	return c.infraProviderResourceStore.FindByIdentifier(ctx, spaceID, identifier)
-}
-
-func (c *Service) FindResource(ctx context.Context, id int64) (*types.InfraProviderResource, error) {
-	return c.infraProviderResourceStore.Find(ctx, id)
 }

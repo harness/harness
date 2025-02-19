@@ -29,14 +29,14 @@ func HandleCreateConfig(infraProviderCtrl *infraprovider.Controller) http.Handle
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
 
-		in := new(infraprovider.CreateInput)
+		in := new(infraprovider.ConfigInput)
 		err := json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
 			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
 			return
 		}
 
-		infraProviderConfig, err := infraProviderCtrl.Create(ctx, *session, *in)
+		infraProviderConfig, err := infraProviderCtrl.CreateConfig(ctx, *session, *in)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return

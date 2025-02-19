@@ -83,7 +83,7 @@ func (c *Controller) CreateResources(
 		return nil, fmt.Errorf("invalid input: %w", err)
 	}
 	now := time.Now().UnixMilli()
-	parentSpace, err := c.spaceFinder.FindByRef(ctx, spaceRef)
+	space, err := c.spaceFinder.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find parent by ref: %w", err)
 	}
@@ -91,31 +91,35 @@ func (c *Controller) CreateResources(
 		ctx,
 		c.authorizer,
 		&session,
-		parentSpace.Path,
+		space.Path,
 		NoResourceIdentifier,
 		enum.PermissionInfraProviderEdit); err != nil {
 		return nil, err
 	}
-	infraProviderConfig, err := c.infraproviderSvc.Find(ctx, parentSpace, configIdentifier)
+	infraProviderConfig, err := c.infraproviderSvc.Find(ctx, space, configIdentifier)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find infraprovider config by ref: %q %w", infraProviderConfig.Identifier, err)
+		return nil, fmt.Errorf("failed to find infraprovider config by ref: %q %w", configIdentifier, err)
 	}
-	resources := mapToResourceEntity(in, parentSpace, now)
-	err = c.infraproviderSvc.CreateResources(ctx, resources, infraProviderConfig.ID, infraProviderConfig.Identifier)
+	resources := c.MapToResourceEntity(in, space, now)
+	err = c.infraproviderSvc.CreateResources(ctx, space.ID, resources, infraProviderConfig.ID)
 	if err != nil {
 		return nil, err
 	}
 	return resources, nil
 }
 
-func mapToResourceEntity(in []ResourceInput, parentSpace *types.SpaceCore, now int64) []types.InfraProviderResource {
+func (c *Controller) MapToResourceEntity(
+	in []ResourceInput,
+	space *types.SpaceCore,
+	now int64,
+) []types.InfraProviderResource {
 	var resources []types.InfraProviderResource
 	for _, res := range in {
 		infraProviderResource := types.InfraProviderResource{
 			UID:               res.Identifier,
 			InfraProviderType: res.InfraProviderType,
 			Name:              res.Name,
-			SpaceID:           parentSpace.ID,
+			SpaceID:           space.ID,
 			CPU:               res.CPU,
 			Memory:            res.Memory,
 			Disk:              res.Disk,
@@ -124,7 +128,7 @@ func mapToResourceEntity(in []ResourceInput, parentSpace *types.SpaceCore, now i
 			Metadata:          res.Metadata,
 			Created:           now,
 			Updated:           now,
-			SpacePath:         parentSpace.Path,
+			SpacePath:         space.Path,
 		}
 		resources = append(resources, infraProviderResource)
 	}

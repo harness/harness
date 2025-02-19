@@ -398,6 +398,30 @@ func (s gitspaceConfigStore) FindAll(ctx context.Context, ids []int64) ([]*types
 	return s.mapToGitspaceConfigs(ctx, dst)
 }
 
+func (s gitspaceConfigStore) ListActiveConfigsForInfraProviderResource(
+	ctx context.Context,
+	infraProviderResourceID int64,
+) ([]*types.GitspaceConfig, error) {
+	stmt := database.Builder.
+		Select(gitspaceConfigSelectColumns).
+		From(gitspaceConfigsTable).
+		Where("gconf_infra_provider_resource_id = ?", infraProviderResourceID).
+		Where("gconf_is_deleted = false").
+		Where("gconf_is_marked_for_deletion = false")
+
+	sql, args, err := stmt.ToSql()
+
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")
+	}
+	db := dbtx.GetAccessor(ctx, s.db)
+	var dst []*gitspaceConfigWithLatestInstance
+	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing list gitspace config query")
+	}
+	return s.ToGitspaceConfigs(ctx, dst)
+}
+
 func (s gitspaceConfigStore) mapDBToGitspaceConfig(
 	ctx context.Context,
 	in *gitspaceConfig,

@@ -25,9 +25,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (c *Service) UpsertInfraProvider(
+func (c *Service) UpsertConfigAndResources(
 	ctx context.Context,
 	infraProviderConfig *types.InfraProviderConfig,
+	infraProviderResources []types.InfraProviderResource,
 ) error {
 	space, err := c.spaceFinder.FindByRef(ctx, infraProviderConfig.SpacePath)
 	if err != nil {
@@ -35,7 +36,7 @@ func (c *Service) UpsertInfraProvider(
 	}
 
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
-		return c.upsertConfig(ctx, space, infraProviderConfig)
+		return c.upsertConfigAndResources(ctx, space, infraProviderConfig, infraProviderResources)
 	})
 	if err != nil {
 		return fmt.Errorf("failed to complete txn for the infraprovider: %w", err)
@@ -43,59 +44,35 @@ func (c *Service) UpsertInfraProvider(
 	return nil
 }
 
-func (c *Service) upsertConfig(
+func (c *Service) upsertConfigAndResources(
 	ctx context.Context,
 	space *types.SpaceCore,
 	infraProviderConfig *types.InfraProviderConfig,
+	infraProviderResources []types.InfraProviderResource,
 ) error {
 	providerConfigInDB, err := c.Find(ctx, space, infraProviderConfig.Identifier)
 	var infraProviderConfigID int64
-	if errors.Is(err, store.ErrResourceNotFound) {
-		if infraProviderConfigID, err = c.createConfig(ctx, infraProviderConfig); err != nil {
+	if errors.Is(err, store.ErrResourceNotFound) { // nolint:gocritic
+		configID, createErr := c.createConfig(ctx, infraProviderConfig)
+		if createErr != nil {
 			return fmt.Errorf("could not create the config: %q %w", infraProviderConfig.Identifier, err)
 		}
+		infraProviderConfigID = configID
 		log.Info().Msgf("created new infraconfig %s", infraProviderConfig.Identifier)
-	} else if err != nil { // todo: should this not be err == nil?
-		infraProviderConfig.ID = providerConfigInDB.ID
-		if err = c.updateConfig(ctx, infraProviderConfig); err != nil {
-			return fmt.Errorf("could not update the config %s: %w", infraProviderConfig.Identifier, err)
-		}
-		log.Info().Msgf("updated infraconfig %s", infraProviderConfig.Identifier)
-	}
-	if err != nil {
+	} else if err != nil {
 		return err
+	} else {
+		infraProviderConfigID = providerConfigInDB.ID
 	}
-	if err = c.UpsertResources(ctx, infraProviderConfig.Resources, infraProviderConfigID, space.ID); err != nil {
-		return err
-	}
-	return nil
-}
 
-func (c *Service) UpsertResources(
-	ctx context.Context,
-	resources []types.InfraProviderResource,
-	configID int64,
-	spaceID int64,
-) error {
-	for idx := range resources {
-		resource := &resources[idx]
-		resource.InfraProviderConfigID = configID
-		resource.SpaceID = spaceID
-		if err := c.validate(ctx, resource); err != nil {
-			return err
-		}
-		_, err := c.infraProviderResourceStore.FindByIdentifier(ctx, resource.SpaceID, resource.UID)
-		if errors.Is(err, store.ErrResourceNotFound) {
-			if err = c.infraProviderResourceStore.Create(ctx, resource); err != nil {
-				return fmt.Errorf("failed to create infraprovider resource for %s: %w", resource.UID, err)
-			}
-			log.Info().Msgf("created new resource %s/%s", resource.InfraProviderConfigIdentifier, resource.UID)
-		} else {
-			if err = c.UpdateResource(ctx, *resource); err != nil {
-				log.Info().Msgf("updated resource %s/%s", resource.InfraProviderConfigIdentifier, resource.UID)
-				return fmt.Errorf("could not update the resources %s: %w", resource.UID, err)
-			}
-		}
+	infraProviderConfig.ID = infraProviderConfigID
+	if err = c.UpdateConfig(ctx, infraProviderConfig); err != nil {
+		return fmt.Errorf("could not update the config %s: %w", infraProviderConfig.Identifier, err)
+	}
+
+	log.Info().Msgf("updated infraconfig %s", infraProviderConfig.Identifier)
+	if err = c.createMissingResources(ctx, infraProviderResources, infraProviderConfigID, space.ID); err != nil {
+		return err
 	}
 	return nil
 }

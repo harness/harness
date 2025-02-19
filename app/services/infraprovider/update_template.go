@@ -17,48 +17,9 @@ package infraprovider
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/harness/gitness/types"
 )
-
-func (c *Service) updateConfig(ctx context.Context, infraProviderConfig *types.InfraProviderConfig) error {
-	err := c.validateConfigAndResources(infraProviderConfig)
-	if err != nil {
-		return err
-	}
-
-	infraProviderConfig.Updated = time.Now().UnixMilli()
-	err = c.infraProviderConfigStore.Update(ctx, infraProviderConfig)
-	if err != nil {
-		return fmt.Errorf("failed to update infraprovider config for %s: %w", infraProviderConfig.Identifier, err)
-	}
-
-	return nil
-}
-
-func (c *Service) UpdateResource(ctx context.Context, resource types.InfraProviderResource) error {
-	err := c.tx.WithTx(ctx, func(ctx context.Context) error {
-		space, err := c.spaceFinder.FindByRef(ctx, resource.SpacePath)
-		if err != nil {
-			return err
-		}
-		infraProviderResource, err := c.FindResourceByIdentifier(ctx, space.ID, resource.UID)
-		if err != nil {
-			return err
-		}
-		resource.ID = infraProviderResource.ID
-		resource.Updated = time.Now().UnixMilli()
-		if err = c.infraProviderResourceStore.Update(ctx, &resource); err != nil {
-			return err
-		}
-		return nil
-	})
-	if err != nil {
-		return fmt.Errorf("failed to complete update txn for the infraprovider resource %w", err)
-	}
-	return nil
-}
 
 func (c *Service) UpdateTemplate(ctx context.Context, template types.InfraProviderTemplate) error {
 	err := c.tx.WithTx(ctx, func(ctx context.Context) error {

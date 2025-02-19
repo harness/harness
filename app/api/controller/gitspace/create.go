@@ -45,19 +45,20 @@ var (
 
 // CreateInput is the input used for create operations.
 type CreateInput struct {
-	Identifier         string                    `json:"identifier"`
-	Name               string                    `json:"name"`
-	SpaceRef           string                    `json:"space_ref"` // Ref of the parent space
-	IDE                enum.IDEType              `json:"ide"`
-	ResourceIdentifier string                    `json:"resource_identifier"`
-	ResourceSpaceRef   string                    `json:"resource_space_ref"`
-	CodeRepoURL        string                    `json:"code_repo_url"`
-	CodeRepoType       enum.GitspaceCodeRepoType `json:"code_repo_type"`
-	CodeRepoRef        *string                   `json:"code_repo_ref"`
-	Branch             string                    `json:"branch"`
-	DevcontainerPath   *string                   `json:"devcontainer_path"`
-	Metadata           map[string]string         `json:"metadata"`
-	SSHTokenIdentifier string                    `json:"ssh_token_identifier"`
+	Identifier                    string                    `json:"identifier"`
+	Name                          string                    `json:"name"`
+	SpaceRef                      string                    `json:"space_ref"` // Ref of the parent space
+	IDE                           enum.IDEType              `json:"ide"`
+	InfraProviderConfigIdentifier string                    `json:"infra_provider_config_identifier"`
+	ResourceIdentifier            string                    `json:"resource_identifier"`
+	ResourceSpaceRef              string                    `json:"resource_space_ref"`
+	CodeRepoURL                   string                    `json:"code_repo_url"`
+	CodeRepoType                  enum.GitspaceCodeRepoType `json:"code_repo_type"`
+	CodeRepoRef                   *string                   `json:"code_repo_ref"`
+	Branch                        string                    `json:"branch"`
+	DevcontainerPath              *string                   `json:"devcontainer_path"`
+	Metadata                      map[string]string         `json:"metadata"`
+	SSHTokenIdentifier            string                    `json:"ssh_token_identifier"`
 }
 
 // Create creates a new gitspace.
@@ -132,7 +133,15 @@ func (c *Controller) Create(
 		enum.PermissionInfraProviderAccess); err != nil {
 		return nil, err
 	}
-	infraProviderResource, err := c.createOrFindInfraProviderResource(ctx, resourceSpace, resourceIdentifier, now)
+
+	// TODO: Temp fix to ensure the gitspace creation doesnt fail. Once the FE starts sending this field in the
+	// request, remove this.
+	if in.InfraProviderConfigIdentifier == "" {
+		in.InfraProviderConfigIdentifier = defaultResourceIdentifier
+	}
+
+	infraProviderResource, err := c.createOrFindInfraProviderResource(ctx, resourceSpace, resourceIdentifier,
+		in.InfraProviderConfigIdentifier, now)
 	if err != nil {
 		return nil, err
 	}
@@ -183,13 +192,16 @@ func (c *Controller) createOrFindInfraProviderResource(
 	ctx context.Context,
 	resourceSpace *types.SpaceCore,
 	resourceIdentifier string,
+	infraProviderConfigIdentifier string,
 	now int64,
 ) (*types.InfraProviderResource, error) {
 	var resource *types.InfraProviderResource
 	var err error
 
-	resource, err = c.infraProviderSvc.FindResourceByIdentifier(ctx, resourceSpace.ID, resourceIdentifier)
-	if err != nil && errors.Is(err, store.ErrResourceNotFound) && resourceIdentifier == defaultResourceIdentifier {
+	resource, err = c.infraProviderSvc.FindResourceByConfigAndIdentifier(ctx, resourceSpace.ID,
+		infraProviderConfigIdentifier, resourceIdentifier)
+	if ((err != nil && errors.Is(err, store.ErrResourceNotFound)) || resource == nil) &&
+		resourceIdentifier == defaultResourceIdentifier {
 		resource, err = c.autoCreateDefaultResource(ctx, resourceSpace, now)
 		if err != nil {
 			return nil, err
@@ -237,12 +249,13 @@ func (c *Controller) autoCreateDefaultResource(
 	}
 	defaultDockerConfig.Resources = []types.InfraProviderResource{defaultResource}
 
-	err = c.infraProviderSvc.CreateInfraProvider(ctx, defaultDockerConfig)
+	err = c.infraProviderSvc.CreateConfigAndResources(ctx, defaultDockerConfig)
 	if err != nil {
 		return nil, fmt.Errorf("could not auto-create the infra provider: %w", err)
 	}
 
-	resource, err := c.infraProviderSvc.FindResourceByIdentifier(ctx, rootSpace.ID, defaultResourceIdentifier)
+	resource, err := c.infraProviderSvc.FindResourceByConfigAndIdentifier(ctx, rootSpace.ID,
+		defaultDockerConfig.Identifier, defaultResourceIdentifier)
 	if err != nil {
 		return nil, fmt.Errorf("could not find infra provider resource : %q %w", defaultResourceIdentifier, err)
 	}

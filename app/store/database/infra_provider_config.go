@@ -124,7 +124,8 @@ func (i infraProviderConfigStore) FindByType(
 	db := dbtx.GetAccessor(ctx, i.db)
 	dst := new([]*infraProviderConfig)
 	if err := db.SelectContext(ctx, dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to list infraprovider resources")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to list infraprovider configs of type %s for"+
+			" space %d", infraProviderType, spaceID)
 	}
 	return i.mapToInfraProviderConfigs(*dst)
 }

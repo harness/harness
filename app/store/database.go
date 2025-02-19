@@ -705,6 +705,12 @@ type (
 
 		// Count the number of gitspace configs in a space matching the given filter.
 		Count(ctx context.Context, filter *types.GitspaceFilter) (int64, error)
+
+		// ListActiveConfigsForInfraProviderResource returns all active configs for the given infra resource.
+		ListActiveConfigsForInfraProviderResource(
+			ctx context.Context,
+			infraProviderResourceID int64,
+		) ([]*types.GitspaceConfig, error)
 	}
 
 	GitspaceInstanceStore interface {
@@ -768,14 +774,17 @@ type (
 		// Find returns a Infra provider resource given a ID from the datastore.
 		Find(ctx context.Context, id int64) (*types.InfraProviderResource, error)
 
-		// FindByIdentifier returns a infra provider resource with a given UID in a space
-		FindByIdentifier(ctx context.Context, spaceID int64, identifier string) (*types.InfraProviderResource, error)
+		// FindByConfigAndIdentifier returns the most recent infra provider resource with a given identifier in
+		// a space for the given infra provider config.
+		FindByConfigAndIdentifier(
+			ctx context.Context,
+			spaceID int64,
+			infraProviderConfigID int64,
+			identifier string,
+		) (*types.InfraProviderResource, error)
 
 		// Create creates a new infra provider resource in the datastore.
 		Create(ctx context.Context, infraProviderResource *types.InfraProviderResource) error
-
-		// Update tries to update the infra provider resource in the datastore.
-		Update(ctx context.Context, infraProviderResource *types.InfraProviderResource) error
 
 		// List lists the infra provider resource present for the gitspace config in a parent space ID in the datastore.
 		List(
@@ -784,8 +793,8 @@ type (
 			filter types.ListQueryFilter,
 		) ([]*types.InfraProviderResource, error)
 
-		// DeleteByIdentifier deletes the Infra provider resource with the given identifier for the given space.
-		DeleteByIdentifier(ctx context.Context, spaceID int64, identifier string) error
+		// Delete soft deletes the Infra provider resource with the given id.
+		Delete(ctx context.Context, id int64) error
 	}
 
 	PipelineStore interface {

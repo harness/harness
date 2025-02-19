@@ -17,7 +17,7 @@ package database
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"time"
 
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database"
@@ -46,7 +46,9 @@ const (
 		ipreso_disk,
 		ipreso_network,
 		ipreso_region,
-		ipreso_opentofu_params
+		ipreso_metadata,
+		ipreso_is_deleted,
+		ipreso_deleted
 	`
 	infraProviderResourceSelectColumns = "ipreso_id," + infraProviderResourceInsertColumns
 	infraProviderResourceTable         = `infra_provider_resources`
@@ -64,14 +66,16 @@ type infraProviderResource struct {
 	Disk                  null.String            `db:"ipreso_disk"`
 	Network               null.String            `db:"ipreso_network"`
 	Region                string                 `db:"ipreso_region"` // need list maybe
-	OpenTofuParams        []byte                 `db:"ipreso_opentofu_params"`
+	Metadata              []byte                 `db:"ipreso_metadata"`
 	Created               int64                  `db:"ipreso_created"`
 	Updated               int64                  `db:"ipreso_updated"`
+	IsDeleted             bool                   `db:"ipreso_is_deleted"`
+	Deleted               null.Int               `db:"ipreso_deleted"`
 }
 
 var _ store.InfraProviderResourceStore = (*infraProviderResourceStore)(nil)
 
-// NewGitspaceConfigStore returns a new GitspaceConfigStore.
+// NewInfraProviderResourceStore returns a new InfraProviderResourceStore.
 func NewInfraProviderResourceStore(db *sqlx.DB) store.InfraProviderResourceStore {
 	return &infraProviderResourceStore{
 		db: db,
@@ -82,12 +86,23 @@ type infraProviderResourceStore struct {
 	db *sqlx.DB
 }
 
-func (s infraProviderResourceStore) List(ctx context.Context, infraProviderConfigID int64,
-	_ types.ListQueryFilter) ([]*types.InfraProviderResource, error) {
-	stmt := database.Builder.
-		Select(infraProviderResourceSelectColumns).
+func (s infraProviderResourceStore) List(
+	ctx context.Context,
+	infraProviderConfigID int64,
+	_ types.ListQueryFilter,
+) ([]*types.InfraProviderResource, error) {
+	subQuery := squirrel.Select("MAX(ipreso_created)").
 		From(infraProviderResourceTable).
-		Where("ipreso_infra_provider_config_id = $1", infraProviderConfigID)
+		Where("ipreso_infra_provider_config_id = $1", infraProviderConfigID).
+		Where("ipreso_is_deleted = false").
+		GroupBy("ipreso_uid")
+
+	stmt := squirrel.Select(infraProviderResourceSelectColumns).
+		From(infraProviderResourceTable).
+		Where("ipreso_infra_provider_config_id = $2", infraProviderConfigID).
+		Where("ipreso_is_deleted = false").
+		Where(squirrel.Expr("ipreso_created IN (?)", subQuery)).
+		OrderBy("ipreso_uid", "ipreso_created DESC")
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -96,7 +111,8 @@ func (s infraProviderResourceStore) List(ctx context.Context, infraProviderConfi
 	db := dbtx.GetAccessor(ctx, s.db)
 	dst := new([]infraProviderResource)
 	if err := db.SelectContext(ctx, dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to list infraprovider resources")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to list infraprovider resources for config %d",
+			infraProviderConfigID)
 	}
 	return mapToInfraProviderResources(*dst)
 }
@@ -105,7 +121,8 @@ func (s infraProviderResourceStore) Find(ctx context.Context, id int64) (*types.
 	stmt := database.Builder.
 		Select(infraProviderResourceSelectColumns).
 		From(infraProviderResourceTable).
-		Where(infraProviderResourceIDColumn+" = $1", id)
+		Where(infraProviderResourceIDColumn+" = $1", id).
+		Where("ipreso_is_deleted = false")
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -119,16 +136,23 @@ func (s infraProviderResourceStore) Find(ctx context.Context, id int64) (*types.
 	return mapToInfraProviderResource(dst)
 }
 
-func (s infraProviderResourceStore) FindByIdentifier(
+func (s infraProviderResourceStore) FindByConfigAndIdentifier(
 	ctx context.Context,
 	spaceID int64,
+	infraProviderConfigID int64,
 	identifier string,
 ) (*types.InfraProviderResource, error) {
-	stmt := database.Builder.
-		Select(infraProviderResourceSelectColumns).
-		From(infraProviderResourceTable).
-		Where("ipreso_uid = $1", identifier).
-		Where("ipreso_space_id = $2", spaceID)
+	stmt :=
+		database.Builder.
+			Select(infraProviderResourceSelectColumns).
+			From(infraProviderResourceTable).
+			OrderBy("ipreso_created DESC").
+			Limit(1).
+			Where("ipreso_uid = ?", identifier).
+			Where("ipreso_space_id = ?", spaceID).
+			Where("ipreso_infra_provider_config_id = ?", infraProviderConfigID).
+			Where("ipreso_is_deleted = false")
+
 	sql, args, err := stmt.ToSql()
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")
@@ -145,7 +169,7 @@ func (s infraProviderResourceStore) Create(
 	ctx context.Context,
 	infraProviderResource *types.InfraProviderResource,
 ) error {
-	jsonBytes, marshalErr := json.Marshal(infraProviderResource.Metadata)
+	metadata, marshalErr := json.Marshal(infraProviderResource.Metadata)
 	if marshalErr != nil {
 		return marshalErr
 	}
@@ -165,7 +189,9 @@ func (s infraProviderResourceStore) Create(
 			infraProviderResource.Disk,
 			infraProviderResource.Network,
 			infraProviderResource.Region,
-			jsonBytes,
+			metadata,
+			infraProviderResource.IsDeleted,
+			infraProviderResource.Deleted,
 		).
 		Suffix(ReturningClause + infraProviderResourceIDColumn)
 	sql, args, err := stmt.ToSql()
@@ -180,57 +206,9 @@ func (s infraProviderResourceStore) Create(
 	return nil
 }
 
-func (s infraProviderResourceStore) Update(
-	ctx context.Context,
-	infraProviderResource *types.InfraProviderResource,
-) error {
-	dbinfraProviderResource, err := s.mapToInternalInfraProviderResource(infraProviderResource)
-	if err != nil {
-		return fmt.Errorf(
-			"failed to map to DB Obj for infraprovider resource %s", infraProviderResource.UID)
-	}
-	stmt := database.Builder.
-		Update(infraProviderResourceTable).
-		Set("ipreso_display_name", dbinfraProviderResource.Name).
-		Set("ipreso_memory", dbinfraProviderResource.Memory).
-		Set("ipreso_disk", dbinfraProviderResource.Disk).
-		Set("ipreso_network", dbinfraProviderResource.Network).
-		Set("ipreso_region", dbinfraProviderResource.Region).
-		Set("ipreso_opentofu_params", dbinfraProviderResource.OpenTofuParams).
-		Set("ipreso_updated", dbinfraProviderResource.Updated).
-		Where("ipreso_id = ?", infraProviderResource.ID)
-	sql, args, err := stmt.ToSql()
-	if err != nil {
-		return errors.Wrap(err, "Failed to convert squirrel builder to sql")
-	}
-	db := dbtx.GetAccessor(ctx, s.db)
-	if _, err := db.ExecContext(ctx, sql, args...); err != nil {
-		return database.ProcessSQLErrorf(
-			ctx, err, "Failed to update infraprovider resource %s", infraProviderResource.UID)
-	}
-	return nil
-}
-
-func (s infraProviderResourceStore) DeleteByIdentifier(ctx context.Context, spaceID int64, identifier string) error {
-	stmt := database.Builder.
-		Delete(infraProviderResourceTable).
-		Where("ipreso_uid = $1", identifier).
-		Where("ipreso_space_id = $2", spaceID)
-	sql, args, err := stmt.ToSql()
-	if err != nil {
-		return errors.Wrap(err, "Failed to convert squirrel builder to sql")
-	}
-	db := dbtx.GetAccessor(ctx, s.db)
-	if _, err := db.ExecContext(ctx, sql, args...); err != nil {
-		return database.ProcessSQLErrorf(
-			ctx, err, "Failed to delete infra provider resource %s", identifier)
-	}
-	return nil
-}
-
 func mapToInfraProviderResource(in *infraProviderResource) (*types.InfraProviderResource, error) {
 	metadataParamsMap := make(map[string]string)
-	marshalErr := json.Unmarshal(in.OpenTofuParams, &metadataParamsMap)
+	marshalErr := json.Unmarshal(in.Metadata, &metadataParamsMap)
 	if marshalErr != nil {
 		return nil, marshalErr
 	}
@@ -249,30 +227,8 @@ func mapToInfraProviderResource(in *infraProviderResource) (*types.InfraProvider
 		Metadata:              metadataParamsMap,
 		Created:               in.Created,
 		Updated:               in.Updated,
-	}, nil
-}
-
-func (s infraProviderResourceStore) mapToInternalInfraProviderResource(
-	in *types.InfraProviderResource,
-) (*infraProviderResource, error) {
-	jsonBytes, marshalErr := json.Marshal(in.Metadata)
-	if marshalErr != nil {
-		return nil, marshalErr
-	}
-	return &infraProviderResource{
-		Identifier:            in.UID,
-		InfraProviderConfigID: in.InfraProviderConfigID,
-		InfraProviderType:     in.InfraProviderType,
-		Name:                  in.Name,
-		SpaceID:               in.SpaceID,
-		CPU:                   null.StringFromPtr(in.CPU),
-		Memory:                null.StringFromPtr(in.Memory),
-		Disk:                  null.StringFromPtr(in.Disk),
-		Network:               null.StringFromPtr(in.Network),
-		Region:                in.Region,
-		OpenTofuParams:        jsonBytes,
-		Created:               in.Created,
-		Updated:               in.Updated,
+		IsDeleted:             in.IsDeleted,
+		Deleted:               in.Deleted.Ptr(),
 	}, nil
 }
 
@@ -370,4 +326,24 @@ func (i InfraProviderResourceView) FindMany(ctx context.Context, ids []int64) ([
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraprovider resources")
 	}
 	return mapToInfraProviderResources(*dst)
+}
+
+func (s infraProviderResourceStore) Delete(ctx context.Context, id int64) error {
+	now := time.Now().UnixMilli()
+	stmt := database.Builder.
+		Update(infraProviderResourceTable).
+		Set("ipreso_updated", now).
+		Set("ipreso_deleted", now).
+		Set("ipreso_is_deleted", true).
+		Where("ipreso_id = $4", id)
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return errors.Wrap(err, "Failed to convert squirrel builder to sql")
+	}
+	db := dbtx.GetAccessor(ctx, s.db)
+	if _, err := db.ExecContext(ctx, sql, args...); err != nil {
+		return database.ProcessSQLErrorf(
+			ctx, err, "Failed to update infraprovider resource %d", id)
+	}
+	return nil
 }
