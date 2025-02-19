@@ -17,3 +17,9 @@
 .triggerType {
   margin-bottom: var(--spacing-xsmall) !important;
 }
+
+.secretFormInput {
+  &.createForm > div {
+    width: auto !important;
+  }
+}

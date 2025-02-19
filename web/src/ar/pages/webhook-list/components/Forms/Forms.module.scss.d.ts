@@ -16,4 +16,6 @@
 
 /* eslint-disable */
 // This is an auto-generated file
+export declare const createForm: string
+export declare const secretFormInput: string
 export declare const triggerType: string

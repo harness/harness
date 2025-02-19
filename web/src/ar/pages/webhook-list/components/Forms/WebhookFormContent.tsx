@@ -15,8 +15,9 @@
  */
 
 import React from 'react'
+import classNames from 'classnames'
 import type { FormikProps } from 'formik'
-import { Checkbox, FormikForm, FormInput, Layout } from '@harnessio/uicore'
+import { Checkbox, Container, FormikForm, FormInput, Layout } from '@harnessio/uicore'
 
 import { useStrings } from '@ar/frameworks/strings'
 import { useAppStore, useParentComponents } from '@ar/hooks'
@@ -25,6 +26,8 @@ import FormLabel from './FormLabel'
 import SelectTriggers from './SelectTriggers'
 import type { WebhookRequestUI } from './types'
 import ExtraHeadersFormContent from './ExtraHeadersFormContent/ExtraHeadersFormContent'
+
+import css from './Forms.module.scss'
 
 interface WebhookFormContentProps {
   formikProps: FormikProps<WebhookRequestUI>
@@ -64,15 +67,20 @@ export default function WebhookFormContent(props: WebhookFormContentProps) {
           placeholder={getString('enterPlaceholder', { name: getString('webhookList.formFields.url') })}
           disabled={readonly}
         />
-        <SecretFormInput
-          name="secretIdentifier"
-          spaceIdFieldName="secretSpaceId"
-          label={getString('webhookList.formFields.secret')}
-          placeholder={getString('enterPlaceholder', { name: getString('webhookList.formFields.secret') })}
-          scope={scope}
-          disabled={readonly}
-          formik={formikProps}
-        />
+        <Container
+          className={classNames(css.secretFormInput, {
+            [css.createForm]: !isEdit
+          })}>
+          <SecretFormInput
+            name="secretIdentifier"
+            spaceIdFieldName="secretSpaceId"
+            label={getString('webhookList.formFields.secret')}
+            placeholder={getString('enterPlaceholder', { name: getString('webhookList.formFields.secret') })}
+            scope={scope}
+            disabled={readonly}
+            formik={formikProps}
+          />
+        </Container>
       </Layout.Vertical>
       <Layout.Vertical spacing="large">
         <SelectTriggers formikProps={formikProps} disabled={readonly} />
