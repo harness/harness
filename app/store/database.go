@@ -296,6 +296,9 @@ type (
 		// List returns a list of repos in a space. With "DeletedBeforeOrAt" filter, lists deleted repos.
 		List(ctx context.Context, parentID int64, opts *types.RepoFilter) ([]*types.Repository, error)
 
+		// ListAll returns a list of all repos across spaces with the provided filters.
+		ListAll(ctx context.Context, filter *types.RepoFilter) ([]*types.Repository, error)
+
 		// ListSizeInfos returns a list of all active repo sizes.
 		ListSizeInfos(ctx context.Context) ([]*types.RepositorySizeInfo, error)
 	}

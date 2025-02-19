@@ -648,7 +648,7 @@ func (s *RepoStore) List(
 	filter *types.RepoFilter,
 ) ([]*types.Repository, error) {
 	if filter.Recursive {
-		return s.listAll(ctx, parentID, filter)
+		return s.listRecursive(ctx, parentID, filter)
 	}
 	return s.list(ctx, parentID, filter)
 }
@@ -681,7 +681,7 @@ func (s *RepoStore) list(
 	return s.mapToRepos(ctx, dst)
 }
 
-func (s *RepoStore) listAll(
+func (s *RepoStore) listRecursive(
 	ctx context.Context,
 	parentID int64,
 	filter *types.RepoFilter,
@@ -742,6 +742,33 @@ func (s *RepoStore) ListSizeInfos(ctx context.Context) ([]*types.RepositorySizeI
 	}
 
 	return s.mapToRepoSizes(dst), nil
+}
+
+// ListAll returns a list of all repos across spaces with the provided filters.
+func (s *RepoStore) ListAll(
+	ctx context.Context,
+	filter *types.RepoFilter,
+) ([]*types.Repository, error) {
+	stmt := database.Builder.
+		Select(repoColumnsForJoin).
+		From("repositories")
+
+	stmt = applyQueryFilter(stmt, filter)
+	stmt = applySortFilter(stmt, filter)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := []*repository{}
+	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "failed executing custom list query")
+	}
+
+	return s.mapToRepos(ctx, dst)
 }
 
 func (s *RepoStore) mapToRepo(
@@ -872,6 +899,7 @@ func applyQueryFilter(stmt squirrel.SelectBuilder, filter *types.RepoFilter) squ
 	} else {
 		stmt = stmt.Where("repo_deleted IS NULL")
 	}
+
 	return stmt
 }
 

@@ -17,7 +17,6 @@ package cleanup
 import (
 	"context"
 	"fmt"
-	"math"
 	"time"
 
 	"github.com/harness/gitness/app/api/controller/repo"
@@ -33,7 +32,8 @@ import (
 const (
 	jobTypeDeletedRepos        = "gitness:cleanup:deleted-repos"
 	jobCronDeletedRepos        = "50 0 * * *" // At minute 50 past midnight every day.
-	jobMaxDurationDeletedRepos = 10 * time.Minute
+	jobMaxDurationDeletedRepos = 1 * time.Hour
+	maxDeletedRepoRetrival     = 1000 // to avoid loading all deleted repos in memory at once
 )
 
 type deletedReposCleanupJob struct {
@@ -66,29 +66,41 @@ func (j *deletedReposCleanupJob) Handle(ctx context.Context, _ string, _ job.Pro
 		olderThan.Format(time.RFC3339Nano))
 
 	deletedBeforeOrAt := olderThan.UnixMilli()
-	filter := &types.RepoFilter{
-		Page:              1,
-		Size:              int(math.MaxInt),
-		Query:             "",
-		Order:             enum.OrderAsc,
-		Sort:              enum.RepoAttrDeleted,
-		DeletedBeforeOrAt: &deletedBeforeOrAt,
-	}
-	toBePurgedRepos, err := j.repoStore.List(ctx, 0, filter)
-	if err != nil {
-		return "", fmt.Errorf("failed to list ready-to-delete repositories: %w", err)
-	}
-
 	session := bootstrap.NewSystemServiceSession()
+
 	purgedRepos := 0
-	for _, r := range toBePurgedRepos {
-		err := j.repoCtrl.PurgeNoAuth(ctx, session, r)
-		if err != nil {
-			log.Warn().Err(err).Msgf("failed to purge repo uid: %s, path: %s, deleted at %d",
-				r.Identifier, r.Path, *r.Deleted)
-			continue
+	for {
+		filter := &types.RepoFilter{
+			Page:              1,
+			Size:              maxDeletedRepoRetrival,
+			Query:             "",
+			Order:             enum.OrderDesc,
+			Sort:              enum.RepoAttrDeleted,
+			DeletedBeforeOrAt: &deletedBeforeOrAt,
 		}
-		purgedRepos++
+		toBePurgedRepos, err := j.repoStore.ListAll(ctx, filter)
+		if err != nil {
+			return "", fmt.Errorf("failed to list ready-to-delete repositories: %w", err)
+		}
+
+		if len(toBePurgedRepos) == 0 {
+			break
+		}
+
+		log.Ctx(ctx).Info().Msgf("found %d deleted repositories ready to be purged.", len(toBePurgedRepos))
+
+		for _, r := range toBePurgedRepos {
+			deletedBeforeOrAt = *r.Deleted - 1 // to avoid infinite loop if last repo wasn't purged successfully
+			err := j.repoCtrl.PurgeNoAuth(ctx, session, r)
+			if err != nil {
+				log.Ctx(ctx).Warn().Err(err).Msgf("failed to purge repo with identifier: %s, path: %s, deleted at: %d",
+					r.Identifier, r.Path, *r.Deleted)
+				continue
+			}
+			log.Ctx(ctx).Info().Msgf("successfully purged repo with identifier: %s, path: %s, deleted at: %d",
+				r.Identifier, r.Path, *r.Deleted)
+			purgedRepos++
+		}
 	}
 
 	result := "no old deleted repositories found"

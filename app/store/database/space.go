@@ -783,7 +783,7 @@ func (s *SpaceStore) List(
 	opts *types.SpaceFilter,
 ) ([]*types.Space, error) {
 	if opts.Recursive {
-		return s.listAll(ctx, id, opts)
+		return s.listRecursive(ctx, id, opts)
 	}
 	return s.list(ctx, id, opts)
 }
@@ -816,7 +816,7 @@ func (s *SpaceStore) list(
 	return s.mapToSpaces(ctx, s.db, dst)
 }
 
-func (s *SpaceStore) listAll(
+func (s *SpaceStore) listRecursive(
 	ctx context.Context,
 	id int64,
 	opts *types.SpaceFilter,
