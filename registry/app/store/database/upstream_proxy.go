@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/api/request"
-	corestore "github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/app/store/database/util"
@@ -35,19 +35,24 @@ import (
 	"github.com/pkg/errors"
 )
 
+var (
+	ulimit  = uint64(0)
+	uoffset = uint64(0)
+)
+
 type UpstreamproxyDao struct {
-	registryDao    store.RegistryRepository
-	db             *sqlx.DB
-	spacePathStore corestore.SpacePathStore
+	registryDao store.RegistryRepository
+	db          *sqlx.DB
+	spaceFinder refcache.SpaceFinder
 }
 
 func NewUpstreamproxyDao(
-	db *sqlx.DB, registryDao store.RegistryRepository, spacePathStore corestore.SpacePathStore,
+	db *sqlx.DB, registryDao store.RegistryRepository, spaceFinder refcache.SpaceFinder,
 ) store.UpstreamProxyConfigRepository {
 	return &UpstreamproxyDao{
-		registryDao:    registryDao,
-		db:             db,
-		spacePathStore: spacePathStore,
+		registryDao: registryDao,
+		db:          db,
+		spaceFinder: spaceFinder,
 	}
 }
 
@@ -307,8 +312,16 @@ func (r UpstreamproxyDao) GetAll(
 		q = q.Where(" AND r.registry_package_type in ? ", packageTypes)
 	}
 
-	q = q.OrderBy(" r.registry_" + sortByField + " " + sortByOrder).Limit(uint64(limit)).Offset(uint64(offset))
+	if limit > 0 {
+		ulimit = uint64(limit)
+	}
+	if offset > 0 {
+		uoffset = uint64(offset)
+	}
 
+	q = q.OrderBy(" r.registry_" + sortByField + " " + sortByOrder).
+		Limit(ulimit).
+		Offset(uoffset)
 	sql, args, err := q.ToSql()
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to convert query to sql")
@@ -411,11 +424,11 @@ func (r UpstreamproxyDao) mapToUpstreamProxy(
 
 	secretSpacePath := ""
 	if dst.SecretSpaceID.Valid {
-		primary, err := r.spacePathStore.FindPrimaryBySpaceID(ctx, int64(dst.SecretSpaceID.Int32))
+		primary, err := r.spaceFinder.FindByID(ctx, int64(dst.SecretSpaceID.Int32))
 		if err != nil {
 			return nil, fmt.Errorf("failed to get secret space path: %w", err)
 		}
-		secretSpacePath = primary.Value
+		secretSpacePath = primary.Path
 	}
 
 	userNameSecretIdentifier := ""
@@ -429,11 +442,11 @@ func (r UpstreamproxyDao) mapToUpstreamProxy(
 
 	userNameSecretSpacePath := ""
 	if dst.UserNameSecretSpaceID.Valid {
-		primary, err := r.spacePathStore.FindPrimaryBySpaceID(ctx, int64(dst.UserNameSecretSpaceID.Int32))
+		primary, err := r.spaceFinder.FindByID(ctx, int64(dst.UserNameSecretSpaceID.Int32))
 		if err != nil {
 			return nil, fmt.Errorf("failed to get secret space path: %w", err)
 		}
-		userNameSecretSpacePath = primary.Value
+		userNameSecretSpacePath = primary.Path
 	}
 
 	return &types.UpstreamProxy{

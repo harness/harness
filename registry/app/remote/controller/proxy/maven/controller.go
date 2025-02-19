@@ -20,11 +20,12 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/app/api/request"
-	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/maven/utils"
 	"github.com/harness/gitness/registry/app/storage"
+	cfg "github.com/harness/gitness/registry/config"
 	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/secret"
 
@@ -32,9 +33,9 @@ import (
 )
 
 type controller struct {
-	localRegistry  registryInterface
-	secretService  secret.Service
-	spacePathStore store.SpacePathStore
+	localRegistry registryInterface
+	secretService secret.Service
+	spaceFinder   refcache.SpaceFinder
 }
 
 type Controller interface {
@@ -49,12 +50,12 @@ type Controller interface {
 // NewProxyController -- get the proxy controller instance.
 func NewProxyController(
 	l registryInterface, secretService secret.Service,
-	spacePathStore store.SpacePathStore,
+	spaceFinder refcache.SpaceFinder,
 ) Controller {
 	return &controller{
-		localRegistry:  l,
-		secretService:  secretService,
-		spacePathStore: spacePathStore,
+		localRegistry: l,
+		secretService: secretService,
+		spaceFinder:   spaceFinder,
 	}
 }
 
@@ -70,7 +71,7 @@ func (c *controller) ProxyFile(
 	responseHeaders = &commons.ResponseHeaders{
 		Headers: make(map[string]string),
 	}
-	rHelper, err := NewRemoteHelper(ctx, c.spacePathStore, c.secretService, proxy)
+	rHelper, err := NewRemoteHelper(ctx, c.spaceFinder, c.secretService, proxy)
 	if err != nil {
 		return responseHeaders, nil, err
 	}
@@ -100,15 +101,15 @@ func (c *controller) ProxyFile(
 			log.Error().Stack().Err(err).Msg("failed to get auth session from context")
 			return
 		}
-		ctx2 := request.WithAuthSession(context.Background(), session)
-
+		ctx2 := request.WithAuthSession(ctx, session)
+		ctx2 = context.WithoutCancel(ctx2)
+		ctx2 = context.WithValue(ctx2, cfg.GoRoutineKey, "goRoutine")
 		err = c.putFileToLocal(ctx2, info, rHelper)
 		if err != nil {
-			log.Ctx(ctx2).Error().Str("goRoutine",
-				"AddMavenFile").Stack().Err(err).Msgf("error while putting file to localRegistry, %v", err)
+			log.Ctx(ctx2).Error().Stack().Err(err).Msgf("error while putting file to localRegistry, %v", err)
 			return
 		}
-		log.Ctx(ctx2).Info().Str("goRoutine", "AddMavenFile").Msgf("Successfully updated file "+
+		log.Ctx(ctx2).Info().Msgf("Successfully updated file "+
 			"to registry:  %s with file path: %s",
 			info.RegIdentifier, filePath)
 	}(info)

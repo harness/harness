@@ -19,7 +19,7 @@ package proxy
 import (
 	"io"
 
-	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/app/services/refcache"
 	api "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/manifest"
 	"github.com/harness/gitness/registry/app/remote/adapter"
@@ -58,7 +58,7 @@ type remoteHelper struct {
 
 // NewRemoteHelper create a remote interface.
 func NewRemoteHelper(
-	ctx context.Context, spacePathStore store.SpacePathStore, secretService secret.Service, repoKey string,
+	ctx context.Context, spaceFinder refcache.SpaceFinder, secretService secret.Service, repoKey string,
 	proxy types.UpstreamProxy,
 ) (RemoteInterface, error) {
 	if proxy.Source == string(api.UpstreamConfigSourceDockerhub) {
@@ -73,13 +73,13 @@ func NewRemoteHelper(
 	if proxy.Source == string(api.UpstreamConfigSourceCustom) {
 		adapterType = string(api.UpstreamConfigSourceDockerhub)
 	}
-	if err := r.init(ctx, spacePathStore, adapterType); err != nil {
+	if err := r.init(ctx, spaceFinder, adapterType); err != nil {
 		return nil, err
 	}
 	return r, nil
 }
 
-func (r *remoteHelper) init(ctx context.Context, spacePathStore store.SpacePathStore, proxyType string) error {
+func (r *remoteHelper) init(ctx context.Context, spaceFinder refcache.SpaceFinder, proxyType string) error {
 	if r.registry != nil {
 		return nil
 	}
@@ -89,7 +89,7 @@ func (r *remoteHelper) init(ctx context.Context, spacePathStore store.SpacePathS
 	if err != nil {
 		return err
 	}
-	adp, err := factory.Create(ctx, spacePathStore, r.upstreamProxy, r.secretService)
+	adp, err := factory.Create(ctx, spaceFinder, r.upstreamProxy, r.secretService)
 	if err != nil {
 		return err
 	}

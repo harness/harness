@@ -20,7 +20,7 @@ import (
 	"context"
 	"net/http"
 
-	store2 "github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	commonhttp "github.com/harness/gitness/registry/app/common/http"
 	adp "github.com/harness/gitness/registry/app/remote/adapter"
@@ -44,7 +44,7 @@ func init() {
 }
 
 func newAdapter(
-	ctx context.Context, spacePathStore store2.SpacePathStore, service secret.Service, registry types.UpstreamProxy,
+	ctx context.Context, spaceFinder refcache.SpaceFinder, service secret.Service, registry types.UpstreamProxy,
 ) (adp.Adapter, error) {
 	client, err := NewClient(registry)
 	if err != nil {
@@ -53,7 +53,7 @@ func newAdapter(
 
 	return &adapter{
 		client:  client,
-		Adapter: native.NewAdapter(ctx, spacePathStore, service, registry),
+		Adapter: native.NewAdapter(ctx, spaceFinder, service, registry),
 	}, nil
 }
 
@@ -62,9 +62,9 @@ type factory struct {
 
 // Create ...
 func (f *factory) Create(
-	ctx context.Context, spacePathStore store2.SpacePathStore, record types.UpstreamProxy, service secret.Service,
+	ctx context.Context, spaceFinder refcache.SpaceFinder, record types.UpstreamProxy, service secret.Service,
 ) (adp.Adapter, error) {
-	return newAdapter(ctx, spacePathStore, service, record)
+	return newAdapter(ctx, spaceFinder, service, record)
 }
 
 var (

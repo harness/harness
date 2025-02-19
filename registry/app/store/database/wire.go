@@ -15,7 +15,7 @@
 package database
 
 import (
-	corestore "github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
 
@@ -26,9 +26,9 @@ import (
 func ProvideUpstreamDao(
 	db *sqlx.DB,
 	registryDao store.RegistryRepository,
-	spacePathStore corestore.SpacePathStore,
+	spaceFinder refcache.SpaceFinder,
 ) store.UpstreamProxyConfigRepository {
-	return NewUpstreamproxyDao(db, registryDao, spacePathStore)
+	return NewUpstreamproxyDao(db, registryDao, spaceFinder)
 }
 
 func ProvideRepoDao(db *sqlx.DB, mtRepository store.MediaTypesRepository) store.RegistryRepository {

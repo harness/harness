@@ -16,6 +16,7 @@ package maven
 
 import (
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/refcache"
 	corestore "github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/remote/controller/proxy/maven"
@@ -31,6 +32,7 @@ func LocalRegistryProvider(
 	tx dbtx.Transactor,
 	fileManager filemanager.FileManager,
 ) *LocalRegistry {
+	//nolint:errcheck
 	return NewLocalRegistry(dBStore,
 		tx,
 		fileManager,
@@ -43,6 +45,7 @@ func RemoteRegistryProvider(
 	local *LocalRegistry,
 	proxyController maven.Controller,
 ) *RemoteRegistry {
+	//nolint:errcheck
 	return NewRemoteRegistry(dBStore, tx, local, proxyController).(*RemoteRegistry)
 }
 
@@ -65,6 +68,7 @@ func DBStoreProvider(
 	nodeDao store.NodesRepository,
 	upstreamProxyDao store.UpstreamProxyConfigRepository,
 ) *DBStore {
+	//nolint:errcheck
 	return NewDBStore(registryDao, imageDao, artifactDao, spaceStore, bandwidthStatDao,
 		downloadStatDao,
 		nodeDao,
@@ -73,9 +77,9 @@ func DBStoreProvider(
 
 func ProvideProxyController(
 	registry *LocalRegistry, secretService secret.Service,
-	spacePathStore corestore.SpacePathStore,
+	spaceFinder refcache.SpaceFinder,
 ) maven.Controller {
-	return maven.NewProxyController(registry, secretService, spacePathStore)
+	return maven.NewProxyController(registry, secretService, spaceFinder)
 }
 
 var ControllerSet = wire.NewSet(ControllerProvider)

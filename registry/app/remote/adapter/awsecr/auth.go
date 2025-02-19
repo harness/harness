@@ -28,7 +28,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/app/services/refcache"
 	api "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	commonhttp "github.com/harness/gitness/registry/app/common/http"
 	"github.com/harness/gitness/registry/app/common/http/modifier"
@@ -135,14 +135,14 @@ func getAwsSvc(accessKey, secretKey string, reg types.UpstreamProxy) (*awsecrapi
 
 func parseAccountRegion(url string) (string, string, error) {
 	rs := ecrRegexp.FindStringSubmatch(url)
-	if rs == nil || len(rs) < 4 {
+	if len(rs) < 4 {
 		return "", "", errors.New("bad aws url")
 	}
 	return rs[1], rs[3], nil
 }
 
 func getCreds(
-	ctx context.Context, spacePathStore store.SpacePathStore, secretService secret.Service, reg types.UpstreamProxy,
+	ctx context.Context, spaceFinder refcache.SpaceFinder, secretService secret.Service, reg types.UpstreamProxy,
 ) (string, string, bool, error) {
 	if api.AuthType(reg.RepoAuthType) == api.AuthTypeAnonymous {
 		return "", "", true, nil
@@ -151,7 +151,7 @@ func getCreds(
 		log.Debug().Msgf("invalid auth type: %s", reg.RepoAuthType)
 		return "", "", false, nil
 	}
-	secretKey, err := getSecretValue(ctx, spacePathStore, secretService, reg.SecretSpaceID,
+	secretKey, err := getSecretValue(ctx, spaceFinder, secretService, reg.SecretSpaceID,
 		reg.SecretIdentifier)
 	if err != nil {
 		return "", "", false, err
@@ -159,7 +159,7 @@ func getCreds(
 	if reg.UserName != "" {
 		return reg.UserName, secretKey, false, nil
 	}
-	accessKey, err := getSecretValue(ctx, spacePathStore, secretService, reg.UserNameSecretSpaceID,
+	accessKey, err := getSecretValue(ctx, spaceFinder, secretService, reg.UserNameSecretSpaceID,
 		reg.UserNameSecretIdentifier)
 	if err != nil {
 		return "", "", false, err
@@ -167,14 +167,14 @@ func getCreds(
 	return accessKey, secretKey, false, nil
 }
 
-func getSecretValue(ctx context.Context, spacePathStore store.SpacePathStore, secretService secret.Service,
+func getSecretValue(ctx context.Context, spaceFinder refcache.SpaceFinder, secretService secret.Service,
 	secretSpaceID int64, secretSpacePath string) (string, error) {
-	spacePath, err := spacePathStore.FindPrimaryBySpaceID(ctx, secretSpaceID)
+	spacePath, err := spaceFinder.FindByID(ctx, secretSpaceID)
 	if err != nil {
 		log.Error().Msgf("failed to find space path: %v", err)
 		return "", err
 	}
-	decryptSecret, err := secretService.DecryptSecret(ctx, spacePath.Value, secretSpacePath)
+	decryptSecret, err := secretService.DecryptSecret(ctx, spacePath.Path, secretSpacePath)
 	if err != nil {
 		log.Error().Msgf("failed to decrypt secret: %v", err)
 		return "", err

@@ -18,7 +18,7 @@ import (
 	"context"
 	"io"
 
-	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/app/services/refcache"
 	api "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/remote/adapter"
@@ -50,7 +50,7 @@ type remoteHelper struct {
 
 // NewRemoteHelper create a remote interface.
 func NewRemoteHelper(
-	ctx context.Context, spacePathStore store.SpacePathStore, secretService secret.Service,
+	ctx context.Context, spaceFinder refcache.SpaceFinder, secretService secret.Service,
 	proxy types.UpstreamProxy,
 ) (RemoteInterface, error) {
 	if proxy.Source == string(api.UpstreamConfigSourceMavenCentral) {
@@ -60,13 +60,13 @@ func NewRemoteHelper(
 		upstreamProxy: proxy,
 		secretService: secretService,
 	}
-	if err := r.init(ctx, spacePathStore, string(api.UpstreamConfigSourceMavenCentral)); err != nil {
+	if err := r.init(ctx, spaceFinder, string(api.UpstreamConfigSourceMavenCentral)); err != nil {
 		return nil, err
 	}
 	return r, nil
 }
 
-func (r *remoteHelper) init(ctx context.Context, spacePathStore store.SpacePathStore, proxyType string) error {
+func (r *remoteHelper) init(ctx context.Context, spaceFinder refcache.SpaceFinder, proxyType string) error {
 	if r.registry != nil {
 		return nil
 	}
@@ -75,7 +75,7 @@ func (r *remoteHelper) init(ctx context.Context, spacePathStore store.SpacePathS
 	if err != nil {
 		return err
 	}
-	adp, err := factory.Create(ctx, spacePathStore, r.upstreamProxy, r.secretService)
+	adp, err := factory.Create(ctx, spaceFinder, r.upstreamProxy, r.secretService)
 	if err != nil {
 		return err
 	}

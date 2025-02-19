@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/api/request"
-	store2 "github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/registry/app/common/lib/errors"
 	"github.com/harness/gitness/registry/app/manifest"
 	"github.com/harness/gitness/registry/app/manifest/manifestlist"
@@ -34,6 +34,7 @@ import (
 	proxy2 "github.com/harness/gitness/registry/app/remote/controller/proxy"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
+	cfg "github.com/harness/gitness/registry/config"
 	"github.com/harness/gitness/secret"
 
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
@@ -51,7 +52,7 @@ const (
 
 func NewRemoteRegistry(
 	local *LocalRegistry, app *App, upstreamProxyConfigRepo store.UpstreamProxyConfigRepository,
-	spacePathStore store2.SpacePathStore, secretService secret.Service, proxyCtl proxy2.Controller,
+	spaceFinder refcache.SpaceFinder, secretService secret.Service, proxyCtl proxy2.Controller,
 ) Registry {
 	cache := proxy2.GetManifestCache(local, local.ms)
 	listCache := proxy2.GetManifestListCache(local)
@@ -67,7 +68,7 @@ func NewRemoteRegistry(
 		local:                   local,
 		App:                     app,
 		upstreamProxyConfigRepo: upstreamProxyConfigRepo,
-		spacePathStore:          spacePathStore,
+		spaceFinder:             spaceFinder,
 		secretService:           secretService,
 		manifestCacheHandlerMap: registry,
 		proxyCtl:                proxyCtl,
@@ -82,7 +83,7 @@ type RemoteRegistry struct {
 	local                   *LocalRegistry
 	App                     *App
 	upstreamProxyConfigRepo store.UpstreamProxyConfigRepository
-	spacePathStore          store2.SpacePathStore
+	spaceFinder             refcache.SpaceFinder
 	secretService           secret.Service
 	proxyCtl                proxy2.Controller
 	manifestCacheHandlerMap map[string]proxy2.ManifestCacheHandler
@@ -116,7 +117,9 @@ func proxyManifestHead(
 		go func(art pkg.RegistryInfo) {
 			// Write function to update local storage.
 			session, _ := request.AuthSessionFrom(ctx)
-			ctx2 := request.WithAuthSession(context.Background(), session)
+			ctx2 := request.WithAuthSession(ctx, session)
+			ctx2 = context.WithoutCancel(ctx2)
+			ctx2 = context.WithValue(ctx2, cfg.GoRoutineKey, "EnsureTag")
 			tag := art.Tag
 			art.Tag = ""
 			art.Digest = desc.Digest.String()
@@ -125,16 +128,15 @@ func proxyManifestHead(
 			for i := 0; i < ensureTagMaxRetry; i++ {
 				time.Sleep(ensureTagInterval)
 				count++
-				log.Ctx(ctx2).Info().Str("goRoutine", "EnsureTag").Msgf("Tag %s for image: %s, retry: %d", tag,
+				log.Ctx(ctx2).Info().Msgf("Tag %s for image: %s, retry: %d", tag,
 					info.Image,
 					count)
 				e := ctl.EnsureTag(ctx2, responseHeaders, art, acceptHeaders, ifNoneMatchHeader)
 				if e != nil {
-					log.Ctx(ctx2).Warn().Str("goRoutine",
-						"EnsureTag").Err(e).Msgf("Failed to update tag: %s for image: %s",
+					log.Ctx(ctx2).Warn().Err(e).Msgf("Failed to update tag: %s for image: %s",
 						tag, info.Image)
 				} else {
-					log.Ctx(ctx2).Info().Str("goRoutine", "EnsureTag").Msgf("Tag updated: %s for image: %s", tag,
+					log.Ctx(ctx2).Info().Msgf("Tag updated: %s for image: %s", tag,
 						info.Image)
 					return
 				}
@@ -175,7 +177,7 @@ func (r *RemoteRegistry) ManifestExist(
 		errs = append(errs, err)
 		return responseHeaders, descriptor, manifestResult, errs
 	}
-	remoteHelper, err := proxy2.NewRemoteHelper(ctx, r.spacePathStore, r.secretService, artInfo.RegIdentifier,
+	remoteHelper, err := proxy2.NewRemoteHelper(ctx, r.spaceFinder, r.secretService, artInfo.RegIdentifier,
 		*upstreamProxy)
 	if err != nil {
 		errs = append(errs, errors.New("Proxy is down"))
@@ -251,7 +253,7 @@ func (r *RemoteRegistry) PullManifest(
 		errs = append(errs, err)
 		return responseHeaders, descriptor, manifestResult, errs
 	}
-	remoteHelper, err := proxy2.NewRemoteHelper(ctx, r.spacePathStore, r.secretService, artInfo.RegIdentifier,
+	remoteHelper, err := proxy2.NewRemoteHelper(ctx, r.spaceFinder, r.secretService, artInfo.RegIdentifier,
 		*upstreamProxy)
 	if err != nil {
 		errs = append(errs, errors.New("Proxy is down"))

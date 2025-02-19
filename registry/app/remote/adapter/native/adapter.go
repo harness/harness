@@ -19,7 +19,7 @@ package native
 import (
 	"context"
 
-	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/app/services/refcache"
 	api "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/common/lib"
 	"github.com/harness/gitness/registry/app/common/lib/errors"
@@ -47,13 +47,13 @@ type Adapter struct {
 
 // NewAdapter returns an instance of the Adapter.
 func NewAdapter(
-	ctx context.Context, spacePathStore store.SpacePathStore, service secret.Service, reg types.UpstreamProxy,
+	ctx context.Context, spaceFinder refcache.SpaceFinder, service secret.Service, reg types.UpstreamProxy,
 ) *Adapter {
 	adapter := &Adapter{
 		proxy: reg,
 	}
 	// Get the password: lookup secrets.secret_data using secret_identifier & secret_space_id.
-	password := getPwd(ctx, spacePathStore, service, reg)
+	password := getPwd(ctx, spaceFinder, service, reg)
 	username, password, url := reg.UserName, password, reg.RepoURL
 	adapter.Client = registry.NewClient(url, username, password, false)
 	return adapter
@@ -69,18 +69,18 @@ func NewAdapterWithAuthorizer(reg types.UpstreamProxy, authorizer lib.Authorizer
 
 // getPwd: lookup secrets.secret_data using secret_identifier & secret_space_id.
 func getPwd(
-	ctx context.Context, spacePathStore store.SpacePathStore, secretService secret.Service, reg types.UpstreamProxy,
+	ctx context.Context, spaceFinder refcache.SpaceFinder, secretService secret.Service, reg types.UpstreamProxy,
 ) string {
 	if api.AuthType(reg.RepoAuthType) == api.AuthTypeUserPassword {
 		secretSpaceID := reg.SecretSpaceID
 		secretIdentifier := reg.SecretIdentifier
 
-		spacePath, err := spacePathStore.FindPrimaryBySpaceID(ctx, secretSpaceID)
+		spacePath, err := spaceFinder.FindByID(ctx, secretSpaceID)
 		if err != nil {
 			log.Error().Msgf("failed to find space path: %v", err)
 			return ""
 		}
-		decryptSecret, err := secretService.DecryptSecret(ctx, spacePath.Value, secretIdentifier)
+		decryptSecret, err := secretService.DecryptSecret(ctx, spacePath.Path, secretIdentifier)
 		if err != nil {
 			log.Error().Msgf("failed to decrypt secret: %v", err)
 			return ""

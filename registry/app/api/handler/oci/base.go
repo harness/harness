@@ -22,6 +22,7 @@ import (
 	usercontroller "github.com/harness/gitness/app/api/controller/user"
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/refcache"
 	corestore "github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/api/controller/metadata"
@@ -41,12 +42,14 @@ import (
 )
 
 func NewHandler(
-	controller *docker.Controller, spaceStore corestore.SpaceStore, tokenStore corestore.TokenStore,
+	controller *docker.Controller, spaceFinder refcache.SpaceFinder, spaceStore corestore.SpaceStore,
+	tokenStore corestore.TokenStore,
 	userCtrl *usercontroller.Controller, authenticator authn.Authenticator, urlProvider urlprovider.Provider,
 	authorizer authz.Authorizer, ociRelativeURL bool,
 ) *Handler {
 	return &Handler{
 		Controller:     controller,
+		SpaceFinder:    spaceFinder,
 		SpaceStore:     spaceStore,
 		TokenStore:     tokenStore,
 		UserCtrl:       userCtrl,
@@ -59,6 +62,7 @@ func NewHandler(
 
 type Handler struct {
 	Controller     *docker.Controller
+	SpaceFinder    refcache.SpaceFinder
 	SpaceStore     corestore.SpaceStore
 	TokenStore     corestore.TokenStore
 	UserCtrl       *usercontroller.Controller

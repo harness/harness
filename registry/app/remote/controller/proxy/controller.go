@@ -25,11 +25,12 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/api/request"
-	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/registry/app/common/lib/errors"
 	"github.com/harness/gitness/registry/app/manifest"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
+	cfg "github.com/harness/gitness/registry/config"
 	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/secret"
 
@@ -91,20 +92,20 @@ type controller struct {
 	localRegistry           registryInterface
 	localManifestRegistry   registryManifestInterface
 	secretService           secret.Service
-	spacePathStore          store.SpacePathStore
+	spaceFinder             refcache.SpaceFinder
 	manifestCacheHandlerMap map[string]ManifestCacheHandler
 }
 
 // NewProxyController -- get the proxy controller instance.
 func NewProxyController(
 	l registryInterface, lm registryManifestInterface, secretService secret.Service,
-	spacePathStore store.SpacePathStore, manifestCacheHandlerMap map[string]ManifestCacheHandler,
+	spaceFinder refcache.SpaceFinder, manifestCacheHandlerMap map[string]ManifestCacheHandler,
 ) Controller {
 	return &controller{
 		localRegistry:           l,
 		localManifestRegistry:   lm,
 		secretService:           secretService,
-		spacePathStore:          spacePathStore,
+		spaceFinder:             spaceFinder,
 		manifestCacheHandlerMap: manifestCacheHandlerMap,
 	}
 }
@@ -229,18 +230,19 @@ func (c *controller) ProxyManifest(
 	// This GoRoutine is to push the manifest from Remote to Local registry.
 	go func(_, ct string) {
 		session, _ := request.AuthSessionFrom(ctx)
-		ctx2 := request.WithAuthSession(context.Background(), session)
+		ctx2 := request.WithAuthSession(ctx, session)
+		ctx2 = context.WithoutCancel(ctx2)
+		ctx2 = context.WithValue(ctx2, cfg.GoRoutineKey, "UpdateManifest")
 		var count = 0
 		for n := 0; n < maxManifestWait; n++ {
 			time.Sleep(sleepIntervalSec * time.Second)
 			count++
-			log.Ctx(ctx2).Info().Str("goRoutine", "UpdateManifest").Msgf("Current retry=%v artifact: %v:%v, digest: %s",
+			log.Ctx(ctx2).Info().Msgf("Current retry=%v artifact: %v:%v, digest: %s",
 				count, repoKey, imageName,
 				art.Digest)
 			_, des, _, e := c.localRegistry.PullManifest(ctx2, art, acceptHeader, ifNoneMatchHeader)
 			if len(e) > 0 {
-				log.Ctx(ctx2).Info().Str("goRoutine",
-					"UpdateManifest").Stack().Err(err).Msgf("Local manifest doesn't exist, error %v", e[0])
+				log.Ctx(ctx2).Info().Stack().Err(err).Msgf("Local manifest doesn't exist, error %v", e[0])
 			}
 			// Push manifest to localRegistry when pull with digest, or artifact not found, or digest mismatch.
 			errs := []error{}
@@ -249,7 +251,6 @@ func (c *controller) ProxyManifest(
 				if len(artInfo.Digest) == 0 {
 					artInfo.Digest = dig
 				}
-
 				err = c.waitAndPushManifest(ctx2, art, ct, man)
 				if err != nil {
 					continue
@@ -260,10 +261,9 @@ func (c *controller) ProxyManifest(
 			if e == nil || commons.IsEmpty(errs) {
 				_, _, _, err := c.localRegistry.PullManifest(ctx2, art, acceptHeader, ifNoneMatchHeader)
 				if err != nil {
-					log.Ctx(ctx2).Error().Str("goRoutine",
-						"UpdateManifest").Stack().Msgf("failed to get manifest, error %v", err)
+					log.Ctx(ctx2).Error().Stack().Msgf("failed to get manifest, error %v", err)
 				} else {
-					log.Ctx(ctx2).Info().Str("goRoutine", "UpdateManifest").Msgf(
+					log.Ctx(ctx2).Info().Msgf(
 						"Completed manifest push to localRegistry registry. Image: %s, Tag: %s, Digest: %s",
 						art.Image, art.Tag, art.Digest,
 					)
@@ -296,7 +296,7 @@ func (c *controller) ProxyBlob(
 	remoteImage := getRemoteRepo(art)
 	log.Debug().Msgf("The blob doesn't exist, proxy the request to the target server, url:%v", remoteImage)
 
-	rHelper, err := NewRemoteHelper(ctx, c.spacePathStore, c.secretService, repoKey, proxy)
+	rHelper, err := NewRemoteHelper(ctx, c.spaceFinder, c.secretService, repoKey, proxy)
 	if err != nil {
 		return 0, nil, err
 	}
@@ -316,18 +316,17 @@ func (c *controller) ProxyBlob(
 			log.Error().Stack().Err(err).Msg("failed to get auth session from context")
 			return
 		}
-		ctx2 := request.WithAuthSession(context.Background(), session)
-		ctx2 = log.Ctx(ctx2).With().
-			Str("goRoutine", "AddBlob").
-			Logger().WithContext(ctx2)
+		ctx2 := request.WithAuthSession(ctx, session)
+		ctx2 = context.WithoutCancel(ctx2)
+		ctx2 = context.WithValue(ctx2, cfg.GoRoutineKey, "AddBlob")
+		ctx2 = log.Ctx(ctx2).With().Logger().WithContext(ctx2)
 		err := c.putBlobToLocal(ctx2, art, remoteImage, repoKey, desc, rHelper)
 		if err != nil {
-			log.Ctx(ctx2).Error().Str("goRoutine",
-				"AddBlob").Stack().Err(err).Msgf("error while putting blob to localRegistry registry, %v", err)
+			log.Ctx(ctx2).Error().Stack().Err(err).
+				Msgf("error while putting blob to localRegistry registry, %v", err)
 			return
 		}
-		log.Ctx(ctx2).Info().Str("goRoutine", "AddBlob").Msgf("Successfully updated the cache for digest %s",
-			art.Digest)
+		log.Ctx(ctx2).Info().Msgf("Successfully updated the cache for digest %s", art.Digest)
 	}(art)
 	return size, bReader, nil
 }

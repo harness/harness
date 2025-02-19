@@ -445,11 +445,11 @@ func (c *APIController) mapToWebhookResponseEntity(
 	}
 	secretSpacePath := ""
 	if createdWebhook.SecretSpaceID > 0 {
-		primary, err := c.spacePathStore.FindPrimaryBySpaceID(ctx, int64(createdWebhook.SecretSpaceID))
+		primary, err := c.SpaceFinder.FindByID(ctx, int64(createdWebhook.SecretSpaceID))
 		if err != nil {
 			return nil, fmt.Errorf("failed to get secret space path: %w", err)
 		}
-		secretSpacePath = primary.Value
+		secretSpacePath = primary.Path
 	}
 	if createdWebhook.SecretIdentifier != "" {
 		webhookResponseEntity.SecretIdentifier = &createdWebhook.SecretIdentifier

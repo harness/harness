@@ -20,7 +20,7 @@ import (
 	"context"
 	"regexp"
 
-	store2 "github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	adp "github.com/harness/gitness/registry/app/remote/adapter"
 	"github.com/harness/gitness/registry/app/remote/adapter/native"
@@ -49,9 +49,9 @@ func init() {
 }
 
 func newAdapter(
-	ctx context.Context, spacePathStore store2.SpacePathStore, service secret.Service, registry types.UpstreamProxy,
+	ctx context.Context, spaceFinder refcache.SpaceFinder, service secret.Service, registry types.UpstreamProxy,
 ) (adp.Adapter, error) {
-	accessKey, secretKey, isPublic, err := getCreds(ctx, spacePathStore, service, registry)
+	accessKey, secretKey, isPublic, err := getCreds(ctx, spaceFinder, service, registry)
 	if err != nil {
 		return nil, err
 	}
@@ -73,9 +73,9 @@ func newAdapter(
 
 // Create ...
 func (f *factory) Create(
-	ctx context.Context, spacePathStore store2.SpacePathStore, record types.UpstreamProxy, service secret.Service,
+	ctx context.Context, spaceFinder refcache.SpaceFinder, record types.UpstreamProxy, service secret.Service,
 ) (adp.Adapter, error) {
-	return newAdapter(ctx, spacePathStore, service, record)
+	return newAdapter(ctx, spaceFinder, service, record)
 }
 
 type factory struct {

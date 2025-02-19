@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"time"
 
-	gas "github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/event"
 	"github.com/harness/gitness/registry/app/manifest"
@@ -58,7 +58,7 @@ type manifestService struct {
 	artifactDao             store.ArtifactRepository
 	manifestRefDao          store.ManifestReferenceRepository
 	ociImageIndexMappingDao store.OCIImageIndexMappingRepository
-	spacePathStore          gas.SpacePathStore
+	spaceFinder             refcache.SpaceFinder
 	gcService               gc.Service
 	tx                      dbtx.Transactor
 	reporter                event.Reporter
@@ -69,7 +69,7 @@ func NewManifestService(
 	blobRepo store.BlobRepository, mtRepository store.MediaTypesRepository, tagDao store.TagRepository,
 	imageDao store.ImageRepository, artifactDao store.ArtifactRepository,
 	layerDao store.LayerRepository, manifestRefDao store.ManifestReferenceRepository,
-	tx dbtx.Transactor, gcService gc.Service, reporter event.Reporter, spacePathStore gas.SpacePathStore,
+	tx dbtx.Transactor, gcService gc.Service, reporter event.Reporter, spaceFinder refcache.SpaceFinder,
 	ociImageIndexMappingDao store.OCIImageIndexMappingRepository,
 ) ManifestService {
 	return &manifestService{
@@ -85,7 +85,7 @@ func NewManifestService(
 		gcService:               gcService,
 		tx:                      tx,
 		reporter:                reporter,
-		spacePathStore:          spacePathStore,
+		spaceFinder:             spaceFinder,
 		ociImageIndexMappingDao: ociImageIndexMappingDao,
 	}
 }
@@ -279,7 +279,7 @@ func (l *manifestService) getSpacePathAndPackageType(
 	ctx context.Context,
 	dbRepo *types.Registry,
 ) (string, event.PackageType, error) {
-	spacePath, err := l.spacePathStore.FindPrimaryBySpaceID(ctx, dbRepo.ParentID)
+	spacePath, err := l.spaceFinder.FindByID(ctx, dbRepo.ParentID)
 	if err != nil {
 		log.Ctx(ctx).Err(err).Msg("Failed to find spacePath")
 		return "", event.PackageType(0), err
@@ -291,7 +291,7 @@ func (l *manifestService) getSpacePathAndPackageType(
 		return "", event.PackageType(0), err
 	}
 
-	return spacePath.Value, packageType, nil
+	return spacePath.Path, packageType, nil
 }
 
 // Reports event asynchronously.

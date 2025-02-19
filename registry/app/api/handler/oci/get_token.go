@@ -96,14 +96,14 @@ func (h *Handler) GetToken(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) getSpace(ctx context.Context, name string) (*types.Space, error) {
+func (h *Handler) getSpace(ctx context.Context, name string) (*types.SpaceCore, error) {
 	spaceRef, _, _ := paths.DisectRoot(name)
-	space, err := h.SpaceStore.FindByRef(ctx, spaceRef)
+	space, err := h.SpaceFinder.FindByRef(ctx, spaceRef)
 	return space, err
 }
 
 func (h *Handler) getAccessPermissionList(
-	ctx context.Context, space *types.Space, ra *ResourceActions, session *auth.Session,
+	ctx context.Context, space *types.SpaceCore, ra *ResourceActions, session *auth.Session,
 	accessPermissionsList []jwt.AccessPermissions,
 ) []jwt.AccessPermissions {
 	accessPermissions := &jwt.AccessPermissions{SpaceID: space.ID, Permissions: []enum.Permission{}}
@@ -118,7 +118,7 @@ func (h *Handler) getAccessPermissionList(
 			ctx,
 			h.Authorizer,
 			session,
-			space.Core(),
+			space,
 			enum.ResourceTypeRegistry,
 			permission,
 		)

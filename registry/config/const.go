@@ -14,8 +14,11 @@
 
 package config
 
+type contextKey string
+
 // const variables.
 const (
-	PostgresqlDatabase = "postgres"
-	Sqlite             = "sqlite3"
+	PostgresqlDatabase            = "postgres"
+	Sqlite                        = "sqlite3"
+	GoRoutineKey       contextKey = "goRoutine"
 )

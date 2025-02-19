@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"io"
 
-	store2 "github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/registry/app/manifest"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/types"
@@ -40,7 +40,7 @@ var registryKeys = []string{}
 // Factory creates a specific Adapter according to the params.
 type Factory interface {
 	Create(
-		ctx context.Context, spacePathStore store2.SpacePathStore, record types.UpstreamProxy, service secret.Service,
+		ctx context.Context, spaceFinder refcache.SpaceFinder, record types.UpstreamProxy, service secret.Service,
 	) (Adapter, error)
 }
 

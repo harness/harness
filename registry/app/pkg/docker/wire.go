@@ -16,6 +16,7 @@ package docker
 
 import (
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/refcache"
 	gitnessstore "github.com/harness/gitness/app/store"
 	storagedriver "github.com/harness/gitness/registry/app/driver"
 	"github.com/harness/gitness/registry/app/event"
@@ -43,6 +44,7 @@ func LocalRegistryProvider(
 	bandwidthStatDao store.BandwidthStatRepository, downloadStatDao store.DownloadStatRepository,
 	gcService gc.Service, tx dbtx.Transactor,
 ) *LocalRegistry {
+	//nolint:errcheck
 	return NewLocalRegistry(
 		app, ms, manifestDao, registryDao, registryBlobDao, blobRepo,
 		mtRepository, tagDao, imageDao, artifactDao, bandwidthStatDao, downloadStatDao, gcService, tx,
@@ -54,21 +56,22 @@ func ManifestServiceProvider(
 	manifestDao store.ManifestRepository, blobRepo store.BlobRepository, mtRepository store.MediaTypesRepository,
 	manifestRefDao store.ManifestReferenceRepository, tagDao store.TagRepository, imageDao store.ImageRepository,
 	artifactDao store.ArtifactRepository, layerDao store.LayerRepository,
-	gcService gc.Service, tx dbtx.Transactor, reporter event.Reporter, spacePathStore gitnessstore.SpacePathStore,
+	gcService gc.Service, tx dbtx.Transactor, reporter event.Reporter, spaceFinder refcache.SpaceFinder,
 	ociImageIndexMappingDao store.OCIImageIndexMappingRepository,
 ) ManifestService {
 	return NewManifestService(
 		registryDao, manifestDao, blobRepo, mtRepository, tagDao, imageDao,
-		artifactDao, layerDao, manifestRefDao, tx, gcService, reporter, spacePathStore,
+		artifactDao, layerDao, manifestRefDao, tx, gcService, reporter, spaceFinder,
 		ociImageIndexMappingDao,
 	)
 }
 
 func RemoteRegistryProvider(
 	local *LocalRegistry, app *App, upstreamProxyConfigRepo store.UpstreamProxyConfigRepository,
-	spacePathStore gitnessstore.SpacePathStore, secretService secret.Service, proxyCtrl proxy2.Controller,
+	spaceFinder refcache.SpaceFinder, secretService secret.Service, proxyCtrl proxy2.Controller,
 ) *RemoteRegistry {
-	return NewRemoteRegistry(local, app, upstreamProxyConfigRepo, spacePathStore, secretService,
+	//nolint:errcheck
+	return NewRemoteRegistry(local, app, upstreamProxyConfigRepo, spaceFinder, secretService,
 		proxyCtrl).(*RemoteRegistry)
 }
 
@@ -103,10 +106,10 @@ func ProvideReporter() event.Reporter {
 
 func ProvideProxyController(
 	registry *LocalRegistry, ms ManifestService, secretService secret.Service,
-	spacePathStore gitnessstore.SpacePathStore,
+	spaceFinder refcache.SpaceFinder,
 ) proxy2.Controller {
 	manifestCacheHandler := getManifestCacheHandler(registry, ms)
-	return proxy2.NewProxyController(registry, ms, secretService, spacePathStore, manifestCacheHandler)
+	return proxy2.NewProxyController(registry, ms, secretService, spaceFinder, manifestCacheHandler)
 }
 
 func getManifestCacheHandler(

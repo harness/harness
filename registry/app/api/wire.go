@@ -18,6 +18,7 @@ import (
 	usercontroller "github.com/harness/gitness/app/api/controller/user"
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/refcache"
 	corestore "github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/api/handler/generic"
@@ -71,12 +72,13 @@ func BlobStorageProvider(c *types.Config) (storagedriver.StorageDriver, error) {
 }
 
 func NewHandlerProvider(
-	controller *docker.Controller, spaceStore corestore.SpaceStore,
+	controller *docker.Controller, spaceFinder refcache.SpaceFinder, spaceStore corestore.SpaceStore,
 	tokenStore corestore.TokenStore, userCtrl *usercontroller.Controller, authenticator authn.Authenticator,
 	urlProvider urlprovider.Provider, authorizer authz.Authorizer, config *types.Config,
 ) *ocihandler.Handler {
 	return ocihandler.NewHandler(
 		controller,
+		spaceFinder,
 		spaceStore,
 		tokenStore,
 		userCtrl,
