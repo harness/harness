@@ -35,6 +35,7 @@ type (
 	Protection interface {
 		MergeVerifier
 		RefChangeVerifier
+		CreatePullReqVerifier
 		UserIDs() ([]int64, error)
 		UserGroupIDs() ([]int64, error)
 	}

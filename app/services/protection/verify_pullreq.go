@@ -71,12 +71,33 @@ type (
 		RequiredIdentifiers   map[string]struct{}
 		BypassableIdentifiers map[string]struct{}
 	}
+
+	CreatePullReqVerifier interface {
+		CreatePullReqVerify(
+			ctx context.Context,
+			in CreatePullReqVerifyInput,
+		) (CreatePullReqVerifyOutput, []types.RuleViolations, error)
+	}
+
+	CreatePullReqVerifyInput struct {
+		ResolveUserGroupID func(ctx context.Context, userGroupIDs []int64) ([]int64, error)
+		Actor              *types.Principal
+		AllowBypass        bool
+		IsRepoOwner        bool
+		DefaultBranch      string
+		TargetBranch       string
+	}
+
+	CreatePullReqVerifyOutput struct {
+		RequestCodeOwners bool
+	}
 )
 
-// ensures that the DefPullReq type implements Sanitizer and MergeVerifier interface.
+// Ensures that the DefPullReq type implements Sanitizer, MergeVerifier and CreatePullReqVerifier interface.
 var (
-	_ Sanitizer     = (*DefPullReq)(nil)
-	_ MergeVerifier = (*DefPullReq)(nil)
+	_ Sanitizer             = (*DefPullReq)(nil)
+	_ MergeVerifier         = (*DefPullReq)(nil)
+	_ CreatePullReqVerifier = (*DefPullReq)(nil)
 )
 
 const (
@@ -271,6 +292,15 @@ func (v *DefPullReq) RequiredChecks(
 	}, nil
 }
 
+func (v *DefPullReq) CreatePullReqVerify(
+	context.Context,
+	CreatePullReqVerifyInput,
+) (CreatePullReqVerifyOutput, []types.RuleViolations, error) {
+	return CreatePullReqVerifyOutput{
+		RequestCodeOwners: v.Reviewers.RequestCodeOwners,
+	}, nil, nil
+}
+
 type DefApprovals struct {
 	RequireCodeOwners      bool `json:"require_code_owners,omitempty"`
 	RequireMinimumCount    int  `json:"require_minimum_count,omitempty"`
@@ -370,6 +400,10 @@ func (v *DefMerge) Sanitize() error {
 	return nil
 }
 
+type DefReviewers struct {
+	RequestCodeOwners bool `json:"request_code_owners,omitempty"`
+}
+
 type DefPush struct {
 	Block bool `json:"block,omitempty"`
 }
@@ -383,6 +417,7 @@ type DefPullReq struct {
 	Comments     DefComments     `json:"comments"`
 	StatusChecks DefStatusChecks `json:"status_checks"`
 	Merge        DefMerge        `json:"merge"`
+	Reviewers    DefReviewers    `json:"reviewers"`
 }
 
 func (v *DefPullReq) Sanitize() error {

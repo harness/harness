@@ -33,6 +33,7 @@ type Branch struct {
 var (
 	// ensures that the Branch type implements Definition interface.
 	_ Definition = (*Branch)(nil)
+	_ Protection = (*Branch)(nil)
 )
 
 func (v *Branch) MergeVerify(
@@ -83,6 +84,27 @@ func (v *Branch) RequiredChecks(
 		RequiredIdentifiers:   requiredIDs,
 		BypassableIdentifiers: bypassableIDs,
 	}, nil
+}
+
+func (v *Branch) CreatePullReqVerify(
+	ctx context.Context,
+	in CreatePullReqVerifyInput,
+) (CreatePullReqVerifyOutput, []types.RuleViolations, error) {
+	var out CreatePullReqVerifyOutput
+
+	out, violations, err := v.PullReq.CreatePullReqVerify(ctx, in)
+	if err != nil {
+		return CreatePullReqVerifyOutput{}, nil, err
+	}
+
+	bypassable := v.Bypass.matches(ctx, in.Actor, in.IsRepoOwner, in.ResolveUserGroupID)
+	bypassed := in.AllowBypass && bypassable
+	for i := range violations {
+		violations[i].Bypassable = bypassable
+		violations[i].Bypassed = bypassed
+	}
+
+	return out, violations, nil
 }
 
 func (v *Branch) RefChangeVerify(

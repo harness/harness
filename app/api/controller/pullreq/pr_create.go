@@ -28,6 +28,7 @@ import (
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/app/services/instrument"
 	labelsvc "github.com/harness/gitness/app/services/label"
+	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
 	gitenum "github.com/harness/gitness/git/enum"
@@ -51,6 +52,8 @@ type CreateInput struct {
 	ReviewerIDs []int64 `json:"reviewer_ids"`
 
 	Labels []*types.PullReqLabelAssignInput `json:"labels"`
+
+	BypassRules bool `json:"bypass_rules"`
 }
 
 func (in *CreateInput) Sanitize() error {
@@ -110,7 +113,9 @@ func (c *Controller) Create(
 		return nil, err
 	}
 
-	targetWriteParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, targetRepo)
+	targetWriteParams, err := controller.CreateRPCInternalWriteParams(
+		ctx, c.urlProvider, session, targetRepo,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}
@@ -147,9 +152,22 @@ func (c *Controller) Create(
 
 	var reviewers []*types.PullReqReviewer
 
-	reviewerInput, err := c.prepareReviewers(ctx, session, in.ReviewerIDs, targetRepo)
+	reviewerInputEmailMap, err := c.prepareReviewers(ctx, session, in.ReviewerIDs, targetRepo)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to prepare reviewers: %w", err)
+	}
+
+	codeowners, err := c.prepareCodeowners(
+		ctx, session, targetRepo, in, mergeBaseSHA.String(), sourceSHA.String(),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to prepare codeowners: %w", err)
+	}
+
+	for _, codeowner := range codeowners {
+		if _, ok := reviewerInputEmailMap[codeowner.Email]; !ok {
+			reviewerInputEmailMap[codeowner.Email] = codeowner
+		}
 	}
 
 	var labelAssignOuts []*labelsvc.AssignToPullReqOut
@@ -201,7 +219,7 @@ func (c *Controller) Create(
 
 		// Create reviewers and assign labels
 
-		reviewers, err = c.createReviewers(ctx, session, reviewerInput, targetRepo, pr)
+		reviewers, err = c.createReviewers(ctx, session, reviewerInputEmailMap, targetRepo, pr)
 		if err != nil {
 			return err
 		}
@@ -268,14 +286,14 @@ func (c *Controller) prepareReviewers(
 	session *auth.Session,
 	reviewers []int64,
 	repo *types.RepositoryCore,
-) ([]*types.Principal, error) {
+) (map[string]*types.Principal, error) {
 	if len(reviewers) == 0 {
-		return []*types.Principal{}, nil
+		return map[string]*types.Principal{}, nil
 	}
 
-	principals := make([]*types.Principal, len(reviewers))
+	principalEmailMap := make(map[string]*types.Principal, len(reviewers))
 
-	for i, id := range reviewers {
+	for _, id := range reviewers {
 		if id == session.Principal.ID {
 			return nil, usererror.BadRequest("PR creator cannot be added as a reviewer.")
 		}
@@ -305,7 +323,55 @@ func (c *Controller) prepareReviewers(
 				"reviewer principal %s access error: %w", reviewerPrincipal.UID, err)
 		}
 
-		principals[i] = reviewerPrincipal
+		principalEmailMap[reviewerPrincipal.Email] = reviewerPrincipal
+	}
+
+	return principalEmailMap, nil
+}
+
+func (c *Controller) prepareCodeowners(
+	ctx context.Context,
+	session *auth.Session,
+	targetRepo *types.RepositoryCore,
+	in *CreateInput,
+	mergeBaseSHA string,
+	sourceSHA string,
+) ([]*types.Principal, error) {
+	rules, isRepoOwner, err := c.fetchRules(ctx, session, targetRepo)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch protection rules: %w", err)
+	}
+
+	out, _, err := rules.CreatePullReqVerify(ctx, protection.CreatePullReqVerifyInput{
+		ResolveUserGroupID: c.userGroupService.ListUserIDsByGroupIDs,
+		Actor:              &session.Principal,
+		AllowBypass:        in.BypassRules,
+		IsRepoOwner:        isRepoOwner,
+		DefaultBranch:      targetRepo.DefaultBranch,
+		TargetBranch:       in.TargetBranch,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to verify protection rules: %w", err)
+	}
+
+	if !out.RequestCodeOwners {
+		return []*types.Principal{}, nil
+	}
+
+	codeowners, err := c.codeOwners.GetApplicableCodeOwners(
+		ctx, targetRepo, in.TargetBranch, mergeBaseSHA, sourceSHA,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get applicable code owners: %w", err)
+	}
+
+	var emails []string
+	for _, entry := range codeowners.Entries {
+		emails = append(emails, entry.Owners...)
+	}
+	principals, err := c.principalStore.FindManyByEmail(ctx, emails)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find many principals by email: %w", err)
 	}
 
 	return principals, nil
@@ -314,7 +380,7 @@ func (c *Controller) prepareReviewers(
 func (c *Controller) createReviewers(
 	ctx context.Context,
 	session *auth.Session,
-	principals []*types.Principal,
+	principals map[string]*types.Principal,
 	repo *types.RepositoryCore,
 	pr *types.PullReq,
 ) ([]*types.PullReqReviewer, error) {
@@ -324,7 +390,8 @@ func (c *Controller) createReviewers(
 
 	reviewers := make([]*types.PullReqReviewer, len(principals))
 
-	for i, principal := range principals {
+	var i int
+	for _, principal := range principals {
 		reviewer := newPullReqReviewer(
 			session, pr, repo,
 			principal.ToPrincipalInfo(),
@@ -340,6 +407,7 @@ func (c *Controller) createReviewers(
 		}
 
 		reviewers[i] = reviewer
+		i++
 	}
 
 	return reviewers, nil

@@ -356,20 +356,22 @@ func (s *Service) getCodeOwnerFileNode(
 	return nil, fmt.Errorf("no codeowner file found: %w", ErrNotFound)
 }
 
-func (s *Service) getApplicableCodeOwnersForPR(
+func (s *Service) GetApplicableCodeOwners(
 	ctx context.Context,
 	repo *types.RepositoryCore,
-	pr *types.PullReq,
+	targetBranch string,
+	baseRef string,
+	headRef string,
 ) (*CodeOwners, error) {
-	codeOwners, err := s.get(ctx, repo, pr.TargetBranch)
+	codeOwners, err := s.get(ctx, repo, targetBranch)
 	if err != nil {
 		return nil, err
 	}
 
 	diffFileStats, err := s.git.DiffFileNames(ctx, &git.DiffParams{
 		ReadParams: git.CreateReadParams(repo),
-		BaseRef:    pr.MergeBaseSHA,
-		HeadRef:    pr.SourceSHA,
+		BaseRef:    baseRef, // MergeBaseSHA,
+		HeadRef:    headRef, // SourceSHA,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get diff file stat: %w", err)
@@ -415,7 +417,9 @@ func (s *Service) Evaluate(
 	pr *types.PullReq,
 	reviewers []*types.PullReqReviewer,
 ) (*Evaluation, error) {
-	owners, err := s.getApplicableCodeOwnersForPR(ctx, repo, pr)
+	owners, err := s.GetApplicableCodeOwners(
+		ctx, repo, pr.TargetBranch, pr.MergeBaseSHA, pr.SourceSHA,
+	)
 	if err != nil {
 		return &Evaluation{}, fmt.Errorf("failed to get codeOwners: %w", err)
 	}

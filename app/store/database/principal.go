@@ -162,6 +162,35 @@ func (s *PrincipalStore) FindByEmail(ctx context.Context, email string) (*types.
 	return s.mapDBPrincipal(dst), nil
 }
 
+func (s *PrincipalStore) FindManyByEmail(
+	ctx context.Context,
+	emails []string,
+) ([]*types.Principal, error) {
+	lowerCaseEmails := make([]string, len(emails))
+	for i := range emails {
+		lowerCaseEmails[i] = strings.ToLower(emails[i])
+	}
+
+	stmt := database.Builder.
+		Select(principalColumns).
+		From("principals").
+		Where(squirrel.Eq{"principal_email": lowerCaseEmails})
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	sqlQuery, params, err := stmt.ToSql()
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "failed to generate find many principal query")
+	}
+
+	dst := []*principal{}
+	if err := db.SelectContext(ctx, &dst, sqlQuery, params...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "find many by email for principal query failed")
+	}
+
+	return s.mapDBPrincipals(dst), nil
+}
+
 // List lists the principals matching the provided filter.
 func (s *PrincipalStore) List(ctx context.Context,
 	opts *types.PrincipalFilter) ([]*types.Principal, error) {

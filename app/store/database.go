@@ -44,6 +44,9 @@ type (
 		// FindByEmail finds the principal by email.
 		FindByEmail(ctx context.Context, email string) (*types.Principal, error)
 
+		// FindManyByEmail finds all principals for the provided emails.
+		FindManyByEmail(ctx context.Context, emails []string) ([]*types.Principal, error)
+
 		/*
 		 * USER RELATED OPERATIONS.
 		 */

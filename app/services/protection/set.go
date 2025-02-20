@@ -104,6 +104,33 @@ func (s ruleSet) RequiredChecks(
 	}, nil
 }
 
+func (s ruleSet) CreatePullReqVerify(
+	ctx context.Context,
+	in CreatePullReqVerifyInput,
+) (CreatePullReqVerifyOutput, []types.RuleViolations, error) {
+	var out CreatePullReqVerifyOutput
+	var violations []types.RuleViolations
+
+	err := s.forEachRuleMatchBranch(in.DefaultBranch, in.TargetBranch,
+		func(r *types.RuleInfoInternal, p Protection) error {
+			rOut, rVs, err := p.CreatePullReqVerify(ctx, in)
+			if err != nil {
+				return err
+			}
+
+			// combine output across rules
+			violations = append(violations, backFillRule(rVs, r.RuleInfo)...)
+			out.RequestCodeOwners = out.RequestCodeOwners || rOut.RequestCodeOwners
+
+			return nil
+		})
+	if err != nil {
+		return out, nil, fmt.Errorf("failed to process each rule in ruleSet: %w", err)
+	}
+
+	return out, violations, nil
+}
+
 func (s ruleSet) RefChangeVerify(ctx context.Context, in RefChangeVerifyInput) ([]types.RuleViolations, error) {
 	var violations []types.RuleViolations
 
