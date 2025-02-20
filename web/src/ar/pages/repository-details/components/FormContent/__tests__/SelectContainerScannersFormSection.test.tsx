@@ -15,7 +15,7 @@
  */
 
 import React from 'react'
-import { getByText, queryByText, render } from '@testing-library/react'
+import { queryByText, render } from '@testing-library/react'
 
 import { RepositoryPackageType } from '@ar/common/types'
 import ArTestWrapper from '@ar/utils/testUtils/ArTestWrapper'
@@ -44,7 +44,6 @@ describe('verify SelectContainerScannersFormSection', () => {
       </ArTestWrapper>
     )
 
-    expect(getByText(container, 'repositoryDetails.repositoryForm.securityScan.title')).toBeInTheDocument()
     const checkboxes = container.querySelectorAll('label.bp3-control.bp3-checkbox')
     const supportedScanners =
       repositoryFactory.getRepositoryType(RepositoryPackageType.DOCKER)?.getSupportedScanners() || []

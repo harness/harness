@@ -223,8 +223,8 @@ describe('Verify configuration form', () => {
     })
 
     // Security scan section
-    const securityScanSection = queryByTestId(container, 'security-scan-section')
-    expect(securityScanSection).not.toBeInTheDocument()
+    const securityScanSection = queryByTestId(container, 'security-section')
+    expect(securityScanSection).toBeInTheDocument()
 
     // upstream proxy section
     const upstreamProxySection = queryByTestId(container, 'upstream-proxy-section')
@@ -245,6 +245,10 @@ describe('Verify configuration form', () => {
     blockedPatterns.forEach((each, idx) => {
       expect(each).toHaveTextContent(MockGetGenericRegistryResponseWithAllData.content.data.blockedPattern[idx])
     })
+
+    const advancedOptionTitle = getByText(container, 'repositoryDetails.repositoryForm.advancedOptionsTitle')
+    expect(advancedOptionTitle).toBeInTheDocument()
+    await userEvent.click(advancedOptionTitle)
 
     // cleanup policy section
     const cleanupPoliciesSection = getByTestId(container, 'cleanup-policy-section')

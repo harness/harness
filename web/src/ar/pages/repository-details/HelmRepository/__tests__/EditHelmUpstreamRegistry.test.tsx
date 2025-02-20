@@ -16,7 +16,7 @@
 
 import React from 'react'
 import userEvent from '@testing-library/user-event'
-import { fireEvent, getByTestId, queryByTestId, render, waitFor } from '@testing-library/react'
+import { fireEvent, getByTestId, getByText, queryByTestId, render, waitFor } from '@testing-library/react'
 
 import { Parent } from '@ar/common/types'
 import { DEFAULT_DATE_TIME_FORMAT } from '@ar/constants'
@@ -227,8 +227,8 @@ describe('Verify configuration form', () => {
     expect(authTypeSelection).not.toBeDisabled()
 
     // Security scan section
-    const securityScanSection = queryByTestId(container, 'security-scan-section')
-    expect(securityScanSection).not.toBeInTheDocument()
+    const securityScanSection = queryByTestId(container, 'security-section')
+    expect(securityScanSection).toBeInTheDocument()
 
     // artifact filtering rules
     const filteringRulesSection = getByTestId(container, 'include-exclude-patterns-section')
@@ -241,6 +241,10 @@ describe('Verify configuration form', () => {
         MockGetHelmUpstreamRegistryResponseWithCustomSourceAllData.content.data.allowedPattern[idx]
       )
     })
+
+    const advancedOptionTitle = getByText(container, 'repositoryDetails.repositoryForm.advancedOptionsTitle')
+    expect(advancedOptionTitle).toBeInTheDocument()
+    await userEvent.click(advancedOptionTitle)
 
     // cleanup policy section
     const cleanupPoliciesSection = getByTestId(container, 'cleanup-policy-section')

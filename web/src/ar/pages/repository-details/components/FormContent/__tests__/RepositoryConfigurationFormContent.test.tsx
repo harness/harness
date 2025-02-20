@@ -62,16 +62,16 @@ describe('Verify repository configuration form content', () => {
     expect(nameField).toHaveAttribute('value', MockGetDockerRegistryResponseWithMinimumData.content.data.identifier)
 
     // Security scan section
-    const securityScanSection = queryByTestId(container, 'security-scan-section')
+    const securityScanSection = queryByTestId(container, 'security-section')
     expect(securityScanSection).toBeInTheDocument()
+
+    // artifact filtering rules
+    const filteringRulesSection = queryByTestId(container, 'include-exclude-patterns-section')
+    expect(filteringRulesSection).toBeInTheDocument()
 
     // upstream proxy section
     const upstreamProxySection = queryByTestId(container, 'upstream-proxy-section')
     expect(upstreamProxySection).not.toBeInTheDocument()
-
-    // artifact filtering rules
-    const filteringRulesSection = queryByTestId(container, 'include-exclude-patterns-section')
-    expect(filteringRulesSection).not.toBeInTheDocument()
 
     // cleanup policy section
     const cleanupPoliciesSection = queryByTestId(container, 'cleanup-policy-section')
@@ -97,16 +97,16 @@ describe('Verify repository configuration form content', () => {
     )
 
     // Security scan section
-    const securityScanSection = queryByTestId(container, 'security-scan-section')
+    const securityScanSection = queryByTestId(container, 'security-section')
     expect(securityScanSection).not.toBeInTheDocument()
-
-    // upstream proxy section
-    const upstreamProxySection = queryByTestId(container, 'upstream-proxy-section')
-    expect(upstreamProxySection).toBeInTheDocument()
 
     // artifact filtering rules
     const filteringRulesSection = queryByTestId(container, 'include-exclude-patterns-section')
     expect(filteringRulesSection).not.toBeInTheDocument()
+
+    // upstream proxy section
+    const upstreamProxySection = queryByTestId(container, 'upstream-proxy-section')
+    expect(upstreamProxySection).toBeInTheDocument()
 
     // cleanup policy section
     const cleanupPoliciesSection = queryByTestId(container, 'cleanup-policy-section')

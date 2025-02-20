@@ -16,7 +16,7 @@
 
 import React from 'react'
 import userEvent from '@testing-library/user-event'
-import { fireEvent, getByTestId, render, waitFor } from '@testing-library/react'
+import { fireEvent, getByTestId, getByText, render, waitFor } from '@testing-library/react'
 
 import { DEFAULT_DATE_TIME_FORMAT } from '@ar/constants'
 import { getReadableDateTime } from '@ar/common/dateUtils'
@@ -228,7 +228,7 @@ describe('Verify configuration form', () => {
     expect(authTypeSelection).not.toBeDisabled()
 
     // Security scan section
-    const securityScanSection = getByTestId(container, 'security-scan-section')
+    const securityScanSection = getByTestId(container, 'security-section')
     expect(securityScanSection).toBeInTheDocument()
 
     const checkboxes = securityScanSection.querySelectorAll('label.bp3-control.bp3-checkbox')
@@ -253,6 +253,10 @@ describe('Verify configuration form', () => {
         MockGetDockerUpstreamRegistryResponseWithDockerhubSourceAllData.content.data.blockedPattern[idx]
       )
     })
+
+    const advancedOptionTitle = getByText(container, 'repositoryDetails.repositoryForm.advancedOptionsTitle')
+    expect(advancedOptionTitle).toBeInTheDocument()
+    await userEvent.click(advancedOptionTitle)
 
     // cleanup policy section
     const cleanupPoliciesSection = getByTestId(container, 'cleanup-policy-section')

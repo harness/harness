@@ -223,16 +223,8 @@ describe('Verify configuration form', () => {
     })
 
     // Security scan section
-    const securityScanSection = queryByTestId(container, 'security-scan-section')
-    expect(securityScanSection).not.toBeInTheDocument()
-
-    // upstream proxy section
-    const upstreamProxySection = getByTestId(container, 'upstream-proxy-section')
-    expect(upstreamProxySection).toBeInTheDocument()
-    const selectedItemList = upstreamProxySection.querySelectorAll('ul[aria-label=orderable-list] .bp3-menu-item')
-    selectedItemList.forEach((each, idx) => {
-      expect(each).toHaveTextContent(MockGetMavenRegistryResponseWithAllData.content.data.config.upstreamProxies[idx])
-    })
+    const securityScanSection = queryByTestId(container, 'security-section')
+    expect(securityScanSection).toBeInTheDocument()
 
     // artifact filtering rules
     const filteringRulesSection = getByTestId(container, 'include-exclude-patterns-section')
@@ -248,6 +240,14 @@ describe('Verify configuration form', () => {
     const blockedPatterns = blockedPatternsSection.querySelectorAll('div.bp3-tag-input-values .bp3-tag')
     blockedPatterns.forEach((each, idx) => {
       expect(each).toHaveTextContent(MockGetMavenRegistryResponseWithAllData.content.data.blockedPattern[idx])
+    })
+
+    // upstream proxy section
+    const upstreamProxySection = getByTestId(container, 'upstream-proxy-section')
+    expect(upstreamProxySection).toBeInTheDocument()
+    const selectedItemList = upstreamProxySection.querySelectorAll('ul[aria-label=orderable-list] .bp3-menu-item')
+    selectedItemList.forEach((each, idx) => {
+      expect(each).toHaveTextContent(MockGetMavenRegistryResponseWithAllData.content.data.config.upstreamProxies[idx])
     })
 
     // cleanup policy section

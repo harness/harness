@@ -59,10 +59,8 @@ function RepositoryConfigurationFormContent(
 
   function getInitialStateOfCollapse(): boolean {
     const isUpstreamProxiesSelected = !!values.config?.upstreamProxies?.length
-    const isIncludesPatternAdded = !!values.allowedPattern?.length
-    const isExcludesPatternAdded = !!values.allowedPattern?.length
     const isCleanupPoliciesAdded = !!values.cleanupPolicy?.length
-    return isUpstreamProxiesSelected || isIncludesPatternAdded || isExcludesPatternAdded || isCleanupPoliciesAdded
+    return isUpstreamProxiesSelected || isCleanupPoliciesAdded
   }
 
   const shouldShowAdvancedConfig = () => {
@@ -83,7 +81,16 @@ function RepositoryConfigurationFormContent(
         <RepositoryDetailsFormContent isEdit readonly={readonly} />
       </Card>
       {parent === Parent.Enterprise && (
-        <SelectContainerScannersFormSection packageType={packageType as RepositoryPackageType} />
+        <Container className={css.marginTopLarge} data-testid="security-section">
+          <Text className={css.cardHeading} font={{ variation: FontVariation.CARD_TITLE }}>
+            {getString('repositoryDetails.repositoryForm.securityScan.title')}
+          </Text>
+          <Card className={classNames(css.cardContainer, css.marginTopLarge)}>
+            <SelectContainerScannersFormSection packageType={packageType as RepositoryPackageType} />
+            <Separator />
+            <RepositoryIncludeExcludePatternFormContent isEdit disabled={readonly} />
+          </Card>
+        </Container>
       )}
       {shouldShowAdvancedConfig() && (
         <CollapseContainer
@@ -109,8 +116,6 @@ function RepositoryConfigurationFormContent(
             )}
             {parent === Parent.Enterprise && (
               <>
-                <Separator />
-                <RepositoryIncludeExcludePatternFormContent isEdit disabled={readonly} />
                 <Separator />
                 <Container className={css.upstreamProxiesContainer}>
                   <RepositoryCleanupPoliciesFormContent isEdit disabled />

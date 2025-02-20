@@ -56,10 +56,8 @@ export default function UpstreamProxyConfigurationFormContent(
   }, [dirty])
 
   function getInitialStateOfCollapse(): boolean {
-    const isIncludesPatternAdded = !!values.allowedPattern?.length
-    const isExcludesPatternAdded = !!values.blockedPattern?.length
     const isCleanupPoliciesAdded = !!values.cleanupPolicy?.length
-    return isIncludesPatternAdded || isExcludesPatternAdded || isCleanupPoliciesAdded
+    return isCleanupPoliciesAdded
   }
 
   return (
@@ -77,15 +75,22 @@ export default function UpstreamProxyConfigurationFormContent(
       </Card>
       {parent === Parent.Enterprise && (
         <>
-          <SelectContainerScannersFormSection packageType={values.packageType as RepositoryPackageType} />
+          <Container className={css.marginTopLarge} data-testid="security-section">
+            <Text className={css.cardHeading} font={{ variation: FontVariation.CARD_TITLE }}>
+              {getString('repositoryDetails.repositoryForm.securityScan.title')}
+            </Text>
+            <Card className={classNames(css.cardContainer, css.marginTopLarge)}>
+              <SelectContainerScannersFormSection packageType={values.packageType as RepositoryPackageType} />
+              <Separator />
+              <UpstreamProxyIncludeExcludePatternFormContent formikProps={formikProps} isEdit readonly={readonly} />
+            </Card>
+          </Container>
           <CollapseContainer
             className={css.marginTopLarge}
             title={getString('repositoryDetails.repositoryForm.advancedOptionsTitle')}
             subTitle={getString('upstreamProxyDetails.editForm.enterpriseAdvancedOptionsSubTitle')}
             initialState={isCollapsedAdvancedConfig}>
             <Card className={classNames(css.cardContainer)}>
-              <UpstreamProxyIncludeExcludePatternFormContent formikProps={formikProps} isEdit readonly={readonly} />
-              <Separator />
               <Container className={css.cleanupPoliciesContainer}>
                 <UpstreamProxyCleanupPoliciesFormContent formikProps={formikProps} isEdit disabled />
               </Container>

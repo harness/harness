@@ -10,8 +10,8 @@ repositoryForm:
   newEnvironment: New Environment
   advancedOptionsTitle: Advanced (Optional)
   ossAdvancedOptionsSubTitle: Configure Upstream Proxies.
-  enterpriseAdvancedOptionsSubTitle: Configure Upstream Proxies, Artifact Filtering rules and Cleanup policies for the Artifact Registry.
-  enterpriseAdvancedWithoutUpstreamOptionsSubTitle: Configure Artifact Filtering rules and Cleanup policies for the Artifact Registry.
+  enterpriseAdvancedOptionsSubTitle: Configure Upstream Proxies and Cleanup policies for the Artifact Registry.
+  enterpriseAdvancedWithoutUpstreamOptionsSubTitle: Configure Cleanup policies for the Artifact Registry.
   includeExcludePatternsTitle: Artifact Filtering Rules
   includeExcludePatternsSubTitle: Define patterns to control which artifacts are allowed or blocked in this registry.
   addPatterns: Specify Allowed Patterns
@@ -31,7 +31,7 @@ repositoryForm:
   repositoryUpdated: Registry updated successfully
   repositoryDeleted: Registry deleted successfully
   securityScan:
-    title: Security Scan
+    title: Security
     containerScannerSelect:
       cardTitle: Built-in Container Scanners
       cardSubTitle: Container scanners detect vulnerabilities in your container images. Select scanner(s) below to add them in your pipeline.

@@ -226,8 +226,24 @@ describe('Verify configuration form', () => {
     })
 
     // Security scan section
-    const securityScanSection = getByTestId(container, 'security-scan-section')
+    const securityScanSection = getByTestId(container, 'security-section')
     expect(securityScanSection).toBeInTheDocument()
+
+    // artifact filtering rules
+    const filteringRulesSection = getByTestId(container, 'include-exclude-patterns-section')
+    expect(filteringRulesSection).toBeInTheDocument()
+
+    const allowedPatternsSection = filteringRulesSection.querySelectorAll('div.bp3-form-group')[0]
+    const allowedPatterns = allowedPatternsSection.querySelectorAll('div.bp3-tag-input-values .bp3-tag')
+    allowedPatterns.forEach((each, idx) => {
+      expect(each).toHaveTextContent(MockGetDockerRegistryResponseWithAllData.content.data.allowedPattern[idx])
+    })
+
+    const blockedPatternsSection = filteringRulesSection.querySelectorAll('div.bp3-form-group')[1]
+    const blockedPatterns = blockedPatternsSection.querySelectorAll('div.bp3-tag-input-values .bp3-tag')
+    blockedPatterns.forEach((each, idx) => {
+      expect(each).toHaveTextContent(MockGetDockerRegistryResponseWithAllData.content.data.blockedPattern[idx])
+    })
 
     const checkboxes = securityScanSection.querySelectorAll('label.bp3-control.bp3-checkbox')
     const supportedScanners =
@@ -246,22 +262,6 @@ describe('Verify configuration form', () => {
     const selectedItemList = upstreamProxySection.querySelectorAll('ul[aria-label=orderable-list] .bp3-menu-item')
     selectedItemList.forEach((each, idx) => {
       expect(each).toHaveTextContent(MockGetDockerRegistryResponseWithAllData.content.data.config.upstreamProxies[idx])
-    })
-
-    // artifact filtering rules
-    const filteringRulesSection = getByTestId(container, 'include-exclude-patterns-section')
-    expect(filteringRulesSection).toBeInTheDocument()
-
-    const allowedPatternsSection = filteringRulesSection.querySelectorAll('div.bp3-form-group')[0]
-    const allowedPatterns = allowedPatternsSection.querySelectorAll('div.bp3-tag-input-values .bp3-tag')
-    allowedPatterns.forEach((each, idx) => {
-      expect(each).toHaveTextContent(MockGetDockerRegistryResponseWithAllData.content.data.allowedPattern[idx])
-    })
-
-    const blockedPatternsSection = filteringRulesSection.querySelectorAll('div.bp3-form-group')[1]
-    const blockedPatterns = blockedPatternsSection.querySelectorAll('div.bp3-tag-input-values .bp3-tag')
-    blockedPatterns.forEach((each, idx) => {
-      expect(each).toHaveTextContent(MockGetDockerRegistryResponseWithAllData.content.data.blockedPattern[idx])
     })
 
     // cleanup policy section

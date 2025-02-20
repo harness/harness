@@ -15,9 +15,6 @@
  */
 
 import React, { useMemo } from 'react'
-import classNames from 'classnames'
-import { FontVariation } from '@harnessio/design-system'
-import { Card, Container, Text } from '@harnessio/uicore'
 
 import { useStrings } from '@ar/frameworks/strings'
 import type { RepositoryPackageType } from '@ar/common/types'
@@ -25,8 +22,6 @@ import repositoryFactory from '@ar/frameworks/RepositoryStep/RepositoryFactory'
 
 import { ContainerScannerConfig } from '../../constants'
 import SelectScannerFormSection from './SelectScannerFormSection'
-
-import css from './FormContent.module.scss'
 
 interface SelectContainerScannersFormSectionProps {
   packageType: RepositoryPackageType
@@ -48,22 +43,13 @@ export default function SelectContainerScannersFormSection(
   if (!availableScannerOptions.length) return <></>
 
   return (
-    <Container data-testid="security-scan-section">
-      <Container className={css.marginTopLarge}>
-        <Text className={css.cardHeading} font={{ variation: FontVariation.CARD_TITLE }}>
-          {getString('repositoryDetails.repositoryForm.securityScan.title')}
-        </Text>
-      </Container>
-      <Card className={classNames(css.cardContainer, css.marginTopLarge)}>
-        <SelectScannerFormSection
-          title={getString('repositoryDetails.repositoryForm.securityScan.containerScannerSelect.cardTitle')}
-          subTitle={getString('repositoryDetails.repositoryForm.securityScan.containerScannerSelect.cardSubTitle')}
-          packageType={packageType as RepositoryPackageType}
-          options={availableScannerOptions}
-          isEdit
-          readonly
-        />
-      </Card>
-    </Container>
+    <SelectScannerFormSection
+      title={getString('repositoryDetails.repositoryForm.securityScan.containerScannerSelect.cardTitle')}
+      subTitle={getString('repositoryDetails.repositoryForm.securityScan.containerScannerSelect.cardSubTitle')}
+      packageType={packageType as RepositoryPackageType}
+      options={availableScannerOptions}
+      isEdit
+      readonly
+    />
   )
 }

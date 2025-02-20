@@ -27,7 +27,7 @@ createForm:
 editForm:
   title: Update Upstream Proxy
   update: '{{ $.upstreamProxyDetails.editForm.title }}'
-  enterpriseAdvancedOptionsSubTitle: Configure Artifact Filtering rules and Cleanup policies for the Artifact Registry.
+  enterpriseAdvancedOptionsSubTitle: Configure Cleanup policies for the Artifact Registry.
 actions:
   delete:
     title: Delete Upstream Registry
