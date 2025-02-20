@@ -186,9 +186,11 @@ func (i infraProviderConfigStore) mapToInfraProviderConfig(
 	in *infraProviderConfig,
 ) (*types.InfraProviderConfig, error) {
 	metadataMap := make(map[string]any)
-	marshalErr := json.Unmarshal(in.Metadata, &metadataMap)
-	if marshalErr != nil {
-		return nil, marshalErr
+	if len(in.Metadata) > 0 {
+		marshalErr := json.Unmarshal(in.Metadata, &metadataMap)
+		if marshalErr != nil {
+			return nil, marshalErr
+		}
 	}
 	infraProviderConfigEntity := &types.InfraProviderConfig{
 		ID:         in.ID,

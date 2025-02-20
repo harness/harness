@@ -208,9 +208,11 @@ func (s infraProviderResourceStore) Create(
 
 func mapToInfraProviderResource(in *infraProviderResource) (*types.InfraProviderResource, error) {
 	metadataParamsMap := make(map[string]string)
-	marshalErr := json.Unmarshal(in.Metadata, &metadataParamsMap)
-	if marshalErr != nil {
-		return nil, marshalErr
+	if len(in.Metadata) > 0 {
+		marshalErr := json.Unmarshal(in.Metadata, &metadataParamsMap)
+		if marshalErr != nil {
+			return nil, marshalErr
+		}
 	}
 	return &types.InfraProviderResource{
 		UID:                   in.Identifier,
