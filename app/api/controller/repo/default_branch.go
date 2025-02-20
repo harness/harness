@@ -72,10 +72,7 @@ func (c *Controller) UpdateDefaultBranch(
 
 	// create new, time-restricted context to guarantee update completion, even if request is canceled.
 	// TODO: a proper error handling solution required.
-	ctx, cancel := context.WithTimeout(
-		contextutil.WithNewValues(context.Background(), ctx),
-		timeout,
-	)
+	ctx, cancel := contextutil.WithNewTimeout(ctx, timeout)
 	defer cancel()
 
 	repoFull, err := c.repoStore.Find(ctx, repo.ID)

@@ -280,10 +280,7 @@ func (c *Controller) CommentApplySuggestions(
 	// TODO: This is a small change to reduce likelihood of dirty state (e.g. git work done but db canceled).
 	// We still require a proper solution to handle an application crash or very slow execution times
 	const timeout = 1 * time.Minute
-	ctx, cancel := context.WithTimeout(
-		contextutil.WithNewValues(context.Background(), ctx),
-		timeout,
-	)
+	ctx, cancel := contextutil.WithNewTimeout(ctx, timeout)
 	defer cancel()
 
 	// Create internal write params. Note: This will skip the pre-commit protection rules check.

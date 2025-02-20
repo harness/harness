@@ -360,7 +360,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 
 		repo.GitUID = gitUID // make sure to delete the correct directory
 
-		if errDel := r.deleteGitRepository(context.Background(), &systemPrincipal, repo); errDel != nil {
+		if errDel := r.deleteGitRepository(context.WithoutCancel(ctx), &systemPrincipal, repo); errDel != nil {
 			log.Warn().Err(errDel).
 				Msg("failed to delete git repository after failed import")
 		}

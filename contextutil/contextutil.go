@@ -16,21 +16,10 @@ package contextutil
 
 import (
 	"context"
+	"time"
 )
 
-// WithNewValues creates a new context derived from originalCtx with values from valuesCtx.
-func WithNewValues(originalCtx context.Context, valuesCtx context.Context) context.Context {
-	return &combinedContext{
-		Context:   originalCtx,
-		valuesCtx: valuesCtx,
-	}
-}
-
-type combinedContext struct {
-	context.Context
-	valuesCtx context.Context
-}
-
-func (c *combinedContext) Value(key any) any {
-	return c.valuesCtx.Value(key)
+// WithNewTimeout creates a new context derived from original context, but without canceling and with the new timeout.
+func WithNewTimeout(ctx context.Context, timeout time.Duration) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.WithoutCancel(ctx), timeout)
 }

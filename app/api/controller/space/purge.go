@@ -61,10 +61,7 @@ func (c *Controller) PurgeNoAuth(
 	// the max time we give a purge space to succeed
 	const timeout = 15 * time.Minute
 	// create new, time-restricted context to guarantee space purge completion, even if request is canceled.
-	ctx, cancel := context.WithTimeout(
-		contextutil.WithNewValues(context.Background(), ctx),
-		timeout,
-	)
+	ctx, cancel := contextutil.WithNewTimeout(ctx, timeout)
 	defer cancel()
 
 	var toBeDeletedRepos []*types.Repository

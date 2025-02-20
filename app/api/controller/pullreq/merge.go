@@ -237,10 +237,7 @@ func (c *Controller) Merge(
 	// TODO: This is a small change to reduce likelihood of dirty state.
 	// We still require a proper solution to handle an application crash or very slow execution times
 	// (which could cause an unlocking pre operation completion).
-	ctx, cancel := context.WithTimeout(
-		contextutil.WithNewValues(context.Background(), ctx),
-		timeout,
-	)
+	ctx, cancel := contextutil.WithNewTimeout(ctx, timeout)
 	defer cancel()
 
 	//nolint:nestif
