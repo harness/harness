@@ -24,7 +24,7 @@ const BypassList = (props: {
               <Icon
                 name="code-close"
                 onClick={() => {
-                  const filteredData = bypassList.filter(item => !(item[0] === owner[0] && item[1] === owner[1]))
+                  const filteredData = bypassList.filter(item => !(item === owner))
                   setFieldValue('bypassList', filteredData)
                 }}
                 className={css.codeClose}
