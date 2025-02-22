@@ -43,8 +43,7 @@ type ImportRepositoriesOutput struct {
 	DuplicateRepos []*repoctrl.RepositoryOutput `json:"duplicate_repos"` // repos which already exist in the space.
 }
 
-// ImportRepositories imports repositories into an existing space. It ignores and continues on
-// repo naming conflicts.
+// ImportRepositories imports repositories into an existing space.
 //
 //nolint:gocognit
 func (c *Controller) ImportRepositories(
@@ -82,6 +81,10 @@ func (c *Controller) ImportRepositories(
 			"",
 			&session.Principal,
 		)
+
+		if err := c.repoIdentifierCheck(repo.Identifier, session); err != nil {
+			return ImportRepositoriesOutput{}, fmt.Errorf("failed to sanitize the repo %s: %w", repo.Identifier, err)
+		}
 
 		repos = append(repos, repo)
 		repoIsPublicVals = append(repoIsPublicVals, isPublic)

@@ -74,34 +74,35 @@ func (s SpaceOutput) MarshalJSON() ([]byte, error) {
 type Controller struct {
 	nestedSpacesEnabled bool
 
-	tx               dbtx.Transactor
-	urlProvider      url.Provider
-	sseStreamer      sse.Streamer
-	identifierCheck  check.SpaceIdentifier
-	authorizer       authz.Authorizer
-	spacePathStore   store.SpacePathStore
-	pipelineStore    store.PipelineStore
-	secretStore      store.SecretStore
-	connectorStore   store.ConnectorStore
-	templateStore    store.TemplateStore
-	spaceStore       store.SpaceStore
-	repoStore        store.RepoStore
-	principalStore   store.PrincipalStore
-	repoCtrl         *repo.Controller
-	membershipStore  store.MembershipStore
-	prListService    *pullreq.ListService
-	spaceFinder      refcache.SpaceFinder
-	importer         *importer.Repository
-	exporter         *exporter.Repository
-	resourceLimiter  limiter.ResourceLimiter
-	publicAccess     publicaccess.Service
-	auditService     audit.Service
-	gitspaceSvc      *gitspace.Service
-	labelSvc         *label.Service
-	instrumentation  instrument.Service
-	executionStore   store.ExecutionStore
-	rulesSvc         *rules.Service
-	usageMetricStore store.UsageMetricStore
+	tx                  dbtx.Transactor
+	urlProvider         url.Provider
+	sseStreamer         sse.Streamer
+	identifierCheck     check.SpaceIdentifier
+	authorizer          authz.Authorizer
+	spacePathStore      store.SpacePathStore
+	pipelineStore       store.PipelineStore
+	secretStore         store.SecretStore
+	connectorStore      store.ConnectorStore
+	templateStore       store.TemplateStore
+	spaceStore          store.SpaceStore
+	repoStore           store.RepoStore
+	principalStore      store.PrincipalStore
+	repoCtrl            *repo.Controller
+	membershipStore     store.MembershipStore
+	prListService       *pullreq.ListService
+	spaceFinder         refcache.SpaceFinder
+	importer            *importer.Repository
+	exporter            *exporter.Repository
+	resourceLimiter     limiter.ResourceLimiter
+	publicAccess        publicaccess.Service
+	auditService        audit.Service
+	gitspaceSvc         *gitspace.Service
+	labelSvc            *label.Service
+	instrumentation     instrument.Service
+	executionStore      store.ExecutionStore
+	rulesSvc            *rules.Service
+	usageMetricStore    store.UsageMetricStore
+	repoIdentifierCheck check.RepoIdentifier
 }
 
 func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Provider,
@@ -115,7 +116,7 @@ func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Pro
 	limiter limiter.ResourceLimiter, publicAccess publicaccess.Service, auditService audit.Service,
 	gitspaceSvc *gitspace.Service, labelSvc *label.Service,
 	instrumentation instrument.Service, executionStore store.ExecutionStore,
-	rulesSvc *rules.Service, usageMetricStore store.UsageMetricStore,
+	rulesSvc *rules.Service, usageMetricStore store.UsageMetricStore, repoIdentifierCheck check.RepoIdentifier,
 ) *Controller {
 	return &Controller{
 		nestedSpacesEnabled: config.NestedSpacesEnabled,
@@ -147,6 +148,7 @@ func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Pro
 		executionStore:      executionStore,
 		rulesSvc:            rulesSvc,
 		usageMetricStore:    usageMetricStore,
+		repoIdentifierCheck: repoIdentifierCheck,
 	}
 }
 
