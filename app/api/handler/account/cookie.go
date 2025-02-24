@@ -17,6 +17,7 @@ package account
 import (
 	"errors"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/harness/gitness/types"
@@ -53,7 +54,12 @@ func deleteTokenCookieIfPresent(r *http.Request, w http.ResponseWriter, cookieNa
 
 func newEmptyTokenCookie(r *http.Request, cookieName string) *http.Cookie {
 	domain := r.URL.Hostname()
-	if headers, ok := r.Header["X-Forwarded-For"]; ok && len(headers) > 0 {
+	if urls, ok := r.Header["X-Forwarded-For"]; ok && len(urls) > 0 {
+		if url, err := url.Parse(urls[0]); err != nil {
+			domain = url.Hostname()
+		}
+	}
+	if headers, ok := r.Header["X-Forwarded-Header"]; ok && len(headers) > 0 {
 		domain = headers[0]
 	}
 
