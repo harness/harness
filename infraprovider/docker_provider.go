@@ -333,3 +333,7 @@ func volumeName(spacePath string, resourceKey string) string {
 func (d DockerProvider) ValidateConfig(_ *types.InfraProviderConfig) error {
 	return nil
 }
+
+func (d DockerProvider) GenerateSetupYAML(_ *types.InfraProviderConfig) (string, error) {
+	return "", nil
+}

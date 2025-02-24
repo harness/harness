@@ -71,4 +71,7 @@ type InfraProvider interface {
 
 	// ValidateConfig checks if the provided infra config is as per the provider.
 	ValidateConfig(infraProviderConfig *types.InfraProviderConfig) error
+
+	// GenerateSetupYAML generates the setup file required for the infra provider in yaml format.
+	GenerateSetupYAML(infraProviderConfig *types.InfraProviderConfig) (string, error)
 }

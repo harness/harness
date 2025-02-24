@@ -35,6 +35,7 @@ type InfraProviderConfig struct {
 	SpacePath  string                  `json:"space_path"`
 	Created    int64                   `json:"created"`
 	Updated    int64                   `json:"updated"`
+	SetupYAML  string                  `json:"setup_yaml,omitempty"`
 }
 
 type InfraProviderResource struct {

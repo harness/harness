@@ -48,7 +48,31 @@ func (c *Service) Find(
 		slices.SortFunc(providerResources, types.CompareInfraProviderResource)
 		infraProviderConfig.Resources = providerResources
 	}
+
+	setupYAML, err := c.getSetupYAML(infraProviderConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	infraProviderConfig.SetupYAML = setupYAML
+
 	return infraProviderConfig, nil
+}
+
+func (c *Service) getSetupYAML(infraProviderConfig *types.InfraProviderConfig) (string, error) {
+	provider, err := c.infraProviderFactory.GetInfraProvider(infraProviderConfig.Type)
+	if err != nil {
+		return "", fmt.Errorf("failed to get infra provider of type %s before getting setup yaml for infra "+
+			"config %s: %w", infraProviderConfig.Type, infraProviderConfig.Identifier, err)
+	}
+
+	setupYAML, err := provider.GenerateSetupYAML(infraProviderConfig)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate setup yaml for infra provider config %s: %w",
+			infraProviderConfig.Identifier, err)
+	}
+
+	return setupYAML, nil
 }
 
 func (c *Service) FindTemplate(
