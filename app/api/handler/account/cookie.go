@@ -52,12 +52,17 @@ func deleteTokenCookieIfPresent(r *http.Request, w http.ResponseWriter, cookieNa
 }
 
 func newEmptyTokenCookie(r *http.Request, cookieName string) *http.Cookie {
+	domain := r.URL.Hostname()
+	if headers, ok := r.Header["X-Forwarded-For"]; ok && len(headers) > 0 {
+		domain = headers[0]
+	}
+
 	return &http.Cookie{
 		Name:     cookieName,
 		SameSite: http.SameSiteStrictMode,
 		HttpOnly: true,
 		Path:     "/",
-		Domain:   r.URL.Hostname(),
+		Domain:   domain,
 		Secure:   r.URL.Scheme == "https",
 	}
 }
