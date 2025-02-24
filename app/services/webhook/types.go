@@ -157,6 +157,7 @@ type PullReqInfo struct {
 	SourceBranch  string            `json:"source_branch"`
 	TargetRepoID  int64             `json:"target_repo_id"`
 	TargetBranch  string            `json:"target_branch"`
+	MergeBaseSHA  string            `json:"merge_base_sha"`
 	MergeStrategy *enum.MergeMethod `json:"merge_strategy,omitempty"`
 	Author        PrincipalInfo     `json:"author"`
 	PrURL         string            `json:"pr_url"`
@@ -179,6 +180,7 @@ func pullReqInfoFrom(
 		SourceBranch:  pr.SourceBranch,
 		TargetRepoID:  pr.TargetRepoID,
 		TargetBranch:  pr.TargetBranch,
+		MergeBaseSHA:  pr.MergeBaseSHA,
 		MergeStrategy: pr.MergeMethod,
 		Author:        principalInfoFrom(&pr.Author),
 		PrURL:         urlProvider.GenerateUIPRURL(ctx, repo.Path, pr.Number),
