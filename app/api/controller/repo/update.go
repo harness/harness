@@ -98,6 +98,10 @@ func (c *Controller) Update(ctx context.Context,
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
+	if err = c.repoCheck.LifecycleRestriction(ctx, session, repoCore); err != nil {
+		return nil, err
+	}
+
 	if in.State != nil &&
 		!slices.Contains(allowedRepoStateTransitions[repo.State], *in.State) {
 		return nil, usererror.BadRequestf("Changing the state of a repository from %s to %s is not allowed.",
