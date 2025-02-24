@@ -314,7 +314,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 			return fmt.Errorf("failed to update repository prior to the import: %w", err)
 		}
 
-		r.repoFinder.MarkChanged(ctx, repo.ID)
+		r.repoFinder.MarkChanged(ctx, repo.Core())
 
 		log.Info().Msg("sync repository")
 
@@ -341,7 +341,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 			return fmt.Errorf("failed to update repository after import: %w", err)
 		}
 
-		r.repoFinder.MarkChanged(ctx, repo.ID)
+		r.repoFinder.MarkChanged(ctx, repo.Core())
 
 		if input.Pipelines != PipelineOptionConvert {
 			return nil // assumes the value is enum.PipelineOptionIgnore

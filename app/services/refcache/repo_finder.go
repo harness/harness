@@ -16,67 +16,41 @@ package refcache
 
 import (
 	"context"
-	"encoding/binary"
 	"fmt"
 	"strconv"
 
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/pubsub"
+	"github.com/harness/gitness/app/store/cache"
 	"github.com/harness/gitness/types"
-
-	"github.com/rs/zerolog/log"
 )
 
 type RepoFinder struct {
-	repoStore     store.RepoStore
-	spaceRefCache SpaceRefCache
-	repoIDCache   RepoIDCache
-	repoRefCache  RepoRefCache
-	pubsub        pubsub.PubSub
+	repoStore      store.RepoStore
+	spacePathCache store.SpacePathCache
+	repoIDCache    store.RepoIDCache
+	repoRefCache   store.RepoRefCache
+	evictor        cache.Evictor[*types.RepositoryCore]
 }
 
 func NewRepoFinder(
 	repoStore store.RepoStore,
-	spaceRefCache SpaceRefCache,
-	repoIDCache RepoIDCache,
-	repoRefCache RepoRefCache,
-	bus pubsub.PubSub,
+	spacePathCache store.SpacePathCache,
+	repoIDCache store.RepoIDCache,
+	repoRefCache store.RepoRefCache,
+	evictor cache.Evictor[*types.RepositoryCore],
 ) RepoFinder {
-	r := RepoFinder{
-		repoStore:     repoStore,
-		spaceRefCache: spaceRefCache,
-		repoIDCache:   repoIDCache,
-		repoRefCache:  repoRefCache,
-		pubsub:        bus,
+	return RepoFinder{
+		repoStore:      repoStore,
+		spacePathCache: spacePathCache,
+		repoIDCache:    repoIDCache,
+		repoRefCache:   repoRefCache,
+		evictor:        evictor,
 	}
-
-	ctx := context.Background()
-
-	_ = bus.Subscribe(ctx, pubsubTopicRepoUpdate, func(payload []byte) error {
-		repoID := int64(binary.LittleEndian.Uint64(payload))
-		repo, err := r.repoIDCache.Get(ctx, repoID)
-		if err != nil {
-			log.Ctx(ctx).Warn().Err(err).Msg("repoFinder: pubsub subscriber: failed to get repo by ID from cache")
-			return err
-		}
-
-		r.repoRefCache.Evict(ctx, RepoCacheKey{spaceID: repo.ParentID, repoIdentifier: repo.Identifier})
-		r.repoIDCache.Evict(ctx, repoID)
-
-		return nil
-	}, pubsub.WithChannelNamespace(pubsubNamespace))
-
-	return r
 }
 
-func (r RepoFinder) MarkChanged(ctx context.Context, repoID int64) {
-	var buff [8]byte
-	binary.LittleEndian.PutUint64(buff[:], uint64(repoID))
-	err := r.pubsub.Publish(ctx, pubsubTopicRepoUpdate, buff[:], pubsub.WithPublishNamespace(pubsubNamespace))
-	if err != nil {
-		log.Ctx(ctx).Warn().Err(err).Msg("failed to publish repo update event")
-	}
+func (r RepoFinder) MarkChanged(ctx context.Context, repoCore *types.RepositoryCore) {
+	r.evictor.Evict(ctx, repoCore)
 }
 
 func (r RepoFinder) FindByID(ctx context.Context, repoID int64) (*types.RepositoryCore, error) {
@@ -86,17 +60,19 @@ func (r RepoFinder) FindByID(ctx context.Context, repoID int64) (*types.Reposito
 func (r RepoFinder) FindByRef(ctx context.Context, repoRef string) (*types.RepositoryCore, error) {
 	repoID, err := strconv.ParseInt(repoRef, 10, 64)
 	if err != nil || repoID <= 0 {
-		spacePath, repoIdentifier, err := paths.DisectLeaf(repoRef)
+		spaceRef, repoIdentifier, err := paths.DisectLeaf(repoRef)
 		if err != nil {
 			return nil, fmt.Errorf("failed to disect extract repo idenfifier from path: %w", err)
 		}
 
-		spaceID, err := r.spaceRefCache.Get(ctx, spacePath)
+		spacePath, err := r.spacePathCache.Get(ctx, spaceRef)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get space from cache: %w", err)
 		}
 
-		repoID, err = r.repoRefCache.Get(ctx, RepoCacheKey{spaceID: spaceID, repoIdentifier: repoIdentifier})
+		key := types.RepoCacheKey{SpaceID: spacePath.SpaceID, RepoIdentifier: repoIdentifier}
+
+		repoID, err = r.repoRefCache.Get(ctx, key)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get repository ID by space ID and repo identifier: %w", err)
 		}
@@ -126,12 +102,12 @@ func (r RepoFinder) FindDeletedByRef(ctx context.Context, repoRef string, delete
 		return nil, fmt.Errorf("failed to disect extract repo idenfifier from path: %w", err)
 	}
 
-	spaceID, err := r.spaceRefCache.Get(ctx, spaceRef)
+	spacePath, err := r.spacePathCache.Get(ctx, spaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get space ID by space ref from cache: %w", err)
 	}
 
-	repo, err := r.repoStore.FindDeletedByUID(ctx, spaceID, repoIdentifier, deleted)
+	repo, err := r.repoStore.FindDeletedByUID(ctx, spacePath.SpaceID, repoIdentifier, deleted)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get deleted repository ID by space ID and repo identifier: %w", err)
 	}

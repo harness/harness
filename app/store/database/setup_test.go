@@ -20,6 +20,7 @@ import (
 	"os"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/store/cache"
@@ -80,7 +81,9 @@ func setupStores(t *testing.T, db *sqlx.DB) (
 
 	spacePathTransformation := store.ToLowerSpacePathTransformation
 	spacePathStore := database.NewSpacePathStore(db, store.ToLowerSpacePathTransformation)
-	spacePathCache := cache.New(spacePathStore, spacePathTransformation)
+
+	evictor := cache.NewEvictor[*types.SpaceCore]("namespace", "space-topic", nil)
+	spacePathCache := cache.New(context.Background(), spacePathStore, spacePathTransformation, evictor, time.Minute)
 
 	spaceStore := database.NewSpaceStore(db, spacePathCache, spacePathStore)
 	repoStore := database.NewRepoStore(db, spacePathCache, spacePathStore, spaceStore)

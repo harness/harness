@@ -69,6 +69,8 @@ func (c *Controller) SoftDeleteNoAuth(
 		return nil, fmt.Errorf("failed to soft delete the space: %w", err)
 	}
 
+	c.spaceFinder.MarkChanged(ctx, space.Core())
+
 	return softDelRes, nil
 }
 

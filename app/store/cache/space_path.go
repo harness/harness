@@ -25,23 +25,33 @@ import (
 )
 
 // pathCacheGetter is used to hook a spacePathStore as source of a PathCache.
-// IMPORTANT: It assumes that the pathCache already transformed the key.
+// IMPORTANT: It assumes that the spacePathCache already transformed the key.
 type pathCacheGetter struct {
 	spacePathStore store.SpacePathStore
 }
 
 func New(
+	appCtx context.Context,
 	pathStore store.SpacePathStore,
 	spacePathTransformation store.SpacePathTransformation,
+	evictor Evictor[*types.SpaceCore],
+	dur time.Duration,
 ) store.SpacePathCache {
-	return &pathCache{
-		inner: cache.New[string, *types.SpacePath](
-			&pathCacheGetter{
-				spacePathStore: pathStore,
-			},
-			1*time.Minute),
+	innerCache := cache.New[string, *types.SpacePath](&pathCacheGetter{spacePathStore: pathStore}, dur)
+
+	c := spacePathCache{
+		inner:                   innerCache,
 		spacePathTransformation: spacePathTransformation,
 	}
+
+	// In case when a space core is updated, we should remove from the cache its space path and all of its sub-paths.
+	// Update of a space core (space identifier or space path) is a rare operation, so clearing cache is justified.
+	evictor.Subscribe(appCtx, func(*types.SpaceCore) error {
+		innerCache.EvictAll(appCtx)
+		return nil
+	})
+
+	return c
 }
 
 func (g *pathCacheGetter) Find(ctx context.Context, key string) (*types.SpacePath, error) {
@@ -53,13 +63,13 @@ func (g *pathCacheGetter) Find(ctx context.Context, key string) (*types.SpacePat
 	return path, nil
 }
 
-// pathCache is a decorator of a Cache required to handle path transformations.
-type pathCache struct {
+// spacePathCache is a decorator of a Cache required to handle path transformations.
+type spacePathCache struct {
 	inner                   cache.Cache[string, *types.SpacePath]
 	spacePathTransformation store.SpacePathTransformation
 }
 
-func (c *pathCache) Get(ctx context.Context, key string) (*types.SpacePath, error) {
+func (c spacePathCache) Get(ctx context.Context, key string) (*types.SpacePath, error) {
 	// build unique key from provided value
 	segments := paths.Segments(key)
 	uniqueKey := ""
@@ -70,10 +80,10 @@ func (c *pathCache) Get(ctx context.Context, key string) (*types.SpacePath, erro
 	return c.inner.Get(ctx, uniqueKey)
 }
 
-func (c *pathCache) Stats() (int64, int64) {
+func (c spacePathCache) Stats() (int64, int64) {
 	return c.inner.Stats()
 }
 
-func (c *pathCache) Evict(ctx context.Context, key string) {
+func (c spacePathCache) Evict(ctx context.Context, key string) {
 	c.inner.Evict(ctx, key)
 }

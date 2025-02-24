@@ -134,7 +134,7 @@ func (c *Controller) moveInner(
 			return fmt.Errorf("failed to update the space in the db: %w", err)
 		}
 
-		c.spaceFinder.MarkChanged(ctx, space.ID)
+		c.spaceFinder.MarkChanged(ctx, space.Core())
 
 		return nil
 	})

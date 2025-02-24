@@ -114,7 +114,7 @@ func (c *Controller) SoftDeleteNoAuth(
 		return fmt.Errorf("failed to soft delete repo from db: %w", err)
 	}
 
-	c.repoFinder.MarkChanged(ctx, repo.ID)
+	c.repoFinder.MarkChanged(ctx, repo.Core())
 
 	return nil
 }

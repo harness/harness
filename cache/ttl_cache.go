@@ -123,6 +123,12 @@ func (c *TTLCache[K, V]) Evict(_ context.Context, key K) {
 	c.mx.Unlock()
 }
 
+func (c *TTLCache[K, V]) EvictAll(_ context.Context) {
+	c.mx.Lock()
+	clear(c.cache)
+	c.mx.Unlock()
+}
+
 func (c *TTLCache[K, V]) fetch(key K, now time.Time) (V, bool) {
 	c.mx.RLock()
 	defer c.mx.RUnlock()

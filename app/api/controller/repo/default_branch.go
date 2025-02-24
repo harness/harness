@@ -103,7 +103,7 @@ func (c *Controller) UpdateDefaultBranch(
 		return nil, fmt.Errorf("failed to update the repo default branch on db:%w", err)
 	}
 
-	c.repoFinder.MarkChanged(ctx, repo.ID)
+	c.repoFinder.MarkChanged(ctx, repo)
 
 	repoOutput, err := GetRepoOutput(ctx, c.publicAccess, repoFull)
 	if err != nil {

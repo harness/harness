@@ -339,7 +339,7 @@ func (c *Controller) handleEmptyRepoPush(
 		return
 	}
 
-	c.repoFinder.MarkChanged(ctx, repo.ID)
+	c.repoFinder.MarkChanged(ctx, repo.Core())
 
 	if repo.DefaultBranch != oldName {
 		c.repoReporter.DefaultBranchUpdated(ctx, &repoevents.DefaultBranchUpdatedPayload{

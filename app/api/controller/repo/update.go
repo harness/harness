@@ -123,7 +123,7 @@ func (c *Controller) Update(ctx context.Context,
 		return nil, fmt.Errorf("failed to update the repo: %w", err)
 	}
 
-	c.repoFinder.MarkChanged(ctx, repo.ID)
+	c.repoFinder.MarkChanged(ctx, repo.Core())
 
 	err = c.auditService.Log(ctx,
 		session.Principal,

@@ -16,60 +16,32 @@ package refcache
 
 import (
 	"github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/pubsub"
+	"github.com/harness/gitness/app/store/cache"
+	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
 )
 
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
-	ProvideSpaceIDCache,
-	ProvideSpaceRefCache,
 	ProvideSpaceFinder,
-	ProvideRepoIDCache,
-	ProvideRepoRefCache,
 	ProvideRepoFinder,
 )
 
-func ProvideSpaceIDCache(
-	spaceStore store.SpaceStore,
-) SpaceIDCache {
-	return NewSpaceIDCache(spaceStore)
-}
-
-func ProvideSpaceRefCache(
-	spacePathStore store.SpacePathStore,
-	pathTransform store.SpacePathTransformation,
-) SpaceRefCache {
-	return NewSpaceRefCache(spacePathStore, pathTransform)
-}
-
 func ProvideSpaceFinder(
-	spaceIDCache SpaceIDCache,
-	spaceRefCache SpaceRefCache,
-	pubsub pubsub.PubSub,
+	spaceIDCache store.SpaceIDCache,
+	spaceRefCache store.SpacePathCache,
+	evictor cache.Evictor[*types.SpaceCore],
 ) SpaceFinder {
-	return NewSpaceFinder(spaceIDCache, spaceRefCache, pubsub)
-}
-
-func ProvideRepoIDCache(
-	repoStore store.RepoStore,
-) RepoIDCache {
-	return NewRepoIDCache(repoStore)
-}
-
-func ProvideRepoRefCache(
-	repoStore store.RepoStore,
-) RepoRefCache {
-	return NewRepoRefCache(repoStore)
+	return NewSpaceFinder(spaceIDCache, spaceRefCache, evictor)
 }
 
 func ProvideRepoFinder(
 	repoStore store.RepoStore,
-	spaceRefCache SpaceRefCache,
-	repoIDCache RepoIDCache,
-	repoRefCache RepoRefCache,
-	pubsub pubsub.PubSub,
+	spaceRefCache store.SpacePathCache,
+	repoIDCache store.RepoIDCache,
+	repoRefCache store.RepoRefCache,
+	evictor cache.Evictor[*types.RepositoryCore],
 ) RepoFinder {
-	return NewRepoFinder(repoStore, spaceRefCache, repoIDCache, repoRefCache, pubsub)
+	return NewRepoFinder(repoStore, spaceRefCache, repoIDCache, repoRefCache, evictor)
 }

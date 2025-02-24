@@ -12,36 +12,41 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package refcache
+package cache
 
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/cache"
 	"github.com/harness/gitness/types"
 )
 
-type (
-	// RepoIDCache holds Repository objects fetched by their ID.
-	RepoIDCache cache.Cache[int64, *types.RepositoryCore]
-
-	// RepoRefCache holds repository IDs fetched by spaceID and repository identifier.
-	RepoRefCache cache.Cache[RepoCacheKey, int64]
-)
-
-type RepoCacheKey struct {
-	spaceID        int64
-	repoIdentifier string
-}
-
 func NewRepoIDCache(
+	appCtx context.Context,
 	repoStore store.RepoStore,
-) RepoIDCache {
-	return cache.New[int64, *types.RepositoryCore](
-		repoIDCacheGetter{repoStore: repoStore},
-		cacheDuration)
+	evictorSpace Evictor[*types.SpaceCore],
+	evictorRepo Evictor[*types.RepositoryCore],
+	dur time.Duration,
+) store.RepoIDCache {
+	c := cache.New[int64, *types.RepositoryCore](repoIDCacheGetter{repoStore: repoStore}, dur)
+
+	// In case when a space is updated, it's possible that a repo in the cache belongs the space or one of its parents.
+	// Rather than to dig through the cache to find if this is actually the case, it's simpler to clear the cache.
+	// Update of a space core (space identifier or space path) is a rare operation, so clearing cache is justified.
+	evictorSpace.Subscribe(appCtx, func(*types.SpaceCore) error {
+		c.EvictAll(appCtx)
+		return nil
+	})
+
+	evictorRepo.Subscribe(appCtx, func(repoCore *types.RepositoryCore) error {
+		c.Evict(appCtx, repoCore.ID)
+		return nil
+	})
+
+	return c
 }
 
 type repoIDCacheGetter struct {
@@ -55,25 +60,4 @@ func (c repoIDCacheGetter) Find(ctx context.Context, repoID int64) (*types.Repos
 	}
 
 	return repo.Core(), nil
-}
-
-func NewRepoRefCache(
-	repoStore store.RepoStore,
-) RepoRefCache {
-	return cache.New[RepoCacheKey, int64](
-		repoCacheGetter{repoStore: repoStore},
-		cacheDuration)
-}
-
-type repoCacheGetter struct {
-	repoStore store.RepoStore
-}
-
-func (c repoCacheGetter) Find(ctx context.Context, repoKey RepoCacheKey) (int64, error) {
-	repo, err := c.repoStore.FindActiveByUID(ctx, repoKey.spaceID, repoKey.repoIdentifier)
-	if err != nil {
-		return 0, fmt.Errorf("failed to find repo by space ID and repo uid: %w", err)
-	}
-
-	return repo.ID, nil
 }

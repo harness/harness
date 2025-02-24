@@ -238,7 +238,7 @@ func (migrate PullReq) Import(
 		return nil, err
 	}
 
-	migrate.repoFinder.MarkChanged(ctx, repo.ID)
+	migrate.repoFinder.MarkChanged(ctx, repo)
 
 	return pullReqs, nil
 }

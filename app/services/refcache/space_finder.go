@@ -16,59 +16,36 @@ package refcache
 
 import (
 	"context"
-	"encoding/binary"
 	"fmt"
 	"strconv"
 
-	"github.com/harness/gitness/pubsub"
+	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/app/store/cache"
 	"github.com/harness/gitness/types"
-
-	"github.com/rs/zerolog/log"
 )
 
 type SpaceFinder struct {
-	spaceIDCache  SpaceIDCache
-	spaceRefCache SpaceRefCache
-	pubsub        pubsub.PubSub
+	spaceIDCache   store.SpaceIDCache
+	spacePathCache store.SpacePathCache
+	evictor        cache.Evictor[*types.SpaceCore]
 }
 
 func NewSpaceFinder(
-	spaceIDCache SpaceIDCache,
-	spaceRefCache SpaceRefCache,
-	bus pubsub.PubSub,
+	spaceIDCache store.SpaceIDCache,
+	spacePathCache store.SpacePathCache,
+	evictor cache.Evictor[*types.SpaceCore],
 ) SpaceFinder {
 	s := SpaceFinder{
-		spaceIDCache:  spaceIDCache,
-		spaceRefCache: spaceRefCache,
-		pubsub:        bus,
+		spaceIDCache:   spaceIDCache,
+		spacePathCache: spacePathCache,
+		evictor:        evictor,
 	}
-
-	ctx := context.Background()
-
-	_ = bus.Subscribe(ctx, pubsubTopicSpaceUpdate, func(payload []byte) error {
-		spaceID := int64(binary.LittleEndian.Uint64(payload))
-		space, err := s.spaceIDCache.Get(ctx, spaceID)
-		if err != nil {
-			log.Ctx(ctx).Warn().Err(err).Msg("spaceFinder: pubsub subscriber: failed to get space by ID from cache")
-			return err
-		}
-
-		s.spaceRefCache.Evict(ctx, space.Path)
-		s.spaceIDCache.Evict(ctx, spaceID)
-
-		return nil
-	}, pubsub.WithChannelNamespace(pubsubNamespace))
 
 	return s
 }
 
-func (s SpaceFinder) MarkChanged(ctx context.Context, spaceID int64) {
-	var buff [8]byte
-	binary.LittleEndian.PutUint64(buff[:], uint64(spaceID))
-	err := s.pubsub.Publish(ctx, pubsubTopicSpaceUpdate, buff[:], pubsub.WithPublishNamespace(pubsubNamespace))
-	if err != nil {
-		log.Ctx(ctx).Warn().Err(err).Msg("failed to publish space update event")
-	}
+func (s SpaceFinder) MarkChanged(ctx context.Context, spaceCore *types.SpaceCore) {
+	s.evictor.Evict(ctx, spaceCore)
 }
 
 func (s SpaceFinder) FindByID(ctx context.Context, spaceID int64) (*types.SpaceCore, error) {
@@ -80,13 +57,15 @@ func (s SpaceFinder) FindByID(ctx context.Context, spaceID int64) (*types.SpaceC
 	return spaceCore, nil
 }
 
-func (s SpaceFinder) FindByRef(ctx context.Context, spacePath string) (*types.SpaceCore, error) {
-	spaceID, err := strconv.ParseInt(spacePath, 10, 64)
+func (s SpaceFinder) FindByRef(ctx context.Context, spaceRef string) (*types.SpaceCore, error) {
+	spaceID, err := strconv.ParseInt(spaceRef, 10, 64)
 	if err != nil || spaceID <= 0 {
-		spaceID, err = s.spaceRefCache.Get(ctx, spacePath)
+		spacePath, err := s.spacePathCache.Get(ctx, spaceRef)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get space ID by space path from cache: %w", err)
 		}
+
+		spaceID = spacePath.SpaceID
 	}
 
 	spaceCore, err := s.spaceIDCache.Get(ctx, spaceID)

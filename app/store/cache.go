@@ -23,8 +23,17 @@ type (
 	// PrincipalInfoCache caches principal IDs to principal info.
 	PrincipalInfoCache cache.ExtendedCache[int64, *types.PrincipalInfo]
 
+	// SpaceIDCache holds the immutable part of Space objects fetched by space ID.
+	SpaceIDCache cache.Cache[int64, *types.SpaceCore]
+
 	// SpacePathCache caches a raw path to a space path.
 	SpacePathCache cache.Cache[string, *types.SpacePath]
+
+	// RepoIDCache holds Repository objects fetched by their ID.
+	RepoIDCache cache.Cache[int64, *types.RepositoryCore]
+
+	// RepoRefCache holds repository IDs fetched by spaceID and repository identifier.
+	RepoRefCache cache.Cache[types.RepoCacheKey, int64]
 
 	// InfraProviderResourceCache caches infraprovider resourceIDs to infraprovider resource.
 	InfraProviderResourceCache cache.ExtendedCache[int64, *types.InfraProviderResource]

@@ -63,7 +63,7 @@ func (c *Controller) UpdateRepoState(
 		return nil, fmt.Errorf("failed to update the repo state: %w", err)
 	}
 
-	c.repoFinder.MarkChanged(ctx, repo.ID)
+	c.repoFinder.MarkChanged(ctx, repo)
 
 	return repoFull, nil
 }

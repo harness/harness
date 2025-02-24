@@ -120,14 +120,10 @@ type RepoFilter struct {
 	Recursive         bool
 }
 
-// RepositoryGitInfo holds git info for a repository.
-type RepositoryGitInfo struct {
-	ID       int64
-	ParentID int64
-	GitUID   string
+type RepoCacheKey struct {
+	SpaceID        int64
+	RepoIdentifier string
 }
-
-func (rgi *RepositoryGitInfo) GetGitUID() string { return rgi.GitUID }
 
 type RepositoryPullReqSummary struct {
 	OpenCount   int `json:"open_count"`

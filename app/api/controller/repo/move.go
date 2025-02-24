@@ -92,7 +92,7 @@ func (c *Controller) Move(ctx context.Context,
 		return nil, fmt.Errorf("failed to update repo: %w", err)
 	}
 
-	c.repoFinder.MarkChanged(ctx, repo.ID)
+	c.repoFinder.MarkChanged(ctx, repo.Core())
 
 	// set public access for the new repo path
 	if err := c.publicAccess.Set(ctx, enum.PublicResourceTypeRepo, repo.Path, isPublic); err != nil {
@@ -115,7 +115,7 @@ func (c *Controller) Move(ctx context.Context,
 			)
 		}
 
-		c.repoFinder.MarkChanged(ctx, repo.ID)
+		c.repoFinder.MarkChanged(ctx, repo.Core())
 
 		// revert public access changes only after we successfully restored original path
 		if dErr = c.publicAccess.Set(ctx, enum.PublicResourceTypeRepo, repo.Path, isPublic); dErr != nil {
