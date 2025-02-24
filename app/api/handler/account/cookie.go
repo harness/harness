@@ -59,7 +59,7 @@ func newEmptyTokenCookie(r *http.Request, cookieName string) *http.Cookie {
 			domain = url.Hostname()
 		}
 	}
-	if headers, ok := r.Header["X-Forwarded-Header"]; ok && len(headers) > 0 {
+	if headers, ok := r.Header["X-Forwarded-Host"]; ok && len(headers) > 0 {
 		domain = headers[0]
 	}
 
