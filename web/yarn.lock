@@ -1945,10 +1945,10 @@
     yargs "^17.6.2"
     zod "^3.19.1"
 
-"@harnessio/react-har-service-client@^0.10.0":
-  version "0.10.0"
-  resolved "https://registry.yarnpkg.com/@harnessio/react-har-service-client/-/react-har-service-client-0.10.0.tgz#84a9a89ec3f02b35313dae02857789ec25a095dc"
-  integrity sha512-TC84QK0mas2F3dtN7EK4yJkjJYPCq0uEtXCdMCyvX36Mw/4mY+pEcbfhQhaP+cugqWJT2/eZ21TrPrx07rG/ig==
+"@harnessio/react-har-service-client@^0.12.0":
+  version "0.12.0"
+  resolved "https://registry.yarnpkg.com/@harnessio/react-har-service-client/-/react-har-service-client-0.12.0.tgz#9ad2dec1a4ba2d4150e9c4dea67e2f867d9141ed"
+  integrity sha512-bBDrVL/OkX14SdG3XS5/h7W5pQ0BH6tXhK1w2F9eWf5qupyZe2lwaDpVRzxi2fkzr0wojf2wd/e3p3IiB47X0g==
   dependencies:
     "@harnessio/oats-cli" "^3.0.0"
 

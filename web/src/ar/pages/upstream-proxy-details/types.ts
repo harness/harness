@@ -21,12 +21,14 @@ export enum UpstreamProxyPackageType {
   DOCKER = 'DOCKER',
   HELM = 'HELM',
   GENERIC = 'GENERIC',
-  MAVEN = 'MAVEN'
+  MAVEN = 'MAVEN',
+  NPM = 'NPM'
 }
 
 export enum UpstreamRepositoryURLInputSource {
   Dockerhub = 'Dockerhub',
   MavenCentral = 'MavenCentral',
+  NpmJS = 'NpmJs',
   AwsEcr = 'AwsEcr',
   Custom = 'Custom'
 }

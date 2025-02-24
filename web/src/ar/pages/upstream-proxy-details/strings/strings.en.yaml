@@ -13,6 +13,7 @@ createForm:
     ecr: AWS ECR
     custom: Custom
     mavenCentral: Maven Central
+    npmjs: npmjs
   authentication:
     title: Authentication
     userNameAndPassword: Username and Password

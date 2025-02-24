@@ -15,7 +15,7 @@
  */
 
 import type { IconName } from '@harnessio/icons'
-import type { FeatureFlags } from '@ar/MFEAppTypes'
+import { FeatureFlags } from '@ar/MFEAppTypes'
 import type { StringsMap } from '@ar/frameworks/strings'
 import { RepositoryPackageType } from '@ar/common/types'
 import { useFeatureFlags } from './useFeatureFlag'
@@ -70,6 +70,7 @@ const RepositoryTypes: RepositoryTypeListItem[] = [
     value: RepositoryPackageType.NPM,
     icon: 'npm-repository-type',
     tooltip: 'Coming Soon!',
+    featureFlag: FeatureFlags.HAR_NPM_PACKAGE_TYPE_ENABLED,
     disabled: true
   },
   {

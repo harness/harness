@@ -133,5 +133,6 @@ export interface MFEAppProps {
 }
 
 export enum FeatureFlags {
-  HAR_TRIGGERS = 'HAR_TRIGGERS'
+  HAR_TRIGGERS = 'HAR_TRIGGERS',
+  HAR_NPM_PACKAGE_TYPE_ENABLED = 'HAR_NPM_PACKAGE_TYPE_ENABLED'
 }
