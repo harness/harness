@@ -48,6 +48,7 @@ type Factory interface {
 type Adapter interface {
 	// HealthCheck checks health status of registry.
 	HealthCheck() (string, error)
+	GetImageName(imageName string) (string, error)
 }
 
 // ArtifactRegistry defines the capabilities that an artifact registry should have.

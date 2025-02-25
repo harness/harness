@@ -86,6 +86,10 @@ func (a *adapter) HealthCheck() (string, error) {
 	return "Not implemented", nil
 }
 
+func (a *adapter) GetImageName(imageName string) (string, error) {
+	return imageName, nil
+}
+
 var (
 	_ adp.Adapter          = (*adapter)(nil)
 	_ adp.ArtifactRegistry = (*adapter)(nil)

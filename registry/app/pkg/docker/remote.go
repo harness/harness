@@ -183,6 +183,13 @@ func (r *RemoteRegistry) ManifestExist(
 		errs = append(errs, errors.New("Proxy is down"))
 		return responseHeaders, descriptor, manifestResult, errs
 	}
+
+	artInfo.Image, err = remoteHelper.GetImageName(ctx, r.spaceFinder, artInfo.Image)
+	if err != nil {
+		errs = append(errs, err)
+		return responseHeaders, descriptor, manifestResult, errs
+	}
+
 	useLocal, man, err := r.proxyCtl.UseLocalManifest(ctx, registryInfo, remoteHelper, acceptHeaders, ifNoneMatchHeader)
 
 	if err != nil {
@@ -259,6 +266,13 @@ func (r *RemoteRegistry) PullManifest(
 		errs = append(errs, errors.New("Proxy is down"))
 		return responseHeaders, descriptor, manifestResult, errs
 	}
+
+	artInfo.Image, err = remoteHelper.GetImageName(ctx, r.spaceFinder, artInfo.Image)
+	if err != nil {
+		errs = append(errs, err)
+		return responseHeaders, descriptor, manifestResult, errs
+	}
+
 	useLocal, man, err := r.proxyCtl.UseLocalManifest(ctx, registryInfo, remoteHelper, acceptHeaders, ifNoneMatchHeader)
 
 	if err != nil {

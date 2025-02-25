@@ -293,13 +293,19 @@ func (c *controller) HeadManifest(
 func (c *controller) ProxyBlob(
 	ctx context.Context, art pkg.RegistryInfo, repoKey string, proxy types.UpstreamProxy,
 ) (int64, io.ReadCloser, error) {
-	remoteImage := getRemoteRepo(art)
-	log.Debug().Msgf("The blob doesn't exist, proxy the request to the target server, url:%v", remoteImage)
 
 	rHelper, err := NewRemoteHelper(ctx, c.spaceFinder, c.secretService, repoKey, proxy)
 	if err != nil {
 		return 0, nil, err
 	}
+
+	art.Image, err = rHelper.GetImageName(ctx, c.spaceFinder, art.Image)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	remoteImage := getRemoteRepo(art)
+	log.Debug().Msgf("The blob doesn't exist, proxy the request to the target server, url:%v", remoteImage)
 
 	size, bReader, err := rHelper.BlobReader(remoteImage, art.Digest)
 	if err != nil {

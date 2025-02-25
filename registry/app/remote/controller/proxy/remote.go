@@ -45,6 +45,8 @@ type RemoteInterface interface {
 	ManifestExist(registry string, ref string) (bool, *manifest.Descriptor, error)
 	// ListTags returns all tags of the registry.
 	ListTags(registry string) ([]string, error)
+
+	GetImageName(ctx context.Context, spacePathStore refcache.SpaceFinder, imageName string) (string, error)
 }
 
 type remoteHelper struct {
@@ -115,4 +117,19 @@ func (r *remoteHelper) ManifestExist(registry string, ref string) (bool, *manife
 
 func (r *remoteHelper) ListTags(registry string) ([]string, error) {
 	return r.registry.ListTags(registry)
+}
+
+func (r *remoteHelper) GetImageName(
+	ctx context.Context, spaceFinder refcache.SpaceFinder, imageName string,
+) (string, error) {
+	adapterType := r.upstreamProxy.Source
+	factory, err := adapter.GetFactory(adapterType)
+	if err != nil {
+		return "", err
+	}
+	adp, err := factory.Create(ctx, spaceFinder, r.upstreamProxy, r.secretService)
+	if err != nil {
+		return "", err
+	}
+	return adp.GetImageName(imageName)
 }

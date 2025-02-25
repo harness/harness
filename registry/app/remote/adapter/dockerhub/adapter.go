@@ -18,6 +18,7 @@ package dockerhub
 
 import (
 	"context"
+	"strings"
 
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
@@ -60,6 +61,14 @@ func (f *factory) Create(
 	ctx context.Context, spaceFinder refcache.SpaceFinder, record types.UpstreamProxy, service secret.Service,
 ) (adp.Adapter, error) {
 	return newAdapter(ctx, spaceFinder, service, record)
+}
+
+func (a *adapter) GetImageName(imageName string) (string, error) {
+	arr := strings.Split(imageName, "/")
+	if len(arr) == 1 {
+		imageName = "library/" + imageName
+	}
+	return imageName, nil
 }
 
 var (

@@ -97,3 +97,7 @@ func NewClient(_ types.UpstreamProxy) (*Client, error) {
 
 	return client, nil
 }
+
+func (a *adapter) GetImageName(imageName string) (string, error) {
+	return imageName, nil
+}

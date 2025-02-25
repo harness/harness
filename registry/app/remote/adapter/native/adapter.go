@@ -117,3 +117,7 @@ func (a *Adapter) DeleteTag(_, _ string) error {
 func (a *Adapter) CanBeMount(_ string) (mount bool, repository string, err error) {
 	return false, "", nil
 }
+
+func (a *Adapter) GetImageName(imageName string) (string, error) {
+	return imageName, nil
+}
