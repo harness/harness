@@ -44,11 +44,14 @@ func LocalRegistryProvider(
 	bandwidthStatDao store.BandwidthStatRepository, downloadStatDao store.DownloadStatRepository,
 	gcService gc.Service, tx dbtx.Transactor,
 ) *LocalRegistry {
-	//nolint:errcheck
-	return NewLocalRegistry(
+	registry, ok := NewLocalRegistry(
 		app, ms, manifestDao, registryDao, registryBlobDao, blobRepo,
 		mtRepository, tagDao, imageDao, artifactDao, bandwidthStatDao, downloadStatDao, gcService, tx,
 	).(*LocalRegistry)
+	if !ok {
+		return nil
+	}
+	return registry
 }
 
 func ManifestServiceProvider(
@@ -70,9 +73,12 @@ func RemoteRegistryProvider(
 	local *LocalRegistry, app *App, upstreamProxyConfigRepo store.UpstreamProxyConfigRepository,
 	spaceFinder refcache.SpaceFinder, secretService secret.Service, proxyCtrl proxy2.Controller,
 ) *RemoteRegistry {
-	//nolint:errcheck
-	return NewRemoteRegistry(local, app, upstreamProxyConfigRepo, spaceFinder, secretService,
+	registry, ok := NewRemoteRegistry(local, app, upstreamProxyConfigRepo, spaceFinder, secretService,
 		proxyCtrl).(*RemoteRegistry)
+	if !ok {
+		return nil
+	}
+	return registry
 }
 
 func ControllerProvider(
