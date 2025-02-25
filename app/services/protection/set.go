@@ -54,6 +54,11 @@ func (s ruleSet) MergeVerify(
 			out.DeleteSourceBranch = out.DeleteSourceBranch || rOut.DeleteSourceBranch
 			out.MinimumRequiredApprovalsCount = maxInt(out.MinimumRequiredApprovalsCount, rOut.MinimumRequiredApprovalsCount)
 			out.MinimumRequiredApprovalsCountLatest = maxInt(out.MinimumRequiredApprovalsCountLatest, rOut.MinimumRequiredApprovalsCountLatest) //nolint:lll
+			out.MinimumRequiredDefaultReviewerApprovalsCount =
+				maxInt(out.MinimumRequiredDefaultReviewerApprovalsCount, rOut.MinimumRequiredDefaultReviewerApprovalsCount)
+			out.MinimumRequiredDefaultReviewerApprovalsCountLatest =
+				maxInt(out.MinimumRequiredDefaultReviewerApprovalsCountLatest, rOut.MinimumRequiredDefaultReviewerApprovalsCountLatest) //nolint:lll
+			out.DefaultReviewerIDs = append(out.DefaultReviewerIDs, rOut.DefaultReviewerIDs...)
 			out.RequiresCodeOwnersApproval = out.RequiresCodeOwnersApproval || rOut.RequiresCodeOwnersApproval
 			out.RequiresCodeOwnersApprovalLatest = out.RequiresCodeOwnersApprovalLatest || rOut.RequiresCodeOwnersApprovalLatest
 			out.RequiresCommentResolution = out.RequiresCommentResolution || rOut.RequiresCommentResolution
@@ -64,6 +69,8 @@ func (s ruleSet) MergeVerify(
 	if err != nil {
 		return out, nil, fmt.Errorf("failed to process each rule in ruleSet: %w", err)
 	}
+
+	out.DefaultReviewerIDs = deduplicateInt64Slice(out.DefaultReviewerIDs)
 
 	return out, violations, nil
 }
@@ -121,12 +128,15 @@ func (s ruleSet) CreatePullReqVerify(
 			// combine output across rules
 			violations = append(violations, backFillRule(rVs, r.RuleInfo)...)
 			out.RequestCodeOwners = out.RequestCodeOwners || rOut.RequestCodeOwners
+			out.DefaultReviewerIDs = append(out.DefaultReviewerIDs, rOut.DefaultReviewerIDs...)
 
 			return nil
 		})
 	if err != nil {
 		return out, nil, fmt.Errorf("failed to process each rule in ruleSet: %w", err)
 	}
+
+	out.DefaultReviewerIDs = deduplicateInt64Slice(out.DefaultReviewerIDs)
 
 	return out, violations, nil
 }
@@ -329,4 +339,20 @@ func maxInt(a int, b int) int {
 		return a
 	}
 	return b
+}
+
+func deduplicateInt64Slice(slice []int64) []int64 {
+	seen := make(map[int64]bool)
+	result := []int64{}
+
+	for _, val := range slice {
+		if _, ok := seen[val]; ok {
+			continue
+		}
+
+		seen[val] = true
+		result = append(result, val)
+	}
+
+	return result
 }

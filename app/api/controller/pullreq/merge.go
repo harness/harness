@@ -336,16 +336,18 @@ func (c *Controller) Merge(
 			RuleViolations: violations,
 
 			// values only returned by dry run
-			DryRun:                              true,
-			Mergeable:                           len(conflicts) == 0,
-			ConflictFiles:                       conflicts,
-			AllowedMethods:                      ruleOut.AllowedMethods,
-			RequiresCodeOwnersApproval:          ruleOut.RequiresCodeOwnersApproval,
-			RequiresCodeOwnersApprovalLatest:    ruleOut.RequiresCodeOwnersApprovalLatest,
-			RequiresCommentResolution:           ruleOut.RequiresCommentResolution,
-			RequiresNoChangeRequests:            ruleOut.RequiresNoChangeRequests,
-			MinimumRequiredApprovalsCount:       ruleOut.MinimumRequiredApprovalsCount,
-			MinimumRequiredApprovalsCountLatest: ruleOut.MinimumRequiredApprovalsCountLatest,
+			DryRun:                                             true,
+			Mergeable:                                          len(conflicts) == 0,
+			ConflictFiles:                                      conflicts,
+			AllowedMethods:                                     ruleOut.AllowedMethods,
+			RequiresCodeOwnersApproval:                         ruleOut.RequiresCodeOwnersApproval,
+			RequiresCodeOwnersApprovalLatest:                   ruleOut.RequiresCodeOwnersApprovalLatest,
+			RequiresCommentResolution:                          ruleOut.RequiresCommentResolution,
+			RequiresNoChangeRequests:                           ruleOut.RequiresNoChangeRequests,
+			MinimumRequiredApprovalsCount:                      ruleOut.MinimumRequiredApprovalsCount,
+			MinimumRequiredApprovalsCountLatest:                ruleOut.MinimumRequiredApprovalsCountLatest,
+			MinimumRequiredDefaultReviewerApprovalsCount:       ruleOut.MinimumRequiredDefaultReviewerApprovalsCount,
+			MinimumRequiredDefaultReviewerApprovalsCountLatest: ruleOut.MinimumRequiredDefaultReviewerApprovalsCountLatest,
 		}
 
 		return out, nil, nil

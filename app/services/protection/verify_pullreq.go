@@ -49,14 +49,17 @@ type (
 	}
 
 	MergeVerifyOutput struct {
-		AllowedMethods                      []enum.MergeMethod
-		DeleteSourceBranch                  bool
-		MinimumRequiredApprovalsCount       int
-		MinimumRequiredApprovalsCountLatest int
-		RequiresCodeOwnersApproval          bool
-		RequiresCodeOwnersApprovalLatest    bool
-		RequiresCommentResolution           bool
-		RequiresNoChangeRequests            bool
+		AllowedMethods                                     []enum.MergeMethod
+		DeleteSourceBranch                                 bool
+		MinimumRequiredApprovalsCount                      int
+		MinimumRequiredApprovalsCountLatest                int
+		MinimumRequiredDefaultReviewerApprovalsCount       int
+		MinimumRequiredDefaultReviewerApprovalsCountLatest int
+		RequiresCodeOwnersApproval                         bool
+		RequiresCodeOwnersApprovalLatest                   bool
+		RequiresCommentResolution                          bool
+		RequiresNoChangeRequests                           bool
+		DefaultReviewerIDs                                 []int64
 	}
 
 	RequiredChecksInput struct {
@@ -89,7 +92,8 @@ type (
 	}
 
 	CreatePullReqVerifyOutput struct {
-		RequestCodeOwners bool
+		RequestCodeOwners  bool
+		DefaultReviewerIDs []int64
 	}
 )
 
@@ -101,8 +105,12 @@ var (
 )
 
 const (
-	codePullReqApprovalReqMinCount              = "pullreq.approvals.require_minimum_count"
-	codePullReqApprovalReqMinCountLatest        = "pullreq.approvals.require_minimum_count:latest_commit"
+	codePullReqApprovalReqMinCount                      = "pullreq.approvals.require_minimum_count"
+	codePullReqApprovalReqMinCountLatest                = "pullreq.approvals.require_minimum_count:latest_commit"
+	codePullReqDefaultReviewerApprovalReqMinCount       = "pullreq.approvals.require_default_reviewer_minimum_count"
+	codePullReqDefaultReviewerApprovalReqMinCountLatest = "" +
+		"pullreq.approvals.require_default_reviewer_minimum_count:latest_commit"
+
 	codePullReqApprovalReqLatestCommit          = "pullreq.approvals.require_latest_commit"
 	codePullReqApprovalReqChangeRequested       = "pullreq.approvals.require_change_requested"
 	codePullReqApprovalReqChangeRequestedOldSHA = "pullreq.approvals.require_change_requested_old_SHA"
@@ -136,9 +144,11 @@ func (v *DefPullReq) MergeVerify(
 	if v.Approvals.RequireLatestCommit {
 		out.RequiresCodeOwnersApprovalLatest = v.Approvals.RequireCodeOwners
 		out.MinimumRequiredApprovalsCountLatest = v.Approvals.RequireMinimumCount
+		out.MinimumRequiredDefaultReviewerApprovalsCountLatest = v.Approvals.RequireMinimumDefaultReviewerCount
 	} else {
 		out.RequiresCodeOwnersApproval = v.Approvals.RequireCodeOwners
 		out.MinimumRequiredApprovalsCount = v.Approvals.RequireMinimumCount
+		out.MinimumRequiredDefaultReviewerApprovalsCount = v.Approvals.RequireMinimumDefaultReviewerCount
 	}
 
 	// pullreq.approvals
@@ -183,6 +193,29 @@ func (v *DefPullReq) MergeVerify(
 				len(approvedBy), v.Approvals.RequireMinimumCount)
 		}
 	}
+
+	defaultReviewerMap := make(map[int64]struct{})
+	for _, approver := range approvedBy {
+		defaultReviewerMap[approver.ID] = struct{}{}
+	}
+	var defaultReviewersCount int
+	for _, id := range v.Reviewers.DefaultReviewerIDs {
+		if _, ok := defaultReviewerMap[id]; ok {
+			defaultReviewersCount++
+		}
+	}
+	if defaultReviewersCount < v.Approvals.RequireMinimumDefaultReviewerCount {
+		if v.Approvals.RequireLatestCommit {
+			violations.Addf(codePullReqDefaultReviewerApprovalReqMinCount,
+				"Insufficient number of default reviewer approvals of the latest commit. Have %d but need at least %d.",
+				defaultReviewersCount, v.Approvals.RequireMinimumDefaultReviewerCount)
+		} else {
+			violations.Addf(codePullReqDefaultReviewerApprovalReqMinCountLatest,
+				"Insufficient number of default reviewer approvals. Have %d but need at least %d.",
+				defaultReviewersCount, v.Approvals.RequireMinimumDefaultReviewerCount)
+		}
+	}
+	out.DefaultReviewerIDs = v.Reviewers.DefaultReviewerIDs
 
 	if v.Approvals.RequireCodeOwners {
 		for _, entry := range in.CodeOwners.EvaluationEntries {
@@ -296,16 +329,20 @@ func (v *DefPullReq) CreatePullReqVerify(
 	context.Context,
 	CreatePullReqVerifyInput,
 ) (CreatePullReqVerifyOutput, []types.RuleViolations, error) {
-	return CreatePullReqVerifyOutput{
-		RequestCodeOwners: v.Reviewers.RequestCodeOwners,
-	}, nil, nil
+	var out CreatePullReqVerifyOutput
+
+	out.RequestCodeOwners = v.Reviewers.RequestCodeOwners
+	out.DefaultReviewerIDs = v.Reviewers.DefaultReviewerIDs
+
+	return out, nil, nil
 }
 
 type DefApprovals struct {
-	RequireCodeOwners      bool `json:"require_code_owners,omitempty"`
-	RequireMinimumCount    int  `json:"require_minimum_count,omitempty"`
-	RequireLatestCommit    bool `json:"require_latest_commit,omitempty"`
-	RequireNoChangeRequest bool `json:"require_no_change_request,omitempty"`
+	RequireCodeOwners                  bool `json:"require_code_owners,omitempty"`
+	RequireMinimumCount                int  `json:"require_minimum_count,omitempty"`
+	RequireLatestCommit                bool `json:"require_latest_commit,omitempty"`
+	RequireNoChangeRequest             bool `json:"require_no_change_request,omitempty"`
+	RequireMinimumDefaultReviewerCount int  `json:"require_minimum_default_reviewer_count,omitempty"`
 }
 
 func (v *DefApprovals) Sanitize() error {
@@ -313,8 +350,10 @@ func (v *DefApprovals) Sanitize() error {
 		return errors.New("minimum count must be zero or a positive integer")
 	}
 
-	if v.RequireLatestCommit && v.RequireMinimumCount == 0 && !v.RequireCodeOwners {
-		return errors.New("require latest commit can only be used with require code owners or require minimum count")
+	if v.RequireLatestCommit && !v.RequireCodeOwners &&
+		v.RequireMinimumCount == 0 && v.RequireMinimumDefaultReviewerCount == 0 {
+		return errors.New("require latest commit can only be used with require code owners, " +
+			"require minimum count or require default reviewer minimum count")
 	}
 
 	return nil
@@ -401,7 +440,8 @@ func (v *DefMerge) Sanitize() error {
 }
 
 type DefReviewers struct {
-	RequestCodeOwners bool `json:"request_code_owners,omitempty"`
+	RequestCodeOwners  bool    `json:"request_code_owners,omitempty"`
+	DefaultReviewerIDs []int64 `json:"default_reviewer_ids,omitempty"`
 }
 
 type DefPush struct {

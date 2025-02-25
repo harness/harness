@@ -257,17 +257,21 @@ type MergeResponse struct {
 	RuleViolations []RuleViolations `json:"rule_violations,omitempty"`
 
 	// values only returned on dryrun
-	DryRunRules                         bool               `json:"dry_run_rules,omitempty"`
-	DryRun                              bool               `json:"dry_run,omitempty"`
-	Mergeable                           bool               `json:"mergeable,omitempty"`
-	ConflictFiles                       []string           `json:"conflict_files,omitempty"`
-	AllowedMethods                      []enum.MergeMethod `json:"allowed_methods,omitempty"`
-	MinimumRequiredApprovalsCount       int                `json:"minimum_required_approvals_count,omitempty"`
-	MinimumRequiredApprovalsCountLatest int                `json:"minimum_required_approvals_count_latest,omitempty"`
-	RequiresCodeOwnersApproval          bool               `json:"requires_code_owners_approval,omitempty"`
-	RequiresCodeOwnersApprovalLatest    bool               `json:"requires_code_owners_approval_latest,omitempty"`
-	RequiresCommentResolution           bool               `json:"requires_comment_resolution,omitempty"`
-	RequiresNoChangeRequests            bool               `json:"requires_no_change_requests,omitempty"`
+	DryRunRules    bool               `json:"dry_run_rules,omitempty"`
+	DryRun         bool               `json:"dry_run,omitempty"`
+	Mergeable      bool               `json:"mergeable,omitempty"`
+	ConflictFiles  []string           `json:"conflict_files,omitempty"`
+	AllowedMethods []enum.MergeMethod `json:"allowed_methods,omitempty"`
+
+	MinimumRequiredApprovalsCount                      int `json:"minimum_required_approvals_count,omitempty"`
+	MinimumRequiredApprovalsCountLatest                int `json:"minimum_required_approvals_count_latest,omitempty"`
+	MinimumRequiredDefaultReviewerApprovalsCount       int `json:"minimum_required_default_reviewer_approvals_count,omitempty"`        //nolint:lll
+	MinimumRequiredDefaultReviewerApprovalsCountLatest int `json:"minimum_required_default_reviewer_approvals_count_latest,omitempty"` //nolint:lll
+
+	RequiresCodeOwnersApproval       bool `json:"requires_code_owners_approval,omitempty"`
+	RequiresCodeOwnersApprovalLatest bool `json:"requires_code_owners_approval_latest,omitempty"`
+	RequiresCommentResolution        bool `json:"requires_comment_resolution,omitempty"`
+	RequiresNoChangeRequests         bool `json:"requires_no_change_requests,omitempty"`
 }
 
 type MergeViolations struct {

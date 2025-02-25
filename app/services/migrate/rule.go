@@ -156,8 +156,14 @@ func mapToBranchRules(
 		},
 
 		PullReq: protection.DefPullReq{
-			Approvals: protection.DefApprovals(rule.PullReq.Approvals),
-			Comments:  protection.DefComments(rule.PullReq.Comments),
+			Approvals: protection.DefApprovals{
+				RequireCodeOwners:                  rule.PullReq.Approvals.RequireCodeOwners,
+				RequireMinimumCount:                rule.PullReq.Approvals.RequireMinimumCount,
+				RequireLatestCommit:                rule.PullReq.Approvals.RequireLatestCommit,
+				RequireNoChangeRequest:             rule.PullReq.Approvals.RequireNoChangeRequest,
+				RequireMinimumDefaultReviewerCount: 0,
+			},
+			Comments: protection.DefComments(rule.PullReq.Comments),
 			Merge: protection.DefMerge{
 				StrategiesAllowed: convertMergeMethods(rule.PullReq.Merge.StrategiesAllowed),
 				DeleteBranch:      rule.PullReq.Merge.DeleteBranch,
