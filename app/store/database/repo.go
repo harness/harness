@@ -813,9 +813,13 @@ func (s *RepoStore) mapToRepo(
 
 func (s *RepoStore) getRepoPath(ctx context.Context, parentID int64, repoIdentifier string) (string, error) {
 	spacePath, err := s.spacePathStore.FindPrimaryBySpaceID(ctx, parentID)
-	// try to re-create the space path if was soft deleted.
+	// try to re-create the space path if it was soft deleted.
 	if errors.Is(err, gitness_store.ErrResourceNotFound) {
-		return getPathForDeletedSpace(ctx, s.db, parentID)
+		sPath, err := getPathForDeletedSpace(ctx, s.db, parentID)
+		if err != nil {
+			return "", fmt.Errorf("failed to get primary path of soft deleted space %d: %w", parentID, err)
+		}
+		return paths.Concatenate(sPath, repoIdentifier), nil
 	}
 	if err != nil {
 		return "", fmt.Errorf("failed to get primary path for space %d: %w", parentID, err)
