@@ -244,18 +244,29 @@ func regexPathTerminatedWithMarker(
 // e.g. subPath: "/space1/space2/+/authToken", marker: "/+" => "/space1/space2"
 // e.g. subPath: "/space1/space2.git", marker: ".git" => "/space1/space2"
 // e.g. subPath: "/space1/space2.git/", marker: ".git" => "/space1/space2".
+// For a subPath, the marker can be at 3 locations:
+// case 1: xxxxxxxxxxxxxxxxxxM/xxxxxx (M is the marker and it should have a / after it to terminate)
+// case 2: xxxxxxxxxxxxxxxxxxxxxxxxM/ (M is at the end and it should have a / after it)
+// case 3: xxxxxxxxxxxxxxxxxxxxxxxxxM (M is at the end).
 func cutOutTerminatedPath(subPath string, marker string) (string, bool) {
-	// if subpath ends with the marker, just remove the marker.
-	if strings.HasSuffix(subPath, marker) {
-		return subPath[:len(subPath)-len(marker)], true
-	}
-
-	// ensure we only look for path segment suffixes when looking for the marker.
-	if !strings.HasSuffix(marker, "/") {
+	endsWithSlash := strings.HasSuffix(marker, "/")
+	if !endsWithSlash {
 		marker += "/"
 	}
+
+	// case 1 and case 2
 	if path, _, found := strings.Cut(subPath, marker); found {
 		return path, true
+	}
+
+	if endsWithSlash {
+		return "", false
+	}
+
+	trimmedMarker := strings.TrimSuffix(marker, "/")
+	if strings.HasSuffix(subPath, trimmedMarker) {
+		subPath = subPath[:len(subPath)-len(trimmedMarker)]
+		return subPath, true
 	}
 
 	return "", false
