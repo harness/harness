@@ -40,6 +40,7 @@ import (
 
 	"github.com/gotidy/ptr"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/exp/maps"
 )
 
 type MergeInput struct {
@@ -230,6 +231,7 @@ func (c *Controller) Merge(
 			RequiresNoChangeRequests:            ruleOut.RequiresNoChangeRequests,
 			MinimumRequiredApprovalsCount:       ruleOut.MinimumRequiredApprovalsCount,
 			MinimumRequiredApprovalsCountLatest: ruleOut.MinimumRequiredApprovalsCountLatest,
+			DefaultReviewerApprovals:            ruleOut.DefaultReviewerApprovals,
 		}, nil, nil
 	}
 
@@ -330,24 +332,31 @@ func (c *Controller) Merge(
 			conflicts = pr.MergeConflicts
 		}
 
+		for _, approvals := range ruleOut.DefaultReviewerApprovals {
+			principalInfos, err := c.principalInfoCache.Map(ctx, approvals.PrincipalIDs)
+			if err != nil {
+				return nil, nil, fmt.Errorf("failed to fetch principal infos from info cache: %w", err)
+			}
+			approvals.PrincipalInfos = maps.Values(principalInfos)
+		}
+
 		// With in.DryRun=true this function never returns types.MergeViolations
 		out := &types.MergeResponse{
 			BranchDeleted:  ruleOut.DeleteSourceBranch,
 			RuleViolations: violations,
 
 			// values only returned by dry run
-			DryRun:                                             true,
-			Mergeable:                                          len(conflicts) == 0,
-			ConflictFiles:                                      conflicts,
-			AllowedMethods:                                     ruleOut.AllowedMethods,
-			RequiresCodeOwnersApproval:                         ruleOut.RequiresCodeOwnersApproval,
-			RequiresCodeOwnersApprovalLatest:                   ruleOut.RequiresCodeOwnersApprovalLatest,
-			RequiresCommentResolution:                          ruleOut.RequiresCommentResolution,
-			RequiresNoChangeRequests:                           ruleOut.RequiresNoChangeRequests,
-			MinimumRequiredApprovalsCount:                      ruleOut.MinimumRequiredApprovalsCount,
-			MinimumRequiredApprovalsCountLatest:                ruleOut.MinimumRequiredApprovalsCountLatest,
-			MinimumRequiredDefaultReviewerApprovalsCount:       ruleOut.MinimumRequiredDefaultReviewerApprovalsCount,
-			MinimumRequiredDefaultReviewerApprovalsCountLatest: ruleOut.MinimumRequiredDefaultReviewerApprovalsCountLatest,
+			DryRun:                              true,
+			Mergeable:                           len(conflicts) == 0,
+			ConflictFiles:                       conflicts,
+			AllowedMethods:                      ruleOut.AllowedMethods,
+			RequiresCodeOwnersApproval:          ruleOut.RequiresCodeOwnersApproval,
+			RequiresCodeOwnersApprovalLatest:    ruleOut.RequiresCodeOwnersApprovalLatest,
+			RequiresCommentResolution:           ruleOut.RequiresCommentResolution,
+			RequiresNoChangeRequests:            ruleOut.RequiresNoChangeRequests,
+			MinimumRequiredApprovalsCount:       ruleOut.MinimumRequiredApprovalsCount,
+			MinimumRequiredApprovalsCountLatest: ruleOut.MinimumRequiredApprovalsCountLatest,
+			DefaultReviewerApprovals:            ruleOut.DefaultReviewerApprovals,
 		}
 
 		return out, nil, nil

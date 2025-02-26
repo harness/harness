@@ -45,7 +45,6 @@ func TestRuleSet_MergeVerify(t *testing.T) {
 			expOut: MergeVerifyOutput{
 				DeleteSourceBranch: false,
 				AllowedMethods:     enum.MergeMethods,
-				DefaultReviewerIDs: []int64{},
 			},
 			expViol: nil,
 		},
@@ -60,7 +59,6 @@ func TestRuleSet_MergeVerify(t *testing.T) {
 			expOut: MergeVerifyOutput{
 				DeleteSourceBranch: false,
 				AllowedMethods:     enum.MergeMethods,
-				DefaultReviewerIDs: []int64{},
 			},
 			expViol: nil,
 		},
@@ -102,7 +100,6 @@ func TestRuleSet_MergeVerify(t *testing.T) {
 				DeleteSourceBranch:            true,
 				MinimumRequiredApprovalsCount: 1,
 				AllowedMethods:                []enum.MergeMethod{enum.MergeMethodMerge},
-				DefaultReviewerIDs:            []int64{},
 			},
 			expViol: []types.RuleViolations{
 				{
@@ -171,7 +168,6 @@ func TestRuleSet_MergeVerify(t *testing.T) {
 			expOut: MergeVerifyOutput{
 				DeleteSourceBranch: false,
 				AllowedMethods:     []enum.MergeMethod{enum.MergeMethodRebase},
-				DefaultReviewerIDs: []int64{},
 			},
 			expViol: []types.RuleViolations{},
 		},
@@ -279,7 +275,6 @@ func TestRuleSet_MergeVerify(t *testing.T) {
 				RequiresCodeOwnersApprovalLatest:    true,
 				RequiresCommentResolution:           true,
 				RequiresNoChangeRequests:            true,
-				DefaultReviewerIDs:                  []int64{},
 			},
 			expViol: []types.RuleViolations{
 				{

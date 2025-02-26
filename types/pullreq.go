@@ -251,6 +251,15 @@ type PullReqFileView struct {
 	Updated int64 `json:"-"`
 }
 
+type DefaultReviewerApprovalsResponse struct {
+	RuleInfo                   RuleInfo         `json:"rule_info"`
+	MinimumRequiredCount       int              `json:"minimum_required_count"`
+	MinimumRequiredCountLatest int              `json:"minimum_required_count_latest"`
+	CurrentCount               int              `json:"current_count"`
+	PrincipalIDs               []int64          `json:"-"`
+	PrincipalInfos             []*PrincipalInfo `json:"principals"`
+}
+
 type MergeResponse struct {
 	SHA            string           `json:"sha,omitempty"`
 	BranchDeleted  bool             `json:"branch_deleted,omitempty"`
@@ -263,10 +272,10 @@ type MergeResponse struct {
 	ConflictFiles  []string           `json:"conflict_files,omitempty"`
 	AllowedMethods []enum.MergeMethod `json:"allowed_methods,omitempty"`
 
-	MinimumRequiredApprovalsCount                      int `json:"minimum_required_approvals_count,omitempty"`
-	MinimumRequiredApprovalsCountLatest                int `json:"minimum_required_approvals_count_latest,omitempty"`
-	MinimumRequiredDefaultReviewerApprovalsCount       int `json:"minimum_required_default_reviewer_approvals_count,omitempty"`        //nolint:lll
-	MinimumRequiredDefaultReviewerApprovalsCountLatest int `json:"minimum_required_default_reviewer_approvals_count_latest,omitempty"` //nolint:lll
+	MinimumRequiredApprovalsCount       int `json:"minimum_required_approvals_count,omitempty"`
+	MinimumRequiredApprovalsCountLatest int `json:"minimum_required_approvals_count_latest,omitempty"`
+
+	DefaultReviewerApprovals []*DefaultReviewerApprovalsResponse `json:"default_reviewer_aprovals,omitempty"`
 
 	RequiresCodeOwnersApproval       bool `json:"requires_code_owners_approval,omitempty"`
 	RequiresCodeOwnersApprovalLatest bool `json:"requires_code_owners_approval_latest,omitempty"`

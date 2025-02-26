@@ -60,6 +60,8 @@ type (
 		RequiresCommentResolution                          bool
 		RequiresNoChangeRequests                           bool
 		DefaultReviewerIDs                                 []int64
+		DefaultReviewerApprovalsCount                      int
+		DefaultReviewerApprovals                           []*types.DefaultReviewerApprovalsResponse
 	}
 
 	RequiredChecksInput struct {
@@ -216,6 +218,7 @@ func (v *DefPullReq) MergeVerify(
 		}
 	}
 	out.DefaultReviewerIDs = v.Reviewers.DefaultReviewerIDs
+	out.DefaultReviewerApprovalsCount = defaultReviewersCount
 
 	if v.Approvals.RequireCodeOwners {
 		for _, entry := range in.CodeOwners.EvaluationEntries {
