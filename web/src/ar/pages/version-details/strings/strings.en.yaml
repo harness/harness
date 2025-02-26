@@ -52,6 +52,9 @@ overview:
     createdAndLastModifiedAt: Created | Last modified
     description: Description
     pullCommand: Pull command
+    repository: Repository
+    homepage: Homepage
+    license: License
 artifactDetails:
   tabs:
     layers: Layers

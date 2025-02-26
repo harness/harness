@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-export enum LabelValueTypeEnum {
-  Text = 'Text',
-  Link = 'Link',
-  CommandBlock = 'CommandBlock',
-  CopyText = 'CopyText',
-  PackageType = 'PackageType'
+.gridContainer {
+  align-items: center;
+  display: grid;
+  grid-template-columns: max-content auto;
+  row-gap: var(--spacing-medium);
+  column-gap: 30px;
 }

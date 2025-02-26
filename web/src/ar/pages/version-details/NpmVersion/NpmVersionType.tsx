@@ -30,6 +30,7 @@ import {
   VersionStep
 } from '@ar/frameworks/Version/Version'
 
+import NpmVersionOverviewPage from './pages/overview/NpmVersionOverviewPage'
 import { VersionDetailsTab } from '../components/VersionDetailsTabs/constants'
 import VersionDetailsHeaderContent from '../components/VersionDetailsHeaderContent/VersionDetailsHeaderContent'
 
@@ -60,8 +61,10 @@ export class NpmVersionType extends VersionStep<ArtifactVersionSummary> {
   renderVersionDetailsTab(props: VersionDetailsTabProps): JSX.Element {
     switch (props.tab) {
       case VersionDetailsTab.OVERVIEW:
+        return <NpmVersionOverviewPage />
       case VersionDetailsTab.ARTIFACT_DETAILS:
       case VersionDetailsTab.OSS:
+        return <NpmVersionOverviewPage />
       default:
         return <String stringID="tabNotFound" />
     }

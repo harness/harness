@@ -14,10 +14,18 @@
  * limitations under the License.
  */
 
-export enum LabelValueTypeEnum {
-  Text = 'Text',
-  Link = 'Link',
-  CommandBlock = 'CommandBlock',
-  CopyText = 'CopyText',
-  PackageType = 'PackageType'
+import React from 'react'
+
+import VersionOverviewProvider from '@ar/pages/version-details/context/VersionOverviewProvider'
+
+import NpmVersionGeneralInfo from './NpmVersionGeneralInfo'
+
+import genericStyles from '../../NpmVersion.module.scss'
+
+export default function NpmVersionOverviewPage() {
+  return (
+    <VersionOverviewProvider>
+      <NpmVersionGeneralInfo className={genericStyles.cardContainer} />
+    </VersionOverviewProvider>
+  )
 }

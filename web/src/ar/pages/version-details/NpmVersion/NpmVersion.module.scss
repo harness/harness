@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-export enum LabelValueTypeEnum {
-  Text = 'Text',
-  Link = 'Link',
-  CommandBlock = 'CommandBlock',
-  CopyText = 'CopyText',
-  PackageType = 'PackageType'
+.cardContainer {
+  width: 60% !important;
+  min-width: 1040px;
+  padding: var(--spacing-7) !important;
+  background-color: var(--white);
+  margin: var(--spacing-large);
 }

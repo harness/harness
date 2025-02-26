@@ -202,9 +202,12 @@ export interface StringsMap {
   'versionDetails.overview.generalInformation.description': string
   'versionDetails.overview.generalInformation.digest': string
   'versionDetails.overview.generalInformation.downloads': string
+  'versionDetails.overview.generalInformation.homepage': string
+  'versionDetails.overview.generalInformation.license': string
   'versionDetails.overview.generalInformation.name': string
   'versionDetails.overview.generalInformation.packageType': string
   'versionDetails.overview.generalInformation.pullCommand': string
+  'versionDetails.overview.generalInformation.repository': string
   'versionDetails.overview.generalInformation.repositoryPath': string
   'versionDetails.overview.generalInformation.size': string
   'versionDetails.overview.generalInformation.title': string
@@ -338,6 +341,7 @@ export interface StringsMap {
   'packageTypes.genericPackage': string
   'packageTypes.helmPackage': string
   'packageTypes.mavenPackage': string
+  'packageTypes.npmPackage': string
   plaintext: string
   plusNewName: string
   prod: string
