@@ -138,6 +138,8 @@ func NewService(
 					stream.WithMaxRetries(config.MaxRetries),
 				))
 
+			_ = r.RegisterCreated(service.notifyPullReqCreated)
+
 			_ = r.RegisterReviewerAdded(service.notifyReviewerAdded)
 			_ = r.RegisterCommentCreated(service.notifyCommentCreated)
 			_ = r.RegisterBranchUpdated(service.notifyPullReqBranchUpdated)
