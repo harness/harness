@@ -33,3 +33,10 @@ func HasAnySuffix(s string, prefixes []string) bool {
 	}
 	return false
 }
+
+func SafeUint64(n int) uint64 {
+	if n < 0 {
+		return 0
+	}
+	return uint64(n)
+}

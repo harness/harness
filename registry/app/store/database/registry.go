@@ -26,6 +26,7 @@ import (
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/app/store/database/util"
 	"github.com/harness/gitness/registry/types"
+	"github.com/harness/gitness/registry/utils"
 	gitnessstore "github.com/harness/gitness/store"
 	databaseg "github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -71,6 +72,11 @@ type registryDB struct {
 	UpdatedAt       int64                 `db:"registry_updated_at"`
 	CreatedBy       int64                 `db:"registry_created_by"`
 	UpdatedBy       int64                 `db:"registry_updated_by"`
+}
+
+type registryNameID struct {
+	ID   int64  `db:"registry_id"`
+	Name string `db:"registry_name"`
 }
 
 func (r registryDao) Get(ctx context.Context, id int64) (*types.Registry, error) {
@@ -165,19 +171,21 @@ func (r registryDao) FetchUpstreamProxyKeys(
 	ctx context.Context,
 	ids []int64,
 ) (repokeys []string, err error) {
-	dst := make([]string, 0)
+	orderedRepoKeys := make([]string, 0)
+
 	if commons.IsEmpty(ids) {
-		return dst, nil
+		return orderedRepoKeys, nil
 	}
 
 	stmt := databaseg.Builder.
-		Select("registry_name").
+		Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(registryNameID{}), ",")).
 		From("registries").
 		Where(sq.Eq{"registry_id": ids}).
 		Where("registry_type = ?", artifact.RegistryTypeUPSTREAM)
 
 	db := dbtx.GetAccessor(ctx, r.db)
 
+	dst := []registryNameID{}
 	sql, args, err := stmt.ToSql()
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to convert query to sql")
@@ -186,7 +194,24 @@ func (r registryDao) FetchUpstreamProxyKeys(
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
 		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to find repo")
 	}
-	return dst, nil
+
+	// Create a map
+	recordMap := make(map[int64]registryNameID)
+	for _, record := range dst {
+		recordMap[record.ID] = record
+	}
+
+	// Reorder the fetched records based on the ID list
+	for _, id := range ids {
+		if record, exists := recordMap[id]; exists {
+			orderedRepoKeys = append(orderedRepoKeys, record.Name)
+		} else {
+			log.Ctx(ctx).Error().Msgf("failed to map upstream registry: %d", id)
+			orderedRepoKeys = append(orderedRepoKeys, "")
+		}
+	}
+
+	return orderedRepoKeys, nil
 }
 
 func (r registryDao) GetByIDIn(ctx context.Context, ids []int64) (*[]types.Registry, error) {
@@ -335,7 +360,7 @@ func (r registryDao) GetAll(
 	} else {
 		query = query.OrderBy(fmt.Sprintf("r.registry_%s %s", sortByField, sortByOrder))
 	}
-	query = query.Limit(uint64(limit)).Offset(uint64(offset))
+	query = query.Limit(utils.SafeUint64(limit)).Offset(utils.SafeUint64(offset))
 
 	// Convert query to SQL
 	sql, args, err := query.ToSql()

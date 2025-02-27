@@ -269,8 +269,8 @@ func (c *APIController) setUpstreamProxyIDs(
 	}
 
 	var upstreamProxies []int64
-	for _, repo := range *repos {
-		for _, proxy := range *virtualConfig.UpstreamProxies {
+	for _, proxy := range *virtualConfig.UpstreamProxies {
+		for _, repo := range *repos {
 			if repo.RegIdentifier == proxy {
 				regID, err := strconv.ParseInt(repo.RegID, 10, 64)
 				if err != nil {
