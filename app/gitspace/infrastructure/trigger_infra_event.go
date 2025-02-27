@@ -148,7 +148,7 @@ func (i InfraProvisioner) provisionNewInfrastructure(
 	}
 
 	infraProviderResource := gitspaceConfig.InfraProviderResource
-	allParams, err := i.getAllParamsFromDB(ctx, infraProviderResource, infraProvider)
+	allParams, configMetadata, err := i.getAllParamsFromDB(ctx, infraProviderResource, infraProvider)
 	if err != nil {
 		return fmt.Errorf("could not get all params from DB while provisioning: %w", err)
 	}
@@ -190,6 +190,7 @@ func (i InfraProvisioner) provisionNewInfrastructure(
 		agentPort,
 		requiredGitspacePorts,
 		allParams,
+		configMetadata,
 	)
 	if err != nil {
 		infraProvisioned.InfraStatus = enum.InfraStatusUnknown
@@ -215,7 +216,7 @@ func (i InfraProvisioner) provisionExistingInfrastructure(
 	gitspaceConfig types.GitspaceConfig,
 	requiredGitspacePorts []types.GitspacePort,
 ) error {
-	allParams, err := i.getAllParamsFromDB(ctx, gitspaceConfig.InfraProviderResource, infraProvider)
+	allParams, configMetadata, err := i.getAllParamsFromDB(ctx, gitspaceConfig.InfraProviderResource, infraProvider)
 	if err != nil {
 		return fmt.Errorf("could not get all params from DB while provisioning: %w", err)
 	}
@@ -234,6 +235,7 @@ func (i InfraProvisioner) provisionExistingInfrastructure(
 		0, // NOTE: Agent port is not required for provisioning type Existing.
 		requiredGitspacePorts,
 		allParams,
+		configMetadata,
 	)
 	if err != nil {
 		return fmt.Errorf(

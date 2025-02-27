@@ -222,9 +222,13 @@ func (i infraProviderConfigStore) mapToInfraProviderConfigs(
 func (i infraProviderConfigStore) mapToInternalInfraProviderConfig(
 	in *types.InfraProviderConfig,
 ) (*infraProviderConfig, error) {
-	jsonBytes, marshalErr := json.Marshal(in.Metadata)
-	if marshalErr != nil {
-		return nil, marshalErr
+	var jsonBytes []byte
+	var marshalErr error
+	if len(in.Metadata) > 0 {
+		jsonBytes, marshalErr = json.Marshal(in.Metadata)
+		if marshalErr != nil {
+			return nil, marshalErr
+		}
 	}
 	infraProviderConfigEntity := &infraProviderConfig{
 		Identifier: in.Identifier,

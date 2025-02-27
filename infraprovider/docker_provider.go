@@ -59,6 +59,7 @@ func (d DockerProvider) Provision(
 	_ int,
 	requiredGitspacePorts []types.GitspacePort,
 	inputParameters []types.InfraProviderParameter,
+	_ map[string]any,
 ) error {
 	dockerClient, err := d.dockerClientFactory.NewDockerClient(ctx, types.Infrastructure{
 		ProviderType:    enum.InfraProviderTypeDocker,
@@ -128,6 +129,7 @@ func (d DockerProvider) Find(
 	_ int,
 	_ []types.GitspacePort,
 	inputParameters []types.InfraProviderParameter,
+	_ map[string]any,
 ) (*types.Infrastructure, error) {
 	dockerClient, err := d.dockerClientFactory.NewDockerClient(ctx, types.Infrastructure{
 		ProviderType:    enum.InfraProviderTypeDocker,

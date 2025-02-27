@@ -32,6 +32,7 @@ type InfraProvider interface {
 		agentPort int,
 		requiredGitspacePorts []types.GitspacePort,
 		inputParameters []types.InfraProviderParameter,
+		configMetadata map[string]any,
 	) error
 
 	// Find finds infrastructure provisioned against a gitspace.
@@ -44,6 +45,7 @@ type InfraProvider interface {
 		agentPort int,
 		requiredGitspacePorts []types.GitspacePort,
 		inputParameters []types.InfraProviderParameter,
+		configMetadata map[string]any,
 	) (*types.Infrastructure, error)
 
 	// Stop frees up the resources allocated against a gitspace, which can be freed.

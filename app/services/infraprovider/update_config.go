@@ -28,6 +28,14 @@ func (c *Service) UpdateConfig(ctx context.Context, infraProviderConfig *types.I
 		return err
 	}
 
+	existingConfig, err := c.infraProviderConfigStore.FindByIdentifier(ctx, infraProviderConfig.SpaceID,
+		infraProviderConfig.Identifier)
+	if err != nil {
+		return fmt.Errorf("could not find infraprovider config %s before updating: %w",
+			infraProviderConfig.Identifier, err)
+	}
+
+	infraProviderConfig.ID = existingConfig.ID
 	infraProviderConfig.Updated = time.Now().UnixMilli()
 	err = c.infraProviderConfigStore.Update(ctx, infraProviderConfig)
 	if err != nil {

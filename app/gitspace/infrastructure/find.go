@@ -42,9 +42,10 @@ func (i InfraProvisioner) Find(
 	}
 
 	var inputParams []types.InfraProviderParameter
+	var configMetadata map[string]any
 	var agentPort = 0
 	if infraProvider.ProvisioningType() == enum.InfraProvisioningTypeNew {
-		inputParams, err = i.paramsForProvisioningTypeNew(ctx, gitspaceConfig)
+		inputParams, configMetadata, err = i.paramsForProvisioningTypeNew(ctx, gitspaceConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -52,7 +53,7 @@ func (i InfraProvisioner) Find(
 		// TODO: What if the agent port has deviated from when the last instance was created?
 		agentPort = i.config.AgentPort
 	} else {
-		inputParams, err = i.paramsForProvisioningTypeExisting(ctx, infraProviderResource, infraProvider)
+		inputParams, configMetadata, err = i.paramsForProvisioningTypeExisting(ctx, infraProviderResource, infraProvider)
 		if err != nil {
 			return nil, err
 		}
@@ -60,7 +61,7 @@ func (i InfraProvisioner) Find(
 
 	infra, err := infraProvider.Find(ctx, gitspaceConfig.SpaceID, gitspaceConfig.SpacePath,
 		gitspaceConfig.Identifier, gitspaceConfig.GitspaceInstance.Identifier,
-		agentPort, requiredGitspacePorts, inputParams)
+		agentPort, requiredGitspacePorts, inputParams, configMetadata)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find infrastructure: %w", err)
 	}
@@ -83,23 +84,27 @@ func (i InfraProvisioner) Find(
 func (i InfraProvisioner) paramsForProvisioningTypeNew(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
-) ([]types.InfraProviderParameter, error) {
+) ([]types.InfraProviderParameter, map[string]any, error) {
 	infraProvisionedLatest, err := i.infraProvisionedStore.FindLatestByGitspaceInstanceID(
 		ctx, gitspaceConfig.GitspaceInstance.ID)
 	if err != nil {
-		return nil, fmt.Errorf(
+		return nil, nil, fmt.Errorf(
 			"could not find latest infra provisioned entity for instance %d: %w",
 			gitspaceConfig.GitspaceInstance.ID, err)
 	}
 	if infraProvisionedLatest.InputParams == "" {
-		return []types.InfraProviderParameter{}, err
+		return []types.InfraProviderParameter{}, nil, err
 	}
 	allParams, err := deserializeInfraProviderParams(infraProvisionedLatest.InputParams)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-
-	return allParams, nil
+	infraProviderConfig, err := i.infraProviderConfigStore.Find(ctx,
+		gitspaceConfig.InfraProviderResource.InfraProviderConfigID)
+	if err != nil {
+		return nil, nil, err
+	}
+	return allParams, infraProviderConfig.Metadata, nil
 }
 
 func deserializeInfraProviderParams(in string) ([]types.InfraProviderParameter, error) {
@@ -115,13 +120,13 @@ func (i InfraProvisioner) paramsForProvisioningTypeExisting(
 	ctx context.Context,
 	infraProviderResource types.InfraProviderResource,
 	infraProvider infraprovider.InfraProvider,
-) ([]types.InfraProviderParameter, error) {
-	allParams, err := i.getAllParamsFromDB(ctx, infraProviderResource, infraProvider)
+) ([]types.InfraProviderParameter, map[string]any, error) {
+	allParams, configMetadata, err := i.getAllParamsFromDB(ctx, infraProviderResource, infraProvider)
 	if err != nil {
-		return nil, fmt.Errorf("could not get all params from DB while finding: %w", err)
+		return nil, nil, fmt.Errorf("could not get all params from DB while finding: %w", err)
 	}
 
-	return allParams, nil
+	return allParams, configMetadata, nil
 }
 
 func getGitspaceScheme(ideType enum.IDEType, gitspaceSchemeFromMetadata string) (string, error) {
@@ -185,12 +190,12 @@ func (i InfraProvisioner) getAllParamsFromDB(
 	ctx context.Context,
 	infraProviderResource types.InfraProviderResource,
 	infraProvider infraprovider.InfraProvider,
-) ([]types.InfraProviderParameter, error) {
+) ([]types.InfraProviderParameter, map[string]any, error) {
 	var allParams []types.InfraProviderParameter
 
 	templateParams, err := i.getTemplateParams(ctx, infraProvider, infraProviderResource)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	allParams = append(allParams, templateParams...)
@@ -199,7 +204,12 @@ func (i InfraProvisioner) getAllParamsFromDB(
 
 	allParams = append(allParams, params...)
 
-	return allParams, nil
+	configMetadata, err := i.configMetadata(ctx, infraProviderResource)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return allParams, configMetadata, nil
 }
 
 func (i InfraProvisioner) getTemplateParams(
@@ -255,4 +265,15 @@ func (i InfraProvisioner) paramsFromResource(
 		})
 	}
 	return params
+}
+
+func (i InfraProvisioner) configMetadata(
+	ctx context.Context,
+	infraProviderResource types.InfraProviderResource,
+) (map[string]any, error) {
+	infraProviderConfig, err := i.infraProviderConfigStore.Find(ctx, infraProviderResource.InfraProviderConfigID)
+	if err != nil {
+		return nil, err
+	}
+	return infraProviderConfig.Metadata, nil
 }
