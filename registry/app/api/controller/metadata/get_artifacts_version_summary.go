@@ -29,7 +29,7 @@ func (c *APIController) GetArtifactVersionSummary(
 	ctx context.Context,
 	r artifact.GetArtifactVersionSummaryRequestObject,
 ) (artifact.GetArtifactVersionSummaryResponseObject, error) {
-	image, version, pkgType, isLatestTag, err := c.FetchArtifactSummary(ctx, r)
+	image, version, pkgType, err := c.FetchArtifactSummary(ctx, r)
 	if err != nil {
 		return artifact.GetArtifactVersionSummary500JSONResponse{
 			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
@@ -39,7 +39,7 @@ func (c *APIController) GetArtifactVersionSummary(
 	}
 
 	return artifact.GetArtifactVersionSummary200JSONResponse{
-		ArtifactVersionSummaryResponseJSONResponse: *GetArtifactVersionSummary(image, pkgType, version, isLatestTag),
+		ArtifactVersionSummaryResponseJSONResponse: *GetArtifactVersionSummary(image, pkgType, version),
 	}, nil
 }
 
@@ -47,16 +47,16 @@ func (c *APIController) GetArtifactVersionSummary(
 func (c *APIController) FetchArtifactSummary(
 	ctx context.Context,
 	r artifact.GetArtifactVersionSummaryRequestObject,
-) (string, string, artifact.PackageType, bool, error) {
+) (string, string, artifact.PackageType, error) {
 	regInfo, err := c.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
 
 	if err != nil {
-		return "", "", "", false, fmt.Errorf("failed to get registry request base info: %w", err)
+		return "", "", "", fmt.Errorf("failed to get registry request base info: %w", err)
 	}
 
 	space, err := c.SpaceFinder.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
-		return "", "", "", false, err
+		return "", "", "", err
 	}
 
 	session, _ := request.AuthSessionFrom(ctx)
@@ -67,7 +67,7 @@ func (c *APIController) FetchArtifactSummary(
 		session,
 		permissionChecks...,
 	); err != nil {
-		return "", "", "", false, err
+		return "", "", "", err
 	}
 
 	image := string(r.Artifact)
@@ -75,29 +75,23 @@ func (c *APIController) FetchArtifactSummary(
 
 	registry, err := c.RegistryRepository.Get(ctx, regInfo.RegistryID)
 	if err != nil {
-		return "", "", "", false, err
+		return "", "", "", err
 	}
 
 	if registry.PackageType == artifact.PackageTypeDOCKER || registry.PackageType == artifact.PackageTypeHELM {
 		tag, err := c.TagStore.GetTagMetadata(ctx, regInfo.parentID, regInfo.RegistryIdentifier, image, version)
 		if err != nil {
-			return "", "", "", false, err
+			return "", "", "", err
 		}
 
-		latestTag, _ := c.TagStore.GetLatestTagName(ctx, regInfo.parentID, regInfo.RegistryIdentifier, image)
-		isLatestTag := latestTag == version
-
-		return image, tag.Name, tag.PackageType, isLatestTag, nil
+		return image, tag.Name, tag.PackageType, nil
 	}
 	artifact, err := c.ArtifactStore.GetArtifactMetadata(ctx, regInfo.parentID,
 		regInfo.RegistryIdentifier, image, version)
 
 	if err != nil {
-		return "", "", "", false, err
+		return "", "", "", err
 	}
 
-	latestTag, _ := c.ArtifactStore.GetLatestVersionName(ctx, regInfo.parentID, regInfo.RegistryIdentifier, image)
-	isLatestTag := latestTag == version
-
-	return image, artifact.Name, artifact.PackageType, isLatestTag, nil
+	return image, artifact.Name, artifact.PackageType, nil
 }

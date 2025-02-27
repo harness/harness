@@ -88,8 +88,6 @@ func (c *APIController) GetAllArtifactVersions(
 			image, regInfo.sortByField, regInfo.sortByOrder, regInfo.limit, regInfo.offset, regInfo.searchTerm,
 		)
 
-		latestTag, _ := c.TagStore.GetLatestTagName(ctx, regInfo.parentID, regInfo.RegistryIdentifier, image)
-
 		count, _ := c.TagStore.CountAllTagsByRepoAndImage(
 			ctx, regInfo.parentID, regInfo.RegistryIdentifier,
 			image, regInfo.searchTerm,
@@ -105,7 +103,7 @@ func (c *APIController) GetAllArtifactVersions(
 
 		return artifact.GetAllArtifactVersions200JSONResponse{
 			ListArtifactVersionResponseJSONResponse: *GetAllArtifactVersionResponse(
-				ctx, tags, latestTag, image, count, regInfo.pageNumber, regInfo.limit,
+				ctx, tags, image, count, regInfo.pageNumber, regInfo.limit,
 				c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, regInfo.RegistryIdentifier),
 			),
 		}, nil
@@ -118,8 +116,6 @@ func (c *APIController) GetAllArtifactVersions(
 		return throw500Error(err)
 	}
 
-	latestVersion, _ := c.ArtifactStore.GetLatestVersionName(ctx, regInfo.parentID, regInfo.RegistryIdentifier, image)
-
 	cnt, _ := c.ArtifactStore.CountAllVersionsByRepoAndImage(
 		ctx, regInfo.parentID, regInfo.RegistryIdentifier,
 		image, regInfo.searchTerm,
@@ -127,7 +123,7 @@ func (c *APIController) GetAllArtifactVersions(
 
 	return artifact.GetAllArtifactVersions200JSONResponse{
 		ListArtifactVersionResponseJSONResponse: *GetNonOCIAllArtifactVersionResponse(
-			ctx, metadata, latestVersion, image, cnt, regInfo.pageNumber, regInfo.limit,
+			ctx, metadata, image, cnt, regInfo.pageNumber, regInfo.limit,
 			c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, regInfo.RegistryIdentifier),
 		),
 	}, nil

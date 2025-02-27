@@ -1672,8 +1672,6 @@ components:
         fileCount:
           type: integer
           format: int64
-        islatestVersion:
-          type: boolean
         lastModified:
           type: string
         packageType:
@@ -1916,8 +1914,6 @@ components:
           type: string
         modifiedAt:
           type: string
-        isLatestVersion:
-          type: boolean
       required:
         - imageName
         - version
@@ -1971,8 +1967,6 @@ components:
           type: string
         modifiedAt:
           type: string
-        isLatestVersion:
-          type: boolean
       required:
         - imageName
         - version
@@ -2011,8 +2005,6 @@ components:
           type: string
         packageType:
           $ref: "#/components/schemas/PackageType"
-        isLatestVersion:
-          type: boolean
       required:
         - imageName
         - version
@@ -2070,8 +2062,6 @@ components:
           type: string
         version:
           type: string
-        isLatestVersion:
-          type: boolean
         manifests:
           type: array
           items:

@@ -241,7 +241,7 @@ func (a ArtifactDao) GetAllArtifactsByParentID(
 	if sortByField == downloadCount {
 		sortField = downloadCount
 	}
-	q = q.OrderBy(sortField + " " + sortByOrder).Limit(uint64(limit)).Offset(uint64(offset))
+	q = q.OrderBy(sortField + " " + sortByOrder).Limit(uint64(limit)).Offset(uint64(offset)) //nolint:gosec
 
 	sql, args, err := q.ToSql()
 	if err != nil {
@@ -358,7 +358,7 @@ func (a ArtifactDao) GetAllArtifactsByRepo(
 	} else if sortByField == imageName {
 		sortField = name
 	}
-	q = q.OrderBy(sortField + " " + sortByOrder).Limit(uint64(limit)).Offset(uint64(offset))
+	q = q.OrderBy(sortField + " " + sortByOrder).Limit(uint64(limit)).Offset(uint64(offset)) //nolint:gosec
 
 	sql, args, err := q.ToSql()
 	if err != nil {
@@ -579,7 +579,7 @@ func (a ArtifactDao) GetAllVersionsByRepoAndImage(
 	} else if sortByField == name {
 		sortField = name
 	}
-	q = q.OrderBy(sortField + " " + sortByOrder).Limit(uint64(limit)).Offset(uint64(offset))
+	q = q.OrderBy(sortField + " " + sortByOrder).Limit(uint64(limit)).Offset(uint64(offset)) //nolint:gosec
 
 	sql, args, err := q.ToSql()
 	if err != nil {
@@ -625,37 +625,6 @@ func (a ArtifactDao) CountAllVersionsByRepoAndImage(
 		return 0, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing count query")
 	}
 	return count, nil
-}
-
-func (a ArtifactDao) GetLatestVersionName(
-	ctx context.Context,
-	parentID int64,
-	repoKey string,
-	imageName string,
-) (string, error) {
-	q := databaseg.Builder.Select("artifact_version as name").
-		From("artifacts a").
-		Join("images ON i.image_id = a.artifact_image_id").
-		Join("registries ON i.image_registry_id = registry_id").
-		Where(
-			"registry_parent_id = ? AND registry_name = ? AND i.image_name = ?",
-			parentID, repoKey, imageName,
-		).
-		OrderBy("artifact_updated_at DESC").Limit(1)
-
-	sql, args, err := q.ToSql()
-	if err != nil {
-		return "", errors.Wrap(err, "Failed to convert query to sql")
-	}
-
-	db := dbtx.GetAccessor(ctx, a.db)
-
-	var tag string
-	err = db.QueryRowContext(ctx, sql, args...).Scan(&tag)
-	if err != nil {
-		return tag, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing get tag name query")
-	}
-	return tag, nil
 }
 
 func (a ArtifactDao) GetArtifactMetadata(
@@ -709,7 +678,8 @@ func (a ArtifactDao) mapToArtifactMetadata(
 }
 
 func (a ArtifactDao) mapToNonOCIMetadata(
-	dst *nonOCIArtifactMetadataDB) *types.NonOCIArtifactMetadata {
+	dst *nonOCIArtifactMetadataDB,
+) *types.NonOCIArtifactMetadata {
 	var size string
 	var fileCount int64
 
@@ -721,18 +691,18 @@ func (a ArtifactDao) mapToNonOCIMetadata(
 		fileCount = *dst.FileCount
 	}
 	return &types.NonOCIArtifactMetadata{
-		Name:            dst.Name,
-		DownloadCount:   dst.DownloadCount,
-		PackageType:     dst.PackageType,
-		Size:            size,
-		FileCount:       fileCount,
-		IsLatestVersion: dst.IsLatestVersion,
-		ModifiedAt:      time.UnixMilli(dst.ModifiedAt),
+		Name:          dst.Name,
+		DownloadCount: dst.DownloadCount,
+		PackageType:   dst.PackageType,
+		Size:          size,
+		FileCount:     fileCount,
+		ModifiedAt:    time.UnixMilli(dst.ModifiedAt),
 	}
 }
 
 func (a ArtifactDao) mapToNonOCIMetadataList(
-	dst []*nonOCIArtifactMetadataDB) (*[]types.NonOCIArtifactMetadata, error) {
+	dst []*nonOCIArtifactMetadataDB,
+) (*[]types.NonOCIArtifactMetadata, error) {
 	metadataList := make([]types.NonOCIArtifactMetadata, 0, len(dst))
 	for _, d := range dst {
 		metadata := a.mapToNonOCIMetadata(d)
@@ -742,13 +712,12 @@ func (a ArtifactDao) mapToNonOCIMetadataList(
 }
 
 type nonOCIArtifactMetadataDB struct {
-	Name            string               `db:"name"`
-	Size            *string              `db:"size"`
-	PackageType     artifact.PackageType `db:"package_type"`
-	FileCount       *int64               `db:"file_count"`
-	IsLatestVersion bool                 `db:"is_latest_version"`
-	ModifiedAt      int64                `db:"modified_at"`
-	DownloadCount   int64                `db:"download_count"`
+	Name          string               `db:"name"`
+	Size          *string              `db:"size"`
+	PackageType   artifact.PackageType `db:"package_type"`
+	FileCount     *int64               `db:"file_count"`
+	ModifiedAt    int64                `db:"modified_at"`
+	DownloadCount int64                `db:"download_count"`
 }
 
 type GenericMetadata struct {

@@ -98,15 +98,9 @@ func (c *APIController) GetDockerArtifactDetails(
 		return getArtifactDetailsErrResponse(err)
 	}
 
-	latestTag, err := c.TagStore.GetLatestTag(ctx, registry.ID, image)
-	if err != nil {
-		return getArtifactDetailsErrResponse(err)
-	}
-
 	return artifact.GetDockerArtifactDetails200JSONResponse{
 		DockerArtifactDetailResponseJSONResponse: *GetDockerArtifactDetails(
-			registry, tag, m,
-			latestTag.ID == tag.ID, c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, registry.Name),
+			registry, tag, m, c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, registry.Name),
 		),
 	}, nil
 }

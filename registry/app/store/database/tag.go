@@ -86,17 +86,16 @@ type artifactMetadataDB struct {
 }
 
 type tagMetadataDB struct {
-	Name            string               `db:"name"`
-	Size            string               `db:"size"`
-	PackageType     artifact.PackageType `db:"package_type"`
-	DigestCount     int                  `db:"digest_count"`
-	IsLatestVersion bool                 `db:"latest_version"`
-	ModifiedAt      int64                `db:"modified_at"`
-	SchemaVersion   int                  `db:"manifest_schema_version"`
-	NonConformant   bool                 `db:"manifest_non_conformant"`
-	Payload         []byte               `db:"manifest_payload"`
-	MediaType       string               `db:"mt_media_type"`
-	DownloadCount   int64                `db:"download_count"`
+	Name          string               `db:"name"`
+	Size          string               `db:"size"`
+	PackageType   artifact.PackageType `db:"package_type"`
+	DigestCount   int                  `db:"digest_count"`
+	ModifiedAt    int64                `db:"modified_at"`
+	SchemaVersion int                  `db:"manifest_schema_version"`
+	NonConformant bool                 `db:"manifest_non_conformant"`
+	Payload       []byte               `db:"manifest_payload"`
+	MediaType     string               `db:"mt_media_type"`
+	DownloadCount int64                `db:"download_count"`
 }
 
 type tagDetailDB struct {
@@ -266,7 +265,7 @@ func (t tagDao) TagsPaginated(
 			"tag_registry_id = ? AND tag_image_name = ? AND tag_name > ?",
 			repoID, image, filters.LastEntry,
 		).
-		OrderBy("tag_name").Limit(uint64(filters.MaxEntries))
+		OrderBy("tag_name").Limit(uint64(filters.MaxEntries)) //nolint:gosec
 
 	db := dbtx.GetAccessor(ctx, t.db)
 
@@ -306,7 +305,7 @@ func (t tagDao) HasTagsAfterName(
 			filters.PublishedAt, filters.LastEntry,
 		)
 	}
-	stmt = stmt.OrderBy("tag_name").GroupBy("tag_name").Limit(uint64(filters.MaxEntries))
+	stmt = stmt.OrderBy("tag_name").GroupBy("tag_name").Limit(uint64(filters.MaxEntries)) //nolint:gosec
 
 	db := dbtx.GetAccessor(ctx, t.db)
 
@@ -399,8 +398,10 @@ func (t tagDao) GetAllArtifactsByParentID(
 	return t.mapToArtifactMetadataList(ctx, dst)
 }
 
-func (t tagDao) GetAllArtifactsQueryByParentIDForOCI(parentID int64, latestVersion bool, registryIDs *[]string,
-	packageTypes []string, search string) sq.SelectBuilder {
+func (t tagDao) GetAllArtifactsQueryByParentIDForOCI(
+	parentID int64, latestVersion bool, registryIDs *[]string,
+	packageTypes []string, search string,
+) sq.SelectBuilder {
 	q2 := databaseg.Builder.Select(
 		`r.registry_name as repo_name, 
 		t.tag_image_name as name, 
@@ -453,8 +454,10 @@ func (t tagDao) GetAllArtifactsQueryByParentIDForOCI(parentID int64, latestVersi
 	return q2
 }
 
-func (t tagDao) GetAllArtifactOnParentIDQueryForNonOCI(parentID int64, latestVersion bool, registryIDs *[]string,
-	packageTypes []string, search string) sq.SelectBuilder {
+func (t tagDao) GetAllArtifactOnParentIDQueryForNonOCI(
+	parentID int64, latestVersion bool, registryIDs *[]string,
+	packageTypes []string, search string,
+) sq.SelectBuilder {
 	q1 := databaseg.Builder.Select(
 		`r.registry_name as repo_name, 
 		i.image_name as name, 
@@ -900,7 +903,7 @@ func (t tagDao) GetAllArtifactsByRepo(
 	if sortByField == downloadCount {
 		sortField = downloadCount
 	}
-	q = q.OrderBy(sortField + " " + sortByOrder).Limit(uint64(limit)).Offset(uint64(offset))
+	q = q.OrderBy(sortField + " " + sortByOrder).Limit(uint64(limit)).Offset(uint64(offset)) //nolint:gosec
 
 	sql, args, err := q.ToSql()
 	if err != nil {
@@ -1010,7 +1013,7 @@ func (t tagDao) GetAllTagsByRepoAndImage(
 	if sortByField == downloadCount {
 		sortField = downloadCount
 	}
-	q = q.OrderBy(sortField + " " + sortByOrder).Limit(uint64(limit)).Offset(uint64(offset))
+	q = q.OrderBy(sortField + " " + sortByOrder).Limit(uint64(limit)).Offset(uint64(offset)) //nolint:gosec
 
 	sql, args, err := q.ToSql()
 	if err != nil {
@@ -1197,17 +1200,16 @@ func (t tagDao) mapToTagMetadata(
 	dst *tagMetadataDB,
 ) (*types.TagMetadata, error) {
 	return &types.TagMetadata{
-		Name:            dst.Name,
-		Size:            dst.Size,
-		PackageType:     dst.PackageType,
-		DigestCount:     dst.DigestCount,
-		IsLatestVersion: dst.IsLatestVersion,
-		ModifiedAt:      time.UnixMilli(dst.ModifiedAt),
-		SchemaVersion:   dst.SchemaVersion,
-		NonConformant:   dst.NonConformant,
-		MediaType:       dst.MediaType,
-		Payload:         dst.Payload,
-		DownloadCount:   dst.DownloadCount,
+		Name:          dst.Name,
+		Size:          dst.Size,
+		PackageType:   dst.PackageType,
+		DigestCount:   dst.DigestCount,
+		ModifiedAt:    time.UnixMilli(dst.ModifiedAt),
+		SchemaVersion: dst.SchemaVersion,
+		NonConformant: dst.NonConformant,
+		MediaType:     dst.MediaType,
+		Payload:       dst.Payload,
+		DownloadCount: dst.DownloadCount,
 	}, nil
 }
 

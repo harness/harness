@@ -89,12 +89,9 @@ func (c *APIController) GetHelmArtifactDetails(
 		return getHelmArtifactDetailsErrResponse(err)
 	}
 
-	latestTag, _ := c.TagStore.GetLatestTag(ctx, registry.ID, image)
-
 	return artifact.GetHelmArtifactDetails200JSONResponse{
 		HelmArtifactDetailResponseJSONResponse: *GetHelmArtifactDetails(
-			registry, tag, m,
-			latestTag.ID == tag.ID, c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, regInfo.RegistryIdentifier),
+			registry, tag, m, c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, regInfo.RegistryIdentifier),
 		),
 	}, nil
 }

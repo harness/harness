@@ -293,7 +293,6 @@ func (c *controller) HeadManifest(
 func (c *controller) ProxyBlob(
 	ctx context.Context, art pkg.RegistryInfo, repoKey string, proxy types.UpstreamProxy,
 ) (int64, io.ReadCloser, error) {
-
 	rHelper, err := NewRemoteHelper(ctx, c.spaceFinder, c.secretService, repoKey, proxy)
 	if err != nil {
 		return 0, nil, err

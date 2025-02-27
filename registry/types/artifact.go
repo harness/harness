@@ -34,11 +34,10 @@ type Artifact struct {
 }
 
 type NonOCIArtifactMetadata struct {
-	Name            string
-	Size            string
-	PackageType     artifact.PackageType
-	FileCount       int64
-	IsLatestVersion bool
-	ModifiedAt      time.Time
-	DownloadCount   int64
+	Name          string
+	Size          string
+	PackageType   artifact.PackageType
+	FileCount     int64
+	ModifiedAt    time.Time
+	DownloadCount int64
 }

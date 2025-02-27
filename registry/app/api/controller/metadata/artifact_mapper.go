@@ -56,8 +56,10 @@ func GetRegistryArtifactMetadata(artifacts []types.ArtifactMetadata) []artifacta
 	return artifactMetadataList
 }
 
-func GetMavenArtifactDetail(image *types.Image, artifact *types.Artifact,
-	metadata database.MavenMetadata) artifactapi.ArtifactDetail {
+func GetMavenArtifactDetail(
+	image *types.Image, artifact *types.Artifact,
+	metadata database.MavenMetadata,
+) artifactapi.ArtifactDetail {
 	createdAt := GetTimeInMs(artifact.CreatedAt)
 	modifiedAt := GetTimeInMs(artifact.UpdatedAt)
 	var size int64
@@ -127,7 +129,6 @@ func toPackageType(packageTypeStr string) (artifactapi.PackageType, error) {
 func GetTagMetadata(
 	ctx context.Context,
 	tags *[]types.TagMetadata,
-	latestTag string,
 	image string,
 	registryURL string,
 ) []artifactapi.ArtifactVersionMetadata {
@@ -136,7 +137,6 @@ func GetTagMetadata(
 		modifiedAt := GetTimeInMs(tag.ModifiedAt)
 		size := GetImageSize(tag.Size)
 		digestCount := tag.DigestCount
-		isLatestVersion := latestTag == tag.Name
 		command := GetPullCommand(image, tag.Name, string(tag.PackageType), registryURL)
 		packageType, err := toPackageType(string(tag.PackageType))
 		downloadCount := tag.DownloadCount
@@ -145,14 +145,13 @@ func GetTagMetadata(
 			continue
 		}
 		artifactVersionMetadata := &artifactapi.ArtifactVersionMetadata{
-			PackageType:     &packageType,
-			Name:            tag.Name,
-			Size:            &size,
-			LastModified:    &modifiedAt,
-			DigestCount:     &digestCount,
-			IslatestVersion: &isLatestVersion,
-			PullCommand:     &command,
-			DownloadsCount:  &downloadCount,
+			PackageType:    &packageType,
+			Name:           tag.Name,
+			Size:           &size,
+			LastModified:   &modifiedAt,
+			DigestCount:    &digestCount,
+			PullCommand:    &command,
+			DownloadsCount: &downloadCount,
 		}
 		artifactVersionMetadataList = append(artifactVersionMetadataList, *artifactVersionMetadata)
 	}
@@ -216,7 +215,8 @@ func GetAllArtifactFilesResponse(
 	}
 }
 
-func GetArtifactFilesMetadata(metadata *[]types.FileNodeMetadata,
+func GetArtifactFilesMetadata(
+	metadata *[]types.FileNodeMetadata,
 	registryURL string,
 	artifactName string,
 	version string,
@@ -307,7 +307,6 @@ func GetAllArtifactLabelsResponse(
 func GetAllArtifactVersionResponse(
 	ctx context.Context,
 	tags *[]types.TagMetadata,
-	latestTag string,
 	image string,
 	count int64,
 	pageNumber int64,
@@ -315,7 +314,7 @@ func GetAllArtifactVersionResponse(
 	registryURL string,
 ) *artifactapi.ListArtifactVersionResponseJSONResponse {
 	artifactVersionMetadataList := GetTagMetadata(
-		ctx, tags, latestTag, image, registryURL,
+		ctx, tags, image, registryURL,
 	)
 	pageCount := GetPageCount(count, pageSize)
 	listArtifactVersions := &artifactapi.ListArtifactVersion{
@@ -335,7 +334,6 @@ func GetAllArtifactVersionResponse(
 func GetNonOCIAllArtifactVersionResponse(
 	ctx context.Context,
 	artifacts *[]types.NonOCIArtifactMetadata,
-	latestTag string,
 	image string,
 	count int64,
 	pageNumber int64,
@@ -343,7 +341,7 @@ func GetNonOCIAllArtifactVersionResponse(
 	registryURL string,
 ) *artifactapi.ListArtifactVersionResponseJSONResponse {
 	artifactVersionMetadataList := GetNonOCIArtifactMetadata(
-		ctx, artifacts, latestTag, image, registryURL,
+		ctx, artifacts, image, registryURL,
 	)
 	pageCount := GetPageCount(count, pageSize)
 	listArtifactVersions := &artifactapi.ListArtifactVersion{
@@ -363,7 +361,6 @@ func GetNonOCIAllArtifactVersionResponse(
 func GetNonOCIArtifactMetadata(
 	ctx context.Context,
 	tags *[]types.NonOCIArtifactMetadata,
-	latestTag string,
 	image string,
 	registryURL string,
 ) []artifactapi.ArtifactVersionMetadata {
@@ -371,7 +368,6 @@ func GetNonOCIArtifactMetadata(
 	for _, tag := range *tags {
 		modifiedAt := GetTimeInMs(tag.ModifiedAt)
 		size := GetImageSize(tag.Size)
-		isLatestVersion := latestTag == tag.Name
 		command := GetPullCommand(image, tag.Name, string(tag.PackageType), registryURL)
 		packageType, err := toPackageType(string(tag.PackageType))
 		downloadCount := tag.DownloadCount
@@ -381,14 +377,13 @@ func GetNonOCIArtifactMetadata(
 		}
 		fileCount := tag.FileCount
 		artifactVersionMetadata := &artifactapi.ArtifactVersionMetadata{
-			PackageType:     &packageType,
-			FileCount:       &fileCount,
-			Name:            tag.Name,
-			Size:            &size,
-			LastModified:    &modifiedAt,
-			IslatestVersion: &isLatestVersion,
-			PullCommand:     &command,
-			DownloadsCount:  &downloadCount,
+			PackageType:    &packageType,
+			FileCount:      &fileCount,
+			Name:           tag.Name,
+			Size:           &size,
+			LastModified:   &modifiedAt,
+			PullCommand:    &command,
+			DownloadsCount: &downloadCount,
 		}
 		artifactVersionMetadataList = append(artifactVersionMetadataList, *artifactVersionMetadata)
 	}
@@ -399,7 +394,6 @@ func GetDockerArtifactDetails(
 	registry *types.Registry,
 	tag *types.TagDetail,
 	manifest *types.Manifest,
-	isLatestTag bool,
 	registryURL string,
 ) *artifactapi.DockerArtifactDetailResponseJSONResponse {
 	repoPath := getRepoPath(registry.Name, tag.ImageName, manifest.Digest.String())
@@ -408,17 +402,16 @@ func GetDockerArtifactDetails(
 	modifiedAt := GetTimeInMs(tag.UpdatedAt)
 	size := GetSize(manifest.TotalSize)
 	artifactDetail := &artifactapi.DockerArtifactDetail{
-		ImageName:       tag.ImageName,
-		Version:         tag.Name,
-		PackageType:     registry.PackageType,
-		IsLatestVersion: &isLatestTag,
-		CreatedAt:       &createdAt,
-		ModifiedAt:      &modifiedAt,
-		RegistryPath:    repoPath,
-		PullCommand:     &pullCommand,
-		Url:             GetTagURL(tag.ImageName, tag.Name, registryURL),
-		Size:            &size,
-		DownloadsCount:  &tag.DownloadCount,
+		ImageName:      tag.ImageName,
+		Version:        tag.Name,
+		PackageType:    registry.PackageType,
+		CreatedAt:      &createdAt,
+		ModifiedAt:     &modifiedAt,
+		RegistryPath:   repoPath,
+		PullCommand:    &pullCommand,
+		Url:            GetTagURL(tag.ImageName, tag.Name, registryURL),
+		Size:           &size,
+		DownloadsCount: &tag.DownloadCount,
 	}
 
 	response := &artifactapi.DockerArtifactDetailResponseJSONResponse{
@@ -432,7 +425,6 @@ func GetHelmArtifactDetails(
 	registry *types.Registry,
 	tag *types.TagDetail,
 	manifest *types.Manifest,
-	isLatestTag bool,
 	registryURL string,
 ) *artifactapi.HelmArtifactDetailResponseJSONResponse {
 	repoPath := getRepoPath(registry.Name, tag.ImageName, manifest.Digest.String())
@@ -442,17 +434,16 @@ func GetHelmArtifactDetails(
 	size := GetSize(manifest.TotalSize)
 	downloadCount := tag.DownloadCount
 	artifactDetail := &artifactapi.HelmArtifactDetail{
-		Artifact:        &tag.ImageName,
-		Version:         tag.Name,
-		PackageType:     registry.PackageType,
-		IsLatestVersion: &isLatestTag,
-		CreatedAt:       &createdAt,
-		ModifiedAt:      &modifiedAt,
-		RegistryPath:    repoPath,
-		PullCommand:     &pullCommand,
-		Url:             GetTagURL(tag.ImageName, tag.Name, registryURL),
-		Size:            &size,
-		DownloadsCount:  &downloadCount,
+		Artifact:       &tag.ImageName,
+		Version:        tag.Name,
+		PackageType:    registry.PackageType,
+		CreatedAt:      &createdAt,
+		ModifiedAt:     &modifiedAt,
+		RegistryPath:   repoPath,
+		PullCommand:    &pullCommand,
+		Url:            GetTagURL(tag.ImageName, tag.Name, registryURL),
+		Size:           &size,
+		DownloadsCount: &downloadCount,
 	}
 
 	response := &artifactapi.HelmArtifactDetailResponseJSONResponse{
@@ -462,8 +453,10 @@ func GetHelmArtifactDetails(
 	return response
 }
 
-func GetGenericArtifactDetail(image *types.Image, artifact *types.Artifact,
-	metadata database.GenericMetadata) artifactapi.ArtifactDetail {
+func GetGenericArtifactDetail(
+	image *types.Image, artifact *types.Artifact,
+	metadata database.GenericMetadata,
+) artifactapi.ArtifactDetail {
 	createdAt := GetTimeInMs(artifact.CreatedAt)
 	modifiedAt := GetTimeInMs(artifact.UpdatedAt)
 	artifactDetail := &artifactapi.ArtifactDetail{
@@ -503,13 +496,11 @@ func GetArtifactVersionSummary(
 	artifactName string,
 	packageType artifactapi.PackageType,
 	version string,
-	isLatestTag bool,
 ) *artifactapi.ArtifactVersionSummaryResponseJSONResponse {
 	artifactVersionSummary := &artifactapi.ArtifactVersionSummary{
-		ImageName:       artifactName,
-		IsLatestVersion: &isLatestTag,
-		PackageType:     packageType,
-		Version:         version,
+		ImageName:   artifactName,
+		PackageType: packageType,
+		Version:     version,
 	}
 	response := &artifactapi.ArtifactVersionSummaryResponseJSONResponse{
 		Data:   *artifactVersionSummary,

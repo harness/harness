@@ -46,17 +46,16 @@ type ArtifactMetadata struct {
 }
 
 type TagMetadata struct {
-	Name            string
-	Size            string
-	PackageType     artifact.PackageType
-	DigestCount     int
-	IsLatestVersion bool
-	ModifiedAt      time.Time
-	SchemaVersion   int
-	NonConformant   bool
-	Payload         Payload
-	MediaType       string
-	DownloadCount   int64
+	Name          string
+	Size          string
+	PackageType   artifact.PackageType
+	DigestCount   int
+	ModifiedAt    time.Time
+	SchemaVersion int
+	NonConformant bool
+	Payload       Payload
+	MediaType     string
+	DownloadCount int64
 }
 
 type TagDetail struct {
