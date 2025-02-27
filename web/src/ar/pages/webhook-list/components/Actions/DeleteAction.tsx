@@ -22,10 +22,9 @@ import { deleteWebhook, type Webhook } from '@harnessio/react-har-service-client
 
 import { useStrings } from '@ar/frameworks/strings'
 import { queryClient } from '@ar/utils/queryClient'
-import { useGetSpaceRef, useParentComponents } from '@ar/hooks'
+import { useGetSpaceRef, useParentComponents, useParentHooks } from '@ar/hooks'
 import type { RepositoryDetailsTabPathParams } from '@ar/routes/types'
 import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
-import { useConfirmationDialog } from 'hooks/useConfirmationDialog'
 
 interface DeleteWebhookActionProps {
   data: Webhook
@@ -38,6 +37,7 @@ export default function DeleteWebhookAction(props: DeleteWebhookActionProps) {
   const { getString } = useStrings()
   const registryRef = useGetSpaceRef()
   const { showError, showSuccess, clear } = useToaster()
+  const { useConfirmationDialog } = useParentHooks()
   const params = useParams<RepositoryDetailsTabPathParams>()
 
   const handleDeleteWebhook = async (isConfirmed: boolean) => {
