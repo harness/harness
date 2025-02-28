@@ -19,7 +19,6 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/config"
 	"github.com/harness/gitness/app/services/refcache"
-	corestore "github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/registry/app/api/handler/generic"
@@ -61,7 +60,6 @@ func APIHandlerProvider(
 	urlProvider urlprovider.Provider,
 	authorizer authz.Authorizer,
 	auditService audit.Service,
-	spacePathStore corestore.SpacePathStore,
 	artifactStore store.ArtifactRepository,
 	webhooksRepository store.WebhooksRepository,
 ) harness.APIHandler {
@@ -81,7 +79,6 @@ func APIHandlerProvider(
 		urlProvider,
 		authorizer,
 		auditService,
-		spacePathStore,
 		artifactStore,
 		webhooksRepository,
 	)

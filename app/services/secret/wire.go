@@ -15,6 +15,7 @@
 package secret
 
 import (
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/secret"
@@ -27,7 +28,7 @@ var WireSet = wire.NewSet(
 )
 
 func ProvideSecretService(
-	secretStore store.SecretStore, encrypter encrypt.Encrypter, spacePathStore store.SpacePathStore,
+	secretStore store.SecretStore, encrypter encrypt.Encrypter, spaceFinder refcache.SpaceFinder,
 ) secret.Service {
-	return NewService(secretStore, encrypter, spacePathStore)
+	return NewService(secretStore, encrypter, spaceFinder)
 }

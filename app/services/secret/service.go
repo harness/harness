@@ -18,6 +18,7 @@ import (
 	"context"
 
 	secretCtrl "github.com/harness/gitness/app/api/controller/secret"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/secret"
@@ -27,28 +28,28 @@ import (
 )
 
 type service struct {
-	secretStore    store.SecretStore
-	encrypter      encrypt.Encrypter
-	spacePathStore store.SpacePathStore
+	secretStore store.SecretStore
+	encrypter   encrypt.Encrypter
+	spaceFinder refcache.SpaceFinder
 }
 
 func NewService(
-	secretStore store.SecretStore, encrypter encrypt.Encrypter, spacePathStore store.SpacePathStore,
+	secretStore store.SecretStore, encrypter encrypt.Encrypter, spaceFinder refcache.SpaceFinder,
 ) secret.Service {
 	return &service{
-		secretStore:    secretStore,
-		encrypter:      encrypter,
-		spacePathStore: spacePathStore,
+		secretStore: secretStore,
+		encrypter:   encrypter,
+		spaceFinder: spaceFinder,
 	}
 }
 
 func (s *service) DecryptSecret(ctx context.Context, spacePath string, secretIdentifier string) (string, error) {
-	path, err := s.spacePathStore.FindByPath(ctx, spacePath)
+	space, err := s.spaceFinder.FindByRef(ctx, spacePath)
 	if err != nil {
 		log.Error().Msgf("failed to find space path: %v", err)
 		return "", errors.Wrap(err, "failed to find space path")
 	}
-	sec, err := s.secretStore.FindByIdentifier(ctx, path.SpaceID, secretIdentifier)
+	sec, err := s.secretStore.FindByIdentifier(ctx, space.ID, secretIdentifier)
 	if err != nil {
 		log.Error().Msgf("failed to find secret: %v", err)
 		return "", errors.Wrap(err, "failed to find secret")

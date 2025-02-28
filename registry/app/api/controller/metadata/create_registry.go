@@ -381,11 +381,12 @@ func (c *APIController) getSecretSpaceID(ctx context.Context, secretSpacePath *s
 		return -1, fmt.Errorf("secret space path is missing")
 	}
 
-	path, err := c.spacePathStore.FindByPath(ctx, *secretSpacePath)
+	space, err := c.SpaceFinder.FindByRef(ctx, *secretSpacePath)
 	if err != nil {
 		return -1, fmt.Errorf("failed to get Space Path: %w", err)
 	}
-	return int(path.SpaceID), nil
+
+	return int(space.ID), nil
 }
 
 func isDuplicateKeyError(err error) bool {
