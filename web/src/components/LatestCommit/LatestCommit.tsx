@@ -45,7 +45,7 @@ import { CommitActions } from 'components/CommitActions/CommitActions'
 import { useAppContext } from 'AppContext'
 import { formatBytes, getErrorMessage } from 'utils/Utils'
 import { useStrings } from 'framework/strings'
-import { makeDiffRefs, type GitInfoProps, type RepositorySummaryData, isRefATag } from 'utils/GitUtils'
+import { makeDiffRefs, type GitInfoProps, type RepositorySummaryData, isRefATag, normalizeGitRef } from 'utils/GitUtils'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { TimePopoverWithLocal } from 'utils/timePopoverLocal/TimePopoverWithLocal'
 import css from './LatestCommit.module.scss'
@@ -101,7 +101,7 @@ export function LatestCommitForFolder({
   const branchDivergenceRequestBody: OpenapiCalculateCommitDivergenceRequest = useMemo(() => {
     return {
       maxCount: 0,
-      requests: [{ from: gitRef, to: repoMetadata.default_branch }]
+      requests: [{ from: normalizeGitRef(gitRef), to: normalizeGitRef(repoMetadata.default_branch) }]
     }
   }, [repoMetadata, gitRef])
 

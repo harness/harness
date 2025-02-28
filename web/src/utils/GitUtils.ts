@@ -288,7 +288,7 @@ export const normalizeGitRef = (gitRef: string | undefined) => {
   } else if (gitRef && isGitRev(gitRef)) {
     return gitRef
   } else {
-    return `refs/heads/${gitRef}`
+    return REFS_BRANCH_PREFIX + gitRef
   }
 }
 

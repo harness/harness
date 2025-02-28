@@ -49,7 +49,7 @@ import { useConfirmAction } from 'hooks/useConfirmAction'
 import { useRuleViolationCheck } from 'hooks/useRuleViolationCheck'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { CommitDivergence } from 'components/CommitDivergence/CommitDivergence'
-import { makeDiffRefs } from 'utils/GitUtils'
+import { makeDiffRefs, normalizeGitRef } from 'utils/GitUtils'
 import css from './BranchesContent.module.scss'
 
 interface BranchesContentProps {
@@ -71,7 +71,10 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
   const branchDivergenceRequestBody: OpenapiCalculateCommitDivergenceRequest = useMemo(() => {
     return {
       maxCount: 0,
-      requests: branches?.map(branch => ({ from: branch.name, to: repoMetadata.default_branch }))
+      requests: branches?.map(branch => ({
+        from: normalizeGitRef(branch.name),
+        to: normalizeGitRef(repoMetadata.default_branch)
+      }))
     }
   }, [repoMetadata, branches])
   const isMounted = useIsMounted()
