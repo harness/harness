@@ -14,7 +14,8 @@ const SelectInfraProviderType = () => {
 
   const infraProviders = [
     { label: 'HARNESS GCP', value: 'HARNESS_GCP' },
-    { label: 'HARNESS OVH', value: 'HARNESS_OVH' }
+    { label: 'HARNESS OVH', value: 'HARNESS_OVH' },
+    { label: 'HYBRID VM GCP', value: 'HYBRID_VM_GCP' }
   ]
 
   const selectedInfraProvider = infraProviders.find(item => item.value === values?.metadata?.infraProvider)

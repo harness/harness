@@ -20,7 +20,7 @@ import { Layout } from '@harnessio/uicore'
 import { useFormikContext } from 'formik'
 import { useParams } from 'react-router-dom'
 import { CDEPathParams, useGetCDEAPIParams } from 'cde-gitness/hooks/useGetCDEAPIParams'
-import { OpenapiCreateGitspaceRequest, useGetInfraProvider } from 'services/cde'
+import { OpenapiCreateGitspaceRequest, useGetInfraProviderDeprecated } from 'services/cde'
 import { useAppContext } from 'AppContext'
 import { SelectRegion } from '../SelectRegion/SelectRegion'
 import { SelectMachine } from '../SelectMachine/SelectMachine'
@@ -32,7 +32,7 @@ export const SelectInfraProvider = () => {
   const { values, setFieldValue: onChange } = useFormikContext<OpenapiCreateGitspaceRequest>()
   const { accountIdentifier = '', projectIdentifier = '', orgIdentifier = '' } = useGetCDEAPIParams() as CDEPathParams
 
-  const { data } = useGetInfraProvider({
+  const { data } = useGetInfraProviderDeprecated({
     accountIdentifier,
     projectIdentifier,
     orgIdentifier,

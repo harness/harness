@@ -129,7 +129,8 @@ export const CDECreateGitspace = () => {
           const payload = data
           const response = await mutate({
             ...omit(payload, 'metadata'),
-            space_ref: space
+            space_ref: space,
+            infra_provider_config_identifier: data?.metadata?.infraProvider
           } as OpenapiCreateGitspaceRequest & {
             space_ref?: string
           })
