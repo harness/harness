@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/app/auth"
 	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/githook"
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -123,7 +124,7 @@ func (c *Controller) DeleteGitRepository(
 	err = c.git.DeleteRepository(ctx, &git.DeleteRepositoryParams{
 		WriteParams: writeParams,
 	})
-	if err != nil {
+	if err != nil && !errors.IsNotFound(err) {
 		return fmt.Errorf("failed to remove git repository %s: %w", gitUID, err)
 	}
 

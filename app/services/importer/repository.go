@@ -18,7 +18,6 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/url"
 	"strings"
@@ -35,6 +34,7 @@ import (
 	gitnessurl "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/encrypt"
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/job"
 	gitness_store "github.com/harness/gitness/store"
@@ -493,7 +493,7 @@ func (r *Repository) deleteGitRepository(ctx context.Context,
 	err = r.git.DeleteRepository(ctx, &git.DeleteRepositoryParams{
 		WriteParams: writeParams,
 	})
-	if err != nil {
+	if err != nil && !errors.IsNotFound(err) {
 		return fmt.Errorf("failed to delete git repository: %w", err)
 	}
 

@@ -218,13 +218,6 @@ func (s *Service) DeleteRepository(ctx context.Context, params *DeleteRepository
 	if err := params.Validate(); err != nil {
 		return err
 	}
-	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
-
-	if _, err := os.Stat(repoPath); err != nil && errors.Is(err, fs.ErrNotExist) {
-		return errors.NotFound("repository path not found")
-	} else if err != nil {
-		return fmt.Errorf("failed to check the status of the repository %v: %w", repoPath, err)
-	}
 
 	return s.DeleteRepositoryBestEffort(ctx, params.RepoUID)
 }
@@ -243,7 +236,7 @@ func (s *Service) DeleteRepositoryBestEffort(ctx context.Context, repoUID string
 	// move current dir to a temp dir (prevent partial deletion)
 	err := os.Rename(repoPath, tempPath)
 	if errors.Is(err, fs.ErrNotExist) {
-		return nil // repository directory doesn't exist - nothing to do
+		return errors.NotFound("repository path not found") // caller decides whether ignore this error
 	}
 	if err != nil {
 		return fmt.Errorf("couldn't move dir %s to %s : %w", repoPath, tempPath, err)
@@ -424,7 +417,7 @@ func (s *Service) createRepositoryInternal(
 	defer func() {
 		if err != nil {
 			cleanuperr := s.DeleteRepositoryBestEffort(ctx, base.RepoUID)
-			if cleanuperr != nil {
+			if cleanuperr != nil && !errors.IsNotFound(cleanuperr) {
 				log.Warn().Err(cleanuperr).Msg("failed to cleanup repo dir")
 			}
 		}
