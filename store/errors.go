@@ -28,7 +28,7 @@ var (
 	ErrPrimaryPathCantBeDeleted   = errors.New("primary path can't be deleted")
 	ErrNoChangeInRequestedMove    = errors.New("the requested move doesn't change anything")
 	ErrIllegalMoveCyclicHierarchy = errors.New("the requested move is not permitted as it would cause a " +
-		"cyclic depdency")
+		"cyclic dependency")
 	ErrSpaceWithChildsCantBeDeleted = errors.New("the space can't be deleted as it still contains " +
 		"spaces or repos")
 	ErrPreConditionFailed = errors.New("precondition failed")

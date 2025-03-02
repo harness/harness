@@ -40,7 +40,6 @@ type ImportRepositoriesInput struct {
 
 type ImportRepositoriesOutput struct {
 	ImportingRepos []*repoctrl.RepositoryOutput `json:"importing_repos"`
-	DuplicateRepos []*repoctrl.RepositoryOutput `json:"duplicate_repos"` // repos which already exist in the space.
 }
 
 // ImportRepositories imports repositories into an existing space.
@@ -68,7 +67,6 @@ func (c *Controller) ImportRepositories(
 	}
 
 	repos := make([]*types.Repository, 0, len(remoteRepositories))
-	duplicateRepos := make([]*types.Repository, 0, len(remoteRepositories))
 	repoIDs := make([]int64, 0, len(remoteRepositories))
 	repoIsPublicVals := make([]bool, 0, len(remoteRepositories))
 	cloneURLs := make([]string, 0, len(remoteRepositories))
@@ -106,12 +104,7 @@ func (c *Controller) ImportRepositories(
 		for _, repo := range repos {
 			err = c.repoStore.Create(ctx, repo)
 			if errors.Is(err, store.ErrDuplicate) {
-				log.Ctx(ctx).Warn().Err(err).Msg("skipping duplicate repo")
-				duplicateRepos = append(duplicateRepos, repo)
-				l := len(repoIDs)
-				repoIsPublicVals = append(repoIsPublicVals[:l], repoIsPublicVals[l+1:]...)
-				cloneURLs = append(cloneURLs[:l], cloneURLs[l+1:]...)
-				continue
+				return fmt.Errorf("failed to create duplicate repo %s", repo.Identifier)
 			} else if err != nil {
 				return fmt.Errorf("failed to create repository in storage: %w", err)
 			}
@@ -174,10 +167,5 @@ func (c *Controller) ImportRepositories(
 		}
 	}
 
-	duplicateReposOut := make([]*repoctrl.RepositoryOutput, len(duplicateRepos))
-	for i, dupRepo := range duplicateRepos {
-		duplicateReposOut[i] = repoctrl.GetRepoOutputWithAccess(ctx, false, dupRepo)
-	}
-
-	return ImportRepositoriesOutput{ImportingRepos: reposOut, DuplicateRepos: duplicateReposOut}, nil
+	return ImportRepositoriesOutput{ImportingRepos: reposOut}, nil
 }
