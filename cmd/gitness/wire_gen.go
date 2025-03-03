@@ -124,6 +124,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/generic"
 	"github.com/harness/gitness/registry/app/pkg/maven"
+	"github.com/harness/gitness/registry/app/pkg/pypi"
 	database2 "github.com/harness/gitness/registry/app/store/database"
 	"github.com/harness/gitness/registry/gc"
 	"github.com/harness/gitness/ssh"
@@ -482,7 +483,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	genericController := generic.ControllerProvider(spaceStore, authorizer, fileManager, genericDBStore, transactor)
 	genericHandler := api2.NewGenericHandlerProvider(spaceStore, genericController, tokenStore, controller, authenticator, provider, authorizer)
 	handler3 := router.GenericHandlerProvider(genericHandler)
-	appRouter := router.AppRouterProvider(registryOCIHandler, apiHandler, handler2, handler3)
+	packagesHandler := api2.NewPackageHandlerProvider(registryRepository, spaceStore, tokenStore, controller, authenticator, provider, authorizer)
+	pypiController := pypi.ControllerProvider(artifactRepository, upstreamProxyConfigRepository)
+	pypiHandler := api2.NewPypiHandlerProvider(pypiController, packagesHandler)
+	handler4 := router.PackageHandlerProvider(packagesHandler, mavenHandler, genericHandler, pypiHandler)
+	appRouter := router.AppRouterProvider(registryOCIHandler, apiHandler, handler2, handler3, handler4)
 	sender := usage.ProvideMediator(ctx, config, spaceFinder, usageMetricStore)
 	routerRouter := router2.ProvideRouter(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, usergroupController, checkController, systemController, uploadController, keywordsearchController, infraproviderController, gitspaceController, migrateController, provider, openapiService, appRouter, sender)
 	serverServer := server2.ProvideServer(config, routerRouter)

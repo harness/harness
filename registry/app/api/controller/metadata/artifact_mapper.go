@@ -121,6 +121,8 @@ func toPackageType(packageTypeStr string) (artifactapi.PackageType, error) {
 		return artifactapi.PackageTypeHELM, nil
 	case string(artifactapi.PackageTypeMAVEN):
 		return artifactapi.PackageTypeMAVEN, nil
+	case string(artifactapi.PackageTypePYPI):
+		return artifactapi.PackageTypePYPI, nil
 	default:
 		return "", errors.New("invalid package type")
 	}

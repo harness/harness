@@ -28,6 +28,7 @@ const (
 const (
 	PackageTypeDOCKER  PackageType = "DOCKER"
 	PackageTypeGENERIC PackageType = "GENERIC"
+	PackageTypePYPI    PackageType = "PYPI"
 	PackageTypeHELM    PackageType = "HELM"
 	PackageTypeMAVEN   PackageType = "MAVEN"
 )

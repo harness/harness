@@ -131,6 +131,8 @@ func (c *APIController) GenerateClientSetupDetails(
 			loginPasswordLabel, username, registryRef, image, tag)
 	case string(artifact.PackageTypeGENERIC):
 		return c.generateGenericClientSetupDetail(ctx, blankString, registryRef, image, tag)
+	case string(artifact.PackageTypePYPI):
+		return c.generatePyPIClientSetupDetail(ctx, registryRef, username, image, tag)
 	}
 	header1 := "Login to Docker"
 	section1step1Header := "Run this Docker command in your terminal to authenticate the client."
@@ -230,8 +232,10 @@ func (c *APIController) GenerateClientSetupDetails(
 }
 
 //nolint:lll
-func (c *APIController) generateGenericClientSetupDetail(ctx context.Context, blankString string,
-	registryRef string, image *artifact.ArtifactParam, tag *artifact.VersionParam) *artifact.ClientSetupDetailsResponseJSONResponse {
+func (c *APIController) generateGenericClientSetupDetail(
+	ctx context.Context, blankString string,
+	registryRef string, image *artifact.ArtifactParam, tag *artifact.VersionParam,
+) *artifact.ClientSetupDetailsResponseJSONResponse {
 	header1 := "Generate identity token"
 	section1Header := "An identity token will serve as the password for uploading and downloading artifact."
 	section1Type := artifact.ClientSetupStepTypeGenerateToken
@@ -302,7 +306,8 @@ func (c *APIController) generateGenericClientSetupDetail(ctx context.Context, bl
 		},
 	}
 	//nolint:lll
-	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, "", registryRef, image, tag, "", "", string(artifact.PackageTypeGENERIC))
+	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, "", registryRef, image, tag, "", "",
+		string(artifact.PackageTypeGENERIC))
 	return &artifact.ClientSetupDetailsResponseJSONResponse{
 		Data:   clientSetupDetails,
 		Status: artifact.StatusSUCCESS,
@@ -310,8 +315,17 @@ func (c *APIController) generateGenericClientSetupDetail(ctx context.Context, bl
 }
 
 //nolint:lll
-func (c *APIController) generateHelmClientSetupDetail(ctx context.Context, blankString string,
-	loginUsernameLabel string, loginUsernameValue string, loginPasswordLabel string, username string, registryRef string, image *artifact.ArtifactParam, tag *artifact.VersionParam) *artifact.ClientSetupDetailsResponseJSONResponse {
+func (c *APIController) generateHelmClientSetupDetail(
+	ctx context.Context,
+	blankString string,
+	loginUsernameLabel string,
+	loginUsernameValue string,
+	loginPasswordLabel string,
+	username string,
+	registryRef string,
+	image *artifact.ArtifactParam,
+	tag *artifact.VersionParam,
+) *artifact.ClientSetupDetailsResponseJSONResponse {
 	header1 := "Login to Helm"
 	section1step1Header := "Run this Helm command in your terminal to authenticate the client."
 	helmLoginValue := "helm registry login <LOGIN_HOSTNAME>"
@@ -569,12 +583,12 @@ func (c *APIController) generateMavenClientSetupDetail(
 	_ = gradleSection2.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
 		Steps: &[]artifact.ClientSetupStep{
 			{
-				Header: stringPtr("Add a maven publish plugin configuration to the project’s build.gradle."),
+				Header: stringPtr("Add a maven publish plugin configuration to the project's build.gradle."),
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
 						//nolint:lll
-						Value: stringPtr("publishing {\n    publications {\n        maven(MavenPublication) {\n            groupId = '<GROUP_ID>'\n            artifactId = '<ARTIFACT_ID>'\n            version = '<VERSION>'\n\n            from components.java\n        }\n    }\n}"),
+						Value: stringPtr("publishing {\n    publications {\n        maven(MavenPublication) {\n            groupId = 'GROUP_ID'\n            artifactId = 'ARTIFACT_ID'\n            version = 'VERSION'\n\n            from components.java\n        }\n    }\n}"),
 					},
 				},
 			},
@@ -714,7 +728,105 @@ func (c *APIController) generateMavenClientSetupDetail(
 	registryURL := c.URLProvider.RegistryURL(ctx, "maven", rootSpace)
 
 	//nolint:lll
-	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, artifactName, version, registryURL, groupID, "")
+	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, artifactName, version, registryURL,
+		groupID, "")
+
+	return &artifact.ClientSetupDetailsResponseJSONResponse{
+		Data:   clientSetupDetails,
+		Status: artifact.StatusSUCCESS,
+	}
+}
+
+func (c *APIController) generatePyPIClientSetupDetail(
+	ctx context.Context,
+	registryRef string,
+	username string,
+	image *artifact.ArtifactParam,
+	tag *artifact.VersionParam,
+) *artifact.ClientSetupDetailsResponseJSONResponse {
+	staticStepType := artifact.ClientSetupStepTypeStatic
+	generateTokenType := artifact.ClientSetupStepTypeGenerateToken
+
+	// Authentication section
+	section1 := artifact.ClientSetupSection{
+		Header: stringPtr("1. Configure Authentication"),
+	}
+	_ = section1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: stringPtr("Create or update your ~/.pypirc file with the following content:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: stringPtr("[distutils]\n" +
+							"index-servers = harness\n\n" +
+							"[harness]\n" +
+							"repository: <REGISTRY_URL>/<REGISTRY_NAME>\n" +
+							"username: <USERNAME>\n" +
+							"password: {{identity-token}}"),
+					},
+				},
+			},
+			{
+				Header: stringPtr("Generate an identity token for authentication"),
+				Type:   &generateTokenType,
+			},
+		},
+	})
+
+	// Install section
+	section2 := artifact.ClientSetupSection{
+		Header: stringPtr("2. Install Package"),
+	}
+	_ = section2.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: stringPtr("Install a package using pip:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: stringPtr("pip install --index-url <REGISTRY_URL>/<REGISTRY_NAME> <PACKAGE_NAME>==<VERSION>"),
+					},
+				},
+			},
+		},
+	})
+
+	// Publish section
+	section3 := artifact.ClientSetupSection{
+		Header: stringPtr("3. Publish Package"),
+	}
+	_ = section3.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: stringPtr("Build and publish your package:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: stringPtr("python -m build"),
+					},
+					{
+						Value: stringPtr("python -m twine upload --repository harness dist/*"),
+					},
+				},
+			},
+		},
+	})
+
+	clientSetupDetails := artifact.ClientSetupDetails{
+		MainHeader: "PyPI Client Setup",
+		SecHeader:  "Follow these instructions to install/use Python packages from this registry.",
+		Sections: []artifact.ClientSetupSection{
+			section1,
+			section2,
+			section3,
+		},
+	}
+
+	rootSpace, _, _ := paths.DisectRoot(registryRef)
+	registryURL := c.URLProvider.RegistryURL(ctx, "pypi", rootSpace)
+
+	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, image, tag, registryURL, "", "pypi")
 
 	return &artifact.ClientSetupDetailsResponseJSONResponse{
 		Data:   clientSetupDetails,
@@ -737,10 +849,12 @@ func (c *APIController) replacePlaceholders(
 		tab, err := (*clientSetupSections)[i].AsTabSetupStepConfig()
 		if err != nil || tab.Tabs == nil {
 			//nolint:lll
-			c.replacePlaceholdersInSection(ctx, &(*clientSetupSections)[i], username, regRef, image, tag, pkgType, groupID, registryURL)
+			c.replacePlaceholdersInSection(ctx, &(*clientSetupSections)[i], username, regRef, image, tag, pkgType,
+				groupID, registryURL)
 		} else {
 			for j := range *tab.Tabs {
-				c.replacePlaceholders(ctx, (*tab.Tabs)[j].Sections, username, regRef, image, tag, groupID, registryURL, pkgType)
+				c.replacePlaceholders(ctx, (*tab.Tabs)[j].Sections, username, regRef, image, tag, groupID, registryURL,
+					pkgType)
 			}
 			_ = (*clientSetupSections)[i].FromTabSetupStepConfig(tab)
 		}
@@ -816,9 +930,12 @@ func replaceText(
 		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<REGISTRY_NAME>", repoName))
 	}
 	if image != nil {
-		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<IMAGE_NAME>", string(*image)))
-		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<ARTIFACT_ID>", string(*image)))
-		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<ARTIFACT_NAME>", string(*image)))
+		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<IMAGE_NAME>",
+			string(*image)))
+		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<ARTIFACT_ID>",
+			string(*image)))
+		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<ARTIFACT_NAME>",
+			string(*image)))
 	}
 	if tag != nil {
 		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<TAG>", string(*tag)))

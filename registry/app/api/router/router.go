@@ -16,6 +16,7 @@ package router
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/harness/gitness/app/api/middleware/address"
@@ -25,6 +26,7 @@ import (
 	"github.com/harness/gitness/registry/app/api/router/harness"
 	"github.com/harness/gitness/registry/app/api/router/maven"
 	"github.com/harness/gitness/registry/app/api/router/oci"
+	"github.com/harness/gitness/registry/app/api/router/packages"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/hlog"
@@ -40,6 +42,7 @@ func GetAppRouter(
 	baseURL string,
 	mavenHandler maven.Handler,
 	genericHandler generic2.Handler,
+	packageHandler packages.Handler,
 ) AppRouter {
 	r := chi.NewRouter()
 	r.Use(hlog.URLHandler("http.url"))
@@ -51,10 +54,23 @@ func GetAppRouter(
 	r.Group(func(r chi.Router) {
 		r.Handle(fmt.Sprintf("%s/*", baseURL), appHandler)
 		r.Handle("/v2/*", ociHandler)
+		// deprecated
 		r.Handle("/maven/*", mavenHandler)
+		// deprecated
 		r.Handle("/generic/*", genericHandler)
 
+		r.Mount("/pkg/", packageHandler)
 		r.Handle("/registry/swagger*", swagger.GetSwaggerHandler("/registry"))
 	})
+
+	// Walk through all routes and print them
+	if err := chi.Walk(r,
+		func(method string, route string, _ http.Handler, _ ...func(http.Handler) http.Handler) error {
+			log.Printf("%-7s %s", method, route)
+			return nil
+		}); err != nil {
+		log.Fatalf("Error walking router: %v", err)
+	}
+
 	return r
 }

@@ -37,6 +37,7 @@ func NewGenericArtifactHandler(handler *generic.Handler) Handler {
 		http.MethodGet: handler.PullArtifact,
 	}
 	r.Route("/generic", func(r chi.Router) {
+		r.Use(middleware.StoreOriginalURL)
 		r.Use(middlewareauthn.Attempt(handler.Authenticator))
 		r.Use(middleware.TrackDownloadStatForGenericArtifact(handler))
 		r.Use(middleware.TrackBandwidthStatForGenericArtifacts(handler))

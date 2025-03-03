@@ -24,6 +24,8 @@ import (
 	"github.com/harness/gitness/registry/app/api/handler/generic"
 	mavenhandler "github.com/harness/gitness/registry/app/api/handler/maven"
 	ocihandler "github.com/harness/gitness/registry/app/api/handler/oci"
+	"github.com/harness/gitness/registry/app/api/handler/packages"
+	pypi2 "github.com/harness/gitness/registry/app/api/handler/pypi"
 	"github.com/harness/gitness/registry/app/api/router"
 	storagedriver "github.com/harness/gitness/registry/app/driver"
 	"github.com/harness/gitness/registry/app/driver/factory"
@@ -34,6 +36,8 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	generic2 "github.com/harness/gitness/registry/app/pkg/generic"
 	"github.com/harness/gitness/registry/app/pkg/maven"
+	"github.com/harness/gitness/registry/app/pkg/pypi"
+	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/app/store/database"
 	"github.com/harness/gitness/registry/config"
 	"github.com/harness/gitness/registry/gc"
@@ -104,6 +108,29 @@ func NewMavenHandlerProvider(
 	)
 }
 
+func NewPackageHandlerProvider(
+	registryDao store.RegistryRepository, spaceStore corestore.SpaceStore, tokenStore corestore.TokenStore,
+	userCtrl *usercontroller.Controller, authenticator authn.Authenticator,
+	urlProvider urlprovider.Provider, authorizer authz.Authorizer,
+) packages.Handler {
+	return packages.NewHandler(
+		registryDao,
+		spaceStore,
+		tokenStore,
+		userCtrl,
+		authenticator,
+		urlProvider,
+		authorizer,
+	)
+}
+
+func NewPypiHandlerProvider(
+	controller pypi.Controller,
+	packageHandler packages.Handler,
+) pypi2.Handler {
+	return pypi2.NewHandler(controller, packageHandler)
+}
+
 func NewGenericHandlerProvider(
 	spaceStore corestore.SpaceStore, controller *generic2.Controller, tokenStore corestore.TokenStore,
 	userCtrl *usercontroller.Controller, authenticator authn.Authenticator, urlProvider urlprovider.Provider,
@@ -125,11 +152,14 @@ var WireSet = wire.NewSet(
 	NewHandlerProvider,
 	NewMavenHandlerProvider,
 	NewGenericHandlerProvider,
+	NewPackageHandlerProvider,
+	NewPypiHandlerProvider,
 	database.WireSet,
 	pkg.WireSet,
 	docker.WireSet,
 	filemanager.WireSet,
 	maven.WireSet,
+	pypi.WireSet,
 	router.WireSet,
 	gc.WireSet,
 	generic2.WireSet,

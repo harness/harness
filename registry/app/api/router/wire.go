@@ -24,10 +24,13 @@ import (
 	"github.com/harness/gitness/registry/app/api/handler/generic"
 	"github.com/harness/gitness/registry/app/api/handler/maven"
 	hoci "github.com/harness/gitness/registry/app/api/handler/oci"
+	"github.com/harness/gitness/registry/app/api/handler/packages"
+	"github.com/harness/gitness/registry/app/api/handler/pypi"
 	generic2 "github.com/harness/gitness/registry/app/api/router/generic"
 	"github.com/harness/gitness/registry/app/api/router/harness"
 	mavenRouter "github.com/harness/gitness/registry/app/api/router/maven"
 	"github.com/harness/gitness/registry/app/api/router/oci"
+	packagerrouter "github.com/harness/gitness/registry/app/api/router/packages"
 	storagedriver "github.com/harness/gitness/registry/app/driver"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
@@ -41,8 +44,9 @@ func AppRouterProvider(
 	appHandler harness.APIHandler,
 	mavenHandler mavenRouter.Handler,
 	genericHandler generic2.Handler,
+	handler packagerrouter.Handler,
 ) AppRouter {
-	return GetAppRouter(ocir, appHandler, config.APIURL, mavenHandler, genericHandler)
+	return GetAppRouter(ocir, appHandler, config.APIURL, mavenHandler, genericHandler, handler)
 }
 
 func APIHandlerProvider(
@@ -96,5 +100,14 @@ func GenericHandlerProvider(handler *generic.Handler) generic2.Handler {
 	return generic2.NewGenericArtifactHandler(handler)
 }
 
+func PackageHandlerProvider(
+	handler packages.Handler,
+	mavenHandler *maven.Handler,
+	genericHandler *generic.Handler,
+	pypiHandler pypi.Handler,
+) packagerrouter.Handler {
+	return packagerrouter.NewRouter(handler, mavenHandler, genericHandler, pypiHandler)
+}
+
 var WireSet = wire.NewSet(APIHandlerProvider, OCIHandlerProvider, AppRouterProvider,
-	MavenHandlerProvider, GenericHandlerProvider)
+	MavenHandlerProvider, GenericHandlerProvider, PackageHandlerProvider)

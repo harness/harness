@@ -38,8 +38,8 @@ import (
 )
 
 type Controller struct {
-	spaceStore  corestore.SpaceStore
-	authorizer  authz.Authorizer
+	SpaceStore  corestore.SpaceStore
+	Authorizer  authz.Authorizer
 	DBStore     *DBStore
 	fileManager filemanager.FileManager
 	tx          dbtx.Transactor
@@ -62,8 +62,8 @@ func NewController(
 	tx dbtx.Transactor,
 ) *Controller {
 	return &Controller{
-		spaceStore:  spaceStore,
-		authorizer:  authorizer,
+		SpaceStore:  spaceStore,
+		Authorizer:  authorizer,
 		fileManager: fileManager,
 		DBStore:     dBStore,
 		tx:          tx,
@@ -88,14 +88,16 @@ func NewDBStore(
 
 const regNameFormat = "registry : [%s]"
 
-func (c Controller) UploadArtifact(ctx context.Context, info pkg.GenericArtifactInfo,
-	file multipart.File) (*commons.ResponseHeaders, string, errcode.Error) {
+func (c Controller) UploadArtifact(
+	ctx context.Context, info pkg.GenericArtifactInfo,
+	file multipart.File,
+) (*commons.ResponseHeaders, string, errcode.Error) {
 	responseHeaders := &commons.ResponseHeaders{
 		Headers: make(map[string]string),
 		Code:    0,
 	}
 	err := pkg.GetRegistryCheckAccess(
-		ctx, c.DBStore.RegistryDao, c.authorizer, c.spaceStore, info.RegIdentifier, info.ParentID,
+		ctx, c.DBStore.RegistryDao, c.Authorizer, c.SpaceStore, info.RegIdentifier, info.ParentID,
 		enum.PermissionArtifactsUpload,
 	)
 	if err != nil {
@@ -169,13 +171,16 @@ func (c Controller) UploadArtifact(ctx context.Context, info pkg.GenericArtifact
 	return responseHeaders, fileInfo.Sha256, errcode.Error{}
 }
 
-func (c Controller) updateMetadata(dbArtifact *types.Artifact, metadata *database.GenericMetadata,
-	info pkg.GenericArtifactInfo, fileInfo pkg.FileInfo) error {
+func (c Controller) updateMetadata(
+	dbArtifact *types.Artifact, metadata *database.GenericMetadata,
+	info pkg.GenericArtifactInfo, fileInfo pkg.FileInfo,
+) error {
 	var files []database.File
 	if dbArtifact != nil {
 		err := json.Unmarshal(dbArtifact.Metadata, metadata)
 		if err != nil {
-			return fmt.Errorf("failed to get metadata for artifact : [%s] with registry : [%s]", info.Image, info.RegIdentifier)
+			return fmt.Errorf("failed to get metadata for artifact : [%s] with registry : [%s]", info.Image,
+				info.RegIdentifier)
 		}
 		fileExist := false
 		files = metadata.Files
@@ -185,28 +190,34 @@ func (c Controller) updateMetadata(dbArtifact *types.Artifact, metadata *databas
 			}
 		}
 		if !fileExist {
-			files = append(files, database.File{Size: fileInfo.Size, Filename: fileInfo.Filename,
-				CreatedAt: time.Now().UnixMilli()})
+			files = append(files, database.File{
+				Size: fileInfo.Size, Filename: fileInfo.Filename,
+				CreatedAt: time.Now().UnixMilli(),
+			})
 			metadata.Files = files
 			metadata.FileCount++
 		}
 	} else {
-		files = append(files, database.File{Size: fileInfo.Size, Filename: fileInfo.Filename,
-			CreatedAt: time.Now().UnixMilli()})
+		files = append(files, database.File{
+			Size: fileInfo.Size, Filename: fileInfo.Filename,
+			CreatedAt: time.Now().UnixMilli(),
+		})
 		metadata.Files = files
 		metadata.FileCount++
 	}
 	return nil
 }
 
-func (c Controller) PullArtifact(ctx context.Context, info pkg.GenericArtifactInfo) (*commons.ResponseHeaders,
-	*storage.FileReader, string, errcode.Error) {
+func (c Controller) PullArtifact(ctx context.Context, info pkg.GenericArtifactInfo) (
+	*commons.ResponseHeaders,
+	*storage.FileReader, string, errcode.Error,
+) {
 	responseHeaders := &commons.ResponseHeaders{
 		Headers: make(map[string]string),
 		Code:    0,
 	}
 	err := pkg.GetRegistryCheckAccess(
-		ctx, c.DBStore.RegistryDao, c.authorizer, c.spaceStore, info.RegIdentifier, info.ParentID,
+		ctx, c.DBStore.RegistryDao, c.Authorizer, c.SpaceStore, info.RegIdentifier, info.ParentID,
 		enum.PermissionArtifactsDownload,
 	)
 	if err != nil {
