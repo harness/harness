@@ -132,7 +132,8 @@ func (a *PullRequestActivityPayloadReviewSubmit) ActivityType() enum.PullReqActi
 }
 
 type PullRequestActivityPayloadReviewerAdd struct {
-	PrincipalID  int64                    `json:"principal_id"`
+	PrincipalID  int64                    `json:"principal_id,omitempty"`
+	PrinciaplIDs []int64                  `json:"principal_ids,omitempty"`
 	ReviewerType enum.PullReqReviewerType `json:"reviewer_type"`
 }
 

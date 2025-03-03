@@ -149,15 +149,19 @@ func (c *Controller) Create(
 
 	targetRepoID := targetRepo.ID
 
-	// Prepare create reviewers input
-
-	var reviewers []*types.PullReqReviewer
+	var activitySeq int64
 
 	// Payload based reviewers
 
 	reviewerInputMap, err := c.preparePayloadReviewers(ctx, session, in.ReviewerIDs, targetRepo)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare reviewers: %w", err)
+	}
+
+	payloadReviewerIDs := maps.Keys(reviewerInputMap)
+
+	if len(reviewerInputMap) > 0 {
+		activitySeq++
 	}
 
 	// Rules based reviewers
@@ -167,6 +171,13 @@ func (c *Controller) Create(
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare codeowners: %w", err)
+	}
+
+	if len(codeownerReviewers) > 0 {
+		activitySeq++
+	}
+	if len(defaultReviewers) > 0 {
+		activitySeq++
 	}
 
 	for _, codeownerReviewer := range codeownerReviewers {
@@ -196,6 +207,8 @@ func (c *Controller) Create(
 		return nil, fmt.Errorf("failed to prepare labels: %w", err)
 	}
 
+	activitySeq += int64(len(labelAssignInputMap))
+
 	err = controller.TxOptLock(ctx, c.tx, func(ctx context.Context) error {
 		// Always re-fetch at the start of the transaction because the repo we have is from a cache.
 
@@ -223,8 +236,7 @@ func (c *Controller) Create(
 
 		targetRepo = targetRepoFull.Core()
 
-		// Calculate the activity sequence
-		pr.ActivitySeq = int64(len(in.Labels) + len(in.ReviewerIDs))
+		pr.ActivitySeq = activitySeq
 
 		err = c.pullreqStore.Create(ctx, pr)
 		if err != nil {
@@ -236,13 +248,12 @@ func (c *Controller) Create(
 
 		// Create reviewers and assign labels
 
-		reviewers, err = c.createReviewers(ctx, session, reviewerInputMap, targetRepo, pr)
-		if err != nil {
-			return err
+		if err = c.createReviewers(ctx, session, reviewerInputMap, targetRepo, pr); err != nil {
+			return fmt.Errorf("failed to create reviewers: %w", err)
 		}
 
 		if labelAssignOuts, err = c.assignLabels(ctx, pr, session.Principal.ID, labelAssignInputMap); err != nil {
-			return err
+			return fmt.Errorf("failed to assign labels: %w", err)
 		}
 
 		// Create PR head reference in the git repository
@@ -264,9 +275,17 @@ func (c *Controller) Create(
 		return nil, fmt.Errorf("failed to create pullreq: %w", err)
 	}
 
-	backfillWithLabelAssignInfo(pr, labelAssignOuts)
+	c.storeCreateReviewerActivity(
+		ctx, pr, session.Principal.ID, payloadReviewerIDs, enum.PullReqReviewerTypeRequested,
+	)
+	c.storeCreateReviewerActivity(
+		ctx, pr, session.Principal.ID, maps.Keys(codeownerReviewers), enum.PullReqReviewerTypeCodeOwners,
+	)
+	c.storeCreateReviewerActivity(
+		ctx, pr, session.Principal.ID, maps.Keys(defaultReviewers), enum.PullReqReviewerTypeDefault,
+	)
 
-	c.storeCreateReviewerActivity(ctx, pr, session.Principal.ID, reviewers)
+	backfillWithLabelAssignInfo(pr, labelAssignOuts)
 	c.storeLabelAssignActivity(ctx, pr, session.Principal.ID, labelAssignOuts)
 
 	c.eventReporter.Created(ctx, &pullreqevents.CreatedPayload{
@@ -447,9 +466,9 @@ func (c *Controller) createReviewers(
 	principalInfos map[int64]*types.PrincipalInfo,
 	repo *types.RepositoryCore,
 	pr *types.PullReq,
-) ([]*types.PullReqReviewer, error) {
+) error {
 	if len(principalInfos) == 0 {
-		return []*types.PullReqReviewer{}, nil
+		return nil
 	}
 
 	reviewers := make([]*types.PullReqReviewer, len(principalInfos))
@@ -467,39 +486,44 @@ func (c *Controller) createReviewers(
 		)
 
 		if err := c.reviewerStore.Create(ctx, reviewer); err != nil {
-			return nil, fmt.Errorf("failed to create pull request reviewer: %w", err)
+			return fmt.Errorf("failed to create pull request reviewer: %w", err)
 		}
 
 		reviewers[i] = reviewer
 		i++
 	}
 
-	return reviewers, nil
+	return nil
 }
 
 func (c *Controller) storeCreateReviewerActivity(
 	ctx context.Context,
 	pr *types.PullReq,
-	principalID int64,
-	reviewers []*types.PullReqReviewer,
+	authorID int64,
+	reviewerIDs []int64,
+	reviewerType enum.PullReqReviewerType,
 ) {
-	for _, reviewer := range reviewers {
-		pr.ActivitySeq++
+	if len(reviewerIDs) == 0 {
+		return
+	}
 
-		payload := &types.PullRequestActivityPayloadReviewerAdd{
-			PrincipalID:  reviewer.PrincipalID,
-			ReviewerType: enum.PullReqReviewerTypeRequested,
-		}
+	pr.ActivitySeq++
 
-		metadata := &types.PullReqActivityMetadata{
-			Mentions: &types.PullReqActivityMentionsMetadata{IDs: []int64{reviewer.PrincipalID}},
-		}
+	payload := &types.PullRequestActivityPayloadReviewerAdd{
+		ReviewerType: reviewerType,
+		PrinciaplIDs: reviewerIDs,
+	}
 
-		if _, err := c.activityStore.CreateWithPayload(
-			ctx, pr, principalID, payload, metadata,
-		); err != nil {
-			log.Ctx(ctx).Err(err).Msg("failed to write create reviewer pull req activity")
-		}
+	metadata := &types.PullReqActivityMetadata{
+		Mentions: &types.PullReqActivityMentionsMetadata{IDs: reviewerIDs},
+	}
+
+	if _, err := c.activityStore.CreateWithPayload(
+		ctx, pr, authorID, payload, metadata,
+	); err != nil {
+		log.Ctx(ctx).Err(err).Msgf(
+			"failed to write create %s reviewer pull req activity", reviewerType,
+		)
 	}
 }
 

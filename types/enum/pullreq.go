@@ -207,12 +207,19 @@ const (
 	PullReqReviewerTypeRequested    PullReqReviewerType = "requested"
 	PullReqReviewerTypeAssigned     PullReqReviewerType = "assigned"
 	PullReqReviewerTypeSelfAssigned PullReqReviewerType = "self_assigned"
+
+	// Used when adding reviewers on PR creation based on CODEOWNERS file or rules.
+	PullReqReviewerTypeCodeOwners PullReqReviewerType = "code_owners"
+	PullReqReviewerTypeDefault    PullReqReviewerType = "default"
 )
 
 var pullReqReviewerTypes = sortEnum([]PullReqReviewerType{
 	PullReqReviewerTypeRequested,
 	PullReqReviewerTypeAssigned,
 	PullReqReviewerTypeSelfAssigned,
+
+	PullReqReviewerTypeCodeOwners,
+	PullReqReviewerTypeDefault,
 })
 
 type MergeMethod gitenum.MergeMethod
