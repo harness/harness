@@ -21,7 +21,7 @@ type (
 	// Service is a principal representing a different internal service that runs alongside gitness.
 	Service struct {
 		// Fields from Principal
-		ID          int64  `db:"principal_id"           json:"-"`
+		ID          int64  `db:"principal_id"           json:"id"`
 		UID         string `db:"principal_uid"          json:"uid"`
 		Email       string `db:"principal_email"        json:"email"`
 		DisplayName string `db:"principal_display_name" json:"display_name"`

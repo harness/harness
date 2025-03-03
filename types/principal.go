@@ -25,7 +25,7 @@ const AnonymousPrincipalUID = "anonymous"
 // Principal represents the identity of an acting entity (User, ServiceAccount, Service).
 type Principal struct {
 	// TODO: int64 ID doesn't match DB
-	ID          int64              `db:"principal_id"           json:"-"`
+	ID          int64              `db:"principal_id"           json:"id"`
 	UID         string             `db:"principal_uid"          json:"uid"`
 	Email       string             `db:"principal_email"        json:"email"`
 	Type        enum.PrincipalType `db:"principal_type"         json:"type"`

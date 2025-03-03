@@ -21,7 +21,7 @@ type (
 	// ServiceAccount is a principal representing a service account.
 	ServiceAccount struct {
 		// Fields from Principal (without admin, as it's never an admin)
-		ID          int64  `db:"principal_id"           json:"-"`
+		ID          int64  `db:"principal_id"           json:"id"`
 		UID         string `db:"principal_uid"          json:"uid"`
 		Email       string `db:"principal_email"        json:"email"`
 		DisplayName string `db:"principal_display_name" json:"display_name"`
