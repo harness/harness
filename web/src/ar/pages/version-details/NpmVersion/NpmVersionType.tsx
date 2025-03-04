@@ -15,6 +15,7 @@
  */
 
 import React from 'react'
+import { Layout } from '@harnessio/uicore'
 import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client'
 
 import { String } from '@ar/frameworks/strings'
@@ -33,6 +34,7 @@ import {
 import NpmVersionOverviewPage from './pages/overview/NpmVersionOverviewPage'
 import { VersionDetailsTab } from '../components/VersionDetailsTabs/constants'
 import VersionDetailsHeaderContent from '../components/VersionDetailsHeaderContent/VersionDetailsHeaderContent'
+import NpmVersionArtifactDetailsPage from './pages/artifact-dertails/NpmVersionArtifactDetailsPage'
 
 export class NpmVersionType extends VersionStep<ArtifactVersionSummary> {
   protected packageType = RepositoryPackageType.NPM
@@ -63,8 +65,14 @@ export class NpmVersionType extends VersionStep<ArtifactVersionSummary> {
       case VersionDetailsTab.OVERVIEW:
         return <NpmVersionOverviewPage />
       case VersionDetailsTab.ARTIFACT_DETAILS:
+        return <NpmVersionArtifactDetailsPage />
       case VersionDetailsTab.OSS:
-        return <NpmVersionOverviewPage />
+        return (
+          <Layout.Vertical spacing="xlarge">
+            <NpmVersionOverviewPage />
+            <NpmVersionArtifactDetailsPage />
+          </Layout.Vertical>
+        )
       default:
         return <String stringID="tabNotFound" />
     }

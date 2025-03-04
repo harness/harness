@@ -159,8 +159,11 @@ export interface StringsMap {
   'versionDetails.artifactDetails.layers.imageLayers': string
   'versionDetails.artifactDetails.layers.lastPush': string
   'versionDetails.artifactDetails.layers.size': string
+  'versionDetails.artifactDetails.tabs.dependencies': string
+  'versionDetails.artifactDetails.tabs.files': string
   'versionDetails.artifactDetails.tabs.layers': string
   'versionDetails.artifactDetails.tabs.manifest': string
+  'versionDetails.artifactDetails.tabs.readme': string
   'versionDetails.artifactFiles.table.columns.checksum': string
   'versionDetails.artifactFiles.table.columns.created': string
   'versionDetails.artifactFiles.table.columns.downloadCommand': string
@@ -190,6 +193,8 @@ export interface StringsMap {
   'versionDetails.cards.supplyChain.sbomScore': string
   'versionDetails.cards.supplyChain.title': string
   'versionDetails.cards.supplyChain.totalComponents': string
+  'versionDetails.dependencyList.table.columns.name': string
+  'versionDetails.dependencyList.table.columns.version': string
   'versionDetails.deploymentsTable.columns.deploymentPipeline': string
   'versionDetails.deploymentsTable.columns.environment': string
   'versionDetails.deploymentsTable.columns.infra': string

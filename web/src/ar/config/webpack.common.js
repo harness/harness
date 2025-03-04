@@ -122,12 +122,20 @@ module.exports = {
       {
         test: /\.(jpg|jpeg|png|svg|gif)$/,
         type: 'asset'
+      },
+      {
+        test: /\.css$/,
+        use: ['style-loader', 'css-loader']
       }
     ]
   },
   resolve: {
-    extensions: ['.mjs', '.js', '.ts', '.tsx', '.json'],
-    plugins: [new TsconfigPathsPlugin()]
+    extensions: ['.mjs', '.js', '.ts', '.tsx', '.json', '.scss', '.ttf'],
+    plugins: [new TsconfigPathsPlugin()],
+    alias: {
+      'react/jsx-dev-runtime': 'react/jsx-dev-runtime.js',
+      'react/jsx-runtime': 'react/jsx-runtime.js'
+    }
   },
   plugins: [
     new ModuleFederationPlugin(moduleFederationConfig),

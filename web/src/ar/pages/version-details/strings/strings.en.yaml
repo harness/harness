@@ -59,6 +59,9 @@ artifactDetails:
   tabs:
     layers: Layers
     manifest: Manifest
+    readme: Readme
+    files: Files
+    dependencies: Dependencies
   layers:
     digest: '{{ $.digestList.table.columns.digest }}'
     imageLayers: Image Layers
@@ -84,3 +87,8 @@ artifactFiles:
       checksum: Checksum
       downloadCommand: Download Command
       created: Created
+dependencyList:
+  table:
+    columns:
+      name: Dependency Name
+      version: Dependency Version
