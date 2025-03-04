@@ -14,9 +14,14 @@
  * limitations under the License.
  */
 
-import type { ArtifactSummary } from '@harnessio/react-har-service-client'
+import type { ArtifactSummary, RegistryArtifactMetadata } from '@harnessio/react-har-service-client'
+import type { PageType } from '@ar/common/types'
 
 export interface ArtifactActionProps {
-  data: ArtifactSummary
+  data: ArtifactSummary | RegistryArtifactMetadata
+  artifactKey: string
   repoKey: string
+  pageType: PageType
+  readonly?: boolean
+  onClose?: () => void
 }

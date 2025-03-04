@@ -15,42 +15,39 @@
  */
 
 import React from 'react'
-import { useHistory } from 'react-router-dom'
+import { defaultTo } from 'lodash-es'
 
+import { useParentComponents } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
-import { useParentComponents, useRoutes } from '@ar/hooks'
-import { RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
+import type { RepositoryPackageType } from '@ar/common/types'
 import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
+import { useSetupClientModal } from '@ar/pages/repository-details/hooks/useSetupClientModal/useSetupClientModal'
 
 import type { ArtifactActionProps } from './types'
 
-export default function EditRepositoryMenuItem({ repoKey }: ArtifactActionProps): JSX.Element {
+export default function SetupClientMenuItem(props: ArtifactActionProps): JSX.Element {
+  const { artifactKey, repoKey, data, readonly } = props
   const { getString } = useStrings()
   const { RbacMenuItem } = useParentComponents()
-  const history = useHistory()
-  const routes = useRoutes()
 
-  const handleOpenRepository = (): void => {
-    history.push(
-      routes.toARRepositoryDetailsTab({
-        repositoryIdentifier: repoKey,
-        tab: RepositoryDetailsTab.CONFIGURATION
-      })
-    )
-  }
-
+  const [showSetupClientModal] = useSetupClientModal({
+    repoKey,
+    packageType: data.packageType as RepositoryPackageType,
+    artifactKey
+  })
   return (
     <>
       <RbacMenuItem
-        icon="edit"
-        text={getString('artifactList.table.actions.editRepository')}
-        onClick={handleOpenRepository}
+        icon="setup-client"
+        text={getString('actions.setupClient')}
+        onClick={showSetupClientModal}
+        disabled={readonly}
         permission={{
           resource: {
             resourceType: ResourceType.ARTIFACT_REGISTRY,
-            resourceIdentifier: repoKey
+            resourceIdentifier: defaultTo(repoKey, '')
           },
-          permission: PermissionIdentifier.EDIT_ARTIFACT_REGISTRY
+          permission: PermissionIdentifier.VIEW_ARTIFACT_REGISTRY
         }}
       />
     </>

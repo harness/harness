@@ -52,7 +52,7 @@ export const MockGetHelmArtifactsByRegistryResponse: GetAllArtifactsByRegistryOk
         }
       ],
       itemCount: 1,
-      pageCount: 1,
+      pageCount: 2,
       pageIndex: 0,
       pageSize: 50
     },

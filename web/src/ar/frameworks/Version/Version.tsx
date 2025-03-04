@@ -15,9 +15,13 @@
  */
 
 import type { PaginationProps } from '@harnessio/uicore'
-import type { ListArtifactVersion } from '@harnessio/react-har-service-client'
+import type {
+  ArtifactSummary,
+  ListArtifactVersion,
+  RegistryArtifactMetadata
+} from '@harnessio/react-har-service-client'
 import type { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
-import type { Parent, RepositoryPackageType } from '@ar/common/types'
+import type { PageType, Parent, RepositoryPackageType } from '@ar/common/types'
 
 export interface VersionDetailsHeaderProps<T> {
   data: T
@@ -39,6 +43,15 @@ export interface VersionListTableProps {
   parent: Parent
 }
 
+export interface ArtifactActionProps {
+  data: RegistryArtifactMetadata | ArtifactSummary
+  pageType: PageType
+  repoKey: string
+  artifactKey: string
+  readonly?: boolean
+  onClose?: () => void
+}
+
 export abstract class VersionStep<T> {
   protected abstract packageType: RepositoryPackageType
   protected abstract allowedVersionDetailsTabs: VersionDetailsTab[]
@@ -56,4 +69,6 @@ export abstract class VersionStep<T> {
   abstract renderVersionDetailsHeader(props: VersionDetailsHeaderProps<T>): JSX.Element
 
   abstract renderVersionDetailsTab(props: VersionDetailsTabProps): JSX.Element
+
+  abstract renderArtifactActions(props: ArtifactActionProps): JSX.Element
 }

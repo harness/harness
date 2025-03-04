@@ -21,12 +21,14 @@ import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client
 import { String } from '@ar/frameworks/strings'
 import { RepositoryPackageType } from '@ar/common/types'
 import { VersionListColumnEnum } from '@ar/pages/version-list/components/VersionListTable/types'
+import ArtifactActions from '@ar/pages/artifact-details/components/ArtifactActions/ArtifactActions'
 import VersionListTable, {
   type CommonVersionListTableProps
 } from '@ar/pages/version-list/components/VersionListTable/VersionListTable'
 import {
+  type ArtifactActionProps,
   type VersionDetailsHeaderProps,
-  VersionDetailsTabProps,
+  type VersionDetailsTabProps,
   type VersionListTableProps,
   VersionStep
 } from '@ar/frameworks/Version/Version'
@@ -76,5 +78,9 @@ export class NpmVersionType extends VersionStep<ArtifactVersionSummary> {
       default:
         return <String stringID="tabNotFound" />
     }
+  }
+
+  renderArtifactActions(props: ArtifactActionProps): JSX.Element {
+    return <ArtifactActions {...props} />
   }
 }

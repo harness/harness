@@ -52,7 +52,7 @@ export const MockGetMavenArtifactsByRegistryResponse: GetAllArtifactsByRegistryO
         }
       ],
       itemCount: 0,
-      pageCount: 0,
+      pageCount: 2,
       pageIndex: 0,
       pageSize: 50
     },

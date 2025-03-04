@@ -23,6 +23,7 @@ import type { ListRegistryArtifact, RegistryArtifactMetadata } from '@harnessio/
 import { useStrings } from '@ar/frameworks/strings'
 import { useParentHooks } from '@ar/hooks'
 import {
+  RegistryArtifactActionsCell,
   RegistryArtifactDownloadsCell,
   RegistryArtifactLatestUpdatedCell,
   RegistryArtifactNameCell,
@@ -95,6 +96,12 @@ export default function RegistryArtifactListTable(props: RegistryArtifactListTab
         accessor: 'latestVersion',
         Cell: RegistryArtifactLatestUpdatedCell,
         serverSortProps: getServerSortProps('latestVersion')
+      },
+      {
+        Header: '',
+        accessor: 'actions',
+        Cell: RegistryArtifactActionsCell,
+        disableSortBy: true
       }
     ].filter(Boolean) as unknown as Column<RegistryArtifactMetadata>[]
   }, [currentOrder, currentSort, getString, onClickLabel])

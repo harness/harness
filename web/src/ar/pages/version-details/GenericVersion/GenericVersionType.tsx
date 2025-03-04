@@ -17,6 +17,7 @@
 import React from 'react'
 import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client'
 import {
+  type ArtifactActionProps,
   type VersionDetailsHeaderProps,
   type VersionDetailsTabProps,
   type VersionListTableProps,
@@ -28,6 +29,7 @@ import VersionListTable, {
   type CommonVersionListTableProps
 } from '@ar/pages/version-list/components/VersionListTable/VersionListTable'
 import { VersionListColumnEnum } from '@ar/pages/version-list/components/VersionListTable/types'
+import ArtifactActions from '@ar/pages/artifact-details/components/ArtifactActions/ArtifactActions'
 import { VersionDetailsTab } from '../components/VersionDetailsTabs/constants'
 import GenericOverviewPage from './pages/overview/OverviewPage'
 import OSSContentPage from './pages/oss-details/OSSContentPage'
@@ -68,5 +70,9 @@ export class GenericVersionType extends VersionStep<ArtifactVersionSummary> {
       default:
         return <String stringID="tabNotFound" />
     }
+  }
+
+  renderArtifactActions(props: ArtifactActionProps): JSX.Element {
+    return <ArtifactActions {...props} />
   }
 }

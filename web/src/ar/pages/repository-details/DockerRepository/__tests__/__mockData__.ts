@@ -52,7 +52,7 @@ export const MockGetArtifactsByRegistryResponse: GetAllArtifactsByRegistryOkResp
         }
       ],
       itemCount: 1,
-      pageCount: 1,
+      pageCount: 3,
       pageIndex: 0,
       pageSize: 50
     },

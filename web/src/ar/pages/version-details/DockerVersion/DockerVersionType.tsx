@@ -19,11 +19,13 @@ import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client
 
 import { String } from '@ar/frameworks/strings'
 import { RepositoryPackageType } from '@ar/common/types'
+import ArtifactActions from '@ar/pages/artifact-details/components/ArtifactActions/ArtifactActions'
 import DockerVersionListTable from '@ar/pages/version-list/DockerVersion/VersionListTable/DockerVersionListTable'
 import {
-  VersionDetailsHeaderProps,
-  VersionDetailsTabProps,
-  VersionListTableProps,
+  type ArtifactActionProps,
+  type VersionDetailsHeaderProps,
+  type VersionDetailsTabProps,
+  type VersionListTableProps,
   VersionStep
 } from '@ar/frameworks/Version/Version'
 
@@ -71,5 +73,9 @@ export class DockerVersionType extends VersionStep<ArtifactVersionSummary> {
       default:
         return <String stringID="tabNotFound" />
     }
+  }
+
+  renderArtifactActions(props: ArtifactActionProps): JSX.Element {
+    return <ArtifactActions {...props} />
   }
 }

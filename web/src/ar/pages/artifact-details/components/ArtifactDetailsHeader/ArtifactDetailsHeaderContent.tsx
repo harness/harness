@@ -21,11 +21,12 @@ import type { ArtifactSummary } from '@harnessio/react-har-service-client'
 
 import { useDecodedParams } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings/String'
-import type { RepositoryPackageType } from '@ar/common/types'
+import { PageType, type RepositoryPackageType } from '@ar/common/types'
 import type { ArtifactDetailsPathParams } from '@ar/routes/types'
 import WeeklyDownloads from '@ar/components/PageTitle/WeeklyDownloads'
 import CreatedAndModifiedAt from '@ar/components/PageTitle/CreatedAndModifiedAt'
 import NameAndDescription from '@ar/components/PageTitle/NameAndDescription'
+import ArtifactActionsWidget from '@ar/frameworks/Version/ArtifactActionsWidget'
 import SetupClientButton from '@ar/components/SetupClientButton/SetupClientButton'
 
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
@@ -68,6 +69,13 @@ function ArtifactDetailsHeaderContent(props: ArtifactDetailsHeaderContentProps):
               repositoryIdentifier={repositoryIdentifier}
               artifactIdentifier={artifactIdentifier}
               packageType={packageType as RepositoryPackageType}
+            />
+            <ArtifactActionsWidget
+              packageType={packageType as RepositoryPackageType}
+              data={data as ArtifactSummary}
+              repoKey={repositoryIdentifier}
+              artifactKey={artifactIdentifier}
+              pageType={PageType.Details}
             />
           </Layout.Horizontal>
         </Layout.Vertical>

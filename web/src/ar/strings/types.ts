@@ -10,7 +10,10 @@
  * Use the command `yarn strings` to regenerate this file.
  */
 export interface StringsMap {
+  'artifactDetails.artifactDeleted': string
   'artifactDetails.artifactLabelInputPlaceholder': string
+  'artifactDetails.deleteArtifactModal.contentText': string
+  'artifactDetails.deleteArtifactModal.title': string
   'artifactDetails.downloadsThisWeek': string
   'artifactDetails.labelsUpdated': string
   'artifactDetails.page': string
@@ -23,6 +26,7 @@ export interface StringsMap {
   'artifactList.table.actions.VulnerabilityStatus.partiallyScanned': string
   'artifactList.table.actions.VulnerabilityStatus.scanStatus': string
   'artifactList.table.actions.VulnerabilityStatus.scanned': string
+  'artifactList.table.actions.deleteArtifact': string
   'artifactList.table.actions.deleteRepository': string
   'artifactList.table.actions.editRepository': string
   'artifactList.table.allRepositories': string

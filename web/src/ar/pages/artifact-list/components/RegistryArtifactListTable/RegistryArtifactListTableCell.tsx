@@ -28,8 +28,9 @@ import { useStrings } from '@ar/frameworks/strings'
 import TableCells from '@ar/components/TableCells/TableCells'
 import LabelsPopover from '@ar/components/LabelsPopover/LabelsPopover'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
-import type { RepositoryPackageType } from '@ar/common/types'
+import { PageType, type RepositoryPackageType } from '@ar/common/types'
 import { RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
+import ArtifactActionsWidget from '@ar/frameworks/Version/ArtifactActionsWidget'
 import { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
 
 type CellTypeWithActions<D extends Record<string, any>, V = any> = TableInstance<D> & {
@@ -141,5 +142,18 @@ export const RegistryArtifactLatestUpdatedCell: CellType = ({ row }) => {
       />
       <TableCells.LastModifiedCell value={defaultTo(lastModified, 0)} />
     </Layout.Vertical>
+  )
+}
+
+export const RegistryArtifactActionsCell: CellType = ({ row }) => {
+  const { original } = row
+  return (
+    <ArtifactActionsWidget
+      packageType={original.packageType as RepositoryPackageType}
+      pageType={PageType.Table}
+      data={original}
+      repoKey={original.registryIdentifier}
+      artifactKey={original.name}
+    />
   )
 }

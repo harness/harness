@@ -18,23 +18,34 @@ import React from 'react'
 import { useHistory } from 'react-router-dom'
 
 import { useStrings } from '@ar/frameworks/strings'
+import { queryClient } from '@ar/utils/queryClient'
 import { useParentComponents, useRoutes } from '@ar/hooks'
+import { RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
 import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
-import useDeleteRepositoryModal from '@ar/pages/repository-details/hooks/useDeleteRepositoryModal/useDeleteRepositoryModal'
 
 import type { ArtifactActionProps } from './types'
+import useDeleteArtifactModal from '../../hooks/useDeleteArtifactModal/useDeleteArtifactModal'
 
-export default function DeleteRepositoryMenuItem({ repoKey }: ArtifactActionProps): JSX.Element {
+export default function DeleteArtifactMenuItem(props: ArtifactActionProps): JSX.Element {
+  const { artifactKey, repoKey, readonly, onClose } = props
   const { getString } = useStrings()
   const { RbacMenuItem } = useParentComponents()
   const history = useHistory()
   const routes = useRoutes()
 
   const handleAfterDeleteRepository = (): void => {
-    history.push(routes.toARArtifacts())
+    onClose?.()
+    queryClient.invalidateQueries(['GetAllArtifactsByRegistry'])
+    history.push(
+      routes.toARRepositoryDetailsTab({
+        repositoryIdentifier: repoKey,
+        tab: RepositoryDetailsTab.PACKAGES
+      })
+    )
   }
 
-  const { triggerDelete } = useDeleteRepositoryModal({
+  const { triggerDelete } = useDeleteArtifactModal({
+    artifactKey,
     repoKey,
     onSuccess: handleAfterDeleteRepository
   })
@@ -46,14 +57,15 @@ export default function DeleteRepositoryMenuItem({ repoKey }: ArtifactActionProp
   return (
     <RbacMenuItem
       icon="code-delete"
-      text={getString('artifactList.table.actions.deleteRepository')}
+      text={getString('artifactList.table.actions.deleteArtifact')}
       onClick={handleDeleteService}
+      disabled={readonly}
       permission={{
         resource: {
           resourceType: ResourceType.ARTIFACT_REGISTRY,
-          resourceIdentifier: repoKey
+          resourceIdentifier: artifactKey
         },
-        permission: PermissionIdentifier.DELETE_ARTIFACT_REGISTRY
+        permission: PermissionIdentifier.DELETE_ARTIFACT
       }}
     />
   )

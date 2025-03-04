@@ -23,10 +23,12 @@ import { VersionListColumnEnum } from '@ar/pages/version-list/components/Version
 import VersionListTable, {
   CommonVersionListTableProps
 } from '@ar/pages/version-list/components/VersionListTable/VersionListTable'
+import ArtifactActions from '@ar/pages/artifact-details/components/ArtifactActions/ArtifactActions'
 import {
-  VersionDetailsHeaderProps,
-  VersionDetailsTabProps,
-  VersionListTableProps,
+  type ArtifactActionProps,
+  type VersionDetailsHeaderProps,
+  type VersionDetailsTabProps,
+  type VersionListTableProps,
   VersionStep
 } from '@ar/frameworks/Version/Version'
 import { VersionDetailsTab } from '../components/VersionDetailsTabs/constants'
@@ -69,5 +71,9 @@ export class HelmVersionType extends VersionStep<ArtifactVersionSummary> {
       default:
         return <String stringID="tabNotFound" />
     }
+  }
+
+  renderArtifactActions(props: ArtifactActionProps): JSX.Element {
+    return <ArtifactActions {...props} />
   }
 }

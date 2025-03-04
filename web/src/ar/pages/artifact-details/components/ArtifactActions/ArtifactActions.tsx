@@ -15,45 +15,46 @@
  */
 
 import React, { useState } from 'react'
-import { Menu, Position } from '@blueprintjs/core'
-import { Button, ButtonVariation } from '@harnessio/uicore'
 
-import DeleteRepositoryMenuItem from './DeleteRepository'
-import EditRepositoryMenuItem from './EditRepository'
-import SetupClientMenuItem from './SetupClient'
+import { PageType } from '@ar/common/types'
+import ActionButton from '@ar/components/ActionButton/ActionButton'
+
+import SetupClientMenuItem from './SetupClientMenuItem'
 import type { ArtifactActionProps } from './types'
+import DeleteArtifactMenuItem from './DeleteArtifactMenuItem'
 
-import css from './ArtifactActions.module.scss'
-
-export default function ArtifactActions({ data, repoKey }: ArtifactActionProps): JSX.Element {
-  const [menuOpen, setMenuOpen] = useState(false)
+export default function ArtifactActions({
+  data,
+  repoKey,
+  artifactKey,
+  pageType,
+  readonly,
+  onClose
+}: ArtifactActionProps): JSX.Element {
+  const [open, setOpen] = useState(false)
   return (
-    <Button
-      variation={ButtonVariation.ICON}
-      icon="Options"
-      tooltip={
-        <Menu
-          className={css.optionsMenu}
-          onClick={e => {
-            e.stopPropagation()
-          }}>
-          <DeleteRepositoryMenuItem data={data} repoKey={repoKey} />
-          <EditRepositoryMenuItem data={data} repoKey={repoKey} />
-          <SetupClientMenuItem data={data} repoKey={repoKey} />
-        </Menu>
-      }
-      tooltipProps={{
-        interactionKind: 'click',
-        onInteraction: nextOpenState => {
-          setMenuOpen(nextOpenState)
-        },
-        isOpen: menuOpen,
-        position: Position.BOTTOM
-      }}
-      onClick={e => {
-        e.stopPropagation()
-        setMenuOpen(true)
-      }}
-    />
+    <ActionButton isOpen={open} setOpen={setOpen}>
+      <DeleteArtifactMenuItem
+        artifactKey={artifactKey}
+        repoKey={repoKey}
+        data={data}
+        pageType={pageType}
+        readonly={readonly}
+        onClose={() => {
+          setOpen(false)
+          onClose?.()
+        }}
+      />
+      {pageType === PageType.Table && (
+        <SetupClientMenuItem
+          data={data}
+          pageType={pageType}
+          readonly={readonly}
+          onClose={() => setOpen(false)}
+          artifactKey={artifactKey}
+          repoKey={repoKey}
+        />
+      )}
+    </ActionButton>
   )
 }
