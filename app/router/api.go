@@ -217,7 +217,7 @@ func setupRoutesV1WithAuth(r chi.Router,
 	usageSender usage.Sender,
 ) {
 	setupAccountWithAuth(r, userCtrl, config)
-	setupSpaces(r, appCtx, spaceCtrl, userGroupCtrl, webhookCtrl, checkCtrl)
+	setupSpaces(r, appCtx, infraProviderCtrl, spaceCtrl, userGroupCtrl, webhookCtrl, checkCtrl)
 	setupRepos(r, repoCtrl, repoSettingsCtrl, pipelineCtrl, executionCtrl, triggerCtrl,
 		logCtrl, pullreqCtrl, webhookCtrl, checkCtrl, uploadCtrl, usageSender)
 	setupConnectors(r, connectorCtrl)
@@ -239,6 +239,7 @@ func setupRoutesV1WithAuth(r chi.Router,
 func setupSpaces(
 	r chi.Router,
 	appCtx context.Context,
+	infraProviderCtrl *infraprovider.Controller,
 	spaceCtrl *space.Controller,
 	userGroupCtrl *usergroup.Controller,
 	webhookCtrl *webhook.Controller,
@@ -271,6 +272,7 @@ func setupSpaces(
 			r.Get("/connectors", handlerspace.HandleListConnectors(spaceCtrl))
 			r.Get("/templates", handlerspace.HandleListTemplates(spaceCtrl))
 			r.Get("/gitspaces", handlerspace.HandleListGitspaces(spaceCtrl))
+			r.Get("/infraproviders", handlerspace.HandleListInfraProviderConfigs(infraProviderCtrl))
 			r.Post("/export", handlerspace.HandleExport(spaceCtrl))
 			r.Get("/export-progress", handlerspace.HandleExportProgress(spaceCtrl))
 			r.Post("/public-access", handlerspace.HandleUpdatePublicAccess(spaceCtrl))
@@ -874,6 +876,7 @@ func setupInfraProviders(r chi.Router, infraProviderCtrl *infraprovider.Controll
 		r.Post("/", handlerinfraProvider.HandleCreateConfig(infraProviderCtrl))
 		r.Route(fmt.Sprintf("/{%s}", request.PathParamInfraProviderConfigIdentifier), func(r chi.Router) {
 			r.Get("/", handlerinfraProvider.HandleFind(infraProviderCtrl))
+			r.Delete("/", handlerinfraProvider.HandleDelete(infraProviderCtrl))
 		})
 	})
 }

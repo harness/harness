@@ -31,32 +31,62 @@ func (c *Service) Find(
 	if err != nil {
 		return nil, fmt.Errorf("failed to find infraprovider config: %q %w", identifier, err)
 	}
+
+	err = c.populateDetails(ctx, space.Path, infraProviderConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return infraProviderConfig, nil
+}
+
+func (c *Service) populateDetails(
+	ctx context.Context,
+	spacePath string,
+	infraProviderConfig *types.InfraProviderConfig,
+) error {
+	infraProviderConfig.SpacePath = spacePath
+
+	resources, err := c.getResources(ctx, spacePath, infraProviderConfig)
+	if err != nil {
+		return err
+	}
+	infraProviderConfig.Resources = resources
+
+	setupYAML, err := c.getSetupYAML(infraProviderConfig)
+	if err != nil {
+		return err
+	}
+	infraProviderConfig.SetupYAML = setupYAML
+
+	return nil
+}
+
+func (c *Service) getResources(
+	ctx context.Context,
+	spacePath string,
+	infraProviderConfig *types.InfraProviderConfig,
+) ([]types.InfraProviderResource, error) {
 	resources, err := c.infraProviderResourceStore.List(ctx, infraProviderConfig.ID, types.ListQueryFilter{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to find infraprovider resources for config: %q %w",
 			infraProviderConfig.Identifier, err)
 	}
-	infraProviderConfig.SpacePath = space.Path
+
+	var providerResources []types.InfraProviderResource
+
 	if len(resources) > 0 {
-		providerResources := make([]types.InfraProviderResource, len(resources))
+		providerResources = make([]types.InfraProviderResource, len(resources))
 		for i, resource := range resources {
 			if resource != nil {
 				providerResources[i] = *resource
-				providerResources[i].SpacePath = space.Path
+				providerResources[i].SpacePath = spacePath
 			}
 		}
 		slices.SortFunc(providerResources, types.CompareInfraProviderResource)
-		infraProviderConfig.Resources = providerResources
 	}
 
-	setupYAML, err := c.getSetupYAML(infraProviderConfig)
-	if err != nil {
-		return nil, err
-	}
-
-	infraProviderConfig.SetupYAML = setupYAML
-
-	return infraProviderConfig, nil
+	return providerResources, nil
 }
 
 func (c *Service) getSetupYAML(infraProviderConfig *types.InfraProviderConfig) (string, error) {

@@ -51,8 +51,8 @@ func (c *Service) DeleteResource(
 		}
 
 		if len(activeGitspaces) > 0 {
-			return usererror.NewWithPayload(http.StatusForbidden, fmt.Sprintf("There are %d active configs for "+
-				"infra resource %s, expected 0", len(activeGitspaces), identifier))
+			return usererror.NewWithPayload(http.StatusForbidden, fmt.Sprintf("There are %d active gitspace "+
+				"configs for infra resource %s, expected 0", len(activeGitspaces), identifier))
 		}
 
 		return c.infraProviderResourceStore.Delete(ctx, infraProviderResource.ID)

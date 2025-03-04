@@ -28,6 +28,8 @@ var gitspaceInstanceStateTypes = []GitspaceInstanceStateType{
 	GitspaceInstanceStateDeleted,
 	GitspaceInstanceStateStarting,
 	GitspaceInstanceStateStopping,
+	GitSpaceInstanceStateCleaning,
+	GitspaceInstanceStateCleaned,
 }
 
 const (

@@ -762,18 +762,17 @@ type (
 		// FindByIdentifier returns a infra provider config with a given UID in a space
 		FindByIdentifier(ctx context.Context, spaceID int64, identifier string) (*types.InfraProviderConfig, error)
 
-		// FindByType returns a infra provider config with a given type in a space
-		FindByType(
-			ctx context.Context,
-			spaceID int64,
-			infraProviderType enum.InfraProviderType,
-		) ([]*types.InfraProviderConfig, error)
+		// List returns all infra provider config matching the given filter
+		List(ctx context.Context, filter *types.InfraProviderConfigFilter) ([]*types.InfraProviderConfig, error)
 
 		// Create creates a new infra provider config in the datastore.
 		Create(ctx context.Context, infraProviderConfig *types.InfraProviderConfig) error
 
 		// Update tries to update the infra provider config in the datastore.
 		Update(ctx context.Context, infraProviderConfig *types.InfraProviderConfig) error
+
+		// Delete soft deletes the infra provider config given a ID from the datastore.
+		Delete(ctx context.Context, id int64) error
 	}
 
 	InfraProviderResourceStore interface {

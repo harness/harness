@@ -21,6 +21,8 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
+const emptyGitspaceInstanceState = ""
+
 type GitspaceConfig struct {
 	ID                    int64                  `json:"-"`
 	Identifier            string                 `json:"identifier"`
@@ -117,7 +119,7 @@ func (g *GitspaceInstance) GetGitspaceState() (enum.GitspaceStateType, error) {
 		return enum.GitspaceStateRunning, nil
 	case enum.GitspaceInstanceStateDeleted:
 		return enum.GitspaceStateStopped, nil
-	case enum.GitspaceInstanceStateUninitialized:
+	case emptyGitspaceInstanceState, enum.GitspaceInstanceStateUninitialized:
 		return enum.GitspaceStateUninitialized, nil
 	case enum.GitspaceInstanceStateError,
 		enum.GitspaceInstanceStateUnknown:

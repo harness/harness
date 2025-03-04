@@ -36,6 +36,8 @@ type InfraProviderConfig struct {
 	Created    int64                   `json:"created"`
 	Updated    int64                   `json:"updated"`
 	SetupYAML  string                  `json:"setup_yaml,omitempty"`
+	IsDeleted  bool                    `json:"is_deleted,omitempty"`
+	Deleted    *int64                  `json:"deleted,omitempty"`
 }
 
 type InfraProviderResource struct {
@@ -157,4 +159,9 @@ type InfraProviderTemplate struct {
 	SpacePath                     string `json:"space_path"`
 	Created                       int64  `json:"created"`
 	Updated                       int64  `json:"updated"`
+}
+
+type InfraProviderConfigFilter struct {
+	SpaceID int64
+	Type    enum.InfraProviderType
 }

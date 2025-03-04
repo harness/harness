@@ -17,6 +17,7 @@ package database
 import (
 	"context"
 	"encoding/json"
+	"time"
 
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database"
@@ -24,6 +25,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
@@ -37,7 +39,9 @@ const (
 		ipconf_space_id,
 		ipconf_created,
 		ipconf_updated,
-		ipconf_metadata
+		ipconf_metadata,
+		ipconf_is_deleted,
+		ipconf_deleted
 	`
 	infraProviderConfigSelectColumns = "ipconf_id," + infraProviderConfigInsertColumns
 	infraProviderConfigTable         = `infra_provider_configs`
@@ -52,6 +56,8 @@ type infraProviderConfig struct {
 	SpaceID    int64                  `db:"ipconf_space_id"`
 	Created    int64                  `db:"ipconf_created"`
 	Updated    int64                  `db:"ipconf_updated"`
+	IsDeleted  bool                   `db:"ipconf_is_deleted"`
+	Deleted    null.Int               `db:"ipconf_deleted"`
 }
 
 var _ store.InfraProviderConfigStore = (*infraProviderConfigStore)(nil)
@@ -93,7 +99,8 @@ func (i infraProviderConfigStore) Find(ctx context.Context, id int64) (*types.In
 	stmt := database.Builder.
 		Select(infraProviderConfigSelectColumns).
 		From(infraProviderConfigTable).
-		Where(infraProviderConfigIDColumn+" = $1", id) //nolint:goconst
+		Where("ipconf_is_deleted = false").
+		Where(infraProviderConfigIDColumn+" = ?", id) //nolint:goconst
 	sql, args, err := stmt.ToSql()
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")
@@ -106,16 +113,23 @@ func (i infraProviderConfigStore) Find(ctx context.Context, id int64) (*types.In
 	return i.mapToInfraProviderConfig(dst)
 }
 
-func (i infraProviderConfigStore) FindByType(
+func (i infraProviderConfigStore) List(
 	ctx context.Context,
-	spaceID int64,
-	infraProviderType enum.InfraProviderType,
+	filter *types.InfraProviderConfigFilter,
 ) ([]*types.InfraProviderConfig, error) {
 	stmt := database.Builder.
 		Select(infraProviderConfigSelectColumns).
 		From(infraProviderConfigTable).
-		Where("ipconf_type = $1", infraProviderType). //nolint:goconst
-		Where("ipconf_space_id = $2", spaceID)
+		Where("ipconf_is_deleted = false")
+
+	if filter != nil && filter.SpaceID > 0 {
+		stmt = stmt.Where("ipconf_space_id = ?", filter.SpaceID)
+	}
+
+	if filter != nil && filter.Type != "" {
+		stmt = stmt.Where("ipconf_type = ?", filter.Type)
+	}
+
 	sql, args, err := stmt.ToSql()
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")
@@ -124,8 +138,7 @@ func (i infraProviderConfigStore) FindByType(
 	db := dbtx.GetAccessor(ctx, i.db)
 	dst := new([]*infraProviderConfig)
 	if err := db.SelectContext(ctx, dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to list infraprovider configs of type %s for"+
-			" space %d", infraProviderType, spaceID)
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to list infraprovider configs")
 	}
 	return i.mapToInfraProviderConfigs(*dst)
 }
@@ -138,8 +151,9 @@ func (i infraProviderConfigStore) FindByIdentifier(
 	stmt := database.Builder.
 		Select(infraProviderConfigSelectColumns).
 		From(infraProviderConfigTable).
-		Where("ipconf_uid = $1", identifier). //nolint:goconst
-		Where("ipconf_space_id = $2", spaceID)
+		Where("ipconf_is_deleted = false").
+		Where("ipconf_uid = ?", identifier). //nolint:goconst
+		Where("ipconf_space_id = ?", spaceID)
 	sql, args, err := stmt.ToSql()
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")
@@ -168,6 +182,8 @@ func (i infraProviderConfigStore) Create(ctx context.Context, infraProviderConfi
 			dbinfraProviderConfig.Created,
 			dbinfraProviderConfig.Updated,
 			dbinfraProviderConfig.Metadata,
+			dbinfraProviderConfig.IsDeleted,
+			dbinfraProviderConfig.Deleted,
 		).
 		Suffix(ReturningClause + infraProviderConfigIDColumn)
 	sql, args, err := stmt.ToSql()
@@ -178,6 +194,25 @@ func (i infraProviderConfigStore) Create(ctx context.Context, infraProviderConfi
 	if err = db.QueryRowContext(ctx, sql, args...).Scan(&dbinfraProviderConfig.ID); err != nil {
 		return database.ProcessSQLErrorf(
 			ctx, err, "infraprovider config create query failed for %s", dbinfraProviderConfig.Identifier)
+	}
+	return nil
+}
+
+func (i infraProviderConfigStore) Delete(ctx context.Context, id int64) error {
+	now := time.Now().UnixMilli()
+	stmt := database.Builder.
+		Update(infraProviderConfigTable).
+		Set("ipconf_updated", now).
+		Set("ipconf_deleted", now).
+		Set("ipconf_is_deleted", true).
+		Where(infraProviderConfigIDColumn+" = ?", id)
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return errors.Wrap(err, "Failed to convert squirrel builder to sql")
+	}
+	db := dbtx.GetAccessor(ctx, i.db)
+	if _, err := db.ExecContext(ctx, sql, args...); err != nil {
+		return database.ProcessSQLErrorf(ctx, err, "Failed to update infraprovider config %d", id)
 	}
 	return nil
 }
@@ -201,6 +236,8 @@ func (i infraProviderConfigStore) mapToInfraProviderConfig(
 		SpaceID:    in.SpaceID,
 		Created:    in.Created,
 		Updated:    in.Updated,
+		IsDeleted:  in.IsDeleted,
+		Deleted:    in.Deleted.Ptr(),
 	}
 	return infraProviderConfigEntity, nil
 }
@@ -238,6 +275,8 @@ func (i infraProviderConfigStore) mapToInternalInfraProviderConfig(
 		Created:    in.Created,
 		Updated:    in.Updated,
 		Metadata:   jsonBytes,
+		IsDeleted:  in.IsDeleted,
+		Deleted:    null.IntFromPtr(in.Deleted),
 	}
 	return infraProviderConfigEntity, nil
 }
