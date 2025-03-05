@@ -171,9 +171,11 @@ func (c *Controller) HeadManifest(
 		}
 	}
 
-	f := func(registry registrytypes.Registry, _ string, a pkg.Artifact) Response {
+	f := func(registry registrytypes.Registry, imageName string, a pkg.Artifact) Response {
 		art.SetRepoKey(registry.Name)
 		art.ParentID = registry.ParentID
+		// Need to reassign original imageName to art because we are updating image name based on upstream proxy source inside
+		art.Image = imageName
 		headers, desc, man, e := a.(Registry).ManifestExist(ctx, art, acceptHeaders, ifNoneMatchHeader)
 		response := &GetManifestResponse{e, headers, desc, man}
 		return response
@@ -198,9 +200,11 @@ func (c *Controller) PullManifest(
 			Errors: []error{errcode.ErrCodeDenied},
 		}
 	}
-	f := func(registry registrytypes.Registry, _ string, a pkg.Artifact) Response {
+	f := func(registry registrytypes.Registry, imageName string, a pkg.Artifact) Response {
 		art.SetRepoKey(registry.Name)
 		art.ParentID = registry.ParentID
+		// Need to reassign original imageName to art because we are updating image name based on upstream proxy source inside
+		art.Image = imageName
 		headers, desc, man, e := a.(Registry).PullManifest(ctx, art, acceptHeaders, ifNoneMatchHeader)
 		response := &GetManifestResponse{e, headers, desc, man}
 		return response
@@ -268,9 +272,10 @@ func (c *Controller) GetBlob(ctx context.Context, info pkg.RegistryInfo) Respons
 			Errors: []error{errcode.ErrCodeDenied},
 		}
 	}
-	f := func(registry registrytypes.Registry, _ string, a pkg.Artifact) Response {
+	f := func(registry registrytypes.Registry, imageName string, a pkg.Artifact) Response {
 		info.SetRepoKey(registry.Name)
 		info.ParentID = registry.ParentID
+		info.Image = imageName
 		headers, body, size, readCloser, redirectURL, errs := a.(Registry).GetBlob(ctx, info)
 		return &GetBlobResponse{errs, headers, body, size, readCloser, redirectURL}
 	}
