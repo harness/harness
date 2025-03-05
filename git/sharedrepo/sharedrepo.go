@@ -946,7 +946,7 @@ func (r *SharedRepo) MoveObjects(ctx context.Context) error {
 
 		// Try to copy the file
 
-		copyError := func() error {
+		errCopy := func() error {
 			srcFile, err := os.Open(f.fullPath)
 			if err != nil {
 				return fmt.Errorf("failed to open source file: %w", err)
@@ -966,17 +966,25 @@ func (r *SharedRepo) MoveObjects(ctx context.Context) error {
 
 			return nil
 		}()
-		if copyError != nil {
-			log.Ctx(ctx).Err(copyError).
+		if errCopy != nil {
+			// Make sure that an invalid or incomplete file does not remain in the repository if copying fails.
+			errRemove := os.Remove(dstPath)
+			if os.IsNotExist(errRemove) {
+				errRemove = nil
+			}
+
+			log.Ctx(ctx).Err(errCopy).
 				Str("object", f.relPath).
-				Str("renameErr", errRename.Error()).
+				Str("errRename", errRename.Error()).
+				Str("errRemove", errRemove.Error()).
 				Msg("failed to move or copy git object")
-			return fmt.Errorf("failed to move or copy git object: %w", copyError)
+
+			return fmt.Errorf("failed to move or copy git object: %w", errCopy)
 		}
 
 		log.Ctx(ctx).Warn().
 			Str("object", f.relPath).
-			Str("renameErr", errRename.Error()).
+			Str("errRename", errRename.Error()).
 			Msg("copied git object")
 	}
 
