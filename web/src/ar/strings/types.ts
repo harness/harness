@@ -392,4 +392,8 @@ export interface StringsMap {
   'validationMessages.urlRequired': string
   'validationMessages.userNameRequired': string
   view: string
+  'vulnerabilityStatus.critical': string
+  'vulnerabilityStatus.high': string
+  'vulnerabilityStatus.low': string
+  'vulnerabilityStatus.medium': string
 }

@@ -43,7 +43,6 @@ export const mockMavenLatestVersionListTableData: ListArtifactVersion = {
 export const mockMavenVersionSummary: ArtifactVersionSummaryResponseResponse = {
   data: {
     imageName: 'maven-app',
-    isLatestVersion: false,
     packageType: 'MAVEN',
     version: '1.0.0'
   },
@@ -60,7 +59,6 @@ export const mockMavenVersionList: ListArtifactVersionResponseResponse = {
         },
         digestCount: 1,
         downloadsCount: 11,
-        islatestVersion: false,
         lastModified: '1738923119434',
         name: '1.0.0',
         packageType: 'MAVEN',
@@ -76,7 +74,6 @@ export const mockMavenVersionList: ListArtifactVersionResponseResponse = {
         },
         digestCount: 1,
         downloadsCount: 11,
-        islatestVersion: false,
         lastModified: '1738923402541',
         name: '1.0.1',
         packageType: 'MAVEN',
@@ -92,7 +89,6 @@ export const mockMavenVersionList: ListArtifactVersionResponseResponse = {
         },
         digestCount: 1,
         downloadsCount: 11,
-        islatestVersion: true,
         lastModified: '1738924148637',
         name: '1.0.2',
         packageType: 'MAVEN',

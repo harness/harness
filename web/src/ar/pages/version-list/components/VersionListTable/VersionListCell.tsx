@@ -23,7 +23,6 @@ import { Icon } from '@harnessio/icons'
 import { Layout, Text } from '@harnessio/uicore'
 import type { ArtifactVersionMetadata } from '@harnessio/react-har-service-client'
 
-import Tag from '@ar/components/Tag/Tag'
 import { useStrings } from '@ar/frameworks/strings'
 import { useDecodedParams, useRoutes } from '@ar/hooks'
 import TableCells from '@ar/components/TableCells/TableCells'
@@ -60,9 +59,7 @@ export const ToggleAccordionCell: Renderer<{
   )
 }
 
-export const VersionNameCell: CellType = ({ value, row }) => {
-  const { original } = row
-  const { getString } = useStrings()
+export const VersionNameCell: CellType = ({ value }) => {
   const routes = useRoutes()
   const pathParams = useDecodedParams<ArtifactDetailsPathParams>()
   return (
@@ -79,7 +76,6 @@ export const VersionNameCell: CellType = ({ value, row }) => {
           {value}
         </Text>
       </Link>
-      {original.islatestVersion && <Tag isVersionTag>{getString('tags.latest')}</Tag>}
     </Layout.Horizontal>
   )
 }

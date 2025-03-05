@@ -36,7 +36,7 @@ interface DockerVersionHeaderProps {
 
 export default function DockerVersionHeader(props: DockerVersionHeaderProps): JSX.Element {
   const { iconSize = 40, data } = props
-  const { imageName: name, version, isLatestVersion = false, packageType } = data
+  const { imageName: name, version, packageType } = data
   const pathParams = useDecodedParams<VersionDetailsPathParams>()
   const { useUpdateQueryParams, useQueryParams } = useParentHooks()
   const { updateQueryParams } = useUpdateQueryParams()
@@ -69,7 +69,7 @@ export default function DockerVersionHeader(props: DockerVersionHeaderProps): JS
         digest={digest}
         onChangeVersion={handleChangeVersion}
         onChangeDigest={handleChangeDigest}
-        isLatestVersion={isLatestVersion}
+        isLatestVersion={false}
       />
       <Expander />
       <SetupClientButton

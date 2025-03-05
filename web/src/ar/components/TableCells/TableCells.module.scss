@@ -56,3 +56,8 @@
     --intent-color: #07a0ab;
   }
 }
+
+.vulnerabilityCellItem {
+  padding: 0 var(--spacing-small) !important;
+  border-left: solid var(--spacing-1);
+}

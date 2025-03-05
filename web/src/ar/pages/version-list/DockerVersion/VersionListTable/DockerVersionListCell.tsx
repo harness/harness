@@ -20,8 +20,6 @@ import { Layout } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
 import type { ArtifactVersionMetadata } from '@harnessio/react-har-service-client'
 
-import Tag from '@ar/components/Tag/Tag'
-import { useStrings } from '@ar/frameworks/strings'
 import TableCells from '@ar/components/TableCells/TableCells'
 
 import css from './DockerVersionListTable.module.scss'
@@ -35,14 +33,11 @@ type CellTypeWithActions<D extends Record<string, any>, V = any> = TableInstance
 
 type CellType = Renderer<CellTypeWithActions<ArtifactVersionMetadata>>
 
-export const DockerVersionNameCell: CellType = ({ value, row }) => {
-  const { original } = row
-  const { getString } = useStrings()
+export const DockerVersionNameCell: CellType = ({ value }) => {
   return (
     <Layout.Horizontal className={css.nameCellContainer} spacing="small">
       <Icon name="store-artifact-bundle" size={24} />
       <TableCells.TextCell value={value} />
-      {original.islatestVersion && <Tag isVersionTag>{getString('tags.latest')}</Tag>}
     </Layout.Horizontal>
   )
 }

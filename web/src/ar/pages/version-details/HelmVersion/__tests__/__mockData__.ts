@@ -27,7 +27,6 @@ export const mockHelmLatestVersionListTableData: ListArtifactVersion = {
     {
       digestCount: 1,
       downloadsCount: 100,
-      islatestVersion: true,
       lastModified: '1730978736333',
       name: '1.0.0',
       packageType: 'HELM',
@@ -46,7 +45,6 @@ export const mockHelmLatestVersionListTableData: ListArtifactVersion = {
 export const mockHelmVersionSummary: ArtifactVersionSummaryResponseResponse = {
   data: {
     imageName: 'maven-app',
-    isLatestVersion: true,
     packageType: 'HELM',
     version: '1.0.0'
   },
@@ -63,7 +61,6 @@ export const mockHelmVersionList: ListArtifactVersionResponseResponse = {
         },
         digestCount: 1,
         downloadsCount: 11,
-        islatestVersion: false,
         lastModified: '1738923119434',
         name: '1.0.0',
         packageType: 'HELM',
@@ -79,7 +76,6 @@ export const mockHelmVersionList: ListArtifactVersionResponseResponse = {
         },
         digestCount: 1,
         downloadsCount: 11,
-        islatestVersion: false,
         lastModified: '1738923402541',
         name: '1.0.1',
         packageType: 'HELM',
@@ -95,7 +91,6 @@ export const mockHelmVersionList: ListArtifactVersionResponseResponse = {
         },
         digestCount: 1,
         downloadsCount: 11,
-        islatestVersion: true,
         lastModified: '1738924148637',
         name: '1.0.2',
         packageType: 'HELM',
@@ -118,7 +113,6 @@ export const mockHelmArtifactDetails: HelmArtifactDetailResponseResponse = {
     artifact: 'production',
     createdAt: '1729862063842',
     downloadsCount: 0,
-    isLatestVersion: true,
     modifiedAt: '1729862063842',
     packageType: 'HELM',
     pullCommand: 'helm pull oci://pkg.qa.harness.io/iwnhltqot7gft7r-f_zp7q/helm-repo-1/production:1.0.15',

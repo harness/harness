@@ -24,9 +24,9 @@ import { useStrings } from '@ar/frameworks/strings/String'
 import {
   DigestActionsCell,
   DigestNameCell,
+  DigestVulnerabilityCell,
   DownloadsCell,
   OsArchCell,
-  ScanStatusCell,
   SizeCell,
   UploadedByCell
 } from './DigestTableCells'
@@ -73,7 +73,7 @@ export default function DigestListTable(props: DigestListTableProps): JSX.Elemen
       {
         Header: getString('digestList.table.columns.scanStatus'),
         accessor: 'scanStatus',
-        Cell: ScanStatusCell,
+        Cell: DigestVulnerabilityCell,
         version
       },
       {

@@ -259,6 +259,45 @@ export const PullCommandCell = ({ value }: CommonCellProps) => {
   return <CommandBlock noWrap commandSnippet={value as string} allowCopy onCopy={killEvent} />
 }
 
+interface VulnerabilityCellProps {
+  critical?: number
+  high?: number
+  medium?: number
+  low?: number
+}
+
+export const VulnerabilityCell = ({ critical, high, medium, low }: VulnerabilityCellProps) => {
+  const { getString } = useStrings()
+  return (
+    <Layout.Horizontal>
+      <Text
+        className={css.vulnerabilityCellItem}
+        color={Color.RED_600}
+        font={{ variation: FontVariation.BODY, weight: 'semi-bold' }}>
+        {getString('vulnerabilityStatus.critical', { count: critical })}
+      </Text>
+      <Text
+        className={css.vulnerabilityCellItem}
+        color={Color.ORANGE_900}
+        font={{ variation: FontVariation.BODY, weight: 'semi-bold' }}>
+        {getString('vulnerabilityStatus.high', { count: high })}
+      </Text>
+      <Text
+        className={css.vulnerabilityCellItem}
+        color={Color.YELLOW_900}
+        font={{ variation: FontVariation.BODY, weight: 'semi-bold' }}>
+        {getString('vulnerabilityStatus.medium', { count: medium })}
+      </Text>
+      <Text
+        className={css.vulnerabilityCellItem}
+        color={Color.GREY_500}
+        font={{ variation: FontVariation.BODY, weight: 'semi-bold' }}>
+        {getString('vulnerabilityStatus.low', { count: low })}
+      </Text>
+    </Layout.Horizontal>
+  )
+}
+
 export default {
   UrlCell,
   SizeCell,
@@ -271,5 +310,6 @@ export default {
   PullCommandCell,
   LastModifiedCell,
   ToggleAccordionCell,
-  RepositoryLocationBadgeCell
+  RepositoryLocationBadgeCell,
+  VulnerabilityCell
 }

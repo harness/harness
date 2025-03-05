@@ -25,3 +25,4 @@ export declare const nameCellContainer: string
 export declare const nonProd: string
 export declare const prod: string
 export declare const toggleAccordion: string
+export declare const vulnerabilityCellItem: string

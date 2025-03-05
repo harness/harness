@@ -15,11 +15,8 @@
  */
 
 import React from 'react'
-import { Link } from 'react-router-dom'
 import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance } from 'react-table'
 
-import { Text } from '@harnessio/uicore'
-import { Color } from '@harnessio/design-system'
 import type { DockerManifestDetails } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
@@ -77,39 +74,20 @@ export const DownloadsCell: CellType = ({ value }) => {
   return <TableCells.CountCell value={value} icon="download-box" iconProps={{ size: 12 }} />
 }
 
-export const ScanStatusCell: Renderer<{
-  row: Row<DockerManifestDetails>
-  column: ColumnInstance<DockerManifestDetails> & DigestNameColumnProps
-}> = ({ row, column }) => {
+export const DigestVulnerabilityCell: CellType = ({ row }) => {
   const { original } = row
-  const { version } = column
-  const router = useRoutes()
-  const { stoExecutionId, stoPipelineId, digest } = original
-  const pathParams = useDecodedParams<ArtifactDetailsPathParams>()
+  const { stoDetails } = original
   const { getString } = useStrings()
-  if (!stoExecutionId || !stoPipelineId)
+  if (!stoDetails)
     return <TableCells.TextCell value={getString('artifactList.table.actions.VulnerabilityStatus.nonScanned')} />
 
-  const linkTo = router.toARVersionDetailsTab({
-    repositoryIdentifier: pathParams.repositoryIdentifier,
-    artifactIdentifier: pathParams.artifactIdentifier,
-    versionIdentifier: version,
-    versionTab: VersionDetailsTab.SECURITY_TESTS,
-    pipelineIdentifier: stoPipelineId,
-    executionIdentifier: stoExecutionId
-  })
   return (
-    <Link to={`${linkTo}?digest=${digest}`}>
-      <Text
-        color={Color.PRIMARY_7}
-        rightIcon="main-share"
-        rightIconProps={{
-          size: 12
-        }}
-        lineClamp={1}>
-        {getString('artifactList.table.actions.VulnerabilityStatus.scanned')}
-      </Text>
-    </Link>
+    <TableCells.VulnerabilityCell
+      critical={stoDetails.critical}
+      high={stoDetails.high}
+      medium={stoDetails.medium}
+      low={stoDetails.low}
+    />
   )
 }
 

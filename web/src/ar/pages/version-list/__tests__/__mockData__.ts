@@ -24,7 +24,6 @@ export const mockHelmLatestVersionListTableData: ListArtifactVersion = {
         prodEnvCount: 0
       },
       digestCount: 1,
-      islatestVersion: true,
       lastModified: '1729861854693',
       name: '1.0.15',
       packageType: 'HELM',
@@ -49,7 +48,6 @@ export const mockHelmNoPullCmdVersionListTableData: ListArtifactVersion = {
         prodEnvCount: 0
       },
       digestCount: 1,
-      islatestVersion: true,
       lastModified: '1729861854693',
       name: '1.0.15',
       packageType: 'HELM',
@@ -74,7 +72,6 @@ export const mockHelmOldVersionListTableData: ListArtifactVersion = {
         prodEnvCount: 0
       },
       digestCount: 1,
-      islatestVersion: false,
       lastModified: '1729861854693',
       name: '1.0.15',
       packageType: 'HELM',
@@ -99,7 +96,6 @@ export const mockDockerNoPullCmdVersionListTableData: ListArtifactVersion = {
         prodEnvCount: 0
       },
       digestCount: 1,
-      islatestVersion: true,
       lastModified: '1730978736333',
       name: '1.0.0',
       packageType: 'DOCKER',
@@ -123,7 +119,6 @@ export const mockDockerLatestVersionListTableData: ListArtifactVersion = {
         prodEnvCount: 0
       },
       digestCount: 1,
-      islatestVersion: true,
       lastModified: '1730978736333',
       name: '1.0.0',
       packageType: 'DOCKER',
@@ -147,7 +142,6 @@ export const mockDockerOldVersionListTableData: ListArtifactVersion = {
         prodEnvCount: 0
       },
       digestCount: 1,
-      islatestVersion: false,
       lastModified: '1730978736333',
       name: '1.0.0',
       packageType: 'DOCKER',

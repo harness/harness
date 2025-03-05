@@ -15,7 +15,7 @@
  */
 
 import React from 'react'
-import { getByText, queryByText, render } from '@testing-library/react'
+import { getByText, render } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import copy from 'clipboard-copy'
 import repositoryFactory from '@ar/frameworks/RepositoryStep/RepositoryFactory'
@@ -67,8 +67,6 @@ describe('Verify Version List Table', () => {
     expect(rows).toHaveLength(1)
 
     const getFirstRowColumn = (col: number) => getTableColumn(1, col) as HTMLElement
-    const latestTag = getByText(getFirstRowColumn(1), 'tags.latest')
-    expect(latestTag).toBeInTheDocument()
     const sizeValue = getByText(
       getFirstRowColumn(2),
       mockHelmLatestVersionListTableData.artifactVersions?.[0].size as string
@@ -106,23 +104,6 @@ describe('Verify Version List Table', () => {
 
     const copyCurlBtn = curlColumn.querySelector('[data-icon="duplicate"]') as HTMLElement
     expect(copyCurlBtn).not.toBeInTheDocument()
-  })
-
-  test('Should not show latest tag if item version is not latest', () => {
-    render(
-      <ArTestWrapper>
-        <VersionListTable
-          data={mockHelmOldVersionListTableData}
-          gotoPage={jest.fn()}
-          setSortBy={jest.fn()}
-          sortBy={['name', 'DESC']}
-          columnConfigs={mockColumnConfigs}
-        />
-      </ArTestWrapper>
-    )
-    const getFirstTableColumn = (col: number) => getTableColumn(col, 1) as HTMLElement
-    const latestTag = queryByText(getFirstTableColumn(1), 'tags.latest')
-    expect(latestTag).not.toBeInTheDocument()
   })
 
   test('Should show no rows if no data is provided', () => {

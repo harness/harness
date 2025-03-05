@@ -42,6 +42,10 @@ export default function OSSVersionDetailsPage() {
   }
 
   const [showModal, hideModal] = useModalHook(() => {
+    const handleCloseDetailsModal = () => {
+      hideModal()
+      handleCloseModal()
+    }
     return (
       <Drawer
         className="arApp"
@@ -49,16 +53,13 @@ export default function OSSVersionDetailsPage() {
         isOpen={true}
         isCloseButtonShown={false}
         size={'70%'}
-        onClose={() => {
-          hideModal()
-          handleCloseModal()
-        }}>
+        onClose={handleCloseDetailsModal}>
         <VersionProvider
           repoKey={pathParams.repositoryIdentifier}
           artifactKey={pathParams.artifactIdentifier}
           versionKey={pathParams.versionIdentifier}>
           <Container data-testid="version-details-page-oss" className={css.ossVersionDetailsModal}>
-            <Button minimal className={css.closeBtn} icon="cross" withoutBoxShadow onClick={hideModal} />
+            <Button minimal className={css.closeBtn} icon="cross" withoutBoxShadow onClick={handleCloseDetailsModal} />
             <OSSVersionDetails />
           </Container>
         </VersionProvider>

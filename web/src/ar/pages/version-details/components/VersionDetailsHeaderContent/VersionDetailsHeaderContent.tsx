@@ -35,7 +35,7 @@ interface VersionDetailsHeaderContentProps {
 
 export default function VersionDetailsHeaderContent(props: VersionDetailsHeaderContentProps): JSX.Element {
   const { iconSize = 40, data } = props
-  const { imageName, version, isLatestVersion = false, packageType } = data
+  const { imageName, version, packageType } = data
   const pathParams = useDecodedParams<VersionDetailsPathParams>()
   const history = useHistory()
   const routes = useRoutes()
@@ -57,7 +57,7 @@ export default function VersionDetailsHeaderContent(props: VersionDetailsHeaderC
         name={imageName}
         version={version}
         onChangeVersion={handleChangeVersion}
-        isLatestVersion={isLatestVersion}
+        isLatestVersion={false}
       />
       <Expander />
       <SetupClientButton
