@@ -15,11 +15,10 @@
 package git
 
 import (
-	"io/fs"
+	"fmt"
 	"os"
 	"path/filepath"
 
-	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/git/storage"
@@ -28,12 +27,13 @@ import (
 
 const (
 	repoSubdirName           = "repos"
+	repoSharedRepoSubdirName = "shared_temp"
 	ReposGraveyardSubdirName = "cleanup"
 )
 
 type Service struct {
 	reposRoot         string
-	tmpDir            string
+	sharedRepoRoot    string
 	git               *api.Git
 	hookClientFactory hook.ClientFactory
 	store             storage.Store
@@ -48,28 +48,41 @@ func New(
 	storage storage.Store,
 ) (*Service, error) {
 	// Create repos folder
-	reposRoot := filepath.Join(config.Root, repoSubdirName)
-	if _, err := os.Stat(reposRoot); errors.Is(err, os.ErrNotExist) {
-		if err = os.MkdirAll(reposRoot, fileMode700); err != nil {
-			return nil, err
-		}
+	reposRoot, err := createSubdir(config.Root, repoSubdirName)
+	if err != nil {
+		return nil, err
 	}
 
 	// create a temp dir for deleted repositories
 	// this dir should get cleaned up peridocally if it's not empty
-	reposGraveyard := filepath.Join(config.Root, ReposGraveyardSubdirName)
-	if _, errdir := os.Stat(reposGraveyard); errors.Is(errdir, fs.ErrNotExist) {
-		if errdir = os.MkdirAll(reposGraveyard, fileMode700); errdir != nil {
-			return nil, errdir
-		}
+	reposGraveyard, err := createSubdir(config.Root, ReposGraveyardSubdirName)
+	if err != nil {
+		return nil, err
 	}
+
+	sharedRepoDir, err := createSubdir(config.Root, repoSharedRepoSubdirName)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Service{
 		reposRoot:         reposRoot,
-		tmpDir:            config.TmpDir,
+		sharedRepoRoot:    sharedRepoDir,
 		reposGraveyard:    reposGraveyard,
 		git:               adapter,
 		hookClientFactory: hookClientFactory,
 		store:             storage,
 		gitHookPath:       config.HookPath,
 	}, nil
+}
+
+func createSubdir(root, subdir string) (string, error) {
+	subdirPath := filepath.Join(root, subdir)
+
+	err := os.MkdirAll(subdirPath, fileMode700)
+	if err != nil {
+		return "", fmt.Errorf("failed to create directory, path=%s: %w", subdirPath, err)
+	}
+
+	return subdirPath, nil
 }

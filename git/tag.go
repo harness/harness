@@ -285,7 +285,7 @@ func (s *Service) CreateCommitTag(ctx context.Context, params *CreateCommitTagPa
 
 	// create the tag
 
-	err = sharedrepo.Run(ctx, refUpdater, s.tmpDir, repoPath, func(r *sharedrepo.SharedRepo) error {
+	err = sharedrepo.Run(ctx, refUpdater, s.sharedRepoRoot, repoPath, func(r *sharedrepo.SharedRepo) error {
 		if err := s.git.CreateTag(ctx, r.Directory(), tagName, targetCommit.SHA, createTagRequest); err != nil {
 			return fmt.Errorf("failed to create tag '%s': %w", tagName, err)
 		}
