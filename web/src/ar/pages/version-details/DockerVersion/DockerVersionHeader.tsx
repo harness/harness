@@ -20,10 +20,11 @@ import { useHistory } from 'react-router-dom'
 import { Layout } from '@harnessio/uicore'
 import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client'
 
-import type { RepositoryPackageType } from '@ar/common/types'
+import { PageType, RepositoryPackageType } from '@ar/common/types'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 import { useDecodedParams, useParentHooks, useRoutes } from '@ar/hooks'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
+import VersionActionsWidget from '@ar/frameworks/Version/VersionActionsWidget'
 import SetupClientButton from '@ar/components/SetupClientButton/SetupClientButton'
 
 import DockerVersionName from './components/DockerVersionName/DockerVersionName'
@@ -77,6 +78,14 @@ export default function DockerVersionHeader(props: DockerVersionHeaderProps): JS
         artifactIdentifier={pathParams.artifactIdentifier}
         versionIdentifier={pathParams.versionIdentifier}
         packageType={packageType as RepositoryPackageType}
+      />
+      <VersionActionsWidget
+        packageType={RepositoryPackageType.DOCKER}
+        repoKey={pathParams.repositoryIdentifier}
+        artifactKey={pathParams.artifactIdentifier}
+        versionKey={pathParams.versionIdentifier}
+        pageType={PageType.Details}
+        data={data}
       />
     </Layout.Horizontal>
   )

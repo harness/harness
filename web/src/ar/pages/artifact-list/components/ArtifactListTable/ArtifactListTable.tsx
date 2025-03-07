@@ -107,6 +107,12 @@ export default function ArtifactListTable(props: ArtifactListTableProps): JSX.El
         accessor: 'lastUpdated',
         Cell: LatestArtifactCell,
         serverSortProps: getServerSortProps('lastUpdated')
+      },
+      {
+        Header: '',
+        accessor: 'actions',
+        Cell: LatestArtifactCell,
+        disableSortBy: true
       }
     ].filter(Boolean) as unknown as Column<ArtifactMetadata>[]
   }, [currentOrder, currentSort, getString])

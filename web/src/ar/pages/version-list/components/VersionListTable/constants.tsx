@@ -16,6 +16,7 @@
 
 import {
   PullCommandCell,
+  VersionActionsCell,
   VersionDownloadsCell,
   VersionFileCountCell,
   VersionNameCell,
@@ -54,5 +55,10 @@ export const VERSION_LIST_TABLE_CELL_CONFIG: Record<VersionListColumnEnum, IVers
     Header: 'versionList.table.columns.pullCommand',
     accessor: 'pullCommand',
     Cell: PullCommandCell
+  },
+  [VersionListColumnEnum.Actions]: {
+    accessor: 'actions',
+    Cell: VersionActionsCell,
+    disableSortBy: true
   }
 }

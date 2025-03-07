@@ -23,6 +23,7 @@ import ArtifactActions from '@ar/pages/artifact-details/components/ArtifactActio
 import DockerVersionListTable from '@ar/pages/version-list/DockerVersion/VersionListTable/DockerVersionListTable'
 import {
   type ArtifactActionProps,
+  type VersionActionProps,
   type VersionDetailsHeaderProps,
   type VersionDetailsTabProps,
   type VersionListTableProps,
@@ -37,6 +38,7 @@ import { VersionDetailsTab } from '../components/VersionDetailsTabs/constants'
 import DockerArtifactSecurityTestsContent from './DockerArtifactSecurityTestsContent'
 import DockerVersionOSSContent from './DockerVersionOSSContent/DockerVersionOSSContent'
 import DockerDeploymentsContent from './DockerDeploymentsContent/DockerDeploymentsContent'
+import VersionActions from '../components/VersionActions/VersionActions'
 
 export class DockerVersionType extends VersionStep<ArtifactVersionSummary> {
   protected packageType = RepositoryPackageType.DOCKER
@@ -77,5 +79,9 @@ export class DockerVersionType extends VersionStep<ArtifactVersionSummary> {
 
   renderArtifactActions(props: ArtifactActionProps): JSX.Element {
     return <ArtifactActions {...props} />
+  }
+
+  renderVersionActions(props: VersionActionProps): JSX.Element {
+    return <VersionActions {...props} />
   }
 }

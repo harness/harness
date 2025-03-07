@@ -92,3 +92,7 @@ dependencyList:
     columns:
       name: Dependency Name
       version: Dependency Version
+versionDeleted: Artifact version deleted successfully!
+deleteVersionModal:
+  title: Delete Artifact Version
+  contentText: Are you sure you want to delete the artifact version?

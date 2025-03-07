@@ -26,6 +26,7 @@ import VersionListTable, {
 import ArtifactActions from '@ar/pages/artifact-details/components/ArtifactActions/ArtifactActions'
 import {
   type ArtifactActionProps,
+  type VersionActionProps,
   type VersionDetailsHeaderProps,
   type VersionDetailsTabProps,
   type VersionListTableProps,
@@ -34,6 +35,7 @@ import {
 import { VersionDetailsTab } from '../components/VersionDetailsTabs/constants'
 import HelmVersionOverviewContent from './HelmVersionOverviewContent'
 import HelmArtifactDetailsContent from './HelmArtifactDetailsContent'
+import VersionActions from '../components/VersionActions/VersionActions'
 import HelmVersionOSSContent from './HelmVersionOSSContent/HelmVersionOSSContent'
 import VersionDetailsHeaderContent from '../components/VersionDetailsHeaderContent/VersionDetailsHeaderContent'
 
@@ -49,7 +51,8 @@ export class HelmVersionType extends VersionStep<ArtifactVersionSummary> {
     [VersionListColumnEnum.Size]: { width: '100%' },
     [VersionListColumnEnum.DownloadCount]: { width: '100%' },
     [VersionListColumnEnum.LastModified]: { width: '100%' },
-    [VersionListColumnEnum.PullCommand]: { width: '100%' }
+    [VersionListColumnEnum.PullCommand]: { width: '100%' },
+    [VersionListColumnEnum.Actions]: { width: '10%' }
   }
 
   renderVersionListTable(props: VersionListTableProps): JSX.Element {
@@ -75,5 +78,9 @@ export class HelmVersionType extends VersionStep<ArtifactVersionSummary> {
 
   renderArtifactActions(props: ArtifactActionProps): JSX.Element {
     return <ArtifactActions {...props} />
+  }
+
+  renderVersionActions(props: VersionActionProps): JSX.Element {
+    return <VersionActions {...props} />
   }
 }

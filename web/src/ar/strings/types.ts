@@ -197,6 +197,8 @@ export interface StringsMap {
   'versionDetails.cards.supplyChain.sbomScore': string
   'versionDetails.cards.supplyChain.title': string
   'versionDetails.cards.supplyChain.totalComponents': string
+  'versionDetails.deleteVersionModal.contentText': string
+  'versionDetails.deleteVersionModal.title': string
   'versionDetails.dependencyList.table.columns.name': string
   'versionDetails.dependencyList.table.columns.version': string
   'versionDetails.deploymentsTable.columns.deploymentPipeline': string
@@ -231,8 +233,8 @@ export interface StringsMap {
   'versionDetails.tabs.overview': string
   'versionDetails.tabs.securityTests': string
   'versionDetails.tabs.supplyChain': string
-  'versionList.actions.deleteModal.contentText': string
-  'versionList.actions.deleteModal.title': string
+  'versionDetails.versionDeleted': string
+  'versionList.actions.deleteVersion': string
   'versionList.page': string
   'versionList.table.columns.activelyDeployed': string
   'versionList.table.columns.deployments': string

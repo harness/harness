@@ -25,11 +25,12 @@ import type { ArtifactMetadata, StoDigestMetadata } from '@harnessio/react-har-s
 
 import { useParentComponents, useRoutes } from '@ar/hooks'
 import TableCells from '@ar/components/TableCells/TableCells'
-import { RepositoryPackageType } from '@ar/common/types'
+import { PageType, RepositoryPackageType } from '@ar/common/types'
 import LabelsPopover from '@ar/components/LabelsPopover/LabelsPopover'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import { useStrings } from '@ar/frameworks/strings'
 import { getShortDigest } from '@ar/pages/digest-list/utils'
+import VersionActionsWidget from '@ar/frameworks/Version/VersionActionsWidget'
 import { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
 
 import css from './ArtifactListTable.module.scss'
@@ -216,4 +217,18 @@ export const ScanStatusCell: CellType = ({ row }) => {
 export const LatestArtifactCell: CellType = ({ row }) => {
   const { original } = row
   return <TableCells.LastModifiedCell value={defaultTo(original.lastModified, 0)} />
+}
+
+export const ArtifactVersionActions: CellType = ({ row }) => {
+  const { original } = row
+  return (
+    <VersionActionsWidget
+      pageType={PageType.Table}
+      data={original}
+      repoKey={original.registryIdentifier}
+      artifactKey={original.name}
+      versionKey={original.version}
+      packageType={original.packageType as RepositoryPackageType}
+    />
+  )
 }

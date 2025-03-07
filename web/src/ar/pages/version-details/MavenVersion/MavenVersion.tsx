@@ -26,17 +26,19 @@ import VersionListTable, {
 } from '@ar/pages/version-list/components/VersionListTable/VersionListTable'
 import {
   type ArtifactActionProps,
+  type VersionActionProps,
   type VersionDetailsHeaderProps,
   type VersionDetailsTabProps,
   type VersionListTableProps,
   VersionStep
 } from '@ar/frameworks/Version/Version'
 
+import OSSContentPage from './pages/oss-details/OSSContentPage'
+import VersionActions from '../components/VersionActions/VersionActions'
 import { VersionDetailsTab } from '../components/VersionDetailsTabs/constants'
 import MavenArtifactOverviewPage from './pages/overview/MavenArtifactOverviewPage'
 import MavenArtifactDetailsPage from './pages/artifact-details/MavenArtifactDetailsPage'
 import VersionDetailsHeaderContent from '../components/VersionDetailsHeaderContent/VersionDetailsHeaderContent'
-import OSSContentPage from './pages/oss-details/OSSContentPage'
 
 export class MavenVersionType extends VersionStep<ArtifactVersionSummary> {
   protected packageType = RepositoryPackageType.MAVEN
@@ -50,7 +52,8 @@ export class MavenVersionType extends VersionStep<ArtifactVersionSummary> {
     [VersionListColumnEnum.Name]: { width: '100%' },
     [VersionListColumnEnum.Size]: { width: '100%' },
     [VersionListColumnEnum.FileCount]: { width: '100%' },
-    [VersionListColumnEnum.LastModified]: { width: '100%' }
+    [VersionListColumnEnum.LastModified]: { width: '100%' },
+    [VersionListColumnEnum.Actions]: { width: '10%' }
   }
 
   renderVersionListTable(props: VersionListTableProps): JSX.Element {
@@ -76,5 +79,9 @@ export class MavenVersionType extends VersionStep<ArtifactVersionSummary> {
 
   renderArtifactActions(props: ArtifactActionProps): JSX.Element {
     return <ArtifactActions {...props} />
+  }
+
+  renderVersionActions(props: VersionActionProps): JSX.Element {
+    return <VersionActions {...props} />
   }
 }

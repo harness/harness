@@ -17,6 +17,8 @@
 import type { PaginationProps } from '@harnessio/uicore'
 import type {
   ArtifactSummary,
+  ArtifactVersionMetadata,
+  ArtifactVersionSummary,
   ListArtifactVersion,
   RegistryArtifactMetadata
 } from '@harnessio/react-har-service-client'
@@ -52,6 +54,16 @@ export interface ArtifactActionProps {
   onClose?: () => void
 }
 
+export interface VersionActionProps {
+  data: ArtifactVersionMetadata | ArtifactVersionSummary
+  pageType: PageType
+  repoKey: string
+  artifactKey: string
+  versionKey: string
+  readonly?: boolean
+  onClose?: () => void
+}
+
 export abstract class VersionStep<T> {
   protected abstract packageType: RepositoryPackageType
   protected abstract allowedVersionDetailsTabs: VersionDetailsTab[]
@@ -71,4 +83,6 @@ export abstract class VersionStep<T> {
   abstract renderVersionDetailsTab(props: VersionDetailsTabProps): JSX.Element
 
   abstract renderArtifactActions(props: ArtifactActionProps): JSX.Element
+
+  abstract renderVersionActions(props: VersionActionProps): JSX.Element
 }

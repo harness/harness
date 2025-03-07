@@ -21,9 +21,10 @@ import { Layout } from '@harnessio/uicore'
 import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client'
 
 import { useDecodedParams, useRoutes } from '@ar/hooks'
-import type { RepositoryPackageType } from '@ar/common/types'
+import { PageType, type RepositoryPackageType } from '@ar/common/types'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
+import VersionActionsWidget from '@ar/frameworks/Version/VersionActionsWidget'
 import SetupClientButton from '@ar/components/SetupClientButton/SetupClientButton'
 
 import VersionNameContent from './VersionNameContent'
@@ -65,6 +66,14 @@ export default function VersionDetailsHeaderContent(props: VersionDetailsHeaderC
         artifactIdentifier={pathParams.artifactIdentifier}
         versionIdentifier={pathParams.versionIdentifier}
         packageType={packageType as RepositoryPackageType}
+      />
+      <VersionActionsWidget
+        packageType={data.packageType as RepositoryPackageType}
+        repoKey={pathParams.repositoryIdentifier}
+        artifactKey={pathParams.artifactIdentifier}
+        versionKey={pathParams.versionIdentifier}
+        pageType={PageType.Details}
+        data={data}
       />
     </Layout.Horizontal>
   )

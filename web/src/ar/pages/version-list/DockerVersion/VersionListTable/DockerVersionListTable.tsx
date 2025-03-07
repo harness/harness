@@ -31,6 +31,7 @@ import { handleToggleExpandableRow } from '@ar/components/TableCells/utils'
 import {
   PullCommandCell,
   ToggleAccordionCell,
+  VersionActionsCell,
   VersionDeploymentsCell,
   VersionDigestsCell,
   VersionPublishedAtCell
@@ -123,6 +124,12 @@ function DockerVersionListTable(props: DockerVersionListTableProps): JSX.Element
         accessor: 'pullCommand',
         Cell: PullCommandCell,
         serverSortProps: getServerSortProps('pullCommand')
+      },
+      {
+        Header: '',
+        accessor: 'actions',
+        Cell: VersionActionsCell,
+        disableSortBy: true
       }
     ]
       .filter(Boolean)

@@ -29,7 +29,7 @@ export const getVersionListTableCellConfigs = (
     const columnConfig = VERSION_LIST_TABLE_CELL_CONFIG[key as VersionListColumnEnum]
     return {
       ...columnConfig,
-      Header: getString(columnConfig.Header),
+      Header: columnConfig.Header ? getString(columnConfig.Header) : '',
       serverSortProps: getServerSortProps(columnConfig.accessor),
       ...columnConfigs[key as VersionListColumnEnum]
     }

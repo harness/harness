@@ -16,7 +16,7 @@
 
 import React from 'react'
 import { defaultTo } from 'lodash-es'
-import { Link } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance, UseExpandedRowProps } from 'react-table'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Icon } from '@harnessio/icons'
@@ -27,6 +27,8 @@ import { useStrings } from '@ar/frameworks/strings'
 import { useDecodedParams, useRoutes } from '@ar/hooks'
 import TableCells from '@ar/components/TableCells/TableCells'
 import type { ArtifactDetailsPathParams } from '@ar/routes/types'
+import { PageType, type RepositoryPackageType } from '@ar/common/types'
+import VersionActionsWidget from '@ar/frameworks/Version/VersionActionsWidget'
 import { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
 
 import type { VersionListExpandedColumnProps } from './types'
@@ -116,6 +118,17 @@ export const VersionPublishedAtCell: CellType = ({ value }) => {
   return <TableCells.LastModifiedCell value={value} />
 }
 
-export const VersionActionsCell: CellType = () => {
-  return <></>
+export const VersionActionsCell: CellType = ({ row }) => {
+  const { original } = row
+  const { artifactIdentifier, repositoryIdentifier } = useParams<ArtifactDetailsPathParams>()
+  return (
+    <VersionActionsWidget
+      data={original}
+      packageType={original.packageType as RepositoryPackageType}
+      pageType={PageType.Table}
+      repoKey={repositoryIdentifier}
+      artifactKey={artifactIdentifier}
+      versionKey={original.name}
+    />
+  )
 }

@@ -27,16 +27,18 @@ import VersionListTable, {
 } from '@ar/pages/version-list/components/VersionListTable/VersionListTable'
 import {
   type ArtifactActionProps,
+  type VersionActionProps,
   type VersionDetailsHeaderProps,
   type VersionDetailsTabProps,
   type VersionListTableProps,
   VersionStep
 } from '@ar/frameworks/Version/Version'
 
+import VersionActions from '../components/VersionActions/VersionActions'
 import NpmVersionOverviewPage from './pages/overview/NpmVersionOverviewPage'
 import { VersionDetailsTab } from '../components/VersionDetailsTabs/constants'
-import VersionDetailsHeaderContent from '../components/VersionDetailsHeaderContent/VersionDetailsHeaderContent'
 import NpmVersionArtifactDetailsPage from './pages/artifact-dertails/NpmVersionArtifactDetailsPage'
+import VersionDetailsHeaderContent from '../components/VersionDetailsHeaderContent/VersionDetailsHeaderContent'
 
 export class NpmVersionType extends VersionStep<ArtifactVersionSummary> {
   protected packageType = RepositoryPackageType.NPM
@@ -51,7 +53,8 @@ export class NpmVersionType extends VersionStep<ArtifactVersionSummary> {
     [VersionListColumnEnum.Size]: { width: '100%' },
     [VersionListColumnEnum.DownloadCount]: { width: '100%' },
     [VersionListColumnEnum.PullCommand]: { width: '100%' },
-    [VersionListColumnEnum.LastModified]: { width: '100%' }
+    [VersionListColumnEnum.LastModified]: { width: '100%' },
+    [VersionListColumnEnum.Actions]: { width: '10%' }
   }
 
   renderVersionListTable(props: VersionListTableProps): JSX.Element {
@@ -82,5 +85,9 @@ export class NpmVersionType extends VersionStep<ArtifactVersionSummary> {
 
   renderArtifactActions(props: ArtifactActionProps): JSX.Element {
     return <ArtifactActions {...props} />
+  }
+
+  renderVersionActions(props: VersionActionProps): JSX.Element {
+    return <VersionActions {...props} />
   }
 }

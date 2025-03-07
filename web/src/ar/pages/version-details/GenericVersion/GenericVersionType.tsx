@@ -18,6 +18,7 @@ import React from 'react'
 import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client'
 import {
   type ArtifactActionProps,
+  type VersionActionProps,
   type VersionDetailsHeaderProps,
   type VersionDetailsTabProps,
   type VersionListTableProps,
@@ -33,6 +34,7 @@ import ArtifactActions from '@ar/pages/artifact-details/components/ArtifactActio
 import { VersionDetailsTab } from '../components/VersionDetailsTabs/constants'
 import GenericOverviewPage from './pages/overview/OverviewPage'
 import OSSContentPage from './pages/oss-details/OSSContentPage'
+import VersionActions from '../components/VersionActions/VersionActions'
 import GenericArtifactDetailsPage from './pages/artifact-details/GenericArtifactDetailsPage'
 import VersionDetailsHeaderContent from '../components/VersionDetailsHeaderContent/VersionDetailsHeaderContent'
 
@@ -48,7 +50,8 @@ export class GenericVersionType extends VersionStep<ArtifactVersionSummary> {
     [VersionListColumnEnum.Name]: { width: '100%' },
     [VersionListColumnEnum.Size]: { width: '100%' },
     [VersionListColumnEnum.FileCount]: { width: '100%' },
-    [VersionListColumnEnum.LastModified]: { width: '100%' }
+    [VersionListColumnEnum.LastModified]: { width: '100%' },
+    [VersionListColumnEnum.Actions]: { width: '10%' }
   }
 
   renderVersionListTable(props: VersionListTableProps): JSX.Element {
@@ -74,5 +77,9 @@ export class GenericVersionType extends VersionStep<ArtifactVersionSummary> {
 
   renderArtifactActions(props: ArtifactActionProps): JSX.Element {
     return <ArtifactActions {...props} />
+  }
+
+  renderVersionActions(props: VersionActionProps): JSX.Element {
+    return <VersionActions {...props} />
   }
 }

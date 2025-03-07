@@ -28,13 +28,15 @@ export enum VersionListColumnEnum {
   DownloadCount = 'DownloadCount',
   FileCount = 'FileCount',
   LastModified = 'LastModified',
-  PullCommand = 'PullCommand'
+  PullCommand = 'PullCommand',
+  Actions = 'Actions'
 }
 
 export interface IVersionListTableColumnConfigType<T = unknown> {
-  Header: keyof StringsMap
+  Header?: keyof StringsMap
   accessor: string
   Cell: Renderer<CellProps<{}, T>>
   hidden?: boolean
   width?: string
+  disableSortBy?: boolean
 }

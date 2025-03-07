@@ -12,6 +12,4 @@ table:
     publishedByAt: '{{ $.versionDetails.artifactDetails.layers.lastPush }}'
     deployments: '{{ $.versionDetails.tabs.deployments }}'
 actions:
-  deleteModal:
-    title: Delete Version
-    contentText: Are you sure you want to delete the artifact version?
+  deleteVersion: Delete Version
