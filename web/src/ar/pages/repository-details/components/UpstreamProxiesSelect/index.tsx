@@ -49,6 +49,7 @@ function UpstreamProxiesSelect(props: UpstreamProxiesSelectProps): JSX.Element {
   const selectedProxies = (get(formikProps.values, name) as string[]) || []
   const [showList, setShowList] = useState(!!selectedProxies?.length)
   const spaceRef = useGetSpaceRef('')
+  const [searchTerm, setSearchTerm] = useState('')
 
   const {
     data,
@@ -62,6 +63,7 @@ function UpstreamProxiesSelect(props: UpstreamProxiesSelectProps): JSX.Element {
         size: 100,
         package_type: [packageType],
         type: RepositoryConfigType.UPSTREAM,
+        search_term: searchTerm,
         recursive: true
       },
       stringifyQueryParamsOptions: {
@@ -140,6 +142,8 @@ function UpstreamProxiesSelect(props: UpstreamProxiesSelectProps): JSX.Element {
         items={items}
         name={name}
         formikProps={formikProps}
+        onChangeQuery={setSearchTerm}
+        query={searchTerm}
         selectListProps={{
           title: getString('repositoryDetails.upstreamProxiesSelectList.selectList.Title', {
             count: data?.content?.data?.registries?.length

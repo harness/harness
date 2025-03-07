@@ -31,6 +31,8 @@ interface ReorderSelectProps<T> {
   className: string
   items: RorderSelectOption[]
   disabled: boolean
+  query: string
+  onChangeQuery: (val: string) => void
   selectListProps?: {
     title?: string | React.ReactNode
     withSearch?: boolean
@@ -102,6 +104,8 @@ export default function ReorderSelect<T>(props: ReorderSelectProps<T>): JSX.Elem
         options={items.filter(each => !formValue.includes(each.value))}
         onSelect={handleAddOption}
         disabled={disabled}
+        query={props.query}
+        onChangeQuery={props.onChangeQuery}
       />
       <SelectedList
         title={selectedListProps?.title}

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { ReactNode, useMemo, useState } from 'react'
+import React, { ReactNode } from 'react'
 import classNames from 'classnames'
 import { Menu } from '@blueprintjs/core'
 import { FontVariation } from '@harnessio/design-system'
@@ -26,6 +26,8 @@ import type { RorderSelectOption } from './types'
 import css from './ReorderSelect.module.scss'
 
 interface SelectListProps {
+  query: string
+  onChangeQuery: (val: string) => void
   options: RorderSelectOption[]
   onSelect: (option: RorderSelectOption) => void
   withSearch?: boolean
@@ -41,16 +43,7 @@ const EmptyOption: RorderSelectOption = {
 
 function SelectList(props: SelectListProps): JSX.Element {
   const { options, onSelect, withSearch, title, disabled } = props
-  const [searchTerm, setSearchTerm] = useState('')
   const { getString } = useStrings()
-
-  const filteredOptions: RorderSelectOption[] = useMemo(() => {
-    try {
-      return options.filter(each => each.label.toLowerCase().includes(searchTerm.toLowerCase()))
-    } catch {
-      return options
-    }
-  }, [options, searchTerm])
 
   const renderTitle = (): JSX.Element | ReactNode => {
     if (typeof title === 'string') {
@@ -67,10 +60,10 @@ function SelectList(props: SelectListProps): JSX.Element {
   }
 
   const renderOptions = (): JSX.Element => {
-    if (filteredOptions.length) {
+    if (options.length) {
       return (
         <>
-          {filteredOptions.map((each, index) => (
+          {options.map((each, index) => (
             <SelectListMenuItem key={`${each.value}_${index}`} option={each} onClick={onSelect} disabled={disabled} />
           ))}
         </>
@@ -88,10 +81,8 @@ function SelectList(props: SelectListProps): JSX.Element {
           autoFocus={false}
           alwaysExpanded
           placeholder={getString('search')}
-          onChange={text => {
-            setSearchTerm(text)
-          }}
-          defaultValue={searchTerm}
+          onChange={props.onChangeQuery}
+          defaultValue={props.query}
           disabled={disabled}
         />
       )}
