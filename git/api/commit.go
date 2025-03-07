@@ -590,13 +590,13 @@ func (g *Git) GetCommits(
 }
 
 // GetCommitDivergences returns the count of the diverging commits for all branch pairs.
-// IMPORTANT: If a max is provided it limits the overal count of diverging commits
-// (max 10 could lead to (0, 10) while it's actually (2, 12)).
+// IMPORTANT: If a maxCount is provided it limits the overal count of diverging commits
+// (maxCount 10 could lead to (0, 10) while it's actually (2, 12)).
 func (g *Git) GetCommitDivergences(
 	ctx context.Context,
 	repoPath string,
 	requests []CommitDivergenceRequest,
-	max int32,
+	maxCount int32,
 ) ([]CommitDivergence, error) {
 	if repoPath == "" {
 		return nil, ErrRepositoryPathEmpty
@@ -604,7 +604,7 @@ func (g *Git) GetCommitDivergences(
 	var err error
 	res := make([]CommitDivergence, len(requests))
 	for i, req := range requests {
-		res[i], err = g.getCommitDivergence(ctx, repoPath, req, max)
+		res[i], err = g.getCommitDivergence(ctx, repoPath, req, maxCount)
 		if errors.IsNotFound(err) {
 			res[i] = CommitDivergence{Ahead: -1, Behind: -1}
 			continue
@@ -618,21 +618,21 @@ func (g *Git) GetCommitDivergences(
 }
 
 // getCommitDivergence returns the count of diverging commits for a pair of branches.
-// IMPORTANT: If a max is provided it limits the overall count of diverging commits
-// (max 10 could lead to (0, 10) while it's actually (2, 12)).
+// IMPORTANT: If a maxCount is provided it limits the overall count of diverging commits
+// (maxCount 10 could lead to (0, 10) while it's actually (2, 12)).
 func (g *Git) getCommitDivergence(
 	ctx context.Context,
 	repoPath string,
 	req CommitDivergenceRequest,
-	max int32,
+	maxCount int32,
 ) (CommitDivergence, error) {
 	cmd := command.New("rev-list",
 		command.WithFlag("--count"),
 		command.WithFlag("--left-right"),
 	)
 	// limit count if requested.
-	if max > 0 {
-		cmd.Add(command.WithFlag("--max-count", strconv.Itoa(int(max))))
+	if maxCount > 0 {
+		cmd.Add(command.WithFlag("--max-count", strconv.Itoa(int(maxCount))))
 	}
 	// add query to get commits without shared base commits
 	cmd.Add(command.WithArg(req.From + "..." + req.To))
