@@ -438,7 +438,6 @@ const ActionMenu = ({
         </Container>
 
         <MenuItem
-          disabled={disabledActionButtons}
           onClick={deleteGitspace as Unknown as () => void}
           text={
             <Layout.Horizontal spacing="small" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>

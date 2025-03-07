@@ -337,7 +337,6 @@ const GitspaceDetails = () => {
                           </Text>
                         </Layout.Horizontal>
                       }
-                      disabled={disabledActionButtons}
                     />
                   </Menu>
                 }>
