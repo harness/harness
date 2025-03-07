@@ -18,7 +18,11 @@ import (
 	"net/http"
 
 	"github.com/harness/gitness/registry/app/api/handler/packages"
+	"github.com/harness/gitness/registry/app/api/handler/utils"
+	pypi2 "github.com/harness/gitness/registry/app/metadata/pypi"
 	"github.com/harness/gitness/registry/app/pkg/pypi"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type Handler interface {
@@ -43,3 +47,27 @@ func NewHandler(
 }
 
 var _ Handler = (*handler)(nil)
+
+func (h *handler) getPackageArtifactInfo(r *http.Request) (pypi.ArtifactInfo, error) {
+	info, e := h.GetArtifactInfo(r)
+
+	if e.Error() != "" {
+		return pypi.ArtifactInfo{}, e
+	}
+
+	var md pypi2.Metadata
+	err := utils.FillFromForm(r, &md)
+	if err != nil {
+		return pypi.ArtifactInfo{}, err
+	}
+
+	info.Image = chi.URLParam(r, "image")
+	if info.Image == "" {
+		info.Image = md.Name
+	}
+
+	return pypi.ArtifactInfo{
+		ArtifactInfo: &info,
+		Metadata:     md,
+	}, nil
+}

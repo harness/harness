@@ -14,7 +14,9 @@
 
 package pkg
 
-import "reflect"
+import (
+	"reflect"
+)
 
 func IsEmpty(slice interface{}) bool {
 	if slice == nil {

@@ -16,8 +16,34 @@ package pypi
 
 import (
 	"net/http"
+
+	"github.com/harness/gitness/registry/app/pkg/commons"
+
+	"github.com/go-chi/chi/v5"
 )
 
-func (h *handler) DownloadPackageFile(_ http.ResponseWriter, _ *http.Request) {
+func (h *handler) DownloadPackageFile(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	info, err := h.GetArtifactInfo(r)
+	if !commons.IsEmptyError(err) {
+		h.HandleErrors(r.Context(), err, w)
+		return
+	}
 
+	image := chi.URLParam(r, "image")
+	filename := chi.URLParam(r, "filename")
+	version := chi.URLParam(r, "version")
+	headers, fileReader, redirectURL, err := h.controller.DownloadPackageFile(ctx, info, image,
+		version, filename)
+	if commons.IsEmptyError(err) {
+		w.Header().Set("Content-Disposition", "attachment; filename="+filename)
+		if redirectURL != "" {
+			http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
+			return
+		}
+		h.ServeContent(w, r, fileReader, filename)
+		headers.WriteToResponse(w)
+		return
+	}
+	h.HandleErrors(r.Context(), err, w)
 }

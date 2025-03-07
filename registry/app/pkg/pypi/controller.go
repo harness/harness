@@ -16,35 +16,63 @@ package pypi
 
 import (
 	"context"
-	"io"
+	"mime/multipart"
 
+	urlprovider "github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/registry/app/dist_temp/errcode"
+	"github.com/harness/gitness/registry/app/pkg"
+	"github.com/harness/gitness/registry/app/pkg/commons"
+	"github.com/harness/gitness/registry/app/pkg/filemanager"
+	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
+	"github.com/harness/gitness/store/database/dbtx"
 )
 
 // Controller handles PyPI package operations.
 type controller struct {
-	artifactStore store.ArtifactRepository
-	proxyStore    store.UpstreamProxyConfigRepository
-	_             FileManager
+	fileManager filemanager.FileManager
+	proxyStore  store.UpstreamProxyConfigRepository
+	tx          dbtx.Transactor
+	registryDao store.RegistryRepository
+	imageDao    store.ImageRepository
+	artifactDao store.ArtifactRepository
+	urlProvider urlprovider.Provider
 }
 
 type Controller interface {
-}
+	GetPackageMetadata(ctx context.Context, info ArtifactInfo, packageName string) (PackageMetadata, error)
+	UploadPackageFile(
+		ctx context.Context,
+		info ArtifactInfo,
+		file multipart.File,
+		fileHeader *multipart.FileHeader,
+	) (*commons.ResponseHeaders, string, errcode.Error)
 
-// FileManager interface for managing PyPI package files.
-type FileManager interface {
-	Upload(ctx context.Context, registryID int64, path string, content io.Reader) error
-	Download(ctx context.Context, registryID int64, path string) (io.ReadCloser, error)
-	Delete(ctx context.Context, registryID int64, path string) error
+	DownloadPackageFile(ctx context.Context, info pkg.ArtifactInfo, image, version, filename string) (
+		*commons.ResponseHeaders,
+		*storage.FileReader,
+		string,
+		errcode.Error,
+	)
 }
 
 // NewController creates a new PyPI controller.
 func NewController(
-	artifactStore store.ArtifactRepository,
 	proxyStore store.UpstreamProxyConfigRepository,
+	registryDao store.RegistryRepository,
+	imageDao store.ImageRepository,
+	artifactDao store.ArtifactRepository,
+	fileManager filemanager.FileManager,
+	tx dbtx.Transactor,
+	urlProvider urlprovider.Provider,
 ) Controller {
 	return &controller{
-		artifactStore: artifactStore,
-		proxyStore:    proxyStore,
+		proxyStore:  proxyStore,
+		registryDao: registryDao,
+		imageDao:    imageDao,
+		artifactDao: artifactDao,
+		fileManager: fileManager,
+		tx:          tx,
+		urlProvider: urlProvider,
 	}
 }

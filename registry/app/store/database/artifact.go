@@ -24,6 +24,7 @@ import (
 
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/registry/app/metadata/pypi"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/app/store/database/util"
 	"github.com/harness/gitness/registry/types"
@@ -74,6 +75,40 @@ func (a ArtifactDao) GetByName(ctx context.Context, imageID int64, version strin
 		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to get artifact")
 	}
 	return a.mapToArtifact(ctx, dst)
+}
+
+func (a ArtifactDao) GetByRegistryIDAndImage(ctx context.Context, registryID int64, image string) (
+	*[]types.Artifact,
+	error,
+) {
+	q := databaseg.Builder.Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(artifactDB{}), ",")).
+		From("artifacts a").
+		Join("images i ON a.artifact_image_id = i.image_id").
+		Where("i.image_registry_id = ? AND i.image_name = ?", registryID, image).
+		OrderBy("a.artifact_created_at DESC")
+
+	sql, args, err := q.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, a.db)
+
+	dst := []artifactDB{}
+	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to get artifacts")
+	}
+
+	artifacts := make([]types.Artifact, len(dst))
+	for i, d := range dst {
+		art, err := a.mapToArtifact(ctx, &d)
+		if err != nil {
+			return nil, errors.Wrap(err, "Failed to map artifact")
+		}
+		artifacts[i] = *art
+	}
+
+	return &artifacts, nil
 }
 
 func (a ArtifactDao) CreateOrUpdate(ctx context.Context, artifact *types.Artifact) error {
@@ -241,7 +276,7 @@ func (a ArtifactDao) GetAllArtifactsByParentID(
 	if sortByField == downloadCount {
 		sortField = downloadCount
 	}
-	q = q.OrderBy(sortField + " " + sortByOrder).Limit(uint64(limit)).Offset(uint64(offset)) //nolint:gosec
+	q = q.OrderBy(sortField + " " + sortByOrder).Limit(util.SafeIntToUInt64(limit)).Offset(util.SafeIntToUInt64(offset))
 
 	sql, args, err := q.ToSql()
 	if err != nil {
@@ -358,7 +393,7 @@ func (a ArtifactDao) GetAllArtifactsByRepo(
 	} else if sortByField == imageName {
 		sortField = name
 	}
-	q = q.OrderBy(sortField + " " + sortByOrder).Limit(uint64(limit)).Offset(uint64(offset)) //nolint:gosec
+	q = q.OrderBy(sortField + " " + sortByOrder).Limit(util.SafeIntToUInt64(limit)).Offset(util.SafeIntToUInt64(offset))
 
 	sql, args, err := q.ToSql()
 	if err != nil {
@@ -579,7 +614,7 @@ func (a ArtifactDao) GetAllVersionsByRepoAndImage(
 	} else if sortByField == name {
 		sortField = name
 	}
-	q = q.OrderBy(sortField + " " + sortByOrder).Limit(uint64(limit)).Offset(uint64(offset)) //nolint:gosec
+	q = q.OrderBy(sortField + " " + sortByOrder).Limit(util.SafeIntToUInt64(limit)).Offset(util.SafeIntToUInt64(offset))
 
 	sql, args, err := q.ToSql()
 	if err != nil {
@@ -729,6 +764,11 @@ type GenericMetadata struct {
 type MavenMetadata struct {
 	Files     []File `json:"files"`
 	FileCount int64  `json:"file_count"`
+}
+
+type PyPiMetadata struct {
+	Files []File `json:"files"`
+	pypi.Metadata
 }
 
 type File struct {

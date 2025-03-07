@@ -65,9 +65,9 @@ type upstreamProxyConfigDB struct {
 	AuthType                 string         `db:"upstream_proxy_config_auth_type"`
 	UserName                 string         `db:"upstream_proxy_config_user_name"`
 	SecretIdentifier         sql.NullString `db:"upstream_proxy_config_secret_identifier"`
-	SecretSpaceID            sql.NullInt32  `db:"upstream_proxy_config_secret_space_id"`
+	SecretSpaceID            sql.NullInt64  `db:"upstream_proxy_config_secret_space_id"`
 	UserNameSecretIdentifier sql.NullString `db:"upstream_proxy_config_user_name_secret_identifier"`
-	UserNameSecretSpaceID    sql.NullInt32  `db:"upstream_proxy_config_user_name_secret_space_id"`
+	UserNameSecretSpaceID    sql.NullInt64  `db:"upstream_proxy_config_user_name_secret_space_id"`
 	Token                    string         `db:"upstream_proxy_config_token"`
 	CreatedAt                int64          `db:"upstream_proxy_config_created_at"`
 	UpdatedAt                int64          `db:"upstream_proxy_config_updated_at"`
@@ -390,8 +390,8 @@ func (r UpstreamproxyDao) mapToInternalUpstreamProxy(
 		AuthType:                 in.AuthType,
 		UserName:                 in.UserName,
 		SecretIdentifier:         util.GetEmptySQLString(in.SecretIdentifier),
-		SecretSpaceID:            util.GetEmptySQLInt32(in.SecretSpaceID),
-		UserNameSecretSpaceID:    util.GetEmptySQLInt32(in.UserNameSecretSpaceID),
+		SecretSpaceID:            util.GetEmptySQLInt64(in.SecretSpaceID),
+		UserNameSecretSpaceID:    util.GetEmptySQLInt64(in.UserNameSecretSpaceID),
 		UserNameSecretIdentifier: util.GetEmptySQLString(in.UserNameSecretIdentifier),
 		Token:                    in.Token,
 		CreatedAt:                in.CreatedAt.UnixMilli(),

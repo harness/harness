@@ -484,7 +484,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	genericHandler := api2.NewGenericHandlerProvider(spaceStore, genericController, tokenStore, controller, authenticator, provider, authorizer)
 	handler3 := router.GenericHandlerProvider(genericHandler)
 	packagesHandler := api2.NewPackageHandlerProvider(registryRepository, spaceStore, tokenStore, controller, authenticator, provider, authorizer)
-	pypiController := pypi.ControllerProvider(artifactRepository, upstreamProxyConfigRepository)
+	pypiController := pypi.ControllerProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider)
 	pypiHandler := api2.NewPypiHandlerProvider(pypiController, packagesHandler)
 	handler4 := router.PackageHandlerProvider(packagesHandler, mavenHandler, genericHandler, pypiHandler)
 	appRouter := router.AppRouterProvider(registryOCIHandler, apiHandler, handler2, handler3, handler4)

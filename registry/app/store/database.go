@@ -477,6 +477,11 @@ type ArtifactRepository interface {
 		ctx context.Context, id int64, identifier string,
 		image string, version string,
 	) (*types.ArtifactMetadata, error)
+
+	GetByRegistryIDAndImage(ctx context.Context, registryID int64, image string) (
+		*[]types.Artifact,
+		error,
+	)
 }
 
 type DownloadStatRepository interface {

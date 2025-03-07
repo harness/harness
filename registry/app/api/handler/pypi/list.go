@@ -15,8 +15,54 @@
 package pypi
 
 import (
+	"html/template"
 	"net/http"
 )
 
-func (h *handler) PackageMetadata(_ http.ResponseWriter, _ *http.Request) {
+const HTMLTemplate = `
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta name="pypi:repository-version" content="1.3">
+		<title>Links for {{.Name}}</title>
+	</head>
+	<body>
+		{{- /* PEP 503 – Simple Repository API: https://peps.python.org/pep-0503/ */ -}}
+		<h1>Links for {{.Name}}</h1>
+			{{range .Files}}
+				<a href="{{.FileURL}}"{{if .RequiresPython}} data-requires-python="{{.RequiresPython}}"{{end}}>{{.Name}}</a><br>
+			{{end}}
+	</body>
+</html>
+`
+
+func (h *handler) PackageMetadata(w http.ResponseWriter, r *http.Request) {
+	info, err := h.getPackageArtifactInfo(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if info.Image == "" {
+		http.Error(w, "Package name required", http.StatusBadRequest)
+		return
+	}
+
+	packageData, err := h.controller.GetPackageMetadata(r.Context(), info, info.Image)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Parse and execute the template
+	tmpl, err := template.New("simple").Parse(HTMLTemplate)
+	if err != nil {
+		http.Error(w, "Template error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	if err := tmpl.Execute(w, packageData); err != nil {
+		http.Error(w, "Rendering error", http.StatusInternalServerError)
+	}
 }

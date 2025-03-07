@@ -17,14 +17,17 @@ package pkg
 import (
 	"time"
 
+	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+
 	v2 "github.com/distribution/distribution/v3/registry/api/v2"
 )
 
 type BaseInfo struct {
-	PathRoot       string
-	ParentID       int64
-	RootIdentifier string
-	RootParentID   int64
+	PathPackageType artifact.PackageType
+	PathRoot        string
+	ParentID        int64
+	RootIdentifier  string
+	RootParentID    int64
 }
 
 type ArtifactInfo struct {

@@ -49,7 +49,7 @@ func NewRouter(
 	r.Route("/{rootIdentifier}/{registryIdentifier}", func(r chi.Router) {
 		r.Use(middleware.StoreOriginalURL)
 
-		r.Route("/maven/", func(r chi.Router) {
+		r.Route("/maven", func(r chi.Router) {
 			r.Use(middleware.CheckMavenAuthHeader())
 			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
 			r.Use(middleware.CheckMavenAuth())
@@ -60,7 +60,7 @@ func NewRouter(
 			r.Put("/*", mavenHandler.PutArtifact)
 		})
 
-		r.Route("/generic/", func(r chi.Router) {
+		r.Route("/generic", func(r chi.Router) {
 			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
 			r.Use(middleware.TrackDownloadStatForGenericArtifact(genericHandler))
 			r.Use(middleware.TrackBandwidthStatForGenericArtifacts(genericHandler))
@@ -69,14 +69,16 @@ func NewRouter(
 			r.Put("/*", genericHandler.PushArtifact)
 		})
 
-		r.Route("/pypi/", func(r chi.Router) {
+		r.Route("/pypi", func(r chi.Router) {
 			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
 			r.With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
 				Post("/*", pypiHandler.UploadPackageFile)
 			r.With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
-				Get("/files/{id}/{version}/{filename}", pypiHandler.DownloadPackageFile)
+				Get("/files/{image}/{version}/{filename}", pypiHandler.DownloadPackageFile)
 			r.With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
-				Get("/simple/{id}", pypiHandler.PackageMetadata)
+				Get("/simple/{image}", pypiHandler.PackageMetadata)
+			r.With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Get("/simple/{image}/", pypiHandler.PackageMetadata)
 		})
 	})
 

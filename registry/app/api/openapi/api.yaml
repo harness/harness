@@ -1749,11 +1749,13 @@ components:
           HELM: "#/components/schemas/HelmArtifactDetailConfig"
           GENERIC: "#/components/schemas/GenericArtifactDetailConfig"
           MAVEN: "#/components/schemas/MavenArtifactDetailConfig"
+          PYPI: "#/components/schemas/PyPiArtifactDetailConfig"
       oneOf:
         - $ref: "#/components/schemas/DockerArtifactDetailConfig"
         - $ref: "#/components/schemas/HelmArtifactDetailConfig"
         - $ref: "#/components/schemas/GenericArtifactDetailConfig"
         - $ref: "#/components/schemas/MavenArtifactDetailConfig"
+        - $ref: "#/components/schemas/PyPiArtifactDetailConfig"
       required:
         - imageName
         - version
@@ -1774,7 +1776,15 @@ components:
           type: string
     MavenArtifactDetailConfig:
       type: object
-      description: Config for generic artifact details
+      description: Config for maven artifact details
+      properties:
+        groupId:
+          type: string
+        artifactId:
+          type: string
+    PyPiArtifactDetailConfig:
+      type: object
+      description: Config for pypi artifact details
       properties:
         groupId:
           type: string
@@ -2127,6 +2137,7 @@ components:
             - Custom
             - AwsEcr
             - MavenCentral
+            - PyPi
       x-discriminator-value: UPSTREAM
       required:
         - authType
@@ -2182,6 +2193,7 @@ components:
       enum:
         - DOCKER
         - MAVEN
+        - PYPI
         - GENERIC
         - HELM
     SectionType:

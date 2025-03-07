@@ -116,6 +116,7 @@ var validPackageTypes = []string{
 	string(a.PackageTypeHELM),
 	string(a.PackageTypeGENERIC),
 	string(a.PackageTypeMAVEN),
+	string(a.PackageTypePYPI),
 }
 
 var validUpstreamSources = []string{
@@ -123,6 +124,7 @@ var validUpstreamSources = []string{
 	string(a.UpstreamConfigSourceDockerhub),
 	string(a.UpstreamConfigSourceAwsEcr),
 	string(a.UpstreamConfigSourceMavenCentral),
+	string(a.UpstreamConfigSourcePyPi),
 }
 
 func ValidatePackageTypes(packageTypes []string) error {

@@ -14,29 +14,25 @@
 
 package pypi
 
+import (
+	"github.com/harness/gitness/registry/app/metadata/pypi"
+	"github.com/harness/gitness/registry/app/pkg"
+)
+
 // Metadata represents the metadata for a PyPI package.
-type Metadata struct {
-	Name           string   `json:"name"`
-	Version        string   `json:"version"`
-	Summary        string   `json:"summary"`
-	Description    string   `json:"description"`
-	Author         string   `json:"author"`
-	AuthorEmail    string   `json:"author_email,omitempty"`
-	License        string   `json:"license"`
-	Keywords       []string `json:"keywords,omitempty"`
-	Platform       string   `json:"platform,omitempty"`
-	RequiresPython string   `json:"requires_python,omitempty"`
-	Dependencies   []string `json:"dependencies,omitempty"`
+
+type ArtifactInfo struct {
+	*pkg.ArtifactInfo
+	Metadata pypi.Metadata
 }
 
-// PackageFile represents a PyPI package file.
-type PackageFile struct {
-	Filename      string `json:"filename"`
-	ContentType   string `json:"content_type"`
-	Size          int64  `json:"size"`
-	MD5           string `json:"md5_digest"`
-	SHA256        string `json:"sha256_digest"`
-	PackageType   string `json:"package_type"` // e.g., "sdist", "bdist_wheel"
-	PythonVersion string `json:"python_version"`
-	UploadTime    int64  `json:"upload_time_ms"`
+type File struct {
+	FileURL        string
+	Name           string
+	RequiresPython string
+}
+
+type PackageMetadata struct {
+	Name  string
+	Files []File
 }

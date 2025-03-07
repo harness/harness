@@ -15,16 +15,24 @@
 package pypi
 
 import (
+	urlprovider "github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
+	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/google/wire"
 )
 
 func ControllerProvider(
-	artifactStore store.ArtifactRepository,
 	proxyStore store.UpstreamProxyConfigRepository,
+	registryDao store.RegistryRepository,
+	imageDao store.ImageRepository,
+	artifactDao store.ArtifactRepository,
+	fileManager filemanager.FileManager,
+	tx dbtx.Transactor,
+	urlProvider urlprovider.Provider,
 ) Controller {
-	return NewController(artifactStore, proxyStore)
+	return NewController(proxyStore, registryDao, imageDao, artifactDao, fileManager, tx, urlProvider)
 }
 
 var ControllerSet = wire.NewSet(ControllerProvider)

@@ -83,7 +83,7 @@ type webhookDB struct {
 	Description           string         `db:"registry_webhook_description"`
 	URL                   string         `db:"registry_webhook_url"`
 	SecretIdentifier      sql.NullString `db:"registry_webhook_secret_identifier"`
-	SecretSpaceID         sql.NullInt32  `db:"registry_webhook_secret_space_id"`
+	SecretSpaceID         sql.NullInt64  `db:"registry_webhook_secret_space_id"`
 	Enabled               bool           `db:"registry_webhook_enabled"`
 	Insecure              bool           `db:"registry_webhook_insecure"`
 	Triggers              string         `db:"registry_webhook_triggers"`
@@ -206,7 +206,7 @@ func (w WebhookDao) ListByRegistry(
 	if validSortByField != "" {
 		query = query.OrderBy(fmt.Sprintf("%s %s", validSortByField, sortByOrder))
 	}
-	query = query.Limit(uint64(limit)).Offset(uint64(offset))
+	query = query.Limit(util.SafeIntToUInt64(limit)).Offset(util.SafeIntToUInt64(offset))
 
 	sqlQuery, args, err := query.ToSql()
 	if err != nil {
@@ -333,7 +333,7 @@ func mapToWebhookDB(webhook *types.Webhook) (*webhookDB, error) {
 		Description:           webhook.Description,
 		URL:                   webhook.URL,
 		SecretIdentifier:      util.GetEmptySQLString(webhook.SecretIdentifier),
-		SecretSpaceID:         util.GetEmptySQLInt32(webhook.SecretSpaceID),
+		SecretSpaceID:         util.GetEmptySQLInt64(webhook.SecretSpaceID),
 		Enabled:               webhook.Enabled,
 		Insecure:              webhook.Insecure,
 		Internal:              webhook.Internal,
@@ -377,7 +377,7 @@ func mapToWebhook(webhookDB *webhookDB) (*types.Webhook, error) {
 		webhook.SecretIdentifier = webhookDB.SecretIdentifier.String
 	}
 	if webhookDB.SecretSpaceID.Valid {
-		webhook.SecretSpaceID = int(webhookDB.SecretSpaceID.Int32)
+		webhook.SecretSpaceID = int(webhookDB.SecretSpaceID.Int64)
 	}
 
 	switch {
