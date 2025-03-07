@@ -82,9 +82,9 @@ repositoryTypes:
   helm: Helm
   generic: Generic
   maven: Maven
-  npm: npm
+  npm: NPM
   gradle: Gradle
-  pypi: PyPi
+  pypi: Python
   nuget: NuGet
 sideNav:
   repositories: '{{ $.repositoryList.pageHeading }}'

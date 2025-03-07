@@ -148,6 +148,7 @@ export interface StringsMap {
   'upstreamProxyDetails.createForm.source.ecr': string
   'upstreamProxyDetails.createForm.source.mavenCentral': string
   'upstreamProxyDetails.createForm.source.npmjs': string
+  'upstreamProxyDetails.createForm.source.pypi': string
   'upstreamProxyDetails.createForm.source.title': string
   'upstreamProxyDetails.createForm.title': string
   'upstreamProxyDetails.createForm.url': string

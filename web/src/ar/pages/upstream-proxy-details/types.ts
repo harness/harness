@@ -22,7 +22,8 @@ export enum UpstreamProxyPackageType {
   HELM = 'HELM',
   GENERIC = 'GENERIC',
   MAVEN = 'MAVEN',
-  NPM = 'NPM'
+  NPM = 'NPM',
+  PYTHON = 'PYTHON'
 }
 
 export enum UpstreamRepositoryURLInputSource {
@@ -30,7 +31,8 @@ export enum UpstreamRepositoryURLInputSource {
   MavenCentral = 'MavenCentral',
   NpmJS = 'NpmJs',
   AwsEcr = 'AwsEcr',
-  Custom = 'Custom'
+  Custom = 'Custom',
+  PyPi = 'PyPi'
 }
 
 export enum UpstreamProxyAuthenticationMode {

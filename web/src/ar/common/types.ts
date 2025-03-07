@@ -51,7 +51,7 @@ export enum RepositoryPackageType {
   MAVEN = 'MAVEN',
   NPM = 'NPM',
   GRADLE = 'GRADLE',
-  PYPI = 'PYPI',
+  PYTHON = 'PYTHON',
   NUGET = 'NUGET'
 }
 

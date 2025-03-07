@@ -62,5 +62,9 @@ export const URLSourceToSupportedAuthTypesMapping: Record<
   [UpstreamRepositoryURLInputSource.NpmJS]: [
     UpstreamProxyAuthenticationMode.USER_NAME_AND_PASSWORD,
     UpstreamProxyAuthenticationMode.ANONYMOUS
+  ],
+  [UpstreamRepositoryURLInputSource.PyPi]: [
+    UpstreamProxyAuthenticationMode.USER_NAME_AND_PASSWORD,
+    UpstreamProxyAuthenticationMode.ANONYMOUS
   ]
 }

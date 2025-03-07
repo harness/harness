@@ -41,5 +41,9 @@ export const UpstreamURLSourceConfig: Record<UpstreamRepositoryURLInputSource, R
   [UpstreamRepositoryURLInputSource.NpmJS]: {
     label: 'upstreamProxyDetails.createForm.source.npmjs',
     value: UpstreamRepositoryURLInputSource.NpmJS
+  },
+  [UpstreamRepositoryURLInputSource.PyPi]: {
+    label: 'upstreamProxyDetails.createForm.source.pypi',
+    value: UpstreamRepositoryURLInputSource.PyPi
   }
 }

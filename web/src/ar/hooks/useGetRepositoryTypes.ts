@@ -75,9 +75,10 @@ const RepositoryTypes: RepositoryTypeListItem[] = [
   },
   {
     label: 'repositoryTypes.pypi',
-    value: RepositoryPackageType.PYPI,
+    value: RepositoryPackageType.PYTHON,
     icon: 'python',
     tooltip: 'Coming Soon!',
+    featureFlag: FeatureFlags.HAR_PYTHON_PACKAGE_TYPE_ENABLED,
     disabled: true
   },
   {

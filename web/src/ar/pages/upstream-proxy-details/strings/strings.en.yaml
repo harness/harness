@@ -14,6 +14,7 @@ createForm:
     custom: Custom
     mavenCentral: Maven Central
     npmjs: npmjs
+    pypi: PyPI
   authentication:
     title: Authentication
     userNameAndPassword: Username and Password
