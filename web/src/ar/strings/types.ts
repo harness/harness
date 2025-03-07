@@ -354,6 +354,7 @@ export interface StringsMap {
   'packageTypes.helmPackage': string
   'packageTypes.mavenPackage': string
   'packageTypes.npmPackage': string
+  'packageTypes.pythonPackage': string
   plaintext: string
   plusNewName: string
   prod: string

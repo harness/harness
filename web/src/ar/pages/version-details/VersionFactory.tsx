@@ -20,9 +20,11 @@ import { HelmVersionType } from './HelmVersion/HelmVersionType'
 import { GenericVersionType } from './GenericVersion/GenericVersionType'
 import { MavenVersionType } from './MavenVersion/MavenVersion'
 import { NpmVersionType } from './NpmVersion/NpmVersionType'
+import { PythonVersionType } from './PythonVersion/PythonVersionType'
 
 versionFactory.registerStep(new DockerVersionType())
 versionFactory.registerStep(new HelmVersionType())
 versionFactory.registerStep(new GenericVersionType())
 versionFactory.registerStep(new MavenVersionType())
 versionFactory.registerStep(new NpmVersionType())
+versionFactory.registerStep(new PythonVersionType())
