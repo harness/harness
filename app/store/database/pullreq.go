@@ -393,31 +393,29 @@ func (s *PullReqStore) ResetMergeCheckStatus(
 	targetRepo int64,
 	targetBranch string,
 ) error {
-	// NOTE: keep pullreq_merge_base_sha on old value as it's a required field.
+	// NOTE: Keep pullreq_merge_base_sha on old value as it's a required field.
+	// NOTE: Deliberately skip update of "repo_updated" field because we update many PRs at once.
 	const query = `
 	UPDATE pullreqs
 	SET
-		 pullreq_updated = $1
-		,pullreq_version = pullreq_version + 1
+		 pullreq_version = pullreq_version + 1
 		,pullreq_merge_target_sha = NULL
 		,pullreq_merge_sha = NULL
-		,pullreq_merge_check_status = $2
+		,pullreq_merge_check_status = $1
 		,pullreq_merge_conflicts = NULL
-		,pullreq_rebase_check_status = $2
+		,pullreq_rebase_check_status = $1
 		,pullreq_rebase_conflicts = NULL
 		,pullreq_commit_count = NULL
 		,pullreq_file_count = NULL
 		,pullreq_additions = NULL
 		,pullreq_deletions = NULL
-	WHERE pullreq_target_repo_id = $3 AND
-		pullreq_target_branch = $4 AND
-		pullreq_state not in ($5, $6)`
+	WHERE pullreq_target_repo_id = $2 AND
+		pullreq_target_branch = $3 AND
+		pullreq_state not in ($4, $5)`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	now := time.Now().UnixMilli()
-
-	_, err := db.ExecContext(ctx, query, now, enum.MergeCheckStatusUnchecked, targetRepo, targetBranch,
+	_, err := db.ExecContext(ctx, query, enum.MergeCheckStatusUnchecked, targetRepo, targetBranch,
 		enum.PullReqStateClosed, enum.PullReqStateMerged)
 	if err != nil {
 		return database.ProcessSQLErrorf(ctx, err, "Failed to reset mergeable status check in pull requests")
