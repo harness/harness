@@ -87,6 +87,12 @@ func Translate(ctx context.Context, err error) *Error {
 	case errors.As(err, &maxBytesErr):
 		return RequestTooLargef("The request is too large. maximum allowed size is %d bytes", maxBytesErr.Limit)
 
+	case errors.Is(err, store.ErrLicenseExpired):
+		return BadRequestf("license expired.")
+
+	case errors.Is(err, store.ErrLicenseNotFound):
+		return BadRequestf("license not found.")
+
 	// git errors
 	case errors.As(err, &appError):
 		if appError.Err != nil {
