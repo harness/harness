@@ -169,6 +169,16 @@ const ProtectionRulesForm = (props: {
       <hr className={css.dividerContainer} />
       <FormInput.CheckBox
         className={css.checkboxLabel}
+        label={getString('branchProtection.addCodeownersToReviewTitle')}
+        name={'autoAddCodeOwner'}
+      />
+      <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
+        {getString('branchProtection.addCodeownersToReviewText')}
+      </Text>
+
+      <hr className={css.dividerContainer} />
+      <FormInput.CheckBox
+        className={css.checkboxLabel}
         label={getString('branchProtection.reqReviewFromCodeOwnerTitle')}
         name={'requireCodeOwner'}
       />

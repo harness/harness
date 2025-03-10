@@ -392,6 +392,7 @@ export type RulesFormPayload = {
   bypassList?: string[]
   requireMinReviewers: boolean
   minReviewers?: string | number
+  autoAddCodeOwner?: boolean
   requireCodeOwner?: boolean
   requireNewChanges?: boolean
   reqResOfChanges?: boolean
@@ -990,6 +991,7 @@ export enum RuleFields {
   APPROVALS_REQUIRE_CODE_OWNERS = 'pullreq.approvals.require_code_owners',
   APPROVALS_REQUIRE_NO_CHANGE_REQUEST = 'pullreq.approvals.require_no_change_request',
   APPROVALS_REQUIRE_LATEST_COMMIT = 'pullreq.approvals.require_latest_commit',
+  AUTO_ADD_CODE_OWNERS = 'pullreq.reviewers.request_code_owners',
   COMMENTS_REQUIRE_RESOLVE_ALL = 'pullreq.comments.require_resolve_all',
   STATUS_CHECKS_ALL_MUST_SUCCEED = 'pullreq.status_checks.all_must_succeed',
   STATUS_CHECKS_REQUIRE_IDENTIFIERS = 'pullreq.status_checks.require_identifiers',
@@ -1020,6 +1022,7 @@ export type BranchProtectionRulesMapType = Record<string, BranchProtectionRule>
 export function createRuleFieldsMap(ruleDefinition: Rule): RuleFieldsMap {
   const ruleFieldsMap: RuleFieldsMap = {
     [RuleFields.APPROVALS_REQUIRE_MINIMUM_COUNT]: false,
+    [RuleFields.AUTO_ADD_CODE_OWNERS]: false,
     [RuleFields.APPROVALS_REQUIRE_CODE_OWNERS]: false,
     [RuleFields.APPROVALS_REQUIRE_NO_CHANGE_REQUEST]: false,
     [RuleFields.APPROVALS_REQUIRE_LATEST_COMMIT]: false,
@@ -1061,6 +1064,10 @@ export function createRuleFieldsMap(ruleDefinition: Rule): RuleFieldsMap {
       ruleFieldsMap[RuleFields.STATUS_CHECKS_REQUIRE_IDENTIFIERS] =
         Array.isArray(ruleDefinition.pullreq.status_checks.require_identifiers) &&
         ruleDefinition.pullreq.status_checks.require_identifiers.length > 0
+    }
+
+    if (ruleDefinition.pullreq.reviewers) {
+      ruleFieldsMap[RuleFields.AUTO_ADD_CODE_OWNERS] = !!ruleDefinition.pullreq.reviewers.request_code_owners
     }
   }
 

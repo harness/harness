@@ -66,6 +66,8 @@ export interface StringsMap {
   branchNotFound: string
   branchNotFoundError: string
   branchNotFoundMessage: string
+  'branchProtection.addCodeownersToReviewText': string
+  'branchProtection.addCodeownersToReviewTitle': string
   'branchProtection.allRepoOwners': string
   'branchProtection.autoDeleteText': string
   'branchProtection.autoDeleteTitle': string

@@ -784,7 +784,13 @@ export interface ProtectionDefPullReq {
   approvals?: ProtectionDefApprovals
   comments?: ProtectionDefComments
   merge?: ProtectionDefMerge
+  reviewers?: ProtectionDefReviewers
   status_checks?: ProtectionDefStatusChecks
+}
+
+export interface ProtectionDefReviewers {
+  default_reviewer_ids?: number[]
+  request_code_owners?: boolean
 }
 
 export interface ProtectionDefStatusChecks {

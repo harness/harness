@@ -243,6 +243,7 @@ const BranchProtectionForm = (props: {
         minReviewers: minReviewerCheck
           ? (rule.definition as ProtectionBranch)?.pullreq?.approvals?.require_minimum_count
           : '',
+        autoAddCodeOwner: (rule.definition as ProtectionBranch)?.pullreq?.reviewers?.request_code_owners,
         requireCodeOwner: (rule.definition as ProtectionBranch)?.pullreq?.approvals?.require_code_owners,
         requireNewChanges: (rule.definition as ProtectionBranch)?.pullreq?.approvals?.require_latest_commit,
         reqResOfChanges: (rule.definition as ProtectionBranch)?.pullreq?.approvals?.require_no_change_request,
@@ -322,6 +323,9 @@ const BranchProtectionForm = (props: {
                 require_minimum_count: parseInt(formData.minReviewers as string),
                 require_latest_commit: formData.requireNewChanges,
                 require_no_change_request: formData.reqResOfChanges
+              },
+              reviewers: {
+                request_code_owners: formData.autoAddCodeOwner
               },
               comments: {
                 require_resolve_all: formData.requireCommentResolution

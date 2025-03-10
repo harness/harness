@@ -213,6 +213,12 @@ const BranchProtectionListing = (props: {
       requiredRule: {
         [RuleFields.LIFECYCLE_UPDATE_FORCE_FORBIDDEN]: true
       }
+    },
+    autoAddCodeownersToReview: {
+      title: getString('branchProtection.addCodeownersToReviewTitle'),
+      requiredRule: {
+        [RuleFields.AUTO_ADD_CODE_OWNERS]: true
+      }
     }
   }
 
