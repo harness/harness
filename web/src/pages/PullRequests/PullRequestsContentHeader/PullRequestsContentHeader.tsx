@@ -16,28 +16,17 @@
 
 import { useHistory } from 'react-router-dom'
 import React, { useEffect, useMemo, useState } from 'react'
-import {
-  Container,
-  Layout,
-  FlexExpander,
-  DropDown,
-  ButtonVariation,
-  Button,
-  SelectOption,
-  Text
-} from '@harnessio/uicore'
-import { Color, FontVariation } from '@harnessio/design-system'
-import { sortBy } from 'lodash-es'
-import { getConfig, getUsingFetch } from 'services/config'
+import { Container, Layout, FlexExpander, DropDown, ButtonVariation, Button } from '@harnessio/uicore'
 import { useStrings } from 'framework/strings'
 import { CodeIcon, GitInfoProps, makeDiffRefs, PullRequestFilterOption } from 'utils/GitUtils'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
-import type { TypesPrincipalInfo, TypesUser } from 'services/code'
+import type { TypesPrincipalInfo } from 'services/code'
 import { useAppContext } from 'AppContext'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
-import { LabelFilterObj, PageBrowserProps, permissionProps } from 'utils/Utils'
+import { LabelFilterObj, PageBrowserProps, ScopeLevel, permissionProps } from 'utils/Utils'
 import { useQueryParams } from 'hooks/useQueryParams'
 import { LabelFilter } from 'components/Label/LabelFilter/LabelFilter'
+import { PRAuthorFilter } from './PRAuthorFilter'
 import css from './PullRequestsContentHeader.module.scss'
 
 interface PullRequestsContentHeaderProps extends Pick<GitInfoProps, 'repoMetadata'> {
@@ -68,13 +57,10 @@ export function PullRequestsContentHeader({
   const { getString } = useStrings()
   const browserParams = useQueryParams<PageBrowserProps>()
   const [filterOption, setFilterOption] = useState(activePullRequestFilterOption)
-  const [authorFilterOption, setAuthorFilterOption] = useState(activePullRequestAuthorFilterOption)
   const [labelFilterOption, setLabelFilterOption] = useState(activePullRequestLabelFilterOption)
   const [searchTerm, setSearchTerm] = useState('')
-  const [query, setQuery] = useState<string>('')
-  const [loadingAuthors, setLoadingAuthors] = useState<boolean>(false)
   const space = useGetSpaceParam()
-  const { hooks, currentUser, standalone, routingId, routes } = useAppContext()
+  const { hooks, standalone, routes } = useAppContext()
   const permPushResult = hooks?.usePermissionTranslate?.(
     {
       resource: {
@@ -99,85 +85,12 @@ export function PullRequestsContentHeader({
       { label: getString('open'), value: PullRequestFilterOption.OPEN },
       { label: getString('merged'), value: PullRequestFilterOption.MERGED },
       { label: getString('closed'), value: PullRequestFilterOption.CLOSED },
-      // { label: getString('draft'), value: PullRequestFilterOption.DRAFT },
-      // { label: getString('yours'), value: PullRequestFilterOption.YOURS },
       { label: getString('all'), value: PullRequestFilterOption.ALL }
     ],
     [getString]
   )
 
   const bearerToken = hooks?.useGetToken?.() || ''
-  const moveCurrentUserToTop = async (
-    authorsList: TypesPrincipalInfo[],
-    user: Required<TypesUser>,
-    userQuery: string
-  ): Promise<TypesPrincipalInfo[]> => {
-    const sortedList = sortBy(authorsList, item => item.display_name?.toLowerCase())
-    const updateList = (index: number, list: TypesPrincipalInfo[]) => {
-      if (index !== -1) {
-        const currentUserObj = list[index]
-        list.splice(index, 1)
-        list.unshift(currentUserObj)
-      }
-    }
-    if (userQuery) return sortedList
-    const targetIndex = sortedList.findIndex(obj => obj.uid === user.uid)
-    if (targetIndex !== -1) {
-      updateList(targetIndex, sortedList)
-    } else {
-      if (user) {
-        const newAuthorsList = await getUsingFetch(getConfig('code/api/v1'), `/principals`, bearerToken, {
-          queryParams: {
-            query: user?.display_name?.trim(),
-            type: 'user',
-            accountIdentifier: routingId
-          }
-        })
-        const mergedList = [...new Set(authorsList?.concat(newAuthorsList))]
-        const newSortedList = sortBy(mergedList, item => item.display_name?.toLowerCase())
-        const newIndex = newSortedList.findIndex(obj => obj.uid === user.uid)
-        updateList(newIndex, newSortedList)
-        return newSortedList
-      }
-    }
-    return sortedList
-  }
-
-  const getAuthorsPromise = async (): Promise<SelectOption[]> => {
-    setLoadingAuthors(true)
-    try {
-      const fetchedAuthors: TypesPrincipalInfo[] = await getUsingFetch(
-        getConfig('code/api/v1'),
-        `/principals`,
-        bearerToken,
-        {
-          queryParams: {
-            query: query?.trim(),
-            type: 'user',
-            accountIdentifier: routingId
-          }
-        }
-      )
-
-      const authors = [...fetchedAuthors, ...(activePullRequestAuthorObj ? [activePullRequestAuthorObj] : [])]
-
-      const authorsList = await moveCurrentUserToTop(authors, currentUser, query)
-
-      const updatedAuthorsList = Array.isArray(authorsList)
-        ? ([
-            ...(authorsList || []).map(item => ({
-              label: JSON.stringify({ displayName: item?.display_name, email: item?.email }),
-              value: String(item?.id)
-            }))
-          ] as SelectOption[])
-        : ([] as SelectOption[])
-      setLoadingAuthors(false)
-      return updatedAuthorsList
-    } catch (error) {
-      setLoadingAuthors(false)
-      throw error
-    }
-  }
 
   return (
     <Container className={css.main} padding="xlarge">
@@ -200,70 +113,16 @@ export function PullRequestsContentHeader({
           bearerToken={bearerToken}
           repoMetadata={repoMetadata}
           spaceRef={space}
+          filterScope={ScopeLevel.REPOSITORY}
         />
 
-        <DropDown
-          value={authorFilterOption}
-          items={() => getAuthorsPromise()}
-          disabled={loadingAuthors}
-          onChange={({ value, label }) => {
-            setAuthorFilterOption(label as string)
-            onPullRequestAuthorFilterChanged(value as string)
-          }}
-          popoverClassName={css.branchDropdown}
-          icon="nav-user-profile"
-          iconProps={{ size: 16 }}
-          placeholder={getString('selectAuthor')}
-          addClearBtn={true}
-          resetOnClose
-          resetOnSelect
-          resetOnQuery
-          query={query}
-          onQueryChange={newQuery => {
-            setQuery(newQuery)
-          }}
-          itemRenderer={(item, { handleClick }) => {
-            const itemObj = JSON.parse(item.label)
-            return (
-              <Layout.Horizontal
-                padding={{ top: 'small', right: 'small', bottom: 'small', left: 'small' }}
-                font={{ variation: FontVariation.BODY }}
-                className={css.authorDropdownItem}
-                onClick={handleClick}>
-                <Text color={Color.GREY_900} className={css.authorName} tooltipProps={{ isDark: true }}>
-                  <span>{itemObj.displayName}</span>
-                </Text>
-                <Text
-                  color={Color.GREY_400}
-                  font={{ variation: FontVariation.BODY }}
-                  lineClamp={1}
-                  tooltip={itemObj.email}>
-                  ({itemObj.email})
-                </Text>
-              </Layout.Horizontal>
-            )
-          }}
-          getCustomLabel={item => {
-            const itemObj = JSON.parse(item.label)
-            return (
-              <Layout.Horizontal spacing="small">
-                <Text
-                  color={Color.GREY_900}
-                  font={{ variation: FontVariation.BODY }}
-                  tooltip={
-                    <Text
-                      padding={{ top: 'medium', right: 'medium', bottom: 'medium', left: 'medium' }}
-                      color={Color.GREY_0}>
-                      {itemObj.email}
-                    </Text>
-                  }
-                  tooltipProps={{ isDark: true }}>
-                  {itemObj.displayName}
-                </Text>
-              </Layout.Horizontal>
-            )
-          }}
+        <PRAuthorFilter
+          onPullRequestAuthorFilterChanged={onPullRequestAuthorFilterChanged}
+          activePullRequestAuthorFilterOption={activePullRequestAuthorFilterOption}
+          activePullRequestAuthorObj={activePullRequestAuthorObj}
+          bearerToken={bearerToken}
         />
+
         <DropDown
           value={filterOption}
           items={items}

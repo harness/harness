@@ -133,6 +133,11 @@ export enum SettingsTab {
   labels = 'labels'
 }
 
+export enum SpacePRTabs {
+  CREATED = 'created',
+  REVIEW_REQUESTED = 'review_requested'
+}
+
 export enum SpaceSettingsTab {
   general = '/',
   labels = 'labels'
@@ -233,6 +238,12 @@ export const PullRequestFilterOption = {
   DRAFT: 'draft',
   YOURS: 'yours',
   ALL: 'all'
+}
+
+export const PullRequestReviewFilterOption = {
+  PENDING: 'pending',
+  APPROVED: 'approved',
+  CHANGES_REQUESTED: 'changereq'
 }
 
 export enum MergeStrategy {

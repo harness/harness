@@ -412,14 +412,17 @@ paths:
     get:
       operationId: listGitspaces
       parameters:
+        - description: The substring which is used to filter the gitspaces by their
+            name or idenitifer.
+          in: query
+          name: query
+          required: false
+          schema:
+            type: string
         - in: query
           name: sort
           schema:
-            enum:
-              - id
-              - created
-              - updated
-            type: string
+            $ref: '#/components/schemas/EnumGitspaceSort'
         - in: query
           name: order
           schema:
@@ -427,6 +430,16 @@ paths:
               - asc
               - desc
             type: string
+        - in: query
+          name: gitspace_owner
+          schema:
+            $ref: '#/components/schemas/EnumGitspaceOwner'
+        - in: query
+          name: gitspace_states
+          schema:
+            items:
+              $ref: '#/components/schemas/EnumGitspaceFilterState'
+            type: array
         - in: query
           name: page
           schema:
@@ -1500,7 +1513,7 @@ paths:
           name: order
           required: false
           schema:
-            default: asc
+            default: desc
             enum:
               - asc
               - desc
@@ -2143,9 +2156,7 @@ paths:
           content:
             application/json:
               schema:
-                items:
-                  $ref: '#/components/schemas/TypesListCommitResponse'
-                type: array
+                $ref: '#/components/schemas/TypesListCommitResponse'
           description: OK
         '401':
           content:
@@ -2288,6 +2299,12 @@ paths:
     get:
       operationId: getCommitDiff
       parameters:
+        - in: query
+          name: ignore_whitespace
+          required: false
+          schema:
+            default: false
+            type: boolean
         - in: path
           name: repo_ref
           required: true
@@ -2401,6 +2418,13 @@ paths:
           schema:
             default: false
             type: boolean
+        - description: Flatten directories that contain just one subdirectory.
+          in: query
+          name: flatten_directories
+          required: false
+          schema:
+            default: false
+            type: boolean
         - in: path
           name: repo_ref
           required: true
@@ -2503,6 +2527,12 @@ paths:
             items:
               type: string
             type: array
+        - in: query
+          name: ignore_whitespace
+          required: false
+          schema:
+            default: false
+            type: boolean
         - in: path
           name: repo_ref
           required: true
@@ -2553,6 +2583,12 @@ paths:
             items:
               type: string
             type: array
+        - in: query
+          name: ignore_whitespace
+          required: false
+          schema:
+            default: false
+            type: boolean
         - in: path
           name: repo_ref
           required: true
@@ -2599,6 +2635,12 @@ paths:
     post:
       operationId: rawDiffPost
       parameters:
+        - in: query
+          name: ignore_whitespace
+          required: false
+          schema:
+            default: false
+            type: boolean
         - in: path
           name: repo_ref
           required: true
@@ -2647,6 +2689,48 @@ paths:
           description: Internal Server Error
       tags:
         - repository
+  /repos/{repo_ref}/import-progress:
+    get:
+      operationId: importProgressRepository
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobProgress'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
   /repos/{repo_ref}/labels:
     get:
       operationId: listRepoLabels
@@ -2668,7 +2752,7 @@ paths:
             maximum: 100
             minimum: 1
             type: integer
-        - description: The result should inherit labels from parent parent spaces.
+        - description: The result should inherit entities from parent spaces.
           in: query
           name: inherited
           required: false
@@ -2864,6 +2948,65 @@ paths:
       responses:
         '204':
           description: No Content
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
+    get:
+      operationId: findRepoLabel
+      parameters:
+        - description: The result should include label values.
+          in: query
+          name: include_values
+          required: false
+          schema:
+            default: false
+            type: boolean
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: key
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesLabelWithValues'
+          description: Created
         '400':
           content:
             application/json:
@@ -3212,6 +3355,12 @@ paths:
             items:
               type: string
             type: array
+        - in: query
+          name: ignore_whitespace
+          required: false
+          schema:
+            default: false
+            type: boolean
         - in: path
           name: repo_ref
           required: true
@@ -3415,8 +3564,8 @@ paths:
     get:
       operationId: listPipelines
       parameters:
-        - description: The substring which is used to filter the repositories by their
-            path name.
+        - description: The substring which is used to filter the pipelines by their
+            names.
           in: query
           name: query
           required: false
@@ -3444,7 +3593,16 @@ paths:
           name: latest
           required: false
           schema:
+            default: false
             type: boolean
+        - description: The number of last executions to be returned
+          in: query
+          name: last_executions
+          required: false
+          schema:
+            default: 10
+            minimum: 1
+            type: integer
         - in: path
           name: repo_ref
           required: true
@@ -4406,7 +4564,7 @@ paths:
           name: order
           required: false
           schema:
-            default: asc
+            default: desc
             enum:
               - asc
               - desc
@@ -4543,6 +4701,29 @@ paths:
               type: string
             type: array
           style: form
+        - description: If true, the git diff stats would be included in the response.
+          in: query
+          name: include_git_stats
+          required: false
+          schema:
+            default: false
+            type: boolean
+        - description: If true, the summary of check for the branch commit SHA would
+            be included in the response.
+          in: query
+          name: include_checks
+          required: false
+          schema:
+            default: false
+            type: boolean
+        - description: If true, a list of rules that apply to this branch would be included
+            in the response.
+          in: query
+          name: include_rules
+          required: false
+          schema:
+            default: false
+            type: boolean
         - in: path
           name: repo_ref
           required: true
@@ -4633,6 +4814,22 @@ paths:
     get:
       operationId: getPullReq
       parameters:
+        - description: If true, the summary of check for the branch commit SHA would
+            be included in the response.
+          in: query
+          name: include_checks
+          required: false
+          schema:
+            default: false
+            type: boolean
+        - description: If true, a list of rules that apply to this branch would be included
+            in the response.
+          in: query
+          name: include_rules
+          required: false
+          schema:
+            default: false
+            type: boolean
         - in: path
           name: repo_ref
           required: true
@@ -4994,9 +5191,7 @@ paths:
           content:
             application/json:
               schema:
-                items:
-                  $ref: '#/components/schemas/TypesPullReqChecks'
-                type: array
+                $ref: '#/components/schemas/TypesPullReqChecks'
           description: OK
         '401':
           content:
@@ -5432,6 +5627,12 @@ paths:
             items:
               type: string
             type: array
+        - in: query
+          name: ignore_whitespace
+          required: false
+          schema:
+            default: false
+            type: boolean
         - in: path
           name: repo_ref
           required: true
@@ -5483,6 +5684,12 @@ paths:
     post:
       operationId: diffPullReqPost
       parameters:
+        - in: query
+          name: ignore_whitespace
+          required: false
+          schema:
+            default: false
+            type: boolean
         - in: path
           name: repo_ref
           required: true
@@ -6235,6 +6442,22 @@ paths:
           required: false
           schema:
             type: string
+        - description: If true, the summary of check for the branch commit SHA would
+            be included in the response.
+          in: query
+          name: include_checks
+          required: false
+          schema:
+            default: false
+            type: boolean
+        - description: If true, a list of rules that apply to this branch would be included
+            in the response.
+          in: query
+          name: include_rules
+          required: false
+          schema:
+            default: false
+            type: boolean
         - in: path
           name: repo_ref
           required: true
@@ -6520,7 +6743,7 @@ paths:
         - repository
   /repos/{repo_ref}/rules:
     get:
-      operationId: ruleList
+      operationId: repoRuleList
       parameters:
         - description: The substring by which the repository protection rules are filtered.
           in: query
@@ -6533,7 +6756,7 @@ paths:
           name: order
           required: false
           schema:
-            default: asc
+            default: desc
             enum:
               - asc
               - desc
@@ -6567,6 +6790,13 @@ paths:
             maximum: 100
             minimum: 1
             type: integer
+        - description: The result should inherit entities from parent spaces.
+          in: query
+          name: inherited
+          required: false
+          schema:
+            default: false
+            type: boolean
         - in: path
           name: repo_ref
           required: true
@@ -6608,7 +6838,7 @@ paths:
       tags:
         - repository
     post:
-      operationId: ruleAdd
+      operationId: repoRuleAdd
       parameters:
         - in: path
           name: repo_ref
@@ -6671,7 +6901,7 @@ paths:
         - repository
   /repos/{repo_ref}/rules/{rule_identifier}:
     delete:
-      operationId: ruleDelete
+      operationId: repoRuleDelete
       parameters:
         - in: path
           name: repo_ref
@@ -6713,7 +6943,7 @@ paths:
       tags:
         - repository
     get:
-      operationId: ruleGet
+      operationId: repoRuleGet
       parameters:
         - in: path
           name: repo_ref
@@ -6759,7 +6989,7 @@ paths:
       tags:
         - repository
     patch:
-      operationId: ruleUpdate
+      operationId: repoRuleUpdate
       parameters:
         - in: path
           name: repo_ref
@@ -7221,7 +7451,7 @@ paths:
           name: order
           required: false
           schema:
-            default: asc
+            default: desc
             enum:
               - asc
               - desc
@@ -7422,6 +7652,12 @@ paths:
           required: true
           schema:
             type: string
+      requestBody:
+        content:
+          application/octet-stream:
+            schema: {}
+        description: Binary file to upload
+        required: true
       responses:
         '201':
           content:
@@ -7476,6 +7712,8 @@ paths:
           schema:
             type: string
       responses:
+        '200':
+          description: OK
         '307':
           description: Temporary Redirect
         '400':
@@ -7538,7 +7776,7 @@ paths:
           name: order
           required: false
           schema:
-            default: asc
+            default: desc
             enum:
               - asc
               - desc
@@ -8320,210 +8558,6 @@ paths:
           description: Internal Server Error
       tags:
         - space
-  /spaces/{repo_ref}/pullreq:
-    get:
-      operationId: listSpacePullReq
-      parameters:
-        - description: The state of the pull requests to include in the result.
-          explode: true
-          in: query
-          name: state
-          required: false
-          schema:
-            items:
-              default: open
-              enum:
-                - closed
-                - merged
-                - open
-              type: string
-            type: array
-          style: form
-        - description: Source repository ref of the pull requests.
-          in: query
-          name: source_repo_ref
-          required: false
-          schema:
-            type: string
-        - description: Source branch of the pull requests.
-          in: query
-          name: source_branch
-          required: false
-          schema:
-            type: string
-        - description: Target branch of the pull requests.
-          in: query
-          name: target_branch
-          required: false
-          schema:
-            type: string
-        - description: The substring by which the pull requests are filtered.
-          in: query
-          name: query
-          required: false
-          schema:
-            type: string
-        - description: List of principal IDs who created pull requests.
-          explode: true
-          in: query
-          name: created_by
-          required: false
-          schema:
-            items:
-              type: integer
-            type: array
-          style: form
-        - description: The result should contain only entries created before this timestamp
-            (unix millis).
-          in: query
-          name: created_lt
-          required: false
-          schema:
-            minimum: 0
-            type: integer
-        - description: The result should contain only entries created after this timestamp
-            (unix millis).
-          in: query
-          name: created_gt
-          required: false
-          schema:
-            minimum: 0
-            type: integer
-        - description: The result should contain only entries updated before this timestamp
-            (unix millis).
-          in: query
-          name: updated_lt
-          required: false
-          schema:
-            minimum: 0
-            type: integer
-        - description: By providing this parameter the description would be excluded
-            from the response.
-          in: query
-          name: exclude_description
-          required: false
-          schema:
-            default: false
-            type: boolean
-        - description: The result should contain entries from the desired space and
-            of its subspaces.
-          in: query
-          name: include_subspaces
-          required: false
-          schema:
-            default: false
-            type: boolean
-        - description: The maximum number of results to return.
-          in: query
-          name: limit
-          required: false
-          schema:
-            default: 30
-            maximum: 100
-            minimum: 1
-            type: integer
-        - description: List of label ids used to filter pull requests.
-          explode: true
-          in: query
-          name: label_id
-          required: false
-          schema:
-            items:
-              type: integer
-            type: array
-          style: form
-        - description: List of label value ids used to filter pull requests.
-          explode: true
-          in: query
-          name: value_id
-          required: false
-          schema:
-            items:
-              type: integer
-            type: array
-          style: form
-        - description: Return only pull requests where this user is the author.
-          in: query
-          name: author_id
-          required: false
-          schema:
-            type: integer
-        - description: Return only pull requests where this user has created at least
-            one comment.
-          in: query
-          name: commenter_id
-          required: false
-          schema:
-            type: integer
-        - description: Return only pull requests where this user has been mentioned.
-          in: query
-          name: mentioned_id
-          required: false
-          schema:
-            type: integer
-        - description: Return only pull requests where this user has been added as a
-            reviewer.
-          in: query
-          name: reviewer_id
-          required: false
-          schema:
-            type: integer
-        - description: Require only this review decision of the reviewer. Requires reviewer_id
-            parameter.
-          explode: true
-          in: query
-          name: review_decision
-          required: false
-          schema:
-            items:
-              enum:
-                - approved
-                - changereq
-                - pending
-                - reviewed
-              type: string
-            type: array
-          style: form
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                items:
-                  $ref: '#/components/schemas/TypesPullReq'
-                type: array
-          description: OK
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Bad Request
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Unauthorized
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Forbidden
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Internal Server Error
-      tags:
-        - space
   /spaces/{space_ref}:
     delete:
       operationId: deleteSpace
@@ -8659,6 +8693,71 @@ paths:
           description: Internal Server Error
       tags:
         - space
+  /spaces/{space_ref}/checks/recent:
+    get:
+      operationId: listStatusCheckRecentSpace
+      parameters:
+        - description: The substring which is used to filter the status checks by their
+            Identifier.
+          in: query
+          name: query
+          required: false
+          schema:
+            type: string
+        - description: The timestamp (in Unix time millis) since the status checks have
+            been run.
+          in: query
+          name: since
+          required: false
+          schema:
+            type: integer
+        - description: The result should include entities from child spaces.
+          in: query
+          name: recursive
+          required: false
+          schema:
+            default: false
+            type: boolean
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  type: string
+                type: array
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - status_checks
   /spaces/{space_ref}/connectors:
     get:
       operationId: listConnectors
@@ -8699,6 +8798,100 @@ paths:
               schema:
                 items:
                   $ref: '#/components/schemas/TypesConnector'
+                type: array
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
+  /spaces/{space_ref}/executions:
+    get:
+      operationId: listSpaceExecutions
+      parameters:
+        - description: The substring which is used to filter the execution by their
+            pipeline names.
+          in: query
+          name: query
+          required: false
+          schema:
+            type: string
+        - description: The page to return.
+          in: query
+          name: page
+          required: false
+          schema:
+            default: 1
+            minimum: 1
+            type: integer
+        - description: The maximum number of results to return.
+          in: query
+          name: limit
+          required: false
+          schema:
+            default: 30
+            maximum: 100
+            minimum: 1
+            type: integer
+        - description: The data by which the executions are sorted.
+          in: query
+          name: sort
+          required: false
+          schema:
+            default: started
+            enum:
+              - finished
+              - started
+            type: string
+        - description: The order of the output.
+          in: query
+          name: order
+          required: false
+          schema:
+            default: desc
+            enum:
+              - asc
+              - desc
+            type: string
+        - description: The pipeline identifier whose executions are to be returned
+          in: query
+          name: pipeline_identifier
+          required: false
+          schema:
+            type: string
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TypesExecution'
                 type: array
           description: OK
         '401':
@@ -8812,6 +9005,53 @@ paths:
           description: Internal Server Error
       tags:
         - space
+  /spaces/{space_ref}/import:
+    post:
+      operationId: importSpaceRepositories
+      parameters:
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiImportRepositoriesRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpaceImportRepositoriesOutput'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
   /spaces/{space_ref}/labels:
     get:
       operationId: listSpaceLabels
@@ -8833,7 +9073,7 @@ paths:
             maximum: 100
             minimum: 1
             type: integer
-        - description: The result should inherit labels from parent parent spaces.
+        - description: The result should inherit entities from parent spaces.
           in: query
           name: inherited
           required: false
@@ -9029,6 +9269,65 @@ paths:
       responses:
         '204':
           description: No Content
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
+    get:
+      operationId: findSpaceLabel
+      parameters:
+        - description: The result should include label values.
+          in: query
+          name: include_values
+          required: false
+          schema:
+            default: false
+            type: boolean
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: key
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesLabelWithValues'
+          description: Created
         '400':
           content:
             application/json:
@@ -9380,7 +9679,7 @@ paths:
           name: order
           required: false
           schema:
-            default: asc
+            default: desc
             enum:
               - asc
               - desc
@@ -9647,6 +9946,82 @@ paths:
           description: Internal Server Error
       tags:
         - space
+  /spaces/{space_ref}/pipelines:
+    get:
+      operationId: listSpacePipelines
+      parameters:
+        - description: The substring which is used to filter the pipelines by their
+            names.
+          in: query
+          name: query
+          required: false
+          schema:
+            type: string
+        - description: The page to return.
+          in: query
+          name: page
+          required: false
+          schema:
+            default: 1
+            minimum: 1
+            type: integer
+        - description: The maximum number of results to return.
+          in: query
+          name: limit
+          required: false
+          schema:
+            default: 30
+            maximum: 100
+            minimum: 1
+            type: integer
+        - description: The number of last executions to be returned
+          in: query
+          name: last_executions
+          required: false
+          schema:
+            default: 10
+            minimum: 1
+            type: integer
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TypesPipeline'
+                type: array
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
   /spaces/{space_ref}/public-access:
     post:
       operationId: updateSpacePublicAccess
@@ -9692,6 +10067,233 @@ paths:
               schema:
                 $ref: '#/components/schemas/UsererrorError'
           description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
+  /spaces/{space_ref}/pullreq:
+    get:
+      operationId: listSpacePullReq
+      parameters:
+        - description: The state of the pull requests to include in the result.
+          explode: true
+          in: query
+          name: state
+          required: false
+          schema:
+            items:
+              default: open
+              enum:
+                - closed
+                - merged
+                - open
+              type: string
+            type: array
+          style: form
+        - description: Source repository ref of the pull requests.
+          in: query
+          name: source_repo_ref
+          required: false
+          schema:
+            type: string
+        - description: Source branch of the pull requests.
+          in: query
+          name: source_branch
+          required: false
+          schema:
+            type: string
+        - description: Target branch of the pull requests.
+          in: query
+          name: target_branch
+          required: false
+          schema:
+            type: string
+        - description: The substring by which the pull requests are filtered.
+          in: query
+          name: query
+          required: false
+          schema:
+            type: string
+        - description: List of principal IDs who created pull requests.
+          explode: true
+          in: query
+          name: created_by
+          required: false
+          schema:
+            items:
+              type: integer
+            type: array
+          style: form
+        - description: The result should contain only entries created before this timestamp
+            (unix millis).
+          in: query
+          name: created_lt
+          required: false
+          schema:
+            minimum: 0
+            type: integer
+        - description: The result should contain only entries created after this timestamp
+            (unix millis).
+          in: query
+          name: created_gt
+          required: false
+          schema:
+            minimum: 0
+            type: integer
+        - description: The result should contain only entries updated before this timestamp
+            (unix millis).
+          in: query
+          name: updated_lt
+          required: false
+          schema:
+            minimum: 0
+            type: integer
+        - description: By providing this parameter the description would be excluded
+            from the response.
+          in: query
+          name: exclude_description
+          required: false
+          schema:
+            default: false
+            type: boolean
+        - description: The result should contain entries from the desired space and
+            of its subspaces.
+          in: query
+          name: include_subspaces
+          required: false
+          schema:
+            default: false
+            type: boolean
+        - description: The maximum number of results to return.
+          in: query
+          name: limit
+          required: false
+          schema:
+            default: 30
+            maximum: 100
+            minimum: 1
+            type: integer
+        - description: List of label ids used to filter pull requests.
+          explode: true
+          in: query
+          name: label_id
+          required: false
+          schema:
+            items:
+              type: integer
+            type: array
+          style: form
+        - description: List of label value ids used to filter pull requests.
+          explode: true
+          in: query
+          name: value_id
+          required: false
+          schema:
+            items:
+              type: integer
+            type: array
+          style: form
+        - description: Return only pull requests where this user is the author.
+          in: query
+          name: author_id
+          required: false
+          schema:
+            type: integer
+        - description: Return only pull requests where this user has created at least
+            one comment.
+          in: query
+          name: commenter_id
+          required: false
+          schema:
+            type: integer
+        - description: Return only pull requests where this user has been mentioned.
+          in: query
+          name: mentioned_id
+          required: false
+          schema:
+            type: integer
+        - description: Return only pull requests where this user has been added as a
+            reviewer.
+          in: query
+          name: reviewer_id
+          required: false
+          schema:
+            type: integer
+        - description: Require only this review decision of the reviewer. Requires reviewer_id
+            parameter.
+          explode: true
+          in: query
+          name: review_decision
+          required: false
+          schema:
+            items:
+              enum:
+                - approved
+                - changereq
+                - pending
+                - reviewed
+              type: string
+            type: array
+          style: form
+        - description: If true, the git diff stats would be included in the response.
+          in: query
+          name: include_git_stats
+          required: false
+          schema:
+            default: false
+            type: boolean
+        - description: If true, the summary of check for the branch commit SHA would
+            be included in the response.
+          in: query
+          name: include_checks
+          required: false
+          schema:
+            default: false
+            type: boolean
+        - description: If true, a list of rules that apply to this branch would be included
+            in the response.
+          in: query
+          name: include_rules
+          required: false
+          schema:
+            default: false
+            type: boolean
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TypesPullReqRepo'
+                type: array
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
         '500':
           content:
             application/json:
@@ -9771,7 +10373,7 @@ paths:
           name: order
           required: false
           schema:
-            default: asc
+            default: desc
             enum:
               - asc
               - desc
@@ -9866,6 +10468,323 @@ paths:
               schema:
                 $ref: '#/components/schemas/UsererrorError'
           description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
+  /spaces/{space_ref}/rules:
+    get:
+      operationId: spaceRuleList
+      parameters:
+        - description: The substring by which the repository protection rules are filtered.
+          in: query
+          name: query
+          required: false
+          schema:
+            type: string
+        - description: The order of the output.
+          in: query
+          name: order
+          required: false
+          schema:
+            default: desc
+            enum:
+              - asc
+              - desc
+            type: string
+        - description: The field by which the protection rules are sorted.
+          in: query
+          name: sort
+          required: false
+          schema:
+            default: created_at
+            enum:
+              - created_at
+              - identifier
+              - uid
+              - updated_at
+            type: string
+        - description: The page to return.
+          in: query
+          name: page
+          required: false
+          schema:
+            default: 1
+            minimum: 1
+            type: integer
+        - description: The maximum number of results to return.
+          in: query
+          name: limit
+          required: false
+          schema:
+            default: 30
+            maximum: 100
+            minimum: 1
+            type: integer
+        - description: The result should inherit entities from parent spaces.
+          in: query
+          name: inherited
+          required: false
+          schema:
+            default: false
+            type: boolean
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/OpenapiRule'
+                type: array
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
+    post:
+      operationId: spaceRuleAdd
+      parameters:
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                definition:
+                  $ref: '#/components/schemas/OpenapiRuleDefinition'
+                description:
+                  type: string
+                identifier:
+                  type: string
+                pattern:
+                  $ref: '#/components/schemas/ProtectionPattern'
+                state:
+                  $ref: '#/components/schemas/EnumRuleState'
+                type:
+                  $ref: '#/components/schemas/OpenapiRuleType'
+                uid:
+                  deprecated: true
+                  type: string
+              type: object
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenapiRule'
+          description: Created
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
+  /spaces/{space_ref}/rules/{rule_identifier}:
+    delete:
+      operationId: spaceRuleDelete
+      parameters:
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: rule_identifier
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No Content
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
+    get:
+      operationId: spaceRuleGet
+      parameters:
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: rule_identifier
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenapiRule'
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
+    patch:
+      operationId: spaceRuleUpdate
+      parameters:
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: rule_identifier
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                definition:
+                  $ref: '#/components/schemas/OpenapiRuleDefinition'
+                description:
+                  nullable: true
+                  type: string
+                identifier:
+                  nullable: true
+                  type: string
+                pattern:
+                  $ref: '#/components/schemas/ProtectionPattern'
+                state:
+                  $ref: '#/components/schemas/EnumRuleState'
+                type:
+                  $ref: '#/components/schemas/OpenapiRuleType'
+                uid:
+                  deprecated: true
+                  nullable: true
+                  type: string
+              type: object
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenapiRule'
+          description: OK
         '401':
           content:
             application/json:
@@ -10031,7 +10950,7 @@ paths:
           name: order
           required: false
           schema:
-            default: asc
+            default: desc
             enum:
               - asc
               - desc
@@ -10161,6 +11080,42 @@ paths:
           description: Internal Server Error
       tags:
         - space
+  /spaces/{space_ref}/usage/metric:
+    get:
+      operationId: getSpaceUsageMetric
+      parameters:
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesUsageMetric'
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
   /spaces/{space_ref}/webhooks:
     get:
       operationId: listSpaceWebhooks
@@ -10189,7 +11144,7 @@ paths:
           name: order
           required: false
           schema:
-            default: asc
+            default: desc
             enum:
               - asc
               - desc
@@ -10631,25 +11586,7 @@ paths:
         content:
           application/json:
             schema:
-              properties:
-                description:
-                  type: string
-                identifier:
-                  type: string
-                is_public:
-                  type: boolean
-                parent_ref:
-                  type: string
-                pipelines:
-                  $ref: '#/components/schemas/ImporterPipelineOption'
-                provider:
-                  $ref: '#/components/schemas/ImporterProvider'
-                provider_space:
-                  type: string
-                uid:
-                  deprecated: true
-                  type: string
-              type: object
+              $ref: '#/components/schemas/SpaceImportInput'
       responses:
         '201':
           content:
@@ -10962,7 +11899,7 @@ paths:
           name: order
           required: false
           schema:
-            default: asc
+            default: desc
             enum:
               - asc
               - desc
@@ -11060,7 +11997,7 @@ paths:
           name: order
           required: false
           schema:
-            default: asc
+            default: desc
             enum:
               - asc
               - desc
@@ -11335,6 +12272,12 @@ components:
         - agent_gitspace_state_report_unknown
         - gitspace_action_auto_stop
       type: string
+    EnumGitspaceFilterState:
+      enum:
+        - error
+        - running
+        - stopped
+      type: string
     EnumGitspaceInstanceStateType:
       enum:
         - running
@@ -11344,6 +12287,17 @@ components:
         - deleted
         - starting
         - stopping
+      type: string
+    EnumGitspaceOwner:
+      enum:
+        - all
+        - self
+      type: string
+    EnumGitspaceSort:
+      enum:
+        - created
+        - last_activated
+        - last_used
       type: string
     EnumGitspaceStateType:
       enum:
@@ -11358,12 +12312,21 @@ components:
       enum:
         - vs_code
         - vs_code_web
+        - intellij
+        - pycharm
+        - goland
+        - webstorm
+        - clion
+        - phpstorm
+        - rubymine
+        - rider
       type: string
     EnumInfraProviderType:
       enum:
         - docker
         - harness_gcp
         - harness_cloud
+        - hybrid_vm_gcp
       type: string
     EnumLabelColor:
       enum:
@@ -11463,6 +12426,7 @@ components:
         - open
       type: string
     EnumRepoState:
+      nullable: true
       type: integer
     EnumResolverType:
       type: string
@@ -11515,10 +12479,13 @@ components:
         - pullreq_branch_updated
         - pullreq_closed
         - pullreq_comment_created
+        - pullreq_comment_status_updated
+        - pullreq_comment_updated
         - pullreq_created
         - pullreq_label_assigned
         - pullreq_merged
         - pullreq_reopened
+        - pullreq_review_submitted
         - pullreq_updated
         - tag_created
         - tag_deleted
@@ -11603,6 +12570,7 @@ components:
           $ref: '#/components/schemas/EnumFileDiffStatus'
       type: object
     GitIdentity:
+      nullable: true
       properties:
         email:
           type: string
@@ -11650,46 +12618,6 @@ components:
         - gogs
         - azure
       type: string
-    InfraproviderResourceInput:
-      properties:
-        cpu:
-          nullable: true
-          type: string
-        disk:
-          nullable: true
-          type: string
-        gateway_host:
-          nullable: true
-          type: string
-        gateway_port:
-          nullable: true
-          type: string
-        identifier:
-          type: string
-        infra_provider_type:
-          $ref: '#/components/schemas/EnumInfraProviderType'
-        memory:
-          nullable: true
-          type: string
-        metadata:
-          additionalProperties:
-            type: string
-          nullable: true
-          type: object
-        name:
-          type: string
-        network:
-          nullable: true
-          type: string
-        region:
-          items:
-            type: string
-          nullable: true
-          type: array
-        template_identifier:
-          nullable: true
-          type: string
-      type: object
     JobProgress:
       properties:
         failure:
@@ -11810,6 +12738,8 @@ components:
             $ref: '#/components/schemas/RepoCommitFileAction'
           nullable: true
           type: array
+        author:
+          $ref: '#/components/schemas/GitIdentity'
         branch:
           type: string
         bypass_rules:
@@ -11892,6 +12822,8 @@ components:
           $ref: '#/components/schemas/EnumIDEType'
         identifier:
           type: string
+        infra_provider_config_identifier:
+          type: string
         metadata:
           additionalProperties:
             type: string
@@ -11913,17 +12845,11 @@ components:
         identifier:
           type: string
         metadata:
-          additionalProperties:
-            type: string
+          additionalProperties: {}
           nullable: true
           type: object
         name:
           type: string
-        resources:
-          items:
-            $ref: '#/components/schemas/InfraproviderResourceInput'
-          nullable: true
-          type: array
         space_ref:
           type: string
         type:
@@ -11947,10 +12873,22 @@ components:
       type: object
     OpenapiCreatePullReqRequest:
       properties:
+        bypass_rules:
+          type: boolean
         description:
           type: string
         is_draft:
           type: boolean
+        labels:
+          items:
+            $ref: '#/components/schemas/TypesPullReqLabelAssignInput'
+          nullable: true
+          type: array
+        reviewer_ids:
+          items:
+            type: integer
+          nullable: true
+          type: array
         source_branch:
           type: string
         source_repo_ref:
@@ -12153,6 +13091,15 @@ components:
         type:
           $ref: '#/components/schemas/OpenapiContentType'
       type: object
+    OpenapiImportRepositoriesRequest:
+      properties:
+        pipelines:
+          $ref: '#/components/schemas/ImporterPipelineOption'
+        provider:
+          $ref: '#/components/schemas/ImporterProvider'
+        provider_space:
+          type: string
+      type: object
     OpenapiLoginRequest:
       properties:
         login_identifier:
@@ -12289,6 +13236,8 @@ components:
           type: string
         pattern:
           $ref: '#/components/schemas/ProtectionPattern'
+        scope:
+          type: integer
         state:
           $ref: '#/components/schemas/EnumRuleState'
         type:
@@ -12382,6 +13331,8 @@ components:
         description:
           nullable: true
           type: string
+        state:
+          $ref: '#/components/schemas/EnumRepoState'
       type: object
     OpenapiUpdateRepoWebhookRequest:
       properties:
@@ -12542,6 +13493,8 @@ components:
           type: integer
         parent_type:
           $ref: '#/components/schemas/EnumWebhookParent'
+        scope:
+          type: integer
         triggers:
           items:
             $ref: '#/components/schemas/EnumWebhookTrigger'
@@ -12570,6 +13523,8 @@ components:
         require_latest_commit:
           type: boolean
         require_minimum_count:
+          type: integer
+        require_minimum_default_reviewer_count:
           type: integer
         require_no_change_request:
           type: boolean
@@ -12622,8 +13577,19 @@ components:
           $ref: '#/components/schemas/ProtectionDefComments'
         merge:
           $ref: '#/components/schemas/ProtectionDefMerge'
+        reviewers:
+          $ref: '#/components/schemas/ProtectionDefReviewers'
         status_checks:
           $ref: '#/components/schemas/ProtectionDefStatusChecks'
+      type: object
+    ProtectionDefReviewers:
+      properties:
+        default_reviewer_ids:
+          items:
+            type: integer
+          type: array
+        request_code_owners:
+          type: boolean
       type: object
     ProtectionDefStatusChecks:
       properties:
@@ -12787,6 +13753,8 @@ components:
           type: boolean
         is_public:
           type: boolean
+        last_git_push:
+          type: integer
         num_closed_pulls:
           type: integer
         num_forks:
@@ -12861,13 +13829,28 @@ components:
           nullable: true
           type: array
       type: object
+    SpaceImportInput:
+      properties:
+        description:
+          type: string
+        identifier:
+          type: string
+        is_public:
+          type: boolean
+        parent_ref:
+          type: string
+        pipelines:
+          $ref: '#/components/schemas/ImporterPipelineOption'
+        provider:
+          $ref: '#/components/schemas/ImporterProvider'
+        provider_space:
+          type: string
+        uid:
+          deprecated: true
+          type: string
+      type: object
     SpaceImportRepositoriesOutput:
       properties:
-        duplicate_repos:
-          items:
-            $ref: '#/components/schemas/RepoRepositoryOutput'
-          nullable: true
-          type: array
         importing_repos:
           items:
             $ref: '#/components/schemas/RepoRepositoryOutput'
@@ -13181,6 +14164,22 @@ components:
         sha:
           $ref: '#/components/schemas/ShaSHA'
       type: object
+    TypesDefaultReviewerApprovalsResponse:
+      properties:
+        current_count:
+          type: integer
+        minimum_required_count:
+          type: integer
+        minimum_required_count_latest:
+          type: integer
+        principals:
+          items:
+            $ref: '#/components/schemas/TypesPrincipalInfo'
+          nullable: true
+          type: array
+        rule_info:
+          $ref: '#/components/schemas/TypesRuleInfo'
+      type: object
     TypesDeleteBranchOutput:
       properties:
         dry_run_rules:
@@ -13253,10 +14252,14 @@ components:
           type: integer
         pipeline_id:
           type: integer
+        pipeline_uid:
+          type: string
         ref:
           type: string
         repo_id:
           type: integer
+        repo_uid:
+          type: string
         sender:
           type: string
         source:
@@ -13284,12 +14287,22 @@ components:
       type: object
     TypesExecutionInfo:
       properties:
+        created_by:
+          type: integer
+        event:
+          $ref: '#/components/schemas/EnumTriggerEvent'
+        finished:
+          type: integer
         number:
           type: integer
         pipeline_id:
           type: integer
+        started:
+          type: integer
         status:
           $ref: '#/components/schemas/EnumCIStatus'
+        trigger:
+          type: string
       type: object
     TypesGithubConnectorData:
       properties:
@@ -13303,6 +14316,8 @@ components:
     TypesGitspaceConfig:
       properties:
         branch:
+          type: string
+        branch_url:
           type: string
         code_repo_is_private:
           type: boolean
@@ -13324,6 +14339,8 @@ components:
           type: string
         instance:
           $ref: '#/components/schemas/TypesGitspaceInstance'
+        log_key:
+          type: string
         name:
           type: string
         resource:
@@ -13379,6 +14396,9 @@ components:
           type: integer
         created:
           type: integer
+        error_message:
+          nullable: true
+          type: string
         has_git_changes:
           nullable: true
           type: boolean
@@ -13422,8 +14442,7 @@ components:
         identifier:
           type: string
         metadata:
-          additionalProperties:
-            type: string
+          additionalProperties: {}
           nullable: true
           type: object
         name:
@@ -13433,6 +14452,8 @@ components:
             $ref: '#/components/schemas/TypesInfraProviderResource'
           nullable: true
           type: array
+        setup_yaml:
+          type: string
         space_path:
           type: string
         type:
@@ -13449,6 +14470,9 @@ components:
           type: string
         created:
           type: integer
+        deleted:
+          nullable: true
+          type: integer
         disk:
           nullable: true
           type: string
@@ -13456,6 +14480,8 @@ components:
           type: string
         infra_provider_type:
           $ref: '#/components/schemas/EnumInfraProviderType'
+        is_deleted:
+          type: boolean
         memory:
           nullable: true
           type: string
@@ -13472,9 +14498,6 @@ components:
         region:
           type: string
         space_path:
-          type: string
-        template_identifier:
-          nullable: true
           type: string
         updated:
           type: integer
@@ -13493,6 +14516,8 @@ components:
           type: integer
         key:
           type: string
+        pullreq_count:
+          type: integer
         repo_id:
           nullable: true
           type: integer
@@ -13591,7 +14616,6 @@ components:
         values:
           items:
             $ref: '#/components/schemas/TypesLabelValue'
-          nullable: true
           type: array
       type: object
     TypesListCommitResponse:
@@ -13646,6 +14670,10 @@ components:
         conflict_files:
           items:
             type: string
+          type: array
+        default_reviewer_aprovals:
+          items:
+            $ref: '#/components/schemas/TypesDefaultReviewerApprovalsResponse'
           type: array
         dry_run:
           type: boolean
@@ -13778,9 +14806,12 @@ components:
           type: integer
       type: object
     TypesPullReq:
+      nullable: true
       properties:
         author:
           $ref: '#/components/schemas/TypesPrincipalInfo'
+        check_summary:
+          $ref: '#/components/schemas/TypesCheckCountSummary'
         closed:
           nullable: true
           type: integer
@@ -13821,6 +14852,10 @@ components:
         rebase_conflicts:
           items:
             type: string
+          type: array
+        rules:
+          items:
+            $ref: '#/components/schemas/TypesRuleInfo'
           type: array
         source_branch:
           type: string
@@ -13959,6 +14994,23 @@ components:
           nullable: true
           type: integer
       type: object
+    TypesPullReqLabelAssignInput:
+      properties:
+        label_id:
+          type: integer
+        value:
+          type: string
+        value_id:
+          nullable: true
+          type: integer
+      type: object
+    TypesPullReqRepo:
+      properties:
+        pull_request:
+          $ref: '#/components/schemas/TypesPullReq'
+        repository:
+          $ref: '#/components/schemas/TypesRepositoryCore'
+      type: object
     TypesPullReqReviewer:
       properties:
         added_by:
@@ -14028,53 +15080,19 @@ components:
         old_path:
           type: string
       type: object
-    TypesRepository:
+    TypesRepositoryCore:
+      nullable: true
       properties:
-        created:
-          type: integer
-        created_by:
-          type: integer
         default_branch:
-          type: string
-        deleted:
-          nullable: true
-          type: integer
-        description:
-          type: string
-        fork_id:
-          type: integer
-        git_ssh_url:
-          type: string
-        git_url:
           type: string
         id:
           type: integer
         identifier:
           type: string
-        is_empty:
-          type: boolean
-        num_closed_pulls:
-          type: integer
-        num_forks:
-          type: integer
-        num_merged_pulls:
-          type: integer
-        num_open_pulls:
-          type: integer
-        num_pulls:
-          type: integer
         parent_id:
           type: integer
         path:
           type: string
-        size:
-          type: integer
-        size_updated:
-          type: integer
-        state:
-          $ref: '#/components/schemas/EnumRepoState'
-        updated:
-          type: integer
       type: object
     TypesRepositoryPullReqSummary:
       properties:
@@ -14160,11 +15178,11 @@ components:
     TypesScopeData:
       properties:
         repository:
-          $ref: '#/components/schemas/TypesRepository'
+          $ref: '#/components/schemas/TypesRepositoryCore'
         scope:
           type: integer
         space:
-          $ref: '#/components/schemas/TypesSpace'
+          $ref: '#/components/schemas/TypesSpaceCore'
       type: object
     TypesScopesLabels:
       properties:
@@ -14249,6 +15267,17 @@ components:
           type: string
         updated:
           type: integer
+      type: object
+    TypesSpaceCore:
+      properties:
+        id:
+          type: integer
+        identifier:
+          type: string
+        parent_id:
+          type: integer
+        path:
+          type: string
       type: object
     TypesSquashResponse:
       properties:
@@ -14419,6 +15448,15 @@ components:
         updated:
           type: integer
       type: object
+    TypesUsageMetric:
+      properties:
+        bandwidth:
+          type: integer
+        root_space_id:
+          type: integer
+        storage:
+          type: integer
+      type: object
     TypesUser:
       properties:
         admin:
@@ -14440,10 +15478,14 @@ components:
       properties:
         description:
           type: string
+        id:
+          type: integer
         identifier:
           type: string
         name:
           type: string
+        scope:
+          type: integer
       type: object
     TypesUserGroupOwnerEvaluation:
       properties:

@@ -26,7 +26,7 @@ import LabelsListing from 'pages/Labels/LabelsListing'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import type { CODEProps } from 'RouteDefinitions'
 import { useGetCurrentPageScope } from 'hooks/useGetCurrentPageScope'
-import css from './ManageRepositories.module.scss'
+import css from '../ManageSpace.module.scss'
 
 export default function ManageRepositories() {
   const { settingSection } = useParams<CODEProps>()

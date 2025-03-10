@@ -132,6 +132,8 @@ export interface PageBrowserProps {
   page?: string
   state?: string
   tab?: string
+  review?: string
+  subspace?: ScopeLevelEnum
 }
 
 export const extractInfoFromRuleViolationArr = (ruleViolationArr: TypesRuleViolations[]) => {
@@ -429,6 +431,11 @@ export const ButtonRoleProps = {
   style: { cursor: 'pointer ' }
 }
 
+export enum ScopeLevel {
+  REPOSITORY = 'repos',
+  SPACE = 'space'
+}
+
 export enum orderSortDate {
   ASC = 'asc',
   DESC = 'desc'
@@ -678,6 +685,11 @@ export function formatBytes(bytes: number, decimals = 2) {
 export enum ScopeLevelEnum {
   ALL = 'all',
   CURRENT = 'current'
+}
+
+export enum PageAction {
+  NEXT = 'next',
+  PREV = 'previous'
 }
 
 export enum PullRequestCheckType {

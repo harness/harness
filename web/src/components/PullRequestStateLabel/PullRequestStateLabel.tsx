@@ -23,7 +23,7 @@ import { useStrings } from 'framework/strings'
 import type { TypesPullReq } from 'services/code'
 import css from './PullRequestStateLabel.module.scss'
 
-export const PullRequestStateLabel: React.FC<{ data: TypesPullReq; iconSize?: number; iconOnly?: boolean }> = ({
+export const PullRequestStateLabel: React.FC<{ data?: TypesPullReq; iconSize?: number; iconOnly?: boolean }> = ({
   data,
   iconSize = 20,
   iconOnly = false
@@ -51,7 +51,7 @@ export const PullRequestStateLabel: React.FC<{ data: TypesPullReq; iconSize?: nu
       css: css.open
     }
   }
-  const map = data.is_draft ? maps.draft : maps[data.state || 'unknown']
+  const map = data?.is_draft ? maps.draft : maps[data?.state || 'unknown']
 
   return (
     <Text
@@ -60,7 +60,7 @@ export const PullRequestStateLabel: React.FC<{ data: TypesPullReq; iconSize?: nu
       icon={map.icon as IconName}
       iconProps={{ size: iconOnly ? iconSize : 12 }}>
       {!iconOnly && (
-        <StringSubstitute str={getString('pr.state')} vars={{ state: data.is_draft ? 'draft' : data.state }} />
+        <StringSubstitute str={getString('pr.state')} vars={{ state: data?.is_draft ? 'draft' : data?.state }} />
       )}
     </Text>
   )

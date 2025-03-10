@@ -40,6 +40,7 @@ import {
   LIST_FETCHING_LIMIT,
   LabelFilterObj,
   LabelFilterType,
+  ScopeLevel,
   getErrorMessage,
   getScopeData
 } from 'utils/Utils'
@@ -53,8 +54,9 @@ interface LabelFilterProps {
   setLabelFilterOption: React.Dispatch<React.SetStateAction<LabelFilterObj[] | undefined>>
   onPullRequestLabelFilterChanged: (labelFilter: LabelFilterObj[]) => void
   bearerToken: string
-  repoMetadata: RepoRepositoryOutput
   spaceRef: string
+  filterScope: ScopeLevel
+  repoMetadata?: RepoRepositoryOutput
 }
 
 enum utilFilterType {
@@ -76,6 +78,7 @@ export const LabelFilter = (props: LabelFilterProps) => {
     onPullRequestLabelFilterChanged,
     bearerToken,
     repoMetadata,
+    filterScope,
     spaceRef
   } = props
   const { showError } = useToaster()
@@ -90,22 +93,36 @@ export const LabelFilter = (props: LabelFilterProps) => {
   const [labelItems, setLabelItems] = useState<SelectOption[]>()
   const { getString } = useStrings()
 
+  const [accountIdentifier, orgIdentifier, projectIdentifier] = spaceRef?.split('/') || []
+
+  const getLabelsOnRepoScope = () =>
+    getUsingFetch(getConfig('code/api/v1'), `/repos/${repoMetadata?.path}/+/labels`, bearerToken, {
+      queryParams: {
+        page: 1,
+        limit: LIST_FETCHING_LIMIT,
+        inherited: true,
+        query: labelQuery?.trim(),
+        accountIdentifier: routingId
+      }
+    })
+
+  const getLabelsOnSpaceScope = () =>
+    getUsingFetch(getConfig('code/api/v1'), `/labels`, bearerToken, {
+      queryParams: {
+        accountIdentifier: accountIdentifier ?? routingId,
+        orgIdentifier,
+        projectIdentifier,
+        page: 1,
+        limit: LIST_FETCHING_LIMIT,
+        inherited: true,
+        query: labelQuery?.trim()
+      }
+    })
+
   const getDropdownLabels = async (currentFilterOption?: LabelFilterObj[]) => {
     try {
-      const fetchedLabels: TypesLabel[] = await getUsingFetch(
-        getConfig('code/api/v1'),
-        `/repos/${repoMetadata?.path}/+/labels`,
-        bearerToken,
-        {
-          queryParams: {
-            page: 1,
-            limit: LIST_FETCHING_LIMIT,
-            inherited: true,
-            query: labelQuery?.trim(),
-            accountIdentifier: routingId
-          }
-        }
-      )
+      const fetchedLabels: TypesLabel[] =
+        filterScope === ScopeLevel.SPACE ? await getLabelsOnSpaceScope() : await getLabelsOnRepoScope()
       const updateLabelsList = mapToSelectOptions(fetchedLabels)
       const labelForTop = mapToSelectOptions(currentFilterOption?.map(({ labelObj }) => labelObj))
       const mergedArray = [...labelForTop, ...updateLabelsList]

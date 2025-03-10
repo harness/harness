@@ -39,7 +39,8 @@ export const defaultCurrentUser: Required<TypesUser> = {
   updated: 0,
   display_name: '',
   email: '',
-  uid: ''
+  uid: '',
+  id: 0
 }
 
 const AppContext = React.createContext<AppContextProps>({

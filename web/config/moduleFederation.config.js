@@ -52,6 +52,7 @@ module.exports = {
     './Webhooks': './src/pages/Webhooks/Webhooks.tsx',
     './WebhookNew': './src/pages/WebhookNew/WebhookNew.tsx',
     './Search': './src/pages/Search/CodeSearchPage.tsx',
+    './SpacePullRequests': '/src/pages/ManageSpace/SpacePullRequests/SpacePullRequests.tsx',
     './Labels': './src/pages/ManageSpace/ManageRepositories/ManageRepositories.tsx',
     './WebhookDetails': './src/pages/WebhookDetails/WebhookDetails.tsx',
     './NewRepoModalButton': './src/components/NewRepoModalButton/NewRepoModalButton.tsx',

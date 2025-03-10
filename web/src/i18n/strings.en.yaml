@@ -364,6 +364,9 @@ pr:
   checks: Checks
   checksFailure: '{failedCount}/{total} checks failed'
   addDescription: Add Description
+  reviewRequested: Review Requested
+  changesRequested: Changes Requested
+  myPRs: My Pull Requests
 prState:
   draftHeading: This pull request is still a work in progress
   draftDesc: Draft pull requests cannot be merged.
@@ -383,6 +386,7 @@ prReview:
   selfAssigned: '{reviewer} self-requested a review'
   removed: '{author} removed the request for review from {reviewer}'
   selfRemoved: '{author} removed their request for review'
+  filterByReviews: Filter by Reviews
 webhookListingContent: 'create,delete,deployment ...'
 general: 'General'
 webhooks: 'Webhooks'
@@ -551,7 +555,8 @@ zoomIn: Zoom In
 zoomOut: Zoom Out
 checks: Checks
 blameCommitLine: '{author} committed {timestamp}'
-selectAuthor: Select Author
+filterByAuthor: Filter by Author
+includeSubspacePR: Include sub-space PRs
 tooltipRepoEdit: You are not authorized to {PERMS}
 missingPerms: 'You are missing the following permission:'
 createRepoPerms: 'Create / Edit Repository'

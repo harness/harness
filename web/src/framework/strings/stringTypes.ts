@@ -441,6 +441,7 @@ export interface StringsMap {
   fileTooLarge: string
   files: string
   filesChanged: string
+  filterByAuthor: string
   findATag: string
   findAUser: string
   findBranch: string
@@ -522,6 +523,7 @@ export interface StringsMap {
   'importSpace.title': string
   in: string
   inactiveBranches: string
+  includeSubspacePR: string
   invalidResponse: string
   isRequired: string
   italic: string
@@ -779,6 +781,7 @@ export interface StringsMap {
   'pr.branchHasNoConflicts': string
   'pr.cantBeMerged': string
   'pr.cantMerge': string
+  'pr.changesRequested': string
   'pr.checkingToMerge': string
   'pr.checks': string
   'pr.checksFailure': string
@@ -826,6 +829,7 @@ export interface StringsMap {
   'pr.metaLine': string
   'pr.modalTitle': string
   'pr.moreComments': string
+  'pr.myPRs': string
   'pr.openForReview': string
   'pr.outdated': string
   'pr.prBranchDeleteInfo': string
@@ -847,6 +851,7 @@ export interface StringsMap {
   'pr.requestSubmitted': string
   'pr.requestedChanges': string
   'pr.reviewChanges': string
+  'pr.reviewRequested': string
   'pr.reviewSubmitted': string
   'pr.showDiff': string
   'pr.showLink': string
@@ -876,6 +881,7 @@ export interface StringsMap {
   prHasNoConflicts: string
   prMustSelectSourceAndTargetBranches: string
   'prReview.assigned': string
+  'prReview.filterByReviews': string
   'prReview.removed': string
   'prReview.requested': string
   'prReview.selfAssigned': string
@@ -1023,7 +1029,6 @@ export interface StringsMap {
   'securitySettings.vulnerabilityScanning': string
   'securitySettings.vulnerabilityScanningDesc': string
   seeNMoreMatches: string
-  selectAuthor: string
   selectBranchPlaceHolder: string
   selectLanguagePlaceholder: string
   selectMergeStrat: string

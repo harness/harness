@@ -1586,6 +1586,17 @@ export interface TypesRepository {
   updated?: number
 }
 
+export interface TypesPullReqLabelAssignInput {
+  label_id?: number
+  value?: string
+  value_id?: number | null
+}
+
+export interface TypesPullReqRepo {
+  pull_request?: TypesPullReq
+  repository?: TypesRepository
+}
+
 export interface TypesRepositoryPullReqSummary {
   closed_count?: number
   merged_count?: number
@@ -1783,6 +1794,7 @@ export interface TypesUser {
   created?: number
   display_name?: string
   email?: string
+  id?: number
   uid?: string
   updated?: number
 }

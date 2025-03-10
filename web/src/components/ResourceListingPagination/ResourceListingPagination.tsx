@@ -106,7 +106,7 @@ interface PrevNextPaginationProps {
   skipLayout?: boolean
 }
 
-function PrevNextPagination({ onPrev, onNext, skipLayout }: PrevNextPaginationProps) {
+export function PrevNextPagination({ onPrev, onNext, skipLayout }: PrevNextPaginationProps) {
   const { getString } = useStrings()
 
   return (
