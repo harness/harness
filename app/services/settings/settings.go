@@ -24,4 +24,6 @@ var (
 	DefaultFileSizeLimit             = int64(1e+8) // 100 MB
 	KeyInstallID                 Key = "install_id"
 	DefaultInstallID                 = string("")
+	KeyUserCommiterMatch         Key = "user_commiter_match"
+	DefaultUserCommiterMatch         = false
 )

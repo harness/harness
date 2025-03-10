@@ -117,11 +117,11 @@ func (c *Controller) getRepoCheckAccess(
 	return repo, nil
 }
 
-// GetBaseSHAForScanningChanges returns the commit sha to which the new sha of the reference
-// should be compared against when scanning incoming changes.
+// GetBaseSHAForRefUpdate returns the commit sha to which the new sha of the reference
+// should be compared against when looking for incoming changes.
 // NOTE: If no such a sha exists, then (sha.None, false, nil) is returned.
 // This will happen in case the default branch doesn't exist yet.
-func GetBaseSHAForScanningChanges(
+func GetBaseSHAForRefUpdate(
 	ctx context.Context,
 	rgit RestrictedGIT,
 	repo *types.RepositoryCore,

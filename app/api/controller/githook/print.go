@@ -137,6 +137,25 @@ func printOversizeFiles(
 	)
 }
 
+func printUserCommiterMismatch(output *hook.Output, shaEmailMap map[string]string) {
+	output.Messages = append(
+		output.Messages,
+		colorScanHeader.Sprintf(
+			"Push contains commits where committer is not an authenticated user:",
+		),
+		"", // add empty line for making it visually more consumable
+	)
+
+	for sha, email := range shaEmailMap {
+		output.Messages = append(
+			output.Messages,
+			fmt.Sprintf("  %s", sha),
+			fmt.Sprintf("      Commiter: %s", email),
+			"", // add empty line for making it visually more consumable
+		)
+	}
+}
+
 func singularOrPlural(noun string, plural bool) string {
 	if plural {
 		return noun + "s"

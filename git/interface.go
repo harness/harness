@@ -65,6 +65,10 @@ type Interface interface {
 		ctx context.Context,
 		params *FindOversizeFilesParams,
 	) (*FindOversizeFilesOutput, error)
+	GetBranchCommiterEmails(
+		ctx context.Context,
+		params *GetBranchCommitterEmailsParams,
+	) (map[string]string, error)
 
 	/*
 	 * Git Cli Service

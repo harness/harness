@@ -102,7 +102,7 @@ func scanSecretsInternal(ctx context.Context,
 		//nolint:nestif
 		if refUpdate.Old.IsNil() {
 			if baseRevFallBack == nil {
-				fallbackSHA, fallbackAvailable, err := GetBaseSHAForScanningChanges(
+				fallbackSHA, fallbackAvailable, err := GetBaseSHAForRefUpdate(
 					ctx,
 					rgit,
 					repo,
