@@ -43,12 +43,6 @@ type GetCommitParams struct {
 	IgnoreWhitespace bool
 }
 
-type GetBranchCommitterEmailsParams struct {
-	ReadParams
-	BaseSHA sha.SHA
-	RevSHA  sha.SHA
-}
-
 type Commit struct {
 	SHA        sha.SHA           `json:"sha"`
 	ParentSHAs []sha.SHA         `json:"parent_shas,omitempty"`
@@ -103,17 +97,6 @@ func (s *Service) GetCommit(ctx context.Context, params *GetCommitParams) (*GetC
 	return &GetCommitOutput{
 		Commit: *commit,
 	}, nil
-}
-
-func (s *Service) GetBranchCommiterEmails(
-	ctx context.Context,
-	params *GetBranchCommitterEmailsParams,
-) (map[string]string, error) {
-	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
-
-	return s.git.GetBranchCommiterEmails(
-		ctx, repoPath, params.BaseSHA, params.RevSHA, params.AlternateObjectDirs,
-	)
 }
 
 type ListCommitsParams struct {

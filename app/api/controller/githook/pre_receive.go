@@ -93,14 +93,6 @@ func (c *Controller) PreReceive(
 			return hook.Output{}, fmt.Errorf("failed to find inner principal with id %d: %w", in.PrincipalID, err)
 		}
 
-		err = c.userCommiterMatchCheck(ctx, rgit, repo, in, principal.Email, &output)
-		if output.Error != nil {
-			return output, nil
-		}
-		if err != nil {
-			return hook.Output{}, fmt.Errorf("failed to check user commiter match: %w", err)
-		}
-
 		dummySession := &auth.Session{Principal: *principal, Metadata: nil}
 
 		err = c.checkProtectionRules(ctx, dummySession, repo, refUpdates, &output)

@@ -589,44 +589,6 @@ func (g *Git) GetCommits(
 	return getCommits(ctx, repoPath, refs)
 }
 
-func (g *Git) GetBranchCommiterEmails(
-	ctx context.Context,
-	repoPath string,
-	baseSHA sha.SHA,
-	revSHA sha.SHA,
-	alternateObjDirs []string,
-) (map[string]string, error) {
-	cmd := command.New(
-		"log",
-		command.WithFlag("--pretty=format:%H %ce"),
-	)
-	if baseSHA.IsEmpty() {
-		cmd.Add(command.WithArg(revSHA.String()))
-	} else {
-		cmd.Add(command.WithArg(baseSHA.String() + ".." + revSHA.String()))
-	}
-	if len(alternateObjDirs) > 0 {
-		cmd.Add(command.WithAlternateObjectDirs(alternateObjDirs...))
-	}
-
-	output := &bytes.Buffer{}
-	err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(output))
-	if err != nil {
-		return nil, fmt.Errorf("failed to run git to get commit data: %w", err)
-	}
-
-	scanner := bufio.NewScanner(output)
-
-	shaEmailMap := make(map[string]string)
-	for scanner.Scan() {
-		// scanned line follows pattern "[commit sha] [commiter's email]"
-		shaCommiterSlice := strings.Split(scanner.Text(), " ")
-		shaEmailMap[shaCommiterSlice[0]] = shaCommiterSlice[1]
-	}
-
-	return shaEmailMap, nil
-}
-
 // GetCommitDivergences returns the count of the diverging commits for all branch pairs.
 // IMPORTANT: If a maxCount is provided it limits the overal count of diverging commits
 // (maxCount 10 could lead to (0, 10) while it's actually (2, 12)).
