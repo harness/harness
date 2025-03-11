@@ -144,7 +144,7 @@ func (c *APIController) deleteUpstreamProxyWithAudit(
 	//nolint:nestif
 	if len(upstreamProxies) > 0 {
 		registryIDs, err := c.RegistryRepository.FetchRegistriesIDByUpstreamProxyID(
-			ctx, strconv.FormatInt(upstreamProxies[0], 10), regInfo.parentID)
+			ctx, strconv.FormatInt(upstreamProxies[0], 10), regInfo.rootIdentifierID)
 		if err != nil {
 			log.Ctx(ctx).Error().Msgf("failed to fetch registryIDs: %s", err)
 			return fmt.Errorf("failed to fetch registryIDs IDs :%w", err)

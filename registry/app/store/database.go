@@ -385,7 +385,7 @@ type RegistryRepository interface {
 
 	FetchRegistriesIDByUpstreamProxyID(
 		ctx context.Context, upstreamProxyID string,
-		parentID int64,
+		rootParentID int64,
 	) (ids []int64, err error)
 
 	FetchUpstreamProxyKeys(ctx context.Context, ids []int64) (repokeys []string, err error)

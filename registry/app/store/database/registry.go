@@ -687,13 +687,13 @@ func (r registryDao) FetchUpstreamProxyIDs(
 
 func (r registryDao) FetchRegistriesIDByUpstreamProxyID(
 	ctx context.Context, upstreamProxyID string,
-	parentID int64,
+	rootParentID int64,
 ) (ids []int64, err error) {
 	var registryIDs []int64
 
 	stmt := databaseg.Builder.Select("registry_id").
 		From("registries").
-		Where("registry_parent_id = ?", parentID).
+		Where("registry_root_parent_id = ?", rootParentID).
 		Where("registry_upstream_proxies LIKE ?", "%"+upstreamProxyID+"%").
 		Where("registry_type = ?", artifact.RegistryTypeVIRTUAL)
 
