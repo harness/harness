@@ -540,7 +540,7 @@ func (c *APIController) generateMavenClientSetupDetail(
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
 						//nolint:lll
-						Value: stringPtr("repositories{\n    maven{\n      url “<REGISTRY_URL>/<REGISTRY_NAME>”\n\n      credentials {\n         username “<USERNAME>”\n         password “identity-token”\n      }\n   }\n}"),
+						Value: stringPtr("repositories{\n    maven{\n      url \"<REGISTRY_URL>/<REGISTRY_NAME>\"\n\n      credentials {\n         username \"<USERNAME>\"\n         password \"identity-token\"\n      }\n   }\n}"),
 					},
 				},
 			},
@@ -559,7 +559,7 @@ func (c *APIController) generateMavenClientSetupDetail(
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: stringPtr("dependencies {\n  implementation ‘<GROUP_ID>:<ARTIFACT_ID>:<VERSION>’\n}"),
+						Value: stringPtr("dependencies {\n  implementation '<GROUP_ID>:<ARTIFACT_ID>:<VERSION>'\n}"),
 					},
 				},
 			},
@@ -616,7 +616,7 @@ func (c *APIController) generateMavenClientSetupDetail(
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
 						//nolint:lll
-						Value: stringPtr("resolver += “Harness Registry” at “<REGISTRY_URL>/<REGISTRY_NAME>”\ncredentials += Credentials(Path.userHome / “.sbt” / “.Credentials”)"),
+						Value: stringPtr("resolver += \"Harness Registry\" at \"<REGISTRY_URL>/<REGISTRY_NAME>\"\ncredentials += Credentials(Path.userHome / \".sbt\" / \".Credentials\")"),
 					},
 				},
 			},
@@ -636,7 +636,7 @@ func (c *APIController) generateMavenClientSetupDetail(
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: stringPtr("libraryDependencies += “<GROUP_ID>” % “<ARTIFACT_ID>” % “<VERSION>”"),
+						Value: stringPtr("libraryDependencies += \"<GROUP_ID>\" % \"<ARTIFACT_ID>\" % \"<VERSION>\""),
 					},
 				},
 			},
