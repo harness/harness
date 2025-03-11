@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/app/auth"
+	webhooksservice "github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -36,6 +37,11 @@ func (c *Controller) RetriggerExecutionSpace(
 		return nil, fmt.Errorf("failed to acquire access to space: %w", err)
 	}
 
-	return c.webhookService.RetriggerExecution(
+	executionCore, err := c.webhookService.RetriggerExecution(
 		ctx, space.ID, enum.WebhookParentSpace, webhookIdentifier, webhookExecutionID)
+	if err != nil {
+		return nil, err
+	}
+	execution := webhooksservice.CoreWebhookExecutionToGitnessWebhookExecution(executionCore)
+	return execution, nil
 }

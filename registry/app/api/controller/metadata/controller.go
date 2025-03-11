@@ -22,28 +22,32 @@ import (
 	storagedriver "github.com/harness/gitness/registry/app/driver"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
+	registrywebhook "github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/store/database/dbtx"
 )
 
 // APIController simple struct.
 type APIController struct {
-	ImageStore         store.ImageRepository
-	fileManager        filemanager.FileManager
-	BlobStore          store.BlobRepository
-	GenericBlobStore   store.GenericBlobRepository
-	RegistryRepository store.RegistryRepository
-	UpstreamProxyStore store.UpstreamProxyConfigRepository
-	TagStore           store.TagRepository
-	ManifestStore      store.ManifestRepository
-	CleanupPolicyStore store.CleanupPolicyRepository
-	SpaceFinder        refcache.SpaceFinder
-	tx                 dbtx.Transactor
-	StorageDriver      storagedriver.StorageDriver
-	URLProvider        urlprovider.Provider
-	Authorizer         authz.Authorizer
-	AuditService       audit.Service
-	ArtifactStore      store.ArtifactRepository
-	WebhooksRepository store.WebhooksRepository
+	ImageStore                  store.ImageRepository
+	fileManager                 filemanager.FileManager
+	BlobStore                   store.BlobRepository
+	GenericBlobStore            store.GenericBlobRepository
+	RegistryRepository          store.RegistryRepository
+	UpstreamProxyStore          store.UpstreamProxyConfigRepository
+	TagStore                    store.TagRepository
+	ManifestStore               store.ManifestRepository
+	CleanupPolicyStore          store.CleanupPolicyRepository
+	SpaceFinder                 refcache.SpaceFinder
+	tx                          dbtx.Transactor
+	StorageDriver               storagedriver.StorageDriver
+	URLProvider                 urlprovider.Provider
+	Authorizer                  authz.Authorizer
+	AuditService                audit.Service
+	ArtifactStore               store.ArtifactRepository
+	WebhooksRepository          store.WebhooksRepository
+	WebhooksExecutionRepository store.WebhooksExecutionRepository
+	RegistryMetadataHelper      RegistryMetadataHelper
+	WebhookService              registrywebhook.Service
 }
 
 func NewAPIController(
@@ -64,24 +68,30 @@ func NewAPIController(
 	auditService audit.Service,
 	artifactStore store.ArtifactRepository,
 	webhooksRepository store.WebhooksRepository,
+	webhooksExecutionRepository store.WebhooksExecutionRepository,
+	registryMetadataHelper RegistryMetadataHelper,
+	webhookService registrywebhook.Service,
 ) *APIController {
 	return &APIController{
-		fileManager:        fileManager,
-		GenericBlobStore:   genericBlobStore,
-		BlobStore:          blobStore,
-		RegistryRepository: repositoryStore,
-		UpstreamProxyStore: upstreamProxyStore,
-		TagStore:           tagStore,
-		ManifestStore:      manifestStore,
-		CleanupPolicyStore: cleanupPolicyStore,
-		ImageStore:         imageStore,
-		SpaceFinder:        spaceFinder,
-		StorageDriver:      driver,
-		tx:                 tx,
-		URLProvider:        urlProvider,
-		Authorizer:         authorizer,
-		AuditService:       auditService,
-		ArtifactStore:      artifactStore,
-		WebhooksRepository: webhooksRepository,
+		fileManager:                 fileManager,
+		GenericBlobStore:            genericBlobStore,
+		BlobStore:                   blobStore,
+		RegistryRepository:          repositoryStore,
+		UpstreamProxyStore:          upstreamProxyStore,
+		TagStore:                    tagStore,
+		ManifestStore:               manifestStore,
+		CleanupPolicyStore:          cleanupPolicyStore,
+		ImageStore:                  imageStore,
+		SpaceFinder:                 spaceFinder,
+		StorageDriver:               driver,
+		tx:                          tx,
+		URLProvider:                 urlProvider,
+		Authorizer:                  authorizer,
+		AuditService:                auditService,
+		ArtifactStore:               artifactStore,
+		WebhooksRepository:          webhooksRepository,
+		WebhooksExecutionRepository: webhooksExecutionRepository,
+		RegistryMetadataHelper:      registryMetadataHelper,
+		WebhookService:              webhookService,
 	}
 }

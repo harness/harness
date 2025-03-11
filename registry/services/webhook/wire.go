@@ -16,15 +16,15 @@ package webhook
 
 import (
 	"context"
+	"encoding/gob"
 
-	gitevents "github.com/harness/gitness/app/events/git"
-	pullreqevents "github.com/harness/gitness/app/events/pullreq"
-	"github.com/harness/gitness/app/sse"
+	gitnesswebhook "github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"
-	"github.com/harness/gitness/git"
+	registryevents "github.com/harness/gitness/registry/app/events"
+	registrystore "github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/secret"
 	"github.com/harness/gitness/store/database/dbtx"
 
@@ -34,56 +34,40 @@ import (
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
 	ProvideService,
-	ProvideURLProvider,
 )
 
 func ProvideService(
 	ctx context.Context,
-	config Config,
+	config gitnesswebhook.Config,
 	tx dbtx.Transactor,
-	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
-	prReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
-	webhookStore store.WebhookStore,
-	webhookExecutionStore store.WebhookExecutionStore,
+	artifactsReaderFactory *events.ReaderFactory[*registryevents.Reader],
+	webhookStore registrystore.WebhooksRepository,
+	webhookExecutionStore registrystore.WebhooksExecutionRepository,
 	spaceStore store.SpaceStore,
-	repoStore store.RepoStore,
-	pullreqStore store.PullReqStore,
-	activityStore store.PullReqActivityStore,
 	urlProvider url.Provider,
 	principalStore store.PrincipalStore,
-	git git.Interface,
-	encrypter encrypt.Encrypter,
-	labelStore store.LabelStore,
-	webhookURLProvider URLProvider,
-	labelValueStore store.LabelValueStore,
-	sseStreamer sse.Streamer,
-	secretService secret.Service,
+	webhookURLProvider gitnesswebhook.URLProvider,
 	spacePathStore store.SpacePathStore,
+	secretService secret.Service,
+	registryRepository registrystore.RegistryRepository,
+	encrypter encrypt.Encrypter,
 ) (*Service, error) {
+	gob.Register(&registryevents.DockerArtifact{})
+	gob.Register(&registryevents.HelmArtifact{})
 	return NewService(
 		ctx,
 		config,
 		tx,
-		gitReaderFactory,
-		prReaderFactory,
+		artifactsReaderFactory,
 		webhookStore,
 		webhookExecutionStore,
-		spaceStore, repoStore,
-		pullreqStore,
-		activityStore,
+		spaceStore,
 		urlProvider,
 		principalStore,
-		git,
-		encrypter,
-		labelStore,
 		webhookURLProvider,
-		labelValueStore,
-		sseStreamer,
-		secretService,
 		spacePathStore,
+		secretService,
+		registryRepository,
+		encrypter,
 	)
-}
-
-func ProvideURLProvider(ctx context.Context) URLProvider {
-	return NewURLProvider(ctx)
 }

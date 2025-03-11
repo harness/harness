@@ -31,7 +31,7 @@ import (
 
 func (c *APIController) DeleteArtifact(ctx context.Context, r artifact.DeleteArtifactRequestObject) (
 	artifact.DeleteArtifactResponseObject, error) {
-	regInfo, err := c.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
+	regInfo, err := c.RegistryMetadataHelper.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
 	if err != nil {
 		return artifact.DeleteArtifact400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(

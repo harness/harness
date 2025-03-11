@@ -44,7 +44,7 @@ func (s *Service) triggerForEventWithRepo(
 	repoID int64,
 	createBodyFn func(*types.Principal, *types.Repository) (any, error),
 ) error {
-	principal, err := s.findPrincipalForEvent(ctx, principalID)
+	principal, err := s.WebhookExecutor.FindPrincipalForEvent(ctx, principalID)
 	if err != nil {
 		return err
 	}
@@ -65,7 +65,7 @@ func (s *Service) triggerForEventWithRepo(
 		return fmt.Errorf("failed to get webhook parent info for parents: %w", err)
 	}
 
-	return s.triggerForEvent(ctx, eventID, parents, triggerType, body)
+	return s.WebhookExecutor.TriggerForEvent(ctx, eventID, parents, triggerType, body)
 }
 
 // triggerForEventWithPullReq triggers all webhooks for the given repo and triggerType
@@ -73,11 +73,15 @@ func (s *Service) triggerForEventWithRepo(
 // The method tries to find the pullreq, principal, target repo, and source repo
 // and provides all to the bodyFn to generate the body.
 // NOTE: technically we could avoid this call if we send the data via the event (though then events will get big).
-func (s *Service) triggerForEventWithPullReq(ctx context.Context,
+func (s *Service) triggerForEventWithPullReq(
+	ctx context.Context,
 	triggerType enum.WebhookTrigger, eventID string, principalID int64, prID int64,
-	createBodyFn func(principal *types.Principal, pr *types.PullReq,
-		targetRepo *types.Repository, sourceRepo *types.Repository) (any, error)) error {
-	principal, err := s.findPrincipalForEvent(ctx, principalID)
+	createBodyFn func(
+		principal *types.Principal, pr *types.PullReq,
+		targetRepo *types.Repository, sourceRepo *types.Repository,
+	) (any, error),
+) error {
+	principal, err := s.WebhookExecutor.FindPrincipalForEvent(ctx, principalID)
 	if err != nil {
 		return err
 	}
@@ -111,7 +115,7 @@ func (s *Service) triggerForEventWithPullReq(ctx context.Context,
 		return fmt.Errorf("failed to get webhook parent info: %w", err)
 	}
 
-	return s.triggerForEvent(ctx, eventID, parents, triggerType, body)
+	return s.WebhookExecutor.TriggerForEvent(ctx, eventID, parents, triggerType, body)
 }
 
 // findRepositoryForEvent finds the repository for the provided repoID.
@@ -146,9 +150,9 @@ func (s *Service) findPullReqForEvent(ctx context.Context, prID int64) (*types.P
 	return pr, nil
 }
 
-// findPrincipalForEvent finds the principal for the provided principalID.
-func (s *Service) findPrincipalForEvent(ctx context.Context, principalID int64) (*types.Principal, error) {
-	principal, err := s.principalStore.Find(ctx, principalID)
+// FindPrincipalForEvent finds the principal for the provided principalID.
+func (w *WebhookExecutor) FindPrincipalForEvent(ctx context.Context, principalID int64) (*types.Principal, error) {
+	principal, err := w.principalStore.Find(ctx, principalID)
 
 	if err != nil && errors.Is(err, store.ErrResourceNotFound) {
 		// this should never happen (as we won't delete principals) - discard event
@@ -162,9 +166,9 @@ func (s *Service) findPrincipalForEvent(ctx context.Context, principalID int64) 
 	return principal, nil
 }
 
-// triggerForEvent triggers all webhooks for the given parentType/ID and triggerType
+// TriggerForEvent triggers all webhooks for the given parentType/ID and triggerType
 // using the eventID to generate a deterministic triggerID and sending the provided body as payload.
-func (s *Service) triggerForEvent(
+func (w *WebhookExecutor) TriggerForEvent(
 	ctx context.Context,
 	eventID string,
 	parents []types.WebhookParentInfo,
@@ -173,7 +177,7 @@ func (s *Service) triggerForEvent(
 ) error {
 	triggerID := generateTriggerIDFromEventID(eventID)
 
-	results, err := s.triggerWebhooksFor(ctx, parents, triggerID, triggerType, body)
+	results, err := w.triggerWebhooksFor(ctx, parents, triggerID, triggerType, body)
 
 	// return all errors and force the event to be reprocessed (it's not webhook execution specific!)
 	if err != nil {

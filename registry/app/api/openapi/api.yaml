@@ -2172,6 +2172,9 @@ components:
           type: string
         value:
           type: string
+      required:
+        - key
+        - value
     WebhookExecResult:
       type: string
       description: refers to webhook execution

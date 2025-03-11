@@ -271,8 +271,10 @@ func (s *WebhookStore) Update(ctx context.Context, hook *types.Webhook) error {
 }
 
 // UpdateOptLock updates the webhook using the optimistic locking mechanism.
-func (s *WebhookStore) UpdateOptLock(ctx context.Context, hook *types.Webhook,
-	mutateFn func(hook *types.Webhook) error) (*types.Webhook, error) {
+func (s *WebhookStore) UpdateOptLock(
+	ctx context.Context, hook *types.Webhook,
+	mutateFn func(hook *types.Webhook) error,
+) (*types.Webhook, error) {
 	for {
 		dup := *hook
 

@@ -51,7 +51,8 @@ func (c *APIController) GetArtifactFiles(
 	}
 
 	session, _ := request.AuthSessionFrom(ctx)
-	permissionChecks := GetPermissionChecks(space, reqInfo.RegistryIdentifier, enum.PermissionRegistryView)
+	permissionChecks := c.RegistryMetadataHelper.GetPermissionChecks(space,
+		reqInfo.RegistryIdentifier, enum.PermissionRegistryView)
 	if err = apiauth.CheckRegistry(
 		ctx,
 		c.Authorizer,
@@ -109,7 +110,7 @@ func (c *APIController) GetArtifactFiles(
 		reqInfo.sortByField, reqInfo.sortByOrder, reqInfo.limit, reqInfo.offset, reqInfo.searchTerm)
 
 	if err != nil {
-		log.Error().Msgf(err.Error())
+		log.Error().Msgf("Failed to fetch files for artifact, err: %v", err.Error())
 		return artifact.GetArtifactFiles500JSONResponse{
 			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
 				*GetErrorResponse(http.StatusInternalServerError,
@@ -121,7 +122,7 @@ func (c *APIController) GetArtifactFiles(
 	count, err := c.fileManager.CountFilesByPath(ctx, filePathPrefix, img.RegistryID)
 
 	if err != nil {
-		log.Error().Msgf(err.Error())
+		log.Error().Msgf("Failed to count files for artifact, err: %v", err.Error())
 		return artifact.GetArtifactFiles500JSONResponse{
 			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
 				*GetErrorResponse(http.StatusInternalServerError,

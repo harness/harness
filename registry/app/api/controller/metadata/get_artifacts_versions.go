@@ -61,7 +61,8 @@ func (c *APIController) GetAllArtifactVersions(
 	}
 
 	session, _ := request.AuthSessionFrom(ctx)
-	permissionChecks := GetPermissionChecks(space, regInfo.RegistryIdentifier, enum.PermissionRegistryView)
+	permissionChecks := c.RegistryMetadataHelper.GetPermissionChecks(space, regInfo.RegistryIdentifier,
+		enum.PermissionRegistryView)
 	if err = apiauth.CheckRegistry(
 		ctx,
 		c.Authorizer,

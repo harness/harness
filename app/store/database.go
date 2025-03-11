@@ -259,7 +259,12 @@ type (
 		FindActiveByUID(ctx context.Context, parentSpaceID int64, uid string) (*types.Repository, error)
 
 		// FindDeletedByUID finds a deleted repo by UID.
-		FindDeletedByUID(ctx context.Context, parentSpaceID int64, uid string, deletedAt int64) (*types.Repository, error)
+		FindDeletedByUID(
+			ctx context.Context,
+			parentSpaceID int64,
+			uid string,
+			deletedAt int64,
+		) (*types.Repository, error)
 
 		// Create a new repo.
 		Create(ctx context.Context, repo *types.Repository) error
@@ -429,7 +434,11 @@ type (
 		Stream(ctx context.Context, opts *types.PullReqFilter) (<-chan *types.PullReq, <-chan error)
 
 		// ListOpenByBranchName returns open pull requests for each branch.
-		ListOpenByBranchName(ctx context.Context, repoID int64, branchNames []string) (map[string][]*types.PullReq, error)
+		ListOpenByBranchName(
+			ctx context.Context,
+			repoID int64,
+			branchNames []string,
+		) (map[string][]*types.PullReq, error)
 	}
 
 	PullReqActivityStore interface {

@@ -54,7 +54,8 @@ func (c *APIController) UpdateArtifactLabels(
 	}
 
 	session, _ := request.AuthSessionFrom(ctx)
-	permissionChecks := GetPermissionChecks(space, regInfo.RegistryIdentifier, enum.PermissionRegistryEdit)
+	permissionChecks := c.RegistryMetadataHelper.GetPermissionChecks(space, regInfo.RegistryIdentifier,
+		enum.PermissionRegistryEdit)
 	if err = apiauth.CheckRegistry(
 		ctx,
 		c.Authorizer,

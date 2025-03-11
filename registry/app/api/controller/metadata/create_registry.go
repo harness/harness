@@ -39,7 +39,7 @@ func (c *APIController) CreateRegistry(
 	registryRequest := artifact.RegistryRequest(*r.Body)
 	parentRef := artifact.SpaceRefPathParam(*registryRequest.ParentRef)
 
-	regInfo, err := c.GetRegistryRequestBaseInfo(ctx, string(parentRef), "")
+	regInfo, err := c.RegistryMetadataHelper.GetRegistryRequestBaseInfo(ctx, string(parentRef), "")
 	if err != nil {
 		return artifact.CreateRegistry400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
@@ -332,7 +332,7 @@ func (c *APIController) CreateUpstreamProxyEntity(
 		}
 
 		if res.SecretSpacePath != nil && len(*res.SecretSpacePath) > 0 {
-			upstreamProxyConfigEntity.SecretSpaceID, err = c.getSecretSpaceID(ctx, res.SecretSpacePath)
+			upstreamProxyConfigEntity.SecretSpaceID, err = c.RegistryMetadataHelper.getSecretSpaceID(ctx, res.SecretSpacePath)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -353,7 +353,8 @@ func (c *APIController) CreateUpstreamProxyEntity(
 			return nil, nil, fmt.Errorf("failed to create upstream proxy: access_key_secret_identifier missing")
 		default:
 			if res.AccessKeySecretSpacePath != nil && len(*res.AccessKeySecretSpacePath) > 0 {
-				upstreamProxyConfigEntity.UserNameSecretSpaceID, err = c.getSecretSpaceID(ctx, res.AccessKeySecretSpacePath)
+				upstreamProxyConfigEntity.UserNameSecretSpaceID, err =
+					c.RegistryMetadataHelper.getSecretSpaceID(ctx, res.AccessKeySecretSpacePath)
 				if err != nil {
 					return nil, nil, err
 				}
@@ -364,7 +365,7 @@ func (c *APIController) CreateUpstreamProxyEntity(
 		}
 
 		if res.SecretKeySpacePath != nil && len(*res.SecretKeySpacePath) > 0 {
-			upstreamProxyConfigEntity.SecretSpaceID, err = c.getSecretSpaceID(ctx, res.SecretKeySpacePath)
+			upstreamProxyConfigEntity.SecretSpaceID, err = c.RegistryMetadataHelper.getSecretSpaceID(ctx, res.SecretKeySpacePath)
 			if err != nil {
 				return nil, nil, err
 			}

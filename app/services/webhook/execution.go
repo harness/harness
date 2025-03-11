@@ -78,7 +78,7 @@ func (s *Service) RetriggerExecution(
 	parentType enum.WebhookParent,
 	webhookIdentifier string,
 	webhookExecutionID int64,
-) (*types.WebhookExecution, error) {
+) (*types.WebhookExecutionCore, error) {
 	webhook, err := s.GetWebhookVerifyOwnership(
 		ctx, parentID, parentType, webhookIdentifier)
 	if err != nil {
@@ -91,7 +91,7 @@ func (s *Service) RetriggerExecution(
 		return nil, err
 	}
 
-	executionResult, err := s.RetriggerWebhookExecution(ctx, webhookExecution.ID)
+	executionResult, err := s.WebhookExecutor.RetriggerWebhookExecution(ctx, webhookExecution.ID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrigger webhook execution: %w", err)
 	}

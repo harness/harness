@@ -36,7 +36,7 @@ func (c *APIController) DeleteRegistry(
 	ctx context.Context,
 	r artifact.DeleteRegistryRequestObject,
 ) (artifact.DeleteRegistryResponseObject, error) {
-	regInfo, err := c.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
+	regInfo, err := c.RegistryMetadataHelper.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
 	if err != nil {
 		return artifact.DeleteRegistry400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
@@ -54,7 +54,8 @@ func (c *APIController) DeleteRegistry(
 	}
 
 	session, _ := request.AuthSessionFrom(ctx)
-	permissionChecks := GetPermissionChecks(space, regInfo.RegistryIdentifier, enum.PermissionRegistryDelete)
+	permissionChecks := c.RegistryMetadataHelper.GetPermissionChecks(space,
+		regInfo.RegistryIdentifier, enum.PermissionRegistryDelete)
 	if err = apiauth.CheckRegistry(
 		ctx,
 		c.Authorizer,

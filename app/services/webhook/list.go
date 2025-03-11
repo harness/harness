@@ -22,7 +22,7 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-// Listreturns the webhooks from the provided scope.
+// List returns the webhooks from the provided scope.
 func (s *Service) List(
 	ctx context.Context,
 	parentID int64,

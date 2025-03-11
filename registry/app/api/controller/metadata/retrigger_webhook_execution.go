@@ -16,18 +16,80 @@ package metadata
 
 import (
 	"context"
+	"net/http"
+	"strconv"
 
+	apiauth "github.com/harness/gitness/app/api/auth"
+	"github.com/harness/gitness/app/api/request"
 	api "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 func (c *APIController) ReTriggerWebhookExecution(
-	_ context.Context,
-	_ api.ReTriggerWebhookExecutionRequestObject,
+	ctx context.Context,
+	r api.ReTriggerWebhookExecutionRequestObject,
 ) (api.ReTriggerWebhookExecutionResponseObject, error) {
+	regInfo, err := c.RegistryMetadataHelper.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
+	if err != nil {
+		return getReTriggerWebhooksExecutionsInternalErrorResponse(err)
+	}
+
+	space, err := c.SpaceFinder.FindByRef(ctx, regInfo.ParentRef)
+	if err != nil {
+		return getReTriggerWebhooksExecutionsInternalErrorResponse(err)
+	}
+	session, _ := request.AuthSessionFrom(ctx)
+	permissionChecks := c.RegistryMetadataHelper.GetPermissionChecks(space, regInfo.RegistryIdentifier,
+		enum.PermissionRegistryEdit)
+	if err = apiauth.CheckRegistry(
+		ctx,
+		c.Authorizer,
+		session,
+		permissionChecks...,
+	); err != nil {
+		log.Ctx(ctx).Error().Msgf("permission check failed while retrigger webhook execution for registry: %s, error: %v",
+			regInfo.RegistryIdentifier, err)
+		return api.ReTriggerWebhookExecution403JSONResponse{
+			UnauthorizedJSONResponse: api.UnauthorizedJSONResponse(
+				*GetErrorResponse(http.StatusForbidden, err.Error()),
+			),
+		}, err
+	}
+
+	webhookExecutionID, err := strconv.ParseInt(string(r.WebhookExecutionId), 10, 64)
+	if err != nil || webhookExecutionID <= 0 {
+		log.Ctx(ctx).Error().Msgf("invalid webhook execution identifier: %s, err: %v", string(r.WebhookExecutionId), err)
+		return api.ReTriggerWebhookExecution400JSONResponse{
+			BadRequestJSONResponse: api.BadRequestJSONResponse(
+				*GetErrorResponse(http.StatusBadRequest, err.Error()),
+			),
+		}, err
+	}
+	result, err := c.WebhookService.WebhookExecutor.RetriggerWebhookExecution(ctx, webhookExecutionID)
+	if err != nil {
+		return getReTriggerWebhooksExecutionsInternalErrorResponse(err)
+	}
+	webhookExecution, err := MapToWebhookExecutionResponseEntity(*result.Execution)
+	if err != nil {
+		log.Ctx(ctx).Error().Msgf(getWebhookErrMsg, regInfo.RegistryRef, r.WebhookIdentifier, err)
+		return getReTriggerWebhooksExecutionsInternalErrorResponse(err)
+	}
 	return api.ReTriggerWebhookExecution200JSONResponse{
 		WebhookExecutionResponseJSONResponse: api.WebhookExecutionResponseJSONResponse{
-			Data:   api.WebhookExecution{},
+			Data:   *webhookExecution,
 			Status: api.StatusSUCCESS,
 		},
 	}, nil
+}
+
+func getReTriggerWebhooksExecutionsInternalErrorResponse(
+	err error,
+) (api.ReTriggerWebhookExecution500JSONResponse, error) {
+	return api.ReTriggerWebhookExecution500JSONResponse{
+		InternalServerErrorJSONResponse: api.InternalServerErrorJSONResponse(
+			*GetErrorResponse(http.StatusInternalServerError, err.Error()),
+		),
+	}, err
 }

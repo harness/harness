@@ -16,19 +16,22 @@ package metadata
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
 	api "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 func (c *APIController) DeleteWebhook(
 	ctx context.Context,
 	r api.DeleteWebhookRequestObject,
 ) (api.DeleteWebhookResponseObject, error) {
-	regInfo, err := c.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
+	regInfo, err := c.RegistryMetadataHelper.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
 	if err != nil {
 		return deleteWebhookInternalErrorResponse(err)
 	}
@@ -39,7 +42,8 @@ func (c *APIController) DeleteWebhook(
 	}
 
 	session, _ := request.AuthSessionFrom(ctx)
-	permissionChecks := GetPermissionChecks(space, regInfo.RegistryIdentifier, enum.PermissionRegistryEdit)
+	permissionChecks := c.RegistryMetadataHelper.GetPermissionChecks(space,
+		regInfo.RegistryIdentifier, enum.PermissionRegistryEdit)
 	if err = apiauth.CheckRegistry(
 		ctx,
 		c.Authorizer,
@@ -54,6 +58,16 @@ func (c *APIController) DeleteWebhook(
 	}
 
 	webhookIdentifier := string(r.WebhookIdentifier)
+	existingWebhook, err := c.WebhooksRepository.GetByRegistryAndIdentifier(ctx, regInfo.RegistryID, webhookIdentifier)
+	if err != nil {
+		log.Ctx(ctx).Error().Msgf("failed to get existing webhook: %s with error: %v",
+			webhookIdentifier, err)
+		return deleteWebhookInternalErrorResponse(fmt.Errorf("failed to get existing webhook"))
+	}
+	if existingWebhook.Type == enum.WebhookTypeInternal {
+		return deleteWebhookBadRequestErrorResponse(fmt.Errorf("cannot delete internal webhook: %s", webhookIdentifier))
+	}
+
 	err = c.WebhooksRepository.DeleteByRegistryAndIdentifier(ctx, regInfo.RegistryID, webhookIdentifier)
 	if err != nil {
 		return deleteWebhookInternalErrorResponse(err)
@@ -67,6 +81,14 @@ func deleteWebhookInternalErrorResponse(err error) (api.DeleteWebhookResponseObj
 	return api.DeleteWebhook500JSONResponse{
 		InternalServerErrorJSONResponse: api.InternalServerErrorJSONResponse(
 			*GetErrorResponse(http.StatusInternalServerError, err.Error()),
+		),
+	}, err
+}
+
+func deleteWebhookBadRequestErrorResponse(err error) (api.DeleteWebhookResponseObject, error) {
+	return api.DeleteWebhook400JSONResponse{
+		BadRequestJSONResponse: api.BadRequestJSONResponse(
+			*GetErrorResponse(http.StatusBadRequest, err.Error()),
 		),
 	}, err
 }

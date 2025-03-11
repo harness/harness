@@ -18,8 +18,10 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/refcache"
 	gitnessstore "github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/app/url"
 	storagedriver "github.com/harness/gitness/registry/app/driver"
 	"github.com/harness/gitness/registry/app/event"
+	registryevents "github.com/harness/gitness/registry/app/events"
 	"github.com/harness/gitness/registry/app/manifest/manifestlist"
 	"github.com/harness/gitness/registry/app/manifest/schema2"
 	"github.com/harness/gitness/registry/app/pkg"
@@ -61,11 +63,13 @@ func ManifestServiceProvider(
 	artifactDao store.ArtifactRepository, layerDao store.LayerRepository,
 	gcService gc.Service, tx dbtx.Transactor, reporter event.Reporter, spaceFinder refcache.SpaceFinder,
 	ociImageIndexMappingDao store.OCIImageIndexMappingRepository,
+	artifactEventReporter *registryevents.Reporter,
+	urlProvider url.Provider,
 ) ManifestService {
 	return NewManifestService(
 		registryDao, manifestDao, blobRepo, mtRepository, tagDao, imageDao,
 		artifactDao, layerDao, manifestRefDao, tx, gcService, reporter, spaceFinder,
-		ociImageIndexMappingDao,
+		ociImageIndexMappingDao, *artifactEventReporter, urlProvider,
 	)
 }
 

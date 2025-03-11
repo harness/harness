@@ -261,6 +261,9 @@ func (r registryDao) GetAll(
 	repoType string,
 	recursive bool,
 ) (repos *[]store.RegistryMetadata, err error) {
+	if limit < 0 || offset < 0 {
+		return nil, fmt.Errorf("limit and offset must be non-negative")
+	}
 	selectFields := `
 		r.registry_id AS registry_id,
 		r.registry_name AS reg_identifier,

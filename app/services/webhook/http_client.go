@@ -37,7 +37,7 @@ func newHTTPClient(allowLoopback bool, allowPrivateNetwork bool, disableSSLVerif
 	}
 
 	// Clone http.DefaultTransport (used by http.DefaultClient)
-	tr := http.DefaultTransport.(*http.Transport).Clone()
+	tr := http.DefaultTransport.(*http.Transport).Clone() //nolint:errcheck
 
 	tr.TLSClientConfig.InsecureSkipVerify = disableSSLVerification
 

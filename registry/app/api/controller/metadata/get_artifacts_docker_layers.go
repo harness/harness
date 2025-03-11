@@ -47,7 +47,7 @@ func (c *APIController) GetDockerArtifactLayers(
 	ctx context.Context,
 	r artifact.GetDockerArtifactLayersRequestObject,
 ) (artifact.GetDockerArtifactLayersResponseObject, error) {
-	regInfo, _ := c.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
+	regInfo, _ := c.RegistryMetadataHelper.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
 
 	space, err := c.SpaceFinder.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
@@ -59,7 +59,8 @@ func (c *APIController) GetDockerArtifactLayers(
 	}
 
 	session, _ := request.AuthSessionFrom(ctx)
-	permissionChecks := GetPermissionChecks(space, regInfo.RegistryIdentifier, enum.PermissionRegistryView)
+	permissionChecks := c.RegistryMetadataHelper.GetPermissionChecks(space,
+		regInfo.RegistryIdentifier, enum.PermissionRegistryView)
 	if err = apiauth.CheckRegistry(
 		ctx,
 		c.Authorizer,

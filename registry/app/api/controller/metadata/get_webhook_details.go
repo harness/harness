@@ -31,7 +31,7 @@ func (c *APIController) GetWebhook(
 	ctx context.Context,
 	r api.GetWebhookRequestObject,
 ) (api.GetWebhookResponseObject, error) {
-	regInfo, err := c.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
+	regInfo, err := c.RegistryMetadataHelper.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("failed to get registry details: %v", err)
 		return getWebhookInternalErrorResponse(err)
@@ -44,7 +44,8 @@ func (c *APIController) GetWebhook(
 	}
 
 	session, _ := request.AuthSessionFrom(ctx)
-	permissionChecks := GetPermissionChecks(space, regInfo.RegistryIdentifier, enum.PermissionRegistryView)
+	permissionChecks := c.RegistryMetadataHelper.GetPermissionChecks(space, regInfo.RegistryIdentifier,
+		enum.PermissionRegistryView)
 	if err = apiauth.CheckRegistry(
 		ctx,
 		c.Authorizer,
@@ -67,7 +68,7 @@ func (c *APIController) GetWebhook(
 		return getWebhookInternalErrorResponse(fmt.Errorf("failed to get webhook"))
 	}
 
-	webhookResponseEntity, err := c.mapToWebhookResponseEntity(ctx, *webhook)
+	webhookResponseEntity, err := c.RegistryMetadataHelper.MapToWebhookResponseEntity(ctx, webhook)
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("failed to get webhook: %s with error: %v", webhookIdentifier, err)
 		return getWebhookInternalErrorResponse(fmt.Errorf("failed to get webhook"))

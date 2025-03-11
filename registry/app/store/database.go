@@ -20,6 +20,7 @@ import (
 
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/types"
+	gitnesstypes "github.com/harness/gitness/types"
 
 	"github.com/lib/pq"
 	"github.com/opencontainers/go-digest"
@@ -579,8 +580,13 @@ type GenericBlobRepository interface {
 }
 
 type WebhooksRepository interface {
-	Create(ctx context.Context, webhook *types.Webhook) error
-	GetByRegistryAndIdentifier(ctx context.Context, registryID int64, webhookIdentifier string) (*types.Webhook, error)
+	Create(ctx context.Context, webhook *gitnesstypes.WebhookCore) error
+	GetByRegistryAndIdentifier(
+		ctx context.Context,
+		registryID int64,
+		webhookIdentifier string,
+	) (*gitnesstypes.WebhookCore, error)
+	Find(ctx context.Context, webhookID int64) (*gitnesstypes.WebhookCore, error)
 	ListByRegistry(
 		ctx context.Context,
 		sortByField string,
@@ -589,13 +595,42 @@ type WebhooksRepository interface {
 		offset int,
 		search string,
 		registryID int64,
-	) (*[]types.Webhook, error)
+	) ([]*gitnesstypes.WebhookCore, error)
+	ListAllByRegistry(
+		ctx context.Context,
+		parents []gitnesstypes.WebhookParentInfo,
+	) ([]*gitnesstypes.WebhookCore, error)
 	CountAllByRegistry(
 		ctx context.Context,
 		registryID int64,
 		search string,
 	) (int64, error)
 
-	Update(ctx context.Context, webhook *types.Webhook) error
+	Update(ctx context.Context, webhook *gitnesstypes.WebhookCore) error
 	DeleteByRegistryAndIdentifier(ctx context.Context, registryID int64, webhookIdentifier string) error
+	UpdateOptLock(
+		ctx context.Context, hook *gitnesstypes.WebhookCore,
+		mutateFn func(hook *gitnesstypes.WebhookCore) error,
+	) (*gitnesstypes.WebhookCore, error)
+}
+
+type WebhooksExecutionRepository interface {
+	Find(ctx context.Context, id int64) (*gitnesstypes.WebhookExecutionCore, error)
+
+	// Create creates a new webhook execution entry.
+	Create(ctx context.Context, hook *gitnesstypes.WebhookExecutionCore) error
+
+	// ListForWebhook lists the webhook executions for a given webhook id.
+	ListForWebhook(
+		ctx context.Context,
+		webhookID int64,
+		limit int,
+		page int,
+		size int,
+	) ([]*gitnesstypes.WebhookExecutionCore, error)
+
+	CountForWebhook(ctx context.Context, webhookID int64) (int64, error)
+
+	// ListForTrigger lists the webhook executions for a given trigger id.
+	ListForTrigger(ctx context.Context, triggerID string) ([]*gitnesstypes.WebhookExecutionCore, error)
 }

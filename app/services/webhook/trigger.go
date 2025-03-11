@@ -25,7 +25,9 @@ import (
 	"net/http"
 	"time"
 
+	gitnessstore "github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/crypto"
+	"github.com/harness/gitness/secret"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -46,6 +48,11 @@ const (
 	responseBodyBytesLimit = 1024
 )
 
+const (
+	RepoTrigger             = "Trigger"
+	ArtifactRegistryTrigger = "Artifact-Registry-Trigger"
+)
+
 var (
 	// ErrWebhookNotRetriggerable is returned in case the webhook can't be retriggered due to an incomplete execution.
 	// This should only occur if we failed to generate the request body (most likely out of memory).
@@ -55,8 +62,8 @@ var (
 type TriggerResult struct {
 	TriggerID   string
 	TriggerType enum.WebhookTrigger
-	Webhook     *types.Webhook
-	Execution   *types.WebhookExecution
+	Webhook     *types.WebhookCore
+	Execution   *types.WebhookExecutionCore
 	Err         error
 }
 
@@ -64,31 +71,32 @@ func (r *TriggerResult) Skipped() bool {
 	return r.Execution == nil
 }
 
-func (s *Service) triggerWebhooksFor(
+func (w *WebhookExecutor) triggerWebhooksFor(
 	ctx context.Context,
 	parents []types.WebhookParentInfo,
 	triggerID string,
 	triggerType enum.WebhookTrigger,
 	body any,
 ) ([]TriggerResult, error) {
-	webhooks, err := s.webhookStore.List(ctx, parents, &types.WebhookFilter{})
+	webhooks, err := w.webhookExecutorStore.ListWebhooks(ctx, parents)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list webhooks for: %w", err)
 	}
-
-	return s.triggerWebhooks(ctx, webhooks, triggerID, triggerType, body)
+	return w.triggerWebhooks(ctx, webhooks, triggerID, triggerType, body)
 }
 
 //nolint:gocognit // refactor if needed
-func (s *Service) triggerWebhooks(ctx context.Context, webhooks []*types.Webhook,
-	triggerID string, triggerType enum.WebhookTrigger, body any) ([]TriggerResult, error) {
+func (w *WebhookExecutor) triggerWebhooks(
+	ctx context.Context, webhooks []*types.WebhookCore,
+	triggerID string, triggerType enum.WebhookTrigger, body any,
+) ([]TriggerResult, error) {
 	// return immediately if webhooks are empty
 	if len(webhooks) == 0 {
 		return []TriggerResult{}, nil
 	}
 
 	// get all previous execution for the same trigger
-	executions, err := s.webhookExecutionStore.ListForTrigger(ctx, triggerID)
+	executions, err := w.webhookExecutorStore.ListForTrigger(ctx, triggerID)
 	if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
 		return nil, fmt.Errorf("failed to get executions for trigger '%s'", triggerID)
 	}
@@ -134,15 +142,18 @@ func (s *Service) triggerWebhooks(ctx context.Context, webhooks []*types.Webhook
 		}
 
 		// execute trigger and store output in result
-		results[i].Execution, results[i].Err = s.executeWebhook(ctx, webhook, triggerID, triggerType, body, nil)
+		results[i].Execution, results[i].Err = w.executeWebhook(ctx, webhook, triggerID, triggerType, body, nil)
 	}
 
 	return results, nil
 }
 
-func (s *Service) RetriggerWebhookExecution(ctx context.Context, webhookExecutionID int64) (*TriggerResult, error) {
+func (w *WebhookExecutor) RetriggerWebhookExecution(
+	ctx context.Context,
+	webhookExecutionID int64,
+) (*TriggerResult, error) {
 	// find execution
-	webhookExecution, err := s.webhookExecutionStore.Find(ctx, webhookExecutionID)
+	webhookExecution, err := w.webhookExecutorStore.Find(ctx, webhookExecutionID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find webhook execution with id %d: %w", webhookExecutionID, err)
 	}
@@ -153,7 +164,7 @@ func (s *Service) RetriggerWebhookExecution(ctx context.Context, webhookExecutio
 	}
 
 	// find webhook
-	webhook, err := s.webhookStore.Find(ctx, webhookExecution.WebhookID)
+	webhook, err := w.webhookExecutorStore.FindWebhook(ctx, webhookExecution.WebhookID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find webhook with id %d: %w", webhookExecution.WebhookID, err)
 	}
@@ -167,7 +178,7 @@ func (s *Service) RetriggerWebhookExecution(ctx context.Context, webhookExecutio
 	// NOTE: bBuff.Write(v) will always return (len(v), nil) - no need to error handle
 	body.WriteString(webhookExecution.Request.Body)
 
-	newExecution, err := s.executeWebhook(ctx, webhook, triggerID, triggerType, body, &webhookExecution.ID)
+	newExecution, err := w.executeWebhook(ctx, webhook, triggerID, triggerType, body, &webhookExecution.ID)
 	return &TriggerResult{
 		TriggerID:   triggerID,
 		TriggerType: triggerType,
@@ -178,10 +189,12 @@ func (s *Service) RetriggerWebhookExecution(ctx context.Context, webhookExecutio
 }
 
 //nolint:gocognit // refactor into smaller chunks if necessary.
-func (s *Service) executeWebhook(ctx context.Context, webhook *types.Webhook, triggerID string,
-	triggerType enum.WebhookTrigger, body any, rerunOfID *int64) (*types.WebhookExecution, error) {
+func (w *WebhookExecutor) executeWebhook(
+	ctx context.Context, webhook *types.WebhookCore, triggerID string,
+	triggerType enum.WebhookTrigger, body any, rerunOfID *int64,
+) (*types.WebhookExecutionCore, error) {
 	// build execution entry on the fly (save no matter what)
-	execution := types.WebhookExecution{
+	execution := types.WebhookExecutionCore{
 		RetriggerOf: rerunOfID,
 		WebhookID:   webhook.ID,
 		TriggerID:   triggerID,
@@ -196,7 +209,7 @@ func (s *Service) executeWebhook(ctx context.Context, webhook *types.Webhook, tr
 		execution.Created = time.Now().UnixMilli()
 
 		// TODO: what if saving execution failed? For now we will rerun it in case of error or not show it in history
-		err := s.webhookExecutionStore.Create(oCtx, &execution)
+		err := w.webhookExecutorStore.CreateWebhookExecution(oCtx, &execution)
 		if err != nil {
 			log.Ctx(ctx).Warn().Err(err).Msgf(
 				"failed to store webhook execution that ended with Result: %s, Response.Status: '%s', Error: '%s'",
@@ -205,10 +218,7 @@ func (s *Service) executeWebhook(ctx context.Context, webhook *types.Webhook, tr
 
 		// update latest execution result of webhook IFF it's different from before (best effort)
 		if webhook.LatestExecutionResult == nil || *webhook.LatestExecutionResult != execution.Result {
-			_, err = s.webhookStore.UpdateOptLock(oCtx, webhook, func(hook *types.Webhook) error {
-				hook.LatestExecutionResult = &execution.Result
-				return nil
-			})
+			_, err = w.webhookExecutorStore.UpdateOptLock(oCtx, webhook, &execution)
 			if err != nil {
 				log.Ctx(ctx).Warn().Err(err).Msgf(
 					"failed to update latest execution result to %s for webhook %d",
@@ -222,7 +232,7 @@ func (s *Service) executeWebhook(ctx context.Context, webhook *types.Webhook, tr
 	defer cancel()
 
 	// create request from webhook and body
-	req, err := s.prepareHTTPRequest(ctx, &execution, triggerType, webhook, body)
+	req, err := w.prepareHTTPRequest(ctx, &execution, triggerType, webhook, body)
 	if err != nil {
 		return &execution, err
 	}
@@ -231,13 +241,13 @@ func (s *Service) executeWebhook(ctx context.Context, webhook *types.Webhook, tr
 	var resp *http.Response
 	switch {
 	case webhook.Type == enum.WebhookTypeInternal && webhook.Insecure:
-		resp, err = s.insecureHTTPClientInternal.Do(req)
+		resp, err = w.insecureHTTPClientInternal.Do(req)
 	case webhook.Type == enum.WebhookTypeInternal:
-		resp, err = s.secureHTTPClientInternal.Do(req)
+		resp, err = w.secureHTTPClientInternal.Do(req)
 	case webhook.Insecure:
-		resp, err = s.insecureHTTPClient.Do(req)
+		resp, err = w.insecureHTTPClient.Do(req)
 	default:
-		resp, err = s.secureHTTPClient.Do(req)
+		resp, err = w.secureHTTPClient.Do(req)
 	}
 
 	// always close the body!
@@ -283,9 +293,11 @@ func (s *Service) executeWebhook(ctx context.Context, webhook *types.Webhook, tr
 // prepareHTTPRequest prepares a new http.Request object for the webhook using the provided body as request body.
 // All execution.Request.XXX values are set accordingly.
 // NOTE: if the body is an io.Reader, the value is used as response body as is, otherwise it'll be JSON serialized.
-func (s *Service) prepareHTTPRequest(ctx context.Context, execution *types.WebhookExecution,
-	triggerType enum.WebhookTrigger, webhook *types.Webhook, body any) (*http.Request, error) {
-	url, err := s.webhookURLProvider.GetWebhookURL(ctx, webhook)
+func (w *WebhookExecutor) prepareHTTPRequest(
+	ctx context.Context, execution *types.WebhookExecutionCore,
+	triggerType enum.WebhookTrigger, webhook *types.WebhookCore, body any,
+) (*http.Request, error) {
+	url, err := w.webhookURLProvider.GetWebhookURL(ctx, webhook)
 	if err != nil {
 		return nil, fmt.Errorf("webhook url is not resolvable: %w", err)
 	}
@@ -336,27 +348,46 @@ func (s *Service) prepareHTTPRequest(ctx context.Context, execution *types.Webho
 	}
 
 	// setup headers
-	req.Header.Add("User-Agent", fmt.Sprintf("%s/%s", s.config.UserAgentIdentity, version.Version))
+	req.Header.Add("User-Agent", fmt.Sprintf("%s/%s", w.config.UserAgentIdentity, version.Version))
 	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add(s.toXHeader("Trigger"), string(triggerType))
-	req.Header.Add(s.toXHeader("Webhook-Parent-Type"), string(webhook.ParentType))
-	req.Header.Add(s.toXHeader("Webhook-Parent-Id"), fmt.Sprint(webhook.ParentID))
-	// TODO [CODE-1363]: remove after identifier migration.
-	req.Header.Add(s.toXHeader("Webhook-Uid"), fmt.Sprint(webhook.Identifier))
-	req.Header.Add(s.toXHeader("Webhook-Identifier"), fmt.Sprint(webhook.Identifier))
 
-	// add HMAC only if a secret was provided
+	req.Header.Add(w.toXHeader("Webhook-Parent-Type"), string(webhook.ParentType))
+	req.Header.Add(w.toXHeader("Webhook-Parent-Id"), fmt.Sprint(webhook.ParentID))
+	// TODO [CODE-1363]: remove after identifier migration.
+	req.Header.Add(w.toXHeader("Webhook-Uid"), fmt.Sprint(webhook.Identifier))
+	req.Header.Add(w.toXHeader("Webhook-Identifier"), fmt.Sprint(webhook.Identifier))
+	req.Header.Add(w.toXHeader(w.source), string(triggerType))
+
+	if webhook.ExtraHeaders != nil {
+		for _, h := range webhook.ExtraHeaders {
+			req.Header.Add(h.Key, h.Value)
+		}
+	}
+
+	var secretValue string
 	if webhook.Secret != "" {
-		decryptedSecret, err := s.encrypter.Decrypt([]byte(webhook.Secret))
+		decryptedSecret, err := w.encrypter.Decrypt([]byte(webhook.Secret))
 		if err != nil {
 			return nil, fmt.Errorf("failed to decrypt webhook secret: %w", err)
 		}
+		secretValue = decryptedSecret
+	} else if webhook.SecretIdentifier != "" {
+		decryptedSecret, err := getSecretValue(ctx, w.spacePathStore, w.secretService,
+			int64(webhook.SecretSpaceID), webhook.SecretIdentifier)
+		if err != nil {
+			return nil, fmt.Errorf("failed get secret secret value: %w", err)
+		}
+		secretValue = decryptedSecret
+	}
+
+	// add HMAC only if a secret was provided
+	if secretValue != "" {
 		var hmac string
-		hmac, err = crypto.GenerateHMACSHA256(bBuff.Bytes(), []byte(decryptedSecret))
+		hmac, err = crypto.GenerateHMACSHA256(bBuff.Bytes(), []byte(secretValue))
 		if err != nil {
 			return nil, fmt.Errorf("failed to generate SHA256 based HMAC: %w", err)
 		}
-		req.Header.Add(s.toXHeader("Signature"), hmac)
+		req.Header.Add(w.toXHeader("Signature"), hmac)
 	}
 
 	hBuffer := &bytes.Buffer{}
@@ -372,12 +403,12 @@ func (s *Service) prepareHTTPRequest(ctx context.Context, execution *types.Webho
 	return req, nil
 }
 
-func (s *Service) toXHeader(name string) string {
-	return fmt.Sprintf("X-%s-%s", s.config.HeaderIdentity, name)
+func (w *WebhookExecutor) toXHeader(name string) string {
+	return fmt.Sprintf("X-%s-%s", w.config.HeaderIdentity, name)
 }
 
 //nolint:funlen // refactor if needed
-func handleWebhookResponse(execution *types.WebhookExecution, resp *http.Response) error {
+func handleWebhookResponse(execution *types.WebhookExecutionCore, resp *http.Response) error {
 	// store status (handle status later - want to first read body)
 	execution.Response.StatusCode = resp.StatusCode
 	execution.Response.Status = resp.Status
@@ -472,4 +503,112 @@ func handleWebhookResponse(execution *types.WebhookExecution, resp *http.Respons
 		execution.Result = enum.WebhookExecutionResultFatalError
 		return fmt.Errorf("received response with unsupported status code %d", code)
 	}
+}
+
+func getSecretValue(
+	ctx context.Context, spacePathStore gitnessstore.SpacePathStore, secretService secret.Service,
+	secretSpaceID int64, secretSpacePath string,
+) (string, error) {
+	spacePath, err := spacePathStore.FindPrimaryBySpaceID(ctx, secretSpaceID)
+	if err != nil {
+		err = fmt.Errorf("failed to find space path: %w", err)
+		log.Error().Msg(err.Error())
+		return "", err
+	}
+	decryptedSecret, err := secretService.DecryptSecret(ctx, spacePath.Value, secretSpacePath)
+	if err != nil {
+		err = fmt.Errorf("failed to decrypt secret: %w", err)
+		log.Error().Msg(err.Error())
+		return "", err
+	}
+	return decryptedSecret, nil
+}
+
+func CoreWebhookExecutionToGitnessWebhookExecution(execution *types.WebhookExecutionCore) *types.WebhookExecution {
+	return &types.WebhookExecution{
+		ID:            execution.ID,
+		WebhookID:     execution.WebhookID,
+		TriggerID:     execution.TriggerID,
+		TriggerType:   execution.TriggerType,
+		Result:        execution.Result,
+		Error:         execution.Error,
+		Request:       execution.Request,
+		Response:      execution.Response,
+		RetriggerOf:   execution.RetriggerOf,
+		Retriggerable: execution.Retriggerable,
+		Duration:      execution.Duration,
+		Created:       execution.Created,
+	}
+}
+
+func GitnessWebhookExecutionToWebhookExecutionCore(execution *types.WebhookExecution) *types.WebhookExecutionCore {
+	return &types.WebhookExecutionCore{
+		ID:            execution.ID,
+		WebhookID:     execution.WebhookID,
+		TriggerID:     execution.TriggerID,
+		TriggerType:   execution.TriggerType,
+		Result:        execution.Result,
+		Error:         execution.Error,
+		Request:       execution.Request,
+		Response:      execution.Response,
+		RetriggerOf:   execution.RetriggerOf,
+		Retriggerable: execution.Retriggerable,
+		Duration:      execution.Duration,
+		Created:       execution.Created,
+	}
+}
+
+func GitnessWebhookToWebhookCore(webhook *types.Webhook) *types.WebhookCore {
+	return &types.WebhookCore{
+		ID:                    webhook.ID,
+		Version:               webhook.Version,
+		ParentID:              webhook.ParentID,
+		ParentType:            webhook.ParentType,
+		CreatedBy:             webhook.CreatedBy,
+		Created:               webhook.Created,
+		Updated:               webhook.Updated,
+		Type:                  webhook.Type,
+		Scope:                 webhook.Scope,
+		Identifier:            webhook.Identifier,
+		DisplayName:           webhook.DisplayName,
+		Description:           webhook.Description,
+		URL:                   webhook.URL,
+		Secret:                webhook.Secret,
+		Enabled:               webhook.Enabled,
+		Insecure:              webhook.Insecure,
+		Triggers:              webhook.Triggers,
+		LatestExecutionResult: webhook.LatestExecutionResult,
+	}
+}
+
+func CoreWebhookToGitnessWebhook(webhook *types.WebhookCore) *types.Webhook {
+	return &types.Webhook{
+		ID:                    webhook.ID,
+		Version:               webhook.Version,
+		ParentID:              webhook.ParentID,
+		ParentType:            webhook.ParentType,
+		CreatedBy:             webhook.CreatedBy,
+		Created:               webhook.Created,
+		Updated:               webhook.Updated,
+		Type:                  webhook.Type,
+		Scope:                 webhook.Scope,
+		Identifier:            webhook.Identifier,
+		DisplayName:           webhook.DisplayName,
+		Description:           webhook.Description,
+		URL:                   webhook.URL,
+		Secret:                webhook.Secret,
+		Enabled:               webhook.Enabled,
+		Insecure:              webhook.Insecure,
+		Triggers:              webhook.Triggers,
+		LatestExecutionResult: webhook.LatestExecutionResult,
+	}
+}
+
+func GitnessWebhooksToWebhooksCore(webhooks []*types.Webhook) []*types.WebhookCore {
+	webhooksCore := make([]*types.WebhookCore, 0)
+	for _, webhook := range webhooks {
+		webhookCore := GitnessWebhookToWebhookCore(webhook)
+		webhooksCore = append(webhooksCore, webhookCore)
+	}
+	return webhooksCore
 }

@@ -22,16 +22,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/app/store/database/util"
-	"github.com/harness/gitness/registry/types"
-	"github.com/harness/gitness/registry/types/enum"
 	gitnessstore "github.com/harness/gitness/store"
 	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
+	gitnesstypes "github.com/harness/gitness/types"
+	gitnessenum "github.com/harness/gitness/types/enum"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
@@ -95,7 +95,7 @@ type WebhookDao struct {
 	db *sqlx.DB
 }
 
-func (w WebhookDao) Create(ctx context.Context, webhook *types.Webhook) error {
+func (w WebhookDao) Create(ctx context.Context, webhook *gitnesstypes.WebhookCore) error {
 	const sqlQuery = `
 		INSERT INTO registry_webhooks (
 			registry_webhook_registry_id
@@ -140,8 +140,8 @@ func (w WebhookDao) Create(ctx context.Context, webhook *types.Webhook) error {
 	db := dbtx.GetAccessor(ctx, w.db)
 
 	dbwebhook, err := mapToWebhookDB(webhook)
-	dbwebhook.Created = webhook.CreatedAt.UnixMilli()
-	dbwebhook.Updated = webhook.UpdatedAt.UnixMilli()
+	dbwebhook.Created = webhook.Created
+	dbwebhook.Updated = webhook.Updated
 	if err != nil {
 		return fmt.Errorf("failed to map registry webhook to internal db type: %w", err)
 	}
@@ -162,10 +162,32 @@ func (w WebhookDao) GetByRegistryAndIdentifier(
 	ctx context.Context,
 	registryID int64,
 	webhookIdentifier string,
-) (*types.Webhook, error) {
+) (*gitnesstypes.WebhookCore, error) {
 	query := database.Builder.Select(registryWebhooksFields...).
 		From("registry_webhooks").
 		Where("registry_webhook_registry_id = ? AND registry_webhook_identifier = ?", registryID, webhookIdentifier)
+
+	sqlQuery, args, err := query.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, w.db)
+
+	dst := new(webhookDB)
+	if err = db.GetContext(ctx, dst, sqlQuery, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to get webhook detail")
+	}
+
+	return mapToWebhook(dst)
+}
+
+func (w WebhookDao) Find(
+	ctx context.Context, id int64,
+) (*gitnesstypes.WebhookCore, error) {
+	query := database.Builder.Select(registryWebhooksFields...).
+		From("registry_webhooks").
+		Where("registry_webhook_id = ?", id)
 
 	sqlQuery, args, err := query.ToSql()
 	if err != nil {
@@ -190,7 +212,7 @@ func (w WebhookDao) ListByRegistry(
 	offset int,
 	search string,
 	registryID int64,
-) (*[]types.Webhook, error) {
+) ([]*gitnesstypes.WebhookCore, error) {
 	query := database.Builder.Select(registryWebhooksFields...).
 		From("registry_webhooks").
 		Where("registry_webhook_registry_id = ?", registryID)
@@ -208,6 +230,31 @@ func (w WebhookDao) ListByRegistry(
 	}
 	query = query.Limit(util.SafeIntToUInt64(limit)).Offset(util.SafeIntToUInt64(offset))
 
+	sqlQuery, args, err := query.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, w.db)
+
+	var dst []*webhookDB
+	if err = db.SelectContext(ctx, &dst, sqlQuery, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to list webhooks details")
+	}
+
+	return mapToWebhooksList(dst)
+}
+
+func (w WebhookDao) ListAllByRegistry(
+	ctx context.Context,
+	parents []gitnesstypes.WebhookParentInfo,
+) ([]*gitnesstypes.WebhookCore, error) {
+	query := database.Builder.Select(registryWebhooksFields...).
+		From("registry_webhooks")
+	err := selectWebhookParents(parents, &query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to select webhook parents: %w", err)
+	}
 	sqlQuery, args, err := query.ToSql()
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to convert query to sql")
@@ -251,9 +298,10 @@ func (w WebhookDao) CountAllByRegistry(
 	return count, nil
 }
 
-func (w WebhookDao) Update(ctx context.Context, webhook *types.Webhook) error {
+func (w WebhookDao) Update(ctx context.Context, webhook *gitnesstypes.WebhookCore) error {
 	var sqlQuery = " UPDATE registry_webhooks SET " +
 		util.GetSetDBKeys(webhookDB{},
+			"registry_webhook_id",
 			"registry_webhook_identifier",
 			"registry_webhook_registry_id",
 			"registry_webhook_created",
@@ -265,7 +313,7 @@ func (w WebhookDao) Update(ctx context.Context, webhook *types.Webhook) error {
 		" AND registry_webhook_registry_id = :registry_webhook_registry_id"
 
 	dbWebhook, err := mapToWebhookDB(webhook)
-	dbWebhook.Updated = webhook.UpdatedAt.UnixMilli()
+	dbWebhook.Updated = webhook.Updated
 	if err != nil {
 		return err
 	}
@@ -318,59 +366,89 @@ func (w WebhookDao) DeleteByRegistryAndIdentifier(
 	return nil
 }
 
-func mapToWebhookDB(webhook *types.Webhook) (*webhookDB, error) {
-	if webhook.CreatedAt.IsZero() {
-		webhook.CreatedAt = time.Now()
+// UpdateOptLock updates the webhook using the optimistic locking mechanism.
+func (w *WebhookDao) UpdateOptLock(
+	ctx context.Context, hook *gitnesstypes.WebhookCore,
+	mutateFn func(hook *gitnesstypes.WebhookCore) error,
+) (*gitnesstypes.WebhookCore, error) {
+	for {
+		dup := *hook
+
+		err := mutateFn(&dup)
+		if err != nil {
+			return nil, fmt.Errorf("failed to mutate the webhook: %w", err)
+		}
+
+		err = w.Update(ctx, &dup)
+		if err == nil {
+			return &dup, nil
+		}
+		if !errors.Is(err, gitnessstore.ErrVersionConflict) {
+			return nil, fmt.Errorf("failed to update the webhook: %w", err)
+		}
+
+		hook, err = w.Find(ctx, hook.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to find the latst version of the webhook: %w", err)
+		}
 	}
-	webhook.UpdatedAt = time.Now()
-	dBwebhook := &webhookDB{
+}
+
+func mapToWebhookDB(webhook *gitnesstypes.WebhookCore) (*webhookDB, error) {
+	if webhook.Created < 0 {
+		webhook.Created = time.Now().UnixMilli()
+	}
+	webhook.Updated = time.Now().UnixMilli()
+	dBWebhook := &webhookDB{
 		ID:                    webhook.ID,
 		Version:               webhook.Version,
 		CreatedBy:             webhook.CreatedBy,
 		Identifier:            webhook.Identifier,
 		Scope:                 webhook.Scope,
-		Name:                  webhook.Name,
+		Name:                  webhook.DisplayName,
 		Description:           webhook.Description,
 		URL:                   webhook.URL,
 		SecretIdentifier:      util.GetEmptySQLString(webhook.SecretIdentifier),
 		SecretSpaceID:         util.GetEmptySQLInt64(webhook.SecretSpaceID),
 		Enabled:               webhook.Enabled,
 		Insecure:              webhook.Insecure,
-		Internal:              webhook.Internal,
 		Triggers:              triggersToString(webhook.Triggers),
 		ExtraHeaders:          null.StringFrom(structListToString(webhook.ExtraHeaders)),
 		LatestExecutionResult: null.StringFromPtr((*string)(webhook.LatestExecutionResult)),
 	}
 
+	if webhook.Type == gitnessenum.WebhookTypeInternal {
+		dBWebhook.Internal = true
+	}
+
 	switch webhook.ParentType {
-	case enum.WebhookParentRegistry:
-		dBwebhook.RegistryID = null.IntFrom(webhook.ParentID)
-	case enum.WebhookParentSpace:
-		dBwebhook.SpaceID = null.IntFrom(webhook.ParentID)
+	case gitnessenum.WebhookParentRegistry:
+		dBWebhook.RegistryID = null.IntFrom(webhook.ParentID)
+	case gitnessenum.WebhookParentSpace:
+		dBWebhook.SpaceID = null.IntFrom(webhook.ParentID)
 	default:
 		return nil, fmt.Errorf("webhook parent type %q is not supported", webhook.ParentType)
 	}
-	return dBwebhook, nil
+	return dBWebhook, nil
 }
 
-func mapToWebhook(webhookDB *webhookDB) (*types.Webhook, error) {
-	webhook := &types.Webhook{
+func mapToWebhook(webhookDB *webhookDB) (*gitnesstypes.WebhookCore, error) {
+	webhook := &gitnesstypes.WebhookCore{
 		ID:                    webhookDB.ID,
 		Version:               webhookDB.Version,
 		CreatedBy:             webhookDB.CreatedBy,
-		CreatedAt:             time.UnixMilli(webhookDB.Created),
-		UpdatedAt:             time.UnixMilli(webhookDB.Updated),
+		Created:               webhookDB.Created,
+		Updated:               webhookDB.Updated,
 		Scope:                 webhookDB.Scope,
 		Identifier:            webhookDB.Identifier,
-		Name:                  webhookDB.Name,
+		DisplayName:           webhookDB.Name,
 		Description:           webhookDB.Description,
 		URL:                   webhookDB.URL,
 		Enabled:               webhookDB.Enabled,
-		Internal:              webhookDB.Internal,
 		Insecure:              webhookDB.Insecure,
 		Triggers:              triggersFromString(webhookDB.Triggers),
 		ExtraHeaders:          stringToStructList(webhookDB.ExtraHeaders.String),
-		LatestExecutionResult: (*artifact.WebhookExecResult)(webhookDB.LatestExecutionResult.Ptr()),
+		LatestExecutionResult: (*gitnessenum.WebhookExecutionResult)(webhookDB.LatestExecutionResult.Ptr()),
 	}
 
 	if webhookDB.SecretIdentifier.Valid {
@@ -380,14 +458,20 @@ func mapToWebhook(webhookDB *webhookDB) (*types.Webhook, error) {
 		webhook.SecretSpaceID = int(webhookDB.SecretSpaceID.Int64)
 	}
 
+	if webhookDB.Internal {
+		webhook.Type = gitnessenum.WebhookTypeInternal
+	} else {
+		webhook.Type = gitnessenum.WebhookTypeExternal
+	}
+
 	switch {
 	case webhookDB.RegistryID.Valid && webhookDB.SpaceID.Valid:
 		return nil, fmt.Errorf("both registryID and spaceID are set for hook %d", webhookDB.ID)
 	case webhookDB.RegistryID.Valid:
-		webhook.ParentType = enum.WebhookParentRegistry
+		webhook.ParentType = gitnessenum.WebhookParentRegistry
 		webhook.ParentID = webhookDB.RegistryID.Int64
 	case webhookDB.SpaceID.Valid:
-		webhook.ParentType = enum.WebhookParentSpace
+		webhook.ParentType = gitnessenum.WebhookParentSpace
 		webhook.ParentID = webhookDB.SpaceID.Int64
 	default:
 		return nil, fmt.Errorf("neither registryID nor spaceID are set for hook %d", webhookDB.ID)
@@ -396,7 +480,32 @@ func mapToWebhook(webhookDB *webhookDB) (*types.Webhook, error) {
 	return webhook, nil
 }
 
-func triggersToString(triggers []artifact.Trigger) string {
+func selectWebhookParents(
+	parents []gitnesstypes.WebhookParentInfo,
+	stmt *squirrel.SelectBuilder,
+) error {
+	var parentSelector squirrel.Or
+	for _, parent := range parents {
+		switch parent.Type {
+		case gitnessenum.WebhookParentRegistry:
+			parentSelector = append(parentSelector, squirrel.Eq{
+				"registry_webhook_registry_id": parent.ID,
+			})
+		case gitnessenum.WebhookParentSpace:
+			parentSelector = append(parentSelector, squirrel.Eq{
+				"registry_webhook_space_id": parent.ID,
+			})
+		default:
+			return fmt.Errorf("webhook parent type '%s' is not supported", parent.Type)
+		}
+	}
+
+	*stmt = stmt.Where(parentSelector)
+
+	return nil
+}
+
+func triggersToString(triggers []gitnessenum.WebhookTrigger) string {
 	rawTriggers := make([]string, len(triggers))
 	for i := range triggers {
 		rawTriggers[i] = string(triggers[i])
@@ -405,22 +514,22 @@ func triggersToString(triggers []artifact.Trigger) string {
 	return strings.Join(rawTriggers, triggersSeparator)
 }
 
-func triggersFromString(triggersString string) []artifact.Trigger {
+func triggersFromString(triggersString string) []gitnessenum.WebhookTrigger {
 	if triggersString == "" {
-		return []artifact.Trigger{}
+		return []gitnessenum.WebhookTrigger{}
 	}
 
 	rawTriggers := strings.Split(triggersString, triggersSeparator)
-	triggers := make([]artifact.Trigger, len(rawTriggers))
+	triggers := make([]gitnessenum.WebhookTrigger, len(rawTriggers))
 	for i, rawTrigger := range rawTriggers {
-		triggers[i] = artifact.Trigger(rawTrigger)
+		triggers[i] = gitnessenum.WebhookTrigger(rawTrigger)
 	}
 
 	return triggers
 }
 
 // Convert a list of ExtraHeaders structs to a JSON string.
-func structListToString(headers []artifact.ExtraHeader) string {
+func structListToString(headers []gitnesstypes.ExtraHeader) string {
 	jsonData, err := json.Marshal(headers)
 	if err != nil {
 		return ""
@@ -429,8 +538,8 @@ func structListToString(headers []artifact.ExtraHeader) string {
 }
 
 // Convert a JSON string back to a list of ExtraHeaders structs.
-func stringToStructList(jsonStr string) []artifact.ExtraHeader {
-	var headers []artifact.ExtraHeader
+func stringToStructList(jsonStr string) []gitnesstypes.ExtraHeader {
+	var headers []gitnesstypes.ExtraHeader
 	err := json.Unmarshal([]byte(jsonStr), &headers)
 	if err != nil {
 		return nil
@@ -440,14 +549,14 @@ func stringToStructList(jsonStr string) []artifact.ExtraHeader {
 
 func mapToWebhooksList(
 	dst []*webhookDB,
-) (*[]types.Webhook, error) {
-	webhooks := make([]types.Webhook, 0, len(dst))
+) ([]*gitnesstypes.WebhookCore, error) {
+	webhooks := make([]*gitnesstypes.WebhookCore, 0, len(dst))
 	for _, d := range dst {
 		webhook, err := mapToWebhook(d)
 		if err != nil {
 			return nil, err
 		}
-		webhooks = append(webhooks, *webhook)
+		webhooks = append(webhooks, webhook)
 	}
-	return &webhooks, nil
+	return webhooks, nil
 }

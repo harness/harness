@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
+//nolint:nilnil
 func (c *APIController) GetArtifactStats(
 	_ context.Context,
 	_ artifact.GetArtifactStatsRequestObject,
@@ -31,12 +32,13 @@ func (c *APIController) GetArtifactStats(
 	return nil, nil
 }
 
+//nolint:nilnil
 func (c *APIController) GetArtifactStatsForSpace(
 	ctx context.Context,
 	r artifact.GetArtifactStatsForSpaceRequestObject,
 ) (artifact.GetArtifactStatsForSpaceResponseObject, error) {
 	parentRef := r.SpaceRef
-	regInfo, err := c.GetRegistryRequestBaseInfo(ctx, string(parentRef), "")
+	regInfo, err := c.RegistryMetadataHelper.GetRegistryRequestBaseInfo(ctx, string(parentRef), "")
 	if err != nil {
 		return artifact.GetArtifactStatsForSpace400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
@@ -55,7 +57,8 @@ func (c *APIController) GetArtifactStatsForSpace(
 	}
 
 	session, _ := request.AuthSessionFrom(ctx)
-	permissionChecks := GetPermissionChecks(space, regInfo.RegistryIdentifier, enum.PermissionRegistryView)
+	permissionChecks := c.RegistryMetadataHelper.GetPermissionChecks(space,
+		regInfo.RegistryIdentifier, enum.PermissionRegistryView)
 	if err = apiauth.CheckRegistry(
 		ctx,
 		c.Authorizer,
@@ -71,11 +74,12 @@ func (c *APIController) GetArtifactStatsForSpace(
 	return nil, nil
 }
 
+//nolint:nilnil
 func (c *APIController) GetArtifactStatsForRegistry(
 	ctx context.Context,
 	r artifact.GetArtifactStatsForRegistryRequestObject,
 ) (artifact.GetArtifactStatsForRegistryResponseObject, error) {
-	regInfo, err := c.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
+	regInfo, err := c.RegistryMetadataHelper.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
 	if err != nil {
 		return artifact.GetArtifactStatsForRegistry400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(

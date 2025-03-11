@@ -22,7 +22,7 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
 	api "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
-	"github.com/harness/gitness/registry/types"
+	gitnesstypes "github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
@@ -32,7 +32,7 @@ func (c *APIController) ListWebhooks(
 	ctx context.Context,
 	r api.ListWebhooksRequestObject,
 ) (api.ListWebhooksResponseObject, error) {
-	regInfo, err := c.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
+	regInfo, err := c.RegistryMetadataHelper.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
 	if err != nil {
 		return listWebhookInternalErrorResponse(err)
 	}
@@ -43,7 +43,8 @@ func (c *APIController) ListWebhooks(
 	}
 
 	session, _ := request.AuthSessionFrom(ctx)
-	permissionChecks := GetPermissionChecks(space, regInfo.RegistryIdentifier, enum.PermissionRegistryView)
+	permissionChecks := c.RegistryMetadataHelper.GetPermissionChecks(space, regInfo.RegistryIdentifier,
+		enum.PermissionRegistryView)
 	if err = apiauth.CheckRegistry(
 		ctx,
 		c.Authorizer,
@@ -126,11 +127,11 @@ func listWebhookInternalErrorResponse(err error) (api.ListWebhooksResponseObject
 
 func (c *APIController) mapToListWebhookResponseEntity(
 	ctx context.Context,
-	webhooks *[]types.Webhook,
+	webhooks []*gitnesstypes.WebhookCore,
 ) ([]api.Webhook, error) {
-	webhooksEntities := make([]api.Webhook, 0, len(*webhooks))
-	for _, d := range *webhooks {
-		webhook, err := c.mapToWebhookResponseEntity(ctx, d)
+	webhooksEntities := make([]api.Webhook, 0, len(webhooks))
+	for _, d := range webhooks {
+		webhook, err := c.RegistryMetadataHelper.MapToWebhookResponseEntity(ctx, d)
 		if err != nil {
 			return nil, err
 		}

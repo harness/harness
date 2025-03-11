@@ -22,7 +22,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// PutManifest validates and stores a manifest in the registry.
+// DeleteManifest a manifest from the registry.
 func (h *Handler) DeleteManifest(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	info, err := h.GetRegistryInfo(r, false)

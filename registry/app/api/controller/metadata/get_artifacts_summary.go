@@ -29,7 +29,7 @@ func (c *APIController) GetArtifactSummary(
 	ctx context.Context,
 	r artifact.GetArtifactSummaryRequestObject,
 ) (artifact.GetArtifactSummaryResponseObject, error) {
-	regInfo, err := c.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
+	regInfo, err := c.RegistryMetadataHelper.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
 	if err != nil {
 		return artifact.GetArtifactSummary400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
@@ -48,7 +48,8 @@ func (c *APIController) GetArtifactSummary(
 	}
 
 	session, _ := request.AuthSessionFrom(ctx)
-	permissionChecks := GetPermissionChecks(space, regInfo.RegistryIdentifier, enum.PermissionRegistryView)
+	permissionChecks := c.RegistryMetadataHelper.GetPermissionChecks(space, regInfo.RegistryIdentifier,
+		enum.PermissionRegistryView)
 	if err = apiauth.CheckRegistry(
 		ctx,
 		c.Authorizer,

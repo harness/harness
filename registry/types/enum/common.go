@@ -31,3 +31,16 @@ func sortEnum[T constraints.Ordered](slice []T) []T {
 	slices.Sort(slice)
 	return slice
 }
+
+func Sanitize[E constraints.Ordered](element E, all func() ([]E, E)) (E, bool) {
+	allValues, defValue := all()
+	var empty E
+	if element == empty && defValue != empty {
+		return defValue, true
+	}
+	idx, exists := slices.BinarySearch(allValues, element)
+	if exists {
+		return allValues[idx], true
+	}
+	return defValue, false
+}

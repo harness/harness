@@ -12,14 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package webhook
+package events
 
 import (
-	"context"
+	"encoding/gob"
 
-	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/events"
+
+	"github.com/google/wire"
 )
 
-type URLProvider interface {
-	GetWebhookURL(ctx context.Context, webhook *types.WebhookCore) (string, error)
+func ProvideReaderFactory(eventsSystem *events.System) (*events.ReaderFactory[*Reader], error) {
+	return NewReaderFactory(eventsSystem)
 }
+
+func ProvideArtifactReporter(eventsSystem *events.System) (*Reporter, error) {
+	reporter, err := NewReporter(eventsSystem)
+	if err != nil {
+		return nil, err
+	}
+	gob.Register(&DockerArtifact{})
+	gob.Register(&HelmArtifact{})
+	return reporter, nil
+}
+
+var WireSet = wire.NewSet(
+	ProvideReaderFactory,
+	ProvideArtifactReporter,
+)

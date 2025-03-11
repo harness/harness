@@ -21,11 +21,15 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"net/url"
 	"time"
 
+	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/services/refcache"
+	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/event"
+	registryevents "github.com/harness/gitness/registry/app/events"
 	"github.com/harness/gitness/registry/app/manifest"
 	"github.com/harness/gitness/registry/app/manifest/manifestlist"
 	"github.com/harness/gitness/registry/app/manifest/ocischema"
@@ -47,6 +51,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+const ociPrefix = "oci://"
+
 type manifestService struct {
 	registryDao             store.RegistryRepository
 	manifestDao             store.ManifestRepository
@@ -62,6 +68,8 @@ type manifestService struct {
 	gcService               gc.Service
 	tx                      dbtx.Transactor
 	reporter                event.Reporter
+	artifactEventReporter   registryevents.Reporter
+	urlProvider             urlprovider.Provider
 }
 
 func NewManifestService(
@@ -70,7 +78,8 @@ func NewManifestService(
 	imageDao store.ImageRepository, artifactDao store.ArtifactRepository,
 	layerDao store.LayerRepository, manifestRefDao store.ManifestReferenceRepository,
 	tx dbtx.Transactor, gcService gc.Service, reporter event.Reporter, spaceFinder refcache.SpaceFinder,
-	ociImageIndexMappingDao store.OCIImageIndexMappingRepository,
+	ociImageIndexMappingDao store.OCIImageIndexMappingRepository, artifactEventReporter registryevents.Reporter,
+	urlProvider urlprovider.Provider,
 ) ManifestService {
 	return &manifestService{
 		registryDao:             registryDao,
@@ -87,6 +96,8 @@ func NewManifestService(
 		reporter:                reporter,
 		spaceFinder:             spaceFinder,
 		ociImageIndexMappingDao: ociImageIndexMappingDao,
+		artifactEventReporter:   artifactEventReporter,
+		urlProvider:             urlProvider,
 	}
 }
 
@@ -193,6 +204,7 @@ func (l *manifestService) dbTagManifest(
 	if err != nil {
 		return formatFailedToTagErr(err)
 	}
+	existingDigest := l.getTagDigest(ctx, dbRegistry.ID, imageName, tagName)
 
 	err = l.tx.WithTx(ctx, func(ctx context.Context) error {
 		// Prevent long running transactions by setting an upper limit of manifestTagGCLockTimeout. If the GC is holding
@@ -228,11 +240,154 @@ func (l *manifestService) dbTagManifest(
 			return err
 		}
 		l.reportEventAsync(ctx, reg.ID, info.RegIdentifier, imageName, tagName, packageType, spacePath)
+		session, _ := request.AuthSessionFrom(ctx)
+		createPayload := l.getArtifactCreatedPayload(ctx, info, session.Principal.ID,
+			reg.ID, reg.Name, tagName, dgst.String())
+		l.artifactEventReporter.ArtifactCreated(ctx, &createPayload)
+
+		if existingDigest != "" && existingDigest != dgst {
+			updatePayload := l.getArtifactUpdatedPayload(ctx, info, session.Principal.ID,
+				reg.ID, reg.Name, tagName, existingDigest.String(), dgst.String())
+			l.artifactEventReporter.ArtifactUpdated(ctx, &updatePayload)
+		}
 	} else {
 		log.Ctx(ctx).Err(err).Msg("Failed to find spacePath, not publishing event")
 	}
 
 	return nil
+}
+
+func (l *manifestService) getArtifactCreatedPayload(
+	ctx context.Context,
+	info pkg.RegistryInfo,
+	principalID int64,
+	registryID int64,
+	regIdentifier string,
+	tag string,
+	digest string,
+) registryevents.ArtifactCreatedPayload {
+	payload := registryevents.ArtifactCreatedPayload{
+		RegistryID:   registryID,
+		PrincipalID:  principalID,
+		ArtifactType: info.PackageType,
+	}
+	artifactURL := l.urlProvider.RegistryURL(ctx, info.RootIdentifier, regIdentifier) + "/" + info.Image + ":" + tag
+	urlWithoutProtocol := GetRepoURLWithoutProtocol(artifactURL)
+	baseArtifact := registryevents.BaseArtifact{
+		Name: info.Image,
+		Ref:  fmt.Sprintf("%s:%s", info.Image, tag),
+	}
+	if info.PackageType == artifact.PackageTypeDOCKER {
+		payload.Artifact = &registryevents.DockerArtifact{
+			BaseArtifact: baseArtifact,
+			Tag:          tag,
+			URL:          urlWithoutProtocol,
+			Digest:       digest,
+		}
+	} else if info.PackageType == artifact.PackageTypeHELM {
+		payload.Artifact = &registryevents.HelmArtifact{
+			BaseArtifact: baseArtifact,
+			Tag:          tag,
+			URL:          ociPrefix + urlWithoutProtocol,
+			Digest:       digest,
+		}
+	}
+	return payload
+}
+
+func (l *manifestService) getArtifactDeletedPayload(
+	ctx context.Context,
+	info pkg.RegistryInfo,
+	principalID int64,
+	registryID int64,
+	regIdentifier string,
+	tag string,
+	digest string,
+) registryevents.ArtifactDeletedPayload {
+	payload := registryevents.ArtifactDeletedPayload{
+		RegistryID:   registryID,
+		PrincipalID:  principalID,
+		ArtifactType: info.PackageType,
+	}
+	artifactURL := l.urlProvider.RegistryURL(ctx, info.RootIdentifier, regIdentifier) + "/" + info.Image + ":" + tag
+	urlWithoutProtocol := GetRepoURLWithoutProtocol(artifactURL)
+
+	baseArtifact := registryevents.BaseArtifact{
+		Name: info.Image,
+		Ref:  fmt.Sprintf("%s:%s", info.Image, tag),
+	}
+	if info.PackageType == artifact.PackageTypeDOCKER {
+		payload.Artifact = &registryevents.DockerArtifact{
+			BaseArtifact: baseArtifact,
+			Tag:          tag,
+			Digest:       digest,
+			URL:          urlWithoutProtocol,
+		}
+	} else if info.PackageType == artifact.PackageTypeHELM {
+		payload.Artifact = &registryevents.HelmArtifact{
+			BaseArtifact: baseArtifact,
+			Tag:          tag,
+			Digest:       digest,
+			URL:          ociPrefix + urlWithoutProtocol,
+		}
+	}
+	return payload
+}
+
+func (l *manifestService) getArtifactUpdatedPayload(
+	ctx context.Context,
+	info pkg.RegistryInfo,
+	principalID int64,
+	registryID int64,
+	regIdentifier string,
+	tag string,
+	oldDigest string,
+	newDigest string,
+) registryevents.ArtifactUpdatedPayload {
+	payload := registryevents.ArtifactUpdatedPayload{
+		RegistryID:   registryID,
+		PrincipalID:  principalID,
+		ArtifactType: info.PackageType,
+	}
+	artifactURL := l.urlProvider.RegistryURL(ctx, info.RootIdentifier, regIdentifier) + "/" + info.Image + ":" + tag
+	urlWithoutProtocol := GetRepoURLWithoutProtocol(artifactURL)
+
+	baseArtifact := registryevents.BaseArtifact{
+		Name: info.Image,
+		Ref:  fmt.Sprintf("%s:%s", info.Image, tag),
+	}
+	if info.PackageType == artifact.PackageTypeDOCKER {
+		payload.ArtifactChange = registryevents.ArtifactChange{
+			Old: &registryevents.DockerArtifact{
+				BaseArtifact: baseArtifact,
+				Tag:          tag,
+				URL:          urlWithoutProtocol,
+				Digest:       oldDigest,
+			},
+			New: &registryevents.DockerArtifact{
+				BaseArtifact: baseArtifact,
+				Tag:          tag,
+				URL:          urlWithoutProtocol,
+				Digest:       newDigest,
+			},
+		}
+	} else if info.PackageType == artifact.PackageTypeHELM {
+		payload.ArtifactChange = registryevents.ArtifactChange{
+			Old: &registryevents.HelmArtifact{
+				BaseArtifact: baseArtifact,
+				Tag:          tag,
+				URL:          ociPrefix + urlWithoutProtocol,
+				Digest:       oldDigest,
+			},
+			New: &registryevents.HelmArtifact{
+				BaseArtifact: baseArtifact,
+				Tag:          tag,
+				URL:          ociPrefix + urlWithoutProtocol,
+				Digest:       newDigest,
+			},
+		}
+	}
+	return payload
 }
 
 func formatFailedToTagErr(err error) error {
@@ -366,7 +521,8 @@ func (l *manifestService) upsertImageAndArtifact(
 	ctx context.Context,
 	d digest.Digest,
 	repoKey string,
-	info pkg.RegistryInfo) error {
+	info pkg.RegistryInfo,
+) error {
 	dbRepo, err := l.registryDao.GetByParentIDAndName(ctx, info.ParentID, repoKey)
 	if err != nil {
 		return err
@@ -399,7 +555,8 @@ func (l *manifestService) upsertImageAndArtifact(
 func (l *manifestService) UpsertImage(
 	ctx context.Context,
 	repoKey string,
-	info pkg.RegistryInfo) error {
+	info pkg.RegistryInfo,
+) error {
 	dbRepo, err := l.registryDao.GetByParentIDAndName(ctx, info.ParentID, repoKey)
 	if err != nil {
 		return err
@@ -1068,15 +1225,37 @@ func (l *manifestService) DeleteTag(
 		return false, err
 	}
 
-	found, err := l.tagDao.DeleteTagByName(ctx, registry.ID, tag)
+	existingDigest := l.getTagDigest(ctx, registry.ID, info.Image, tag)
+	deleted, err := l.tagDao.DeleteTagByName(ctx, registry.ID, tag)
 	if err != nil {
 		return false, fmt.Errorf("failed to delete tag in database: %w", err)
 	}
-	if !found {
+	if !deleted {
 		return false, distribution.ErrTagUnknown{Tag: tag}
 	}
 
+	session, _ := request.AuthSessionFrom(ctx)
+	payload := l.getArtifactDeletedPayload(ctx, info, session.Principal.ID, registry.ID,
+		registry.Name, tag, existingDigest.String())
+	l.artifactEventReporter.ArtifactDeleted(ctx, &payload)
+
 	return true, nil
+}
+
+func (l *manifestService) getTagDigest(
+	ctx context.Context,
+	registryID int64,
+	imageName string,
+	tag string,
+) digest.Digest {
+	existingTag, findTagErr := l.tagDao.FindTag(ctx, registryID, imageName, tag)
+	if findTagErr == nil && existingTag != nil {
+		existingTaggedManifest, getManifestErr := l.manifestDao.Get(ctx, existingTag.ManifestID)
+		if getManifestErr == nil {
+			return existingTaggedManifest.Digest
+		}
+	}
+	return ""
 }
 
 func (l *manifestService) DeleteTagsByManifestID(
@@ -1178,4 +1357,15 @@ func (l *manifestService) DeleteManifest(
 			return nil
 		},
 	)
+}
+
+func GetRepoURLWithoutProtocol(registryURL string) string {
+	repoURL := registryURL
+	parsedURL, err := url.Parse(repoURL)
+	if err != nil {
+		log.Error().Stack().Err(err).Msg("Error parsing URL: ")
+		return ""
+	}
+
+	return parsedURL.Host + parsedURL.Path
 }

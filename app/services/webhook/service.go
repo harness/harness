@@ -29,8 +29,10 @@ import (
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/secret"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/stream"
+	"github.com/harness/gitness/types"
 )
 
 const (
@@ -59,16 +61,16 @@ func (c *Config) Prepare() error {
 		return errors.New("config is required")
 	}
 	if c.EventReaderName == "" {
-		return errors.New("config.EventReaderName is required")
+		return errors.New("Config.EventReaderName is required")
 	}
 	if c.UserAgentIdentity == "" {
-		return errors.New("config.UserAgentIdentity is required")
+		return errors.New("Config.UserAgentIdentity is required")
 	}
 	if c.Concurrency < 1 {
-		return errors.New("config.Concurrency has to be a positive number")
+		return errors.New("Config.Concurrency has to be a positive number")
 	}
 	if c.MaxRetries < 0 {
-		return errors.New("config.MaxRetries can't be negative")
+		return errors.New("Config.MaxRetries can't be negative")
 	}
 
 	// Backfill data
@@ -79,10 +81,76 @@ func (c *Config) Prepare() error {
 	return nil
 }
 
+type WebhookExecutorStore interface {
+	Find(ctx context.Context, id int64) (*types.WebhookExecutionCore, error)
+	ListWebhooks(
+		ctx context.Context,
+		parents []types.WebhookParentInfo,
+	) ([]*types.WebhookCore, error)
+
+	UpdateOptLock(
+		ctx context.Context, hook *types.WebhookCore,
+		execution *types.WebhookExecutionCore,
+	) (*types.WebhookCore, error)
+
+	FindWebhook(
+		ctx context.Context,
+		id int64,
+	) (*types.WebhookCore, error)
+
+	ListForTrigger(
+		ctx context.Context,
+		triggerID string,
+	) ([]*types.WebhookExecutionCore, error)
+
+	CreateWebhookExecution(ctx context.Context, hook *types.WebhookExecutionCore) error
+}
+
+type WebhookExecutor struct {
+	secureHTTPClient           *http.Client
+	insecureHTTPClient         *http.Client
+	secureHTTPClientInternal   *http.Client
+	insecureHTTPClientInternal *http.Client
+	config                     Config
+	webhookURLProvider         URLProvider
+	encrypter                  encrypt.Encrypter
+	spacePathStore             store.SpacePathStore
+	secretService              secret.Service
+	principalStore             store.PrincipalStore
+	webhookExecutorStore       WebhookExecutorStore
+	source                     string
+}
+
+func NewWebhookExecutor(
+	config Config,
+	webhookURLProvider URLProvider,
+	encrypter encrypt.Encrypter,
+	spacePathStore store.SpacePathStore,
+	secretService secret.Service,
+	principalStore store.PrincipalStore,
+	webhookExecutorStore WebhookExecutorStore,
+	source string,
+) *WebhookExecutor {
+	return &WebhookExecutor{
+		webhookExecutorStore:       webhookExecutorStore,
+		secureHTTPClient:           newHTTPClient(config.AllowLoopback, config.AllowPrivateNetwork, false),
+		insecureHTTPClient:         newHTTPClient(config.AllowLoopback, config.AllowPrivateNetwork, true),
+		secureHTTPClientInternal:   newHTTPClient(config.AllowLoopback, true, false),
+		insecureHTTPClientInternal: newHTTPClient(config.AllowLoopback, true, true),
+		config:                     config,
+		webhookURLProvider:         webhookURLProvider,
+		encrypter:                  encrypter,
+		spacePathStore:             spacePathStore,
+		secretService:              secretService,
+		principalStore:             principalStore,
+		source:                     source,
+	}
+}
+
 // Service is responsible for processing webhook events.
 type Service struct {
-	tx dbtx.Transactor
-
+	WebhookExecutor       *WebhookExecutor
+	tx                    dbtx.Transactor
 	webhookStore          store.WebhookStore
 	webhookExecutionStore store.WebhookExecutionStore
 	urlProvider           url.Provider
@@ -95,17 +163,8 @@ type Service struct {
 	labelStore            store.LabelStore
 	labelValueStore       store.LabelValueStore
 	encrypter             encrypt.Encrypter
-
-	secureHTTPClient   *http.Client
-	insecureHTTPClient *http.Client
-
-	secureHTTPClientInternal   *http.Client
-	insecureHTTPClientInternal *http.Client
-
-	config             Config
-	webhookURLProvider URLProvider
-
-	sseStreamer sse.Streamer
+	config                Config
+	sseStreamer           sse.Streamer
 }
 
 func NewService(
@@ -128,11 +187,21 @@ func NewService(
 	webhookURLProvider URLProvider,
 	labelValueStore store.LabelValueStore,
 	sseStreamer sse.Streamer,
+	secretService secret.Service,
+	spacePathStore store.SpacePathStore,
 ) (*Service, error) {
 	if err := config.Prepare(); err != nil {
-		return nil, fmt.Errorf("provided webhook service config is invalid: %w", err)
+		return nil, fmt.Errorf("provided webhook service Config is invalid: %w", err)
 	}
+	webhookExecutorStore := &GitnessWebhookExecutorStore{
+		webhookStore:          webhookStore,
+		webhookExecutionStore: webhookExecutionStore,
+	}
+	executor := NewWebhookExecutor(config, webhookURLProvider, encrypter, spacePathStore,
+		secretService, principalStore, webhookExecutorStore, RepoTrigger)
+
 	service := &Service{
+		WebhookExecutor:       executor,
 		tx:                    tx,
 		webhookStore:          webhookStore,
 		webhookExecutionStore: webhookExecutionStore,
@@ -144,20 +213,10 @@ func NewService(
 		principalStore:        principalStore,
 		git:                   git,
 		encrypter:             encrypter,
-
-		secureHTTPClient:   newHTTPClient(config.AllowLoopback, config.AllowPrivateNetwork, false),
-		insecureHTTPClient: newHTTPClient(config.AllowLoopback, config.AllowPrivateNetwork, true),
-
-		secureHTTPClientInternal:   newHTTPClient(config.AllowLoopback, true, false),
-		insecureHTTPClientInternal: newHTTPClient(config.AllowLoopback, true, true),
-
-		config: config,
-
-		labelStore:         labelStore,
-		labelValueStore:    labelValueStore,
-		webhookURLProvider: webhookURLProvider,
-
-		sseStreamer: sseStreamer,
+		config:                config,
+		labelStore:            labelStore,
+		labelValueStore:       labelValueStore,
+		sseStreamer:           sseStreamer,
 	}
 
 	_, err := gitReaderFactory.Launch(ctx, eventsReaderGroupName, config.EventReaderName,

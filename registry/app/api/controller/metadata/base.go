@@ -22,13 +22,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/harness/gitness/app/paths"
 	api "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	storagedriver "github.com/harness/gitness/registry/app/driver"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/types"
-	registryenum "github.com/harness/gitness/registry/types/enum"
+	gitnessenum "github.com/harness/gitness/types/enum"
 
 	digest "github.com/opencontainers/go-digest"
 	"github.com/rs/zerolog/log"
@@ -91,63 +90,6 @@ type ArtifactFilesRequestInfo struct {
 	searchTerm  string
 }
 
-// GetRegistryRequestBaseInfo returns the base info for the registry request
-// One of the regRefParam or (parentRefParam + regIdentifierParam) should be provided.
-func (c *APIController) GetRegistryRequestBaseInfo(
-	ctx context.Context,
-	parentRef string,
-	regRef string,
-) (*RegistryRequestBaseInfo, error) {
-	// ---------- CHECKS ------------
-	if commons.IsEmpty(parentRef) && !commons.IsEmpty(regRef) {
-		parentRef, _, _ = paths.DisectLeaf(regRef)
-	}
-
-	// ---------- PARENT ------------
-	if commons.IsEmpty(parentRef) {
-		return nil, fmt.Errorf("parent reference is required")
-	}
-	rootIdentifier, _, err := paths.DisectRoot(parentRef)
-	if err != nil {
-		return nil, fmt.Errorf("invalid parent reference: %w", err)
-	}
-
-	rootSpace, err := c.SpaceFinder.FindByRef(ctx, rootIdentifier)
-	if err != nil {
-		return nil, fmt.Errorf("root space not found: %w", err)
-	}
-	parentSpace, err := c.SpaceFinder.FindByRef(ctx, parentRef)
-	if err != nil {
-		return nil, fmt.Errorf("parent space not found: %w", err)
-	}
-	rootIdentifierID := rootSpace.ID
-	parentID := parentSpace.ID
-
-	baseInfo := &RegistryRequestBaseInfo{
-		ParentRef:        parentRef,
-		parentID:         parentID,
-		RootIdentifier:   rootIdentifier,
-		rootIdentifierID: rootIdentifierID,
-	}
-
-	// ---------- REGISTRY  ------------
-	if !commons.IsEmpty(regRef) {
-		_, regIdentifier, _ := paths.DisectLeaf(regRef)
-
-		reg, getRegistryErr := c.RegistryRepository.GetByParentIDAndName(ctx, parentID, regIdentifier)
-		if getRegistryErr != nil {
-			return nil, fmt.Errorf("registry not found: %w", err)
-		}
-
-		baseInfo.RegistryRef = regRef
-		baseInfo.RegistryIdentifier = regIdentifier
-		baseInfo.RegistryID = reg.ID
-		baseInfo.RegistryType = reg.Type
-	}
-
-	return baseInfo, nil
-}
-
 func (c *APIController) GetRegistryRequestInfo(
 	ctx context.Context,
 	registryRequestParams RegistryRequestParams,
@@ -188,7 +130,8 @@ func (c *APIController) GetRegistryRequestInfo(
 		searchTerm = string(*registryRequestParams.search)
 	}
 
-	baseInfo, err := c.GetRegistryRequestBaseInfo(ctx, registryRequestParams.ParentRef, registryRequestParams.RegRef)
+	baseInfo, err := c.RegistryMetadataHelper.GetRegistryRequestBaseInfo(ctx, registryRequestParams.ParentRef,
+		registryRequestParams.RegRef)
 	if err != nil {
 		return nil, err
 	}
@@ -419,97 +362,14 @@ func CreateUpstreamProxyResponseJSONResponse(upstreamproxy *types.UpstreamProxy)
 	return response
 }
 
-func (c *APIController) mapToWebhookResponseEntity(
-	ctx context.Context,
-	createdWebhook types.Webhook,
-) (*api.Webhook, error) {
-	createdAt := GetTimeInMs(createdWebhook.CreatedAt)
-	modifiedAt := GetTimeInMs(createdWebhook.UpdatedAt)
-	webhookResponseEntity := &api.Webhook{
-		Identifier:            createdWebhook.Identifier,
-		Name:                  createdWebhook.Name,
-		Description:           &createdWebhook.Description,
-		Url:                   createdWebhook.URL,
-		Version:               &createdWebhook.Version,
-		Enabled:               createdWebhook.Enabled,
-		Internal:              &createdWebhook.Internal,
-		Insecure:              createdWebhook.Insecure,
-		Triggers:              &createdWebhook.Triggers,
-		CreatedBy:             &createdWebhook.CreatedBy,
-		CreatedAt:             &createdAt,
-		ModifiedAt:            &modifiedAt,
-		LatestExecutionResult: createdWebhook.LatestExecutionResult,
-	}
-	if createdWebhook.ExtraHeaders != nil {
-		webhookResponseEntity.ExtraHeaders = &createdWebhook.ExtraHeaders
-	}
-	secretSpacePath := ""
-	if createdWebhook.SecretSpaceID > 0 {
-		primary, err := c.SpaceFinder.FindByID(ctx, int64(createdWebhook.SecretSpaceID))
-		if err != nil {
-			return nil, fmt.Errorf("failed to get secret space path: %w", err)
-		}
-		secretSpacePath = primary.Path
-	}
-	if createdWebhook.SecretIdentifier != "" {
-		webhookResponseEntity.SecretIdentifier = &createdWebhook.SecretIdentifier
-	}
-	if secretSpacePath != "" {
-		webhookResponseEntity.SecretSpacePath = &secretSpacePath
-	}
-	if createdWebhook.SecretSpaceID > 0 {
-		webhookResponseEntity.SecretSpaceId = &createdWebhook.SecretSpaceID
-	}
-
-	return webhookResponseEntity, nil
-}
-
-func (c *APIController) mapToWebhook(
-	ctx context.Context,
-	webhookRequest api.WebhookRequest,
-	regInfo *RegistryRequestBaseInfo,
-) (*types.Webhook, error) {
-	webhook := &types.Webhook{
-		Name:       webhookRequest.Identifier,
-		ParentType: registryenum.WebhookParentRegistry,
-		ParentID:   regInfo.RegistryID,
-		Scope:      webhookScopeRegistry,
-		Identifier: webhookRequest.Identifier,
-		URL:        webhookRequest.Url,
-		Enabled:    webhookRequest.Enabled,
-		Insecure:   webhookRequest.Insecure,
-		Triggers:   deduplicateTriggers(*webhookRequest.Triggers),
-	}
-	if webhookRequest.Description != nil {
-		webhook.Description = *webhookRequest.Description
-	}
-	if webhookRequest.SecretIdentifier != nil {
-		webhook.SecretIdentifier = *webhookRequest.SecretIdentifier
-	}
-	if webhookRequest.ExtraHeaders != nil {
-		webhook.ExtraHeaders = *webhookRequest.ExtraHeaders
-	}
-
-	if webhookRequest.SecretSpacePath != nil && len(*webhookRequest.SecretSpacePath) > 0 {
-		secretSpaceID, err := c.getSecretSpaceID(ctx, webhookRequest.SecretSpacePath)
-		if err != nil {
-			return nil, err
-		}
-		webhook.SecretSpaceID = secretSpaceID
-	} else if webhookRequest.SecretSpaceId != nil {
-		webhook.SecretSpaceID = *webhookRequest.SecretSpaceId
-	}
-	return webhook, nil
-}
-
 // deduplicateTriggers de-duplicates the triggers provided by the user.
-func deduplicateTriggers(in []api.Trigger) []api.Trigger {
+func deduplicateTriggers(in []gitnessenum.WebhookTrigger) []gitnessenum.WebhookTrigger {
 	if len(in) == 0 {
-		return []api.Trigger{}
+		return []gitnessenum.WebhookTrigger{}
 	}
 
-	triggerSet := make(map[api.Trigger]bool, len(in))
-	out := make([]api.Trigger, 0, len(in))
+	triggerSet := make(map[gitnessenum.WebhookTrigger]bool, len(in))
+	out := make([]gitnessenum.WebhookTrigger, 0, len(in))
 	for _, trigger := range in {
 		if triggerSet[trigger] {
 			continue
@@ -547,7 +407,7 @@ func (c *APIController) GetArtifactFilesRequestInfo(
 		searchTerm = string(*r.Params.SearchTerm)
 	}
 
-	baseInfo, err := c.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
+	baseInfo, err := c.RegistryMetadataHelper.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
 
 	if err != nil {
 		return nil, err

@@ -63,6 +63,11 @@ func InternalError(ctx context.Context, w http.ResponseWriter) {
 	UserError(ctx, w, usererror.ErrInternal)
 }
 
+// InternalErrorf writes the json-encoded message with internal server error status code.
+func InternalErrorf(ctx context.Context, w http.ResponseWriter, format string, args ...interface{}) {
+	UserError(ctx, w, usererror.Newf(http.StatusInternalServerError, format, args...))
+}
+
 // UserError writes the json-encoded user error.
 func UserError(ctx context.Context, w http.ResponseWriter, err *usererror.Error) {
 	log.Ctx(ctx).Debug().Err(err).Msgf("operation resulted in user facing error")

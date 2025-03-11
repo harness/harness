@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/app/auth"
+	webhooksservice "github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -35,7 +36,11 @@ func (c *Controller) RetriggerExecutionRepo(
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to the repo: %w", err)
 	}
-
-	return c.webhookService.RetriggerExecution(
+	executionCore, err := c.webhookService.RetriggerExecution(
 		ctx, repo.ID, enum.WebhookParentRepo, webhookIdentifier, webhookExecutionID)
+	if err != nil {
+		return nil, err
+	}
+	execution := webhooksservice.CoreWebhookExecutionToGitnessWebhookExecution(executionCore)
+	return execution, nil
 }

@@ -41,8 +41,10 @@ type PullReqCreatedPayload struct {
 
 // handleEventPullReqCreated handles created events for pull requests
 // and triggers pullreq created webhooks for the source repo.
-func (s *Service) handleEventPullReqCreated(ctx context.Context,
-	event *events.Event[*pullreqevents.CreatedPayload]) error {
+func (s *Service) handleEventPullReqCreated(
+	ctx context.Context,
+	event *events.Event[*pullreqevents.CreatedPayload],
+) error {
 	return s.triggerForEventWithPullReq(ctx, enum.WebhookTriggerPullReqCreated,
 		event.ID, event.Payload.PrincipalID, event.Payload.PullReqID,
 		func(principal *types.Principal, pr *types.PullReq, targetRepo, sourceRepo *types.Repository) (any, error) {
@@ -89,8 +91,10 @@ type PullReqReopenedPayload PullReqCreatedPayload
 
 // handleEventPullReqReopened handles reopened events for pull requests
 // and triggers pullreq reopened webhooks for the source repo.
-func (s *Service) handleEventPullReqReopened(ctx context.Context,
-	event *events.Event[*pullreqevents.ReopenedPayload]) error {
+func (s *Service) handleEventPullReqReopened(
+	ctx context.Context,
+	event *events.Event[*pullreqevents.ReopenedPayload],
+) error {
 	return s.triggerForEventWithPullReq(ctx, enum.WebhookTriggerPullReqReopened,
 		event.ID, event.Payload.PrincipalID, event.Payload.PullReqID,
 		func(principal *types.Principal, pr *types.PullReq, targetRepo, sourceRepo *types.Repository) (any, error) {
@@ -144,8 +148,10 @@ type PullReqBranchUpdatedPayload struct {
 
 // handleEventPullReqBranchUpdated handles branch updated events for pull requests
 // and triggers pullreq branch updated webhooks for the source repo.
-func (s *Service) handleEventPullReqBranchUpdated(ctx context.Context,
-	event *events.Event[*pullreqevents.BranchUpdatedPayload]) error {
+func (s *Service) handleEventPullReqBranchUpdated(
+	ctx context.Context,
+	event *events.Event[*pullreqevents.BranchUpdatedPayload],
+) error {
 	return s.triggerForEventWithPullReq(ctx, enum.WebhookTriggerPullReqBranchUpdated,
 		event.ID, event.Payload.PrincipalID, event.Payload.PullReqID,
 		func(principal *types.Principal, pr *types.PullReq, targetRepo, sourceRepo *types.Repository) (any, error) {
@@ -204,8 +210,10 @@ type PullReqClosedPayload struct {
 	ReferenceDetailsSegment
 }
 
-func (s *Service) handleEventPullReqClosed(ctx context.Context,
-	event *events.Event[*pullreqevents.ClosedPayload]) error {
+func (s *Service) handleEventPullReqClosed(
+	ctx context.Context,
+	event *events.Event[*pullreqevents.ClosedPayload],
+) error {
 	return s.triggerForEventWithPullReq(ctx, enum.WebhookTriggerPullReqClosed,
 		event.ID, event.Payload.PrincipalID, event.Payload.PullReqID,
 		func(principal *types.Principal, pr *types.PullReq, targetRepo, sourceRepo *types.Repository) (any, error) {
@@ -255,8 +263,10 @@ type PullReqMergedPayload struct {
 	ReferenceDetailsSegment
 }
 
-func (s *Service) handleEventPullReqMerged(ctx context.Context,
-	event *events.Event[*pullreqevents.MergedPayload]) error {
+func (s *Service) handleEventPullReqMerged(
+	ctx context.Context,
+	event *events.Event[*pullreqevents.MergedPayload],
+) error {
 	return s.triggerForEventWithPullReq(ctx, enum.WebhookTriggerPullReqMerged,
 		event.ID, event.Payload.PrincipalID, event.Payload.PullReqID,
 		func(principal *types.Principal, pr *types.PullReq, targetRepo, sourceRepo *types.Repository) (any, error) {
@@ -654,7 +664,7 @@ func (s *Service) handleEventPullReqReviewSubmitted(
 			targetRepoInfo := repositoryInfoFrom(ctx, targetRepo, s.urlProvider)
 			sourceRepoInfo := repositoryInfoFrom(ctx, sourceRepo, s.urlProvider)
 
-			reviewer, err := s.findPrincipalForEvent(ctx, event.Payload.ReviewerID)
+			reviewer, err := s.WebhookExecutor.FindPrincipalForEvent(ctx, event.Payload.ReviewerID)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get reviewer by id for reviewer id %d: %w", event.Payload.ReviewerID, err)
 			}

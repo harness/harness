@@ -39,7 +39,7 @@ func (c *APIController) GetDockerArtifactManifests(
 	ctx context.Context,
 	r artifact.GetDockerArtifactManifestsRequestObject,
 ) (artifact.GetDockerArtifactManifestsResponseObject, error) {
-	regInfo, err := c.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
+	regInfo, err := c.RegistryMetadataHelper.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
 	if err != nil {
 		return artifact.GetDockerArtifactManifests400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
@@ -58,7 +58,8 @@ func (c *APIController) GetDockerArtifactManifests(
 	}
 
 	session, _ := request.AuthSessionFrom(ctx)
-	permissionChecks := GetPermissionChecks(space, regInfo.RegistryIdentifier, enum.PermissionRegistryView)
+	permissionChecks := c.RegistryMetadataHelper.GetPermissionChecks(space,
+		regInfo.RegistryIdentifier, enum.PermissionRegistryView)
 	if err = apiauth.CheckRegistry(
 		ctx,
 		c.Authorizer,
@@ -136,7 +137,8 @@ func artifactManifestsErrorRs(err error) artifact.GetDockerArtifactManifestsResp
 }
 
 func getManifestDetails(
-	m *types.Manifest, mConfig *manifestConfig, downloadsCount int64) artifact.DockerManifestDetails {
+	m *types.Manifest, mConfig *manifestConfig, downloadsCount int64,
+) artifact.DockerManifestDetails {
 	createdAt := GetTimeInMs(m.CreatedAt)
 	size := GetSize(m.TotalSize)
 

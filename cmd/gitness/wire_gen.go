@@ -119,6 +119,7 @@ import (
 	"github.com/harness/gitness/pubsub"
 	api2 "github.com/harness/gitness/registry/app/api"
 	"github.com/harness/gitness/registry/app/api/router"
+	events8 "github.com/harness/gitness/registry/app/events"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/docker"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
@@ -127,6 +128,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/pypi"
 	database2 "github.com/harness/gitness/registry/app/store/database"
 	"github.com/harness/gitness/registry/gc"
+	webhook3 "github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/ssh"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -384,7 +386,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	webhookStore := database.ProvideWebhookStore(db)
 	webhookExecutionStore := database.ProvideWebhookExecutionStore(db)
 	urlProvider := webhook.ProvideURLProvider(ctx)
-	webhookService, err := webhook.ProvideService(ctx, webhookConfig, transactor, readerFactory, eventsReaderFactory, webhookStore, webhookExecutionStore, spaceStore, repoStore, pullReqStore, pullReqActivityStore, provider, principalStore, gitInterface, encrypter, labelStore, urlProvider, labelValueStore, streamer)
+	secretService := secret3.ProvideSecretService(secretStore, encrypter, spaceFinder)
+	webhookService, err := webhook.ProvideService(ctx, webhookConfig, transactor, readerFactory, eventsReaderFactory, webhookStore, webhookExecutionStore, spaceStore, repoStore, pullReqStore, pullReqActivityStore, provider, principalStore, gitInterface, encrypter, labelStore, urlProvider, labelValueStore, streamer, secretService, spacePathStore)
 	if err != nil {
 		return nil, err
 	}
@@ -451,13 +454,16 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	layerRepository := database2.ProvideLayerDao(db, mediaTypesRepository)
 	eventReporter := docker.ProvideReporter()
 	ociImageIndexMappingRepository := database2.ProvideOCIImageIndexMappingDao(db)
-	manifestService := docker.ManifestServiceProvider(registryRepository, manifestRepository, blobRepository, mediaTypesRepository, manifestReferenceRepository, tagRepository, imageRepository, artifactRepository, layerRepository, gcService, transactor, eventReporter, spaceFinder, ociImageIndexMappingRepository)
+	reporter6, err := events8.ProvideArtifactReporter(eventsSystem)
+	if err != nil {
+		return nil, err
+	}
+	manifestService := docker.ManifestServiceProvider(registryRepository, manifestRepository, blobRepository, mediaTypesRepository, manifestReferenceRepository, tagRepository, imageRepository, artifactRepository, layerRepository, gcService, transactor, eventReporter, spaceFinder, ociImageIndexMappingRepository, reporter6, provider)
 	registryBlobRepository := database2.ProvideRegistryBlobDao(db)
 	bandwidthStatRepository := database2.ProvideBandwidthStatDao(db)
 	downloadStatRepository := database2.ProvideDownloadStatDao(db)
 	localRegistry := docker.LocalRegistryProvider(app, manifestService, blobRepository, registryRepository, manifestRepository, registryBlobRepository, mediaTypesRepository, tagRepository, imageRepository, artifactRepository, bandwidthStatRepository, downloadStatRepository, gcService, transactor)
 	upstreamProxyConfigRepository := database2.ProvideUpstreamDao(db, registryRepository, spaceFinder)
-	secretService := secret3.ProvideSecretService(secretStore, encrypter, spaceFinder)
 	proxyController := docker.ProvideProxyController(localRegistry, manifestService, secretService, spaceFinder)
 	remoteRegistry := docker.RemoteRegistryProvider(localRegistry, app, upstreamProxyConfigRepository, spaceFinder, secretService, proxyController)
 	coreController := pkg.CoreControllerProvider(registryRepository)
@@ -471,7 +477,16 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	fileManager := filemanager.Provider(filemanagerApp, registryRepository, genericBlobRepository, nodesRepository, transactor)
 	cleanupPolicyRepository := database2.ProvideCleanupPolicyDao(db, transactor)
 	webhooksRepository := database2.ProvideWebhookDao(db)
-	apiHandler := router.APIHandlerProvider(registryRepository, upstreamProxyConfigRepository, fileManager, tagRepository, manifestRepository, cleanupPolicyRepository, imageRepository, storageDriver, spaceFinder, transactor, authenticator, provider, authorizer, auditService, artifactRepository, webhooksRepository)
+	webhooksExecutionRepository := database2.ProvideWebhookExecutionDao(db)
+	readerFactory2, err := events8.ProvideReaderFactory(eventsSystem)
+	if err != nil {
+		return nil, err
+	}
+	service2, err := webhook3.ProvideService(ctx, webhookConfig, transactor, readerFactory2, webhooksRepository, webhooksExecutionRepository, spaceStore, provider, principalStore, urlProvider, spacePathStore, secretService, registryRepository, encrypter)
+	if err != nil {
+		return nil, err
+	}
+	apiHandler := router.APIHandlerProvider(registryRepository, upstreamProxyConfigRepository, fileManager, tagRepository, manifestRepository, cleanupPolicyRepository, imageRepository, storageDriver, spaceFinder, transactor, authenticator, provider, authorizer, auditService, artifactRepository, webhooksRepository, webhooksExecutionRepository, service2, spacePathStore)
 	mavenDBStore := maven.DBStoreProvider(registryRepository, imageRepository, artifactRepository, spaceStore, bandwidthStatRepository, downloadStatRepository, nodesRepository, upstreamProxyConfigRepository)
 	mavenLocalRegistry := maven.LocalRegistryProvider(mavenDBStore, transactor, fileManager)
 	mavenController := maven.ProvideProxyController(mavenLocalRegistry, secretService, spaceFinder)
@@ -514,11 +529,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	readerFactory2, err := events2.ProvideReaderFactory(eventsSystem)
+	readerFactory3, err := events2.ProvideReaderFactory(eventsSystem)
 	if err != nil {
 		return nil, err
 	}
-	repoService, err := repo2.ProvideService(ctx, config, reporter, readerFactory2, repoStore, provider, gitInterface, lockerLocker)
+	repoService, err := repo2.ProvideService(ctx, config, reporter, readerFactory3, repoStore, provider, gitInterface, lockerLocker)
 	if err != nil {
 		return nil, err
 	}
@@ -535,24 +550,24 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	keywordsearchConfig := server.ProvideKeywordSearchConfig(config)
-	keywordsearchService, err := keywordsearch.ProvideService(ctx, keywordsearchConfig, readerFactory, readerFactory2, repoStore, indexer)
+	keywordsearchService, err := keywordsearch.ProvideService(ctx, keywordsearchConfig, readerFactory, readerFactory3, repoStore, indexer)
 	if err != nil {
 		return nil, err
 	}
 	gitspaceeventConfig := server.ProvideGitspaceEventConfig(config)
-	readerFactory3, err := events3.ProvideReaderFactory(eventsSystem)
+	readerFactory4, err := events3.ProvideReaderFactory(eventsSystem)
 	if err != nil {
 		return nil, err
 	}
-	gitspaceeventService, err := gitspaceevent.ProvideService(ctx, gitspaceeventConfig, readerFactory3, gitspaceEventStore)
+	gitspaceeventService, err := gitspaceevent.ProvideService(ctx, gitspaceeventConfig, readerFactory4, gitspaceEventStore)
 	if err != nil {
 		return nil, err
 	}
-	readerFactory4, err := events4.ProvideReaderFactory(eventsSystem)
+	readerFactory5, err := events4.ProvideReaderFactory(eventsSystem)
 	if err != nil {
 		return nil, err
 	}
-	gitspaceinfraeventService, err := gitspaceinfraevent.ProvideService(ctx, gitspaceeventConfig, readerFactory4, orchestratorOrchestrator, gitspaceService, eventsReporter)
+	gitspaceinfraeventService, err := gitspaceinfraevent.ProvideService(ctx, gitspaceeventConfig, readerFactory5, orchestratorOrchestrator, gitspaceService, eventsReporter)
 	if err != nil {
 		return nil, err
 	}
@@ -565,7 +580,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	servicesServices := services.ProvideServices(webhookService, pullreqService, triggerService, jobScheduler, collector, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceServices, instrumentService, consumer, repositoryCount)
+	servicesServices := services.ProvideServices(webhookService, pullreqService, triggerService, jobScheduler, collector, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceServices, instrumentService, consumer, repositoryCount, service2)
 	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, sshServer, poller, resolverManager, servicesServices)
 	return serverSystem, nil
 }

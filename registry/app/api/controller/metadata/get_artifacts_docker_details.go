@@ -34,7 +34,7 @@ func (c *APIController) GetDockerArtifactDetails(
 	ctx context.Context,
 	r artifact.GetDockerArtifactDetailsRequestObject,
 ) (artifact.GetDockerArtifactDetailsResponseObject, error) {
-	regInfo, err := c.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
+	regInfo, err := c.RegistryMetadataHelper.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
 	if err != nil {
 		return artifact.GetDockerArtifactDetails400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
@@ -53,7 +53,8 @@ func (c *APIController) GetDockerArtifactDetails(
 	}
 
 	session, _ := request.AuthSessionFrom(ctx)
-	permissionChecks := GetPermissionChecks(space, regInfo.RegistryIdentifier, enum.PermissionRegistryView)
+	permissionChecks := c.RegistryMetadataHelper.GetPermissionChecks(space,
+		regInfo.RegistryIdentifier, enum.PermissionRegistryView)
 	if err = apiauth.CheckRegistry(
 		ctx,
 		c.Authorizer,

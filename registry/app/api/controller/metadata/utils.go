@@ -26,8 +26,6 @@ import (
 
 	a "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/pkg/commons"
-	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/enum"
 
 	"github.com/inhies/go-bytesize"
 	"github.com/rs/zerolog/log"
@@ -49,7 +47,8 @@ const (
 	ArtifactFilesResource      = "artifactFiles"
 	RegistryIdentifierErrorMsg = "registry name should be 1~255 characters long with lower case characters, numbers " +
 		"and ._- and must be start with numbers or characters"
-	RegexIdentifierPattern = "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"
+	RegexIdentifierPattern    = "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"
+	internalWebhookIdentifier = "harnesstriggerwebhok"
 )
 
 var RegistrySortMap = map[string]string{
@@ -442,19 +441,4 @@ func CleanURLPath(input *string) {
 
 	// Update the input string with the cleaned URL string representation
 	*input = u.String()
-}
-
-func GetPermissionChecks(
-	space *types.SpaceCore,
-	registryIdentifier string,
-	permission enum.Permission,
-) []types.PermissionCheck {
-	var permissionChecks []types.PermissionCheck
-	permissionCheck := &types.PermissionCheck{
-		Scope:      types.Scope{SpacePath: space.Path},
-		Resource:   types.Resource{Type: enum.ResourceTypeRegistry, Identifier: registryIdentifier},
-		Permission: permission,
-	}
-	permissionChecks = append(permissionChecks, *permissionCheck)
-	return permissionChecks
 }

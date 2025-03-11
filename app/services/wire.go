@@ -29,6 +29,7 @@ import (
 	"github.com/harness/gitness/app/services/trigger"
 	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/job"
+	registrywebhooks "github.com/harness/gitness/registry/services/webhook"
 
 	"github.com/google/wire"
 )
@@ -38,20 +39,21 @@ var WireSet = wire.NewSet(
 )
 
 type Services struct {
-	Webhook               *webhook.Service
-	PullReq               *pullreq.Service
-	Trigger               *trigger.Service
-	JobScheduler          *job.Scheduler
-	MetricCollector       *metric.Collector
-	RepoSizeCalculator    *repo.SizeCalculator
-	Repo                  *repo.Service
-	Cleanup               *cleanup.Service
-	Notification          *notification.Service
-	Keywordsearch         *keywordsearch.Service
-	GitspaceService       *GitspaceServices
-	Instrumentation       instrument.Service
-	instrumentConsumer    instrument.Consumer
-	instrumentRepoCounter *instrument.RepositoryCount
+	Webhook                 *webhook.Service
+	PullReq                 *pullreq.Service
+	Trigger                 *trigger.Service
+	JobScheduler            *job.Scheduler
+	MetricCollector         *metric.Collector
+	RepoSizeCalculator      *repo.SizeCalculator
+	Repo                    *repo.Service
+	Cleanup                 *cleanup.Service
+	Notification            *notification.Service
+	Keywordsearch           *keywordsearch.Service
+	GitspaceService         *GitspaceServices
+	Instrumentation         instrument.Service
+	instrumentConsumer      instrument.Consumer
+	instrumentRepoCounter   *instrument.RepositoryCount
+	registryWebhooksService *registrywebhooks.Service
 }
 
 type GitspaceServices struct {
@@ -90,21 +92,23 @@ func ProvideServices(
 	instrumentation instrument.Service,
 	instrumentConsumer instrument.Consumer,
 	instrumentRepoCounter *instrument.RepositoryCount,
+	registryWebhooksService *registrywebhooks.Service,
 ) Services {
 	return Services{
-		Webhook:               webhooksSvc,
-		PullReq:               pullReqSvc,
-		Trigger:               triggerSvc,
-		JobScheduler:          jobScheduler,
-		MetricCollector:       metricCollector,
-		RepoSizeCalculator:    repoSizeCalculator,
-		Repo:                  repo,
-		Cleanup:               cleanupSvc,
-		Notification:          notificationSvc,
-		Keywordsearch:         keywordsearchSvc,
-		GitspaceService:       gitspaceSvc,
-		Instrumentation:       instrumentation,
-		instrumentConsumer:    instrumentConsumer,
-		instrumentRepoCounter: instrumentRepoCounter,
+		Webhook:                 webhooksSvc,
+		PullReq:                 pullReqSvc,
+		Trigger:                 triggerSvc,
+		JobScheduler:            jobScheduler,
+		MetricCollector:         metricCollector,
+		RepoSizeCalculator:      repoSizeCalculator,
+		Repo:                    repo,
+		Cleanup:                 cleanupSvc,
+		Notification:            notificationSvc,
+		Keywordsearch:           keywordsearchSvc,
+		GitspaceService:         gitspaceSvc,
+		Instrumentation:         instrumentation,
+		instrumentConsumer:      instrumentConsumer,
+		instrumentRepoCounter:   instrumentRepoCounter,
+		registryWebhooksService: registryWebhooksService,
 	}
 }

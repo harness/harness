@@ -75,6 +75,10 @@ func ProvideWebhookDao(sqlDB *sqlx.DB) store.WebhooksRepository {
 	return NewWebhookDao(sqlDB)
 }
 
+func ProvideWebhookExecutionDao(sqlDB *sqlx.DB) store.WebhooksExecutionRepository {
+	return NewWebhookExecutionDao(sqlDB)
+}
+
 func ProvideManifestRefDao(db *sqlx.DB) store.ManifestReferenceRepository {
 	return NewManifestReferenceDao(db)
 }
@@ -118,4 +122,5 @@ var WireSet = wire.NewSet(
 	ProvideNodeDao,
 	ProvideGenericBlobDao,
 	ProvideWebhookDao,
+	ProvideWebhookExecutionDao,
 )

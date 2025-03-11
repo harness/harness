@@ -19,6 +19,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/config"
 	"github.com/harness/gitness/app/services/refcache"
+	corestore "github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/registry/app/api/handler/generic"
@@ -34,6 +35,7 @@ import (
 	storagedriver "github.com/harness/gitness/registry/app/driver"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
+	registrywebhook "github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/google/wire"
@@ -66,6 +68,9 @@ func APIHandlerProvider(
 	auditService audit.Service,
 	artifactStore store.ArtifactRepository,
 	webhooksRepository store.WebhooksRepository,
+	webhooksExecutionRepository store.WebhooksExecutionRepository,
+	webhookService *registrywebhook.Service,
+	spacePathStore corestore.SpacePathStore,
 ) harness.APIHandler {
 	return harness.NewAPIHandler(
 		repoDao,
@@ -85,6 +90,9 @@ func APIHandlerProvider(
 		auditService,
 		artifactStore,
 		webhooksRepository,
+		webhooksExecutionRepository,
+		*webhookService,
+		spacePathStore,
 	)
 }
 

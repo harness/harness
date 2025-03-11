@@ -35,7 +35,7 @@ func (c *APIController) GetClientSetupDetails(
 	imageParam := r.Params.Artifact
 	tagParam := r.Params.Version
 
-	regInfo, _ := c.GetRegistryRequestBaseInfo(ctx, "", string(regRefParam))
+	regInfo, _ := c.RegistryMetadataHelper.GetRegistryRequestBaseInfo(ctx, "", string(regRefParam))
 
 	space, err := c.SpaceFinder.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
@@ -47,7 +47,8 @@ func (c *APIController) GetClientSetupDetails(
 	}
 
 	session, _ := request.AuthSessionFrom(ctx)
-	permissionChecks := GetPermissionChecks(space, regInfo.RegistryIdentifier, enum.PermissionRegistryView)
+	permissionChecks := c.RegistryMetadataHelper.GetPermissionChecks(space, regInfo.RegistryIdentifier,
+		enum.PermissionRegistryView)
 	if err = apiauth.CheckRegistry(
 		ctx,
 		c.Authorizer,

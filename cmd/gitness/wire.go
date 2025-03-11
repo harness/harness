@@ -126,7 +126,9 @@ import (
 	"github.com/harness/gitness/livelog"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/pubsub"
+	registryevents "github.com/harness/gitness/registry/app/events"
 	"github.com/harness/gitness/registry/app/pkg/docker"
+	registrywebhooks "github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/ssh"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -273,6 +275,8 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		secretservice.WireSet,
 		runarg.WireSet,
 		usage.WireSet,
+		registryevents.WireSet,
+		registrywebhooks.WireSet,
 	)
 	return &cliserver.System{}, nil
 }

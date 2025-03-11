@@ -153,3 +153,49 @@ type WebhookParentInfo struct {
 	Type enum.WebhookParent
 	ID   int64
 }
+
+// WebhookCore represents a webhook DTO object.
+type WebhookCore struct {
+	ID                    int64
+	Version               int64
+	ParentID              int64
+	ParentType            enum.WebhookParent
+	CreatedBy             int64
+	Created               int64
+	Updated               int64
+	Type                  enum.WebhookType
+	Scope                 int64
+	Identifier            string
+	DisplayName           string
+	Description           string
+	URL                   string
+	Secret                string
+	Enabled               bool
+	Insecure              bool
+	Triggers              []enum.WebhookTrigger
+	LatestExecutionResult *enum.WebhookExecutionResult
+	SecretIdentifier      string
+	SecretSpaceID         int
+	ExtraHeaders          []ExtraHeader
+}
+
+// WebhookExecutionCore represents a webhook execution DTO object.
+type WebhookExecutionCore struct {
+	ID            int64
+	RetriggerOf   *int64
+	Retriggerable bool
+	Created       int64
+	WebhookID     int64
+	TriggerType   enum.WebhookTrigger
+	TriggerID     string
+	Result        enum.WebhookExecutionResult
+	Duration      int64
+	Error         string
+	Request       WebhookExecutionRequest
+	Response      WebhookExecutionResponse
+}
+
+type ExtraHeader struct {
+	Key   string `json:"key,omitempty"`
+	Value string `json:"value,omitempty"`
+}

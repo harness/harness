@@ -92,11 +92,15 @@ const (
 
 	// WebhookParentSpace describes a space as webhook owner.
 	WebhookParentSpace WebhookParent = "space"
+
+	// WebhookParentRegistry describes a registry as webhook owner.
+	WebhookParentRegistry WebhookParent = "registry"
 )
 
 var webhookParents = sortEnum([]WebhookParent{
 	WebhookParentRepo,
 	WebhookParentSpace,
+	WebhookParentRegistry,
 })
 
 // WebhookExecutionResult defines the different results of a webhook execution.
@@ -130,7 +134,7 @@ const (
 	// WebhookTypeExternal describes a webhook url pointing to external source.
 	WebhookTypeExternal WebhookType = iota
 
-	// WebhookTypeInternal describes a webhook url pointing to internal url.
+	// WebhookTypeInternal describes a repo webhook url pointing to internal url.
 	WebhookTypeInternal
 
 	// WebhookTypeJira describes a webhook url pointing to jira.
@@ -190,6 +194,13 @@ const (
 	WebhookTriggerPullReqLabelAssigned WebhookTrigger = "pullreq_label_assigned"
 	// WebhookTriggerPullReqReviewSubmitted gets triggered when a pull request review is submitted.
 	WebhookTriggerPullReqReviewSubmitted = "pullreq_review_submitted"
+
+	// WebhookTriggerArtifactCreated gets triggered when an artifact gets created.
+	WebhookTriggerArtifactCreated WebhookTrigger = "artifact_created"
+	// WebhookTriggerArtifactUpdated gets triggered when an artifact gets updated.
+	WebhookTriggerArtifactUpdated WebhookTrigger = "artifact_updated"
+	// WebhookTriggerArtifactDeleted gets triggered when an artifact gets deleted.
+	WebhookTriggerArtifactDeleted WebhookTrigger = "artifact_deleted"
 )
 
 var webhookTriggers = sortEnum([]WebhookTrigger{
@@ -210,4 +221,7 @@ var webhookTriggers = sortEnum([]WebhookTrigger{
 	WebhookTriggerPullReqMerged,
 	WebhookTriggerPullReqLabelAssigned,
 	WebhookTriggerPullReqReviewSubmitted,
+	WebhookTriggerArtifactCreated,
+	WebhookTriggerArtifactUpdated,
+	WebhookTriggerArtifactDeleted,
 })

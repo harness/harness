@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/refcache"
+	corestore "github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/registry/app/api/controller/metadata"
@@ -30,6 +31,7 @@ import (
 	storagedriver "github.com/harness/gitness/registry/app/driver"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
+	registrywebhook "github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/go-chi/chi/v5"
@@ -69,11 +71,15 @@ func NewAPIHandler(
 	auditService audit.Service,
 	artifactStore store.ArtifactRepository,
 	webhooksRepository store.WebhooksRepository,
+	webhooksExecutionRepository store.WebhooksExecutionRepository,
+	webhookService registrywebhook.Service,
+	spacePathStore corestore.SpacePathStore,
 ) APIHandler {
 	r := chi.NewRouter()
 	r.Use(audit.Middleware())
 	r.Use(middlewareauthn.Attempt(authenticator))
 	r.Use(middleware.CheckAuth())
+	registryMetadataHelper := metadata.NewRegistryMetadataHelper(spacePathStore, spaceFinder, repoDao)
 	apiController := metadata.NewAPIController(
 		repoDao,
 		fileManager,
@@ -92,7 +98,11 @@ func NewAPIHandler(
 		auditService,
 		artifactStore,
 		webhooksRepository,
+		webhooksExecutionRepository,
+		*registryMetadataHelper,
+		webhookService,
 	)
+
 	handler := artifact.NewStrictHandler(apiController, []artifact.StrictMiddlewareFunc{})
 	muxHandler := artifact.HandlerFromMuxWithBaseURL(handler, r, baseURL)
 	return encode.TerminatedPathBefore(

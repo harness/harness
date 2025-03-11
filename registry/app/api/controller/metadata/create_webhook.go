@@ -34,7 +34,10 @@ func (c *APIController) CreateWebhook(
 	r api.CreateWebhookRequestObject,
 ) (api.CreateWebhookResponseObject, error) {
 	webhookRequest := api.WebhookRequest(*r.Body)
-	regInfo, err := c.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
+	if webhookRequest.Identifier == internalWebhookIdentifier {
+		return createWebhookBadRequestErrorResponse(fmt.Errorf("webhook identifier %s is reserved", internalWebhookIdentifier))
+	}
+	regInfo, err := c.RegistryMetadataHelper.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
 	if err != nil {
 		return createWebhookBadRequestErrorResponse(err)
 	}
@@ -49,7 +52,8 @@ func (c *APIController) CreateWebhook(
 		return createWebhookBadRequestErrorResponse(err)
 	}
 	session, _ := request.AuthSessionFrom(ctx)
-	permissionChecks := GetPermissionChecks(space, regInfo.RegistryIdentifier, enum.PermissionRegistryEdit)
+	permissionChecks := c.RegistryMetadataHelper.GetPermissionChecks(space,
+		regInfo.RegistryIdentifier, enum.PermissionRegistryEdit)
 	if err = apiauth.CheckRegistry(
 		ctx,
 		c.Authorizer,
@@ -65,8 +69,8 @@ func (c *APIController) CreateWebhook(
 		}, err
 	}
 
-	webhook, err := c.mapToWebhook(ctx, webhookRequest, regInfo)
-	webhook.Internal = false
+	webhook, err := c.RegistryMetadataHelper.MapToWebhookCore(ctx, webhookRequest, regInfo)
+	webhook.Type = enum.WebhookTypeExternal
 	webhook.CreatedBy = session.Principal.ID
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("failed to store webhook: %s with error: %v", webhookRequest.Identifier, err)
@@ -93,7 +97,7 @@ func (c *APIController) CreateWebhook(
 		return createWebhookInternalErrorResponse(fmt.Errorf("failed to stored webhook: %w", err))
 	}
 
-	webhookResponseEntity, err := c.mapToWebhookResponseEntity(ctx, *createdWebhook)
+	webhookResponseEntity, err := c.RegistryMetadataHelper.MapToWebhookResponseEntity(ctx, createdWebhook)
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("failed to stored webhook: %s with error: %v",
 			webhookRequest.Identifier, err)

@@ -30,7 +30,7 @@ import (
 
 func (c *APIController) DeleteArtifactVersion(ctx context.Context, r artifact.DeleteArtifactVersionRequestObject) (
 	artifact.DeleteArtifactVersionResponseObject, error) {
-	regInfo, err := c.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
+	regInfo, err := c.RegistryMetadataHelper.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
 	if err != nil {
 		return artifact.DeleteArtifactVersion400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
@@ -88,7 +88,8 @@ func (c *APIController) DeleteArtifactVersion(ctx context.Context, r artifact.De
 
 func (c *APIController) deleteTagWithAudit(
 	ctx context.Context, regInfo *RegistryRequestBaseInfo,
-	registryName string, principal types.Principal, artifactName string, versionName string) error {
+	registryName string, principal types.Principal, artifactName string, versionName string,
+) error {
 	err := c.TagStore.DeleteTag(ctx, regInfo.RegistryID, artifactName, versionName)
 	if err != nil {
 		return err

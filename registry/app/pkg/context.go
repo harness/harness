@@ -38,11 +38,12 @@ type ArtifactInfo struct {
 
 type RegistryInfo struct {
 	*ArtifactInfo
-	Reference  string
-	Digest     string
-	Tag        string
-	URLBuilder *v2.URLBuilder
-	Path       string
+	Reference   string
+	Digest      string
+	Tag         string
+	URLBuilder  *v2.URLBuilder
+	Path        string
+	PackageType artifact.PackageType
 }
 
 type FileInfo struct {

@@ -28,7 +28,7 @@ func NewURLProvider(_ context.Context) *GitnessURLProvider {
 	return &GitnessURLProvider{}
 }
 
-func (u *GitnessURLProvider) GetWebhookURL(_ context.Context, webhook *types.Webhook) (string, error) {
+func (u *GitnessURLProvider) GetWebhookURL(_ context.Context, webhook *types.WebhookCore) (string, error) {
 	// set URL as is (already has been validated, any other error will be caught in request creation)
 	return webhook.URL, nil
 }

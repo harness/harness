@@ -23,7 +23,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/rs/zerolog/log"
+	"github.com/harness/gitness/app/paths"
 )
 
 const (
@@ -80,6 +80,9 @@ type Provider interface {
 	RegistryURL(ctx context.Context, params ...string) string
 
 	GetUIBaseURL(ctx context.Context, params ...string) string
+
+	// GenerateUIRegistryURL returns the url for the UI screen of a registry.
+	GenerateUIRegistryURL(ctx context.Context, parentSpacePath string, registryName string) string
 }
 
 // Provider provides the URLs of the Harness system.
@@ -239,12 +242,7 @@ func (p *provider) GetAPIProto(context.Context) string {
 }
 
 func (p *provider) RegistryURL(_ context.Context, params ...string) string {
-	u, err := url.Parse(p.registryURL.String())
-	if err != nil {
-		log.Warn().Msgf("failed to parse registry url: %v", err)
-		return p.registryURL.String()
-	}
-
+	u := *p.registryURL
 	segments := []string{u.Path}
 	if len(params) > 0 {
 		if len(params) > 1 && (params[1] == "generic" || params[1] == "maven") {
@@ -261,6 +259,15 @@ func (p *provider) RegistryURL(_ context.Context, params ...string) string {
 
 func (p *provider) GetUIBaseURL(_ context.Context, _ ...string) string {
 	return p.uiURL.String()
+}
+
+func (p *provider) GenerateUIRegistryURL(_ context.Context, parentSpacePath string, registryName string) string {
+	segments := paths.Segments(parentSpacePath)
+	if len(segments) < 1 {
+		return ""
+	}
+	space := segments[0]
+	return p.uiURL.String() + "/spaces/" + space + "/registries/" + registryName
 }
 
 func BuildGITCloneSSHURL(user string, sshURL *url.URL, repoPath string) string {

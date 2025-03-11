@@ -229,11 +229,12 @@ func (h *Handler) GetRegistryInfo(r *http.Request, remoteSupport bool) (pkg.Regi
 			RegIdentifier: registryIdentifier,
 			Image:         image,
 		},
-		Reference:  ref,
-		Digest:     dgst,
-		Tag:        tag,
-		URLBuilder: v2.NewURLBuilderFromRequest(r, h.OCIRelativeURL),
-		Path:       r.URL.Path,
+		Reference:   ref,
+		Digest:      dgst,
+		Tag:         tag,
+		URLBuilder:  v2.NewURLBuilderFromRequest(r, h.OCIRelativeURL),
+		Path:        r.URL.Path,
+		PackageType: registry.PackageType,
 	}
 
 	log.Ctx(ctx).Info().Msgf("Dispatch: URI: %s", path)
