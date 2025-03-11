@@ -1086,6 +1086,29 @@ func (t tagDao) FindTag(
 	return t.mapToTag(ctx, dst)
 }
 
+func (t tagDao) DeleteTagsByImageName(
+	ctx context.Context, registryID int64,
+	imageName string,
+) (err error) {
+	stmt := databaseg.Builder.Delete("tags").
+		Where(
+			"tag_registry_id = ? AND tag_image_name = ?", registryID, imageName)
+
+	toSQL, args, err := stmt.ToSql()
+	if err != nil {
+		return fmt.Errorf("failed to convert tag query to sql: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, t.db)
+
+	_, err = db.ExecContext(ctx, toSQL, args...)
+	if err != nil {
+		return databaseg.ProcessSQLErrorf(ctx, err, "the delete query failed")
+	}
+
+	return nil
+}
+
 func (t tagDao) mapToInternalTag(ctx context.Context, in *types.Tag) *tagDB {
 	if in.CreatedAt.IsZero() {
 		in.CreatedAt = time.Now()

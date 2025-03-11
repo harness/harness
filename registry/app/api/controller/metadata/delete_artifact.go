@@ -102,7 +102,7 @@ func (c *APIController) DeleteArtifact(ctx context.Context, r artifact.DeleteArt
 				return fmt.Errorf("failed to delete artifact: %w", err)
 			}
 
-			err := c.ManifestStore.DeleteManifestsByImageName(ctx, regInfo.RegistryID, artifactName)
+			err := c.TagStore.DeleteTagsByImageName(ctx, regInfo.RegistryID, artifactName)
 
 			if err != nil {
 				return fmt.Errorf("failed to delete artifact: %w", err)

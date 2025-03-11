@@ -132,7 +132,6 @@ type ManifestRepository interface {
 		ctx context.Context, repoID int64,
 		digest types.Digest,
 	) (types.Manifests, error)
-	DeleteManifestsByImageName(ctx context.Context, registryID int64, imageName string) (err error)
 }
 
 type ManifestReferenceRepository interface {
@@ -258,6 +257,10 @@ type TagRepository interface {
 		ctx context.Context, repoID int64, imageName string,
 		name string,
 	) (*types.Tag, error)
+	DeleteTagsByImageName(
+		ctx context.Context, registryID int64,
+		imageName string,
+	) (err error)
 }
 
 // UpstreamProxyConfig holds the record of a config of upstream proxy in DB.
