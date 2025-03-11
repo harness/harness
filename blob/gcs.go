@@ -16,6 +16,7 @@ package blob
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -65,7 +66,7 @@ func NewGCSStore(ctx context.Context, cfg Config) (Store, error) {
 }
 
 func (c *GCSStore) Upload(ctx context.Context, file io.Reader, filePath string) error {
-	gcsClient, err := c.getLatestClient(ctx)
+	gcsClient, err := c.getClient(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to retrieve latest client: %w", err)
 	}
@@ -93,8 +94,8 @@ func (c *GCSStore) Upload(ctx context.Context, file io.Reader, filePath string) 
 	return nil
 }
 
-func (c *GCSStore) GetSignedURL(ctx context.Context, filePath string) (string, error) {
-	gcsClient, err := c.getLatestClient(ctx)
+func (c *GCSStore) GetSignedURL(ctx context.Context, filePath string, expire time.Time) (string, error) {
+	gcsClient, err := c.getClient(ctx)
 	if err != nil {
 		return "", fmt.Errorf("failed to retrieve latest client: %w", err)
 	}
@@ -102,7 +103,7 @@ func (c *GCSStore) GetSignedURL(ctx context.Context, filePath string) (string, e
 	bkt := gcsClient.Bucket(c.config.Bucket)
 	signedURL, err := bkt.SignedURL(filePath, &storage.SignedURLOptions{
 		Method:  http.MethodGet,
-		Expires: time.Now().Add(1 * time.Hour),
+		Expires: expire,
 	})
 	if err != nil {
 		return "", fmt.Errorf("failed to create signed URL for file %q: %w", filePath, err)
@@ -110,8 +111,22 @@ func (c *GCSStore) GetSignedURL(ctx context.Context, filePath string) (string, e
 	return signedURL, nil
 }
 
-func (c *GCSStore) Download(_ context.Context, _ string) (io.ReadCloser, error) {
-	return nil, fmt.Errorf("not implemented")
+func (c *GCSStore) Download(ctx context.Context, filePath string) (io.ReadCloser, error) {
+	gcsClient, err := c.getClient(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve latest client: %w", err)
+	}
+
+	bkt := gcsClient.Bucket(c.config.Bucket)
+	rc, err := bkt.Object(filePath).NewReader(ctx)
+	if err != nil {
+		if errors.Is(err, storage.ErrObjectNotExist) {
+			return nil, ErrNotFound
+		}
+		return nil, fmt.Errorf("failed to create reader for file %q in bucket %q: %w", filePath, c.config.Bucket, err)
+	}
+
+	return rc, nil
 }
 
 func createNewImpersonatedClient(ctx context.Context, cfg Config) (*storage.Client, error) {
@@ -138,7 +153,7 @@ func createNewImpersonatedClient(ctx context.Context, cfg Config) (*storage.Clie
 	return client, nil
 }
 
-func (c *GCSStore) getLatestClient(ctx context.Context) (*storage.Client, error) {
+func (c *GCSStore) getClient(ctx context.Context) (*storage.Client, error) {
 	err := c.checkAndRefreshToken(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to refresh token: %w", err)

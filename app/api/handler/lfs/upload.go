@@ -12,63 +12,54 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package repo
+package lfs
 
 import (
-	"context"
 	"errors"
-	"fmt"
 	"net/http"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
-	"github.com/harness/gitness/app/api/controller/repo"
+	"github.com/harness/gitness/app/api/controller/lfs"
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
-	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/url"
-	"github.com/harness/gitness/git/api"
 )
 
-// HandleGitInfoRefs handles the info refs part of git's smart http protocol.
-func HandleGitInfoRefs(repoCtrl *repo.Controller, urlProvider url.Provider) http.HandlerFunc {
+func HandleLFSUpload(controller *lfs.Controller, urlProvider url.Provider) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			w.WriteHeader(http.StatusNotFound)
-			pktError(ctx, w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		gitProtocol := request.GetGitProtocolFromHeadersOrDefault(r, "")
-		service, err := request.GetGitServiceTypeFromQuery(r)
+		oid, err := request.GetObjectIDFromQuery(r)
 		if err != nil {
-			pktError(ctx, w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		// Clients MUST NOT reuse or revalidate a cached response.
-		// Servers MUST include sufficient Cache-Control headers to prevent caching of the response.
-		// https://git-scm.com/docs/http-protocol
-		render.NoCache(w)
-		w.Header().Set("Content-Type", fmt.Sprintf("application/x-git-%s-advertisement", service))
+		size, err := request.GetObjectSizeFromQuery(r)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
 
-		err = repoCtrl.GitInfoRefs(ctx, session, repoRef, service, gitProtocol, w)
+		// apply max byte size from the request body
+
+		res, err := controller.Upload(ctx, session, repoRef, lfs.Pointer{OId: oid, Size: size}, r.Body)
 		if errors.Is(err, apiauth.ErrNotAuthorized) && auth.IsAnonymousSession(session) {
 			render.GitBasicAuth(ctx, w, urlProvider)
 			return
 		}
 		if err != nil {
-			pktError(ctx, w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
-	}
-}
 
-func pktError(ctx context.Context, w http.ResponseWriter, err error) {
-	terr := usererror.Translate(ctx, err)
-	w.WriteHeader(terr.Status)
-	api.PktError(w, terr)
+		render.JSON(w, http.StatusCreated, res)
+	}
 }

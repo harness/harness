@@ -60,6 +60,7 @@ func ProvideController(
 	updateExtender UpdateExtender,
 	postReceiveExtender PostReceiveExtender,
 	sseStreamer sse.Streamer,
+	lfsStore store.LFSObjectStore,
 ) *Controller {
 	ctrl := NewController(
 		authorizer,
@@ -78,6 +79,7 @@ func ProvideController(
 		updateExtender,
 		postReceiveExtender,
 		sseStreamer,
+		lfsStore,
 	)
 
 	// TODO: improve wiring if possible

@@ -15,6 +15,7 @@
 package ssh
 
 import (
+	"github.com/harness/gitness/app/api/controller/lfs"
 	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/services/publickey"
 	"github.com/harness/gitness/types"
@@ -30,6 +31,7 @@ func ProvideServer(
 	config *types.Config,
 	verifier publickey.Service,
 	repoctrl *repo.Controller,
+	lfsCtrl *lfs.Controller,
 ) *Server {
 	return &Server{
 		Host:                    config.SSH.Host,
@@ -44,6 +46,7 @@ func ProvideServer(
 		KeepAliveInterval:       config.SSH.KeepAliveInterval,
 		Verifier:                verifier,
 		RepoCtrl:                repoctrl,
+		LFSCtrl:                 lfsCtrl,
 		ServerKeyPath:           config.SSH.ServerKeyPath,
 	}
 }

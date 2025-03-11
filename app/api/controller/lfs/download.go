@@ -12,46 +12,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package upload
+package lfs
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
-	"time"
 
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/blob"
 	"github.com/harness/gitness/types/enum"
 )
 
-func (c *Controller) Download(
-	ctx context.Context,
+func (c *Controller) Download(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
-	filePath string,
-) (string, io.ReadCloser, error) {
+	oid string,
+) (io.ReadCloser, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to acquire access to repo: %w", err)
+		return nil, fmt.Errorf("failed to acquire access to repo: %w", err)
 	}
 
-	fileBucketPath := getFileBucketPath(repo.ID, filePath)
-
-	signedURL, err := c.blobStore.GetSignedURL(ctx, fileBucketPath, time.Now().Add(1*time.Hour))
-	if err != nil && !errors.Is(err, blob.ErrNotSupported) {
-		return "", nil, fmt.Errorf("failed to get signed URL: %w", err)
-	}
-
-	if signedURL != "" {
-		return signedURL, nil, nil
-	}
-
-	file, err := c.blobStore.Download(ctx, fileBucketPath)
+	_, err = c.lfsStore.Find(ctx, repo.ID, oid)
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to download file from blobstore: %w", err)
+		return nil, fmt.Errorf("failed to find the oid %q for the repo: %w", oid, err)
 	}
 
-	return "", file, nil
+	objPath := getLFSObjectPath(oid)
+	file, err := c.blobStore.Download(ctx, objPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to download file from blobstore: %w", err)
+	}
+
+	return file, nil
 }

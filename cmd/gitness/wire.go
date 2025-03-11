@@ -27,6 +27,7 @@ import (
 	gitspaceCtrl "github.com/harness/gitness/app/api/controller/gitspace"
 	infraproviderCtrl "github.com/harness/gitness/app/api/controller/infraprovider"
 	controllerkeywordsearch "github.com/harness/gitness/app/api/controller/keywordsearch"
+	"github.com/harness/gitness/app/api/controller/lfs"
 	"github.com/harness/gitness/app/api/controller/limiter"
 	controllerlogs "github.com/harness/gitness/app/api/controller/logs"
 	"github.com/harness/gitness/app/api/controller/migrate"
@@ -99,6 +100,7 @@ import (
 	"github.com/harness/gitness/app/services/publickey"
 	pullreqservice "github.com/harness/gitness/app/services/pullreq"
 	"github.com/harness/gitness/app/services/refcache"
+	"github.com/harness/gitness/app/services/remoteauth"
 	reposervice "github.com/harness/gitness/app/services/repo"
 	"github.com/harness/gitness/app/services/rules"
 	secretservice "github.com/harness/gitness/app/services/secret"
@@ -253,6 +255,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		audit.WireSet,
 		ssh.WireSet,
 		publickey.WireSet,
+		remoteauth.WireSet,
 		migrate.WireSet,
 		scm.WireSet,
 		platformconnector.WireSet,
@@ -274,6 +277,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		docker.ProvideReporter,
 		secretservice.WireSet,
 		runarg.WireSet,
+		lfs.WireSet,
 		usage.WireSet,
 		registryevents.WireSet,
 		registrywebhooks.WireSet,

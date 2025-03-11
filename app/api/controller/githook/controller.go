@@ -56,6 +56,7 @@ type Controller struct {
 	updateExtender      UpdateExtender
 	postReceiveExtender PostReceiveExtender
 	sseStreamer         sse.Streamer
+	lfsStore            store.LFSObjectStore
 }
 
 func NewController(
@@ -75,6 +76,7 @@ func NewController(
 	updateExtender UpdateExtender,
 	postReceiveExtender PostReceiveExtender,
 	sseStreamer sse.Streamer,
+	lfsStore store.LFSObjectStore,
 ) *Controller {
 	return &Controller{
 		authorizer:          authorizer,
@@ -93,6 +95,7 @@ func NewController(
 		updateExtender:      updateExtender,
 		postReceiveExtender: postReceiveExtender,
 		sseStreamer:         sseStreamer,
+		lfsStore:            lfsStore,
 	}
 }
 

@@ -17,6 +17,7 @@ package token
 import (
 	"context"
 	"fmt"
+	"math/rand/v2"
 	"time"
 
 	"github.com/harness/gitness/app/jwt"
@@ -32,6 +33,7 @@ const (
 	// NOTE: Users can list / delete session tokens via rest API if they want to cleanup earlier.
 	userSessionTokenLifeTime                  time.Duration = 30 * 24 * time.Hour // 30 days.
 	sessionTokenWithAccessPermissionsLifeTime time.Duration = 24 * time.Hour      // 24 hours.
+	RemoteAuthTokenLifeTime                   time.Duration = 15 * time.Minute    // 15 minutes.
 )
 
 func CreateUserWithAccessPermissions(
@@ -100,6 +102,29 @@ func CreateSAT(
 		identifier,
 		lifetime,
 	)
+}
+
+func CreateRemoteAuthToken(
+	ctx context.Context,
+	tokenStore store.TokenStore,
+	principal *types.Principal,
+	identifier string,
+) (*types.Token, string, error) {
+	return create(
+		ctx,
+		tokenStore,
+		enum.TokenTypeRemoteAuth,
+		principal,
+		principal,
+		identifier,
+		ptr.Duration(RemoteAuthTokenLifeTime),
+	)
+}
+
+func GenerateIdentifier(prefix string) string {
+	//nolint:gosec // math/rand is sufficient for this use case
+	r := rand.IntN(0x10000)
+	return fmt.Sprintf("%s-%08x-%04x", prefix, time.Now().Unix(), r)
 }
 
 func create(

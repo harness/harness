@@ -22,6 +22,7 @@ import (
 	"io/fs"
 	"os"
 	"path"
+	"time"
 
 	"github.com/rs/zerolog/log"
 )
@@ -81,7 +82,7 @@ func (c FileSystemStore) Upload(ctx context.Context,
 	return nil
 }
 
-func (c FileSystemStore) GetSignedURL(_ context.Context, _ string) (string, error) {
+func (c FileSystemStore) GetSignedURL(context.Context, string, time.Time) (string, error) {
 	return "", ErrNotSupported
 }
 

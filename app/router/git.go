@@ -18,7 +18,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/harness/gitness/app/api/controller/lfs"
 	"github.com/harness/gitness/app/api/controller/repo"
+	handlerlfs "github.com/harness/gitness/app/api/handler/lfs"
 	handlerrepo "github.com/harness/gitness/app/api/handler/repo"
 	middlewareauthn "github.com/harness/gitness/app/api/middleware/authn"
 	middlewareauthz "github.com/harness/gitness/app/api/middleware/authz"
@@ -45,6 +47,7 @@ func NewGitHandler(
 	authenticator authn.Authenticator,
 	repoCtrl *repo.Controller,
 	usageSender usage.Sender,
+	lfsCtrl *lfs.Controller,
 ) http.Handler {
 	// maxRepoDepth depends on config
 	maxRepoDepth := check.MaxRepoPathDepth
@@ -98,6 +101,9 @@ func NewGitHandler(
 			r.Get("/objects/{head:[0-9a-f]{2}}/{hash:[0-9a-f]{38}}", stubGitHandler())
 			r.Get("/objects/pack/pack-{file:[0-9a-f]{40}}.pack", stubGitHandler())
 			r.Get("/objects/pack/pack-{file:[0-9a-f]{40}}.idx", stubGitHandler())
+
+			// Git LFS API
+			GitLFSHandler(r, lfsCtrl, urlProvider)
 		})
 	})
 
@@ -110,4 +116,15 @@ func stubGitHandler() http.HandlerFunc {
 		_, _ = w.Write([]byte("Seems like an asteroid destroyed the ancient git protocol"))
 		w.WriteHeader(http.StatusBadGateway)
 	}
+}
+
+func GitLFSHandler(r chi.Router, lfsCtrl *lfs.Controller, urlProvider url.Provider) {
+	r.Route("/info/lfs", func(r chi.Router) {
+		r.Route("/objects", func(r chi.Router) {
+			r.Post("/batch", handlerlfs.HandleLFSTransfer(lfsCtrl, urlProvider))
+			// direct download and upload handlers for lfs objects
+			r.Put("/", handlerlfs.HandleLFSUpload(lfsCtrl, urlProvider))
+			r.Get("/", handlerlfs.HandleLFSDownload(lfsCtrl, urlProvider))
+		})
+	})
 }

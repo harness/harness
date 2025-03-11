@@ -16,11 +16,7 @@ package user
 
 import (
 	"context"
-	"crypto/rand"
 	"errors"
-	"fmt"
-	"math/big"
-	"time"
 
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/token"
@@ -69,22 +65,12 @@ func (c *Controller) Login(
 		return nil, usererror.ErrNotFound
 	}
 
-	tokenIdentifier, err := GenerateSessionTokenIdentifier()
-	if err != nil {
-		return nil, err
-	}
+	tokenIdentifier := token.GenerateIdentifier("login")
+
 	token, jwtToken, err := token.CreateUserSession(ctx, c.tokenStore, user, tokenIdentifier)
 	if err != nil {
 		return nil, err
 	}
 
 	return &types.TokenResponse{Token: *token, AccessToken: jwtToken}, nil
-}
-
-func GenerateSessionTokenIdentifier() (string, error) {
-	r, err := rand.Int(rand.Reader, big.NewInt(10000))
-	if err != nil {
-		return "", fmt.Errorf("failed to generate random number: %w", err)
-	}
-	return fmt.Sprintf("login-%d-%04d", time.Now().Unix(), r.Int64()), nil
 }

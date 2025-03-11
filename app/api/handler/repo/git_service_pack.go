@@ -80,7 +80,7 @@ func HandleGitServicePack(
 			Protocol:     gitProtocol,
 		})
 		if errors.Is(err, apiauth.ErrNotAuthorized) && auth.IsAnonymousSession(session) {
-			renderBasicAuth(ctx, w, urlProvider)
+			render.GitBasicAuth(ctx, w, urlProvider)
 			return
 		}
 		if err != nil {

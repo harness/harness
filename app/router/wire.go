@@ -25,6 +25,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/gitspace"
 	"github.com/harness/gitness/app/api/controller/infraprovider"
 	"github.com/harness/gitness/app/api/controller/keywordsearch"
+	"github.com/harness/gitness/app/api/controller/lfs"
 	"github.com/harness/gitness/app/api/controller/logs"
 	"github.com/harness/gitness/app/api/controller/migrate"
 	"github.com/harness/gitness/app/api/controller/pipeline"
@@ -110,6 +111,7 @@ func ProvideRouter(
 	openapi openapi.Service,
 	registryRouter router.AppRouter,
 	usageSender usage.Sender,
+	lfsCtrl *lfs.Controller,
 ) *Router {
 	routers := make([]Interface, 4)
 
@@ -120,6 +122,7 @@ func ProvideRouter(
 		authenticator,
 		repoCtrl,
 		usageSender,
+		lfsCtrl,
 	)
 	routers[0] = NewGitRouter(gitHandler, gitRoutingHost)
 	routers[1] = router.NewRegistryRouter(registryRouter)

@@ -16,6 +16,7 @@ import (
 	gitspace2 "github.com/harness/gitness/app/api/controller/gitspace"
 	infraprovider3 "github.com/harness/gitness/app/api/controller/infraprovider"
 	keywordsearch2 "github.com/harness/gitness/app/api/controller/keywordsearch"
+	"github.com/harness/gitness/app/api/controller/lfs"
 	"github.com/harness/gitness/app/api/controller/limiter"
 	logs2 "github.com/harness/gitness/app/api/controller/logs"
 	migrate2 "github.com/harness/gitness/app/api/controller/migrate"
@@ -90,6 +91,7 @@ import (
 	"github.com/harness/gitness/app/services/publickey"
 	"github.com/harness/gitness/app/services/pullreq"
 	"github.com/harness/gitness/app/services/refcache"
+	"github.com/harness/gitness/app/services/remoteauth"
 	repo2 "github.com/harness/gitness/app/services/repo"
 	"github.com/harness/gitness/app/services/rules"
 	secret3 "github.com/harness/gitness/app/services/secret"
@@ -409,7 +411,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	githookController := githook.ProvideController(authorizer, principalStore, repoStore, repoFinder, reporter5, reporter, gitInterface, pullReqStore, provider, protectionManager, clientFactory, resourceLimiter, settingsService, preReceiveExtender, updateExtender, postReceiveExtender, streamer)
+	lfsObjectStore := database.ProvideLFSObjectStore(db)
+	githookController := githook.ProvideController(authorizer, principalStore, repoStore, repoFinder, reporter5, reporter, gitInterface, pullReqStore, provider, protectionManager, clientFactory, resourceLimiter, settingsService, preReceiveExtender, updateExtender, postReceiveExtender, streamer, lfsObjectStore)
 	serviceaccountController := serviceaccount.NewController(principalUID, authorizer, principalStore, spaceStore, repoStore, tokenStore)
 	principalController := principal.ProvideController(principalStore, authorizer)
 	usergroupController := usergroup2.ProvideController(userGroupStore, spaceStore, authorizer, searchService)
@@ -504,10 +507,12 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	handler4 := router.PackageHandlerProvider(packagesHandler, mavenHandler, genericHandler, pypiHandler)
 	appRouter := router.AppRouterProvider(registryOCIHandler, apiHandler, handler2, handler3, handler4)
 	sender := usage.ProvideMediator(ctx, config, spaceFinder, usageMetricStore)
-	routerRouter := router2.ProvideRouter(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, usergroupController, checkController, systemController, uploadController, keywordsearchController, infraproviderController, gitspaceController, migrateController, provider, openapiService, appRouter, sender)
+	remoteauthService := remoteauth.ProvideRemoteAuth(tokenStore, principalStore)
+	lfsController := lfs.ProvideController(authorizer, repoFinder, principalStore, lfsObjectStore, blobStore, remoteauthService, provider)
+	routerRouter := router2.ProvideRouter(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, usergroupController, checkController, systemController, uploadController, keywordsearchController, infraproviderController, gitspaceController, migrateController, provider, openapiService, appRouter, sender, lfsController)
 	serverServer := server2.ProvideServer(config, routerRouter)
 	publickeyService := publickey.ProvidePublicKey(publicKeyStore, principalInfoCache)
-	sshServer := ssh.ProvideServer(config, publickeyService, repoController)
+	sshServer := ssh.ProvideServer(config, publickeyService, repoController, lfsController)
 	executionManager := manager.ProvideExecutionManager(config, executionStore, pipelineStore, provider, streamer, fileService, converterService, logStore, logStream, checkStore, repoStore, schedulerScheduler, secretStore, stageStore, stepStore, principalStore, publicaccessService, reporter3)
 	client := manager.ProvideExecutionClient(executionManager, provider, config)
 	resolverManager := resolver.ProvideResolver(config, pluginStore, templateStore, executionStore, repoStore)

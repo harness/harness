@@ -16,11 +16,19 @@ package git
 
 import (
 	"context"
+	"fmt"
 	"io"
 
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/api"
+	"github.com/harness/gitness/git/parser"
 	"github.com/harness/gitness/git/sha"
 )
+
+// lfsPointerMaxSize is the maximum size for an LFS pointer file.
+// This is used to identify blobs that are too large to be valid LFS pointers.
+// lfs-pointer specification ref: https://github.com/git-lfs/git-lfs/blob/master/docs/spec.md#the-pointer
+const lfsPointerMaxSize = 200
 
 type GetBlobParams struct {
 	ReadParams
@@ -63,4 +71,88 @@ func (s *Service) GetBlob(ctx context.Context, params *GetBlobParams) (*GetBlobO
 		ContentSize: reader.ContentSize,
 		Content:     reader.Content,
 	}, nil
+}
+
+type ListLFSPointersParams struct {
+	ReadParams
+}
+
+type ListLFSPointersOutput struct {
+	LFSInfos []LFSInfo
+}
+
+type LFSInfo struct {
+	OID string  `json:"oid"`
+	SHA sha.SHA `json:"sha"`
+}
+
+func (s *Service) ListLFSPointers(
+	ctx context.Context,
+	params *ListLFSPointersParams,
+) (*ListLFSPointersOutput, error) {
+	if params.RepoUID == "" {
+		return nil, api.ErrRepositoryPathEmpty
+	}
+
+	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
+
+	var lfsInfos []LFSInfo
+	var candidateObjects []parser.BatchCheckObject
+	// first get the sha of the objects that could be lfs pointers
+	for _, gitObjDir := range params.AlternateObjectDirs {
+		objects, err := catFileBatchCheckAllObjects(ctx, repoPath, gitObjDir)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, obj := range objects {
+			if obj.Type == string(TreeNodeTypeBlob) && obj.Size <= lfsPointerMaxSize {
+				candidateObjects = append(candidateObjects, obj)
+			}
+		}
+	}
+
+	if len(candidateObjects) == 0 {
+		return &ListLFSPointersOutput{LFSInfos: lfsInfos}, nil
+	}
+
+	// check the short-listed objects for lfs-pointers content
+	stdIn, stdOut, cancel := api.CatFileBatch(ctx, repoPath, params.AlternateObjectDirs)
+	defer cancel()
+
+	for _, obj := range candidateObjects {
+		line := obj.SHA.String() + "\n"
+
+		_, err := stdIn.Write([]byte(line))
+		if err != nil {
+			return nil, fmt.Errorf("failed to write blob sha to git stdin: %w", err)
+		}
+
+		// first line is always the object type, sha, and size
+		_, err = stdOut.ReadString('\n')
+		if err != nil {
+			return nil, fmt.Errorf("failed to read the git cat-file output: %w", err)
+		}
+
+		content, err := io.ReadAll(io.LimitReader(stdOut, obj.Size))
+		if err != nil {
+			return nil, fmt.Errorf("failed to read the git cat-file output: %w", err)
+		}
+
+		oid, err := parser.GetLFSOID(content)
+		if err != nil && !errors.Is(err, parser.ErrInvalidLFSPointer) {
+			return nil, fmt.Errorf("failed to scan git cat-file output for %s: %w", obj.SHA, err)
+		}
+		if err == nil {
+			lfsInfos = append(lfsInfos, LFSInfo{OID: oid, SHA: obj.SHA})
+		}
+
+		// skip the trailing new line
+		_, err = stdOut.ReadString('\n')
+		if err != nil {
+			return nil, fmt.Errorf("failed to read trailing newline after object: %w", err)
+		}
+	}
+
+	return &ListLFSPointersOutput{LFSInfos: lfsInfos}, nil
 }

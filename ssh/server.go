@@ -19,6 +19,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	"io"
@@ -30,6 +31,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/app/api/controller/lfs"
 	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/auth"
@@ -53,6 +55,8 @@ var (
 	allowedCommands = []string{
 		"git-upload-pack",
 		"git-receive-pack",
+		"git-lfs-authenticate",
+		"git-lfs-transfer",
 	}
 	defaultCiphers = []string{
 		"chacha20-poly1305@openssh.com",
@@ -97,6 +101,7 @@ type Server struct {
 
 	Verifier publickey.Service
 	RepoCtrl *repo.Controller
+	LFSCtrl  *lfs.Controller
 
 	ServerKeyPath string
 }
@@ -225,12 +230,70 @@ func (s *Server) sessionHandler(session ssh.Session) {
 	}
 
 	// first part is git service pack command: git-upload-pack, git-receive-pack
+	// of git-lfs client command: git-lfs-authenticate, git-lfs-transfer
 	gitCommand := parts[0]
 	if !slices.Contains(allowedCommands, gitCommand) {
 		_, _ = fmt.Fprintf(session.Stderr(), "command not supported: %q\n", command)
 		return
 	}
 
+	// handle git-lfs commands
+	//nolint:nestif
+	if strings.HasPrefix(gitCommand, "git-lfs-") {
+		gitLFSservice, err := enum.ParseGitLFSServiceType(gitCommand)
+		if err != nil {
+			_, _ = fmt.Fprintf(session.Stderr(), "failed to parse git-lfs service command: %q\n", gitCommand)
+			return
+		}
+		repoRef := getRepoRefFromCommand(parts[1])
+
+		// when git-lfs-transfer not supported, git-lfs client uses git-lfs-authenticate
+		// to gain a token from server and continue with http transfer APIs
+		if gitLFSservice == enum.GitLFSServiceTypeTransfer {
+			_, _ = fmt.Fprint(session.Stderr(), "git-lfs-transfer is not supported.")
+			return
+		}
+
+		// handling git-lfs-authenticate
+		principal := types.Principal{
+			ID:          principal.ID,
+			UID:         principal.UID,
+			Email:       principal.Email,
+			Type:        principal.Type,
+			DisplayName: principal.DisplayName,
+			Created:     principal.Created,
+			Updated:     principal.Updated,
+		}
+		ctx, cancel := context.WithCancel(session.Context())
+		defer cancel()
+
+		response, err := s.LFSCtrl.Authenticate(
+			ctx,
+			&auth.Session{
+				Principal: principal,
+			},
+			repoRef)
+		if err != nil {
+			log.Error().Err(err).Msg("git lfs authenticate failed")
+			writeErrorToSession(session, err.Error())
+			return
+		}
+
+		responseJSON, err := json.Marshal(response)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to marshal lfs authenticate response")
+			writeErrorToSession(session, err.Error())
+			return
+		}
+
+		if _, err := session.Write(responseJSON); err != nil {
+			log.Error().Err(err).Msg("failed to write response of git lfs authenticate")
+			writeErrorToSession(session, err.Error())
+		}
+		return
+	}
+
+	// handle git service pack commands
 	gitServicePack := strings.TrimPrefix(gitCommand, "git-")
 	service, err := enum.ParseGitServiceType(gitServicePack)
 	if err != nil {
@@ -241,12 +304,7 @@ func (s *Server) sessionHandler(session ssh.Session) {
 	// git command args
 	gitArgs := parts[1:]
 
-	// first git service pack cmd arg is path: 'space/repository.git' so we need to remove
-	// single quotes.
-	repoRef := strings.Trim(gitArgs[0], "'")
-	// remove .git suffix
-	repoRef = strings.TrimSuffix(repoRef, ".git")
-
+	repoRef := getRepoRefFromCommand(gitArgs[0])
 	gitProtocol := ""
 	for _, key := range session.Environ() {
 		if strings.HasPrefix(key, "GIT_PROTOCOL=") {
@@ -431,4 +489,20 @@ func GenerateKeyPair(keyPath string) error {
 		return fmt.Errorf("failed to write to public key: %w", err)
 	}
 	return nil
+}
+
+func getRepoRefFromCommand(gitArg string) string {
+	// first git service pack cmd arg is path: 'space/repository.git' so we need to remove
+	// single quotes.
+	repoRef := strings.Trim(gitArg, "'")
+	// remove .git suffix
+	repoRef = strings.TrimSuffix(repoRef, ".git")
+
+	return repoRef
+}
+
+func writeErrorToSession(session ssh.Session, message string) {
+	if _, err := io.Copy(session.Stderr(), strings.NewReader(message+"\n")); err != nil {
+		log.Printf("error writing to session stderr: %v", err)
+	}
 }

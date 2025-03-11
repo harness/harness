@@ -12,21 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package enum
+package remoteauth
 
-// TokenType represents the type of the JWT token.
-type TokenType string
+import (
+	"github.com/harness/gitness/app/store"
 
-const (
-	// TokenTypeSession is the token returned during user login or signup.
-	TokenTypeSession TokenType = "session"
-
-	// TokenTypePAT is a personal access token.
-	TokenTypePAT TokenType = "pat"
-
-	// TokenTypeSAT is a service account access token.
-	TokenTypeSAT TokenType = "sat"
-
-	// TokenTypeRemoteAuth is the token returned during ssh git-lfs-authenticate.
-	TokenTypeRemoteAuth TokenType = "remoteAuth"
+	"github.com/google/wire"
 )
+
+var WireSet = wire.NewSet(
+	ProvideRemoteAuth,
+)
+
+func ProvideRemoteAuth(
+	tokenStore store.TokenStore,
+	principalStore store.PrincipalStore,
+) Service {
+	return NewService(tokenStore, principalStore)
+}

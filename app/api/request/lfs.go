@@ -12,21 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package enum
+package request
 
-// TokenType represents the type of the JWT token.
-type TokenType string
+import "net/http"
 
 const (
-	// TokenTypeSession is the token returned during user login or signup.
-	TokenTypeSession TokenType = "session"
-
-	// TokenTypePAT is a personal access token.
-	TokenTypePAT TokenType = "pat"
-
-	// TokenTypeSAT is a service account access token.
-	TokenTypeSAT TokenType = "sat"
-
-	// TokenTypeRemoteAuth is the token returned during ssh git-lfs-authenticate.
-	TokenTypeRemoteAuth TokenType = "remoteAuth"
+	QueryParamObjectID   = "oid"
+	QueryParamObjectSize = "size"
 )
+
+func GetObjectIDFromQuery(r *http.Request) (string, error) {
+	return QueryParamOrError(r, QueryParamObjectID)
+}
+
+func GetObjectSizeFromQuery(r *http.Request) (int64, error) {
+	return QueryParamAsPositiveInt64OrError(r, QueryParamObjectSize)
+}

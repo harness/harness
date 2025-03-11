@@ -1299,6 +1299,15 @@ type (
 		) (map[int64][]*types.LabelPullReqAssignmentInfo, error)
 	}
 
+	LFSObjectStore interface {
+		// Find finds an LFS object with a specified oid and repo-id.
+		Find(ctx context.Context, repoID int64, oid string) (*types.LFSObject, error)
+		// FindMany finds LFS objects for a specified repo.
+		FindMany(ctx context.Context, repoID int64, oids []string) ([]*types.LFSObject, error)
+		// Create creates an LFS object.
+		Create(ctx context.Context, lfsObject *types.LFSObject) error
+	}
+
 	InfraProviderTemplateStore interface {
 		FindByIdentifier(ctx context.Context, spaceID int64, identifier string) (*types.InfraProviderTemplate, error)
 		Find(ctx context.Context, id int64) (*types.InfraProviderTemplate, error)

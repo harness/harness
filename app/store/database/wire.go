@@ -70,6 +70,7 @@ var WireSet = wire.NewSet(
 	ProvideLabelStore,
 	ProvideLabelValueStore,
 	ProvidePullReqLabelStore,
+	ProvideLFSObjectStore,
 	ProvideInfraProviderTemplateStore,
 	ProvideInfraProvisionedStore,
 	ProvideUsageMetricStore,
@@ -334,6 +335,11 @@ func ProvideLabelValueStore(db *sqlx.DB) store.LabelValueStore {
 // ProvideLabelValueStore provides a label value store.
 func ProvidePullReqLabelStore(db *sqlx.DB) store.PullReqLabelAssignmentStore {
 	return NewPullReqLabelStore(db)
+}
+
+// ProvideLFSObjectStore provides an lfs object store.
+func ProvideLFSObjectStore(db *sqlx.DB) store.LFSObjectStore {
+	return NewLFSObjectStore(db)
 }
 
 // ProvideInfraProviderTemplateStore provides a infraprovider template store.

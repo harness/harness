@@ -30,6 +30,12 @@ import (
 	gojwt "github.com/golang-jwt/jwt"
 )
 
+const (
+	headerTokenPrefixBearer = "Bearer "
+	//nolint:gosec // wrong flagging
+	HeaderTokenPrefixRemoteAuth = "RemoteAuth "
+)
+
 var _ Authenticator = (*JWTAuthenticator)(nil)
 
 // JWTAuthenticator uses the provided JWT to authenticate the caller.
@@ -162,8 +168,11 @@ func extractToken(r *http.Request, cookieName string) string {
 		_, pwd, _ := r.BasicAuth()
 		return pwd
 	// strip bearer prefix if present
-	case strings.HasPrefix(headerToken, "Bearer "):
-		return headerToken[7:]
+	case strings.HasPrefix(headerToken, headerTokenPrefixBearer):
+		return headerToken[len(headerTokenPrefixBearer):]
+	// for ssh git-lfs-authenticate the returned token prefix would be RemoteAuth of type JWT
+	case strings.HasPrefix(headerToken, HeaderTokenPrefixRemoteAuth):
+		return headerToken[len(HeaderTokenPrefixRemoteAuth):]
 	// otherwise use value as is
 	case headerToken != "":
 		return headerToken

@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/types"
@@ -26,7 +25,7 @@ import (
 	"github.com/gotidy/ptr"
 )
 
-func (c *Controller) checkFileSizeLimit(
+func (c *Controller) checkLFSObjects(
 	ctx context.Context,
 	rgit RestrictedGIT,
 	repo *types.RepositoryCore,
@@ -38,36 +37,48 @@ func (c *Controller) checkFileSizeLimit(
 		return nil
 	}
 
-	sizeLimit, err := settings.RepoGet(
-		ctx,
-		c.settings,
-		repo.ID,
-		settings.KeyFileSizeLimit,
-		settings.DefaultFileSizeLimit,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to check settings for file size limit: %w", err)
-	}
-	if sizeLimit <= 0 {
-		return nil
-	}
-
-	res, err := rgit.FindOversizeFiles(
-		ctx,
-		&git.FindOversizeFilesParams{
-			RepoUID:       repo.GitUID,
-			GitObjectDirs: in.Environment.AlternateObjectDirs,
-			SizeLimit:     sizeLimit,
+	res, err := rgit.ListLFSPointers(ctx,
+		&git.ListLFSPointersParams{
+			ReadParams: git.ReadParams{
+				RepoUID:             repo.GitUID,
+				AlternateObjectDirs: in.Environment.AlternateObjectDirs,
+			},
 		},
 	)
 	if err != nil {
-		return fmt.Errorf("failed to get file sizes: %w", err)
+		return fmt.Errorf("failed to list lfs pointers: %w", err)
 	}
 
-	if len(res.FileInfos) > 0 {
-		output.Error = ptr.String("Changes blocked by files exceeding the file size limit")
-		printOversizeFiles(output, res.FileInfos, sizeLimit)
+	if len(res.LFSInfos) == 0 {
+		return nil
+	}
+
+	oids := make([]string, len(res.LFSInfos))
+	for i := range res.LFSInfos {
+		oids[i] = res.LFSInfos[i].OID
+	}
+
+	existingObjs, err := c.lfsStore.FindMany(ctx, in.RepoID, oids)
+	if err != nil {
+		return fmt.Errorf("failed to find lfs objects: %w", err)
+	}
+
+	//nolint:lll
+	if len(existingObjs) != len(oids) {
+		output.Error = ptr.String(
+			"Changes blocked by missing lfs objects. Please try `git lfs push --all` or check if LFS is setup properly.")
+		return nil
 	}
 
 	return nil
+}
+
+func isAllRefDeletions(refUpdates []hook.ReferenceUpdate) bool {
+	for _, refUpdate := range refUpdates {
+		if !refUpdate.New.IsNil() {
+			return false
+		}
+	}
+
+	return true
 }

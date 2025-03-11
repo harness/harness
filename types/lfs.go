@@ -12,21 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package enum
+package types
 
-// TokenType represents the type of the JWT token.
-type TokenType string
+type LFSObject struct {
+	ID        int64  `json:"id"`
+	OID       string `json:"oid"`
+	Size      int64  `json:"size"`
+	Created   int64  `json:"created"`
+	CreatedBy int64  `json:"created_by"`
+	RepoID    int64  `json:"repo_id"`
+}
 
-const (
-	// TokenTypeSession is the token returned during user login or signup.
-	TokenTypeSession TokenType = "session"
-
-	// TokenTypePAT is a personal access token.
-	TokenTypePAT TokenType = "pat"
-
-	// TokenTypeSAT is a service account access token.
-	TokenTypeSAT TokenType = "sat"
-
-	// TokenTypeRemoteAuth is the token returned during ssh git-lfs-authenticate.
-	TokenTypeRemoteAuth TokenType = "remoteAuth"
-)
+type LFSLock struct {
+	ID      int64  `json:"id"`
+	Path    string `json:"path"`
+	Ref     string `json:"ref"`
+	Created int64  `json:"created"`
+	RepoID  int64  `json:"repo_id"`
+}
