@@ -20,11 +20,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/harness/gitness/app/gitspace/orchestrator/container"
+	"github.com/harness/gitness/app/gitspace/orchestrator/container/response"
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
-	"github.com/harness/gitness/app/gitspace/secret"
-	secretenum "github.com/harness/gitness/app/gitspace/secret/enum"
-	"github.com/harness/gitness/app/paths"
+	"github.com/harness/gitness/app/gitspace/orchestrator/utils"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -39,39 +37,16 @@ func (o Orchestrator) ResumeStartGitspace(
 	provisionedInfra types.Infrastructure,
 ) (types.GitspaceInstance, *types.GitspaceError) {
 	gitspaceInstance := gitspaceConfig.GitspaceInstance
-	gitspaceInstance.State = enum.GitspaceInstanceStateError
-
-	secretResolver, err := o.getSecretResolver(gitspaceInstance.AccessType)
+	gitspaceInstance.State = enum.GitspaceInstanceStateStarting
+	secretValue, err := utils.ResolveSecret(ctx, o.secretResolverFactory, gitspaceConfig)
 	if err != nil {
-		log.Err(err).Msgf("could not find secret resolver for type: %s", gitspaceInstance.AccessType)
 		return *gitspaceInstance, &types.GitspaceError{
-			Error:        err,
+			Error: fmt.Errorf("cannot resolve secret for ID %s: %w",
+				gitspaceConfig.InfraProviderResource.UID, err),
 			ErrorMessage: ptr.String(err.Error()),
 		}
 	}
-	rootSpaceID, _, err := paths.DisectRoot(gitspaceConfig.SpacePath)
-	if err != nil {
-		log.Err(err).Msgf("unable to find root space id from space path: %s", gitspaceConfig.SpacePath)
-		return *gitspaceInstance, &types.GitspaceError{
-			Error:        err,
-			ErrorMessage: ptr.String(err.Error()),
-		}
-	}
-	resolvedSecret, err := secretResolver.Resolve(ctx, secret.ResolutionContext{
-		UserIdentifier:     gitspaceConfig.GitspaceUser.Identifier,
-		GitspaceIdentifier: gitspaceConfig.Identifier,
-		SecretRef:          *gitspaceInstance.AccessKeyRef,
-		SpaceIdentifier:    rootSpaceID,
-	})
-	if err != nil {
-		log.Err(err).Msgf("could not resolve secret type: %s, ref: %s",
-			gitspaceInstance.AccessType, *gitspaceInstance.AccessKeyRef)
-		return *gitspaceInstance, &types.GitspaceError{
-			Error:        err,
-			ErrorMessage: ptr.String(err.Error()),
-		}
-	}
-	gitspaceInstance.AccessKey = &resolvedSecret.SecretValue
+	gitspaceInstance.AccessKey = secretValue
 
 	ideSvc, err := o.ideFactory.GetIDE(gitspaceConfig.IDE)
 	if err != nil {
@@ -118,13 +93,13 @@ func (o Orchestrator) ResumeStartGitspace(
 	}
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentConnectStart)
 
-	err = o.containerOrchestrator.Status(ctx, provisionedInfra)
+	containerOrchestrator, err := o.containerOrchestratorFactory.GetContainerOrchestrator(provisionedInfra.ProviderType)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentConnectFailed)
-		agentUnreachableErr := fmt.Errorf("couldn't call the agent health API: %w", err)
 		return *gitspaceInstance, &types.GitspaceError{
-			Error:        agentUnreachableErr,
-			ErrorMessage: ptr.String(agentUnreachableErr.Error()),
+			Error: fmt.Errorf("failed to get the container orchestrator for infra provider type %s: %w",
+				provisionedInfra.ProviderType, err),
+			ErrorMessage: ptr.String(err.Error()),
 		}
 	}
 
@@ -153,7 +128,7 @@ func (o Orchestrator) ResumeStartGitspace(
 	// NOTE: Currently we use a static identifier as the Gitspace user.
 	gitspaceConfig.GitspaceUser.Identifier = harnessUser
 
-	startResponse, err := o.containerOrchestrator.CreateAndStartGitspace(
+	err = containerOrchestrator.CreateAndStartGitspace(
 		ctx, gitspaceConfig, provisionedInfra, *scmResolvedDetails, o.config.DefaultBaseImage, ideSvc)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceCreationFailed)
@@ -164,7 +139,26 @@ func (o Orchestrator) ResumeStartGitspace(
 		}
 	}
 
+	return *gitspaceConfig.GitspaceInstance, nil
+}
+
+// FinishResumeStartGitspace needs to be called from the API Handler.
+func (o Orchestrator) FinishResumeStartGitspace(
+	ctx context.Context,
+	gitspaceConfig types.GitspaceConfig,
+	provisionedInfra types.Infrastructure,
+	startResponse *response.StartResponse,
+) (types.GitspaceInstance, *types.GitspaceError) {
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceCreationCompleted)
+	gitspaceInstance := gitspaceConfig.GitspaceInstance
+
+	ideSvc, err := o.ideFactory.GetIDE(gitspaceConfig.IDE)
+	if err != nil {
+		return *gitspaceInstance, &types.GitspaceError{
+			Error:        err,
+			ErrorMessage: ptr.String(err.Error()),
+		}
+	}
 
 	ideURLString := generateIDEURL(provisionedInfra, ideSvc, startResponse)
 	gitspaceInstance.URL = &ideURLString
@@ -183,7 +177,7 @@ func (o Orchestrator) ResumeStartGitspace(
 func generateIDEURL(
 	provisionedInfra types.Infrastructure,
 	ideSvc ide.IDE,
-	startResponse *container.StartResponse,
+	startResponse *response.StartResponse,
 ) string {
 	idePort := ideSvc.Port()
 	var forwardedPort string
@@ -200,19 +194,6 @@ func generateIDEURL(
 	}
 
 	return ideSvc.GenerateURL(startResponse.AbsoluteRepoPath, host, forwardedPort, startResponse.RemoteUser)
-}
-
-func (o Orchestrator) getSecretResolver(accessType enum.GitspaceAccessType) (secret.Resolver, error) {
-	secretType := secretenum.PasswordSecretType
-	switch accessType {
-	case enum.GitspaceAccessTypeUserCredentials:
-		secretType = secretenum.PasswordSecretType
-	case enum.GitspaceAccessTypeJWTToken:
-		secretType = secretenum.JWTSecretType
-	case enum.GitspaceAccessTypeSSHKey:
-		secretType = secretenum.SSHSecretType
-	}
-	return o.secretResolverFactory.GetSecretResolver(secretType)
 }
 
 // ResumeStopGitspace saves the deprovisioned infra details.

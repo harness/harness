@@ -20,6 +20,8 @@ import (
 	"encoding/gob"
 	"fmt"
 	"time"
+
+	"github.com/harness/gitness/app/gitspace/orchestrator/container/response"
 )
 
 // GenericReporter represents an event reporter that supports sending typesafe messages
@@ -46,6 +48,8 @@ func ReporterSendEvent[T interface{}](reporter *GenericReporter, ctx context.Con
 
 	buff := &bytes.Buffer{}
 	encoder := gob.NewEncoder(buff)
+	gob.Register((*response.StartResponse)(nil))
+	gob.Register((*response.DeleteResponse)(nil))
 
 	if err := encoder.Encode(&event); err != nil {
 		return "", fmt.Errorf("failed to encode payload: %w", err)

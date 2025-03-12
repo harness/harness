@@ -14,14 +14,6 @@
 
 package container
 
-type StartResponse struct {
-	ContainerID      string
-	ContainerName    string
-	PublishedPorts   map[int]string
-	AbsoluteRepoPath string
-	RemoteUser       string
-}
-
 type PostAction string
 
 const (

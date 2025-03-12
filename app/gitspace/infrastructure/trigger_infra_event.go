@@ -163,6 +163,22 @@ func (i InfraProvisioner) provisionNewInfrastructure(
 	if err != nil {
 		return err
 	}
+	infrastructure := types.Infrastructure{
+		Identifier:                 gitspaceConfig.GitspaceInstance.Identifier,
+		SpaceID:                    gitspaceConfig.SpaceID,
+		SpacePath:                  gitspaceConfig.SpacePath,
+		GitspaceConfigIdentifier:   gitspaceConfig.Identifier,
+		GitspaceInstanceIdentifier: gitspaceConfig.GitspaceInstance.Identifier,
+		ProviderType:               infraProviderType,
+		InputParameters:            allParams,
+		ConfigMetadata:             configMetadata,
+	}
+	responseMetadata, err := json.Marshal(infrastructure)
+	if err != nil {
+		return fmt.Errorf("unable to marshal infra object %+v: %w", responseMetadata, err)
+	}
+	responseMetaDataJSON := string(responseMetadata)
+
 	infraProvisioned := &types.InfraProvisioned{
 		GitspaceInstanceID:      gitspaceConfig.GitspaceInstance.ID,
 		InfraProviderType:       infraProviderType,
@@ -172,6 +188,7 @@ func (i InfraProvisioner) provisionNewInfrastructure(
 		InputParams:             paramsBytes,
 		InfraStatus:             enum.InfraStatusPending,
 		SpaceID:                 gitspaceConfig.SpaceID,
+		ResponseMetadata:        &responseMetaDataJSON,
 	}
 
 	err = i.infraProvisionedStore.Create(ctx, infraProvisioned)
@@ -190,7 +207,6 @@ func (i InfraProvisioner) provisionNewInfrastructure(
 		agentPort,
 		requiredGitspacePorts,
 		allParams,
-		configMetadata,
 	)
 	if err != nil {
 		infraProvisioned.InfraStatus = enum.InfraStatusUnknown
@@ -216,7 +232,7 @@ func (i InfraProvisioner) provisionExistingInfrastructure(
 	gitspaceConfig types.GitspaceConfig,
 	requiredGitspacePorts []types.GitspacePort,
 ) error {
-	allParams, configMetadata, err := i.getAllParamsFromDB(ctx, gitspaceConfig.InfraProviderResource, infraProvider)
+	allParams, _, err := i.getAllParamsFromDB(ctx, gitspaceConfig.InfraProviderResource, infraProvider)
 	if err != nil {
 		return fmt.Errorf("could not get all params from DB while provisioning: %w", err)
 	}
@@ -235,7 +251,6 @@ func (i InfraProvisioner) provisionExistingInfrastructure(
 		0, // NOTE: Agent port is not required for provisioning type Existing.
 		requiredGitspacePorts,
 		allParams,
-		configMetadata,
 	)
 	if err != nil {
 		return fmt.Errorf(

@@ -19,6 +19,7 @@ import (
 	"github.com/harness/gitness/app/services/gitspace"
 	"github.com/harness/gitness/app/services/gitspaceevent"
 	"github.com/harness/gitness/app/services/gitspaceinfraevent"
+	"github.com/harness/gitness/app/services/gitspaceoperationsevent"
 	"github.com/harness/gitness/app/services/infraprovider"
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/keywordsearch"
@@ -57,10 +58,11 @@ type Services struct {
 }
 
 type GitspaceServices struct {
-	GitspaceEvent         *gitspaceevent.Service
-	infraProvider         *infraprovider.Service
-	gitspace              *gitspace.Service
-	gitspaceInfraEventSvc *gitspaceinfraevent.Service
+	GitspaceEvent              *gitspaceevent.Service
+	infraProvider              *infraprovider.Service
+	gitspace                   *gitspace.Service
+	gitspaceInfraEventSvc      *gitspaceinfraevent.Service
+	gitspaceOperationsEventSvc *gitspaceoperationsevent.Service
 }
 
 func ProvideGitspaceServices(
@@ -68,12 +70,14 @@ func ProvideGitspaceServices(
 	infraProviderSvc *infraprovider.Service,
 	gitspaceSvc *gitspace.Service,
 	gitspaceInfraEventSvc *gitspaceinfraevent.Service,
+	gitspaceOperationsEventSvc *gitspaceoperationsevent.Service,
 ) *GitspaceServices {
 	return &GitspaceServices{
-		GitspaceEvent:         gitspaceEventSvc,
-		infraProvider:         infraProviderSvc,
-		gitspace:              gitspaceSvc,
-		gitspaceInfraEventSvc: gitspaceInfraEventSvc,
+		GitspaceEvent:              gitspaceEventSvc,
+		infraProvider:              infraProviderSvc,
+		gitspace:                   gitspaceSvc,
+		gitspaceInfraEventSvc:      gitspaceInfraEventSvc,
+		gitspaceOperationsEventSvc: gitspaceOperationsEventSvc,
 	}
 }
 

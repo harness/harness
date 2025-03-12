@@ -15,6 +15,7 @@
 package container
 
 import (
+	events "github.com/harness/gitness/app/events/gitspaceoperations"
 	"github.com/harness/gitness/app/gitspace/logutil"
 	"github.com/harness/gitness/app/gitspace/orchestrator/runarg"
 	"github.com/harness/gitness/infraprovider"
@@ -24,16 +25,25 @@ import (
 
 var WireSet = wire.NewSet(
 	ProvideEmbeddedDockerOrchestrator,
+	ProvideContainerOrchestratorFactory,
 )
 
 func ProvideEmbeddedDockerOrchestrator(
 	dockerClientFactory *infraprovider.DockerClientFactory,
 	statefulLogger *logutil.StatefulLogger,
-	runArgProvdier runarg.Provider,
-) Orchestrator {
+	runArgProvider runarg.Provider,
+	eventReporter *events.Reporter,
+) EmbeddedDockerOrchestrator {
 	return NewEmbeddedDockerOrchestrator(
 		dockerClientFactory,
 		statefulLogger,
-		runArgProvdier,
+		runArgProvider,
+		eventReporter,
 	)
+}
+
+func ProvideContainerOrchestratorFactory(
+	embeddedDockerOrchestrator EmbeddedDockerOrchestrator,
+) Factory {
+	return NewFactory(embeddedDockerOrchestrator)
 }

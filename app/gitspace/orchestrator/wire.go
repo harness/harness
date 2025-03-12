@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/platformconnector"
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/app/gitspace/secret"
+	"github.com/harness/gitness/app/store"
 
 	"github.com/google/wire"
 )
@@ -35,20 +36,22 @@ func ProvideOrchestrator(
 	scm *scm.SCM,
 	platformConnector platformconnector.PlatformConnector,
 	infraProvisioner infrastructure.InfraProvisioner,
-	containerOrchestrator container.Orchestrator,
+	containerOrchestratorFactor container.Factory,
 	reporter *events.Reporter,
 	config *Config,
 	ideFactory ide.Factory,
 	secretResolverFactory *secret.ResolverFactory,
+	gitspaceInstanceStore store.GitspaceInstanceStore,
 ) Orchestrator {
 	return NewOrchestrator(
 		scm,
 		platformConnector,
 		infraProvisioner,
-		containerOrchestrator,
+		containerOrchestratorFactor,
 		reporter,
 		config,
 		ideFactory,
 		secretResolverFactory,
+		gitspaceInstanceStore,
 	)
 }

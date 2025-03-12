@@ -32,7 +32,6 @@ type InfraProvider interface {
 		agentPort int,
 		requiredGitspacePorts []types.GitspacePort,
 		inputParameters []types.InfraProviderParameter,
-		configMetadata map[string]any,
 	) error
 
 	// Find finds infrastructure provisioned against a gitspace.
@@ -41,12 +40,15 @@ type InfraProvider interface {
 		spaceID int64,
 		spacePath string,
 		gitspaceConfigIdentifier string,
-		gitspaceInstanceIdentifier string,
-		agentPort int,
-		requiredGitspacePorts []types.GitspacePort,
 		inputParameters []types.InfraProviderParameter,
-		configMetadata map[string]any,
 	) (*types.Infrastructure, error)
+
+	FindInfraStatus(
+		ctx context.Context,
+		gitspaceConfigIdentifier string,
+		gitspaceInstanceIdentifier string,
+		inputParameters []types.InfraProviderParameter,
+	) (*enum.InfraStatus, error)
 
 	// Stop frees up the resources allocated against a gitspace, which can be freed.
 	Stop(ctx context.Context, infra types.Infrastructure) error

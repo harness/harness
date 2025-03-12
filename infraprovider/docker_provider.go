@@ -59,7 +59,6 @@ func (d DockerProvider) Provision(
 	_ int,
 	requiredGitspacePorts []types.GitspacePort,
 	inputParameters []types.InfraProviderParameter,
-	_ map[string]any,
 ) error {
 	dockerClient, err := d.dockerClientFactory.NewDockerClient(ctx, types.Infrastructure{
 		ProviderType:    enum.InfraProviderTypeDocker,
@@ -125,11 +124,7 @@ func (d DockerProvider) Find(
 	spaceID int64,
 	spacePath string,
 	gitspaceConfigIdentifier string,
-	_ string,
-	_ int,
-	_ []types.GitspacePort,
 	inputParameters []types.InfraProviderParameter,
-	_ map[string]any,
 ) (*types.Infrastructure, error) {
 	dockerClient, err := d.dockerClientFactory.NewDockerClient(ctx, types.Infrastructure{
 		ProviderType:    enum.InfraProviderTypeDocker,
@@ -158,6 +153,13 @@ func (d DockerProvider) Find(
 	infrastructure.Storage = volumeName(spacePath, gitspaceConfigIdentifier)
 
 	return infrastructure, nil
+}
+
+func (d DockerProvider) FindInfraStatus(_ context.Context,
+	_ string,
+	_ string,
+	_ []types.InfraProviderParameter) (*enum.InfraStatus, error) {
+	return nil, nil //nolint:nilnil
 }
 
 // Stop is NOOP as this provider uses already running docker engine. It does not stop the docker engine.

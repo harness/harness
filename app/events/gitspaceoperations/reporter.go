@@ -12,20 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gitspaceservice
+package events
 
 import (
-	"github.com/harness/gitness/app/services/gitspace"
-	"github.com/harness/gitness/app/services/gitspaceinfraevent"
-	"github.com/harness/gitness/app/services/gitspaceoperationsevent"
-	"github.com/harness/gitness/app/services/infraprovider"
+	"errors"
 
-	"github.com/google/wire"
+	"github.com/harness/gitness/events"
 )
 
-var WireSet = wire.NewSet(
-	gitspace.WireSet,
-	gitspaceinfraevent.WireSet,
-	infraprovider.WireSet,
-	gitspaceoperationsevent.WireSet,
-)
+// Reporter is the event reporter for this package.
+type Reporter struct {
+	innerReporter *events.GenericReporter
+}
+
+func NewReporter(eventsSystem *events.System) (*Reporter, error) {
+	innerReporter, err := events.NewReporter(eventsSystem, category)
+	if err != nil {
+		return nil, errors.New("failed to create new GenericReporter from event system")
+	}
+
+	return &Reporter{
+		innerReporter: innerReporter,
+	}, nil
+}

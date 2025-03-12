@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"strconv"
 	"time"
 
@@ -47,13 +48,13 @@ func (i InfraProvisioner) PostInfraEventComplete(
 		enum.InfraEventDeprovision,
 		enum.InfraEventStop,
 		enum.InfraEventCleanup:
-		return i.updateInfraProvisioned(ctx, gitspaceConfig.GitspaceInstance.ID, infra)
+		return i.UpdateInfraProvisioned(ctx, gitspaceConfig.GitspaceInstance.ID, infra)
 	default:
 		return fmt.Errorf("unsupported event type: %s", eventType)
 	}
 }
 
-func (i InfraProvisioner) updateInfraProvisioned(
+func (i InfraProvisioner) UpdateInfraProvisioned(
 	ctx context.Context,
 	gitspaceInstanceID int64,
 	infrastructure types.Infrastructure,
@@ -72,8 +73,22 @@ func (i InfraProvisioner) updateInfraProvisioned(
 	infraProvisionedLatest.InfraStatus = infrastructure.Status
 	infraProvisionedLatest.ServerHostIP = infrastructure.AgentHost
 	infraProvisionedLatest.ServerHostPort = strconv.Itoa(infrastructure.AgentPort)
-	infraProvisionedLatest.ProxyHost = infrastructure.ProxyAgentHost
-	infraProvisionedLatest.ProxyPort = int32(infrastructure.ProxyAgentPort)
+
+	proxyHost := infrastructure.AgentHost
+	if infrastructure.ProxyAgentHost != "" {
+		proxyHost = infrastructure.ProxyAgentHost
+	}
+	infraProvisionedLatest.ProxyHost = proxyHost
+
+	proxyPort := infrastructure.AgentPort
+	if infrastructure.ProxyAgentPort != 0 {
+		proxyPort = infrastructure.ProxyAgentPort
+	}
+	if proxyPort > math.MaxInt32 || proxyPort < math.MinInt32 {
+		return fmt.Errorf("proxyPort value %d exceeds int32 range", proxyPort)
+	}
+	infraProvisionedLatest.ProxyPort = int32(proxyPort)
+
 	infraProvisionedLatest.ResponseMetadata = &responseMetaDataJSON
 	infraProvisionedLatest.Updated = time.Now().UnixMilli()
 

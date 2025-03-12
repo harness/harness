@@ -28,7 +28,6 @@ import (
 func (i InfraProvisioner) Find(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
-	requiredGitspacePorts []types.GitspacePort,
 ) (*types.Infrastructure, error) {
 	infraProviderResource := gitspaceConfig.InfraProviderResource
 	infraProviderEntity, err := i.getConfigFromResource(ctx, infraProviderResource)
@@ -41,35 +40,43 @@ func (i InfraProvisioner) Find(
 		return nil, err
 	}
 
-	var inputParams []types.InfraProviderParameter
-	var configMetadata map[string]any
-	var agentPort = 0
+	var infra *types.Infrastructure
+	//nolint:nestif
 	if infraProvider.ProvisioningType() == enum.InfraProvisioningTypeNew {
-		inputParams, configMetadata, err = i.paramsForProvisioningTypeNew(ctx, gitspaceConfig)
+		inputParams, _, err := i.paramsForProvisioningTypeNew(ctx, gitspaceConfig)
 		if err != nil {
 			return nil, err
 		}
-
-		// TODO: What if the agent port has deviated from when the last instance was created?
-		agentPort = i.config.AgentPort
+		infra, err = i.GetInfraFromStoredInfo(ctx, gitspaceConfig)
+		if err != nil {
+			return nil, fmt.Errorf("failed to find infrastructure from stored info: %w", err)
+		}
+		status, err := infraProvider.FindInfraStatus(
+			ctx,
+			gitspaceConfig.Identifier,
+			gitspaceConfig.GitspaceInstance.Identifier,
+			inputParams,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to find infra status: %w", err)
+		}
+		if status != nil {
+			infra.Status = *status
+		}
 	} else {
-		inputParams, configMetadata, err = i.paramsForProvisioningTypeExisting(ctx, infraProviderResource, infraProvider)
+		inputParams, _, err := i.paramsForProvisioningTypeExisting(ctx, infraProviderResource, infraProvider)
 		if err != nil {
 			return nil, err
 		}
-	}
-
-	infra, err := infraProvider.Find(ctx, gitspaceConfig.SpaceID, gitspaceConfig.SpacePath,
-		gitspaceConfig.Identifier, gitspaceConfig.GitspaceInstance.Identifier,
-		agentPort, requiredGitspacePorts, inputParams, configMetadata)
-	if err != nil {
-		return nil, fmt.Errorf("failed to find infrastructure: %w", err)
-	}
-
-	if infra == nil { // fallback
-		infra, err = i.getInfraFromStoredInfo(ctx, gitspaceConfig)
+		infra, err = infraProvider.Find(
+			ctx,
+			gitspaceConfig.SpaceID,
+			gitspaceConfig.SpacePath,
+			gitspaceConfig.Identifier,
+			inputParams,
+		)
 		if err != nil {
-			return nil, fmt.Errorf("failed to build infrastructure from stored info: %w", err)
+			return nil, fmt.Errorf("failed to find infrastructure from provider: %w", err)
 		}
 	}
 
@@ -143,7 +150,7 @@ func getGitspaceScheme(ideType enum.IDEType, gitspaceSchemeFromMetadata string) 
 	}
 }
 
-func (i InfraProvisioner) getInfraFromStoredInfo(
+func (i InfraProvisioner) GetInfraFromStoredInfo(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 ) (*types.Infrastructure, error) {

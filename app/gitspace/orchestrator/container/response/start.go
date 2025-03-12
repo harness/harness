@@ -12,20 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gitspaceservice
+package response
 
-import (
-	"github.com/harness/gitness/app/services/gitspace"
-	"github.com/harness/gitness/app/services/gitspaceinfraevent"
-	"github.com/harness/gitness/app/services/gitspaceoperationsevent"
-	"github.com/harness/gitness/app/services/infraprovider"
-
-	"github.com/google/wire"
-)
-
-var WireSet = wire.NewSet(
-	gitspace.WireSet,
-	gitspaceinfraevent.WireSet,
-	infraprovider.WireSet,
-	gitspaceoperationsevent.WireSet,
-)
+type StartResponse struct {
+	ContainerID      string         `json:"container_id"`
+	ContainerName    string         `json:"container_name"`
+	PublishedPorts   map[int]string `json:"published_ports"`
+	AbsoluteRepoPath string         `json:"absolute_repo_path"`
+	RemoteUser       string         `json:"remote_user"`
+}

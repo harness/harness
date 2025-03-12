@@ -56,6 +56,7 @@ import (
 	gitevents "github.com/harness/gitness/app/events/git"
 	gitspaceevents "github.com/harness/gitness/app/events/gitspace"
 	gitspaceinfraevents "github.com/harness/gitness/app/events/gitspaceinfra"
+	gitspaceoperationsevents "github.com/harness/gitness/app/events/gitspaceoperations"
 	pipelineevents "github.com/harness/gitness/app/events/pipeline"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	repoevents "github.com/harness/gitness/app/events/repo"
@@ -270,6 +271,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		ide.WireSet,
 		gitspaceinfraevents.WireSet,
 		gitspaceservice.WireSet,
+		gitspaceoperationsevents.WireSet,
 		cliserver.ProvideGitspaceInfraProvisionerConfig,
 		cliserver.ProvideIDEVSCodeConfig,
 		cliserver.ProvideIDEJetBrainsConfig,

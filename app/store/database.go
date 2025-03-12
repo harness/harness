@@ -733,6 +733,7 @@ type (
 		Find(ctx context.Context, id int64) (*types.GitspaceInstance, error)
 
 		// FindByIdentifier returns a gitspace instance given a gitspace instance identifier from the datastore.
+		// TODO: Fix this. It needs to use space ID as well.
 		FindByIdentifier(ctx context.Context, identifier string) (*types.GitspaceInstance, error)
 
 		// FindLatestByGitspaceConfigID returns the latest gitspace instance given a gitspace config ID from the datastore.

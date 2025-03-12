@@ -48,6 +48,10 @@ type InstanceInfo struct {
 	PoolName          string `json:"pool_name"`
 	Zone              string `json:"zone"`
 	StorageIdentifier string `json:"storage_identifier"`
+	CAKey             []byte `json:"ca_key"`
+	CACert            []byte `json:"ca_cert"`
+	TLSKey            []byte `json:"tls_key"`
+	TLSCert           []byte `json:"tls_cert"`
 }
 
 type Infrastructure struct {
@@ -65,6 +69,8 @@ type Infrastructure struct {
 	ProviderType enum.InfraProviderType
 	// InputParameters which are required by the provider to provision the infra.
 	InputParameters []InfraProviderParameter
+	// ConfigMetadata contains the infra config metadata required by the infra provider to provision the infra.
+	ConfigMetadata map[string]any
 	// Status of the infra.
 	Status enum.InfraStatus
 

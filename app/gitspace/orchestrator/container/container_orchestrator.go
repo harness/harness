@@ -33,13 +33,21 @@ type Orchestrator interface {
 		resolvedDetails scm.ResolvedDetails,
 		defaultBaseImage string,
 		ideService ide.IDE,
-	) (*StartResponse, error)
+	) error
+
+	// RetryCreateAndStartGitspaceIfRequired will handle the delegate task response and retry if status code is > 202
+	RetryCreateAndStartGitspaceIfRequired(ctx context.Context)
 
 	// StopGitspace stops the gitspace container.
 	StopGitspace(ctx context.Context, config types.GitspaceConfig, infra types.Infrastructure) error
 
 	// StopAndRemoveGitspace stops and removes the gitspace container.
-	StopAndRemoveGitspace(ctx context.Context, config types.GitspaceConfig, infra types.Infrastructure) error
+	StopAndRemoveGitspace(
+		ctx context.Context,
+		config types.GitspaceConfig,
+		infra types.Infrastructure,
+		canDeleteUserData bool,
+	) error
 
 	// Status checks if the infra is reachable and ready to orchestrate containers.
 	Status(ctx context.Context, infra types.Infrastructure) error

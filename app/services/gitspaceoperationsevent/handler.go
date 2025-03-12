@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gitspaceinfraevent
+package gitspaceoperationsevent
 
 import (
 	"context"
@@ -20,7 +20,8 @@ import (
 	"time"
 
 	gitspaceEvents "github.com/harness/gitness/app/events/gitspace"
-	gitspaceInfraEvents "github.com/harness/gitness/app/events/gitspaceinfra"
+	gitspaceOperationsEvents "github.com/harness/gitness/app/events/gitspaceoperations"
+	"github.com/harness/gitness/app/gitspace/orchestrator/container/response"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -28,10 +29,13 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (s *Service) handleGitspaceInfraResumeEvent(
+func (s *Service) handleGitspaceOperationsEvent(
 	ctx context.Context,
-	event *events.Event[*gitspaceInfraEvents.GitspaceInfraEventPayload],
+	event *events.Event[*gitspaceOperationsEvents.GitspaceOperationsEventPayload],
 ) error {
+	logr := log.With().Str("event", string(event.Payload.Type)).Logger()
+	logr.Debug().Msg("Received gitspace operations event")
+
 	payload := event.Payload
 	ctxWithTimedOut, cancel := context.WithTimeout(ctx, time.Duration(s.config.TimeoutInMins)*time.Minute)
 	defer cancel()
@@ -57,7 +61,6 @@ func (s *Service) handleGitspaceInfraResumeEvent(
 	}
 
 	defer func() {
-		// TODO: Update would not be needed for provision, stop and deprovision. Needs to be removed later.
 		updateErr := s.gitspaceSvc.UpdateInstance(ctxWithTimedOut, instance)
 		if updateErr != nil {
 			log.Err(updateErr).Msgf("failed to update gitspace instance")
@@ -67,59 +70,57 @@ func (s *Service) handleGitspaceInfraResumeEvent(
 	var err error
 
 	switch payload.Type {
-	case enum.InfraEventProvision:
+	case enum.GitspaceOperationsEventStart:
 		if config.GitspaceInstance.Identifier != payload.Infra.GitspaceInstanceIdentifier {
 			return fmt.Errorf("gitspace instance is not latest, stopping provisioning")
 		}
-		updatedInstance, resumeStartErr := s.orchestrator.ResumeStartGitspace(ctxWithTimedOut, *config, payload.Infra)
-		if resumeStartErr != nil {
+
+		startResponse, ok := payload.Response.(*response.StartResponse)
+		if !ok {
+			return fmt.Errorf("failed to cast start response")
+		}
+		updatedInstance, handleResumeStartErr := s.orchestrator.FinishResumeStartGitspace(
+			ctxWithTimedOut,
+			*config,
+			payload.Infra,
+			startResponse,
+		)
+		if handleResumeStartErr != nil {
 			s.emitGitspaceConfigEvent(ctxWithTimedOut, config, enum.GitspaceEventTypeGitspaceActionStartFailed)
-			updatedInstance.ErrorMessage = resumeStartErr.ErrorMessage
-			err = fmt.Errorf("failed to resume start gitspace: %w", resumeStartErr.Error)
+			updatedInstance.ErrorMessage = handleResumeStartErr.ErrorMessage
+			err = fmt.Errorf("failed to finish resume start gitspace: %w", handleResumeStartErr.Error)
 		}
-
 		instance = &updatedInstance
-
-	case enum.InfraEventStop:
-		instanceState, resumeStopErr := s.orchestrator.ResumeStopGitspace(ctxWithTimedOut, *config, payload.Infra)
-		if resumeStopErr != nil {
+	case enum.GitspaceOperationsEventStop:
+		finishStopErr := s.orchestrator.FinishStopGitspaceContainer(ctxWithTimedOut, *config, payload.Infra)
+		if finishStopErr != nil {
 			s.emitGitspaceConfigEvent(ctxWithTimedOut, config, enum.GitspaceEventTypeGitspaceActionStopFailed)
-			instance.ErrorMessage = resumeStopErr.ErrorMessage
-			err = fmt.Errorf("failed to resume stop gitspace: %w", resumeStopErr.Error)
+			instance.ErrorMessage = finishStopErr.ErrorMessage
+			err = fmt.Errorf("failed to finish trigger start gitspace: %w", finishStopErr.Error)
+		}
+	case enum.GitspaceOperationsEventDelete:
+		deleteResponse, ok := payload.Response.(*response.DeleteResponse)
+		if !ok {
+			return fmt.Errorf("failed to cast delete response")
+		}
+		finishStopAndRemoveErr := s.orchestrator.FinishStopAndRemoveGitspaceContainer(
+			ctxWithTimedOut,
+			*config,
+			payload.Infra,
+			deleteResponse.CanDeleteUserData,
+		)
+		if finishStopAndRemoveErr != nil {
+			s.emitGitspaceConfigEvent(ctxWithTimedOut, config, enum.GitspaceEventTypeGitspaceActionStopFailed)
+			instance.ErrorMessage = finishStopAndRemoveErr.ErrorMessage
+			err = fmt.Errorf("failed to finish trigger start gitspace: %w", finishStopAndRemoveErr.Error)
 		}
 
-		instance.State = instanceState
-
-	case enum.InfraEventDeprovision:
-		instanceState, resumeDeleteErr := s.orchestrator.ResumeDeleteGitspace(ctxWithTimedOut, *config, payload.Infra)
-		if resumeDeleteErr != nil {
-			err = fmt.Errorf("failed to resume delete gitspace: %w", resumeDeleteErr)
-		} else if config.IsMarkedForDeletion {
-			config.IsDeleted = true
-			updateErr := s.gitspaceSvc.UpdateConfig(ctxWithTimedOut, config)
-			if updateErr != nil {
-				err = fmt.Errorf("failed to delete gitspace config with ID: %s %w", config.Identifier, updateErr)
-			}
-		}
-
-		instance.State = instanceState
-	case enum.InfraEventCleanup:
-		instanceState, resumeCleanupErr := s.orchestrator.ResumeCleanupInstanceResources(
-			ctxWithTimedOut, *config, payload.Infra)
-		if resumeCleanupErr != nil {
-			s.emitGitspaceConfigEvent(ctxWithTimedOut, config, enum.GitspaceEventTypeInfraCleanupFailed)
-
-			err = fmt.Errorf("failed to resume cleanup gitspace: %w", resumeCleanupErr)
-		}
-
-		instance.State = instanceState
 	default:
-		instance.State = enum.GitspaceInstanceStateError
 		return fmt.Errorf("unknown event type: %s", event.Payload.Type)
 	}
 
 	if err != nil {
-		log.Err(err).Msgf("error while handling gitspace infra event")
+		log.Err(err).Msgf("error while handling gitspace operations event")
 	}
 
 	return nil

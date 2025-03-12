@@ -28,6 +28,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/harness/gitness/app/gitspace/orchestrator/container/response"
 	"github.com/harness/gitness/app/gitspace/orchestrator/runarg"
 	"github.com/harness/gitness/app/gitspace/orchestrator/utils"
 	gitspaceTypes "github.com/harness/gitness/app/gitspace/types"
@@ -794,7 +795,7 @@ func GetContainerResponse(
 	containerName string,
 	portMappings map[int]*types.PortMapping,
 	repoName string,
-) (*StartResponse, error) {
+) (*response.StartResponse, error) {
 	id, ports, remoteUser, err := GetContainerInfo(ctx, containerName, dockerClient, portMappings)
 	if err != nil {
 		return nil, err
@@ -803,7 +804,7 @@ func GetContainerResponse(
 	homeDir := GetUserHomeDir(remoteUser)
 	codeRepoDir := filepath.Join(homeDir, repoName)
 
-	return &StartResponse{
+	return &response.StartResponse{
 		ContainerID:      id,
 		ContainerName:    containerName,
 		PublishedPorts:   ports,

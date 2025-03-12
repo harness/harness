@@ -18,14 +18,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"path/filepath"
 	"sync"
 
+	"github.com/harness/gitness/app/gitspace/orchestrator/container/response"
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
 	gitspaceTypes "github.com/harness/gitness/app/gitspace/types"
 	"github.com/harness/gitness/types"
 
 	dockerTypes "github.com/docker/docker/api/types"
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -154,4 +157,33 @@ func ExecuteLifecycleCommands(
 	wg.Wait()
 
 	return nil
+}
+
+func ProcessStartResponse(
+	ctx context.Context,
+	config types.GitspaceConfig,
+	resp io.ReadCloser,
+) (*response.StartResponse, error) {
+	var err error
+	defer func() {
+		err = resp.Close()
+		if err != nil {
+			log.Ctx(ctx).Warn().Err(err).Msgf(
+				"failed to close response after starting gitspace %s", config.Identifier)
+		}
+	}()
+
+	bodyBytes, _ := io.ReadAll(resp)
+	responseBody := string(bodyBytes)
+
+	log.Debug().Msgf("response from %s %s", config.GitspaceInstance.Identifier, responseBody)
+
+	var startResponse response.StartResponse
+	err = json.Unmarshal(bodyBytes, &startResponse)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshalling start response for gitspace instance %s: %w",
+			config.GitspaceInstance.Identifier, err)
+	}
+
+	return &startResponse, nil
 }

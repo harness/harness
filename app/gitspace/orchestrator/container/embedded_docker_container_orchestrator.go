@@ -20,7 +20,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	events "github.com/harness/gitness/app/events/gitspaceoperations"
 	"github.com/harness/gitness/app/gitspace/logutil"
+	"github.com/harness/gitness/app/gitspace/orchestrator/container/response"
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
 	"github.com/harness/gitness/app/gitspace/orchestrator/runarg"
@@ -29,6 +31,7 @@ import (
 	gitspaceTypes "github.com/harness/gitness/app/gitspace/types"
 	"github.com/harness/gitness/infraprovider"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
@@ -46,6 +49,7 @@ type EmbeddedDockerOrchestrator struct {
 	dockerClientFactory *infraprovider.DockerClientFactory
 	statefulLogger      *logutil.StatefulLogger
 	runArgProvider      runarg.Provider
+	eventReporter       *events.Reporter
 }
 
 // Step represents a single setup action.
@@ -87,11 +91,13 @@ func NewEmbeddedDockerOrchestrator(
 	dockerClientFactory *infraprovider.DockerClientFactory,
 	statefulLogger *logutil.StatefulLogger,
 	runArgProvider runarg.Provider,
-) Orchestrator {
-	return &EmbeddedDockerOrchestrator{
+	eventReporter *events.Reporter,
+) EmbeddedDockerOrchestrator {
+	return EmbeddedDockerOrchestrator{
 		dockerClientFactory: dockerClientFactory,
 		statefulLogger:      statefulLogger,
 		runArgProvider:      runArgProvider,
+		eventReporter:       eventReporter,
 	}
 }
 
@@ -106,20 +112,20 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 	resolvedRepoDetails scm.ResolvedDetails,
 	defaultBaseImage string,
 	ideService ide.IDE,
-) (*StartResponse, error) {
+) error {
 	containerName := GetGitspaceContainerName(gitspaceConfig)
 	logger := log.Ctx(ctx).With().Str(loggingKey, containerName).Logger()
 
 	// Step 1: Validate access key
 	accessKey, err := e.getAccessKey(gitspaceConfig)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// Step 2: Get Docker client
 	dockerClient, err := e.getDockerClient(ctx, infra)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer e.closeDockerClient(dockerClient)
 
@@ -129,7 +135,7 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 	// Step 3: Check the current state of the container
 	state, err := e.checkContainerState(ctx, dockerClient, containerName)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// Step 4: Handle different container states
@@ -146,7 +152,7 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 			accessKey,
 			ideService,
 		); err != nil {
-			return nil, err
+			return err
 		}
 	case ContainerStateRemoved:
 		if err = e.createAndStartNewGitspace(
@@ -158,18 +164,37 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 			defaultBaseImage,
 			ideService,
 			imagAuthMap); err != nil {
-			return nil, err
+			return err
 		}
 	case ContainerStatePaused, ContainerStateCreated, ContainerStateUnknown, ContainerStateDead:
 		// TODO handle the following states
-		return nil, fmt.Errorf("gitspace %s is in a unhandled state: %s", containerName, state)
+		return fmt.Errorf("gitspace %s is in a unhandled state: %s", containerName, state)
 
 	default:
-		return nil, fmt.Errorf("gitspace %s is in a bad state: %s", containerName, state)
+		return fmt.Errorf("gitspace %s is in a bad state: %s", containerName, state)
 	}
 
 	// Step 5: Retrieve container information and return response
-	return GetContainerResponse(ctx, dockerClient, containerName, infra.GitspacePortMappings, resolvedRepoDetails.RepoName)
+	startResponse, err := GetContainerResponse(
+		ctx,
+		dockerClient,
+		containerName,
+		infra.GitspacePortMappings,
+		resolvedRepoDetails.RepoName,
+	)
+	if err != nil {
+		return err
+	}
+
+	return e.eventReporter.EmitGitspaceOperationsEvent(
+		ctx,
+		events.GitspaceOperationsEvent,
+		&events.GitspaceOperationsEventPayload{
+			Type:     enum.GitspaceOperationsEventStart,
+			Infra:    infra,
+			Response: *startResponse,
+		},
+	)
 }
 
 // startStoppedGitspace starts the Gitspace container if it was stopped.
@@ -293,8 +318,16 @@ func (e *EmbeddedDockerOrchestrator) StopGitspace(
 		return fmt.Errorf("gitspace %s is in a bad state: %s", containerName, state)
 	}
 
+	err = e.eventReporter.EmitGitspaceOperationsEvent(
+		ctx,
+		events.GitspaceOperationsEvent,
+		&events.GitspaceOperationsEventPayload{
+			Type:  enum.GitspaceOperationsEventStop,
+			Infra: infra,
+		},
+	)
 	logger.Debug().Msg("stopped gitspace")
-	return nil
+	return err
 }
 
 // stopRunningGitspace handles stopping the container when it is in a running state.
@@ -326,6 +359,7 @@ func (e *EmbeddedDockerOrchestrator) StopAndRemoveGitspace(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 	infra types.Infrastructure,
+	canDeleteUserData bool,
 ) error {
 	containerName := GetGitspaceContainerName(gitspaceConfig)
 	logger := log.Ctx(ctx).With().Str(loggingKey, containerName).Logger()
@@ -373,8 +407,17 @@ func (e *EmbeddedDockerOrchestrator) StopAndRemoveGitspace(
 		return fmt.Errorf("failed to remove gitspace %s: %w", containerName, err)
 	}
 
+	err = e.eventReporter.EmitGitspaceOperationsEvent(
+		ctx,
+		events.GitspaceOperationsEvent,
+		&events.GitspaceOperationsEventPayload{
+			Type:     enum.GitspaceOperationsEventDelete,
+			Infra:    infra,
+			Response: &response.DeleteResponse{CanDeleteUserData: canDeleteUserData},
+		},
+	)
 	logger.Debug().Msg("removed gitspace")
-	return nil
+	return err
 }
 
 func (e *EmbeddedDockerOrchestrator) StreamLogs(
@@ -832,4 +875,8 @@ func getImage(devcontainerConfig types.DevcontainerConfig, defaultBaseImage stri
 		imageName = defaultBaseImage
 	}
 	return imageName
+}
+
+func (e *EmbeddedDockerOrchestrator) RetryCreateAndStartGitspaceIfRequired(_ context.Context) {
+	// Nothing to do here as the event will be published from CreateAndStartGitspace itself.
 }
