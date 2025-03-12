@@ -178,7 +178,13 @@ func (c *Controller) Merge(
 	}
 
 	sourceRepo := targetRepo
+	sourceWriteParams := targetWriteParams
 	if pr.SourceRepoID != pr.TargetRepoID {
+		sourceWriteParams, err = controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, sourceRepo)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to create RPC write params: %w", err)
+		}
+
 		sourceRepo, err = c.repoFinder.FindByID(ctx, pr.SourceRepoID)
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to get source repository: %w", err)
@@ -432,11 +438,6 @@ func (c *Controller) Merge(
 		return nil, nil, fmt.Errorf("failed to convert source SHA: %w", err)
 	}
 
-	refSourceBranch, err := git.GetRefPath(pr.SourceBranch, gitenum.RefTypeBranch)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to generate source branch ref name: %w", err)
-	}
-
 	refTargetBranch, err := git.GetRefPath(pr.TargetBranch, gitenum.RefTypeBranch)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to generate target branch ref name: %w", err)
@@ -476,15 +477,6 @@ func (c *Controller) Merge(
 		Old:  sha.SHA{},
 		New:  sha.Nil,
 	})
-
-	if ruleOut.DeleteSourceBranch {
-		// Delete the source branch.
-		refUpdates = append(refUpdates, git.RefUpdate{
-			Name: refSourceBranch,
-			Old:  sourceBranchSHA,
-			New:  sha.Nil,
-		})
-	}
 
 	now := time.Now()
 	mergeOutput, err := c.git.Merge(ctx, &git.MergeParams{
@@ -605,13 +597,27 @@ func (c *Controller) Merge(
 		SourceSHA:   mergeOutput.HeadSHA.String(),
 	})
 
+	var branchDeleted bool
 	if ruleOut.DeleteSourceBranch {
-		pr.ActivitySeq = activitySeqBranchDeleted
-		if _, errAct := c.activityStore.CreateWithPayload(ctx, pr, mergedBy,
-			&types.PullRequestActivityPayloadBranchDelete{SHA: in.SourceSHA}, nil); errAct != nil {
+		errDelete := c.git.DeleteBranch(ctx, &git.DeleteBranchParams{
+			WriteParams: sourceWriteParams,
+			BranchName:  pr.SourceBranch,
+		})
+		if errDelete != nil {
 			// non-critical error
-			log.Ctx(ctx).Err(errAct).
-				Msgf("failed to write pull request activity for successful automatic branch delete")
+			log.Ctx(ctx).Err(errDelete).Msgf("failed to delete source branch after merging")
+		} else {
+			branchDeleted = true
+
+			// NOTE: there is a chance someone pushed on the branch between merge and delete.
+			// Either way, we'll use the SHA that was merged with for the activity to be consistent from PR perspective.
+			pr.ActivitySeq = activitySeqBranchDeleted
+			if _, errAct := c.activityStore.CreateWithPayload(ctx, pr, mergedBy,
+				&types.PullRequestActivityPayloadBranchDelete{SHA: in.SourceSHA}, nil); errAct != nil {
+				// non-critical error
+				log.Ctx(ctx).Err(errAct).
+					Msgf("failed to write pull request activity for successful automatic branch delete")
+			}
 		}
 	}
 
@@ -667,7 +673,7 @@ func (c *Controller) Merge(
 	}
 	return &types.MergeResponse{
 		SHA:            mergeOutput.MergeSHA.String(),
-		BranchDeleted:  ruleOut.DeleteSourceBranch,
+		BranchDeleted:  branchDeleted,
 		RuleViolations: violations,
 	}, nil, nil
 }
