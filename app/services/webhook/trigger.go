@@ -365,7 +365,10 @@ func (w *WebhookExecutor) prepareHTTPRequest(
 	}
 
 	var secretValue string
-	if webhook.Secret != "" {
+	//nolint:gocritic
+	if webhook.Type == enum.WebhookTypeInternal {
+		secretValue = w.config.InternalSecret
+	} else if webhook.Secret != "" {
 		decryptedSecret, err := w.encrypter.Decrypt([]byte(webhook.Secret))
 		if err != nil {
 			return nil, fmt.Errorf("failed to decrypt webhook secret: %w", err)

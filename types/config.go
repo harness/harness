@@ -339,7 +339,8 @@ type Config struct {
 		AllowPrivateNetwork bool   `envconfig:"GITNESS_WEBHOOK_ALLOW_PRIVATE_NETWORK" default:"false"`
 		AllowLoopback       bool   `envconfig:"GITNESS_WEBHOOK_ALLOW_LOOPBACK" default:"false"`
 		// RetentionTime is the duration after which webhook executions will be purged from the DB.
-		RetentionTime time.Duration `envconfig:"GITNESS_WEBHOOK_RETENTION_TIME" default:"168h"` // 7 days
+		RetentionTime  time.Duration `envconfig:"GITNESS_WEBHOOK_RETENTION_TIME" default:"168h"` // 7 days
+		InternalSecret string        `envconfig:"GITNESS_WEBHOOK_INTERNAL_SECRET"`
 	}
 
 	Trigger struct {

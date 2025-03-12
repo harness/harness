@@ -51,9 +51,7 @@ type Config struct {
 	MaxRetries          int
 	AllowPrivateNetwork bool
 	AllowLoopback       bool
-
-	// InternalWebhooksURL specifies the internal webhook URL which will be used if webhook is marked internal
-	InternalWebhooksURL string
+	InternalSecret      string
 }
 
 func (c *Config) Prepare() error {
@@ -81,6 +79,7 @@ func (c *Config) Prepare() error {
 	return nil
 }
 
+//nolint:revive
 type WebhookExecutorStore interface {
 	Find(ctx context.Context, id int64) (*types.WebhookExecutionCore, error)
 	ListWebhooks(
@@ -106,6 +105,7 @@ type WebhookExecutorStore interface {
 	CreateWebhookExecution(ctx context.Context, hook *types.WebhookExecutionCore) error
 }
 
+//nolint:revive
 type WebhookExecutor struct {
 	secureHTTPClient           *http.Client
 	insecureHTTPClient         *http.Client

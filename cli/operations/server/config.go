@@ -331,6 +331,7 @@ func ProvideWebhookConfig(config *types.Config) webhook.Config {
 		MaxRetries:          config.Webhook.MaxRetries,
 		AllowPrivateNetwork: config.Webhook.AllowPrivateNetwork,
 		AllowLoopback:       config.Webhook.AllowLoopback,
+		InternalSecret:      config.Webhook.InternalSecret,
 	}
 }
 
