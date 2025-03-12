@@ -36,7 +36,9 @@ export enum LabelActivity {
 export enum ReviewerAddActivity {
   REQUESTED = 'requested',
   ASSIGNED = 'assigned',
-  SELF_ASSIGNED = 'self_assigned'
+  SELF_ASSIGNED = 'self_assigned',
+  DEFAULT = 'default',
+  CODEOWNERS = 'code_owners'
 }
 
 /**

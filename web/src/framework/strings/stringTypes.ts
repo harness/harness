@@ -881,6 +881,8 @@ export interface StringsMap {
   prHasNoConflicts: string
   prMustSelectSourceAndTargetBranches: string
   'prReview.assigned': string
+  'prReview.codeowners': string
+  'prReview.defaultReviewers': string
   'prReview.filterByReviews': string
   'prReview.removed': string
   'prReview.requested': string

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React from 'react'
+import React, { useMemo } from 'react'
 import { Avatar, Container, Layout, StringSubstitute, Text } from '@harnessio/uicore'
 import { Icon, IconName } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
@@ -48,12 +48,47 @@ interface MergePayload {
 interface ReviewerAddActivityPayload {
   reviewer_type: ReviewerAddActivity
 }
+
+const formatListWithAndFragment = (names: string[]): React.ReactNode => {
+  const uniqueNames = [...new Set(names)] // Ensure uniqueness
+
+  switch (uniqueNames.length) {
+    case 0:
+      return null
+    case 1:
+      return <strong>{uniqueNames[0]}</strong>
+    case 2:
+      return (
+        <>
+          <strong>{uniqueNames[0]}</strong> and <strong>{uniqueNames[1]}</strong>
+        </>
+      )
+    default:
+      return (
+        <>
+          {uniqueNames.slice(0, -1).map((name, index) => (
+            <React.Fragment key={index}>
+              <strong>{name}</strong>
+              {index < uniqueNames.length - 2 ? ', ' : ''}
+            </React.Fragment>
+          ))}{' '}
+          and <strong>{uniqueNames[uniqueNames.length - 1]}</strong>
+        </>
+      )
+  }
+}
+
 //ToDo : update all comment options with the correct payload type and remove Unknown
 export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, commentItems, repoMetadataPath }) => {
   const { getString } = useStrings()
   const payload = commentItems[0].payload
   const type = payload?.type
   const { routes } = useAppContext()
+  const displayNameList = useMemo(() => {
+    const checkList = payload?.metadata?.mentions?.ids ?? []
+    const mentionsMap = payload?.mentions ?? {}
+    return [...new Set(checkList.map(id => mentionsMap[id]?.display_name ?? ''))]
+  }, [payload?.metadata?.mentions?.ids, payload?.mentions])
 
   switch (type) {
     case CommentType.MERGE: {
@@ -425,8 +460,8 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
     }
 
     case CommentType.REVIEWER_ADD: {
-      const mentionId = payload?.metadata?.mentions?.ids?.[0] ?? 0
-      const mentionDisplayName = payload?.mentions?.[mentionId]?.display_name ?? ''
+      const activityMentions = formatListWithAndFragment(displayNameList)
+
       return (
         <Container className={css.mergedBox}>
           <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }}>
@@ -438,7 +473,7 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
                     str={getString('prReview.assigned')}
                     vars={{
                       author: <strong>{payload?.author?.display_name}</strong>,
-                      reviewer: <strong>{mentionDisplayName}</strong>
+                      reviewer: activityMentions
                     }}
                   />
                 </Case>
@@ -447,7 +482,7 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
                     str={getString('prReview.requested')}
                     vars={{
                       author: <strong>{payload?.author?.display_name}</strong>,
-                      reviewer: <strong>{mentionDisplayName}</strong>
+                      reviewer: activityMentions
                     }}
                   />
                 </Case>
@@ -455,7 +490,25 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
                   <StringSubstitute
                     str={getString('prReview.selfAssigned')}
                     vars={{
-                      reviewer: <strong>{mentionDisplayName}</strong>
+                      reviewer: activityMentions
+                    }}
+                  />
+                </Case>
+                <Case val={ReviewerAddActivity.CODEOWNERS}>
+                  <StringSubstitute
+                    str={getString('prReview.codeowners')}
+                    vars={{
+                      author: <strong>{payload?.author?.display_name}</strong>,
+                      codeowners: activityMentions
+                    }}
+                  />
+                </Case>
+                <Case val={ReviewerAddActivity.DEFAULT}>
+                  <StringSubstitute
+                    str={getString('prReview.defaultReviewers')}
+                    vars={{
+                      author: <strong>{payload?.author?.display_name}</strong>,
+                      reviewers: activityMentions
                     }}
                   />
                 </Case>
