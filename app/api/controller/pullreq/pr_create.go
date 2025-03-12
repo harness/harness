@@ -192,10 +192,6 @@ func (c *Controller) Create(
 		}
 	}
 
-	// don't create PR creator as reviewer based on rules
-	// don't emit an error to allow creation of reviewers from rules
-	delete(reviewerInputMap, session.Principal.ID)
-
 	// Prepare label assign input
 
 	var labelAssignOuts []*labelsvc.AssignToPullReqOut
@@ -397,26 +393,32 @@ func (c *Controller) prepareRuleReviewers(
 
 	codeownerReviewers := make(map[int64]*types.PrincipalInfo)
 	if out.RequestCodeOwners {
-		codeownerReviewers, err = c.prepareCodeowners(
+		codeownerReviewers, err = c.getApplicableCodeOwners(
 			ctx, targetRepo, in.TargetBranch, mergeBaseSHA, sourceSHA,
 		)
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to prepare code owner reviewers: %w", err)
 		}
+
+		// ensure we remove author from list
+		delete(codeownerReviewers, session.Principal.ID)
 	}
 
 	defaultReviewers := make(map[int64]*types.PrincipalInfo, len(out.DefaultReviewerIDs))
 	if len(out.DefaultReviewerIDs) > 0 {
-		defaultReviewers, err = c.prepareDefaultReviewers(ctx, out.DefaultReviewerIDs)
+		defaultReviewers, err = c.getDefaultReviewers(ctx, out.DefaultReviewerIDs)
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to prepare default reviewers: %w", err)
 		}
+
+		// ensure we remove author from list
+		delete(defaultReviewers, session.Principal.ID)
 	}
 
 	return codeownerReviewers, defaultReviewers, nil
 }
 
-func (c *Controller) prepareCodeowners(
+func (c *Controller) getApplicableCodeOwners(
 	ctx context.Context,
 	targetRepo *types.RepositoryCore,
 	targetBranch string,
@@ -448,7 +450,7 @@ func (c *Controller) prepareCodeowners(
 	return principalInfoMap, nil
 }
 
-func (c *Controller) prepareDefaultReviewers(
+func (c *Controller) getDefaultReviewers(
 	ctx context.Context,
 	reviewerIDs []int64,
 ) (map[int64]*types.PrincipalInfo, error) {
