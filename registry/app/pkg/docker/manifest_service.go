@@ -499,20 +499,25 @@ func (l *manifestService) dbPutManifest(
 ) error {
 	switch reqManifest := manifest.(type) {
 	case *schema2.DeserializedManifest:
+		log.Ctx(ctx).Debug().Msgf("Putting schema2 manifest %s to database", d.String())
 		if err := l.dbPutManifestSchema2(ctx, reqManifest, payload, d, repoKey, headers, info); err != nil {
 			return err
 		}
 		return l.upsertImageAndArtifact(ctx, d, repoKey, info)
 	case *ocischema.DeserializedManifest:
+		log.Ctx(ctx).Debug().Msgf("Putting ocischema manifest %s to database", d.String())
 		if err := l.dbPutManifestOCI(ctx, reqManifest, payload, d, repoKey, headers, info); err != nil {
 			return err
 		}
 		return l.upsertImageAndArtifact(ctx, d, repoKey, info)
 	case *manifestlist.DeserializedManifestList:
+		log.Ctx(ctx).Debug().Msgf("Putting manifestlist manifest %s to database", d.String())
 		return l.dbPutManifestList(ctx, reqManifest, payload, d, repoKey, headers, info)
 	case *ocischema.DeserializedImageIndex:
+		log.Ctx(ctx).Debug().Msgf("Putting ocischema image index %s to database", d.String())
 		return l.dbPutImageIndex(ctx, reqManifest, payload, d, repoKey, headers, info)
 	default:
+		log.Ctx(ctx).Info().Msgf("Invalid manifest type: %T", reqManifest)
 		return errcode.ErrorCodeManifestInvalid.WithDetail("manifest type unsupported")
 	}
 }
@@ -701,6 +706,7 @@ func (l *manifestService) dbPutManifestV2(
 
 	// find and associate distributable manifest layer blobs
 	for _, reqLayer := range mfst.DistributableLayers() {
+		log.Ctx(ctx).Debug().Msgf("associating layer %s with manifest %s", reqLayer.Digest.String(), digest.String())
 		dbBlob, err := l.DBFindRepositoryBlob(ctx, reqLayer, dbRepo.ID, info.Image)
 		if err != nil {
 			return err

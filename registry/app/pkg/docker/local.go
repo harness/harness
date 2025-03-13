@@ -696,7 +696,7 @@ func (r *LocalRegistry) PutManifest(
 	var jsonBuf bytes.Buffer
 	d, _ := digest.Parse(artInfo.Digest)
 	tag := artInfo.Tag
-	log.Ctx(ctx).Info().Msgf("Pushing manifest %s %s / %s", artInfo.RegIdentifier, d, tag)
+	log.Ctx(ctx).Info().Msgf("Pushing manifest %s, digest: %q, tag: %s", artInfo.RegIdentifier, d, tag)
 
 	responseHeaders = &commons.ResponseHeaders{
 		Headers: map[string]string{},
@@ -724,6 +724,7 @@ func (r *LocalRegistry) PutManifest(
 	} else {
 		if tag != "" {
 			d = desc.Digest
+			log.Ctx(ctx).Debug().Msgf("payload digest: %q", d)
 		} else {
 			errs = append(errs, errcode.ErrCodeTagInvalid.WithDetail("no tag or digest specified"))
 			return responseHeaders, errs
