@@ -52,8 +52,8 @@ export class MavenVersionType extends VersionStep<ArtifactVersionSummary> {
     [VersionListColumnEnum.Name]: { width: '100%' },
     [VersionListColumnEnum.Size]: { width: '100%' },
     [VersionListColumnEnum.FileCount]: { width: '100%' },
-    [VersionListColumnEnum.LastModified]: { width: '100%' },
-    [VersionListColumnEnum.Actions]: { width: '10%' }
+    [VersionListColumnEnum.LastModified]: { width: '100%' }
+    // [VersionListColumnEnum.Actions]: { width: '10%' } // TODO: will add this once BE support actions
   }
 
   renderVersionListTable(props: VersionListTableProps): JSX.Element {
