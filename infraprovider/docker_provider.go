@@ -59,6 +59,7 @@ func (d DockerProvider) Provision(
 	_ int,
 	requiredGitspacePorts []types.GitspacePort,
 	inputParameters []types.InfraProviderParameter,
+	_ map[string]any,
 ) error {
 	dockerClient, err := d.dockerClientFactory.NewDockerClient(ctx, types.Infrastructure{
 		ProviderType:    enum.InfraProviderTypeDocker,
@@ -163,7 +164,7 @@ func (d DockerProvider) FindInfraStatus(_ context.Context,
 }
 
 // Stop is NOOP as this provider uses already running docker engine. It does not stop the docker engine.
-func (d DockerProvider) Stop(ctx context.Context, infra types.Infrastructure) error {
+func (d DockerProvider) Stop(ctx context.Context, infra types.Infrastructure, _ map[string]any) error {
 	infra.Status = enum.InfraStatusDestroyed
 
 	event := &events.GitspaceInfraEventPayload{
@@ -200,7 +201,12 @@ func (d DockerProvider) CleanupInstanceResources(ctx context.Context, infra type
 // Deprovision is NOOP if canDeleteUserData = false
 // Deprovision deletes the volume created by Provision method if canDeleteUserData = false.
 // Deprovision does not stop the docker engine in any case.
-func (d DockerProvider) Deprovision(ctx context.Context, infra types.Infrastructure, canDeleteUserData bool) error {
+func (d DockerProvider) Deprovision(
+	ctx context.Context,
+	infra types.Infrastructure,
+	canDeleteUserData bool,
+	_ map[string]any,
+) error {
 	if canDeleteUserData {
 		err := d.deleteVolume(ctx, infra)
 		if err != nil {

@@ -99,6 +99,11 @@ func (i InfraProvisioner) TriggerInfraEventWithOpts(
 		return err
 	}
 
+	_, configMetadata, err := i.getAllParamsFromDB(ctx, gitspaceConfig.InfraProviderResource, infraProvider)
+	if err != nil {
+		return fmt.Errorf("could not get all params from DB while provisioning: %w", err)
+	}
+
 	switch eventType {
 	case enum.InfraEventProvision:
 		if infraProvider.ProvisioningType() == enum.InfraProvisioningTypeNew {
@@ -109,15 +114,22 @@ func (i InfraProvisioner) TriggerInfraEventWithOpts(
 
 	case enum.InfraEventDeprovision:
 		if infraProvider.ProvisioningType() == enum.InfraProvisioningTypeNew {
-			return i.deprovisionNewInfrastructure(ctx, infraProvider, gitspaceConfig, *infra, opts.CanDeleteUserData)
+			return i.deprovisionNewInfrastructure(
+				ctx,
+				infraProvider,
+				gitspaceConfig,
+				*infra,
+				opts.CanDeleteUserData,
+				configMetadata,
+			)
 		}
-		return infraProvider.Deprovision(ctx, *infra, opts.CanDeleteUserData)
+		return infraProvider.Deprovision(ctx, *infra, opts.CanDeleteUserData, configMetadata)
 
 	case enum.InfraEventCleanup:
 		return infraProvider.CleanupInstanceResources(ctx, *infra)
 
 	case enum.InfraEventStop:
-		return infraProvider.Stop(ctx, *infra)
+		return infraProvider.Stop(ctx, *infra, configMetadata)
 
 	default:
 		return fmt.Errorf("unsupported event type: %s", eventType)
@@ -207,6 +219,7 @@ func (i InfraProvisioner) provisionNewInfrastructure(
 		agentPort,
 		requiredGitspacePorts,
 		allParams,
+		configMetadata,
 	)
 	if err != nil {
 		infraProvisioned.InfraStatus = enum.InfraStatusUnknown
@@ -232,7 +245,7 @@ func (i InfraProvisioner) provisionExistingInfrastructure(
 	gitspaceConfig types.GitspaceConfig,
 	requiredGitspacePorts []types.GitspacePort,
 ) error {
-	allParams, _, err := i.getAllParamsFromDB(ctx, gitspaceConfig.InfraProviderResource, infraProvider)
+	allParams, configMetadata, err := i.getAllParamsFromDB(ctx, gitspaceConfig.InfraProviderResource, infraProvider)
 	if err != nil {
 		return fmt.Errorf("could not get all params from DB while provisioning: %w", err)
 	}
@@ -251,6 +264,7 @@ func (i InfraProvisioner) provisionExistingInfrastructure(
 		0, // NOTE: Agent port is not required for provisioning type Existing.
 		requiredGitspacePorts,
 		allParams,
+		configMetadata,
 	)
 	if err != nil {
 		return fmt.Errorf(
@@ -269,6 +283,7 @@ func (i InfraProvisioner) deprovisionNewInfrastructure(
 	gitspaceConfig types.GitspaceConfig,
 	infra types.Infrastructure,
 	canDeleteUserData bool,
+	configMetadata map[string]any,
 ) error {
 	infraProvisionedLatest, err := i.infraProvisionedStore.FindLatestByGitspaceInstanceID(
 		ctx, gitspaceConfig.GitspaceInstance.ID)
@@ -282,7 +297,7 @@ func (i InfraProvisioner) deprovisionNewInfrastructure(
 		return nil
 	}
 
-	err = infraProvider.Deprovision(ctx, infra, canDeleteUserData)
+	err = infraProvider.Deprovision(ctx, infra, canDeleteUserData, configMetadata)
 	if err != nil {
 		return fmt.Errorf("unable to trigger deprovision infra %+v: %w", infra, err)
 	}

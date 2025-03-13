@@ -32,6 +32,7 @@ type InfraProvider interface {
 		agentPort int,
 		requiredGitspacePorts []types.GitspacePort,
 		inputParameters []types.InfraProviderParameter,
+		configMetadata map[string]any,
 	) error
 
 	// Find finds infrastructure provisioned against a gitspace.
@@ -51,7 +52,7 @@ type InfraProvider interface {
 	) (*enum.InfraStatus, error)
 
 	// Stop frees up the resources allocated against a gitspace, which can be freed.
-	Stop(ctx context.Context, infra types.Infrastructure) error
+	Stop(ctx context.Context, infra types.Infrastructure, configMetadata map[string]any) error
 
 	// CleanupInstanceResources cleans up resources exclusively allocated to a gitspace instance.
 	CleanupInstanceResources(ctx context.Context, infra types.Infrastructure) error
@@ -59,7 +60,12 @@ type InfraProvider interface {
 	// Deprovision removes infrastructure provisioned against a gitspace.
 	// canDeleteUserData = false -> remove all resources except storage where user has stored it's data.
 	// canDeleteUserData = true -> remove all resources including storage.
-	Deprovision(ctx context.Context, infra types.Infrastructure, canDeleteUserData bool) error
+	Deprovision(
+		ctx context.Context,
+		infra types.Infrastructure,
+		canDeleteUserData bool,
+		configMetadata map[string]any,
+	) error
 
 	// AvailableParams provides a schema to define the infrastructure.
 	AvailableParams() []types.InfraProviderParameterSchema
