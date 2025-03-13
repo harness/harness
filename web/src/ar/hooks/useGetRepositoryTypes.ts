@@ -86,6 +86,7 @@ const RepositoryTypes: RepositoryTypeListItem[] = [
     value: RepositoryPackageType.NUGET,
     icon: 'nuget-repository-type',
     tooltip: 'Coming Soon!',
+    featureFlag: FeatureFlags.HAR_NUGET_PACKAGE_TYPE_ENABLED,
     disabled: true
   }
 ]

@@ -77,5 +77,13 @@ export const UpstreamProxyPackageTypeList: UpstreamRepositoryPackageTypeListItem
     tooltip: 'Coming Soon!',
     featureFlag: FeatureFlags.HAR_PYTHON_PACKAGE_TYPE_ENABLED,
     disabled: true
+  },
+  {
+    label: 'repositoryTypes.nuget',
+    value: UpstreamProxyPackageType.NUGET,
+    icon: 'nuget-repository-type',
+    tooltip: 'Coming Soon!',
+    featureFlag: FeatureFlags.HAR_NUGET_PACKAGE_TYPE_ENABLED,
+    disabled: true
   }
 ]

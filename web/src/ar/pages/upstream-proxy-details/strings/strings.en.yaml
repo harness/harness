@@ -15,6 +15,7 @@ createForm:
     mavenCentral: Maven Central
     npmjs: npmjs
     pypi: PyPI
+    nugetOrg: NuGet.org
   authentication:
     title: Authentication
     userNameAndPassword: Username and Password

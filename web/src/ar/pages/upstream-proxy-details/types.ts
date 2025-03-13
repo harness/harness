@@ -23,7 +23,8 @@ export enum UpstreamProxyPackageType {
   GENERIC = 'GENERIC',
   MAVEN = 'MAVEN',
   NPM = 'NPM',
-  PYTHON = 'PYTHON'
+  PYTHON = 'PYTHON',
+  NUGET = 'NUGET'
 }
 
 export enum UpstreamRepositoryURLInputSource {
@@ -32,7 +33,8 @@ export enum UpstreamRepositoryURLInputSource {
   NpmJS = 'NpmJs',
   AwsEcr = 'AwsEcr',
   Custom = 'Custom',
-  PyPi = 'PyPi'
+  PyPi = 'PyPi',
+  NuGetorg = 'NuGet.org'
 }
 
 export enum UpstreamProxyAuthenticationMode {

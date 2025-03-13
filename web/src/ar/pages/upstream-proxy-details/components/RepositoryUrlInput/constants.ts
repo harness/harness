@@ -45,5 +45,9 @@ export const UpstreamURLSourceConfig: Record<UpstreamRepositoryURLInputSource, R
   [UpstreamRepositoryURLInputSource.PyPi]: {
     label: 'upstreamProxyDetails.createForm.source.pypi',
     value: UpstreamRepositoryURLInputSource.PyPi
+  },
+  [UpstreamRepositoryURLInputSource.NuGetorg]: {
+    label: 'upstreamProxyDetails.createForm.source.nugetOrg',
+    value: UpstreamRepositoryURLInputSource.NuGetorg
   }
 }
