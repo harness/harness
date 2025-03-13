@@ -107,3 +107,10 @@ func NewService(
 
 	return service, nil
 }
+
+func (s *Service) ReTriggerWebhookExecution(
+	ctx context.Context,
+	webhookExecutionID int64,
+) (*gitnesswebhook.TriggerResult, error) {
+	return s.WebhookExecutor.RetriggerWebhookExecution(ctx, webhookExecutionID)
+}

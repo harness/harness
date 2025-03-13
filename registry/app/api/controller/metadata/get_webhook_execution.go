@@ -16,6 +16,7 @@ package metadata
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -65,7 +66,8 @@ func (c *APIController) GetWebhookExecution(
 		log.Ctx(ctx).Error().Msgf("invalid webhook execution identifier: %s, err: %v", string(r.WebhookExecutionId), err)
 		return api.GetWebhookExecution400JSONResponse{
 			BadRequestJSONResponse: api.BadRequestJSONResponse(
-				*GetErrorResponse(http.StatusBadRequest, err.Error()),
+				*GetErrorResponse(http.StatusBadRequest,
+					fmt.Sprintf("invalid webhook execution identifier: %s, err: %v", string(r.WebhookExecutionId), err)),
 			),
 		}, err
 	}
@@ -73,7 +75,7 @@ func (c *APIController) GetWebhookExecution(
 	w, err := c.WebhooksExecutionRepository.Find(ctx, webhookExecutionID)
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf(getWebhookErrMsg, regInfo.RegistryRef, r.WebhookIdentifier, err)
-		return getWebhooksExecutionsInternalErrorResponse(err)
+		return getWebhooksExecutionsInternalErrorResponse(fmt.Errorf("failed to find webhook execution: %w", err))
 	}
 	webhookExecution, err := MapToWebhookExecutionResponseEntity(*w)
 	if err != nil {

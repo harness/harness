@@ -99,8 +99,8 @@ func NewAPIHandler(
 		artifactStore,
 		webhooksRepository,
 		webhooksExecutionRepository,
-		*registryMetadataHelper,
-		webhookService,
+		registryMetadataHelper,
+		&webhookService,
 	)
 
 	handler := artifact.NewStrictHandler(apiController, []artifact.StrictMiddlewareFunc{})

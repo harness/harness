@@ -16,6 +16,7 @@ package metadata
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -63,13 +64,14 @@ func (c *APIController) ReTriggerWebhookExecution(
 		log.Ctx(ctx).Error().Msgf("invalid webhook execution identifier: %s, err: %v", string(r.WebhookExecutionId), err)
 		return api.ReTriggerWebhookExecution400JSONResponse{
 			BadRequestJSONResponse: api.BadRequestJSONResponse(
-				*GetErrorResponse(http.StatusBadRequest, err.Error()),
+				*GetErrorResponse(http.StatusBadRequest,
+					fmt.Sprintf("invalid webhook execution identifier: %s, err: %v", string(r.WebhookExecutionId), err)),
 			),
 		}, err
 	}
-	result, err := c.WebhookService.WebhookExecutor.RetriggerWebhookExecution(ctx, webhookExecutionID)
+	result, err := c.WebhookService.ReTriggerWebhookExecution(ctx, webhookExecutionID)
 	if err != nil {
-		return getReTriggerWebhooksExecutionsInternalErrorResponse(err)
+		return getReTriggerWebhooksExecutionsInternalErrorResponse(fmt.Errorf("failed to re-trigger execution: %w", err))
 	}
 	webhookExecution, err := MapToWebhookExecutionResponseEntity(*result.Execution)
 	if err != nil {

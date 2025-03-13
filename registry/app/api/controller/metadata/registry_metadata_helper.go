@@ -20,7 +20,6 @@ import (
 	"strconv"
 
 	"github.com/harness/gitness/app/paths"
-	"github.com/harness/gitness/app/services/refcache"
 	corestore "github.com/harness/gitness/app/store"
 	api "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/pkg/commons"
@@ -29,25 +28,29 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-type RegistryMetadataHelper struct {
+var _ RegistryMetadataHelper = (*GitnessRegistryMetadataHelper)(nil)
+var _ RegistryMetadataHelper = (*MockRegistryMetadataHelper)(nil)
+
+type GitnessRegistryMetadataHelper struct {
 	spacePathStore     corestore.SpacePathStore
-	spaceFinder        refcache.SpaceFinder
+	spaceFinder        SpaceFinder
 	registryRepository store.RegistryRepository
 }
 
 func NewRegistryMetadataHelper(
 	spacePathStore corestore.SpacePathStore,
-	spaceFinder refcache.SpaceFinder,
+	spaceFinder SpaceFinder,
 	registryRepository store.RegistryRepository,
-) *RegistryMetadataHelper {
-	return &RegistryMetadataHelper{
+) RegistryMetadataHelper {
+	gitnessRegistryMetadataHelper := GitnessRegistryMetadataHelper{
 		spacePathStore:     spacePathStore,
 		spaceFinder:        spaceFinder,
 		registryRepository: registryRepository,
 	}
+	return &gitnessRegistryMetadataHelper
 }
 
-func (r *RegistryMetadataHelper) getSecretSpaceID(ctx context.Context, secretSpacePath *string) (int, error) {
+func (r *GitnessRegistryMetadataHelper) getSecretSpaceID(ctx context.Context, secretSpacePath *string) (int, error) {
 	if secretSpacePath == nil {
 		return -1, fmt.Errorf("secret space path is missing")
 	}
@@ -61,7 +64,7 @@ func (r *RegistryMetadataHelper) getSecretSpaceID(ctx context.Context, secretSpa
 
 // GetRegistryRequestBaseInfo returns the base info for the registry request
 // One of the regRefParam or (parentRefParam + regIdentifierParam) should be provided.
-func (r *RegistryMetadataHelper) GetRegistryRequestBaseInfo(
+func (r *GitnessRegistryMetadataHelper) GetRegistryRequestBaseInfo(
 	ctx context.Context,
 	parentRef string,
 	regRef string,
@@ -116,7 +119,7 @@ func (r *RegistryMetadataHelper) GetRegistryRequestBaseInfo(
 	return baseInfo, nil
 }
 
-func (r *RegistryMetadataHelper) GetPermissionChecks(
+func (r *GitnessRegistryMetadataHelper) GetPermissionChecks(
 	space *types.SpaceCore,
 	registryIdentifier string,
 	permission enum.Permission,
@@ -131,7 +134,7 @@ func (r *RegistryMetadataHelper) GetPermissionChecks(
 	return permissionChecks
 }
 
-func (r *RegistryMetadataHelper) MapToWebhookCore(
+func (r *GitnessRegistryMetadataHelper) MapToWebhookCore(
 	ctx context.Context,
 	webhookRequest api.WebhookRequest,
 	regInfo *RegistryRequestBaseInfo,
@@ -182,7 +185,7 @@ func mapToDTOHeaders(extraHeaders *[]api.ExtraHeader) []types.ExtraHeader {
 	return headers
 }
 
-func (r *RegistryMetadataHelper) MapToWebhookResponseEntity(
+func (r *GitnessRegistryMetadataHelper) MapToWebhookResponseEntity(
 	ctx context.Context,
 	createdWebhook *types.WebhookCore,
 ) (*api.Webhook, error) {
@@ -241,7 +244,7 @@ func (r *RegistryMetadataHelper) MapToWebhookResponseEntity(
 	return webhookResponseEntity, nil
 }
 
-func (r *RegistryMetadataHelper) MapToInternalWebhookTriggers(
+func (r *GitnessRegistryMetadataHelper) MapToInternalWebhookTriggers(
 	triggers []api.Trigger,
 ) []enum.WebhookTrigger {
 	var webhookTriggers = make([]enum.WebhookTrigger, 0)
@@ -258,7 +261,9 @@ func (r *RegistryMetadataHelper) MapToInternalWebhookTriggers(
 	return webhookTriggers
 }
 
-func (r *RegistryMetadataHelper) MapToAPIExecutionResult(result enum.WebhookExecutionResult) api.WebhookExecResult {
+func (r *GitnessRegistryMetadataHelper) MapToAPIExecutionResult(
+	result enum.WebhookExecutionResult,
+) api.WebhookExecResult {
 	switch result {
 	case enum.WebhookExecutionResultSuccess:
 		return api.WebhookExecResultSUCCESS
@@ -271,7 +276,7 @@ func (r *RegistryMetadataHelper) MapToAPIExecutionResult(result enum.WebhookExec
 	return ""
 }
 
-func (r *RegistryMetadataHelper) MapToAPIWebhookTriggers(triggers []enum.WebhookTrigger) []api.Trigger {
+func (r *GitnessRegistryMetadataHelper) MapToAPIWebhookTriggers(triggers []enum.WebhookTrigger) []api.Trigger {
 	var webhookTriggers = make([]api.Trigger, 0)
 	for _, trigger := range triggers {
 		//nolint:exhaustive
@@ -287,7 +292,7 @@ func (r *RegistryMetadataHelper) MapToAPIWebhookTriggers(triggers []enum.Webhook
 	return webhookTriggers
 }
 
-func (r *RegistryMetadataHelper) MapToAPIExtraHeaders(headers []types.ExtraHeader) []api.ExtraHeader {
+func (r *GitnessRegistryMetadataHelper) MapToAPIExtraHeaders(headers []types.ExtraHeader) []api.ExtraHeader {
 	apiHeaders := make([]api.ExtraHeader, 0)
 	for _, h := range headers {
 		apiHeaders = append(apiHeaders, api.ExtraHeader{Key: h.Key, Value: h.Value})

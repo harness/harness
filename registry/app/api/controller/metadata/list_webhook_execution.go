@@ -16,6 +16,7 @@ package metadata
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
@@ -66,17 +67,19 @@ func (c *APIController) ListWebhookExecutions(
 	reg, err := c.RegistryRepository.GetByParentIDAndName(ctx, space.ID, regInfo.RegistryIdentifier)
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf(listWebhooksErrMsg, regInfo.RegistryRef, r.WebhookIdentifier, err)
-		return listWebhooksExecutionsInternalErrorResponse(err)
+		return listWebhooksExecutionsInternalErrorResponse(fmt.Errorf("failed to find registry: %w", err))
 	}
 	webhook, err := c.WebhooksRepository.GetByRegistryAndIdentifier(ctx, reg.ID, string(r.WebhookIdentifier))
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf(listWebhooksErrMsg, regInfo.RegistryRef, r.WebhookIdentifier, err)
-		return listWebhooksExecutionsInternalErrorResponse(err)
+		return listWebhooksExecutionsInternalErrorResponse(
+			fmt.Errorf("failed to find webhook [%s] : %w", r.WebhookIdentifier, err),
+		)
 	}
 	we, err := c.WebhooksExecutionRepository.ListForWebhook(ctx, webhook.ID, limit, int(pageNumber), size)
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf(listWebhooksErrMsg, regInfo.RegistryRef, r.WebhookIdentifier, err)
-		return listWebhooksExecutionsInternalErrorResponse(err)
+		return listWebhooksExecutionsInternalErrorResponse(fmt.Errorf("failed to list webhook executions: %w", err))
 	}
 	webhookExecutions, err := mapToAPIListWebhooksExecutions(we)
 	if err != nil {
@@ -86,7 +89,7 @@ func (c *APIController) ListWebhookExecutions(
 	count, err := c.WebhooksExecutionRepository.CountForWebhook(ctx, webhook.ID)
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf(listWebhooksErrMsg, regInfo.RegistryRef, r.WebhookIdentifier, err)
-		return listWebhooksExecutionsInternalErrorResponse(err)
+		return listWebhooksExecutionsInternalErrorResponse(fmt.Errorf("failed to get webhook executions count: %w", err))
 	}
 	pageCount := GetPageCount(count, limit)
 	currentPageSize := len(webhookExecutions)
@@ -172,6 +175,7 @@ func mapTpAPIExecutionResult(result enum.WebhookExecutionResult) api.WebhookExec
 
 //nolint:exhaustive
 func mapTpAPITriggerType(trigger enum.WebhookTrigger) api.Trigger {
+	//nolint:exhaustive
 	switch trigger {
 	case enum.WebhookTriggerArtifactCreated:
 		return api.TriggerARTIFACTCREATION

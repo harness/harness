@@ -22,7 +22,6 @@ import (
 	storagedriver "github.com/harness/gitness/registry/app/driver"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
-	registrywebhook "github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/store/database/dbtx"
 )
 
@@ -37,7 +36,7 @@ type APIController struct {
 	TagStore                    store.TagRepository
 	ManifestStore               store.ManifestRepository
 	CleanupPolicyStore          store.CleanupPolicyRepository
-	SpaceFinder                 refcache.SpaceFinder
+	SpaceFinder                 SpaceFinder
 	tx                          dbtx.Transactor
 	StorageDriver               storagedriver.StorageDriver
 	URLProvider                 urlprovider.Provider
@@ -47,7 +46,7 @@ type APIController struct {
 	WebhooksRepository          store.WebhooksRepository
 	WebhooksExecutionRepository store.WebhooksExecutionRepository
 	RegistryMetadataHelper      RegistryMetadataHelper
-	WebhookService              registrywebhook.Service
+	WebhookService              WebhookService
 }
 
 func NewAPIController(
@@ -70,7 +69,7 @@ func NewAPIController(
 	webhooksRepository store.WebhooksRepository,
 	webhooksExecutionRepository store.WebhooksExecutionRepository,
 	registryMetadataHelper RegistryMetadataHelper,
-	webhookService registrywebhook.Service,
+	webhookService WebhookService,
 ) *APIController {
 	return &APIController{
 		fileManager:                 fileManager,
