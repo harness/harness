@@ -224,18 +224,18 @@ func (s *Service) triggerForEventWithArtifact(
 
 func (s *Service) getParentInfoRegistry(
 	ctx context.Context,
-	registryId int64,
+	registryID int64,
 	inherited bool,
 ) ([]types.WebhookParentInfo, error) {
 	var parents []types.WebhookParentInfo
 
 	parents = append(parents, types.WebhookParentInfo{
-		ID:   registryId,
+		ID:   registryID,
 		Type: enum.WebhookParentRegistry,
 	})
 
 	if inherited {
-		registry, err := s.registryRepository.Get(ctx, registryId)
+		registry, err := s.registryRepository.Get(ctx, registryID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get registry: %w", err)
 		}

@@ -426,6 +426,7 @@ func mapToWebhookDB(webhook *gitnesstypes.WebhookCore) (*webhookDB, error) {
 		dBWebhook.RegistryID = null.IntFrom(webhook.ParentID)
 	case gitnessenum.WebhookParentSpace:
 		dBWebhook.SpaceID = null.IntFrom(webhook.ParentID)
+	case gitnessenum.WebhookParentRepo:
 	default:
 		return nil, fmt.Errorf("webhook parent type %q is not supported", webhook.ParentType)
 	}
@@ -495,6 +496,7 @@ func selectWebhookParents(
 			parentSelector = append(parentSelector, squirrel.Eq{
 				"registry_webhook_space_id": parent.ID,
 			})
+		case gitnessenum.WebhookParentRepo:
 		default:
 			return fmt.Errorf("webhook parent type '%s' is not supported", parent.Type)
 		}

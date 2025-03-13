@@ -115,7 +115,7 @@ var validPackageTypes = []string{
 	string(a.PackageTypeHELM),
 	string(a.PackageTypeGENERIC),
 	string(a.PackageTypeMAVEN),
-	string(a.PackageTypePYPI),
+	string(a.PackageTypePYTHON),
 }
 
 var validUpstreamSources = []string{

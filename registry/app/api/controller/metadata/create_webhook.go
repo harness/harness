@@ -35,7 +35,9 @@ func (c *APIController) CreateWebhook(
 ) (api.CreateWebhookResponseObject, error) {
 	webhookRequest := api.WebhookRequest(*r.Body)
 	if webhookRequest.Identifier == internalWebhookIdentifier {
-		return createWebhookBadRequestErrorResponse(fmt.Errorf("webhook identifier %s is reserved", internalWebhookIdentifier))
+		return createWebhookBadRequestErrorResponse(
+			fmt.Errorf("webhook identifier %s is reserved", internalWebhookIdentifier),
+		)
 	}
 	regInfo, err := c.RegistryMetadataHelper.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
 	if err != nil {

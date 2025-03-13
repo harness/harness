@@ -134,6 +134,7 @@ func (s *WebhookStore) FindByIdentifier(
 		stmt = stmt.Where("webhook_repo_id = ?", parentID)
 	case enum.WebhookParentSpace:
 		stmt = stmt.Where("webhook_space_id = ?", parentID)
+	case enum.WebhookParentRegistry:
 	default:
 		return nil, fmt.Errorf("webhook parent type '%s' is not supported", parentType)
 	}
@@ -329,6 +330,7 @@ func (s *WebhookStore) DeleteByIdentifier(
 		stmt = stmt.Where("webhook_repo_id = ?", parentID)
 	case enum.WebhookParentSpace:
 		stmt = stmt.Where("webhook_space_id = ?", parentID)
+	case enum.WebhookParentRegistry:
 	default:
 		return fmt.Errorf("webhook parent type '%s' is not supported", parentType)
 	}
@@ -503,6 +505,7 @@ func mapToInternalWebhook(hook *types.Webhook) (*webhook, error) {
 		res.RepoID = null.IntFrom(hook.ParentID)
 	case enum.WebhookParentSpace:
 		res.SpaceID = null.IntFrom(hook.ParentID)
+	case enum.WebhookParentRegistry:
 	default:
 		return nil, fmt.Errorf("webhook parent type %q is not supported", hook.ParentType)
 	}
@@ -581,6 +584,7 @@ func selectWebhookParents(
 			parentSelector = append(parentSelector, squirrel.Eq{
 				"webhook_space_id": parent.ID,
 			})
+		case enum.WebhookParentRegistry:
 		default:
 			return fmt.Errorf("webhook parent type '%s' is not supported", parent.Type)
 		}

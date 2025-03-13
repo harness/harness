@@ -1749,13 +1749,13 @@ components:
           HELM: "#/components/schemas/HelmArtifactDetailConfig"
           GENERIC: "#/components/schemas/GenericArtifactDetailConfig"
           MAVEN: "#/components/schemas/MavenArtifactDetailConfig"
-          PYPI: "#/components/schemas/PyPiArtifactDetailConfig"
+          PYTHON: "#/components/schemas/PythonArtifactDetailConfig"
       oneOf:
         - $ref: "#/components/schemas/DockerArtifactDetailConfig"
         - $ref: "#/components/schemas/HelmArtifactDetailConfig"
         - $ref: "#/components/schemas/GenericArtifactDetailConfig"
         - $ref: "#/components/schemas/MavenArtifactDetailConfig"
-        - $ref: "#/components/schemas/PyPiArtifactDetailConfig"
+        - $ref: "#/components/schemas/PythonArtifactDetailConfig"
       required:
         - imageName
         - version
@@ -1782,9 +1782,9 @@ components:
           type: string
         artifactId:
           type: string
-    PyPiArtifactDetailConfig:
+    PythonArtifactDetailConfig:
       type: object
-      description: Config for pypi artifact details
+      description: Config for python artifact details
       properties:
         groupId:
           type: string
@@ -2196,7 +2196,7 @@ components:
       enum:
         - DOCKER
         - MAVEN
-        - PYPI
+        - PYTHON
         - GENERIC
         - HELM
     SectionType:

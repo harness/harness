@@ -332,7 +332,8 @@ func (c *APIController) CreateUpstreamProxyEntity(
 		}
 
 		if res.SecretSpacePath != nil && len(*res.SecretSpacePath) > 0 {
-			upstreamProxyConfigEntity.SecretSpaceID, err = c.RegistryMetadataHelper.getSecretSpaceID(ctx, res.SecretSpacePath)
+			upstreamProxyConfigEntity.SecretSpaceID, err = c.RegistryMetadataHelper.getSecretSpaceID(ctx,
+				res.SecretSpacePath)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -365,7 +366,8 @@ func (c *APIController) CreateUpstreamProxyEntity(
 		}
 
 		if res.SecretKeySpacePath != nil && len(*res.SecretKeySpacePath) > 0 {
-			upstreamProxyConfigEntity.SecretSpaceID, err = c.RegistryMetadataHelper.getSecretSpaceID(ctx, res.SecretKeySpacePath)
+			upstreamProxyConfigEntity.SecretSpaceID, err = c.RegistryMetadataHelper.getSecretSpaceID(ctx,
+				res.SecretKeySpacePath)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -375,19 +377,6 @@ func (c *APIController) CreateUpstreamProxyEntity(
 		upstreamProxyConfigEntity.SecretIdentifier = res.SecretKeyIdentifier
 	}
 	return repoEntity, upstreamProxyConfigEntity, nil
-}
-
-func (c *APIController) getSecretSpaceID(ctx context.Context, secretSpacePath *string) (int, error) {
-	if secretSpacePath == nil {
-		return -1, fmt.Errorf("secret space path is missing")
-	}
-
-	space, err := c.SpaceFinder.FindByRef(ctx, *secretSpacePath)
-	if err != nil {
-		return -1, fmt.Errorf("failed to get Space Path: %w", err)
-	}
-
-	return int(space.ID), nil
 }
 
 func isDuplicateKeyError(err error) bool {

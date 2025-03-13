@@ -24,6 +24,8 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/app/paths"
+
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -78,7 +80,7 @@ type Provider interface {
 	GetAPIProto(ctx context.Context) string
 
 	RegistryURL(ctx context.Context, params ...string) string
-
+	PackageURL(ctx context.Context, params ...string) string
 	GetUIBaseURL(ctx context.Context, params ...string) string
 
 	// GenerateUIRegistryURL returns the url for the UI screen of a registry.
@@ -251,6 +253,21 @@ func (p *provider) RegistryURL(_ context.Context, params ...string) string {
 			params[0] = strings.ToLower(params[0])
 		}
 	}
+	segments = append(segments, params...)
+	fullPath := path.Join(segments...)
+	u.Path = fullPath
+	return strings.TrimRight(u.String(), "/")
+}
+
+func (p *provider) PackageURL(_ context.Context, params ...string) string {
+	u, err := url.Parse(p.registryURL.String())
+	if err != nil {
+		log.Warn().Msgf("failed to parse registry url: %v", err)
+		return p.registryURL.String()
+	}
+
+	segments := []string{u.Path}
+	segments = append(segments, "pkg")
 	segments = append(segments, params...)
 	fullPath := path.Join(segments...)
 	u.Path = fullPath

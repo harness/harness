@@ -69,7 +69,7 @@ func NewRouter(
 			r.Put("/*", genericHandler.PushArtifact)
 		})
 
-		r.Route("/pypi", func(r chi.Router) {
+		r.Route("/python", func(r chi.Router) {
 			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
 			r.With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
 				Post("/*", pypiHandler.UploadPackageFile)

@@ -17,6 +17,7 @@ package metadata
 import (
 	"context"
 	"net/http"
+	"net/url"
 	"strings"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
@@ -71,37 +72,6 @@ func (c *APIController) GetClientSetupDetails(
 		}, err
 	}
 
-	//nolint:nestif
-	if imageParam != nil {
-		image, err := c.ImageStore.GetByName(ctx, reg.ID, string(*imageParam))
-		if err != nil {
-			return artifact.GetClientSetupDetails404JSONResponse{
-				NotFoundJSONResponse: artifact.NotFoundJSONResponse(
-					*GetErrorResponse(http.StatusNotFound, "image doesn't exist"),
-				),
-			}, err
-		}
-		if reg.PackageType != artifact.PackageTypeDOCKER && reg.PackageType != artifact.PackageTypeHELM && tagParam != nil {
-			_, err := c.ArtifactStore.GetByName(ctx, image.ID, string(*tagParam))
-			if err != nil {
-				return artifact.GetClientSetupDetails404JSONResponse{
-					NotFoundJSONResponse: artifact.NotFoundJSONResponse(
-						*GetErrorResponse(http.StatusNotFound, "tag doesn't exist"),
-					),
-				}, err
-			}
-		} else if tagParam != nil {
-			_, err := c.TagStore.FindTag(ctx, reg.ID, string(*imageParam), string(*tagParam))
-			if err != nil {
-				return artifact.GetClientSetupDetails404JSONResponse{
-					NotFoundJSONResponse: artifact.NotFoundJSONResponse(
-						*GetErrorResponse(http.StatusNotFound, "tag doesn't exist"),
-					),
-				}, err
-			}
-		}
-	}
-
 	packageType := string(reg.PackageType)
 
 	return artifact.GetClientSetupDetails200JSONResponse{
@@ -132,8 +102,8 @@ func (c *APIController) GenerateClientSetupDetails(
 			loginPasswordLabel, username, registryRef, image, tag)
 	case string(artifact.PackageTypeGENERIC):
 		return c.generateGenericClientSetupDetail(ctx, blankString, registryRef, image, tag)
-	case string(artifact.PackageTypePYPI):
-		return c.generatePyPIClientSetupDetail(ctx, registryRef, username, image, tag)
+	case string(artifact.PackageTypePYTHON):
+		return c.generatePythonClientSetupDetail(ctx, registryRef, username, image, tag)
 	}
 	header1 := "Login to Docker"
 	section1step1Header := "Run this Docker command in your terminal to authenticate the client."
@@ -738,7 +708,7 @@ func (c *APIController) generateMavenClientSetupDetail(
 	}
 }
 
-func (c *APIController) generatePyPIClientSetupDetail(
+func (c *APIController) generatePythonClientSetupDetail(
 	ctx context.Context,
 	registryRef string,
 	username string,
@@ -750,7 +720,7 @@ func (c *APIController) generatePyPIClientSetupDetail(
 
 	// Authentication section
 	section1 := artifact.ClientSetupSection{
-		Header: stringPtr("1. Configure Authentication"),
+		Header: stringPtr("Configure Authentication"),
 	}
 	_ = section1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
 		Steps: &[]artifact.ClientSetupStep{
@@ -762,9 +732,9 @@ func (c *APIController) generatePyPIClientSetupDetail(
 						Value: stringPtr("[distutils]\n" +
 							"index-servers = harness\n\n" +
 							"[harness]\n" +
-							"repository: <REGISTRY_URL>/<REGISTRY_NAME>\n" +
-							"username: <USERNAME>\n" +
-							"password: {{identity-token}}"),
+							"repository = <REGISTRY_URL>\n" +
+							"username = <USERNAME>\n" +
+							"password = *see step 2*"),
 					},
 				},
 			},
@@ -775,29 +745,11 @@ func (c *APIController) generatePyPIClientSetupDetail(
 		},
 	})
 
-	// Install section
+	// Publish section
 	section2 := artifact.ClientSetupSection{
-		Header: stringPtr("2. Install Package"),
+		Header: stringPtr("Publish Package"),
 	}
 	_ = section2.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
-		Steps: &[]artifact.ClientSetupStep{
-			{
-				Header: stringPtr("Install a package using pip:"),
-				Type:   &staticStepType,
-				Commands: &[]artifact.ClientSetupStepCommand{
-					{
-						Value: stringPtr("pip install --index-url <REGISTRY_URL>/<REGISTRY_NAME> <PACKAGE_NAME>==<VERSION>"),
-					},
-				},
-			},
-		},
-	})
-
-	// Publish section
-	section3 := artifact.ClientSetupSection{
-		Header: stringPtr("3. Publish Package"),
-	}
-	_ = section3.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
 		Steps: &[]artifact.ClientSetupStep{
 			{
 				Header: stringPtr("Build and publish your package:"),
@@ -807,7 +759,25 @@ func (c *APIController) generatePyPIClientSetupDetail(
 						Value: stringPtr("python -m build"),
 					},
 					{
-						Value: stringPtr("python -m twine upload --repository harness dist/*"),
+						Value: stringPtr("python -m twine upload --repository harness /path/to/files/*"),
+					},
+				},
+			},
+		},
+	})
+
+	// Install section
+	section3 := artifact.ClientSetupSection{
+		Header: stringPtr("Install Package"),
+	}
+	_ = section3.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: stringPtr("Install a package using pip:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: stringPtr("pip install --index-url <UPLOAD_URL>/simple --no-deps <ARTIFACT_NAME>==<VERSION>"),
 					},
 				},
 			},
@@ -815,7 +785,7 @@ func (c *APIController) generatePyPIClientSetupDetail(
 	})
 
 	clientSetupDetails := artifact.ClientSetupDetails{
-		MainHeader: "PyPI Client Setup",
+		MainHeader: "Python Client Setup",
 		SecHeader:  "Follow these instructions to install/use Python packages from this registry.",
 		Sections: []artifact.ClientSetupSection{
 			section1,
@@ -824,10 +794,10 @@ func (c *APIController) generatePyPIClientSetupDetail(
 		},
 	}
 
-	rootSpace, _, _ := paths.DisectRoot(registryRef)
-	registryURL := c.URLProvider.RegistryURL(ctx, "pypi", rootSpace)
+	registryURL := c.URLProvider.PackageURL(ctx, registryRef, "python")
 
-	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, image, tag, registryURL, "", "pypi")
+	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, image, tag, registryURL, "",
+		string(artifact.PackageTypePYTHON))
 
 	return &artifact.ClientSetupDetailsResponseJSONResponse{
 		Data:   clientSetupDetails,
@@ -846,15 +816,23 @@ func (c *APIController) replacePlaceholders(
 	groupID string,
 	pkgType string,
 ) {
+	uploadURL := ""
+	if pkgType == string(artifact.PackageTypePYTHON) {
+		regURL, _ := url.Parse(registryURL)
+		// append username:password to the host
+		regURL.User = url.UserPassword(username, "identity-token")
+		uploadURL = regURL.String()
+	}
+
 	for i := range *clientSetupSections {
 		tab, err := (*clientSetupSections)[i].AsTabSetupStepConfig()
 		if err != nil || tab.Tabs == nil {
 			//nolint:lll
 			c.replacePlaceholdersInSection(ctx, &(*clientSetupSections)[i], username, regRef, image, tag, pkgType,
-				groupID, registryURL)
+				registryURL, groupID, uploadURL)
 		} else {
 			for j := range *tab.Tabs {
-				c.replacePlaceholders(ctx, (*tab.Tabs)[j].Sections, username, regRef, image, tag, groupID, registryURL,
+				c.replacePlaceholders(ctx, (*tab.Tabs)[j].Sections, username, regRef, image, tag, registryURL, groupID,
 					pkgType)
 			}
 			_ = (*clientSetupSections)[i].FromTabSetupStepConfig(tab)
@@ -872,6 +850,7 @@ func (c *APIController) replacePlaceholdersInSection(
 	pkgType string,
 	registryURL string,
 	groupID string,
+	uploadURL string,
 ) {
 	rootSpace, _, _ := paths.DisectRoot(regRef)
 	_, registryName, _ := paths.DisectLeaf(regRef)
@@ -891,7 +870,7 @@ func (c *APIController) replacePlaceholdersInSection(
 			continue
 		}
 		for j := range *st.Commands {
-			replaceText(username, st, j, hostname, registryName, image, tag, registryURL, groupID)
+			replaceText(username, st, j, hostname, registryName, image, tag, registryURL, groupID, uploadURL)
 		}
 	}
 	_ = clientSetupSection.FromClientSetupStepConfig(sec)
@@ -907,6 +886,7 @@ func replaceText(
 	tag *artifact.VersionParam,
 	registryURL string,
 	groupID string,
+	uploadURL string,
 ) {
 	if username != "" {
 		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<USERNAME>", username))
@@ -919,6 +899,9 @@ func replaceText(
 	}
 	if registryURL != "" {
 		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<REGISTRY_URL>", registryURL))
+	}
+	if uploadURL != "" {
+		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<UPLOAD_URL>", uploadURL))
 	}
 	if hostname != "" {
 		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<HOSTNAME>", hostname))

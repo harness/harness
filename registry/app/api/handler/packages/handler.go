@@ -83,13 +83,13 @@ type PathPackageType string
 const (
 	PathPackageTypeGeneric PathPackageType = "generic"
 	PathPackageTypeMaven   PathPackageType = "maven"
-	PathPackageTypePyPI    PathPackageType = "pypi"
+	PathPackageTypePython  PathPackageType = "python"
 )
 
 var packageTypeMap = map[PathPackageType]artifact2.PackageType{
 	PathPackageTypeGeneric: artifact2.PackageTypeGENERIC,
 	PathPackageTypeMaven:   artifact2.PackageTypeMAVEN,
-	PathPackageTypePyPI:    artifact2.PackageTypePYPI,
+	PathPackageTypePython:  artifact2.PackageTypePYTHON,
 }
 
 func (h *handler) GetAuthenticator() authn.Authenticator {

@@ -25,7 +25,10 @@ import (
 	gitnessenum "github.com/harness/gitness/types/enum"
 )
 
-func ResolveSecret(ctx context.Context, secretResolverFactory *secret.ResolverFactory, config types.GitspaceConfig) (*string, error) {
+func ResolveSecret(ctx context.Context, secretResolverFactory *secret.ResolverFactory, config types.GitspaceConfig) (
+	*string,
+	error,
+) {
 	rootSpaceID, _, err := paths.DisectRoot(config.SpacePath)
 	if err != nil {
 		return nil, fmt.Errorf("unable to find root space id from space path: %s", config.SpacePath)

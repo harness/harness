@@ -53,7 +53,7 @@ func (c *controller) GetPackageMetadata(ctx context.Context, info ArtifactInfo, 
 			fileInfo := File{
 				Name: file.Filename,
 				FileURL: c.urlProvider.RegistryURL(ctx) + fmt.Sprintf(
-					"/pkg/%s/%s/pypi/files/%s/%s/%s",
+					"/pkg/%s/%s/python/files/%s/%s/%s",
 					info.RootIdentifier,
 					info.RegIdentifier,
 					packageName,

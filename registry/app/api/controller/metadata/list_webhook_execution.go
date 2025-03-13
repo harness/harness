@@ -170,6 +170,7 @@ func mapTpAPIExecutionResult(result enum.WebhookExecutionResult) api.WebhookExec
 	return ""
 }
 
+//nolint:exhaustive
 func mapTpAPITriggerType(trigger enum.WebhookTrigger) api.Trigger {
 	switch trigger {
 	case enum.WebhookTriggerArtifactCreated:

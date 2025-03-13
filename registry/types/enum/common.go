@@ -19,19 +19,6 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-func toInterfaceSlice[T interface{}](vals []T) []interface{} {
-	res := make([]interface{}, len(vals))
-	for i := range vals {
-		res[i] = vals[i]
-	}
-	return res
-}
-
-func sortEnum[T constraints.Ordered](slice []T) []T {
-	slices.Sort(slice)
-	return slice
-}
-
 func Sanitize[E constraints.Ordered](element E, all func() ([]E, E)) (E, bool) {
 	allValues, defValue := all()
 	var empty E

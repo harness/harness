@@ -44,6 +44,7 @@ func (s *Service) List(
 		if err != nil {
 			return nil, 0, err
 		}
+	case enum.WebhookParentRegistry:
 	default:
 		return nil, 0, fmt.Errorf("webhook type %s is not supported", parentType)
 	}
