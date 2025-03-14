@@ -28,6 +28,7 @@ import {
   ArtifactListPullCommandCell,
   ArtifactListVulnerabilitiesCell,
   ArtifactNameCell,
+  ArtifactVersionActions,
   LatestArtifactCell
 } from './ArtifactListTableCell'
 import css from './ArtifactListTable.module.scss'
@@ -111,7 +112,7 @@ export default function ArtifactListTable(props: ArtifactListTableProps): JSX.El
       {
         Header: '',
         accessor: 'actions',
-        Cell: LatestArtifactCell,
+        Cell: ArtifactVersionActions,
         disableSortBy: true
       }
     ].filter(Boolean) as unknown as Column<ArtifactMetadata>[]

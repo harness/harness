@@ -25,6 +25,6 @@ interface TriggerLabelOption {
 
 export const TriggerLabelOptions: TriggerLabelOption[] = [
   { label: 'webhookList.triggers.artifactCreation', value: 'ARTIFACT_CREATION' },
-  { label: 'webhookList.triggers.artifactDeletion', value: 'ARTIFACT_DELETION' },
-  { label: 'webhookList.triggers.artifactModification', value: 'ARTIFACT_MODIFICATION' }
+  { label: 'webhookList.triggers.artifactDeletion', value: 'ARTIFACT_DELETION' }
+  // { label: 'webhookList.triggers.artifactModification', value: 'ARTIFACT_MODIFICATION' }
 ]
