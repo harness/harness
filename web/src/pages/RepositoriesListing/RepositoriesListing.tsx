@@ -40,6 +40,7 @@ import { voidFn, formatDate, getErrorMessage, LIST_FETCHING_LIMIT, PageBrowserPr
 import { NewRepoModalButton } from 'components/NewRepoModalButton/NewRepoModalButton'
 import type { RepoRepositoryOutput } from 'services/code'
 import { useDeleteRepository } from 'services/code'
+import { useFeatureFlags } from 'hooks/useFeatureFlag'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { useQueryParams } from 'hooks/useQueryParams'
 import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
@@ -88,6 +89,7 @@ export default function RepositoriesListing() {
   const [page, setPage] = usePageIndex(pageInit)
   const { showError, showSuccess } = useToaster()
   const [updatedRepositories, setUpdatedRepositories] = useState<RepoRepositoryOutput[]>()
+  const { CODE_ENABLE_MFE_V2: isCodeV2Enabled } = useFeatureFlags()
 
   const {
     data: repositories,
@@ -372,20 +374,22 @@ export default function RepositoriesListing() {
         toolbar={
           standalone ? null : (
             <>
-              <Button
-                variation={ButtonVariation.SECONDARY}
-                onClick={() => {
-                  let newUIPath = pathname
-                  if (!pathname.includes('/ng')) {
-                    newUIPath.replace('/account', '/ng/account')
-                  }
-                  if (!pathname.includes('/codev2')) {
-                    newUIPath = newUIPath.replace('/code', '/codev2')
-                  }
-                  history.replace(newUIPath)
-                }}>
-                Try New UI
-              </Button>
+              {isCodeV2Enabled ? (
+                <Button
+                  variation={ButtonVariation.SECONDARY}
+                  onClick={() => {
+                    let newUIPath = pathname
+                    if (!pathname.includes('/ng')) {
+                      newUIPath.replace('/account', '/ng/account')
+                    }
+                    if (!pathname.includes('/codev2')) {
+                      newUIPath = newUIPath.replace('/code', '/codev2')
+                    }
+                    history.replace(newUIPath)
+                  }}>
+                  Try New UI
+                </Button>
+              ) : null}
               <KeywordSearch />
             </>
           )
