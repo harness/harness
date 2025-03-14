@@ -373,7 +373,7 @@ export default function RepositoriesListing() {
         toolbar={
           standalone ? null : (
             <>
-              {/* <Button
+              <Button
                 variation={ButtonVariation.SECONDARY}
                 onClick={() => {
                   let newUIPath = pathname
@@ -386,7 +386,7 @@ export default function RepositoriesListing() {
                   history.replace(newUIPath)
                 }}>
                 Try New UI
-              </Button> */}
+              </Button>
               <KeywordSearch />
             </>
           )
