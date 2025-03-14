@@ -25,7 +25,8 @@ import {
   Utils,
   TableV2 as Table,
   Text,
-  useToaster
+  useToaster,
+  Button
 } from '@harnessio/uicore'
 import { ProgressBar, Intent } from '@blueprintjs/core'
 import { Color, FontVariation } from '@harnessio/design-system'
@@ -33,7 +34,7 @@ import type { CellProps, Column } from 'react-table'
 import Keywords from 'react-keywords'
 import cx from 'classnames'
 import { useGet } from 'restful-react'
-import { useHistory } from 'react-router-dom'
+import { useHistory, useLocation } from 'react-router-dom'
 import { useStrings, String } from 'framework/strings'
 import { voidFn, formatDate, getErrorMessage, LIST_FETCHING_LIMIT, PageBrowserProps } from 'utils/Utils'
 import { NewRepoModalButton } from 'components/NewRepoModalButton/NewRepoModalButton'
@@ -363,9 +364,34 @@ export default function RepositoriesListing() {
     }
   }, [onResize])
 
+  const { pathname } = useLocation()
+
   return (
     <Container className={css.main}>
-      <PageHeader title={getString('repositories')} toolbar={standalone ? null : <KeywordSearch />} />
+      <PageHeader
+        title={getString('repositories')}
+        toolbar={
+          standalone ? null : (
+            <>
+              {/* <Button
+                variation={ButtonVariation.SECONDARY}
+                onClick={() => {
+                  let newUIPath = pathname
+                  if (!pathname.includes('/ng')) {
+                    newUIPath.replace('/account', '/ng/account')
+                  }
+                  if (!pathname.includes('/codev2')) {
+                    newUIPath = newUIPath.replace('/code', '/codev2')
+                  }
+                  history.replace(newUIPath)
+                }}>
+                Try New UI
+              </Button> */}
+              <KeywordSearch />
+            </>
+          )
+        }
+      />
       <PageBody
         className={cx({ [css.withError]: !!error })}
         error={error ? getErrorMessage(error) : null}
