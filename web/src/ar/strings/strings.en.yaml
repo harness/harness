@@ -78,6 +78,7 @@ packageTypes:
   mavenPackage: Maven Package
   npmPackage: npm
   pythonPackage: Python Package
+  nugetPackage: NuGet Package
 repositoryTypes:
   docker: Docker
   helm: Helm
