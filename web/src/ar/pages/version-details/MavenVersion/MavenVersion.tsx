@@ -20,7 +20,6 @@ import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client
 import { String } from '@ar/frameworks/strings'
 import { RepositoryPackageType } from '@ar/common/types'
 import { VersionListColumnEnum } from '@ar/pages/version-list/components/VersionListTable/types'
-import ArtifactActions from '@ar/pages/artifact-details/components/ArtifactActions/ArtifactActions'
 import VersionListTable, {
   type CommonVersionListTableProps
 } from '@ar/pages/version-list/components/VersionListTable/VersionListTable'
@@ -34,7 +33,6 @@ import {
 } from '@ar/frameworks/Version/Version'
 
 import OSSContentPage from './pages/oss-details/OSSContentPage'
-import VersionActions from '../components/VersionActions/VersionActions'
 import { VersionDetailsTab } from '../components/VersionDetailsTabs/constants'
 import MavenArtifactOverviewPage from './pages/overview/MavenArtifactOverviewPage'
 import MavenArtifactDetailsPage from './pages/artifact-details/MavenArtifactDetailsPage'
@@ -77,11 +75,11 @@ export class MavenVersionType extends VersionStep<ArtifactVersionSummary> {
     }
   }
 
-  renderArtifactActions(props: ArtifactActionProps): JSX.Element {
-    return <ArtifactActions {...props} />
+  renderArtifactActions(_props: ArtifactActionProps): JSX.Element {
+    return <></>
   }
 
-  renderVersionActions(props: VersionActionProps): JSX.Element {
-    return <VersionActions {...props} />
+  renderVersionActions(_props: VersionActionProps): JSX.Element {
+    return <></>
   }
 }

@@ -95,17 +95,18 @@ describe('Test Registry Artifact List Page', () => {
     expect(globalGetByText(getFirstRowColumn(3), tableData[0].downloadsCount?.toString() as string)).toBeInTheDocument()
     expect(globalGetByText(getFirstRowColumn(4), tableData[0].latestVersion)).toBeInTheDocument()
 
-    const actionBtn = getFirstRowColumn(5).querySelector('span[data-icon=Options')
-    await userEvent.click(actionBtn as HTMLElement)
-    const dialogs = document.getElementsByClassName('bp3-popover')
-    await waitFor(() => expect(dialogs).toHaveLength(1))
-    const selectPopover = dialogs[0] as HTMLElement
+    // TODO: removed actions for now
+    // const actionBtn = getFirstRowColumn(5).querySelector('span[data-icon=Options')
+    // await userEvent.click(actionBtn as HTMLElement)
+    // const dialogs = document.getElementsByClassName('bp3-popover')
+    // await waitFor(() => expect(dialogs).toHaveLength(1))
+    // const selectPopover = dialogs[0] as HTMLElement
 
-    const items = selectPopover.getElementsByClassName('bp3-menu-item')
-    expect(items).toHaveLength(2)
+    // const items = selectPopover.getElementsByClassName('bp3-menu-item')
+    // expect(items).toHaveLength(2)
 
-    expect(items[0]).toHaveTextContent('artifactList.table.actions.deleteArtifact')
-    expect(items[1]).toHaveTextContent('actions.setupClient')
+    // expect(items[0]).toHaveTextContent('artifactList.table.actions.deleteArtifact')
+    // expect(items[1]).toHaveTextContent('actions.setupClient')
   })
 
   test('Should show error message if listing api fails', async () => {
@@ -281,7 +282,8 @@ describe('Test Registry Artifact List Page', () => {
     })
   })
 
-  test('Should list actions', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  test.skip('Should list actions', async () => {
     render(
       <ArTestWrapper path="/registries/abcd/:tab" pathParams={{ tab: RepositoryDetailsTab.PACKAGES }}>
         <RepositoryDetailsPage />

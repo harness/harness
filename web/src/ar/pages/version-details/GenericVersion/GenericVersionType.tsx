@@ -30,11 +30,9 @@ import VersionListTable, {
   type CommonVersionListTableProps
 } from '@ar/pages/version-list/components/VersionListTable/VersionListTable'
 import { VersionListColumnEnum } from '@ar/pages/version-list/components/VersionListTable/types'
-import ArtifactActions from '@ar/pages/artifact-details/components/ArtifactActions/ArtifactActions'
 import { VersionDetailsTab } from '../components/VersionDetailsTabs/constants'
 import GenericOverviewPage from './pages/overview/OverviewPage'
 import OSSContentPage from './pages/oss-details/OSSContentPage'
-import VersionActions from '../components/VersionActions/VersionActions'
 import GenericArtifactDetailsPage from './pages/artifact-details/GenericArtifactDetailsPage'
 import VersionDetailsHeaderContent from '../components/VersionDetailsHeaderContent/VersionDetailsHeaderContent'
 
@@ -75,11 +73,11 @@ export class GenericVersionType extends VersionStep<ArtifactVersionSummary> {
     }
   }
 
-  renderArtifactActions(props: ArtifactActionProps): JSX.Element {
-    return <ArtifactActions {...props} />
+  renderArtifactActions(_props: ArtifactActionProps): JSX.Element {
+    return <></>
   }
 
-  renderVersionActions(props: VersionActionProps): JSX.Element {
-    return <VersionActions {...props} />
+  renderVersionActions(_props: VersionActionProps): JSX.Element {
+    return <></>
   }
 }
