@@ -75,6 +75,7 @@ interface ProgressState {
 
 export default function RepositoriesListing() {
   const { getString } = useStrings()
+  const { pathname } = useLocation()
   const history = useHistory()
   const rowContainerRef = useRef<HTMLDivElement>(null)
   const [nameTextWidth, setNameTextWidth] = useState(600)
@@ -363,8 +364,6 @@ export default function RepositoriesListing() {
       window.removeEventListener('resize', onResize)
     }
   }, [onResize])
-
-  const { pathname } = useLocation()
 
   return (
     <Container className={css.main}>
