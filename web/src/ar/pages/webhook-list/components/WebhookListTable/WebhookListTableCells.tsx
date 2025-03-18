@@ -46,7 +46,7 @@ export const WebhookNameCell: Renderer<{
   row: Row<Webhook>
   column: ColumnInstance<Webhook> & WebhookListColumnActions
 }> = ({ row, column }) => {
-  const { name, enabled, identifier } = row.original
+  const { name, enabled, identifier, internal } = row.original
   const { readonly } = column
   const [isEnabled, setIsEnabled] = useState(enabled)
   const registryRef = useGetSpaceRef()
@@ -75,7 +75,7 @@ export const WebhookNameCell: Renderer<{
     <Layout.Horizontal spacing="small" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
       <Icon name="code-webhook" size={24} />
       <Container onClick={killEvent}>
-        <Toggle disabled={readonly} checked={isEnabled} onToggle={handleUpdateToggle} />
+        <Toggle disabled={readonly || internal} checked={isEnabled} onToggle={handleUpdateToggle} />
       </Container>
       <Text lineClamp={1} font={{ variation: FontVariation.BODY }} color={Color.PRIMARY_7}>
         {name}
