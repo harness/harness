@@ -124,14 +124,16 @@ import (
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/pubsub"
 	api2 "github.com/harness/gitness/registry/app/api"
+	python2 "github.com/harness/gitness/registry/app/api/controller/pkg/python"
 	"github.com/harness/gitness/registry/app/api/router"
 	events10 "github.com/harness/gitness/registry/app/events"
 	"github.com/harness/gitness/registry/app/pkg"
+	"github.com/harness/gitness/registry/app/pkg/base"
 	"github.com/harness/gitness/registry/app/pkg/docker"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/generic"
 	"github.com/harness/gitness/registry/app/pkg/maven"
-	"github.com/harness/gitness/registry/app/pkg/pypi"
+	"github.com/harness/gitness/registry/app/pkg/python"
 	database2 "github.com/harness/gitness/registry/app/store/database"
 	"github.com/harness/gitness/registry/gc"
 	webhook3 "github.com/harness/gitness/registry/services/webhook"
@@ -515,9 +517,12 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	genericHandler := api2.NewGenericHandlerProvider(spaceStore, genericController, tokenStore, controller, authenticator, provider, authorizer)
 	handler3 := router.GenericHandlerProvider(genericHandler)
 	packagesHandler := api2.NewPackageHandlerProvider(registryRepository, spaceStore, tokenStore, controller, authenticator, provider, authorizer)
-	pypiController := pypi.ControllerProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider)
-	pypiHandler := api2.NewPypiHandlerProvider(pypiController, packagesHandler)
-	handler4 := router.PackageHandlerProvider(packagesHandler, mavenHandler, genericHandler, pypiHandler)
+	localBase := base.LocalBaseProvider(registryRepository, fileManager, transactor, imageRepository, artifactRepository)
+	pythonLocalRegistry := python.LocalRegistryProvider(localBase, fileManager, upstreamProxyConfigRepository, transactor, registryRepository, imageRepository, artifactRepository, provider)
+	proxy := python.ProxyProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider)
+	pythonController := python2.ControllerProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, pythonLocalRegistry, proxy)
+	pythonHandler := api2.NewPythonHandlerProvider(pythonController, packagesHandler)
+	handler4 := router.PackageHandlerProvider(packagesHandler, mavenHandler, genericHandler, pythonHandler)
 	appRouter := router.AppRouterProvider(registryOCIHandler, apiHandler, handler2, handler3, handler4)
 	sender := usage.ProvideMediator(ctx, config, spaceFinder, usageMetricStore)
 	remoteauthService := remoteauth.ProvideRemoteAuth(tokenStore, principalStore)

@@ -12,12 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pkg
+package base
 
-import "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+import (
+	"github.com/harness/gitness/registry/app/pkg/filemanager"
+	"github.com/harness/gitness/registry/app/store"
+	"github.com/harness/gitness/store/database/dbtx"
 
-// Artifact Fixme: Name change to Registry as it provides Registry Type
-type Artifact interface {
-	GetArtifactType() artifact.RegistryType
-	GetPackageTypes() []artifact.PackageType
+	"github.com/google/wire"
+)
+
+func LocalBaseProvider(
+	registryDao store.RegistryRepository,
+	fileManager filemanager.FileManager,
+	tx dbtx.Transactor,
+	imageDao store.ImageRepository,
+	artifactDao store.ArtifactRepository,
+) LocalBase {
+	return NewLocalBase(registryDao, fileManager, tx, imageDao, artifactDao)
 }
+
+var WireSet = wire.NewSet(LocalBaseProvider)

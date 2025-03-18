@@ -12,12 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pkg
+package response
 
-import "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
-
-// Artifact Fixme: Name change to Registry as it provides Registry Type
-type Artifact interface {
-	GetArtifactType() artifact.RegistryType
-	GetPackageTypes() []artifact.PackageType
+type Response interface {
+	GetErrors() []error
+	SetError(error)
 }

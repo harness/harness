@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pypi
+package python
 
 import (
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
+	"github.com/harness/gitness/registry/app/pkg/python"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
 
@@ -31,9 +32,10 @@ func ControllerProvider(
 	fileManager filemanager.FileManager,
 	tx dbtx.Transactor,
 	urlProvider urlprovider.Provider,
+	local python.LocalRegistry,
+	proxy python.Proxy,
 ) Controller {
-	return NewController(proxyStore, registryDao, imageDao, artifactDao, fileManager, tx, urlProvider)
+	return NewController(proxyStore, registryDao, imageDao, artifactDao, fileManager, tx, urlProvider, local, proxy)
 }
 
 var ControllerSet = wire.NewSet(ControllerProvider)
-var WireSet = wire.NewSet(ControllerSet)

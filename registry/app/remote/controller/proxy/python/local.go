@@ -12,30 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package maven
+package python
 
 import (
 	"context"
 	"io"
 
-	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
+	"github.com/harness/gitness/registry/app/pkg/types/python"
 	"github.com/harness/gitness/registry/app/storage"
 )
 
-type Registry interface {
-	Artifact
-
-	HeadArtifact(ctx context.Context, artInfo pkg.MavenArtifactInfo) (
+type registryInterface interface {
+	HeadArtifact(ctx context.Context, info python.ArtifactInfo) (
 		responseHeaders *commons.ResponseHeaders, errs []error,
 	)
 
-	GetArtifact(ctx context.Context, artInfo pkg.MavenArtifactInfo) (
-		responseHeaders *commons.ResponseHeaders, body *storage.FileReader, readCloser io.ReadCloser,
+	GetArtifact(ctx context.Context, info python.ArtifactInfo) (
+		responseHeaders *commons.ResponseHeaders, body *storage.FileReader, fileReader io.ReadCloser,
 		redirectURL string, errs []error,
 	)
 
-	PutArtifact(ctx context.Context, artInfo pkg.MavenArtifactInfo, fileReader io.Reader) (
+	PutArtifact(ctx context.Context, info python.ArtifactInfo, fileReader io.Reader) (
 		responseHeaders *commons.ResponseHeaders, errs []error,
 	)
 }

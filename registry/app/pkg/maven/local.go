@@ -24,12 +24,12 @@ import (
 	"time"
 
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
+	"github.com/harness/gitness/registry/app/metadata"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/maven/utils"
 	"github.com/harness/gitness/registry/app/storage"
-	"github.com/harness/gitness/registry/app/store/database"
 	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/store/database/dbtx"
 )
@@ -38,7 +38,8 @@ const (
 	ArtifactTypeLocalRegistry = "Local Registry"
 )
 
-func NewLocalRegistry(dBStore *DBStore, tx dbtx.Transactor,
+func NewLocalRegistry(
+	dBStore *DBStore, tx dbtx.Transactor,
 
 	fileManager filemanager.FileManager,
 ) Registry {
@@ -60,14 +61,16 @@ func (r *LocalRegistry) GetMavenArtifactType() string {
 }
 
 func (r *LocalRegistry) HeadArtifact(ctx context.Context, info pkg.MavenArtifactInfo) (
-	responseHeaders *commons.ResponseHeaders, errs []error) {
+	responseHeaders *commons.ResponseHeaders, errs []error,
+) {
 	responseHeaders, _, _, _, errs = r.FetchArtifact(ctx, info, false)
 	return responseHeaders, errs
 }
 
 func (r *LocalRegistry) GetArtifact(ctx context.Context, info pkg.MavenArtifactInfo) (
 	responseHeaders *commons.ResponseHeaders, body *storage.FileReader, readCloser io.ReadCloser,
-	redirectURL string, errs []error) {
+	redirectURL string, errs []error,
+) {
 	return r.FetchArtifact(ctx, info, true)
 }
 
@@ -76,7 +79,8 @@ func (r *LocalRegistry) FetchArtifact(ctx context.Context, info pkg.MavenArtifac
 	body *storage.FileReader,
 	readCloser io.ReadCloser,
 	redirectURL string,
-	errs []error) {
+	errs []error,
+) {
 	filePath := utils.GetFilePath(info)
 	name := info.GroupID + ":" + info.ArtifactID
 	dbImage, err2 := r.DBStore.ImageDao.GetByName(ctx, info.RegistryID, name)
@@ -115,7 +119,8 @@ func (r *LocalRegistry) FetchArtifact(ctx context.Context, info pkg.MavenArtifac
 }
 
 func (r *LocalRegistry) PutArtifact(ctx context.Context, info pkg.MavenArtifactInfo, fileReader io.Reader) (
-	responseHeaders *commons.ResponseHeaders, errs []error) {
+	responseHeaders *commons.ResponseHeaders, errs []error,
+) {
 	filePath := utils.GetFilePath(info)
 	fileInfo, err := r.fileManager.UploadFile(ctx, filePath, info.RegIdentifier,
 		info.RegistryID, info.RootParentID, info.RootIdentifier, nil, fileReader, info.FileName)
@@ -140,7 +145,7 @@ func (r *LocalRegistry) PutArtifact(ctx context.Context, info pkg.MavenArtifactI
 				return nil
 			}
 
-			metadata := &database.MavenMetadata{}
+			metadata := &metadata.MavenMetadata{}
 
 			dbArtifact, err3 := r.DBStore.ArtifactDao.GetByName(ctx, dbImage.ID, info.Version)
 
@@ -183,39 +188,46 @@ func (r *LocalRegistry) PutArtifact(ctx context.Context, info pkg.MavenArtifactI
 	return responseHeaders, nil
 }
 
-func (r *LocalRegistry) updateArtifactMetadata(dbArtifact *types.Artifact, metadata *database.MavenMetadata,
-	info pkg.MavenArtifactInfo, fileInfo pkg.FileInfo) error {
-	var files []database.File
+func (r *LocalRegistry) updateArtifactMetadata(
+	dbArtifact *types.Artifact, mavenMetadata *metadata.MavenMetadata,
+	info pkg.MavenArtifactInfo, fileInfo pkg.FileInfo,
+) error {
+	var files []metadata.File
 	if dbArtifact != nil {
-		err := json.Unmarshal(dbArtifact.Metadata, metadata)
+		err := json.Unmarshal(dbArtifact.Metadata, mavenMetadata)
 		if err != nil {
 			return err
 		}
 		fileExist := false
-		files = metadata.Files
+		files = mavenMetadata.Files
 		for _, file := range files {
 			if file.Filename == info.FileName {
 				fileExist = true
 			}
 		}
 		if !fileExist {
-			files = append(files, database.File{Size: fileInfo.Size, Filename: fileInfo.Filename,
-				CreatedAt: time.Now().UnixMilli()})
-			metadata.Files = files
-			metadata.FileCount++
+			files = append(files, metadata.File{
+				Size: fileInfo.Size, Filename: fileInfo.Filename,
+				CreatedAt: time.Now().UnixMilli(),
+			})
+			mavenMetadata.Files = files
+			mavenMetadata.FileCount++
 		}
 	} else {
-		files = append(files, database.File{Size: fileInfo.Size, Filename: fileInfo.Filename,
-			CreatedAt: time.Now().UnixMilli()})
-		metadata.Files = files
-		metadata.FileCount++
+		files = append(files, metadata.File{
+			Size: fileInfo.Size, Filename: fileInfo.Filename,
+			CreatedAt: time.Now().UnixMilli(),
+		})
+		mavenMetadata.Files = files
+		mavenMetadata.FileCount++
 	}
 	return nil
 }
 
 func processError(err error) (
 	responseHeaders *commons.ResponseHeaders, body *storage.FileReader, readCloser io.ReadCloser,
-	redirectURL string, errs []error) {
+	redirectURL string, errs []error,
+) {
 	if strings.Contains(err.Error(), sql.ErrNoRows.Error()) ||
 		strings.Contains(err.Error(), "resource not found") ||
 		strings.Contains(err.Error(), "http status code: 404") {

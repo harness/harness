@@ -12,23 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pypi
+package python
 
 import (
 	"context"
 	"mime/multipart"
 
 	urlprovider "github.com/harness/gitness/app/url"
-	"github.com/harness/gitness/registry/app/dist_temp/errcode"
-	"github.com/harness/gitness/registry/app/pkg"
-	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
-	"github.com/harness/gitness/registry/app/storage"
+	"github.com/harness/gitness/registry/app/pkg/python"
+	pythontype "github.com/harness/gitness/registry/app/pkg/types/python"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
 )
 
-// Controller handles PyPI package operations.
+type Controller interface {
+	GetPackageMetadata(ctx context.Context, info pythontype.ArtifactInfo) (pythontype.PackageMetadata, error)
+
+	UploadPackageFile(
+		ctx context.Context,
+		info pythontype.ArtifactInfo,
+		file multipart.File,
+		fileHeader *multipart.FileHeader,
+	) *PutArtifactResponse
+
+	DownloadPackageFile(ctx context.Context, info pythontype.ArtifactInfo) *GetArtifactResponse
+}
+
+// Controller handles Python package operations.
 type controller struct {
 	fileManager filemanager.FileManager
 	proxyStore  store.UpstreamProxyConfigRepository
@@ -37,26 +48,11 @@ type controller struct {
 	imageDao    store.ImageRepository
 	artifactDao store.ArtifactRepository
 	urlProvider urlprovider.Provider
+	local       python.LocalRegistry
+	proxy       python.Proxy
 }
 
-type Controller interface {
-	GetPackageMetadata(ctx context.Context, info ArtifactInfo, packageName string) (PackageMetadata, error)
-	UploadPackageFile(
-		ctx context.Context,
-		info ArtifactInfo,
-		file multipart.File,
-		fileHeader *multipart.FileHeader,
-	) (*commons.ResponseHeaders, string, errcode.Error)
-
-	DownloadPackageFile(ctx context.Context, info pkg.ArtifactInfo, image, version, filename string) (
-		*commons.ResponseHeaders,
-		*storage.FileReader,
-		string,
-		errcode.Error,
-	)
-}
-
-// NewController creates a new PyPI controller.
+// NewController creates a new Python controller.
 func NewController(
 	proxyStore store.UpstreamProxyConfigRepository,
 	registryDao store.RegistryRepository,
@@ -65,6 +61,8 @@ func NewController(
 	fileManager filemanager.FileManager,
 	tx dbtx.Transactor,
 	urlProvider urlprovider.Provider,
+	local python.LocalRegistry,
+	proxy python.Proxy,
 ) Controller {
 	return &controller{
 		proxyStore:  proxyStore,
@@ -74,5 +72,7 @@ func NewController(
 		fileManager: fileManager,
 		tx:          tx,
 		urlProvider: urlProvider,
+		local:       local,
+		proxy:       proxy,
 	}
 }

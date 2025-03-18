@@ -31,7 +31,8 @@ const (
 	ArtifactTypeRemoteRegistry = "Remote Registry"
 )
 
-func NewRemoteRegistry(dBStore *DBStore, tx dbtx.Transactor, local *LocalRegistry,
+func NewRemoteRegistry(
+	dBStore *DBStore, tx dbtx.Transactor, local *LocalRegistry,
 	proxyController maven.Controller,
 ) Registry {
 	return &RemoteRegistry{
@@ -54,25 +55,30 @@ func (r *RemoteRegistry) GetMavenArtifactType() string {
 }
 
 func (r *RemoteRegistry) HeadArtifact(ctx context.Context, info pkg.MavenArtifactInfo) (
-	responseHeaders *commons.ResponseHeaders, errs []error) {
-	responseHeaders, _, _, _, errs = r.FetchArtifact(ctx, info, false)
+	responseHeaders *commons.ResponseHeaders, errs []error,
+) {
+	responseHeaders, _, _, _, errs = r.fetchArtifact(ctx, info, false)
 	return responseHeaders, errs
 }
 
 func (r *RemoteRegistry) GetArtifact(ctx context.Context, info pkg.MavenArtifactInfo) (
 	responseHeaders *commons.ResponseHeaders, body *storage.FileReader, readCloser io.ReadCloser,
-	redirectURL string, errs []error) {
-	return r.FetchArtifact(ctx, info, true)
+	redirectURL string, errs []error,
+) {
+	return r.fetchArtifact(ctx, info, true)
 }
 
-func (r *RemoteRegistry) PutArtifact(_ context.Context, _ pkg.MavenArtifactInfo, _ io.Reader) (
-	responseHeaders *commons.ResponseHeaders, errs []error) {
+func (r *RemoteRegistry) PutArtifact(ctx context.Context, _ pkg.MavenArtifactInfo, _ io.Reader) (
+	responseHeaders *commons.ResponseHeaders, errs []error,
+) {
+	log.Error().Ctx(ctx).Msg("Not implemented")
 	return nil, nil
 }
 
-func (r *RemoteRegistry) FetchArtifact(ctx context.Context, info pkg.MavenArtifactInfo, serveFile bool) (
+func (r *RemoteRegistry) fetchArtifact(ctx context.Context, info pkg.MavenArtifactInfo, serveFile bool) (
 	responseHeaders *commons.ResponseHeaders, body *storage.FileReader, readCloser io.ReadCloser,
-	redirectURL string, errs []error) {
+	redirectURL string, errs []error,
+) {
 	log.Ctx(ctx).Info().Msgf("Maven Proxy: %s", info.RegIdentifier)
 
 	responseHeaders, body, redirectURL, useLocal := r.proxyController.UseLocalFile(ctx, info)

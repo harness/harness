@@ -35,6 +35,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/paths"
+	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/dist_temp/dcontext"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/manifest"
@@ -157,8 +158,12 @@ func (r *LocalRegistry) CanBeMount() (mount bool, repository string, err error) 
 	panic("implement me")
 }
 
-func (r *LocalRegistry) GetArtifactType() string {
-	return ArtifactTypeLocalRegistry
+func (r *LocalRegistry) GetArtifactType() artifact.RegistryType {
+	return artifact.RegistryTypeVIRTUAL
+}
+
+func (r *LocalRegistry) GetPackageTypes() []artifact.PackageType {
+	return []artifact.PackageType{artifact.PackageTypeDOCKER, artifact.PackageTypeHELM}
 }
 
 func (r *LocalRegistry) getManifest(

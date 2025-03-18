@@ -16,6 +16,8 @@ package packages
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -72,7 +74,8 @@ type Handler interface {
 	) error
 	GetArtifactInfo(r *http.Request) (pkg.ArtifactInfo, errcode.Error)
 	GetAuthenticator() authn.Authenticator
-	HandleErrors(ctx context.Context, errors errcode.Error, w http.ResponseWriter)
+	HandleErrors2(ctx context.Context, errors errcode.Error, w http.ResponseWriter)
+	HandleErrors(ctx context.Context, errors errcode.Errors, w http.ResponseWriter)
 	ServeContent(
 		w http.ResponseWriter, r *http.Request, fileReader *storage.FileReader, filename string,
 	)
@@ -144,14 +147,44 @@ func (h *handler) GetArtifactInfo(r *http.Request) (pkg.ArtifactInfo, errcode.Er
 			PathPackageType: pathPackageType,
 		},
 		RegIdentifier: registryIdentifier,
+		RegistryID:    registry.ID,
+		Image:         "",
 	}, errcode.Error{}
 }
 
-func (h *handler) HandleErrors(ctx context.Context, err errcode.Error, w http.ResponseWriter) {
+func (h *handler) HandleErrors2(ctx context.Context, err errcode.Error, w http.ResponseWriter) {
 	if !commons.IsEmptyError(err) {
 		w.WriteHeader(err.Code.Descriptor().HTTPStatusCode)
 		_ = errcode.ServeJSON(w, err)
 		log.Ctx(ctx).Error().Msgf("Error occurred while performing artifact action: %s", err.Message)
+	}
+}
+
+// HandleErrors TODO: Improve Error Handling
+// HandleErrors handles errors and writes the appropriate response to the client.
+func (h *handler) HandleErrors(ctx context.Context, errs errcode.Errors, w http.ResponseWriter) {
+	if !commons.IsEmpty(errs) {
+		LogError(errs)
+		log.Ctx(ctx).Error().Errs("errs occurred during artifact operation: ", errs).Msgf("Error occurred")
+		err := errs[0]
+		var e *commons.Error
+		if errors.As(err, &e) {
+			code := e.Status
+			w.WriteHeader(code)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(errs)
+		if err != nil {
+			log.Ctx(ctx).Error().Err(err).Msgf("Error occurred during artifact error encoding")
+		}
+	}
+}
+
+func LogError(errList errcode.Errors) {
+	for _, e1 := range errList {
+		log.Error().Err(e1).Msgf("error: %v", e1)
 	}
 }
 

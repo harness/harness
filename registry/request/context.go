@@ -17,12 +17,15 @@ package request
 import (
 	"context"
 
+	"github.com/harness/gitness/registry/app/pkg"
+
 	"github.com/rs/zerolog/log"
 )
 
 type contextKey string
 
 const OriginalURLKey contextKey = "originalURL"
+const ArtifactInfoKey contextKey = "artifactInfo"
 
 func OriginalURLFrom(ctx context.Context) string {
 	originalURL, ok := ctx.Value(OriginalURLKey).(string)
@@ -34,4 +37,16 @@ func OriginalURLFrom(ctx context.Context) string {
 
 func WithOriginalURL(parent context.Context, originalURL string) context.Context {
 	return context.WithValue(parent, OriginalURLKey, originalURL)
+}
+
+func ArtifactInfoFrom(ctx context.Context) pkg.PackageArtifactInfo {
+	baseInfo, ok := ctx.Value(ArtifactInfoKey).(pkg.PackageArtifactInfo)
+	if !ok {
+		log.Ctx(ctx).Warn().Msg("Failed to create artifact info")
+	}
+	return baseInfo
+}
+
+func WithArtifactInfo(parent context.Context, artifactInfo pkg.PackageArtifactInfo) context.Context {
+	return context.WithValue(parent, ArtifactInfoKey, artifactInfo)
 }

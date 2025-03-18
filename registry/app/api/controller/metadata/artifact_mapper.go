@@ -23,7 +23,7 @@ import (
 
 	"github.com/harness/gitness/app/url"
 	artifactapi "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
-	"github.com/harness/gitness/registry/app/store/database"
+	"github.com/harness/gitness/registry/app/metadata"
 	"github.com/harness/gitness/registry/types"
 
 	"github.com/rs/zerolog/log"
@@ -58,12 +58,12 @@ func GetRegistryArtifactMetadata(artifacts []types.ArtifactMetadata) []artifacta
 
 func GetMavenArtifactDetail(
 	image *types.Image, artifact *types.Artifact,
-	metadata database.MavenMetadata,
+	mavenMetadata metadata.MavenMetadata,
 ) artifactapi.ArtifactDetail {
 	createdAt := GetTimeInMs(artifact.CreatedAt)
 	modifiedAt := GetTimeInMs(artifact.UpdatedAt)
 	var size int64
-	for _, file := range metadata.Files {
+	for _, file := range mavenMetadata.Files {
 		size += file.Size
 	}
 	sizeVal := GetSize(size)
@@ -229,7 +229,7 @@ func GetArtifactFilesMetadata(
 		filePathPrefix := "/" + artifactName + "/" + version + "/"
 		filename := strings.Replace(file.Path, filePathPrefix, "", 1)
 		var downloadCommand string
-		if artifactapi.PackageTypeGENERIC == packageType {
+		if artifactapi.PackageTypeGENERIC == packageType || artifactapi.PackageTypePYTHON == packageType {
 			downloadCommand = GetGenericArtifactFileDownloadCommand(registryURL, artifactName, version, filename)
 		} else if artifactapi.PackageTypeMAVEN == packageType {
 			artifactName = strings.ReplaceAll(artifactName, ".", "/")
@@ -457,7 +457,7 @@ func GetHelmArtifactDetails(
 
 func GetGenericArtifactDetail(
 	image *types.Image, artifact *types.Artifact,
-	metadata database.GenericMetadata,
+	metadata metadata.GenericMetadata,
 ) artifactapi.ArtifactDetail {
 	createdAt := GetTimeInMs(artifact.CreatedAt)
 	modifiedAt := GetTimeInMs(artifact.UpdatedAt)
@@ -469,6 +469,27 @@ func GetGenericArtifactDetail(
 	}
 	err := artifactDetail.FromGenericArtifactDetailConfig(artifactapi.GenericArtifactDetailConfig{
 		Description: &metadata.Description,
+	})
+	if err != nil {
+		return artifactapi.ArtifactDetail{}
+	}
+	return *artifactDetail
+}
+
+func GetPythonArtifactDetail(
+	image *types.Image, artifact *types.Artifact,
+	metadata map[string]interface{},
+) artifactapi.ArtifactDetail {
+	createdAt := GetTimeInMs(artifact.CreatedAt)
+	modifiedAt := GetTimeInMs(artifact.UpdatedAt)
+	artifactDetail := &artifactapi.ArtifactDetail{
+		CreatedAt:  &createdAt,
+		ModifiedAt: &modifiedAt,
+		Name:       &image.Name,
+		Version:    artifact.Version,
+	}
+	err := artifactDetail.FromPythonArtifactDetailConfig(artifactapi.PythonArtifactDetailConfig{
+		Metadata: &metadata,
 	})
 	if err != nil {
 		return artifactapi.ArtifactDetail{}

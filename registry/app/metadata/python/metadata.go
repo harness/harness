@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pypi
+package python
+
+import "github.com/harness/gitness/registry/app/metadata"
+
+var _ metadata.Metadata = (*PythonMetadata)(nil)
 
 // Metadata Source: https://github.com/pypa/twine/blob/main/twine/package.py
 type Metadata struct {
@@ -72,4 +76,22 @@ type Metadata struct {
 	LongDescription string   `json:"long_description,omitempty"`
 	ProjectURL      string   `json:"project_url,omitempty"`
 	Dependencies    []string `json:"dependencies,omitempty"`
+}
+
+// PythonMetadata represents the metadata for a Python package.
+//
+//nolint:revive
+type PythonMetadata struct {
+	Metadata
+	Files     []metadata.File `json:"files"`
+	FileCount int64           `json:"file_count"`
+}
+
+func (p *PythonMetadata) GetFiles() []metadata.File {
+	return p.Files
+}
+
+func (p *PythonMetadata) SetFiles(files []metadata.File) {
+	p.Files = files
+	p.FileCount = int64(len(files))
 }

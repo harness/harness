@@ -21,22 +21,24 @@ import (
 	"github.com/harness/gitness/app/services/refcache"
 	corestore "github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
+	python2 "github.com/harness/gitness/registry/app/api/controller/pkg/python"
 	"github.com/harness/gitness/registry/app/api/handler/generic"
 	mavenhandler "github.com/harness/gitness/registry/app/api/handler/maven"
 	ocihandler "github.com/harness/gitness/registry/app/api/handler/oci"
 	"github.com/harness/gitness/registry/app/api/handler/packages"
-	pypi2 "github.com/harness/gitness/registry/app/api/handler/pypi"
+	pypi2 "github.com/harness/gitness/registry/app/api/handler/python"
 	"github.com/harness/gitness/registry/app/api/router"
 	storagedriver "github.com/harness/gitness/registry/app/driver"
 	"github.com/harness/gitness/registry/app/driver/factory"
 	"github.com/harness/gitness/registry/app/driver/filesystem"
 	"github.com/harness/gitness/registry/app/driver/s3-aws"
 	"github.com/harness/gitness/registry/app/pkg"
+	"github.com/harness/gitness/registry/app/pkg/base"
 	"github.com/harness/gitness/registry/app/pkg/docker"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	generic2 "github.com/harness/gitness/registry/app/pkg/generic"
 	"github.com/harness/gitness/registry/app/pkg/maven"
-	"github.com/harness/gitness/registry/app/pkg/pypi"
+	"github.com/harness/gitness/registry/app/pkg/python"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/app/store/database"
 	"github.com/harness/gitness/registry/config"
@@ -124,8 +126,8 @@ func NewPackageHandlerProvider(
 	)
 }
 
-func NewPypiHandlerProvider(
-	controller pypi.Controller,
+func NewPythonHandlerProvider(
+	controller python2.Controller,
 	packageHandler packages.Handler,
 ) pypi2.Handler {
 	return pypi2.NewHandler(controller, packageHandler)
@@ -153,16 +155,18 @@ var WireSet = wire.NewSet(
 	NewMavenHandlerProvider,
 	NewGenericHandlerProvider,
 	NewPackageHandlerProvider,
-	NewPypiHandlerProvider,
+	NewPythonHandlerProvider,
 	database.WireSet,
 	pkg.WireSet,
 	docker.WireSet,
 	filemanager.WireSet,
 	maven.WireSet,
-	pypi.WireSet,
+	python.WireSet,
 	router.WireSet,
 	gc.WireSet,
 	generic2.WireSet,
+	python2.ControllerSet,
+	base.WireSet,
 )
 
 func Wire(_ *types.Config) (RegistryApp, error) {

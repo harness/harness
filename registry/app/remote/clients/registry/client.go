@@ -153,10 +153,10 @@ type Client interface {
 	// Do send generic HTTP requests to the target registry service
 	Do(req *http.Request) (*http.Response, error)
 
-	// Download the file
+	// GetFile Download the file
 	GetFile(filePath string) (*commons.ResponseHeaders, io.ReadCloser, error)
 
-	// Check existence of file
+	// HeadFile Check existence of file
 	HeadFile(filePath string) (*commons.ResponseHeaders, bool, error)
 }
 

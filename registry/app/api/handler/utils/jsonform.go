@@ -31,6 +31,9 @@ func FillFromForm(r *http.Request, data interface{}) error {
 	if err := r.ParseForm(); err != nil {
 		return err
 	}
+	if err := r.ParseMultipartForm(32 << 22); err != nil {
+		return err
+	}
 
 	v := reflect.ValueOf(data).Elem()
 	t := v.Type()

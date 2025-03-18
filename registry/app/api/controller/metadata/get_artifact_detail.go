@@ -22,7 +22,7 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
-	"github.com/harness/gitness/registry/app/store/database"
+	"github.com/harness/gitness/registry/app/metadata"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -97,8 +97,10 @@ func (c *APIController) GetArtifactDetails(
 
 	var artifactDetails artifact.ArtifactDetail
 
-	if artifact.PackageTypeMAVEN == registry.PackageType {
-		var metadata database.MavenMetadata
+	// FIXME: Arvind: Unify the metadata structure to avoid this type checking
+	switch registry.PackageType {
+	case artifact.PackageTypeMAVEN:
+		var metadata metadata.MavenMetadata
 		err := json.Unmarshal(art.Metadata, &metadata)
 		if err != nil {
 			return artifact.GetArtifactDetails500JSONResponse{
@@ -108,8 +110,8 @@ func (c *APIController) GetArtifactDetails(
 			}, nil
 		}
 		artifactDetails = GetMavenArtifactDetail(img, art, metadata)
-	} else if artifact.PackageTypeGENERIC == registry.PackageType {
-		var metadata database.GenericMetadata
+	case artifact.PackageTypeGENERIC:
+		var metadata metadata.GenericMetadata
 		err := json.Unmarshal(art.Metadata, &metadata)
 		if err != nil {
 			return artifact.GetArtifactDetails500JSONResponse{
@@ -119,7 +121,27 @@ func (c *APIController) GetArtifactDetails(
 			}, nil
 		}
 		artifactDetails = GetGenericArtifactDetail(img, art, metadata)
+	case artifact.PackageTypePYTHON:
+		var result map[string]interface{}
+		err := json.Unmarshal(art.Metadata, &result)
+		if err != nil {
+			return artifact.GetArtifactDetails500JSONResponse{
+				InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
+					*GetErrorResponse(http.StatusInternalServerError, err.Error()),
+				),
+			}, nil
+		}
+		artifactDetails = GetPythonArtifactDetail(img, art, result)
+	case artifact.PackageTypeDOCKER:
+	case artifact.PackageTypeHELM:
+	default:
+		return artifact.GetArtifactDetails400JSONResponse{
+			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
+				*GetErrorResponse(http.StatusBadRequest, "unsupported package type"),
+			),
+		}, nil
 	}
+
 	return artifact.GetArtifactDetails200JSONResponse{
 		ArtifactDetailResponseJSONResponse: artifact.ArtifactDetailResponseJSONResponse{
 			Data:   artifactDetails,

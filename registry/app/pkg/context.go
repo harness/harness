@@ -33,6 +33,7 @@ type BaseInfo struct {
 type ArtifactInfo struct {
 	*BaseInfo
 	RegIdentifier string
+	RegistryID    int64
 	Image         string
 }
 

@@ -1786,10 +1786,9 @@ components:
       type: object
       description: Config for python artifact details
       properties:
-        groupId:
-          type: string
-        artifactId:
-          type: string
+        metadata:
+            type: object
+            additionalProperties: true
     HelmArtifactDetailConfig:
       type: object
       description: Config for helm artifact details

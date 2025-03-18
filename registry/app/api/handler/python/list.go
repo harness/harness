@@ -12,11 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pypi
+package python
 
 import (
 	"html/template"
 	"net/http"
+
+	pythontype "github.com/harness/gitness/registry/app/pkg/types/python"
+	"github.com/harness/gitness/registry/request"
 )
 
 const HTMLTemplate = `
@@ -37,18 +40,18 @@ const HTMLTemplate = `
 `
 
 func (h *handler) PackageMetadata(w http.ResponseWriter, r *http.Request) {
-	info, err := h.getPackageArtifactInfo(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	contextInfo := request.ArtifactInfoFrom(r.Context())
+	info, ok := contextInfo.(*pythontype.ArtifactInfo)
+	if !ok {
+		http.Error(w, "Invalid request context", http.StatusBadRequest)
 		return
 	}
-
 	if info.Image == "" {
 		http.Error(w, "Package name required", http.StatusBadRequest)
 		return
 	}
 
-	packageData, err := h.controller.GetPackageMetadata(r.Context(), info, info.Image)
+	packageData, err := h.controller.GetPackageMetadata(r.Context(), *info)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

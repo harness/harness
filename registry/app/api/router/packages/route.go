@@ -21,7 +21,7 @@ import (
 	"github.com/harness/gitness/registry/app/api/handler/generic"
 	"github.com/harness/gitness/registry/app/api/handler/maven"
 	"github.com/harness/gitness/registry/app/api/handler/packages"
-	"github.com/harness/gitness/registry/app/api/handler/pypi"
+	"github.com/harness/gitness/registry/app/api/handler/python"
 	"github.com/harness/gitness/registry/app/api/middleware"
 	"github.com/harness/gitness/types/enum"
 
@@ -42,7 +42,7 @@ func NewRouter(
 	packageHandler packages.Handler,
 	mavenHandler *maven.Handler,
 	genericHandler *generic.Handler,
-	pypiHandler pypi.Handler,
+	pythonHandler python.Handler,
 ) Handler {
 	r := chi.NewRouter()
 
@@ -71,14 +71,20 @@ func NewRouter(
 
 		r.Route("/python", func(r chi.Router) {
 			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
-			r.With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
-				Post("/*", pypiHandler.UploadPackageFile)
-			r.With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
-				Get("/files/{image}/{version}/{filename}", pypiHandler.DownloadPackageFile)
-			r.With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
-				Get("/simple/{image}", pypiHandler.PackageMetadata)
-			r.With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
-				Get("/simple/{image}/", pypiHandler.PackageMetadata)
+
+			// TODO (Arvind): Move this to top layer with total abstraction
+			r.With(middleware.StoreArtifactInfo(pythonHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
+				Post("/*", pythonHandler.UploadPackageFile)
+			r.With(middleware.StoreArtifactInfo(pythonHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Get("/files/{image}/{version}/{filename}", pythonHandler.DownloadPackageFile)
+			r.With(middleware.StoreArtifactInfo(pythonHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Get("/simple/{image}", pythonHandler.PackageMetadata)
+			r.With(middleware.StoreArtifactInfo(pythonHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Get("/simple/{image}/", pythonHandler.PackageMetadata)
 		})
 	})
 

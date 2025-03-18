@@ -25,12 +25,12 @@ import (
 	"github.com/harness/gitness/registry/app/api/handler/oci"
 	"github.com/harness/gitness/registry/app/api/router/utils"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
+	"github.com/harness/gitness/registry/app/metadata"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/docker"
 	generic2 "github.com/harness/gitness/registry/app/pkg/generic"
 	maven2 "github.com/harness/gitness/registry/app/pkg/maven"
-	"github.com/harness/gitness/registry/app/store/database"
 	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/store"
 
@@ -225,7 +225,7 @@ func dbBandwidthStatForGenericArtifact(
 		return errcode.ErrCodeInvalidRequest.WithDetail(err)
 	}
 
-	var metadata database.GenericMetadata
+	var metadata metadata.GenericMetadata
 	err = json.Unmarshal(art.Metadata, &metadata)
 
 	if err != nil {
@@ -273,7 +273,7 @@ func dbBandwidthStatForMavenArtifact(
 		return errcode.ErrCodeInvalidRequest.WithDetail(err)
 	}
 
-	var metadata database.MavenMetadata
+	var metadata metadata.MavenMetadata
 	err = json.Unmarshal(art.Metadata, &metadata)
 
 	if err != nil {
@@ -351,7 +351,8 @@ func getImageFromUpstreamProxy(ctx context.Context, c *docker.Controller, info p
 	return nil, errors.New("image not found in upstream proxy")
 }
 
-func getMavenArtifactFromUpstreamProxy(ctx context.Context,
+func getMavenArtifactFromUpstreamProxy(
+	ctx context.Context,
 	c *maven2.Controller,
 	info pkg.MavenArtifactInfo,
 ) (*types.Image, error) {

@@ -25,6 +25,7 @@ import (
 
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/services/refcache"
+	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/common/lib/errors"
 	"github.com/harness/gitness/registry/app/manifest"
 	"github.com/harness/gitness/registry/app/manifest/manifestlist"
@@ -75,8 +76,12 @@ func NewRemoteRegistry(
 	}
 }
 
-func (r *RemoteRegistry) GetArtifactType() string {
-	return "Remote Registry"
+func (r *RemoteRegistry) GetArtifactType() artifact.RegistryType {
+	return artifact.RegistryTypeUPSTREAM
+}
+
+func (r *RemoteRegistry) GetPackageTypes() []artifact.PackageType {
+	return []artifact.PackageType{artifact.PackageTypeDOCKER, artifact.PackageTypeHELM}
 }
 
 type RemoteRegistry struct {

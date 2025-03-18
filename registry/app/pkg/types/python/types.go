@@ -12,18 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pypi
+package python
 
 import (
-	"github.com/harness/gitness/registry/app/metadata/pypi"
+	"github.com/harness/gitness/registry/app/metadata/python"
 	"github.com/harness/gitness/registry/app/pkg"
 )
 
-// Metadata represents the metadata for a PyPI package.
-
 type ArtifactInfo struct {
-	*pkg.ArtifactInfo
-	Metadata pypi.Metadata
+	pkg.ArtifactInfo
+	Version  string
+	Filename string
+	Metadata python.Metadata
+}
+
+// BaseArtifactInfo implements pkg.PackageArtifactInfo interface.
+func (a ArtifactInfo) BaseArtifactInfo() pkg.ArtifactInfo {
+	return a.ArtifactInfo
 }
 
 type File struct {

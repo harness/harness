@@ -12,32 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pypi
+package python
 
 import (
 	"net/http"
 
+	"github.com/harness/gitness/registry/app/api/controller/pkg/python"
 	"github.com/harness/gitness/registry/app/api/handler/packages"
 	"github.com/harness/gitness/registry/app/api/handler/utils"
-	pypi2 "github.com/harness/gitness/registry/app/metadata/pypi"
-	"github.com/harness/gitness/registry/app/pkg/pypi"
+	python2 "github.com/harness/gitness/registry/app/metadata/python"
+	"github.com/harness/gitness/registry/app/pkg"
+	"github.com/harness/gitness/registry/app/pkg/commons"
+	pythontype "github.com/harness/gitness/registry/app/pkg/types/python"
 
 	"github.com/go-chi/chi/v5"
 )
 
 type Handler interface {
-	DownloadPackageFile(http.ResponseWriter, *http.Request)
+	pkg.ArtifactInfoProvider
 	UploadPackageFile(writer http.ResponseWriter, request *http.Request)
+	DownloadPackageFile(http.ResponseWriter, *http.Request)
 	PackageMetadata(writer http.ResponseWriter, request *http.Request)
 }
 
 type handler struct {
 	packages.Handler
-	controller pypi.Controller
+	controller python.Controller
 }
 
 func NewHandler(
-	controller pypi.Controller,
+	controller python.Controller,
 	packageHandler packages.Handler,
 ) Handler {
 	return &handler{
@@ -48,26 +52,33 @@ func NewHandler(
 
 var _ Handler = (*handler)(nil)
 
-func (h *handler) getPackageArtifactInfo(r *http.Request) (pypi.ArtifactInfo, error) {
-	info, e := h.GetArtifactInfo(r)
-
-	if e.Error() != "" {
-		return pypi.ArtifactInfo{}, e
+func (h *handler) GetPackageArtifactInfo(r *http.Request) (pkg.PackageArtifactInfo, error) {
+	info, err := h.Handler.GetArtifactInfo(r)
+	if !commons.IsEmptyError(err) {
+		return nil, err
 	}
 
-	var md pypi2.Metadata
-	err := utils.FillFromForm(r, &md)
-	if err != nil {
-		return pypi.ArtifactInfo{}, err
+	image := chi.URLParam(r, "image")
+	filename := chi.URLParam(r, "filename")
+	version := chi.URLParam(r, "version")
+
+	var md python2.Metadata
+	err2 := utils.FillFromForm(r, &md)
+
+	if err2 == nil {
+		if image == "" {
+			image = md.Name
+		}
+		if version == "" {
+			version = md.Version
+		}
 	}
 
-	info.Image = chi.URLParam(r, "image")
-	if info.Image == "" {
-		info.Image = md.Name
-	}
-
-	return pypi.ArtifactInfo{
-		ArtifactInfo: &info,
+	info.Image = image
+	return &pythontype.ArtifactInfo{
+		ArtifactInfo: info,
 		Metadata:     md,
+		Filename:     filename,
+		Version:      version,
 	}, nil
 }

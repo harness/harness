@@ -24,7 +24,6 @@ import (
 
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
-	"github.com/harness/gitness/registry/app/metadata/pypi"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/app/store/database/util"
 	"github.com/harness/gitness/registry/types"
@@ -753,26 +752,4 @@ type nonOCIArtifactMetadataDB struct {
 	FileCount     *int64               `db:"file_count"`
 	ModifiedAt    int64                `db:"modified_at"`
 	DownloadCount int64                `db:"download_count"`
-}
-
-type GenericMetadata struct {
-	Files       []File `json:"files"`
-	Description string `json:"desc"`
-	FileCount   int64  `json:"file_count"`
-}
-
-type MavenMetadata struct {
-	Files     []File `json:"files"`
-	FileCount int64  `json:"file_count"`
-}
-
-type PyPiMetadata struct {
-	Files []File `json:"files"`
-	pypi.Metadata
-}
-
-type File struct {
-	Size      int64  `json:"size"`
-	Filename  string `json:"file_name"`
-	CreatedAt int64  `json:"created_at"`
 }
