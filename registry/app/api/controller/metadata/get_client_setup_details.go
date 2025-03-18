@@ -26,6 +26,8 @@ import (
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/common"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 func (c *APIController) GetClientSetupDetails(
@@ -74,10 +76,20 @@ func (c *APIController) GetClientSetupDetails(
 
 	packageType := string(reg.PackageType)
 
+	response := c.GenerateClientSetupDetails(
+		ctx, packageType, imageParam, tagParam, regInfo.RegistryRef,
+		regInfo.RegistryType,
+	)
+
+	if response == nil {
+		return artifact.GetClientSetupDetails400JSONResponse{
+			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
+				*GetErrorResponse(http.StatusBadRequest, "Package type not supported"),
+			),
+		}, nil
+	}
 	return artifact.GetClientSetupDetails200JSONResponse{
-		ClientSetupDetailsResponseJSONResponse: *c.GenerateClientSetupDetails(
-			ctx, packageType, imageParam, tagParam, regInfo.RegistryRef,
-		),
+		ClientSetupDetailsResponseJSONResponse: *response,
 	}, nil
 }
 
@@ -87,6 +99,7 @@ func (c *APIController) GenerateClientSetupDetails(
 	image *artifact.ArtifactParam,
 	tag *artifact.VersionParam,
 	registryRef string,
+	registryType artifact.RegistryType,
 ) *artifact.ClientSetupDetailsResponseJSONResponse {
 	session, _ := request.AuthSessionFrom(ctx)
 	username := session.Principal.Email
@@ -96,15 +109,36 @@ func (c *APIController) GenerateClientSetupDetails(
 	blankString := ""
 	switch packageType {
 	case string(artifact.PackageTypeMAVEN):
-		return c.generateMavenClientSetupDetail(ctx, image, tag, registryRef, username)
+		return c.generateMavenClientSetupDetail(ctx, image, tag, registryRef, username, registryType)
 	case string(artifact.PackageTypeHELM):
 		return c.generateHelmClientSetupDetail(ctx, blankString, loginUsernameLabel, loginUsernameValue,
-			loginPasswordLabel, username, registryRef, image, tag)
+			loginPasswordLabel, username, registryRef, image, tag, registryType)
 	case string(artifact.PackageTypeGENERIC):
-		return c.generateGenericClientSetupDetail(ctx, blankString, registryRef, image, tag)
+		return c.generateGenericClientSetupDetail(ctx, blankString, registryRef, image, tag, registryType)
 	case string(artifact.PackageTypePYTHON):
-		return c.generatePythonClientSetupDetail(ctx, registryRef, username, image, tag)
+		return c.generatePythonClientSetupDetail(ctx, registryRef, username, image, tag, registryType)
+	case string(artifact.PackageTypeDOCKER):
+		return c.generateDockerClientSetupDetail(ctx, blankString, loginUsernameLabel, loginUsernameValue,
+			loginPasswordLabel, registryType,
+			username, registryRef, image, tag)
+	default:
+		log.Debug().Ctx(ctx).Msgf("Unknown package type for client details: %s", packageType)
+		return nil
 	}
+}
+
+func (c *APIController) generateDockerClientSetupDetail(
+	ctx context.Context,
+	blankString string,
+	loginUsernameLabel string,
+	loginUsernameValue string,
+	loginPasswordLabel string,
+	registryType artifact.RegistryType,
+	username string,
+	registryRef string,
+	image *artifact.ArtifactParam,
+	tag *artifact.VersionParam,
+) *artifact.ClientSetupDetailsResponseJSONResponse {
 	header1 := "Login to Docker"
 	section1step1Header := "Run this Docker command in your terminal to authenticate the client."
 	dockerLoginValue := "docker login <LOGIN_HOSTNAME>"
@@ -184,14 +218,23 @@ func (c *APIController) GenerateClientSetupDetails(
 	_ = section3.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
 		Steps: &section3Steps,
 	})
+	sections := []artifact.ClientSetupSection{
+		section1,
+		section2,
+		section3,
+	}
+
+	if registryType == artifact.RegistryTypeUPSTREAM {
+		sections = []artifact.ClientSetupSection{
+			section1,
+			section2,
+		}
+	}
+
 	clientSetupDetails := artifact.ClientSetupDetails{
 		MainHeader: "Docker Client Setup",
 		SecHeader:  "Follow these instructions to install/use Docker artifacts or compatible packages.",
-		Sections: []artifact.ClientSetupSection{
-			section1,
-			section2,
-			section3,
-		},
+		Sections:   sections,
 	}
 
 	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, image, tag, "", "", "")
@@ -204,8 +247,12 @@ func (c *APIController) GenerateClientSetupDetails(
 
 //nolint:lll
 func (c *APIController) generateGenericClientSetupDetail(
-	ctx context.Context, blankString string,
-	registryRef string, image *artifact.ArtifactParam, tag *artifact.VersionParam,
+	ctx context.Context,
+	blankString string,
+	registryRef string,
+	image *artifact.ArtifactParam,
+	tag *artifact.VersionParam,
+	registryType artifact.RegistryType,
 ) *artifact.ClientSetupDetailsResponseJSONResponse {
 	header1 := "Generate identity token"
 	section1Header := "An identity token will serve as the password for uploading and downloading artifact."
@@ -267,14 +314,23 @@ func (c *APIController) generateGenericClientSetupDetail(
 		Steps: &section3steps,
 	})
 
+	sections := []artifact.ClientSetupSection{
+		section1,
+		section2,
+		section3,
+	}
+
+	if registryType == artifact.RegistryTypeUPSTREAM {
+		sections = []artifact.ClientSetupSection{
+			section1,
+			section3,
+		}
+	}
+
 	clientSetupDetails := artifact.ClientSetupDetails{
 		MainHeader: "Generic Client Setup",
 		SecHeader:  "Follow these instructions to install/use Generic artifacts or compatible packages.",
-		Sections: []artifact.ClientSetupSection{
-			section1,
-			section2,
-			section3,
-		},
+		Sections:   sections,
 	}
 	//nolint:lll
 	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, "", registryRef, image, tag, "", "",
@@ -296,6 +352,7 @@ func (c *APIController) generateHelmClientSetupDetail(
 	registryRef string,
 	image *artifact.ArtifactParam,
 	tag *artifact.VersionParam,
+	registryType artifact.RegistryType,
 ) *artifact.ClientSetupDetailsResponseJSONResponse {
 	header1 := "Login to Helm"
 	section1step1Header := "Run this Helm command in your terminal to authenticate the client."
@@ -368,14 +425,23 @@ func (c *APIController) generateHelmClientSetupDetail(
 	_ = section3.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
 		Steps: &section3Steps,
 	})
+
+	sections := []artifact.ClientSetupSection{
+		section1,
+		section2,
+		section3,
+	}
+	if registryType == artifact.RegistryTypeUPSTREAM {
+		sections = []artifact.ClientSetupSection{
+			section1,
+			section3,
+		}
+	}
+
 	clientSetupDetails := artifact.ClientSetupDetails{
 		MainHeader: "Helm Client Setup",
 		SecHeader:  "Follow these instructions to install/use Helm artifacts or compatible packages.",
-		Sections: []artifact.ClientSetupSection{
-			section1,
-			section2,
-			section3,
-		},
+		Sections:   sections,
 	}
 
 	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, image, tag, "", "", "")
@@ -392,6 +458,7 @@ func (c *APIController) generateMavenClientSetupDetail(
 	version *artifact.VersionParam,
 	registryRef string,
 	username string,
+	registryType artifact.RegistryType,
 ) *artifact.ClientSetupDetailsResponseJSONResponse {
 	staticStepType := artifact.ClientSetupStepTypeStatic
 	generateTokenStepType := artifact.ClientSetupStepTypeGenerateToken
@@ -652,31 +719,35 @@ func (c *APIController) generateMavenClientSetupDetail(
 	})
 
 	section2 := artifact.ClientSetupSection{}
-	_ = section2.FromTabSetupStepConfig(artifact.TabSetupStepConfig{
+	config := artifact.TabSetupStepConfig{
 		Tabs: &[]artifact.TabSetupStep{
 			{
 				Header: stringPtr("Maven"),
 				Sections: &[]artifact.ClientSetupSection{
 					mavenSection1,
-					mavenSection2,
 				},
 			},
 			{
 				Header: stringPtr("Gradle"),
 				Sections: &[]artifact.ClientSetupSection{
 					gradleSection1,
-					gradleSection2,
 				},
 			},
 			{
 				Header: stringPtr("Sbt/Scala"),
 				Sections: &[]artifact.ClientSetupSection{
 					sbtSection1,
-					sbtSection2,
 				},
 			},
 		},
-	})
+	}
+	if registryType == artifact.RegistryTypeVIRTUAL {
+		for i, remoteSection := range []artifact.ClientSetupSection{mavenSection2, gradleSection2, sbtSection2} {
+			*(*config.Tabs)[i].Sections = append(*(*config.Tabs)[i].Sections, remoteSection)
+		}
+	}
+
+	_ = section2.FromTabSetupStepConfig(config)
 
 	clientSetupDetails := artifact.ClientSetupDetails{
 		MainHeader: "Maven Client Setup",
@@ -714,6 +785,7 @@ func (c *APIController) generatePythonClientSetupDetail(
 	username string,
 	image *artifact.ArtifactParam,
 	tag *artifact.VersionParam,
+	registryType artifact.RegistryType,
 ) *artifact.ClientSetupDetailsResponseJSONResponse {
 	staticStepType := artifact.ClientSetupStepTypeStatic
 	generateTokenType := artifact.ClientSetupStepTypeGenerateToken
@@ -784,14 +856,23 @@ func (c *APIController) generatePythonClientSetupDetail(
 		},
 	})
 
+	sections := []artifact.ClientSetupSection{
+		section1,
+		section2,
+		section3,
+	}
+
+	if registryType == artifact.RegistryTypeUPSTREAM {
+		sections = []artifact.ClientSetupSection{
+			section1,
+			section3,
+		}
+	}
+
 	clientSetupDetails := artifact.ClientSetupDetails{
 		MainHeader: "Python Client Setup",
 		SecHeader:  "Follow these instructions to install/use Python packages from this registry.",
-		Sections: []artifact.ClientSetupSection{
-			section1,
-			section2,
-			section3,
-		},
+		Sections:   sections,
 	}
 
 	registryURL := c.URLProvider.PackageURL(ctx, registryRef, "python")
