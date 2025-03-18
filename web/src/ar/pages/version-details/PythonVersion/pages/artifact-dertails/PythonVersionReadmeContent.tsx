@@ -16,13 +16,17 @@
 
 import React from 'react'
 import { Container } from '@harnessio/uicore'
+
+import { useVersionOverview } from '@ar/pages/version-details/context/VersionOverviewProvider'
 import ReadmeFileContent from '@ar/pages/version-details/components/ReadmeFileContent/ReadmeFileContent'
-import { MOCK_README_CONTENT } from './mockData'
+import type { PythonArtifactDetails } from '../../types'
 
 export default function PythonVersionReadmeContent() {
+  const { data } = useVersionOverview<PythonArtifactDetails>()
+  const { metadata } = data
   return (
     <Container>
-      <ReadmeFileContent source={MOCK_README_CONTENT} />
+      <ReadmeFileContent source={metadata?.description} />
     </Container>
   )
 }

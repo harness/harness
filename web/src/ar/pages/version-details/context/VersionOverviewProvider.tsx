@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { createContext, type PropsWithChildren } from 'react'
+import React, { createContext, useContext, type PropsWithChildren } from 'react'
 import { PageError, PageSpinner } from '@harnessio/uicore'
 import { type ArtifactDetail, useGetArtifactDetailsQuery } from '@harnessio/react-har-service-client'
 
@@ -22,11 +22,19 @@ import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import { useDecodedParams, useGetSpaceRef } from '@ar/hooks'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 
-interface VersionOverviewProviderProps {
-  data: ArtifactDetail
+interface VersionOverviewProviderProps<T = ArtifactDetail> {
+  data: T
   refetch: () => void
 }
-export const VersionOverviewContext = createContext<VersionOverviewProviderProps>({} as VersionOverviewProviderProps)
+
+export const VersionOverviewContext = createContext<VersionOverviewProviderProps>(
+  {} as VersionOverviewProviderProps<ArtifactDetail>
+)
+
+export const useVersionOverview = <T,>(): VersionOverviewProviderProps<T> => {
+  const context = useContext(VersionOverviewContext)
+  return context as VersionOverviewProviderProps<T>
+}
 
 const VersionOverviewProvider = (props: PropsWithChildren<unknown>) => {
   const pathParams = useDecodedParams<VersionDetailsPathParams>()

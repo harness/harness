@@ -21,6 +21,7 @@ import { useParentHooks } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import { ButtonTab, ButtonTabs } from '@ar/components/ButtonTabs/ButtonTabs'
 import VersionFilesProvider from '@ar/pages/version-details/context/VersionFilesProvider'
+import VersionOverviewProvider from '@ar/pages/version-details/context/VersionOverviewProvider'
 
 import PythonVersionFilesContent from './PythonVersionFilesContent'
 import PythonVersionReadmeContent from './PythonVersionReadmeContent'
@@ -40,27 +41,29 @@ export default function PythonVersionArtifactDetailsPage() {
   )
 
   return (
-    <Layout.Vertical padding="large" spacing="large">
-      <ButtonTabs small bold selectedTabId={detailsTab} onChange={handleTabChange}>
-        <ButtonTab
-          id={PythonArtifactDetailsTabEnum.ReadMe}
-          icon="document"
-          iconProps={{ size: 12 }}
-          panel={<PythonVersionReadmeContent />}
-          title={getString('versionDetails.artifactDetails.tabs.readme')}
-        />
-        <ButtonTab
-          id={PythonArtifactDetailsTabEnum.Files}
-          icon="document"
-          iconProps={{ size: 12 }}
-          panel={
-            <VersionFilesProvider>
-              <PythonVersionFilesContent />
-            </VersionFilesProvider>
-          }
-          title={getString('versionDetails.artifactDetails.tabs.files')}
-        />
-      </ButtonTabs>
-    </Layout.Vertical>
+    <VersionOverviewProvider>
+      <Layout.Vertical padding="large" spacing="large">
+        <ButtonTabs small bold selectedTabId={detailsTab} onChange={handleTabChange}>
+          <ButtonTab
+            id={PythonArtifactDetailsTabEnum.ReadMe}
+            icon="document"
+            iconProps={{ size: 12 }}
+            panel={<PythonVersionReadmeContent />}
+            title={getString('versionDetails.artifactDetails.tabs.readme')}
+          />
+          <ButtonTab
+            id={PythonArtifactDetailsTabEnum.Files}
+            icon="document"
+            iconProps={{ size: 12 }}
+            panel={
+              <VersionFilesProvider>
+                <PythonVersionFilesContent />
+              </VersionFilesProvider>
+            }
+            title={getString('versionDetails.artifactDetails.tabs.files')}
+          />
+        </ButtonTabs>
+      </Layout.Vertical>
+    </VersionOverviewProvider>
   )
 }

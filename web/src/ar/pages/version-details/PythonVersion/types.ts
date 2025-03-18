@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { ArtifactDetail, PythonArtifactDetailConfig } from '@harnessio/react-har-service-client'
 import type { VersionDetailsQueryParams } from '../types'
 
 export enum PythonArtifactDetailsTabEnum {
@@ -24,3 +25,5 @@ export interface PythonVersionDetailsQueryParams extends VersionDetailsQueryPara
   detailsTab: PythonArtifactDetailsTabEnum
   digest: string
 }
+
+export type PythonArtifactDetails = ArtifactDetail & PythonArtifactDetailConfig
