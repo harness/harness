@@ -131,7 +131,20 @@ func (v *Branch) RefChangeVerify(
 }
 
 func (v *Branch) UserIDs() ([]int64, error) {
-	return v.Bypass.UserIDs, nil
+	uniqueUserMap := make(map[int64]struct{}, len(v.Bypass.UserIDs)+len(v.PullReq.Reviewers.DefaultReviewerIDs))
+	for _, id := range v.Bypass.UserIDs {
+		uniqueUserMap[id] = struct{}{}
+	}
+	for _, id := range v.PullReq.Reviewers.DefaultReviewerIDs {
+		uniqueUserMap[id] = struct{}{}
+	}
+
+	ids := make([]int64, 0, len(uniqueUserMap))
+	for id := range uniqueUserMap {
+		ids = append(ids, id)
+	}
+
+	return ids, nil
 }
 
 func (v *Branch) UserGroupIDs() ([]int64, error) {
