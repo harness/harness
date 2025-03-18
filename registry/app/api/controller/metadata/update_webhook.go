@@ -55,7 +55,7 @@ func (c *APIController) UpdateWebhook(
 			UnauthorizedJSONResponse: api.UnauthorizedJSONResponse(
 				*GetErrorResponse(http.StatusForbidden, err.Error()),
 			),
-		}, err
+		}, nil
 	}
 	existingWebhook, err := c.WebhooksRepository.GetByRegistryAndIdentifier(ctx,
 		regInfo.RegistryID, webhookRequest.Identifier)
@@ -112,7 +112,7 @@ func updateWebhookInternalErrorResponse(err error) (api.UpdateWebhookResponseObj
 		InternalServerErrorJSONResponse: api.InternalServerErrorJSONResponse(
 			*GetErrorResponse(http.StatusInternalServerError, err.Error()),
 		),
-	}, err
+	}, nil
 }
 
 func updateWebhookBadRequestErrorResponse(err error) (api.UpdateWebhookResponseObject, error) {
@@ -120,5 +120,5 @@ func updateWebhookBadRequestErrorResponse(err error) (api.UpdateWebhookResponseO
 		BadRequestJSONResponse: api.BadRequestJSONResponse(
 			*GetErrorResponse(http.StatusBadRequest, err.Error()),
 		),
-	}, err
+	}, nil
 }

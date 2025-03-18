@@ -144,11 +144,10 @@ func TestListWebhookExecutions_GetRegistryRequestBaseInfoError(t *testing.T) {
 	}
 
 	response, err := controller.ListWebhookExecutions(ctx, r)
-	assert.Error(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, response)
 	assert.IsType(t, api.ListWebhookExecutions500JSONResponse{}, response)
-	assert.Contains(t, err.Error(), "error")
-
+	assert.Equal(t, "error", response.(api.ListWebhookExecutions500JSONResponse).Message) //nolint:errcheck
 	mockRegistryMetadataHelper.AssertExpectations(t)
 }
 
@@ -183,10 +182,10 @@ func TestListWebhookExecutions_FindByRefError(t *testing.T) {
 	}
 
 	response, err := controller.ListWebhookExecutions(ctx, r)
-	assert.Error(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, response)
 	assert.IsType(t, api.ListWebhookExecutions500JSONResponse{}, response)
-	assert.Contains(t, err.Error(), "error")
+	assert.Equal(t, "error", response.(api.ListWebhookExecutions500JSONResponse).Message) //nolint:errcheck
 
 	mockRegistryMetadataHelper.AssertExpectations(t)
 	mockSpaceFinder.AssertExpectations(t)
@@ -229,10 +228,9 @@ func TestListWebhookExecutions_CheckPermissionsFails(t *testing.T) {
 	}
 
 	response, err := controller.ListWebhookExecutions(ctx, r)
-	assert.Error(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, response)
 	assert.IsType(t, api.ListWebhookExecutions403JSONResponse{}, response)
-	assert.Contains(t, err.Error(), "not authorized")
 	assert.Equal(t, "not authorized", response.(api.ListWebhookExecutions403JSONResponse).Message) //nolint:errcheck
 
 	mockRegistryMetadataHelper.AssertExpectations(t)
@@ -283,10 +281,9 @@ func TestListWebhookExecutions_FailedToDetRegistry(t *testing.T) {
 	}
 
 	response, err := controller.ListWebhookExecutions(ctx, r)
-	assert.Error(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, response)
 	assert.IsType(t, api.ListWebhookExecutions500JSONResponse{}, response)
-	assert.Contains(t, err.Error(), "failed to find registry: error")
 	assert.Equal(t, "failed to find registry: error", response.(api.ListWebhookExecutions500JSONResponse).Message) //nolint:errcheck
 
 	mockRegistryMetadataHelper.AssertExpectations(t)
@@ -339,10 +336,9 @@ func TestListWebhookExecutions_FailedToGetWebhook(t *testing.T) {
 	}
 
 	response, err := controller.ListWebhookExecutions(ctx, r)
-	assert.Error(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, response)
 	assert.IsType(t, api.ListWebhookExecutions500JSONResponse{}, response)
-	assert.Contains(t, err.Error(), "failed to find webhook [webhook] : error")
 	assert.Equal(t, "failed to find webhook [webhook] : error", response.(api.ListWebhookExecutions500JSONResponse).Message) //nolint:errcheck
 
 	mockRegistryMetadataHelper.AssertExpectations(t)
@@ -397,10 +393,9 @@ func TestListWebhookExecutions_FailedToGetWebhookExecutions(t *testing.T) {
 	}
 
 	response, err := controller.ListWebhookExecutions(ctx, r)
-	assert.Error(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, response)
 	assert.IsType(t, api.ListWebhookExecutions500JSONResponse{}, response)
-	assert.Contains(t, err.Error(), "failed to list webhook executions: error")
 	assert.Equal(t, "failed to list webhook executions: error", response.(api.ListWebhookExecutions500JSONResponse).Message) //nolint:errcheck
 
 	mockRegistryMetadataHelper.AssertExpectations(t)
@@ -471,10 +466,9 @@ func TestListWebhookExecutions_FailedToGetWebhooksCount(t *testing.T) {
 	}
 
 	response, err := controller.ListWebhookExecutions(ctx, r)
-	assert.Error(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, response)
 	assert.IsType(t, api.ListWebhookExecutions500JSONResponse{}, response)
-	assert.Contains(t, err.Error(), "failed to get webhook executions count: error")
 	assert.Equal(t, "failed to get webhook executions count: error", response.(api.ListWebhookExecutions500JSONResponse).Message) //nolint:errcheck
 
 	mockRegistryMetadataHelper.AssertExpectations(t)

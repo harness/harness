@@ -58,7 +58,7 @@ func (c *APIController) GetWebhookExecution(
 			UnauthorizedJSONResponse: api.UnauthorizedJSONResponse(
 				*GetErrorResponse(http.StatusForbidden, err.Error()),
 			),
-		}, err
+		}, nil
 	}
 
 	webhookExecutionID, err := strconv.ParseInt(string(r.WebhookExecutionId), 10, 64)
@@ -69,7 +69,7 @@ func (c *APIController) GetWebhookExecution(
 				*GetErrorResponse(http.StatusBadRequest,
 					fmt.Sprintf("invalid webhook execution identifier: %s, err: %v", string(r.WebhookExecutionId), err)),
 			),
-		}, err
+		}, nil
 	}
 
 	w, err := c.WebhooksExecutionRepository.Find(ctx, webhookExecutionID)
@@ -90,10 +90,11 @@ func (c *APIController) GetWebhookExecution(
 	}, nil
 }
 
+//nolint:unparam
 func getWebhooksExecutionsInternalErrorResponse(err error) (api.GetWebhookExecution500JSONResponse, error) {
 	return api.GetWebhookExecution500JSONResponse{
 		InternalServerErrorJSONResponse: api.InternalServerErrorJSONResponse(
 			*GetErrorResponse(http.StatusInternalServerError, err.Error()),
 		),
-	}, err
+	}, nil
 }

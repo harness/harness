@@ -144,10 +144,9 @@ func TestGetWebhookExecution_PermissionCheckFails(t *testing.T) {
 	}
 
 	response, err := controller.GetWebhookExecution(ctx, r)
-	assert.Error(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, response)
 	assert.IsType(t, api.GetWebhookExecution403JSONResponse{}, response)
-	assert.Contains(t, err.Error(), "not authorized")
 	assert.Equal(t, "not authorized", response.(api.GetWebhookExecution403JSONResponse).Message)
 
 	mockRegistryMetadataHelper.AssertExpectations(t)
@@ -194,10 +193,9 @@ func TestGetWebhookExecution_InvalidExecutionIdentifier(t *testing.T) {
 	}
 
 	response, err := controller.GetWebhookExecution(ctx, r)
-	assert.Error(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, response)
 	assert.IsType(t, api.GetWebhookExecution400JSONResponse{}, response)
-	assert.Contains(t, err.Error(), "strconv.ParseInt: parsing \"invalid\": invalid syntax")
 	assert.Equal(t,
 		"invalid webhook execution identifier: invalid, err: strconv.ParseInt: parsing \"invalid\": invalid syntax",
 		response.(api.GetWebhookExecution400JSONResponse).Message)
@@ -247,10 +245,9 @@ func TestGetWebhookExecution_FindExecutionError(t *testing.T) {
 	}
 
 	response, err := controller.GetWebhookExecution(ctx, r)
-	assert.Error(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, response)
 	assert.IsType(t, api.GetWebhookExecution500JSONResponse{}, response)
-	assert.Contains(t, err.Error(), "failed to find webhook execution: error")
 	assert.Equal(t, "failed to find webhook execution: error",
 		response.(api.GetWebhookExecution500JSONResponse).Message)
 

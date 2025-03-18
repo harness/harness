@@ -56,7 +56,7 @@ func (c *APIController) ReTriggerWebhookExecution(
 			UnauthorizedJSONResponse: api.UnauthorizedJSONResponse(
 				*GetErrorResponse(http.StatusForbidden, err.Error()),
 			),
-		}, err
+		}, nil
 	}
 
 	webhookExecutionID, err := strconv.ParseInt(string(r.WebhookExecutionId), 10, 64)
@@ -67,7 +67,7 @@ func (c *APIController) ReTriggerWebhookExecution(
 				*GetErrorResponse(http.StatusBadRequest,
 					fmt.Sprintf("invalid webhook execution identifier: %s, err: %v", string(r.WebhookExecutionId), err)),
 			),
-		}, err
+		}, nil
 	}
 	result, err := c.WebhookService.ReTriggerWebhookExecution(ctx, webhookExecutionID)
 	if err != nil {
@@ -86,6 +86,7 @@ func (c *APIController) ReTriggerWebhookExecution(
 	}, nil
 }
 
+//nolint:unparam
 func getReTriggerWebhooksExecutionsInternalErrorResponse(
 	err error,
 ) (api.ReTriggerWebhookExecution500JSONResponse, error) {
@@ -93,5 +94,5 @@ func getReTriggerWebhooksExecutionsInternalErrorResponse(
 		InternalServerErrorJSONResponse: api.InternalServerErrorJSONResponse(
 			*GetErrorResponse(http.StatusInternalServerError, err.Error()),
 		),
-	}, err
+	}, nil
 }

@@ -68,7 +68,7 @@ func (c *APIController) CreateWebhook(
 			UnauthorizedJSONResponse: api.UnauthorizedJSONResponse(
 				*GetErrorResponse(http.StatusForbidden, err.Error()),
 			),
-		}, err
+		}, nil
 	}
 
 	webhook, err := c.RegistryMetadataHelper.MapToWebhookCore(ctx, webhookRequest, regInfo)
@@ -118,7 +118,7 @@ func createWebhookBadRequestErrorResponse(err error) (api.CreateWebhookResponseO
 		BadRequestJSONResponse: api.BadRequestJSONResponse(
 			*GetErrorResponse(http.StatusBadRequest, err.Error()),
 		),
-	}, err
+	}, nil
 }
 
 func createWebhookInternalErrorResponse(err error) (api.CreateWebhookResponseObject, error) {
@@ -126,5 +126,5 @@ func createWebhookInternalErrorResponse(err error) (api.CreateWebhookResponseObj
 		InternalServerErrorJSONResponse: api.InternalServerErrorJSONResponse(
 			*GetErrorResponse(http.StatusInternalServerError, err.Error()),
 		),
-	}, err
+	}, nil
 }

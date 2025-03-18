@@ -57,7 +57,7 @@ func (c *APIController) ListWebhooks(
 			UnauthorizedJSONResponse: api.UnauthorizedJSONResponse(
 				*GetErrorResponse(http.StatusForbidden, err.Error()),
 			),
-		}, err
+		}, nil
 	}
 
 	offset := GetOffset(r.Params.Size, r.Params.Page)
@@ -122,7 +122,7 @@ func listWebhookInternalErrorResponse(err error) (api.ListWebhooksResponseObject
 		InternalServerErrorJSONResponse: api.InternalServerErrorJSONResponse(
 			*GetErrorResponse(http.StatusInternalServerError, err.Error()),
 		),
-	}, err
+	}, nil
 }
 
 func (c *APIController) mapToListWebhookResponseEntity(

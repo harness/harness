@@ -165,10 +165,9 @@ func TestReTriggerWebhookExecution_PermissionCheckFails(t *testing.T) {
 	}
 
 	response, err := controller.ReTriggerWebhookExecution(ctx, r)
-	assert.Error(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, response)
 	assert.IsType(t, api.ReTriggerWebhookExecution403JSONResponse{}, response)
-	assert.Contains(t, err.Error(), "not authorized")
 	assert.Equal(t, "not authorized", response.(api.ReTriggerWebhookExecution403JSONResponse).Message) //nolint:errcheck
 
 	mockRegistryMetadataHelper.AssertExpectations(t)
@@ -215,10 +214,9 @@ func TestReTriggerWebhookExecution_InvalidExecutionIdentifier(t *testing.T) {
 	}
 
 	response, err := controller.ReTriggerWebhookExecution(ctx, r)
-	assert.Error(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, response)
 	assert.IsType(t, api.ReTriggerWebhookExecution400JSONResponse{}, response)
-	assert.Contains(t, err.Error(), "strconv.ParseInt: parsing \"invalid\": invalid syntax")
 	assert.Equal(t, "invalid webhook execution identifier: invalid, err: strconv.ParseInt: parsing \"invalid\": invalid syntax",
 		response.(api.ReTriggerWebhookExecution400JSONResponse).Message) //nolint:errcheck
 
@@ -267,10 +265,9 @@ func TestReTriggerWebhookExecution_ReTriggerExecutionError(t *testing.T) {
 	}
 
 	response, err := controller.ReTriggerWebhookExecution(ctx, r)
-	assert.Error(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, response)
 	assert.IsType(t, api.ReTriggerWebhookExecution500JSONResponse{}, response)
-	assert.Contains(t, err.Error(), "failed to re-trigger execution: error")
 	assert.Equal(t, "failed to re-trigger execution: error", response.(api.ReTriggerWebhookExecution500JSONResponse).Message) //nolint:errcheck
 
 	mockRegistryMetadataHelper.AssertExpectations(t)

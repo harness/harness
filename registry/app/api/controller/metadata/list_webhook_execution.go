@@ -58,7 +58,7 @@ func (c *APIController) ListWebhookExecutions(
 			UnauthorizedJSONResponse: api.UnauthorizedJSONResponse(
 				*GetErrorResponse(http.StatusForbidden, err.Error()),
 			),
-		}, err
+		}, nil
 	}
 
 	size := GetOffset(r.Params.Size, r.Params.Page)
@@ -112,7 +112,7 @@ func listWebhooksExecutionsInternalErrorResponse(err error) (api.ListWebhookExec
 		InternalServerErrorJSONResponse: api.InternalServerErrorJSONResponse(
 			*GetErrorResponse(http.StatusInternalServerError, err.Error()),
 		),
-	}, err
+	}, nil
 }
 
 func mapToAPIListWebhooksExecutions(executions []*gitnesstypes.WebhookExecutionCore) ([]api.WebhookExecution, error) {

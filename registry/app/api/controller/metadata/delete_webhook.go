@@ -54,7 +54,7 @@ func (c *APIController) DeleteWebhook(
 			UnauthorizedJSONResponse: api.UnauthorizedJSONResponse(
 				*GetErrorResponse(http.StatusForbidden, err.Error()),
 			),
-		}, err
+		}, nil
 	}
 
 	webhookIdentifier := string(r.WebhookIdentifier)
@@ -82,7 +82,7 @@ func deleteWebhookInternalErrorResponse(err error) (api.DeleteWebhookResponseObj
 		InternalServerErrorJSONResponse: api.InternalServerErrorJSONResponse(
 			*GetErrorResponse(http.StatusInternalServerError, err.Error()),
 		),
-	}, err
+	}, nil
 }
 
 func deleteWebhookBadRequestErrorResponse(err error) (api.DeleteWebhookResponseObject, error) {
@@ -90,5 +90,5 @@ func deleteWebhookBadRequestErrorResponse(err error) (api.DeleteWebhookResponseO
 		BadRequestJSONResponse: api.BadRequestJSONResponse(
 			*GetErrorResponse(http.StatusBadRequest, err.Error()),
 		),
-	}, err
+	}, nil
 }
