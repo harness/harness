@@ -29,10 +29,10 @@ type UpstreamProxyConfig struct {
 	AuthType                 string
 	UserName                 string
 	UserNameSecretIdentifier string
-	UserNameSecretSpaceID    int
+	UserNameSecretSpaceID    int64
 	Password                 string
 	SecretIdentifier         string
-	SecretSpaceID            int
+	SecretSpaceID            int64
 	Token                    string
 	CreatedAt                time.Time
 	UpdatedAt                time.Time

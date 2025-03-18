@@ -175,7 +175,7 @@ type WebhookCore struct {
 	Triggers              []enum.WebhookTrigger
 	LatestExecutionResult *enum.WebhookExecutionResult
 	SecretIdentifier      string
-	SecretSpaceID         int
+	SecretSpaceID         int64
 	ExtraHeaders          []ExtraHeader
 }
 

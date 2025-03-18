@@ -50,7 +50,7 @@ func NewRegistryMetadataHelper(
 	return &gitnessRegistryMetadataHelper
 }
 
-func (r *GitnessRegistryMetadataHelper) getSecretSpaceID(ctx context.Context, secretSpacePath *string) (int, error) {
+func (r *GitnessRegistryMetadataHelper) getSecretSpaceID(ctx context.Context, secretSpacePath *string) (int64, error) {
 	if secretSpacePath == nil {
 		return -1, fmt.Errorf("secret space path is missing")
 	}
@@ -59,7 +59,7 @@ func (r *GitnessRegistryMetadataHelper) getSecretSpaceID(ctx context.Context, se
 	if err != nil {
 		return -1, fmt.Errorf("failed to get Space Path: %w", err)
 	}
-	return int(path.SpaceID), nil
+	return path.SpaceID, nil
 }
 
 // GetRegistryRequestBaseInfo returns the base info for the registry request
@@ -225,7 +225,7 @@ func (r *GitnessRegistryMetadataHelper) MapToWebhookResponseEntity(
 	}
 	secretSpacePath := ""
 	if createdWebhook.SecretSpaceID > 0 {
-		primary, err := r.spacePathStore.FindPrimaryBySpaceID(ctx, int64(createdWebhook.SecretSpaceID))
+		primary, err := r.spacePathStore.FindPrimaryBySpaceID(ctx, createdWebhook.SecretSpaceID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get secret space path: %w", err)
 		}

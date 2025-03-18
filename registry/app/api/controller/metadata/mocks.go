@@ -76,7 +76,7 @@ func (m *MockRegistryMetadataHelper) GetRegistryRequestBaseInfo(
 	return nil, args.Error(1)
 }
 
-func (m *MockRegistryMetadataHelper) getSecretSpaceID(_ context.Context, _ *string) (int, error) {
+func (m *MockRegistryMetadataHelper) getSecretSpaceID(_ context.Context, _ *string) (int64, error) {
 	// TODO implement me
 	panic("implement me")
 }

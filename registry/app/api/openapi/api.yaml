@@ -1828,6 +1828,7 @@ components:
           type: string
         secretSpaceId:
           type: integer
+          format: int64
         insecure:
           type: boolean
         triggers:
@@ -2305,6 +2306,7 @@ components:
           type: string
         secretSpaceId:
           type: integer
+          format: int64
         triggers:
           type: array
           items:
@@ -2338,6 +2340,7 @@ components:
           type: string
         secretSpaceId:
           type: integer
+          format: int64
       required:
         - userName
     AccessKeySecretKey:
@@ -2350,12 +2353,14 @@ components:
           type: string
         accessKeySecretSpaceId:
           type: integer
+          format: int64
         secretKeyIdentifier:
           type: string
         secretKeySpacePath:
           type: string
         secretKeySpaceId:
           type: integer
+          format: int64
       required:
         - secretKeyIdentifier
     Anonymous: {}

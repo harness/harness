@@ -456,7 +456,7 @@ func mapToWebhook(webhookDB *webhookDB) (*gitnesstypes.WebhookCore, error) {
 		webhook.SecretIdentifier = webhookDB.SecretIdentifier.String
 	}
 	if webhookDB.SecretSpaceID.Valid {
-		webhook.SecretSpaceID = int(webhookDB.SecretSpaceID.Int64)
+		webhook.SecretSpaceID = webhookDB.SecretSpaceID.Int64
 	}
 
 	if webhookDB.Internal {

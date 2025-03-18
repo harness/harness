@@ -29,11 +29,11 @@ func GetEmptySQLString(str string) sql.NullString {
 	return sql.NullString{String: str, Valid: true}
 }
 
-func GetEmptySQLInt64(i int) sql.NullInt64 {
+func GetEmptySQLInt64(i int64) sql.NullInt64 {
 	if i == 0 {
-		return sql.NullInt64{Int64: int64(i), Valid: false}
+		return sql.NullInt64{Int64: i, Valid: false}
 	}
-	return sql.NullInt64{Int64: int64(i), Valid: true}
+	return sql.NullInt64{Int64: i, Valid: true}
 }
 
 func ConstructQuery(query string, args []interface{}) string {

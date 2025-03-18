@@ -217,7 +217,7 @@ func TestMapToWebhook_WithSecretSpacePath(t *testing.T) {
 	assert.Equal(t, false, webhook.Insecure)
 	assert.Len(t, webhook.Triggers, 1)
 	assert.Equal(t, gitnessenum.WebhookTriggerArtifactCreated, webhook.Triggers[0])
-	assert.Equal(t, 2, webhook.SecretSpaceID)
+	assert.Equal(t, int64(2), webhook.SecretSpaceID)
 }
 
 func TestMapToWebhook_WithInexistentSecretSpacePath(t *testing.T) {
@@ -301,7 +301,7 @@ func TestMapToWebhookResponseEntity(t *testing.T) {
 	assert.Equal(t, "value", extraHeaders[0].Value)
 	assert.Equal(t, "secret-id", *webhookResponseEntity.SecretIdentifier)
 	assert.Equal(t, "secret/path", *webhookResponseEntity.SecretSpacePath)
-	assert.Equal(t, 1, *webhookResponseEntity.SecretSpaceId)
+	assert.Equal(t, int64(1), *webhookResponseEntity.SecretSpaceId)
 }
 
 //nolint:lll

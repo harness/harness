@@ -376,7 +376,7 @@ func (w *WebhookExecutor) prepareHTTPRequest(
 		secretValue = decryptedSecret
 	} else if webhook.SecretIdentifier != "" {
 		decryptedSecret, err := getSecretValue(ctx, w.spacePathStore, w.secretService,
-			int64(webhook.SecretSpaceID), webhook.SecretIdentifier)
+			webhook.SecretSpaceID, webhook.SecretIdentifier)
 		if err != nil {
 			return nil, fmt.Errorf("failed get secret secret value: %w", err)
 		}

@@ -39,7 +39,7 @@ type RegistryMetadataHelper interface {
 		parentRef string,
 		regRef string,
 	) (*RegistryRequestBaseInfo, error)
-	getSecretSpaceID(ctx context.Context, secretSpacePath *string) (int, error)
+	getSecretSpaceID(ctx context.Context, secretSpacePath *string) (int64, error)
 	MapToAPIWebhookTriggers(triggers []enum.WebhookTrigger) []api.Trigger
 	MapToInternalWebhookTriggers(
 		triggers []api.Trigger,
