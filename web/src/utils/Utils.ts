@@ -30,9 +30,11 @@ import type {
   TypesLabel,
   TypesLabelValue,
   TypesPrincipalInfo,
-  EnumMembershipRole
+  EnumMembershipRole,
+  TypesDefaultReviewerApprovalsResponse
 } from 'services/code'
 import type { StringKeys } from 'framework/strings'
+import { PullReqReviewDecision } from 'pages/PullRequest/PullRequestUtils'
 
 export enum ACCESS_MODES {
   VIEW,
@@ -361,8 +363,11 @@ export const rulesFormInitialPayload: RulesFormPayload = {
   targetList: [] as string[][],
   allRepoOwners: false,
   bypassList: [] as string[],
+  defaultReviewersList: [] as string[],
   requireMinReviewers: false,
+  requireMinDefaultReviewers: false,
   minReviewers: '',
+  minDefaultReviewers: '',
   requireCodeOwner: false,
   requireNewChanges: false,
   reqResOfChanges: false,
@@ -380,7 +385,9 @@ export const rulesFormInitialPayload: RulesFormPayload = {
   blockForcePush: false,
   requirePr: false,
   bypassSet: false,
-  targetSet: false
+  targetSet: false,
+  defaultReviewersSet: false,
+  defaultReviewersEnabled: false
 }
 
 export type RulesFormPayload = {
@@ -392,8 +399,11 @@ export type RulesFormPayload = {
   targetList: string[][]
   allRepoOwners?: boolean
   bypassList?: string[]
+  defaultReviewersList?: string[]
   requireMinReviewers: boolean
+  requireMinDefaultReviewers: boolean
   minReviewers?: string | number
+  minDefaultReviewers?: string | number
   autoAddCodeOwner?: boolean
   requireCodeOwner?: boolean
   requireNewChanges?: boolean
@@ -414,6 +424,8 @@ export type RulesFormPayload = {
   requirePr?: boolean
   bypassSet: boolean
   targetSet: boolean
+  defaultReviewersSet: boolean
+  defaultReviewersEnabled: boolean
 }
 
 /**
@@ -1002,8 +1014,10 @@ export enum RuleFields {
   APPROVALS_REQUIRE_MINIMUM_COUNT = 'pullreq.approvals.require_minimum_count',
   APPROVALS_REQUIRE_CODE_OWNERS = 'pullreq.approvals.require_code_owners',
   APPROVALS_REQUIRE_NO_CHANGE_REQUEST = 'pullreq.approvals.require_no_change_request',
+  APPROVALS_REQUIRE_MINIMUM_DEFAULT_REVIEWERS = 'pullreq.approvals.require_minimum_default_reviewer_count',
   APPROVALS_REQUIRE_LATEST_COMMIT = 'pullreq.approvals.require_latest_commit',
   AUTO_ADD_CODE_OWNERS = 'pullreq.reviewers.request_code_owners',
+  DEFAULT_REVIEWERS_ADDED = 'pullreq.reviewers.default_reviewer_ids',
   COMMENTS_REQUIRE_RESOLVE_ALL = 'pullreq.comments.require_resolve_all',
   STATUS_CHECKS_ALL_MUST_SUCCEED = 'pullreq.status_checks.all_must_succeed',
   STATUS_CHECKS_REQUIRE_IDENTIFIERS = 'pullreq.status_checks.require_identifiers',
@@ -1034,10 +1048,12 @@ export type BranchProtectionRulesMapType = Record<string, BranchProtectionRule>
 export function createRuleFieldsMap(ruleDefinition: Rule): RuleFieldsMap {
   const ruleFieldsMap: RuleFieldsMap = {
     [RuleFields.APPROVALS_REQUIRE_MINIMUM_COUNT]: false,
-    [RuleFields.AUTO_ADD_CODE_OWNERS]: false,
     [RuleFields.APPROVALS_REQUIRE_CODE_OWNERS]: false,
     [RuleFields.APPROVALS_REQUIRE_NO_CHANGE_REQUEST]: false,
     [RuleFields.APPROVALS_REQUIRE_LATEST_COMMIT]: false,
+    [RuleFields.APPROVALS_REQUIRE_MINIMUM_DEFAULT_REVIEWERS]: false,
+    [RuleFields.AUTO_ADD_CODE_OWNERS]: false,
+    [RuleFields.DEFAULT_REVIEWERS_ADDED]: false,
     [RuleFields.COMMENTS_REQUIRE_RESOLVE_ALL]: false,
     [RuleFields.STATUS_CHECKS_ALL_MUST_SUCCEED]: false,
     [RuleFields.STATUS_CHECKS_REQUIRE_IDENTIFIERS]: false,
@@ -1058,6 +1074,8 @@ export function createRuleFieldsMap(ruleDefinition: Rule): RuleFieldsMap {
         typeof ruleDefinition.pullreq.approvals.require_minimum_count === 'number'
       ruleFieldsMap[RuleFields.APPROVALS_REQUIRE_NO_CHANGE_REQUEST] =
         !!ruleDefinition.pullreq.approvals.require_no_change_request
+      ruleFieldsMap[RuleFields.APPROVALS_REQUIRE_MINIMUM_DEFAULT_REVIEWERS] =
+        !!ruleDefinition.pullreq.approvals.require_minimum_default_reviewer_count
     }
 
     if (ruleDefinition.pullreq.comments) {
@@ -1080,6 +1098,9 @@ export function createRuleFieldsMap(ruleDefinition: Rule): RuleFieldsMap {
 
     if (ruleDefinition.pullreq.reviewers) {
       ruleFieldsMap[RuleFields.AUTO_ADD_CODE_OWNERS] = !!ruleDefinition.pullreq.reviewers.request_code_owners
+      ruleFieldsMap[RuleFields.DEFAULT_REVIEWERS_ADDED] =
+        Array.isArray(ruleDefinition.pullreq.reviewers.default_reviewer_ids) &&
+        ruleDefinition.pullreq.reviewers.default_reviewer_ids.length > 0
     }
   }
 
@@ -1121,4 +1142,44 @@ export const formatListWithAnd = (list: string[]): string => {
     if (list.length === 2) return list.join(' and ')
     return `${list.slice(0, -1).join(', ')} and ${list[list.length - 1]}`
   } else return ''
+}
+
+export interface TypesPrincipalInfoWithReviewDecision extends TypesPrincipalInfo {
+  review_decision?: PullReqReviewDecision
+  review_sha?: string
+}
+
+export interface TypesDefaultReviewerApprovalsResponseWithRevDecision extends TypesDefaultReviewerApprovalsResponse {
+  principals?: TypesPrincipalInfoWithReviewDecision[] | null // Override the 'principals' field
+}
+export const getUnifiedDefaultReviewersState = (info: TypesDefaultReviewerApprovalsResponseWithRevDecision[]) => {
+  const defaultReviewState = {
+    defReviewerApprovalRequiredByRule: false,
+    defReviewerLatestApprovalRequiredByRule: false,
+    defReviewerApprovedLatestChanges: true,
+    defReviewerApprovedChanges: true,
+    changesRequestedByDefReviewersArr: [] as TypesPrincipalInfoWithReviewDecision[]
+  }
+
+  info?.forEach(item => {
+    if (item?.minimum_required_count !== undefined && item.minimum_required_count > 0) {
+      defaultReviewState.defReviewerApprovalRequiredByRule = true
+      if (item.current_count !== undefined && item.current_count < item.minimum_required_count) {
+        defaultReviewState.defReviewerApprovedChanges = false
+      }
+    }
+    if (item?.minimum_required_count_latest !== undefined && item.minimum_required_count_latest > 0) {
+      defaultReviewState.defReviewerLatestApprovalRequiredByRule = true
+      if (item.current_count !== undefined && item.current_count < item.minimum_required_count_latest) {
+        defaultReviewState.defReviewerApprovedLatestChanges = false
+      }
+    }
+
+    item?.principals?.forEach(principal => {
+      if (principal?.review_decision === PullReqReviewDecision.CHANGEREQ)
+        defaultReviewState.changesRequestedByDefReviewersArr.push(principal)
+    })
+  })
+
+  return defaultReviewState
 }

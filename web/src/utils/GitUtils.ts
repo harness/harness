@@ -28,7 +28,8 @@ import type {
   TypesCommit,
   TypesPullReq,
   RepoRepositoryOutput,
-  TypesRuleViolations
+  TypesRuleViolations,
+  TypesDefaultReviewerApprovalsResponse
 } from 'services/code'
 import { getConfig } from 'services/config'
 import { PullRequestSection, getErrorMessage } from './Utils'
@@ -173,7 +174,8 @@ export enum GitRefType {
 
 export enum PrincipalUserType {
   USER = 'user',
-  SERVICE = 'service'
+  SERVICE = 'service',
+  SERVICE_ACCOUNT = 'serviceaccount'
 }
 
 export enum SettingTypeMode {
@@ -540,9 +542,10 @@ export const dryMerge = (
   setMinApproval?: (value: React.SetStateAction<number>) => void,
   setReqCodeOwnerLatestApproval?: (value: React.SetStateAction<boolean>) => void,
   setMinReqLatestApproval?: (value: React.SetStateAction<number>) => void,
-  setPRStateLoading?: (value: React.SetStateAction<boolean>) => void
+  setPRStateLoading?: (value: React.SetStateAction<boolean>) => void,
+  setDefaultReviewersInfoSet?: React.Dispatch<React.SetStateAction<TypesDefaultReviewerApprovalsResponse[]>>
 ) => {
-  if (isMounted.current && !isClosed && pullReqMetadata.state !== PullRequestState.MERGED) {
+  if (isMounted.current && !isClosed && pullReqMetadata?.state !== PullRequestState.MERGED) {
     // Use an internal flag to prevent flickering during the loading state of buttons
     internalFlags.current.dryRun = true
     mergePR({ bypass_rules: true, dry_run: true, source_sha: pullReqMetadata?.source_sha })
@@ -558,6 +561,7 @@ export const dryMerge = (
           setReqCodeOwnerLatestApproval?.(res.requires_code_owners_approval_latest)
           setMinReqLatestApproval?.(res.minimum_required_approvals_count_latest)
           setConflictingFiles?.(res.conflict_files)
+          setDefaultReviewersInfoSet?.(res.default_reviewer_aprovals)
         } else {
           setRuleViolation(false)
           setAllowedStrats(res.allowed_methods)
@@ -568,6 +572,7 @@ export const dryMerge = (
           setReqCodeOwnerLatestApproval?.(res.requires_code_owners_approval_latest)
           setMinReqLatestApproval?.(res.minimum_required_approvals_count_latest)
           setConflictingFiles?.(res.conflict_files)
+          setDefaultReviewersInfoSet?.(res.default_reviewer_aprovals)
         }
       })
       .catch(err => {
@@ -582,6 +587,7 @@ export const dryMerge = (
           setReqCodeOwnerLatestApproval?.(err.requires_code_owners_approval_latest)
           setMinReqLatestApproval?.(err.minimum_required_approvals_count_latest)
           setConflictingFiles?.(err.conflict_files)
+          setDefaultReviewersInfoSet?.(err.default_reviewer_aprovals)
         } else if (
           err.status === 400 &&
           [oldCommitRefetchRequired, prMergedRefetchRequired].includes(getErrorMessage(err) || '')

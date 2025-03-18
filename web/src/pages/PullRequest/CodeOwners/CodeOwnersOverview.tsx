@@ -104,7 +104,7 @@ export function CodeOwnersOverview({
   return codeOwners?.evaluation_entries?.length ? (
     <Container
       className={cx(css.main, { [css.codeOwner]: !standalone })}
-      margin={{ top: 'medium', bottom: pullReqMetadata.description ? undefined : 'large' }}
+      margin={{ top: 'medium', bottom: pullReqMetadata?.description ? undefined : 'large' }}
       style={{ '--border-color': Utils.getRealCSSColor(borderColor) } as React.CSSProperties}>
       <Match expr={isExpanded}>
         <Truthy>
@@ -165,7 +165,7 @@ export const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({
       [
         {
           id: 'CODE',
-          width: '45%',
+          width: '40%',
           sort: true,
           Header: getString('code'),
           accessor: 'CODE',
@@ -183,7 +183,7 @@ export const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({
         },
         {
           id: 'Owners',
-          width: '13%',
+          width: '18%',
           sort: true,
           Header: getString('ownersHeading'),
           accessor: 'OWNERS',

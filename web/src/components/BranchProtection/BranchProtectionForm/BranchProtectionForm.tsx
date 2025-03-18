@@ -35,7 +35,14 @@ import { Menu, PopoverPosition } from '@blueprintjs/core'
 import { Icon } from '@harnessio/icons'
 import { useHistory } from 'react-router-dom'
 import { useGet, useMutate } from 'restful-react'
-import { BranchTargetType, MergeStrategy, SettingTypeMode, SettingsTab, branchTargetOptions } from 'utils/GitUtils'
+import {
+  BranchTargetType,
+  MergeStrategy,
+  PrincipalUserType,
+  SettingTypeMode,
+  SettingsTab,
+  branchTargetOptions
+} from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import {
   LabelsPageScope,
@@ -136,9 +143,18 @@ const BranchProtectionForm = (props: {
       }
     })
   }
-  const transformUserArray = transformDataToArray(rule?.users || [])
-  const usersArrayCurr = transformUserArray?.map(user => `${user.id} ${user.display_name}`)
+
+  const usersMap = rule?.users
+
+  const bypassListUsers = rule?.definition?.bypass?.user_ids?.map(id => usersMap?.[id])
+  const transformBypassListArray = transformDataToArray(bypassListUsers || [])
+  const usersArrayCurr = transformBypassListArray?.map(user => `${user.id} ${user.display_name}`)
   const [userArrayState, setUserArrayState] = useState<string[]>(usersArrayCurr)
+
+  const defaultReviewersUsers = rule?.definition?.pullreq?.reviewers?.default_reviewer_ids?.map(id => usersMap?.[id])
+  const transformDefaultReviewersArray = transformDataToArray(defaultReviewersUsers || [])
+  const reviewerArrayCurr = transformDefaultReviewersArray?.map(user => `${user.id} ${user.display_name}`)
+  const [defaultReviewersState, setDefaultReviewersState] = useState<string[]>(reviewerArrayCurr)
 
   const getUpdateChecksPath = () =>
     currentRule?.scope === 0 && repoMetadata
@@ -173,6 +189,20 @@ const BranchProtectionForm = (props: {
     [principals]
   )
 
+  const userPrincipalOptions: SelectOption[] = useMemo(
+    () =>
+      principals?.reduce<SelectOption[]>((acc, principal) => {
+        if (principal?.type === PrincipalUserType.USER) {
+          acc.push({
+            value: `${principal.id?.toString() as string} ${principal.uid}`,
+            label: `${principal?.display_name} (${principal.email})`
+          })
+        }
+        return acc
+      }, []) || [],
+    [principals]
+  )
+
   const handleSubmit = async (operation: Promise<OpenapiRule>, successMessage: string, resetForm: () => void) => {
     try {
       await operation
@@ -204,7 +234,10 @@ const BranchProtectionForm = (props: {
   const initialValues = useMemo((): RulesFormPayload => {
     if (editMode && rule) {
       const minReviewerCheck =
-        ((rule.definition as ProtectionBranch)?.pullreq?.approvals?.require_minimum_count as number) > 0 ? true : false
+        ((rule.definition as ProtectionBranch)?.pullreq?.approvals?.require_minimum_count as number) > 0
+      const minDefaultReviewerCheck =
+        ((rule.definition as ProtectionBranch)?.pullreq?.approvals?.require_minimum_default_reviewer_count as number) >
+        0
       const isMergePresent = (rule.definition as ProtectionBranch)?.pullreq?.merge?.strategies_allowed?.includes(
         MergeStrategy.MERGE
       )
@@ -224,11 +257,18 @@ const BranchProtectionForm = (props: {
       const includeArr = includeList?.map((arr: string) => ['include', arr])
       const excludeArr = excludeList?.map((arr: string) => ['exclude', arr])
       const finalArray = [...includeArr, ...excludeArr]
-      const usersArray = transformDataToArray(rule.users)
+      const usersArray = transformDataToArray(bypassListUsers || [])
+
       const bypassList =
         userArrayState.length > 0
           ? userArrayState
           : usersArray?.map(user => `${user.id} ${user.display_name} (${user.email})`)
+
+      const reviewersArray = transformDataToArray(defaultReviewersUsers || [])
+      const defaultReviewersList =
+        defaultReviewersState.length > 0
+          ? defaultReviewersState
+          : reviewersArray?.map(user => `${user.id} ${user.display_name} (${user.email})`)
 
       return {
         name: rule?.identifier,
@@ -239,9 +279,15 @@ const BranchProtectionForm = (props: {
         targetList: finalArray,
         allRepoOwners: (rule.definition as ProtectionBranch)?.bypass?.repo_owners,
         bypassList: bypassList,
+        defaultReviewersEnabled: (rule.definition as any)?.pullreq?.reviewers?.default_reviewer_ids?.length > 0,
+        defaultReviewersList: defaultReviewersList,
         requireMinReviewers: minReviewerCheck,
+        requireMinDefaultReviewers: minDefaultReviewerCheck,
         minReviewers: minReviewerCheck
           ? (rule.definition as ProtectionBranch)?.pullreq?.approvals?.require_minimum_count
+          : '',
+        minDefaultReviewers: minDefaultReviewerCheck
+          ? (rule.definition as ProtectionBranch)?.pullreq?.approvals?.require_minimum_default_reviewer_count
           : '',
         autoAddCodeOwner: (rule.definition as ProtectionBranch)?.pullreq?.reviewers?.request_code_owners,
         requireCodeOwner: (rule.definition as ProtectionBranch)?.pullreq?.approvals?.require_code_owners,
@@ -269,7 +315,8 @@ const BranchProtectionForm = (props: {
           (rule.definition as ProtectionBranch)?.lifecycle?.update_forbidden &&
           !(rule.definition as ProtectionBranch)?.pullreq?.merge?.block,
         targetSet: false,
-        bypassSet: false
+        bypassSet: false,
+        defaultReviewersSet: false
       }
     }
 
@@ -280,6 +327,14 @@ const BranchProtectionForm = (props: {
     getEditPermissionRequestFromScope(space, currentRule?.scope ?? 0, repoMetadata),
     [space, currentRule?.scope, repoMetadata]
   )
+
+  const defaultReviewerProps = {
+    setSearchTerm,
+    userPrincipalOptions,
+    settingSectionMode,
+    setDefaultReviewersState
+  }
+
   return (
     <Formik<RulesFormPayload>
       formName="branchProtectionRulesNewEditForm"
@@ -287,7 +342,34 @@ const BranchProtectionForm = (props: {
       enableReinitialize
       validationSchema={yup.object().shape({
         name: yup.string().trim().required().matches(REGEX_VALID_REPO_NAME, getString('validation.nameLogic')),
-        minReviewers: yup.number().typeError(getString('enterANumber'))
+        minReviewers: yup.number().typeError(getString('enterANumber')),
+        minDefaultReviewers: yup.number().typeError(getString('enterANumber')),
+        defaultReviewersList: yup
+          .array()
+          .of(yup.string())
+          .test(
+            'min-reviewers', // Name of the test
+            getString('branchProtection.atLeastMinReviewer', { count: 1 }),
+            function (defaultReviewersList) {
+              const { minDefaultReviewers, requireMinDefaultReviewers, defaultReviewersEnabled } = this.parent
+              const minReviewers = Number(minDefaultReviewers) || 0
+              if (defaultReviewersEnabled && requireMinDefaultReviewers) {
+                const isValid = defaultReviewersList && defaultReviewersList.length >= minReviewers
+
+                return (
+                  isValid ||
+                  this.createError({
+                    message:
+                      minReviewers > 1
+                        ? getString('branchProtection.atLeastMinReviewers', { count: minReviewers })
+                        : getString('branchProtection.atLeastMinReviewer', { count: minReviewers })
+                  })
+                )
+              }
+
+              return true
+            }
+          )
       })}
       onSubmit={async (formData, { resetForm }) => {
         const stratArray = [
@@ -302,6 +384,7 @@ const BranchProtectionForm = (props: {
           formData?.targetList?.filter(([type]) => type === 'exclude').map(([, value]) => value) ?? []
 
         const bypassList = formData?.bypassList?.map(item => parseInt(item.split(' ')[0]))
+        const defaultReviewersList = formData?.defaultReviewersList?.map(item => parseInt(item.split(' ')[0]))
         const payload: OpenapiRule = {
           identifier: formData.name,
           type: 'branch',
@@ -321,11 +404,13 @@ const BranchProtectionForm = (props: {
               approvals: {
                 require_code_owners: formData.requireCodeOwner,
                 require_minimum_count: parseInt(formData.minReviewers as string),
+                require_minimum_default_reviewer_count: parseInt(formData.minDefaultReviewers as string),
                 require_latest_commit: formData.requireNewChanges,
                 require_no_change_request: formData.reqResOfChanges
               },
               reviewers: {
-                request_code_owners: formData.autoAddCodeOwner
+                request_code_owners: formData.autoAddCodeOwner,
+                default_reviewer_ids: defaultReviewersList
               },
               comments: {
                 require_resolve_all: formData.requireCommentResolution
@@ -355,6 +440,9 @@ const BranchProtectionForm = (props: {
         }
         if (!formData.requireMinReviewers) {
           delete (payload?.definition as ProtectionBranch)?.pullreq?.approvals?.require_minimum_count
+        }
+        if (!formData.requireMinDefaultReviewers) {
+          delete (payload?.definition as ProtectionBranch)?.pullreq?.approvals?.require_minimum_default_reviewer_count
         }
         if (editMode) {
           handleSubmit(updateRule(payload), getString('branchProtection.ruleUpdated'), resetForm)
@@ -549,6 +637,7 @@ const BranchProtectionForm = (props: {
                 statusChecks={statusChecks}
                 limitMergeStrats={limitMergeStrats}
                 setSearchStatusTerm={setSearchStatusTerm}
+                defaultReviewerProps={defaultReviewerProps}
               />
               <Container padding={{ top: 'large' }}>
                 <Layout.Horizontal spacing="small">

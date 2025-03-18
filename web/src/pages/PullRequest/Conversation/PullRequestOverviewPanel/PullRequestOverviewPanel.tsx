@@ -27,7 +27,8 @@ import type {
   TypesPullReqReviewer,
   RepoRepositoryOutput,
   TypesRuleViolations,
-  TypesBranchExtended
+  TypesBranchExtended,
+  TypesDefaultReviewerApprovalsResponse
 } from 'services/code'
 import {
   PRMergeOption,
@@ -103,6 +104,7 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
   const [reqCodeOwnerApproval, setReqCodeOwnerApproval] = useState(false)
   const [minApproval, setMinApproval] = useState(0)
   const [reqCodeOwnerLatestApproval, setReqCodeOwnerLatestApproval] = useState(false)
+  const [defaultReviewersInfoSet, setDefaultReviewersInfoSet] = useState<TypesDefaultReviewerApprovalsResponse[]>([])
   const [minReqLatestApproval, setMinReqLatestApproval] = useState(0)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [resolvedCommentArr, setResolvedCommentArr] = useState<any>()
@@ -234,7 +236,8 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
       setMinApproval,
       setReqCodeOwnerLatestApproval,
       setMinReqLatestApproval,
-      setPRStateLoading
+      setPRStateLoading,
+      setDefaultReviewersInfoSet
     ) // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unchecked, pullReqMetadata?.source_sha, activities])
 
@@ -295,6 +298,7 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
                     reqCodeOwnerLatestApproval={reqCodeOwnerLatestApproval}
                     refetchCodeOwners={refetchCodeOwners}
                     mergeBlockedRule={mergeBlockedRule}
+                    defaultReviewersInfoSet={defaultReviewersInfoSet}
                   />
                 </Render>
               ),

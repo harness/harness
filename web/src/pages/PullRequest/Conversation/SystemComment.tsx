@@ -50,29 +50,27 @@ interface ReviewerAddActivityPayload {
 }
 
 const formatListWithAndFragment = (names: string[]): React.ReactNode => {
-  const uniqueNames = [...new Set(names)] // Ensure uniqueness
-
-  switch (uniqueNames.length) {
+  switch (names.length) {
     case 0:
       return null
     case 1:
-      return <strong>{uniqueNames[0]}</strong>
+      return <strong>{names[0]}</strong>
     case 2:
       return (
         <>
-          <strong>{uniqueNames[0]}</strong> and <strong>{uniqueNames[1]}</strong>
+          <strong>{names[0]}</strong> and <strong>{names[1]}</strong>
         </>
       )
     default:
       return (
         <>
-          {uniqueNames.slice(0, -1).map((name, index) => (
+          {names.slice(0, -1).map((name, index) => (
             <React.Fragment key={index}>
               <strong>{name}</strong>
-              {index < uniqueNames.length - 2 ? ', ' : ''}
+              {index < names.length - 2 ? ', ' : ''}
             </React.Fragment>
           ))}{' '}
-          and <strong>{uniqueNames[uniqueNames.length - 1]}</strong>
+          and <strong>{names[names.length - 1]}</strong>
         </>
       )
   }
@@ -86,9 +84,17 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
   const { routes } = useAppContext()
   const displayNameList = useMemo(() => {
     const checkList = payload?.metadata?.mentions?.ids ?? []
+    const uniqueList = [...new Set(checkList)]
     const mentionsMap = payload?.mentions ?? {}
-    return [...new Set(checkList.map(id => mentionsMap[id]?.display_name ?? ''))]
+    return uniqueList.map(id => mentionsMap[id]?.display_name ?? '')
   }, [payload?.metadata?.mentions?.ids, payload?.mentions])
+
+  const principalNameList = useMemo(() => {
+    const checkList = (payload?.payload as any)?.principal_ids ?? []
+    const uniqueList = [...new Set(checkList)]
+    const mentionsMap = payload?.mentions ?? {}
+    return uniqueList.map(id => mentionsMap[id as number]?.display_name ?? '')
+  }, [(payload?.payload as any)?.principal_ids, payload?.mentions])
 
   switch (type) {
     case CommentType.MERGE: {
@@ -461,6 +467,7 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
 
     case CommentType.REVIEWER_ADD: {
       const activityMentions = formatListWithAndFragment(displayNameList)
+      const principalMentions = formatListWithAndFragment(principalNameList)
 
       return (
         <Container className={css.mergedBox}>
@@ -499,7 +506,7 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
                     str={getString('prReview.codeowners')}
                     vars={{
                       author: <strong>{payload?.author?.display_name}</strong>,
-                      codeowners: activityMentions
+                      codeowners: principalMentions
                     }}
                   />
                 </Case>
@@ -508,7 +515,7 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
                     str={getString('prReview.defaultReviewers')}
                     vars={{
                       author: <strong>{payload?.author?.display_name}</strong>,
-                      reviewers: activityMentions
+                      reviewers: principalMentions
                     }}
                   />
                 </Case>

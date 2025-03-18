@@ -81,6 +81,10 @@
   }
 }
 
+.codeCloseBtn {
+  cursor: pointer !important;
+}
+
 .targetContainer {
   :global(.bp3-form-group) {
     margin-bottom: unset !important;
@@ -186,4 +190,15 @@
   display: flex;
   flex-wrap: wrap;
   max-width: calc(100% - 100px) !important;
+}
+
+.reviewerBlock {
+  background-color: var(--primary-1) !important;
+  padding: 3px 10px !important;
+  gap: 5px !important;
+}
+
+.defaultReviewerContainer {
+  gap: 10px;
+  flex-wrap: wrap;
 }

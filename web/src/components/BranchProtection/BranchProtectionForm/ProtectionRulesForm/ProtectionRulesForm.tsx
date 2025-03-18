@@ -22,6 +22,8 @@ import type { FormikProps } from 'formik'
 import { Classes, Popover, PopoverInteractionKind, PopoverPosition } from '@blueprintjs/core'
 import { useStrings } from 'framework/strings'
 import type { RulesFormPayload } from 'utils/Utils'
+import type { SettingTypeMode } from 'utils/GitUtils'
+import DefaultReviewersSection from './DefaultReviewersSection'
 import css from '../BranchProtectionForm.module.scss'
 
 const ProtectionRulesForm = (props: {
@@ -29,9 +31,15 @@ const ProtectionRulesForm = (props: {
   minReviewers: boolean
   statusOptions: SelectOption[]
   statusChecks: string[]
-  limitMergeStrats: boolean // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  limitMergeStrats: boolean
   setSearchStatusTerm: React.Dispatch<React.SetStateAction<string>>
   formik: FormikProps<RulesFormPayload>
+  defaultReviewerProps: {
+    setSearchTerm: React.Dispatch<React.SetStateAction<string>>
+    userPrincipalOptions: SelectOption[]
+    settingSectionMode: SettingTypeMode
+    setDefaultReviewersState: React.Dispatch<React.SetStateAction<string[]>>
+  }
 }) => {
   const {
     statusChecks,
@@ -40,7 +48,8 @@ const ProtectionRulesForm = (props: {
     requireStatusChecks,
     statusOptions,
     limitMergeStrats,
-    formik
+    formik,
+    defaultReviewerProps
   } = props
   const { getString } = useStrings()
   const setFieldValue = formik.setFieldValue
@@ -143,6 +152,7 @@ const ProtectionRulesForm = (props: {
       </Popover>
 
       <hr className={css.dividerContainer} />
+      <DefaultReviewersSection formik={formik} defaultReviewerProps={defaultReviewerProps} />
       <FormInput.CheckBox
         className={css.checkboxLabel}
         label={getString('branchProtection.requireMinReviewersTitle')}

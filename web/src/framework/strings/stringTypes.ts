@@ -69,6 +69,8 @@ export interface StringsMap {
   'branchProtection.addCodeownersToReviewText': string
   'branchProtection.addCodeownersToReviewTitle': string
   'branchProtection.allRepoOwners': string
+  'branchProtection.atLeastMinReviewer': string
+  'branchProtection.atLeastMinReviewers': string
   'branchProtection.autoDeleteText': string
   'branchProtection.autoDeleteTitle': string
   'branchProtection.blockBranchCreation': string
@@ -102,6 +104,8 @@ export interface StringsMap {
   'branchProtection.disableTheRule': string
   'branchProtection.edit': string
   'branchProtection.editRule': string
+  'branchProtection.enableDefaultReviewersText': string
+  'branchProtection.enableDefaultReviewersTitle': string
   'branchProtection.enableTheRule': string
   'branchProtection.limitMergeStrategies': string
   'branchProtection.limitMergeStrategiesText': string
@@ -124,6 +128,8 @@ export interface StringsMap {
   'branchProtection.reqReviewFromCodeOwnerTitle': string
   'branchProtection.reqStatusChecksText': string
   'branchProtection.reqStatusChecksTitle': string
+  'branchProtection.requireMinDefaultReviewersContent': string
+  'branchProtection.requireMinDefaultReviewersTitle': string
   'branchProtection.requireMinReviewersContent': string
   'branchProtection.requireMinReviewersTitle': string
   'branchProtection.requirePr': string
@@ -170,24 +176,31 @@ export interface StringsMap {
   'changesSection.changesApproved': string
   'changesSection.changesApprovedByXReviewers': string
   'changesSection.changesWereAppByCodeOwner': string
+  'changesSection.changesWereAppByDefaultReviewers': string
   'changesSection.changesWereAppByLatestReqRev': string
   'changesSection.codeOwnerReqChanges': string
   'changesSection.codeOwnerReqChangesToPr': string
+  'changesSection.defaultReviewersChangesToPr': string
+  'changesSection.defaultReviewersStatus': string
   'changesSection.latestChangesApprovedByXReviewers': string
   'changesSection.latestChangesPendingReqRev': string
   'changesSection.latestChangesWereAppByCodeOwner': string
+  'changesSection.latestChangesWereAppByDefaultReviewers': string
   'changesSection.latestChangesWereApprovedByReq': string
   'changesSection.noCodeOwnerReviewsReq': string
   'changesSection.noReviewsReq': string
   'changesSection.pendingAppFromCodeOwners': string
   'changesSection.pendingLatestApprovalCodeOwners': string
+  'changesSection.pendingLatestApprovalDefaultReviewers': string
   'changesSection.prMergeBlockedMessage': string
   'changesSection.prMergeBlockedTitle': string
   'changesSection.pullReqWithoutAnyReviews': string
   'changesSection.reqChangeFromCodeOwners': string
   'changesSection.someChangesWereAppByCodeOwner': string
   'changesSection.waitingOnCodeOwner': string
+  'changesSection.waitingOnDefaultReviewers': string
   'changesSection.waitingOnLatestCodeOwner': string
+  'changesSection.waitingOnLatestDefaultReviewers': string
   'changesSection.waitingOnReviewers': string
   'changesSection.xApprovalsArePending': string
   characterLimit: string
@@ -309,6 +322,7 @@ export interface StringsMap {
   dangerDeleteProject: string
   defaultBranch: string
   defaultBranchTitle: string
+  defaultReviewers: string
   delete: string
   deleteBranch: string
   deleteBranchConfirm: string
@@ -673,6 +687,7 @@ export interface StringsMap {
   ok: string
   on: string
   onDate: string
+  onLatestChanges: string
   oneMustBeSelected: string
   open: string
   optional: string
@@ -1036,6 +1051,7 @@ export interface StringsMap {
   selectMergeStrat: string
   selectRange: string
   selectRepositoryPlaceholder: string
+  selectReviewers: string
   selectSpace: string
   selectSpaceText: string
   selectStatuses: string

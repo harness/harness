@@ -12287,6 +12287,8 @@ components:
         - deleted
         - starting
         - stopping
+        - cleaning
+        - cleaned
       type: string
     EnumGitspaceOwner:
       enum:
@@ -12416,6 +12418,8 @@ components:
     EnumPullReqReviewerType:
       enum:
         - assigned
+        - code_owners
+        - default
         - requested
         - self_assigned
       type: string
@@ -12468,11 +12472,15 @@ components:
       type: string
     EnumWebhookParent:
       enum:
+        - registry
         - repo
         - space
       type: string
     EnumWebhookTrigger:
       enum:
+        - artifact_created
+        - artifact_deleted
+        - artifact_updated
         - branch_created
         - branch_deleted
         - branch_updated
@@ -14439,8 +14447,13 @@ components:
       properties:
         created:
           type: integer
+        deleted:
+          nullable: true
+          type: integer
         identifier:
           type: string
+        is_deleted:
+          type: boolean
         metadata:
           additionalProperties: {}
           nullable: true
@@ -15229,6 +15242,8 @@ components:
           type: string
         email:
           type: string
+        id:
+          type: integer
         parent_id:
           type: integer
         parent_type:
@@ -15469,6 +15484,8 @@ components:
           type: string
         email:
           type: string
+        id:
+          type: integer
         uid:
           type: string
         updated:

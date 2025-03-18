@@ -1079,6 +1079,12 @@ branchProtection:
   commitDirectlyBlockText: Some rules don't allow you to commit directly
   commitDirectlyAlertText: Some rules will be bypassed to commit directly
   commitDirectlyAlertBtn: Bypass rules and commit directly
+  enableDefaultReviewersTitle: Enable default reviewers
+  enableDefaultReviewersText: Require approval from default reviewer for each pull request
+  requireMinDefaultReviewersTitle: Require a minimum number of default reviewers
+  requireMinDefaultReviewersContent: Require approval on pull requests from a minimum number of default reviewers
+  atLeastMinReviewers: 'Select at least {{count}} default reviewers'
+  atLeastMinReviewer: 'Select at least {{count}} default reviewer'
 codeOwner:
   title: Code Owner
   changesRequested: '{count} {count|1:change,changes} requested'
@@ -1089,6 +1095,7 @@ approved: Approved
 comingSoon: Coming soon...
 enterANumber: Enter a number
 selectUsers: Select Users
+selectReviewers: Select Reviewers
 selectUsersAndServiceAcc: Select Users and Service Accounts
 selectStatuses: Select Statuses
 featureRoadmap: Feature Roadmap
@@ -1150,8 +1157,11 @@ changesSection:
   pendingAppFromCodeOwners: Approvals pending from code owners
   pendingLatestApprovalCodeOwners: Latest changes are pending approval from code owners
   waitingOnCodeOwner: Changes are pending approval from code owners
+  pendingLatestApprovalDefaultReviewers: Latest changes are pending approval from default reviewers
+  waitingOnDefaultReviewers: Changes are pending approval from default reviewers
   waitingOnReviewers: Changes are pending approval from required reviewers
   waitingOnLatestCodeOwner: Waiting on code owner reviews of latest changes
+  waitingOnLatestDefaultReviewers: Waiting on default reviewer's reviews of latest changes
   approvalPending: Approvals pending
   changesApproved: Changes approved
   noReviewsReq: No reviews required
@@ -1161,13 +1171,17 @@ changesSection:
   changesApprovedByXReviewers: Changes were approved by {length} {length|1:reviewer,reviewers}
   latestChangesApprovedByXReviewers: Latest changes were approved by {length} {length|1:reviewer,reviewers}
   latestChangesWereAppByCodeOwner: Latest changes were approved by code owners
+  latestChangesWereAppByDefaultReviewers: Latest changes were approved by default reviewers
   latestChangesPendingReqRev: Latest changes are pending approval from required reviewers
   changesWereAppByCodeOwner: Changes were approved by code owners
+  changesWereAppByDefaultReviewers: Changes were approved by default reviewers
+  defaultReviewersStatus: Default reviewers were added to the PR
   changesWereAppByLatestReqRev: Changes were approved by required reviewers
   latestChangesWereApprovedByReq: Latest changes were approved by required reviewers
   someChangesWereAppByCodeOwner: Some changes were approved by code owners
   xApprovalsArePending: '{approved}/{min} approvals are pending'
   codeOwnerReqChangesToPr: Code owners requested changes to the pull request
+  defaultReviewersChangesToPr: Default reviewers requested changes to the pull request
 checkSection:
   someReqChecksFailed: Some required checks have failed
   someReqChecksPending: Some required checks are pending
@@ -1203,6 +1217,7 @@ checklist: Check list
 code: Code
 approvedBy: Approved By
 ownersHeading: OWNERS
+defaultReviewers: DEFAULT REVIEWERS
 changesRequestedBy: Changes Requested By
 changesRequested: changesRequested
 owners: Owners
@@ -1322,3 +1337,4 @@ rebase: Rebase
 rebaseBranch: Rebase branch
 updateWithRebase: Update with rebase
 updatedBranchMessageRebase: Updated branch with rebase
+onLatestChanges: on latest changes

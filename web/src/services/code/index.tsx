@@ -145,7 +145,7 @@ export type EnumPullReqCommentStatus = 'active' | 'resolved'
 
 export type EnumPullReqReviewDecision = 'approved' | 'changereq' | 'pending' | 'reviewed'
 
-export type EnumPullReqReviewerType = 'assigned' | 'requested' | 'self_assigned'
+export type EnumPullReqReviewerType = 'assigned' | 'code_owners' | 'default' | 'requested' | 'self_assigned'
 
 export type EnumPullReqState = 'closed' | 'merged' | 'open'
 
@@ -183,11 +183,11 @@ export type EnumWebhookTrigger =
   | 'pullreq_comment_created'
   | 'pullreq_comment_status_updated'
   | 'pullreq_comment_updated'
-  | 'pullreq_review_submitted'
   | 'pullreq_created'
   | 'pullreq_label_assigned'
   | 'pullreq_merged'
   | 'pullreq_reopened'
+  | 'pullreq_review_submitted'
   | 'pullreq_updated'
   | 'tag_created'
   | 'tag_deleted'
@@ -344,6 +344,7 @@ export interface OpenapiCommentUpdatePullReqRequest {
 
 export interface OpenapiCommitFilesRequest {
   actions?: RepoCommitFileAction[] | null
+  author?: GitIdentity
   branch?: string
   bypass_rules?: boolean
   dry_run_rules?: boolean
@@ -738,6 +739,7 @@ export interface OpenapiWebhookType {
   latest_execution_result?: EnumWebhookExecutionResult
   parent_id?: number
   parent_type?: EnumWebhookParent
+  scope?: number
   triggers?: EnumWebhookTrigger[] | null
   updated?: number
   url?: string
@@ -754,6 +756,7 @@ export interface ProtectionDefApprovals {
   require_code_owners?: boolean
   require_latest_commit?: boolean
   require_minimum_count?: number
+  require_minimum_default_reviewer_count?: number
   require_no_change_request?: boolean
 }
 
@@ -1119,6 +1122,14 @@ export interface TypesCreateBranchOutput {
   sha?: ShaSHA
 }
 
+export interface TypesDefaultReviewerApprovalsResponse {
+  current_count?: number
+  minimum_required_count?: number
+  minimum_required_count_latest?: number
+  principals?: TypesPrincipalInfo[] | null
+  rule_info?: TypesRuleInfo
+}
+
 export interface TypesDeleteBranchOutput {
   dry_run_rules?: boolean
   rule_violations?: TypesRuleViolations[]
@@ -1358,6 +1369,7 @@ export interface TypesMergeResponse {
   allowed_methods?: EnumMergeMethod[]
   branch_deleted?: boolean
   conflict_files?: string[]
+  default_reviewer_aprovals?: TypesDefaultReviewerApprovalsResponse[]
   dry_run?: boolean
   dry_run_rules?: boolean
   mergeable?: boolean
@@ -1676,6 +1688,7 @@ export interface TypesServiceAccount {
   created?: number
   display_name?: string
   email?: string
+  id?: number
   parent_id?: number
   parent_type?: EnumParentResourceType
   uid?: string
@@ -1801,8 +1814,10 @@ export interface TypesUser {
 
 export interface TypesUserGroupInfo {
   description?: string
+  id?: number
   identifier?: string
   name?: string
+  scope?: number
 }
 
 export interface TypesUserGroupOwnerEvaluation {
@@ -3761,7 +3776,7 @@ export interface ListRepoLabelsQueryParams {
    */
   limit?: number
   /**
-   * The result should inherit labels from parent parent spaces.
+   * The result should inherit entities from parent spaces.
    */
   inherited?: boolean
   /**
@@ -6636,11 +6651,11 @@ export const useRuleList = ({ repo_ref, ...props }: UseRuleListProps) =>
     { base: getConfig('code/api/v1'), pathParams: { repo_ref }, ...props }
   )
 
-export interface RuleAddPathParams {
+export interface RepoRuleAddPathParams {
   repo_ref: string
 }
 
-export interface RuleAddRequestBody {
+export interface RepoRuleAddRequestBody {
   definition?: OpenapiRuleDefinition
   description?: string
   identifier?: string
@@ -6650,14 +6665,14 @@ export interface RuleAddRequestBody {
   uid?: string
 }
 
-export type RuleAddProps = Omit<
-  MutateProps<OpenapiRule, UsererrorError, void, RuleAddRequestBody, RuleAddPathParams>,
+export type RepoRuleAddProps = Omit<
+  MutateProps<OpenapiRule, UsererrorError, void, RepoRuleAddRequestBody, RepoRuleAddPathParams>,
   'path' | 'verb'
 > &
-  RuleAddPathParams
+  RepoRuleAddPathParams
 
-export const RuleAdd = ({ repo_ref, ...props }: RuleAddProps) => (
-  <Mutate<OpenapiRule, UsererrorError, void, RuleAddRequestBody, RuleAddPathParams>
+export const RepoRuleAdd = ({ repo_ref, ...props }: RepoRuleAddProps) => (
+  <Mutate<OpenapiRule, UsererrorError, void, RepoRuleAddRequestBody, RepoRuleAddPathParams>
     verb="POST"
     path={`/repos/${repo_ref}/rules`}
     base={getConfig('code/api/v1')}
@@ -6665,31 +6680,31 @@ export const RuleAdd = ({ repo_ref, ...props }: RuleAddProps) => (
   />
 )
 
-export type UseRuleAddProps = Omit<
-  UseMutateProps<OpenapiRule, UsererrorError, void, RuleAddRequestBody, RuleAddPathParams>,
+export type UseRepoRuleAddProps = Omit<
+  UseMutateProps<OpenapiRule, UsererrorError, void, RepoRuleAddRequestBody, RepoRuleAddPathParams>,
   'path' | 'verb'
 > &
-  RuleAddPathParams
+  RepoRuleAddPathParams
 
-export const useRuleAdd = ({ repo_ref, ...props }: UseRuleAddProps) =>
-  useMutate<OpenapiRule, UsererrorError, void, RuleAddRequestBody, RuleAddPathParams>(
+export const useRepoRuleAdd = ({ repo_ref, ...props }: UseRepoRuleAddProps) =>
+  useMutate<OpenapiRule, UsererrorError, void, RepoRuleAddRequestBody, RepoRuleAddPathParams>(
     'POST',
-    (paramsInPath: RuleAddPathParams) => `/repos/${paramsInPath.repo_ref}/rules`,
+    (paramsInPath: RepoRuleAddPathParams) => `/repos/${paramsInPath.repo_ref}/rules`,
     { base: getConfig('code/api/v1'), pathParams: { repo_ref }, ...props }
   )
 
-export interface RuleDeletePathParams {
+export interface RepoRuleDeletePathParams {
   repo_ref: string
 }
 
-export type RuleDeleteProps = Omit<
-  MutateProps<void, UsererrorError, void, string, RuleDeletePathParams>,
+export type RepoRuleDeleteProps = Omit<
+  MutateProps<void, UsererrorError, void, string, RepoRuleDeletePathParams>,
   'path' | 'verb'
 > &
-  RuleDeletePathParams
+  RepoRuleDeletePathParams
 
-export const RuleDelete = ({ repo_ref, ...props }: RuleDeleteProps) => (
-  <Mutate<void, UsererrorError, void, string, RuleDeletePathParams>
+export const RepoRuleDelete = ({ repo_ref, ...props }: RepoRuleDeleteProps) => (
+  <Mutate<void, UsererrorError, void, string, RepoRuleDeletePathParams>
     verb="DELETE"
     path={`/repos/${repo_ref}/rules`}
     base={getConfig('code/api/v1')}
@@ -6697,50 +6712,50 @@ export const RuleDelete = ({ repo_ref, ...props }: RuleDeleteProps) => (
   />
 )
 
-export type UseRuleDeleteProps = Omit<
-  UseMutateProps<void, UsererrorError, void, string, RuleDeletePathParams>,
+export type UseRepoRuleDeleteProps = Omit<
+  UseMutateProps<void, UsererrorError, void, string, RepoRuleDeletePathParams>,
   'path' | 'verb'
 > &
-  RuleDeletePathParams
+  RepoRuleDeletePathParams
 
-export const useRuleDelete = ({ repo_ref, ...props }: UseRuleDeleteProps) =>
-  useMutate<void, UsererrorError, void, string, RuleDeletePathParams>(
+export const useRepoRuleDelete = ({ repo_ref, ...props }: UseRepoRuleDeleteProps) =>
+  useMutate<void, UsererrorError, void, string, RepoRuleDeletePathParams>(
     'DELETE',
-    (paramsInPath: RuleDeletePathParams) => `/repos/${paramsInPath.repo_ref}/rules`,
+    (paramsInPath: RepoRuleDeletePathParams) => `/repos/${paramsInPath.repo_ref}/rules`,
     { base: getConfig('code/api/v1'), pathParams: { repo_ref }, ...props }
   )
 
-export interface RuleGetPathParams {
+export interface RepoRuleGetPathParams {
   repo_ref: string
   rule_identifier: string
 }
 
-export type RuleGetProps = Omit<GetProps<OpenapiRule, UsererrorError, void, RuleGetPathParams>, 'path'> &
-  RuleGetPathParams
+export type RepoRuleGetProps = Omit<GetProps<OpenapiRule, UsererrorError, void, RepoRuleGetPathParams>, 'path'> &
+  RepoRuleGetPathParams
 
-export const RuleGet = ({ repo_ref, rule_identifier, ...props }: RuleGetProps) => (
-  <Get<OpenapiRule, UsererrorError, void, RuleGetPathParams>
+export const RepoRuleGet = ({ repo_ref, rule_identifier, ...props }: RepoRuleGetProps) => (
+  <Get<OpenapiRule, UsererrorError, void, RepoRuleGetPathParams>
     path={`/repos/${repo_ref}/rules/${rule_identifier}`}
     base={getConfig('code/api/v1')}
     {...props}
   />
 )
 
-export type UseRuleGetProps = Omit<UseGetProps<OpenapiRule, UsererrorError, void, RuleGetPathParams>, 'path'> &
-  RuleGetPathParams
+export type UseRepoRuleGetProps = Omit<UseGetProps<OpenapiRule, UsererrorError, void, RepoRuleGetPathParams>, 'path'> &
+  RepoRuleGetPathParams
 
-export const useRuleGet = ({ repo_ref, rule_identifier, ...props }: UseRuleGetProps) =>
-  useGet<OpenapiRule, UsererrorError, void, RuleGetPathParams>(
-    (paramsInPath: RuleGetPathParams) => `/repos/${paramsInPath.repo_ref}/rules/${paramsInPath.rule_identifier}`,
+export const useRepoRuleGet = ({ repo_ref, rule_identifier, ...props }: UseRepoRuleGetProps) =>
+  useGet<OpenapiRule, UsererrorError, void, RepoRuleGetPathParams>(
+    (paramsInPath: RepoRuleGetPathParams) => `/repos/${paramsInPath.repo_ref}/rules/${paramsInPath.rule_identifier}`,
     { base: getConfig('code/api/v1'), pathParams: { repo_ref, rule_identifier }, ...props }
   )
 
-export interface RuleUpdatePathParams {
+export interface RepoRuleUpdatePathParams {
   repo_ref: string
   rule_identifier: string
 }
 
-export interface RuleUpdateRequestBody {
+export interface RepoRuleUpdateRequestBody {
   definition?: OpenapiRuleDefinition
   description?: string | null
   identifier?: string | null
@@ -6750,14 +6765,14 @@ export interface RuleUpdateRequestBody {
   uid?: string | null
 }
 
-export type RuleUpdateProps = Omit<
-  MutateProps<OpenapiRule, UsererrorError, void, RuleUpdateRequestBody, RuleUpdatePathParams>,
+export type RepoRuleUpdateProps = Omit<
+  MutateProps<OpenapiRule, UsererrorError, void, RepoRuleUpdateRequestBody, RepoRuleUpdatePathParams>,
   'path' | 'verb'
 > &
-  RuleUpdatePathParams
+  RepoRuleUpdatePathParams
 
-export const RuleUpdate = ({ repo_ref, rule_identifier, ...props }: RuleUpdateProps) => (
-  <Mutate<OpenapiRule, UsererrorError, void, RuleUpdateRequestBody, RuleUpdatePathParams>
+export const RepoRuleUpdate = ({ repo_ref, rule_identifier, ...props }: RepoRuleUpdateProps) => (
+  <Mutate<OpenapiRule, UsererrorError, void, RepoRuleUpdateRequestBody, RepoRuleUpdatePathParams>
     verb="PATCH"
     path={`/repos/${repo_ref}/rules/${rule_identifier}`}
     base={getConfig('code/api/v1')}
@@ -6765,16 +6780,16 @@ export const RuleUpdate = ({ repo_ref, rule_identifier, ...props }: RuleUpdatePr
   />
 )
 
-export type UseRuleUpdateProps = Omit<
-  UseMutateProps<OpenapiRule, UsererrorError, void, RuleUpdateRequestBody, RuleUpdatePathParams>,
+export type UseRepoRuleUpdateProps = Omit<
+  UseMutateProps<OpenapiRule, UsererrorError, void, RepoRuleUpdateRequestBody, RepoRuleUpdatePathParams>,
   'path' | 'verb'
 > &
-  RuleUpdatePathParams
+  RepoRuleUpdatePathParams
 
-export const useRuleUpdate = ({ repo_ref, rule_identifier, ...props }: UseRuleUpdateProps) =>
-  useMutate<OpenapiRule, UsererrorError, void, RuleUpdateRequestBody, RuleUpdatePathParams>(
+export const useRepoRuleUpdate = ({ repo_ref, rule_identifier, ...props }: UseRepoRuleUpdateProps) =>
+  useMutate<OpenapiRule, UsererrorError, void, RepoRuleUpdateRequestBody, RepoRuleUpdatePathParams>(
     'PATCH',
-    (paramsInPath: RuleUpdatePathParams) => `/repos/${paramsInPath.repo_ref}/rules/${paramsInPath.rule_identifier}`,
+    (paramsInPath: RepoRuleUpdatePathParams) => `/repos/${paramsInPath.repo_ref}/rules/${paramsInPath.rule_identifier}`,
     { base: getConfig('code/api/v1'), pathParams: { repo_ref, rule_identifier }, ...props }
   )
 

@@ -22,6 +22,8 @@ export declare const checkboxLabel: string
 export declare const checkboxText: string
 export declare const checkContainer: string
 export declare const codeClose: string
+export declare const codeCloseBtn: string
+export declare const defaultReviewerContainer: string
 export declare const dividerContainer: string
 export declare const generalContainer: string
 export declare const greyButton: string
@@ -35,6 +37,7 @@ export declare const minText: string
 export declare const noData: string
 export declare const paddingTop: string
 export declare const popover: string
+export declare const reviewerBlock: string
 export declare const row: string
 export declare const statusWidthContainer: string
 export declare const table: string

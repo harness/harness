@@ -219,6 +219,18 @@ const BranchProtectionListing = (props: {
       requiredRule: {
         [RuleFields.AUTO_ADD_CODE_OWNERS]: true
       }
+    },
+    requireMinDefaultReviewersTitle: {
+      title: getString('branchProtection.requireMinDefaultReviewersTitle'),
+      requiredRule: {
+        [RuleFields.APPROVALS_REQUIRE_MINIMUM_DEFAULT_REVIEWERS]: true
+      }
+    },
+    defaultReviewersAdded: {
+      title: getString('branchProtection.enableDefaultReviewersTitle'),
+      requiredRule: {
+        [RuleFields.DEFAULT_REVIEWERS_ADDED]: true
+      }
     }
   }
 

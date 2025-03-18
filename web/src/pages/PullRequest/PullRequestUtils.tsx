@@ -23,9 +23,12 @@ import type {
   EnumMergeMethod,
   EnumPullReqReviewDecision,
   TypesCodeOwnerEvaluationEntry,
+  TypesDefaultReviewerApprovalsResponse,
   TypesOwnerEvaluation,
+  TypesPrincipalInfo,
   TypesPullReq,
-  TypesPullReqActivity
+  TypesPullReqActivity,
+  TypesPullReqReviewer
 } from 'services/code'
 
 export interface PRMergeOption extends SelectOption {
@@ -95,7 +98,7 @@ export const findWaitingDecisions = (
       const hasApprovedDecision = entry?.owner_evaluations?.some(
         evaluation =>
           evaluation.review_decision === PullReqReviewDecision.APPROVED &&
-          (reqCodeOwnerLatestApproval ? evaluation.review_sha === pullReqMetadata.source_sha : true)
+          (reqCodeOwnerLatestApproval ? evaluation.review_sha === pullReqMetadata?.source_sha : true)
       )
       return !hasApprovedDecision
     })
@@ -176,3 +179,41 @@ export const getMergeOptions = (getString: UseStringsReturn['getString'], mergea
     value: 'close'
   }
 ]
+
+export const updateReviewDecisionPrincipal = (reviewers: TypesPullReqReviewer[], principals: TypesPrincipalInfo[]) => {
+  const reviewDecisionMap: {
+    [x: number]: { sha: string; review_decision: EnumPullReqReviewDecision } | null
+  } = reviewers?.reduce((acc, rev) => {
+    if (rev.reviewer?.id) {
+      acc[rev.reviewer.id] = {
+        sha: rev.sha ?? '',
+        review_decision: rev.review_decision ?? 'pending'
+      }
+    }
+    return acc
+  }, {} as { [x: number]: { sha: string; review_decision: EnumPullReqReviewDecision } | null })
+
+  return principals?.map(principal => {
+    if (principal?.id) {
+      return {
+        ...principal,
+        review_decision: reviewDecisionMap[principal.id] ? reviewDecisionMap[principal.id]?.review_decision : 'pending',
+        review_sha: reviewDecisionMap[principal.id]?.sha
+      }
+    }
+    return principal
+  })
+}
+
+export const defaultReviewerResponseWithDecision = (
+  defaultRevApprovalResponse: TypesDefaultReviewerApprovalsResponse[],
+  reviewers: TypesPullReqReviewer[]
+) => {
+  return defaultRevApprovalResponse?.map(res => {
+    return {
+      ...res,
+      principals:
+        reviewers && res.principals ? updateReviewDecisionPrincipal(reviewers, res.principals) : res.principals
+    }
+  })
+}
