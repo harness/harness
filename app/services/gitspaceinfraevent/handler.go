@@ -63,6 +63,14 @@ func (s *Service) handleGitspaceInfraResumeEvent(
 	}()
 
 	var err error
+	if payload.Infra.Status == enum.InfraStatusError {
+		log.Error().Msgf(
+			"infra status is error, updating gitspace instance %s state to error",
+			instance.Identifier,
+		)
+		instance.State = enum.GitspaceInstanceStateError
+		return nil
+	}
 
 	switch payload.Type {
 	case enum.InfraEventProvision:
