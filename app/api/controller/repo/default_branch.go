@@ -21,7 +21,6 @@ import (
 
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/app/bootstrap"
 	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/audit"
@@ -129,10 +128,9 @@ func (c *Controller) UpdateDefaultBranch(
 	}
 
 	c.eventReporter.DefaultBranchUpdated(ctx, &repoevents.DefaultBranchUpdatedPayload{
-		RepoID:      repo.ID,
-		PrincipalID: bootstrap.NewSystemServiceSession().Principal.ID,
-		OldName:     oldName,
-		NewName:     repo.DefaultBranch,
+		Base:    eventBase(repo, &session.Principal),
+		OldName: oldName,
+		NewName: repoFull.DefaultBranch,
 	})
 
 	return repoOutput, nil

@@ -343,10 +343,12 @@ func (c *Controller) handleEmptyRepoPush(
 
 	if repo.DefaultBranch != oldName {
 		c.repoReporter.DefaultBranchUpdated(ctx, &repoevents.DefaultBranchUpdatedPayload{
-			RepoID:      repo.ID,
-			PrincipalID: bootstrap.NewSystemServiceSession().Principal.ID,
-			OldName:     oldName,
-			NewName:     repo.DefaultBranch,
+			Base: repoevents.Base{
+				RepoID:      repo.ID,
+				PrincipalID: bootstrap.NewSystemServiceSession().Principal.ID,
+			},
+			OldName: oldName,
+			NewName: repo.DefaultBranch,
 		})
 	}
 }

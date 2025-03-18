@@ -25,6 +25,7 @@ import (
 	repoCtrl "github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/bootstrap"
+	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/githook"
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/audit"
@@ -166,6 +167,14 @@ func (c *Controller) CreateRepo(
 	if err != nil {
 		log.Warn().Msgf("failed to insert audit log for import repository operation: %s", err)
 	}
+
+	c.eventReporter.Created(ctx, &repoevents.CreatedPayload{
+		Base: repoevents.Base{
+			RepoID:      repo.ID,
+			PrincipalID: session.Principal.ID,
+		},
+		Type: "migrated",
+	})
 
 	return &repoCtrl.RepositoryOutput{
 		Repository: *repo,

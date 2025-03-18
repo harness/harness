@@ -15,6 +15,7 @@
 package importer
 
 import (
+	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/refcache"
@@ -50,6 +51,7 @@ func ProvideRepoImporter(
 	sseStreamer sse.Streamer,
 	indexer keywordsearch.Indexer,
 	publicAccess publicaccess.Service,
+	eventReporter *repoevents.Reporter,
 	auditService audit.Service,
 ) (*Repository, error) {
 	importer := &Repository{
@@ -66,6 +68,7 @@ func ProvideRepoImporter(
 		sseStreamer:   sseStreamer,
 		indexer:       indexer,
 		publicAccess:  publicAccess,
+		eventReporter: eventReporter,
 		auditService:  auditService,
 	}
 

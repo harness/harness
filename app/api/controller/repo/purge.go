@@ -21,6 +21,7 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/bootstrap"
 	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/githook"
 	"github.com/harness/gitness/errors"
@@ -87,7 +88,7 @@ func (c *Controller) PurgeNoAuth(
 	c.eventReporter.Deleted(
 		ctx,
 		&repoevents.DeletedPayload{
-			RepoID: repo.ID,
+			Base: eventBase(repo.Core(), &bootstrap.NewSystemServiceSession().Principal),
 		},
 	)
 

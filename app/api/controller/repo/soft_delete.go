@@ -22,6 +22,7 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/types"
@@ -115,6 +116,14 @@ func (c *Controller) SoftDeleteNoAuth(
 	}
 
 	c.repoFinder.MarkChanged(ctx, repo.Core())
+
+	if repo.Deleted != nil {
+		c.eventReporter.SoftDeleted(ctx, &repoevents.SoftDeletedPayload{
+			Base:     eventBase(repo.Core(), &session.Principal),
+			RepoPath: repo.Path,
+			Deleted:  *repo.Deleted,
+		})
+	}
 
 	return nil
 }

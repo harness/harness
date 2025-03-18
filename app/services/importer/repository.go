@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/bootstrap"
+	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/githook"
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/services/keywordsearch"
@@ -69,6 +70,7 @@ type Repository struct {
 	sseStreamer   sse.Streamer
 	indexer       keywordsearch.Indexer
 	publicAccess  publicaccess.Service
+	eventReporter *repoevents.Reporter
 	auditService  audit.Service
 }
 
@@ -369,6 +371,14 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 	}
 
 	r.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypeRepositoryImportCompleted, repo)
+
+	r.eventReporter.Created(ctx, &repoevents.CreatedPayload{
+		Base: repoevents.Base{
+			RepoID:      repo.ID,
+			PrincipalID: bootstrap.NewSystemServiceSession().Principal.ID,
+		},
+		Type: "imported",
+	})
 
 	err = r.indexer.Index(ctx, repo)
 	if err != nil {

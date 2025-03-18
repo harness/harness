@@ -45,7 +45,7 @@ type Services struct {
 	PullReq                 *pullreq.Service
 	Trigger                 *trigger.Service
 	JobScheduler            *job.Scheduler
-	MetricCollector         *metric.Collector
+	MetricCollector         *metric.CollectorJob
 	RepoSizeCalculator      *repo.SizeCalculator
 	Repo                    *repo.Service
 	Cleanup                 *cleanup.Service
@@ -90,7 +90,7 @@ func ProvideServices(
 	pullReqSvc *pullreq.Service,
 	triggerSvc *trigger.Service,
 	jobScheduler *job.Scheduler,
-	metricCollector *metric.Collector,
+	metricCollector *metric.CollectorJob,
 	repoSizeCalculator *repo.SizeCalculator,
 	repo *repo.Service,
 	cleanupSvc *cleanup.Service,

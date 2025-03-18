@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/app/auth"
+	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/types/enum"
@@ -97,6 +98,12 @@ func (c *Controller) UpdatePublicAccess(ctx context.Context,
 	if err != nil {
 		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for update repository operation: %s", err)
 	}
+
+	c.eventReporter.PublicAccessChanged(ctx, &repoevents.PublicAccessChangedPayload{
+		Base:        eventBase(repo.Core(), &session.Principal),
+		OldIsPublic: isPublic,
+		NewIsPublic: in.IsPublic,
+	})
 
 	return GetRepoOutputWithAccess(ctx, in.IsPublic, repo), nil
 }

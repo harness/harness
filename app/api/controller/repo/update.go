@@ -22,6 +22,7 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/types"
@@ -88,8 +89,6 @@ func (c *Controller) Update(ctx context.Context,
 		return nil, fmt.Errorf("failed to find repository by ID: %w", err)
 	}
 
-	repoClone := repo.Clone()
-
 	if !in.hasChanges(repo) {
 		return GetRepoOutput(ctx, c.publicAccess, repo)
 	}
@@ -108,7 +107,11 @@ func (c *Controller) Update(ctx context.Context,
 			repo.State, *in.State)
 	}
 
+	var repoClone types.Repository
+
 	repo, err = c.repoStore.UpdateOptLock(ctx, repo, func(repo *types.Repository) error {
+		repoClone = *repo
+
 		// update values only if provided
 		if in.Description != nil {
 			repo.Description = *in.Description
@@ -140,6 +143,14 @@ func (c *Controller) Update(ctx context.Context,
 	// backfill repo url
 	repo.GitURL = c.urlProvider.GenerateGITCloneURL(ctx, repo.Path)
 	repo.GitSSHURL = c.urlProvider.GenerateGITCloneSSHURL(ctx, repo.Path)
+
+	if repo.State != repoClone.State {
+		c.eventReporter.StateChanged(ctx, &repoevents.StateChangedPayload{
+			Base:     eventBase(repo.Core(), &session.Principal),
+			OldState: repoClone.State,
+			NewState: repo.State,
+		})
+	}
 
 	return GetRepoOutput(ctx, c.publicAccess, repo)
 }

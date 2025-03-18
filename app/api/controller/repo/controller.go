@@ -247,6 +247,13 @@ func ValidateParentRef(parentRef string) error {
 	return nil
 }
 
+func eventBase(repo *types.RepositoryCore, principal *types.Principal) repoevents.Base {
+	return repoevents.Base{
+		RepoID:      repo.ID,
+		PrincipalID: principal.ID,
+	}
+}
+
 func (c *Controller) fetchRules(
 	ctx context.Context,
 	session *auth.Session,

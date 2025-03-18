@@ -15,8 +15,15 @@
 package metric
 
 import (
+	"context"
+	"fmt"
+
+	pullreqevents "github.com/harness/gitness/app/events/pullreq"
+	repoevents "github.com/harness/gitness/app/events/repo"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/job"
 	registrystore "github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/types"
@@ -25,11 +32,51 @@ import (
 )
 
 var WireSet = wire.NewSet(
-	ProvideCollector,
+	ProvideValues,
+	ProvideSubmitter,
+	ProvideCollectorJob,
 )
 
-func ProvideCollector(
+func ProvideValues(ctx context.Context, config *types.Config, settingsSrv *settings.Service) (*Values, error) {
+	return NewValues(ctx, config, settingsSrv)
+}
+
+func ProvideSubmitter(
+	appCtx context.Context,
 	config *types.Config,
+	values *Values,
+	principalStore store.PrincipalStore,
+	principalInfoCache store.PrincipalInfoCache,
+	pullReqStore store.PullReqStore,
+	repoReaderFactory *events.ReaderFactory[*repoevents.Reader],
+	pullreqEvReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
+	repoFinder refcache.RepoFinder,
+) (Submitter, error) {
+	submitter, err := NewPostHog(appCtx, config, values, principalStore, principalInfoCache)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create posthog metrics submitter: %w", err)
+	}
+
+	err = registerEventListeners(
+		appCtx,
+		config,
+		principalInfoCache,
+		pullReqStore,
+		repoReaderFactory,
+		pullreqEvReaderFactory,
+		repoFinder,
+		submitter,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to register metric event listeners: %w", err)
+	}
+
+	return submitter, nil
+}
+
+func ProvideCollectorJob(
+	config *types.Config,
+	values *Values,
 	userStore store.PrincipalStore,
 	repoStore store.RepoStore,
 	pipelineStore store.PipelineStore,
@@ -37,30 +84,29 @@ func ProvideCollector(
 	scheduler *job.Scheduler,
 	executor *job.Executor,
 	gitspaceConfigStore store.GitspaceConfigStore,
-	settings *settings.Service,
 	registryStore registrystore.RegistryRepository,
 	artifactStore registrystore.ArtifactRepository,
-) (*Collector, error) {
-	job := &Collector{
-		hostname:            config.InstanceID,
-		enabled:             config.Metric.Enabled,
-		endpoint:            config.Metric.Endpoint,
-		token:               config.Metric.Token,
-		userStore:           userStore,
-		repoStore:           repoStore,
-		pipelineStore:       pipelineStore,
-		executionStore:      executionStore,
-		scheduler:           scheduler,
-		gitspaceConfigStore: gitspaceConfigStore,
-		registryStore:       registryStore,
-		artifactStore:       artifactStore,
-		settings:            settings,
-	}
+	submitter Submitter,
+) (*CollectorJob, error) {
+	collector := NewCollectorJob(
+		values,
+		config.Metric.Endpoint,
+		config.Metric.Token,
+		userStore,
+		repoStore,
+		pipelineStore,
+		executionStore,
+		scheduler,
+		gitspaceConfigStore,
+		registryStore,
+		artifactStore,
+		submitter,
+	)
 
-	err := executor.Register(jobType, job)
+	err := executor.Register(jobType, collector)
 	if err != nil {
 		return nil, err
 	}
 
-	return job, nil
+	return collector, nil
 }

@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
+	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/services/migrate"
 	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/refcache"
@@ -53,6 +54,7 @@ type Controller struct {
 	repoStore       store.RepoStore
 	spaceFinder     refcache.SpaceFinder
 	repoFinder      refcache.RepoFinder
+	eventReporter   *repoevents.Reporter
 }
 
 func NewController(
@@ -72,6 +74,7 @@ func NewController(
 	repoStore store.RepoStore,
 	spaceFinder refcache.SpaceFinder,
 	repoFinder refcache.RepoFinder,
+	eventReporter *repoevents.Reporter,
 ) *Controller {
 	return &Controller{
 		authorizer:      authorizer,
@@ -90,6 +93,7 @@ func NewController(
 		repoStore:       repoStore,
 		spaceFinder:     spaceFinder,
 		repoFinder:      repoFinder,
+		eventReporter:   eventReporter,
 	}
 }
 

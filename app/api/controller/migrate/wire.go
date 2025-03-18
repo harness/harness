@@ -17,6 +17,7 @@ package migrate
 import (
 	"github.com/harness/gitness/app/api/controller/limiter"
 	"github.com/harness/gitness/app/auth/authz"
+	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/services/migrate"
 	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/refcache"
@@ -52,6 +53,7 @@ func ProvideController(
 	repoStore store.RepoStore,
 	spaceFinder refcache.SpaceFinder,
 	repoFinder refcache.RepoFinder,
+	eventReporter *repoevents.Reporter,
 ) *Controller {
 	return NewController(
 		authorizer,
@@ -70,5 +72,6 @@ func ProvideController(
 		repoStore,
 		spaceFinder,
 		repoFinder,
+		eventReporter,
 	)
 }

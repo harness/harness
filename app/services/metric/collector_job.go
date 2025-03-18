@@ -22,14 +22,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/job"
-	store2 "github.com/harness/gitness/registry/app/store"
+	registrystore "github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 	"github.com/harness/gitness/version"
-
-	"github.com/google/uuid"
 )
 
 const jobType = "metric-collector"
@@ -50,12 +48,10 @@ type metricData struct {
 	ArtifactCount  int64  `json:"artifact_count"`
 }
 
-type Collector struct {
-	hostname  string
-	enabled   bool
-	endpoint  string
-	token     string
-	installID string
+type CollectorJob struct {
+	values   *Values
+	endpoint string
+	token    string
 
 	userStore           store.PrincipalStore
 	repoStore           store.RepoStore
@@ -63,29 +59,50 @@ type Collector struct {
 	executionStore      store.ExecutionStore
 	scheduler           *job.Scheduler
 	gitspaceConfigStore store.GitspaceConfigStore
-	registryStore       store2.RegistryRepository
-	artifactStore       store2.ArtifactRepository
-	settings            *settings.Service
+	registryStore       registrystore.RegistryRepository
+	artifactStore       registrystore.ArtifactRepository
+	submitter           Submitter
 }
 
-func (c *Collector) Register(ctx context.Context) error {
-	if !c.enabled {
+func NewCollectorJob(
+	values *Values,
+	endpoint string,
+	token string,
+	userStore store.PrincipalStore,
+	repoStore store.RepoStore,
+	pipelineStore store.PipelineStore,
+	executionStore store.ExecutionStore,
+	scheduler *job.Scheduler,
+	gitspaceConfigStore store.GitspaceConfigStore,
+	registryStore registrystore.RegistryRepository,
+	artifactStore registrystore.ArtifactRepository,
+	submitter Submitter,
+) *CollectorJob {
+	return &CollectorJob{
+		values: values,
+
+		endpoint: endpoint,
+		token:    token,
+
+		userStore:           userStore,
+		repoStore:           repoStore,
+		pipelineStore:       pipelineStore,
+		executionStore:      executionStore,
+		scheduler:           scheduler,
+		gitspaceConfigStore: gitspaceConfigStore,
+		registryStore:       registryStore,
+		artifactStore:       artifactStore,
+
+		submitter: submitter,
+	}
+}
+
+func (c *CollectorJob) Register(ctx context.Context) error {
+	if !c.values.Enabled {
 		return nil
 	}
 
-	ok, err := c.settings.SystemGet(ctx, settings.KeyInstallID, &c.installID)
-	if err != nil {
-		return fmt.Errorf("failed to find install id: %w", err)
-	}
-	if !ok || c.installID == "" {
-		c.installID = uuid.New().String()
-		err = c.settings.SystemSet(ctx, settings.KeyInstallID, c.installID)
-		if err != nil {
-			return fmt.Errorf("failed to update system settings: %w", err)
-		}
-	}
-
-	err = c.scheduler.AddRecurring(ctx, jobType, jobType, "0 0 * * *", time.Minute)
+	err := c.scheduler.AddRecurring(ctx, jobType, jobType, "0 0 * * *", time.Minute)
 	if err != nil {
 		return fmt.Errorf("failed to register recurring job for collector: %w", err)
 	}
@@ -93,15 +110,22 @@ func (c *Collector) Register(ctx context.Context) error {
 	return nil
 }
 
-func (c *Collector) Handle(ctx context.Context, _ string, _ job.ProgressReporter) (string, error) {
-	if !c.enabled {
+func (c *CollectorJob) Handle(ctx context.Context, _ string, _ job.ProgressReporter) (string, error) {
+	if !c.values.Enabled {
 		return "", nil
+	}
+
+	err := c.submitter.SubmitGroups(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to submit metric groups: %w", err)
 	}
 
 	// get first available user
 	users, err := c.userStore.ListUsers(ctx, &types.UserFilter{
-		Page: 1,
-		Size: 1,
+		Page:  1,
+		Size:  1,
+		Sort:  enum.UserAttrCreated,
+		Order: enum.OrderAsc,
 	})
 	if err != nil {
 		return "", err
@@ -151,8 +175,8 @@ func (c *Collector) Handle(ctx context.Context, _ string, _ job.ProgressReporter
 	}
 
 	data := metricData{
-		Hostname:       c.hostname,
-		InstallID:      c.installID,
+		Hostname:       c.values.Hostname,
+		InstallID:      c.values.InstallID,
 		Installer:      users[0].Email,
 		Installed:      time.UnixMilli(users[0].Created).Format("2006-01-02 15:04:05"),
 		Version:        version.Version.String(),

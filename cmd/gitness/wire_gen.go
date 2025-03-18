@@ -236,14 +236,6 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	streamer := sse.ProvideEventsStreaming(pubSub)
 	localIndexSearcher := keywordsearch.ProvideLocalIndexSearcher()
 	indexer := keywordsearch.ProvideIndexer(localIndexSearcher)
-	auditService := audit.ProvideAuditService()
-	repository, err := importer.ProvideRepoImporter(config, provider, gitInterface, transactor, repoStore, pipelineStore, triggerStore, repoFinder, encrypter, jobScheduler, executor, streamer, indexer, publicaccessService, auditService)
-	if err != nil {
-		return nil, err
-	}
-	codeownersConfig := server.ProvideCodeOwnerConfig(config)
-	usergroupResolver := usergroup.ProvideUserGroupResolver()
-	codeownersService := codeowners.ProvideCodeOwners(gitInterface, repoStore, codeownersConfig, principalStore, usergroupResolver)
 	eventsConfig := server.ProvideEventsConfig(config)
 	eventsSystem, err := events.ProvideSystem(eventsConfig, universalClient)
 	if err != nil {
@@ -253,6 +245,14 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
+	auditService := audit.ProvideAuditService()
+	repository, err := importer.ProvideRepoImporter(config, provider, gitInterface, transactor, repoStore, pipelineStore, triggerStore, repoFinder, encrypter, jobScheduler, executor, streamer, indexer, publicaccessService, reporter, auditService)
+	if err != nil {
+		return nil, err
+	}
+	codeownersConfig := server.ProvideCodeOwnerConfig(config)
+	usergroupResolver := usergroup.ProvideUserGroupResolver()
+	codeownersService := codeowners.ProvideCodeOwners(gitInterface, repoStore, codeownersConfig, principalStore, usergroupResolver)
 	resourceLimiter, err := limiter.ProvideLimiter()
 	if err != nil {
 		return nil, err
@@ -449,7 +449,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	rule := migrate.ProvideRuleImporter(ruleStore, transactor, principalStore)
 	migrateWebhook := migrate.ProvideWebhookImporter(webhookConfig, transactor, webhookStore)
 	migrateLabel := migrate.ProvideLabelImporter(transactor, labelStore, labelValueStore, spaceStore)
-	migrateController := migrate2.ProvideController(authorizer, publicaccessService, gitInterface, provider, pullReq, rule, migrateWebhook, migrateLabel, resourceLimiter, auditService, repoIdentifier, transactor, spaceStore, repoStore, spaceFinder, repoFinder)
+	migrateController := migrate2.ProvideController(authorizer, publicaccessService, gitInterface, provider, pullReq, rule, migrateWebhook, migrateLabel, resourceLimiter, auditService, repoIdentifier, transactor, spaceStore, repoStore, spaceFinder, repoFinder, reporter)
 	openapiService := openapi.ProvideOpenAPIService()
 	storageDriver, err := api2.BlobStorageProvider(config)
 	if err != nil {
@@ -539,15 +539,23 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	collector, err := metric.ProvideCollector(config, principalStore, repoStore, pipelineStore, executionStore, jobScheduler, executor, gitspaceConfigStore, settingsService, registryRepository, artifactRepository)
-	if err != nil {
-		return nil, err
-	}
-	sizeCalculator, err := repo2.ProvideCalculator(config, gitInterface, repoStore, jobScheduler, executor)
+	values, err := metric.ProvideValues(ctx, config, settingsService)
 	if err != nil {
 		return nil, err
 	}
 	readerFactory3, err := events2.ProvideReaderFactory(eventsSystem)
+	if err != nil {
+		return nil, err
+	}
+	submitter, err := metric.ProvideSubmitter(ctx, config, values, principalStore, principalInfoCache, pullReqStore, readerFactory3, eventsReaderFactory, repoFinder)
+	if err != nil {
+		return nil, err
+	}
+	collectorJob, err := metric.ProvideCollectorJob(config, values, principalStore, repoStore, pipelineStore, executionStore, jobScheduler, executor, gitspaceConfigStore, registryRepository, artifactRepository, submitter)
+	if err != nil {
+		return nil, err
+	}
+	sizeCalculator, err := repo2.ProvideCalculator(config, gitInterface, repoStore, jobScheduler, executor)
 	if err != nil {
 		return nil, err
 	}
@@ -615,7 +623,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	servicesServices := services.ProvideServices(webhookService, pullreqService, triggerService, jobScheduler, collector, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceServices, instrumentService, consumer, repositoryCount, service2)
+	servicesServices := services.ProvideServices(webhookService, pullreqService, triggerService, jobScheduler, collectorJob, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceServices, instrumentService, consumer, repositoryCount, service2)
 	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, sshServer, poller, resolverManager, servicesServices)
 	return serverSystem, nil
 }

@@ -352,6 +352,14 @@ type Config struct {
 		Enabled  bool   `envconfig:"GITNESS_METRIC_ENABLED" default:"true"`
 		Endpoint string `envconfig:"GITNESS_METRIC_ENDPOINT" default:"https://stats.drone.ci/api/v1/gitness"`
 		Token    string `envconfig:"GITNESS_METRIC_TOKEN"`
+
+		// PostHogEndpoint is URL to the PostHog service
+		PostHogEndpoint string `envconfig:"GITNESS_METRIC_POSTHOG_ENDPOINT" default:"https://us.i.posthog.com"`
+		// PostHogProjectAPIKey (starts with "phc_") is public (can be exposed in frontend) token used to submit events.
+		PostHogProjectAPIKey string `envconfig:"GITNESS_METRIC_POSTHOG_PROJECT_APIKEY"`
+		// PostHogPersonalAPIKey (starts with "phx_") is sensitive. It's used to access private access points.
+		// It's not required for submitting events.
+		PostHogPersonalAPIKey string `envconfig:"GITNESS_METRIC_POSTHOG_PERSONAL_APIKEY"`
 	}
 
 	RepoSize struct {

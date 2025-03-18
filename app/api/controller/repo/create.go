@@ -26,6 +26,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/bootstrap"
+	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/githook"
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/services/instrument"
@@ -165,6 +166,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	if err != nil {
 		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for create repository operation: %s", err)
 	}
+
 	err = c.instrumentation.Track(ctx, instrument.Event{
 		Type:      instrument.EventTypeRepositoryCreate,
 		Principal: session.Principal.ToPrincipalInfo(),
@@ -178,6 +180,12 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	if err != nil {
 		log.Ctx(ctx).Warn().Msgf("failed to insert instrumentation record for create repository operation: %s", err)
 	}
+
+	c.eventReporter.Created(ctx, &repoevents.CreatedPayload{
+		Base: eventBase(repo.Core(), &session.Principal),
+		Type: "created",
+	})
+
 	// index repository if files are created
 	if !repo.IsEmpty {
 		err = c.indexer.Index(ctx, repo)
