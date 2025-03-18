@@ -52,7 +52,7 @@ func (c *Controller) Update(
 		return fmt.Errorf("failed to authorize: %w", err)
 	}
 
-	gitspaceConfig, err := c.gitspaceSvc.FindWithLatestInstance(ctx, spaceRef, identifier)
+	gitspaceConfig, err := c.gitspaceSvc.FindWithLatestInstanceWithSpacePath(ctx, spaceRef, identifier)
 	if err != nil {
 		return fmt.Errorf("failed to find gitspace config: %w", err)
 	}

@@ -23,8 +23,13 @@ import (
 	"github.com/harness/gitness/types"
 )
 
-func (c *Service) DeleteConfig(ctx context.Context, space *types.SpaceCore, identifier string) error {
-	err := c.tx.WithTx(ctx, func(ctx context.Context) error {
+func (c *Service) DeleteConfig(
+	ctx context.Context,
+	space *types.SpaceCore,
+	identifier string,
+	useTransaction bool,
+) error {
+	deleteFunc := func(ctx context.Context) error {
 		infraProviderConfig, err := c.Find(ctx, space, identifier)
 		if err != nil {
 			return fmt.Errorf("could not find infra provider config %s to delete: %w", identifier, err)
@@ -34,9 +39,9 @@ func (c *Service) DeleteConfig(ctx context.Context, space *types.SpaceCore, iden
 				"not allowed until all resources are deleted.", len(infraProviderConfig.Resources))
 		}
 		return c.infraProviderConfigStore.Delete(ctx, infraProviderConfig.ID)
-	})
-	if err != nil {
-		return err
 	}
-	return nil
+	if useTransaction {
+		return c.tx.WithTx(ctx, deleteFunc)
+	}
+	return deleteFunc(ctx)
 }

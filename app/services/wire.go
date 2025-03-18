@@ -17,6 +17,7 @@ package services
 import (
 	"github.com/harness/gitness/app/services/cleanup"
 	"github.com/harness/gitness/app/services/gitspace"
+	"github.com/harness/gitness/app/services/gitspacedeleteevent"
 	"github.com/harness/gitness/app/services/gitspaceevent"
 	"github.com/harness/gitness/app/services/gitspaceinfraevent"
 	"github.com/harness/gitness/app/services/gitspaceoperationsevent"
@@ -63,10 +64,12 @@ type GitspaceServices struct {
 	gitspace                   *gitspace.Service
 	gitspaceInfraEventSvc      *gitspaceinfraevent.Service
 	gitspaceOperationsEventSvc *gitspaceoperationsevent.Service
+	gitspaceDeleteEventSvc     *gitspacedeleteevent.Service
 }
 
 func ProvideGitspaceServices(
 	gitspaceEventSvc *gitspaceevent.Service,
+	gitspaceDeleteEventSvc *gitspacedeleteevent.Service,
 	infraProviderSvc *infraprovider.Service,
 	gitspaceSvc *gitspace.Service,
 	gitspaceInfraEventSvc *gitspaceinfraevent.Service,
@@ -78,6 +81,7 @@ func ProvideGitspaceServices(
 		gitspace:                   gitspaceSvc,
 		gitspaceInfraEventSvc:      gitspaceInfraEventSvc,
 		gitspaceOperationsEventSvc: gitspaceOperationsEventSvc,
+		gitspaceDeleteEventSvc:     gitspaceDeleteEventSvc,
 	}
 }
 

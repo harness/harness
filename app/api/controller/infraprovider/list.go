@@ -37,5 +37,8 @@ func (c *Controller) List(
 	if err != nil {
 		return nil, fmt.Errorf("failed to authorize: %w", err)
 	}
-	return c.infraproviderSvc.List(ctx, space)
+	filter := types.InfraProviderConfigFilter{
+		SpaceIDs: []int64{space.ID},
+	}
+	return c.infraproviderSvc.List(ctx, &filter)
 }

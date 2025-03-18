@@ -19,11 +19,46 @@ import (
 	"fmt"
 	"time"
 
+	events "github.com/harness/gitness/app/events/gitspacedelete"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
 )
+
+func (c *Service) DeleteGitspaceByIdentifier(ctx context.Context, spaceRef string, identifier string) error {
+	gitspaceConfig, err := c.FindWithLatestInstanceWithSpacePath(ctx, spaceRef, identifier)
+	if err != nil {
+		log.Err(err).Msgf("Failed to find latest gitspace config : %s", identifier)
+		return err
+	}
+	return c.deleteGitspace(ctx, gitspaceConfig)
+}
+
+func (c *Service) deleteGitspace(ctx context.Context, gitspaceConfig *types.GitspaceConfig) error {
+	if gitspaceConfig.GitspaceInstance == nil ||
+		gitspaceConfig.GitspaceInstance.State == enum.GitspaceInstanceStateUninitialized {
+		gitspaceConfig.IsMarkedForDeletion = true
+		gitspaceConfig.IsDeleted = true
+		if err := c.UpdateConfig(ctx, gitspaceConfig); err != nil {
+			return fmt.Errorf("failed to mark gitspace config as deleted: %w", err)
+		}
+
+		return nil
+	}
+
+	// mark can_delete for gitconfig as true so that if delete operation fails, cron job can clean up resources.
+	gitspaceConfig.IsMarkedForDeletion = true
+	if err := c.UpdateConfig(ctx, gitspaceConfig); err != nil {
+		return fmt.Errorf("failed to mark gitspace config is_marked_for_deletion column: %w", err)
+	}
+
+	c.gitspaceDeleteEventReporter.EmitGitspaceDeleteEvent(ctx, events.GitspaceDeleteEvent,
+		&events.GitspaceDeleteEventPayload{GitspaceConfigIdentifier: gitspaceConfig.Identifier,
+			SpaceID: gitspaceConfig.SpaceID})
+
+	return nil
+}
 
 func (c *Service) RemoveGitspace(ctx context.Context, config types.GitspaceConfig, canDeleteUserData bool) error {
 	if config.GitspaceInstance.State == enum.GitSpaceInstanceStateCleaning &&

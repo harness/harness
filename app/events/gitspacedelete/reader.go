@@ -12,27 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gitspace
+package events
 
 import (
-	"context"
-	"fmt"
-
-	apiauth "github.com/harness/gitness/app/api/auth"
-	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/types/enum"
+	"github.com/harness/gitness/events"
 )
 
-func (c *Controller) Delete(
-	ctx context.Context,
-	session *auth.Session,
-	spaceRef string,
-	identifier string,
-) error {
-	err := apiauth.CheckGitspace(ctx, c.authorizer, session, spaceRef, identifier, enum.PermissionGitspaceDelete)
-	if err != nil {
-		return fmt.Errorf("failed to authorize: %w", err)
+func NewReaderFactory(eventsSystem *events.System) (*events.ReaderFactory[*Reader], error) {
+	readerFactoryFunc := func(innerReader *events.GenericReader) (*Reader, error) {
+		return &Reader{
+			innerReader: innerReader,
+		}, nil
 	}
 
-	return c.gitspaceSvc.DeleteGitspaceByIdentifier(ctx, spaceRef, identifier)
+	return events.NewReaderFactory(eventsSystem, category, readerFactoryFunc)
+}
+
+// Reader is the event reader for this package.
+type Reader struct {
+	innerReader *events.GenericReader
+}
+
+func (r *Reader) Configure(opts ...events.ReaderOption) {
+	r.innerReader.Configure(opts...)
 }

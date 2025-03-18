@@ -97,7 +97,24 @@ func (c *Controller) softDeleteInnerInTx(
 		return nil, fmt.Errorf("failed to list space %d sub spaces recursively: %w", space.ID, err)
 	}
 
+	allSpaces := []*types.Space{space}
+	allSpaces = append(allSpaces, subSpaces...)
+
 	now := time.Now().UnixMilli()
+
+	if c.gitspaceSvc != nil {
+		err = c.gitspaceSvc.DeleteAllForSpaces(ctx, allSpaces)
+		if err != nil {
+			return nil, fmt.Errorf("failed to soft delete gitspaces of space %d: %w", space.ID, err)
+		}
+	}
+
+	if c.infraProviderSvc != nil {
+		err = c.infraProviderSvc.DeleteAllForSpaces(ctx, allSpaces)
+		if err != nil {
+			return nil, fmt.Errorf("failed to soft delete infra providers of space %d: %w", space.ID, err)
+		}
+	}
 
 	for _, space := range subSpaces {
 		_, err := c.spaceStore.FindForUpdate(ctx, space.ID)
@@ -110,9 +127,11 @@ func (c *Controller) softDeleteInnerInTx(
 		}
 	}
 
-	err = c.softDeleteRepositoriesNoAuth(ctx, session, space.ID, now)
-	if err != nil {
-		return nil, fmt.Errorf("failed to soft delete repositories of space %d: %w", space.ID, err)
+	if c.repoStore != nil && c.repoCtrl != nil {
+		err = c.softDeleteRepositoriesNoAuth(ctx, session, space.ID, now)
+		if err != nil {
+			return nil, fmt.Errorf("failed to soft delete repositories of space %d: %w", space.ID, err)
+		}
 	}
 
 	if err = c.spaceStore.SoftDelete(ctx, space, now); err != nil {

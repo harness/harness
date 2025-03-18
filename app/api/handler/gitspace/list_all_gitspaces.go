@@ -30,7 +30,7 @@ func HandleListAllGitspaces(gitspaceCtrl *gitspace.Controller) http.HandlerFunc 
 		session, _ := request.AuthSessionFrom(ctx)
 		deleted := false
 		markedForDeletion := false
-		filter := &types.GitspaceFilter{
+		filter := types.GitspaceFilter{
 			GitspaceInstanceFilter: types.GitspaceInstanceFilter{UserIdentifier: session.Principal.UID},
 			Deleted:                &deleted,
 			MarkedForDeletion:      &markedForDeletion,

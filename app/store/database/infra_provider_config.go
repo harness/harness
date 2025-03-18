@@ -25,6 +25,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
@@ -95,12 +96,20 @@ func (i infraProviderConfigStore) Update(ctx context.Context, infraProviderConfi
 	return nil
 }
 
-func (i infraProviderConfigStore) Find(ctx context.Context, id int64) (*types.InfraProviderConfig, error) {
+func (i infraProviderConfigStore) Find(
+	ctx context.Context,
+	id int64,
+	includeDeleted bool,
+) (*types.InfraProviderConfig, error) {
 	stmt := database.Builder.
 		Select(infraProviderConfigSelectColumns).
 		From(infraProviderConfigTable).
-		Where("ipconf_is_deleted = false").
 		Where(infraProviderConfigIDColumn+" = ?", id) //nolint:goconst
+
+	if !includeDeleted {
+		stmt = stmt.Where("ipconf_is_deleted = false")
+	}
+
 	sql, args, err := stmt.ToSql()
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")
@@ -122,8 +131,8 @@ func (i infraProviderConfigStore) List(
 		From(infraProviderConfigTable).
 		Where("ipconf_is_deleted = false")
 
-	if filter != nil && filter.SpaceID > 0 {
-		stmt = stmt.Where("ipconf_space_id = ?", filter.SpaceID)
+	if filter != nil && len(filter.SpaceIDs) > 0 {
+		stmt = stmt.Where(squirrel.Eq{"ipconf_space_id": filter.SpaceIDs})
 	}
 
 	if filter != nil && filter.Type != "" {

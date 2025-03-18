@@ -50,7 +50,6 @@ func (s *Service) handleGitspaceOperationsEvent(
 		gitspaceInstance, err := s.gitspaceSvc.FindInstanceByIdentifier(
 			ctxWithTimedOut,
 			payload.Infra.GitspaceInstanceIdentifier,
-			payload.Infra.SpacePath,
 		)
 		if err != nil {
 			return fmt.Errorf("failed to fetch gitspace instance: %w", err)
@@ -131,7 +130,7 @@ func (s *Service) getConfig(
 	spaceRef string,
 	identifier string,
 ) (*types.GitspaceConfig, error) {
-	config, err := s.gitspaceSvc.FindWithLatestInstance(ctx, spaceRef, identifier)
+	config, err := s.gitspaceSvc.FindWithLatestInstanceWithSpacePath(ctx, spaceRef, identifier)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"failed to find gitspace config during infra event handling, identifier %s: %w", identifier, err)

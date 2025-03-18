@@ -64,8 +64,8 @@ func (c *Service) fetchExistingConfigs(
 	infraProviderConfig *types.InfraProviderConfig,
 ) ([]*types.InfraProviderConfig, error) {
 	existingConfigs, err := c.infraProviderConfigStore.List(ctx, &types.InfraProviderConfigFilter{
-		SpaceID: infraProviderConfig.SpaceID,
-		Type:    infraProviderConfig.Type,
+		SpaceIDs: []int64{infraProviderConfig.SpaceID},
+		Type:     infraProviderConfig.Type,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to find existing infraprovider config for type %s & space %d: %w",

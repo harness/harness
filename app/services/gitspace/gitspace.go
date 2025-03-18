@@ -20,6 +20,7 @@ import (
 	"strconv"
 
 	gitspaceevents "github.com/harness/gitness/app/events/gitspace"
+	gitspacedeleteevents "github.com/harness/gitness/app/events/gitspacedelete"
 	"github.com/harness/gitness/app/gitspace/orchestrator"
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/app/services/infraprovider"
@@ -42,41 +43,47 @@ func NewService(
 	orchestrator orchestrator.Orchestrator,
 	scm *scm.SCM,
 	config *types.Config,
+	gitspaceDeleteEventReporter *gitspacedeleteevents.Reporter,
 ) *Service {
 	return &Service{
-		tx:                    tx,
-		gitspaceConfigStore:   gitspaceStore,
-		gitspaceInstanceStore: gitspaceInstanceStore,
-		eventReporter:         eventReporter,
-		gitspaceEventStore:    gitspaceEventStore,
-		spaceFinder:           spaceFinder,
-		infraProviderSvc:      infraProviderSvc,
-		orchestrator:          orchestrator,
-		scm:                   scm,
-		config:                config,
+		tx:                          tx,
+		gitspaceConfigStore:         gitspaceStore,
+		gitspaceInstanceStore:       gitspaceInstanceStore,
+		gitspaceEventReporter:       eventReporter,
+		gitspaceEventStore:          gitspaceEventStore,
+		spaceFinder:                 spaceFinder,
+		infraProviderSvc:            infraProviderSvc,
+		orchestrator:                orchestrator,
+		scm:                         scm,
+		config:                      config,
+		gitspaceDeleteEventReporter: gitspaceDeleteEventReporter,
 	}
 }
 
 type Service struct {
-	gitspaceConfigStore   store.GitspaceConfigStore
-	gitspaceInstanceStore store.GitspaceInstanceStore
-	eventReporter         *gitspaceevents.Reporter
-	gitspaceEventStore    store.GitspaceEventStore
-	spaceFinder           refcache.SpaceFinder
-	tx                    dbtx.Transactor
-	infraProviderSvc      *infraprovider.Service
-	orchestrator          orchestrator.Orchestrator
-	scm                   *scm.SCM
-	config                *types.Config
+	gitspaceConfigStore         store.GitspaceConfigStore
+	gitspaceInstanceStore       store.GitspaceInstanceStore
+	gitspaceEventReporter       *gitspaceevents.Reporter
+	gitspaceDeleteEventReporter *gitspacedeleteevents.Reporter
+	gitspaceEventStore          store.GitspaceEventStore
+	spaceFinder                 refcache.SpaceFinder
+	tx                          dbtx.Transactor
+	infraProviderSvc            *infraprovider.Service
+	orchestrator                orchestrator.Orchestrator
+	scm                         *scm.SCM
+	config                      *types.Config
 }
 
 func (c *Service) ListGitspacesWithInstance(
 	ctx context.Context,
 	filter types.GitspaceFilter,
+	useTransaction bool,
 ) ([]*types.GitspaceConfig, int64, int64, error) {
 	var gitspaceConfigs []*types.GitspaceConfig
 	var filterCount, allGitspacesCount int64
-	err := c.tx.WithTx(ctx, func(ctx context.Context) (err error) {
+	var err error
+
+	findFunc := func(ctx context.Context) (err error) {
 		gitspaceConfigs, err = c.gitspaceConfigStore.ListWithLatestInstance(ctx, &filter)
 		if err != nil {
 			return fmt.Errorf("failed to list gitspace configs: %w", err)
@@ -101,7 +108,14 @@ func (c *Service) ListGitspacesWithInstance(
 		}
 
 		return nil
-	}, dbtx.TxDefaultReadOnly)
+	}
+
+	if useTransaction {
+		err = c.tx.WithTx(ctx, findFunc, dbtx.TxDefaultReadOnly)
+	} else {
+		err = findFunc(ctx)
+	}
+
 	if err != nil {
 		return nil, 0, 0, err
 	}

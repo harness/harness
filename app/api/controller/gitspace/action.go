@@ -51,7 +51,7 @@ func (c *Controller) Action(
 		return nil, fmt.Errorf("failed to authorize: %w", err)
 	}
 
-	gitspaceConfig, err := c.gitspaceSvc.FindWithLatestInstance(ctx, space.Path, in.Identifier)
+	gitspaceConfig, err := c.gitspaceSvc.FindWithLatestInstance(ctx, space.ID, space.Path, in.Identifier)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find gitspace config: %w", err)
 	}

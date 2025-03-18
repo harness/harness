@@ -170,7 +170,7 @@ func (c *Service) EmitGitspaceConfigEvent(
 	config types.GitspaceConfig,
 	eventType enum.GitspaceEventType,
 ) {
-	c.eventReporter.EmitGitspaceEvent(ctx, events.GitspaceEvent, &events.GitspaceEventPayload{
+	c.gitspaceEventReporter.EmitGitspaceEvent(ctx, events.GitspaceEvent, &events.GitspaceEventPayload{
 		QueryKey:   config.Identifier,
 		EntityID:   config.ID,
 		EntityType: enum.GitspaceEntityTypeGitspaceConfig,

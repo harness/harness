@@ -37,7 +37,7 @@ func (c *Controller) LogsStream(
 		return nil, nil, fmt.Errorf("failed to authorize: %w", err)
 	}
 
-	gitspaceConfig, err := c.gitspaceSvc.FindWithLatestInstance(ctx, spaceRef, identifier)
+	gitspaceConfig, err := c.gitspaceSvc.FindWithLatestInstanceWithSpacePath(ctx, spaceRef, identifier)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to find gitspace config: %w", err)
 	}

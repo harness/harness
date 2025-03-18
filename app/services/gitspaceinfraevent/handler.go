@@ -35,8 +35,7 @@ func (s *Service) handleGitspaceInfraResumeEvent(
 	payload := event.Payload
 	ctxWithTimedOut, cancel := context.WithTimeout(ctx, time.Duration(s.config.TimeoutInMins)*time.Minute)
 	defer cancel()
-	config, fetchErr := s.getConfig(
-		ctxWithTimedOut, payload.Infra.SpacePath, payload.Infra.GitspaceConfigIdentifier)
+	config, fetchErr := s.getConfig(ctxWithTimedOut, payload.Infra.SpaceID, payload.Infra.GitspaceConfigIdentifier)
 	if fetchErr != nil {
 		return fetchErr
 	}
@@ -46,7 +45,6 @@ func (s *Service) handleGitspaceInfraResumeEvent(
 		gitspaceInstance, err := s.gitspaceSvc.FindInstanceByIdentifier(
 			ctxWithTimedOut,
 			payload.Infra.GitspaceInstanceIdentifier,
-			payload.Infra.SpacePath,
 		)
 		if err != nil {
 			return fmt.Errorf("failed to fetch gitspace instance: %w", err)
@@ -127,10 +125,10 @@ func (s *Service) handleGitspaceInfraResumeEvent(
 
 func (s *Service) getConfig(
 	ctx context.Context,
-	spaceRef string,
+	spaceID int64,
 	identifier string,
 ) (*types.GitspaceConfig, error) {
-	config, err := s.gitspaceSvc.FindWithLatestInstance(ctx, spaceRef, identifier)
+	config, err := s.gitspaceSvc.FindWithLatestInstance(ctx, spaceID, "", identifier)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"failed to find gitspace config during infra event handling, identifier %s: %w", identifier, err)

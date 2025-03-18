@@ -12,27 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gitspace
+package events
 
 import (
-	"context"
-	"fmt"
+	"errors"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
-	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/types/enum"
+	"github.com/harness/gitness/events"
 )
 
-func (c *Controller) Delete(
-	ctx context.Context,
-	session *auth.Session,
-	spaceRef string,
-	identifier string,
-) error {
-	err := apiauth.CheckGitspace(ctx, c.authorizer, session, spaceRef, identifier, enum.PermissionGitspaceDelete)
+// Reporter is the event reporter for this package.
+type Reporter struct {
+	innerReporter *events.GenericReporter
+}
+
+func NewReporter(eventsSystem *events.System) (*Reporter, error) {
+	innerReporter, err := events.NewReporter(eventsSystem, category)
 	if err != nil {
-		return fmt.Errorf("failed to authorize: %w", err)
+		return nil, errors.New("failed to create new GenericReporter from event system")
 	}
 
-	return c.gitspaceSvc.DeleteGitspaceByIdentifier(ctx, spaceRef, identifier)
+	return &Reporter{
+		innerReporter: innerReporter,
+	}, nil
 }

@@ -16,6 +16,7 @@ package gitspace
 
 import (
 	gitspaceevents "github.com/harness/gitness/app/events/gitspace"
+	gitspacedeleteevents "github.com/harness/gitness/app/events/gitspacedelete"
 	"github.com/harness/gitness/app/gitspace/orchestrator"
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/app/services/infraprovider"
@@ -42,7 +43,8 @@ func ProvideGitspace(
 	orchestrator orchestrator.Orchestrator,
 	scm *scm.SCM,
 	config *types.Config,
+	gitspaceDeleteEventReporter *gitspacedeleteevents.Reporter,
 ) *Service {
 	return NewService(tx, gitspaceStore, gitspaceInstanceStore, eventReporter,
-		gitspaceEventStore, spaceFinder, infraProviderSvc, orchestrator, scm, config)
+		gitspaceEventStore, spaceFinder, infraProviderSvc, orchestrator, scm, config, gitspaceDeleteEventReporter)
 }

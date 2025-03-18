@@ -12,27 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gitspace
+package events
 
-import (
-	"context"
-	"fmt"
-
-	apiauth "github.com/harness/gitness/app/api/auth"
-	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/types/enum"
+const (
+	// category defines the event category used for this package.
+	category = "gitspace_delete"
 )
-
-func (c *Controller) Delete(
-	ctx context.Context,
-	session *auth.Session,
-	spaceRef string,
-	identifier string,
-) error {
-	err := apiauth.CheckGitspace(ctx, c.authorizer, session, spaceRef, identifier, enum.PermissionGitspaceDelete)
-	if err != nil {
-		return fmt.Errorf("failed to authorize: %w", err)
-	}
-
-	return c.gitspaceSvc.DeleteGitspaceByIdentifier(ctx, spaceRef, identifier)
-}

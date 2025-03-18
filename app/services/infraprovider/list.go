@@ -23,16 +23,18 @@ import (
 
 func (c *Service) List(
 	ctx context.Context,
-	space *types.SpaceCore,
+	filter *types.InfraProviderConfigFilter,
 ) ([]*types.InfraProviderConfig, error) {
-	infraProviderConfigs, err := c.infraProviderConfigStore.List(ctx, &types.InfraProviderConfigFilter{
-		SpaceID: space.ID,
-	})
+	infraProviderConfigs, err := c.infraProviderConfigStore.List(ctx, filter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list infraprovider configs: %w", err)
 	}
 
 	for _, infraProviderConfig := range infraProviderConfigs {
+		space, err := c.spaceFinder.FindByID(ctx, infraProviderConfig.SpaceID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to list infraprovider configs: %w", err)
+		}
 		err = c.populateDetails(ctx, space.Path, infraProviderConfig)
 		if err != nil {
 			return nil, err

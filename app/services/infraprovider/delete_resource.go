@@ -27,8 +27,10 @@ func (c *Service) DeleteResource(
 	spaceID int64,
 	infraProviderConfigIdentifier string,
 	identifier string,
+	useTransaction bool,
 ) error {
-	err := c.tx.WithTx(ctx, func(ctx context.Context) error {
+	var err error
+	deleteFunc := func(ctx context.Context) error {
 		infraProviderConfig, err := c.infraProviderConfigStore.FindByIdentifier(ctx, spaceID,
 			infraProviderConfigIdentifier)
 		if err != nil {
@@ -56,7 +58,13 @@ func (c *Service) DeleteResource(
 		}
 
 		return c.infraProviderResourceStore.Delete(ctx, infraProviderResource.ID)
-	})
+	}
+
+	if useTransaction {
+		err = c.tx.WithTx(ctx, deleteFunc)
+	} else {
+		err = deleteFunc(ctx)
+	}
 
 	if err != nil {
 		return fmt.Errorf("failed to complete txn for deleting the infra resource %s: %w", identifier, err)

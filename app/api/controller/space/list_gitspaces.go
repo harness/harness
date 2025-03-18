@@ -22,6 +22,8 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/gotidy/ptr"
 )
 
 func (c *Controller) ListGitspaces(
@@ -42,10 +44,8 @@ func (c *Controller) ListGitspaces(
 
 	filter.UserIdentifier = session.Principal.UID
 	filter.SpaceIDs = []int64{space.ID}
-	deleted := false
-	markedForDeletion := false
-	filter.Deleted = &deleted
-	filter.MarkedForDeletion = &markedForDeletion
+	filter.Deleted = ptr.Bool(false)
+	filter.MarkedForDeletion = ptr.Bool(false)
 
-	return c.gitspaceSvc.ListGitspacesWithInstance(ctx, filter)
+	return c.gitspaceSvc.ListGitspacesWithInstance(ctx, filter, true)
 }

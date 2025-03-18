@@ -55,6 +55,7 @@ import (
 	connectorservice "github.com/harness/gitness/app/connector"
 	gitevents "github.com/harness/gitness/app/events/git"
 	gitspaceevents "github.com/harness/gitness/app/events/gitspace"
+	gitspacedeleteevents "github.com/harness/gitness/app/events/gitspacedelete"
 	gitspaceinfraevents "github.com/harness/gitness/app/events/gitspaceinfra"
 	gitspaceoperationsevents "github.com/harness/gitness/app/events/gitspaceoperations"
 	pipelineevents "github.com/harness/gitness/app/events/pipeline"
@@ -85,6 +86,7 @@ import (
 	"github.com/harness/gitness/app/services/codecomments"
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/exporter"
+	gitspacedeleteeventservice "github.com/harness/gitness/app/services/gitspacedeleteevent"
 	"github.com/harness/gitness/app/services/gitspaceevent"
 	"github.com/harness/gitness/app/services/gitspaceservice"
 	"github.com/harness/gitness/app/services/importer"
@@ -266,6 +268,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		cliserver.ProvideIDEVSCodeWebConfig,
 		cliserver.ProvideDockerConfig,
 		cliserver.ProvideGitspaceEventConfig,
+		cliserver.ProvideGitspaceDeleteEventConfig,
 		logutil.WireSet,
 		cliserver.ProvideGitspaceOrchestratorConfig,
 		ide.WireSet,
@@ -283,6 +286,8 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		usage.WireSet,
 		registryevents.WireSet,
 		registrywebhooks.WireSet,
+		gitspacedeleteevents.WireSet,
+		gitspacedeleteeventservice.WireSet,
 	)
 	return &cliserver.System{}, nil
 }

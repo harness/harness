@@ -37,5 +37,5 @@ func (c *Controller) DeleteConfig(
 	if err != nil {
 		return fmt.Errorf("failed to authorize: %w", err)
 	}
-	return c.infraproviderSvc.DeleteConfig(ctx, space, identifier)
+	return c.infraproviderSvc.DeleteConfig(ctx, space, identifier, true)
 }

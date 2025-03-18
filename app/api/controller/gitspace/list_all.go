@@ -30,11 +30,11 @@ import (
 func (c *Controller) ListAllGitspaces( // nolint:gocognit
 	ctx context.Context,
 	session *auth.Session,
-	filter *types.GitspaceFilter,
+	filter types.GitspaceFilter,
 ) ([]*types.GitspaceConfig, error) {
 	var result []*types.GitspaceConfig
 	err := c.tx.WithTx(ctx, func(ctx context.Context) (err error) {
-		allGitspaceConfigs, _, _, err := c.gitspaceSvc.ListGitspacesWithInstance(ctx, *filter)
+		allGitspaceConfigs, _, _, err := c.gitspaceSvc.ListGitspacesWithInstance(ctx, filter, false)
 		if err != nil {
 			return fmt.Errorf("failed to list gitspace configs: %w", err)
 		}

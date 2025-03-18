@@ -18,31 +18,36 @@ import (
 	"context"
 
 	"github.com/harness/gitness/events"
-	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
 )
 
 const (
-	// List all Gitspace events below.
-
-	GitspaceEvent events.EventType = "gitspace_event"
+	GitspaceDeleteEvent events.EventType = "gitspace_delete_event"
 )
 
 type (
-	GitspaceEventPayload struct {
-		EntityID   int64                   `json:"entity_id,omitempty"`
-		QueryKey   string                  `json:"query_key,omitempty"`
-		EntityType enum.GitspaceEntityType `json:"entity_type,omitempty"`
-		EventType  enum.GitspaceEventType  `json:"event_type,omitempty"`
-		Timestamp  int64                   `json:"timestamp,omitempty"`
+	GitspaceDeleteEventPayload struct {
+		GitspaceConfigIdentifier string `json:"gitspace_config_identifier"`
+		SpaceID                  int64  `json:"space_id"`
 	}
 )
 
-func (r *Reporter) EmitGitspaceEvent(ctx context.Context, event events.EventType, payload *GitspaceEventPayload) {
+func (r *Reporter) EmitGitspaceDeleteEvent(
+	ctx context.Context,
+	event events.EventType,
+	payload *GitspaceDeleteEventPayload,
+) {
 	if payload == nil {
 		return
 	}
+
+	if event != GitspaceDeleteEvent {
+		log.Ctx(ctx).Error().Msgf("event type should be %s, got %s, aborting emission, payload: %+v",
+			GitspaceDeleteEvent, event, payload)
+		return
+	}
+
 	eventID, err := events.ReporterSendEvent(r.innerReporter, ctx, event, payload)
 	if err != nil {
 		log.Ctx(ctx).Err(err).Msgf("failed to send %s event", event)
@@ -52,9 +57,9 @@ func (r *Reporter) EmitGitspaceEvent(ctx context.Context, event events.EventType
 	log.Ctx(ctx).Debug().Msgf("reported %s event with id '%s'", event, eventID)
 }
 
-func (r *Reader) RegisterGitspaceEvent(
-	fn events.HandlerFunc[*GitspaceEventPayload],
+func (r *Reader) RegisterGitspaceDeleteEvent(
+	fn events.HandlerFunc[*GitspaceDeleteEventPayload],
 	opts ...events.HandlerOption,
 ) error {
-	return events.ReaderRegisterEvent(r.innerReader, GitspaceEvent, fn, opts...)
+	return events.ReaderRegisterEvent(r.innerReader, GitspaceDeleteEvent, fn, opts...)
 }

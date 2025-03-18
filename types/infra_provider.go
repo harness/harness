@@ -162,6 +162,6 @@ type InfraProviderTemplate struct {
 }
 
 type InfraProviderConfigFilter struct {
-	SpaceID int64
-	Type    enum.InfraProviderType
+	SpaceIDs []int64
+	Type     enum.InfraProviderType
 }

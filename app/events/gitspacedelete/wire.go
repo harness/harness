@@ -12,27 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gitspace
+package events
 
 import (
-	"context"
-	"fmt"
+	"github.com/harness/gitness/events"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
-	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/types/enum"
+	"github.com/google/wire"
 )
 
-func (c *Controller) Delete(
-	ctx context.Context,
-	session *auth.Session,
-	spaceRef string,
-	identifier string,
-) error {
-	err := apiauth.CheckGitspace(ctx, c.authorizer, session, spaceRef, identifier, enum.PermissionGitspaceDelete)
-	if err != nil {
-		return fmt.Errorf("failed to authorize: %w", err)
-	}
+// WireSet provides a wire set for this package.
+var WireSet = wire.NewSet(
+	ProvideReaderFactory,
+	ProvideReporter,
+)
 
-	return c.gitspaceSvc.DeleteGitspaceByIdentifier(ctx, spaceRef, identifier)
+func ProvideReaderFactory(eventsSystem *events.System) (*events.ReaderFactory[*Reader], error) {
+	return NewReaderFactory(eventsSystem)
+}
+
+func ProvideReporter(eventsSystem *events.System) (*Reporter, error) {
+	return NewReporter(eventsSystem)
 }

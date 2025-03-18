@@ -767,7 +767,7 @@ type (
 
 	InfraProviderConfigStore interface {
 		// Find returns a infra provider config given a ID from the datastore.
-		Find(ctx context.Context, id int64) (*types.InfraProviderConfig, error)
+		Find(ctx context.Context, id int64, includeDeleted bool) (*types.InfraProviderConfig, error)
 
 		// FindByIdentifier returns a infra provider config with a given UID in a space
 		FindByIdentifier(ctx context.Context, spaceID int64, identifier string) (*types.InfraProviderConfig, error)

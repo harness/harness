@@ -30,6 +30,7 @@ import (
 	"github.com/harness/gitness/app/services/exporter"
 	"github.com/harness/gitness/app/services/gitspace"
 	"github.com/harness/gitness/app/services/importer"
+	"github.com/harness/gitness/app/services/infraprovider"
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/label"
 	"github.com/harness/gitness/app/services/publicaccess"
@@ -103,6 +104,7 @@ type Controller struct {
 	rulesSvc            *rules.Service
 	usageMetricStore    store.UsageMetricStore
 	repoIdentifierCheck check.RepoIdentifier
+	infraProviderSvc    *infraprovider.Service
 }
 
 func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Provider,
@@ -117,6 +119,7 @@ func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Pro
 	gitspaceSvc *gitspace.Service, labelSvc *label.Service,
 	instrumentation instrument.Service, executionStore store.ExecutionStore,
 	rulesSvc *rules.Service, usageMetricStore store.UsageMetricStore, repoIdentifierCheck check.RepoIdentifier,
+	infraProviderSvc *infraprovider.Service,
 ) *Controller {
 	return &Controller{
 		nestedSpacesEnabled: config.NestedSpacesEnabled,
@@ -149,6 +152,7 @@ func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Pro
 		rulesSvc:            rulesSvc,
 		usageMetricStore:    usageMetricStore,
 		repoIdentifierCheck: repoIdentifierCheck,
+		infraProviderSvc:    infraProviderSvc,
 	}
 }
 

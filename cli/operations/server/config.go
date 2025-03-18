@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
 	"github.com/harness/gitness/app/services/cleanup"
 	"github.com/harness/gitness/app/services/codeowners"
+	"github.com/harness/gitness/app/services/gitspacedeleteevent"
 	"github.com/harness/gitness/app/services/gitspaceevent"
 	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/services/notification"
@@ -474,6 +475,16 @@ func ProvideGitspaceInfraProvisionerConfig(config *types.Config) *infrastructure
 // ProvideGitspaceEventConfig loads the gitspace event service config from the main config.
 func ProvideGitspaceEventConfig(config *types.Config) *gitspaceevent.Config {
 	return &gitspaceevent.Config{
+		EventReaderName: config.InstanceID,
+		Concurrency:     config.Gitspace.Events.Concurrency,
+		MaxRetries:      config.Gitspace.Events.MaxRetries,
+		TimeoutInMins:   config.Gitspace.Events.TimeoutInMins,
+	}
+}
+
+// ProvideGitspaceDeleteEventConfig loads the gitspace delete event service config from the main config.
+func ProvideGitspaceDeleteEventConfig(config *types.Config) *gitspacedeleteevent.Config {
+	return &gitspacedeleteevent.Config{
 		EventReaderName: config.InstanceID,
 		Concurrency:     config.Gitspace.Events.Concurrency,
 		MaxRetries:      config.Gitspace.Events.MaxRetries,

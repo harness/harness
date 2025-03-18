@@ -92,8 +92,8 @@ func (i InfraProvisioner) paramsForProvisioningTypeNew(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 ) ([]types.InfraProviderParameter, map[string]any, error) {
-	infraProvisionedLatest, err := i.infraProvisionedStore.FindLatestByGitspaceInstanceID(
-		ctx, gitspaceConfig.GitspaceInstance.ID)
+	infraProvisionedLatest, err := i.infraProvisionedStore.FindLatestByGitspaceInstanceID(ctx,
+		gitspaceConfig.GitspaceInstance.ID)
 	if err != nil {
 		return nil, nil, fmt.Errorf(
 			"could not find latest infra provisioned entity for instance %d: %w",
@@ -107,7 +107,7 @@ func (i InfraProvisioner) paramsForProvisioningTypeNew(
 		return nil, nil, err
 	}
 	infraProviderConfig, err := i.infraProviderConfigStore.Find(ctx,
-		gitspaceConfig.InfraProviderResource.InfraProviderConfigID)
+		gitspaceConfig.InfraProviderResource.InfraProviderConfigID, true)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -174,7 +174,7 @@ func (i InfraProvisioner) getConfigFromResource(
 	ctx context.Context,
 	infraProviderResource types.InfraProviderResource,
 ) (*types.InfraProviderConfig, error) {
-	config, err := i.infraProviderConfigStore.Find(ctx, infraProviderResource.InfraProviderConfigID)
+	config, err := i.infraProviderConfigStore.Find(ctx, infraProviderResource.InfraProviderConfigID, true)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"unable to get infra provider details for ID %d: %w",
@@ -278,7 +278,7 @@ func (i InfraProvisioner) configMetadata(
 	ctx context.Context,
 	infraProviderResource types.InfraProviderResource,
 ) (map[string]any, error) {
-	infraProviderConfig, err := i.infraProviderConfigStore.Find(ctx, infraProviderResource.InfraProviderConfigID)
+	infraProviderConfig, err := i.infraProviderConfigStore.Find(ctx, infraProviderResource.InfraProviderConfigID, true)
 	if err != nil {
 		return nil, err
 	}
