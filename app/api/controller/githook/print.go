@@ -107,6 +107,7 @@ func FMTDuration(d time.Duration) string {
 func printOversizeFiles(
 	output *hook.Output,
 	oversizeFiles []git.FileInfo,
+	total int64,
 	sizeLimit int64,
 ) {
 	output.Messages = append(
@@ -126,12 +127,44 @@ func printOversizeFiles(
 		)
 	}
 
-	total := len(oversizeFiles)
 	output.Messages = append(
 		output.Messages,
 		colorScanSummary.Sprintf(
 			"%d %s found exceeding the size limit of %dB",
 			total, singularOrPlural("file", total > 1), sizeLimit,
+		),
+		"", "", // add two empty lines for making it visually more consumable
+	)
+}
+
+func printCommitterMismatch(
+	output *hook.Output,
+	commitInfos []git.CommitInfo,
+	principalEmail string,
+	total int64,
+) {
+	output.Messages = append(
+		output.Messages,
+		colorScanHeader.Sprintf(
+			"Push contains commits where committer is not the authenticated user (%s):",
+			principalEmail,
+		),
+		"", // add empty line for making it visually more consumable
+	)
+
+	for _, info := range commitInfos {
+		output.Messages = append(
+			output.Messages,
+			fmt.Sprintf("  %s    Committer: %s", info.SHA, info.Committer),
+			"", // add empty line for making it visually more consumable
+		)
+	}
+
+	output.Messages = append(
+		output.Messages,
+		colorScanSummary.Sprintf(
+			"%d %s found not matching the authenticated user (%s)",
+			total, singularOrPlural("commit", total > 1), principalEmail,
 		),
 		"", "", // add two empty lines for making it visually more consumable
 	)

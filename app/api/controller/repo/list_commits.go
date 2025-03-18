@@ -46,9 +46,9 @@ func (c *Controller) ListCommits(ctx context.Context,
 		gitRef = repo.DefaultBranch
 	}
 
-	commiterRegex, err := c.contributorsRegex(ctx, filter.Committer, filter.CommitterIDs)
+	committerRegex, err := c.contributorsRegex(ctx, filter.Committer, filter.CommitterIDs)
 	if err != nil {
-		return types.ListCommitResponse{}, fmt.Errorf("failed create commiter regex: %w", err)
+		return types.ListCommitResponse{}, fmt.Errorf("failed create committer regex: %w", err)
 	}
 
 	authorRegex, err := c.contributorsRegex(ctx, filter.Author, filter.AuthorIDs)
@@ -60,12 +60,12 @@ func (c *Controller) ListCommits(ctx context.Context,
 		ReadParams:   git.CreateReadParams(repo),
 		GitREF:       gitRef,
 		After:        filter.After,
-		Page:         int32(filter.Page),
-		Limit:        int32(filter.Limit),
+		Page:         int32(filter.Page),  //nolint:gosec
+		Limit:        int32(filter.Limit), //nolint:gosec
 		Path:         filter.Path,
 		Since:        filter.Since,
 		Until:        filter.Until,
-		Committer:    commiterRegex,
+		Committer:    committerRegex,
 		Author:       authorRegex,
 		IncludeStats: filter.IncludeStats,
 		Regex:        true,

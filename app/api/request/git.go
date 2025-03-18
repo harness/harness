@@ -195,7 +195,7 @@ func ParseCommitFilter(r *http.Request) (*types.CommitFilter, error) {
 		return nil, err
 	}
 
-	commiterIDs, err := QueryParamListAsPositiveInt64(r, QueryParamCommitterID)
+	committerIDs, err := QueryParamListAsPositiveInt64(r, QueryParamCommitterID)
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +215,7 @@ func ParseCommitFilter(r *http.Request) (*types.CommitFilter, error) {
 		Since:        since,
 		Until:        until,
 		Committer:    QueryParamOrDefault(r, QueryParamCommitter, ""),
-		CommitterIDs: commiterIDs,
+		CommitterIDs: committerIDs,
 		Author:       QueryParamOrDefault(r, QueryParamAuthor, ""),
 		AuthorIDs:    authorIDs,
 		IncludeStats: includeStats,

@@ -96,22 +96,23 @@ func (s *Service) ListLFSPointers(
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
-	var lfsInfos []LFSInfo
-	var candidateObjects []parser.BatchCheckObject
-	// first get the sha of the objects that could be lfs pointers
+	var objects []parser.BatchCheckObject
 	for _, gitObjDir := range params.AlternateObjectDirs {
-		objects, err := catFileBatchCheckAllObjects(ctx, repoPath, gitObjDir)
+		objs, err := s.listGitObjDir(ctx, repoPath, gitObjDir)
 		if err != nil {
 			return nil, err
 		}
+		objects = append(objects, objs...)
+	}
 
-		for _, obj := range objects {
-			if obj.Type == string(TreeNodeTypeBlob) && obj.Size <= lfsPointerMaxSize {
-				candidateObjects = append(candidateObjects, obj)
-			}
+	var candidateObjects []parser.BatchCheckObject
+	for _, obj := range objects {
+		if obj.Type == string(TreeNodeTypeBlob) && obj.Size <= lfsPointerMaxSize {
+			candidateObjects = append(candidateObjects, obj)
 		}
 	}
 
+	var lfsInfos []LFSInfo
 	if len(candidateObjects) == 0 {
 		return &ListLFSPointersOutput{LFSInfos: lfsInfos}, nil
 	}

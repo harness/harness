@@ -22,25 +22,37 @@ import (
 
 // SecuritySettings represents the security related part of repository settings as exposed externally.
 type SecuritySettings struct {
-	SecretScanningEnabled *bool `json:"secret_scanning_enabled" yaml:"secret_scanning_enabled"`
+	SecretScanningEnabled   *bool `json:"secret_scanning_enabled" yaml:"secret_scanning_enabled"`
+	PrincipalCommitterMatch *bool `json:"principal_committer_match" yaml:"principal_committer_match"`
 }
 
 func GetDefaultSecuritySettings() *SecuritySettings {
 	return &SecuritySettings{
-		SecretScanningEnabled: ptr.Bool(settings.DefaultSecretScanningEnabled),
+		SecretScanningEnabled:   ptr.Bool(settings.DefaultSecretScanningEnabled),
+		PrincipalCommitterMatch: ptr.Bool(settings.DefaultPrincipalCommitterMatch),
 	}
 }
 
 func GetSecuritySettingsMappings(s *SecuritySettings) []settings.SettingHandler {
 	return []settings.SettingHandler{
 		settings.Mapping(settings.KeySecretScanningEnabled, s.SecretScanningEnabled),
+		settings.Mapping(settings.KeyPrincipalCommitterMatch, s.PrincipalCommitterMatch),
 	}
 }
 
 func GetSecuritySettingsAsKeyValues(s *SecuritySettings) []settings.KeyValue {
-	kvs := make([]settings.KeyValue, 0, 1)
+	kvs := make([]settings.KeyValue, 0, 2)
+
 	if s.SecretScanningEnabled != nil {
 		kvs = append(kvs, settings.KeyValue{Key: settings.KeySecretScanningEnabled, Value: *s.SecretScanningEnabled})
 	}
+
+	if s.PrincipalCommitterMatch != nil {
+		kvs = append(kvs, settings.KeyValue{
+			Key:   settings.KeyPrincipalCommitterMatch,
+			Value: s.PrincipalCommitterMatch,
+		})
+	}
+
 	return kvs
 }

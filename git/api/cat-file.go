@@ -44,26 +44,6 @@ func CatFileBatch(
 	alternateObjectDirs []string,
 	flags ...command.CmdOptionFunc,
 ) (WriteCloserError, *bufio.Reader, func()) {
-	flags = append(flags, command.WithFlag("--batch"))
-	return catFileBatch(ctx, repoPath, alternateObjectDirs, flags...)
-}
-
-func CatFileBatchCheck(
-	ctx context.Context,
-	repoPath string,
-	alternateObjectDirs []string,
-	flags ...command.CmdOptionFunc,
-) (WriteCloserError, *bufio.Reader, func()) {
-	flags = append(flags, command.WithFlag("--batch-check"))
-	return catFileBatch(ctx, repoPath, alternateObjectDirs, flags...)
-}
-
-func catFileBatch(
-	ctx context.Context,
-	repoPath string,
-	alternateObjectDirs []string,
-	flags ...command.CmdOptionFunc,
-) (WriteCloserError, *bufio.Reader, func()) {
 	const bufferSize = 32 * 1024
 	// We often want to feed the commits in order into cat-file --batch,
 	// followed by their trees and sub trees as necessary.
@@ -87,6 +67,7 @@ func catFileBatch(
 	go func() {
 		stderr := bytes.Buffer{}
 		cmd := command.New("cat-file",
+			command.WithFlag("--batch"),
 			command.WithAlternateObjectDirs(alternateObjectDirs...),
 		)
 		cmd.Add(flags...)

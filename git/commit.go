@@ -270,21 +270,8 @@ func (s *Service) GetCommitDivergences(
 	}, nil
 }
 
-type FindOversizeFilesParams struct {
-	RepoUID       string
-	GitObjectDirs []string
-	SizeLimit     int64
-}
-
-type FindOversizeFilesOutput struct {
-	FileInfos []FileInfo
-}
-
-type FileInfo struct {
-	SHA  sha.SHA
-	Size int64
-}
-
+// TODO: remove. Kept for backwards compatibility.
+//
 //nolint:gocognit
 func (s *Service) FindOversizeFiles(
 	ctx context.Context,
@@ -295,22 +282,22 @@ func (s *Service) FindOversizeFiles(
 	}
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
-	var fileInfos []FileInfo
+	var objects []parser.BatchCheckObject
 	for _, gitObjDir := range params.GitObjectDirs {
-		objects, err := catFileBatchCheckAllObjects(ctx, repoPath, gitObjDir)
+		objs, err := s.listGitObjDir(ctx, repoPath, gitObjDir)
 		if err != nil {
 			return nil, err
 		}
+		objects = append(objects, objs...)
+	}
 
-		for _, obj := range objects {
-			if obj.Type == string(TreeNodeTypeBlob) {
-				if obj.Size > params.SizeLimit {
-					fileInfos = append(fileInfos, FileInfo{
-						SHA:  obj.SHA,
-						Size: obj.Size,
-					})
-				}
-			}
+	var fileInfos []FileInfo
+	for _, obj := range objects {
+		if obj.Type == string(TreeNodeTypeBlob) && obj.Size > params.SizeLimit {
+			fileInfos = append(fileInfos, FileInfo{
+				SHA:  obj.SHA,
+				Size: obj.Size,
+			})
 		}
 	}
 
@@ -319,7 +306,7 @@ func (s *Service) FindOversizeFiles(
 	}, nil
 }
 
-func catFileBatchCheckAllObjects(
+func (s *Service) listGitObjDir(
 	ctx context.Context,
 	repoPath string,
 	gitObjDir string,
@@ -330,7 +317,8 @@ func catFileBatchCheckAllObjects(
 
 	// --batch-all-objects reports objects in the current repository and in all alternate directories.
 	// We want to report objects in the current repository only.
-	if err := os.Rename(gitObjDir+oldFilename, gitObjDir+newFilename); err != nil && !errors.Is(err, fs.ErrNotExist) {
+	if err := os.Rename(gitObjDir+oldFilename, gitObjDir+newFilename); err != nil &&
+		!errors.Is(err, fs.ErrNotExist) {
 		return nil, fmt.Errorf("failed to rename %s to %s: %w", oldFilename, newFilename, err)
 	}
 
@@ -356,7 +344,8 @@ func catFileBatchCheckAllObjects(
 		return nil, fmt.Errorf("failed to parse output of cat-file batch check all objects: %w", err)
 	}
 
-	if err := os.Rename(gitObjDir+newFilename, gitObjDir+oldFilename); err != nil && !errors.Is(err, fs.ErrNotExist) {
+	if err := os.Rename(gitObjDir+newFilename, gitObjDir+oldFilename); err != nil &&
+		!errors.Is(err, fs.ErrNotExist) {
 		return nil, fmt.Errorf("failed to rename %s to %s: %w", newFilename, oldFilename, err)
 	}
 
