@@ -36,10 +36,16 @@ func (h *Handler) GetTags(w http.ResponseWriter, r *http.Request) {
 
 	q := r.URL.Query()
 	lastEntry := q.Get("last")
-	maxEntries, err := strconv.Atoi(q.Get("n"))
-	if err != nil {
-		log.Ctx(ctx).Error().Err(err).Msgf("Failed to parse max entries %s", q.Get("n"))
+	var maxEntries int
+	n := q.Get("n")
+	if n == "" {
 		maxEntries = docker.DefaultMaximumReturnedEntries
+	} else {
+		maxEntries, err = strconv.Atoi(n)
+		if err != nil {
+			log.Ctx(ctx).Info().Err(err).Msgf("Failed to parse max entries %s", n)
+			maxEntries = docker.DefaultMaximumReturnedEntries
+		}
 	}
 
 	if maxEntries <= 0 {
