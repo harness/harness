@@ -1043,6 +1043,8 @@ export interface StringsMap {
   'securitySettings.scanningSecret': string
   'securitySettings.scanningSecretDesc': string
   'securitySettings.updateSuccess': string
+  'securitySettings.verifyCommitterIdentity': string
+  'securitySettings.verifyCommitterIdentityDesc': string
   'securitySettings.vulnerabilityScanning': string
   'securitySettings.vulnerabilityScanningDesc': string
   seeNMoreMatches: string

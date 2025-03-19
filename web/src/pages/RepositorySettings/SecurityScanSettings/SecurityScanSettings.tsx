@@ -50,6 +50,7 @@ interface FormData {
   secretScanEnable: boolean
   vulnerabilityScanEnable: boolean
   vulnerabilityScanningType: VulnerabilityScanningType
+  verifyCommitterIdentity: boolean
 }
 
 const SecurityScanSettings = (props: SecurityScanProps) => {
@@ -89,7 +90,8 @@ const SecurityScanSettings = (props: SecurityScanProps) => {
         secret_scanning_enabled: !!formData?.secretScanEnable,
         vulnerability_scanning_mode: formData?.vulnerabilityScanEnable
           ? formData?.vulnerabilityScanningType
-          : VulnerabilityScanningType.DISABLED
+          : VulnerabilityScanningType.DISABLED,
+        principal_committer_match: !!formData?.verifyCommitterIdentity
       }
       const response = await updateSecuritySettings(payload)
       showSuccess(getString('securitySettings.updateSuccess'), 1500)
@@ -100,7 +102,8 @@ const SecurityScanSettings = (props: SecurityScanProps) => {
           vulnerabilityScanningType:
             response?.vulnerability_scanning_mode === VulnerabilityScanningType.DISABLED
               ? VulnerabilityScanningType.DETECT
-              : response?.vulnerability_scanning_mode
+              : response?.vulnerability_scanning_mode,
+          verifyCommitterIdentity: !!response?.principal_committer_match
         }
       })
     } catch (exception) {
@@ -121,7 +124,8 @@ const SecurityScanSettings = (props: SecurityScanProps) => {
             vulnerabilityScanningType:
               securitySettings?.vulnerability_scanning_mode === VulnerabilityScanningType.DISABLED
                 ? VulnerabilityScanningType.DETECT
-                : securitySettings?.vulnerability_scanning_mode
+                : securitySettings?.vulnerability_scanning_mode,
+            verifyCommitterIdentity: securitySettings?.principal_committer_match
           }}
           onSubmit={(formData, { resetForm }) => {
             handleSubmit(formData, resetForm)
@@ -215,6 +219,21 @@ const SecurityScanSettings = (props: SecurityScanProps) => {
                       </Layout.Horizontal>
                     </Container>
                   </Render>
+                  <Container padding="medium" margin="medium" className={css.generalContainer}>
+                    <Layout.Horizontal
+                      spacing={'medium'}
+                      padding={{ left: 'medium' }}
+                      flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
+                      <FormInput.Toggle
+                        {...permissionProps(permPushResult, standalone)}
+                        key={'verifyCommitterIdentity'}
+                        style={{ margin: '0px' }}
+                        label=""
+                        name="verifyCommitterIdentity"></FormInput.Toggle>
+                      <Text className={css.title}>{getString('securitySettings.verifyCommitterIdentity')}</Text>
+                      <Text className={css.text}>{getString('securitySettings.verifyCommitterIdentityDesc')}</Text>
+                    </Layout.Horizontal>
+                  </Container>
                 </Layout.Vertical>
                 <Layout.Horizontal margin={'medium'} spacing={'medium'}>
                   <Button

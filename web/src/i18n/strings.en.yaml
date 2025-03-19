@@ -1198,9 +1198,11 @@ importFailed: Import Failed
 uploadAFileError: There is no image or video uploaded. Please upload an image or video.
 securitySettings:
   scanningSecret: Secret Scanning
-  scanningSecretDesc: Block commits containing secrets like passwords, API keys, and tokens.
+  scanningSecretDesc: Block commits containing secrets like passwords, API keys, and tokens
   vulnerabilityScanning: Vulnerability Scanning
   vulnerabilityScanningDesc: Scan incoming commits for known vulnerabilities
+  verifyCommitterIdentity: Verify Committer Identity
+  verifyCommitterIdentityDesc: Block commits not committed by the user pushing the changes
   failedToUpdate: Failed to update security settings
   updateSuccess: Updated security settings
   detect: Detect
