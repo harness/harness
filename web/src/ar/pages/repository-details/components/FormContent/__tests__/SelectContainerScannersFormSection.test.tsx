@@ -28,6 +28,15 @@ import SelectContainerScannersFormSection from '../SelectContainerScannersFormSe
 
 import '../../../RepositoryFactory'
 
+jest.mock('@harnessio/react-ng-manager-client', () => ({
+  useGetOrgScopedProjectQuery: jest.fn().mockImplementation(() => ({
+    isFetching: false,
+    refetch: jest.fn(),
+    error: false,
+    data: { content: { data: {} } }
+  }))
+}))
+
 describe('verify SelectContainerScannersFormSection', () => {
   beforeEach(() => {
     jest.clearAllMocks()

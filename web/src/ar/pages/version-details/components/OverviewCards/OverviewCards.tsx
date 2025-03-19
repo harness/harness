@@ -23,8 +23,9 @@ import { useGetDockerArtifactIntegrationDetailsQuery } from '@harnessio/react-ha
 
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import { useStrings } from '@ar/frameworks/strings'
+import { DEFAULT_ORG, DEFAULT_PROJECT } from '@ar/constants'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
-import { useDecodedParams, useGetSpaceRef, useRoutes } from '@ar/hooks'
+import { useAppStore, useDecodedParams, useGetSpaceRef, useRoutes } from '@ar/hooks'
 import DeploymentsCard from '@ar/pages/version-details/components/DeploymentsCard/DeploymentsCard'
 import SecurityTestsCard from '@ar/pages/version-details/components/SecurityTestsCard/SecurityTestsCard'
 import SupplyChainCard from '@ar/pages/version-details/components/SupplyChainCard/SupplyChainCard'
@@ -40,6 +41,8 @@ interface RedirectToTabOptions {
   artifactId?: string
   executionIdentifier?: string
   pipelineIdentifier?: string
+  orgIdentifier?: string
+  projectIdentifier?: string
 }
 
 interface VersionOverviewCardsProps {
@@ -51,6 +54,8 @@ export default function VersionOverviewCards(props: VersionOverviewCardsProps) {
   const { digest = '', cards = [] } = props
   const { getString } = useStrings()
   const routes = useRoutes()
+  const { scope } = useAppStore()
+  const { orgIdentifier, projectIdentifier } = scope
   const pathParams = useDecodedParams<VersionDetailsPathParams>()
   const history = useHistory()
   const spaceRef = useGetSpaceRef()
@@ -112,7 +117,9 @@ export default function VersionOverviewCards(props: VersionOverviewCardsProps) {
               onClick={() => {
                 handleRedirectToTab(VersionDetailsTab.SUPPLY_CHAIN, {
                   sourceId: responseData.sbomDetails?.artifactSourceId,
-                  artifactId: responseData.sbomDetails?.artifactId
+                  artifactId: responseData.sbomDetails?.artifactId,
+                  orgIdentifier: !orgIdentifier ? DEFAULT_ORG : undefined,
+                  projectIdentifier: !projectIdentifier ? DEFAULT_PROJECT : undefined
                 })
               }}
               orchestrationId={defaultTo(responseData.sbomDetails?.orchestrationId, '')}
@@ -129,7 +136,9 @@ export default function VersionOverviewCards(props: VersionOverviewCardsProps) {
               onClick={() => {
                 handleRedirectToTab(VersionDetailsTab.SECURITY_TESTS, {
                   executionIdentifier: responseData?.stoDetails?.executionId,
-                  pipelineIdentifier: responseData?.stoDetails?.pipelineId
+                  pipelineIdentifier: responseData?.stoDetails?.pipelineId,
+                  orgIdentifier: !orgIdentifier ? DEFAULT_ORG : undefined,
+                  projectIdentifier: !projectIdentifier ? DEFAULT_PROJECT : undefined
                 })
               }}
               totalCount={defaultTo(responseData.stoDetails?.total, 0)}

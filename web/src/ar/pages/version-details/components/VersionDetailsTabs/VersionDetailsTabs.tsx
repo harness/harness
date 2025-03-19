@@ -20,7 +20,8 @@ import { Container, Tab, Tabs } from '@harnessio/uicore'
 
 import { useStrings } from '@ar/frameworks/strings'
 import { useQueryParams } from '@ar/__mocks__/hooks'
-import { useDecodedParams, useRoutes } from '@ar/hooks'
+import { DEFAULT_ORG, DEFAULT_PROJECT } from '@ar/constants'
+import { useAppStore, useDecodedParams, useRoutes } from '@ar/hooks'
 import type { RepositoryPackageType } from '@ar/common/types'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 import versionFactory from '@ar/frameworks/Version/VersionFactory'
@@ -30,7 +31,9 @@ import { VersionProviderContext } from '@ar/pages/version-details/context/Versio
 import {
   versionDetailsPathParams,
   versionDetailsTabPathParams,
+  versionDetailsTabWithOrgAndProjectPathParams,
   versionDetailsTabWithPipelineDetailsPathParams,
+  versionDetailsTabWithProjectPathParams,
   versionDetailsTabWithSSCADetailsPathParams
 } from '@ar/routes/RouteDestinations'
 
@@ -42,12 +45,14 @@ export default function VersionDetailsTabs(): JSX.Element {
   const [tab, setTab] = useState('')
 
   const routes = useRoutes()
+  const { scope } = useAppStore()
   const history = useHistory()
   const { getString } = useStrings()
   const routeDefinitions = useRoutes(true)
   const { data } = useContext(VersionProviderContext)
   const pathParams = useDecodedParams<VersionDetailsPathParams>()
   const { digest } = useQueryParams<DockerVersionDetailsQueryParams>()
+  const { orgIdentifier, projectIdentifier } = scope
 
   const tabList = useMemo(() => {
     const versionType = versionFactory?.getVersionType(data?.packageType)
@@ -65,7 +70,9 @@ export default function VersionDetailsTabs(): JSX.Element {
             ...pathParams,
             versionTab: nextTab,
             sourceId: data?.sscaArtifactSourceId,
-            artifactId: data?.sscaArtifactId
+            artifactId: data?.sscaArtifactId,
+            orgIdentifier: !orgIdentifier ? DEFAULT_ORG : undefined,
+            projectIdentifier: !projectIdentifier ? DEFAULT_PROJECT : undefined
           })
           break
         case VersionDetailsTab.SECURITY_TESTS:
@@ -73,11 +80,18 @@ export default function VersionDetailsTabs(): JSX.Element {
             ...pathParams,
             versionTab: nextTab,
             executionIdentifier: data?.stoExecutionId,
-            pipelineIdentifier: data?.stoPipelineId
+            pipelineIdentifier: data?.stoPipelineId,
+            orgIdentifier: !orgIdentifier ? DEFAULT_ORG : undefined,
+            projectIdentifier: !projectIdentifier ? DEFAULT_PROJECT : undefined
           })
           break
         default:
-          newRoute = routes.toARVersionDetailsTab({ ...pathParams, versionTab: nextTab })
+          newRoute = routes.toARVersionDetailsTab({
+            versionIdentifier: pathParams.versionIdentifier,
+            artifactIdentifier: pathParams.artifactIdentifier,
+            repositoryIdentifier: pathParams.repositoryIdentifier,
+            versionTab: nextTab
+          })
           break
       }
       if (digest) {
@@ -106,8 +120,34 @@ export default function VersionDetailsTabs(): JSX.Element {
           exact
           path={[
             routeDefinitions.toARVersionDetailsTab({ ...versionDetailsTabPathParams }),
+            // with project and org data
+            routeDefinitions.toARVersionDetailsTab({
+              ...versionDetailsTabWithOrgAndProjectPathParams
+            }),
+            // ssca with pipeline data
             routeDefinitions.toARVersionDetailsTab({ ...versionDetailsTabWithSSCADetailsPathParams }),
-            routeDefinitions.toARVersionDetailsTab({ ...versionDetailsTabWithPipelineDetailsPathParams })
+            // ssca with project and pipeline data
+            routeDefinitions.toARVersionDetailsTab({
+              ...versionDetailsTabWithSSCADetailsPathParams,
+              ...versionDetailsTabWithProjectPathParams
+            }),
+            // ssca with org, project and pipeline data
+            routeDefinitions.toARVersionDetailsTab({
+              ...versionDetailsTabWithSSCADetailsPathParams,
+              ...versionDetailsTabWithOrgAndProjectPathParams
+            }),
+            // sto with pipeline data
+            routeDefinitions.toARVersionDetailsTab({ ...versionDetailsTabWithPipelineDetailsPathParams }),
+            // sto with project and pipeline data
+            routeDefinitions.toARVersionDetailsTab({
+              ...versionDetailsTabWithPipelineDetailsPathParams,
+              ...versionDetailsTabWithProjectPathParams
+            }),
+            // sto with org, project and pipeline data
+            routeDefinitions.toARVersionDetailsTab({
+              ...versionDetailsTabWithPipelineDetailsPathParams,
+              ...versionDetailsTabWithOrgAndProjectPathParams
+            })
           ]}>
           <VersionDetailsTabWidget
             onInit={setTab}

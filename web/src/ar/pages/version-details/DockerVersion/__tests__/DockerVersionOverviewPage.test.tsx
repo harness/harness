@@ -145,7 +145,7 @@ describe('Verify docker version overview page', () => {
     await userEvent.click(sscaCard)
     await waitFor(() => {
       expect(mockHistoryPush).toHaveBeenCalledWith(
-        '/registries/1/artifacts/1/versions/1/artifact-sources/67a5dccf6d75916b0c3ea1b5/artifacts/67a5dccf6d75916b0c3ea1b6/supply_chain?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
+        '/registries/1/artifacts/1/versions/1/orgs/default/projects/default_project/artifact-sources/67a5dccf6d75916b0c3ea1b5/artifacts/67a5dccf6d75916b0c3ea1b6/supply_chain?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
       )
     })
 
@@ -159,7 +159,7 @@ describe('Verify docker version overview page', () => {
     await userEvent.click(securityTestsCard)
     await waitFor(() => {
       expect(mockHistoryPush).toHaveBeenCalledWith(
-        '/registries/1/artifacts/1/versions/1/pipelines/HARNESS_ARTIFACT_SCAN_PIPELINE/executions/Tbi7s6nETjmOMKU3Qrnm7A/security_tests?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
+        '/registries/1/artifacts/1/versions/1/orgs/default/projects/default_project/pipelines/HARNESS_ARTIFACT_SCAN_PIPELINE/executions/Tbi7s6nETjmOMKU3Qrnm7A/security_tests?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
       )
     })
   })

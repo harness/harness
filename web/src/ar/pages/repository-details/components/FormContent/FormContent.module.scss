@@ -48,3 +48,9 @@
   column-gap: var(--spacing-medium);
   row-gap: var(--spacing-medium);
 }
+
+.helperText {
+  font-size: var(--font-size-small);
+  font-weight: 400;
+  color: var(--gray-900);
+}

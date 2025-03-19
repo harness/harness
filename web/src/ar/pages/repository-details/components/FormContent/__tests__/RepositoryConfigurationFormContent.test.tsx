@@ -41,6 +41,15 @@ jest.mock('@harnessio/react-har-service-client', () => ({
   }))
 }))
 
+jest.mock('@harnessio/react-ng-manager-client', () => ({
+  useGetOrgScopedProjectQuery: jest.fn().mockImplementation(() => ({
+    isFetching: false,
+    refetch: jest.fn(),
+    error: false,
+    data: { content: { data: {} } }
+  }))
+}))
+
 describe('Verify repository configuration form content', () => {
   beforeEach(() => {
     jest.clearAllMocks()

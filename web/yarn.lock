@@ -1952,6 +1952,11 @@
   dependencies:
     "@harnessio/oats-cli" "^3.0.0"
 
+"@harnessio/react-ng-manager-client@^1.40.0":
+  version "1.40.0"
+  resolved "https://registry.yarnpkg.com/@harnessio/react-ng-manager-client/-/react-ng-manager-client-1.40.0.tgz#e874e9afe1b2358d85364d5e23aabe9f6157bae8"
+  integrity sha512-PETKrA+4TmFs3e+Ok99zPi0ngvGwVJqX5HKczxTWtaDrfXiu/ktZYX5pDN9GBBibShadT0ONbRe4xN6ILFPIuA==
+
 "@harnessio/react-ssca-manager-client@^0.65.0":
   version "0.65.0"
   resolved "https://registry.yarnpkg.com/@harnessio/react-ssca-manager-client/-/react-ssca-manager-client-0.65.0.tgz#8088869e282c5268bf1fefb9715652e0fc1a8940"

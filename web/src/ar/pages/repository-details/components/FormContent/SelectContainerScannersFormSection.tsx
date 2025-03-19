@@ -41,7 +41,6 @@ export default function SelectContainerScannersFormSection(
   }, [packageType])
 
   if (!availableScannerOptions.length) return <></>
-
   return (
     <SelectScannerFormSection
       title={getString('repositoryDetails.repositoryForm.securityScan.containerScannerSelect.cardTitle')}

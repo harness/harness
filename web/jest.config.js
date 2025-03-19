@@ -90,7 +90,7 @@ module.exports = {
   //   }
   // },
   transformIgnorePatterns: [
-    'node_modules/(?!(date-fns|lodash-es|@harnessio/uicore|@harnessio/design-system|@harnessio/react-har-service-client|@harnessio/react-ssca-manager-client)/)'
+    'node_modules/(?!(date-fns|lodash-es|@harnessio/uicore|@harnessio/design-system|@harnessio/react-har-service-client|@harnessio/react-ssca-manager-client|@harnessio/react-ng-manager-client)/)'
   ],
   testPathIgnorePatterns: ['<rootDir>/dist', '<rootDir>/src/static']
 }

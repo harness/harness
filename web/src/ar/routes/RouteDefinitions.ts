@@ -63,13 +63,17 @@ export const routeDefinitions: ARRouteDefinitionsReturn = {
   toARVersionDetails: params =>
     `/registries/${params?.repositoryIdentifier}/artifacts/${params?.artifactIdentifier}/versions/${params?.versionIdentifier}`,
   toARVersionDetailsTab: params => {
+    let route = `/registries/${params?.repositoryIdentifier}/artifacts/${params?.artifactIdentifier}/versions/${params?.versionIdentifier}`
+    if (params.orgIdentifier) route += `/orgs/${params.orgIdentifier}`
+    if (params.projectIdentifier) route += `/projects/${params.projectIdentifier}`
     if (params.sourceId && params.artifactId) {
-      return `/registries/${params?.repositoryIdentifier}/artifacts/${params?.artifactIdentifier}/versions/${params?.versionIdentifier}/artifact-sources/${params.sourceId}/artifacts/${params.artifactId}/${params.versionTab}`
+      route += `/artifact-sources/${params.sourceId}/artifacts/${params.artifactId}`
     }
     if (params.pipelineIdentifier && params.executionIdentifier) {
-      return `/registries/${params?.repositoryIdentifier}/artifacts/${params?.artifactIdentifier}/versions/${params?.versionIdentifier}/pipelines/${params.pipelineIdentifier}/executions/${params.executionIdentifier}/${params.versionTab}`
+      route += `/pipelines/${params.pipelineIdentifier}/executions/${params.executionIdentifier}`
     }
-    return `/registries/${params?.repositoryIdentifier}/artifacts/${params?.artifactIdentifier}/versions/${params?.versionIdentifier}/${params.versionTab}`
+    route += `/${params.versionTab}`
+    return route
   },
   toARRepositoryWebhookDetails: params =>
     `/registries/${params?.repositoryIdentifier}/webhooks/${params?.webhookIdentifier}`,

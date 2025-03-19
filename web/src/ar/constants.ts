@@ -34,3 +34,6 @@ export enum PreferenceScope {
   USER = 'USER',
   MACHINE = 'MACHINE' // or workstation. This will act as default PreferenceScope
 }
+
+export const DEFAULT_ORG = 'default'
+export const DEFAULT_PROJECT = 'default_project'

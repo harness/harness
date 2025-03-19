@@ -18,6 +18,7 @@
 // This is an auto-generated file
 export declare const cardContainer: string
 export declare const cardHeading: string
+export declare const helperText: string
 export declare const includeExcludeWrapper: string
 export declare const marginTopLarge: string
 export declare const scannersContainer: string

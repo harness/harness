@@ -17,6 +17,7 @@
 import { useRef } from 'react'
 import { HARServiceAPIClient } from '@harnessio/react-har-service-client'
 import { SSCAManagerAPIClient } from '@harnessio/react-ssca-manager-client'
+import { NGManagerServiceAPIClient } from '@harnessio/react-ng-manager-client'
 
 import type { CustomUtils } from '@ar/MFEAppTypes'
 
@@ -59,6 +60,16 @@ export default function useOpenApiClient({ on401, customUtils }: useOpenApiClien
       requestInterceptor,
       urlInterceptor: (url: string) => {
         return window.getApiBaseUrl(`/ssca-manager${url}`)
+      }
+    })
+  )
+
+  useRef<NGManagerServiceAPIClient>(
+    new NGManagerServiceAPIClient({
+      responseInterceptor,
+      requestInterceptor,
+      urlInterceptor: (url: string) => {
+        return window.getApiBaseUrl(url)
       }
     })
   )

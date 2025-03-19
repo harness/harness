@@ -41,6 +41,8 @@ export interface VersionDetailsTabPathParams extends VersionDetailsPathParams {
   executionIdentifier?: string
   artifactId?: string
   sourceId?: string
+  orgIdentifier?: string
+  projectIdentifier?: string
 }
 
 export interface RedirectPageQueryParams {

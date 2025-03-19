@@ -66,6 +66,17 @@ export const versionDetailsTabPathParams: VersionDetailsTabPathParams = {
   versionTab: ':versionTab'
 }
 
+export const versionDetailsTabWithProjectPathParams: VersionDetailsTabPathParams = {
+  ...versionDetailsTabPathParams,
+  projectIdentifier: ':projectIdentifier'
+}
+
+export const versionDetailsTabWithOrgAndProjectPathParams: VersionDetailsTabPathParams = {
+  ...versionDetailsTabPathParams,
+  orgIdentifier: ':orgIdentifier',
+  projectIdentifier: ':projectIdentifier'
+}
+
 export const versionDetailsTabWithPipelineDetailsPathParams: VersionDetailsTabPathParams = {
   ...versionDetailsTabPathParams,
   pipelineIdentifier: ':pipelineIdentifier',
