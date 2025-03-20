@@ -252,7 +252,6 @@ type PullReqFileView struct {
 }
 
 type DefaultReviewerApprovalsResponse struct {
-	RuleInfo                   RuleInfo         `json:"rule_info"`
 	MinimumRequiredCount       int              `json:"minimum_required_count"`
 	MinimumRequiredCountLatest int              `json:"minimum_required_count_latest"`
 	CurrentCount               int              `json:"current_count"`

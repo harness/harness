@@ -1127,7 +1127,6 @@ export interface TypesDefaultReviewerApprovalsResponse {
   minimum_required_count?: number
   minimum_required_count_latest?: number
   principals?: TypesPrincipalInfo[] | null
-  rule_info?: TypesRuleInfo
 }
 
 export interface TypesDeleteBranchOutput {

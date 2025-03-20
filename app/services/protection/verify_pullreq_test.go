@@ -24,6 +24,12 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
+var (
+	reviewer1 = types.PrincipalInfo{ID: 1, DisplayName: "Reviewer 1", UID: "reviewer-1"}
+	reviewer2 = types.PrincipalInfo{ID: 2, DisplayName: "Reviewer 2", UID: "reviewer-2"}
+	reviewer3 = types.PrincipalInfo{ID: 3, DisplayName: "Reviewer 3", UID: "reviewer-3"}
+)
+
 // nolint:gocognit // it's a unit test
 func TestDefPullReq_MergeVerify(t *testing.T) {
 	tests := []struct {
@@ -58,7 +64,7 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 			in: MergeVerifyInput{
 				PullReq: &types.PullReq{UnresolvedCount: 0, SourceSHA: "abc"},
 				Reviewers: []*types.PullReqReviewer{
-					{ReviewDecision: enum.PullReqReviewDecisionChangeReq, SHA: "abc"},
+					{ReviewDecision: enum.PullReqReviewDecisionChangeReq, SHA: "abc", Reviewer: reviewer1},
 				},
 				Method: enum.MergeMethodMerge,
 			},
@@ -75,8 +81,8 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 			in: MergeVerifyInput{
 				PullReq: &types.PullReq{UnresolvedCount: 0, SourceSHA: "abc"},
 				Reviewers: []*types.PullReqReviewer{
-					{ReviewDecision: enum.PullReqReviewDecisionApproved, SHA: "abc"},
-					{ReviewDecision: enum.PullReqReviewDecisionApproved, SHA: "abc"},
+					{ReviewDecision: enum.PullReqReviewDecisionApproved, SHA: "abc", Reviewer: reviewer1},
+					{ReviewDecision: enum.PullReqReviewDecisionApproved, SHA: "abc", Reviewer: reviewer2},
 				},
 				Method: enum.MergeMethodMerge,
 			},
@@ -109,15 +115,261 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 			in: MergeVerifyInput{
 				PullReq: &types.PullReq{UnresolvedCount: 0, SourceSHA: "abc"},
 				Reviewers: []*types.PullReqReviewer{
-					{ReviewDecision: enum.PullReqReviewDecisionPending, SHA: "abc"},
-					{ReviewDecision: enum.PullReqReviewDecisionApproved, SHA: "abc"},
-					{ReviewDecision: enum.PullReqReviewDecisionApproved, SHA: "abc"},
+					{ReviewDecision: enum.PullReqReviewDecisionPending, SHA: "abc", Reviewer: reviewer1},
+					{ReviewDecision: enum.PullReqReviewDecisionApproved, SHA: "abc", Reviewer: reviewer2},
+					{ReviewDecision: enum.PullReqReviewDecisionApproved, SHA: "abc", Reviewer: reviewer3},
 				},
 				Method: enum.MergeMethodMerge,
 			},
 			expOut: MergeVerifyOutput{
 				AllowedMethods:                      enum.MergeMethods,
 				MinimumRequiredApprovalsCountLatest: 2,
+			},
+		},
+		{
+			name: codePullReqApprovalReqDefaultReviewerMinCount + "-fail",
+			def: DefPullReq{
+				Approvals: DefApprovals{RequireMinimumDefaultReviewerCount: 1},
+				Reviewers: DefReviewers{DefaultReviewerIDs: []int64{reviewer1.ID}},
+			},
+			in: MergeVerifyInput{
+				PullReq: &types.PullReq{UnresolvedCount: 0, SourceSHA: "abc"},
+				Reviewers: []*types.PullReqReviewer{
+					{ReviewDecision: enum.PullReqReviewDecisionChangeReq, SHA: "abc", Reviewer: reviewer1},
+					{ReviewDecision: enum.PullReqReviewDecisionApproved, SHA: "abc", Reviewer: reviewer2},
+				},
+				Method: enum.MergeMethodMerge,
+			},
+			expCodes:  []string{codePullReqApprovalReqDefaultReviewerMinCount},
+			expParams: [][]any{{0, 1}},
+			expOut: MergeVerifyOutput{
+				AllowedMethods: enum.MergeMethods,
+				DefaultReviewerApprovals: []*types.DefaultReviewerApprovalsResponse{{
+					PrincipalIDs:         []int64{reviewer1.ID},
+					CurrentCount:         0,
+					MinimumRequiredCount: 1,
+				}},
+			},
+		},
+		{
+			name: codePullReqApprovalReqDefaultReviewerMinCount + "-success",
+			def: DefPullReq{
+				Approvals: DefApprovals{RequireMinimumDefaultReviewerCount: 1},
+				Reviewers: DefReviewers{DefaultReviewerIDs: []int64{reviewer1.ID}},
+			},
+			in: MergeVerifyInput{
+				PullReq: &types.PullReq{UnresolvedCount: 0, SourceSHA: "abc"},
+				Reviewers: []*types.PullReqReviewer{
+					{ReviewDecision: enum.PullReqReviewDecisionApproved, SHA: "abc", Reviewer: reviewer1},
+					{ReviewDecision: enum.PullReqReviewDecisionChangeReq, SHA: "abc", Reviewer: reviewer2},
+				},
+				Method: enum.MergeMethodMerge,
+			},
+			expOut: MergeVerifyOutput{
+				AllowedMethods: enum.MergeMethods,
+				DefaultReviewerApprovals: []*types.DefaultReviewerApprovalsResponse{{
+					PrincipalIDs:         []int64{reviewer1.ID},
+					CurrentCount:         1,
+					MinimumRequiredCount: 1,
+				}},
+			},
+		},
+		{
+			name: codePullReqApprovalReqDefaultReviewerMinCount + "-with-author-count-1-exact",
+			def: DefPullReq{
+				Approvals: DefApprovals{RequireMinimumDefaultReviewerCount: 1},
+				Reviewers: DefReviewers{DefaultReviewerIDs: []int64{reviewer1.ID}},
+			},
+			in: MergeVerifyInput{
+				PullReq:   &types.PullReq{UnresolvedCount: 0, SourceSHA: "abc", Author: reviewer1},
+				Reviewers: nil,
+				Method:    enum.MergeMethodMerge,
+			},
+			expOut: MergeVerifyOutput{
+				AllowedMethods:           enum.MergeMethods,
+				DefaultReviewerApprovals: nil,
+			},
+		},
+		{
+			name: codePullReqApprovalReqDefaultReviewerMinCount + "-with-author-count-1-more-fail",
+			def: DefPullReq{
+				Approvals: DefApprovals{RequireMinimumDefaultReviewerCount: 1},
+				Reviewers: DefReviewers{DefaultReviewerIDs: []int64{reviewer1.ID, reviewer2.ID}},
+			},
+			in: MergeVerifyInput{
+				PullReq:   &types.PullReq{UnresolvedCount: 0, SourceSHA: "abc", Author: reviewer1},
+				Reviewers: nil,
+				Method:    enum.MergeMethodMerge,
+			},
+			expCodes:  []string{codePullReqApprovalReqDefaultReviewerMinCount},
+			expParams: [][]any{{0, 1}},
+			expOut: MergeVerifyOutput{
+				AllowedMethods: enum.MergeMethods,
+				DefaultReviewerApprovals: []*types.DefaultReviewerApprovalsResponse{{
+					PrincipalIDs:         []int64{reviewer2.ID},
+					CurrentCount:         0,
+					MinimumRequiredCount: 1,
+				}},
+			},
+		},
+		{
+			name: codePullReqApprovalReqDefaultReviewerMinCount + "-with-author-count-1-more-success",
+			def: DefPullReq{
+				Approvals: DefApprovals{RequireMinimumDefaultReviewerCount: 1},
+				Reviewers: DefReviewers{DefaultReviewerIDs: []int64{reviewer1.ID, reviewer2.ID}},
+			},
+			in: MergeVerifyInput{
+				PullReq: &types.PullReq{UnresolvedCount: 0, SourceSHA: "abc", Author: reviewer1},
+				Reviewers: []*types.PullReqReviewer{
+					{ReviewDecision: enum.PullReqReviewDecisionApproved, SHA: "abc", Reviewer: reviewer2},
+				},
+				Method: enum.MergeMethodMerge,
+			},
+			expOut: MergeVerifyOutput{
+				AllowedMethods: enum.MergeMethods,
+				DefaultReviewerApprovals: []*types.DefaultReviewerApprovalsResponse{{
+					PrincipalIDs:         []int64{reviewer2.ID},
+					CurrentCount:         1,
+					MinimumRequiredCount: 1,
+				}},
+			},
+		},
+		{
+			name: codePullReqApprovalReqDefaultReviewerMinCount + "-with-author-count-2-exact-fail",
+			def: DefPullReq{
+				Approvals: DefApprovals{RequireMinimumDefaultReviewerCount: 2},
+				Reviewers: DefReviewers{DefaultReviewerIDs: []int64{reviewer1.ID, reviewer2.ID}},
+			},
+			in: MergeVerifyInput{
+				PullReq:   &types.PullReq{UnresolvedCount: 0, SourceSHA: "abc", Author: reviewer1},
+				Reviewers: []*types.PullReqReviewer{},
+				Method:    enum.MergeMethodMerge,
+			},
+			expCodes:  []string{codePullReqApprovalReqDefaultReviewerMinCount},
+			expParams: [][]any{{0, 1}},
+			expOut: MergeVerifyOutput{
+				AllowedMethods: enum.MergeMethods,
+				DefaultReviewerApprovals: []*types.DefaultReviewerApprovalsResponse{{
+					PrincipalIDs:         []int64{reviewer2.ID},
+					CurrentCount:         0,
+					MinimumRequiredCount: 1,
+				}},
+			},
+		},
+		{
+			name: codePullReqApprovalReqDefaultReviewerMinCount + "-with-author-count-2-exact-success",
+			def: DefPullReq{
+				Approvals: DefApprovals{RequireMinimumDefaultReviewerCount: 2},
+				Reviewers: DefReviewers{DefaultReviewerIDs: []int64{reviewer1.ID, reviewer2.ID}},
+			},
+			in: MergeVerifyInput{
+				PullReq: &types.PullReq{UnresolvedCount: 0, SourceSHA: "abc", Author: reviewer1},
+				Reviewers: []*types.PullReqReviewer{
+					{ReviewDecision: enum.PullReqReviewDecisionApproved, SHA: "abc", Reviewer: reviewer2},
+				},
+				Method: enum.MergeMethodMerge,
+			},
+			expOut: MergeVerifyOutput{
+				AllowedMethods: enum.MergeMethods,
+				DefaultReviewerApprovals: []*types.DefaultReviewerApprovalsResponse{{
+					PrincipalIDs:         []int64{reviewer2.ID},
+					CurrentCount:         1,
+					MinimumRequiredCount: 1,
+				}},
+			},
+		},
+		{
+			name: codePullReqApprovalReqDefaultReviewerMinCount + "-with-author-count-2-more-fail",
+			def: DefPullReq{
+				Approvals: DefApprovals{RequireMinimumDefaultReviewerCount: 2},
+				Reviewers: DefReviewers{DefaultReviewerIDs: []int64{reviewer1.ID, reviewer2.ID, reviewer3.ID}},
+			},
+			in: MergeVerifyInput{
+				PullReq: &types.PullReq{UnresolvedCount: 0, SourceSHA: "abc", Author: reviewer1},
+				Reviewers: []*types.PullReqReviewer{
+					{ReviewDecision: enum.PullReqReviewDecisionApproved, SHA: "abc", Reviewer: reviewer2},
+					{ReviewDecision: enum.PullReqReviewDecisionChangeReq, SHA: "abc", Reviewer: reviewer3},
+				},
+				Method: enum.MergeMethodMerge,
+			},
+			expCodes:  []string{codePullReqApprovalReqDefaultReviewerMinCount},
+			expParams: [][]any{{1, 2}},
+			expOut: MergeVerifyOutput{
+				AllowedMethods: enum.MergeMethods,
+				DefaultReviewerApprovals: []*types.DefaultReviewerApprovalsResponse{{
+					PrincipalIDs:         []int64{reviewer2.ID, reviewer3.ID},
+					CurrentCount:         1,
+					MinimumRequiredCount: 2,
+				}},
+			},
+		},
+		{
+			name: codePullReqApprovalReqDefaultReviewerMinCount + "-with-author-count-2-more-success",
+			def: DefPullReq{
+				Approvals: DefApprovals{RequireMinimumDefaultReviewerCount: 2},
+				Reviewers: DefReviewers{DefaultReviewerIDs: []int64{reviewer1.ID, reviewer2.ID, reviewer3.ID}},
+			},
+			in: MergeVerifyInput{
+				PullReq: &types.PullReq{UnresolvedCount: 0, SourceSHA: "abc", Author: reviewer1},
+				Reviewers: []*types.PullReqReviewer{
+					{ReviewDecision: enum.PullReqReviewDecisionApproved, SHA: "abc", Reviewer: reviewer2},
+					{ReviewDecision: enum.PullReqReviewDecisionApproved, SHA: "abc", Reviewer: reviewer3},
+				},
+				Method: enum.MergeMethodMerge,
+			},
+			expOut: MergeVerifyOutput{
+				AllowedMethods: enum.MergeMethods,
+				DefaultReviewerApprovals: []*types.DefaultReviewerApprovalsResponse{{
+					PrincipalIDs:         []int64{reviewer2.ID, reviewer3.ID},
+					CurrentCount:         2,
+					MinimumRequiredCount: 2,
+				}},
+			},
+		},
+		{
+			name: codePullReqApprovalReqDefaultReviewerMinCountLatest + "-fail",
+			def: DefPullReq{
+				Approvals: DefApprovals{RequireMinimumDefaultReviewerCount: 1, RequireLatestCommit: true},
+				Reviewers: DefReviewers{DefaultReviewerIDs: []int64{reviewer1.ID}},
+			},
+			in: MergeVerifyInput{
+				PullReq: &types.PullReq{UnresolvedCount: 0, SourceSHA: "abc"},
+				Reviewers: []*types.PullReqReviewer{
+					{ReviewDecision: enum.PullReqReviewDecisionApproved, SHA: "def", Reviewer: reviewer1},
+				},
+				Method: enum.MergeMethodMerge,
+			},
+			expCodes:  []string{codePullReqApprovalReqDefaultReviewerMinCountLatest},
+			expParams: [][]any{{0, 1}},
+			expOut: MergeVerifyOutput{
+				AllowedMethods: enum.MergeMethods,
+				DefaultReviewerApprovals: []*types.DefaultReviewerApprovalsResponse{{
+					PrincipalIDs:               []int64{reviewer1.ID},
+					CurrentCount:               0,
+					MinimumRequiredCountLatest: 1,
+				}},
+			},
+		},
+		{
+			name: codePullReqApprovalReqDefaultReviewerMinCountLatest + "-success",
+			def: DefPullReq{
+				Approvals: DefApprovals{RequireMinimumDefaultReviewerCount: 1, RequireLatestCommit: true},
+				Reviewers: DefReviewers{DefaultReviewerIDs: []int64{reviewer1.ID}},
+			},
+			in: MergeVerifyInput{
+				PullReq: &types.PullReq{UnresolvedCount: 0, SourceSHA: "abc"},
+				Reviewers: []*types.PullReqReviewer{
+					{ReviewDecision: enum.PullReqReviewDecisionApproved, SHA: "abc", Reviewer: reviewer1},
+				},
+				Method: enum.MergeMethodMerge,
+			},
+			expOut: MergeVerifyOutput{
+				AllowedMethods: enum.MergeMethods,
+				DefaultReviewerApprovals: []*types.DefaultReviewerApprovalsResponse{{
+					PrincipalIDs:               []int64{reviewer1.ID},
+					CurrentCount:               1,
+					MinimumRequiredCountLatest: 1,
+				}},
 			},
 		},
 		{
@@ -390,7 +642,7 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 			in: MergeVerifyInput{
 				PullReq: &types.PullReq{SourceSHA: "abc"},
 				Reviewers: []*types.PullReqReviewer{
-					{ReviewDecision: enum.PullReqReviewDecisionChangeReq, SHA: "abc"},
+					{ReviewDecision: enum.PullReqReviewDecisionChangeReq, SHA: "abc", Reviewer: reviewer1},
 				},
 				Method: enum.MergeMethodMerge,
 			},
@@ -408,14 +660,14 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 				Reviewers: []*types.PullReqReviewer{
 					{
 						ReviewDecision: enum.PullReqReviewDecisionChangeReq,
-						Reviewer:       types.PrincipalInfo{DisplayName: "John"},
+						Reviewer:       reviewer1,
 						SHA:            "abc",
 					},
 				},
 				Method: enum.MergeMethodMerge,
 			},
 			expCodes:  []string{codePullReqApprovalReqChangeRequested},
-			expParams: [][]any{{"John"}},
+			expParams: [][]any{{reviewer1.DisplayName}},
 			expOut: MergeVerifyOutput{
 				AllowedMethods:           enum.MergeMethods,
 				RequiresNoChangeRequests: true,
@@ -431,14 +683,14 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 				Reviewers: []*types.PullReqReviewer{
 					{
 						ReviewDecision: enum.PullReqReviewDecisionChangeReq,
-						Reviewer:       types.PrincipalInfo{DisplayName: "John"},
+						Reviewer:       reviewer1,
 						SHA:            "def",
 					},
 				},
 				Method: enum.MergeMethodMerge,
 			},
 			expCodes:  []string{codePullReqApprovalReqChangeRequestedOldSHA},
-			expParams: [][]any{{"John"}},
+			expParams: [][]any{{reviewer1.DisplayName}},
 			expOut: MergeVerifyOutput{
 				AllowedMethods:           enum.MergeMethods,
 				RequiresNoChangeRequests: true,

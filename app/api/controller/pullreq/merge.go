@@ -225,6 +225,14 @@ func (c *Controller) Merge(
 	}
 
 	if in.DryRunRules {
+		for _, approvals := range ruleOut.DefaultReviewerApprovals {
+			principalInfos, err := c.principalInfoCache.Map(ctx, approvals.PrincipalIDs)
+			if err != nil {
+				return nil, nil, fmt.Errorf("failed to fetch principal infos from info cache: %w", err)
+			}
+			approvals.PrincipalInfos = maps.Values(principalInfos)
+		}
+
 		return &types.MergeResponse{
 			BranchDeleted:  ruleOut.DeleteSourceBranch,
 			RuleViolations: violations,

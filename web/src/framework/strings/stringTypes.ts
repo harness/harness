@@ -94,6 +94,8 @@ export interface StringsMap {
   'branchProtection.createBranchBlockText': string
   'branchProtection.createRule': string
   'branchProtection.defaultBranch': string
+  'branchProtection.defaultReviewerWarning': string
+  'branchProtection.defaultReviewersWarning': string
   'branchProtection.deleteBranchAlertBtn': string
   'branchProtection.deleteBranchAlertText': string
   'branchProtection.deleteBranchBlockText': string

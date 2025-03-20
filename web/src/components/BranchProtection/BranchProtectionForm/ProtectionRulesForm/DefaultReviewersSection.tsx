@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React from 'react'
+import React, { useMemo } from 'react'
 import cx from 'classnames'
 import { Container, FormInput, SelectOption, Text } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
@@ -48,6 +48,28 @@ const DefaultReviewersSection = (props: {
   const filteredPrincipalOptions = userPrincipalOptions.filter(
     (item: SelectOption) => !defaultReviewersList?.includes(item.value as string)
   )
+
+  const defReviewerWarning = useMemo(() => {
+    const minReviewers = Number(formik.values.minDefaultReviewers)
+    const reviewerCount = defaultReviewersList?.length || 0
+
+    if (formik.values.requireMinDefaultReviewers && minReviewers === reviewerCount) {
+      let message = ''
+      let showWarning = false
+
+      if (reviewerCount === 1) {
+        message = getString('branchProtection.defaultReviewerWarning')
+        showWarning = true
+      } else if (reviewerCount > 1) {
+        message = getString('branchProtection.defaultReviewersWarning')
+        showWarning = true
+      }
+
+      return { message, showWarning }
+    }
+
+    return { message: '', showWarning: false }
+  }, [formik.values, defaultReviewersList])
 
   return (
     <>
@@ -90,6 +112,11 @@ const DefaultReviewersSection = (props: {
               {formik.errors.defaultReviewersList}
             </Text>
           )}
+          <Render when={defReviewerWarning.showWarning}>
+            <Text color={Color.WARNING} padding={{ bottom: 'medium' }} style={{ width: '35%' }}>
+              {defReviewerWarning.message}
+            </Text>
+          </Render>
           <DefaultReviewersList defaultReviewersList={defaultReviewersList} setFieldValue={formik.setFieldValue} />
 
           <FormInput.CheckBox

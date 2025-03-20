@@ -49,19 +49,15 @@ type (
 	}
 
 	MergeVerifyOutput struct {
-		AllowedMethods                                     []enum.MergeMethod
-		DeleteSourceBranch                                 bool
-		MinimumRequiredApprovalsCount                      int
-		MinimumRequiredApprovalsCountLatest                int
-		MinimumRequiredDefaultReviewerApprovalsCount       int
-		MinimumRequiredDefaultReviewerApprovalsCountLatest int
-		RequiresCodeOwnersApproval                         bool
-		RequiresCodeOwnersApprovalLatest                   bool
-		RequiresCommentResolution                          bool
-		RequiresNoChangeRequests                           bool
-		DefaultReviewerIDs                                 []int64
-		DefaultReviewerApprovalsCount                      int
-		DefaultReviewerApprovals                           []*types.DefaultReviewerApprovalsResponse
+		AllowedMethods                      []enum.MergeMethod
+		DeleteSourceBranch                  bool
+		MinimumRequiredApprovalsCount       int
+		MinimumRequiredApprovalsCountLatest int
+		RequiresCodeOwnersApproval          bool
+		RequiresCodeOwnersApprovalLatest    bool
+		RequiresCommentResolution           bool
+		RequiresNoChangeRequests            bool
+		DefaultReviewerApprovals            []*types.DefaultReviewerApprovalsResponse
 	}
 
 	RequiredChecksInput struct {
@@ -109,9 +105,8 @@ var (
 const (
 	codePullReqApprovalReqMinCount                      = "pullreq.approvals.require_minimum_count"
 	codePullReqApprovalReqMinCountLatest                = "pullreq.approvals.require_minimum_count:latest_commit"
-	codePullReqDefaultReviewerApprovalReqMinCount       = "pullreq.approvals.require_default_reviewer_minimum_count"
-	codePullReqDefaultReviewerApprovalReqMinCountLatest = "" +
-		"pullreq.approvals.require_default_reviewer_minimum_count:latest_commit"
+	codePullReqApprovalReqDefaultReviewerMinCount       = "pullreq.approvals.require_default_reviewer_minimum_count"
+	codePullReqApprovalReqDefaultReviewerMinCountLatest = "pullreq.approvals.require_default_reviewer_minimum_count:latest_commit" //nolint:lll
 
 	codePullReqApprovalReqLatestCommit          = "pullreq.approvals.require_latest_commit"
 	codePullReqApprovalReqChangeRequested       = "pullreq.approvals.require_change_requested"
@@ -146,23 +141,21 @@ func (v *DefPullReq) MergeVerify(
 	if v.Approvals.RequireLatestCommit {
 		out.RequiresCodeOwnersApprovalLatest = v.Approvals.RequireCodeOwners
 		out.MinimumRequiredApprovalsCountLatest = v.Approvals.RequireMinimumCount
-		out.MinimumRequiredDefaultReviewerApprovalsCountLatest = v.Approvals.RequireMinimumDefaultReviewerCount
 	} else {
 		out.RequiresCodeOwnersApproval = v.Approvals.RequireCodeOwners
 		out.MinimumRequiredApprovalsCount = v.Approvals.RequireMinimumCount
-		out.MinimumRequiredDefaultReviewerApprovalsCount = v.Approvals.RequireMinimumDefaultReviewerCount
 	}
 
 	// pullreq.approvals
 
-	approvedBy := make([]types.PrincipalInfo, 0, len(in.Reviewers))
+	approvedBy := make(map[int64]struct{})
 	for _, reviewer := range in.Reviewers {
 		switch reviewer.ReviewDecision {
 		case enum.PullReqReviewDecisionApproved:
 			if v.Approvals.RequireLatestCommit && reviewer.SHA != in.PullReq.SourceSHA {
 				continue
 			}
-			approvedBy = append(approvedBy, reviewer.Reviewer)
+			approvedBy[reviewer.Reviewer.ID] = struct{}{}
 		case enum.PullReqReviewDecisionChangeReq:
 			if v.Approvals.RequireNoChangeRequest {
 				if reviewer.SHA == in.PullReq.SourceSHA {
@@ -196,29 +189,51 @@ func (v *DefPullReq) MergeVerify(
 		}
 	}
 
-	defaultReviewerMap := make(map[int64]struct{})
-	for _, approver := range approvedBy {
-		defaultReviewerMap[approver.ID] = struct{}{}
-	}
-	var defaultReviewersCount int
+	effectiveDefaultReviewerIDs := make([]int64, 0, len(v.Reviewers.DefaultReviewerIDs))
 	for _, id := range v.Reviewers.DefaultReviewerIDs {
-		if _, ok := defaultReviewerMap[id]; ok {
-			defaultReviewersCount++
+		if id == in.PullReq.Author.ID {
+			continue
 		}
+		effectiveDefaultReviewerIDs = append(effectiveDefaultReviewerIDs, id)
 	}
-	if defaultReviewersCount < v.Approvals.RequireMinimumDefaultReviewerCount {
+
+	// if author is default reviewer and required minimum == number of default reviewers, reduce minimum by one.
+	effectiveMinimumRequiredDefaultReviewerCount := v.Approvals.RequireMinimumDefaultReviewerCount
+	if len(effectiveDefaultReviewerIDs) < len(v.Reviewers.DefaultReviewerIDs) &&
+		len(v.Reviewers.DefaultReviewerIDs) == v.Approvals.RequireMinimumDefaultReviewerCount {
+		effectiveMinimumRequiredDefaultReviewerCount--
+	}
+
+	//nolint:nestif
+	if effectiveMinimumRequiredDefaultReviewerCount > 0 {
+		var defaultReviewerApprovalCount int
+		for _, id := range effectiveDefaultReviewerIDs {
+			if _, ok := approvedBy[id]; ok {
+				defaultReviewerApprovalCount++
+			}
+		}
+		if defaultReviewerApprovalCount < effectiveMinimumRequiredDefaultReviewerCount {
+			if v.Approvals.RequireLatestCommit {
+				violations.Addf(codePullReqApprovalReqDefaultReviewerMinCountLatest,
+					"Insufficient number of default reviewer approvals of the latest commit. Have %d but need at least %d.",
+					defaultReviewerApprovalCount, effectiveMinimumRequiredDefaultReviewerCount)
+			} else {
+				violations.Addf(codePullReqApprovalReqDefaultReviewerMinCount,
+					"Insufficient number of default reviewer approvals. Have %d but need at least %d.",
+					defaultReviewerApprovalCount, effectiveMinimumRequiredDefaultReviewerCount)
+			}
+		}
+
+		out.DefaultReviewerApprovals = []*types.DefaultReviewerApprovalsResponse{{
+			PrincipalIDs: effectiveDefaultReviewerIDs,
+			CurrentCount: defaultReviewerApprovalCount,
+		}}
 		if v.Approvals.RequireLatestCommit {
-			violations.Addf(codePullReqDefaultReviewerApprovalReqMinCount,
-				"Insufficient number of default reviewer approvals of the latest commit. Have %d but need at least %d.",
-				defaultReviewersCount, v.Approvals.RequireMinimumDefaultReviewerCount)
+			out.DefaultReviewerApprovals[0].MinimumRequiredCountLatest = effectiveMinimumRequiredDefaultReviewerCount
 		} else {
-			violations.Addf(codePullReqDefaultReviewerApprovalReqMinCountLatest,
-				"Insufficient number of default reviewer approvals. Have %d but need at least %d.",
-				defaultReviewersCount, v.Approvals.RequireMinimumDefaultReviewerCount)
+			out.DefaultReviewerApprovals[0].MinimumRequiredCount = effectiveMinimumRequiredDefaultReviewerCount
 		}
 	}
-	out.DefaultReviewerIDs = v.Reviewers.DefaultReviewerIDs
-	out.DefaultReviewerApprovalsCount = defaultReviewersCount
 
 	if v.Approvals.RequireCodeOwners {
 		for _, entry := range in.CodeOwners.EvaluationEntries {

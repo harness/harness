@@ -79,10 +79,7 @@ export const DefaultReviewersPanel: React.FC<DefaultReviewersPanelProps> = ({
           accessor: 'DefaultReviewers',
           Cell: ({ row }: CellProps<TypesDefaultReviewerApprovalsResponseWithRevDecision>) => {
             return (
-              <Layout.Horizontal
-                key={`keyContainer-${row.original.rule_info?.identifier}`}
-                className={css.ownerContainer}
-                spacing="tiny">
+              <Layout.Horizontal key={`keyContainer-${row.index}`} className={css.ownerContainer} spacing="tiny">
                 {row.original.principals?.map((principal, idx) => {
                   if (idx < 2) {
                     return (

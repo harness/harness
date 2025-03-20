@@ -151,8 +151,7 @@ const ChangesSection = (props: ChangesSectionProps) => {
     defReviewerApprovalRequiredByRule,
     defReviewerLatestApprovalRequiredByRule,
     defReviewerApprovedLatestChanges,
-    defReviewerApprovedChanges,
-    changesRequestedByDefReviewersArr
+    defReviewerApprovedChanges
   } = getUnifiedDefaultReviewersState(updatedDefaultApprovalRes)
 
   const extractInfoForCodeOwnerContent = () => {
@@ -690,29 +689,7 @@ const ChangesSection = (props: ChangesSectionProps) => {
             (defReviewerApprovalRequiredByRule || defReviewerLatestApprovalRequiredByRule) && (
               <Container className={css.borderContainer} padding={{ left: 'xlarge', right: 'small' }}>
                 <Layout.Horizontal className={css.paddingContainer} flex={{ justifyContent: 'space-between' }}>
-                  {changesRequestedByDefReviewersArr && changesRequestedByDefReviewersArr?.length > 0 ? (
-                    <Text
-                      className={cx(
-                        css.sectionSubheader,
-                        defReviewerApprovalRequiredByRule || defReviewerLatestApprovalRequiredByRule
-                          ? css.redIcon
-                          : css.greyIcon
-                      )}
-                      icon={'error-transparent-no-outline'}
-                      iconProps={{
-                        size: 17,
-                        color:
-                          defReviewerApprovalRequiredByRule || defReviewerLatestApprovalRequiredByRule
-                            ? Color.RED_600
-                            : '',
-                        padding: { right: 'medium' }
-                      }}
-                      padding={{ left: 'large' }}>
-                      {getString('changesSection.defaultReviewersChangesToPr')}
-                    </Text>
-                  ) : (
-                    renderDefaultReviewersStatus()
-                  )}
+                  {renderDefaultReviewersStatus()}
                   {(defReviewerApprovalRequiredByRule || defReviewerLatestApprovalRequiredByRule) && (
                     <Container className={css.changeContainerPadding}>
                       <Container className={css.requiredContainer}>

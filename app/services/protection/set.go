@@ -54,21 +54,11 @@ func (s ruleSet) MergeVerify(
 			out.DeleteSourceBranch = out.DeleteSourceBranch || rOut.DeleteSourceBranch
 			out.MinimumRequiredApprovalsCount = maxInt(out.MinimumRequiredApprovalsCount, rOut.MinimumRequiredApprovalsCount)
 			out.MinimumRequiredApprovalsCountLatest = maxInt(out.MinimumRequiredApprovalsCountLatest, rOut.MinimumRequiredApprovalsCountLatest) //nolint:lll
-			out.DefaultReviewerIDs = append(out.DefaultReviewerIDs, rOut.DefaultReviewerIDs...)
 			out.RequiresCodeOwnersApproval = out.RequiresCodeOwnersApproval || rOut.RequiresCodeOwnersApproval
 			out.RequiresCodeOwnersApprovalLatest = out.RequiresCodeOwnersApprovalLatest || rOut.RequiresCodeOwnersApprovalLatest
 			out.RequiresCommentResolution = out.RequiresCommentResolution || rOut.RequiresCommentResolution
 			out.RequiresNoChangeRequests = out.RequiresNoChangeRequests || rOut.RequiresNoChangeRequests
-
-			if len(out.DefaultReviewerIDs) > 0 {
-				out.DefaultReviewerApprovals = append(out.DefaultReviewerApprovals, &types.DefaultReviewerApprovalsResponse{
-					RuleInfo:                   r.RuleInfo,
-					MinimumRequiredCount:       rOut.MinimumRequiredDefaultReviewerApprovalsCount,
-					MinimumRequiredCountLatest: rOut.MinimumRequiredDefaultReviewerApprovalsCountLatest,
-					PrincipalIDs:               rOut.DefaultReviewerIDs,
-					CurrentCount:               rOut.DefaultReviewerApprovalsCount,
-				})
-			}
+			out.DefaultReviewerApprovals = append(out.DefaultReviewerApprovals, rOut.DefaultReviewerApprovals...)
 
 			return nil
 		})
