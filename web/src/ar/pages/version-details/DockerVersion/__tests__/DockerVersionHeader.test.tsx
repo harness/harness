@@ -294,13 +294,13 @@ describe('Verify DockerVersionHeader component render', () => {
     const sscaTab = container.querySelector('div[data-tab-id=supply_chain]')
     await userEvent.click(sscaTab!)
     expect(mockHistoryPush).toHaveBeenLastCalledWith(
-      '/registries/undefined/artifacts/undefined/versions/undefined/orgs/default/projects/default_project/artifact-sources/67a5dccf6d75916b0c3ea1b5/artifacts/67a5dccf6d75916b0c3ea1b6/supply_chain?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
+      '/registries/artifacts/versions/orgs/default/projects/default_project/artifact-sources/67a5dccf6d75916b0c3ea1b5/artifacts/67a5dccf6d75916b0c3ea1b6/supply_chain?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
     )
 
     const stoTab = container.querySelector('div[data-tab-id=security_tests]')
     await userEvent.click(stoTab!)
     expect(mockHistoryPush).toHaveBeenLastCalledWith(
-      '/registries/undefined/artifacts/undefined/versions/undefined/orgs/default/projects/default_project/pipelines/HARNESS_ARTIFACT_SCAN_PIPELINE/executions/Tbi7s6nETjmOMKU3Qrnm7A/security_tests?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
+      '/registries/artifacts/versions/orgs/default/projects/default_project/pipelines/HARNESS_ARTIFACT_SCAN_PIPELINE/executions/Tbi7s6nETjmOMKU3Qrnm7A/security_tests?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
     )
   })
 
@@ -335,13 +335,13 @@ describe('Verify DockerVersionHeader component render', () => {
     const sscaTab = container.querySelector('div[data-tab-id=supply_chain]')
     await userEvent.click(sscaTab!)
     expect(mockHistoryPush).toHaveBeenLastCalledWith(
-      '/registries/undefined/artifacts/undefined/versions/undefined/orgs/default/projects/default_project/supply_chain?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
+      '/registries/artifacts/versions/orgs/default/projects/default_project/supply_chain?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
     )
 
     const stoTab = container.querySelector('div[data-tab-id=security_tests]')
     await userEvent.click(stoTab!)
     expect(mockHistoryPush).toHaveBeenLastCalledWith(
-      '/registries/undefined/artifacts/undefined/versions/undefined/orgs/default/projects/default_project/security_tests?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
+      '/registries/artifacts/versions/orgs/default/projects/default_project/security_tests?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
     )
   })
 })

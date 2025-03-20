@@ -67,7 +67,9 @@ export default function VersionDetailsTabs(): JSX.Element {
       switch (nextTab) {
         case VersionDetailsTab.SUPPLY_CHAIN:
           newRoute = routes.toARVersionDetailsTab({
-            ...pathParams,
+            versionIdentifier: pathParams.versionIdentifier,
+            artifactIdentifier: pathParams.artifactIdentifier,
+            repositoryIdentifier: pathParams.repositoryIdentifier,
             versionTab: nextTab,
             sourceId: data?.sscaArtifactSourceId,
             artifactId: data?.sscaArtifactId,
@@ -77,7 +79,9 @@ export default function VersionDetailsTabs(): JSX.Element {
           break
         case VersionDetailsTab.SECURITY_TESTS:
           newRoute = routes.toARVersionDetailsTab({
-            ...pathParams,
+            versionIdentifier: pathParams.versionIdentifier,
+            artifactIdentifier: pathParams.artifactIdentifier,
+            repositoryIdentifier: pathParams.repositoryIdentifier,
             versionTab: nextTab,
             executionIdentifier: data?.stoExecutionId,
             pipelineIdentifier: data?.stoPipelineId,
@@ -114,7 +118,14 @@ export default function VersionDetailsTabs(): JSX.Element {
       </Container>
       <Switch>
         <RouteProvider exact path={routeDefinitions.toARVersionDetails({ ...versionDetailsPathParams })}>
-          <Redirect to={routes.toARVersionDetailsTab({ ...pathParams, versionTab: VersionDetailsTab.OVERVIEW })} />
+          <Redirect
+            to={routes.toARVersionDetailsTab({
+              versionIdentifier: pathParams.versionIdentifier,
+              artifactIdentifier: pathParams.artifactIdentifier,
+              repositoryIdentifier: pathParams.repositoryIdentifier,
+              versionTab: VersionDetailsTab.OVERVIEW
+            })}
+          />
         </RouteProvider>
         <RouteProvider
           exact

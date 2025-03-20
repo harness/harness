@@ -78,9 +78,11 @@ export default function VersionOverviewCards(props: VersionOverviewCardsProps) {
 
   const handleRedirectToTab = (tab: VersionDetailsTab, options: RedirectToTabOptions = {}) => {
     let url = routes.toARVersionDetailsTab({
-      ...pathParams,
-      ...options,
-      versionTab: tab
+      versionIdentifier: pathParams.versionIdentifier,
+      artifactIdentifier: pathParams.artifactIdentifier,
+      repositoryIdentifier: pathParams.repositoryIdentifier,
+      versionTab: tab,
+      ...options
     })
     if (digest) {
       url = `${url}?digest=${digest}`
