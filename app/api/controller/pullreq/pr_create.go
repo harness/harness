@@ -26,6 +26,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
+	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/instrument"
 	labelsvc "github.com/harness/gitness/app/services/label"
 	"github.com/harness/gitness/app/services/protection"
@@ -425,15 +426,18 @@ func (c *Controller) getApplicableCodeOwners(
 	mergeBaseSHA string,
 	sourceSHA string,
 ) (map[int64]*types.PrincipalInfo, error) {
-	codeowners, err := c.codeOwners.GetApplicableCodeOwners(
+	applicableCodeOwners, err := c.codeOwners.GetApplicableCodeOwners(
 		ctx, targetRepo, targetBranch, mergeBaseSHA, sourceSHA,
 	)
+	if errors.Is(err, codeowners.ErrNotFound) {
+		return map[int64]*types.PrincipalInfo{}, nil
+	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to get applicable code owners: %w", err)
 	}
 
 	var emails []string
-	for _, entry := range codeowners.Entries {
+	for _, entry := range applicableCodeOwners.Entries {
 		emails = append(emails, entry.Owners...)
 	}
 
