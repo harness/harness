@@ -504,6 +504,7 @@ const ChangesSection = (props: ChangesSectionProps) => {
       minReqLatestApproval > 0 ||
       !isEmpty(changeReqEvaluations) ||
       !isEmpty(codeOwners) ||
+      !isEmpty(defaultReviewersInfoSet) ||
       false)
   return (
     <Render when={!loading && !loadingReviewers && status}>
