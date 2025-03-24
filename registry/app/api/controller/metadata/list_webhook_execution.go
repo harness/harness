@@ -179,8 +179,6 @@ func mapTpAPITriggerType(trigger enum.WebhookTrigger) api.Trigger {
 	switch trigger {
 	case enum.WebhookTriggerArtifactCreated:
 		return api.TriggerARTIFACTCREATION
-	case enum.WebhookTriggerArtifactUpdated:
-		return api.TriggerARTIFACTMODIFICATION
 	case enum.WebhookTriggerArtifactDeleted:
 		return api.TriggerARTIFACTDELETION
 	}

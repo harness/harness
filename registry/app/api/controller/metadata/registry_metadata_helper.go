@@ -114,6 +114,7 @@ func (r *GitnessRegistryMetadataHelper) GetRegistryRequestBaseInfo(
 		baseInfo.RegistryIdentifier = regIdentifier
 		baseInfo.RegistryID = reg.ID
 		baseInfo.RegistryType = reg.Type
+		baseInfo.PackageType = reg.PackageType
 	}
 
 	return baseInfo, nil
@@ -252,8 +253,6 @@ func (r *GitnessRegistryMetadataHelper) MapToInternalWebhookTriggers(
 		switch trigger {
 		case api.TriggerARTIFACTCREATION:
 			webhookTriggers = append(webhookTriggers, enum.WebhookTriggerArtifactCreated)
-		case api.TriggerARTIFACTMODIFICATION:
-			webhookTriggers = append(webhookTriggers, enum.WebhookTriggerArtifactUpdated)
 		case api.TriggerARTIFACTDELETION:
 			webhookTriggers = append(webhookTriggers, enum.WebhookTriggerArtifactDeleted)
 		}
@@ -283,8 +282,6 @@ func (r *GitnessRegistryMetadataHelper) MapToAPIWebhookTriggers(triggers []enum.
 		switch trigger {
 		case enum.WebhookTriggerArtifactCreated:
 			webhookTriggers = append(webhookTriggers, api.TriggerARTIFACTCREATION)
-		case enum.WebhookTriggerArtifactUpdated:
-			webhookTriggers = append(webhookTriggers, api.TriggerARTIFACTMODIFICATION)
 		case enum.WebhookTriggerArtifactDeleted:
 			webhookTriggers = append(webhookTriggers, api.TriggerARTIFACTDELETION)
 		}

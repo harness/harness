@@ -26,7 +26,6 @@ import (
 const ArtifactsCategory = "artifacts"
 
 const ArtifactCreatedEvent events.EventType = "artifact-created"
-const ArtifactUpdatedEvent events.EventType = "artifact-updated"
 const ArtifactDeletedEvent events.EventType = "artifact-deleted"
 
 type ArtifactCreatedPayload struct {
@@ -74,12 +73,6 @@ type ArtifactInfo struct {
 	Artifact interface{}          `json:"artifact"`
 }
 
-type ArtifactChangeInfo struct {
-	Type           artifact.PackageType `json:"type"`
-	Name           string               `json:"name"`
-	ArtifactChange interface{}          `json:"artifact_change"`
-}
-
 func (r *Reporter) ArtifactCreated(ctx context.Context, payload *ArtifactCreatedPayload) {
 	eventID, err := events.ReporterSendEvent(r.innerReporter, ctx, ArtifactCreatedEvent, payload)
 	if err != nil {
@@ -97,18 +90,6 @@ func (r *Reader) RegisterArtifactCreated(
 	return events.ReaderRegisterEvent(r.innerReader, ArtifactCreatedEvent, fn, opts...)
 }
 
-type ArtifactUpdatedPayload struct {
-	RegistryID     int64                `json:"registry_id"`
-	PrincipalID    int64                `json:"principal_id"`
-	ArtifactType   artifact.PackageType `json:"artifact_type"`
-	ArtifactChange ArtifactChange       `json:"artifact_change"`
-}
-
-type ArtifactChange struct {
-	Old Artifact
-	New Artifact
-}
-
 type DockerArtifactChange struct {
 	Old DockerArtifact
 	New DockerArtifact
@@ -117,23 +98,6 @@ type DockerArtifactChange struct {
 type HelmArtifactChange struct {
 	Old HelmArtifact
 	New HelmArtifact
-}
-
-func (r *Reporter) ArtifactUpdated(ctx context.Context, payload *ArtifactUpdatedPayload) {
-	eventID, err := events.ReporterSendEvent(r.innerReporter, ctx, ArtifactUpdatedEvent, payload)
-	if err != nil {
-		log.Ctx(ctx).Err(err).Msgf("failed to send artifact updated event")
-		return
-	}
-
-	log.Ctx(ctx).Debug().Msgf("reported artifact updated event with id '%s'", eventID)
-}
-
-func (r *Reader) RegisterArtifactUpdated(
-	fn events.HandlerFunc[*ArtifactUpdatedPayload],
-	opts ...events.HandlerOption,
-) error {
-	return events.ReaderRegisterEvent(r.innerReader, ArtifactUpdatedEvent, fn, opts...)
 }
 
 type ArtifactDeletedPayload struct {

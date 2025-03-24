@@ -29,11 +29,10 @@ import (
 
 // ArtifactEventPayload describes the payload of Artifact related webhook triggers.
 type ArtifactEventPayload struct {
-	Trigger            enum.WebhookTrigger                `json:"trigger"`
-	Registry           RegistryInfo                       `json:"registry"`
-	Principal          gitnesswebhook.PrincipalInfo       `json:"principal"`
-	ArtifactInfo       *registryevents.ArtifactInfo       `json:"artifact_info"`
-	ArtifactChangeInfo *registryevents.ArtifactChangeInfo `json:"artifact_change_info"`
+	Trigger      enum.WebhookTrigger          `json:"trigger"`
+	Registry     RegistryInfo                 `json:"registry"`
+	Principal    gitnesswebhook.PrincipalInfo `json:"principal"`
+	ArtifactInfo *registryevents.ArtifactInfo `json:"artifact_info"`
 }
 
 type RegistryInfo struct {
@@ -77,45 +76,6 @@ func (s *Service) handleEventArtifactCreated(
 					Updated:     principal.Updated,
 				},
 				ArtifactInfo: getArtifactInfo(event.Payload.Artifact),
-			}, nil
-		})
-}
-
-// handleEventArtifactUpdated handles branch updated events
-// and triggers branch updated webhooks for the source repo.
-func (s *Service) handleEventArtifactUpdated(
-	ctx context.Context,
-	event *events.Event[*registryevents.ArtifactUpdatedPayload],
-) error {
-	return s.triggerForEventWithArtifact(ctx, enum.WebhookTriggerArtifactUpdated,
-		event.ID, event.Payload.PrincipalID, event.Payload.RegistryID,
-		func(
-			principal *types.Principal,
-			registry *registrytypes.Registry,
-		) (any, error) {
-			space, err := s.spaceStore.Find(ctx, registry.ParentID)
-			if err != nil {
-				return nil, err
-			}
-			return &ArtifactEventPayload{
-				Trigger: enum.WebhookTriggerArtifactUpdated,
-				Registry: RegistryInfo{
-					ID:          registry.ID,
-					Name:        registry.Name,
-					Description: registry.Description,
-					URL:         s.urlProvider.GenerateUIRegistryURL(ctx, space.Path, registry.Name),
-				},
-				Principal: gitnesswebhook.PrincipalInfo{
-					ID:          principal.ID,
-					UID:         principal.UID,
-					DisplayName: principal.DisplayName,
-					Email:       principal.Email,
-					Type:        principal.Type,
-					Created:     principal.Created,
-					Updated:     principal.Updated,
-				},
-				ArtifactInfo:       getArtifactInfo(event.Payload.ArtifactChange.New),
-				ArtifactChangeInfo: getArtifactInfoForArtifactUpdated(*event.Payload),
 			}, nil
 		})
 }
@@ -171,21 +131,6 @@ func getArtifactInfo(eventArtifact registryevents.Artifact) *registryevents.Arti
 		artifactInfo.Version = helmArtifact.Tag
 		artifactInfo.Artifact = &helmArtifact
 	}
-	return &artifactInfo
-}
-
-func getArtifactInfoForArtifactUpdated(
-	payload registryevents.ArtifactUpdatedPayload,
-) *registryevents.ArtifactChangeInfo {
-	artifactInfo := registryevents.ArtifactChangeInfo{
-		Type: payload.ArtifactType,
-	}
-	if dockerArtifact, ok := payload.ArtifactChange.New.(*registryevents.DockerArtifact); ok {
-		artifactInfo.Name = dockerArtifact.Name
-	} else if helmArtifact, ok := payload.ArtifactChange.New.(*registryevents.HelmArtifact); ok {
-		artifactInfo.Name = helmArtifact.Name
-	}
-	artifactInfo.ArtifactChange = &payload.ArtifactChange
 	return &artifactInfo
 }
 

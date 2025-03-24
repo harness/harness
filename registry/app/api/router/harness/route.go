@@ -29,6 +29,7 @@ import (
 	"github.com/harness/gitness/registry/app/api/middleware"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	storagedriver "github.com/harness/gitness/registry/app/driver"
+	registryevents "github.com/harness/gitness/registry/app/events"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
 	registrywebhook "github.com/harness/gitness/registry/services/webhook"
@@ -74,6 +75,7 @@ func NewAPIHandler(
 	webhooksExecutionRepository store.WebhooksExecutionRepository,
 	webhookService registrywebhook.Service,
 	spacePathStore corestore.SpacePathStore,
+	artifactEventReporter registryevents.Reporter,
 ) APIHandler {
 	r := chi.NewRouter()
 	r.Use(audit.Middleware())
@@ -101,6 +103,7 @@ func NewAPIHandler(
 		webhooksExecutionRepository,
 		registryMetadataHelper,
 		&webhookService,
+		artifactEventReporter,
 	)
 
 	handler := artifact.NewStrictHandler(apiController, []artifact.StrictMiddlewareFunc{})

@@ -96,7 +96,6 @@ func NewService(
 
 			// register events
 			_ = r.RegisterArtifactCreated(service.handleEventArtifactCreated)
-			_ = r.RegisterArtifactUpdated(service.handleEventArtifactUpdated)
 			_ = r.RegisterArtifactDeleted(service.handleEventArtifactDeleted)
 
 			return nil

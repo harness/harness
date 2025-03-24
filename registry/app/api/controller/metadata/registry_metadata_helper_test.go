@@ -347,13 +347,11 @@ func TestMapToInternalWebhookTriggers(t *testing.T) {
 
 	apiTriggers := []api.Trigger{
 		api.TriggerARTIFACTCREATION,
-		api.TriggerARTIFACTMODIFICATION,
 		api.TriggerARTIFACTDELETION,
 	}
 
 	expectedInternalTriggers := []gitnessenum.WebhookTrigger{
 		gitnessenum.WebhookTriggerArtifactCreated,
-		gitnessenum.WebhookTriggerArtifactUpdated,
 		gitnessenum.WebhookTriggerArtifactDeleted,
 	}
 
@@ -366,13 +364,11 @@ func TestMapToAPIWebhookTriggers(t *testing.T) {
 
 	internalTriggers := []gitnessenum.WebhookTrigger{
 		gitnessenum.WebhookTriggerArtifactCreated,
-		gitnessenum.WebhookTriggerArtifactUpdated,
 		gitnessenum.WebhookTriggerArtifactDeleted,
 	}
 
 	expectedAPITriggers := []api.Trigger{
 		api.TriggerARTIFACTCREATION,
-		api.TriggerARTIFACTMODIFICATION,
 		api.TriggerARTIFACTDELETION,
 	}
 

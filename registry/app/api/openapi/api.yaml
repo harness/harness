@@ -2162,7 +2162,6 @@ components:
       description: refers to trigger
       enum:
         - ARTIFACT_CREATION
-        - ARTIFACT_MODIFICATION
         - ARTIFACT_DELETION
     ExtraHeader:
       type: object

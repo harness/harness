@@ -33,6 +33,7 @@ import (
 	"github.com/harness/gitness/registry/app/api/router/oci"
 	packagerrouter "github.com/harness/gitness/registry/app/api/router/packages"
 	storagedriver "github.com/harness/gitness/registry/app/driver"
+	registryevents "github.com/harness/gitness/registry/app/events"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
 	registrywebhook "github.com/harness/gitness/registry/services/webhook"
@@ -71,6 +72,7 @@ func APIHandlerProvider(
 	webhooksExecutionRepository store.WebhooksExecutionRepository,
 	webhookService *registrywebhook.Service,
 	spacePathStore corestore.SpacePathStore,
+	artifactEventReporter *registryevents.Reporter,
 ) harness.APIHandler {
 	return harness.NewAPIHandler(
 		repoDao,
@@ -93,6 +95,7 @@ func APIHandlerProvider(
 		webhooksExecutionRepository,
 		*webhookService,
 		spacePathStore,
+		*artifactEventReporter,
 	)
 }
 

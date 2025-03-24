@@ -49,6 +49,7 @@ type RegistryRequestBaseInfo struct {
 	parentID  int64
 
 	RegistryType api.RegistryType
+	PackageType  api.PackageType
 }
 
 type RegistryRequestInfo struct {

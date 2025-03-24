@@ -20,6 +20,7 @@ import (
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/audit"
 	storagedriver "github.com/harness/gitness/registry/app/driver"
+	registryevents "github.com/harness/gitness/registry/app/events"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -47,6 +48,7 @@ type APIController struct {
 	WebhooksExecutionRepository store.WebhooksExecutionRepository
 	RegistryMetadataHelper      RegistryMetadataHelper
 	WebhookService              WebhookService
+	ArtifactEventReporter       registryevents.Reporter
 }
 
 func NewAPIController(
@@ -70,6 +72,7 @@ func NewAPIController(
 	webhooksExecutionRepository store.WebhooksExecutionRepository,
 	registryMetadataHelper RegistryMetadataHelper,
 	webhookService WebhookService,
+	artifactEventReporter registryevents.Reporter,
 ) *APIController {
 	return &APIController{
 		fileManager:                 fileManager,
@@ -92,5 +95,6 @@ func NewAPIController(
 		WebhooksExecutionRepository: webhooksExecutionRepository,
 		RegistryMetadataHelper:      registryMetadataHelper,
 		WebhookService:              webhookService,
+		ArtifactEventReporter:       artifactEventReporter,
 	}
 }

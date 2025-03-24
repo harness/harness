@@ -197,8 +197,6 @@ const (
 
 	// WebhookTriggerArtifactCreated gets triggered when an artifact gets created.
 	WebhookTriggerArtifactCreated WebhookTrigger = "artifact_created"
-	// WebhookTriggerArtifactUpdated gets triggered when an artifact gets updated.
-	WebhookTriggerArtifactUpdated WebhookTrigger = "artifact_updated"
 	// WebhookTriggerArtifactDeleted gets triggered when an artifact gets deleted.
 	WebhookTriggerArtifactDeleted WebhookTrigger = "artifact_deleted"
 )
@@ -222,6 +220,5 @@ var webhookTriggers = sortEnum([]WebhookTrigger{
 	WebhookTriggerPullReqLabelAssigned,
 	WebhookTriggerPullReqReviewSubmitted,
 	WebhookTriggerArtifactCreated,
-	WebhookTriggerArtifactUpdated,
 	WebhookTriggerArtifactDeleted,
 })

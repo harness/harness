@@ -22,9 +22,11 @@ import (
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/opencontainers/go-digest"
 	"github.com/rs/zerolog/log"
 )
 
@@ -90,9 +92,18 @@ func (c *APIController) deleteTagWithAudit(
 	ctx context.Context, regInfo *RegistryRequestBaseInfo,
 	registryName string, principal types.Principal, artifactName string, versionName string,
 ) error {
+	existingDigest := c.getTagDigest(ctx, regInfo.RegistryID, artifactName, versionName)
+
 	err := c.TagStore.DeleteTag(ctx, regInfo.RegistryID, artifactName, versionName)
 	if err != nil {
 		return err
+	}
+
+	if existingDigest != "" {
+		payload := webhook.GetArtifactDeletedPayload(ctx, principal.ID, regInfo.RegistryID,
+			registryName, versionName, existingDigest.String(), regInfo.RootIdentifier,
+			regInfo.PackageType, artifactName, c.URLProvider)
+		c.ArtifactEventReporter.ArtifactDeleted(ctx, &payload)
 	}
 	auditErr := c.AuditService.Log(
 		ctx,
@@ -116,4 +127,20 @@ func throwDeleteArtifactVersion500Error(err error) artifact.DeleteArtifactVersio
 			*GetErrorResponse(http.StatusInternalServerError, err.Error()),
 		),
 	}
+}
+
+func (c *APIController) getTagDigest(
+	ctx context.Context,
+	registryID int64,
+	imageName string,
+	tag string,
+) digest.Digest {
+	existingTag, findTagErr := c.TagStore.FindTag(ctx, registryID, imageName, tag)
+	if findTagErr == nil && existingTag != nil {
+		existingTaggedManifest, getManifestErr := c.ManifestStore.Get(ctx, existingTag.ManifestID)
+		if getManifestErr == nil {
+			return existingTaggedManifest.Digest
+		}
+	}
+	return ""
 }
