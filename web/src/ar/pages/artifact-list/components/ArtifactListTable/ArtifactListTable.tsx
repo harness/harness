@@ -30,6 +30,7 @@ import {
   ArtifactNameCell,
   LatestArtifactCell
 } from './ArtifactListTableCell'
+import { RepositoryNameCell } from '../RegistryArtifactListTable/RegistryArtifactListTableCell'
 import css from './ArtifactListTable.module.scss'
 
 export interface ArtifactListColumnActions {
@@ -77,6 +78,12 @@ export default function ArtifactListTable(props: ArtifactListTableProps): JSX.El
         accessor: 'name',
         Cell: ArtifactNameCell,
         serverSortProps: getServerSortProps('name')
+      },
+      {
+        Header: getString('artifactList.table.columns.repository'),
+        accessor: 'registryIdentifier',
+        Cell: RepositoryNameCell,
+        serverSortProps: getServerSortProps('registryIdentifier')
       },
       {
         Header: getString('artifactList.table.columns.pullCommand'),

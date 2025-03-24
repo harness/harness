@@ -22,6 +22,7 @@ import {
   useGetAllRegistriesQuery as _useGetAllRegistriesQuery
 } from '@harnessio/react-har-service-client'
 import ArTestWrapper from '@ar/utils/testUtils/ArTestWrapper'
+import { testMultiSelectChange } from '@ar/utils/testUtils/utils'
 import repositoryFactory from '@ar/frameworks/RepositoryStep/RepositoryFactory'
 import { DockerRepositoryType } from '@ar/pages/repository-details/DockerRepository/DockerRepositoryType'
 import { HelmRepositoryType } from '@ar/pages/repository-details/HelmRepository/HelmRepositoryType'
@@ -136,9 +137,7 @@ describe('Test Artifact List Page', () => {
     })
 
     const registriesSelect = getByTestId('regitry-select')
-    await userEvent.click(registriesSelect)
-    const registryIdOption = getByText('repo1')
-    await userEvent.click(registryIdOption)
+    await testMultiSelectChange(registriesSelect, 'repo1', '')
 
     expect(useGetAllHarnessArtifactsQuery).toHaveBeenLastCalledWith({
       space_ref: 'undefined/+',
