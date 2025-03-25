@@ -1750,12 +1750,14 @@ components:
           GENERIC: "#/components/schemas/GenericArtifactDetailConfig"
           MAVEN: "#/components/schemas/MavenArtifactDetailConfig"
           PYTHON: "#/components/schemas/PythonArtifactDetailConfig"
+          NPM: "#/components/schemas/NpmArtifactDetailConfig"
       oneOf:
         - $ref: "#/components/schemas/DockerArtifactDetailConfig"
         - $ref: "#/components/schemas/HelmArtifactDetailConfig"
         - $ref: "#/components/schemas/GenericArtifactDetailConfig"
         - $ref: "#/components/schemas/MavenArtifactDetailConfig"
         - $ref: "#/components/schemas/PythonArtifactDetailConfig"
+        - $ref: "#/components/schemas/NpmArtifactDetailConfig"
       required:
         - imageName
         - version
@@ -1789,6 +1791,13 @@ components:
         metadata:
             type: object
             additionalProperties: true
+    NpmArtifactDetailConfig:
+      type: object
+      description: Config for npm artifact details
+      properties:
+        metadata:
+          type: object
+          additionalProperties: true
     HelmArtifactDetailConfig:
       type: object
       description: Config for helm artifact details
@@ -2198,6 +2207,7 @@ components:
         - PYTHON
         - GENERIC
         - HELM
+        - NPM
     SectionType:
       type: string
       description: refers to client setup section type

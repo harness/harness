@@ -30,6 +30,7 @@ const (
 	PackageTypeGENERIC PackageType = "GENERIC"
 	PackageTypeHELM    PackageType = "HELM"
 	PackageTypeMAVEN   PackageType = "MAVEN"
+	PackageTypeNPM     PackageType = "NPM"
 	PackageTypePYTHON  PackageType = "PYTHON"
 )
 
@@ -472,6 +473,11 @@ type ListWebhooksExecutions struct {
 type MavenArtifactDetailConfig struct {
 	ArtifactId *string `json:"artifactId,omitempty"`
 	GroupId    *string `json:"groupId,omitempty"`
+}
+
+// NpmArtifactDetailConfig Config for npm artifact details
+type NpmArtifactDetailConfig struct {
+	Metadata *map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // PackageType refers to package
@@ -1387,6 +1393,36 @@ func (t *ArtifactDetail) MergePythonArtifactDetailConfig(v PythonArtifactDetailC
 	return err
 }
 
+// AsNpmArtifactDetailConfig returns the union data inside the ArtifactDetail as a NpmArtifactDetailConfig
+func (t ArtifactDetail) AsNpmArtifactDetailConfig() (NpmArtifactDetailConfig, error) {
+	var body NpmArtifactDetailConfig
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromNpmArtifactDetailConfig overwrites any union data inside the ArtifactDetail as the provided NpmArtifactDetailConfig
+func (t *ArtifactDetail) FromNpmArtifactDetailConfig(v NpmArtifactDetailConfig) error {
+	t.PackageType = "NPM"
+
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeNpmArtifactDetailConfig performs a merge with any union data inside the ArtifactDetail, using the provided NpmArtifactDetailConfig
+func (t *ArtifactDetail) MergeNpmArtifactDetailConfig(v NpmArtifactDetailConfig) error {
+	t.PackageType = "NPM"
+
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
 func (t ArtifactDetail) Discriminator() (string, error) {
 	var discriminator struct {
 		Discriminator string `json:"packageType"`
@@ -1409,6 +1445,8 @@ func (t ArtifactDetail) ValueByDiscriminator() (interface{}, error) {
 		return t.AsHelmArtifactDetailConfig()
 	case "MAVEN":
 		return t.AsMavenArtifactDetailConfig()
+	case "NPM":
+		return t.AsNpmArtifactDetailConfig()
 	case "PYTHON":
 		return t.AsPythonArtifactDetailConfig()
 	default:
