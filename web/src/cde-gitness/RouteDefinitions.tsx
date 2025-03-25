@@ -17,11 +17,13 @@
 export interface CDEProps {
   space?: string
   gitspaceId?: string
+  accountId?: string
 }
 
 export const pathProps: Readonly<Required<CDEProps>> = {
   space: ':space*',
-  gitspaceId: ':gitspaceId'
+  gitspaceId: ':gitspaceId',
+  accountId: ':accountId'
 }
 
 export interface CDERoutes {
@@ -29,11 +31,17 @@ export interface CDERoutes {
   toCDEGitspaceDetail: (args: Required<Pick<CDEProps, 'space' | 'gitspaceId'>>) => string
   toCDEGitspacesCreate: (args: Required<Pick<CDEProps, 'space'>>) => string
   toCDEGitspacesEdit: (args: Required<Pick<CDEProps, 'space' | 'gitspaceId'>>) => string
+  toCDEGitspaceInfra: (args: Required<Pick<CDEProps, 'accountId'>>) => string
+  toCDEInfraConfigure: (args: Required<Pick<CDEProps, 'accountId'>>) => string
+  toModuleRoute: (args: Required<Pick<CDEProps, 'accountId'>>) => string
 }
 
 export const routes: CDERoutes = {
   toCDEGitspaces: ({ space }) => `/${space}/gitspaces`,
   toCDEGitspaceDetail: ({ space, gitspaceId }) => `/${space}/gitspaces/${gitspaceId}`,
   toCDEGitspacesCreate: ({ space }) => `/${space}/gitspaces/create`,
-  toCDEGitspacesEdit: ({ space, gitspaceId }) => `/${space}/gitspaces/edit/${gitspaceId}`
+  toCDEGitspacesEdit: ({ space, gitspaceId }) => `/${space}/gitspaces/edit/${gitspaceId}`,
+  toCDEGitspaceInfra: ({ accountId }) => `/account/${accountId}/module/cde/gitspace-infrastructure`,
+  toCDEInfraConfigure: ({ accountId }) => `/account/${accountId}/module/cde/gitspace-infrastructure/configure`,
+  toModuleRoute: ({ accountId }) => `/account/${accountId}/module/cde`
 }

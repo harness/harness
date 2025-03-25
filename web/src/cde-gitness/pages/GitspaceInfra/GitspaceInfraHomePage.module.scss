@@ -1,0 +1,88 @@
+/*
+ * Copyright 2024 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.main {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  margin-top: 4% !important;
+
+  .titleContainer {
+    width: 50%;
+  }
+
+  .cardMain {
+    width: 50%;
+  }
+
+  .cardTitle {
+    font-size: 16px !important;
+  }
+}
+
+.subContainers {
+  margin: var(--spacing-xlarge) 0 !important;
+  margin-bottom: 0px !important;
+}
+
+.customBreadcumbStyles {
+  [class*='Layout--horizontal']:last-child > span[class*='bp3-icon'] {
+    /* Your styles here */
+    display: none !important;
+  }
+}
+
+.infraLogo {
+  margin: 0 auto !important;
+  width: 318px !important;
+  height: 318px !important;
+}
+
+.containerHeading {
+  margin-bottom: var(--spacing-small) !important;
+  font-weight: 600 !important;
+  font-size: var(--font-size-medium) !important;
+  text-align: center;
+}
+
+.infraDescription {
+  margin-bottom: var(--spacing-xlarge) !important;
+  font-size: var(--font-size-normal) !important;
+  font-weight: 400 !important;
+  text-align: center;
+}
+
+.configureButton {
+  padding: var(--spacing-medium) var(--spacing-medium) !important;
+  width: fit-content !important;
+  font-size: var(--font-size-small) !important;
+  font-weight: 200 !important;
+  margin: 0 auto var(--spacing-xxlarge) auto !important;
+}
+
+.supportText {
+  font-weight: 400 !important;
+  font-size: var(--font-size-small) !important;
+  text-align: center !important;
+  width: 100% !important;
+}
+
+.learnMoreText {
+  font-weight: 400 !important;
+  font-size: var(--font-size-small) !important;
+  color: var(--primary-7) !important;
+  cursor: pointer;
+}

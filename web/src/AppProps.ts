@@ -87,6 +87,8 @@ export interface AppProps {
   isCurrentSessionPublic: boolean
   module?: string
 
+  accountInfo?: Unknown
+
   arAppStore?: {
     repositoryIdentifier?: string
     artifactIdentifier?: string

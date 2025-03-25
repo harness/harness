@@ -1258,12 +1258,32 @@ export interface StringsMap {
   yours: string
   zoomIn: string
   zoomOut: string
+  'cde.account': string
   'cde.branchPlaceholder': string
   'cde.branchValidationMessage': string
   'cde.changes': string
   'cde.changesTooltip.description': string
   'cde.changesTooltip.learnMore': string
   'cde.cloudDeveloperExperience': string
+  'cde.configureGCPInfra': string
+  'cde.configureGitspaceInfra': string
+  'cde.configureInfra.basicDetails': string
+  'cde.configureInfra.basicNoteText': string
+  'cde.configureInfra.cancel': string
+  'cde.configureInfra.configure': string
+  'cde.configureInfra.configureLocationNote': string
+  'cde.configureInfra.configureLocations': string
+  'cde.configureInfra.domain': string
+  'cde.configureInfra.downloadAndApply': string
+  'cde.configureInfra.gateway': string
+  'cde.configureInfra.gatewayNoteText': string
+  'cde.configureInfra.id': string
+  'cde.configureInfra.learnMore': string
+  'cde.configureInfra.learnMoreAboutHybrid': string
+  'cde.configureInfra.machineType': string
+  'cde.configureInfra.name': string
+  'cde.configureInfra.numberOfInstance': string
+  'cde.configureInfra.provideInfraDetails': string
   'cde.copied': string
   'cde.cpu': string
   'cde.create.branchPlaceholder': string
@@ -1310,6 +1330,13 @@ export interface StringsMap {
   'cde.details.stopProvising': string
   'cde.details.wrongIdentifier': string
   'cde.disk': string
+  'cde.downloadAndApplySection.applyYamlText': string
+  'cde.downloadAndApplySection.back': string
+  'cde.downloadAndApplySection.done': string
+  'cde.downloadAndApplySection.downloadGeneratedYaml': string
+  'cde.downloadAndApplySection.downloadYaml': string
+  'cde.downloadAndApplySection.title': string
+  'cde.edit': string
   'cde.editGitspace': string
   'cde.errorCard.contactUs': string
   'cde.errorCard.learnMore': string
@@ -1320,6 +1347,11 @@ export interface StringsMap {
   'cde.eventTimeline': string
   'cde.getStarted': string
   'cde.gitspaceDetail': string
+  'cde.gitspaceInfra': string
+  'cde.gitspaceInfraHome.configureGCPButton': string
+  'cde.gitspaceInfraHome.description': string
+  'cde.gitspaceInfraHome.gcpSupportText': string
+  'cde.gitspaceInfraHome.learnMore': string
   'cde.gitspaceOwners.allGitspaces': string
   'cde.gitspaceOwners.myGitspaces': string
   'cde.gitspaceStatus.active': string

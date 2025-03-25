@@ -54,6 +54,7 @@ ReactDOM.render(
     defaultSettingsURL=""
     isPublicAccessEnabledOnResources
     isCurrentSessionPublic={!!window.publicAccessOnGitness}
+    accountInfo={noop}
   />,
   document.getElementById('react-root')
 )

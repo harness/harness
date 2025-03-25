@@ -32,6 +32,7 @@ export interface TestWrapperProps {
   defaultSettingsURL?: string
   isPublicAccessEnabledOnResources?: boolean
   isCurrentSessionPublic?: boolean
+  accountInfo?: Unknown
 }
 
 export default function TestWrapper(props: PropsWithChildren<TestWrapperProps>) {
@@ -49,7 +50,8 @@ export default function TestWrapper(props: PropsWithChildren<TestWrapperProps>) 
     currentUserProfileURL = '',
     defaultSettingsURL = '',
     isPublicAccessEnabledOnResources = false,
-    isCurrentSessionPublic = false
+    isCurrentSessionPublic = false,
+    accountInfo = null
   } = props
   const search = QueryString.stringify(queryParams, { addQueryPrefix: true })
   const routePath = compile(path)(pathParams) + search
@@ -73,7 +75,8 @@ export default function TestWrapper(props: PropsWithChildren<TestWrapperProps>) 
           currentUserProfileURL,
           defaultSettingsURL,
           isPublicAccessEnabledOnResources,
-          isCurrentSessionPublic
+          isCurrentSessionPublic,
+          accountInfo
         }}>
         <StringsContextProvider initialStrings={stringsData} getString={getString}>
           <RestfulProvider base="/">

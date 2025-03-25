@@ -33,6 +33,8 @@ cpu: CPU
 memory: Memory
 disk: Disk
 created: Created
+edit: Edit
+account: Account
 regionSelectWarning: Select a region first
 gitspaceUpdateSuccess: Gitspace updated successfully
 regionValidationMessage: Region is required
@@ -55,6 +57,39 @@ createImport: creating or importing repositories
 regionAndMachineSize: Region & Machine Size
 copied: Copied
 id: ID
+gitspaceInfra: Gitspace Infrastructure
+configureGCPInfra: Configure GCP Infrastructure
+configureGitspaceInfra: Configure Gitspace Infrastructure
+gitspaceInfraHome:
+  configureGCPButton: Configure GCP infrastructure
+  description: Configure an infrastructure with locations and machines to be used as one of the infrastructure while creating a Gitspace
+  gcpSupportText: Currently we support GCP based infrastructure only.
+  learnMore: Learn more about Gitspace Infrastructure
+configureInfra:
+  configure: Configure
+  learnMoreAboutHybrid: Learn more about hybrid infra
+  provideInfraDetails: Provide Infrastructure Details
+  downloadAndApply: Download and Apply YAML
+  basicDetails: Basic Details
+  learnMore: Learn More
+  cancel: Cancel
+  id: Id
+  name: Name
+  domain: Domain
+  gateway: Gateway
+  numberOfInstance: Number of instances
+  machineType: Machine Type
+  configureLocations: Configure Locations
+  configureLocationNote: Users will only be able to host gitspaces in these locations only.
+  gatewayNoteText: More number of instances better reliability of running the Gitspace. However more number of instances incur more costs
+  basicNoteText: The domain on which all the gitspaces created by this infra will be accessible
+downloadAndApplySection:
+  title: Download and apply YAML to terraform module
+  back: Back
+  done: Done
+  downloadYaml: Download YAML
+  downloadGeneratedYaml: Download the generated YAML file
+  applyYamlText: Apply the YAML in the terraform module and run following commands
 sshSelect:
   30days: 30 Days
   90days: 90 Days

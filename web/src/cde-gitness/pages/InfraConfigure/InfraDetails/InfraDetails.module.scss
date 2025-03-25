@@ -1,0 +1,66 @@
+.main {
+  padding: 40px 160px !important;
+}
+
+.basicDetailsContainer {
+  width: 100% !important;
+}
+
+.basicDetailsHeading {
+  font-size: var(--font-size-normal) !important;
+  font-weight: 600 !important;
+  color: var(--grey-800) !important;
+}
+
+.basicDetailsBody {
+  background-color: var(--grey-0) !important;
+  border-radius: var(--spacing-small) !important;
+  padding: var(--spacing-xlarge) !important;
+  border: 1px solid var(--grey-100) !important;
+}
+
+.noteText {
+  font-size: 12px !important;
+  font-weight: 400 !important;
+}
+
+.inputLabel {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+}
+
+.inlineContainer {
+  width: 100% !important;
+  display: flex !important;
+  justify-content: space-between;
+}
+
+.valueText {
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  padding-left: 4px !important;
+}
+
+.inputWithNote {
+  margin-bottom: 4px !important;
+}
+
+.containerSpacing {
+  margin-bottom: var(--spacing-large) !important;
+}
+
+.inputWithMargin {
+  margin-top: var(--spacing-medium) !important;
+}
+
+.headerLinkText {
+  font-size: 13px !important;
+  font-weight: 400 !important;
+}
+
+.formFooter {
+  padding: var(--spacing-medium) 0 !important;
+  width: 100% !important;
+  display: flex;
+  justify-content: space-between !important;
+}

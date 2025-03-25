@@ -1,0 +1,30 @@
+.customBreadcumbStyles {
+  [class*='Layout--horizontal']:last-child > span[class*='bp3-icon'] {
+    /* Your styles here */
+    display: none !important;
+  }
+}
+
+.learnMoreLink {
+  font-weight: 500 !important;
+  font-size: var(--font-size-normal) !important;
+  cursor: pointer !important;
+
+  .bp3-icon {
+    padding-left: var(--spacing-small) !important;
+  }
+}
+
+.tabContainer {
+  width: 100% !important;
+
+  [class*='bp3-tab-list'] {
+    background-color: var(--grey-0) !important;
+    border-bottom: 1px solid var(--grey-200) !important;
+    padding: 0 var(--spacing-xlarge) !important;
+  }
+
+  [class*='bp3-tab'] {
+    margin-right: 0 !important;
+  }
+}
