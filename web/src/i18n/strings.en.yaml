@@ -387,8 +387,8 @@ prReview:
   removed: '{author} removed the request for review from {reviewer}'
   selfRemoved: '{author} removed their request for review'
   filterByReviews: Filter by Reviews
-  codeowners: '{author} requested review from {codeowners} as code owner'
-  defaultReviewers: '{author} requested review from {reviewers} as default reviewer'
+  codeowners: '{author} requested review from {codeowners} as {count|1:code owner,code owners}'
+  defaultReviewers: '{author} requested review from {reviewers} as {count|1:default reviewer,default reviewers}'
 webhookListingContent: 'create,delete,deployment ...'
 general: 'General'
 webhooks: 'Webhooks'

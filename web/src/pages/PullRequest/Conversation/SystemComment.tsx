@@ -506,7 +506,8 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
                     str={getString('prReview.codeowners')}
                     vars={{
                       author: <strong>{payload?.author?.display_name}</strong>,
-                      codeowners: principalMentions
+                      codeowners: principalMentions,
+                      count: principalNameList.length
                     }}
                   />
                 </Case>
@@ -515,7 +516,8 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
                     str={getString('prReview.defaultReviewers')}
                     vars={{
                       author: <strong>{payload?.author?.display_name}</strong>,
-                      reviewers: principalMentions
+                      reviewers: principalMentions,
+                      count: principalNameList.length
                     }}
                   />
                 </Case>
