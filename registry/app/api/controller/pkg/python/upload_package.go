@@ -47,7 +47,7 @@ func (c *controller) UploadPackageFile(
 				nil,
 			}
 		}
-		headers, sha256, err := pythonRegistry.UploadPackageFile(ctx, info, file, fileHeader)
+		headers, sha256, err := pythonRegistry.UploadPackageFile(ctx, info, file, fileHeader.Filename)
 		if commons.IsEmptyError(err) {
 			return &PutArtifactResponse{
 				sha256, []error{}, headers,

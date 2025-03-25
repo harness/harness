@@ -20,6 +20,7 @@ import (
 	"io"
 	"mime/multipart"
 
+	"github.com/harness/gitness/app/services/refcache"
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
@@ -27,26 +28,33 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	pythontype "github.com/harness/gitness/registry/app/pkg/types/python"
-	"github.com/harness/gitness/registry/app/remote/controller/proxy/python"
+	"github.com/harness/gitness/registry/app/remote/adapter/commons/pypi"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
+	cfg "github.com/harness/gitness/registry/config"
+	request2 "github.com/harness/gitness/registry/request"
+	"github.com/harness/gitness/secret"
 	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/rs/zerolog/log"
+
+	_ "github.com/harness/gitness/registry/app/remote/adapter/pypi" // This is required to init pypi adapter
 )
 
 var _ pkg.Artifact = (*proxy)(nil)
 var _ Registry = (*proxy)(nil)
 
 type proxy struct {
-	fileManager     filemanager.FileManager
-	proxyStore      store.UpstreamProxyConfigRepository
-	tx              dbtx.Transactor
-	registryDao     store.RegistryRepository
-	imageDao        store.ImageRepository
-	artifactDao     store.ArtifactRepository
-	urlProvider     urlprovider.Provider
-	proxyController python.Controller
+	fileManager         filemanager.FileManager
+	proxyStore          store.UpstreamProxyConfigRepository
+	tx                  dbtx.Transactor
+	registryDao         store.RegistryRepository
+	imageDao            store.ImageRepository
+	artifactDao         store.ArtifactRepository
+	urlProvider         urlprovider.Provider
+	spaceFinder         refcache.SpaceFinder
+	service             secret.Service
+	localRegistryHelper LocalRegistryHelper
 }
 
 type Proxy interface {
@@ -61,15 +69,21 @@ func NewProxy(
 	imageDao store.ImageRepository,
 	artifactDao store.ArtifactRepository,
 	urlProvider urlprovider.Provider,
+	spaceFinder refcache.SpaceFinder,
+	service secret.Service,
+	localRegistryHelper LocalRegistryHelper,
 ) Proxy {
 	return &proxy{
-		proxyStore:  proxyStore,
-		registryDao: registryDao,
-		imageDao:    imageDao,
-		artifactDao: artifactDao,
-		fileManager: fileManager,
-		tx:          tx,
-		urlProvider: urlProvider,
+		fileManager:         fileManager,
+		proxyStore:          proxyStore,
+		tx:                  tx,
+		registryDao:         registryDao,
+		imageDao:            imageDao,
+		artifactDao:         artifactDao,
+		urlProvider:         urlProvider,
+		spaceFinder:         spaceFinder,
+		service:             service,
+		localRegistryHelper: localRegistryHelper,
 	}
 }
 
@@ -84,53 +98,138 @@ func (r *proxy) GetPackageTypes() []artifact.PackageType {
 func (r *proxy) DownloadPackageFile(ctx context.Context, info pythontype.ArtifactInfo) (
 	*commons.ResponseHeaders,
 	*storage.FileReader,
+	io.ReadCloser,
 	string,
 	[]error,
 ) {
-	headers, body, _, url, errs := r.fetchFile(ctx, info, true)
-	return headers, body, url, errs
+	upstreamProxy, err := r.proxyStore.GetByRegistryIdentifier(ctx, info.ParentID, info.RegIdentifier)
+	if err != nil {
+		return nil, nil, nil, "", []error{errcode.ErrCodeUnknown.WithDetail(err)}
+	}
+
+	// TODO: Extract out to Path Utils for all package types
+	exists := r.localRegistryHelper.FileExists(ctx, info)
+	if exists {
+		headers, fileReader, redirectURL, errors := r.localRegistryHelper.DownloadFile(ctx, info)
+		if len(errors) == 0 {
+			return headers, fileReader, nil, redirectURL, errors
+		}
+		// If file exists in local registry, but download failed, we should try to download from remote
+		log.Warn().Ctx(ctx).Msgf("failed to pull from local, attempting streaming from remote, %v", errors)
+	}
+
+	remote, err := NewRemoteRegistryHelper(ctx, r.spaceFinder, *upstreamProxy, r.service)
+	if err != nil {
+		return nil, nil, nil, "", []error{errcode.ErrCodeUnknown.WithDetail(err)}
+	}
+
+	file, err := remote.GetFile(ctx, info.Image, info.Filename)
+	if err != nil {
+		return nil, nil, nil, "", []error{errcode.ErrCodeUnknown.WithDetail(err)}
+	}
+
+	go func(info pythontype.ArtifactInfo) {
+		ctx2 := context.WithoutCancel(ctx)
+		ctx2 = context.WithValue(ctx2, cfg.GoRoutineKey, "goRoutine")
+		err = r.putFileToLocal(ctx2, info.Image, info.Filename, remote)
+		if err != nil {
+			log.Ctx(ctx2).Error().Stack().Err(err).Msgf("error while putting file to localRegistry, %v", err)
+			return
+		}
+		log.Ctx(ctx2).Info().Msgf("Successfully updated file: %s, registry: %s", info.Filename, info.RegIdentifier)
+	}(info)
+
+	return nil, nil, file, "", nil
 }
 
-// Metadata represents the metadata of a Python package.
+// GetPackageMetadata Returns metadata from remote.
 func (r *proxy) GetPackageMetadata(
-	_ context.Context,
-	_ pythontype.ArtifactInfo,
+	ctx context.Context,
+	info pythontype.ArtifactInfo,
 ) (pythontype.PackageMetadata, error) {
-	return pythontype.PackageMetadata{}, nil
+	upstreamProxy, err := r.proxyStore.GetByRegistryIdentifier(ctx, info.ParentID, info.RegIdentifier)
+	if err != nil {
+		return pythontype.PackageMetadata{}, err
+	}
+
+	helper, _ := NewRemoteRegistryHelper(ctx, r.spaceFinder, *upstreamProxy, r.service)
+	result, err := helper.GetMetadata(ctx, info.Image)
+	if err != nil {
+		return pythontype.PackageMetadata{}, err
+	}
+
+	var files []pythontype.File
+	for _, file := range result.Packages {
+		files = append(files, pythontype.File{
+			Name: file.Name,
+			FileURL: r.urlProvider.RegistryURL(ctx) + fmt.Sprintf(
+				"/pkg/%s/%s/python/files/%s/%s/%s",
+				info.RootIdentifier,
+				info.RegIdentifier,
+				info.Image,
+				file.Version(),
+				file.Name),
+			RequiresPython: file.RequiresPython(),
+		})
+	}
+
+	metadata := pythontype.PackageMetadata{
+		Name:  info.Image,
+		Files: files,
+	}
+	sortPackageMetadata(ctx, metadata)
+	return metadata, nil
 }
 
-// UploadPackageFile FIXME: Extract this upload function for all types of packageTypes
+func (r *proxy) putFileToLocal(ctx context.Context, pkg string, filename string, remote RemoteRegistryHelper) error {
+	version := pypi.GetPyPIVersion(filename)
+	metadata, err := remote.GetJSON(ctx, pkg, version)
+	if err != nil {
+		log.Ctx(ctx).Error().Stack().Err(err).Msgf("fetching metadata for %s failed, %v", filename, err)
+		return err
+	}
+	file, err := remote.GetFile(ctx, pkg, filename)
+	if err != nil {
+		log.Ctx(ctx).Error().Stack().Err(err).Msgf("fetching file %s failed, %v", filename, err)
+		return err
+	}
+	info, ok := request2.ArtifactInfoFrom(ctx).(*pythontype.ArtifactInfo)
+	if !ok {
+		log.Ctx(ctx).Error().Msgf("failed to cast artifact info to python artifact info")
+		return errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("failed to cast artifact info to python artifact info"))
+	}
+	info.Metadata = *metadata
+	info.Filename = filename
+
+	_, sha256, err2 := r.localRegistryHelper.UploadPackageFile(ctx, *info, file, filename)
+	if !commons.IsEmptyError(err2) {
+		log.Ctx(ctx).Error().Stack().Err(err2).Msgf("uploading file %s failed, %v", filename, err)
+		return err2
+	}
+	log.Info().Msgf("Successfully uploaded %s with SHA256: %s", filename, sha256)
+	return nil
+}
+
+// UploadPackageFile TODO: Extract this upload function for all types of packageTypes
 // uploads the package file to the storage.
 func (r *proxy) UploadPackageFile(
 	ctx context.Context,
 	_ pythontype.ArtifactInfo,
 	_ multipart.File,
-	_ *multipart.FileHeader,
+	_ string,
 ) (*commons.ResponseHeaders, string, errcode.Error) {
 	log.Error().Ctx(ctx).Msg("Not implemented")
 	return nil, "", errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
 }
 
-func (r *proxy) fetchFile(ctx context.Context, info pythontype.ArtifactInfo, serveFile bool) (
-	responseHeaders *commons.ResponseHeaders, body *storage.FileReader, readCloser io.ReadCloser,
-	redirectURL string, errs []error,
-) {
-	log.Ctx(ctx).Info().Msgf("Maven Proxy: %s", info.RegIdentifier)
-
-	responseHeaders, body, redirectURL, useLocal := r.proxyController.UseLocalFile(ctx, info)
-	if useLocal {
-		return responseHeaders, body, readCloser, redirectURL, errs
-	}
-
-	upstreamProxy, err := r.proxyStore.GetByRegistryIdentifier(ctx, info.ParentID, info.RegIdentifier)
-	if err != nil {
-		return responseHeaders, nil, nil, "", []error{errcode.ErrCodeUnknown.WithDetail(err)}
-	}
-
-	// This is start of proxy Code.
-	responseHeaders, readCloser, err = r.proxyController.ProxyFile(ctx, info, *upstreamProxy, serveFile)
-	if err != nil {
-		return responseHeaders, nil, nil, "", []error{errcode.ErrCodeUnknown.WithDetail(err)}
-	}
-	return responseHeaders, nil, readCloser, "", errs
+// UploadPackageFile TODO: Extract this upload function for all types of packageTypes
+// uploads the package file to the storage.
+func (r *proxy) UploadPackageFileReader(
+	ctx context.Context,
+	_ pythontype.ArtifactInfo,
+	_ io.ReadCloser,
+	_ string,
+) (*commons.ResponseHeaders, string, errcode.Error) {
+	log.Error().Ctx(ctx).Msg("Not implemented")
+	return nil, "", errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
 }

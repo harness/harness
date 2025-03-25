@@ -15,28 +15,15 @@
 package commons
 
 import (
+	"errors"
+	"fmt"
+	"io"
 	"net/http"
 	"reflect"
+	"time"
 
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
-)
-
-const (
-	HeaderAccept              = "Accept"
-	HeaderAuthorization       = "Authorization"
-	HeaderCacheControl        = "Cache-Control"
-	HeaderContentLength       = "Content-Length"
-	HeaderContentRange        = "Content-Range"
-	HeaderContentType         = "Content-Type"
-	HeaderDockerContentDigest = "Docker-Content-Digest"
-	HeaderDockerUploadUUID    = "Docker-Upload-UUID"
-	HeaderEtag                = "Etag"
-	HeaderIfNoneMatch         = "If-None-Match"
-	HeaderLink                = "Link"
-	HeaderLocation            = "Location"
-	HeaderOCIFiltersApplied   = "OCI-Filters-Applied"
-	HeaderOCISubject          = "OCI-Subject"
-	HeaderRange               = "Range"
+	"github.com/harness/gitness/registry/app/storage"
 )
 
 type ResponseHeaders struct {
@@ -94,4 +81,25 @@ func (r *ResponseHeaders) WriteHeadersToResponse(w http.ResponseWriter) {
 			w.Header().Set(key, value)
 		}
 	}
+}
+
+func ServeContent(
+	w http.ResponseWriter,
+	r *http.Request,
+	body *storage.FileReader,
+	fileName string,
+	readCloser io.ReadCloser,
+) error {
+	if body != nil {
+		http.ServeContent(w, r, fileName, time.Time{}, body)
+		return nil
+	}
+	if readCloser != nil {
+		_, err := io.Copy(w, readCloser)
+		if err != nil {
+			return fmt.Errorf("failed to copy content: %w", err)
+		}
+		return nil
+	}
+	return errors.New("no content to serve")
 }

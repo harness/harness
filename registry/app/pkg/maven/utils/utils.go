@@ -22,6 +22,7 @@ import (
 
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
+	"github.com/harness/gitness/registry/types"
 )
 
 const (
@@ -81,8 +82,9 @@ func IsMainArtifactFile(info pkg.MavenArtifactInfo) bool {
 	return false
 }
 
-func SetHeaders(info pkg.MavenArtifactInfo,
-	fileInfo pkg.FileInfo,
+func SetHeaders(
+	info pkg.MavenArtifactInfo,
+	fileInfo types.FileInfo,
 ) *commons.ResponseHeaders {
 	responseHeaders := &commons.ResponseHeaders{
 		Headers: map[string]string{},

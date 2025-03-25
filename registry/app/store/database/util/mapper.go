@@ -20,7 +20,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/harness/gitness/registry/app/pkg/commons"
+	"github.com/harness/gitness/registry/utils"
 )
 
 const ID = ""
@@ -44,7 +44,7 @@ func StringToInt64Arr(s string) []int64 {
 
 func StringToArrByDelimiter(s string, delimiter string) []string {
 	var arr []string
-	if commons.IsEmpty(s) {
+	if utils.IsEmpty(s) {
 		return arr
 	}
 	return strings.Split(s, delimiter)
@@ -64,7 +64,7 @@ func Int64ArrToStringByDelimiter(arr []int64, delimiter string) string {
 
 func StringToInt64ArrByDelimiter(s string, delimiter string) []int64 {
 	var arr []int64
-	if commons.IsEmpty(s) {
+	if utils.IsEmpty(s) {
 		return arr
 	}
 	for _, i := range strings.Split(s, delimiter) {

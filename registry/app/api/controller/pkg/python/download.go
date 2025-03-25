@@ -40,10 +40,10 @@ func (c *controller) DownloadPackageFile(
 				nil, "", nil, nil,
 			}
 		}
-		headers, fileReader, redirectURL, errs := pythonRegistry.DownloadPackageFile(ctx, info)
+		headers, fileReader, readCloser, redirectURL, errs := pythonRegistry.DownloadPackageFile(ctx, info)
 		return &GetArtifactResponse{
 			errs, headers, redirectURL,
-			fileReader, nil,
+			fileReader, readCloser,
 		}
 	}
 

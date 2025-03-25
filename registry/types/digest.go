@@ -15,10 +15,9 @@
 package types
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
-
-	"github.com/harness/gitness/registry/app/store/database/util"
 
 	"github.com/opencontainers/go-digest"
 )
@@ -42,11 +41,15 @@ func GetDigestBytes(dgst digest.Digest) ([]byte, error) {
 		return nil, err
 	}
 
-	digestBytes, err := util.GetHexDecodedBytes(string(newDigest))
+	digestBytes, err := GetHexDecodedBytes(string(newDigest))
 	if err != nil {
 		return nil, err
 	}
 	return digestBytes, nil
+}
+
+func GetHexDecodedBytes(s string) ([]byte, error) {
+	return hex.DecodeString(s)
 }
 
 // String implements the Stringer interface.

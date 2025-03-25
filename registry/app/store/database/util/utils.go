@@ -19,11 +19,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/harness/gitness/registry/app/pkg/commons"
+	"github.com/harness/gitness/registry/utils"
 )
 
 func GetEmptySQLString(str string) sql.NullString {
-	if commons.IsEmpty(str) {
+	if utils.IsEmpty(str) {
 		return sql.NullString{String: str, Valid: false}
 	}
 	return sql.NullString{String: str, Valid: true}

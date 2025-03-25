@@ -15,8 +15,6 @@
 package pkg
 
 import (
-	"time"
-
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 
 	v2 "github.com/distribution/distribution/v3/registry/api/v2"
@@ -45,16 +43,6 @@ type RegistryInfo struct {
 	URLBuilder  *v2.URLBuilder
 	Path        string
 	PackageType artifact.PackageType
-}
-
-type FileInfo struct {
-	Size      int64
-	Sha1      string
-	Sha256    string
-	Sha512    string
-	MD5       string
-	Filename  string
-	CreatedAt time.Time
 }
 
 func (r *RegistryInfo) SetReference(ref string) {

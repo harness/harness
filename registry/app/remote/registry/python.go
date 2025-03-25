@@ -12,28 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package types
+package registry
 
-import "time"
+import (
+	"context"
+	"io"
 
-type GenericBlob struct {
-	ID           string
-	RootParentID int64
-	Sha1         string
-	Sha256       string
-	Sha512       string
-	MD5          string
-	Size         int64
-	CreatedAt    time.Time
-	CreatedBy    int64
-}
+	"github.com/harness/gitness/registry/app/metadata/python"
+	"github.com/harness/gitness/registry/app/remote/adapter/commons/pypi"
+)
 
-type FileInfo struct {
-	Size      int64
-	Sha1      string
-	Sha256    string
-	Sha512    string
-	MD5       string
-	Filename  string
-	CreatedAt time.Time
+type PythonRegistry interface {
+	GetMetadata(ctx context.Context, pkg string) (*pypi.SimpleMetadata, error)
+	GetPackage(ctx context.Context, pkg string, filename string) (io.ReadCloser, error)
+	GetJSON(ctx context.Context, pkg string, version string) (*python.Metadata, error)
 }

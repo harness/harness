@@ -48,15 +48,6 @@ import (
 )
 
 var (
-	// Cli is the global registry client instance, it targets to the backend docker registry.
-	Cli = func() Client {
-		url := "myurl"
-		username, password := "myusername", "mypassword"
-		// url, _ := config.RegistryURL()
-		// username, password := config.RegistryCredential()
-		return NewClient(url, username, password, false)
-	}()
-
 	accepts = []string{
 		v1.MediaTypeImageIndex,
 		manifestlist.MediaTypeManifestList,
@@ -158,6 +149,9 @@ type Client interface {
 
 	// HeadFile Check existence of file
 	HeadFile(filePath string) (*commons.ResponseHeaders, bool, error)
+
+	// GetFileFromURL Download the file from URL instead of provided endpoint. Authorizer still remains the same.
+	GetFileFromURL(url string) (*commons.ResponseHeaders, io.ReadCloser, error)
 }
 
 // NewClient creates a registry client with the default authorizer which determines the auth scheme
@@ -835,6 +829,21 @@ func buildMonolithicBlobUploadURL(endpoint, location, digest string) (string, er
 func (c *client) GetFile(filePath string) (*commons.ResponseHeaders, io.ReadCloser, error) {
 	req, err := http.NewRequestWithContext(context.TODO(), http.MethodGet,
 		buildFileURL(c.url, filePath), nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	resp, err := c.Do(req)
+	if err != nil {
+		return nil, nil, err
+	}
+	responseHeaders := utils.ParseResponseHeaders(resp)
+	return responseHeaders, resp.Body, nil
+}
+
+func (c *client) GetFileFromURL(url string) (*commons.ResponseHeaders, io.ReadCloser, error) {
+	req, err := http.NewRequestWithContext(context.TODO(), http.MethodGet,
+		url, nil)
 	if err != nil {
 		return nil, nil, err
 	}

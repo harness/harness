@@ -18,9 +18,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"mime/multipart"
-	"net/http"
 	"sort"
+	"strconv"
+	"strings"
 
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
@@ -31,10 +33,12 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	pythontype "github.com/harness/gitness/registry/app/pkg/types/python"
+	"github.com/harness/gitness/registry/app/remote/adapter/commons/pypi"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
-	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/store/database/dbtx"
+
+	"github.com/rs/zerolog/log"
 )
 
 var _ pkg.Artifact = (*localRegistry)(nil)
@@ -85,31 +89,19 @@ func (c *localRegistry) GetPackageTypes() []artifact.PackageType {
 	return []artifact.PackageType{artifact.PackageTypePYTHON}
 }
 
-func (c *localRegistry) DownloadPackageFile(ctx context.Context, info pythontype.ArtifactInfo) (
-	*commons.ResponseHeaders,
-	*storage.FileReader,
-	string,
-	[]error,
-) {
-	responseHeaders := &commons.ResponseHeaders{
-		Headers: make(map[string]string),
-		Code:    0,
+func (c *localRegistry) DownloadPackageFile(
+	ctx context.Context,
+	info pythontype.ArtifactInfo,
+) (*commons.ResponseHeaders, *storage.FileReader, io.ReadCloser, string, []error) {
+	headers, fileReader, redirectURL, errors := c.localBase.Download(ctx, info.ArtifactInfo, info.Version,
+		info.Filename)
+	if len(errors) > 0 {
+		return nil, nil, nil, "", errors
 	}
-
-	path := "/" + info.Image + "/" + info.Version + "/" + info.Filename
-
-	fileReader, _, redirectURL, err := c.fileManager.DownloadFile(ctx, path, types.Registry{
-		ID:   info.RegistryID,
-		Name: info.RegIdentifier,
-	}, info.RootIdentifier)
-	if err != nil {
-		return responseHeaders, nil, "", []error{err}
-	}
-	responseHeaders.Code = http.StatusOK
-	return responseHeaders, fileReader, redirectURL, nil
+	return headers, fileReader, nil, redirectURL, nil
 }
 
-// Metadata represents the metadata of a Python package.
+// GetPackageMetadata Metadata represents the metadata of a Python package.
 func (c *localRegistry) GetPackageMetadata(
 	ctx context.Context,
 	info pythontype.ArtifactInfo,
@@ -152,22 +144,68 @@ func (c *localRegistry) GetPackageMetadata(
 		}
 	}
 
-	// Sort files by Name
-	sort.Slice(packageMetadata.Files, func(i, j int) bool {
-		return packageMetadata.Files[i].Name < packageMetadata.Files[j].Name
-	})
-
+	sortPackageMetadata(ctx, packageMetadata)
 	return packageMetadata, nil
+}
+
+func sortPackageMetadata(ctx context.Context, metadata pythontype.PackageMetadata) {
+	sort.Slice(metadata.Files, func(i, j int) bool {
+		version1 := pypi.GetPyPIVersion(metadata.Files[i].Name)
+		version2 := pypi.GetPyPIVersion(metadata.Files[j].Name)
+		if version1 == "" || version2 == "" || version1 == version2 {
+			return metadata.Files[i].Name < metadata.Files[j].Name
+		}
+
+		vi := parseVersion(ctx, version1)
+		vj := parseVersion(ctx, version2)
+
+		for k := 0; k < len(vi) && k < len(vj); k++ {
+			if vi[k] != vj[k] {
+				return vi[k] < vj[k]
+			}
+		}
+
+		return len(vi) < len(vj)
+	})
+}
+
+func parseVersion(ctx context.Context, version string) []int {
+	parts := strings.Split(version, ".")
+	result := make([]int, len(parts))
+	for i, part := range parts {
+		num, err := strconv.Atoi(part)
+		if err != nil {
+			log.Debug().Ctx(ctx).Msgf("failed to parse version %s: %v", part, err)
+			continue
+		}
+		result[i] = num
+	}
+	return result
 }
 
 func (c *localRegistry) UploadPackageFile(
 	ctx context.Context,
 	info pythontype.ArtifactInfo,
 	file multipart.File,
-	fileHeader *multipart.FileHeader,
+	filename string,
 ) (headers *commons.ResponseHeaders, sha256 string, err errcode.Error) {
-	path := info.Image + "/" + info.Metadata.Version + "/" + fileHeader.Filename
-	return c.localBase.Upload(ctx, info.ArtifactInfo, fileHeader.Filename, info.Metadata.Version, path, file,
+	defer file.Close()
+	path := pkg.JoinWithSeparator("/", info.Image, info.Metadata.Version, filename)
+	return c.localBase.UploadFile(ctx, info.ArtifactInfo, filename, info.Metadata.Version, path, file,
+		&pythonmetadata.PythonMetadata{
+			Metadata: info.Metadata,
+		})
+}
+
+func (c *localRegistry) UploadPackageFileReader(
+	ctx context.Context,
+	info pythontype.ArtifactInfo,
+	file io.ReadCloser,
+	filename string,
+) (headers *commons.ResponseHeaders, sha256 string, err errcode.Error) {
+	defer file.Close()
+	path := pkg.JoinWithSeparator("/", info.Image, info.Metadata.Version, filename)
+	return c.localBase.Upload(ctx, info.ArtifactInfo, filename, info.Metadata.Version, path, file,
 		&pythonmetadata.PythonMetadata{
 			Metadata: info.Metadata,
 		})

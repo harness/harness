@@ -167,16 +167,18 @@ func getCreds(
 	return accessKey, secretKey, false, nil
 }
 
-func getSecretValue(ctx context.Context, spaceFinder refcache.SpaceFinder, secretService secret.Service,
-	secretSpaceID int64, secretSpacePath string) (string, error) {
+func getSecretValue(
+	ctx context.Context, spaceFinder refcache.SpaceFinder, secretService secret.Service,
+	secretSpaceID int64, secretSpacePath string,
+) (string, error) {
 	spacePath, err := spaceFinder.FindByID(ctx, secretSpaceID)
 	if err != nil {
-		log.Error().Msgf("failed to find space path: %v", err)
+		log.Error().Msgf("failed to find space path: %d, %v", secretSpaceID, err)
 		return "", err
 	}
 	decryptSecret, err := secretService.DecryptSecret(ctx, spacePath.Path, secretSpacePath)
 	if err != nil {
-		log.Error().Msgf("failed to decrypt secret: %v", err)
+		log.Error().Msgf("failed to decrypt secret at path: %s, secret: %s, %v", spacePath.Path, secretSpacePath, err)
 		return "", err
 	}
 	return decryptSecret, nil

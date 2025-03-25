@@ -48,8 +48,9 @@ type controller struct {
 	imageDao    store.ImageRepository
 	artifactDao store.ArtifactRepository
 	urlProvider urlprovider.Provider
-	local       python.LocalRegistry
-	proxy       python.Proxy
+	// TODO: Cleanup and initiate at other place
+	local python.LocalRegistry
+	proxy python.Proxy
 }
 
 // NewController creates a new Python controller.

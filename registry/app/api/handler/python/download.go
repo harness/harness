@@ -29,31 +29,48 @@ func (h *handler) DownloadPackageFile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	info, ok := request.ArtifactInfoFrom(ctx).(*pythontype.ArtifactInfo)
 	if !ok {
-		log.Ctx(ctx).Error().Msg("Failed to get python artifact info from context")
-		h.HandleErrors(r.Context(), []error{fmt.Errorf("failed to fetch python artifact info from context")}, w)
+		h.HandleErrors(ctx, []error{fmt.Errorf("failed to fetch info from context")}, w)
 		return
 	}
 
 	response := h.controller.DownloadPackageFile(ctx, *info)
+	if response == nil {
+		h.HandleErrors(ctx, []error{fmt.Errorf("failed to get response from controller")}, w)
+		return
+	}
 
 	defer func() {
 		if response.Body != nil {
 			err := response.Body.Close()
 			if err != nil {
-				log.Ctx(r.Context()).Error().Msgf("Failed to close body: %v", err)
+				log.Ctx(ctx).Error().Msgf("Failed to close body: %v", err)
+			}
+		}
+
+		if response.ReadCloser != nil {
+			err := response.ReadCloser.Close()
+			if err != nil {
+				log.Ctx(ctx).Error().Msgf("Failed to close read closer: %v", err)
 			}
 		}
 	}()
 
 	if !commons.IsEmpty(response.GetErrors()) {
-		h.HandleErrors(r.Context(), response.GetErrors(), w)
+		h.HandleErrors(ctx, response.GetErrors(), w)
+		return
 	}
 
-	w.Header().Set("Content-Disposition", "attachment; filename="+info.Filename)
 	if response.RedirectURL != "" {
 		http.Redirect(w, r, response.RedirectURL, http.StatusTemporaryRedirect)
 		return
 	}
-	h.ServeContent(w, r, response.Body, info.Filename)
+
+	w.WriteHeader(http.StatusOK)
+	err := commons.ServeContent(w, r, response.Body, info.Filename, response.ReadCloser)
+	if err != nil {
+		log.Ctx(ctx).Error().Msgf("Failed to serve content: %v", err)
+		h.HandleErrors(ctx, []error{err}, w)
+		return
+	}
 	response.ResponseHeaders.WriteToResponse(w)
 }

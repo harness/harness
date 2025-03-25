@@ -16,6 +16,7 @@ package pkg
 
 import (
 	"reflect"
+	"strings"
 )
 
 func IsEmpty(slice interface{}) bool {
@@ -23,4 +24,8 @@ func IsEmpty(slice interface{}) bool {
 		return true
 	}
 	return reflect.ValueOf(slice).Len() == 0
+}
+
+func JoinWithSeparator(sep string, args ...string) string {
+	return strings.Join(args, sep)
 }

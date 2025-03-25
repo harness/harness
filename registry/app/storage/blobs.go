@@ -25,7 +25,7 @@ import (
 
 	"github.com/harness/gitness/registry/app/driver"
 	"github.com/harness/gitness/registry/app/manifest"
-	"github.com/harness/gitness/registry/app/pkg"
+	"github.com/harness/gitness/registry/types"
 
 	"github.com/distribution/reference"
 	"github.com/opencontainers/go-digest"
@@ -173,7 +173,8 @@ type GenericBlobStore interface {
 	// multiple times until the BlobWriter is committed or cancelled.
 	Create(ctx context.Context, filePath string) (driver.FileWriter, error)
 
-	Write(ctx context.Context, w driver.FileWriter, file multipart.File, fileReader io.Reader) (pkg.FileInfo, error)
+	// Write writes the file to the blob store. There are two ways to write the file and fileReader takes the precedence.
+	Write(ctx context.Context, w driver.FileWriter, file multipart.File, fileReader io.Reader) (types.FileInfo, error)
 	Move(ctx context.Context, srcPath string, dstPath string) error
 	Delete(ctx context.Context, filePath string) error
 

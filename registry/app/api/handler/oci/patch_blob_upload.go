@@ -18,6 +18,7 @@ import (
 	"net/http"
 
 	"github.com/harness/gitness/registry/app/pkg/commons"
+	"github.com/harness/gitness/registry/app/storage"
 )
 
 func (h *Handler) PatchBlobUpload(w http.ResponseWriter, r *http.Request) {
@@ -26,9 +27,9 @@ func (h *Handler) PatchBlobUpload(w http.ResponseWriter, r *http.Request) {
 		handleErrors(r.Context(), []error{err}, w)
 		return
 	}
-	ct := r.Header.Get(commons.HeaderContentType)
-	cr := r.Header.Get(commons.HeaderContentRange)
-	cl := r.Header.Get(commons.HeaderContentLength)
+	ct := r.Header.Get(storage.HeaderContentType)
+	cr := r.Header.Get(storage.HeaderContentRange)
+	cl := r.Header.Get(storage.HeaderContentLength)
 	length := r.ContentLength
 	if length > 0 {
 		r.Body = http.MaxBytesReader(w, r.Body, length)

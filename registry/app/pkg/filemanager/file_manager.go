@@ -22,7 +22,6 @@ import (
 	"path"
 	"strings"
 
-	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/types"
@@ -40,7 +39,8 @@ const (
 	pathFormat     = "for path: %s, with error %w"
 )
 
-func NewFileManager(app *App, registryDao store.RegistryRepository, genericBlobDao store.GenericBlobRepository,
+func NewFileManager(
+	app *App, registryDao store.RegistryRepository, genericBlobDao store.GenericBlobRepository,
 	nodesDao store.NodesRepository,
 	tx dbtx.Transactor,
 ) FileManager {
@@ -71,7 +71,7 @@ func (f *FileManager) UploadFile(
 	file multipart.File,
 	fileReader io.Reader,
 	filename string,
-) (pkg.FileInfo, error) {
+) (types.FileInfo, error) {
 	// uploading the file to temporary path in file storage
 	blobContext := f.App.GetBlobsContext(ctx, regName, rootIdentifier)
 	pathUUID := uuid.NewString()
@@ -81,7 +81,7 @@ func (f *FileManager) UploadFile(
 	if err != nil {
 		log.Error().Msgf("failed to initiate the file upload for file with"+
 			" name : %s with error : %s", filename, err.Error())
-		return pkg.FileInfo{}, fmt.Errorf("failed to initiate the file upload "+
+		return types.FileInfo{}, fmt.Errorf("failed to initiate the file upload "+
 			"for file with name : %s with error : %w", filename, err)
 	}
 	defer fw.Close()
@@ -90,7 +90,7 @@ func (f *FileManager) UploadFile(
 	if err != nil {
 		log.Error().Msgf("failed to upload the file on temparary location"+
 			" with name : %s with error : %s", filename, err.Error())
-		return pkg.FileInfo{}, fmt.Errorf("failed to upload the file on temparary "+
+		return types.FileInfo{}, fmt.Errorf("failed to upload the file on temparary "+
 			"location with name : %s with error : %w", filename, err)
 	}
 	fileInfo.Filename = filename
@@ -102,7 +102,7 @@ func (f *FileManager) UploadFile(
 	if err != nil {
 		log.Error().Msgf("failed to Move the file on permanent location "+
 			"with name : %s with error : %s", filename, err.Error())
-		return pkg.FileInfo{}, fmt.Errorf("failed to Move the file on permanent"+
+		return types.FileInfo{}, fmt.Errorf("failed to Move the file on permanent"+
 			" location with name : %s with error : %w", filename, err)
 	}
 
@@ -120,7 +120,7 @@ func (f *FileManager) UploadFile(
 	if err != nil {
 		log.Error().Msgf("failed to save generic blob in db with "+
 			"sha256 : %s, err: %s", fileInfo.Sha256, err.Error())
-		return pkg.FileInfo{}, fmt.Errorf("failed to save generic blob"+
+		return types.FileInfo{}, fmt.Errorf("failed to save generic blob"+
 			" in db with sha256 : %s, err: %w", fileInfo.Sha256, err)
 	}
 	blobID = gb.ID
@@ -135,7 +135,7 @@ func (f *FileManager) UploadFile(
 	if err != nil {
 		log.Error().Msgf("failed to save nodes for file : %s, with "+
 			"path : %s, err: %s", filename, filePath, err)
-		return pkg.FileInfo{}, fmt.Errorf("failed to save nodes for"+
+		return types.FileInfo{}, fmt.Errorf("failed to save nodes for"+
 			" file : %s, with path : %s, err: %w", filename, filePath, err)
 	}
 	return fileInfo, nil
@@ -175,8 +175,10 @@ func (f *FileManager) createNodes(ctx context.Context, filePath string, blobID s
 	return nil
 }
 
-func (f *FileManager) SaveNode(ctx context.Context, filePath string, blobID string, regID int64, segment string,
-	parentID string, nodePath string, isFile bool) (string, error) {
+func (f *FileManager) SaveNode(
+	ctx context.Context, filePath string, blobID string, regID int64, segment string,
+	parentID string, nodePath string, isFile bool,
+) (string, error) {
 	node := &types.Node{
 		Name:         segment,
 		RegistryID:   regID,
@@ -261,20 +263,20 @@ func (f *FileManager) GetFileMetadata(
 	ctx context.Context,
 	filePath string,
 	regID int64,
-) (pkg.FileInfo, error) {
+) (types.FileInfo, error) {
 	node, err := f.nodesDao.GetByPathAndRegistryID(ctx, regID, filePath)
 
 	if err != nil {
-		return pkg.FileInfo{}, fmt.Errorf("failed to get the node path mapping "+
+		return types.FileInfo{}, fmt.Errorf("failed to get the node path mapping "+
 			pathFormat, filePath, err)
 	}
 	blob, err := f.genericBlobDao.FindByID(ctx, node.BlobID)
 
 	if err != nil {
-		return pkg.FileInfo{}, fmt.Errorf("failed to get the blob for path: %s, "+
+		return types.FileInfo{}, fmt.Errorf("failed to get the blob for path: %s, "+
 			"with blob id: %s, with error %s", filePath, node.BlobID, err)
 	}
-	return pkg.FileInfo{
+	return types.FileInfo{
 		Sha1:     blob.Sha1,
 		Size:     blob.Size,
 		Sha256:   blob.Sha256,

@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"strings"
@@ -37,7 +38,10 @@ import (
 var _ LocalBase = (*localBase)(nil)
 
 type LocalBase interface {
-	Upload(
+
+	// UploadFile uploads the file to the storage.
+	// FIXME: Validate upload by given sha256 or any other checksums provided
+	UploadFile(
 		ctx context.Context,
 		info pkg.ArtifactInfo,
 		fileName string,
@@ -50,12 +54,23 @@ type LocalBase interface {
 		// each package implementation should have their own.
 		headers *commons.ResponseHeaders, sha256 string, err errcode.Error,
 	)
+	Upload(
+		ctx context.Context,
+		info pkg.ArtifactInfo,
+		fileName string,
+		version string,
+		path string,
+		file io.ReadCloser,
+		metadata metadata.Metadata,
+	) (*commons.ResponseHeaders, string, errcode.Error)
 	Download(ctx context.Context, info pkg.ArtifactInfo, version string, fileName string) (
 		*commons.ResponseHeaders,
 		*storage.FileReader,
 		string,
 		[]error,
 	)
+
+	Exists(ctx context.Context, info pkg.ArtifactInfo, version string, fileName string) bool
 }
 
 type localBase struct {
@@ -82,7 +97,7 @@ func NewLocalBase(
 	}
 }
 
-func (l *localBase) Upload(
+func (l *localBase) UploadFile(
 	ctx context.Context,
 	info pkg.ArtifactInfo,
 	fileName string,
@@ -90,6 +105,31 @@ func (l *localBase) Upload(
 	path string,
 	file multipart.File,
 	// TODO: Metadata shouldn't be provided as a parameter, it should be fetched or created.
+	metadata metadata.Metadata,
+) (*commons.ResponseHeaders, string, errcode.Error) {
+	return l.uploadInternal(ctx, info, fileName, version, path, file, nil, metadata)
+}
+
+func (l *localBase) Upload(
+	ctx context.Context,
+	info pkg.ArtifactInfo,
+	fileName string,
+	version string,
+	path string,
+	file io.ReadCloser,
+	metadata metadata.Metadata,
+) (*commons.ResponseHeaders, string, errcode.Error) {
+	return l.uploadInternal(ctx, info, fileName, version, path, nil, file, metadata)
+}
+
+func (l *localBase) uploadInternal(
+	ctx context.Context,
+	info pkg.ArtifactInfo,
+	fileName string,
+	version string,
+	path string,
+	file multipart.File,
+	fileReadCloser io.ReadCloser,
 	metadata metadata.Metadata,
 ) (*commons.ResponseHeaders, string, errcode.Error) {
 	responseHeaders := &commons.ResponseHeaders{
@@ -108,7 +148,7 @@ func (l *localBase) Upload(
 		return responseHeaders, "", errcode.ErrCodeUnknown.WithDetail(err)
 	}
 	fileInfo, err := l.fileManager.UploadFile(ctx, path, info.RegIdentifier, registry.ID,
-		info.RootParentID, info.RootIdentifier, file, nil, fileName)
+		info.RootParentID, info.RootIdentifier, file, fileReadCloser, fileName)
 	if err != nil {
 		return responseHeaders, "", errcode.ErrCodeUnknown.WithDetail(err)
 	}
@@ -171,9 +211,10 @@ func (l *localBase) Download(ctx context.Context, info pkg.ArtifactInfo, version
 	}
 
 	path := "/" + info.Image + "/" + version + "/" + fileName
+	reg, _ := l.registryDao.GetByRootParentIDAndName(ctx, info.RootParentID, info.RegIdentifier)
 
 	fileReader, _, redirectURL, err := l.fileManager.DownloadFile(ctx, path, types.Registry{
-		ID:   info.RegistryID,
+		ID:   reg.ID,
 		Name: info.RegIdentifier,
 	}, info.RootIdentifier)
 	if err != nil {
@@ -183,11 +224,18 @@ func (l *localBase) Download(ctx context.Context, info pkg.ArtifactInfo, version
 	return responseHeaders, fileReader, redirectURL, nil
 }
 
+func (l *localBase) Exists(ctx context.Context, info pkg.ArtifactInfo, version string, fileName string) bool {
+	filePath := "/" + info.Image + "/" + version + "/" + fileName
+	sha256, _ := l.fileManager.HeadFile(ctx, filePath, info.RegistryID)
+	//FIXME: err should be checked on if the record doesn't exist or there was DB call issue
+	return sha256 != ""
+}
+
 func (l *localBase) updateMetadata(
 	dbArtifact *types.Artifact,
 	inputMetadata metadata.Metadata,
 	info pkg.ArtifactInfo,
-	fileInfo pkg.FileInfo,
+	fileInfo types.FileInfo,
 ) error {
 	var files []metadata.File
 	if dbArtifact != nil {

@@ -383,12 +383,13 @@ func (r *LocalRegistry) fetchBlobInternal(
 	var dgst digest.Digest
 	blobs := ctx.OciBlobStore
 
-	if err := r.dbBlobLinkExists(ctx, ctx.Digest, info.RegIdentifier, info); err != nil {
+	if err := r.dbBlobLinkExists(ctx, ctx.Digest, info.RegIdentifier, info); err != nil { //nolint:contextcheck
 		errs = append(errs, errcode.FromUnknownError(err))
 		return responseHeaders, nil, -1, nil, "", errs
 	}
 	dgst = ctx.Digest
 	headers := make(map[string]string)
+	//nolint:contextcheck
 	fileReader, redirectURL, size, err := blobs.ServeBlobInternal(
 		ctx.Context,
 		info.RootIdentifier,
@@ -882,7 +883,7 @@ func (r *LocalRegistry) InitBlobUpload(
 	}
 	digest := digest.Digest(mountDigest)
 	if mountDigest != "" && fromRepo != "" {
-		err := r.dbMountBlob(blobCtx, fromRepo, artInfo.RegIdentifier, digest, artInfo)
+		err := r.dbMountBlob(blobCtx, fromRepo, artInfo.RegIdentifier, digest, artInfo) //nolint:contextcheck
 		if err != nil {
 			e := fmt.Errorf("failed to mount blob in database: %w", err)
 			errList = append(errList, errcode.FromUnknownError(e))
@@ -897,7 +898,7 @@ func (r *LocalRegistry) InitBlobUpload(
 	}
 
 	blobs := blobCtx.OciBlobStore
-	upload, err := blobs.Create(blobCtx.Context)
+	upload, err := blobs.Create(blobCtx.Context) //nolint:contextcheck
 	if err != nil {
 		if errors.Is(err, storage.ErrUnsupported) {
 			errList = append(errList, errcode.ErrCodeUnsupported)
@@ -916,7 +917,7 @@ func (r *LocalRegistry) InitBlobUpload(
 		errList = append(errList, errcode.ErrCodeUnknown.WithDetail(err))
 		return responseHeaders, errList
 	}
-	responseHeaders.Headers[commons.HeaderDockerUploadUUID] = blobCtx.Upload.ID()
+	responseHeaders.Headers[storage.HeaderDockerUploadUUID] = blobCtx.Upload.ID()
 	responseHeaders.Code = http.StatusAccepted
 	return responseHeaders, nil
 }
@@ -1017,7 +1018,7 @@ func (r *LocalRegistry) PushBlob(
 	}
 	ctx := r.App.GetBlobsContext(ctx2, artInfo)
 	if ctx.UUID != "" {
-		resumeErrs := ResumeBlobUpload(ctx, stateToken)
+		resumeErrs := ResumeBlobUpload(ctx, stateToken) //nolint:contextcheck
 		errs = append(errs, resumeErrs...)
 	}
 
@@ -1048,6 +1049,7 @@ func (r *LocalRegistry) PushBlob(
 		return responseHeaders, errs
 	}
 
+	//nolint:contextcheck
 	if err := copyFullPayload(
 		ctx, contentLength, body, ctx.Upload,
 		"blob PUT",
@@ -1059,6 +1061,7 @@ func (r *LocalRegistry) PushBlob(
 		return responseHeaders, errs
 	}
 
+	//nolint:contextcheck
 	desc, err := ctx.Upload.Commit(
 		ctx, artInfo.RootIdentifier, manifest.Descriptor{
 			Digest: dgst,
@@ -1089,11 +1092,12 @@ func (r *LocalRegistry) PushBlob(
 					errcode.ErrCodeBlobUploadInvalid.WithDetail(err),
 				)
 			default:
-				dcontext.GetLogger(ctx, log.Error()).Msgf("unknown error completing upload: %v", err)
+				//nolint:contextcheck
+				log.Ctx(ctx).Error().Msgf("unknown error completing upload: %v", err)
 				errs = append(errs, errcode.ErrCodeUnknown.WithDetail(err))
 			}
 		}
-
+		//nolint:contextcheck
 		// Clean up the backend blob data if there was an error.
 		if err := ctx.Upload.Cancel(ctx); err != nil {
 			// If the cleanup fails, all we can do is observe and report.
@@ -1104,6 +1108,7 @@ func (r *LocalRegistry) PushBlob(
 		return responseHeaders, errs
 	}
 
+	//nolint:contextcheck
 	err = r.dbPutBlobUploadComplete(
 		ctx,
 		artInfo.RegIdentifier,

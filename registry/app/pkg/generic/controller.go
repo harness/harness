@@ -173,7 +173,7 @@ func (c Controller) UploadArtifact(
 
 func (c Controller) updateMetadata(
 	dbArtifact *types.Artifact, metadataInput *metadata.GenericMetadata,
-	info pkg.GenericArtifactInfo, fileInfo pkg.FileInfo,
+	info pkg.GenericArtifactInfo, fileInfo types.FileInfo,
 ) error {
 	var files []metadata.File
 	if dbArtifact != nil {

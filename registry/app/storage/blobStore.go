@@ -27,7 +27,7 @@ import (
 
 	"github.com/harness/gitness/registry/app/dist_temp/dcontext"
 	"github.com/harness/gitness/registry/app/driver"
-	"github.com/harness/gitness/registry/app/pkg"
+	"github.com/harness/gitness/registry/types"
 
 	"github.com/rs/zerolog/log"
 )
@@ -96,8 +96,10 @@ func (bs *genericBlobStore) newBlobUpload(
 
 // Write takes a file writer and a multipart form file or file reader,
 // streams the file to the writer, and calculates hashes.
-func (bs *genericBlobStore) Write(ctx context.Context, w driver.FileWriter, file multipart.File,
-	fileReader io.Reader) (pkg.FileInfo, error) {
+func (bs *genericBlobStore) Write(
+	ctx context.Context, w driver.FileWriter, file multipart.File,
+	fileReader io.Reader,
+) (types.FileInfo, error) {
 	// Create new hash.Hash instances for SHA256 and SHA512
 	sha1Hasher := sha1.New()
 	sha256Hasher := sha256.New()
@@ -115,15 +117,15 @@ func (bs *genericBlobStore) Write(ctx context.Context, w driver.FileWriter, file
 		totalBytesWritten, err = io.Copy(mw, file)
 	}
 	if err != nil {
-		return pkg.FileInfo{}, fmt.Errorf("failed to copy file to s3: %w", err)
+		return types.FileInfo{}, fmt.Errorf("failed to copy file to s3: %w", err)
 	}
 
 	err = w.Commit(ctx)
 	if err != nil {
-		return pkg.FileInfo{}, err
+		return types.FileInfo{}, err
 	}
 
-	return pkg.FileInfo{
+	return types.FileInfo{
 		Sha1:   fmt.Sprintf("%x", sha1Hasher.Sum(nil)),
 		Sha256: fmt.Sprintf("%x", sha256Hasher.Sum(nil)),
 		Sha512: fmt.Sprintf("%x", sha512Hasher.Sum(nil)),

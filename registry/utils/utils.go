@@ -14,7 +14,10 @@
 
 package utils
 
-import "strings"
+import (
+	"reflect"
+	"strings"
+)
 
 func HasAnyPrefix(s string, prefixes []string) bool {
 	for _, prefix := range prefixes {
@@ -39,4 +42,24 @@ func SafeUint64(n int) uint64 {
 		return 0
 	}
 	return uint64(n)
+}
+
+func IsEmpty(slice interface{}) bool {
+	if slice == nil {
+		return true
+	}
+	val := reflect.ValueOf(slice)
+
+	// Check if the input is a pointer
+	if val.Kind() == reflect.Ptr {
+		// Dereference the pointer
+		val = val.Elem()
+	}
+
+	// Check if the dereferenced value is nil
+	if !val.IsValid() {
+		return true
+	}
+
+	return val.Len() == 0
 }

@@ -20,6 +20,7 @@ import (
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/docker"
+	"github.com/harness/gitness/registry/app/storage"
 
 	"github.com/rs/zerolog/log"
 )
@@ -36,8 +37,8 @@ func (h *Handler) GetManifest(w http.ResponseWriter, r *http.Request) {
 	result := h.Controller.PullManifest(
 		ctx,
 		info,
-		r.Header[commons.HeaderAccept],
-		r.Header[commons.HeaderIfNoneMatch],
+		r.Header[storage.HeaderAccept],
+		r.Header[storage.HeaderIfNoneMatch],
 	)
 	if commons.IsEmpty(result.GetErrors()) {
 		response, ok := result.(*docker.GetManifestResponse)

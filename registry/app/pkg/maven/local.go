@@ -190,7 +190,7 @@ func (r *LocalRegistry) PutArtifact(ctx context.Context, info pkg.MavenArtifactI
 
 func (r *LocalRegistry) updateArtifactMetadata(
 	dbArtifact *types.Artifact, mavenMetadata *metadata.MavenMetadata,
-	info pkg.MavenArtifactInfo, fileInfo pkg.FileInfo,
+	info pkg.MavenArtifactInfo, fileInfo types.FileInfo,
 ) error {
 	var files []metadata.File
 	if dbArtifact != nil {

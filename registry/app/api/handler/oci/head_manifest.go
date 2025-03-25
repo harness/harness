@@ -20,6 +20,7 @@ import (
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/docker"
+	"github.com/harness/gitness/registry/app/storage"
 )
 
 // HeadManifest fetches the image manifest from the storage backend, if it exists.
@@ -33,11 +34,16 @@ func (h *Handler) HeadManifest(w http.ResponseWriter, r *http.Request) {
 	result := h.Controller.HeadManifest(
 		r.Context(),
 		info,
-		r.Header[commons.HeaderAccept],
-		r.Header[commons.HeaderIfNoneMatch],
+		r.Header[storage.HeaderAccept],
+		r.Header[storage.HeaderIfNoneMatch],
 	)
 	if commons.IsEmpty(result.GetErrors()) {
-		result.(*docker.GetManifestResponse).ResponseHeaders.WriteToResponse(w)
+		response, ok := result.(*docker.GetManifestResponse)
+		if !ok {
+			handleErrors(r.Context(), errcode.Errors{errcode.ErrCodeManifestUnknown}, w)
+			return
+		}
+		response.ResponseHeaders.WriteToResponse(w)
 	}
 	handleErrors(r.Context(), result.GetErrors(), w)
 }

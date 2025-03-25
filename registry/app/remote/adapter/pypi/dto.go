@@ -12,28 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package types
+package pypi
 
-import "time"
+import "github.com/harness/gitness/registry/app/metadata/python"
 
-type GenericBlob struct {
-	ID           string
-	RootParentID int64
-	Sha1         string
-	Sha256       string
-	Sha512       string
-	MD5          string
-	Size         int64
-	CreatedAt    time.Time
-	CreatedBy    int64
-}
-
-type FileInfo struct {
-	Size      int64
-	Sha1      string
-	Sha256    string
-	Sha512    string
-	MD5       string
-	Filename  string
-	CreatedAt time.Time
+type Response struct {
+	Info python.Metadata `json:"info"`
 }

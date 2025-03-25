@@ -26,11 +26,28 @@ import (
 	"github.com/harness/gitness/registry/app/dist_temp/dcontext"
 	"github.com/harness/gitness/registry/app/driver"
 	"github.com/harness/gitness/registry/app/manifest"
-	"github.com/harness/gitness/registry/app/pkg/commons"
 
 	"github.com/google/uuid"
 	"github.com/opencontainers/go-digest"
 	"github.com/rs/zerolog/log"
+)
+
+const (
+	HeaderAccept              = "Accept"
+	HeaderAuthorization       = "Authorization"
+	HeaderCacheControl        = "Cache-Control"
+	HeaderContentLength       = "Content-Length"
+	HeaderContentRange        = "Content-Range"
+	HeaderContentType         = "Content-Type"
+	HeaderDockerContentDigest = "Docker-Content-Digest"
+	HeaderDockerUploadUUID    = "Docker-Upload-UUID"
+	HeaderEtag                = "Etag"
+	HeaderIfNoneMatch         = "If-None-Match"
+	HeaderLink                = "Link"
+	HeaderLocation            = "Location"
+	HeaderOCIFiltersApplied   = "OCI-Filters-Applied"
+	HeaderOCISubject          = "OCI-Subject"
+	HeaderRange               = "Range"
 )
 
 const blobCacheControlMaxAge = 365 * 24 * time.Hour
@@ -106,7 +123,7 @@ func (bs *ociBlobStore) ServeBlobInternal(
 	}
 	if desc.MediaType != "" {
 		// Set the repository local content type.
-		headers[commons.HeaderContentType] = desc.MediaType
+		headers[HeaderContentType] = desc.MediaType
 	}
 	size := desc.Size
 	path, err := bs.pathFn(pathPrefix, desc.Digest)
@@ -135,25 +152,25 @@ func (bs *ociBlobStore) ServeBlobInternal(
 		return nil, "", size, err
 	}
 
-	headers[commons.HeaderEtag] = fmt.Sprintf(`"%s"`, desc.Digest)
+	headers[HeaderEtag] = fmt.Sprintf(`"%s"`, desc.Digest)
 	// If-None-Match handled by ServeContent
-	headers[commons.HeaderCacheControl] = fmt.Sprintf(
+	headers[HeaderCacheControl] = fmt.Sprintf(
 		"max-age=%.f",
 		blobCacheControlMaxAge.Seconds(),
 	)
 
-	if headers[commons.HeaderDockerContentDigest] == "" {
-		headers[commons.HeaderDockerContentDigest] = desc.Digest.String()
+	if headers[HeaderDockerContentDigest] == "" {
+		headers[HeaderDockerContentDigest] = desc.Digest.String()
 	}
 
-	if headers[commons.HeaderContentType] == "" {
+	if headers[HeaderContentType] == "" {
 		// Set the content type if not already set.
-		headers[commons.HeaderContentType] = desc.MediaType
+		headers[HeaderContentType] = desc.MediaType
 	}
 
-	if headers[commons.HeaderContentLength] == "" {
+	if headers[HeaderContentLength] == "" {
 		// Set the content length if not already set.
-		headers[commons.HeaderContentLength] = fmt.Sprint(desc.Size)
+		headers[HeaderContentLength] = fmt.Sprint(desc.Size)
 	}
 
 	return br, "", size, err
