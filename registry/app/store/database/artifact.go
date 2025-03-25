@@ -416,16 +416,9 @@ func (a ArtifactDao) CountAllArtifactsByRepo(
 	q := databaseg.Builder.Select("COUNT(*)").
 		From("artifacts a").
 		Join(
-			`(SELECT a.artifact_id as id, ROW_NUMBER() OVER (PARTITION BY a.artifact_image_id 
-			ORDER BY a.artifact_updated_at DESC) AS rank FROM artifacts a 
-			JOIN registries r ON t.tag_registry_id = r.registry_id 
-			WHERE r.registry_parent_id = ? AND r.registry_name = ? ) AS a1 ON a.artifact_id = a1.id`, parentID, repoKey,
-		).
-		Join(
-			"images i ON i.image_id = a.artifact_image_id AND").
+			"images i ON i.image_id = a.artifact_image_id").
 		Join("registries r ON i.image_registry_id = r.registry_id").
-		Where("a1.rank = 1 ")
-
+		Where("r.registry_parent_id = ? AND r.registry_name = ?", parentID, repoKey)
 	if search != "" {
 		q = q.Where("i.image_name LIKE ?", sqlPartialMatch(search))
 	}
