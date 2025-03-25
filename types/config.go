@@ -184,7 +184,7 @@ type Config struct {
 
 	// BlobStore defines the blob storage configuration parameters.
 	BlobStore struct {
-		// Provider is a name of blob storage service like filesystem or gcs
+		// Provider is a name of blob storage service like filesystem or gcs or cloudflare
 		Provider blob.Provider `envconfig:"GITNESS_BLOBSTORE_PROVIDER" default:"filesystem"`
 		// Bucket is a path to the directory where the files will be stored when using filesystem blob storage,
 		// in case of gcs provider this will be the actual bucket where the images are stored.
@@ -520,6 +520,7 @@ type Config struct {
 				LogLevel                    string `envconfig:"GITNESS_REGISTRY_S3_LOG_LEVEL" default:"info"`
 				Delete                      bool   `envconfig:"GITNESS_REGISTRY_S3_DELETE_ENABLED" default:"true"`
 				Redirect                    bool   `envconfig:"GITNESS_REGISTRY_S3_STORAGE_REDIRECT" default:"false"`
+				Provider                    string `envconfig:"GITNESS_REGISTRY_S3_PROVIDER" default:"cloudflare"`
 			}
 		}
 

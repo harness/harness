@@ -38,6 +38,7 @@ import (
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/dist_temp/dcontext"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
+	"github.com/harness/gitness/registry/app/event"
 	"github.com/harness/gitness/registry/app/manifest"
 	"github.com/harness/gitness/registry/app/manifest/manifestlist"
 	"github.com/harness/gitness/registry/app/manifest/ocischema"
@@ -112,7 +113,7 @@ func NewLocalRegistry(
 	blobRepo store.BlobRepository, mtRepository store.MediaTypesRepository,
 	tagDao store.TagRepository, imageDao store.ImageRepository, artifactDao store.ArtifactRepository,
 	bandwidthStatDao store.BandwidthStatRepository, downloadStatDao store.DownloadStatRepository,
-	gcService gc.Service, tx dbtx.Transactor,
+	gcService gc.Service, tx dbtx.Transactor, reporter event.Reporter,
 ) Registry {
 	return &LocalRegistry{
 		App:              app,
@@ -129,6 +130,7 @@ func NewLocalRegistry(
 		downloadStatDao:  downloadStatDao,
 		gcService:        gcService,
 		tx:               tx,
+		reporter:         reporter,
 	}
 }
 
@@ -147,6 +149,7 @@ type LocalRegistry struct {
 	downloadStatDao  store.DownloadStatRepository
 	gcService        gc.Service
 	tx               dbtx.Transactor
+	reporter         event.Reporter
 }
 
 func (r *LocalRegistry) Base() error {
@@ -1590,7 +1593,7 @@ func (r *LocalRegistry) dbBlobLinkExists(
 }
 
 func (r *LocalRegistry) dbPutBlobUploadComplete(
-	ctx context.Context,
+	ctx *Context,
 	repoName string,
 	mediaType string,
 	digestVal string,
@@ -1604,14 +1607,16 @@ func (r *LocalRegistry) dbPutBlobUploadComplete(
 		Size:         int64(size),
 	}
 
+	var storedBlob *types.Blob
+	created := false
 	err := r.tx.WithTx(
-		ctx, func(ctx context.Context) error {
+		ctx.Context, func(ctx context.Context) error {
 			registry, err := r.registryDao.GetByParentIDAndName(ctx, info.ParentID, repoName)
 			if err != nil {
 				return err
 			}
 
-			storedBlob, err := r.blobRepo.CreateOrFind(ctx, blob)
+			storedBlob, created, err = r.blobRepo.CreateOrFind(ctx, blob)
 			if err != nil && !errors.Is(err, store2.ErrResourceNotFound) {
 				return err
 			}
@@ -1634,6 +1639,12 @@ func (r *LocalRegistry) dbPutBlobUploadComplete(
 		return fmt.Errorf("committing database transaction: %w", err)
 	}
 
+	// Emit blob create event
+	if created {
+		event.ReportEventAsync(ctx.Context, ctx.OciBlobStore.Path(),
+			r.reporter, event.BlobCreate, storedBlob.ID,
+			"", digestVal, r.App.Config)
+	}
 	return nil
 }
 
@@ -1674,6 +1685,7 @@ func (r *LocalRegistry) dbDeleteBlob(
 		return storage.ErrBlobUnknown
 	}
 
+	// No need to emit blob delete event here. The GC will take care of it even in the replicated regions.
 	return nil
 }
 

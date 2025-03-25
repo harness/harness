@@ -41,7 +41,7 @@ type BlobRepository interface {
 		ctx context.Context, d digest.Digest, repoID int64,
 		imageName string,
 	) (*types.Blob, error)
-	CreateOrFind(ctx context.Context, b *types.Blob) (*types.Blob, error)
+	CreateOrFind(ctx context.Context, b *types.Blob) (*types.Blob, bool, error)
 	DeleteByID(ctx context.Context, id int64) error
 	ExistsBlob(
 		ctx context.Context, repoID int64, d digest.Digest,
@@ -574,7 +574,7 @@ type GenericBlobRepository interface {
 		ctx context.Context, sha256 string,
 		rootParentID int64,
 	) (*types.GenericBlob, error)
-	Create(ctx context.Context, gb *types.GenericBlob) error
+	Create(ctx context.Context, gb *types.GenericBlob) (bool, error)
 	DeleteByID(ctx context.Context, id string) error
 	TotalSizeByRootParentID(ctx context.Context, id int64) (int64, error)
 }

@@ -15,6 +15,7 @@
 package filemanager
 
 import (
+	"github.com/harness/gitness/registry/app/event"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
 
@@ -24,8 +25,9 @@ import (
 func Provider(app *App, registryDao store.RegistryRepository, genericBlobDao store.GenericBlobRepository,
 	nodesDao store.NodesRepository,
 	tx dbtx.Transactor,
+	reporter event.Reporter,
 ) FileManager {
-	return NewFileManager(app, registryDao, genericBlobDao, nodesDao, tx)
+	return NewFileManager(app, registryDao, genericBlobDao, nodesDao, tx, reporter)
 }
 
 var AppSet = wire.NewSet(NewApp)

@@ -102,45 +102,45 @@ func (g GenericBlobDao) FindBySha256AndRootParentID(ctx context.Context,
 	return g.mapToGenericBlob(ctx, dst)
 }
 
-func (g GenericBlobDao) Create(ctx context.Context, gb *types.GenericBlob) error {
+func (g GenericBlobDao) Create(ctx context.Context, gb *types.GenericBlob) (bool, error) {
 	const sqlQuery = `
-		INSERT INTO generic_blobs ( 
-		         generic_blob_id
-		         ,generic_blob_root_parent_id
-				,generic_blob_sha_1
-				,generic_blob_sha_256
-				,generic_blob_sha_512
-				,generic_blob_md5
-				,generic_blob_size
-				,generic_blob_created_at
-				,generic_blob_created_by
-		    ) VALUES (
-		              :generic_blob_id
-		        , :generic_blob_root_parent_id
-				,:generic_blob_sha_1
-				,:generic_blob_sha_256
-				,:generic_blob_sha_512
-				,:generic_blob_md5
-				,:generic_blob_size
-				,:generic_blob_created_at
-				,:generic_blob_created_by
-		    )  ON CONFLICT (generic_blob_root_parent_id, generic_blob_sha_256)
-			DO UPDATE SET generic_blob_id = generic_blobs.generic_blob_id 
-		    RETURNING generic_blob_id`
+        INSERT INTO generic_blobs (
+            generic_blob_id,
+            generic_blob_root_parent_id,
+            generic_blob_sha_1,
+            generic_blob_sha_256,
+            generic_blob_sha_512,
+            generic_blob_md5,
+            generic_blob_size,
+            generic_blob_created_at,
+            generic_blob_created_by
+        ) VALUES (
+            :generic_blob_id,
+            :generic_blob_root_parent_id,
+            :generic_blob_sha_1,
+            :generic_blob_sha_256,
+            :generic_blob_sha_512,
+            :generic_blob_md5,
+            :generic_blob_size,
+            :generic_blob_created_at,
+            :generic_blob_created_by
+        ) ON CONFLICT (generic_blob_root_parent_id, generic_blob_sha_256)
+        DO UPDATE SET generic_blob_id = generic_blobs.generic_blob_id
+        RETURNING generic_blob_id`
 
 	db := dbtx.GetAccessor(ctx, g.sqlDB)
 	query, arg, err := db.BindNamed(sqlQuery, g.mapToInternalGenericBlob(ctx, gb))
 	if err != nil {
-		return databaseg.ProcessSQLErrorf(ctx, err, "Failed to bind generic blob object")
+		return false, databaseg.ProcessSQLErrorf(ctx, err, "Failed to bind generic blob object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&gb.ID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) || errors.Is(err, store2.ErrDuplicate) {
-			return nil
+			return false, nil
 		}
-		return databaseg.ProcessSQLErrorf(ctx, err, "Insert query failed")
+		return false, databaseg.ProcessSQLErrorf(ctx, err, "Insert query failed")
 	}
-	return nil
+	return true, nil
 }
 
 func (g GenericBlobDao) DeleteByID(_ context.Context, _ string) error {

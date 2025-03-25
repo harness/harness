@@ -24,7 +24,6 @@ import (
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/app/store/database/util"
 	"github.com/harness/gitness/registry/types"
-	store2 "github.com/harness/gitness/store"
 	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
 
@@ -173,16 +172,16 @@ func (bd blobDao) FindByDigestAndRepoID(ctx context.Context, d digest.Digest, re
 	return bd.mapToBlob(dst)
 }
 
-func (bd blobDao) CreateOrFind(ctx context.Context, b *types.Blob) (*types.Blob, error) {
+func (bd blobDao) CreateOrFind(ctx context.Context, b *types.Blob) (*types.Blob, bool, error) {
 	sqlQuery := `INSERT INTO blobs (
-                   blob_digest, 
-                   blob_root_parent_id, 
-                   blob_media_type_id, 
+                   blob_digest,
+                   blob_root_parent_id,
+                   blob_media_type_id,
                    blob_size,
                    blob_created_at,
                    blob_created_by
         ) VALUES (
-                  :blob_digest, 
+                  :blob_digest,
                   :blob_root_parent_id,
                   :blob_media_type_id,
                   :blob_size,
@@ -190,33 +189,38 @@ func (bd blobDao) CreateOrFind(ctx context.Context, b *types.Blob) (*types.Blob,
                   :blob_created_by
         ) ON CONFLICT (
             blob_digest, blob_root_parent_id
-        ) DO NOTHING 
+        ) DO NOTHING
           RETURNING blob_id`
 
 	mediaTypeID, err := bd.mtRepository.MapMediaType(ctx, b.MediaType)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	b.MediaTypeID = mediaTypeID
 
 	db := dbtx.GetAccessor(ctx, bd.db)
 	blob, err := mapToInternalBlob(ctx, b)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	query, arg, err := db.BindNamed(sqlQuery, blob)
 	if err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to bind repo object")
+		return nil, false, database.ProcessSQLErrorf(ctx, err, "Failed to bind repo object")
 	}
 
+	var created bool
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&b.ID); err != nil {
-		err := database.ProcessSQLErrorf(ctx, err, "Insert query failed")
-		if !errors2.Is(err, store2.ErrResourceNotFound) {
-			return nil, err
+		if errors2.Is(err, sql.ErrNoRows) {
+			created = false
+		} else {
+			return nil, false, database.ProcessSQLErrorf(ctx, err, "Insert query failed")
 		}
+	} else {
+		created = true
 	}
 
-	return bd.FindByDigestAndRootParentID(ctx, b.Digest, b.RootParentID)
+	blob2, err := bd.FindByDigestAndRootParentID(ctx, b.Digest, b.RootParentID)
+	return blob2, created, err
 }
 
 func (bd blobDao) DeleteByID(ctx context.Context, id int64) error {

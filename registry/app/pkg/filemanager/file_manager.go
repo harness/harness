@@ -22,6 +22,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/harness/gitness/registry/app/event"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/types"
@@ -42,7 +43,8 @@ const (
 func NewFileManager(
 	app *App, registryDao store.RegistryRepository, genericBlobDao store.GenericBlobRepository,
 	nodesDao store.NodesRepository,
-	tx dbtx.Transactor,
+	tx dbtx.Transactor, reporter event.Reporter,
+
 ) FileManager {
 	return FileManager{
 		App:            app,
@@ -50,6 +52,7 @@ func NewFileManager(
 		genericBlobDao: genericBlobDao,
 		nodesDao:       nodesDao,
 		tx:             tx,
+		reporter:       reporter,
 	}
 }
 
@@ -59,6 +62,7 @@ type FileManager struct {
 	genericBlobDao store.GenericBlobRepository
 	nodesDao       store.NodesRepository
 	tx             dbtx.Transactor
+	reporter       event.Reporter
 }
 
 func (f *FileManager) UploadFile(
@@ -116,7 +120,8 @@ func (f *FileManager) UploadFile(
 		MD5:          fileInfo.MD5,
 		Size:         fileInfo.Size,
 	}
-	err = f.genericBlobDao.Create(ctx, gb)
+	var created bool
+	created, err = f.genericBlobDao.Create(ctx, gb)
 	if err != nil {
 		log.Error().Msgf("failed to save generic blob in db with "+
 			"sha256 : %s, err: %s", fileInfo.Sha256, err.Error())
@@ -137,6 +142,12 @@ func (f *FileManager) UploadFile(
 			"path : %s, err: %s", filename, filePath, err)
 		return types.FileInfo{}, fmt.Errorf("failed to save nodes for"+
 			" file : %s, with path : %s, err: %w", filename, filePath, err)
+	}
+
+	// Emit blob create event
+	if created {
+		event.ReportEventAsync(ctx, rootIdentifier, f.reporter, event.BlobCreate, 0, blobID, fileInfo.Sha256,
+			f.App.Config)
 	}
 	return fileInfo, nil
 }

@@ -21,6 +21,8 @@ import (
 	"path"
 	"strings"
 
+	a "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+
 	"github.com/opencontainers/go-digest"
 )
 
@@ -28,6 +30,11 @@ const (
 	storagePathRoot = "/"
 	docker          = "docker"
 	blobs           = "blobs"
+)
+
+// PackageType constants using iota.
+const (
+	PackageTypeDOCKER = iota
 )
 
 func pathFor(spec pathSpec) (string, error) {
@@ -181,4 +188,20 @@ func digestPathComponents(dgst digest.Digest, multilevel bool) ([]string, error)
 	suffix = append(suffix, hex)
 
 	return append(prefix, suffix...), nil
+}
+
+// BlobPath returns the path for a blob based on the package type.
+func BlobPath(acctID string, packageType string, sha256 string) (string, error) {
+	acctID = strings.ToLower(acctID)
+	// sample =  sha256:50f564aff30aeb53eb88b0eb2c2ba59878e9854681989faa5ff7396bdfaf509b
+	sha256 = strings.TrimPrefix(sha256, "sha256:")
+	sha256Prefix := sha256[:2]
+
+	switch packageType {
+	case string(a.PackageTypeDOCKER):
+		// format: /accountId(lowercase)/docker/blobs/sha256/(2 character prefix of sha)/sha/data
+		return fmt.Sprintf("/%s/docker/blobs/sha256/%s/%s/data", acctID, sha256Prefix, sha256), nil
+	default:
+		return fmt.Sprintf("/%s/files/%s", acctID, sha256), nil
+	}
 }

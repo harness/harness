@@ -44,11 +44,12 @@ func LocalRegistryProvider(
 	mtRepository store.MediaTypesRepository,
 	tagDao store.TagRepository, imageDao store.ImageRepository, artifactDao store.ArtifactRepository,
 	bandwidthStatDao store.BandwidthStatRepository, downloadStatDao store.DownloadStatRepository,
-	gcService gc.Service, tx dbtx.Transactor,
+	gcService gc.Service, tx dbtx.Transactor, reporter event.Reporter,
 ) *LocalRegistry {
 	registry, ok := NewLocalRegistry(
 		app, ms, manifestDao, registryDao, registryBlobDao, blobRepo,
-		mtRepository, tagDao, imageDao, artifactDao, bandwidthStatDao, downloadStatDao, gcService, tx,
+		mtRepository, tagDao, imageDao, artifactDao, bandwidthStatDao, downloadStatDao,
+		gcService, tx, reporter,
 	).(*LocalRegistry)
 	if !ok {
 		return nil
