@@ -884,6 +884,7 @@ export interface StringsMap {
   'pr.titlePlaceHolder': string
   'pr.toggleComments': string
   'pr.unified': string
+  'pr.updatedLine': string
   'pr.useCmdLineToResolveConflicts': string
   'prChecks.error': string
   'prChecks.failure': string

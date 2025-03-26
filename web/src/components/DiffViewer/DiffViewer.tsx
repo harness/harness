@@ -494,7 +494,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
                     ? branchInfo
                       ? pullReqMetadata?.source_branch
                       : pullReqMetadata?.source_sha
-                    : commitSHA || '',
+                    : sourceRef ?? commitSHA ?? '',
                   resourcePath: diff.isRename ? diff.newName : diff.filePath
                 })}>
                 {diff.isRename ? `${diff.oldName} -> ${diff.newName}` : diff.filePath}

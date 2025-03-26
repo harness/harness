@@ -378,6 +378,26 @@ export function SpacePullRequestsListing({ activeTab, includeSubspaces, setInclu
                             />
                           </Layout.Horizontal>
                         </Container>
+                        <PipeSeparator height={10} />
+                        <Icon name="execution-waiting" size={16} />
+                        <Text color={Color.GREY_500} font={{ size: 'small' }}>
+                          <StringSubstitute
+                            str={getString('pr.updatedLine')}
+                            vars={{
+                              time: (
+                                <strong>
+                                  <TimePopoverWithLocal
+                                    time={defaultTo(pull_request?.updated as number, 0)}
+                                    inline={false}
+                                    font={{ variation: FontVariation.SMALL_BOLD }}
+                                    color={Color.GREY_500}
+                                    tag="span"
+                                  />
+                                </strong>
+                              )
+                            }}
+                          />
+                        </Text>
                       </Layout.Horizontal>
                     </Container>
                   </Layout.Vertical>

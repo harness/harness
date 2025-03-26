@@ -155,7 +155,7 @@ export default function Repository() {
                   isFile={!isDir(resourceContent)}
                   className={css.headerContainer}
                 />
-                {!!resourceContent && (
+                {resourceContent ? (
                   <RepositoryContent
                     repoMetadata={repoMetadata}
                     gitRef={gitRef}
@@ -163,8 +163,9 @@ export default function Repository() {
                     resourceContent={resourceContent}
                     commitRef={commitRef}
                   />
+                ) : (
+                  isRepositoryEmpty && <EmptyRepositoryInfo repoMetadata={repoMetadata} />
                 )}
-                {isRepositoryEmpty && <EmptyRepositoryInfo repoMetadata={repoMetadata} />}
               </>
             )}
           </PageBody>

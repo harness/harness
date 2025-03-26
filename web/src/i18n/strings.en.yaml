@@ -293,6 +293,7 @@ pr:
   executionState: '{state|success:Success,failed:Failed}'
   state: '{state|closed:Closed,merged:Merged,rejected:Rejected,draft:Draft,Open}'
   statusLine: '#{number} {state|merged:merged,closed:closed,rejected:rejected,opened} {time} by {user}'
+  updatedLine: 'last updated {time}'
   diffStatus: '{status|deleted:Deleted,new:Added,renamed:Renamed,copied:Copied,Changed}'
   showDiff: Show Diff
   fileDeleted: This file was deleted.
