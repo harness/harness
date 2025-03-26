@@ -63,19 +63,16 @@ export const UpstreamProxyPackageTypeList: UpstreamRepositoryPackageTypeListItem
     icon: 'maven-repository-type'
   },
   {
+    label: 'repositoryTypes.pypi',
+    value: UpstreamProxyPackageType.PYTHON,
+    icon: 'python'
+  },
+  {
     label: 'repositoryTypes.npm',
     value: UpstreamProxyPackageType.NPM,
     icon: 'npm-repository-type',
     tooltip: 'Coming Soon!',
     featureFlag: FeatureFlags.HAR_NPM_PACKAGE_TYPE_ENABLED,
-    disabled: true
-  },
-  {
-    label: 'repositoryTypes.pypi',
-    value: UpstreamProxyPackageType.PYTHON,
-    icon: 'python',
-    tooltip: 'Coming Soon!',
-    featureFlag: FeatureFlags.HAR_PYTHON_PACKAGE_TYPE_ENABLED,
     disabled: true
   },
   {

@@ -66,19 +66,16 @@ const RepositoryTypes: RepositoryTypeListItem[] = [
     icon: 'maven-repository-type'
   },
   {
+    label: 'repositoryTypes.pypi',
+    value: RepositoryPackageType.PYTHON,
+    icon: 'python'
+  },
+  {
     label: 'repositoryTypes.npm',
     value: RepositoryPackageType.NPM,
     icon: 'npm-repository-type',
     tooltip: 'Coming Soon!',
     featureFlag: FeatureFlags.HAR_NPM_PACKAGE_TYPE_ENABLED,
-    disabled: true
-  },
-  {
-    label: 'repositoryTypes.pypi',
-    value: RepositoryPackageType.PYTHON,
-    icon: 'python',
-    tooltip: 'Coming Soon!',
-    featureFlag: FeatureFlags.HAR_PYTHON_PACKAGE_TYPE_ENABLED,
     disabled: true
   },
   {
