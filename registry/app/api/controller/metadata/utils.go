@@ -382,7 +382,7 @@ func GetDockerPullCommand(
 }
 
 func GetHelmPullCommand(image string, tag string, registryURL string) string {
-	return "helm pull oci://" + GetRepoURLWithoutProtocol(registryURL) + "/" + image + ":" + tag
+	return "helm pull oci://" + GetRepoURLWithoutProtocol(registryURL) + "/" + image + " --version " + tag
 }
 
 func GetGenericArtifactFileDownloadCommand(regURL, artifact, version, filename string) string {

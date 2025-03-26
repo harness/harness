@@ -147,7 +147,7 @@ func TestGetTagURL_ValidURL(t *testing.T) {
 func TestGetPullCommand_ValidCommand(t *testing.T) {
 	assert.Equal(t, "docker pull example.com/image:tag",
 		GetPullCommand("image", "tag", "DOCKER", "https://example.com"))
-	assert.Equal(t, "helm pull oci://example.com/image:tag",
+	assert.Equal(t, "helm pull oci://example.com/image --version tag",
 		GetPullCommand("image", "tag", "HELM", "https://example.com"))
 	assert.Equal(t, "", GetPullCommand("image", "tag", "INVALID", "https://example.com"))
 }
@@ -157,5 +157,6 @@ func TestGetDockerPullCommand_ValidCommand(t *testing.T) {
 }
 
 func TestGetHelmPullCommand_ValidCommand(t *testing.T) {
-	assert.Equal(t, "helm pull oci://example.com/image:tag", GetHelmPullCommand("image", "tag", "https://example.com"))
+	assert.Equal(t, "helm pull oci://example.com/image --version tag",
+		GetHelmPullCommand("image", "tag", "https://example.com"))
 }
