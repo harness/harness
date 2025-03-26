@@ -587,7 +587,7 @@ func (s *Service) Validate(
 
 func findReviewerInList(email string, uid string, reviewers []*types.PullReqReviewer) *types.PullReqReviewer {
 	for _, reviewer := range reviewers {
-		if uid == reviewer.Reviewer.UID || email == reviewer.Reviewer.Email {
+		if uid == reviewer.Reviewer.UID || strings.EqualFold(email, reviewer.Reviewer.Email) {
 			return reviewer
 		}
 	}
