@@ -52,7 +52,8 @@ import {
   LIST_FETCHING_LIMIT,
   RenameDetails,
   FileSection,
-  PAGE_CONTAINER_WIDTH
+  PAGE_CONTAINER_WIDTH,
+  PageBrowserProps
 } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import { LatestCommitForFile } from 'components/LatestCommit/LatestCommit'
@@ -67,6 +68,7 @@ import { useQueryParams } from 'hooks/useQueryParams'
 import { FileCategory, RepoContentExtended, useFileContentViewerDecision } from 'utils/FileUtils'
 import { useDownloadRawFile } from 'hooks/useDownloadRawFile'
 import { usePageIndex } from 'hooks/usePageIndex'
+import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { Readme } from '../FolderContent/Readme'
 import { GitBlame } from './GitBlame'
 import RenameContentHistory from './RenameContentHistory'
@@ -156,8 +158,10 @@ export function FileContent({
     }
   }, [pdfWidth, ref.current?.clientWidth])
 
-  const [page] = usePageIndex()
-  const { data: commits } = useGet<{ commits: TypesCommit[]; rename_details: RenameDetails[] }>({
+  const pageBrowser = useQueryParams<PageBrowserProps>()
+  const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
+  const [page, setPage] = usePageIndex(pageInit)
+  const { data: commits, response } = useGet<{ commits: TypesCommit[]; rename_details: RenameDetails[] }>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
     queryParams: {
       limit: LIST_FETCHING_LIMIT,
@@ -525,6 +529,7 @@ export function FileContent({
                         />
                       ) : null}
                     </Container>
+                    <ResourceListingPagination response={response} page={page} setPage={setPage} />
                   </>
                 )}
               </>
