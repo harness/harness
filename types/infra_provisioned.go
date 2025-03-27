@@ -31,6 +31,7 @@ type InfraProvisioned struct {
 	ServerHostPort          string
 	ProxyHost               string
 	ProxyPort               int32
+	GatewayHost             string
 }
 
 type InfraProvisionedGatewayView struct {

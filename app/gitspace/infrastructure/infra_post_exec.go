@@ -92,6 +92,7 @@ func (i InfraProvisioner) UpdateInfraProvisioned(
 	infraProvisionedLatest.ResponseMetadata = &responseMetaDataJSON
 	infraProvisionedLatest.Updated = time.Now().UnixMilli()
 
+	infraProvisionedLatest.GatewayHost = infrastructure.GatewayHost
 	err = i.infraProvisionedStore.Update(ctx, infraProvisionedLatest)
 	if err != nil {
 		return fmt.Errorf("unable to update infraProvisioned %d: %w", infraProvisionedLatest.ID, err)

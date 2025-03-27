@@ -43,7 +43,8 @@ const (
 		iprov_server_host_ip,
 		iprov_server_host_port,	
 		iprov_proxy_host,
-		iprov_proxy_port
+		iprov_proxy_port,
+		iprov_gateway_host
 	`
 	infraProvisionedSelectColumns = infraProvisionedIDColumn + `,
 		` + infraProvisionedColumns
@@ -71,6 +72,7 @@ type infraProvisioned struct {
 	ServerHostPort          string                 `db:"iprov_server_host_port"`
 	ProxyHost               string                 `db:"iprov_proxy_host"`
 	ProxyPort               int32                  `db:"iprov_proxy_port"`
+	GatewayHost             string                 `db:"iprov_gateway_host"`
 }
 
 type infraProvisionedGatewayView struct {
@@ -120,7 +122,7 @@ func (i infraProvisionedStore) FindAllLatestByGateway(
 			iprov_response_metadata`).
 		From(infraProvisionedTable).
 		Join(fmt.Sprintf("%s ON iprov_gitspace_id = gits_id", gitspaceInstanceTable)).
-		Where("iprov_proxy_host = ?", gatewayHost).
+		Where("iprov_gateway_host = ?", gatewayHost).
 		Where("iprov_infra_status = ?", enum.InfraStatusProvisioned).
 		OrderBy("iprov_created DESC")
 
@@ -222,6 +224,7 @@ func (i infraProvisionedStore) Create(ctx context.Context, infraProvisioned *typ
 			infraProvisioned.ServerHostPort,
 			infraProvisioned.ProxyHost,
 			infraProvisioned.ProxyPort,
+			infraProvisioned.GatewayHost,
 		).
 		Suffix(ReturningClause + infraProvisionedIDColumn)
 
@@ -269,6 +272,7 @@ func (i infraProvisionedStore) Update(ctx context.Context, infraProvisioned *typ
 		Set("iprov_updated", infraProvisioned.Updated).
 		Set("iprov_proxy_host", infraProvisioned.ProxyHost).
 		Set("iprov_proxy_port", infraProvisioned.ProxyPort).
+		Set("iprov_gateway_host", infraProvisioned.GatewayHost).
 		Where(infraProvisionedIDColumn+" = ?", infraProvisioned.ID)
 
 	sql, args, err := stmt.ToSql()
@@ -301,5 +305,6 @@ func (entity infraProvisioned) toDTO() *types.InfraProvisioned {
 		ServerHostPort:          entity.ServerHostPort,
 		ProxyHost:               entity.ProxyHost,
 		ProxyPort:               entity.ProxyPort,
+		GatewayHost:             entity.GatewayHost,
 	}
 }

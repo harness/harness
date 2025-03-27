@@ -98,4 +98,5 @@ type Infrastructure struct {
 	// that are required for execute (start/stop, publish) and cleanup tasks
 	// to make the runner stateless
 	InstanceInfo InstanceInfo
+	GatewayHost  string
 }
