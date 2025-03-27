@@ -135,6 +135,10 @@ export default function VersionDetailsTabs(): JSX.Element {
             routeDefinitions.toARVersionDetailsTab({
               ...versionDetailsTabWithOrgAndProjectPathParams
             }),
+            // with project data
+            routeDefinitions.toARVersionDetailsTab({
+              ...versionDetailsTabWithProjectPathParams
+            }),
             // ssca with pipeline data
             routeDefinitions.toARVersionDetailsTab({ ...versionDetailsTabWithSSCADetailsPathParams }),
             // ssca with project and pipeline data
