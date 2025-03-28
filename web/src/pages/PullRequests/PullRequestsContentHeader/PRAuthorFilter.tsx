@@ -96,7 +96,15 @@ export function PRAuthorFilter({
         }
       )
 
-      const authors = [...fetchedAuthors, ...(activePullRequestAuthorObj ? [activePullRequestAuthorObj] : [])]
+      const authors = [...fetchedAuthors]
+      if (activePullRequestAuthorObj?.id) {
+        // Only add activePullRequestAuthorObj if it exists and isn't already in the list
+        const isDuplicate = fetchedAuthors.some(author => author.id === activePullRequestAuthorObj.id)
+
+        if (!isDuplicate) {
+          authors.push(activePullRequestAuthorObj)
+        }
+      }
 
       const authorsList = await moveCurrentUserToTop(authors, currentUser, query)
 
@@ -118,6 +126,7 @@ export function PRAuthorFilter({
 
   return (
     <DropDown
+      key={activePullRequestAuthorObj?.id}
       value={authorFilterOption}
       items={() => getAuthorsPromise()}
       disabled={loadingAuthors}

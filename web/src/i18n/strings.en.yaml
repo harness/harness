@@ -504,10 +504,10 @@ repoEmptyMarkdownExisting: |
 webhookEmpty: There are no webhooks in your repo. Click the button below to create a webhook.
 compareEmptyDiffTitle: There isn't anything to compare
 compareEmptyDiffMessage: Two branches are identical.
-noCommits: There is no commits
+noCommits: There are no commits
 noCommitsMessage: This repository does not have any commits yet.
 noCommitsPR: This Pull Request does not have commit history.
-noChanges: There is no changes
+noChanges: There are no changes
 noChangesPR: This Pull Request does not have any changes.
 noChangesCompare: Source and target are identical.
 pageLoading: Loading, please wait...
