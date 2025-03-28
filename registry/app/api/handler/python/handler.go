@@ -26,7 +26,6 @@ import (
 	"github.com/harness/gitness/registry/app/api/handler/utils"
 	python2 "github.com/harness/gitness/registry/app/metadata/python"
 	"github.com/harness/gitness/registry/app/pkg"
-	"github.com/harness/gitness/registry/app/pkg/commons"
 	pythontype "github.com/harness/gitness/registry/app/pkg/types/python"
 	"github.com/harness/gitness/registry/validation"
 
@@ -76,7 +75,7 @@ var _ Handler = (*handler)(nil)
 
 func (h *handler) GetPackageArtifactInfo(r *http.Request) (pkg.PackageArtifactInfo, error) {
 	info, err := h.Handler.GetArtifactInfo(r)
-	if !commons.IsEmptyError(err) {
+	if err != nil {
 		return nil, err
 	}
 

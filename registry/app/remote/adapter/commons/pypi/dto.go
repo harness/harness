@@ -17,6 +17,7 @@ package pypi
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"golang.org/x/net/html"
@@ -35,6 +36,8 @@ var (
 		".app",
 		".dmg",
 	}
+
+	exeRegex = regexp.MustCompile(`(\d+(?:\.\d+)+)`)
 )
 
 type SimpleMetadata struct {
@@ -90,7 +93,13 @@ func GetPyPIVersion(filename string) string {
 	switch ext {
 	case ".whl", ".egg":
 		return splits[1]
-	case ".tar.gz", ".tar.bz2", ".tar.xz", ".zip", ".dmg", ".app", ".exe":
+	case ".tar.gz", ".tar.bz2", ".tar.xz", ".zip", ".dmg", ".app":
+		return splits[len(splits)-1]
+	case ".exe":
+		match := exeRegex.FindStringSubmatch(filename)
+		if len(match) > 1 {
+			return match[1]
+		}
 		return splits[len(splits)-1]
 	default:
 		return ""

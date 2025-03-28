@@ -20,8 +20,6 @@ import (
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/registry/app/api/handler/packages"
 	"github.com/harness/gitness/types/enum"
-
-	"github.com/rs/zerolog/log"
 )
 
 // StoreOriginalURL stores the original URL in the context.
@@ -33,11 +31,7 @@ func RequestPackageAccess(
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			err := packageHandler.GetRegistryCheckAccess(r.Context(), r, reqPermissions...)
 			if err != nil {
-				log.Info().Err(err).Msgf("Access denied for path: %s, method: %s, permission: %s", r.URL.Path, r.Method,
-					reqPermissions)
-				render.Forbiddenf(r.Context(), w,
-					"Access denied as permission: %s is required for path: %s, method: %s", reqPermissions, r.URL.Path,
-					r.Method)
+				render.TranslatedUserError(r.Context(), w, err)
 			}
 
 			next.ServeHTTP(w, r.WithContext(r.Context()))

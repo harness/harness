@@ -15,9 +15,12 @@
 package python
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
 
+	"github.com/harness/gitness/app/api/render"
+	"github.com/harness/gitness/registry/app/common/lib/errors"
 	pythontype "github.com/harness/gitness/registry/app/pkg/types/python"
 	"github.com/harness/gitness/registry/request"
 )
@@ -43,29 +46,30 @@ func (h *handler) PackageMetadata(w http.ResponseWriter, r *http.Request) {
 	contextInfo := request.ArtifactInfoFrom(r.Context())
 	info, ok := contextInfo.(*pythontype.ArtifactInfo)
 	if !ok {
-		http.Error(w, "Invalid request context", http.StatusBadRequest)
-		return
-	}
-	if info.Image == "" {
-		http.Error(w, "Package name required", http.StatusBadRequest)
+		render.TranslatedUserError(r.Context(), w, fmt.Errorf("invalid request context"))
 		return
 	}
 
-	packageData, err := h.controller.GetPackageMetadata(r.Context(), *info)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	packageData := h.controller.GetPackageMetadata(r.Context(), *info)
+	if packageData.GetError() != nil {
+		notFound := errors.IsErr(packageData.GetError(), errors.NotFoundCode)
+		if notFound {
+			render.NotFound(r.Context(), w)
+			return
+		}
+		render.TranslatedUserError(r.Context(), w, packageData.GetError())
 		return
 	}
 
 	// Parse and execute the template
 	tmpl, err := template.New("simple").Parse(HTMLTemplate)
 	if err != nil {
-		http.Error(w, "Template error", http.StatusInternalServerError)
+		render.TranslatedUserError(r.Context(), w, fmt.Errorf("template error: %w", err))
 		return
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := tmpl.Execute(w, packageData); err != nil {
-		http.Error(w, "Rendering error", http.StatusInternalServerError)
+	if err := tmpl.Execute(w, packageData.PackageMetadata); err != nil {
+		render.TranslatedUserError(r.Context(), w, fmt.Errorf("template rendering error: %w", err))
 	}
 }

@@ -55,8 +55,8 @@ func (h *handler) DownloadPackageFile(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	if !commons.IsEmpty(response.GetErrors()) {
-		h.HandleErrors(ctx, response.GetErrors(), w)
+	if response.GetError() != nil {
+		h.HandleError(ctx, w, response.GetError())
 		return
 	}
 
@@ -69,7 +69,7 @@ func (h *handler) DownloadPackageFile(w http.ResponseWriter, r *http.Request) {
 	err := commons.ServeContent(w, r, response.Body, info.Filename, response.ReadCloser)
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("Failed to serve content: %v", err)
-		h.HandleErrors(ctx, []error{err}, w)
+		h.HandleError(ctx, w, err)
 		return
 	}
 	response.ResponseHeaders.WriteToResponse(w)

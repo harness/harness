@@ -135,9 +135,16 @@ func (c *Controller) GetArtifact(ctx context.Context, info pkg.MavenArtifactInfo
 	f := func(registry registrytypes.Registry, a Artifact) Response {
 		info.SetMavenRepoKey(registry.Name)
 		info.RegistryID = registry.ID
-		headers, body, fileReader, redirectURL, e := a.(Registry).GetArtifact(ctx, info)
-		return &GetArtifactResponse{e, headers, redirectURL,
-			body, fileReader}
+		r, ok := a.(Registry)
+		if !ok {
+			log.Error().Stack().Msgf("Proxy wrapper has invalid registry set")
+			return nil
+		}
+		headers, body, fileReader, redirectURL, e := r.GetArtifact(ctx, info) //nolint:errcheck
+		return &GetArtifactResponse{
+			e, headers, redirectURL,
+			body, fileReader,
+		}
 	}
 	return c.ProxyWrapper(ctx, f, info)
 }
@@ -156,7 +163,12 @@ func (c *Controller) HeadArtifact(ctx context.Context, info pkg.MavenArtifactInf
 	f := func(registry registrytypes.Registry, a Artifact) Response {
 		info.SetMavenRepoKey(registry.Name)
 		info.RegistryID = registry.ID
-		headers, e := a.(Registry).HeadArtifact(ctx, info)
+		r, ok := a.(Registry)
+		if !ok {
+			log.Error().Stack().Msgf("Proxy wrapper has invalid registry set")
+			return nil
+		}
+		headers, e := r.HeadArtifact(ctx, info)
 		return &HeadArtifactResponse{e, headers}
 	}
 	return c.ProxyWrapper(ctx, f, info)
@@ -224,7 +236,11 @@ func (c *Controller) GetOrderedRepos(
 		result = append(result, *registry)
 		proxies := registry.UpstreamProxies
 		if len(proxies) > 0 {
-			upstreamRepos, _ := c.DBStore.RegistryDao.GetByIDIn(ctx, proxies)
+			upstreamRepos, err := c.DBStore.RegistryDao.GetByIDIn(ctx, proxies)
+			if err != nil {
+				return result, err
+			}
+
 			result = append(result, *upstreamRepos...)
 		}
 	} else {

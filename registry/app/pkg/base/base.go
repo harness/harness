@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/metadata"
 	"github.com/harness/gitness/registry/app/pkg"
@@ -49,25 +50,19 @@ type LocalBase interface {
 		path string,
 		file multipart.File,
 		metadata metadata.Metadata,
-	) (
-		// TODO: Check the scope if we should remove the response message / headers setup here or
-		// each package implementation should have their own.
-		headers *commons.ResponseHeaders, sha256 string, err errcode.Error,
-	)
+	) (headers *commons.ResponseHeaders, sha256 string, err error)
 	Upload(
 		ctx context.Context,
 		info pkg.ArtifactInfo,
-		fileName string,
-		version string,
-		path string,
+		fileName, version, path string,
 		file io.ReadCloser,
 		metadata metadata.Metadata,
-	) (*commons.ResponseHeaders, string, errcode.Error)
+	) (*commons.ResponseHeaders, string, error)
 	Download(ctx context.Context, info pkg.ArtifactInfo, version string, fileName string) (
 		*commons.ResponseHeaders,
 		*storage.FileReader,
 		string,
-		[]error,
+		error,
 	)
 
 	Exists(ctx context.Context, info pkg.ArtifactInfo, version string, fileName string) bool
@@ -104,21 +99,18 @@ func (l *localBase) UploadFile(
 	version string,
 	path string,
 	file multipart.File,
-	// TODO: Metadata shouldn't be provided as a parameter, it should be fetched or created.
 	metadata metadata.Metadata,
-) (*commons.ResponseHeaders, string, errcode.Error) {
+) (*commons.ResponseHeaders, string, error) {
 	return l.uploadInternal(ctx, info, fileName, version, path, file, nil, metadata)
 }
 
 func (l *localBase) Upload(
 	ctx context.Context,
 	info pkg.ArtifactInfo,
-	fileName string,
-	version string,
-	path string,
+	fileName, version, path string,
 	file io.ReadCloser,
 	metadata metadata.Metadata,
-) (*commons.ResponseHeaders, string, errcode.Error) {
+) (*commons.ResponseHeaders, string, error) {
 	return l.uploadInternal(ctx, info, fileName, version, path, nil, file, metadata)
 }
 
@@ -131,7 +123,7 @@ func (l *localBase) uploadInternal(
 	file multipart.File,
 	fileReadCloser io.ReadCloser,
 	metadata metadata.Metadata,
-) (*commons.ResponseHeaders, string, errcode.Error) {
+) (*commons.ResponseHeaders, string, error) {
 	responseHeaders := &commons.ResponseHeaders{
 		Headers: make(map[string]string),
 		Code:    0,
@@ -140,7 +132,16 @@ func (l *localBase) uploadInternal(
 	err := l.CheckIfFileAlreadyExist(ctx, info, version, metadata, fileName)
 
 	if err != nil {
-		return nil, "", errcode.ErrCodeInvalidRequest.WithDetail(err)
+		if !errors.IsConflict(err) {
+			return nil, "", err
+		}
+		_, sha256, err2 := l.GetSHA256(ctx, info, version, fileName)
+		if err2 != nil {
+			return responseHeaders, "", err2
+		}
+
+		responseHeaders.Code = http.StatusCreated
+		return responseHeaders, sha256, nil
 	}
 
 	registry, err := l.registryDao.GetByRootParentIDAndName(ctx, info.RootParentID, info.RegIdentifier)
@@ -193,18 +194,18 @@ func (l *localBase) uploadInternal(
 		})
 
 	if err != nil {
-		return responseHeaders, "", errcode.ErrCodeUnknown.WithDetail(err)
+		return responseHeaders, "", err
 	}
 	responseHeaders.Code = http.StatusCreated
-	return responseHeaders, fileInfo.Sha256, errcode.Error{}
+	return responseHeaders, fileInfo.Sha256, nil
 }
 
-func (l *localBase) Download(ctx context.Context, info pkg.ArtifactInfo, version string, fileName string) (
-	*commons.ResponseHeaders,
-	*storage.FileReader,
-	string,
-	[]error,
-) {
+func (l *localBase) Download(
+	ctx context.Context,
+	info pkg.ArtifactInfo,
+	version string,
+	fileName string,
+) (*commons.ResponseHeaders, *storage.FileReader, string, error) {
 	responseHeaders := &commons.ResponseHeaders{
 		Headers: make(map[string]string),
 		Code:    0,
@@ -218,17 +219,30 @@ func (l *localBase) Download(ctx context.Context, info pkg.ArtifactInfo, version
 		Name: info.RegIdentifier,
 	}, info.RootIdentifier)
 	if err != nil {
-		return responseHeaders, nil, "", []error{err}
+		return responseHeaders, nil, "", err
 	}
 	responseHeaders.Code = http.StatusOK
 	return responseHeaders, fileReader, redirectURL, nil
 }
 
 func (l *localBase) Exists(ctx context.Context, info pkg.ArtifactInfo, version string, fileName string) bool {
+	exists, _, _ := l.GetSHA256(ctx, info, version, fileName)
+	return exists
+}
+
+func (l *localBase) GetSHA256(ctx context.Context, info pkg.ArtifactInfo, version string, fileName string) (
+	exists bool,
+	sha256 string,
+	err error,
+) {
 	filePath := "/" + info.Image + "/" + version + "/" + fileName
-	sha256, _ := l.fileManager.HeadFile(ctx, filePath, info.RegistryID)
+	sha256, err = l.fileManager.HeadFile(ctx, filePath, info.RegistryID)
+	if err != nil {
+		return false, "", err
+	}
+
 	//FIXME: err should be checked on if the record doesn't exist or there was DB call issue
-	return sha256 != ""
+	return true, sha256, err
 }
 
 func (l *localBase) updateMetadata(
@@ -302,7 +316,8 @@ func (l *localBase) CheckIfFileAlreadyExist(
 
 	for _, file := range metadata.GetFiles() {
 		if file.Filename == fileName {
-			return fmt.Errorf("file: [%s] with Artifact: [%s], Version: [%s] and registry: [%s] already exist",
+			l.Exists(ctx, info, version, fileName)
+			return errors.Conflict("file: [%s] with Artifact: [%s], Version: [%s] and registry: [%s] already exist",
 				fileName, info.Image, version, info.RegIdentifier)
 		}
 	}

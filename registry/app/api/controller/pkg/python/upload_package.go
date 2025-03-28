@@ -21,7 +21,6 @@ import (
 
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/base"
-	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/python"
 	"github.com/harness/gitness/registry/app/pkg/response"
 	pythontype "github.com/harness/gitness/registry/app/pkg/types/python"
@@ -39,33 +38,37 @@ func (c *controller) UploadPackageFile(
 	f := func(registry registrytypes.Registry, a pkg.Artifact) response.Response {
 		info.RegIdentifier = registry.Name
 		info.RegistryID = registry.ID
+		info.Registry = registry
 		pythonRegistry, ok := a.(python.Registry)
 		if !ok {
 			return &PutArtifactResponse{
+				BaseResponse{
+					Error:           fmt.Errorf("invalid registry type: expected python.Registry"),
+					ResponseHeaders: nil,
+				},
 				"",
-				[]error{fmt.Errorf("invalid registry type: expected python.Registry")},
-				nil,
 			}
 		}
 		headers, sha256, err := pythonRegistry.UploadPackageFile(ctx, info, file, fileHeader.Filename)
-		if commons.IsEmptyError(err) {
-			return &PutArtifactResponse{
-				sha256, []error{}, headers,
-			}
-		}
 		return &PutArtifactResponse{
-			sha256, []error{err}, headers,
+			BaseResponse{
+				Error:           err,
+				ResponseHeaders: headers,
+			},
+			sha256,
 		}
 	}
 
-	result := base.NoProxyWrapper(ctx, c.registryDao, f, info.BaseArtifactInfo())
-	response, ok := result.(*PutArtifactResponse)
+	result, err := base.NoProxyWrapper(ctx, c.registryDao, f, info)
+	putResponse, ok := result.(*PutArtifactResponse)
 	if !ok {
 		return &PutArtifactResponse{
+			BaseResponse{
+				Error:           err,
+				ResponseHeaders: nil,
+			},
 			"",
-			[]error{fmt.Errorf("invalid response type: expected PutArtifactResponse")},
-			nil,
 		}
 	}
-	return response
+	return putResponse
 }

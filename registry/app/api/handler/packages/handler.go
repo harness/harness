@@ -24,6 +24,8 @@ import (
 	"time"
 
 	usercontroller "github.com/harness/gitness/app/api/controller/user"
+	"github.com/harness/gitness/app/api/render"
+	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/auth/authz"
 	corestore "github.com/harness/gitness/app/store"
@@ -72,10 +74,11 @@ type Handler interface {
 		r *http.Request,
 		reqPermissions ...enum.Permission,
 	) error
-	GetArtifactInfo(r *http.Request) (pkg.ArtifactInfo, errcode.Error)
+	GetArtifactInfo(r *http.Request) (pkg.ArtifactInfo, error)
 	GetAuthenticator() authn.Authenticator
 	HandleErrors2(ctx context.Context, errors errcode.Error, w http.ResponseWriter)
 	HandleErrors(ctx context.Context, errors errcode.Errors, w http.ResponseWriter)
+	HandleError(ctx context.Context, w http.ResponseWriter, err error)
 	ServeContent(
 		w http.ResponseWriter, r *http.Request, fileReader *storage.FileReader, filename string,
 	)
@@ -104,13 +107,16 @@ func (h *handler) GetRegistryCheckAccess(
 	r *http.Request,
 	reqPermissions ...enum.Permission,
 ) error {
-	info, _ := h.GetArtifactInfo(r)
+	info, err := h.GetArtifactInfo(r)
+	if err != nil {
+		return err
+	}
 	return pkg.GetRegistryCheckAccess(ctx, h.RegistryDao, h.Authorizer,
 		h.SpaceStore,
 		info.RegIdentifier, info.ParentID, reqPermissions...)
 }
 
-func (h *handler) GetArtifactInfo(r *http.Request) (pkg.ArtifactInfo, errcode.Error) {
+func (h *handler) GetArtifactInfo(r *http.Request) (pkg.ArtifactInfo, error) {
 	ctx := r.Context()
 	rootIdentifier, registryIdentifier, pathPackageType, err := extractPathVars(r)
 
@@ -121,7 +127,7 @@ func (h *handler) GetArtifactInfo(r *http.Request) (pkg.ArtifactInfo, errcode.Er
 	rootSpace, err := h.SpaceStore.FindByRefCaseInsensitive(ctx, rootIdentifier)
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("Root space not found: %s", rootIdentifier)
-		return pkg.ArtifactInfo{}, errcode.ErrCodeRootNotFound.WithDetail(err)
+		return pkg.ArtifactInfo{}, usererror.NotFoundf("Root not found: %s", rootIdentifier)
 	}
 
 	registry, err := h.RegistryDao.GetByRootParentIDAndName(ctx, rootSpace.ID, registryIdentifier)
@@ -130,13 +136,13 @@ func (h *handler) GetArtifactInfo(r *http.Request) (pkg.ArtifactInfo, errcode.Er
 		log.Ctx(ctx).Error().Msgf(
 			"registry %s not found for root: %s. Reason: %s", registryIdentifier, rootSpace.Identifier, err,
 		)
-		return pkg.ArtifactInfo{}, errcode.ErrCodeRegNotFound.WithDetail(err)
+		return pkg.ArtifactInfo{}, usererror.NotFoundf("Registry not found: %s", registryIdentifier)
 	}
 
 	_, err = h.SpaceStore.Find(r.Context(), registry.ParentID)
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("Parent space not found: %d", registry.ParentID)
-		return pkg.ArtifactInfo{}, errcode.ErrCodeParentNotFound.WithDetail(err)
+		return pkg.ArtifactInfo{}, usererror.NotFoundf("Parent not found for registry: %s", registryIdentifier)
 	}
 
 	return pkg.ArtifactInfo{
@@ -148,8 +154,9 @@ func (h *handler) GetArtifactInfo(r *http.Request) (pkg.ArtifactInfo, errcode.Er
 		},
 		RegIdentifier: registryIdentifier,
 		RegistryID:    registry.ID,
+		Registry:      *registry,
 		Image:         "",
-	}, errcode.Error{}
+	}, nil
 }
 
 func (h *handler) HandleErrors2(ctx context.Context, err errcode.Error, w http.ResponseWriter) {
@@ -179,6 +186,14 @@ func (h *handler) HandleErrors(ctx context.Context, errs errcode.Errors, w http.
 		if err != nil {
 			log.Ctx(ctx).Error().Err(err).Msgf("Error occurred during artifact error encoding")
 		}
+	}
+}
+
+func (h *handler) HandleError(ctx context.Context, w http.ResponseWriter, err error) {
+	if nil != err {
+		log.Error().Err(err).Ctx(ctx).Msgf("error: %v", err)
+		render.TranslatedUserError(ctx, w, err)
+		return
 	}
 }
 

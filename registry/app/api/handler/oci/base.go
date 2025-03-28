@@ -249,7 +249,7 @@ func (h *Handler) GetRegistryInfo(r *http.Request, remoteSupport bool) (pkg.Regi
 	}
 
 	if !commons.IsEmpty(info.Image) && !commons.IsEmpty(info.Tag) {
-		flag, err2 := utils.MatchArtifactFilter(registry.AllowedPattern, registry.BlockedPattern, info.Image+":"+info.Tag)
+		flag, err2 := utils.IsPatternAllowed(registry.AllowedPattern, registry.BlockedPattern, info.Image+":"+info.Tag)
 		if !flag || err2 != nil {
 			return pkg.RegistryInfo{}, errcode.ErrCodeDenied
 		}

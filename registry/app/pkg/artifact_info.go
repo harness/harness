@@ -23,6 +23,7 @@ import (
 // the base ArtifactInfo type.
 type PackageArtifactInfo interface {
 	BaseArtifactInfo() ArtifactInfo
+	GetImageVersion() (bool, string)
 }
 
 // ArtifactInfoProvider is an interface that must be implemented by package handlers

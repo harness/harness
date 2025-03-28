@@ -15,6 +15,7 @@
 package packages
 
 import (
+	"fmt"
 	"net/http"
 
 	middlewareauthn "github.com/harness/gitness/app/api/middleware/authn"
@@ -62,6 +63,7 @@ func NewRouter(
 
 		r.Route("/generic", func(r chi.Router) {
 			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
+			r.Use(middleware.CheckAuth())
 			r.Use(middleware.TrackDownloadStatForGenericArtifact(genericHandler))
 			r.Use(middleware.TrackBandwidthStatForGenericArtifacts(genericHandler))
 
@@ -71,6 +73,7 @@ func NewRouter(
 
 		r.Route("/python", func(r chi.Router) {
 			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
+			r.Use(middleware.CheckAuth())
 
 			// TODO (Arvind): Move this to top layer with total abstraction
 			r.With(middleware.StoreArtifactInfo(pythonHandler)).
@@ -81,10 +84,19 @@ func NewRouter(
 				Get("/files/{image}/{version}/{filename}", pythonHandler.DownloadPackageFile)
 			r.With(middleware.StoreArtifactInfo(pythonHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
-				Get("/simple/{image}", pythonHandler.PackageMetadata)
-			r.With(middleware.StoreArtifactInfo(pythonHandler)).
-				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/simple/{image}/", pythonHandler.PackageMetadata)
+			r.Get("/simple/{image}", func(w http.ResponseWriter, r *http.Request) {
+				http.Redirect(w, r, r.URL.Path+"/", http.StatusMovedPermanently)
+			})
+		})
+
+		r.Route("/{packageType}", func(r chi.Router) {
+			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
+			r.Use(middleware.CheckAuth())
+			r.HandleFunc("/*", func(w http.ResponseWriter, r *http.Request) {
+				packageType := chi.URLParam(r, "packageType")
+				http.Error(w, fmt.Sprintf("Package type '%s' is not supported", packageType), http.StatusNotFound)
+			})
 		})
 	})
 

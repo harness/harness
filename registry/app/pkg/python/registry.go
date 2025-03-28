@@ -19,7 +19,6 @@ import (
 	"io"
 	"mime/multipart"
 
-	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/types/python"
@@ -36,20 +35,20 @@ type Registry interface {
 		info python.ArtifactInfo,
 		file multipart.File,
 		filename string,
-	) (*commons.ResponseHeaders, string, errcode.Error)
+	) (*commons.ResponseHeaders, string, error)
 
 	UploadPackageFileReader(
 		ctx context.Context,
 		info python.ArtifactInfo,
 		file io.ReadCloser,
 		filename string,
-	) (*commons.ResponseHeaders, string, errcode.Error)
+	) (*commons.ResponseHeaders, string, error)
 
 	DownloadPackageFile(ctx context.Context, info python.ArtifactInfo) (
 		*commons.ResponseHeaders,
 		*storage.FileReader,
 		io.ReadCloser,
 		string,
-		[]error,
+		error,
 	)
 }

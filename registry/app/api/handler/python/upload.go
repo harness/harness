@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	pythontype "github.com/harness/gitness/registry/app/pkg/types/python"
 	"github.com/harness/gitness/registry/request"
 )
@@ -27,8 +26,7 @@ func (h *handler) UploadPackageFile(w http.ResponseWriter, r *http.Request) {
 	file, fileHeader, err := r.FormFile("content")
 
 	if err != nil {
-		h.HandleErrors2(r.Context(), errcode.ErrCodeInvalidRequest.WithMessage(fmt.Sprintf("failed to parse file: %s, "+
-			"please provide correct file path ", err.Error())), w)
+		h.HandleError(r.Context(), w, err)
 		return
 	}
 
@@ -37,9 +35,10 @@ func (h *handler) UploadPackageFile(w http.ResponseWriter, r *http.Request) {
 	contextInfo := request.ArtifactInfoFrom(r.Context())
 	info, ok := contextInfo.(*pythontype.ArtifactInfo)
 	if !ok {
-		h.HandleErrors2(r.Context(), errcode.ErrCodeInvalidRequest.WithMessage("failed to fetch info from context"), w)
+		h.HandleError(r.Context(), w, fmt.Errorf("failed to fetch info from context"))
 		return
 	}
+
 	// TODO: Can we extract this out to ArtifactInfoProvider
 	if info.Filename == "" {
 		info.Filename = fileHeader.Filename
@@ -48,13 +47,15 @@ func (h *handler) UploadPackageFile(w http.ResponseWriter, r *http.Request) {
 
 	response := h.controller.UploadPackageFile(r.Context(), *info, file, fileHeader)
 
-	if len(response.Errors) == 0 {
-		response.ResponseHeaders.WriteToResponse(w)
-		_, err := w.Write([]byte(fmt.Sprintf("Pushed.\nSha256: %s", response.Sha256)))
-		if err != nil {
-			h.HandleErrors2(r.Context(), errcode.ErrCodeUnknown.WithDetail(err), w)
-			return
-		}
+	if response.GetError() != nil {
+		h.HandleError(r.Context(), w, response.GetError())
+		return
 	}
-	h.HandleErrors(r.Context(), response.GetErrors(), w)
+
+	response.ResponseHeaders.WriteToResponse(w)
+	_, err = w.Write([]byte(fmt.Sprintf("Pushed.\nSha256: %s", response.Sha256)))
+	if err != nil {
+		h.HandleError(r.Context(), w, err)
+		return
+	}
 }

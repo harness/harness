@@ -27,7 +27,7 @@ import (
 )
 
 type Controller interface {
-	GetPackageMetadata(ctx context.Context, info pythontype.ArtifactInfo) (pythontype.PackageMetadata, error)
+	GetPackageMetadata(ctx context.Context, info pythontype.ArtifactInfo) *GetMetadataResponse
 
 	UploadPackageFile(
 		ctx context.Context,

@@ -18,7 +18,6 @@ import (
 	"context"
 	"io"
 
-	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/pkg/base"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/types/python"
@@ -31,14 +30,14 @@ type LocalRegistryHelper interface {
 		*commons.ResponseHeaders,
 		*storage.FileReader,
 		string,
-		[]error,
+		error,
 	)
 	UploadPackageFile(
 		ctx context.Context,
 		info python.ArtifactInfo,
 		fileReader io.ReadCloser,
 		filename string,
-	) (*commons.ResponseHeaders, string, errcode.Error)
+	) (*commons.ResponseHeaders, string, error)
 }
 
 type localRegistryHelper struct {
@@ -61,7 +60,7 @@ func (h *localRegistryHelper) DownloadFile(ctx context.Context, info python.Arti
 	*commons.ResponseHeaders,
 	*storage.FileReader,
 	string,
-	[]error,
+	error,
 ) {
 	return h.localBase.Download(ctx, info.ArtifactInfo, info.Version, info.Filename)
 }
@@ -71,6 +70,6 @@ func (h *localRegistryHelper) UploadPackageFile(
 	info python.ArtifactInfo,
 	fileReader io.ReadCloser,
 	filename string,
-) (*commons.ResponseHeaders, string, errcode.Error) {
+) (*commons.ResponseHeaders, string, error) {
 	return h.localRegistry.UploadPackageFileReader(ctx, info, fileReader, filename)
 }

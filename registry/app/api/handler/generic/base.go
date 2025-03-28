@@ -143,7 +143,7 @@ func (h *Handler) GetArtifactInfo(r *http.Request) (pkg.GenericArtifactInfo, err
 	}
 
 	if !commons.IsEmpty(info.Image) && !commons.IsEmpty(info.Version) && !commons.IsEmpty(info.FileName) {
-		flag, err2 := utils.MatchArtifactFilter(registry.AllowedPattern, registry.BlockedPattern,
+		flag, err2 := utils.IsPatternAllowed(registry.AllowedPattern, registry.BlockedPattern,
 			info.Image+":"+info.Version+":"+info.FileName)
 		if !flag || err2 != nil {
 			return pkg.GenericArtifactInfo{}, errcode.ErrCodeInvalidRequest.WithDetail(err2)
@@ -156,8 +156,10 @@ func (h *Handler) GetArtifactInfo(r *http.Request) (pkg.GenericArtifactInfo, err
 // ExtractPathVars extracts registry,image, reference, digest and tag from the path
 // Path format: /generic/:rootSpace/:registry/:image/:tag (for ex:
 // /generic/myRootSpace/reg1/alpine/v1).
-func ExtractPathVars(r *http.Request) (rootIdentifier, registry, artifact,
-	tag, fileName string, description string, err error) {
+func ExtractPathVars(r *http.Request) (
+	rootIdentifier, registry, artifact,
+	tag, fileName string, description string, err error,
+) {
 	path := r.URL.Path
 
 	// Ensure the path starts with "/generic/"

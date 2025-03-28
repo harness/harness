@@ -23,7 +23,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func MatchArtifactFilter(
+func IsPatternAllowed(
 	allowedPattern pq.StringArray,
 	blockedPattern pq.StringArray, artifact string,
 ) (bool, error) {
@@ -33,7 +33,7 @@ func MatchArtifactFilter(
 	if len(blockedPatterns) > 0 {
 		flag, err := matchPatterns(blockedPatterns, artifact)
 		if err != nil {
-			return flag, fmt.Errorf(
+			return false, fmt.Errorf(
 				"failed to match blocked patterns for artifact %s: %w",
 				artifact, err,
 			)
@@ -48,7 +48,7 @@ func MatchArtifactFilter(
 	if len(allowedPatterns) > 0 {
 		flag, err := matchPatterns(allowedPatterns, artifact)
 		if err != nil {
-			return flag, fmt.Errorf(
+			return false, fmt.Errorf(
 				"failed to match allowed patterns for artifact %s: %w",
 				artifact, err,
 			)

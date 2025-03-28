@@ -21,12 +21,11 @@ import (
 	"io"
 	"mime/multipart"
 	"sort"
-	"strconv"
 	"strings"
 
 	urlprovider "github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
-	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	pythonmetadata "github.com/harness/gitness/registry/app/metadata/python"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/base"
@@ -92,11 +91,11 @@ func (c *localRegistry) GetPackageTypes() []artifact.PackageType {
 func (c *localRegistry) DownloadPackageFile(
 	ctx context.Context,
 	info pythontype.ArtifactInfo,
-) (*commons.ResponseHeaders, *storage.FileReader, io.ReadCloser, string, []error) {
-	headers, fileReader, redirectURL, errors := c.localBase.Download(ctx, info.ArtifactInfo, info.Version,
+) (*commons.ResponseHeaders, *storage.FileReader, io.ReadCloser, string, error) {
+	headers, fileReader, redirectURL, err := c.localBase.Download(ctx, info.ArtifactInfo, info.Version,
 		info.Filename)
-	if len(errors) > 0 {
-		return nil, nil, nil, "", errors
+	if err != nil {
+		return nil, nil, nil, "", err
 	}
 	return headers, fileReader, nil, redirectURL, nil
 }
@@ -118,6 +117,11 @@ func (c *localRegistry) GetPackageMetadata(
 	artifacts, err := c.artifactDao.GetByRegistryIDAndImage(ctx, registry.ID, info.Image)
 	if err != nil {
 		return packageMetadata, err
+	}
+
+	if len(*artifacts) == 0 {
+		return packageMetadata, errors.NotFound("no artifacts found for registry %s and image %s", info.RegIdentifier,
+			info.Image)
 	}
 
 	for _, artifact := range *artifacts {
@@ -173,9 +177,9 @@ func parseVersion(ctx context.Context, version string) []int {
 	parts := strings.Split(version, ".")
 	result := make([]int, len(parts))
 	for i, part := range parts {
-		num, err := strconv.Atoi(part)
+		num, err := pkg.ExtractFirstNumber(part)
 		if err != nil {
-			log.Debug().Ctx(ctx).Msgf("failed to parse version %s: %v", part, err)
+			log.Debug().Ctx(ctx).Msgf("failed to parse version %s, part %s: %v", version, part, err)
 			continue
 		}
 		result[i] = num
@@ -188,7 +192,7 @@ func (c *localRegistry) UploadPackageFile(
 	info pythontype.ArtifactInfo,
 	file multipart.File,
 	filename string,
-) (headers *commons.ResponseHeaders, sha256 string, err errcode.Error) {
+) (headers *commons.ResponseHeaders, sha256 string, err error) {
 	defer file.Close()
 	path := pkg.JoinWithSeparator("/", info.Image, info.Metadata.Version, filename)
 	return c.localBase.UploadFile(ctx, info.ArtifactInfo, filename, info.Metadata.Version, path, file,
@@ -202,7 +206,7 @@ func (c *localRegistry) UploadPackageFileReader(
 	info pythontype.ArtifactInfo,
 	file io.ReadCloser,
 	filename string,
-) (headers *commons.ResponseHeaders, sha256 string, err errcode.Error) {
+) (headers *commons.ResponseHeaders, sha256 string, err error) {
 	defer file.Close()
 	path := pkg.JoinWithSeparator("/", info.Image, info.Metadata.Version, filename)
 	return c.localBase.Upload(ctx, info.ArtifactInfo, filename, info.Metadata.Version, path, file,

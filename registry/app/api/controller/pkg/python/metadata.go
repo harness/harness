@@ -27,33 +27,42 @@ import (
 )
 
 // Metadata represents the metadata of a Python package.
-func (c *controller) GetPackageMetadata(ctx context.Context, info pythontype.ArtifactInfo) (
-	pythontype.PackageMetadata,
-	error,
-) {
+func (c *controller) GetPackageMetadata(ctx context.Context, info pythontype.ArtifactInfo) *GetMetadataResponse {
 	f := func(registry registrytypes.Registry, a pkg.Artifact) response.Response {
 		info.RegIdentifier = registry.Name
 		info.RegistryID = registry.ID
-
+		info.Registry = registry
 		pythonRegistry, ok := a.(python.Registry)
 		if !ok {
 			return &GetMetadataResponse{
-				[]error{fmt.Errorf("invalid registry type: expected python.Registry")},
-				nil, pythontype.PackageMetadata{},
+				BaseResponse{
+					fmt.Errorf("invalid registry type: expected python.Registry"),
+					nil,
+				},
+				pythontype.PackageMetadata{},
 			}
 		}
 
 		metadata, err := pythonRegistry.GetPackageMetadata(ctx, info)
 		return &GetMetadataResponse{
-			[]error{err}, nil, metadata,
+			BaseResponse{
+				err,
+				nil,
+			},
+			metadata,
 		}
 	}
 
-	result := base.ProxyWrapper(ctx, c.registryDao, f, info.BaseArtifactInfo())
+	result, err := base.ProxyWrapper(ctx, c.registryDao, f, info)
 	metadataResponse, ok := result.(*GetMetadataResponse)
 	if !ok {
-		return pythontype.PackageMetadata{},
-			fmt.Errorf("invalid response type: expected GetMetadataResponse, got %T", result)
+		return &GetMetadataResponse{
+			BaseResponse{
+				err,
+				nil,
+			},
+			pythontype.PackageMetadata{},
+		}
 	}
-	return metadataResponse.PackageMetadata, nil
+	return metadataResponse
 }

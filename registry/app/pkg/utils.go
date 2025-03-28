@@ -15,8 +15,15 @@
 package pkg
 
 import (
+	"fmt"
 	"reflect"
+	"regexp"
+	"strconv"
 	"strings"
+)
+
+var (
+	numberRegex = regexp.MustCompile(`\d+`)
 )
 
 func IsEmpty(slice interface{}) bool {
@@ -28,4 +35,19 @@ func IsEmpty(slice interface{}) bool {
 
 func JoinWithSeparator(sep string, args ...string) string {
 	return strings.Join(args, sep)
+}
+
+func ExtractFirstNumber(input string) (int, error) {
+	match := numberRegex.FindString(input)
+
+	if match == "" {
+		return 0, fmt.Errorf("no number found in input: %s", input)
+	}
+
+	result, err := strconv.Atoi(match)
+	if err != nil {
+		return 0, fmt.Errorf("failed to convert string '%s' to number: %w", match, err)
+	}
+
+	return result, nil
 }

@@ -30,7 +30,7 @@ func StoreArtifactInfo(
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			packageInfo, err := provider.GetPackageArtifactInfo(r)
 			if err != nil {
-				render.BadRequestf(r.Context(), w, err.Error())
+				render.TranslatedUserError(r.Context(), w, err)
 				return
 			}
 			// Store the base artifact info in the context

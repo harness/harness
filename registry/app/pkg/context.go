@@ -16,6 +16,7 @@ package pkg
 
 import (
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/registry/types"
 
 	v2 "github.com/distribution/distribution/v3/registry/api/v2"
 )
@@ -32,7 +33,10 @@ type ArtifactInfo struct {
 	*BaseInfo
 	RegIdentifier string
 	RegistryID    int64
-	Image         string
+	// Currently used only for Python packages
+	// TODO: extend to all package types
+	Registry types.Registry
+	Image    string
 }
 
 type RegistryInfo struct {

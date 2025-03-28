@@ -33,26 +33,45 @@ func (c *controller) DownloadPackageFile(
 	f := func(registry registrytypes.Registry, a pkg.Artifact) response.Response {
 		info.RegIdentifier = registry.Name
 		info.RegistryID = registry.ID
+		info.Registry = registry
 		pythonRegistry, ok := a.(python.Registry)
 		if !ok {
 			return &GetArtifactResponse{
-				[]error{fmt.Errorf("invalid registry type: expected python.Registry")},
-				nil, "", nil, nil,
+				BaseResponse{
+					fmt.Errorf("invalid registry type: expected python.Registry"),
+					nil,
+				},
+				"", nil, nil,
 			}
 		}
-		headers, fileReader, readCloser, redirectURL, errs := pythonRegistry.DownloadPackageFile(ctx, info)
+		headers, fileReader, readCloser, redirectURL, err := pythonRegistry.DownloadPackageFile(ctx, info)
 		return &GetArtifactResponse{
-			errs, headers, redirectURL,
-			fileReader, readCloser,
+			BaseResponse{
+				err,
+				headers,
+			},
+			redirectURL, fileReader, readCloser,
 		}
 	}
 
-	result := base.ProxyWrapper(ctx, c.registryDao, f, info.BaseArtifactInfo())
+	result, err := base.ProxyWrapper(ctx, c.registryDao, f, info)
+	if err != nil {
+		return &GetArtifactResponse{
+			BaseResponse{
+				err,
+				nil,
+			},
+			"", nil, nil,
+		}
+	}
 	getResponse, ok := result.(*GetArtifactResponse)
 	if !ok {
 		return &GetArtifactResponse{
-			[]error{fmt.Errorf("invalid response type: expected GetArtifactResponse")},
-			nil, "", nil, nil,
+			BaseResponse{
+				fmt.Errorf("invalid response type: expected GetArtifactResponse"),
+				nil,
+			},
+			"", nil, nil,
 		}
 	}
 	return getResponse

@@ -68,15 +68,27 @@ func (c *CoreController) GetOrderedRepos(
 	artInfo BaseInfo,
 ) ([]types.Registry, error) {
 	var result []types.Registry
-	if registry, err := c.RegistryDao.GetByParentIDAndName(ctx, artInfo.ParentID, repoKey); err == nil {
-		result = append(result, *registry)
-		proxies := registry.UpstreamProxies
-		if len(proxies) > 0 {
-			upstreamRepos, _ := c.RegistryDao.GetByIDIn(ctx, proxies)
-			result = append(result, *upstreamRepos...)
-		}
-	} else {
+	registry, err := c.RegistryDao.GetByParentIDAndName(ctx, artInfo.ParentID, repoKey)
+	if err != nil {
 		return result, err
+	}
+	result = append(result, *registry)
+	proxies := registry.UpstreamProxies
+	if len(proxies) > 0 {
+		upstreamRepos, err2 := c.RegistryDao.GetByIDIn(ctx, proxies)
+		if err2 != nil {
+			log.Error().Msgf("Failed to get upstream proxies for %s: %v", repoKey, err2)
+			return result, err2
+		}
+		repoMap := make(map[int64]types.Registry)
+		for _, repo := range *upstreamRepos {
+			repoMap[repo.ID] = repo
+		}
+		for _, proxyID := range proxies {
+			if repo, ok := repoMap[proxyID]; ok {
+				result = append(result, repo)
+			}
+		}
 	}
 
 	return result, nil

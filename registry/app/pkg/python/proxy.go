@@ -100,32 +100,32 @@ func (r *proxy) DownloadPackageFile(ctx context.Context, info pythontype.Artifac
 	*storage.FileReader,
 	io.ReadCloser,
 	string,
-	[]error,
+	error,
 ) {
 	upstreamProxy, err := r.proxyStore.GetByRegistryIdentifier(ctx, info.ParentID, info.RegIdentifier)
 	if err != nil {
-		return nil, nil, nil, "", []error{errcode.ErrCodeUnknown.WithDetail(err)}
+		return nil, nil, nil, "", err
 	}
 
 	// TODO: Extract out to Path Utils for all package types
 	exists := r.localRegistryHelper.FileExists(ctx, info)
 	if exists {
-		headers, fileReader, redirectURL, errors := r.localRegistryHelper.DownloadFile(ctx, info)
-		if len(errors) == 0 {
-			return headers, fileReader, nil, redirectURL, errors
+		headers, fileReader, redirectURL, err := r.localRegistryHelper.DownloadFile(ctx, info)
+		if err == nil {
+			return headers, fileReader, nil, redirectURL, nil
 		}
 		// If file exists in local registry, but download failed, we should try to download from remote
-		log.Warn().Ctx(ctx).Msgf("failed to pull from local, attempting streaming from remote, %v", errors)
+		log.Warn().Ctx(ctx).Msgf("failed to pull from local, attempting streaming from remote, %v", err)
 	}
 
 	remote, err := NewRemoteRegistryHelper(ctx, r.spaceFinder, *upstreamProxy, r.service)
 	if err != nil {
-		return nil, nil, nil, "", []error{errcode.ErrCodeUnknown.WithDetail(err)}
+		return nil, nil, nil, "", err
 	}
 
 	file, err := remote.GetFile(ctx, info.Image, info.Filename)
 	if err != nil {
-		return nil, nil, nil, "", []error{errcode.ErrCodeUnknown.WithDetail(err)}
+		return nil, nil, nil, "", errcode.ErrCodeUnknown.WithDetail(err)
 	}
 
 	go func(info pythontype.ArtifactInfo) {
@@ -202,7 +202,7 @@ func (r *proxy) putFileToLocal(ctx context.Context, pkg string, filename string,
 	info.Filename = filename
 
 	_, sha256, err2 := r.localRegistryHelper.UploadPackageFile(ctx, *info, file, filename)
-	if !commons.IsEmptyError(err2) {
+	if err2 != nil {
 		log.Ctx(ctx).Error().Stack().Err(err2).Msgf("uploading file %s failed, %v", filename, err)
 		return err2
 	}
@@ -217,7 +217,7 @@ func (r *proxy) UploadPackageFile(
 	_ pythontype.ArtifactInfo,
 	_ multipart.File,
 	_ string,
-) (*commons.ResponseHeaders, string, errcode.Error) {
+) (*commons.ResponseHeaders, string, error) {
 	log.Error().Ctx(ctx).Msg("Not implemented")
 	return nil, "", errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
 }
@@ -229,7 +229,7 @@ func (r *proxy) UploadPackageFileReader(
 	_ pythontype.ArtifactInfo,
 	_ io.ReadCloser,
 	_ string,
-) (*commons.ResponseHeaders, string, errcode.Error) {
+) (*commons.ResponseHeaders, string, error) {
 	log.Error().Ctx(ctx).Msg("Not implemented")
 	return nil, "", errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
 }

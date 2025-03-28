@@ -15,6 +15,5 @@
 package response
 
 type Response interface {
-	GetErrors() []error
-	SetError(error)
+	GetError() error
 }
