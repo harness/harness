@@ -204,7 +204,9 @@ func (c *Controller) Create(
 		return nil, fmt.Errorf("failed to prepare labels: %w", err)
 	}
 
-	activitySeq += int64(len(labelAssignInputMap))
+	if len(labelAssignInputMap) > 0 {
+		activitySeq++
+	}
 
 	err = controller.TxOptLock(ctx, c.tx, func(ctx context.Context) error {
 		// Always re-fetch at the start of the transaction because the repo we have is from a cache.
@@ -609,14 +611,37 @@ func (c *Controller) storeLabelAssignActivity(
 	principalID int64,
 	labelAssignOuts []*labelsvc.AssignToPullReqOut,
 ) {
-	for _, out := range labelAssignOuts {
-		payload := activityPayload(out)
-		pr.ActivitySeq++
-		if _, err := c.activityStore.CreateWithPayload(
-			ctx, pr, principalID, payload, nil,
-		); err != nil {
-			log.Ctx(ctx).Err(err).Msg("failed to write label assign pull req activity")
+	if len(labelAssignOuts) == 0 {
+		return
+	}
+
+	pr.ActivitySeq++
+
+	payload := &types.PullRequestActivityLabels{
+		Labels: make([]*types.PullRequestActivityLabelBase, len(labelAssignOuts)),
+		Type:   enum.LabelActivityAssign,
+	}
+
+	for i, out := range labelAssignOuts {
+		var value *string
+		var valueColor *enum.LabelColor
+		if out.NewLabelValue != nil {
+			value = &out.NewLabelValue.Value
+			valueColor = &out.NewLabelValue.Color
 		}
+		payload.Labels[i] = &types.PullRequestActivityLabelBase{
+			Label:      out.Label.Key,
+			LabelColor: out.Label.Color,
+			LabelScope: out.Label.Scope,
+			Value:      value,
+			ValueColor: valueColor,
+		}
+	}
+
+	if _, err := c.activityStore.CreateWithPayload(
+		ctx, pr, principalID, payload, nil,
+	); err != nil {
+		log.Ctx(ctx).Err(err).Msg("failed to write label assign pull req activity")
 	}
 }
 

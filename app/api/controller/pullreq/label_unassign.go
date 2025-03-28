@@ -61,12 +61,14 @@ func (c *Controller) UnassignLabel(
 		color = &labelValue.Color
 	}
 	payload := &types.PullRequestActivityLabel{
-		Label:      label.Key,
-		LabelColor: label.Color,
-		LabelScope: label.Scope,
-		Value:      value,
-		ValueColor: color,
-		Type:       enum.LabelActivityUnassign,
+		PullRequestActivityLabelBase: types.PullRequestActivityLabelBase{
+			Label:      label.Key,
+			LabelColor: label.Color,
+			LabelScope: label.Scope,
+			Value:      value,
+			ValueColor: color,
+		},
+		Type: enum.LabelActivityUnassign,
 	}
 	if _, err := c.activityStore.CreateWithPayload(
 		ctx, pullreq, session.Principal.ID, payload, nil); err != nil {

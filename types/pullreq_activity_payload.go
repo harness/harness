@@ -179,17 +179,29 @@ func (a *PullRequestActivityPayloadBranchRestore) ActivityType() enum.PullReqAct
 	return enum.PullReqActivityTypeBranchRestore
 }
 
+type PullRequestActivityLabelBase struct {
+	Label         string           `json:"label"`
+	LabelColor    enum.LabelColor  `json:"label_color"`
+	LabelScope    int64            `json:"label_scope"`
+	Value         *string          `json:"value,omitempty"`
+	ValueColor    *enum.LabelColor `json:"value_color,omitempty"`
+	OldValue      *string          `json:"old_value,omitempty"`
+	OldValueColor *enum.LabelColor `json:"old_value_color,omitempty"`
+}
 type PullRequestActivityLabel struct {
-	Label         string                        `json:"label"`
-	LabelColor    enum.LabelColor               `json:"label_color"`
-	LabelScope    int64                         `json:"label_scope"`
-	Value         *string                       `json:"value,omitempty"`
-	ValueColor    *enum.LabelColor              `json:"value_color,omitempty"`
-	OldValue      *string                       `json:"old_value,omitempty"`
-	OldValueColor *enum.LabelColor              `json:"old_value_color,omitempty"`
-	Type          enum.PullReqLabelActivityType `json:"type"`
+	PullRequestActivityLabelBase
+	Type enum.PullReqLabelActivityType `json:"type"`
 }
 
 func (a *PullRequestActivityLabel) ActivityType() enum.PullReqActivityType {
+	return enum.PullReqActivityTypeLabelModify
+}
+
+type PullRequestActivityLabels struct {
+	Type   enum.PullReqLabelActivityType   `json:"type"`
+	Labels []*PullRequestActivityLabelBase `json:"labels"`
+}
+
+func (a *PullRequestActivityLabels) ActivityType() enum.PullReqActivityType {
 	return enum.PullReqActivityTypeLabelModify
 }
