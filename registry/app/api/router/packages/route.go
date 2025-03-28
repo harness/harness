@@ -21,6 +21,7 @@ import (
 	middlewareauthn "github.com/harness/gitness/app/api/middleware/authn"
 	"github.com/harness/gitness/registry/app/api/handler/generic"
 	"github.com/harness/gitness/registry/app/api/handler/maven"
+	"github.com/harness/gitness/registry/app/api/handler/nuget"
 	"github.com/harness/gitness/registry/app/api/handler/packages"
 	"github.com/harness/gitness/registry/app/api/handler/python"
 	"github.com/harness/gitness/registry/app/api/middleware"
@@ -44,6 +45,7 @@ func NewRouter(
 	mavenHandler *maven.Handler,
 	genericHandler *generic.Handler,
 	pythonHandler python.Handler,
+	nugetHandler nuget.Handler,
 ) Handler {
 	r := chi.NewRouter()
 
@@ -97,6 +99,20 @@ func NewRouter(
 				packageType := chi.URLParam(r, "packageType")
 				http.Error(w, fmt.Sprintf("Package type '%s' is not supported", packageType), http.StatusNotFound)
 			})
+		})
+
+		r.Route("/nuget", func(r chi.Router) {
+			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
+
+			r.With(middleware.StoreArtifactInfo(nugetHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
+				Put("/", nugetHandler.UploadPackage)
+			r.With(middleware.StoreArtifactInfo(nugetHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Get("/package/{id}/{version}/{filename}", nugetHandler.DownloadPackage)
+			r.With(middleware.StoreArtifactInfo(nugetHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Get("/index.json", nugetHandler.GetServiceEndpoint)
 		})
 	})
 

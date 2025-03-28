@@ -2207,6 +2207,7 @@ components:
         - PYTHON
         - GENERIC
         - HELM
+        - NUGET
         - NPM
     SectionType:
       type: string

@@ -124,6 +124,7 @@ import (
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/pubsub"
 	api2 "github.com/harness/gitness/registry/app/api"
+	nuget2 "github.com/harness/gitness/registry/app/api/controller/pkg/nuget"
 	python2 "github.com/harness/gitness/registry/app/api/controller/pkg/python"
 	"github.com/harness/gitness/registry/app/api/router"
 	events10 "github.com/harness/gitness/registry/app/events"
@@ -133,6 +134,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/generic"
 	"github.com/harness/gitness/registry/app/pkg/maven"
+	"github.com/harness/gitness/registry/app/pkg/nuget"
 	"github.com/harness/gitness/registry/app/pkg/python"
 	database2 "github.com/harness/gitness/registry/app/store/database"
 	"github.com/harness/gitness/registry/gc"
@@ -523,7 +525,10 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	proxy := python.ProxyProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, spaceFinder, secretService, localRegistryHelper)
 	pythonController := python2.ControllerProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, pythonLocalRegistry, proxy)
 	pythonHandler := api2.NewPythonHandlerProvider(pythonController, packagesHandler)
-	handler4 := router.PackageHandlerProvider(packagesHandler, mavenHandler, genericHandler, pythonHandler)
+	nugetLocalRegistry := nuget.LocalRegistryProvider(localBase, fileManager, upstreamProxyConfigRepository, transactor, registryRepository, imageRepository, artifactRepository, provider)
+	nugetController := nuget2.ControllerProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, nugetLocalRegistry)
+	nugetHandler := api2.NewNugetHandlerProvider(nugetController, packagesHandler)
+	handler4 := router.PackageHandlerProvider(packagesHandler, mavenHandler, genericHandler, pythonHandler, nugetHandler)
 	appRouter := router.AppRouterProvider(registryOCIHandler, apiHandler, handler2, handler3, handler4)
 	sender := usage.ProvideMediator(ctx, config, spaceFinder, usageMetricStore)
 	remoteauthService := remoteauth.ProvideRemoteAuth(tokenStore, principalStore)

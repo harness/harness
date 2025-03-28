@@ -21,9 +21,11 @@ import (
 	"github.com/harness/gitness/app/services/refcache"
 	corestore "github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
+	nuget2 "github.com/harness/gitness/registry/app/api/controller/pkg/nuget"
 	python2 "github.com/harness/gitness/registry/app/api/controller/pkg/python"
 	"github.com/harness/gitness/registry/app/api/handler/generic"
 	mavenhandler "github.com/harness/gitness/registry/app/api/handler/maven"
+	nugethandler "github.com/harness/gitness/registry/app/api/handler/nuget"
 	ocihandler "github.com/harness/gitness/registry/app/api/handler/oci"
 	"github.com/harness/gitness/registry/app/api/handler/packages"
 	pypi2 "github.com/harness/gitness/registry/app/api/handler/python"
@@ -38,6 +40,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	generic2 "github.com/harness/gitness/registry/app/pkg/generic"
 	"github.com/harness/gitness/registry/app/pkg/maven"
+	"github.com/harness/gitness/registry/app/pkg/nuget"
 	"github.com/harness/gitness/registry/app/pkg/python"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/app/store/database"
@@ -133,6 +136,13 @@ func NewPythonHandlerProvider(
 	return pypi2.NewHandler(controller, packageHandler)
 }
 
+func NewNugetHandlerProvider(
+	controller nuget2.Controller,
+	packageHandler packages.Handler,
+) nugethandler.Handler {
+	return nugethandler.NewHandler(controller, packageHandler)
+}
+
 func NewGenericHandlerProvider(
 	spaceStore corestore.SpaceStore, controller *generic2.Controller, tokenStore corestore.TokenStore,
 	userCtrl *usercontroller.Controller, authenticator authn.Authenticator, urlProvider urlprovider.Provider,
@@ -156,16 +166,19 @@ var WireSet = wire.NewSet(
 	NewGenericHandlerProvider,
 	NewPackageHandlerProvider,
 	NewPythonHandlerProvider,
+	NewNugetHandlerProvider,
 	database.WireSet,
 	pkg.WireSet,
 	docker.WireSet,
 	filemanager.WireSet,
 	maven.WireSet,
+	nuget.WireSet,
 	python.WireSet,
 	router.WireSet,
 	gc.WireSet,
 	generic2.WireSet,
 	python2.ControllerSet,
+	nuget2.ControllerSet,
 	base.WireSet,
 )
 

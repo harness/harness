@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/registry/app/api/handler/generic"
 	"github.com/harness/gitness/registry/app/api/handler/maven"
+	"github.com/harness/gitness/registry/app/api/handler/nuget"
 	hoci "github.com/harness/gitness/registry/app/api/handler/oci"
 	"github.com/harness/gitness/registry/app/api/handler/packages"
 	"github.com/harness/gitness/registry/app/api/handler/python"
@@ -116,8 +117,9 @@ func PackageHandlerProvider(
 	mavenHandler *maven.Handler,
 	genericHandler *generic.Handler,
 	pypiHandler python.Handler,
+	nugetHandler nuget.Handler,
 ) packagerrouter.Handler {
-	return packagerrouter.NewRouter(handler, mavenHandler, genericHandler, pypiHandler)
+	return packagerrouter.NewRouter(handler, mavenHandler, genericHandler, pypiHandler, nugetHandler)
 }
 
 var WireSet = wire.NewSet(APIHandlerProvider, OCIHandlerProvider, AppRouterProvider,

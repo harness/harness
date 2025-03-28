@@ -415,3 +415,5 @@ issues:
       linters: [ goheader ]
     - path: "^registry/app/storage/blobStore.go"
       linters: [ gosec ]
+    - path: "^registry/app/metadata/nuget/metadata.go"
+      linters: [ tagliatelle, lll ]
