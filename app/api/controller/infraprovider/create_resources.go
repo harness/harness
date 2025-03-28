@@ -17,7 +17,6 @@ package infraprovider
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
@@ -124,7 +123,7 @@ func (c *Controller) MapToResourceEntity(
 			Memory:            res.Memory,
 			Disk:              res.Disk,
 			Network:           res.Network,
-			Region:            strings.Join(res.Region, " "), // TODO fix
+			Region:            res.Region,
 			Metadata:          res.Metadata,
 			Created:           now,
 			Updated:           now,

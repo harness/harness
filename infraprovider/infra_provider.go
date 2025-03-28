@@ -70,6 +70,9 @@ type InfraProvider interface {
 	// AvailableParams provides a schema to define the infrastructure.
 	AvailableParams() []types.InfraProviderParameterSchema
 
+	// UpdateParams updates input Parameters to add or modify given inputParameters.
+	UpdateParams(inputParameters []types.InfraProviderParameter) ([]types.InfraProviderParameter, error)
+
 	// ValidateParams validates the supplied params before defining the infrastructure resource .
 	ValidateParams(inputParameters []types.InfraProviderParameter) error
 

@@ -19,7 +19,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/harness/gitness/infraprovider"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 
@@ -47,10 +46,27 @@ func (c *Service) createMissingResources(
 	configID int64,
 	spaceID int64,
 ) error {
+	emptyStr := ""
 	for idx := range resources {
 		resource := &resources[idx]
 		resource.InfraProviderConfigID = configID
 		resource.SpaceID = spaceID
+		if resource.CPU == nil {
+			resource.CPU = &emptyStr
+		}
+		if resource.Memory == nil {
+			resource.Memory = &emptyStr
+		}
+		if resource.Network == nil {
+			resource.Network = &emptyStr
+		}
+		// updating metadata based on infra provider type
+		updatedMetadata, err := c.updateResourceMetadata(resource)
+		if err != nil {
+			return fmt.Errorf("creating missing infra resources: %w", err)
+		}
+		resource.Metadata = updatedMetadata
+
 		if err := c.validateResource(ctx, resource); err != nil {
 			return err
 		}
@@ -66,6 +82,20 @@ func (c *Service) createMissingResources(
 	return nil
 }
 
+func (c *Service) updateResourceMetadata(resource *types.InfraProviderResource) (map[string]string, error) {
+	infraProvider, err := c.infraProviderFactory.GetInfraProvider(resource.InfraProviderType)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch infra impl for type : %q %w", resource.InfraProviderType, err)
+	}
+
+	params, err := infraProvider.UpdateParams(toResourceParams(resource.Metadata))
+	if err != nil {
+		return nil, err
+	}
+
+	return toMetadata(params), nil
+}
+
 func (c *Service) validateResource(ctx context.Context, resource *types.InfraProviderResource) error {
 	infraProvider, err := c.infraProviderFactory.GetInfraProvider(resource.InfraProviderType)
 	if err != nil {
@@ -79,7 +109,7 @@ func (c *Service) validateResource(ctx context.Context, resource *types.InfraPro
 		}
 	}
 
-	err = c.validateResourceParams(infraProvider, *resource)
+	err = infraProvider.ValidateParams(toResourceParams(resource.Metadata))
 	if err != nil {
 		return err
 	}
@@ -87,16 +117,24 @@ func (c *Service) validateResource(ctx context.Context, resource *types.InfraPro
 	return err
 }
 
-func (c *Service) validateResourceParams(
-	infraProvider infraprovider.InfraProvider,
-	res types.InfraProviderResource,
-) error {
-	infraResourceParams := make([]types.InfraProviderParameter, 0)
-	for key, value := range res.Metadata {
+func toResourceParams(metadata map[string]string) []types.InfraProviderParameter {
+	var infraResourceParams []types.InfraProviderParameter
+	for key, value := range metadata {
 		infraResourceParams = append(infraResourceParams, types.InfraProviderParameter{
 			Name:  key,
 			Value: value,
 		})
 	}
-	return infraProvider.ValidateParams(infraResourceParams)
+
+	return infraResourceParams
+}
+
+func toMetadata(params []types.InfraProviderParameter) map[string]string {
+	metadata := make(map[string]string)
+
+	for _, param := range params {
+		metadata[param.Name] = param.Value
+	}
+
+	return metadata
 }

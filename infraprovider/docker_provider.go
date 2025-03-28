@@ -288,6 +288,10 @@ func (d DockerProvider) ValidateParams(_ []types.InfraProviderParameter) error {
 	return nil
 }
 
+func (d DockerProvider) UpdateParams(ip []types.InfraProviderParameter) ([]types.InfraProviderParameter, error) {
+	return ip, nil
+}
+
 // TemplateParams returns nil as no template params are used.
 func (d DockerProvider) TemplateParams() []types.InfraProviderParameterSchema {
 	return nil

@@ -39,7 +39,7 @@ type ResourceInput struct {
 	Memory            *string                `json:"memory" yaml:"memory"`
 	Disk              *string                `json:"disk" yaml:"disk"`
 	Network           *string                `json:"network" yaml:"network"`
-	Region            []string               `json:"region" yaml:"region"`
+	Region            string                 `json:"region" yaml:"region"`
 	Metadata          map[string]string      `json:"metadata" yaml:"metadata"`
 	GatewayHost       *string                `json:"gateway_host" yaml:"gateway_host"`
 	GatewayPort       *string                `json:"gateway_port" yaml:"gateway_port"`
