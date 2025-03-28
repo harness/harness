@@ -86,14 +86,25 @@ func (s *Service) handleGitspaceOperationsEvent(
 		)
 		if handleResumeStartErr != nil {
 			s.emitGitspaceConfigEvent(ctxWithTimedOut, config, enum.GitspaceEventTypeGitspaceActionStartFailed)
+			instance.State = enum.GitspaceInstanceStateError
 			updatedInstance.ErrorMessage = handleResumeStartErr.ErrorMessage
 			err = fmt.Errorf("failed to finish resume start gitspace: %w", handleResumeStartErr.Error)
 		}
 		instance = &updatedInstance
 	case enum.GitspaceOperationsEventStop:
-		finishStopErr := s.orchestrator.FinishStopGitspaceContainer(ctxWithTimedOut, *config, payload.Infra)
+		stopResponse, ok := payload.Response.(*response.StopResponse)
+		if !ok {
+			return fmt.Errorf("failed to cast stop response")
+		}
+		finishStopErr := s.orchestrator.FinishStopGitspaceContainer(
+			ctxWithTimedOut,
+			*config,
+			payload.Infra,
+			stopResponse,
+		)
 		if finishStopErr != nil {
 			s.emitGitspaceConfigEvent(ctxWithTimedOut, config, enum.GitspaceEventTypeGitspaceActionStopFailed)
+			instance.State = enum.GitspaceInstanceStateError
 			instance.ErrorMessage = finishStopErr.ErrorMessage
 			err = fmt.Errorf("failed to finish trigger start gitspace: %w", finishStopErr.Error)
 		}
@@ -106,10 +117,11 @@ func (s *Service) handleGitspaceOperationsEvent(
 			ctxWithTimedOut,
 			*config,
 			payload.Infra,
-			deleteResponse.CanDeleteUserData,
+			deleteResponse,
 		)
 		if finishStopAndRemoveErr != nil {
 			s.emitGitspaceConfigEvent(ctxWithTimedOut, config, enum.GitspaceEventTypeGitspaceActionStopFailed)
+			instance.State = enum.GitspaceInstanceStateError
 			instance.ErrorMessage = finishStopAndRemoveErr.ErrorMessage
 			err = fmt.Errorf("failed to finish trigger start gitspace: %w", finishStopAndRemoveErr.Error)
 		}

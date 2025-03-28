@@ -805,6 +805,7 @@ func GetContainerResponse(
 	codeRepoDir := filepath.Join(homeDir, repoName)
 
 	return &response.StartResponse{
+		Status:           response.SuccessStatus,
 		ContainerID:      id,
 		ContainerName:    containerName,
 		PublishedPorts:   ports,

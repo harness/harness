@@ -49,6 +49,7 @@ func ReporterSendEvent[T interface{}](reporter *GenericReporter, ctx context.Con
 	buff := &bytes.Buffer{}
 	encoder := gob.NewEncoder(buff)
 	gob.Register((*response.StartResponse)(nil))
+	gob.Register((*response.StopResponse)(nil))
 	gob.Register((*response.DeleteResponse)(nil))
 
 	if err := encoder.Encode(&event); err != nil {

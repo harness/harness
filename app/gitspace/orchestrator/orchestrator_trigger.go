@@ -22,6 +22,7 @@ import (
 	events "github.com/harness/gitness/app/events/gitspace"
 	"github.com/harness/gitness/app/gitspace/infrastructure"
 	"github.com/harness/gitness/app/gitspace/orchestrator/container"
+	"github.com/harness/gitness/app/gitspace/orchestrator/container/response"
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
 	"github.com/harness/gitness/app/gitspace/platformconnector"
 	"github.com/harness/gitness/app/gitspace/scm"
@@ -206,7 +207,18 @@ func (o Orchestrator) FinishStopGitspaceContainer(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 	infra types.Infrastructure,
+	stopResponse *response.StopResponse,
 ) *types.GitspaceError {
+	if stopResponse == nil || stopResponse.Status == response.FailureStatus {
+		err := fmt.Errorf("gitspace agent does not specify the error for failure")
+		if stopResponse != nil && stopResponse.ErrMessage != "" {
+			err = fmt.Errorf("%s", stopResponse.ErrMessage)
+		}
+		return &types.GitspaceError{
+			Error:        err,
+			ErrorMessage: ptr.String(err.Error()),
+		}
+	}
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceStopCompleted)
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraStopStart)
@@ -257,19 +269,29 @@ func (o Orchestrator) FinishStopAndRemoveGitspaceContainer(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 	infra types.Infrastructure,
-	canDeleteUserData bool,
+	deleteResponse *response.DeleteResponse,
 ) *types.GitspaceError {
+	if deleteResponse == nil || deleteResponse.Status == response.FailureStatus {
+		err := fmt.Errorf("gitspace agent does not specify the error for failure")
+		if deleteResponse != nil && deleteResponse.ErrMessage != "" {
+			err = fmt.Errorf("%s", deleteResponse.ErrMessage)
+		}
+		return &types.GitspaceError{
+			Error:        err,
+			ErrorMessage: ptr.String(err.Error()),
+		}
+	}
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceDeletionCompleted)
-	if canDeleteUserData {
+	if deleteResponse.CanDeleteUserData {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraDeprovisioningStart)
 	} else {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraResetStart)
 	}
 
-	opts := infrastructure.InfraEventOpts{CanDeleteUserData: canDeleteUserData}
+	opts := infrastructure.InfraEventOpts{CanDeleteUserData: deleteResponse.CanDeleteUserData}
 	err := o.infraProvisioner.TriggerInfraEventWithOpts(ctx, enum.InfraEventDeprovision, gitspaceConfig, &infra, opts)
 	if err != nil {
-		if canDeleteUserData {
+		if deleteResponse.CanDeleteUserData {
 			o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraDeprovisioningFailed)
 		} else {
 			o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraResetFailed)

@@ -14,12 +14,9 @@
 
 package response
 
-type StartResponse struct {
-	ContainerID      string         `json:"container_id"`
-	Status           Status         `json:"status"`
-	ErrMessage       string         `json:"err_message"`
-	ContainerName    string         `json:"container_name"`
-	PublishedPorts   map[int]string `json:"published_ports"`
-	AbsoluteRepoPath string         `json:"absolute_repo_path"`
-	RemoteUser       string         `json:"remote_user"`
-}
+type Status string
+
+const (
+	SuccessStatus Status = "success"
+	FailureStatus Status = "failure"
+)

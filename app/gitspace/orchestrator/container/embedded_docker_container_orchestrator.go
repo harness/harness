@@ -318,12 +318,17 @@ func (e *EmbeddedDockerOrchestrator) StopGitspace(
 		return fmt.Errorf("gitspace %s is in a bad state: %s", containerName, state)
 	}
 
+	stopResponse := &response.StopResponse{
+		Status: response.SuccessStatus,
+	}
+
 	err = e.eventReporter.EmitGitspaceOperationsEvent(
 		ctx,
 		events.GitspaceOperationsEvent,
 		&events.GitspaceOperationsEventPayload{
-			Type:  enum.GitspaceOperationsEventStop,
-			Infra: infra,
+			Type:     enum.GitspaceOperationsEventStop,
+			Infra:    infra,
+			Response: stopResponse,
 		},
 	)
 	logger.Debug().Msg("stopped gitspace")
@@ -411,9 +416,12 @@ func (e *EmbeddedDockerOrchestrator) StopAndRemoveGitspace(
 		ctx,
 		events.GitspaceOperationsEvent,
 		&events.GitspaceOperationsEventPayload{
-			Type:     enum.GitspaceOperationsEventDelete,
-			Infra:    infra,
-			Response: &response.DeleteResponse{CanDeleteUserData: canDeleteUserData},
+			Type:  enum.GitspaceOperationsEventDelete,
+			Infra: infra,
+			Response: &response.DeleteResponse{
+				Status:            response.SuccessStatus,
+				CanDeleteUserData: canDeleteUserData,
+			},
 		},
 	)
 	logger.Debug().Msg("removed gitspace")

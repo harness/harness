@@ -149,8 +149,20 @@ func (o Orchestrator) FinishResumeStartGitspace(
 	provisionedInfra types.Infrastructure,
 	startResponse *response.StartResponse,
 ) (types.GitspaceInstance, *types.GitspaceError) {
-	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceCreationCompleted)
 	gitspaceInstance := gitspaceConfig.GitspaceInstance
+	if startResponse == nil || startResponse.Status == response.FailureStatus {
+		gitspaceInstance.State = enum.GitspaceInstanceStateError
+		err := fmt.Errorf("gitspace agent does not specify the error for failure")
+		if startResponse != nil && startResponse.ErrMessage != "" {
+			err = fmt.Errorf("%s", startResponse.ErrMessage)
+		}
+		return *gitspaceInstance, &types.GitspaceError{
+			Error:        err,
+			ErrorMessage: ptr.String(err.Error()),
+		}
+	}
+
+	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceCreationCompleted)
 
 	ideSvc, err := o.ideFactory.GetIDE(gitspaceConfig.IDE)
 	if err != nil {

@@ -15,5 +15,7 @@
 package response
 
 type DeleteResponse struct {
-	CanDeleteUserData bool `json:"can_delete_user_data"`
+	Status            Status `json:"status"`
+	ErrMessage        string `json:"err_message"`
+	CanDeleteUserData bool   `json:"can_delete_user_data"`
 }

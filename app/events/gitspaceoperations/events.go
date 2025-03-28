@@ -47,7 +47,7 @@ func (r *Reporter) EmitGitspaceOperationsEvent(
 	}
 	eventID, err := events.ReporterSendEvent(r.innerReporter, ctx, event, payload)
 	if err != nil {
-		return fmt.Errorf("failed to send %+v event", event)
+		return fmt.Errorf("failed to send %s event: %w", event, err)
 	}
 
 	log.Ctx(ctx).Debug().Msgf("reported %v event with id '%s'", event, eventID)
