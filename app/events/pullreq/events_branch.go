@@ -47,7 +47,46 @@ func (r *Reporter) BranchUpdated(ctx context.Context, payload *BranchUpdatedPayl
 	log.Ctx(ctx).Debug().Msgf("reported pull request branch updated event with id '%s'", eventID)
 }
 
-func (r *Reader) RegisterBranchUpdated(fn events.HandlerFunc[*BranchUpdatedPayload],
+func (r *Reader) RegisterBranchUpdated(
+	fn events.HandlerFunc[*BranchUpdatedPayload],
 	opts ...events.HandlerOption) error {
 	return events.ReaderRegisterEvent(r.innerReader, BranchUpdatedEvent, fn, opts...)
+}
+
+const TargetBranchChangedEvent events.EventType = "target-branch-changed"
+
+type TargetBranchChangedPayload struct {
+	Base
+	SourceSHA       string `json:"source_sha"`
+	OldTargetBranch string `json:"old_target_branch"`
+	NewTargetBranch string `json:"new_target_branch"`
+	OldMergeBaseSHA string `json:"old_merge_base_sha"`
+	NewMergeBaseSHA string `json:"new_merge_base_sha"`
+}
+
+func (r *Reporter) TargetBranchChanged(
+	ctx context.Context,
+	payload *TargetBranchChangedPayload,
+) {
+	if payload == nil {
+		return
+	}
+
+	eventID, err := events.ReporterSendEvent(
+		r.innerReporter, ctx, TargetBranchChangedEvent, payload,
+	)
+	if err != nil {
+		log.Ctx(ctx).Err(err).Msgf("failed to send pull request target branch changed event")
+		return
+	}
+
+	log.Ctx(ctx).Debug().Msgf(
+		"reported pull request target branch changed event with id '%s'", eventID,
+	)
+}
+
+func (r *Reader) RegisterTargetBranchChanged(
+	fn events.HandlerFunc[*TargetBranchChangedPayload],
+	opts ...events.HandlerOption) error {
+	return events.ReaderRegisterEvent(r.innerReader, TargetBranchChangedEvent, fn, opts...)
 }

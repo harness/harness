@@ -179,6 +179,15 @@ func (a *PullRequestActivityPayloadBranchRestore) ActivityType() enum.PullReqAct
 	return enum.PullReqActivityTypeBranchRestore
 }
 
+type PullRequestActivityPayloadBranchChangeTarget struct {
+	Old string `json:"old"`
+	New string `json:"new"`
+}
+
+func (a *PullRequestActivityPayloadBranchChangeTarget) ActivityType() enum.PullReqActivityType {
+	return enum.PullReqActivityTypeTargetBranchChange
+}
+
 type PullRequestActivityLabelBase struct {
 	Label         string           `json:"label"`
 	LabelColor    enum.LabelColor  `json:"label_color"`
@@ -188,6 +197,7 @@ type PullRequestActivityLabelBase struct {
 	OldValue      *string          `json:"old_value,omitempty"`
 	OldValueColor *enum.LabelColor `json:"old_value_color,omitempty"`
 }
+
 type PullRequestActivityLabel struct {
 	PullRequestActivityLabelBase
 	Type enum.PullReqLabelActivityType `json:"type"`

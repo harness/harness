@@ -65,6 +65,20 @@ func (s *Service) mergeCheckOnBranchUpdate(ctx context.Context,
 	)
 }
 
+// mergeCheckOnTargetBranchChange handles pull request target branch changed events.
+func (s *Service) mergeCheckOnTargetBranchChange(
+	ctx context.Context,
+	event *events.Event[*pullreqevents.TargetBranchChangedPayload],
+) error {
+	return s.updateMergeData(
+		ctx,
+		event.Payload.TargetRepoID,
+		event.Payload.Number,
+		sha.None.String(),
+		event.Payload.SourceSHA,
+	)
+}
+
 // mergeCheckOnReopen handles pull request StateChanged events.
 // It updates the PR head git ref to point to the source branch commit SHA.
 func (s *Service) mergeCheckOnReopen(ctx context.Context,

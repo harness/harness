@@ -757,6 +757,21 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opDeleteBranch, new(types.RulesViolations), http.StatusUnprocessableEntity)
 	_ = reflector.Spec.AddOperation(http.MethodDelete, "/repos/{repo_ref}/pullreq/{pullreq_number}/branch", opDeleteBranch)
 
+	opChangeTargetBranch := openapi3.Operation{}
+	opChangeTargetBranch.WithTags("pullreq")
+	opChangeTargetBranch.WithMapOfAnything(map[string]interface{}{"operationId": "changeTargetBranch"})
+	_ = reflector.SetRequest(&opChangeTargetBranch, struct {
+		pullReqRequest
+		pullreq.ChangeTargetBranchInput
+	}{}, http.MethodPost)
+	_ = reflector.SetJSONResponse(&opChangeTargetBranch, new(types.PullReq), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opChangeTargetBranch, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opChangeTargetBranch, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opChangeTargetBranch, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opChangeTargetBranch, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodPut,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/branch", opChangeTargetBranch)
+
 	fileViewAdd := openapi3.Operation{}
 	fileViewAdd.WithTags("pullreq")
 	fileViewAdd.WithMapOfAnything(map[string]interface{}{"operationId": "fileViewAddPullReq"})

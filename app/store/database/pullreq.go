@@ -302,6 +302,7 @@ func (s *PullReqStore) Update(ctx context.Context, pr *types.PullReq) error {
 		,pullreq_description = :pullreq_description
 		,pullreq_activity_seq = :pullreq_activity_seq
 		,pullreq_source_sha = :pullreq_source_sha
+		,pullreq_target_branch = :pullreq_target_branch
 		,pullreq_merged_by = :pullreq_merged_by
 		,pullreq_merged = :pullreq_merged
 		,pullreq_merge_method = :pullreq_merge_method

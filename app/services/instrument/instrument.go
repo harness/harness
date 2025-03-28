@@ -42,6 +42,7 @@ const (
 	PropertyIsDefaultBranch           Property = "is_default_branch"
 	PropertyDecision                  Property = "decision"
 	PropertyRepositories              Property = "repositories"
+	PropertyTargetBranch              Property = "target_branch"
 
 	PropertySpaceID   Property = "space_id"
 	PropertySpaceName Property = "space_name"
@@ -55,6 +56,7 @@ const (
 	EventTypeCommitCount         EventType = "Commit count"
 	EventTypeCreateCommit        EventType = "Create commit"
 	EventTypeCreateBranch        EventType = "Create branch"
+	EventTypeChangeTargetBranch  EventType = "Change target branch"
 	EventTypeCreateTag           EventType = "Create tag"
 	EventTypeCreatePullRequest   EventType = "Create pull request"
 	EventTypeMergePullRequest    EventType = "Merge pull request"
