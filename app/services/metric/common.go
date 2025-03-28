@@ -23,46 +23,51 @@ import (
 type Object string
 
 const (
-	ObjectRepository  Object = "repository"
-	ObjectPullRequest Object = "pull_request"
+	ObjectUser        Object = "user"
+	ObjectRepository  Object = "repo"
+	ObjectPullRequest Object = "pr"
+	ObjectRule        Object = "rule"
 )
 
-type VerbRepo string
+type Verb string
+
+// User verbs.
+const (
+	VerbUserCreate Verb = "create"
+	VerbUserLogin  Verb = "login"
+)
 
 // Repository verbs.
 const (
-	VerbRepoCreate VerbRepo = "create"
-	VerbRepoUpdate VerbRepo = "update"
-	VerbRepoDelete VerbRepo = "delete"
+	VerbRepoCreate Verb = "create"
+	VerbRepoPush   Verb = "push"
+	VerbRepoDelete Verb = "delete"
 )
-
-type VerbPullReq string
 
 // Pull request verbs.
 const (
-	VerbPullReqCreate VerbPullReq = "create"
-	VerbPullReqMerge  VerbPullReq = "merge"
-	VerbPullReqClose  VerbPullReq = "close"
-	VerbPullReqReopen VerbPullReq = "reopen"
+	VerbPullReqCreate  Verb = "create"
+	VerbPullReqMerge   Verb = "merge"
+	VerbPullReqClose   Verb = "close"
+	VerbPullReqReopen  Verb = "reopen"
+	VerbPullReqComment Verb = "comment"
+)
+
+// Rule verbs.
+const (
+	VerbRuleCreate Verb = "create"
 )
 
 type Submitter interface {
 	// SubmitGroups should be called once a day to update info about all the groups.
 	SubmitGroups(ctx context.Context) error
 
-	// SubmitForRepo submits an event for a repository.
-	SubmitForRepo(
+	// Submit submits an event.
+	Submit(
 		ctx context.Context,
 		user *types.PrincipalInfo,
-		verb VerbRepo,
-		properties map[string]any,
-	) error
-
-	// SubmitForPullReq submits an event for a pull request.
-	SubmitForPullReq(
-		ctx context.Context,
-		user *types.PrincipalInfo,
-		verb VerbPullReq,
+		object Object,
+		verb Verb,
 		properties map[string]any,
 	) error
 }

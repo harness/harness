@@ -19,6 +19,7 @@ import (
 	"errors"
 
 	"github.com/harness/gitness/app/api/usererror"
+	userevents "github.com/harness/gitness/app/events/user"
 	"github.com/harness/gitness/app/token"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
@@ -32,9 +33,7 @@ type LoginInput struct {
 	Password        string `json:"password"`
 }
 
-/*
- * Login attempts to login as a specific user - returns the session token if successful.
- */
+// Login attempts to login as a specific user - returns the session token if successful.
 func (c *Controller) Login(
 	ctx context.Context,
 	in *LoginInput,
@@ -71,6 +70,10 @@ func (c *Controller) Login(
 	if err != nil {
 		return nil, err
 	}
+
+	c.eventReporter.LoggedIn(ctx, &userevents.LoggedInPayload{
+		Base: userevents.Base{PrincipalID: user.ID},
+	})
 
 	return &types.TokenResponse{Token: *token, AccessToken: jwtToken}, nil
 }

@@ -377,7 +377,8 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 			RepoID:      repo.ID,
 			PrincipalID: bootstrap.NewSystemServiceSession().Principal.ID,
 		},
-		Type: "imported",
+		IsPublic:     input.Public,
+		ImportedFrom: input.CloneURL,
 	})
 
 	err = r.indexer.Index(ctx, repo)

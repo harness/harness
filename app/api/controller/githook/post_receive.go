@@ -24,7 +24,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/bootstrap"
-	events "github.com/harness/gitness/app/events/git"
+	gitevents "github.com/harness/gitness/app/events/git"
 	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/types"
@@ -85,6 +85,13 @@ func (c *Controller) PostReceive(
 		return hook.Output{}, fmt.Errorf("failed to extend post-receive hook: %w", err)
 	}
 
+	c.repoReporter.Pushed(ctx, &repoevents.PushedPayload{
+		Base: repoevents.Base{
+			RepoID:      in.RepoID,
+			PrincipalID: in.PrincipalID,
+		},
+	})
+
 	return out, nil
 }
 
@@ -120,7 +127,7 @@ func (c *Controller) reportBranchEvent(
 ) {
 	switch {
 	case branchUpdate.Old.IsNil():
-		payload := &events.BranchCreatedPayload{
+		payload := &gitevents.BranchCreatedPayload{
 			RepoID:      repo.ID,
 			PrincipalID: principalID,
 			Ref:         branchUpdate.Ref,
@@ -132,7 +139,7 @@ func (c *Controller) reportBranchEvent(
 		c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypeBranchCreated, payload)
 
 	case branchUpdate.New.IsNil():
-		payload := &events.BranchDeletedPayload{
+		payload := &gitevents.BranchDeletedPayload{
 			RepoID:      repo.ID,
 			PrincipalID: principalID,
 			Ref:         branchUpdate.Ref,
@@ -156,7 +163,7 @@ func (c *Controller) reportBranchEvent(
 				Msg("failed to check ancestor")
 		}
 
-		payload := &events.BranchUpdatedPayload{
+		payload := &gitevents.BranchUpdatedPayload{
 			RepoID:      repo.ID,
 			PrincipalID: principalID,
 			Ref:         branchUpdate.Ref,
@@ -179,7 +186,7 @@ func (c *Controller) reportTagEvent(
 ) {
 	switch {
 	case tagUpdate.Old.IsNil():
-		payload := &events.TagCreatedPayload{
+		payload := &gitevents.TagCreatedPayload{
 			RepoID:      repo.ID,
 			PrincipalID: principalID,
 			Ref:         tagUpdate.Ref,
@@ -191,7 +198,7 @@ func (c *Controller) reportTagEvent(
 		c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypeTagCreated, payload)
 
 	case tagUpdate.New.IsNil():
-		payload := &events.TagDeletedPayload{
+		payload := &gitevents.TagDeletedPayload{
 			RepoID:      repo.ID,
 			PrincipalID: principalID,
 			Ref:         tagUpdate.Ref,
@@ -203,7 +210,7 @@ func (c *Controller) reportTagEvent(
 		c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypeTagDeleted, payload)
 
 	default:
-		payload := &events.TagUpdatedPayload{
+		payload := &gitevents.TagUpdatedPayload{
 			RepoID:      repo.ID,
 			PrincipalID: principalID,
 			Ref:         tagUpdate.Ref,

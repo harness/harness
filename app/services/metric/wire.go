@@ -20,6 +20,9 @@ import (
 
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	repoevents "github.com/harness/gitness/app/events/repo"
+	ruleevents "github.com/harness/gitness/app/events/rule"
+	userevents "github.com/harness/gitness/app/events/user"
+	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/store"
@@ -48,8 +51,13 @@ func ProvideSubmitter(
 	principalStore store.PrincipalStore,
 	principalInfoCache store.PrincipalInfoCache,
 	pullReqStore store.PullReqStore,
-	repoReaderFactory *events.ReaderFactory[*repoevents.Reader],
+	ruleStore store.RuleStore,
+	userEvReaderFactory *events.ReaderFactory[*userevents.Reader],
+	repoEvReaderFactory *events.ReaderFactory[*repoevents.Reader],
 	pullreqEvReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
+	ruleEvReaderFactory *events.ReaderFactory[*ruleevents.Reader],
+	publicAccess publicaccess.Service,
+	spaceFinder refcache.SpaceFinder,
 	repoFinder refcache.RepoFinder,
 ) (Submitter, error) {
 	submitter, err := NewPostHog(appCtx, config, values, principalStore, principalInfoCache)
@@ -62,9 +70,14 @@ func ProvideSubmitter(
 		config,
 		principalInfoCache,
 		pullReqStore,
-		repoReaderFactory,
+		ruleStore,
+		userEvReaderFactory,
+		repoEvReaderFactory,
 		pullreqEvReaderFactory,
+		ruleEvReaderFactory,
+		spaceFinder,
 		repoFinder,
+		publicAccess,
 		submitter,
 	)
 	if err != nil {

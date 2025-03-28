@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/api/usererror"
+	ruleevents "github.com/harness/gitness/app/events/rule"
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/protection"
@@ -168,6 +169,15 @@ func (s *Service) Create(ctx context.Context,
 	}
 
 	s.sendSSE(ctx, parentID, parentType, enum.SSETypeRuleCreated, rule)
+
+	s.eventReporter.Created(ctx, &ruleevents.CreatedPayload{
+		Base: ruleevents.Base{
+			RuleID:      rule.ID,
+			SpaceID:     rule.SpaceID,
+			RepoID:      rule.RepoID,
+			PrincipalID: rule.CreatedBy,
+		},
+	})
 
 	return rule, nil
 }

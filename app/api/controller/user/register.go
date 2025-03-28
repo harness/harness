@@ -20,6 +20,7 @@ import (
 
 	"github.com/harness/gitness/app/api/controller/system"
 	"github.com/harness/gitness/app/api/usererror"
+	userevents "github.com/harness/gitness/app/events/user"
 	"github.com/harness/gitness/app/token"
 	"github.com/harness/gitness/types"
 )
@@ -59,6 +60,10 @@ func (c *Controller) Register(ctx context.Context, sysCtrl *system.Controller,
 	if err != nil {
 		return nil, fmt.Errorf("failed to create token after successful user creation: %w", err)
 	}
+
+	c.eventReporter.Registered(ctx, &userevents.RegisteredPayload{
+		Base: userevents.Base{PrincipalID: user.ID},
+	})
 
 	return &types.TokenResponse{Token: *token, AccessToken: jwtToken}, nil
 }

@@ -16,6 +16,7 @@ package user
 
 import (
 	"github.com/harness/gitness/app/auth/authz"
+	userevents "github.com/harness/gitness/app/events/user"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types/check"
@@ -36,6 +37,7 @@ func ProvideController(
 	tokenStore store.TokenStore,
 	membershipStore store.MembershipStore,
 	publicKeyStore store.PublicKeyStore,
+	eventReporter *userevents.Reporter,
 ) *Controller {
 	return NewController(
 		tx,
@@ -44,5 +46,6 @@ func ProvideController(
 		principalStore,
 		tokenStore,
 		membershipStore,
-		publicKeyStore)
+		publicKeyStore,
+		eventReporter)
 }

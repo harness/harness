@@ -27,7 +27,9 @@ const CreatedEvent events.EventType = "created"
 
 type CreatedPayload struct {
 	Base
-	Type string `json:"type"`
+	IsPublic     bool   `json:"is_public"`
+	IsMigrated   bool   `json:"is_migrated"`
+	ImportedFrom string `json:"imported_from"`
 }
 
 func (r *Reporter) Created(ctx context.Context, payload *CreatedPayload) {
@@ -186,4 +188,27 @@ func (r *Reader) RegisterDefaultBranchUpdated(
 	opts ...events.HandlerOption,
 ) error {
 	return events.ReaderRegisterEvent(r.innerReader, DefaultBranchUpdatedEvent, fn, opts...)
+}
+
+const PushedEvent events.EventType = "pushed"
+
+type PushedPayload struct {
+	Base
+}
+
+func (r *Reporter) Pushed(ctx context.Context, payload *PushedPayload) {
+	eventID, err := events.ReporterSendEvent(r.innerReporter, ctx, PushedEvent, payload)
+	if err != nil {
+		log.Ctx(ctx).Err(err).Msgf("failed to send pushed event")
+		return
+	}
+
+	log.Ctx(ctx).Debug().Msgf("reported pushed event with id '%s'", eventID)
+}
+
+func (r *Reader) RegisterPushed(
+	fn events.HandlerFunc[*PushedPayload],
+	opts ...events.HandlerOption,
+) error {
+	return events.ReaderRegisterEvent(r.innerReader, PushedEvent, fn, opts...)
 }

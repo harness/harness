@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/harness/gitness/app/auth/authz"
+	userevents "github.com/harness/gitness/app/events/user"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -35,6 +36,7 @@ type Controller struct {
 	tokenStore        store.TokenStore
 	membershipStore   store.MembershipStore
 	publicKeyStore    store.PublicKeyStore
+	eventReporter     *userevents.Reporter
 }
 
 func NewController(
@@ -45,6 +47,7 @@ func NewController(
 	tokenStore store.TokenStore,
 	membershipStore store.MembershipStore,
 	publicKeyStore store.PublicKeyStore,
+	eventReporter *userevents.Reporter,
 ) *Controller {
 	return &Controller{
 		tx:                tx,
@@ -54,6 +57,7 @@ func NewController(
 		tokenStore:        tokenStore,
 		membershipStore:   membershipStore,
 		publicKeyStore:    publicKeyStore,
+		eventReporter:     eventReporter,
 	}
 }
 

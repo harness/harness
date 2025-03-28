@@ -22,6 +22,7 @@ import (
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
+	userevents "github.com/harness/gitness/app/events/user"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
@@ -50,15 +51,25 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		return nil, err
 	}
 
-	return c.CreateNoAuth(ctx, in, false)
+	user, err := c.CreateNoAuth(ctx, in, false)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create user: %w", err)
+	}
+
+	c.eventReporter.Created(ctx, &userevents.CreatedPayload{
+		Base: userevents.Base{
+			PrincipalID: session.Principal.ID,
+		},
+		CreatedPrincipalID: user.ID,
+	})
+
+	return user, nil
 }
 
-/*
- * CreateNoAuth creates a new user without auth checks.
- * WARNING: Never call as part of user flow.
- *
- * Note: take admin separately to avoid potential vulnerabilities for user calls.
- */
+// CreateNoAuth creates a new user without auth checks.
+// WARNING: Never call as part of user flow.
+//
+// Note: take admin separately to avoid potential vulnerabilities for user calls.
 func (c *Controller) CreateNoAuth(ctx context.Context, in *CreateInput, admin bool) (*types.User, error) {
 	if err := c.sanitizeCreateInput(in); err != nil {
 		return nil, fmt.Errorf("invalid input: %w", err)

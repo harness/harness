@@ -15,6 +15,7 @@
 package rules
 
 import (
+	ruleevents "github.com/harness/gitness/app/events/rule"
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/usergroup"
@@ -42,6 +43,7 @@ func ProvideService(
 	principalInfoCache store.PrincipalInfoCache,
 	userGroupStore store.UserGroupStore,
 	userGroupService usergroup.SearchService,
+	eventReporter *ruleevents.Reporter,
 	sseStreamer sse.Streamer,
 ) *Service {
 	return NewService(
@@ -55,6 +57,7 @@ func ProvideService(
 		principalInfoCache,
 		userGroupStore,
 		userGroupService,
+		eventReporter,
 		sseStreamer,
 	)
 }

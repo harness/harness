@@ -21,11 +21,15 @@ import (
 
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	repoevents "github.com/harness/gitness/app/events/repo"
+	ruleevents "github.com/harness/gitness/app/events/rule"
+	userevents "github.com/harness/gitness/app/events/user"
+	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/stream"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 func registerEventListeners(
@@ -33,9 +37,14 @@ func registerEventListeners(
 	config *types.Config,
 	principalInfoCache store.PrincipalInfoCache,
 	pullReqStore store.PullReqStore,
-	repoReaderFactory *events.ReaderFactory[*repoevents.Reader],
+	ruleStore store.RuleStore,
+	userEvReaderFactory *events.ReaderFactory[*userevents.Reader],
+	repoEvReaderFactory *events.ReaderFactory[*repoevents.Reader],
 	pullreqEvReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
+	ruleEvReaderFactory *events.ReaderFactory[*ruleevents.Reader],
+	spaceFinder refcache.SpaceFinder,
 	repoFinder refcache.RepoFinder,
+	publicAccess publicaccess.Service,
 	submitter Submitter,
 ) error {
 	if submitter == nil {
@@ -44,8 +53,34 @@ func registerEventListeners(
 
 	var err error
 
+	const groupMetricsUser = "gitness:metrics:user"
+	_, err = userEvReaderFactory.Launch(ctx, groupMetricsUser, config.InstanceID,
+		func(r *userevents.Reader) error {
+			const idleTimeout = 10 * time.Second
+			r.Configure(
+				stream.WithConcurrency(1),
+				stream.WithHandlerOptions(
+					stream.WithIdleTimeout(idleTimeout),
+					stream.WithMaxRetries(2),
+				))
+
+			h := handlersUser{
+				principalInfoCache: principalInfoCache,
+				submitter:          submitter,
+			}
+
+			_ = r.RegisterCreated(h.Create)
+			_ = r.RegisterRegistered(h.Register)
+			_ = r.RegisterLoggedIn(h.Login)
+
+			return nil
+		})
+	if err != nil {
+		return err
+	}
+
 	const groupMetricsRepo = "gitness:metrics:repo"
-	_, err = repoReaderFactory.Launch(ctx, groupMetricsRepo, config.InstanceID,
+	_, err = repoEvReaderFactory.Launch(ctx, groupMetricsRepo, config.InstanceID,
 		func(r *repoevents.Reader) error {
 			const idleTimeout = 10 * time.Second
 			r.Configure(
@@ -58,13 +93,12 @@ func registerEventListeners(
 			h := handlersRepo{
 				principalInfoCache: principalInfoCache,
 				repoFinder:         repoFinder,
+				publicAccess:       publicAccess,
 				submitter:          submitter,
 			}
 
 			_ = r.RegisterCreated(h.Create)
-			_ = r.RegisterDefaultBranchUpdated(h.DefaultBranchUpdate)
-			_ = r.RegisterStateChanged(h.StateChange)
-			_ = r.RegisterPublicAccessChanged(h.PublicAccessChange)
+			_ = r.RegisterPushed(h.Push)
 			_ = r.RegisterSoftDeleted(h.SoftDelete)
 
 			return nil
@@ -88,6 +122,7 @@ func registerEventListeners(
 				principalInfoCache: principalInfoCache,
 				repoFinder:         repoFinder,
 				pullReqStore:       pullReqStore,
+				publicAccess:       publicAccess,
 				submitter:          submitter,
 			}
 
@@ -95,6 +130,35 @@ func registerEventListeners(
 			_ = r.RegisterReopened(h.Reopen)
 			_ = r.RegisterClosed(h.Close)
 			_ = r.RegisterMerged(h.Merge)
+			_ = r.RegisterCommentCreated(h.CommentCreate)
+
+			return nil
+		})
+	if err != nil {
+		return err
+	}
+
+	const groupMetricsRule = "gitness:metrics:rule"
+	_, err = ruleEvReaderFactory.Launch(ctx, groupMetricsRule, config.InstanceID,
+		func(r *ruleevents.Reader) error {
+			const idleTimeout = 10 * time.Second
+			r.Configure(
+				stream.WithConcurrency(1),
+				stream.WithHandlerOptions(
+					stream.WithIdleTimeout(idleTimeout),
+					stream.WithMaxRetries(2),
+				))
+
+			h := handlersRule{
+				principalInfoCache: principalInfoCache,
+				spaceFinder:        spaceFinder,
+				repoFinder:         repoFinder,
+				ruleStore:          ruleStore,
+				publicAccess:       publicAccess,
+				submitter:          submitter,
+			}
+
+			_ = r.RegisterCreated(h.Create)
 
 			return nil
 		})
@@ -105,75 +169,147 @@ func registerEventListeners(
 	return nil
 }
 
+func prepareProps(m map[string]any) map[string]any {
+	if m != nil {
+		return m
+	}
+	return make(map[string]any, 8)
+}
+
+// User fields.
+const (
+	userID             = "user_id"
+	userName           = "user_name"
+	userEmail          = "user_email"
+	userCreatedByID    = "user_created_by_id"
+	userCreatedByName  = "user_created_by_name"
+	userCreatedByEmail = "user_created_by_email"
+)
+
+type handlersUser struct {
+	principalInfoCache store.PrincipalInfoCache
+	submitter          Submitter
+}
+
+func (h handlersUser) Register(ctx context.Context, e *events.Event[*userevents.RegisteredPayload]) error {
+	return h.submit(ctx, e.Payload.PrincipalID, VerbUserCreate, nil)
+}
+
+func (h handlersUser) Create(ctx context.Context, e *events.Event[*userevents.CreatedPayload]) error {
+	principal, err := h.principalInfoCache.Get(ctx, e.Payload.PrincipalID)
+	if err != nil {
+		return fmt.Errorf("failed to find principal who created a user: %w", err)
+	}
+
+	props := prepareProps(nil)
+	props[userCreatedByID] = principal.ID
+	props[userCreatedByName] = principal.UID
+	props[userCreatedByEmail] = principal.Email
+
+	return h.submit(ctx, e.Payload.CreatedPrincipalID, VerbUserCreate, props)
+}
+
+func (h handlersUser) Login(ctx context.Context, e *events.Event[*userevents.LoggedInPayload]) error {
+	return h.submit(ctx, e.Payload.PrincipalID, VerbUserLogin, nil)
+}
+
+func (h handlersUser) submit(
+	ctx context.Context,
+	principalID int64,
+	verb Verb,
+	props map[string]any,
+) error {
+	principal, err := h.principalInfoCache.Get(ctx, principalID)
+	if err != nil {
+		return fmt.Errorf("failed to find principal info")
+	}
+
+	props = prepareProps(props)
+	props[userID] = principal.ID
+	props[userName] = principal.UID
+	props[userEmail] = principal.Email
+
+	err = h.submitter.Submit(ctx, principal, ObjectUser, verb, props)
+	if err != nil {
+		return fmt.Errorf("failed to submit metric data for user: %w", err)
+	}
+
+	return nil
+}
+
+// Space fields.
+const (
+	spaceID       = "space_id"
+	spaceName     = "space_name"
+	spacePath     = "space_path"
+	spaceParentID = "space_parent_id"
+	spacePrivate  = "space_private"
+)
+
+// Repository fields.
+const (
+	repoID           = "repo_id"
+	repoName         = "repo_name"
+	repoPath         = "repo_path"
+	repoParentID     = "repo_parent_id"
+	repoPrivate      = "repo_private"
+	repoMigrated     = "repo_migrated"
+	repoImported     = "repo_imported"
+	repoImportedFrom = "repo_imported_from"
+)
+
 type handlersRepo struct {
 	principalInfoCache store.PrincipalInfoCache
 	repoFinder         refcache.RepoFinder
+	publicAccess       publicaccess.Service
 	submitter          Submitter
 }
 
 func (h handlersRepo) Create(ctx context.Context, e *events.Event[*repoevents.CreatedPayload]) error {
-	props := map[string]any{
-		"type": e.Payload.Type,
+	props := prepareProps(nil)
+	props[repoPrivate] = !e.Payload.IsPublic
+	if e.Payload.IsMigrated {
+		props[repoMigrated] = true
 	}
-	return h.submit(ctx, e.Payload.RepoID, e.Payload.PrincipalID, VerbRepoCreate, props)
+	if e.Payload.ImportedFrom != "" {
+		props[repoImported] = true
+		props[repoImportedFrom] = e.Payload.ImportedFrom
+	}
+	return h.submitForActive(ctx, e.Payload.RepoID, e.Payload.PrincipalID, VerbRepoCreate, props)
 }
 
-func (h handlersRepo) DefaultBranchUpdate(
+func (h handlersRepo) Push(
 	ctx context.Context,
-	e *events.Event[*repoevents.DefaultBranchUpdatedPayload],
+	e *events.Event[*repoevents.PushedPayload],
 ) error {
-	props := map[string]any{
-		"change":                  "default_branch",
-		"repo_old_default_branch": e.Payload.OldName,
-		"repo_new_default_branch": e.Payload.NewName,
-	}
-	return h.submit(ctx, e.Payload.RepoID, e.Payload.PrincipalID, VerbRepoUpdate, props)
-}
-
-func (h handlersRepo) StateChange(
-	ctx context.Context,
-	e *events.Event[*repoevents.StateChangedPayload],
-) error {
-	props := map[string]any{
-		"change":         "state",
-		"repo_old_state": e.Payload.OldState,
-		"repo_new_state": e.Payload.NewState,
-	}
-	return h.submit(ctx, e.Payload.RepoID, e.Payload.PrincipalID, VerbRepoUpdate, props)
-}
-
-func (h handlersRepo) PublicAccessChange(
-	ctx context.Context,
-	e *events.Event[*repoevents.PublicAccessChangedPayload],
-) error {
-	props := map[string]any{
-		"change":             "public_access",
-		"repo_old_is_public": e.Payload.OldIsPublic,
-		"repo_new_is_public": e.Payload.NewIsPublic,
-	}
-	return h.submit(ctx, e.Payload.RepoID, e.Payload.PrincipalID, VerbRepoUpdate, props)
+	return h.submitForActive(ctx, e.Payload.RepoID, e.Payload.PrincipalID, VerbRepoPush, nil)
 }
 
 func (h handlersRepo) SoftDelete(
 	ctx context.Context,
 	e *events.Event[*repoevents.SoftDeletedPayload],
 ) error {
-	return h.submitDeleted(ctx, e.Payload.RepoPath, e.Payload.Deleted, e.Payload.PrincipalID, VerbRepoDelete, nil)
+	return h.submitForDeleted(ctx, e.Payload.RepoPath, e.Payload.Deleted, e.Payload.PrincipalID, VerbRepoDelete, nil)
 }
 
-func (h handlersRepo) submit(
+func (h handlersRepo) submitForActive(
 	ctx context.Context,
-	repoID int64,
+	id int64,
 	principalID int64,
-	verb VerbRepo,
+	verb Verb,
 	props map[string]any,
 ) error {
-	repo, err := h.repoFinder.FindByID(ctx, repoID)
+	repo, err := h.repoFinder.FindByID(ctx, id)
 	if err != nil {
 		return fmt.Errorf("failed to find repository")
 	}
 
-	err = h.submitMetric(ctx, repo, principalID, verb, props)
+	props, err = fillRepoData(ctx, props, repo, h.publicAccess)
+	if err != nil {
+		return fmt.Errorf("failed to fill repo data: %w", err)
+	}
+
+	err = h.submit(ctx, principalID, verb, props)
 	if err != nil {
 		return fmt.Errorf("failed to submit event: %w", err)
 	}
@@ -181,32 +317,36 @@ func (h handlersRepo) submit(
 	return nil
 }
 
-func (h handlersRepo) submitDeleted(
+func (h handlersRepo) submitForDeleted(
 	ctx context.Context,
 	repoRef string,
 	deletedAt int64,
 	principalID int64,
-	verb VerbRepo,
+	verb Verb,
 	props map[string]any,
 ) error {
 	repo, err := h.repoFinder.FindDeletedByRef(ctx, repoRef, deletedAt)
 	if err != nil {
-		return fmt.Errorf("failed to find delete repo: %w", err)
+		return fmt.Errorf("failed to find deleted repo: %w", err)
 	}
 
-	err = h.submitMetric(ctx, repo.Core(), principalID, verb, props)
+	props, err = fillRepoData(ctx, props, repo.Core(), nil)
 	if err != nil {
-		return fmt.Errorf("failed to submit event: %w", err)
+		return fmt.Errorf("failed to fill deleted repo data: %w", err)
+	}
+
+	err = h.submit(ctx, principalID, verb, props)
+	if err != nil {
+		return fmt.Errorf("failed to submit metric data for deleted repository: %w", err)
 	}
 
 	return nil
 }
 
-func (h handlersRepo) submitMetric(
+func (h handlersRepo) submit(
 	ctx context.Context,
-	repo *types.RepositoryCore,
 	principalID int64,
-	verb VerbRepo,
+	verb Verb,
 	props map[string]any,
 ) error {
 	principal, err := h.principalInfoCache.Get(ctx, principalID)
@@ -214,15 +354,7 @@ func (h handlersRepo) submitMetric(
 		return fmt.Errorf("failed to get principal info: %w", err)
 	}
 
-	if props == nil {
-		props = make(map[string]any)
-	}
-
-	props["repo_id"] = repo.ID
-	props["repo_path"] = repo.Path
-	props["repo_parent_id"] = repo.ParentID
-
-	err = h.submitter.SubmitForRepo(ctx, principal, verb, props)
+	err = h.submitter.Submit(ctx, principal, ObjectRepository, verb, props)
 	if err != nil {
 		return fmt.Errorf("failed to submit metric data for repositoy: %w", err)
 	}
@@ -230,38 +362,65 @@ func (h handlersRepo) submitMetric(
 	return nil
 }
 
+// Pull request fields.
+const (
+	prNumber         = "pr_number"
+	prTargetBranch   = "pr_target_branch"
+	prSourceBranch   = "pr_source_branch"
+	prSourceRepoID   = "pr_source_repo_id"
+	prSourceRepoName = "pr_source_repo_name"
+	prSourceRepoPath = "pr_source_repo_path"
+	prMergeMethod    = "pr_merge_method"
+	prCommentReply   = "pr_comment_reply"
+)
+
 type handlersPullReq struct {
 	principalInfoCache store.PrincipalInfoCache
 	repoFinder         refcache.RepoFinder
 	pullReqStore       store.PullReqStore
+	publicAccess       publicaccess.Service
 	submitter          Submitter
 }
 
 func (h handlersPullReq) Create(ctx context.Context, e *events.Event[*pullreqevents.CreatedPayload]) error {
-	return h.submit(ctx, e.Payload.PullReqID, e.Payload.PrincipalID, VerbPullReqCreate)
+	return h.submit(ctx, e.Payload.PullReqID, e.Payload.PrincipalID, VerbPullReqCreate, nil)
 }
 
 func (h handlersPullReq) Close(ctx context.Context, e *events.Event[*pullreqevents.ClosedPayload]) error {
-	return h.submit(ctx, e.Payload.PullReqID, e.Payload.PrincipalID, VerbPullReqClose)
+	return h.submit(ctx, e.Payload.PullReqID, e.Payload.PrincipalID, VerbPullReqClose, nil)
 }
 
 func (h handlersPullReq) Reopen(ctx context.Context, e *events.Event[*pullreqevents.ReopenedPayload]) error {
-	return h.submit(ctx, e.Payload.PullReqID, e.Payload.PrincipalID, VerbPullReqReopen)
+	return h.submit(ctx, e.Payload.PullReqID, e.Payload.PrincipalID, VerbPullReqReopen, nil)
 }
 
 func (h handlersPullReq) Merge(ctx context.Context, e *events.Event[*pullreqevents.MergedPayload]) error {
-	return h.submit(ctx, e.Payload.PullReqID, e.Payload.PrincipalID, VerbPullReqMerge)
+	return h.submit(ctx, e.Payload.PullReqID, e.Payload.PrincipalID, VerbPullReqMerge, nil)
 }
 
-func (h handlersPullReq) submit(ctx context.Context, pullReqID, principalID int64, verb VerbPullReq) error {
+func (h handlersPullReq) CommentCreate(
+	ctx context.Context,
+	e *events.Event[*pullreqevents.CommentCreatedPayload],
+) error {
+	props := prepareProps(nil)
+	props[prCommentReply] = e.Payload.IsReply
+	return h.submit(ctx, e.Payload.PullReqID, e.Payload.PrincipalID, VerbPullReqComment, props)
+}
+
+func (h handlersPullReq) submit(
+	ctx context.Context,
+	pullReqID, principalID int64,
+	verb Verb,
+	props map[string]any,
+) error {
 	pr, err := h.pullReqStore.Find(ctx, pullReqID)
 	if err != nil {
 		return fmt.Errorf("failed to find pull request: %w", err)
 	}
 
-	repo, err := h.repoFinder.FindByID(ctx, pr.TargetRepoID)
+	props, err = fillPullReqProps(ctx, props, pr, h.repoFinder, h.publicAccess)
 	if err != nil {
-		return fmt.Errorf("failed to find pull request: %w", err)
+		return fmt.Errorf("failed to fill pull request props: %w", err)
 	}
 
 	principal, err := h.principalInfoCache.Get(ctx, principalID)
@@ -269,31 +428,183 @@ func (h handlersPullReq) submit(ctx context.Context, pullReqID, principalID int6
 		return fmt.Errorf("failed to get principal info: %w", err)
 	}
 
-	author, err := h.principalInfoCache.Get(ctx, pr.CreatedBy)
-	if err != nil {
-		return fmt.Errorf("failed to get author principal info: %w", err)
-	}
-
-	props := map[string]any{
-		"repo_id":                repo.ID,
-		"repo_path":              repo.Path,
-		"repo_parent_id":         repo.ParentID,
-		"pullreq_author_email":   author.Email,
-		"pullreq_number":         pr.Number,
-		"pullreq_target_repo_id": pr.TargetRepoID,
-		"pullreq_source_repo_id": pr.SourceRepoID,
-		"pullreq_target_branch":  pr.TargetBranch,
-		"pullreq_source_branch":  pr.SourceBranch,
-	}
-
-	if pr.MergeMethod != nil {
-		props["pullreq_merge_method"] = string(*pr.MergeMethod)
-	}
-
-	err = h.submitter.SubmitForPullReq(ctx, principal, verb, props)
+	err = h.submitter.Submit(ctx, principal, ObjectPullRequest, verb, props)
 	if err != nil {
 		return fmt.Errorf("failed to submit metric data for pull request: %w", err)
 	}
 
 	return nil
+}
+
+// Rule fields.
+const (
+	ruleID   = "rule_id"
+	ruleName = "rule_name"
+	ruleType = "rule_type"
+)
+
+func (h handlersRule) Create(ctx context.Context, e *events.Event[*ruleevents.CreatedPayload]) error {
+	return h.submit(ctx, e.Payload.RuleID, e.Payload.PrincipalID, VerbRuleCreate, nil)
+}
+
+func (h handlersRule) submit(
+	ctx context.Context,
+	ruleID, principalID int64,
+	verb Verb,
+	props map[string]any,
+) error {
+	rule, err := h.ruleStore.Find(ctx, ruleID)
+	if err != nil {
+		return fmt.Errorf("failed to find pull request: %w", err)
+	}
+
+	props, err = fillRuleProps(ctx, props, rule, h.spaceFinder, h.repoFinder, h.publicAccess)
+	if err != nil {
+		return fmt.Errorf("failed to fill pull request props: %w", err)
+	}
+
+	principal, err := h.principalInfoCache.Get(ctx, principalID)
+	if err != nil {
+		return fmt.Errorf("failed to get principal info: %w", err)
+	}
+
+	err = h.submitter.Submit(ctx, principal, ObjectRule, verb, props)
+	if err != nil {
+		return fmt.Errorf("failed to submit metric data for rule: %w", err)
+	}
+
+	return nil
+}
+
+type handlersRule struct {
+	principalInfoCache store.PrincipalInfoCache
+	spaceFinder        refcache.SpaceFinder
+	repoFinder         refcache.RepoFinder
+	ruleStore          store.RuleStore
+	publicAccess       publicaccess.Service
+	submitter          Submitter
+}
+
+func fillSpaceData(
+	ctx context.Context,
+	props map[string]any,
+	space *types.SpaceCore,
+	publicAccess publicaccess.Service,
+) (map[string]any, error) {
+	props = prepareProps(props)
+	props[spaceID] = space.ID
+	props[spaceName] = space.Identifier
+	props[spacePath] = space.Path
+	props[spaceParentID] = space.ParentID
+
+	if _, ok := props[spacePrivate]; !ok && publicAccess != nil {
+		isRepoPublic, err := publicAccess.Get(ctx, enum.PublicResourceTypeSpace, space.Path)
+		if err != nil {
+			return nil, fmt.Errorf("failed to check public access for space: %w", err)
+		}
+		props[spacePrivate] = !isRepoPublic
+	}
+
+	return props, nil
+}
+
+func fillRepoData(
+	ctx context.Context,
+	props map[string]any,
+	repo *types.RepositoryCore,
+	publicAccess publicaccess.Service,
+) (map[string]any, error) {
+	props = prepareProps(props)
+	props[repoID] = repo.ID
+	props[repoName] = repo.Identifier
+	props[repoPath] = repo.Path
+	props[repoParentID] = repo.ParentID
+
+	if _, ok := props[repoPrivate]; !ok && publicAccess != nil {
+		isRepoPublic, err := publicAccess.Get(ctx, enum.PublicResourceTypeRepo, repo.Path)
+		if err != nil {
+			return nil, fmt.Errorf("failed to check public access for repo: %w", err)
+		}
+		props[repoPrivate] = !isRepoPublic
+	}
+
+	return props, nil
+}
+
+func fillPullReqProps(
+	ctx context.Context,
+	props map[string]any,
+	pr *types.PullReq,
+	repoFinder refcache.RepoFinder,
+	publicAccess publicaccess.Service,
+) (map[string]any, error) {
+	props = prepareProps(props)
+	props[prNumber] = pr.Number
+	props[prSourceBranch] = pr.SourceBranch
+	props[prTargetBranch] = pr.TargetBranch
+	if pr.MergeMethod != nil {
+		props[prMergeMethod] = string(*pr.MergeMethod)
+	}
+
+	targetRepo, err := repoFinder.FindByID(ctx, pr.TargetRepoID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find target repo: %w", err)
+	}
+
+	props, err = fillRepoData(ctx, props, targetRepo, publicAccess)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fill repo data for target repo: %w", err)
+	}
+
+	if pr.SourceRepoID != pr.TargetRepoID {
+		sourceRepo, err := repoFinder.FindByID(ctx, pr.SourceRepoID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to find source repo: %w", err)
+		}
+
+		props[prSourceRepoID] = pr.SourceRepoID
+		props[prSourceRepoName] = sourceRepo.Identifier
+		props[prSourceRepoPath] = sourceRepo.Path
+	}
+
+	return props, nil
+}
+
+func fillRuleProps(
+	ctx context.Context,
+	props map[string]any,
+	rule *types.Rule,
+	spaceFinder refcache.SpaceFinder,
+	repoFinder refcache.RepoFinder,
+	publicAccess publicaccess.Service,
+) (map[string]any, error) {
+	props = prepareProps(props)
+	props[ruleID] = rule.RepoID
+	props[ruleName] = rule.Identifier
+	props[ruleType] = string(rule.Type)
+
+	//nolint:nestif
+	if rule.SpaceID != nil {
+		space, err := spaceFinder.FindByID(ctx, *rule.SpaceID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to find space: %w", err)
+		}
+
+		props, err = fillSpaceData(ctx, props, space, publicAccess)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fill space data for rule: %w", err)
+		}
+	} else if rule.RepoID != nil {
+		repo, err := repoFinder.FindByID(ctx, *rule.RepoID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to find repo: %w", err)
+		}
+
+		props, err = fillRepoData(ctx, props, repo, publicAccess)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fill repo data for rule: %w", err)
+		}
+	}
+
+	return props, nil
 }

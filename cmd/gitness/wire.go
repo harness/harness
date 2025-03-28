@@ -61,6 +61,8 @@ import (
 	pipelineevents "github.com/harness/gitness/app/events/pipeline"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	repoevents "github.com/harness/gitness/app/events/repo"
+	ruleevents "github.com/harness/gitness/app/events/rule"
+	userevents "github.com/harness/gitness/app/events/user"
 	infrastructure "github.com/harness/gitness/app/gitspace/infrastructure"
 	"github.com/harness/gitness/app/gitspace/logutil"
 	"github.com/harness/gitness/app/gitspace/orchestrator"
@@ -190,6 +192,8 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		gitevents.WireSet,
 		pullreqevents.WireSet,
 		repoevents.WireSet,
+		ruleevents.WireSet,
+		userevents.WireSet,
 		storage.WireSet,
 		api.WireSet,
 		cliserver.ProvideGitConfig,

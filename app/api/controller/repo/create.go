@@ -182,8 +182,8 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	}
 
 	c.eventReporter.Created(ctx, &repoevents.CreatedPayload{
-		Base: eventBase(repo.Core(), &session.Principal),
-		Type: "created",
+		Base:     eventBase(repo.Core(), &session.Principal),
+		IsPublic: in.IsPublic,
 	})
 
 	// index repository if files are created

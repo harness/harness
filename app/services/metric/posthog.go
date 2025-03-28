@@ -92,33 +92,15 @@ func (ph *PostHog) SubmitGroups(context.Context) error {
 	return nil
 }
 
-func (ph *PostHog) SubmitForRepo(
-	ctx context.Context,
-	user *types.PrincipalInfo,
-	verb VerbRepo,
-	properties map[string]any,
-) error {
-	return ph.submit(ctx, user, ObjectRepository, string(verb), properties)
-}
-
-func (ph *PostHog) SubmitForPullReq(
-	ctx context.Context,
-	user *types.PrincipalInfo,
-	verb VerbPullReq,
-	properties map[string]any,
-) error {
-	return ph.submit(ctx, user, ObjectPullRequest, string(verb), properties)
-}
-
 func (ph *PostHog) uniqueUserID(id string) string {
 	return ph.installID + ":" + id
 }
 
-func (ph *PostHog) submit(
+func (ph *PostHog) Submit(
 	_ context.Context,
 	user *types.PrincipalInfo,
 	object Object,
-	verb string,
+	verb Verb,
 	properties map[string]any,
 ) error {
 	if ph == nil {
@@ -135,7 +117,9 @@ func (ph *PostHog) submit(
 			"created": user.Created,
 		})
 		p.Set("$set", map[string]any{
-			"email": user.Email,
+			"id":       user.ID,
+			"username": user.UID,
+			"email":    user.Email,
 		})
 
 		properties = p
@@ -143,7 +127,7 @@ func (ph *PostHog) submit(
 
 	err := ph.client.Enqueue(posthog.Capture{
 		DistinctId: distinctID,
-		Event:      string(object) + ":" + verb,
+		Event:      string(object) + ":" + string(verb),
 		Groups:     posthog.NewGroups().Set(postHogGroupInstall, ph.installID),
 		Properties: properties,
 	})

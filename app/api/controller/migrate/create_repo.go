@@ -173,7 +173,8 @@ func (c *Controller) CreateRepo(
 			RepoID:      repo.ID,
 			PrincipalID: session.Principal.ID,
 		},
-		Type: "migrated",
+		IsPublic:   isRepoPublic,
+		IsMigrated: true,
 	})
 
 	return &repoCtrl.RepositoryOutput{

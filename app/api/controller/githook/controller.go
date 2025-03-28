@@ -22,8 +22,8 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
-	eventsgit "github.com/harness/gitness/app/events/git"
-	eventsrepo "github.com/harness/gitness/app/events/repo"
+	gitevents "github.com/harness/gitness/app/events/git"
+	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/services/settings"
@@ -44,8 +44,8 @@ type Controller struct {
 	principalStore      store.PrincipalStore
 	repoStore           store.RepoStore
 	repoFinder          refcache.RepoFinder
-	gitReporter         *eventsgit.Reporter
-	repoReporter        *eventsrepo.Reporter
+	gitReporter         *gitevents.Reporter
+	repoReporter        *repoevents.Reporter
 	git                 git.Interface
 	pullreqStore        store.PullReqStore
 	urlProvider         url.Provider
@@ -64,8 +64,8 @@ func NewController(
 	principalStore store.PrincipalStore,
 	repoStore store.RepoStore,
 	repoFinder refcache.RepoFinder,
-	gitReporter *eventsgit.Reporter,
-	repoReporter *eventsrepo.Reporter,
+	gitReporter *gitevents.Reporter,
+	repoReporter *repoevents.Reporter,
 	git git.Interface,
 	pullreqStore store.PullReqStore,
 	urlProvider url.Provider,
