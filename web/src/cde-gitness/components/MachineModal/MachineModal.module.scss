@@ -1,0 +1,27 @@
+.machineModal {
+  .modalFooter {
+    padding: var(--spacing-xlarge) !important;
+    border-top: 1px solid var(--grey-200) !important;
+  }
+
+  [class*='ModalDialog--footer'] {
+    padding: 0 !important;
+  }
+
+  [class*='ModalDialog--header'] {
+    padding: var(--spacing-xlarge) var(--spacing-xlarge) var(--spacing-main) var(--spacing-xlarge) !important;
+    border-bottom: 1px solid var(--grey-200) !important;
+  }
+
+  [class*='ModalDialog--bodyContent'] {
+    padding: 0 !important;
+  }
+
+  .formContainer {
+    padding: var(--spacing-xlarge) !important;
+  }
+
+  [class*='InputWithIdentifier--txtNameContainer'] {
+    margin-bottom: 0 !important;
+  }
+}

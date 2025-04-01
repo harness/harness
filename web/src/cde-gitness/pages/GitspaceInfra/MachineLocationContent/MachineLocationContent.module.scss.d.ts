@@ -16,24 +16,22 @@
 
 /* eslint-disable */
 // This is an auto-generated file
-export declare const bp3ButtonText: string
+export declare const addMachineBtn: string
+export declare const addMachineNote: string
+export declare const addMachineText: string
 export declare const cardContent: string
 export declare const cardTitle: string
-export declare const connectionLoader: string
-export declare const connectionTile: string
-export declare const connectionTime: string
 export declare const countLabel: string
-export declare const customBreadcumbStyles: string
-export declare const deleteBtn: string
-export declare const deleteHeading: string
-export declare const deleteInfraCard: string
-export declare const deleteInfraContainer: string
-export declare const deleteInfraTitle: string
-export declare const deleteMessage: string
-export declare const infraDetailCard: string
-export declare const locationAndMachineCard: string
-export declare const locationAndMachineTitle: string
+export declare const deleteContainer: string
+export declare const dnone: string
+export declare const emptyMachineCard: string
+export declare const headingText: string
+export declare const locationDetail: string
+export declare const machineDetail: string
+export declare const machineHeader: string
 export declare const main: string
+export declare const messageContainer: string
+export declare const noMachineIcon: string
 export declare const rowContent: string
 export declare const rowHeader: string
-export declare const tabHeading: string
+export declare const tableContainer: string

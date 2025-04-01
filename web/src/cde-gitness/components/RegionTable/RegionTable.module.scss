@@ -1,0 +1,60 @@
+.locationTable {
+  background-color: var(--grey-0) !important;
+  border-radius: var(--spacing-small) !important;
+  border: 1px solid var(--grey-100) !important;
+  width: 100% !important;
+  margin-top: var(--spacing-small) !important;
+}
+
+.tableContainer {
+  width: 100% !important;
+
+  th {
+    padding: 14px var(--spacing-main) !important;
+  }
+
+  thead {
+    border: 1px solid var(--grey-100) !important;
+  }
+
+  .dnone {
+    display: none !important;
+  }
+
+  .deleteContainer {
+    text-align: end !important;
+    margin: auto 0 !important;
+    height: 100% !important;
+    padding-top: 3px !important;
+  }
+
+  tbody {
+    tr {
+      border: 1px solid var(--grey-100) !important;
+      background-color: var(--grey-0) !important;
+
+      td {
+        padding: var(--padding-button) var(--padding-button) var(--padding-button) 14px !important;
+        background-color: var(--grey-0) !important;
+      }
+    }
+  }
+
+  .inputContainer {
+    margin: 0 !important;
+
+    [class*='TextInput--main'] {
+      margin: 0 !important;
+    }
+  }
+}
+
+.newRegion {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  width: 100% !important;
+  padding: var(--spacing-main) var(--spacing-xlarge) !important;
+  margin-top: 0 !important;
+  background-color: var(--grey-0) !important;
+  cursor: pointer !important;
+}

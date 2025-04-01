@@ -1,0 +1,59 @@
+.infraDetailCard {
+  background: white !important;
+  border-radius: var(--spacing-small) !important;
+  box-shadow: 0px var(--spacing-tiny) 3px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid var(--grey-100) !important;
+  padding: var(--spacing-xlarge) !important;
+  width: 100% !important;
+  min-width: 900px !important;
+
+  .cardTitle {
+    font-size: var(--font-size-medium) !important;
+    font-weight: 600 !important;
+    line-height: var(--spacing-xlarge) !important;
+    padding-left: var(--spacing-small) !important;
+    color: var(--grey-1000) !important;
+  }
+
+  .cardContent {
+    margin-top: var(--spacing-xxlarge) !important;
+    width: 100% !important;
+    align-items: start !important;
+
+    .rowHeader {
+      font-size: var(--font-size-small) !important;
+      font-weight: 500 !important;
+      color: var(--grey-500) !important;
+      line-height: 18px !important;
+      margin: 0 !important;
+    }
+
+    .connectionTile {
+      margin-top: 8px !important;
+    }
+
+    .connectionTime {
+      font-size: var(--font-size-small) !important;
+      font-weight: 400 !important;
+      padding-top: var(--spacing-small) !important;
+    }
+
+    .connectionLoader {
+      padding-top: var(--spacing-small) !important;
+      font-size: var(--font-size-normal) !important;
+      font-weight: 400 !important;
+
+      span {
+        padding-right: var(--spacing-small) !important;
+      }
+    }
+
+    .rowContent {
+      font-size: var(--font-size-normal) !important;
+      font-weight: 500 !important;
+      line-height: var(--spacing-large) !important;
+      color: var(--grey-900) !important;
+      margin-top: var(--spacing-small) !important;
+    }
+  }
+}

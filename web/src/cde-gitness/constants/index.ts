@@ -24,8 +24,10 @@ import webStormIcon from 'cde-gitness/assests/webStorm.svg?url'
 import goLandIcon from 'cde-gitness/assests/goLand.svg?url'
 import riderIcon from 'cde-gitness/assests/rider.svg?url'
 import type { StringsMap } from 'framework/strings/stringTypes'
+import type { TypesInfraProviderResource } from 'services/cde'
 
 export const docLink = 'https://developer.harness.io/docs/cloud-development-environments'
+export const learnMoreRegion = 'https://cloud.google.com/compute/docs/regions-zones'
 
 export enum IDEType {
   VSCODE = 'vs_code',
@@ -40,10 +42,25 @@ export enum IDEType {
   RIDER = 'rider'
 }
 
+export interface regionProp {
+  location: string
+  defaultSubnet: string
+  proxySubnet: string
+  domain: string
+  dns: string
+  identifier: number
+}
+export const HYBRID_VM_GCP = 'hybrid_vm_gcp'
+
 export interface ideType {
   label: keyof StringsMap
   value: string
   icon: any
+}
+
+export interface dropdownProps {
+  label: string
+  value: string
 }
 
 export const groupEnums = {
@@ -222,6 +239,17 @@ export enum SortByType {
 export interface SortByTypeListItem {
   label: string
   value: SortByType
+}
+
+export interface regionType {
+  region_name: string
+  proxy_subnet_ip_range: string
+  default_subnet_ip_range: string
+  dns: string
+  domain: string
+  machines: TypesInfraProviderResource[]
+  identifier?: number
+  location?: string
 }
 
 export const SortByTypes = (getString: any) => [

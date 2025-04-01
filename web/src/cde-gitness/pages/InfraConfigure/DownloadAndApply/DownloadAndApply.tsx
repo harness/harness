@@ -1,23 +1,47 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Button, ButtonVariation, CodeBlock, Layout, Page, Text } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
-import { useHistory } from 'react-router-dom'
+import { useHistory, useParams } from 'react-router-dom'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
+import { useGetInfraDetails } from 'cde-gitness/hooks/useInfraDetailAPI'
 import { routes } from 'cde-gitness/RouteDefinitions'
 import Index1 from '../../../../icons/num1.svg?url'
 import Index2 from '../../../../icons/num2.svg?url'
 import css from './DownloadAndApply.module.scss'
 
-interface InfraDetailProps {
-  onTabChange: (key: string) => void
-  tabOptions: { [key: string]: string }
+interface RouteParamsProps {
+  infraprovider_identifier?: string
 }
 
-const DownloadAndApplySection = ({ onTabChange, tabOptions }: InfraDetailProps) => {
+const DownloadAndApplySection = () => {
   const { getString } = useStrings()
   const { accountInfo } = useAppContext()
   const history = useHistory()
+  const { infraprovider_identifier } = useParams<RouteParamsProps>()
+
+  const { data } = useGetInfraDetails({
+    accountIdentifier: accountInfo?.identifier,
+    infraprovider_identifier: infraprovider_identifier ?? 'undefined'
+  })
+
+  useEffect(() => {
+    if (!infraprovider_identifier) {
+      return history.push(routes.toCDEGitspaceInfra({ accountId: accountInfo?.identifier }))
+    }
+  }, [infraprovider_identifier])
+
+  const downloadYaml = () => {
+    const blob = new Blob([data?.setup_yaml ?? ''], { type: 'text/yaml' })
+
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = 'data.yaml'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+  }
+
   return (
     <Page.Body className={css.main}>
       <Layout.Vertical spacing={'medium'}>
@@ -35,6 +59,7 @@ const DownloadAndApplySection = ({ onTabChange, tabOptions }: InfraDetailProps) 
               iconProps={{ size: 14 }}
               text={getString('cde.downloadAndApplySection.downloadYaml')}
               variation={ButtonVariation.PRIMARY}
+              onClick={downloadYaml}
             />
           </Layout.Vertical>
           <Layout.Vertical spacing="none">
@@ -52,7 +77,14 @@ const DownloadAndApplySection = ({ onTabChange, tabOptions }: InfraDetailProps) 
             text={getString('cde.downloadAndApplySection.back')}
             icon="chevron-left"
             variation={ButtonVariation.SECONDARY}
-            onClick={() => onTabChange(tabOptions.tab1)}
+            onClick={() => {
+              history.push(
+                routes.toCDEInfraConfigureDetail({
+                  accountId: accountInfo?.identifier,
+                  infraprovider_identifier: infraprovider_identifier ?? ''
+                })
+              )
+            }}
           />
           <Button
             text={getString('cde.downloadAndApplySection.done')}

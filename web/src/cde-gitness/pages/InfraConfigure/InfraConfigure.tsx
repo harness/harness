@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Breadcrumbs, Container, Heading, Layout, Page, Tabs, Text } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
+import { useParams } from 'react-router-dom'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
 import { routes } from 'cde-gitness/RouteDefinitions'
@@ -13,15 +14,17 @@ import css from './InfraConfigure.module.scss'
 const InfraConfigurePage = () => {
   const { getString } = useStrings()
   const { accountInfo } = useAppContext()
+  const { type } = useParams<{ type?: string }>()
+
   const tabOptions = {
     tab1: 'infra-details',
     tab2: 'download-and-apply'
   }
   const [tab, selectedTab] = useState(tabOptions.tab1)
 
-  const onTabChange = (key: string) => {
-    selectedTab(key)
-  }
+  useEffect(() => {
+    selectedTab(type ? tabOptions.tab2 : tabOptions.tab1)
+  }, [type])
 
   return (
     <>
@@ -76,14 +79,14 @@ const InfraConfigurePage = () => {
                 id: tabOptions.tab1,
                 title: getString('cde.configureInfra.provideInfraDetails'),
                 disabled: tab !== tabOptions.tab1,
-                panel: <InfraDetails onTabChange={onTabChange} tabOptions={tabOptions} />
+                panel: <InfraDetails />
               },
               { id: '', title: <Icon name="chevron-right" size={16} />, disabled: true },
               {
                 id: tabOptions.tab2,
                 title: getString('cde.configureInfra.downloadAndApply'),
                 disabled: tab !== tabOptions.tab2,
-                panel: <DownloadAndApplySection onTabChange={onTabChange} tabOptions={tabOptions} />
+                panel: <DownloadAndApplySection />
               }
             ]}
           />

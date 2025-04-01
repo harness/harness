@@ -1,5 +1,5 @@
 .main {
-  padding: 40px 160px !important;
+  padding: var(--spacing-xxxlarge) 160px !important;
 }
 
 .basicDetailsContainer {
@@ -17,6 +17,10 @@
   border-radius: var(--spacing-small) !important;
   padding: var(--spacing-xlarge) !important;
   border: 1px solid var(--grey-100) !important;
+
+  [class*='TextInput--main'] {
+    margin-bottom: 0 !important;
+  }
 }
 
 .noteText {
@@ -38,15 +42,19 @@
 .valueText {
   font-size: 13px !important;
   font-weight: 400 !important;
-  padding-left: 4px !important;
+  padding-left: var(--spacing-xsmall) !important;
 }
 
 .inputWithNote {
-  margin-bottom: 4px !important;
+  margin-bottom: var(--spacing-xsmall) !important;
 }
 
 .containerSpacing {
   margin-bottom: var(--spacing-large) !important;
+
+  .bottomSpacing {
+    padding-bottom: var(--spacing-main) !important;
+  }
 }
 
 .inputWithMargin {
@@ -56,6 +64,7 @@
 .headerLinkText {
   font-size: 13px !important;
   font-weight: 400 !important;
+  cursor: pointer !important;
 }
 
 .formFooter {
@@ -63,4 +72,58 @@
   width: 100% !important;
   display: flex;
   justify-content: space-between !important;
+}
+
+.tableContainer {
+  width: 100% !important;
+
+  th {
+    padding: 14px var(--spacing-main) !important;
+  }
+
+  thead {
+    border: 1px solid var(--grey-100) !important;
+  }
+
+  .dnone {
+    display: none !important;
+  }
+
+  .deleteContainer {
+    text-align: end !important;
+    margin: auto 0 !important;
+    height: 100% !important;
+    padding-top: 3px !important;
+  }
+
+  tbody {
+    tr {
+      border: 1px solid var(--grey-100) !important;
+      background-color: var(--grey-0) !important;
+
+      td {
+        padding: var(--padding-button) var(--padding-button) var(--padding-button) 14px !important;
+        background-color: var(--grey-0) !important;
+      }
+    }
+  }
+
+  .inputContainer {
+    margin: 0 !important;
+
+    [class*='TextInput--main'] {
+      margin: 0 !important;
+    }
+  }
+}
+
+.marginTopSmall {
+  margin-top: var(--spacing-small) !important;
+}
+
+.headingText {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  line-height: var(--spacing-main) !important;
+  text-transform: uppercase !important;
 }

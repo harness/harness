@@ -1260,6 +1260,7 @@ export interface StringsMap {
   zoomIn: string
   zoomOut: string
   'cde.account': string
+  'cde.atleastOneRegion': string
   'cde.branchPlaceholder': string
   'cde.branchValidationMessage': string
   'cde.changes': string
@@ -1284,6 +1285,8 @@ export interface StringsMap {
   'cde.configureInfra.machineType': string
   'cde.configureInfra.name': string
   'cde.configureInfra.numberOfInstance': string
+  'cde.configureInfra.numberOfLocations': string
+  'cde.configureInfra.project': string
   'cde.configureInfra.provideInfraDetails': string
   'cde.copied': string
   'cde.cpu': string
@@ -1292,6 +1295,10 @@ export interface StringsMap {
   'cde.create.gitspaceCreateFailed': string
   'cde.create.gitspaceCreateSuccess': string
   'cde.create.importWarning': string
+  'cde.create.infraProviderFailed': string
+  'cde.create.infraProviderSuccess': string
+  'cde.create.machineCreateFailed': string
+  'cde.create.machineCreateSuccess': string
   'cde.create.repoNotFound': string
   'cde.create.repositoryDetails': string
   'cde.create.searchBranchPlaceholder': string
@@ -1308,6 +1315,8 @@ export interface StringsMap {
   'cde.deleteGitspace': string
   'cde.deleteGitspaceText': string
   'cde.deleteGitspaceTitle': string
+  'cde.deleteInfraSuccess': string
+  'cde.deleteMachineSuccess': string
   'cde.deleteSuccess': string
   'cde.details.actions': string
   'cde.details.containerLogs': string
@@ -1349,10 +1358,58 @@ export interface StringsMap {
   'cde.getStarted': string
   'cde.gitspaceDetail': string
   'cde.gitspaceInfra': string
+  'cde.gitspaceInfraHome.addMachineNote': string
+  'cde.gitspaceInfraHome.addMachineType': string
+  'cde.gitspaceInfraHome.bootDisk': string
+  'cde.gitspaceInfraHome.bootSize': string
+  'cde.gitspaceInfraHome.bootSizeColumn': string
+  'cde.gitspaceInfraHome.bootSizeMessage': string
+  'cde.gitspaceInfraHome.bootType': string
+  'cde.gitspaceInfraHome.bootTypeMessage': string
   'cde.gitspaceInfraHome.configureGCPButton': string
+  'cde.gitspaceInfraHome.cpu': string
+  'cde.gitspaceInfraHome.cpuMessage': string
+  'cde.gitspaceInfraHome.create': string
+  'cde.gitspaceInfraHome.createNewMachine': string
+  'cde.gitspaceInfraHome.dangerZone': string
+  'cde.gitspaceInfraHome.defaultSubnet': string
+  'cde.gitspaceInfraHome.deleteInfraText': string
+  'cde.gitspaceInfraHome.deleteInfraTitle': string
+  'cde.gitspaceInfraHome.deleteMachineTitle': string
+  'cde.gitspaceInfraHome.deleteThisInfra': string
+  'cde.gitspaceInfraHome.deleteWarning': string
   'cde.gitspaceInfraHome.description': string
+  'cde.gitspaceInfraHome.diskSize': string
+  'cde.gitspaceInfraHome.diskSizeMessage': string
+  'cde.gitspaceInfraHome.diskType': string
+  'cde.gitspaceInfraHome.diskTypeMessage': string
+  'cde.gitspaceInfraHome.dnsManagedZone': string
+  'cde.gitspaceInfraHome.domainMessage': string
   'cde.gitspaceInfraHome.gcpSupportText': string
+  'cde.gitspaceInfraHome.infraDetails': string
+  'cde.gitspaceInfraHome.instanceMessage': string
   'cde.gitspaceInfraHome.learnMore': string
+  'cde.gitspaceInfraHome.locationAndMachine': string
+  'cde.gitspaceInfraHome.locationDetails': string
+  'cde.gitspaceInfraHome.locationName': string
+  'cde.gitspaceInfraHome.machine': string
+  'cde.gitspaceInfraHome.machineType': string
+  'cde.gitspaceInfraHome.machineTypeMessage': string
+  'cde.gitspaceInfraHome.machines': string
+  'cde.gitspaceInfraHome.memoryInGb': string
+  'cde.gitspaceInfraHome.memoryMessage': string
+  'cde.gitspaceInfraHome.nameMessage': string
+  'cde.gitspaceInfraHome.newMachine': string
+  'cde.gitspaceInfraHome.newRegion': string
+  'cde.gitspaceInfraHome.noMachineAvailable': string
+  'cde.gitspaceInfraHome.persistentDisk': string
+  'cde.gitspaceInfraHome.proxySubnet': string
+  'cde.gitspaceInfraHome.region': string
+  'cde.gitspaceInfraHome.troubleshoot': string
+  'cde.gitspaceInfraHome.waitingForConnection': string
+  'cde.gitspaceInfraHome.waitingMessage': string
+  'cde.gitspaceInfraHome.zone': string
+  'cde.gitspaceInfraHome.zoneMessage': string
   'cde.gitspaceOwners.allGitspaces': string
   'cde.gitspaceOwners.myGitspaces': string
   'cde.gitspaceStatus.active': string
@@ -1450,6 +1507,8 @@ export interface StringsMap {
   'cde.status': string
   'cde.stopingGitspace': string
   'cde.total': string
+  'cde.update.infraProviderFailed': string
+  'cde.update.infraProviderSuccess': string
   'cde.updateGitspace': string
   'cde.used': string
   'cde.viewGitspace': string

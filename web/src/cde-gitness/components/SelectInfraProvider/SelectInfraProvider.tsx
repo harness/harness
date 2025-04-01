@@ -14,35 +14,57 @@
  * limitations under the License.
  */
 
-import React, { useEffect } from 'react'
-import { isObject, groupBy } from 'lodash-es'
+import React, { useEffect, useState } from 'react'
+import { groupBy } from 'lodash-es'
 import { Layout } from '@harnessio/uicore'
 import { useFormikContext } from 'formik'
 import { useParams } from 'react-router-dom'
-import { CDEPathParams, useGetCDEAPIParams } from 'cde-gitness/hooks/useGetCDEAPIParams'
-import { OpenapiCreateGitspaceRequest, useGetInfraProvider } from 'services/cde'
-import { useAppContext } from 'AppContext'
+import type { OpenapiCreateGitspaceRequest, TypesInfraProviderConfig, TypesInfraProviderResource } from 'services/cde'
+import { useInfraListingApi } from 'cde-gitness/hooks/useGetInfraListProvider'
+import type { dropdownProps } from 'cde-gitness/constants'
 import { SelectRegion } from '../SelectRegion/SelectRegion'
 import { SelectMachine } from '../SelectMachine/SelectMachine'
 import SelectInfraProviderType from '../SelectInfraProviderType/SelectInfraProviderType'
 
 export const SelectInfraProvider = () => {
-  const { hooks } = useAppContext()
-  const { CDE_OVH_ENABLED } = hooks?.useFeatureFlags()
+  const [infraProviders, setInfraProvider] = useState<dropdownProps[]>()
   const { values, setFieldValue: onChange } = useFormikContext<OpenapiCreateGitspaceRequest>()
-  const { accountIdentifier = '' } = useGetCDEAPIParams() as CDEPathParams
 
-  const { data } = useGetInfraProvider({
-    accountIdentifier,
-    infraprovider_identifier: values?.metadata?.infraProvider as string
-  })
+  const { data, refetch } = useInfraListingApi()
+
+  useEffect(() => {
+    refetch()
+  }, [])
 
   const { gitspaceId = '' } = useParams<{ gitspaceId?: string }>()
 
-  const optionsList = data?.resources && isObject(data?.resources) ? data?.resources : []
+  const [optionsList, setOptionList] = useState<TypesInfraProviderResource[]>([])
 
   useEffect(() => {
-    if (gitspaceId && values.resource_identifier && optionsList.length) {
+    const infraOptions: dropdownProps[] = []
+    data?.forEach(infra => {
+      infraOptions.push({
+        label: infra?.name ?? '',
+        value: infra?.identifier ?? ''
+      })
+    })
+    setInfraProvider(infraOptions)
+  }, [data])
+
+  useEffect(() => {
+    let options: TypesInfraProviderResource[] = []
+    if (values?.metadata?.infraProvider) {
+      data?.forEach((infra: TypesInfraProviderConfig) => {
+        if (infra?.identifier === values?.metadata?.infraProvider) {
+          options = infra?.resources ?? []
+        }
+      })
+    }
+    setOptionList(options)
+  }, [values?.metadata?.infraProvider])
+
+  useEffect(() => {
+    if (gitspaceId && values.resource_identifier && optionsList?.length) {
       const match = optionsList.find(item => item.identifier === values.resource_identifier)
       if (values?.metadata?.region !== match?.region) {
         onChange('metadata.region', match?.region?.toLowerCase())
@@ -56,14 +78,14 @@ export const SelectInfraProvider = () => {
 
   const machineOptions =
     optionsList
-      ?.filter(item => item?.region === values?.metadata?.region)
+      ?.filter(item => item?.region?.toLowerCase() === values?.metadata?.region?.toLowerCase())
       ?.map(item => {
         return { ...item }
       }) || []
 
   return (
     <Layout.Vertical spacing="medium">
-      {CDE_OVH_ENABLED && <SelectInfraProviderType />}
+      <SelectInfraProviderType infraProviders={infraProviders ?? []} />
       <SelectRegion defaultValue={regionOptions?.[0]} options={regionOptions} disabled={!!gitspaceId} />
       <SelectMachine options={machineOptions} defaultValue={machineOptions?.[0]} />
     </Layout.Vertical>

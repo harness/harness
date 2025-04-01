@@ -49,6 +49,9 @@ lastActivated: Last Activated
 deleteGitspaceTitle: Delete Gitspace '{{name}}'
 deleteGitspaceText: 'This action cannot be undone. Are you sure you want to proceed to delete?'
 deleteSuccess: Gitspace deleted successfully
+deleteInfraSuccess: Gitspace Infrastructure deleted successfully
+deleteMachineSuccess: Machine type deleted successfully
+atleastOneRegion: Please add atleast one region
 repositoryAndBranch: Repository & Branch
 importInto: Import Repository into Gitness
 status: Status
@@ -65,7 +68,56 @@ gitspaceInfraHome:
   description: Configure an infrastructure with locations and machines to be used as one of the infrastructure while creating a Gitspace
   gcpSupportText: Currently we support GCP based infrastructure only.
   learnMore: Learn more about Gitspace Infrastructure
+  infraDetails: Infrastructure details
+  waitingForConnection: Waiting for Connection
+  waitingMessage: It takes around 3-5 minutes to connect to the infrastructure. If it takes longer, please follow the
+  troubleshoot: troubleshoot guidelines
+  locationAndMachine: Regions and machines
+  locationDetails: Region details
+  region: Region
+  locationName: Region Name
+  defaultSubnet: Default subnet IP range
+  proxySubnet: Proxy subnet IP range
+  dnsManagedZone: DNS managed zone
+  machines: Machines
+  machine: Machine
+  diskType: Persistent Disk Type
+  bootType: Boot Size Type
+  diskSize: Persistent Disk Size
+  persistentDisk: Persistent Disk
+  bootSizeColumn: Boot Size
+  bootDisk: Boot Disk
+  bootSize: Boot Size (in GB)
+  cpu: CPU (in Cores)
+  memoryInGb: Memory (in GB)
+  newMachine: New Machine
+  newRegion: New Region
+  machineType: Machine Type
+  zone: Zone
+  diskSizeMessage: Persistent Disk Size is required
+  zoneMessage: Zone is required
+  diskTypeMessage: Persistent Disk Type is required
+  bootTypeMessage: Boot Size Type is required
+  bootSizeMessage: Boot Size is required
+  cpuMessage: CPU is required
+  memoryMessage: Memory is required
+  createNewMachine: Create a new machine type
+  deleteMachineTitle: Delete “{{name}}” machine type?
+  addMachineNote: You can add machines once the infrastructure is connected.
+  noMachineAvailable: No machines available
+  addMachineType: Add machine types to make the region available for use
+  nameMessage: Name is required
+  domainMessage: Domain is required
+  machineTypeMessage: Machine type is required
+  instanceMessage: Instance is required
+  dangerZone: Danger Zone
+  deleteThisInfra: Delete this infrastructure
+  deleteWarning: Once you delete the infra, there is no going back. Please be certain
+  deleteInfraText: This action cannot be undone. Are you sure you want to proceed to delete?
+  deleteInfraTitle: Delete this infrastructure?
+  create: Create
 configureInfra:
+  project: GCP Project
   configure: Configure
   learnMoreAboutHybrid: Learn more about hybrid infra
   provideInfraDetails: Provide Infrastructure Details
@@ -77,10 +129,11 @@ configureInfra:
   name: Name
   domain: Domain
   gateway: Gateway
-  numberOfInstance: Number of instances
+  numberOfInstance: Number of Instances
+  numberOfLocations: Number of Locations
   machineType: Machine Type
-  configureLocations: Configure Locations
-  configureLocationNote: Users will only be able to host gitspaces in these locations only.
+  configureLocations: Configure Regions
+  configureLocationNote: Users will only be able to host gitspaces in these regions only.
   gatewayNoteText: More number of instances better reliability of running the Gitspace. However more number of instances incur more costs
   basicNoteText: The domain on which all the gitspaces created by this infra will be accessible
 downloadAndApplySection:
@@ -121,6 +174,10 @@ create:
   repoNotFound: 'Create a repo <strong>{{repo}}</strong>'
   gitspaceCreateSuccess: Gitspace created successfully
   gitspaceCreateFailed: Gitspace creation failed
+  infraProviderSuccess: Gitspace Infrastructure created successfully
+  infraProviderFailed: Gitspace Infrastructure creation failed
+  machineCreateSuccess: Machine created successfully
+  machineCreateFailed: Machine creation failed
   subtext: Start Coding, no setup required. Dedicated cloud development environments with your favorite editor.
   importWarning:
     Currently we support only third party public repositories. In order to use a private git repository, please
@@ -128,6 +185,9 @@ create:
   unsaved:
     title: Unsaved Changes
     message: 'You have unsaved changes, On switching all unsaved changes will be lost'
+update:
+  infraProviderFailed: Gitspace Infrastructure updation failed
+  infraProviderSuccess: Gitspace Infrastructure updated successfully
 details:
   actions: More Actions
   openEditor: Open VS Code Editor

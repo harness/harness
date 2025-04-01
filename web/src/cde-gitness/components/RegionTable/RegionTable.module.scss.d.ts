@@ -16,23 +16,9 @@
 
 /* eslint-disable */
 // This is an auto-generated file
-export declare const basicDetailsBody: string
-export declare const basicDetailsContainer: string
-export declare const basicDetailsHeading: string
-export declare const bottomSpacing: string
-export declare const containerSpacing: string
 export declare const deleteContainer: string
 export declare const dnone: string
-export declare const formFooter: string
-export declare const headerLinkText: string
-export declare const headingText: string
-export declare const inlineContainer: string
 export declare const inputContainer: string
-export declare const inputLabel: string
-export declare const inputWithMargin: string
-export declare const inputWithNote: string
-export declare const main: string
-export declare const marginTopSmall: string
-export declare const noteText: string
+export declare const locationTable: string
+export declare const newRegion: string
 export declare const tableContainer: string
-export declare const valueText: string

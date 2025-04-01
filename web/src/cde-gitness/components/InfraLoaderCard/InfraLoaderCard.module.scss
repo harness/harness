@@ -1,0 +1,36 @@
+.mainContainer {
+  padding: var(--spacing-xxxlarge) 150px !important;
+}
+
+.loadingCard {
+  width: 100% !important;
+  min-width: 900px !important;
+  border: var(--spacing-tiny) solid var(--grey-0) !important;
+  box-shadow: 0px var(--spacing-tiny) 3px rgba(0, 0, 0, 0.1) !important;
+  border-radius: var(--spacing-small) !important;
+  padding: var(--spacing-main) !important;
+  background-color: var(--primary-1) !important;
+  margin-bottom: var(--spacing-medium) !important;
+
+  .connectionHeader {
+    font-size: var(--font-size-normal) !important;
+    line-height: var(--spacing-large) !important;
+    font-weight: 600 !important;
+
+    span {
+      padding-right: var(--spacing-small) !important;
+    }
+  }
+
+  .connectionMessage {
+    font-size: var(--font-size-normal) !important;
+    line-height: var(--spacing-large) !important;
+    font-weight: 400 !important;
+    margin-top: var(--spacing-4) !important;
+
+    .linkStyle {
+      color: var(--primary-7) !important;
+      cursor: pointer !important;
+    }
+  }
+}

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Container, FormInput, Label, Layout, Text } from '@harnessio/uicore'
+import { Container, FormInput, Layout, Text } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
 import { useStrings } from 'framework/strings'
 import css from './InfraDetails.module.scss'
@@ -10,22 +10,16 @@ const BasicDetails = () => {
     <Layout.Vertical spacing="medium" className={css.containerSpacing}>
       <Text className={css.basicDetailsHeading}>{getString('cde.configureInfra.basicDetails')}</Text>
       <Container className={css.basicDetailsBody}>
-        <Label>
-          <Layout.Horizontal className={css.inlineContainer}>
-            <Text className={css.inputLabel}>{getString('cde.configureInfra.name')}</Text>
-            <Layout.Horizontal>
-              <Text className={css.inputLabel}>{getString('cde.configureInfra.id')}: </Text>
-              <Text
-                color={Color.PRIMARY_7}
-                rightIcon="code-edit"
-                className={css.valueText}
-                rightIconProps={{ size: 16 }}>
-                Dhruv Test
-              </Text>
-            </Layout.Horizontal>
-          </Layout.Horizontal>
-        </Label>
-        <FormInput.Text name="name" placeholder={getString('cde.configureInfra.name')} />
+        <FormInput.InputWithIdentifier
+          inputLabel={getString('cde.configureInfra.name')}
+          inputName="name"
+          isIdentifierEditable={true}
+        />
+        <FormInput.Text
+          name="project"
+          label={getString('cde.configureInfra.project')}
+          placeholder={getString('cde.configureInfra.project')}
+        />
         <FormInput.Text
           name="domain"
           className={css.inputWithNote}

@@ -1,88 +1,156 @@
-/*
- * Copyright 2024 Harness, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-.main {
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-  margin-top: 4% !important;
-
-  .titleContainer {
-    width: 50%;
-  }
-
-  .cardMain {
-    width: 50%;
-  }
-
-  .cardTitle {
-    font-size: 16px !important;
-  }
-}
-
-.subContainers {
-  margin: var(--spacing-xlarge) 0 !important;
-  margin-bottom: 0px !important;
-}
-
 .customBreadcumbStyles {
   [class*='Layout--horizontal']:last-child > span[class*='bp3-icon'] {
-    /* Your styles here */
     display: none !important;
   }
 }
 
-.infraLogo {
-  margin: 0 auto !important;
-  width: 318px !important;
-  height: 318px !important;
+.main {
+  padding: var(--spacing-xxxlarge) 150px !important;
 }
 
-.containerHeading {
-  margin-bottom: var(--spacing-small) !important;
-  font-weight: 600 !important;
-  font-size: var(--font-size-medium) !important;
-  text-align: center;
-}
-
-.infraDescription {
-  margin-bottom: var(--spacing-xlarge) !important;
-  font-size: var(--font-size-normal) !important;
-  font-weight: 400 !important;
-  text-align: center;
-}
-
-.configureButton {
-  padding: var(--spacing-medium) var(--spacing-medium) !important;
-  width: fit-content !important;
-  font-size: var(--font-size-small) !important;
-  font-weight: 200 !important;
-  margin: 0 auto var(--spacing-xxlarge) auto !important;
-}
-
-.supportText {
-  font-weight: 400 !important;
-  font-size: var(--font-size-small) !important;
-  text-align: center !important;
+.infraDetailCard {
+  background: white !important;
+  border-radius: var(--spacing-small) !important;
+  box-shadow: 0px var(--spacing-tiny) 3px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid var(--grey-100) !important;
+  padding: var(--spacing-xlarge) !important;
   width: 100% !important;
+  min-width: 900px !important;
+
+  .cardTitle {
+    font-size: var(--font-size-medium) !important;
+    font-weight: 600 !important;
+    line-height: var(--spacing-xlarge) !important;
+    padding-left: var(--spacing-small) !important;
+    color: var(--grey-1000) !important;
+  }
+
+  .cardContent {
+    margin-top: var(--spacing-xxlarge) !important;
+    width: 100% !important;
+    align-items: start !important;
+
+    .rowHeader {
+      font-size: var(--font-size-small) !important;
+      font-weight: 500 !important;
+      color: var(--grey-500) !important;
+      line-height: 18px !important;
+      margin: 0 !important;
+    }
+
+    .connectionTile {
+      margin-top: 8px !important;
+    }
+
+    .connectionTime {
+      font-size: var(--font-size-small) !important;
+      font-weight: 400 !important;
+      padding-top: var(--spacing-small) !important;
+    }
+
+    .connectionLoader {
+      padding-top: var(--spacing-small) !important;
+      font-size: var(--font-size-normal) !important;
+      font-weight: 400 !important;
+
+      span {
+        padding-right: var(--spacing-small) !important;
+      }
+    }
+
+    .rowContent {
+      font-size: var(--font-size-normal) !important;
+      font-weight: 500 !important;
+      line-height: var(--spacing-large) !important;
+      color: var(--grey-900) !important;
+      margin-top: var(--spacing-small) !important;
+    }
+  }
 }
 
-.learnMoreText {
-  font-weight: 400 !important;
-  font-size: var(--font-size-small) !important;
-  color: var(--primary-7) !important;
-  cursor: pointer;
+.locationAndMachineCard {
+  background: white !important;
+  border-radius: var(--spacing-small) !important;
+  box-shadow: 0px var(--spacing-tiny) 3px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid var(--grey-100) !important;
+  width: 100% !important;
+  min-width: 900px !important;
+
+  .locationAndMachineTitle {
+    padding: var(--spacing-7) var(--spacing-7) var(--spacing-5) var(--spacing-7) !important;
+    font-size: var(--font-size-medium) !important;
+    font-weight: 600 !important;
+  }
+
+  [class*='bp3-tabs'] > [class*='bp3-tab-list'] {
+    padding: 0 var(--spacing-7) !important;
+    border-bottom: 1px solid var(--grey-200) !important;
+
+    .tabHeading {
+      padding: 1px 0 !important;
+      font-size: var(--font-size-normal) !important;
+      font-weight: 500 !important;
+    }
+
+    .countLabel {
+      padding: 1px var(--spacing-small) !important;
+      background-color: var(--primary-7) !important;
+      color: var(--grey-0) !important;
+      font-size: var(--font-size-small) !important;
+      font-weight: 400 !important;
+      border-radius: var(--spacing-main) !important;
+      margin-left: var(--spacing-small) !important;
+    }
+  }
+
+  [class*='bp3-tab-panel'] {
+    margin: 0 !important;
+  }
+}
+
+.deleteInfraContainer {
+  width: 100% !important;
+  min-width: 900px !important;
+  padding-top: var(--spacing-xxxlarge) !important;
+
+  .deleteInfraTitle {
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    color: var(--grey-900) !important;
+    margin-bottom: var(--spacing-4) !important;
+  }
+
+  .deleteInfraCard {
+    border: 1px solid var(--red-200) !important;
+    width: 100% !important;
+    min-width: 900px !important;
+    background: white !important;
+    border-radius: var(--spacing-small) !important;
+    box-shadow: 0px var(--spacing-tiny) 3px rgba(0, 0, 0, 0.1) !important;
+    padding: var(--spacing-5) var(--spacing-7) !important;
+
+    .deleteHeading {
+      font-size: var(--font-size-normal) !important;
+      font-weight: 500 !important;
+      line-height: var(--spacing-large) !important;
+    }
+
+    .deleteMessage {
+      font-size: 12px !important;
+      font-weight: 400 !important;
+      line-height: 18px !important;
+      padding-top: var(--spacing-xsmall) !important;
+    }
+
+    .deleteBtn {
+      font-size: var(--font-size-normal) !important;
+      font-weight: 600 !important;
+      line-height: var(--spacing-main) !important;
+      color: var(--red-600) !important;
+
+      span.bp3-button-text {
+        color: var(--red-600) !important;
+      }
+    }
+  }
 }

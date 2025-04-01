@@ -1613,6 +1613,8 @@ components:
         - deleted
         - starting
         - stopping
+        - cleaning
+        - cleaned
       type: string
     EnumGitspaceOwner:
       enum:
@@ -1762,8 +1764,13 @@ components:
       properties:
         created:
           type: integer
+        deleted:
+          nullable: true
+          type: integer
         identifier:
           type: string
+        is_deleted:
+          type: boolean
         metadata:
           additionalProperties: {}
           nullable: true
@@ -1936,8 +1943,13 @@ components:
       properties:
         created:
           type: integer
+        deleted:
+          nullable: true
+          type: integer
         identifier:
           type: string
+        is_deleted:
+          type: boolean
         metadata:
           additionalProperties: {}
           nullable: true

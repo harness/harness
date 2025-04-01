@@ -1,0 +1,41 @@
+.locationDetail {
+  width: 100% !important;
+  border: 1px solid var(--grey-100) !important;
+  border-radius: var(--spacing-xsmall) !important;
+  margin-bottom: var(--spacing-xxlarge) !important;
+
+  .cardContent {
+    padding: var(--spacing-5) !important;
+    background-color: var(--grey-50) !important;
+
+    .rowHeader {
+      font-size: var(--font-size-small) !important;
+      line-height: 18px !important;
+      font-weight: 400 !important;
+    }
+
+    .rowContent {
+      font-size: var(--font-size-normal) !important;
+      line-height: var(--spacing-large) !important;
+      font-weight: 400 !important;
+    }
+  }
+}
+
+.machineDetail {
+  width: 100% !important;
+  border: 1px solid var(--grey-100) !important;
+  border-radius: var(--spacing-xsmall) !important;
+}
+
+.cardTitle {
+  font-size: var(--font-size-normal) !important;
+  font-weight: 600 !important;
+  color: var(--grey-1000) !important;
+  padding-right: var(--spacing-3) !important;
+}
+
+.machineHeader {
+  padding: var(--spacing-5) !important;
+  border-bottom: 1px solid var(--grey-100) !important;
+}

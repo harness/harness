@@ -1,5 +1,5 @@
 .main {
-  padding: 64px 264px !important;
+  padding: var(--spacing-11) 264px !important;
 }
 
 .pageTitle {
@@ -9,7 +9,7 @@
 
 .bodyContainer {
   background-color: var(--grey-0) !important;
-  border-radius: 4px !important;
+  border-radius: var(--spacing-xsmall) !important;
   border: 1px solid var(--grey-100) !important;
   padding: var(--spacing-xlarge) !important;
   margin-bottom: var(--spacing-large) !important;
