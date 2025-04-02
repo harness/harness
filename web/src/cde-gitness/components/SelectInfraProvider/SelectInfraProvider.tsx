@@ -18,15 +18,20 @@ import React, { useEffect, useState } from 'react'
 import { groupBy } from 'lodash-es'
 import { Layout } from '@harnessio/uicore'
 import { useFormikContext } from 'formik'
-import { useParams } from 'react-router-dom'
+import { useHistory, useParams } from 'react-router-dom'
 import type { OpenapiCreateGitspaceRequest, TypesInfraProviderConfig, TypesInfraProviderResource } from 'services/cde'
 import { useInfraListingApi } from 'cde-gitness/hooks/useGetInfraListProvider'
-import type { dropdownProps } from 'cde-gitness/constants'
+import { HARNESS_GCP, HYBRID_VM_GCP, type dropdownProps } from 'cde-gitness/constants'
+import { useAppContext } from 'AppContext'
+import { routes } from 'cde-gitness/RouteDefinitions'
 import { SelectRegion } from '../SelectRegion/SelectRegion'
 import { SelectMachine } from '../SelectMachine/SelectMachine'
 import SelectInfraProviderType from '../SelectInfraProviderType/SelectInfraProviderType'
 
 export const SelectInfraProvider = () => {
+  const { hooks, accountInfo } = useAppContext()
+  const history = useHistory()
+  const { CDE_HYBRID_ENABLED, CDE_HARNESS_GCP_ENABLED } = hooks?.useFeatureFlags()
   const [infraProviders, setInfraProvider] = useState<dropdownProps[]>()
   const { values, setFieldValue: onChange } = useFormikContext<OpenapiCreateGitspaceRequest>()
 
@@ -42,13 +47,32 @@ export const SelectInfraProvider = () => {
 
   useEffect(() => {
     const infraOptions: dropdownProps[] = []
+    let isHybridAvailable = false
     data?.forEach(infra => {
-      infraOptions.push({
+      const payload = {
         label: infra?.name ?? '',
         value: infra?.identifier ?? ''
-      })
+      }
+      if (infra.type === HARNESS_GCP && CDE_HARNESS_GCP_ENABLED) {
+        infraOptions.push(payload)
+      }
+      if (infra.type === HYBRID_VM_GCP && CDE_HYBRID_ENABLED) {
+        isHybridAvailable = true
+        infraOptions.push(payload)
+      }
+      if (infra.type !== HARNESS_GCP && infra.type !== HYBRID_VM_GCP) {
+        infraOptions.push(payload)
+      }
     })
-    setInfraProvider(infraOptions)
+    if (CDE_HYBRID_ENABLED && !isHybridAvailable) {
+      history.push(
+        routes.toCDEGitspaceInfra({
+          accountId: accountInfo?.identifier
+        })
+      )
+    } else {
+      setInfraProvider(infraOptions)
+    }
   }, [data])
 
   useEffect(() => {

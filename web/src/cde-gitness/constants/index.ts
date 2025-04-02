@@ -51,6 +51,7 @@ export interface regionProp {
   identifier: number
 }
 export const HYBRID_VM_GCP = 'hybrid_vm_gcp'
+export const HARNESS_GCP = 'harness_gcp'
 
 export interface ideType {
   label: keyof StringsMap
