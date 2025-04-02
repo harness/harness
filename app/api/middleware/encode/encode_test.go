@@ -252,6 +252,13 @@ func TestCutOutTerminatedPath(t *testing.T) {
 			expectedPath:  "",
 			expectedFound: true,
 		},
+		{
+			name:          "empty marker",
+			subPath:       "/foo/bar",
+			marker:        "",
+			expectedPath:  "/foo/bar",
+			expectedFound: true,
+		},
 	}
 
 	for _, tt := range tests {

@@ -270,6 +270,10 @@ func regexPathTerminatedWithMarker(
 // case 2: xxxxxxxxxxxxxxxxxxxxxxxxM/ (M is at the end and it should have a / after it)
 // case 3: xxxxxxxxxxxxxxxxxxxxxxxxxM (M is at the end).
 func cutOutTerminatedPath(subPath string, marker string) (string, bool) {
+	// base case of marker being empty
+	if marker == "" {
+		return subPath, true
+	}
 	endsWithSlash := strings.HasSuffix(marker, "/")
 	if !endsWithSlash {
 		marker += "/"
