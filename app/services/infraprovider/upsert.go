@@ -71,7 +71,8 @@ func (c *Service) upsertConfigAndResources(
 	}
 
 	log.Info().Msgf("updated infraconfig %s", infraProviderConfig.Identifier)
-	if err = c.createMissingResources(ctx, infraProviderResources, infraProviderConfigID, space.ID); err != nil {
+	if err = c.createMissingResources(ctx, infraProviderResources, infraProviderConfigID, space.ID,
+		infraProviderConfig.Identifier); err != nil {
 		return err
 	}
 	return nil

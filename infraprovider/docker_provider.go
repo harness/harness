@@ -288,7 +288,8 @@ func (d DockerProvider) ValidateParams(_ []types.InfraProviderParameter) error {
 	return nil
 }
 
-func (d DockerProvider) UpdateParams(ip []types.InfraProviderParameter) ([]types.InfraProviderParameter, error) {
+func (d DockerProvider) UpdateParams(ip []types.InfraProviderParameter,
+	_ string) ([]types.InfraProviderParameter, error) {
 	return ip, nil
 }
 
