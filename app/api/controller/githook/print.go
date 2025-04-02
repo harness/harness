@@ -170,6 +170,38 @@ func printCommitterMismatch(
 	)
 }
 
+func printLFSPointers(
+	output *hook.Output,
+	lfsInfos []git.LFSInfo,
+	total int64,
+) {
+	output.Messages = append(
+		output.Messages,
+		colorScanHeader.Sprintf(
+			"Push references unknown LFS objects:",
+		),
+		"", // add empty line for making it visually more consumable
+	)
+
+	for _, info := range lfsInfos {
+		output.Messages = append(
+			output.Messages,
+			fmt.Sprintf(" Object ID: %s", info.ObjID),
+			fmt.Sprintf(" File SHA : %s", info.SHA),
+			"", // add empty line for making it visually more consumable
+		)
+	}
+
+	output.Messages = append(
+		output.Messages,
+		colorScanSummary.Sprintf(
+			"%d %s missing",
+			total, singularOrPlural("LFS object", total > 1),
+		),
+		"", "", // add two empty lines for making it visually more consumable
+	)
+}
+
 func singularOrPlural(noun string, plural bool) string {
 	if plural {
 		return noun + "s"

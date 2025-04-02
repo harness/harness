@@ -37,5 +37,4 @@ type RestrictedGIT interface {
 		ctx context.Context,
 		params *git.FindOversizeFilesParams,
 	) (*git.FindOversizeFilesOutput, error)
-	ListLFSPointers(ctx context.Context, params *git.ListLFSPointersParams) (*git.ListLFSPointersOutput, error)
 }

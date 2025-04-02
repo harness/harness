@@ -85,6 +85,8 @@ func (c *Controller) processObjects(
 		}
 	}
 
+	preReceiveObjsIn.FindLFSPointersParams = &git.FindLFSPointersParams{}
+
 	preReceiveObjsOut, err := c.git.ProcessPreReceiveObjects(
 		ctx,
 		preReceiveObjsIn,
@@ -113,6 +115,30 @@ func (c *Controller) processObjects(
 			preReceiveObjsIn.FindCommitterMismatchParams.PrincipalEmail,
 			preReceiveObjsOut.FindCommitterMismatchOutput.Total,
 		)
+	}
+
+	if preReceiveObjsOut.FindLFSPointersOutput != nil &&
+		len(preReceiveObjsOut.FindLFSPointersOutput.LFSInfos) > 0 {
+		objIDs := make([]string, len(preReceiveObjsOut.FindLFSPointersOutput.LFSInfos))
+		for i, info := range preReceiveObjsOut.FindLFSPointersOutput.LFSInfos {
+			objIDs[i] = info.ObjID
+		}
+
+		existingObjs, err := c.lfsStore.FindMany(ctx, in.RepoID, objIDs)
+		if err != nil {
+			return fmt.Errorf("failed to find lfs objects: %w", err)
+		}
+
+		//nolint:lll
+		if len(existingObjs) != len(objIDs) {
+			output.Error = ptr.String(
+				"Changes blocked by unknown Git LFS objects. Please try `git lfs push --all` or check if LFS is setup properly.")
+			printLFSPointers(
+				output,
+				preReceiveObjsOut.FindLFSPointersOutput.LFSInfos,
+				preReceiveObjsOut.FindLFSPointersOutput.Total,
+			)
+		}
 	}
 
 	return nil

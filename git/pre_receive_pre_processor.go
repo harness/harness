@@ -20,6 +20,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/parser"
 	"github.com/harness/gitness/git/sha"
@@ -28,6 +29,7 @@ import (
 const (
 	maxOversizeFiles       = 10
 	maxCommitterMismatches = 10
+	maxMissingLFSObjects   = 10
 )
 
 type FindOversizeFilesParams struct {
@@ -62,15 +64,31 @@ type FindCommitterMismatchOutput struct {
 	Total       int64
 }
 
+type FindLFSPointersParams struct {
+	ReadParams
+}
+
+type LFSInfo struct {
+	ObjID string
+	SHA   sha.SHA
+}
+
+type FindLFSPointersOutput struct {
+	LFSInfos []LFSInfo
+	Total    int64
+}
+
 type ProcessPreReceiveObjectsParams struct {
 	ReadParams
 	FindOversizeFilesParams     *FindOversizeFilesParams
 	FindCommitterMismatchParams *FindCommitterMismatchParams
+	FindLFSPointersParams       *FindLFSPointersParams
 }
 
 type ProcessPreReceiveObjectsOutput struct {
 	FindOversizeFilesOutput     *FindOversizeFilesOutput
 	FindCommitterMismatchOutput *FindCommitterMismatchOutput
+	FindLFSPointersOutput       *FindLFSPointersOutput
 }
 
 func (s *Service) ProcessPreReceiveObjects(
@@ -110,6 +128,20 @@ func (s *Service) ProcessPreReceiveObjects(
 		output.FindCommitterMismatchOutput = out
 	}
 
+	if params.FindLFSPointersParams != nil {
+		out, err := s.findLFSPointers(
+			ctx,
+			objects,
+			repoPath,
+			params.ReadParams.AlternateObjectDirs,
+			params.FindLFSPointersParams,
+		)
+		if err != nil {
+			return ProcessPreReceiveObjectsOutput{}, err
+		}
+
+		output.FindLFSPointersOutput = out
+	}
 	return output, nil
 }
 
@@ -204,5 +236,70 @@ func findCommitterMismatch(
 	return &FindCommitterMismatchOutput{
 		CommitInfos: commitInfos,
 		Total:       total,
+	}, nil
+}
+
+func (s *Service) findLFSPointers(
+	ctx context.Context,
+	objects []parser.BatchCheckObject,
+	repoPath string,
+	alternateObjectDirs []string,
+	_ *FindLFSPointersParams,
+) (*FindLFSPointersOutput, error) {
+	var candidateObjects []parser.BatchCheckObject
+	for _, obj := range objects {
+		if obj.Type == string(TreeNodeTypeBlob) && obj.Size <= lfsPointerMaxSize {
+			candidateObjects = append(candidateObjects, obj)
+		}
+	}
+
+	if len(candidateObjects) == 0 {
+		return &FindLFSPointersOutput{}, nil
+	}
+
+	// check the short-listed objects for lfs-pointers content
+	writer, reader, cancel := api.CatFileBatch(ctx, repoPath, alternateObjectDirs)
+	defer cancel()
+
+	var total int64
+	var lfsInfos []LFSInfo
+	for _, obj := range candidateObjects {
+		_, writeErr := writer.Write([]byte(obj.SHA.String() + "\n"))
+		if writeErr != nil {
+			return nil, fmt.Errorf("failed to write to cat-file batch: %w", writeErr)
+		}
+
+		// first line is always the object type, sha, and size
+		_, readErr := reader.ReadString('\n')
+		if readErr != nil {
+			return nil, fmt.Errorf("failed to read cat-file output: %w", readErr)
+		}
+
+		data, readErr := io.ReadAll(io.LimitReader(reader, obj.Size))
+		if readErr != nil {
+			return nil, fmt.Errorf("failed to read cat-file output: %w", readErr)
+		}
+
+		objID, err := parser.GetLFSObjectID(data)
+		if err != nil && !errors.Is(err, parser.ErrInvalidLFSPointer) {
+			return nil, fmt.Errorf("failed to parse cat-file output to get LFS object ID for sha %q: %w", obj.SHA, err)
+		}
+		if err == nil {
+			if total < maxMissingLFSObjects {
+				lfsInfos = append(lfsInfos, LFSInfo{ObjID: objID, SHA: obj.SHA})
+			}
+			total++
+		}
+
+		// skip the trailing new line
+		_, readErr = reader.ReadString('\n')
+		if readErr != nil {
+			return nil, fmt.Errorf("failed to read trailing newline after object: %w", readErr)
+		}
+	}
+
+	return &FindLFSPointersOutput{
+		LFSInfos: lfsInfos,
+		Total:    total,
 	}, nil
 }

@@ -73,23 +73,10 @@ func (s *Service) GetBlob(ctx context.Context, params *GetBlobParams) (*GetBlobO
 	}, nil
 }
 
-type ListLFSPointersParams struct {
-	ReadParams
-}
-
-type ListLFSPointersOutput struct {
-	LFSInfos []LFSInfo
-}
-
-type LFSInfo struct {
-	OID string  `json:"oid"`
-	SHA sha.SHA `json:"sha"`
-}
-
-func (s *Service) ListLFSPointers(
+func (s *Service) FindLFSPointers(
 	ctx context.Context,
-	params *ListLFSPointersParams,
-) (*ListLFSPointersOutput, error) {
+	params *FindLFSPointersParams,
+) (*FindLFSPointersOutput, error) {
 	if params.RepoUID == "" {
 		return nil, api.ErrRepositoryPathEmpty
 	}
@@ -114,7 +101,7 @@ func (s *Service) ListLFSPointers(
 
 	var lfsInfos []LFSInfo
 	if len(candidateObjects) == 0 {
-		return &ListLFSPointersOutput{LFSInfos: lfsInfos}, nil
+		return &FindLFSPointersOutput{LFSInfos: lfsInfos}, nil
 	}
 
 	// check the short-listed objects for lfs-pointers content
@@ -140,12 +127,12 @@ func (s *Service) ListLFSPointers(
 			return nil, fmt.Errorf("failed to read the git cat-file output: %w", err)
 		}
 
-		oid, err := parser.GetLFSOID(content)
+		oid, err := parser.GetLFSObjectID(content)
 		if err != nil && !errors.Is(err, parser.ErrInvalidLFSPointer) {
 			return nil, fmt.Errorf("failed to scan git cat-file output for %s: %w", obj.SHA, err)
 		}
 		if err == nil {
-			lfsInfos = append(lfsInfos, LFSInfo{OID: oid, SHA: obj.SHA})
+			lfsInfos = append(lfsInfos, LFSInfo{ObjID: oid, SHA: obj.SHA})
 		}
 
 		// skip the trailing new line
@@ -155,5 +142,5 @@ func (s *Service) ListLFSPointers(
 		}
 	}
 
-	return &ListLFSPointersOutput{LFSInfos: lfsInfos}, nil
+	return &FindLFSPointersOutput{LFSInfos: lfsInfos}, nil
 }

@@ -125,14 +125,6 @@ func (c *Controller) PreReceive(
 		return hook.Output{}, fmt.Errorf("failed to process pre-receive objects: %w", err)
 	}
 
-	err = c.checkLFSObjects(ctx, rgit, repo, in, &output)
-	if output.Error != nil {
-		return output, nil
-	}
-	if err != nil {
-		return hook.Output{}, err
-	}
-
 	return output, nil
 }
 

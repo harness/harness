@@ -29,7 +29,7 @@ var (
 	ErrInvalidLFSPointer = errors.New("invalid lfs pointer")
 )
 
-func GetLFSOID(content []byte) (string, error) {
+func GetLFSObjectID(content []byte) (string, error) {
 	if !bytes.HasPrefix(content, []byte(lfsPointerVersionPrefix)) {
 		return "", ErrInvalidLFSPointer
 	}
