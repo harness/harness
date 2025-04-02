@@ -610,6 +610,7 @@ export interface StringsMap {
   language: string
   lastTriggeredAt: string
   leaveAComment: string
+  lfsInfo: string
   license: string
   lineBreaks: string
   loading: string

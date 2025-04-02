@@ -25,7 +25,8 @@ import {
   Layout,
   StringSubstitute,
   Tabs,
-  Utils
+  Utils,
+  Text
 } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
 import { Color } from '@harnessio/design-system'
@@ -36,6 +37,7 @@ import type { EditorDidMount } from 'react-monaco-editor'
 import type { editor } from 'monaco-editor'
 import { SourceCodeViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
 import type { OpenapiContentInfo, RepoFileContent, TypesCommit } from 'services/code'
+
 import {
   normalizeGitRef,
   decodeGitContent,
@@ -84,7 +86,7 @@ export function FileContent({
   const { routes } = useAppContext()
   const { getString } = useStrings()
   const downloadFile = useDownloadRawFile()
-  const { category, isText, isFileTooLarge, isViewable, filename, extension, size, base64Data, rawURL } =
+  const { category, isFileTooLarge, isText, isFileLFS, isViewable, filename, extension, size, base64Data, rawURL } =
     useFileContentViewerDecision({ repoMetadata, gitRef, resourcePath, resourceContent })
   const history = useHistory()
   const [activeTab, setActiveTab] = React.useState<string>(FileSection.CONTENT)
@@ -171,7 +173,10 @@ export function FileContent({
     },
     lazy: !repoMetadata
   })
-  const editButtonDisabled = useMemo(() => permsFinal.disabled || !isText, [permsFinal.disabled, isText])
+  const editButtonDisabled = useMemo(
+    () => permsFinal.disabled || (!isText && !isFileLFS),
+    [permsFinal.disabled, isText, isFileLFS]
+  )
   const editAsText = useMemo(
     () => editButtonDisabled && !isFileTooLarge && category === FileCategory.OTHER,
     [editButtonDisabled, isFileTooLarge, category]
@@ -205,6 +210,10 @@ export function FileContent({
     }
   }
 
+  const fullRawURL = standalone
+    ? `${window.location.origin}${rawURL.replace(/^\/code/, '')}`
+    : `${window.location.origin}${getConfig(rawURL)}`.replace('//', '/')
+
   return (
     <Container className={css.tabsContainer} ref={ref}>
       <Tabs
@@ -229,8 +238,18 @@ export function FileContent({
                   />
                   <Container className={css.container} background={Color.WHITE}>
                     <Layout.Horizontal padding="small" className={css.heading}>
-                      <Heading level={5} color={Color.BLACK}>
-                        {resourceContent.name}
+                      <Heading level={5}>
+                        <Layout.Horizontal spacing="small" flex={{ alignItems: 'center' }}>
+                          <span style={{ color: Color.BLACK }}>{resourceContent.name}</span>
+                          {isFileLFS && (
+                            <Layout.Horizontal spacing="xsmall" flex={{ alignItems: 'center' }}>
+                              <Icon name="info" size={12} color={Color.GREY_500} padding={{ left: 'small' }} />
+                              <Text font={{ size: 'small' }} color={Color.GREY_500}>
+                                {getString('lfsInfo')}
+                              </Text>
+                            </Layout.Horizontal>
+                          )}
+                        </Layout.Horizontal>
                       </Heading>
                       <FlexExpander />
                       <Layout.Horizontal spacing="xsmall" style={{ alignItems: 'center' }}>
@@ -408,21 +427,27 @@ export function FileContent({
                                       <Match expr={category}>
                                         <Case val={FileCategory.SVG}>
                                           <img
-                                            src={`data:image/svg+xml;base64,${base64Data}`}
+                                            src={
+                                              isFileLFS ? `${fullRawURL}` : `data:image/svg+xml;base64,${base64Data}`
+                                            }
                                             alt={filename}
                                             style={{ maxWidth: '100%', maxHeight: '100%' }}
                                           />
                                         </Case>
                                         <Case val={FileCategory.IMAGE}>
                                           <img
-                                            src={`data:image/${extension};base64,${base64Data}`}
+                                            src={
+                                              isFileLFS
+                                                ? `${fullRawURL}`
+                                                : `data:image/${extension};base64,${base64Data}`
+                                            }
                                             alt={filename}
                                             style={{ maxWidth: '100%', maxHeight: '100%' }}
                                           />
                                         </Case>
                                         <Case val={FileCategory.PDF}>
                                           <Document
-                                            file={`data:application/pdf;base64,${base64Data}`}
+                                            file={isFileLFS ? fullRawURL : `data:application/pdf;base64,${base64Data}`}
                                             options={{
                                               // TODO: Configure this to use a local worker/webpack loader
                                               cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
@@ -443,19 +468,27 @@ export function FileContent({
                                         </Case>
                                         <Case val={FileCategory.AUDIO}>
                                           <audio controls>
-                                            <source src={`data:audio/${extension};base64,${base64Data}`} />
+                                            <source
+                                              src={
+                                                isFileLFS ? fullRawURL : `data:audio/${extension};base64,${base64Data}`
+                                              }
+                                            />
                                           </audio>
                                         </Case>
                                         <Case val={FileCategory.VIDEO}>
                                           <video controls height={500}>
-                                            <source src={`data:video/${extension};base64,${base64Data}`} />
+                                            <source
+                                              src={
+                                                isFileLFS ? fullRawURL : `data:video/${extension};base64,${base64Data}`
+                                              }
+                                            />
                                           </video>
                                         </Case>
                                         <Case val={FileCategory.TEXT}>
                                           <SourceCodeViewer
                                             editorDidMount={onEditorMount}
                                             language={filenameToLanguage(filename)}
-                                            source={decodeGitContent(base64Data)}
+                                            source={isFileLFS ? fullRawURL : decodeGitContent(base64Data)}
                                           />
                                         </Case>
                                         <Case val={FileCategory.SUBMODULE}>

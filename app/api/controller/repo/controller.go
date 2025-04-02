@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
+	"github.com/harness/gitness/app/api/controller/lfs"
 	"github.com/harness/gitness/app/api/controller/limiter"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
@@ -110,6 +111,7 @@ type Controller struct {
 	instrumentation    instrument.Service
 	rulesSvc           *rules.Service
 	sseStreamer        sse.Streamer
+	lfsCtrl            *lfs.Controller
 }
 
 func NewController(
@@ -148,6 +150,7 @@ func NewController(
 	userGroupService usergroup.SearchService,
 	rulesSvc *rules.Service,
 	sseStreamer sse.Streamer,
+	lfsCtrl *lfs.Controller,
 ) *Controller {
 	return &Controller{
 		defaultBranch:      config.Git.DefaultBranch,
@@ -185,6 +188,7 @@ func NewController(
 		userGroupService:   userGroupService,
 		rulesSvc:           rulesSvc,
 		sseStreamer:        sseStreamer,
+		lfsCtrl:            lfsCtrl,
 	}
 }
 

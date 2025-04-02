@@ -23,17 +23,38 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
+type Content struct {
+	Data io.ReadCloser
+	Size int64
+}
+
+func (c *Content) Read(p []byte) (n int, err error) {
+	return c.Data.Read(p)
+}
+
+func (c *Content) Close() error {
+	return c.Data.Close()
+}
+
 func (c *Controller) Download(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 	oid string,
-) (io.ReadCloser, error) {
+) (*Content, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to repo: %w", err)
 	}
 
-	_, err = c.lfsStore.Find(ctx, repo.ID, oid)
+	return c.DownloadNoAuth(ctx, repo.ID, oid)
+}
+
+func (c *Controller) DownloadNoAuth(
+	ctx context.Context,
+	repoID int64,
+	oid string,
+) (*Content, error) {
+	obj, err := c.lfsStore.Find(ctx, repoID, oid)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find the oid %q for the repo: %w", oid, err)
 	}
@@ -44,5 +65,8 @@ func (c *Controller) Download(ctx context.Context,
 		return nil, fmt.Errorf("failed to download file from blobstore: %w", err)
 	}
 
-	return file, nil
+	return &Content{
+		Data: file,
+		Size: obj.Size,
+	}, nil
 }

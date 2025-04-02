@@ -63,6 +63,12 @@ func processGitRequest(r *http.Request) (bool, error) {
 	const receivePackPath = "/" + receivePack
 	const serviceParam = "service"
 
+	const lfsTransferPath = "/info/lfs/objects"
+	const lfsTransferBatchPath = lfsTransferPath + "/batch"
+
+	const oidParam = "oid"
+	const sizeParam = "size"
+
 	allowedServices := []string{
 		uploadPack,
 		receivePack,
@@ -84,6 +90,11 @@ func processGitRequest(r *http.Request) (bool, error) {
 			}
 			return pathTerminatedWithMarkerAndURL(r, "", infoRefsPath, infoRefsPath, urlPath)
 		}
+		// check if request is coming from git lfs client
+		if strings.HasSuffix(urlPath, lfsTransferPath) && r.URL.Query().Has(oidParam) {
+			return pathTerminatedWithMarkerAndURL(r, "", lfsTransferPath, lfsTransferPath, urlPath)
+		}
+
 	case http.MethodPost:
 		if strings.HasSuffix(urlPath, uploadPackPath) {
 			return pathTerminatedWithMarkerAndURL(r, "", uploadPackPath, uploadPackPath, urlPath)
@@ -91,6 +102,16 @@ func processGitRequest(r *http.Request) (bool, error) {
 
 		if strings.HasSuffix(urlPath, receivePackPath) {
 			return pathTerminatedWithMarkerAndURL(r, "", receivePackPath, receivePackPath, urlPath)
+		}
+
+		if strings.HasSuffix(urlPath, lfsTransferBatchPath) {
+			return pathTerminatedWithMarkerAndURL(r, "", lfsTransferBatchPath, lfsTransferBatchPath, urlPath)
+		}
+
+	case http.MethodPut:
+		if strings.HasSuffix(urlPath, lfsTransferPath) &&
+			r.URL.Query().Has(oidParam) && r.URL.Query().Has(sizeParam) {
+			return pathTerminatedWithMarkerAndURL(r, "", lfsTransferPath, lfsTransferPath, urlPath)
 		}
 	}
 

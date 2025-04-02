@@ -48,7 +48,7 @@ func (c *Controller) Upload(ctx context.Context,
 		return nil, usererror.BadRequest("no file or content provided")
 	}
 
-	bufReader := bufio.NewReader(file)
+	bufReader := bufio.NewReader(io.LimitReader(file, pointer.Size))
 	objPath := getLFSObjectPath(pointer.OId)
 
 	err = c.blobStore.Upload(ctx, bufReader, objPath)

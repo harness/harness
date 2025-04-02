@@ -602,6 +602,7 @@ tagEmpty: There are no tags in your repo. Click the button below to create a tag
 newTag: New Tag
 overview: Overview
 fileTooLarge: File is too large to open. {download}
+lfsInfo: Stored with Git LFS
 clickHereToDownload: Click here to download.
 viewFileHistory: View the file at this point in the history
 viewRepo: View the repository at this point in the history

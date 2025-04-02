@@ -29,6 +29,7 @@ type UseFileViewerDecisionProps = Pick<GitInfoProps, 'repoMetadata' | 'gitRef' |
 interface UseFileViewerDecisionResult {
   category: FileCategory
   isFileTooLarge: boolean
+  isFileLFS: boolean
   isViewable: string | boolean
   filename: string
   extension: string
@@ -95,19 +96,28 @@ export function useFileContentViewerDecision({
       : FileCategory.OTHER
     const isViewable = isPdf || isSVG || isImage || isAudio || isVideo || isText || isSubmodule || isSymlink
     const resourceData = resourceContent?.content as RepoContentExtended
+    const isFileLFS = resourceData?.lfs_object_id ? true : false
+
     const isFileTooLarge =
-      resourceData?.size && resourceData?.data_size ? resourceData?.size !== resourceData?.data_size : false
+      (isFileLFS
+        ? resourceData?.data_size &&
+          resourceData?.lfs_object_size &&
+          resourceData?.lfs_object_size > MAX_VIEWABLE_FILE_SIZE
+        : resourceData?.data_size && resourceData?.size && resourceData?.data_size !== resourceData?.size) || false
+
     const rawURL = `/code/api/v1/repos/${repoMetadata?.path}/+/raw/${resourcePath}?routingId=${routingId}&git_ref=${gitRef}`
+
     return {
       category,
 
       isFileTooLarge,
-      isViewable,
       isText,
+      isFileLFS,
+      isViewable,
 
       filename,
       extension,
-      size: resourceData?.size || 0,
+      size: isFileLFS ? resourceData?.lfs_object_size || 0 : resourceData?.size || 0,
 
       // base64 data returned from content API. This snapshot can be truncated by backend
       base64Data: resourceData?.data || resourceData?.target || resourceData?.url || '',
@@ -119,7 +129,7 @@ export function useFileContentViewerDecision({
   return metadata
 }
 
-export const MAX_VIEWABLE_FILE_SIZE = 100 * 1024 * 1024 // 100 MB
+export const MAX_VIEWABLE_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
 
 export enum FileCategory {
   MARKDOWN = 'MARKDOWN',

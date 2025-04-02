@@ -25,11 +25,6 @@ import (
 	"github.com/harness/gitness/git/sha"
 )
 
-// lfsPointerMaxSize is the maximum size for an LFS pointer file.
-// This is used to identify blobs that are too large to be valid LFS pointers.
-// lfs-pointer specification ref: https://github.com/git-lfs/git-lfs/blob/master/docs/spec.md#the-pointer
-const lfsPointerMaxSize = 200
-
 type GetBlobParams struct {
 	ReadParams
 	SHA       string
@@ -94,7 +89,7 @@ func (s *Service) FindLFSPointers(
 
 	var candidateObjects []parser.BatchCheckObject
 	for _, obj := range objects {
-		if obj.Type == string(TreeNodeTypeBlob) && obj.Size <= lfsPointerMaxSize {
+		if obj.Type == string(TreeNodeTypeBlob) && obj.Size <= parser.LfsPointerMaxSize {
 			candidateObjects = append(candidateObjects, obj)
 		}
 	}

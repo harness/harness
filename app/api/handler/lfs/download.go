@@ -16,6 +16,7 @@ package lfs
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
@@ -24,6 +25,8 @@ import (
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/url"
+
+	"github.com/rs/zerolog/log"
 )
 
 func HandleLFSDownload(controller *lfs.Controller, urlProvider url.Provider) http.HandlerFunc {
@@ -42,7 +45,7 @@ func HandleLFSDownload(controller *lfs.Controller, urlProvider url.Provider) htt
 			return
 		}
 
-		file, err := controller.Download(ctx, session, repoRef, oid)
+		resp, err := controller.Download(ctx, session, repoRef, oid)
 		if errors.Is(err, apiauth.ErrNotAuthorized) && auth.IsAnonymousSession(session) {
 			render.GitBasicAuth(ctx, w, urlProvider)
 			return
@@ -51,8 +54,14 @@ func HandleLFSDownload(controller *lfs.Controller, urlProvider url.Provider) htt
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
-		defer file.Close()
+		defer func() {
+			if err := resp.Data.Close(); err != nil {
+				log.Ctx(ctx).Warn().Err(err).Msgf("failed to close LFS file reader for %q.", oid)
+			}
+		}()
+
+		w.Header().Add("Content-Length", fmt.Sprint(resp.Size))
 		// apply max byte size
-		render.Reader(ctx, w, http.StatusOK, file)
+		render.Reader(ctx, w, http.StatusOK, resp.Data)
 	}
 }

@@ -6581,6 +6581,10 @@ paths:
             type: string
       responses:
         '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenapiRawOutput'
           description: OK
         '401':
           content:
@@ -13701,6 +13705,19 @@ components:
           $ref: '#/components/schemas/EnumContentEncodingType'
         size:
           type: integer
+        lfs_object_id:
+          type: string
+        lfs_object_size:
+          type: integer
+      type: object
+    OpenapiRawOutput:
+      properties:
+        data:
+          type: string
+        size:
+          type: integer
+        sha:
+          type: string
       type: object
     RepoListPathsOutput:
       properties:

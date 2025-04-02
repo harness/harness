@@ -16,15 +16,29 @@ package parser
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"regexp"
+	"strconv"
+
+	"github.com/rs/zerolog/log"
 )
+
+// LfsPointerMaxSize is the maximum size for an LFS pointer file.
+// This is used to identify blobs that are too large to be valid LFS pointers.
+// lfs-pointer specification ref: https://github.com/git-lfs/git-lfs/blob/master/docs/spec.md#the-pointer
+const LfsPointerMaxSize = 200
 
 const lfsPointerVersionPrefix = "version https://git-lfs.github.com/spec"
 
+type LFSPointer struct {
+	OID  string
+	Size int64
+}
+
 var (
 	regexLFSOID  = regexp.MustCompile(`(?m)^oid sha256:([a-f0-9]{64})$`)
-	regexLFSSize = regexp.MustCompile(`(?m)^size [0-9]+$`)
+	regexLFSSize = regexp.MustCompile(`(?m)^size (\d+)+$`)
 
 	ErrInvalidLFSPointer = errors.New("invalid lfs pointer")
 )
@@ -44,4 +58,36 @@ func GetLFSObjectID(content []byte) (string, error) {
 	}
 
 	return string(oidMatch[1]), nil
+}
+
+func IsLFSPointer(
+	ctx context.Context,
+	content []byte,
+	size int64,
+) (*LFSPointer, bool) {
+	if size > LfsPointerMaxSize {
+		return nil, false
+	}
+
+	if !bytes.HasPrefix(content, []byte(lfsPointerVersionPrefix)) {
+		return nil, false
+	}
+
+	oidMatch := regexLFSOID.FindSubmatch(content)
+	if oidMatch == nil {
+		return nil, false
+	}
+
+	sizeMatch := regexLFSSize.FindSubmatch(content)
+	if sizeMatch == nil {
+		return nil, false
+	}
+
+	contentSize, err := strconv.ParseInt(string(sizeMatch[1]), 10, 64)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msgf("failed to parse lfs pointer size for object ID %s", oidMatch[1])
+		return nil, false
+	}
+
+	return &LFSPointer{OID: string(oidMatch[1]), Size: contentSize}, true
 }

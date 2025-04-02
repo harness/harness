@@ -122,7 +122,7 @@ func GitLFSHandler(r chi.Router, lfsCtrl *lfs.Controller, urlProvider url.Provid
 	r.Route("/info/lfs", func(r chi.Router) {
 		r.Route("/objects", func(r chi.Router) {
 			r.Post("/batch", handlerlfs.HandleLFSTransfer(lfsCtrl, urlProvider))
-			// direct download and upload handlers for lfs objects
+			// direct upload and download handlers for lfs objects
 			r.Put("/", handlerlfs.HandleLFSUpload(lfsCtrl, urlProvider))
 			r.Get("/", handlerlfs.HandleLFSDownload(lfsCtrl, urlProvider))
 		})

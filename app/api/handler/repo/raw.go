@@ -41,26 +41,26 @@ func HandleRaw(repoCtrl *repo.Controller) http.HandlerFunc {
 		gitRef := request.GetGitRefFromQueryOrDefault(r, "")
 		path := request.GetOptionalRemainderFromPath(r)
 
-		dataReader, dataLength, sha, err := repoCtrl.Raw(ctx, session, repoRef, gitRef, path)
+		resp, err := repoCtrl.Raw(ctx, session, repoRef, gitRef, path)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		defer func() {
-			if err := dataReader.Close(); err != nil {
+			if err := resp.Data.Close(); err != nil {
 				log.Ctx(ctx).Warn().Err(err).Msgf("failed to close blob content reader.")
 			}
 		}()
 
 		ifNoneMatch, ok := request.GetIfNoneMatchFromHeader(r)
-		if ok && ifNoneMatch == sha.String() {
+		if ok && ifNoneMatch == resp.SHA.String() {
 			w.WriteHeader(http.StatusNotModified)
 			return
 		}
 
-		w.Header().Add("Content-Length", fmt.Sprint(dataLength))
-		w.Header().Add(request.HeaderETag, sha.String())
-		render.Reader(ctx, w, http.StatusOK, dataReader)
+		w.Header().Add("Content-Length", fmt.Sprint(resp.Size))
+		w.Header().Add(request.HeaderETag, resp.SHA.String())
+		render.Reader(ctx, w, http.StatusOK, resp.Data)
 	}
 }

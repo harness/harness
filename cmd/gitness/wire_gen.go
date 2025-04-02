@@ -282,7 +282,18 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	rulesService := rules.ProvideService(transactor, ruleStore, repoStore, spaceStore, protectionManager, auditService, instrumentService, principalInfoCache, userGroupStore, searchService, reporter2, streamer)
-	repoController := repo.ProvideController(config, transactor, provider, authorizer, repoStore, spaceStore, pipelineStore, principalStore, executionStore, ruleStore, checkStore, pullReqStore, settingsService, principalInfoCache, protectionManager, gitInterface, spaceFinder, repoFinder, repository, codeownersService, eventsReporter, indexer, resourceLimiter, lockerLocker, auditService, mutexManager, repoIdentifier, repoCheck, publicaccessService, labelService, instrumentService, userGroupStore, searchService, rulesService, streamer)
+	lfsObjectStore := database.ProvideLFSObjectStore(db)
+	blobConfig, err := server.ProvideBlobStoreConfig(config)
+	if err != nil {
+		return nil, err
+	}
+	blobStore, err := blob.ProvideStore(ctx, blobConfig)
+	if err != nil {
+		return nil, err
+	}
+	remoteauthService := remoteauth.ProvideRemoteAuth(tokenStore, principalStore)
+	lfsController := lfs.ProvideController(authorizer, repoFinder, principalStore, lfsObjectStore, blobStore, remoteauthService, provider)
+	repoController := repo.ProvideController(config, transactor, provider, authorizer, repoStore, spaceStore, pipelineStore, principalStore, executionStore, ruleStore, checkStore, pullReqStore, settingsService, principalInfoCache, protectionManager, gitInterface, spaceFinder, repoFinder, repository, codeownersService, eventsReporter, indexer, resourceLimiter, lockerLocker, auditService, mutexManager, repoIdentifier, repoCheck, publicaccessService, labelService, instrumentService, userGroupStore, searchService, rulesService, streamer, lfsController)
 	reposettingsController := reposettings.ProvideController(authorizer, repoFinder, settingsService, auditService)
 	stageStore := database.ProvideStageStore(db)
 	schedulerScheduler, err := scheduler.ProvideScheduler(stageStore, mutexManager)
@@ -438,7 +449,6 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	lfsObjectStore := database.ProvideLFSObjectStore(db)
 	githookController := githook.ProvideController(authorizer, principalStore, repoStore, repoFinder, reporter9, eventsReporter, gitInterface, pullReqStore, provider, protectionManager, clientFactory, resourceLimiter, settingsService, preReceiveExtender, updateExtender, postReceiveExtender, streamer, lfsObjectStore)
 	serviceaccountController := serviceaccount.NewController(principalUID, authorizer, principalStore, spaceStore, repoStore, tokenStore)
 	principalController := principal.ProvideController(principalStore, authorizer)
@@ -446,14 +456,6 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	v2 := check2.ProvideCheckSanitizers()
 	checkController := check2.ProvideController(transactor, authorizer, spaceStore, checkStore, spaceFinder, repoFinder, gitInterface, v2, streamer)
 	systemController := system.NewController(principalStore, config)
-	blobConfig, err := server.ProvideBlobStoreConfig(config)
-	if err != nil {
-		return nil, err
-	}
-	blobStore, err := blob.ProvideStore(ctx, blobConfig)
-	if err != nil {
-		return nil, err
-	}
 	uploadController := upload.ProvideController(authorizer, repoFinder, blobStore)
 	searcher := keywordsearch.ProvideSearcher(localIndexSearcher)
 	keywordsearchController := keywordsearch2.ProvideController(authorizer, searcher, repoController, spaceController)
@@ -541,8 +543,6 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	handler4 := router.PackageHandlerProvider(packagesHandler, mavenHandler, genericHandler, pythonHandler, nugetHandler)
 	appRouter := router.AppRouterProvider(registryOCIHandler, apiHandler, handler2, handler3, handler4)
 	sender := usage.ProvideMediator(ctx, config, spaceFinder, usageMetricStore)
-	remoteauthService := remoteauth.ProvideRemoteAuth(tokenStore, principalStore)
-	lfsController := lfs.ProvideController(authorizer, repoFinder, principalStore, lfsObjectStore, blobStore, remoteauthService, provider)
 	routerRouter := router2.ProvideRouter(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, usergroupController, checkController, systemController, uploadController, keywordsearchController, infraproviderController, gitspaceController, migrateController, provider, openapiService, appRouter, sender, lfsController)
 	serverServer := server2.ProvideServer(config, routerRouter)
 	publickeyService := publickey.ProvidePublicKey(publicKeyStore, principalInfoCache)

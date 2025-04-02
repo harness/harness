@@ -15,6 +15,7 @@
 package repo
 
 import (
+	"github.com/harness/gitness/app/api/controller/lfs"
 	"github.com/harness/gitness/app/api/controller/limiter"
 	"github.com/harness/gitness/app/auth/authz"
 	repoevents "github.com/harness/gitness/app/events/repo"
@@ -84,6 +85,7 @@ func ProvideController(
 	userGroupService usergroup.SearchService,
 	rulesSvc *rules.Service,
 	sseStreamer sse.Streamer,
+	lfsCtrl *lfs.Controller,
 ) *Controller {
 	return NewController(config, tx, urlProvider,
 		authorizer,
@@ -92,7 +94,7 @@ func ProvideController(
 		principalInfoCache, protectionManager, rpcClient, spaceFinder, repoFinder, importer,
 		codeOwners, repoReporter, indexer, limiter, locker, auditService, mtxManager, identifierCheck,
 		repoChecks, publicAccess, labelSvc, instrumentation, userGroupStore, userGroupService,
-		rulesSvc, sseStreamer,
+		rulesSvc, sseStreamer, lfsCtrl,
 	)
 }
 

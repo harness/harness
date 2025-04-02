@@ -248,7 +248,7 @@ func (s *Service) findLFSPointers(
 ) (*FindLFSPointersOutput, error) {
 	var candidateObjects []parser.BatchCheckObject
 	for _, obj := range objects {
-		if obj.Type == string(TreeNodeTypeBlob) && obj.Size <= lfsPointerMaxSize {
+		if obj.Type == string(TreeNodeTypeBlob) && obj.Size <= parser.LfsPointerMaxSize {
 			candidateObjects = append(candidateObjects, obj)
 		}
 	}

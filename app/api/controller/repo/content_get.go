@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/git/parser"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -33,7 +34,7 @@ import (
 const (
 	// maxGetContentFileSize specifies the maximum number of bytes a file content response contains.
 	// If a file is any larger, the content is truncated.
-	maxGetContentFileSize = 1 << 22 // 4 MB
+	maxGetContentFileSize = 10 * 1024 * 1024 // 10 MB
 )
 
 type ContentType string
@@ -64,10 +65,12 @@ type Content interface {
 }
 
 type FileContent struct {
-	Encoding enum.ContentEncodingType `json:"encoding"`
-	Data     string                   `json:"data"`
-	Size     int64                    `json:"size"`
-	DataSize int64                    `json:"data_size"`
+	Encoding      enum.ContentEncodingType `json:"encoding"`
+	Data          string                   `json:"data"`
+	Size          int64                    `json:"size"`
+	DataSize      int64                    `json:"data_size"`
+	LFSObjectID   string                   `json:"lfs_object_id,omitempty"`
+	LFSObjectSize int64                    `json:"lfs_object_size,omitempty"`
 }
 
 func (c *FileContent) isContent() {}
@@ -198,6 +201,19 @@ func (c *Controller) getFileContent(ctx context.Context,
 	content, err := io.ReadAll(output.Content)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read blob content: %w", err)
+	}
+
+	// check if blob is an LFS pointer
+	lfsInfo, ok := parser.IsLFSPointer(ctx, content, output.Size)
+	if ok {
+		return &FileContent{
+			Size:          output.Size,
+			DataSize:      output.ContentSize,
+			Encoding:      enum.ContentEncodingTypeBase64,
+			Data:          base64.StdEncoding.EncodeToString(content),
+			LFSObjectID:   lfsInfo.OID,
+			LFSObjectSize: lfsInfo.Size,
+		}, nil
 	}
 
 	return &FileContent{

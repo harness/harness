@@ -533,6 +533,12 @@ export interface OpenapiGetContentOutput {
   type?: OpenapiContentType
 }
 
+export interface OpenapiRawOutput {
+  data?: ArrayBuffer
+  size?: number
+  sha?: string
+}
+
 export interface OpenapiLoginRequest {
   login_identifier?: string
   password?: string
@@ -858,6 +864,8 @@ export interface RepoFileContent {
   data_size?: number
   encoding?: EnumContentEncodingType
   size?: number
+  lfs_object_id?: string
+  lfs_object_size?: number
 }
 
 export interface RepoListPathsOutput {
@@ -6448,22 +6456,28 @@ export interface GetRawPathParams {
   path: string
 }
 
-export type GetRawProps = Omit<GetProps<void, UsererrorError, GetRawQueryParams, GetRawPathParams>, 'path'> &
+export type GetRawProps = Omit<
+  GetProps<OpenapiRawOutput, UsererrorError, GetRawQueryParams, GetRawPathParams>,
+  'path'
+> &
   GetRawPathParams
 
 export const GetRaw = ({ repo_ref, path, ...props }: GetRawProps) => (
-  <Get<void, UsererrorError, GetRawQueryParams, GetRawPathParams>
+  <Get<OpenapiRawOutput, UsererrorError, GetRawQueryParams, GetRawPathParams>
     path={`/repos/${repo_ref}/raw/${path}`}
     base={getConfig('code/api/v1')}
     {...props}
   />
 )
 
-export type UseGetRawProps = Omit<UseGetProps<void, UsererrorError, GetRawQueryParams, GetRawPathParams>, 'path'> &
+export type UseGetRawProps = Omit<
+  UseGetProps<OpenapiRawOutput, UsererrorError, GetRawQueryParams, GetRawPathParams>,
+  'path'
+> &
   GetRawPathParams
 
 export const useGetRaw = ({ repo_ref, path, ...props }: UseGetRawProps) =>
-  useGet<void, UsererrorError, GetRawQueryParams, GetRawPathParams>(
+  useGet<OpenapiRawOutput, UsererrorError, GetRawQueryParams, GetRawPathParams>(
     (paramsInPath: GetRawPathParams) => `/repos/${paramsInPath.repo_ref}/raw/${paramsInPath.path}`,
     { base: getConfig('code/api/v1'), pathParams: { repo_ref, path }, ...props }
   )
