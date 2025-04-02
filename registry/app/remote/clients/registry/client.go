@@ -152,13 +152,14 @@ type Client interface {
 
 	// GetFileFromURL Download the file from URL instead of provided endpoint. Authorizer still remains the same.
 	GetFileFromURL(url string) (*commons.ResponseHeaders, io.ReadCloser, error)
+	GetURL(filePath string) string
 }
 
 // NewClient creates a registry client with the default authorizer which determines the auth scheme
 // of the registry automatically and calls the corresponding underlying authorizers(basic/bearer) to
 // do the auth work. If a customized authorizer is needed, use "NewClientWithAuthorizer" instead.
-func NewClient(url, username, password string, insecure bool, interceptors ...interceptor.Interceptor) Client {
-	authorizer := auth.NewAuthorizer(username, password, insecure)
+func NewClient(url, username, password string, insecure, isOCI bool, interceptors ...interceptor.Interceptor) Client {
+	authorizer := auth.NewAuthorizer(username, password, insecure, isOCI)
 	return NewClientWithAuthorizer(url, authorizer, insecure, interceptors...)
 }
 
@@ -874,4 +875,8 @@ func (c *client) HeadFile(filePath string) (*commons.ResponseHeaders, bool, erro
 
 func buildFileURL(endpoint, filePath string) string {
 	return fmt.Sprintf("%s/%s", endpoint, filePath)
+}
+
+func (c *client) GetURL(filePath string) string {
+	return buildFileURL(c.url, filePath)
 }

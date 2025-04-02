@@ -17,9 +17,11 @@ package pypi
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"regexp"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"golang.org/x/net/html"
 )
 
@@ -48,14 +50,33 @@ type SimpleMetadata struct {
 }
 
 type Package struct {
-	Name  string
-	ATags map[string]string
+	SimpleURL string
+	Name      string
+	ATags     map[string]string
 }
 
 // URL returns the "href" attribute from the package's map.
 func (p Package) URL() string {
-	return p.ATags["href"]
+	href := p.ATags["href"]
+	parsedURL, err := url.Parse(href)
+	if err != nil {
+		return href
+	}
+
+	if parsedURL.IsAbs() {
+		return href
+	}
+
+	// If href is relative, resolve it against SimpleURL
+	baseURL, err := url.Parse(p.SimpleURL)
+	if err != nil {
+		log.Err(err).Msgf("failed to parse url %s", p.SimpleURL)
+		return href
+	}
+
+	return baseURL.ResolveReference(parsedURL).String()
 }
+
 func (p Package) Valid() bool {
 	return p.URL() != "" && p.Name != ""
 }

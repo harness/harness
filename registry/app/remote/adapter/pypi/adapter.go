@@ -76,7 +76,7 @@ func (f *factory) Create(
 }
 
 func init() {
-	adapterType := string(artifact.UpstreamConfigSourcePyPi)
+	adapterType := string(artifact.PackageTypePYTHON)
 	if err := adp.RegisterFactory(adapterType, new(factory)); err != nil {
 		log.Error().Stack().Err(err).Msgf("Failed to register adapter factory for %s", adapterType)
 		return
@@ -85,12 +85,16 @@ func init() {
 }
 
 func (a *adapter) GetMetadata(_ context.Context, pkg string) (*pypi.SimpleMetadata, error) {
-	_, readCloser, err := a.GetFile("simple/" + pkg)
+	filePath := "simple/" + pkg
+	if a.registry.RepoURL != PyPiURL {
+		filePath += "/index.html"
+	}
+	_, readCloser, err := a.GetFile(filePath)
 	if err != nil {
 		return nil, err
 	}
 	defer readCloser.Close()
-	response, err := ParsePyPISimple(readCloser)
+	response, err := ParsePyPISimple(readCloser, a.GetURL(filePath))
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +174,7 @@ func ParseMetadata(ctx context.Context, body io.ReadCloser) (python.Metadata, er
 }
 
 // ParsePyPISimple parses the given HTML and returns a SimpleMetadata DTO.
-func ParsePyPISimple(r io.ReadCloser) (pypi.SimpleMetadata, error) {
+func ParsePyPISimple(r io.ReadCloser, url string) (pypi.SimpleMetadata, error) {
 	doc, err := html.Parse(r)
 	if err != nil {
 		return pypi.SimpleMetadata{}, err
@@ -214,8 +218,9 @@ func ParsePyPISimple(r io.ReadCloser) (pypi.SimpleMetadata, error) {
 					linkText = n.FirstChild.Data
 				}
 				packages = append(packages, pypi.Package{
-					ATags: aMap,
-					Name:  linkText,
+					SimpleURL: url,
+					ATags:     aMap,
+					Name:      linkText,
 				})
 			}
 		}

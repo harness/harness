@@ -68,7 +68,7 @@ func (r *remoteRegistryHelper) init(
 	spaceFinder refcache.SpaceFinder,
 	service secret.Service,
 ) error {
-	key := string(artifact.UpstreamConfigSourcePyPi)
+	key := string(artifact.PackageTypePYTHON)
 	if r.registry.Source == string(artifact.UpstreamConfigSourcePyPi) {
 		r.registry.RepoURL = pypi.PyPiURL
 	}

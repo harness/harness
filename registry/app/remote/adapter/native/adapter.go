@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/harness/gitness/app/services/refcache"
+	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/common/lib"
 	"github.com/harness/gitness/registry/app/common/lib/errors"
 	adp "github.com/harness/gitness/registry/app/remote/adapter"
@@ -60,7 +61,8 @@ func NewAdapter(
 		return nil
 	}
 
-	adapter.Client = registry.NewClient(url, accessKey, secretKey, false)
+	adapter.Client = registry.NewClient(url, accessKey, secretKey, false,
+		reg.PackageType == artifact.PackageTypeDOCKER || reg.PackageType == artifact.PackageTypeHELM)
 	return adapter
 }
 

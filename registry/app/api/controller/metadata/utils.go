@@ -369,6 +369,8 @@ func GetPullCommand(
 		return GetHelmPullCommand(image, tag, registryURL)
 	case string(a.PackageTypeGENERIC):
 		return GetGenericArtifactFileDownloadCommand(registryURL, image, tag, "<FILENAME>")
+	case string(a.PackageTypePYTHON):
+		return GetPythonDownloadCommand(image, tag)
 	default:
 		return ""
 	}
@@ -383,6 +385,22 @@ func GetDockerPullCommand(
 
 func GetHelmPullCommand(image string, tag string, registryURL string) string {
 	return "helm pull oci://" + GetRepoURLWithoutProtocol(registryURL) + "/" + image + " --version " + tag
+}
+
+func GetPythonDownloadCommand(artifact, version string) string {
+	downloadCommand := "pip install <ARTIFACT>==<VERSION> "
+
+	// Replace the placeholders with the actual values
+	replacements := map[string]string{
+		"<ARTIFACT>": artifact,
+		"<VERSION>":  version,
+	}
+
+	for placeholder, value := range replacements {
+		downloadCommand = strings.ReplaceAll(downloadCommand, placeholder, value)
+	}
+
+	return downloadCommand
 }
 
 func GetGenericArtifactFileDownloadCommand(regURL, artifact, version, filename string) string {

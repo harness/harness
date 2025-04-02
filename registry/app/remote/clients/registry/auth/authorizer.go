@@ -34,10 +34,11 @@ import (
 )
 
 // NewAuthorizer creates an authorizer that can handle different auth schemes.
-func NewAuthorizer(username, password string, insecure bool) lib.Authorizer {
+func NewAuthorizer(username, password string, insecure, isOCI bool) lib.Authorizer {
 	return &authorizer{
 		username: username,
 		password: password,
+		isOCI:    isOCI,
 		client: &http.Client{
 			Transport: commonhttp.GetHTTPTransport(commonhttp.WithInsecure(insecure)),
 		},
@@ -54,6 +55,7 @@ type authorizer struct {
 	client     *http.Client
 	url        *url.URL          // registry URL
 	authorizer modifier.Modifier // the underlying authorizer
+	isOCI      bool
 }
 
 func (a *authorizer) Modify(req *http.Request) error {
@@ -82,6 +84,12 @@ func (a *authorizer) initialize(u *url.URL) error {
 	if a.authorizer != nil {
 		return nil
 	}
+
+	if !a.isOCI {
+		a.authorizer = basic.NewAuthorizer(a.username, a.password)
+		return nil
+	}
+
 	url, err := url.Parse(u.Scheme + "://" + u.Host + "/v2/")
 	if err != nil {
 		return fmt.Errorf("failed to parse URL for scheme %s and host %s: %w", u.Scheme, u.Host, err)
@@ -128,15 +136,17 @@ func (a *authorizer) initialize(u *url.URL) error {
 // If not, the request shouldn't be handled by the authorizer, e.g., requests sent to backend storage (S3, etc.).
 func (a *authorizer) isTarget(req *http.Request) bool {
 	// Check if the path contains the versioned API endpoint (e.g., "/v2/")
-	const versionedPath = "/v2/"
-	if !strings.Contains(req.URL.Path, versionedPath) {
-		return false
-	}
+	if a.isOCI {
+		const versionedPath = "/v2/"
+		if !strings.Contains(req.URL.Path, versionedPath) {
+			return false
+		}
 
-	// Ensure that the request's host, scheme, and versioned path match the authorizer's URL.
-	if req.URL.Host != a.url.Host || req.URL.Scheme != a.url.Scheme ||
-		!strings.HasPrefix(req.URL.Path, a.url.Path) {
-		return false
+		// Ensure that the request's host, scheme, and versioned path match the authorizer's URL.
+		if req.URL.Host != a.url.Host || req.URL.Scheme != a.url.Scheme ||
+			!strings.HasPrefix(req.URL.Path, a.url.Path) {
+			return false
+		}
 	}
 
 	return true
