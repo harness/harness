@@ -58,10 +58,10 @@ const InfraDetails = () => {
 
   useEffect(() => {
     if (data) {
-      const { identifier, metadata }: OpenapiCreateInfraProviderConfigRequest = data
+      const { identifier, metadata, name }: OpenapiCreateInfraProviderConfigRequest = data
       const payload: InfraDetailsFormikProps = {
         identifier: identifier,
-        name: metadata?.name,
+        name: name,
         domain: metadata?.domain,
         machine_type: metadata?.gateway?.machine_type,
         instances: metadata?.gateway?.instances,
@@ -126,7 +126,7 @@ const InfraDetails = () => {
                   identifier,
                   metadata: {
                     domain,
-                    name,
+                    name: identifier,
                     region_configs,
                     project: {
                       id: project
