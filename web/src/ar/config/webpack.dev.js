@@ -44,6 +44,7 @@ const devConfig = {
     },
     port: 8191,
     hot: true,
+    host: 'localhost',
     allowedHosts: 'all',
     proxy: {
       '/api': {

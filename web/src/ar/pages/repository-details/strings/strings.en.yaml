@@ -36,6 +36,7 @@ repositoryForm:
       cardTitle: Built-in Container Scanners
       cardSubTitle: Container scanners detect vulnerabilities in your container images. Select scanner(s) below to add them in your pipeline.
       scannerNoteForRequiredConfiguration: To enable scanning for account level or org level registries, please create a project with id set to <b>default_project</b> in your <b>{{orgName}}</b> org.
+      scannerNoteForRequiredLicense: You need a valid license of Supply Chain Security and Security Testing Orchestration to enabled scanning.
 tabs:
   configuration: Configuration
   packages: '{{ $.artifactList.pageHeading }}'

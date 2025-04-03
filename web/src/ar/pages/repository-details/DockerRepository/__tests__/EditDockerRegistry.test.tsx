@@ -262,7 +262,7 @@ describe('Verify configuration form', () => {
       const ele = each.querySelector(`input[value=${supportedScanners[idx]}][type=checkbox]`)
       expect(ele).toBeInTheDocument()
       expect(ele).toBeChecked()
-      expect(ele).toBeDisabled()
+      expect(ele).not.toBeDisabled()
     })
 
     // upstream proxy section

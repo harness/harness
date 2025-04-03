@@ -22,8 +22,7 @@ import type { StringKeys } from '@ar/frameworks/strings'
 
 export const WebhookTriggerLabelMap: Record<Trigger, StringKeys> = {
   ARTIFACT_CREATION: 'webhookList.triggers.artifactCreation',
-  ARTIFACT_DELETION: 'webhookList.triggers.artifactDeletion',
-  ARTIFACT_MODIFICATION: 'webhookList.triggers.artifactModification'
+  ARTIFACT_DELETION: 'webhookList.triggers.artifactDeletion'
 }
 
 export const WebhookStatusIconMap: Record<WebhookExecResult, IconProps> = {

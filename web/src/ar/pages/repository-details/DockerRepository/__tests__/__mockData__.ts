@@ -31,7 +31,8 @@ export const MockGetDockerRegistryResponseWithAllData = {
       packageType: 'DOCKER',
       url: 'https://pkg.qa.harness.io/iwnhltqot7gft7r-f_zp7q/docker-repo',
       allowedPattern: ['test1', 'test2'],
-      blockedPattern: ['test3', 'test4']
+      blockedPattern: ['test3', 'test4'],
+      scanners: [{ name: 'AQUA_TRIVY' }]
     },
     status: 'SUCCESS'
   }
@@ -138,7 +139,8 @@ export const MockGetDockerUpstreamRegistryResponseWithDockerhubSourceAllData = {
       modifiedAt: '1738516362995',
       packageType: 'DOCKER',
       labels: ['label1', 'label2', 'label3', 'label4'],
-      url: ''
+      url: '',
+      scanners: [{ name: 'AQUA_TRIVY' }]
     },
     status: 'SUCCESS'
   }

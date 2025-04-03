@@ -80,7 +80,10 @@ export default function UpstreamProxyConfigurationFormContent(
               {getString('repositoryDetails.repositoryForm.securityScan.title')}
             </Text>
             <Card className={classNames(css.cardContainer, css.marginTopLarge)}>
-              <SelectContainerScannersFormSection packageType={values.packageType as RepositoryPackageType} />
+              <SelectContainerScannersFormSection
+                packageType={values.packageType as RepositoryPackageType}
+                readonly={readonly}
+              />
               <Separator />
               <UpstreamProxyIncludeExcludePatternFormContent formikProps={formikProps} isEdit readonly={readonly} />
             </Card>

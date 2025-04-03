@@ -31,7 +31,7 @@ interface SelectContainerScannersFormSectionProps {
 export default function SelectContainerScannersFormSection(
   props: SelectContainerScannersFormSectionProps
 ): JSX.Element {
-  const { packageType } = props
+  const { packageType, readonly } = props
   const { getString } = useStrings()
 
   const availableScannerOptions = useMemo(() => {
@@ -48,7 +48,7 @@ export default function SelectContainerScannersFormSection(
       packageType={packageType as RepositoryPackageType}
       options={availableScannerOptions}
       isEdit
-      readonly
+      readonly={readonly}
     />
   )
 }

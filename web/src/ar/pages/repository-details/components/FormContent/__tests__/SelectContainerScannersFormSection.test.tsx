@@ -60,8 +60,8 @@ describe('verify SelectContainerScannersFormSection', () => {
     checkboxes.forEach((each, idx) => {
       const ele = each.querySelector(`input[value=${supportedScanners[idx]}][type=checkbox]`)
       expect(ele).toBeInTheDocument()
-      expect(ele).toBeChecked()
-      expect(ele).toBeDisabled()
+      expect(ele).not.toBeChecked()
+      expect(ele).not.toBeDisabled()
     })
   })
 

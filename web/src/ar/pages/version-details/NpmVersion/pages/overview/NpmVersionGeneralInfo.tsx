@@ -66,17 +66,17 @@ export default function NpmVersionGeneralInfo(props: NpmVersionGeneralInfoProps)
           />
           <LabelValueContent
             label={getString('versionDetails.overview.generalInformation.repository')}
-            value={data.repository}
+            value={data.metadata?.repository}
             type={LabelValueTypeEnum.Link}
           />
           <LabelValueContent
             label={getString('versionDetails.overview.generalInformation.homepage')}
-            value={data.homepage}
+            value={data.metadata?.homepage}
             type={LabelValueTypeEnum.Link}
           />
           <LabelValueContent
             label={getString('versionDetails.overview.generalInformation.license')}
-            value={data.license}
+            value={data.metadata?.license}
             type={LabelValueTypeEnum.Text}
           />
 
@@ -87,7 +87,7 @@ export default function NpmVersionGeneralInfo(props: NpmVersionGeneralInfoProps)
           />
           <LabelValueContent
             label={getString('versionDetails.overview.generalInformation.pullCommand')}
-            value={data.pullCommand}
+            value={data.metadata?.pullCommand}
             type={LabelValueTypeEnum.CommandBlock}
           />
         </Container>

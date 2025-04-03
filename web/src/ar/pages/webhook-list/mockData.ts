@@ -41,7 +41,7 @@ export const MOCK_WEBHOK_LIST_TABLE: ListWebhooks = {
     {
       name: 'Webhook 3',
       identifier: 'webhook-3',
-      triggers: ['ARTIFACT_CREATION', 'ARTIFACT_DELETION', 'ARTIFACT_MODIFICATION'],
+      triggers: ['ARTIFACT_CREATION', 'ARTIFACT_DELETION'],
       url: 'https://webhook-3.com',
       insecure: false,
       enabled: true

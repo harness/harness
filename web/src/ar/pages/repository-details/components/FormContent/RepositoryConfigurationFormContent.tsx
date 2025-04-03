@@ -86,7 +86,10 @@ function RepositoryConfigurationFormContent(
             {getString('repositoryDetails.repositoryForm.securityScan.title')}
           </Text>
           <Card className={classNames(css.cardContainer, css.marginTopLarge)}>
-            <SelectContainerScannersFormSection packageType={packageType as RepositoryPackageType} />
+            <SelectContainerScannersFormSection
+              packageType={packageType as RepositoryPackageType}
+              readonly={readonly}
+            />
             <Separator />
             <RepositoryIncludeExcludePatternFormContent isEdit disabled={readonly} />
           </Card>

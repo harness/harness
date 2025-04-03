@@ -248,7 +248,7 @@ describe('Verify configuration form', () => {
       const ele = each.querySelector(`input[value=${supportedScanners[idx]}][type=checkbox]`)
       expect(ele).toBeInTheDocument()
       expect(ele).toBeChecked()
-      expect(ele).toBeDisabled()
+      expect(ele).not.toBeDisabled()
     })
 
     // artifact filtering rules
@@ -355,6 +355,7 @@ describe('Verify configuration form', () => {
             labels: ['label1', 'label2', 'label3', 'label4'],
             modifiedAt: '1738516362995',
             packageType: 'DOCKER',
+            scanners: [{ name: 'AQUA_TRIVY' }],
             url: ''
           },
           registry_ref: 'undefined/abcd/+'
@@ -390,6 +391,7 @@ describe('Verify configuration form', () => {
             labels: ['label1', 'label2', 'label3', 'label4'],
             modifiedAt: '1738516362995',
             packageType: 'DOCKER',
+            scanners: [{ name: 'AQUA_TRIVY' }],
             url: ''
           },
           registry_ref: 'undefined/abcd/+'
@@ -430,6 +432,7 @@ describe('Verify configuration form', () => {
             labels: ['label1', 'label2', 'label3', 'label4'],
             modifiedAt: '1738516362995',
             packageType: 'DOCKER',
+            scanners: [{ name: 'AQUA_TRIVY' }],
             url: ''
           },
           registry_ref: 'undefined/abcd/+'
@@ -465,6 +468,7 @@ describe('Verify configuration form', () => {
             labels: ['label1', 'label2', 'label3', 'label4'],
             modifiedAt: '1738516362995',
             packageType: 'DOCKER',
+            scanners: [{ name: 'AQUA_TRIVY' }],
             url: ''
           },
           registry_ref: 'undefined/abcd/+'
@@ -500,6 +504,7 @@ describe('Verify configuration form', () => {
             labels: ['label1', 'label2', 'label3', 'label4'],
             modifiedAt: '1738516362995',
             packageType: 'DOCKER',
+            scanners: [{ name: 'AQUA_TRIVY' }],
             url: ''
           },
           registry_ref: 'undefined/abcd/+'

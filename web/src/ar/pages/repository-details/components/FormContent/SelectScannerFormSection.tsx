@@ -21,7 +21,7 @@ import { Color, FontVariation } from '@harnessio/design-system'
 import { Checkbox, CheckboxVariant, Container, Layout, Text } from '@harnessio/uicore'
 
 import { String } from '@ar/frameworks/strings'
-import { Scanners, type RepositoryPackageType } from '@ar/common/types'
+import type { RepositoryPackageType } from '@ar/common/types'
 import type { VirtualRegistryRequest } from '@ar/pages/repository-details/types'
 import type { ScannerConfigSpec } from '@ar/pages/repository-details/constants'
 import useCheckRequiredConfigForScan from '@ar/pages/repository-details/hooks/useCheckRequiredConfigForScan/useCheckRequiredConfigForScan'
@@ -41,7 +41,8 @@ export default function SelectScannerFormSection(props: SelectScannerFormSection
   const { options, title, subTitle, readonly } = props
   const { setFieldValue, values } = useFormikContext<VirtualRegistryRequest>()
 
-  const { hasRequiredLicense, hasRequiredProjectConfig, orgIdentifier } = useCheckRequiredConfigForScan()
+  const { hasRequiredLicense, hasRequiredProjectConfig, orgIdentifier, hasRequiredConfig } =
+    useCheckRequiredConfigForScan()
 
   const handleUpdateFormikState = (event: React.FormEvent<HTMLInputElement>) => {
     const isChecked = event.currentTarget.checked
@@ -54,8 +55,7 @@ export default function SelectScannerFormSection(props: SelectScannerFormSection
   }
 
   const getCheckboxState = (value: ScannerConfigSpec['value']) => {
-    return value === Scanners.AQUA_TRIVY && hasRequiredProjectConfig
-    // return values.scanners?.some(each => each.name === value) || false
+    return values.scanners?.some(each => each.name === value) || false
   }
 
   return (
@@ -66,7 +66,7 @@ export default function SelectScannerFormSection(props: SelectScannerFormSection
         {options.map(each => (
           <Checkbox
             key={each.label}
-            disabled={readonly || hasRequiredLicense}
+            disabled={readonly || !hasRequiredConfig}
             value={each.value}
             checked={getCheckboxState(each.value)}
             variant={CheckboxVariant.BOXED}
@@ -80,7 +80,7 @@ export default function SelectScannerFormSection(props: SelectScannerFormSection
           </Checkbox>
         ))}
       </Container>
-      {!hasRequiredProjectConfig && (
+      {hasRequiredLicense && !hasRequiredProjectConfig && (
         <Layout.Horizontal flex={{ alignItems: 'center', justifyContent: 'flex-start' }} spacing="small">
           <Icon name="main-info" color={Color.PRIMARY_7} />
           <String
@@ -88,6 +88,16 @@ export default function SelectScannerFormSection(props: SelectScannerFormSection
             vars={{ orgName: orgIdentifier }}
             className={css.helperText}
             stringID="repositoryDetails.repositoryForm.securityScan.containerScannerSelect.scannerNoteForRequiredConfiguration"
+          />
+        </Layout.Horizontal>
+      )}
+      {!hasRequiredLicense && (
+        <Layout.Horizontal flex={{ alignItems: 'center', justifyContent: 'flex-start' }} spacing="small">
+          <Icon name="main-info" color={Color.PRIMARY_7} />
+          <String
+            useRichText
+            className={css.helperText}
+            stringID="repositoryDetails.repositoryForm.securityScan.containerScannerSelect.scannerNoteForRequiredLicense"
           />
         </Layout.Horizontal>
       )}

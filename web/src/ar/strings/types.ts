@@ -88,6 +88,7 @@ export interface StringsMap {
   'repositoryDetails.repositoryForm.securityScan.containerScannerSelect.cardSubTitle': string
   'repositoryDetails.repositoryForm.securityScan.containerScannerSelect.cardTitle': string
   'repositoryDetails.repositoryForm.securityScan.containerScannerSelect.scannerNoteForRequiredConfiguration': string
+  'repositoryDetails.repositoryForm.securityScan.containerScannerSelect.scannerNoteForRequiredLicense': string
   'repositoryDetails.repositoryForm.securityScan.title': string
   'repositoryDetails.repositoryForm.selectRepoType': string
   'repositoryDetails.repositoryForm.title': string
