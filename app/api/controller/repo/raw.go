@@ -15,6 +15,7 @@
 package repo
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -31,6 +32,15 @@ type RawContent struct {
 	Data io.ReadCloser
 	Size int64
 	SHA  sha.SHA
+}
+
+type multiReadCloser struct {
+	io.Reader
+	closeFunc func() error
+}
+
+func (m *multiReadCloser) Close() error {
+	return m.closeFunc()
 }
 
 // Raw finds the file of the repo at the given path and returns its raw content.
@@ -79,7 +89,7 @@ func (c *Controller) Raw(ctx context.Context,
 		return nil, fmt.Errorf("failed to read blob: %w", err)
 	}
 
-	// check if blob is LFS
+	// check if blob is an LFS pointer
 	content, err := io.ReadAll(io.LimitReader(blobReader.Content, parser.LfsPointerMaxSize))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read LFS file content: %w", err)
@@ -88,7 +98,10 @@ func (c *Controller) Raw(ctx context.Context,
 	lfsInfo, ok := parser.IsLFSPointer(ctx, content, blobReader.Size)
 	if !ok {
 		return &RawContent{
-			Data: blobReader.Content,
+			Data: &multiReadCloser{
+				Reader:    io.MultiReader(bytes.NewBuffer(content), blobReader.Content),
+				closeFunc: blobReader.Content.Close,
+			},
 			Size: blobReader.ContentSize,
 			SHA:  blobReader.SHA,
 		}, nil
