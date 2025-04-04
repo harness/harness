@@ -89,7 +89,7 @@ func (c *Controller) ChangeTargetBranch(ctx context.Context,
 	oldTargetBranch := pr.TargetBranch
 	oldMergeBaseSHA := pr.MergeBaseSHA
 
-	_, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
+	pr, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
 		// clear merge and stats related fields
 		pr.MergeSHA = nil
 		pr.MergeTargetSHA = nil
