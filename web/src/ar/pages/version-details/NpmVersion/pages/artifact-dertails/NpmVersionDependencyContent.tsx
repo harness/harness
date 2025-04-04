@@ -14,22 +14,23 @@
  * limitations under the License.
  */
 
-import React, { useContext } from 'react'
+import React from 'react'
 
-import { DEFAULT_PAGE_INDEX } from '@ar/constants'
-import { VersionDependencyListContext } from '@ar/pages/version-details/context/VersionDependencyListProvider'
+import { useVersionOverview } from '@ar/pages/version-details/context/VersionOverviewProvider'
+import type { IDependencyList } from '@ar/pages/version-details/components/ArtifactDependencyListTable/types'
 import ArtifactDependencyListTable from '@ar/pages/version-details/components/ArtifactDependencyListTable/ArtifactDependencyListTable'
 
+import type { NpmVersionDetailsConfig } from '../../types'
+
 export default function NpmVersionDependencyContent() {
-  const { data, updateQueryParams, sort } = useContext(VersionDependencyListContext)
-  return (
-    <ArtifactDependencyListTable
-      data={data}
-      gotoPage={pageNumber => updateQueryParams({ page: pageNumber })}
-      setSortBy={sortArr => {
-        updateQueryParams({ sort: sortArr, page: DEFAULT_PAGE_INDEX })
-      }}
-      sortBy={sort}
-    />
-  )
+  const { data } = useVersionOverview<NpmVersionDetailsConfig>()
+  const versionMetatdata = data.metadata?.versions?.[data.version]
+  const dependencies = versionMetatdata?.dependencies || {}
+
+  const dependencyList: IDependencyList = Object.entries(dependencies).map(([key, value]) => ({
+    name: key,
+    version: value as string
+  }))
+
+  return <ArtifactDependencyListTable data={dependencyList} />
 }

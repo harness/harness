@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-import React, { useContext } from 'react'
+import React from 'react'
 import { defaultTo } from 'lodash-es'
 import { FontVariation } from '@harnessio/design-system'
 import { Card, Container, Layout, Text } from '@harnessio/uicore'
-import type { ArtifactDetail, NpmArtifactDetailConfig } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
 import { DEFAULT_DATE_TIME_FORMAT } from '@ar/constants'
 import { getReadableDateTime } from '@ar/common/dateUtils'
 import { LabelValueTypeEnum } from '@ar/pages/version-details/components/LabelValueContent/type'
-import { VersionOverviewContext } from '@ar/pages/version-details/context/VersionOverviewProvider'
+import { useVersionOverview } from '@ar/pages/version-details/context/VersionOverviewProvider'
 import { LabelValueContent } from '@ar/pages/version-details/components/LabelValueContent/LabelValueContent'
 
+import type { NpmVersionDetailsConfig } from '../../types'
 import css from './overview.module.scss'
 
 interface NpmVersionGeneralInfoProps {
@@ -35,8 +35,8 @@ interface NpmVersionGeneralInfoProps {
 
 export default function NpmVersionGeneralInfo(props: NpmVersionGeneralInfoProps) {
   const { className } = props
-  const contextValue = useContext(VersionOverviewContext)
-  const data = contextValue.data as ArtifactDetail & NpmArtifactDetailConfig
+  const { data } = useVersionOverview<NpmVersionDetailsConfig>()
+  const versionMetatdata = data.metadata?.versions?.[data.version]
   const { getString } = useStrings()
   return (
     <Card
@@ -64,32 +64,40 @@ export default function NpmVersionGeneralInfo(props: NpmVersionGeneralInfoProps)
             value={defaultTo(data.downloadCount?.toLocaleString(), 0)}
             type={LabelValueTypeEnum.Text}
           />
-          <LabelValueContent
-            label={getString('versionDetails.overview.generalInformation.repository')}
-            value={data.metadata?.repository}
-            type={LabelValueTypeEnum.Link}
-          />
-          <LabelValueContent
-            label={getString('versionDetails.overview.generalInformation.homepage')}
-            value={data.metadata?.homepage}
-            type={LabelValueTypeEnum.Link}
-          />
-          <LabelValueContent
-            label={getString('versionDetails.overview.generalInformation.license')}
-            value={data.metadata?.license}
-            type={LabelValueTypeEnum.Text}
-          />
+          {versionMetatdata?.repository && (
+            <LabelValueContent
+              label={getString('versionDetails.overview.generalInformation.repository')}
+              value={versionMetatdata.repository?.url}
+              type={LabelValueTypeEnum.Link}
+            />
+          )}
+          {versionMetatdata?.homepage && (
+            <LabelValueContent
+              label={getString('versionDetails.overview.generalInformation.homepage')}
+              value={versionMetatdata.homepage}
+              type={LabelValueTypeEnum.Link}
+            />
+          )}
+          {versionMetatdata?.license && (
+            <LabelValueContent
+              label={getString('versionDetails.overview.generalInformation.license')}
+              value={versionMetatdata.license}
+              type={LabelValueTypeEnum.Text}
+            />
+          )}
 
           <LabelValueContent
             label={getString('versionDetails.overview.generalInformation.uploadedBy')}
             value={getReadableDateTime(Number(data.modifiedAt), DEFAULT_DATE_TIME_FORMAT)}
             type={LabelValueTypeEnum.Text}
           />
-          <LabelValueContent
-            label={getString('versionDetails.overview.generalInformation.pullCommand')}
-            value={data.metadata?.pullCommand}
-            type={LabelValueTypeEnum.CommandBlock}
-          />
+          {data.metadata?.pullCommand && (
+            <LabelValueContent
+              label={getString('versionDetails.overview.generalInformation.pullCommand')}
+              value={data.metadata.pullCommand}
+              type={LabelValueTypeEnum.CommandBlock}
+            />
+          )}
         </Container>
       </Layout.Vertical>
     </Card>

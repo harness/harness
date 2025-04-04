@@ -21,7 +21,7 @@ import { useParentHooks } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import { ButtonTab, ButtonTabs } from '@ar/components/ButtonTabs/ButtonTabs'
 import VersionFilesProvider from '@ar/pages/version-details/context/VersionFilesProvider'
-import VersionDependencyListProvider from '@ar/pages/version-details/context/VersionDependencyListProvider'
+import VersionOverviewProvider from '@ar/pages/version-details/context/VersionOverviewProvider'
 
 import NpmVersionFilesContent from './NpmVersionFilesContent'
 import NpmVersionReadmeContent from './NpmVersionReadmeContent'
@@ -42,38 +42,36 @@ export default function NpmVersionArtifactDetailsPage() {
   )
 
   return (
-    <Layout.Vertical padding="large" spacing="large">
-      <ButtonTabs small bold selectedTabId={detailsTab} onChange={handleTabChange}>
-        <ButtonTab
-          id={NpmArtifactDetailsTabEnum.ReadMe}
-          icon="document"
-          iconProps={{ size: 12 }}
-          panel={<NpmVersionReadmeContent />}
-          title={getString('versionDetails.artifactDetails.tabs.readme')}
-        />
-        <ButtonTab
-          id={NpmArtifactDetailsTabEnum.Files}
-          icon="document"
-          iconProps={{ size: 12 }}
-          panel={
-            <VersionFilesProvider>
-              <NpmVersionFilesContent />
-            </VersionFilesProvider>
-          }
-          title={getString('versionDetails.artifactDetails.tabs.files')}
-        />
-        <ButtonTab
-          id={NpmArtifactDetailsTabEnum.Dependencies}
-          icon="layers"
-          iconProps={{ size: 12 }}
-          panel={
-            <VersionDependencyListProvider>
-              <NpmVersionDependencyContent />
-            </VersionDependencyListProvider>
-          }
-          title={getString('versionDetails.artifactDetails.tabs.dependencies')}
-        />
-      </ButtonTabs>
-    </Layout.Vertical>
+    <VersionOverviewProvider>
+      <Layout.Vertical padding="large" spacing="large">
+        <ButtonTabs small bold selectedTabId={detailsTab} onChange={handleTabChange}>
+          <ButtonTab
+            id={NpmArtifactDetailsTabEnum.ReadMe}
+            icon="document"
+            iconProps={{ size: 12 }}
+            panel={<NpmVersionReadmeContent />}
+            title={getString('versionDetails.artifactDetails.tabs.readme')}
+          />
+          <ButtonTab
+            id={NpmArtifactDetailsTabEnum.Files}
+            icon="document"
+            iconProps={{ size: 12 }}
+            panel={
+              <VersionFilesProvider>
+                <NpmVersionFilesContent />
+              </VersionFilesProvider>
+            }
+            title={getString('versionDetails.artifactDetails.tabs.files')}
+          />
+          <ButtonTab
+            id={NpmArtifactDetailsTabEnum.Dependencies}
+            icon="layers"
+            iconProps={{ size: 12 }}
+            panel={<NpmVersionDependencyContent />}
+            title={getString('versionDetails.artifactDetails.tabs.dependencies')}
+          />
+        </ButtonTabs>
+      </Layout.Vertical>
+    </VersionOverviewProvider>
   )
 }

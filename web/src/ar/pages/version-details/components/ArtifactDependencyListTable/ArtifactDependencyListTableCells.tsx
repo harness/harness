@@ -15,6 +15,7 @@
  */
 
 import React from 'react'
+import { FontVariation } from '@harnessio/design-system'
 import type { FileDetail } from '@harnessio/react-har-service-client'
 import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance } from 'react-table'
 
@@ -30,9 +31,9 @@ type CellTypeWithActions<D extends Record<string, any>, V = any> = TableInstance
 type CellType = Renderer<CellTypeWithActions<FileDetail>>
 
 export const DependencyNameCell: CellType = ({ value }) => {
-  return <TableCells.TextCell value={value} />
+  return <TableCells.TextCell font={{ variation: FontVariation.BODY }} value={value} />
 }
 
 export const DependencyVersionCell: CellType = ({ value }) => {
-  return <TableCells.TextCell value={value} />
+  return <TableCells.TextCell font={{ variation: FontVariation.BODY }} value={value} />
 }

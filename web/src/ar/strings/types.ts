@@ -348,6 +348,7 @@ export interface StringsMap {
   new: string
   noDescription: string
   noMatchingFilterData: string
+  noReadme: string
   noResultsFound: string
   nonProd: string
   nonProdCount: string

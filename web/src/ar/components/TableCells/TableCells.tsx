@@ -20,7 +20,7 @@ import { defaultTo } from 'lodash-es'
 import copy from 'clipboard-copy'
 import { Link } from 'react-router-dom'
 import type { TableExpandedToggleProps } from 'react-table'
-import { Button, ButtonProps, ButtonVariation, Layout, Text } from '@harnessio/uicore'
+import { Button, ButtonProps, ButtonVariation, Layout, Text, TextProps } from '@harnessio/uicore'
 import type { IconName, IconProps } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
 
@@ -151,14 +151,14 @@ export const CountCell = ({ value, icon, iconProps }: CountCellProps): JSX.Eleme
   )
 }
 
-interface TextCellProps {
+interface TextCellProps extends TextProps {
   value: string | undefined
 }
 
-export const TextCell = ({ value }: TextCellProps): JSX.Element => {
+export const TextCell = ({ value, ...rest }: TextCellProps): JSX.Element => {
   const { getString } = useStrings()
   return (
-    <Text color={Color.GREY_900} lineClamp={1}>
+    <Text color={Color.GREY_900} lineClamp={1} {...rest}>
       {defaultTo(value, getString('na'))}
     </Text>
   )

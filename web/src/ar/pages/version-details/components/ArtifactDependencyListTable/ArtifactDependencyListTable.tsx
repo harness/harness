@@ -15,82 +15,40 @@
  */
 
 import React from 'react'
-import classNames from 'classnames'
 import type { Column } from 'react-table'
-import { type PaginationProps, TableV2 } from '@harnessio/uicore'
-import type { FileDetail, FileDetailResponseResponse } from '@harnessio/react-har-service-client'
+import { TableV2 } from '@harnessio/uicore'
 
-import { useParentHooks } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
+
+import type { IDependencyItem, IDependencyList } from './types'
 import { DependencyNameCell, DependencyVersionCell } from './ArtifactDependencyListTableCells'
 
-import css from './ArtifactDependencyListTable.module.scss'
-
-export interface DependencyListSortBy {
-  sort: 'name' | 'size' | 'created'
-}
-
 interface ArtifactDependencyListTableProps {
-  data: FileDetailResponseResponse
-  gotoPage: (pageNumber: number) => void
-  onPageSizeChange?: PaginationProps['onPageSizeChange']
-  setSortBy: (sortBy: string[]) => void
-  sortBy: string[]
+  data: IDependencyList
   minimal?: boolean
   className?: string
 }
 
 export default function ArtifactDependencyListTable(props: ArtifactDependencyListTableProps): JSX.Element {
-  const { data, gotoPage, onPageSizeChange, sortBy, setSortBy, className } = props
-  const { useDefaultPaginationProps } = useParentHooks()
+  const { data, className } = props
   const { getString } = useStrings()
 
-  const { files, itemCount = 0, pageCount = 0, pageIndex, pageSize = 0 } = data
-  const paginationProps = useDefaultPaginationProps({
-    itemCount,
-    pageSize,
-    pageCount,
-    pageIndex,
-    gotoPage,
-    onPageSizeChange
-  })
-
-  const [currentSort, currentOrder] = sortBy
-
-  const columns: Column<FileDetail>[] = React.useMemo(() => {
-    const getServerSortProps = (id: string) => {
-      return {
-        enableServerSort: true,
-        isServerSorted: currentSort === id,
-        isServerSortedDesc: currentOrder === 'DESC',
-        getSortedColumn: ({ sort }: DependencyListSortBy) => {
-          setSortBy([sort, currentOrder === 'DESC' ? 'ASC' : 'DESC'])
-        }
-      }
-    }
+  const columns: Column<IDependencyItem>[] = React.useMemo(() => {
     return [
       {
         Header: getString('versionDetails.dependencyList.table.columns.name'),
         accessor: 'name',
         Cell: DependencyNameCell,
-        serverSortProps: getServerSortProps('name')
+        width: '100%'
       },
       {
         Header: getString('versionDetails.dependencyList.table.columns.version'),
         accessor: 'version',
         Cell: DependencyVersionCell,
-        serverSortProps: getServerSortProps('version')
+        width: '20%'
       }
-    ].filter(Boolean) as unknown as Column<FileDetail>[]
-  }, [currentOrder, currentSort, getString])
+    ].filter(Boolean) as unknown as Column<IDependencyItem>[]
+  }, [getString])
 
-  return (
-    <TableV2
-      className={classNames(css.table, className)}
-      columns={columns}
-      data={files}
-      pagination={paginationProps}
-      sortable
-    />
-  )
+  return <TableV2 className={className} columns={columns} data={data} sortable={false} />
 }

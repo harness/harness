@@ -14,22 +14,11 @@
  * limitations under the License.
  */
 
-import React, { useContext } from 'react'
+import React from 'react'
 
-import { DEFAULT_PAGE_INDEX } from '@ar/constants'
-import { VersionDependencyListContext } from '@ar/pages/version-details/context/VersionDependencyListProvider'
 import ArtifactDependencyListTable from '@ar/pages/version-details/components/ArtifactDependencyListTable/ArtifactDependencyListTable'
 
 export default function NuGetVersionDependencyContent() {
-  const { data, updateQueryParams, sort } = useContext(VersionDependencyListContext)
-  return (
-    <ArtifactDependencyListTable
-      data={data}
-      gotoPage={pageNumber => updateQueryParams({ page: pageNumber })}
-      setSortBy={sortArr => {
-        updateQueryParams({ sort: sortArr, page: DEFAULT_PAGE_INDEX })
-      }}
-      sortBy={sort}
-    />
-  )
+  // TODO: Implement NuGetVersionDependencyContent
+  return <ArtifactDependencyListTable data={[]} />
 }

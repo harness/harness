@@ -16,13 +16,21 @@
 
 import React from 'react'
 import { Container } from '@harnessio/uicore'
+
+import { useStrings } from '@ar/frameworks/strings'
+import { useVersionOverview } from '@ar/pages/version-details/context/VersionOverviewProvider'
 import ReadmeFileContent from '@ar/pages/version-details/components/ReadmeFileContent/ReadmeFileContent'
-import { MOCK_README_CONTENT } from './mockData'
+
+import type { NpmVersionDetailsConfig } from '../../types'
 
 export default function NpmVersionReadmeContent() {
+  const { data } = useVersionOverview<NpmVersionDetailsConfig>()
+  const versionMetatdata = data.metadata?.versions?.[data.version]
+
+  const { getString } = useStrings()
   return (
     <Container>
-      <ReadmeFileContent source={MOCK_README_CONTENT} />
+      <ReadmeFileContent source={versionMetatdata?.readme || getString('noReadme')} />
     </Container>
   )
 }

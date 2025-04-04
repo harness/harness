@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { ArtifactDetail, NpmArtifactDetailConfig } from '@harnessio/react-har-service-client'
 import type { VersionDetailsQueryParams } from '../types'
 
 export enum NpmArtifactDetailsTabEnum {
@@ -21,7 +22,10 @@ export enum NpmArtifactDetailsTabEnum {
   Files = 'files',
   Dependencies = 'dependencies'
 }
+
 export interface NpmVersionDetailsQueryParams extends VersionDetailsQueryParams {
   detailsTab: NpmArtifactDetailsTabEnum
   digest: string
 }
+
+export type NpmVersionDetailsConfig = ArtifactDetail & NpmArtifactDetailConfig
