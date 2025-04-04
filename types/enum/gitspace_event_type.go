@@ -157,3 +157,79 @@ const (
 	GitspaceEventTypeInfraPublishGatewayCompleted GitspaceEventType = "infra_publish_gateway_completed"
 	GitspaceEventTypeInfraPublishGatewayFailed    GitspaceEventType = "infra_publish_gateway_failed"
 )
+
+func EventsMessageMapping() map[GitspaceEventType]string {
+	var gitspaceConfigsMap = map[GitspaceEventType]string{
+		GitspaceEventTypeGitspaceActionStart:          "Starting gitspace...",
+		GitspaceEventTypeGitspaceActionStartCompleted: "Started gitspace",
+		GitspaceEventTypeGitspaceActionStartFailed:    "Starting gitspace failed",
+
+		GitspaceEventTypeGitspaceActionStop:          "Stopping gitspace...",
+		GitspaceEventTypeGitspaceActionStopCompleted: "Stopped gitspace",
+		GitspaceEventTypeGitspaceActionStopFailed:    "Stopping gitspace failed",
+
+		GitspaceEventTypeFetchDevcontainerStart:     "Fetching devcontainer config...",
+		GitspaceEventTypeFetchDevcontainerCompleted: "Fetched devcontainer config",
+		GitspaceEventTypeFetchDevcontainerFailed:    "Fetching devcontainer config failed",
+
+		GitspaceEventTypeFetchConnectorsDetailsStart:     "Fetching platform connectors details...",
+		GitspaceEventTypeFetchConnectorsDetailsCompleted: "Fetched platform connectors details",
+		GitspaceEventTypeFetchConnectorsDetailsFailed:    "Fetching platform connectors details failed",
+
+		GitspaceEventTypeInfraProvisioningStart:     "Provisioning infrastructure...",
+		GitspaceEventTypeInfraProvisioningCompleted: "Provisioning infrastructure completed",
+		GitspaceEventTypeInfraProvisioningFailed:    "Provisioning infrastructure failed",
+
+		GitspaceEventTypeInfraGatewayRouteStart:     "Updating gateway routing...",
+		GitspaceEventTypeInfraGatewayRouteCompleted: "Updating gateway routing completed",
+		GitspaceEventTypeInfraGatewayRouteFailed:    "Updating gateway routing failed",
+
+		GitspaceEventTypeInfraStopStart:     "Stopping infrastructure...",
+		GitspaceEventTypeInfraStopCompleted: "Stopping infrastructure completed",
+		GitspaceEventTypeInfraStopFailed:    "Stopping infrastructure failed",
+
+		GitspaceEventTypeInfraDeprovisioningStart:     "Deprovisioning infrastructure...",
+		GitspaceEventTypeInfraDeprovisioningCompleted: "Deprovisioning infrastructure completed",
+		GitspaceEventTypeInfraDeprovisioningFailed:    "Deprovisioning infrastructure failed",
+
+		GitspaceEventTypeAgentConnectStart:     "Connecting to the gitspace agent...",
+		GitspaceEventTypeAgentConnectCompleted: "Connected to the gitspace agent",
+		GitspaceEventTypeAgentConnectFailed:    "Failed connecting to the gitspace agent",
+
+		GitspaceEventTypeAgentGitspaceCreationStart:     "Setting up the gitspace...",
+		GitspaceEventTypeAgentGitspaceCreationCompleted: "Successfully setup the gitspace",
+		GitspaceEventTypeAgentGitspaceCreationFailed:    "Failed to setup the gitspace",
+
+		GitspaceEventTypeAgentGitspaceStopStart:     "Stopping the gitspace...",
+		GitspaceEventTypeAgentGitspaceStopCompleted: "Successfully stopped the gitspace",
+		GitspaceEventTypeAgentGitspaceStopFailed:    "Failed to stop the gitspace",
+
+		GitspaceEventTypeAgentGitspaceDeletionStart:      "Removing the gitspace...",
+		GitspaceEventTypeAgentGitspaceDeletionCompleted:  "Successfully removed the gitspace",
+		GitspaceEventTypeAgentGitspaceDeletionFailed:     "Failed to remove the gitspace",
+		GitspaceEventTypeAgentGitspaceStateReportRunning: "Gitspace is running",
+		GitspaceEventTypeAgentGitspaceStateReportStopped: "Gitspace is stopped",
+		GitspaceEventTypeAgentGitspaceStateReportUnknown: "Gitspace is in unknown state",
+		GitspaceEventTypeAgentGitspaceStateReportError:   "Gitspace has an error",
+
+		GitspaceEventTypeGitspaceAutoStop: "Triggering auto-stopping due to inactivity...",
+
+		GitspaceEventTypeInfraCleanupStart:     "Cleaning up infrastructure...",
+		GitspaceEventTypeInfraCleanupCompleted: "Successfully cleaned up infrastructure",
+		GitspaceEventTypeInfraCleanupFailed:    "Failed to cleaned up infrastructure",
+
+		GitspaceEventTypeInfraResetStart:  "Resetting the gitspace infrastructure...",
+		GitspaceEventTypeInfraResetFailed: "Failed to reset the gitspace infrastructure",
+
+		GitspaceEventTypeDelegateTaskSubmitted: "Delegate task submitted",
+
+		GitspaceEventTypeInfraVMCreationStart:     "creating VM...",
+		GitspaceEventTypeInfraVMCreationCompleted: "Successfully created VM",
+		GitspaceEventTypeInfraVMCreationFailed:    "Failed to created VM",
+
+		GitspaceEventTypeInfraPublishGatewayCompleted: "Published machine port mapping to Gateway",
+		GitspaceEventTypeInfraPublishGatewayFailed:    "Failed to publish machine port mapping to Gateway",
+	}
+
+	return gitspaceConfigsMap
+}

@@ -28,7 +28,7 @@ import (
 var eventMessageMap map[enum.GitspaceEventType]string
 
 func init() {
-	eventMessageMap = eventsMessageMapping()
+	eventMessageMap = enum.EventsMessageMapping()
 }
 
 func (c *Controller) Events(
@@ -78,80 +78,4 @@ func (c *Controller) Events(
 	}
 
 	return result, count, nil
-}
-
-func eventsMessageMapping() map[enum.GitspaceEventType]string {
-	var gitspaceConfigsMap = map[enum.GitspaceEventType]string{
-		enum.GitspaceEventTypeGitspaceActionStart:          "Starting gitspace...",
-		enum.GitspaceEventTypeGitspaceActionStartCompleted: "Started gitspace",
-		enum.GitspaceEventTypeGitspaceActionStartFailed:    "Starting gitspace failed",
-
-		enum.GitspaceEventTypeGitspaceActionStop:          "Stopping gitspace...",
-		enum.GitspaceEventTypeGitspaceActionStopCompleted: "Stopped gitspace",
-		enum.GitspaceEventTypeGitspaceActionStopFailed:    "Stopping gitspace failed",
-
-		enum.GitspaceEventTypeFetchDevcontainerStart:     "Fetching devcontainer config...",
-		enum.GitspaceEventTypeFetchDevcontainerCompleted: "Fetched devcontainer config",
-		enum.GitspaceEventTypeFetchDevcontainerFailed:    "Fetching devcontainer config failed",
-
-		enum.GitspaceEventTypeFetchConnectorsDetailsStart:     "Fetching platform connectors details...",
-		enum.GitspaceEventTypeFetchConnectorsDetailsCompleted: "Fetched platform connectors details",
-		enum.GitspaceEventTypeFetchConnectorsDetailsFailed:    "Fetching platform connectors details failed",
-
-		enum.GitspaceEventTypeInfraProvisioningStart:     "Provisioning infrastructure...",
-		enum.GitspaceEventTypeInfraProvisioningCompleted: "Provisioning infrastructure completed",
-		enum.GitspaceEventTypeInfraProvisioningFailed:    "Provisioning infrastructure failed",
-
-		enum.GitspaceEventTypeInfraGatewayRouteStart:     "Updating gateway routing...",
-		enum.GitspaceEventTypeInfraGatewayRouteCompleted: "Updating gateway routing completed",
-		enum.GitspaceEventTypeInfraGatewayRouteFailed:    "Updating gateway routing failed",
-
-		enum.GitspaceEventTypeInfraStopStart:     "Stopping infrastructure...",
-		enum.GitspaceEventTypeInfraStopCompleted: "Stopping infrastructure completed",
-		enum.GitspaceEventTypeInfraStopFailed:    "Stopping infrastructure failed",
-
-		enum.GitspaceEventTypeInfraDeprovisioningStart:     "Deprovisioning infrastructure...",
-		enum.GitspaceEventTypeInfraDeprovisioningCompleted: "Deprovisioning infrastructure completed",
-		enum.GitspaceEventTypeInfraDeprovisioningFailed:    "Deprovisioning infrastructure failed",
-
-		enum.GitspaceEventTypeAgentConnectStart:     "Connecting to the gitspace agent...",
-		enum.GitspaceEventTypeAgentConnectCompleted: "Connected to the gitspace agent",
-		enum.GitspaceEventTypeAgentConnectFailed:    "Failed connecting to the gitspace agent",
-
-		enum.GitspaceEventTypeAgentGitspaceCreationStart:     "Setting up the gitspace...",
-		enum.GitspaceEventTypeAgentGitspaceCreationCompleted: "Successfully setup the gitspace",
-		enum.GitspaceEventTypeAgentGitspaceCreationFailed:    "Failed to setup the gitspace",
-
-		enum.GitspaceEventTypeAgentGitspaceStopStart:     "Stopping the gitspace...",
-		enum.GitspaceEventTypeAgentGitspaceStopCompleted: "Successfully stopped the gitspace",
-		enum.GitspaceEventTypeAgentGitspaceStopFailed:    "Failed to stop the gitspace",
-
-		enum.GitspaceEventTypeAgentGitspaceDeletionStart:      "Removing the gitspace...",
-		enum.GitspaceEventTypeAgentGitspaceDeletionCompleted:  "Successfully removed the gitspace",
-		enum.GitspaceEventTypeAgentGitspaceDeletionFailed:     "Failed to remove the gitspace",
-		enum.GitspaceEventTypeAgentGitspaceStateReportRunning: "Gitspace is running",
-		enum.GitspaceEventTypeAgentGitspaceStateReportStopped: "Gitspace is stopped",
-		enum.GitspaceEventTypeAgentGitspaceStateReportUnknown: "Gitspace is in unknown state",
-		enum.GitspaceEventTypeAgentGitspaceStateReportError:   "Gitspace has an error",
-
-		enum.GitspaceEventTypeGitspaceAutoStop: "Triggering auto-stopping due to inactivity...",
-
-		enum.GitspaceEventTypeInfraCleanupStart:     "Cleaning up infrastructure...",
-		enum.GitspaceEventTypeInfraCleanupCompleted: "Successfully cleaned up infrastructure",
-		enum.GitspaceEventTypeInfraCleanupFailed:    "Failed to cleaned up infrastructure",
-
-		enum.GitspaceEventTypeInfraResetStart:  "Resetting the gitspace infrastructure...",
-		enum.GitspaceEventTypeInfraResetFailed: "Failed to reset the gitspace infrastructure",
-
-		enum.GitspaceEventTypeDelegateTaskSubmitted: "Delegate task submitted",
-
-		enum.GitspaceEventTypeInfraVMCreationStart:     "creating VM...",
-		enum.GitspaceEventTypeInfraVMCreationCompleted: "Successfully created VM",
-		enum.GitspaceEventTypeInfraVMCreationFailed:    "Failed to created VM",
-
-		enum.GitspaceEventTypeInfraPublishGatewayCompleted: "Published machine port mapping to Gateway",
-		enum.GitspaceEventTypeInfraPublishGatewayFailed:    "Failed to publish machine port mapping to Gateway",
-	}
-
-	return gitspaceConfigsMap
 }
