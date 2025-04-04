@@ -277,6 +277,7 @@ func setupSpaces(
 			r.Get("/export-progress", handlerspace.HandleExportProgress(spaceCtrl))
 			r.Post("/public-access", handlerspace.HandleUpdatePublicAccess(spaceCtrl))
 			r.Get("/pullreq", handlerspace.HandleListPullReqs(spaceCtrl))
+			r.Get("/pullreq/count", handlerspace.HandleCountPullReqs(spaceCtrl))
 
 			r.Route("/members", func(r chi.Router) {
 				r.Get("/", handlerspace.HandleMembershipList(spaceCtrl))

@@ -679,6 +679,26 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	_ = reflector.Spec.AddOperation(http.MethodPatch,
 		"/spaces/{space_ref}/labels/{key}/values/{value}", opUpdateLabelValue)
 
+	countPullReq := openapi3.Operation{}
+	countPullReq.WithTags("space")
+	countPullReq.WithMapOfAnything(map[string]interface{}{"operationId": "countSpacePullReq"})
+	countPullReq.WithParameters(
+		queryParameterStatePullRequest, queryParameterSourceRepoRefPullRequest,
+		queryParameterSourceBranchPullRequest, queryParameterTargetBranchPullRequest,
+		queryParameterQueryPullRequest, queryParameterCreatedByPullRequest,
+		queryParameterCreatedLt, queryParameterCreatedGt, queryParameterUpdatedLt,
+		queryParameterIncludeSubspaces,
+		QueryParameterLabelID, QueryParameterValueID,
+		queryParameterAuthorID, queryParameterCommenterID, queryParameterMentionedID,
+		queryParameterReviewerID, queryParameterReviewDecision)
+	_ = reflector.SetRequest(&countPullReq, new(spaceRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&countPullReq, new([]types.PullReqRepo), http.StatusOK)
+	_ = reflector.SetJSONResponse(&countPullReq, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&countPullReq, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&countPullReq, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&countPullReq, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{space_ref}/pullreq/count", countPullReq)
+
 	listPullReq := openapi3.Operation{}
 	listPullReq.WithTags("space")
 	listPullReq.WithMapOfAnything(map[string]interface{}{"operationId": "listSpacePullReq"})

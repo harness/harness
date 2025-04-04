@@ -72,6 +72,36 @@ func NewListService(
 	}
 }
 
+// CountForSpace returns number of pull requests in a specific space (and optionally in subspaces).
+// The API doesn't do a permission check for repositories.
+func (c *ListService) CountForSpace(
+	ctx context.Context,
+	space *types.SpaceCore,
+	includeSubspaces bool,
+	filter *types.PullReqFilter,
+) (int64, error) {
+	if includeSubspaces {
+		subspaces, err := c.spaceStore.GetDescendantsData(ctx, space.ID)
+		if err != nil {
+			return 0, fmt.Errorf("failed to get space descendant data: %w", err)
+		}
+
+		filter.SpaceIDs = make([]int64, 0, len(subspaces))
+		for i := range subspaces {
+			filter.SpaceIDs = append(filter.SpaceIDs, subspaces[i].ID)
+		}
+	} else {
+		filter.SpaceIDs = []int64{space.ID}
+	}
+
+	count, err := c.pullreqStore.Count(ctx, filter)
+	if err != nil {
+		return 0, fmt.Errorf("failed to count pull requests: %w", err)
+	}
+
+	return count, nil
+}
+
 // ListForSpace returns a list of pull requests and their respective repositories for a specific space.
 //
 //nolint:gocognit
