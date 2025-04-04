@@ -36,7 +36,7 @@ func (c *Service) CreateConfigAndResources(
 			return fmt.Errorf("could not create the config: %q %w", infraProviderConfig.Identifier, err)
 		}
 		err = c.createMissingResources(ctx, infraProviderConfig.Resources, configID,
-			infraProviderConfig.SpaceID, infraProviderConfig.Identifier)
+			infraProviderConfig.SpaceID, *infraProviderConfig)
 		if err != nil {
 			return fmt.Errorf("could not create the resources: %v %w", infraProviderConfig.Resources, err)
 		}

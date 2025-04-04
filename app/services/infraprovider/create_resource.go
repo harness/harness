@@ -32,8 +32,13 @@ func (c *Service) CreateResources(
 	configID int64,
 	configIdentifier string,
 ) error {
-	err := c.tx.WithTx(ctx, func(ctx context.Context) error {
-		return c.createMissingResources(ctx, resources, configID, spaceID, configIdentifier)
+	config, err := c.infraProviderConfigStore.FindByIdentifier(ctx, spaceID, configIdentifier)
+	if err != nil {
+		return fmt.Errorf("failed to find config: %w", err)
+	}
+
+	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
+		return c.createMissingResources(ctx, resources, configID, spaceID, *config)
 	})
 	if err != nil {
 		return fmt.Errorf("failed to complete create txn for the infraprovider resource %w", err)
@@ -46,7 +51,7 @@ func (c *Service) createMissingResources(
 	resources []types.InfraProviderResource,
 	configID int64,
 	spaceID int64,
-	configIdentifier string,
+	config types.InfraProviderConfig,
 ) error {
 	emptyStr := ""
 	for idx := range resources {
@@ -63,7 +68,7 @@ func (c *Service) createMissingResources(
 			resource.Network = &emptyStr
 		}
 		// updating metadata based on infra provider type
-		updatedMetadata, err := c.updateResourceMetadata(resource, configIdentifier)
+		updatedMetadata, err := c.updateResourceMetadata(resource, config)
 		if err != nil {
 			return fmt.Errorf("creating missing infra resources: %w", err)
 		}
@@ -86,14 +91,14 @@ func (c *Service) createMissingResources(
 
 func (c *Service) updateResourceMetadata(
 	resource *types.InfraProviderResource,
-	configIdentifier string,
+	config types.InfraProviderConfig,
 ) (map[string]string, error) {
 	infraProvider, err := c.infraProviderFactory.GetInfraProvider(resource.InfraProviderType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch infra impl for type : %q %w", resource.InfraProviderType, err)
 	}
 
-	params, err := infraProvider.UpdateParams(toResourceParams(resource.Metadata), configIdentifier)
+	params, err := infraProvider.UpdateParams(toResourceParams(resource.Metadata), config.Metadata)
 	if err != nil {
 		return nil, err
 	}

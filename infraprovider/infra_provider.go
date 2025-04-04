@@ -73,7 +73,7 @@ type InfraProvider interface {
 
 	// UpdateParams updates input Parameters to add or modify given inputParameters.
 	UpdateParams(inputParameters []types.InfraProviderParameter,
-		configIdentifier string) ([]types.InfraProviderParameter, error)
+		configMetaData map[string]any) ([]types.InfraProviderParameter, error)
 
 	// ValidateParams validates the supplied params before defining the infrastructure resource .
 	ValidateParams(inputParameters []types.InfraProviderParameter) error

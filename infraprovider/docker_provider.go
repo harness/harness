@@ -290,7 +290,7 @@ func (d DockerProvider) ValidateParams(_ []types.InfraProviderParameter) error {
 }
 
 func (d DockerProvider) UpdateParams(ip []types.InfraProviderParameter,
-	_ string) ([]types.InfraProviderParameter, error) {
+	_ map[string]any) ([]types.InfraProviderParameter, error) {
 	return ip, nil
 }
 
