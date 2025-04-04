@@ -65,6 +65,8 @@ type Infrastructure struct {
 	GitspaceConfigIdentifier string
 	// GitspaceInstanceIdentifier is the gitspace instance for which the infra is provisioned.
 	GitspaceInstanceIdentifier string
+	// GitspaceInstanceID is the gitspace instance id for which the infra is provisioned.
+	GitspaceInstanceID int64
 	// ProviderType specifies the type of the infra provider.
 	ProviderType enum.InfraProviderType
 	// InputParameters which are required by the provider to provision the infra.

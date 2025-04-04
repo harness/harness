@@ -81,68 +81,77 @@ func (c *Controller) Events(
 }
 
 func eventsMessageMapping() map[enum.GitspaceEventType]string {
-	var gitspaceConfigsMap = make(map[enum.GitspaceEventType]string)
+	var gitspaceConfigsMap = map[enum.GitspaceEventType]string{
+		enum.GitspaceEventTypeGitspaceActionStart:          "Starting gitspace...",
+		enum.GitspaceEventTypeGitspaceActionStartCompleted: "Started gitspace",
+		enum.GitspaceEventTypeGitspaceActionStartFailed:    "Starting gitspace failed",
 
-	gitspaceConfigsMap[enum.GitspaceEventTypeGitspaceActionStart] = "Starting gitspace..."
-	gitspaceConfigsMap[enum.GitspaceEventTypeGitspaceActionStartCompleted] = "Started gitspace"
-	gitspaceConfigsMap[enum.GitspaceEventTypeGitspaceActionStartFailed] = "Starting gitspace failed"
+		enum.GitspaceEventTypeGitspaceActionStop:          "Stopping gitspace...",
+		enum.GitspaceEventTypeGitspaceActionStopCompleted: "Stopped gitspace",
+		enum.GitspaceEventTypeGitspaceActionStopFailed:    "Stopping gitspace failed",
 
-	gitspaceConfigsMap[enum.GitspaceEventTypeGitspaceActionStop] = "Stopping gitspace..."
-	gitspaceConfigsMap[enum.GitspaceEventTypeGitspaceActionStopCompleted] = "Stopped gitspace"
-	gitspaceConfigsMap[enum.GitspaceEventTypeGitspaceActionStopFailed] = "Stopping gitspace failed"
+		enum.GitspaceEventTypeFetchDevcontainerStart:     "Fetching devcontainer config...",
+		enum.GitspaceEventTypeFetchDevcontainerCompleted: "Fetched devcontainer config",
+		enum.GitspaceEventTypeFetchDevcontainerFailed:    "Fetching devcontainer config failed",
 
-	gitspaceConfigsMap[enum.GitspaceEventTypeFetchDevcontainerStart] = "Fetching devcontainer config..."
-	gitspaceConfigsMap[enum.GitspaceEventTypeFetchDevcontainerCompleted] = "Fetched devcontainer config"
-	gitspaceConfigsMap[enum.GitspaceEventTypeFetchDevcontainerFailed] = "Fetching devcontainer config failed"
+		enum.GitspaceEventTypeFetchConnectorsDetailsStart:     "Fetching platform connectors details...",
+		enum.GitspaceEventTypeFetchConnectorsDetailsCompleted: "Fetched platform connectors details",
+		enum.GitspaceEventTypeFetchConnectorsDetailsFailed:    "Fetching platform connectors details failed",
 
-	gitspaceConfigsMap[enum.GitspaceEventTypeFetchConnectorsDetailsStart] = "Fetching platform connectors details..."
-	gitspaceConfigsMap[enum.GitspaceEventTypeFetchConnectorsDetailsCompleted] = "Fetched platform connectors details"
-	gitspaceConfigsMap[enum.GitspaceEventTypeFetchConnectorsDetailsFailed] = "Fetching platform connectors details failed" //nolint:lll
+		enum.GitspaceEventTypeInfraProvisioningStart:     "Provisioning infrastructure...",
+		enum.GitspaceEventTypeInfraProvisioningCompleted: "Provisioning infrastructure completed",
+		enum.GitspaceEventTypeInfraProvisioningFailed:    "Provisioning infrastructure failed",
 
-	gitspaceConfigsMap[enum.GitspaceEventTypeInfraProvisioningStart] = "Provisioning infrastructure..."
-	gitspaceConfigsMap[enum.GitspaceEventTypeInfraProvisioningCompleted] = "Provisioning infrastructure completed"
-	gitspaceConfigsMap[enum.GitspaceEventTypeInfraProvisioningFailed] = "Provisioning infrastructure failed"
+		enum.GitspaceEventTypeInfraGatewayRouteStart:     "Updating gateway routing...",
+		enum.GitspaceEventTypeInfraGatewayRouteCompleted: "Updating gateway routing completed",
+		enum.GitspaceEventTypeInfraGatewayRouteFailed:    "Updating gateway routing failed",
 
-	gitspaceConfigsMap[enum.GitspaceEventTypeInfraGatewayRouteStart] = "Updating gateway routing..."
-	gitspaceConfigsMap[enum.GitspaceEventTypeInfraGatewayRouteCompleted] = "Updating gateway routing completed"
-	gitspaceConfigsMap[enum.GitspaceEventTypeInfraGatewayRouteFailed] = "Updating gateway routing failed"
+		enum.GitspaceEventTypeInfraStopStart:     "Stopping infrastructure...",
+		enum.GitspaceEventTypeInfraStopCompleted: "Stopping infrastructure completed",
+		enum.GitspaceEventTypeInfraStopFailed:    "Stopping infrastructure failed",
 
-	gitspaceConfigsMap[enum.GitspaceEventTypeInfraStopStart] = "Stopping infrastructure..."
-	gitspaceConfigsMap[enum.GitspaceEventTypeInfraStopCompleted] = "Stopping infrastructure completed"
-	gitspaceConfigsMap[enum.GitspaceEventTypeInfraStopFailed] = "Stopping infrastructure failed"
+		enum.GitspaceEventTypeInfraDeprovisioningStart:     "Deprovisioning infrastructure...",
+		enum.GitspaceEventTypeInfraDeprovisioningCompleted: "Deprovisioning infrastructure completed",
+		enum.GitspaceEventTypeInfraDeprovisioningFailed:    "Deprovisioning infrastructure failed",
 
-	gitspaceConfigsMap[enum.GitspaceEventTypeInfraDeprovisioningStart] = "Deprovisioning infrastructure..."
-	gitspaceConfigsMap[enum.GitspaceEventTypeInfraDeprovisioningCompleted] = "Deprovisioning infrastructure completed"
-	gitspaceConfigsMap[enum.GitspaceEventTypeInfraDeprovisioningFailed] = "Deprovisioning infrastructure failed"
+		enum.GitspaceEventTypeAgentConnectStart:     "Connecting to the gitspace agent...",
+		enum.GitspaceEventTypeAgentConnectCompleted: "Connected to the gitspace agent",
+		enum.GitspaceEventTypeAgentConnectFailed:    "Failed connecting to the gitspace agent",
 
-	gitspaceConfigsMap[enum.GitspaceEventTypeAgentConnectStart] = "Connecting to the gitspace agent..."
-	gitspaceConfigsMap[enum.GitspaceEventTypeAgentConnectCompleted] = "Connected to the gitspace agent"
-	gitspaceConfigsMap[enum.GitspaceEventTypeAgentConnectFailed] = "Failed connecting to the gitspace agent"
+		enum.GitspaceEventTypeAgentGitspaceCreationStart:     "Setting up the gitspace...",
+		enum.GitspaceEventTypeAgentGitspaceCreationCompleted: "Successfully setup the gitspace",
+		enum.GitspaceEventTypeAgentGitspaceCreationFailed:    "Failed to setup the gitspace",
 
-	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceCreationStart] = "Setting up the gitspace..."
-	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceCreationCompleted] = "Successfully setup the gitspace"
-	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceCreationFailed] = "Failed to setup the gitspace"
+		enum.GitspaceEventTypeAgentGitspaceStopStart:     "Stopping the gitspace...",
+		enum.GitspaceEventTypeAgentGitspaceStopCompleted: "Successfully stopped the gitspace",
+		enum.GitspaceEventTypeAgentGitspaceStopFailed:    "Failed to stop the gitspace",
 
-	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceStopStart] = "Stopping the gitspace..."
-	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceStopCompleted] = "Successfully stopped the gitspace"
-	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceStopFailed] = "Failed to stop the gitspace"
+		enum.GitspaceEventTypeAgentGitspaceDeletionStart:      "Removing the gitspace...",
+		enum.GitspaceEventTypeAgentGitspaceDeletionCompleted:  "Successfully removed the gitspace",
+		enum.GitspaceEventTypeAgentGitspaceDeletionFailed:     "Failed to remove the gitspace",
+		enum.GitspaceEventTypeAgentGitspaceStateReportRunning: "Gitspace is running",
+		enum.GitspaceEventTypeAgentGitspaceStateReportStopped: "Gitspace is stopped",
+		enum.GitspaceEventTypeAgentGitspaceStateReportUnknown: "Gitspace is in unknown state",
+		enum.GitspaceEventTypeAgentGitspaceStateReportError:   "Gitspace has an error",
 
-	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceDeletionStart] = "Removing the gitspace..."
-	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceDeletionCompleted] = "Successfully removed the gitspace"
-	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceDeletionFailed] = "Failed to remove the gitspace"
+		enum.GitspaceEventTypeGitspaceAutoStop: "Triggering auto-stopping due to inactivity...",
 
-	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceStateReportRunning] = "Gitspace is running"
-	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceStateReportStopped] = "Gitspace is stopped"
-	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceStateReportUnknown] = "Gitspace is in unknown state"
-	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceStateReportError] = "Gitspace has an error"
+		enum.GitspaceEventTypeInfraCleanupStart:     "Cleaning up infrastructure...",
+		enum.GitspaceEventTypeInfraCleanupCompleted: "Successfully cleaned up infrastructure",
+		enum.GitspaceEventTypeInfraCleanupFailed:    "Failed to cleaned up infrastructure",
 
-	gitspaceConfigsMap[enum.GitspaceEventTypeGitspaceAutoStop] = "Triggering auto-stopping due to inactivity..."
+		enum.GitspaceEventTypeInfraResetStart:  "Resetting the gitspace infrastructure...",
+		enum.GitspaceEventTypeInfraResetFailed: "Failed to reset the gitspace infrastructure",
 
-	gitspaceConfigsMap[enum.GitspaceEventTypeInfraCleanupStart] = "Cleaning up infrastructure..."
-	gitspaceConfigsMap[enum.GitspaceEventTypeInfraCleanupCompleted] = "Successfully cleaned up infrastructure"
-	gitspaceConfigsMap[enum.GitspaceEventTypeInfraCleanupFailed] = "Failed to cleaned up infrastructure"
+		enum.GitspaceEventTypeDelegateTaskSubmitted: "Delegate task submitted",
 
-	gitspaceConfigsMap[enum.GitspaceEventTypeInfraResetStart] = "Resetting the gitspace infrastructure..."
-	gitspaceConfigsMap[enum.GitspaceEventTypeInfraResetFailed] = "Failed to reset the gitspace infrastructure"
+		enum.GitspaceEventTypeInfraVMCreationStart:     "creating VM...",
+		enum.GitspaceEventTypeInfraVMCreationCompleted: "Successfully created VM",
+		enum.GitspaceEventTypeInfraVMCreationFailed:    "Failed to created VM",
+
+		enum.GitspaceEventTypeInfraPublishGatewayCompleted: "Published machine port mapping to Gateway",
+		enum.GitspaceEventTypeInfraPublishGatewayFailed:    "Failed to publish machine port mapping to Gateway",
+	}
+
 	return gitspaceConfigsMap
 }

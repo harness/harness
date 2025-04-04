@@ -181,6 +181,7 @@ func (i InfraProvisioner) provisionNewInfrastructure(
 		SpacePath:                  gitspaceConfig.SpacePath,
 		GitspaceConfigIdentifier:   gitspaceConfig.Identifier,
 		GitspaceInstanceIdentifier: gitspaceConfig.GitspaceInstance.Identifier,
+		GitspaceInstanceID:         gitspaceConfig.GitspaceInstance.ID,
 		ProviderType:               infraProviderType,
 		InputParameters:            allParams,
 		ConfigMetadata:             configMetadata,
@@ -216,6 +217,7 @@ func (i InfraProvisioner) provisionNewInfrastructure(
 		gitspaceConfig.SpacePath,
 		gitspaceConfig.Identifier,
 		gitspaceConfig.GitspaceInstance.Identifier,
+		gitspaceConfig.GitspaceInstance.ID,
 		agentPort,
 		requiredGitspacePorts,
 		allParams,
@@ -261,6 +263,7 @@ func (i InfraProvisioner) provisionExistingInfrastructure(
 		gitspaceConfig.SpacePath,
 		gitspaceConfig.Identifier,
 		gitspaceConfig.GitspaceInstance.Identifier,
+		gitspaceConfig.GitspaceInstance.ID,
 		0, // NOTE: Agent port is not required for provisioning type Existing.
 		requiredGitspacePorts,
 		allParams,

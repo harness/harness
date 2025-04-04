@@ -147,4 +147,13 @@ const (
 	// Infra reset events.
 	GitspaceEventTypeInfraResetStart  GitspaceEventType = "infra_reset_start"
 	GitspaceEventTypeInfraResetFailed GitspaceEventType = "infra_reset_failed"
+
+	GitspaceEventTypeDelegateTaskSubmitted GitspaceEventType = "delegate_task_submitted"
+
+	GitspaceEventTypeInfraVMCreationStart     GitspaceEventType = "infra_vm_creation_start"
+	GitspaceEventTypeInfraVMCreationCompleted GitspaceEventType = "infra_vm_creation_completed"
+	GitspaceEventTypeInfraVMCreationFailed    GitspaceEventType = "infra_vm_creation_failed"
+
+	GitspaceEventTypeInfraPublishGatewayCompleted GitspaceEventType = "infra_publish_gateway_completed"
+	GitspaceEventTypeInfraPublishGatewayFailed    GitspaceEventType = "infra_publish_gateway_failed"
 )

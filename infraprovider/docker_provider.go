@@ -56,6 +56,7 @@ func (d DockerProvider) Provision(
 	spacePath string,
 	gitspaceConfigIdentifier string,
 	gitspaceInstanceIdentifier string,
+	_ int64,
 	_ int,
 	requiredGitspacePorts []types.GitspacePort,
 	inputParameters []types.InfraProviderParameter,

@@ -29,6 +29,7 @@ type InfraProvider interface {
 		spacePath string,
 		gitspaceConfigIdentifier string,
 		gitspaceInstanceIdentifier string,
+		gitspaceInstanceID int64,
 		agentPort int,
 		requiredGitspacePorts []types.GitspacePort,
 		inputParameters []types.InfraProviderParameter,
