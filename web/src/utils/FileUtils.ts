@@ -18,6 +18,7 @@ import { useMemo } from 'react'
 import { pdfjs } from 'react-pdf'
 import { useAppContext } from 'AppContext'
 import type { RepoFileContent } from 'services/code'
+import { getConfig } from 'services/config'
 import type { GitInfoProps } from './GitUtils'
 
 // TODO: Configure this to use a local worker/webpack loader
@@ -105,7 +106,8 @@ export function useFileContentViewerDecision({
           resourceData?.lfs_object_size > MAX_VIEWABLE_FILE_SIZE
         : resourceData?.data_size && resourceData?.size && resourceData?.data_size !== resourceData?.size) || false
 
-    const rawURL = `/code/api/v1/repos/${repoMetadata?.path}/+/raw/${resourcePath}?routingId=${routingId}&git_ref=${gitRef}`
+    const base = getConfig('code/api/v1')
+    const rawURL = `${base}/repos/${repoMetadata?.path}/+/raw/${resourcePath}?routingId=${routingId}&git_ref=${gitRef}`
 
     return {
       category,

@@ -61,7 +61,6 @@ import { useAppContext } from 'AppContext'
 import { LatestCommitForFile } from 'components/LatestCommit/LatestCommit'
 import { useCommitModal } from 'components/CommitModalButton/CommitModalButton'
 import { useStrings } from 'framework/strings'
-import { getConfig } from 'services/config'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { PlainButton } from 'components/PlainButton/PlainButton'
 import { CommitsView } from 'components/CommitsView/CommitsView'
@@ -210,10 +209,6 @@ export function FileContent({
     }
   }
 
-  const fullRawURL = standalone
-    ? `${window.location.origin}${rawURL.replace(/^\/code/, '')}`
-    : `${window.location.origin}${getConfig(rawURL)}`.replace('//', '/')
-
   return (
     <Container className={css.tabsContainer} ref={ref}>
       <Tabs
@@ -285,9 +280,7 @@ export function FileContent({
                               iconName: 'arrow-right',
                               text: getString('viewRaw'),
                               onClick: () => {
-                                const url = standalone
-                                  ? rawURL.replace(/^\/code/, '')
-                                  : getConfig(rawURL).replace('//', '/')
+                                const url = rawURL
                                 window.open(url, '_blank')
                               }
                             },
@@ -427,9 +420,7 @@ export function FileContent({
                                       <Match expr={category}>
                                         <Case val={FileCategory.SVG}>
                                           <img
-                                            src={
-                                              isFileLFS ? `${fullRawURL}` : `data:image/svg+xml;base64,${base64Data}`
-                                            }
+                                            src={isFileLFS ? `${rawURL}` : `data:image/svg+xml;base64,${base64Data}`}
                                             alt={filename}
                                             style={{ maxWidth: '100%', maxHeight: '100%' }}
                                           />
@@ -437,9 +428,7 @@ export function FileContent({
                                         <Case val={FileCategory.IMAGE}>
                                           <img
                                             src={
-                                              isFileLFS
-                                                ? `${fullRawURL}`
-                                                : `data:image/${extension};base64,${base64Data}`
+                                              isFileLFS ? `${rawURL}` : `data:image/${extension};base64,${base64Data}`
                                             }
                                             alt={filename}
                                             style={{ maxWidth: '100%', maxHeight: '100%' }}
@@ -447,7 +436,7 @@ export function FileContent({
                                         </Case>
                                         <Case val={FileCategory.PDF}>
                                           <Document
-                                            file={isFileLFS ? fullRawURL : `data:application/pdf;base64,${base64Data}`}
+                                            file={isFileLFS ? rawURL : `data:application/pdf;base64,${base64Data}`}
                                             options={{
                                               // TODO: Configure this to use a local worker/webpack loader
                                               cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
@@ -469,18 +458,14 @@ export function FileContent({
                                         <Case val={FileCategory.AUDIO}>
                                           <audio controls>
                                             <source
-                                              src={
-                                                isFileLFS ? fullRawURL : `data:audio/${extension};base64,${base64Data}`
-                                              }
+                                              src={isFileLFS ? rawURL : `data:audio/${extension};base64,${base64Data}`}
                                             />
                                           </audio>
                                         </Case>
                                         <Case val={FileCategory.VIDEO}>
                                           <video controls height={500}>
                                             <source
-                                              src={
-                                                isFileLFS ? fullRawURL : `data:video/${extension};base64,${base64Data}`
-                                              }
+                                              src={isFileLFS ? rawURL : `data:video/${extension};base64,${base64Data}`}
                                             />
                                           </video>
                                         </Case>
@@ -488,7 +473,7 @@ export function FileContent({
                                           <SourceCodeViewer
                                             editorDidMount={onEditorMount}
                                             language={filenameToLanguage(filename)}
-                                            source={isFileLFS ? fullRawURL : decodeGitContent(base64Data)}
+                                            source={isFileLFS ? rawURL : decodeGitContent(base64Data)}
                                           />
                                         </Case>
                                         <Case val={FileCategory.SUBMODULE}>
