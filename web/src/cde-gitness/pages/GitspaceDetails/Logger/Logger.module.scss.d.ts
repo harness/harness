@@ -16,15 +16,14 @@
 
 /* eslint-disable */
 // This is an auto-generated file
-export declare const accordionnCustomSummary: string
-export declare const cardContainer: string
-export declare const consoleContainer: string
-export declare const containerlogsTitle: string
-export declare const copyBtn: string
-export declare const customSubheader: string
-export declare const gitspaceIcon: string
-export declare const gitspaceIdContainer: string
-export declare const pageMain: string
-export declare const popover: string
-export declare const scrollDownBtn: string
-export declare const titleContainer: string
+export declare const chevron: string
+export declare const consoleLine: string
+export declare const expanded: string
+export declare const line: string
+export declare const main: string
+export declare const name: string
+export declare const pipelineSteps: string
+export declare const selected: string
+export declare const stepContainer: string
+export declare const stepHeader: string
+export declare const stepLogContainer: string

@@ -1034,6 +1034,7 @@ export interface TypesGitspaceConfig {
   state?: EnumGitspaceStateType
   updated?: number
   user_id?: string
+  log_key?: string
 }
 
 export interface TypesGitspaceEventResponse {

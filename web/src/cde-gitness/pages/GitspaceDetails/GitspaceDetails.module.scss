@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@import 'src/utils/utils';
 
 .customSubheader {
   height: 10vh;
@@ -110,4 +111,46 @@
 .containerlogsTitle {
   width: 130px;
   justify-content: space-between !important;
+}
+
+.scrollDownBtn {
+  position: absolute;
+  padding: 8px !important;
+  bottom: 35px;
+  right: 30px;
+
+  & > :global(.bp3-icon) {
+    padding: 0 !important;
+  }
+
+  & > :global(.bp3-button-text) {
+    width: 0;
+    padding-left: 0;
+    overflow: hidden;
+    display: inline-block;
+  }
+
+  &:hover > :global(.bp3-button-text) {
+    width: auto;
+    padding-left: 4px;
+  }
+}
+
+.consoleContainer {
+  min-height: 120px !important;
+  max-height: 70vh !important;
+  overflow: scroll;
+  align-items: start !important;
+  padding-top: var(--spacing-large) !important;
+  padding-bottom: var(--spacing-large) !important;
+  padding-left: var(--spacing-xlarge) !important;
+  background-color: var(--black) !important;
+  color: var(--white) !important;
+  pre {
+    background-color: var(--black) !important;
+    color: var(--white) !important;
+    text-align: start !important;
+    font-size: 12px;
+    font-family: var(--font-family-mono) !important;
+  }
 }

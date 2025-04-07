@@ -26,7 +26,8 @@ import {
   Page,
   Text,
   useToaster,
-  AccordionHandle
+  AccordionHandle,
+  ButtonSize
 } from '@harnessio/uicore'
 import { Play } from 'iconoir-react'
 import { useHistory, useParams } from 'react-router-dom'
@@ -53,12 +54,10 @@ import { useGitspaceDetails } from 'cde-gitness/hooks/useGitspaceDetails'
 import { useGitspaceEvents } from 'cde-gitness/hooks/useGitspaceEvents'
 import { useGitspaceActions } from 'cde-gitness/hooks/useGitspaceActions'
 import { useDeleteGitspaces } from 'cde-gitness/hooks/useDeleteGitspaces'
-import { useGitspacesLogs } from 'cde-gitness/hooks/useGitspaceLogs'
 import { useOpenVSCodeBrowserURL } from 'cde-gitness/hooks/useOpenVSCodeBrowserURL'
 import { ErrorCard } from 'cde-gitness/components/ErrorCard/ErrorCard'
 import CopyButton from 'cde-gitness/components/CopyButton/CopyButton'
-import ContainerLogs from '../../components/ContainerLogs/ContainerLogs'
-import { useGetLogStream } from '../../hooks/useGetLogStream'
+import Logger from './Logger/Logger'
 import css from './GitspaceDetails.module.scss'
 
 const GitspaceDetails = () => {
@@ -67,25 +66,21 @@ const GitspaceDetails = () => {
   const { routes, standalone } = useAppContext()
   const { showError, showSuccess } = useToaster()
   const history = useHistory()
+  const containerRef = useRef<HTMLDivElement | null>(null)
   const [startTriggred, setStartTriggred] = useState<boolean>(false)
   const [triggerPollingOnStart, setTriggerPollingOnStart] = useState<EnumGitspaceStateType>()
   const { gitspaceId = '' } = useParams<{ gitspaceId?: string }>()
 
+  const logCardId = 'logsCard'
+  const [expandedTab, setExpandedTab] = useState('')
   const [isStreamingLogs, setIsStreamingLogs] = useState(false)
+  const [isBottom, setIsBottom] = useState(false)
 
   const [startPolling, setStartPolling] = useState<GitspaceActionType | undefined>(undefined)
 
   const { loading, data, refetch, error } = useGitspaceDetails({ gitspaceId })
 
   const { data: eventData, refetch: refetchEventData } = useGitspaceEvents({ gitspaceId })
-
-  const {
-    data: responseData,
-    refetch: refetchLogsData,
-    response,
-    error: streamLogsError,
-    loading: logsLoading
-  } = useGitspacesLogs({ gitspaceId })
 
   const { mutate: actionMutate, loading: mutateLoading } = useGitspaceActions({ gitspaceId })
 
@@ -111,15 +106,13 @@ const GitspaceDetails = () => {
         defaultTo(item?.timestamp, 0) >= defaultTo(data?.instance?.updated, 0)
     )
     if (disabledActionButtons && filteredEvent?.length && !isStreamingLogs) {
-      refetchLogsData()
       setIsStreamingLogs(true)
-    } else if (
-      (filteredEvent?.length && !disabledActionButtons && isStreamingLogs) ||
-      (isStreamingLogs && streamLogsError)
-    ) {
+      viewLogs()
+    } else if (filteredEvent?.length && !disabledActionButtons && isStreamingLogs) {
       setIsStreamingLogs(false)
+      viewLogs()
     }
-  }, [eventData, data?.instance?.updated, disabledActionButtons, streamLogsError])
+  }, [eventData, data?.instance?.updated, disabledActionButtons])
 
   usePolling(
     async () => {
@@ -132,19 +125,6 @@ const GitspaceDetails = () => {
     {
       pollingInterval: standalone ? 2000 : 10000,
       startCondition: Boolean(startPolling) || !pollingCondition
-    }
-  )
-
-  usePolling(
-    async () => {
-      if (!standalone) {
-        await refetchLogsData()
-      }
-    },
-    {
-      pollingInterval: 10000,
-      startCondition: (eventData?.[eventData?.length - 1]?.event as string) === 'agent_gitspace_creation_start',
-      stopCondition: pollingCondition
     }
   )
 
@@ -170,8 +150,6 @@ const GitspaceDetails = () => {
       startTrigger()
     }
   }, [data?.state, redirectFrom, mutateLoading, startTriggred])
-
-  const formattedlogsdata = useGetLogStream(standalone ? { response } : { response: undefined })
 
   const confirmDelete = useConfirmAct()
 
@@ -203,14 +181,6 @@ const GitspaceDetails = () => {
   const myRef = useRef<any | null>(null)
   const selectedIde = getIDEOption(data?.ide, getString)
 
-  useEffect(() => {
-    if (standalone ? formattedlogsdata.data : responseData) {
-      accordionRef.current?.open('logsCard')
-    } else {
-      accordionRef.current?.close('logsCard')
-    }
-  }, [standalone, responseData, formattedlogsdata.data])
-
   const triggerGitspace = async () => {
     try {
       setStartPolling(GitspaceActionType.START)
@@ -227,6 +197,19 @@ const GitspaceDetails = () => {
   const viewLogs = () => {
     myRef.current?.scrollIntoView()
     accordionRef.current?.open('logsCard')
+    setExpandedTab('logsCard')
+  }
+
+  const handleClick = () => {
+    const logContainer = containerRef.current as HTMLDivElement
+    const scrollParent = logContainer?.parentElement as HTMLDivElement
+    if (!isBottom) {
+      scrollParent.scrollTop = scrollParent.scrollHeight
+      setIsBottom(true)
+    } else if (isBottom) {
+      scrollParent.scrollTop = 0
+      setIsBottom(false)
+    }
   }
 
   return (
@@ -451,16 +434,20 @@ const GitspaceDetails = () => {
           <Card className={css.cardContainer}>
             <EventTimelineAccordion data={eventData as TypesGitspaceEventResponse[]} />
           </Card>
-
           <Card className={css.cardContainer}>
             <Container ref={myRef}>
-              <Accordion activeId={''} ref={accordionRef}>
+              <Accordion
+                activeId={expandedTab}
+                ref={accordionRef}
+                onChange={(e: string) => {
+                  setExpandedTab(e)
+                }}>
                 <Accordion.Panel
                   className={css.accordionnCustomSummary}
                   summary={
                     <Layout.Vertical spacing="small">
                       <Text
-                        rightIcon={isStreamingLogs || logsLoading ? 'steps-spinner' : undefined}
+                        rightIcon={isStreamingLogs ? 'steps-spinner' : undefined}
                         className={css.containerlogsTitle}
                         font={{ variation: FontVariation.CARD_TITLE }}
                         margin={{ left: 'large' }}>
@@ -469,10 +456,27 @@ const GitspaceDetails = () => {
                       <Text margin={{ left: 'large' }}>{getString('cde.details.containerLogsSubText')} </Text>
                     </Layout.Vertical>
                   }
-                  id="logsCard"
+                  id={logCardId}
                   details={
-                    <Container width="100%">
-                      <ContainerLogs data={standalone ? formattedlogsdata.data : responseData} />
+                    <Container width="100%" className={css.consoleContainer}>
+                      <Logger
+                        value={data?.name ?? ''}
+                        state={data?.state ?? ''}
+                        logKey={data?.log_key ?? ''}
+                        isStreaming={isStreamingLogs}
+                        expanded={true}
+                        localRef={containerRef}
+                        setIsBottom={setIsBottom}
+                      />
+                      <Button
+                        size={ButtonSize.SMALL}
+                        variation={ButtonVariation.PRIMARY}
+                        text={isBottom ? getString('top') : getString('bottom')}
+                        icon={isBottom ? 'arrow-up' : 'arrow-down'}
+                        iconProps={{ size: 10 }}
+                        onClick={handleClick}
+                        className={css.scrollDownBtn}
+                      />
                     </Container>
                   }
                 />
