@@ -28,7 +28,7 @@ const BasicDetails = ({ formikProps }: BasicDetailProps) => {
       <Text className={css.basicDetailsHeading}>{getString('cde.configureInfra.basicDetails')}</Text>
       <Container className={css.basicDetailsBody}>
         <FormInput.InputWithIdentifier
-          inputLabel={getString('cde.configureInfra.name')}
+          inputLabel={getString('cde.configureInfra.infraName')}
           inputName="name"
           isIdentifierEditable={true}
         />

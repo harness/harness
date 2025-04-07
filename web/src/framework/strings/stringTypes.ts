@@ -1281,6 +1281,7 @@ export interface StringsMap {
   'cde.configureInfra.gateway': string
   'cde.configureInfra.gatewayNoteText': string
   'cde.configureInfra.id': string
+  'cde.configureInfra.infraName': string
   'cde.configureInfra.learnMore': string
   'cde.configureInfra.learnMoreAboutHybrid': string
   'cde.configureInfra.machineType': string
