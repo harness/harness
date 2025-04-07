@@ -253,8 +253,10 @@ func (i ImageDao) CreateOrUpdate(ctx context.Context, image *types.Image) error 
 	return nil
 }
 
-func (i ImageDao) GetLabelsByParentIDAndRepo(ctx context.Context, parentID int64, repo string,
-	limit int, offset int, search string) (labels []string, err error) {
+func (i ImageDao) GetLabelsByParentIDAndRepo(
+	ctx context.Context, parentID int64, repo string,
+	limit int, offset int, search string,
+) (labels []string, err error) {
 	q := databaseg.Builder.Select("a.image_labels as labels").
 		From("images a").
 		Join("registries r ON r.registry_id = a.image_registry_id").
@@ -264,7 +266,8 @@ func (i ImageDao) GetLabelsByParentIDAndRepo(ctx context.Context, parentID int64
 		q = q.Where("a.image_labels LIKE ?", "%"+search+"%")
 	}
 
-	q = q.OrderBy("a.image_labels ASC").Limit(uint64(limit)).Offset(uint64(offset))
+	q = q.OrderBy("a.image_labels ASC").
+		Limit(util.SafeIntToUInt64(limit)).Offset(util.SafeIntToUInt64(offset))
 
 	sql, args, err := q.ToSql()
 	if err != nil {
@@ -282,8 +285,10 @@ func (i ImageDao) GetLabelsByParentIDAndRepo(ctx context.Context, parentID int64
 	return i.mapToImageLabels(dst), nil
 }
 
-func (i ImageDao) CountLabelsByParentIDAndRepo(ctx context.Context, parentID int64, repo,
-	search string) (count int64, err error) {
+func (i ImageDao) CountLabelsByParentIDAndRepo(
+	ctx context.Context, parentID int64, repo,
+	search string,
+) (count int64, err error) {
 	q := databaseg.Builder.Select("a.image_labels as labels").
 		From("images a").
 		Join("registries r ON r.registry_id = a.image_registry_id").
@@ -309,8 +314,10 @@ func (i ImageDao) CountLabelsByParentIDAndRepo(ctx context.Context, parentID int
 	return int64(len(dst)), nil
 }
 
-func (i ImageDao) GetByRepoAndName(ctx context.Context, parentID int64,
-	repo string, name string) (*types.Image, error) {
+func (i ImageDao) GetByRepoAndName(
+	ctx context.Context, parentID int64,
+	repo string, name string,
+) (*types.Image, error) {
 	q := databaseg.Builder.Select("a.image_id, a.image_name, "+
 		" a.image_registry_id, a.image_labels, a.image_created_at, "+
 		" a.image_updated_at, a.image_created_by, a.image_updated_by").
@@ -449,8 +456,10 @@ func (i ImageDao) mapToImageLabels(dst []*imageLabelDB) []string {
 	return res
 }
 
-func (i ImageDao) mapToImageLabel(elements map[string]bool, res []string,
-	dst *imageLabelDB) (map[string]bool, []string) {
+func (i ImageDao) mapToImageLabel(
+	elements map[string]bool, res []string,
+	dst *imageLabelDB,
+) (map[string]bool, []string) {
 	if dst == nil {
 		return elements, res
 	}

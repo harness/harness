@@ -74,29 +74,54 @@ func (c *APIController) GetArtifactSummary(
 		}, nil
 	}
 
-	var metadata *types.ArtifactMetadata
-	if registry.PackageType == artifact.PackageTypeDOCKER || registry.PackageType == artifact.PackageTypeHELM {
-		metadata, err = c.TagStore.GetLatestTagMetadata(ctx, regInfo.parentID, regInfo.RegistryIdentifier, image)
-
-		if err != nil {
-			return artifact.GetArtifactSummary500JSONResponse{
-				InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
-					*GetErrorResponse(http.StatusInternalServerError, err.Error()),
-				),
-			}, nil
-		}
-	} else {
-		metadata, err = c.ArtifactStore.GetLatestArtifactMetadata(ctx, regInfo.parentID, regInfo.RegistryIdentifier, image)
-
-		if err != nil {
-			return artifact.GetArtifactSummary500JSONResponse{
-				InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
-					*GetErrorResponse(http.StatusInternalServerError, err.Error()),
-				),
-			}, nil
-		}
+	metadata, err := c.getImageMetadata(ctx, registry, image)
+	if err != nil {
+		return artifact.GetArtifactSummary500JSONResponse{
+			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
+				*GetErrorResponse(http.StatusInternalServerError, err.Error()),
+			),
+		}, nil
 	}
 	return artifact.GetArtifactSummary200JSONResponse{
 		ArtifactSummaryResponseJSONResponse: *GetArtifactSummary(*metadata),
 	}, nil
+}
+
+func (c *APIController) getImageMetadata(
+	ctx context.Context,
+	registry *types.Registry,
+	image string,
+) (*types.ImageMetadata, error) {
+	img, err := c.ImageStore.GetByName(ctx, registry.ID, image)
+	if err != nil {
+		return nil, err
+	}
+	downloadCount, err := c.DownloadStatRepository.GetTotalDownloadsForImage(ctx, img.ID)
+	if err != nil {
+		return nil, err
+	}
+	imgMetadata := &types.ImageMetadata{
+		Name:          image,
+		DownloadCount: downloadCount,
+		RepoName:      registry.Name,
+		PackageType:   registry.PackageType,
+		CreatedAt:     img.CreatedAt,
+	}
+
+	if registry.PackageType == artifact.PackageTypeDOCKER || registry.PackageType == artifact.PackageTypeHELM {
+		latestTag, err := c.TagStore.GetLatestTag(ctx, registry.ID, image)
+		if err != nil {
+			return nil, err
+		}
+		imgMetadata.LatestVersion = latestTag.Name
+		imgMetadata.ModifiedAt = latestTag.UpdatedAt
+	} else {
+		latestArtifact, err := c.ArtifactStore.GetLatestByImageID(ctx, img.ID)
+		if err != nil {
+			return nil, err
+		}
+		imgMetadata.LatestVersion = latestArtifact.Version
+		imgMetadata.ModifiedAt = latestArtifact.UpdatedAt
+	}
+	return imgMetadata, nil
 }

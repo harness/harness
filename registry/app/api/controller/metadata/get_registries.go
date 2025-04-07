@@ -47,8 +47,14 @@ func (c *APIController) GetAllRegistries(
 		registryIDsParam:  nil,
 		recursive:         r.Params.Recursive != nil && bool(*r.Params.Recursive), // default is false
 	}
-	regInfo, _ := c.GetRegistryRequestInfo(ctx, *registryRequestParams)
-
+	regInfo, err := c.GetRegistryRequestInfo(ctx, *registryRequestParams)
+	if err != nil {
+		return artifact.GetAllRegistries400JSONResponse{
+			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
+				*GetErrorResponse(http.StatusBadRequest, err.Error()),
+			),
+		}, nil
+	}
 	space, err := c.SpaceFinder.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
 		return artifact.GetAllRegistries400JSONResponse{

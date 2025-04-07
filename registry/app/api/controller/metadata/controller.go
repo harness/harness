@@ -49,6 +49,7 @@ type APIController struct {
 	RegistryMetadataHelper      RegistryMetadataHelper
 	WebhookService              WebhookService
 	ArtifactEventReporter       registryevents.Reporter
+	DownloadStatRepository      store.DownloadStatRepository
 }
 
 func NewAPIController(
@@ -73,6 +74,7 @@ func NewAPIController(
 	registryMetadataHelper RegistryMetadataHelper,
 	webhookService WebhookService,
 	artifactEventReporter registryevents.Reporter,
+	downloadStatRepository store.DownloadStatRepository,
 ) *APIController {
 	return &APIController{
 		fileManager:                 fileManager,
@@ -96,5 +98,6 @@ func NewAPIController(
 		RegistryMetadataHelper:      registryMetadataHelper,
 		WebhookService:              webhookService,
 		ArtifactEventReporter:       artifactEventReporter,
+		DownloadStatRepository:      downloadStatRepository,
 	}
 }

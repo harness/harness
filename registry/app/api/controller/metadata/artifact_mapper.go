@@ -497,7 +497,7 @@ func GetPythonArtifactDetail(
 	return *artifactDetail
 }
 
-func GetArtifactSummary(artifact types.ArtifactMetadata) *artifactapi.ArtifactSummaryResponseJSONResponse {
+func GetArtifactSummary(artifact types.ImageMetadata) *artifactapi.ArtifactSummaryResponseJSONResponse {
 	createdAt := GetTimeInMs(artifact.CreatedAt)
 	modifiedAt := GetTimeInMs(artifact.ModifiedAt)
 	artifactVersionSummary := &artifactapi.ArtifactSummary{
@@ -505,7 +505,6 @@ func GetArtifactSummary(artifact types.ArtifactMetadata) *artifactapi.ArtifactSu
 		ModifiedAt:     &modifiedAt,
 		DownloadsCount: &artifact.DownloadCount,
 		ImageName:      artifact.Name,
-		Labels:         &artifact.Labels,
 		PackageType:    artifact.PackageType,
 	}
 	response := &artifactapi.ArtifactSummaryResponseJSONResponse{

@@ -82,14 +82,38 @@ func (c *APIController) GetAllArtifactVersions(
 	if err != nil {
 		return throw500Error(err)
 	}
-
+	img, err := c.ImageStore.GetByName(ctx, registry.ID, image)
+	if err != nil {
+		return throw500Error(err)
+	}
+	//nolint:nestif
 	if registry.PackageType == artifact.PackageTypeDOCKER || registry.PackageType == artifact.PackageTypeHELM {
 		tags, err := c.TagStore.GetAllTagsByRepoAndImage(
 			ctx, regInfo.parentID, regInfo.RegistryIdentifier,
 			image, regInfo.sortByField, regInfo.sortByOrder, regInfo.limit, regInfo.offset, regInfo.searchTerm,
 		)
+		if err != nil {
+			return throw500Error(err)
+		}
 
-		count, _ := c.TagStore.CountAllTagsByRepoAndImage(
+		var digests []string
+		for _, tag := range *tags {
+			if tag.Digest != "" {
+				digests = append(digests, tag.Digest)
+			}
+		}
+
+		counts, err := c.DownloadStatRepository.GetTotalDownloadsForManifests(ctx, digests, img.ID)
+		if err != nil {
+			return throw500Error(err)
+		}
+
+		for i, tag := range *tags {
+			if tag.Digest != "" {
+				(*tags)[i].DownloadCount = counts[tag.Digest]
+			}
+		}
+		count, err := c.TagStore.CountAllTagsByRepoAndImage(
 			ctx, regInfo.parentID, regInfo.RegistryIdentifier,
 			image, regInfo.searchTerm,
 		)

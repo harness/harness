@@ -74,6 +74,7 @@ func APIHandlerProvider(
 	webhookService *registrywebhook.Service,
 	spacePathStore corestore.SpacePathStore,
 	artifactEventReporter *registryevents.Reporter,
+	downloadStatRepository store.DownloadStatRepository,
 ) harness.APIHandler {
 	return harness.NewAPIHandler(
 		repoDao,
@@ -97,6 +98,7 @@ func APIHandlerProvider(
 		*webhookService,
 		spacePathStore,
 		*artifactEventReporter,
+		downloadStatRepository,
 	)
 }
 

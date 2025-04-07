@@ -45,6 +45,16 @@ type ArtifactMetadata struct {
 	Version       string
 }
 
+type ImageMetadata struct {
+	Name          string
+	RepoName      string
+	DownloadCount int64
+	PackageType   artifact.PackageType
+	LatestVersion string
+	CreatedAt     time.Time
+	ModifiedAt    time.Time
+}
+
 type TagMetadata struct {
 	Name          string
 	Size          string
@@ -55,6 +65,7 @@ type TagMetadata struct {
 	NonConformant bool
 	Payload       Payload
 	MediaType     string
+	Digest        string
 	DownloadCount int64
 }
 

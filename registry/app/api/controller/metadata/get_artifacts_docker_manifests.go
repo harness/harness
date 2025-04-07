@@ -75,11 +75,7 @@ func (c *APIController) GetDockerArtifactManifests(
 
 	image := string(r.Artifact)
 	version := string(r.Version)
-	artifactMetadata, err := c.TagStore.GetLatestTagMetadata(ctx, regInfo.parentID, regInfo.RegistryIdentifier, image)
-	if err != nil {
-		return artifactManifestsErrorRs(err), nil
-	}
-	manifestDetailsList, err := c.ProcessManifest(ctx, regInfo, image, version, artifactMetadata.DownloadCount)
+	manifestDetailsList, err := c.ProcessManifest(ctx, regInfo, image, version)
 	if err != nil {
 		return artifactManifestsErrorRs(err), nil
 	}
@@ -98,7 +94,7 @@ func (c *APIController) GetDockerArtifactManifests(
 
 func (c *APIController) getManifestList(
 	ctx context.Context, reqManifest *ml.DeserializedManifestList, registry *types.Registry, image string,
-	regInfo *RegistryRequestBaseInfo, downloadCount int64,
+	regInfo *RegistryRequestBaseInfo,
 ) ([]artifact.DockerManifestDetails, error) {
 	manifestDetailsList := []artifact.DockerManifestDetails{}
 	for _, manifestEntry := range reqManifest.Manifests {
@@ -123,7 +119,11 @@ func (c *APIController) getManifestList(
 		if err != nil {
 			return nil, err
 		}
-		manifestDetailsList = append(manifestDetailsList, getManifestDetails(referencedManifest, mConfig, downloadCount))
+		md, err := c.getManifestDetails(ctx, referencedManifest, mConfig)
+		if err != nil {
+			return nil, err
+		}
+		manifestDetailsList = append(manifestDetailsList, md)
 	}
 	return manifestDetailsList, nil
 }
@@ -136,22 +136,31 @@ func artifactManifestsErrorRs(err error) artifact.GetDockerArtifactManifestsResp
 	}
 }
 
-func getManifestDetails(
-	m *types.Manifest, mConfig *manifestConfig, downloadsCount int64,
-) artifact.DockerManifestDetails {
+func (c *APIController) getManifestDetails(
+	ctx context.Context,
+	m *types.Manifest, mConfig *manifestConfig,
+) (artifact.DockerManifestDetails, error) {
 	createdAt := GetTimeInMs(m.CreatedAt)
 	size := GetSize(m.TotalSize)
-
+	dgst, _ := types.NewDigest(m.Digest)
+	image, err := c.ImageStore.GetByName(ctx, m.RegistryID, m.ImageName)
+	if err != nil {
+		return artifact.DockerManifestDetails{}, err
+	}
 	manifestDetails := artifact.DockerManifestDetails{
-		Digest:         m.Digest.String(),
-		CreatedAt:      &createdAt,
-		Size:           &size,
-		DownloadsCount: &downloadsCount,
+		Digest:    m.Digest.String(),
+		CreatedAt: &createdAt,
+		Size:      &size,
+	}
+	downloadCountMap, err := c.DownloadStatRepository.GetTotalDownloadsForManifests(ctx, []string{string(dgst)}, image.ID)
+	if err == nil && len(downloadCountMap) > 0 {
+		downloadCount := downloadCountMap[string(dgst)]
+		manifestDetails.DownloadsCount = &downloadCount
 	}
 	if mConfig != nil {
 		manifestDetails.OsArch = fmt.Sprintf("%s/%s", mConfig.Os, mConfig.Arch)
 	}
-	return manifestDetails
+	return manifestDetails, nil
 }
 
 // ProcessManifest processes a Docker artifact manifest by retrieving the manifest details from the database,
@@ -161,7 +170,7 @@ func getManifestDetails(
 func (c *APIController) ProcessManifest(
 	ctx context.Context,
 	regInfo *RegistryRequestBaseInfo,
-	image, version string, downloadCount int64,
+	image, version string,
 ) ([]artifact.DockerManifestDetails, error) {
 	registry, err := c.RegistryRepository.GetByParentIDAndName(ctx, regInfo.parentID, regInfo.RegistryIdentifier)
 	if err != nil {
@@ -186,15 +195,23 @@ func (c *APIController) ProcessManifest(
 		if err != nil {
 			return nil, err
 		}
-		manifestDetailsList = append(manifestDetailsList, getManifestDetails(m, mConfig, downloadCount))
+		md, err := c.getManifestDetails(ctx, m, mConfig)
+		if err != nil {
+			return nil, err
+		}
+		manifestDetailsList = append(manifestDetailsList, md)
 	case *ocischema.DeserializedManifest:
 		mConfig, err := getManifestConfig(ctx, reqManifest.Config().Digest, regInfo.RootIdentifier, c.StorageDriver)
 		if err != nil {
 			return nil, err
 		}
-		manifestDetailsList = append(manifestDetailsList, getManifestDetails(m, mConfig, downloadCount))
+		md, err := c.getManifestDetails(ctx, m, mConfig)
+		if err != nil {
+			return nil, err
+		}
+		manifestDetailsList = append(manifestDetailsList, md)
 	case *ml.DeserializedManifestList:
-		manifestDetailsList, err = c.getManifestList(ctx, reqManifest, registry, image, regInfo, downloadCount)
+		manifestDetailsList, err = c.getManifestList(ctx, reqManifest, registry, image, regInfo)
 		if err != nil {
 			return nil, err
 		}

@@ -110,6 +110,25 @@ func (a ArtifactDao) GetByRegistryIDAndImage(ctx context.Context, registryID int
 	return &artifacts, nil
 }
 
+func (a ArtifactDao) GetLatestByImageID(ctx context.Context, imageID int64) (*types.Artifact, error) {
+	q := databaseg.Builder.Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(artifactDB{}), ",")).
+		From("artifacts").
+		Where("artifact_image_id = ?", imageID).OrderBy("artifact_updated_at DESC").Limit(1)
+
+	sql, args, err := q.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, a.db)
+
+	dst := new(artifactDB)
+	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to get artifact")
+	}
+	return a.mapToArtifact(ctx, dst)
+}
+
 func (a ArtifactDao) CreateOrUpdate(ctx context.Context, artifact *types.Artifact) error {
 	const sqlQuery = `
 		INSERT INTO artifacts ( 

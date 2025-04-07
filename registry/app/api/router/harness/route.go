@@ -76,6 +76,7 @@ func NewAPIHandler(
 	webhookService registrywebhook.Service,
 	spacePathStore corestore.SpacePathStore,
 	artifactEventReporter registryevents.Reporter,
+	downloadStatRepository store.DownloadStatRepository,
 ) APIHandler {
 	r := chi.NewRouter()
 	r.Use(audit.Middleware())
@@ -104,6 +105,7 @@ func NewAPIHandler(
 		registryMetadataHelper,
 		&webhookService,
 		artifactEventReporter,
+		downloadStatRepository,
 	)
 
 	handler := artifact.NewStrictHandler(apiController, []artifact.StrictMiddlewareFunc{})

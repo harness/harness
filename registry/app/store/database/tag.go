@@ -95,6 +95,7 @@ type tagMetadataDB struct {
 	NonConformant bool                 `db:"manifest_non_conformant"`
 	Payload       []byte               `db:"manifest_payload"`
 	MediaType     string               `db:"mt_media_type"`
+	Digest        []byte               `db:"manifest_digest"`
 	DownloadCount int64                `db:"download_count"`
 }
 
@@ -969,38 +970,16 @@ func (t tagDao) GetAllTagsByRepoAndImage(
 	image string, sortByField string, sortByOrder string, limit int, offset int,
 	search string,
 ) (*[]types.TagMetadata, error) {
-	// Define download count subquery
-	downloadCountSubquery := `
-        SELECT 
-            a.artifact_image_id, 
-            COUNT(d.download_stat_id) AS download_count, 
-            i.image_name, 
-            i.image_registry_id
-        FROM artifacts a
-        JOIN download_stats d ON d.download_stat_artifact_id = a.artifact_id
-        JOIN images i ON i.image_id = a.artifact_image_id
-        GROUP BY a.artifact_image_id, i.image_name, i.image_registry_id
-    `
-
-	// Build the main query
-	q := databaseg.Builder.
-		Select(`
-            t.tag_name AS name, 
-            m.manifest_total_size AS size, 
-            r.registry_package_type AS package_type, 
-            t.tag_updated_at AS modified_at,
-            m.manifest_schema_version, 
-            m.manifest_non_conformant, 
-            m.manifest_payload, 
-            mt.mt_media_type, 
-            COALESCE(dc.download_count, 0) AS download_count
-        `).
+	q := databaseg.Builder.Select(
+		`t.tag_name as name, m.manifest_total_size as size, 
+		r.registry_package_type as package_type, t.tag_updated_at as modified_at, 
+		m.manifest_schema_version, m.manifest_non_conformant, m.manifest_payload, 
+		mt.mt_media_type, m.manifest_digest`,
+	).
 		From("tags t").
 		Join("registries r ON t.tag_registry_id = r.registry_id").
 		Join("manifests m ON t.tag_manifest_id = m.manifest_id").
 		Join("media_types mt ON mt.mt_id = m.manifest_media_type_id").
-		LeftJoin(fmt.Sprintf("(%s) AS dc ON t.tag_image_name = dc.image_name "+
-			"AND t.tag_registry_id = dc.image_registry_id", downloadCountSubquery)).
 		Where(
 			"r.registry_parent_id = ? AND r.registry_name = ? AND t.tag_image_name = ?",
 			parentID, repoKey, image,
@@ -1009,11 +988,7 @@ func (t tagDao) GetAllTagsByRepoAndImage(
 	if search != "" {
 		q = q.Where("tag_name LIKE ?", sqlPartialMatch(search))
 	}
-	sortField := "tag_" + sortByField
-	if sortByField == downloadCount {
-		sortField = downloadCount
-	}
-	q = q.OrderBy(sortField + " " + sortByOrder).Limit(uint64(limit)).Offset(uint64(offset)) //nolint:gosec
+	q = q.OrderBy("t.tag_" + sortByField + " " + sortByOrder).Limit(uint64(limit)).Offset(uint64(offset)) //nolint:gosec
 
 	sql, args, err := q.ToSql()
 	if err != nil {
@@ -1039,7 +1014,7 @@ func (t tagDao) CountAllTagsByRepoAndImage(
 		Join("manifests ON tag_manifest_id = manifest_id").
 		Where(
 			"registry_parent_id = ? AND registry_name = ?"+
-				"AND tag_image_name = ?", parentID, repoKey, image,
+				" AND tag_image_name = ?", parentID, repoKey, image,
 		)
 
 	if search != "" {
@@ -1222,7 +1197,7 @@ func (t tagDao) mapToTagMetadata(
 	_ context.Context,
 	dst *tagMetadataDB,
 ) (*types.TagMetadata, error) {
-	return &types.TagMetadata{
+	tagMetadata := &types.TagMetadata{
 		Name:          dst.Name,
 		Size:          dst.Size,
 		PackageType:   dst.PackageType,
@@ -1233,7 +1208,13 @@ func (t tagDao) mapToTagMetadata(
 		MediaType:     dst.MediaType,
 		Payload:       dst.Payload,
 		DownloadCount: dst.DownloadCount,
-	}, nil
+	}
+	if dst.Digest != nil {
+		dgst := types.Digest(util.GetHexEncodedString(dst.Digest))
+		tagMetadata.Digest = string(dgst)
+	}
+
+	return tagMetadata, nil
 }
 
 func (t tagDao) mapToTagDetail(

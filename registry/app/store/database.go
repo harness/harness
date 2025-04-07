@@ -486,10 +486,17 @@ type ArtifactRepository interface {
 		*[]types.Artifact,
 		error,
 	)
+	GetLatestByImageID(ctx context.Context, imageID int64) (*types.Artifact, error)
 }
 
 type DownloadStatRepository interface {
 	Create(ctx context.Context, downloadStat *types.DownloadStat) error
+	GetTotalDownloadsForImage(ctx context.Context, imageID int64) (int64, error)
+	GetTotalDownloadsForManifests(
+		ctx context.Context,
+		artifactVersion []string,
+		imageID int64,
+	) (map[string]int64, error)
 }
 
 type BandwidthStatRepository interface {
