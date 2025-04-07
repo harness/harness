@@ -127,3 +127,17 @@
   line-height: var(--spacing-main) !important;
   text-transform: uppercase !important;
 }
+
+.delegateContainer {
+  margin: var(--padding-button) 0 !important;
+
+  [class*='DelegateSelectors-module_delegateInput'] {
+    border: 1px solid var(--grey-200) !important;
+  }
+}
+
+.delegateSelector {
+  padding-bottom: var(--spacing-xsmall) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+}

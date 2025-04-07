@@ -1313,6 +1313,7 @@ export interface StringsMap {
   'cde.createImport': string
   'cde.createRepo': string
   'cde.created': string
+  'cde.delegate.DelegateSelector': string
   'cde.deleteGitspace': string
   'cde.deleteGitspaceText': string
   'cde.deleteGitspaceTitle': string

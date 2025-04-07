@@ -42,6 +42,11 @@ export enum IDEType {
   RIDER = 'rider'
 }
 
+export interface DelegateSelector {
+  connected?: boolean
+  name?: string
+}
+
 export interface regionProp {
   location: string
   defaultSubnet: string

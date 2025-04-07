@@ -23,6 +23,7 @@ import { useFeatureFlags } from 'hooks/useFeatureFlag'
 import { useGetSettingValue } from 'hooks/useGetSettingValue'
 import { useGetAuthSettings } from 'hooks/useGetAuthSettings'
 import { defaultUsefulOrNot } from 'components/DefaultUsefulOrNot/UsefulOrNot'
+import { defaultDelegateSelectorsV2 } from 'components/DelegateSelector/DelegateSelector'
 import App from './App'
 import './bootstrap.scss'
 
@@ -47,7 +48,8 @@ ReactDOM.render(
     }}
     currentUser={defaultCurrentUser}
     customComponents={{
-      UsefulOrNot: defaultUsefulOrNot
+      UsefulOrNot: defaultUsefulOrNot,
+      DelegateSelectorsV2: defaultDelegateSelectorsV2
     }}
     currentUserProfileURL=""
     routingId=""

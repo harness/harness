@@ -17,7 +17,7 @@
 import type React from 'react'
 import type { CODERoutes } from 'RouteDefinitions'
 import type { TypesUser } from 'services/code'
-import type { UsefulOrNotProps } from 'utils/types'
+import type { DelegateSelectorsV2Props, UsefulOrNotProps } from 'utils/types'
 import type { LangLocale } from './framework/strings/languageLoader'
 
 /**
@@ -61,6 +61,7 @@ export interface AppProps {
   /** React Components which are passed down from the Parent that are needed by the child app */
   customComponents: {
     UsefulOrNot: (props: UsefulOrNotProps) => React.ReactElement
+    DelegateSelectorsV2: (props: DelegateSelectorsV2Props) => React.ReactElement
   }
   /** React Hooks that Harness Platform passes down. Note: Pass only hooks that your app need */
   hooks: Partial<{
@@ -77,6 +78,7 @@ export interface AppProps {
     useListAggregatedTokens?: Unknown
     useDeleteToken?: Unknown
     useCreateToken?: Unknown
+    useGetDelegateSelectorsUpTheHierarchyV2?: Unknown
   }>
 
   currentUser: Required<TypesUser>

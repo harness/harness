@@ -25,6 +25,7 @@ interface InfraDetailsFormikProps {
   machine_type?: string
   instances?: string
   project?: string
+  delegateSelector?: string[]
 }
 
 const InfraDetails = () => {
@@ -59,13 +60,15 @@ const InfraDetails = () => {
   useEffect(() => {
     if (data) {
       const { identifier, metadata, name }: OpenapiCreateInfraProviderConfigRequest = data
+      const delegate = metadata?.delegate_selectors?.map((del: { selector: string }) => del.selector)
       const payload: InfraDetailsFormikProps = {
         identifier: identifier,
         name: name,
         domain: metadata?.domain,
         machine_type: metadata?.gateway?.machine_type,
         instances: metadata?.gateway?.instances,
-        project: metadata?.project?.id
+        project: metadata?.project?.id,
+        delegateSelector: delegate
       }
       const regions: regionProp[] = []
       Object?.keys(data?.metadata?.region_configs ?? {}).forEach((key: string, index: number) => {
@@ -103,7 +106,7 @@ const InfraDetails = () => {
           onSubmit={async (values: InfraDetailsFormikProps) => {
             try {
               if (regionData?.length > 0) {
-                const { identifier, name, domain, machine_type, instances, project } = values
+                const { identifier, name, domain, machine_type, instances, project, delegateSelector } = values
                 const region_configs: Unknown = {}
                 regionData?.forEach((region: regionProp) => {
                   const { location, defaultSubnet, proxySubnet, dns, domain: regionDomain } = region
@@ -122,11 +125,13 @@ const InfraDetails = () => {
                     }
                   }
                 })
+                const delegates = delegateSelector?.map((del: string) => ({ selector: del }))
                 const payload: OpenapiCreateInfraProviderConfigRequest = {
                   identifier,
                   metadata: {
                     domain,
                     name: identifier,
+                    delegate_selectors: delegates,
                     region_configs,
                     project: {
                       id: project
@@ -168,7 +173,7 @@ const InfraDetails = () => {
             return (
               <FormikForm>
                 <Layout.Vertical spacing="medium">
-                  <BasicDetails />
+                  <BasicDetails formikProps={formikProps} />
                   <GatewayDetails formikProps={formikProps} />
                   <ConfigureLocations regionData={regionData} setRegionData={setRegionData} initialData={initialData} />
                   <Layout.Horizontal className={css.formFooter}>

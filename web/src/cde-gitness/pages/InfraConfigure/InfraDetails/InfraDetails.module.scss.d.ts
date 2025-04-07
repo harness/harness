@@ -21,6 +21,8 @@ export declare const basicDetailsContainer: string
 export declare const basicDetailsHeading: string
 export declare const bottomSpacing: string
 export declare const containerSpacing: string
+export declare const delegateContainer: string
+export declare const delegateSelector: string
 export declare const deleteContainer: string
 export declare const dnone: string
 export declare const formFooter: string

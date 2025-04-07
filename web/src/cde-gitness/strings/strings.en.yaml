@@ -63,6 +63,8 @@ id: ID
 gitspaceInfra: Gitspace Infrastructure
 configureGCPInfra: Configure GCP Infrastructure
 configureGitspaceInfra: Configure Gitspace Infrastructure
+delegate:
+  DelegateSelector: Delegate Selector
 gitspaceInfraHome:
   configureGCPButton: Configure GCP infrastructure
   description: Configure an infrastructure with locations and machines to be used as one of the infrastructure while creating a Gitspace

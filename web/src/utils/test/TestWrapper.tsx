@@ -16,6 +16,7 @@ import type { LangLocale } from 'framework/strings/languageLoader'
 import { AppContextProvider, defaultCurrentUser } from 'AppContext'
 import { defaultUsefulOrNot } from 'components/DefaultUsefulOrNot/UsefulOrNot'
 import { StringsContextProvider } from 'framework/strings/StringsContextProvider'
+import { defaultDelegateSelectorsV2 } from 'components/DelegateSelector/DelegateSelector'
 
 export interface TestWrapperProps {
   path?: string
@@ -70,7 +71,8 @@ export default function TestWrapper(props: PropsWithChildren<TestWrapperProps>) 
           hooks: {},
           currentUser,
           customComponents: {
-            UsefulOrNot: defaultUsefulOrNot
+            UsefulOrNot: defaultUsefulOrNot,
+            DelegateSelectorsV2: defaultDelegateSelectorsV2
           },
           currentUserProfileURL,
           defaultSettingsURL,

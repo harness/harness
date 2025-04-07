@@ -64,7 +64,7 @@ export const SelectInfraProvider = () => {
         infraOptions.push(payload)
       }
     })
-    if (CDE_HYBRID_ENABLED && !isHybridAvailable) {
+    if (CDE_HYBRID_ENABLED && !isHybridAvailable && data) {
       history.push(
         routes.toCDEGitspaceInfra({
           accountId: accountInfo?.identifier

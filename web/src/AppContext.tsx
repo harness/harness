@@ -27,6 +27,7 @@ import { newCacheStrategy } from 'utils/CacheStrategy'
 import { useGetSettingValue } from 'hooks/useGetSettingValue'
 import { useFeatureFlags } from 'hooks/useFeatureFlag'
 import { defaultUsefulOrNot } from 'components/DefaultUsefulOrNot/UsefulOrNot'
+import { defaultDelegateSelectorsV2 } from 'components/DelegateSelector/DelegateSelector'
 
 interface AppContextProps extends AppProps {
   setAppContext: (value: Partial<AppProps>) => void
@@ -50,7 +51,8 @@ const AppContext = React.createContext<AppContextProps>({
   hooks: {},
   currentUser: defaultCurrentUser,
   customComponents: {
-    UsefulOrNot: defaultUsefulOrNot
+    UsefulOrNot: defaultUsefulOrNot,
+    DelegateSelectorsV2: defaultDelegateSelectorsV2
   },
   currentUserProfileURL: '',
   routingId: '',
