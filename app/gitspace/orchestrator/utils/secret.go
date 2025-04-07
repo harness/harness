@@ -48,9 +48,10 @@ func ResolveSecret(ctx context.Context, secretResolverFactory *secret.ResolverFa
 	})
 	if err != nil {
 		return nil, fmt.Errorf(
-			"could not resolve secret type: %s, ref: %s",
+			"could not resolve secret type: %s, ref: %s : %w",
 			config.GitspaceInstance.AccessType,
 			*config.GitspaceInstance.AccessKeyRef,
+			err,
 		)
 	}
 	return &resolvedSecret.SecretValue, nil
