@@ -391,6 +391,7 @@ export interface StringsMap {
   'validationMessages.cleanupPolicy.nameRequired': string
   'validationMessages.cleanupPolicy.positiveExpireDays': string
   'validationMessages.genericURLPattern': string
+  'validationMessages.headerAlreadyExists': string
   'validationMessages.identifierRequired': string
   'validationMessages.nameRequired': string
   'validationMessages.passwordRequired': string

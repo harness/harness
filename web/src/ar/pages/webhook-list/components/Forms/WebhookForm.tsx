@@ -16,6 +16,7 @@
 
 import React, { forwardRef, useMemo } from 'react'
 import * as Yup from 'yup'
+import { get } from 'lodash-es'
 import { Formik } from '@harnessio/uicore'
 import type { Webhook, WebhookRequest } from '@harnessio/react-har-service-client'
 
@@ -74,7 +75,26 @@ function WebhookForm(props: CreateWebhookFormProps, formikRef: FormikFowardRef<W
           is: (triggerType: WebhookRequestUI['triggerType']) => triggerType === 'custom',
           then: (schema: Yup.StringSchema) => schema.required(getString('validationMessages.required')),
           otherwise: (schema: Yup.StringSchema) => schema.notRequired()
-        })
+        }),
+        extraHeaders: Yup.lazy(formikHeaderValues =>
+          Yup.array().of(
+            Yup.object().shape({
+              key: Yup.string().test(
+                'Check for duplicate header',
+                getString('validationMessages.headerAlreadyExists'),
+                headerName => {
+                  let count = 0
+                  if (Array.isArray(formikHeaderValues)) {
+                    formikHeaderValues.forEach(val => {
+                      if (get(val, 'key') === headerName) count++
+                    })
+                  }
+                  return count <= 1
+                }
+              )
+            })
+          )
+        )
       })}
       onSubmit={handleSubmit}
       initialValues={initialValues}>

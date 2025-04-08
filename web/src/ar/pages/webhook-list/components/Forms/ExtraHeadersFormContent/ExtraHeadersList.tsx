@@ -53,14 +53,20 @@ export default function ExtraHeadersList(props: ExtraHeadersListProps) {
             placeholder={getString('webhookList.formFields.extraValuePlaceholder')}
             disabled={disabled}
           />
-          <Button variation={ButtonVariation.ICON} icon="code-delete" onClick={() => onRemove(index)} />
+          <Button
+            variation={ButtonVariation.ICON}
+            icon="code-delete"
+            disabled={disabled}
+            onClick={() => onRemove(index)}
+          />
         </Layout.Horizontal>
       ))}
       <Button
         size={ButtonSize.SMALL}
         icon="plus"
         variation={ButtonVariation.LINK}
-        onClick={() => onAdd({ key: '', value: '' })}>
+        onClick={() => onAdd({ key: '', value: '' })}
+        disabled={disabled}>
         {getString('webhookList.formFields.addNewKeyValuePair')}
       </Button>
     </Layout.Vertical>

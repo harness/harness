@@ -112,6 +112,7 @@ validationMessages:
   passwordRequired: Password is required
   accessKeyRequired: Access key is required
   secretKeyRequired: Secret key is required
+  headerAlreadyExists: Header already exists
 vulnerabilityStatus:
   critical: 'C {{count}}'
   high: 'H {{count}}'
