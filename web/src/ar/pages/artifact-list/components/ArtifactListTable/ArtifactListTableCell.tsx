@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-import React, { useState } from 'react'
+import React from 'react'
+import QueryString from 'qs'
 import { defaultTo } from 'lodash-es'
-import { Link, useHistory } from 'react-router-dom'
-import { Menu, Position } from '@blueprintjs/core'
+import { Link } from 'react-router-dom'
+import { Position } from '@blueprintjs/core'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Button, ButtonVariation, Layout, Text } from '@harnessio/uicore'
 import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance } from 'react-table'
 import type { ArtifactMetadata, StoDigestMetadata } from '@harnessio/react-har-service-client'
 
-import { useParentComponents, useRoutes } from '@ar/hooks'
+import { useRoutes } from '@ar/hooks'
 import TableCells from '@ar/components/TableCells/TableCells'
 import { PageType, RepositoryPackageType } from '@ar/common/types'
 import LabelsPopover from '@ar/components/LabelsPopover/LabelsPopover'
@@ -126,65 +127,66 @@ export const ArtifactListPullCommandCell: CellType = ({ value, row }) => {
   }
 }
 
+interface ScannedDigestListProps {
+  list: StoDigestMetadata[]
+  metadata: ArtifactMetadata
+}
+
+const ScannedDigestList = (props: ScannedDigestListProps) => {
+  const { list, metadata } = props
+  const routes = useRoutes()
+  return (
+    <Layout.Vertical width={450}>
+      {list.map(each => (
+        <Layout.Horizontal
+          padding="small"
+          spacing="medium"
+          flex={{ alignItems: 'center', justifyContent: 'space-between' }}
+          key={each.digest}>
+          <TableCells.LinkCell
+            linkTo={
+              routes.toARVersionDetailsTab({
+                repositoryIdentifier: metadata.registryIdentifier,
+                artifactIdentifier: metadata.name,
+                versionIdentifier: metadata.version,
+                versionTab: VersionDetailsTab.OVERVIEW
+              }) + `?${QueryString.stringify({ digest: each.digest }, { skipNulls: true })}`
+            }
+            label={getShortDigest(each.digest || '')}
+          />
+          <TableCells.TextCell value={each.osArch} />
+          <TableCells.VulnerabilityCell
+            critical={each.stoDetails?.critical}
+            high={each.stoDetails?.high}
+            low={each.stoDetails?.low}
+            medium={each.stoDetails?.medium}
+          />
+        </Layout.Horizontal>
+      ))}
+    </Layout.Vertical>
+  )
+}
+
 export const ArtifactListVulnerabilitiesCell: CellType = ({ row }) => {
   const { original } = row
-  const { stoMetadata, registryIdentifier, name, version } = original
+  const { stoMetadata } = original
   const { scannedCount, totalCount, digestMetadata } = stoMetadata || {}
-  const [isOptionsOpen, setIsOptionsOpen] = useState(false)
   const { getString } = useStrings()
-  const { RbacMenuItem } = useParentComponents()
-  const routes = useRoutes()
-  const history = useHistory()
-
-  const handleRenderDigestMenuItem = (digest: StoDigestMetadata) => {
-    return (
-      <RbacMenuItem
-        text={getString('artifactList.table.actions.VulnerabilityStatus.digestMenuItemText', {
-          archName: digest.osArch,
-          digest: getShortDigest(digest.digest || '')
-        })}
-        onClick={() => {
-          const url = routes.toARVersionDetailsTab({
-            repositoryIdentifier: registryIdentifier,
-            artifactIdentifier: name,
-            versionIdentifier: version as string,
-            versionTab: VersionDetailsTab.SECURITY_TESTS,
-            pipelineIdentifier: digest.stoPipelineId,
-            executionIdentifier: digest.stoExecutionId
-          })
-          history.push(`${url}?digest=${digest.digest}`)
-        }}
-      />
-    )
-  }
 
   if (!scannedCount) {
     return <Text>{getString('artifactList.table.actions.VulnerabilityStatus.nonScanned')}</Text>
   }
 
   return (
-    <Button
-      className={css.cellBtn}
-      tooltip={
-        <Menu
-          className={css.optionsMenu}
-          onClick={e => {
-            e.stopPropagation()
-            setIsOptionsOpen(false)
-          }}>
-          {digestMetadata?.map(handleRenderDigestMenuItem)}
-        </Menu>
-      }
-      tooltipProps={{
-        interactionKind: 'click',
-        onInteraction: nextOpenState => {
-          setIsOptionsOpen(nextOpenState)
-        },
-        isOpen: isOptionsOpen,
-        position: Position.BOTTOM
-      }}
-      variation={ButtonVariation.LINK}>
-      <Text font={{ variation: FontVariation.BODY }} color={Color.PRIMARY_7}>
+    <Button className={css.cellBtn} variation={ButtonVariation.LINK}>
+      <Text
+        font={{ variation: FontVariation.BODY }}
+        color={Color.PRIMARY_7}
+        tooltipProps={{
+          interactionKind: 'click',
+          position: Position.BOTTOM
+        }}
+        tooltip={<ScannedDigestList list={digestMetadata || []} metadata={original} />}>
         {getString('artifactList.table.actions.VulnerabilityStatus.partiallyScanned', {
           total: defaultTo(totalCount, 0),
           scanned: defaultTo(scannedCount, 0)
