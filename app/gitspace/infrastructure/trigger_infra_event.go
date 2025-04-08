@@ -89,6 +89,7 @@ func (i InfraProvisioner) TriggerInfraEventWithOpts(
 	infra *types.Infrastructure,
 	opts InfraEventOpts,
 ) error {
+	logger := log.Logger.With().Logger()
 	infraProviderEntity, err := i.getConfigFromResource(ctx, gitspaceConfig.InfraProviderResource)
 	if err != nil {
 		return err
@@ -106,11 +107,33 @@ func (i InfraProvisioner) TriggerInfraEventWithOpts(
 
 	switch eventType {
 	case enum.InfraEventProvision:
-		if infraProvider.ProvisioningType() == enum.InfraProvisioningTypeNew {
-			return i.provisionNewInfrastructure(ctx, infraProvider, infraProviderEntity.Type,
-				gitspaceConfig, opts.RequiredGitspacePorts)
+		var stoppedInfra *types.Infrastructure
+		stoppedInfra, err = i.GetStoppedInfraFromStoredInfo(ctx, gitspaceConfig)
+		if err != nil {
+			logger.Info().
+				Str("error", err.Error()).
+				Msgf(
+					"could not find stopped infra provisioned entity for instance %s",
+					gitspaceConfig.Identifier,
+				)
 		}
-		return i.provisionExistingInfrastructure(ctx, infraProvider, gitspaceConfig, opts.RequiredGitspacePorts)
+		if infraProvider.ProvisioningType() == enum.InfraProvisioningTypeNew {
+			return i.provisionNewInfrastructure(
+				ctx,
+				infraProvider,
+				infraProviderEntity.Type,
+				gitspaceConfig,
+				opts.RequiredGitspacePorts,
+				stoppedInfra,
+			)
+		}
+		return i.provisionExistingInfrastructure(
+			ctx,
+			infraProvider,
+			gitspaceConfig,
+			opts.RequiredGitspacePorts,
+			stoppedInfra,
+		)
 
 	case enum.InfraEventDeprovision:
 		if infraProvider.ProvisioningType() == enum.InfraProvisioningTypeNew {
@@ -142,6 +165,7 @@ func (i InfraProvisioner) provisionNewInfrastructure(
 	infraProviderType enum.InfraProviderType,
 	gitspaceConfig types.GitspaceConfig,
 	requiredGitspacePorts []types.GitspacePort,
+	stoppedInfra *types.Infrastructure,
 ) error {
 	// Logic for new provisioning...
 	infraProvisionedLatest, _ := i.infraProvisionedStore.FindLatestByGitspaceInstanceID(
@@ -181,10 +205,12 @@ func (i InfraProvisioner) provisionNewInfrastructure(
 		SpacePath:                  gitspaceConfig.SpacePath,
 		GitspaceConfigIdentifier:   gitspaceConfig.Identifier,
 		GitspaceInstanceIdentifier: gitspaceConfig.GitspaceInstance.Identifier,
-		GitspaceInstanceID:         gitspaceConfig.GitspaceInstance.ID,
 		ProviderType:               infraProviderType,
 		InputParameters:            allParams,
 		ConfigMetadata:             configMetadata,
+	}
+	if stoppedInfra != nil {
+		infrastructure.InstanceInfo = stoppedInfra.InstanceInfo
 	}
 	responseMetadata, err := json.Marshal(infrastructure)
 	if err != nil {
@@ -222,6 +248,7 @@ func (i InfraProvisioner) provisionNewInfrastructure(
 		requiredGitspacePorts,
 		allParams,
 		configMetadata,
+		infrastructure,
 	)
 	if err != nil {
 		infraProvisioned.InfraStatus = enum.InfraStatusUnknown
@@ -246,6 +273,7 @@ func (i InfraProvisioner) provisionExistingInfrastructure(
 	infraProvider infraprovider.InfraProvider,
 	gitspaceConfig types.GitspaceConfig,
 	requiredGitspacePorts []types.GitspacePort,
+	stoppedInfra *types.Infrastructure,
 ) error {
 	allParams, configMetadata, err := i.getAllParamsFromDB(ctx, gitspaceConfig.InfraProviderResource, infraProvider)
 	if err != nil {
@@ -268,6 +296,7 @@ func (i InfraProvisioner) provisionExistingInfrastructure(
 		requiredGitspacePorts,
 		allParams,
 		configMetadata,
+		*stoppedInfra,
 	)
 	if err != nil {
 		return fmt.Errorf(

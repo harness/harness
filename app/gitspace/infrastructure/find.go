@@ -169,6 +169,25 @@ func (i InfraProvisioner) GetInfraFromStoredInfo(
 	return &infra, nil
 }
 
+func (i InfraProvisioner) GetStoppedInfraFromStoredInfo(
+	ctx context.Context,
+	gitspaceConfig types.GitspaceConfig,
+) (*types.Infrastructure, error) {
+	infraProvisioned, err := i.infraProvisionedStore.FindStoppedInfraForGitspaceConfigIdentifier(
+		ctx,
+		gitspaceConfig.Identifier,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find infraProvisioned: %w", err)
+	}
+	var infra types.Infrastructure
+	err = json.Unmarshal([]byte(*infraProvisioned.ResponseMetadata), &infra)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response metadata: %w", err)
+	}
+	return &infra, nil
+}
+
 // Methods to find infra provider resources.
 func (i InfraProvisioner) getConfigFromResource(
 	ctx context.Context,

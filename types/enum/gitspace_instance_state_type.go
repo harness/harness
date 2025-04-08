@@ -37,6 +37,7 @@ const (
 	GitspaceInstanceStateUninitialized GitspaceInstanceStateType = "uninitialized"
 	GitspaceInstanceStateUnknown       GitspaceInstanceStateType = "unknown"
 	GitspaceInstanceStateError         GitspaceInstanceStateType = "error"
+	GitspaceInstanceStateStopped       GitspaceInstanceStateType = "stopped"
 	GitspaceInstanceStateDeleted       GitspaceInstanceStateType = "deleted"
 	GitspaceInstanceStateCleaned       GitspaceInstanceStateType = "cleaned"
 

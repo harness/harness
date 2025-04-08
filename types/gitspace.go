@@ -116,7 +116,7 @@ func (g *GitspaceInstance) GetGitspaceState() (enum.GitspaceStateType, error) {
 	switch instanceState {
 	case enum.GitspaceInstanceStateRunning:
 		return enum.GitspaceStateRunning, nil
-	case enum.GitspaceInstanceStateDeleted:
+	case enum.GitspaceInstanceStateStopped, enum.GitspaceInstanceStateDeleted, enum.GitspaceInstanceStateCleaned:
 		return enum.GitspaceStateStopped, nil
 	case emptyGitspaceInstanceState, enum.GitspaceInstanceStateUninitialized:
 		return enum.GitspaceStateUninitialized, nil
@@ -128,8 +128,6 @@ func (g *GitspaceInstance) GetGitspaceState() (enum.GitspaceStateType, error) {
 	case enum.GitspaceInstanceStateStopping,
 		enum.GitSpaceInstanceStateCleaning:
 		return enum.GitspaceStateStopping, nil
-	case enum.GitspaceInstanceStateCleaned:
-		return enum.GitspaceStateStopped, nil
 	default:
 		return enum.GitspaceStateError, fmt.Errorf("unsupported gitspace instance state %s", string(instanceState))
 	}

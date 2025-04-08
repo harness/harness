@@ -34,6 +34,7 @@ type InfraProvider interface {
 		requiredGitspacePorts []types.GitspacePort,
 		inputParameters []types.InfraProviderParameter,
 		configMetadata map[string]any,
+		infrastructure types.Infrastructure,
 	) error
 
 	// Find finds infrastructure provisioned against a gitspace.

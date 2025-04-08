@@ -206,6 +206,40 @@ func (i infraProvisionedStore) FindLatestByGitspaceInstanceIdentifier(
 	return entity.toDTO(), nil
 }
 
+func (i infraProvisionedStore) FindStoppedInfraForGitspaceConfigIdentifier(
+	ctx context.Context,
+	gitspaceConfigIdentifier string,
+) (*types.InfraProvisioned, error) {
+	gitsSubQuery := fmt.Sprintf(`
+    SELECT gits.gits_id
+    FROM %s gits
+	JOIN %s conf ON gits.gits_gitspace_config_id = conf.gconf_id
+    WHERE conf.gconf_uid = '%s' AND gits.gits_state = 'starting'
+    LIMIT 1`,
+		gitspaceInstanceTable, gitspaceConfigsTable, gitspaceConfigIdentifier)
+
+	// Build the main query
+	stmt := database.Builder.
+		Select(infraProvisionedSelectColumns).
+		From(infraProvisionedTable).
+		Where("iprov_infra_status = ?", enum.InfraStatusStopped).
+		Join(fmt.Sprintf("(%s) AS gits ON iprov_gitspace_id = gits.gits_id", gitsSubQuery))
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")
+	}
+
+	entity := new(infraProvisioned)
+	db := dbtx.GetAccessor(ctx, i.db)
+	if err := db.GetContext(ctx, entity, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(
+			ctx, err, "Failed to find last stopped infraprovisioned for config %s", gitspaceConfigIdentifier)
+	}
+
+	return entity.toDTO(), nil
+}
+
 func (i infraProvisionedStore) Create(ctx context.Context, infraProvisioned *types.InfraProvisioned) error {
 	stmt := database.Builder.
 		Insert(infraProvisionedTable).

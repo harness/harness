@@ -1326,6 +1326,10 @@ type (
 			spaceID int64,
 			gitspaceInstanceIdentifier string,
 		) (*types.InfraProvisioned, error)
+		FindStoppedInfraForGitspaceConfigIdentifier(
+			ctc context.Context,
+			gitspaceConfigIdentifier string,
+		) (*types.InfraProvisioned, error)
 		Create(ctx context.Context, infraProvisioned *types.InfraProvisioned) error
 		Delete(ctx context.Context, id int64) error
 		Update(ctx context.Context, infraProvisioned *types.InfraProvisioned) error
