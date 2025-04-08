@@ -81,7 +81,6 @@ func init() {
 		log.Error().Stack().Err(err).Msgf("Failed to register adapter factory for %s", adapterType)
 		return
 	}
-	log.Info().Stack().Msgf("Registered adapter factory for %s", adapterType)
 }
 
 func (a *adapter) GetMetadata(_ context.Context, pkg string) (*pypi.SimpleMetadata, error) {
