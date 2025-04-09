@@ -80,7 +80,7 @@ type Provider interface {
 	GetAPIProto(ctx context.Context) string
 
 	RegistryURL(ctx context.Context, params ...string) string
-	PackageURL(ctx context.Context, params ...string) string
+	PackageURL(ctx context.Context, regRef string, pkgType string, params ...string) string
 	GetUIBaseURL(ctx context.Context, params ...string) string
 
 	// GenerateUIRegistryURL returns the url for the UI screen of a registry.
@@ -259,7 +259,7 @@ func (p *provider) RegistryURL(_ context.Context, params ...string) string {
 	return strings.TrimRight(u.String(), "/")
 }
 
-func (p *provider) PackageURL(_ context.Context, params ...string) string {
+func (p *provider) PackageURL(_ context.Context, regRef string, pkgType string, params ...string) string {
 	u, err := url.Parse(p.registryURL.String())
 	if err != nil {
 		log.Warn().Msgf("failed to parse registry url: %v", err)
@@ -268,6 +268,8 @@ func (p *provider) PackageURL(_ context.Context, params ...string) string {
 
 	segments := []string{u.Path}
 	segments = append(segments, "pkg")
+	segments = append(segments, regRef)
+	segments = append(segments, pkgType)
 	segments = append(segments, params...)
 	fullPath := path.Join(segments...)
 	u.Path = fullPath

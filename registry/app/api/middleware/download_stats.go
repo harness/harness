@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/registry/app/api/handler/generic"
 	"github.com/harness/gitness/registry/app/api/handler/maven"
 	"github.com/harness/gitness/registry/app/api/handler/oci"
+	"github.com/harness/gitness/registry/app/api/handler/packages"
 	"github.com/harness/gitness/registry/app/api/router/utils"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/pkg"
@@ -262,4 +263,28 @@ func dbDownloadStatForMavenArtifact(
 		return errcode.ErrCodeNameUnknown.WithDetail(err)
 	}
 	return errcode.Error{}
+}
+
+func TrackDownloadStats(
+	packageHandler packages.Handler,
+) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				ctx := r.Context()
+				sw := &StatusWriter{ResponseWriter: w}
+				next.ServeHTTP(sw, r)
+				if sw.StatusCode != http.StatusOK && sw.StatusCode != http.StatusTemporaryRedirect {
+					return
+				}
+				err := packageHandler.TrackDownloadStats(ctx, r)
+				if err != nil {
+					log.Ctx(ctx).Error().Stack().Str("middleware",
+						"TrackDownloadStat").Err(err).Msgf("error while putting download stat of artifact, %v",
+						err)
+					return
+				}
+			},
+		)
+	}
 }

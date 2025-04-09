@@ -87,6 +87,21 @@ type MockLocalBase struct {
 	mock.Mock
 }
 
+func (m *MockLocalBase) CheckIfVersionExists(_ context.Context, _ pkg.PackageArtifactInfo) (bool, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (m *MockLocalBase) DeletePackage(_ context.Context, _ pkg.PackageArtifactInfo) error {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (m *MockLocalBase) DeleteVersion(_ context.Context, _ pkg.PackageArtifactInfo) error {
+	// TODO implement me
+	panic("implement me")
+}
+
 func (m *MockLocalBase) Exists(ctx context.Context, info pkg.ArtifactInfo, version, filename string) bool {
 	args := m.Called(ctx, info, version, filename)
 	return args.Bool(0)

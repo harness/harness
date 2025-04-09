@@ -126,6 +126,7 @@ import (
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/pubsub"
 	api2 "github.com/harness/gitness/registry/app/api"
+	npm2 "github.com/harness/gitness/registry/app/api/controller/pkg/npm"
 	nuget2 "github.com/harness/gitness/registry/app/api/controller/pkg/nuget"
 	python2 "github.com/harness/gitness/registry/app/api/controller/pkg/python"
 	"github.com/harness/gitness/registry/app/api/router"
@@ -136,6 +137,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/generic"
 	"github.com/harness/gitness/registry/app/pkg/maven"
+	"github.com/harness/gitness/registry/app/pkg/npm"
 	"github.com/harness/gitness/registry/app/pkg/nuget"
 	"github.com/harness/gitness/registry/app/pkg/python"
 	database2 "github.com/harness/gitness/registry/app/store/database"
@@ -530,8 +532,9 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	genericController := generic.ControllerProvider(spaceStore, authorizer, fileManager, genericDBStore, transactor)
 	genericHandler := api2.NewGenericHandlerProvider(spaceStore, genericController, tokenStore, controller, authenticator, provider, authorizer)
 	handler3 := router.GenericHandlerProvider(genericHandler)
-	packagesHandler := api2.NewPackageHandlerProvider(registryRepository, spaceStore, tokenStore, controller, authenticator, provider, authorizer)
-	localBase := base.LocalBaseProvider(registryRepository, fileManager, transactor, imageRepository, artifactRepository)
+	packagesHandler := api2.NewPackageHandlerProvider(registryRepository, downloadStatRepository, spaceStore, tokenStore, controller, authenticator, provider, authorizer)
+	packageTagRepository := database2.ProvidePackageTagDao(db)
+	localBase := base.LocalBaseProvider(registryRepository, fileManager, transactor, imageRepository, artifactRepository, nodesRepository, packageTagRepository)
 	pythonLocalRegistry := python.LocalRegistryProvider(localBase, fileManager, upstreamProxyConfigRepository, transactor, registryRepository, imageRepository, artifactRepository, provider)
 	localRegistryHelper := python.LocalRegistryHelperProvider(pythonLocalRegistry, localBase)
 	proxy := python.ProxyProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, spaceFinder, secretService, localRegistryHelper)
@@ -540,7 +543,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	nugetLocalRegistry := nuget.LocalRegistryProvider(localBase, fileManager, upstreamProxyConfigRepository, transactor, registryRepository, imageRepository, artifactRepository, provider)
 	nugetController := nuget2.ControllerProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, nugetLocalRegistry)
 	nugetHandler := api2.NewNugetHandlerProvider(nugetController, packagesHandler)
-	handler4 := router.PackageHandlerProvider(packagesHandler, mavenHandler, genericHandler, pythonHandler, nugetHandler)
+	npmLocalRegistry := npm.LocalRegistryProvider(localBase, fileManager, upstreamProxyConfigRepository, transactor, packageTagRepository, registryRepository, imageRepository, artifactRepository, nodesRepository, provider)
+	npmProxy := npm.ProxyProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider)
+	npmController := npm2.ControllerProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, downloadStatRepository, provider, npmLocalRegistry, npmProxy)
+	npmHandler := api2.NewNPMHandlerProvider(npmController, packagesHandler)
+	handler4 := router.PackageHandlerProvider(packagesHandler, mavenHandler, genericHandler, pythonHandler, nugetHandler, npmHandler)
 	appRouter := router.AppRouterProvider(registryOCIHandler, apiHandler, handler2, handler3, handler4)
 	sender := usage.ProvideMediator(ctx, config, spaceFinder, usageMetricStore)
 	routerRouter := router2.ProvideRouter(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, usergroupController, checkController, systemController, uploadController, keywordsearchController, infraproviderController, gitspaceController, migrateController, provider, openapiService, appRouter, sender, lfsController)

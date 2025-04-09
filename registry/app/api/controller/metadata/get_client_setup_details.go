@@ -117,6 +117,8 @@ func (c *APIController) GenerateClientSetupDetails(
 		return c.generateGenericClientSetupDetail(ctx, blankString, registryRef, image, tag, registryType)
 	case string(artifact.PackageTypePYTHON):
 		return c.generatePythonClientSetupDetail(ctx, registryRef, username, image, tag, registryType)
+	case string(artifact.PackageTypeNPM):
+		return c.generateNpmClientSetupDetail(ctx, registryRef, username, image, tag, registryType)
 	case string(artifact.PackageTypeDOCKER):
 		return c.generateDockerClientSetupDetail(ctx, blankString, loginUsernameLabel, loginUsernameValue,
 			loginPasswordLabel, registryType,
@@ -879,6 +881,110 @@ func (c *APIController) generatePythonClientSetupDetail(
 
 	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, image, tag, registryURL, "",
 		string(artifact.PackageTypePYTHON))
+
+	return &artifact.ClientSetupDetailsResponseJSONResponse{
+		Data:   clientSetupDetails,
+		Status: artifact.StatusSUCCESS,
+	}
+}
+
+func (c *APIController) generateNpmClientSetupDetail(
+	ctx context.Context,
+	registryRef string,
+	username string,
+	image *artifact.ArtifactParam,
+	tag *artifact.VersionParam,
+	registryType artifact.RegistryType,
+) *artifact.ClientSetupDetailsResponseJSONResponse {
+	staticStepType := artifact.ClientSetupStepTypeStatic
+	generateTokenType := artifact.ClientSetupStepTypeGenerateToken
+
+	// Authentication section
+	section1 := artifact.ClientSetupSection{
+		Header: stringPtr("Configure Authentication"),
+	}
+	_ = section1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: stringPtr("Create or update your ~/.npmrc file with the following content:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: stringPtr("npm set registry https:<REGISTRY_URL>/\n\n" +
+							"npm set <REGISTRY_URL>/:_authToken <TOKEN>"),
+					},
+				},
+			},
+			{
+				Header: stringPtr("Generate an identity token for authentication"),
+				Type:   &generateTokenType,
+			},
+		},
+	})
+
+	// Publish section
+	section2 := artifact.ClientSetupSection{
+		Header: stringPtr("Publish Package"),
+	}
+	_ = section2.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: stringPtr("Build and publish your package:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: stringPtr("npm run build\n"),
+					},
+					{
+						Value: stringPtr("npm publish"),
+					},
+				},
+			},
+		},
+	})
+
+	// Install section
+	section3 := artifact.ClientSetupSection{
+		Header: stringPtr("Install Package"),
+	}
+	_ = section3.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: stringPtr("Install a package using npm"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: stringPtr("npm install <ARTIFACT_NAME>@<VERSION>"),
+					},
+				},
+			},
+		},
+	})
+
+	sections := []artifact.ClientSetupSection{
+		section1,
+		section2,
+		section3,
+	}
+
+	if registryType == artifact.RegistryTypeUPSTREAM {
+		sections = []artifact.ClientSetupSection{
+			section1,
+			section3,
+		}
+	}
+
+	clientSetupDetails := artifact.ClientSetupDetails{
+		MainHeader: "NPM Client Setup",
+		SecHeader:  "Follow these instructions to install/use NPM packages from this registry.",
+		Sections:   sections,
+	}
+
+	registryURL := c.URLProvider.PackageURL(ctx, registryRef, "npm")
+	registryURL = strings.TrimPrefix(registryURL, "http:")
+	registryURL = strings.TrimPrefix(registryURL, "https:")
+	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, image, tag, registryURL, "",
+		string(artifact.PackageTypeNPM))
 
 	return &artifact.ClientSetupDetailsResponseJSONResponse{
 		Data:   clientSetupDetails,

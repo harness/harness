@@ -34,6 +34,8 @@ import (
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/store/database/dbtx"
+
+	"github.com/rs/zerolog/log"
 )
 
 var _ LocalBase = (*localBase)(nil)
@@ -66,6 +68,12 @@ type LocalBase interface {
 	)
 
 	Exists(ctx context.Context, info pkg.ArtifactInfo, version string, fileName string) bool
+
+	CheckIfVersionExists(ctx context.Context, info pkg.PackageArtifactInfo) (bool, error)
+
+	DeletePackage(ctx context.Context, info pkg.PackageArtifactInfo) error
+
+	DeleteVersion(ctx context.Context, info pkg.PackageArtifactInfo) error
 }
 
 type localBase struct {
@@ -74,6 +82,8 @@ type localBase struct {
 	tx          dbtx.Transactor
 	imageDao    store.ImageRepository
 	artifactDao store.ArtifactRepository
+	nodesDao    store.NodesRepository
+	tagsDao     store.PackageTagRepository
 }
 
 func NewLocalBase(
@@ -82,6 +92,8 @@ func NewLocalBase(
 	tx dbtx.Transactor,
 	imageDao store.ImageRepository,
 	artifactDao store.ArtifactRepository,
+	nodesDao store.NodesRepository,
+	tagsDao store.PackageTagRepository,
 ) LocalBase {
 	return &localBase{
 		registryDao: registryDao,
@@ -89,6 +101,8 @@ func NewLocalBase(
 		tx:          tx,
 		imageDao:    imageDao,
 		artifactDao: artifactDao,
+		nodesDao:    nodesDao,
+		tagsDao:     tagsDao,
 	}
 }
 
@@ -230,6 +244,19 @@ func (l *localBase) Exists(ctx context.Context, info pkg.ArtifactInfo, version s
 	return exists
 }
 
+func (l *localBase) CheckIfVersionExists(ctx context.Context, info pkg.PackageArtifactInfo) (bool, error) {
+	artifacts, err := l.artifactDao.GetArtifactMetadata(ctx,
+		info.BaseArtifactInfo().ParentID, info.BaseArtifactInfo().RegIdentifier,
+		info.BaseArtifactInfo().Image, info.GetVersion())
+	if err != nil {
+		return false, err
+	}
+	if artifacts != nil {
+		return false, err
+	}
+	return true, nil
+}
+
 func (l *localBase) GetSHA256(ctx context.Context, info pkg.ArtifactInfo, version string, fileName string) (
 	exists bool,
 	sha256 string,
@@ -271,6 +298,7 @@ func (l *localBase) updateMetadata(
 				CreatedAt: time.Now().UnixMilli(),
 			})
 			inputMetadata.SetFiles(files)
+			inputMetadata.UpdateSize(fileInfo.Size)
 		}
 	} else {
 		files = append(files, metadata.File{
@@ -278,6 +306,7 @@ func (l *localBase) updateMetadata(
 			CreatedAt: time.Now().UnixMilli(),
 		})
 		inputMetadata.SetFiles(files)
+		inputMetadata.UpdateSize(fileInfo.Size)
 	}
 	return nil
 }
@@ -322,5 +351,62 @@ func (l *localBase) CheckIfFileAlreadyExist(
 		}
 	}
 
+	return nil
+}
+
+func (l *localBase) DeletePackage(ctx context.Context, info pkg.PackageArtifactInfo) error {
+	err := l.tx.WithTx(
+		ctx, func(ctx context.Context) error {
+			path := "/" + info.BaseArtifactInfo().Image
+			err := l.nodesDao.DeleteByNodePathAndRegistryID(ctx, path, info.BaseArtifactInfo().RegistryID)
+
+			if err != nil {
+				return err
+			}
+
+			err = l.artifactDao.DeleteByImageNameAndRegistryID(ctx,
+				info.BaseArtifactInfo().RegistryID, info.BaseArtifactInfo().Image)
+
+			if err != nil {
+				return err
+			}
+
+			err = l.imageDao.DeleteByImageNameAndRegID(ctx, info.BaseArtifactInfo().RegistryID, info.BaseArtifactInfo().Image)
+
+			if err != nil {
+				return err
+			}
+			return nil
+		})
+	if err != nil {
+		log.Warn().Msgf("Failed to delete the package %v", info.BaseArtifactInfo().Image)
+		return err
+	}
+
+	return nil
+}
+
+func (l *localBase) DeleteVersion(ctx context.Context, info pkg.PackageArtifactInfo) error {
+	err := l.tx.WithTx(
+		ctx, func(ctx context.Context) error {
+			path := "/" + info.BaseArtifactInfo().Image + "/" + info.GetVersion()
+			err := l.nodesDao.DeleteByNodePathAndRegistryID(ctx,
+				path, info.BaseArtifactInfo().RegistryID)
+
+			if err != nil {
+				return err
+			}
+
+			err = l.artifactDao.DeleteByVersionAndImageName(ctx,
+				info.BaseArtifactInfo().Image, info.GetVersion(), info.BaseArtifactInfo().RegistryID)
+			if err != nil {
+				return err
+			}
+			return nil
+		})
+	if err != nil {
+		log.Warn().Msgf("Failed to delete the version for artifact %v:%v", info.BaseArtifactInfo().Image, info.GetVersion())
+		return err
+	}
 	return nil
 }

@@ -116,6 +116,7 @@ var validPackageTypes = []string{
 	string(a.PackageTypeGENERIC),
 	string(a.PackageTypeMAVEN),
 	string(a.PackageTypePYTHON),
+	string(a.PackageTypeNPM),
 }
 
 var validUpstreamSources = []string{
@@ -371,6 +372,8 @@ func GetPullCommand(
 		return GetGenericArtifactFileDownloadCommand(registryURL, image, tag, "<FILENAME>")
 	case string(a.PackageTypePYTHON):
 		return GetPythonDownloadCommand(image, tag)
+	case string(a.PackageTypeNPM):
+		return GetNPMDownloadCommand(image, tag)
 	default:
 		return ""
 	}
@@ -385,6 +388,22 @@ func GetDockerPullCommand(
 
 func GetHelmPullCommand(image string, tag string, registryURL string) string {
 	return "helm pull oci://" + GetRepoURLWithoutProtocol(registryURL) + "/" + image + " --version " + tag
+}
+
+func GetNPMDownloadCommand(artifact, version string) string {
+	downloadCommand := "npm install <ARTIFACT>@<VERSION> "
+
+	// Replace the placeholders with the actual values
+	replacements := map[string]string{
+		"<ARTIFACT>": artifact,
+		"<VERSION>":  version,
+	}
+
+	for placeholder, value := range replacements {
+		downloadCommand = strings.ReplaceAll(downloadCommand, placeholder, value)
+	}
+
+	return downloadCommand
 }
 
 func GetPythonDownloadCommand(artifact, version string) string {

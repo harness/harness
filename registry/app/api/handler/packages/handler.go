@@ -36,6 +36,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
+	"github.com/harness/gitness/registry/request"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
@@ -43,29 +44,32 @@ import (
 
 func NewHandler(
 	registryDao store.RegistryRepository,
+	downloadStatDao store.DownloadStatRepository,
 	spaceStore corestore.SpaceStore, tokenStore corestore.TokenStore,
 	userCtrl *usercontroller.Controller, authenticator authn.Authenticator,
 	urlProvider urlprovider.Provider, authorizer authz.Authorizer,
 ) Handler {
 	return &handler{
-		RegistryDao:   registryDao,
-		SpaceStore:    spaceStore,
-		TokenStore:    tokenStore,
-		UserCtrl:      userCtrl,
-		Authenticator: authenticator,
-		URLProvider:   urlProvider,
-		Authorizer:    authorizer,
+		RegistryDao:     registryDao,
+		DownloadStatDao: downloadStatDao,
+		SpaceStore:      spaceStore,
+		TokenStore:      tokenStore,
+		UserCtrl:        userCtrl,
+		Authenticator:   authenticator,
+		URLProvider:     urlProvider,
+		Authorizer:      authorizer,
 	}
 }
 
 type handler struct {
-	RegistryDao   store.RegistryRepository
-	SpaceStore    corestore.SpaceStore
-	TokenStore    corestore.TokenStore
-	UserCtrl      *usercontroller.Controller
-	Authenticator authn.Authenticator
-	URLProvider   urlprovider.Provider
-	Authorizer    authz.Authorizer
+	RegistryDao     store.RegistryRepository
+	DownloadStatDao store.DownloadStatRepository
+	SpaceStore      corestore.SpaceStore
+	TokenStore      corestore.TokenStore
+	UserCtrl        *usercontroller.Controller
+	Authenticator   authn.Authenticator
+	URLProvider     urlprovider.Provider
+	Authorizer      authz.Authorizer
 }
 
 type Handler interface {
@@ -75,6 +79,11 @@ type Handler interface {
 		reqPermissions ...enum.Permission,
 	) error
 	GetArtifactInfo(r *http.Request) (pkg.ArtifactInfo, error)
+
+	TrackDownloadStats(
+		ctx context.Context,
+		r *http.Request,
+	) error
 	GetAuthenticator() authn.Authenticator
 	HandleErrors2(ctx context.Context, errors errcode.Error, w http.ResponseWriter)
 	HandleErrors(ctx context.Context, errors errcode.Errors, w http.ResponseWriter)
@@ -91,6 +100,7 @@ const (
 	PathPackageTypeMaven   PathPackageType = "maven"
 	PathPackageTypePython  PathPackageType = "python"
 	PathPackageTypeNuget   PathPackageType = "nuget"
+	PathPackageTypeNpm     PathPackageType = "npm"
 )
 
 var packageTypeMap = map[PathPackageType]artifact2.PackageType{
@@ -98,6 +108,7 @@ var packageTypeMap = map[PathPackageType]artifact2.PackageType{
 	PathPackageTypeMaven:   artifact2.PackageTypeMAVEN,
 	PathPackageTypePython:  artifact2.PackageTypePYTHON,
 	PathPackageTypeNuget:   artifact2.PackageTypeNUGET,
+	PathPackageTypeNpm:     artifact2.PackageTypeNPM,
 }
 
 func (h *handler) GetAuthenticator() authn.Authenticator {
@@ -116,6 +127,19 @@ func (h *handler) GetRegistryCheckAccess(
 	return pkg.GetRegistryCheckAccess(ctx, h.RegistryDao, h.Authorizer,
 		h.SpaceStore,
 		info.RegIdentifier, info.ParentID, reqPermissions...)
+}
+
+func (h *handler) TrackDownloadStats(
+	ctx context.Context,
+	r *http.Request,
+) error {
+	info := request.ArtifactInfoFrom(r.Context()) //nolint:contextcheck
+	if err := h.DownloadStatDao.CreateByRegistryIDImageAndArtifactName(ctx,
+		info.BaseArtifactInfo().RegistryID, info.BaseArtifactInfo().Image, info.GetVersion()); err != nil {
+		log.Error().Msgf("failed to create download stat: %v", err.Error())
+		return usererror.ErrInternal
+	}
+	return nil
 }
 
 func (h *handler) GetArtifactInfo(r *http.Request) (pkg.ArtifactInfo, error) {

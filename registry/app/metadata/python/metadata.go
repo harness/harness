@@ -85,6 +85,7 @@ type PythonMetadata struct {
 	Metadata
 	Files     []metadata.File `json:"files"`
 	FileCount int64           `json:"file_count"`
+	Size      int64           `json:"size"`
 }
 
 func (p *PythonMetadata) GetFiles() []metadata.File {
@@ -94,4 +95,11 @@ func (p *PythonMetadata) GetFiles() []metadata.File {
 func (p *PythonMetadata) SetFiles(files []metadata.File) {
 	p.Files = files
 	p.FileCount = int64(len(files))
+}
+func (p *PythonMetadata) GetSize() int64 {
+	return p.Size
+}
+
+func (p *PythonMetadata) UpdateSize(size int64) {
+	p.Size += size
 }

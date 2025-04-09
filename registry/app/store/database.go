@@ -436,8 +436,11 @@ type ImageRepository interface {
 	UpdateStatus(ctx context.Context, artifact *types.Image) (err error)
 
 	DeleteByRegistryID(ctx context.Context, registryID int64) (err error)
+
 	DeleteBandwidthStatByRegistryID(ctx context.Context, registryID int64) (err error)
 	DeleteDownloadStatByRegistryID(ctx context.Context, registryID int64) (err error)
+
+	DeleteByImageNameAndRegID(ctx context.Context, regID int64, image string) (err error)
 }
 
 type ArtifactRepository interface {
@@ -486,6 +489,10 @@ type ArtifactRepository interface {
 		*[]types.Artifact,
 		error,
 	)
+
+	DeleteByImageNameAndRegistryID(ctx context.Context, regID int64, image string) (err error)
+
+	DeleteByVersionAndImageName(ctx context.Context, image string, version string, regID int64) (err error)
 	GetLatestByImageID(ctx context.Context, imageID int64) (*types.Artifact, error)
 }
 
@@ -497,6 +504,7 @@ type DownloadStatRepository interface {
 		artifactVersion []string,
 		imageID int64,
 	) (map[string]int64, error)
+	CreateByRegistryIDImageAndArtifactName(ctx context.Context, regID int64, image string, artifactName string) error
 }
 
 type BandwidthStatRepository interface {
@@ -573,6 +581,8 @@ type NodesRepository interface {
 		offset int,
 		search string,
 	) (*[]types.FileNodeMetadata, error)
+
+	DeleteByNodePathAndRegistryID(ctx context.Context, nodePath string, regID int64) (err error)
 }
 
 type GenericBlobRepository interface {
@@ -640,4 +650,13 @@ type WebhooksExecutionRepository interface {
 
 	// ListForTrigger lists the webhook executions for a given trigger id.
 	ListForTrigger(ctx context.Context, triggerID string) ([]*gitnesstypes.WebhookExecutionCore, error)
+}
+
+type PackageTagRepository interface {
+	FindByImageNameAndRegID(ctx context.Context, image string, regID int64) ([]*types.PackageTagMetadata, error)
+
+	Create(ctx context.Context, tag *types.PackageTag) (string, error)
+
+	DeleteByTagAndImageName(ctx context.Context, tag string, image string, regID int64) error
+	DeleteByImageNameAndRegID(ctx context.Context, image string, regID int64) error
 }

@@ -28,8 +28,10 @@ func LocalBaseProvider(
 	tx dbtx.Transactor,
 	imageDao store.ImageRepository,
 	artifactDao store.ArtifactRepository,
+	nodesDao store.NodesRepository,
+	tagsDao store.PackageTagRepository,
 ) LocalBase {
-	return NewLocalBase(registryDao, fileManager, tx, imageDao, artifactDao)
+	return NewLocalBase(registryDao, fileManager, tx, imageDao, artifactDao, nodesDao, tagsDao)
 }
 
 var WireSet = wire.NewSet(LocalBaseProvider)

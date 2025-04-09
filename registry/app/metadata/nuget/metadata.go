@@ -25,6 +25,7 @@ type NugetMetadata struct {
 	Metadata
 	Files     []metadata.File `json:"files"`
 	FileCount int64           `json:"file_count"`
+	Size      int64           `json:"size"`
 }
 
 func (p *NugetMetadata) GetFiles() []metadata.File {
@@ -34,6 +35,14 @@ func (p *NugetMetadata) GetFiles() []metadata.File {
 func (p *NugetMetadata) SetFiles(files []metadata.File) {
 	p.Files = files
 	p.FileCount = int64(len(files))
+}
+
+func (p *NugetMetadata) GetSize() int64 {
+	return p.Size
+}
+
+func (p *NugetMetadata) UpdateSize(size int64) {
+	p.Size += size
 }
 
 // Package represents the entire NuGet package.

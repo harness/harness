@@ -123,6 +123,8 @@ func toPackageType(packageTypeStr string) (artifactapi.PackageType, error) {
 		return artifactapi.PackageTypeMAVEN, nil
 	case string(artifactapi.PackageTypePYTHON):
 		return artifactapi.PackageTypePYTHON, nil
+	case string(artifactapi.PackageTypeNPM):
+		return artifactapi.PackageTypeNPM, nil
 	default:
 		return "", errors.New("invalid package type")
 	}
@@ -489,6 +491,27 @@ func GetPythonArtifactDetail(
 		Version:    artifact.Version,
 	}
 	err := artifactDetail.FromPythonArtifactDetailConfig(artifactapi.PythonArtifactDetailConfig{
+		Metadata: &metadata,
+	})
+	if err != nil {
+		return artifactapi.ArtifactDetail{}
+	}
+	return *artifactDetail
+}
+
+func GetNPMArtifactDetail(
+	image *types.Image, artifact *types.Artifact,
+	metadata map[string]interface{},
+) artifactapi.ArtifactDetail {
+	createdAt := GetTimeInMs(artifact.CreatedAt)
+	modifiedAt := GetTimeInMs(artifact.UpdatedAt)
+	artifactDetail := &artifactapi.ArtifactDetail{
+		CreatedAt:  &createdAt,
+		ModifiedAt: &modifiedAt,
+		Name:       &image.Name,
+		Version:    artifact.Version,
+	}
+	err := artifactDetail.FromNpmArtifactDetailConfig(artifactapi.NpmArtifactDetailConfig{
 		Metadata: &metadata,
 	})
 	if err != nil {

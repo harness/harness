@@ -21,6 +21,7 @@ import (
 	middlewareauthn "github.com/harness/gitness/app/api/middleware/authn"
 	"github.com/harness/gitness/registry/app/api/handler/generic"
 	"github.com/harness/gitness/registry/app/api/handler/maven"
+	"github.com/harness/gitness/registry/app/api/handler/npm"
 	"github.com/harness/gitness/registry/app/api/handler/nuget"
 	"github.com/harness/gitness/registry/app/api/handler/packages"
 	"github.com/harness/gitness/registry/app/api/handler/python"
@@ -46,6 +47,7 @@ func NewRouter(
 	genericHandler *generic.Handler,
 	pythonHandler python.Handler,
 	nugetHandler nuget.Handler,
+	npmHandler npm.Handler,
 ) Handler {
 	r := chi.NewRouter()
 
@@ -114,7 +116,103 @@ func NewRouter(
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/index.json", nugetHandler.GetServiceEndpoint)
 		})
+
+		r.Route("/npm", func(r chi.Router) {
+			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
+			r.Use(middleware.CheckAuth())
+			r.Route("/@{scope}/{id}", func(r chi.Router) {
+				r.With(middleware.StoreArtifactInfo(npmHandler)).
+					With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
+					Put("/", npmHandler.UploadPackage)
+
+				r.With(middleware.StoreArtifactInfo(npmHandler)).
+					With(middleware.TrackDownloadStats(packageHandler)).
+					With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+					Get("/-/{version}/@{scope}/{filename}", npmHandler.DownloadPackageFile)
+
+				r.With(middleware.StoreArtifactInfo(npmHandler)).
+					With(middleware.TrackDownloadStats(packageHandler)).
+					With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+					Get("/-/@{scope}/{filename}", npmHandler.DownloadPackageFileByName)
+
+				r.With(middleware.StoreArtifactInfo(npmHandler)).
+					With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+					Head("/-/@{scope}/{filename}", npmHandler.HeadPackageFileByName)
+
+				r.With(middleware.StoreArtifactInfo(npmHandler)).
+					With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+					Get("/", npmHandler.GetPackageMetadata)
+
+				r.With(middleware.StoreArtifactInfo(npmHandler)).
+					With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDelete)).
+					Delete("/-/{version}/@{scope}/{filename}/-rev/{revision}", npmHandler.DeleteVersion)
+			})
+
+			r.Route("/{id}", func(r chi.Router) {
+				r.With(middleware.StoreArtifactInfo(npmHandler)).
+					With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
+					Put("/", npmHandler.UploadPackage)
+
+				r.With(middleware.StoreArtifactInfo(npmHandler)).
+					With(middleware.TrackDownloadStats(packageHandler)).
+					With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+					Get("/-/{version}/{filename}", npmHandler.DownloadPackageFile)
+
+				r.With(middleware.StoreArtifactInfo(npmHandler)).
+					With(middleware.TrackDownloadStats(packageHandler)).
+					With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+					Get("/-/{filename}", npmHandler.DownloadPackageFileByName)
+
+				r.With(middleware.StoreArtifactInfo(npmHandler)).
+					With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+					Head("/-/{filename}", npmHandler.HeadPackageFileByName)
+				r.With(middleware.StoreArtifactInfo(npmHandler)).
+					With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+					Get("/", npmHandler.GetPackageMetadata)
+				r.With(middleware.StoreArtifactInfo(npmHandler)).
+					With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDelete)).
+					Delete("/-/{version}/{filename}/-rev/{revision}", npmHandler.DeleteVersion)
+			})
+
+			r.Route("/-/package/@{scope}/{id}/dist-tags", func(r chi.Router) {
+				registerDistTagRoutes(r, npmHandler, packageHandler)
+			})
+
+			r.Route("/-/package/{id}/dist-tags", func(r chi.Router) {
+				registerDistTagRoutes(r, npmHandler, packageHandler)
+			})
+
+			r.Route("/@{scope}/-rev/{revision}", func(r chi.Router) {
+				registerRevisionRoutes(r, npmHandler, packageHandler)
+			})
+
+			r.Route("/{id}/-rev/{revision}", func(r chi.Router) {
+				registerRevisionRoutes(r, npmHandler, packageHandler)
+			})
+		})
 	})
 
 	return r
+}
+
+func registerDistTagRoutes(r chi.Router, npmHandler npm.Handler, packageHandler packages.Handler) {
+	r.With(middleware.StoreArtifactInfo(npmHandler)).
+		With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
+		Get("/", npmHandler.ListPackageTag)
+
+	r.With(middleware.StoreArtifactInfo(npmHandler)).
+		With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
+		Route("/{tag}", func(r chi.Router) {
+			r.Put("/", npmHandler.AddPackageTag)
+			r.Delete("/", npmHandler.DeletePackageTag)
+		})
+}
+
+func registerRevisionRoutes(r chi.Router, npmHandler npm.Handler, packageHandler packages.Handler) {
+	r.Use(middleware.StoreArtifactInfo(npmHandler))
+	r.With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDelete)).
+		Route("/", func(r chi.Router) {
+			r.Delete("/", npmHandler.DeletePackage)
+			r.Put("/", npmHandler.DeletePreview)
+		})
 }

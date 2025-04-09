@@ -48,6 +48,9 @@ func IsEmpty(slice interface{}) bool {
 		return true
 	}
 
+	if val.Kind() == reflect.Struct {
+		return false
+	}
 	return val.Len() == 0
 }
 

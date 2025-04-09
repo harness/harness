@@ -99,6 +99,10 @@ func ProvideNodeDao(db *sqlx.DB) store.NodesRepository {
 	return NewNodeDao(db)
 }
 
+func ProvidePackageTagDao(db *sqlx.DB) store.PackageTagRepository {
+	return NewPackageTagDao(db)
+}
+
 func ProvideGenericBlobDao(db *sqlx.DB) store.GenericBlobRepository {
 	return NewGenericBlobDao(db)
 }
@@ -123,4 +127,5 @@ var WireSet = wire.NewSet(
 	ProvideGenericBlobDao,
 	ProvideWebhookDao,
 	ProvideWebhookExecutionDao,
+	ProvidePackageTagDao,
 )

@@ -114,6 +114,25 @@ func (i ImageDao) DeleteBandwidthStatByRegistryID(ctx context.Context, registryI
 	return nil
 }
 
+func (i ImageDao) DeleteByImageNameAndRegID(ctx context.Context, regID int64, image string) (err error) {
+	stmt := databaseg.Builder.Delete("images").
+		Where("image_name = ? AND image_registry_id = ?", image, regID)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, i.db)
+
+	_, err = db.ExecContext(ctx, sql, args...)
+	if err != nil {
+		return databaseg.ProcessSQLErrorf(ctx, err, "the delete query failed")
+	}
+
+	return nil
+}
+
 func (i ImageDao) DeleteByRegistryID(ctx context.Context, registryID int64) error {
 	var ids []int64
 	stmt := databaseg.Builder.Select("artifact_id").

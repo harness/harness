@@ -38,6 +38,10 @@ func (a ArtifactInfo) GetImageVersion() (exists bool, imageVersion string) {
 	return false, ""
 }
 
+func (a ArtifactInfo) GetVersion() string {
+	return a.Version
+}
+
 type File struct {
 	FileURL string
 	Name    string

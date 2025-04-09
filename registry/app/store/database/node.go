@@ -210,6 +210,25 @@ func (n NodeDao) DeleteByRegistryID(ctx context.Context, regID int64) (err error
 	return nil
 }
 
+func (n NodeDao) DeleteByNodePathAndRegistryID(ctx context.Context, nodePath string, regID int64) (err error) {
+	db := dbtx.GetAccessor(ctx, n.sqlDB)
+	delStmt := databaseg.Builder.Delete("nodes").
+		Where("node_path = ? OR node_path LIKE ?", nodePath, nodePath+"%").
+		Where("node_registry_id = ?", regID)
+
+	delQuery, delArgs, err := delStmt.ToSql()
+	if err != nil {
+		return fmt.Errorf("failed to convert purge query to sql: %w", err)
+	}
+
+	_, err = db.ExecContext(ctx, delQuery, delArgs...)
+	if err != nil {
+		return databaseg.ProcessSQLErrorf(ctx, err, "the delete query failed")
+	}
+
+	return nil
+}
+
 func (n NodeDao) mapToNode(_ context.Context, dst *Nodes) (*types.Node, error) {
 	var blobID, parentNodeID string
 	if dst.BlobID != nil {
@@ -290,7 +309,7 @@ func (n NodeDao) GetFilesMetadataByPathAndRegistryID(ctx context.Context, regist
 
 	db := dbtx.GetAccessor(ctx, n.sqlDB)
 
-	q = q.OrderBy(sortByField + " " + sortByOrder).Limit(uint64(limit)).Offset(uint64(offset))
+	q = q.OrderBy(sortByField + " " + sortByOrder).Limit(uint64(limit)).Offset(uint64(offset)) //nolint:gosec
 
 	if search != "" {
 		q = q.Where("name LIKE ?", sqlPartialMatch(search))

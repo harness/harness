@@ -21,10 +21,12 @@ import (
 	"github.com/harness/gitness/app/services/refcache"
 	corestore "github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/registry/app/api/controller/pkg/npm"
 	nuget2 "github.com/harness/gitness/registry/app/api/controller/pkg/nuget"
 	python2 "github.com/harness/gitness/registry/app/api/controller/pkg/python"
 	"github.com/harness/gitness/registry/app/api/handler/generic"
 	mavenhandler "github.com/harness/gitness/registry/app/api/handler/maven"
+	npm2 "github.com/harness/gitness/registry/app/api/handler/npm"
 	nugethandler "github.com/harness/gitness/registry/app/api/handler/nuget"
 	ocihandler "github.com/harness/gitness/registry/app/api/handler/oci"
 	"github.com/harness/gitness/registry/app/api/handler/packages"
@@ -40,6 +42,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	generic2 "github.com/harness/gitness/registry/app/pkg/generic"
 	"github.com/harness/gitness/registry/app/pkg/maven"
+	npm22 "github.com/harness/gitness/registry/app/pkg/npm"
 	"github.com/harness/gitness/registry/app/pkg/nuget"
 	"github.com/harness/gitness/registry/app/pkg/python"
 	"github.com/harness/gitness/registry/app/store"
@@ -114,12 +117,14 @@ func NewMavenHandlerProvider(
 }
 
 func NewPackageHandlerProvider(
-	registryDao store.RegistryRepository, spaceStore corestore.SpaceStore, tokenStore corestore.TokenStore,
+	registryDao store.RegistryRepository, downloadStatDao store.DownloadStatRepository,
+	spaceStore corestore.SpaceStore, tokenStore corestore.TokenStore,
 	userCtrl *usercontroller.Controller, authenticator authn.Authenticator,
 	urlProvider urlprovider.Provider, authorizer authz.Authorizer,
 ) packages.Handler {
 	return packages.NewHandler(
 		registryDao,
+		downloadStatDao,
 		spaceStore,
 		tokenStore,
 		userCtrl,
@@ -141,6 +146,13 @@ func NewNugetHandlerProvider(
 	packageHandler packages.Handler,
 ) nugethandler.Handler {
 	return nugethandler.NewHandler(controller, packageHandler)
+}
+
+func NewNPMHandlerProvider(
+	controller npm.Controller,
+	packageHandler packages.Handler,
+) npm2.Handler {
+	return npm2.NewHandler(controller, packageHandler)
 }
 
 func NewGenericHandlerProvider(
@@ -167,6 +179,7 @@ var WireSet = wire.NewSet(
 	NewPackageHandlerProvider,
 	NewPythonHandlerProvider,
 	NewNugetHandlerProvider,
+	NewNPMHandlerProvider,
 	database.WireSet,
 	pkg.WireSet,
 	docker.WireSet,
@@ -174,11 +187,13 @@ var WireSet = wire.NewSet(
 	maven.WireSet,
 	nuget.WireSet,
 	python.WireSet,
+	npm22.WireSet,
 	router.WireSet,
 	gc.WireSet,
 	generic2.WireSet,
 	python2.ControllerSet,
 	nuget2.ControllerSet,
+	npm.ControllerSet,
 	base.WireSet,
 )
 

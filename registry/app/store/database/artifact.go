@@ -183,6 +183,47 @@ func (a ArtifactDao) Count(ctx context.Context) (int64, error) {
 	return count, nil
 }
 
+func (a ArtifactDao) DeleteByImageNameAndRegistryID(ctx context.Context, regID int64, image string) (err error) {
+	delStmt := databaseg.Builder.Delete("artifacts").
+		Where("artifact_id IN (SELECT a.artifact_id FROM artifacts a JOIN images i ON i.image_id = a.artifact_image_id"+
+			" WHERE i.image_name = ? AND i.image_registry_id = ?)", image, regID)
+
+	db := dbtx.GetAccessor(ctx, a.db)
+
+	delQuery, delArgs, err := delStmt.ToSql()
+	if err != nil {
+		return fmt.Errorf("failed to convert delete query to sql: %w", err)
+	}
+
+	_, err = db.ExecContext(ctx, delQuery, delArgs...)
+	if err != nil {
+		return databaseg.ProcessSQLErrorf(ctx, err, "the delete query failed")
+	}
+
+	return nil
+}
+
+func (a ArtifactDao) DeleteByVersionAndImageName(ctx context.Context, image string,
+	version string, regID int64) (err error) {
+	delStmt := databaseg.Builder.Delete("artifacts").
+		Where("artifact_id IN (SELECT a.artifact_id FROM artifacts a JOIN images i ON i.image_id = a.artifact_image_id"+
+			" WHERE a.artifact_name = ? AND i.image_name = ? AND i.image_registry_id = ?)", version, image, regID)
+
+	sql, args, err := delStmt.ToSql()
+	if err != nil {
+		return errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, a.db)
+
+	_, err = db.ExecContext(ctx, sql, args...)
+	if err != nil {
+		return databaseg.ProcessSQLErrorf(ctx, err, "the delete query failed")
+	}
+
+	return nil
+}
+
 func (a ArtifactDao) mapToInternalArtifact(ctx context.Context, in *types.Artifact) *artifactDB {
 	session, _ := request.AuthSessionFrom(ctx)
 

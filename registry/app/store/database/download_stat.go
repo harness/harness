@@ -17,6 +17,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/harness/gitness/app/api/request"
@@ -70,7 +71,6 @@ func (d DownloadStatDao) Create(ctx context.Context, downloadStat *types.Downloa
 				        ,:download_stat_updated_by							
 		    ) 		   
         RETURNING download_stat_id`
-
 	db := dbtx.GetAccessor(ctx, d.db)
 	query, arg, err := db.BindNamed(sqlQuery, d.mapToInternalDownloadStat(ctx, downloadStat))
 	if err != nil {
@@ -84,6 +84,54 @@ func (d DownloadStatDao) Create(ctx context.Context, downloadStat *types.Downloa
 	return nil
 }
 
+func (d DownloadStatDao) CreateByRegistryIDImageAndArtifactName(ctx context.Context,
+	regID int64, image string, version string) error {
+	selectQuery := databaseg.Builder.
+		Select(
+			"a.artifact_id",
+			"?",
+			"?",
+			"?",
+			"?",
+			"?",
+		).
+		From("artifacts a").
+		Join("images i ON a.artifact_image_id = i.image_id").
+		Where("a.artifact_version = ? AND i.image_registry_id = ? AND i.image_name = ?").
+		Limit(1)
+
+	insertQuery := databaseg.Builder.
+		Insert("download_stats").
+		Columns(
+			"download_stat_artifact_id",
+			"download_stat_timestamp",
+			"download_stat_created_at",
+			"download_stat_updated_at",
+			"download_stat_created_by",
+			"download_stat_updated_by",
+		).
+		Select(selectQuery)
+
+	// Convert query to SQL string and args
+	sqlStr, _, err := insertQuery.ToSql()
+	if err != nil {
+		return fmt.Errorf("failed to generate SQL: %w", err)
+	}
+
+	session, _ := request.AuthSessionFrom(ctx)
+	user := session.Principal.ID
+	db := dbtx.GetAccessor(ctx, d.db)
+
+	// Execute the query with parameters
+	_, err = db.ExecContext(ctx, sqlStr,
+		time.Now().UnixMilli(), time.Now().UnixMilli(), time.Now().UnixMilli(),
+		user, user, version, regID, image)
+	if err != nil {
+		return fmt.Errorf("failed to insert download stat: %w", err)
+	}
+
+	return nil
+}
 func (d DownloadStatDao) GetTotalDownloadsForImage(ctx context.Context, imageID int64) (int64, error) {
 	q := databaseg.Builder.Select(`count(*)`).
 		From("artifacts art").Where("art.artifact_image_id = ?", imageID).

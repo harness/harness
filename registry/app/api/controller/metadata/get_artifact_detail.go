@@ -98,6 +98,7 @@ func (c *APIController) GetArtifactDetails(
 	var artifactDetails artifact.ArtifactDetail
 
 	// FIXME: Arvind: Unify the metadata structure to avoid this type checking
+	//nolint:exhaustive
 	switch registry.PackageType {
 	case artifact.PackageTypeMAVEN:
 		var metadata metadata.MavenMetadata
@@ -132,6 +133,18 @@ func (c *APIController) GetArtifactDetails(
 			}, nil
 		}
 		artifactDetails = GetPythonArtifactDetail(img, art, result)
+
+	case artifact.PackageTypeNPM:
+		var result map[string]interface{}
+		err := json.Unmarshal(art.Metadata, &result)
+		if err != nil {
+			return artifact.GetArtifactDetails500JSONResponse{
+				InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
+					*GetErrorResponse(http.StatusInternalServerError, err.Error()),
+				),
+			}, nil
+		}
+		artifactDetails = GetNPMArtifactDetail(img, art, result)
 	case artifact.PackageTypeDOCKER:
 	case artifact.PackageTypeHELM:
 	default:
