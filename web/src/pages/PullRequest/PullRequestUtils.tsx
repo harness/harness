@@ -17,7 +17,7 @@
 import type { SelectOption } from '@harnessio/uicore'
 import type { UseStringsReturn } from 'framework/strings'
 import type { CommentItem } from 'components/CommentBox/CommentBox'
-import type { PullRequestSection } from 'utils/Utils'
+import type { ColorName, PullRequestSection } from 'utils/Utils'
 import { MergeStrategy } from 'utils/GitUtils'
 import type {
   EnumMergeMethod,
@@ -216,4 +216,12 @@ export const defaultReviewerResponseWithDecision = (
         reviewers && res.principals ? updateReviewDecisionPrincipal(reviewers, res.principals) : res.principals
     }
   })
+}
+
+export type ActivityLabel = {
+  label: string
+  label_color: ColorName
+  label_scope: number
+  value: string
+  value_color: ColorName
 }

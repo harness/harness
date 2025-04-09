@@ -31,7 +31,7 @@ import { CommitActions } from 'components/CommitActions/CommitActions'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { TimePopoverWithLocal } from 'utils/timePopoverLocal/TimePopoverWithLocal'
 import { Label } from 'components/Label/Label'
-import { CommentType } from '../PullRequestUtils'
+import { ActivityLabel, CommentType } from '../PullRequestUtils'
 import css from './Conversation.module.scss'
 
 interface SystemCommentProps extends Pick<GitInfoProps, 'pullReqMetadata'> {
@@ -71,6 +71,51 @@ const formatListWithAndFragment = (names: string[]): React.ReactNode => {
             </React.Fragment>
           ))}{' '}
           and <strong>{names[names.length - 1]}</strong>
+        </>
+      )
+  }
+}
+
+const RenderScopedLabel = ({ labelObj }: { labelObj: ActivityLabel }) => {
+  return (
+    <Label
+      name={labelObj.label}
+      label_color={labelObj.label_color}
+      label_value={{
+        name: labelObj.value,
+        color: labelObj.value_color
+      }}
+      scope={labelObj.label_scope}
+    />
+  )
+}
+
+const formatLabelListWithAndFragment = (labels: ActivityLabel[]): JSX.Element => {
+  if (!labels || !Array.isArray(labels)) {
+    return <></>
+  }
+
+  switch (labels.length) {
+    case 0:
+      return <></>
+    case 1:
+      return <RenderScopedLabel labelObj={labels[0]} />
+    case 2:
+      return (
+        <>
+          <RenderScopedLabel labelObj={labels[0]} /> and <RenderScopedLabel labelObj={labels[1]} />
+        </>
+      )
+    default:
+      return (
+        <>
+          {labels.slice(0, -1).map((labelObj, index) => (
+            <React.Fragment key={index}>
+              <RenderScopedLabel labelObj={labelObj} />
+              {index < labels.length - 2 ? ', ' : ''}
+            </React.Fragment>
+          ))}{' '}
+          and <RenderScopedLabel labelObj={labels[labels.length - 1]} />
         </>
       )
   }
@@ -395,24 +440,28 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
     }
 
     case CommentType.LABEL_MODIFY: {
+      const labelList = (payload?.payload as any)?.labels || []
+      const labelsListElement = formatLabelListWithAndFragment(labelList)
+
       return (
         <Container className={css.mergedBox}>
           <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }}>
             <Avatar name={payload?.author?.display_name} size="small" hoverCard={false} />
             <Text tag="div">
-              <Match expr={(payload?.payload as Unknown).type}>
+              <Match expr={(payload?.payload as Unknown)?.type}>
                 <Case val={LabelActivity.ASSIGN}>
                   <strong>{payload?.author?.display_name}</strong> {getString('labels.applied')}
-                  <Label
-                    name={(payload?.payload as Unknown).label}
-                    label_color={(payload?.payload as Unknown).label_color}
-                    label_value={{
-                      name: (payload?.payload as Unknown).value,
-                      color: (payload?.payload as Unknown).value_color
+                  {Array.isArray(labelList) && labelList.length > 0 ? (
+                    <>{labelsListElement}</>
+                  ) : (
+                    <RenderScopedLabel labelObj={payload?.payload as ActivityLabel} />
+                  )}{' '}
+                  <StringSubstitute
+                    str={getString('prReview.labelsAssigned')}
+                    vars={{
+                      count: labelList?.length || 0
                     }}
-                    scope={(payload?.payload as Unknown).label_scope}
                   />
-                  <span>{getString('labels.label')}</span>
                 </Case>
                 <Case val={LabelActivity.RE_ASSIGN}>
                   <strong>{payload?.author?.display_name}</strong> <span>{getString('labels.updated')}</span>
@@ -426,27 +475,11 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
                     scope={(payload?.payload as Unknown).label_scope}
                   />
                   <span>{getString('labels.labelTo')}</span>
-                  <Label
-                    name={(payload?.payload as Unknown).label}
-                    label_color={(payload?.payload as Unknown).label_color}
-                    label_value={{
-                      name: (payload?.payload as Unknown).value,
-                      color: (payload?.payload as Unknown).value_color
-                    }}
-                    scope={(payload?.payload as Unknown).label_scope}
-                  />
+                  <RenderScopedLabel labelObj={payload?.payload as ActivityLabel} />
                 </Case>
                 <Case val={LabelActivity.UN_ASSIGN}>
                   <strong>{payload?.author?.display_name}</strong> <span>{getString('labels.removed')}</span>
-                  <Label
-                    name={(payload?.payload as Unknown).label}
-                    label_color={(payload?.payload as Unknown).label_color}
-                    label_value={{
-                      name: (payload?.payload as Unknown).value,
-                      color: (payload?.payload as Unknown).value_color
-                    }}
-                    scope={(payload?.payload as Unknown).label_scope}
-                  />
+                  <RenderScopedLabel labelObj={payload?.payload as ActivityLabel} />
                   <span>{getString('labels.label')}</span>
                 </Case>
               </Match>

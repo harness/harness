@@ -390,6 +390,7 @@ prReview:
   filterByReviews: Filter by Reviews
   codeowners: '{author} requested review from {codeowners} as {count|1:code owner,code owners}'
   defaultReviewers: '{author} requested review from {reviewers} as {count|1:default reviewer,default reviewers}'
+  labelsAssigned: '{count|0:label,labels}'
 webhookListingContent: 'create,delete,deployment ...'
 general: 'General'
 webhooks: 'Webhooks'

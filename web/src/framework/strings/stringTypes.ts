@@ -903,6 +903,7 @@ export interface StringsMap {
   'prReview.codeowners': string
   'prReview.defaultReviewers': string
   'prReview.filterByReviews': string
+  'prReview.labelsAssigned': string
   'prReview.removed': string
   'prReview.requested': string
   'prReview.selfAssigned': string
