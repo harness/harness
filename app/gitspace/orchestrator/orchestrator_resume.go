@@ -243,7 +243,7 @@ func (o Orchestrator) ResumeStopGitspace(
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraStopCompleted)
 
-	instanceState = enum.GitspaceInstanceStateDeleted
+	instanceState = enum.GitspaceInstanceStateStopped
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeGitspaceActionStopCompleted)
 
