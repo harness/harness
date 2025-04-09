@@ -165,7 +165,7 @@ func (c *ListService) ListForSpace(
 			case err == nil:
 				repoWhitelist[repoID] = struct{}{}
 				repoMap[repoID] = repo
-			case errors.Is(err, apiauth.ErrNotAuthorized):
+			case errors.Is(err, apiauth.ErrForbidden):
 				filter.RepoIDBlacklist = append(filter.RepoIDBlacklist, repoID)
 			default:
 				return nil, fmt.Errorf("failed to check access check: %w", err)

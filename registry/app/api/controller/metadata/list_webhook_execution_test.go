@@ -231,7 +231,7 @@ func TestListWebhookExecutions_CheckPermissionsFails(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, response)
 	assert.IsType(t, api.ListWebhookExecutions403JSONResponse{}, response)
-	assert.Equal(t, "not authorized", response.(api.ListWebhookExecutions403JSONResponse).Message) //nolint:errcheck
+	assert.Equal(t, "forbidden", response.(api.ListWebhookExecutions403JSONResponse).Message) //nolint:errcheck
 
 	mockRegistryMetadataHelper.AssertExpectations(t)
 	mockSpaceFinder.AssertExpectations(t)

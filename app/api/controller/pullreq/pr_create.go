@@ -350,13 +350,12 @@ func (c *Controller) preparePayloadReviewers(
 			repo,
 			enum.PermissionRepoReview,
 		); err != nil {
-			if errors.Is(err, apiauth.ErrNotAuthorized) {
+			if !errors.Is(err, apiauth.ErrForbidden) {
 				return nil, usererror.BadRequest(
 					"The reviewer doesn't have enough permissions for the repository.",
 				)
 			}
-			return nil, fmt.Errorf(
-				"reviewer principal %s access error: %w", reviewerPrincipal.UID, err)
+			return nil, fmt.Errorf("reviewer principal %s check repo access error: %w", reviewerPrincipal.UID, err)
 		}
 
 		principalEmailMap[reviewerPrincipal.ID] = reviewerPrincipal.ToPrincipalInfo()

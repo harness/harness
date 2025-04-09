@@ -16,7 +16,6 @@ package repo
 
 import (
 	"compress/gzip"
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -26,6 +25,7 @@ import (
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/types/enum"
 
@@ -79,7 +79,7 @@ func HandleGitServicePack(
 			Stdin:        dataReader,
 			Protocol:     gitProtocol,
 		})
-		if errors.Is(err, apiauth.ErrNotAuthorized) && auth.IsAnonymousSession(session) {
+		if errors.Is(err, apiauth.ErrForbidden) && auth.IsAnonymousSession(session) {
 			render.GitBasicAuth(ctx, w, urlProvider)
 			return
 		}

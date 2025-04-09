@@ -109,7 +109,7 @@ func Middleware(
 							Msgf("repository %q doesn't exist, assume submodule and try again", repoRef)
 						continue
 					}
-					if errors.Is(err, auth.ErrNotAuthorized) {
+					if errors.Is(err, auth.ErrForbidden) {
 						// To avoid leaking information about repos' existence we continue as if it wasn't found.
 						// WARNING: This can lead to different import results depending on access (very unlikely)
 						log.Ctx(ctx).Debug().Err(err).

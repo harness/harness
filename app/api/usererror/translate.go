@@ -56,8 +56,11 @@ func Translate(ctx context.Context, err error) *Error {
 		return rError
 
 	// api auth errors
-	case errors.Is(err, apiauth.ErrNotAuthorized):
+	case errors.Is(err, apiauth.ErrForbidden):
 		return ErrForbidden
+
+	case errors.Is(err, apiauth.ErrUnauthorized):
+		return ErrUnauthorized
 
 	// validation errors
 	case errors.As(err, &checkError):

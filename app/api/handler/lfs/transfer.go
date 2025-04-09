@@ -46,7 +46,7 @@ func HandleLFSTransfer(lfsCtrl *lfs.Controller, urlProvider url.Provider) http.H
 
 		w.Header().Set("Content-Type", "application/vnd.git-lfs+json")
 		out, err := lfsCtrl.LFSTransfer(ctx, session, repoRef, in)
-		if errors.Is(err, apiauth.ErrNotAuthorized) && auth.IsAnonymousSession(session) {
+		if errors.Is(err, apiauth.ErrForbidden) && auth.IsAnonymousSession(session) {
 			render.GitBasicAuth(ctx, w, urlProvider)
 			return
 		}

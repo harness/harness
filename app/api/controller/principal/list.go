@@ -16,7 +16,6 @@ package principal
 
 import (
 	"context"
-	"errors"
 	"net/http"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
@@ -42,7 +41,7 @@ func (c Controller) List(
 		)
 	}
 
-	err := apiauth.Check(
+	if err := apiauth.Check(
 		ctx,
 		c.authorizer,
 		session,
@@ -51,14 +50,7 @@ func (c Controller) List(
 			Type: enum.ResourceTypeUser,
 		},
 		enum.PermissionUserView,
-	)
-	if errors.Is(err, apiauth.ErrNotAuthorized) {
-		return nil, usererror.Forbidden(
-			"You lack the permission to list users. " +
-				"Please grant User view permission at the account level.",
-		)
-	}
-	if err != nil {
+	); err != nil {
 		return nil, err
 	}
 

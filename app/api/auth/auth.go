@@ -30,19 +30,19 @@ import (
 )
 
 var (
-	ErrNotAuthorized             = errors.New("not authorized")
+	ErrUnauthorized              = errors.New("unauthorized")
+	ErrForbidden                 = errors.New("forbidden")
 	ErrParentResourceTypeUnknown = errors.New("Unknown parent resource type")
 	ErrPrincipalTypeUnknown      = errors.New("Unknown principal type")
 )
 
 // Check checks if a resource specific permission is granted for the current auth session in the scope.
 // Returns nil if the permission is granted, otherwise returns an error.
-// NotAuthenticated, NotAuthorized, or any underlying error.
 func Check(
 	ctx context.Context, authorizer authz.Authorizer, session *auth.Session,
 	scope *types.Scope, resource *types.Resource, permission enum.Permission,
 ) error {
-	authorized, err := authorizer.Check(
+	authenticated, err := authorizer.Check(
 		ctx,
 		session,
 		scope,
@@ -53,21 +53,16 @@ func Check(
 		return err
 	}
 
-	if !authorized {
-		return ErrNotAuthorized
-	}
-
-	return nil
+	return CheckSessionAuth(session, authenticated)
 }
 
 // CheckAll checks if multiple resources specific permission is granted for the current auth session in the scope.
 // Returns nil if the permission is granted, otherwise returns an error.
-// NotAuthenticated, NotAuthorized, or any underlying error.
 func CheckAll(
 	ctx context.Context, authorizer authz.Authorizer, session *auth.Session,
 	permissionChecks ...types.PermissionCheck,
 ) error {
-	authorized, err := authorizer.CheckAll(
+	authenticated, err := authorizer.CheckAll(
 		ctx,
 		session,
 		permissionChecks...,
@@ -76,8 +71,17 @@ func CheckAll(
 		return err
 	}
 
-	if !authorized {
-		return ErrNotAuthorized
+	return CheckSessionAuth(session, authenticated)
+}
+
+// CheckSessionAuth returns nil if the user is authenticated.
+// Otherwise, ir returns err unauthorized on anonymous or err forbidden on non anonymous session.
+func CheckSessionAuth(session *auth.Session, authenticated bool) error {
+	if !authenticated {
+		if auth.IsAnonymousSession(session) {
+			return ErrUnauthorized
+		}
+		return ErrForbidden
 	}
 
 	return nil

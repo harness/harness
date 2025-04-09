@@ -51,7 +51,7 @@ func HandleLFSUpload(controller *lfs.Controller, urlProvider url.Provider) http.
 		// apply max byte size from the request body
 
 		res, err := controller.Upload(ctx, session, repoRef, lfs.Pointer{OId: oid, Size: size}, r.Body)
-		if errors.Is(err, apiauth.ErrNotAuthorized) && auth.IsAnonymousSession(session) {
+		if errors.Is(err, apiauth.ErrForbidden) && auth.IsAnonymousSession(session) {
 			render.GitBasicAuth(ctx, w, urlProvider)
 			return
 		}

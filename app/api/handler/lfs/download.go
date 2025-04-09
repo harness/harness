@@ -46,7 +46,7 @@ func HandleLFSDownload(controller *lfs.Controller, urlProvider url.Provider) htt
 		}
 
 		resp, err := controller.Download(ctx, session, repoRef, oid)
-		if errors.Is(err, apiauth.ErrNotAuthorized) && auth.IsAnonymousSession(session) {
+		if errors.Is(err, apiauth.ErrForbidden) && auth.IsAnonymousSession(session) {
 			render.GitBasicAuth(ctx, w, urlProvider)
 			return
 		}

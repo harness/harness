@@ -101,9 +101,11 @@ func (c *Controller) getAuthorizedSpaces(
 	var authorizedSpaceIDs = make(map[int64]bool, 0)
 
 	for spaceID, spacePath := range spacesMap {
-		authErr := apiauth.CheckGitspace(ctx, c.authorizer, session, spacePath, "", enum.PermissionGitspaceView)
-		if authErr != nil && !errors.Is(authErr, apiauth.ErrNotAuthorized) {
-			return nil, fmt.Errorf("failed to check gitspace auth for space ID %d: %w", spaceID, authErr)
+		err := apiauth.CheckGitspace(
+			ctx, c.authorizer, session, spacePath, "", enum.PermissionGitspaceView,
+		)
+		if err != nil && !errors.Is(err, apiauth.ErrForbidden) {
+			return nil, fmt.Errorf("failed to check gitspace auth for space ID %d: %w", spaceID, err)
 		}
 
 		authorizedSpaceIDs[spaceID] = true

@@ -200,9 +200,10 @@ func (c *Controller) spaceCheckAuth(
 		Identifier: "",
 	}
 
-	err = apiauth.Check(ctx, c.authorizer, session, scope, resource, enum.PermissionRepoCreate)
-	if err != nil {
-		return nil, fmt.Errorf("auth check failed: %w", err)
+	if err = apiauth.Check(
+		ctx, c.authorizer, session, scope, resource, enum.PermissionRepoCreate,
+	); err != nil {
+		return nil, err
 	}
 
 	return space, nil
