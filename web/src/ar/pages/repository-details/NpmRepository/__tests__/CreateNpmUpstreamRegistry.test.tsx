@@ -66,10 +66,7 @@ jest.mock('@harnessio/react-har-service-client', () => ({
 describe('Verify create npm upstream registry flow', () => {
   test('Verify Modal header', async () => {
     const { container } = render(
-      <ArTestWrapper
-        featureFlags={{
-          HAR_NPM_PACKAGE_TYPE_ENABLED: true
-        }}>
+      <ArTestWrapper featureFlags={{}}>
         <RepositoryListPage />
       </ArTestWrapper>
     )
@@ -88,10 +85,7 @@ describe('Verify create npm upstream registry flow', () => {
 
   test('verify registry type selector', async () => {
     const { container } = render(
-      <ArTestWrapper
-        featureFlags={{
-          HAR_NPM_PACKAGE_TYPE_ENABLED: true
-        }}>
+      <ArTestWrapper featureFlags={{}}>
         <RepositoryListPage />
       </ArTestWrapper>
     )
@@ -106,10 +100,7 @@ describe('Verify create npm upstream registry flow', () => {
 
   test('verify NPM registry create form with success scenario > Source as NpmJs > Anonymous', async () => {
     const { container } = render(
-      <ArTestWrapper
-        featureFlags={{
-          HAR_NPM_PACKAGE_TYPE_ENABLED: true
-        }}>
+      <ArTestWrapper featureFlags={{}}>
         <RepositoryListPage />
       </ArTestWrapper>
     )
@@ -159,11 +150,7 @@ describe('Verify create npm upstream registry flow', () => {
 
   test('verify NPM registry create form with success scenario > Source as NpmJs > UserPassword', async () => {
     const { container } = render(
-      <ArTestWrapper
-        featureFlags={{
-          HAR_NPM_PACKAGE_TYPE_ENABLED: true
-        }}
-        parent={Parent.OSS}>
+      <ArTestWrapper featureFlags={{}} parent={Parent.OSS}>
         <RepositoryListPage />
       </ArTestWrapper>
     )
@@ -219,10 +206,7 @@ describe('Verify create npm upstream registry flow', () => {
 
   test('verify npm registry create form with success scenario > Source as Custom > Anonymous', async () => {
     const { container } = render(
-      <ArTestWrapper
-        featureFlags={{
-          HAR_NPM_PACKAGE_TYPE_ENABLED: true
-        }}>
+      <ArTestWrapper featureFlags={{}}>
         <RepositoryListPage />
       </ArTestWrapper>
     )
@@ -278,11 +262,7 @@ describe('Verify create npm upstream registry flow', () => {
 
   test('verify NPM registry create form with success scenario > Source as Custom > Username Password', async () => {
     const { container } = render(
-      <ArTestWrapper
-        featureFlags={{
-          HAR_NPM_PACKAGE_TYPE_ENABLED: true
-        }}
-        parent={Parent.OSS}>
+      <ArTestWrapper featureFlags={{}} parent={Parent.OSS}>
         <RepositoryListPage />
       </ArTestWrapper>
     )

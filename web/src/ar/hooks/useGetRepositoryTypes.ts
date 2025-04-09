@@ -73,10 +73,7 @@ const RepositoryTypes: RepositoryTypeListItem[] = [
   {
     label: 'repositoryTypes.npm',
     value: RepositoryPackageType.NPM,
-    icon: 'npm-repository-type',
-    tooltip: 'Coming Soon!',
-    featureFlag: FeatureFlags.HAR_NPM_PACKAGE_TYPE_ENABLED,
-    disabled: true
+    icon: 'npm-repository-type'
   },
   {
     label: 'repositoryTypes.nuget',

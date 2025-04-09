@@ -273,12 +273,7 @@ describe('Verify configuration form', () => {
 
   test('should render form correctly with all data prefilled', async () => {
     const { container } = render(
-      <ArTestWrapper
-        path="/registries/abcd/:tab"
-        pathParams={{ tab: 'configuration' }}
-        featureFlags={{
-          HAR_NPM_PACKAGE_TYPE_ENABLED: true
-        }}>
+      <ArTestWrapper path="/registries/abcd/:tab" pathParams={{ tab: 'configuration' }} featureFlags={{}}>
         <RepositoryDetailsPage />
       </ArTestWrapper>
     )
@@ -365,12 +360,7 @@ describe('Verify configuration form', () => {
 
   test('should able to submit the form with updated data: Success Scenario', async () => {
     const { container } = render(
-      <ArTestWrapper
-        path="/registries/abcd/:tab"
-        pathParams={{ tab: 'configuration' }}
-        featureFlags={{
-          HAR_NPM_PACKAGE_TYPE_ENABLED: true
-        }}>
+      <ArTestWrapper path="/registries/abcd/:tab" pathParams={{ tab: 'configuration' }} featureFlags={{}}>
         <RepositoryDetailsPage />
       </ArTestWrapper>
     )
@@ -406,9 +396,7 @@ describe('Verify configuration form', () => {
         parent={Parent.OSS}
         path="/registries/abcd/:tab"
         pathParams={{ tab: 'configuration' }}
-        featureFlags={{
-          HAR_NPM_PACKAGE_TYPE_ENABLED: true
-        }}>
+        featureFlags={{}}>
         <RepositoryDetailsPage />
       </ArTestWrapper>
     )
@@ -531,12 +519,7 @@ describe('Verify configuration form', () => {
         })
     )
     const { container } = render(
-      <ArTestWrapper
-        path="/registries/abcd/:tab"
-        pathParams={{ tab: 'configuration' }}
-        featureFlags={{
-          HAR_NPM_PACKAGE_TYPE_ENABLED: true
-        }}>
+      <ArTestWrapper path="/registries/abcd/:tab" pathParams={{ tab: 'configuration' }} featureFlags={{}}>
         <RepositoryDetailsPage />
       </ArTestWrapper>
     )

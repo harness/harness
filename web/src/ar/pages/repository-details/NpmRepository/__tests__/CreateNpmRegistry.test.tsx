@@ -62,10 +62,7 @@ jest.mock('@harnessio/react-har-service-client', () => ({
 describe('Verify create npm registry flow', () => {
   test('Verify Modal header', async () => {
     const { container } = render(
-      <ArTestWrapper
-        featureFlags={{
-          HAR_NPM_PACKAGE_TYPE_ENABLED: true
-        }}>
+      <ArTestWrapper featureFlags={{}}>
         <RepositoryListPage />
       </ArTestWrapper>
     )
@@ -91,10 +88,7 @@ describe('Verify create npm registry flow', () => {
 
   test('verify registry type selector', async () => {
     const { container } = render(
-      <ArTestWrapper
-        featureFlags={{
-          HAR_NPM_PACKAGE_TYPE_ENABLED: true
-        }}>
+      <ArTestWrapper featureFlags={{}}>
         <RepositoryListPage />
       </ArTestWrapper>
     )
@@ -119,10 +113,7 @@ describe('Verify create npm registry flow', () => {
 
   test('verify npm registry create form with success scenario', async () => {
     const { container } = render(
-      <ArTestWrapper
-        featureFlags={{
-          HAR_NPM_PACKAGE_TYPE_ENABLED: true
-        }}>
+      <ArTestWrapper featureFlags={{}}>
         <RepositoryListPage />
       </ArTestWrapper>
     )
@@ -187,10 +178,7 @@ describe('Verify create npm registry flow', () => {
   test('verify npm registry create form with failure scenario', async () => {
     createRegistryFn.mockImplementation(() => Promise.reject({ message: 'error message' }))
     const { container } = render(
-      <ArTestWrapper
-        featureFlags={{
-          HAR_NPM_PACKAGE_TYPE_ENABLED: true
-        }}>
+      <ArTestWrapper featureFlags={{}}>
         <RepositoryListPage />
       </ArTestWrapper>
     )
