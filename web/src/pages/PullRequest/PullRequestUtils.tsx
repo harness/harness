@@ -57,7 +57,8 @@ export enum CommentType {
   STATE_CHANGE = 'state-change',
   LABEL_MODIFY = 'label-modify',
   REVIEWER_ADD = 'reviewer-add',
-  REVIEWER_DELETE = 'reviewer-delete'
+  REVIEWER_DELETE = 'reviewer-delete',
+  TARGET_BRANCH_CHANGE = 'target-branch-change'
 }
 
 export function isCodeComment(commentItems: CommentItem<TypesPullReqActivity>[]) {

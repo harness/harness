@@ -139,6 +139,7 @@ export type EnumPullReqActivityType =
   | 'reviewer-add'
   | 'reviewer-delete'
   | 'state-change'
+  | 'target-branch-change'
   | 'title-change'
 
 export type EnumPullReqCommentStatus = 'active' | 'resolved'
@@ -5193,6 +5194,7 @@ export interface ListPullReqActivitiesQueryParams {
     | 'reviewer-add'
     | 'reviewer-delete'
     | 'state-change'
+    | 'target-branch-change'
     | 'title-change'
   )[]
   /**
@@ -5382,6 +5384,44 @@ export const useRestorePullReqSourceBranch = ({
   >(
     'POST',
     (paramsInPath: RestorePullReqSourceBranchPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/branch`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, pullreq_number }, ...props }
+  )
+
+export interface ChangeTargetBranchPathParams {
+  repo_ref: string
+  pullreq_number: number
+}
+
+export interface ChangeTargetBranchRequestBody {
+  branch_name?: string
+}
+
+export type ChangeTargetBranchProps = Omit<
+  MutateProps<TypesPullReq, UsererrorError, void, ChangeTargetBranchRequestBody, ChangeTargetBranchPathParams>,
+  'path' | 'verb'
+> &
+  ChangeTargetBranchPathParams
+
+export const ChangeTargetBranch = ({ repo_ref, pullreq_number, ...props }: ChangeTargetBranchProps) => (
+  <Mutate<TypesPullReq, UsererrorError, void, ChangeTargetBranchRequestBody, ChangeTargetBranchPathParams>
+    verb="PUT"
+    path={`/repos/${repo_ref}/pullreq/${pullreq_number}/branch`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseChangeTargetBranchProps = Omit<
+  UseMutateProps<TypesPullReq, UsererrorError, void, ChangeTargetBranchRequestBody, ChangeTargetBranchPathParams>,
+  'path' | 'verb'
+> &
+  ChangeTargetBranchPathParams
+
+export const useChangeTargetBranch = ({ repo_ref, pullreq_number, ...props }: UseChangeTargetBranchProps) =>
+  useMutate<TypesPullReq, UsererrorError, void, ChangeTargetBranchRequestBody, ChangeTargetBranchPathParams>(
+    'PUT',
+    (paramsInPath: ChangeTargetBranchPathParams) =>
       `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/branch`,
     { base: getConfig('code/api/v1'), pathParams: { repo_ref, pullreq_number }, ...props }
   )

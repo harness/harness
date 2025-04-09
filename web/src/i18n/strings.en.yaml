@@ -368,6 +368,9 @@ pr:
   reviewRequested: Review Requested
   changesRequested: Changes Requested
   myPRs: My Pull Requests
+  titleUpdated: Pull request title updated
+  targetBranchUpdated: Target branch updated to {{branch}}
+  titleAndBranchUpdated: 'Pull request updated: Title and target branch ({{branch}})'
 prState:
   draftHeading: This pull request is still a work in progress
   draftDesc: Draft pull requests cannot be merged.
@@ -391,6 +394,7 @@ prReview:
   codeowners: '{author} requested review from {codeowners} as {count|1:code owner,code owners}'
   defaultReviewers: '{author} requested review from {reviewers} as {count|1:default reviewer,default reviewers}'
   labelsAssigned: '{count|0:label,labels}'
+  targetBranchChange: '{user} changed the target branch from {old} to {new}'
 webhookListingContent: 'create,delete,deployment ...'
 general: 'General'
 webhooks: 'Webhooks'

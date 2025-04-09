@@ -879,10 +879,13 @@ export interface StringsMap {
   'pr.statusLine': string
   'pr.suggestedChange': string
   'pr.suggestionApplied': string
+  'pr.targetBranchUpdated': string
+  'pr.titleAndBranchUpdated': string
   'pr.titleChanged': string
   'pr.titleChangedTable': string
   'pr.titleIsRequired': string
   'pr.titlePlaceHolder': string
+  'pr.titleUpdated': string
   'pr.toggleComments': string
   'pr.unified': string
   'pr.updatedLine': string
@@ -908,6 +911,7 @@ export interface StringsMap {
   'prReview.requested': string
   'prReview.selfAssigned': string
   'prReview.selfRemoved': string
+  'prReview.targetBranchChange': string
   prSourceAndTargetMustBeDifferent: string
   'prState.draftDesc': string
   'prState.draftHeading': string

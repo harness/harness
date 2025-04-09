@@ -4958,6 +4958,7 @@ paths:
                 - reviewer-add
                 - reviewer-delete
                 - state-change
+                - target-branch-change
                 - title-change
               type: string
             type: array
@@ -5164,6 +5165,60 @@ paths:
               schema:
                 $ref: '#/components/schemas/TypesRulesViolations'
           description: Unprocessable Entity
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pullreq
+    put:
+      operationId: changeTargetBranch
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pullreq_number
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                branch_name:
+                  type: string
+              type: object
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesPullReq'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
         '500':
           content:
             application/json:
@@ -6581,10 +6636,6 @@ paths:
             type: string
       responses:
         '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpenapiRawOutput'
           description: OK
         '401':
           content:
@@ -10306,6 +10357,191 @@ paths:
           description: Internal Server Error
       tags:
         - space
+  /spaces/{space_ref}/pullreq/count:
+    get:
+      operationId: countSpacePullReq
+      parameters:
+        - description: The state of the pull requests to include in the result.
+          explode: true
+          in: query
+          name: state
+          required: false
+          schema:
+            items:
+              default: open
+              enum:
+                - closed
+                - merged
+                - open
+              type: string
+            type: array
+          style: form
+        - description: Source repository ref of the pull requests.
+          in: query
+          name: source_repo_ref
+          required: false
+          schema:
+            type: string
+        - description: Source branch of the pull requests.
+          in: query
+          name: source_branch
+          required: false
+          schema:
+            type: string
+        - description: Target branch of the pull requests.
+          in: query
+          name: target_branch
+          required: false
+          schema:
+            type: string
+        - description: The substring by which the pull requests are filtered.
+          in: query
+          name: query
+          required: false
+          schema:
+            type: string
+        - description: List of principal IDs who created pull requests.
+          explode: true
+          in: query
+          name: created_by
+          required: false
+          schema:
+            items:
+              type: integer
+            type: array
+          style: form
+        - description: The result should contain only entries created before this timestamp
+            (unix millis).
+          in: query
+          name: created_lt
+          required: false
+          schema:
+            minimum: 0
+            type: integer
+        - description: The result should contain only entries created after this timestamp
+            (unix millis).
+          in: query
+          name: created_gt
+          required: false
+          schema:
+            minimum: 0
+            type: integer
+        - description: The result should contain only entries updated before this timestamp
+            (unix millis).
+          in: query
+          name: updated_lt
+          required: false
+          schema:
+            minimum: 0
+            type: integer
+        - description: The result should contain entries from the desired space and
+            of its subspaces.
+          in: query
+          name: include_subspaces
+          required: false
+          schema:
+            default: false
+            type: boolean
+        - description: List of label ids used to filter pull requests.
+          explode: true
+          in: query
+          name: label_id
+          required: false
+          schema:
+            items:
+              type: integer
+            type: array
+          style: form
+        - description: List of label value ids used to filter pull requests.
+          explode: true
+          in: query
+          name: value_id
+          required: false
+          schema:
+            items:
+              type: integer
+            type: array
+          style: form
+        - description: Return only pull requests where this user is the author.
+          in: query
+          name: author_id
+          required: false
+          schema:
+            type: integer
+        - description: Return only pull requests where this user has created at least
+            one comment.
+          in: query
+          name: commenter_id
+          required: false
+          schema:
+            type: integer
+        - description: Return only pull requests where this user has been mentioned.
+          in: query
+          name: mentioned_id
+          required: false
+          schema:
+            type: integer
+        - description: Return only pull requests where this user has been added as a
+            reviewer.
+          in: query
+          name: reviewer_id
+          required: false
+          schema:
+            type: integer
+        - description: Require only this review decision of the reviewer. Requires reviewer_id
+            parameter.
+          explode: true
+          in: query
+          name: review_decision
+          required: false
+          schema:
+            items:
+              enum:
+                - approved
+                - changereq
+                - pending
+                - reviewed
+              type: string
+            type: array
+          style: form
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: integer
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
   /spaces/{space_ref}/purge:
     post:
       operationId: purgeSpace
@@ -12405,6 +12641,7 @@ components:
         - reviewer-add
         - reviewer-delete
         - state-change
+        - target-branch-change
         - title-change
       type: string
     EnumPullReqCommentStatus:
@@ -12484,7 +12721,6 @@ components:
       enum:
         - artifact_created
         - artifact_deleted
-        - artifact_updated
         - branch_created
         - branch_deleted
         - branch_updated
@@ -13277,6 +13513,9 @@ components:
       type: string
     OpenapiSecuritySettingsRequest:
       properties:
+        principal_committer_match:
+          nullable: true
+          type: boolean
         secret_scanning_enabled:
           nullable: true
           type: boolean
@@ -13703,21 +13942,12 @@ components:
           type: integer
         encoding:
           $ref: '#/components/schemas/EnumContentEncodingType'
-        size:
-          type: integer
         lfs_object_id:
           type: string
         lfs_object_size:
           type: integer
-      type: object
-    OpenapiRawOutput:
-      properties:
-        data:
-          type: string
         size:
           type: integer
-        sha:
-          type: string
       type: object
     RepoListPathsOutput:
       properties:
@@ -13830,6 +14060,9 @@ components:
       type: object
     ReposettingsSecuritySettings:
       properties:
+        principal_committer_match:
+          nullable: true
+          type: boolean
         secret_scanning_enabled:
           nullable: true
           type: boolean

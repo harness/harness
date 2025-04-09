@@ -62,6 +62,8 @@ export default function PullRequest() {
     refetchPullReq,
     retryOnErrorFunc
   } = useGetPullRequestInfo()
+  const [edit, setEdit] = useState(false)
+  const [currentRef, setCurrentRef] = useState('')
 
   const onAddDescriptionClick = useCallback(() => {
     setShowEditDescription(true)
@@ -98,6 +100,9 @@ export default function PullRequest() {
               repoMetadata={repoMetadata}
               {...pullReqMetadata}
               onAddDescriptionClick={onAddDescriptionClick}
+              currentRef={currentRef as string}
+              edit={edit}
+              setEdit={setEdit}
             />
           ) : (
             ''
@@ -118,7 +123,13 @@ export default function PullRequest() {
 
         <Render when={repoMetadata && pullReqMetadata}>
           <>
-            <PullRequestMetaLine repoMetadata={repoMetadata as RepoRepositoryOutput} {...pullReqMetadata} />
+            <PullRequestMetaLine
+              repoMetadata={repoMetadata as RepoRepositoryOutput}
+              {...pullReqMetadata}
+              edit={edit}
+              currentRef={currentRef as string}
+              setCurrentRef={setCurrentRef}
+            />
 
             <Container className={tabContainerCSS.tabsContainer}>
               <Tabs

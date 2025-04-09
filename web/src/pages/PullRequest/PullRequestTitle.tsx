@@ -19,7 +19,7 @@ import { Container, Text, Layout, Button, ButtonVariation, ButtonSize, TextInput
 import { FontVariation } from '@harnessio/design-system'
 import { useMutate } from 'restful-react'
 import { Match, Truthy, Else } from 'react-jsx-match'
-import { compact } from 'lodash-es'
+import { compact, isEmpty } from 'lodash-es'
 import { useStrings } from 'framework/strings'
 import { ButtonRoleProps, getErrorMessage } from 'utils/Utils'
 import type { GitInfoProps } from 'utils/GitUtils'
@@ -29,6 +29,9 @@ import { useDocumentTitle } from 'hooks/useDocumentTitle'
 import css from './PullRequest.module.scss'
 
 interface PullRequestTitleProps extends TypesPullReq, Pick<GitInfoProps, 'repoMetadata'> {
+  edit: boolean
+  currentRef: string
+  setEdit: React.Dispatch<React.SetStateAction<boolean>>
   onSaveDone?: (newTitle: string) => Promise<boolean>
   onAddDescriptionClick: () => void
 }
@@ -38,28 +41,78 @@ export const PullRequestTitle: React.FC<PullRequestTitleProps> = ({
   title,
   number,
   description,
+  currentRef,
+  target_branch,
+  edit,
+  setEdit,
   onAddDescriptionClick
 }) => {
   const [original, setOriginal] = useState(title)
   const [val, setVal] = useState(title)
-  const [edit, setEdit] = useState(false)
   const { getString } = useStrings()
-  const { showError } = useToaster()
-  const { mutate } = useMutate({
+  const { showError, showSuccess } = useToaster()
+  const { mutate: updatePRTitle } = useMutate({
     verb: 'PATCH',
-    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${number}`
+    path: `/api/v1/repos/${repoMetadata?.path}/+/pullreq/${number}`
+  })
+  const { mutate: updateTargetBranch } = useMutate({
+    verb: 'PUT',
+    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${number}/branch`
   })
   const submitChange = useCallback(() => {
-    mutate({
-      title: val,
-      description
-    })
-      .then(() => {
-        setEdit(false)
+    const titleChanged = title !== val
+    const targetBranchChanged = target_branch !== currentRef
+
+    if (!titleChanged && !targetBranchChanged) {
+      return
+    }
+
+    const promises = []
+
+    if (titleChanged) {
+      promises.push(
+        updatePRTitle({
+          title: val,
+          description
+        })
+          .then(() => ({ success: true, type: 'title' }))
+          .catch(exception => {
+            showError(getErrorMessage(exception), 1000)
+            return { success: false, type: 'title' }
+          })
+      )
+    }
+
+    if (targetBranchChanged) {
+      promises.push(
+        updateTargetBranch({ branch_name: currentRef })
+          .then(() => ({ success: true, type: 'branch' }))
+          .catch(exception => {
+            showError(getErrorMessage(exception), 1000)
+            return { success: false, type: 'branch' }
+          })
+      )
+    }
+
+    Promise.all(promises).then(results => {
+      setEdit(false)
+      if (titleChanged && results.some(r => r.type === 'title' && r.success)) {
         setOriginal(val)
-      })
-      .catch(exception => showError(getErrorMessage(exception), 0))
-  }, [description, val, mutate, showError])
+      }
+
+      const successful = results.filter(result => result.success)
+      const titleSuccess = successful.some(r => r.type === 'title')
+      const branchSuccess = successful.some(r => r.type === 'branch')
+
+      if (titleSuccess && branchSuccess) {
+        showSuccess(getString('pr.titleAndBranchUpdated', { branch: currentRef }), 3000)
+      } else if (titleSuccess) {
+        showSuccess(getString('pr.titleUpdated'), 3000)
+      } else if (branchSuccess) {
+        showSuccess(getString('pr.targetBranchUpdated', { branch: currentRef }), 3000)
+      }
+    })
+  }, [description, val, title, target_branch, currentRef, updatePRTitle, updateTargetBranch, showError, showSuccess])
 
   useEffect(() => {
     setOriginal(title)
@@ -99,7 +152,7 @@ export const PullRequestTitle: React.FC<PullRequestTitleProps> = ({
                 variation={ButtonVariation.PRIMARY}
                 text={getString('save')}
                 size={ButtonSize.MEDIUM}
-                disabled={(val || '').trim().length === 0 || title === val}
+                disabled={isEmpty(val?.trim()) || !(title !== val || target_branch !== currentRef)}
                 onClick={submitChange}
               />
               <Button

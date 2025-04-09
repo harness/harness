@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import React from 'react'
-import { Container, Text, Layout, StringSubstitute } from '@harnessio/uicore'
+import React, { useEffect } from 'react'
+import { Container, Text, Layout, StringSubstitute, ButtonSize } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'
 import cx from 'classnames'
 import { defaultTo } from 'lodash-es'
@@ -27,9 +27,16 @@ import type { TypesPullReq } from 'services/code'
 import { PullRequestStateLabel } from 'components/PullRequestStateLabel/PullRequestStateLabel'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { GitRefLink } from 'components/GitRefLink/GitRefLink'
+import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
 import css from './PullRequestMetaLine.module.scss'
 
-export const PullRequestMetaLine: React.FC<TypesPullReq & Pick<GitInfoProps, 'repoMetadata'>> = ({
+interface PullRequestMetaLineProps extends TypesPullReq, Pick<GitInfoProps, 'repoMetadata'> {
+  edit: boolean
+  currentRef: string
+  setCurrentRef: React.Dispatch<React.SetStateAction<string>>
+}
+
+export const PullRequestMetaLine: React.FC<PullRequestMetaLineProps> = ({
   repoMetadata,
   target_branch,
   source_branch,
@@ -38,8 +45,14 @@ export const PullRequestMetaLine: React.FC<TypesPullReq & Pick<GitInfoProps, 're
   merged,
   state,
   is_draft,
-  stats
+  stats,
+  edit,
+  currentRef,
+  setCurrentRef
 }) => {
+  useEffect(() => {
+    setCurrentRef(target_branch as string)
+  }, [target_branch, edit])
   const { getString } = useStrings()
   const { routes } = useAppContext()
   const vars = {
@@ -47,11 +60,22 @@ export const PullRequestMetaLine: React.FC<TypesPullReq & Pick<GitInfoProps, 're
     user: <strong>{author?.display_name || author?.email || ''}</strong>,
     commits: <strong>{stats?.commits}</strong>,
     commitsCount: stats?.commits,
-    target: (
+    target: !edit ? (
       <GitRefLink
         text={target_branch as string}
         url={routes.toCODERepository({ repoPath: repoMetadata.path as string, gitRef: target_branch })}
         showCopy
+      />
+    ) : (
+      <BranchTagSelect
+        forBranchesOnly
+        disableBranchCreation
+        repoMetadata={repoMetadata}
+        gitRef={currentRef as string}
+        size={ButtonSize.SMALL}
+        onSelect={ref => {
+          setCurrentRef(ref)
+        }}
       />
     ),
     source: (

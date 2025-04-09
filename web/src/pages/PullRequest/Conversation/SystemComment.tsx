@@ -31,6 +31,7 @@ import { CommitActions } from 'components/CommitActions/CommitActions'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { TimePopoverWithLocal } from 'utils/timePopoverLocal/TimePopoverWithLocal'
 import { Label } from 'components/Label/Label'
+import { GitRefLink } from 'components/GitRefLink/GitRefLink'
 import { ActivityLabel, CommentType } from '../PullRequestUtils'
 import css from './Conversation.module.scss'
 
@@ -603,6 +604,50 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
             <TimePopoverWithLocal
               time={defaultTo(payload?.created as number, 0)}
               inline={true}
+              width={100}
+              font={{ variation: FontVariation.SMALL }}
+              color={Color.GREY_400}
+            />
+          </Layout.Horizontal>
+        </Container>
+      )
+    }
+
+    case CommentType.TARGET_BRANCH_CHANGE: {
+      const vars = {
+        user: <strong>{payload?.author?.display_name}</strong>,
+        old: (
+          <GitRefLink
+            text={(payload?.payload as Unknown).old as string}
+            url={routes.toCODERepository({
+              repoPath: repoMetadataPath as string,
+              gitRef: (payload?.payload as Unknown).old
+            })}
+            showCopy
+          />
+        ),
+        new: (
+          <GitRefLink
+            text={(payload?.payload as Unknown).new as string}
+            url={routes.toCODERepository({
+              repoPath: repoMetadataPath as string,
+              gitRef: (payload?.payload as Unknown).new
+            })}
+            showCopy
+          />
+        )
+      }
+      return (
+        <Container className={css.mergedBox}>
+          <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }}>
+            <Avatar name={payload?.author?.display_name} size="small" hoverCard={false} />
+            <Text tag="div">
+              <StringSubstitute str={getString('prReview.targetBranchChange')} vars={vars} />
+            </Text>
+            <PipeSeparator height={9} />
+            <TimePopoverWithLocal
+              time={defaultTo(payload?.created as number, 0)}
+              inline
               width={100}
               font={{ variation: FontVariation.SMALL }}
               color={Color.GREY_400}
