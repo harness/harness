@@ -23,7 +23,6 @@ import (
 	"github.com/harness/gitness/app/api/controller/lfs"
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
-	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/url"
 )
 
@@ -46,7 +45,7 @@ func HandleLFSTransfer(lfsCtrl *lfs.Controller, urlProvider url.Provider) http.H
 
 		w.Header().Set("Content-Type", "application/vnd.git-lfs+json")
 		out, err := lfsCtrl.LFSTransfer(ctx, session, repoRef, in)
-		if errors.Is(err, apiauth.ErrForbidden) && auth.IsAnonymousSession(session) {
+		if errors.Is(err, apiauth.ErrUnauthorized) {
 			render.GitBasicAuth(ctx, w, urlProvider)
 			return
 		}

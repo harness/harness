@@ -24,7 +24,6 @@ import (
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/api/usererror"
-	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/api"
@@ -56,7 +55,7 @@ func HandleGitInfoRefs(repoCtrl *repo.Controller, urlProvider url.Provider) http
 		w.Header().Set("Content-Type", fmt.Sprintf("application/x-git-%s-advertisement", service))
 
 		err = repoCtrl.GitInfoRefs(ctx, session, repoRef, service, gitProtocol, w)
-		if errors.Is(err, apiauth.ErrForbidden) && auth.IsAnonymousSession(session) {
+		if errors.Is(err, apiauth.ErrUnauthorized) {
 			render.GitBasicAuth(ctx, w, urlProvider)
 			return
 		}

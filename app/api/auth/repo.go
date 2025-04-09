@@ -60,7 +60,7 @@ func IsRepoOwner(
 ) (bool, error) {
 	// for now we use repoedit as permission to verify if someone is a SpaceOwner and hence a RepoOwner.
 	err := CheckRepo(ctx, authorizer, session, repo, enum.PermissionRepoEdit)
-	if err != nil && !errors.Is(err, ErrForbidden) {
+	if err != nil && !IsNoAccess(err) {
 		return false, fmt.Errorf("failed to check access user access: %w", err)
 	}
 

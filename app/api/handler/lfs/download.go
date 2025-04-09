@@ -23,7 +23,6 @@ import (
 	"github.com/harness/gitness/app/api/controller/lfs"
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
-	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/url"
 
 	"github.com/rs/zerolog/log"
@@ -46,7 +45,7 @@ func HandleLFSDownload(controller *lfs.Controller, urlProvider url.Provider) htt
 		}
 
 		resp, err := controller.Download(ctx, session, repoRef, oid)
-		if errors.Is(err, apiauth.ErrForbidden) && auth.IsAnonymousSession(session) {
+		if errors.Is(err, apiauth.ErrUnauthorized) {
 			render.GitBasicAuth(ctx, w, urlProvider)
 			return
 		}

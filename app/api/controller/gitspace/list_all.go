@@ -104,7 +104,7 @@ func (c *Controller) getAuthorizedSpaces(
 		err := apiauth.CheckGitspace(
 			ctx, c.authorizer, session, spacePath, "", enum.PermissionGitspaceView,
 		)
-		if err != nil && !errors.Is(err, apiauth.ErrForbidden) {
+		if err != nil && !apiauth.IsNoAccess(err) {
 			return nil, fmt.Errorf("failed to check gitspace auth for space ID %d: %w", spaceID, err)
 		}
 

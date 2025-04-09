@@ -87,6 +87,11 @@ func CheckSessionAuth(session *auth.Session, authenticated bool) error {
 	return nil
 }
 
+// IsNoAccess returns true if the error is ErrUnauthorized or ErrForbidden.
+func IsNoAccess(err error) bool {
+	return errors.Is(err, ErrForbidden) || errors.Is(err, ErrUnauthorized)
+}
+
 // CheckChild checks if a resource specific permission is granted for the current auth session
 // in the scope of a parent.
 // Returns nil if the permission is granted, otherwise returns an error.

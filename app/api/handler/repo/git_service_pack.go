@@ -23,7 +23,6 @@ import (
 	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
-	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/api"
@@ -79,7 +78,7 @@ func HandleGitServicePack(
 			Stdin:        dataReader,
 			Protocol:     gitProtocol,
 		})
-		if errors.Is(err, apiauth.ErrForbidden) && auth.IsAnonymousSession(session) {
+		if errors.Is(err, apiauth.ErrUnauthorized) {
 			render.GitBasicAuth(ctx, w, urlProvider)
 			return
 		}

@@ -22,7 +22,6 @@ import (
 	"github.com/harness/gitness/app/api/controller/lfs"
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
-	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/url"
 )
 
@@ -51,7 +50,7 @@ func HandleLFSUpload(controller *lfs.Controller, urlProvider url.Provider) http.
 		// apply max byte size from the request body
 
 		res, err := controller.Upload(ctx, session, repoRef, lfs.Pointer{OId: oid, Size: size}, r.Body)
-		if errors.Is(err, apiauth.ErrForbidden) && auth.IsAnonymousSession(session) {
+		if errors.Is(err, apiauth.ErrUnauthorized) {
 			render.GitBasicAuth(ctx, w, urlProvider)
 			return
 		}
