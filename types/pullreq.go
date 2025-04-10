@@ -292,3 +292,8 @@ type PullReqRepo struct {
 	PullRequest *PullReq        `json:"pull_request"`
 	Repository  *RepositoryCore `json:"repository"`
 }
+
+type RevertResponse struct {
+	Branch string `json:"branch"`
+	Commit Commit `json:"commit"`
+}

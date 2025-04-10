@@ -690,6 +690,7 @@ func SetupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 				r.Post("/", handlerpullreq.HandleReviewSubmit(pullreqCtrl))
 			})
 			r.Post("/merge", handlerpullreq.HandleMerge(pullreqCtrl))
+			r.Post("/revert", handlerpullreq.HandleRevert(pullreqCtrl))
 			r.Get("/commits", handlerpullreq.HandleCommits(pullreqCtrl))
 			r.Get("/metadata", handlerpullreq.HandleMetadata(pullreqCtrl))
 			r.Route("/branch", func(r chi.Router) {

@@ -704,6 +704,22 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.Spec.AddOperation(http.MethodPost,
 		"/repos/{repo_ref}/pullreq/{pullreq_number}/merge", mergePullReqOp)
 
+	revertPullReqOp := openapi3.Operation{}
+	revertPullReqOp.WithTags("pullreq")
+	revertPullReqOp.WithMapOfAnything(map[string]interface{}{"operationId": "revertPullReqOp"})
+	_ = reflector.SetRequest(&revertPullReqOp, &struct {
+		pullReqRequest
+		pullreq.RevertInput
+	}{}, http.MethodPost)
+	_ = reflector.SetJSONResponse(&revertPullReqOp, new(types.RevertResponse), http.StatusOK)
+	_ = reflector.SetJSONResponse(&revertPullReqOp, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&revertPullReqOp, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&revertPullReqOp, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&revertPullReqOp, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.SetJSONResponse(&revertPullReqOp, new(usererror.Error), http.StatusMethodNotAllowed)
+	_ = reflector.Spec.AddOperation(http.MethodPost,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/revert", revertPullReqOp)
+
 	opListCommits := openapi3.Operation{}
 	opListCommits.WithTags("pullreq")
 	opListCommits.WithMapOfAnything(map[string]interface{}{"operationId": "listPullReqCommits"})

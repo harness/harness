@@ -16,8 +16,6 @@ package pullreq
 
 import (
 	"encoding/json"
-	"errors"
-	"io"
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/pullreq"
@@ -25,8 +23,7 @@ import (
 	"github.com/harness/gitness/app/api/request"
 )
 
-// HandleMerge returns a http.HandlerFunc that merges the pull request.
-func HandleMerge(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
+func HandleRevert(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
@@ -37,9 +34,9 @@ func HandleMerge(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 			return
 		}
 
-		in := new(pullreq.MergeInput)
+		in := new(pullreq.RevertInput)
 		err = json.NewDecoder(r.Body).Decode(in)
-		if err != nil && !errors.Is(err, io.EOF) { // allow empty body
+		if err != nil {
 			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
 			return
 		}
@@ -50,13 +47,9 @@ func HandleMerge(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 			return
 		}
 
-		pr, violation, err := pullreqCtrl.Merge(ctx, session, repoRef, pullreqNumber, in)
+		pr, err := pullreqCtrl.Revert(ctx, session, repoRef, pullreqNumber, in)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
-			return
-		}
-		if violation != nil {
-			render.Unprocessable(w, violation)
 			return
 		}
 

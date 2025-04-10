@@ -466,6 +466,37 @@ func (r *SharedRepo) MergeBase(
 	return strings.TrimSpace(stdout.String()), nil
 }
 
+// WriteDiff runs git diff between two revisions and stores the output to the provided writer.
+// The diff output would also include changes to binary files.
+func (r *SharedRepo) WriteDiff(
+	ctx context.Context,
+	revFrom, revTo string,
+	wr io.Writer,
+) error {
+	cmd := command.New("diff", command.WithFlag("--binary"),
+		command.WithArg(revFrom), command.WithArg(revTo))
+
+	if err := cmd.Run(ctx, command.WithDir(r.repoPath), command.WithStdout(wr)); err != nil {
+		return fmt.Errorf("failed to diff in shared repo: %w", err)
+	}
+
+	return nil
+}
+
+// ApplyToIndex runs 'git apply --cached' which would update the current index with the provided diff patch.
+func (r *SharedRepo) ApplyToIndex(
+	ctx context.Context,
+	inputFileName string,
+) error {
+	cmd := command.New("apply", command.WithFlag("--cached"), command.WithArg(inputFileName))
+
+	if err := cmd.Run(ctx, command.WithDir(r.repoPath)); err != nil {
+		return fmt.Errorf("failed to apply a patch in shared repo: %w", err)
+	}
+
+	return nil
+}
+
 func (r *SharedRepo) CreateFile(
 	ctx context.Context,
 	treeishSHA sha.SHA,

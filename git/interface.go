@@ -102,6 +102,8 @@ type Interface interface {
 	 */
 	Merge(ctx context.Context, in *MergeParams) (MergeOutput, error)
 
+	Revert(ctx context.Context, in *RevertParams) (RevertOutput, error)
+
 	/*
 	 * Blame services
 	 */
