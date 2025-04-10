@@ -774,10 +774,6 @@ CREATE TABLE IF NOT EXISTS cards
 );
 `
 
-//
-// 020_amend_column_builds_deploy_id.sql
-//
-
 var alterTableBuildsAlterColumnDeployId = `
 ALTER TABLE builds
 ALTER COLUMN build_deploy_id SET DATA TYPE BIGINT,

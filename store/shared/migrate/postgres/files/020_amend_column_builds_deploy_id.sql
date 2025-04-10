@@ -1,3 +1,4 @@
+
 -- name: alter-table-builds-alter-column-deploy-id
 
 ALTER TABLE builds
