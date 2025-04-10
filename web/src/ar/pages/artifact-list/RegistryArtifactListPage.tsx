@@ -59,7 +59,7 @@ function RegistryArtifactListPage({ pageBodyClassName }: RegistryArtifactListPag
   const {
     data,
     refetch,
-    isLoading: loading,
+    isFetching: loading,
     error
   } = useGetAllArtifactsByRegistryQuery({
     registry_ref: registryRef,

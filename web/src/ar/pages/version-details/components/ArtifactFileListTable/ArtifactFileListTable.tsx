@@ -47,12 +47,13 @@ interface ArtifactFileListTableProps {
 }
 
 export default function ArtifactFileListTable(props: ArtifactFileListTableProps): JSX.Element {
-  const { data, gotoPage, onPageSizeChange, sortBy, setSortBy, className } = props
+  const { data, gotoPage, onPageSizeChange, sortBy, setSortBy, className, minimal } = props
   const { useDefaultPaginationProps } = useParentHooks()
   const { getString } = useStrings()
 
   const { files, itemCount = 0, pageCount = 0, pageIndex, pageSize = 0 } = data
   const paginationProps = useDefaultPaginationProps({
+    showPagination: pageCount > 1,
     itemCount,
     pageSize,
     pageCount,
@@ -111,11 +112,14 @@ export default function ArtifactFileListTable(props: ArtifactFileListTableProps)
 
   return (
     <TableV2
-      className={classNames(css.table, className)}
+      className={classNames(css.table, className, {
+        [css.minimal]: minimal
+      })}
       columns={columns}
       data={files as FileDetail[]}
       pagination={paginationProps}
       sortable
+      minimal={minimal}
     />
   )
 }

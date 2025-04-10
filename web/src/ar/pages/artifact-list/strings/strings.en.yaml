@@ -18,6 +18,8 @@ table:
     environments: Environments
     sto: Security Vulnerabilities
     lastUpdated: Uploaded At
+    size: Size
+    type: Type
   actions:
     editRepository: Edit Registry
     deleteRepository: Delete Registry

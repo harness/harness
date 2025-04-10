@@ -60,7 +60,14 @@ export default function DigestListPage(props: DigestListPageProps): JSX.Element 
         messageTitle: getString('digestList.table.noDigestTitle'),
         message: getString('digestList.table.aboutDigest')
       }}>
-      {responseData && <DigestListTable version={version} data={responseData} />}
+      {responseData && (
+        <DigestListTable
+          repositoryIdentifier={repoKey}
+          artifactIdentifier={artifact}
+          versionIdentifier={version}
+          data={responseData}
+        />
+      )}
     </Page.Body>
   )
 }

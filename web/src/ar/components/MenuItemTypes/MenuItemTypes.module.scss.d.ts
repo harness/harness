@@ -16,7 +16,4 @@
 
 /* eslint-disable */
 // This is an auto-generated file
-export declare const checksumContainer: string
-export declare const copyChecksumBtn: string
-export declare const minimal: string
-export declare const table: string
+export declare const link: string

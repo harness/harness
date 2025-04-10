@@ -20,10 +20,9 @@ import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance } fr
 import type { DockerManifestDetails } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
-import { useDecodedParams, useRoutes } from '@ar/hooks'
+import { useRoutes } from '@ar/hooks'
 import { getShortDigest } from '@ar/pages/digest-list/utils'
 import TableCells from '@ar/components/TableCells/TableCells'
-import type { ArtifactDetailsPathParams } from '@ar/routes/types'
 import { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
 
 type CellTypeWithActions<D extends Record<string, any>, V = any> = TableInstance<D> & {
@@ -35,8 +34,10 @@ type CellTypeWithActions<D extends Record<string, any>, V = any> = TableInstance
 
 type CellType = Renderer<CellTypeWithActions<DockerManifestDetails>>
 
-type DigestNameColumnProps = {
-  version: string
+export type DigestNameColumnProps = {
+  repositoryIdentifier: string
+  artifactIdentifier: string
+  versionIdentifier: string
 }
 
 export const DigestNameCell: Renderer<{
@@ -44,15 +45,14 @@ export const DigestNameCell: Renderer<{
   column: ColumnInstance<DockerManifestDetails> & DigestNameColumnProps
 }> = ({ row, column }) => {
   const { original } = row
-  const { version } = column
+  const { repositoryIdentifier, artifactIdentifier, versionIdentifier } = column
   const value = original.digest
-  const pathParams = useDecodedParams<ArtifactDetailsPathParams>()
   const routes = useRoutes()
 
   const linkTo = routes.toARVersionDetailsTab({
-    repositoryIdentifier: pathParams.repositoryIdentifier,
-    artifactIdentifier: pathParams.artifactIdentifier,
-    versionIdentifier: version,
+    repositoryIdentifier,
+    artifactIdentifier,
+    versionIdentifier,
     versionTab: VersionDetailsTab.OVERVIEW
   })
   return <TableCells.LinkCell label={getShortDigest(value)} linkTo={`${linkTo}?digest=${value}`} />

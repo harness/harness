@@ -61,6 +61,7 @@ actions:
   scan: Scan
   setupClient: Set Up Client
   executions: Executions
+  copyCommand: Copy Command
 cleanupPolicy:
   name: Cleanup Policy Name
   addBtn: Add Cleanup Policy

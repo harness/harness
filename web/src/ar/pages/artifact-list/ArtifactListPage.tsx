@@ -69,7 +69,7 @@ function ArtifactListPage(): JSX.Element {
   const {
     data,
     refetch,
-    isLoading: loading,
+    isFetching: loading,
     error
   } = useGetAllHarnessArtifactsQuery({
     space_ref: spaceRef,

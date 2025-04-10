@@ -19,7 +19,7 @@ import { Layout } from '@harnessio/uicore'
 import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client'
 
 import { String } from '@ar/frameworks/strings'
-import { RepositoryPackageType } from '@ar/common/types'
+import { PageType, RepositoryPackageType } from '@ar/common/types'
 import { VersionListColumnEnum } from '@ar/pages/version-list/components/VersionListTable/types'
 import ArtifactActions from '@ar/pages/artifact-details/components/ArtifactActions/ArtifactActions'
 import VersionListTable, {
@@ -27,6 +27,7 @@ import VersionListTable, {
 } from '@ar/pages/version-list/components/VersionListTable/VersionListTable'
 import {
   type ArtifactActionProps,
+  ArtifactRowSubComponentProps,
   type VersionActionProps,
   type VersionDetailsHeaderProps,
   type VersionDetailsTabProps,
@@ -39,9 +40,13 @@ import NuGetVersionOverviewPage from './pages/overview/NuGetVersionOverviewPage'
 import { VersionDetailsTab } from '../components/VersionDetailsTabs/constants'
 import NuGetVersionArtifactDetailsPage from './pages/artifact-dertails/NuGetVersionArtifactDetailsPage'
 import VersionDetailsHeaderContent from '../components/VersionDetailsHeaderContent/VersionDetailsHeaderContent'
+import VersionFilesProvider from '../context/VersionFilesProvider'
+import ArtifactFilesContent from '../components/ArtifactFileListTable/ArtifactFilesContent'
+import { VersionAction } from '../components/VersionActions/types'
 
 export class NuGetVersionType extends VersionStep<ArtifactVersionSummary> {
   protected packageType = RepositoryPackageType.NUGET
+  protected hasArtifactRowSubComponent = true
   protected allowedVersionDetailsTabs: VersionDetailsTab[] = [
     VersionDetailsTab.OVERVIEW,
     VersionDetailsTab.ARTIFACT_DETAILS,
@@ -56,6 +61,14 @@ export class NuGetVersionType extends VersionStep<ArtifactVersionSummary> {
     [VersionListColumnEnum.LastModified]: { width: '100%' },
     [VersionListColumnEnum.Actions]: { width: '10%' }
   }
+
+  protected allowedActionsOnVersion: VersionAction[] = [
+    VersionAction.SetupClient,
+    VersionAction.DownloadCommand,
+    VersionAction.ViewVersionDetails
+  ]
+
+  protected allowedActionsOnVersionDetailsPage = []
 
   renderVersionListTable(props: VersionListTableProps): JSX.Element {
     return <VersionListTable {...props} columnConfigs={this.versionListTableColumnConfig} />
@@ -88,6 +101,20 @@ export class NuGetVersionType extends VersionStep<ArtifactVersionSummary> {
   }
 
   renderVersionActions(props: VersionActionProps): JSX.Element {
-    return <VersionActions {...props} />
+    const allowedActions =
+      props.pageType === PageType.Table ? this.allowedActionsOnVersion : this.allowedActionsOnVersionDetailsPage
+    return <VersionActions {...props} allowedActions={allowedActions} />
+  }
+
+  renderArtifactRowSubComponent(props: ArtifactRowSubComponentProps): JSX.Element {
+    return (
+      <VersionFilesProvider
+        repositoryIdentifier={props.data.registryIdentifier}
+        artifactIdentifier={props.data.name}
+        versionIdentifier={props.data.version}
+        shouldUseLocalParams>
+        <ArtifactFilesContent minimal />
+      </VersionFilesProvider>
+    )
   }
 }

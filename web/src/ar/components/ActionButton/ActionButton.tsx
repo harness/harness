@@ -49,7 +49,7 @@ export default function ActionButton({ children, isOpen, setOpen }: PropsWithChi
       }}
       onClick={e => {
         e.stopPropagation()
-        setOpen(true)
+        setOpen(!isOpen)
       }}
     />
   )

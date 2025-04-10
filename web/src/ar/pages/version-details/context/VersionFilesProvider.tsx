@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { createContext, type PropsWithChildren } from 'react'
+import React, { createContext, useState, type PropsWithChildren } from 'react'
 import { PageError, PageSpinner } from '@harnessio/uicore'
 import { type FileDetailResponseResponse, useGetArtifactFilesQuery } from '@harnessio/react-har-service-client'
 
@@ -22,6 +22,7 @@ import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 import { useDecodedParams, useGetSpaceRef, useParentHooks } from '@ar/hooks'
 import type { UseUpdateQueryParamsReturn } from '@ar/__mocks__/hooks/useUpdateQueryParams'
+import { DEFAULT_ARTIFACT_LIST_TABLE_SORT, DEFAULT_PAGE_INDEX, DEFAULT_PAGE_SIZE } from '@ar/constants'
 
 import {
   ArtifactFileListPageQueryParams,
@@ -31,23 +32,36 @@ import {
 interface VersionFilesProviderProps {
   data: FileDetailResponseResponse
   updateQueryParams: UseUpdateQueryParamsReturn<Partial<ArtifactFileListPageQueryParams>>['updateQueryParams']
-  queryParams: ArtifactFileListPageQueryParams
+  queryParams: Partial<ArtifactFileListPageQueryParams>
   refetch: () => void
   sort: string[]
 }
 
 export const VersionFilesContext = createContext<VersionFilesProviderProps>({} as VersionFilesProviderProps)
 
-const VersionFilesProvider = (props: PropsWithChildren<unknown>) => {
+interface IVersionFilesProviderProps {
+  shouldUseLocalParams?: boolean
+  repositoryIdentifier?: string
+  artifactIdentifier?: string
+  versionIdentifier?: string
+}
+
+const VersionFilesProvider = (props: PropsWithChildren<IVersionFilesProviderProps>) => {
+  const { shouldUseLocalParams, artifactIdentifier, versionIdentifier, repositoryIdentifier } = props
+  const [localParams, setLocalParams] = useState<Partial<ArtifactFileListPageQueryParams>>({
+    page: DEFAULT_PAGE_INDEX,
+    size: DEFAULT_PAGE_SIZE,
+    sort: DEFAULT_ARTIFACT_LIST_TABLE_SORT
+  })
   const pathParams = useDecodedParams<VersionDetailsPathParams>()
-  const spaceRef = useGetSpaceRef()
+  const spaceRef = useGetSpaceRef(repositoryIdentifier)
 
   const { useQueryParams, useUpdateQueryParams } = useParentHooks()
   const { updateQueryParams } = useUpdateQueryParams<Partial<ArtifactFileListPageQueryParams>>()
 
   const queryParamOptions = useArtifactFileListQueryParamOptions()
   const queryParams = useQueryParams<ArtifactFileListPageQueryParams>(queryParamOptions)
-  const { page, size, sort } = queryParams
+  const { page, size, sort } = shouldUseLocalParams ? localParams : queryParams
 
   const [sortField, sortOrder] = sort || []
 
@@ -58,8 +72,8 @@ const VersionFilesProvider = (props: PropsWithChildren<unknown>) => {
     refetch
   } = useGetArtifactFilesQuery({
     registry_ref: spaceRef,
-    artifact: encodeRef(pathParams.artifactIdentifier),
-    version: pathParams.versionIdentifier,
+    artifact: encodeRef(artifactIdentifier ?? pathParams.artifactIdentifier),
+    version: versionIdentifier ?? pathParams.versionIdentifier,
     queryParams: {
       page,
       size,
@@ -74,7 +88,14 @@ const VersionFilesProvider = (props: PropsWithChildren<unknown>) => {
       {loading ? <PageSpinner /> : null}
       {error && !loading ? <PageError message={error.message} onClick={() => refetch()} /> : null}
       {!error && !loading && responseData ? (
-        <VersionFilesContext.Provider value={{ data: responseData, refetch, updateQueryParams, queryParams, sort }}>
+        <VersionFilesContext.Provider
+          value={{
+            data: responseData,
+            refetch,
+            updateQueryParams: shouldUseLocalParams ? setLocalParams : updateQueryParams,
+            queryParams: shouldUseLocalParams ? localParams : queryParams,
+            sort: sort || []
+          }}>
           {props.children}
         </VersionFilesContext.Provider>
       ) : null}

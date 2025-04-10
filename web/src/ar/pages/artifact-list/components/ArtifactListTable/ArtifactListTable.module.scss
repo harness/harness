@@ -34,12 +34,17 @@
   div[class*='TableV2--cells'],
   div[class*='TableV2--header'] {
     display: grid !important;
-    grid-template-columns: minmax(var(--har-table-name-column-min-width), 1fr) 12rem 10rem 8rem 12rem 12rem 8rem;
+    grid-template-columns: 50px minmax(var(--har-table-name-column-min-width), 1fr) 12rem 10rem 10rem 14rem 8rem 40px;
   }
 }
 
 .tableRow {
   position: relative;
+}
+
+.tableRowSubComponent {
+  position: relative;
+  min-height: 100px;
 }
 
 .nameCellContainer {
@@ -52,4 +57,12 @@
 
 .optionsMenu {
   min-width: unset;
+}
+
+.activeRow {
+  border-color: var(--primary-7) !important;
+  :global(.TableV2--cells) {
+    background-color: var(--primary-1) !important;
+    border: 1px solid var(--primary-2) !important;
+  }
 }

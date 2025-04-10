@@ -14,21 +14,28 @@
  * limitations under the License.
  */
 
-import React from 'react'
+import React, { useCallback } from 'react'
 import classNames from 'classnames'
-import type { Column } from 'react-table'
-import { PaginationProps, TableV2 } from '@harnessio/uicore'
+import type { Column, Row } from 'react-table'
+import { Container, PaginationProps, TableV2 } from '@harnessio/uicore'
 import type { ArtifactMetadata, ListArtifact } from '@harnessio/react-har-service-client'
 
-import { useStrings } from '@ar/frameworks/strings'
 import { useParentHooks } from '@ar/hooks'
+import { killEvent } from '@ar/common/utils'
+import { useStrings } from '@ar/frameworks/strings'
+import type { RepositoryPackageType } from '@ar/common/types'
+import versionFactory from '@ar/frameworks/Version/VersionFactory'
+import { handleToggleExpandableRow } from '@ar/components/TableCells/utils'
+import ArtifactRowSubComponentWidget from '@ar/frameworks/Version/ArtifactRowSubComponentWidget'
+
 import {
   ArtifactDeploymentsCell,
   ArtifactDownloadsCell,
-  ArtifactListPullCommandCell,
-  ArtifactListVulnerabilitiesCell,
   ArtifactNameCell,
-  LatestArtifactCell
+  ArtifactPackageTypeCell,
+  ArtifactVersionActions,
+  LatestArtifactCell,
+  ToggleAccordionCell
 } from './ArtifactListTableCell'
 import { RepositoryNameCell } from '../RegistryArtifactListTable/RegistryArtifactListTableCell'
 import css from './ArtifactListTable.module.scss'
@@ -47,8 +54,21 @@ export interface ArtifactListTableProps extends ArtifactListColumnActions {
 
 export default function ArtifactListTable(props: ArtifactListTableProps): JSX.Element {
   const { data, gotoPage, onPageSizeChange, sortBy, setSortBy } = props
+  const [expandedRows, setExpandedRows] = React.useState<Set<string>>(new Set())
+
   const { useDefaultPaginationProps } = useParentHooks()
   const { getString } = useStrings()
+
+  const getRowId = (rowData: ArtifactMetadata) => {
+    return `${rowData.registryIdentifier}/${rowData.name}:${rowData.version}`
+  }
+
+  const onToggleRow = useCallback((rowData: ArtifactMetadata): void => {
+    const value = getRowId(rowData)
+    const repositoryType = versionFactory?.getVersionType(rowData.packageType)
+    if (!repositoryType?.getHasArtifactRowSubComponent()) return
+    setExpandedRows(handleToggleExpandableRow(value))
+  }, [])
 
   const { artifacts = [], itemCount = 0, pageCount = 0, pageIndex, pageSize = 0 } = data || {}
   const paginationProps = useDefaultPaginationProps({
@@ -74,6 +94,16 @@ export default function ArtifactListTable(props: ArtifactListTableProps): JSX.El
     }
     return [
       {
+        Header: '',
+        accessor: 'select',
+        id: 'rowSelectOrExpander',
+        Cell: ToggleAccordionCell,
+        disableSortBy: true,
+        expandedRows,
+        setExpandedRows,
+        getRowId
+      },
+      {
         Header: getString('artifactList.table.columns.artifactName'),
         accessor: 'name',
         Cell: ArtifactNameCell,
@@ -86,10 +116,10 @@ export default function ArtifactListTable(props: ArtifactListTableProps): JSX.El
         serverSortProps: getServerSortProps('registryIdentifier')
       },
       {
-        Header: getString('artifactList.table.columns.pullCommand'),
-        accessor: 'pullCommand',
-        Cell: ArtifactListPullCommandCell,
-        disableSortBy: true
+        Header: getString('artifactList.table.columns.type'),
+        accessor: 'packageType',
+        Cell: ArtifactPackageTypeCell,
+        serverSortProps: getServerSortProps('packageType')
       },
       {
         Header: getString('artifactList.table.columns.downloads'),
@@ -104,19 +134,31 @@ export default function ArtifactListTable(props: ArtifactListTableProps): JSX.El
         disableSortBy: true
       },
       {
-        Header: getString('artifactList.table.columns.sto'),
-        accessor: 'sto',
-        Cell: ArtifactListVulnerabilitiesCell,
-        disableSortBy: true
-      },
-      {
         Header: getString('artifactList.table.columns.lastUpdated'),
         accessor: 'lastUpdated',
         Cell: LatestArtifactCell,
         serverSortProps: getServerSortProps('lastUpdated')
+      },
+      {
+        Header: '',
+        accessor: 'action',
+        Cell: ArtifactVersionActions,
+        disableSortBy: true
       }
     ].filter(Boolean) as unknown as Column<ArtifactMetadata>[]
-  }, [currentOrder, currentSort, getString])
+  }, [currentOrder, currentSort, getString, expandedRows, setExpandedRows])
+
+  const renderRowSubComponent = useCallback(
+    ({ row }: { row: Row<ArtifactMetadata> }) => (
+      <Container className={css.tableRowSubComponent} onClick={killEvent}>
+        <ArtifactRowSubComponentWidget
+          packageType={row.original.packageType as RepositoryPackageType}
+          data={row.original}
+        />
+      </Container>
+    ),
+    []
+  )
 
   return (
     <TableV2<ArtifactMetadata>
@@ -125,7 +167,10 @@ export default function ArtifactListTable(props: ArtifactListTableProps): JSX.El
       data={artifacts}
       pagination={paginationProps}
       sortable
-      getRowClassName={() => css.tableRow}
+      renderRowSubComponent={renderRowSubComponent}
+      getRowClassName={row => classNames(css.tableRow, { [css.activeRow]: expandedRows.has(getRowId(row.original)) })}
+      onRowClick={onToggleRow}
+      autoResetExpanded={false}
     />
   )
 }

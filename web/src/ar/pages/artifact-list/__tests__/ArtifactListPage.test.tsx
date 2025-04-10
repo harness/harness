@@ -155,10 +155,9 @@ describe('Test Artifact List Page', () => {
       stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
     })
 
-    const packageTypeSelect = getByTestId('package-type-select')
-    await userEvent.click(packageTypeSelect)
-    const packageTypeOption = getByText('repositoryTypes.docker')
-    await userEvent.click(packageTypeOption)
+    const packageTypeSelector = getByTestId('package-type-select')
+    expect(packageTypeSelector).toBeInTheDocument()
+    await testMultiSelectChange(packageTypeSelector, 'repositoryTypes.docker')
 
     expect(useGetAllHarnessArtifactsQuery).toHaveBeenLastCalledWith({
       space_ref: 'undefined/+',

@@ -18,11 +18,13 @@ import React from 'react'
 import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client'
 
 import { String } from '@ar/frameworks/strings'
-import { RepositoryPackageType } from '@ar/common/types'
+import { PageType, RepositoryPackageType } from '@ar/common/types'
+import DigestListPage from '@ar/pages/digest-list/DigestListPage'
 import ArtifactActions from '@ar/pages/artifact-details/components/ArtifactActions/ArtifactActions'
 import DockerVersionListTable from '@ar/pages/version-list/DockerVersion/VersionListTable/DockerVersionListTable'
 import {
   type ArtifactActionProps,
+  ArtifactRowSubComponentProps,
   type VersionActionProps,
   type VersionDetailsHeaderProps,
   type VersionDetailsTabProps,
@@ -39,9 +41,11 @@ import DockerArtifactSecurityTestsContent from './DockerArtifactSecurityTestsCon
 import DockerVersionOSSContent from './DockerVersionOSSContent/DockerVersionOSSContent'
 import DockerDeploymentsContent from './DockerDeploymentsContent/DockerDeploymentsContent'
 import VersionActions from '../components/VersionActions/VersionActions'
+import { VersionAction } from '../components/VersionActions/types'
 
 export class DockerVersionType extends VersionStep<ArtifactVersionSummary> {
   protected packageType = RepositoryPackageType.DOCKER
+  protected hasArtifactRowSubComponent = true
   protected allowedVersionDetailsTabs: VersionDetailsTab[] = [
     VersionDetailsTab.OVERVIEW,
     VersionDetailsTab.ARTIFACT_DETAILS,
@@ -50,6 +54,16 @@ export class DockerVersionType extends VersionStep<ArtifactVersionSummary> {
     VersionDetailsTab.DEPLOYMENTS,
     VersionDetailsTab.CODE
   ]
+
+  protected allowedActionsOnVersion = [
+    VersionAction.Delete,
+    VersionAction.SetupClient,
+    VersionAction.DownloadCommand,
+    VersionAction.ViewVersionDetails
+  ]
+
+  protected allowedActionsOnVersionDetailsPage = [VersionAction.Delete]
+
   renderVersionListTable(props: VersionListTableProps): JSX.Element {
     return <DockerVersionListTable {...props} />
   }
@@ -82,6 +96,14 @@ export class DockerVersionType extends VersionStep<ArtifactVersionSummary> {
   }
 
   renderVersionActions(props: VersionActionProps): JSX.Element {
-    return <VersionActions {...props} />
+    const allowedActions =
+      props.pageType === PageType.Table ? this.allowedActionsOnVersion : this.allowedActionsOnVersionDetailsPage
+    return <VersionActions {...props} allowedActions={allowedActions} />
+  }
+
+  renderArtifactRowSubComponent(props: ArtifactRowSubComponentProps): JSX.Element {
+    return (
+      <DigestListPage repoKey={props.data.registryIdentifier} artifact={props.data.name} version={props.data.version} />
+    )
   }
 }

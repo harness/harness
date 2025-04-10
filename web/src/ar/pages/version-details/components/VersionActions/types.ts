@@ -25,4 +25,12 @@ export interface VersionActionProps {
   pageType: PageType
   readonly?: boolean
   onClose?: () => void
+  allowedActions?: VersionAction[]
+}
+
+export enum VersionAction {
+  Delete = 'delete',
+  SetupClient = 'setupClient',
+  DownloadCommand = 'downloadCommand',
+  ViewVersionDetails = 'viewVersionDetails'
 }

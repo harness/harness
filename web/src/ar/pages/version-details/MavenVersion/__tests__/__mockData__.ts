@@ -175,7 +175,7 @@ export const mockMavenArtifactFiles: FileDetailResponseResponse = {
     }
   ],
   itemCount: 4,
-  pageCount: 1,
+  pageCount: 10,
   pageIndex: 0,
   pageSize: 50,
   status: 'SUCCESS'

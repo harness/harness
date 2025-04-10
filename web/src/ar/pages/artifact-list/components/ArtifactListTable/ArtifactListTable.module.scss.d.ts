@@ -16,8 +16,10 @@
 
 /* eslint-disable */
 // This is an auto-generated file
+export declare const activeRow: string
 export declare const cellBtn: string
 export declare const nameCellContainer: string
 export declare const optionsMenu: string
 export declare const table: string
 export declare const tableRow: string
+export declare const tableRowSubComponent: string

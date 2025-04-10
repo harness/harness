@@ -16,6 +16,7 @@
 
 import type { PaginationProps } from '@harnessio/uicore'
 import type {
+  ArtifactMetadata,
   ArtifactSummary,
   ArtifactVersionMetadata,
   ArtifactVersionSummary,
@@ -64,9 +65,14 @@ export interface VersionActionProps {
   onClose?: () => void
 }
 
+export interface ArtifactRowSubComponentProps {
+  data: ArtifactMetadata
+}
+
 export abstract class VersionStep<T> {
   protected abstract packageType: RepositoryPackageType
   protected abstract allowedVersionDetailsTabs: VersionDetailsTab[]
+  protected abstract hasArtifactRowSubComponent: boolean
 
   getPackageType(): string {
     return this.packageType
@@ -74,6 +80,10 @@ export abstract class VersionStep<T> {
 
   getAllowedVersionDetailsTab(): VersionDetailsTab[] {
     return this.allowedVersionDetailsTabs
+  }
+
+  getHasArtifactRowSubComponent(): boolean {
+    return this.hasArtifactRowSubComponent
   }
 
   abstract renderVersionListTable(props: VersionListTableProps): JSX.Element
@@ -85,4 +95,6 @@ export abstract class VersionStep<T> {
   abstract renderArtifactActions(props: ArtifactActionProps): JSX.Element
 
   abstract renderVersionActions(props: VersionActionProps): JSX.Element
+
+  abstract renderArtifactRowSubComponent(props: ArtifactRowSubComponentProps): JSX.Element
 }

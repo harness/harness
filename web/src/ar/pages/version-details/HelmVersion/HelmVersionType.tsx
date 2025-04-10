@@ -18,7 +18,7 @@ import React from 'react'
 import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client'
 
 import { String } from '@ar/frameworks/strings'
-import { RepositoryPackageType } from '@ar/common/types'
+import { PageType, RepositoryPackageType } from '@ar/common/types'
 import { VersionListColumnEnum } from '@ar/pages/version-list/components/VersionListTable/types'
 import VersionListTable, {
   CommonVersionListTableProps
@@ -38,9 +38,11 @@ import HelmArtifactDetailsContent from './HelmArtifactDetailsContent'
 import VersionActions from '../components/VersionActions/VersionActions'
 import HelmVersionOSSContent from './HelmVersionOSSContent/HelmVersionOSSContent'
 import VersionDetailsHeaderContent from '../components/VersionDetailsHeaderContent/VersionDetailsHeaderContent'
+import { VersionAction } from '../components/VersionActions/types'
 
 export class HelmVersionType extends VersionStep<ArtifactVersionSummary> {
   protected packageType = RepositoryPackageType.HELM
+  protected hasArtifactRowSubComponent = false
   protected allowedVersionDetailsTabs: VersionDetailsTab[] = [
     VersionDetailsTab.OVERVIEW,
     VersionDetailsTab.ARTIFACT_DETAILS,
@@ -54,6 +56,15 @@ export class HelmVersionType extends VersionStep<ArtifactVersionSummary> {
     [VersionListColumnEnum.PullCommand]: { width: '100%' },
     [VersionListColumnEnum.Actions]: { width: '10%' }
   }
+
+  protected allowedActionsOnVersion = [
+    VersionAction.Delete,
+    VersionAction.SetupClient,
+    VersionAction.DownloadCommand,
+    VersionAction.ViewVersionDetails
+  ]
+
+  protected allowedActionsOnVersionDetailsPage = [VersionAction.Delete]
 
   renderVersionListTable(props: VersionListTableProps): JSX.Element {
     return <VersionListTable {...props} columnConfigs={this.versionListTableColumnConfig} />
@@ -81,6 +92,12 @@ export class HelmVersionType extends VersionStep<ArtifactVersionSummary> {
   }
 
   renderVersionActions(props: VersionActionProps): JSX.Element {
-    return <VersionActions {...props} />
+    const allowedActions =
+      props.pageType === PageType.Table ? this.allowedActionsOnVersion : this.allowedActionsOnVersionDetailsPage
+    return <VersionActions {...props} allowedActions={allowedActions} />
+  }
+
+  renderArtifactRowSubComponent(): JSX.Element {
+    return <></>
   }
 }

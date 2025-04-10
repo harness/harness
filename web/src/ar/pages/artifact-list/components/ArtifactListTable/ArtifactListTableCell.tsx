@@ -21,16 +21,18 @@ import { Link } from 'react-router-dom'
 import { Position } from '@blueprintjs/core'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Button, ButtonVariation, Layout, Text } from '@harnessio/uicore'
-import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance } from 'react-table'
 import type { ArtifactMetadata, StoDigestMetadata } from '@harnessio/react-har-service-client'
+import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance, UseExpandedRowProps } from 'react-table'
 
 import { useRoutes } from '@ar/hooks'
-import TableCells from '@ar/components/TableCells/TableCells'
-import { PageType, RepositoryPackageType } from '@ar/common/types'
-import LabelsPopover from '@ar/components/LabelsPopover/LabelsPopover'
-import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import { useStrings } from '@ar/frameworks/strings'
 import { getShortDigest } from '@ar/pages/digest-list/utils'
+import TableCells from '@ar/components/TableCells/TableCells'
+import versionFactory from '@ar/frameworks/Version/VersionFactory'
+import { PageType, RepositoryPackageType } from '@ar/common/types'
+import LabelsPopover from '@ar/components/LabelsPopover/LabelsPopover'
+import { useGetRepositoryTypes } from '@ar/hooks/useGetRepositoryTypes'
+import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import VersionActionsWidget from '@ar/frameworks/Version/VersionActionsWidget'
 import { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
 
@@ -49,6 +51,32 @@ type ArtifactNameCellActionProps = {
   onClickLabel: (val: string) => void
 }
 
+export type ArtifactListExpandedColumnProps = {
+  expandedRows: Set<string>
+  setExpandedRows: React.Dispatch<React.SetStateAction<Set<string>>>
+  getRowId: (rowData: ArtifactMetadata) => string
+}
+
+export const ToggleAccordionCell: Renderer<{
+  row: UseExpandedRowProps<ArtifactMetadata> & Row<ArtifactMetadata>
+  column: ColumnInstance<ArtifactMetadata> & ArtifactListExpandedColumnProps
+}> = ({ row, column }) => {
+  const { expandedRows, setExpandedRows, getRowId } = column
+  const data = row.original
+  const repositoryType = versionFactory?.getVersionType(data.packageType)
+  if (!repositoryType?.getHasArtifactRowSubComponent()) return <></>
+  return (
+    <TableCells.ToggleAccordionCell
+      expandedRows={expandedRows}
+      setExpandedRows={setExpandedRows}
+      value={getRowId(data)}
+      initialIsExpanded={row.isExpanded}
+      getToggleRowExpandedProps={row.getToggleRowExpandedProps}
+      onToggleRowExpanded={row.toggleRowExpanded}
+    />
+  )
+}
+
 export const ArtifactNameCell: Renderer<{
   row: Row<ArtifactMetadata>
   column: ColumnInstance<ArtifactMetadata> & ArtifactNameCellActionProps
@@ -57,7 +85,6 @@ export const ArtifactNameCell: Renderer<{
   const { onClickLabel } = column
   const routes = useRoutes()
   const { name: value, version, packageType, registryIdentifier } = original
-
   return (
     <Layout.Vertical>
       <TableCells.LinkCell
@@ -94,6 +121,17 @@ export const ArtifactNameCell: Renderer<{
 
 export const ArtifactDownloadsCell: CellType = ({ value }) => {
   return <TableCells.CountCell value={value} icon="download-box" iconProps={{ size: 12 }} />
+}
+
+export const ArtifactPackageTypeCell: CellType = ({ value }) => {
+  const repositoryTypes = useGetRepositoryTypes()
+  const { getString } = useStrings()
+  const typeConfig = repositoryTypes.find(type => type.value === value)
+  return <TableCells.TextCell value={typeConfig ? getString(typeConfig.label) : value} />
+}
+
+export const ArtifactSizeCell: CellType = ({ value }) => {
+  return <TableCells.TextCell value={value} />
 }
 
 export const ArtifactDeploymentsCell: CellType = ({ row }) => {

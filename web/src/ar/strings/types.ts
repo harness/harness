@@ -39,8 +39,10 @@ export interface StringsMap {
   'artifactList.table.columns.name': string
   'artifactList.table.columns.pullCommand': string
   'artifactList.table.columns.repository': string
+  'artifactList.table.columns.size': string
   'artifactList.table.columns.sto': string
   'artifactList.table.columns.tags': string
+  'artifactList.table.columns.type': string
   'artifactList.table.latestVersions': string
   'artifactList.table.noArtifactsTitle': string
   'artifactList.viewArtifactDetails': string
@@ -297,6 +299,7 @@ export interface StringsMap {
   'webhookList.webhookCreated': string
   'webhookList.webhookDeleted': string
   'webhookList.webhookUpdated': string
+  'actions.copyCommand': string
   'actions.delete': string
   'actions.edit': string
   'actions.executions': string

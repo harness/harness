@@ -30,7 +30,13 @@
   div[class*='TableV2--header'] {
     display: grid !important;
     width: 100%; /* Ensure the container doesn't exceed 100% width */
-    grid-template-columns: minmax(var(--har-table-name-column-min-width), 15rem) 6rem minmax(0, 1fr) 15rem 10rem;
+    grid-template-columns: minmax(var(--har-table-name-column-min-width), 15rem) 6rem minmax(0, 1fr) 15rem 10rem !important;
+  }
+
+  &.minimal {
+    div[class*='TableV2--header'] {
+      --typography-color: var(--grey-500);
+    }
   }
 }
 

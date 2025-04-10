@@ -24,6 +24,7 @@ import { useStrings } from '@ar/frameworks/strings/String'
 import {
   DigestActionsCell,
   DigestNameCell,
+  type DigestNameColumnProps,
   DigestVulnerabilityCell,
   DownloadsCell,
   OsArchCell,
@@ -32,13 +33,12 @@ import {
 } from './DigestTableCells'
 import css from './DigestListTable.module.scss'
 
-interface DigestListTableProps {
+interface DigestListTableProps extends DigestNameColumnProps {
   data: DockerManifestDetails[]
-  version: string
 }
 
 export default function DigestListTable(props: DigestListTableProps): JSX.Element {
-  const { data, version } = props
+  const { data, repositoryIdentifier, artifactIdentifier, versionIdentifier } = props
 
   const { getString } = useStrings()
 
@@ -48,7 +48,9 @@ export default function DigestListTable(props: DigestListTableProps): JSX.Elemen
         Header: getString('digestList.table.columns.digest'),
         accessor: 'digest',
         Cell: DigestNameCell,
-        version
+        repositoryIdentifier,
+        artifactIdentifier,
+        versionIdentifier
       },
       {
         Header: getString('digestList.table.columns.osArch'),
@@ -73,8 +75,7 @@ export default function DigestListTable(props: DigestListTableProps): JSX.Elemen
       {
         Header: getString('digestList.table.columns.scanStatus'),
         accessor: 'scanStatus',
-        Cell: DigestVulnerabilityCell,
-        version
+        Cell: DigestVulnerabilityCell
       },
       {
         Header: '',
@@ -83,7 +84,7 @@ export default function DigestListTable(props: DigestListTableProps): JSX.Elemen
         disableSortBy: true
       }
     ].filter(Boolean) as unknown as Column<DockerManifestDetails>[]
-  }, [getString, version])
+  }, [getString, repositoryIdentifier, artifactIdentifier, versionIdentifier])
   return (
     <TableV2<DockerManifestDetails>
       minimal

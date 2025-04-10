@@ -18,6 +18,7 @@ import React from 'react'
 import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client'
 import {
   type ArtifactActionProps,
+  ArtifactRowSubComponentProps,
   type VersionActionProps,
   type VersionDetailsHeaderProps,
   type VersionDetailsTabProps,
@@ -25,7 +26,7 @@ import {
   VersionStep
 } from '@ar/frameworks/Version/Version'
 import { String } from '@ar/frameworks/strings'
-import { RepositoryPackageType } from '@ar/common/types'
+import { PageType, RepositoryPackageType } from '@ar/common/types'
 import VersionListTable, {
   type CommonVersionListTableProps
 } from '@ar/pages/version-list/components/VersionListTable/VersionListTable'
@@ -35,9 +36,14 @@ import GenericOverviewPage from './pages/overview/OverviewPage'
 import OSSContentPage from './pages/oss-details/OSSContentPage'
 import GenericArtifactDetailsPage from './pages/artifact-details/GenericArtifactDetailsPage'
 import VersionDetailsHeaderContent from '../components/VersionDetailsHeaderContent/VersionDetailsHeaderContent'
+import VersionFilesProvider from '../context/VersionFilesProvider'
+import ArtifactFilesContent from '../components/ArtifactFileListTable/ArtifactFilesContent'
+import VersionActions from '../components/VersionActions/VersionActions'
+import { VersionAction } from '../components/VersionActions/types'
 
 export class GenericVersionType extends VersionStep<ArtifactVersionSummary> {
   protected packageType = RepositoryPackageType.GENERIC
+  protected hasArtifactRowSubComponent = true
   protected allowedVersionDetailsTabs: VersionDetailsTab[] = [
     VersionDetailsTab.OVERVIEW,
     VersionDetailsTab.ARTIFACT_DETAILS,
@@ -51,6 +57,9 @@ export class GenericVersionType extends VersionStep<ArtifactVersionSummary> {
     [VersionListColumnEnum.LastModified]: { width: '100%' }
     // [VersionListColumnEnum.Actions]: { width: '10%' } // TODO: will add this once BE support actions
   }
+
+  protected allowedActionsOnVersion = [VersionAction.SetupClient, VersionAction.ViewVersionDetails]
+  protected allowedActionsOnVersionDetailsPage = []
 
   renderVersionListTable(props: VersionListTableProps): JSX.Element {
     return <VersionListTable {...props} columnConfigs={this.versionListTableColumnConfig} />
@@ -77,7 +86,21 @@ export class GenericVersionType extends VersionStep<ArtifactVersionSummary> {
     return <></>
   }
 
-  renderVersionActions(_props: VersionActionProps): JSX.Element {
-    return <></>
+  renderVersionActions(props: VersionActionProps): JSX.Element {
+    const allowedActions =
+      props.pageType === PageType.Table ? this.allowedActionsOnVersion : this.allowedActionsOnVersionDetailsPage
+    return <VersionActions {...props} allowedActions={allowedActions} />
+  }
+
+  renderArtifactRowSubComponent(props: ArtifactRowSubComponentProps): JSX.Element {
+    return (
+      <VersionFilesProvider
+        repositoryIdentifier={props.data.registryIdentifier}
+        artifactIdentifier={props.data.name}
+        versionIdentifier={props.data.version}
+        shouldUseLocalParams>
+        <ArtifactFilesContent minimal />
+      </VersionFilesProvider>
+    )
   }
 }
