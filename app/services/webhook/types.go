@@ -105,6 +105,11 @@ type PullReqReviewSegment struct {
 	ReviewerInfo   PrincipalInfo              `json:"reviewer"`
 }
 
+type PullReqTargetBrancheChangedSegment struct {
+	OldTargetBranch string `json:"old_target_branch"`
+	OldMergeBaseSHA string `json:"old_merge_base_sha"`
+}
+
 // RepositoryInfo describes the repo related info for a webhook payload.
 // NOTE: don't use types package as we want webhook payload to be independent from API calls.
 type RepositoryInfo struct {

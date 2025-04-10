@@ -194,6 +194,8 @@ const (
 	WebhookTriggerPullReqLabelAssigned WebhookTrigger = "pullreq_label_assigned"
 	// WebhookTriggerPullReqReviewSubmitted gets triggered when a pull request review is submitted.
 	WebhookTriggerPullReqReviewSubmitted = "pullreq_review_submitted"
+	// WebhookTriggerPullReqTargetBranchChanged gets triggered when a pull request target branch is changed.
+	WebhookTriggerPullReqTargetBranchChanged = "pullreq_target_branch_changed"
 
 	// WebhookTriggerArtifactCreated gets triggered when an artifact gets created.
 	WebhookTriggerArtifactCreated WebhookTrigger = "artifact_created"
@@ -219,6 +221,7 @@ var webhookTriggers = sortEnum([]WebhookTrigger{
 	WebhookTriggerPullReqMerged,
 	WebhookTriggerPullReqLabelAssigned,
 	WebhookTriggerPullReqReviewSubmitted,
+	WebhookTriggerPullReqTargetBranchChanged,
 	WebhookTriggerArtifactCreated,
 	WebhookTriggerArtifactDeleted,
 })

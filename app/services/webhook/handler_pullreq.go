@@ -697,3 +697,71 @@ func (s *Service) handleEventPullReqReviewSubmitted(
 			}, nil
 		})
 }
+
+// PullReqTargetBranchChangedPayload describes the body of the pullreq target branch changed trigger.
+type PullReqTargetBranchChangedPayload struct {
+	BaseSegment
+	PullReqSegment
+	PullReqTargetReferenceSegment
+	ReferenceSegment
+	ReferenceDetailsSegment
+	PullReqTargetBrancheChangedSegment
+}
+
+// handleEventPullReqTargetBranchChanged handles pullreq target branch changed events
+// and triggers pullreq target branch changed webhooks.
+func (s *Service) handleEventPullReqTargetBranchChanged(
+	ctx context.Context,
+	event *events.Event[*pullreqevents.TargetBranchChangedPayload],
+) error {
+	return s.triggerForEventWithPullReq(
+		ctx,
+		enum.WebhookTriggerPullReqTargetBranchChanged,
+		event.ID,
+		event.Payload.PrincipalID,
+		event.Payload.PullReqID,
+		func(
+			principal *types.Principal,
+			pr *types.PullReq,
+			targetRepo, sourceRepo *types.Repository,
+		) (any, error) {
+			commitInfo, err := s.fetchCommitInfoForEvent(ctx, sourceRepo.GitUID, event.Payload.SourceSHA)
+			if err != nil {
+				return nil, err
+			}
+			targetRepoInfo := repositoryInfoFrom(ctx, targetRepo, s.urlProvider)
+			sourceRepoInfo := repositoryInfoFrom(ctx, sourceRepo, s.urlProvider)
+
+			return &PullReqTargetBranchChangedPayload{
+				BaseSegment: BaseSegment{
+					Trigger:   enum.WebhookTriggerPullReqTargetBranchChanged,
+					Repo:      targetRepoInfo,
+					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
+				},
+				PullReqSegment: PullReqSegment{
+					PullReq: pullReqInfoFrom(ctx, pr, targetRepo, s.urlProvider),
+				},
+				PullReqTargetReferenceSegment: PullReqTargetReferenceSegment{
+					TargetRef: ReferenceInfo{
+						Name: gitReferenceNamePrefixBranch + pr.TargetBranch,
+						Repo: targetRepoInfo,
+					},
+				},
+				ReferenceSegment: ReferenceSegment{
+					Ref: ReferenceInfo{
+						Name: gitReferenceNamePrefixBranch + pr.SourceBranch,
+						Repo: sourceRepoInfo,
+					},
+				},
+				ReferenceDetailsSegment: ReferenceDetailsSegment{
+					SHA:        event.Payload.SourceSHA,
+					Commit:     &commitInfo,
+					HeadCommit: &commitInfo,
+				},
+				PullReqTargetBrancheChangedSegment: PullReqTargetBrancheChangedSegment{
+					OldTargetBranch: event.Payload.OldTargetBranch,
+					OldMergeBaseSHA: event.Payload.OldMergeBaseSHA,
+				},
+			}, nil
+		})
+}
