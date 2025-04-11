@@ -93,7 +93,7 @@ func (r *proxy) GetPackageMetadata(ctx context.Context, info npm2.ArtifactInfo) 
 	if err != nil {
 		return npm.PackageMetadata{}, err
 	}
-	regURL := r.urlProvider.PackageURL(ctx, info.RootIdentifier, info.RegIdentifier, "npm")
+	regURL := r.urlProvider.PackageURL(ctx, info.RootIdentifier+"/"+info.RegIdentifier, "npm")
 
 	versions := make(map[string]*npm.PackageMetadataVersion)
 	for _, version := range result.Versions {
