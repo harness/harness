@@ -104,11 +104,10 @@ func (c *Controller) Create(
 			return nil, err
 		}
 	}
-	suffixUID, err := gonanoid.Generate(gitspace.AllowedUIDAlphabet, 6)
+	identifier, err := buildIdentifier(in.Identifier)
 	if err != nil {
-		return nil, fmt.Errorf("could not generate UID for gitspace config : %q %w", in.Identifier, err)
+		return nil, fmt.Errorf("could not generate identrifier for gitspace config : %q %w", in.Identifier, err)
 	}
-	identifier := strings.ToLower(in.Identifier + "-" + suffixUID)
 	now := time.Now().UnixMilli()
 	var gitspaceConfig *types.GitspaceConfig
 	// assume resource to be in same space if it's not explicitly specified.
@@ -280,4 +279,15 @@ func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
 	}
 
 	return nil
+}
+
+func buildIdentifier(identifier string) (string, error) {
+	suffixUID, err := gonanoid.Generate(gitspace.AllowedUIDAlphabet, 6)
+	if err != nil {
+		return "", fmt.Errorf("could not generate UID for gitspace config : %q %w", identifier, err)
+	}
+	if len(identifier) > 50 {
+		identifier = identifier[:50]
+	}
+	return strings.ToLower(identifier + "-" + suffixUID), nil
 }
