@@ -40,11 +40,12 @@ func (c *controller) DownloadPackageFileByName(
 				BaseResponse: BaseResponse{Error: fmt.Errorf("invalid registry type: expected npm.Registry")},
 			}
 		}
-		headers, fileReader, redirectURL, errs := npmRegistry.DownloadPackageFile(ctx, info)
+		headers, fileReader, readCloser, redirectURL, errs := npmRegistry.DownloadPackageFile(ctx, info)
 		return &GetArtifactResponse{
 			BaseResponse: BaseResponse{Error: errs, ResponseHeaders: headers},
 			RedirectURL:  redirectURL,
 			Body:         fileReader,
+			ReadCloser:   readCloser,
 		}
 	}
 

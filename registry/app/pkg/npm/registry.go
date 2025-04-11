@@ -36,6 +36,7 @@ type Registry interface {
 	DownloadPackageFile(ctx context.Context, info npm.ArtifactInfo) (
 		*commons.ResponseHeaders,
 		*storage.FileReader,
+		io.ReadCloser,
 		string,
 		error,
 	)

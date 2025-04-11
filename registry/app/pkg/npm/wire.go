@@ -15,10 +15,12 @@
 package npm
 
 import (
+	"github.com/harness/gitness/app/services/refcache"
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/pkg/base"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
+	"github.com/harness/gitness/secret"
 	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/google/wire"
@@ -51,10 +53,18 @@ func ProxyProvider(
 	fileManager filemanager.FileManager,
 	tx dbtx.Transactor,
 	urlProvider urlprovider.Provider,
+	spaceFinder refcache.SpaceFinder,
+	service secret.Service,
+	localRegistryHelper LocalRegistryHelper,
 ) Proxy {
-	proxy := NewProxy(fileManager, proxyStore, tx, registryDao, imageDao, artifactDao, urlProvider)
+	proxy := NewProxy(fileManager, proxyStore, tx,
+		registryDao, imageDao, artifactDao, urlProvider, spaceFinder, service, localRegistryHelper)
 	base.Register(proxy)
 	return proxy
 }
 
-var WireSet = wire.NewSet(LocalRegistryProvider, ProxyProvider)
+func LocalRegistryHelperProvider(localRegistry LocalRegistry, localBase base.LocalBase) LocalRegistryHelper {
+	return NewLocalRegistryHelper(localRegistry, localBase)
+}
+
+var WireSet = wire.NewSet(LocalRegistryProvider, ProxyProvider, LocalRegistryHelperProvider)

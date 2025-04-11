@@ -95,7 +95,7 @@ const (
 	UpstreamConfigSourceDockerhub    UpstreamConfigSource = "Dockerhub"
 	UpstreamConfigSourceMavenCentral UpstreamConfigSource = "MavenCentral"
 	UpstreamConfigSourcePyPi         UpstreamConfigSource = "PyPi"
-	UpstreamConfigSourceNpm          UpstreamConfigSource = "Npm"
+	UpstreamConfigSourceNpmjs         UpstreamConfigSource = "NpmJs"
 )
 
 // Defines values for WebhookExecResult.

@@ -19,7 +19,8 @@ import "net/http"
 var (
 
 	// ErrBadRequest is returned when there was an issue with the input.
-	ErrBadRequest = New(http.StatusNotFound, "Bad Request", nil)
+	ErrBadRequest   = New(http.StatusNotFound, "Bad Request", nil)
+	ErrNotSupported = New(http.StatusMethodNotAllowed, "not supported", nil)
 )
 
 // Error represents a json-encoded API error.

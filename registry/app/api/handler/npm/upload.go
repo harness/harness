@@ -37,6 +37,7 @@ func (h *handler) UploadPackage(w http.ResponseWriter, r *http.Request) {
 		h.HandleError(r.Context(), w, usererror.BadRequest("File Data is empty in the request"))
 		return
 	}
+	defer file.Close()
 	response := h.controller.UploadPackageFile(r.Context(), info, file)
 	if response.GetError() != nil {
 		h.HandleError(r.Context(), w, response.GetError())

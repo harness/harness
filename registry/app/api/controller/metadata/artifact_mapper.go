@@ -231,7 +231,8 @@ func GetArtifactFilesMetadata(
 		filePathPrefix := "/" + artifactName + "/" + version + "/"
 		filename := strings.Replace(file.Path, filePathPrefix, "", 1)
 		var downloadCommand string
-		if artifactapi.PackageTypeGENERIC == packageType || artifactapi.PackageTypePYTHON == packageType {
+		if artifactapi.PackageTypeGENERIC == packageType ||
+			artifactapi.PackageTypePYTHON == packageType || artifactapi.PackageTypeNPM == packageType {
 			downloadCommand = GetGenericArtifactFileDownloadCommand(registryURL, artifactName, version, filename)
 		} else if artifactapi.PackageTypeMAVEN == packageType {
 			artifactName = strings.ReplaceAll(artifactName, ".", "/")

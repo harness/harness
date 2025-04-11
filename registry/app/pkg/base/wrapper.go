@@ -90,7 +90,7 @@ func proxyInternal(
 		for _, registry := range skipped {
 			skippedRegNames = append(skippedRegNames, registry.Name)
 		}
-		return r, errors.NotFound("no matching artifacts found in registry %s, skipped registries: [%s] "+
+		return r, errors.InvalidArgument("no matching artifacts found in registry %s, skipped registries: [%s] "+
 			"due to allowed/blocked policies",
 			requestRepoKey, pkg.JoinWithSeparator(", ", skippedRegNames...))
 	}

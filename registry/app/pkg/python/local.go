@@ -193,7 +193,6 @@ func (c *localRegistry) UploadPackageFile(
 	file multipart.File,
 	filename string,
 ) (headers *commons.ResponseHeaders, sha256 string, err error) {
-	defer file.Close()
 	path := pkg.JoinWithSeparator("/", info.Image, info.Metadata.Version, filename)
 	return c.localBase.UploadFile(ctx, info.ArtifactInfo, filename, info.Metadata.Version, path, file,
 		&pythonmetadata.PythonMetadata{
@@ -207,7 +206,6 @@ func (c *localRegistry) UploadPackageFileReader(
 	file io.ReadCloser,
 	filename string,
 ) (headers *commons.ResponseHeaders, sha256 string, err error) {
-	defer file.Close()
 	path := pkg.JoinWithSeparator("/", info.Image, info.Metadata.Version, filename)
 	return c.localBase.Upload(ctx, info.ArtifactInfo, filename, info.Metadata.Version, path, file,
 		&pythonmetadata.PythonMetadata{

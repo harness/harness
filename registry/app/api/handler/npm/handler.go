@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"regexp"
 	"strings"
 
 	npm3 "github.com/harness/gitness/registry/app/api/controller/pkg/npm"
@@ -30,11 +31,15 @@ import (
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/types/npm"
+
+	"github.com/rs/zerolog/log"
 )
 
 var (
 	ErrInvalidPackageVersion = errors.New("package version is invalid")
 	ErrInvalidAttachment     = errors.New("package attachment is invalid")
+	packageNameRegex         = regexp.MustCompile(`^(?:@[\w.-]+\/)?[\w.-]+$`)
+	versionRegex             = regexp.MustCompile(`^(\d+)\.(\d+)\.(\d+)(?:-([\w.-]+))?(?:\+([\w.-]+))?$`)
 )
 
 type Handler interface {
@@ -80,6 +85,11 @@ func (h *handler) GetPackageArtifactInfo(r *http.Request) (pkg.PackageArtifactIn
 	info.Image = PackageNameFromParams(r)
 	version := GetVersionFromParams(r)
 	fileName := GetFileName(r)
+
+	if info.Image != "" && version != "" && !isValidNameAndVersion(info.Image, version) {
+		log.Info().Msgf("Invalid image name/version: %s/%s", info.Image, version)
+		return nil, fmt.Errorf("invalid name or version")
+	}
 
 	npmInfo := npm.ArtifactInfo{
 		ArtifactInfo: info,
@@ -156,4 +166,8 @@ func GetNPMFile(r *http.Request) (io.ReadCloser, error) {
 	}
 	return io.NopCloser(base64.NewDecoder(base64.StdEncoding,
 		strings.NewReader(attachment.Data))), nil
+}
+
+func isValidNameAndVersion(image, version string) bool {
+	return packageNameRegex.MatchString(image) && versionRegex.MatchString(version)
 }

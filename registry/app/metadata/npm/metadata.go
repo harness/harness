@@ -46,11 +46,11 @@ type PackageMetadata struct {
 	Time           map[string]time.Time               `json:"time,omitempty"`
 	Homepage       string                             `json:"homepage,omitempty"`
 	Keywords       []string                           `json:"keywords,omitempty"`
-	Repository     Repository                         `json:"repository,omitempty"`
-	Author         User                               `json:"author"`
+	Repository     interface{}                        `json:"repository,omitempty"`
+	Author         interface{}                        `json:"author"`
 	ReadmeFilename string                             `json:"readmeFilename,omitempty"`
 	Users          map[string]bool                    `json:"users,omitempty"`
-	License        string                             `json:"license,omitempty"`
+	License        interface{}                        `json:"license,omitempty"`
 }
 
 // PackageMetadataVersion documentation:
@@ -62,21 +62,21 @@ type PackageMetadataVersion struct {
 	ID                   string              `json:"_id"`
 	Name                 string              `json:"name"`
 	Version              string              `json:"version"`
-	Description          string              `json:"description"`
-	Author               User                `json:"author"`
-	Homepage             string              `json:"homepage,omitempty"`
-	License              string              `json:"license,omitempty"`
-	Repository           Repository          `json:"repository,omitempty"`
-	Keywords             []string            `json:"keywords,omitempty"`
+	Description          interface{}         `json:"description"`
+	Author               interface{}         `json:"author"`
+	Homepage             interface{}         `json:"homepage,omitempty"`
+	License              interface{}         `json:"license,omitempty"`
+	Repository           interface{}         `json:"repository,omitempty"`
+	Keywords             interface{}         `json:"keywords,omitempty"`
 	Dependencies         map[string]string   `json:"dependencies,omitempty"`
-	BundleDependencies   []string            `json:"bundleDependencies,omitempty"`
-	DevDependencies      map[string]string   `json:"devDependencies,omitempty"`
-	PeerDependencies     map[string]string   `json:"peerDependencies,omitempty"`
-	Bin                  map[string]string   `json:"bin,omitempty"`
-	OptionalDependencies map[string]string   `json:"optionalDependencies,omitempty"`
+	BundleDependencies   interface{}         `json:"bundleDependencies,omitempty"`
+	DevDependencies      interface{}         `json:"devDependencies,omitempty"`
+	PeerDependencies     interface{}         `json:"peerDependencies,omitempty"`
+	Bin                  interface{}         `json:"bin,omitempty"`
+	OptionalDependencies interface{}         `json:"optionalDependencies,omitempty"`
 	Readme               string              `json:"readme,omitempty"`
 	Dist                 PackageDistribution `json:"dist"`
-	Maintainers          []User              `json:"maintainers,omitempty"`
+	Maintainers          interface{}         `json:"maintainers,omitempty"`
 }
 
 // Repository https://github.com/npm/registry/blob/master/docs/REGISTRY-API.md#version

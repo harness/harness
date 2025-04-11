@@ -59,14 +59,14 @@ func (c *localRegistry) HeadPackageMetadata(ctx context.Context, info npm.Artifa
 }
 
 func (c *localRegistry) DownloadPackageFile(ctx context.Context,
-	info npm.ArtifactInfo) (*commons.ResponseHeaders, *storage.FileReader, string, error) {
+	info npm.ArtifactInfo) (*commons.ResponseHeaders, *storage.FileReader, io.ReadCloser, string, error) {
 	headers, fileReader, redirectURL, err :=
 		c.localBase.Download(ctx, info.ArtifactInfo, info.Version,
 			info.Filename)
 	if err != nil {
-		return nil, nil, "", err
+		return nil, nil, nil, "", err
 	}
-	return headers, fileReader, redirectURL, nil
+	return headers, fileReader, nil, redirectURL, nil
 }
 
 type LocalRegistry interface {
@@ -112,7 +112,6 @@ func (c *localRegistry) UploadPackageFile(
 	info npm.ArtifactInfo,
 	file io.ReadCloser,
 ) (headers *commons.ResponseHeaders, sha256 string, err error) {
-	defer file.Close()
 	path := pkg.JoinWithSeparator("/", info.Image, info.Version, info.Filename)
 	response, sha, err := c.localBase.Upload(ctx, info.ArtifactInfo, info.Filename, info.Version, path, file,
 		&npm2.NpmMetadata{
@@ -186,7 +185,7 @@ func CreatePackageMetadataVersion(registryURL string,
 		Dist: npm2.PackageDistribution{
 			Shasum:    metadata.Dist.Shasum,
 			Integrity: metadata.Dist.Integrity,
-			Tarball: fmt.Sprintf("http://localhost:3000/pkg/test/npm1/npm/%s/-/%s/%s", metadata.Name, metadata.Version,
+			Tarball: fmt.Sprintf("%s/%s/-/%s/%s", registryURL, metadata.Name, metadata.Version,
 				metadata.Name+"-"+metadata.Version+".tgz"),
 		},
 	}

@@ -193,6 +193,7 @@ func (r *proxy) putFileToLocal(ctx context.Context, pkg string, filename string,
 		log.Ctx(ctx).Error().Stack().Err(err).Msgf("fetching file %s failed, %v", filename, err)
 		return err
 	}
+	defer file.Close()
 	info, ok := request2.ArtifactInfoFrom(ctx).(*pythontype.ArtifactInfo)
 	if !ok {
 		log.Ctx(ctx).Error().Msgf("failed to cast artifact info to python artifact info")

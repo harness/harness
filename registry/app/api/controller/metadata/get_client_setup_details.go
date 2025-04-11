@@ -910,8 +910,10 @@ func (c *APIController) generateNpmClientSetupDetail(
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: stringPtr("npm set registry https:<REGISTRY_URL>/\n\n" +
-							"npm set <REGISTRY_URL>/:_authToken <TOKEN>"),
+						Value: stringPtr("https:<REGISTRY_URL>/"),
+					},
+					{
+						Value: stringPtr("<REGISTRY_URL>/:_authToken <TOKEN>"),
 					},
 				},
 			},
@@ -933,7 +935,7 @@ func (c *APIController) generateNpmClientSetupDetail(
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: stringPtr("npm run build\n"),
+						Value: stringPtr("npm init -y\n"),
 					},
 					{
 						Value: stringPtr("npm publish"),
