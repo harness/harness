@@ -17,6 +17,7 @@ package gitspace
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -35,7 +36,10 @@ import (
 	gonanoid "github.com/matoous/go-nanoid"
 )
 
-const defaultResourceIdentifier = "default"
+const (
+	defaultResourceIdentifier               = "default"
+	maxGitspaceConfigIdentifierPrefixLength = 50
+)
 
 var (
 	// ErrGitspaceRequiresParent if the user tries to create a secret without a parent space.
@@ -282,12 +286,30 @@ func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
 }
 
 func buildIdentifier(identifier string) (string, error) {
-	suffixUID, err := gonanoid.Generate(gitspace.AllowedUIDAlphabet, 6)
+	const suffixLen = 6
+
+	suffixUID, err := gonanoid.Generate(gitspace.AllowedUIDAlphabet, suffixLen)
 	if err != nil {
-		return "", fmt.Errorf("could not generate UID for gitspace config : %q %w", identifier, err)
+		return "", fmt.Errorf("could not generate UID for gitspace config: %q %w", identifier, err)
 	}
-	if len(identifier) > 50 {
-		identifier = identifier[:50]
+
+	sanitized := sanitizeIdentifier(strings.ToLower(identifier))
+	return sanitized + "-" + suffixUID, nil
+}
+
+func sanitizeIdentifier(identifier string) string {
+	// Replace invalid characters with hyphen (keep existing hyphens)
+	identifier = regexp.MustCompile(`[^a-z0-9-]`).ReplaceAllString(identifier, "-")
+
+	// Trim leading non-letters
+	for len(identifier) > 0 && (identifier[0] < 'a' || identifier[0] > 'z') {
+		identifier = identifier[1:]
 	}
-	return strings.ToLower(identifier + "-" + suffixUID), nil
+
+	// Truncate to 50 characters
+	if len(identifier) > maxGitspaceConfigIdentifierPrefixLength {
+		identifier = identifier[:maxGitspaceConfigIdentifierPrefixLength]
+	}
+
+	return identifier
 }
