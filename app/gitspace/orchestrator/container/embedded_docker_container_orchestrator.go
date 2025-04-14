@@ -240,7 +240,7 @@ func (e *EmbeddedDockerOrchestrator) startStoppedGitspace(
 	}
 
 	// Set up git credentials if needed
-	if resolvedRepoDetails.Credentials != nil {
+	if resolvedRepoDetails.UserPasswordCredentials != nil {
 		if err = utils.SetupGitCredentials(ctx, exec, resolvedRepoDetails, logStreamInstance); err != nil {
 			return err
 		}
@@ -674,7 +674,7 @@ func (e *EmbeddedDockerOrchestrator) buildSetupSteps(
 				exec *devcontainer.Exec,
 				gitspaceLogger gitspaceTypes.GitspaceLogger,
 			) error {
-				if resolvedRepoDetails.ResolvedCredentials.Credentials != nil {
+				if resolvedRepoDetails.ResolvedCredentials.UserPasswordCredentials != nil {
 					return utils.SetupGitCredentials(ctx, exec, resolvedRepoDetails, gitspaceLogger)
 				}
 				return nil

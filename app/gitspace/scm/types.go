@@ -33,26 +33,50 @@ type CodeRepositoryResponse struct {
 	CodeRepoIsPrivate bool   `json:"is_private"`
 }
 
+// CredentialType represents the type of credential.
+type CredentialType string
+
+const (
+	CredentialTypeUserPassword  CredentialType = "user_password"
+	CredentialTypeOAuthTokenRef CredentialType = "oauth_token_ref" // #nosec G101
+)
+
 type (
 	ResolvedDetails struct {
 		ResolvedCredentials
 		DevcontainerConfig types.DevcontainerConfig
 	}
 
-	// Credentials contains login and initialization information used
+	// UserPasswordCredentials contains login and initialization information used
 	// by an automated login process.
-	Credentials struct {
+	UserPasswordCredentials struct {
 		Email    string
 		Name     types.MaskSecret
 		Password types.MaskSecret
 	}
 
+	OAuth2ClientRefCredentials struct {
+		ClientID        string
+		ClientSecretRef string
+		GrantType       string
+		RedirectURI     string
+		Code            string
+	}
+
+	OAuth2TokenRefCredentials struct {
+		UserPasswordCredentials
+		RefreshTokenRef string
+		AccessTokenRef  string
+	}
+
 	ResolvedCredentials struct {
 		Branch string
 		// CloneURL contains credentials for private repositories in url prefix
-		CloneURL    types.MaskSecret
-		Credentials *Credentials
-		RepoName    string
+		CloneURL                  types.MaskSecret
+		UserPasswordCredentials   *UserPasswordCredentials
+		OAuth2TokenRefCredentials *OAuth2TokenRefCredentials
+		RepoName                  string
+		CredentialType            CredentialType
 	}
 
 	RepositoryFilter struct {
@@ -67,8 +91,8 @@ type (
 		SpaceID    int64  `json:"space_id"`
 		Repository string `json:"repo"`
 		Query      string `json:"query"`
-		Page       int    `json:"page"`
-		Size       int    `json:"size"`
+		Page       int32  `json:"page"`
+		Size       int32  `json:"size"`
 		RepoURL    string `json:"repo_url"`
 	}
 

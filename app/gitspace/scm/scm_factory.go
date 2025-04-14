@@ -21,22 +21,41 @@ import (
 )
 
 type Factory struct {
-	providers map[enum.GitspaceCodeRepoType]Provider
+	listingProviders     map[enum.GitspaceCodeRepoType]ListingProvider
+	authAndFileProviders map[enum.GitspaceCodeRepoType]AuthAndFileContentProvider
 }
 
-func NewFactoryWithProviders(providers map[enum.GitspaceCodeRepoType]Provider) Factory {
-	return Factory{providers: providers}
+func NewFactoryWithProviders(
+	providers map[enum.GitspaceCodeRepoType]ListingProvider,
+	authProviders map[enum.GitspaceCodeRepoType]AuthAndFileContentProvider) Factory {
+	return Factory{listingProviders: providers,
+		authAndFileProviders: authProviders}
 }
 
 func NewFactory(gitnessProvider *GitnessSCM, genericSCM *GenericSCM) Factory {
-	providers := make(map[enum.GitspaceCodeRepoType]Provider)
-	providers[enum.CodeRepoTypeGitness] = gitnessProvider
-	providers[enum.CodeRepoTypeUnknown] = genericSCM
-	return Factory{providers: providers}
+	listingProviders := make(map[enum.GitspaceCodeRepoType]ListingProvider)
+	listingProviders[enum.CodeRepoTypeGitness] = gitnessProvider
+	listingProviders[enum.CodeRepoTypeUnknown] = genericSCM
+	authAndFileContentProviders := make(map[enum.GitspaceCodeRepoType]AuthAndFileContentProvider)
+	authAndFileContentProviders[enum.CodeRepoTypeGitness] = gitnessProvider
+	authAndFileContentProviders[enum.CodeRepoTypeUnknown] = genericSCM
+	return Factory{
+		listingProviders:     listingProviders,
+		authAndFileProviders: authAndFileContentProviders,
+	}
 }
 
-func (f *Factory) GetSCMProvider(providerType enum.GitspaceCodeRepoType) (Provider, error) {
-	val := f.providers[providerType]
+func (f *Factory) GetSCMProvider(providerType enum.GitspaceCodeRepoType) (ListingProvider, error) {
+	val := f.listingProviders[providerType]
+	if val == nil {
+		return nil, fmt.Errorf("unknown scm provider type: %s", providerType)
+	}
+	return val, nil
+}
+
+func (f *Factory) GetSCMAuthAndFileProvider(providerType enum.GitspaceCodeRepoType) (
+	AuthAndFileContentProvider, error) {
+	val := f.authAndFileProviders[providerType]
 	if val == nil {
 		return nil, fmt.Errorf("unknown scm provider type: %s", providerType)
 	}

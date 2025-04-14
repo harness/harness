@@ -31,7 +31,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var _ Provider = (*GenericSCM)(nil)
+var _ ListingProvider = (*GenericSCM)(nil)
+var _ AuthAndFileContentProvider = (*GenericSCM)(nil)
 
 type GenericSCM struct {
 }

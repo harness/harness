@@ -62,12 +62,12 @@ func (s *SCM) CheckValidCodeRepo(
 		return codeRepositoryResponse, nil
 	}
 
-	scmProvider, err := s.getSCMProvider(codeRepositoryRequest.RepoType)
+	authAndFileContentProvider, err := s.getSCMAuthAndFileProvider(codeRepositoryRequest.RepoType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve SCM provider: %w", err)
 	}
 
-	resolvedCreds, err := s.resolveRepoCredentials(ctx, scmProvider, codeRepositoryRequest)
+	resolvedCreds, err := s.resolveRepoCredentials(ctx, authAndFileContentProvider, codeRepositoryRequest)
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve repo credentials and URL: %w", err)
 	}
@@ -83,17 +83,21 @@ func (s *SCM) GetSCMRepoDetails(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 ) (*ResolvedDetails, error) {
-	scmProvider, err := s.getSCMProvider(gitspaceConfig.CodeRepo.Type)
+	scmAuthAndFileContentProvider, err := s.getSCMAuthAndFileProvider(gitspaceConfig.CodeRepo.Type)
 	if err != nil {
-		return nil, fmt.Errorf("failed to resolve SCM provider: %w", err)
+		return nil, fmt.Errorf("failed to resolve SCM Auth and File COntent provider: %w", err)
 	}
 
-	resolvedCredentials, err := scmProvider.ResolveCredentials(ctx, gitspaceConfig)
+	resolvedCredentials, err := scmAuthAndFileContentProvider.ResolveCredentials(ctx, gitspaceConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve repo credentials and url: %w", err)
 	}
 
-	devcontainerConfig, err := s.getDevcontainerConfig(ctx, scmProvider, gitspaceConfig, resolvedCredentials)
+	scmAuthAndFileProvider, err := s.getSCMAuthAndFileProvider(gitspaceConfig.CodeRepo.Type)
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve SCM Auth and File content provider: %w", err)
+	}
+	devcontainerConfig, err := s.getDevcontainerConfig(ctx, scmAuthAndFileProvider, gitspaceConfig, resolvedCredentials)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read or parse devcontainer config: %w", err)
 	}
@@ -148,16 +152,16 @@ func (s *SCM) detectBranch(ctx context.Context, repoURL string) (string, error) 
 	return defaultBranch, nil
 }
 
-func (s *SCM) getSCMProvider(repoType enum.GitspaceCodeRepoType) (Provider, error) {
+func (s *SCM) getSCMAuthAndFileProvider(repoType enum.GitspaceCodeRepoType) (AuthAndFileContentProvider, error) {
 	if repoType == "" {
 		repoType = enum.CodeRepoTypeUnknown
 	}
-	return s.scmProviderFactory.GetSCMProvider(repoType)
+	return s.scmProviderFactory.GetSCMAuthAndFileProvider(repoType)
 }
 
 func (s *SCM) resolveRepoCredentials(
 	ctx context.Context,
-	scmProvider Provider,
+	authAndFileContentProvider AuthAndFileContentProvider,
 	codeRepositoryRequest CodeRepositoryRequest,
 ) (*ResolvedCredentials, error) {
 	codeRepo := types.CodeRepo{URL: codeRepositoryRequest.URL}
@@ -167,18 +171,19 @@ func (s *SCM) resolveRepoCredentials(
 		SpacePath:    codeRepositoryRequest.SpacePath,
 		GitspaceUser: gitspaceUser,
 	}
-	return scmProvider.ResolveCredentials(ctx, gitspaceConfig)
+	return authAndFileContentProvider.ResolveCredentials(ctx, gitspaceConfig)
 }
 
 func (s *SCM) getDevcontainerConfig(
 	ctx context.Context,
-	scmProvider Provider,
+	scmAuthAndFileContentProvider AuthAndFileContentProvider,
 	gitspaceConfig types.GitspaceConfig,
 	resolvedCredentials *ResolvedCredentials,
 ) (types.DevcontainerConfig, error) {
 	config := types.DevcontainerConfig{}
 	filePath := devcontainerDefaultPath
-	catFileOutputBytes, err := scmProvider.GetFileContent(ctx, gitspaceConfig, filePath, resolvedCredentials)
+	catFileOutputBytes, err := scmAuthAndFileContentProvider.GetFileContent(
+		ctx, gitspaceConfig, filePath, resolvedCredentials)
 	if err != nil {
 		return config, fmt.Errorf("failed to read devcontainer file: %w", err)
 	}

@@ -20,27 +20,12 @@ import (
 	"github.com/harness/gitness/types"
 )
 
-type Provider interface {
-	ResolveCredentials(ctx context.Context, gitspaceConfig types.GitspaceConfig) (*ResolvedCredentials, error)
-
+type AuthAndFileContentProvider interface {
 	GetFileContent(
 		ctx context.Context,
 		gitspaceConfig types.GitspaceConfig,
 		filePath string,
 		credentials *ResolvedCredentials,
 	) ([]byte, error)
-
-	ListRepositories(
-		ctx context.Context,
-		filter *RepositoryFilter,
-		credentials *ResolvedCredentials,
-	) ([]Repository, error)
-
-	ListBranches(
-		ctx context.Context,
-		filter *BranchFilter,
-		credentials *ResolvedCredentials,
-	) ([]Branch, error)
-
-	GetBranchURL(spacePath string, repoURL string, branch string) (string, error)
+	ResolveCredentials(ctx context.Context, gitspaceConfig types.GitspaceConfig) (*ResolvedCredentials, error)
 }

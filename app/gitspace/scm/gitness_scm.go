@@ -35,7 +35,8 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-var _ Provider = (*GitnessSCM)(nil)
+var _ ListingProvider = (*GitnessSCM)(nil)
+var _ AuthAndFileContentProvider = (*GitnessSCM)(nil)
 
 var gitspaceJWTLifetime = 720 * 24 * time.Hour
 
@@ -50,7 +51,7 @@ type GitnessSCM struct {
 	urlProvider    urlprovider.Provider
 }
 
-// ListBranches implements Provider.
+// ListBranches implements ListingProvider.
 func (s *GitnessSCM) ListBranches(
 	ctx context.Context,
 	filter *BranchFilter,
@@ -66,8 +67,8 @@ func (s *GitnessSCM) ListBranches(
 		Query:         filter.Query,
 		Sort:          git.BranchSortOptionDate,
 		Order:         git.SortOrderDesc,
-		Page:          int32(filter.Page),
-		PageSize:      int32(filter.Size),
+		Page:          filter.Page,
+		PageSize:      filter.Size,
 	})
 	if err != nil {
 		return nil, err
@@ -87,7 +88,7 @@ func mapBranch(b git.Branch) Branch {
 	}
 }
 
-// ListRepositories implements Provider.
+// ListRepositories implements ListingProvider.
 func (s *GitnessSCM) ListRepositories(
 	ctx context.Context,
 	filter *RepositoryFilter,
@@ -202,12 +203,12 @@ func (s *GitnessSCM) ResolveCredentials(
 	userInfo := url.UserPassword("harness", jwtToken)
 	modifiedURL.User = userInfo
 	resolvedCredentails.CloneURL = types.NewMaskSecret(modifiedURL.String())
-	credentials := &Credentials{
+	credentials := &UserPasswordCredentials{
 		Email:    user.Email,
 		Name:     types.NewMaskSecret(user.DisplayName),
 		Password: types.NewMaskSecret(jwtToken),
 	}
-	resolvedCredentails.Credentials = credentials
+	resolvedCredentails.UserPasswordCredentials = credentials
 	return resolvedCredentails, nil
 }
 

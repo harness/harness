@@ -91,9 +91,9 @@ func CloneCode(
 		Branch:   resolvedRepoDetails.Branch,
 		RepoName: resolvedRepoDetails.RepoName,
 	}
-	if resolvedRepoDetails.ResolvedCredentials.Credentials != nil {
-		data.Email = resolvedRepoDetails.Credentials.Email
-		data.Name = resolvedRepoDetails.Credentials.Name.Value()
+	if resolvedRepoDetails.ResolvedCredentials.UserPasswordCredentials != nil {
+		data.Email = resolvedRepoDetails.UserPasswordCredentials.Email
+		data.Name = resolvedRepoDetails.UserPasswordCredentials.Name.Value()
 	}
 	script, err := GenerateScriptFromTemplate(
 		templateCloneCode, data)
