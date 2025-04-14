@@ -30,7 +30,7 @@ func (s *Service) handleEventTagCreated(ctx context.Context,
 	return s.triggerForEventWithRepo(ctx, enum.WebhookTriggerTagCreated,
 		event.ID, event.Payload.PrincipalID, event.Payload.RepoID,
 		func(principal *types.Principal, repo *types.Repository) (any, error) {
-			commitInfo, err := s.fetchCommitInfoForEvent(ctx, repo.GitUID, event.Payload.SHA)
+			commitInfo, err := s.fetchCommitInfoForEvent(ctx, repo.GitUID, repo.Path, event.Payload.SHA, s.urlProvider)
 			if err != nil {
 				return nil, err
 			}
@@ -68,8 +68,8 @@ func (s *Service) handleEventTagUpdated(ctx context.Context,
 	return s.triggerForEventWithRepo(ctx, enum.WebhookTriggerTagUpdated,
 		event.ID, event.Payload.PrincipalID, event.Payload.RepoID,
 		func(principal *types.Principal, repo *types.Repository) (any, error) {
-			commitsInfo, totalCommits, err := s.fetchCommitsInfoForEvent(ctx, repo.GitUID,
-				event.Payload.OldSHA, event.Payload.NewSHA)
+			commitsInfo, totalCommits, err := s.fetchCommitsInfoForEvent(ctx, repo.GitUID, repo.Path,
+				event.Payload.OldSHA, event.Payload.NewSHA, s.urlProvider)
 			if err != nil {
 				return nil, err
 			}

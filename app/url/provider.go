@@ -67,6 +67,9 @@ type Provider interface {
 	// GenerateUICompareURL returns the url for the UI screen comparing two references.
 	GenerateUICompareURL(ctx context.Context, repoPath string, ref1 string, ref2 string) string
 
+	// GenerateUIRefURL returns the url for the UI screen for given ref.
+	GenerateUIRefURL(ctx context.Context, repoPath string, ref string) string
+
 	// GetAPIHostname returns the host for the api endpoint.
 	GetAPIHostname(ctx context.Context) string
 
@@ -229,6 +232,10 @@ func (p *provider) GenerateUIPRURL(_ context.Context, repoPath string, prID int6
 
 func (p *provider) GenerateUICompareURL(_ context.Context, repoPath string, ref1 string, ref2 string) string {
 	return p.uiURL.JoinPath(repoPath, "pulls/compare", ref1+"..."+ref2).String()
+}
+
+func (p *provider) GenerateUIRefURL(_ context.Context, repoPath string, ref string) string {
+	return p.uiURL.JoinPath(repoPath, "commit", ref).String()
 }
 
 func (p *provider) GetAPIHostname(context.Context) string {

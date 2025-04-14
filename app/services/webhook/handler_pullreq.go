@@ -48,7 +48,8 @@ func (s *Service) handleEventPullReqCreated(
 	return s.triggerForEventWithPullReq(ctx, enum.WebhookTriggerPullReqCreated,
 		event.ID, event.Payload.PrincipalID, event.Payload.PullReqID,
 		func(principal *types.Principal, pr *types.PullReq, targetRepo, sourceRepo *types.Repository) (any, error) {
-			commitInfo, err := s.fetchCommitInfoForEvent(ctx, sourceRepo.GitUID, event.Payload.SourceSHA)
+			commitInfo, err := s.fetchCommitInfoForEvent(ctx, sourceRepo.GitUID, sourceRepo.Path,
+				event.Payload.SourceSHA, s.urlProvider)
 			if err != nil {
 				return nil, err
 			}
@@ -98,7 +99,8 @@ func (s *Service) handleEventPullReqReopened(
 	return s.triggerForEventWithPullReq(ctx, enum.WebhookTriggerPullReqReopened,
 		event.ID, event.Payload.PrincipalID, event.Payload.PullReqID,
 		func(principal *types.Principal, pr *types.PullReq, targetRepo, sourceRepo *types.Repository) (any, error) {
-			commitInfo, err := s.fetchCommitInfoForEvent(ctx, sourceRepo.GitUID, event.Payload.SourceSHA)
+			commitInfo, err := s.fetchCommitInfoForEvent(ctx, sourceRepo.GitUID, sourceRepo.Path,
+				event.Payload.SourceSHA, s.urlProvider)
 			if err != nil {
 				return nil, err
 			}
@@ -155,8 +157,8 @@ func (s *Service) handleEventPullReqBranchUpdated(
 	return s.triggerForEventWithPullReq(ctx, enum.WebhookTriggerPullReqBranchUpdated,
 		event.ID, event.Payload.PrincipalID, event.Payload.PullReqID,
 		func(principal *types.Principal, pr *types.PullReq, targetRepo, sourceRepo *types.Repository) (any, error) {
-			commitsInfo, totalCommits, err := s.fetchCommitsInfoForEvent(ctx, sourceRepo.GitUID,
-				event.Payload.OldSHA, event.Payload.NewSHA)
+			commitsInfo, totalCommits, err := s.fetchCommitsInfoForEvent(ctx, sourceRepo.GitUID, sourceRepo.Path,
+				event.Payload.OldSHA, event.Payload.NewSHA, s.urlProvider)
 			if err != nil {
 				return nil, err
 			}
@@ -217,7 +219,8 @@ func (s *Service) handleEventPullReqClosed(
 	return s.triggerForEventWithPullReq(ctx, enum.WebhookTriggerPullReqClosed,
 		event.ID, event.Payload.PrincipalID, event.Payload.PullReqID,
 		func(principal *types.Principal, pr *types.PullReq, targetRepo, sourceRepo *types.Repository) (any, error) {
-			commitInfo, err := s.fetchCommitInfoForEvent(ctx, sourceRepo.GitUID, event.Payload.SourceSHA)
+			commitInfo, err := s.fetchCommitInfoForEvent(ctx, sourceRepo.GitUID, sourceRepo.Path,
+				event.Payload.SourceSHA, s.urlProvider)
 			if err != nil {
 				return nil, err
 			}
@@ -270,7 +273,8 @@ func (s *Service) handleEventPullReqMerged(
 	return s.triggerForEventWithPullReq(ctx, enum.WebhookTriggerPullReqMerged,
 		event.ID, event.Payload.PrincipalID, event.Payload.PullReqID,
 		func(principal *types.Principal, pr *types.PullReq, targetRepo, sourceRepo *types.Repository) (any, error) {
-			commitInfo, err := s.fetchCommitInfoForEvent(ctx, sourceRepo.GitUID, event.Payload.SourceSHA)
+			commitInfo, err := s.fetchCommitInfoForEvent(ctx, sourceRepo.GitUID, sourceRepo.Path,
+				event.Payload.SourceSHA, s.urlProvider)
 			if err != nil {
 				return nil, err
 			}
@@ -334,7 +338,8 @@ func (s *Service) handleEventPullReqComment(
 					err,
 				)
 			}
-			commitInfo, err := s.fetchCommitInfoForEvent(ctx, sourceRepo.GitUID, event.Payload.SourceSHA)
+			commitInfo, err := s.fetchCommitInfoForEvent(ctx, sourceRepo.GitUID, sourceRepo.Path,
+				event.Payload.SourceSHA, s.urlProvider)
 			if err != nil {
 				return nil, err
 			}
@@ -725,7 +730,8 @@ func (s *Service) handleEventPullReqTargetBranchChanged(
 			pr *types.PullReq,
 			targetRepo, sourceRepo *types.Repository,
 		) (any, error) {
-			commitInfo, err := s.fetchCommitInfoForEvent(ctx, sourceRepo.GitUID, event.Payload.SourceSHA)
+			commitInfo, err := s.fetchCommitInfoForEvent(ctx, sourceRepo.GitUID, sourceRepo.Path,
+				event.Payload.SourceSHA, s.urlProvider)
 			if err != nil {
 				return nil, err
 			}

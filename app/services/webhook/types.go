@@ -224,6 +224,7 @@ type CommitInfo struct {
 	Message   string        `json:"message"`
 	Author    SignatureInfo `json:"author"`
 	Committer SignatureInfo `json:"committer"`
+	URL       string        `json:"url"`
 
 	Added    []string `json:"added"`
 	Removed  []string `json:"removed"`
@@ -231,7 +232,12 @@ type CommitInfo struct {
 }
 
 // commitInfoFrom gets the CommitInfo from a git.Commit.
-func commitInfoFrom(commit git.Commit) CommitInfo {
+func commitInfoFrom(
+	ctx context.Context,
+	repoPath string,
+	commit git.Commit,
+	urlProvider url.Provider,
+) CommitInfo {
 	added := []string{}
 	removed := []string{}
 	modified := []string{}
@@ -258,6 +264,7 @@ func commitInfoFrom(commit git.Commit) CommitInfo {
 		Message:   commit.Message,
 		Author:    signatureInfoFrom(commit.Author),
 		Committer: signatureInfoFrom(commit.Committer),
+		URL:       urlProvider.GenerateUIRefURL(ctx, repoPath, commit.SHA.String()),
 		Added:     added,
 		Removed:   removed,
 		Modified:  modified,
@@ -265,10 +272,15 @@ func commitInfoFrom(commit git.Commit) CommitInfo {
 }
 
 // commitsInfoFrom gets the ExtendedCommitInfo from a []git.Commit.
-func commitsInfoFrom(commits []git.Commit) []CommitInfo {
+func commitsInfoFrom(
+	ctx context.Context,
+	repoPath string,
+	commits []git.Commit,
+	urlProvider url.Provider,
+) []CommitInfo {
 	commitsInfo := make([]CommitInfo, len(commits))
 	for i, commit := range commits {
-		commitsInfo[i] = commitInfoFrom(commit)
+		commitsInfo[i] = commitInfoFrom(ctx, repoPath, commit, urlProvider)
 	}
 	return commitsInfo
 }
