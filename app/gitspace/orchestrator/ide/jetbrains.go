@@ -20,6 +20,7 @@ import (
 	"net/url"
 	"path"
 	"strconv"
+	"strings"
 
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
 	"github.com/harness/gitness/app/gitspace/orchestrator/utils"
@@ -31,8 +32,9 @@ import (
 var _ IDE = (*JetBrainsIDE)(nil)
 
 const (
-	templateSetupJetBrainsIDE     string = "setup_jetbrains_ide.sh"
-	templateRunRemoteJetBrainsIDE string = "run_jetbrains_ide.sh"
+	templateSetupJetBrainsIDE        string = "setup_jetbrains_ide.sh"
+	templateSetupJetBrainsIDEPlugins string = "setup_jetbrains_plugins.sh"
+	templateRunRemoteJetBrainsIDE    string = "run_jetbrains_ide.sh"
 
 	intellijURLScheme string = "jetbrains-gateway"
 )
@@ -105,11 +107,19 @@ func (jb *JetBrainsIDE) Setup(
 
 	gitspaceLogger.Info(fmt.Sprintf("Installing %s IdeType inside container...", jb.ideType))
 	gitspaceLogger.Info("IDE setup output...")
-	err = jb.setupIntellijIDE(ctx, exec, args, gitspaceLogger)
+	err = jb.setupJetbrainsIDE(ctx, exec, args, gitspaceLogger)
 	if err != nil {
 		return fmt.Errorf("failed to setup %s IdeType: %w", jb.ideType, err)
 	}
 	gitspaceLogger.Info(fmt.Sprintf("Successfully installed %s IdeType", jb.ideType))
+
+	gitspaceLogger.Info("Installing JetBrains plugins inside container...")
+	err = jb.setupJetbrainsPlugins(ctx, exec, args, gitspaceLogger)
+	if err != nil {
+		return fmt.Errorf("failed to setup JetBrains plugins for %s Ide: %w", jb.ideType, err)
+	}
+	gitspaceLogger.Info(fmt.Sprintf("Successfully installed JetBrains plugins for %s Ide", jb.ideType))
+
 	gitspaceLogger.Info("Successfully set up IDE inside container")
 
 	return nil
@@ -140,13 +150,13 @@ func (jb *JetBrainsIDE) setupSSHServer(
 	return nil
 }
 
-func (jb *JetBrainsIDE) setupIntellijIDE(
+func (jb *JetBrainsIDE) setupJetbrainsIDE(
 	ctx context.Context,
 	exec *devcontainer.Exec,
 	args map[gitspaceTypes.IDEArg]interface{},
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
-	payload := gitspaceTypes.SetupIntellijIDEPayload{
+	payload := gitspaceTypes.SetupJetBrainsIDEPayload{
 		Username: exec.RemoteUser,
 	}
 
@@ -169,7 +179,7 @@ func (jb *JetBrainsIDE) setupIntellijIDE(
 		templateSetupJetBrainsIDE, &payload)
 	if err != nil {
 		return fmt.Errorf(
-			"failed to generate scipt to setup intellij idea from template %s: %w",
+			"failed to generate script to setup JetBrains idea from template %s: %w",
 			templateSetupJetBrainsIDE,
 			err,
 		)
@@ -178,7 +188,59 @@ func (jb *JetBrainsIDE) setupIntellijIDE(
 	err = exec.ExecuteCommandInHomeDirAndLog(ctx, intellijIDEScript,
 		false, gitspaceLogger, true)
 	if err != nil {
-		return fmt.Errorf("failed to setup intellij IdeType: %w", err)
+		return fmt.Errorf("failed to setup JetBrains IdeType: %w", err)
+	}
+
+	return nil
+}
+
+func (jb *JetBrainsIDE) setupJetbrainsPlugins(
+	ctx context.Context,
+	exec *devcontainer.Exec,
+	args map[gitspaceTypes.IDEArg]interface{},
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
+) error {
+	payload := gitspaceTypes.SetupJetBrainsPluginPayload{
+		Username: exec.RemoteUser,
+	}
+
+	// get DIR name
+	dirName, err := getIDEDirName(args)
+	if err != nil {
+		return err
+	}
+	payload.IdeDirName = dirName
+
+	// get jetbrains plugins
+	customization, exists := args[gitspaceTypes.JetBrainsCustomizationArg]
+	if !exists {
+		return nil
+	}
+
+	jetBrainsCustomization, ok := customization.(types.JetBrainsCustomizationSpecs)
+	if !ok {
+		return fmt.Errorf("customization is not of type JetBrainsCustomizationSpecs")
+	}
+
+	payload.IdePluginsName = strings.Join(jetBrainsCustomization.Plugins, " ")
+
+	gitspaceLogger.Info(fmt.Sprintf(
+		"JetBrains Customizations : Plugins %v", jetBrainsCustomization.Plugins))
+
+	intellijIDEScript, err := utils.GenerateScriptFromTemplate(
+		templateSetupJetBrainsIDEPlugins, &payload)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to generate script to setup Jetbrains plugins from template %s: %w",
+			templateSetupJetBrainsIDEPlugins,
+			err,
+		)
+	}
+
+	err = exec.ExecuteCommandInHomeDirAndLog(ctx, intellijIDEScript,
+		false, gitspaceLogger, true)
+	if err != nil {
+		return fmt.Errorf("failed to setup Jetbrains plugins IdeType: %w", err)
 	}
 
 	return nil

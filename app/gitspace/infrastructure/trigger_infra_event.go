@@ -107,7 +107,7 @@ func (i InfraProvisioner) TriggerInfraEventWithOpts(
 
 	switch eventType {
 	case enum.InfraEventProvision:
-		var stoppedInfra *types.Infrastructure
+		var stoppedInfra types.Infrastructure
 		stoppedInfra, err = i.GetStoppedInfraFromStoredInfo(ctx, gitspaceConfig)
 		if err != nil {
 			logger.Info().
@@ -117,6 +117,7 @@ func (i InfraProvisioner) TriggerInfraEventWithOpts(
 					gitspaceConfig.Identifier,
 				)
 		}
+
 		if infraProvider.ProvisioningType() == enum.InfraProvisioningTypeNew {
 			return i.provisionNewInfrastructure(
 				ctx,
@@ -165,7 +166,7 @@ func (i InfraProvisioner) provisionNewInfrastructure(
 	infraProviderType enum.InfraProviderType,
 	gitspaceConfig types.GitspaceConfig,
 	requiredGitspacePorts []types.GitspacePort,
-	stoppedInfra *types.Infrastructure,
+	stoppedInfra types.Infrastructure,
 ) error {
 	// Logic for new provisioning...
 	infraProvisionedLatest, _ := i.infraProvisionedStore.FindLatestByGitspaceInstanceID(
@@ -208,9 +209,7 @@ func (i InfraProvisioner) provisionNewInfrastructure(
 		ProviderType:               infraProviderType,
 		InputParameters:            allParams,
 		ConfigMetadata:             configMetadata,
-	}
-	if stoppedInfra != nil {
-		infrastructure.InstanceInfo = stoppedInfra.InstanceInfo
+		InstanceInfo:               stoppedInfra.InstanceInfo,
 	}
 	responseMetadata, err := json.Marshal(infrastructure)
 	if err != nil {
@@ -273,7 +272,7 @@ func (i InfraProvisioner) provisionExistingInfrastructure(
 	infraProvider infraprovider.InfraProvider,
 	gitspaceConfig types.GitspaceConfig,
 	requiredGitspacePorts []types.GitspacePort,
-	stoppedInfra *types.Infrastructure,
+	stoppedInfra types.Infrastructure,
 ) error {
 	allParams, configMetadata, err := i.getAllParamsFromDB(ctx, gitspaceConfig.InfraProviderResource, infraProvider)
 	if err != nil {
@@ -296,7 +295,7 @@ func (i InfraProvisioner) provisionExistingInfrastructure(
 		requiredGitspacePorts,
 		allParams,
 		configMetadata,
-		*stoppedInfra,
+		stoppedInfra,
 	)
 	if err != nil {
 		return fmt.Errorf(

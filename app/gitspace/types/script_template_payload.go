@@ -78,11 +78,18 @@ type SetEnvPayload struct {
 	EnvVariables []string
 }
 
-type SetupIntellijIDEPayload struct {
+type SetupJetBrainsIDEPayload struct {
 	Username            string
 	IdeDownloadURLArm64 string
 	IdeDownloadURLAmd64 string
 	IdeDirName          string
+}
+
+type SetupJetBrainsPluginPayload struct {
+	Username   string
+	IdeDirName string
+	// IdePluginsName contains like of plugins each separated with space.
+	IdePluginsName string
 }
 
 type RunIntellijIDEPayload struct {
