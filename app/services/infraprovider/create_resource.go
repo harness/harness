@@ -119,7 +119,14 @@ func (c *Service) validateResource(ctx context.Context, resource *types.InfraPro
 		}
 	}
 
-	err = infraProvider.ValidateParams(toResourceParams(resource.Metadata))
+	resourceParams := toResourceParams(resource.Metadata)
+	// add resource name as param as well as it is required for validation
+	resourceParams = append(resourceParams, types.InfraProviderParameter{
+		Name:  "resource_name",
+		Value: resource.Name,
+	})
+
+	err = infraProvider.ValidateParams(resourceParams)
 	if err != nil {
 		return err
 	}
