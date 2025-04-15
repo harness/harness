@@ -34,6 +34,8 @@ func (c *controller) HeadPackageFileByName(
 	f := func(registry registrytypes.Registry, a pkg.Artifact) response.Response {
 		info.RegIdentifier = registry.Name
 		info.RegistryID = registry.ID
+		info.Registry = registry
+		info.ParentID = registry.ParentID
 		npmRegistry, ok := a.(npm2.Registry)
 		if !ok {
 			return &HeadMetadataResponse{

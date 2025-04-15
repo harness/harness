@@ -155,6 +155,28 @@ func (d DownloadStatDao) GetTotalDownloadsForImage(ctx context.Context, imageID 
 	return count, nil
 }
 
+func (d DownloadStatDao) GetTotalDownloadsForArtifactID(ctx context.Context, artifactID int64) (int64, error) {
+	q := databaseg.Builder.Select(`count(*)`).
+		From("download_stats ds").Where("ds.download_stat_artifact_id = ?", artifactID)
+
+	sql, args, err := q.ToSql()
+	if err != nil {
+		return 0, errors.Wrap(err, "Failed to convert query to sql")
+	}
+	// Log the final sql query
+	finalQuery := util.FormatQuery(sql, args)
+	log.Ctx(ctx).Debug().Str("sql", finalQuery).Msg("Executing GetTotalDownloadsForArtifact query")
+	// Execute query
+	db := dbtx.GetAccessor(ctx, d.db)
+
+	var count int64
+	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
+	if err != nil {
+		return 0, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing count query")
+	}
+	return count, nil
+}
+
 func (d DownloadStatDao) GetTotalDownloadsForManifests(
 	ctx context.Context,
 	artifactVersions []string,

@@ -505,6 +505,7 @@ type DownloadStatRepository interface {
 		imageID int64,
 	) (map[string]int64, error)
 	CreateByRegistryIDImageAndArtifactName(ctx context.Context, regID int64, image string, artifactName string) error
+	GetTotalDownloadsForArtifactID(ctx context.Context, artifactID int64) (int64, error)
 }
 
 type BandwidthStatRepository interface {

@@ -95,6 +95,16 @@ func (c *APIController) GetArtifactDetails(
 		}, nil
 	}
 
+	downloadCount, err := c.DownloadStatRepository.GetTotalDownloadsForArtifactID(ctx, art.ID)
+
+	if err != nil {
+		return artifact.GetArtifactDetails500JSONResponse{
+			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
+				*GetErrorResponse(http.StatusInternalServerError, err.Error()),
+			),
+		}, nil
+	}
+
 	var artifactDetails artifact.ArtifactDetail
 
 	// FIXME: Arvind: Unify the metadata structure to avoid this type checking
@@ -144,7 +154,7 @@ func (c *APIController) GetArtifactDetails(
 				),
 			}, nil
 		}
-		artifactDetails = GetNPMArtifactDetail(img, art, result)
+		artifactDetails = GetNPMArtifactDetail(img, art, result, downloadCount)
 	case artifact.PackageTypeDOCKER:
 	case artifact.PackageTypeHELM:
 	default:

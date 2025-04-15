@@ -16,14 +16,17 @@ package metadata
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/harness/gitness/app/url"
 	artifactapi "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/metadata"
+	npm2 "github.com/harness/gitness/registry/app/metadata/npm"
 	"github.com/harness/gitness/registry/types"
 
 	"github.com/rs/zerolog/log"
@@ -503,19 +506,31 @@ func GetPythonArtifactDetail(
 func GetNPMArtifactDetail(
 	image *types.Image, artifact *types.Artifact,
 	metadata map[string]interface{},
+	downloadCount int64,
 ) artifactapi.ArtifactDetail {
 	createdAt := GetTimeInMs(artifact.CreatedAt)
 	modifiedAt := GetTimeInMs(artifact.UpdatedAt)
-	artifactDetail := &artifactapi.ArtifactDetail{
-		CreatedAt:  &createdAt,
-		ModifiedAt: &modifiedAt,
-		Name:       &image.Name,
-		Version:    artifact.Version,
+	var npmMetadata npm2.NpmMetadata
+	err := json.Unmarshal(artifact.Metadata, &npmMetadata)
+	if err != nil {
+		log.Error().Err(err).Msgf("Error unmarshalling the artifact metadata "+
+			"for image: [%s], version: [%s]", image.Name, artifact.Version)
+		return artifactapi.ArtifactDetail{}
 	}
-	err := artifactDetail.FromNpmArtifactDetailConfig(artifactapi.NpmArtifactDetailConfig{
+	totalSize := strconv.FormatInt(npmMetadata.Size, 10)
+	artifactDetail := &artifactapi.ArtifactDetail{
+		CreatedAt:     &createdAt,
+		ModifiedAt:    &modifiedAt,
+		Name:          &image.Name,
+		Version:       artifact.Version,
+		DownloadCount: &downloadCount,
+		Size:          &totalSize,
+	}
+	err = artifactDetail.FromNpmArtifactDetailConfig(artifactapi.NpmArtifactDetailConfig{
 		Metadata: &metadata,
 	})
 	if err != nil {
+		log.Error().Err(err).Msgf("Error setting the artifact details for image: [%s]", image.Name)
 		return artifactapi.ArtifactDetail{}
 	}
 	return *artifactDetail

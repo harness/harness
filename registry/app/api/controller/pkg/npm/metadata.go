@@ -42,6 +42,8 @@ func (c *controller) GetPackageMetadata(
 	f := func(registry types.Registry, a pkg.Artifact) response.Response {
 		info.RegIdentifier = registry.Name
 		info.RegistryID = registry.ID
+		info.Registry = registry
+		info.ParentID = registry.ParentID
 		npmRegistry, ok := a.(npm2.Registry)
 		if !ok {
 			return &GetMetadataResponse{

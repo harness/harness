@@ -135,7 +135,7 @@ func (r UpstreamproxyDao) Get(ctx context.Context, id int64) (upstreamProxy *typ
 
 	dst := new(upstreamProxyDB)
 	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
-		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to get tag detail")
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to get upstream proxy detail")
 	}
 
 	return r.mapToUpstreamProxy(ctx, dst)
@@ -159,7 +159,7 @@ func (r UpstreamproxyDao) GetByRegistryIdentifier(
 
 	dst := new(upstreamProxyDB)
 	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
-		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to get tag detail")
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to get upstream proxy detail")
 	}
 
 	return r.mapToUpstreamProxy(ctx, dst)
