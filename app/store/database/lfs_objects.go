@@ -137,6 +137,28 @@ func (s *LFSObjectStore) Create(ctx context.Context, obj *types.LFSObject) error
 	return nil
 }
 
+// GetSizeInKBByRepoID returns the total size of LFS objects in KiB for a specified repo.
+func (s *LFSObjectStore) GetSizeInKBByRepoID(ctx context.Context, repoID int64) (int64, error) {
+	stmt := database.Builder.
+		Select("COALESCE(SUM(lfs_object_size) / 1024.0, 0)").
+		From("lfs_objects").
+		Where("lfs_object_repo_id = ?", repoID)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return 0, fmt.Errorf("failed to convert query to sql: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var size int64
+	if err := db.GetContext(ctx, &size, sql, args...); err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "Select query failed")
+	}
+
+	return size, nil
+}
+
 func mapInternalLFSObject(obj *types.LFSObject) *lfsObject {
 	return &lfsObject{
 		ID:        obj.ID,

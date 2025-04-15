@@ -38,6 +38,7 @@ type SizeCalculator struct {
 	git        git.Interface
 	repoStore  store.RepoStore
 	scheduler  *job.Scheduler
+	lfsStore   store.LFSObjectStore
 }
 
 func (s *SizeCalculator) Register(ctx context.Context) error {
@@ -96,23 +97,31 @@ func worker(ctx context.Context, s *SizeCalculator, wg *sync.WaitGroup, taskCh <
 
 		log.Debug().Msgf("previous repo size: %d KiB", sizeInfo.Size)
 
-		sizeOut, err := s.git.GetRepositorySize(
+		gitSizeOut, err := s.git.GetRepositorySize(
 			ctx,
 			&git.GetRepositorySizeParams{ReadParams: git.ReadParams{RepoUID: sizeInfo.GitUID}})
 		if err != nil {
 			log.Error().Msgf("failed to get repo size: %s", err.Error())
 			continue
 		}
-		if sizeOut.Size == sizeInfo.Size {
+
+		lfsSize, err := s.lfsStore.GetSizeInKBByRepoID(ctx, sizeInfo.ID)
+		if err != nil {
+			log.Error().Msgf("failed to get repo lfs objects size: %s", err.Error())
+			continue
+		}
+
+		repoSize := gitSizeOut.Size + lfsSize
+		if repoSize == sizeInfo.Size {
 			log.Debug().Msg("repo size not changed")
 			continue
 		}
 
-		if err := s.repoStore.UpdateSize(ctx, sizeInfo.ID, sizeOut.Size); err != nil {
+		if err := s.repoStore.UpdateSize(ctx, sizeInfo.ID, repoSize); err != nil {
 			log.Error().Msgf("failed to update repo size: %s", err.Error())
 			continue
 		}
 
-		log.Debug().Msgf("new repo size: %d KiB", sizeOut.Size)
+		log.Debug().Msgf("new repo size: %d KiB (git: %d KiB, lfs: %d KiB)", repoSize, gitSizeOut.Size, lfsSize)
 	}
 }

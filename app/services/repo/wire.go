@@ -40,6 +40,7 @@ func ProvideCalculator(
 	repoStore store.RepoStore,
 	scheduler *job.Scheduler,
 	executor *job.Executor,
+	lfsStore store.LFSObjectStore,
 ) (*SizeCalculator, error) {
 	job := &SizeCalculator{
 		enabled:    config.RepoSize.Enabled,
@@ -49,6 +50,7 @@ func ProvideCalculator(
 		git:        git,
 		repoStore:  repoStore,
 		scheduler:  scheduler,
+		lfsStore:   lfsStore,
 	}
 
 	err := executor.Register(jobType, job)

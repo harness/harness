@@ -1307,6 +1307,8 @@ type (
 		FindMany(ctx context.Context, repoID int64, oids []string) ([]*types.LFSObject, error)
 		// Create creates an LFS object.
 		Create(ctx context.Context, lfsObject *types.LFSObject) error
+		// GetSizeInKBByRepoID returns the total size of LFS objects in KiB for a specified repo.
+		GetSizeInKBByRepoID(ctx context.Context, repoID int64) (int64, error)
 	}
 
 	InfraProviderTemplateStore interface {
