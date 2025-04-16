@@ -84,8 +84,10 @@ func (d DownloadStatDao) Create(ctx context.Context, downloadStat *types.Downloa
 	return nil
 }
 
-func (d DownloadStatDao) CreateByRegistryIDImageAndArtifactName(ctx context.Context,
-	regID int64, image string, version string) error {
+func (d DownloadStatDao) CreateByRegistryIDImageAndArtifactName(
+	ctx context.Context,
+	regID int64, image string, version string,
+) error {
 	selectQuery := databaseg.Builder.
 		Select(
 			"a.artifact_id",
@@ -182,7 +184,7 @@ func (d DownloadStatDao) GetTotalDownloadsForManifests(
 	artifactVersions []string,
 	imageID int64,
 ) (map[string]int64, error) {
-	q := databaseg.Builder.Select(`art.artifact_version, count(*)`).
+	q := databaseg.Builder.Select(`art.artifact_version, count(*) as count`).
 		From("artifacts art").
 		Join("download_stats ds ON ds.download_stat_artifact_id = art.artifact_id").Where(sq.And{
 		sq.Eq{"artifact_image_id": imageID},
