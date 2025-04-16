@@ -99,7 +99,8 @@ func (a ArtifactDao) GetByRegistryIDAndImage(ctx context.Context, registryID int
 	}
 
 	artifacts := make([]types.Artifact, len(dst))
-	for i, d := range dst {
+	for i := range dst {
+		d := dst[i]
 		art, err := a.mapToArtifact(ctx, &d)
 		if err != nil {
 			return nil, errors.Wrap(err, "Failed to map artifact")
@@ -203,8 +204,10 @@ func (a ArtifactDao) DeleteByImageNameAndRegistryID(ctx context.Context, regID i
 	return nil
 }
 
-func (a ArtifactDao) DeleteByVersionAndImageName(ctx context.Context, image string,
-	version string, regID int64) (err error) {
+func (a ArtifactDao) DeleteByVersionAndImageName(
+	ctx context.Context, image string,
+	version string, regID int64,
+) (err error) {
 	delStmt := databaseg.Builder.Delete("artifacts").
 		Where("artifact_id IN (SELECT a.artifact_id FROM artifacts a JOIN images i ON i.image_id = a.artifact_image_id"+
 			" WHERE a.artifact_name = ? AND i.image_name = ? AND i.image_registry_id = ?)", version, image, regID)
@@ -399,8 +402,8 @@ func (a ArtifactDao) CountAllArtifactsByParentID(
 	return count, nil
 }
 
-func (a ArtifactDao) GetAllArtifactsByRepo(
-	ctx context.Context, parentID int64, repoKey string,
+func (a ArtifactDao) GetArtifactsByRepo(
+	ctx context.Context, registryParentID int64, repoKey string,
 	sortByField string, sortByOrder string, limit int, offset int, search string,
 	labels []string,
 ) (*[]types.ArtifactMetadata, error) {
@@ -417,7 +420,7 @@ func (a ArtifactDao) GetAllArtifactsByRepo(
             JOIN images i ON i.image_id = a.artifact_image_id  
 			JOIN registries r ON i.image_registry_id = r.registry_id  
 			WHERE r.registry_parent_id = ? AND r.registry_name = ? ) AS a1 
-			ON a.artifact_id = a1.id`, parentID, repoKey, // nolint:goconst
+			ON a.artifact_id = a1.id`, registryParentID, repoKey, // nolint:goconst
 		).
 		Join("images i ON i.image_id = a.artifact_image_id").
 		Join("registries r ON i.image_registry_id = r.registry_id").
@@ -430,7 +433,7 @@ func (a ArtifactDao) GetAllArtifactsByRepo(
 			JOIN images i ON i.image_id = t1.artifact_image_id 
 			JOIN registries r ON r.registry_id = i.image_registry_id 
 			WHERE r.registry_parent_id = ? AND r.registry_name = ? GROUP BY i.image_name) as t2 
-			ON i.image_name = t2.image_name`, parentID, repoKey,
+			ON i.image_name = t2.image_name`, registryParentID, repoKey,
 		).
 		Where("a1.rank = 1 ")
 
@@ -469,7 +472,7 @@ func (a ArtifactDao) GetAllArtifactsByRepo(
 }
 
 // nolint:goconst
-func (a ArtifactDao) CountAllArtifactsByRepo(
+func (a ArtifactDao) CountArtifactsByRepo(
 	ctx context.Context, parentID int64, repoKey string,
 	search string, labels []string,
 ) (int64, error) {
@@ -747,11 +750,41 @@ func (a ArtifactDao) GetArtifactMetadata(
 	return a.mapToArtifactMetadata(ctx, dst)
 }
 
+func (a ArtifactDao) GetAllArtifactsByRepo(
+	ctx context.Context, registryID int64, batchSize int, artifactID int64,
+) (*[]types.ArtifactMetadata, error) {
+	q := databaseg.Builder.Select(
+		`r.registry_name as repo_name, i.image_name as name,
+        a.artifact_id as artifact_id, a.artifact_version as version, a.artifact_metadata as metadata`,
+	).
+		From("artifacts a").
+		Join("images i ON i.image_id = a.artifact_image_id").
+		Join("registries r ON i.image_registry_id = r.registry_id").
+		Where("artifact_id > ? AND r.registry_id = ?", artifactID, registryID).
+		OrderBy("artifact_id ASC").
+		Limit(util.SafeIntToUInt64(batchSize))
+
+	sql, args, err := q.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, a.db)
+
+	var dst []*artifactMetadataDB
+	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing GetAllArtifactsByRepo query")
+	}
+
+	return a.mapToArtifactMetadataList(ctx, dst)
+}
+
 func (a ArtifactDao) mapToArtifactMetadata(
 	_ context.Context,
 	dst *artifactMetadataDB,
 ) (*types.ArtifactMetadata, error) {
 	return &types.ArtifactMetadata{
+		ID:            dst.ID,
 		Name:          dst.Name,
 		RepoName:      dst.RepoName,
 		DownloadCount: dst.DownloadCount,
@@ -761,6 +794,7 @@ func (a ArtifactDao) mapToArtifactMetadata(
 		CreatedAt:     time.UnixMilli(dst.CreatedAt),
 		ModifiedAt:    time.UnixMilli(dst.ModifiedAt),
 		Version:       dst.Version,
+		Metadata:      *dst.Metadata,
 	}, nil
 }
 

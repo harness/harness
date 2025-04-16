@@ -22,7 +22,6 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-// StoreOriginalURL stores the original URL in the context.
 func RequestPackageAccess(
 	packageHandler packages.Handler,
 	reqPermissions ...enum.Permission,

@@ -33,6 +33,7 @@ const (
 	PackageTypeNPM     PackageType = "NPM"
 	PackageTypeNUGET   PackageType = "NUGET"
 	PackageTypePYTHON  PackageType = "PYTHON"
+	PackageTypeRPM     PackageType = "RPM"
 )
 
 // Defines values for RegistryType.

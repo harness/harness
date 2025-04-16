@@ -56,7 +56,9 @@ type LocalBase interface {
 	Upload(
 		ctx context.Context,
 		info pkg.ArtifactInfo,
-		fileName, version, path string,
+		fileName,
+		version,
+		path string,
 		file io.ReadCloser,
 		metadata metadata.Metadata,
 	) (*commons.ResponseHeaders, string, error)
@@ -121,7 +123,9 @@ func (l *localBase) UploadFile(
 func (l *localBase) Upload(
 	ctx context.Context,
 	info pkg.ArtifactInfo,
-	fileName, version, path string,
+	fileName,
+	version,
+	path string,
 	file io.ReadCloser,
 	metadata metadata.Metadata,
 ) (*commons.ResponseHeaders, string, error) {
@@ -228,10 +232,8 @@ func (l *localBase) Download(
 	path := "/" + info.Image + "/" + version + "/" + fileName
 	reg, _ := l.registryDao.GetByRootParentIDAndName(ctx, info.RootParentID, info.RegIdentifier)
 
-	fileReader, _, redirectURL, err := l.fileManager.DownloadFile(ctx, path, types.Registry{
-		ID:   reg.ID,
-		Name: info.RegIdentifier,
-	}, info.RootIdentifier)
+	fileReader, _, redirectURL, err := l.fileManager.DownloadFile(ctx, path, reg.ID,
+		info.RegIdentifier, info.RootIdentifier)
 	if err != nil {
 		return responseHeaders, nil, "", err
 	}
@@ -296,6 +298,7 @@ func (l *localBase) updateMetadata(
 			files = append(files, metadata.File{
 				Size: fileInfo.Size, Filename: fileInfo.Filename,
 				CreatedAt: time.Now().UnixMilli(),
+				Sha256:    fileInfo.Sha256,
 			})
 			inputMetadata.SetFiles(files)
 			inputMetadata.UpdateSize(fileInfo.Size)
@@ -303,7 +306,7 @@ func (l *localBase) updateMetadata(
 	} else {
 		files = append(files, metadata.File{
 			Size: fileInfo.Size, Filename: fileInfo.Filename,
-			CreatedAt: time.Now().UnixMilli(),
+			Sha256: fileInfo.Sha256, CreatedAt: time.Now().UnixMilli(),
 		})
 		inputMetadata.SetFiles(files)
 		inputMetadata.UpdateSize(fileInfo.Size)

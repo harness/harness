@@ -100,10 +100,10 @@ func (c *APIController) GetAllArtifactsByRegistry(
 			}, nil
 		}
 	} else {
-		artifacts, err = c.ArtifactStore.GetAllArtifactsByRepo(
+		artifacts, err = c.ArtifactStore.GetArtifactsByRepo(
 			ctx, regInfo.parentID, regInfo.RegistryIdentifier,
 			regInfo.sortByField, regInfo.sortByOrder, regInfo.limit, regInfo.offset, regInfo.searchTerm, regInfo.labels)
-		count, _ = c.ArtifactStore.CountAllArtifactsByRepo(
+		count, _ = c.ArtifactStore.CountArtifactsByRepo(
 			ctx, regInfo.parentID, regInfo.RegistryIdentifier,
 			regInfo.searchTerm, regInfo.labels)
 		if err != nil {

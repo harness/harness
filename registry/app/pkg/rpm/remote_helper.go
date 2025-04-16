@@ -12,11 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package metadata
+package rpm
 
-type File struct {
-	Size      int64  `json:"size"`
-	Filename  string `json:"file_name"`
-	CreatedAt int64  `json:"created_at"`
-	Sha256    string `json:"sha256"`
+type RemoteRegistryHelper interface {
+}
+
+type remoteRegistryHelper struct {
+}
+
+func NewRemoteRegistryHelper() RemoteRegistryHelper {
+	return &remoteRegistryHelper{}
 }

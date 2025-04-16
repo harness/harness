@@ -25,6 +25,7 @@ import (
 	"github.com/harness/gitness/registry/app/api/handler/nuget"
 	"github.com/harness/gitness/registry/app/api/handler/packages"
 	"github.com/harness/gitness/registry/app/api/handler/python"
+	"github.com/harness/gitness/registry/app/api/handler/rpm"
 	"github.com/harness/gitness/registry/app/api/middleware"
 	"github.com/harness/gitness/types/enum"
 
@@ -48,6 +49,7 @@ func NewRouter(
 	pythonHandler python.Handler,
 	nugetHandler nuget.Handler,
 	npmHandler npm.Handler,
+	rpmHandler rpm.Handler,
 ) Handler {
 	r := chi.NewRouter()
 
@@ -189,6 +191,19 @@ func NewRouter(
 			r.Route("/{id}/-rev/{revision}", func(r chi.Router) {
 				registerRevisionRoutes(r, npmHandler, packageHandler)
 			})
+		})
+		r.Route("/rpm", func(r chi.Router) {
+			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
+			r.Use(middleware.CheckAuth())
+			r.With(middleware.StoreArtifactInfo(rpmHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
+				Put("/*", rpmHandler.UploadPackageFile)
+			r.With(middleware.StoreArtifactInfo(rpmHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Get("/repodata/{file}", rpmHandler.GetRepoData)
+			r.With(middleware.StoreArtifactInfo(rpmHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Get("/package/{name}/{version}/{architecture}/{file}", rpmHandler.DownloadPackageFile)
 		})
 	})
 

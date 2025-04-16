@@ -209,13 +209,14 @@ func (f *FileManager) SaveNode(
 func (f *FileManager) DownloadFile(
 	ctx context.Context,
 	filePath string,
-	regInfo types.Registry,
+	registryID int64,
+	registryIdentifier string,
 	rootIdentifier string,
 ) (fileReader *storage.FileReader, size int64, redirectURL string, err error) {
-	node, err := f.nodesDao.GetByPathAndRegistryID(ctx, regInfo.ID, filePath)
+	node, err := f.nodesDao.GetByPathAndRegistryID(ctx, registryID, filePath)
 	if err != nil {
 		return nil, 0, "", fmt.Errorf("failed to get the file for path: %s, "+
-			"with registry: %s", filePath, regInfo.Name)
+			"with registry: %s", filePath, registryIdentifier)
 	}
 	blob, err := f.genericBlobDao.FindByID(ctx, node.BlobID)
 
@@ -226,7 +227,7 @@ func (f *FileManager) DownloadFile(
 
 	completeFilaPath := path.Join(rootPathString + rootIdentifier + rootPathString + files + rootPathString + blob.Sha256)
 	//
-	blobContext := f.App.GetBlobsContext(ctx, regInfo.Name, rootIdentifier)
+	blobContext := f.App.GetBlobsContext(ctx, registryIdentifier, rootIdentifier)
 	reader, redirectURL, err := blobContext.genericBlobStore.Get(ctx, completeFilaPath, blob.Size)
 
 	if err != nil {

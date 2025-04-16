@@ -459,12 +459,12 @@ type ArtifactRepository interface {
 		ctx context.Context, parentID int64,
 		registryIDs *[]string, search string, latestVersion bool, packageTypes []string,
 	) (int64, error)
-	GetAllArtifactsByRepo(
+	GetArtifactsByRepo(
 		ctx context.Context, parentID int64, repoKey string,
 		sortByField string, sortByOrder string, limit int, offset int, search string,
 		labels []string,
 	) (*[]types.ArtifactMetadata, error)
-	CountAllArtifactsByRepo(
+	CountArtifactsByRepo(
 		ctx context.Context, parentID int64, repoKey string,
 		search string, labels []string,
 	) (int64, error)
@@ -494,6 +494,10 @@ type ArtifactRepository interface {
 
 	DeleteByVersionAndImageName(ctx context.Context, image string, version string, regID int64) (err error)
 	GetLatestByImageID(ctx context.Context, imageID int64) (*types.Artifact, error)
+
+	GetAllArtifactsByRepo(
+		ctx context.Context, registryID int64, batchSize int, artifactID int64,
+	) (*[]types.ArtifactMetadata, error)
 }
 
 type DownloadStatRepository interface {

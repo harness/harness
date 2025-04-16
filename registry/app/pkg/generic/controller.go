@@ -225,10 +225,8 @@ func (c Controller) PullArtifact(ctx context.Context, info pkg.GenericArtifactIn
 	}
 
 	path := "/" + info.Image + "/" + info.Version + "/" + info.FileName
-	fileReader, _, redirectURL, err := c.fileManager.DownloadFile(ctx, path, types.Registry{
-		ID:   info.RegistryID,
-		Name: info.RegIdentifier,
-	}, info.RootIdentifier)
+	fileReader, _, redirectURL, err := c.fileManager.DownloadFile(ctx, path, info.RegistryID,
+		info.RegIdentifier, info.RootIdentifier)
 	if err != nil {
 		return responseHeaders, nil, "", errcode.ErrCodeRootNotFound.WithDetail(err)
 	}

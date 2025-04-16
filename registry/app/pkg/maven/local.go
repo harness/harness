@@ -106,10 +106,8 @@ func (r *LocalRegistry) FetchArtifact(ctx context.Context, info pkg.MavenArtifac
 	}
 	var fileReader *storage.FileReader
 	if serveFile {
-		fileReader, _, redirectURL, err = r.fileManager.DownloadFile(ctx, filePath, types.Registry{
-			ID:   info.RegistryID,
-			Name: info.RootIdentifier,
-		}, info.RootIdentifier)
+		fileReader, _, redirectURL, err = r.fileManager.DownloadFile(ctx, filePath, info.RegistryID,
+			info.RootIdentifier, info.RootIdentifier)
 		if err != nil {
 			return processError(err)
 		}

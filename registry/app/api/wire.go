@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/registry/app/api/controller/pkg/npm"
 	nuget2 "github.com/harness/gitness/registry/app/api/controller/pkg/nuget"
 	python2 "github.com/harness/gitness/registry/app/api/controller/pkg/python"
+	rpm2 "github.com/harness/gitness/registry/app/api/controller/pkg/rpm"
 	"github.com/harness/gitness/registry/app/api/handler/generic"
 	mavenhandler "github.com/harness/gitness/registry/app/api/handler/maven"
 	npm2 "github.com/harness/gitness/registry/app/api/handler/npm"
@@ -31,6 +32,7 @@ import (
 	ocihandler "github.com/harness/gitness/registry/app/api/handler/oci"
 	"github.com/harness/gitness/registry/app/api/handler/packages"
 	pypi2 "github.com/harness/gitness/registry/app/api/handler/python"
+	rpm "github.com/harness/gitness/registry/app/api/handler/rpm"
 	"github.com/harness/gitness/registry/app/api/router"
 	storagedriver "github.com/harness/gitness/registry/app/driver"
 	"github.com/harness/gitness/registry/app/driver/factory"
@@ -45,6 +47,7 @@ import (
 	npm22 "github.com/harness/gitness/registry/app/pkg/npm"
 	"github.com/harness/gitness/registry/app/pkg/nuget"
 	"github.com/harness/gitness/registry/app/pkg/python"
+	rpmregistry "github.com/harness/gitness/registry/app/pkg/rpm"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/app/store/database"
 	"github.com/harness/gitness/registry/config"
@@ -155,6 +158,13 @@ func NewNPMHandlerProvider(
 	return npm2.NewHandler(controller, packageHandler)
 }
 
+func NewRpmHandlerProvider(
+	controller rpm2.Controller,
+	packageHandler packages.Handler,
+) rpm.Handler {
+	return rpm.NewHandler(controller, packageHandler)
+}
+
 func NewGenericHandlerProvider(
 	spaceStore corestore.SpaceStore, controller *generic2.Controller, tokenStore corestore.TokenStore,
 	userCtrl *usercontroller.Controller, authenticator authn.Authenticator, urlProvider urlprovider.Provider,
@@ -180,6 +190,7 @@ var WireSet = wire.NewSet(
 	NewPythonHandlerProvider,
 	NewNugetHandlerProvider,
 	NewNPMHandlerProvider,
+	NewRpmHandlerProvider,
 	database.WireSet,
 	pkg.WireSet,
 	docker.WireSet,
@@ -195,6 +206,8 @@ var WireSet = wire.NewSet(
 	nuget2.ControllerSet,
 	npm.ControllerSet,
 	base.WireSet,
+	rpm2.ControllerSet,
+	rpmregistry.WireSet,
 )
 
 func Wire(_ *types.Config) (RegistryApp, error) {

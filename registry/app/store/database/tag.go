@@ -17,6 +17,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
@@ -73,6 +74,7 @@ type tagDB struct {
 }
 
 type artifactMetadataDB struct {
+	ID            int64                `db:"artifact_id"`
 	Name          string               `db:"name"`
 	RepoName      string               `db:"repo_name"`
 	DownloadCount int64                `db:"download_count"`
@@ -83,6 +85,7 @@ type artifactMetadataDB struct {
 	ModifiedAt    int64                `db:"modified_at"`
 	Tag           *string              `db:"tag"`
 	Version       string               `db:"version"`
+	Metadata      *json.RawMessage     `db:"metadata"`
 }
 
 type tagMetadataDB struct {

@@ -2707,6 +2707,7 @@ components:
         - HELM
         - NUGET
         - NPM
+        - RPM
     SectionType:
       type: string
       description: refers to client setup section type

@@ -15,6 +15,7 @@
 package types
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
@@ -34,6 +35,7 @@ type Tag struct {
 }
 
 type ArtifactMetadata struct {
+	ID            int64
 	Name          string
 	RepoName      string
 	DownloadCount int64
@@ -43,6 +45,7 @@ type ArtifactMetadata struct {
 	CreatedAt     time.Time
 	ModifiedAt    time.Time
 	Version       string
+	Metadata      json.RawMessage
 }
 
 type ImageMetadata struct {

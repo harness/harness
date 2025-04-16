@@ -95,7 +95,7 @@ func SetHeaders(
 	responseHeaders.Code = http.StatusOK
 	responseHeaders.Headers["Content-Length"] = fmt.Sprintf("%d", fileInfo.Size)
 	responseHeaders.Headers["LastModified"] = fmt.Sprintf("%d", fileInfo.CreatedAt.Unix())
-	responseHeaders.Headers["Filename"] = fileInfo.Filename
+	responseHeaders.Headers["FileName"] = fileInfo.Filename
 	switch ext {
 	case extensionJar:
 		responseHeaders.Headers["Content-Type"] = contentTypeJar

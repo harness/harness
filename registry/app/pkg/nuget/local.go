@@ -36,7 +36,6 @@ import (
 	nugettype "github.com/harness/gitness/registry/app/pkg/types/nuget"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
-	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/google/uuid"
@@ -67,14 +66,17 @@ type localRegistry struct {
 	urlProvider urlprovider.Provider
 }
 
-func (c *localRegistry) GetServiceEndpoint(ctx context.Context,
-	info nugettype.ArtifactInfo) *nugettype.ServiceEndpoint {
+func (c *localRegistry) GetServiceEndpoint(
+	ctx context.Context,
+	info nugettype.ArtifactInfo,
+) *nugettype.ServiceEndpoint {
 	baseURL := c.urlProvider.RegistryURL(ctx, "pkg", info.RootIdentifier, info.RegIdentifier, "nuget")
 	serviceEndpoints := buildServiceEndpoint(baseURL)
 	return serviceEndpoints
 }
 
-func (c *localRegistry) UploadPackage(ctx context.Context,
+func (c *localRegistry) UploadPackage(
+	ctx context.Context,
 	info nugettype.ArtifactInfo,
 	fileReader io.ReadCloser,
 ) (headers *commons.ResponseHeaders, sha256 string, err error) {
@@ -96,8 +98,10 @@ func (c *localRegistry) UploadPackage(ctx context.Context,
 		})
 }
 
-func (c *localRegistry) buildMetadata(info nugettype.ArtifactInfo,
-	fileReader io.Reader) (metadata nugetmetadata.Metadata, err error) {
+func (c *localRegistry) buildMetadata(
+	info nugettype.ArtifactInfo,
+	fileReader io.Reader,
+) (metadata nugetmetadata.Metadata, err error) {
 	pathUUID := uuid.NewString()
 	tmpFile, err2 := os.CreateTemp(os.TempDir(), info.RootIdentifier+"-"+pathUUID+"*")
 	if err2 != nil {
@@ -154,8 +158,10 @@ func (c *localRegistry) parseMetadata(f io.Reader) (metadata nugetmetadata.Metad
 	return p, nil
 }
 
-func (c *localRegistry) DownloadPackage(ctx context.Context,
-	info nugettype.ArtifactInfo) (*commons.ResponseHeaders, *storage.FileReader, string, error) {
+func (c *localRegistry) DownloadPackage(
+	ctx context.Context,
+	info nugettype.ArtifactInfo,
+) (*commons.ResponseHeaders, *storage.FileReader, string, error) {
 	responseHeaders := &commons.ResponseHeaders{
 		Headers: make(map[string]string),
 		Code:    0,
@@ -163,10 +169,8 @@ func (c *localRegistry) DownloadPackage(ctx context.Context,
 
 	path := "/" + info.Image + "/" + info.Version + "/" + info.Filename
 
-	fileReader, _, redirectURL, err := c.fileManager.DownloadFile(ctx, path, types.Registry{
-		ID:   info.RegistryID,
-		Name: info.RegIdentifier,
-	}, info.RootIdentifier)
+	fileReader, _, redirectURL, err := c.fileManager.DownloadFile(ctx, path, info.RegistryID,
+		info.RegIdentifier, info.RootIdentifier)
 	if err != nil {
 		return responseHeaders, nil, "", err
 	}

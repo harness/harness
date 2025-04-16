@@ -29,6 +29,7 @@ import (
 	hoci "github.com/harness/gitness/registry/app/api/handler/oci"
 	"github.com/harness/gitness/registry/app/api/handler/packages"
 	"github.com/harness/gitness/registry/app/api/handler/python"
+	rpm "github.com/harness/gitness/registry/app/api/handler/rpm"
 	generic2 "github.com/harness/gitness/registry/app/api/router/generic"
 	"github.com/harness/gitness/registry/app/api/router/harness"
 	mavenRouter "github.com/harness/gitness/registry/app/api/router/maven"
@@ -122,8 +123,17 @@ func PackageHandlerProvider(
 	pypiHandler python.Handler,
 	nugetHandler nuget.Handler,
 	npmHandler npm.Handler,
+	rpmHandler rpm.Handler,
 ) packagerrouter.Handler {
-	return packagerrouter.NewRouter(handler, mavenHandler, genericHandler, pypiHandler, nugetHandler, npmHandler)
+	return packagerrouter.NewRouter(
+		handler,
+		mavenHandler,
+		genericHandler,
+		pypiHandler,
+		nugetHandler,
+		npmHandler,
+		rpmHandler,
+	)
 }
 
 var WireSet = wire.NewSet(APIHandlerProvider, OCIHandlerProvider, AppRouterProvider,
