@@ -94,7 +94,7 @@ func (c *Controller) Revert(
 	title := in.Title
 	message := in.Message
 	if title == "" {
-		title = fmt.Sprintf("Revert of #%d", pr.Number)
+		title = fmt.Sprintf("Revert Pull Request #%d %q", pullreqNum, pr.Title)
 	}
 	commitMessage := git.CommitMessage(title, message)
 

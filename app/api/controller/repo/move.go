@@ -65,8 +65,6 @@ func (c *Controller) Move(ctx context.Context,
 		return GetRepoOutput(ctx, c.publicAccess, repo)
 	}
 
-	oldIdentifier := repo.Identifier
-
 	isPublic, err := c.publicAccess.Get(ctx, enum.PublicResourceTypeRepo, repo.Path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get repo public access: %w", err)
@@ -82,7 +80,7 @@ func (c *Controller) Move(ctx context.Context,
 	}
 
 	// TODO add a repo level lock here to avoid racing condition or partial repo update w/o setting repo public access
-	repo, err = c.repoStore.UpdateOptLock(ctx, repo, func(r *types.Repository) error {
+	renamedRepo, err := c.repoStore.UpdateOptLock(ctx, repo, func(r *types.Repository) error {
 		if in.Identifier != nil {
 			r.Identifier = *in.Identifier
 		}
@@ -92,19 +90,20 @@ func (c *Controller) Move(ctx context.Context,
 		return nil, fmt.Errorf("failed to update repo: %w", err)
 	}
 
+	// clear old repo from cache
 	c.repoFinder.MarkChanged(ctx, repo.Core())
 
 	// set public access for the new repo path
-	if err := c.publicAccess.Set(ctx, enum.PublicResourceTypeRepo, repo.Path, isPublic); err != nil {
+	if err := c.publicAccess.Set(ctx, enum.PublicResourceTypeRepo, renamedRepo.Path, isPublic); err != nil {
 		// ensure public access for new repo path is cleaned up first or we risk leaking it
-		if dErr := c.publicAccess.Delete(ctx, enum.PublicResourceTypeRepo, repo.Path); dErr != nil {
+		if dErr := c.publicAccess.Delete(ctx, enum.PublicResourceTypeRepo, renamedRepo.Path); dErr != nil {
 			return nil, fmt.Errorf("failed to set repo public access (and public access cleanup: %w): %w", dErr, err)
 		}
 
 		// revert identifier changes first
 		var dErr error
-		repo, dErr = c.repoStore.UpdateOptLock(ctx, repo, func(r *types.Repository) error {
-			r.Identifier = oldIdentifier
+		_, dErr = c.repoStore.UpdateOptLock(ctx, renamedRepo, func(r *types.Repository) error {
+			r.Identifier = repo.Identifier
 			return nil
 		})
 		if dErr != nil {
@@ -115,7 +114,8 @@ func (c *Controller) Move(ctx context.Context,
 			)
 		}
 
-		c.repoFinder.MarkChanged(ctx, repo.Core())
+		// clear updated repo from cache
+		c.repoFinder.MarkChanged(ctx, renamedRepo.Core())
 
 		// revert public access changes only after we successfully restored original path
 		if dErr = c.publicAccess.Set(ctx, enum.PublicResourceTypeRepo, repo.Path, isPublic); dErr != nil {
@@ -129,10 +129,10 @@ func (c *Controller) Move(ctx context.Context,
 		return nil, fmt.Errorf("failed to set repo public access for new path (cleanup successful): %w", err)
 	}
 
-	repo.GitURL = c.urlProvider.GenerateGITCloneURL(ctx, repo.Path)
-	repo.GitSSHURL = c.urlProvider.GenerateGITCloneSSHURL(ctx, repo.Path)
+	renamedRepo.GitURL = c.urlProvider.GenerateGITCloneURL(ctx, renamedRepo.Path)
+	renamedRepo.GitSSHURL = c.urlProvider.GenerateGITCloneSSHURL(ctx, renamedRepo.Path)
 
-	return GetRepoOutput(ctx, c.publicAccess, repo)
+	return GetRepoOutput(ctx, c.publicAccess, renamedRepo)
 }
 
 func (c *Controller) sanitizeMoveInput(in *MoveInput, session *auth.Session) error {
