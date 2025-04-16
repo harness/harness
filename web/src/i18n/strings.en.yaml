@@ -371,6 +371,10 @@ pr:
   titleUpdated: Pull request title updated
   targetBranchUpdated: Target branch updated to {{branch}}
   titleAndBranchUpdated: 'Pull request updated: Title and target branch ({{branch}})'
+  revert: Revert
+  createRevertPR: Create a new pull request to revert changes
+  revertBranchSuccess: Revert branch {{branch}} created
+  revertOpFailed: Revert operation failed
 prState:
   draftHeading: This pull request is still a work in progress
   draftDesc: Draft pull requests cannot be merged.

@@ -813,6 +813,7 @@ export interface StringsMap {
   'pr.commitSuggestions': string
   'pr.copyLinkToComment': string
   'pr.createDraftPR': string
+  'pr.createRevertPR': string
   'pr.descHasTooLongLine': string
   'pr.descIsRequired': string
   'pr.descIsTooLong': string
@@ -871,6 +872,9 @@ export interface StringsMap {
   'pr.removeSuggestion': string
   'pr.requestSubmitted': string
   'pr.requestedChanges': string
+  'pr.revert': string
+  'pr.revertBranchSuccess': string
+  'pr.revertOpFailed': string
   'pr.reviewChanges': string
   'pr.reviewRequested': string
   'pr.reviewSubmitted': string

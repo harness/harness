@@ -42,6 +42,7 @@ import type {
   OpenapiCreateBranchRequest,
   OpenapiStatePullReqRequest,
   RebaseBranchRequestBody,
+  RepoRepositoryOutput,
   TypesListCommitResponse,
   TypesPullReq,
   TypesRuleViolations
@@ -62,6 +63,7 @@ import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButto
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { PullReqSuggestionsBatch } from 'components/PullReqSuggestionsBatch/PullReqSuggestionsBatch'
 import { TimePopoverWithLocal } from 'utils/timePopoverLocal/TimePopoverWithLocal'
+import { RevertPRButton } from 'components/RevertPRButton/RevertPRButton'
 import { BranchActionsButton } from '../PullRequestOverviewPanel/sections/BranchActionsSection'
 import InlineMergeBox from './InlineMergeBox'
 import css from './PullRequestActionsBox.module.scss'
@@ -290,6 +292,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
         refetchBranch={refetchBranch}
         createBranch={createBranch}
         deleteBranch={deleteBranch}
+        repoMetadata={repoMetadata}
       />
     )
   }
@@ -590,6 +593,7 @@ const MergeInfo: React.FC<{
   pullRequestMetadata: TypesPullReq
   showRestoreBranchButton: boolean
   showDeleteBranchButton: boolean
+  repoMetadata: RepoRepositoryOutput
   setShowDeleteBranchButton: React.Dispatch<React.SetStateAction<boolean>>
   setShowRestoreBranchButton: React.Dispatch<React.SetStateAction<boolean>>
   refetchActivities: () => void
@@ -597,9 +601,8 @@ const MergeInfo: React.FC<{
   createBranch: MutateMethod<any, any, OpenapiCreateBranchRequest, CreateBranchPathParams>
   deleteBranch: MutateMethod<any, any, DeletePullReqSourceBranchQueryParams, unknown>
 }> = props => {
-  const { pullRequestMetadata, showRestoreBranchButton, showDeleteBranchButton } = props
+  const { pullRequestMetadata, showRestoreBranchButton, showDeleteBranchButton, repoMetadata } = props
   const { getString } = useStrings()
-
   return (
     <Container className={cx(css.main, css.merged)}>
       <Layout.Horizontal spacing="medium" flex={{ alignItems: 'center' }} className={css.layout}>
@@ -648,6 +651,7 @@ const MergeInfo: React.FC<{
           />
         </Text>
         <FlexExpander />
+        <RevertPRButton pullRequestMetadata={pullRequestMetadata} repoMetadata={repoMetadata} />
         {(showDeleteBranchButton || showRestoreBranchButton) && (
           <BranchActionsButton
             {...props}
