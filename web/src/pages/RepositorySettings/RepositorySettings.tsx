@@ -48,7 +48,6 @@ export default function RepositorySettings() {
     gitRef: normalizeGitRef(gitRef) as string,
     resourcePath
   })
-
   useDisableCodeMainLinks(!!isRepositoryEmpty)
   const tabListArray = [
     {

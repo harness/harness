@@ -26,4 +26,6 @@ var (
 	DefaultInstallID                   = string("")
 	KeyPrincipalCommitterMatch     Key = "principal_committer_match"
 	DefaultPrincipalCommitterMatch     = false
+	KeyGitLFSEnabled               Key = "git_lfs_enabled"
+	DefaultGitLFSEnabled               = true
 )

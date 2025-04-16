@@ -39,7 +39,7 @@ func (c *Controller) Upload(ctx context.Context,
 	pointer Pointer,
 	file io.Reader,
 ) (*UploadOut, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush)
+	repo, err := c.getRepoCheckAccessAndSetting(ctx, session, repoRef, enum.PermissionRepoPush)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to repo: %w", err)
 	}

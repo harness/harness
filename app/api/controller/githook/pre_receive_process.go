@@ -62,7 +62,18 @@ func (c *Controller) processObjects(
 		return fmt.Errorf("failed to check settings for principal committer match: %w", err)
 	}
 
-	if sizeLimit == 0 && !principalCommitterMatch {
+	gitLFSEnabled, err := settings.RepoGet(
+		ctx,
+		c.settings,
+		repo.ID,
+		settings.KeyGitLFSEnabled,
+		settings.DefaultGitLFSEnabled,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to check settings for Git LFS enabled: %w", err)
+	}
+
+	if sizeLimit == 0 && !principalCommitterMatch && !gitLFSEnabled {
 		return nil
 	}
 
@@ -85,7 +96,9 @@ func (c *Controller) processObjects(
 		}
 	}
 
-	preReceiveObjsIn.FindLFSPointersParams = &git.FindLFSPointersParams{}
+	if gitLFSEnabled {
+		preReceiveObjsIn.FindLFSPointersParams = &git.FindLFSPointersParams{}
+	}
 
 	preReceiveObjsOut, err := c.git.ProcessPreReceiveObjects(
 		ctx,

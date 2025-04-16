@@ -23,17 +23,20 @@ import (
 // GeneralSettings represent the general repository settings as exposed externally.
 type GeneralSettings struct {
 	FileSizeLimit *int64 `json:"file_size_limit" yaml:"file_size_limit"`
+	GitLFSEnabled *bool  `json:"git_lfs_enabled" yaml:"git_lfs_enabled"`
 }
 
 func GetDefaultGeneralSettings() *GeneralSettings {
 	return &GeneralSettings{
 		FileSizeLimit: ptr.Int64(settings.DefaultFileSizeLimit),
+		GitLFSEnabled: ptr.Bool(settings.DefaultGitLFSEnabled),
 	}
 }
 
 func GetGeneralSettingsMappings(s *GeneralSettings) []settings.SettingHandler {
 	return []settings.SettingHandler{
 		settings.Mapping(settings.KeyFileSizeLimit, s.FileSizeLimit),
+		settings.Mapping(settings.KeyGitLFSEnabled, s.GitLFSEnabled),
 	}
 }
 
@@ -46,5 +49,13 @@ func GetGeneralSettingsAsKeyValues(s *GeneralSettings) []settings.KeyValue {
 			Value: s.FileSizeLimit,
 		})
 	}
+
+	if s.GitLFSEnabled != nil {
+		kvs = append(kvs, settings.KeyValue{
+			Key:   settings.KeyGitLFSEnabled,
+			Value: s.GitLFSEnabled,
+		})
+	}
+
 	return kvs
 }

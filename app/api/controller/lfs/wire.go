@@ -18,6 +18,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/services/remoteauth"
+	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/blob"
@@ -37,6 +38,16 @@ func ProvideController(
 	blobStore blob.Store,
 	remoteAuth remoteauth.Service,
 	urlProvider url.Provider,
+	settings *settings.Service,
 ) *Controller {
-	return NewController(authorizer, repoFinder, principalStore, lfsStore, blobStore, remoteAuth, urlProvider)
+	return NewController(
+		authorizer,
+		repoFinder,
+		principalStore,
+		lfsStore,
+		blobStore,
+		remoteAuth,
+		urlProvider,
+		settings,
+	)
 }

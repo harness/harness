@@ -41,7 +41,7 @@ func (c *Controller) Download(ctx context.Context,
 	repoRef string,
 	oid string,
 ) (*Content, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
+	repo, err := c.getRepoCheckAccessAndSetting(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to repo: %w", err)
 	}

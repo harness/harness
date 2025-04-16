@@ -117,6 +117,13 @@
   text-transform: capitalize;
 }
 
+.featureText {
+  font-size: 12px !important;
+  font-style: normal !important;
+  font-weight: 300 !important;
+  white-space: nowrap !important;
+}
+
 .dividerContainer {
   opacity: 0.2;
   height: 1px;

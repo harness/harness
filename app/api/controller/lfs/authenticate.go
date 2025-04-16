@@ -18,8 +18,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authn"
+	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/token"
 )
 
@@ -28,6 +30,26 @@ func (c *Controller) Authenticate(
 	session *auth.Session,
 	repoRef string,
 ) (*AuthenticateResponse, error) {
+	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find repository: %w", err)
+	}
+
+	gitLFSEnabled, err := settings.RepoGet(
+		ctx,
+		c.settings,
+		repo.ID,
+		settings.KeyGitLFSEnabled,
+		settings.DefaultGitLFSEnabled,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check settings for Git LFS enabled: %w", err)
+	}
+
+	if !gitLFSEnabled {
+		return nil, usererror.ErrGitLFSDisabled
+	}
+
 	jwt, err := c.remoteAuth.GenerateToken(ctx, session.Principal.ID, session.Principal.Type, repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate auth token: %w", err)

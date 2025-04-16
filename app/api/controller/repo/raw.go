@@ -22,9 +22,12 @@ import (
 
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/services/settings"
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/git/parser"
 	"github.com/harness/gitness/git/sha"
+	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -89,32 +92,52 @@ func (c *Controller) Raw(ctx context.Context,
 		return nil, fmt.Errorf("failed to read blob: %w", err)
 	}
 
-	// check if blob is an LFS pointer
-	content, err := io.ReadAll(io.LimitReader(blobReader.Content, parser.LfsPointerMaxSize))
+	gitLFSEnabled, err := settings.RepoGet(
+		ctx,
+		c.settings,
+		repo.ID,
+		settings.KeyGitLFSEnabled,
+		settings.DefaultGitLFSEnabled,
+	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read LFS file content: %w", err)
+		return nil, fmt.Errorf("failed to check settings for Git LFS enabled: %w", err)
 	}
 
-	lfsInfo, ok := parser.IsLFSPointer(ctx, content, blobReader.Size)
-	if !ok {
+	if !gitLFSEnabled {
 		return &RawContent{
-			Data: &multiReadCloser{
-				Reader:    io.MultiReader(bytes.NewBuffer(content), blobReader.Content),
-				closeFunc: blobReader.Content.Close,
-			},
+			Data: blobReader.Content,
 			Size: blobReader.ContentSize,
 			SHA:  blobReader.SHA,
 		}, nil
 	}
 
-	file, err := c.lfsCtrl.DownloadNoAuth(ctx, repo.ID, lfsInfo.OID)
+	// check if blob is an LFS pointer
+	headerContent, err := io.ReadAll(io.LimitReader(blobReader.Content, parser.LfsPointerMaxSize))
 	if err != nil {
-		return nil, fmt.Errorf("failed to download LFS file: %w", err)
+		return nil, fmt.Errorf("failed to read content: %w", err)
+	}
+
+	lfsInfo, ok := parser.IsLFSPointer(ctx, headerContent, blobReader.Size)
+	if ok {
+		lfsContent, err := c.lfsCtrl.DownloadNoAuth(ctx, repo.ID, lfsInfo.OID)
+		if err == nil {
+			return &RawContent{
+				Data: lfsContent,
+				Size: lfsInfo.Size,
+				SHA:  blobReader.SHA,
+			}, nil
+		}
+		if !errors.Is(err, gitness_store.ErrResourceNotFound) {
+			return nil, fmt.Errorf("failed to download LFS file: %w", err)
+		}
 	}
 
 	return &RawContent{
-		Data: file,
-		Size: lfsInfo.Size,
+		Data: &multiReadCloser{
+			Reader:    io.MultiReader(bytes.NewBuffer(headerContent), blobReader.Content),
+			closeFunc: blobReader.Content.Close,
+		},
+		Size: blobReader.ContentSize,
 		SHA:  blobReader.SHA,
 	}, nil
 }

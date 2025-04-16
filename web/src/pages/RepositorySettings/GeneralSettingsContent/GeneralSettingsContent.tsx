@@ -32,7 +32,7 @@ import cx from 'classnames'
 import { Color, FontVariation, Intent } from '@harnessio/design-system'
 import { Icon } from '@harnessio/icons'
 import { noop } from 'lodash-es'
-import { useMutate } from 'restful-react'
+import { useGet, useMutate } from 'restful-react'
 import { Render } from 'react-jsx-match'
 import { ACCESS_MODES, getErrorMessage, permissionProps, voidFn } from 'utils/Utils'
 import { useStrings } from 'framework/strings'
@@ -64,7 +64,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
   const [defaultBranch, setDefaultBranch] = useState(ACCESS_MODES.VIEW)
   const { openModal: openDefaultBranchModal } = useDefaultBranchModal({ currentGitRef, setDefaultBranch, refetch })
   const { showError, showSuccess } = useToaster()
-  const { standalone, hooks } = useAppContext()
+  const { standalone, hooks, routingId } = useAppContext()
   const space = useGetSpaceParam()
   const { allowPublicResourceCreation } = usePublicResourceConfig()
   const { getString } = useStrings()
@@ -81,6 +81,17 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
   const { mutate: changeVisibility } = useMutate({
     verb: 'POST',
     path: `/api/v1/repos/${repoMetadata?.path}/+/public-access`
+  })
+
+  const { data: generalSettingsData, refetch: refetchSettings } = useGet({
+    path: `/api/v1/repos/${repoMetadata?.path}/+/settings/general`,
+    queryParams: { routingId: routingId }
+  })
+
+  const { mutate: updateGeneralSettings } = useMutate({
+    verb: 'PATCH',
+    path: `/api/v1/repos/${repoMetadata?.path}/+/settings/general`,
+    queryParams: { routingId: routingId }
   })
 
   const permEditResult = hooks?.usePermissionTranslate?.(
@@ -178,12 +189,14 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
 
   return (
     <Formik
+      enableReinitialize
       formName="repoGeneralSettings"
       initialValues={{
         name: repoMetadata?.identifier,
         desc: repoMetadata?.description,
         defaultBranch: repoMetadata?.default_branch,
-        isPublic: currRepoVisibility
+        isPublic: currRepoVisibility,
+        gitLFSEnabled: generalSettingsData?.git_lfs_enabled ?? true
       }}
       onSubmit={voidFn(mutate)}>
       {formik => {
@@ -412,6 +425,56 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
                 </Layout.Horizontal>
               </Container>
             </Render>
+            <Container padding="medium" margin={{ bottom: 'medium' }} className={css.generalContainer}>
+              <Layout.Horizontal padding={{ bottom: 'medium' }}>
+                <Container className={css.label}>
+                  <Text color={Color.GREY_600} className={css.textSize} margin={{ top: 'medium' }}>
+                    {getString('generalSetting.features')}
+                  </Text>
+                </Container>
+                <Layout.Vertical spacing="small" padding={{ button: 'small', top: 'small' }}>
+                  <Container className={css.content}>
+                    <Layout.Horizontal flex={{ alignItems: 'center' }} spacing={'small'}>
+                      <FormInput.Toggle
+                        {...permissionProps(permEditResult, standalone)}
+                        key={'gitLFSEnabled'}
+                        style={{ margin: '0px' }}
+                        label=""
+                        name="gitLFSEnabled"
+                      />
+                      <Text color={Color.GREY_800} className={css.featureText}>
+                        {getString('generalSetting.gitLFSEnable')}
+                      </Text>
+                      <Text color={Color.GREY_500} className={css.featureText}>
+                        {getString('generalSetting.gitLFSEnableDesc')}
+                      </Text>
+                    </Layout.Horizontal>
+                    <Layout.Horizontal className={css.buttonContainer}>
+                      {generalSettingsData?.git_lfs_enabled !== formik.values.gitLFSEnabled ? (
+                        <Button
+                          margin={{ top: 'medium' }}
+                          type="submit"
+                          text={getString('save')}
+                          variation={ButtonVariation.PRIMARY}
+                          size={ButtonSize.SMALL}
+                          onClick={() => {
+                            updateGeneralSettings({ git_lfs_enabled: formik.values.gitLFSEnabled })
+                              .then(() => {
+                                showSuccess(getString('repoUpdate'))
+                                refetchSettings()
+                              })
+                              .catch(err => {
+                                showError(getErrorMessage(err))
+                              })
+                          }}
+                          {...permissionProps(permEditResult, standalone)}
+                        />
+                      ) : null}
+                    </Layout.Horizontal>
+                  </Container>
+                </Layout.Vertical>
+              </Layout.Horizontal>
+            </Container>
             <Container padding="medium" margin={{ bottom: 'medium' }} className={css.generalContainer}>
               <Layout.Horizontal padding={{ bottom: 'medium' }}>
                 <Container className={css.label}>

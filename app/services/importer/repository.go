@@ -30,6 +30,7 @@ import (
 	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/refcache"
+	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	gitnessurl "github.com/harness/gitness/app/url"
@@ -72,6 +73,7 @@ type Repository struct {
 	publicAccess  publicaccess.Service
 	eventReporter *repoevents.Reporter
 	auditService  audit.Service
+	settings      *settings.Service
 }
 
 var _ job.Handler = (*Repository)(nil)
@@ -293,6 +295,11 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		if err != nil {
 			log.Warn().Msgf("failed to insert audit log for updating repo to public: %s", err)
 		}
+	}
+
+	// revert this when import fetches LFS objects
+	if err := r.settings.RepoSet(ctx, repo.ID, settings.KeyGitLFSEnabled, false); err != nil {
+		log.Warn().Err(err).Msg("failed to disable Git LFS in repository settings")
 	}
 
 	log.Info().Msg("create git repository")

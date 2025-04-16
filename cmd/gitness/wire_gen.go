@@ -260,7 +260,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	auditService := audit.ProvideAuditService()
-	repository, err := importer.ProvideRepoImporter(config, provider, gitInterface, transactor, repoStore, pipelineStore, triggerStore, repoFinder, encrypter, jobScheduler, executor, streamer, indexer, publicaccessService, eventsReporter, auditService)
+	repository, err := importer.ProvideRepoImporter(config, provider, gitInterface, transactor, repoStore, pipelineStore, triggerStore, repoFinder, encrypter, jobScheduler, executor, streamer, indexer, publicaccessService, eventsReporter, auditService, settingsService)
 	if err != nil {
 		return nil, err
 	}
@@ -296,7 +296,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	remoteauthService := remoteauth.ProvideRemoteAuth(tokenStore, principalStore)
-	lfsController := lfs.ProvideController(authorizer, repoFinder, principalStore, lfsObjectStore, blobStore, remoteauthService, provider)
+	lfsController := lfs.ProvideController(authorizer, repoFinder, principalStore, lfsObjectStore, blobStore, remoteauthService, provider, settingsService)
 	repoController := repo.ProvideController(config, transactor, provider, authorizer, repoStore, spaceStore, pipelineStore, principalStore, executionStore, ruleStore, checkStore, pullReqStore, settingsService, principalInfoCache, protectionManager, gitInterface, spaceFinder, repoFinder, repository, codeownersService, eventsReporter, indexer, resourceLimiter, lockerLocker, auditService, mutexManager, repoIdentifier, repoCheck, publicaccessService, labelService, instrumentService, userGroupStore, searchService, rulesService, streamer, lfsController)
 	reposettingsController := reposettings.ProvideController(authorizer, repoFinder, settingsService, auditService)
 	stageStore := database.ProvideStageStore(db)

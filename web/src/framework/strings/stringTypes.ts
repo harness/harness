@@ -464,6 +464,9 @@ export interface StringsMap {
   findOrCreateBranch: string
   firstTimeTitle: string
   general: string
+  'generalSetting.features': string
+  'generalSetting.gitLFSEnable': string
+  'generalSetting.gitLFSEnableDesc': string
   generate: string
   generateCloneCred: string
   generateCloneText: string

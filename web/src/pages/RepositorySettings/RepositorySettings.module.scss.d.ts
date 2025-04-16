@@ -26,6 +26,7 @@ export declare const descText: string
 export declare const dialogContainer: string
 export declare const dividerContainer: string
 export declare const editContainer: string
+export declare const featureText: string
 export declare const generalContainer: string
 export declare const headerContainer: string
 export declare const iconContainer: string

@@ -19,6 +19,7 @@ import (
 	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/refcache"
+	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
@@ -53,6 +54,7 @@ func ProvideRepoImporter(
 	publicAccess publicaccess.Service,
 	eventReporter *repoevents.Reporter,
 	auditService audit.Service,
+	settings *settings.Service,
 ) (*Repository, error) {
 	importer := &Repository{
 		defaultBranch: config.Git.DefaultBranch,
@@ -70,6 +72,7 @@ func ProvideRepoImporter(
 		publicAccess:  publicAccess,
 		eventReporter: eventReporter,
 		auditService:  auditService,
+		settings:      settings,
 	}
 
 	err := executor.Register(jobType, importer)

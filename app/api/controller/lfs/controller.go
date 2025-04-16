@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/services/remoteauth"
+	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/blob"
@@ -43,6 +44,7 @@ type Controller struct {
 	blobStore      blob.Store
 	remoteAuth     remoteauth.Service
 	urlProvider    url.Provider
+	settings       *settings.Service
 }
 
 func NewController(
@@ -53,6 +55,7 @@ func NewController(
 	blobStore blob.Store,
 	remoteAuth remoteauth.Service,
 	urlProvider url.Provider,
+	settings *settings.Service,
 ) *Controller {
 	return &Controller{
 		authorizer:     authorizer,
@@ -62,10 +65,11 @@ func NewController(
 		blobStore:      blobStore,
 		remoteAuth:     remoteAuth,
 		urlProvider:    urlProvider,
+		settings:       settings,
 	}
 }
 
-func (c *Controller) getRepoCheckAccess(
+func (c *Controller) getRepoCheckAccessAndSetting(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
@@ -87,6 +91,21 @@ func (c *Controller) getRepoCheckAccess(
 
 	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, reqPermission); err != nil {
 		return nil, fmt.Errorf("access check failed: %w", err)
+	}
+
+	gitLFSEnabled, err := settings.RepoGet(
+		ctx,
+		c.settings,
+		repo.ID,
+		settings.KeyGitLFSEnabled,
+		settings.DefaultGitLFSEnabled,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check settings for Git LFS enabled: %w", err)
+	}
+
+	if !gitLFSEnabled {
+		return nil, usererror.ErrGitLFSDisabled
 	}
 
 	return repo, nil

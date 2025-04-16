@@ -397,6 +397,10 @@ prReview:
   targetBranchChange: '{user} changed the target branch from {old} to {new}'
 webhookListingContent: 'create,delete,deployment ...'
 general: 'General'
+generalSetting:
+  features: Features
+  gitLFSEnable: Git Large File Storage (LFS)
+  gitLFSEnableDesc: Manage large files using Git LFS.
 webhooks: 'Webhooks'
 open: Open
 merged: Merged
