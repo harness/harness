@@ -2645,6 +2645,7 @@ components:
             - AwsEcr
             - MavenCentral
             - PyPi
+            - NpmJs
       x-discriminator-value: UPSTREAM
       required:
         - authType

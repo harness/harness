@@ -125,7 +125,7 @@ var validUpstreamSources = []string{
 	string(a.UpstreamConfigSourceAwsEcr),
 	string(a.UpstreamConfigSourceMavenCentral),
 	string(a.UpstreamConfigSourcePyPi),
-	string(a.UpstreamConfigSourceNpmjs),
+	string(a.UpstreamConfigSourceNpmJs),
 }
 
 func ValidatePackageTypes(packageTypes []string) error {
@@ -184,7 +184,7 @@ func ValidateUpstream(config *a.RegistryConfig) error {
 		*upstreamConfig.Source != a.UpstreamConfigSourceDockerhub &&
 		*upstreamConfig.Source != a.UpstreamConfigSourceMavenCentral &&
 		*upstreamConfig.Source != a.UpstreamConfigSourcePyPi &&
-		*upstreamConfig.Source != a.UpstreamConfigSourceNpmjs {
+		*upstreamConfig.Source != a.UpstreamConfigSourceNpmJs {
 		if commons.IsEmpty(upstreamConfig.Url) {
 			return errors.New("URL is required for upstream repository")
 		}

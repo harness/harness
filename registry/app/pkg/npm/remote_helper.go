@@ -67,7 +67,7 @@ func (r *remoteRegistryHelper) init(
 	service secret.Service,
 ) error {
 	key := string(artifact.PackageTypeNPM)
-	if r.registry.Source == string(artifact.UpstreamConfigSourceNpmjs) {
+	if r.registry.Source == string(artifact.UpstreamConfigSourceNpmJs) {
 		r.registry.RepoURL = npmjs.NpmjsURL
 	}
 
