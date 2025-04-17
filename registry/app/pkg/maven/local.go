@@ -120,7 +120,7 @@ func (r *LocalRegistry) PutArtifact(ctx context.Context, info pkg.MavenArtifactI
 	responseHeaders *commons.ResponseHeaders, errs []error,
 ) {
 	filePath := utils.GetFilePath(info)
-	fileInfo, err := r.fileManager.UploadFile(ctx, filePath, info.RegIdentifier,
+	fileInfo, err := r.fileManager.UploadFile(ctx, filePath,
 		info.RegistryID, info.RootParentID, info.RootIdentifier, nil, fileReader, info.FileName)
 	if err != nil {
 		return responseHeaders, []error{errcode.ErrCodeUnknown.WithDetail(err)}

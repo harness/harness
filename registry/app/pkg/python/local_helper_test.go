@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/types/python"
 	"github.com/harness/gitness/registry/app/storage"
+	"github.com/harness/gitness/registry/types"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -87,6 +88,17 @@ type MockLocalBase struct {
 	mock.Mock
 }
 
+func (m *MockLocalBase) MoveTempFile(
+	_ context.Context,
+	_ pkg.ArtifactInfo,
+	_, _, _ string,
+	_ metadata.Metadata,
+	_ types.FileInfo,
+) (*commons.ResponseHeaders, string, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
 func (m *MockLocalBase) CheckIfVersionExists(_ context.Context, _ pkg.PackageArtifactInfo) (bool, error) {
 	// TODO implement me
 	panic("implement me")
@@ -121,6 +133,17 @@ func (m *MockLocalBase) Upload(
 	reader io.ReadCloser, metadata metadata.Metadata,
 ) (*commons.ResponseHeaders, string, error) {
 	args := m.Called(ctx, info, filename, version, path, reader, metadata)
+	return args.Get(0).(*commons.ResponseHeaders), args.String(1), args.Error(2) //nolint:errcheck
+}
+
+func (m *MockLocalBase) Move(
+	ctx context.Context,
+	info pkg.ArtifactInfo,
+	filename, version, path string,
+	metadata metadata.Metadata,
+	fileInfo types.FileInfo,
+) (*commons.ResponseHeaders, string, error) {
+	args := m.Called(ctx, info, filename, version, path, metadata, fileInfo)
 	return args.Get(0).(*commons.ResponseHeaders), args.String(1), args.Error(2) //nolint:errcheck
 }
 

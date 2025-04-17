@@ -179,4 +179,5 @@ type GenericBlobStore interface {
 	Delete(ctx context.Context, filePath string) error
 
 	Get(ctx context.Context, filePath string, size int64) (*FileReader, string, error)
+	GetWithNoRedirect(ctx context.Context, filePath string, size int64) (*FileReader, error)
 }

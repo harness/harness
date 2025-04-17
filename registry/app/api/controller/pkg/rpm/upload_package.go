@@ -31,7 +31,8 @@ import (
 func (c *controller) UploadPackageFile(
 	ctx context.Context,
 	info rpmtype.ArtifactInfo,
-	file multipart.File,
+	file multipart.Part,
+	fileName string,
 ) *PutArtifactResponse {
 	f := func(registry registrytypes.Registry, a pkg.Artifact) response.Response {
 		info.RegIdentifier = registry.Name
@@ -46,7 +47,7 @@ func (c *controller) UploadPackageFile(
 				"",
 			}
 		}
-		headers, sha256, err := rpmRegistry.UploadPackageFile(ctx, info, file)
+		headers, sha256, err := rpmRegistry.UploadPackageFile(ctx, info, file, fileName)
 		return &PutArtifactResponse{
 			BaseResponse{
 				Error:           err,

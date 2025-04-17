@@ -30,7 +30,8 @@ type Controller interface {
 	UploadPackageFile(
 		ctx context.Context,
 		info rpmtype.ArtifactInfo,
-		file multipart.File,
+		file multipart.Part,
+		fileName string,
 	) *PutArtifactResponse
 
 	DownloadPackageFile(

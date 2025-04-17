@@ -106,7 +106,8 @@ func (r *proxy) GetRepoData(
 func (r *proxy) UploadPackageFile(
 	ctx context.Context,
 	_ rpmtype.ArtifactInfo,
-	_ multipart.File,
+	_ multipart.Part,
+	_ string,
 ) (*commons.ResponseHeaders, string, error) {
 	log.Error().Ctx(ctx).Msg("Not implemented")
 	return nil, "", errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))

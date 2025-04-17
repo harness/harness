@@ -111,7 +111,7 @@ func (c Controller) UploadArtifact(
 	}
 
 	path := info.Image + "/" + info.Version + "/" + info.FileName
-	fileInfo, err := c.fileManager.UploadFile(ctx, path, info.RegIdentifier, info.RegistryID,
+	fileInfo, err := c.fileManager.UploadFile(ctx, path, info.RegistryID,
 		info.RootParentID, info.RootIdentifier, file, nil, info.FileName)
 	if err != nil {
 		return responseHeaders, "", errcode.ErrCodeUnknown.WithDetail(err)

@@ -76,9 +76,8 @@ func (storage *Service) OciBlobsStore(ctx context.Context, repoKey string, rootP
 	}
 }
 
-func (storage *Service) GenericBlobsStore(repoKey string, rootParentRef string) GenericBlobStore {
+func (storage *Service) GenericBlobsStore(rootParentRef string) GenericBlobStore {
 	return &genericBlobStore{
-		repoKey:       repoKey,
 		driver:        storage.driver,
 		redirect:      storage.redirect,
 		rootParentRef: rootParentRef,

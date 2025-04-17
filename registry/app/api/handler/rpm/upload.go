@@ -18,15 +18,14 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/harness/gitness/registry/app/api/handler/utils"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	rpmtype "github.com/harness/gitness/registry/app/pkg/types/rpm"
 	"github.com/harness/gitness/registry/request"
 )
 
-const formFileKey = "file"
-
 func (h *handler) UploadPackageFile(w http.ResponseWriter, r *http.Request) {
-	file, _, err := r.FormFile(formFileKey)
+	file, fileName, err := utils.GetFileReader(r, "file")
 	if err != nil {
 		h.HandleErrors2(r.Context(), errcode.ErrCodeInvalidRequest.WithMessage(fmt.Sprintf("failed to parse file: %s, "+
 			"please provide correct file path ", err.Error())), w)
@@ -41,7 +40,7 @@ func (h *handler) UploadPackageFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := h.controller.UploadPackageFile(r.Context(), *info, file)
+	response := h.controller.UploadPackageFile(r.Context(), *info, *file, fileName)
 	if response.GetError() != nil {
 		h.HandleError(r.Context(), w, response.GetError())
 		return

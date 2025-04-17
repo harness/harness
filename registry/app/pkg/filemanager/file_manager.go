@@ -38,6 +38,8 @@ const (
 	files          = "files"
 	nodeLimit      = 1000
 	pathFormat     = "for path: %s, with error %w"
+
+	failedToGetFile = "failed to get the file for path: %s, with error %w"
 )
 
 func NewFileManager(
@@ -68,48 +70,48 @@ type FileManager struct {
 func (f *FileManager) UploadFile(
 	ctx context.Context,
 	filePath string,
-	regName string,
 	regID int64,
 	rootParentID int64,
 	rootIdentifier string,
 	file multipart.File,
 	fileReader io.Reader,
-	filename string,
+	fileName string,
 ) (types.FileInfo, error) {
 	// uploading the file to temporary path in file storage
-	blobContext := f.App.GetBlobsContext(ctx, regName, rootIdentifier)
-	pathUUID := uuid.NewString()
-	tmpPath := path.Join(rootPathString, rootIdentifier, tmp, pathUUID)
-	fw, err := blobContext.genericBlobStore.Create(ctx, tmpPath)
-
+	blobContext := f.App.GetBlobsContext(ctx, rootIdentifier)
+	tmpFileName := uuid.NewString()
+	fileInfo, tmpPath, err := f.uploadTempFileInternal(ctx, blobContext, rootIdentifier,
+		file, fileName, fileReader, tmpFileName)
 	if err != nil {
-		log.Error().Msgf("failed to initiate the file upload for file with"+
-			" name : %s with error : %s", filename, err.Error())
-		return types.FileInfo{}, fmt.Errorf("failed to initiate the file upload "+
-			"for file with name : %s with error : %w", filename, err)
+		return fileInfo, err
 	}
-	defer fw.Close()
+	fileInfo.Filename = fileName
 
-	fileInfo, err := blobContext.genericBlobStore.Write(ctx, fw, file, fileReader)
+	err = f.moveFile(ctx, rootIdentifier, fileInfo, blobContext, tmpPath)
 	if err != nil {
-		log.Error().Msgf("failed to upload the file on temparary location"+
-			" with name : %s with error : %s", filename, err.Error())
-		return types.FileInfo{}, fmt.Errorf("failed to upload the file on temparary "+
-			"location with name : %s with error : %w", filename, err)
-	}
-	fileInfo.Filename = filename
-
-	// Moving the file to permanent path in file storage
-	fileStoragePath := path.Join(rootPathString, rootIdentifier, files, fileInfo.Sha256)
-	err = blobContext.genericBlobStore.Move(ctx, tmpPath, fileStoragePath)
-
-	if err != nil {
-		log.Error().Msgf("failed to Move the file on permanent location "+
-			"with name : %s with error : %s", filename, err.Error())
-		return types.FileInfo{}, fmt.Errorf("failed to Move the file on permanent"+
-			" location with name : %s with error : %w", filename, err)
+		return fileInfo, err
 	}
 
+	blobID, created, err := f.dbSaveFile(ctx, filePath, regID, rootParentID, fileInfo)
+	if err != nil {
+		return fileInfo, err
+	}
+
+	// Emit blob create event
+	if created {
+		event.ReportEventAsync(ctx, rootIdentifier, f.reporter, event.BlobCreate, 0, blobID, fileInfo.Sha256,
+			f.App.Config)
+	}
+	return fileInfo, nil
+}
+
+func (f *FileManager) dbSaveFile(
+	ctx context.Context,
+	filePath string,
+	regID int64,
+	rootParentID int64,
+	fileInfo types.FileInfo,
+) (string, bool, error) {
 	// Saving in the generic blobs table
 	var blobID = ""
 	gb := &types.GenericBlob{
@@ -120,12 +122,11 @@ func (f *FileManager) UploadFile(
 		MD5:          fileInfo.MD5,
 		Size:         fileInfo.Size,
 	}
-	var created bool
-	created, err = f.genericBlobDao.Create(ctx, gb)
+	created, err := f.genericBlobDao.Create(ctx, gb)
 	if err != nil {
 		log.Error().Msgf("failed to save generic blob in db with "+
 			"sha256 : %s, err: %s", fileInfo.Sha256, err.Error())
-		return types.FileInfo{}, fmt.Errorf("failed to save generic blob"+
+		return "", false, fmt.Errorf("failed to save generic blob"+
 			" in db with sha256 : %s, err: %w", fileInfo.Sha256, err)
 	}
 	blobID = gb.ID
@@ -139,17 +140,31 @@ func (f *FileManager) UploadFile(
 	})
 	if err != nil {
 		log.Error().Msgf("failed to save nodes for file : %s, with "+
-			"path : %s, err: %s", filename, filePath, err)
-		return types.FileInfo{}, fmt.Errorf("failed to save nodes for"+
-			" file : %s, with path : %s, err: %w", filename, filePath, err)
+			"path : %s, err: %s", fileInfo.Filename, filePath, err)
+		return "", false, fmt.Errorf("failed to save nodes for"+
+			" file : %s, with path : %s, err: %w", fileInfo.Filename, filePath, err)
 	}
+	return blobID, created, nil
+}
 
-	// Emit blob create event
-	if created {
-		event.ReportEventAsync(ctx, rootIdentifier, f.reporter, event.BlobCreate, 0, blobID, fileInfo.Sha256,
-			f.App.Config)
+func (f *FileManager) moveFile(
+	ctx context.Context,
+	rootIdentifier string,
+	fileInfo types.FileInfo,
+	blobContext *Context,
+	tmpPath string,
+) error {
+	// Moving the file to permanent path in file storage
+	fileStoragePath := path.Join(rootPathString, rootIdentifier, files, fileInfo.Sha256)
+	err := blobContext.genericBlobStore.Move(ctx, tmpPath, fileStoragePath)
+
+	if err != nil {
+		log.Error().Msgf("failed to Move the file on permanent location "+
+			"with name : %s with error : %s", fileInfo.Filename, err.Error())
+		return fmt.Errorf("failed to Move the file on permanent"+
+			" location with name : %s with error : %w", fileInfo.Filename, err)
 	}
-	return fileInfo, nil
+	return nil
 }
 
 func (f *FileManager) createNodes(ctx context.Context, filePath string, blobID string, regID int64) error {
@@ -226,13 +241,11 @@ func (f *FileManager) DownloadFile(
 	}
 
 	completeFilaPath := path.Join(rootPathString + rootIdentifier + rootPathString + files + rootPathString + blob.Sha256)
-	//
-	blobContext := f.App.GetBlobsContext(ctx, registryIdentifier, rootIdentifier)
+	blobContext := f.App.GetBlobsContext(ctx, rootIdentifier)
 	reader, redirectURL, err := blobContext.genericBlobStore.Get(ctx, completeFilaPath, blob.Size)
 
 	if err != nil {
-		return nil, 0, "", fmt.Errorf("failed to get the file for path: %s, "+
-			" with error %w", completeFilaPath, err)
+		return nil, 0, "", fmt.Errorf(failedToGetFile, completeFilaPath, err)
 	}
 
 	if redirectURL != "" {
@@ -347,4 +360,98 @@ func (f *FileManager) CountFilesByPath(
 	}
 
 	return count, nil
+}
+
+func (f *FileManager) UploadTempFile(
+	ctx context.Context,
+	rootIdentifier string,
+	file multipart.File,
+	fileName string,
+	fileReader io.Reader,
+) (types.FileInfo, string, error) {
+	blobContext := f.App.GetBlobsContext(ctx, rootIdentifier)
+	tempFileName := uuid.NewString()
+	fileInfo, _, err := f.uploadTempFileInternal(ctx, blobContext, rootIdentifier,
+		file, fileName, fileReader, tempFileName)
+	if err != nil {
+		return fileInfo, tempFileName, err
+	}
+	return fileInfo, tempFileName, nil
+}
+
+func (f *FileManager) uploadTempFileInternal(
+	ctx context.Context,
+	blobContext *Context,
+	rootIdentifier string,
+	file multipart.File,
+	fileName string,
+	fileReader io.Reader,
+	tempFileName string,
+) (types.FileInfo, string, error) {
+	tmpPath := path.Join(rootPathString, rootIdentifier, tmp, tempFileName)
+	fw, err := blobContext.genericBlobStore.Create(ctx, tmpPath)
+
+	if err != nil {
+		log.Error().Msgf("failed to initiate the file upload for file with"+
+			" name : %s with error : %s", fileName, err.Error())
+		return types.FileInfo{}, tmpPath, fmt.Errorf("failed to initiate the file upload "+
+			"for file with name : %s with error : %w", fileName, err)
+	}
+	defer fw.Close()
+
+	fileInfo, err := blobContext.genericBlobStore.Write(ctx, fw, file, fileReader)
+	if err != nil {
+		log.Error().Msgf("failed to upload the file on temparary location"+
+			" with name : %s with error : %s", fileName, err.Error())
+		return types.FileInfo{}, tmpPath, fmt.Errorf("failed to upload the file on temparary "+
+			"location with name : %s with error : %w", fileName, err)
+	}
+	return fileInfo, tmpPath, nil
+}
+
+func (f *FileManager) DownloadTempFile(
+	ctx context.Context,
+	fileSize int64,
+	fileName string,
+	rootIdentifier string,
+) (fileReader *storage.FileReader, size int64, err error) {
+	tmpPath := path.Join(rootPathString, rootIdentifier, tmp, fileName)
+	blobContext := f.App.GetBlobsContext(ctx, rootIdentifier)
+	reader, err := blobContext.genericBlobStore.GetWithNoRedirect(ctx, tmpPath, fileSize)
+	if err != nil {
+		return nil, 0, fmt.Errorf(failedToGetFile, tmpPath, err)
+	}
+
+	return reader, fileSize, nil
+}
+
+func (f *FileManager) MoveTempFile(
+	ctx context.Context,
+	filePath string,
+	regID int64,
+	rootParentID int64,
+	rootIdentifier string,
+	fileInfo types.FileInfo,
+	tempFileName string,
+) error {
+	// uploading the file to temporary path in file storage
+	blobContext := f.App.GetBlobsContext(ctx, rootIdentifier)
+	tmpPath := path.Join(rootPathString, rootIdentifier, tmp, tempFileName)
+
+	err := f.moveFile(ctx, rootIdentifier, fileInfo, blobContext, tmpPath)
+	if err != nil {
+		return err
+	}
+
+	blobID, created, err := f.dbSaveFile(ctx, filePath, regID, rootParentID, fileInfo)
+	if err != nil {
+		return err
+	}
+
+	// Emit blob create event
+	if created {
+		event.ReportEventAsync(ctx, rootIdentifier, f.reporter, event.BlobCreate, 0, blobID, fileInfo.Sha256,
+			f.App.Config)
+	}
+	return nil
 }

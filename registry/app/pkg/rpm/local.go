@@ -90,41 +90,39 @@ func (c *localRegistry) GetPackageTypes() []artifact.PackageType {
 func (c *localRegistry) UploadPackageFile(
 	ctx context.Context,
 	info rpmtype.ArtifactInfo,
-	file multipart.File,
+	file multipart.Part,
+	fileName string,
 ) (headers *commons.ResponseHeaders, sha256 string, err error) {
-	buf, err := CreateHashedBufferFromReader(file)
+	fileInfo, tempFileName, err := c.fileManager.UploadTempFile(ctx, info.RootIdentifier, nil, fileName, &file)
 	if err != nil {
 		return nil, "", err
 	}
-	defer buf.Close()
+	r, _, err := c.fileManager.DownloadTempFile(ctx, fileInfo.Size, tempFileName, info.RootIdentifier)
+	if err != nil {
+		return nil, "", err
+	}
+	defer r.Close()
 
-	pkg, err := parsePackage(buf)
+	p, err := parsePackage(r)
 	if err != nil {
 		log.Printf("failded to parse rpm package: %v", err)
 		return nil, "", err
 	}
 
-	if _, err := buf.Seek(0, io.SeekStart); err != nil {
-		return nil, "", err
-	}
-
-	info.Image = pkg.Name
-	info.Version = pkg.Version + "." + pkg.FileMetadata.Architecture
+	info.Image = p.Name
+	info.Version = p.Version + "." + p.FileMetadata.Architecture
 	info.Metadata = rpmmetadata.Metadata{
-		VersionMetadata: *pkg.VersionMetadata,
-		FileMetadata:    *pkg.FileMetadata,
+		VersionMetadata: *p.VersionMetadata,
+		FileMetadata:    *p.FileMetadata,
 	}
 
-	fileName := fmt.Sprintf("%s-%s.%s.rpm", pkg.Name, pkg.Version, pkg.FileMetadata.Architecture)
-	if info.FileName == "" {
-		info.FileName = fileName
-	}
-
-	path := fmt.Sprintf("%s/%s/%s/%s", pkg.Name, pkg.Version, pkg.FileMetadata.Architecture, fileName)
-	rs, sha256, err := c.localBase.Upload(ctx, info.ArtifactInfo, fileName, info.Version, path, buf,
+	rpmFileName := fmt.Sprintf("%s-%s.%s.rpm", p.Name, p.Version, p.FileMetadata.Architecture)
+	path := fmt.Sprintf("%s/%s/%s/%s", p.Name, p.Version, p.FileMetadata.Architecture, rpmFileName)
+	fileInfo.Filename = rpmFileName
+	rs, sha256, err := c.localBase.MoveTempFile(ctx, info.ArtifactInfo, tempFileName, info.Version, path,
 		&rpmmetadata.RpmMetadata{
 			Metadata: info.Metadata,
-		})
+		}, fileInfo)
 
 	if err != nil {
 		return nil, "", err

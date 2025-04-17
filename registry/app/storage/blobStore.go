@@ -33,14 +33,9 @@ import (
 )
 
 type genericBlobStore struct {
-	repoKey       string
 	driver        driver.StorageDriver
 	rootParentRef string
 	redirect      bool
-}
-
-func (bs *genericBlobStore) Info() string {
-	return bs.rootParentRef + " " + bs.repoKey
 }
 
 func (bs *genericBlobStore) Get(ctx context.Context, filePath string, size int64) (*FileReader, string, error) {
@@ -63,6 +58,16 @@ func (bs *genericBlobStore) Get(ctx context.Context, filePath string, size int64
 		return nil, "", err
 	}
 	return br, "", nil
+}
+
+func (bs *genericBlobStore) GetWithNoRedirect(ctx context.Context, filePath string, size int64) (*FileReader, error) {
+	dcontext.GetLogger(ctx, log.Ctx(ctx).Debug()).Msg("(*genericBlobStore).Get")
+
+	br, err := NewFileReader(ctx, bs.driver, filePath, size)
+	if err != nil {
+		return nil, err
+	}
+	return br, nil
 }
 
 var _ GenericBlobStore = &genericBlobStore{}

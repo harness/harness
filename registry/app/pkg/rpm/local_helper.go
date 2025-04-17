@@ -91,7 +91,7 @@ func (l *localRegistryHelper) BuildRegistryFiles(ctx context.Context, info rpmty
 	if err != nil {
 		return err
 	}
-	fileLists, err := l.buildFilelists(ctx, packageInfos, info)
+	fileLists, err := l.buildFileLists(ctx, packageInfos, info)
 	if err != nil {
 		return err
 	}
@@ -212,7 +212,7 @@ func (l *localRegistryHelper) buildOther(
 	}, info)
 }
 
-func (l *localRegistryHelper) buildFilelists(
+func (l *localRegistryHelper) buildFileLists(
 	ctx context.Context,
 	pds []*packageInfo,
 	info rpmtype.ArtifactInfo,
@@ -256,7 +256,7 @@ func (l *localRegistryHelper) buildRepomd(
 	repomdContent, _ := CreateHashedBufferFromReader(&buf)
 	defer repomdContent.Close()
 
-	_, err := l.fileManager.UploadFile(ctx, RepoDataPrefix+RepoMdFile, info.RegIdentifier, info.RegistryID,
+	_, err := l.fileManager.UploadFile(ctx, RepoDataPrefix+RepoMdFile, info.RegistryID,
 		info.RootParentID, info.RootIdentifier, repomdContent, repomdContent, RepoMdFile)
 	if err != nil {
 		return err
@@ -289,7 +289,7 @@ func (l *localRegistryHelper) addDataAsFileToRepo(
 	}
 
 	filename := filetype + ".xml.gz"
-	_, err := l.fileManager.UploadFile(ctx, RepoDataPrefix+filename, info.RegIdentifier, info.RegistryID,
+	_, err := l.fileManager.UploadFile(ctx, RepoDataPrefix+filename, info.RegistryID,
 		info.RootParentID, info.RootIdentifier, content, content, filename)
 	if err != nil {
 		return nil, err

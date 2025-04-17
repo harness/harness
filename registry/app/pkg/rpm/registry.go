@@ -31,7 +31,8 @@ type Registry interface {
 	UploadPackageFile(
 		ctx context.Context,
 		info rpm.ArtifactInfo,
-		file multipart.File,
+		file multipart.Part,
+		fileName string,
 	) (*commons.ResponseHeaders, string, error)
 
 	DownloadPackageFile(ctx context.Context, info rpm.ArtifactInfo) (

@@ -62,6 +62,15 @@ type LocalBase interface {
 		file io.ReadCloser,
 		metadata metadata.Metadata,
 	) (*commons.ResponseHeaders, string, error)
+	MoveTempFile(
+		ctx context.Context,
+		info pkg.ArtifactInfo,
+		tempFileName,
+		version,
+		path string,
+		metadata metadata.Metadata,
+		fileInfo types.FileInfo,
+	) (*commons.ResponseHeaders, string, error)
 	Download(ctx context.Context, info pkg.ArtifactInfo, version string, fileName string) (
 		*commons.ResponseHeaders,
 		*storage.FileReader,
@@ -132,6 +141,52 @@ func (l *localBase) Upload(
 	return l.uploadInternal(ctx, info, fileName, version, path, nil, file, metadata)
 }
 
+func (l *localBase) MoveTempFile(
+	ctx context.Context,
+	info pkg.ArtifactInfo,
+	tempFileName,
+	version,
+	path string,
+	metadata metadata.Metadata,
+	fileInfo types.FileInfo,
+) (*commons.ResponseHeaders, string, error) {
+	responseHeaders := &commons.ResponseHeaders{
+		Headers: make(map[string]string),
+		Code:    0,
+	}
+
+	err := l.CheckIfFileAlreadyExist(ctx, info, version, metadata, fileInfo.Filename)
+	if err != nil {
+		if !errors.IsConflict(err) {
+			return nil, "", err
+		}
+		_, sha256, err2 := l.GetSHA256ByPath(ctx, info.RegistryID, path)
+		if err2 != nil {
+			return responseHeaders, "", err2
+		}
+
+		responseHeaders.Code = http.StatusCreated
+		return responseHeaders, sha256, nil
+	}
+
+	registry, err := l.registryDao.GetByRootParentIDAndName(ctx, info.RootParentID, info.RegIdentifier)
+	if err != nil {
+		return responseHeaders, "", errcode.ErrCodeUnknown.WithDetail(err)
+	}
+	err = l.fileManager.MoveTempFile(ctx, path, registry.ID,
+		info.RootParentID, info.RootIdentifier, fileInfo, tempFileName)
+	if err != nil {
+		return responseHeaders, "", errcode.ErrCodeUnknown.WithDetail(err)
+	}
+
+	err = l.postUploadArtifact(ctx, info, registry, version, metadata, fileInfo)
+	if err != nil {
+		return responseHeaders, "", err
+	}
+	responseHeaders.Code = http.StatusCreated
+	return responseHeaders, fileInfo.Sha256, nil
+}
+
 func (l *localBase) uploadInternal(
 	ctx context.Context,
 	info pkg.ArtifactInfo,
@@ -166,12 +221,28 @@ func (l *localBase) uploadInternal(
 	if err != nil {
 		return responseHeaders, "", errcode.ErrCodeUnknown.WithDetail(err)
 	}
-	fileInfo, err := l.fileManager.UploadFile(ctx, path, info.RegIdentifier, registry.ID,
+	fileInfo, err := l.fileManager.UploadFile(ctx, path, registry.ID,
 		info.RootParentID, info.RootIdentifier, file, fileReadCloser, fileName)
 	if err != nil {
 		return responseHeaders, "", errcode.ErrCodeUnknown.WithDetail(err)
 	}
-	err = l.tx.WithTx(
+	err = l.postUploadArtifact(ctx, info, registry, version, metadata, fileInfo)
+	if err != nil {
+		return responseHeaders, "", err
+	}
+	responseHeaders.Code = http.StatusCreated
+	return responseHeaders, fileInfo.Sha256, nil
+}
+
+func (l *localBase) postUploadArtifact(
+	ctx context.Context,
+	info pkg.ArtifactInfo,
+	registry *types.Registry,
+	version string,
+	metadata metadata.Metadata,
+	fileInfo types.FileInfo,
+) error {
+	return l.tx.WithTx(
 		ctx, func(ctx context.Context) error {
 			image := &types.Image{
 				Name:       info.Image,
@@ -210,12 +281,6 @@ func (l *localBase) uploadInternal(
 			}
 			return nil
 		})
-
-	if err != nil {
-		return responseHeaders, "", err
-	}
-	responseHeaders.Code = http.StatusCreated
-	return responseHeaders, fileInfo.Sha256, nil
 }
 
 func (l *localBase) Download(
@@ -266,6 +331,20 @@ func (l *localBase) GetSHA256(ctx context.Context, info pkg.ArtifactInfo, versio
 ) {
 	filePath := "/" + info.Image + "/" + version + "/" + fileName
 	sha256, err = l.fileManager.HeadFile(ctx, filePath, info.RegistryID)
+	if err != nil {
+		return false, "", err
+	}
+
+	//FIXME: err should be checked on if the record doesn't exist or there was DB call issue
+	return true, sha256, err
+}
+
+func (l *localBase) GetSHA256ByPath(ctx context.Context, registryID int64, filePath string) (
+	exists bool,
+	sha256 string,
+	err error,
+) {
+	sha256, err = l.fileManager.HeadFile(ctx, "/"+filePath, registryID)
 	if err != nil {
 		return false, "", err
 	}

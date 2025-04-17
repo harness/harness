@@ -351,7 +351,7 @@ func (a ArtifactDao) GetAllArtifactsByParentID(
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
 		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
 	}
-	return a.mapToArtifactMetadataList(ctx, dst)
+	return a.mapToArtifactMetadataList(dst)
 }
 
 func (a ArtifactDao) CountAllArtifactsByParentID(
@@ -468,7 +468,7 @@ func (a ArtifactDao) GetArtifactsByRepo(
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
 		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
 	}
-	return a.mapToArtifactMetadataList(ctx, dst)
+	return a.mapToArtifactMetadataList(dst)
 }
 
 // nolint:goconst
@@ -590,16 +590,15 @@ func (a ArtifactDao) GetLatestArtifactMetadata(
 		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to get tag detail")
 	}
 
-	return a.mapToArtifactMetadata(ctx, dst)
+	return a.mapToArtifactMetadata(dst)
 }
 
 func (a ArtifactDao) mapToArtifactMetadataList(
-	ctx context.Context,
 	dst []*artifactMetadataDB,
 ) (*[]types.ArtifactMetadata, error) {
 	artifacts := make([]types.ArtifactMetadata, 0, len(dst))
 	for _, d := range dst {
-		artifact, err := a.mapToArtifactMetadata(ctx, d)
+		artifact, err := a.mapToArtifactMetadata(d)
 		if err != nil {
 			return nil, err
 		}
@@ -747,7 +746,7 @@ func (a ArtifactDao) GetArtifactMetadata(
 		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to get artifact metadata")
 	}
 
-	return a.mapToArtifactMetadata(ctx, dst)
+	return a.mapToArtifactMetadata(dst)
 }
 
 func (a ArtifactDao) GetAllArtifactsByRepo(
@@ -776,14 +775,13 @@ func (a ArtifactDao) GetAllArtifactsByRepo(
 		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing GetAllArtifactsByRepo query")
 	}
 
-	return a.mapToArtifactMetadataList(ctx, dst)
+	return a.mapToArtifactMetadataList(dst)
 }
 
 func (a ArtifactDao) mapToArtifactMetadata(
-	_ context.Context,
 	dst *artifactMetadataDB,
 ) (*types.ArtifactMetadata, error) {
-	return &types.ArtifactMetadata{
+	artifactMetadata := &types.ArtifactMetadata{
 		ID:            dst.ID,
 		Name:          dst.Name,
 		RepoName:      dst.RepoName,
@@ -794,8 +792,11 @@ func (a ArtifactDao) mapToArtifactMetadata(
 		CreatedAt:     time.UnixMilli(dst.CreatedAt),
 		ModifiedAt:    time.UnixMilli(dst.ModifiedAt),
 		Version:       dst.Version,
-		Metadata:      *dst.Metadata,
-	}, nil
+	}
+	if dst.Metadata != nil {
+		artifactMetadata.Metadata = *dst.Metadata
+	}
+	return artifactMetadata, nil
 }
 
 func (a ArtifactDao) mapToNonOCIMetadata(

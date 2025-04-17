@@ -45,7 +45,7 @@ func NewApp(
 		Config:         cfg,
 		storageService: storageService,
 	}
-	app.configureSecret(cfg)
+	app.configureSecret(cfg) //nolint:contextcheck
 	return app
 }
 
@@ -69,12 +69,12 @@ func (app *App) configureSecret(configuration *types.Config) {
 
 // GetBlobsContext context constructs the context object for the application. This only be
 // called once per request.
-func (app *App) GetBlobsContext(c context.Context, regID string, rootIdentifier string) *Context {
+func (app *App) GetBlobsContext(c context.Context, rootIdentifier string) *Context {
 	context := &Context{
 		App:     app,
 		Context: c,
 	}
-	blobStore := app.storageService.GenericBlobsStore(regID, rootIdentifier)
+	blobStore := app.storageService.GenericBlobsStore(rootIdentifier)
 	context.genericBlobStore = blobStore
 
 	return context
