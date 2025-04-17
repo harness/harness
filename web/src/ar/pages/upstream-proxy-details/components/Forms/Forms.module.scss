@@ -26,3 +26,12 @@
   --page-header-height: 100px;
   background-color: #fafcff !important;
 }
+
+.thumbnailContainer {
+  flex-wrap: wrap;
+  gap: var(--spacing-medium);
+}
+
+.thumbnailCard {
+  position: relative;
+}

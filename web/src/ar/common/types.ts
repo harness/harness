@@ -52,7 +52,12 @@ export enum RepositoryPackageType {
   NPM = 'NPM',
   GRADLE = 'GRADLE',
   PYTHON = 'PYTHON',
-  NUGET = 'NUGET'
+  NUGET = 'NUGET',
+  RPM = 'RPM',
+  GO = 'GO',
+  DEBIAN = 'DEBIAN',
+  RUST = 'RUST',
+  ALPINE = 'ALPINE'
 }
 
 export enum RepositoryConfigType {

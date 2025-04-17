@@ -33,9 +33,28 @@
 }
 
 .tag {
-  font-size: 10px;
+  font-size: var(--font-size-xsmall);
   font-weight: 700;
   line-height: 15px;
+  border-radius: 4px;
+}
+
+.newTag {
+  background-color: var(--primary-2) !important;
+  border-color: var(--primary-2) !important;
+  color: var(--primary-7) !important;
+}
+
+.comingSoonTag {
+  background-color: var(--purple-50) !important;
+  border-color: var(--purple-50) !important;
+  color: var(--purple-800) !important;
+}
+
+.betaTag {
+  background-color: var(--yellow-200) !important;
+  border-color: var(--yellow-200) !important;
+  color: var(--orange-800) !important;
 }
 
 .prodTag {

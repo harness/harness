@@ -42,6 +42,7 @@ import {
   UpstreamRegistryRequest
 } from '@ar/pages/upstream-proxy-details/types'
 
+import ThumbnailLabel from '@ar/components/ThumbnailLabel/ThumbnailLabel'
 import CreateRepositoryWidget from '@ar/frameworks/RepositoryStep/CreateRepositoryWidget'
 import repositoryFactory from '@ar/frameworks/RepositoryStep/RepositoryFactory'
 import { getFormattedFormDataForCleanupPolicy } from '@ar/components/CleanupPolicyList/utils'
@@ -77,9 +78,15 @@ function FormContent(props: FormContentProps): JSX.Element {
         <Container>
           <ThumbnailSelect
             name="packageType"
+            layoutProps={{
+              spacing: 'none',
+              className: css.thumbnailContainer
+            }}
+            cornerSelected={false}
+            thumbnailClassName={css.thumbnailCard}
             items={packageTypeList.map(each => ({
               ...each,
-              label: getString(each.label)
+              label: <ThumbnailLabel disabled={each.disabled} label={getString(each.label)} tag={each.tag} />
             }))}
             staticItems
             onChange={(val: UpstreamProxyPackageType) => {

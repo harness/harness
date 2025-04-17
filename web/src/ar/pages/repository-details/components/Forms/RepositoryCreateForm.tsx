@@ -44,6 +44,7 @@ import { Separator } from '@ar/components/Separator/Separator'
 import type { Repository, VirtualRegistryRequest } from '@ar/pages/repository-details/types'
 import { getFormattedFormDataForCleanupPolicy } from '@ar/components/CleanupPolicyList/utils'
 import { useGetRepositoryTypes } from '@ar/hooks/useGetRepositoryTypes'
+import ThumbnailLabel from '@ar/components/ThumbnailLabel/ThumbnailLabel'
 
 import css from './RepositoryDetailsForm.module.scss'
 
@@ -78,9 +79,15 @@ function FormContent(props: FormContentProps): JSX.Element {
         <Container>
           <ThumbnailSelect
             name="packageType"
+            layoutProps={{
+              spacing: 'none',
+              className: css.thumbnailContainer
+            }}
+            cornerSelected={false}
+            thumbnailClassName={css.thumbnailCard}
             items={repositoryTypes.map(each => ({
               ...each,
-              label: getString(each.label),
+              label: <ThumbnailLabel disabled={each.disabled} label={getString(each.label)} tag={each.tag} />,
               disabled: allowedPackageTypes?.length ? !allowedPackageTypes.includes(each.value) : each.disabled
             }))}
             staticItems

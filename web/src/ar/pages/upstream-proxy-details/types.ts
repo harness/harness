@@ -24,7 +24,12 @@ export enum UpstreamProxyPackageType {
   MAVEN = 'MAVEN',
   NPM = 'NPM',
   PYTHON = 'PYTHON',
-  NUGET = 'NUGET'
+  NUGET = 'NUGET',
+  RPM = 'RPM',
+  GO = 'GO',
+  DEBIAN = 'DEBIAN',
+  RUST = 'RUST',
+  ALPINE = 'ALPINE'
 }
 
 export enum UpstreamRepositoryURLInputSource {

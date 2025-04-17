@@ -311,6 +311,7 @@ export interface StringsMap {
   all: string
   'badges.artifactRegistry': string
   'badges.upstreamProxy': string
+  beta: string
   'breadcrumbs.artifacts': string
   'breadcrumbs.repositories': string
   'breadcrumbs.upstreamProxies': string
@@ -367,20 +368,26 @@ export interface StringsMap {
   plusNewName: string
   prod: string
   prodCount: string
+  'repositoryTypes.alpine': string
+  'repositoryTypes.debian': string
   'repositoryTypes.docker': string
   'repositoryTypes.generic': string
+  'repositoryTypes.go': string
   'repositoryTypes.gradle': string
   'repositoryTypes.helm': string
   'repositoryTypes.maven': string
   'repositoryTypes.npm': string
   'repositoryTypes.nuget': string
   'repositoryTypes.pypi': string
+  'repositoryTypes.rpm': string
+  'repositoryTypes.rust': string
   retriableError: string
   save: string
   search: string
   'sideNav.artifacts': string
   'sideNav.repositories': string
   'sideNav.upstreamProxies': string
+  soon: string
   stepNotFound: string
   success: string
   tabNotFound: string

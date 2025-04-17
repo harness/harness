@@ -1921,10 +1921,10 @@
   resolved "https://registry.npmjs.org/@harnessio/design-system/-/design-system-2.1.1.tgz#2da3036602ed9b9446d8139c72009e6dc1e25642"
   integrity sha512-ZwAGM1srOZ49/6YkwyjkczUv4v91CN0rCecRYnV3/g+xdSV5ycrUvkJjl9nHub6jw2eCGC0GdyNgAtAJnLmGfQ==
 
-"@harnessio/icons@^2.1.9":
-  version "2.1.10"
-  resolved "https://registry.yarnpkg.com/@harnessio/icons/-/icons-2.1.10.tgz#2a849fbf41a00e2b0dac016bec74f9166e6e6fa2"
-  integrity sha512-LArSZWVxYUqkOM228t/fHUnws3PtVayBbqx+4zKODsbCpr4GdFDX/CIel6hpKREknk4YdfZvjeSBjvuLOw+KjQ==
+"@harnessio/icons@^2.1.12":
+  version "2.1.12"
+  resolved "https://registry.yarnpkg.com/@harnessio/icons/-/icons-2.1.12.tgz#3fa50c49b8c81013ca867681bccd343fdb973c1b"
+  integrity sha512-FVwaIOBrc5xj2j+84j8Up1jaGuu6UsUzXcG30Td0ZEBZVqR0Lgz6KoVwIheT0uVjC3cqjvBN6+Z+Im3HrWnH0w==
 
 "@harnessio/oats-cli@^3.0.0":
   version "3.0.0"
@@ -1962,10 +1962,10 @@
   resolved "https://registry.yarnpkg.com/@harnessio/react-ssca-manager-client/-/react-ssca-manager-client-0.65.0.tgz#8088869e282c5268bf1fefb9715652e0fc1a8940"
   integrity sha512-sNLDf1lyBfdzD9TqlrsMib61YffrEpb5WJwhRKuPGKD9Po0peAqE6NGLHVFbyra4tRGvvg8gnNpzzp4hMBYeCQ==
 
-"@harnessio/uicore@^4.1.2":
-  version "4.1.2"
-  resolved "https://registry.npmjs.org/@harnessio/uicore/-/uicore-4.1.2.tgz#731c8da3f53531b90f5b5cde4589b248129ef306"
-  integrity sha512-xlV47pFpVd5LHBarMm18xgveUxoss5qpHhHAg8FKnfr6S+gy5OgfAsqWJAIiOCaUmwRbEvT/pAZeAQGh6fFUCA==
+"@harnessio/uicore@^4.2.0":
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/@harnessio/uicore/-/uicore-4.2.0.tgz#4ce930b2832fe406a91a963f417215e098e56326"
+  integrity sha512-jb5kRQgrrdcYfuECmk9Zn1u7K8b0L81l0HKuiZsmqOpc7dhM/zCrSc4zLTHxfmi1iUB/VULRhKnekxjU4ChpHQ==
 
 "@humanwhocodes/config-array@^0.5.0":
   version "0.5.0"

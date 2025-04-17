@@ -18,6 +18,7 @@ import type { IconName } from '@harnessio/icons'
 
 import { FeatureFlags } from '@ar/MFEAppTypes'
 import type { StringsMap } from '@ar/frameworks/strings'
+import { ThumbnailTagEnum } from '@ar/components/Tag/ThumbnailTags'
 import { UpstreamProxyPackageType } from '@ar/pages/upstream-proxy-details/types'
 
 import { useFeatureFlags } from './useFeatureFlag'
@@ -29,6 +30,7 @@ export interface UpstreamRepositoryPackageTypeListItem {
   disabled?: boolean
   tooltip?: string
   featureFlag?: FeatureFlags
+  tag?: ThumbnailTagEnum
 }
 
 export const useGetUpstreamRepositoryPackageTypes = (): UpstreamRepositoryPackageTypeListItem[] => {
@@ -65,12 +67,14 @@ export const UpstreamProxyPackageTypeList: UpstreamRepositoryPackageTypeListItem
   {
     label: 'repositoryTypes.pypi',
     value: UpstreamProxyPackageType.PYTHON,
-    icon: 'python'
+    icon: 'python',
+    tag: ThumbnailTagEnum.Beta
   },
   {
     label: 'repositoryTypes.npm',
     value: UpstreamProxyPackageType.NPM,
-    icon: 'npm-repository-type'
+    icon: 'npm-repository-type',
+    tag: ThumbnailTagEnum.Beta
   },
   {
     label: 'repositoryTypes.nuget',
@@ -78,6 +82,47 @@ export const UpstreamProxyPackageTypeList: UpstreamRepositoryPackageTypeListItem
     icon: 'nuget-repository-type',
     tooltip: 'Coming Soon!',
     featureFlag: FeatureFlags.HAR_NUGET_PACKAGE_TYPE_ENABLED,
-    disabled: true
+    disabled: true,
+    tag: ThumbnailTagEnum.ComingSoon
+  },
+  {
+    label: 'repositoryTypes.rpm',
+    value: UpstreamProxyPackageType.RPM,
+    icon: 'red-hat-logo',
+    tooltip: 'Coming Soon!',
+    disabled: true,
+    tag: ThumbnailTagEnum.ComingSoon
+  },
+  {
+    label: 'repositoryTypes.go',
+    value: UpstreamProxyPackageType.GO,
+    icon: 'go-logo',
+    tooltip: 'Coming Soon!',
+    disabled: true,
+    tag: ThumbnailTagEnum.ComingSoon
+  },
+  {
+    label: 'repositoryTypes.debian',
+    value: UpstreamProxyPackageType.DEBIAN,
+    icon: 'debian-logo',
+    tooltip: 'Coming Soon!',
+    disabled: true,
+    tag: ThumbnailTagEnum.ComingSoon
+  },
+  {
+    label: 'repositoryTypes.alpine',
+    value: UpstreamProxyPackageType.ALPINE,
+    icon: 'alpine-logo',
+    tooltip: 'Coming Soon!',
+    disabled: true,
+    tag: ThumbnailTagEnum.ComingSoon
+  },
+  {
+    label: 'repositoryTypes.rust',
+    value: UpstreamProxyPackageType.RUST,
+    icon: 'rust-logo',
+    tooltip: 'Coming Soon!',
+    disabled: true,
+    tag: ThumbnailTagEnum.ComingSoon
   }
 ]

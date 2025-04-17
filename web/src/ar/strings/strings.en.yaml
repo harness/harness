@@ -22,6 +22,7 @@ dateLabel: Date
 timeLabel: Time
 harnessAI: Harness AI
 new: NEW
+beta: BETA
 harLabel: '{{ $.repositoryList.artifactRegistry.label }}'
 na: N/A
 success: Success
@@ -30,6 +31,7 @@ retriableError: Retriable Error
 unknown: Unknown
 cancel: Cancel
 comingSoon: Coming Soon.
+soon: SOON
 failedToLoadData: Failed to load data. Please try again!
 all: All
 noResultsFound: No results found
@@ -90,6 +92,11 @@ repositoryTypes:
   gradle: Gradle
   pypi: Python
   nuget: NuGet
+  rpm: RPM
+  go: Go
+  debian: Debian
+  rust: Rust
+  alpine: Alpine
 sideNav:
   repositories: '{{ $.repositoryList.pageHeading }}'
   artifacts: '{{ $.artifactList.pageHeading }}'

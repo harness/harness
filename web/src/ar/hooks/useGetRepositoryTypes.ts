@@ -18,6 +18,7 @@ import type { IconName } from '@harnessio/icons'
 import { FeatureFlags } from '@ar/MFEAppTypes'
 import type { StringsMap } from '@ar/frameworks/strings'
 import { RepositoryPackageType } from '@ar/common/types'
+import { ThumbnailTagEnum } from '@ar/components/Tag/ThumbnailTags'
 import { useFeatureFlags } from './useFeatureFlag'
 
 export interface RepositoryTypeListItem {
@@ -27,6 +28,7 @@ export interface RepositoryTypeListItem {
   disabled?: boolean
   tooltip?: string
   featureFlag?: FeatureFlags
+  tag?: ThumbnailTagEnum
 }
 
 export const useGetRepositoryTypes = (): RepositoryTypeListItem[] => {
@@ -68,12 +70,14 @@ const RepositoryTypes: RepositoryTypeListItem[] = [
   {
     label: 'repositoryTypes.pypi',
     value: RepositoryPackageType.PYTHON,
-    icon: 'python'
+    icon: 'python',
+    tag: ThumbnailTagEnum.Beta
   },
   {
     label: 'repositoryTypes.npm',
     value: RepositoryPackageType.NPM,
-    icon: 'npm-repository-type'
+    icon: 'npm-repository-type',
+    tag: ThumbnailTagEnum.Beta
   },
   {
     label: 'repositoryTypes.nuget',
@@ -81,6 +85,47 @@ const RepositoryTypes: RepositoryTypeListItem[] = [
     icon: 'nuget-repository-type',
     tooltip: 'Coming Soon!',
     featureFlag: FeatureFlags.HAR_NUGET_PACKAGE_TYPE_ENABLED,
-    disabled: true
+    disabled: true,
+    tag: ThumbnailTagEnum.ComingSoon
+  },
+  {
+    label: 'repositoryTypes.rpm',
+    value: RepositoryPackageType.RPM,
+    icon: 'red-hat-logo',
+    tooltip: 'Coming Soon!',
+    disabled: true,
+    tag: ThumbnailTagEnum.ComingSoon
+  },
+  {
+    label: 'repositoryTypes.go',
+    value: RepositoryPackageType.GO,
+    icon: 'go-logo',
+    tooltip: 'Coming Soon!',
+    disabled: true,
+    tag: ThumbnailTagEnum.ComingSoon
+  },
+  {
+    label: 'repositoryTypes.debian',
+    value: RepositoryPackageType.DEBIAN,
+    icon: 'debian-logo',
+    tooltip: 'Coming Soon!',
+    disabled: true,
+    tag: ThumbnailTagEnum.ComingSoon
+  },
+  {
+    label: 'repositoryTypes.alpine',
+    value: RepositoryPackageType.ALPINE,
+    icon: 'alpine-logo',
+    tooltip: 'Coming Soon!',
+    disabled: true,
+    tag: ThumbnailTagEnum.ComingSoon
+  },
+  {
+    label: 'repositoryTypes.rust',
+    value: RepositoryPackageType.RUST,
+    icon: 'rust-logo',
+    tooltip: 'Coming Soon!',
+    disabled: true,
+    tag: ThumbnailTagEnum.ComingSoon
   }
 ]

@@ -1,11 +1,11 @@
 /*
- * Copyright 2024 Harness, Inc.
+ * Copyright 2023 Harness, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,24 +14,6 @@
  * limitations under the License.
  */
 
-.pageBody {
-  --page-header-height: 200px;
-  background-color: #fafcff !important;
-}
-
-.thumbnailContainer {
-  flex-wrap: wrap;
-  gap: var(--spacing-medium);
-}
-
-.thumbnailCard {
-  position: relative;
-}
-
-.formContainer {
-  :global(.bp3-form-group .bp3-input),
-  :global(.bp3-form-group .bp3-input-group),
-  :global(.bp3-form-group .bp3-select-popover) {
-    width: var(--input-element-width);
-  }
-}
+/* eslint-disable */
+// This is an auto-generated file
+export declare const tag: string

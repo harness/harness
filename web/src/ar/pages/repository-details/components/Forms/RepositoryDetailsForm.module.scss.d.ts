@@ -18,3 +18,5 @@
 // This is an auto-generated file
 export declare const formContainer: string
 export declare const pageBody: string
+export declare const thumbnailCard: string
+export declare const thumbnailContainer: string
