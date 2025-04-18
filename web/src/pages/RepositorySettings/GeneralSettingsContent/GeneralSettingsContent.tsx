@@ -83,6 +83,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
     path: `/api/v1/repos/${repoMetadata?.path}/+/public-access`
   })
 
+  const { CODE_GIT_LFS_ENABLED } = hooks?.useFeatureFlags()
   const { data: generalSettingsData, refetch: refetchSettings } = useGet({
     path: `/api/v1/repos/${repoMetadata?.path}/+/settings/general`,
     queryParams: { routingId: routingId }
@@ -425,56 +426,58 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
                 </Layout.Horizontal>
               </Container>
             </Render>
-            <Container padding="medium" margin={{ bottom: 'medium' }} className={css.generalContainer}>
-              <Layout.Horizontal padding={{ bottom: 'medium' }}>
-                <Container className={css.label}>
-                  <Text color={Color.GREY_600} className={css.textSize} margin={{ top: 'medium' }}>
-                    {getString('generalSetting.features')}
-                  </Text>
-                </Container>
-                <Layout.Vertical spacing="small" padding={{ button: 'small', top: 'small' }}>
-                  <Container className={css.content}>
-                    <Layout.Horizontal flex={{ alignItems: 'center' }} spacing={'small'}>
-                      <FormInput.Toggle
-                        {...permissionProps(permEditResult, standalone)}
-                        key={'gitLFSEnabled'}
-                        style={{ margin: '0px' }}
-                        label=""
-                        name="gitLFSEnabled"
-                      />
-                      <Text color={Color.GREY_800} className={css.featureText}>
-                        {getString('generalSetting.gitLFSEnable')}
-                      </Text>
-                      <Text color={Color.GREY_500} className={css.featureText}>
-                        {getString('generalSetting.gitLFSEnableDesc')}
-                      </Text>
-                    </Layout.Horizontal>
-                    <Layout.Horizontal className={css.buttonContainer}>
-                      {generalSettingsData?.git_lfs_enabled !== formik.values.gitLFSEnabled ? (
-                        <Button
-                          margin={{ top: 'medium' }}
-                          type="submit"
-                          text={getString('save')}
-                          variation={ButtonVariation.PRIMARY}
-                          size={ButtonSize.SMALL}
-                          onClick={() => {
-                            updateGeneralSettings({ git_lfs_enabled: formik.values.gitLFSEnabled })
-                              .then(() => {
-                                showSuccess(getString('repoUpdate'))
-                                refetchSettings()
-                              })
-                              .catch(err => {
-                                showError(getErrorMessage(err))
-                              })
-                          }}
-                          {...permissionProps(permEditResult, standalone)}
-                        />
-                      ) : null}
-                    </Layout.Horizontal>
+            <Render when={standalone || CODE_GIT_LFS_ENABLED}>
+              <Container padding="medium" margin={{ bottom: 'medium' }} className={css.generalContainer}>
+                <Layout.Horizontal padding={{ bottom: 'medium' }}>
+                  <Container className={css.label}>
+                    <Text color={Color.GREY_600} className={css.textSize} margin={{ top: 'medium' }}>
+                      {getString('generalSetting.features')}
+                    </Text>
                   </Container>
-                </Layout.Vertical>
-              </Layout.Horizontal>
-            </Container>
+                  <Layout.Vertical spacing="small" padding={{ button: 'small', top: 'small' }}>
+                    <Container className={css.content}>
+                      <Layout.Horizontal flex={{ alignItems: 'center' }} spacing={'small'}>
+                        <FormInput.Toggle
+                          {...permissionProps(permEditResult, standalone)}
+                          key={'gitLFSEnabled'}
+                          style={{ margin: '0px' }}
+                          label=""
+                          name="gitLFSEnabled"
+                        />
+                        <Text color={Color.GREY_800} className={css.featureText}>
+                          {getString('generalSetting.gitLFSEnable')}
+                        </Text>
+                        <Text color={Color.GREY_500} className={css.featureText}>
+                          {getString('generalSetting.gitLFSEnableDesc')}
+                        </Text>
+                      </Layout.Horizontal>
+                      <Layout.Horizontal className={css.buttonContainer}>
+                        {generalSettingsData?.git_lfs_enabled !== formik.values.gitLFSEnabled ? (
+                          <Button
+                            margin={{ top: 'medium' }}
+                            type="submit"
+                            text={getString('save')}
+                            variation={ButtonVariation.PRIMARY}
+                            size={ButtonSize.SMALL}
+                            onClick={() => {
+                              updateGeneralSettings({ git_lfs_enabled: formik.values.gitLFSEnabled })
+                                .then(() => {
+                                  showSuccess(getString('repoUpdate'))
+                                  refetchSettings()
+                                })
+                                .catch(err => {
+                                  showError(getErrorMessage(err))
+                                })
+                            }}
+                            {...permissionProps(permEditResult, standalone)}
+                          />
+                        ) : null}
+                      </Layout.Horizontal>
+                    </Container>
+                  </Layout.Vertical>
+                </Layout.Horizontal>
+              </Container>
+            </Render>
             <Container padding="medium" margin={{ bottom: 'medium' }} className={css.generalContainer}>
               <Layout.Horizontal padding={{ bottom: 'medium' }}>
                 <Container className={css.label}>
