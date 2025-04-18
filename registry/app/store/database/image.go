@@ -217,6 +217,28 @@ func (i ImageDao) DeleteDownloadStatByRegistryID(ctx context.Context, registryID
 	return nil
 }
 
+func (i ImageDao) DeleteByImageNameIfNoLinkedArtifacts(
+	ctx context.Context, regID int64, image string,
+) error {
+	stmt := databaseg.Builder.Delete("images").
+		Where("image_name = ? AND image_registry_id = ?", image, regID).
+		Where("NOT EXISTS ( SELECT 1 FROM artifacts WHERE artifacts.artifact_image_id = images.image_id )")
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, i.db)
+
+	_, err = db.ExecContext(ctx, sql, args...)
+	if err != nil {
+		return databaseg.ProcessSQLErrorf(ctx, err, "the delete query failed")
+	}
+
+	return nil
+}
+
 func (i ImageDao) GetByName(ctx context.Context, registryID int64, name string) (*types.Image, error) {
 	q := databaseg.Builder.Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(imageDB{}), ",")).
 		From("images").

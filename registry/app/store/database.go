@@ -441,6 +441,7 @@ type ImageRepository interface {
 	DeleteDownloadStatByRegistryID(ctx context.Context, registryID int64) (err error)
 
 	DeleteByImageNameAndRegID(ctx context.Context, regID int64, image string) (err error)
+	DeleteByImageNameIfNoLinkedArtifacts(ctx context.Context, regID int64, image string) (err error)
 }
 
 type ArtifactRepository interface {

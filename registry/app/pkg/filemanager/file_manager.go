@@ -255,12 +255,15 @@ func (f *FileManager) DownloadFile(
 	return reader, blob.Size, "", nil
 }
 
-func (f *FileManager) DeleteFile(
+func (f *FileManager) DeleteNode(
 	ctx context.Context,
+	regID int64,
 	filePath string,
-	regID int,
 ) error {
-	log.Ctx(ctx).Info().Msgf("%s%d", filePath, regID)
+	err := f.nodesDao.DeleteByNodePathAndRegistryID(ctx, filePath, regID)
+	if err != nil {
+		return fmt.Errorf("failed to delete file for path: %s, with error: %w", filePath, err)
+	}
 	return nil
 }
 

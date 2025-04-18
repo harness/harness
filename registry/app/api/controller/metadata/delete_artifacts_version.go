@@ -16,12 +16,14 @@ package metadata
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/registry/app/api/utils"
 	"github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -66,29 +68,86 @@ func (c *APIController) DeleteArtifactVersion(ctx context.Context, r artifact.De
 	}
 
 	repoEntity, err := c.RegistryRepository.GetByParentIDAndName(ctx, regInfo.parentID, regInfo.RegistryIdentifier)
-	if len(repoEntity.Name) == 0 {
+	if err != nil {
+		//nolint:nilerr
 		return artifact.DeleteArtifactVersion404JSONResponse{
 			NotFoundJSONResponse: artifact.NotFoundJSONResponse(
 				*GetErrorResponse(http.StatusNotFound, "registry doesn't exist with this key"),
 			),
 		}, nil
 	}
+
+	artifactName := string(r.Artifact)
+	versionName := string(r.Version)
+	registryName := repoEntity.Name
+
+	image, err := c.ImageStore.GetByRepoAndName(ctx, regInfo.parentID, regInfo.RegistryIdentifier, artifactName)
+	if err != nil {
+		//nolint:nilerr
+		return artifact.DeleteArtifactVersion404JSONResponse{
+			NotFoundJSONResponse: artifact.NotFoundJSONResponse(
+				*GetErrorResponse(http.StatusNotFound, "image doesn't exist with this key"),
+			),
+		}, nil
+	}
+
+	_, err = c.ArtifactStore.GetByName(ctx, image.ID, versionName)
+	if err != nil {
+		//nolint:nilerr
+		return artifact.DeleteArtifactVersion404JSONResponse{
+			NotFoundJSONResponse: artifact.NotFoundJSONResponse(
+				*GetErrorResponse(http.StatusNotFound, "version doesn't exist with this key"),
+			),
+		}, nil
+	}
+
+	switch regInfo.PackageType {
+	case artifact.PackageTypeDOCKER:
+		err = c.deleteTag(ctx, regInfo, registryName, session.Principal, artifactName,
+			versionName)
+	case artifact.PackageTypeHELM:
+		err = c.deleteTag(ctx, regInfo, registryName, session.Principal, artifactName,
+			versionName)
+	case artifact.PackageTypeNPM:
+		err = c.deleteVersion(ctx, regInfo, artifactName, versionName)
+	case artifact.PackageTypeMAVEN:
+		err = c.deleteVersion(ctx, regInfo, artifactName, versionName)
+	case artifact.PackageTypePYTHON:
+		err = c.deleteVersion(ctx, regInfo, artifactName, versionName)
+	case artifact.PackageTypeGENERIC:
+		err = c.deleteVersion(ctx, regInfo, artifactName, versionName)
+	case artifact.PackageTypeNUGET:
+		err = fmt.Errorf("delete version not supported for nuget")
+	case artifact.PackageTypeRPM:
+		err = fmt.Errorf("delete version not supported for rpm")
+	default:
+		err = fmt.Errorf("unsupported package type: %s", regInfo.PackageType)
+	}
+
 	if err != nil {
 		return throwDeleteArtifactVersion500Error(err), err
 	}
 
-	err = c.deleteTagWithAudit(ctx, regInfo, repoEntity.Name, session.Principal, string(r.Artifact),
-		string(r.Version))
-
-	if err != nil {
-		return throwDeleteArtifactVersion500Error(err), err
+	auditErr := c.AuditService.Log(
+		ctx,
+		session.Principal,
+		audit.NewResource(audit.ResourceTypeRegistry, artifactName),
+		audit.ActionDeleted,
+		regInfo.ParentRef,
+		audit.WithData("registry name", registryName),
+		audit.WithData("artifact name", artifactName),
+		audit.WithData("version name", versionName),
+	)
+	if auditErr != nil {
+		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for delete artifact operation: %s", auditErr)
 	}
+
 	return artifact.DeleteArtifactVersion200JSONResponse{
 		SuccessJSONResponse: artifact.SuccessJSONResponse(*GetSuccessResponse()),
 	}, nil
 }
 
-func (c *APIController) deleteTagWithAudit(
+func (c *APIController) deleteTag(
 	ctx context.Context, regInfo *RegistryRequestBaseInfo,
 	registryName string, principal types.Principal, artifactName string, versionName string,
 ) error {
@@ -105,20 +164,52 @@ func (c *APIController) deleteTagWithAudit(
 			regInfo.PackageType, artifactName, c.URLProvider)
 		c.ArtifactEventReporter.ArtifactDeleted(ctx, &payload)
 	}
-	auditErr := c.AuditService.Log(
-		ctx,
-		principal,
-		audit.NewResource(audit.ResourceTypeRegistry, artifactName),
-		audit.ActionDeleted,
-		regInfo.ParentRef,
-		audit.WithData("registry name", registryName),
-		audit.WithData("artifact name", artifactName),
-		audit.WithData("version name", versionName),
-	)
-	if auditErr != nil {
-		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for delete tag operation: %s", auditErr)
-	}
+
 	return err
+}
+
+func (c *APIController) deleteVersion(
+	ctx context.Context,
+	regInfo *RegistryRequestBaseInfo,
+	artifactName string,
+	versionName string,
+) error {
+	// get the file path based on package type
+	filePath, err := utils.GetFilePath(regInfo.PackageType, artifactName, versionName)
+	if err != nil {
+		return fmt.Errorf("failed to get file path: %w", err)
+	}
+
+	err = c.tx.WithTx(
+		ctx,
+		func(ctx context.Context) error {
+			// delete nodes from nodes store
+			err = c.fileManager.DeleteNode(ctx, regInfo.RegistryID, filePath)
+			if err != nil {
+				return err
+			}
+
+			// delete artifacts from artifacts store
+			err = c.ArtifactStore.DeleteByVersionAndImageName(ctx, artifactName, versionName, regInfo.RegistryID)
+			if err != nil {
+				return fmt.Errorf("failed to delete version: %w", err)
+			}
+
+			// delete image if no other artifacts linked
+			err = c.ImageStore.DeleteByImageNameIfNoLinkedArtifacts(ctx, regInfo.RegistryID, artifactName)
+			if err != nil {
+				return fmt.Errorf("failed to delete image: %w", err)
+			}
+
+			return nil
+		},
+	)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func throwDeleteArtifactVersion500Error(err error) artifact.DeleteArtifactVersion500JSONResponse {

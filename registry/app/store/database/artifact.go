@@ -185,9 +185,17 @@ func (a ArtifactDao) Count(ctx context.Context) (int64, error) {
 }
 
 func (a ArtifactDao) DeleteByImageNameAndRegistryID(ctx context.Context, regID int64, image string) (err error) {
-	delStmt := databaseg.Builder.Delete("artifacts").
-		Where("artifact_id IN (SELECT a.artifact_id FROM artifacts a JOIN images i ON i.image_id = a.artifact_image_id"+
-			" WHERE i.image_name = ? AND i.image_registry_id = ?)", image, regID)
+	var delStmt sq.DeleteBuilder
+	switch a.db.DriverName() {
+	case SQLITE3:
+		delStmt = databaseg.Builder.Delete("artifacts").
+			Where("artifact_id IN (SELECT a.artifact_id FROM artifacts a JOIN images i ON i.image_id = a.artifact_image_id"+
+				" WHERE i.image_name = ? AND i.image_registry_id = ?)", image, regID)
+	default:
+		delStmt = databaseg.Builder.Delete("artifacts a USING images i").
+			Where("a.artifact_image_id = i.image_id").
+			Where("i.image_name = ? AND i.image_registry_id = ?", image, regID)
+	}
 
 	db := dbtx.GetAccessor(ctx, a.db)
 
@@ -208,9 +216,18 @@ func (a ArtifactDao) DeleteByVersionAndImageName(
 	ctx context.Context, image string,
 	version string, regID int64,
 ) (err error) {
-	delStmt := databaseg.Builder.Delete("artifacts").
-		Where("artifact_id IN (SELECT a.artifact_id FROM artifacts a JOIN images i ON i.image_id = a.artifact_image_id"+
-			" WHERE a.artifact_name = ? AND i.image_name = ? AND i.image_registry_id = ?)", version, image, regID)
+	var delStmt sq.DeleteBuilder
+	switch a.db.DriverName() {
+	case SQLITE3:
+		delStmt = databaseg.Builder.Delete("artifacts").
+			Where("artifact_id IN (SELECT a.artifact_id FROM artifacts a JOIN images i ON i.image_id = a.artifact_image_id"+
+				" WHERE a.artifact_version = ? AND i.image_name = ? AND i.image_registry_id = ?)", version, image, regID)
+
+	default:
+		delStmt = databaseg.Builder.Delete("artifacts a USING images i").
+			Where("a.artifact_image_id = i.image_id").
+			Where("a.artifact_version = ? AND i.image_name = ? AND i.image_registry_id = ?", version, image, regID)
+	}
 
 	sql, args, err := delStmt.ToSql()
 	if err != nil {
