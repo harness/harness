@@ -37,7 +37,9 @@ func (c *Controller) LFSTransfer(ctx context.Context,
 		reqPermission = enum.PermissionRepoPush
 	}
 
-	repo, err := c.getRepoCheckAccessAndSetting(ctx, session, repoRef, reqPermission)
+	var additionalAllowedRepoStates = []enum.RepoState{enum.RepoStateMigrateGitPush}
+	repo, err := c.getRepoCheckAccessAndSetting(ctx, session, repoRef,
+		reqPermission, additionalAllowedRepoStates...)
 	if err != nil {
 		return nil, err
 	}

@@ -39,7 +39,9 @@ func (c *Controller) Upload(ctx context.Context,
 	pointer Pointer,
 	file io.Reader,
 ) (*UploadOut, error) {
-	repo, err := c.getRepoCheckAccessAndSetting(ctx, session, repoRef, enum.PermissionRepoPush)
+	var additionalAllowedRepoStates = []enum.RepoState{enum.RepoStateMigrateGitPush}
+	repo, err := c.getRepoCheckAccessAndSetting(ctx, session, repoRef,
+		enum.PermissionRepoPush, additionalAllowedRepoStates...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to repo: %w", err)
 	}
