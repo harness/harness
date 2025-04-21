@@ -280,7 +280,7 @@ func (v *DefPullReq) MergeVerify(
 		var succeeded bool
 		for i := range in.CheckResults {
 			if in.CheckResults[i].Identifier == requiredIdentifier {
-				succeeded = in.CheckResults[i].Status == enum.CheckStatusSuccess
+				succeeded = in.CheckResults[i].Status.IsSuccess()
 				break
 			}
 		}
