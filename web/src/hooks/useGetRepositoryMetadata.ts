@@ -59,8 +59,11 @@ export function useGetRepositoryMetadata() {
     if (repoName && (!repoMetadata || cacheStrategy.isExpired())) {
       refetch()
     } else if (repoMetadata && repoMetadata.path !== repoPath) {
-      history.replace(routes.toCODERepository({ repoPath: repoMetadata.path as string }))
-      setTimeout(() => refetch(), 0)
+      refetch().then(() => {
+        if (repoPath?.toLocaleLowerCase() === repoMetadata.path?.toLocaleLowerCase()) {
+          history.replace(routes.toCODERepository({ repoPath: repoMetadata.path as string }))
+        }
+      })
     }
   }, [repoName, refetch, repoMetadata, repoPath])
 
