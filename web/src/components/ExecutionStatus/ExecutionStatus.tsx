@@ -28,7 +28,9 @@ export enum ExecutionState {
   FAILURE = 'failure',
   ERROR = 'error',
   SKIPPED = 'skipped',
-  KILLED = 'killed'
+  KILLED = 'killed',
+  FAILURE_IGNORED = 'failure_ignored',
+  IGNORE_FAILED = 'ignorefailed'
 }
 
 interface ExecutionStatusProps {
@@ -100,6 +102,16 @@ export const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
         icon: 'execution-stopped',
         css: null,
         title: getString('killed').toLocaleUpperCase()
+      },
+      [ExecutionState.FAILURE_IGNORED]: {
+        icon: 'ignoreFailed',
+        css: null,
+        title: getString('failureIgnored').toLocaleUpperCase()
+      },
+      [ExecutionState.IGNORE_FAILED]: {
+        icon: 'ignoreFailed',
+        css: css.ignoreFailed,
+        title: getString('failureIgnored').toLocaleUpperCase()
       },
       [ExecutionStateExtended.ABORTED]: {
         icon: 'execution-stopped',

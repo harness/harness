@@ -24,7 +24,7 @@ export type EnumCIStatus =
 
 export type EnumCheckPayloadKind = '' | 'markdown' | 'pipeline' | 'raw'
 
-export type EnumCheckStatus = 'error' | 'failure' | 'pending' | 'running' | 'success'
+export type EnumCheckStatus = 'error' | 'failure' | 'failure_ignored' | 'pending' | 'running' | 'success'
 
 export type EnumConnectorAuthType = 'basic' | 'bearer'
 

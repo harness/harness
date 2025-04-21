@@ -124,6 +124,15 @@
     }
   }
 
+  &.ignoreFailed {
+    svg {
+      path[fill='#fff'],
+      circle[fill='#fff'] {
+        fill: var(--grey-1000) !important;
+      }
+    }
+  }
+
   &.error {
     --fgColor: var(--red-900);
     --bgColor: var(--red-50);

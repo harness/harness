@@ -70,6 +70,7 @@ const ChecksSection = (props: ChecksSectionProps) => {
       failedReq: 0,
       pendingReq: 0,
       runningReq: 0,
+      failureIgnoredReq: 0,
       successReq: 0,
       failed: 0,
       pending: 0,
@@ -102,6 +103,12 @@ const ChecksSection = (props: ChecksSectionProps) => {
           statusCounts.runningReq += 1
         } else {
           statusCounts.running += 1
+        }
+      } else if (status === CheckStatus.FAILURE_IGNORED) {
+        if (required) {
+          statusCounts.failureIgnoredReq += 1
+        } else {
+          statusCounts.failureIgnoredReq += 1
         }
       } else if (status === CheckStatus.SUCCESS) {
         if (required) {
@@ -170,7 +177,13 @@ const ChecksSection = (props: ChecksSectionProps) => {
 
         content = `${message}`
         color = Color.PRIMARY_6
-      } else if (checks.every(check => check.check.status === CheckStatus.SUCCESS)) {
+      } else if (
+        checks.every(
+          check =>
+            check?.check?.status !== undefined &&
+            [CheckStatus.SUCCESS, CheckStatus.FAILURE_IGNORED].includes(check.check.status as CheckStatus)
+        )
+      ) {
         title = getString('checkSection.allChecksSucceeded')
         content = `${message}`
         color = Color.GREY_600
@@ -195,7 +208,13 @@ const ChecksSection = (props: ChecksSectionProps) => {
         title = getString('checkSection.someChecksRunning')
         content = `${message}`
         color = Color.PRIMARY_6
-      } else if (checks.every(check => check.check.status === CheckStatus.SUCCESS)) {
+      } else if (
+        checks.every(
+          check =>
+            check?.check?.status !== undefined &&
+            [CheckStatus.SUCCESS, CheckStatus.FAILURE_IGNORED].includes(check.check.status as CheckStatus)
+        )
+      ) {
         title = getString('checkSection.allChecksSucceeded')
         content = `${message}`
         color = Color.GREY_600
@@ -298,7 +317,7 @@ const ChecksSection = (props: ChecksSectionProps) => {
                     font={{ variation: FontVariation.BODY }}>
                     <StringSubstitute
                       str={getString(
-                        check.check.status === CheckStatus.SUCCESS
+                        check.check.status === CheckStatus.SUCCESS || check.check.status === CheckStatus.FAILURE_IGNORED
                           ? 'checkStatus.succeeded'
                           : check.check.status === CheckStatus.FAILURE
                           ? 'checkStatus.failed'

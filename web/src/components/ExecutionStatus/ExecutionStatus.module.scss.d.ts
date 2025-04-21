@@ -20,6 +20,7 @@ export declare const error: string
 export declare const executionWaiting: string
 export declare const failure: string
 export declare const iconOnly: string
+export declare const ignoreFailed: string
 export declare const main: string
 export declare const noBackground: string
 export declare const pending: string

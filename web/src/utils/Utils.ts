@@ -478,7 +478,8 @@ export enum CheckStatus {
   FAILURE = 'failure',
   ERROR = 'error',
   SKIPPED = 'skipped',
-  KILLED = 'killed'
+  KILLED = 'killed',
+  FAILURE_IGNORED = 'failure_ignored'
 }
 
 export enum PRCommentFilterType {

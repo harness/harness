@@ -28,7 +28,7 @@ import { CodeIcon } from 'utils/GitUtils'
 import type { TypesPullReq, RepoRepositoryOutput } from 'services/code'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { TabTitleWithCount, tabContainerCSS } from 'components/TabTitleWithCount/TabTitleWithCount'
-import { ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
+import { ExecutionStatus, ExecutionState } from 'components/ExecutionStatus/ExecutionStatus'
 import { useSetPageContainerWidthVar } from 'hooks/useSetPageContainerWidthVar'
 import { useScrollTop } from 'hooks/useScrollTop'
 import { PullRequestMetaLine } from './PullRequestMetaLine'
@@ -252,7 +252,9 @@ export default function PullRequest() {
                                   padding={{ left: 'xsmall' }}
                                   tag="span"
                                   font={{ variation: FontVariation.FORM_MESSAGE_WARNING }}>
-                                  {pullReqChecksDecision?.count[pullReqChecksDecision?.overallStatus]}
+                                  {pullReqChecksDecision?.overallStatus === ExecutionState.IGNORE_FAILED
+                                    ? pullReqChecksDecision?.count?.failure_ignored || 0
+                                    : pullReqChecksDecision?.count?.[pullReqChecksDecision?.overallStatus] || 0}
                                 </Text>
                               </Layout.Horizontal>
                             </Container>

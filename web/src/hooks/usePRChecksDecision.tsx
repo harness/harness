@@ -50,6 +50,7 @@ export function usePRChecksDecision({
           case ExecutionState.FAILURE:
           case ExecutionState.RUNNING:
           case ExecutionState.PENDING:
+          case ExecutionState.FAILURE_IGNORED:
           case ExecutionState.SUCCESS:
             _count[check.status]++
             setCount({ ..._count })
@@ -90,6 +91,13 @@ export function usePRChecksDecision({
         setColor(Color.GREY_600)
         setBackground(Color.GREY_100)
         setMessage(stringSubstitute(getString('prChecks.skipped'), { count: _count.skipped, total }) as string)
+      } else if (_count.failure_ignored) {
+        _status = ExecutionState.FAILURE_IGNORED
+        setColor(Color.GREEN_800)
+        setBackground(Color.GREEN_50)
+        setMessage(
+          stringSubstitute(getString('prChecks.failureIgnored'), { count: _count.failure_ignored, total }) as string
+        )
       } else if (_count.success) {
         _status = ExecutionState.SUCCESS
         setColor(Color.GREEN_800)
@@ -147,5 +155,6 @@ const DEFAULT_COUNTS = {
   running: 0,
   success: 0,
   skipped: 0,
-  killed: 0
+  killed: 0,
+  failure_ignored: 0
 }

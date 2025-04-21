@@ -20,6 +20,7 @@ import { ExecutionState, ExecutionStatus } from 'components/ExecutionStatus/Exec
 import Fail from '../../../../../icons/code-fail.svg?url'
 import Timeout from '../../../../../icons/code-timeout.svg?url'
 import Success from '../../../../../icons/code-success.svg?url'
+import IgnoreFailed from '../../../../../icons/ignoreFailed.svg?url'
 import css from '../PullRequestOverviewPanel.module.scss'
 
 // Define the StatusCircle component
@@ -37,6 +38,7 @@ const StatusCircle = ({
       pending: number
       running: number
       succeeded: number
+      failureIgnoredReq: number
       total: number
     }
   }
@@ -58,6 +60,8 @@ const StatusCircle = ({
       ? ExecutionState.PENDING
       : data.running > 0
       ? ExecutionState.RUNNING
+      : data.failureIgnoredReq > 0
+      ? ExecutionState.FAILURE_IGNORED
       : data.succeeded > 0
       ? ExecutionState.SUCCESS
       : ExecutionState.SKIPPED
@@ -66,6 +70,8 @@ const StatusCircle = ({
     <>
       {status === ExecutionState.SUCCESS ? (
         <img alt={getString('success')} width={27} height={27} src={Success} />
+      ) : (status as ExecutionState) === ExecutionState.FAILURE_IGNORED ? (
+        <img alt={'ignore failed'} width={26} height={26} src={IgnoreFailed} />
       ) : (status as ExecutionState) === ExecutionState.FAILURE ? (
         <img alt={getString('failed')} width={26} height={26} src={Fail} />
       ) : (status as ExecutionState) === ExecutionState.PENDING ? (

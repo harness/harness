@@ -12424,6 +12424,7 @@ components:
       enum:
         - error
         - failure
+        - failure_ignored
         - pending
         - running
         - success

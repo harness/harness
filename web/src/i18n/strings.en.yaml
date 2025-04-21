@@ -386,6 +386,7 @@ prChecks:
   skipped: '{count}/{total} {count|1:check,checks} skipped.'
   success: '{count}/{total} {count|1:check,checks} succeeded.'
   killed: '{count}/{total} {count|1:check,checks} killed.'
+  failureIgnored: '{count}/{total} {count|1:check,checks} failure ignored.'
   notFound: No pipelines or external checks found for this repository.
   viewExternal: View Details
 prReview:
@@ -760,6 +761,7 @@ failed: Failed
 error: Error
 skipped: Skipped
 killed: Killed
+failureIgnored: Success (Failure Ignored)
 repoDelete:
   title: Delete Repository
   deleteConfirm1: This will permanently delete the "{{repo}}" repository.

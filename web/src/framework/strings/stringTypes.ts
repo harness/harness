@@ -451,6 +451,7 @@ export interface StringsMap {
   failedToFetchFileContent: string
   failedToImportSpace: string
   failedToSavePipeline: string
+  failureIgnored: string
   fastForwardMerge: string
   featureRoadmap: string
   fileDeleted: string
@@ -899,6 +900,7 @@ export interface StringsMap {
   'pr.useCmdLineToResolveConflicts': string
   'prChecks.error': string
   'prChecks.failure': string
+  'prChecks.failureIgnored': string
   'prChecks.killed': string
   'prChecks.notFound': string
   'prChecks.pending': string
