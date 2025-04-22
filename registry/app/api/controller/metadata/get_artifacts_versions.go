@@ -89,7 +89,7 @@ func (c *APIController) GetAllArtifactVersions(
 	//nolint:nestif
 	if registry.PackageType == artifact.PackageTypeDOCKER || registry.PackageType == artifact.PackageTypeHELM {
 		tags, err := c.TagStore.GetAllTagsByRepoAndImage(
-			ctx, regInfo.parentID, regInfo.RegistryIdentifier,
+			ctx, regInfo.ParentID, regInfo.RegistryIdentifier,
 			image, regInfo.sortByField, regInfo.sortByOrder, regInfo.limit, regInfo.offset, regInfo.searchTerm,
 		)
 		if err != nil {
@@ -114,7 +114,7 @@ func (c *APIController) GetAllArtifactVersions(
 			}
 		}
 		count, err := c.TagStore.CountAllTagsByRepoAndImage(
-			ctx, regInfo.parentID, regInfo.RegistryIdentifier,
+			ctx, regInfo.ParentID, regInfo.RegistryIdentifier,
 			image, regInfo.searchTerm,
 		)
 
@@ -134,7 +134,7 @@ func (c *APIController) GetAllArtifactVersions(
 		}, nil
 	}
 	metadata, err := c.ArtifactStore.GetAllVersionsByRepoAndImage(
-		ctx, regInfo.parentID, regInfo.RegistryIdentifier,
+		ctx, regInfo.ParentID, regInfo.RegistryIdentifier,
 		image, regInfo.sortByField, regInfo.sortByOrder, regInfo.limit, regInfo.offset, regInfo.searchTerm,
 	)
 	if err != nil {
@@ -142,7 +142,7 @@ func (c *APIController) GetAllArtifactVersions(
 	}
 
 	cnt, _ := c.ArtifactStore.CountAllVersionsByRepoAndImage(
-		ctx, regInfo.parentID, regInfo.RegistryIdentifier,
+		ctx, regInfo.ParentID, regInfo.RegistryIdentifier,
 		image, regInfo.searchTerm,
 	)
 
@@ -164,6 +164,7 @@ func setDigestCount(ctx context.Context, tags []types.TagMetadata) error {
 	return nil
 }
 
+//nolint:unused // kept for potential future use
 func setDigestCountInTagMetadata(ctx context.Context, t *types.TagMetadata) error {
 	m := types.Manifest{
 		SchemaVersion: t.SchemaVersion,
@@ -188,6 +189,7 @@ func setDigestCountInTagMetadata(ctx context.Context, t *types.TagMetadata) erro
 	return nil
 }
 
+//nolint:unused,unparam // kept for potential future use
 func throw500Error(err error) (artifact.GetAllArtifactVersionsResponseObject, error) {
 	wrappedErr := fmt.Errorf("internal server error: %w", err)
 	return artifact.GetAllArtifactVersions500JSONResponse{

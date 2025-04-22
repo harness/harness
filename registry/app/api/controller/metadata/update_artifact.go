@@ -71,7 +71,7 @@ func (c *APIController) UpdateArtifactLabels(
 
 	a := string(r.Artifact)
 
-	artifactEntity, err := c.ImageStore.GetByRepoAndName(ctx, regInfo.parentID, regInfo.RegistryIdentifier, a)
+	artifactEntity, err := c.ImageStore.GetByRepoAndName(ctx, regInfo.ParentID, regInfo.RegistryIdentifier, a)
 
 	if len(artifactEntity.Name) == 0 {
 		return artifact.UpdateArtifactLabels404JSONResponse{
@@ -95,7 +95,7 @@ func (c *APIController) UpdateArtifactLabels(
 	}
 
 	// TODO: use the correct way to get download count if this endpoint is used
-	tag, err := c.TagStore.GetLatestTagMetadata(ctx, regInfo.parentID, regInfo.RegistryIdentifier, a)
+	tag, err := c.TagStore.GetLatestTagMetadata(ctx, regInfo.ParentID, regInfo.RegistryIdentifier, a)
 
 	if err != nil {
 		return artifact.UpdateArtifactLabels500JSONResponse{

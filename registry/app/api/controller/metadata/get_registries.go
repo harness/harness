@@ -96,7 +96,7 @@ func (c *APIController) GetAllRegistries(
 	var count int64
 	repos, err = c.RegistryRepository.GetAll(
 		ctx,
-		regInfo.parentID,
+		regInfo.ParentID,
 		regInfo.packageTypes,
 		regInfo.sortByField,
 		regInfo.sortByOrder,
@@ -108,7 +108,7 @@ func (c *APIController) GetAllRegistries(
 	)
 	count, _ = c.RegistryRepository.CountAll(
 		ctx,
-		regInfo.parentID,
+		regInfo.ParentID,
 		regInfo.packageTypes,
 		regInfo.searchTerm,
 		repoType,

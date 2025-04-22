@@ -65,7 +65,7 @@ func (c *APIController) GetHelmArtifactManifest(
 
 	manifestPayload, err := c.ManifestStore.FindManifestPayloadByTagName(
 		ctx,
-		regInfo.parentID,
+		regInfo.ParentID,
 		regInfo.RegistryIdentifier,
 		imageName,
 		version,

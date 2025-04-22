@@ -35,6 +35,9 @@ const (
 	eventsReaderGroupName = "gitness:webhook"
 )
 
+// Verify Service implements ServiceInterface.
+var _ ServiceInterface = (*Service)(nil)
+
 // Service is responsible for processing webhook events.
 type Service struct {
 	WebhookExecutor    *gitnesswebhook.WebhookExecutor

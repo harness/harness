@@ -69,7 +69,7 @@ func (c *APIController) GetArtifactFiles(
 	image := string(r.Artifact)
 	version := string(r.Version)
 
-	registry, err := c.RegistryRepository.GetByParentIDAndName(ctx, reqInfo.parentID, reqInfo.RegistryIdentifier)
+	registry, err := c.RegistryRepository.GetByParentIDAndName(ctx, reqInfo.ParentID, reqInfo.RegistryIdentifier)
 
 	if err != nil {
 		return artifact.GetArtifactFiles500JSONResponse{

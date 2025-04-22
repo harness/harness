@@ -76,11 +76,11 @@ func (c *APIController) GetAllArtifacts(
 		latestVersion = bool(*r.Params.LatestVersion)
 	}
 	artifacts, err := c.TagStore.GetAllArtifactsByParentID(
-		ctx, regInfo.parentID, &regInfo.registryIDs,
+		ctx, regInfo.ParentID, &regInfo.registryIDs,
 		regInfo.sortByField, regInfo.sortByOrder, regInfo.limit, regInfo.offset, regInfo.searchTerm,
 		latestVersion, regInfo.packageTypes)
 	count, _ := c.TagStore.CountAllArtifactsByParentID(
-		ctx, regInfo.parentID, &regInfo.registryIDs,
+		ctx, regInfo.ParentID, &regInfo.registryIDs,
 		regInfo.searchTerm, latestVersion, regInfo.packageTypes)
 	if err != nil {
 		return artifact.GetAllArtifacts500JSONResponse{

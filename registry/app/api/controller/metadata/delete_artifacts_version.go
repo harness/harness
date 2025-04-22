@@ -25,6 +25,7 @@ import (
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/api/utils"
 	"github.com/harness/gitness/registry/services/webhook"
+	registryTypes "github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -67,7 +68,7 @@ func (c *APIController) DeleteArtifactVersion(ctx context.Context, r artifact.De
 		}, err
 	}
 
-	repoEntity, err := c.RegistryRepository.GetByParentIDAndName(ctx, regInfo.parentID, regInfo.RegistryIdentifier)
+	repoEntity, err := c.RegistryRepository.GetByParentIDAndName(ctx, regInfo.ParentID, regInfo.RegistryIdentifier)
 	if err != nil {
 		//nolint:nilerr
 		return artifact.DeleteArtifactVersion404JSONResponse{
@@ -81,7 +82,7 @@ func (c *APIController) DeleteArtifactVersion(ctx context.Context, r artifact.De
 	versionName := string(r.Version)
 	registryName := repoEntity.Name
 
-	image, err := c.ImageStore.GetByRepoAndName(ctx, regInfo.parentID, regInfo.RegistryIdentifier, artifactName)
+	image, err := c.ImageStore.GetByRepoAndName(ctx, regInfo.ParentID, regInfo.RegistryIdentifier, artifactName)
 	if err != nil {
 		//nolint:nilerr
 		return artifact.DeleteArtifactVersion404JSONResponse{
@@ -103,10 +104,10 @@ func (c *APIController) DeleteArtifactVersion(ctx context.Context, r artifact.De
 
 	switch regInfo.PackageType {
 	case artifact.PackageTypeDOCKER:
-		err = c.deleteTag(ctx, regInfo, registryName, session.Principal, artifactName,
+		err = c.deleteTagWithAudit(ctx, regInfo, registryName, session.Principal, artifactName,
 			versionName)
 	case artifact.PackageTypeHELM:
-		err = c.deleteTag(ctx, regInfo, registryName, session.Principal, artifactName,
+		err = c.deleteTagWithAudit(ctx, regInfo, registryName, session.Principal, artifactName,
 			versionName)
 	case artifact.PackageTypeNPM:
 		err = c.deleteVersion(ctx, regInfo, artifactName, versionName)
@@ -147,8 +148,8 @@ func (c *APIController) DeleteArtifactVersion(ctx context.Context, r artifact.De
 	}, nil
 }
 
-func (c *APIController) deleteTag(
-	ctx context.Context, regInfo *RegistryRequestBaseInfo,
+func (c *APIController) deleteTagWithAudit(
+	ctx context.Context, regInfo *registryTypes.RegistryRequestBaseInfo,
 	registryName string, principal types.Principal, artifactName string, versionName string,
 ) error {
 	existingDigest := c.getTagDigest(ctx, regInfo.RegistryID, artifactName, versionName)
@@ -170,7 +171,7 @@ func (c *APIController) deleteTag(
 
 func (c *APIController) deleteVersion(
 	ctx context.Context,
-	regInfo *RegistryRequestBaseInfo,
+	regInfo *registryTypes.RegistryRequestBaseInfo,
 	artifactName string,
 	versionName string,
 ) error {

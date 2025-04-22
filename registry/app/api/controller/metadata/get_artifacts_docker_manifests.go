@@ -92,10 +92,9 @@ func (c *APIController) GetDockerArtifactManifests(
 	}, nil
 }
 
-func (c *APIController) getManifestList(
-	ctx context.Context, reqManifest *ml.DeserializedManifestList, registry *types.Registry, image string,
-	regInfo *RegistryRequestBaseInfo,
-) ([]artifact.DockerManifestDetails, error) {
+func (c *APIController) getManifestList(ctx context.Context, reqManifest *ml.DeserializedManifestList,
+	registry *types.Registry, image string, regInfo *types.RegistryRequestBaseInfo) (
+	[]artifact.DockerManifestDetails, error) {
 	manifestDetailsList := []artifact.DockerManifestDetails{}
 	for _, manifestEntry := range reqManifest.Manifests {
 		dgst, err := types.NewDigest(manifestEntry.Digest)
@@ -169,10 +168,10 @@ func (c *APIController) getManifestDetails(
 // of Docker manifest details.
 func (c *APIController) ProcessManifest(
 	ctx context.Context,
-	regInfo *RegistryRequestBaseInfo,
+	regInfo *types.RegistryRequestBaseInfo,
 	image, version string,
 ) ([]artifact.DockerManifestDetails, error) {
-	registry, err := c.RegistryRepository.GetByParentIDAndName(ctx, regInfo.parentID, regInfo.RegistryIdentifier)
+	registry, err := c.RegistryRepository.GetByParentIDAndName(ctx, regInfo.ParentID, regInfo.RegistryIdentifier)
 	if err != nil {
 		return nil, err
 	}

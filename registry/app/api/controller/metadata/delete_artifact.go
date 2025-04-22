@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/api/utils"
+	registryTypes "github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
@@ -64,7 +65,7 @@ func (c *APIController) DeleteArtifact(ctx context.Context, r artifact.DeleteArt
 		}, err
 	}
 
-	repoEntity, err := c.RegistryRepository.GetByParentIDAndName(ctx, regInfo.parentID, regInfo.RegistryIdentifier)
+	repoEntity, err := c.RegistryRepository.GetByParentIDAndName(ctx, regInfo.ParentID, regInfo.RegistryIdentifier)
 	if err != nil {
 		//nolint:nilerr
 		return artifact.DeleteArtifact404JSONResponse{
@@ -130,7 +131,7 @@ func (c *APIController) DeleteArtifact(ctx context.Context, r artifact.DeleteArt
 
 func (c *APIController) deleteOCIImage(
 	ctx context.Context,
-	regInfo *RegistryRequestBaseInfo,
+	regInfo *registryTypes.RegistryRequestBaseInfo,
 	artifactName string,
 ) error {
 	err := c.tx.WithTx(
@@ -156,7 +157,7 @@ func (c *APIController) deleteOCIImage(
 
 func (c *APIController) deleteGenericImage(
 	ctx context.Context,
-	regInfo *RegistryRequestBaseInfo,
+	regInfo *registryTypes.RegistryRequestBaseInfo,
 	artifactName string,
 ) error {
 	err := c.tx.WithTx(

@@ -69,7 +69,7 @@ func (c *APIController) DeleteRegistry(
 		}, err
 	}
 
-	repoEntity, err := c.RegistryRepository.GetByParentIDAndName(ctx, regInfo.parentID, regInfo.RegistryIdentifier)
+	repoEntity, err := c.RegistryRepository.GetByParentIDAndName(ctx, regInfo.ParentID, regInfo.RegistryIdentifier)
 	if err != nil {
 		//nolint:nilerr
 		return artifact.DeleteRegistry404JSONResponse{
@@ -132,10 +132,10 @@ func (c *APIController) DeleteRegistry(
 
 func (c *APIController) deleteUpstreamProxyWithAudit(
 	ctx context.Context,
-	regInfo *RegistryRequestBaseInfo, principal types.Principal, parentRef string, registryName string,
+	regInfo *registrytypes.RegistryRequestBaseInfo, principal types.Principal, parentRef string, registryName string,
 ) error {
 	upstreamProxies, err := c.RegistryRepository.FetchUpstreamProxyIDs(ctx,
-		[]string{regInfo.RegistryIdentifier}, regInfo.parentID)
+		[]string{regInfo.RegistryIdentifier}, regInfo.ParentID)
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("failed to fetch upstream proxy IDs: %s", err)
 		return fmt.Errorf("failed to fectch upstream proxy IDs :%w", err)
@@ -143,7 +143,7 @@ func (c *APIController) deleteUpstreamProxyWithAudit(
 	//nolint:nestif
 	if len(upstreamProxies) > 0 {
 		registryIDs, err := c.RegistryRepository.FetchRegistriesIDByUpstreamProxyID(
-			ctx, strconv.FormatInt(upstreamProxies[0], 10), regInfo.rootIdentifierID)
+			ctx, strconv.FormatInt(upstreamProxies[0], 10), regInfo.RootIdentifierID)
 		if err != nil {
 			log.Ctx(ctx).Error().Msgf("failed to fetch registryIDs: %s", err)
 			return fmt.Errorf("failed to fetch registryIDs IDs :%w", err)
@@ -168,7 +168,7 @@ func (c *APIController) deleteUpstreamProxyWithAudit(
 		}
 	}
 
-	err = c.UpstreamProxyStore.Delete(ctx, regInfo.parentID, regInfo.RegistryIdentifier)
+	err = c.UpstreamProxyStore.Delete(ctx, regInfo.ParentID, regInfo.RegistryIdentifier)
 	if err != nil {
 		return err
 	}
@@ -191,7 +191,7 @@ func (c *APIController) deleteUpstreamProxyWithAudit(
 }
 
 func (c *APIController) deleteRegistryWithAudit(
-	ctx context.Context, regInfo *RegistryRequestBaseInfo,
+	ctx context.Context, regInfo *registrytypes.RegistryRequestBaseInfo,
 	registry *registrytypes.Registry, principal types.Principal, parentRef string,
 ) error {
 	err := c.ImageStore.DeleteByRegistryID(ctx, regInfo.RegistryID)
@@ -204,7 +204,7 @@ func (c *APIController) deleteRegistryWithAudit(
 		return err
 	}
 
-	err = c.RegistryRepository.Delete(ctx, regInfo.parentID, regInfo.RegistryIdentifier)
+	err = c.RegistryRepository.Delete(ctx, regInfo.ParentID, regInfo.RegistryIdentifier)
 	if err != nil {
 		return err
 	}

@@ -199,6 +199,10 @@ linters:
     - goheader # checks is file header matches to pattern
     - misspell # [useless] finds commonly misspelled English words in comments
 
+run:
+  skip-dirs:
+    - registry/app/api/controller/mocks
+
 issues:
   # Maximum count of issues with the same text.
   # Set to 0 to disable.

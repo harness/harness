@@ -25,6 +25,7 @@ import (
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/common"
+	"github.com/harness/gitness/registry/utils"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
@@ -65,7 +66,7 @@ func (c *APIController) GetClientSetupDetails(
 		}, nil
 	}
 
-	reg, err := c.RegistryRepository.GetByParentIDAndName(ctx, regInfo.parentID, regInfo.RegistryIdentifier)
+	reg, err := c.RegistryRepository.GetByParentIDAndName(ctx, regInfo.ParentID, regInfo.RegistryIdentifier)
 	if err != nil {
 		return artifact.GetClientSetupDetails404JSONResponse{
 			NotFoundJSONResponse: artifact.NotFoundJSONResponse(
@@ -454,6 +455,7 @@ func (c *APIController) generateHelmClientSetupDetail(
 	}
 }
 
+// TODO: Remove StringPtr / see why it is used.
 func (c *APIController) generateMavenClientSetupDetail(
 	ctx context.Context,
 	artifactName *artifact.ArtifactParam,
@@ -466,62 +468,62 @@ func (c *APIController) generateMavenClientSetupDetail(
 	generateTokenStepType := artifact.ClientSetupStepTypeGenerateToken
 
 	section1 := artifact.ClientSetupSection{
-		Header:    stringPtr("1. Generate Identity Token"),
-		SecHeader: stringPtr("An identity token will serve as the password for uploading and downloading artifacts."),
+		Header:    utils.StringPtr("1. Generate Identity Token"),
+		SecHeader: utils.StringPtr("An identity token will serve as the password for uploading and downloading artifacts."),
 	}
 	_ = section1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
 		Steps: &[]artifact.ClientSetupStep{
 			{
-				Header: stringPtr("Generate an identity token"),
+				Header: utils.StringPtr("Generate an identity token"),
 				Type:   &generateTokenStepType,
 			},
 		},
 	})
 
 	mavenSection1 := artifact.ClientSetupSection{
-		Header:    stringPtr("2. Pull a Maven Package"),
-		SecHeader: stringPtr("Set default repository in your pom.xml file."),
+		Header:    utils.StringPtr("2. Pull a Maven Package"),
+		SecHeader: utils.StringPtr("Set default repository in your pom.xml file."),
 	}
 	_ = mavenSection1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
 		Steps: &[]artifact.ClientSetupStep{
 			{
-				Header: stringPtr("To set default registry in your pom.xml file by adding the following:"),
+				Header: utils.StringPtr("To set default registry in your pom.xml file by adding the following:"),
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
 						//nolint:lll
-						Value: stringPtr("<repositories>\n  <repository>\n    <id>maven-dev</id>\n    <url><REGISTRY_URL>/<REGISTRY_NAME></url>\n    <releases>\n      <enabled>true</enabled>\n      <updatePolicy>always</updatePolicy>\n    </releases>\n    <snapshots>\n      <enabled>true</enabled>\n      <updatePolicy>always</updatePolicy>\n    </snapshots>\n  </repository>\n</repositories>"),
+						Value: utils.StringPtr("<repositories>\n  <repository>\n    <id>maven-dev</id>\n    <url><REGISTRY_URL>/<REGISTRY_NAME></url>\n    <releases>\n      <enabled>true</enabled>\n      <updatePolicy>always</updatePolicy>\n    </releases>\n    <snapshots>\n      <enabled>true</enabled>\n      <updatePolicy>always</updatePolicy>\n    </snapshots>\n  </repository>\n</repositories>"),
 					},
 				},
 			},
 			{
 				//nolint:lll
-				Header: stringPtr("Copy the following your ~/ .m2/settings.xml file for MacOs, or $USERPROFILE$\\ .m2\\settings.xml for Windows to authenticate with token to pull from your Maven registry."),
+				Header: utils.StringPtr("Copy the following your ~/ .m2/settings.xml file for MacOs, or $USERPROFILE$\\ .m2\\settings.xml for Windows to authenticate with token to pull from your Maven registry."),
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
 						//nolint:lll
-						Value: stringPtr("<settings>\n  <servers>\n    <server>\n      <id>maven-dev</id>\n      <username><USERNAME></username>\n      <password>identity-token</password>\n    </server>\n  </servers>\n</settings>"),
+						Value: utils.StringPtr("<settings>\n  <servers>\n    <server>\n      <id>maven-dev</id>\n      <username><USERNAME></username>\n      <password>identity-token</password>\n    </server>\n  </servers>\n</settings>"),
 					},
 				},
 			},
 			{
 				//nolint:lll
-				Header: stringPtr("Add a dependency to the project's pom.xml (replace <GROUP_ID>, <ARTIFACT_ID> & <VERSION> with your own):"),
+				Header: utils.StringPtr("Add a dependency to the project's pom.xml (replace <GROUP_ID>, <ARTIFACT_ID> & <VERSION> with your own):"),
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
 						//nolint:lll
-						Value: stringPtr("<dependency>\n  <groupId><GROUP_ID></groupId>\n  <artifactId><ARTIFACT_ID></artifactId>\n  <version><VERSION></version>\n</dependency>"),
+						Value: utils.StringPtr("<dependency>\n  <groupId><GROUP_ID></groupId>\n  <artifactId><ARTIFACT_ID></artifactId>\n  <version><VERSION></version>\n</dependency>"),
 					},
 				},
 			},
 			{
-				Header: stringPtr("Install dependencies in pom.xml file"),
+				Header: utils.StringPtr("Install dependencies in pom.xml file"),
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: stringPtr("mvn install"),
+						Value: utils.StringPtr("mvn install"),
 					},
 				},
 			},
@@ -529,39 +531,39 @@ func (c *APIController) generateMavenClientSetupDetail(
 	})
 
 	mavenSection2 := artifact.ClientSetupSection{
-		Header:    stringPtr("3. Push a Maven Package"),
-		SecHeader: stringPtr("Set default repository in your pom.xml file."),
+		Header:    utils.StringPtr("3. Push a Maven Package"),
+		SecHeader: utils.StringPtr("Set default repository in your pom.xml file."),
 	}
 
 	_ = mavenSection2.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
 		Steps: &[]artifact.ClientSetupStep{
 			{
-				Header: stringPtr("To set default registry in your pom.xml file by adding the following:"),
+				Header: utils.StringPtr("To set default registry in your pom.xml file by adding the following:"),
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
 						//nolint:lll
-						Value: stringPtr("<distributionManagement>\n  <snapshotRepository>\n    <id>maven-dev</id>\n    <url><REGISTRY_URL>/<REGISTRY_NAME></url>\n  </snapshotRepository>\n  <repository>\n    <id>maven-dev</id>\n    <url><REGISTRY_URL>/<REGISTRY_NAME></url>\n  </repository>\n</distributionManagement>"),
+						Value: utils.StringPtr("<distributionManagement>\n  <snapshotRepository>\n    <id>maven-dev</id>\n    <url><REGISTRY_URL>/<REGISTRY_NAME></url>\n  </snapshotRepository>\n  <repository>\n    <id>maven-dev</id>\n    <url><REGISTRY_URL>/<REGISTRY_NAME></url>\n  </repository>\n</distributionManagement>"),
 					},
 				},
 			},
 			{
 				//nolint:lll
-				Header: stringPtr("Copy the following your ~/ .m2/setting.xml file for MacOs, or $USERPROFILE$\\ .m2\\settings.xml for Windows to authenticate with token to push to your Maven registry."),
+				Header: utils.StringPtr("Copy the following your ~/ .m2/setting.xml file for MacOs, or $USERPROFILE$\\ .m2\\settings.xml for Windows to authenticate with token to push to your Maven registry."),
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
 						//nolint:lll
-						Value: stringPtr("<settings>\n  <servers>\n    <server>\n      <id>maven-dev</id>\n      <username><USERNAME></username>\n      <password>identity-token</password>\n    </server>\n  </servers>\n</settings>"),
+						Value: utils.StringPtr("<settings>\n  <servers>\n    <server>\n      <id>maven-dev</id>\n      <username><USERNAME></username>\n      <password>identity-token</password>\n    </server>\n  </servers>\n</settings>"),
 					},
 				},
 			},
 			{
-				Header: stringPtr("Publish package to your Maven registry."),
+				Header: utils.StringPtr("Publish package to your Maven registry."),
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: stringPtr("mvn deploy"),
+						Value: utils.StringPtr("mvn deploy"),
 					},
 				},
 			},
@@ -569,46 +571,46 @@ func (c *APIController) generateMavenClientSetupDetail(
 	})
 
 	gradleSection1 := artifact.ClientSetupSection{
-		Header:    stringPtr("2. Pull a Gradle Package"),
-		SecHeader: stringPtr("Set default repository in your build.gradle file."),
+		Header:    utils.StringPtr("2. Pull a Gradle Package"),
+		SecHeader: utils.StringPtr("Set default repository in your build.gradle file."),
 	}
 	_ = gradleSection1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
 		Steps: &[]artifact.ClientSetupStep{
 			{
-				Header: stringPtr("Set the default registry in your project’s build.gradle by adding the following:"),
+				Header: utils.StringPtr("Set the default registry in your project’s build.gradle by adding the following:"),
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
 						//nolint:lll
-						Value: stringPtr("repositories{\n    maven{\n      url \"<REGISTRY_URL>/<REGISTRY_NAME>\"\n\n      credentials {\n         username \"<USERNAME>\"\n         password \"identity-token\"\n      }\n   }\n}"),
+						Value: utils.StringPtr("repositories{\n    maven{\n      url \"<REGISTRY_URL>/<REGISTRY_NAME>\"\n\n      credentials {\n         username \"<USERNAME>\"\n         password \"identity-token\"\n      }\n   }\n}"),
 					},
 				},
 			},
 			{
 				//nolint:lll
-				Header: stringPtr("As this is a private registry, you’ll need to authenticate. Create or add to the ~/.gradle/gradle.properties file with the following:"),
+				Header: utils.StringPtr("As this is a private registry, you’ll need to authenticate. Create or add to the ~/.gradle/gradle.properties file with the following:"),
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: stringPtr("repositoryUser=<USERNAME>\nrepositoryPassword={{identity-token}}"),
+						Value: utils.StringPtr("repositoryUser=<USERNAME>\nrepositoryPassword={{identity-token}}"),
 					},
 				},
 			},
 			{
-				Header: stringPtr("Add a dependency to the project’s build.gradle"),
+				Header: utils.StringPtr("Add a dependency to the project’s build.gradle"),
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: stringPtr("dependencies {\n  implementation '<GROUP_ID>:<ARTIFACT_ID>:<VERSION>'\n}"),
+						Value: utils.StringPtr("dependencies {\n  implementation '<GROUP_ID>:<ARTIFACT_ID>:<VERSION>'\n}"),
 					},
 				},
 			},
 			{
-				Header: stringPtr("Install dependencies in build.gradle file"),
+				Header: utils.StringPtr("Install dependencies in build.gradle file"),
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: stringPtr("gradlew build     // Linux or OSX\n gradlew.bat build  // Windows"),
+						Value: utils.StringPtr("gradlew build     // Linux or OSX\n gradlew.bat build  // Windows"),
 					},
 				},
 			},
@@ -616,28 +618,28 @@ func (c *APIController) generateMavenClientSetupDetail(
 	})
 
 	gradleSection2 := artifact.ClientSetupSection{
-		Header:    stringPtr("3. Push a Gradle Package"),
-		SecHeader: stringPtr("Set default repository in your build.gradle file."),
+		Header:    utils.StringPtr("3. Push a Gradle Package"),
+		SecHeader: utils.StringPtr("Set default repository in your build.gradle file."),
 	}
 
 	_ = gradleSection2.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
 		Steps: &[]artifact.ClientSetupStep{
 			{
-				Header: stringPtr("Add a maven publish plugin configuration to the project's build.gradle."),
+				Header: utils.StringPtr("Add a maven publish plugin configuration to the project's build.gradle."),
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
 						//nolint:lll
-						Value: stringPtr("publishing {\n    publications {\n        maven(MavenPublication) {\n            groupId = 'GROUP_ID'\n            artifactId = 'ARTIFACT_ID'\n            version = 'VERSION'\n\n            from components.java\n        }\n    }\n}"),
+						Value: utils.StringPtr("publishing {\n    publications {\n        maven(MavenPublication) {\n            groupId = 'GROUP_ID'\n            artifactId = 'ARTIFACT_ID'\n            version = 'VERSION'\n\n            from components.java\n        }\n    }\n}"),
 					},
 				},
 			},
 			{
-				Header: stringPtr("Publish package to your Maven registry."),
+				Header: utils.StringPtr("Publish package to your Maven registry."),
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: stringPtr("gradlew publish"),
+						Value: utils.StringPtr("gradlew publish"),
 					},
 				},
 			},
@@ -645,47 +647,47 @@ func (c *APIController) generateMavenClientSetupDetail(
 	})
 
 	sbtSection1 := artifact.ClientSetupSection{
-		Header:    stringPtr("2. Pull a Sbt/Scala Package"),
-		SecHeader: stringPtr("Set default repository in your build.sbt file."),
+		Header:    utils.StringPtr("2. Pull a Sbt/Scala Package"),
+		SecHeader: utils.StringPtr("Set default repository in your build.sbt file."),
 	}
 	_ = sbtSection1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
 		Steps: &[]artifact.ClientSetupStep{
 			{
-				Header: stringPtr("Set the default registry in your project’s build.sbt by adding the following:"),
+				Header: utils.StringPtr("Set the default registry in your project’s build.sbt by adding the following:"),
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
 						//nolint:lll
-						Value: stringPtr("resolver += \"Harness Registry\" at \"<REGISTRY_URL>/<REGISTRY_NAME>\"\ncredentials += Credentials(Path.userHome / \".sbt\" / \".Credentials\")"),
+						Value: utils.StringPtr("resolver += \"Harness Registry\" at \"<REGISTRY_URL>/<REGISTRY_NAME>\"\ncredentials += Credentials(Path.userHome / \".sbt\" / \".Credentials\")"),
 					},
 				},
 			},
 			{
 				//nolint:lll
-				Header: stringPtr("As this is a private registry, you’ll need to authenticate. Create or add to the ~/.sbt/.credentials file with the following:"),
+				Header: utils.StringPtr("As this is a private registry, you’ll need to authenticate. Create or add to the ~/.sbt/.credentials file with the following:"),
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
 						//nolint:lll
-						Value: stringPtr("realm=Harness Registry\nhost=<LOGIN_HOSTNAME>\nuser=<USERNAME>\npassword={{identity-token}}"),
+						Value: utils.StringPtr("realm=Harness Registry\nhost=<LOGIN_HOSTNAME>\nuser=<USERNAME>\npassword={{identity-token}}"),
 					},
 				},
 			},
 			{
-				Header: stringPtr("Add a dependency to the project’s build.sbt"),
+				Header: utils.StringPtr("Add a dependency to the project’s build.sbt"),
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: stringPtr("libraryDependencies += \"<GROUP_ID>\" % \"<ARTIFACT_ID>\" % \"<VERSION>\""),
+						Value: utils.StringPtr("libraryDependencies += \"<GROUP_ID>\" % \"<ARTIFACT_ID>\" % \"<VERSION>\""),
 					},
 				},
 			},
 			{
-				Header: stringPtr("Install dependencies in build.sbt file"),
+				Header: utils.StringPtr("Install dependencies in build.sbt file"),
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: stringPtr("sbt update"),
+						Value: utils.StringPtr("sbt update"),
 					},
 				},
 			},
@@ -693,27 +695,27 @@ func (c *APIController) generateMavenClientSetupDetail(
 	})
 
 	sbtSection2 := artifact.ClientSetupSection{
-		Header:    stringPtr("3. Push a Sbt/Scala Package"),
-		SecHeader: stringPtr("Set default repository in your build.sbt file."),
+		Header:    utils.StringPtr("3. Push a Sbt/Scala Package"),
+		SecHeader: utils.StringPtr("Set default repository in your build.sbt file."),
 	}
 
 	_ = sbtSection2.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
 		Steps: &[]artifact.ClientSetupStep{
 			{
-				Header: stringPtr("Add publish configuration to the project’s build.sbt."),
+				Header: utils.StringPtr("Add publish configuration to the project’s build.sbt."),
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: stringPtr("publishTo := Some(\"Harness Registry\" at \"<REGISTRY_URL>/<REGISTRY_NAME>\")"),
+						Value: utils.StringPtr("publishTo := Some(\"Harness Registry\" at \"<REGISTRY_URL>/<REGISTRY_NAME>\")"),
 					},
 				},
 			},
 			{
-				Header: stringPtr("Publish package to your Maven registry."),
+				Header: utils.StringPtr("Publish package to your Maven registry."),
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: stringPtr("sbt publish"),
+						Value: utils.StringPtr("sbt publish"),
 					},
 				},
 			},
@@ -724,19 +726,19 @@ func (c *APIController) generateMavenClientSetupDetail(
 	config := artifact.TabSetupStepConfig{
 		Tabs: &[]artifact.TabSetupStep{
 			{
-				Header: stringPtr("Maven"),
+				Header: utils.StringPtr("Maven"),
 				Sections: &[]artifact.ClientSetupSection{
 					mavenSection1,
 				},
 			},
 			{
-				Header: stringPtr("Gradle"),
+				Header: utils.StringPtr("Gradle"),
 				Sections: &[]artifact.ClientSetupSection{
 					gradleSection1,
 				},
 			},
 			{
-				Header: stringPtr("Sbt/Scala"),
+				Header: utils.StringPtr("Sbt/Scala"),
 				Sections: &[]artifact.ClientSetupSection{
 					sbtSection1,
 				},
@@ -794,16 +796,16 @@ func (c *APIController) generatePythonClientSetupDetail(
 
 	// Authentication section
 	section1 := artifact.ClientSetupSection{
-		Header: stringPtr("Configure Authentication"),
+		Header: utils.StringPtr("Configure Authentication"),
 	}
 	_ = section1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
 		Steps: &[]artifact.ClientSetupStep{
 			{
-				Header: stringPtr("Create or update your ~/.pypirc file with the following content:"),
+				Header: utils.StringPtr("Create or update your ~/.pypirc file with the following content:"),
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: stringPtr("[distutils]\n" +
+						Value: utils.StringPtr("[distutils]\n" +
 							"index-servers = harness\n\n" +
 							"[harness]\n" +
 							"repository = <REGISTRY_URL>\n" +
@@ -813,7 +815,7 @@ func (c *APIController) generatePythonClientSetupDetail(
 				},
 			},
 			{
-				Header: stringPtr("Generate an identity token for authentication"),
+				Header: utils.StringPtr("Generate an identity token for authentication"),
 				Type:   &generateTokenType,
 			},
 		},
@@ -821,19 +823,19 @@ func (c *APIController) generatePythonClientSetupDetail(
 
 	// Publish section
 	section2 := artifact.ClientSetupSection{
-		Header: stringPtr("Publish Package"),
+		Header: utils.StringPtr("Publish Package"),
 	}
 	_ = section2.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
 		Steps: &[]artifact.ClientSetupStep{
 			{
-				Header: stringPtr("Build and publish your package:"),
+				Header: utils.StringPtr("Build and publish your package:"),
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: stringPtr("python -m build"),
+						Value: utils.StringPtr("python -m build"),
 					},
 					{
-						Value: stringPtr("python -m twine upload --repository harness /path/to/files/*"),
+						Value: utils.StringPtr("python -m twine upload --repository harness /path/to/files/*"),
 					},
 				},
 			},
@@ -842,16 +844,16 @@ func (c *APIController) generatePythonClientSetupDetail(
 
 	// Install section
 	section3 := artifact.ClientSetupSection{
-		Header: stringPtr("Install Package"),
+		Header: utils.StringPtr("Install Package"),
 	}
 	_ = section3.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
 		Steps: &[]artifact.ClientSetupStep{
 			{
-				Header: stringPtr("Install a package using pip:"),
+				Header: utils.StringPtr("Install a package using pip:"),
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: stringPtr("pip install --index-url <UPLOAD_URL>/simple --no-deps <ARTIFACT_NAME>==<VERSION>"),
+						Value: utils.StringPtr("pip install --index-url <UPLOAD_URL>/simple --no-deps <ARTIFACT_NAME>==<VERSION>"),
 					},
 				},
 			},
@@ -901,24 +903,24 @@ func (c *APIController) generateNpmClientSetupDetail(
 
 	// Authentication section
 	section1 := artifact.ClientSetupSection{
-		Header: stringPtr("Configure Authentication"),
+		Header: utils.StringPtr("Configure Authentication"),
 	}
 	_ = section1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
 		Steps: &[]artifact.ClientSetupStep{
 			{
-				Header: stringPtr("Create or update your ~/.npmrc file with the following content:"),
+				Header: utils.StringPtr("Create or update your ~/.npmrc file with the following content:"),
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: stringPtr("https:<REGISTRY_URL>/"),
+						Value: utils.StringPtr("https:<REGISTRY_URL>/"),
 					},
 					{
-						Value: stringPtr("<REGISTRY_URL>/:_authToken <TOKEN>"),
+						Value: utils.StringPtr("<REGISTRY_URL>/:_authToken <TOKEN>"),
 					},
 				},
 			},
 			{
-				Header: stringPtr("Generate an identity token for authentication"),
+				Header: utils.StringPtr("Generate an identity token for authentication"),
 				Type:   &generateTokenType,
 			},
 		},
@@ -926,19 +928,19 @@ func (c *APIController) generateNpmClientSetupDetail(
 
 	// Publish section
 	section2 := artifact.ClientSetupSection{
-		Header: stringPtr("Publish Package"),
+		Header: utils.StringPtr("Publish Package"),
 	}
 	_ = section2.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
 		Steps: &[]artifact.ClientSetupStep{
 			{
-				Header: stringPtr("Build and publish your package:"),
+				Header: utils.StringPtr("Build and publish your package:"),
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: stringPtr("npm init -y\n"),
+						Value: utils.StringPtr("npm run build\n"),
 					},
 					{
-						Value: stringPtr("npm publish"),
+						Value: utils.StringPtr("npm publish"),
 					},
 				},
 			},
@@ -947,16 +949,16 @@ func (c *APIController) generateNpmClientSetupDetail(
 
 	// Install section
 	section3 := artifact.ClientSetupSection{
-		Header: stringPtr("Install Package"),
+		Header: utils.StringPtr("Install Package"),
 	}
 	_ = section3.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
 		Steps: &[]artifact.ClientSetupStep{
 			{
-				Header: stringPtr("Install a package using npm"),
+				Header: utils.StringPtr("Install a package using npm"),
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: stringPtr("npm install <ARTIFACT_NAME>@<VERSION>"),
+						Value: utils.StringPtr("npm install <ARTIFACT_NAME>@<VERSION>"),
 					},
 				},
 			},
@@ -1078,44 +1080,40 @@ func replaceText(
 	uploadURL string,
 ) {
 	if username != "" {
-		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<USERNAME>", username))
+		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<USERNAME>", username))
 		if (*st.Commands)[i].Label != nil {
-			(*st.Commands)[i].Label = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Label, "<USERNAME>", username))
+			(*st.Commands)[i].Label = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Label, "<USERNAME>", username))
 		}
 	}
 	if groupID != "" {
-		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<GROUP_ID>", groupID))
+		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<GROUP_ID>", groupID))
 	}
 	if registryURL != "" {
-		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<REGISTRY_URL>", registryURL))
+		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<REGISTRY_URL>", registryURL))
 	}
 	if uploadURL != "" {
-		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<UPLOAD_URL>", uploadURL))
+		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<UPLOAD_URL>", uploadURL))
 	}
 	if hostname != "" {
-		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<HOSTNAME>", hostname))
+		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<HOSTNAME>", hostname))
 	}
 	if hostname != "" {
-		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value,
+		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value,
 			"<LOGIN_HOSTNAME>", common.GetHost(hostname)))
 	}
 	if repoName != "" {
-		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<REGISTRY_NAME>", repoName))
+		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<REGISTRY_NAME>", repoName))
 	}
 	if image != nil {
-		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<IMAGE_NAME>",
+		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<IMAGE_NAME>",
 			string(*image)))
-		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<ARTIFACT_ID>",
+		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<ARTIFACT_ID>",
 			string(*image)))
-		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<ARTIFACT_NAME>",
+		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<ARTIFACT_NAME>",
 			string(*image)))
 	}
 	if tag != nil {
-		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<TAG>", string(*tag)))
-		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<VERSION>", string(*tag)))
+		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<TAG>", string(*tag)))
+		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<VERSION>", string(*tag)))
 	}
-}
-
-func stringPtr(s string) *string {
-	return &s
 }

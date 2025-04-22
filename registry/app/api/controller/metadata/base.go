@@ -37,23 +37,8 @@ const MediaTypeImageConfig = "application/vnd.docker.container.image.v1+json"
 
 var _ api.StrictServerInterface = (*APIController)(nil)
 
-type RegistryRequestBaseInfo struct {
-	RootIdentifier   string
-	rootIdentifierID int64
-
-	RegistryRef        string
-	RegistryIdentifier string
-	RegistryID         int64
-
-	ParentRef string
-	parentID  int64
-
-	RegistryType api.RegistryType
-	PackageType  api.PackageType
-}
-
 type RegistryRequestInfo struct {
-	RegistryRequestBaseInfo
+	*types.RegistryRequestBaseInfo
 	packageTypes []string
 	sortByField  string
 	sortByOrder  string
@@ -82,7 +67,7 @@ type RegistryRequestParams struct {
 }
 
 type ArtifactFilesRequestInfo struct {
-	RegistryRequestBaseInfo
+	*types.RegistryRequestBaseInfo
 	sortByField string
 	sortByOrder string
 	offset      int
@@ -138,7 +123,7 @@ func (c *APIController) GetRegistryRequestInfo(
 	}
 
 	return &RegistryRequestInfo{
-		RegistryRequestBaseInfo: *baseInfo,
+		RegistryRequestBaseInfo: baseInfo,
 		packageTypes:            packageTypes,
 		sortByField:             sortByField,
 		sortByOrder:             sortByOrder,
@@ -415,7 +400,7 @@ func (c *APIController) GetArtifactFilesRequestInfo(
 	}
 
 	return &ArtifactFilesRequestInfo{
-		RegistryRequestBaseInfo: *baseInfo,
+		RegistryRequestBaseInfo: baseInfo,
 		sortByField:             sortByField,
 		sortByOrder:             sortByOrder,
 		offset:                  offset,

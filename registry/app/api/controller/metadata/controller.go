@@ -16,13 +16,14 @@ package metadata
 
 import (
 	"github.com/harness/gitness/app/auth/authz"
-	"github.com/harness/gitness/app/services/refcache"
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/audit"
+	"github.com/harness/gitness/registry/app/api/interfaces"
 	storagedriver "github.com/harness/gitness/registry/app/driver"
 	registryevents "github.com/harness/gitness/registry/app/events"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
+	"github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/store/database/dbtx"
 )
 
@@ -37,7 +38,7 @@ type APIController struct {
 	TagStore                    store.TagRepository
 	ManifestStore               store.ManifestRepository
 	CleanupPolicyStore          store.CleanupPolicyRepository
-	SpaceFinder                 SpaceFinder
+	SpaceFinder                 interfaces.SpaceFinder
 	tx                          dbtx.Transactor
 	StorageDriver               storagedriver.StorageDriver
 	URLProvider                 urlprovider.Provider
@@ -46,8 +47,8 @@ type APIController struct {
 	ArtifactStore               store.ArtifactRepository
 	WebhooksRepository          store.WebhooksRepository
 	WebhooksExecutionRepository store.WebhooksExecutionRepository
-	RegistryMetadataHelper      RegistryMetadataHelper
-	WebhookService              WebhookService
+	RegistryMetadataHelper      interfaces.RegistryMetadataHelper
+	WebhookService              webhook.ServiceInterface
 	ArtifactEventReporter       registryevents.Reporter
 	DownloadStatRepository      store.DownloadStatRepository
 }
@@ -63,7 +64,7 @@ func NewAPIController(
 	cleanupPolicyStore store.CleanupPolicyRepository,
 	imageStore store.ImageRepository,
 	driver storagedriver.StorageDriver,
-	spaceFinder refcache.SpaceFinder,
+	spaceFinder interfaces.SpaceFinder,
 	tx dbtx.Transactor,
 	urlProvider urlprovider.Provider,
 	authorizer authz.Authorizer,
@@ -71,8 +72,8 @@ func NewAPIController(
 	artifactStore store.ArtifactRepository,
 	webhooksRepository store.WebhooksRepository,
 	webhooksExecutionRepository store.WebhooksExecutionRepository,
-	registryMetadataHelper RegistryMetadataHelper,
-	webhookService WebhookService,
+	registryMetadataHelper interfaces.RegistryMetadataHelper,
+	webhookService webhook.ServiceInterface,
 	artifactEventReporter registryevents.Reporter,
 	downloadStatRepository store.DownloadStatRepository,
 ) *APIController {

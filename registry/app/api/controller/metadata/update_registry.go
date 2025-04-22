@@ -68,7 +68,7 @@ func (c *APIController) ModifyRegistry(
 		}, err
 	}
 
-	repoEntity, err := c.RegistryRepository.GetByParentIDAndName(ctx, regInfo.parentID, regInfo.RegistryIdentifier)
+	repoEntity, err := c.RegistryRepository.GetByParentIDAndName(ctx, regInfo.ParentID, regInfo.RegistryIdentifier)
 	if err != nil {
 		return throwModifyRegistry500Error(err), err
 	}
@@ -77,7 +77,7 @@ func (c *APIController) ModifyRegistry(
 		return c.updateVirtualRegistry(ctx, r, repoEntity, err, regInfo, session)
 	}
 	upstreamproxyEntity, err := c.UpstreamProxyStore.GetByRegistryIdentifier(
-		ctx, regInfo.parentID,
+		ctx, regInfo.ParentID,
 		regInfo.RegistryIdentifier,
 	)
 	if len(upstreamproxyEntity.RepoKey) == 0 {
@@ -93,7 +93,7 @@ func (c *APIController) ModifyRegistry(
 	registry, upstreamproxy, err := c.UpdateUpstreamProxyEntity(
 		ctx,
 		artifact.RegistryRequest(*r.Body),
-		regInfo.parentID, regInfo.rootIdentifierID, upstreamproxyEntity,
+		regInfo.ParentID, regInfo.RootIdentifierID, upstreamproxyEntity,
 	)
 	registry.ID = repoEntity.ID
 	upstreamproxy.ID = upstreamproxyEntity.ID
@@ -133,7 +133,7 @@ func (c *APIController) ModifyRegistry(
 
 func (c *APIController) updateVirtualRegistry(
 	ctx context.Context, r artifact.ModifyRegistryRequestObject, repoEntity *types.Registry, err error,
-	regInfo *RegistryRequestBaseInfo, session *auth.Session,
+	regInfo *types.RegistryRequestBaseInfo, session *auth.Session,
 ) (artifact.ModifyRegistryResponseObject, error) {
 	if len(repoEntity.Name) == 0 {
 		return artifact.ModifyRegistry404JSONResponse{
@@ -158,7 +158,7 @@ func (c *APIController) updateVirtualRegistry(
 			),
 		}, nil
 	}
-	err = c.setUpstreamProxyIDs(ctx, registry, artifact.RegistryRequest(*r.Body), regInfo.parentID)
+	err = c.setUpstreamProxyIDs(ctx, registry, artifact.RegistryRequest(*r.Body), regInfo.ParentID)
 	if err != nil {
 		return throwModifyRegistry500Error(err), nil
 	}
@@ -393,7 +393,7 @@ func (c *APIController) UpdateUpstreamProxyEntity(
 		}
 
 		if res.SecretSpacePath != nil && len(*res.SecretSpacePath) > 0 {
-			upstreamProxyConfigEntity.SecretSpaceID, err = c.RegistryMetadataHelper.getSecretSpaceID(ctx, res.SecretSpacePath)
+			upstreamProxyConfigEntity.SecretSpaceID, err = c.RegistryMetadataHelper.GetSecretSpaceID(ctx, res.SecretSpacePath)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -414,7 +414,7 @@ func (c *APIController) UpdateUpstreamProxyEntity(
 		default:
 			if res.AccessKeySecretSpacePath != nil && len(*res.AccessKeySecretSpacePath) > 0 {
 				upstreamProxyConfigEntity.UserNameSecretSpaceID, err =
-					c.RegistryMetadataHelper.getSecretSpaceID(ctx, res.AccessKeySecretSpacePath)
+					c.RegistryMetadataHelper.GetSecretSpaceID(ctx, res.AccessKeySecretSpacePath)
 				if err != nil {
 					return nil, nil, err
 				}
@@ -426,7 +426,7 @@ func (c *APIController) UpdateUpstreamProxyEntity(
 
 		if res.SecretKeySpacePath != nil && len(*res.SecretKeySpacePath) > 0 {
 			upstreamProxyConfigEntity.SecretSpaceID, err =
-				c.RegistryMetadataHelper.getSecretSpaceID(ctx, res.SecretKeySpacePath)
+				c.RegistryMetadataHelper.GetSecretSpaceID(ctx, res.SecretKeySpacePath)
 			if err != nil {
 				return nil, nil, err
 			}

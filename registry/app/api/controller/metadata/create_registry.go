@@ -79,7 +79,7 @@ func (c *APIController) CreateRegistry(
 	registry, upstreamproxy, err := c.CreateUpstreamProxyEntity(
 		ctx,
 		registryRequest,
-		regInfo.parentID, regInfo.rootIdentifierID,
+		regInfo.ParentID, regInfo.RootIdentifierID,
 	)
 	var registryID int64
 	if err != nil {
@@ -127,16 +127,16 @@ func (c *APIController) CreateRegistry(
 }
 
 func (c *APIController) createVirtualRegistry(
-	ctx context.Context, registryRequest artifact.RegistryRequest, regInfo *RegistryRequestBaseInfo,
+	ctx context.Context, registryRequest artifact.RegistryRequest, regInfo *registrytypes.RegistryRequestBaseInfo,
 	session *auth.Session, parentRef artifact.SpaceRefPathParam,
 ) (artifact.CreateRegistryResponseObject, error) {
-	registry, err := CreateRegistryEntity(registryRequest, regInfo.parentID, regInfo.rootIdentifierID)
+	registry, err := CreateRegistryEntity(registryRequest, regInfo.ParentID, regInfo.RootIdentifierID)
 	if err != nil {
 		return throwCreateRegistry400Error(err), nil
 	}
 
 	if registry.PackageType != artifact.PackageTypeGENERIC {
-		err = c.setUpstreamProxyIDs(ctx, registry, registryRequest, regInfo.parentID)
+		err = c.setUpstreamProxyIDs(ctx, registry, registryRequest, regInfo.ParentID)
 	}
 	if err != nil {
 		return throwCreateRegistry400Error(err), nil
@@ -332,7 +332,7 @@ func (c *APIController) CreateUpstreamProxyEntity(
 		}
 
 		if res.SecretSpacePath != nil && len(*res.SecretSpacePath) > 0 {
-			upstreamProxyConfigEntity.SecretSpaceID, err = c.RegistryMetadataHelper.getSecretSpaceID(ctx,
+			upstreamProxyConfigEntity.SecretSpaceID, err = c.RegistryMetadataHelper.GetSecretSpaceID(ctx,
 				res.SecretSpacePath)
 			if err != nil {
 				return nil, nil, err
@@ -355,7 +355,7 @@ func (c *APIController) CreateUpstreamProxyEntity(
 		default:
 			if res.AccessKeySecretSpacePath != nil && len(*res.AccessKeySecretSpacePath) > 0 {
 				upstreamProxyConfigEntity.UserNameSecretSpaceID, err =
-					c.RegistryMetadataHelper.getSecretSpaceID(ctx, res.AccessKeySecretSpacePath)
+					c.RegistryMetadataHelper.GetSecretSpaceID(ctx, res.AccessKeySecretSpacePath)
 				if err != nil {
 					return nil, nil, err
 				}
@@ -366,7 +366,7 @@ func (c *APIController) CreateUpstreamProxyEntity(
 		}
 
 		if res.SecretKeySpacePath != nil && len(*res.SecretKeySpacePath) > 0 {
-			upstreamProxyConfigEntity.SecretSpaceID, err = c.RegistryMetadataHelper.getSecretSpaceID(ctx,
+			upstreamProxyConfigEntity.SecretSpaceID, err = c.RegistryMetadataHelper.GetSecretSpaceID(ctx,
 				res.SecretKeySpacePath)
 			if err != nil {
 				return nil, nil, err

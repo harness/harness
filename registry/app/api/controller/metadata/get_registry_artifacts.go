@@ -85,11 +85,11 @@ func (c *APIController) GetAllArtifactsByRegistry(
 	var count int64
 	if registry.PackageType == artifact.PackageTypeDOCKER || registry.PackageType == artifact.PackageTypeHELM {
 		artifacts, err = c.TagStore.GetAllArtifactsByRepo(
-			ctx, regInfo.parentID, regInfo.RegistryIdentifier,
+			ctx, regInfo.ParentID, regInfo.RegistryIdentifier,
 			regInfo.sortByField, regInfo.sortByOrder, regInfo.limit, regInfo.offset, regInfo.searchTerm, regInfo.labels,
 		)
 		count, _ = c.TagStore.CountAllArtifactsByRepo(
-			ctx, regInfo.parentID, regInfo.RegistryIdentifier,
+			ctx, regInfo.ParentID, regInfo.RegistryIdentifier,
 			regInfo.searchTerm, regInfo.labels,
 		)
 		if err != nil {
@@ -101,10 +101,10 @@ func (c *APIController) GetAllArtifactsByRegistry(
 		}
 	} else {
 		artifacts, err = c.ArtifactStore.GetArtifactsByRepo(
-			ctx, regInfo.parentID, regInfo.RegistryIdentifier,
+			ctx, regInfo.ParentID, regInfo.RegistryIdentifier,
 			regInfo.sortByField, regInfo.sortByOrder, regInfo.limit, regInfo.offset, regInfo.searchTerm, regInfo.labels)
 		count, _ = c.ArtifactStore.CountArtifactsByRepo(
-			ctx, regInfo.parentID, regInfo.RegistryIdentifier,
+			ctx, regInfo.ParentID, regInfo.RegistryIdentifier,
 			regInfo.searchTerm, regInfo.labels)
 		if err != nil {
 			return artifact.GetAllArtifactsByRegistry500JSONResponse{

@@ -74,7 +74,7 @@ func (c *APIController) GetDockerArtifactManifest(
 
 	manifestPayload, err := c.ManifestStore.GetManifestPayload(
 		ctx,
-		regInfo.parentID,
+		regInfo.ParentID,
 		regInfo.RegistryIdentifier,
 		imageName,
 		manifestDigest,

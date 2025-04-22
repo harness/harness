@@ -72,12 +72,13 @@ func (c *APIController) CreateWebhook(
 	}
 
 	webhook, err := c.RegistryMetadataHelper.MapToWebhookCore(ctx, webhookRequest, regInfo)
-	webhook.Type = enum.WebhookTypeExternal
-	webhook.CreatedBy = session.Principal.ID
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("failed to store webhook: %s with error: %v", webhookRequest.Identifier, err)
 		return createWebhookBadRequestErrorResponse(fmt.Errorf("failed to store webhook %w", err))
 	}
+
+	webhook.Type = enum.WebhookTypeExternal
+	webhook.CreatedBy = session.Principal.ID
 
 	err = c.WebhooksRepository.Create(ctx, webhook)
 	if err != nil {

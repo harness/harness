@@ -80,14 +80,14 @@ func (c *APIController) FetchArtifactSummary(
 	}
 
 	if registry.PackageType == artifact.PackageTypeDOCKER || registry.PackageType == artifact.PackageTypeHELM {
-		tag, err := c.TagStore.GetTagMetadata(ctx, regInfo.parentID, regInfo.RegistryIdentifier, image, version)
+		tag, err := c.TagStore.GetTagMetadata(ctx, regInfo.ParentID, regInfo.RegistryIdentifier, image, version)
 		if err != nil {
 			return "", "", "", err
 		}
 
 		return image, tag.Name, tag.PackageType, nil
 	}
-	artifact, err := c.ArtifactStore.GetArtifactMetadata(ctx, regInfo.parentID,
+	artifact, err := c.ArtifactStore.GetArtifactMetadata(ctx, regInfo.ParentID,
 		regInfo.RegistryIdentifier, image, version)
 
 	if err != nil {

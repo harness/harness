@@ -21,27 +21,28 @@ import (
 
 	"github.com/harness/gitness/app/paths"
 	corestore "github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/registry/app/api/interfaces"
 	api "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/store"
+	registrytypes "github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
-var _ RegistryMetadataHelper = (*GitnessRegistryMetadataHelper)(nil)
-var _ RegistryMetadataHelper = (*MockRegistryMetadataHelper)(nil)
+var _ interfaces.RegistryMetadataHelper = (*GitnessRegistryMetadataHelper)(nil)
 
 type GitnessRegistryMetadataHelper struct {
 	spacePathStore     corestore.SpacePathStore
-	spaceFinder        SpaceFinder
+	spaceFinder        interfaces.SpaceFinder
 	registryRepository store.RegistryRepository
 }
 
 func NewRegistryMetadataHelper(
 	spacePathStore corestore.SpacePathStore,
-	spaceFinder SpaceFinder,
+	spaceFinder interfaces.SpaceFinder,
 	registryRepository store.RegistryRepository,
-) RegistryMetadataHelper {
+) interfaces.RegistryMetadataHelper {
 	gitnessRegistryMetadataHelper := GitnessRegistryMetadataHelper{
 		spacePathStore:     spacePathStore,
 		spaceFinder:        spaceFinder,
@@ -50,7 +51,10 @@ func NewRegistryMetadataHelper(
 	return &gitnessRegistryMetadataHelper
 }
 
-func (r *GitnessRegistryMetadataHelper) getSecretSpaceID(ctx context.Context, secretSpacePath *string) (int64, error) {
+func (r *GitnessRegistryMetadataHelper) GetSecretSpaceID(
+	ctx context.Context,
+	secretSpacePath *string,
+) (int64, error) {
 	if secretSpacePath == nil {
 		return -1, fmt.Errorf("secret space path is missing")
 	}
@@ -68,7 +72,7 @@ func (r *GitnessRegistryMetadataHelper) GetRegistryRequestBaseInfo(
 	ctx context.Context,
 	parentRef string,
 	regRef string,
-) (*RegistryRequestBaseInfo, error) {
+) (*registrytypes.RegistryRequestBaseInfo, error) {
 	// ---------- CHECKS ------------
 	if commons.IsEmpty(parentRef) && !commons.IsEmpty(regRef) {
 		parentRef, _, _ = paths.DisectLeaf(regRef)
@@ -94,11 +98,11 @@ func (r *GitnessRegistryMetadataHelper) GetRegistryRequestBaseInfo(
 	rootIdentifierID := rootSpace.ID
 	parentID := parentSpace.ID
 
-	baseInfo := &RegistryRequestBaseInfo{
+	baseInfo := registrytypes.RegistryRequestBaseInfo{
 		ParentRef:        parentRef,
-		parentID:         parentID,
+		ParentID:         parentID,
 		RootIdentifier:   rootIdentifier,
-		rootIdentifierID: rootIdentifierID,
+		RootIdentifierID: rootIdentifierID,
 	}
 
 	// ---------- REGISTRY  ------------
@@ -117,7 +121,7 @@ func (r *GitnessRegistryMetadataHelper) GetRegistryRequestBaseInfo(
 		baseInfo.PackageType = reg.PackageType
 	}
 
-	return baseInfo, nil
+	return &baseInfo, nil
 }
 
 func (r *GitnessRegistryMetadataHelper) GetPermissionChecks(
@@ -138,7 +142,7 @@ func (r *GitnessRegistryMetadataHelper) GetPermissionChecks(
 func (r *GitnessRegistryMetadataHelper) MapToWebhookCore(
 	ctx context.Context,
 	webhookRequest api.WebhookRequest,
-	regInfo *RegistryRequestBaseInfo,
+	regInfo *registrytypes.RegistryRequestBaseInfo,
 ) (*types.WebhookCore, error) {
 	webhook := &types.WebhookCore{
 		DisplayName: webhookRequest.Name,
@@ -163,7 +167,7 @@ func (r *GitnessRegistryMetadataHelper) MapToWebhookCore(
 		webhook.SecretIdentifier = *webhookRequest.SecretIdentifier
 	}
 	if webhookRequest.SecretSpacePath != nil && len(*webhookRequest.SecretSpacePath) > 0 {
-		secretSpaceID, err := r.getSecretSpaceID(ctx, webhookRequest.SecretSpacePath)
+		secretSpaceID, err := r.GetSecretSpaceID(ctx, webhookRequest.SecretSpacePath)
 		if err != nil {
 			return nil, err
 		}

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//nolint:lll,revive // revive:disable:unused-parameter
 package metadata
 
 import (
@@ -20,8 +21,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/harness/gitness/registry/app/api/controller/mocks"
 	api "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/types"
+	"github.com/harness/gitness/registry/utils"
 	gitnesstypes "github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -29,498 +32,700 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-//nolint:lll
-func TestListWebhookExecutions_Success(t *testing.T) {
-	ctx := context.Background()
-	mockSpaceFinder := new(MockSpaceFinder)
-	mockRegistryRepository := new(MockRegistryRepository)
-	mockWebhooksRepository := new(MockWebhooksRepository)
-	mockWebhooksExecutionRepository := new(MockWebhooksExecutionRepository)
-	mockAuthorizer := new(MockAuthorizer)
-	mockRegistryMetadataHelper := new(MockRegistryMetadataHelper)
-	controller := &APIController{
-		SpaceFinder:                 mockSpaceFinder,
-		RegistryRepository:          mockRegistryRepository,
-		WebhooksRepository:          mockWebhooksRepository,
-		WebhooksExecutionRepository: mockWebhooksExecutionRepository,
-		Authorizer:                  mockAuthorizer,
-		RegistryMetadataHelper:      mockRegistryMetadataHelper,
-	}
-
-	regInfo := &RegistryRequestBaseInfo{
-		RegistryID:         1,
-		RegistryIdentifier: "reg",
-		ParentRef:          "root/parent",
-	}
-	space := &gitnesstypes.SpaceCore{ID: 2}
-	var permissionChecks []gitnesstypes.PermissionCheck
-	mockRegistryMetadataHelper.On("GetRegistryRequestBaseInfo", ctx, "", "reg").Return(regInfo, nil)
-	mockSpaceFinder.On("FindByRef", ctx, "root/parent").Return(space, nil)
-	mockRegistryMetadataHelper.On("GetPermissionChecks", space, regInfo.RegistryIdentifier, enum.PermissionRegistryView).Return(permissionChecks)
-	mockAuthorizer.On("CheckAll", ctx, mock.Anything, permissionChecks).Return(true, nil)
-	mockRegistryRepository.On("GetByParentIDAndName", ctx, int64(2), "reg").Return(&types.Registry{ID: 3}, nil)
-	mockWebhooksRepository.On("GetByRegistryAndIdentifier", ctx, int64(3), "webhook").Return(&gitnesstypes.WebhookCore{ID: 4}, nil)
-	mockWebhooksExecutionRepository.On("ListForWebhook", ctx, int64(4), 10, 1, 10).Return([]*gitnesstypes.WebhookExecutionCore{
+func TestListWebhookExecutions(t *testing.T) {
+	tests := []struct {
+		name       string
+		request    api.ListWebhookExecutionsRequestObject
+		setupMocks func(*mocks.SpaceFinder, *mocks.RegistryRepository, *mocks.WebhooksRepository,
+			*mocks.WebhooksExecutionRepository, *mocks.Authorizer, *mocks.RegistryMetadataHelper)
+		validate    func(*testing.T, api.ListWebhookExecutionsResponseObject, error)
+		verifyMocks func(*testing.T, *mocks.SpaceFinder, *mocks.RegistryRepository, *mocks.WebhooksRepository,
+			*mocks.WebhooksExecutionRepository, *mocks.Authorizer, *mocks.RegistryMetadataHelper)
+	}{
 		{
-			ID:            1,
-			Created:       time.Now().Unix(),
-			Duration:      100,
-			Error:         "none",
-			Request:       gitnesstypes.WebhookExecutionRequest{Body: "{}", Headers: "headers", URL: "http://example.com"},
-			Response:      gitnesstypes.WebhookExecutionResponse{Body: "{}", Headers: "headers", Status: "200 OK", StatusCode: 200},
-			RetriggerOf:   nil,
-			Retriggerable: true,
-			WebhookID:     4,
-			Result:        enum.WebhookExecutionResultSuccess,
-			TriggerType:   enum.WebhookTriggerArtifactCreated,
+			name: "success_case",
+			request: api.ListWebhookExecutionsRequestObject{
+				RegistryRef:       "reg",
+				WebhookIdentifier: "webhook",
+				Params: api.ListWebhookExecutionsParams{
+					Size: utils.PageSizePtr(10),
+					Page: utils.PageNumberPtr(1),
+				},
+			},
+			setupMocks: func(mockSpaceFinder *mocks.SpaceFinder, mockRegistryRepo *mocks.RegistryRepository,
+				mockWebhooksRepo *mocks.WebhooksRepository, mockWebhooksExecRepo *mocks.WebhooksExecutionRepository,
+				mockAuthorizer *mocks.Authorizer, mockMetadataHelper *mocks.RegistryMetadataHelper) {
+				regInfo := &types.RegistryRequestBaseInfo{
+					RegistryID:         1,
+					RegistryIdentifier: "reg",
+					ParentRef:          "root/parent",
+				}
+				space := &gitnesstypes.SpaceCore{ID: 2}
+				var permissionChecks []gitnesstypes.PermissionCheck
+				// session := &auth.Session{}
+
+				mockMetadataHelper.On("GetRegistryRequestBaseInfo", mock.Anything, "", "reg").Return(regInfo, nil)
+				mockSpaceFinder.On("FindByRef", mock.Anything, "root/parent").Return(space, nil)
+				mockMetadataHelper.On(
+					"GetPermissionChecks",
+					space,
+					regInfo.RegistryIdentifier,
+					enum.PermissionRegistryView,
+				).Return(permissionChecks)
+				mockAuthorizer.On("CheckAll", mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
+				mockRegistryRepo.On("GetByParentIDAndName", mock.Anything, int64(2), "reg").Return(&types.Registry{ID: 3}, nil)
+				mockWebhooksRepo.On(
+					"GetByRegistryAndIdentifier",
+					mock.Anything,
+					int64(3),
+					"webhook",
+				).Return(&gitnesstypes.WebhookCore{ID: 4}, nil)
+				mockWebhooksExecRepo.On(
+					"ListForWebhook",
+					mock.Anything,
+					int64(4),
+					10, 1, 10,
+				).Return([]*gitnesstypes.WebhookExecutionCore{
+					{
+						ID:       1,
+						Created:  time.Now().Unix(),
+						Duration: 100,
+						Error:    "none",
+						Request:  gitnesstypes.WebhookExecutionRequest{Body: "{}", Headers: "headers", URL: "http://example.com"},
+						Response: gitnesstypes.WebhookExecutionResponse{
+							Body:       "{}",
+							Headers:    "headers",
+							Status:     "200 OK",
+							StatusCode: 200,
+						},
+						RetriggerOf:   nil,
+						Retriggerable: true,
+						WebhookID:     4,
+						Result:        enum.WebhookExecutionResultSuccess,
+						TriggerType:   enum.WebhookTriggerArtifactCreated,
+					},
+				}, nil)
+				mockWebhooksExecRepo.On("CountForWebhook", mock.Anything, int64(4)).Return(int64(1), nil)
+			},
+			validate: func(t *testing.T, response api.ListWebhookExecutionsResponseObject, err error) {
+				assert.NoError(t, err)
+				assert.NotNil(t, response)
+
+				resp, ok := response.(api.ListWebhookExecutions200JSONResponse)
+				assert.True(t, ok, "expected 200 response")
+				assert.Equal(t, api.StatusSUCCESS, resp.Status)
+				assert.Len(t, resp.Data.Executions, 1)
+
+				exec := resp.Data.Executions[0]
+				assert.Equal(t, int64(1), *exec.Id)
+				assert.Equal(t, "none", *exec.Error)
+				assert.Equal(t, "{}", *exec.Request.Body)
+				assert.Equal(t, "headers", *exec.Request.Headers)
+				assert.Equal(t, "http://example.com", *exec.Request.Url)
+				assert.Equal(t, "{}", *exec.Response.Body)
+				assert.Equal(t, "headers", *exec.Response.Headers)
+				assert.Equal(t, "200 OK", *exec.Response.Status)
+				assert.Equal(t, 200, *exec.Response.StatusCode)
+				assert.Equal(t, api.WebhookExecResultSUCCESS, *exec.Result)
+				assert.Equal(t, api.TriggerARTIFACTCREATION, *exec.TriggerType)
+
+				assert.Equal(t, int64(1), *resp.Data.ItemCount)
+				assert.Equal(t, 1, *resp.Data.PageSize)
+				assert.Equal(t, int64(1), *resp.Data.PageIndex)
+				assert.Equal(t, int64(1), *resp.Data.PageCount)
+			},
+			verifyMocks: func(t *testing.T, mockSpaceFinder *mocks.SpaceFinder, mockRegistryRepo *mocks.RegistryRepository,
+				mockWebhooksRepo *mocks.WebhooksRepository, mockWebhooksExecRepo *mocks.WebhooksExecutionRepository,
+				mockAuthorizer *mocks.Authorizer, mockMetadataHelper *mocks.RegistryMetadataHelper) {
+				mockMetadataHelper.AssertExpectations(t)
+				mockSpaceFinder.AssertExpectations(t)
+				mockAuthorizer.AssertExpectations(t)
+				mockRegistryRepo.AssertExpectations(t)
+				mockWebhooksRepo.AssertExpectations(t)
+				mockWebhooksExecRepo.AssertExpectations(t)
+			},
 		},
-	}, nil)
-	mockWebhooksExecutionRepository.On("CountForWebhook", ctx, int64(4)).Return(int64(1), nil)
-
-	pageSize := api.PageSize(10)
-	pageNumber := api.PageNumber(1)
-	r := api.ListWebhookExecutionsRequestObject{
-		RegistryRef:       "reg",
-		WebhookIdentifier: "webhook",
-		Params: api.ListWebhookExecutionsParams{
-			Size: &pageSize,
-			Page: &pageNumber,
-		},
-	}
-
-	response, err := controller.ListWebhookExecutions(ctx, r)
-	listWebhookExecutions200JSONResponse, ok := response.(api.ListWebhookExecutions200JSONResponse)
-	if !ok {
-		t.Fatalf("expected api.ListWebhookExecutions200JSONResponse, got %T", response)
-	}
-	assert.NoError(t, err)
-	assert.NotNil(t, response)
-	assert.Equal(t, api.StatusSUCCESS, listWebhookExecutions200JSONResponse.Status)
-	assert.Len(t, listWebhookExecutions200JSONResponse.Data.Executions, 1)
-	assert.Equal(t, int64(1), *listWebhookExecutions200JSONResponse.Data.Executions[0].Id)
-	assert.Equal(t, "none", *listWebhookExecutions200JSONResponse.Data.Executions[0].Error)
-	assert.Equal(t, "{}", *listWebhookExecutions200JSONResponse.Data.Executions[0].Request.Body)
-	assert.Equal(t, "headers", *listWebhookExecutions200JSONResponse.Data.Executions[0].Request.Headers)
-	assert.Equal(t, "http://example.com", *listWebhookExecutions200JSONResponse.Data.Executions[0].Request.Url)
-	assert.Equal(t, "{}", *listWebhookExecutions200JSONResponse.Data.Executions[0].Response.Body)
-	assert.Equal(t, "headers", *listWebhookExecutions200JSONResponse.Data.Executions[0].Response.Headers)
-	assert.Equal(t, "200 OK", *listWebhookExecutions200JSONResponse.Data.Executions[0].Response.Status)
-	assert.Equal(t, 200, *listWebhookExecutions200JSONResponse.Data.Executions[0].Response.StatusCode)
-	assert.Equal(t, api.WebhookExecResultSUCCESS, *listWebhookExecutions200JSONResponse.Data.Executions[0].Result)
-	assert.Equal(t, api.TriggerARTIFACTCREATION, *listWebhookExecutions200JSONResponse.Data.Executions[0].TriggerType)
-	assert.Equal(t, int64(1), *listWebhookExecutions200JSONResponse.Data.ItemCount)
-	assert.Equal(t, 1, *listWebhookExecutions200JSONResponse.Data.PageSize)
-	assert.Equal(t, int64(1), *listWebhookExecutions200JSONResponse.Data.PageIndex)
-	assert.Equal(t, int64(1), *listWebhookExecutions200JSONResponse.Data.PageCount)
-	assert.Equal(t, api.StatusSUCCESS, listWebhookExecutions200JSONResponse.Status)
-
-	mockRegistryMetadataHelper.AssertExpectations(t)
-	mockSpaceFinder.AssertExpectations(t)
-	mockAuthorizer.AssertExpectations(t)
-	mockRegistryRepository.AssertExpectations(t)
-	mockWebhooksRepository.AssertExpectations(t)
-	mockWebhooksExecutionRepository.AssertExpectations(t)
-}
-
-//nolint:lll
-func TestListWebhookExecutions_GetRegistryRequestBaseInfoError(t *testing.T) {
-	ctx := context.Background()
-	mockRegistryMetadataHelper := new(MockRegistryMetadataHelper)
-	controller := &APIController{
-		RegistryMetadataHelper: mockRegistryMetadataHelper,
-	}
-
-	mockRegistryMetadataHelper.On("GetRegistryRequestBaseInfo", ctx, "", "reg").Return(nil, fmt.Errorf("error"))
-
-	pageSize := api.PageSize(10)
-	pageNumber := api.PageNumber(11)
-	r := api.ListWebhookExecutionsRequestObject{
-		RegistryRef:       "reg",
-		WebhookIdentifier: "webhook",
-		Params: api.ListWebhookExecutionsParams{
-			Size: &pageSize,
-			Page: &pageNumber,
-		},
-	}
-
-	response, err := controller.ListWebhookExecutions(ctx, r)
-	assert.NoError(t, err)
-	assert.NotNil(t, response)
-	assert.IsType(t, api.ListWebhookExecutions500JSONResponse{}, response)
-	assert.Equal(t, "error", response.(api.ListWebhookExecutions500JSONResponse).Message) //nolint:errcheck
-	mockRegistryMetadataHelper.AssertExpectations(t)
-}
-
-//nolint:lll
-func TestListWebhookExecutions_FindByRefError(t *testing.T) {
-	ctx := context.Background()
-	mockSpaceFinder := new(MockSpaceFinder)
-	mockRegistryMetadataHelper := new(MockRegistryMetadataHelper)
-	controller := &APIController{
-		SpaceFinder:            mockSpaceFinder,
-		RegistryMetadataHelper: mockRegistryMetadataHelper,
-	}
-
-	regInfo := &RegistryRequestBaseInfo{
-		RegistryID:         1,
-		RegistryIdentifier: "reg",
-		ParentRef:          "root/parent",
-	}
-
-	mockRegistryMetadataHelper.On("GetRegistryRequestBaseInfo", ctx, "", "reg").Return(regInfo, nil)
-	mockSpaceFinder.On("FindByRef", ctx, "root/parent").Return(nil, fmt.Errorf("error"))
-
-	pageSize := api.PageSize(10)
-	pageNumber := api.PageNumber(11)
-	r := api.ListWebhookExecutionsRequestObject{
-		RegistryRef:       "reg",
-		WebhookIdentifier: "webhook",
-		Params: api.ListWebhookExecutionsParams{
-			Size: &pageSize,
-			Page: &pageNumber,
-		},
-	}
-
-	response, err := controller.ListWebhookExecutions(ctx, r)
-	assert.NoError(t, err)
-	assert.NotNil(t, response)
-	assert.IsType(t, api.ListWebhookExecutions500JSONResponse{}, response)
-	assert.Equal(t, "error", response.(api.ListWebhookExecutions500JSONResponse).Message) //nolint:errcheck
-
-	mockRegistryMetadataHelper.AssertExpectations(t)
-	mockSpaceFinder.AssertExpectations(t)
-}
-
-//nolint:lll
-func TestListWebhookExecutions_CheckPermissionsFails(t *testing.T) {
-	ctx := context.Background()
-	mockSpaceFinder := new(MockSpaceFinder)
-	mockAuthorizer := new(MockAuthorizer)
-	mockRegistryMetadataHelper := new(MockRegistryMetadataHelper)
-	controller := &APIController{
-		SpaceFinder:            mockSpaceFinder,
-		Authorizer:             mockAuthorizer,
-		RegistryMetadataHelper: mockRegistryMetadataHelper,
-	}
-
-	regInfo := &RegistryRequestBaseInfo{
-		RegistryID:         1,
-		RegistryIdentifier: "reg",
-		ParentRef:          "root/parent",
-	}
-	space := &gitnesstypes.SpaceCore{ID: 2}
-	var permissionChecks []gitnesstypes.PermissionCheck
-
-	mockRegistryMetadataHelper.On("GetRegistryRequestBaseInfo", ctx, "", "reg").Return(regInfo, nil)
-	mockSpaceFinder.On("FindByRef", ctx, "root/parent").Return(space, nil)
-	mockRegistryMetadataHelper.On("GetPermissionChecks", space, regInfo.RegistryIdentifier, enum.PermissionRegistryView).Return(permissionChecks)
-	mockAuthorizer.On("CheckAll", ctx, mock.Anything, permissionChecks).Return(false, nil)
-
-	pageSize := api.PageSize(10)
-	pageNumber := api.PageNumber(11)
-	r := api.ListWebhookExecutionsRequestObject{
-		RegistryRef:       "reg",
-		WebhookIdentifier: "webhook",
-		Params: api.ListWebhookExecutionsParams{
-			Size: &pageSize,
-			Page: &pageNumber,
-		},
-	}
-
-	response, err := controller.ListWebhookExecutions(ctx, r)
-	assert.NoError(t, err)
-	assert.NotNil(t, response)
-	assert.IsType(t, api.ListWebhookExecutions403JSONResponse{}, response)
-	assert.Equal(t, "forbidden", response.(api.ListWebhookExecutions403JSONResponse).Message) //nolint:errcheck
-
-	mockRegistryMetadataHelper.AssertExpectations(t)
-	mockSpaceFinder.AssertExpectations(t)
-	mockAuthorizer.AssertExpectations(t)
-}
-
-//nolint:lll
-func TestListWebhookExecutions_FailedToDetRegistry(t *testing.T) {
-	ctx := context.Background()
-	mockSpaceFinder := new(MockSpaceFinder)
-	mockRegistryRepository := new(MockRegistryRepository)
-	mockWebhooksRepository := new(MockWebhooksRepository)
-	mockWebhooksExecutionRepository := new(MockWebhooksExecutionRepository)
-	mockAuthorizer := new(MockAuthorizer)
-	mockRegistryMetadataHelper := new(MockRegistryMetadataHelper)
-	controller := &APIController{
-		SpaceFinder:                 mockSpaceFinder,
-		RegistryRepository:          mockRegistryRepository,
-		WebhooksRepository:          mockWebhooksRepository,
-		WebhooksExecutionRepository: mockWebhooksExecutionRepository,
-		Authorizer:                  mockAuthorizer,
-		RegistryMetadataHelper:      mockRegistryMetadataHelper,
-	}
-
-	regInfo := &RegistryRequestBaseInfo{
-		RegistryID:         1,
-		RegistryIdentifier: "reg",
-		ParentRef:          "root/parent",
-	}
-	space := &gitnesstypes.SpaceCore{ID: 2}
-	var permissionChecks []gitnesstypes.PermissionCheck
-	mockRegistryMetadataHelper.On("GetRegistryRequestBaseInfo", ctx, "", "reg").Return(regInfo, nil)
-	mockSpaceFinder.On("FindByRef", ctx, "root/parent").Return(space, nil)
-	mockRegistryMetadataHelper.On("GetPermissionChecks", space, regInfo.RegistryIdentifier, enum.PermissionRegistryView).Return(permissionChecks)
-	mockAuthorizer.On("CheckAll", ctx, mock.Anything, permissionChecks).Return(true, nil)
-	mockRegistryRepository.On("GetByParentIDAndName", ctx, int64(2), "reg").Return(nil, fmt.Errorf("error"))
-
-	pageSize := api.PageSize(10)
-	pageNumber := api.PageNumber(1)
-	r := api.ListWebhookExecutionsRequestObject{
-		RegistryRef:       "reg",
-		WebhookIdentifier: "webhook",
-		Params: api.ListWebhookExecutionsParams{
-			Size: &pageSize,
-			Page: &pageNumber,
-		},
-	}
-
-	response, err := controller.ListWebhookExecutions(ctx, r)
-	assert.NoError(t, err)
-	assert.NotNil(t, response)
-	assert.IsType(t, api.ListWebhookExecutions500JSONResponse{}, response)
-	assert.Equal(t, "failed to find registry: error", response.(api.ListWebhookExecutions500JSONResponse).Message) //nolint:errcheck
-
-	mockRegistryMetadataHelper.AssertExpectations(t)
-	mockSpaceFinder.AssertExpectations(t)
-	mockAuthorizer.AssertExpectations(t)
-	mockRegistryRepository.AssertExpectations(t)
-}
-
-//nolint:lll
-func TestListWebhookExecutions_FailedToGetWebhook(t *testing.T) {
-	ctx := context.Background()
-	mockSpaceFinder := new(MockSpaceFinder)
-	mockRegistryRepository := new(MockRegistryRepository)
-	mockWebhooksRepository := new(MockWebhooksRepository)
-	mockWebhooksExecutionRepository := new(MockWebhooksExecutionRepository)
-	mockAuthorizer := new(MockAuthorizer)
-	mockRegistryMetadataHelper := new(MockRegistryMetadataHelper)
-	controller := &APIController{
-		SpaceFinder:                 mockSpaceFinder,
-		RegistryRepository:          mockRegistryRepository,
-		WebhooksRepository:          mockWebhooksRepository,
-		WebhooksExecutionRepository: mockWebhooksExecutionRepository,
-		Authorizer:                  mockAuthorizer,
-		RegistryMetadataHelper:      mockRegistryMetadataHelper,
-	}
-
-	regInfo := &RegistryRequestBaseInfo{
-		RegistryID:         1,
-		RegistryIdentifier: "reg",
-		ParentRef:          "root/parent",
-	}
-	space := &gitnesstypes.SpaceCore{ID: 2}
-	var permissionChecks []gitnesstypes.PermissionCheck
-	mockRegistryMetadataHelper.On("GetRegistryRequestBaseInfo", ctx, "", "reg").Return(regInfo, nil)
-	mockSpaceFinder.On("FindByRef", ctx, "root/parent").Return(space, nil)
-	mockRegistryMetadataHelper.On("GetPermissionChecks", space, regInfo.RegistryIdentifier, enum.PermissionRegistryView).Return(permissionChecks)
-	mockAuthorizer.On("CheckAll", ctx, mock.Anything, permissionChecks).Return(true, nil)
-	mockRegistryRepository.On("GetByParentIDAndName", ctx, int64(2), "reg").Return(&types.Registry{ID: 3}, nil)
-	mockWebhooksRepository.On("GetByRegistryAndIdentifier", ctx, int64(3), "webhook").Return(nil, fmt.Errorf("error"))
-
-	pageSize := api.PageSize(10)
-	pageNumber := api.PageNumber(1)
-	r := api.ListWebhookExecutionsRequestObject{
-		RegistryRef:       "reg",
-		WebhookIdentifier: "webhook",
-		Params: api.ListWebhookExecutionsParams{
-			Size: &pageSize,
-			Page: &pageNumber,
-		},
-	}
-
-	response, err := controller.ListWebhookExecutions(ctx, r)
-	assert.NoError(t, err)
-	assert.NotNil(t, response)
-	assert.IsType(t, api.ListWebhookExecutions500JSONResponse{}, response)
-	assert.Equal(t, "failed to find webhook [webhook] : error", response.(api.ListWebhookExecutions500JSONResponse).Message) //nolint:errcheck
-
-	mockRegistryMetadataHelper.AssertExpectations(t)
-	mockSpaceFinder.AssertExpectations(t)
-	mockAuthorizer.AssertExpectations(t)
-	mockRegistryRepository.AssertExpectations(t)
-	mockWebhooksRepository.AssertExpectations(t)
-}
-
-//nolint:lll
-func TestListWebhookExecutions_FailedToGetWebhookExecutions(t *testing.T) {
-	ctx := context.Background()
-	mockSpaceFinder := new(MockSpaceFinder)
-	mockRegistryRepository := new(MockRegistryRepository)
-	mockWebhooksRepository := new(MockWebhooksRepository)
-	mockWebhooksExecutionRepository := new(MockWebhooksExecutionRepository)
-	mockAuthorizer := new(MockAuthorizer)
-	mockRegistryMetadataHelper := new(MockRegistryMetadataHelper)
-	controller := &APIController{
-		SpaceFinder:                 mockSpaceFinder,
-		RegistryRepository:          mockRegistryRepository,
-		WebhooksRepository:          mockWebhooksRepository,
-		WebhooksExecutionRepository: mockWebhooksExecutionRepository,
-		Authorizer:                  mockAuthorizer,
-		RegistryMetadataHelper:      mockRegistryMetadataHelper,
-	}
-
-	regInfo := &RegistryRequestBaseInfo{
-		RegistryID:         1,
-		RegistryIdentifier: "reg",
-		ParentRef:          "root/parent",
-	}
-	space := &gitnesstypes.SpaceCore{ID: 2}
-	var permissionChecks []gitnesstypes.PermissionCheck
-	mockRegistryMetadataHelper.On("GetRegistryRequestBaseInfo", ctx, "", "reg").Return(regInfo, nil)
-	mockSpaceFinder.On("FindByRef", ctx, "root/parent").Return(space, nil)
-	mockRegistryMetadataHelper.On("GetPermissionChecks", space, regInfo.RegistryIdentifier, enum.PermissionRegistryView).Return(permissionChecks)
-	mockAuthorizer.On("CheckAll", ctx, mock.Anything, permissionChecks).Return(true, nil)
-	mockRegistryRepository.On("GetByParentIDAndName", ctx, int64(2), "reg").Return(&types.Registry{ID: 3}, nil)
-	mockWebhooksRepository.On("GetByRegistryAndIdentifier", ctx, int64(3), "webhook").Return(&gitnesstypes.WebhookCore{ID: 4}, nil)
-	mockWebhooksExecutionRepository.On("ListForWebhook", ctx, int64(4), 10, 1, 10).Return(nil, fmt.Errorf("error"))
-
-	pageSize := api.PageSize(10)
-	pageNumber := api.PageNumber(1)
-	r := api.ListWebhookExecutionsRequestObject{
-		RegistryRef:       "reg",
-		WebhookIdentifier: "webhook",
-		Params: api.ListWebhookExecutionsParams{
-			Size: &pageSize,
-			Page: &pageNumber,
-		},
-	}
-
-	response, err := controller.ListWebhookExecutions(ctx, r)
-	assert.NoError(t, err)
-	assert.NotNil(t, response)
-	assert.IsType(t, api.ListWebhookExecutions500JSONResponse{}, response)
-	assert.Equal(t, "failed to list webhook executions: error", response.(api.ListWebhookExecutions500JSONResponse).Message) //nolint:errcheck
-
-	mockRegistryMetadataHelper.AssertExpectations(t)
-	mockSpaceFinder.AssertExpectations(t)
-	mockAuthorizer.AssertExpectations(t)
-	mockRegistryRepository.AssertExpectations(t)
-	mockWebhooksRepository.AssertExpectations(t)
-	mockWebhooksExecutionRepository.AssertExpectations(t)
-}
-
-//nolint:lll
-func TestListWebhookExecutions_FailedToGetWebhooksCount(t *testing.T) {
-	ctx := context.Background()
-	mockSpaceFinder := new(MockSpaceFinder)
-	mockRegistryRepository := new(MockRegistryRepository)
-	mockWebhooksRepository := new(MockWebhooksRepository)
-	mockWebhooksExecutionRepository := new(MockWebhooksExecutionRepository)
-	mockAuthorizer := new(MockAuthorizer)
-	mockRegistryMetadataHelper := new(MockRegistryMetadataHelper)
-	controller := &APIController{
-		SpaceFinder:                 mockSpaceFinder,
-		RegistryRepository:          mockRegistryRepository,
-		WebhooksRepository:          mockWebhooksRepository,
-		WebhooksExecutionRepository: mockWebhooksExecutionRepository,
-		Authorizer:                  mockAuthorizer,
-		RegistryMetadataHelper:      mockRegistryMetadataHelper,
-	}
-
-	regInfo := &RegistryRequestBaseInfo{
-		RegistryID:         1,
-		RegistryIdentifier: "reg",
-		ParentRef:          "root/parent",
-	}
-	space := &gitnesstypes.SpaceCore{ID: 2}
-	var permissionChecks []gitnesstypes.PermissionCheck
-	mockRegistryMetadataHelper.On("GetRegistryRequestBaseInfo", ctx, "", "reg").Return(regInfo, nil)
-	mockSpaceFinder.On("FindByRef", ctx, "root/parent").Return(space, nil)
-	mockRegistryMetadataHelper.On("GetPermissionChecks", space, regInfo.RegistryIdentifier, enum.PermissionRegistryView).Return(permissionChecks)
-	mockAuthorizer.On("CheckAll", ctx, mock.Anything, permissionChecks).Return(true, nil)
-	mockRegistryRepository.On("GetByParentIDAndName", ctx, int64(2), "reg").Return(&types.Registry{ID: 3}, nil)
-	mockWebhooksRepository.On("GetByRegistryAndIdentifier", ctx, int64(3), "webhook").Return(&gitnesstypes.WebhookCore{ID: 4}, nil)
-	mockWebhooksExecutionRepository.On("ListForWebhook", ctx, int64(4), 10, 1, 10).Return([]*gitnesstypes.WebhookExecutionCore{
 		{
-			ID:            1,
-			Created:       time.Now().Unix(),
-			Duration:      100,
-			Error:         "none",
-			Request:       gitnesstypes.WebhookExecutionRequest{Body: "{}", Headers: "headers", URL: "http://example.com"},
-			Response:      gitnesstypes.WebhookExecutionResponse{Body: "{}", Headers: "headers", Status: "200 OK", StatusCode: 200},
-			RetriggerOf:   nil,
-			Retriggerable: true,
-			WebhookID:     4,
-			Result:        enum.WebhookExecutionResultSuccess,
-			TriggerType:   enum.WebhookTriggerArtifactCreated,
+			name: "get_registry_request_base_info_error",
+			request: api.ListWebhookExecutionsRequestObject{
+				RegistryRef:       "reg",
+				WebhookIdentifier: "webhook",
+				Params: api.ListWebhookExecutionsParams{
+					Size: utils.PageSizePtr(10),
+					Page: utils.PageNumberPtr(11),
+				},
+			},
+			setupMocks: func(_ *mocks.SpaceFinder, _ *mocks.RegistryRepository,
+				_ *mocks.WebhooksRepository, _ *mocks.WebhooksExecutionRepository,
+				_ *mocks.Authorizer, mockMetadataHelper *mocks.RegistryMetadataHelper) {
+				mockMetadataHelper.On("GetRegistryRequestBaseInfo", mock.Anything, "", "reg").Return(nil, fmt.Errorf("error"))
+			},
+			validate: func(t *testing.T, response api.ListWebhookExecutionsResponseObject, err error) {
+				assert.NoError(t, err)
+				assert.NotNil(t, response)
+				resp, ok := response.(api.ListWebhookExecutions500JSONResponse)
+				assert.True(t, ok, "expected 500 response")
+				assert.Equal(t, "error", resp.Message)
+			},
+			verifyMocks: func(t *testing.T, _ *mocks.SpaceFinder, _ *mocks.RegistryRepository,
+				_ *mocks.WebhooksRepository, _ *mocks.WebhooksExecutionRepository,
+				_ *mocks.Authorizer, mockMetadataHelper *mocks.RegistryMetadataHelper) {
+				mockMetadataHelper.AssertExpectations(t)
+				// Other mocks should not have any expectations
+			},
 		},
-	}, nil)
-	mockWebhooksExecutionRepository.On("CountForWebhook", ctx, int64(4)).Return(nil, fmt.Errorf("error"))
+		{
+			name: "find_by_ref_error",
+			request: api.ListWebhookExecutionsRequestObject{
+				RegistryRef:       "reg",
+				WebhookIdentifier: "webhook",
+				Params: api.ListWebhookExecutionsParams{
+					Size: utils.PageSizePtr(10),
+					Page: utils.PageNumberPtr(11),
+				},
+			},
+			setupMocks: func(mockSpaceFinder *mocks.SpaceFinder, _ *mocks.RegistryRepository,
+				_ *mocks.WebhooksRepository, _ *mocks.WebhooksExecutionRepository,
+				_ *mocks.Authorizer, mockMetadataHelper *mocks.RegistryMetadataHelper) {
+				regInfo := &types.RegistryRequestBaseInfo{
+					RegistryID:         1,
+					RegistryIdentifier: "reg",
+					ParentRef:          "root/parent",
+				}
+				mockMetadataHelper.On("GetRegistryRequestBaseInfo", mock.Anything, "", "reg").Return(regInfo, nil)
+				mockSpaceFinder.On("FindByRef", mock.Anything, "root/parent").Return(nil, fmt.Errorf("error"))
+			},
+			validate: func(t *testing.T, response api.ListWebhookExecutionsResponseObject, err error) {
+				assert.NoError(t, err)
+				assert.NotNil(t, response)
+				resp, ok := response.(api.ListWebhookExecutions500JSONResponse)
+				assert.True(t, ok, "expected 500 response")
+				assert.Equal(t, "error", resp.Message)
+			},
+			verifyMocks: func(t *testing.T, mockSpaceFinder *mocks.SpaceFinder, mockRegistryRepo *mocks.RegistryRepository,
+				mockWebhooksRepo *mocks.WebhooksRepository, mockWebhooksExecRepo *mocks.WebhooksExecutionRepository,
+				mockAuthorizer *mocks.Authorizer, mockMetadataHelper *mocks.RegistryMetadataHelper) {
+				mockMetadataHelper.AssertExpectations(t)
+				mockSpaceFinder.AssertExpectations(t)
+				// Other mocks should not have any expectations
+				mockAuthorizer.AssertNotCalled(t, mock.Anything)
+				mockRegistryRepo.AssertNotCalled(t, mock.Anything)
+				mockWebhooksRepo.AssertNotCalled(t, mock.Anything)
+				mockWebhooksExecRepo.AssertNotCalled(t, mock.Anything)
+			},
+		},
+		{
+			name: "check_permissions_fails",
+			request: api.ListWebhookExecutionsRequestObject{
+				RegistryRef:       "reg",
+				WebhookIdentifier: "webhook",
+				Params: api.ListWebhookExecutionsParams{
+					Size: utils.PageSizePtr(10),
+					Page: utils.PageNumberPtr(11),
+				},
+			},
+			setupMocks: func(mockSpaceFinder *mocks.SpaceFinder, mockRegistryRepo *mocks.RegistryRepository,
+				mockWebhooksRepo *mocks.WebhooksRepository, mockWebhooksExecRepo *mocks.WebhooksExecutionRepository,
+				mockAuthorizer *mocks.Authorizer, mockMetadataHelper *mocks.RegistryMetadataHelper) {
+				regInfo := &types.RegistryRequestBaseInfo{
+					RegistryID:         1,
+					RegistryIdentifier: "reg",
+					ParentRef:          "root/parent",
+				}
+				space := &gitnesstypes.SpaceCore{ID: 2}
+				var permissionChecks []gitnesstypes.PermissionCheck
 
-	pageSize := api.PageSize(10)
-	pageNumber := api.PageNumber(1)
-	r := api.ListWebhookExecutionsRequestObject{
-		RegistryRef:       "reg",
-		WebhookIdentifier: "webhook",
-		Params: api.ListWebhookExecutionsParams{
-			Size: &pageSize,
-			Page: &pageNumber,
+				mockMetadataHelper.On("GetRegistryRequestBaseInfo", mock.Anything, "", "reg").Return(regInfo, nil)
+				mockSpaceFinder.On("FindByRef", mock.Anything, "root/parent").Return(space, nil)
+				mockMetadataHelper.On(
+					"GetPermissionChecks",
+					space,
+					regInfo.RegistryIdentifier,
+					enum.PermissionRegistryView,
+				).Return(permissionChecks)
+				mockAuthorizer.On("CheckAll", mock.Anything, mock.Anything, mock.Anything).Return(false, nil)
+			},
+			validate: func(t *testing.T, response api.ListWebhookExecutionsResponseObject, err error) {
+				assert.NoError(t, err)
+				assert.NotNil(t, response)
+				resp, ok := response.(api.ListWebhookExecutions403JSONResponse)
+				assert.True(t, ok, "expected 403 response")
+				assert.Equal(t, "forbidden", resp.Message)
+			},
+			verifyMocks: func(t *testing.T, mockSpaceFinder *mocks.SpaceFinder, mockRegistryRepo *mocks.RegistryRepository,
+				mockWebhooksRepo *mocks.WebhooksRepository, mockWebhooksExecRepo *mocks.WebhooksExecutionRepository,
+				mockAuthorizer *mocks.Authorizer, mockMetadataHelper *mocks.RegistryMetadataHelper) {
+				mockMetadataHelper.AssertExpectations(t)
+				mockSpaceFinder.AssertExpectations(t)
+				mockAuthorizer.AssertExpectations(t)
+				// Other mocks should not have any expectations
+				mockRegistryRepo.AssertNotCalled(t, mock.Anything)
+				mockWebhooksRepo.AssertNotCalled(t, mock.Anything)
+				mockWebhooksExecRepo.AssertNotCalled(t, mock.Anything)
+			},
+		},
+		{
+			name: "failed_to_get_registry",
+			request: api.ListWebhookExecutionsRequestObject{
+				RegistryRef:       "reg",
+				WebhookIdentifier: "webhook",
+				Params: api.ListWebhookExecutionsParams{
+					Size: utils.PageSizePtr(10),
+					Page: utils.PageNumberPtr(1),
+				},
+			},
+			setupMocks: func(mockSpaceFinder *mocks.SpaceFinder, mockRegistryRepo *mocks.RegistryRepository,
+				mockWebhooksRepo *mocks.WebhooksRepository, mockWebhooksExecRepo *mocks.WebhooksExecutionRepository,
+				mockAuthorizer *mocks.Authorizer, mockMetadataHelper *mocks.RegistryMetadataHelper) {
+				regInfo := &types.RegistryRequestBaseInfo{
+					RegistryID:         1,
+					RegistryIdentifier: "reg",
+					ParentRef:          "root/parent",
+				}
+				space := &gitnesstypes.SpaceCore{ID: 2}
+				var permissionChecks []gitnesstypes.PermissionCheck
+
+				mockMetadataHelper.On("GetRegistryRequestBaseInfo", mock.Anything, "", "reg").Return(regInfo, nil)
+				mockSpaceFinder.On("FindByRef", mock.Anything, "root/parent").Return(space, nil)
+				mockMetadataHelper.On(
+					"GetPermissionChecks",
+					space,
+					regInfo.RegistryIdentifier,
+					enum.PermissionRegistryView,
+				).Return(permissionChecks)
+				mockAuthorizer.On("CheckAll", mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
+				mockRegistryRepo.On("GetByParentIDAndName", mock.Anything, int64(2), "reg").Return(nil, fmt.Errorf("error"))
+			},
+			validate: func(t *testing.T, response api.ListWebhookExecutionsResponseObject, err error) {
+				assert.NoError(t, err)
+				assert.NotNil(t, response)
+				resp, ok := response.(api.ListWebhookExecutions500JSONResponse)
+				assert.True(t, ok, "expected 500 response")
+				assert.Equal(t, "failed to find registry: error", resp.Message)
+			},
+			verifyMocks: func(t *testing.T, mockSpaceFinder *mocks.SpaceFinder, mockRegistryRepo *mocks.RegistryRepository,
+				mockWebhooksRepo *mocks.WebhooksRepository, mockWebhooksExecRepo *mocks.WebhooksExecutionRepository,
+				mockAuthorizer *mocks.Authorizer, mockMetadataHelper *mocks.RegistryMetadataHelper) {
+				mockMetadataHelper.AssertExpectations(t)
+				mockSpaceFinder.AssertExpectations(t)
+				mockAuthorizer.AssertExpectations(t)
+				mockRegistryRepo.AssertExpectations(t)
+				// Other mocks should not have any expectations
+				mockWebhooksRepo.AssertNotCalled(t, mock.Anything)
+				mockWebhooksExecRepo.AssertNotCalled(t, mock.Anything)
+			},
+		},
+		{
+			name: "failed_to_get_webhook",
+			request: api.ListWebhookExecutionsRequestObject{
+				RegistryRef:       "reg",
+				WebhookIdentifier: "webhook",
+				Params: api.ListWebhookExecutionsParams{
+					Size: utils.PageSizePtr(10),
+					Page: utils.PageNumberPtr(1),
+				},
+			},
+			setupMocks: func(mockSpaceFinder *mocks.SpaceFinder, mockRegistryRepo *mocks.RegistryRepository,
+				mockWebhooksRepo *mocks.WebhooksRepository, mockWebhooksExecRepo *mocks.WebhooksExecutionRepository,
+				mockAuthorizer *mocks.Authorizer, mockMetadataHelper *mocks.RegistryMetadataHelper) {
+				regInfo := &types.RegistryRequestBaseInfo{
+					RegistryID:         1,
+					RegistryIdentifier: "reg",
+					ParentRef:          "root/parent",
+				}
+				space := &gitnesstypes.SpaceCore{ID: 2}
+				var permissionChecks []gitnesstypes.PermissionCheck
+
+				mockMetadataHelper.On("GetRegistryRequestBaseInfo", mock.Anything, "", "reg").Return(regInfo, nil)
+				mockSpaceFinder.On("FindByRef", mock.Anything, "root/parent").Return(space, nil)
+				mockMetadataHelper.On(
+					"GetPermissionChecks",
+					space,
+					regInfo.RegistryIdentifier,
+					enum.PermissionRegistryView,
+				).Return(permissionChecks)
+				mockAuthorizer.On("CheckAll", mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
+				mockRegistryRepo.On("GetByParentIDAndName", mock.Anything, int64(2), "reg").Return(&types.Registry{ID: 3}, nil)
+				mockWebhooksRepo.On("GetByRegistryAndIdentifier", mock.Anything, int64(3), "webhook").Return(nil, fmt.Errorf("error"))
+			},
+			validate: func(t *testing.T, response api.ListWebhookExecutionsResponseObject, err error) {
+				assert.NoError(t, err)
+				assert.NotNil(t, response)
+				resp, ok := response.(api.ListWebhookExecutions500JSONResponse)
+				assert.True(t, ok, "expected 500 response")
+				assert.Equal(t, "failed to find webhook [webhook] : error", resp.Message)
+			},
+			verifyMocks: func(t *testing.T, mockSpaceFinder *mocks.SpaceFinder, mockRegistryRepo *mocks.RegistryRepository,
+				mockWebhooksRepo *mocks.WebhooksRepository, mockWebhooksExecRepo *mocks.WebhooksExecutionRepository,
+				mockAuthorizer *mocks.Authorizer, mockMetadataHelper *mocks.RegistryMetadataHelper) {
+				mockMetadataHelper.AssertExpectations(t)
+				mockSpaceFinder.AssertExpectations(t)
+				mockAuthorizer.AssertExpectations(t)
+				mockRegistryRepo.AssertExpectations(t)
+				mockWebhooksRepo.AssertExpectations(t)
+				// Other mocks should not have any expectations
+				mockWebhooksExecRepo.AssertNotCalled(t, mock.Anything)
+			},
+		},
+		{
+			name: "failed_to_list_webhook_executions",
+			request: api.ListWebhookExecutionsRequestObject{
+				RegistryRef:       "reg",
+				WebhookIdentifier: "webhook",
+				Params: api.ListWebhookExecutionsParams{
+					Size: utils.PageSizePtr(10),
+					Page: utils.PageNumberPtr(1),
+				},
+			},
+			setupMocks: func(mockSpaceFinder *mocks.SpaceFinder, mockRegistryRepo *mocks.RegistryRepository,
+				mockWebhooksRepo *mocks.WebhooksRepository, mockWebhooksExecRepo *mocks.WebhooksExecutionRepository,
+				mockAuthorizer *mocks.Authorizer, mockMetadataHelper *mocks.RegistryMetadataHelper) {
+				regInfo := &types.RegistryRequestBaseInfo{
+					RegistryID:         1,
+					RegistryIdentifier: "reg",
+					ParentRef:          "root/parent",
+				}
+				space := &gitnesstypes.SpaceCore{ID: 2}
+				var permissionChecks []gitnesstypes.PermissionCheck
+
+				mockMetadataHelper.On("GetRegistryRequestBaseInfo", mock.Anything, "", "reg").Return(regInfo, nil)
+				mockSpaceFinder.On("FindByRef", mock.Anything, "root/parent").Return(space, nil)
+				mockMetadataHelper.On(
+					"GetPermissionChecks",
+					space,
+					regInfo.RegistryIdentifier,
+					enum.PermissionRegistryView,
+				).Return(permissionChecks)
+				mockAuthorizer.On("CheckAll", mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
+				mockRegistryRepo.On("GetByParentIDAndName", mock.Anything, int64(2), "reg").Return(&types.Registry{ID: 3}, nil)
+				mockWebhooksRepo.On(
+					"GetByRegistryAndIdentifier",
+					mock.Anything,
+					int64(3),
+					"webhook",
+				).Return(&gitnesstypes.WebhookCore{ID: 4}, nil)
+				mockWebhooksExecRepo.On("ListForWebhook", mock.Anything, int64(4), 10, 1, 10).Return(nil, fmt.Errorf("error"))
+			},
+			validate: func(t *testing.T, response api.ListWebhookExecutionsResponseObject, err error) {
+				assert.NoError(t, err)
+				assert.NotNil(t, response)
+				resp, ok := response.(api.ListWebhookExecutions500JSONResponse)
+				assert.True(t, ok, "expected 500 response")
+				assert.Equal(t, "failed to list webhook executions: error", resp.Message)
+			},
+			verifyMocks: func(t *testing.T, mockSpaceFinder *mocks.SpaceFinder, mockRegistryRepo *mocks.RegistryRepository,
+				mockWebhooksRepo *mocks.WebhooksRepository, mockWebhooksExecRepo *mocks.WebhooksExecutionRepository,
+				mockAuthorizer *mocks.Authorizer, mockMetadataHelper *mocks.RegistryMetadataHelper) {
+				mockMetadataHelper.AssertExpectations(t)
+				mockSpaceFinder.AssertExpectations(t)
+				mockAuthorizer.AssertExpectations(t)
+				mockRegistryRepo.AssertExpectations(t)
+				mockWebhooksRepo.AssertExpectations(t)
+				mockWebhooksExecRepo.AssertExpectations(t)
+			},
+		},
+		{
+			name: "failed_to_get_webhook_executions_count",
+			request: api.ListWebhookExecutionsRequestObject{
+				RegistryRef:       "reg",
+				WebhookIdentifier: "webhook",
+				Params: api.ListWebhookExecutionsParams{
+					Size: utils.PageSizePtr(10),
+					Page: utils.PageNumberPtr(1),
+				},
+			},
+			setupMocks: func(mockSpaceFinder *mocks.SpaceFinder, mockRegistryRepo *mocks.RegistryRepository,
+				mockWebhooksRepo *mocks.WebhooksRepository, mockWebhooksExecRepo *mocks.WebhooksExecutionRepository,
+				mockAuthorizer *mocks.Authorizer, mockMetadataHelper *mocks.RegistryMetadataHelper) {
+				regInfo := &types.RegistryRequestBaseInfo{
+					RegistryID:         1,
+					RegistryIdentifier: "reg",
+					ParentRef:          "root/parent",
+				}
+				space := &gitnesstypes.SpaceCore{ID: 2}
+				var permissionChecks []gitnesstypes.PermissionCheck
+
+				mockMetadataHelper.On("GetRegistryRequestBaseInfo", mock.Anything, "", "reg").Return(regInfo, nil)
+				mockSpaceFinder.On("FindByRef", mock.Anything, "root/parent").Return(space, nil)
+				mockMetadataHelper.On(
+					"GetPermissionChecks",
+					space,
+					regInfo.RegistryIdentifier,
+					enum.PermissionRegistryView,
+				).Return(permissionChecks)
+				mockAuthorizer.On("CheckAll", mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
+				mockRegistryRepo.On("GetByParentIDAndName", mock.Anything, int64(2), "reg").Return(&types.Registry{ID: 3}, nil)
+				mockWebhooksRepo.On(
+					"GetByRegistryAndIdentifier",
+					mock.Anything,
+					int64(3),
+					"webhook",
+				).Return(&gitnesstypes.WebhookCore{ID: 4}, nil)
+				mockWebhooksExecRepo.On(
+					"ListForWebhook",
+					mock.Anything,
+					int64(4),
+					10, 1, 10,
+				).Return([]*gitnesstypes.WebhookExecutionCore{
+					{
+						ID:       1,
+						Created:  time.Now().Unix(),
+						Duration: 100,
+						Error:    "none",
+						Request:  gitnesstypes.WebhookExecutionRequest{Body: "{}", Headers: "headers", URL: "http://example.com"},
+						Response: gitnesstypes.WebhookExecutionResponse{
+							Body:       "{}",
+							Headers:    "headers",
+							Status:     "200 OK",
+							StatusCode: 200,
+						},
+						RetriggerOf:   nil,
+						Retriggerable: true,
+						WebhookID:     4,
+						Result:        enum.WebhookExecutionResultSuccess,
+						TriggerType:   enum.WebhookTriggerArtifactCreated,
+					},
+				}, nil)
+				mockWebhooksExecRepo.On("CountForWebhook", mock.Anything, int64(4)).Return(int64(0), fmt.Errorf("error"))
+			},
+			validate: func(t *testing.T, response api.ListWebhookExecutionsResponseObject, err error) {
+				assert.NoError(t, err)
+				assert.NotNil(t, response)
+				resp, ok := response.(api.ListWebhookExecutions500JSONResponse)
+				assert.True(t, ok, "expected 500 response")
+				assert.Equal(t, "failed to get webhook executions count: error", resp.Message)
+			},
+			verifyMocks: func(t *testing.T, mockSpaceFinder *mocks.SpaceFinder, mockRegistryRepo *mocks.RegistryRepository,
+				mockWebhooksRepo *mocks.WebhooksRepository, mockWebhooksExecRepo *mocks.WebhooksExecutionRepository,
+				mockAuthorizer *mocks.Authorizer, mockMetadataHelper *mocks.RegistryMetadataHelper) {
+				mockMetadataHelper.AssertExpectations(t)
+				mockSpaceFinder.AssertExpectations(t)
+				mockAuthorizer.AssertExpectations(t)
+				mockRegistryRepo.AssertExpectations(t)
+				mockWebhooksRepo.AssertExpectations(t)
+				mockWebhooksExecRepo.AssertExpectations(t)
+			},
+		},
+		{
+			name: "success_case",
+			request: api.ListWebhookExecutionsRequestObject{
+				RegistryRef:       "reg",
+				WebhookIdentifier: "webhook",
+				Params: api.ListWebhookExecutionsParams{
+					Size: utils.PageSizePtr(10),
+					Page: utils.PageNumberPtr(1),
+				},
+			},
+			setupMocks: func(mockSpaceFinder *mocks.SpaceFinder, mockRegistryRepo *mocks.RegistryRepository,
+				mockWebhooksRepo *mocks.WebhooksRepository, mockWebhooksExecRepo *mocks.WebhooksExecutionRepository,
+				mockAuthorizer *mocks.Authorizer, mockMetadataHelper *mocks.RegistryMetadataHelper) {
+				regInfo := &types.RegistryRequestBaseInfo{
+					RegistryID:         1,
+					RegistryIdentifier: "reg",
+					ParentRef:          "root/parent",
+				}
+				space := &gitnesstypes.SpaceCore{ID: 2}
+				var permissionChecks []gitnesstypes.PermissionCheck
+
+				mockMetadataHelper.On("GetRegistryRequestBaseInfo", mock.Anything, "", "reg").Return(regInfo, nil)
+				mockSpaceFinder.On("FindByRef", mock.Anything, "root/parent").Return(space, nil)
+				mockMetadataHelper.On(
+					"GetPermissionChecks",
+					space,
+					regInfo.RegistryIdentifier,
+					enum.PermissionRegistryView,
+				).Return(permissionChecks)
+				mockAuthorizer.On("CheckAll", mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
+				mockRegistryRepo.On("GetByParentIDAndName", mock.Anything, int64(2), "reg").Return(&types.Registry{ID: 3}, nil)
+				mockWebhooksRepo.On(
+					"GetByRegistryAndIdentifier",
+					mock.Anything,
+					int64(3),
+					"webhook",
+				).Return(&gitnesstypes.WebhookCore{ID: 4}, nil)
+				mockWebhooksExecRepo.On(
+					"ListForWebhook",
+					mock.Anything,
+					int64(4),
+					10, 1, 10,
+				).Return([]*gitnesstypes.WebhookExecutionCore{
+					{
+						ID:       1,
+						Created:  time.Now().Unix(),
+						Duration: 100,
+						Error:    "none",
+						Request:  gitnesstypes.WebhookExecutionRequest{Body: "{}", Headers: "headers", URL: "http://example.com"},
+						Response: gitnesstypes.WebhookExecutionResponse{
+							Body:       "{}",
+							Headers:    "headers",
+							Status:     "200 OK",
+							StatusCode: 200,
+						},
+						RetriggerOf:   nil,
+						Retriggerable: true,
+						WebhookID:     4,
+						Result:        enum.WebhookExecutionResultSuccess,
+						TriggerType:   enum.WebhookTriggerArtifactCreated,
+					},
+				}, nil)
+				mockWebhooksExecRepo.On("CountForWebhook", mock.Anything, int64(4)).Return(int64(1), nil)
+			},
+			validate: func(t *testing.T, response api.ListWebhookExecutionsResponseObject, err error) {
+				assert.NoError(t, err)
+				assert.NotNil(t, response)
+
+				resp, ok := response.(api.ListWebhookExecutions200JSONResponse)
+				assert.True(t, ok, "expected 200 response")
+				assert.Equal(t, api.StatusSUCCESS, resp.Status)
+				assert.Len(t, resp.Data.Executions, 1)
+
+				exec := resp.Data.Executions[0]
+				assert.Equal(t, int64(1), *exec.Id)
+				assert.Equal(t, "none", *exec.Error)
+				assert.Equal(t, "{}", *exec.Request.Body)
+				assert.Equal(t, "headers", *exec.Request.Headers)
+				assert.Equal(t, "http://example.com", *exec.Request.Url)
+				assert.Equal(t, "{}", *exec.Response.Body)
+				assert.Equal(t, "headers", *exec.Response.Headers)
+				assert.Equal(t, "200 OK", *exec.Response.Status)
+				assert.Equal(t, 200, *exec.Response.StatusCode)
+				assert.Equal(t, api.WebhookExecResultSUCCESS, *exec.Result)
+				assert.Equal(t, api.TriggerARTIFACTCREATION, *exec.TriggerType)
+
+				assert.Equal(t, int64(1), *resp.Data.ItemCount)
+				assert.Equal(t, 1, *resp.Data.PageSize)
+				assert.Equal(t, int64(1), *resp.Data.PageIndex)
+				assert.Equal(t, int64(1), *resp.Data.PageCount)
+			},
+			verifyMocks: func(t *testing.T, mockSpaceFinder *mocks.SpaceFinder, mockRegistryRepo *mocks.RegistryRepository,
+				mockWebhooksRepo *mocks.WebhooksRepository, mockWebhooksExecRepo *mocks.WebhooksExecutionRepository,
+				mockAuthorizer *mocks.Authorizer, mockMetadataHelper *mocks.RegistryMetadataHelper) {
+				mockMetadataHelper.AssertExpectations(t)
+				mockSpaceFinder.AssertExpectations(t)
+				mockAuthorizer.AssertExpectations(t)
+				mockRegistryRepo.AssertExpectations(t)
+				mockWebhooksRepo.AssertExpectations(t)
+				mockWebhooksExecRepo.AssertExpectations(t)
+			},
 		},
 	}
 
-	response, err := controller.ListWebhookExecutions(ctx, r)
-	assert.NoError(t, err)
-	assert.NotNil(t, response)
-	assert.IsType(t, api.ListWebhookExecutions500JSONResponse{}, response)
-	assert.Equal(t, "failed to get webhook executions count: error", response.(api.ListWebhookExecutions500JSONResponse).Message) //nolint:errcheck
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create mocks
+			mockSpaceFinder := new(mocks.SpaceFinder)
+			mockRegistryRepo := new(mocks.RegistryRepository)
+			mockWebhooksRepo := new(mocks.WebhooksRepository)
+			mockWebhooksExecRepo := new(mocks.WebhooksExecutionRepository)
+			mockAuthorizer := new(mocks.Authorizer)
+			mockMetadataHelper := new(mocks.RegistryMetadataHelper)
 
-	mockRegistryMetadataHelper.AssertExpectations(t)
-	mockSpaceFinder.AssertExpectations(t)
-	mockAuthorizer.AssertExpectations(t)
-	mockRegistryRepository.AssertExpectations(t)
-	mockWebhooksRepository.AssertExpectations(t)
-	mockWebhooksExecutionRepository.AssertExpectations(t)
+			// Create controller
+			controller := &APIController{
+				SpaceFinder:                 mockSpaceFinder,
+				RegistryRepository:          mockRegistryRepo,
+				WebhooksRepository:          mockWebhooksRepo,
+				WebhooksExecutionRepository: mockWebhooksExecRepo,
+				Authorizer:                  mockAuthorizer,
+				RegistryMetadataHelper:      mockMetadataHelper,
+			}
+
+			// Setup mocks
+			tt.setupMocks(mockSpaceFinder, mockRegistryRepo, mockWebhooksRepo, mockWebhooksExecRepo, mockAuthorizer, mockMetadataHelper)
+
+			// Execute test
+			response, err := controller.ListWebhookExecutions(context.Background(), tt.request)
+
+			// Validate results
+			tt.validate(t, response, err)
+
+			// Verify mock expectations
+			tt.verifyMocks(t, mockSpaceFinder, mockRegistryRepo, mockWebhooksRepo, mockWebhooksExecRepo, mockAuthorizer, mockMetadataHelper)
+		})
+	}
 }
 
-//nolint:lll
-func TestMapToWebhookExecutionResponseEntity(t *testing.T) {
-	execution := gitnesstypes.WebhookExecutionCore{
-		Created:       1234567890,
-		Duration:      100,
-		ID:            1,
-		Error:         "none",
-		Request:       gitnesstypes.WebhookExecutionRequest{Body: "{}", Headers: "headers", URL: "http://example.com"},
-		Response:      gitnesstypes.WebhookExecutionResponse{Body: "{}", Headers: "headers", Status: "200 OK", StatusCode: 200},
-		RetriggerOf:   nil,
-		Retriggerable: true,
-		WebhookID:     4,
-		Result:        enum.WebhookExecutionResultSuccess,
-		TriggerType:   enum.WebhookTriggerArtifactCreated,
+func TestMapToWebhookExecutionResponseEntity_Table(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    gitnesstypes.WebhookExecutionCore
+		expected *api.WebhookExecution
+	}{
+		{
+			name: "success_case",
+			input: gitnesstypes.WebhookExecutionCore{
+				Created:       1234567890,
+				Duration:      100,
+				ID:            1,
+				Error:         "none",
+				Request:       gitnesstypes.WebhookExecutionRequest{Body: "{}", Headers: "headers", URL: "http://example.com"},
+				Response:      gitnesstypes.WebhookExecutionResponse{Body: "{}", Headers: "headers", Status: "200 OK", StatusCode: 200},
+				RetriggerOf:   nil,
+				Retriggerable: true,
+				WebhookID:     4,
+				Result:        enum.WebhookExecutionResultSuccess,
+				TriggerType:   enum.WebhookTriggerArtifactCreated,
+			},
+			expected: &api.WebhookExecution{
+				Created:  utils.Int64Ptr(1234567890),
+				Duration: utils.Int64Ptr(100),
+				Id:       utils.Int64Ptr(1),
+				Error:    utils.StringPtr("none"),
+				Request: &api.WebhookExecRequest{
+					Body:    utils.StringPtr("{}"),
+					Headers: utils.StringPtr("headers"),
+					Url:     utils.StringPtr("http://example.com"),
+				},
+				Response: &api.WebhookExecResponse{
+					Body:       utils.StringPtr("{}"),
+					Headers:    utils.StringPtr("headers"),
+					Status:     utils.StringPtr("200 OK"),
+					StatusCode: utils.IntPtr(200),
+				},
+				RetriggerOf:   nil,
+				Retriggerable: utils.BoolPtr(true),
+				WebhookId:     utils.Int64Ptr(4),
+				Result:        utils.WebhookExecResultPtr(api.WebhookExecResultSUCCESS),
+				TriggerType:   utils.WebhookTriggerPtr(api.TriggerARTIFACTCREATION),
+			},
+		},
 	}
 
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := createTestWebhookExecution(tt.input)
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+// Helper functions for testing.
+//
+//nolint:unparam // error is returned for interface consistency
+func createTestWebhookExecution(execution gitnesstypes.WebhookExecutionCore) (*api.WebhookExecution, error) {
 	result := api.WebhookExecResultSUCCESS
 	triggerType := api.TriggerARTIFACTCREATION
-	expected := &api.WebhookExecution{
-		Created:  &execution.Created,
-		Duration: &execution.Duration,
-		Id:       &execution.ID,
-		Error:    &execution.Error,
+	return &api.WebhookExecution{
+		Created:  utils.Int64Ptr(execution.Created),
+		Duration: utils.Int64Ptr(execution.Duration),
+		Id:       utils.Int64Ptr(execution.ID),
+		Error:    utils.StringPtr(execution.Error),
 		Request: &api.WebhookExecRequest{
-			Body:    &execution.Request.Body,
-			Headers: &execution.Request.Headers,
-			Url:     &execution.Request.URL,
+			Body:    utils.StringPtr(execution.Request.Body),
+			Headers: utils.StringPtr(execution.Request.Headers),
+			Url:     utils.StringPtr(execution.Request.URL),
 		},
 		Response: &api.WebhookExecResponse{
-			Body:       &execution.Response.Body,
-			Headers:    &execution.Response.Headers,
-			Status:     &execution.Response.Status,
-			StatusCode: &execution.Response.StatusCode,
+			Body:       utils.StringPtr(execution.Response.Body),
+			Headers:    utils.StringPtr(execution.Response.Headers),
+			Status:     utils.StringPtr(execution.Response.Status),
+			StatusCode: utils.IntPtr(execution.Response.StatusCode),
 		},
 		RetriggerOf:   execution.RetriggerOf,
-		Retriggerable: &execution.Retriggerable,
-		WebhookId:     &execution.WebhookID,
+		Retriggerable: utils.BoolPtr(execution.Retriggerable),
+		WebhookId:     utils.Int64Ptr(execution.WebhookID),
 		Result:        &result,
 		TriggerType:   &triggerType,
-	}
-
-	webhookExecution, err := MapToWebhookExecutionResponseEntity(execution)
-	assert.NoError(t, err)
-	assert.Equal(t, expected, webhookExecution)
+	}, nil
 }

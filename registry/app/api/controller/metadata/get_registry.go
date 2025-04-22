@@ -60,7 +60,7 @@ func (c *APIController) GetRegistry(
 			),
 		}, nil
 	}
-	repoEntity, _ := c.RegistryRepository.GetByParentIDAndName(ctx, regInfo.parentID, regInfo.RegistryIdentifier)
+	repoEntity, _ := c.RegistryRepository.GetByParentIDAndName(ctx, regInfo.ParentID, regInfo.RegistryIdentifier)
 	if string(repoEntity.Type) == string(artifact.RegistryTypeVIRTUAL) {
 		cleanupPolicies, err := c.CleanupPolicyStore.GetByRegistryID(ctx, repoEntity.ID)
 		if err != nil {
@@ -84,7 +84,7 @@ func (c *APIController) GetRegistry(
 	}
 	upstreamproxyEntity, err := c.UpstreamProxyStore.GetByRegistryIdentifier(
 		ctx,
-		regInfo.parentID, regInfo.RegistryIdentifier,
+		regInfo.ParentID, regInfo.RegistryIdentifier,
 	)
 	if len(upstreamproxyEntity.RepoKey) == 0 {
 		return artifact.GetRegistry404JSONResponse{
