@@ -55,14 +55,6 @@ type (
 		Password types.MaskSecret
 	}
 
-	OAuth2ClientRefCredentials struct {
-		ClientID        string
-		ClientSecretRef string
-		GrantType       string
-		RedirectURI     string
-		Code            string
-	}
-
 	OAuth2TokenRefCredentials struct {
 		UserPasswordCredentials
 		RefreshTokenRef string

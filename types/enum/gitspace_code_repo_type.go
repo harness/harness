@@ -27,19 +27,21 @@ var codeRepoTypes = []GitspaceCodeRepoType{
 	CodeRepoTypeGitness,
 	CodeRepoTypeGitlabOnPrem,
 	CodeRepoTypeBitbucketServer,
+	CodeRepoTypeGithubEnterprise,
 }
 
 const (
-	CodeRepoTypeGithub          GitspaceCodeRepoType = "github"
-	CodeRepoTypeGitlab          GitspaceCodeRepoType = "gitlab"
-	CodeRepoTypeGitness         GitspaceCodeRepoType = "gitness"
-	CodeRepoTypeHarnessCode     GitspaceCodeRepoType = "harness_code"
-	CodeRepoTypeBitbucket       GitspaceCodeRepoType = "bitbucket"
-	CodeRepoTypeUnknown         GitspaceCodeRepoType = "unknown"
-	CodeRepoTypeGitlabOnPrem    GitspaceCodeRepoType = "gitlab_on_prem"
-	CodeRepoTypeBitbucketServer GitspaceCodeRepoType = "bitbucket_server"
+	CodeRepoTypeGithub           GitspaceCodeRepoType = "github"
+	CodeRepoTypeGitlab           GitspaceCodeRepoType = "gitlab"
+	CodeRepoTypeGitness          GitspaceCodeRepoType = "gitness"
+	CodeRepoTypeHarnessCode      GitspaceCodeRepoType = "harness_code"
+	CodeRepoTypeBitbucket        GitspaceCodeRepoType = "bitbucket"
+	CodeRepoTypeUnknown          GitspaceCodeRepoType = "unknown"
+	CodeRepoTypeGitlabOnPrem     GitspaceCodeRepoType = "gitlab_on_prem"
+	CodeRepoTypeBitbucketServer  GitspaceCodeRepoType = "bitbucket_server"
+	CodeRepoTypeGithubEnterprise GitspaceCodeRepoType = "github_enterprise"
 )
 
 func (p GitspaceCodeRepoType) IsOnPrem() bool {
-	return p == CodeRepoTypeGitlabOnPrem || p == CodeRepoTypeBitbucketServer
+	return p == CodeRepoTypeGitlabOnPrem || p == CodeRepoTypeBitbucketServer || p == CodeRepoTypeGithubEnterprise
 }
