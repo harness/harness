@@ -30,7 +30,7 @@ type RepoFinder interface {
 	FindByID(ctx context.Context, id int64) (*types.RepositoryCore, error)
 }
 
-func registerEventListeners(
+func RegisterEventListeners(
 	ctx context.Context,
 	instanceID string,
 	sender Sender,

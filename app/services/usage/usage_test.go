@@ -102,7 +102,7 @@ func TestMediator_basic(t *testing.T) {
 	numEventsCreated := 4
 	numEventsPushed := 5
 	defaultSize := 512
-	mediator := newMediator(
+	mediator := NewMediator(
 		context.Background(),
 		spaceFinderMock,
 		usageMock,
@@ -110,7 +110,7 @@ func TestMediator_basic(t *testing.T) {
 			MaxWorkers: 5,
 		},
 	)
-	err = registerEventListeners(context.Background(), "test", mediator, repoEvReaderFactory, repoFinderMock)
+	err = RegisterEventListeners(context.Background(), "test", mediator, repoEvReaderFactory, repoFinderMock)
 	if err != nil {
 		t.Fatalf("failed to register event listeners: %v", err)
 	}

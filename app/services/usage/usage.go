@@ -59,7 +59,7 @@ type MetricStore interface {
 	) ([]types.UsageMetric, error)
 }
 
-type mediator struct {
+type Mediator struct {
 	queue *queue
 
 	workers []*worker
@@ -72,13 +72,13 @@ type mediator struct {
 	config Config
 }
 
-func newMediator(
+func NewMediator(
 	ctx context.Context,
 	spaceFinder SpaceFinder,
 	usageMetricsStore MetricStore,
 	config Config,
-) *mediator {
-	m := &mediator{
+) *Mediator {
+	m := &Mediator{
 		queue:        newQueue(),
 		spaceFinder:  spaceFinder,
 		metricsStore: usageMetricsStore,
@@ -91,7 +91,7 @@ func newMediator(
 	return m
 }
 
-func (m *mediator) Start(ctx context.Context) {
+func (m *Mediator) Start(ctx context.Context) {
 	for i := range m.workers {
 		w := newWorker(i, m.queue)
 		go w.start(ctx, m.process)
@@ -99,23 +99,23 @@ func (m *mediator) Start(ctx context.Context) {
 	}
 }
 
-func (m *mediator) Stop() {
+func (m *Mediator) Stop() {
 	for i := range m.workers {
 		m.workers[i].stop()
 	}
 }
 
-func (m *mediator) Send(ctx context.Context, payload Metric) error {
+func (m *Mediator) Send(ctx context.Context, payload Metric) error {
 	m.wg.Add(1)
 	m.queue.Add(ctx, payload)
 	return nil
 }
 
-func (m *mediator) Wait() {
+func (m *Mediator) Wait() {
 	m.wg.Wait()
 }
 
-func (m *mediator) Size(ctx context.Context, spaceRef string) (Bandwidth, error) {
+func (m *Mediator) Size(ctx context.Context, spaceRef string) (Bandwidth, error) {
 	space, err := m.spaceFinder.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return Bandwidth{}, fmt.Errorf("could not find space: %w", err)
@@ -131,7 +131,7 @@ func (m *mediator) Size(ctx context.Context, spaceRef string) (Bandwidth, error)
 	}, nil
 }
 
-func (m *mediator) process(ctx context.Context, payload *Metric) {
+func (m *Mediator) process(ctx context.Context, payload *Metric) {
 	defer m.wg.Done()
 
 	space, err := m.spaceFinder.FindByRef(ctx, payload.SpaceRef)

@@ -43,14 +43,14 @@ func ProvideMediator(
 		return &Noop{}, nil
 	}
 
-	m := newMediator(
+	m := NewMediator(
 		ctx,
 		spaceFinder,
 		metricsStore,
 		NewConfig(config),
 	)
 
-	if err := registerEventListeners(ctx, config.InstanceID, m, repoEvReaderFactory, repoFinder); err != nil {
+	if err := RegisterEventListeners(ctx, config.InstanceID, m, repoEvReaderFactory, repoFinder); err != nil {
 		return nil, fmt.Errorf("failed to register event listeners: %w", err)
 	}
 
