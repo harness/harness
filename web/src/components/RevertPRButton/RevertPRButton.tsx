@@ -50,7 +50,10 @@ export const RevertPRButton: React.FC<RevertPRButtonProps> = ({ pullRequestMetad
             history.push(
               routes.toCODECompare({
                 repoPath: repoMetadata?.path as string,
-                diffRefs: makeDiffRefs(pullRequestMetadata?.target_branch as string, data.branch)
+                diffRefs: makeDiffRefs(
+                  (pullRequestMetadata?.target_branch ?? repoMetadata?.default_branch) as string,
+                  data.branch
+                )
               })
             )
             showSuccess(getString('pr.revertBranchSuccess', { branch: data.branch }), 3000)
@@ -63,7 +66,10 @@ export const RevertPRButton: React.FC<RevertPRButtonProps> = ({ pullRequestMetad
                 history.push(
                   routes.toCODECompare({
                     repoPath: repoMetadata?.path as string,
-                    diffRefs: makeDiffRefs(pullRequestMetadata?.target_branch as string, branchName)
+                    diffRefs: makeDiffRefs(
+                      (pullRequestMetadata?.target_branch ?? repoMetadata?.default_branch) as string,
+                      branchName
+                    )
                   })
                 )
               }

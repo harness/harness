@@ -105,7 +105,7 @@ export function FileContent({
         history.replace(
           routes.toCODECompare({
             repoPath: repoMetadata.path as string,
-            diffRefs: makeDiffRefs(repoMetadata?.default_branch as string, newBranch)
+            diffRefs: makeDiffRefs((gitRef ?? repoMetadata?.default_branch) as string, newBranch)
           })
         )
       } else {
