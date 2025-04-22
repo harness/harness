@@ -156,9 +156,9 @@ func getScope(r *http.Request) string {
 }
 
 func returnUnauthorised(ctx context.Context, w http.ResponseWriter, url string, scope string) {
-	header := fmt.Sprintf(`Bearer realm="%s", service="gitness-registry"`, url)
+	header := fmt.Sprintf(`Bearer realm="%s",service="gitness-registry"`, url)
 	if scope != "" {
-		header = fmt.Sprintf(`%s, scope="%s"`, header, scope)
+		header = fmt.Sprintf(`%s,scope="%s"`, header, scope)
 	}
 	w.Header().Set("WWW-Authenticate", header)
 	render.Unauthorized(ctx, w)
