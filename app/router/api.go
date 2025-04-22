@@ -696,8 +696,9 @@ func SetupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 			r.Route("/branch", func(r chi.Router) {
 				r.Post("/", handlerpullreq.HandleRestoreBranch(pullreqCtrl))
 				r.Delete("/", handlerpullreq.HandleDeleteBranch(pullreqCtrl))
-				r.Put("/", handlerpullreq.HandleChangeTargetBranch(pullreqCtrl))
 			})
+
+			r.Put("/target-branch", handlerpullreq.HandleChangeTargetBranch(pullreqCtrl))
 
 			r.Route("/file-views", func(r chi.Router) {
 				r.Put("/", handlerpullreq.HandleFileViewAdd(pullreqCtrl))

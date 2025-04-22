@@ -779,14 +779,14 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetRequest(&opChangeTargetBranch, struct {
 		pullReqRequest
 		pullreq.ChangeTargetBranchInput
-	}{}, http.MethodPost)
+	}{}, http.MethodPut)
 	_ = reflector.SetJSONResponse(&opChangeTargetBranch, new(types.PullReq), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opChangeTargetBranch, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opChangeTargetBranch, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opChangeTargetBranch, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opChangeTargetBranch, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodPut,
-		"/repos/{repo_ref}/pullreq/{pullreq_number}/branch", opChangeTargetBranch)
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/target-branch", opChangeTargetBranch)
 
 	fileViewAdd := openapi3.Operation{}
 	fileViewAdd.WithTags("pullreq")
