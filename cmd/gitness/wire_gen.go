@@ -347,7 +347,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	dockerProvider := infraprovider.ProvideDockerProvider(dockerConfig, dockerClientFactory, reporter4)
 	factory := infraprovider.ProvideFactory(dockerProvider)
-	infraproviderService := infraprovider2.ProvideInfraProvider(transactor, gitspaceConfigStore, infraProviderResourceStore, infraProviderConfigStore, infraProviderTemplateStore, factory, spaceFinder)
+	cdeGatewayStore := database.ProvideCDEGatewayStore(db)
+	infraproviderService := infraprovider2.ProvideInfraProvider(transactor, gitspaceConfigStore, infraProviderResourceStore, infraProviderConfigStore, infraProviderTemplateStore, factory, spaceFinder, cdeGatewayStore)
 	gitnessSCM := scm.ProvideGitnessSCM(repoStore, repoFinder, gitInterface, tokenStore, principalStore, provider)
 	genericSCM := scm.ProvideGenericSCM()
 	scmFactory := scm.ProvideFactory(gitnessSCM, genericSCM)

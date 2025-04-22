@@ -35,7 +35,8 @@ func ProvideInfraProvider(
 	templateStore store.InfraProviderTemplateStore,
 	infraProviderFactory infraprovider.Factory,
 	spaceFinder refcache.SpaceFinder,
+	gatewayStore store.CDEGatewayStore,
 ) *Service {
 	return NewService(tx, gitspaceConfigStore, resourceStore, configStore, templateStore, infraProviderFactory,
-		spaceFinder)
+		spaceFinder, gatewayStore)
 }

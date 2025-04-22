@@ -1352,4 +1352,9 @@ type (
 			end int64,
 		) ([]types.UsageMetric, error)
 	}
+
+	CDEGatewayStore interface {
+		Upsert(ctx context.Context, in *types.CDEGateway) error
+		List(ctx context.Context, filter *types.CDEGatewayFilter) ([]*types.CDEGateway, error)
+	}
 )

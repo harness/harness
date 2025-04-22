@@ -29,6 +29,7 @@ func NewService(
 	templateStore store.InfraProviderTemplateStore,
 	factory infraprovider.Factory,
 	spaceFinder refcache.SpaceFinder,
+	gatewayStore store.CDEGatewayStore,
 ) *Service {
 	return &Service{
 		tx:                         tx,
@@ -38,6 +39,7 @@ func NewService(
 		infraProviderFactory:       factory,
 		spaceFinder:                spaceFinder,
 		gitspaceConfigStore:        gitspaceConfigStore,
+		gatewayStore:               gatewayStore,
 	}
 }
 
@@ -49,4 +51,5 @@ type Service struct {
 	infraProviderTemplateStore store.InfraProviderTemplateStore
 	infraProviderFactory       infraprovider.Factory
 	spaceFinder                refcache.SpaceFinder
+	gatewayStore               store.CDEGatewayStore
 }
