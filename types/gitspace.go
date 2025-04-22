@@ -38,6 +38,7 @@ type GitspaceConfig struct {
 	SSHTokenIdentifier    string                 `json:"ssh_token_identifier"`
 	InfraProviderResource InfraProviderResource  `json:"resource"`
 	LogKey                string                 `json:"log_key"`
+	InitializeLogKey      string                 `json:"initialize_log_key"`
 	CodeRepo
 	GitspaceUser
 	Connectors []PlatformConnector `json:"-"`
