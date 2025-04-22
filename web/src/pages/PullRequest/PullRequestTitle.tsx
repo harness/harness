@@ -57,7 +57,7 @@ export const PullRequestTitle: React.FC<PullRequestTitleProps> = ({
   })
   const { mutate: updateTargetBranch } = useMutate({
     verb: 'PUT',
-    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${number}/branch`
+    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${number}/target-branch`
   })
   const submitChange = useCallback(() => {
     const titleChanged = title !== val
