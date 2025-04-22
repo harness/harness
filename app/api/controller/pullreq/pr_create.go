@@ -115,7 +115,7 @@ func (c *Controller) Create(
 		return nil, err
 	}
 
-	targetWriteParams, err := controller.CreateRPCInternalWriteParams(
+	targetWriteParams, err := controller.CreateRPCSystemReferencesWriteParams(
 		ctx, c.urlProvider, session, targetRepo,
 	)
 	if err != nil {

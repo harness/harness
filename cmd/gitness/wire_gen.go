@@ -557,7 +557,14 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	rpmHandler := api2.NewRpmHandlerProvider(rpmController, packagesHandler)
 	handler4 := router.PackageHandlerProvider(packagesHandler, mavenHandler, genericHandler, pythonHandler, nugetHandler, npmHandler, rpmHandler)
 	appRouter := router.AppRouterProvider(registryOCIHandler, apiHandler, handler2, handler3, handler4)
-	sender := usage.ProvideMediator(ctx, config, spaceFinder, usageMetricStore)
+	readerFactory3, err := events3.ProvideReaderFactory(eventsSystem)
+	if err != nil {
+		return nil, err
+	}
+	sender, err := usage.ProvideMediator(ctx, config, spaceFinder, repoFinder, usageMetricStore, readerFactory3)
+	if err != nil {
+		return nil, err
+	}
 	routerRouter := router2.ProvideRouter(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, usergroupController, checkController, systemController, uploadController, keywordsearchController, infraproviderController, gitspaceController, migrateController, provider, openapiService, appRouter, sender, lfsController)
 	serverServer := server2.ProvideServer(config, routerRouter)
 	publickeyService := publickey.ProvidePublicKey(publicKeyStore, principalInfoCache)
@@ -579,11 +586,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	readerFactory3, err := events2.ProvideReaderFactory(eventsSystem)
-	if err != nil {
-		return nil, err
-	}
-	readerFactory4, err := events3.ProvideReaderFactory(eventsSystem)
+	readerFactory4, err := events2.ProvideReaderFactory(eventsSystem)
 	if err != nil {
 		return nil, err
 	}
@@ -591,7 +594,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	submitter, err := metric.ProvideSubmitter(ctx, config, values, principalStore, principalInfoCache, pullReqStore, ruleStore, readerFactory3, readerFactory4, eventsReaderFactory, readerFactory5, publicaccessService, spaceFinder, repoFinder)
+	submitter, err := metric.ProvideSubmitter(ctx, config, values, principalStore, principalInfoCache, pullReqStore, ruleStore, readerFactory4, readerFactory3, eventsReaderFactory, readerFactory5, publicaccessService, spaceFinder, repoFinder)
 	if err != nil {
 		return nil, err
 	}
@@ -603,7 +606,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	repoService, err := repo2.ProvideService(ctx, config, eventsReporter, readerFactory4, repoStore, provider, gitInterface, lockerLocker)
+	repoService, err := repo2.ProvideService(ctx, config, eventsReporter, readerFactory3, repoStore, provider, gitInterface, lockerLocker)
 	if err != nil {
 		return nil, err
 	}
@@ -620,7 +623,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	keywordsearchConfig := server.ProvideKeywordSearchConfig(config)
-	keywordsearchService, err := keywordsearch.ProvideService(ctx, keywordsearchConfig, readerFactory, readerFactory4, repoStore, indexer)
+	keywordsearchService, err := keywordsearch.ProvideService(ctx, keywordsearchConfig, readerFactory, readerFactory3, repoStore, indexer)
 	if err != nil {
 		return nil, err
 	}

@@ -36,7 +36,7 @@ func (s *Service) updateHeadRefOnBranchUpdate(ctx context.Context,
 		return fmt.Errorf("failed to get repo git info: %w", err)
 	}
 
-	writeParams, err := createSystemRPCWriteParams(ctx, s.urlProvider, repoGit.ID, repoGit.GitUID)
+	writeParams, err := createRPCSystemReferencesWriteParams(ctx, s.urlProvider, repoGit.ID, repoGit.GitUID)
 	if err != nil {
 		return fmt.Errorf("failed to generate rpc write params: %w", err)
 	}

@@ -17,7 +17,6 @@ package githook
 import (
 	"context"
 	"fmt"
-	"slices"
 	"strings"
 	"time"
 
@@ -70,7 +69,7 @@ func (c *Controller) PostReceive(
 	c.handleEmptyRepoPush(ctx, repo, in.PostReceiveInput, &out)
 
 	// always update last git push time - best effort
-	c.updateLastGITPushTime(ctx, repo, in)
+	c.updateLastGITPushTime(ctx, repo)
 
 	// report ref events if repo is in an active state - best effort
 	if repo.State == enum.RepoStateActive {
@@ -364,16 +363,7 @@ func (c *Controller) handleEmptyRepoPush(
 func (c *Controller) updateLastGITPushTime(
 	ctx context.Context,
 	repo *types.Repository,
-	in types.GithookPostReceiveInput,
 ) {
-	isNonePRRefFn := func(refUpdate hook.ReferenceUpdate) bool {
-		return !strings.HasPrefix(refUpdate.Ref, gitReferenceNamePullReq)
-	}
-	// ignore push that only contains pr refs for last git push time updates
-	if !slices.ContainsFunc(in.RefUpdates, isNonePRRefFn) {
-		return
-	}
-
 	newRepo, err := c.repoStore.UpdateOptLock(ctx, repo, func(r *types.Repository) error {
 		r.LastGITPush = time.Now().UnixMilli()
 		return nil

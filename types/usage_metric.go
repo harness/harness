@@ -18,4 +18,5 @@ type UsageMetric struct {
 	RootSpaceID int64 `json:"root_space_id"`
 	Bandwidth   int64 `json:"bandwidth"`
 	Storage     int64 `json:"storage"`
+	Pushes      int64 `json:"pushes"`
 }

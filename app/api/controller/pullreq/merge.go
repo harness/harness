@@ -294,8 +294,14 @@ func (c *Controller) Merge(
 		}(in.Method)
 
 		if checkMergeability {
+			// for merge-check we can skip git hooks explicitly (we don't update any refs anyway)
+			writeParams, err := controller.CreateRPCSystemReferencesWriteParams(ctx, c.urlProvider, session, targetRepo)
+			if err != nil {
+				return nil, nil, fmt.Errorf("failed to create RPC write params: %w", err)
+			}
+
 			mergeOutput, err = c.git.Merge(ctx, &git.MergeParams{
-				WriteParams:     targetWriteParams,
+				WriteParams:     writeParams,
 				BaseBranch:      pr.TargetBranch,
 				HeadRepoUID:     sourceRepo.GitUID,
 				HeadBranch:      pr.SourceBranch,

@@ -248,8 +248,8 @@ func New(ctx context.Context,
 	return service, nil
 }
 
-// createSystemRPCWriteParams creates base write parameters for write operations.
-func createSystemRPCWriteParams(
+// createRPCSystemReferencesWriteParams creates base write parameters for write operations.
+func createRPCSystemReferencesWriteParams(
 	ctx context.Context,
 	urlProvider url.Provider,
 	repoID int64,
@@ -257,13 +257,13 @@ func createSystemRPCWriteParams(
 ) (git.WriteParams, error) {
 	principal := bootstrap.NewSystemServiceSession().Principal
 
-	// generate envars (add everything githook CLI needs for execution)
+	// generate envars - skip githook execution since it's system references only
 	envVars, err := githook.GenerateEnvironmentVariables(
 		ctx,
 		urlProvider.GetInternalAPIURL(ctx),
 		repoID,
 		principal.ID,
-		false,
+		true,
 		true,
 	)
 	if err != nil {

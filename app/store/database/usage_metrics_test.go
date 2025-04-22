@@ -43,6 +43,7 @@ func TestUsageMetricsStore_Upsert(t *testing.T) {
 		RootSpaceID: 1,
 		Bandwidth:   100,
 		Storage:     100,
+		Pushes:      21,
 	})
 	require.NoError(t, err)
 
@@ -51,6 +52,7 @@ func TestUsageMetricsStore_Upsert(t *testing.T) {
 		RootSpaceID: 1,
 		Bandwidth:   100,
 		Storage:     0,
+		Pushes:      3,
 	})
 	require.NoError(t, err)
 
@@ -60,7 +62,8 @@ func TestUsageMetricsStore_Upsert(t *testing.T) {
     		usage_metric_space_id,
     		usage_metric_date,
     		usage_metric_bandwidth,
-    		usage_metric_storage
+    		usage_metric_storage,
+			usage_metric_pushes
     	FROM usage_metrics
     	WHERE usage_metric_space_id = ?
     	LIMIT 1`,
@@ -73,12 +76,14 @@ func TestUsageMetricsStore_Upsert(t *testing.T) {
 		&date,
 		&metric.Bandwidth,
 		&metric.Storage,
+		&metric.Pushes,
 	)
 	require.NoError(t, err)
 	require.Equal(t, int64(1), metric.RootSpaceID)
 	require.Equal(t, metricsStore.Date(time.Now()), date)
 	require.Equal(t, int64(200), metric.Bandwidth)
 	require.Equal(t, int64(100), metric.Storage)
+	require.Equal(t, int64(24), metric.Pushes)
 }
 
 func TestUsageMetricsStore_UpsertOptimistic(t *testing.T) {
@@ -102,6 +107,7 @@ func TestUsageMetricsStore_UpsertOptimistic(t *testing.T) {
 				RootSpaceID: 1,
 				Bandwidth:   100,
 				Storage:     100,
+				Pushes:      21,
 			})
 		})
 	}
@@ -115,6 +121,7 @@ func TestUsageMetricsStore_UpsertOptimistic(t *testing.T) {
 
 	require.Equal(t, int64(100*100), metric.Bandwidth)
 	require.Equal(t, int64(100*100), metric.Storage)
+	require.Equal(t, int64(21*100), metric.Pushes)
 }
 
 func TestUsageMetricsStore_GetMetrics(t *testing.T) {
@@ -134,6 +141,7 @@ func TestUsageMetricsStore_GetMetrics(t *testing.T) {
 		RootSpaceID: 1,
 		Bandwidth:   100,
 		Storage:     100,
+		Pushes:      21,
 	})
 	require.NoError(t, err)
 
@@ -145,6 +153,7 @@ func TestUsageMetricsStore_GetMetrics(t *testing.T) {
 	require.Equal(t, int64(1), metric.RootSpaceID, "expected spaceID = %d, got %d", 1, metric.RootSpaceID)
 	require.Equal(t, int64(100), metric.Bandwidth, "expected bandwidth = %d, got %d", 100, metric.Bandwidth)
 	require.Equal(t, int64(100), metric.Storage, "expected storage = %d, got %d", 100, metric.Storage)
+	require.Equal(t, int64(21), metric.Pushes, "expected pushes = %d, got %d", 21, metric.Pushes)
 }
 
 func TestUsageMetricsStore_List(t *testing.T) {
@@ -164,6 +173,7 @@ func TestUsageMetricsStore_List(t *testing.T) {
 		RootSpaceID: 1,
 		Bandwidth:   100,
 		Storage:     100,
+		Pushes:      21,
 	})
 	require.NoError(t, err)
 
@@ -171,6 +181,7 @@ func TestUsageMetricsStore_List(t *testing.T) {
 		RootSpaceID: 1,
 		Bandwidth:   50,
 		Storage:     50,
+		Pushes:      21,
 	})
 	require.NoError(t, err)
 
@@ -178,6 +189,7 @@ func TestUsageMetricsStore_List(t *testing.T) {
 		RootSpaceID: 2,
 		Bandwidth:   200,
 		Storage:     200,
+		Pushes:      21,
 	})
 	require.NoError(t, err)
 
@@ -188,4 +200,13 @@ func TestUsageMetricsStore_List(t *testing.T) {
 
 	// list use desc order so first row should be spaceID = 2
 	require.Equal(t, int64(2), metrics[0].RootSpaceID)
+	require.Equal(t, int64(200), metrics[0].Bandwidth)
+	require.Equal(t, int64(200), metrics[0].Storage)
+	require.Equal(t, int64(21), metrics[0].Pushes)
+
+	// second row should be spaceID = 1
+	require.Equal(t, int64(1), metrics[1].RootSpaceID)
+	require.Equal(t, int64(150), metrics[1].Bandwidth)
+	require.Equal(t, int64(150), metrics[1].Storage)
+	require.Equal(t, int64(42), metrics[1].Pushes)
 }

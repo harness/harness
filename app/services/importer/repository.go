@@ -577,7 +577,7 @@ func (r *Repository) createEnvVars(ctx context.Context,
 		r.urlProvider.GetInternalAPIURL(ctx),
 		repoID,
 		principal.ID,
-		false,
+		true,
 		true,
 	)
 	if err != nil {

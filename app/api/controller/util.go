@@ -27,12 +27,13 @@ import (
 )
 
 // createRPCWriteParams creates base write parameters for git write operations.
-// TODO: this function should be in git package and should accept params as interface (contract)
+// TODO: this function should be in git package and should accept params as interface (contract).
 func createRPCWriteParams(
 	ctx context.Context,
 	urlProvider url.Provider,
 	session *auth.Session,
 	repo *types.RepositoryCore,
+	disabled bool,
 	isInternal bool,
 ) (git.WriteParams, error) {
 	// generate envars (add everything githook CLI needs for execution)
@@ -41,7 +42,7 @@ func createRPCWriteParams(
 		urlProvider.GetInternalAPIURL(ctx),
 		repo.ID,
 		session.Principal.ID,
-		false,
+		disabled,
 		isInternal,
 	)
 	if err != nil {
@@ -66,7 +67,7 @@ func CreateRPCExternalWriteParams(
 	session *auth.Session,
 	repo *types.RepositoryCore,
 ) (git.WriteParams, error) {
-	return createRPCWriteParams(ctx, urlProvider, session, repo, false)
+	return createRPCWriteParams(ctx, urlProvider, session, repo, false, false)
 }
 
 // CreateRPCInternalWriteParams creates base write parameters for git internal write operations.
@@ -77,7 +78,18 @@ func CreateRPCInternalWriteParams(
 	session *auth.Session,
 	repo *types.RepositoryCore,
 ) (git.WriteParams, error) {
-	return createRPCWriteParams(ctx, urlProvider, session, repo, true)
+	return createRPCWriteParams(ctx, urlProvider, session, repo, false, true)
+}
+
+// CreateRPCSystemReferencesWriteParams creates base write parameters for write operations
+// on system references (e.g. pullreq references).
+func CreateRPCSystemReferencesWriteParams(
+	ctx context.Context,
+	urlProvider url.Provider,
+	session *auth.Session,
+	repo *types.RepositoryCore,
+) (git.WriteParams, error) {
+	return createRPCWriteParams(ctx, urlProvider, session, repo, true, true)
 }
 
 func MapBranch(b git.Branch) (types.Branch, error) {

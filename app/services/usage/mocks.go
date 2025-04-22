@@ -54,6 +54,20 @@ func (s *SpaceFinderMock) FindByRef(
 	return s.FindByRefFn(ctx, spaceRef)
 }
 
+type RepoFinderMock struct {
+	FindByIDFn func(
+		ctx context.Context,
+		id int64,
+	) (*types.RepositoryCore, error)
+}
+
+func (r *RepoFinderMock) FindByID(
+	ctx context.Context,
+	id int64,
+) (*types.RepositoryCore, error) {
+	return r.FindByIDFn(ctx, id)
+}
+
 type MetricsMock struct {
 	UpsertOptimisticFn func(ctx context.Context, in *types.UsageMetric) error
 	GetMetricsFn       func(

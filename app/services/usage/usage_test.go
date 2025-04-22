@@ -20,7 +20,10 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 
+	repoevents "github.com/harness/gitness/app/events/repo"
+	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/types"
 
 	"github.com/stretchr/testify/require"
@@ -36,10 +39,38 @@ func TestMediator_basic(t *testing.T) {
 			return space, nil
 		},
 	}
+	repo := &types.RepositoryCore{
+		ID:   2,
+		Path: "space/repo",
+	}
+	repoFinderMock := &RepoFinderMock{
+		FindByIDFn: func(_ context.Context, id int64) (*types.RepositoryCore, error) {
+			if id != repo.ID {
+				return nil, fmt.Errorf("expected id to be %d, got %d", repo.ID, id)
+			}
+			return repo, nil
+		},
+	}
+
+	eventSystem, err := events.ProvideSystem(events.Config{
+		Mode:            events.ModeInMemory,
+		MaxStreamLength: 100,
+	}, nil)
+	if err != nil {
+		t.Fatalf("failed to create event system: %v", err)
+	}
+	repoEvReaderFactory, err := repoevents.NewReaderFactory(eventSystem)
+	if err != nil {
+		t.Fatalf("failed to create repo event reader factory: %v", err)
+	}
+	repoEvReporter, err := repoevents.NewReporter(eventSystem)
+	if err != nil {
+		t.Fatalf("failed to create repo event reporter: %v", err)
+	}
 
 	out := atomic.Int64{}
 	in := atomic.Int64{}
-	counter := atomic.Int64{}
+	pushes := atomic.Int64{}
 
 	usageMock := &MetricsMock{
 		UpsertOptimisticFn: func(_ context.Context, metric *types.UsageMetric) error {
@@ -48,7 +79,7 @@ func TestMediator_basic(t *testing.T) {
 			}
 			out.Add(metric.Bandwidth)
 			in.Add(metric.Storage)
-			counter.Add(1)
+			pushes.Add(metric.Pushes)
 			return nil
 		},
 		GetMetricsFn: func(
@@ -67,9 +98,11 @@ func TestMediator_basic(t *testing.T) {
 		},
 	}
 
-	numRoutines := 10
+	numBandwidthRoutines := 10
+	numEventsCreated := 4
+	numEventsPushed := 5
 	defaultSize := 512
-	mediator := NewMediator(
+	mediator := newMediator(
 		context.Background(),
 		spaceFinderMock,
 		usageMock,
@@ -77,8 +110,13 @@ func TestMediator_basic(t *testing.T) {
 			MaxWorkers: 5,
 		},
 	)
+	err = registerEventListeners(context.Background(), "test", mediator, repoEvReaderFactory, repoFinderMock)
+	if err != nil {
+		t.Fatalf("failed to register event listeners: %v", err)
+	}
+
 	wg := sync.WaitGroup{}
-	for range numRoutines {
+	for range numBandwidthRoutines {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -93,8 +131,29 @@ func TestMediator_basic(t *testing.T) {
 	}
 
 	wg.Wait()
+
+	for range numEventsCreated {
+		repoEvReporter.Created(context.Background(), &repoevents.CreatedPayload{
+			Base: repoevents.Base{
+				RepoID: repo.ID,
+			},
+		})
+	}
+
+	for range numEventsPushed {
+		repoEvReporter.Pushed(context.Background(), &repoevents.PushedPayload{
+			Base: repoevents.Base{
+				RepoID: repo.ID,
+			},
+		})
+	}
+
+	// todo: add ability to wait for event system to complete
+	time.Sleep(200 * time.Millisecond)
+
 	mediator.Wait()
 
-	require.Equal(t, int64(numRoutines*defaultSize), out.Load())
-	require.Equal(t, int64(numRoutines*defaultSize), in.Load())
+	require.Equal(t, int64(numBandwidthRoutines*defaultSize), out.Load())
+	require.Equal(t, int64(numBandwidthRoutines*defaultSize), in.Load())
+	require.Equal(t, int64(numEventsCreated+numEventsPushed), pushes.Load())
 }

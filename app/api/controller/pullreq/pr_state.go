@@ -142,7 +142,7 @@ func (c *Controller) State(ctx context.Context,
 		stateChange = changeClose
 	}
 
-	targetWriteParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, targetRepo)
+	targetWriteParams, err := controller.CreateRPCSystemReferencesWriteParams(ctx, c.urlProvider, session, targetRepo)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}

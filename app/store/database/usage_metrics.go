@@ -30,6 +30,17 @@ import (
 
 var _ store.UsageMetricStore = (*UsageMetricsStore)(nil)
 
+type usageMetric struct {
+	RootSpaceID int64 `db:"usage_metric_space_id"`
+	Date        int64 `db:"usage_metric_date"`
+	Created     int64 `db:"usage_metric_created"`
+	Updated     int64 `db:"usage_metric_updated"`
+	Bandwidth   int64 `db:"usage_metric_bandwidth"`
+	Storage     int64 `db:"usage_metric_storage"`
+	Pushes      int64 `db:"usage_metric_pushes"`
+	Version     int64 `db:"usage_metric_version"`
+}
+
 // NewUsageMetricsStore returns a new UsageMetricsStore.
 func NewUsageMetricsStore(db *sqlx.DB) *UsageMetricsStore {
 	return &UsageMetricsStore{
@@ -48,9 +59,9 @@ func (s *UsageMetricsStore) getVersion(
 	date int64,
 ) int64 {
 	const sqlQuery = `
-		SELECT 
-		    usage_metric_version 
-		FROM usage_metrics 
+		SELECT
+		    usage_metric_version
+		FROM usage_metrics
 		WHERE usage_metric_space_id = $1 AND usage_metric_date = $2
 	`
 	var version int64
@@ -70,6 +81,7 @@ func (s *UsageMetricsStore) Upsert(ctx context.Context, in *types.UsageMetric) e
 			,usage_metric_updated
 			,usage_metric_bandwidth
 			,usage_metric_storage
+			,usage_metric_pushes
 			,usage_metric_version
 		) VALUES (
 			:usage_metric_space_id
@@ -78,8 +90,9 @@ func (s *UsageMetricsStore) Upsert(ctx context.Context, in *types.UsageMetric) e
 		    ,:usage_metric_updated
 		    ,:usage_metric_bandwidth
 		    ,:usage_metric_storage
+		    ,:usage_metric_pushes
 		    ,:usage_metric_version
-		) 
+		)
 		ON CONFLICT (usage_metric_space_id, usage_metric_date)
 		DO UPDATE
 			SET
@@ -87,6 +100,7 @@ func (s *UsageMetricsStore) Upsert(ctx context.Context, in *types.UsageMetric) e
 		        ,usage_metric_updated = EXCLUDED.usage_metric_updated
 		        ,usage_metric_bandwidth = usage_metrics.usage_metric_bandwidth + EXCLUDED.usage_metric_bandwidth
 		        ,usage_metric_storage = usage_metrics.usage_metric_storage + EXCLUDED.usage_metric_storage
+		        ,usage_metric_pushes = usage_metrics.usage_metric_pushes + EXCLUDED.usage_metric_pushes
 			WHERE usage_metrics.usage_metric_version = EXCLUDED.usage_metric_version - 1`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -98,6 +112,7 @@ func (s *UsageMetricsStore) Upsert(ctx context.Context, in *types.UsageMetric) e
 		Updated:     time.Now().UnixMilli(),
 		Bandwidth:   in.Bandwidth,
 		Storage:     in.Storage,
+		Pushes:      in.Pushes,
 		Version:     s.getVersion(ctx, in.RootSpaceID, today) + 1,
 	})
 	if err != nil {
@@ -143,9 +158,10 @@ func (s *UsageMetricsStore) GetMetrics(
 	const sqlQuery = `
 	SELECT
 		COALESCE(SUM(usage_metric_bandwidth), 0) AS usage_metric_bandwidth,
-		COALESCE(SUM(usage_metric_storage), 0) AS usage_metric_storage
+		COALESCE(SUM(usage_metric_storage), 0) AS usage_metric_storage,
+		COALESCE(SUM(usage_metric_pushes), 0) AS usage_metric_pushes
 	FROM usage_metrics
-	WHERE 
+	WHERE
 	    usage_metric_space_id = $1 AND
 	    usage_metric_date BETWEEN $2 AND $3`
 
@@ -165,6 +181,7 @@ func (s *UsageMetricsStore) GetMetrics(
 	).Scan(
 		&result.Bandwidth,
 		&result.Storage,
+		&result.Pushes,
 	)
 	if err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "failed to get metric")
@@ -182,12 +199,13 @@ func (s *UsageMetricsStore) List(
 	SELECT
 		usage_metric_space_id,
 		COALESCE(SUM(usage_metric_bandwidth), 0) AS usage_metric_bandwidth,
-		COALESCE(SUM(usage_metric_storage), 0) AS usage_metric_storage
+		COALESCE(SUM(usage_metric_storage), 0) AS usage_metric_storage,
+		COALESCE(SUM(usage_metric_pushes), 0) AS usage_metric_pushes
 	FROM usage_metrics
-	WHERE 
+	WHERE
 	    usage_metric_date BETWEEN $1 AND $2
 	GROUP BY usage_metric_space_id
-	ORDER BY usage_metric_bandwidth DESC, usage_metric_storage DESC`
+	ORDER BY usage_metric_bandwidth DESC, usage_metric_storage DESC, usage_metric_pushes DESC`
 
 	startTime := time.UnixMilli(start)
 	endTime := time.UnixMilli(end)
@@ -195,7 +213,7 @@ func (s *UsageMetricsStore) List(
 	db := dbtx.GetAccessor(ctx, s.db)
 	rows, err := db.QueryContext(ctx, sqlQuery, s.Date(startTime), s.Date(endTime))
 	if err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "failed to list usage_metrics")
+		return nil, database.ProcessSQLErrorf(ctx, err, "failed to list usage metrics")
 	}
 	defer rows.Close()
 
@@ -206,6 +224,7 @@ func (s *UsageMetricsStore) List(
 			&metric.RootSpaceID,
 			&metric.Bandwidth,
 			&metric.Storage,
+			&metric.Pushes,
 		)
 		if err != nil {
 			return nil, database.ProcessSQLErrorf(ctx, err, "failed to scan usage_metrics")
@@ -222,14 +241,4 @@ func (s *UsageMetricsStore) List(
 func (s *UsageMetricsStore) Date(t time.Time) int64 {
 	year, month, day := t.Date()
 	return time.Date(year, month, day, 0, 0, 0, 0, time.UTC).UnixMilli()
-}
-
-type usageMetric struct {
-	RootSpaceID int64 `db:"usage_metric_space_id"`
-	Date        int64 `db:"usage_metric_date"`
-	Created     int64 `db:"usage_metric_created"`
-	Updated     int64 `db:"usage_metric_updated"`
-	Bandwidth   int64 `db:"usage_metric_bandwidth"`
-	Storage     int64 `db:"usage_metric_storage"`
-	Version     int64 `db:"usage_metric_version"`
 }

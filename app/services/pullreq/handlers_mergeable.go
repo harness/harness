@@ -155,7 +155,7 @@ func (s *Service) updateMergeData(
 		}
 	}
 
-	writeParams, err := createSystemRPCWriteParams(ctx, s.urlProvider, targetRepo.ID, targetRepo.GitUID)
+	writeParams, err := createRPCSystemReferencesWriteParams(ctx, s.urlProvider, targetRepo.ID, targetRepo.GitUID)
 	if err != nil {
 		return fmt.Errorf("failed to generate rpc write params: %w", err)
 	}

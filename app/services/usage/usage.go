@@ -25,6 +25,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+var (
+	days30 = time.Duration(30*24) * time.Hour
+)
+
 type Bandwidth struct {
 	Out int64
 	In  int64
@@ -33,6 +37,7 @@ type Bandwidth struct {
 type Metric struct {
 	SpaceRef string
 	Bandwidth
+	Pushes int64
 }
 
 type SpaceFinder interface {
@@ -54,7 +59,7 @@ type MetricStore interface {
 	) ([]types.UsageMetric, error)
 }
 
-type Mediator struct {
+type mediator struct {
 	queue *queue
 
 	workers []*worker
@@ -67,13 +72,13 @@ type Mediator struct {
 	config Config
 }
 
-func NewMediator(
+func newMediator(
 	ctx context.Context,
 	spaceFinder SpaceFinder,
 	usageMetricsStore MetricStore,
 	config Config,
-) *Mediator {
-	m := &Mediator{
+) *mediator {
+	m := &mediator{
 		queue:        newQueue(),
 		spaceFinder:  spaceFinder,
 		metricsStore: usageMetricsStore,
@@ -86,7 +91,7 @@ func NewMediator(
 	return m
 }
 
-func (m *Mediator) Start(ctx context.Context) {
+func (m *mediator) Start(ctx context.Context) {
 	for i := range m.workers {
 		w := newWorker(i, m.queue)
 		go w.start(ctx, m.process)
@@ -94,29 +99,29 @@ func (m *Mediator) Start(ctx context.Context) {
 	}
 }
 
-func (m *Mediator) Stop() {
+func (m *mediator) Stop() {
 	for i := range m.workers {
 		m.workers[i].stop()
 	}
 }
 
-func (m *Mediator) Send(ctx context.Context, payload Metric) error {
+func (m *mediator) Send(ctx context.Context, payload Metric) error {
 	m.wg.Add(1)
 	m.queue.Add(ctx, payload)
 	return nil
 }
 
-func (m *Mediator) Wait() {
+func (m *mediator) Wait() {
 	m.wg.Wait()
 }
 
-func (m *Mediator) Size(ctx context.Context, spaceRef string) (Bandwidth, error) {
+func (m *mediator) Size(ctx context.Context, spaceRef string) (Bandwidth, error) {
 	space, err := m.spaceFinder.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return Bandwidth{}, fmt.Errorf("could not find space: %w", err)
 	}
 	now := time.Now()
-	metric, err := m.metricsStore.GetMetrics(ctx, space.ID, now.Add(-m.days30()).UnixMilli(), now.UnixMilli())
+	metric, err := m.metricsStore.GetMetrics(ctx, space.ID, now.Add(-days30).UnixMilli(), now.UnixMilli())
 	if err != nil {
 		return Bandwidth{}, err
 	}
@@ -126,11 +131,7 @@ func (m *Mediator) Size(ctx context.Context, spaceRef string) (Bandwidth, error)
 	}, nil
 }
 
-func (m *Mediator) days30() time.Duration {
-	return time.Duration(30*24) * time.Hour
-}
-
-func (m *Mediator) process(ctx context.Context, payload *Metric) {
+func (m *mediator) process(ctx context.Context, payload *Metric) {
 	defer m.wg.Done()
 
 	space, err := m.spaceFinder.FindByRef(ctx, payload.SpaceRef)
@@ -143,6 +144,7 @@ func (m *Mediator) process(ctx context.Context, payload *Metric) {
 		RootSpaceID: space.ID,
 		Bandwidth:   payload.Out,
 		Storage:     payload.In,
+		Pushes:      payload.Pushes,
 	}); err != nil {
 		log.Ctx(ctx).Err(err).Msg("failed to upsert usage metrics")
 	}
