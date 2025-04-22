@@ -29,6 +29,7 @@ import (
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
+	"golang.org/x/exp/slices"
 )
 
 type SoftDeleteResponse struct {
@@ -107,7 +108,8 @@ func (c *Controller) SoftDeleteNoAuth(
 		return fmt.Errorf("failed to delete public access for repo: %w", err)
 	}
 
-	if repo.State != enum.RepoStateActive {
+	if slices.Contains(importingStates, repo.State) {
+		c.repoFinder.MarkChanged(ctx, repo.Core())
 		return c.PurgeNoAuth(ctx, session, repo)
 	}
 
