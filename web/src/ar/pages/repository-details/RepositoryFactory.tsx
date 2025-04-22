@@ -22,6 +22,7 @@ import { GenericRepositoryType } from './GenericRepository/GenericRepositoryType
 import { NpmRepositoryType } from './NpmRepository/NpmRepositoryType'
 import { PythonRepositoryType } from './PythonRepository/PythonRepositoryType'
 import { NuGetRepositoryType } from './NuGetRepository/NuGetRepositoryType'
+import { RPMRepositoryType } from './RPMRepository/RPMRepositoryType'
 
 repositoryFactory.registerStep(new DockerRepositoryType())
 repositoryFactory.registerStep(new HelmRepositoryType())
@@ -30,3 +31,4 @@ repositoryFactory.registerStep(new MavenRepositoryType())
 repositoryFactory.registerStep(new NpmRepositoryType())
 repositoryFactory.registerStep(new PythonRepositoryType())
 repositoryFactory.registerStep(new NuGetRepositoryType())
+repositoryFactory.registerStep(new RPMRepositoryType())

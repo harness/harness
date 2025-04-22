@@ -91,7 +91,8 @@ export const UpstreamProxyPackageTypeList: UpstreamRepositoryPackageTypeListItem
     icon: 'red-hat-logo',
     tooltip: 'Coming Soon!',
     disabled: true,
-    tag: ThumbnailTagEnum.ComingSoon
+    tag: ThumbnailTagEnum.ComingSoon,
+    featureFlag: FeatureFlags.HAR_RPM_PACKAGE_TYPE_ENABLED
   },
   {
     label: 'repositoryTypes.go',
