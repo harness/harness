@@ -23,7 +23,7 @@ import (
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
-	registryTypes "github.com/harness/gitness/registry/types"
+	"github.com/harness/gitness/registry/app/api/utils"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
@@ -65,84 +65,127 @@ func (c *APIController) DeleteArtifact(ctx context.Context, r artifact.DeleteArt
 	}
 
 	repoEntity, err := c.RegistryRepository.GetByParentIDAndName(ctx, regInfo.parentID, regInfo.RegistryIdentifier)
-	if len(repoEntity.Name) == 0 {
+	if err != nil {
+		//nolint:nilerr
 		return artifact.DeleteArtifact404JSONResponse{
 			NotFoundJSONResponse: artifact.NotFoundJSONResponse(
 				*GetErrorResponse(http.StatusNotFound, "registry doesn't exist with this key"),
 			),
 		}, nil
 	}
-	if err != nil {
-		return throwDeleteArtifact500Error(err), err
-	}
 
 	artifactName := string(r.Artifact)
-	artifactDetails, err := c.ImageStore.GetByName(ctx, regInfo.RegistryID, artifactName)
-	if err != nil || artifactDetails == nil {
+	_, err = c.ImageStore.GetByName(ctx, regInfo.RegistryID, artifactName)
+	if err != nil {
+		//nolint:nilerr
 		return artifact.DeleteArtifact404JSONResponse{
 			NotFoundJSONResponse: artifact.NotFoundJSONResponse(
 				*GetErrorResponse(http.StatusNotFound, "artifact doesn't exist with this key"),
 			),
-		}, err
-	}
-	if !artifactDetails.Enabled {
-		return artifact.DeleteArtifact404JSONResponse{
-			NotFoundJSONResponse: artifact.NotFoundJSONResponse(
-				*GetErrorResponse(http.StatusNotFound, "artifact is already deleted"),
-			),
 		}, nil
 	}
-	err = c.tx.WithTx(
-		ctx, func(ctx context.Context) error {
-			err = c.disableImageStatus(
-				ctx, regInfo, artifactName,
-			)
 
-			if err != nil {
-				return fmt.Errorf("failed to delete artifact: %w", err)
-			}
-
-			err := c.TagStore.DeleteTagsByImageName(ctx, regInfo.RegistryID, artifactName)
-
-			if err != nil {
-				return fmt.Errorf("failed to delete artifact: %w", err)
-			}
-
-			auditErr := c.AuditService.Log(
-				ctx,
-				session.Principal,
-				audit.NewResource(audit.ResourceTypeRegistryArtifact, string(r.Artifact)),
-				audit.ActionDeleted,
-				regInfo.ParentRef,
-				audit.WithData("registry name", repoEntity.Name),
-				audit.WithData("artifact name", string(r.Artifact)),
-			)
-			if auditErr != nil {
-				log.Ctx(ctx).Warn().Msgf("failed to insert audit log for delete tag operation: %s", auditErr)
-			}
-
-			return nil
-		},
-	)
+	switch regInfo.PackageType {
+	case artifact.PackageTypeDOCKER:
+		err = c.deleteOCIImage(ctx, regInfo, artifactName)
+	case artifact.PackageTypeHELM:
+		err = c.deleteOCIImage(ctx, regInfo, artifactName)
+	case artifact.PackageTypeGENERIC:
+		err = c.deleteGenericImage(ctx, regInfo, artifactName)
+	case artifact.PackageTypeMAVEN:
+		err = c.deleteGenericImage(ctx, regInfo, artifactName)
+	case artifact.PackageTypePYTHON:
+		err = c.deleteGenericImage(ctx, regInfo, artifactName)
+	case artifact.PackageTypeNPM:
+		err = c.deleteGenericImage(ctx, regInfo, artifactName)
+	case artifact.PackageTypeNUGET:
+		err = fmt.Errorf("delete artifact not supported for nuget")
+	case artifact.PackageTypeRPM:
+		err = fmt.Errorf("delete artifact not supported for rpm")
+	default:
+		err = fmt.Errorf("unsupported package type: %s", regInfo.PackageType)
+	}
 
 	if err != nil {
 		return throwDeleteArtifact500Error(err), err
 	}
+
+	auditErr := c.AuditService.Log(
+		ctx,
+		session.Principal,
+		audit.NewResource(audit.ResourceTypeRegistryArtifact, string(r.Artifact)),
+		audit.ActionDeleted,
+		regInfo.ParentRef,
+		audit.WithData("registry name", repoEntity.Name),
+		audit.WithData("artifact name", string(r.Artifact)),
+	)
+	if auditErr != nil {
+		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for delete tag operation: %s", auditErr)
+	}
+
 	return artifact.DeleteArtifact200JSONResponse{
 		SuccessJSONResponse: artifact.SuccessJSONResponse(*GetSuccessResponse()),
 	}, nil
 }
 
-func (c *APIController) disableImageStatus(
+func (c *APIController) deleteOCIImage(
 	ctx context.Context,
-	regInfo *RegistryRequestBaseInfo, artifactName string,
+	regInfo *RegistryRequestBaseInfo,
+	artifactName string,
 ) error {
-	image := &registryTypes.Image{
-		Name:       artifactName,
-		RegistryID: regInfo.RegistryID,
-		Enabled:    false,
-	}
-	err := c.ImageStore.UpdateStatus(ctx, image)
+	err := c.tx.WithTx(
+		ctx, func(ctx context.Context) error {
+			// Delete tags linked to the image
+			err := c.TagStore.DeleteTagsByImageName(ctx, regInfo.RegistryID, artifactName)
+			if err != nil {
+				return fmt.Errorf("failed to delete artifact: %w", err)
+			}
+
+			// Delete image
+			err = c.ImageStore.DeleteByImageNameAndRegID(
+				ctx, regInfo.RegistryID, artifactName,
+			)
+			if err != nil {
+				return fmt.Errorf("failed to delete artifact: %w", err)
+			}
+			return nil
+		},
+	)
+	return err
+}
+
+func (c *APIController) deleteGenericImage(
+	ctx context.Context,
+	regInfo *RegistryRequestBaseInfo,
+	artifactName string,
+) error {
+	err := c.tx.WithTx(
+		ctx, func(ctx context.Context) error {
+			// Get File Path
+			filePath, err := utils.GetFilePath(regInfo.PackageType, artifactName, "")
+			if err != nil {
+				return fmt.Errorf("failed to get file path: %w", err)
+			}
+			// Delete Artifact Files
+			err = c.fileManager.DeleteNode(ctx, regInfo.RegistryID, filePath)
+			if err != nil {
+				return fmt.Errorf("failed to delete artifact files: %w", err)
+			}
+			// Delete Artifacts
+			err = c.ArtifactStore.DeleteByImageNameAndRegistryID(ctx, regInfo.RegistryID, artifactName)
+			if err != nil {
+				return fmt.Errorf("failed to delete versions: %w", err)
+			}
+			// Delete image
+			err = c.ImageStore.DeleteByImageNameAndRegID(
+				ctx, regInfo.RegistryID, artifactName,
+			)
+			if err != nil {
+				return fmt.Errorf("failed to delete artifact: %w", err)
+			}
+			return nil
+		},
+	)
 	return err
 }
 

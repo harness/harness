@@ -70,15 +70,13 @@ func (c *APIController) DeleteRegistry(
 	}
 
 	repoEntity, err := c.RegistryRepository.GetByParentIDAndName(ctx, regInfo.parentID, regInfo.RegistryIdentifier)
-	if len(repoEntity.Name) == 0 {
+	if err != nil {
+		//nolint:nilerr
 		return artifact.DeleteRegistry404JSONResponse{
 			NotFoundJSONResponse: artifact.NotFoundJSONResponse(
 				*GetErrorResponse(http.StatusNotFound, "registry doesn't exist with this key"),
 			),
 		}, nil
-	}
-	if err != nil {
-		return throwDeleteRegistry500Error(err), err
 	}
 
 	if string(repoEntity.Type) == string(artifact.RegistryTypeVIRTUAL) {
@@ -196,17 +194,7 @@ func (c *APIController) deleteRegistryWithAudit(
 	ctx context.Context, regInfo *RegistryRequestBaseInfo,
 	registry *registrytypes.Registry, principal types.Principal, parentRef string,
 ) error {
-	err := c.ImageStore.DeleteDownloadStatByRegistryID(ctx, regInfo.RegistryID)
-	if err != nil {
-		return err
-	}
-
-	err = c.ImageStore.DeleteBandwidthStatByRegistryID(ctx, regInfo.RegistryID)
-	if err != nil {
-		return err
-	}
-
-	err = c.ImageStore.DeleteByRegistryID(ctx, regInfo.RegistryID)
+	err := c.ImageStore.DeleteByRegistryID(ctx, regInfo.RegistryID)
 	if err != nil {
 		return err
 	}
