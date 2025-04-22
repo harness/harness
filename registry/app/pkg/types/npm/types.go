@@ -21,10 +21,11 @@ import (
 
 type ArtifactInfo struct {
 	pkg.ArtifactInfo
-	Metadata npm.PackageMetadata
-	Version  string
-	DistTags []string
-	Filename string
+	Metadata            npm.PackageMetadata
+	Version             string
+	DistTags            []string
+	Filename            string
+	ParentRegIdentifier string
 }
 
 type File struct {

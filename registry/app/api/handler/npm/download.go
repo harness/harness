@@ -50,8 +50,9 @@ func (h *handler) DownloadPackageFile(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	if !commons.IsEmpty(response.GetError()) {
+	if response.GetError() != nil {
 		h.HandleError(r.Context(), w, response.GetError())
+		return
 	}
 
 	w.Header().Set("Content-Disposition", "attachment; filename="+info.Filename)

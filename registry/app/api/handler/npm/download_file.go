@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/harness/gitness/registry/app/pkg/commons"
 	npm2 "github.com/harness/gitness/registry/app/pkg/types/npm"
 	"github.com/harness/gitness/registry/request"
 
@@ -44,8 +43,9 @@ func (h *handler) DownloadPackageFileByName(w http.ResponseWriter, r *http.Reque
 		}
 	}()
 
-	if !commons.IsEmpty(response.GetError()) {
+	if response.GetError() != nil {
 		h.HandleError(r.Context(), w, response.GetError())
+		return
 	}
 
 	w.Header().Set("Content-Disposition", "attachment; filename="+info.Filename)

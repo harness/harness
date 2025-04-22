@@ -90,12 +90,16 @@ func (h *handler) GetPackageArtifactInfo(r *http.Request) (pkg.PackageArtifactIn
 		log.Info().Msgf("Invalid image name/version: %s/%s", info.Image, version)
 		return nil, fmt.Errorf("invalid name or version")
 	}
+	distTags := r.PathValue("tag")
 
 	npmInfo := npm.ArtifactInfo{
-		ArtifactInfo: info,
-		Filename:     fileName,
-		Version:      version,
+		ArtifactInfo:        info,
+		Filename:            fileName,
+		Version:             version,
+		ParentRegIdentifier: info.RegIdentifier,
+		DistTags:            []string{distTags},
 	}
+
 	if r.Body == nil || r.ContentLength == 0 {
 		return npmInfo, nil
 	}
@@ -136,10 +140,11 @@ func GetNPMMetadata(r *http.Request, info pkg.ArtifactInfo) (pkg.PackageArtifact
 
 	for _, meta := range md.Versions {
 		a := npm.ArtifactInfo{
-			ArtifactInfo: info,
-			Metadata:     md.PackageMetadata,
-			Version:      meta.Version,
-			DistTags:     make([]string, 0),
+			ArtifactInfo:        info,
+			Metadata:            md.PackageMetadata,
+			Version:             meta.Version,
+			DistTags:            make([]string, 0),
+			ParentRegIdentifier: info.RegIdentifier,
 		}
 		for tag := range md.DistTags {
 			a.DistTags = append(a.DistTags, tag)
