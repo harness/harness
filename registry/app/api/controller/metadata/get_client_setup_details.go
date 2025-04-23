@@ -492,7 +492,7 @@ func (c *APIController) generateMavenClientSetupDetail(
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
 						//nolint:lll
-						Value: utils.StringPtr("<repositories>\n  <repository>\n    <id>maven-dev</id>\n    <url><REGISTRY_URL>/<REGISTRY_NAME></url>\n    <releases>\n      <enabled>true</enabled>\n      <updatePolicy>always</updatePolicy>\n    </releases>\n    <snapshots>\n      <enabled>true</enabled>\n      <updatePolicy>always</updatePolicy>\n    </snapshots>\n  </repository>\n</repositories>"),
+						Value: utils.StringPtr("<repositories>\n  <repository>\n    <id>maven-dev</id>\n    <url><REGISTRY_URL></url>\n    <releases>\n      <enabled>true</enabled>\n      <updatePolicy>always</updatePolicy>\n    </releases>\n    <snapshots>\n      <enabled>true</enabled>\n      <updatePolicy>always</updatePolicy>\n    </snapshots>\n  </repository>\n</repositories>"),
 					},
 				},
 			},
@@ -543,7 +543,7 @@ func (c *APIController) generateMavenClientSetupDetail(
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
 						//nolint:lll
-						Value: utils.StringPtr("<distributionManagement>\n  <snapshotRepository>\n    <id>maven-dev</id>\n    <url><REGISTRY_URL>/<REGISTRY_NAME></url>\n  </snapshotRepository>\n  <repository>\n    <id>maven-dev</id>\n    <url><REGISTRY_URL>/<REGISTRY_NAME></url>\n  </repository>\n</distributionManagement>"),
+						Value: utils.StringPtr("<distributionManagement>\n  <snapshotRepository>\n    <id>maven-dev</id>\n    <url><REGISTRY_URL></url>\n  </snapshotRepository>\n  <repository>\n    <id>maven-dev</id>\n    <url><REGISTRY_URL></url>\n  </repository>\n</distributionManagement>"),
 					},
 				},
 			},
@@ -582,7 +582,7 @@ func (c *APIController) generateMavenClientSetupDetail(
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
 						//nolint:lll
-						Value: utils.StringPtr("repositories{\n    maven{\n      url \"<REGISTRY_URL>/<REGISTRY_NAME>\"\n\n      credentials {\n         username \"<USERNAME>\"\n         password \"identity-token\"\n      }\n   }\n}"),
+						Value: utils.StringPtr("repositories{\n    maven{\n      url \"<REGISTRY_URL>\"\n\n      credentials {\n         username \"<USERNAME>\"\n         password \"identity-token\"\n      }\n   }\n}"),
 					},
 				},
 			},
@@ -658,7 +658,7 @@ func (c *APIController) generateMavenClientSetupDetail(
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
 						//nolint:lll
-						Value: utils.StringPtr("resolver += \"Harness Registry\" at \"<REGISTRY_URL>/<REGISTRY_NAME>\"\ncredentials += Credentials(Path.userHome / \".sbt\" / \".Credentials\")"),
+						Value: utils.StringPtr("resolver += \"Harness Registry\" at \"<REGISTRY_URL>\"\ncredentials += Credentials(Path.userHome / \".sbt\" / \".Credentials\")"),
 					},
 				},
 			},
@@ -706,7 +706,7 @@ func (c *APIController) generateMavenClientSetupDetail(
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: utils.StringPtr("publishTo := Some(\"Harness Registry\" at \"<REGISTRY_URL>/<REGISTRY_NAME>\")"),
+						Value: utils.StringPtr("publishTo := Some(\"Harness Registry\" at \"<REGISTRY_URL>\")"),
 					},
 				},
 			},
@@ -770,8 +770,7 @@ func (c *APIController) generateMavenClientSetupDetail(
 		}
 	}
 
-	rootSpace, _, _ := paths.DisectRoot(registryRef)
-	registryURL := c.URLProvider.RegistryURL(ctx, "maven", rootSpace)
+	registryURL := c.URLProvider.PackageURL(ctx, registryRef, "maven")
 
 	//nolint:lll
 	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, artifactName, version, registryURL,

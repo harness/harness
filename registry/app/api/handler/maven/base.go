@@ -168,7 +168,11 @@ func ExtractPathVars(path string) (rootIdentifier, registry, groupID, artifactID
 	registry = segments[2]
 	fileName = segments[len(segments)-1]
 
-	segments = segments[3 : len(segments)-1]
+	if "pkg" == segments[0] {
+		segments = segments[4 : len(segments)-1]
+	} else {
+		segments = segments[3 : len(segments)-1]
+	}
 
 	version = segments[len(segments)-1]
 	if isMetadataFile(fileName) && !strings.HasSuffix(version, "-SNAPSHOT") {
