@@ -200,9 +200,8 @@ func (s *GitnessSCM) ResolveCredentials(
 	if err != nil {
 		return nil, fmt.Errorf("error while parsing the clone url: %s", gitURL)
 	}
-	userInfo := url.UserPassword("harness", jwtToken)
-	modifiedURL.User = userInfo
-	resolvedCredentails.CloneURL = types.NewMaskSecret(modifiedURL.String())
+	resolvedCredentails.CloneURL = types.NewMaskSecret(
+		BuildAuthenticatedCloneURL(modifiedURL, jwtToken, enum.CodeRepoTypeGitness).String())
 	credentials := &UserPasswordCredentials{
 		Email:    user.Email,
 		Name:     types.NewMaskSecret(user.DisplayName),

@@ -30,6 +30,4 @@ type ListingProvider interface {
 		filter *BranchFilter,
 		credentials *ResolvedCredentials,
 	) ([]Branch, error)
-
-	GetBranchURL(spacePath string, repoURL string, branch string) (string, error)
 }

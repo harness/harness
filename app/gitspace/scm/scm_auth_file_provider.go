@@ -27,5 +27,8 @@ type AuthAndFileContentProvider interface {
 		filePath string,
 		credentials *ResolvedCredentials,
 	) ([]byte, error)
+
 	ResolveCredentials(ctx context.Context, gitspaceConfig types.GitspaceConfig) (*ResolvedCredentials, error)
+
+	GetBranchURL(spacePath string, repoURL string, branch string) (string, error)
 }

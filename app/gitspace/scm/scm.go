@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"regexp"
 	"strings"
 
@@ -27,6 +28,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/rs/zerolog/log"
 	"github.com/tidwall/jsonc"
 )
 
@@ -133,7 +135,7 @@ func (s *SCM) GetBranchURL(
 	repoURL string,
 	branch string,
 ) (string, error) {
-	scmProvider, err := s.scmProviderFactory.GetSCMProvider(repoType)
+	scmProvider, err := s.getSCMAuthAndFileProvider(repoType)
 	if err != nil {
 		return "", fmt.Errorf("failed to resolve scm provider while generating branch url: %w", err)
 	}
@@ -197,4 +199,24 @@ func (s *SCM) getDevcontainerConfig(
 	}
 
 	return config, nil
+}
+
+func BuildAuthenticatedCloneURL(repoURL *url.URL, accessToken string, codeRepoType enum.GitspaceCodeRepoType) *url.URL {
+	switch codeRepoType {
+	case enum.CodeRepoTypeGithubEnterprise, enum.CodeRepoTypeGithub:
+		repoURL.User = url.UserPassword(accessToken, "x-oauth-basic")
+	case enum.CodeRepoTypeGitlab, enum.CodeRepoTypeGitlabOnPrem:
+		repoURL.User = url.UserPassword("oauth2", accessToken)
+	case enum.CodeRepoTypeBitbucket, enum.CodeRepoTypeBitbucketServer:
+		repoURL.User = url.UserPassword("x-token-auth", accessToken)
+	case enum.CodeRepoTypeGitness:
+		repoURL.User = url.UserPassword("harness", accessToken)
+	case enum.CodeRepoTypeHarnessCode:
+		repoURL.User = url.UserPassword("Basic", accessToken)
+	case enum.CodeRepoTypeUnknown:
+		log.Warn().Msgf("unknown repo type, cannot set credentials")
+	default:
+		log.Warn().Msgf("Unsupported repo type: %s", codeRepoType)
+	}
+	return repoURL
 }
