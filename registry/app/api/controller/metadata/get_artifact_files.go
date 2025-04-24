@@ -23,6 +23,8 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/registry/app/api/utils"
+	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
@@ -99,24 +101,15 @@ func (c *APIController) GetArtifactFiles(
 
 	registryURL := c.URLProvider.RegistryURL(ctx,
 		reqInfo.RootIdentifier, strings.ToLower(string(registry.PackageType)), reqInfo.RegistryIdentifier)
-	filePathPrefix := "/" + img.Name + "/" + art.Version + "%"
-
-	if artifact.PackageTypeMAVEN == registry.PackageType {
-		artifactName := strings.ReplaceAll(img.Name, ".", "/")
-		artifactName = strings.ReplaceAll(artifactName, ":", "/")
-		filePathPrefix = "/" + artifactName + "/" + art.Version + "%"
-	}
-	fileMetadataList, err := c.fileManager.GetFilesMetadata(ctx, filePathPrefix, img.RegistryID,
-		reqInfo.sortByField, reqInfo.sortByOrder, reqInfo.limit, reqInfo.offset, reqInfo.searchTerm)
-
+	filePathPrefix, err := utils.GetFilePath(registry.PackageType, img.Name, art.Version)
 	if err != nil {
-		log.Error().Msgf("Failed to fetch files for artifact, err: %v", err.Error())
-		return artifact.GetArtifactFiles500JSONResponse{
-			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
-				*GetErrorResponse(http.StatusInternalServerError,
-					fmt.Sprintf("Failed to fetch files for artifact with name: [%s]", art.Version)),
-			),
-		}, nil
+		return failedToFetchFilesResponse(err, art)
+	}
+	filePathPattern := filePathPrefix + "%"
+	fileMetadataList, err := c.fileManager.GetFilesMetadata(ctx, filePathPattern, img.RegistryID,
+		reqInfo.sortByField, reqInfo.sortByOrder, reqInfo.limit, reqInfo.offset, reqInfo.searchTerm)
+	if err != nil {
+		return failedToFetchFilesResponse(err, art)
 	}
 
 	count, err := c.fileManager.CountFilesByPath(ctx, filePathPrefix, img.RegistryID)
@@ -133,7 +126,8 @@ func (c *APIController) GetArtifactFiles(
 
 	//nolint:exhaustive
 	switch registry.PackageType {
-	case artifact.PackageTypeGENERIC, artifact.PackageTypeMAVEN, artifact.PackageTypePYTHON, artifact.PackageTypeNPM:
+	case artifact.PackageTypeGENERIC, artifact.PackageTypeMAVEN, artifact.PackageTypePYTHON,
+		artifact.PackageTypeNPM, artifact.PackageTypeRPM:
 		return artifact.GetArtifactFiles200JSONResponse{
 			FileDetailResponseJSONResponse: *GetAllArtifactFilesResponse(
 				fileMetadataList, count, reqInfo.pageNumber, reqInfo.limit, registryURL, img.Name, art.Version,
@@ -146,4 +140,14 @@ func (c *APIController) GetArtifactFiles(
 			),
 		}, nil
 	}
+}
+
+func failedToFetchFilesResponse(err error, art *types.Artifact) (artifact.GetArtifactFilesResponseObject, error) {
+	log.Error().Msgf("Failed to fetch files for artifact, err: %v", err.Error())
+	return artifact.GetArtifactFiles500JSONResponse{
+		InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
+			*GetErrorResponse(http.StatusInternalServerError,
+				fmt.Sprintf("Failed to fetch files for artifact with name: [%s]", art.Version)),
+		),
+	}, nil
 }

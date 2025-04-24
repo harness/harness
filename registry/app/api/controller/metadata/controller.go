@@ -23,6 +23,7 @@ import (
 	registryevents "github.com/harness/gitness/registry/app/events"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
+	"github.com/harness/gitness/registry/services/index"
 	"github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/store/database/dbtx"
 )
@@ -51,6 +52,7 @@ type APIController struct {
 	WebhookService              webhook.ServiceInterface
 	ArtifactEventReporter       registryevents.Reporter
 	DownloadStatRepository      store.DownloadStatRepository
+	RegistryIndexService        index.Service
 }
 
 func NewAPIController(
@@ -76,6 +78,7 @@ func NewAPIController(
 	webhookService webhook.ServiceInterface,
 	artifactEventReporter registryevents.Reporter,
 	downloadStatRepository store.DownloadStatRepository,
+	registryIndexService index.Service,
 ) *APIController {
 	return &APIController{
 		fileManager:                 fileManager,
@@ -100,5 +103,6 @@ func NewAPIController(
 		WebhookService:              webhookService,
 		ArtifactEventReporter:       artifactEventReporter,
 		DownloadStatRepository:      downloadStatRepository,
+		RegistryIndexService:        registryIndexService,
 	}
 }

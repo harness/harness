@@ -263,6 +263,7 @@ func TestCreateRegistry(t *testing.T) {
 					nil, // webhookService.
 					eventReporter,
 					nil, // downloadStatRepository.
+					nil, // registryIndexService - not needed for this test.
 				)
 			},
 		},
@@ -332,6 +333,7 @@ func TestCreateRegistry(t *testing.T) {
 					mockRegistryMetadataHelper,
 					nil, // webhookService.
 					eventReporter,
+					nil, //
 					nil, // downloadStatRepository.
 				)
 			},

@@ -31,6 +31,8 @@ import (
 	rpmtype "github.com/harness/gitness/registry/app/pkg/types/rpm"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
+	rpmutil "github.com/harness/gitness/registry/app/utils/rpm"
+	"github.com/harness/gitness/registry/services/index"
 	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/rs/zerolog/log"
@@ -40,15 +42,15 @@ var _ pkg.Artifact = (*localRegistry)(nil)
 var _ Registry = (*localRegistry)(nil)
 
 type localRegistry struct {
-	localBase           base.LocalBase
-	fileManager         filemanager.FileManager
-	proxyStore          store.UpstreamProxyConfigRepository
-	tx                  dbtx.Transactor
-	registryDao         store.RegistryRepository
-	imageDao            store.ImageRepository
-	artifactDao         store.ArtifactRepository
-	urlProvider         urlprovider.Provider
-	localRegistryHelper LocalRegistryHelper
+	localBase            base.LocalBase
+	fileManager          filemanager.FileManager
+	proxyStore           store.UpstreamProxyConfigRepository
+	tx                   dbtx.Transactor
+	registryDao          store.RegistryRepository
+	imageDao             store.ImageRepository
+	artifactDao          store.ArtifactRepository
+	urlProvider          urlprovider.Provider
+	registryIndexService index.Service
 }
 
 type LocalRegistry interface {
@@ -64,18 +66,18 @@ func NewLocalRegistry(
 	imageDao store.ImageRepository,
 	artifactDao store.ArtifactRepository,
 	urlProvider urlprovider.Provider,
-	localRegistryHelper LocalRegistryHelper,
+	registryIndexService index.Service,
 ) LocalRegistry {
 	return &localRegistry{
-		localBase:           localBase,
-		fileManager:         fileManager,
-		proxyStore:          proxyStore,
-		tx:                  tx,
-		registryDao:         registryDao,
-		imageDao:            imageDao,
-		artifactDao:         artifactDao,
-		urlProvider:         urlProvider,
-		localRegistryHelper: localRegistryHelper,
+		localBase:            localBase,
+		fileManager:          fileManager,
+		proxyStore:           proxyStore,
+		tx:                   tx,
+		registryDao:          registryDao,
+		imageDao:             imageDao,
+		artifactDao:          artifactDao,
+		urlProvider:          urlProvider,
+		registryIndexService: registryIndexService,
 	}
 }
 
@@ -103,7 +105,7 @@ func (c *localRegistry) UploadPackageFile(
 	}
 	defer r.Close()
 
-	p, err := parsePackage(r)
+	p, err := rpmutil.ParsePackage(r)
 	if err != nil {
 		log.Printf("failded to parse rpm package: %v", err)
 		return nil, "", err
@@ -129,7 +131,7 @@ func (c *localRegistry) UploadPackageFile(
 	}
 
 	//TODO: make it async / atomic operation, implement artifact status (sync successful, sync failed..... statuses)
-	err = c.localRegistryHelper.BuildRegistryFiles(ctx, info)
+	err = c.registryIndexService.RegenerateRpmRepoData(ctx, info.RegistryID, info.RootParentID, info.RootIdentifier)
 	if err != nil {
 		return nil, "", err
 	}
@@ -152,7 +154,7 @@ func (c *localRegistry) GetRepoData(
 	}
 
 	fileReader, _, redirectURL, err := c.fileManager.DownloadFile(
-		ctx, "/"+RepoDataPrefix+fileName, info.RegistryID, info.RegIdentifier, info.RootIdentifier,
+		ctx, "/"+rpmutil.RepoDataPrefix+fileName, info.RegistryID, info.RegIdentifier, info.RootIdentifier,
 	)
 	if err != nil {
 		return responseHeaders, nil, nil, "", err

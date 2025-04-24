@@ -120,7 +120,12 @@ func (c *APIController) DeleteArtifactVersion(ctx context.Context, r artifact.De
 	case artifact.PackageTypeNUGET:
 		err = fmt.Errorf("delete version not supported for nuget")
 	case artifact.PackageTypeRPM:
-		err = fmt.Errorf("delete version not supported for rpm")
+		err = c.deleteVersion(ctx, regInfo, artifactName, versionName)
+		if err != nil {
+			break
+		}
+		err = c.RegistryIndexService.RegenerateRpmRepoData(ctx, regInfo.RegistryID,
+			regInfo.RootIdentifierID, regInfo.RootIdentifier)
 	default:
 		err = fmt.Errorf("unsupported package type: %s", regInfo.PackageType)
 	}

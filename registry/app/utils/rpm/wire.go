@@ -12,15 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package webhook
+package rpm
 
 import (
-	"context"
+	"github.com/harness/gitness/registry/app/pkg/filemanager"
+	"github.com/harness/gitness/registry/app/store"
 
-	gitnesswebhook "github.com/harness/gitness/app/services/webhook"
+	"github.com/google/wire"
 )
 
-// ServiceInterface interface for webhook operations.
-type ServiceInterface interface {
-	ReTriggerWebhookExecution(ctx context.Context, webhookExecutionID int64) (*gitnesswebhook.TriggerResult, error)
+func LocalRegistryHelperProvider(
+	fileManager filemanager.FileManager,
+	artifactDao store.ArtifactRepository,
+) RegistryHelper {
+	return NewRegistryHelper(fileManager, artifactDao)
 }
+
+var WireSet = wire.NewSet(LocalRegistryHelperProvider)

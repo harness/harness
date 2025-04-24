@@ -39,9 +39,17 @@ func GetGenericFilePath(imageName string, version string) string {
 	return filePathPrefix
 }
 
+func GetRpmFilePath(imageName string, version string) string {
+	lastDotIndex := strings.LastIndex(version, ".")
+	rpmVersion := version[:lastDotIndex]
+	rpmArch := version[lastDotIndex+1:]
+	return "/" + imageName + "/" + rpmVersion + "/" + rpmArch
+}
+
 func GetFilePath(
 	packageType artifact.PackageType,
-	imageName string, version string) (string, error) {
+	imageName string, version string,
+) (string, error) {
 	switch packageType {
 	case artifact.PackageTypeDOCKER:
 		return "", fmt.Errorf("docker package type not supported")
@@ -58,7 +66,7 @@ func GetFilePath(
 	case artifact.PackageTypeNUGET:
 		return "", fmt.Errorf("nuget package type not supported")
 	case artifact.PackageTypeRPM:
-		return "", fmt.Errorf("rpm package type not supported")
+		return GetRpmFilePath(imageName, version), nil
 	default:
 		return "", fmt.Errorf("unsupported package type: %s", packageType)
 	}

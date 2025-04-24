@@ -117,6 +117,7 @@ var validPackageTypes = []string{
 	string(a.PackageTypeMAVEN),
 	string(a.PackageTypePYTHON),
 	string(a.PackageTypeNPM),
+	string(a.PackageTypeRPM),
 }
 
 var validUpstreamSources = []string{
@@ -376,6 +377,8 @@ func GetPullCommand(
 		return GetPythonDownloadCommand(image, tag)
 	case string(a.PackageTypeNPM):
 		return GetNPMDownloadCommand(image, tag)
+	case string(a.PackageTypeRPM):
+		return GetRPMDownloadCommand(image, tag)
 	default:
 		return ""
 	}
@@ -390,6 +393,22 @@ func GetDockerPullCommand(
 
 func GetHelmPullCommand(image string, tag string, registryURL string) string {
 	return "helm pull oci://" + GetRepoURLWithoutProtocol(registryURL) + "/" + image + " --version " + tag
+}
+
+func GetRPMDownloadCommand(artifact, version string) string {
+	downloadCommand := "yum install <ARTIFACT>-<VERSION>"
+
+	// Replace the placeholders with the actual values
+	replacements := map[string]string{
+		"<ARTIFACT>": artifact,
+		"<VERSION>":  version,
+	}
+
+	for placeholder, value := range replacements {
+		downloadCommand = strings.ReplaceAll(downloadCommand, placeholder, value)
+	}
+
+	return downloadCommand
 }
 
 func GetNPMDownloadCommand(artifact, version string) string {
@@ -433,6 +452,21 @@ func GetGenericArtifactFileDownloadCommand(regURL, artifact, version, filename s
 		"<HOSTNAME>": regURL,
 		"<ARTIFACT>": artifact,
 		"<VERSION>":  version,
+		"<FILENAME>": filename,
+	}
+
+	for placeholder, value := range replacements {
+		downloadCommand = strings.ReplaceAll(downloadCommand, placeholder, value)
+	}
+
+	return downloadCommand
+}
+
+func GetRPMArtifactFileDownloadCommand(regURL, filename string) string {
+	downloadCommand := "curl --location '<HOSTNAME>/package<FILENAME>' --header 'x-api-key: <API_KEY>'" +
+		" -J -O"
+	replacements := map[string]string{
+		"<HOSTNAME>": regURL,
 		"<FILENAME>": filename,
 	}
 

@@ -32,6 +32,7 @@ import (
 	registryevents "github.com/harness/gitness/registry/app/events"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
+	"github.com/harness/gitness/registry/services/index"
 	registrywebhook "github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/store/database/dbtx"
 
@@ -77,6 +78,7 @@ func NewAPIHandler(
 	spacePathStore corestore.SpacePathStore,
 	artifactEventReporter registryevents.Reporter,
 	downloadStatRepository store.DownloadStatRepository,
+	registryIndexService index.Service,
 ) APIHandler {
 	r := chi.NewRouter()
 	r.Use(audit.Middleware())
@@ -106,6 +108,7 @@ func NewAPIHandler(
 		&webhookService,
 		artifactEventReporter,
 		downloadStatRepository,
+		registryIndexService,
 	)
 
 	handler := artifact.NewStrictHandler(apiController, []artifact.StrictMiddlewareFunc{})

@@ -2249,6 +2249,7 @@ components:
           MAVEN: "#/components/schemas/MavenArtifactDetailConfig"
           PYTHON: "#/components/schemas/PythonArtifactDetailConfig"
           NPM: "#/components/schemas/NpmArtifactDetailConfig"
+          RPM: "#/components/schemas/RpmArtifactDetailConfig"
       oneOf:
         - $ref: "#/components/schemas/DockerArtifactDetailConfig"
         - $ref: "#/components/schemas/HelmArtifactDetailConfig"
@@ -2256,6 +2257,7 @@ components:
         - $ref: "#/components/schemas/MavenArtifactDetailConfig"
         - $ref: "#/components/schemas/PythonArtifactDetailConfig"
         - $ref: "#/components/schemas/NpmArtifactDetailConfig"
+        - $ref: "#/components/schemas/RpmArtifactDetailConfig"
       required:
         - imageName
         - version
@@ -2292,6 +2294,13 @@ components:
     NpmArtifactDetailConfig:
       type: object
       description: Config for npm artifact details
+      properties:
+        metadata:
+          type: object
+          additionalProperties: true
+    RpmArtifactDetailConfig:
+      type: object
+      description: Config for RPM artifact details
       properties:
         metadata:
           type: object

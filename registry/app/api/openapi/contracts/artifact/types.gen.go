@@ -697,6 +697,11 @@ type ReplicationRuleRequestDestinationType string
 // ReplicationRuleRequestSourceType defines model for ReplicationRuleRequest.SourceType.
 type ReplicationRuleRequestSourceType string
 
+// RpmArtifactDetailConfig Config for RPM artifact details
+type RpmArtifactDetailConfig struct {
+	Metadata *map[string]interface{} `json:"metadata,omitempty"`
+}
+
 // SectionType refers to client setup section type
 type SectionType string
 
@@ -1612,6 +1617,36 @@ func (t *ArtifactDetail) MergeNpmArtifactDetailConfig(v NpmArtifactDetailConfig)
 	return err
 }
 
+// AsRpmArtifactDetailConfig returns the union data inside the ArtifactDetail as a RpmArtifactDetailConfig
+func (t ArtifactDetail) AsRpmArtifactDetailConfig() (RpmArtifactDetailConfig, error) {
+	var body RpmArtifactDetailConfig
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromRpmArtifactDetailConfig overwrites any union data inside the ArtifactDetail as the provided RpmArtifactDetailConfig
+func (t *ArtifactDetail) FromRpmArtifactDetailConfig(v RpmArtifactDetailConfig) error {
+	t.PackageType = "RPM"
+
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeRpmArtifactDetailConfig performs a merge with any union data inside the ArtifactDetail, using the provided RpmArtifactDetailConfig
+func (t *ArtifactDetail) MergeRpmArtifactDetailConfig(v RpmArtifactDetailConfig) error {
+	t.PackageType = "RPM"
+
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
 func (t ArtifactDetail) Discriminator() (string, error) {
 	var discriminator struct {
 		Discriminator string `json:"packageType"`
@@ -1638,6 +1673,8 @@ func (t ArtifactDetail) ValueByDiscriminator() (interface{}, error) {
 		return t.AsNpmArtifactDetailConfig()
 	case "PYTHON":
 		return t.AsPythonArtifactDetailConfig()
+	case "RPM":
+		return t.AsRpmArtifactDetailConfig()
 	default:
 		return nil, errors.New("unknown discriminator value: " + discriminator)
 	}

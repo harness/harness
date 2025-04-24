@@ -19,6 +19,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/base"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
+	"github.com/harness/gitness/registry/services/index"
 	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/google/wire"
@@ -33,10 +34,10 @@ func LocalRegistryProvider(
 	imageDao store.ImageRepository,
 	artifactDao store.ArtifactRepository,
 	urlProvider urlprovider.Provider,
-	helper LocalRegistryHelper,
+	registryIndexService index.Service,
 ) LocalRegistry {
 	registry := NewLocalRegistry(localBase, fileManager, proxyStore, tx, registryDao, imageDao, artifactDao,
-		urlProvider, helper)
+		urlProvider, registryIndexService)
 	base.Register(registry)
 	return registry
 }
@@ -55,11 +56,4 @@ func ProxyProvider(
 	return proxy
 }
 
-func LocalRegistryHelperProvider(
-	fileManager filemanager.FileManager,
-	artifactDao store.ArtifactRepository,
-) LocalRegistryHelper {
-	return NewLocalRegistryHelper(fileManager, artifactDao)
-}
-
-var WireSet = wire.NewSet(LocalRegistryProvider, ProxyProvider, LocalRegistryHelperProvider)
+var WireSet = wire.NewSet(LocalRegistryProvider, ProxyProvider)

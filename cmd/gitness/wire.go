@@ -135,6 +135,8 @@ import (
 	"github.com/harness/gitness/pubsub"
 	registryevents "github.com/harness/gitness/registry/app/events"
 	"github.com/harness/gitness/registry/app/pkg/docker"
+	rpmutils "github.com/harness/gitness/registry/app/utils/rpm"
+	registryindex "github.com/harness/gitness/registry/services/index"
 	registrywebhooks "github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/ssh"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -292,6 +294,8 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		registrywebhooks.WireSet,
 		gitspacedeleteevents.WireSet,
 		gitspacedeleteeventservice.WireSet,
+		registryindex.WireSet,
+		rpmutils.WireSet,
 	)
 	return &cliserver.System{}, nil
 }

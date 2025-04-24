@@ -128,6 +128,8 @@ func toPackageType(packageTypeStr string) (artifactapi.PackageType, error) {
 		return artifactapi.PackageTypePYTHON, nil
 	case string(artifactapi.PackageTypeNPM):
 		return artifactapi.PackageTypeNPM, nil
+	case string(artifactapi.PackageTypeRPM):
+		return artifactapi.PackageTypeRPM, nil
 	default:
 		return "", errors.New("invalid package type")
 	}
@@ -234,15 +236,18 @@ func GetArtifactFilesMetadata(
 		filePathPrefix := "/" + artifactName + "/" + version + "/"
 		filename := strings.Replace(file.Path, filePathPrefix, "", 1)
 		var downloadCommand string
-		if artifactapi.PackageTypeGENERIC == packageType ||
-			artifactapi.PackageTypePYTHON == packageType || artifactapi.PackageTypeNPM == packageType {
+		//nolint:exhaustive
+		switch packageType {
+		case artifactapi.PackageTypeGENERIC, artifactapi.PackageTypePYTHON, artifactapi.PackageTypeNPM:
 			downloadCommand = GetGenericArtifactFileDownloadCommand(registryURL, artifactName, version, filename)
-		} else if artifactapi.PackageTypeMAVEN == packageType {
+		case artifactapi.PackageTypeMAVEN:
 			artifactName = strings.ReplaceAll(artifactName, ".", "/")
 			artifactName = strings.ReplaceAll(artifactName, ":", "/")
 			filePathPrefix = "/" + artifactName + "/" + version + "/"
 			filename = strings.Replace(file.Path, filePathPrefix, "", 1)
 			downloadCommand = GetMavenArtifactFileDownloadCommand(registryURL, artifactName, version, filename)
+		case artifactapi.PackageTypeRPM:
+			downloadCommand = GetRPMArtifactFileDownloadCommand(registryURL, filename)
 		}
 		files = append(files, artifactapi.FileDetail{
 			Checksums:       getCheckSums(file),
@@ -531,6 +536,42 @@ func GetNPMArtifactDetail(
 	})
 	if err != nil {
 		log.Error().Err(err).Msgf("Error setting the artifact details for image: [%s]", image.Name)
+		return artifactapi.ArtifactDetail{}
+	}
+	return *artifactDetail
+}
+
+func GetRPMArtifactDetail(
+	image *types.Image, artifact *types.Artifact,
+	metadata map[string]interface{},
+	downloadCount int64,
+) artifactapi.ArtifactDetail {
+	createdAt := GetTimeInMs(artifact.CreatedAt)
+	modifiedAt := GetTimeInMs(artifact.UpdatedAt)
+	size, ok := metadata["size"].(float64)
+	if !ok {
+		log.Error().Msg("failed to get size from RPM metadata")
+	}
+	fileMetadata, ok := metadata["file_metadata"].(map[string]interface{})
+	if ok {
+		delete(fileMetadata, "files")
+		delete(fileMetadata, "changelogs")
+	}
+
+	totalSize := strconv.FormatInt(int64(size), 10)
+	artifactDetail := &artifactapi.ArtifactDetail{
+		CreatedAt:     &createdAt,
+		ModifiedAt:    &modifiedAt,
+		Name:          &image.Name,
+		Version:       artifact.Version,
+		DownloadCount: &downloadCount,
+		Size:          &totalSize,
+	}
+	err := artifactDetail.FromRpmArtifactDetailConfig(artifactapi.RpmArtifactDetailConfig{
+		Metadata: &metadata,
+	})
+	if err != nil {
+		log.Error().Err(err).Msgf("Error setting the artifact details for artifact: [%s/%s].", image.Name, artifact.Version)
 		return artifactapi.ArtifactDetail{}
 	}
 	return *artifactDetail

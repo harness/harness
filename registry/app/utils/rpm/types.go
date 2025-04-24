@@ -165,7 +165,7 @@ type packageInfo struct {
 	FileMetadata    *rpmmetadata.FileMetadata
 }
 
-type rpmPackage struct {
+type Package struct {
 	Name            string
 	Version         string
 	VersionMetadata *rpmmetadata.VersionMetadata

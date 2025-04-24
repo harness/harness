@@ -109,6 +109,8 @@ func (c *APIController) GenerateClientSetupDetails(
 	loginPasswordLabel := "Password: *see step 2*"
 	blankString := ""
 	switch packageType {
+	case string(artifact.PackageTypeRPM):
+		return c.generateRpmClientSetupDetail(ctx, image, tag, registryRef, username)
 	case string(artifact.PackageTypeMAVEN):
 		return c.generateMavenClientSetupDetail(ctx, image, tag, registryRef, username, registryType)
 	case string(artifact.PackageTypeHELM):
@@ -775,6 +777,208 @@ func (c *APIController) generateMavenClientSetupDetail(
 	//nolint:lll
 	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, artifactName, version, registryURL,
 		groupID, "")
+
+	return &artifact.ClientSetupDetailsResponseJSONResponse{
+		Data:   clientSetupDetails,
+		Status: artifact.StatusSUCCESS,
+	}
+}
+
+func (c *APIController) generateRpmClientSetupDetail(
+	ctx context.Context,
+	artifactName *artifact.ArtifactParam,
+	version *artifact.VersionParam,
+	registryRef string,
+	username string,
+) *artifact.ClientSetupDetailsResponseJSONResponse {
+	staticStepType := artifact.ClientSetupStepTypeStatic
+	generateTokenStepType := artifact.ClientSetupStepTypeGenerateToken
+
+	// Authentication section
+	section1 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("1. Configure Authentication"),
+	}
+	_ = section1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Generate an identity token for authentication"),
+				Type:   &generateTokenStepType,
+			},
+		},
+	})
+
+	yumSection1 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("2. Install a RPM Package"),
+	}
+	_ = yumSection1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Create or edit the .repo file."),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("sudo vi /etc/yum.repos.d/harness-<REGISTRY_NAME>.repo"),
+					},
+				},
+			},
+			{
+				Header: utils.StringPtr("Add the following content:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("[harness-<REGISTRY_NAME>]\n" +
+							"name=harness-<REGISTRY_NAME>\n" +
+							"baseurl=<REGISTRY_URL>\n" +
+							"enabled=1\n" +
+							"gpgcheck=0\n" +
+							"username=<USERNAME>\n" +
+							"password=*see step 2*\n"),
+					},
+				},
+			},
+			{
+				Header: utils.StringPtr("Clear the YUM cache."),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("sudo yum clean all"),
+					},
+				},
+			},
+			{
+				Header: utils.StringPtr("Install package."),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("sudo yum install <ARTIFACT_NAME>"),
+					},
+				},
+			},
+		},
+	})
+
+	yumSection2 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("3. Upload RPM Package"),
+	}
+
+	_ = yumSection2.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("To upload a RPM artifact run the following cURL with your package file:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						//nolint:lll
+						Value: utils.StringPtr("curl --location --request PUT '<REGISTRY_URL>/' \\\n--form 'file=@\"<FILE_PATH>\"' \\\n--header 'x-api-key: <API_KEY>'"),
+					},
+				},
+			},
+		},
+	})
+
+	dnfSection1 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("2. Install a RPM Package"),
+	}
+	_ = dnfSection1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Create or edit the .repo file."),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("sudo vi /etc/yum.repos.d/harness-<REGISTRY_NAME>.repo"),
+					},
+				},
+			},
+			{
+				Header: utils.StringPtr("Add the following content:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("[harness-<REGISTRY_NAME>]\n" +
+							"name=harness-<REGISTRY_NAME>\n" +
+							"baseurl=<REGISTRY_URL>\n" +
+							"enabled=1\n" +
+							"gpgcheck=0\n"),
+					},
+				},
+			},
+			{
+				Header: utils.StringPtr("Clear the DNF cache."),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("sudo dnf clean all"),
+					},
+				},
+			},
+			{
+				Header: utils.StringPtr("Install package."),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("sudo dnf install <ARTIFACT_NAME>"),
+					},
+				},
+			},
+		},
+	})
+
+	dnfSection2 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("3. Upload RPM Package"),
+	}
+
+	_ = dnfSection2.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("To upload a RPM artifact run the following cURL with your package file:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						//nolint:lll
+						Value: utils.StringPtr("curl --location --request PUT '<REGISTRY_URL>/' \\\n--form 'file=@\"<FILE_PATH>\"' \\\n--header 'x-api-key: <API_KEY>'"),
+					},
+				},
+			},
+		},
+	})
+
+	section2 := artifact.ClientSetupSection{}
+	config := artifact.TabSetupStepConfig{
+		Tabs: &[]artifact.TabSetupStep{
+			{
+				Header: utils.StringPtr("YUM"),
+				Sections: &[]artifact.ClientSetupSection{
+					yumSection1,
+					yumSection2,
+				},
+			},
+			{
+				Header: utils.StringPtr("DNF"),
+				Sections: &[]artifact.ClientSetupSection{
+					dnfSection1,
+					dnfSection2,
+				},
+			},
+		},
+	}
+
+	_ = section2.FromTabSetupStepConfig(config)
+
+	clientSetupDetails := artifact.ClientSetupDetails{
+		MainHeader: "RPM Client Setup",
+		SecHeader:  "Follow these instructions to install/upload RPM packages.",
+		Sections: []artifact.ClientSetupSection{
+			section1,
+			section2,
+		},
+	}
+
+	registryURL := c.URLProvider.PackageURL(ctx, registryRef, "rpm")
+
+	//nolint:lll
+	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, artifactName, version, registryURL,
+		"", "")
 
 	return &artifact.ClientSetupDetailsResponseJSONResponse{
 		Data:   clientSetupDetails,

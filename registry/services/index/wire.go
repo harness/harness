@@ -1,4 +1,4 @@
-//  Copyright 2023 Harness, Inc.
+// Copyright 2023 Harness, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,15 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package webhook
+package index
 
 import (
-	"context"
+	"github.com/harness/gitness/registry/app/utils/rpm"
 
-	gitnesswebhook "github.com/harness/gitness/app/services/webhook"
+	"github.com/google/wire"
 )
 
-// ServiceInterface interface for webhook operations.
-type ServiceInterface interface {
-	ReTriggerWebhookExecution(ctx context.Context, webhookExecutionID int64) (*gitnesswebhook.TriggerResult, error)
+// WireSet provides a wire set for this package.
+var WireSet = wire.NewSet(
+	ProvideService,
+)
+
+func ProvideService(
+	rpmRegistryHelper rpm.RegistryHelper,
+) Service {
+	return NewService(rpmRegistryHelper)
 }
