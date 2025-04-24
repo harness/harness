@@ -83,6 +83,7 @@ packageTypes:
   npmPackage: npm
   pythonPackage: Python Package
   nugetPackage: NuGet Package
+  rpmPackage: RPM Package
 repositoryTypes:
   docker: Docker
   helm: Helm

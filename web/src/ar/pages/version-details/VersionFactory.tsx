@@ -22,6 +22,7 @@ import { MavenVersionType } from './MavenVersion/MavenVersion'
 import { NpmVersionType } from './NpmVersion/NpmVersionType'
 import { PythonVersionType } from './PythonVersion/PythonVersionType'
 import { NuGetVersionType } from './NuGetVersion/NuGetVersionType'
+import { RPMVersionType } from './RPMVersion/RPMVersionType'
 
 versionFactory.registerStep(new DockerVersionType())
 versionFactory.registerStep(new HelmVersionType())
@@ -30,3 +31,4 @@ versionFactory.registerStep(new MavenVersionType())
 versionFactory.registerStep(new NpmVersionType())
 versionFactory.registerStep(new PythonVersionType())
 versionFactory.registerStep(new NuGetVersionType())
+versionFactory.registerStep(new RPMVersionType())

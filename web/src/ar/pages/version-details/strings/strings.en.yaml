@@ -55,6 +55,12 @@ overview:
     repository: Repository
     homepage: Homepage
     license: License
+    buildHost: Build Host
+    buildTime: Build Time
+    packager: Packager
+    platform: Platform
+    sourceRpm: Source RPM
+    vendor: Vendor
 artifactDetails:
   tabs:
     layers: Layers
@@ -88,6 +94,7 @@ artifactFiles:
       downloadCommand: Download Command
       created: Created
 dependencyList:
+  dependencyNameWithRelease: '{{ name }} (release: {{ release }})'
   table:
     columns:
       name: Dependency Name

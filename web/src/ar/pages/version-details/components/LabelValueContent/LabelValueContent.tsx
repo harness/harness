@@ -45,10 +45,11 @@ interface LabelValueProps {
   value: string | number | undefined
   type: LabelValueTypeEnum
   icon?: IconName
+  lineClamp?: number
 }
 
 export function LabelValueContent(props: LabelValueProps): JSX.Element {
-  const { label, value, type, icon } = props
+  const { label, value, type, icon, lineClamp = 1 } = props
   const { getString } = useStrings()
   const transformedValue = defaultTo(value, getString('na'))
   const renderValue = () => {
@@ -58,7 +59,7 @@ export function LabelValueContent(props: LabelValueProps): JSX.Element {
       case LabelValueTypeEnum.CopyText:
         return (
           <CopyText
-            lineClamp={1}
+            lineClamp={lineClamp}
             value={transformedValue.toString()}
             font={{ variation: FontVariation.BODY2, weight: 'light' }}
           />
@@ -73,21 +74,24 @@ export function LabelValueContent(props: LabelValueProps): JSX.Element {
         if (value) {
           return (
             <Link target="_blank" rel="noreferrer" to={value as string}>
-              <Text lineClamp={1} font={{ variation: FontVariation.BODY2, weight: 'light' }} color={Color.PRIMARY_7}>
+              <Text
+                lineClamp={lineClamp}
+                font={{ variation: FontVariation.BODY2, weight: 'light' }}
+                color={Color.PRIMARY_7}>
                 {value}
               </Text>
             </Link>
           )
         } else {
           return (
-            <Text lineClamp={1} font={{ variation: FontVariation.BODY2, weight: 'light' }}>
+            <Text lineClamp={lineClamp} font={{ variation: FontVariation.BODY2, weight: 'light' }}>
               {transformedValue}
             </Text>
           )
         }
       default:
         return (
-          <Text lineClamp={1} font={{ variation: FontVariation.BODY2, weight: 'light' }}>
+          <Text lineClamp={lineClamp} font={{ variation: FontVariation.BODY2, weight: 'light' }}>
             {transformedValue}
           </Text>
         )

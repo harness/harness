@@ -205,6 +205,7 @@ export interface StringsMap {
   'versionDetails.cards.supplyChain.totalComponents': string
   'versionDetails.deleteVersionModal.contentText': string
   'versionDetails.deleteVersionModal.title': string
+  'versionDetails.dependencyList.dependencyNameWithRelease': string
   'versionDetails.dependencyList.table.columns.name': string
   'versionDetails.dependencyList.table.columns.version': string
   'versionDetails.deploymentsTable.columns.deploymentPipeline': string
@@ -215,6 +216,8 @@ export interface StringsMap {
   'versionDetails.deploymentsTable.columns.triggeredBy': string
   'versionDetails.deploymentsTable.columns.type': string
   'versionDetails.deploymentsTable.noDeploymentsTitle': string
+  'versionDetails.overview.generalInformation.buildHost': string
+  'versionDetails.overview.generalInformation.buildTime': string
   'versionDetails.overview.generalInformation.createdAndLastModifiedAt': string
   'versionDetails.overview.generalInformation.description': string
   'versionDetails.overview.generalInformation.digest': string
@@ -223,13 +226,17 @@ export interface StringsMap {
   'versionDetails.overview.generalInformation.license': string
   'versionDetails.overview.generalInformation.name': string
   'versionDetails.overview.generalInformation.packageType': string
+  'versionDetails.overview.generalInformation.packager': string
+  'versionDetails.overview.generalInformation.platform': string
   'versionDetails.overview.generalInformation.pullCommand': string
   'versionDetails.overview.generalInformation.repository': string
   'versionDetails.overview.generalInformation.repositoryPath': string
   'versionDetails.overview.generalInformation.size': string
+  'versionDetails.overview.generalInformation.sourceRpm': string
   'versionDetails.overview.generalInformation.title': string
   'versionDetails.overview.generalInformation.uploadedBy': string
   'versionDetails.overview.generalInformation.url': string
+  'versionDetails.overview.generalInformation.vendor': string
   'versionDetails.overview.generalInformation.version': string
   'versionDetails.page': string
   'versionDetails.selectDigestPlaceholder': string
@@ -364,6 +371,7 @@ export interface StringsMap {
   'packageTypes.npmPackage': string
   'packageTypes.nugetPackage': string
   'packageTypes.pythonPackage': string
+  'packageTypes.rpmPackage': string
   plaintext: string
   plusNewName: string
   prod: string
