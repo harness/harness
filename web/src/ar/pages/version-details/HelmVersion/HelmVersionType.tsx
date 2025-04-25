@@ -24,19 +24,26 @@ import VersionListTable, {
   CommonVersionListTableProps
 } from '@ar/pages/version-list/components/VersionListTable/VersionListTable'
 import ArtifactActions from '@ar/pages/artifact-details/components/ArtifactActions/ArtifactActions'
+import ArtifactTreeNode from '@ar/pages/artifact-details/components/ArtifactTreeNode/ArtifactTreeNode'
+import ArtifactTreeNodeDetailsContent from '@ar/pages/artifact-details/components/ArtifactTreeNode/ArtifactTreeNodeDetailsContent'
 import {
   type ArtifactActionProps,
   type VersionActionProps,
+  type ArtifactTreeNodeViewProps,
   type VersionDetailsHeaderProps,
   type VersionDetailsTabProps,
   type VersionListTableProps,
-  VersionStep
+  VersionStep,
+  type VersionTreeNodeViewProps
 } from '@ar/frameworks/Version/Version'
-import { VersionDetailsTab } from '../components/VersionDetailsTabs/constants'
+
 import HelmVersionOverviewContent from './HelmVersionOverviewContent'
 import HelmArtifactDetailsContent from './HelmArtifactDetailsContent'
 import VersionActions from '../components/VersionActions/VersionActions'
+import VersionTreeNode from '../components/VersionTreeNode/VersionTreeNode'
+import { VersionDetailsTab } from '../components/VersionDetailsTabs/constants'
 import HelmVersionOSSContent from './HelmVersionOSSContent/HelmVersionOSSContent'
+import VersionDetailsTabs from '../components/VersionDetailsTabs/VersionDetailsTabs'
 import VersionDetailsHeaderContent from '../components/VersionDetailsHeaderContent/VersionDetailsHeaderContent'
 import { VersionAction } from '../components/VersionActions/types'
 
@@ -104,5 +111,21 @@ export class HelmVersionType extends VersionStep<ArtifactVersionSummary> {
 
   renderArtifactRowSubComponent(): JSX.Element {
     return <></>
+  }
+
+  renderArtifactTreeNodeView(props: ArtifactTreeNodeViewProps): JSX.Element {
+    return <ArtifactTreeNode {...props} icon="store-artifact-bundle" />
+  }
+
+  renderArtifactTreeNodeDetails(): JSX.Element {
+    return <ArtifactTreeNodeDetailsContent />
+  }
+
+  renderVersionTreeNodeView(props: VersionTreeNodeViewProps): JSX.Element {
+    return <VersionTreeNode {...props} icon="container" />
+  }
+
+  renderVersionTreeNodeDetails(): JSX.Element {
+    return <VersionDetailsTabs />
   }
 }

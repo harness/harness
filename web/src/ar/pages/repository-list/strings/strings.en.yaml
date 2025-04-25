@@ -1,6 +1,7 @@
 pageHeading: Artifact Registries
 newRepository: New Artifact Registry
 newRegistry: New Registry
+registryCount: 'Total {{count}} Registries'
 artifactRegistry:
   label: Artifact Registry
   subLabel: Manage internal packages and external dependencies through a unified registry.
@@ -11,6 +12,7 @@ selectEnvironments: Environments
 selectPackageTypes: Package Types
 selectRegistryType: Registry Type
 selectLabels: '{{ $.artifactList.table.columns.tags }}'
+compact: Compact View
 deleteModal:
   title: '{{ $.artifactList.table.actions.deleteRepository }}'
   contentText: Are you sure you want to delete the registry?

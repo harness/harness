@@ -24,15 +24,16 @@ import ParentSyncProvider from './ParentSyncProvider'
 
 interface RouteProviderProps extends RouteProps {
   enabled?: boolean
+  onLoad?: (pathParams: Record<string, string>) => void
 }
 
 function RouteProvider(props: PropsWithChildren<RouteProviderProps>) {
-  const { children, enabled = true, ...rest } = props
+  const { children, enabled = true, onLoad, ...rest } = props
   const { ModalProvider } = useParentComponents()
   if (!enabled) return <></>
   return (
     <Route {...rest}>
-      <ParentSyncProvider>
+      <ParentSyncProvider onLoad={onLoad}>
         <ModalProvider>{children}</ModalProvider>
       </ParentSyncProvider>
     </Route>

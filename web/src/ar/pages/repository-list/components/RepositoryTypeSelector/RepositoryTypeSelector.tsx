@@ -31,6 +31,7 @@ export default function RepositoryTypeSelector(props: RepositoryTypeSelectorProp
   return (
     <DropDown
       width={180}
+      usePortal
       buttonTestId="registry-type-select"
       items={RepositoryConfigTypes.filter(each => !each.disabled).map(each => ({
         ...each,

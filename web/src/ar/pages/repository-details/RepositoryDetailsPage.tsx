@@ -15,6 +15,7 @@
  */
 
 import React from 'react'
+import RepositoryHeader from './RepositoryHeader'
 import RepositoryDetails from './RepositoryDetails'
 import RepositoryProvider from './context/RepositoryProvider'
 
@@ -23,6 +24,7 @@ import './RepositoryFactory'
 export default function RepositoryDetailsPage(): JSX.Element {
   return (
     <RepositoryProvider>
+      <RepositoryHeader />
       <RepositoryDetails />
     </RepositoryProvider>
   )

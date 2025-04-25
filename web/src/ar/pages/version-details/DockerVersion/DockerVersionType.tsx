@@ -18,30 +18,38 @@ import React from 'react'
 import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client'
 
 import { String } from '@ar/frameworks/strings'
-import { PageType, RepositoryPackageType } from '@ar/common/types'
+import { NodeTypeEnum } from '@ar/components/TreeView/TreeNode'
 import DigestListPage from '@ar/pages/digest-list/DigestListPage'
+import { PageType, RepositoryPackageType } from '@ar/common/types'
 import ArtifactActions from '@ar/pages/artifact-details/components/ArtifactActions/ArtifactActions'
+import ArtifactTreeNode from '@ar/pages/artifact-details/components/ArtifactTreeNode/ArtifactTreeNode'
+import DigestListTreeView from '@ar/pages/digest-list/components/DigestListTreeView/DigestListTreeView'
 import DockerVersionListTable from '@ar/pages/version-list/DockerVersion/VersionListTable/DockerVersionListTable'
+import ArtifactTreeNodeDetailsContent from '@ar/pages/artifact-details/components/ArtifactTreeNode/ArtifactTreeNodeDetailsContent'
 import {
   type ArtifactActionProps,
   ArtifactRowSubComponentProps,
   type VersionActionProps,
+  type ArtifactTreeNodeViewProps,
   type VersionDetailsHeaderProps,
   type VersionDetailsTabProps,
   type VersionListTableProps,
-  VersionStep
+  VersionStep,
+  type VersionTreeNodeViewProps
 } from '@ar/frameworks/Version/Version'
 
 import DockerVersionHeader from './DockerVersionHeader'
+import { VersionAction } from '../components/VersionActions/types'
 import DockerArtifactSSCAContent from './DockerArtifactSSCAContent'
+import VersionActions from '../components/VersionActions/VersionActions'
 import DockerVersionOverviewContent from './DockerVersionOverviewContent'
 import DockerArtifactDetailsContent from './DockerArtifactDetailsContent'
+import VersionTreeNode from '../components/VersionTreeNode/VersionTreeNode'
 import { VersionDetailsTab } from '../components/VersionDetailsTabs/constants'
 import DockerArtifactSecurityTestsContent from './DockerArtifactSecurityTestsContent'
 import DockerVersionOSSContent from './DockerVersionOSSContent/DockerVersionOSSContent'
 import DockerDeploymentsContent from './DockerDeploymentsContent/DockerDeploymentsContent'
-import VersionActions from '../components/VersionActions/VersionActions'
-import { VersionAction } from '../components/VersionActions/types'
+import DockerVersionTreeNodeDetailsContent from './components/DockerVersionTreeNodeDetailsContent/DockerVersionTreeNodeDetailsContent'
 
 export class DockerVersionType extends VersionStep<ArtifactVersionSummary> {
   protected packageType = RepositoryPackageType.DOCKER
@@ -110,5 +118,31 @@ export class DockerVersionType extends VersionStep<ArtifactVersionSummary> {
     return (
       <DigestListPage repoKey={props.data.registryIdentifier} artifact={props.data.name} version={props.data.version} />
     )
+  }
+
+  renderArtifactTreeNodeView(props: ArtifactTreeNodeViewProps): JSX.Element {
+    return <ArtifactTreeNode {...props} icon="store-artifact-bundle" />
+  }
+
+  renderArtifactTreeNodeDetails(): JSX.Element {
+    return <ArtifactTreeNodeDetailsContent />
+  }
+
+  renderVersionTreeNodeView(props: VersionTreeNodeViewProps): JSX.Element {
+    const { data, parentNodeLevels, isLastChild } = props
+    return (
+      <VersionTreeNode {...props} icon="container" nodeType={NodeTypeEnum.Folder}>
+        <DigestListTreeView
+          registryIdentifier={props.data.registryIdentifier}
+          artifactIdentifier={props.artifactIdentifier}
+          versionIdentifier={props.data.name}
+          parentNodeLevels={[...parentNodeLevels, { data, isLastChild }]}
+        />
+      </VersionTreeNode>
+    )
+  }
+
+  renderVersionTreeNodeDetails(): JSX.Element {
+    return <DockerVersionTreeNodeDetailsContent />
   }
 }

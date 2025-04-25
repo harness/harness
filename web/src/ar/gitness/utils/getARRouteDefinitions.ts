@@ -15,6 +15,8 @@
  */
 
 import { defaultTo, isEmpty } from 'lodash-es'
+
+import { routeDefinitionWithMode } from '@ar/routes/utils'
 import type { ARRouteDefinitionsReturn } from '@ar/routes/RouteDefinitions'
 
 export default function getARRouteDefinitions(routeParams: Record<string, string>): ARRouteDefinitionsReturn {
@@ -34,17 +36,34 @@ export default function getARRouteDefinitions(routeParams: Record<string, string
       }
       return '/redirect'
     },
-    toARRepositories: () => '/',
-    toARRepositoryDetails: params => `/${params?.repositoryIdentifier}`,
-    toARRepositoryDetailsTab: params => `/${params?.repositoryIdentifier}/${params?.tab}`,
-    toARRepositoryWebhookDetails: params => `/${params?.repositoryIdentifier}/webhooks/${params?.webhookIdentifier}`,
-    toARArtifacts: () => `/${routeParams?.repositoryIdentifier}/packages`,
-    toARArtifactDetails: params => `/${params?.repositoryIdentifier}/artifacts/${params?.artifactIdentifier}`,
-    toARVersionDetails: params =>
-      `/${params?.repositoryIdentifier}/artifacts/${params?.artifactIdentifier}/versions/${params?.versionIdentifier}`,
+    toARRepositories: routeDefinitionWithMode(() => '/'),
+    toARRepositoryDetails: routeDefinitionWithMode(params => `/${params?.repositoryIdentifier}`),
+    toARRepositoryDetailsTab: routeDefinitionWithMode(params => `/${params?.repositoryIdentifier}/${params?.tab}`),
+    toARArtifacts: routeDefinitionWithMode(() => `/${routeParams?.repositoryIdentifier}/packages`),
+    toARArtifactDetails: routeDefinitionWithMode(
+      params => `/${params?.repositoryIdentifier}/artifacts/${params?.artifactIdentifier}`
+    ),
+    toARVersionDetails: routeDefinitionWithMode(
+      params =>
+        `/${params?.repositoryIdentifier}/artifacts/${params?.artifactIdentifier}/versions/${params?.versionIdentifier}`
+    ),
     // anything random, as this route will not be used in gitness
-    toARVersionDetailsTab: params =>
-      `/${params?.repositoryIdentifier}/artifacts/${params?.artifactIdentifier}/versions/${params?.versionIdentifier}`,
+    toARVersionDetailsTab: routeDefinitionWithMode(params => {
+      let route = `/${params.repositoryIdentifier}/artifacts/${params.artifactIdentifier}/versions/${params.versionIdentifier}`
+      if (params.orgIdentifier) route += `/orgs/${params.orgIdentifier}`
+      if (params.projectIdentifier) route += `/projects/${params.projectIdentifier}`
+      if (params.sourceId && params.artifactId) {
+        route += `/artifact-sources/${params.sourceId}/artifacts/${params.artifactId}`
+      }
+      if (params.pipelineIdentifier && params.executionIdentifier) {
+        route += `/pipelines/${params.pipelineIdentifier}/executions/${params.executionIdentifier}`
+      }
+      route += `/${params.versionTab}`
+      return route
+    }),
+    toARRepositoryWebhookDetails: routeDefinitionWithMode(
+      params => `/${params?.repositoryIdentifier}/webhooks/${params?.webhookIdentifier}`
+    ),
     toARRepositoryWebhookDetailsTab: params =>
       `/${params?.repositoryIdentifier}/webhooks/${params?.webhookIdentifier}/${params?.tab}`
   }

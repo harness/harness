@@ -18,8 +18,9 @@ import React from 'react'
 import { Redirect, Switch } from 'react-router-dom'
 
 import { Parent } from '@ar/common/types'
-import { useAppStore, useRoutes } from '@ar/hooks'
+import { useAppStore, useGetRepositoryListViewType, useRoutes } from '@ar/hooks'
 import RedirectPage from '@ar/pages/redirect-page/RedirectPage'
+import { RepositoryListViewTypeEnum } from '@ar/contexts/AppStoreContext'
 import type { WebhookDetailsTab } from '@ar/pages/webhook-details/constants'
 import type { RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
 
@@ -34,6 +35,7 @@ import type {
 } from './types'
 
 const RepositoryListPage = React.lazy(() => import('@ar/pages/repository-list/RepositoryListPage'))
+const RepositoryListTreeViewPage = React.lazy(() => import('@ar/pages/repository-list/RepositoryListTreeViewPage'))
 const RepositoryDetailsPage = React.lazy(() => import('@ar/pages/repository-details/RepositoryDetailsPage'))
 const ArtifactListPage = React.lazy(() => import('@ar/pages/artifact-list/ArtifactListPage'))
 const ArtifactDetailsPage = React.lazy(() => import('@ar/pages/artifact-details/ArtifactDetailsPage'))
@@ -51,7 +53,7 @@ export const repositoryDetailsTabPathProps: RepositoryDetailsTabPathParams = {
   tab: ':tab' as RepositoryDetailsTab
 }
 
-const artifactDetailsPathProps: ArtifactDetailsPathParams = {
+export const artifactDetailsPathProps: ArtifactDetailsPathParams = {
   ...repositoryDetailsPathProps,
   artifactIdentifier: ':artifactIdentifier'
 }
@@ -102,6 +104,9 @@ export const repositoryWebhookDetailsTabPathParams: RepositoryWebhookDetailsTabP
 const RouteDestinations = (): JSX.Element => {
   const routes = useRoutes(true)
   const { parent } = useAppStore()
+  const repositoryListViewType = useGetRepositoryListViewType()
+  const shouldUseSeperateVersionDetailsRoute =
+    parent === Parent.Enterprise || repositoryListViewType === RepositoryListViewTypeEnum.DIRECTORY
   return (
     <Switch>
       <RouteProvider exact path={routes.toAR()}>
@@ -110,27 +115,38 @@ const RouteDestinations = (): JSX.Element => {
       <RouteProvider exact path={routes.toARRedirect()}>
         <RedirectPage />
       </RouteProvider>
-      <RouteProvider exact path={routes.toARRepositories()}>
-        <RepositoryListPage />
-      </RouteProvider>
       <RouteProvider exact path={routes.toARArtifacts()}>
         <ArtifactListPage />
       </RouteProvider>
+      {repositoryListViewType === RepositoryListViewTypeEnum.DIRECTORY && (
+        <RouteProvider path={routes.toARRepositories()}>
+          <RepositoryListTreeViewPage />
+        </RouteProvider>
+      )}
+      {repositoryListViewType === RepositoryListViewTypeEnum.LIST && (
+        <RouteProvider exact path={routes.toARRepositories()}>
+          <RepositoryListPage />
+        </RouteProvider>
+      )}
+      {/* IF Enterprise then will use different route for version details page
+       * IF repositoryListViewType = DIRECTORY then will use different route for version details page
+       * IF OSS then will use version details as sub route for artifact details page
+       */}
       <RouteProvider
-        exact={parent === Parent.Enterprise}
+        exact={shouldUseSeperateVersionDetailsRoute}
         path={routes.toARArtifactDetails({ ...artifactDetailsPathProps })}>
         <>
           <ArtifactDetailsPage />
           {parent === Parent.OSS && (
             <Switch>
-              <RouteProvider exact path={routes.toARVersionDetails({ ...versionDetailsPathParams })}>
+              <RouteProvider path={routes.toARVersionDetails({ ...versionDetailsPathParams })}>
                 <OSSVersionDetailsPage />
               </RouteProvider>
             </Switch>
           )}
         </>
       </RouteProvider>
-      {parent === Parent.Enterprise && (
+      {shouldUseSeperateVersionDetailsRoute && (
         <RouteProvider path={routes.toARVersionDetails({ ...versionDetailsPathParams })}>
           <VersionDetailsPage />
         </RouteProvider>

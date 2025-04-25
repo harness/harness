@@ -15,6 +15,7 @@
  */
 
 import type { IconName } from '@harnessio/icons'
+import type { RegistryMetadata } from '@harnessio/react-har-service-client'
 import type { UpstreamRepositoryURLInputSource } from '@ar/pages/upstream-proxy-details/types'
 import type { FormikFowardRef, RepositoryPackageType, RepositoryConfigType, PageType, Scanners } from '@ar/common/types'
 import type { StringKeys } from '../strings'
@@ -46,6 +47,11 @@ export interface RepositoySetupClientProps {
 export interface RepositoryDetailsHeaderProps<T> {
   data: T
   type: RepositoryConfigType
+}
+
+export interface RepositoryTreeNodeProps {
+  data: RegistryMetadata
+  isLastChild?: boolean
 }
 
 export abstract class RepositoryStep<T, U = unknown> {
@@ -132,4 +138,8 @@ export abstract class RepositoryStep<T, U = unknown> {
   abstract renderRepositoryDetailsHeader(props: RepositoryDetailsHeaderProps<U>): JSX.Element
 
   abstract renderRedirectPage(): JSX.Element
+
+  abstract renderTreeNodeView(props: RepositoryTreeNodeProps): JSX.Element
+
+  abstract renderTreeNodeDetails(): JSX.Element
 }

@@ -17,7 +17,7 @@
 import { useMemo } from 'react'
 import { mapValues } from 'lodash-es'
 
-import { encodePathParams, normalizePath } from '@ar/routes/utils'
+import { encodePathParams, IRouteOptions, normalizePath } from '@ar/routes/utils'
 import { ARRouteDefinitionsReturn, routeDefinitions } from '@ar/routes/RouteDefinitions'
 
 import { useAppStore } from './useAppStore'
@@ -32,11 +32,11 @@ export function useRoutes(isRouteDestinationRendering = false): ARRouteDefinitio
   const transformedRouteDefinitions: ARRouteDefinitionsReturn = useMemo(() => {
     const finalRouteDefinitions =
       typeof getRouteDefinitions === 'function' ? getRouteDefinitions(routeParams) : routeDefinitions
-    return mapValues(finalRouteDefinitions, route => (params: any = {}) => {
+    return mapValues(finalRouteDefinitions, route => (params: any = {}, options?: IRouteOptions) => {
       const transformedParams: any = Object.keys(params).reduce((acc, curr) => {
         return { ...acc, [curr]: encodePathParams(params[curr]) }
       }, {})
-      return normalizePath(`${prefixUrl}/${route(transformedParams)}`)
+      return normalizePath(`${prefixUrl}/${route(transformedParams, options)}`)
     })
   }, [prefixUrl])
 

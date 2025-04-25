@@ -20,11 +20,18 @@ import type { PropsWithChildren } from 'react'
 import { Parent } from '@ar/common/types'
 import { useAppStore, useDecodedParams, useDeepCompareEffect } from '@ar/hooks'
 
-export default function ParentSyncProvider(props: PropsWithChildren<unknown>) {
-  const pathParams = useDecodedParams<Record<string, unknown>>()
+interface ParentSyncProviderProps {
+  onLoad?: (pathParams: Record<string, string>) => void
+}
+
+export default function ParentSyncProvider(props: PropsWithChildren<ParentSyncProviderProps>) {
+  const pathParams = useDecodedParams<Record<string, string>>()
   const { updateAppStore, parent } = useAppStore()
 
   useDeepCompareEffect(() => {
+    if (typeof props.onLoad === 'function') {
+      props.onLoad(pathParams)
+    }
     if (typeof updateAppStore === 'function' && parent !== Parent.Enterprise) {
       updateAppStore({
         repositoryIdentifier: pathParams?.repositoryIdentifier as string,

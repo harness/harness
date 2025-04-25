@@ -15,14 +15,22 @@
  */
 
 import { createContext } from 'react'
+import { noop } from 'lodash-es'
 import type { AppstoreContext, Scope } from '@ar/MFEAppTypes'
 import { Parent } from '@ar/common/types'
+
+export enum RepositoryListViewTypeEnum {
+  LIST = 'list',
+  DIRECTORY = 'directory'
+}
 
 export interface ModuleAppStoreContextProps extends AppstoreContext, Record<string, unknown> {
   baseUrl: string
   matchPath: string
   scope: Scope & Record<string, string>
   parent: Parent
+  repositoryListViewType: RepositoryListViewTypeEnum
+  setRepositoryListViewType: (type: RepositoryListViewTypeEnum) => void
 }
 
 export const AppStoreContext = createContext<ModuleAppStoreContextProps>({
@@ -33,5 +41,7 @@ export const AppStoreContext = createContext<ModuleAppStoreContextProps>({
   matchPath: '',
   scope: {},
   accountInfo: {},
-  parent: Parent.OSS
+  parent: Parent.OSS,
+  repositoryListViewType: RepositoryListViewTypeEnum.LIST,
+  setRepositoryListViewType: noop
 })

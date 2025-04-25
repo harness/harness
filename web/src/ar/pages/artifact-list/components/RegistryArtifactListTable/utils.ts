@@ -26,6 +26,7 @@ export type RegistryArtifactListPageQueryParams = {
   size: number
   sort: string[]
   searchTerm?: string
+  artifactSearchTerm?: string
   isDeployedArtifacts: boolean
   packageTypes: RepositoryPackageType[]
   repositoryKey?: string

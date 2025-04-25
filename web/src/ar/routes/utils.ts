@@ -15,6 +15,7 @@
  */
 
 import { defaultTo } from 'lodash-es'
+import QueryString from 'qs'
 
 export function normalizePath(url: string): string {
   return url.replace(/\/{2,}/g, '/')
@@ -23,4 +24,20 @@ export function normalizePath(url: string): string {
 export const encodePathParams = (val?: string): string => {
   if (typeof val === 'string' && val.startsWith(':')) return val
   return encodeURIComponent(defaultTo(val, ''))
+}
+
+export interface IRouteOptions {
+  queryParams?: Record<string, string>
+}
+
+export function routeDefinitionWithMode<T>(fn: (params: T) => string) {
+  return (params: T, options?: IRouteOptions) => {
+    const { queryParams } = options || {}
+    let route = fn(params)
+    if (queryParams) {
+      const queryString = QueryString.stringify(queryParams, { encode: false })
+      route = `${route}?${queryString}`
+    }
+    return route
+  }
 }

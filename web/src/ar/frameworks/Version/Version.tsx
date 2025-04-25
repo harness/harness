@@ -21,10 +21,12 @@ import type {
   ArtifactVersionMetadata,
   ArtifactVersionSummary,
   ListArtifactVersion,
-  RegistryArtifactMetadata
+  RegistryArtifactMetadata,
+  RegistryMetadata
 } from '@harnessio/react-har-service-client'
-import type { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
+import type { NodeSpec } from '@ar/components/TreeView/TreeViewContext'
 import type { PageType, Parent, RepositoryPackageType } from '@ar/common/types'
+import type { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
 
 export interface VersionDetailsHeaderProps<T> {
   data: T
@@ -69,6 +71,23 @@ export interface ArtifactRowSubComponentProps {
   data: ArtifactMetadata
 }
 
+export interface ArtifactTreeNodeViewProps {
+  data: RegistryArtifactMetadata
+  parentNodeLevels: Array<NodeSpec<RegistryMetadata>>
+  isLastChild?: boolean
+}
+
+export interface VersionTreeNodeViewProps {
+  data: ArtifactVersionMetadata
+  artifactIdentifier: string
+  parentNodeLevels: Array<NodeSpec<RegistryMetadata | RegistryArtifactMetadata>>
+  isLastChild?: boolean
+}
+
+export interface VersionTreeNodeDetailsProps {
+  data: ArtifactVersionSummary
+}
+
 export abstract class VersionStep<T> {
   protected abstract packageType: RepositoryPackageType
   protected abstract allowedVersionDetailsTabs: VersionDetailsTab[]
@@ -97,4 +116,12 @@ export abstract class VersionStep<T> {
   abstract renderVersionActions(props: VersionActionProps): JSX.Element
 
   abstract renderArtifactRowSubComponent(props: ArtifactRowSubComponentProps): JSX.Element
+
+  abstract renderArtifactTreeNodeView(props: ArtifactTreeNodeViewProps): JSX.Element
+
+  abstract renderArtifactTreeNodeDetails(): JSX.Element
+
+  abstract renderVersionTreeNodeView(props: VersionTreeNodeViewProps): JSX.Element
+
+  abstract renderVersionTreeNodeDetails(props: VersionTreeNodeDetailsProps): JSX.Element
 }

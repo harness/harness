@@ -19,13 +19,14 @@ import { Page } from '@harnessio/uicore'
 import { QueryClientProvider } from '@tanstack/react-query'
 
 import { StringsContextProvider } from '@ar/frameworks/strings/StringsContextProvider'
-import { AppStoreContext } from '@ar/contexts/AppStoreContext'
+import { AppStoreContext, RepositoryListViewTypeEnum } from '@ar/contexts/AppStoreContext'
 import ParentProvider from '@ar/contexts/ParentProvider'
 import type { ParentProviderProps } from '@ar/contexts/ParentProvider'
 import { queryClient } from '@ar/utils/queryClient'
 
 import { Parent } from '@ar/common/types'
 import strings from '@ar/strings/strings.en.yaml'
+import { PreferenceScope } from '@ar/constants'
 import type { MFEAppProps } from '@ar/MFEAppTypes'
 import DefaultNavComponent from '@ar/__mocks__/components/DefaultNavComponent'
 import AppErrorBoundary from '@ar/components/AppErrorBoundary/AppErrorBoundary'
@@ -60,6 +61,10 @@ export default function ChildApp(props: PropsWithChildren<MFEAppProps>): React.R
 
   const { ModalProvider } = customComponents
   const appStoreData = React.useContext(parentContextObj.appStoreContext)
+  const { usePreferenceStore } = customHooks
+  const { preference: repositoryListViewType, setPreference: setRepositoryListViewType } = usePreferenceStore<
+    RepositoryListViewTypeEnum | undefined
+  >(PreferenceScope.USER, 'RepositoryListViewType')
 
   useOpenApiClient({ on401, customUtils })
 
@@ -81,6 +86,8 @@ export default function ChildApp(props: PropsWithChildren<MFEAppProps>): React.R
             matchPath,
             baseUrl: renderUrl,
             scope: { ...scope, ...customScope },
+            repositoryListViewType: repositoryListViewType || RepositoryListViewTypeEnum.LIST,
+            setRepositoryListViewType,
             parent
           }}>
           <StringsContextProvider initialStrings={strings}>

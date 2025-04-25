@@ -23,6 +23,7 @@ import type {
   RepositoryActionsProps,
   RepositoryConfigurationFormProps,
   RepositoryDetailsHeaderProps,
+  RepositoryTreeNodeProps,
   RepositoySetupClientProps
 } from '@ar/frameworks/RepositoryStep/Repository'
 
@@ -38,12 +39,14 @@ import {
 } from '@ar/pages/upstream-proxy-details/types'
 import type { Repository, VirtualRegistryRequest } from '@ar/pages/repository-details/types'
 
+import RepositoryDetails from '../RepositoryDetails'
 import RepositoryActions from '../components/Actions/RepositoryActions'
+import RedirectPageView from '../components/RedirectPageView/RedirectPageView'
 import SetupClientContent from '../components/SetupClientContent/SetupClientContent'
+import RepositoryTreeNode from '../components/RepositoryTreeNode/RepositoryTreeNode'
+import RepositoryConfigurationForm from '../components/Forms/RepositoryConfigurationForm'
 import RepositoryCreateFormContent from '../components/FormContent/RepositoryCreateFormContent'
 import RepositoryDetailsHeader from '../components/RepositoryDetailsHeader/RepositoryDetailsHeader'
-import RepositoryConfigurationForm from '../components/Forms/RepositoryConfigurationForm'
-import RedirectPageView from '../components/RedirectPageView/RedirectPageView'
 
 export class HelmRepositoryType extends RepositoryStep<VirtualRegistryRequest> {
   protected packageType = RepositoryPackageType.HELM
@@ -127,5 +130,13 @@ export class HelmRepositoryType extends RepositoryStep<VirtualRegistryRequest> {
 
   renderRedirectPage(): JSX.Element {
     return <RedirectPageView />
+  }
+
+  renderTreeNodeView(props: RepositoryTreeNodeProps): JSX.Element {
+    return <RepositoryTreeNode {...props} icon={this.repositoryIcon} />
+  }
+
+  renderTreeNodeDetails(): JSX.Element {
+    return <RepositoryDetails />
   }
 }

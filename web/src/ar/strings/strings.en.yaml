@@ -11,6 +11,7 @@ prodCount: '{{count}} Prod'
 nonProdCount: '{{count}} Non-Prod'
 copy: Copy
 view: View
+loadMore: Load More
 noMatchingFilterData: No results found matching the filter criteria
 stepNotFound: Step not found
 tabNotFound: Tab not found
@@ -48,6 +49,7 @@ createdAt: Created At
 modifiedAt: Modified At
 plaintext: Plain Text
 encrypted: Encrypted
+details: Details
 tags:
   latest: LATEST
   latestVersion: LATEST VERSION

@@ -30,6 +30,7 @@ type GetVersionListQueryParams = {
   size: number
   sort: string[]
   searchTerm: string
+  versionSearchTerm?: string
   isDeployedArtifacts: boolean
   packageTypes: RepositoryPackageType[]
   repositoryKey: string

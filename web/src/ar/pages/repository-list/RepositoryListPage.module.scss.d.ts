@@ -20,3 +20,4 @@ export declare const pageBody: string
 export declare const pageHeader: string
 export declare const subHeader: string
 export declare const subHeaderItems: string
+export declare const treeViewPageBody: string

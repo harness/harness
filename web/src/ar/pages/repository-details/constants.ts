@@ -17,7 +17,10 @@
 import type { IconName } from '@harnessio/icons'
 import type { Scanner } from '@harnessio/react-har-service-client'
 
-import type { Scanners } from '@ar/common/types'
+import { FeatureFlags } from '@ar/MFEAppTypes'
+import type { StringKeys } from '@ar/frameworks/strings'
+import { RepositoryListViewTypeEnum } from '@ar/contexts/AppStoreContext'
+import { RepositoryConfigType, RepositoryPackageType, Scanners } from '@ar/common/types'
 
 export enum RepositoryDetailsTab {
   PACKAGES = 'packages',
@@ -44,3 +47,30 @@ export const ContainerScannerConfig: Record<Scanners, ScannerConfigSpec> = {
     value: 'GRYPE'
   }
 }
+
+interface RepositoryDetailsTabSpec {
+  label: StringKeys
+  value: RepositoryDetailsTab
+  packageType?: RepositoryPackageType
+  type?: RepositoryConfigType
+  mode?: RepositoryListViewTypeEnum
+  featureFlag?: FeatureFlags
+}
+
+export const RepositoryDetailsTabs: RepositoryDetailsTabSpec[] = [
+  {
+    label: 'repositoryDetails.tabs.packages',
+    value: RepositoryDetailsTab.PACKAGES,
+    mode: RepositoryListViewTypeEnum.LIST
+  },
+  {
+    label: 'repositoryDetails.tabs.configuration',
+    value: RepositoryDetailsTab.CONFIGURATION
+  },
+  {
+    label: 'repositoryDetails.tabs.webhooks',
+    value: RepositoryDetailsTab.WEBHOOKS,
+    featureFlag: FeatureFlags.HAR_TRIGGERS,
+    type: RepositoryConfigType.VIRTUAL
+  }
+]

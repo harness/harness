@@ -24,15 +24,19 @@ import {
   RepositoryConfigurationFormProps,
   RepositoryDetailsHeaderProps,
   RepositoryStep,
+  RepositoryTreeNodeProps,
   RepositoySetupClientProps
 } from '@ar/frameworks/RepositoryStep/Repository'
-import RepositoryActions from '../components/Actions/RepositoryActions'
+
+import RepositoryDetails from '../RepositoryDetails'
 import type { Repository, VirtualRegistryRequest } from '../types'
-import RepositoryCreateFormContent from '../components/FormContent/RepositoryCreateFormContent'
-import RepositoryConfigurationForm from '../components/Forms/RepositoryConfigurationForm'
-import RepositoryDetailsHeader from '../components/RepositoryDetailsHeader/RepositoryDetailsHeader'
-import SetupClientContent from '../components/SetupClientContent/SetupClientContent'
+import RepositoryActions from '../components/Actions/RepositoryActions'
 import RedirectPageView from '../components/RedirectPageView/RedirectPageView'
+import RepositoryTreeNode from '../components/RepositoryTreeNode/RepositoryTreeNode'
+import SetupClientContent from '../components/SetupClientContent/SetupClientContent'
+import RepositoryConfigurationForm from '../components/Forms/RepositoryConfigurationForm'
+import RepositoryCreateFormContent from '../components/FormContent/RepositoryCreateFormContent'
+import RepositoryDetailsHeader from '../components/RepositoryDetailsHeader/RepositoryDetailsHeader'
 
 export class GenericRepositoryType extends RepositoryStep<VirtualRegistryRequest> {
   protected packageType = RepositoryPackageType.GENERIC
@@ -88,5 +92,13 @@ export class GenericRepositoryType extends RepositoryStep<VirtualRegistryRequest
 
   renderRedirectPage(): JSX.Element {
     return <RedirectPageView />
+  }
+
+  renderTreeNodeView(props: RepositoryTreeNodeProps): JSX.Element {
+    return <RepositoryTreeNode {...props} icon={this.repositoryIcon} iconSize={20} />
+  }
+
+  renderTreeNodeDetails(): JSX.Element {
+    return <RepositoryDetails />
   }
 }

@@ -29,8 +29,11 @@ type GetArtifactRepositoryQueryParams = {
   size: number
   sort: string[]
   searchTerm?: string
+  registrySearchTerm?: string
+  compact: boolean
   repositoryTypes: RepositoryPackageType[]
   configType?: RepositoryConfigType
+  treeSort?: string
 }
 
 export type ArtifactRepositoryListPageQueryParams = Omit<
@@ -46,7 +49,8 @@ export const useArtifactRepositoriesQueryParamOptions =
         page: DEFAULT_PAGE_INDEX,
         size: DEFAULT_PAGE_SIZE,
         sort: DEFAULT_PIPELINE_LIST_TABLE_SORT,
-        repositoryTypes: []
+        repositoryTypes: [],
+        compact: false
       },
       { ignoreEmptyString: false }
     )

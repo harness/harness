@@ -19,7 +19,8 @@ import { PageError, PageSpinner } from '@harnessio/uicore'
 import { ArtifactVersionSummary, useGetArtifactVersionSummaryQuery } from '@harnessio/react-har-service-client'
 
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
-import { useGetSpaceRef, useParentHooks } from '@ar/hooks'
+import type { VersionDetailsPathParams } from '@ar/routes/types'
+import { useDecodedParams, useGetSpaceRef, useParentHooks } from '@ar/hooks'
 
 import type { DockerVersionDetailsQueryParams } from '../DockerVersion/types'
 
@@ -32,9 +33,9 @@ interface VersionProviderProps {
 export const VersionProviderContext = createContext<VersionProviderProps>({} as VersionProviderProps)
 
 interface VersionProviderSpcs {
-  repoKey: string
-  artifactKey: string
-  versionKey: string
+  repoKey?: string
+  artifactKey?: string
+  versionKey?: string
 }
 
 const VersionProvider: FC<PropsWithChildren<VersionProviderSpcs>> = ({
@@ -43,10 +44,11 @@ const VersionProvider: FC<PropsWithChildren<VersionProviderSpcs>> = ({
   artifactKey,
   versionKey
 }): JSX.Element => {
-  const spaceRef = useGetSpaceRef(repoKey)
   const { useQueryParams } = useParentHooks()
   const { digest } = useQueryParams<DockerVersionDetailsQueryParams>()
+  const { repositoryIdentifier, artifactIdentifier, versionIdentifier } = useDecodedParams<VersionDetailsPathParams>()
 
+  const spaceRef = useGetSpaceRef(repoKey ?? repositoryIdentifier)
   const {
     data,
     isFetching: loading,
@@ -54,8 +56,8 @@ const VersionProvider: FC<PropsWithChildren<VersionProviderSpcs>> = ({
     refetch
   } = useGetArtifactVersionSummaryQuery({
     registry_ref: spaceRef,
-    artifact: encodeRef(artifactKey),
-    version: versionKey,
+    artifact: encodeRef(artifactKey ?? artifactIdentifier),
+    version: versionKey ?? versionIdentifier,
     queryParams: {
       digest
     }

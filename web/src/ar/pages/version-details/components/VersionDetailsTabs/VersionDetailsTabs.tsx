@@ -38,7 +38,6 @@ import {
 } from '@ar/routes/RouteDestinations'
 
 import { VersionDetailsTab, VersionDetailsTabList } from './constants'
-import type { DockerVersionDetailsQueryParams } from '../../DockerVersion/types'
 import css from './VersionDetailsTab.module.scss'
 
 export default function VersionDetailsTabs(): JSX.Element {
@@ -49,15 +48,18 @@ export default function VersionDetailsTabs(): JSX.Element {
   const history = useHistory()
   const { getString } = useStrings()
   const routeDefinitions = useRoutes(true)
+  const { parent } = useAppStore()
   const { data } = useContext(VersionProviderContext)
   const pathParams = useDecodedParams<VersionDetailsPathParams>()
-  const { digest } = useQueryParams<DockerVersionDetailsQueryParams>()
+  const queryParams = useQueryParams<Record<string, string>>()
   const { orgIdentifier, projectIdentifier } = scope
 
   const tabList = useMemo(() => {
     const versionType = versionFactory?.getVersionType(data?.packageType)
     if (!versionType) return []
-    return VersionDetailsTabList.filter(each => versionType.getAllowedVersionDetailsTab().includes(each.value))
+    return VersionDetailsTabList.filter(each => !each.parent || each.parent === parent).filter(each =>
+      versionType.getAllowedVersionDetailsTab().includes(each.value)
+    )
   }, [data])
 
   const handleTabChange = useCallback(
@@ -66,44 +68,50 @@ export default function VersionDetailsTabs(): JSX.Element {
       let newRoute
       switch (nextTab) {
         case VersionDetailsTab.SUPPLY_CHAIN:
-          newRoute = routes.toARVersionDetailsTab({
-            versionIdentifier: pathParams.versionIdentifier,
-            artifactIdentifier: pathParams.artifactIdentifier,
-            repositoryIdentifier: pathParams.repositoryIdentifier,
-            versionTab: nextTab,
-            sourceId: data?.sscaArtifactSourceId,
-            artifactId: data?.sscaArtifactId,
-            orgIdentifier: !orgIdentifier ? DEFAULT_ORG : undefined,
-            projectIdentifier: !projectIdentifier ? DEFAULT_PROJECT : undefined
-          })
+          newRoute = routes.toARVersionDetailsTab(
+            {
+              versionIdentifier: pathParams.versionIdentifier,
+              artifactIdentifier: pathParams.artifactIdentifier,
+              repositoryIdentifier: pathParams.repositoryIdentifier,
+              versionTab: nextTab,
+              sourceId: data?.sscaArtifactSourceId,
+              artifactId: data?.sscaArtifactId,
+              orgIdentifier: !orgIdentifier ? DEFAULT_ORG : undefined,
+              projectIdentifier: !projectIdentifier ? DEFAULT_PROJECT : undefined
+            },
+            { queryParams }
+          )
           break
         case VersionDetailsTab.SECURITY_TESTS:
-          newRoute = routes.toARVersionDetailsTab({
-            versionIdentifier: pathParams.versionIdentifier,
-            artifactIdentifier: pathParams.artifactIdentifier,
-            repositoryIdentifier: pathParams.repositoryIdentifier,
-            versionTab: nextTab,
-            executionIdentifier: data?.stoExecutionId,
-            pipelineIdentifier: data?.stoPipelineId,
-            orgIdentifier: !orgIdentifier ? DEFAULT_ORG : undefined,
-            projectIdentifier: !projectIdentifier ? DEFAULT_PROJECT : undefined
-          })
+          newRoute = routes.toARVersionDetailsTab(
+            {
+              versionIdentifier: pathParams.versionIdentifier,
+              artifactIdentifier: pathParams.artifactIdentifier,
+              repositoryIdentifier: pathParams.repositoryIdentifier,
+              versionTab: nextTab,
+              executionIdentifier: data?.stoExecutionId,
+              pipelineIdentifier: data?.stoPipelineId,
+              orgIdentifier: !orgIdentifier ? DEFAULT_ORG : undefined,
+              projectIdentifier: !projectIdentifier ? DEFAULT_PROJECT : undefined
+            },
+            { queryParams }
+          )
           break
         default:
-          newRoute = routes.toARVersionDetailsTab({
-            versionIdentifier: pathParams.versionIdentifier,
-            artifactIdentifier: pathParams.artifactIdentifier,
-            repositoryIdentifier: pathParams.repositoryIdentifier,
-            versionTab: nextTab
-          })
+          newRoute = routes.toARVersionDetailsTab(
+            {
+              versionIdentifier: pathParams.versionIdentifier,
+              artifactIdentifier: pathParams.artifactIdentifier,
+              repositoryIdentifier: pathParams.repositoryIdentifier,
+              versionTab: nextTab
+            },
+            { queryParams }
+          )
           break
-      }
-      if (digest) {
-        newRoute = `${newRoute}?digest=${digest}`
       }
       history.push(newRoute)
     },
-    [digest]
+    [queryParams]
   )
 
   if (!data) return <></>

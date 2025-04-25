@@ -15,6 +15,7 @@
  */
 
 import { defaultTo, isEmpty } from 'lodash-es'
+
 import type {
   ArtifactDetailsPathParams,
   RedirectPageQueryParams,
@@ -25,19 +26,20 @@ import type {
   VersionDetailsPathParams,
   VersionDetailsTabPathParams
 } from './types'
+import { IRouteOptions, routeDefinitionWithMode } from './utils'
 
 export interface ARRouteDefinitionsReturn {
   toAR: () => string
-  toARRedirect: (params?: RedirectPageQueryParams) => string
-  toARRepositories: () => string
-  toARRepositoryDetails: (params: RepositoryDetailsPathParams) => string
-  toARRepositoryDetailsTab: (params: RepositoryDetailsTabPathParams) => string
-  toARArtifacts: () => string
-  toARArtifactDetails: (params: ArtifactDetailsPathParams) => string
-  toARVersionDetails: (params: VersionDetailsPathParams) => string
-  toARVersionDetailsTab: (params: VersionDetailsTabPathParams) => string
-  toARRepositoryWebhookDetails: (params: RepositoryWebhookDetailsPathParams) => string
-  toARRepositoryWebhookDetailsTab: (params: RepositoryWebhookDetailsTabPathParams) => string
+  toARRedirect: (params?: RedirectPageQueryParams, options?: IRouteOptions) => string
+  toARRepositories: (_?: unknown, options?: IRouteOptions) => string
+  toARRepositoryDetails: (params: RepositoryDetailsPathParams, options?: IRouteOptions) => string
+  toARRepositoryDetailsTab: (params: RepositoryDetailsTabPathParams, options?: IRouteOptions) => string
+  toARArtifacts: (_?: unknown, options?: IRouteOptions) => string
+  toARArtifactDetails: (params: ArtifactDetailsPathParams, options?: IRouteOptions) => string
+  toARVersionDetails: (params: VersionDetailsPathParams, options?: IRouteOptions) => string
+  toARVersionDetailsTab: (params: VersionDetailsTabPathParams, options?: IRouteOptions) => string
+  toARRepositoryWebhookDetails: (params: RepositoryWebhookDetailsPathParams, options?: IRouteOptions) => string
+  toARRepositoryWebhookDetailsTab: (params: RepositoryWebhookDetailsTabPathParams, options?: IRouteOptions) => string
 }
 
 export const routeDefinitions: ARRouteDefinitionsReturn = {
@@ -55,14 +57,20 @@ export const routeDefinitions: ARRouteDefinitionsReturn = {
     }
     return '/redirect'
   },
-  toARRepositories: () => '/registries',
-  toARRepositoryDetails: params => `/registries/${params?.repositoryIdentifier}`,
-  toARRepositoryDetailsTab: params => `/registries/${params?.repositoryIdentifier}/${params?.tab}`,
-  toARArtifacts: () => '/artifacts',
-  toARArtifactDetails: params => `/registries/${params?.repositoryIdentifier}/artifacts/${params?.artifactIdentifier}`,
-  toARVersionDetails: params =>
-    `/registries/${params?.repositoryIdentifier}/artifacts/${params?.artifactIdentifier}/versions/${params?.versionIdentifier}`,
-  toARVersionDetailsTab: params => {
+  toARRepositories: routeDefinitionWithMode(() => '/registries'),
+  toARRepositoryDetails: routeDefinitionWithMode(params => `/registries/${params?.repositoryIdentifier}`),
+  toARRepositoryDetailsTab: routeDefinitionWithMode(
+    params => `/registries/${params?.repositoryIdentifier}/${params.tab}`
+  ),
+  toARArtifacts: routeDefinitionWithMode(() => '/artifacts'),
+  toARArtifactDetails: routeDefinitionWithMode(
+    params => `/registries/${params?.repositoryIdentifier}/artifacts/${params?.artifactIdentifier}`
+  ),
+  toARVersionDetails: routeDefinitionWithMode(
+    params =>
+      `/registries/${params?.repositoryIdentifier}/artifacts/${params?.artifactIdentifier}/versions/${params?.versionIdentifier}`
+  ),
+  toARVersionDetailsTab: routeDefinitionWithMode(params => {
     let route = `/registries/${params?.repositoryIdentifier}/artifacts/${params?.artifactIdentifier}/versions/${params?.versionIdentifier}`
     if (params.orgIdentifier) route += `/orgs/${params.orgIdentifier}`
     if (params.projectIdentifier) route += `/projects/${params.projectIdentifier}`
@@ -74,7 +82,7 @@ export const routeDefinitions: ARRouteDefinitionsReturn = {
     }
     route += `/${params.versionTab}`
     return route
-  },
+  }),
   toARRepositoryWebhookDetails: params =>
     `/registries/${params?.repositoryIdentifier}/webhooks/${params?.webhookIdentifier}`,
   toARRepositoryWebhookDetailsTab: params =>

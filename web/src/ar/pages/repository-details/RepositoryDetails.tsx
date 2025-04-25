@@ -23,13 +23,17 @@ import { Button, ButtonVariation, Container, Layout, Tab, Tabs } from '@harnessi
 import { useStrings } from '@ar/frameworks/strings'
 import type { RepositoryDetailsPathParams } from '@ar/routes/types'
 import RouteProvider from '@ar/components/RouteProvider/RouteProvider'
-import { useDecodedParams, useFeatureFlags, useParentComponents, useRoutes } from '@ar/hooks'
+import {
+  useDecodedParams,
+  useFeatureFlags,
+  useGetRepositoryListViewType,
+  useParentComponents,
+  useRoutes
+} from '@ar/hooks'
 import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
-import { RepositoryConfigType, RepositoryPackageType } from '@ar/common/types'
-import RepositoryDetailsHeaderWidget from '@ar/frameworks/RepositoryStep/RepositoryDetailsHeaderWidget'
 import { repositoryDetailsPathProps, repositoryDetailsTabPathProps } from '@ar/routes/RouteDestinations'
 
-import { RepositoryDetailsTab } from './constants'
+import { RepositoryDetailsTab, RepositoryDetailsTabs } from './constants'
 import RepositoryDetailsTabPage from './RepositoryDetailsTabPage'
 import { RepositoryProviderContext } from './context/RepositoryProvider'
 import css from './RepositoryDetailsPage.module.scss'
@@ -37,7 +41,7 @@ import css from './RepositoryDetailsPage.module.scss'
 export default function RepositoryDetails(): JSX.Element | null {
   const { RbacButton } = useParentComponents()
   const { getString } = useStrings()
-  const { HAR_TRIGGERS } = useFeatureFlags()
+  const featureFlags = useFeatureFlags()
   const pathParams = useDecodedParams<RepositoryDetailsPathParams>()
   const { repositoryIdentifier } = pathParams
   const [activeTab, setActiveTab] = useState('')
@@ -46,6 +50,7 @@ export default function RepositoryDetails(): JSX.Element | null {
   const routeDefinitions = useRoutes(true)
   const history = useHistory()
   const routes = useRoutes()
+  const repositoryListViewType = useGetRepositoryListViewType()
 
   const { isDirty, data, isUpdating } = useContext(RepositoryProviderContext)
 
@@ -90,22 +95,17 @@ export default function RepositoryDetails(): JSX.Element | null {
 
   if (!data) return null
 
-  const isNotUpstreamRegistry = data.config.type !== RepositoryConfigType.UPSTREAM
-
   return (
     <>
-      <RepositoryDetailsHeaderWidget
-        data={data}
-        packageType={data.packageType as RepositoryPackageType}
-        type={data.config.type as RepositoryConfigType}
-      />
       <Container className={css.tabsContainer}>
         <Tabs id="repositoryTabDetails" selectedTabId={activeTab} onChange={handleTabChange}>
-          <Tab id={RepositoryDetailsTab.PACKAGES} title={getString('repositoryDetails.tabs.packages')} />
-          <Tab id={RepositoryDetailsTab.CONFIGURATION} title={getString('repositoryDetails.tabs.configuration')} />
-          {HAR_TRIGGERS && isNotUpstreamRegistry && (
-            <Tab id={RepositoryDetailsTab.WEBHOOKS} title={getString('repositoryDetails.tabs.webhooks')} />
-          )}
+          {RepositoryDetailsTabs.filter(each => !each.featureFlag || featureFlags[each.featureFlag])
+            .filter(each => !each.packageType || each.packageType === data.packageType)
+            .filter(each => !each.type || each.type === data.config.type)
+            .filter(each => !each.mode || each.mode === repositoryListViewType)
+            .map(each => (
+              <Tab key={each.value} id={each.value} title={getString(each.label)} />
+            ))}
           <Expander />
           {activeTab === RepositoryDetailsTab.CONFIGURATION && renderActionBtns()}
         </Tabs>

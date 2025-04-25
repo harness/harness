@@ -19,6 +19,11 @@
   background-color: var(--primary-bg) !important;
 }
 
+.treeViewPageBody {
+  --page-header-height: 145px;
+  display: flex;
+}
+
 .pageHeader {
   height: var(--har-repository-list-page-header-height) !important;
   background-color: var(--white) !important;

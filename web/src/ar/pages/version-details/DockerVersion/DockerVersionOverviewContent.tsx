@@ -19,12 +19,13 @@ import { FontVariation } from '@harnessio/design-system'
 import { Card, Container, Layout, Page, Text } from '@harnessio/uicore'
 import { useGetDockerArtifactDetailsQuery } from '@harnessio/react-har-service-client'
 
+import { Parent } from '@ar/common/types'
 import { useStrings } from '@ar/frameworks/strings'
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import { DEFAULT_DATE_TIME_FORMAT } from '@ar/constants'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 import { getReadableDateTime } from '@ar/common/dateUtils'
-import { useDecodedParams, useGetSpaceRef, useParentHooks } from '@ar/hooks'
+import { useAppStore, useDecodedParams, useGetSpaceRef, useParentHooks } from '@ar/hooks'
 
 import type { DockerVersionDetailsQueryParams } from './types'
 import { VersionOverviewCard } from '../components/OverviewCards/types'
@@ -40,6 +41,7 @@ export default function DockerVersionOverviewContent(): JSX.Element {
   const { useQueryParams } = useParentHooks()
   const { digest } = useQueryParams<DockerVersionDetailsQueryParams>()
   const spaceRef = useGetSpaceRef()
+  const { parent } = useAppStore()
 
   const {
     data,
@@ -70,15 +72,17 @@ export default function DockerVersionOverviewContent(): JSX.Element {
       retryOnError={() => refetch()}>
       {response && (
         <Layout.Vertical className={css.cardContainer} spacing="medium" flex={{ alignItems: 'flex-start' }}>
-          <VersionOverviewCards
-            cards={[
-              VersionOverviewCard.DEPLOYMENT,
-              VersionOverviewCard.BUILD,
-              VersionOverviewCard.SECURITY_TESTS,
-              VersionOverviewCard.SUPPLY_CHAIN
-            ]}
-            digest={digest}
-          />
+          {parent === Parent.Enterprise && (
+            <VersionOverviewCards
+              cards={[
+                VersionOverviewCard.DEPLOYMENT,
+                VersionOverviewCard.BUILD,
+                VersionOverviewCard.SECURITY_TESTS,
+                VersionOverviewCard.SUPPLY_CHAIN
+              ]}
+              digest={digest}
+            />
+          )}
           <Card
             data-testid="general-information-card"
             title={getString('versionDetails.overview.generalInformation.title')}

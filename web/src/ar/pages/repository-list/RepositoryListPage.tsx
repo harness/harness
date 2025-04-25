@@ -17,13 +17,29 @@
 import React, { useMemo, useRef } from 'react'
 import { flushSync } from 'react-dom'
 import { Expander } from '@blueprintjs/core'
-import { ExpandingSearchInput, HarnessDocTooltip, Page, Button, ButtonVariation } from '@harnessio/uicore'
+import {
+  ExpandingSearchInput,
+  HarnessDocTooltip,
+  Page,
+  Button,
+  ButtonVariation,
+  GridListToggle,
+  Views
+} from '@harnessio/uicore'
 import type { ExpandingSearchInputHandle } from '@harnessio/uicore'
 import { useGetAllRegistriesQuery } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
 import { DEFAULT_PAGE_INDEX, PreferenceScope } from '@ar/constants'
-import { useParentComponents, useParentHooks, useGetSpaceRef } from '@ar/hooks'
+import { RepositoryListViewTypeEnum } from '@ar/contexts/AppStoreContext'
+import {
+  useParentComponents,
+  useParentHooks,
+  useGetSpaceRef,
+  useFeatureFlags,
+  useAppStore,
+  useGetRepositoryListViewType
+} from '@ar/hooks'
 import PackageTypeSelector from '@ar/components/PackageTypeSelector/PackageTypeSelector'
 
 import { CreateRepository } from './components/CreateRepository/CreateRepository'
@@ -39,7 +55,10 @@ function RepositoryListPage(): JSX.Element {
   const { getString } = useStrings()
   const { NGBreadcrumbs } = useParentComponents()
   const { useQueryParams, useUpdateQueryParams, usePreferenceStore } = useParentHooks()
+  const { HAR_TREE_VIEW_ENABLED } = useFeatureFlags()
   const { updateQueryParams } = useUpdateQueryParams<Partial<ArtifactRepositoryListPageQueryParams>>()
+  const { setRepositoryListViewType } = useAppStore()
+  const repositoryListViewType = useGetRepositoryListViewType()
 
   const spaceRef = useGetSpaceRef()
   const queryParamOptions = useArtifactRepositoriesQueryParamOptions()
@@ -130,6 +149,16 @@ function RepositoryListPage(): JSX.Element {
             defaultValue={searchTerm}
             ref={searchRef}
           />
+          {HAR_TREE_VIEW_ENABLED && (
+            <GridListToggle
+              initialSelectedView={repositoryListViewType === RepositoryListViewTypeEnum.LIST ? Views.LIST : Views.GRID}
+              icons={{ left: 'SplitView' }}
+              onViewToggle={newView => {
+                if (newView === Views.LIST) return
+                setRepositoryListViewType(RepositoryListViewTypeEnum.DIRECTORY)
+              }}
+            />
+          )}
         </div>
       </Page.SubHeader>
       <Page.Body

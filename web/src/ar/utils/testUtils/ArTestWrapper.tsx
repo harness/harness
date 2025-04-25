@@ -26,7 +26,7 @@ import type { FeatureFlags, Scope } from '@ar/MFEAppTypes'
 import { Parent } from '@ar/common/types'
 import { ModalProvider } from '@ar/__mocks__/hooks'
 import type { UseStringsReturn } from '@ar/frameworks/strings'
-import { AppStoreContext } from '@ar/contexts/AppStoreContext'
+import { AppStoreContext, RepositoryListViewTypeEnum } from '@ar/contexts/AppStoreContext'
 import ParentProvider from '@ar/contexts/ParentProvider'
 import type { ParentProviderProps } from '@ar/contexts/ParentProvider'
 import { StringsContextProvider } from '@ar/frameworks/strings/StringsContextProvider'
@@ -82,7 +82,9 @@ export default function ArTestWrapper(props: PropsWithChildren<TestWrapperProps>
             matchPath,
             scope,
             parent,
-            updateAppStore: noop
+            updateAppStore: noop,
+            repositoryListViewType: RepositoryListViewTypeEnum.LIST,
+            setRepositoryListViewType: noop
           }}>
           <StringsContextProvider initialStrings={stringsData} getString={getString}>
             <ParentProvider

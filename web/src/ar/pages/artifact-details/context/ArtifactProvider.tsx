@@ -18,8 +18,9 @@ import React, { createContext, type FC, type PropsWithChildren } from 'react'
 import { ArtifactSummary, useGetArtifactSummaryQuery } from '@harnessio/react-har-service-client'
 import { PageError, PageSpinner } from '@harnessio/uicore'
 
-import { useGetSpaceRef } from '@ar/hooks'
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
+import { useDecodedParams, useGetSpaceRef } from '@ar/hooks'
+import type { ArtifactDetailsPathParams } from '@ar/routes/types'
 
 export interface ArtifactProviderProps {
   data: ArtifactSummary | undefined
@@ -29,12 +30,13 @@ export interface ArtifactProviderProps {
 
 export const ArtifactProviderContext = createContext<ArtifactProviderProps>({} as ArtifactProviderProps)
 
-const ArtifactProvider: FC<PropsWithChildren<{ repoKey: string; artifact: string }>> = ({
+const ArtifactProvider: FC<PropsWithChildren<{ repoKey?: string; artifact?: string }>> = ({
   children,
   repoKey,
   artifact
 }): JSX.Element => {
-  const spaceRef = useGetSpaceRef(repoKey)
+  const { repositoryIdentifier, artifactIdentifier } = useDecodedParams<ArtifactDetailsPathParams>()
+  const spaceRef = useGetSpaceRef(repoKey ?? repositoryIdentifier)
   const {
     data,
     isFetching: loading,
@@ -42,7 +44,7 @@ const ArtifactProvider: FC<PropsWithChildren<{ repoKey: string; artifact: string
     refetch
   } = useGetArtifactSummaryQuery({
     registry_ref: spaceRef,
-    artifact: encodeRef(artifact)
+    artifact: encodeRef(artifact ?? artifactIdentifier)
   })
 
   const responseData = data?.content?.data

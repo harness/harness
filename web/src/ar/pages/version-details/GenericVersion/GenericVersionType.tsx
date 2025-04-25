@@ -20,10 +20,12 @@ import {
   type ArtifactActionProps,
   ArtifactRowSubComponentProps,
   type VersionActionProps,
+  type ArtifactTreeNodeViewProps,
   type VersionDetailsHeaderProps,
   type VersionDetailsTabProps,
   type VersionListTableProps,
-  VersionStep
+  VersionStep,
+  type VersionTreeNodeViewProps
 } from '@ar/frameworks/Version/Version'
 import { String } from '@ar/frameworks/strings'
 import { PageType, RepositoryPackageType } from '@ar/common/types'
@@ -32,9 +34,13 @@ import VersionListTable, {
 } from '@ar/pages/version-list/components/VersionListTable/VersionListTable'
 import { VersionListColumnEnum } from '@ar/pages/version-list/components/VersionListTable/types'
 import ArtifactActions from '@ar/pages/artifact-details/components/ArtifactActions/ArtifactActions'
+import ArtifactTreeNode from '@ar/pages/artifact-details/components/ArtifactTreeNode/ArtifactTreeNode'
+import ArtifactTreeNodeDetailsContent from '@ar/pages/artifact-details/components/ArtifactTreeNode/ArtifactTreeNodeDetailsContent'
 import { VersionDetailsTab } from '../components/VersionDetailsTabs/constants'
 import GenericOverviewPage from './pages/overview/OverviewPage'
 import OSSContentPage from './pages/oss-details/OSSContentPage'
+import VersionTreeNode from '../components/VersionTreeNode/VersionTreeNode'
+import VersionDetailsTabs from '../components/VersionDetailsTabs/VersionDetailsTabs'
 import GenericArtifactDetailsPage from './pages/artifact-details/GenericArtifactDetailsPage'
 import VersionDetailsHeaderContent from '../components/VersionDetailsHeaderContent/VersionDetailsHeaderContent'
 import VersionFilesProvider from '../context/VersionFilesProvider'
@@ -112,5 +118,21 @@ export class GenericVersionType extends VersionStep<ArtifactVersionSummary> {
         <ArtifactFilesContent minimal />
       </VersionFilesProvider>
     )
+  }
+
+  renderArtifactTreeNodeView(props: ArtifactTreeNodeViewProps): JSX.Element {
+    return <ArtifactTreeNode {...props} icon="store-artifact-bundle" />
+  }
+
+  renderArtifactTreeNodeDetails(): JSX.Element {
+    return <ArtifactTreeNodeDetailsContent />
+  }
+
+  renderVersionTreeNodeView(props: VersionTreeNodeViewProps): JSX.Element {
+    return <VersionTreeNode {...props} icon="container" />
+  }
+
+  renderVersionTreeNodeDetails(): JSX.Element {
+    return <VersionDetailsTabs />
   }
 }

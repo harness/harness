@@ -20,6 +20,8 @@ import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client
 import { String } from '@ar/frameworks/strings'
 import { PageType, RepositoryPackageType } from '@ar/common/types'
 import { VersionListColumnEnum } from '@ar/pages/version-list/components/VersionListTable/types'
+import ArtifactTreeNode from '@ar/pages/artifact-details/components/ArtifactTreeNode/ArtifactTreeNode'
+import ArtifactTreeNodeDetailsContent from '@ar/pages/artifact-details/components/ArtifactTreeNode/ArtifactTreeNodeDetailsContent'
 import VersionListTable, {
   type CommonVersionListTableProps
 } from '@ar/pages/version-list/components/VersionListTable/VersionListTable'
@@ -27,17 +29,21 @@ import {
   type ArtifactActionProps,
   ArtifactRowSubComponentProps,
   type VersionActionProps,
+  type ArtifactTreeNodeViewProps,
   type VersionDetailsHeaderProps,
   type VersionDetailsTabProps,
   type VersionListTableProps,
-  VersionStep
+  VersionStep,
+  type VersionTreeNodeViewProps
 } from '@ar/frameworks/Version/Version'
 import ArtifactActions from '@ar/pages/artifact-details/components/ArtifactActions/ArtifactActions'
 
 import OSSContentPage from './pages/oss-details/OSSContentPage'
 import VersionFilesProvider from '../context/VersionFilesProvider'
+import VersionTreeNode from '../components/VersionTreeNode/VersionTreeNode'
 import { VersionDetailsTab } from '../components/VersionDetailsTabs/constants'
 import MavenArtifactOverviewPage from './pages/overview/MavenArtifactOverviewPage'
+import VersionDetailsTabs from '../components/VersionDetailsTabs/VersionDetailsTabs'
 import MavenArtifactDetailsPage from './pages/artifact-details/MavenArtifactDetailsPage'
 import ArtifactFilesContent from '../components/ArtifactFileListTable/ArtifactFilesContent'
 import VersionDetailsHeaderContent from '../components/VersionDetailsHeaderContent/VersionDetailsHeaderContent'
@@ -114,5 +120,21 @@ export class MavenVersionType extends VersionStep<ArtifactVersionSummary> {
         <ArtifactFilesContent minimal />
       </VersionFilesProvider>
     )
+  }
+
+  renderArtifactTreeNodeView(props: ArtifactTreeNodeViewProps): JSX.Element {
+    return <ArtifactTreeNode {...props} icon="store-artifact-bundle" />
+  }
+
+  renderArtifactTreeNodeDetails(): JSX.Element {
+    return <ArtifactTreeNodeDetailsContent />
+  }
+
+  renderVersionTreeNodeView(props: VersionTreeNodeViewProps): JSX.Element {
+    return <VersionTreeNode {...props} icon="container" />
+  }
+
+  renderVersionTreeNodeDetails(): JSX.Element {
+    return <VersionDetailsTabs />
   }
 }

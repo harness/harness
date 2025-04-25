@@ -107,11 +107,13 @@ export interface StringsMap {
   'repositoryDetails.upstreamProxiesSelectList.selectedList.note.message': string
   'repositoryList.artifactRegistry.label': string
   'repositoryList.artifactRegistry.subLabel': string
+  'repositoryList.compact': string
   'repositoryList.deleteModal.contentText': string
   'repositoryList.deleteModal.title': string
   'repositoryList.newRegistry': string
   'repositoryList.newRepository': string
   'repositoryList.pageHeading': string
+  'repositoryList.registryCount': string
   'repositoryList.selectEnvironments': string
   'repositoryList.selectLabels': string
   'repositoryList.selectPackageTypes': string
@@ -219,11 +221,13 @@ export interface StringsMap {
   'versionDetails.overview.generalInformation.buildHost': string
   'versionDetails.overview.generalInformation.buildTime': string
   'versionDetails.overview.generalInformation.createdAndLastModifiedAt': string
+  'versionDetails.overview.generalInformation.createdAt': string
   'versionDetails.overview.generalInformation.description': string
   'versionDetails.overview.generalInformation.digest': string
   'versionDetails.overview.generalInformation.downloads': string
   'versionDetails.overview.generalInformation.homepage': string
   'versionDetails.overview.generalInformation.license': string
+  'versionDetails.overview.generalInformation.modifiedAt': string
   'versionDetails.overview.generalInformation.name': string
   'versionDetails.overview.generalInformation.packageType': string
   'versionDetails.overview.generalInformation.packager': string
@@ -342,6 +346,7 @@ export interface StringsMap {
   delete: string
   description: string
   descriptionPlaceholder: string
+  details: string
   discard: string
   download: string
   encrypted: string
@@ -352,6 +357,7 @@ export interface StringsMap {
   harnessAI: string
   id: string
   lastUpdated: string
+  loadMore: string
   loading: string
   modifiedAt: string
   moduleName: string

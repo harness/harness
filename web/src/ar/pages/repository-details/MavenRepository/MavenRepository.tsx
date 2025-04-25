@@ -28,6 +28,7 @@ import {
   type RepositoryConfigurationFormProps,
   type RepositoryDetailsHeaderProps,
   RepositoryStep,
+  type RepositoryTreeNodeProps,
   type RepositoySetupClientProps
 } from '@ar/frameworks/RepositoryStep/Repository'
 import {
@@ -36,10 +37,12 @@ import {
   UpstreamRepositoryURLInputSource
 } from '@ar/pages/upstream-proxy-details/types'
 
+import RepositoryDetails from '../RepositoryDetails'
 import type { Repository, VirtualRegistryRequest } from '../types'
 import RepositoryActions from '../components/Actions/RepositoryActions'
 import RedirectPageView from '../components/RedirectPageView/RedirectPageView'
 import SetupClientContent from '../components/SetupClientContent/SetupClientContent'
+import RepositoryTreeNode from '../components/RepositoryTreeNode/RepositoryTreeNode'
 import RepositoryConfigurationForm from '../components/Forms/RepositoryConfigurationForm'
 import RepositoryCreateFormContent from '../components/FormContent/RepositoryCreateFormContent'
 import RepositoryDetailsHeader from '../components/RepositoryDetailsHeader/RepositoryDetailsHeader'
@@ -126,5 +129,13 @@ export class MavenRepositoryType extends RepositoryStep<VirtualRegistryRequest> 
 
   renderRedirectPage(): JSX.Element {
     return <RedirectPageView />
+  }
+
+  renderTreeNodeView(props: RepositoryTreeNodeProps): JSX.Element {
+    return <RepositoryTreeNode {...props} icon={this.repositoryIcon} />
+  }
+
+  renderTreeNodeDetails(): JSX.Element {
+    return <RepositoryDetails />
   }
 }

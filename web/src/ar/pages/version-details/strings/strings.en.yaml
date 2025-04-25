@@ -50,6 +50,8 @@ overview:
     downloads: '{{ $.repositoryList.table.columns.downloads }}'
     uploadedBy: Uploaded At
     createdAndLastModifiedAt: Created | Last modified
+    createdAt: Created At
+    modifiedAt: Modified At
     description: Description
     pullCommand: Pull command
     repository: Repository

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { Parent } from '@ar/common/types'
 import type { StringsMap } from '@ar/frameworks/strings'
 
 export enum VersionDetailsTab {
@@ -30,6 +31,7 @@ interface VersionDetailsTabListItem {
   label: keyof StringsMap
   value: VersionDetailsTab
   disabled?: boolean
+  parent?: Parent
 }
 
 export const VersionDetailsTabList: VersionDetailsTabListItem[] = [
@@ -43,19 +45,23 @@ export const VersionDetailsTabList: VersionDetailsTabListItem[] = [
   },
   {
     label: 'versionDetails.tabs.supplyChain',
-    value: VersionDetailsTab.SUPPLY_CHAIN
+    value: VersionDetailsTab.SUPPLY_CHAIN,
+    parent: Parent.Enterprise
   },
   {
     label: 'versionDetails.tabs.securityTests',
-    value: VersionDetailsTab.SECURITY_TESTS
+    value: VersionDetailsTab.SECURITY_TESTS,
+    parent: Parent.Enterprise
   },
   {
     label: 'versionDetails.tabs.deployments',
-    value: VersionDetailsTab.DEPLOYMENTS
+    value: VersionDetailsTab.DEPLOYMENTS,
+    parent: Parent.Enterprise
   },
   {
     label: 'versionDetails.tabs.code',
     value: VersionDetailsTab.CODE,
-    disabled: true
+    disabled: true,
+    parent: Parent.Enterprise
   }
 ]
