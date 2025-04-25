@@ -115,6 +115,8 @@ export class RPMVersionType extends VersionStep<ArtifactVersionSummary> {
     switch (props.pageType) {
       case PageType.Details:
         return <VersionActions {...props} allowedActions={this.allowedActionsOnVersionDetailsPage} />
+      case PageType.Table:
+      case PageType.GlobalList:
       default:
         return <VersionActions {...props} allowedActions={this.allowedActionsOnVersion} />
     }

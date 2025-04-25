@@ -15,39 +15,32 @@
  */
 
 import React from 'react'
-import { useHistory } from 'react-router-dom'
 
 import { useStrings } from '@ar/frameworks/strings'
-import { queryClient } from '@ar/utils/queryClient'
-import { useParentComponents, useRoutes } from '@ar/hooks'
+import { useParentComponents } from '@ar/hooks'
 import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
 
 import type { VersionActionProps } from './types'
 import useDeleteVersionModal from '../../hooks/useDeleteVersionModal'
+import { useUtilsForDeleteVersion } from '../../hooks/useUtilsForDeleteVersion'
 
 export default function DeleteVersionMenuItem(props: VersionActionProps): JSX.Element {
-  const { artifactKey, repoKey, readonly, onClose, versionKey } = props
+  const { artifactKey, repoKey, readonly, onClose, versionKey, pageType } = props
   const { getString } = useStrings()
   const { RbacMenuItem } = useParentComponents()
-  const history = useHistory()
-  const routes = useRoutes()
 
-  const handleAfterDeleteRepository = (): void => {
+  const { handleRedirectAfterDeleteVersion } = useUtilsForDeleteVersion()
+
+  const handleAfterDeleteVersion = () => {
     onClose?.()
-    queryClient.invalidateQueries(['GetAllArtifactVersions'])
-    history.push(
-      routes.toARArtifactDetails({
-        repositoryIdentifier: repoKey,
-        artifactIdentifier: artifactKey
-      })
-    )
+    handleRedirectAfterDeleteVersion(pageType)
   }
 
   const { triggerDelete } = useDeleteVersionModal({
     artifactKey,
     repoKey,
     versionKey,
-    onSuccess: handleAfterDeleteRepository
+    onSuccess: handleAfterDeleteVersion
   })
 
   const handleDeleteService = (): void => {

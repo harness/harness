@@ -96,9 +96,14 @@ export class DockerVersionType extends VersionStep<ArtifactVersionSummary> {
   }
 
   renderVersionActions(props: VersionActionProps): JSX.Element {
-    const allowedActions =
-      props.pageType === PageType.Table ? this.allowedActionsOnVersion : this.allowedActionsOnVersionDetailsPage
-    return <VersionActions {...props} allowedActions={allowedActions} />
+    switch (props.pageType) {
+      case PageType.Details:
+        return <VersionActions {...props} allowedActions={this.allowedActionsOnVersionDetailsPage} />
+      case PageType.Table:
+      case PageType.GlobalList:
+      default:
+        return <VersionActions {...props} allowedActions={this.allowedActionsOnVersion} />
+    }
   }
 
   renderArtifactRowSubComponent(props: ArtifactRowSubComponentProps): JSX.Element {

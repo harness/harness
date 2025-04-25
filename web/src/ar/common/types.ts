@@ -67,7 +67,8 @@ export enum RepositoryConfigType {
 
 export enum PageType {
   Details = 'Details',
-  Table = 'Table'
+  Table = 'Table',
+  GlobalList = 'GlobalList'
 }
 
 export enum Scanners {

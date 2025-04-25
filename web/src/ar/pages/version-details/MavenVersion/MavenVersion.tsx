@@ -32,6 +32,7 @@ import {
   type VersionListTableProps,
   VersionStep
 } from '@ar/frameworks/Version/Version'
+import ArtifactActions from '@ar/pages/artifact-details/components/ArtifactActions/ArtifactActions'
 
 import OSSContentPage from './pages/oss-details/OSSContentPage'
 import VersionFilesProvider from '../context/VersionFilesProvider'
@@ -56,12 +57,16 @@ export class MavenVersionType extends VersionStep<ArtifactVersionSummary> {
     [VersionListColumnEnum.Name]: { width: '100%' },
     [VersionListColumnEnum.Size]: { width: '100%' },
     [VersionListColumnEnum.FileCount]: { width: '100%' },
-    [VersionListColumnEnum.LastModified]: { width: '100%' }
-    // [VersionListColumnEnum.Actions]: { width: '10%' } // TODO: will add this once BE support actions
+    [VersionListColumnEnum.LastModified]: { width: '100%' },
+    [VersionListColumnEnum.Actions]: { width: '10%' }
   }
 
-  protected allowedActionsOnVersion = [VersionAction.SetupClient, VersionAction.ViewVersionDetails]
-  protected allowedActionsOnVersionDetailsPage = []
+  protected allowedActionsOnVersion = [
+    VersionAction.Delete,
+    VersionAction.SetupClient,
+    VersionAction.ViewVersionDetails
+  ]
+  protected allowedActionsOnVersionDetailsPage = [VersionAction.Delete]
 
   renderVersionListTable(props: VersionListTableProps): JSX.Element {
     return <VersionListTable {...props} columnConfigs={this.versionListTableColumnConfig} />
@@ -84,14 +89,19 @@ export class MavenVersionType extends VersionStep<ArtifactVersionSummary> {
     }
   }
 
-  renderArtifactActions(_props: ArtifactActionProps): JSX.Element {
-    return <></>
+  renderArtifactActions(props: ArtifactActionProps): JSX.Element {
+    return <ArtifactActions {...props} />
   }
 
   renderVersionActions(props: VersionActionProps): JSX.Element {
-    const allowedActions =
-      props.pageType === PageType.Table ? this.allowedActionsOnVersion : this.allowedActionsOnVersionDetailsPage
-    return <VersionActions {...props} allowedActions={allowedActions} />
+    switch (props.pageType) {
+      case PageType.Details:
+        return <VersionActions {...props} allowedActions={this.allowedActionsOnVersionDetailsPage} />
+      case PageType.Table:
+      case PageType.GlobalList:
+      default:
+        return <VersionActions {...props} allowedActions={this.allowedActionsOnVersion} />
+    }
   }
 
   renderArtifactRowSubComponent(props: ArtifactRowSubComponentProps): JSX.Element {

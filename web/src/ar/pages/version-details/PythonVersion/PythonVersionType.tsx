@@ -64,12 +64,13 @@ export class PythonVersionType extends VersionStep<ArtifactVersionSummary> {
   }
 
   protected allowedActionsOnVersion = [
+    VersionAction.Delete,
     VersionAction.SetupClient,
     VersionAction.DownloadCommand,
     VersionAction.ViewVersionDetails
   ]
 
-  protected allowedActionsOnVersionDetailsPage = []
+  protected allowedActionsOnVersionDetailsPage = [VersionAction.Delete]
 
   renderVersionListTable(props: VersionListTableProps): JSX.Element {
     return <VersionListTable {...props} columnConfigs={this.versionListTableColumnConfig} />
@@ -102,9 +103,14 @@ export class PythonVersionType extends VersionStep<ArtifactVersionSummary> {
   }
 
   renderVersionActions(props: VersionActionProps): JSX.Element {
-    const allowedActions =
-      props.pageType === PageType.Table ? this.allowedActionsOnVersion : this.allowedActionsOnVersionDetailsPage
-    return <VersionActions {...props} allowedActions={allowedActions} />
+    switch (props.pageType) {
+      case PageType.Details:
+        return <VersionActions {...props} allowedActions={this.allowedActionsOnVersionDetailsPage} />
+      case PageType.Table:
+      case PageType.GlobalList:
+      default:
+        return <VersionActions {...props} allowedActions={this.allowedActionsOnVersion} />
+    }
   }
 
   renderArtifactRowSubComponent(props: ArtifactRowSubComponentProps): JSX.Element {

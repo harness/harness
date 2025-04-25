@@ -263,7 +263,7 @@ export const ArtifactVersionActions: CellType = ({ row }) => {
   const { original } = row
   return (
     <VersionActionsWidget
-      pageType={PageType.Table}
+      pageType={PageType.GlobalList}
       data={original}
       repoKey={original.registryIdentifier}
       artifactKey={original.name}
