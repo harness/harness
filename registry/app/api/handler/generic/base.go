@@ -27,12 +27,15 @@ import (
 	corestore "github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/api/controller/metadata"
+	"github.com/harness/gitness/registry/app/api/handler/packages"
 	"github.com/harness/gitness/registry/app/api/handler/utils"
 	artifact2 "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/generic"
+	"github.com/harness/gitness/registry/app/pkg/types/npm"
+	"github.com/harness/gitness/registry/request"
 
 	"github.com/rs/zerolog/log"
 )
@@ -47,9 +50,10 @@ const (
 func NewGenericArtifactHandler(
 	spaceStore corestore.SpaceStore, controller *generic.Controller, tokenStore corestore.TokenStore,
 	userCtrl *usercontroller.Controller, authenticator authn.Authenticator, urlProvider urlprovider.Provider,
-	authorizer authz.Authorizer,
+	authorizer authz.Authorizer, packageHandler packages.Handler,
 ) *Handler {
 	return &Handler{
+		Handler:       packageHandler,
 		Controller:    controller,
 		SpaceStore:    spaceStore,
 		TokenStore:    tokenStore,
@@ -61,6 +65,7 @@ func NewGenericArtifactHandler(
 }
 
 type Handler struct {
+	packages.Handler
 	Controller    *generic.Controller
 	SpaceStore    corestore.SpaceStore
 	TokenStore    corestore.TokenStore
@@ -70,8 +75,12 @@ type Handler struct {
 	Authorizer    authz.Authorizer
 }
 
-func (h *Handler) GetArtifactInfo(r *http.Request) (pkg.GenericArtifactInfo, errcode.Error) {
+func (h *Handler) GetGenericArtifactInfo(r *http.Request) (pkg.GenericArtifactInfo, errcode.Error) {
 	ctx := r.Context()
+	info, ok := request.ArtifactInfoFrom(ctx).(pkg.GenericArtifactInfo)
+	if ok {
+		return info, errcode.Error{}
+	}
 	path := r.URL.Path
 	rootIdentifier, registryIdentifier, artifact, tag, fileName, description, err := ExtractPathVars(r)
 
@@ -115,7 +124,7 @@ func (h *Handler) GetArtifactInfo(r *http.Request) (pkg.GenericArtifactInfo, err
 		return pkg.GenericArtifactInfo{}, errcode.ErrCodeParentNotFound.WithDetail(err)
 	}
 
-	info := &pkg.GenericArtifactInfo{
+	info = pkg.GenericArtifactInfo{
 		ArtifactInfo: &pkg.ArtifactInfo{
 			BaseInfo: &pkg.BaseInfo{
 				RootIdentifier: rootIdentifier,
@@ -150,7 +159,7 @@ func (h *Handler) GetArtifactInfo(r *http.Request) (pkg.GenericArtifactInfo, err
 		}
 	}
 
-	return *info, errcode.Error{}
+	return info, errcode.Error{}
 }
 
 // ExtractPathVars extracts registry,image, reference, digest and tag from the path
@@ -241,4 +250,30 @@ func validatePackageVersionAndFileName(packageName, version, filename string) er
 	}
 
 	return nil
+}
+
+func (h *Handler) GetPackageArtifactInfo(r *http.Request) (pkg.PackageArtifactInfo, error) {
+	info, e := h.GetArtifactInfo(r)
+
+	if !commons.IsEmpty(e) {
+		return npm.ArtifactInfo{}, e
+	}
+
+	info.Image = r.PathValue("package")
+	version := r.PathValue("version")
+	fileName := r.FormValue("filename")
+	description := r.FormValue("description")
+
+	if err := validatePackageVersionAndFileName(info.Image, version, fileName); err != nil {
+		log.Error().Msgf("Invalid image name/version/fileName: %s/%s/%s", info.Image, version, fileName)
+		return nil, err
+	}
+
+	return pkg.GenericArtifactInfo{
+		ArtifactInfo: &info,
+		Version:      version,
+		FileName:     fileName,
+		Description:  description,
+		RegistryID:   info.RegistryID,
+	}, nil
 }

@@ -135,7 +135,7 @@ func TrackBandwidthStatForGenericArtifacts(h *generic.Handler) func(http.Handler
 				}
 				ctx := r.Context()
 
-				info, err := h.GetArtifactInfo(r)
+				info, err := h.GetGenericArtifactInfo(r)
 				if !commons.IsEmptyError(err) {
 					log.Ctx(ctx).Error().Stack().Str("middleware",
 						"TrackBandwidthStat").Err(err).Msgf("error while putting bandwidth stat for artifact, %v",

@@ -25,7 +25,7 @@ import (
 
 func (h *Handler) PullArtifact(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	info, err := h.GetArtifactInfo(r)
+	info, err := h.GetGenericArtifactInfo(r)
 	if !commons.IsEmptyError(err) {
 		handleErrors(r.Context(), err, w)
 		return

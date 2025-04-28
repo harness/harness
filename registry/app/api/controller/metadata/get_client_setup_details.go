@@ -278,7 +278,7 @@ func (c *APIController) generateGenericClientSetupDetail(
 	header2 := "Upload Artifact"
 	section2step1Header := "Run this curl command in your terminal to push the artifact."
 	//nolint:lll
-	pushValue := "curl --location --request PUT '<HOSTNAME>/<REGISTRY_NAME>/<ARTIFACT_NAME>/<VERSION>' \\\n--form 'filename=\"<FILENAME>\"' \\\n--form 'file=@\"<FILE_PATH>\"' \\\n--form 'description=\"<DESC>\"' \\\n--header 'x-api-key: <API_KEY>'"
+	pushValue := "curl --location --request PUT '<HOSTNAME>/<ARTIFACT_NAME>/<VERSION>' \\\n--form 'filename=\"<FILENAME>\"' \\\n--form 'file=@\"<FILE_PATH>\"' \\\n--form 'description=\"<DESC>\"' \\\n--header 'x-api-key: <API_KEY>'"
 	section2step1Commands := []artifact.ClientSetupStepCommand{
 		{Label: &blankString, Value: &pushValue},
 	}
@@ -299,8 +299,8 @@ func (c *APIController) generateGenericClientSetupDetail(
 	header3 := "Download Artifact"
 	section3step1Header := "Run this command in your terminal to download the artifact."
 	//nolint:lll
-	pullValue := "curl --location '<HOSTNAME>/<REGISTRY_NAME>/<ARTIFACT_NAME>:<VERSION>:<FILENAME>' --header 'x-api-key: <API_KEY>' " +
-		"-J -O"
+	pullValue := "curl --location '<HOSTNAME>/<ARTIFACT_NAME>/<VERSION>' \\\n--form 'filename=\"<FILENAME>\"' --header 'x-api-key: <API_KEY>' " +
+		"-o <FILENAME>"
 	section3step1Commands := []artifact.ClientSetupStepCommand{
 		{Label: &blankString, Value: &pullValue},
 	}
@@ -1250,7 +1250,7 @@ func (c *APIController) replacePlaceholdersInSection(
 	_, registryName, _ := paths.DisectLeaf(regRef)
 	var hostname string
 	if pkgType == string(artifact.PackageTypeGENERIC) {
-		hostname = c.URLProvider.RegistryURL(ctx, rootSpace, "generic")
+		hostname = c.URLProvider.PackageURL(ctx, regRef, "generic")
 	} else {
 		hostname = common.TrimURLScheme(c.URLProvider.RegistryURL(ctx, rootSpace))
 	}

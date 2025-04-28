@@ -168,7 +168,7 @@ func NewRpmHandlerProvider(
 func NewGenericHandlerProvider(
 	spaceStore corestore.SpaceStore, controller *generic2.Controller, tokenStore corestore.TokenStore,
 	userCtrl *usercontroller.Controller, authenticator authn.Authenticator, urlProvider urlprovider.Provider,
-	authorizer authz.Authorizer,
+	authorizer authz.Authorizer, packageHandler packages.Handler,
 ) *generic.Handler {
 	return generic.NewGenericArtifactHandler(
 		spaceStore,
@@ -178,6 +178,7 @@ func NewGenericHandlerProvider(
 		authenticator,
 		urlProvider,
 		authorizer,
+		packageHandler,
 	)
 }
 

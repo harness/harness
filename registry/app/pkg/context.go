@@ -79,3 +79,19 @@ type GenericArtifactInfo struct {
 func (a *MavenArtifactInfo) SetMavenRepoKey(key string) {
 	a.RegIdentifier = key
 }
+
+// BaseArtifactInfo implements pkg.PackageArtifactInfo interface.
+func (a GenericArtifactInfo) BaseArtifactInfo() ArtifactInfo {
+	return *a.ArtifactInfo
+}
+
+func (a GenericArtifactInfo) GetImageVersion() (exists bool, imageVersion string) {
+	if a.Image != "" && a.Version != "" {
+		return true, JoinWithSeparator(":", a.Image, a.Version)
+	}
+	return false, ""
+}
+
+func (a GenericArtifactInfo) GetVersion() string {
+	return a.Version
+}

@@ -70,11 +70,17 @@ func NewRouter(
 		r.Route("/generic", func(r chi.Router) {
 			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
 			r.Use(middleware.CheckAuth())
-			r.Use(middleware.TrackDownloadStatForGenericArtifact(genericHandler))
-			r.Use(middleware.TrackBandwidthStatForGenericArtifacts(genericHandler))
+			r.Route("/{package}/{version}", func(r chi.Router) {
+				r.Use(middleware.StoreArtifactInfo(genericHandler))
+				r.Use(middleware.TrackDownloadStatForGenericArtifact(genericHandler))
+				r.Use(middleware.TrackBandwidthStatForGenericArtifacts(genericHandler))
 
-			r.Get("/*", genericHandler.PullArtifact)
-			r.Put("/*", genericHandler.PushArtifact)
+				r.With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+					Get("/", genericHandler.PullArtifact)
+
+				r.With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
+					Put("/", genericHandler.PushArtifact)
+			})
 		})
 
 		r.Route("/python", func(r chi.Router) {

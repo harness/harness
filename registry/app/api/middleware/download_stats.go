@@ -138,7 +138,7 @@ func TrackDownloadStatForGenericArtifact(h *generic.Handler) func(http.Handler) 
 					return
 				}
 
-				info, err := h.GetArtifactInfo(r)
+				info, err := h.GetGenericArtifactInfo(r)
 				if !commons.IsEmptyError(err) {
 					log.Ctx(ctx).Error().Stack().Str("middleware",
 						"TrackDownloadStat").Err(err).Msgf("error while putting download stat of artifact, %v",
