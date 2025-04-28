@@ -74,6 +74,7 @@ const devConfig = {
   },
   plugins: [
     new MiniCssExtractPlugin({
+      ignoreOrder: true,
       filename: '[name].css',
       chunkFilename: '[name].[id].css'
     }),

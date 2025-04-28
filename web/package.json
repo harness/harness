@@ -54,7 +54,7 @@
     "@harnessio/react-har-service-client": "^0.18.0",
     "@harnessio/react-ng-manager-client": "^1.40.0",
     "@harnessio/react-ssca-manager-client": "^0.65.0",
-    "@harnessio/uicore": "^4.2.0",
+    "@harnessio/uicore": "^4.2.1",
     "@tanstack/react-query": "4.20.4",
     "@types/dompurify": "^3.0.2",
     "@types/react-monaco-editor": "^0.16.0",
