@@ -53,6 +53,10 @@ type proxy struct {
 	localRegistryHelper LocalRegistryHelper
 }
 
+func (r *proxy) SearchPackage(_ context.Context, _ npm2.ArtifactInfo, _ int, _ int) (*npm.PackageSearch, error) {
+	return nil, commons.ErrNotSupported
+}
+
 func (r *proxy) UploadPackageFileReader(_ context.Context,
 	_ npm2.ArtifactInfo) (*commons.ResponseHeaders, string, error) {
 	return nil, " ", commons.ErrNotSupported

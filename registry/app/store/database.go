@@ -499,6 +499,14 @@ type ArtifactRepository interface {
 	GetAllArtifactsByRepo(
 		ctx context.Context, registryID int64, batchSize int, artifactID int64,
 	) (*[]types.ArtifactMetadata, error)
+
+	SearchLatestByName(
+		ctx context.Context, regID int64, name string, limit int, offset int,
+	) (*[]types.Artifact, error)
+
+	CountLatestByName(
+		ctx context.Context, regID int64, name string,
+	) (int64, error)
 }
 
 type DownloadStatRepository interface {

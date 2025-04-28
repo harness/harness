@@ -197,6 +197,12 @@ func NewRouter(
 			r.Route("/{id}/-rev/{revision}", func(r chi.Router) {
 				registerRevisionRoutes(r, npmHandler, packageHandler)
 			})
+
+			r.Route("/-/v1/search", func(r chi.Router) {
+				r.With(middleware.StoreArtifactInfo(npmHandler)).
+					With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+					Get("/", npmHandler.SearchPackage)
+			})
 		})
 		r.Route("/rpm", func(r chi.Router) {
 			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))

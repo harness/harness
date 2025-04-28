@@ -80,6 +80,12 @@ type Controller interface {
 		ctx context.Context,
 		info npm.ArtifactInfo,
 	) *DeleteEntityResponse
+
+	SearchPackage(
+		ctx context.Context,
+		info npm.ArtifactInfo,
+		limit int, offset int,
+	) *SearchArtifactResponse
 }
 
 // NewController creates a new PyPI controller.

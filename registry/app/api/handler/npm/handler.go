@@ -56,6 +56,7 @@ type Handler interface {
 	DeletePackage(w http.ResponseWriter, r *http.Request)
 	DeleteVersion(w http.ResponseWriter, r *http.Request)
 	DeletePreview(w http.ResponseWriter, r *http.Request)
+	SearchPackage(w http.ResponseWriter, r *http.Request)
 }
 
 type handler struct {

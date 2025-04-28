@@ -81,3 +81,12 @@ type DeleteEntityResponse struct {
 func (r *DeleteEntityResponse) GetError() error {
 	return r.Error
 }
+
+type SearchArtifactResponse struct {
+	BaseResponse
+	Artifacts *npm2.PackageSearch
+}
+
+func (r *SearchArtifactResponse) GetError() error {
+	return r.Error
+}

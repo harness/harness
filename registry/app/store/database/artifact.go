@@ -292,6 +292,80 @@ func (a ArtifactDao) mapToArtifact(_ context.Context, dst *artifactDB) (*types.A
 	}, nil
 }
 
+func (a ArtifactDao) SearchLatestByName(
+	ctx context.Context, regID int64, name string, limit int, offset int,
+) (*[]types.Artifact, error) {
+	subQuery := `
+	SELECT artifact_image_id, MAX(artifact_created_at) AS max_created_at
+	FROM artifacts
+	GROUP BY artifact_image_id`
+
+	q := databaseg.Builder.
+		Select("a.artifact_metadata,"+
+			"a.artifact_created_at").
+		From("artifacts a").
+		Join("images i ON a.artifact_image_id = i.image_id").
+		Join(fmt.Sprintf(`(%s) latest
+	ON a.artifact_image_id = latest.artifact_image_id
+	AND a.artifact_created_at = latest.max_created_at
+`, subQuery)).
+		Where("i.image_name LIKE ? AND i.image_registry_id = ?", "%"+name+"%", regID).
+		Limit(util.SafeIntToUInt64(limit)).
+		Offset(util.SafeIntToUInt64(offset))
+
+	sql, args, err := q.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to build SQL for latest artifact metadata with pagination")
+	}
+	db := dbtx.GetAccessor(ctx, a.db)
+
+	var metadataList []*artifactDB
+	if err := db.SelectContext(ctx, &metadataList, sql, args...); err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to get artifact metadata")
+	}
+
+	artifactList, err := a.mapArtifactToArtifactMetadataList(ctx, metadataList)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to map artifact metadata")
+	}
+
+	return artifactList, nil
+}
+
+func (a ArtifactDao) CountLatestByName(
+	ctx context.Context, regID int64, name string,
+) (int64, error) {
+	subQuery := `
+	SELECT artifact_image_id, MAX(artifact_created_at) AS max_created_at
+	FROM artifacts
+	GROUP BY artifact_image_id`
+
+	// Main count query
+	q := databaseg.Builder.
+		Select("COUNT(*)").
+		From("artifacts a").
+		Join("images i ON a.artifact_image_id = i.image_id").
+		Join(fmt.Sprintf(`(%s) latest
+	ON a.artifact_image_id = latest.artifact_image_id
+	AND a.artifact_created_at = latest.max_created_at
+`, subQuery)).
+		Where("i.image_name LIKE ? AND i.image_registry_id = ?", "%"+name+"%", regID)
+
+	sql, args, err := q.ToSql()
+	if err != nil {
+		return 0, errors.Wrap(err, "Failed to build count SQL")
+	}
+
+	db := dbtx.GetAccessor(ctx, a.db)
+
+	var count int64
+	if err := db.GetContext(ctx, &count, sql, args...); err != nil {
+		return 0, databaseg.ProcessSQLErrorf(ctx, err, "Failed to count artifact metadata")
+	}
+
+	return count, nil
+}
+
 func (a ArtifactDao) GetAllArtifactsByParentID(
 	ctx context.Context,
 	parentID int64,
@@ -608,6 +682,20 @@ func (a ArtifactDao) GetLatestArtifactMetadata(
 	}
 
 	return a.mapToArtifactMetadata(dst)
+}
+
+func (a ArtifactDao) mapArtifactToArtifactMetadataList(ctx context.Context,
+	dst []*artifactDB,
+) (*[]types.Artifact, error) {
+	artifacts := make([]types.Artifact, 0, len(dst))
+	for _, d := range dst {
+		artifact, err := a.mapToArtifact(ctx, d)
+		if err != nil {
+			return nil, err
+		}
+		artifacts = append(artifacts, *artifact)
+	}
+	return &artifacts, nil
 }
 
 func (a ArtifactDao) mapToArtifactMetadataList(

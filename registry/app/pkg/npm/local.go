@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/harness/gitness/app/api/usererror"
 	urlprovider "github.com/harness/gitness/app/url"
@@ -163,6 +164,98 @@ func (c *localRegistry) GetPackageMetadata(ctx context.Context, info npm.Artifac
 	packageMetadata.Versions = versions
 	packageMetadata.DistTags = distTags
 	return packageMetadata, nil
+}
+
+func (c *localRegistry) SearchPackage(ctx context.Context, info npm.ArtifactInfo,
+	limit int, offset int) (*npm2.PackageSearch, error) {
+	metadataList, err := c.artifactDao.SearchLatestByName(ctx, info.RegistryID, info.Image, limit, offset)
+
+	if err != nil {
+		log.Err(err).Msgf("Failed to search package for search term: [%s]", info.Image)
+		return &npm2.PackageSearch{}, err
+	}
+	count, err := c.artifactDao.CountLatestByName(ctx, info.RegistryID, info.Image)
+
+	if err != nil {
+		log.Err(err).Msgf("Failed to search package for search term: [%s]", info.Image)
+		return &npm2.PackageSearch{}, err
+	}
+	psList := make([]*npm2.PackageSearchObject, 0)
+	registryURL := c.urlProvider.PackageURL(ctx,
+		info.BaseArtifactInfo().RootIdentifier+"/"+info.BaseArtifactInfo().RegIdentifier, "npm")
+
+	for _, metadata := range *metadataList {
+		pso, err := mapToPackageSearch(metadata, registryURL)
+		if err != nil {
+			log.Err(err).Msgf("Failed to map search package results: [%s]", info.Image)
+			return &npm2.PackageSearch{}, err
+		}
+		psList = append(psList, pso)
+	}
+	return &npm2.PackageSearch{
+		Objects: psList,
+		Total:   count,
+	}, nil
+}
+
+func mapToPackageSearch(metadata types.Artifact, registryURL string) (*npm2.PackageSearchObject, error) {
+	var art *npm2.NpmMetadata
+	if err := json.Unmarshal(metadata.Metadata, &art); err != nil {
+		return &npm2.PackageSearchObject{}, err
+	}
+
+	for _, version := range art.Versions {
+		var author npm2.User
+		if version.Author != nil {
+			data, err := json.Marshal(version.Author)
+			if err != nil {
+				log.Err(err).Msgf("Failed to marshal search package results: [%s]", art.Name)
+				return &npm2.PackageSearchObject{}, err
+			}
+			err = json.Unmarshal(data, &author)
+			if err != nil {
+				log.Err(err).Msgf("Failed to unmarshal search package results: [%s]", art.Name)
+				return &npm2.PackageSearchObject{}, err
+			}
+		}
+
+		return &npm2.PackageSearchObject{
+			Package: &npm2.PackageSearchPackage{
+				Name:        version.Name,
+				Version:     version.Version,
+				Description: version.Description,
+				Date:        metadata.CreatedAt,
+
+				Scope:       getScope(art.Name),
+				Author:      npm2.User{Username: author.Name},
+				Publisher:   npm2.User{Username: author.Name},
+				Maintainers: getValueOrDefault(version.Maintainers, []npm2.User{}), // npm cli needs this field
+				Keywords:    getValueOrDefault(version.Keywords, []string{}),
+				Links: &npm2.PackageSearchPackageLinks{
+					Registry:   registryURL,
+					Homepage:   registryURL,
+					Repository: registryURL,
+				},
+			},
+		}, nil
+	}
+	return &npm2.PackageSearchObject{}, fmt.Errorf("no version found in the metadata for image:[%s]", art.Name)
+}
+
+func getValueOrDefault(value interface{}, defaultValue interface{}) interface{} {
+	if value != nil {
+		return value
+	}
+	return defaultValue
+}
+
+func getScope(name string) string {
+	if strings.HasPrefix(name, "@") {
+		if i := strings.Index(name, "/"); i != -1 {
+			return name[1:i] // Strip @ and return only the scope
+		}
+	}
+	return "unscoped"
 }
 
 func CreatePackageMetadataVersion(registryURL string,

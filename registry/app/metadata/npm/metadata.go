@@ -110,12 +110,12 @@ type PackageSearchPackage struct {
 	Scope       string                     `json:"scope"`
 	Name        string                     `json:"name"`
 	Version     string                     `json:"version"`
-	Date        time.Time                  `json:"date"`
-	Description string                     `json:"description"`
-	Author      User                       `json:"author"`
-	Publisher   User                       `json:"publisher"`
-	Maintainers []User                     `json:"maintainers"`
-	Keywords    []string                   `json:"keywords,omitempty"`
+	Date        interface{}                `json:"date"`
+	Description interface{}                `json:"description"`
+	Author      interface{}                `json:"author"`
+	Publisher   interface{}                `json:"publisher"`
+	Maintainers interface{}                `json:"maintainers"`
+	Keywords    interface{}                `json:"keywords,omitempty"`
 	Links       *PackageSearchPackageLinks `json:"links"`
 }
 
@@ -132,7 +132,7 @@ type User struct {
 	URL      string `json:"url,omitempty"`
 }
 
-// PythonMetadata represents the metadata for a Python package.
+// NpmMetadata represents the metadata for a Python package.
 //
 //nolint:revive
 type NpmMetadata struct {
