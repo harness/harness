@@ -48,10 +48,13 @@ func IsEmpty(slice interface{}) bool {
 		return true
 	}
 
-	if val.Kind() == reflect.Struct {
-		return false
+	kind := val.Kind()
+
+	if kind == reflect.Slice || kind == reflect.Array || kind == reflect.Map || kind == reflect.String ||
+		kind == reflect.Chan || kind == reflect.Ptr {
+		return val.Len() == 0
 	}
-	return val.Len() == 0
+	return false
 }
 
 func IsEmptyError(err errcode.Error) bool {
