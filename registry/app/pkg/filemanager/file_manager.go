@@ -237,7 +237,7 @@ func (f *FileManager) DownloadFile(
 
 	if err != nil {
 		return nil, 0, "", fmt.Errorf("failed to get the blob for path: %s, "+
-			"with blob id: %s, with error %s", filePath, blob.ID, err)
+			"with blob id: %s, with error %s", filePath, node.BlobID, err)
 	}
 
 	completeFilaPath := path.Join(rootPathString + rootIdentifier + rootPathString + files + rootPathString + blob.Sha256)
