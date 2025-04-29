@@ -54,9 +54,12 @@ import { useGitspaceDetails } from 'cde-gitness/hooks/useGitspaceDetails'
 import { useGitspaceEvents } from 'cde-gitness/hooks/useGitspaceEvents'
 import { useGitspaceActions } from 'cde-gitness/hooks/useGitspaceActions'
 import { useDeleteGitspaces } from 'cde-gitness/hooks/useDeleteGitspaces'
+import { useGitspacesLogs } from 'cde-gitness/hooks/useGitspaceLogs'
 import { useOpenVSCodeBrowserURL } from 'cde-gitness/hooks/useOpenVSCodeBrowserURL'
 import { ErrorCard } from 'cde-gitness/components/ErrorCard/ErrorCard'
 import CopyButton from 'cde-gitness/components/CopyButton/CopyButton'
+import ContainerLogs from '../../components/ContainerLogs/ContainerLogs'
+import { useGetLogStream } from '../../hooks/useGetLogStream'
 import Logger from './Logger/Logger'
 import css from './GitspaceDetails.module.scss'
 
@@ -82,6 +85,13 @@ const GitspaceDetails = () => {
 
   const { data: eventData, refetch: refetchEventData } = useGitspaceEvents({ gitspaceId })
 
+  const {
+    refetch: refetchLogsData,
+    response,
+    error: streamLogsError,
+    loading: logsLoading
+  } = useGitspacesLogs({ gitspaceId })
+
   const { mutate: actionMutate, loading: mutateLoading } = useGitspaceActions({ gitspaceId })
 
   const { mutate: deleteGitspace, loading: deleteLoading } = useDeleteGitspaces({ gitspaceId })
@@ -105,14 +115,27 @@ const GitspaceDetails = () => {
         (item.event === 'agent_gitspace_creation_start' || item.event === 'agent_gitspace_deletion_start') &&
         defaultTo(item?.timestamp, 0) >= defaultTo(data?.instance?.updated, 0)
     )
-    if (disabledActionButtons && filteredEvent?.length && !isStreamingLogs) {
-      setIsStreamingLogs(true)
-      viewLogs()
-    } else if (filteredEvent?.length && !disabledActionButtons && isStreamingLogs) {
-      setIsStreamingLogs(false)
-      viewLogs()
+    const refetchLogs = disabledActionButtons && filteredEvent?.length && !isStreamingLogs
+    if (standalone) {
+      if (refetchLogs) {
+        refetchLogsData()
+        setIsStreamingLogs(true)
+      } else if (
+        (filteredEvent?.length && !disabledActionButtons && isStreamingLogs) ||
+        (isStreamingLogs && streamLogsError)
+      ) {
+        setIsStreamingLogs(false)
+      }
+    } else {
+      if (refetchLogs) {
+        setIsStreamingLogs(true)
+        viewLogs()
+      } else if (filteredEvent?.length && !disabledActionButtons && isStreamingLogs) {
+        setIsStreamingLogs(false)
+        viewLogs()
+      }
     }
-  }, [eventData, data?.instance?.updated, disabledActionButtons])
+  }, [eventData, data?.instance?.updated, disabledActionButtons, streamLogsError])
 
   usePolling(
     async () => {
@@ -173,6 +196,8 @@ const GitspaceDetails = () => {
     })
   }
 
+  const formattedlogsdata = useGetLogStream({ response })
+
   const [accountIdentifier, orgIdentifier, projectIdentifier] = data?.space_path?.split('/') || []
 
   const { refetchToken, setSelectedRowUrl } = useOpenVSCodeBrowserURL()
@@ -180,6 +205,16 @@ const GitspaceDetails = () => {
   const accordionRef = useRef<AccordionHandle | null>(null)
   const myRef = useRef<any | null>(null)
   const selectedIde = getIDEOption(data?.ide, getString)
+
+  useEffect(() => {
+    if (standalone) {
+      if (formattedlogsdata.data) {
+        accordionRef.current?.open('logsCard')
+      } else {
+        accordionRef.current?.close('logsCard')
+      }
+    }
+  }, [standalone, formattedlogsdata.data])
 
   const triggerGitspace = async () => {
     try {
@@ -197,7 +232,9 @@ const GitspaceDetails = () => {
   const viewLogs = () => {
     myRef.current?.scrollIntoView()
     accordionRef.current?.open('logsCard')
-    setExpandedTab('logsCard')
+    if (!standalone) {
+      setExpandedTab('logsCard')
+    }
   }
 
   const handleClick = () => {
@@ -447,7 +484,7 @@ const GitspaceDetails = () => {
                   summary={
                     <Layout.Vertical spacing="small">
                       <Text
-                        rightIcon={isStreamingLogs ? 'steps-spinner' : undefined}
+                        rightIcon={isStreamingLogs || logsLoading ? 'steps-spinner' : undefined}
                         className={css.containerlogsTitle}
                         font={{ variation: FontVariation.CARD_TITLE }}
                         margin={{ left: 'large' }}>
@@ -458,26 +495,30 @@ const GitspaceDetails = () => {
                   }
                   id={logCardId}
                   details={
-                    <Container width="100%" className={css.consoleContainer}>
-                      <Logger
-                        value={data?.name ?? ''}
-                        state={data?.state ?? ''}
-                        logKey={data?.log_key ?? ''}
-                        isStreaming={isStreamingLogs}
-                        expanded={true}
-                        localRef={containerRef}
-                        setIsBottom={setIsBottom}
-                      />
-                      <Button
-                        size={ButtonSize.SMALL}
-                        variation={ButtonVariation.PRIMARY}
-                        text={isBottom ? getString('top') : getString('bottom')}
-                        icon={isBottom ? 'arrow-up' : 'arrow-down'}
-                        iconProps={{ size: 10 }}
-                        onClick={handleClick}
-                        className={css.scrollDownBtn}
-                      />
-                    </Container>
+                    standalone ? (
+                      <ContainerLogs data={formattedlogsdata.data} />
+                    ) : (
+                      <Container width="100%" className={css.consoleContainer}>
+                        <Logger
+                          value={data?.name ?? ''}
+                          state={data?.state ?? ''}
+                          logKey={data?.log_key ?? ''}
+                          isStreaming={isStreamingLogs}
+                          expanded={true}
+                          localRef={containerRef}
+                          setIsBottom={setIsBottom}
+                        />
+                        <Button
+                          size={ButtonSize.SMALL}
+                          variation={ButtonVariation.PRIMARY}
+                          text={isBottom ? getString('top') : getString('bottom')}
+                          icon={isBottom ? 'arrow-up' : 'arrow-down'}
+                          iconProps={{ size: 10 }}
+                          onClick={handleClick}
+                          className={css.scrollDownBtn}
+                        />
+                      </Container>
+                    )
                   }
                 />
               </Accordion>
