@@ -30,29 +30,30 @@ import (
 
 // APIController simple struct.
 type APIController struct {
-	ImageStore                  store.ImageRepository
-	fileManager                 filemanager.FileManager
-	BlobStore                   store.BlobRepository
-	GenericBlobStore            store.GenericBlobRepository
-	RegistryRepository          store.RegistryRepository
-	UpstreamProxyStore          store.UpstreamProxyConfigRepository
-	TagStore                    store.TagRepository
-	ManifestStore               store.ManifestRepository
-	CleanupPolicyStore          store.CleanupPolicyRepository
-	SpaceFinder                 interfaces.SpaceFinder
-	tx                          dbtx.Transactor
-	StorageDriver               storagedriver.StorageDriver
-	URLProvider                 urlprovider.Provider
-	Authorizer                  authz.Authorizer
-	AuditService                audit.Service
-	ArtifactStore               store.ArtifactRepository
-	WebhooksRepository          store.WebhooksRepository
-	WebhooksExecutionRepository store.WebhooksExecutionRepository
-	RegistryMetadataHelper      interfaces.RegistryMetadataHelper
-	WebhookService              webhook.ServiceInterface
-	ArtifactEventReporter       registryevents.Reporter
-	DownloadStatRepository      store.DownloadStatRepository
-	RegistryIndexService        index.Service
+	ImageStore                   store.ImageRepository
+	fileManager                  filemanager.FileManager
+	BlobStore                    store.BlobRepository
+	GenericBlobStore             store.GenericBlobRepository
+	RegistryRepository           store.RegistryRepository
+	UpstreamProxyStore           store.UpstreamProxyConfigRepository
+	TagStore                     store.TagRepository
+	ManifestStore                store.ManifestRepository
+	CleanupPolicyStore           store.CleanupPolicyRepository
+	SpaceFinder                  interfaces.SpaceFinder
+	tx                           dbtx.Transactor
+	StorageDriver                storagedriver.StorageDriver
+	URLProvider                  urlprovider.Provider
+	Authorizer                   authz.Authorizer
+	AuditService                 audit.Service
+	ArtifactStore                store.ArtifactRepository
+	WebhooksRepository           store.WebhooksRepository
+	WebhooksExecutionRepository  store.WebhooksExecutionRepository
+	RegistryMetadataHelper       interfaces.RegistryMetadataHelper
+	WebhookService               webhook.ServiceInterface
+	ArtifactEventReporter        registryevents.Reporter
+	DownloadStatRepository       store.DownloadStatRepository
+	RegistryIndexService         index.Service
+	SetupDetailsAuthHeaderPrefix string
 }
 
 func NewAPIController(
@@ -79,30 +80,32 @@ func NewAPIController(
 	artifactEventReporter registryevents.Reporter,
 	downloadStatRepository store.DownloadStatRepository,
 	registryIndexService index.Service,
+	setupDetailsAuthHeaderPrefix string,
 ) *APIController {
 	return &APIController{
-		fileManager:                 fileManager,
-		GenericBlobStore:            genericBlobStore,
-		BlobStore:                   blobStore,
-		RegistryRepository:          repositoryStore,
-		UpstreamProxyStore:          upstreamProxyStore,
-		TagStore:                    tagStore,
-		ManifestStore:               manifestStore,
-		CleanupPolicyStore:          cleanupPolicyStore,
-		ImageStore:                  imageStore,
-		SpaceFinder:                 spaceFinder,
-		StorageDriver:               driver,
-		tx:                          tx,
-		URLProvider:                 urlProvider,
-		Authorizer:                  authorizer,
-		AuditService:                auditService,
-		ArtifactStore:               artifactStore,
-		WebhooksRepository:          webhooksRepository,
-		WebhooksExecutionRepository: webhooksExecutionRepository,
-		RegistryMetadataHelper:      registryMetadataHelper,
-		WebhookService:              webhookService,
-		ArtifactEventReporter:       artifactEventReporter,
-		DownloadStatRepository:      downloadStatRepository,
-		RegistryIndexService:        registryIndexService,
+		fileManager:                  fileManager,
+		GenericBlobStore:             genericBlobStore,
+		BlobStore:                    blobStore,
+		RegistryRepository:           repositoryStore,
+		UpstreamProxyStore:           upstreamProxyStore,
+		TagStore:                     tagStore,
+		ManifestStore:                manifestStore,
+		CleanupPolicyStore:           cleanupPolicyStore,
+		ImageStore:                   imageStore,
+		SpaceFinder:                  spaceFinder,
+		StorageDriver:                driver,
+		tx:                           tx,
+		URLProvider:                  urlProvider,
+		Authorizer:                   authorizer,
+		AuditService:                 auditService,
+		ArtifactStore:                artifactStore,
+		WebhooksRepository:           webhooksRepository,
+		WebhooksExecutionRepository:  webhooksExecutionRepository,
+		RegistryMetadataHelper:       registryMetadataHelper,
+		WebhookService:               webhookService,
+		ArtifactEventReporter:        artifactEventReporter,
+		DownloadStatRepository:       downloadStatRepository,
+		RegistryIndexService:         registryIndexService,
+		SetupDetailsAuthHeaderPrefix: setupDetailsAuthHeaderPrefix,
 	}
 }

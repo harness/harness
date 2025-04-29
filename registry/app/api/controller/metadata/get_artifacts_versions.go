@@ -130,6 +130,7 @@ func (c *APIController) GetAllArtifactVersions(
 			ListArtifactVersionResponseJSONResponse: *GetAllArtifactVersionResponse(
 				ctx, tags, image, count, regInfo.pageNumber, regInfo.limit,
 				c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, regInfo.RegistryIdentifier),
+				c.SetupDetailsAuthHeaderPrefix,
 			),
 		}, nil
 	}
@@ -150,6 +151,7 @@ func (c *APIController) GetAllArtifactVersions(
 		ListArtifactVersionResponseJSONResponse: *GetNonOCIAllArtifactVersionResponse(
 			ctx, metadata, image, cnt, regInfo.pageNumber, regInfo.limit,
 			c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, regInfo.RegistryIdentifier),
+			c.SetupDetailsAuthHeaderPrefix,
 		),
 	}, nil
 }

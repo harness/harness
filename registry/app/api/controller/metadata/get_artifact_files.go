@@ -131,7 +131,7 @@ func (c *APIController) GetArtifactFiles(
 		return artifact.GetArtifactFiles200JSONResponse{
 			FileDetailResponseJSONResponse: *GetAllArtifactFilesResponse(
 				fileMetadataList, count, reqInfo.pageNumber, reqInfo.limit, registryURL, img.Name, art.Version,
-				registry.PackageType),
+				registry.PackageType, c.SetupDetailsAuthHeaderPrefix),
 		}, nil
 	default:
 		return artifact.GetArtifactFiles400JSONResponse{

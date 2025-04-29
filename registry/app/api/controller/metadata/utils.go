@@ -364,7 +364,7 @@ func GetTagURL(artifact string, version string, registryURL string) string {
 
 func GetPullCommand(
 	image string, tag string,
-	packageType string, registryURL string,
+	packageType string, registryURL string, setupDetailsAuthHeaderPrefix string,
 ) string {
 	switch packageType {
 	case string(a.PackageTypeDOCKER):
@@ -372,7 +372,7 @@ func GetPullCommand(
 	case string(a.PackageTypeHELM):
 		return GetHelmPullCommand(image, tag, registryURL)
 	case string(a.PackageTypeGENERIC):
-		return GetGenericArtifactFileDownloadCommand(registryURL, image, tag, "<FILENAME>")
+		return GetGenericArtifactFileDownloadCommand(registryURL, image, tag, "<FILENAME>", setupDetailsAuthHeaderPrefix)
 	case string(a.PackageTypePYTHON):
 		return GetPythonDownloadCommand(image, tag)
 	case string(a.PackageTypeNPM):
@@ -443,16 +443,21 @@ func GetPythonDownloadCommand(artifact, version string) string {
 	return downloadCommand
 }
 
-func GetGenericArtifactFileDownloadCommand(regURL, artifact, version, filename string) string {
-	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>:<VERSION>:<FILENAME>' --header 'x-api-key: <API_KEY>'" +
+func GetGenericArtifactFileDownloadCommand(
+	regURL, artifact, version, filename string,
+	setupDetailsAuthHeaderPrefix string,
+) string {
+	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>:<VERSION>:<FILENAME>'" +
+		" --header '<AUTH_HEADER_PREFIX> <API_KEY>'" +
 		" -J -O"
 
 	// Replace the placeholders with the actual values
 	replacements := map[string]string{
-		"<HOSTNAME>": regURL,
-		"<ARTIFACT>": artifact,
-		"<VERSION>":  version,
-		"<FILENAME>": filename,
+		"<HOSTNAME>":           regURL,
+		"<ARTIFACT>":           artifact,
+		"<VERSION>":            version,
+		"<FILENAME>":           filename,
+		"<AUTH_HEADER_PREFIX>": setupDetailsAuthHeaderPrefix,
 	}
 
 	for placeholder, value := range replacements {
@@ -462,12 +467,13 @@ func GetGenericArtifactFileDownloadCommand(regURL, artifact, version, filename s
 	return downloadCommand
 }
 
-func GetRPMArtifactFileDownloadCommand(regURL, filename string) string {
-	downloadCommand := "curl --location '<HOSTNAME>/package<FILENAME>' --header 'x-api-key: <API_KEY>'" +
+func GetRPMArtifactFileDownloadCommand(regURL, filename string, setupDetailsAuthHeaderPrefix string) string {
+	downloadCommand := "curl --location '<HOSTNAME>/package<FILENAME>' --header '<AUTH_HEADER_PREFIX> <API_KEY>'" +
 		" -J -O"
 	replacements := map[string]string{
-		"<HOSTNAME>": regURL,
-		"<FILENAME>": filename,
+		"<HOSTNAME>":           regURL,
+		"<FILENAME>":           filename,
+		"<AUTH_HEADER_PREFIX>": setupDetailsAuthHeaderPrefix,
 	}
 
 	for placeholder, value := range replacements {
@@ -477,16 +483,20 @@ func GetRPMArtifactFileDownloadCommand(regURL, filename string) string {
 	return downloadCommand
 }
 
-func GetMavenArtifactFileDownloadCommand(regURL, artifact, version, filename string) string {
+func GetMavenArtifactFileDownloadCommand(
+	regURL, artifact, version, filename string,
+	setupDetailsAuthHeaderPrefix string,
+) string {
 	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>/<VERSION>/<FILENAME>'" +
-		" --header 'x-api-key: <IDENTITY_TOKEN>' -O"
+		" --header '<AUTH_HEADER_PREFIX> <IDENTITY_TOKEN>' -O"
 
 	// Replace the placeholders with the actual values
 	replacements := map[string]string{
-		"<HOSTNAME>": regURL,
-		"<ARTIFACT>": artifact,
-		"<VERSION>":  version,
-		"<FILENAME>": filename,
+		"<HOSTNAME>":           regURL,
+		"<ARTIFACT>":           artifact,
+		"<VERSION>":            version,
+		"<FILENAME>":           filename,
+		"<AUTH_HEADER_PREFIX>": setupDetailsAuthHeaderPrefix,
 	}
 
 	for placeholder, value := range replacements {

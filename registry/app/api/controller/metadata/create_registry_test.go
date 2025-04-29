@@ -264,6 +264,7 @@ func TestCreateRegistry(t *testing.T) {
 					eventReporter,
 					nil, // downloadStatRepository.
 					nil, // registryIndexService - not needed for this test.
+					"",
 				)
 			},
 		},
@@ -335,6 +336,7 @@ func TestCreateRegistry(t *testing.T) {
 					eventReporter,
 					nil, //
 					nil, // downloadStatRepository.
+					"",
 				)
 			},
 		},

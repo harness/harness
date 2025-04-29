@@ -542,6 +542,7 @@ type Config struct {
 			TransactionTimeoutDuration  time.Duration `envconfig:"GITNESS_REGISTRY_GARBAGE_COLLECTION_TRANSACTION_TIMEOUT_DURATION" default:"10s"` //nolint:lll
 			BlobsStorageTimeoutDuration time.Duration `envconfig:"GITNESS_REGISTRY_GARBAGE_COLLECTION_BLOB_STORAGE_TIMEOUT_DURATION" default:"5s"` //nolint:lll
 		}
+		SetupDetailsAuthHeaderPrefix string `envconfig:"SETUP_DETAILS_AUTH_PREFIX" default:"Authorization: Bearer"`
 	}
 
 	Instrumentation struct {

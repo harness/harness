@@ -278,7 +278,7 @@ func (c *APIController) generateGenericClientSetupDetail(
 	header2 := "Upload Artifact"
 	section2step1Header := "Run this curl command in your terminal to push the artifact."
 	//nolint:lll
-	pushValue := "curl --location --request PUT '<HOSTNAME>/<ARTIFACT_NAME>/<VERSION>' \\\n--form 'filename=\"<FILENAME>\"' \\\n--form 'file=@\"<FILE_PATH>\"' \\\n--form 'description=\"<DESC>\"' \\\n--header 'x-api-key: <API_KEY>'"
+	pushValue := "curl --location --request PUT '<HOSTNAME>/<ARTIFACT_NAME>/<VERSION>' \\\n--form 'filename=\"<FILENAME>\"' \\\n--form 'file=@\"<FILE_PATH>\"' \\\n--form 'description=\"<DESC>\"' \\\n--header '<AUTH_HEADER_PREFIX> <API_KEY>'"
 	section2step1Commands := []artifact.ClientSetupStepCommand{
 		{Label: &blankString, Value: &pushValue},
 	}
@@ -299,7 +299,7 @@ func (c *APIController) generateGenericClientSetupDetail(
 	header3 := "Download Artifact"
 	section3step1Header := "Run this command in your terminal to download the artifact."
 	//nolint:lll
-	pullValue := "curl --location '<HOSTNAME>/<ARTIFACT_NAME>/<VERSION>' \\\n--form 'filename=\"<FILENAME>\"' --header 'x-api-key: <API_KEY>' " +
+	pullValue := "curl --location '<HOSTNAME>/<ARTIFACT_NAME>/<VERSION>' \\\n--form 'filename=\"<FILENAME>\"' --header '<AUTH_HEADER_PREFIX> <API_KEY>' " +
 		"-o <FILENAME>"
 	section3step1Commands := []artifact.ClientSetupStepCommand{
 		{Label: &blankString, Value: &pullValue},
@@ -869,7 +869,7 @@ func (c *APIController) generateRpmClientSetupDetail(
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
 						//nolint:lll
-						Value: utils.StringPtr("curl --location --request PUT '<REGISTRY_URL>/' \\\n--form 'file=@\"<FILE_PATH>\"' \\\n--header 'x-api-key: <API_KEY>'"),
+						Value: utils.StringPtr("curl --location --request PUT '<REGISTRY_URL>/' \\\n--form 'file=@\"<FILE_PATH>\"' \\\n--header '<AUTH_HEADER_PREFIX> <API_KEY>'"),
 					},
 				},
 			},
@@ -936,7 +936,7 @@ func (c *APIController) generateRpmClientSetupDetail(
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
 						//nolint:lll
-						Value: utils.StringPtr("curl --location --request PUT '<REGISTRY_URL>/' \\\n--form 'file=@\"<FILE_PATH>\"' \\\n--header 'x-api-key: <API_KEY>'"),
+						Value: utils.StringPtr("curl --location --request PUT '<REGISTRY_URL>/' \\\n--form 'file=@\"<FILE_PATH>\"' \\\n--header '<AUTH_HEADER_PREFIX> <API_KEY>'"),
 					},
 				},
 			},
@@ -1264,13 +1264,13 @@ func (c *APIController) replacePlaceholdersInSection(
 			continue
 		}
 		for j := range *st.Commands {
-			replaceText(username, st, j, hostname, registryName, image, tag, registryURL, groupID, uploadURL)
+			c.replaceText(username, st, j, hostname, registryName, image, tag, registryURL, groupID, uploadURL)
 		}
 	}
 	_ = clientSetupSection.FromClientSetupStepConfig(sec)
 }
 
-func replaceText(
+func (c *APIController) replaceText(
 	username string,
 	st artifact.ClientSetupStep,
 	i int,
@@ -1282,6 +1282,10 @@ func replaceText(
 	groupID string,
 	uploadURL string,
 ) {
+	if c.SetupDetailsAuthHeaderPrefix != "" {
+		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value,
+			"<AUTH_HEADER_PREFIX>", c.SetupDetailsAuthHeaderPrefix))
+	}
 	if username != "" {
 		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<USERNAME>", username))
 		if (*st.Commands)[i].Label != nil {

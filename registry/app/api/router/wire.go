@@ -42,6 +42,7 @@ import (
 	"github.com/harness/gitness/registry/services/index"
 	registrywebhook "github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/store/database/dbtx"
+	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
 )
@@ -79,6 +80,7 @@ func APIHandlerProvider(
 	artifactEventReporter *registryevents.Reporter,
 	downloadStatRepository store.DownloadStatRepository,
 	registryIndexService index.Service,
+	gitnessConfig *types.Config,
 ) harness.APIHandler {
 	return harness.NewAPIHandler(
 		repoDao,
@@ -104,6 +106,7 @@ func APIHandlerProvider(
 		*artifactEventReporter,
 		downloadStatRepository,
 		registryIndexService,
+		gitnessConfig,
 	)
 }
 

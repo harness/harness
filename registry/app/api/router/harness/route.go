@@ -35,6 +35,7 @@ import (
 	"github.com/harness/gitness/registry/services/index"
 	registrywebhook "github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/store/database/dbtx"
+	"github.com/harness/gitness/types"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -79,6 +80,7 @@ func NewAPIHandler(
 	artifactEventReporter registryevents.Reporter,
 	downloadStatRepository store.DownloadStatRepository,
 	registryIndexService index.Service,
+	gitnessConfig *types.Config,
 ) APIHandler {
 	r := chi.NewRouter()
 	r.Use(audit.Middleware())
@@ -109,6 +111,7 @@ func NewAPIHandler(
 		artifactEventReporter,
 		downloadStatRepository,
 		registryIndexService,
+		gitnessConfig.Registry.SetupDetailsAuthHeaderPrefix,
 	)
 
 	handler := artifact.NewStrictHandler(apiController, []artifact.StrictMiddlewareFunc{})

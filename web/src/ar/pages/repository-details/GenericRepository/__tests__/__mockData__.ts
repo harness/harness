@@ -84,7 +84,7 @@ export const MockGetGenericSetupClientOnRegistryConfigPageResponse = {
                 {
                   label: '',
                   value:
-                    "curl --location --request PUT 'http://host.docker.internal:3000/generic/artifact-registry/generic-repo/\u003cARTIFACT_NAME\u003e/\u003cVERSION\u003e' \\\n--form 'filename=\"\u003cFILENAME\u003e\"' \\\n--form 'file=@\"\u003cFILE_PATH\u003e\"' \\\n--form 'description=\"\u003cDESC\u003e\"' \\\n--header 'x-api-key: \u003cAPI_KEY\u003e'"
+                    "curl --location --request PUT 'http://host.docker.internal:3000/generic/artifact-registry/generic-repo/\u003cARTIFACT_NAME\u003e/\u003cVERSION\u003e' \\\n--form 'filename=\"\u003cFILENAME\u003e\"' \\\n--form 'file=@\"\u003cFILE_PATH\u003e\"' \\\n--form 'description=\"\u003cDESC\u003e\"' \\\n--header 'Authorization: Bearer \u003cAPI_KEY\u003e'"
                 }
               ],
               header: 'Run this curl command in your terminal to push the artifact.',
@@ -101,7 +101,7 @@ export const MockGetGenericSetupClientOnRegistryConfigPageResponse = {
                 {
                   label: '',
                   value:
-                    "curl --location 'http://host.docker.internal:3000/generic/artifact-registry/generic-repo/\u003cARTIFACT_NAME\u003e:\u003cVERSION\u003e:\u003cFILENAME\u003e' --header 'x-api-key: \u003cAPI_KEY\u003e' -J -O"
+                    "curl --location 'http://host.docker.internal:3000/generic/artifact-registry/generic-repo/\u003cARTIFACT_NAME\u003e:\u003cVERSION\u003e:\u003cFILENAME\u003e' --header 'Authorization: Bearer \u003cAPI_KEY\u003e' -J -O"
                 }
               ],
               header: 'Run this command in your terminal to download the artifact.',
