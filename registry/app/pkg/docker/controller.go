@@ -109,37 +109,36 @@ const (
 	ResourceTypeManifest = "manifest"
 )
 
-func (c *Controller) ProxyWrapper(
-	ctx context.Context,
-	f func(registry registrytypes.Registry, imageName string, artInfo pkg.Artifact) Response,
-	info pkg.RegistryInfo,
-	resourceType string,
-) Response {
+func (c *Controller) ProxyWrapper(ctx context.Context, f func(registry registrytypes.Registry, imageName string,
+	artInfo pkg.Artifact) Response, info pkg.RegistryInfo, resourceType string,
+) (Response, error) {
 	none := pkg.RegistryInfo{}
+	var response Response
 	if info == none {
 		log.Ctx(ctx).Error().Stack().Msg("artifactinfo is not found")
-		return nil
+		return response, errors.New("bad Request: artifactinfo is not found")
 	}
 
-	var response Response
 	requestRepoKey := info.RegIdentifier
 	imageName := info.Image
-	if repos, err := c.GetOrderedRepos(ctx, requestRepoKey, *info.BaseInfo); err == nil {
-		for _, registry := range repos {
-			log.Ctx(ctx).Info().Msgf("Using Repository: %s, Type: %s", registry.Name, registry.Type)
-			artifact, ok := c.GetArtifact(registry).(Registry)
-			if !ok {
-				log.Ctx(ctx).Warn().Msgf("artifact %s is not a registry", registry.Name)
-				continue
+	repos, err := c.GetOrderedRepos(ctx, requestRepoKey, *info.BaseInfo)
+	if err != nil {
+		return response, err
+	}
+	for _, registry := range repos {
+		log.Ctx(ctx).Info().Msgf("Using Repository: %s, Type: %s", registry.Name, registry.Type)
+		artifact, ok := c.GetArtifact(registry).(Registry)
+		if !ok {
+			log.Ctx(ctx).Warn().Msgf("artifact %s is not a registry", registry.Name)
+			continue
+		}
+		if artifact != nil {
+			response = f(registry, imageName, artifact)
+			if pkg.IsEmpty(response.GetErrors()) {
+				return response, nil
 			}
-			if artifact != nil {
-				response = f(registry, imageName, artifact)
-				if pkg.IsEmpty(response.GetErrors()) {
-					return response
-				}
-				log.Ctx(ctx).Warn().Msgf("Repository: %s, Type: %s, errors: %v", registry.Name, registry.Type,
-					response.GetErrors())
-			}
+			log.Ctx(ctx).Warn().Msgf("Repository: %s, Type: %s, errors: %v", registry.Name, registry.Type,
+				response.GetErrors())
 		}
 	}
 	if response != nil && !pkg.IsEmpty(response.GetErrors()) {
@@ -152,7 +151,7 @@ func (c *Controller) ProxyWrapper(
 			// do nothing
 		}
 	}
-	return response
+	return response, nil
 }
 
 func (c *Controller) HeadManifest(
@@ -176,12 +175,18 @@ func (c *Controller) HeadManifest(
 		art.ParentID = registry.ParentID
 		// Need to reassign original imageName to art because we are updating image name based on upstream proxy source inside
 		art.Image = imageName
+		//nolint:errcheck
 		headers, desc, man, e := a.(Registry).ManifestExist(ctx, art, acceptHeaders, ifNoneMatchHeader)
 		response := &GetManifestResponse{e, headers, desc, man}
 		return response
 	}
 
-	result := c.ProxyWrapper(ctx, f, art, ResourceTypeManifest)
+	result, err := c.ProxyWrapper(ctx, f, art, ResourceTypeManifest)
+	if err != nil {
+		return &GetManifestResponse{
+			Errors: []error{err},
+		}
+	}
 	return result
 }
 
@@ -205,12 +210,18 @@ func (c *Controller) PullManifest(
 		art.ParentID = registry.ParentID
 		// Need to reassign original imageName to art because we are updating image name based on upstream proxy source inside
 		art.Image = imageName
+		//nolint:errcheck
 		headers, desc, man, e := a.(Registry).PullManifest(ctx, art, acceptHeaders, ifNoneMatchHeader)
 		response := &GetManifestResponse{e, headers, desc, man}
 		return response
 	}
 
-	result := c.ProxyWrapper(ctx, f, art, ResourceTypeManifest)
+	result, err := c.ProxyWrapper(ctx, f, art, ResourceTypeManifest)
+	if err != nil {
+		return &GetManifestResponse{
+			Errors: []error{err},
+		}
+	}
 	return result
 }
 
@@ -276,11 +287,18 @@ func (c *Controller) GetBlob(ctx context.Context, info pkg.RegistryInfo) Respons
 		info.SetRepoKey(registry.Name)
 		info.ParentID = registry.ParentID
 		info.Image = imageName
+		//nolint:errcheck
 		headers, body, size, readCloser, redirectURL, errs := a.(Registry).GetBlob(ctx, info)
 		return &GetBlobResponse{errs, headers, body, size, readCloser, redirectURL}
 	}
 
-	return c.ProxyWrapper(ctx, f, info, ResourceTypeBlob)
+	result, err := c.ProxyWrapper(ctx, f, info, ResourceTypeBlob)
+	if err != nil {
+		return &GetBlobResponse{
+			Errors: []error{err},
+		}
+	}
+	return result
 }
 
 func (c *Controller) InitiateUploadBlob(
@@ -313,6 +331,7 @@ func (c *Controller) GetUploadBlobStatus(
 		return nil, []error{errcode.ErrCodeDenied}
 	}
 	blobCtx := c.local.App.GetBlobsContext(ctx, info)
+	//nolint:contextcheck
 	return c.local.GetBlobUploadStatus(blobCtx, info, token)
 }
 
@@ -337,6 +356,7 @@ func (c *Controller) PatchBlobUpload(
 	}
 	errors = make([]error, 0)
 	if blobCtx.UUID != "" {
+		//nolint:contextcheck
 		errs := ResumeBlobUpload(blobCtx, token)
 		errors = append(errors, errs...)
 	}
@@ -344,6 +364,7 @@ func (c *Controller) PatchBlobUpload(
 		defer blobCtx.Upload.Close()
 	}
 
+	//nolint:contextcheck
 	rs, errs := c.local.PushBlobChunk(blobCtx, info, ct, cr, cl, body, length)
 	if !commons.IsEmpty(errs) {
 		errors = append(errors, errs...)
@@ -387,6 +408,7 @@ func (c *Controller) CancelBlobUpload(
 	errors = make([]error, 0)
 
 	if blobCtx.UUID != "" {
+		//nolint:contextcheck
 		errs := ResumeBlobUpload(blobCtx, stateToken)
 		errors = append(errors, errs...)
 	}
@@ -402,6 +424,7 @@ func (c *Controller) CancelBlobUpload(
 		Headers: map[string]string{"Docker-Upload-UUID": blobCtx.UUID},
 	}
 
+	//nolint:contextcheck
 	if err := blobCtx.Upload.Cancel(blobCtx); err != nil {
 		log.Ctx(ctx).Error().Stack().Err(err).Msgf("error encountered canceling upload: %v", err)
 		errors = append(errors, errcode.ErrCodeUnknown.WithDetail(err))
@@ -423,6 +446,7 @@ func (c *Controller) DeleteBlob(
 		return nil, []error{errcode.ErrCodeDenied}
 	}
 	blobCtx := c.local.App.GetBlobsContext(ctx, info)
+	//nolint:contextcheck
 	return c.local.DeleteBlob(blobCtx, info)
 }
 
