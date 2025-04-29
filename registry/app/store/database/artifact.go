@@ -24,6 +24,7 @@ import (
 
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/app/store/database/util"
 	"github.com/harness/gitness/registry/types"
@@ -131,6 +132,10 @@ func (a ArtifactDao) GetLatestByImageID(ctx context.Context, imageID int64) (*ty
 }
 
 func (a ArtifactDao) CreateOrUpdate(ctx context.Context, artifact *types.Artifact) error {
+	if commons.IsEmpty(artifact.Version) {
+		return errors.New("version is empty")
+	}
+
 	const sqlQuery = `
 		INSERT INTO artifacts ( 
 		         artifact_image_id
@@ -221,7 +226,8 @@ func (a ArtifactDao) DeleteByVersionAndImageName(
 	case SQLITE3:
 		delStmt = databaseg.Builder.Delete("artifacts").
 			Where("artifact_id IN (SELECT a.artifact_id FROM artifacts a JOIN images i ON i.image_id = a.artifact_image_id"+
-				" WHERE a.artifact_version = ? AND i.image_name = ? AND i.image_registry_id = ?)", version, image, regID)
+				" WHERE a.artifact_version = ? AND i.image_name = ? AND i.image_registry_id = ?)", version, image,
+				regID)
 
 	default:
 		delStmt = databaseg.Builder.Delete("artifacts a USING images i").

@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/api/request"
+	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/app/store/database/util"
 	"github.com/harness/gitness/registry/types"
@@ -259,6 +260,9 @@ func (i ImageDao) GetByName(ctx context.Context, registryID int64, name string) 
 }
 
 func (i ImageDao) CreateOrUpdate(ctx context.Context, image *types.Image) error {
+	if commons.IsEmpty(image.Name) {
+		return errors.New("package/image name is empty")
+	}
 	const sqlQuery = `
 		INSERT INTO images ( 
 		         image_registry_id
