@@ -79,6 +79,7 @@ func (s *Service) handleGitspaceInfraResumeEvent(
 		}
 		updatedInstance, resumeStartErr := s.orchestrator.ResumeStartGitspace(ctxWithTimedOut, *config, payload.Infra)
 		if resumeStartErr != nil {
+			updatedInstance.State = enum.GitspaceInstanceStateError
 			s.emitGitspaceConfigEvent(ctxWithTimedOut, config, enum.GitspaceEventTypeGitspaceActionStartFailed)
 			updatedInstance.ErrorMessage = resumeStartErr.ErrorMessage
 			err = fmt.Errorf("failed to resume start gitspace: %w", resumeStartErr.Error)
@@ -89,6 +90,7 @@ func (s *Service) handleGitspaceInfraResumeEvent(
 	case enum.InfraEventStop:
 		instanceState, resumeStopErr := s.orchestrator.ResumeStopGitspace(ctxWithTimedOut, *config, payload.Infra)
 		if resumeStopErr != nil {
+			instance.State = enum.GitspaceInstanceStateError
 			s.emitGitspaceConfigEvent(ctxWithTimedOut, config, enum.GitspaceEventTypeGitspaceActionStopFailed)
 			instance.ErrorMessage = resumeStopErr.ErrorMessage
 			err = fmt.Errorf("failed to resume stop gitspace: %w", resumeStopErr.Error)
@@ -99,6 +101,7 @@ func (s *Service) handleGitspaceInfraResumeEvent(
 	case enum.InfraEventDeprovision:
 		instanceState, resumeDeleteErr := s.orchestrator.ResumeDeleteGitspace(ctxWithTimedOut, *config, payload.Infra)
 		if resumeDeleteErr != nil {
+			instance.State = enum.GitspaceInstanceStateError
 			err = fmt.Errorf("failed to resume delete gitspace: %w", resumeDeleteErr)
 		} else if config.IsMarkedForDeletion {
 			config.IsDeleted = true
@@ -113,6 +116,7 @@ func (s *Service) handleGitspaceInfraResumeEvent(
 		instanceState, resumeCleanupErr := s.orchestrator.ResumeCleanupInstanceResources(
 			ctxWithTimedOut, *config, payload.Infra)
 		if resumeCleanupErr != nil {
+			instance.State = enum.GitspaceInstanceStateError
 			s.emitGitspaceConfigEvent(ctxWithTimedOut, config, enum.GitspaceEventTypeInfraCleanupFailed)
 
 			err = fmt.Errorf("failed to resume cleanup gitspace: %w", resumeCleanupErr)
