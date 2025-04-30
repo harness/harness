@@ -22,9 +22,12 @@ import (
 )
 
 func GetMavenFilePath(imageName string, version string) string {
-	artifactName := strings.ReplaceAll(imageName, ".", "/")
-	artifactName = strings.ReplaceAll(artifactName, ":", "/")
-	filePathPrefix := "/" + artifactName
+	parts := strings.SplitN(imageName, ":", 2)
+	filePathPrefix := "/"
+	if len(parts) == 2 {
+		groupID := strings.ReplaceAll(parts[0], ".", "/")
+		filePathPrefix += groupID + "/" + parts[1]
+	}
 	if version != "" {
 		filePathPrefix += "/" + version
 	}
