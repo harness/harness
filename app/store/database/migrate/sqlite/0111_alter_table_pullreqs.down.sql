@@ -1,0 +1,2 @@
+ALTER TABLE pullreqs
+DROP COLUMN pullreq_merge_violations_bypassed;

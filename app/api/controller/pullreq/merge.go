@@ -568,6 +568,10 @@ func (c *Controller) Merge(
 		pr.MergeBaseSHA = mergeOutput.MergeBaseSHA.String()
 		pr.MergeSHA = ptr.String(mergeOutput.MergeSHA.String())
 		pr.MarkAsMerged()
+
+		bypassed := protection.IsBypassed(violations)
+		pr.MergeViolationsBypassed = &bypassed
+
 		pr.Stats.DiffStats = types.NewDiffStats(
 			mergeOutput.CommitCount,
 			mergeOutput.ChangedFileCount,

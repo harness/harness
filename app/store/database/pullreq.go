@@ -86,9 +86,10 @@ type pullReq struct {
 	Merged      null.Int    `db:"pullreq_merged"`
 	MergeMethod null.String `db:"pullreq_merge_method"`
 
-	MergeTargetSHA null.String `db:"pullreq_merge_target_sha"`
-	MergeBaseSHA   string      `db:"pullreq_merge_base_sha"`
-	MergeSHA       null.String `db:"pullreq_merge_sha"`
+	MergeTargetSHA          null.String `db:"pullreq_merge_target_sha"`
+	MergeBaseSHA            string      `db:"pullreq_merge_base_sha"`
+	MergeSHA                null.String `db:"pullreq_merge_sha"`
+	MergeViolationsBypassed null.Bool   `db:"pullreq_merge_violations_bypassed"`
 
 	MergeCheckStatus  enum.MergeCheckStatus `db:"pullreq_merge_check_status"`
 	MergeConflicts    null.String           `db:"pullreq_merge_conflicts"`
@@ -125,6 +126,7 @@ const (
 		,pullreq_merged_by
 		,pullreq_merged
 		,pullreq_merge_method
+		,pullreq_merge_violations_bypassed
 		,pullreq_merge_target_sha
 		,pullreq_merge_base_sha
 		,pullreq_merge_sha
@@ -224,6 +226,7 @@ func (s *PullReqStore) Create(ctx context.Context, pr *types.PullReq) error {
 		,pullreq_merged_by
 		,pullreq_merged
 		,pullreq_merge_method
+		,pullreq_merge_violations_bypassed
 		,pullreq_merge_target_sha
 		,pullreq_merge_base_sha
 		,pullreq_merge_sha
@@ -258,6 +261,7 @@ func (s *PullReqStore) Create(ctx context.Context, pr *types.PullReq) error {
 		,:pullreq_merged_by
 		,:pullreq_merged
 		,:pullreq_merge_method
+		,:pullreq_merge_violations_bypassed
 		,:pullreq_merge_target_sha
 		,:pullreq_merge_base_sha
 		,:pullreq_merge_sha
@@ -311,6 +315,7 @@ func (s *PullReqStore) Update(ctx context.Context, pr *types.PullReq) error {
 		,pullreq_merge_sha = :pullreq_merge_sha
 		,pullreq_merge_check_status = :pullreq_merge_check_status
 		,pullreq_merge_conflicts = :pullreq_merge_conflicts
+		,pullreq_merge_violations_bypassed = :pullreq_merge_violations_bypassed
 		,pullreq_rebase_check_status = :pullreq_rebase_check_status
 		,pullreq_rebase_conflicts = :pullreq_rebase_conflicts
 		,pullreq_commit_count = :pullreq_commit_count
@@ -774,38 +779,39 @@ func mapPullReq(pr *pullReq) *types.PullReq {
 	}
 
 	return &types.PullReq{
-		ID:                pr.ID,
-		Version:           pr.Version,
-		Number:            pr.Number,
-		CreatedBy:         pr.CreatedBy,
-		Created:           pr.Created,
-		Updated:           pr.Updated,
-		Edited:            pr.Edited, // TODO: When we remove the DB column, make Edited equal to Updated
-		Closed:            pr.Closed.Ptr(),
-		State:             pr.State,
-		IsDraft:           pr.IsDraft,
-		CommentCount:      pr.CommentCount,
-		UnresolvedCount:   pr.UnresolvedCount,
-		Title:             pr.Title,
-		Description:       pr.Description,
-		SourceRepoID:      pr.SourceRepoID,
-		SourceBranch:      pr.SourceBranch,
-		SourceSHA:         pr.SourceSHA,
-		TargetRepoID:      pr.TargetRepoID,
-		TargetBranch:      pr.TargetBranch,
-		ActivitySeq:       pr.ActivitySeq,
-		MergedBy:          pr.MergedBy.Ptr(),
-		Merged:            pr.Merged.Ptr(),
-		MergeMethod:       (*enum.MergeMethod)(pr.MergeMethod.Ptr()),
-		MergeCheckStatus:  pr.MergeCheckStatus,
-		MergeTargetSHA:    pr.MergeTargetSHA.Ptr(),
-		MergeBaseSHA:      pr.MergeBaseSHA,
-		MergeSHA:          pr.MergeSHA.Ptr(),
-		MergeConflicts:    mergeConflicts,
-		RebaseCheckStatus: pr.RebaseCheckStatus,
-		RebaseConflicts:   rebaseConflicts,
-		Author:            types.PrincipalInfo{},
-		Merger:            nil,
+		ID:                      pr.ID,
+		Version:                 pr.Version,
+		Number:                  pr.Number,
+		CreatedBy:               pr.CreatedBy,
+		Created:                 pr.Created,
+		Updated:                 pr.Updated,
+		Edited:                  pr.Edited, // TODO: When we remove the DB column, make Edited equal to Updated
+		Closed:                  pr.Closed.Ptr(),
+		State:                   pr.State,
+		IsDraft:                 pr.IsDraft,
+		CommentCount:            pr.CommentCount,
+		UnresolvedCount:         pr.UnresolvedCount,
+		Title:                   pr.Title,
+		Description:             pr.Description,
+		SourceRepoID:            pr.SourceRepoID,
+		SourceBranch:            pr.SourceBranch,
+		SourceSHA:               pr.SourceSHA,
+		TargetRepoID:            pr.TargetRepoID,
+		TargetBranch:            pr.TargetBranch,
+		ActivitySeq:             pr.ActivitySeq,
+		MergedBy:                pr.MergedBy.Ptr(),
+		Merged:                  pr.Merged.Ptr(),
+		MergeMethod:             (*enum.MergeMethod)(pr.MergeMethod.Ptr()),
+		MergeCheckStatus:        pr.MergeCheckStatus,
+		MergeTargetSHA:          pr.MergeTargetSHA.Ptr(),
+		MergeBaseSHA:            pr.MergeBaseSHA,
+		MergeSHA:                pr.MergeSHA.Ptr(),
+		MergeConflicts:          mergeConflicts,
+		MergeViolationsBypassed: pr.MergeViolationsBypassed.Ptr(),
+		RebaseCheckStatus:       pr.RebaseCheckStatus,
+		RebaseConflicts:         rebaseConflicts,
+		Author:                  types.PrincipalInfo{},
+		Merger:                  nil,
 		Stats: types.PullReqStats{
 			Conversations:   pr.CommentCount,
 			UnresolvedCount: pr.UnresolvedCount,
@@ -823,40 +829,41 @@ func mapInternalPullReq(pr *types.PullReq) *pullReq {
 	mergeConflicts := strings.Join(pr.MergeConflicts, "\n")
 	rebaseConflicts := strings.Join(pr.RebaseConflicts, "\n")
 	m := &pullReq{
-		ID:                pr.ID,
-		Version:           pr.Version,
-		Number:            pr.Number,
-		CreatedBy:         pr.CreatedBy,
-		Created:           pr.Created,
-		Updated:           pr.Updated,
-		Edited:            pr.Edited, // TODO: When we remove the DB column, make Edited equal to Updated
-		Closed:            null.IntFromPtr(pr.Closed),
-		State:             pr.State,
-		IsDraft:           pr.IsDraft,
-		CommentCount:      pr.CommentCount,
-		UnresolvedCount:   pr.UnresolvedCount,
-		Title:             pr.Title,
-		Description:       pr.Description,
-		SourceRepoID:      pr.SourceRepoID,
-		SourceBranch:      pr.SourceBranch,
-		SourceSHA:         pr.SourceSHA,
-		TargetRepoID:      pr.TargetRepoID,
-		TargetBranch:      pr.TargetBranch,
-		ActivitySeq:       pr.ActivitySeq,
-		MergedBy:          null.IntFromPtr(pr.MergedBy),
-		Merged:            null.IntFromPtr(pr.Merged),
-		MergeMethod:       null.StringFromPtr((*string)(pr.MergeMethod)),
-		MergeCheckStatus:  pr.MergeCheckStatus,
-		MergeTargetSHA:    null.StringFromPtr(pr.MergeTargetSHA),
-		MergeBaseSHA:      pr.MergeBaseSHA,
-		MergeSHA:          null.StringFromPtr(pr.MergeSHA),
-		MergeConflicts:    null.NewString(mergeConflicts, mergeConflicts != ""),
-		RebaseCheckStatus: pr.RebaseCheckStatus,
-		RebaseConflicts:   null.NewString(rebaseConflicts, rebaseConflicts != ""),
-		CommitCount:       null.IntFromPtr(pr.Stats.Commits),
-		FileCount:         null.IntFromPtr(pr.Stats.FilesChanged),
-		Additions:         null.IntFromPtr(pr.Stats.Additions),
-		Deletions:         null.IntFromPtr(pr.Stats.Deletions),
+		ID:                      pr.ID,
+		Version:                 pr.Version,
+		Number:                  pr.Number,
+		CreatedBy:               pr.CreatedBy,
+		Created:                 pr.Created,
+		Updated:                 pr.Updated,
+		Edited:                  pr.Edited, // TODO: When we remove the DB column, make Edited equal to Updated
+		Closed:                  null.IntFromPtr(pr.Closed),
+		State:                   pr.State,
+		IsDraft:                 pr.IsDraft,
+		CommentCount:            pr.CommentCount,
+		UnresolvedCount:         pr.UnresolvedCount,
+		Title:                   pr.Title,
+		Description:             pr.Description,
+		SourceRepoID:            pr.SourceRepoID,
+		SourceBranch:            pr.SourceBranch,
+		SourceSHA:               pr.SourceSHA,
+		TargetRepoID:            pr.TargetRepoID,
+		TargetBranch:            pr.TargetBranch,
+		ActivitySeq:             pr.ActivitySeq,
+		MergedBy:                null.IntFromPtr(pr.MergedBy),
+		Merged:                  null.IntFromPtr(pr.Merged),
+		MergeMethod:             null.StringFromPtr((*string)(pr.MergeMethod)),
+		MergeCheckStatus:        pr.MergeCheckStatus,
+		MergeTargetSHA:          null.StringFromPtr(pr.MergeTargetSHA),
+		MergeBaseSHA:            pr.MergeBaseSHA,
+		MergeSHA:                null.StringFromPtr(pr.MergeSHA),
+		MergeConflicts:          null.NewString(mergeConflicts, mergeConflicts != ""),
+		MergeViolationsBypassed: null.BoolFromPtr(pr.MergeViolationsBypassed),
+		RebaseCheckStatus:       pr.RebaseCheckStatus,
+		RebaseConflicts:         null.NewString(rebaseConflicts, rebaseConflicts != ""),
+		CommitCount:             null.IntFromPtr(pr.Stats.Commits),
+		FileCount:               null.IntFromPtr(pr.Stats.FilesChanged),
+		Additions:               null.IntFromPtr(pr.Stats.Additions),
+		Deletions:               null.IntFromPtr(pr.Stats.Deletions),
 	}
 
 	return m
