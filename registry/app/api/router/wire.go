@@ -81,6 +81,7 @@ func APIHandlerProvider(
 	downloadStatRepository store.DownloadStatRepository,
 	registryIndexService index.Service,
 	gitnessConfig *types.Config,
+	registryBlobsDao store.RegistryBlobRepository,
 ) harness.APIHandler {
 	return harness.NewAPIHandler(
 		repoDao,
@@ -107,6 +108,7 @@ func APIHandlerProvider(
 		downloadStatRepository,
 		registryIndexService,
 		gitnessConfig,
+		registryBlobsDao,
 	)
 }
 

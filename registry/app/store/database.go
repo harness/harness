@@ -125,6 +125,10 @@ type ManifestRepository interface {
 		ctx context.Context, repoID int64,
 		imageName string, d digest.Digest,
 	) (bool, error)
+	DeleteManifestByImageName(
+		ctx context.Context, repoID int64,
+		imageName string,
+	) (bool, error)
 	ListManifestsBySubject(
 		ctx context.Context, repoID int64,
 		id int64,
@@ -401,6 +405,11 @@ type RegistryBlobRepository interface {
 	UnlinkBlob(
 		ctx context.Context, imageName string,
 		registry *types.Registry, blobID int64,
+	) (bool, error)
+
+	UnlinkBlobByImageName(
+		ctx context.Context, registryID int64,
+		imageName string,
 	) (bool, error)
 }
 

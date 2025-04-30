@@ -388,6 +388,32 @@ func (dao manifestDao) DeleteManifest(
 	return count == 1, nil
 }
 
+func (dao manifestDao) DeleteManifestByImageName(
+	ctx context.Context, repoID int64,
+	imageName string,
+) (bool, error) {
+	stmt := database.Builder.Delete("manifests").
+		Where(
+			"manifest_registry_id = ? AND manifest_image_name = ?",
+			repoID, imageName,
+		)
+
+	toSQL, args, err := stmt.ToSql()
+	if err != nil {
+		return false, fmt.Errorf("failed to convert manifest query to sql: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, dao.sqlDB)
+
+	r, err := db.ExecContext(ctx, toSQL, args...)
+	if err != nil {
+		return false, database.ProcessSQLErrorf(ctx, err, "the delete query failed")
+	}
+
+	count, _ := r.RowsAffected()
+	return count > 0, nil
+}
+
 func (dao manifestDao) FindManifestByID(
 	ctx context.Context,
 	registryID,

@@ -81,6 +81,7 @@ func NewAPIHandler(
 	downloadStatRepository store.DownloadStatRepository,
 	registryIndexService index.Service,
 	gitnessConfig *types.Config,
+	registryBlobsDao store.RegistryBlobRepository,
 ) APIHandler {
 	r := chi.NewRouter()
 	r.Use(audit.Middleware())
@@ -112,6 +113,7 @@ func NewAPIHandler(
 		downloadStatRepository,
 		registryIndexService,
 		gitnessConfig.Registry.SetupDetailsAuthHeaderPrefix,
+		registryBlobsDao,
 	)
 
 	handler := artifact.NewStrictHandler(apiController, []artifact.StrictMiddlewareFunc{})

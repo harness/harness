@@ -82,22 +82,12 @@ func (c *APIController) DeleteArtifactVersion(ctx context.Context, r artifact.De
 	versionName := string(r.Version)
 	registryName := repoEntity.Name
 
-	image, err := c.ImageStore.GetByRepoAndName(ctx, regInfo.ParentID, regInfo.RegistryIdentifier, artifactName)
+	imageInfo, err := c.ImageStore.GetByName(ctx, regInfo.RegistryID, artifactName)
 	if err != nil {
 		//nolint:nilerr
 		return artifact.DeleteArtifactVersion404JSONResponse{
 			NotFoundJSONResponse: artifact.NotFoundJSONResponse(
 				*GetErrorResponse(http.StatusNotFound, "image doesn't exist with this key"),
-			),
-		}, nil
-	}
-
-	_, err = c.ArtifactStore.GetByName(ctx, image.ID, versionName)
-	if err != nil {
-		//nolint:nilerr
-		return artifact.DeleteArtifactVersion404JSONResponse{
-			NotFoundJSONResponse: artifact.NotFoundJSONResponse(
-				*GetErrorResponse(http.StatusNotFound, "version doesn't exist with this key"),
 			),
 		}, nil
 	}
@@ -110,17 +100,17 @@ func (c *APIController) DeleteArtifactVersion(ctx context.Context, r artifact.De
 		err = c.deleteTagWithAudit(ctx, regInfo, registryName, session.Principal, artifactName,
 			versionName)
 	case artifact.PackageTypeNPM:
-		err = c.deleteVersion(ctx, regInfo, artifactName, versionName)
+		err = c.deleteVersion(ctx, regInfo, imageInfo, artifactName, versionName)
 	case artifact.PackageTypeMAVEN:
-		err = c.deleteVersion(ctx, regInfo, artifactName, versionName)
+		err = c.deleteVersion(ctx, regInfo, imageInfo, artifactName, versionName)
 	case artifact.PackageTypePYTHON:
-		err = c.deleteVersion(ctx, regInfo, artifactName, versionName)
+		err = c.deleteVersion(ctx, regInfo, imageInfo, artifactName, versionName)
 	case artifact.PackageTypeGENERIC:
-		err = c.deleteVersion(ctx, regInfo, artifactName, versionName)
+		err = c.deleteVersion(ctx, regInfo, imageInfo, artifactName, versionName)
 	case artifact.PackageTypeNUGET:
 		err = fmt.Errorf("delete version not supported for nuget")
 	case artifact.PackageTypeRPM:
-		err = c.deleteVersion(ctx, regInfo, artifactName, versionName)
+		err = c.deleteVersion(ctx, regInfo, imageInfo, artifactName, versionName)
 		if err != nil {
 			break
 		}
@@ -177,9 +167,15 @@ func (c *APIController) deleteTagWithAudit(
 func (c *APIController) deleteVersion(
 	ctx context.Context,
 	regInfo *registryTypes.RegistryRequestBaseInfo,
+	imageInfo *registryTypes.Image,
 	artifactName string,
 	versionName string,
 ) error {
+	_, err := c.ArtifactStore.GetByName(ctx, imageInfo.ID, versionName)
+	if err != nil {
+		return fmt.Errorf("version doesn't exist with for image %v", imageInfo.Name)
+	}
+
 	// get the file path based on package type
 	filePath, err := utils.GetFilePath(regInfo.PackageType, artifactName, versionName)
 	if err != nil {

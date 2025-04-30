@@ -265,6 +265,7 @@ func TestCreateRegistry(t *testing.T) {
 					nil, // downloadStatRepository.
 					nil, // registryIndexService - not needed for this test.
 					"",
+					nil, // registryBlobStore - not needed for this test.
 				)
 			},
 		},
@@ -337,6 +338,7 @@ func TestCreateRegistry(t *testing.T) {
 					nil, //
 					nil, // downloadStatRepository.
 					"",
+					nil, // registryIndexService - not needed for this test.
 				)
 			},
 		},

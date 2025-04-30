@@ -127,6 +127,30 @@ func (r registryBlobDao) UnlinkBlob(
 	return affected == 1, err
 }
 
+func (r registryBlobDao) UnlinkBlobByImageName(
+	ctx context.Context, registryID int64,
+	imageName string,
+) (bool, error) {
+	stmt := databaseg.Builder.Delete("registry_blobs").
+		Where("rblob_registry_id = ? AND rblob_image_name = ?",
+			registryID, imageName)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return false, fmt.Errorf("failed to convert purge registry query to sql: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, r.db)
+
+	result, err := db.ExecContext(ctx, sql, args...)
+	if err != nil {
+		return false, databaseg.ProcessSQLErrorf(ctx, err, "error unlinking blobs")
+	}
+
+	affected, err := result.RowsAffected()
+	return affected > 0, err
+}
+
 func mapToInternalRegistryBlob(
 	ctx context.Context, registryID int64, blobID int64,
 	imageName string,

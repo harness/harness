@@ -54,6 +54,7 @@ type APIController struct {
 	DownloadStatRepository       store.DownloadStatRepository
 	RegistryIndexService         index.Service
 	SetupDetailsAuthHeaderPrefix string
+	RegistryBlobStore            store.RegistryBlobRepository
 }
 
 func NewAPIController(
@@ -81,6 +82,7 @@ func NewAPIController(
 	downloadStatRepository store.DownloadStatRepository,
 	registryIndexService index.Service,
 	setupDetailsAuthHeaderPrefix string,
+	registryBlobStore store.RegistryBlobRepository,
 ) *APIController {
 	return &APIController{
 		fileManager:                  fileManager,
@@ -107,5 +109,6 @@ func NewAPIController(
 		DownloadStatRepository:       downloadStatRepository,
 		RegistryIndexService:         registryIndexService,
 		SetupDetailsAuthHeaderPrefix: setupDetailsAuthHeaderPrefix,
+		RegistryBlobStore:            registryBlobStore,
 	}
 }

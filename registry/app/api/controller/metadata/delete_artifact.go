@@ -136,10 +136,22 @@ func (c *APIController) deleteOCIImage(
 ) error {
 	err := c.tx.WithTx(
 		ctx, func(ctx context.Context) error {
-			// Delete tags linked to the image
-			err := c.TagStore.DeleteTagsByImageName(ctx, regInfo.RegistryID, artifactName)
+			// Delete manifests linked to the image
+			_, err := c.ManifestStore.DeleteManifestByImageName(ctx, regInfo.RegistryID, artifactName)
 			if err != nil {
-				return fmt.Errorf("failed to delete artifact: %w", err)
+				return fmt.Errorf("failed to delete manifests: %w", err)
+			}
+
+			// Delete registry blobs linked to the image
+			_, err = c.RegistryBlobStore.UnlinkBlobByImageName(ctx, regInfo.RegistryID, artifactName)
+			if err != nil {
+				return fmt.Errorf("failed to delete registry blobs: %w", err)
+			}
+
+			// Delete Artifacts linked to image
+			err = c.ArtifactStore.DeleteByImageNameAndRegistryID(ctx, regInfo.RegistryID, artifactName)
+			if err != nil {
+				return fmt.Errorf("failed to delete versions: %w", err)
 			}
 
 			// Delete image
