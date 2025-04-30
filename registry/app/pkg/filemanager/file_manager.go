@@ -216,7 +216,7 @@ func (f *FileManager) SaveNode(
 	err := f.nodesDao.Create(ctx, node)
 	if err != nil {
 		return "", fmt.Errorf("failed to create the node: %s, "+
-			"for path := %s", segment, filePath)
+			"for path := %s, %w", segment, filePath, err)
 	}
 	return node.ID, nil
 }

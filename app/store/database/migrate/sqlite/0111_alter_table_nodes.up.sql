@@ -10,7 +10,7 @@ CREATE TABLE nodes (
                        node_generic_blob_id TEXT REFERENCES generic_blobs (generic_blob_id),
                        node_created_at      INTEGER NOT NULL,
                        node_created_by      INTEGER NOT NULL,
-                       CONSTRAINT unique_nodes UNIQUE (node_name, node_parent_id)
+                       CONSTRAINT unique_nodes UNIQUE (node_registry_id, node_path)
 );
 
 INSERT INTO nodes (
