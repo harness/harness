@@ -28,6 +28,7 @@ import (
 )
 
 const namespaceRepo = "repo"
+const namespaceRegistry = "registry"
 
 type Locker struct {
 	mtxManager lock.MutexManager
@@ -49,7 +50,7 @@ func (l Locker) lock(
 	ctx = logging.NewContext(ctx, func(zc zerolog.Context) zerolog.Context {
 		return zc.
 			Str("key", key).
-			Str("namespace", namespaceRepo).
+			Str("namespace", namespace).
 			Str("expiry", expiry.String())
 	})
 

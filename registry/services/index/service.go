@@ -16,9 +16,14 @@ package index
 
 import (
 	"context"
+	"fmt"
+	"time"
 
+	"github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/registry/app/utils/rpm"
 )
+
+const timeout = 3 * time.Minute
 
 type Service interface {
 	RegenerateRpmRepoData(ctx context.Context, registryID int64, rootParentID int64, rootIdentifier string) error
@@ -26,6 +31,7 @@ type Service interface {
 
 type service struct {
 	rpmRegistryHelper rpm.RegistryHelper
+	locker            *locker.Locker
 }
 
 func (s *service) RegenerateRpmRepoData(
@@ -34,14 +40,24 @@ func (s *service) RegenerateRpmRepoData(
 	rootParentID int64,
 	rootIdentifier string,
 ) error {
-	// TODO: integrate with distributed lock
+	unlock, err := s.locker.LockRpmRepoData(
+		ctx,
+		registryID,
+		timeout,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to lock registry for RPM repo data regeneration: %w", err)
+	}
+	defer unlock()
 	return s.rpmRegistryHelper.BuildRegistryFiles(ctx, registryID, rootParentID, rootIdentifier)
 }
 
 func NewService(
 	rpmRegistryHelper rpm.RegistryHelper,
+	locker *locker.Locker,
 ) Service {
 	return &service{
 		rpmRegistryHelper: rpmRegistryHelper,
+		locker:            locker,
 	}
 }

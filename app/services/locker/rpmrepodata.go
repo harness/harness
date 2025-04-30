@@ -12,23 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package index
+package locker
 
 import (
-	"github.com/harness/gitness/app/services/locker"
-	"github.com/harness/gitness/registry/app/utils/rpm"
-
-	"github.com/google/wire"
+	"context"
+	"fmt"
+	"time"
 )
 
-// WireSet provides a wire set for this package.
-var WireSet = wire.NewSet(
-	ProvideService,
-)
+func (l Locker) LockRpmRepoData(
+	ctx context.Context,
+	registryID int64,
+	expiry time.Duration,
+) (func(), error) {
+	key := fmt.Sprintf("%d/repodata", registryID)
 
-func ProvideService(
-	rpmRegistryHelper rpm.RegistryHelper,
-	locker *locker.Locker,
-) Service {
-	return NewService(rpmRegistryHelper, locker)
+	unlockFn, err := l.lock(ctx, namespaceRegistry, key, expiry)
+	if err != nil {
+		return nil, fmt.Errorf("failed to lock mutex for registry [%d] RPM repodata: %w", registryID, err)
+	}
+
+	return unlockFn, nil
 }
