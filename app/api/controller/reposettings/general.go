@@ -22,7 +22,7 @@ import (
 
 // GeneralSettings represent the general repository settings as exposed externally.
 type GeneralSettings struct {
-	FileSizeLimit *int64 `json:"file_size_limit" yaml:"file_size_limit"`
+	FileSizeLimit *int64 `json:"file_size_limit" yaml:"file_size_limit" description:"file size limit in bytes"`
 	GitLFSEnabled *bool  `json:"git_lfs_enabled" yaml:"git_lfs_enabled"`
 }
 
