@@ -100,7 +100,7 @@ func (i InfraProvisioner) TriggerInfraEventWithOpts(
 		return err
 	}
 
-	_, configMetadata, err := i.getAllParamsFromDB(ctx, gitspaceConfig.InfraProviderResource, infraProvider)
+	allParams, configMetadata, err := i.getAllParamsFromDB(ctx, gitspaceConfig.InfraProviderResource, infraProvider)
 	if err != nil {
 		return fmt.Errorf("could not get all params from DB while provisioning: %w", err)
 	}
@@ -126,6 +126,8 @@ func (i InfraProvisioner) TriggerInfraEventWithOpts(
 				gitspaceConfig,
 				opts.RequiredGitspacePorts,
 				stoppedInfra,
+				configMetadata,
+				allParams,
 			)
 		}
 		return i.provisionExistingInfrastructure(
@@ -145,9 +147,10 @@ func (i InfraProvisioner) TriggerInfraEventWithOpts(
 				*infra,
 				opts.CanDeleteUserData,
 				configMetadata,
+				allParams,
 			)
 		}
-		return infraProvider.Deprovision(ctx, *infra, opts.CanDeleteUserData, configMetadata)
+		return infraProvider.Deprovision(ctx, *infra, opts.CanDeleteUserData, configMetadata, allParams)
 
 	case enum.InfraEventCleanup:
 		return infraProvider.CleanupInstanceResources(ctx, *infra)
@@ -167,6 +170,8 @@ func (i InfraProvisioner) provisionNewInfrastructure(
 	gitspaceConfig types.GitspaceConfig,
 	requiredGitspacePorts []types.GitspacePort,
 	stoppedInfra types.Infrastructure,
+	configMetadata map[string]any,
+	allParams []types.InfraProviderParameter,
 ) error {
 	// Logic for new provisioning...
 	infraProvisionedLatest, _ := i.infraProvisionedStore.FindLatestByGitspaceInstanceID(
@@ -185,12 +190,8 @@ func (i InfraProvisioner) provisionNewInfrastructure(
 	}
 
 	infraProviderResource := gitspaceConfig.InfraProviderResource
-	allParams, configMetadata, err := i.getAllParamsFromDB(ctx, infraProviderResource, infraProvider)
-	if err != nil {
-		return fmt.Errorf("could not get all params from DB while provisioning: %w", err)
-	}
 
-	err = infraProvider.ValidateParams(allParams)
+	err := infraProvider.ValidateParams(allParams)
 	if err != nil {
 		return fmt.Errorf("invalid provisioning params %v: %w", infraProviderResource.Metadata, err)
 	}
@@ -210,6 +211,7 @@ func (i InfraProvisioner) provisionNewInfrastructure(
 		InputParameters:            allParams,
 		ConfigMetadata:             configMetadata,
 		InstanceInfo:               stoppedInfra.InstanceInfo,
+		Status:                     enum.InfraStatusPending,
 	}
 	responseMetadata, err := json.Marshal(infrastructure)
 	if err != nil {
@@ -315,6 +317,7 @@ func (i InfraProvisioner) deprovisionNewInfrastructure(
 	infra types.Infrastructure,
 	canDeleteUserData bool,
 	configMetadata map[string]any,
+	params []types.InfraProviderParameter,
 ) error {
 	infraProvisionedLatest, err := i.infraProvisionedStore.FindLatestByGitspaceInstanceID(
 		ctx, gitspaceConfig.GitspaceInstance.ID)
@@ -328,7 +331,7 @@ func (i InfraProvisioner) deprovisionNewInfrastructure(
 		return nil
 	}
 
-	err = infraProvider.Deprovision(ctx, infra, canDeleteUserData, configMetadata)
+	err = infraProvider.Deprovision(ctx, infra, canDeleteUserData, configMetadata, params)
 	if err != nil {
 		return fmt.Errorf("unable to trigger deprovision infra %+v: %w", infra, err)
 	}

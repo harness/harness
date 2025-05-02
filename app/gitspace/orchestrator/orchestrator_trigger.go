@@ -344,17 +344,18 @@ func (o Orchestrator) TriggerCleanupInstanceResources(ctx context.Context, gitsp
 	return nil
 }
 
-// TriggerDeleteGitspace removes the Gitspace container and triggers infra deprovisioning to deprovision
+// TriggerStopAndDeleteGitspace removes the Gitspace container and triggers infra deprovisioning to deprovision
 // the infra resources.
 // canDeleteUserData = false -> trigger deprovision of all resources except storage associated to user data.
 // canDeleteUserData = true -> trigger deprovision of all resources.
-func (o Orchestrator) TriggerDeleteGitspace(
+func (o Orchestrator) TriggerStopAndDeleteGitspace(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 	canDeleteUserData bool,
 ) error {
 	infra, err := o.getProvisionedInfra(ctx, gitspaceConfig,
 		[]enum.InfraStatus{
+			enum.InfraStatusPending,
 			enum.InfraStatusProvisioned,
 			enum.InfraStatusStopped,
 			enum.InfraStatusDestroyed,
@@ -368,6 +369,8 @@ func (o Orchestrator) TriggerDeleteGitspace(
 	}
 	if err = o.stopAndRemoveGitspaceContainer(ctx, gitspaceConfig, *infra, canDeleteUserData); err != nil {
 		log.Warn().Msgf("error stopping and removing gitspace container: %v", err)
+		// If stop fails, delete the gitspace anyway
+		return o.triggerDeleteGitspace(ctx, gitspaceConfig, infra, canDeleteUserData)
 	}
 
 	// TODO: Add a job for cleanup of infra if stop fails
@@ -375,22 +378,56 @@ func (o Orchestrator) TriggerDeleteGitspace(
 		"Checking and force deleting the infra if required for gitspace instance %s",
 		gitspaceConfig.GitspaceInstance.Identifier,
 	)
-	ticker := time.NewTicker(60 * time.Second)
-	timeout := time.After(15 * time.Minute)
+	if err = o.waitForGitspaceCleanupOrTimeout(ctx, gitspaceConfig, 15*time.Minute, 60*time.Second); err != nil {
+		return o.triggerDeleteGitspace(ctx, gitspaceConfig, infra, canDeleteUserData)
+	}
+	return nil
+}
+
+func (o Orchestrator) triggerDeleteGitspace(
+	ctx context.Context,
+	gitspaceConfig types.GitspaceConfig,
+	infra *types.Infrastructure,
+	canDeleteUserData bool,
+) error {
+	opts := infrastructure.InfraEventOpts{CanDeleteUserData: true}
+	err := o.infraProvisioner.TriggerInfraEventWithOpts(
+		ctx,
+		enum.InfraEventDeprovision,
+		gitspaceConfig,
+		infra,
+		opts,
+	)
+	if err != nil {
+		if canDeleteUserData {
+			o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraDeprovisioningFailed)
+		} else {
+			o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraResetFailed)
+		}
+		return fmt.Errorf(
+			"cannot trigger deprovision infrastructure with gitspace identifier %s: %w",
+			gitspaceConfig.GitspaceInstance.Identifier,
+			err,
+		)
+	}
+	return nil
+}
+
+func (o Orchestrator) waitForGitspaceCleanupOrTimeout(
+	ctx context.Context,
+	gitspaceConfig types.GitspaceConfig,
+	timeoutDuration time.Duration,
+	tickInterval time.Duration,
+) error {
+	ticker := time.NewTicker(tickInterval)
 	defer ticker.Stop()
-	ch := make(chan error)
+
+	timeout := time.After(timeoutDuration)
 
 	for {
 		select {
-		case msg := <-ch:
-			if msg == nil {
-				return msg
-			}
 		case <-ticker.C:
-			instance, err := o.gitspaceInstanceStore.Find(
-				ctx,
-				gitspaceConfig.GitspaceInstance.ID,
-			)
+			instance, err := o.gitspaceInstanceStore.Find(ctx, gitspaceConfig.GitspaceInstance.ID)
 			if err != nil {
 				return fmt.Errorf(
 					"failed to find gitspace instance %s: %w",
@@ -403,27 +440,10 @@ func (o Orchestrator) TriggerDeleteGitspace(
 				return nil
 			}
 		case <-timeout:
-			opts := infrastructure.InfraEventOpts{CanDeleteUserData: true}
-			err := o.infraProvisioner.TriggerInfraEventWithOpts(
-				ctx,
-				enum.InfraEventDeprovision,
-				gitspaceConfig,
-				infra,
-				opts,
+			return fmt.Errorf(
+				"timeout waiting for gitspace cleanup for instance %s",
+				gitspaceConfig.GitspaceInstance.Identifier,
 			)
-			if err != nil {
-				if canDeleteUserData {
-					o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraDeprovisioningFailed)
-				} else {
-					o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraResetFailed)
-				}
-				return fmt.Errorf(
-					"cannot trigger deprovision infrastructure with gitspace identifier %s: %w",
-					gitspaceConfig.GitspaceInstance.Identifier,
-					err,
-				)
-			}
-			return nil
 		}
 	}
 }

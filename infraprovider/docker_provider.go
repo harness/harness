@@ -208,6 +208,7 @@ func (d DockerProvider) Deprovision(
 	infra types.Infrastructure,
 	canDeleteUserData bool,
 	_ map[string]any,
+	_ []types.InfraProviderParameter,
 ) error {
 	if canDeleteUserData {
 		err := d.deleteVolume(ctx, infra)

@@ -67,6 +67,7 @@ type InfraProvider interface {
 		infra types.Infrastructure,
 		canDeleteUserData bool,
 		configMetadata map[string]any,
+		params []types.InfraProviderParameter,
 	) error
 
 	// AvailableParams provides a schema to define the infrastructure.

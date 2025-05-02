@@ -89,7 +89,7 @@ func (c *Service) RemoveGitspace(ctx context.Context, config types.GitspaceConfi
 		)
 	}
 
-	if err := c.orchestrator.TriggerDeleteGitspace(ctx, config, canDeleteUserData); err != nil {
+	if err := c.orchestrator.TriggerStopAndDeleteGitspace(ctx, config, canDeleteUserData); err != nil {
 		log.Ctx(ctx).Err(err).Msgf("error during triggering delete for gitspace instance %s",
 			config.GitspaceInstance.Identifier)
 		config.GitspaceInstance.State = enum.GitspaceInstanceStateError
