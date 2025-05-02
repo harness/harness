@@ -58,14 +58,12 @@ func (a *ArtifactInfo) SetRepoKey(key string) {
 }
 
 type MavenArtifactInfo struct {
-	*BaseInfo
-	RegIdentifier string
-	RegistryID    int64
-	GroupID       string
-	ArtifactID    string
-	Version       string
-	FileName      string
-	Path          string
+	*ArtifactInfo
+	GroupID    string
+	ArtifactID string
+	Version    string
+	FileName   string
+	Path       string
 }
 
 type GenericArtifactInfo struct {

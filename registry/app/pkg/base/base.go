@@ -80,6 +80,8 @@ type LocalBase interface {
 
 	Exists(ctx context.Context, info pkg.ArtifactInfo, version string, fileName string) bool
 
+	ExistsByFilePath(ctx context.Context, registryID int64, filePath string) (bool, error)
+
 	CheckIfVersionExists(ctx context.Context, info pkg.PackageArtifactInfo) (bool, error)
 
 	DeletePackage(ctx context.Context, info pkg.PackageArtifactInfo) error
@@ -309,6 +311,11 @@ func (l *localBase) Download(
 func (l *localBase) Exists(ctx context.Context, info pkg.ArtifactInfo, version string, fileName string) bool {
 	exists, _, _ := l.GetSHA256(ctx, info, version, fileName)
 	return exists
+}
+
+func (l *localBase) ExistsByFilePath(ctx context.Context, registryID int64, filePath string) (bool, error) {
+	exists, _, err := l.GetSHA256ByPath(ctx, registryID, filePath)
+	return exists, err
 }
 
 func (l *localBase) CheckIfVersionExists(ctx context.Context, info pkg.PackageArtifactInfo) (bool, error) {

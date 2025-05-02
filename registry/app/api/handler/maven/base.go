@@ -112,19 +112,23 @@ func (h *Handler) GetArtifactInfo(r *http.Request, remoteSupport bool) (pkg.Mave
 	pathRoot := getPathRoot(r.Context())
 
 	info := &pkg.MavenArtifactInfo{
-		BaseInfo: &pkg.BaseInfo{
-			PathRoot:       pathRoot,
-			RootIdentifier: rootIdentifier,
-			RootParentID:   rootSpace.ID,
-			ParentID:       registry.ParentID,
+		ArtifactInfo: &pkg.ArtifactInfo{
+			BaseInfo: &pkg.BaseInfo{
+				PathRoot:       pathRoot,
+				RootIdentifier: rootIdentifier,
+				RootParentID:   rootSpace.ID,
+				ParentID:       registry.ParentID,
+			},
+			Registry:      *registry,
+			RegIdentifier: registryIdentifier,
+			RegistryID:    registry.ID,
+			Image:         groupID + ":" + artifactID,
 		},
-		RegIdentifier: registryIdentifier,
-		RegistryID:    registry.ID,
-		GroupID:       groupID,
-		ArtifactID:    artifactID,
-		Version:       version,
-		FileName:      fileName,
-		Path:          r.URL.Path,
+		GroupID:    groupID,
+		ArtifactID: artifactID,
+		Version:    version,
+		FileName:   fileName,
+		Path:       r.URL.Path,
 	}
 
 	log.Ctx(ctx).Info().Msgf("Dispatch: URI: %s", path)

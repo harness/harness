@@ -18,6 +18,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -26,6 +27,7 @@ import (
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/metadata"
 	"github.com/harness/gitness/registry/app/pkg"
+	"github.com/harness/gitness/registry/app/pkg/base"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/maven/utils"
@@ -39,11 +41,13 @@ const (
 )
 
 func NewLocalRegistry(
-	dBStore *DBStore, tx dbtx.Transactor,
-
+	localBase base.LocalBase,
+	dBStore *DBStore,
+	tx dbtx.Transactor,
 	fileManager filemanager.FileManager,
 ) Registry {
 	return &LocalRegistry{
+		localBase:   localBase,
 		DBStore:     dBStore,
 		tx:          tx,
 		fileManager: fileManager,
@@ -51,6 +55,7 @@ func NewLocalRegistry(
 }
 
 type LocalRegistry struct {
+	localBase   base.LocalBase
 	DBStore     *DBStore
 	tx          dbtx.Transactor
 	fileManager filemanager.FileManager
@@ -120,6 +125,21 @@ func (r *LocalRegistry) PutArtifact(ctx context.Context, info pkg.MavenArtifactI
 	responseHeaders *commons.ResponseHeaders, errs []error,
 ) {
 	filePath := utils.GetFilePath(info)
+	fileExists, err := r.localBase.ExistsByFilePath(ctx, info.RegistryID, strings.TrimPrefix(filePath, "/"))
+	if err != nil {
+		return responseHeaders, []error{
+			fmt.Errorf("error occurred while checking file existence for GroupID: %s, "+
+				"ArtifactID: %s and Version: %s with file name: %s in registry: %s with error: %w",
+				info.GroupID, info.ArtifactID, info.Version, info.FileName, info.RegIdentifier, err)}
+	}
+	if fileExists {
+		return responseHeaders, []error{
+			fmt.Errorf("file already exists for GroupID: %s, "+
+				"ArtifactID: %s and Version: %s with file name: %s in registry: %s. "+
+				"Try deleting this version and push it again", info.GroupID, info.ArtifactID,
+				info.Version, info.FileName, info.RegIdentifier)}
+	}
+
 	fileInfo, err := r.fileManager.UploadFile(ctx, filePath,
 		info.RegistryID, info.RootParentID, info.RootIdentifier, nil, fileReader, info.FileName)
 	if err != nil {

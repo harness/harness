@@ -18,6 +18,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/refcache"
 	corestore "github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/registry/app/pkg/base"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/remote/controller/proxy/maven"
 	"github.com/harness/gitness/registry/app/store"
@@ -28,12 +29,14 @@ import (
 )
 
 func LocalRegistryProvider(
+	localBase base.LocalBase,
 	dBStore *DBStore,
 	tx dbtx.Transactor,
 	fileManager filemanager.FileManager,
 ) *LocalRegistry {
 	//nolint:errcheck
-	return NewLocalRegistry(dBStore,
+	return NewLocalRegistry(localBase,
+		dBStore,
 		tx,
 		fileManager,
 	).(*LocalRegistry)
