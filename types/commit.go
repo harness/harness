@@ -18,4 +18,10 @@ package types
 type CommitFilesResponse struct {
 	CommitID string `json:"commit_id"`
 	DryRunRulesOutput
+	ChangedFiles []FileReference `json:"changed_files"`
+}
+
+type FileReference struct {
+	Path string `json:"path"`
+	SHA  string `json:"blob_sha"`
 }

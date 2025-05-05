@@ -73,6 +73,17 @@ func (in *CommitFilesOptions) Sanitize() error {
 	return nil
 }
 
+func mapChangedFiles(files []git.FileReference) []types.FileReference {
+	changedFiles := make([]types.FileReference, len(files))
+	for i, file := range files {
+		changedFiles[i] = types.FileReference{
+			Path: file.Path,
+			SHA:  file.SHA.String(),
+		}
+	}
+	return changedFiles
+}
+
 func (c *Controller) CommitFiles(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
@@ -214,5 +225,6 @@ func (c *Controller) CommitFiles(ctx context.Context,
 		DryRunRulesOutput: types.DryRunRulesOutput{
 			RuleViolations: violations,
 		},
+		ChangedFiles: mapChangedFiles(commit.ChangedFiles),
 	}, nil, nil
 }

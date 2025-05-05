@@ -502,25 +502,25 @@ func (r *SharedRepo) CreateFile(
 	treeishSHA sha.SHA,
 	filePath, mode string,
 	payload []byte,
-) error {
+) (sha.SHA, error) {
 	// only check path availability if a source commit is available (empty repo won't have such a commit)
 	if !treeishSHA.IsEmpty() {
 		if err := r.checkPathAvailability(ctx, treeishSHA, filePath, true); err != nil {
-			return err
+			return sha.None, err
 		}
 	}
 
 	objectSHA, err := r.WriteGitObject(ctx, bytes.NewReader(payload))
 	if err != nil {
-		return fmt.Errorf("createFile: error hashing object: %w", err)
+		return sha.None, fmt.Errorf("createFile: error hashing object: %w", err)
 	}
 
 	// Add the object to the index
 	if err = r.AddObjectToIndex(ctx, mode, objectSHA, filePath); err != nil {
-		return fmt.Errorf("createFile: error creating object: %w", err)
+		return sha.None, fmt.Errorf("createFile: error creating object: %w", err)
 	}
 
-	return nil
+	return objectSHA, nil
 }
 
 func (r *SharedRepo) UpdateFile(
@@ -530,11 +530,11 @@ func (r *SharedRepo) UpdateFile(
 	objectSHA sha.SHA,
 	mode string,
 	payload []byte,
-) error {
+) (sha.SHA, error) {
 	// get file mode from existing file (default unless executable)
 	entry, err := r.getFileEntry(ctx, treeishSHA, objectSHA, filePath)
 	if err != nil {
-		return err
+		return sha.None, err
 	}
 
 	if entry.IsExecutable() {
@@ -543,14 +543,14 @@ func (r *SharedRepo) UpdateFile(
 
 	objectSHA, err = r.WriteGitObject(ctx, bytes.NewReader(payload))
 	if err != nil {
-		return fmt.Errorf("updateFile: error hashing object: %w", err)
+		return sha.None, fmt.Errorf("updateFile: error hashing object: %w", err)
 	}
 
 	if err = r.AddObjectToIndex(ctx, mode, objectSHA, filePath); err != nil {
-		return fmt.Errorf("updateFile: error updating object: %w", err)
+		return sha.None, fmt.Errorf("updateFile: error updating object: %w", err)
 	}
 
-	return nil
+	return objectSHA, nil
 }
 
 func (r *SharedRepo) MoveFile(
@@ -560,21 +560,21 @@ func (r *SharedRepo) MoveFile(
 	objectSHA sha.SHA,
 	mode string,
 	payload []byte,
-) (string, error) {
+) (string, sha.SHA, error) {
 	newPath, newContent, err := parseMovePayload(payload)
 	if err != nil {
-		return "", err
+		return "", sha.None, err
 	}
 
 	// ensure file exists and matches SHA
 	entry, err := r.getFileEntry(ctx, treeishSHA, objectSHA, filePath)
 	if err != nil {
-		return "", err
+		return "", sha.None, err
 	}
 
 	// ensure new path is available
 	if err = r.checkPathAvailability(ctx, treeishSHA, newPath, false); err != nil {
-		return "", err
+		return "", sha.None, err
 	}
 
 	var fileHash sha.SHA
@@ -582,7 +582,7 @@ func (r *SharedRepo) MoveFile(
 	if newContent != nil {
 		hash, err := r.WriteGitObject(ctx, bytes.NewReader(newContent))
 		if err != nil {
-			return "", fmt.Errorf("moveFile: error hashing object: %w", err)
+			return "", sha.None, fmt.Errorf("moveFile: error hashing object: %w", err)
 		}
 
 		fileHash = hash
@@ -597,14 +597,14 @@ func (r *SharedRepo) MoveFile(
 	}
 
 	if err = r.AddObjectToIndex(ctx, fileMode, fileHash, newPath); err != nil {
-		return "", fmt.Errorf("moveFile: add object error: %w", err)
+		return "", sha.None, fmt.Errorf("moveFile: add object error: %w", err)
 	}
 
 	if err = r.RemoveFilesFromIndex(ctx, filePath); err != nil {
-		return "", fmt.Errorf("moveFile: remove object error: %w", err)
+		return "", sha.None, fmt.Errorf("moveFile: remove object error: %w", err)
 	}
 
-	return newPath, nil
+	return newPath, fileHash, nil
 }
 
 func (r *SharedRepo) DeleteFile(ctx context.Context, filePath string) error {
@@ -628,25 +628,25 @@ func (r *SharedRepo) PatchTextFile(
 	filePath string,
 	objectSHA sha.SHA,
 	payloadsRaw [][]byte,
-) error {
+) (sha.SHA, error) {
 	payloads, err := parsePatchTextFilePayloads(payloadsRaw)
 	if err != nil {
-		return err
+		return sha.None, err
 	}
 
 	entry, err := r.getFileEntry(ctx, treeishSHA, objectSHA, filePath)
 	if err != nil {
-		return err
+		return sha.None, err
 	}
 
 	blob, err := api.GetBlob(ctx, r.repoPath, nil, entry.SHA, 0)
 	if err != nil {
-		return fmt.Errorf("error reading blob: %w", err)
+		return sha.None, fmt.Errorf("error reading blob: %w", err)
 	}
 
 	scanner, lineEnding, err := parser.ReadTextFile(blob.Content, nil)
 	if err != nil {
-		return fmt.Errorf("error reading blob as text file: %w", err)
+		return sha.None, fmt.Errorf("error reading blob as text file: %w", err)
 	}
 
 	pipeReader, pipeWriter := io.Pipe()
@@ -660,14 +660,14 @@ func (r *SharedRepo) PatchTextFile(
 
 	objectSHA, err = r.WriteGitObject(ctx, pipeReader)
 	if err != nil {
-		return fmt.Errorf("error writing patched file to git store: %w", err)
+		return sha.None, fmt.Errorf("error writing patched file to git store: %w", err)
 	}
 
 	if err = r.AddObjectToIndex(ctx, entry.Mode.String(), objectSHA, filePath); err != nil {
-		return fmt.Errorf("error updating object: %w", err)
+		return sha.None, fmt.Errorf("error updating object: %w", err)
 	}
 
-	return nil
+	return objectSHA, nil
 }
 
 // nolint: gocognit, gocyclo, cyclop

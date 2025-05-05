@@ -81,8 +81,14 @@ func (p *CommitFilesParams) Validate() error {
 	return p.WriteParams.Validate()
 }
 
+type FileReference struct {
+	Path string
+	SHA  sha.SHA
+}
+
 type CommitFilesResponse struct {
-	CommitID sha.SHA
+	CommitID     sha.SHA
+	ChangedFiles []FileReference
 }
 
 //nolint:gocognit,nestif
@@ -134,6 +140,7 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 	// ref updater
 	var refOldSHA sha.SHA
 	var refNewSHA sha.SHA
+	var changedFiles []FileReference
 
 	branchRef := api.GetReferenceFromBranchName(params.Branch)
 	if params.Branch != params.NewBranch {
@@ -150,14 +157,13 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 	}
 
 	// run the actions in a shared repo
-
 	err = sharedrepo.Run(ctx, refUpdater, s.sharedRepoRoot, repoPath, func(r *sharedrepo.SharedRepo) error {
 		var parentCommits []sha.SHA
 		var oldTreeSHA sha.SHA
 
 		if isEmpty {
 			oldTreeSHA = sha.EmptyTree
-			err = s.prepareTreeEmptyRepo(ctx, r, params.Actions)
+			changedFiles, err = s.prepareTreeEmptyRepo(ctx, r, params.Actions)
 			if err != nil {
 				return fmt.Errorf("failed to prepare empty tree: %w", err)
 			}
@@ -176,7 +182,7 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 				return fmt.Errorf("failed to set index in shared repository: %w", err)
 			}
 
-			err = s.prepareTree(ctx, r, commit.SHA, params.Actions)
+			changedFiles, err = s.prepareTree(ctx, r, commit.SHA, params.Actions)
 			if err != nil {
 				return fmt.Errorf("failed to prepare tree: %w", err)
 			}
@@ -238,16 +244,9 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 		return CommitFilesResponse{}, fmt.Errorf("CommitFiles: failed to create commit in shared repository: %w", err)
 	}
 
-	// get commit
-
-	commit, err = s.git.GetCommit(ctx, repoPath, refNewSHA.String())
-	if err != nil {
-		return CommitFilesResponse{}, fmt.Errorf("failed to get commit for SHA %s: %w",
-			refNewSHA.String(), err)
-	}
-
 	return CommitFilesResponse{
-		CommitID: commit.SHA,
+		CommitID:     refNewSHA,
+		ChangedFiles: changedFiles,
 	}, nil
 }
 
@@ -256,12 +255,14 @@ func (s *Service) prepareTree(
 	r *sharedrepo.SharedRepo,
 	treeishSHA sha.SHA,
 	actions []CommitFileAction,
-) error {
+) ([]FileReference, error) {
 	// patch file actions are executed in batch for a single file
 	patchMap := map[string][]*CommitFileAction{}
 
 	// keep track of what paths have been written to detect conflicting actions
 	modifiedPaths := map[string]bool{}
+
+	fileRefs := make([]FileReference, 0, len(actions))
 
 	for i := range actions {
 		act := &actions[i]
@@ -272,14 +273,19 @@ func (s *Service) prepareTree(
 			continue
 		}
 		// anything else is executed as is
-		modifiedPath, err := s.processAction(ctx, r, treeishSHA, act)
+		modifiedPath, objectSHA, err := s.processAction(ctx, r, treeishSHA, act)
 		if err != nil {
-			return fmt.Errorf("failed to process action %s on %q: %w", act.Action, act.Path, err)
+			return nil, fmt.Errorf("failed to process action %s on %q: %w", act.Action, act.Path, err)
 		}
 
 		if modifiedPaths[modifiedPath] {
-			return errors.InvalidArgument("More than one conflicting actions are modifying file %q.", modifiedPath)
+			return nil, errors.InvalidArgument("More than one conflicting actions are modifying file %q.", modifiedPath)
 		}
+
+		fileRefs = append(fileRefs, FileReference{
+			Path: modifiedPath,
+			SHA:  objectSHA,
+		})
 		modifiedPaths[modifiedPath] = true
 	}
 
@@ -296,7 +302,7 @@ func (s *Service) prepareTree(
 
 			// there can only be one file sha for a given path and commit.
 			if !act.SHA.IsEmpty() && !fileSHA.Equal(act.SHA) {
-				return errors.InvalidArgument(
+				return nil, errors.InvalidArgument(
 					"patch text actions for %q contain different SHAs %q and %q",
 					filePath,
 					act.SHA,
@@ -305,40 +311,54 @@ func (s *Service) prepareTree(
 			}
 		}
 
-		if err := r.PatchTextFile(ctx, treeishSHA, filePath, fileSHA, payloads); err != nil {
-			return fmt.Errorf("failed to process action %s on %q: %w", PatchTextAction, filePath, err)
+		objectSHA, err := r.PatchTextFile(ctx, treeishSHA, filePath, fileSHA, payloads)
+		if err != nil {
+			return nil, fmt.Errorf("failed to process action %s on %q: %w", PatchTextAction, filePath, err)
 		}
 
 		if modifiedPaths[filePath] {
-			return errors.InvalidArgument("More than one conflicting action are modifying file %q.", filePath)
+			return nil, errors.InvalidArgument("More than one conflicting action are modifying file %q.", filePath)
 		}
+
+		fileRefs = append(fileRefs, FileReference{
+			Path: filePath,
+			SHA:  objectSHA,
+		})
 		modifiedPaths[filePath] = true
 	}
 
-	return nil
+	return fileRefs, nil
 }
 
 func (s *Service) prepareTreeEmptyRepo(
 	ctx context.Context,
 	r *sharedrepo.SharedRepo,
 	actions []CommitFileAction,
-) error {
+) ([]FileReference, error) {
+	fileRefs := make([]FileReference, 0, len(actions))
+
 	for _, action := range actions {
 		if action.Action != CreateAction {
-			return errors.PreconditionFailed("action not allowed on empty repository")
+			return nil, errors.PreconditionFailed("action not allowed on empty repository")
 		}
 
 		filePath := api.CleanUploadFileName(action.Path)
 		if filePath == "" {
-			return errors.InvalidArgument("invalid path")
+			return nil, errors.InvalidArgument("invalid path")
 		}
 
-		if err := r.CreateFile(ctx, sha.None, filePath, filePermissionDefault, action.Payload); err != nil {
-			return errors.Internal(err, "failed to create file '%s'", action.Path)
+		objectSHA, err := r.CreateFile(ctx, sha.None, filePath, filePermissionDefault, action.Payload)
+		if err != nil {
+			return nil, errors.Internal(err, "failed to create file '%s'", action.Path)
 		}
+
+		fileRefs = append(fileRefs, FileReference{
+			Path: filePath,
+			SHA:  objectSHA,
+		})
 	}
 
-	return nil
+	return fileRefs, nil
 }
 
 func (s *Service) validateAndPrepareCommitFilesHeader(
@@ -393,26 +413,27 @@ func (s *Service) processAction(
 	r *sharedrepo.SharedRepo,
 	treeishSHA sha.SHA,
 	action *CommitFileAction,
-) (modifiedPath string, err error) {
+) (modifiedPath string, objectSHA sha.SHA, err error) {
 	filePath := api.CleanUploadFileName(action.Path)
 	if filePath == "" {
-		return "", errors.InvalidArgument("path cannot be empty")
+		return "", sha.None, errors.InvalidArgument("path cannot be empty")
 	}
 	modifiedPath = filePath
 	switch action.Action {
 	case CreateAction:
-		err = r.CreateFile(ctx, treeishSHA, filePath, filePermissionDefault, action.Payload)
+		objectSHA, err = r.CreateFile(ctx, treeishSHA, filePath, filePermissionDefault, action.Payload)
 	case UpdateAction:
-		err = r.UpdateFile(ctx, treeishSHA, filePath, action.SHA, filePermissionDefault, action.Payload)
+		objectSHA, err = r.UpdateFile(ctx, treeishSHA, filePath, action.SHA, filePermissionDefault, action.Payload)
 	case MoveAction:
-		modifiedPath, err = r.MoveFile(ctx, treeishSHA, filePath, action.SHA, filePermissionDefault, action.Payload)
+		modifiedPath, objectSHA, err =
+			r.MoveFile(ctx, treeishSHA, filePath, action.SHA, filePermissionDefault, action.Payload)
 	case DeleteAction:
 		err = r.DeleteFile(ctx, filePath)
 	case PatchTextAction:
-		return "", fmt.Errorf("action %s not supported by this method", action.Action)
+		return "", sha.None, fmt.Errorf("action %s not supported by this method", action.Action)
 	default:
 		err = fmt.Errorf("unknown file action %q", action.Action)
 	}
 
-	return modifiedPath, err
+	return modifiedPath, objectSHA, err
 }
