@@ -40,8 +40,10 @@ enum CloneType {
 export function CloneButtonTooltip({ httpsURL, sshURL }: CloneButtonTooltipProps) {
   const { getString } = useStrings()
   const [flag, setFlag] = useState(false)
-  const { isCurrentSessionPublic } = useAppContext()
+  const { isCurrentSessionPublic, hooks, standalone } = useAppContext()
   const [type, setType] = useState(CloneType.HTTPS)
+  const { CODE_SSH_ENABLED } = hooks?.useFeatureFlags()
+  const isSSHEnabled = CODE_SSH_ENABLED || standalone
   return (
     <Container className={css.container} padding="xlarge">
       <Layout.Vertical spacing="small">
@@ -58,7 +60,7 @@ export function CloneButtonTooltip({ httpsURL, sshURL }: CloneButtonTooltipProps
           />
         </Container>
         <Text font={{ variation: FontVariation.H4 }}>{getString('cloneHTTPS')}</Text>
-        {sshURL ? (
+        {isSSHEnabled && sshURL ? (
           <Container padding={{ top: 'small' }}>
             <Layout.Vertical>
               <Container padding={{ bottom: 'medium' }}>
