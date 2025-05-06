@@ -31,6 +31,9 @@ type Handler interface {
 	UploadPackage(writer http.ResponseWriter, request *http.Request)
 	DownloadPackage(http.ResponseWriter, *http.Request)
 	GetServiceEndpoint(http.ResponseWriter, *http.Request)
+	ListPackageVersion(http.ResponseWriter, *http.Request)
+	GetPackageMetadata(http.ResponseWriter, *http.Request)
+	GetPackageVersionMetadata(http.ResponseWriter, *http.Request)
 }
 
 type handler struct {

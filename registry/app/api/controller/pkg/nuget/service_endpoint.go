@@ -65,7 +65,7 @@ func (c *controller) GetServiceEndpoint(
 	if !ok {
 		return &GetServiceEndpointResponse{
 			BaseResponse{
-				fmt.Errorf("invalid registry type: expected nuget.Registry"),
+				fmt.Errorf("invalid response type: expected GetServiceEndpointResponse"),
 				nil,
 			}, nil,
 		}

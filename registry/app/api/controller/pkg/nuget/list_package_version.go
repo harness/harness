@@ -17,7 +17,6 @@ package nuget
 import (
 	"context"
 	"fmt"
-	"io"
 
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/base"
@@ -27,49 +26,49 @@ import (
 	registrytypes "github.com/harness/gitness/registry/types"
 )
 
-func (c *controller) UploadPackage(
+func (c *controller) ListPackageVersion(
 	ctx context.Context,
 	info nugettype.ArtifactInfo,
-	fileReader io.ReadCloser,
-) *PutArtifactResponse {
+) *ListPackageVersionResponse {
 	f := func(registry registrytypes.Registry, a pkg.Artifact) response.Response {
 		info.RegIdentifier = registry.Name
 		info.RegistryID = registry.ID
 		nugetRegistry, ok := a.(nuget.Registry)
 		if !ok {
-			return &PutArtifactResponse{
+			return &ListPackageVersionResponse{
 				BaseResponse{
-					Error:           fmt.Errorf("invalid registry type: expected nuget.Registry"),
-					ResponseHeaders: nil,
-				},
+					fmt.Errorf("invalid registry type: expected nuget.Registry"),
+					nil,
+				}, nil,
 			}
 		}
-		headers, _, err := nugetRegistry.UploadPackage(ctx, info, fileReader)
-		return &PutArtifactResponse{
+		packageVersions, err := nugetRegistry.ListPackageVersion(ctx, info)
+		return &ListPackageVersionResponse{
 			BaseResponse{
-				Error:           err,
-				ResponseHeaders: headers,
-			},
+				err,
+				nil,
+			}, packageVersions,
 		}
 	}
 
-	result, err := base.NoProxyWrapper(ctx, c.registryDao, f, info)
+	result, err := base.ProxyWrapper(ctx, c.registryDao, f, info)
+
 	if err != nil {
-		return &PutArtifactResponse{
+		return &ListPackageVersionResponse{
 			BaseResponse{
-				Error:           err,
-				ResponseHeaders: nil,
-			},
+				err,
+				nil,
+			}, nil,
 		}
 	}
-	uploadResponse, ok := result.(*PutArtifactResponse)
+	listPackageVersionResponse, ok := result.(*ListPackageVersionResponse)
 	if !ok {
-		return &PutArtifactResponse{
+		return &ListPackageVersionResponse{
 			BaseResponse{
-				Error:           fmt.Errorf("invalid response type: expected PutArtifactResponse"),
-				ResponseHeaders: nil,
-			},
+				fmt.Errorf("invalid response type: expected ListPackageVersionResponse"),
+				nil,
+			}, nil,
 		}
 	}
-	return uploadResponse
+	return listPackageVersionResponse
 }

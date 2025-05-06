@@ -67,7 +67,7 @@ func (c *controller) DownloadPackage(
 	if !ok {
 		return &GetArtifactResponse{
 			BaseResponse{
-				fmt.Errorf("invalid registry type: expected nuget.Registry"),
+				fmt.Errorf("invalid response type: expected GetArtifactResponse"),
 				nil,
 			}, "", nil, nil,
 		}

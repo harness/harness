@@ -123,6 +123,15 @@ func NewRouter(
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/index.json", nugetHandler.GetServiceEndpoint)
+			r.With(middleware.StoreArtifactInfo(nugetHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Get("/package/{id}/index.json", nugetHandler.ListPackageVersion)
+			r.With(middleware.StoreArtifactInfo(nugetHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Get("/registration/{id}/index.json", nugetHandler.GetPackageMetadata)
+			r.With(middleware.StoreArtifactInfo(nugetHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Get("/registration/{id}/{version}", nugetHandler.GetPackageVersionMetadata)
 		})
 
 		r.Route("/npm", func(r chi.Router) {

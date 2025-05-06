@@ -40,5 +40,11 @@ type Registry interface {
 		error,
 	)
 
+	ListPackageVersion(ctx context.Context, info nuget.ArtifactInfo) (*nuget.PackageVersion, error)
+
+	GetPackageMetadata(ctx context.Context, info nuget.ArtifactInfo) (*nuget.RegistrationIndexResponse, error)
+
+	GetPackageVersionMetadata(ctx context.Context, info nuget.ArtifactInfo) (*nuget.RegistrationLeafResponse, error)
+
 	GetServiceEndpoint(ctx context.Context, info nuget.ArtifactInfo) *nuget.ServiceEndpoint
 }

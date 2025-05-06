@@ -50,3 +50,18 @@ type GetArtifactResponse struct {
 type PutArtifactResponse struct {
 	BaseResponse
 }
+
+type ListPackageVersionResponse struct {
+	BaseResponse
+	PackageVersion *nuget.PackageVersion
+}
+
+type GetPackageMetadataResponse struct {
+	BaseResponse
+	RegistrationIndexResponse *nuget.RegistrationIndexResponse
+}
+
+type GetPackageVersionMetadataResponse struct {
+	BaseResponse
+	RegistrationLeafResponse *nuget.RegistrationLeafResponse
+}

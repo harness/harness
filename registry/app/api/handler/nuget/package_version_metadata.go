@@ -15,6 +15,7 @@
 package nuget
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -24,7 +25,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (h *handler) DownloadPackage(w http.ResponseWriter, r *http.Request) {
+func (h *handler) GetPackageVersionMetadata(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	info, ok := request.ArtifactInfoFrom(ctx).(*nugettype.ArtifactInfo)
 	if !ok {
@@ -32,32 +33,15 @@ func (h *handler) DownloadPackage(w http.ResponseWriter, r *http.Request) {
 		h.HandleErrors(r.Context(), []error{fmt.Errorf("failed to fetch info from context")}, w)
 		return
 	}
-
-	response := h.controller.DownloadPackage(ctx, *info)
-
-	defer func() {
-		if response.Body != nil {
-			err := response.Body.Close()
-			if err != nil {
-				log.Ctx(ctx).Error().Msgf("Failed to close body: %v", err)
-			}
-		}
-		if response.ReadCloser != nil {
-			err := response.ReadCloser.Close()
-			if err != nil {
-				log.Ctx(ctx).Error().Msgf("Failed to close readcloser: %v", err)
-			}
-		}
-	}()
+	response := h.controller.GetPackageVersionMetadata(r.Context(), *info)
 
 	if response.GetError() != nil {
 		h.HandleError(r.Context(), w, response.GetError())
-	}
-
-	if response.RedirectURL != "" {
-		http.Redirect(w, r, response.RedirectURL, http.StatusTemporaryRedirect)
 		return
 	}
-	h.ServeContent(w, r, response.Body, info.Filename)
-	response.ResponseHeaders.WriteToResponse(w)
+	err := json.NewEncoder(w).Encode(response.RegistrationLeafResponse)
+	if err != nil {
+		h.HandleErrors(r.Context(), []error{err}, w)
+		return
+	}
 }

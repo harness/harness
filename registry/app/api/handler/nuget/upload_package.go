@@ -18,7 +18,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/harness/gitness/registry/app/pkg/commons"
+	"github.com/harness/gitness/registry/app/api/handler/utils"
+	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	nugettype "github.com/harness/gitness/registry/app/pkg/types/nuget"
 	"github.com/harness/gitness/registry/request"
 
@@ -26,15 +27,23 @@ import (
 )
 
 func (h *handler) UploadPackage(w http.ResponseWriter, r *http.Request) {
+	fileReader, _, err := utils.GetFileReader(r, "package")
+	if err != nil {
+		h.HandleErrors2(r.Context(), errcode.ErrCodeInvalidRequest.WithMessage(fmt.Sprintf("failed to parse file: %s, "+
+			"please provide correct file path ", err.Error())), w)
+		return
+	}
+	defer fileReader.Close()
 	ctx := r.Context()
 	info, ok := request.ArtifactInfoFrom(ctx).(*nugettype.ArtifactInfo)
+
 	if !ok {
 		log.Ctx(ctx).Error().Msg("Failed to get artifact info from context")
 		h.HandleErrors(r.Context(), []error{fmt.Errorf("failed to fetch info from context")}, w)
 		return
 	}
-	response := h.controller.UploadPackage(r.Context(), *info, r.Body)
-	if !commons.IsEmpty(response.GetError()) {
+	response := h.controller.UploadPackage(r.Context(), *info, fileReader)
+	if response.GetError() != nil {
 		h.HandleError(ctx, w, response.GetError())
 		return
 	}

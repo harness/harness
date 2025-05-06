@@ -126,6 +126,8 @@ func (c *APIController) GenerateClientSetupDetails(
 		return c.generateDockerClientSetupDetail(ctx, blankString, loginUsernameLabel, loginUsernameValue,
 			loginPasswordLabel, registryType,
 			username, registryRef, image, tag)
+	case string(artifact.PackageTypeNUGET):
+		return c.generateNugetClientSetupDetail(ctx, registryRef, username, image, tag, registryType)
 	default:
 		log.Debug().Ctx(ctx).Msgf("Unknown package type for client details: %s", packageType)
 		return nil
@@ -1086,6 +1088,111 @@ func (c *APIController) generatePythonClientSetupDetail(
 
 	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, image, tag, registryURL, "",
 		string(artifact.PackageTypePYTHON))
+
+	return &artifact.ClientSetupDetailsResponseJSONResponse{
+		Data:   clientSetupDetails,
+		Status: artifact.StatusSUCCESS,
+	}
+}
+
+func (c *APIController) generateNugetClientSetupDetail(
+	ctx context.Context,
+	registryRef string,
+	username string,
+	image *artifact.ArtifactParam,
+	tag *artifact.VersionParam,
+	registryType artifact.RegistryType,
+) *artifact.ClientSetupDetailsResponseJSONResponse {
+	staticStepType := artifact.ClientSetupStepTypeStatic
+	generateTokenType := artifact.ClientSetupStepTypeGenerateToken
+
+	// Authentication section
+	section1 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Configure Authentication"),
+	}
+	_ = section1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Add the Harness Registry as a package source:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("nuget sources add -Name <SOURCE_NAME> -Source \n" +
+							"<REGISTRY_URL>/index.json \n" +
+							"-Username <USERNAME>\n" +
+							"-Password  = *see step 2*"),
+					},
+				},
+			},
+			{
+				Header: utils.StringPtr("Generate an identity token for authentication"),
+				Type:   &generateTokenType,
+			},
+		},
+	})
+
+	// Publish section
+	section2 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Publish Package"),
+	}
+	_ = section2.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Build and publish your package:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("nuget pack"),
+					},
+					{
+						Value: utils.StringPtr("nuget push <PACKAGE_FILE> -Source <SOURCE_NAME>"),
+					},
+				},
+			},
+		},
+	})
+
+	// Install section
+	section3 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Install Package"),
+	}
+	_ = section3.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Install a package using nuget:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("nuget install <ARTIFACT_NAME> -Version <VERSION> -Source <SOURCE_NAME>"),
+					},
+				},
+			},
+		},
+	})
+
+	sections := []artifact.ClientSetupSection{
+		section1,
+		section2,
+		section3,
+	}
+
+	if registryType == artifact.RegistryTypeUPSTREAM {
+		sections = []artifact.ClientSetupSection{
+			section1,
+			section3,
+		}
+	}
+
+	clientSetupDetails := artifact.ClientSetupDetails{
+		MainHeader: "Nuget Client Setup",
+		SecHeader:  "Follow these instructions to install/use Nuget packages from this registry.",
+		Sections:   sections,
+	}
+
+	registryURL := c.URLProvider.PackageURL(ctx, registryRef, "nuget")
+
+	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, image, tag, registryURL, "",
+		string(artifact.PackageTypeNUGET))
 
 	return &artifact.ClientSetupDetailsResponseJSONResponse{
 		Data:   clientSetupDetails,

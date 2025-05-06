@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/harness/gitness/registry/app/pkg/commons"
 	nugettype "github.com/harness/gitness/registry/app/pkg/types/nuget"
 	"github.com/harness/gitness/registry/request"
 
@@ -36,7 +35,7 @@ func (h *handler) GetServiceEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 	response := h.controller.GetServiceEndpoint(r.Context(), *info)
 
-	if !commons.IsEmpty(response.GetError()) {
+	if response.GetError() != nil {
 		h.HandleError(r.Context(), w, response.GetError())
 		return
 	}

@@ -37,6 +37,12 @@ type Controller interface {
 
 	GetServiceEndpoint(ctx context.Context,
 		info nugettype.ArtifactInfo) *GetServiceEndpointResponse
+
+	ListPackageVersion(ctx context.Context, info nugettype.ArtifactInfo) *ListPackageVersionResponse
+
+	GetPackageMetadata(ctx context.Context, info nugettype.ArtifactInfo) *GetPackageMetadataResponse
+
+	GetPackageVersionMetadata(ctx context.Context, info nugettype.ArtifactInfo) *GetPackageVersionMetadataResponse
 }
 
 // Controller handles Python package operations.

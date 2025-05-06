@@ -255,6 +255,8 @@ issues:
       linters: [ goheader ]
     - path: "^registry/app/dist_temp/requestutil/util_test.go"
       linters: [ goheader ]
+    - path: "^registry/app/pkg/commons/zipreader/*"
+      linters: [ goheader ]
     - path: "^registry/app/manifest/descriptor.go"
       linters: [ goheader ]
     - path: "^registry/app/manifest/doc.go"

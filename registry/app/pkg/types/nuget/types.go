@@ -15,6 +15,8 @@
 package nuget
 
 import (
+	"time"
+
 	"github.com/harness/gitness/registry/app/metadata/nuget"
 	"github.com/harness/gitness/registry/app/pkg"
 )
@@ -61,4 +63,77 @@ type Resource struct {
 	//nolint:revive
 	ID   string `json:"@id"`
 	Type string `json:"@type"`
+}
+
+type PackageVersion struct {
+	Versions []string `json:"versions"`
+}
+
+// https://docs.microsoft.com/en-us/nuget/api/registration-base-url-resource#response
+type RegistrationIndexResponse struct {
+	RegistrationIndexURL string                   `json:"@id"`
+	Type                 []string                 `json:"@type"`
+	Count                int                      `json:"count"`
+	Pages                []*RegistrationIndexPage `json:"items"`
+}
+
+// https://docs.microsoft.com/en-us/nuget/api/registration-base-url-resource#registration-page-object
+type RegistrationIndexPage struct {
+	RegistrationPageURL string                       `json:"@id"`
+	Lower               string                       `json:"lower"`
+	Upper               string                       `json:"upper"`
+	Count               int                          `json:"count"`
+	Items               []*RegistrationIndexPageItem `json:"items"`
+}
+
+// https://docs.microsoft.com/en-us/nuget/api/registration-base-url-resource#registration-leaf-object-in-a-page
+type RegistrationIndexPageItem struct {
+	RegistrationLeafURL string `json:"@id"`
+	//nolint: tagliatelle
+	PackageContentURL string `json:"packageContent"`
+	//nolint: tagliatelle
+	CatalogEntry *CatalogEntry `json:"catalogEntry"`
+}
+
+// https://docs.microsoft.com/en-us/nuget/api/registration-base-url-resource#registration-leaf
+type RegistrationLeafResponse struct {
+	RegistrationLeafURL string   `json:"@id"`
+	Type                []string `json:"@type"`
+	Listed              bool     `json:"listed"`
+	//nolint: tagliatelle
+	PackageContentURL    string    `json:"packageContent"`
+	Published            time.Time `json:"published"`
+	RegistrationIndexURL string    `json:"registration"`
+}
+
+// https://docs.microsoft.com/en-us/nuget/api/registration-base-url-resource#catalog-entry
+type CatalogEntry struct {
+	CatalogLeafURL string `json:"@id"`
+	//nolint: tagliatelle
+	PackageContentURL string `json:"packageContent"`
+	ID                string `json:"id"`
+	Version           string `json:"version"`
+	Description       string `json:"description"`
+	//nolint: tagliatelle
+	ReleaseNotes string `json:"releaseNotes"`
+	Authors      string `json:"authors"`
+	//nolint: tagliatelle
+	RequireLicenseAcceptance bool `json:"requireLicenseAcceptance"`
+	//nolint: tagliatelle
+	ProjectURL string `json:"projectURL"`
+	//nolint: tagliatelle
+	DependencyGroups []*PackageDependencyGroup `json:"dependencyGroups,omitempty"`
+}
+
+// https://docs.microsoft.com/en-us/nuget/api/registration-base-url-resource#package-dependency-group
+type PackageDependencyGroup struct {
+	//nolint: tagliatelle
+	TargetFramework string               `json:"targetFramework"`
+	Dependencies    []*PackageDependency `json:"dependencies"`
+}
+
+// https://docs.microsoft.com/en-us/nuget/api/registration-base-url-resource#package-dependency
+type PackageDependency struct {
+	ID    string `json:"id"`
+	Range string `json:"range"`
 }

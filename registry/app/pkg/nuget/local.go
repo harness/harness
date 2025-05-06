@@ -15,23 +15,23 @@
 package nuget
 
 import (
-	"archive/zip"
 	"context"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
-	"os"
-	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 
 	urlprovider "github.com/harness/gitness/app/url"
-	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	apicontract "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	nugetmetadata "github.com/harness/gitness/registry/app/metadata/nuget"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/base"
 	"github.com/harness/gitness/registry/app/pkg/commons"
+	zs "github.com/harness/gitness/registry/app/pkg/commons/zipreader"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	nugettype "github.com/harness/gitness/registry/app/pkg/types/nuget"
 	"github.com/harness/gitness/registry/app/storage"
@@ -66,80 +66,112 @@ type localRegistry struct {
 	urlProvider urlprovider.Provider
 }
 
-func (c *localRegistry) GetServiceEndpoint(
-	ctx context.Context,
-	info nugettype.ArtifactInfo,
-) *nugettype.ServiceEndpoint {
-	baseURL := c.urlProvider.RegistryURL(ctx, "pkg", info.RootIdentifier, info.RegIdentifier, "nuget")
-	serviceEndpoints := buildServiceEndpoint(baseURL)
+func (c *localRegistry) GetServiceEndpoint(ctx context.Context,
+	info nugettype.ArtifactInfo) *nugettype.ServiceEndpoint {
+	packageURL := c.urlProvider.PackageURL(ctx, info.RootIdentifier+"/"+info.RegIdentifier, "nuget")
+	serviceEndpoints := buildServiceEndpoint(packageURL)
 	return serviceEndpoints
 }
 
-func (c *localRegistry) UploadPackage(
-	ctx context.Context,
+func (c *localRegistry) ListPackageVersion(ctx context.Context,
+	info nugettype.ArtifactInfo) (response *nugettype.PackageVersion, err error) {
+	artifacts, err2 := c.artifactDao.GetByRegistryIDAndImage(ctx, info.RegistryID, info.Image)
+	if err2 != nil {
+		return nil, fmt.Errorf(
+			"failed to get artifacts for registry: %d and image: %s: %w", info.RegistryID, info.Image, err2)
+	}
+	var versions []string
+	for _, artifact := range *artifacts {
+		versions = append(versions, artifact.Version)
+	}
+	return &nugettype.PackageVersion{
+		Versions: versions,
+	}, nil
+}
+
+func (c *localRegistry) GetPackageMetadata(ctx context.Context,
+	info nugettype.ArtifactInfo) (*nugettype.RegistrationIndexResponse, error) {
+	packageURL := c.urlProvider.PackageURL(ctx, info.RootIdentifier+"/"+info.RegIdentifier, "nuget")
+	artifacts, err2 := c.artifactDao.GetByRegistryIDAndImage(ctx, info.RegistryID, info.Image)
+	if err2 != nil {
+		return nil, fmt.Errorf(
+			"failed to get artifacts for registry: %d and image: %s: %w", info.RegistryID, info.Image, err2)
+	}
+
+	return createRegistrationIndexResponse(packageURL, info, artifacts)
+}
+
+func (c *localRegistry) GetPackageVersionMetadata(ctx context.Context,
+	info nugettype.ArtifactInfo) (*nugettype.RegistrationLeafResponse, error) {
+	packageURL := c.urlProvider.PackageURL(ctx, info.RootIdentifier+"/"+info.RegIdentifier, "nuget")
+	image, err2 := c.imageDao.GetByName(ctx, info.RegistryID, info.Image)
+	if err2 != nil {
+		return nil, fmt.Errorf(
+			"failed to get image for registry: %d and image: %s: %w", info.RegistryID, info.Image, err2)
+	}
+	artifact, err2 := c.artifactDao.GetByName(ctx, image.ID, info.Version)
+	if err2 != nil {
+		return nil, fmt.Errorf(
+			"failed to get artifacts for registry: %d and image: %s: %w", info.RegistryID, info.Image, err2)
+	}
+
+	return createRegistrationLeafResponse(packageURL, info, artifact), nil
+}
+
+func (c *localRegistry) UploadPackage(ctx context.Context,
 	info nugettype.ArtifactInfo,
 	fileReader io.ReadCloser,
 ) (headers *commons.ResponseHeaders, sha256 string, err error) {
-	metadata, err := c.buildMetadata(info, fileReader)
+	tmpFileName := info.RootIdentifier + "-" + uuid.NewString()
+
+	fileInfo, tempFileName, err := c.fileManager.UploadTempFile(ctx, info.RootIdentifier,
+		nil, tmpFileName, fileReader)
 	if err != nil {
-		return headers, "", err
+		return headers, "", fmt.Errorf(
+			"failed to upload file: %s with registry: %d with error: %w", tmpFileName, info.RegistryID, err)
+	}
+	r, _, err := c.fileManager.DownloadTempFile(ctx, fileInfo.Size, tempFileName, info.RootIdentifier)
+	if err != nil {
+		return headers, "", fmt.Errorf(
+			"failed to download file: %s with registry: %d with error: %w", tempFileName,
+			info.RegistryID, err)
+	}
+	defer r.Close()
+
+	metadata, err := c.buildMetadata(r)
+	if err != nil {
+		return headers, "", fmt.Errorf(
+			"failed to build metadata for file: %s with registry: %d with error: %w", tempFileName,
+			info.RegistryID, err)
 	}
 	fileName := strings.ToLower(fmt.Sprintf("%s.%s.nupkg",
 		metadata.PackageMetadata.ID, metadata.PackageMetadata.Version))
 	info.Metadata = metadata
 	info.Filename = fileName
 	info.Version = metadata.PackageMetadata.Version
-	info.Image = metadata.PackageMetadata.ID
+	info.Image = strings.ToLower(metadata.PackageMetadata.ID)
 	path := info.Image + "/" + info.Version + "/" + fileName
 
-	return c.localBase.Upload(ctx, info.ArtifactInfo, fileName, info.Version, path, fileReader,
+	return c.localBase.MoveTempFile(ctx, info.ArtifactInfo, tempFileName, info.Version, path,
 		&nugetmetadata.NugetMetadata{
 			Metadata: info.Metadata,
-		})
+		}, fileInfo)
 }
 
-func (c *localRegistry) buildMetadata(
-	info nugettype.ArtifactInfo,
-	fileReader io.Reader,
-) (metadata nugetmetadata.Metadata, err error) {
-	pathUUID := uuid.NewString()
-	tmpFile, err2 := os.CreateTemp(os.TempDir(), info.RootIdentifier+"-"+pathUUID+"*")
-	if err2 != nil {
-		return metadata, err2
-	}
-	defer os.Remove(tmpFile.Name()) // Cleanup
+func (c *localRegistry) buildMetadata(fileReader io.Reader) (metadata nugetmetadata.Metadata, err error) {
+	zr := zs.NewReader(fileReader)
 
-	_, err2 = io.Copy(tmpFile, fileReader)
-	if err2 != nil {
-		return metadata, err2
-	}
-	_, err = tmpFile.Seek(0, 0)
-	if err != nil {
-		return nugetmetadata.Metadata{}, err
-	}
-
-	stat, err2 := tmpFile.Stat()
-	if err2 != nil {
-		return metadata, err2
-	}
-
-	archive, err2 := zip.NewReader(tmpFile, stat.Size())
-	if err2 != nil {
-		return metadata, err2
-	}
-
-	for _, file := range archive.File {
-		if filepath.Dir(file.Name) != "." {
-			continue
+	for {
+		header, err2 := zr.Next()
+		if errors.Is(err2, io.EOF) {
+			break
 		}
-		if strings.HasSuffix(strings.ToLower(file.Name), ".nuspec") {
-			f, err3 := archive.Open(file.Name)
-			if err3 != nil {
-				return metadata, err3
-			}
-			defer f.Close()
+		if err2 != nil {
+			return metadata, fmt.Errorf("failed to read zip file with error: %w", err2)
+		}
 
-			metadata, err = c.parseMetadata(f)
+		if strings.HasSuffix(header.Name, ".nuspec") {
+			metadata, err = c.parseMetadata(zr)
 			return metadata, err
 		}
 	}
@@ -149,7 +181,7 @@ func (c *localRegistry) buildMetadata(
 func (c *localRegistry) parseMetadata(f io.Reader) (metadata nugetmetadata.Metadata, err error) {
 	var p nugetmetadata.Metadata
 	if err = xml.NewDecoder(f).Decode(&p); err != nil {
-		return metadata, err
+		return metadata, fmt.Errorf("failed to parse .nuspec file with error: %w", err)
 	}
 
 	if !IDMatch.MatchString(p.PackageMetadata.ID) {
@@ -158,10 +190,8 @@ func (c *localRegistry) parseMetadata(f io.Reader) (metadata nugetmetadata.Metad
 	return p, nil
 }
 
-func (c *localRegistry) DownloadPackage(
-	ctx context.Context,
-	info nugettype.ArtifactInfo,
-) (*commons.ResponseHeaders, *storage.FileReader, string, error) {
+func (c *localRegistry) DownloadPackage(ctx context.Context,
+	info nugettype.ArtifactInfo) (*commons.ResponseHeaders, *storage.FileReader, string, error) {
 	responseHeaders := &commons.ResponseHeaders{
 		Headers: make(map[string]string),
 		Code:    0,
@@ -169,12 +199,16 @@ func (c *localRegistry) DownloadPackage(
 
 	path := "/" + info.Image + "/" + info.Version + "/" + info.Filename
 
-	fileReader, _, redirectURL, err := c.fileManager.DownloadFile(ctx, path, info.RegistryID,
+	fileReader, size, redirectURL, err := c.fileManager.DownloadFile(ctx, path,
+		info.RegistryID,
 		info.RegIdentifier, info.RootIdentifier)
 	if err != nil {
-		return responseHeaders, nil, "", err
+		return responseHeaders, nil, "", fmt.Errorf("failed to download file with path: %s, "+
+			"registry: %d with error: %w", path, info.RegistryID, err)
 	}
 	responseHeaders.Code = http.StatusOK
+	responseHeaders.Headers["Content-Type"] = "application/octet-stream"
+	responseHeaders.Headers["Content-Length"] = strconv.FormatInt(size, 10)
 	return responseHeaders, fileReader, redirectURL, nil
 }
 
@@ -204,10 +238,10 @@ func NewLocalRegistry(
 	}
 }
 
-func (c *localRegistry) GetArtifactType() artifact.RegistryType {
-	return artifact.RegistryTypeVIRTUAL
+func (c *localRegistry) GetArtifactType() apicontract.RegistryType {
+	return apicontract.RegistryTypeVIRTUAL
 }
 
-func (c *localRegistry) GetPackageTypes() []artifact.PackageType {
-	return []artifact.PackageType{artifact.PackageTypeNUGET}
+func (c *localRegistry) GetPackageTypes() []apicontract.PackageType {
+	return []apicontract.PackageType{apicontract.PackageTypeNUGET}
 }

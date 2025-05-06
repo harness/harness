@@ -17,7 +17,6 @@ package nuget
 import (
 	"context"
 	"fmt"
-	"io"
 
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/base"
@@ -27,49 +26,49 @@ import (
 	registrytypes "github.com/harness/gitness/registry/types"
 )
 
-func (c *controller) UploadPackage(
+func (c *controller) GetPackageMetadata(
 	ctx context.Context,
 	info nugettype.ArtifactInfo,
-	fileReader io.ReadCloser,
-) *PutArtifactResponse {
+) *GetPackageMetadataResponse {
 	f := func(registry registrytypes.Registry, a pkg.Artifact) response.Response {
 		info.RegIdentifier = registry.Name
 		info.RegistryID = registry.ID
 		nugetRegistry, ok := a.(nuget.Registry)
 		if !ok {
-			return &PutArtifactResponse{
+			return &GetPackageMetadataResponse{
 				BaseResponse{
-					Error:           fmt.Errorf("invalid registry type: expected nuget.Registry"),
-					ResponseHeaders: nil,
-				},
+					fmt.Errorf("invalid registry type: expected nuget.Registry"),
+					nil,
+				}, nil,
 			}
 		}
-		headers, _, err := nugetRegistry.UploadPackage(ctx, info, fileReader)
-		return &PutArtifactResponse{
+		packageMetadata, err := nugetRegistry.GetPackageMetadata(ctx, info)
+		return &GetPackageMetadataResponse{
 			BaseResponse{
-				Error:           err,
-				ResponseHeaders: headers,
-			},
+				err,
+				nil,
+			}, packageMetadata,
 		}
 	}
 
-	result, err := base.NoProxyWrapper(ctx, c.registryDao, f, info)
+	result, err := base.ProxyWrapper(ctx, c.registryDao, f, info)
+
 	if err != nil {
-		return &PutArtifactResponse{
+		return &GetPackageMetadataResponse{
 			BaseResponse{
-				Error:           err,
-				ResponseHeaders: nil,
-			},
+				err,
+				nil,
+			}, nil,
 		}
 	}
-	uploadResponse, ok := result.(*PutArtifactResponse)
+	packageMetadataResponse, ok := result.(*GetPackageMetadataResponse)
 	if !ok {
-		return &PutArtifactResponse{
+		return &GetPackageMetadataResponse{
 			BaseResponse{
-				Error:           fmt.Errorf("invalid response type: expected PutArtifactResponse"),
-				ResponseHeaders: nil,
-			},
+				fmt.Errorf("invalid response type: expected GetPackageMetadataResponse"),
+				nil,
+			}, nil,
 		}
 	}
-	return uploadResponse
+	return packageMetadataResponse
 }

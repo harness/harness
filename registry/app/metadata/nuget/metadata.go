@@ -53,34 +53,30 @@ type Metadata struct {
 
 // PackageMetadata represents the metadata of a NuGet package.
 type PackageMetadata struct {
-	ID                       string                      `json:"id" xml:"id"`
-	Version                  string                      `json:"version" xml:"version"`
-	Title                    string                      `json:"title,omitempty" xml:"title,omitempty"`
-	Authors                  string                      `json:"authors" xml:"authors"`
-	Owners                   string                      `json:"owners,omitempty" xml:"owners,omitempty"`
-	LicenseURL               string                      `json:"licenseUrl,omitempty" xml:"licenseUrl,omitempty"`
-	ProjectURL               string                      `json:"projectUrl,omitempty" xml:"projectUrl,omitempty"`
-	IconURL                  string                      `json:"iconUrl,omitempty" xml:"iconUrl,omitempty"`
-	RequireLicenseAcceptance bool                        `json:"requireLicenseAcceptance,omitempty" xml:"requireLicenseAcceptance,omitempty"`
-	DevelopmentDependency    bool                        `json:"developmentDependency,omitempty" xml:"developmentDependency,omitempty"`
-	Description              string                      `json:"description" xml:"description"`
-	Summary                  string                      `json:"summary,omitempty" xml:"summary,omitempty"`
-	ReleaseNotes             string                      `json:"releaseNotes,omitempty" xml:"releaseNotes,omitempty"`
-	Copyright                string                      `json:"copyright,omitempty" xml:"copyright,omitempty"`
-	Language                 string                      `json:"language,omitempty" xml:"language,omitempty"`
-	Tags                     string                      `json:"tags,omitempty" xml:"tags,omitempty"`
-	Serviceable              bool                        `json:"serviceable,omitempty" xml:"serviceable,omitempty"`
-	Icon                     string                      `json:"icon,omitempty" xml:"icon,omitempty"`
-	Readme                   string                      `json:"readme,omitempty" xml:"readme,omitempty"`
-	Repository               *Repository                 `json:"repository,omitempty" xml:"repository,omitempty"`
-	License                  *License                    `json:"license,omitempty" xml:"license,omitempty"`
-	PackageTypes             []PackageType               `json:"packageTypes,omitempty" xml:"packageType"`
-	Dependencies             *DependenciesWrapper        `json:"dependencies,omitempty" xml:"dependencies,omitempty"`
-	FrameworkAssemblies      []FrameworkAssembly         `json:"frameworkAssemblies,omitempty" xml:"frameworkAssembly"`
-	FrameworkReferences      *FrameworkReferencesWrapper `json:"frameworkReferences,omitempty" xml:"frameworkReferences,omitempty"`
-	References               *ReferencesWrapper          `json:"references,omitempty" xml:"references,omitempty"`
-	ContentFiles             []ContentFileEntry          `json:"contentFiles,omitempty" xml:"files"`
-	MinClientVersion         string                      `json:"minClientVersion,omitempty" xml:"minClientVersion,attr"`
+	ID                       string               `json:"id" xml:"id"`
+	Version                  string               `json:"version" xml:"version"`
+	Title                    string               `json:"title,omitempty" xml:"title,omitempty"`
+	Authors                  string               `json:"authors" xml:"authors"`
+	Owners                   string               `json:"owners,omitempty" xml:"owners,omitempty"`
+	LicenseURL               string               `json:"licenseUrl,omitempty" xml:"licenseUrl,omitempty"`
+	ProjectURL               string               `json:"projectUrl,omitempty" xml:"projectUrl,omitempty"`
+	IconURL                  string               `json:"iconUrl,omitempty" xml:"iconUrl,omitempty"`
+	RequireLicenseAcceptance bool                 `json:"requireLicenseAcceptance,omitempty" xml:"requireLicenseAcceptance,omitempty"`
+	DevelopmentDependency    bool                 `json:"developmentDependency,omitempty" xml:"developmentDependency,omitempty"`
+	Description              string               `json:"description" xml:"description"`
+	Summary                  string               `json:"summary,omitempty" xml:"summary,omitempty"`
+	ReleaseNotes             string               `json:"releaseNotes,omitempty" xml:"releaseNotes,omitempty"`
+	Copyright                string               `json:"copyright,omitempty" xml:"copyright,omitempty"`
+	Language                 string               `json:"language,omitempty" xml:"language,omitempty"`
+	Tags                     string               `json:"tags,omitempty" xml:"tags,omitempty"`
+	Serviceable              bool                 `json:"serviceable,omitempty" xml:"serviceable,omitempty"`
+	Icon                     string               `json:"icon,omitempty" xml:"icon,omitempty"`
+	Readme                   string               `json:"readme,omitempty" xml:"readme,omitempty"`
+	Repository               *Repository          `json:"repository,omitempty" xml:"repository,omitempty"`
+	License                  *License             `json:"license,omitempty" xml:"license,omitempty"`
+	PackageTypes             []PackageType        `json:"packageTypes,omitempty" xml:"packageType"`
+	Dependencies             *DependenciesWrapper `json:"dependencies,omitempty" xml:"dependencies,omitempty"`
+	MinClientVersion         string               `json:"minClientVersion,omitempty" xml:"minClientVersion,attr"`
 }
 
 // Dependency represents a package dependency.
@@ -95,37 +91,6 @@ type Dependency struct {
 type DependencyGroup struct {
 	TargetFramework string       `json:"targetFramework,omitempty" xml:"targetFramework,attr"`
 	Dependencies    []Dependency `json:"dependencies,omitempty" xml:"dependency"`
-}
-
-// Reference represents a package reference.
-type Reference struct {
-	File string `json:"file" xml:"file,attr"`
-}
-
-// ReferenceGroup represents a group of references.
-type ReferenceGroup struct {
-	TargetFramework string      `json:"targetFramework,omitempty" xml:"targetFramework,attr"`
-	References      []Reference `json:"references,omitempty" xml:"reference"`
-}
-
-// FrameworkReference represents a single framework reference.
-type FrameworkReference struct {
-	Name string `json:"name" xml:"name,attr"`
-}
-
-// FrameworkReferenceGroup represents a group of framework references.
-type FrameworkReferenceGroup struct {
-	TargetFramework     string               `json:"targetFramework" xml:"targetFramework,attr"`
-	FrameworkReferences []FrameworkReference `json:"frameworkReferences,omitempty" xml:"frameworkReference"`
-}
-
-// ContentFileEntry represents a content file entry.
-type ContentFileEntry struct {
-	Include      string `json:"include" xml:"include,attr"`
-	Exclude      string `json:"exclude,omitempty" xml:"exclude,attr"`
-	BuildAction  string `json:"buildAction,omitempty" xml:"buildAction,attr"`
-	CopyToOutput bool   `json:"copyToOutput,omitempty" xml:"copyToOutput,attr"`
-	Flatten      bool   `json:"flatten,omitempty" xml:"flatten,attr"`
 }
 
 // PackageType represents a package type.
@@ -150,27 +115,10 @@ type License struct {
 	Text string `json:",chardata" xml:",chardata"`
 }
 
-// FrameworkAssembly represents a framework assembly reference.
-type FrameworkAssembly struct {
-	AssemblyName    string `json:"assemblyName" xml:"assemblyName,attr"`
-	TargetFramework string `json:"targetFramework,omitempty" xml:"targetFramework,attr"`
-}
-
 // DependenciesWrapper represents the `<dependencies>` section.
 type DependenciesWrapper struct {
 	Dependencies []Dependency      `json:"dependencies,omitempty" xml:"dependency"`
 	Groups       []DependencyGroup `json:"groups,omitempty" xml:"group"`
-}
-
-// ReferencesWrapper represents the `<references>` section.
-type ReferencesWrapper struct {
-	References []Reference      `json:"references,omitempty" xml:"reference"`
-	Groups     []ReferenceGroup `json:"groups,omitempty" xml:"group"`
-}
-
-// FrameworkReferencesWrapper represents the `<frameworkReferences>` section.
-type FrameworkReferencesWrapper struct {
-	Groups []FrameworkReferenceGroup `json:"groups,omitempty" xml:"group"`
 }
 
 // File represents an individual file in the `<files>` section.
