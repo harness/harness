@@ -255,6 +255,13 @@ export enum MergeStrategy {
   FAST_FORWARD = 'fast-forward'
 }
 
+export enum MergeMethodDisplay {
+  MERGED = 'merged',
+  SQUASHED = 'squashed',
+  REBASED = 'rebased',
+  FAST_FORWARDED = 'fast-forwarded'
+}
+
 export const CodeIcon = {
   Logo: 'code' as IconName,
   PullRequest: 'git-pull' as IconName,
@@ -681,4 +688,15 @@ export const eventMapping: Record<WebhookIndividualEvent, WebhookEventMap> = {
 
 export function getEventDescription(event: WebhookIndividualEvent): string {
   return eventMapping[event]
+}
+
+export const mergeMethodMapping: Record<MergeStrategy, MergeMethodDisplay> = {
+  [MergeStrategy.MERGE]: MergeMethodDisplay.MERGED,
+  [MergeStrategy.SQUASH]: MergeMethodDisplay.SQUASHED,
+  [MergeStrategy.REBASE]: MergeMethodDisplay.REBASED,
+  [MergeStrategy.FAST_FORWARD]: MergeMethodDisplay.FAST_FORWARDED
+}
+
+export function getMergeMethodDisplay(mergeMethodType: MergeStrategy): string {
+  return mergeMethodMapping[mergeMethodType]
 }

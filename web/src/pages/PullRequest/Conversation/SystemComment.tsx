@@ -20,7 +20,7 @@ import { Icon, IconName } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { defaultTo } from 'lodash-es'
 import { Case, Falsy, Match, Truthy } from 'react-jsx-match'
-import { CodeIcon, GitInfoProps, MergeStrategy } from 'utils/GitUtils'
+import { CodeIcon, GitInfoProps, MergeStrategy, getMergeMethodDisplay } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import type { TypesPullReqActivity } from 'services/code'
 import type { CommentItem } from 'components/CommentBox/CommentBox'
@@ -144,6 +144,7 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
 
   switch (type) {
     case CommentType.MERGE: {
+      const areRulesBypassed = (payload?.payload as MergePayload)?.rules_bypassed
       return (
         <Container>
           <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }} className={css.mergedBox}>
@@ -154,13 +155,19 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
             <Avatar name={pullReqMetadata.merger?.display_name} size="small" hoverCard={false} />
             <Text flex tag="div" style={{ whiteSpace: 'nowrap' }}>
               <StringSubstitute
-                str={
-                  (payload?.payload as MergePayload)?.merge_method === MergeStrategy.REBASE
-                    ? getString('pr.prRebasedInfo')
-                    : getString('pr.prMergedInfo')
-                }
+                str={areRulesBypassed ? getString('pr.prMergedInfoWithBypassingRules') : getString('pr.prMergedInfo')}
                 vars={{
                   user: <strong className={css.rightTextPadding}>{pullReqMetadata.merger?.display_name}</strong>,
+                  mergeMethod: (
+                    <Text
+                      lineClamp={1}
+                      margin={{
+                        left: areRulesBypassed ? 'xsmall' : '',
+                        right: 'xsmall'
+                      }}>
+                      {getMergeMethodDisplay(pullReqMetadata?.merge_method as MergeStrategy)}
+                    </Text>
+                  ),
                   source: (
                     <Text lineClamp={1}>
                       <strong className={css.textPadding}>{pullReqMetadata.source_branch}</strong>
@@ -171,7 +178,6 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
                       <strong className={css.textPadding}>{pullReqMetadata.target_branch}</strong>
                     </Text>
                   ),
-                  bypassed: (payload?.payload as MergePayload)?.rules_bypassed,
                   mergeSha: (
                     <Container className={css.commitContainer} padding={{ left: 'small', right: 'xsmall' }}>
                       <CommitActions
