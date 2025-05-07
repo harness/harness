@@ -223,9 +223,9 @@ func EventsMessageMapping() map[GitspaceEventType]string {
 
 		GitspaceEventTypeDelegateTaskSubmitted: "Delegate task submitted",
 
-		GitspaceEventTypeInfraVMCreationStart:     "creating VM...",
-		GitspaceEventTypeInfraVMCreationCompleted: "Successfully created VM",
-		GitspaceEventTypeInfraVMCreationFailed:    "Failed to created VM",
+		GitspaceEventTypeInfraVMCreationStart:     "Creating Virtual Machine...",
+		GitspaceEventTypeInfraVMCreationCompleted: "Successfully created Virtual Machine",
+		GitspaceEventTypeInfraVMCreationFailed:    "Failed to created Virtual Machine",
 
 		GitspaceEventTypeInfraPublishGatewayCompleted: "Published machine port mapping to Gateway",
 		GitspaceEventTypeInfraPublishGatewayFailed:    "Failed to publish machine port mapping to Gateway",
