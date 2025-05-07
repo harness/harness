@@ -301,8 +301,8 @@ func (c *APIController) generateGenericClientSetupDetail(
 	header3 := "Download Artifact"
 	section3step1Header := "Run this command in your terminal to download the artifact."
 	//nolint:lll
-	pullValue := "curl --location '<HOSTNAME>/<ARTIFACT_NAME>/<VERSION>' \\\n--form 'filename=\"<FILENAME>\"' --header '<AUTH_HEADER_PREFIX> <API_KEY>' " +
-		"-o <FILENAME>"
+	pullValue := "curl --location '<HOSTNAME>/<ARTIFACT_NAME>/<VERSION>?filename=<FILENAME>' \\\n --header '<AUTH_HEADER_PREFIX> <API_KEY>' " +
+		"-J -O"
 	section3step1Commands := []artifact.ClientSetupStepCommand{
 		{Label: &blankString, Value: &pullValue},
 	}
