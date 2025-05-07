@@ -315,6 +315,9 @@ func (l *localBase) Exists(ctx context.Context, info pkg.ArtifactInfo, version s
 
 func (l *localBase) ExistsByFilePath(ctx context.Context, registryID int64, filePath string) (bool, error) {
 	exists, _, err := l.GetSHA256ByPath(ctx, registryID, filePath)
+	if err != nil && strings.Contains(err.Error(), "resource not found") {
+		return false, nil
+	}
 	return exists, err
 }
 
