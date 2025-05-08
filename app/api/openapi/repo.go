@@ -255,11 +255,12 @@ var queryParameterSince = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamSince,
 		In:          openapi3.ParameterInQuery,
-		Description: ptr.String("Epoch since when commit information should be retrieved."),
+		Description: ptr.String("Epoch timestamp since when commit information should be retrieved."),
 		Required:    ptr.Bool(false),
 		Schema: &openapi3.SchemaOrRef{
 			Schema: &openapi3.Schema{
-				Type: ptrSchemaType(openapi3.SchemaTypeInteger),
+				Type:    ptrSchemaType(openapi3.SchemaTypeInteger),
+				Example: ptrptr(1728348213),
 			},
 		},
 	},
@@ -269,11 +270,12 @@ var queryParameterUntil = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamUntil,
 		In:          openapi3.ParameterInQuery,
-		Description: ptr.String("Epoch until when commit information should be retrieved."),
+		Description: ptr.String("Epoch timestamp until when commit information should be retrieved."),
 		Required:    ptr.Bool(false),
 		Schema: &openapi3.SchemaOrRef{
 			Schema: &openapi3.Schema{
-				Type: ptrSchemaType(openapi3.SchemaTypeInteger),
+				Type:    ptrSchemaType(openapi3.SchemaTypeInteger),
+				Example: ptrptr(1746668446),
 			},
 		},
 	},
@@ -557,6 +559,62 @@ var queryParameterCommitter = openapi3.ParameterOrRef{
 				Type: ptrSchemaType(openapi3.SchemaTypeString),
 			},
 		},
+	},
+}
+
+var queryParameterCommitterID = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamCommitterID,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("Committer principal IDs for which commit information should be retrieved."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeArray),
+				Items: &openapi3.SchemaOrRef{
+					Schema: &openapi3.Schema{
+						Type: ptrSchemaType(openapi3.SchemaTypeInteger),
+					},
+				},
+			},
+		},
+		Style:   ptr.String(string(openapi3.EncodingStyleForm)),
+		Explode: ptr.Bool(true),
+	},
+}
+
+var queryParameterAuthor = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamAuthor,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("Author pattern for which commit information should be retrieved."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeString),
+			},
+		},
+	},
+}
+
+var queryParameterAuthoredByID = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamAuthorID,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("Author principal IDs for which commit information should be retrieved."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeArray),
+				Items: &openapi3.SchemaOrRef{
+					Schema: &openapi3.Schema{
+						Type: ptrSchemaType(openapi3.SchemaTypeInteger),
+					},
+				},
+			},
+		},
+		Style:   ptr.String(string(openapi3.EncodingStyleForm)),
+		Explode: ptr.Bool(true),
 	},
 }
 
@@ -967,8 +1025,8 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opListCommits.WithTags("repository")
 	opListCommits.WithMapOfAnything(map[string]interface{}{"operationId": "listCommits"})
 	opListCommits.WithParameters(queryParameterGitRef, queryParameterAfterCommits, queryParameterPath,
-		queryParameterSince, queryParameterUntil, queryParameterCommitter,
-		QueryParameterPage, QueryParameterLimit, QueryParamIncludeStats)
+		queryParameterSince, queryParameterUntil, queryParameterCommitter, queryParameterCommitterID,
+		queryParameterAuthor, queryParameterAuthoredByID, QueryParameterPage, QueryParameterLimit, QueryParamIncludeStats)
 	_ = reflector.SetRequest(&opListCommits, new(listCommitsRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opListCommits, new(types.ListCommitResponse), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opListCommits, new(usererror.Error), http.StatusInternalServerError)
