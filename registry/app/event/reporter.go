@@ -32,17 +32,22 @@ type ArtifactDetails struct {
 	PackageType  PackageType `json:"package_type,omitempty"`
 }
 
+type CloudLocation struct {
+	Provider Provider `json:"provider,omitempty"`
+	Endpoint string   `json:"endpoint,omitempty"`
+	Region   string   `json:"region,omitempty"`
+	Bucket   string   `json:"bucket,omitempty"`
+}
+
 // ReplicationDetails represents the ReplicationDetails message from the proto file.
 type ReplicationDetails struct {
-	AccountID     string     `json:"account_id,omitempty"`
-	Action        BlobAction `json:"action,omitempty"`
-	BlobID        int64      `json:"blob_id,omitempty"`
-	GenericBlobID string     `json:"generic_blob_id,omitempty"`
-	Path          string     `json:"path,omitempty"`
-	Provider      Provider   `json:"provider,omitempty"`
-	Endpoint      string     `json:"endpoint,omitempty"`
-	Region        string     `json:"region,omitempty"`
-	Bucket        string     `json:"bucket,omitempty"`
+	AccountID     string          `json:"account_id,omitempty"`
+	Action        BlobAction      `json:"action,omitempty"`
+	BlobID        int64           `json:"blob_id,omitempty"`
+	GenericBlobID string          `json:"generic_blob_id,omitempty"`
+	Path          string          `json:"path,omitempty"`
+	Source        CloudLocation   `json:"source,omitempty"`
+	Destinations  []CloudLocation `json:"destinations,omitempty"`
 }
 
 // PackageType constants using iota.

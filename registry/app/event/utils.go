@@ -57,15 +57,22 @@ func ReportEventAsync(
 		return
 	}
 
-	go reporter.ReportEvent(ctx, &ReplicationDetails{
+	source := CloudLocation{
+		Provider: ProviderValue[strings.ToUpper(conf.Registry.Storage.S3Storage.Provider)],
+		Endpoint: conf.Registry.Storage.S3Storage.RegionEndpoint,
+		Region:   conf.Registry.Storage.S3Storage.Region,
+		Bucket:   conf.Registry.Storage.S3Storage.Bucket,
+	}
+
+	destinations := []CloudLocation{source} // TODO: Use the correct destination
+
+	go reporter.ReportEvent(ctx, ReplicationDetails{
 		AccountID:     accountID,
 		Action:        action,
 		BlobID:        blobID,
 		GenericBlobID: genericBlobID,
 		Path:          path,
-		Provider:      ProviderValue[strings.ToUpper(conf.Registry.Storage.S3Storage.Provider)],
-		Endpoint:      conf.Registry.Storage.S3Storage.RegionEndpoint,
-		Region:        conf.Registry.Storage.S3Storage.Region,
-		Bucket:        conf.Registry.Storage.S3Storage.Bucket,
+		Source:        source,
+		Destinations:  destinations,
 	}, "")
 }
