@@ -1476,6 +1476,7 @@ export interface TypesPullReq {
   target_repo_id?: number
   title?: string
   updated?: number
+  merge_violations_bypassed?: boolean | null
 }
 
 export interface TypesPullReqActivity {

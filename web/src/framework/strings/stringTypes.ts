@@ -863,6 +863,7 @@ export interface StringsMap {
   'pr.prClosed': string
   'pr.prMerged': string
   'pr.prMergedBannerInfo': string
+  'pr.prMergedBannerInfoWithBypassingRules': string
   'pr.prMergedInfo': string
   'pr.prMergedInfoWithBypassingRules': string
   'pr.prReviewSubmit': string

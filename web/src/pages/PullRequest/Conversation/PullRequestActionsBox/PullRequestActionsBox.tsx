@@ -48,7 +48,14 @@ import type {
   TypesRuleViolations
 } from 'services/code'
 import { useStrings } from 'framework/strings'
-import { CodeIcon, GitInfoProps, MergeStrategy, PullRequestState, dryMerge } from 'utils/GitUtils'
+import {
+  CodeIcon,
+  GitInfoProps,
+  MergeStrategy,
+  PullRequestState,
+  dryMerge,
+  getMergeMethodDisplay
+} from 'utils/GitUtils'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useAppContext } from 'AppContext'
 import { getMergeOptions, PRDraftOption, type PRMergeOption } from 'pages/PullRequest/PullRequestUtils'
@@ -603,6 +610,9 @@ const MergeInfo: React.FC<{
 }> = props => {
   const { pullRequestMetadata, showRestoreBranchButton, showDeleteBranchButton, repoMetadata } = props
   const { getString } = useStrings()
+
+  const areRulesBypassed = pullRequestMetadata?.merge_violations_bypassed
+
   return (
     <Container className={cx(css.main, css.merged)}>
       <Layout.Horizontal spacing="medium" flex={{ alignItems: 'center' }} className={css.layout}>
@@ -611,12 +621,27 @@ const MergeInfo: React.FC<{
         </Container>
         <Text flex={{ alignItems: 'center' }} className={cx(css.sub, css.merged)}>
           <StringSubstitute
-            str={getString('pr.prMergedBannerInfo')}
+            str={
+              areRulesBypassed
+                ? getString('pr.prMergedBannerInfoWithBypassingRules')
+                : getString('pr.prMergedBannerInfo')
+            }
             vars={{
               user: (
-                <Container padding={{ right: 'small' }}>
+                <Container padding={{ right: areRulesBypassed ? 'xsmall' : '' }}>
                   <strong className={css.boldText}>{pullRequestMetadata.merger?.display_name}</strong>
                 </Container>
+              ),
+              mergeMethod: (
+                <Text
+                  lineClamp={1}
+                  color={Color.PURPLE_700}
+                  margin={{
+                    left: 'xsmall',
+                    right: 'xsmall'
+                  }}>
+                  {getMergeMethodDisplay(pullRequestMetadata.merge_method as MergeStrategy)}
+                </Text>
               ),
               source: (
                 <Container padding={{ left: 'small', right: 'small' }}>
