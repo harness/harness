@@ -773,7 +773,7 @@ func (a ArtifactDao) GetAllVersionsByRepoAndImage(
 		q = q.Where("artifact_version LIKE ?", sqlPartialMatch(search))
 	}
 	// nolint:goconst
-	sortField := "image_" + sortByField
+	sortField := "artifact_" + sortByField
 	if sortByField == downloadCount {
 		sortField = downloadCount
 	} else if sortByField == name {
