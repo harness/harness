@@ -29,6 +29,7 @@ const (
 
 type builder struct {
 	flags                  uint
+	options                func() []CmdOptionFunc
 	actions                map[string]uint
 	validatePositionalArgs func([]string) error
 }
@@ -267,6 +268,12 @@ var descriptions = map[string]builder{
 	},
 	"upload-pack": {
 		flags: NoRefUpdates,
+		options: func() []CmdOptionFunc {
+			return []CmdOptionFunc{
+				WithConfig("uploadpack.allowFilter", "true"),
+				WithConfig("uploadpack.allowAnySHA1InWant", "true"),
+			}
+		},
 	},
 	"version": {
 		flags: NoRefUpdates,

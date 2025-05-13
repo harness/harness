@@ -193,15 +193,23 @@ func (c *Command) makeArgs() ([]string, error) {
 
 	var safeArgs []string
 
+	commandDescription, ok := descriptions[c.Name]
+	if !ok {
+		return nil, fmt.Errorf("invalid sub command name %q: %w", c.Name, ErrInvalidArg)
+	}
+
+	if commandDescription.options != nil {
+		options := commandDescription.options()
+		for _, option := range options {
+			option(c)
+		}
+	}
+
 	// add globals
 	if len(c.Globals) > 0 {
 		safeArgs = append(safeArgs, c.Globals...)
 	}
 
-	commandDescription, ok := descriptions[c.Name]
-	if !ok {
-		return nil, fmt.Errorf("invalid sub command name %q: %w", c.Name, ErrInvalidArg)
-	}
 	safeArgs = append(safeArgs, c.Name)
 
 	if c.Action != "" {
