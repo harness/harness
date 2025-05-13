@@ -171,6 +171,15 @@ func (s *Service) Revert(ctx context.Context, params *RevertParams) (RevertOutpu
 			return fmt.Errorf("failed to close patch file: %w", err)
 		}
 
+		fInfo, err := os.Lstat(diffPatchName)
+		if err != nil {
+			return fmt.Errorf("failed to lstat diff path file: %w", err)
+		}
+
+		if fInfo.Size() == 0 {
+			return errors.InvalidArgument("can't revert an empty diff")
+		}
+
 		if err := s.SetIndex(ctx, params.ParentCommitSHA); err != nil {
 			return fmt.Errorf("failed to set parent commit index: %w", err)
 		}
