@@ -9,13 +9,16 @@ import {
   ModalDialog,
   useToaster
 } from '@harnessio/uicore'
-import { cloneDeep } from 'lodash-es'
+import { cloneDeep, get } from 'lodash-es'
 import { TypesInfraProviderResource, useCreateInfraProviderResource } from 'services/cde'
 import { useAppContext } from 'AppContext'
 import { getErrorMessage } from 'utils/Utils'
-import { HYBRID_VM_GCP, regionType } from 'cde-gitness/constants'
+import { getStringDropdownOptions, HYBRID_VM_GCP, regionType } from 'cde-gitness/constants'
 import { validateMachineForm } from 'cde-gitness/utils/InfraValidations.utils'
 import { useStrings } from 'framework/strings'
+import { getZoneByRegion, machineTypes, persistentDiskTypes } from 'cde-gitness/utils/dropdownData.utils'
+import CustomSelectDropdown from '../CustomSelectDropdown/CustomSelectDropdown'
+import CustomInput from '../CustomInput/CustomInput'
 import css from './MachineModal.module.scss'
 
 interface MachineModalProps {
@@ -25,6 +28,17 @@ interface MachineModalProps {
   regionIdentifier: string
   setRegionData: (val: regionType[]) => void
   regionData: regionType[]
+}
+
+interface MachineModalForm {
+  name: string
+  disk_type: string
+  boot_size: string
+  machine_type: string
+  identifier: string
+  disk_size: string
+  boot_type: string
+  zone: string
 }
 
 function MachineModal({
@@ -38,12 +52,13 @@ function MachineModal({
   const { getString } = useStrings()
   const { accountInfo } = useAppContext()
   const { showSuccess, showError } = useToaster()
+  const zoneOptions: string[] = getZoneByRegion(regionIdentifier)
   const { mutate, loading } = useCreateInfraProviderResource({
     accountIdentifier: accountInfo?.identifier,
     infraprovider_identifier: infraproviderIdentifier
   })
 
-  const onSubmitHandler = async (values: any) => {
+  const onSubmitHandler = async (values: MachineModalForm) => {
     try {
       const { name, disk_type, boot_size, machine_type, identifier, disk_size, boot_type, zone } = values
       const payload: any = [
@@ -89,14 +104,15 @@ function MachineModal({
       onClose={() => setIsOpen(false)}
       title={getString('cde.gitspaceInfraHome.createNewMachine')}
       width={700}>
-      <Formik
+      <Formik<MachineModalForm>
         formName="edit-layout-name"
-        onSubmit={(values: any) => {
+        onSubmit={values => {
           onSubmitHandler(values)
         }}
-        initialValues={{}}
+        initialValues={{} as MachineModalForm}
         validationSchema={validateMachineForm(getString)}>
-        {() => {
+        {formik => {
+          const { zone, disk_type, machine_type, disk_size, boot_size, boot_type } = formik?.values
           return (
             <FormikForm>
               <Layout.Vertical spacing="normal" className={css.formContainer}>
@@ -105,31 +121,61 @@ function MachineModal({
                   inputName="name"
                   isIdentifierEditable={true}
                 />
-                <FormInput.Text label={getString('cde.gitspaceInfraHome.zone')} name="zone" />
-                <FormInput.Text
-                  label={getString('cde.gitspaceInfraHome.diskType')}
-                  name="disk_type"
-                  placeholder="e.g Balanced"
+                <CustomSelectDropdown
+                  options={zoneOptions?.map(options => getStringDropdownOptions(options))}
+                  value={{ value: zone, label: zone }}
+                  label={getString('cde.gitspaceInfraHome.zone')}
+                  onChange={(value: { label: string; value: string }) => formik.setFieldValue('zone', value?.value)}
+                  error={formik?.submitCount ? get(formik?.errors, 'zone') : ''}
+                  allowCustom
                 />
-                <FormInput.Text
+                <CustomSelectDropdown
+                  options={persistentDiskTypes?.map((options: string) => getStringDropdownOptions(options))}
+                  value={{ value: disk_type, label: disk_type }}
+                  label={getString('cde.gitspaceInfraHome.diskType')}
+                  onChange={(value: { label: string; value: string }) =>
+                    formik.setFieldValue('disk_type', value?.value)
+                  }
+                  error={formik?.submitCount ? get(formik?.errors, 'disk_type') : ''}
+                  allowCustom
+                />
+                <CustomInput
                   label={getString('cde.gitspaceInfraHome.diskSize')}
                   name="disk_size"
                   placeholder="e.g 100"
+                  type="number"
+                  value={disk_size}
+                  onChange={(form: { value: string }) => formik.setFieldValue('disk_size', form.value)}
+                  error={formik?.submitCount ? get(formik?.errors, 'disk_size') : ''}
                 />
-                <FormInput.Text
+                <CustomSelectDropdown
+                  options={persistentDiskTypes?.map((options: string) => getStringDropdownOptions(options))}
+                  value={{ value: boot_type, label: boot_type }}
                   label={getString('cde.gitspaceInfraHome.bootType')}
-                  name="boot_type"
-                  placeholder="e.g standard"
+                  onChange={(value: { label: string; value: string }) =>
+                    formik.setFieldValue('boot_type', value?.value)
+                  }
+                  error={formik?.submitCount ? get(formik?.errors, 'boot_type') : ''}
+                  allowCustom
                 />
-                <FormInput.Text
+                <CustomInput
                   label={getString('cde.gitspaceInfraHome.bootSize')}
                   name="boot_size"
                   placeholder="e.g 100"
+                  type="number"
+                  value={boot_size}
+                  onChange={(form: { value: string }) => formik.setFieldValue('boot_size', form.value)}
+                  error={formik?.submitCount ? get(formik?.errors, 'boot_size') : ''}
                 />
-                <FormInput.Text
+                <CustomSelectDropdown
+                  options={machineTypes?.map((options: string) => getStringDropdownOptions(options))}
+                  value={{ value: machine_type, label: machine_type }}
                   label={getString('cde.gitspaceInfraHome.machineType')}
-                  name="machine_type"
-                  placeholder="e.g standard"
+                  onChange={(value: { label: string; value: string }) =>
+                    formik.setFieldValue('machine_type', value?.value)
+                  }
+                  allowCustom
+                  error={formik?.submitCount ? get(formik?.errors, 'machine_type') : ''}
                 />
               </Layout.Vertical>
               <Layout.Horizontal spacing="small" className={css.modalFooter}>

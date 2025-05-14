@@ -1,0 +1,20 @@
+.inputLabel {
+  color: var(--grey-600) !important;
+  font-size: var(--form-input-font-size) !important;
+  font-weight: 500 !important;
+  padding-bottom: 5px !important;
+}
+
+.mb15 {
+  margin-bottom: 15px !important;
+
+  [class*='TextInput--main'] {
+    margin-bottom: 0 !important;
+  }
+}
+
+.errorClass {
+  [class='bp3-input'] {
+    border: 1px solid var(--red-600) !important;
+  }
+}

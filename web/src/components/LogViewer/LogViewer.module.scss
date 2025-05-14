@@ -18,20 +18,19 @@
 
 .main {
   flex-shrink: 0;
+}
+.line {
+  margin: 0;
+  padding: 0;
+  cursor: text;
+  min-height: 20px;
+  display: block;
 
-  .line {
-    margin: 0;
-    padding: 0;
-    cursor: text;
-    min-height: 20px;
-    display: block;
+  @include mono-font;
+  color: var(--white);
 
-    @include mono-font;
-    color: var(--white);
-
-    word-wrap: break-word !important;
-    white-space: pre-wrap !important;
-  }
+  word-wrap: break-word !important;
+  white-space: pre-wrap !important;
 }
 
 .pipelineSteps {

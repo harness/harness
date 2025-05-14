@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'
+import React, { useRef, useState } from 'react'
 import { Container, HarnessDocTooltip, Layout, Text, TextInput } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
 import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance } from 'react-table'
@@ -7,6 +7,7 @@ import { cloneDeep } from 'lodash-es'
 import { learnMoreRegion, type regionProp } from 'cde-gitness/constants'
 import { useStrings } from 'framework/strings'
 import RegionTable from 'cde-gitness/components/RegionTable/RegionTable'
+import NewRegionModal from './NewRegionModal'
 import css from './InfraDetails.module.scss'
 
 type CellTypeWithActions<D extends Record<string, any>, V = any> = TableInstance<D> & {
@@ -35,8 +36,9 @@ interface LocationProps {
   initialData: regionProp
 }
 
-const ConfigureLocations = ({ regionData, setRegionData, initialData }: LocationProps) => {
+const ConfigureLocations = ({ regionData, setRegionData }: LocationProps) => {
   const { getString } = useStrings()
+  const [isOpen, setIsOpen] = useState(false)
   const lastFocusRef = useRef<HTMLInputElement | null>(null)
   const currentFocusRef = useRef('')
 
@@ -83,6 +85,7 @@ const ConfigureLocations = ({ regionData, setRegionData, initialData }: Location
   const CustomCell: any = (row: customCellProps) => {
     const { id, placeholder } = row?.column
     const focusId = `${id}_${row?.row?.index}`
+
     return (
       <Container className={css.inputContainer} ref={currentFocusRef?.current === focusId ? lastFocusRef : null}>
         <TextInput
@@ -166,14 +169,19 @@ const ConfigureLocations = ({ regionData, setRegionData, initialData }: Location
     }
   ]
 
-  const addNewRegion = () => {
+  const addNewRegion = (data: regionProp) => {
     const clonedData: regionProp[] = cloneDeep(regionData)
     const payload: regionProp = {
-      ...initialData,
+      ...data,
       identifier: clonedData?.length + 1
     }
     clonedData.push(payload)
     setRegionData(clonedData)
+    setIsOpen(false)
+  }
+
+  const openRegionModal = () => {
+    setIsOpen(true)
   }
 
   return (
@@ -193,7 +201,8 @@ const ConfigureLocations = ({ regionData, setRegionData, initialData }: Location
         </Text>
       </Layout.Horizontal>
 
-      <RegionTable columns={columns} addNewRegion={addNewRegion} regionData={regionData} />
+      <NewRegionModal isOpen={isOpen} setIsOpen={setIsOpen} onSubmit={addNewRegion} />
+      <RegionTable columns={columns} addNewRegion={openRegionModal} regionData={regionData} />
     </Layout.Vertical>
   )
 }

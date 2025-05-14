@@ -1,8 +1,10 @@
 import React from 'react'
-import { Container, FormInput, Label, Layout, Text, TextInput } from '@harnessio/uicore'
+import { Container, Label, Layout, Text, TextInput } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
-import type { FormikProps } from 'formik'
+import { useFormikContext, type FormikProps } from 'formik'
 import { useStrings } from 'framework/strings'
+import CustomSelectDropdown from 'cde-gitness/components/CustomSelectDropdown/CustomSelectDropdown'
+import { InfraDetails } from './InfraDetails.constants'
 import css from './InfraDetails.module.scss'
 
 interface GatewayProps {
@@ -11,6 +13,13 @@ interface GatewayProps {
 
 const GatewayDetails = ({ formikProps }: GatewayProps) => {
   const { getString } = useStrings()
+  const machineTypeOption = InfraDetails.machine_types.map(machine => {
+    return {
+      label: machine.name,
+      value: machine.name
+    }
+  })
+  const { setFieldValue, values } = useFormikContext<{ machine_type?: string }>()
   return (
     <Layout.Vertical spacing="medium" className={css.containerSpacing}>
       <Text className={css.basicDetailsHeading}>{getString('cde.configureInfra.gateway')}</Text>
@@ -33,11 +42,14 @@ const GatewayDetails = ({ formikProps }: GatewayProps) => {
         />
 
         <Text className={css.noteText}>{getString('cde.configureInfra.gatewayNoteText')}</Text>
-        <FormInput.Text
-          className={css.inputWithMargin}
-          name="machine_type"
+        <br />
+        <CustomSelectDropdown
+          value={machineTypeOption.find(item => item.label === values?.machine_type)}
+          onChange={(data: string) => setFieldValue('machine_type', data)}
+          allowCustom
           label={getString('cde.configureInfra.machineType')}
-          placeholder={getString('cde.configureInfra.machineType')}
+          options={machineTypeOption}
+          // placeholder={getString('cde.configureInfra.machineType')}
         />
       </Container>
     </Layout.Vertical>

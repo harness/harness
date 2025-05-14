@@ -1378,6 +1378,7 @@ export interface StringsMap {
   'cde.gitspaceInfra': string
   'cde.gitspaceInfraHome.addMachineNote': string
   'cde.gitspaceInfraHome.addMachineType': string
+  'cde.gitspaceInfraHome.addnewRegion': string
   'cde.gitspaceInfraHome.bootDisk': string
   'cde.gitspaceInfraHome.bootSize': string
   'cde.gitspaceInfraHome.bootSizeColumn': string
@@ -1414,8 +1415,11 @@ export interface StringsMap {
   'cde.gitspaceInfraHome.machineType': string
   'cde.gitspaceInfraHome.machineTypeMessage': string
   'cde.gitspaceInfraHome.machines': string
+  'cde.gitspaceInfraHome.maxMessage': string
   'cde.gitspaceInfraHome.memoryInGb': string
   'cde.gitspaceInfraHome.memoryMessage': string
+  'cde.gitspaceInfraHome.minMessage': string
+  'cde.gitspaceInfraHome.minNumber': string
   'cde.gitspaceInfraHome.nameMessage': string
   'cde.gitspaceInfraHome.newMachine': string
   'cde.gitspaceInfraHome.newRegion': string

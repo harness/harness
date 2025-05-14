@@ -66,6 +66,9 @@ configureGitspaceInfra: Configure Gitspace Infrastructure
 delegate:
   DelegateSelector: Delegate Selector
 gitspaceInfraHome:
+  minMessage: '{{field}} should contain minimum {{count}} characters'
+  maxMessage: '{{field}} should not contain more than {{count}} characters'
+  minNumber: '{{field}} should be greater than {{count}}'
   configureGCPButton: Configure GCP infrastructure
   description: Configure an infrastructure with locations and machines to be used as one of the infrastructure while creating a Gitspace
   gcpSupportText: Currently we support GCP based infrastructure only.
@@ -85,7 +88,7 @@ gitspaceInfraHome:
   machine: Machine
   diskType: Persistent Disk Type
   bootType: Boot Size Type
-  diskSize: Persistent Disk Size
+  diskSize: Persistent Disk Size (in GB)
   persistentDisk: Persistent Disk
   bootSizeColumn: Boot Size
   bootDisk: Boot Disk
@@ -94,6 +97,7 @@ gitspaceInfraHome:
   memoryInGb: Memory (in GB)
   newMachine: New Machine
   newRegion: New Region
+  addnewRegion: Add New Region
   machineType: Machine Type
   zone: Zone
   diskSizeMessage: Persistent Disk Size is required

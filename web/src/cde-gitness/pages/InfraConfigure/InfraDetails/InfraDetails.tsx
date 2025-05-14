@@ -10,7 +10,6 @@ import { getErrorMessage } from 'utils/Utils'
 import { useGetInfraDetails } from 'cde-gitness/hooks/useInfraDetailAPI'
 import { validateInfraForm } from '../../../utils/InfraValidations.utils'
 import BasicDetails from './BasicDetails'
-import GatewayDetails from './GatewayDetails'
 import ConfigureLocations from './ConfigureLocations'
 import css from './InfraDetails.module.scss'
 
@@ -41,7 +40,7 @@ const InfraDetails = () => {
   const { getString } = useStrings()
   const { accountInfo } = useAppContext()
   const { showSuccess, showError } = useToaster()
-  const [regionData, setRegionData] = useState([initialData])
+  const [regionData, setRegionData] = useState<regionProp[]>([])
   const { infraprovider_identifier } = useParams<RouteParamsProps>()
   const [infraDetails, setInfraDetails] = useState<InfraDetailsFormikProps>({})
   const { data } = useGetInfraDetails({
@@ -174,7 +173,7 @@ const InfraDetails = () => {
               <FormikForm>
                 <Layout.Vertical spacing="medium">
                   <BasicDetails formikProps={formikProps} />
-                  <GatewayDetails formikProps={formikProps} />
+                  {/* <GatewayDetails formikProps={formikProps} /> */}
                   <ConfigureLocations regionData={regionData} setRegionData={setRegionData} initialData={initialData} />
                   <Layout.Horizontal className={css.formFooter}>
                     <Button

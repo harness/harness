@@ -1,9 +1,11 @@
 import React from 'react'
 import { Container, FormInput, Layout, Text } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
-import type { FormikProps } from 'formik'
+import { useFormikContext, type FormikProps } from 'formik'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
+import CustomSelectDropdown from 'cde-gitness/components/CustomSelectDropdown/CustomSelectDropdown'
+import { InfraDetails } from './InfraDetails.constants'
 import css from './InfraDetails.module.scss'
 
 interface BasicDetailProps {
@@ -19,9 +21,18 @@ const BasicDetails = ({ formikProps }: BasicDetailProps) => {
     queryParams
   })
 
+  const { setFieldValue, values } = useFormikContext<{ machine_type?: string }>()
+
   const delegateHandler = (val: string[]) => {
     formikProps.setFieldValue('delegateSelector', val)
   }
+
+  const machineTypeOption = InfraDetails.machine_types.map(machine => {
+    return {
+      label: machine.name,
+      value: machine.name
+    }
+  })
 
   return (
     <Layout.Vertical spacing="medium" className={css.containerSpacing}>
@@ -51,6 +62,15 @@ const BasicDetails = ({ formikProps }: BasicDetailProps) => {
           placeholder={getString('cde.configureInfra.domain')}
         />
         <Text className={css.noteText}>{getString('cde.configureInfra.basicNoteText')}</Text>
+        <br />
+        <CustomSelectDropdown
+          value={machineTypeOption.find(item => item.label === values?.machine_type)}
+          onChange={(data: string) => setFieldValue('machine_type', data)}
+          allowCustom
+          label={getString('cde.configureInfra.machineType')}
+          options={machineTypeOption}
+          // placeholder={getString('cde.configureInfra.machineType')}
+        />
         <Container className={css.delegateContainer}>
           <Text className={css.delegateSelector}>{getString('cde.delegate.DelegateSelector')}</Text>
           <DelegateSelectorsV2

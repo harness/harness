@@ -272,3 +272,7 @@ export const SortByTypes = (getString: any) => [
     value: SortByType.LAST_ACTIVATED
   }
 ]
+
+export const getStringDropdownOptions = (value: string) => {
+  return { value: value, label: value }
+}
