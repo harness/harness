@@ -61,3 +61,13 @@ export interface Identifier {
   orgIdentifier: string
   projectIdentifier: string
 }
+
+export interface RuleSettingsParams {
+  accountId: string
+  orgIdentifier: string
+  projectIdentifier: string
+  repoName: string
+  settingSection: string
+  ruleId: string
+  settingSectionMode: string
+}

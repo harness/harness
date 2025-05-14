@@ -33,7 +33,7 @@ import {
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Menu, PopoverPosition } from '@blueprintjs/core'
 import { Icon } from '@harnessio/icons'
-import { useHistory } from 'react-router-dom'
+import { useHistory, useParams } from 'react-router-dom'
 import { useGet, useMutate } from 'restful-react'
 import {
   BranchTargetType,
@@ -51,6 +51,7 @@ import {
   getEditPermissionRequestFromScope,
   getErrorMessage,
   getScopeData,
+  getScopeFromParams,
   permissionProps,
   rulesFormInitialPayload
 } from 'utils/Utils'
@@ -66,6 +67,7 @@ import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useAppContext } from 'AppContext'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { getConfig } from 'services/config'
+import type { Identifier } from 'utils/types'
 import ProtectionRulesForm from './ProtectionRulesForm/ProtectionRulesForm'
 import Include from '../../../icons/Include.svg?url'
 import Exclude from '../../../icons/Exclude.svg?url'
@@ -73,7 +75,6 @@ import BypassList from './BypassList'
 import css from './BranchProtectionForm.module.scss'
 
 const BranchProtectionForm = (props: {
-  currentRule?: OpenapiRule
   editMode: boolean
   repoMetadata?: RepoRepositoryOutput | undefined
   refetchRules: () => void
@@ -81,19 +82,21 @@ const BranchProtectionForm = (props: {
   currentPageScope: LabelsPageScope
 }) => {
   const { routes, routingId, standalone, hooks } = useAppContext()
-
+  const params = useParams<Identifier>()
   const { ruleId } = useGetRepositoryMetadata()
   const { showError, showSuccess } = useToaster()
   const space = useGetSpaceParam()
-  const { editMode = false, repoMetadata, currentRule, refetchRules, settingSectionMode, currentPageScope } = props
+  const { editMode = false, repoMetadata, refetchRules, settingSectionMode, currentPageScope } = props
   const { getString } = useStrings()
   const [searchTerm, setSearchTerm] = useState('')
   const [searchStatusTerm, setSearchStatusTerm] = useState('')
-  const { scopeRef } = currentRule?.scope ? getScopeData(space, currentRule?.scope, standalone) : { scopeRef: space }
+  const currentRuleScope = getScopeFromParams(params, standalone, repoMetadata)
+  const { scopeRef } =
+    typeof currentRuleScope === 'number' ? getScopeData(space, currentRuleScope, standalone) : { scopeRef: space }
   const [accountIdentifier, orgIdentifier, projectIdentifier] = scopeRef?.split('/') || []
 
   const getUpdateRulePath = () =>
-    currentRule?.scope === 0 && repoMetadata
+    currentPageScope === LabelsPageScope.REPOSITORY
       ? `/repos/${repoMetadata?.path}/+/rules/${encodeURIComponent(ruleId)}`
       : `/spaces/${scopeRef}/+/rules/${encodeURIComponent(ruleId)}`
 
@@ -157,7 +160,7 @@ const BranchProtectionForm = (props: {
   const [defaultReviewersState, setDefaultReviewersState] = useState<string[]>(reviewerArrayCurr)
 
   const getUpdateChecksPath = () =>
-    currentRule?.scope === 0 && repoMetadata
+    currentRuleScope === 0 && repoMetadata
       ? `/repos/${repoMetadata?.path}/+/checks/recent`
       : `/spaces/${scopeRef}/+/checks/recent`
 
@@ -321,11 +324,11 @@ const BranchProtectionForm = (props: {
     }
 
     return rulesFormInitialPayload // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editMode, rule, currentRule, principals])
+  }, [editMode, rule, currentRuleScope, principals])
 
   const permPushResult = hooks?.usePermissionTranslate(
-    getEditPermissionRequestFromScope(space, currentRule?.scope ?? 0, repoMetadata),
-    [space, currentRule?.scope, repoMetadata]
+    getEditPermissionRequestFromScope(space, currentRuleScope ?? 0, repoMetadata),
+    [space, currentRuleScope, repoMetadata]
   )
 
   const defaultReviewerProps = {

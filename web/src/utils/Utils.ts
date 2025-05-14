@@ -35,6 +35,7 @@ import type {
 } from 'services/code'
 import type { StringKeys } from 'framework/strings'
 import { PullReqReviewDecision } from 'pages/PullRequest/PullRequestUtils'
+import type { Identifier } from './types'
 
 export enum ACCESS_MODES {
   VIEW,
@@ -927,6 +928,33 @@ export const getScopeData = (space: string, scope: number, standalone: boolean) 
     default:
       return { scopeRef: space, scopeIcon: 'nav-project' as IconName, scopeId: scope }
   }
+}
+
+export enum scopeEnum {
+  REPO_SCOPE = 0,
+  ACCOUNT_SCOPE = 1,
+  ORG_SCOPE = 2,
+  PROJECT_SCOPE = 3
+}
+
+export const getScopeFromParams = (params: Identifier, standalone: boolean, repoMetadata?: RepoRepositoryOutput) => {
+  if (repoMetadata) return scopeEnum.REPO_SCOPE
+
+  const { accountId, orgIdentifier, projectIdentifier } = params
+
+  if (standalone && projectIdentifier) {
+    return scopeEnum.ACCOUNT_SCOPE
+  }
+
+  if (accountId) {
+    if (!orgIdentifier) {
+      return scopeEnum.ACCOUNT_SCOPE
+    }
+
+    return projectIdentifier ? scopeEnum.PROJECT_SCOPE : scopeEnum.ORG_SCOPE
+  }
+
+  return scopeEnum.REPO_SCOPE
 }
 
 export const getEditPermissionRequestFromScope = (

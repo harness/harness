@@ -87,7 +87,6 @@ const BranchProtectionListing = (props: {
   const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
   const [page, setPage] = usePageIndex(pageInit)
   const [searchTerm, setSearchTerm] = useState('')
-  const [currentRule, setCurrentRule] = useState<OpenapiRule>()
   const { settingSection, ruleId, settingSectionMode } = useParams<CODEProps>()
   const newRule = settingSection && settingSectionMode === SettingTypeMode.NEW
   const editRule = settingSection !== '' && ruleId !== '' && settingSectionMode === SettingTypeMode.EDIT
@@ -475,7 +474,6 @@ const BranchProtectionListing = (props: {
                           iconName: 'Edit',
                           text: getString('branchProtection.editRule'),
                           onClick: () => {
-                            setCurrentRule(row.original)
                             navigateToSettings({
                               repoMetadata,
                               standalone,
@@ -585,7 +583,6 @@ const BranchProtectionListing = (props: {
         <BranchProtectionForm
           editMode={editRule}
           repoMetadata={repoMetadata}
-          currentRule={currentRule}
           refetchRules={refetchRules}
           settingSectionMode={settingSectionMode}
           currentPageScope={currentPageScope}
@@ -601,7 +598,6 @@ const BranchProtectionListing = (props: {
                 data={rules}
                 getRowClassName={() => css.row}
                 onRowClick={row => {
-                  setCurrentRule(row)
                   navigateToSettings({
                     repoMetadata,
                     standalone,
