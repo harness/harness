@@ -182,6 +182,35 @@ func (s gitspaceConfigStore) FindByIdentifier(
 	return s.mapDBToGitspaceConfig(ctx, dst)
 }
 
+func (s gitspaceConfigStore) FindAllByIdentifier(
+	ctx context.Context,
+	spaceID int64,
+	identifiers []string,
+) ([]types.GitspaceConfig, error) {
+	stmt := database.Builder.
+		Select(gitspaceConfigSelectColumns).
+		From(gitspaceConfigsTable).
+		Where(squirrel.Eq{"gconf_uid": identifiers}).
+		Where(squirrel.Eq{"gconf_space_id": spaceID})
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")
+	}
+	var dst []*gitspaceConfig
+	db := dbtx.GetAccessor(ctx, s.db)
+	if err := db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find gitspace configs, identifiers: %s",
+			identifiers)
+	}
+	gitspaceConfigs, err := s.mapToGitspaceConfigs(ctx, dst)
+	if err != nil {
+		return nil, err
+	}
+
+	return sortBy(gitspaceConfigs, identifiers), nil
+}
+
 func (s gitspaceConfigStore) Create(ctx context.Context, gitspaceConfig *types.GitspaceConfig) error {
 	stmt := database.Builder.
 		Insert(gitspaceConfigsTable).
@@ -536,4 +565,18 @@ func addGitspaceQueryFilter(stmt squirrel.SelectBuilder, filter types.ListQueryF
 		})
 	}
 	return stmt
+}
+
+func sortBy(configs []*types.GitspaceConfig, idsInOrder []string) []types.GitspaceConfig {
+	idsIdxMap := make(map[string]int)
+	for i, id := range idsInOrder {
+		idsIdxMap[id] = i
+	}
+
+	orderedConfigs := make([]types.GitspaceConfig, len(configs))
+	for _, config := range configs {
+		orderedConfigs[idsIdxMap[config.Identifier]] = *config
+	}
+
+	return orderedConfigs
 }

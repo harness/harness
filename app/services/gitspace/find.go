@@ -151,6 +151,27 @@ func (c *Service) FindAll(
 	return gitspaceConfigResult, nil
 }
 
+func (c *Service) FindAllByIdentifier(
+	ctx context.Context,
+	spaceID int64,
+	identifiers []string,
+) ([]types.GitspaceConfig, error) {
+	var gitspaceConfigResult []types.GitspaceConfig
+	txErr := c.tx.WithTx(ctx, func(ctx context.Context) error {
+		gitspaceConfigs, err := c.gitspaceConfigStore.FindAllByIdentifier(ctx, spaceID, identifiers)
+		if err != nil {
+			return fmt.Errorf("failed to find gitspace config: %w", err)
+		}
+
+		gitspaceConfigResult = gitspaceConfigs
+		return nil
+	}, dbtx.TxDefaultReadOnly)
+	if txErr != nil {
+		return nil, txErr
+	}
+	return gitspaceConfigResult, nil
+}
+
 func (c *Service) FindInstanceByIdentifier(
 	ctx context.Context,
 	identifier string,

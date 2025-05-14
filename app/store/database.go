@@ -708,6 +708,9 @@ type (
 		// FindByIdentifier returns a gitspace config with a given UID in a space
 		FindByIdentifier(ctx context.Context, spaceID int64, identifier string) (*types.GitspaceConfig, error)
 
+		// FindAllByIdentifier returns a list of gitspace configs with a given UIDs for a given space
+		FindAllByIdentifier(ctx context.Context, spaceID int64, identifiers []string) ([]types.GitspaceConfig, error)
+
 		// Create creates a new gitspace config in the datastore.
 		Create(ctx context.Context, gitspaceConfig *types.GitspaceConfig) error
 
