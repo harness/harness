@@ -66,12 +66,19 @@ export const scmOptions: SCMType[] = [
   { name: 'Any public Git repository', value: EnumGitspaceCodeRepoType.UNKNOWN, icon: genericGit },
   { name: 'Gitness', value: EnumGitspaceCodeRepoType.GITNESS, icon: gitnessIcon }
 ]
+
+export const onPremSCMOptions: SCMType[] = [
+  { name: 'GitHub Enterprise', value: EnumGitspaceCodeRepoType.GITHUB_ENTERPRISE, icon: github },
+  { name: 'GitLab On-prem', value: EnumGitspaceCodeRepoType.GITLAB_ON_PREM, icon: gitlab },
+  { name: 'Bitbucket Server', value: EnumGitspaceCodeRepoType.BITBUCKET_SERVER, icon: bitbucket }
+]
+
 export const scmOptionsCDE: SCMType[] = [
   { name: 'Harness Code', value: EnumGitspaceCodeRepoType.HARNESS_CODE, icon: harnessCode },
   { name: 'GitHub Cloud', value: EnumGitspaceCodeRepoType.GITHUB, icon: github },
   { name: 'GitLab Cloud', value: EnumGitspaceCodeRepoType.GITLAB, icon: gitlab },
   { name: 'Bitbucket', value: EnumGitspaceCodeRepoType.BITBUCKET, icon: bitbucket },
-  { name: 'Any public Git repository', value: EnumGitspaceCodeRepoType.UNKNOWN, icon: genericGit }
+  ...onPremSCMOptions
 ]
 
 export const CDECreateGitspace = () => {
@@ -80,6 +87,7 @@ export const CDECreateGitspace = () => {
   const { useGetUserSourceCodeManagers } = hooks
   const history = useHistory()
   const space = useGetSpaceParam()
+
   const { accountIdentifier = '', orgIdentifier = '', projectIdentifier = '' } = useGetCDEAPIParams()
   const { showSuccess, showError } = useToaster()
   const { mutate } = useCreateGitspace({ accountIdentifier, orgIdentifier, projectIdentifier })
@@ -88,7 +96,7 @@ export const CDECreateGitspace = () => {
   const [repoURLviaQueryParam, setrepoURLviaQueryParam] = useState<RepoQueryParams>({ ...repoQueryParams })
 
   const { data: OauthSCMs } = useGetUserSourceCodeManagers({
-    queryParams: { accountIdentifier, userIdentifier: currentUser?.uid }
+    queryParams: { accountIdentifier, userIdentifier: currentUser?.uid || '_QYNE3g7Rhiq-MkVN0G0Bg' }
   })
 
   useEffect(() => {

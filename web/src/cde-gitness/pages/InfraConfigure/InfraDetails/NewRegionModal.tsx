@@ -1,5 +1,5 @@
 import React from 'react'
-import { Button, ButtonVariation, Formik, FormikForm, FormInput, ModalDialog } from '@harnessio/uicore'
+import { Button, ButtonVariation, Formik, FormikForm, FormInput, ModalDialog, SelectOption } from '@harnessio/uicore'
 import * as Yup from 'yup'
 import cidrRegex from 'cidr-regex'
 import { useFormikContext } from 'formik'
@@ -36,7 +36,7 @@ const validationSchema = (context: { domain: string }) =>
 const NewRegionModal = ({ isOpen, setIsOpen, onSubmit }: NewRegionModalProps) => {
   const { getString } = useStrings()
 
-  const { values, setFieldValue } = useFormikContext<{ domain: string; location: string }>()
+  const { values } = useFormikContext<{ domain: string }>()
 
   const regionOptions = Object.keys(InfraDetails.regions).map(item => {
     return {
@@ -63,14 +63,17 @@ const NewRegionModal = ({ isOpen, setIsOpen, onSubmit }: NewRegionModalProps) =>
           dns: '',
           identifier: 0
         }}>
-        {() => {
+        {formikProps => {
           return (
             <FormikForm>
               <CustomSelectDropdown
-                value={regionOptions.find(item => item.label === values?.location)}
-                onChange={(data: string) => setFieldValue('location', data)}
+                value={regionOptions.find(item => item.label === formikProps?.values?.location)}
+                onChange={(data: SelectOption) => {
+                  formikProps.setFieldValue('location', data?.value as string)
+                }}
                 label={getString('cde.gitspaceInfraHome.locationName')}
                 options={regionOptions}
+                error={formikProps.errors.location}
                 // placeholder="e.g us-west1"
               />
               <FormInput.Text

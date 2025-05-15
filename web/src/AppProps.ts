@@ -79,6 +79,10 @@ export interface AppProps {
     useDeleteToken?: Unknown
     useCreateToken?: Unknown
     useGetDelegateSelectorsUpTheHierarchyV2?: Unknown
+    useGetPaginatedListOfReposByRefConnector?: Unknown
+    useGetPaginatedListOfBranchesByRefConnector?: Unknown
+    useGetRepoURL?: Unknown
+    getRepoURLPromise?: Unknown
   }>
 
   currentUser: Required<TypesUser>

@@ -162,7 +162,10 @@ export enum EnumGitspaceCodeRepoType {
   HARNESS_CODE = 'harness_code',
   BITBUCKET = 'bitbucket',
   UNKNOWN = 'unknown',
-  GITNESS = 'gitness'
+  GITNESS = 'gitness',
+  GITLAB_ON_PREM = 'gitlab_on_prem',
+  BITBUCKET_SERVER = 'bitbucket_server',
+  GITHUB_ENTERPRISE = 'github_enterprise'
 }
 
 export enum GitspaceStatus {
