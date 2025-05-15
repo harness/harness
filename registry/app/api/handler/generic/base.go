@@ -92,11 +92,7 @@ func (h *Handler) GetGenericArtifactInfo(r *http.Request) (pkg.GenericArtifactIn
 		return pkg.GenericArtifactInfo{}, errcode.ErrCodeInvalidRequest.WithDetail(err)
 	}
 
-	if err := validatePackageVersion(artifact, tag); err != nil {
-		return pkg.GenericArtifactInfo{}, errcode.ErrCodeInvalidRequest.WithDetail(err)
-	}
-
-	if err := validateFileName(fileName); err != nil {
+	if err := validatePackageVersionAndFileName(artifact, tag, fileName); err != nil {
 		return pkg.GenericArtifactInfo{}, errcode.ErrCodeInvalidRequest.WithDetail(err)
 	}
 
@@ -232,10 +228,11 @@ func handleErrors(ctx context.Context, err errcode.Error, w http.ResponseWriter)
 	}
 }
 
-func validatePackageVersion(packageName, version string) error {
+func validatePackageVersionAndFileName(packageName, version, filename string) error {
 	// Compile the regular expressions
 	packageNameRe := regexp.MustCompile(packageNameRegex)
 	versionRe := regexp.MustCompile(versionRegex)
+	filenameRe := regexp.MustCompile(filenameRegex)
 
 	// Validate package name
 	if !packageNameRe.MatchString(packageName) {
@@ -247,15 +244,11 @@ func validatePackageVersion(packageName, version string) error {
 		return fmt.Errorf("invalid version: %s", version)
 	}
 
-	return nil
-}
-
-func validateFileName(filename string) error {
-	filenameRe := regexp.MustCompile(filenameRegex)
-
+	// Validate filename
 	if !filenameRe.MatchString(filename) {
 		return fmt.Errorf("invalid filename: %s", filename)
 	}
+
 	return nil
 }
 
@@ -268,15 +261,19 @@ func (h *Handler) GetPackageArtifactInfo(r *http.Request) (pkg.PackageArtifactIn
 
 	info.Image = r.PathValue("package")
 	version := r.PathValue("version")
+	fileName := r.FormValue("filename")
+	description := r.FormValue("description")
 
-	if err := validatePackageVersion(info.Image, version); err != nil {
-		log.Error().Msgf("Invalid image name/version/fileName: %s/%s", info.Image, version)
+	if err := validatePackageVersionAndFileName(info.Image, version, fileName); err != nil {
+		log.Error().Msgf("Invalid image name/version/fileName: %s/%s/%s", info.Image, version, fileName)
 		return nil, err
 	}
 
 	return pkg.GenericArtifactInfo{
 		ArtifactInfo: &info,
 		Version:      version,
+		FileName:     fileName,
+		Description:  description,
 		RegistryID:   info.RegistryID,
 	}, nil
 }

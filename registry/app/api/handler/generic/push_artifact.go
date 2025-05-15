@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/harness/gitness/registry/app/api/handler/utils"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 )
@@ -30,21 +29,16 @@ func (h *Handler) PushArtifact(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fileReader, formValues, err1 := utils.GetMultipartValues(r, "file", []string{"filename", "description"})
+	file, _, err1 := r.FormFile("file")
 	if err1 != nil {
 		handleErrors(r.Context(),
-			errcode.ErrCodeInvalidRequest.WithMessage(fmt.Sprintf("failed to process multipart form: %s",
-				err1.Error())), w)
+			errcode.ErrCodeInvalidRequest.WithMessage(fmt.Sprintf("failed to parse file: %s, "+
+				"please provide correct file path ", err.Message)), w)
 		return
 	}
-	defer fileReader.Close()
-
-	info.FileName = formValues["filename"]
-	info.Description = formValues["description"]
-
-	// Process the upload
 	ctx := r.Context()
-	headers, sha256, err := h.Controller.UploadArtifact(ctx, info, fileReader)
+	defer file.Close()
+	headers, sha256, err := h.Controller.UploadArtifact(ctx, info, file)
 	if commons.IsEmptyError(err) {
 		headers.WriteToResponse(w)
 		_, err := w.Write([]byte(fmt.Sprintf("Pushed.\nSha256: %s", sha256)))
@@ -52,7 +46,6 @@ func (h *Handler) PushArtifact(w http.ResponseWriter, r *http.Request) {
 			handleErrors(r.Context(), errcode.ErrCodeUnknown.WithDetail(err), w)
 			return
 		}
-	} else {
-		handleErrors(r.Context(), err, w)
 	}
+	handleErrors(r.Context(), err, w)
 }
