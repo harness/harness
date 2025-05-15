@@ -21,17 +21,20 @@ import { useParentHooks } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import { ButtonTab, ButtonTabs } from '@ar/components/ButtonTabs/ButtonTabs'
 import VersionFilesProvider from '@ar/pages/version-details/context/VersionFilesProvider'
-import VersionDependencyListProvider from '@ar/pages/version-details/context/VersionDependencyListProvider'
+import { useVersionOverview } from '@ar/pages/version-details/context/VersionOverviewProvider'
+import ReadmeFileContent from '@ar/pages/version-details/components/ReadmeFileContent/ReadmeFileContent'
 
 import NuGetVersionFilesContent from './NuGetVersionFilesContent'
 import NuGetVersionDependencyContent from './NuGetVersionDependencyContent'
-import { NuGetArtifactDetailsTabEnum, type NuGetVersionDetailsQueryParams } from '../../types'
+import { NugetArtifactDetails, NuGetArtifactDetailsTabEnum, type NuGetVersionDetailsQueryParams } from '../../types'
 
 export default function NuGetVersionArtifactDetailsPage() {
   const { getString } = useStrings()
   const { useUpdateQueryParams, useQueryParams } = useParentHooks()
   const { updateQueryParams } = useUpdateQueryParams()
-  const { detailsTab = NuGetArtifactDetailsTabEnum.Files } = useQueryParams<NuGetVersionDetailsQueryParams>()
+  const { detailsTab = NuGetArtifactDetailsTabEnum.ReadMe } = useQueryParams<NuGetVersionDetailsQueryParams>()
+  const { data } = useVersionOverview<NugetArtifactDetails>()
+  const { metadata } = data
 
   const handleTabChange = useCallback(
     (nextTab: NuGetArtifactDetailsTabEnum): void => {
@@ -43,6 +46,13 @@ export default function NuGetVersionArtifactDetailsPage() {
   return (
     <Layout.Vertical padding="large" spacing="large">
       <ButtonTabs small bold selectedTabId={detailsTab} onChange={handleTabChange}>
+        <ButtonTab
+          id={NuGetArtifactDetailsTabEnum.ReadMe}
+          icon="document"
+          iconProps={{ size: 12 }}
+          panel={<ReadmeFileContent source={metadata?.metadata.readme || getString('noReadme')} />}
+          title={getString('versionDetails.artifactDetails.tabs.readme')}
+        />
         <ButtonTab
           id={NuGetArtifactDetailsTabEnum.Files}
           icon="document"
@@ -58,11 +68,7 @@ export default function NuGetVersionArtifactDetailsPage() {
           id={NuGetArtifactDetailsTabEnum.Dependencies}
           icon="layers"
           iconProps={{ size: 12 }}
-          panel={
-            <VersionDependencyListProvider>
-              <NuGetVersionDependencyContent />
-            </VersionDependencyListProvider>
-          }
+          panel={<NuGetVersionDependencyContent />}
           title={getString('versionDetails.artifactDetails.tabs.dependencies')}
         />
       </ButtonTabs>

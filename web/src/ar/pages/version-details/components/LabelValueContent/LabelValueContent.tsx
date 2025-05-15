@@ -16,7 +16,6 @@
 
 import React from 'react'
 import { defaultTo } from 'lodash-es'
-import { Link } from 'react-router-dom'
 import type { IconName } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Layout, Text, TextProps } from '@harnessio/uicore'
@@ -73,14 +72,14 @@ export function LabelValueContent(props: LabelValueProps): JSX.Element {
       case LabelValueTypeEnum.Link:
         if (value) {
           return (
-            <Link target="_blank" rel="noreferrer" to={value as string}>
+            <a target="_blank" rel="noreferrer" href={value as string}>
               <Text
                 lineClamp={lineClamp}
                 font={{ variation: FontVariation.BODY2, weight: 'light' }}
                 color={Color.PRIMARY_7}>
                 {value}
               </Text>
-            </Link>
+            </a>
           )
         } else {
           return (

@@ -39,7 +39,7 @@ export enum UpstreamRepositoryURLInputSource {
   AwsEcr = 'AwsEcr',
   Custom = 'Custom',
   PyPi = 'PyPi',
-  NuGetorg = 'NuGet.org'
+  NugetOrg = 'NugetOrg'
 }
 
 export enum UpstreamProxyAuthenticationMode {

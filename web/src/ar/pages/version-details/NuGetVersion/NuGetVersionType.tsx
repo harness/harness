@@ -49,6 +49,7 @@ import VersionDetailsHeaderContent from '../components/VersionDetailsHeaderConte
 import VersionFilesProvider from '../context/VersionFilesProvider'
 import ArtifactFilesContent from '../components/ArtifactFileListTable/ArtifactFilesContent'
 import { VersionAction } from '../components/VersionActions/types'
+import VersionOverviewProvider from '../context/VersionOverviewProvider'
 
 export class NuGetVersionType extends VersionStep<ArtifactVersionSummary> {
   protected packageType = RepositoryPackageType.NUGET
@@ -88,15 +89,25 @@ export class NuGetVersionType extends VersionStep<ArtifactVersionSummary> {
   renderVersionDetailsTab(props: VersionDetailsTabProps): JSX.Element {
     switch (props.tab) {
       case VersionDetailsTab.OVERVIEW:
-        return <NuGetVersionOverviewPage />
+        return (
+          <VersionOverviewProvider>
+            <NuGetVersionOverviewPage />
+          </VersionOverviewProvider>
+        )
       case VersionDetailsTab.ARTIFACT_DETAILS:
-        return <NuGetVersionArtifactDetailsPage />
+        return (
+          <VersionOverviewProvider>
+            <NuGetVersionArtifactDetailsPage />
+          </VersionOverviewProvider>
+        )
       case VersionDetailsTab.OSS:
         return (
-          <Layout.Vertical spacing="xlarge">
-            <NuGetVersionOverviewPage />
-            <NuGetVersionArtifactDetailsPage />
-          </Layout.Vertical>
+          <VersionOverviewProvider>
+            <Layout.Vertical spacing="xlarge">
+              <NuGetVersionOverviewPage />
+              <NuGetVersionArtifactDetailsPage />
+            </Layout.Vertical>
+          </VersionOverviewProvider>
         )
       default:
         return <String stringID="tabNotFound" />

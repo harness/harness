@@ -54,7 +54,7 @@ export class NuGetRepositoryType extends RepositoryStep<VirtualRegistryRequest> 
   protected supportedScanners = []
   protected supportsUpstreamProxy = true
   protected supportedUpstreamURLSources = [
-    UpstreamRepositoryURLInputSource.NuGetorg,
+    UpstreamRepositoryURLInputSource.NugetOrg,
     UpstreamRepositoryURLInputSource.Custom
   ]
 
@@ -72,7 +72,7 @@ export class NuGetRepositoryType extends RepositoryStep<VirtualRegistryRequest> 
     identifier: '',
     config: {
       type: RepositoryConfigType.UPSTREAM,
-      source: UpstreamRepositoryURLInputSource.NuGetorg,
+      source: UpstreamRepositoryURLInputSource.NugetOrg,
       authType: UpstreamProxyAuthenticationMode.ANONYMOUS,
       url: ''
     },

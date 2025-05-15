@@ -1,5 +1,6 @@
 page: Version Details Page
 selectDigestPlaceholder: All Digest
+noDependencies: No Dependencies
 tabs:
   overview: Overview
   artifactDetails: Artifact Details

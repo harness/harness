@@ -14,31 +14,12 @@
  * limitations under the License.
  */
 
-.pageBody {
-  height: auto;
-  min-height: 300px;
-}
+.collapseMain {
+  border-top: none !important;
 
-.ossVersionDetailsModal {
-  overflow: auto;
-  min-height: 100%;
-  .ossVersionDetailsContainer {
-    background-color: var(--primary-bg) !important;
-    min-height: 100%;
-    .ossVersionDetailsHeader {
-      position: sticky;
-      top: 0px;
-    }
-  }
-
-  .closeBtn {
-    position: absolute;
-    right: 100%;
-    top: 0;
-    background: var(--primary-5) !important;
-    opacity: 0.5;
-    color: var(--white) !important;
-    border-radius: 4px 0 0 4px !important;
-    padding: 0 !important;
+  & svg {
+    height: 16px;
+    width: 16px;
+    color: var(--grey-800);
   }
 }
