@@ -18,7 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"mime/multipart"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -90,7 +90,7 @@ const regNameFormat = "registry : [%s]"
 
 func (c Controller) UploadArtifact(
 	ctx context.Context, info pkg.GenericArtifactInfo,
-	file multipart.File,
+	file io.Reader,
 ) (*commons.ResponseHeaders, string, errcode.Error) {
 	responseHeaders := &commons.ResponseHeaders{
 		Headers: make(map[string]string),
@@ -112,7 +112,7 @@ func (c Controller) UploadArtifact(
 
 	path := info.Image + "/" + info.Version + "/" + info.FileName
 	fileInfo, err := c.fileManager.UploadFile(ctx, path, info.RegistryID,
-		info.RootParentID, info.RootIdentifier, file, nil, info.FileName)
+		info.RootParentID, info.RootIdentifier, nil, file, info.FileName)
 	if err != nil {
 		return responseHeaders, "", errcode.ErrCodeUnknown.WithDetail(err)
 	}

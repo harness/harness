@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/storage"
@@ -28,6 +29,12 @@ func (h *Handler) PullArtifact(w http.ResponseWriter, r *http.Request) {
 	info, err := h.GetGenericArtifactInfo(r)
 	if !commons.IsEmptyError(err) {
 		handleErrors(r.Context(), err, w)
+		return
+	}
+	info.FileName = r.FormValue("filename")
+
+	if err2 := validateFileName(info.FileName); err2 != nil {
+		handleErrors(r.Context(), errcode.ErrCodeInvalidRequest.WithDetail(err2), w)
 		return
 	}
 
