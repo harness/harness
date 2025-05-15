@@ -341,6 +341,7 @@ pr:
     | ----------- | -------- | -------- | ---- |
   readyForReview: Ready for review
   openForReview: Open for review
+  openForReviewSuccess: PR state changed to Open
   authorCommentedPR: '{author} submitted this pull request {time}'
   mergeOptions:
     squashAndMerge: Squash and merge

@@ -854,6 +854,7 @@ export interface StringsMap {
   'pr.moreComments': string
   'pr.myPRs': string
   'pr.openForReview': string
+  'pr.openForReviewSuccess': string
   'pr.outdated': string
   'pr.prBranchDeleteInfo': string
   'pr.prBranchForcePushInfo': string

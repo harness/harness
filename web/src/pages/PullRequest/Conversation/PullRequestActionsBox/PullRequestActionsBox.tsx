@@ -405,11 +405,15 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                           text={getString('pr.openForReview')}
                           variation={ButtonVariation.SECONDARY}
                           disabled={isSourceBranchDeleted}
-                          onClick={() => {
-                            const payload: OpenapiStatePullReqRequest = { state: 'open' }
-                            updatePRState(payload)
-                              .then(onPRStateChanged)
-                              .catch(exception => showError(getErrorMessage(exception)))
+                          onClick={async () => {
+                            try {
+                              const payload: OpenapiStatePullReqRequest = { state: 'open' }
+                              await updatePRState(payload)
+                              onPRStateChanged()
+                              showSuccess(getString('pr.openForReviewSuccess'), 1000)
+                            } catch (exception) {
+                              showError(getErrorMessage(exception))
+                            }
                           }}
                         />
                       </Case>

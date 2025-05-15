@@ -103,6 +103,7 @@ export function CompareContentHeader({
         <FlexExpander />
         <SplitButton
           loading={loading}
+          disabled={loading}
           text={createOption.title}
           variation={ButtonVariation.PRIMARY}
           popoverProps={{
