@@ -77,6 +77,16 @@ type driver struct {
 	rootDirectory string
 }
 
+func (d *driver) CopyObject(_ context.Context, _, _, _ string) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (d *driver) BatchCopyObjects(_ context.Context, _ string, _ []string, _ int) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 type baseEmbed struct {
 	base.Base
 }

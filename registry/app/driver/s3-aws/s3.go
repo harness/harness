@@ -93,6 +93,8 @@ const listMax = 1000
 // noStorageClass defines the value to be used if storage class is not supported by the S3 endpoint.
 const noStorageClass = "NONE"
 
+const r2Regions = "wnam, enam, weur, eeur, apac, oc"
+
 // s3StorageClasses lists all compatible (instant retrieval) S3 storage classes.
 var s3StorageClasses = []string{
 	noStorageClass,
@@ -150,6 +152,10 @@ func init() {
 		}
 	}
 
+	// Add the default Cloudflare R2 regions
+	for _, region := range strings.Split(r2Regions, ",") {
+		validRegions[strings.TrimSpace(region)] = struct{}{}
+	}
 	for _, objectACL := range []string{
 		s3.ObjectCannedACLPrivate,
 		s3.ObjectCannedACLPublicRead,
@@ -193,6 +199,72 @@ type driver struct {
 	StorageClass                string
 	ObjectACL                   string
 	pool                        *sync.Pool
+}
+
+func (d *driver) CopyObject(ctx context.Context, srcKey, destBucket, destKey string) error {
+	copySource := fmt.Sprintf("/%s%s", d.Bucket, srcKey)
+
+	_, err := d.S3.CopyObjectWithContext(ctx, &s3.CopyObjectInput{
+		Bucket:     aws.String(destBucket),
+		CopySource: aws.String(copySource),
+		Key:        aws.String(destKey),
+	})
+	if err != nil {
+		return err
+	}
+
+	_, err = d.S3.HeadObjectWithContext(ctx, &s3.HeadObjectInput{
+		Bucket: aws.String(destBucket),
+		Key:    aws.String(destKey),
+	})
+	return err
+}
+
+func (d *driver) BatchCopyObjects(ctx context.Context, destBucket string, keys []string, concurrency int) error {
+	total := len(keys)
+	sem := make(chan struct{}, concurrency)
+	errCh := make(chan error, total)
+	var wg sync.WaitGroup
+
+	var mu sync.Mutex
+	completed := 0
+
+	for _, key := range keys {
+		wg.Add(1)
+		sem <- struct{}{}
+
+		go func(key string) {
+			defer wg.Done()
+			defer func() { <-sem }()
+
+			var err error
+			for attempt := 1; attempt <= 3; attempt++ {
+				err = d.CopyObject(ctx, key, destBucket, key)
+				if err == nil {
+					break
+				}
+				time.Sleep(time.Duration(100*attempt) * time.Millisecond) // basic exponential backoff
+			}
+			if err != nil {
+				errCh <- fmt.Errorf("failed to copy key %s after %d retries: %w", key, 3, err)
+				return
+			}
+
+			// Update progress
+			mu.Lock()
+			completed++
+			log.Ctx(ctx).Info().Msgf("Progress: %d/%d copied", completed, total)
+			mu.Unlock()
+		}(key)
+	}
+
+	wg.Wait()
+	close(errCh)
+
+	if len(errCh) > 0 {
+		return <-errCh
+	}
+	return nil
 }
 
 type baseEmbed struct {
@@ -541,8 +613,8 @@ func getParameterAsInt64(
 	parameters map[string]interface{},
 	name string,
 	defaultt int64,
-	min int64,
-	max int64,
+	minSize int64,
+	maxSize int64,
 ) (int64, error) {
 	rv := defaultt
 	param := parameters[name]
@@ -563,13 +635,13 @@ func getParameterAsInt64(
 		return 0, fmt.Errorf("invalid value for %s: %#v", name, param)
 	}
 
-	if rv < min || rv > max {
+	if rv < minSize || rv > maxSize {
 		return 0, fmt.Errorf(
 			"the %s %#v parameter should be a number between %d and %d (inclusive)",
 			name,
 			rv,
-			min,
-			max,
+			minSize,
+			maxSize,
 		)
 	}
 
@@ -609,7 +681,11 @@ func New(params DriverParameters) (*Driver, error) {
 	}
 
 	if params.SkipVerify {
-		httpTransport := http.DefaultTransport.(*http.Transport).Clone()
+		httpTransport, ok := http.DefaultTransport.(*http.Transport)
+		if !ok {
+			return nil, fmt.Errorf("failed to get default transport")
+		}
+		httpTransport = httpTransport.Clone()
 		httpTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true, MinVersion: tls.VersionTLS12}
 		awsConfig.WithHTTPClient(
 			&http.Client{
@@ -1375,6 +1451,9 @@ func (d *driver) s3Path(path string) string {
 
 // S3BucketKey returns the s3 bucket key for the given storage driver path.
 func (d *Driver) S3BucketKey(path string) string {
+	// We can ignore the error here as s3Path only returns error for empty paths
+	// which is handled by the caller
+	//nolint:errcheck
 	return d.StorageDriver.(*driver).s3Path(path)
 }
 
@@ -1427,7 +1506,11 @@ type buffer struct {
 // NewBuffer returns a new bytes buffer from driver's memory pool.
 // The size of the buffer is static and set to params.ChunkSize.
 func (d *driver) NewBuffer() *buffer {
-	return d.pool.Get().(*buffer)
+	buf, ok := d.pool.Get().(*buffer)
+	if !ok {
+		return nil
+	}
+	return buf
 }
 
 // ReadFrom reads as much data as it can fit in from r without growing its size.
@@ -1722,14 +1805,14 @@ func (w *writer) Commit(ctx context.Context) error {
 	// to the completedUploadedParts slice used to complete the Multipart upload.
 	if len(w.parts) == 0 {
 		log.Ctx(ctx).Trace().Msgf("[AWS] Upload empty part for %s", w.key)
-		resp, err := w.driver.S3.UploadPartWithContext(
-			w.ctx, &s3.UploadPartInput{
-				Bucket:     aws.String(w.driver.Bucket),
-				Key:        aws.String(w.key),
-				PartNumber: aws.Int64(1),
-				UploadId:   aws.String(w.uploadID),
-				Body:       bytes.NewReader(nil),
-			},
+		//nolint:contextcheck
+		resp, err := w.driver.S3.UploadPartWithContext(w.ctx, &s3.UploadPartInput{
+			Bucket:     aws.String(w.driver.Bucket),
+			Key:        aws.String(w.key),
+			PartNumber: aws.Int64(1),
+			UploadId:   aws.String(w.uploadID),
+			Body:       bytes.NewReader(nil),
+		},
 		)
 		if err != nil {
 			return err
@@ -1749,18 +1832,19 @@ func (w *writer) Commit(ctx context.Context) error {
 	sort.Sort(completedUploadedParts)
 
 	log.Ctx(ctx).Trace().Msgf("[AWS] Complete multipart upload for %s", w.key)
-	_, err = w.driver.S3.CompleteMultipartUploadWithContext(
-		w.ctx, &s3.CompleteMultipartUploadInput{
-			Bucket:   aws.String(w.driver.Bucket),
-			Key:      aws.String(w.key),
-			UploadId: aws.String(w.uploadID),
-			MultipartUpload: &s3.CompletedMultipartUpload{
-				Parts: completedUploadedParts,
-			},
+	//nolint:contextcheck
+	_, err = w.driver.S3.CompleteMultipartUploadWithContext(w.ctx, &s3.CompleteMultipartUploadInput{
+		Bucket:   aws.String(w.driver.Bucket),
+		Key:      aws.String(w.key),
+		UploadId: aws.String(w.uploadID),
+		MultipartUpload: &s3.CompletedMultipartUpload{
+			Parts: completedUploadedParts,
 		},
+	},
 	)
 	if err != nil {
 		log.Ctx(ctx).Trace().Msgf("[AWS] Abort multipart upload for %s: %v", w.key, err)
+		//nolint:contextcheck
 		if _, aErr := w.driver.S3.AbortMultipartUploadWithContext(
 			w.ctx, &s3.AbortMultipartUploadInput{
 				Bucket:   aws.String(w.driver.Bucket),
