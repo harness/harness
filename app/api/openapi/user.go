@@ -91,6 +91,46 @@ var queryParameterSortPublicKey = openapi3.ParameterOrRef{
 	},
 }
 
+var queryParameterUsagePublicKey = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamPublicKeyUsage,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The public key usage."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeArray),
+				Items: &openapi3.SchemaOrRef{
+					Schema: &openapi3.Schema{
+						Type: ptrSchemaType(openapi3.SchemaTypeString),
+						Enum: enum.PublicKeyUsage("").Enum(),
+					},
+				},
+			},
+		},
+	},
+}
+
+var queryParameterSchemePublicKey = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamPublicKeyScheme,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The public key scheme."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeArray),
+				Items: &openapi3.SchemaOrRef{
+					Schema: &openapi3.Schema{
+						Type: ptrSchemaType(openapi3.SchemaTypeString),
+						Enum: enum.PublicKeyScheme("").Enum(),
+					},
+				},
+			},
+		},
+	},
+}
+
 // helper function that constructs the openapi specification
 // for user account resources.
 func buildUser(reflector *openapi3.Reflector) {
@@ -146,7 +186,9 @@ func buildUser(reflector *openapi3.Reflector) {
 	opKeyList.WithTags("user")
 	opKeyList.WithMapOfAnything(map[string]interface{}{"operationId": "listPublicKey"})
 	opKeyList.WithParameters(QueryParameterPage, QueryParameterLimit,
-		queryParameterQueryPublicKey, queryParameterSortPublicKey, queryParameterOrder)
+		queryParameterQueryPublicKey, queryParameterSortPublicKey, queryParameterOrder,
+		queryParameterUsagePublicKey, queryParameterSchemePublicKey,
+	)
 	_ = reflector.SetRequest(&opKeyList, struct{}{}, http.MethodGet)
 	_ = reflector.SetJSONResponse(&opKeyList, new([]types.PublicKey), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opKeyList, new(usererror.Error), http.StatusBadRequest)

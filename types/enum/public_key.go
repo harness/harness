@@ -14,6 +14,25 @@
 
 package enum
 
+type PublicKeyScheme string
+
+const (
+	PublicKeySchemeSSH PublicKeyScheme = "ssh"
+	PublicKeySchemePGP PublicKeyScheme = "pgp"
+)
+
+var publicKeySchemes = sortEnum([]PublicKeyScheme{
+	PublicKeySchemeSSH, PublicKeySchemePGP,
+})
+
+func (PublicKeyScheme) Enum() []interface{} { return toInterfaceSlice(publicKeySchemes) }
+func (s PublicKeyScheme) Sanitize() (PublicKeyScheme, bool) {
+	return Sanitize(s, GetAllPublicKeySchemes)
+}
+func GetAllPublicKeySchemes() ([]PublicKeyScheme, PublicKeyScheme) {
+	return publicKeySchemes, PublicKeySchemeSSH
+}
+
 // PublicKeyUsage represents usage type of public key.
 type PublicKeyUsage string
 
@@ -24,7 +43,7 @@ const (
 )
 
 var publicKeyTypes = sortEnum([]PublicKeyUsage{
-	PublicKeyUsageAuth,
+	PublicKeyUsageAuth, PublicKeyUsageSign,
 })
 
 func (PublicKeyUsage) Enum() []interface{} { return toInterfaceSlice(publicKeyTypes) }

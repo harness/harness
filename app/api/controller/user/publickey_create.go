@@ -30,9 +30,31 @@ import (
 )
 
 type CreatePublicKeyInput struct {
-	Identifier string              `json:"identifier"`
-	Usage      enum.PublicKeyUsage `json:"usage"`
-	Content    string              `json:"content"`
+	Identifier string               `json:"identifier"`
+	Usage      enum.PublicKeyUsage  `json:"usage"`
+	Scheme     enum.PublicKeyScheme `json:"scheme"`
+	Content    string               `json:"content"`
+}
+
+func (in *CreatePublicKeyInput) Sanitize() error {
+	if err := check.Identifier(in.Identifier); err != nil {
+		return err
+	}
+
+	if _, ok := in.Usage.Sanitize(); !ok {
+		return errors.InvalidArgument("invalid value for public key usage")
+	}
+
+	if _, ok := in.Scheme.Sanitize(); !ok {
+		return errors.InvalidArgument("invalid value for public key scheme")
+	}
+
+	in.Content = strings.TrimSpace(in.Content)
+	if in.Content == "" {
+		return errors.InvalidArgument("public key not provided")
+	}
+
+	return nil
 }
 
 func (c *Controller) CreatePublicKey(
@@ -50,13 +72,40 @@ func (c *Controller) CreatePublicKey(
 		return nil, err
 	}
 
-	if err := sanitizeCreatePublicKeyInput(in); err != nil {
+	if err := in.Sanitize(); err != nil {
 		return nil, err
 	}
 
-	key, comment, err := publickey.ParseString(in.Content)
+	key, identity, comment, err := publickey.ParseString(in.Content)
 	if err != nil {
-		return nil, errors.InvalidArgument("could not parse public key")
+		return nil, errors.InvalidArgument("unrecognized key content")
+	}
+
+	if in.Scheme != "" && key.Scheme() != in.Scheme {
+		return nil, errors.InvalidArgument("key is not a valid %s key", in.Scheme)
+	}
+
+	// SSH keys don't have an embedded identity, by PGP keys do.
+	// If a key has an identity, it must match the current user's.
+	// The email address must match, the name can be different.
+	if identity != nil && !strings.EqualFold(identity.Email, session.Principal.Email) {
+		return nil, errors.InvalidArgument("key identity doesn't match the current user's email address")
+	}
+
+	switch key.Scheme() {
+	case enum.PublicKeySchemeSSH:
+		if in.Usage == "" {
+			in.Usage = enum.PublicKeyUsageAuth // backward compatibility, default usage for SSH is auth only
+		}
+	case enum.PublicKeySchemePGP:
+		if in.Usage == "" {
+			in.Usage = enum.PublicKeyUsageSign
+		} else if in.Usage == enum.PublicKeyUsageAuth {
+			return nil, errors.InvalidArgument(
+				"invalid key usage: PGP keys can only be used for verification of commit signatures")
+		}
+	default:
+		return nil, errors.InvalidArgument("unrecognized public key scheme")
 	}
 
 	now := time.Now().UnixMilli()
@@ -71,17 +120,23 @@ func (c *Controller) CreatePublicKey(
 		Content:     in.Content,
 		Comment:     comment,
 		Type:        key.Type(),
+		Scheme:      key.Scheme(),
 	}
 
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
-		existingKeys, err := c.publicKeyStore.ListByFingerprint(ctx, k.Fingerprint)
+		existingKeys, err := c.publicKeyStore.ListByFingerprint(
+			ctx,
+			k.Fingerprint,
+			nil,
+			[]enum.PublicKeyScheme{key.Scheme()},
+		)
 		if err != nil {
 			return fmt.Errorf("failed to read keys by fingerprint: %w", err)
 		}
 
 		for _, existingKey := range existingKeys {
 			if key.Matches(existingKey.Content) {
-				return errors.InvalidArgument("Key is already in use")
+				return errors.InvalidArgument("key is already in use")
 			}
 		}
 
@@ -97,23 +152,4 @@ func (c *Controller) CreatePublicKey(
 	}
 
 	return k, nil
-}
-
-func sanitizeCreatePublicKeyInput(in *CreatePublicKeyInput) error {
-	if err := check.Identifier(in.Identifier); err != nil {
-		return err
-	}
-
-	usage, ok := in.Usage.Sanitize()
-	if !ok {
-		return errors.InvalidArgument("invalid value for public key usage")
-	}
-	in.Usage = usage
-
-	in.Content = strings.TrimSpace(in.Content)
-	if in.Content == "" {
-		return errors.InvalidArgument("public key not provided")
-	}
-
-	return nil
 }

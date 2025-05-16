@@ -50,7 +50,7 @@ type LocalService struct {
 	pCache         store.PrincipalInfoCache
 }
 
-// ValidateKey tries to match the provided key to one of the keys in the database.
+// ValidateKey tries to match the provided SSH key to one of the keys in the database.
 // It updates the verified timestamp of the matched key to mark it as used.
 func (s LocalService) ValidateKey(
 	ctx context.Context,
@@ -58,10 +58,15 @@ func (s LocalService) ValidateKey(
 	publicKey ssh.PublicKey,
 	usage enum.PublicKeyUsage,
 ) (*types.PrincipalInfo, error) {
-	key := From(publicKey)
+	key := FromSSH(publicKey)
 	fingerprint := key.Fingerprint()
 
-	existingKeys, err := s.publicKeyStore.ListByFingerprint(ctx, fingerprint)
+	existingKeys, err := s.publicKeyStore.ListByFingerprint(
+		ctx,
+		fingerprint,
+		[]enum.PublicKeyUsage{enum.PublicKeyUsageAuth},
+		[]enum.PublicKeyScheme{enum.PublicKeySchemeSSH},
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read keys by fingerprint: %w", err)
 	}

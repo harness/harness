@@ -46,7 +46,7 @@ func (c *Controller) ListPublicKeys(
 	)
 
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
-		list, err = c.publicKeyStore.List(ctx, user.ID, filter)
+		list, err = c.publicKeyStore.List(ctx, &user.ID, filter)
 		if err != nil {
 			return fmt.Errorf("failed to list public keys for user: %w", err)
 		}

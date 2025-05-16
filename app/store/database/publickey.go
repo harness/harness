@@ -29,6 +29,7 @@ import (
 	"github.com/Masterminds/squirrel"
 	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 )
 
 var _ store.PublicKeyStore = PublicKeyStore{}
@@ -60,6 +61,8 @@ type publicKey struct {
 	Content     string `db:"public_key_content"`
 	Comment     string `db:"public_key_comment"`
 	Type        string `db:"public_key_type"`
+
+	Scheme string `db:"public_key_scheme"`
 }
 
 const (
@@ -73,7 +76,8 @@ const (
 		,public_key_fingerprint
 		,public_key_content
 		,public_key_comment
-		,public_key_type`
+		,public_key_type
+		,public_key_scheme`
 
 	publicKeySelectBase = `
 		SELECT` + publicKeyColumns + `
@@ -131,6 +135,7 @@ func (s PublicKeyStore) Create(ctx context.Context, key *types.PublicKey) error 
 			,public_key_content
 			,public_key_comment
 			,public_key_type
+			,public_key_scheme
 		) values (
 			 :public_key_principal_id
 			,:public_key_created
@@ -141,6 +146,7 @@ func (s PublicKeyStore) Create(ctx context.Context, key *types.PublicKey) error 
 			,:public_key_content
 			,:public_key_comment
 			,:public_key_type
+			,:public_key_scheme
 		) RETURNING public_key_id`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -229,13 +235,16 @@ func (s PublicKeyStore) Count(
 // List returns the public keys for the principal.
 func (s PublicKeyStore) List(
 	ctx context.Context,
-	principalID int64,
+	principalID *int64,
 	filter *types.PublicKeyFilter,
 ) ([]types.PublicKey, error) {
 	stmt := database.Builder.
 		Select(publicKeyColumns).
-		From("public_keys").
-		Where("public_key_principal_id = ?", principalID)
+		From("public_keys")
+
+	if principalID != nil {
+		stmt = stmt.Where("public_key_principal_id = ?", *principalID)
+	}
 
 	stmt = s.applyQueryFilter(stmt, filter)
 	stmt = s.applySortFilter(stmt, filter)
@@ -259,34 +268,55 @@ func (s PublicKeyStore) List(
 func (s PublicKeyStore) ListByFingerprint(
 	ctx context.Context,
 	fingerprint string,
+	usages []enum.PublicKeyUsage,
+	schemes []enum.PublicKeyScheme,
 ) ([]types.PublicKey, error) {
-	stmt := database.Builder.
-		Select(publicKeyColumns).
-		From("public_keys").
-		Where("public_key_fingerprint = ?", fingerprint).
-		OrderBy("public_key_created ASC")
-
-	sql, args, err := stmt.ToSql()
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert query to sql: %w", err)
-	}
-
-	db := dbtx.GetAccessor(ctx, s.db)
-
-	keys := make([]publicKey, 0)
-	if err = db.SelectContext(ctx, &keys, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "failed to execute public keys by fingerprint query")
-	}
-
-	return mapToPublicKeys(keys), nil
+	return s.List(ctx, nil, &types.PublicKeyFilter{
+		ListQueryFilter: types.ListQueryFilter{
+			Pagination: types.Pagination{Page: 0, Size: 1000000},
+			Query:      "",
+		},
+		Sort:        enum.PublicKeySortCreated,
+		Order:       enum.OrderAsc,
+		Usages:      usages,
+		Schemes:     schemes,
+		Fingerprint: fingerprint,
+	},
+	)
 }
 
-func (PublicKeyStore) applyQueryFilter(
+func (s PublicKeyStore) applyQueryFilter(
 	stmt squirrel.SelectBuilder,
 	filter *types.PublicKeyFilter,
 ) squirrel.SelectBuilder {
 	if filter.Query != "" {
 		stmt = stmt.Where(PartialMatch("public_key_identifier", filter.Query))
+	}
+
+	if len(filter.Usages) == 1 {
+		stmt = stmt.Where("public_key_usage = ?", filter.Usages[0])
+	} else if len(filter.Usages) > 1 {
+		switch s.db.DriverName() {
+		case SqliteDriverName:
+			stmt = stmt.Where(squirrel.Eq{"public_key_usage": filter.Usages})
+		case PostgresDriverName:
+			stmt = stmt.Where("public_key_usage = ANY(?)", pq.Array(filter.Usages))
+		}
+	}
+
+	if len(filter.Schemes) == 1 {
+		stmt = stmt.Where("public_key_scheme = ?", filter.Schemes[0])
+	} else if len(filter.Schemes) > 1 {
+		switch s.db.DriverName() {
+		case SqliteDriverName:
+			stmt = stmt.Where(squirrel.Eq{"public_key_scheme": filter.Schemes})
+		case PostgresDriverName:
+			stmt = stmt.Where("public_key_scheme = ANY(?)", pq.Array(filter.Schemes))
+		}
+	}
+
+	if filter.Fingerprint != "" {
+		stmt = stmt.Where("public_key_fingerprint = ?", filter.Fingerprint)
 	}
 
 	return stmt
@@ -326,6 +356,7 @@ func mapToInternalPublicKey(in *types.PublicKey) publicKey {
 		Content:     in.Content,
 		Comment:     in.Comment,
 		Type:        in.Type,
+		Scheme:      string(in.Scheme),
 	}
 }
 
@@ -341,6 +372,7 @@ func mapToPublicKey(in *publicKey) types.PublicKey {
 		Content:     in.Content,
 		Comment:     in.Comment,
 		Type:        in.Type,
+		Scheme:      enum.PublicKeyScheme(in.Scheme),
 	}
 }
 

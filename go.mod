@@ -6,6 +6,7 @@ require (
 	cloud.google.com/go/storage v1.43.0
 	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/Masterminds/squirrel v1.5.4
+	github.com/ProtonMail/go-crypto v1.2.0
 	github.com/adrg/xdg v0.5.0
 	github.com/aws/aws-sdk-go v1.55.2
 	github.com/bmatcuk/doublestar/v4 v4.6.1
@@ -78,12 +79,12 @@ require (
 	github.com/zricethezav/gitleaks/v8 v8.18.5-0.20240912004812-e93a7c0d2604
 	go.starlark.net v0.0.0-20231121155337-90ade8b19d09
 	go.uber.org/multierr v1.11.0
-	golang.org/x/crypto v0.25.0
+	golang.org/x/crypto v0.33.0
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	golang.org/x/oauth2 v0.21.0
-	golang.org/x/sync v0.8.0
-	golang.org/x/term v0.22.0
-	golang.org/x/text v0.17.0
+	golang.org/x/sync v0.11.0
+	golang.org/x/term v0.29.0
+	golang.org/x/text v0.22.0
 	google.golang.org/api v0.189.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/mail.v2 v2.3.1
@@ -101,7 +102,6 @@ require (
 	github.com/BobuSumisu/aho-corasick v1.0.3 // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
-	github.com/ProtonMail/go-crypto v1.0.0 // indirect
 	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
 	github.com/antonmedv/expr v1.15.5 // indirect
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
@@ -111,7 +111,7 @@ require (
 	github.com/buildkite/yaml v2.1.0+incompatible // indirect
 	github.com/charmbracelet/lipgloss v0.12.1 // indirect
 	github.com/charmbracelet/x/ansi v0.1.4 // indirect
-	github.com/cloudflare/circl v1.3.8 // indirect
+	github.com/cloudflare/circl v1.6.0 // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
 	github.com/drone/envsubst v1.0.3 // indirect
 	github.com/fatih/semgroup v1.2.0 // indirect
@@ -213,7 +213,7 @@ require (
 	github.com/yuin/goldmark v1.4.13
 	golang.org/x/mod v0.19.0 // indirect
 	golang.org/x/net v0.27.0
-	golang.org/x/sys v0.22.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
 	golang.org/x/tools v0.23.0 // indirect
 	google.golang.org/genproto v0.0.0-20240722135656-d784300faade // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

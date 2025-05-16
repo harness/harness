@@ -1141,10 +1141,15 @@ type (
 		Count(ctx context.Context, principalID int64, filter *types.PublicKeyFilter) (int, error)
 
 		// List returns the public keys for the principal that match provided the filter.
-		List(ctx context.Context, principalID int64, filter *types.PublicKeyFilter) ([]types.PublicKey, error)
+		List(ctx context.Context, principalID *int64, filter *types.PublicKeyFilter) ([]types.PublicKey, error)
 
-		// ListByFingerprint returns public keys given a fingerprint and key usage.
-		ListByFingerprint(ctx context.Context, fingerprint string) ([]types.PublicKey, error)
+		// ListByFingerprint returns public keys given a fingerprint and key usage and scheme.
+		ListByFingerprint(
+			ctx context.Context,
+			fingerprint string,
+			usages []enum.PublicKeyUsage,
+			schemes []enum.PublicKeyScheme,
+		) ([]types.PublicKey, error)
 	}
 
 	GitspaceEventStore interface {
