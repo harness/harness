@@ -18,6 +18,7 @@ import (
 	"context"
 	"io"
 
+	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/base"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/types/python"
@@ -53,7 +54,7 @@ func NewLocalRegistryHelper(localRegistry LocalRegistry, localBase base.LocalBas
 }
 
 func (h *localRegistryHelper) FileExists(ctx context.Context, info python.ArtifactInfo) bool {
-	return h.localBase.Exists(ctx, info.ArtifactInfo, info.Version, info.Filename)
+	return h.localBase.Exists(ctx, info.ArtifactInfo, pkg.JoinWithSeparator("/", info.Image, info.Version, info.Filename))
 }
 
 func (h *localRegistryHelper) DownloadFile(ctx context.Context, info python.ArtifactInfo) (

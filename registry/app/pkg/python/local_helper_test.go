@@ -114,8 +114,8 @@ func (m *MockLocalBase) DeleteVersion(_ context.Context, _ pkg.PackageArtifactIn
 	panic("implement me")
 }
 
-func (m *MockLocalBase) Exists(ctx context.Context, info pkg.ArtifactInfo, version, filename string) bool {
-	args := m.Called(ctx, info, version, filename)
+func (m *MockLocalBase) Exists(ctx context.Context, info pkg.ArtifactInfo, path string) bool {
+	args := m.Called(ctx, info, path)
 	return args.Bool(0)
 }
 
@@ -206,7 +206,8 @@ func TestLocalRegistryHelper_FileExists(t *testing.T) {
 		Filename: "package-1.0.0.whl",
 	}
 
-	mockLocalBase.On("Exists", ctx, artifactInfo.ArtifactInfo, artifactInfo.Version, artifactInfo.Filename).Return(true)
+	mockLocalBase.On("Exists", ctx, artifactInfo.ArtifactInfo,
+		artifactInfo.Image+"/"+artifactInfo.Version+"/"+artifactInfo.Filename).Return(true)
 
 	exists := helper.FileExists(ctx, artifactInfo)
 

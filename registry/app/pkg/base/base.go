@@ -78,7 +78,7 @@ type LocalBase interface {
 		error,
 	)
 
-	Exists(ctx context.Context, info pkg.ArtifactInfo, version string, fileName string) bool
+	Exists(ctx context.Context, info pkg.ArtifactInfo, path string) bool
 
 	ExistsByFilePath(ctx context.Context, registryID int64, filePath string) (bool, error)
 
@@ -157,7 +157,7 @@ func (l *localBase) MoveTempFile(
 		Code:    0,
 	}
 
-	err := l.CheckIfFileAlreadyExist(ctx, info, version, metadata, fileInfo.Filename)
+	err := l.CheckIfFileAlreadyExist(ctx, info, version, metadata, fileInfo.Filename, path)
 	if err != nil {
 		if !errors.IsConflict(err) {
 			return nil, "", err
@@ -204,13 +204,13 @@ func (l *localBase) uploadInternal(
 		Code:    0,
 	}
 
-	err := l.CheckIfFileAlreadyExist(ctx, info, version, metadata, fileName)
+	err := l.CheckIfFileAlreadyExist(ctx, info, version, metadata, fileName, path)
 
 	if err != nil {
 		if !errors.IsConflict(err) {
 			return nil, "", err
 		}
-		_, sha256, err2 := l.GetSHA256(ctx, info, version, fileName)
+		_, sha256, err2 := l.GetSHA256(ctx, info, path)
 		if err2 != nil {
 			return responseHeaders, "", err2
 		}
@@ -308,8 +308,11 @@ func (l *localBase) Download(
 	return responseHeaders, fileReader, redirectURL, nil
 }
 
-func (l *localBase) Exists(ctx context.Context, info pkg.ArtifactInfo, version string, fileName string) bool {
-	exists, _, _ := l.GetSHA256(ctx, info, version, fileName)
+func (l *localBase) Exists(ctx context.Context, info pkg.ArtifactInfo, path string) bool {
+	exists, _, err := l.GetSHA256(ctx, info, path)
+	if err != nil {
+		log.Ctx(ctx).Err(err).Msgf("Failed to check if file: [%s] exists", path)
+	}
 	return exists
 }
 
@@ -334,12 +337,12 @@ func (l *localBase) CheckIfVersionExists(ctx context.Context, info pkg.PackageAr
 	return true, nil
 }
 
-func (l *localBase) GetSHA256(ctx context.Context, info pkg.ArtifactInfo, version string, fileName string) (
+func (l *localBase) GetSHA256(ctx context.Context, info pkg.ArtifactInfo, path string) (
 	exists bool,
 	sha256 string,
 	err error,
 ) {
-	filePath := "/" + info.Image + "/" + version + "/" + fileName
+	filePath := "/" + path
 	sha256, err = l.fileManager.HeadFile(ctx, filePath, info.RegistryID)
 	if err != nil {
 		return false, "", err
@@ -409,6 +412,7 @@ func (l *localBase) CheckIfFileAlreadyExist(
 	version string,
 	metadata metadata.Metadata,
 	fileName string,
+	path string,
 ) error {
 	image, err := l.imageDao.GetByName(ctx, info.RegistryID, info.Image)
 	if err != nil && !strings.Contains(err.Error(), "resource not found") {
@@ -436,9 +440,8 @@ func (l *localBase) CheckIfFileAlreadyExist(
 	}
 
 	for _, file := range metadata.GetFiles() {
-		if file.Filename == fileName {
-			l.Exists(ctx, info, version, fileName)
-			return errors.Conflict("file: [%s] with Artifact: [%s], Version: [%s] and registry: [%s] already exist",
+		if file.Filename == fileName && l.Exists(ctx, info, path) {
+			return errors.Conflict("file: [%s] for Artifact: [%s], Version: [%s] and registry: [%s] already exist",
 				fileName, info.Image, version, info.RegIdentifier)
 		}
 	}
