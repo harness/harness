@@ -38,7 +38,7 @@ func Attempt(authenticator authn.Authenticator) func(http.Handler) http.Handler 
 
 			session, err := authenticator.Authenticate(r)
 			if err != nil && !errors.Is(err, authn.ErrNoAuthData) {
-				log.Debug().Err(err).Msg("authentication failed")
+				log.Warn().Err(err).Msg("authentication failed")
 
 				render.Unauthorized(ctx, w)
 				return
