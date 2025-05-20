@@ -27,4 +27,5 @@ const (
 	InfraProviderTypeHarnessGCP   InfraProviderType = "harness_gcp"
 	InfraProviderTypeHarnessCloud InfraProviderType = "harness_cloud"
 	InfraProviderTypeHybridVMGCP  InfraProviderType = "hybrid_vm_gcp"
+	InfraProviderTypeHybridVMAWS  InfraProviderType = "hybrid_vm_aws"
 )
