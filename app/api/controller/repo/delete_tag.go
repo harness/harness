@@ -38,7 +38,7 @@ func (c *Controller) DeleteTag(ctx context.Context,
 		return nil, err
 	}
 
-	rules, isRepoOwner, err := c.fetchRules(ctx, session, repo)
+	rules, isRepoOwner, err := c.fetchTagRules(ctx, session, repo)
 	if err != nil {
 		return nil, err
 	}

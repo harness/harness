@@ -344,13 +344,13 @@ func (c *ListService) backfillRules(
 
 	repoBranchNameMap := make(map[repoBranchName][]types.RuleInfo)
 	for repoID, branchNames := range repoBranchNames {
-		repoProtection, err := c.protectionManager.ForRepository(ctx, repoID)
+		repoProtection, err := c.protectionManager.ListRepoBranchRules(ctx, repoID)
 		if err != nil {
 			return fmt.Errorf("fail to fetch protection rules for repository: %w", err)
 		}
 
 		for _, branchName := range branchNames {
-			branchRuleInfos, err := protection.GetRuleInfos(
+			branchRuleInfos, err := protection.GetBranchRuleInfos(
 				repoProtection,
 				repoDefaultBranch[repoID],
 				branchName,

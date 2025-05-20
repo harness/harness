@@ -98,7 +98,7 @@ func (c *Controller) CommitFiles(ctx context.Context,
 		return types.CommitFilesResponse{}, nil, err
 	}
 
-	rules, isRepoOwner, err := c.fetchRules(ctx, session, repo)
+	rules, isRepoOwner, err := c.fetchBranchRules(ctx, session, repo)
 	if err != nil {
 		return types.CommitFilesResponse{}, nil, err
 	}

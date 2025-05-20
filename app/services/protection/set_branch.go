@@ -16,23 +16,25 @@ package protection
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/rs/zerolog/log"
 	"golang.org/x/exp/constraints"
 	"golang.org/x/exp/slices"
 )
 
-type ruleSet struct {
+type branchRuleSet struct {
 	rules   []types.RuleInfoInternal
 	manager *Manager
 }
 
-var _ Protection = ruleSet{} // ensure that ruleSet implements the Protection interface.
+var _ Protection = branchRuleSet{} // ensure that ruleSet implements the Protection interface.
 
-func (s ruleSet) MergeVerify(
+func (s branchRuleSet) MergeVerify(
 	ctx context.Context,
 	in MergeVerifyInput,
 ) (MergeVerifyOutput, []types.RuleViolations, error) {
@@ -41,9 +43,12 @@ func (s ruleSet) MergeVerify(
 
 	out.AllowedMethods = slices.Clone(enum.MergeMethods)
 
-	err := s.forEachRuleMatchBranch(in.TargetRepo.DefaultBranch, in.PullReq.TargetBranch,
-		func(r *types.RuleInfoInternal, p Protection) error {
+	err := s.forEachRuleMatchBranch(
+		in.TargetRepo.DefaultBranch,
+		in.PullReq.TargetBranch,
+		func(r *types.RuleInfoInternal, p BranchProtection) error {
 			rOut, rVs, err := p.MergeVerify(ctx, in)
+
 			if err != nil {
 				return err
 			}
@@ -69,14 +74,17 @@ func (s ruleSet) MergeVerify(
 	return out, violations, nil
 }
 
-func (s ruleSet) RequiredChecks(
+func (s branchRuleSet) RequiredChecks(
 	ctx context.Context,
 	in RequiredChecksInput,
 ) (RequiredChecksOutput, error) {
 	requiredIDMap := map[string]struct{}{}
 	bypassableIDMap := map[string]struct{}{}
-	err := s.forEachRuleMatchBranch(in.Repo.DefaultBranch, in.PullReq.TargetBranch,
-		func(_ *types.RuleInfoInternal, p Protection) error {
+
+	err := s.forEachRuleMatchBranch(
+		in.Repo.DefaultBranch,
+		in.PullReq.TargetBranch,
+		func(_ *types.RuleInfoInternal, p BranchProtection) error {
 			out, err := p.RequiredChecks(ctx, in)
 			if err != nil {
 				return err
@@ -105,15 +113,17 @@ func (s ruleSet) RequiredChecks(
 	}, nil
 }
 
-func (s ruleSet) CreatePullReqVerify(
+func (s branchRuleSet) CreatePullReqVerify(
 	ctx context.Context,
 	in CreatePullReqVerifyInput,
 ) (CreatePullReqVerifyOutput, []types.RuleViolations, error) {
 	var out CreatePullReqVerifyOutput
 	var violations []types.RuleViolations
 
-	err := s.forEachRuleMatchBranch(in.DefaultBranch, in.TargetBranch,
-		func(r *types.RuleInfoInternal, p Protection) error {
+	err := s.forEachRuleMatchBranch(
+		in.DefaultBranch,
+		in.TargetBranch,
+		func(r *types.RuleInfoInternal, p BranchProtection) error {
 			rOut, rVs, err := p.CreatePullReqVerify(ctx, in)
 			if err != nil {
 				return err
@@ -135,23 +145,16 @@ func (s ruleSet) CreatePullReqVerify(
 	return out, violations, nil
 }
 
-func (s ruleSet) RefChangeVerify(ctx context.Context, in RefChangeVerifyInput) ([]types.RuleViolations, error) {
+func (s branchRuleSet) RefChangeVerify(ctx context.Context, in RefChangeVerifyInput) ([]types.RuleViolations, error) {
 	var violations []types.RuleViolations
 
-	err := s.forEachRuleMatchRefs(in.Repo.DefaultBranch, in.RefNames,
-		func(r *types.RuleInfoInternal, p Protection, matched []string) error {
-			ruleIn := in
-			ruleIn.RefNames = matched
-
-			rVs, err := p.RefChangeVerify(ctx, ruleIn)
-			if err != nil {
-				return err
-			}
-
-			violations = append(violations, backFillRule(rVs, r.RuleInfo)...)
-
-			return nil
-		})
+	err := forEachRuleMatchRefs(
+		s.manager,
+		s.rules,
+		in.Repo.DefaultBranch,
+		in.RefNames,
+		refChangeVerifyFunc(ctx, in, &violations),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to process each rule in ruleSet: %w", err)
 	}
@@ -159,84 +162,18 @@ func (s ruleSet) RefChangeVerify(ctx context.Context, in RefChangeVerifyInput) (
 	return violations, nil
 }
 
-func (s ruleSet) UserIDs() ([]int64, error) {
-	mapIDs := make(map[int64]struct{})
-	err := s.forEachRule(func(_ *types.RuleInfoInternal, p Protection) error {
-		userIDs, err := p.UserIDs()
-		if err != nil {
-			return err
-		}
-
-		for _, userID := range userIDs {
-			mapIDs[userID] = struct{}{}
-		}
-
-		return nil
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to process each rule in ruleSet: %w", err)
-	}
-
-	result := make([]int64, 0, len(mapIDs))
-	for userID := range mapIDs {
-		result = append(result, userID)
-	}
-
-	return result, nil
+func (s branchRuleSet) UserIDs() ([]int64, error) {
+	return collectIDs(s.manager, s.rules, Protection.UserIDs)
 }
 
-func (s ruleSet) UserGroupIDs() ([]int64, error) {
-	mapIDs := make(map[int64]struct{})
-	err := s.forEachRule(func(_ *types.RuleInfoInternal, p Protection) error {
-		userGroupIDs, err := p.UserGroupIDs()
-		if err != nil {
-			return err
-		}
-
-		for _, userGroupID := range userGroupIDs {
-			mapIDs[userGroupID] = struct{}{}
-		}
-
-		return nil
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to process each rule in ruleSet: %w", err)
-	}
-
-	result := make([]int64, 0, len(mapIDs))
-	for userGroupID := range mapIDs {
-		result = append(result, userGroupID)
-	}
-
-	return result, nil
+func (s branchRuleSet) UserGroupIDs() ([]int64, error) {
+	return collectIDs(s.manager, s.rules, Protection.UserGroupIDs)
 }
 
-func (s ruleSet) forEachRule(
-	fn func(r *types.RuleInfoInternal, p Protection) error,
-) error {
-	for i := range s.rules {
-		r := s.rules[i]
-
-		protection, err := s.manager.FromJSON(r.Type, r.Definition, false)
-		if err != nil {
-			return fmt.Errorf("forEachRule: failed to parse protection definition ID=%d Type=%s: %w",
-				r.ID, r.Type, err)
-		}
-
-		err = fn(&r, protection)
-		if err != nil {
-			return fmt.Errorf("forEachRule: failed to process rule ID=%d Type=%s: %w",
-				r.ID, r.Type, err)
-		}
-	}
-
-	return nil
-}
-
-func (s ruleSet) forEachRuleMatchBranch(
+func (s branchRuleSet) forEachRuleMatchBranch(
 	defaultBranch string,
 	branchName string,
-	fn func(r *types.RuleInfoInternal, p Protection) error,
+	fn func(r *types.RuleInfoInternal, p BranchProtection) error,
 ) error {
 	for i := range s.rules {
 		r := s.rules[i]
@@ -255,41 +192,15 @@ func (s ruleSet) forEachRuleMatchBranch(
 				r.ID, r.Type, err)
 		}
 
-		err = fn(&r, protection)
+		branchProtection, ok := protection.(BranchProtection)
+		if !ok { // theoretically, should never happen
+			log.Warn().Err(errors.New("failed to type assert Protection to BranchProtection"))
+			return nil
+		}
+
+		err = fn(&r, branchProtection)
 		if err != nil {
 			return fmt.Errorf("forEachRuleMatchBranch: failed to process rule ID=%d Type=%s: %w",
-				r.ID, r.Type, err)
-		}
-	}
-
-	return nil
-}
-
-func (s ruleSet) forEachRuleMatchRefs(
-	defaultBranch string,
-	refNames []string,
-	fn func(r *types.RuleInfoInternal, p Protection, matched []string) error,
-) error {
-	for i := range s.rules {
-		r := s.rules[i]
-
-		matched, err := matchedNames(r.Pattern, defaultBranch, refNames...)
-		if err != nil {
-			return err
-		}
-		if len(matched) == 0 {
-			continue
-		}
-
-		protection, err := s.manager.FromJSON(r.Type, r.Definition, false)
-		if err != nil {
-			return fmt.Errorf("forEachRuleMatchRefs: failed to parse protection definition ID=%d Type=%s: %w",
-				r.ID, r.Type, err)
-		}
-
-		err = fn(&r, protection, matched)
-		if err != nil {
-			return fmt.Errorf("forEachRuleMatchRefs: failed to process rule ID=%d Type=%s: %w",
 				r.ID, r.Type, err)
 		}
 	}

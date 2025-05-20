@@ -25,15 +25,15 @@ const TypeBranch types.RuleType = "branch"
 
 // Branch implements protection rules for the rule type TypeBranch.
 type Branch struct {
-	Bypass    DefBypass    `json:"bypass"`
-	PullReq   DefPullReq   `json:"pullreq"`
-	Lifecycle DefLifecycle `json:"lifecycle"`
+	Bypass    DefBypass          `json:"bypass"`
+	PullReq   DefPullReq         `json:"pullreq"`
+	Lifecycle DefBranchLifecycle `json:"lifecycle"`
 }
 
 var (
 	// ensures that the Branch type implements Definition interface.
-	_ Definition = (*Branch)(nil)
-	_ Protection = (*Branch)(nil)
+	_ Definition       = (*Branch)(nil)
+	_ BranchProtection = (*Branch)(nil)
 )
 
 func (v *Branch) MergeVerify(

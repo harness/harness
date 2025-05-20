@@ -46,8 +46,8 @@ func (c *Controller) ListBranches(ctx context.Context,
 		Query:         filter.Query,
 		Sort:          mapToRPCBranchSortOption(filter.Sort),
 		Order:         mapToRPCSortOrder(filter.Order),
-		Page:          int32(filter.Page),
-		PageSize:      int32(filter.Size),
+		Page:          int32(filter.Page), //nolint:gosec
+		PageSize:      int32(filter.Size), //nolint:gosec
 	})
 	if err != nil {
 		return nil, fmt.Errorf("fail to get the list of branches from git: %w", err)
@@ -105,7 +105,7 @@ func (c *Controller) collectBranchMetadata(
 	}
 
 	if options.IncludeRules {
-		rules, err := c.protectionManager.ForRepository(ctx, repo.ID)
+		rules, err := c.protectionManager.ListRepoBranchRules(ctx, repo.ID)
 		if err != nil {
 			return branchMetadataOutput{}, fmt.Errorf("failed to fetch protection rules for the repository: %w", err)
 		}
@@ -114,7 +114,7 @@ func (c *Controller) collectBranchMetadata(
 		for i := range branches {
 			branchName := branches[i].Name
 
-			branchRuleInfos, err := protection.GetRuleInfos(
+			branchRuleInfos, err := protection.GetBranchRuleInfos(
 				rules,
 				repo.DefaultBranch,
 				branchName,
@@ -151,7 +151,7 @@ func (c *Controller) collectBranchMetadata(
 
 		divergences, err = c.git.GetCommitDivergences(ctx, &git.GetCommitDivergencesParams{
 			ReadParams: readParams,
-			MaxCount:   int32(options.MaxDivergence),
+			MaxCount:   int32(options.MaxDivergence), //nolint:gosec
 			Requests:   divergenceRequests,
 		})
 		if err != nil {

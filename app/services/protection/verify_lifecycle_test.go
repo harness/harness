@@ -27,7 +27,7 @@ func TestDefLifecycle_RefChangeVerify(t *testing.T) {
 	const refName = "a"
 	tests := []struct {
 		name      string
-		def       DefLifecycle
+		def       DefBranchLifecycle
 		action    RefAction
 		expCodes  []string
 		expParams [][]any
@@ -36,29 +36,35 @@ func TestDefLifecycle_RefChangeVerify(t *testing.T) {
 			name: "empty",
 		},
 		{
-			name:      "lifecycle.create-fail",
-			def:       DefLifecycle{CreateForbidden: true},
+			name: "lifecycle.create-fail",
+			def: DefBranchLifecycle{
+				DefLifecycle: DefLifecycle{CreateForbidden: true},
+			},
 			action:    RefActionCreate,
 			expCodes:  []string{"lifecycle.create"},
 			expParams: [][]any{{refName}},
 		},
 		{
-			name:      "lifecycle.delete-fail",
-			def:       DefLifecycle{DeleteForbidden: true},
+			name: "lifecycle.delete-fail",
+			def: DefBranchLifecycle{
+				DefLifecycle: DefLifecycle{DeleteForbidden: true},
+			},
 			action:    RefActionDelete,
 			expCodes:  []string{"lifecycle.delete"},
 			expParams: [][]any{{refName}},
 		},
 		{
 			name:      "lifecycle.update-fail",
-			def:       DefLifecycle{UpdateForbidden: true},
+			def:       DefBranchLifecycle{UpdateForbidden: true},
 			action:    RefActionUpdate,
 			expCodes:  []string{"lifecycle.update"},
 			expParams: [][]any{{refName}},
 		},
 		{
-			name:      "lifecycle.update.force-fail",
-			def:       DefLifecycle{UpdateForceForbidden: true},
+			name: "lifecycle.update.force-fail",
+			def: DefBranchLifecycle{
+				DefLifecycle: DefLifecycle{UpdateForceForbidden: true},
+			},
 			action:    RefActionUpdateForce,
 			expCodes:  []string{"lifecycle.update.force"},
 			expParams: [][]any{{refName}},

@@ -178,10 +178,14 @@ func isForcePush(
 	rgit RestrictedGIT,
 	gitUID string,
 	alternateObjectDirs []string,
-	branchUpdate hook.ReferenceUpdate,
+	refUpdate hook.ReferenceUpdate,
 ) (bool, error) {
-	if branchUpdate.Old.IsNil() || branchUpdate.New.IsNil() {
+	if refUpdate.Old.IsNil() || refUpdate.New.IsNil() {
 		return false, nil
+	}
+
+	if isTag(refUpdate.Ref) {
+		return true, nil
 	}
 
 	result, err := rgit.IsAncestor(ctx, git.IsAncestorParams{
@@ -189,8 +193,8 @@ func isForcePush(
 			RepoUID:             gitUID,
 			AlternateObjectDirs: alternateObjectDirs,
 		},
-		AncestorCommitSHA:   branchUpdate.Old,
-		DescendantCommitSHA: branchUpdate.New,
+		AncestorCommitSHA:   refUpdate.Old,
+		DescendantCommitSHA: refUpdate.New,
 	})
 	if err != nil {
 		return false, err

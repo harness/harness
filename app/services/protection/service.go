@@ -33,11 +33,19 @@ type (
 	}
 
 	Protection interface {
-		MergeVerifier
 		RefChangeVerifier
-		CreatePullReqVerifier
 		UserIDs() ([]int64, error)
 		UserGroupIDs() ([]int64, error)
+	}
+
+	BranchProtection interface {
+		MergeVerifier
+		CreatePullReqVerifier
+		Protection
+	}
+
+	TagProtection interface {
+		Protection
 	}
 
 	Definition interface {
@@ -100,7 +108,9 @@ func (m *Manager) Register(ruleType types.RuleType, gen DefinitionGenerator) err
 	return nil
 }
 
-func (m *Manager) FromJSON(ruleType types.RuleType, message json.RawMessage, strict bool) (Protection, error) {
+func (m *Manager) FromJSON(
+	ruleType types.RuleType, message json.RawMessage, strict bool,
+) (Protection, error) {
 	gen := m.defGenMap[ruleType]
 	if gen == nil {
 		return nil, ErrUnrecognizedType
@@ -134,16 +144,77 @@ func (m *Manager) SanitizeJSON(ruleType types.RuleType, message json.RawMessage)
 	return ToJSON(r)
 }
 
-func (m *Manager) ForRepository(ctx context.Context, repoID int64) (Protection, error) {
-	ruleInfos, err := m.ruleStore.ListAllRepoRules(ctx, repoID)
+func (m *Manager) ListRepoRules(
+	ctx context.Context,
+	repoID int64,
+	ruleTypes ...types.RuleType,
+) ([]types.RuleInfoInternal, error) {
+	ruleInfos, err := m.ruleStore.ListAllRepoRules(ctx, repoID, ruleTypes...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list rules for repository: %w", err)
 	}
 
-	return ruleSet{
+	return ruleInfos, nil
+}
+
+func (m *Manager) ListRepoBranchRules(
+	ctx context.Context,
+	repoID int64,
+) (BranchProtection, error) {
+	ruleInfos, err := m.ListRepoRules(ctx, repoID, TypeBranch)
+	if err != nil {
+		return branchRuleSet{}, err
+	}
+
+	return branchRuleSet{
 		rules:   ruleInfos,
 		manager: m,
 	}, nil
+}
+
+func (m *Manager) ListRepoTagRules(
+	ctx context.Context,
+	repoID int64,
+) (TagProtection, error) {
+	ruleInfos, err := m.ListRepoRules(ctx, repoID, TypeTag)
+	if err != nil {
+		return tagRuleSet{}, err
+	}
+
+	return tagRuleSet{
+		rules:   ruleInfos,
+		manager: m,
+	}, nil
+}
+
+func (m *Manager) FilterCreateBranchProtection(rules []types.RuleInfoInternal) BranchProtection {
+	var branchRules []types.RuleInfoInternal
+
+	for _, rule := range rules {
+		if rule.Type == TypeBranch {
+			branchRules = append(branchRules, rule)
+		}
+	}
+
+	return branchRuleSet{
+		rules:   branchRules,
+		manager: m,
+	}
+}
+
+func (m *Manager) FilterCreateTagProtection(rules []types.RuleInfoInternal) TagProtection {
+	var tagRules []types.RuleInfoInternal
+
+	for _, rule := range rules {
+		if rule.Type == TypeTag {
+			tagRules = append(tagRules, rule)
+		}
+	}
+
+	return tagRuleSet{
+		rules:   tagRules,
+		manager: m,
+	}
 }
 
 // GenerateErrorMessageForBlockingViolations generates an error message for a given slice of rule violations.

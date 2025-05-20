@@ -332,7 +332,7 @@ func TestRuleSet_MergeVerify(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			set := ruleSet{
+			set := branchRuleSet{
 				rules:   test.rules,
 				manager: m,
 			}
@@ -445,7 +445,7 @@ func TestRuleSet_RequiredChecks(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			set := ruleSet{
+			set := branchRuleSet{
 				rules:   test.rules,
 				manager: m,
 			}

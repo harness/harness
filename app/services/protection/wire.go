@@ -31,5 +31,9 @@ func ProvideManager(ruleStore store.RuleStore) (*Manager, error) {
 		return nil, err
 	}
 
+	if err := m.Register(TypeTag, func() Definition { return &Tag{} }); err != nil {
+		return nil, err
+	}
+
 	return m, nil
 }

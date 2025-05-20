@@ -52,7 +52,7 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 		return types.DeleteBranchOutput{}, nil, usererror.ErrDefaultBranchCantBeDeleted
 	}
 
-	rules, isRepoOwner, err := c.fetchRules(ctx, session, repo)
+	rules, isRepoOwner, err := c.fetchBranchRules(ctx, session, repo)
 	if err != nil {
 		return types.DeleteBranchOutput{}, nil, err
 	}

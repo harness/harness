@@ -29,13 +29,13 @@ var RuleInfoFilterStatusActive = func(r *types.RuleInfoInternal) (bool, error) {
 	return r.State == enum.RuleStateActive, nil
 }
 
-func GetRuleInfos(
-	protection Protection,
+func GetBranchRuleInfos(
+	protection BranchProtection,
 	defaultBranch string,
 	branchName string,
 	filterFns ...func(*types.RuleInfoInternal) (bool, error),
 ) (ruleInfos []types.RuleInfo, err error) {
-	v, ok := protection.(ruleSet)
+	v, ok := protection.(branchRuleSet)
 	if !ok {
 		return ruleInfos, nil
 	}
@@ -43,7 +43,7 @@ func GetRuleInfos(
 	err = v.forEachRuleMatchBranch(
 		defaultBranch,
 		branchName,
-		func(r *types.RuleInfoInternal, _ Protection) error {
+		func(r *types.RuleInfoInternal, _ BranchProtection) error {
 			for _, filterFn := range filterFns {
 				allow, err := filterFn(r)
 				if err != nil {

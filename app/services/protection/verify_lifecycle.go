@@ -43,8 +43,16 @@ type (
 	DefLifecycle struct {
 		CreateForbidden      bool `json:"create_forbidden,omitempty"`
 		DeleteForbidden      bool `json:"delete_forbidden,omitempty"`
-		UpdateForbidden      bool `json:"update_forbidden,omitempty"`
 		UpdateForceForbidden bool `json:"update_force_forbidden,omitempty"`
+	}
+
+	DefTagLifecycle struct {
+		DefLifecycle
+	}
+
+	DefBranchLifecycle struct {
+		DefLifecycle
+		UpdateForbidden bool `json:"update_forbidden,omitempty"`
 	}
 )
 
@@ -63,8 +71,8 @@ const (
 
 // ensures that the DefLifecycle type implements Sanitizer and RefChangeVerifier interfaces.
 var (
-	_ Sanitizer         = (*DefLifecycle)(nil)
-	_ RefChangeVerifier = (*DefLifecycle)(nil)
+	_ Sanitizer         = (*DefBranchLifecycle)(nil)
+	_ RefChangeVerifier = (*DefBranchLifecycle)(nil)
 )
 
 const (
@@ -74,7 +82,42 @@ const (
 	codeLifecycleUpdateForce = "lifecycle.update.force"
 )
 
-func (v *DefLifecycle) RefChangeVerify(_ context.Context, in RefChangeVerifyInput) ([]types.RuleViolations, error) {
+func (v *DefTagLifecycle) RefChangeVerify(
+	_ context.Context,
+	in RefChangeVerifyInput,
+) ([]types.RuleViolations, error) {
+	var violations types.RuleViolations
+
+	//nolint:exhaustive
+	switch in.RefAction {
+	case RefActionCreate:
+		if v.CreateForbidden {
+			violations.Addf(codeLifecycleCreate,
+				"Creation of tag %q is not allowed.", in.RefNames[0])
+		}
+	case RefActionDelete:
+		if v.DeleteForbidden {
+			violations.Addf(codeLifecycleDelete,
+				"Deletion of tag %q is not allowed.", in.RefNames[0])
+		}
+	case RefActionUpdateForce:
+		if v.UpdateForceForbidden {
+			violations.Addf(codeLifecycleUpdateForce,
+				"Update of tag %q is not allowed.", in.RefNames[0])
+		}
+	}
+
+	if len(violations.Violations) > 0 {
+		return []types.RuleViolations{violations}, nil
+	}
+
+	return nil, nil
+}
+
+func (v *DefBranchLifecycle) RefChangeVerify(
+	_ context.Context,
+	in RefChangeVerifyInput,
+) ([]types.RuleViolations, error) {
 	var violations types.RuleViolations
 
 	switch in.RefAction {
@@ -86,7 +129,7 @@ func (v *DefLifecycle) RefChangeVerify(_ context.Context, in RefChangeVerifyInpu
 	case RefActionDelete:
 		if v.DeleteForbidden {
 			violations.Addf(codeLifecycleDelete,
-				"Delete of branch %q is not allowed.", in.RefNames[0])
+				"Deletion of branch %q is not allowed.", in.RefNames[0])
 		}
 	case RefActionUpdate:
 		if v.UpdateForbidden {
@@ -107,6 +150,10 @@ func (v *DefLifecycle) RefChangeVerify(_ context.Context, in RefChangeVerifyInpu
 	return nil, nil
 }
 
-func (*DefLifecycle) Sanitize() error {
+func (*DefTagLifecycle) Sanitize() error {
+	return nil
+}
+
+func (*DefBranchLifecycle) Sanitize() error {
 	return nil
 }

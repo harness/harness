@@ -86,7 +86,7 @@ func (c *Controller) Squash(
 		return nil, nil, fmt.Errorf("failed to acquire access to repo: %w", err)
 	}
 
-	protectionRules, isRepoOwner, err := c.fetchRules(ctx, session, repo)
+	protectionRules, isRepoOwner, err := c.fetchBranchRules(ctx, session, repo)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to fetch rules: %w", err)
 	}

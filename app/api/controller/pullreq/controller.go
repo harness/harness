@@ -216,13 +216,13 @@ func (c *Controller) fetchRules(
 	ctx context.Context,
 	session *auth.Session,
 	repo *types.RepositoryCore,
-) (protection.Protection, bool, error) {
+) (protection.BranchProtection, bool, error) {
 	isRepoOwner, err := apiauth.IsRepoOwner(ctx, c.authorizer, session, repo)
 	if err != nil {
 		return nil, false, fmt.Errorf("failed to determine if user is repo owner: %w", err)
 	}
 
-	protectionRules, err := c.protectionManager.ForRepository(ctx, repo.ID)
+	protectionRules, err := c.protectionManager.ListRepoBranchRules(ctx, repo.ID)
 	if err != nil {
 		return nil, false, fmt.Errorf("failed to fetch protection rules for the repository: %w", err)
 	}

@@ -258,17 +258,35 @@ func eventBase(repo *types.RepositoryCore, principal *types.Principal) repoevent
 	}
 }
 
-func (c *Controller) fetchRules(
+func (c *Controller) fetchBranchRules(
 	ctx context.Context,
 	session *auth.Session,
 	repo *types.RepositoryCore,
-) (protection.Protection, bool, error) {
+) (protection.BranchProtection, bool, error) {
 	isRepoOwner, err := apiauth.IsRepoOwner(ctx, c.authorizer, session, repo)
 	if err != nil {
 		return nil, false, fmt.Errorf("failed to determine if user is repo owner: %w", err)
 	}
 
-	protectionRules, err := c.protectionManager.ForRepository(ctx, repo.ID)
+	protectionRules, err := c.protectionManager.ListRepoBranchRules(ctx, repo.ID)
+	if err != nil {
+		return nil, false, fmt.Errorf("failed to fetch protection rules for the repository: %w", err)
+	}
+
+	return protectionRules, isRepoOwner, nil
+}
+
+func (c *Controller) fetchTagRules(
+	ctx context.Context,
+	session *auth.Session,
+	repo *types.RepositoryCore,
+) (protection.TagProtection, bool, error) {
+	isRepoOwner, err := apiauth.IsRepoOwner(ctx, c.authorizer, session, repo)
+	if err != nil {
+		return nil, false, fmt.Errorf("failed to determine if user is repo owner: %w", err)
+	}
+
+	protectionRules, err := c.protectionManager.ListRepoTagRules(ctx, repo.ID)
 	if err != nil {
 		return nil, false, fmt.Errorf("failed to fetch protection rules for the repository: %w", err)
 	}

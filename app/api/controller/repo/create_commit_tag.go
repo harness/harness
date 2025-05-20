@@ -60,7 +60,7 @@ func (c *Controller) CreateCommitTag(ctx context.Context,
 		in.Target = repo.DefaultBranch
 	}
 
-	rules, isRepoOwner, err := c.fetchRules(ctx, session, repo)
+	rules, isRepoOwner, err := c.fetchTagRules(ctx, session, repo)
 	if err != nil {
 		return nil, nil, err
 	}

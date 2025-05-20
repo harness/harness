@@ -171,11 +171,13 @@ func mapToBranchRules(
 			},
 		},
 
-		Lifecycle: protection.DefLifecycle{
-			CreateForbidden:      rule.Lifecycle.CreateForbidden,
-			DeleteForbidden:      rule.Lifecycle.DeleteForbidden,
-			UpdateForbidden:      rule.Lifecycle.UpdateForbidden,
-			UpdateForceForbidden: rule.Lifecycle.UpdateForceForbidden,
+		Lifecycle: protection.DefBranchLifecycle{
+			DefLifecycle: protection.DefLifecycle{
+				CreateForbidden:      rule.Lifecycle.CreateForbidden,
+				DeleteForbidden:      rule.Lifecycle.DeleteForbidden,
+				UpdateForceForbidden: rule.Lifecycle.UpdateForceForbidden,
+			},
+			UpdateForbidden: rule.Lifecycle.UpdateForbidden,
 		},
 	}, nil
 }

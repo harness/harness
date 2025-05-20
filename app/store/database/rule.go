@@ -31,6 +31,7 @@ import (
 	"github.com/Masterminds/squirrel"
 	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	"github.com/rs/zerolog/log"
 )
 
@@ -360,73 +361,119 @@ type ruleInfo struct {
 	Definition string         `db:"rule_definition"`
 }
 
-// ListAllRepoRules returns a list of all protection rules that can be applied on a repository.
-// This includes the rules defined directly on the repository and all those defined on the parent spaces.
-func (s *RuleStore) ListAllRepoRules(ctx context.Context, repoID int64) ([]types.RuleInfoInternal, error) {
-	const query = `
-		WITH RECURSIVE
-			repo_info(repo_id, repo_uid, repo_space_id) AS (
-				SELECT repo_id, repo_uid, repo_parent_id
-				FROM repositories
-				WHERE repo_id = $1
-			),
-			space_parents(space_id, space_uid, space_parent_id) AS (
-				SELECT space_id, space_uid, space_parent_id
-				FROM spaces
-				INNER JOIN repo_info ON repo_info.repo_space_id = spaces.space_id
-				UNION ALL
-				SELECT spaces.space_id, spaces.space_uid, spaces.space_parent_id
-				FROM spaces
-				INNER JOIN space_parents ON space_parents.space_parent_id = spaces.space_id
-			),
-			spaces_with_path(space_id, space_parent_id, space_uid, space_full_path) AS (
-				SELECT space_id, space_parent_id, space_uid, space_uid
-				FROM space_parents
-				WHERE space_parent_id IS NULL
-				UNION ALL
-				SELECT
-					space_parents.space_id,
-					space_parents.space_parent_id,
-					space_parents.space_uid,
-					spaces_with_path.space_full_path || '/' || space_parents.space_uid
-				FROM space_parents
-				INNER JOIN spaces_with_path ON spaces_with_path.space_id = space_parents.space_parent_id
-			)
-		SELECT
-			 space_full_path AS "space_path"
-			,'' as "repo_path"
-			,rule_id
-			,rule_uid
-			,rule_type
-			,rule_state
-			,rule_pattern
-			,rule_definition
-		FROM spaces_with_path
-		INNER JOIN rules ON rules.rule_space_id = spaces_with_path.space_id
-		WHERE rule_state IN ('active', 'monitor')
+const listRepoRulesQuery = `
+WITH RECURSIVE
+	repo_info(repo_id, repo_uid, repo_space_id) AS (
+		SELECT repo_id, repo_uid, repo_parent_id
+		FROM repositories
+		WHERE repo_id = $1
+	),
+	space_parents(space_id, space_uid, space_parent_id) AS (
+		SELECT space_id, space_uid, space_parent_id
+		FROM spaces
+		INNER JOIN repo_info ON repo_info.repo_space_id = spaces.space_id
+		UNION ALL
+		SELECT spaces.space_id, spaces.space_uid, spaces.space_parent_id
+		FROM spaces
+		INNER JOIN space_parents ON space_parents.space_parent_id = spaces.space_id
+	),
+	spaces_with_path(space_id, space_parent_id, space_uid, space_full_path) AS (
+		SELECT space_id, space_parent_id, space_uid, space_uid
+		FROM space_parents
+		WHERE space_parent_id IS NULL
 		UNION ALL
 		SELECT
-			 '' as "space_path"
-			,space_full_path || '/' || repo_info.repo_uid AS "repo_path"
-			,rule_id
-			,rule_uid
-			,rule_type
-			,rule_state
-			,rule_pattern
-			,rule_definition
-		FROM rules
-		INNER JOIN repo_info ON repo_info.repo_id = rules.rule_repo_id
-		INNER JOIN spaces_with_path ON spaces_with_path.space_id = repo_info.repo_space_id
-		WHERE rule_state IN ('active', 'monitor')`
+			space_parents.space_id,
+			space_parents.space_parent_id,
+			space_parents.space_uid,
+			spaces_with_path.space_full_path || '/' || space_parents.space_uid
+		FROM space_parents
+		INNER JOIN spaces_with_path ON spaces_with_path.space_id = space_parents.space_parent_id
+	)
+SELECT
+	 space_full_path AS "space_path"
+	,'' as "repo_path"
+	,rule_id
+	,rule_uid
+	,rule_type
+	,rule_state
+	,rule_pattern
+	,rule_definition
+FROM spaces_with_path
+INNER JOIN rules ON rules.rule_space_id = spaces_with_path.space_id
+WHERE rule_state IN ('active', 'monitor') %s
+UNION ALL
+SELECT
+	 '' as "space_path"
+	,space_full_path || '/' || repo_info.repo_uid AS "repo_path"
+	,rule_id
+	,rule_uid
+	,rule_type
+	,rule_state
+	,rule_pattern
+	,rule_definition
+FROM rules
+INNER JOIN repo_info ON repo_info.repo_id = rules.rule_repo_id
+INNER JOIN spaces_with_path ON spaces_with_path.space_id = repo_info.repo_space_id
+WHERE rule_state IN ('active', 'monitor') %s`
+
+var listRepoRulesQueryAll = fmt.Sprintf(listRepoRulesQuery, "", "")
+var listRepoRulesQueryTypesPg = fmt.Sprintf(listRepoRulesQuery, "AND rule_type = ANY($2)", "AND rule_type = ANY($2)")
+
+// ListAllRepoRules returns a list of all protection rules that can be applied on a repository.
+// This includes the rules defined directly on the repository and all those defined on the parent spaces.
+func (s *RuleStore) ListAllRepoRules(
+	ctx context.Context,
+	repoID int64,
+	ruleTypes ...types.RuleType,
+) ([]types.RuleInfoInternal, error) {
+	useRuleTypes := len(ruleTypes) > 0
+
+	usingPostgres := s.db.DriverName() == PostgresDriverName
+
+	query := listRepoRulesQueryAll
+	if useRuleTypes && usingPostgres {
+		query = listRepoRulesQueryTypesPg
+	}
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
+	var err error
 	result := make([]ruleInfo, 0)
-	if err := db.SelectContext(ctx, &result, query, repoID); err != nil {
+	if useRuleTypes {
+		if usingPostgres {
+			err = db.SelectContext(ctx, &result, query, repoID, pq.Array(ruleTypes))
+		} else {
+			ruleTypeQuery := ruleTypeQuery(ruleTypes...)
+			query = fmt.Sprintf(listRepoRulesQuery, ruleTypeQuery, ruleTypeQuery)
+			err = db.SelectContext(ctx, &result, query, repoID)
+		}
+	} else {
+		err = db.SelectContext(ctx, &result, query, repoID)
+	}
+	if err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
 	}
 
 	return s.mapToRuleInfos(result), nil
+}
+
+func ruleTypeQuery(ruleTypes ...types.RuleType) string {
+	var b strings.Builder
+	b.WriteString(`AND rule_type IN (`)
+
+	for i, rt := range ruleTypes {
+		if i > 0 {
+			b.WriteString(`,`)
+		}
+		b.WriteByte('\'')
+		b.WriteString(string(rt))
+		b.WriteByte('\'')
+	}
+
+	b.WriteString(`)`)
+
+	return b.String()
 }
 
 func (*RuleStore) applyFilter(

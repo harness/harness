@@ -403,7 +403,7 @@ func TestBranch_RefChangeVerify(t *testing.T) {
 			name: "empty",
 			branch: Branch{
 				Bypass:    DefBypass{},
-				Lifecycle: DefLifecycle{},
+				Lifecycle: DefBranchLifecycle{},
 			},
 			in: RefChangeVerifyInput{
 				Actor: user,
@@ -413,8 +413,11 @@ func TestBranch_RefChangeVerify(t *testing.T) {
 		{
 			name: "admin-no-owner",
 			branch: Branch{
-				Bypass:    DefBypass{},
-				Lifecycle: DefLifecycle{DeleteForbidden: true},
+				Bypass: DefBypass{},
+				Lifecycle: DefBranchLifecycle{
+					DefLifecycle: DefLifecycle{
+						DeleteForbidden: true},
+				},
 			},
 			in: RefChangeVerifyInput{
 				Actor:       admin,
@@ -437,8 +440,11 @@ func TestBranch_RefChangeVerify(t *testing.T) {
 		{
 			name: "owner-bypass",
 			branch: Branch{
-				Bypass:    DefBypass{RepoOwners: true},
-				Lifecycle: DefLifecycle{DeleteForbidden: true},
+				Bypass: DefBypass{RepoOwners: true},
+				Lifecycle: DefBranchLifecycle{
+					DefLifecycle: DefLifecycle{
+						DeleteForbidden: true},
+				},
 			},
 			in: RefChangeVerifyInput{
 				Actor:       user,
@@ -461,8 +467,11 @@ func TestBranch_RefChangeVerify(t *testing.T) {
 		{
 			name: "user-no-bypass",
 			branch: Branch{
-				Bypass:    DefBypass{RepoOwners: true},
-				Lifecycle: DefLifecycle{DeleteForbidden: true},
+				Bypass: DefBypass{RepoOwners: true},
+				Lifecycle: DefBranchLifecycle{
+					DefLifecycle: DefLifecycle{
+						DeleteForbidden: true},
+				},
 			},
 			in: RefChangeVerifyInput{
 				Actor:       user,
@@ -485,8 +494,11 @@ func TestBranch_RefChangeVerify(t *testing.T) {
 		{
 			name: "usergroup-bypass",
 			branch: Branch{
-				Bypass:    DefBypass{RepoOwners: true},
-				Lifecycle: DefLifecycle{DeleteForbidden: true},
+				Bypass: DefBypass{RepoOwners: true},
+				Lifecycle: DefBranchLifecycle{
+					DefLifecycle: DefLifecycle{
+						DeleteForbidden: true},
+				},
 			},
 			in: RefChangeVerifyInput{
 				Actor:              &types.Principal{ID: 43},

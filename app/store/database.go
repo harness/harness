@@ -593,7 +593,11 @@ type (
 		) ([]types.Rule, error)
 
 		// ListAllRepoRules returns a list of all protection rules that can be applied on a repository.
-		ListAllRepoRules(ctx context.Context, repoID int64) ([]types.RuleInfoInternal, error)
+		ListAllRepoRules(
+			ctx context.Context,
+			repoID int64,
+			ruleTypes ...types.RuleType,
+		) ([]types.RuleInfoInternal, error)
 	}
 
 	// WebhookStore defines the webhook data storage.

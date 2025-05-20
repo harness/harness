@@ -155,21 +155,30 @@ func (c *Controller) checkProtectionRules(
 		return fmt.Errorf("failed to determine if user is repo owner: %w", err)
 	}
 
-	protectionRules, err := c.protectionManager.ForRepository(ctx, repo.ID)
+	protectionRules, err := c.protectionManager.ListRepoRules(
+		ctx, repo.ID, protection.TypeBranch, protection.TypeTag,
+	)
 	if err != nil {
 		return fmt.Errorf("failed to fetch protection rules for the repository: %w", err)
 	}
+	branchProtection := c.protectionManager.FilterCreateBranchProtection(protectionRules)
+	tagProtection := c.protectionManager.FilterCreateTagProtection(protectionRules)
 
 	var ruleViolations []types.RuleViolations
 	var errCheckAction error
 
 	//nolint:unparam
-	checkAction := func(refAction protection.RefAction, refType protection.RefType, names []string) {
+	checkAction := func(
+		refProtection protection.Protection,
+		refAction protection.RefAction,
+		refType protection.RefType,
+		names []string,
+	) {
 		if errCheckAction != nil || len(names) == 0 {
 			return
 		}
 
-		violations, err := protectionRules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
+		violations, err := refProtection.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
 			Actor:       &session.Principal,
 			AllowBypass: true,
 			IsRepoOwner: isRepoOwner,
@@ -186,10 +195,35 @@ func (c *Controller) checkProtectionRules(
 		ruleViolations = append(ruleViolations, violations...)
 	}
 
-	checkAction(protection.RefActionCreate, protection.RefTypeBranch, refUpdates.branches.created)
-	checkAction(protection.RefActionDelete, protection.RefTypeBranch, refUpdates.branches.deleted)
-	checkAction(protection.RefActionUpdate, protection.RefTypeBranch, refUpdates.branches.updated)
-	checkAction(protection.RefActionUpdateForce, protection.RefTypeBranch, refUpdates.branches.forced)
+	checkAction(
+		branchProtection, protection.RefActionCreate,
+		protection.RefTypeBranch, refUpdates.branches.created,
+	)
+	checkAction(
+		branchProtection, protection.RefActionDelete,
+		protection.RefTypeBranch, refUpdates.branches.deleted,
+	)
+	checkAction(
+		branchProtection, protection.RefActionUpdate,
+		protection.RefTypeBranch, refUpdates.branches.updated,
+	)
+	checkAction(
+		branchProtection, protection.RefActionUpdateForce,
+		protection.RefTypeBranch, refUpdates.branches.forced,
+	)
+
+	checkAction(
+		tagProtection, protection.RefActionCreate,
+		protection.RefTypeTag, refUpdates.tags.created,
+	)
+	checkAction(
+		tagProtection, protection.RefActionDelete,
+		protection.RefTypeTag, refUpdates.tags.deleted,
+	)
+	checkAction(
+		tagProtection, protection.RefActionUpdateForce,
+		protection.RefTypeTag, refUpdates.tags.forced,
+	)
 
 	if errCheckAction != nil {
 		return errCheckAction
@@ -254,15 +288,23 @@ func (c *changedRefs) hasOnlyDeletedBranches() bool {
 	return true
 }
 
+func isBranch(ref string) bool {
+	return strings.HasPrefix(ref, gitReferenceNamePrefixBranch)
+}
+
+func isTag(ref string) bool {
+	return strings.HasPrefix(ref, gitReferenceNamePrefixTag)
+}
+
 func groupRefsByAction(refUpdates []hook.ReferenceUpdate, forced []bool) (c changedRefs) {
 	for i, refUpdate := range refUpdates {
 		switch {
-		case strings.HasPrefix(refUpdate.Ref, gitReferenceNamePrefixBranch):
+		case isBranch(refUpdate.Ref):
 			branchName := refUpdate.Ref[len(gitReferenceNamePrefixBranch):]
 			c.branches.groupByAction(refUpdate, branchName, forced[i])
-		case strings.HasPrefix(refUpdate.Ref, gitReferenceNamePrefixTag):
+		case isTag(refUpdate.Ref):
 			tagName := refUpdate.Ref[len(gitReferenceNamePrefixTag):]
-			c.tags.groupByAction(refUpdate, tagName, false)
+			c.tags.groupByAction(refUpdate, tagName, forced[i])
 		default:
 			c.other.groupByAction(refUpdate, refUpdate.Ref, false)
 		}

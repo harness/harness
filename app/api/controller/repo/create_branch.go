@@ -59,7 +59,7 @@ func (c *Controller) CreateBranch(ctx context.Context,
 		in.Target = repo.DefaultBranch
 	}
 
-	rules, isRepoOwner, err := c.fetchRules(ctx, session, repo)
+	rules, isRepoOwner, err := c.fetchBranchRules(ctx, session, repo)
 	if err != nil {
 		return types.CreateBranchOutput{}, nil, err
 	}
