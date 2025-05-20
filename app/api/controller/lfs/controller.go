@@ -39,6 +39,7 @@ const (
 type Controller struct {
 	authorizer     authz.Authorizer
 	repoFinder     refcache.RepoFinder
+	repoStore      store.RepoStore
 	principalStore store.PrincipalStore
 	lfsStore       store.LFSObjectStore
 	blobStore      blob.Store
@@ -50,6 +51,7 @@ type Controller struct {
 func NewController(
 	authorizer authz.Authorizer,
 	repoFinder refcache.RepoFinder,
+	repoStore store.RepoStore,
 	principalStore store.PrincipalStore,
 	lfsStore store.LFSObjectStore,
 	blobStore blob.Store,
@@ -60,6 +62,7 @@ func NewController(
 	return &Controller{
 		authorizer:     authorizer,
 		repoFinder:     repoFinder,
+		repoStore:      repoStore,
 		principalStore: principalStore,
 		lfsStore:       lfsStore,
 		blobStore:      blobStore,

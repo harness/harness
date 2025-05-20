@@ -33,6 +33,7 @@ var WireSet = wire.NewSet(
 func ProvideController(
 	authorizer authz.Authorizer,
 	repoFinder refcache.RepoFinder,
+	repoStore store.RepoStore,
 	principalStore store.PrincipalStore,
 	lfsStore store.LFSObjectStore,
 	blobStore blob.Store,
@@ -43,6 +44,7 @@ func ProvideController(
 	return NewController(
 		authorizer,
 		repoFinder,
+		repoStore,
 		principalStore,
 		lfsStore,
 		blobStore,

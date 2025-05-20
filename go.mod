@@ -26,6 +26,7 @@ require (
 	github.com/drone/go-scm v1.38.4
 	github.com/drone/runner-go v1.12.0
 	github.com/drone/spec v0.0.0-20230920145636-3827abdce961
+	github.com/dustin/go-humanize v1.0.1
 	github.com/fatih/color v1.17.0
 	github.com/gabriel-vasile/mimetype v1.4.4
 	github.com/getkin/kin-openapi v0.123.0

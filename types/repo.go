@@ -48,7 +48,8 @@ type Repository struct {
 	LastGITPush int64  `json:"last_git_push" yaml:"last_git_push"`
 
 	// Size of the repository in KiB.
-	Size int64 `json:"size" yaml:"size" description:"size of the repository in KiB"`
+	Size    int64 `json:"size" yaml:"size" description:"size of the repository in KiB"`
+	LFSSize int64 `json:"size_lfs" yaml:"lfs_size" description:"size of the repository LFS in KiB"`
 	// SizeUpdated is the time when the Size was last updated.
 	SizeUpdated int64 `json:"size_updated" yaml:"size_updated"`
 
@@ -100,6 +101,8 @@ type RepositorySizeInfo struct {
 	GitUID string `json:"git_uid"`
 	// Size of the repository in KiB.
 	Size int64 `json:"size"`
+	// LFSSize size of the LFS data in KiB.
+	LFSSize int64 `json:"lfs_size"`
 	// SizeUpdated is the time when the Size was last updated.
 	SizeUpdated int64 `json:"size_updated"`
 }

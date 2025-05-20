@@ -298,7 +298,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	remoteauthService := remoteauth.ProvideRemoteAuth(tokenStore, principalStore)
-	lfsController := lfs.ProvideController(authorizer, repoFinder, principalStore, lfsObjectStore, blobStore, remoteauthService, provider, settingsService)
+	lfsController := lfs.ProvideController(authorizer, repoFinder, repoStore, principalStore, lfsObjectStore, blobStore, remoteauthService, provider, settingsService)
 	repoController := repo.ProvideController(config, transactor, provider, authorizer, repoStore, spaceStore, pipelineStore, principalStore, executionStore, ruleStore, checkStore, pullReqStore, settingsService, principalInfoCache, protectionManager, gitInterface, spaceFinder, repoFinder, repository, codeownersService, eventsReporter, indexer, resourceLimiter, lockerLocker, auditService, mutexManager, repoIdentifier, repoCheck, publicaccessService, labelService, instrumentService, userGroupStore, searchService, rulesService, streamer, lfsController)
 	reposettingsController := reposettings.ProvideController(authorizer, repoFinder, settingsService, auditService)
 	stageStore := database.ProvideStageStore(db)
@@ -606,7 +606,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	sizeCalculator, err := repo2.ProvideCalculator(config, gitInterface, repoStore, jobScheduler, executor, lfsObjectStore)
+	sizeCalculator, err := repo2.ProvideCalculator(config, gitInterface, repoStore, spaceStore, jobScheduler, executor, lfsObjectStore, sender)
 	if err != nil {
 		return nil, err
 	}

@@ -416,7 +416,7 @@ func setupRepos(r chi.Router,
 
 			r.Route("/raw", func(r chi.Router) {
 				r.With(
-					usage.Middleware(usageSender, false),
+					usage.Middleware(usageSender),
 				).Get("/*", handlerrepo.HandleRaw(repoCtrl))
 			})
 
@@ -469,7 +469,7 @@ func setupRepos(r chi.Router,
 			r.Get("/codeowners/validate", handlerrepo.HandleCodeOwnersValidate(repoCtrl))
 
 			r.With(
-				usage.Middleware(usageSender, false),
+				usage.Middleware(usageSender),
 			).Get(fmt.Sprintf("/archive/%s", request.PathParamArchiveGitRef), handlerrepo.HandleArchive(repoCtrl))
 
 			SetupPullReq(r, pullreqCtrl)

@@ -23,7 +23,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func Middleware(intf Sender, trackUpload bool) func(http.Handler) http.Handler {
+func Middleware(intf Sender) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ref, err := request.GetRepoRefFromPath(r)
@@ -41,10 +41,7 @@ func Middleware(intf Sender, trackUpload bool) func(http.Handler) http.Handler {
 
 			writer := newWriter(w)
 			reader := newReader(r.Body)
-
-			if trackUpload {
-				r.Body = reader
-			}
+			r.Body = reader
 
 			next.ServeHTTP(writer, r)
 

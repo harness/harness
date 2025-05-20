@@ -40,7 +40,7 @@ func (c *Controller) Upload(ctx context.Context,
 	file io.Reader,
 ) (*UploadOut, error) {
 	var additionalAllowedRepoStates = []enum.RepoState{enum.RepoStateMigrateGitPush}
-	repo, err := c.getRepoCheckAccessAndSetting(ctx, session, repoRef,
+	repoCore, err := c.getRepoCheckAccessAndSetting(ctx, session, repoRef,
 		enum.PermissionRepoPush, additionalAllowedRepoStates...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to repo: %w", err)
@@ -64,8 +64,9 @@ func (c *Controller) Upload(ctx context.Context,
 		Size:      pointer.Size,
 		Created:   now.UnixMilli(),
 		CreatedBy: session.Principal.ID,
-		RepoID:    repo.ID,
+		RepoID:    repoCore.ID,
 	}
+
 	// create the object in lfs store after successful upload to the blob store.
 	err = c.lfsStore.Create(ctx, object)
 	if err != nil && !errors.Is(err, store.ErrDuplicate) {

@@ -1065,3 +1065,52 @@ func buildRecursiveSelectQueryUsingCaseInsensitivePath(segments []string) squirr
 
 	return stmt
 }
+
+func (s *SpaceStore) GetRootSpacesSize(ctx context.Context) ([]types.SpaceStorage, error) {
+	const query = `
+WITH RECURSIVE SpaceHierarchy AS (
+    SELECT space_id, space_id AS root_space_id, space_uid AS root_space_uid
+    FROM spaces
+    WHERE space_parent_id IS NULL
+
+    UNION ALL
+
+    SELECT s.space_id, sh.root_space_id, sh.root_space_uid
+    FROM spaces s
+    JOIN SpaceHierarchy sh ON s.space_parent_id = sh.space_id
+)
+SELECT
+    sh.root_space_id,
+    sh.root_space_uid,
+    COALESCE(SUM(r.repo_size), 0) AS total_repository_size,
+    COALESCE(SUM(r.repo_lfs_size), 0) AS total_lfs_size
+FROM SpaceHierarchy sh
+LEFT JOIN repositories r ON r.repo_parent_id = sh.space_id
+WHERE repo_deleted IS NULL
+GROUP BY sh.root_space_id, sh.root_space_uid
+`
+	db := dbtx.GetAccessor(ctx, s.db)
+	rows, err := db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get root spaces storage size: %w", err)
+	}
+	defer rows.Close()
+
+	spaces := make([]types.SpaceStorage, 0, 32)
+	for rows.Next() {
+		var space types.SpaceStorage
+		if err := rows.Scan(
+			&space.ID,
+			&space.Identifier,
+			&space.Size,
+			&space.LFSSize,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan root space storage: %w", err)
+		}
+		spaces = append(spaces, space)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed to scan rows for root spaces storage size: %w", err)
+	}
+	return spaces, nil
+}

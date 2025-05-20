@@ -72,6 +72,7 @@ type repository struct {
 	LastGITPush int64    `db:"repo_last_git_push"`
 
 	Size        int64 `db:"repo_size"`
+	SizeLFS     int64 `db:"repo_lfs_size"`
 	SizeUpdated int64 `db:"repo_size_updated"`
 
 	GitUID        string `db:"repo_git_uid"`
@@ -102,6 +103,7 @@ const (
 		,repo_deleted
 		,repo_last_git_push
 		,repo_size
+		,repo_lfs_size
 		,repo_size_updated
 		,repo_git_uid
 		,repo_default_branch
@@ -220,6 +222,7 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 			,repo_deleted
 			,repo_last_git_push
 			,repo_size
+			,repo_lfs_size
 			,repo_size_updated
 			,repo_git_uid
 			,repo_default_branch
@@ -243,6 +246,7 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 			,:repo_deleted
 			,:repo_last_git_push
 			,:repo_size
+			,:repo_lfs_size
 			,:repo_size_updated
 			,:repo_git_uid
 			,:repo_default_branch
@@ -341,10 +345,11 @@ func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 }
 
 // UpdateSize updates the size of a specific repository in the database (size is in KiB).
-func (s *RepoStore) UpdateSize(ctx context.Context, id int64, sizeInKiB int64) error {
+func (s *RepoStore) UpdateSize(ctx context.Context, id int64, sizeInKiB, lfsSizeInKiB int64) error {
 	stmt := database.Builder.
 		Update("repositories").
 		Set("repo_size", sizeInKiB).
+		Set("repo_lfs_size", lfsSizeInKiB).
 		Set("repo_size_updated", time.Now().UnixMilli()).
 		Where("repo_id = ? AND repo_deleted IS NULL", id)
 
@@ -374,11 +379,35 @@ func (s *RepoStore) UpdateSize(ctx context.Context, id int64, sizeInKiB int64) e
 
 // GetSize returns the repo size.
 func (s *RepoStore) GetSize(ctx context.Context, id int64) (int64, error) {
-	query := "SELECT repo_size FROM repositories WHERE repo_id = $1 AND repo_deleted IS NULL;"
+	query := `
+		SELECT 
+		    repo_size
+		FROM repositories
+		WHERE 
+		    repo_id = $1 AND repo_deleted IS NULL
+`
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	var size int64
-	if err := db.GetContext(ctx, &size, query, id); err != nil {
+	if err := db.QueryRowContext(ctx, query, id).Scan(&size); err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "failed to get repo size")
+	}
+	return size, nil
+}
+
+// GetLFSSize returns the repo LFS size.
+func (s *RepoStore) GetLFSSize(ctx context.Context, id int64) (int64, error) {
+	query := `
+		SELECT 
+		    repo_lfs_size
+		FROM repositories
+		WHERE 
+		    repo_id = $1 AND repo_deleted IS NULL
+`
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var size int64
+	if err := db.QueryRowContext(ctx, query, id).Scan(&size); err != nil {
 		return 0, database.ProcessSQLErrorf(ctx, err, "failed to get repo size")
 	}
 	return size, nil
@@ -720,13 +749,15 @@ type repoSize struct {
 	ID          int64  `db:"repo_id"`
 	GitUID      string `db:"repo_git_uid"`
 	Size        int64  `db:"repo_size"`
+	LFSSize     int64  `db:"repo_lfs_size"`
 	SizeUpdated int64  `db:"repo_size_updated"`
 }
 
 func (s *RepoStore) ListSizeInfos(ctx context.Context) ([]*types.RepositorySizeInfo, error) {
 	stmt := database.Builder.
-		Select("repo_id", "repo_git_uid", "repo_size", "repo_size_updated").
+		Select("repo_id", "repo_git_uid", "repo_size", "repo_lfs_size", "repo_size_updated").
 		From("repositories").
+		Where("repo_last_git_push >= repo_size_updated").
 		Where("repo_deleted IS NULL")
 
 	sql, args, err := stmt.ToSql()
@@ -788,6 +819,7 @@ func (s *RepoStore) mapToRepo(
 		Deleted:        in.Deleted.Ptr(),
 		LastGITPush:    in.LastGITPush,
 		Size:           in.Size,
+		LFSSize:        in.SizeLFS,
 		SizeUpdated:    in.SizeUpdated,
 		GitUID:         in.GitUID,
 		DefaultBranch:  in.DefaultBranch,

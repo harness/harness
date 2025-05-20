@@ -35,9 +35,12 @@ type Bandwidth struct {
 }
 
 type Metric struct {
+	Time     time.Time
 	SpaceRef string
 	Bandwidth
-	Pushes int64
+	StorageTotal    int64
+	LFSStorageTotal int64
+	Pushes          int64
 }
 
 type SpaceFinder interface {
@@ -126,8 +129,8 @@ func (m *Mediator) Size(ctx context.Context, spaceRef string) (Bandwidth, error)
 		return Bandwidth{}, err
 	}
 	return Bandwidth{
-		Out: metric.Bandwidth,
-		In:  metric.Storage,
+		Out: metric.BandwidthOut,
+		In:  metric.BandwidthIn,
 	}, nil
 }
 
@@ -141,10 +144,13 @@ func (m *Mediator) process(ctx context.Context, payload *Metric) {
 	}
 
 	if err = m.metricsStore.UpsertOptimistic(ctx, &types.UsageMetric{
-		RootSpaceID: space.ID,
-		Bandwidth:   payload.Out,
-		Storage:     payload.In,
-		Pushes:      payload.Pushes,
+		Date:            payload.Time,
+		RootSpaceID:     space.ID,
+		BandwidthOut:    payload.Out,
+		BandwidthIn:     payload.In,
+		StorageTotal:    payload.StorageTotal,
+		LFSStorageTotal: payload.LFSStorageTotal,
+		Pushes:          payload.Pushes,
 	}); err != nil {
 		log.Ctx(ctx).Err(err).Msg("failed to upsert usage metrics")
 	}

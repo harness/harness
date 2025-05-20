@@ -76,3 +76,10 @@ type SpaceFilter struct {
 	DeletedBeforeOrAt *int64         `json:"deleted_before_or_at,omitempty"`
 	Recursive         bool           `json:"recursive"`
 }
+
+type SpaceStorage struct {
+	ID         int64  `json:"id"`
+	Identifier string `json:"identifier"`
+	Size       int64  `json:"size"`
+	LFSSize    int64  `json:"lfs_size"`
+}

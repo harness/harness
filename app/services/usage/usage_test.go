@@ -77,8 +77,8 @@ func TestMediator_basic(t *testing.T) {
 			if metric.RootSpaceID != space.ID {
 				return fmt.Errorf("expected root space id to be %d, got %d", space.ID, metric.RootSpaceID)
 			}
-			out.Add(metric.Bandwidth)
-			in.Add(metric.Storage)
+			out.Add(metric.BandwidthOut)
+			in.Add(metric.BandwidthIn)
 			pushes.Add(metric.Pushes)
 			return nil
 		},
@@ -89,8 +89,8 @@ func TestMediator_basic(t *testing.T) {
 			int64, // endDate
 		) (*types.UsageMetric, error) {
 			return &types.UsageMetric{
-				Bandwidth: out.Load(),
-				Storage:   in.Load(),
+				BandwidthOut: out.Load(),
+				BandwidthIn:  in.Load(),
 			}, nil
 		},
 		ListFn: func(context.Context, int64, int64) ([]types.UsageMetric, error) {

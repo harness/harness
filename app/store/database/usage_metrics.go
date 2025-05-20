@@ -31,14 +31,16 @@ import (
 var _ store.UsageMetricStore = (*UsageMetricsStore)(nil)
 
 type usageMetric struct {
-	RootSpaceID int64 `db:"usage_metric_space_id"`
-	Date        int64 `db:"usage_metric_date"`
-	Created     int64 `db:"usage_metric_created"`
-	Updated     int64 `db:"usage_metric_updated"`
-	Bandwidth   int64 `db:"usage_metric_bandwidth"`
-	Storage     int64 `db:"usage_metric_storage"`
-	Pushes      int64 `db:"usage_metric_pushes"`
-	Version     int64 `db:"usage_metric_version"`
+	RootSpaceID     int64 `db:"usage_metric_space_id"`
+	Date            int64 `db:"usage_metric_date"`
+	Created         int64 `db:"usage_metric_created"`
+	Updated         int64 `db:"usage_metric_updated"`
+	BandwidthOut    int64 `db:"usage_metric_bandwidth_out"`
+	BandwidthIn     int64 `db:"usage_metric_bandwidth_in"`
+	StorageTotal    int64 `db:"usage_metric_storage_total"`
+	LFSStorageTotal int64 `db:"usage_metric_lfs_storage_total"`
+	Pushes          int64 `db:"usage_metric_pushes"`
+	Version         int64 `db:"usage_metric_version"`
 }
 
 // NewUsageMetricsStore returns a new UsageMetricsStore.
@@ -73,14 +75,16 @@ func (s *UsageMetricsStore) getVersion(
 }
 
 func (s *UsageMetricsStore) Upsert(ctx context.Context, in *types.UsageMetric) error {
-	const sqlQuery = `
+	sqlQuery := `
 		INSERT INTO usage_metrics (
         	usage_metric_space_id
 			,usage_metric_date
 			,usage_metric_created
 			,usage_metric_updated
-			,usage_metric_bandwidth
-			,usage_metric_storage
+			,usage_metric_bandwidth_out
+			,usage_metric_bandwidth_in
+			,usage_metric_storage_total
+			,usage_metric_lfs_storage_total
 			,usage_metric_pushes
 			,usage_metric_version
 		) VALUES (
@@ -88,8 +92,10 @@ func (s *UsageMetricsStore) Upsert(ctx context.Context, in *types.UsageMetric) e
 		    ,:usage_metric_date
 		    ,:usage_metric_created
 		    ,:usage_metric_updated
-		    ,:usage_metric_bandwidth
-		    ,:usage_metric_storage
+		    ,:usage_metric_bandwidth_out
+		    ,:usage_metric_bandwidth_in
+		    ,:usage_metric_storage_total
+		    ,:usage_metric_lfs_storage_total
 		    ,:usage_metric_pushes
 		    ,:usage_metric_version
 		)
@@ -98,22 +104,40 @@ func (s *UsageMetricsStore) Upsert(ctx context.Context, in *types.UsageMetric) e
 			SET
 			    usage_metric_version = EXCLUDED.usage_metric_version
 		        ,usage_metric_updated = EXCLUDED.usage_metric_updated
-		        ,usage_metric_bandwidth = usage_metrics.usage_metric_bandwidth + EXCLUDED.usage_metric_bandwidth
-		        ,usage_metric_storage = usage_metrics.usage_metric_storage + EXCLUDED.usage_metric_storage
+		        ,usage_metric_bandwidth_out = usage_metrics.usage_metric_bandwidth_out + EXCLUDED.usage_metric_bandwidth_out
+				,usage_metric_bandwidth_in = usage_metrics.usage_metric_bandwidth_in + EXCLUDED.usage_metric_bandwidth_in
 		        ,usage_metric_pushes = usage_metrics.usage_metric_pushes + EXCLUDED.usage_metric_pushes
+`
+	if in.StorageTotal > 0 {
+		sqlQuery += `
+				,usage_metric_storage_total = EXCLUDED.usage_metric_storage_total`
+	}
+
+	if in.LFSStorageTotal > 0 {
+		sqlQuery += `
+				,usage_metric_lfs_storage_total = EXCLUDED.usage_metric_lfs_storage_total`
+	}
+
+	sqlQuery += `
 			WHERE usage_metrics.usage_metric_version = EXCLUDED.usage_metric_version - 1`
 
 	db := dbtx.GetAccessor(ctx, s.db)
-	today := s.Date(time.Now())
+	now := time.Now()
+	today := s.Date(now)
+	if !in.Date.IsZero() {
+		today = s.Date(in.Date)
+	}
 	query, args, err := db.BindNamed(sqlQuery, usageMetric{
-		RootSpaceID: in.RootSpaceID,
-		Date:        today,
-		Created:     time.Now().UnixMilli(),
-		Updated:     time.Now().UnixMilli(),
-		Bandwidth:   in.Bandwidth,
-		Storage:     in.Storage,
-		Pushes:      in.Pushes,
-		Version:     s.getVersion(ctx, in.RootSpaceID, today) + 1,
+		RootSpaceID:     in.RootSpaceID,
+		Date:            today,
+		Created:         now.UnixMilli(),
+		Updated:         now.UnixMilli(),
+		BandwidthOut:    in.BandwidthOut,
+		BandwidthIn:     in.BandwidthIn,
+		StorageTotal:    in.StorageTotal,
+		LFSStorageTotal: in.LFSStorageTotal,
+		Pushes:          in.Pushes,
+		Version:         s.getVersion(ctx, in.RootSpaceID, today) + 1,
 	})
 	if err != nil {
 		return database.ProcessSQLErrorf(ctx, err, "failed to bind query")
@@ -157,8 +181,10 @@ func (s *UsageMetricsStore) GetMetrics(
 ) (*types.UsageMetric, error) {
 	const sqlQuery = `
 	SELECT
-		COALESCE(SUM(usage_metric_bandwidth), 0) AS usage_metric_bandwidth,
-		COALESCE(SUM(usage_metric_storage), 0) AS usage_metric_storage,
+		COALESCE(SUM(usage_metric_bandwidth_out), 0) AS usage_metric_bandwidth_out,
+		COALESCE(SUM(usage_metric_bandwidth_in), 0) AS usage_metric_bandwidth_in,
+		COALESCE(AVG(usage_metric_storage_total), 0) AS usage_metric_storage_total,
+		COALESCE(AVG(usage_metric_lfs_storage_total), 0) AS usage_metric_lfs_storage_total,
 		COALESCE(SUM(usage_metric_pushes), 0) AS usage_metric_pushes
 	FROM usage_metrics
 	WHERE
@@ -179,8 +205,10 @@ func (s *UsageMetricsStore) GetMetrics(
 		s.Date(startTime),
 		s.Date(endTime),
 	).Scan(
-		&result.Bandwidth,
-		&result.Storage,
+		&result.BandwidthOut,
+		&result.BandwidthIn,
+		&result.StorageTotal,
+		&result.LFSStorageTotal,
 		&result.Pushes,
 	)
 	if err != nil {
@@ -198,14 +226,21 @@ func (s *UsageMetricsStore) List(
 	const sqlQuery = `
 	SELECT
 		usage_metric_space_id,
-		COALESCE(SUM(usage_metric_bandwidth), 0) AS usage_metric_bandwidth,
-		COALESCE(SUM(usage_metric_storage), 0) AS usage_metric_storage,
+		COALESCE(SUM(usage_metric_bandwidth_out), 0) AS usage_metric_bandwidth_out,
+		COALESCE(SUM(usage_metric_bandwidth_in), 0) AS usage_metric_bandwidth_in,
+		COALESCE(AVG(usage_metric_storage_total), 0) AS usage_metric_storage_total,
+		COALESCE(AVG(usage_metric_lfs_storage_total), 0) AS usage_metric_lfs_storage_total,
 		COALESCE(SUM(usage_metric_pushes), 0) AS usage_metric_pushes
 	FROM usage_metrics
 	WHERE
 	    usage_metric_date BETWEEN $1 AND $2
 	GROUP BY usage_metric_space_id
-	ORDER BY usage_metric_bandwidth DESC, usage_metric_storage DESC, usage_metric_pushes DESC`
+	ORDER BY 
+		usage_metric_bandwidth_out DESC,
+		usage_metric_bandwidth_in DESC,
+		usage_metric_storage_total DESC,
+		usage_metric_lfs_storage_total DESC,
+		usage_metric_pushes DESC`
 
 	startTime := time.UnixMilli(start)
 	endTime := time.UnixMilli(end)
@@ -222,8 +257,10 @@ func (s *UsageMetricsStore) List(
 		metric := types.UsageMetric{}
 		err = rows.Scan(
 			&metric.RootSpaceID,
-			&metric.Bandwidth,
-			&metric.Storage,
+			&metric.BandwidthOut,
+			&metric.BandwidthIn,
+			&metric.StorageTotal,
+			&metric.LFSStorageTotal,
 			&metric.Pushes,
 		)
 		if err != nil {

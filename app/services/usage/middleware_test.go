@@ -41,7 +41,7 @@ func TestMiddleware(t *testing.T) {
 
 	r := chi.NewRouter()
 	r.Route(fmt.Sprintf("/testing/{%s}", request.PathParamRepoRef), func(r chi.Router) {
-		r.Use(Middleware(mock, true))
+		r.Use(Middleware(mock))
 		r.Post("/", func(w http.ResponseWriter, r *http.Request) {
 			// read from body
 			_, _ = io.Copy(io.Discard, r.Body)
@@ -55,33 +55,33 @@ func TestMiddleware(t *testing.T) {
 
 	body := []byte(sampleText)
 
-	_, _ = testRequest(t, ts, http.MethodPost, "/testing/"+spaceRef, bytes.NewReader(body))
+	_ = testRequest(t, ts, http.MethodPost, "/testing/"+spaceRef, bytes.NewReader(body))
 
 	require.Equal(t, int64(sampleLength), m.Out)
 	require.Equal(t, int64(sampleLength), m.In)
 }
 
-func testRequest(t *testing.T, ts *httptest.Server, method, path string, body io.Reader) (*http.Response, string) {
+func testRequest(t *testing.T, ts *httptest.Server, method, path string, body io.Reader) string {
 	t.Helper()
 
-	req, err := http.NewRequest(method, ts.URL+path, body)
+	req, err := http.NewRequest(method, ts.URL+path, body) //nolint: noctx
 	if err != nil {
 		t.Fatal(err)
-		return nil, ""
+		return ""
 	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		t.Fatal(err)
-		return nil, ""
+		return ""
 	}
+	defer resp.Body.Close()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatal(err)
-		return nil, ""
+		return ""
 	}
-	defer resp.Body.Close()
 
-	return resp, string(respBody)
+	return string(respBody)
 }

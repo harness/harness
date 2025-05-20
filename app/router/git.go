@@ -82,11 +82,9 @@ func NewGitHandler(
 		// routes that are coming from git (where we block the usage of session tokens)
 		r.Group(func(r chi.Router) {
 			r.Use(middlewareauthz.BlockSessionToken)
-
+			r.Use(usage.Middleware(usageSender))
 			// smart protocol
-			r.With(
-				usage.Middleware(usageSender, false),
-			).Post("/git-upload-pack", handlerrepo.HandleGitServicePack(
+			r.Post("/git-upload-pack", handlerrepo.HandleGitServicePack(
 				enum.GitServiceTypeUploadPack, repoCtrl, urlProvider))
 			r.Post("/git-receive-pack", handlerrepo.HandleGitServicePack(
 				enum.GitServiceTypeReceivePack, repoCtrl, urlProvider))

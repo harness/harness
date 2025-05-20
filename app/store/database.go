@@ -245,6 +245,9 @@ type (
 
 		// List returns a list of child spaces in a space.
 		List(ctx context.Context, id int64, opts *types.SpaceFilter) ([]*types.Space, error)
+
+		// GetRootSpacesSize returns the size of the root spaces
+		GetRootSpacesSize(ctx context.Context) ([]types.SpaceStorage, error)
 	}
 
 	// RepoStore defines the repository data storage.
@@ -273,10 +276,13 @@ type (
 		Update(ctx context.Context, repo *types.Repository) error
 
 		// UpdateSize updates the size of a specific repository in the database (size is in KiB).
-		UpdateSize(ctx context.Context, id int64, sizeInKiB int64) error
+		UpdateSize(ctx context.Context, id int64, sizeInKiB, sizeLFSInKiB int64) error
 
-		// Get the repo size.
+		// GetSize returns the repo size.
 		GetSize(ctx context.Context, id int64) (int64, error)
+
+		// GetLFSSize returns LFS size.
+		GetLFSSize(ctx context.Context, id int64) (int64, error)
 
 		// UpdateOptLock the repo details using the optimistic locking mechanism.
 		UpdateOptLock(
