@@ -163,7 +163,7 @@ export const CDECreateGitspace = () => {
       formName="importRepoForm"
       enableReinitialize>
       {formik => {
-        const scmOption = scmOptionsCDE.find(item => item.value === formik.values.code_repo_type) as SCMType
+        const scmOption = scmOptionsCDE.find(item => item.value === formik.values?.code_repo_type) as SCMType
         const selectedIDE = formik?.values?.ide ? getIDEOption(formik?.values?.ide, getString) : {}
         return (
           <>
@@ -187,7 +187,7 @@ export const CDECreateGitspace = () => {
                         />
                         <Layout.Vertical>
                           <Text font={{ variation: FontVariation.SMALL }}>Git Provider</Text>
-                          <Text>{defaultTo(scmOption?.name, '')}</Text>
+                          <Text>{defaultTo(scmOption?.name || {}, '')}</Text>
                         </Layout.Vertical>
                       </Layout.Horizontal>
                     }

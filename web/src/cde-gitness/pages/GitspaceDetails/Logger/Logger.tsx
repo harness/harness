@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { Container } from '@harnessio/uicore'
+import { Container, useToaster } from '@harnessio/uicore'
 import cx from 'classnames'
 import { GitspaceStatus } from 'cde-gitness/constants'
 import { lineElement } from 'components/LogViewer/LogViewer'
@@ -8,7 +8,7 @@ import { useAppContext } from 'AppContext'
 import LogStreaming from './LogStreaming'
 import css from './Logger.module.scss'
 
-interface LoggerProps {
+export interface LoggerProps {
   stepNameLogKeyMap?: Map<string, string>
   expanded?: boolean
   logKey: string
@@ -17,11 +17,31 @@ interface LoggerProps {
   isStreaming: boolean
   localRef: any
   setIsBottom: (val: boolean) => void
+  title?: string
 }
 
-const Logger: React.FC<LoggerProps> = ({ expanded, logKey, value, state, isStreaming, localRef, setIsBottom }) => {
+function isValidJSON(str: string): boolean {
+  try {
+    JSON.parse(str)
+    return true
+  } catch (e) {
+    return false
+  }
+}
+
+const Logger: React.FC<LoggerProps> = ({
+  expanded,
+  logKey,
+  value,
+  state,
+  isStreaming,
+  localRef,
+  setIsBottom,
+  title
+}) => {
   const logKeyList: string[] = [logKey]
   const { hooks } = useAppContext()
+  const { showError } = useToaster()
   const [startStreaming, setStartStreaming] = useState(false)
   const { getBlobData, blobDataCur } = hooks?.useLogsContent(logKeyList)
 
@@ -70,7 +90,7 @@ const Logger: React.FC<LoggerProps> = ({ expanded, logKey, value, state, isStrea
   }
 
   useEffect(() => {
-    if (expanded && (state === GitspaceStatus.RUNNING || state === GitspaceStatus.STOPPED)) {
+    if (expanded && (state === GitspaceStatus.RUNNING || state === GitspaceStatus.STOPPED || !isStreaming)) {
       // Fetch from blob
       getLogData()
     } else if (expanded && state !== GitspaceStatus.RUNNING && state !== GitspaceStatus.STOPPED) {
@@ -83,11 +103,20 @@ const Logger: React.FC<LoggerProps> = ({ expanded, logKey, value, state, isStrea
   }, [state, isStreaming, expanded])
 
   useEffect(() => {
-    if (blobDataCur && (state === GitspaceStatus.RUNNING || state === GitspaceStatus.STOPPED)) {
-      const logData = JSON.parse(blobDataCur)?.map((logs: { level: string; time: string }) => {
-        return JSON.stringify(logs)
-      })
-      sendStreamLogToRenderer(logData || '')
+    try {
+      if (blobDataCur && (state === GitspaceStatus.RUNNING || state === GitspaceStatus.STOPPED || !isStreaming)) {
+        const validJSON = isValidJSON(blobDataCur)
+        if (!validJSON) {
+          showError(`Invalid log format for ${title}`)
+        } else {
+          const logData = JSON.parse(blobDataCur)?.map((logs: { level: string; time: string }) => {
+            return JSON.stringify(logs)
+          })
+          sendStreamLogToRenderer(logData || '')
+        }
+      }
+    } catch (_) {
+      // eslint-disable-next-line
     }
   }, [blobDataCur])
 

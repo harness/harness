@@ -1403,7 +1403,6 @@ export interface StringsMap {
   'cde.gitspaceInfraHome.diskSizeMessage': string
   'cde.gitspaceInfraHome.diskType': string
   'cde.gitspaceInfraHome.diskTypeMessage': string
-  'cde.gitspaceInfraHome.dnsManagedZone': string
   'cde.gitspaceInfraHome.domainMessage': string
   'cde.gitspaceInfraHome.gcpSupportText': string
   'cde.gitspaceInfraHome.infraDetails': string

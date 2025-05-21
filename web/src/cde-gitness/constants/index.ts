@@ -52,7 +52,6 @@ export interface regionProp {
   defaultSubnet: string
   proxySubnet: string
   domain: string
-  dns: string
   identifier: number
 }
 export const HYBRID_VM_GCP = 'hybrid_vm_gcp'

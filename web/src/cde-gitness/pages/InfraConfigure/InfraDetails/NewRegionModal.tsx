@@ -29,8 +29,7 @@ const validationSchema = (context: { domain: string }) =>
       .required('Domain is required')
       .test('ends-with-domain', `Domain must end with ${context.domain}`, function (value) {
         return value ? value.endsWith(context.domain) : false
-      }),
-    dns: Yup.string().required('DNS Managed Zone is required')
+      })
   })
 
 const NewRegionModal = ({ isOpen, setIsOpen, onSubmit }: NewRegionModalProps) => {
@@ -60,7 +59,6 @@ const NewRegionModal = ({ isOpen, setIsOpen, onSubmit }: NewRegionModalProps) =>
           defaultSubnet: '',
           proxySubnet: '',
           domain: `*.${values?.domain}`,
-          dns: '',
           identifier: 0
         }}>
         {formikProps => {
@@ -90,11 +88,6 @@ const NewRegionModal = ({ isOpen, setIsOpen, onSubmit }: NewRegionModalProps) =>
                 name="domain"
                 placeholder="e.g us-west-ga.io"
                 label={getString('cde.configureInfra.domain')}
-              />
-              <FormInput.Text
-                placeholder="e.g us-west-ga.io"
-                name="dns"
-                label={getString('cde.gitspaceInfraHome.dnsManagedZone')}
               />
 
               <Button variation={ButtonVariation.PRIMARY} type="submit" style={{ marginLeft: '75%' }}>

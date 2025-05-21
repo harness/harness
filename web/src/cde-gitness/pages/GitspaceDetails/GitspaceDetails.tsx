@@ -27,9 +27,12 @@ import {
   Text,
   useToaster,
   AccordionHandle,
-  ButtonSize
+  ButtonSize,
+  Utils
 } from '@harnessio/uicore'
-import { Play } from 'iconoir-react'
+import cx from 'classnames'
+import { NavArrowDown, NavArrowRight, Play } from 'iconoir-react'
+import { Render } from 'react-jsx-match'
 import { useHistory, useParams } from 'react-router-dom'
 import { Color, FontVariation, PopoverProps } from '@harnessio/design-system'
 import { Menu, MenuItem, PopoverInteractionKind, PopoverPosition } from '@blueprintjs/core'
@@ -60,8 +63,49 @@ import { ErrorCard } from 'cde-gitness/components/ErrorCard/ErrorCard'
 import CopyButton from 'cde-gitness/components/CopyButton/CopyButton'
 import ContainerLogs from '../../components/ContainerLogs/ContainerLogs'
 import { useGetLogStream } from '../../hooks/useGetLogStream'
-import Logger from './Logger/Logger'
+import Logger, { LoggerProps } from './Logger/Logger'
 import css from './GitspaceDetails.module.scss'
+
+const LogSection = (props: LoggerProps & { title: string; isBottom?: boolean; handlePageScrollClick: () => void }) => {
+  const { getString } = useStrings()
+  const [initExpand, setInitExpand] = useState<boolean>(false)
+  return (
+    <Container>
+      <Layout.Horizontal
+        spacing="small"
+        className={cx(css.stepHeader, {
+          [css.expanded]: initExpand,
+          [css.selected]: initExpand
+        })}
+        onClick={() => {
+          setInitExpand(!initExpand)
+        }}>
+        {initExpand ? (
+          <NavArrowDown color={Utils.getRealCSSColor(Color.GREY_500)} className={cx(css.noShrink)} />
+        ) : (
+          <NavArrowRight color={Utils.getRealCSSColor(Color.GREY_500)} className={cx(css.noShrink)} />
+        )}
+        <Text className={css.name} color={initExpand ? Color.PRIMARY_7 : Color.GREY_500} lineClamp={1}>
+          {props.title}
+        </Text>
+      </Layout.Horizontal>
+      <Render when={initExpand}>
+        <Container margin="medium" padding="medium">
+          <Logger {...props} />
+        </Container>
+        <Button
+          size={ButtonSize.SMALL}
+          variation={ButtonVariation.PRIMARY}
+          text={props?.isBottom ? getString('top') : getString('bottom')}
+          icon={props?.isBottom ? 'arrow-up' : 'arrow-down'}
+          iconProps={{ size: 10 }}
+          onClick={props?.handlePageScrollClick}
+          className={css.scrollDownBtn}
+        />
+      </Render>
+    </Container>
+  )
+}
 
 const GitspaceDetails = () => {
   const space = useGetSpaceParam()
@@ -70,6 +114,7 @@ const GitspaceDetails = () => {
   const { showError, showSuccess } = useToaster()
   const history = useHistory()
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const initcontainerRef = useRef<HTMLDivElement | null>(null)
   const [startTriggred, setStartTriggred] = useState<boolean>(false)
   const [triggerPollingOnStart, setTriggerPollingOnStart] = useState<EnumGitspaceStateType>()
   const { gitspaceId = '' } = useParams<{ gitspaceId?: string }>()
@@ -239,12 +284,16 @@ const GitspaceDetails = () => {
 
   const handleClick = () => {
     const logContainer = containerRef.current as HTMLDivElement
+    const initlogContainer = initcontainerRef.current as HTMLDivElement
     const scrollParent = logContainer?.parentElement as HTMLDivElement
+    const initScrollParent = initlogContainer?.parentElement as HTMLDivElement
     if (!isBottom) {
       scrollParent.scrollTop = scrollParent.scrollHeight
+      initScrollParent.scrollTop = initScrollParent.scrollHeight
       setIsBottom(true)
     } else if (isBottom) {
       scrollParent.scrollTop = 0
+      initScrollParent.scrollTop = 0
       setIsBottom(false)
     }
   }
@@ -499,7 +548,21 @@ const GitspaceDetails = () => {
                       <ContainerLogs data={formattedlogsdata.data} />
                     ) : (
                       <Container width="100%" className={css.consoleContainer}>
-                        <Logger
+                        <LogSection
+                          title="Initialise"
+                          value={`init_${data?.name}`}
+                          state={data?.state ?? ''}
+                          logKey={(data as { initialize_log_key: string })?.initialize_log_key ?? ''}
+                          isStreaming={false}
+                          expanded={true}
+                          localRef={initcontainerRef}
+                          setIsBottom={setIsBottom}
+                          isBottom={isBottom}
+                          handlePageScrollClick={handleClick}
+                        />
+
+                        <LogSection
+                          title="Container logs"
                           value={data?.name ?? ''}
                           state={data?.state ?? ''}
                           logKey={data?.log_key ?? ''}
@@ -507,7 +570,10 @@ const GitspaceDetails = () => {
                           expanded={true}
                           localRef={containerRef}
                           setIsBottom={setIsBottom}
+                          isBottom={isBottom}
+                          handlePageScrollClick={handleClick}
                         />
+
                         <Button
                           size={ButtonSize.SMALL}
                           variation={ButtonVariation.PRIMARY}

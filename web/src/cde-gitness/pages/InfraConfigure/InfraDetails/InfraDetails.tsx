@@ -78,7 +78,6 @@ const InfraDetails = () => {
           defaultSubnet: default_subnet_ip_range,
           proxySubnet: proxy_subnet_ip_range,
           domain: certificates?.contents?.[0]?.domain,
-          dns: certificates?.contents?.[0]?.dns_managed_zone_name,
           identifier: index + 1
         }
         regions.push(region)
@@ -108,7 +107,7 @@ const InfraDetails = () => {
                 const { identifier, name, domain, machine_type, instances, project, delegateSelector } = values
                 const region_configs: Unknown = {}
                 regionData?.forEach((region: regionProp) => {
-                  const { location, defaultSubnet, proxySubnet, dns, domain: regionDomain } = region
+                  const { location, defaultSubnet, proxySubnet, domain: regionDomain } = region
                   const regionKey = location?.replace(/-/g, '')
                   region_configs[regionKey] = {
                     region_name: location,
@@ -117,8 +116,7 @@ const InfraDetails = () => {
                     certificates: {
                       contents: [
                         {
-                          domain: regionDomain,
-                          dns_managed_zone_name: dns
+                          domain: regionDomain
                         }
                       ]
                     }

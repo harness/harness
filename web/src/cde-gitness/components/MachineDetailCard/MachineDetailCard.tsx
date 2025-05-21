@@ -40,13 +40,6 @@ function MachineDetailCard({ locationData }: { locationData: regionType }) {
             {locationData?.domain}
           </Text>
         </Layout.Vertical>
-
-        <Layout.Vertical spacing={'small'}>
-          <Text className={css.rowHeader}>{getString('cde.gitspaceInfraHome.dnsManagedZone')}</Text>
-          <Text className={css.rowContent} iconProps={{ size: 14 }} color={Color.GREY_1000}>
-            {locationData?.dns}
-          </Text>
-        </Layout.Vertical>
       </Layout.Horizontal>
     </Container>
   )

@@ -72,7 +72,7 @@ export const CDEAnyGitImport = () => {
     debounce: 1000
   })
 
-  const { data: scmrepos } = useGetPaginatedListOfReposByRefConnector({
+  const { data: scmrepos, loading: onPremRepoLoading } = useGetPaginatedListOfReposByRefConnector({
     queryParams: {
       accountIdentifier,
       orgIdentifier,
@@ -92,7 +92,7 @@ export const CDEAnyGitImport = () => {
       accountIdentifier,
       orgIdentifier,
       projectIdentifier,
-      repoName: values.code_repo_url || '',
+      repoName: values.name || '',
       useSCMProviderForConnector: true,
       scmProviderForConnectorType: values?.code_repo_type,
       branchNameSearchTerm: defaultTo(searchBranch, '')
@@ -249,7 +249,7 @@ export const CDEAnyGitImport = () => {
             }
             tooltipProps={{ isOpen: repoRef.current?.onfocus }}
             rightIcon={
-              loading || repoLoading
+              loading || repoLoading || onPremRepoLoading
                 ? 'loading'
                 : repoCheckState && isValidUrl(defaultTo(searchTerm, ''))
                 ? repoCheckState === RepoCheckStatus.Valid
@@ -261,14 +261,14 @@ export const CDEAnyGitImport = () => {
             formikName="code_repo_url"
             renderMenu={
               <Menu>
-                {loading || repoLoading ? (
+                {loading || repoLoading || onPremRepoLoading ? (
                   <MenuItem text={<Text>Fetching Repositories</Text>} />
                 ) : repoOptions?.length ? (
                   repoOptions?.map(item => {
                     return (
                       <MenuItem
                         key={item.name}
-                        disabled={repoLoading}
+                        disabled={repoLoading || onPremRepoLoading}
                         text={
                           <Layout.Horizontal
                             spacing="large"
@@ -285,32 +285,45 @@ export const CDEAnyGitImport = () => {
                             </Layout.Vertical>
                           </Layout.Horizontal>
                         }
-                        onClick={() => {
+                        onClick={async () => {
                           setSearchTerm(item.name as string)
-                          setValues((prvValues: any) => {
-                            return isOnPremSCM
-                              ? {
-                                  ...prvValues,
-                                  code_repo_url: item.name,
-                                  branch: item.default_branch,
-                                  identifier: getRepoIdFromURL(item.name),
-                                  name: getRepoNameFromURL(item.name),
-                                  code_repo_type: values?.code_repo_type
-                                }
-                              : {
-                                  ...prvValues,
-                                  code_repo_url: item.clone_url,
-                                  branch: item.default_branch,
-                                  identifier: getRepoIdFromURL(item.clone_url),
-                                  name: getRepoNameFromURL(item.clone_url),
-                                  code_repo_type: values?.code_repo_type
-                                }
-                          })
-                          setSearchBranch(item.default_branch as string)
                           if (isOnPremSCM) {
+                            const { data } = await getRepoURLPromise({
+                              queryParams: {
+                                accountIdentifier,
+                                orgIdentifier,
+                                projectIdentifier,
+                                useSCMProviderForConnector: true,
+                                repoName: item.name || '',
+                                scmProviderForConnectorType: values?.code_repo_type
+                              }
+                            })
+                            setValues((prvValues: any) => {
+                              return {
+                                ...prvValues,
+                                code_repo_url: data,
+                                branch: item.default_branch,
+                                identifier: item.name,
+                                name: item.name,
+                                code_repo_type: values?.code_repo_type
+                              }
+                            })
                             scmrefetchBranch()
-                            // refetchBranch()
                           } else {
+                            setValues((prvValues: any) => {
+                              return {
+                                ...prvValues,
+                                code_repo_url: item.clone_url,
+                                branch: item.default_branch,
+                                identifier: getRepoIdFromURL(item.clone_url),
+                                name: getRepoNameFromURL(item.clone_url),
+                                code_repo_type: values?.code_repo_type
+                              }
+                            })
+                            setSearchBranch(item.default_branch as string)
+                          }
+
+                          if (!isOnPremSCM) {
                             refetchBranch()
                           }
                         }}
@@ -370,7 +383,7 @@ export const CDEAnyGitImport = () => {
                       />
                     )
                   })
-                ) : loading || repoLoading ? (
+                ) : loading || repoLoading || onPremRepoLoading ? (
                   <MenuItem text={<Text>Fetching Branches</Text>} />
                 ) : (
                   <MenuItem text={<Text>No Branches Found</Text>} />

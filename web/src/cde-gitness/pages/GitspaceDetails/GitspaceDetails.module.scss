@@ -154,3 +154,50 @@
     font-family: var(--font-family-mono) !important;
   }
 }
+
+.stepHeader {
+  display: flex;
+  align-items: center;
+  min-height: 34px;
+  border-radius: 6px;
+  padding: 0 10px 0 6px;
+  // position: sticky;
+  top: 0px;
+  z-index: 2;
+  cursor: pointer;
+  background-color: var(--black);
+
+  &.expanded {
+    .chevron {
+      transform: rotate(90deg);
+    }
+  }
+
+  .chevron {
+    transition: transform 0.2s ease;
+  }
+
+  &:hover {
+    background-color: #22222aa9;
+  }
+
+  &.selected {
+    background-color: #22222a;
+  }
+
+  &.selected .name {
+    color: var(--primary-7) !important;
+    font-weight: 600 !important;
+  }
+
+  .noShrink {
+    flex-shrink: inherit;
+  }
+
+  .name {
+    color: #b0b1c3 !important;
+    font-weight: 400 !important;
+    font-size: 14px !important;
+    font-family: var(--font-family-mono) !important;
+  }
+}

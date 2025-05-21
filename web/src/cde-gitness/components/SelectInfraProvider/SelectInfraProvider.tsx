@@ -18,19 +18,17 @@ import React, { useEffect, useState } from 'react'
 import { groupBy } from 'lodash-es'
 import { Layout } from '@harnessio/uicore'
 import { useFormikContext } from 'formik'
-import { useHistory, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import type { OpenapiCreateGitspaceRequest, TypesInfraProviderConfig, TypesInfraProviderResource } from 'services/cde'
 import { useInfraListingApi } from 'cde-gitness/hooks/useGetInfraListProvider'
 import { HARNESS_GCP, HYBRID_VM_GCP, type dropdownProps } from 'cde-gitness/constants'
 import { useAppContext } from 'AppContext'
-import { routes } from 'cde-gitness/RouteDefinitions'
 import { SelectRegion } from '../SelectRegion/SelectRegion'
 import { SelectMachine } from '../SelectMachine/SelectMachine'
 import SelectInfraProviderType from '../SelectInfraProviderType/SelectInfraProviderType'
 
 export const SelectInfraProvider = () => {
-  const { hooks, accountInfo } = useAppContext()
-  const history = useHistory()
+  const { hooks } = useAppContext()
   const { CDE_HYBRID_ENABLED, CDE_HARNESS_GCP_ENABLED } = hooks?.useFeatureFlags()
   const [infraProviders, setInfraProvider] = useState<dropdownProps[]>()
   const { values, setFieldValue: onChange } = useFormikContext<OpenapiCreateGitspaceRequest>()
@@ -65,11 +63,11 @@ export const SelectInfraProvider = () => {
       }
     })
     if (CDE_HYBRID_ENABLED && !isHybridAvailable && data) {
-      history.push(
-        routes.toCDEGitspaceInfra({
-          accountId: accountInfo?.identifier
-        })
-      )
+      // history.push(
+      //   routes.toCDEGitspaceInfra({
+      //     accountId: accountInfo?.identifier
+      //   })
+      // )
     } else {
       setInfraProvider(infraOptions)
     }

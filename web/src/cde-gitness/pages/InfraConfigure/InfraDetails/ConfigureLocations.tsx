@@ -150,18 +150,6 @@ const ConfigureLocations = ({ regionData, setRegionData }: LocationProps) => {
       width: '15%'
     },
     {
-      Header: (
-        <Layout.Horizontal>
-          <Text className={css.headingText}>{getString('cde.gitspaceInfraHome.dnsManagedZone')}</Text>
-          <HarnessDocTooltip tooltipId="InfraProviderRegionDNS" useStandAlone={true} />
-        </Layout.Horizontal>
-      ),
-      Cell: CustomCell,
-      accessor: 'dns',
-      placeholder: 'e.g us-west-ga.io',
-      width: '20%'
-    },
-    {
       Header: '',
       accessor: 'identifier',
       Cell: ActionCell,

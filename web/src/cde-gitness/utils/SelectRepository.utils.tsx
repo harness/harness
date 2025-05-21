@@ -18,7 +18,7 @@ import React from 'react'
 import { defaultTo } from 'lodash-es'
 import type { EnumGitspaceCodeRepoType } from 'cde-gitness/services'
 import genericGit from 'cde-gitness/assests/genericGit.svg?url'
-import { scmOptions } from 'cde-gitness/pages/GitspaceCreate/CDECreateGitspace'
+import { onPremSCMOptions, scmOptions } from 'cde-gitness/pages/GitspaceCreate/CDECreateGitspace'
 
 export const isValidUrl = (url: string) => {
   const urlPattern = new RegExp(
@@ -50,7 +50,10 @@ export enum CodeRepoType {
   Gitlab = 'gitlab',
   HarnessCode = 'harnessCode',
   Bitbucket = 'bitbucket',
-  Unknown = 'unknown'
+  Unknown = 'unknown',
+  gitlabOnPrem = 'gitlab_on_prem',
+  bitbucketServer = 'bitbucket_server',
+  githubEnterprise = 'github_enterprise'
 }
 
 export const getIconByRepoType = ({
@@ -60,7 +63,7 @@ export const getIconByRepoType = ({
   repoType?: EnumGitspaceCodeRepoType
   height?: number
 }): React.ReactNode => {
-  const scmOption = scmOptions.find(option => option.value === repoType)
+  const scmOption = [...scmOptions, ...onPremSCMOptions].find(option => option.value === repoType)
   return (
     <img height={height} width={height} src={defaultTo(scmOption?.icon, genericGit)} style={{ marginRight: '10px' }} />
   )

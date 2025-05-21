@@ -83,7 +83,6 @@ gitspaceInfraHome:
   locationName: Region Name
   defaultSubnet: Default subnet IP range
   proxySubnet: Proxy subnet IP range
-  dnsManagedZone: DNS managed zone
   machines: Machines
   machine: Machine
   diskType: Persistent Disk Type
