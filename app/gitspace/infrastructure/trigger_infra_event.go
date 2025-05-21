@@ -150,13 +150,13 @@ func (i InfraProvisioner) TriggerInfraEventWithOpts(
 				allParams,
 			)
 		}
-		return infraProvider.Deprovision(ctx, *infra, opts.CanDeleteUserData, configMetadata, allParams)
+		return infraProvider.Deprovision(ctx, *infra, gitspaceConfig, opts.CanDeleteUserData, configMetadata, allParams)
 
 	case enum.InfraEventCleanup:
 		return infraProvider.CleanupInstanceResources(ctx, *infra)
 
 	case enum.InfraEventStop:
-		return infraProvider.Stop(ctx, *infra, configMetadata)
+		return infraProvider.Stop(ctx, *infra, gitspaceConfig, configMetadata)
 
 	default:
 		return fmt.Errorf("unsupported event type: %s", eventType)
@@ -240,16 +240,12 @@ func (i InfraProvisioner) provisionNewInfrastructure(
 
 	err = infraProvider.Provision(
 		ctx,
-		gitspaceConfig.SpaceID,
-		gitspaceConfig.SpacePath,
-		gitspaceConfig.Identifier,
-		gitspaceConfig.GitspaceInstance.Identifier,
-		gitspaceConfig.GitspaceInstance.ID,
+		gitspaceConfig,
 		agentPort,
 		requiredGitspacePorts,
 		allParams,
 		configMetadata,
-		infrastructure,
+		infrastructure.InstanceInfo,
 	)
 	if err != nil {
 		infraProvisioned.InfraStatus = enum.InfraStatusUnknown
@@ -288,16 +284,12 @@ func (i InfraProvisioner) provisionExistingInfrastructure(
 
 	err = infraProvider.Provision(
 		ctx,
-		gitspaceConfig.SpaceID,
-		gitspaceConfig.SpacePath,
-		gitspaceConfig.Identifier,
-		gitspaceConfig.GitspaceInstance.Identifier,
-		gitspaceConfig.GitspaceInstance.ID,
+		gitspaceConfig,
 		0, // NOTE: Agent port is not required for provisioning type Existing.
 		requiredGitspacePorts,
 		allParams,
 		configMetadata,
-		stoppedInfra,
+		stoppedInfra.InstanceInfo,
 	)
 	if err != nil {
 		return fmt.Errorf(
@@ -331,7 +323,7 @@ func (i InfraProvisioner) deprovisionNewInfrastructure(
 		return nil
 	}
 
-	err = infraProvider.Deprovision(ctx, infra, canDeleteUserData, configMetadata, params)
+	err = infraProvider.Deprovision(ctx, infra, gitspaceConfig, canDeleteUserData, configMetadata, params)
 	if err != nil {
 		return fmt.Errorf("unable to trigger deprovision infra %+v: %w", infra, err)
 	}

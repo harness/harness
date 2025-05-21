@@ -25,16 +25,12 @@ type InfraProvider interface {
 	// Provision provisions infrastructure against a gitspace with the provided parameters.
 	Provision(
 		ctx context.Context,
-		spaceID int64,
-		spacePath string,
-		gitspaceConfigIdentifier string,
-		gitspaceInstanceIdentifier string,
-		gitspaceInstanceID int64,
+		gitspaceConfig types.GitspaceConfig,
 		agentPort int,
 		requiredGitspacePorts []types.GitspacePort,
 		inputParameters []types.InfraProviderParameter,
 		configMetadata map[string]any,
-		infrastructure types.Infrastructure,
+		instanceInfo types.InstanceInfo,
 	) error
 
 	// Find finds infrastructure provisioned against a gitspace.
@@ -54,7 +50,12 @@ type InfraProvider interface {
 	) (*enum.InfraStatus, error)
 
 	// Stop frees up the resources allocated against a gitspace, which can be freed.
-	Stop(ctx context.Context, infra types.Infrastructure, configMetadata map[string]any) error
+	Stop(
+		ctx context.Context,
+		infra types.Infrastructure,
+		gitspaceConfig types.GitspaceConfig,
+		configMetadata map[string]any,
+	) error
 
 	// CleanupInstanceResources cleans up resources exclusively allocated to a gitspace instance.
 	CleanupInstanceResources(ctx context.Context, infra types.Infrastructure) error
@@ -65,6 +66,7 @@ type InfraProvider interface {
 	Deprovision(
 		ctx context.Context,
 		infra types.Infrastructure,
+		gitspaceConfig types.GitspaceConfig,
 		canDeleteUserData bool,
 		configMetadata map[string]any,
 		params []types.InfraProviderParameter,

@@ -52,16 +52,12 @@ func NewDockerProvider(
 // It does not start docker engine. It creates a docker volume using the given gitspace config identifier.
 func (d DockerProvider) Provision(
 	ctx context.Context,
-	spaceID int64,
-	spacePath string,
-	gitspaceConfigIdentifier string,
-	gitspaceInstanceIdentifier string,
-	_ int64,
+	gitspaceConfig types.GitspaceConfig,
 	_ int,
 	requiredGitspacePorts []types.GitspacePort,
 	inputParameters []types.InfraProviderParameter,
 	_ map[string]any,
-	_ types.Infrastructure,
+	_ types.InstanceInfo,
 ) error {
 	dockerClient, err := d.dockerClientFactory.NewDockerClient(ctx, types.Infrastructure{
 		ProviderType:    enum.InfraProviderTypeDocker,
@@ -83,12 +79,12 @@ func (d DockerProvider) Provision(
 		return err
 	}
 
-	infrastructure.SpaceID = spaceID
-	infrastructure.SpacePath = spacePath
-	infrastructure.GitspaceConfigIdentifier = gitspaceConfigIdentifier
-	infrastructure.GitspaceInstanceIdentifier = gitspaceInstanceIdentifier
+	infrastructure.SpaceID = gitspaceConfig.SpaceID
+	infrastructure.SpacePath = gitspaceConfig.SpacePath
+	infrastructure.GitspaceConfigIdentifier = gitspaceConfig.Identifier
+	infrastructure.GitspaceInstanceIdentifier = gitspaceConfig.GitspaceInstance.Identifier
 
-	storageName, err := d.createNamedVolume(ctx, spacePath, gitspaceConfigIdentifier, dockerClient)
+	storageName, err := d.createNamedVolume(ctx, gitspaceConfig.SpacePath, gitspaceConfig.Identifier, dockerClient)
 	if err != nil {
 		return err
 	}
@@ -166,7 +162,12 @@ func (d DockerProvider) FindInfraStatus(_ context.Context,
 }
 
 // Stop is NOOP as this provider uses already running docker engine. It does not stop the docker engine.
-func (d DockerProvider) Stop(ctx context.Context, infra types.Infrastructure, _ map[string]any) error {
+func (d DockerProvider) Stop(
+	ctx context.Context,
+	infra types.Infrastructure,
+	_ types.GitspaceConfig,
+	_ map[string]any,
+) error {
 	infra.Status = enum.InfraStatusDestroyed
 
 	event := &events.GitspaceInfraEventPayload{
@@ -206,6 +207,7 @@ func (d DockerProvider) CleanupInstanceResources(ctx context.Context, infra type
 func (d DockerProvider) Deprovision(
 	ctx context.Context,
 	infra types.Infrastructure,
+	_ types.GitspaceConfig,
 	canDeleteUserData bool,
 	_ map[string]any,
 	_ []types.InfraProviderParameter,
