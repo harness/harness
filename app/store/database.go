@@ -1375,4 +1375,9 @@ type (
 		Upsert(ctx context.Context, in *types.CDEGateway) error
 		List(ctx context.Context, filter *types.CDEGatewayFilter) ([]*types.CDEGateway, error)
 	}
+
+	FavoriteStore interface {
+		Create(ctx context.Context, in *types.FavoriteResource) error
+		Delete(ctx context.Context, in *types.FavoriteResource) error
+	}
 )

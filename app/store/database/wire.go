@@ -75,6 +75,7 @@ var WireSet = wire.NewSet(
 	ProvideInfraProvisionedStore,
 	ProvideUsageMetricStore,
 	ProvideCDEGatewayStore,
+	ProvideFavoriteStore,
 )
 
 // migrator is helper function to set up the database by performing automated
@@ -359,4 +360,8 @@ func ProvideUsageMetricStore(db *sqlx.DB) store.UsageMetricStore {
 
 func ProvideCDEGatewayStore(db *sqlx.DB) store.CDEGatewayStore {
 	return NewCDEGatewayStore(db)
+}
+
+func ProvideFavoriteStore(db *sqlx.DB) store.FavoriteStore {
+	return NewFavoriteStore(db)
 }
