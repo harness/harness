@@ -15,80 +15,27 @@
  */
 
 import React, { useContext } from 'react'
-import { omit } from 'lodash-es'
-import { useHistory } from 'react-router-dom'
 import type { IconName } from '@harnessio/icons'
-import type { RegistryArtifactMetadata, RegistryMetadata } from '@harnessio/react-har-service-client'
 
-import { useParentHooks, useRoutes } from '@ar/hooks'
-import TreeNode, { NodeTypeEnum } from '@ar/components/TreeView/TreeNode'
 import TreeNodeContent from '@ar/components/TreeView/TreeNodeContent'
-import { PageType, type RepositoryPackageType } from '@ar/common/types'
 import { TreeViewContext } from '@ar/components/TreeView/TreeViewContext'
 import type { ArtifactTreeNodeViewProps } from '@ar/frameworks/Version/Version'
-import ArtifactActionsWidget from '@ar/frameworks/Version/ArtifactActionsWidget'
-import VersionListTreeView from '@ar/pages/version-list/components/VersionListTreeView/VersionListTreeView'
 
 interface IArtifactTreeNode extends ArtifactTreeNodeViewProps {
   icon: IconName
   iconSize?: number
-  level?: number
 }
 
 export default function ArtifactTreeNode(props: IArtifactTreeNode) {
-  const { data, icon, iconSize = 24, level = 1, isLastChild, parentNodeLevels } = props
-  const { setActivePath, activePath, compact } = useContext(TreeViewContext)
-  const { useQueryParams } = useParentHooks()
-  const queryParams = useQueryParams<Record<string, string>>()
-  const routes = useRoutes()
-  const history = useHistory()
-  const path = `${data.registryIdentifier}/${data.name}`
+  const { data, icon, iconSize = 24 } = props
+  const { compact } = useContext(TreeViewContext)
   return (
-    <TreeNode<RegistryMetadata | RegistryArtifactMetadata>
-      key={path}
-      id={path}
-      level={level}
-      nodeType={NodeTypeEnum.Folder}
+    <TreeNodeContent
+      icon={icon}
+      iconSize={iconSize}
+      label={data.name}
+      downloads={data.downloadsCount}
       compact={compact}
-      isLastChild={isLastChild}
-      parentNodeLevels={parentNodeLevels}
-      isOpen={activePath.includes(path)}
-      isActive={activePath === path}
-      onClick={() => {
-        setActivePath(path)
-        history.push(
-          routes.toARArtifactDetails(
-            {
-              repositoryIdentifier: data.registryIdentifier,
-              artifactIdentifier: data.name
-            },
-            { queryParams: omit(queryParams, 'digest') }
-          )
-        )
-      }}
-      heading={
-        <TreeNodeContent
-          icon={icon}
-          iconSize={iconSize}
-          label={data.name}
-          downloads={data.downloadsCount}
-          compact={compact}
-        />
-      }
-      actionElement={
-        <ArtifactActionsWidget
-          packageType={data.packageType as RepositoryPackageType}
-          data={data}
-          repoKey={data.registryIdentifier}
-          artifactKey={data.name}
-          pageType={PageType.Table}
-        />
-      }>
-      <VersionListTreeView
-        parentNodeLevels={[...parentNodeLevels, { data, isLastChild }]}
-        registryIdentifier={data.registryIdentifier}
-        artifactIdentifier={data.name}
-      />
-    </TreeNode>
+    />
   )
 }

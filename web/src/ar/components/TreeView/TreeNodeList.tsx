@@ -14,17 +14,69 @@
  * limitations under the License.
  */
 
-import React, { type PropsWithChildren } from 'react'
+import React from 'react'
 import classNames from 'classnames'
 
 import css from './TreeView.module.scss'
 
-export default function TreeNodeList(
-  props: PropsWithChildren<React.DetailedHTMLProps<React.HTMLAttributes<HTMLUListElement>, HTMLUListElement>>
-) {
-  return (
-    <ul {...props} className={classNames(props.className, css.treeList)}>
-      {props.children}
-    </ul>
-  )
-}
+export const TreeNodeList = React.forwardRef<HTMLDivElement, React.HTMLProps<HTMLDivElement>>(
+  ({ style, children, className, ...rest }, ref) => {
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+      const items = Array.from(document.querySelectorAll('[data-tree-item]')) as HTMLElement[]
+      const idx = items.findIndex(el => el === document.activeElement)
+      if (idx === -1) return
+      const activeElement = items[idx]
+      const isDirectory = activeElement.getAttribute('data-is-directory') === 'true'
+      const isOpen = activeElement.getAttribute('data-is-expanded') === 'true'
+
+      switch (e.key) {
+        case 'ArrowDown': {
+          e.preventDefault()
+          const next = items[idx + 1]
+          next?.focus()
+          return
+        }
+        case 'ArrowUp': {
+          e.preventDefault()
+          const prev = items[idx - 1]
+          prev?.focus()
+          return
+        }
+        case 'ArrowRight': {
+          e.preventDefault()
+          if (!isDirectory || isOpen) return
+          e.currentTarget.focus()
+          activeElement.click()
+          return
+        }
+        case 'ArrowLeft': {
+          e.preventDefault()
+          if (!isDirectory || !isOpen) return
+          e.currentTarget.focus()
+          activeElement.click()
+          return
+        }
+        case 'Enter':
+          e.preventDefault()
+          e.currentTarget.focus()
+          activeElement.click()
+          return
+        default:
+          return
+      }
+    }
+    return (
+      <div
+        {...rest}
+        style={style}
+        ref={ref}
+        className={classNames(className, css.treeList)}
+        role="tree"
+        onKeyDown={handleKeyDown}>
+        {children}
+      </div>
+    )
+  }
+)
+
+TreeNodeList.displayName = 'TreeNodeList'

@@ -18,12 +18,10 @@ import React from 'react'
 import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client'
 
 import { String } from '@ar/frameworks/strings'
-import { NodeTypeEnum } from '@ar/components/TreeView/TreeNode'
 import DigestListPage from '@ar/pages/digest-list/DigestListPage'
 import { PageType, RepositoryPackageType } from '@ar/common/types'
 import ArtifactActions from '@ar/pages/artifact-details/components/ArtifactActions/ArtifactActions'
 import ArtifactTreeNode from '@ar/pages/artifact-details/components/ArtifactTreeNode/ArtifactTreeNode'
-import DigestListTreeView from '@ar/pages/digest-list/components/DigestListTreeView/DigestListTreeView'
 import DockerVersionListTable from '@ar/pages/version-list/DockerVersion/VersionListTable/DockerVersionListTable'
 import ArtifactTreeNodeDetailsContent from '@ar/pages/artifact-details/components/ArtifactTreeNode/ArtifactTreeNodeDetailsContent'
 import {
@@ -129,17 +127,7 @@ export class DockerVersionType extends VersionStep<ArtifactVersionSummary> {
   }
 
   renderVersionTreeNodeView(props: VersionTreeNodeViewProps): JSX.Element {
-    const { data, parentNodeLevels, isLastChild } = props
-    return (
-      <VersionTreeNode {...props} icon="container" nodeType={NodeTypeEnum.Folder}>
-        <DigestListTreeView
-          registryIdentifier={props.data.registryIdentifier}
-          artifactIdentifier={props.artifactIdentifier}
-          versionIdentifier={props.data.name}
-          parentNodeLevels={[...parentNodeLevels, { data, isLastChild }]}
-        />
-      </VersionTreeNode>
-    )
+    return <VersionTreeNode {...props} icon="container" />
   }
 
   renderVersionTreeNodeDetails(): JSX.Element {

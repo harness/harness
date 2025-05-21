@@ -14,177 +14,178 @@
  * limitations under the License.
  */
 
-import React, { useMemo, useState } from 'react'
+import React, { useState } from 'react'
 import { compact as lodashCompact } from 'lodash-es'
 import { Switch } from 'react-router-dom'
-import { useInfiniteQuery } from '@tanstack/react-query'
-import { FontVariation } from '@harnessio/design-system'
-import { Container, DropDown, Layout, Text } from '@harnessio/uicore'
-import { type Error, getAllRegistries, type GetAllRegistriesOkResponse } from '@harnessio/react-har-service-client'
+import { Container, Layout } from '@harnessio/uicore'
 
-import { useStrings } from '@ar/frameworks/strings'
-import { useGetSpaceRef, useParentHooks, useRoutes } from '@ar/hooks'
-import TreeBody from '@ar/components/TreeView/TreeBody'
-import TreeNode from '@ar/components/TreeView/TreeNode'
-import type { RepositoryPackageType } from '@ar/common/types'
-import TreeNodeList from '@ar/components/TreeView/TreeNodeList'
+import { useParentHooks, useRoutes } from '@ar/hooks'
+import { PageType } from '@ar/common/types'
 import RouteProvider from '@ar/components/RouteProvider/RouteProvider'
-import TreeLoadMoreNode from '@ar/components/TreeView/TreeLoadMoreNode'
 import RepositoryProvider from '@ar/pages/repository-details/context/RepositoryProvider'
 import {
   artifactDetailsPathProps,
   repositoryDetailsPathProps,
   versionDetailsPathParams
 } from '@ar/routes/RouteDestinations'
-import TreeNodeSearchInput from '@ar/components/TreeView/TreeNodeSearchInput'
 import { TreeViewContext } from '@ar/components/TreeView/TreeViewContext'
 import VersionProvider from '@ar/pages/version-details/context/VersionProvider'
 import ArtifactProvider from '@ar/pages/artifact-details/context/ArtifactProvider'
 import type { DockerVersionDetailsQueryParams } from '@ar/pages/version-details/DockerVersion/types'
-import RepositoryTreeNodeViewWidget from '@ar/frameworks/RepositoryStep/RepositoryTreeNodeViewWidget'
 import VersionTreeNodeDetails from '@ar/pages/version-details/components/VersionTreeNode/VersionTreeNodeDetails'
 
+import TreeView from '@ar/components/TreeView/TreeView'
+import type { INodeConfig, ITreeNode } from '@ar/components/TreeView/types'
+import VersionActionsWidget from '@ar/frameworks/Version/VersionActionsWidget'
+import ArtifactActionsWidget from '@ar/frameworks/Version/ArtifactActionsWidget'
+import RepositoryActionsWidget from '@ar/frameworks/RepositoryStep/RepositoryActionsWidget'
 import ArtifactTreeNodeDetails from '@ar/pages/artifact-details/components/ArtifactTreeNode/ArtifactTreeNodeDetails'
 import RepositoryTreeNodeDetails from '@ar/pages/repository-details/components/RepositoryTreeNode/RepositoryTreeNodeDetails'
 
+import TreeNodeContent from '@ar/components/TreeView/TreeNodeContent'
+import VersionTreeNodeViewWidget from '@ar/frameworks/Version/VersionTreeNodeViewWidget'
+import ArtifactTreeNodeViewWidget from '@ar/frameworks/Version/ArtifactTreeNodeViewWidget'
+import RepositoryTreeNodeViewWidget from '@ar/frameworks/RepositoryStep/RepositoryTreeNodeViewWidget'
+
+import type { IGlobalFilters } from './types'
+import { useRepositoryTreeViewUtils } from './utils'
 import { TreeViewSortingOptions } from '../../constants'
 import { useArtifactRepositoriesQueryParamOptions, type ArtifactRepositoryListPageQueryParams } from '../../utils'
 
 import css from './RepositoryListTreeView.module.scss'
 
+const ROOT_NODE_ID = 'root'
 export default function RepositoryListTreeView() {
   const routeDefinitions = useRoutes(true)
-  const { getString } = useStrings()
-  const spaceRef = useGetSpaceRef()
-  const [initialised, setInitialised] = useState(false)
-
-  const { useQueryParams, useUpdateQueryParams } = useParentHooks()
+  const { useQueryParams } = useParentHooks()
   const { digest } = useQueryParams<DockerVersionDetailsQueryParams>()
   const [activePath, setActivePath] = useState('')
 
   const queryParamOptions = useArtifactRepositoriesQueryParamOptions()
-  const { updateQueryParams } = useUpdateQueryParams<Partial<ArtifactRepositoryListPageQueryParams>>()
   const { registrySearchTerm, compact, repositoryTypes, configType, treeSort } =
     useQueryParams<ArtifactRepositoryListPageQueryParams>(queryParamOptions)
 
-  const [sortField, sortOrder] = treeSort?.split(',') || []
-
-  const { data, isFetching, error, hasNextPage, fetchNextPage, refetch, isFetchingNextPage } = useInfiniteQuery<
-    GetAllRegistriesOkResponse,
-    Error,
-    GetAllRegistriesOkResponse,
-    Array<string | Record<string, unknown>>
-  >({
-    queryKey: [
-      'registryList',
-      {
-        sortField,
-        sortOrder,
-        registrySearchTerm,
-        configType,
-        repositoryTypes
-      }
-    ],
-    queryFn: ({ pageParam = 0 }) =>
-      getAllRegistries({
-        space_ref: spaceRef,
-        queryParams: {
-          page: pageParam,
-          size: 20,
-          sort_field: sortField,
-          sort_order: sortOrder,
-          package_type: repositoryTypes,
-          search_term: registrySearchTerm,
-          type: configType
-        },
-        stringifyQueryParamsOptions: {
-          arrayFormat: 'repeat'
-        }
-      }),
-    getNextPageParam: lastPage => {
-      const totalPages = lastPage.content.data.pageCount ?? 0
-      const lastPageNumber = lastPage.content.data.pageIndex ?? -1
-      const nextPage = lastPageNumber + 1
-      return nextPage < totalPages ? nextPage : undefined
-    }
-  })
-
   const handleUpdateActivePath = (values: Record<string, string>) => {
     const initialActivePath = lodashCompact([
+      ROOT_NODE_ID,
       values.repositoryIdentifier,
-      values.artifactIdentifier,
+      values.artifactIdentifier ? encodeURIComponent(values.artifactIdentifier) : '',
       values.versionIdentifier,
       digest
     ]).join('/')
     setActivePath(initialActivePath)
-    setInitialised(true)
   }
 
-  const { list: repositoryList, count: repositoryCount } = useMemo(() => {
-    const list = data?.pages.flatMap(page => page.content.data.registries) || []
-    const count = data?.pages[0].content.data.itemCount || 0
-    return { list, count }
-  }, [data])
+  const RepositoryTreeViewUtils = useRepositoryTreeViewUtils()
+
+  const handleFetchTreeNodesByPath = async (node: ITreeNode, filters?: INodeConfig<IGlobalFilters>) => {
+    const { metadata } = node
+    const { repositoryIdentifier, artifactIdentifier, versionIdentifier } = metadata || {}
+    if (versionIdentifier) {
+      return RepositoryTreeViewUtils.fetchDockerDigestList(node, filters)
+    } else if (artifactIdentifier) {
+      return RepositoryTreeViewUtils.fetchArtifactVersionList(node, filters)
+    } else if (repositoryIdentifier) {
+      return RepositoryTreeViewUtils.fetchArtifactList(node, filters)
+    } else {
+      return RepositoryTreeViewUtils.fetchRegistryList(node, filters)
+    }
+  }
+
+  const handleClickNode = (node: ITreeNode) => {
+    const { id: pathId, metadata } = node
+    const { repositoryIdentifier, artifactIdentifier, versionIdentifier, digestIdentifier } = metadata || {}
+    setActivePath(pathId)
+    if (digestIdentifier) {
+      return RepositoryTreeViewUtils.handleNavigateToDigestDetails(node)
+    } else if (versionIdentifier) {
+      return RepositoryTreeViewUtils.handleNavigateToVersionDetails(node)
+    } else if (artifactIdentifier) {
+      return RepositoryTreeViewUtils.handleNavigateToArtifactDetials(node)
+    } else if (repositoryIdentifier) {
+      return RepositoryTreeViewUtils.handleNavigateToRepositoryDetials(node)
+    }
+  }
+
+  const renderNodeAction = (node: ITreeNode): JSX.Element => {
+    const { metadata } = node
+    const { repositoryIdentifier, artifactIdentifier, versionIdentifier, digestIdentifier } = metadata || {}
+    if (digestIdentifier) {
+      return <></>
+    } else if (versionIdentifier) {
+      return (
+        <VersionActionsWidget
+          packageType={metadata.packageType}
+          data={node.metadata}
+          repoKey={repositoryIdentifier}
+          artifactKey={artifactIdentifier}
+          versionKey={versionIdentifier}
+          pageType={PageType.GlobalList}
+        />
+      )
+    } else if (artifactIdentifier) {
+      return (
+        <ArtifactActionsWidget
+          packageType={metadata.packageType}
+          data={node.metadata}
+          repoKey={repositoryIdentifier}
+          artifactKey={artifactIdentifier}
+          pageType={PageType.Table}
+        />
+      )
+    } else if (repositoryIdentifier) {
+      return (
+        <RepositoryActionsWidget
+          packageType={metadata.packageType}
+          data={node.metadata}
+          pageType={PageType.Table}
+          type={metadata.type}
+          readonly={false}
+        />
+      )
+    }
+    return <></>
+  }
+
+  const renderNodeLabel = (node: ITreeNode): JSX.Element => {
+    const { metadata } = node
+    const { repositoryIdentifier, artifactIdentifier, versionIdentifier, digestIdentifier } = metadata || {}
+    if (digestIdentifier) {
+      return <TreeNodeContent label={node.label} compact={compact} />
+    } else if (versionIdentifier) {
+      return <VersionTreeNodeViewWidget data={node.metadata} packageType={node.metadata.packageType} />
+    } else if (artifactIdentifier) {
+      return <ArtifactTreeNodeViewWidget data={node.metadata} packageType={node.metadata.packageType} />
+    } else if (repositoryIdentifier) {
+      return <RepositoryTreeNodeViewWidget data={node.metadata} packageType={node.metadata.packageType} />
+    }
+    return <></>
+  }
 
   return (
     <TreeViewContext.Provider value={{ activePath, setActivePath, compact }}>
       <Layout.Horizontal className={css.treeViewPageContainer}>
         <Container className={css.treeViewContainer}>
-          <TreeNodeList>
-            <TreeNodeSearchInput
-              className={css.searchInput}
-              defaultValue={registrySearchTerm}
-              onChange={val => {
-                updateQueryParams({ registrySearchTerm: val })
-              }}
-              treeNodeProps={{
-                alwaysShowAction: true,
-                actionElement: (
-                  <DropDown
-                    icon="main-sort"
-                    className={css.sortingDropDown}
-                    items={TreeViewSortingOptions}
-                    value={treeSort}
-                    onChange={option => {
-                      const selectedOption = TreeViewSortingOptions.find(each => each.label === option.label)
-                      if (!selectedOption) return
-                      const val = selectedOption.key
-                      const dir = selectedOption.dir
-                      updateQueryParams({ treeSort: [val, dir].join(',') })
-                    }}
-                    usePortal
-                  />
-                )
-              }}
-            />
-            {!!repositoryCount && (
-              <TreeNode
-                disabled
-                alwaysShowAction
-                compact={compact}
-                heading={
-                  <Text font={{ variation: FontVariation.BODY, weight: 'semi-bold' }}>
-                    {getString('repositoryList.registryCount', { count: repositoryCount })}
-                  </Text>
-                }
-              />
-            )}
-            <TreeBody
-              loading={isFetching || !initialised}
-              error={error?.message}
-              retryOnError={refetch}
-              isEmpty={!repositoryList.length}>
-              {repositoryList.map((registry, idx) => (
-                <RepositoryTreeNodeViewWidget
-                  key={registry.identifier}
-                  data={registry}
-                  packageType={registry.packageType as RepositoryPackageType}
-                  isLastChild={idx === repositoryList.length - 1}
-                />
-              ))}
-              {hasNextPage && <TreeLoadMoreNode onClick={() => fetchNextPage()} disabled={isFetchingNextPage} />}
-            </TreeBody>
-          </TreeNodeList>
+          <TreeView<IGlobalFilters>
+            activePath={activePath}
+            setActivePath={setActivePath}
+            compact={compact}
+            fetchData={handleFetchTreeNodesByPath}
+            onClick={handleClickNode}
+            renderNodeAction={renderNodeAction}
+            renderNodeHeader={renderNodeLabel}
+            globalSearchConfig={{
+              className: css.searchInput,
+              searchTerm: registrySearchTerm,
+              sortOptions: TreeViewSortingOptions,
+              sort: treeSort
+            }}
+            globalFilters={{
+              repositoryTypes,
+              configType
+            }}
+            rootPath={ROOT_NODE_ID}
+          />
         </Container>
         <Container className={css.treeViewPageContentContainer}>
           <Switch>

@@ -27,16 +27,18 @@ export const decodeRef = (pattern: string): string => {
   return pattern
 }
 
+export const getSpaceRef = (space?: string, repoKey?: string): string => {
+  let url = `${space}`
+  if (!isUndefined(repoKey)) {
+    url += `/${repoKey}`
+  }
+  url = url.replace(/^\/|\/$/g, '')
+  return encodeRef(url)
+}
+
 export const useGetSpaceRef = (repoKey?: string): string => {
   const { scope } = useAppStore()
   const { space } = scope
   const { repositoryIdentifier } = useDecodedParams<Record<string, string>>()
-  let url = `${space}`
-  if (!isUndefined(repoKey)) {
-    url += `/${repoKey}`
-  } else if (repositoryIdentifier) {
-    url += `/${repositoryIdentifier}`
-  }
-  url = url.replace(/^\/|\/$/g, '')
-  return encodeRef(url)
+  return getSpaceRef(space, repoKey ?? repositoryIdentifier)
 }

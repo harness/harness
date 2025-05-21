@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useRef, useState, type PropsWithChildren } from 'react'
+import React, { useContext, useEffect, useMemo, useRef, useState, type PropsWithChildren } from 'react'
 import classNames from 'classnames'
 import { Icon } from '@harnessio/icons'
 import { Container } from '@harnessio/uicore'
@@ -23,76 +23,94 @@ import childImage from './images/child.svg?url'
 import lastChildImage from './images/last-child.svg?url'
 import lineImage from './images/line.svg?url'
 
-import type { NodeSpec } from './TreeViewContext'
+import { ITreeNode, NodeTypeEnum } from './types'
+import { TreeViewContext } from './TreeViewContext'
 
 import css from './TreeView.module.scss'
 
-export enum NodeTypeEnum {
-  File = 'File',
-  Folder = 'Folder'
-}
-
-export interface TreeNodeProps<T = unknown> extends React.HTMLAttributes<HTMLLIElement> {
+export interface TreeNodeProps extends React.HTMLAttributes<HTMLDivElement> {
   heading: string | React.ReactNode
+  node: ITreeNode
   isActive?: boolean
   isOpen?: boolean
   nodeType?: NodeTypeEnum
   level?: number
   compact?: boolean
   disabled?: boolean
-  onClick?: () => void
+  onNodeClick?: (isInitialising?: boolean) => void
   actionElement?: React.ReactNode
   alwaysShowAction?: boolean
   isLastChild?: boolean
-  parentNodeLevels?: Array<NodeSpec<T>>
 }
 
-export default function TreeNode<T>(props: PropsWithChildren<TreeNodeProps<T>>) {
+export default function TreeNode(props: PropsWithChildren<TreeNodeProps>) {
   const {
     isOpen,
     nodeType = NodeTypeEnum.File,
     level = 0,
-    onClick,
+    onNodeClick,
     compact = true,
     disabled,
     isActive,
     actionElement,
     alwaysShowAction,
-    parentNodeLevels = [],
     isLastChild = false,
     className,
+    heading,
+    node,
     ...rest
   } = props
-  const ref = useRef<HTMLLIElement>(null)
+  const ref = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(isOpen)
-  const [isMounted, setIsMounted] = useState(false)
+  const { rootPath } = useContext(TreeViewContext)
+
+  const getParentNodeList = (treeNode: ITreeNode, result: Array<ITreeNode> = []) => {
+    if (treeNode.parentNode && treeNode.parentNode.id !== rootPath) {
+      result.push(treeNode.parentNode)
+      getParentNodeList(treeNode.parentNode, result)
+    }
+    return result
+  }
+
+  const parentNodeLevels = useMemo(() => getParentNodeList(node, []).reverse(), [])
+
+  const handleClickNode = () => {
+    if (disabled) return
+    if (nodeType === NodeTypeEnum.Folder) setOpen(!open)
+    onNodeClick?.()
+  }
 
   useEffect(() => {
     if (open && ref.current) {
-      ref.current.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' })
+      ref.current.focus()
+      onNodeClick?.(true)
+      if (isActive) {
+        ref.current.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' })
+      }
     }
   }, [])
 
   return (
-    <li
-      data-level={2}
+    <div
+      data-level={level}
+      data-id={node.id}
+      data-parent-id={node.parentNode?.id}
       data-last-child={isLastChild}
+      data-is-directory={nodeType === NodeTypeEnum.Folder}
+      data-is-expanded={open}
+      data-tree-item
       ref={ref}
-      className={classNames(css.treeNode, className)}
+      className={classNames(css.treeNode, className, {
+        [css.active]: isActive,
+        [css.disabled]: disabled
+      })}
+      onClick={e => {
+        e.currentTarget.focus()
+        handleClickNode()
+      }}
+      tabIndex={0}
       {...rest}>
-      <Container
-        tabIndex={0}
-        onMouseEnter={() => setIsMounted(true)}
-        onMouseLeave={() => setIsMounted(false)}
-        className={classNames(css.header, {
-          [css.active]: isActive,
-          [css.disabled]: disabled
-        })}
-        onClick={() => {
-          if (disabled) return
-          if (nodeType === NodeTypeEnum.Folder) setOpen(!open)
-          onClick?.()
-        }}>
+      <Container className={classNames(css.header)}>
         {parentNodeLevels.slice(1).map((_each, indx) => {
           const img = _each.isLastChild ? undefined : lineImage
           return <div key={indx} className={css.levelImg} style={{ backgroundImage: `url(${img})` }}></div>
@@ -107,9 +125,9 @@ export default function TreeNode<T>(props: PropsWithChildren<TreeNodeProps<T>>) 
         <Container padding={compact ? 'xsmall' : 'small'} className={css.headingContent}>
           {props.heading}
         </Container>
-        {actionElement && (isMounted || alwaysShowAction || isActive) && <Container>{actionElement}</Container>}
+        {actionElement && (alwaysShowAction || isActive) && <Container>{actionElement}</Container>}
       </Container>
       {open && <Container>{props.children}</Container>}
-    </li>
+    </div>
   )
 }

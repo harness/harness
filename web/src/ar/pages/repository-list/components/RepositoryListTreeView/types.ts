@@ -14,23 +14,9 @@
  * limitations under the License.
  */
 
-import { createContext } from 'react'
-import { noop } from 'lodash-es'
+import type { RepositoryConfigType, RepositoryPackageType } from '@ar/common/types'
 
-export interface NodeSpec<T = unknown> {
-  data: T
-  isLastChild?: boolean
+export interface IGlobalFilters {
+  repositoryTypes?: RepositoryPackageType[]
+  configType?: RepositoryConfigType
 }
-
-interface TreeViewContextValue {
-  activePath: string
-  setActivePath: (path: string) => void
-  compact?: boolean
-  rootPath?: string
-}
-
-export const TreeViewContext = createContext<TreeViewContextValue>({
-  activePath: '',
-  setActivePath: noop,
-  compact: false
-})

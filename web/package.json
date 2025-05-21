@@ -100,6 +100,7 @@
     "react-split-pane": "^0.1.92",
     "react-table": "^7.1.0",
     "react-timeago": "^4.4.0",
+    "react-virtuoso": "3.1.2",
     "rehype-external-links": "^3.0.0",
     "rehype-sanitize": "^6.0.0",
     "rehype-video": "^2.0.2",

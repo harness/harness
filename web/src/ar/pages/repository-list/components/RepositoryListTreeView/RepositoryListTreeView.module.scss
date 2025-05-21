@@ -51,5 +51,7 @@
 }
 
 .searchInput {
-  padding: var(--spacing-xsmall) !important;
+  min-height: 45px !important; // to match blueprint tab min height
+  border-bottom: 1px solid var(--grey-200) !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.13);
 }

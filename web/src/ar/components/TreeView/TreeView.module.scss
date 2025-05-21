@@ -36,30 +36,37 @@
 }
 
 .treeNode {
+  display: flex;
+  align-items: center;
+
   & > :first-child {
     padding-left: var(--spacing-large) !important;
     padding-right: var(--spacing-small) !important;
   }
+
   & .header {
+    flex: 1;
     display: flex;
     align-items: center;
     gap: var(--spacing-xsmall);
+  }
 
-    &:hover,
-    &.active {
-      background-color: var(--primary-2);
-      cursor: pointer;
+  &:hover,
+  &:focus,
+  &:active,
+  &.active {
+    background-color: var(--primary-2);
+    cursor: pointer;
 
-      & .actionElement {
-        display: block;
-      }
+    & .actionElement {
+      display: block;
     }
+  }
 
-    &.disabled {
-      cursor: auto;
-      &:hover {
-        background-color: var(--grey-100);
-      }
+  &.disabled {
+    cursor: auto;
+    &:hover {
+      background-color: var(--grey-100);
     }
   }
 
@@ -74,6 +81,7 @@
 
 .treeNodeContent {
   .labelContainer {
+    flex: 1;
     margin-left: var(--spacing-small) !important;
   }
 }

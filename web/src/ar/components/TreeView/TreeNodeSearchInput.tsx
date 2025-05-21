@@ -20,21 +20,25 @@ import { ExpandingSearchInput, ExpandingSearchInputProps } from '@harnessio/uico
 import { useStrings } from '@ar/frameworks/strings'
 import TreeNode, { TreeNodeProps } from './TreeNode'
 
+import type { ITreeNode } from './types'
 import css from './TreeView.module.scss'
 
 interface TreeNodeSearchInputProps extends ExpandingSearchInputProps {
   level?: number
-  treeNodeProps?: Omit<TreeNodeProps, 'heading'>
+  node: ITreeNode
+  treeNodeProps?: Omit<TreeNodeProps, 'node' | 'heading'>
 }
 
 export default function TreeNodeSearchInput(props: TreeNodeSearchInputProps) {
-  const { level = 0, treeNodeProps, className, ...rest } = props
+  const { level = 0, treeNodeProps, className, node, ...rest } = props
   const { getString } = useStrings()
   return (
     <TreeNode
       className={classNames(className, css.stickyNode)}
       disabled
+      node={node}
       level={level}
+      onClick={e => e.stopPropagation()}
       heading={<ExpandingSearchInput alwaysExpanded placeholder={getString('search')} width="100%" {...rest} />}
       {...treeNodeProps}
     />

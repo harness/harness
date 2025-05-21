@@ -21,10 +21,8 @@ import type {
   ArtifactVersionMetadata,
   ArtifactVersionSummary,
   ListArtifactVersion,
-  RegistryArtifactMetadata,
-  RegistryMetadata
+  RegistryArtifactMetadata
 } from '@harnessio/react-har-service-client'
-import type { NodeSpec } from '@ar/components/TreeView/TreeViewContext'
 import type { PageType, Parent, RepositoryPackageType } from '@ar/common/types'
 import type { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
 
@@ -73,15 +71,10 @@ export interface ArtifactRowSubComponentProps {
 
 export interface ArtifactTreeNodeViewProps {
   data: RegistryArtifactMetadata
-  parentNodeLevels: Array<NodeSpec<RegistryMetadata>>
-  isLastChild?: boolean
 }
 
 export interface VersionTreeNodeViewProps {
   data: ArtifactVersionMetadata
-  artifactIdentifier: string
-  parentNodeLevels: Array<NodeSpec<RegistryMetadata | RegistryArtifactMetadata>>
-  isLastChild?: boolean
 }
 
 export interface VersionTreeNodeDetailsProps {
