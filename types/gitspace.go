@@ -94,6 +94,7 @@ type GitspaceFilter struct {
 	Order                enum.Order        `json:"order"`
 	Owner                enum.GitspaceOwner
 	GitspaceFilterStates []enum.GitspaceFilterState
+	CodeRepoTypes        []enum.GitspaceCodeRepoType
 	Deleted              *bool // not nil when we want to add this filter
 	MarkedForDeletion    *bool // not nil when we want to add this filter
 	GitspaceInstanceFilter
