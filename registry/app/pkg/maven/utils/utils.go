@@ -26,6 +26,7 @@ import (
 )
 
 const (
+	mavenMetadataFile    = "maven-metadata.xml"
 	extensionXML         = ".xml"
 	extensionMD5         = ".md5"
 	extensionSHA1        = ".sha1"
@@ -80,6 +81,14 @@ func IsMainArtifactFile(info pkg.MavenArtifactInfo) bool {
 		}
 	}
 	return false
+}
+
+func IsMetadataFile(filename string) bool {
+	return filename == mavenMetadataFile ||
+		filename == mavenMetadataFile+extensionMD5 ||
+		filename == mavenMetadataFile+extensionSHA1 ||
+		filename == mavenMetadataFile+extensionSHA256 ||
+		filename == mavenMetadataFile+extensionSHA512
 }
 
 func SetHeaders(

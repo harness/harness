@@ -34,6 +34,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/maven"
+	mavenutils "github.com/harness/gitness/registry/app/pkg/maven/utils"
 	"github.com/harness/gitness/registry/request"
 
 	"github.com/rs/zerolog/log"
@@ -61,18 +62,6 @@ func NewHandler(
 		Authorizer:    authorizer,
 	}
 }
-
-const (
-	mavenMetadataFile = "maven-metadata.xml"
-	extensionMD5      = ".md5"
-	extensionSHA1     = ".sha1"
-	extensionSHA256   = ".sha256"
-	extensionSHA512   = ".sha512"
-	extensionPom      = ".pom"
-	extensionJar      = ".jar"
-	contentTypeJar    = "application/java-archive"
-	contentTypeXML    = "text/xml"
-)
 
 var (
 	illegalCharacters = regexp.MustCompile(`[\\/:"<>|?\*]`)
@@ -172,14 +161,14 @@ func ExtractPathVars(path string) (rootIdentifier, registry, groupID, artifactID
 	registry = segments[2]
 	fileName = segments[len(segments)-1]
 
-	if "pkg" == segments[0] {
+	if segments[0] == "pkg" {
 		segments = segments[4 : len(segments)-1]
 	} else {
 		segments = segments[3 : len(segments)-1]
 	}
 
 	version = segments[len(segments)-1]
-	if isMetadataFile(fileName) && !strings.HasSuffix(version, "-SNAPSHOT") {
+	if mavenutils.IsMetadataFile(fileName) && !strings.HasSuffix(version, "-SNAPSHOT") {
 		version = ""
 	} else {
 		segments = segments[:len(segments)-1]
@@ -198,14 +187,6 @@ func ExtractPathVars(path string) (rootIdentifier, registry, groupID, artifactID
 		return rootIdentifier, registry, groupID, artifactID, version, fileName, err
 	}
 	return rootIdentifier, registry, groupID, artifactID, version, fileName, nil
-}
-
-func isMetadataFile(filename string) bool {
-	return filename == mavenMetadataFile ||
-		filename == mavenMetadataFile+extensionMD5 ||
-		filename == mavenMetadataFile+extensionSHA1 ||
-		filename == mavenMetadataFile+extensionSHA256 ||
-		filename == mavenMetadataFile+extensionSHA512
 }
 
 func getPathRoot(ctx context.Context) string {

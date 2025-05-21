@@ -125,19 +125,23 @@ func (r *LocalRegistry) PutArtifact(ctx context.Context, info pkg.MavenArtifactI
 	responseHeaders *commons.ResponseHeaders, errs []error,
 ) {
 	filePath := utils.GetFilePath(info)
-	fileExists, err := r.localBase.ExistsByFilePath(ctx, info.RegistryID, strings.TrimPrefix(filePath, "/"))
-	if err != nil {
-		return responseHeaders, []error{
-			fmt.Errorf("error occurred while checking file existence for GroupID: %s, "+
-				"ArtifactID: %s and Version: %s with file name: %s in registry: %s with error: %w",
-				info.GroupID, info.ArtifactID, info.Version, info.FileName, info.RegIdentifier, err)}
-	}
-	if fileExists {
-		return responseHeaders, []error{
-			fmt.Errorf("file already exists for GroupID: %s, "+
-				"ArtifactID: %s and Version: %s with file name: %s in registry: %s. "+
-				"Try deleting this version and push it again", info.GroupID, info.ArtifactID,
-				info.Version, info.FileName, info.RegIdentifier)}
+
+	// if package file belongs to maven-metadata file, then file override is expected.
+	if !utils.IsMetadataFile(info.FileName) {
+		fileExists, err := r.localBase.ExistsByFilePath(ctx, info.RegistryID, strings.TrimPrefix(filePath, "/"))
+		if err != nil {
+			return responseHeaders, []error{
+				fmt.Errorf("error occurred while checking file existence for GroupID: %s, "+
+					"ArtifactID: %s and Version: %s with file name: %s in registry: %s with error: %w",
+					info.GroupID, info.ArtifactID, info.Version, info.FileName, info.RegIdentifier, err)}
+		}
+		if fileExists {
+			return responseHeaders, []error{
+				fmt.Errorf("file already exists for GroupID: %s, "+
+					"ArtifactID: %s and Version: %s with file name: %s in registry: %s. "+
+					"Try deleting this version and push it again", info.GroupID, info.ArtifactID,
+					info.Version, info.FileName, info.RegIdentifier)}
+		}
 	}
 
 	fileInfo, err := r.fileManager.UploadFile(ctx, filePath,
