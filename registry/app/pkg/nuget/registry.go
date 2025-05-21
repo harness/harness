@@ -27,24 +27,25 @@ import (
 type Registry interface {
 	pkg.Artifact
 
-	UploadPackage(
-		ctx context.Context,
-		info nuget.ArtifactInfo,
-		fileReader io.ReadCloser,
-	) (*commons.ResponseHeaders, string, error)
+	UploadPackage(ctx context.Context, info nuget.ArtifactInfo, fileReader io.ReadCloser,
+		fileBundleType FileBundleType) (*commons.ResponseHeaders, string, error)
 
-	DownloadPackage(ctx context.Context, info nuget.ArtifactInfo) (
-		*commons.ResponseHeaders,
-		*storage.FileReader,
-		string,
-		error,
-	)
+	DownloadPackage(ctx context.Context, info nuget.ArtifactInfo) (*commons.ResponseHeaders,
+		*storage.FileReader, string, io.ReadCloser, error)
+
+	DeletePackage(ctx context.Context, info nuget.ArtifactInfo) (*commons.ResponseHeaders, error)
 
 	ListPackageVersion(ctx context.Context, info nuget.ArtifactInfo) (*nuget.PackageVersion, error)
 
-	GetPackageMetadata(ctx context.Context, info nuget.ArtifactInfo) (*nuget.RegistrationIndexResponse, error)
+	ListPackageVersionV2(ctx context.Context, info nuget.ArtifactInfo) (*nuget.FeedResponse, error)
+
+	GetPackageMetadata(ctx context.Context, info nuget.ArtifactInfo) (nuget.RegistrationResponse, error)
+
+	GetPackageVersionMetadataV2(ctx context.Context, info nuget.ArtifactInfo) (*nuget.FeedEntryResponse, error)
 
 	GetPackageVersionMetadata(ctx context.Context, info nuget.ArtifactInfo) (*nuget.RegistrationLeafResponse, error)
 
 	GetServiceEndpoint(ctx context.Context, info nuget.ArtifactInfo) *nuget.ServiceEndpoint
+
+	GetServiceEndpointV2(ctx context.Context, info nuget.ArtifactInfo) *nuget.ServiceEndpointV2
 }

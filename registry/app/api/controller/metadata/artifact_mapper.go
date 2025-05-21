@@ -132,6 +132,8 @@ func toPackageType(packageTypeStr string) (artifactapi.PackageType, error) {
 		return artifactapi.PackageTypeNPM, nil
 	case string(artifactapi.PackageTypeRPM):
 		return artifactapi.PackageTypeRPM, nil
+	case string(artifactapi.PackageTypeNUGET):
+		return artifactapi.PackageTypeNUGET, nil
 	default:
 		return "", errors.New("invalid package type")
 	}
@@ -257,6 +259,9 @@ func GetArtifactFilesMetadata(
 				version, filename, setupDetailsAuthHeaderPrefix)
 		case artifactapi.PackageTypeRPM:
 			downloadCommand = GetRPMArtifactFileDownloadCommand(registryURL, filename, setupDetailsAuthHeaderPrefix)
+		case artifactapi.PackageTypeNUGET:
+			downloadCommand = GetNugetArtifactFileDownloadCommand(registryURL, artifactName,
+				version, filename, setupDetailsAuthHeaderPrefix)
 		}
 		files = append(files, artifactapi.FileDetail{
 			Checksums:       getCheckSums(file),
@@ -514,6 +519,36 @@ func GetPythonArtifactDetail(
 		Metadata: &metadata,
 	})
 	if err != nil {
+		return artifactapi.ArtifactDetail{}
+	}
+	return *artifactDetail
+}
+
+func GetNugetArtifactDetail(
+	image *types.Image, artifact *types.Artifact,
+	metadata map[string]interface{},
+	downloadCount int64,
+) artifactapi.ArtifactDetail {
+	createdAt := GetTimeInMs(artifact.CreatedAt)
+	modifiedAt := GetTimeInMs(artifact.UpdatedAt)
+	size, ok := metadata["size"].(float64)
+	if !ok {
+		log.Error().Msg("failed to get size from Nuget metadata")
+	}
+	totalSize := GetSize(int64(size))
+	artifactDetail := &artifactapi.ArtifactDetail{
+		CreatedAt:     &createdAt,
+		ModifiedAt:    &modifiedAt,
+		Name:          &image.Name,
+		Version:       artifact.Version,
+		DownloadCount: &downloadCount,
+		Size:          &totalSize,
+	}
+	err := artifactDetail.FromNugetArtifactDetailConfig(artifactapi.NugetArtifactDetailConfig{
+		Metadata: &metadata,
+	})
+	if err != nil {
+		log.Error().Err(err).Msgf("Error setting the artifact details for nuget package: [%s]", image.Name)
 		return artifactapi.ArtifactDetail{}
 	}
 	return *artifactDetail

@@ -43,13 +43,13 @@ func (c *controller) DownloadPackage(
 				"", nil, nil,
 			}
 		}
-		headers, fileReader, redirectURL, err := nugetRegistry.DownloadPackage(ctx, info)
+		headers, fileReader, redirectURL, readCloser, err := nugetRegistry.DownloadPackage(ctx, info)
 		return &GetArtifactResponse{
 			BaseResponse{
 				err,
 				headers,
 			},
-			redirectURL, fileReader, nil,
+			redirectURL, fileReader, readCloser,
 		}
 	}
 

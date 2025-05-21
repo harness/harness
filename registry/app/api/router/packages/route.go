@@ -57,9 +57,9 @@ func NewRouter(
 		r.Use(middleware.StoreOriginalURL)
 
 		r.Route("/maven", func(r chi.Router) {
-			r.Use(middleware.CheckMavenAuthHeader())
+			r.Use(middleware.CheckAuthHeader())
 			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
-			r.Use(middleware.CheckMavenAuth())
+			r.Use(middleware.CheckAuthWithChallenge())
 			r.Use(middleware.TrackDownloadStatForMavenArtifact(mavenHandler))
 			r.Use(middleware.TrackBandwidthStatForMavenArtifacts(mavenHandler))
 			r.Get("/*", mavenHandler.GetArtifact)
@@ -112,23 +112,41 @@ func NewRouter(
 		})
 
 		r.Route("/nuget", func(r chi.Router) {
+			r.Use(middleware.CheckAuthHeader())
 			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
+			r.Use(middleware.CheckAuthWithChallenge())
 
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
 				Put("/", nugetHandler.UploadPackage)
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
+				Put("/symbolpackage", nugetHandler.UploadSymbolPackage)
+			r.With(middleware.StoreArtifactInfo(nugetHandler)).
+				With(middleware.TrackDownloadStats(packageHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/package/{id}/{version}/{filename}", nugetHandler.DownloadPackage)
+			r.With(middleware.StoreArtifactInfo(nugetHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDelete)).
+				Delete("/{id}/{version}", nugetHandler.DeletePackage)
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/index.json", nugetHandler.GetServiceEndpoint)
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Get("/", nugetHandler.GetServiceEndpointV2)
+			r.With(middleware.StoreArtifactInfo(nugetHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/package/{id}/index.json", nugetHandler.ListPackageVersion)
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Get("/FindPackagesById()", nugetHandler.ListPackageVersionV2)
+			r.With(middleware.StoreArtifactInfo(nugetHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/registration/{id}/index.json", nugetHandler.GetPackageMetadata)
+			r.With(middleware.StoreArtifactInfo(nugetHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Get("/Packages(Id='{id:[^']+}',Version='{version:[^']+}')", nugetHandler.GetPackageVersionMetadataV2)
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/registration/{id}/{version}", nugetHandler.GetPackageVersionMetadata)

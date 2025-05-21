@@ -2250,6 +2250,7 @@ components:
           PYTHON: "#/components/schemas/PythonArtifactDetailConfig"
           NPM: "#/components/schemas/NpmArtifactDetailConfig"
           RPM: "#/components/schemas/RpmArtifactDetailConfig"
+          NUGET: "#/components/schemas/NugetArtifactDetailConfig"
       oneOf:
         - $ref: "#/components/schemas/DockerArtifactDetailConfig"
         - $ref: "#/components/schemas/HelmArtifactDetailConfig"
@@ -2258,6 +2259,7 @@ components:
         - $ref: "#/components/schemas/PythonArtifactDetailConfig"
         - $ref: "#/components/schemas/NpmArtifactDetailConfig"
         - $ref: "#/components/schemas/RpmArtifactDetailConfig"
+        - $ref: "#/components/schemas/NugetArtifactDetailConfig"
       required:
         - imageName
         - version
@@ -2284,6 +2286,13 @@ components:
           type: string
         artifactId:
           type: string
+    NugetArtifactDetailConfig:
+      type: object
+      description: Config for nuget artifact details
+      properties:
+        metadata:
+          type: object
+          additionalProperties: true
     PythonArtifactDetailConfig:
       type: object
       description: Config for python artifact details
@@ -2655,6 +2664,7 @@ components:
             - MavenCentral
             - PyPi
             - NpmJs
+            - NugetOrg
       x-discriminator-value: UPSTREAM
       required:
         - authType

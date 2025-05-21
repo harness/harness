@@ -89,14 +89,14 @@ func CheckAuth() func(http.Handler) http.Handler {
 	}
 }
 
-func CheckMavenAuth() func(http.Handler) http.Handler {
+func CheckAuthWithChallenge() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(
 			func(w http.ResponseWriter, r *http.Request) {
 				ctx := r.Context()
 				session, _ := request.AuthSessionFrom(ctx)
 				if session.Principal == auth.AnonymousPrincipal {
-					setMavenHeaders(w)
+					setAuthenticateHeader(w)
 					render.Unauthorized(ctx, w)
 					return
 				}
@@ -106,7 +106,7 @@ func CheckMavenAuth() func(http.Handler) http.Handler {
 	}
 }
 
-func CheckMavenAuthHeader() func(http.Handler) http.Handler {
+func CheckAuthHeader() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(
 			func(w http.ResponseWriter, r *http.Request) {
@@ -114,7 +114,7 @@ func CheckMavenAuthHeader() func(http.Handler) http.Handler {
 				authHeader := r.Header.Get("Authorization")
 				apiKeyHeader := r.Header.Get("x-api-key")
 				if authHeader == "" && apiKeyHeader == "" {
-					setMavenHeaders(w)
+					setAuthenticateHeader(w)
 					render.Unauthorized(ctx, w)
 					return
 				} else if apiKeyHeader != "" {
@@ -126,7 +126,7 @@ func CheckMavenAuthHeader() func(http.Handler) http.Handler {
 	}
 }
 
-func setMavenHeaders(w http.ResponseWriter) {
+func setAuthenticateHeader(w http.ResponseWriter) {
 	w.Header().Set("WWW-Authenticate", "Basic realm=\"Harness Registry\"")
 }
 

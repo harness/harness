@@ -67,7 +67,7 @@ func GetFilePath(
 	case artifact.PackageTypeGENERIC:
 		return GetGenericFilePath(imageName, version), nil
 	case artifact.PackageTypeNUGET:
-		return "", fmt.Errorf("nuget package type not supported")
+		return GetGenericFilePath(imageName, version), nil
 	case artifact.PackageTypeRPM:
 		return GetRpmFilePath(imageName, version), nil
 	default:

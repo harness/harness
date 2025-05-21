@@ -118,6 +118,7 @@ var validPackageTypes = []string{
 	string(a.PackageTypePYTHON),
 	string(a.PackageTypeNPM),
 	string(a.PackageTypeRPM),
+	string(a.PackageTypeNUGET),
 }
 
 var validUpstreamSources = []string{
@@ -127,6 +128,7 @@ var validUpstreamSources = []string{
 	string(a.UpstreamConfigSourceMavenCentral),
 	string(a.UpstreamConfigSourcePyPi),
 	string(a.UpstreamConfigSourceNpmJs),
+	string(a.UpstreamConfigSourceNugetOrg),
 }
 
 func ValidatePackageTypes(packageTypes []string) error {
@@ -185,7 +187,8 @@ func ValidateUpstream(config *a.RegistryConfig) error {
 		*upstreamConfig.Source != a.UpstreamConfigSourceDockerhub &&
 		*upstreamConfig.Source != a.UpstreamConfigSourceMavenCentral &&
 		*upstreamConfig.Source != a.UpstreamConfigSourcePyPi &&
-		*upstreamConfig.Source != a.UpstreamConfigSourceNpmJs {
+		*upstreamConfig.Source != a.UpstreamConfigSourceNpmJs &&
+		*upstreamConfig.Source != a.UpstreamConfigSourceNugetOrg {
 		if commons.IsEmpty(upstreamConfig.Url) {
 			return errors.New("URL is required for upstream repository")
 		}
@@ -379,6 +382,8 @@ func GetPullCommand(
 		return GetNPMDownloadCommand(image, tag)
 	case string(a.PackageTypeRPM):
 		return GetRPMDownloadCommand(image, tag)
+	case string(a.PackageTypeNUGET):
+		return GetNugetDownloadCommand(image, tag)
 	default:
 		return ""
 	}
@@ -397,6 +402,22 @@ func GetHelmPullCommand(image string, tag string, registryURL string) string {
 
 func GetRPMDownloadCommand(artifact, version string) string {
 	downloadCommand := "yum install <ARTIFACT>-<VERSION>"
+
+	// Replace the placeholders with the actual values
+	replacements := map[string]string{
+		"<ARTIFACT>": artifact,
+		"<VERSION>":  version,
+	}
+
+	for placeholder, value := range replacements {
+		downloadCommand = strings.ReplaceAll(downloadCommand, placeholder, value)
+	}
+
+	return downloadCommand
+}
+
+func GetNugetDownloadCommand(artifact, version string) string {
+	downloadCommand := "nuget install <ARTIFACT> -Version <VERSION> -Source <SOURCE>"
 
 	// Replace the placeholders with the actual values
 	replacements := map[string]string{
@@ -472,6 +493,28 @@ func GetRPMArtifactFileDownloadCommand(regURL, filename string, setupDetailsAuth
 		" -J -O"
 	replacements := map[string]string{
 		"<HOSTNAME>":           regURL,
+		"<FILENAME>":           filename,
+		"<AUTH_HEADER_PREFIX>": setupDetailsAuthHeaderPrefix,
+	}
+
+	for placeholder, value := range replacements {
+		downloadCommand = strings.ReplaceAll(downloadCommand, placeholder, value)
+	}
+
+	return downloadCommand
+}
+
+func GetNugetArtifactFileDownloadCommand(regURL, artifact, version, filename,
+	setupDetailsAuthHeaderPrefix string) string {
+	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>/<VERSION>/<FILENAME>'" +
+		" --header '<AUTH_HEADER_PREFIX> <API_KEY>'" +
+		" -J -O"
+
+	// Replace the placeholders with the actual values
+	replacements := map[string]string{
+		"<HOSTNAME>":           regURL,
+		"<ARTIFACT>":           artifact,
+		"<VERSION>":            version,
 		"<FILENAME>":           filename,
 		"<AUTH_HEADER_PREFIX>": setupDetailsAuthHeaderPrefix,
 	}

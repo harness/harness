@@ -16,6 +16,7 @@ package nuget
 
 import (
 	"fmt"
+	"github.com/harness/gitness/registry/app/pkg/nuget"
 	"net/http"
 
 	"github.com/harness/gitness/registry/app/api/handler/utils"
@@ -42,7 +43,7 @@ func (h *handler) UploadPackage(w http.ResponseWriter, r *http.Request) {
 		h.HandleErrors(r.Context(), []error{fmt.Errorf("failed to fetch info from context")}, w)
 		return
 	}
-	response := h.controller.UploadPackage(r.Context(), *info, fileReader)
+	response := h.controller.UploadPackage(r.Context(), *info, fileReader, nuget.DependencyFile)
 	if response.GetError() != nil {
 		h.HandleError(ctx, w, response.GetError())
 		return

@@ -41,6 +41,11 @@ type GetServiceEndpointResponse struct {
 	ServiceEndpoint *nuget.ServiceEndpoint
 }
 
+type GetServiceEndpointV2Response struct {
+	BaseResponse
+	ServiceEndpoint *nuget.ServiceEndpointV2
+}
+
 type GetArtifactResponse struct {
 	BaseResponse
 	RedirectURL string
@@ -50,15 +55,32 @@ type GetArtifactResponse struct {
 type PutArtifactResponse struct {
 	BaseResponse
 }
+type DeleteArtifactResponse struct {
+	BaseResponse
+}
 
 type ListPackageVersionResponse struct {
 	BaseResponse
 	PackageVersion *nuget.PackageVersion
 }
 
+type ListPackageVersionV2Response struct {
+	BaseResponse
+	FeedResponse *nuget.FeedResponse
+}
+
 type GetPackageMetadataResponse struct {
 	BaseResponse
-	RegistrationIndexResponse *nuget.RegistrationIndexResponse
+	RegistrationResponse nuget.RegistrationResponse
+}
+
+type GetPackageVersionMetadataV2Response struct {
+	BaseResponse
+	FeedEntryResponse *nuget.FeedEntryResponse
+}
+
+type RegistrationResponse interface {
+	isRegistrationResponse() // marker method
 }
 
 type GetPackageVersionMetadataResponse struct {

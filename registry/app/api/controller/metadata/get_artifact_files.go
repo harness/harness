@@ -112,7 +112,7 @@ func (c *APIController) GetArtifactFiles(
 		return failedToFetchFilesResponse(err, art)
 	}
 
-	count, err := c.fileManager.CountFilesByPath(ctx, filePathPrefix, img.RegistryID)
+	count, err := c.fileManager.CountFilesByPath(ctx, filePathPattern, img.RegistryID)
 
 	if err != nil {
 		log.Error().Msgf("Failed to count files for artifact, err: %v", err.Error())
@@ -127,7 +127,7 @@ func (c *APIController) GetArtifactFiles(
 	//nolint:exhaustive
 	switch registry.PackageType {
 	case artifact.PackageTypeGENERIC, artifact.PackageTypeMAVEN, artifact.PackageTypePYTHON,
-		artifact.PackageTypeNPM, artifact.PackageTypeRPM:
+		artifact.PackageTypeNPM, artifact.PackageTypeRPM, artifact.PackageTypeNUGET:
 		return artifact.GetArtifactFiles200JSONResponse{
 			FileDetailResponseJSONResponse: *GetAllArtifactFilesResponse(
 				fileMetadataList, count, reqInfo.pageNumber, reqInfo.limit, registryURL, img.Name, art.Version,

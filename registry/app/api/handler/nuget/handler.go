@@ -16,6 +16,7 @@ package nuget
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/harness/gitness/registry/app/api/controller/pkg/nuget"
 	"github.com/harness/gitness/registry/app/api/handler/packages"
@@ -29,10 +30,15 @@ import (
 type Handler interface {
 	pkg.ArtifactInfoProvider
 	UploadPackage(writer http.ResponseWriter, request *http.Request)
+	UploadSymbolPackage(writer http.ResponseWriter, request *http.Request)
 	DownloadPackage(http.ResponseWriter, *http.Request)
+	DeletePackage(writer http.ResponseWriter, request *http.Request)
 	GetServiceEndpoint(http.ResponseWriter, *http.Request)
+	GetServiceEndpointV2(http.ResponseWriter, *http.Request)
 	ListPackageVersion(http.ResponseWriter, *http.Request)
+	ListPackageVersionV2(http.ResponseWriter, *http.Request)
 	GetPackageMetadata(http.ResponseWriter, *http.Request)
+	GetPackageVersionMetadataV2(http.ResponseWriter, *http.Request)
 	GetPackageVersionMetadata(http.ResponseWriter, *http.Request)
 }
 
@@ -62,14 +68,20 @@ func (h *handler) GetPackageArtifactInfo(r *http.Request) (pkg.PackageArtifactIn
 	image := chi.URLParam(r, "id")
 	filename := chi.URLParam(r, "filename")
 	version := chi.URLParam(r, "version")
-
+	proxyEndpoint := r.URL.Query().Get("proxy_endpoint")
+	if image == "" {
+		image = r.URL.Query().Get("id")
+		image = strings.TrimPrefix(image, "'")
+		image = strings.TrimSuffix(image, "'")
+	}
 	var md nugetmetadata.Metadata
 
 	info.Image = image
 	return &nugettype.ArtifactInfo{
-		ArtifactInfo: info,
-		Metadata:     md,
-		Filename:     filename,
-		Version:      version,
+		ArtifactInfo:  info,
+		Metadata:      md,
+		Filename:      filename,
+		Version:       version,
+		ProxyEndpoint: proxyEndpoint,
 	}, nil
 }

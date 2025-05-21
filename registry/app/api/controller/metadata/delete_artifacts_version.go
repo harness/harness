@@ -108,7 +108,7 @@ func (c *APIController) DeleteArtifactVersion(ctx context.Context, r artifact.De
 	case artifact.PackageTypeGENERIC:
 		err = c.deleteVersion(ctx, regInfo, imageInfo, artifactName, versionName)
 	case artifact.PackageTypeNUGET:
-		err = fmt.Errorf("delete version not supported for nuget")
+		err = c.deleteVersion(ctx, regInfo, imageInfo, artifactName, versionName)
 	case artifact.PackageTypeRPM:
 		err = c.deleteVersion(ctx, regInfo, imageInfo, artifactName, versionName)
 		if err != nil {

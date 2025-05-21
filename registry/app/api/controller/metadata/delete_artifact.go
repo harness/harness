@@ -100,7 +100,7 @@ func (c *APIController) DeleteArtifact(ctx context.Context, r artifact.DeleteArt
 	case artifact.PackageTypeNPM:
 		err = c.deleteGenericImage(ctx, regInfo, artifactName)
 	case artifact.PackageTypeNUGET:
-		err = fmt.Errorf("delete artifact not supported for nuget")
+		err = c.deleteGenericImage(ctx, regInfo, artifactName)
 	case artifact.PackageTypeRPM:
 		err = fmt.Errorf("delete artifact not supported for rpm")
 	default:

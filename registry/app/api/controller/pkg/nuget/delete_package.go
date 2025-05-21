@@ -26,49 +26,48 @@ import (
 	registrytypes "github.com/harness/gitness/registry/types"
 )
 
-func (c *controller) GetServiceEndpoint(
+func (c *controller) DeletePackage(
 	ctx context.Context,
 	info nugettype.ArtifactInfo,
-) *GetServiceEndpointResponse {
+) *DeleteArtifactResponse {
 	f := func(registry registrytypes.Registry, a pkg.Artifact) response.Response {
 		info.RegIdentifier = registry.Name
 		info.RegistryID = registry.ID
 		nugetRegistry, ok := a.(nuget.Registry)
 		if !ok {
-			return &GetServiceEndpointResponse{
+			return &DeleteArtifactResponse{
 				BaseResponse{
 					fmt.Errorf("invalid registry type: expected nuget.Registry"),
 					nil,
-				}, nil,
+				},
 			}
 		}
-		serviceEndpoint := nugetRegistry.GetServiceEndpoint(ctx, info)
-		return &GetServiceEndpointResponse{
+		headers, err := nugetRegistry.DeletePackage(ctx, info)
+		return &DeleteArtifactResponse{
 			BaseResponse{
-				nil,
-				nil,
-			}, serviceEndpoint,
+				err,
+				headers,
+			},
 		}
 	}
 
 	result, err := base.ProxyWrapper(ctx, c.registryDao, f, info)
-
 	if err != nil {
-		return &GetServiceEndpointResponse{
+		return &DeleteArtifactResponse{
 			BaseResponse{
 				err,
 				nil,
-			}, nil,
+			},
 		}
 	}
-	serviceEndpointResponse, ok := result.(*GetServiceEndpointResponse)
+	getResponse, ok := result.(*DeleteArtifactResponse)
 	if !ok {
-		return &GetServiceEndpointResponse{
+		return &DeleteArtifactResponse{
 			BaseResponse{
-				fmt.Errorf("invalid response type: expected GetServiceEndpointResponse"),
+				fmt.Errorf("invalid response type: expected DeleteArtifactResponse"),
 				nil,
-			}, nil,
+			},
 		}
 	}
-	return serviceEndpointResponse
+	return getResponse
 }

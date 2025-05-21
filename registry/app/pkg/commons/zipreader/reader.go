@@ -170,7 +170,7 @@ func (r *Reader) Next() (*zip.FileHeader, error) {
 		crc.Reader = dcomp(&descriptorReader{br: r.br, fileHeader: f})
 	} else {
 		//nolint: gosec
-		crc.Reader = dcomp(io.LimitReader(r.br, int64(f.CompressedSize64)))
+		crc.Reader = dcomp(io.LimitReader(r.br, int64(f.CompressedSize)))
 		crc.crc = &f.CRC32
 	}
 	r.Reader = crc

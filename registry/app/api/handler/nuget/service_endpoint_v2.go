@@ -15,8 +15,8 @@
 package nuget
 
 import (
+	"encoding/xml"
 	"fmt"
-	"github.com/harness/gitness/registry/app/pkg/commons"
 	"net/http"
 
 	nugettype "github.com/harness/gitness/registry/app/pkg/types/nuget"
@@ -25,7 +25,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (h *handler) DownloadPackage(w http.ResponseWriter, r *http.Request) {
+func (h *handler) GetServiceEndpointV2(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	info, ok := request.ArtifactInfoFrom(ctx).(*nugettype.ArtifactInfo)
 	if !ok {
@@ -33,37 +33,15 @@ func (h *handler) DownloadPackage(w http.ResponseWriter, r *http.Request) {
 		h.HandleErrors(r.Context(), []error{fmt.Errorf("failed to fetch info from context")}, w)
 		return
 	}
-
-	response := h.controller.DownloadPackage(ctx, *info)
-
-	defer func() {
-		if response.Body != nil {
-			err := response.Body.Close()
-			if err != nil {
-				log.Ctx(ctx).Error().Msgf("Failed to close body: %v", err)
-			}
-		}
-		if response.ReadCloser != nil {
-			err := response.ReadCloser.Close()
-			if err != nil {
-				log.Ctx(ctx).Error().Msgf("Failed to close readcloser: %v", err)
-			}
-		}
-	}()
+	response := h.controller.GetServiceEndpointV2(r.Context(), *info)
 
 	if response.GetError() != nil {
 		h.HandleError(r.Context(), w, response.GetError())
-	}
-
-	if response.RedirectURL != "" {
-		http.Redirect(w, r, response.RedirectURL, http.StatusTemporaryRedirect)
 		return
 	}
-	err := commons.ServeContent(w, r, response.Body, info.Filename, response.ReadCloser)
+	err := xml.NewEncoder(w).Encode(response.ServiceEndpoint)
 	if err != nil {
-		log.Ctx(ctx).Error().Msgf("Failed to serve content: %v", err)
-		h.HandleError(ctx, w, err)
+		h.HandleErrors(r.Context(), []error{err}, w)
 		return
 	}
-	response.ResponseHeaders.WriteToResponse(w)
 }

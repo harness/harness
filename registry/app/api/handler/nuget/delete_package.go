@@ -16,7 +16,6 @@ package nuget
 
 import (
 	"fmt"
-	"github.com/harness/gitness/registry/app/pkg/commons"
 	"net/http"
 
 	nugettype "github.com/harness/gitness/registry/app/pkg/types/nuget"
@@ -25,7 +24,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (h *handler) DownloadPackage(w http.ResponseWriter, r *http.Request) {
+func (h *handler) DeletePackage(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	info, ok := request.ArtifactInfoFrom(ctx).(*nugettype.ArtifactInfo)
 	if !ok {
@@ -34,36 +33,11 @@ func (h *handler) DownloadPackage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := h.controller.DownloadPackage(ctx, *info)
-
-	defer func() {
-		if response.Body != nil {
-			err := response.Body.Close()
-			if err != nil {
-				log.Ctx(ctx).Error().Msgf("Failed to close body: %v", err)
-			}
-		}
-		if response.ReadCloser != nil {
-			err := response.ReadCloser.Close()
-			if err != nil {
-				log.Ctx(ctx).Error().Msgf("Failed to close readcloser: %v", err)
-			}
-		}
-	}()
+	response := h.controller.DeletePackage(ctx, *info)
 
 	if response.GetError() != nil {
 		h.HandleError(r.Context(), w, response.GetError())
 	}
 
-	if response.RedirectURL != "" {
-		http.Redirect(w, r, response.RedirectURL, http.StatusTemporaryRedirect)
-		return
-	}
-	err := commons.ServeContent(w, r, response.Body, info.Filename, response.ReadCloser)
-	if err != nil {
-		log.Ctx(ctx).Error().Msgf("Failed to serve content: %v", err)
-		h.HandleError(ctx, w, err)
-		return
-	}
 	response.ResponseHeaders.WriteToResponse(w)
 }

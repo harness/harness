@@ -27,20 +27,25 @@ import (
 )
 
 type Controller interface {
-	UploadPackage(
-		ctx context.Context,
-		info nugettype.ArtifactInfo,
-		fileReader io.ReadCloser,
-	) *PutArtifactResponse
+	UploadPackage(ctx context.Context, info nugettype.ArtifactInfo, fileReader io.ReadCloser, fileBundleType nuget.FileBundleType) *PutArtifactResponse
 
 	DownloadPackage(ctx context.Context, info nugettype.ArtifactInfo) *GetArtifactResponse
+
+	DeletePackage(ctx context.Context, info nugettype.ArtifactInfo) *DeleteArtifactResponse
 
 	GetServiceEndpoint(ctx context.Context,
 		info nugettype.ArtifactInfo) *GetServiceEndpointResponse
 
+	GetServiceEndpointV2(ctx context.Context,
+		info nugettype.ArtifactInfo) *GetServiceEndpointV2Response
+
 	ListPackageVersion(ctx context.Context, info nugettype.ArtifactInfo) *ListPackageVersionResponse
 
+	ListPackageVersionV2(ctx context.Context, info nugettype.ArtifactInfo) *ListPackageVersionV2Response
+
 	GetPackageMetadata(ctx context.Context, info nugettype.ArtifactInfo) *GetPackageMetadataResponse
+
+	GetPackageVersionMetadataV2(ctx context.Context, info nugettype.ArtifactInfo) *GetPackageVersionMetadataV2Response
 
 	GetPackageVersionMetadata(ctx context.Context, info nugettype.ArtifactInfo) *GetPackageVersionMetadataResponse
 }
@@ -55,6 +60,7 @@ type controller struct {
 	artifactDao store.ArtifactRepository
 	urlProvider urlprovider.Provider
 	local       nuget.LocalRegistry
+	proxy       nuget.Proxy
 }
 
 // NewController creates a new Python controller.
@@ -67,6 +73,7 @@ func NewController(
 	tx dbtx.Transactor,
 	urlProvider urlprovider.Provider,
 	local nuget.LocalRegistry,
+	proxy nuget.Proxy,
 ) Controller {
 	return &controller{
 		proxyStore:  proxyStore,
@@ -77,5 +84,6 @@ func NewController(
 		tx:          tx,
 		urlProvider: urlProvider,
 		local:       local,
+		proxy:       proxy,
 	}
 }

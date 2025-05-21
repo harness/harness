@@ -26,49 +26,49 @@ import (
 	registrytypes "github.com/harness/gitness/registry/types"
 )
 
-func (c *controller) GetServiceEndpoint(
+func (c *controller) GetPackageVersionMetadataV2(
 	ctx context.Context,
 	info nugettype.ArtifactInfo,
-) *GetServiceEndpointResponse {
+) *GetPackageVersionMetadataV2Response {
 	f := func(registry registrytypes.Registry, a pkg.Artifact) response.Response {
 		info.RegIdentifier = registry.Name
 		info.RegistryID = registry.ID
 		nugetRegistry, ok := a.(nuget.Registry)
 		if !ok {
-			return &GetServiceEndpointResponse{
+			return &GetPackageVersionMetadataV2Response{
 				BaseResponse{
 					fmt.Errorf("invalid registry type: expected nuget.Registry"),
 					nil,
 				}, nil,
 			}
 		}
-		serviceEndpoint := nugetRegistry.GetServiceEndpoint(ctx, info)
-		return &GetServiceEndpointResponse{
+		packageMetadata, err := nugetRegistry.GetPackageVersionMetadataV2(ctx, info)
+		return &GetPackageVersionMetadataV2Response{
 			BaseResponse{
+				err,
 				nil,
-				nil,
-			}, serviceEndpoint,
+			}, packageMetadata,
 		}
 	}
 
 	result, err := base.ProxyWrapper(ctx, c.registryDao, f, info)
 
 	if err != nil {
-		return &GetServiceEndpointResponse{
+		return &GetPackageVersionMetadataV2Response{
 			BaseResponse{
 				err,
 				nil,
 			}, nil,
 		}
 	}
-	serviceEndpointResponse, ok := result.(*GetServiceEndpointResponse)
+	packageMetadataResponse, ok := result.(*GetPackageVersionMetadataV2Response)
 	if !ok {
-		return &GetServiceEndpointResponse{
+		return &GetPackageVersionMetadataV2Response{
 			BaseResponse{
-				fmt.Errorf("invalid response type: expected GetServiceEndpointResponse"),
+				fmt.Errorf("invalid response type: expected GetPackageVersionMetadataV2Response"),
 				nil,
 			}, nil,
 		}
 	}
-	return serviceEndpointResponse
+	return packageMetadataResponse
 }

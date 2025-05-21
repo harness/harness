@@ -33,8 +33,9 @@ func ControllerProvider(
 	tx dbtx.Transactor,
 	urlProvider urlprovider.Provider,
 	local nuget.LocalRegistry,
+	proxy nuget.Proxy,
 ) Controller {
-	return NewController(proxyStore, registryDao, imageDao, artifactDao, fileManager, tx, urlProvider, local)
+	return NewController(proxyStore, registryDao, imageDao, artifactDao, fileManager, tx, urlProvider, local, proxy)
 }
 
 var ControllerSet = wire.NewSet(ControllerProvider)

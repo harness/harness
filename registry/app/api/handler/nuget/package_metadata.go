@@ -39,7 +39,8 @@ func (h *handler) GetPackageMetadata(w http.ResponseWriter, r *http.Request) {
 		h.HandleError(r.Context(), w, response.GetError())
 		return
 	}
-	err := json.NewEncoder(w).Encode(response.RegistrationIndexResponse)
+
+	err := json.NewEncoder(w).Encode(response.RegistrationResponse)
 	if err != nil {
 		h.HandleErrors(r.Context(), []error{err}, w)
 		return

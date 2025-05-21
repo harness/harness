@@ -26,49 +26,49 @@ import (
 	registrytypes "github.com/harness/gitness/registry/types"
 )
 
-func (c *controller) GetServiceEndpoint(
+func (c *controller) ListPackageVersionV2(
 	ctx context.Context,
 	info nugettype.ArtifactInfo,
-) *GetServiceEndpointResponse {
+) *ListPackageVersionV2Response {
 	f := func(registry registrytypes.Registry, a pkg.Artifact) response.Response {
 		info.RegIdentifier = registry.Name
 		info.RegistryID = registry.ID
 		nugetRegistry, ok := a.(nuget.Registry)
 		if !ok {
-			return &GetServiceEndpointResponse{
+			return &ListPackageVersionV2Response{
 				BaseResponse{
 					fmt.Errorf("invalid registry type: expected nuget.Registry"),
 					nil,
 				}, nil,
 			}
 		}
-		serviceEndpoint := nugetRegistry.GetServiceEndpoint(ctx, info)
-		return &GetServiceEndpointResponse{
+		feedResponse, err := nugetRegistry.ListPackageVersionV2(ctx, info)
+		return &ListPackageVersionV2Response{
 			BaseResponse{
+				err,
 				nil,
-				nil,
-			}, serviceEndpoint,
+			}, feedResponse,
 		}
 	}
 
 	result, err := base.ProxyWrapper(ctx, c.registryDao, f, info)
 
 	if err != nil {
-		return &GetServiceEndpointResponse{
+		return &ListPackageVersionV2Response{
 			BaseResponse{
 				err,
 				nil,
 			}, nil,
 		}
 	}
-	serviceEndpointResponse, ok := result.(*GetServiceEndpointResponse)
+	listPackageVersionResponse, ok := result.(*ListPackageVersionV2Response)
 	if !ok {
-		return &GetServiceEndpointResponse{
+		return &ListPackageVersionV2Response{
 			BaseResponse{
-				fmt.Errorf("invalid response type: expected GetServiceEndpointResponse"),
+				fmt.Errorf("invalid response type: expected ListPackageVersionV2Response"),
 				nil,
 			}, nil,
 		}
 	}
-	return serviceEndpointResponse
+	return listPackageVersionResponse
 }

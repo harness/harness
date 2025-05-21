@@ -166,6 +166,17 @@ func (c *APIController) GetArtifactDetails(
 			}, nil
 		}
 		artifactDetails = GetRPMArtifactDetail(img, art, result, downloadCount)
+	case artifact.PackageTypeNUGET:
+		var result map[string]interface{}
+		err := json.Unmarshal(art.Metadata, &result)
+		if err != nil {
+			return artifact.GetArtifactDetails500JSONResponse{
+				InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
+					*GetErrorResponse(http.StatusInternalServerError, err.Error()),
+				),
+			}, nil
+		}
+		artifactDetails = GetNugetArtifactDetail(img, art, result, downloadCount)
 	case artifact.PackageTypeDOCKER:
 	case artifact.PackageTypeHELM:
 	default:
