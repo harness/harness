@@ -18,7 +18,7 @@ import { useConfirmAct } from 'hooks/useConfirmAction'
 import { getErrorMessage } from 'utils/Utils'
 import MachineModal from 'cde-gitness/components/MachineModal/MachineModal'
 import { useAppContext } from 'AppContext'
-import { TypesInfraProviderResource, useDeleteInfraProviderResource } from 'services/cde'
+import { TypesInfraProviderResource, useDeleteInfraProviderResource, useListGateways } from 'services/cde'
 import NoMachineCard from 'cde-gitness/components/NoMachineCard/NoMachineCard'
 import MachineDetailCard from 'cde-gitness/components/MachineDetailCard/MachineDetailCard'
 import NoMachineIcon from '../../../../icons/NoMachine.svg?url'
@@ -48,10 +48,15 @@ function MachineLocationContent({
   const { showError, showSuccess } = useToaster()
   const bpTableProps = { bordered: false, condensed: true, striped: true }
 
+  const { data: gatewayResponse } = useListGateways({
+    accountIdentifier: accountInfo?.identifier,
+    infraprovider_identifier
+  })
+
   function ActionCell(row: Unknown) {
     const { mutate: deleteResource } = useDeleteInfraProviderResource({
       accountIdentifier: accountInfo?.identifier,
-      infraprovider_resource_identifier: row?.row?.values?.identifier,
+      // infraprovider_resource_identifier: row?.row?.values?.identifier,
       infraprovider_identifier
     })
 
@@ -202,7 +207,20 @@ function MachineLocationContent({
         regionData={regionData}
       />
       <Layout.Vertical>
-        <MachineDetailCard locationData={locationData} />
+        <Container margin={{ top: 'large', bottom: 'large' }}>
+          <Text
+            color={Color.BLACK}
+            icon="globe-network"
+            iconProps={{ size: 24, margin: { right: 'small' } }}
+            font={{ size: 'medium' }}>
+            {locationData.region_name}
+          </Text>
+        </Container>
+
+        <MachineDetailCard
+          locationData={locationData}
+          groupHealthData={gatewayResponse?.find(gateway => gateway.region === locationData.identifier)}
+        />
 
         <Container className={css.machineDetail}>
           <Layout.Horizontal spacing={'none'} className={css.machineHeader} flex={{ justifyContent: 'space-between' }}>

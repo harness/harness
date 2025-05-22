@@ -16,7 +16,7 @@
 
 import React from 'react'
 import { defaultTo } from 'lodash-es'
-import type { EnumGitspaceCodeRepoType } from 'cde-gitness/services'
+import type { EnumGitspaceCodeRepoType } from 'services/cde'
 import genericGit from 'cde-gitness/assests/genericGit.svg?url'
 import { onPremSCMOptions, scmOptions } from 'cde-gitness/pages/GitspaceCreate/CDECreateGitspace'
 

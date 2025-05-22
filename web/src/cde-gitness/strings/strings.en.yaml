@@ -70,6 +70,10 @@ gitspaceInfraHome:
   maxMessage: '{{field}} should not contain more than {{count}} characters'
   minNumber: '{{field}} should be greater than {{count}}'
   configureGCPButton: Configure GCP infrastructure
+  gatewayGroupName: Gateway Group Name
+  gatewayGroupHealth: Gateway Group Health
+  gatewayInstanceName: Gateway Instance Name
+  gatewayversionnumber: Gateway version number
   description: Configure an infrastructure with locations and machines to be used as one of the infrastructure while creating a Gitspace
   gcpSupportText: Currently we support GCP based infrastructure only.
   learnMore: Learn more about Gitspace Infrastructure
@@ -77,12 +81,14 @@ gitspaceInfraHome:
   waitingForConnection: Waiting for Connection
   waitingMessage: It takes around 3-5 minutes to connect to the infrastructure. If it takes longer, please follow the
   troubleshoot: troubleshoot guidelines
-  locationAndMachine: Regions and machines
-  locationDetails: Region details
+  locationAndMachine: Locations and machines
+  locationDetails: Location details
   region: Region
   locationName: Region Name
   defaultSubnet: Default subnet IP range
   proxySubnet: Proxy subnet IP range
+  dnsManagedZone: DNS managed zone
+  runnerVMRegion: Runner VM Region
   machines: Machines
   machine: Machine
   diskType: Persistent Disk Type

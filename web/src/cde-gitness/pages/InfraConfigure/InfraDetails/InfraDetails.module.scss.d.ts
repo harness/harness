@@ -36,5 +36,7 @@ export declare const inputWithNote: string
 export declare const main: string
 export declare const marginTopSmall: string
 export declare const noteText: string
+export declare const regionContainer: string
+export declare const runnerregion: string
 export declare const tableContainer: string
 export declare const valueText: string

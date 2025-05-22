@@ -7,6 +7,9 @@
   .cardContent {
     padding: var(--spacing-5) !important;
     background-color: var(--grey-50) !important;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+    grid-row-gap: var(--spacing-xlarge);
 
     .rowHeader {
       font-size: var(--font-size-small) !important;
@@ -16,6 +19,12 @@
 
     .rowContent {
       font-size: var(--font-size-normal) !important;
+      line-height: var(--spacing-large) !important;
+      font-weight: 400 !important;
+    }
+
+    .emptyRowContent {
+      font-size: var(--font-size-small) !important;
       line-height: var(--spacing-large) !important;
       font-weight: 400 !important;
     }

@@ -9,7 +9,16 @@ export type EnumGitspaceAccessType = 'jwt_token' | 'user_credentials' | 'ssh_key
 
 export type EnumGitspaceActionType = 'start' | 'stop'
 
-export type EnumGitspaceCodeRepoType = 'github' | 'gitlab' | 'harness_code' | 'bitbucket' | 'unknown' | 'gitness'
+export type EnumGitspaceCodeRepoType =
+  | 'github'
+  | 'gitlab'
+  | 'harness_code'
+  | 'bitbucket'
+  | 'unknown'
+  | 'gitness'
+  | 'gitlab_on_prem'
+  | 'bitbucket_server'
+  | 'github_enterprise'
 
 export type EnumGitspaceEntityType = 'gitspace_config' | 'gitspace_instance'
 
@@ -180,6 +189,23 @@ export interface TypesBranchResponse {
   name?: string
 }
 
+export interface TypesCDEGateway {
+  created?: number
+  envoy_health?: string
+  group_name?: string
+  health?: string
+  infra_provider_config_id?: number
+  infra_provider_config_identifier?: string
+  name?: string
+  overall_health?: string
+  region?: string
+  space_id?: number
+  space_path?: string
+  updated?: number
+  version?: string
+  zone?: string
+}
+
 export interface TypesGitspaceConfig {
   branch?: string
   branch_url?: string
@@ -191,6 +217,7 @@ export interface TypesGitspaceConfig {
   devcontainer_path?: string | null
   ide?: EnumIDEType
   identifier?: string
+  initialize_log_key?: string
   instance?: TypesGitspaceInstance
   log_key?: string
   name?: string
@@ -525,8 +552,7 @@ export const useDeleteInfraProvider = ({
 }: UseDeleteInfraProviderProps) =>
   useMutate<void, unknown, void, string, DeleteInfraProviderPathParams>(
     'DELETE',
-    (paramsInPath: DeleteInfraProviderPathParams) =>
-      `/accounts/${paramsInPath.accountIdentifier}/infraproviders/${paramsInPath.infraprovider_identifier}`,
+    (paramsInPath: DeleteInfraProviderPathParams) => `/accounts/${paramsInPath.accountIdentifier}/infraproviders`,
     { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier, infraprovider_identifier }, ...props }
   )
 
@@ -656,6 +682,44 @@ export const useUpdateInfraProvider = ({
     { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier, infraprovider_identifier }, ...props }
   )
 
+export interface ListGatewaysPathParams {
+  /**
+   * account identifier.
+   */
+  accountIdentifier: string
+  /**
+   * infra Provider Config Identifier.
+   */
+  infraprovider_identifier: string
+}
+
+export type ListGatewaysProps = Omit<GetProps<TypesCDEGateway[], unknown, void, ListGatewaysPathParams>, 'path'> &
+  ListGatewaysPathParams
+
+/**
+ * List gateways
+ */
+export const ListGateways = ({ accountIdentifier, infraprovider_identifier, ...props }: ListGatewaysProps) => (
+  <Get<TypesCDEGateway[], unknown, void, ListGatewaysPathParams>
+    path={`/accounts/${accountIdentifier}/infraproviders/${infraprovider_identifier}/gateways`}
+    base={getConfig('cde/api/v1')}
+    {...props}
+  />
+)
+
+export type UseListGatewaysProps = Omit<UseGetProps<TypesCDEGateway[], unknown, void, ListGatewaysPathParams>, 'path'> &
+  ListGatewaysPathParams
+
+/**
+ * List gateways
+ */
+export const useListGateways = ({ accountIdentifier, infraprovider_identifier, ...props }: UseListGatewaysProps) =>
+  useGet<TypesCDEGateway[], unknown, void, ListGatewaysPathParams>(
+    (paramsInPath: ListGatewaysPathParams) =>
+      `/accounts/${paramsInPath.accountIdentifier}/infraproviders/${paramsInPath.infraprovider_identifier}/gateways`,
+    { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier, infraprovider_identifier }, ...props }
+  )
+
 export interface CreateInfraProviderResourcePathParams {
   /**
    * account identifier.
@@ -719,7 +783,6 @@ export interface DeleteInfraProviderResourcePathParams {
    * infra Provider Config Identifier.
    */
   infraprovider_identifier: string
-  infraprovider_resource_identifier: string
 }
 
 export type DeleteInfraProviderResourceProps = Omit<
@@ -734,12 +797,11 @@ export type DeleteInfraProviderResourceProps = Omit<
 export const DeleteInfraProviderResource = ({
   accountIdentifier,
   infraprovider_identifier,
-  infraprovider_resource_identifier,
   ...props
 }: DeleteInfraProviderResourceProps) => (
   <Mutate<void, unknown, void, string, DeleteInfraProviderResourcePathParams>
     verb="DELETE"
-    path={`/accounts/${accountIdentifier}/infraproviders/${infraprovider_identifier}/resources/${infraprovider_resource_identifier}`}
+    path={`/accounts/${accountIdentifier}/infraproviders/${infraprovider_identifier}/resources`}
     base={getConfig('cde/api/v1')}
     {...props}
   />
@@ -757,18 +819,13 @@ export type UseDeleteInfraProviderResourceProps = Omit<
 export const useDeleteInfraProviderResource = ({
   accountIdentifier,
   infraprovider_identifier,
-  infraprovider_resource_identifier,
   ...props
 }: UseDeleteInfraProviderResourceProps) =>
   useMutate<void, unknown, void, string, DeleteInfraProviderResourcePathParams>(
     'DELETE',
     (paramsInPath: DeleteInfraProviderResourcePathParams) =>
-      `/accounts/${paramsInPath.accountIdentifier}/infraproviders/${paramsInPath.infraprovider_identifier}/resources/${infraprovider_resource_identifier}`,
-    {
-      base: getConfig('cde/api/v1'),
-      pathParams: { accountIdentifier, infraprovider_identifier, infraprovider_resource_identifier },
-      ...props
-    }
+      `/accounts/${paramsInPath.accountIdentifier}/infraproviders/${paramsInPath.infraprovider_identifier}/resources`,
+    { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier, infraprovider_identifier }, ...props }
   )
 
 export interface SyncInfraProviderPathParams {

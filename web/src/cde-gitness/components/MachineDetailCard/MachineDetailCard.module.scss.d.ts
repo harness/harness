@@ -18,6 +18,7 @@
 // This is an auto-generated file
 export declare const cardContent: string
 export declare const cardTitle: string
+export declare const emptyRowContent: string
 export declare const locationDetail: string
 export declare const machineDetail: string
 export declare const machineHeader: string

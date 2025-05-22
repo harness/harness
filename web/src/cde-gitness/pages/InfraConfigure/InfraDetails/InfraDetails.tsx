@@ -25,6 +25,7 @@ interface InfraDetailsFormikProps {
   instances?: string
   project?: string
   delegateSelector?: string[]
+  runner_vm_region?: string[]
 }
 
 const InfraDetails = () => {
@@ -67,7 +68,8 @@ const InfraDetails = () => {
         machine_type: metadata?.gateway?.machine_type,
         instances: metadata?.gateway?.instances,
         project: metadata?.project?.id,
-        delegateSelector: delegate
+        delegateSelector: delegate,
+        runner_vm_region: metadata?.runner_vm_region || []
       }
       const regions: regionProp[] = []
       Object?.keys(data?.metadata?.region_configs ?? {}).forEach((key: string, index: number) => {
@@ -104,7 +106,16 @@ const InfraDetails = () => {
           onSubmit={async (values: InfraDetailsFormikProps) => {
             try {
               if (regionData?.length > 0) {
-                const { identifier, name, domain, machine_type, instances, project, delegateSelector } = values
+                const {
+                  identifier,
+                  name,
+                  domain,
+                  machine_type,
+                  instances,
+                  project,
+                  delegateSelector,
+                  runner_vm_region
+                } = values
                 const region_configs: Unknown = {}
                 regionData?.forEach((region: regionProp) => {
                   const { location, defaultSubnet, proxySubnet, domain: regionDomain } = region
@@ -127,6 +138,7 @@ const InfraDetails = () => {
                   identifier,
                   metadata: {
                     domain,
+                    runner_vm_region,
                     delegate_selectors: delegates,
                     name,
                     region_configs,
@@ -172,7 +184,13 @@ const InfraDetails = () => {
                 <Layout.Vertical spacing="medium">
                   <BasicDetails formikProps={formikProps} />
                   {/* <GatewayDetails formikProps={formikProps} /> */}
-                  <ConfigureLocations regionData={regionData} setRegionData={setRegionData} initialData={initialData} />
+                  <ConfigureLocations
+                    regionData={regionData}
+                    setRegionData={setRegionData}
+                    initialData={initialData}
+                    runnerVMRegion={formikProps?.values?.runner_vm_region || []}
+                    setRunnerVMRegion={result => formikProps?.setFieldValue('runner_vm_region', result)}
+                  />
                   <Layout.Horizontal className={css.formFooter}>
                     <Button
                       text={getString('cde.configureInfra.cancel')}

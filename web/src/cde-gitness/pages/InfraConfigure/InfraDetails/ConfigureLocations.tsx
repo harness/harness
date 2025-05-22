@@ -1,5 +1,14 @@
 import React, { useRef, useState } from 'react'
-import { Container, HarnessDocTooltip, Layout, Text, TextInput } from '@harnessio/uicore'
+import {
+  Container,
+  HarnessDocTooltip,
+  Label,
+  Layout,
+  MultiSelectTypeInput,
+  SelectOption,
+  Text,
+  TextInput
+} from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
 import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance } from 'react-table'
 import { Icon } from '@harnessio/icons'
@@ -34,9 +43,11 @@ interface LocationProps {
   regionData: regionProp[]
   setRegionData: (result: regionProp[]) => void
   initialData: regionProp
+  runnerVMRegion: string[]
+  setRunnerVMRegion: (result: string[]) => void
 }
 
-const ConfigureLocations = ({ regionData, setRegionData }: LocationProps) => {
+const ConfigureLocations = ({ regionData, runnerVMRegion, setRegionData, setRunnerVMRegion }: LocationProps) => {
   const { getString } = useStrings()
   const [isOpen, setIsOpen] = useState(false)
   const lastFocusRef = useRef<HTMLInputElement | null>(null)
@@ -111,7 +122,7 @@ const ConfigureLocations = ({ regionData, setRegionData }: LocationProps) => {
       Cell: CustomCell,
       accessor: 'location',
       placeholder: 'e.g us-west1',
-      width: '13%'
+      width: '20%'
     },
     {
       Header: (
@@ -123,7 +134,7 @@ const ConfigureLocations = ({ regionData, setRegionData }: LocationProps) => {
       Cell: CustomCell,
       accessor: 'defaultSubnet',
       placeholder: 'e.g 10.6.0.0/16',
-      width: '22%'
+      width: '15%'
     },
     {
       Header: (
@@ -135,7 +146,7 @@ const ConfigureLocations = ({ regionData, setRegionData }: LocationProps) => {
       Cell: CustomCell,
       accessor: 'proxySubnet',
       placeholder: 'e.g 10.3.0.0/16',
-      width: '22%'
+      width: '15%'
     },
     {
       Header: (
@@ -147,7 +158,7 @@ const ConfigureLocations = ({ regionData, setRegionData }: LocationProps) => {
       Cell: CustomCell,
       accessor: 'domain',
       placeholder: 'e.g us-west-ga.io',
-      width: '15%'
+      width: '25%'
     },
     {
       Header: '',
@@ -172,6 +183,8 @@ const ConfigureLocations = ({ regionData, setRegionData }: LocationProps) => {
     setIsOpen(true)
   }
 
+  const runnerVMRegionOptions = regionData.map(item => ({ label: item.location, value: item.location }))
+
   return (
     <Layout.Vertical spacing="none" className={css.containerSpacing}>
       <Text className={css.basicDetailsHeading}>{getString('cde.configureInfra.configureLocations')}</Text>
@@ -191,6 +204,18 @@ const ConfigureLocations = ({ regionData, setRegionData }: LocationProps) => {
 
       <NewRegionModal isOpen={isOpen} setIsOpen={setIsOpen} onSubmit={addNewRegion} />
       <RegionTable columns={columns} addNewRegion={openRegionModal} regionData={regionData} />
+      <Container className={css.regionContainer}>
+        <Label className={css.runnerregion}>{getString('cde.gitspaceInfraHome.runnerVMRegion')}</Label>
+        <MultiSelectTypeInput
+          name={getString('cde.gitspaceInfraHome.runnerVMRegion')}
+          multiSelectProps={{ items: runnerVMRegionOptions }}
+          value={runnerVMRegionOptions.filter(region => runnerVMRegion.includes(region.value))}
+          onChange={value => {
+            setRunnerVMRegion((value as SelectOption[])?.map(item => item.value as string))
+          }}
+          allowableTypes={[]}
+        />
+      </Container>
     </Layout.Vertical>
   )
 }

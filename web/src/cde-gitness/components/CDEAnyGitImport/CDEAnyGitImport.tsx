@@ -303,12 +303,13 @@ export const CDEAnyGitImport = () => {
                                 ...prvValues,
                                 code_repo_url: data,
                                 branch: item.default_branch,
-                                identifier: item.name,
+                                identifier: getRepoIdFromURL(item.name),
                                 name: item.name,
                                 code_repo_type: values?.code_repo_type
                               }
                             })
                             scmrefetchBranch()
+                            setSearchBranch(undefined)
                           } else {
                             setValues((prvValues: any) => {
                               return {
@@ -383,7 +384,7 @@ export const CDEAnyGitImport = () => {
                       />
                     )
                   })
-                ) : loading || repoLoading || onPremRepoLoading ? (
+                ) : loading || repoLoading || onPremRepoLoading || scmbranchLoading ? (
                   <MenuItem text={<Text>Fetching Branches</Text>} />
                 ) : (
                   <MenuItem text={<Text>No Branches Found</Text>} />
