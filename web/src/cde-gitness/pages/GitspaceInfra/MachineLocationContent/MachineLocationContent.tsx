@@ -57,7 +57,7 @@ function MachineLocationContent({
   function ActionCell(row: Unknown) {
     const { mutate: deleteResource } = useDeleteInfraProviderResource({
       accountIdentifier: accountInfo?.identifier,
-      // infraprovider_resource_identifier: row?.row?.values?.identifier,
+      infraprovider_resource_identifier: row?.row?.values?.identifier,
       infraprovider_identifier
     })
 

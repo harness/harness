@@ -69,7 +69,8 @@ export const CDEAnyGitImport = () => {
       search_term: defaultTo(searchTerm, ''),
       repo_type: values?.code_repo_type as string
     },
-    debounce: 1000
+    debounce: 1000,
+    lazy: !!isOnPremSCM
   })
 
   const { data: scmrepos, loading: onPremRepoLoading } = useGetPaginatedListOfReposByRefConnector({
@@ -78,7 +79,8 @@ export const CDEAnyGitImport = () => {
       orgIdentifier,
       projectIdentifier,
       useSCMProviderForConnector: true,
-      scmProviderForConnectorType: values?.code_repo_type
+      scmProviderForConnectorType: values?.code_repo_type,
+      repoNameSearchTerm: searchTerm?.split('/')[searchTerm?.split('/')?.length - 1]
     },
     lazy: !isOnPremSCM
   })
@@ -151,13 +153,15 @@ export const CDEAnyGitImport = () => {
   }, [values.code_repo_url, repoQueryParams.codeRepoURL])
 
   useEffect(() => {
-    if (searchBranch) {
+    if (searchBranch && !isOnPremSCM) {
       refetchBranch()
     }
   }, [searchBranch])
 
   useEffect(() => {
-    scmrefetchBranch()
+    if (isOnPremSCM) {
+      scmrefetchBranch()
+    }
   }, [values?.code_repo_url])
 
   const onChange = useCallback(
@@ -260,7 +264,7 @@ export const CDEAnyGitImport = () => {
             withoutCurrentColor
             formikName="code_repo_url"
             renderMenu={
-              <Menu>
+              <Menu style={{ maxHeight: 300 }}>
                 {loading || repoLoading || onPremRepoLoading ? (
                   <MenuItem text={<Text>Fetching Repositories</Text>} />
                 ) : repoOptions?.length ? (
@@ -308,7 +312,7 @@ export const CDEAnyGitImport = () => {
                                 code_repo_type: values?.code_repo_type
                               }
                             })
-                            scmrefetchBranch()
+                            // scmrefetchBranch()
                             setSearchBranch(undefined)
                           } else {
                             setValues((prvValues: any) => {
