@@ -25,7 +25,9 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 )
 
 var _ store.FavoriteStore = (*FavoriteStore)(nil)
@@ -71,6 +73,52 @@ func (s *FavoriteStore) Create(ctx context.Context, in *types.FavoriteResource) 
 	}
 
 	return nil
+}
+
+// Map returns a map for the given resourceIDs and checks if the entity has been marked favorite or not.
+func (s *FavoriteStore) Map(
+	ctx context.Context,
+	principalID int64,
+	resourceType enum.ResourceType,
+	resourceIDs []int64,
+) (map[int64]bool, error) {
+	tableName, resourceColumnName, err := getTableAndColumnName(resourceType)
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "failed to resolve table/column for resourceType %v", resourceType)
+	}
+
+	stmt := database.Builder.
+		Select(resourceColumnName).
+		From(tableName).
+		Where("favorite_principal_id = ?", principalID)
+
+	switch s.db.DriverName() {
+	case SqliteDriverName:
+		stmt = stmt.Where(squirrel.Eq{resourceColumnName: resourceIDs})
+	case PostgresDriverName:
+		query := fmt.Sprintf("%s = ANY(?)", resourceColumnName)
+		stmt = stmt.Where(query, pq.Array(resourceIDs))
+	}
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var foundIDs []int64
+	if err := db.SelectContext(ctx, &foundIDs, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(
+			ctx, err, "failed to fetch %s favorites for principal %d", resourceType, principalID)
+	}
+
+	result := make(map[int64]bool, len(resourceIDs))
+	for _, id := range foundIDs {
+		result[id] = true
+	}
+
+	return result, nil
 }
 
 // Delete unfavorites the resource.

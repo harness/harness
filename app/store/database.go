@@ -1378,6 +1378,12 @@ type (
 
 	FavoriteStore interface {
 		Create(ctx context.Context, in *types.FavoriteResource) error
+		Map(
+			ctx context.Context,
+			principalID int64,
+			resourceType enum.ResourceType,
+			resourceIDs []int64,
+		) (map[int64]bool, error)
 		Delete(ctx context.Context, in *types.FavoriteResource) error
 	}
 )
