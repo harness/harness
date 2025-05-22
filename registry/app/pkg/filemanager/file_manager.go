@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/store/database/dbtx"
+	gitnesstypes "github.com/harness/gitness/types"
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -43,23 +44,25 @@ const (
 )
 
 func NewFileManager(
-	app *App, registryDao store.RegistryRepository, genericBlobDao store.GenericBlobRepository,
-	nodesDao store.NodesRepository,
-	tx dbtx.Transactor, reporter event.Reporter,
-
+	registryDao store.RegistryRepository, genericBlobDao store.GenericBlobRepository,
+	nodesDao store.NodesRepository, tx dbtx.Transactor,
+	reporter event.Reporter, config *gitnesstypes.Config,
+	storageService *storage.Service,
 ) FileManager {
 	return FileManager{
-		App:            app,
 		registryDao:    registryDao,
 		genericBlobDao: genericBlobDao,
 		nodesDao:       nodesDao,
 		tx:             tx,
 		reporter:       reporter,
+		config:         config,
+		storageService: storageService,
 	}
 }
 
 type FileManager struct {
-	App            *App
+	config         *gitnesstypes.Config
+	storageService *storage.Service
 	registryDao    store.RegistryRepository
 	genericBlobDao store.GenericBlobRepository
 	nodesDao       store.NodesRepository
@@ -78,7 +81,7 @@ func (f *FileManager) UploadFile(
 	fileName string,
 ) (types.FileInfo, error) {
 	// uploading the file to temporary path in file storage
-	blobContext := f.App.GetBlobsContext(ctx, rootIdentifier)
+	blobContext := f.GetBlobsContext(ctx, rootIdentifier)
 	tmpFileName := uuid.NewString()
 	fileInfo, tmpPath, err := f.uploadTempFileInternal(ctx, blobContext, rootIdentifier,
 		file, fileName, fileReader, tmpFileName)
@@ -100,9 +103,21 @@ func (f *FileManager) UploadFile(
 	// Emit blob create event
 	if created {
 		event.ReportEventAsync(ctx, rootIdentifier, f.reporter, event.BlobCreate, 0, blobID, fileInfo.Sha256,
-			f.App.Config)
+			f.config)
 	}
 	return fileInfo, nil
+}
+
+// GetBlobsContext context constructs the context object for the application. This only be
+// called once per request.
+func (f *FileManager) GetBlobsContext(c context.Context, rootIdentifier string) *Context {
+	context := &Context{
+		Context: c,
+	}
+	blobStore := f.storageService.GenericBlobsStore(rootIdentifier)
+	context.genericBlobStore = blobStore
+
+	return context
 }
 
 func (f *FileManager) dbSaveFile(
@@ -241,7 +256,7 @@ func (f *FileManager) DownloadFile(
 	}
 
 	completeFilaPath := path.Join(rootPathString + rootIdentifier + rootPathString + files + rootPathString + blob.Sha256)
-	blobContext := f.App.GetBlobsContext(ctx, rootIdentifier)
+	blobContext := f.GetBlobsContext(ctx, rootIdentifier)
 	reader, redirectURL, err := blobContext.genericBlobStore.Get(ctx, completeFilaPath, blob.Size)
 
 	if err != nil {
@@ -372,7 +387,7 @@ func (f *FileManager) UploadTempFile(
 	fileName string,
 	fileReader io.Reader,
 ) (types.FileInfo, string, error) {
-	blobContext := f.App.GetBlobsContext(ctx, rootIdentifier)
+	blobContext := f.GetBlobsContext(ctx, rootIdentifier)
 	tempFileName := uuid.NewString()
 	fileInfo, _, err := f.uploadTempFileInternal(ctx, blobContext, rootIdentifier,
 		file, fileName, fileReader, tempFileName)
@@ -419,7 +434,7 @@ func (f *FileManager) DownloadTempFile(
 	rootIdentifier string,
 ) (fileReader *storage.FileReader, size int64, err error) {
 	tmpPath := path.Join(rootPathString, rootIdentifier, tmp, fileName)
-	blobContext := f.App.GetBlobsContext(ctx, rootIdentifier)
+	blobContext := f.GetBlobsContext(ctx, rootIdentifier)
 	reader, err := blobContext.genericBlobStore.GetWithNoRedirect(ctx, tmpPath, fileSize)
 	if err != nil {
 		return nil, 0, fmt.Errorf(failedToGetFile, tmpPath, err)
@@ -438,7 +453,7 @@ func (f *FileManager) MoveTempFile(
 	tempFileName string,
 ) error {
 	// uploading the file to temporary path in file storage
-	blobContext := f.App.GetBlobsContext(ctx, rootIdentifier)
+	blobContext := f.GetBlobsContext(ctx, rootIdentifier)
 	tmpPath := path.Join(rootPathString, rootIdentifier, tmp, tempFileName)
 
 	err := f.moveFile(ctx, rootIdentifier, fileInfo, blobContext, tmpPath)
@@ -454,7 +469,7 @@ func (f *FileManager) MoveTempFile(
 	// Emit blob create event
 	if created {
 		event.ReportEventAsync(ctx, rootIdentifier, f.reporter, event.BlobCreate, 0, blobID, fileInfo.Sha256,
-			f.App.Config)
+			f.config)
 	}
 	return nil
 }

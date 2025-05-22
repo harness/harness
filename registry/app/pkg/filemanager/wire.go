@@ -16,21 +16,25 @@ package filemanager
 
 import (
 	"github.com/harness/gitness/registry/app/event"
+	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
+	gitnesstypes "github.com/harness/gitness/types"
 
 	"github.com/google/wire"
 )
 
-func Provider(app *App, registryDao store.RegistryRepository, genericBlobDao store.GenericBlobRepository,
+func Provider(
+	registryDao store.RegistryRepository, genericBlobDao store.GenericBlobRepository,
 	nodesDao store.NodesRepository,
 	tx dbtx.Transactor,
 	reporter event.Reporter,
+	config *gitnesstypes.Config,
+	storageService *storage.Service,
 ) FileManager {
-	return NewFileManager(app, registryDao, genericBlobDao, nodesDao, tx, reporter)
+	return NewFileManager(registryDao, genericBlobDao, nodesDao, tx, reporter, config, storageService)
 }
 
-var AppSet = wire.NewSet(NewApp)
 var Set = wire.NewSet(Provider)
 
-var WireSet = wire.NewSet(AppSet, Set)
+var WireSet = wire.NewSet(Set)

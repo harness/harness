@@ -26,7 +26,6 @@ import (
 // handlers. Resources that don't need to be shared across handlers should not
 // be on this object.
 type Context struct {
-	*App
 	context.Context
 	URLBuilder       *v2.URLBuilder
 	genericBlobStore storage.GenericBlobStore

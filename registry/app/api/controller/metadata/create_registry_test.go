@@ -196,17 +196,14 @@ func TestCreateRegistry(t *testing.T) {
 
 				// Setup already covered above.
 
-				// Create file manager.
-				var app = &filemanager.App{
-					Context: context.Background(),
-				}
 				fileManager := filemanager.NewFileManager(
-					app,
 					mockRegistryRepo,
 					mockGenericBlobRepo,
 					nil, // nodesRepo - not needed for this test.
 					mockTransactor,
 					nil, // reporter - not needed for this test.
+					nil,
+					nil,
 				)
 
 				// Setup audit service mock.
@@ -300,17 +297,14 @@ func TestCreateRegistry(t *testing.T) {
 				mockRegistryMetadataHelper.On("GetRegistryRequestBaseInfo", mock.Anything, "invalid", "").
 					Return(nil, fmt.Errorf("space not found")).Once()
 
-				app := &filemanager.App{
-					Context: context.Background(),
-				}
-
 				fileManager := filemanager.NewFileManager(
-					app,
 					mockRegistryRepo,
 					mockGenericBlobRepo,
 					nil, // nodesRepo - not needed for this test.
 					mockTransactor,
 					nil, // reporter - not needed for this test.
+					nil,
+					nil,
 				)
 
 				return metadata.NewAPIController(
