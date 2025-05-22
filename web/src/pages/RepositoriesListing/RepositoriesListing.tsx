@@ -22,10 +22,10 @@ import {
   Layout,
   PageBody,
   PageHeader,
-  Utils,
   TableV2 as Table,
   Text,
-  useToaster
+  useToaster,
+  Utils
 } from '@harnessio/uicore'
 import { ProgressBar, Intent } from '@blueprintjs/core'
 import { Color, FontVariation } from '@harnessio/design-system'
@@ -132,7 +132,7 @@ export default function RepositoriesListing() {
   const bearerToken = hooks?.useGetToken?.() || ''
 
   const addImportProgressToData = async (repos: RepoRepositoryOutput[]) => {
-    const updatedData = await Promise.all(
+    return await Promise.all(
       repos.map(async repo => {
         if (repo.importing) {
           try {
@@ -158,8 +158,6 @@ export default function RepositoriesListing() {
         return repo
       })
     )
-
-    return updatedData
   }
 
   useEffect(() => {

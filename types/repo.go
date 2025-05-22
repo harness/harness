@@ -121,6 +121,7 @@ type RepoFilter struct {
 	DeletedAt         *int64        `json:"deleted_at,omitempty"`
 	DeletedBeforeOrAt *int64        `json:"deleted_before_or_at,omitempty"`
 	Recursive         bool
+	OnlyFavoritesFor  *int64
 }
 
 type RepoCacheKey struct {

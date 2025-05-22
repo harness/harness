@@ -20,7 +20,6 @@ import (
 	"github.com/harness/gitness/app/api/controller/space"
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
-	"github.com/harness/gitness/types/enum"
 )
 
 // HandleListRepos writes json-encoded list of repos in the request body.
@@ -34,14 +33,10 @@ func HandleListRepos(spaceCtrl *space.Controller) http.HandlerFunc {
 			return
 		}
 
-		filter, err := request.ParseRepoFilter(r)
+		filter, err := request.ParseRepoFilter(r, session)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
-		}
-
-		if filter.Order == enum.OrderDefault {
-			filter.Order = enum.OrderAsc
 		}
 
 		repos, count, err := spaceCtrl.ListRepositories(

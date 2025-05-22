@@ -936,6 +936,12 @@ func applyQueryFilter(stmt squirrel.SelectBuilder, filter *types.RepoFilter) squ
 		stmt = stmt.Where("repo_deleted IS NULL")
 	}
 
+	if filter.OnlyFavoritesFor != nil {
+		stmt = stmt.
+			InnerJoin("favorite_repos ON favorite_repos.favorite_repo_id = repositories.repo_id").
+			Where("favorite_repos.favorite_principal_id = ?", *filter.OnlyFavoritesFor)
+	}
+
 	return stmt
 }
 

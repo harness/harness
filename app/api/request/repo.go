@@ -17,13 +17,14 @@ package request
 import (
 	"net/http"
 
+	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
 const (
-	PathParamRepoRef = "repo_ref"
-	QueryParamRepoID = "repo_id"
+	PathParamRepoRef        = "repo_ref"
+	QueryParamOnlyFavorites = "only_favorites"
 )
 
 func GetRepoRefFromPath(r *http.Request) (string, error) {
@@ -37,8 +38,13 @@ func ParseSortRepo(r *http.Request) enum.RepoAttr {
 	)
 }
 
+// ParseOnlyFavoritesFromQuery extracts the only_favorites option from the URL.
+func ParseOnlyFavoritesFromQuery(r *http.Request) (bool, error) {
+	return QueryParamAsBoolOrDefault(r, QueryParamOnlyFavorites, false)
+}
+
 // ParseRepoFilter extracts the repository filter from the url.
-func ParseRepoFilter(r *http.Request) (*types.RepoFilter, error) {
+func ParseRepoFilter(r *http.Request, session *auth.Session) (*types.RepoFilter, error) {
 	// recursive is optional to get all repos in a sapce and its subsapces recursively.
 	recursive, err := ParseRecursiveFromQuery(r)
 	if err != nil {
@@ -65,14 +71,29 @@ func ParseRepoFilter(r *http.Request) (*types.RepoFilter, error) {
 		deletedAt = &deletedAtVal
 	}
 
+	order := ParseOrder(r)
+	if order == enum.OrderDefault {
+		order = enum.OrderAsc
+	}
+
+	onlyFavorites, err := ParseOnlyFavoritesFromQuery(r)
+	if err != nil {
+		return nil, err
+	}
+	var onlyFavoritesFor *int64
+	if onlyFavorites {
+		onlyFavoritesFor = &session.Principal.ID
+	}
+
 	return &types.RepoFilter{
 		Query:             ParseQuery(r),
-		Order:             ParseOrder(r),
+		Order:             order,
 		Page:              ParsePage(r),
 		Sort:              ParseSortRepo(r),
 		Size:              ParseLimit(r),
 		Recursive:         recursive,
 		DeletedAt:         deletedAt,
 		DeletedBeforeOrAt: deletedBeforeOrAt,
+		OnlyFavoritesFor:  onlyFavoritesFor,
 	}, nil
 }
