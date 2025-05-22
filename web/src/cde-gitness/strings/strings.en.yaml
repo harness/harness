@@ -88,6 +88,7 @@ gitspaceInfraHome:
   defaultSubnet: Default subnet IP range
   proxySubnet: Proxy subnet IP range
   dnsManagedZone: DNS managed zone
+  envoyHealth: Envoy health
   runnerVMRegion: Runner VM Region
   machines: Machines
   machine: Machine

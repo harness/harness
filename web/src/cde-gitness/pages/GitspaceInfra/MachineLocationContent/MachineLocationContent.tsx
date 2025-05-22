@@ -6,6 +6,7 @@ import {
   HarnessDocTooltip,
   Layout,
   Table,
+  Tag,
   Text,
   useToaster
 } from '@harnessio/uicore'
@@ -48,7 +49,7 @@ function MachineLocationContent({
   const { showError, showSuccess } = useToaster()
   const bpTableProps = { bordered: false, condensed: true, striped: true }
 
-  const { data: gatewayResponse } = useListGateways({
+  const { data: gatewayResponse, loading: gatewayAPILoading } = useListGateways({
     accountIdentifier: accountInfo?.identifier,
     infraprovider_identifier
   })
@@ -196,6 +197,8 @@ function MachineLocationContent({
     }
   ]
 
+  const groupHealthData = gatewayResponse?.find(gateway => gateway.region === locationData.region_name)
+
   return (
     <Container className={css.main}>
       <MachineModal
@@ -207,20 +210,23 @@ function MachineLocationContent({
         regionData={regionData}
       />
       <Layout.Vertical>
-        <Container margin={{ top: 'large', bottom: 'large' }}>
+        <Container
+          flex={{ justifyContent: 'flex-start', alignItems: 'center' }}
+          margin={{ top: 'large', bottom: 'large' }}>
           <Text
             color={Color.BLACK}
             icon="globe-network"
             iconProps={{ size: 24, margin: { right: 'small' } }}
-            font={{ size: 'medium' }}>
+            font={{ size: 'medium' }}
+            margin={{ right: 'medium' }}>
             {locationData.region_name}
           </Text>
+          {gatewayAPILoading && <Icon name="loading" />}
+          {groupHealthData?.overall_health === 'healthy' && <Tag intent="success">HEALTHY</Tag>}
+          {groupHealthData?.overall_health === 'unhealthy' && <Tag intent="danger">UNHEALTHY</Tag>}
         </Container>
 
-        <MachineDetailCard
-          locationData={locationData}
-          groupHealthData={gatewayResponse?.find(gateway => gateway.region === locationData.identifier)}
-        />
+        <MachineDetailCard loading={gatewayAPILoading} locationData={locationData} groupHealthData={groupHealthData} />
 
         <Container className={css.machineDetail}>
           <Layout.Horizontal spacing={'none'} className={css.machineHeader} flex={{ justifyContent: 'space-between' }}>

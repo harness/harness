@@ -1405,6 +1405,7 @@ export interface StringsMap {
   'cde.gitspaceInfraHome.diskTypeMessage': string
   'cde.gitspaceInfraHome.dnsManagedZone': string
   'cde.gitspaceInfraHome.domainMessage': string
+  'cde.gitspaceInfraHome.envoyHealth': string
   'cde.gitspaceInfraHome.gatewayGroupHealth': string
   'cde.gitspaceInfraHome.gatewayGroupName': string
   'cde.gitspaceInfraHome.gatewayInstanceName': string
