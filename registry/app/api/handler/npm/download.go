@@ -57,7 +57,7 @@ func (h *handler) DownloadPackageFile(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Disposition", "attachment; filename="+info.Filename)
 	if response.RedirectURL != "" {
-		http.Redirect(w, r, response.RedirectURL, http.StatusTemporaryRedirect)
+		http.Redirect(w, r, response.RedirectURL, http.StatusFound)
 		return
 	}
 	err := commons.ServeContent(w, r, response.Body, info.Filename, response.ReadCloser)
