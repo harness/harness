@@ -105,6 +105,7 @@ type Controller struct {
 	usageMetricStore    store.UsageMetricStore
 	repoIdentifierCheck check.RepoIdentifier
 	infraProviderSvc    *infraprovider.Service
+	favoriteStore       store.FavoriteStore
 }
 
 func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Provider,
@@ -119,7 +120,7 @@ func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Pro
 	gitspaceSvc *gitspace.Service, labelSvc *label.Service,
 	instrumentation instrument.Service, executionStore store.ExecutionStore,
 	rulesSvc *rules.Service, usageMetricStore store.UsageMetricStore, repoIdentifierCheck check.RepoIdentifier,
-	infraProviderSvc *infraprovider.Service,
+	infraProviderSvc *infraprovider.Service, favoriteStore store.FavoriteStore,
 ) *Controller {
 	return &Controller{
 		nestedSpacesEnabled: config.NestedSpacesEnabled,
@@ -153,6 +154,7 @@ func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Pro
 		usageMetricStore:    usageMetricStore,
 		repoIdentifierCheck: repoIdentifierCheck,
 		infraProviderSvc:    infraProviderSvc,
+		favoriteStore:       favoriteStore,
 	}
 }
 

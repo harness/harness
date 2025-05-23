@@ -49,27 +49,30 @@ func (c *Controller) ListRepositories(
 		return nil, 0, err
 	}
 
-	return c.ListRepositoriesNoAuth(ctx, space.ID, filter)
+	return c.ListRepositoriesNoAuth(ctx, session.Principal.ID, space.ID, filter)
 }
 
 // ListRepositoriesNoAuth list repositories WITHOUT checking for PermissionRepoView.
 func (c *Controller) ListRepositoriesNoAuth(
 	ctx context.Context,
+	principalID int64,
 	spaceID int64,
 	filter *types.RepoFilter,
 ) ([]*repoCtrl.RepositoryOutput, int64, error) {
-	var repos []*types.Repository
-	var count int64
+	var (
+		repos []*types.Repository
+		count int64
+	)
 
 	err := c.tx.WithTx(ctx, func(ctx context.Context) (err error) {
 		count, err = c.repoStore.Count(ctx, spaceID, filter)
 		if err != nil {
-			return fmt.Errorf("failed to count child repos: %w", err)
+			return fmt.Errorf("failed to count child repos for space %d: %w", spaceID, err)
 		}
 
 		repos, err = c.repoStore.List(ctx, spaceID, filter)
 		if err != nil {
-			return fmt.Errorf("failed to list child repos: %w", err)
+			return fmt.Errorf("failed to list child repos for space %d: %w", spaceID, err)
 		}
 
 		return nil
@@ -78,7 +81,22 @@ func (c *Controller) ListRepositoriesNoAuth(
 		return nil, 0, err
 	}
 
-	reposOut := []*repoCtrl.RepositoryOutput{}
+	if len(repos) == 0 {
+		return []*repoCtrl.RepositoryOutput{}, 0, nil
+	}
+
+	// Get repo IDs
+	repoIDs := make([]int64, len(repos))
+	for i, repo := range repos {
+		repoIDs[i] = repo.ID
+	}
+	// Get favorites
+	favoritesMap, err := c.favoriteStore.Map(ctx, principalID, enum.ResourceTypeRepo, repoIDs)
+	if err != nil {
+		return nil, 0, fmt.Errorf("fetch favorite repos for principal %d failed: %w", principalID, err)
+	}
+
+	reposOut := make([]*repoCtrl.RepositoryOutput, 0, len(repos))
 	for _, repo := range repos {
 		// backfill URLs
 		repo.GitURL = c.urlProvider.GenerateGITCloneURL(ctx, repo.Path)
@@ -88,6 +106,7 @@ func (c *Controller) ListRepositoriesNoAuth(
 		if err != nil {
 			return nil, 0, fmt.Errorf("failed to get repo %q output: %w", repo.Path, err)
 		}
+		repoOut.IsFavorite = favoritesMap[repo.ID]
 
 		reposOut = append(reposOut, repoOut)
 	}

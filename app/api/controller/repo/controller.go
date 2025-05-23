@@ -56,9 +56,10 @@ var errPublicRepoCreationDisabled = usererror.BadRequest("Public repository crea
 
 type RepositoryOutput struct {
 	types.Repository
-	IsPublic  bool `json:"is_public" yaml:"is_public"`
-	Importing bool `json:"importing" yaml:"-"`
-	Archived  bool `json:"archived" yaml:"-"`
+	IsPublic   bool `json:"is_public" yaml:"is_public"`
+	Importing  bool `json:"importing" yaml:"-"`
+	Archived   bool `json:"archived" yaml:"-"`
+	IsFavorite bool `json:"is_favorite" yaml:"is_favorite"`
 }
 
 // TODO [CODE-1363]: remove after identifier migration.
