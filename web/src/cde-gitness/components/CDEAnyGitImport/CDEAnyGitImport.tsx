@@ -125,7 +125,7 @@ export const CDEAnyGitImport = () => {
 
   const [repoCheckState, setRepoCheckState] = useState<RepoCheckStatus | undefined>()
   const [repoOptions, setRepoOptions] = useState<TypesRepoResponse[] | null | undefined>(
-    repoData?.repositories || scmrepos?.data?.gitRepositoryResponseList
+    isOnPremSCM ? scmrepos?.data?.gitRepositoryResponseList : repoData?.repositories
   )
 
   useEffect(() => {
@@ -142,7 +142,7 @@ export const CDEAnyGitImport = () => {
       !isEqual(repoOptions, repoData?.repositories) ||
       !isEqual(repoOptions, scmrepos?.data?.gitRepositoryResponseList)
     ) {
-      setRepoOptions(repoData?.repositories || scmrepos?.data?.gitRepositoryResponseList)
+      setRepoOptions(isOnPremSCM ? scmrepos?.data?.gitRepositoryResponseList : repoData?.repositories)
     }
   }, [repoOptions, repoData?.repositories, scmrepos])
 

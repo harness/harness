@@ -119,8 +119,8 @@ const InfraDetails = () => {
                 const region_configs: Unknown = {}
                 regionData?.forEach((region: regionProp) => {
                   const { location, defaultSubnet, proxySubnet, domain: regionDomain } = region
-                  const regionKey = location?.replace(/-/g, '')
-                  region_configs[regionKey] = {
+                  // const regionKey = location?.replace(/-/g, '')
+                  region_configs[location] = {
                     region_name: location,
                     default_subnet_ip_range: defaultSubnet,
                     proxy_subnet_ip_range: proxySubnet,

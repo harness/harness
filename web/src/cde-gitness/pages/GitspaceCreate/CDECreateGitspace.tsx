@@ -96,7 +96,7 @@ export const CDECreateGitspace = () => {
   const [repoURLviaQueryParam, setrepoURLviaQueryParam] = useState<RepoQueryParams>({ ...repoQueryParams })
 
   const { data: OauthSCMs } = useGetUserSourceCodeManagers({
-    queryParams: { accountIdentifier, userIdentifier: currentUser?.uid || '_QYNE3g7Rhiq-MkVN0G0Bg' }
+    queryParams: { accountIdentifier, userIdentifier: currentUser?.uid }
   })
 
   useEffect(() => {
