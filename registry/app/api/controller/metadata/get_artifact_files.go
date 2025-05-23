@@ -105,7 +105,7 @@ func (c *APIController) GetArtifactFiles(
 	if err != nil {
 		return failedToFetchFilesResponse(err, art)
 	}
-	filePathPattern := filePathPrefix + "%"
+	filePathPattern := filePathPrefix + "/%"
 	fileMetadataList, err := c.fileManager.GetFilesMetadata(ctx, filePathPattern, img.RegistryID,
 		reqInfo.sortByField, reqInfo.sortByOrder, reqInfo.limit, reqInfo.offset, reqInfo.searchTerm)
 	if err != nil {

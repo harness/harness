@@ -215,7 +215,7 @@ func GetAllArtifactFilesResponse(
 	setupDetailsAuthHeaderPrefix string,
 ) *artifactapi.FileDetailResponseJSONResponse {
 	var fileMetadataList []artifactapi.FileDetail
-	if files == nil {
+	if files == nil || len(*files) == 0 {
 		fileMetadataList = make([]artifactapi.FileDetail, 0)
 	} else {
 		fileMetadataList = GetArtifactFilesMetadata(files, registryURL, artifactName,
