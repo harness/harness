@@ -86,6 +86,7 @@ func ProvideController(
 	rulesSvc *rules.Service,
 	sseStreamer sse.Streamer,
 	lfsCtrl *lfs.Controller,
+	favoriteStore store.FavoriteStore,
 ) *Controller {
 	return NewController(config, tx, urlProvider,
 		authorizer,
@@ -94,7 +95,7 @@ func ProvideController(
 		principalInfoCache, protectionManager, rpcClient, spaceFinder, repoFinder, importer,
 		codeOwners, repoReporter, indexer, limiter, locker, auditService, mtxManager, identifierCheck,
 		repoChecks, publicAccess, labelSvc, instrumentation, userGroupStore, userGroupService,
-		rulesSvc, sseStreamer, lfsCtrl,
+		rulesSvc, sseStreamer, lfsCtrl, favoriteStore,
 	)
 }
 

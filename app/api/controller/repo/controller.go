@@ -113,6 +113,7 @@ type Controller struct {
 	rulesSvc           *rules.Service
 	sseStreamer        sse.Streamer
 	lfsCtrl            *lfs.Controller
+	favoriteStore      store.FavoriteStore
 }
 
 func NewController(
@@ -152,6 +153,7 @@ func NewController(
 	rulesSvc *rules.Service,
 	sseStreamer sse.Streamer,
 	lfsCtrl *lfs.Controller,
+	favoriteStore store.FavoriteStore,
 ) *Controller {
 	return &Controller{
 		defaultBranch:      config.Git.DefaultBranch,
@@ -190,6 +192,7 @@ func NewController(
 		rulesSvc:           rulesSvc,
 		sseStreamer:        sseStreamer,
 		lfsCtrl:            lfsCtrl,
+		favoriteStore:      favoriteStore,
 	}
 }
 

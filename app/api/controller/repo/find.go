@@ -44,5 +44,16 @@ func (c *Controller) Find(ctx context.Context, session *auth.Session, repoRef st
 	repo.GitURL = c.urlProvider.GenerateGITCloneURL(ctx, repo.Path)
 	repo.GitSSHURL = c.urlProvider.GenerateGITCloneSSHURL(ctx, repo.Path)
 
-	return GetRepoOutput(ctx, c.publicAccess, repo)
+	repoOut, err := GetRepoOutput(ctx, c.publicAccess, repo)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get repo output for repo %q: %w", repo.Path, err)
+	}
+
+	favoritesMap, err := c.favoriteStore.Map(ctx, session.Principal.ID, enum.ResourceTypeRepo, []int64{repo.ID})
+	if err != nil {
+		return nil, fmt.Errorf("failed to check if repo %q is marked as favorite: %w", repo.Path, err)
+	}
+	repoOut.IsFavorite = favoritesMap[repo.ID]
+
+	return repoOut, nil
 }
