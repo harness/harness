@@ -806,6 +806,12 @@ func setupUser(r chi.Router, userCtrl *user.Controller) {
 			r.Delete(fmt.Sprintf("/{%s}", request.PathParamPublicKeyIdentifier),
 				handleruser.HandleDeletePublicKey(userCtrl))
 		})
+
+		// Favorites
+		r.Route("/favorite", func(r chi.Router) {
+			r.Post("/", handleruser.HandleCreateFavorite(userCtrl))
+			r.Delete("/", handleruser.HandleDeleteFavorite(userCtrl))
+		})
 	})
 }
 

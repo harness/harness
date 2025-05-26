@@ -19,6 +19,7 @@ import (
 
 	"github.com/harness/gitness/app/auth/authz"
 	userevents "github.com/harness/gitness/app/events/user"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -37,6 +38,8 @@ type Controller struct {
 	membershipStore   store.MembershipStore
 	publicKeyStore    store.PublicKeyStore
 	eventReporter     *userevents.Reporter
+	repoFinder        refcache.RepoFinder
+	favoriteStore     store.FavoriteStore
 }
 
 func NewController(
@@ -48,6 +51,8 @@ func NewController(
 	membershipStore store.MembershipStore,
 	publicKeyStore store.PublicKeyStore,
 	eventReporter *userevents.Reporter,
+	repoFinder refcache.RepoFinder,
+	favoriteStore store.FavoriteStore,
 ) *Controller {
 	return &Controller{
 		tx:                tx,
@@ -58,6 +63,8 @@ func NewController(
 		membershipStore:   membershipStore,
 		publicKeyStore:    publicKeyStore,
 		eventReporter:     eventReporter,
+		repoFinder:        repoFinder,
+		favoriteStore:     favoriteStore,
 	}
 }
 

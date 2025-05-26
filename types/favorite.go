@@ -17,7 +17,6 @@ package types
 import "github.com/harness/gitness/types/enum"
 
 type FavoriteResource struct {
-	ID          int64             `json:"resource_id"`
-	Type        enum.ResourceType `json:"resource_type"`
-	PrincipalID int64
+	ID   int64             `json:"resource_id"`
+	Type enum.ResourceType `json:"resource_type"`
 }
