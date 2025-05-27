@@ -58,12 +58,7 @@ func (c *Service) createMissingResources(
 		resource := &resources[idx]
 		resource.InfraProviderConfigID = configID
 		resource.SpaceID = spaceID
-		if resource.CPU == nil {
-			resource.CPU = &emptyStr
-		}
-		if resource.Memory == nil {
-			resource.Memory = &emptyStr
-		}
+
 		if resource.Network == nil {
 			resource.Network = &emptyStr
 		}
@@ -73,6 +68,11 @@ func (c *Service) createMissingResources(
 			return fmt.Errorf("creating missing infra resources: %w", err)
 		}
 		resource.Metadata = updatedMetadata
+
+		cpuStr := getMetadataVal(updatedMetadata, "cpu")
+		memoryStr := getMetadataVal(updatedMetadata, "memory")
+		resource.CPU = &cpuStr
+		resource.Memory = &memoryStr
 
 		if err := c.validateResource(ctx, resource); err != nil {
 			return err
@@ -153,4 +153,11 @@ func toMetadata(params []types.InfraProviderParameter) map[string]string {
 	}
 
 	return metadata
+}
+
+func getMetadataVal(metadata map[string]string, key string) string {
+	if val, ok := metadata[key]; ok {
+		return val
+	}
+	return ""
 }
