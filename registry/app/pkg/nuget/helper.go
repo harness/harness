@@ -107,7 +107,7 @@ func getPackageDownloadURL(baseURL, id, version string) string {
 	return fmt.Sprintf("%s/package/%s/%s/%s.%s.nupkg", baseURL, id, version, id, version)
 }
 
-// GetPackageMetadataURL builds the package metadata url
+// GetPackageMetadataURL builds the package metadata url.
 func getPackageMetadataURL(baseURL, id, version string) string {
 	return fmt.Sprintf("%s/Packages(Id='%s',Version='%s')", baseURL, id, version)
 }
@@ -125,7 +125,6 @@ func getInnerXMLField(baseURL, id, version string) string {
                                <link rel="edit" href="%s"/>`,
 		packageMetadataURL, packageDownloadURL,
 		packageMetadataURL, packageMetadataURL)
-
 }
 
 func createRegistrationIndexResponse(baseURL string, info nuget.ArtifactInfo, artifacts *[]types.Artifact) (
@@ -250,22 +249,23 @@ func createFeedEntryResponse(baseURL string, info nuget.ArtifactInfo, artifact *
 		Author:  metadata.PackageMetadata.Authors,
 		Content: content,
 		Properties: &nuget.FeedEntryProperties{
-			Id:                       info.Image,
-			Version:                  artifact.Version,
-			NormalizedVersion:        artifact.Version,
-			Authors:                  metadata.PackageMetadata.Authors,
-			Dependencies:             buildDependencyString(metadata),
-			Description:              metadata.PackageMetadata.Description,
-			VersionDownloadCount:     nuget.TypedValue[int64]{Type: "Edm.Int64", Value: 0}, //todo: fix this download count
-			DownloadCount:            nuget.TypedValue[int64]{Type: "Edm.Int64", Value: 0},
-			PackageSize:              nuget.TypedValue[int64]{Type: "Edm.Int64", Value: metadata.Size},
-			Created:                  createdValue,
-			LastUpdated:              createdValue,
-			Published:                createdValue,
-			ProjectURL:               metadata.PackageMetadata.ProjectURL,
-			ReleaseNotes:             metadata.PackageMetadata.ReleaseNotes,
-			RequireLicenseAcceptance: nuget.TypedValue[bool]{Type: "Edm.Boolean", Value: metadata.PackageMetadata.RequireLicenseAcceptance},
-			Title:                    info.Image,
+			ID:                   info.Image,
+			Version:              artifact.Version,
+			NormalizedVersion:    artifact.Version,
+			Authors:              metadata.PackageMetadata.Authors,
+			Dependencies:         buildDependencyString(metadata),
+			Description:          metadata.PackageMetadata.Description,
+			VersionDownloadCount: nuget.TypedValue[int64]{Type: "Edm.Int64", Value: 0}, //todo: fix this download count
+			DownloadCount:        nuget.TypedValue[int64]{Type: "Edm.Int64", Value: 0},
+			PackageSize:          nuget.TypedValue[int64]{Type: "Edm.Int64", Value: metadata.Size},
+			Created:              createdValue,
+			LastUpdated:          createdValue,
+			Published:            createdValue,
+			ProjectURL:           metadata.PackageMetadata.ProjectURL,
+			ReleaseNotes:         metadata.PackageMetadata.ReleaseNotes,
+			RequireLicenseAcceptance: nuget.TypedValue[bool]{Type: "Edm.Boolean",
+				Value: metadata.PackageMetadata.RequireLicenseAcceptance},
+			Title: info.Image,
 		},
 	}, nil
 }

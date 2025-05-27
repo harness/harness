@@ -27,7 +27,8 @@ import (
 )
 
 type Controller interface {
-	UploadPackage(ctx context.Context, info nugettype.ArtifactInfo, fileReader io.ReadCloser, fileBundleType nuget.FileBundleType) *PutArtifactResponse
+	UploadPackage(ctx context.Context, info nugettype.ArtifactInfo, fileReader io.ReadCloser,
+		fileBundleType nuget.FileBundleType) *PutArtifactResponse
 
 	DownloadPackage(ctx context.Context, info nugettype.ArtifactInfo) *GetArtifactResponse
 

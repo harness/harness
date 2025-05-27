@@ -50,5 +50,4 @@ func (h *handler) ListPackageVersionV2(w http.ResponseWriter, r *http.Request) {
 		h.HandleErrors(r.Context(), []error{err}, w)
 		return
 	}
-
 }

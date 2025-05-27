@@ -169,7 +169,7 @@ func (r *Reader) Next() (*zip.FileHeader, error) {
 	if f.Flags&0x8 != 0 { // If has dataDescriptor
 		crc.Reader = dcomp(&descriptorReader{br: r.br, fileHeader: f})
 	} else {
-		//nolint: gosec
+		//nolint: gosec,staticcheck
 		crc.Reader = dcomp(io.LimitReader(r.br, int64(f.CompressedSize)))
 		crc.crc = &f.CRC32
 	}

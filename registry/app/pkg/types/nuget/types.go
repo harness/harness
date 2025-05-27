@@ -69,6 +69,7 @@ type Resource struct {
 
 type AtomTitle struct {
 	Type string `xml:"type,attr"`
+	//nolint: tagliatelle
 	Text string `xml:",chardata"`
 }
 
@@ -143,17 +144,18 @@ type RegistrationLeafResponse struct {
 
 // https://github.com/NuGet/NuGet.Client/blob/dev/src/NuGet.Core/NuGet.Protocol/LegacyFeed/V2FeedQueryBuilder.cs
 type FeedEntryResponse struct {
-	XMLName         xml.Name             `xml:"entry"`
-	Xmlns           string               `xml:"xmlns,attr,omitempty"`
-	XmlnsD          string               `xml:"xmlns:d,attr,omitempty"`
-	XmlnsM          string               `xml:"xmlns:m,attr,omitempty"`
-	Base            string               `xml:"xml:base,attr,omitempty"`
-	ID              string               `xml:"id,omitempty"`
-	Category        FeedEntryCategory    `xml:"category"`
-	Title           TypedValue[string]   `xml:"title"`
-	Updated         time.Time            `xml:"updated"`
-	Author          string               `xml:"author>name"`
-	Summary         string               `xml:"summary"`
+	XMLName  xml.Name           `xml:"entry"`
+	Xmlns    string             `xml:"xmlns,attr,omitempty"`
+	XmlnsD   string             `xml:"xmlns:d,attr,omitempty"`
+	XmlnsM   string             `xml:"xmlns:m,attr,omitempty"`
+	Base     string             `xml:"xml:base,attr,omitempty"`
+	ID       string             `xml:"id,omitempty"`
+	Category FeedEntryCategory  `xml:"category"`
+	Title    TypedValue[string] `xml:"title"`
+	Updated  time.Time          `xml:"updated"`
+	Author   string             `xml:"author>name"`
+	Summary  string             `xml:"summary"`
+	//nolint: tagliatelle
 	Content         string               `xml:",innerxml"`
 	Properties      *FeedEntryProperties `xml:"m:properties"`
 	DownloadContent *FeedEntryContent    `xml:"content,omitempty"`
@@ -189,12 +191,13 @@ type FeedEntryLink struct {
 }
 
 type TypedValue[T any] struct {
-	Type  string `xml:"m:type,attr,omitempty"`
-	Value T      `xml:",chardata"`
+	Type string `xml:"m:type,attr,omitempty"`
+	//nolint: tagliatelle
+	Value T `xml:",chardata"`
 }
 
 type FeedEntryProperties struct {
-	Id                       string                `xml:"d:Id"`
+	ID                       string                `xml:"d:Id"`
 	Version                  string                `xml:"d:Version"`
 	NormalizedVersion        string                `xml:"d:NormalizedVersion"`
 	Authors                  string                `xml:"d:Authors"`
