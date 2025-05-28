@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
   Container,
   PageBody,
@@ -33,7 +33,7 @@ import { useGet } from 'restful-react'
 import type { CellProps, Column } from 'react-table'
 import { Case, Match, Render, Truthy } from 'react-jsx-match'
 import { defaultTo, isEmpty, noop } from 'lodash-es'
-import { PullRequestFilterOption, PullRequestReviewFilterOption, PullRequestState, SpacePRTabs } from 'utils/GitUtils'
+import { PullRequestState } from 'utils/GitUtils'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
 import {
@@ -44,12 +44,8 @@ import {
   ColorName,
   LabelFilterObj,
   LabelFilterType,
-  ScopeLevelEnum,
   PageAction
 } from 'utils/Utils'
-import { usePageIndex } from 'hooks/usePageIndex'
-import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
-import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
 import { useQueryParams } from 'hooks/useQueryParams'
 import type { TypesLabelPullReqAssignmentInfo, TypesPrincipalInfo, TypesPullReqRepo } from 'services/code'
 import { PrevNextPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
@@ -61,130 +57,33 @@ import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { TimePopoverWithLocal } from 'utils/timePopoverLocal/TimePopoverWithLocal'
 import { Label } from 'components/Label/Label'
 import { getConfig } from 'services/config'
+import { usePullRequestsData } from 'hooks/usePullRequestsData'
+import usePRFiltersContext from 'hooks/usePRFiltersContext'
 import { SpacePullRequestsContentHeader } from './PullRequestsContentHeader/SpacePullRequestsContentHeader'
 import css from './PullRequests.module.scss'
 
-interface SpacePullRequestsProps {
-  activeTab: SpacePRTabs
-  includeSubspaces: ScopeLevelEnum
-  setIncludeSubspaces: (sub: ScopeLevelEnum) => void
-}
-
-export function SpacePullRequestsListing({ activeTab, includeSubspaces, setIncludeSubspaces }: SpacePullRequestsProps) {
+export function SpacePullRequestsListing() {
   const { getString } = useStrings()
-  const { routes, routingId, currentUser } = useAppContext()
-  const [searchTerm, setSearchTerm] = useState<string | undefined>()
+  const { routes, routingId } = useAppContext()
   const browserParams = useQueryParams<PageBrowserProps>()
-  const [filter, setFilter] = useState(browserParams?.state || (PullRequestFilterOption.OPEN as string))
-  const [reviewFilter, setReviewFilter] = useState(
-    browserParams?.review || (PullRequestReviewFilterOption.PENDING as string)
-  )
-  const [authorFilter, setAuthorFilter] = useState<string>(browserParams?.author ?? '')
-  const [labelFilter, setLabelFilter] = useState<LabelFilterObj[]>([])
   const [pageAction, setPageAction] = useState<{ action: PageAction; timestamp: number }>({
     action: PageAction.NEXT,
     timestamp: 1
   })
-  const space = useGetSpaceParam()
-  const { updateQueryParams, replaceQueryParams } = useUpdateQueryParams()
-  const pageInit = browserParams.page ? parseInt(browserParams.page) : 1
-  const [page, setPage] = usePageIndex(pageInit)
 
-  const { data: principal, refetch: refetchPrincipal } = useGet<TypesPrincipalInfo>({
+  const { data: principal } = useGet<TypesPrincipalInfo>({
     base: getConfig('code/api/v1'),
     path: `/principals/${browserParams.author}`,
     queryParams: {
       accountIdentifier: routingId
-    },
-    lazy: true
+    }
   })
-  useEffect(() => {
-    const params = {
-      ...browserParams,
-      ...(Boolean(authorFilter) && { author: authorFilter }),
-      // ...(page >= 1 && { page: page.toString() }),
-      ...(filter && { state: filter }),
-      ...(reviewFilter && { review: reviewFilter }),
-      subspace: includeSubspaces.toString()
-    }
 
-    updateQueryParams(params, undefined, true)
+  const { state, setPage, setLabelFilter } = usePRFiltersContext()
 
-    if (page <= 1) {
-      const updateParams = { ...params }
-      delete updateParams.page
-      replaceQueryParams(updateParams, undefined, true)
-    }
+  const { searchTerm, page, prStateFilter, authorFilter, labelFilter } = state
 
-    if (!authorFilter && browserParams.author) {
-      const paramList = { ...params }
-      delete paramList.author
-      replaceQueryParams(paramList, undefined, true)
-    }
-
-    if (activeTab === SpacePRTabs.CREATED || !reviewFilter) {
-      const paramList = { ...params }
-      delete paramList.review
-      replaceQueryParams(paramList, undefined, true)
-    }
-
-    if (browserParams.author) {
-      refetchPrincipal()
-    }
-  }, [page, filter, reviewFilter, authorFilter, activeTab, includeSubspaces]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const [accountIdentifier, orgIdentifier, projectIdentifier] = space?.split('/') || []
-
-  const {
-    data,
-    error: prError,
-    loading: prLoading,
-    refetch: refetchPrs
-  } = useGet<TypesPullReqRepo[]>({
-    //add type
-    path: `/api/v1/pullreq`,
-    queryParams: {
-      accountIdentifier,
-      orgIdentifier,
-      projectIdentifier,
-      limit: String(LIST_FETCHING_LIMIT),
-      exclude_description: true,
-      page,
-      sort: filter == PullRequestFilterOption.MERGED ? 'merged' : 'number',
-      order: 'desc',
-      query: searchTerm,
-      include_subspaces: includeSubspaces === ScopeLevelEnum.ALL,
-      state: browserParams.state ? browserParams.state : filter == PullRequestFilterOption.ALL ? '' : filter,
-      ...(activeTab === SpacePRTabs.REVIEW_REQUESTED && {
-        reviewer_id: Number(currentUser.id),
-        review_decision: reviewFilter
-      }),
-      ...(activeTab === SpacePRTabs.CREATED && { created_by: Number(currentUser.id) }),
-      ...(authorFilter && activeTab === SpacePRTabs.REVIEW_REQUESTED && { created_by: Number(authorFilter) }),
-
-      ...(labelFilter.filter(({ type, valueId }) => type === 'label' || valueId === -1).length && {
-        label_id: labelFilter
-          .filter(({ type, valueId }) => type === 'label' || valueId === -1)
-          .map(({ labelId }) => labelId)
-      }),
-      ...(labelFilter.filter(({ type }) => type === 'value').length && {
-        value_id: labelFilter
-          .filter(({ type, valueId }) => type === 'value' && valueId !== -1)
-          .map(({ valueId }) => valueId)
-      }),
-
-      ...(page > 1
-        ? pageAction?.action === PageAction.NEXT
-          ? { updated_lt: pageAction.timestamp }
-          : { updated_gt: pageAction.timestamp }
-        : {})
-    },
-    queryParamStringifyOptions: {
-      arrayFormat: 'repeat'
-    },
-    debounce: 500,
-    lazy: !currentUser
-  })
+  const { data, error: prError, loading: prLoading, refetch: refetchPrs } = usePullRequestsData(pageAction)
 
   const handleLabelClick = (labelFilterArr: LabelFilterObj[], clickedLabel: TypesLabelPullReqAssignmentInfo) => {
     // if not present - add :
@@ -419,38 +318,8 @@ export function SpacePullRequestsListing({ activeTab, includeSubspaces, setInclu
         <Render when={data}>
           <Layout.Vertical>
             <SpacePullRequestsContentHeader
-              activeTab={activeTab}
               loading={prLoading && searchTerm !== undefined}
-              activePullRequestFilterOption={filter}
-              activePullRequestReviewFilterOption={reviewFilter}
-              onPullRequestFilterChanged={_filter => {
-                setFilter(_filter)
-                setPage(1)
-              }}
-              onPullRequestReviewFilterChanged={_reviewFilter => {
-                setReviewFilter(_reviewFilter)
-                setPage(1)
-              }}
-              onSearchTermChanged={value => {
-                setSearchTerm(value)
-                setPage(1)
-              }}
               activePullRequestAuthorObj={principal}
-              activePullRequestAuthorFilterOption={authorFilter}
-              activePullRequestLabelFilterOption={labelFilter}
-              activePullRequestIncludeSubSpaceOption={includeSubspaces}
-              onPullRequestAuthorFilterChanged={_authorFilter => {
-                setAuthorFilter(_authorFilter)
-                setPage(1)
-              }}
-              onPullRequestLabelFilterChanged={_labelFilter => {
-                setLabelFilter(_labelFilter)
-                setPage(1)
-              }}
-              onPullRequestIncludeSubSpaceOptionChanged={_includeSubspaces => {
-                setIncludeSubspaces(_includeSubspaces as ScopeLevelEnum)
-                setPage(1)
-              }}
             />
             <Container padding="xlarge">
               <Container padding={{ top: 'medium', bottom: 'large' }}>
@@ -488,7 +357,6 @@ export function SpacePullRequestsListing({ activeTab, includeSubspaces, setInclu
                               }
                             })
                             setLabelFilter(updateFilterObjArr)
-                            setPage(1)
                           } else if (label.type === 'label') {
                             const updateFilterObjArr = labelFilter.filter(filterObj => {
                               if (!(filterObj.labelId === label.labelId && filterObj.type === 'label')) {
@@ -496,7 +364,6 @@ export function SpacePullRequestsListing({ activeTab, includeSubspaces, setInclu
                               }
                             })
                             setLabelFilter(updateFilterObjArr)
-                            setPage(1)
                           }
                         }}
                         disableRemoveBtnTooltip={true}
@@ -519,7 +386,7 @@ export function SpacePullRequestsListing({ activeTab, includeSubspaces, setInclu
                       onPrev={
                         page > 1 && data
                           ? () => {
-                              setPage(pre => pre - 1)
+                              setPage(page - 1)
                               setPageAction({ action: PageAction.PREV, timestamp: data[0].pull_request?.updated ?? 0 })
                             }
                           : false
@@ -527,7 +394,7 @@ export function SpacePullRequestsListing({ activeTab, includeSubspaces, setInclu
                       onNext={
                         data && data?.length === LIST_FETCHING_LIMIT
                           ? () => {
-                              setPage(pre => pre + 1)
+                              setPage(page + 1)
                               setPageAction({
                                 action: PageAction.NEXT,
                                 timestamp: data.slice(-1)[0]?.pull_request?.updated ?? 0
@@ -541,7 +408,7 @@ export function SpacePullRequestsListing({ activeTab, includeSubspaces, setInclu
                 <Case val={0}>
                   <NoResultCard
                     forSearch={!!searchTerm}
-                    forFilter={!isEmpty(labelFilter) || !isEmpty(authorFilter) || !isEmpty(filter)}
+                    forFilter={!isEmpty(labelFilter) || !isEmpty(authorFilter) || !isEmpty(prStateFilter)}
                     emptyFilterMessage={getString('pullRequestNotFoundforFilter')}
                     message={getString('pullRequestEmpty')}
                     buttonText={getString('newPullRequest')}

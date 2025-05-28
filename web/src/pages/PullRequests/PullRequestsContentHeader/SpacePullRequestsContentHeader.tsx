@@ -14,75 +14,57 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useMemo, useState } from 'react'
-import { Container, Layout, FlexExpander, DropDown, SelectOption } from '@harnessio/uicore'
+import React, { useCallback, useMemo } from 'react'
+import {
+  Container,
+  Layout,
+  FlexExpander,
+  DropDown,
+  SelectOption,
+  MultiSelectDropDown,
+  MultiSelectOption
+} from '@harnessio/uicore'
 import { Render } from 'react-jsx-match'
 import { useStrings } from 'framework/strings'
-import { PullRequestFilterOption, PullRequestReviewFilterOption, SpacePRTabs } from 'utils/GitUtils'
+import { DashboardFilter, PullRequestFilterOption, PullRequestReviewFilterOption } from 'utils/GitUtils'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import type { TypesPrincipalInfo } from 'services/code'
 import { useAppContext } from 'AppContext'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
-import { ScopeLevelEnum, type LabelFilterObj, type PageBrowserProps, ScopeLevel } from 'utils/Utils'
-import { useQueryParams } from 'hooks/useQueryParams'
+import { ScopeLevelEnum, ScopeLevel } from 'utils/Utils'
 import { LabelFilter } from 'components/Label/LabelFilter/LabelFilter'
+import usePRFiltersContext from 'hooks/usePRFiltersContext'
+import ToggleTabsBtn from 'components/ToggleTabs/ToggleTabsBtn'
 import { PRAuthorFilter } from './PRAuthorFilter'
 import css from './PullRequestsContentHeader.module.scss'
 
 interface SpacePullRequestsContentHeaderProps {
-  activeTab: SpacePRTabs
   loading?: boolean
-  activePullRequestFilterOption?: string
-  activePullRequestReviewFilterOption?: string
-  activePullRequestAuthorFilterOption?: string
   activePullRequestAuthorObj?: TypesPrincipalInfo | null
-  activePullRequestLabelFilterOption?: LabelFilterObj[]
-  activePullRequestIncludeSubSpaceOption?: ScopeLevelEnum
-  onPullRequestFilterChanged: React.Dispatch<React.SetStateAction<string>>
-  onPullRequestReviewFilterChanged: React.Dispatch<React.SetStateAction<string>>
-  onPullRequestAuthorFilterChanged: (authorFilter: string) => void
-  onPullRequestLabelFilterChanged: (labelFilter: LabelFilterObj[]) => void
-  onSearchTermChanged: (searchTerm: string) => void
-  onPullRequestIncludeSubSpaceOptionChanged: React.Dispatch<React.SetStateAction<ScopeLevelEnum>>
 }
 
 export function SpacePullRequestsContentHeader({
-  activeTab,
   loading,
-  onPullRequestFilterChanged,
-  onPullRequestReviewFilterChanged,
-  onPullRequestAuthorFilterChanged,
-  onPullRequestLabelFilterChanged,
-  onPullRequestIncludeSubSpaceOptionChanged,
-  onSearchTermChanged,
-  activePullRequestFilterOption = PullRequestFilterOption.OPEN,
-  activePullRequestReviewFilterOption,
-  activePullRequestAuthorFilterOption,
-  activePullRequestLabelFilterOption,
-  activePullRequestAuthorObj,
-  activePullRequestIncludeSubSpaceOption
+  activePullRequestAuthorObj
 }: SpacePullRequestsContentHeaderProps) {
   const { getString } = useStrings()
-  const browserParams = useQueryParams<PageBrowserProps>()
-  const [filterOption, setFilterOption] = useState(activePullRequestFilterOption)
-  const [reviewFilterOption, setReviewFilterOption] = useState(activePullRequestReviewFilterOption)
-  const [labelFilterOption, setLabelFilterOption] = useState(activePullRequestLabelFilterOption)
-  const [searchTerm, setSearchTerm] = useState('')
+
+  const {
+    state,
+    setEncapFilter,
+    setPrStateFilterOption,
+    setSearchTerm,
+    setIncludeSubspaces,
+    setLabelFilter,
+    setReviewFilter,
+    setAuthorFilter
+  } = usePRFiltersContext()
+
+  const { searchTerm, prStateFilter, includeSubspaces, reviewFilter, authorFilter, labelFilter, encapFilter } = state
+
   const space = useGetSpaceParam()
   const { hooks } = useAppContext()
   const [accountIdentifier, orgIdentifier, projectIdentifier] = space?.split('/') || []
-
-  useEffect(() => {
-    setLabelFilterOption(activePullRequestLabelFilterOption)
-  }, [activePullRequestLabelFilterOption])
-
-  useEffect(() => {
-    setFilterOption(browserParams?.state as string)
-  }, [browserParams, activeTab])
-
-  useEffect(() => {
-    activeTab === SpacePRTabs.REVIEW_REQUESTED && setReviewFilterOption(activePullRequestReviewFilterOption)
-  }, [activePullRequestReviewFilterOption, activeTab])
 
   const items = useMemo(
     () => [
@@ -120,7 +102,7 @@ export function SpacePullRequestsContentHeader({
   ].filter(Boolean) as SelectOption[]
 
   const currentScopeLabel =
-    activePullRequestIncludeSubSpaceOption === ScopeLevelEnum.ALL
+    includeSubspaces === ScopeLevelEnum.ALL
       ? {
           label:
             accountIdentifier && !orgIdentifier
@@ -134,70 +116,106 @@ export function SpacePullRequestsContentHeader({
           value: ScopeLevelEnum.CURRENT
         }
 
-  const [scopeLabel, setScopeLabel] = useState<SelectOption>(currentScopeLabel ? currentScopeLabel : scopeOption[0])
+  const dashboardEncapFilters = [
+    { label: 'All', value: DashboardFilter.ALL },
+    { label: 'Created', value: DashboardFilter.CREATED },
+    { label: 'Review Requested', value: DashboardFilter.REVIEW_REQUESTED }
+  ]
+
+  const MemoizedPRAuthorFilter = useCallback(
+    () => (
+      <PRAuthorFilter
+        onPullRequestAuthorFilterChanged={setAuthorFilter}
+        activePullRequestAuthorFilterOption={authorFilter}
+        activePullRequestAuthorObj={activePullRequestAuthorObj}
+        bearerToken={bearerToken}
+      />
+    ),
+    [authorFilter, encapFilter]
+  )
+
+  const modifiedReviewFilterOptions = (reviewOps: string | undefined) => {
+    if (!reviewOps) {
+      return [] as MultiSelectOption[]
+    }
+    return reviewOps?.split('&').map(revOps => {
+      if (revOps === PullRequestReviewFilterOption.PENDING) {
+        return { label: getString('pending'), value: PullRequestReviewFilterOption.PENDING }
+      }
+      if (revOps === PullRequestReviewFilterOption.APPROVED) {
+        return { label: getString('approved'), value: PullRequestReviewFilterOption.APPROVED }
+      }
+      if (revOps === PullRequestReviewFilterOption.CHANGES_REQUESTED) {
+        return { label: getString('pr.changesRequested'), value: PullRequestReviewFilterOption.CHANGES_REQUESTED }
+      }
+    }) as MultiSelectOption[]
+  }
 
   return (
     <Container className={css.main} padding="xlarge">
-      <Layout.Horizontal spacing="medium">
-        <SearchInputWithSpinner
-          loading={loading}
-          spinnerPosition="right"
-          query={searchTerm}
-          setQuery={value => {
-            setSearchTerm(value)
-            onSearchTermChanged(value)
-          }}
-        />
-        <Render when={!projectIdentifier}>
-          <DropDown
-            placeholder={scopeLabel.label}
-            value={scopeLabel}
-            items={scopeOption}
-            onChange={e => {
-              onPullRequestIncludeSubSpaceOptionChanged(e.value as ScopeLevelEnum)
-              setScopeLabel(e)
+      <Layout.Vertical flex={{ alignItems: 'flex-start' }} spacing="medium">
+        <Layout.Horizontal spacing="medium">
+          <ToggleTabsBtn
+            currentTab={encapFilter}
+            tabsList={dashboardEncapFilters}
+            onTabChange={newTab => {
+              setEncapFilter(newTab as DashboardFilter)
             }}
           />
-        </Render>
-        <FlexExpander />
+        </Layout.Horizontal>
+        <Layout.Horizontal spacing="medium" style={{ width: '100%' }}>
+          <Render when={!projectIdentifier}>
+            <DropDown
+              placeholder={currentScopeLabel.label}
+              value={currentScopeLabel}
+              items={scopeOption}
+              onChange={e => {
+                setIncludeSubspaces(e.value as ScopeLevelEnum)
+              }}
+            />
+          </Render>
 
-        <LabelFilter
-          labelFilterOption={labelFilterOption}
-          setLabelFilterOption={setLabelFilterOption}
-          onPullRequestLabelFilterChanged={onPullRequestLabelFilterChanged}
-          bearerToken={bearerToken}
-          filterScope={ScopeLevel.SPACE}
-          spaceRef={space}
-        />
-        <Render when={activeTab === SpacePRTabs.REVIEW_REQUESTED}>
+          <MemoizedPRAuthorFilter />
+
           <DropDown
-            value={reviewFilterOption}
-            items={reviewItems}
+            value={prStateFilter}
+            items={items}
             onChange={({ value }) => {
-              setReviewFilterOption(value as string)
-              onPullRequestReviewFilterChanged(value as string)
+              setPrStateFilterOption(value as PullRequestFilterOption)
             }}
             popoverClassName={css.branchDropdown}
           />
-        </Render>
-        <Render when={activeTab !== SpacePRTabs.CREATED}>
-          <PRAuthorFilter
-            onPullRequestAuthorFilterChanged={onPullRequestAuthorFilterChanged}
-            activePullRequestAuthorFilterOption={activePullRequestAuthorFilterOption}
-            activePullRequestAuthorObj={activePullRequestAuthorObj}
+          <LabelFilter
+            labelFilterOption={labelFilter}
+            onPullRequestLabelFilterChanged={setLabelFilter}
             bearerToken={bearerToken}
+            filterScope={ScopeLevel.SPACE}
+            spaceRef={space}
           />
-        </Render>
-        <DropDown
-          value={filterOption}
-          items={items}
-          onChange={({ value }) => {
-            setFilterOption(value as string)
-            onPullRequestFilterChanged(value as string)
-          }}
-          popoverClassName={css.branchDropdown}
-        />
-      </Layout.Horizontal>
+
+          <MultiSelectDropDown
+            value={modifiedReviewFilterOptions(reviewFilter)}
+            items={reviewItems}
+            resetOnSelect
+            icon="time"
+            iconProps={{ size: 16 }}
+            placeholder={'Your Reviews'}
+            onChange={option => {
+              const optionString = option.length > 0 ? option.map(o => o.value).join('&') : ''
+              setReviewFilter(optionString)
+            }}
+            popoverClassName={css.branchDropdown}
+          />
+
+          <FlexExpander />
+          <SearchInputWithSpinner
+            loading={loading}
+            spinnerPosition="right"
+            query={searchTerm}
+            setQuery={setSearchTerm}
+          />
+        </Layout.Horizontal>
+      </Layout.Vertical>
     </Container>
   )
 }

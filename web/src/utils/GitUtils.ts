@@ -139,6 +139,12 @@ export enum SpacePRTabs {
   REVIEW_REQUESTED = 'review_requested'
 }
 
+export enum DashboardFilter {
+  ALL = 'all',
+  CREATED = 'created',
+  REVIEW_REQUESTED = 'review_requested'
+}
+
 export enum SpaceSettingsTab {
   general = '/',
   labels = 'labels'
@@ -217,6 +223,15 @@ export enum PullRequestState {
   CLOSED = 'closed'
 }
 
+export enum PullRequestFilterOption {
+  OPEN = 'open',
+  MERGED = 'merged',
+  CLOSED = 'closed',
+  DRAFT = 'draft',
+  YOURS = 'yours',
+  ALL = 'all'
+}
+
 export enum GitProviders {
   GITHUB = 'GitHub',
   GITHUB_ENTERPRISE = 'GitHub Enterprise',
@@ -232,14 +247,6 @@ export enum GitProviders {
 export enum ConvertPipelineLabel {
   CONVERT = 'convert',
   IGNORE = 'ignore'
-}
-
-export const PullRequestFilterOption = {
-  ...PullRequestState,
-  // REJECTED: 'rejected',
-  DRAFT: 'draft',
-  YOURS: 'yours',
-  ALL: 'all'
 }
 
 export const PullRequestReviewFilterOption = {

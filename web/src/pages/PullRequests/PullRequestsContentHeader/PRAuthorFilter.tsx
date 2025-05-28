@@ -39,7 +39,6 @@ export function PRAuthorFilter({
 }: PullRequestsContentHeaderProps) {
   const { getString } = useStrings()
   const [authorFilterOption, setAuthorFilterOption] = useState(activePullRequestAuthorFilterOption)
-
   const [query, setQuery] = useState<string>('')
   const [loadingAuthors, setLoadingAuthors] = useState<boolean>(false)
   const { currentUser, routingId } = useAppContext()
@@ -96,10 +95,10 @@ export function PRAuthorFilter({
         }
       )
 
-      const authors = [...fetchedAuthors]
+      const authors = Array.isArray(fetchedAuthors) ? [...fetchedAuthors] : []
       if (activePullRequestAuthorObj?.id) {
         // Only add activePullRequestAuthorObj if it exists and isn't already in the list
-        const isDuplicate = fetchedAuthors.some(author => author.id === activePullRequestAuthorObj.id)
+        const isDuplicate = fetchedAuthors?.some(author => author.id === activePullRequestAuthorObj.id)
 
         if (!isDuplicate) {
           authors.push(activePullRequestAuthorObj)

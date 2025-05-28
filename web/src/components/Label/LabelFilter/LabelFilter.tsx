@@ -51,7 +51,7 @@ import css from './LabelFilter.module.scss'
 
 interface LabelFilterProps {
   labelFilterOption?: LabelFilterObj[]
-  setLabelFilterOption: React.Dispatch<React.SetStateAction<LabelFilterObj[] | undefined>>
+  setLabelFilterOption?: React.Dispatch<React.SetStateAction<LabelFilterObj[] | undefined>>
   onPullRequestLabelFilterChanged: (labelFilter: LabelFilterObj[]) => void
   bearerToken: string
   spaceRef: string
@@ -229,7 +229,7 @@ export const LabelFilter = (props: LabelFilterProps) => {
       return filterObj
     })
     onPullRequestLabelFilterChanged([...updateFilterObjArr])
-    setLabelFilterOption([...updateFilterObjArr])
+    setLabelFilterOption?.([...updateFilterObjArr])
   }
 
   const removeValueFromFilter = (filterObjArr: LabelFilterObj[], currentObj: any) => {
@@ -239,7 +239,7 @@ export const LabelFilter = (props: LabelFilterProps) => {
       }
     })
     onPullRequestLabelFilterChanged(updateFilterObjArr)
-    setLabelFilterOption(updateFilterObjArr)
+    setLabelFilterOption?.(updateFilterObjArr)
   }
 
   const removeLabelFromFilter = (filterObjArr: LabelFilterObj[], currentObj: any) => {
@@ -249,7 +249,7 @@ export const LabelFilter = (props: LabelFilterProps) => {
       }
     })
     onPullRequestLabelFilterChanged(updateFilterObjArr)
-    setLabelFilterOption(updateFilterObjArr)
+    setLabelFilterOption?.(updateFilterObjArr)
   }
 
   return (
@@ -395,7 +395,7 @@ export const LabelFilter = (props: LabelFilterProps) => {
                             }
                           } else if (labelFilterOption) {
                             onPullRequestLabelFilterChanged([...labelFilterOption, anyValueObj])
-                            setLabelFilterOption([...labelFilterOption, anyValueObj])
+                            setLabelFilterOption?.([...labelFilterOption, anyValueObj])
                           }
 
                           handleClick(event)
@@ -469,7 +469,7 @@ export const LabelFilter = (props: LabelFilterProps) => {
                                 }
                               } else {
                                 onPullRequestLabelFilterChanged(updatedValueFilterOption)
-                                setLabelFilterOption(updatedValueFilterOption)
+                                setLabelFilterOption?.(updatedValueFilterOption)
                               }
 
                               handleClick(event)
@@ -542,7 +542,7 @@ export const LabelFilter = (props: LabelFilterProps) => {
                     onPullRequestLabelFilterChanged(
                       updatedLabelFilterOption ? [...updatedLabelFilterOption] : ([] as LabelFilterObj[])
                     )
-                    setLabelFilterOption(
+                    setLabelFilterOption?.(
                       updatedLabelFilterOption ? [...updatedLabelFilterOption] : ([] as LabelFilterObj[])
                     )
                   }

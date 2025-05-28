@@ -14,84 +14,25 @@
  * limitations under the License.
  */
 
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import cx from 'classnames'
-import { Container, Tabs, Page } from '@harnessio/uicore'
-import { omit } from 'lodash-es'
+import { Container, Page } from '@harnessio/uicore'
 import { useStrings } from 'framework/strings'
-import { PullRequestFilterOption, PullRequestReviewFilterOption, SpacePRTabs } from 'utils/GitUtils'
-import { PageBrowserProps, ScopeLevelEnum } from 'utils/Utils'
-import { useQueryParams } from 'hooks/useQueryParams'
-import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
 import { SpacePullRequestsListing } from 'pages/PullRequests/SpacePullRequestsListing'
+import { PRFilterProvider } from 'contexts/PRFiltersContext'
 import css from '../ManageSpace.module.scss'
 
 export default function SpacePullRequests() {
-  const browserParams = useQueryParams<PageBrowserProps>()
-  const { updateQueryParams, replaceQueryParams } = useUpdateQueryParams()
-  const [activeTab, setActiveTab] = useState<string>(browserParams.tab || SpacePRTabs.CREATED)
-  const [includeSubspaces, setIncludeSubspaces] = useState<ScopeLevelEnum>(
-    browserParams?.subspace || ScopeLevelEnum.CURRENT
-  )
   const { getString } = useStrings()
 
-  useEffect(() => {
-    const params = {
-      ...browserParams,
-      tab: browserParams.tab ?? SpacePRTabs.CREATED,
-      ...(!browserParams.state && { state: PullRequestFilterOption.OPEN })
-    }
-    updateQueryParams(params, undefined, true)
-  }, [browserParams])
-
-  const tabListArray = [
-    {
-      id: SpacePRTabs.CREATED,
-      title: getString('pr.myPRs'),
-      panel: (
-        <SpacePullRequestsListing
-          activeTab={SpacePRTabs.CREATED}
-          includeSubspaces={includeSubspaces}
-          setIncludeSubspaces={setIncludeSubspaces}
-        />
-      )
-    },
-    {
-      id: SpacePRTabs.REVIEW_REQUESTED,
-      title: getString('pr.reviewRequested'),
-      panel: (
-        <SpacePullRequestsListing
-          activeTab={SpacePRTabs.REVIEW_REQUESTED}
-          includeSubspaces={includeSubspaces}
-          setIncludeSubspaces={setIncludeSubspaces}
-        />
-      )
-    }
-  ]
   return (
     <Container className={css.main}>
       <Page.Header title={getString('pullRequests')} />
 
       <Container className={cx(css.main, css.tabsContainer)}>
-        <Tabs
-          id="SettingsTabs"
-          large={false}
-          defaultSelectedTabId={activeTab}
-          animate={false}
-          onChange={(id: string) => {
-            setActiveTab(id)
-            const params = {
-              ...browserParams,
-              tab: id
-            }
-            if (id === SpacePRTabs.CREATED) {
-              replaceQueryParams(omit(params, 'review'), undefined, true)
-            } else {
-              const updatedParams = { ...params, review: PullRequestReviewFilterOption.PENDING }
-              replaceQueryParams(updatedParams, undefined, true)
-            }
-          }}
-          tabList={tabListArray}></Tabs>
+        <PRFilterProvider>
+          <SpacePullRequestsListing />
+        </PRFilterProvider>
       </Container>
     </Container>
   )
