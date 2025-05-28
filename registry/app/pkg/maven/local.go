@@ -34,6 +34,8 @@ import (
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/store/database/dbtx"
+
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -92,17 +94,14 @@ func (r *LocalRegistry) FetchArtifact(ctx context.Context, info pkg.MavenArtifac
 	if err2 != nil {
 		return processError(err2)
 	}
-	if utils.IsSnapshotVersion(info) {
-		node, err := r.DBStore.NodeDao.FindByPathAndRegistryID(ctx, info.RegistryID, utils.AddLikeBeforeExtension(info))
-		if err != nil {
-			return processError(err)
+
+	if !(utils.IsMetadataFile(info.FileName) && info.Version == "") {
+		_, err2 = r.DBStore.ArtifactDao.GetByName(ctx, dbImage.ID, info.Version)
+		if err2 != nil {
+			log.Ctx(ctx).Error().Msgf("Failed to get artifact for image ID: %d, version: %s with error: %v",
+				dbImage.ID, info.Version, err2)
+			return processError(err2)
 		}
-		info.FileName = node.Name
-		filePath = utils.GetFilePath(info)
-	}
-	_, err2 = r.DBStore.ArtifactDao.GetByName(ctx, dbImage.ID, info.Version)
-	if err2 != nil {
-		return processError(err2)
 	}
 
 	fileInfo, err := r.fileManager.GetFileMetadata(ctx, filePath, info.RegistryID)

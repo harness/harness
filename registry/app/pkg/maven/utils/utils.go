@@ -69,7 +69,11 @@ var MainArtifactFileExtensions = []string{
 
 func GetFilePath(info pkg.MavenArtifactInfo) string {
 	groupIDPath := strings.ReplaceAll(info.GroupID, ".", "/")
-	return "/" + groupIDPath + "/" + info.ArtifactID + "/" + info.Version + "/" + info.FileName
+	path := "/" + groupIDPath + "/" + info.ArtifactID
+	if info.Version != "" {
+		path += "/" + info.Version
+	}
+	return path + "/" + info.FileName
 }
 
 func IsMainArtifactFile(info pkg.MavenArtifactInfo) bool {
