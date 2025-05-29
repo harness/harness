@@ -655,6 +655,7 @@ func SetupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 			fmt.Sprintf("/{%s}...{%s}", request.PathParamTargetBranch, request.PathParamSourceBranch),
 			handlerpullreq.HandleFindByBranches(pullreqCtrl),
 		)
+		r.Get("/candidates", handlerpullreq.HandlePRBranchCandidates(pullreqCtrl))
 
 		r.Route(fmt.Sprintf("/{%s}", request.PathParamPullReqNumber), func(r chi.Router) {
 			r.Get("/", handlerpullreq.HandleFind(pullreqCtrl))

@@ -15,6 +15,7 @@
 package services
 
 import (
+	"github.com/harness/gitness/app/services/branch"
 	"github.com/harness/gitness/app/services/cleanup"
 	"github.com/harness/gitness/app/services/gitspace"
 	"github.com/harness/gitness/app/services/gitspacedeleteevent"
@@ -56,6 +57,7 @@ type Services struct {
 	instrumentConsumer      instrument.Consumer
 	instrumentRepoCounter   *instrument.RepositoryCount
 	registryWebhooksService *registrywebhooks.Service
+	Branch                  *branch.Service
 }
 
 type GitspaceServices struct {
@@ -101,6 +103,7 @@ func ProvideServices(
 	instrumentConsumer instrument.Consumer,
 	instrumentRepoCounter *instrument.RepositoryCount,
 	registryWebhooksService *registrywebhooks.Service,
+	branchSvc *branch.Service,
 ) Services {
 	return Services{
 		Webhook:                 webhooksSvc,
@@ -118,5 +121,6 @@ func ProvideServices(
 		instrumentConsumer:      instrumentConsumer,
 		instrumentRepoCounter:   instrumentRepoCounter,
 		registryWebhooksService: registryWebhooksService,
+		Branch:                  branchSvc,
 	}
 }

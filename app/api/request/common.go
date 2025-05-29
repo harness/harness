@@ -99,13 +99,21 @@ func ParsePage(r *http.Request) int {
 }
 
 // ParseLimit extracts the limit parameter from the url.
+//
+//nolint:gosec
 func ParseLimit(r *http.Request) int {
+	return int(ParseLimitOrDefaultWithMax(r, PerPageDefault, PerPageMax))
+}
+
+// ParseLimitOrDefaultWithMax extracts the limit parameter from the url and defaults to deflt if not found.
+func ParseLimitOrDefaultWithMax(r *http.Request, deflt uint64, mx uint64) uint64 {
 	s := r.URL.Query().Get(QueryParamLimit)
-	i, _ := strconv.Atoi(s)
+	i, _ := strconv.ParseUint(s, 10, 64)
 	if i <= 0 {
-		i = PerPageDefault
-	} else if i > PerPageMax {
-		i = PerPageMax
+		i = deflt
+	}
+	if i > mx {
+		i = mx
 	}
 	return i
 }

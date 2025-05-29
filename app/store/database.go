@@ -1329,6 +1329,24 @@ type (
 		GetSizeInKBByRepoID(ctx context.Context, repoID int64) (int64, error)
 	}
 
+	// BranchStore defines operations on git branches.
+	BranchStore interface {
+		// FindBranchesWithoutPRs finds branches without pull requests for a repository
+		FindBranchesWithoutPRs(
+			ctx context.Context,
+			repoID int64,
+			principalID int64,
+			cutOffTime int64,
+			limit uint64,
+		) ([]types.BranchTable, error)
+
+		// Delete deletes a branch by repo ID and branch name.
+		Delete(ctx context.Context, repoID int64, name string) error
+
+		// Upsert creates a new branch or updates an existing one.
+		Upsert(ctx context.Context, repoID int64, branch *types.BranchTable) error
+	}
+
 	InfraProviderTemplateStore interface {
 		FindByIdentifier(ctx context.Context, spaceID int64, identifier string) (*types.InfraProviderTemplate, error)
 		Find(ctx context.Context, id int64) (*types.InfraProviderTemplate, error)

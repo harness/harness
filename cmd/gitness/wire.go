@@ -84,6 +84,7 @@ import (
 	"github.com/harness/gitness/app/router"
 	"github.com/harness/gitness/app/server"
 	"github.com/harness/gitness/app/services"
+	"github.com/harness/gitness/app/services/branch"
 	"github.com/harness/gitness/app/services/cleanup"
 	"github.com/harness/gitness/app/services/codecomments"
 	"github.com/harness/gitness/app/services/codeowners"
@@ -296,6 +297,8 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		gitspacedeleteeventservice.WireSet,
 		registryindex.WireSet,
 		rpmutils.WireSet,
+		cliserver.ProvideBranchConfig,
+		branch.WireSet,
 	)
 	return &cliserver.System{}, nil
 }

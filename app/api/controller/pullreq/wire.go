@@ -67,6 +67,7 @@ func ProvideController(
 	labelSvc *label.Service,
 	instrumentation instrument.Service,
 	userGroupService usergroup.SearchService,
+	branchStore store.BranchStore,
 ) *Controller {
 	return NewController(tx,
 		urlProvider,
@@ -99,5 +100,6 @@ func ProvideController(
 		labelSvc,
 		instrumentation,
 		userGroupService,
+		branchStore,
 	)
 }

@@ -79,6 +79,7 @@ type Controller struct {
 	labelSvc               *label.Service
 	instrumentation        instrument.Service
 	userGroupService       usergroup.SearchService
+	branchStore            store.BranchStore
 }
 
 func NewController(
@@ -113,6 +114,7 @@ func NewController(
 	labelSvc *label.Service,
 	instrumentation instrument.Service,
 	userGroupService usergroup.SearchService,
+	branchStore store.BranchStore,
 ) *Controller {
 	return &Controller{
 		tx:                     tx,
@@ -146,6 +148,7 @@ func NewController(
 		labelSvc:               labelSvc,
 		instrumentation:        instrumentation,
 		userGroupService:       userGroupService,
+		branchStore:            branchStore,
 	}
 }
 

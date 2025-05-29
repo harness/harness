@@ -37,6 +37,7 @@ var WireSet = wire.NewSet(
 	ProvideSpacePathStore,
 	ProvideSpaceStore,
 	ProvideRepoStore,
+	ProvideBranchStore,
 	ProvideRuleStore,
 	ProvideJobStore,
 	ProvideExecutionStore,
@@ -317,6 +318,11 @@ func ProvidePublicAccessStore(db *sqlx.DB) store.PublicAccessStore {
 // ProvidePublicKeyStore provides a public key store.
 func ProvidePublicKeyStore(db *sqlx.DB) store.PublicKeyStore {
 	return NewPublicKeyStore(db)
+}
+
+// ProvideBranchStore provides a branch store.
+func ProvideBranchStore(db *sqlx.DB) store.BranchStore {
+	return NewBranchStore(db)
 }
 
 // ProvideGitspaceEventStore provides a gitspace event store.

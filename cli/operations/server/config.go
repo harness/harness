@@ -25,6 +25,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/infrastructure"
 	"github.com/harness/gitness/app/gitspace/orchestrator"
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
+	"github.com/harness/gitness/app/services/branch"
 	"github.com/harness/gitness/app/services/cleanup"
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/gitspacedeleteevent"
@@ -350,6 +351,14 @@ func ProvideTriggerConfig(config *types.Config) trigger.Config {
 		EventReaderName: config.InstanceID,
 		Concurrency:     config.Webhook.Concurrency,
 		MaxRetries:      config.Webhook.MaxRetries,
+	}
+}
+
+func ProvideBranchConfig(config *types.Config) branch.Config {
+	return branch.Config{
+		EventReaderName: config.InstanceID,
+		Concurrency:     config.Branch.Concurrency,
+		MaxRetries:      config.Branch.MaxRetries,
 	}
 }
 
