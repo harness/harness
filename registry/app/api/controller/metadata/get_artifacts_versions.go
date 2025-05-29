@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
@@ -147,10 +148,15 @@ func (c *APIController) GetAllArtifactVersions(
 		image, regInfo.searchTerm,
 	)
 
+	registryURL := c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, regInfo.RegistryIdentifier)
+	if registry.PackageType == artifact.PackageTypeGENERIC {
+		registryURL = c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier,
+			strings.ToLower(string(registry.PackageType)), regInfo.RegistryIdentifier)
+	}
+
 	return artifact.GetAllArtifactVersions200JSONResponse{
 		ListArtifactVersionResponseJSONResponse: *GetNonOCIAllArtifactVersionResponse(
-			ctx, metadata, image, cnt, regInfo.pageNumber, regInfo.limit,
-			c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, regInfo.RegistryIdentifier),
+			ctx, metadata, image, cnt, regInfo.pageNumber, regInfo.limit, registryURL,
 			c.SetupDetailsAuthHeaderPrefix,
 		),
 	}, nil
