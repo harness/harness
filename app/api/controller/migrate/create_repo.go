@@ -146,7 +146,9 @@ func (c *Controller) CreateRepo(
 
 	isRepoPublic := in.IsPublic
 	if !isPublicAccessSupported {
-		log.Debug().Msgf("public access is not supported, create migrating repo %s as private instead", repo.Identifier)
+		log.Ctx(ctx).Debug().Msgf(
+			"public access is not supported, create migrating repo %s as private instead",
+			repo.Identifier)
 		isRepoPublic = false
 	}
 	err = c.publicAccess.Set(ctx, enum.PublicResourceTypeRepo, repo.Path, isRepoPublic)
@@ -165,7 +167,7 @@ func (c *Controller) CreateRepo(
 		}),
 	)
 	if err != nil {
-		log.Warn().Msgf("failed to insert audit log for import repository operation: %s", err)
+		log.Ctx(ctx).Warn().Err(err).Msg("failed to insert audit log for import repository operation")
 	}
 
 	c.eventReporter.Created(ctx, &repoevents.CreatedPayload{

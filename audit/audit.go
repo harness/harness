@@ -52,15 +52,16 @@ const (
 type Action string
 
 const (
-	ActionCreated  Action = "created"
-	ActionUpdated  Action = "updated" // update default branch, switching default branch, updating description
-	ActionDeleted  Action = "deleted"
-	ActionBypassed Action = "bypassed"
+	ActionCreated   Action = "created"
+	ActionUpdated   Action = "updated" // update default branch, switching default branch, updating description
+	ActionDeleted   Action = "deleted"
+	ActionBypassed  Action = "bypassed"
+	ActionForcePush Action = "forcePush"
 )
 
 func (a Action) Validate() error {
 	switch a {
-	case ActionCreated, ActionUpdated, ActionDeleted, ActionBypassed:
+	case ActionCreated, ActionUpdated, ActionDeleted, ActionBypassed, ActionForcePush:
 		return nil
 	default:
 		return ErrActionUndefined

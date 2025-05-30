@@ -25,6 +25,7 @@ import (
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/git/hook"
 
@@ -61,6 +62,7 @@ func ProvideController(
 	postReceiveExtender PostReceiveExtender,
 	sseStreamer sse.Streamer,
 	lfsStore store.LFSObjectStore,
+	auditService audit.Service,
 ) *Controller {
 	ctrl := NewController(
 		authorizer,
@@ -80,6 +82,7 @@ func ProvideController(
 		postReceiveExtender,
 		sseStreamer,
 		lfsStore,
+		auditService,
 	)
 
 	// TODO: improve wiring if possible

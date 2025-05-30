@@ -25,6 +25,8 @@ import (
 	"github.com/harness/gitness/app/bootstrap"
 	gitevents "github.com/harness/gitness/app/events/git"
 	repoevents "github.com/harness/gitness/app/events/repo"
+	"github.com/harness/gitness/app/paths"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -43,6 +45,9 @@ const (
 	// gitReferenceNamePrefixTag is the prefix of pull req references.
 	gitReferenceNamePullReq = "refs/pullreq/"
 )
+
+// refForcePushMap stores branch refs that were force pushed.
+type refForcePushMap map[string]struct{}
 
 // PostReceive executes the post-receive hook for a git repository.
 func (c *Controller) PostReceive(
@@ -72,8 +77,9 @@ func (c *Controller) PostReceive(
 	c.updateLastGITPushTime(ctx, repo)
 
 	// report ref events if repo is in an active state - best effort
+	forcePushStatus := make(refForcePushMap)
 	if repo.State == enum.RepoStateActive {
-		c.reportReferenceEvents(ctx, rgit, repo, in.PrincipalID, in.PostReceiveInput)
+		forcePushStatus = c.reportReferenceEvents(ctx, rgit, repo, in.PrincipalID, in.PostReceiveInput)
 	}
 
 	// handle branch updates related to PRs - best effort
@@ -83,6 +89,8 @@ func (c *Controller) PostReceive(
 	if err != nil {
 		return hook.Output{}, fmt.Errorf("failed to extend post-receive hook: %w", err)
 	}
+
+	c.logForcePush(ctx, repo, in.PrincipalID, in.RefUpdates, forcePushStatus)
 
 	c.repoReporter.Pushed(ctx, &repoevents.PushedPayload{
 		Base: repoevents.Base{
@@ -103,17 +111,23 @@ func (c *Controller) reportReferenceEvents(
 	repo *types.Repository,
 	principalID int64,
 	in hook.PostReceiveInput,
-) {
+) refForcePushMap {
+	forcePushStatus := make(refForcePushMap)
+
 	for _, refUpdate := range in.RefUpdates {
 		switch {
 		case strings.HasPrefix(refUpdate.Ref, gitReferenceNamePrefixBranch):
-			c.reportBranchEvent(ctx, rgit, repo, principalID, in.Environment, refUpdate)
+			if forced := c.reportBranchEvent(ctx, rgit, repo, principalID, in.Environment, refUpdate); forced {
+				forcePushStatus[refUpdate.Ref] = struct{}{}
+			}
 		case strings.HasPrefix(refUpdate.Ref, gitReferenceNamePrefixTag):
 			c.reportTagEvent(ctx, repo, principalID, refUpdate)
 		default:
 			// Ignore any other references in post-receive
 		}
 	}
+
+	return forcePushStatus
 }
 
 func (c *Controller) reportBranchEvent(
@@ -123,7 +137,9 @@ func (c *Controller) reportBranchEvent(
 	principalID int64,
 	env hook.Environment,
 	branchUpdate hook.ReferenceUpdate,
-) {
+) bool {
+	var forced bool
+
 	switch {
 	case branchUpdate.Old.IsNil():
 		payload := &gitevents.BranchCreatedPayload{
@@ -152,7 +168,8 @@ func (c *Controller) reportBranchEvent(
 	default:
 		// A force update event might trigger some additional operations that aren't required
 		// for ordinary updates (force pushes alter the commit history of a branch).
-		forced, err := isForcePush(ctx, rgit, repo.GitUID, env.AlternateObjectDirs, branchUpdate)
+		var err error
+		forced, err = isForcePush(ctx, rgit, repo.GitUID, env.AlternateObjectDirs, branchUpdate)
 		if err != nil {
 			// In case of an error consider this a forced update. In post-update the branch has already been updated,
 			// so there's less harm in declaring the update as forced.
@@ -175,6 +192,8 @@ func (c *Controller) reportBranchEvent(
 
 		c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypeBranchUpdated, payload)
 	}
+
+	return forced
 }
 
 func (c *Controller) reportTagEvent(
@@ -374,4 +393,73 @@ func (c *Controller) updateLastGITPushTime(
 	}
 
 	*repo = *newRepo
+}
+
+// logForcePush detects and logs force pushes to the default branch.
+func (c *Controller) logForcePush(
+	ctx context.Context,
+	repo *types.Repository,
+	principalID int64,
+	refUpdates []hook.ReferenceUpdate,
+	forcePushStatus refForcePushMap,
+) {
+	if repo.DefaultBranch == "" {
+		return
+	}
+
+	defaultBranchRef := gitReferenceNamePrefixBranch + repo.DefaultBranch
+
+	_, exists := forcePushStatus[defaultBranchRef]
+	if !exists {
+		return
+	}
+
+	var defaultBranchUpdate *hook.ReferenceUpdate
+	for i := range refUpdates {
+		if refUpdates[i].Ref == defaultBranchRef && !refUpdates[i].New.IsNil() {
+			defaultBranchUpdate = &refUpdates[i]
+			break
+		}
+	}
+
+	if defaultBranchUpdate == nil {
+		return
+	}
+
+	principal, err := c.principalStore.Find(ctx, principalID)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("failed to find principal who force pushed to default branch")
+		return
+	}
+
+	err = c.auditService.Log(ctx,
+		*principal,
+		audit.NewResource(
+			audit.ResourceTypeRepository,
+			repo.Identifier,
+			audit.RepoPath,
+			repo.Path,
+			audit.BypassedResourceType,
+			audit.BypassedResourceTypeCommit,
+			audit.ResourceName,
+			fmt.Sprintf(
+				audit.BypassSHALabelFormat,
+				repo.DefaultBranch,
+				defaultBranchUpdate.New.String()[0:6],
+			),
+		),
+		audit.ActionForcePush,
+		paths.Parent(repo.Path),
+		audit.WithOldObject(audit.CommitObject{
+			CommitSHA: defaultBranchUpdate.Old.String(),
+			RepoPath:  repo.Path,
+		}),
+		audit.WithNewObject(audit.CommitObject{
+			CommitSHA: defaultBranchUpdate.New.String(),
+			RepoPath:  repo.Path,
+		}),
+	)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("failed to insert audit log for force push")
+	}
 }

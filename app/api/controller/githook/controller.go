@@ -30,6 +30,7 @@ import (
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/git/api"
@@ -57,6 +58,7 @@ type Controller struct {
 	postReceiveExtender PostReceiveExtender
 	sseStreamer         sse.Streamer
 	lfsStore            store.LFSObjectStore
+	auditService        audit.Service
 }
 
 func NewController(
@@ -77,6 +79,7 @@ func NewController(
 	postReceiveExtender PostReceiveExtender,
 	sseStreamer sse.Streamer,
 	lfsStore store.LFSObjectStore,
+	auditService audit.Service,
 ) *Controller {
 	return &Controller{
 		authorizer:          authorizer,
@@ -96,6 +99,7 @@ func NewController(
 		postReceiveExtender: postReceiveExtender,
 		sseStreamer:         sseStreamer,
 		lfsStore:            lfsStore,
+		auditService:        auditService,
 	}
 }
 
