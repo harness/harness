@@ -130,8 +130,14 @@ func CheckNugetAPIKey() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(
 			func(w http.ResponseWriter, r *http.Request) {
+				ctx := r.Context()
 				apiKeyHeader := r.Header.Get("x-nuget-apikey")
-				if apiKeyHeader != "" {
+				authHeader := r.Header.Get("Authorization")
+				if authHeader == "" && apiKeyHeader == "" {
+					setNugetAuthChallenge(r.Method, w)
+					render.Unauthorized(ctx, w)
+					return
+				} else if apiKeyHeader != "" {
 					r.Header.Set("Authorization", apiKeyHeader)
 				}
 				next.ServeHTTP(w, r)
@@ -147,17 +153,21 @@ func CheckNugetAuthWithChallenge() func(http.Handler) http.Handler {
 				ctx := r.Context()
 				session, _ := request.AuthSessionFrom(ctx)
 				if session.Principal == auth.AnonymousPrincipal {
-					if r.Method == http.MethodPut || r.Method == http.MethodDelete {
-						w.Header().Set("WWW-Authenticate", "ApiKey realm=\"Harness Registry\"")
-					} else {
-						w.Header().Set("WWW-Authenticate", "Basic realm=\"Harness Registry\"")
-					}
+					setNugetAuthChallenge(r.Method, w)
 					render.Unauthorized(ctx, w)
 					return
 				}
 				next.ServeHTTP(w, r)
 			},
 		)
+	}
+}
+
+func setNugetAuthChallenge(method string, w http.ResponseWriter) {
+	if method == http.MethodPut || method == http.MethodDelete {
+		w.Header().Set("WWW-Authenticate", "ApiKey realm=\"Harness Registry\"")
+	} else {
+		w.Header().Set("WWW-Authenticate", "Basic realm=\"Harness Registry\"")
 	}
 }
 
