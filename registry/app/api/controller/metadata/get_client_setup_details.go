@@ -1117,10 +1117,17 @@ func (c *APIController) generateNugetClientSetupDetail(
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: utils.StringPtr("nuget sources add -Name <SOURCE_NAME> -Source \n" +
-							"<REGISTRY_URL>/index.json \n" +
-							"-Username <USERNAME>\n" +
-							"-Password  = *see step 2*"),
+						Value: utils.StringPtr("nuget sources add -Name harness -Source " +
+							"<REGISTRY_URL>/index.json " +
+							"-Username <USERNAME> " +
+							"-Password <TOKEN>\n\n"),
+					},
+					{
+						Value: utils.StringPtr("nuget setapikey <TOKEN> -Source harness\n\n"),
+					},
+					{
+						Label: utils.StringPtr("Note: For Nuget V2 Client, use this url: <REGISTRY_URL>/"),
+						Value: utils.StringPtr("<REGISTRY_URL>/"),
 					},
 				},
 			},
@@ -1138,14 +1145,11 @@ func (c *APIController) generateNugetClientSetupDetail(
 	_ = section2.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
 		Steps: &[]artifact.ClientSetupStep{
 			{
-				Header: utils.StringPtr("Build and publish your package:"),
+				Header: utils.StringPtr("Publish your package:"),
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: utils.StringPtr("nuget pack"),
-					},
-					{
-						Value: utils.StringPtr("nuget push <PACKAGE_FILE> -Source <SOURCE_NAME>"),
+						Value: utils.StringPtr("nuget push <PACKAGE_FILE> -Source harness"),
 					},
 				},
 			},
@@ -1163,7 +1167,7 @@ func (c *APIController) generateNugetClientSetupDetail(
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: utils.StringPtr("nuget install <ARTIFACT_NAME> -Version <VERSION> -Source <SOURCE_NAME>"),
+						Value: utils.StringPtr("nuget install <ARTIFACT_NAME> -Version <VERSION> -Source harness"),
 					},
 				},
 			},
@@ -1404,6 +1408,10 @@ func (c *APIController) replaceText(
 	}
 	if registryURL != "" {
 		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<REGISTRY_URL>", registryURL))
+		if (*st.Commands)[i].Label != nil {
+			(*st.Commands)[i].Label = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Label,
+				"<REGISTRY_URL>", registryURL))
+		}
 	}
 	if uploadURL != "" {
 		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<UPLOAD_URL>", uploadURL))
