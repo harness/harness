@@ -16,7 +16,6 @@ package router
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/harness/gitness/app/api/middleware/address"
@@ -62,15 +61,6 @@ func GetAppRouter(
 		r.Mount("/pkg/", packageHandler)
 		r.Handle("/registry/swagger*", swagger.GetSwaggerHandler("/registry"))
 	})
-
-	// Walk through all routes and print them
-	if err := chi.Walk(r,
-		func(method string, route string, _ http.Handler, _ ...func(http.Handler) http.Handler) error {
-			log.Printf("%-7s %s", method, route)
-			return nil
-		}); err != nil {
-		log.Fatalf("Error walking router: %v", err)
-	}
 
 	return r
 }
