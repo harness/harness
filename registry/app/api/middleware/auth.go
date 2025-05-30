@@ -126,6 +126,41 @@ func CheckAuthHeader() func(http.Handler) http.Handler {
 	}
 }
 
+func CheckNugetAPIKey() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				apiKeyHeader := r.Header.Get("x-nuget-apikey")
+				if apiKeyHeader != "" {
+					r.Header.Set("Authorization", apiKeyHeader)
+				}
+				next.ServeHTTP(w, r)
+			},
+		)
+	}
+}
+
+func CheckNugetAuthWithChallenge() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				ctx := r.Context()
+				session, _ := request.AuthSessionFrom(ctx)
+				if session.Principal == auth.AnonymousPrincipal {
+					if r.Method == http.MethodPut || r.Method == http.MethodDelete {
+						w.Header().Set("WWW-Authenticate", "ApiKey realm=\"Harness Registry\"")
+					} else {
+						w.Header().Set("WWW-Authenticate", "Basic realm=\"Harness Registry\"")
+					}
+					render.Unauthorized(ctx, w)
+					return
+				}
+				next.ServeHTTP(w, r)
+			},
+		)
+	}
+}
+
 func setAuthenticateHeader(w http.ResponseWriter) {
 	w.Header().Set("WWW-Authenticate", "Basic realm=\"Harness Registry\"")
 }

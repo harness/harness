@@ -112,9 +112,9 @@ func NewRouter(
 		})
 
 		r.Route("/nuget", func(r chi.Router) {
-			r.Use(middleware.CheckAuthHeader())
+			r.Use(middleware.CheckNugetAPIKey())
 			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
-			r.Use(middleware.CheckAuthWithChallenge())
+			r.Use(middleware.CheckNugetAuthWithChallenge())
 
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).

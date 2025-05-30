@@ -37,9 +37,9 @@ var _ registry.NugetRegistry = (*adapter)(nil)
 var _ adp.Adapter = (*adapter)(nil)
 
 const (
-	NugetOrgURL          = "https://api.nuget.org/v3/index.json"
-	RegistrationsBaseURL = "RegistrationsBaseURL"
-	PackageBaseAddress   = "PackageBaseAddress"
+	NugetOrgURL         = "https://api.nuget.org/v3/index.json"
+	RegistrationBaseURL = "RegistrationsBaseUrl"
+	PackageBaseAddress  = "PackageBaseAddress"
 )
 
 type adapter struct {
@@ -106,7 +106,7 @@ func (a adapter) GetPackageMetadata(ctx context.Context, pkg, proxyEndpoint stri
 		if err != nil {
 			return nil, err
 		}
-		baseURL, err := getResourceByTypePrefix(svcEndpoints, RegistrationsBaseURL)
+		baseURL, err := getResourceByTypePrefix(svcEndpoints, RegistrationBaseURL)
 		if err != nil {
 			return nil, err
 		}
