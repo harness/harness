@@ -913,4 +913,17 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opUnassignLabel, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodDelete,
 		"/repos/{repo_ref}/pullreq/{pullreq_number}/labels/{label_id}", opUnassignLabel)
+
+	opPRCandidates := openapi3.Operation{}
+	opPRCandidates.WithTags("pullreq")
+	opPRCandidates.WithMapOfAnything(map[string]interface{}{"operationId": "prCandidates"})
+	opPRCandidates.WithParameters(QueryParameterLimit)
+	_ = reflector.SetRequest(&opPRCandidates, new(repoRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opPRCandidates, new(types.BranchTable), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opPRCandidates, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opPRCandidates, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opPRCandidates, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opPRCandidates, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodGet,
+		"/repos/{repo_ref}/pullreq/candidates", opPRCandidates)
 }
