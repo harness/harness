@@ -207,6 +207,21 @@ var queryParameterPipelineIdentifier = openapi3.ParameterOrRef{
 	},
 }
 
+var queryParameterOnlyFavorites = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamOnlyFavorites,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The result should contain only the favorite entries for the logged in user."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeBoolean),
+				Default: ptrptr(false),
+			},
+		},
+	},
+}
+
 //nolint:funlen // api spec generation no need for checking func complexity
 func spaceOperations(reflector *openapi3.Reflector) {
 	opCreate := openapi3.Operation{}
@@ -367,7 +382,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opRepos.WithTags("space")
 	opRepos.WithMapOfAnything(map[string]interface{}{"operationId": "listRepos"})
 	opRepos.WithParameters(queryParameterQueryRepo, queryParameterSortRepo, queryParameterOrder,
-		QueryParameterPage, QueryParameterLimit)
+		QueryParameterPage, QueryParameterLimit, queryParameterOnlyFavorites)
 	_ = reflector.SetRequest(&opRepos, new(spaceRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opRepos, []repo.RepositoryOutput{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opRepos, new(usererror.Error), http.StatusInternalServerError)

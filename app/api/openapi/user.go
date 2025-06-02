@@ -225,4 +225,25 @@ func buildUser(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opDeleteToken, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opDeleteToken, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.Spec.AddOperation(http.MethodDelete, "/user/tokens/{token_identifier}", opDeleteToken)
+
+	opCreateFavorite := openapi3.Operation{}
+	opCreateFavorite.WithTags("user")
+	opCreateFavorite.WithMapOfAnything(map[string]interface{}{"operationId": "createFavorite"})
+	_ = reflector.SetRequest(&opCreateFavorite, new(types.FavoriteResource), http.MethodPost)
+	_ = reflector.SetJSONResponse(&opCreateFavorite, new(types.FavoriteResource), http.StatusCreated)
+	_ = reflector.SetJSONResponse(&opCreateFavorite, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opCreateFavorite, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opCreateFavorite, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/user/favorite", opCreateFavorite)
+
+	opDeleteFavorite := openapi3.Operation{}
+	opDeleteFavorite.WithTags("user")
+	opDeleteFavorite.WithMapOfAnything(map[string]interface{}{"operationId": "deleteFavorite"})
+	_ = reflector.SetRequest(&opDeleteFavorite, new(types.FavoriteResource), http.MethodDelete)
+	_ = reflector.SetJSONResponse(&opDeleteFavorite, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&opDeleteFavorite, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opDeleteFavorite, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opDeleteFavorite, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.SetJSONResponse(&opDeleteFavorite, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.Spec.AddOperation(http.MethodDelete, "/user/favorite", opDeleteFavorite)
 }

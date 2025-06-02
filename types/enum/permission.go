@@ -32,6 +32,27 @@ const (
 	ResourceTypeRegistry       ResourceType = "REGISTRY"
 )
 
+func (ResourceType) Enum() []interface{} {
+	return toInterfaceSlice(GetAllResourceTypes())
+}
+
+func GetAllResourceTypes() []ResourceType {
+	return []ResourceType{
+		ResourceTypeSpace,
+		ResourceTypeRepo,
+		ResourceTypeUser,
+		ResourceTypeServiceAccount,
+		ResourceTypeService,
+		ResourceTypePipeline,
+		ResourceTypeSecret,
+		ResourceTypeConnector,
+		ResourceTypeTemplate,
+		ResourceTypeGitspace,
+		ResourceTypeInfraProvider,
+		ResourceTypeRegistry,
+	}
+}
+
 // Permission represents the different types of permissions a principal can have.
 type Permission string
 
