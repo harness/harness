@@ -1148,7 +1148,7 @@ type (
 		MarkAsVerified(ctx context.Context, id int64, verified int64) error
 
 		// Count returns the number of public keys for the principal that match provided the filter.
-		Count(ctx context.Context, principalID int64, filter *types.PublicKeyFilter) (int, error)
+		Count(ctx context.Context, principalID *int64, filter *types.PublicKeyFilter) (int, error)
 
 		// List returns the public keys for the principal that match provided the filter.
 		List(ctx context.Context, principalID *int64, filter *types.PublicKeyFilter) ([]types.PublicKey, error)
@@ -1157,9 +1157,23 @@ type (
 		ListByFingerprint(
 			ctx context.Context,
 			fingerprint string,
+			principalID *int64,
 			usages []enum.PublicKeyUsage,
 			schemes []enum.PublicKeyScheme,
 		) ([]types.PublicKey, error)
+
+		// ListBySubKeyID returns public keys that match a sub key ID.
+		ListBySubKeyID(
+			ctx context.Context,
+			subKeyID string,
+			principalID *int64,
+			usages []enum.PublicKeyUsage,
+			schemes []enum.PublicKeyScheme,
+		) ([]types.PublicKey, error)
+	}
+
+	PublicKeySubKeyStore interface {
+		Create(ctx context.Context, publicKeyID int64, subKeyIDs []string) error
 	}
 
 	GitspaceEventStore interface {

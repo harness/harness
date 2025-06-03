@@ -27,36 +27,34 @@ import (
 	"github.com/gliderlabs/ssh"
 )
 
-type Service interface {
+type SSHAuthService interface {
 	ValidateKey(ctx context.Context,
 		username string,
 		publicKey ssh.PublicKey,
-		usage enum.PublicKeyUsage,
 	) (*types.PrincipalInfo, error)
 }
 
-func NewService(
+func NewSSHAuthService(
 	publicKeyStore store.PublicKeyStore,
 	pCache store.PrincipalInfoCache,
-) LocalService {
-	return LocalService{
+) SSHAuthService {
+	return sshAuthService{
 		publicKeyStore: publicKeyStore,
 		pCache:         pCache,
 	}
 }
 
-type LocalService struct {
+type sshAuthService struct {
 	publicKeyStore store.PublicKeyStore
 	pCache         store.PrincipalInfoCache
 }
 
 // ValidateKey tries to match the provided SSH key to one of the keys in the database.
 // It updates the verified timestamp of the matched key to mark it as used.
-func (s LocalService) ValidateKey(
+func (s sshAuthService) ValidateKey(
 	ctx context.Context,
 	_ string,
 	publicKey ssh.PublicKey,
-	usage enum.PublicKeyUsage,
 ) (*types.PrincipalInfo, error) {
 	key := FromSSH(publicKey)
 	fingerprint := key.Fingerprint()
@@ -64,6 +62,7 @@ func (s LocalService) ValidateKey(
 	existingKeys, err := s.publicKeyStore.ListByFingerprint(
 		ctx,
 		fingerprint,
+		nil,
 		[]enum.PublicKeyUsage{enum.PublicKeyUsageAuth},
 		[]enum.PublicKeyScheme{enum.PublicKeySchemeSSH},
 	)
@@ -71,28 +70,40 @@ func (s LocalService) ValidateKey(
 		return nil, fmt.Errorf("failed to read keys by fingerprint: %w", err)
 	}
 
-	var keyID int64
-	var principalID int64
-
+	var selectedKey *types.PublicKey
 	for _, existingKey := range existingKeys {
-		if !key.Matches(existingKey.Content) || existingKey.Usage != usage {
-			continue
+		if key.Matches(existingKey.Content) {
+			selectedKey = &existingKey
+			break
 		}
-
-		keyID = existingKey.ID
-		principalID = existingKey.PrincipalID
 	}
 
-	if keyID == 0 {
+	if selectedKey == nil {
 		return nil, errors.NotFound("Unrecognized key")
 	}
 
-	pInfo, err := s.pCache.Get(ctx, principalID)
+	if rev := selectedKey.RevocationReason; rev != nil && *rev == enum.RevocationReasonCompromised {
+		return nil, errors.Forbidden("Key has been revoked")
+	}
+
+	now := time.Now().UnixMilli()
+
+	if t := selectedKey.ValidFrom; t != nil && now < *t {
+		return nil, errors.Forbidden("Key not valid")
+	}
+	if t := selectedKey.ValidTo; t != nil && now > *t {
+		if selectedKey.RevocationReason != nil {
+			return nil, errors.Forbidden("Key has been revoked")
+		}
+		return nil, errors.Forbidden("Key has expired")
+	}
+
+	pInfo, err := s.pCache.Get(ctx, selectedKey.PrincipalID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to pull principal info by public key's principal ID: %w", err)
 	}
 
-	err = s.publicKeyStore.MarkAsVerified(ctx, keyID, time.Now().UnixMilli())
+	err = s.publicKeyStore.MarkAsVerified(ctx, selectedKey.ID, now)
 	if err != nil {
 		return nil, fmt.Errorf("failed mark key as verified: %w", err)
 	}

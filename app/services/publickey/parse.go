@@ -15,6 +15,7 @@
 package publickey
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -28,11 +29,22 @@ type KeyInfo interface {
 	Fingerprint() string
 	Type() string
 	Scheme() enum.PublicKeyScheme
+	Comment() string
+
+	ValidFrom() *int64
+	ValidTo() *int64
+
+	Identities() []types.Identity
+	RevocationReason() *enum.RevocationReason
+
+	Metadata() json.RawMessage
+
+	SubKeyIDs() []string
 }
 
-func ParseString(keyData string) (KeyInfo, *types.Identity, string, error) {
+func ParseString(keyData string) (KeyInfo, error) {
 	if len(keyData) == 0 {
-		return nil, nil, "", errors.InvalidArgument("empty key")
+		return nil, errors.InvalidArgument("empty key")
 	}
 
 	const pgpHeader = "-----BEGIN PGP PUBLIC KEY BLOCK-----"
@@ -41,16 +53,16 @@ func ParseString(keyData string) (KeyInfo, *types.Identity, string, error) {
 	if strings.HasPrefix(keyData, pgpHeader) && strings.HasSuffix(keyData, pgpFooter) {
 		key, err := parsePGP(strings.NewReader(keyData))
 		if err != nil {
-			return nil, nil, "", fmt.Errorf("failed to parse PGP key: %w", err)
+			return nil, fmt.Errorf("failed to parse PGP key: %w", err)
 		}
 
-		return key, &key.Identity, "", nil
+		return key, nil
 	}
 
-	key, comment, err := parseSSH([]byte(keyData))
+	key, err := parseSSH([]byte(keyData))
 	if err != nil {
-		return nil, nil, "", fmt.Errorf("failed to parse SSH key: %w", err)
+		return nil, fmt.Errorf("failed to parse SSH key: %w", err)
 	}
 
-	return key, nil, comment, nil
+	return key, nil
 }

@@ -29,7 +29,7 @@ var WireSet = wire.NewSet(
 
 func ProvideServer(
 	config *types.Config,
-	verifier publickey.Service,
+	verifier publickey.SSHAuthService,
 	repoctrl *repo.Controller,
 	lfsCtrl *lfs.Controller,
 ) *Server {

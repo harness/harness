@@ -198,6 +198,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	principalStore := database.ProvidePrincipalStore(db, principalUIDTransformation)
 	tokenStore := database.ProvideTokenStore(db)
 	publicKeyStore := database.ProvidePublicKeyStore(db)
+	publicKeySubKeyStore := database.ProvidePublicKeySubKeyStore(db)
 	eventsConfig := server.ProvideEventsConfig(config)
 	eventsSystem, err := events.ProvideSystem(eventsConfig, universalClient)
 	if err != nil {
@@ -208,7 +209,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	favoriteStore := database.ProvideFavoriteStore(db)
-	controller := user.ProvideController(transactor, principalUID, authorizer, principalStore, tokenStore, membershipStore, publicKeyStore, reporter, repoFinder, favoriteStore)
+	controller := user.ProvideController(transactor, principalUID, authorizer, principalStore, tokenStore, membershipStore, publicKeyStore, publicKeySubKeyStore, reporter, repoFinder, favoriteStore)
 	serviceController := service.NewController(principalUID, authorizer, principalStore)
 	bootstrapBootstrap := bootstrap.ProvideBootstrap(config, controller, serviceController)
 	authenticator := authn.ProvideAuthenticator(config, principalStore, tokenStore)
@@ -575,8 +576,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	routerRouter := router2.ProvideRouter(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, usergroupController, checkController, systemController, uploadController, keywordsearchController, infraproviderController, gitspaceController, migrateController, provider, openapiService, appRouter, sender, lfsController)
 	serverServer := server2.ProvideServer(config, routerRouter)
-	publickeyService := publickey.ProvidePublicKey(publicKeyStore, principalInfoCache)
-	sshServer := ssh.ProvideServer(config, publickeyService, repoController, lfsController)
+	sshAuthService := publickey.ProvideSSHAuthService(publicKeyStore, principalInfoCache)
+	sshServer := ssh.ProvideServer(config, sshAuthService, repoController, lfsController)
 	executionManager := manager.ProvideExecutionManager(config, executionStore, pipelineStore, provider, streamer, fileService, converterService, logStore, logStream, checkStore, repoStore, schedulerScheduler, secretStore, stageStore, stepStore, principalStore, publicaccessService, reporter7)
 	client := manager.ProvideExecutionClient(executionManager, provider, config)
 	resolverManager := resolver.ProvideResolver(config, pluginStore, templateStore, executionStore, repoStore)

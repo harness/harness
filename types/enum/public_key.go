@@ -73,3 +73,29 @@ func (s PublicKeySort) Sanitize() (PublicKeySort, bool) { return Sanitize(s, Get
 func GetAllPublicKeySorts() ([]PublicKeySort, PublicKeySort) {
 	return publicKeySorts, PublicKeySortCreated
 }
+
+// RevocationReason is the reason why a public key has been revoked.
+type RevocationReason string
+
+// RevocationReason enumeration.
+const (
+	RevocationReasonUnknown     RevocationReason = "unknown"
+	RevocationReasonSuperseded  RevocationReason = "superseded"
+	RevocationReasonRetired     RevocationReason = "retired"
+	RevocationReasonCompromised RevocationReason = "compromised"
+)
+
+var revocationReasons = sortEnum([]RevocationReason{
+	RevocationReasonUnknown,
+	RevocationReasonSuperseded,
+	RevocationReasonRetired,
+	RevocationReasonCompromised,
+})
+
+func (RevocationReason) Enum() []interface{} { return toInterfaceSlice(revocationReasons) }
+func (s RevocationReason) Sanitize() (RevocationReason, bool) {
+	return Sanitize(s, GetAllRevocationReasons)
+}
+func GetAllRevocationReasons() ([]RevocationReason, RevocationReason) {
+	return revocationReasons, ""
+}

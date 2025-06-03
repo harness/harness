@@ -56,7 +56,7 @@ func (c *Controller) ListPublicKeys(
 			return nil
 		}
 
-		count, err = c.publicKeyStore.Count(ctx, user.ID, filter)
+		count, err = c.publicKeyStore.Count(ctx, &user.ID, filter)
 		if err != nil {
 			return fmt.Errorf("failed to count public keys for user: %w", err)
 		}

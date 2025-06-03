@@ -16,6 +16,7 @@ package database
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -63,6 +64,12 @@ type publicKey struct {
 	Type        string `db:"public_key_type"`
 
 	Scheme string `db:"public_key_scheme"`
+
+	ValidFrom        null.Int    `db:"public_key_valid_from"`
+	ValidTo          null.Int    `db:"public_key_valid_to"`
+	RevocationReason null.String `db:"public_key_revocation_reason"`
+
+	Metadata json.RawMessage `db:"public_key_metadata"`
 }
 
 const (
@@ -77,7 +84,11 @@ const (
 		,public_key_content
 		,public_key_comment
 		,public_key_type
-		,public_key_scheme`
+		,public_key_scheme
+		,public_key_valid_from
+		,public_key_valid_to
+		,public_key_revocation_reason
+		,public_key_metadata`
 
 	publicKeySelectBase = `
 		SELECT` + publicKeyColumns + `
@@ -136,6 +147,10 @@ func (s PublicKeyStore) Create(ctx context.Context, key *types.PublicKey) error 
 			,public_key_comment
 			,public_key_type
 			,public_key_scheme
+			,public_key_valid_from
+			,public_key_valid_to
+			,public_key_revocation_reason
+			,public_key_metadata
 		) values (
 			 :public_key_principal_id
 			,:public_key_created
@@ -147,6 +162,10 @@ func (s PublicKeyStore) Create(ctx context.Context, key *types.PublicKey) error 
 			,:public_key_comment
 			,:public_key_type
 			,:public_key_scheme
+			,:public_key_valid_from
+			,:public_key_valid_to
+			,:public_key_revocation_reason
+			,:public_key_metadata
 		) RETURNING public_key_id`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -206,13 +225,16 @@ func (s PublicKeyStore) MarkAsVerified(ctx context.Context, id int64, verified i
 
 func (s PublicKeyStore) Count(
 	ctx context.Context,
-	principalID int64,
+	principalID *int64,
 	filter *types.PublicKeyFilter,
 ) (int, error) {
 	stmt := database.Builder.
 		Select("count(*)").
-		From("public_keys").
-		Where("public_key_principal_id = ?", principalID)
+		From("public_keys")
+
+	if principalID != nil {
+		stmt = stmt.Where("public_key_principal_id = ?", *principalID)
+	}
 
 	stmt = s.applyQueryFilter(stmt, filter)
 
@@ -238,16 +260,69 @@ func (s PublicKeyStore) List(
 	principalID *int64,
 	filter *types.PublicKeyFilter,
 ) ([]types.PublicKey, error) {
+	return s.list(ctx, func(stmt squirrel.SelectBuilder) squirrel.SelectBuilder {
+		if principalID != nil {
+			stmt = stmt.Where("public_key_principal_id = ?", *principalID)
+		}
+
+		stmt = s.applyQueryFilter(stmt, filter)
+		stmt = s.applyPagination(stmt, filter.Pagination)
+		stmt = s.applySortFilter(stmt, filter.Sort, filter.Order)
+
+		return stmt
+	})
+}
+
+// ListByFingerprint returns public keys given a fingerprint and key usage.
+func (s PublicKeyStore) ListByFingerprint(
+	ctx context.Context,
+	fingerprint string,
+	principalID *int64,
+	usages []enum.PublicKeyUsage,
+	schemes []enum.PublicKeyScheme,
+) ([]types.PublicKey, error) {
+	return s.list(ctx, func(stmt squirrel.SelectBuilder) squirrel.SelectBuilder {
+		stmt = stmt.Where("public_key_fingerprint = ?", fingerprint)
+		if principalID != nil {
+			stmt = stmt.Where("public_key_principal_id = ?", *principalID)
+		}
+		stmt = s.applyUsages(stmt, usages)
+		stmt = s.applySchemes(stmt, schemes)
+		stmt = s.applySortFilter(stmt, enum.PublicKeySortCreated, enum.OrderDesc)
+		return stmt
+	})
+}
+
+func (s PublicKeyStore) ListBySubKeyID(
+	ctx context.Context,
+	subKeyID string,
+	principalID *int64,
+	usages []enum.PublicKeyUsage,
+	schemes []enum.PublicKeyScheme,
+) ([]types.PublicKey, error) {
+	return s.list(ctx, func(stmt squirrel.SelectBuilder) squirrel.SelectBuilder {
+		stmt = stmt.Join("public_key_sub_keys ON public_key_sub_key_public_key_id = public_key_id").
+			Where("public_key_sub_key_id = ?", subKeyID)
+		if principalID != nil {
+			stmt = stmt.Where("public_key_principal_id = ?", *principalID)
+		}
+		stmt = s.applyUsages(stmt, usages)
+		stmt = s.applySchemes(stmt, schemes)
+		stmt = s.applySortFilter(stmt, enum.PublicKeySortCreated, enum.OrderDesc)
+		return stmt
+	})
+}
+
+// List returns the public keys for the principal.
+func (s PublicKeyStore) list(
+	ctx context.Context,
+	builder func(squirrel.SelectBuilder) squirrel.SelectBuilder,
+) ([]types.PublicKey, error) {
 	stmt := database.Builder.
 		Select(publicKeyColumns).
 		From("public_keys")
 
-	if principalID != nil {
-		stmt = stmt.Where("public_key_principal_id = ?", *principalID)
-	}
-
-	stmt = s.applyQueryFilter(stmt, filter)
-	stmt = s.applySortFilter(stmt, filter)
+	stmt = builder(stmt)
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -264,27 +339,6 @@ func (s PublicKeyStore) List(
 	return mapToPublicKeys(keys), nil
 }
 
-// ListByFingerprint returns public keys given a fingerprint and key usage.
-func (s PublicKeyStore) ListByFingerprint(
-	ctx context.Context,
-	fingerprint string,
-	usages []enum.PublicKeyUsage,
-	schemes []enum.PublicKeyScheme,
-) ([]types.PublicKey, error) {
-	return s.List(ctx, nil, &types.PublicKeyFilter{
-		ListQueryFilter: types.ListQueryFilter{
-			Pagination: types.Pagination{Page: 0, Size: 1000000},
-			Query:      "",
-		},
-		Sort:        enum.PublicKeySortCreated,
-		Order:       enum.OrderAsc,
-		Usages:      usages,
-		Schemes:     schemes,
-		Fingerprint: fingerprint,
-	},
-	)
-}
-
 func (s PublicKeyStore) applyQueryFilter(
 	stmt squirrel.SelectBuilder,
 	filter *types.PublicKeyFilter,
@@ -293,48 +347,65 @@ func (s PublicKeyStore) applyQueryFilter(
 		stmt = stmt.Where(PartialMatch("public_key_identifier", filter.Query))
 	}
 
-	if len(filter.Usages) == 1 {
-		stmt = stmt.Where("public_key_usage = ?", filter.Usages[0])
-	} else if len(filter.Usages) > 1 {
+	stmt = s.applyUsages(stmt, filter.Usages)
+	stmt = s.applySchemes(stmt, filter.Schemes)
+
+	return stmt
+}
+
+func (s PublicKeyStore) applyUsages(
+	stmt squirrel.SelectBuilder,
+	usages []enum.PublicKeyUsage,
+) squirrel.SelectBuilder {
+	if len(usages) == 1 {
+		stmt = stmt.Where("public_key_usage = ?", usages[0])
+	} else if len(usages) > 1 {
 		switch s.db.DriverName() {
 		case SqliteDriverName:
-			stmt = stmt.Where(squirrel.Eq{"public_key_usage": filter.Usages})
+			stmt = stmt.Where(squirrel.Eq{"public_key_usage": usages})
 		case PostgresDriverName:
-			stmt = stmt.Where("public_key_usage = ANY(?)", pq.Array(filter.Usages))
+			stmt = stmt.Where("public_key_usage = ANY(?)", pq.Array(usages))
 		}
 	}
+	return stmt
+}
 
-	if len(filter.Schemes) == 1 {
-		stmt = stmt.Where("public_key_scheme = ?", filter.Schemes[0])
-	} else if len(filter.Schemes) > 1 {
+func (s PublicKeyStore) applySchemes(
+	stmt squirrel.SelectBuilder,
+	schemes []enum.PublicKeyScheme,
+) squirrel.SelectBuilder {
+	if len(schemes) == 1 {
+		stmt = stmt.Where("public_key_scheme = ?", schemes[0])
+	} else if len(schemes) > 1 {
 		switch s.db.DriverName() {
 		case SqliteDriverName:
-			stmt = stmt.Where(squirrel.Eq{"public_key_scheme": filter.Schemes})
+			stmt = stmt.Where(squirrel.Eq{"public_key_scheme": schemes})
 		case PostgresDriverName:
-			stmt = stmt.Where("public_key_scheme = ANY(?)", pq.Array(filter.Schemes))
+			stmt = stmt.Where("public_key_scheme = ANY(?)", pq.Array(schemes))
 		}
 	}
+	return stmt
+}
 
-	if filter.Fingerprint != "" {
-		stmt = stmt.Where("public_key_fingerprint = ?", filter.Fingerprint)
-	}
-
+func (PublicKeyStore) applyPagination(
+	stmt squirrel.SelectBuilder,
+	filter types.Pagination,
+) squirrel.SelectBuilder {
+	stmt = stmt.Limit(database.Limit(filter.Size))
+	stmt = stmt.Offset(database.Offset(filter.Page, filter.Size))
 	return stmt
 }
 
 func (PublicKeyStore) applySortFilter(
 	stmt squirrel.SelectBuilder,
-	filter *types.PublicKeyFilter,
+	sort enum.PublicKeySort,
+	order enum.Order,
 ) squirrel.SelectBuilder {
-	stmt = stmt.Limit(database.Limit(filter.Size))
-	stmt = stmt.Offset(database.Offset(filter.Page, filter.Size))
-
-	order := filter.Order
 	if order == enum.OrderDefault {
 		order = enum.OrderAsc
 	}
 
-	switch filter.Sort {
+	switch sort {
 	case enum.PublicKeySortIdentifier:
 		stmt = stmt.OrderBy("public_key_identifier " + order.String())
 	case enum.PublicKeySortCreated:
@@ -345,34 +416,47 @@ func (PublicKeyStore) applySortFilter(
 }
 
 func mapToInternalPublicKey(in *types.PublicKey) publicKey {
+	var revocationReason null.String
+	if in.RevocationReason != nil {
+		revocationReason.Valid = true
+		revocationReason.String = string(*in.RevocationReason)
+	}
 	return publicKey{
-		ID:          in.ID,
-		PrincipalID: in.PrincipalID,
-		Created:     in.Created,
-		Verified:    null.IntFromPtr(in.Verified),
-		Identifier:  in.Identifier,
-		Usage:       string(in.Usage),
-		Fingerprint: in.Fingerprint,
-		Content:     in.Content,
-		Comment:     in.Comment,
-		Type:        in.Type,
-		Scheme:      string(in.Scheme),
+		ID:               in.ID,
+		PrincipalID:      in.PrincipalID,
+		Created:          in.Created,
+		Verified:         null.IntFromPtr(in.Verified),
+		Identifier:       in.Identifier,
+		Usage:            string(in.Usage),
+		Fingerprint:      in.Fingerprint,
+		Content:          in.Content,
+		Comment:          in.Comment,
+		Type:             in.Type,
+		Scheme:           string(in.Scheme),
+		ValidFrom:        null.IntFromPtr(in.ValidFrom),
+		ValidTo:          null.IntFromPtr(in.ValidTo),
+		RevocationReason: revocationReason,
+		Metadata:         in.Metadata,
 	}
 }
 
 func mapToPublicKey(in *publicKey) types.PublicKey {
 	return types.PublicKey{
-		ID:          in.ID,
-		PrincipalID: in.PrincipalID,
-		Created:     in.Created,
-		Verified:    in.Verified.Ptr(),
-		Identifier:  in.Identifier,
-		Usage:       enum.PublicKeyUsage(in.Usage),
-		Fingerprint: in.Fingerprint,
-		Content:     in.Content,
-		Comment:     in.Comment,
-		Type:        in.Type,
-		Scheme:      enum.PublicKeyScheme(in.Scheme),
+		ID:               in.ID,
+		PrincipalID:      in.PrincipalID,
+		Created:          in.Created,
+		Verified:         in.Verified.Ptr(),
+		Identifier:       in.Identifier,
+		Usage:            enum.PublicKeyUsage(in.Usage),
+		Fingerprint:      in.Fingerprint,
+		Content:          in.Content,
+		Comment:          in.Comment,
+		Type:             in.Type,
+		Scheme:           enum.PublicKeyScheme(in.Scheme),
+		ValidFrom:        in.ValidFrom.Ptr(),
+		ValidTo:          in.ValidTo.Ptr(),
+		RevocationReason: (*enum.RevocationReason)(in.RevocationReason.Ptr()),
+		Metadata:         in.Metadata,
 	}
 }
 

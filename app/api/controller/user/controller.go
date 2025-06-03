@@ -30,16 +30,17 @@ import (
 )
 
 type Controller struct {
-	tx                dbtx.Transactor
-	principalUIDCheck check.PrincipalUID
-	authorizer        authz.Authorizer
-	principalStore    store.PrincipalStore
-	tokenStore        store.TokenStore
-	membershipStore   store.MembershipStore
-	publicKeyStore    store.PublicKeyStore
-	eventReporter     *userevents.Reporter
-	repoFinder        refcache.RepoFinder
-	favoriteStore     store.FavoriteStore
+	tx                   dbtx.Transactor
+	principalUIDCheck    check.PrincipalUID
+	authorizer           authz.Authorizer
+	principalStore       store.PrincipalStore
+	tokenStore           store.TokenStore
+	membershipStore      store.MembershipStore
+	publicKeyStore       store.PublicKeyStore
+	publicKeySubKeyStore store.PublicKeySubKeyStore
+	eventReporter        *userevents.Reporter
+	repoFinder           refcache.RepoFinder
+	favoriteStore        store.FavoriteStore
 }
 
 func NewController(
@@ -50,21 +51,23 @@ func NewController(
 	tokenStore store.TokenStore,
 	membershipStore store.MembershipStore,
 	publicKeyStore store.PublicKeyStore,
+	publicKeySubKeyStore store.PublicKeySubKeyStore,
 	eventReporter *userevents.Reporter,
 	repoFinder refcache.RepoFinder,
 	favoriteStore store.FavoriteStore,
 ) *Controller {
 	return &Controller{
-		tx:                tx,
-		principalUIDCheck: principalUIDCheck,
-		authorizer:        authorizer,
-		principalStore:    principalStore,
-		tokenStore:        tokenStore,
-		membershipStore:   membershipStore,
-		publicKeyStore:    publicKeyStore,
-		eventReporter:     eventReporter,
-		repoFinder:        repoFinder,
-		favoriteStore:     favoriteStore,
+		tx:                   tx,
+		principalUIDCheck:    principalUIDCheck,
+		authorizer:           authorizer,
+		principalStore:       principalStore,
+		tokenStore:           tokenStore,
+		membershipStore:      membershipStore,
+		publicKeyStore:       publicKeyStore,
+		publicKeySubKeyStore: publicKeySubKeyStore,
+		eventReporter:        eventReporter,
+		repoFinder:           repoFinder,
+		favoriteStore:        favoriteStore,
 	}
 }
 

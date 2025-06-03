@@ -21,12 +21,12 @@ import (
 )
 
 var WireSet = wire.NewSet(
-	ProvidePublicKey,
+	ProvideSSHAuthService,
 )
 
-func ProvidePublicKey(
+func ProvideSSHAuthService(
 	publicKeyStore store.PublicKeyStore,
 	pCache store.PrincipalInfoCache,
-) Service {
-	return NewService(publicKeyStore, pCache)
+) SSHAuthService {
+	return NewSSHAuthService(publicKeyStore, pCache)
 }

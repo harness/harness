@@ -17,6 +17,7 @@ package user
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -76,7 +77,7 @@ func (c *Controller) CreatePublicKey(
 		return nil, err
 	}
 
-	key, identity, comment, err := publickey.ParseString(in.Content)
+	key, err := publickey.ParseString(in.Content)
 	if err != nil {
 		return nil, errors.InvalidArgument("unrecognized key content")
 	}
@@ -86,10 +87,15 @@ func (c *Controller) CreatePublicKey(
 	}
 
 	// SSH keys don't have an embedded identity, by PGP keys do.
-	// If a key has an identity, it must match the current user's.
+	// If a key has identities, one of those must match the current user's.
 	// The email address must match, the name can be different.
-	if identity != nil && !strings.EqualFold(identity.Email, session.Principal.Email) {
-		return nil, errors.InvalidArgument("key identity doesn't match the current user's email address")
+	if identities := key.Identities(); len(identities) > 0 {
+		found := slices.ContainsFunc(identities, func(identity types.Identity) bool {
+			return strings.EqualFold(identity.Email, session.Principal.Email)
+		})
+		if !found {
+			return nil, errors.InvalidArgument("key identities don't contain the current user's email address")
+		}
 	}
 
 	switch key.Scheme() {
@@ -100,7 +106,7 @@ func (c *Controller) CreatePublicKey(
 	case enum.PublicKeySchemePGP:
 		if in.Usage == "" {
 			in.Usage = enum.PublicKeyUsageSign
-		} else if in.Usage == enum.PublicKeyUsageAuth {
+		} else if in.Usage != enum.PublicKeyUsageSign {
 			return nil, errors.InvalidArgument(
 				"invalid key usage: PGP keys can only be used for verification of commit signatures")
 		}
@@ -111,38 +117,35 @@ func (c *Controller) CreatePublicKey(
 	now := time.Now().UnixMilli()
 
 	k := &types.PublicKey{
-		PrincipalID: user.ID,
-		Created:     now,
-		Verified:    nil, // the key is created as unverified
-		Identifier:  in.Identifier,
-		Usage:       in.Usage,
-		Fingerprint: key.Fingerprint(),
-		Content:     in.Content,
-		Comment:     comment,
-		Type:        key.Type(),
-		Scheme:      key.Scheme(),
+		PrincipalID:      user.ID,
+		Created:          now,
+		Verified:         nil, // the key is created as unverified
+		Identifier:       in.Identifier,
+		Usage:            in.Usage,
+		Fingerprint:      key.Fingerprint(),
+		Content:          in.Content,
+		Comment:          key.Comment(),
+		Type:             key.Type(),
+		Scheme:           key.Scheme(),
+		ValidFrom:        key.ValidFrom(),
+		ValidTo:          key.ValidTo(),
+		RevocationReason: key.RevocationReason(),
+		Metadata:         key.Metadata(),
 	}
 
+	subKeyIDs := key.SubKeyIDs()
+
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
-		existingKeys, err := c.publicKeyStore.ListByFingerprint(
-			ctx,
-			k.Fingerprint,
-			nil,
-			[]enum.PublicKeyScheme{key.Scheme()},
-		)
-		if err != nil {
-			return fmt.Errorf("failed to read keys by fingerprint: %w", err)
+		if err := c.checkKeyExistence(ctx, user.ID, key, k); err != nil {
+			return err
 		}
 
-		for _, existingKey := range existingKeys {
-			if key.Matches(existingKey.Content) {
-				return errors.InvalidArgument("key is already in use")
-			}
-		}
-
-		err = c.publicKeyStore.Create(ctx, k)
-		if err != nil {
+		if err = c.publicKeyStore.Create(ctx, k); err != nil {
 			return fmt.Errorf("failed to insert public key: %w", err)
+		}
+
+		if err = c.publicKeySubKeyStore.Create(ctx, k.ID, subKeyIDs); err != nil {
+			return fmt.Errorf("failed to insert public key subkey: %w", err)
 		}
 
 		return nil
@@ -152,4 +155,40 @@ func (c *Controller) CreatePublicKey(
 	}
 
 	return k, nil
+}
+
+func (c *Controller) checkKeyExistence(
+	ctx context.Context,
+	userID int64,
+	key publickey.KeyInfo,
+	k *types.PublicKey,
+) error {
+	schemes := []enum.PublicKeyScheme{key.Scheme()}
+	switch key.Scheme() {
+	case enum.PublicKeySchemeSSH:
+		// For SSH keys we don't allow the same key twice, even for two different users.
+		// The fingerprint field is indexed in the DB, but it's not a unique index.
+		existingKeys, err := c.publicKeyStore.ListByFingerprint(ctx, k.Fingerprint, nil, nil, schemes)
+		if err != nil {
+			return fmt.Errorf("failed to read keys by fingerprint: %w", err)
+		}
+
+		for _, existingKey := range existingKeys {
+			if key.Matches(existingKey.Content) {
+				return errors.InvalidArgument("key is already in use")
+			}
+		}
+	case enum.PublicKeySchemePGP:
+		// For PGP keys we don't allow the same key twice for the same user.
+		existingKeys, err := c.publicKeyStore.ListByFingerprint(ctx, k.Fingerprint, &userID, nil, schemes)
+		if err != nil {
+			return fmt.Errorf("failed to read keys by userID and fingerprint: %w", err)
+		}
+
+		if len(existingKeys) > 0 {
+			return errors.InvalidArgument("key is already in use")
+		}
+	}
+
+	return nil
 }

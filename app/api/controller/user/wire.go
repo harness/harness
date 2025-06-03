@@ -37,6 +37,7 @@ func ProvideController(
 	tokenStore store.TokenStore,
 	membershipStore store.MembershipStore,
 	publicKeyStore store.PublicKeyStore,
+	publicKeySubKeyStore store.PublicKeySubKeyStore,
 	eventReporter *userevents.Reporter,
 	repoFinder refcache.RepoFinder,
 	favoriteStore store.FavoriteStore,
@@ -49,6 +50,7 @@ func ProvideController(
 		tokenStore,
 		membershipStore,
 		publicKeyStore,
+		publicKeySubKeyStore,
 		eventReporter,
 		repoFinder,
 		favoriteStore)
