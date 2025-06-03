@@ -175,9 +175,12 @@ const Search = () => {
   }, [selectedLanguages, selectedRepositories, repoMetadata?.path])
 
   useEffect(() => {
-    setTimeout(() => {
-      debouncedSearch(searchTerm)
-    }, 0) // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (searchMode !== SEARCH_MODE.SEMANTIC) {
+      setTimeout(() => {
+        debouncedSearch(searchTerm)
+      }, 0)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setRecursiveSearchEnabled, recursiveSearchEnabled])
 
   return (
