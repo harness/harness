@@ -29,6 +29,7 @@ import (
 type MediaTypesRepository interface {
 	MapMediaType(ctx context.Context, mediaType string) (int64, error)
 	MediaTypeExists(ctx context.Context, mediaType string) (bool, error)
+	GetMediaTypeByID(ctx context.Context, ids int64) (*types.MediaType, error)
 }
 
 type BlobRepository interface {
@@ -159,6 +160,7 @@ type OCIImageIndexMappingRepository interface {
 
 type LayerRepository interface {
 	AssociateLayerBlob(ctx context.Context, m *types.Manifest, b *types.Blob) error
+	GetAllLayersByManifestID(ctx context.Context, id int64) (*[]types.Layer, error)
 }
 
 type TagRepository interface {

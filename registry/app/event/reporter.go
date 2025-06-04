@@ -30,6 +30,7 @@ type ArtifactDetails struct {
 	RegistryName string      `json:"registry_name,omitempty"`
 	ImagePath    string      `json:"image_path,omitempty"` // format = image:tag
 	PackageType  PackageType `json:"package_type,omitempty"`
+	ManifestID   int64       `json:"manifest_id,omitempty"`
 }
 
 type CloudLocation struct {

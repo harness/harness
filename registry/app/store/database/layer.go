@@ -117,6 +117,51 @@ func (l layersDao) AssociateLayerBlob(
 	return nil
 }
 
+func (l layersDao) GetAllLayersByManifestID(
+	ctx context.Context, manifestID int64,
+) (*[]types.Layer, error) {
+	stmt := database.Builder.
+		Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(layersDB{}), ",")).
+		From("layers").
+		Where("layer_manifest_id = ?", manifestID)
+
+	toSQL, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert layers query to sql: %w", err)
+	}
+
+	dst := []layersDB{}
+	db := dbtx.GetAccessor(ctx, l.db)
+
+	if err = db.SelectContext(ctx, &dst, toSQL, args...); err != nil {
+		err := database.ProcessSQLErrorf(ctx, err, "Failed to find layers")
+		return nil, err
+	}
+
+	layers := make([]types.Layer, len(dst))
+	for i := range dst {
+		layer := l.mapToLayer(&dst[i])
+		layers[i] = *layer
+	}
+
+	return &layers, nil
+}
+
+func (l layersDao) mapToLayer(dst *layersDB) *types.Layer {
+	return &types.Layer{
+		ID:          dst.ID,
+		RegistryID:  dst.RegistryID,
+		ManifestID:  dst.ManifestID,
+		MediaTypeID: dst.MediaTypeID,
+		BlobID:      dst.BlobID,
+		Size:        dst.Size,
+		CreatedAt:   time.UnixMilli(dst.CreatedAt),
+		UpdatedAt:   time.UnixMilli(dst.UpdatedAt),
+		CreatedBy:   dst.CreatedBy,
+		UpdatedBy:   dst.UpdatedBy,
+	}
+}
+
 func (l layersDao) mapToInternalLayer(ctx context.Context, in *types.Layer) *layersDB {
 	if in.CreatedAt.IsZero() {
 		in.CreatedAt = time.Now()

@@ -235,7 +235,10 @@ func (l *manifestService) dbTagManifest(
 				info.ParentID, info.RegIdentifier)
 			return err
 		}
-		l.reportEventAsync(ctx, reg.ID, info.RegIdentifier, imageName, tagName, packageType, spacePath)
+		l.reportEventAsync(
+			ctx, reg.ID, info.RegIdentifier, imageName, tagName, packageType,
+			spacePath, dbManifest.ID,
+		)
 		session, _ := request.AuthSessionFrom(ctx)
 		createPayload := webhook.GetArtifactCreatedPayload(ctx, info, session.Principal.ID,
 			reg.ID, reg.Name, tagName, dgst.String(), l.urlProvider)
@@ -315,12 +318,14 @@ func (l *manifestService) reportEventAsync(
 	tagName string,
 	packageType event.PackageType,
 	spacePath string,
+	manifestID int64,
 ) {
 	go l.reporter.ReportEvent(ctx, &event.ArtifactDetails{
 		RegistryID:   regID,
 		RegistryName: regName,
 		ImagePath:    imageName + ":" + tagName,
 		PackageType:  packageType,
+		ManifestID:   manifestID,
 	}, spacePath)
 }
 
