@@ -66,7 +66,7 @@ func ReportEventAsync(
 
 	destinations := []CloudLocation{source} // TODO: Use the correct destination
 
-	go reporter.ReportEvent(ctx, ReplicationDetails{
+	go reporter.ReportEvent(ctx, &ReplicationDetails{
 		AccountID:     accountID,
 		Action:        action,
 		BlobID:        blobID,
