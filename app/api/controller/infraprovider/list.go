@@ -33,7 +33,9 @@ func (c *Controller) List(
 	if err != nil {
 		return nil, fmt.Errorf("failed to find space: %w", err)
 	}
-	err = apiauth.CheckGitspace(ctx, c.authorizer, session, space.Path, "", enum.PermissionInfraProviderView)
+	// todo: change the permission to PermissionInfraProviderView once infra provider resource is added to access
+	// control
+	err = apiauth.CheckGitspace(ctx, c.authorizer, session, space.Path, "", enum.PermissionGitspaceCreate)
 	if err != nil {
 		return nil, fmt.Errorf("failed to authorize: %w", err)
 	}

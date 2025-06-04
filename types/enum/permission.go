@@ -152,9 +152,10 @@ const (
 		----- GITSPACE -----
 	*/
 	PermissionGitspaceView   Permission = "gitspace_view"
+	PermissionGitspaceCreate Permission = "gitspace_create"
 	PermissionGitspaceEdit   Permission = "gitspace_edit"
 	PermissionGitspaceDelete Permission = "gitspace_delete"
-	PermissionGitspaceAccess Permission = "gitspace_access"
+	PermissionGitspaceUse    Permission = "gitspace_use"
 )
 
 const (

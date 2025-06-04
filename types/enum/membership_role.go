@@ -50,7 +50,7 @@ var membershipRoleExecutorPermissions = slices.Clip(slices.Insert(membershipRole
 	PermissionSecretAccess,
 	PermissionConnectorAccess,
 	PermissionTemplateAccess,
-	PermissionGitspaceAccess,
+	PermissionGitspaceUse,
 	PermissionInfraProviderAccess,
 	PermissionArtifactsUpload,
 ))
@@ -95,7 +95,7 @@ var membershipRoleSpaceOwnerPermissions = slices.Clip(slices.Insert(membershipRo
 
 	PermissionGitspaceEdit,
 	PermissionGitspaceDelete,
-	PermissionGitspaceAccess,
+	PermissionGitspaceUse,
 
 	PermissionInfraProviderEdit,
 	PermissionInfraProviderDelete,

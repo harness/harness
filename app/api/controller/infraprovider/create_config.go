@@ -39,13 +39,15 @@ func (c *Controller) CreateConfig(
 	if err != nil {
 		return nil, fmt.Errorf("failed to find parent by ref %q : %w", in.SpaceRef, err)
 	}
+	// todo: change the permission to PermissionInfraProviderView once infra provider resource is added to access
+	// control
 	if err = apiauth.CheckInfraProvider(
 		ctx,
 		c.authorizer,
 		&session,
 		parentSpace.Path,
 		NoResourceIdentifier,
-		enum.PermissionInfraProviderEdit); err != nil {
+		enum.PermissionGitspaceCreate); err != nil {
 		return nil, err
 	}
 	now := time.Now().UnixMilli()

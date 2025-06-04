@@ -33,7 +33,9 @@ func (c *Controller) DeleteConfig(
 	if err != nil {
 		return fmt.Errorf("failed to find space: %w", err)
 	}
-	err = apiauth.CheckGitspace(ctx, c.authorizer, session, space.Path, identifier, enum.PermissionInfraProviderDelete)
+	// todo: change the permission to PermissionInfraProviderView once infra provider resource is added to access
+	// control
+	err = apiauth.CheckGitspace(ctx, c.authorizer, session, space.Path, identifier, enum.PermissionGitspaceDelete)
 	if err != nil {
 		return fmt.Errorf("failed to authorize: %w", err)
 	}

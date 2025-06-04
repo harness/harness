@@ -84,7 +84,7 @@ func (c *Controller) Create(
 		session,
 		space.Path,
 		"",
-		enum.PermissionGitspaceEdit); err != nil {
+		enum.PermissionGitspaceCreate); err != nil {
 		return nil, err
 	}
 
@@ -133,7 +133,7 @@ func (c *Controller) Create(
 		session,
 		resourceSpace.Path,
 		resourceIdentifier,
-		enum.PermissionInfraProviderAccess); err != nil {
+		enum.PermissionGitspaceCreate); err != nil {
 		return nil, err
 	}
 
