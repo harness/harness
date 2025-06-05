@@ -1227,19 +1227,21 @@ func (d *driver) Delete(ctx context.Context, path string) error {
 }
 
 // RedirectURL returns a URL which may be used to retrieve the content stored at the given path.
-func (d *driver) RedirectURL(ctx context.Context, method string, path string) (string, error) {
+func (d *driver) RedirectURL(ctx context.Context, method string, path string, filename string) (string, error) {
 	expiresIn := 20 * time.Minute
 
 	var req *request.Request
 
 	switch method {
 	case http.MethodGet:
-		req, _ = d.S3.GetObjectRequest(
-			&s3.GetObjectInput{
-				Bucket: aws.String(d.Bucket),
-				Key:    aws.String(d.s3Path(path)),
-			},
-		)
+		input := &s3.GetObjectInput{
+			Bucket: aws.String(d.Bucket),
+			Key:    aws.String(d.s3Path(path)),
+		}
+		if filename != "" {
+			input.ResponseContentDisposition = aws.String(fmt.Sprintf("attachment; filename=\"%s\"", filename))
+		}
+		req, _ = d.S3.GetObjectRequest(input)
 	case http.MethodHead:
 		req, _ = d.S3.HeadObjectRequest(
 			&s3.HeadObjectInput{

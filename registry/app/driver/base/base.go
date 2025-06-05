@@ -219,13 +219,13 @@ func (base *Base) Delete(ctx context.Context, path string) error {
 }
 
 // RedirectURL wraps RedirectURL of the underlying storage driver.
-func (base *Base) RedirectURL(ctx context.Context, method string, path string) (string, error) {
+func (base *Base) RedirectURL(ctx context.Context, method string, path string, filename string) (string, error) {
 	log.Ctx(ctx).Info().Msgf("RedirectURL(%q, %q)", method, path)
 	if !driver.PathRegexp.MatchString(path) {
 		return "", driver.InvalidPathError{Path: path, DriverName: base.StorageDriver.Name()}
 	}
 
-	str, e := base.StorageDriver.RedirectURL(ctx, method, path)
+	str, e := base.StorageDriver.RedirectURL(ctx, method, path, filename)
 	log.Ctx(ctx).Info().Msgf("Redirect URL generated %s", str)
 	return str, base.setDriverName(e)
 }

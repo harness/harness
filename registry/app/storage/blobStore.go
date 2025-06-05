@@ -38,11 +38,12 @@ type genericBlobStore struct {
 	redirect      bool
 }
 
-func (bs *genericBlobStore) Get(ctx context.Context, filePath string, size int64) (*FileReader, string, error) {
+func (bs *genericBlobStore) Get(ctx context.Context,
+	filePath string, size int64, filename string) (*FileReader, string, error) {
 	dcontext.GetLogger(ctx, log.Ctx(ctx).Debug()).Msg("(*genericBlobStore).Get")
 
 	if bs.redirect {
-		redirectURL, err := bs.driver.RedirectURL(ctx, http.MethodGet, filePath)
+		redirectURL, err := bs.driver.RedirectURL(ctx, http.MethodGet, filePath, filename)
 		if err != nil {
 			return nil, "", err
 		}

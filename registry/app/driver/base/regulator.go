@@ -39,7 +39,7 @@ type regulator struct {
 // concurrent calls given a minimum limit and default.
 //
 // If the parameter supplied is of an invalid type this returns an error.
-func GetLimitFromParameter(param interface{}, min, def uint64) (uint64, error) {
+func GetLimitFromParameter(param interface{}, mn, def uint64) (uint64, error) {
 	limit := def
 
 	switch v := param.(type) {
@@ -57,7 +57,7 @@ func GetLimitFromParameter(param interface{}, min, def uint64) (uint64, error) {
 		if val > 0 {
 			limit = uint64(val)
 		} else {
-			limit = min
+			limit = mn
 		}
 	case uint, uint32:
 		limit = reflect.ValueOf(v).Convert(reflect.TypeOf(param)).Uint()
@@ -67,8 +67,8 @@ func GetLimitFromParameter(param interface{}, min, def uint64) (uint64, error) {
 		return 0, fmt.Errorf("invalid value '%#v'", param)
 	}
 
-	if limit < min {
-		return min, nil
+	if limit < mn {
+		return mn, nil
 	}
 
 	return limit, nil
@@ -188,9 +188,9 @@ func (r *regulator) Delete(ctx context.Context, path string) error {
 
 // RedirectURL returns a URL which may be used to retrieve the content stored at
 // the given path.
-func (r *regulator) RedirectURL(ctx context.Context, method string, path string) (string, error) {
+func (r *regulator) RedirectURL(ctx context.Context, method string, path string, filename string) (string, error) {
 	r.enter()
 	defer r.exit()
 
-	return r.StorageDriver.RedirectURL(ctx, method, path)
+	return r.StorageDriver.RedirectURL(ctx, method, path, filename)
 }

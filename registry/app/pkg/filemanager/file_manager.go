@@ -257,7 +257,7 @@ func (f *FileManager) DownloadFile(
 
 	completeFilaPath := path.Join(rootPathString + rootIdentifier + rootPathString + files + rootPathString + blob.Sha256)
 	blobContext := f.GetBlobsContext(ctx, rootIdentifier)
-	reader, redirectURL, err := blobContext.genericBlobStore.Get(ctx, completeFilaPath, blob.Size)
+	reader, redirectURL, err := blobContext.genericBlobStore.Get(ctx, completeFilaPath, blob.Size, node.Name)
 
 	if err != nil {
 		return nil, 0, "", fmt.Errorf(failedToGetFile, completeFilaPath, err)

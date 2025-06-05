@@ -778,7 +778,7 @@ func (suite *DriverSuite) TestRedirectURL() {
 	err := suite.StorageDriver.PutContent(suite.ctx, filename, contents)
 	suite.Require().NoError(err)
 
-	url, err := suite.StorageDriver.RedirectURL(context.TODO(), "", filename)
+	url, err := suite.StorageDriver.RedirectURL(context.TODO(), "", filename, "")
 	if url == "" && err == nil {
 		return
 	}
@@ -794,7 +794,7 @@ func (suite *DriverSuite) TestRedirectURL() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(contents, read)
 
-	url, err = suite.StorageDriver.RedirectURL(context.TODO(), "", filename)
+	url, err = suite.StorageDriver.RedirectURL(context.TODO(), "", filename, "")
 	if url == "" && err == nil {
 		return
 	}

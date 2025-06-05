@@ -178,6 +178,6 @@ type GenericBlobStore interface {
 	Move(ctx context.Context, srcPath string, dstPath string) error
 	Delete(ctx context.Context, filePath string) error
 
-	Get(ctx context.Context, filePath string, size int64) (*FileReader, string, error)
+	Get(ctx context.Context, filePath string, size int64, filename string) (*FileReader, string, error)
 	GetWithNoRedirect(ctx context.Context, filePath string, size int64) (*FileReader, error)
 }

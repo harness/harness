@@ -179,7 +179,7 @@ func (_m *StorageDriver) Reader(ctx context.Context, path string, offset int64) 
 }
 
 // RedirectURL provides a mock function with given fields: ctx, method, path
-func (_m *StorageDriver) RedirectURL(ctx context.Context, method string, path string) (string, error) {
+func (_m *StorageDriver) RedirectURL(ctx context.Context, method string, path string, filename string) (string, error) {
 	ret := _m.Called(ctx, method, path)
 
 	if len(ret) == 0 {

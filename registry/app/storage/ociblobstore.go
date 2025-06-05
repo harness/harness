@@ -132,7 +132,7 @@ func (bs *ociBlobStore) ServeBlobInternal(
 	}
 
 	if bs.redirect {
-		redirectURL, err := bs.driver.RedirectURL(ctx, method, path)
+		redirectURL, err := bs.driver.RedirectURL(ctx, method, path, "")
 		if err != nil {
 			return nil, "", size, err
 		}

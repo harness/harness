@@ -325,7 +325,7 @@ func (d *driver) Delete(_ context.Context, subPath string) error {
 }
 
 // RedirectURL returns a URL which may be used to retrieve the content stored at the given path.
-func (d *driver) RedirectURL(_ context.Context, _ string, _ string) (string, error) {
+func (d *driver) RedirectURL(_ context.Context, _ string, _ string, _ string) (string, error) {
 	return "", nil
 }
 

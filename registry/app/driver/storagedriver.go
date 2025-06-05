@@ -114,7 +114,7 @@ type StorageDriver interface {
 	// RedirectURL returns a URL which the client of the request r may use
 	// to retrieve the content stored at path. Returning the empty string
 	// signals that the request may not be redirected.
-	RedirectURL(ctx context.Context, method string, path string) (string, error)
+	RedirectURL(ctx context.Context, method string, path string, filename string) (string, error)
 
 	// Walk traverses a filesystem defined within driver, starting
 	// from the given path, calling f on each file.
