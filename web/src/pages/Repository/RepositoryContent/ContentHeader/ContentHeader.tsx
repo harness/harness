@@ -19,7 +19,7 @@ import { Container, Layout, Button, FlexExpander, ButtonVariation, Text, ButtonS
 import cx from 'classnames'
 import { Icon } from '@harnessio/icons'
 import { Color } from '@harnessio/design-system'
-import { Breadcrumbs, IBreadcrumbProps } from '@blueprintjs/core'
+import { Breadcrumbs, IBreadcrumbProps, Intent } from '@blueprintjs/core'
 import { Link, useHistory } from 'react-router-dom'
 import { compact, isEmpty } from 'lodash-es'
 import { useStrings } from 'framework/strings'
@@ -43,7 +43,8 @@ export function ContentHeader({
   resourceContent
 }: Pick<GitInfoProps, 'repoMetadata' | 'gitRef' | 'resourcePath' | 'resourceContent'>) {
   const { getString } = useStrings()
-  const { routes, standalone, hooks, isCurrentSessionPublic } = useAppContext()
+  // @ts-ignore
+  const { routes, standalone, hooks, isCurrentSessionPublic, turboURL } = useAppContext()
   const history = useHistory()
   const _isDir = isDir(resourceContent)
   const space = useGetSpaceParam()
@@ -142,6 +143,7 @@ export function ContentHeader({
                 />
               }
               tooltipProps={{
+                // @ts-ignore
                 interactionKind: 'click',
                 minimal: true,
                 position: 'bottom-right'
@@ -166,6 +168,16 @@ export function ContentHeader({
               }}
               {...permissionProps(permPushResult, standalone)}
             />
+            <Button
+              style={{ whiteSpace: 'nowrap' }}
+              variation={ButtonVariation.PRIMARY}
+              intent={Intent.SUCCESS}
+              disabled={isRefATag(gitRef) || isGitRev(gitRef)}
+              onClick={() => {
+                history.push(`${turboURL}?repoId=${repoMetadata.identifier}`)
+              }}>
+              🚀 Deploy
+            </Button>
           </>
         )}
       </Layout.Horizontal>

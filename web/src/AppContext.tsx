@@ -56,6 +56,8 @@ const AppContext = React.createContext<AppContextProps>({
   },
   currentUserProfileURL: '',
   routingId: '',
+  // @ts-ignore
+  turboURL: '',
   defaultSettingsURL: '',
   isPublicAccessEnabledOnResources: false,
   isCurrentSessionPublic: !!window.publicAccessOnGitness,

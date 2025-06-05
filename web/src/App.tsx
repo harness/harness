@@ -48,6 +48,8 @@ const App: React.FC<AppProps> = React.memo(function App({
   hooks,
   customComponents,
   currentUserProfileURL = '',
+  // @ts-ignore
+  turboURL = '',
   defaultSettingsURL = '',
   isPublicAccessEnabledOnResources = false,
   isCurrentSessionPublic = !!window.publicAccessOnGitness,
@@ -99,6 +101,8 @@ const App: React.FC<AppProps> = React.memo(function App({
                     currentUser: defaultCurrentUser,
                     customComponents,
                     currentUserProfileURL,
+                    // @ts-ignore
+                    turboURL,
                     defaultSettingsURL,
                     isPublicAccessEnabledOnResources,
                     isCurrentSessionPublic,
