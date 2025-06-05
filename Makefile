@@ -44,8 +44,8 @@ build: generate ## Build the all-in-one Harness binary
 
 test: generate  ## Run the go tests
 	@echo "Running tests"
-	go test -v -coverprofile=coverage.out ./...
-	go tool cover -html=coverage.out
+	@go test -v -coverprofile=coverage.out `go list ./... | grep -v "./registry/tests/maven"`
+	@go tool cover -html=coverage.out
 
 
 
@@ -58,19 +58,25 @@ test: generate  ## Run the go tests
 run: ar-clean build
 	./gitness server .local.env || true
 
+# Main conformance test targets
 ar-conformance-test: ar-clean build
 	./gitness server .local.env > logfile.log 2>&1 & echo $$! > server.PID
-	@sleep 20
+	sleep 20
 	./registry/tests/conformance_test.sh localhost:3000
-	EXIT_CODE=$$?;
-	kill `cat server.PID`
-	@rm server.PID
-	@rm logfile.log
-	exit $$EXIT_CODE
+	@EXIT_CODE=$$?;
+	@kill `cat server.PID` 2>/dev/null || true
+	@rm -f server.PID
+	@rm -f logfile.log
+	@exit $$EXIT_CODE
 
 ar-hot-conformance-test:
+	@echo "Running OCI conformance tests..."
 	rm -rf distribution-spec || true
 	./registry/tests/conformance_test.sh localhost:3000 || true
+	@echo "Running Maven conformance tests..."
+	./registry/tests/maven/scripts/setup_test.sh localhost:3000
+	@chmod +x /tmp/maven_env.sh
+	source /tmp/maven_env.sh && go test -v ./registry/tests/maven/... -ginkgo.v || true
 
 ar-api-update:
 	@set -e; \
