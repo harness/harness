@@ -1,0 +1,19 @@
+{
+  "image": "dhruvharness/gitness-base:latest",
+  "remoteUser": "root",
+  "forwardPorts": [
+    "3000"
+  ],
+  "customizations": {
+    "harnessGitspaces": {
+      "connectors": [
+        {
+          "type": "DockerRegistry",
+          "identifier": "dhruvdockerregistry"
+        }
+      ]
+    }
+  },
+  "postCreateCommand": "sudo chmod +x /root/gitness/.devcontainer/postCreate.sh && /root/gitness/.devcontainer/postCreate.sh",
+  "postStartCommand": "sudo chmod +x /root/gitness/.devcontainer/postStart.sh && /root/gitness/.devcontainer/postStart.sh"
+}
