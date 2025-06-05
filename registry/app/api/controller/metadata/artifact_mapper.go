@@ -368,9 +368,10 @@ func GetNonOCIAllArtifactVersionResponse(
 	pageSize int,
 	registryURL string,
 	setupDetailsAuthHeaderPrefix string,
+	pkgType string,
 ) *artifactapi.ListArtifactVersionResponseJSONResponse {
 	artifactVersionMetadataList := GetNonOCIArtifactMetadata(
-		ctx, artifacts, image, registryURL, setupDetailsAuthHeaderPrefix)
+		ctx, artifacts, image, registryURL, setupDetailsAuthHeaderPrefix, pkgType)
 	pageCount := GetPageCount(count, pageSize)
 	listArtifactVersions := &artifactapi.ListArtifactVersion{
 		ItemCount:        &count,
@@ -392,13 +393,14 @@ func GetNonOCIArtifactMetadata(
 	image string,
 	registryURL string,
 	setupDetailsAuthHeaderPrefix string,
+	pkgType string,
 ) []artifactapi.ArtifactVersionMetadata {
 	artifactVersionMetadataList := []artifactapi.ArtifactVersionMetadata{}
 	for _, tag := range *tags {
 		modifiedAt := GetTimeInMs(tag.ModifiedAt)
 		size := GetImageSize(tag.Size)
-		command := GetPullCommand(image, tag.Name, string(tag.PackageType), registryURL, setupDetailsAuthHeaderPrefix)
-		packageType, err := toPackageType(string(tag.PackageType))
+		command := GetPullCommand(image, tag.Name, pkgType, registryURL, setupDetailsAuthHeaderPrefix)
+		packageType, err := toPackageType(pkgType)
 		downloadCount := tag.DownloadCount
 		if err != nil {
 			log.Ctx(ctx).Error().Err(err).Msgf("Error converting package type %s", tag.PackageType)
@@ -424,6 +426,7 @@ func GetDockerArtifactDetails(
 	tag *types.TagDetail,
 	manifest *types.Manifest,
 	registryURL string,
+	downloadCount int64,
 ) *artifactapi.DockerArtifactDetailResponseJSONResponse {
 	repoPath := getRepoPath(registry.Name, tag.ImageName, manifest.Digest.String())
 	pullCommand := GetDockerPullCommand(tag.ImageName, tag.Name, registryURL)
@@ -440,7 +443,7 @@ func GetDockerArtifactDetails(
 		PullCommand:    &pullCommand,
 		Url:            GetTagURL(tag.ImageName, tag.Name, registryURL),
 		Size:           &size,
-		DownloadsCount: &tag.DownloadCount,
+		DownloadsCount: &downloadCount,
 	}
 
 	response := &artifactapi.DockerArtifactDetailResponseJSONResponse{
@@ -455,13 +458,13 @@ func GetHelmArtifactDetails(
 	tag *types.TagDetail,
 	manifest *types.Manifest,
 	registryURL string,
+	downloadCount int64,
 ) *artifactapi.HelmArtifactDetailResponseJSONResponse {
 	repoPath := getRepoPath(registry.Name, tag.ImageName, manifest.Digest.String())
 	pullCommand := GetHelmPullCommand(tag.ImageName, tag.Name, registryURL)
 	createdAt := GetTimeInMs(tag.CreatedAt)
 	modifiedAt := GetTimeInMs(tag.UpdatedAt)
 	size := GetSize(manifest.TotalSize)
-	downloadCount := tag.DownloadCount
 	artifactDetail := &artifactapi.HelmArtifactDetail{
 		Artifact:       &tag.ImageName,
 		Version:        tag.Name,

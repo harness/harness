@@ -136,7 +136,7 @@ func (c *APIController) GetAllArtifactVersions(
 		}, nil
 	}
 	metadata, err := c.ArtifactStore.GetAllVersionsByRepoAndImage(
-		ctx, regInfo.ParentID, regInfo.RegistryIdentifier,
+		ctx, regInfo.RegistryID,
 		image, regInfo.sortByField, regInfo.sortByOrder, regInfo.limit, regInfo.offset, regInfo.searchTerm,
 	)
 	if err != nil {
@@ -157,7 +157,7 @@ func (c *APIController) GetAllArtifactVersions(
 	return artifact.GetAllArtifactVersions200JSONResponse{
 		ListArtifactVersionResponseJSONResponse: *GetNonOCIAllArtifactVersionResponse(
 			ctx, metadata, image, cnt, regInfo.pageNumber, regInfo.limit, registryURL,
-			c.SetupDetailsAuthHeaderPrefix,
+			c.SetupDetailsAuthHeaderPrefix, string(registry.PackageType),
 		),
 	}, nil
 }

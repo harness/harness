@@ -485,7 +485,7 @@ type ArtifactRepository interface {
 		image string,
 	) (*types.ArtifactMetadata, error)
 	GetAllVersionsByRepoAndImage(
-		ctx context.Context, id int64, identifier string, image string,
+		ctx context.Context, id int64, image string,
 		field string, order string, limit int, offset int, term string,
 	) (*[]types.NonOCIArtifactMetadata, error)
 	CountAllVersionsByRepoAndImage(

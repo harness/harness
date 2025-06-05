@@ -719,64 +719,42 @@ func (a ArtifactDao) mapToArtifactMetadataList(
 }
 
 func (a ArtifactDao) GetAllVersionsByRepoAndImage(
-	ctx context.Context, parentID int64, repoKey string,
+	ctx context.Context, regID int64,
 	image string, sortByField string, sortByOrder string, limit int, offset int,
 	search string,
 ) (*[]types.NonOCIArtifactMetadata, error) {
-	// Define download count subquery
-	downloadCountSubquery := `
-    SELECT 
-        a.artifact_image_id, 
-        COUNT(d.download_stat_id) AS download_count, 
-        i.image_name, 
-        i.image_registry_id
-    FROM artifacts a
-    JOIN download_stats d ON d.download_stat_artifact_id = a.artifact_id
-    JOIN images i ON i.image_id = a.artifact_image_id
-    GROUP BY a.artifact_image_id, i.image_name, i.image_registry_id
-`
-
 	// Build the main query
 	q := databaseg.Builder.
 		Select(`
+        a.artifact_id as id,
         a.artifact_version AS name, 
         a.artifact_metadata ->> 'size' AS size, 
-        a.artifact_metadata ->> 'file_count' AS file_count, 
-        r.registry_package_type AS package_type, 
-        a.artifact_updated_at AS modified_at,
-        COALESCE(dc.download_count, 0) AS download_count
+        a.artifact_metadata ->> 'file_count' AS file_count,
+        a.artifact_updated_at AS modified_at
     `)
 
 	if a.db.DriverName() == SQLITE3 {
 		q = databaseg.Builder.Select(`
+        a.artifact_id as id,
         a.artifact_version AS name, 
         json_extract(a.artifact_metadata, '$.size') AS size,
         json_extract(a.artifact_metadata, '$.file_count') AS file_count,
-        r.registry_package_type AS package_type, 
-        a.artifact_updated_at AS modified_at,
-        COALESCE(dc.download_count, 0) AS download_count
+        a.artifact_updated_at AS modified_at
     `)
 	}
 
 	q = q.From("artifacts a").
 		Join("images i ON i.image_id = a.artifact_image_id").
-		Join("registries r ON i.image_registry_id = r.registry_id").
-		LeftJoin(fmt.Sprintf(
-			"(%s) AS dc ON a.artifact_image_id = dc.artifact_image_id",
-			downloadCountSubquery,
-		)).
 		Where(
-			"r.registry_parent_id = ? AND r.registry_name = ? AND i.image_name = ?",
-			parentID, repoKey, image,
+			" i.image_registry_id = ? AND i.image_name = ?",
+			regID, image,
 		)
 	if search != "" {
 		q = q.Where("artifact_version LIKE ?", sqlPartialMatch(search))
 	}
 	// nolint:goconst
 	sortField := "artifact_" + sortByField
-	if sortByField == downloadCount {
-		sortField = downloadCount
-	} else if sortByField == name {
+	if sortByField == name || sortByField == downloadCount {
 		sortField = name
 	}
 	q = q.OrderBy(sortField + " " + sortByOrder).Limit(util.SafeIntToUInt64(limit)).Offset(util.SafeIntToUInt64(offset))
@@ -792,7 +770,64 @@ func (a ArtifactDao) GetAllVersionsByRepoAndImage(
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
 		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
 	}
+
+	artifactIDs := make([]interface{}, 0, len(dst))
+	for _, art := range dst {
+		artifactIDs = append(artifactIDs, art.ID)
+	}
+	err = a.fetchDownloadStatsForArtifacts(ctx, artifactIDs, dst, sortByField == downloadCount, sortByOrder)
+	if err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to fetch the download count for artifacts")
+	}
 	return a.mapToNonOCIMetadataList(dst)
+}
+
+func (a ArtifactDao) fetchDownloadStatsForArtifacts(ctx context.Context,
+	artifactIDs []interface{}, dst []*nonOCIArtifactMetadataDB, sortByDownloadCount bool, sortOrder string) error {
+	if len(artifactIDs) == 0 {
+		return nil
+	}
+
+	query, args, err := sq.
+		Select("download_stat_artifact_id", "COUNT(*) AS download_count").
+		From("download_stats").
+		Where(sq.Eq{"download_stat_artifact_id": artifactIDs}).
+		GroupBy("download_stat_artifact_id").
+		ToSql()
+	if err != nil {
+		return errors.Wrap(err, "building download stats query")
+	}
+
+	results := []downloadCountResult{}
+	if err := a.db.SelectContext(ctx, &results, query, args...); err != nil {
+		return errors.Wrap(err, "executing download stats query")
+	}
+
+	// Map artifact ID -> count
+	countMap := make(map[string]int64, len(results))
+	for _, r := range results {
+		countMap[r.ArtifactID] = r.DownloadCount
+	}
+
+	// Update download counts in dst
+	for _, artifact := range dst {
+		if count, ok := countMap[artifact.ID]; ok {
+			artifact.DownloadCount = count
+		} else {
+			artifact.DownloadCount = 0
+		}
+	}
+
+	if sortByDownloadCount {
+		sort.Slice(dst, func(i, j int) bool {
+			if sortOrder == "DESC" {
+				return dst[i].DownloadCount > dst[j].DownloadCount
+			}
+			return dst[i].DownloadCount < dst[j].DownloadCount
+		})
+	}
+
+	return nil
 }
 
 func (a ArtifactDao) CountAllVersionsByRepoAndImage(
@@ -836,14 +871,17 @@ func (a ArtifactDao) GetArtifactMetadata(
 ) (*types.ArtifactMetadata, error) {
 	q := databaseg.Builder.Select(
 		"r.registry_package_type as package_type, a.artifact_version as name,"+
-			"a.artifact_updated_at as modified_at").
+			"a.artifact_updated_at as modified_at, "+
+			"COALESCE(COUNT(dc.download_stat_id), 0) as download_count").
 		From("artifacts a").
 		Join("images i ON i.image_id = a.artifact_image_id").
 		Join("registries r ON i.image_registry_id = registry_id").
+		LeftJoin("download_stats dc ON dc.download_stat_artifact_id = a.artifact_id").
 		Where(
 			"r.registry_parent_id = ? AND r.registry_name = ?"+
 				" AND i.image_name = ? AND a.artifact_version = ?", parentID, repoKey, imageName, name,
-		)
+		).
+		GroupBy("r.registry_package_type, a.artifact_version, a.artifact_updated_at")
 
 	sql, args, err := q.ToSql()
 	if err != nil {
@@ -945,10 +983,16 @@ func (a ArtifactDao) mapToNonOCIMetadataList(
 }
 
 type nonOCIArtifactMetadataDB struct {
+	ID            string               `db:"id"`
 	Name          string               `db:"name"`
 	Size          *string              `db:"size"`
 	PackageType   artifact.PackageType `db:"package_type"`
 	FileCount     *int64               `db:"file_count"`
 	ModifiedAt    int64                `db:"modified_at"`
 	DownloadCount int64                `db:"download_count"`
+}
+
+type downloadCountResult struct {
+	ArtifactID    string `db:"download_stat_artifact_id"`
+	DownloadCount int64  `db:"download_count"`
 }

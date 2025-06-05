@@ -90,6 +90,11 @@ func (c *APIController) GetDockerArtifactDetails(
 	if err != nil {
 		return getArtifactDetailsErrResponse(err)
 	}
+	art, err := c.ArtifactStore.GetArtifactMetadata(ctx, registry.ParentID, registry.Name, image, dgst.String())
+	if err != nil {
+		return getArtifactDetailsErrResponse(err)
+	}
+
 	m, err := c.ManifestStore.FindManifestByDigest(ctx, registry.ID, image, dgst)
 
 	if err != nil {
@@ -102,6 +107,7 @@ func (c *APIController) GetDockerArtifactDetails(
 	return artifact.GetDockerArtifactDetails200JSONResponse{
 		DockerArtifactDetailResponseJSONResponse: *GetDockerArtifactDetails(
 			registry, tag, m, c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, registry.Name),
+			art.DownloadCount,
 		),
 	}, nil
 }

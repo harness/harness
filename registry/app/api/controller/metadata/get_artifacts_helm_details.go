@@ -23,6 +23,7 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/registry/types"
 	store2 "github.com/harness/gitness/store"
 	"github.com/harness/gitness/types/enum"
 )
@@ -90,9 +91,20 @@ func (c *APIController) GetHelmArtifactDetails(
 		return getHelmArtifactDetailsErrResponse(err)
 	}
 
+	parsedDigest, err := types.NewDigest(m.Digest)
+	if err != nil {
+		return getHelmArtifactDetailsErrResponse(err)
+	}
+
+	art, err := c.ArtifactStore.GetArtifactMetadata(ctx, registry.ParentID, registry.Name, image, parsedDigest.String())
+	if err != nil {
+		return getHelmArtifactDetailsErrResponse(err)
+	}
+
 	return artifact.GetHelmArtifactDetails200JSONResponse{
 		HelmArtifactDetailResponseJSONResponse: *GetHelmArtifactDetails(
 			registry, tag, m, c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, regInfo.RegistryIdentifier),
+			art.DownloadCount,
 		),
 	}, nil
 }
