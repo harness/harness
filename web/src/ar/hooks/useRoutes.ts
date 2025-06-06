@@ -23,11 +23,16 @@ import { ARRouteDefinitionsReturn, routeDefinitions } from '@ar/routes/RouteDefi
 import { useAppStore } from './useAppStore'
 import { useParentUtils } from './useParentUtils'
 import { useDecodedParams } from './useDecodedParams'
+import { useGetRepositoryListViewType } from './useGetRepositoryListViewType'
+import { useParentHooks } from './useParentHooks'
 
 export function useRoutes(isRouteDestinationRendering = false): ARRouteDefinitionsReturn {
   const { baseUrl, matchPath } = useAppStore()
+  const { useQueryParams } = useParentHooks()
   const prefixUrl = isRouteDestinationRendering ? matchPath : baseUrl
   const routeParams = useDecodedParams<Record<string, string>>()
+  const queryParams = useQueryParams<Record<string, string>>()
+  const mode = useGetRepositoryListViewType()
   const { getRouteDefinitions } = useParentUtils()
   const transformedRouteDefinitions: ARRouteDefinitionsReturn = useMemo(() => {
     const finalRouteDefinitions =
@@ -36,9 +41,15 @@ export function useRoutes(isRouteDestinationRendering = false): ARRouteDefinitio
       const transformedParams: any = Object.keys(params).reduce((acc, curr) => {
         return { ...acc, [curr]: encodePathParams(params[curr]) }
       }, {})
-      return normalizePath(`${prefixUrl}/${route(transformedParams, options)}`)
+      return normalizePath(
+        `${prefixUrl}/${route(transformedParams, {
+          ...options,
+          mode,
+          currentQueryParams: isRouteDestinationRendering ? undefined : queryParams
+        })}`
+      )
     })
-  }, [prefixUrl])
+  }, [prefixUrl, queryParams, mode, isRouteDestinationRendering])
 
   return transformedRouteDefinitions
 }

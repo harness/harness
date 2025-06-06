@@ -17,7 +17,9 @@
 export enum NodeTypeEnum {
   File = 'File',
   Folder = 'Folder',
-  Header = 'Header'
+  Header = 'Header',
+  LoadMore = 'LoadMore',
+  Error = 'Error'
 }
 
 export enum TreeNodeTypeEnum {

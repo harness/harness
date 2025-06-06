@@ -14,57 +14,56 @@
  * limitations under the License.
  */
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Virtuoso } from 'react-virtuoso'
 import { Spinner } from '@blueprintjs/core'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { DropDown, SelectOption, Text } from '@harnessio/uicore'
 
-import { useDeepCompareEffect } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 
-import TreeNode from './TreeNode'
+import TreeNode, { NodeStateEnum } from './TreeNode'
 import { TreeViewContext } from './TreeViewContext'
-import TreeNodeSearchInput from './TreeNodeSearchInput'
-import { IFetchDataResult, INodeConfig, ITreeNode, NodeTypeEnum, TreeNodeTypeEnum } from './types'
+import { INode, INodeConfig, ITreeNode, NodeTypeEnum, TreeNodeTypeEnum } from './types'
 import {
   addElementAtIndex,
   addElementInSet,
   addElementsInArrayAtIndex,
-  getComputedFilters,
   getEmptyTreeNodeConfig,
   getErrorTreeNodeConfig,
   getLoadingTreeNodeConfig,
-  getLoadMoreTreeNodeConfig,
   getRootNodeTreeNodeConfig,
   getSearchNodeTreeNodeConfig,
   removeChildrenNodesFromArray,
   removeElementFromIndex,
-  removeElementFromSet,
-  removeNextSiblingNodesFromArray
+  removeElementFromSet
 } from './utils'
 import { TreeNodeList } from './TreeNodeList'
+import TreeNodeSearchInput from './TreeNodeSearchInput'
 
-interface TreeViewProps<T extends INodeConfig> {
+interface TreeViewProps {
   activePath: string
   setActivePath: (path: string) => void
+  rootNodes: Array<INode>
+  loadingRootNodes: boolean
   rootPath: string
   compact?: boolean
-  fetchData: (node: ITreeNode, filters?: INodeConfig) => Promise<IFetchDataResult>
+  fetchData: (node: ITreeNode, filters?: INodeConfig) => Promise<Array<INode>>
   onClick: (node: ITreeNode) => void
   renderNodeHeader?: (node: ITreeNode) => React.ReactNode
   renderNodeAction?: (node: ITreeNode) => React.ReactNode
   topItemCount?: number
+  initialised?: boolean
   globalSearchConfig?: {
     className?: string
     searchTerm?: string
-    sortOptions?: Array<SelectOption>
     sort?: string
+    sortOptions?: Array<SelectOption>
+    onChange?: (searchTerm: string, sort?: string) => void
   }
-  globalFilters: Omit<T, keyof INodeConfig>
 }
 
-export default function TreeView<T>(props: TreeViewProps<T & INodeConfig>): JSX.Element {
+export default function TreeView(props: TreeViewProps): JSX.Element {
   const {
     activePath,
     setActivePath,
@@ -73,13 +72,15 @@ export default function TreeView<T>(props: TreeViewProps<T & INodeConfig>): JSX.
     onClick,
     renderNodeHeader,
     renderNodeAction,
-    topItemCount = 1
+    topItemCount = 1,
+    rootNodes,
+    loadingRootNodes,
+    initialised
   } = props
   const [expandedIds, setExpandedIds] = React.useState<Set<string>>(new Set([]))
+  const [contentLoadedIds, setContentLoadedIds] = React.useState<Set<string>>(new Set([]))
   const [loadingIds, setLoadingIds] = React.useState<Set<string>>(new Set([]))
   const [nodes, setNodes] = React.useState<Array<ITreeNode>>([])
-  const isMounted = React.useRef(false)
-  const [nodeConfig, setNodeConfig] = React.useState<Map<string, INodeConfig<T>>>(new Map())
 
   const { getString } = useStrings()
 
@@ -88,74 +89,55 @@ export default function TreeView<T>(props: TreeViewProps<T & INodeConfig>): JSX.
     ids.forEach(id => {
       setExpandedIds(prev => removeElementFromSet(prev, id))
       setLoadingIds(prev => removeElementFromSet(prev, id))
+      setContentLoadedIds(prev => removeElementFromSet(prev, id))
     })
   }
 
-  // use this function to update node config (page, filters, etc)
-  const addOrUpdateNodeConfig = (node: ITreeNode, filters: INodeConfig = {}) => {
-    setNodeConfig(prev => {
-      const newMap = new Map(prev)
-      const existingNodeConfig = newMap.get(node.id) || ({} as INodeConfig<T>)
-      newMap.set(node.id, getComputedFilters(existingNodeConfig, filters))
-      return newMap
-    })
+  const mapNodeTypeToTreeNodeType = (nodeType: NodeTypeEnum): TreeNodeTypeEnum => {
+    switch (nodeType) {
+      case NodeTypeEnum.Header:
+        return TreeNodeTypeEnum.Header
+      case NodeTypeEnum.LoadMore:
+        return TreeNodeTypeEnum.LoadMore
+      case NodeTypeEnum.Error:
+        return TreeNodeTypeEnum.Error
+      case NodeTypeEnum.File:
+      case NodeTypeEnum.Folder:
+      default:
+        return TreeNodeTypeEnum.Node
+    }
+  }
+
+  const mapNodesToTreeNodes = (parentNode: ITreeNode, nodeList: Array<INode>): Array<ITreeNode> => {
+    const parentNodeLevel = parentNode.level ?? -1
+    const treeNodeList: Array<ITreeNode> = nodeList.map((node, idx) => ({
+      ...node,
+      level: parentNodeLevel + 1,
+      isLastChild: idx === nodeList.length - 1,
+      parentNode: parentNode,
+      disabled: node.disabled,
+      treeNodeType: mapNodeTypeToTreeNodeType(node.type)
+    }))
+    if (treeNodeList.length === 0) {
+      treeNodeList.push(getEmptyTreeNodeConfig(parentNode))
+    }
+    return treeNodeList
   }
 
   // base function to fetch nodes and transform to TreeNode
-  const fetchNodes = async (node: ITreeNode, filters?: INodeConfig): Promise<Array<ITreeNode>> => {
-    const level = node.level || 0
-    return fetchData(node, filters)
+  const fetchNodes = async (node: ITreeNode): Promise<Array<ITreeNode>> => {
+    return fetchData(node)
       .then(result => {
-        const { data, pagination } = result
-        const childrenWithLevel: Array<ITreeNode> = data.map((child, idx) => ({
-          ...child,
-          level: level + 1,
-          isLastChild: data.length - 1 === idx && !pagination?.hasMore,
-          parentNode: node,
-          disabled: child.disabled,
-          treeNodeType: child.type === NodeTypeEnum.Header ? TreeNodeTypeEnum.Header : TreeNodeTypeEnum.Node
-        }))
-        if (childrenWithLevel.length === 0) {
-          childrenWithLevel.push(getEmptyTreeNodeConfig(node))
-        }
-        if (pagination?.hasMore) {
-          childrenWithLevel.push(getLoadMoreTreeNodeConfig(node, pagination.page))
-        }
-        addOrUpdateNodeConfig(node, filters)
-        return childrenWithLevel
+        const treeNodes = mapNodesToTreeNodes(node, result)
+        return treeNodes
       })
       .catch((e: Error) => {
-        const childrenWithLevel = [getErrorTreeNodeConfig(node, e)]
-        return childrenWithLevel
+        const treeNodes = [getErrorTreeNodeConfig(node, e)]
+        return treeNodes
       })
   }
 
-  const fetchRootNodes = async (node: ITreeNode, index = 0, filters?: INodeConfig) => {
-    const pathId = node.id
-    setExpandedIds(prev => addElementInSet(prev, pathId))
-    setLoadingIds(prev => addElementInSet(prev, pathId))
-    // Add loading node in the tree
-    setNodes(prev => {
-      const updatedNodes = removeChildrenNodesFromArray(prev, index)
-      clearAllTracesOfNodes(updatedNodes.removedIds)
-      return addElementAtIndex(updatedNodes.result, index, getLoadingTreeNodeConfig(node))
-    })
-    return fetchNodes(node, filters).then(result => {
-      setNodes(prev => {
-        // Remove loading node in the tree
-        const removedLoadingNodes = removeElementFromIndex(prev, 0)
-        // clear all traces of removed loading node
-        clearAllTracesOfNodes(removedLoadingNodes.removedIds)
-        // add search node at the top
-        const updatedNodes = [getSearchNodeTreeNodeConfig(node), ...removedLoadingNodes.result]
-        // add new nodes to tree
-        return addElementsInArrayAtIndex(updatedNodes, index, result)
-      })
-      setLoadingIds(prev => removeElementFromSet(prev, pathId))
-    })
-  }
-
-  const fetchTreeNodes = async (node: ITreeNode, index = 0, filters: INodeConfig = {}) => {
+  const fetchTreeNodes = async (node: ITreeNode, index = 0) => {
     const pathId = node.id
     setExpandedIds(prev => addElementInSet(prev, pathId))
     setLoadingIds(prev => addElementInSet(prev, pathId))
@@ -165,7 +147,7 @@ export default function TreeView<T>(props: TreeViewProps<T & INodeConfig>): JSX.
       clearAllTracesOfNodes(updatedNodes.removedIds)
       return addElementAtIndex(updatedNodes.result, index, getLoadingTreeNodeConfig(node))
     })
-    return fetchNodes(node, filters).then(result => {
+    return fetchNodes(node).then(result => {
       setNodes(prev => {
         // remove loading node in the tree
         const updatedNodes = removeChildrenNodesFromArray(prev, index)
@@ -175,25 +157,33 @@ export default function TreeView<T>(props: TreeViewProps<T & INodeConfig>): JSX.
         return addElementsInArrayAtIndex(updatedNodes.result, index, result)
       })
       setLoadingIds(prev => removeElementFromSet(prev, pathId))
+      setContentLoadedIds(prev => addElementInSet(prev, pathId))
     })
   }
 
   const fetchNextPage = async (node: ITreeNode, index: number) => {
-    const { parentNode } = node
+    const { parentNode, level } = node
     if (!parentNode) return
-    const filters = nodeConfig.get(parentNode.id) || ({} as INodeConfig)
-    const currentPage = filters.page ?? 0
     // add loading node in tree
     setNodes(prev => {
       return addElementAtIndex(prev, index, getLoadingTreeNodeConfig(node))
     })
-    return fetchNodes(parentNode, getComputedFilters(filters, { page: currentPage + 1 })).then(result => {
+    return fetchNodes(node).then(result => {
+      const transformedTreeNodesForNextPage = result.map(each => ({
+        ...each,
+        level,
+        parentNode
+      }))
       setNodes(prev => {
         // remove loading node
         const removedLoadingNodes = removeElementFromIndex(prev, index + 1)
         clearAllTracesOfNodes(removedLoadingNodes.removedIds)
         // add new nodes
-        const addedChildrenNodes = addElementsInArrayAtIndex(removedLoadingNodes.result, index, result)
+        const addedChildrenNodes = addElementsInArrayAtIndex(
+          removedLoadingNodes.result,
+          index,
+          transformedTreeNodesForNextPage
+        )
         // remove load more node
         const removedLoadMoreNode = removeElementFromIndex(addedChildrenNodes, index)
         clearAllTracesOfNodes(removedLoadMoreNode.removedIds)
@@ -204,24 +194,24 @@ export default function TreeView<T>(props: TreeViewProps<T & INodeConfig>): JSX.
 
   const handleCollapseTreeNode = (node: ITreeNode, index: number) => {
     const pathId = node.id
-    setExpandedIds(prev => removeElementFromSet(prev, pathId))
     setNodes(prev => {
       // remove all children nodes from tree
       const removedChildrenNodes = removeChildrenNodesFromArray(prev, index)
       // clear all traces of removed children nodes
+      removedChildrenNodes.removedIds.add(pathId)
       clearAllTracesOfNodes(removedChildrenNodes.removedIds)
       return removedChildrenNodes.result
     })
   }
 
-  const handleClickTreeNode = (node: ITreeNode, index: number, isInitialising?: boolean) => {
+  const handleClickTreeNode = (node: ITreeNode, index: number, nextState: NodeStateEnum) => {
     const pathId = node.id
     // do not do any thing if node type is file
     if (node.type === NodeTypeEnum.File) return
-    // do not do anything if already expanded and its initialising because of virtual list scroll
-    if (expandedIds.has(pathId) && isInitialising) return
-    // collapse if already expanded
-    if (expandedIds.has(pathId)) {
+    // do not do anything if already loaded content and its initialising because of virtual list scroll
+    if (contentLoadedIds.has(pathId) && nextState === NodeStateEnum.EXPANDED) return
+    // collapse if already expanded & not initialising
+    if (nextState === NodeStateEnum.COLLAPSED) {
       handleCollapseTreeNode(node, index)
       return
     }
@@ -231,52 +221,46 @@ export default function TreeView<T>(props: TreeViewProps<T & INodeConfig>): JSX.
     fetchTreeNodes(node, index)
   }
 
-  const handleSearchTreeNode = async (node: ITreeNode, index: number, filters: INodeConfig) => {
-    const pathId = node.id
-    if (!node.parentNode) return
-    const existingNodeConfig = nodeConfig.get(node.parentNode.id) || {}
-    // remove all children nodes and add loading node in tree
-    setNodes(prev => {
-      // remove all siblings nodes
-      const updatedNodes = removeNextSiblingNodesFromArray(prev, index)
-      // clear all traces of removed nodes
-      clearAllTracesOfNodes(updatedNodes.removedIds)
-      // add loading node
-      return addElementAtIndex(updatedNodes.result, index, getLoadingTreeNodeConfig(node))
-    })
-    return fetchNodes(node.parentNode, getComputedFilters(existingNodeConfig, filters)).then(result => {
-      setNodes(prev => {
-        // remove loading node
-        const updatedNodes = removeNextSiblingNodesFromArray(prev, index)
-        // clear all traces of removed loading node
-        clearAllTracesOfNodes(updatedNodes.removedIds)
-        // add new nodes
-        return addElementsInArrayAtIndex(updatedNodes.result, index, result)
-      })
-      setLoadingIds(prev => addElementInSet(prev, pathId))
-    })
-  }
-
-  useDeepCompareEffect(() => {
-    if (!isMounted.current) {
-      isMounted.current = true
-      const rootNodeConfig = getRootNodeTreeNodeConfig(props.rootPath)
-      const rootNodeIndex = 0
-      const rootNodeFilters = getComputedFilters(props.globalFilters, {
-        searchTerm: props.globalSearchConfig?.searchTerm,
-        sort: props.globalSearchConfig?.sort
-      })
-      fetchRootNodes(rootNodeConfig, rootNodeIndex, rootNodeFilters)
-    } else {
-      const rootSearchNode = nodes[0]
-      const rootNodeIndex = 0
-      const rootNodeFilters = getComputedFilters(props.globalFilters, { page: 0 })
-      handleSearchTreeNode(rootSearchNode, rootNodeIndex, rootNodeFilters)
+  // set initial root nodes
+  useEffect(() => {
+    const parentNodeForRootNode = getRootNodeTreeNodeConfig(props.rootPath)
+    const initialNodes = []
+    if (props.globalSearchConfig) {
+      initialNodes.push(getSearchNodeTreeNodeConfig(parentNodeForRootNode))
     }
-  }, [props.globalFilters, props.rootPath])
+    if (!loadingRootNodes) {
+      initialNodes.push(...mapNodesToTreeNodes(parentNodeForRootNode, rootNodes))
+    } else {
+      initialNodes.push(...[getLoadingTreeNodeConfig(parentNodeForRootNode)])
+    }
+    setNodes(initialNodes)
+    setContentLoadedIds(new Set([]))
+  }, [loadingRootNodes])
+
+  // set initial expanded ids based on active path
+  useEffect(() => {
+    if (!initialised) return
+    const initialExpandedIds = new Set<string>([])
+    let prevPath = ''
+    activePath.split('/').forEach(each => {
+      const newPath = prevPath ? `${prevPath}/${each}` : each
+      initialExpandedIds.add(newPath)
+      prevPath = newPath
+    })
+    setExpandedIds(initialExpandedIds)
+  }, [initialised])
+
+  if (!initialised) return <Spinner size={Spinner.SIZE_SMALL} />
 
   return (
-    <TreeViewContext.Provider value={{ activePath, setActivePath, compact, rootPath: props.rootPath }}>
+    <TreeViewContext.Provider
+      value={{
+        activePath,
+        setActivePath,
+        compact,
+        rootPath: props.rootPath,
+        contentLoadedIds
+      }}>
       <Virtuoso
         data={nodes}
         components={{
@@ -366,8 +350,8 @@ export default function TreeView<T>(props: TreeViewProps<T & INodeConfig>): JSX.
                   className={props.globalSearchConfig?.className}
                   key={node.id}
                   level={node.level}
-                  defaultValue={node.parentNode?.id && nodeConfig.get(node.parentNode.id)?.searchTerm}
-                  onChange={val => handleSearchTreeNode(node, index, { searchTerm: val, page: 0 })}
+                  defaultValue={props.globalSearchConfig?.searchTerm ?? ''}
+                  onChange={val => props.globalSearchConfig?.onChange?.(val, props.globalSearchConfig?.sort)}
                   node={node}
                   treeNodeProps={{
                     alwaysShowAction: true,
@@ -375,9 +359,12 @@ export default function TreeView<T>(props: TreeViewProps<T & INodeConfig>): JSX.
                       <DropDown
                         icon="main-sort"
                         items={props.globalSearchConfig.sortOptions}
-                        value={node.parentNode?.id && nodeConfig.get(node.parentNode.id)?.sort}
+                        value={props.globalSearchConfig?.sort}
                         onChange={option => {
-                          handleSearchTreeNode(node, index, { sort: option.value as string, page: 0 })
+                          props.globalSearchConfig?.onChange?.(
+                            props.globalSearchConfig?.searchTerm ?? '',
+                            option.value as string
+                          )
                         }}
                         usePortal
                       />
@@ -402,14 +389,17 @@ export default function TreeView<T>(props: TreeViewProps<T & INodeConfig>): JSX.
                   node={node}
                   nodeType={node.type}
                   level={node.level}
-                  isOpen={activePath.startsWith(node.id)}
+                  isOpen={expandedIds.has(node.id)}
+                  initialised={contentLoadedIds.has(node.id)}
                   isActive={activePath === node.id}
                   isLastChild={node.isLastChild}
                   actionElement={renderNodeAction ? renderNodeAction(node) : undefined}
                   compact={compact}
-                  onNodeClick={isInitialising => {
-                    if (!isInitialising) onClick(node)
-                    handleClickTreeNode(node, index, isInitialising)
+                  onChangeState={nextState => {
+                    handleClickTreeNode(node, index, nextState)
+                  }}
+                  onNodeClick={() => {
+                    onClick(node)
                   }}
                 />
               )

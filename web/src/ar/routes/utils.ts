@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-import { defaultTo } from 'lodash-es'
+import { defaultTo, omit } from 'lodash-es'
 import QueryString from 'qs'
+
+import { RepositoryListViewTypeEnum } from '@ar/contexts/AppStoreContext'
 
 export function normalizePath(url: string): string {
   return url.replace(/\/{2,}/g, '/')
@@ -28,14 +30,21 @@ export const encodePathParams = (val?: string): string => {
 
 export interface IRouteOptions {
   queryParams?: Record<string, string>
+  mode?: RepositoryListViewTypeEnum
+  currentQueryParams?: Record<string, string>
 }
 
 export function routeDefinitionWithMode<T>(fn: (params: T) => string) {
   return (params: T, options?: IRouteOptions) => {
-    const { queryParams } = options || {}
+    const { queryParams, mode, currentQueryParams } = options || {}
+    let finalQueryParams = queryParams
     let route = fn(params)
-    if (queryParams) {
-      const queryString = QueryString.stringify(queryParams, { encode: false })
+    // TODO: find a way to make this flexible
+    if (mode === RepositoryListViewTypeEnum.DIRECTORY && currentQueryParams) {
+      finalQueryParams = { ...finalQueryParams, ...omit(currentQueryParams, 'digest') }
+    }
+    if (finalQueryParams) {
+      const queryString = QueryString.stringify(finalQueryParams, { encode: false })
       route = `${route}?${queryString}`
     }
     return route

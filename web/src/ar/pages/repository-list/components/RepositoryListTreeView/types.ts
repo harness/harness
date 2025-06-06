@@ -19,4 +19,19 @@ import type { RepositoryConfigType, RepositoryPackageType } from '@ar/common/typ
 export interface IGlobalFilters {
   repositoryTypes?: RepositoryPackageType[]
   configType?: RepositoryConfigType
+  space?: string
+}
+
+export interface APIQueryParams {
+  page: number
+  size: number
+  sort?: string
+  space?: string
+  searchTerm?: string
+  packageTypes?: RepositoryPackageType[]
+  configType?: RepositoryConfigType
+  repositoryIdentifier?: string
+  artifactIdentifier?: string
+  versionIdentifier?: string
+  digest?: string
 }

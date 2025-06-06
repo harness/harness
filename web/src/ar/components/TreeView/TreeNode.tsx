@@ -28,6 +28,11 @@ import { TreeViewContext } from './TreeViewContext'
 
 import css from './TreeView.module.scss'
 
+export enum NodeStateEnum {
+  EXPANDED = 'expanded',
+  COLLAPSED = 'collapsed'
+}
+
 export interface TreeNodeProps extends React.HTMLAttributes<HTMLDivElement> {
   heading: string | React.ReactNode
   node: ITreeNode
@@ -37,10 +42,12 @@ export interface TreeNodeProps extends React.HTMLAttributes<HTMLDivElement> {
   level?: number
   compact?: boolean
   disabled?: boolean
-  onNodeClick?: (isInitialising?: boolean) => void
+  onNodeClick?: () => void
+  onChangeState?: (nextState: NodeStateEnum) => void
   actionElement?: React.ReactNode
   alwaysShowAction?: boolean
   isLastChild?: boolean
+  initialised?: boolean
 }
 
 export default function TreeNode(props: PropsWithChildren<TreeNodeProps>) {
@@ -58,6 +65,8 @@ export default function TreeNode(props: PropsWithChildren<TreeNodeProps>) {
     className,
     heading,
     node,
+    initialised = false,
+    onChangeState,
     ...rest
   } = props
   const ref = useRef<HTMLDivElement>(null)
@@ -76,14 +85,20 @@ export default function TreeNode(props: PropsWithChildren<TreeNodeProps>) {
 
   const handleClickNode = () => {
     if (disabled) return
-    if (nodeType === NodeTypeEnum.Folder) setOpen(!open)
+    if (nodeType === NodeTypeEnum.Folder) {
+      onChangeState?.(open ? NodeStateEnum.COLLAPSED : NodeStateEnum.EXPANDED)
+      setOpen(!open)
+    }
     onNodeClick?.()
   }
 
   useEffect(() => {
     if (open && ref.current) {
+      // this is to check if content already loaded.
+      // if node is rendered again because of virtual list scroll dont do anything
+      if (initialised) return
       ref.current.focus()
-      onNodeClick?.(true)
+      onChangeState?.(NodeStateEnum.EXPANDED)
       if (isActive) {
         ref.current.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' })
       }

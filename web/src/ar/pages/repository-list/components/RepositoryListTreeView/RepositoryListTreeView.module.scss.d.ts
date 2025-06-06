@@ -18,6 +18,7 @@
 // This is an auto-generated file
 export declare const searchInput: string
 export declare const sortingDropDown: string
+export declare const splitPane: string
 export declare const treeViewContainer: string
 export declare const treeViewPageContainer: string
 export declare const treeViewPageContentContainer: string

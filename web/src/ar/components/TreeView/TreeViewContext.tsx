@@ -27,10 +27,12 @@ interface TreeViewContextValue {
   setActivePath: (path: string) => void
   compact?: boolean
   rootPath?: string
+  contentLoadedIds: Set<string>
 }
 
 export const TreeViewContext = createContext<TreeViewContextValue>({
   activePath: '',
   setActivePath: noop,
-  compact: false
+  compact: false,
+  contentLoadedIds: new Set([])
 })

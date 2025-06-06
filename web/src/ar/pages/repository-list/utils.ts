@@ -58,3 +58,29 @@ export const useArtifactRepositoriesQueryParamOptions =
 
     return options
   }
+
+export type TreeViewRepositoryQueryParams = {
+  page: number
+  size: number
+  sort: string
+  compact: boolean
+  searchTerm?: string
+  packageTypes?: string
+  configType?: RepositoryConfigType
+}
+
+export const useTreeViewRepositoriesQueryParamOptions = (): UseQueryParamsOptions<TreeViewRepositoryQueryParams> => {
+  const { useQueryParamsOptions } = useParentHooks()
+  const _options = useQueryParamsOptions(
+    {
+      page: DEFAULT_PAGE_INDEX,
+      size: DEFAULT_PAGE_SIZE,
+      sort: DEFAULT_PIPELINE_LIST_TABLE_SORT.join(','),
+      compact: false
+    },
+    { ignoreEmptyString: false }
+  )
+  const options = useMemo(() => ({ ..._options, strictNullHandling: true }), [_options])
+
+  return options
+}

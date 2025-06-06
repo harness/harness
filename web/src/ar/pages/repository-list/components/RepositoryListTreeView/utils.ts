@@ -15,7 +15,6 @@
  */
 
 import { useHistory } from 'react-router-dom'
-import { omit } from 'lodash-es'
 import {
   getAllArtifactsByRegistry,
   getAllArtifactVersions,
@@ -29,36 +28,67 @@ import { useStrings } from '@ar/frameworks/strings'
 import { RepositoryPackageType } from '@ar/common/types'
 import { getShortDigest } from '@ar/pages/digest-list/utils'
 import { encodeRef, getSpaceRef } from '@ar/hooks/useGetSpaceRef'
-import { useAppStore, useParentHooks, useRoutes } from '@ar/hooks'
+import { useAppStore, useRoutes } from '@ar/hooks'
 import { RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
 import { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
-import { INodeConfig, ITreeNode, NodeTypeEnum, IFetchDataResult, INode } from '@ar/components/TreeView/types'
+import { ITreeNode, NodeTypeEnum, INode } from '@ar/components/TreeView/types'
 
-import type { IGlobalFilters } from './types'
-import type { ArtifactRepositoryListPageQueryParams } from '../../utils'
+import type { APIQueryParams } from './types'
+import type { TreeViewRepositoryQueryParams } from '../../utils'
 
-export function useRepositoryTreeViewUtils() {
-  const { scope } = useAppStore()
-  const { space = '' } = scope
+const getLoadMoreNodeConfig = (parentNode: ITreeNode, metadata: APIQueryParams): INode => {
+  const { page } = metadata
+  const pathId = parentNode.id
+  return {
+    id: `${pathId}/loadMore/${page}`,
+    label: '',
+    value: '',
+    type: NodeTypeEnum.LoadMore,
+    metadata
+  }
+}
+
+export function useRepositoryTreeViewUtils(queryParams: TreeViewRepositoryQueryParams) {
   const routes = useRoutes()
   const history = useHistory()
   const { getString } = useStrings()
-  const { useQueryParams, useUpdateQueryParams } = useParentHooks()
-  const queryParams = useQueryParams<Record<string, string>>()
+  const { scope } = useAppStore()
+  const { space } = scope
+  const { searchTerm, packageTypes, configType, sort, page } = queryParams
 
-  const { updateQueryParams } = useUpdateQueryParams<Partial<ArtifactRepositoryListPageQueryParams>>()
-  const fetchDockerDigestList = async (
-    node: ITreeNode,
-    _filters?: INodeConfig<IGlobalFilters>
-  ): Promise<IFetchDataResult> => {
+  const getTotalCountNodeConfig = (node: ITreeNode, totalCount: number): INode => {
+    const { id: pathId } = node
+    return {
+      id: `${pathId}/totalCount`,
+      label: getString('repositoryList.registryCount', { count: totalCount }),
+      value: `${pathId}/totalCount`,
+      type: NodeTypeEnum.Header,
+      metadata: {
+        totalCount: totalCount
+      }
+    }
+  }
+
+  const getErrorNodeNodeConfig = (node: ITreeNode, error: string): INode => {
+    const { id: pathId } = node
+    return {
+      id: `${pathId}/error`,
+      label: error,
+      value: `${pathId}/error`,
+      type: NodeTypeEnum.Error,
+      metadata: error
+    }
+  }
+
+  const fetchDockerDigestList = async (node: ITreeNode, filters?: APIQueryParams): Promise<INode[]> => {
     const { id: pathId, value, metadata } = node
     const { repositoryIdentifier, artifactIdentifier } = metadata
-    const registryRef = getSpaceRef(space, repositoryIdentifier)
+    const registryRef = getSpaceRef(filters?.space ?? space, filters?.repositoryIdentifier ?? repositoryIdentifier)
     try {
       const response = await getDockerArtifactManifests({
         registry_ref: registryRef,
         artifact: encodeRef(artifactIdentifier),
-        version: value
+        version: filters?.versionIdentifier ?? value
       })
       const digestList = response.content.data.manifests || []
       const data = digestList.map(each => ({
@@ -74,34 +104,29 @@ export function useRepositoryTreeViewUtils() {
           digestIdentifier: each.digest
         }
       }))
-      return {
-        data
-      }
+      return data
     } catch (e: any) {
       throw getErrorInfoFromErrorObject(e, true)
     }
   }
 
-  const fetchArtifactVersionList = async (
-    node: ITreeNode,
-    filters?: INodeConfig<IGlobalFilters>
-  ): Promise<IFetchDataResult> => {
+  const fetchArtifactVersionList = async (node: ITreeNode, filters?: APIQueryParams): Promise<INode[]> => {
     const { id: pathId, value, metadata } = node
-    const { page, searchTerm } = filters || {}
     const { repositoryIdentifier } = metadata
-    const registryRef = getSpaceRef(space, repositoryIdentifier)
+    const registryRef = getSpaceRef(filters?.space ?? space, filters?.repositoryIdentifier ?? repositoryIdentifier)
     try {
       const response = await getAllArtifactVersions({
         registry_ref: registryRef,
-        artifact: encodeRef(value),
+        artifact: encodeRef(filters?.artifactIdentifier ?? value),
         queryParams: {
           size: DEFAULT_PAGE_SIZE,
-          page: page ?? 0,
-          search_term: searchTerm ?? undefined
+          page: filters?.page ?? page ?? 0,
+          search_term: filters?.searchTerm ?? undefined
         }
       })
       const versionList = response.content.data.artifactVersions || []
-      const data = versionList.map(each => ({
+      const { pageIndex = 0, pageCount = 1 } = response.content.data
+      const data: INode[] = versionList.map(each => ({
         id: `${pathId}/${each.name}`,
         label: each.name,
         value: each.name,
@@ -113,37 +138,38 @@ export function useRepositoryTreeViewUtils() {
           versionIdentifier: each.name
         }
       }))
-      const { pageIndex = 0, pageCount = 1 } = response.content.data
-      return {
-        data,
-        pagination: {
-          page: pageIndex,
-          hasMore: pageIndex + 1 < pageCount
-        }
+      if (pageCount > pageIndex + 1) {
+        data.push(
+          getLoadMoreNodeConfig(node, {
+            ...filters,
+            page: pageIndex + 1,
+            size: DEFAULT_PAGE_SIZE,
+            repositoryIdentifier,
+            artifactIdentifier: filters?.artifactIdentifier ?? value
+          })
+        )
       }
+      return data
     } catch (e: any) {
       throw getErrorInfoFromErrorObject(e, true)
     }
   }
 
-  const fetchArtifactList = async (
-    node: ITreeNode,
-    filters?: INodeConfig<IGlobalFilters>
-  ): Promise<IFetchDataResult> => {
+  const fetchArtifactList = async (node: ITreeNode, filters?: APIQueryParams): Promise<INode[]> => {
     const { id: pathId, value } = node
-    const { page, searchTerm } = filters || {}
-    const registryRef = getSpaceRef(space, value)
+    const registryRef = getSpaceRef(filters?.space ?? space, filters?.repositoryIdentifier ?? value)
     try {
       const response = await getAllArtifactsByRegistry({
         registry_ref: registryRef,
         queryParams: {
           size: DEFAULT_PAGE_SIZE,
-          page: page ?? 0,
-          search_term: searchTerm ?? undefined
+          page: filters?.page ?? page ?? 0,
+          search_term: filters?.searchTerm ?? undefined
         }
       })
       const artifactList = response.content.data.artifacts || []
-      const data = artifactList.map(each => ({
+      const { pageIndex = 0, pageCount = 1 } = response.content.data
+      const data: INode[] = artifactList.map(each => ({
         id: `${pathId}/${encodeURIComponent(each.name)}`,
         label: each.name,
         value: each.name,
@@ -154,39 +180,39 @@ export function useRepositoryTreeViewUtils() {
           artifactIdentifier: each.name
         }
       }))
-      const { pageIndex = 0, pageCount = 1 } = response.content.data
-      return {
-        data,
-        pagination: {
-          page: pageIndex,
-          hasMore: pageIndex + 1 < pageCount
-        }
+
+      if (pageCount > pageIndex + 1) {
+        data.push(
+          getLoadMoreNodeConfig(node, {
+            ...filters,
+            page: pageIndex + 1,
+            size: DEFAULT_PAGE_SIZE,
+            repositoryIdentifier: filters?.repositoryIdentifier ?? value
+          })
+        )
       }
+      return data
     } catch (e: any) {
       throw getErrorInfoFromErrorObject(e, true)
     }
   }
 
-  const fetchRegistryList = async (
-    node: ITreeNode,
-    filters?: INodeConfig<IGlobalFilters>
-  ): Promise<IFetchDataResult> => {
+  const fetchRegistryList = async (node: ITreeNode, filters?: APIQueryParams): Promise<INode[]> => {
     const { id: pathId } = node
-    const { page, searchTerm, sort, repositoryTypes, configType } = filters || {}
-    const registryRef = getSpaceRef(space)
-    const [sortField, sortOrder] = sort?.split(',') || []
+    const registryRef = getSpaceRef(filters?.space ?? space)
+    const [sortField, sortOrder] = filters?.sort ?? sort?.split(',') ?? []
+    const pageNumber = filters?.page ?? page ?? 0
     try {
-      updateQueryParams({ repositoryTypes, configType, registrySearchTerm: searchTerm, treeSort: sort })
       const response = await getAllRegistries({
         space_ref: registryRef,
         queryParams: {
           size: DEFAULT_PAGE_SIZE,
-          page: page ?? 0,
-          search_term: searchTerm ?? undefined,
+          page: pageNumber,
+          search_term: filters?.searchTerm ?? searchTerm ?? undefined,
           sort_field: sortField ?? undefined,
           sort_order: sortOrder ?? undefined,
           type: configType ?? undefined,
-          package_type: repositoryTypes ?? undefined
+          package_type: filters?.packageTypes ?? packageTypes?.split(',') ?? undefined
         },
         stringifyQueryParamsOptions: {
           arrayFormat: 'repeat'
@@ -204,25 +230,20 @@ export function useRepositoryTreeViewUtils() {
           repositoryIdentifier: each.identifier
         }
       }))
-      if (itemCount) {
-        data.unshift({
-          id: `${pathId}/totalCount`,
-          label: getString('repositoryList.registryCount', { count: itemCount }),
-          value: `${pathId}/totalCount`,
-          type: NodeTypeEnum.Header,
-          metadata: {
-            totalCount: itemCount
-          }
-        })
+      if (pageNumber === 0) {
+        data.unshift(getTotalCountNodeConfig(node, itemCount))
+      }
+      if (pageCount > pageIndex + 1) {
+        data.push(
+          getLoadMoreNodeConfig(node, {
+            ...filters,
+            page: pageIndex + 1,
+            size: DEFAULT_PAGE_SIZE
+          })
+        )
       }
 
-      return {
-        data,
-        pagination: {
-          page: pageIndex,
-          hasMore: pageCount > pageIndex + 1
-        }
-      }
+      return data
     } catch (e: any) {
       throw getErrorInfoFromErrorObject(e, true)
     }
@@ -230,41 +251,32 @@ export function useRepositoryTreeViewUtils() {
 
   const handleNavigateToRepositoryDetials = (node: ITreeNode) => {
     const { value } = node
-    const newRoute = routes.toARRepositoryDetailsTab(
-      {
-        repositoryIdentifier: value,
-        tab: RepositoryDetailsTab.CONFIGURATION
-      },
-      { queryParams: omit(queryParams, 'digest') }
-    )
+    const newRoute = routes.toARRepositoryDetailsTab({
+      repositoryIdentifier: value,
+      tab: RepositoryDetailsTab.CONFIGURATION
+    })
     history.push(newRoute)
   }
 
   const handleNavigateToArtifactDetials = (node: ITreeNode) => {
     const { value, metadata } = node
     const { repositoryIdentifier } = metadata
-    const newRoute = routes.toARArtifactDetails(
-      {
-        repositoryIdentifier,
-        artifactIdentifier: value
-      },
-      { queryParams: omit(queryParams, 'digest') }
-    )
+    const newRoute = routes.toARArtifactDetails({
+      repositoryIdentifier,
+      artifactIdentifier: value
+    })
     history.push(newRoute)
   }
 
   const handleNavigateToVersionDetails = (node: ITreeNode) => {
     const { value, metadata } = node
     const { artifactIdentifier, repositoryIdentifier } = metadata
-    const newRoute = routes.toARVersionDetailsTab(
-      {
-        repositoryIdentifier,
-        artifactIdentifier,
-        versionIdentifier: value,
-        versionTab: VersionDetailsTab.OVERVIEW
-      },
-      { queryParams: omit(queryParams, 'digest') }
-    )
+    const newRoute = routes.toARVersionDetailsTab({
+      repositoryIdentifier,
+      artifactIdentifier,
+      versionIdentifier: value,
+      versionTab: VersionDetailsTab.OVERVIEW
+    })
     history.push(newRoute)
   }
 
@@ -279,10 +291,7 @@ export function useRepositoryTreeViewUtils() {
         versionTab: VersionDetailsTab.OVERVIEW
       },
       {
-        queryParams: {
-          ...omit(queryParams, 'digest'),
-          digest: value
-        }
+        queryParams: { digest: value }
       }
     )
     history.push(newRoute)
@@ -296,6 +305,7 @@ export function useRepositoryTreeViewUtils() {
     handleNavigateToRepositoryDetials,
     handleNavigateToArtifactDetials,
     handleNavigateToVersionDetails,
-    handleNavigateToDigestDetails
+    handleNavigateToDigestDetails,
+    getErrorNodeNodeConfig
   }
 }

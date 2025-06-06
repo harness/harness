@@ -16,15 +16,19 @@
 
 .treeViewPageContainer {
   --tree-view-page-content-height: calc(var(--page-height, var(--page-min-height)) - var(--page-header-height, 64px));
-  --tree-view-width: 25%;
   --har-repository-details-page-header-height: 0px;
   --har-version-details-page-header-height: 0px;
   width: 100% !important;
   height: var(--tree-view-page-content-height);
 }
 
+.splitPane {
+  & > div:nth-of-type(2) {
+    overflow: auto !important;
+  }
+}
+
 .treeViewContainer {
-  width: var(--tree-view-width);
   height: var(--tree-view-page-content-height);
   overflow: auto;
   border-right: 1px solid var(--grey-200);
@@ -35,7 +39,6 @@
 .treeViewPageContentContainer {
   position: relative;
   background-color: var(--primary-bg) !important;
-  width: calc(100% - var(--tree-view-width));
   height: var(--tree-view-page-content-height);
   overflow: auto;
   padding: var(--spacing-0);

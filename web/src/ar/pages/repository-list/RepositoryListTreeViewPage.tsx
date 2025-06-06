@@ -20,13 +20,14 @@ import { HarnessDocTooltip, Page, GridListToggle, Views } from '@harnessio/uicor
 
 import { useStrings } from '@ar/frameworks/strings'
 import { DEFAULT_PAGE_INDEX } from '@ar/constants'
+import type { RepositoryPackageType } from '@ar/common/types'
 import { RepositoryListViewTypeEnum } from '@ar/contexts/AppStoreContext'
 import { useAppStore, useGetRepositoryListViewType, useParentComponents, useParentHooks } from '@ar/hooks'
 import PackageTypeSelector from '@ar/components/PackageTypeSelector/PackageTypeSelector'
 import TableFilterCheckbox from '@ar/components/TableFilterCheckbox/TableFilterCheckbox'
 
-import { useArtifactRepositoriesQueryParamOptions } from './utils'
-import type { ArtifactRepositoryListPageQueryParams } from './utils'
+import { useTreeViewRepositoriesQueryParamOptions } from './utils'
+import type { TreeViewRepositoryQueryParams } from './utils'
 import { CreateRepository } from './components/CreateRepository/CreateRepository'
 import RepositoryTypeSelector from './components/RepositoryTypeSelector/RepositoryTypeSelector'
 import RepositoryListTreeView from './components/RepositoryListTreeView/RepositoryListTreeView'
@@ -37,13 +38,13 @@ function RepositoryListTreeViewPage(): JSX.Element {
   const { getString } = useStrings()
   const { NGBreadcrumbs } = useParentComponents()
   const { useQueryParams, useUpdateQueryParams } = useParentHooks()
-  const { updateQueryParams } = useUpdateQueryParams<Partial<ArtifactRepositoryListPageQueryParams>>()
+  const { updateQueryParams } = useUpdateQueryParams<Partial<TreeViewRepositoryQueryParams>>()
   const { setRepositoryListViewType } = useAppStore()
   const repositoryListViewType = useGetRepositoryListViewType()
 
-  const queryParamOptions = useArtifactRepositoriesQueryParamOptions()
-  const queryParams = useQueryParams<ArtifactRepositoryListPageQueryParams>(queryParamOptions)
-  const { repositoryTypes, configType, compact } = queryParams
+  const queryParamOptions = useTreeViewRepositoriesQueryParamOptions()
+  const queryParams = useQueryParams<TreeViewRepositoryQueryParams>(queryParamOptions)
+  const { packageTypes, configType, compact } = queryParams
 
   return (
     <>
@@ -67,9 +68,9 @@ function RepositoryListTreeViewPage(): JSX.Element {
             }}
           />
           <PackageTypeSelector
-            value={repositoryTypes}
+            value={(packageTypes?.split(',') || []) as RepositoryPackageType[]}
             onChange={val => {
-              updateQueryParams({ repositoryTypes: val, page: DEFAULT_PAGE_INDEX })
+              updateQueryParams({ packageTypes: val.join(','), page: DEFAULT_PAGE_INDEX })
             }}
           />
           <Expander />

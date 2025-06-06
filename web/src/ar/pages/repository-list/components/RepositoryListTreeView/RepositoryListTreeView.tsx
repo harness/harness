@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { compact as lodashCompact } from 'lodash-es'
 import { Switch } from 'react-router-dom'
-import { Container, Layout } from '@harnessio/uicore'
+import { Container } from '@harnessio/uicore'
 
-import { useParentHooks, useRoutes } from '@ar/hooks'
+import { useAppStore, useParentHooks, useRoutes } from '@ar/hooks'
 import { PageType } from '@ar/common/types'
 import RouteProvider from '@ar/components/RouteProvider/RouteProvider'
 import RepositoryProvider from '@ar/pages/repository-details/context/RepositoryProvider'
@@ -28,14 +28,13 @@ import {
   repositoryDetailsPathProps,
   versionDetailsPathParams
 } from '@ar/routes/RouteDestinations'
-import { TreeViewContext } from '@ar/components/TreeView/TreeViewContext'
 import VersionProvider from '@ar/pages/version-details/context/VersionProvider'
 import ArtifactProvider from '@ar/pages/artifact-details/context/ArtifactProvider'
 import type { DockerVersionDetailsQueryParams } from '@ar/pages/version-details/DockerVersion/types'
 import VersionTreeNodeDetails from '@ar/pages/version-details/components/VersionTreeNode/VersionTreeNodeDetails'
 
 import TreeView from '@ar/components/TreeView/TreeView'
-import type { INodeConfig, ITreeNode } from '@ar/components/TreeView/types'
+import type { INode, ITreeNode } from '@ar/components/TreeView/types'
 import VersionActionsWidget from '@ar/frameworks/Version/VersionActionsWidget'
 import ArtifactActionsWidget from '@ar/frameworks/Version/ArtifactActionsWidget'
 import RepositoryActionsWidget from '@ar/frameworks/RepositoryStep/RepositoryActionsWidget'
@@ -47,23 +46,50 @@ import VersionTreeNodeViewWidget from '@ar/frameworks/Version/VersionTreeNodeVie
 import ArtifactTreeNodeViewWidget from '@ar/frameworks/Version/ArtifactTreeNodeViewWidget'
 import RepositoryTreeNodeViewWidget from '@ar/frameworks/RepositoryStep/RepositoryTreeNodeViewWidget'
 
-import type { IGlobalFilters } from './types'
+import { Split } from 'components/Split/Split'
+
 import { useRepositoryTreeViewUtils } from './utils'
 import { TreeViewSortingOptions } from '../../constants'
-import { useArtifactRepositoriesQueryParamOptions, type ArtifactRepositoryListPageQueryParams } from '../../utils'
+import { type TreeViewRepositoryQueryParams, useTreeViewRepositoriesQueryParamOptions } from '../../utils'
 
 import css from './RepositoryListTreeView.module.scss'
 
 const ROOT_NODE_ID = 'root'
 export default function RepositoryListTreeView() {
   const routeDefinitions = useRoutes(true)
-  const { useQueryParams } = useParentHooks()
+  const { useQueryParams, useUpdateQueryParams } = useParentHooks()
   const { digest } = useQueryParams<DockerVersionDetailsQueryParams>()
+  const { updateQueryParams } = useUpdateQueryParams<Partial<TreeViewRepositoryQueryParams>>()
   const [activePath, setActivePath] = useState('')
+  const [initialised, setInitialised] = useState(false)
+  const { scope } = useAppStore()
+  const { space } = scope
 
-  const queryParamOptions = useArtifactRepositoriesQueryParamOptions()
-  const { registrySearchTerm, compact, repositoryTypes, configType, treeSort } =
-    useQueryParams<ArtifactRepositoryListPageQueryParams>(queryParamOptions)
+  const [rootNodes, setRootNodes] = useState<INode[]>([])
+  const [loadingRootNodes, setLoadingRootNodes] = useState<boolean>(false)
+
+  const queryParamOptions = useTreeViewRepositoriesQueryParamOptions()
+  const queryParams = useQueryParams<TreeViewRepositoryQueryParams>(queryParamOptions)
+  const { searchTerm, compact, packageTypes, configType, sort } = queryParams
+  const RepositoryTreeViewUtils = useRepositoryTreeViewUtils(queryParams)
+
+  const fetchRootNodes = async () => {
+    const rooteNode = { id: ROOT_NODE_ID } as ITreeNode
+    try {
+      setLoadingRootNodes(true)
+      const registryList = await RepositoryTreeViewUtils.fetchRegistryList(rooteNode)
+      setRootNodes(registryList)
+    } catch (e) {
+      const errorNodeConfig = RepositoryTreeViewUtils.getErrorNodeNodeConfig(rooteNode, e as string)
+      setRootNodes([errorNodeConfig])
+    } finally {
+      setLoadingRootNodes(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchRootNodes()
+  }, [searchTerm, packageTypes, configType, sort, space])
 
   const handleUpdateActivePath = (values: Record<string, string>) => {
     const initialActivePath = lodashCompact([
@@ -74,21 +100,20 @@ export default function RepositoryListTreeView() {
       digest
     ]).join('/')
     setActivePath(initialActivePath)
+    setInitialised(true)
   }
 
-  const RepositoryTreeViewUtils = useRepositoryTreeViewUtils()
-
-  const handleFetchTreeNodesByPath = async (node: ITreeNode, filters?: INodeConfig<IGlobalFilters>) => {
+  const handleFetchTreeNodesByPath = async (node: ITreeNode): Promise<Array<INode>> => {
     const { metadata } = node
     const { repositoryIdentifier, artifactIdentifier, versionIdentifier } = metadata || {}
     if (versionIdentifier) {
-      return RepositoryTreeViewUtils.fetchDockerDigestList(node, filters)
+      return RepositoryTreeViewUtils.fetchDockerDigestList(node, node.metadata)
     } else if (artifactIdentifier) {
-      return RepositoryTreeViewUtils.fetchArtifactVersionList(node, filters)
+      return RepositoryTreeViewUtils.fetchArtifactVersionList(node, node.metadata)
     } else if (repositoryIdentifier) {
-      return RepositoryTreeViewUtils.fetchArtifactList(node, filters)
+      return RepositoryTreeViewUtils.fetchArtifactList(node, node.metadata)
     } else {
-      return RepositoryTreeViewUtils.fetchRegistryList(node, filters)
+      return RepositoryTreeViewUtils.fetchRegistryList(node, node.metadata)
     }
   }
 
@@ -163,26 +188,31 @@ export default function RepositoryListTreeView() {
   }
 
   return (
-    <TreeViewContext.Provider value={{ activePath, setActivePath, compact }}>
-      <Layout.Horizontal className={css.treeViewPageContainer}>
+    <Container className={css.treeViewPageContainer}>
+      <Split className={css.splitPane} split="vertical" size={400} minSize={200} maxSize={500}>
         <Container className={css.treeViewContainer}>
-          <TreeView<IGlobalFilters>
+          <TreeView
             activePath={activePath}
             setActivePath={setActivePath}
+            rootNodes={rootNodes}
+            loadingRootNodes={loadingRootNodes}
             compact={compact}
             fetchData={handleFetchTreeNodesByPath}
             onClick={handleClickNode}
             renderNodeAction={renderNodeAction}
             renderNodeHeader={renderNodeLabel}
+            initialised={initialised}
             globalSearchConfig={{
               className: css.searchInput,
-              searchTerm: registrySearchTerm,
+              searchTerm: searchTerm,
               sortOptions: TreeViewSortingOptions,
-              sort: treeSort
-            }}
-            globalFilters={{
-              repositoryTypes,
-              configType
+              sort: sort,
+              onChange: (query: string, sortVal?: string) => {
+                updateQueryParams({
+                  searchTerm: query,
+                  sort: sortVal
+                })
+              }
             }}
             rootPath={ROOT_NODE_ID}
           />
@@ -217,7 +247,7 @@ export default function RepositoryListTreeView() {
             </RouteProvider>
           </Switch>
         </Container>
-      </Layout.Horizontal>
-    </TreeViewContext.Provider>
+      </Split>
+    </Container>
   )
 }
