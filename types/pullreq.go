@@ -225,16 +225,18 @@ type UserGroupReviewer struct {
 
 	RepoID int64 `json:"-"`
 
+	UserGroup UserGroupInfo `json:"user_group"`
 	AddedBy   PrincipalInfo `json:"added_by"`
-	UserGroup UserGroupInfo `json:"reviewer_group"`
 
-	//	Reviewers Info
-	Reviewers []UserGroupReviewerDecision `json:"reviewers"`
+	// invdividual decisions by group users
+	UserDecisions []UserGroupReviewerDecision `json:"user_decisions,omitempty"`
+	// derived user group decision: change_req > approved > reviewed > pending
+	Decision enum.PullReqReviewDecision `json:"decision,omitempty"`
 }
 
 type UserGroupReviewerDecision struct {
-	ReviewDecision enum.PullReqReviewDecision `json:"review_decision"`
-	SHA            string                     `json:"sha"`
+	ReviewDecision enum.PullReqReviewDecision `json:"decision"`
+	SHA            string                     `json:"sha,omitempty"`
 	Reviewer       PrincipalInfo              `json:"reviewer"`
 }
 

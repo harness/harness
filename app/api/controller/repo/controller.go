@@ -92,7 +92,7 @@ type Controller struct {
 	settings           *settings.Service
 	principalInfoCache store.PrincipalInfoCache
 	userGroupStore     store.UserGroupStore
-	userGroupService   usergroup.SearchService
+	userGroupService   usergroup.Service
 	protectionManager  *protection.Manager
 	git                git.Interface
 	spaceFinder        refcache.SpaceFinder
@@ -149,7 +149,7 @@ func NewController(
 	labelSvc *label.Service,
 	instrumentation instrument.Service,
 	userGroupStore store.UserGroupStore,
-	userGroupService usergroup.SearchService,
+	userGroupService usergroup.Service,
 	rulesSvc *rules.Service,
 	sseStreamer sse.Streamer,
 	lfsCtrl *lfs.Controller,

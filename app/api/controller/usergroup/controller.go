@@ -15,28 +15,60 @@
 package usergroup
 
 import (
+	"context"
+	"fmt"
+
+	apiauth "github.com/harness/gitness/app/api/auth"
+	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/services/usergroup"
 	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 type Controller struct {
-	userGroupStore store.UserGroupStore
-	spaceStore     store.SpaceStore
-	authorizer     authz.Authorizer
-	searchSvc      usergroup.SearchService
+	userGroupStore   store.UserGroupStore
+	spaceStore       store.SpaceStore
+	spaceFinder      refcache.SpaceFinder
+	authorizer       authz.Authorizer
+	userGroupService usergroup.Service
 }
 
 func NewController(
 	userGroupStore store.UserGroupStore,
 	spaceStore store.SpaceStore,
+	spaceFinder refcache.SpaceFinder,
 	authorizer authz.Authorizer,
-	searchSvc usergroup.SearchService,
+	userGroupService usergroup.Service,
 ) *Controller {
 	return &Controller{
-		userGroupStore: userGroupStore,
-		spaceStore:     spaceStore,
-		authorizer:     authorizer,
-		searchSvc:      searchSvc,
+		userGroupStore:   userGroupStore,
+		spaceStore:       spaceStore,
+		spaceFinder:      spaceFinder,
+		authorizer:       authorizer,
+		userGroupService: userGroupService,
 	}
+}
+
+func getSpaceCheckAuth(
+	ctx context.Context,
+	spaceFinder refcache.SpaceFinder,
+	authorizer authz.Authorizer,
+	session *auth.Session,
+	spaceRef string,
+	permission enum.Permission,
+) (*types.SpaceCore, error) {
+	space, err := spaceFinder.FindByRef(ctx, spaceRef)
+	if err != nil {
+		return nil, fmt.Errorf("parent space not found: %w", err)
+	}
+
+	err = apiauth.CheckSpace(ctx, authorizer, session, space, permission)
+	if err != nil {
+		return nil, fmt.Errorf("auth check failed: %w", err)
+	}
+
+	return space, nil
 }

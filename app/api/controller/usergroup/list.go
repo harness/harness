@@ -16,22 +16,29 @@ package usergroup
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
-type SearchService interface {
-	Search(
-		ctx context.Context,
-		filter *types.ListQueryFilter,
-		spacePath string,
-	) ([]*types.UserGroupInfo, error)
-	ListUsers(
-		ctx context.Context,
-		session *auth.Session,
-		userGroup *types.UserGroup,
-	) ([]string, error)
+func (c Controller) List(
+	ctx context.Context,
+	session *auth.Session,
+	filter *types.ListQueryFilter,
+	spaceRef string,
+) ([]*types.UserGroupInfo, error) {
+	space, err := getSpaceCheckAuth(
+		ctx, c.spaceFinder, c.authorizer, session, spaceRef, enum.PermissionSpaceView,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to acquire access to space: %w", err)
+	}
 
-	ListUserIDsByGroupIDs(ctx context.Context, userGroupIDs []int64) ([]int64, error)
+	userGroupInfos, err := c.userGroupService.List(ctx, filter, space)
+	if err != nil {
+		return nil, fmt.Errorf("failed to search user groups: %w", err)
+	}
+	return userGroupInfos, nil
 }

@@ -16,22 +16,24 @@ package usergroup
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/harness/gitness/types"
 )
 
-type searchService struct {
-}
+type Service interface {
+	List(
+		ctx context.Context,
+		filter *types.ListQueryFilter,
+		space *types.SpaceCore,
+	) ([]*types.UserGroupInfo, error)
 
-func NewSearchService() SearchService {
-	return &searchService{}
-}
+	ListUserIDsByGroupIDs(
+		ctx context.Context,
+		userGroupIDs []int64,
+	) ([]int64, error)
 
-func (s *searchService) Search(
-	_ context.Context,
-	_ *types.ListQueryFilter,
-	_ string,
-) ([]*types.UserGroupInfo, error) {
-	return nil, fmt.Errorf("not implemented")
+	MapGroupIDsToPrincipals(
+		ctx context.Context,
+		groupIDs []int64,
+	) (map[int64][]*types.Principal, error)
 }

@@ -28,7 +28,7 @@ func (c *Controller) UserGroupReviewerDelete(
 	session *auth.Session,
 	repoRef string,
 	prNum,
-	reviewerID int64,
+	userGroupReviewerID int64,
 ) error {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush)
 	if err != nil {
@@ -40,7 +40,7 @@ func (c *Controller) UserGroupReviewerDelete(
 		return fmt.Errorf("failed to find pull request: %w", err)
 	}
 
-	err = c.userGroupReviewerStore.Delete(ctx, pr.ID, reviewerID)
+	err = c.userGroupReviewerStore.Delete(ctx, pr.ID, userGroupReviewerID)
 	if err != nil {
 		return fmt.Errorf("failed to delete user group reviewer: %w", err)
 	}

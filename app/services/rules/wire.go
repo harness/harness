@@ -42,7 +42,7 @@ func ProvideService(
 	instrumentation instrument.Service,
 	principalInfoCache store.PrincipalInfoCache,
 	userGroupStore store.UserGroupStore,
-	userGroupService usergroup.SearchService,
+	userGroupService usergroup.Service,
 	eventReporter *ruleevents.Reporter,
 	sseStreamer sse.Streamer,
 ) *Service {

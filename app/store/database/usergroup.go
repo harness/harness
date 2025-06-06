@@ -139,7 +139,8 @@ func (s *UserGroupStore) FindManyByIdentifiersAndSpaceID(
 	stmt := database.Builder.
 		Select(userGroupColumns).
 		From("usergroups").
-		Where(squirrel.Eq{"usergroup_identifier": identifiers}).Where(squirrel.Eq{"usergroup_space_id": spaceID})
+		Where(squirrel.Eq{"usergroup_identifier": identifiers}).
+		Where("usergroup_space_id = ?", spaceID)
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	sqlQuery, params, err := stmt.ToSql()
@@ -151,10 +152,12 @@ func (s *UserGroupStore) FindManyByIdentifiersAndSpaceID(
 	if err := db.SelectContext(ctx, &dst, sqlQuery, params...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "find many by identifiers for usergroups query failed")
 	}
+
 	result := make([]*types.UserGroup, len(dst))
 	for i, u := range dst {
 		result[i] = mapUserGroup(u)
 	}
+
 	return result, nil
 }
 

@@ -21,13 +21,13 @@ import (
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
 	ProvideUserGroupResolver,
-	ProvideSearchService,
+	ProvideService,
 )
 
 func ProvideUserGroupResolver() Resolver {
 	return NewGitnessResolver()
 }
 
-func ProvideSearchService() SearchService {
-	return NewSearchService()
+func ProvideService() Service {
+	return NewService()
 }

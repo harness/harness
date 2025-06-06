@@ -66,7 +66,7 @@ func ProvideController(
 	codeOwners *codeowners.Service, locker *locker.Locker, importer *migrate.PullReq,
 	labelSvc *label.Service,
 	instrumentation instrument.Service,
-	userGroupService usergroup.SearchService,
+	userGroupService usergroup.Service,
 	branchStore store.BranchStore,
 ) *Controller {
 	return NewController(tx,

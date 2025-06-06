@@ -82,7 +82,7 @@ func ProvideController(
 	labelSvc *label.Service,
 	instrumentation instrument.Service,
 	userGroupStore store.UserGroupStore,
-	userGroupService usergroup.SearchService,
+	userGroupService usergroup.Service,
 	rulesSvc *rules.Service,
 	sseStreamer sse.Streamer,
 	lfsCtrl *lfs.Controller,

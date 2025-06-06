@@ -16,6 +16,7 @@ package usergroup
 
 import (
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/services/usergroup"
 	"github.com/harness/gitness/app/store"
 
@@ -30,8 +31,9 @@ var WireSet = wire.NewSet(
 func ProvideController(
 	userGroupStore store.UserGroupStore,
 	spaceStore store.SpaceStore,
+	spaceFinder refcache.SpaceFinder,
 	authorizer authz.Authorizer,
-	searchSvc usergroup.SearchService,
+	searchSvc usergroup.Service,
 ) *Controller {
-	return NewController(userGroupStore, spaceStore, authorizer, searchSvc)
+	return NewController(userGroupStore, spaceStore, spaceFinder, authorizer, searchSvc)
 }

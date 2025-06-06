@@ -125,12 +125,7 @@ func (s *UsergroupReviewerStore) List(ctx context.Context, prID int64) ([]*types
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to list pull request usergroup reviewers")
 	}
 
-	result, err := s.mapSlicePullReqUserGroupReviewer(ctx, dst)
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	return s.mapSlicePullReqUserGroupReviewer(dst), nil
 }
 
 // Find returns a pull request usergroup reviewer by userGroupReviewerID.
@@ -176,35 +171,13 @@ func mapPullReqUserGroupReviewer(v *usergroupReviewer) *types.UserGroupReviewer 
 }
 
 func (s *UsergroupReviewerStore) mapSlicePullReqUserGroupReviewer(
-	ctx context.Context,
 	userGroupReviewers []*usergroupReviewer,
-) ([]*types.UserGroupReviewer, error) {
-	result := make([]*types.UserGroupReviewer, 0, len(userGroupReviewers))
-	var addedByIDs []int64
-	var userGroupIDs []int64
-	for _, v := range userGroupReviewers {
-		addedByIDs = append(addedByIDs, v.CreatedBy)
-		userGroupIDs = append(userGroupIDs, v.UserGroupID)
+) []*types.UserGroupReviewer {
+	result := make([]*types.UserGroupReviewer, len(userGroupReviewers))
+
+	for i, v := range userGroupReviewers {
+		result[i] = mapPullReqUserGroupReviewer(v)
 	}
 
-	// pull all the usergroups info
-	userGroupsMap, err := s.userGroupStore.Map(ctx, userGroupIDs)
-	if err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "failed to load PR usergroups")
-	}
-
-	// pull principal infos from cache
-	infoMap, err := s.pInfoCache.Map(ctx, addedByIDs)
-	if err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "failed to load PR principal infos")
-	}
-
-	for _, v := range userGroupReviewers {
-		pullReqUsergroupReviewer := mapPullReqUserGroupReviewer(v)
-		pullReqUsergroupReviewer.UserGroup = *userGroupsMap[v.UserGroupID].ToUserGroupInfo()
-		pullReqUsergroupReviewer.AddedBy = *infoMap[v.CreatedBy]
-
-		result = append(result, pullReqUsergroupReviewer)
-	}
-	return result, nil
+	return result
 }

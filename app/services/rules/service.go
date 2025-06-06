@@ -37,7 +37,7 @@ type Service struct {
 	instrumentation    instrument.Service
 	principalInfoCache store.PrincipalInfoCache
 	userGroupStore     store.UserGroupStore
-	userGroupService   usergroup.SearchService
+	userGroupService   usergroup.Service
 	eventReporter      *ruleevents.Reporter
 
 	sseStreamer sse.Streamer
@@ -53,7 +53,7 @@ func NewService(
 	instrumentation instrument.Service,
 	principalInfoCache store.PrincipalInfoCache,
 	userGroupStore store.UserGroupStore,
-	userGroupService usergroup.SearchService,
+	userGroupService usergroup.Service,
 	eventReporter *ruleevents.Reporter,
 	sseStreamer sse.Streamer,
 ) *Service {

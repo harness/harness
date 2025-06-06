@@ -46,7 +46,9 @@ func HandleUserGroupReviewerDelete(pullreqCtrl *pullreq.Controller) http.Handler
 			return
 		}
 
-		err = pullreqCtrl.UserGroupReviewerDelete(ctx, session, repoRef, prNum, userGroupReviewerID)
+		err = pullreqCtrl.UserGroupReviewerDelete(
+			ctx, session, repoRef, prNum, userGroupReviewerID,
+		)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return

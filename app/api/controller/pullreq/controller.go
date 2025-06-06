@@ -78,7 +78,7 @@ type Controller struct {
 	importer               *migrate.PullReq
 	labelSvc               *label.Service
 	instrumentation        instrument.Service
-	userGroupService       usergroup.SearchService
+	userGroupService       usergroup.Service
 	branchStore            store.BranchStore
 }
 
@@ -113,7 +113,7 @@ func NewController(
 	importer *migrate.PullReq,
 	labelSvc *label.Service,
 	instrumentation instrument.Service,
-	userGroupService usergroup.SearchService,
+	userGroupService usergroup.Service,
 	branchStore store.BranchStore,
 ) *Controller {
 	return &Controller{

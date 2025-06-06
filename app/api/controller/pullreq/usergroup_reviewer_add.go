@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	events "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/store"
@@ -50,91 +49,90 @@ func (c *Controller) UserGroupReviewerAdd(
 		return nil, fmt.Errorf("failed to find pull request by number: %w", err)
 	}
 
-	var userGroupReviewer *types.UserGroupReviewer
-
-	userGroupReviewer, err = addReviewerUserGroup(ctx, session, c, repo, pr, in)
+	reviewers, err := c.reviewerStore.List(ctx, pr.ID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to add usergroup_reviwer: %w", err)
+		return nil, fmt.Errorf("failed to list reviewers: %w", err)
 	}
 
-	c.reportUserGroupReviewerAddition(ctx, session, pr, userGroupReviewer)
-	return userGroupReviewer, nil
-}
-
-func addReviewerUserGroup(
-	ctx context.Context,
-	session *auth.Session,
-	c *Controller,
-	repo *types.RepositoryCore,
-	pr *types.PullReq,
-	in *UserGroupReviewerAddInput,
-) (*types.UserGroupReviewer, error) {
-	addedByInfo := session.Principal.ToPrincipalInfo()
-
-	var reviewerUserGroup *types.UserGroup
-	reviewerUserGroup, err := c.userGroupStore.Find(ctx, in.UserGroupID)
+	userGroup, err := c.userGroupStore.Find(ctx, in.UserGroupID)
 	if err != nil {
-		return nil, usererror.NotFound("failed to find usergroup")
+		return nil, fmt.Errorf("failed to find user group: %w", err)
+	}
+	userIDs, err := c.userGroupService.ListUserIDsByGroupIDs(ctx, []int64{userGroup.ID})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list user ids by group id: %w", err)
 	}
 
-	userGroupReviewerInfo := reviewerUserGroup.ToUserGroupInfo()
+	reviewersMap := reviewersMap(reviewers)
+	decision := enum.PullReqReviewDecisionPending
+	for _, userGroupID := range userIDs {
+		if reviewer, ok := reviewersMap[userGroupID]; ok {
+			decision = getHighestOrderDecision(decision, reviewer.ReviewDecision)
+		}
+	}
 
-	var userGroupReviewer *types.UserGroupReviewer
-	userGroupReviewer, err = c.userGroupReviewerStore.Find(ctx, pr.ID, in.UserGroupID)
+	userGroupReviewer, err := c.userGroupReviewerStore.Find(ctx, pr.ID, in.UserGroupID)
 	if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
-		return nil, usererror.NotFound("failed to find usergroup reviewer")
+		return nil, fmt.Errorf("failed to find user group reviewer: %w", err)
 	}
 
 	if userGroupReviewer != nil {
-		addedByInfo, err = c.principalInfoCache.Get(ctx, userGroupReviewer.CreatedBy)
+		addedBy, err := c.principalInfoCache.Get(ctx, userGroupReviewer.CreatedBy)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get added by principal info: %w", err)
 		}
-		userGroupReviewer.AddedBy = *addedByInfo
-		userGroupReviewer.UserGroup = *userGroupReviewerInfo
+
+		userGroupReviewer.AddedBy = *addedBy
+		userGroupReviewer.UserGroup = *userGroup.ToUserGroupInfo()
+
+		userGroupReviewer.Decision = decision
+
+		return userGroupReviewer, nil
 	}
 
-	newUserGroupReviewer := newPullReqUserGroupReviewer(session, pr, repo, *userGroupReviewerInfo, addedByInfo, in)
-
-	err = c.userGroupReviewerStore.Create(ctx, newUserGroupReviewer)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create pull request reviewer: %w", err)
-	}
-
-	return userGroupReviewer, nil
-}
-
-func newPullReqUserGroupReviewer(
-	session *auth.Session,
-	pullReq *types.PullReq,
-	repo *types.RepositoryCore,
-	userGroupReviewerInfo types.UserGroupInfo,
-	addedByInfo *types.PrincipalInfo,
-	in *UserGroupReviewerAddInput,
-) *types.UserGroupReviewer {
 	now := time.Now().UnixMilli()
-	reviewer := &types.UserGroupReviewer{
-		PullReqID:   pullReq.ID,
+	userGroupReviewer = &types.UserGroupReviewer{
+		PullReqID:   pr.ID,
 		UserGroupID: in.UserGroupID,
 		CreatedBy:   session.Principal.ID,
 		Created:     now,
 		Updated:     now,
 		RepoID:      repo.ID,
-		UserGroup:   userGroupReviewerInfo,
-		AddedBy:     *addedByInfo,
+		UserGroup:   *userGroup.ToUserGroupInfo(),
+		AddedBy:     *session.Principal.ToPrincipalInfo(),
+		Decision:    decision,
 	}
-	return reviewer
+
+	err = c.userGroupReviewerStore.Create(ctx, userGroupReviewer)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create pull request reviewer: %w", err)
+	}
+
+	c.reportUserGroupReviewerAdded(ctx, &session.Principal, pr, userGroupReviewer.UserGroupID)
+
+	return userGroupReviewer, nil
 }
 
-func (c *Controller) reportUserGroupReviewerAddition(
+func (c *Controller) reportUserGroupReviewerAdded(
 	ctx context.Context,
-	session *auth.Session,
+	principal *types.Principal,
 	pr *types.PullReq,
-	userGroupReviewer *types.UserGroupReviewer,
+	userGroupReviewerID int64,
 ) {
-	userGroupReviewerID := userGroupReviewer.UserGroupID
-	c.eventReporter.UserGroupReviewerAdded(ctx, &events.UserGroupReviewerAddedPayload{
-		Base:                eventBase(pr, &session.Principal),
-		UserGroupReviewerID: userGroupReviewerID,
-	})
+	c.eventReporter.UserGroupReviewerAdded(
+		ctx,
+		&events.UserGroupReviewerAddedPayload{
+			Base:                eventBase(pr, principal),
+			UserGroupReviewerID: userGroupReviewerID,
+		},
+	)
+}
+
+func reviewersMap(reviewers []*types.PullReqReviewer) map[int64]*types.PullReqReviewer {
+	reviewersMap := make(map[int64]*types.PullReqReviewer, len(reviewers))
+	for _, reviewer := range reviewers {
+		reviewersMap[reviewer.PrincipalID] = reviewer
+	}
+
+	return reviewersMap
 }

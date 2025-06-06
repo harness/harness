@@ -18,34 +18,34 @@ import (
 	"context"
 	"fmt"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
-	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/enum"
 )
 
-func (c Controller) List(
-	ctx context.Context,
-	session *auth.Session,
-	filter *types.ListQueryFilter,
-	spacePath string,
-) ([]*types.UserGroupInfo, error) {
-	if err := apiauth.Check(
-		ctx,
-		c.authorizer,
-		session,
-		&types.Scope{},
-		&types.Resource{
-			Type: enum.ResourceTypeUser,
-		},
-		enum.PermissionUserView,
-	); err != nil {
-		return nil, err
-	}
+type service struct {
+}
 
-	userGroupInfos, err := c.searchSvc.Search(ctx, filter, spacePath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to search user groups: %w", err)
-	}
-	return userGroupInfos, nil
+func NewService() Service {
+	return &service{}
+}
+
+func (s *service) List(
+	_ context.Context,
+	_ *types.ListQueryFilter,
+	_ *types.SpaceCore,
+) ([]*types.UserGroupInfo, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (s *service) ListUserIDsByGroupIDs(
+	_ context.Context,
+	_ []int64,
+) ([]int64, error) {
+	return []int64{}, nil
+}
+
+func (s *service) MapGroupIDsToPrincipals(
+	_ context.Context,
+	_ []int64,
+) (map[int64][]*types.Principal, error) {
+	return map[int64][]*types.Principal{}, nil
 }
