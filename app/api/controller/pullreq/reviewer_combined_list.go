@@ -111,9 +111,9 @@ func (c *Controller) ReviewersListCombined(
 			userGroupReviewerDecisions = append(
 				userGroupReviewerDecisions,
 				types.UserGroupReviewerDecision{
-					ReviewDecision: reviewer.ReviewDecision,
-					SHA:            reviewer.SHA,
-					Reviewer:       reviewer.Reviewer,
+					Decision: reviewer.ReviewDecision,
+					SHA:      reviewer.SHA,
+					Reviewer: reviewer.Reviewer,
 				},
 			)
 

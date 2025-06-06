@@ -235,9 +235,9 @@ type UserGroupReviewer struct {
 }
 
 type UserGroupReviewerDecision struct {
-	ReviewDecision enum.PullReqReviewDecision `json:"decision"`
-	SHA            string                     `json:"sha,omitempty"`
-	Reviewer       PrincipalInfo              `json:"reviewer"`
+	Decision enum.PullReqReviewDecision `json:"decision"`
+	SHA      string                     `json:"sha,omitempty"`
+	Reviewer PrincipalInfo              `json:"reviewer"`
 }
 
 // PullReqFileView represents a file reviewed entry for a given pr and principal.
