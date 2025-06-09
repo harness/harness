@@ -19,6 +19,7 @@ import (
 	"net/http"
 
 	middlewareauthn "github.com/harness/gitness/app/api/middleware/authn"
+	"github.com/harness/gitness/registry/app/api/handler/cargo"
 	"github.com/harness/gitness/registry/app/api/handler/generic"
 	"github.com/harness/gitness/registry/app/api/handler/maven"
 	"github.com/harness/gitness/registry/app/api/handler/npm"
@@ -50,6 +51,7 @@ func NewRouter(
 	nugetHandler nuget.Handler,
 	npmHandler npm.Handler,
 	rpmHandler rpm.Handler,
+	cargoHandler cargo.Handler,
 ) Handler {
 	r := chi.NewRouter()
 
@@ -243,6 +245,13 @@ func NewRouter(
 			r.With(middleware.StoreArtifactInfo(rpmHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/package/{name}/{version}/{architecture}/{file}", rpmHandler.DownloadPackageFile)
+		})
+		r.Route("/cargo", func(r chi.Router) {
+			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
+			r.Use(middleware.CheckAuth())
+			r.With(middleware.StoreArtifactInfo(cargoHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionRegistryView)).
+				Get("/index/config.json", cargoHandler.GetRegistryConfig)
 		})
 	})
 

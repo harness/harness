@@ -18,7 +18,6 @@ tags:
   - name: Webhooks
     description: APIs to create, update, list webhooks
 
-
 servers:
   - url: /api/v1
     description: Registry
@@ -766,7 +765,6 @@ paths:
           $ref: "#/components/responses/NotFound"
         500:
           $ref: "#/components/responses/InternalServerError"
-
 
   #Tag: Docker Artifacts
   /registry/{registry_ref}/artifact/{artifact}/version/{version}/docker/details:
@@ -1553,7 +1551,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: "#/components/schemas/Error"
     PlainTextResponse:
       description: A plain text response
       content:
@@ -2208,7 +2206,7 @@ components:
           items:
             type: string
         config:
-          $ref: '#/components/schemas/RegistryConfig'
+          $ref: "#/components/schemas/RegistryConfig"
         createdAt:
           type: string
         modifiedAt:
@@ -2251,6 +2249,7 @@ components:
           NPM: "#/components/schemas/NpmArtifactDetailConfig"
           RPM: "#/components/schemas/RpmArtifactDetailConfig"
           NUGET: "#/components/schemas/NugetArtifactDetailConfig"
+          CARGO: "#/components/schemas/CargoArtifactDetailConfig"
       oneOf:
         - $ref: "#/components/schemas/DockerArtifactDetailConfig"
         - $ref: "#/components/schemas/HelmArtifactDetailConfig"
@@ -2260,6 +2259,7 @@ components:
         - $ref: "#/components/schemas/NpmArtifactDetailConfig"
         - $ref: "#/components/schemas/RpmArtifactDetailConfig"
         - $ref: "#/components/schemas/NugetArtifactDetailConfig"
+        - $ref: "#/components/schemas/CargoArtifactDetailConfig"
       required:
         - imageName
         - version
@@ -2310,6 +2310,13 @@ components:
     RpmArtifactDetailConfig:
       type: object
       description: Config for RPM artifact details
+      properties:
+        metadata:
+          type: object
+          additionalProperties: true
+    CargoArtifactDetailConfig:
+      type: object
+      description: Config for Cargo artifact details
       properties:
         metadata:
           type: object
@@ -2600,7 +2607,7 @@ components:
         manifests:
           type: array
           items:
-            $ref: '#/components/schemas/DockerManifestDetails'
+            $ref: "#/components/schemas/DockerManifestDetails"
       required:
         - imageName
         - version
@@ -2615,7 +2622,7 @@ components:
         layers:
           type: array
           items:
-            $ref: '#/components/schemas/DockerLayerEntry'
+            $ref: "#/components/schemas/DockerLayerEntry"
       required:
         - digest
     RegistryConfig:
@@ -2665,6 +2672,7 @@ components:
             - PyPi
             - NpmJs
             - NugetOrg
+            - Crates
       x-discriminator-value: UPSTREAM
       required:
         - authType
@@ -2728,6 +2736,7 @@ components:
         - NUGET
         - NPM
         - RPM
+        - CARGO
     SectionType:
       type: string
       description: refers to client setup section type
@@ -2806,7 +2815,7 @@ components:
           items:
             type: string
         config:
-          $ref: '#/components/schemas/RegistryConfig'
+          $ref: "#/components/schemas/RegistryConfig"
         parentRef:
           type: string
       required:

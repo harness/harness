@@ -127,6 +127,7 @@ import (
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/pubsub"
 	api2 "github.com/harness/gitness/registry/app/api"
+	"github.com/harness/gitness/registry/app/api/controller/pkg/cargo"
 	npm2 "github.com/harness/gitness/registry/app/api/controller/pkg/npm"
 	nuget2 "github.com/harness/gitness/registry/app/api/controller/pkg/nuget"
 	python2 "github.com/harness/gitness/registry/app/api/controller/pkg/python"
@@ -564,7 +565,9 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	rpmProxy := rpm2.ProxyProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider)
 	rpmController := rpm3.ControllerProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, rpmLocalRegistry, rpmProxy)
 	rpmHandler := api2.NewRpmHandlerProvider(rpmController, packagesHandler)
-	handler4 := router.PackageHandlerProvider(packagesHandler, mavenHandler, genericHandler, pythonHandler, nugetHandler, npmHandler, rpmHandler)
+	cargoController := cargo.ControllerProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider)
+	cargoHandler := api2.NewCargoHandlerProvider(cargoController, packagesHandler)
+	handler4 := router.PackageHandlerProvider(packagesHandler, mavenHandler, genericHandler, pythonHandler, nugetHandler, npmHandler, rpmHandler, cargoHandler)
 	appRouter := router.AppRouterProvider(registryOCIHandler, apiHandler, handler2, handler3, handler4)
 	readerFactory3, err := events3.ProvideReaderFactory(eventsSystem)
 	if err != nil {

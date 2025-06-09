@@ -102,6 +102,7 @@ const (
 	PathPackageTypeNuget   PathPackageType = "nuget"
 	PathPackageTypeNpm     PathPackageType = "npm"
 	PathPackageTypeRPM     PathPackageType = "rpm"
+	PathPackageTypeCargo   PathPackageType = "cargo"
 )
 
 var packageTypeMap = map[PathPackageType]artifact2.PackageType{
@@ -111,6 +112,7 @@ var packageTypeMap = map[PathPackageType]artifact2.PackageType{
 	PathPackageTypeNuget:   artifact2.PackageTypeNUGET,
 	PathPackageTypeNpm:     artifact2.PackageTypeNPM,
 	PathPackageTypeRPM:     artifact2.PackageTypeRPM,
+	PathPackageTypeCargo:   artifact2.PackageTypeCARGO,
 }
 
 func (h *handler) GetAuthenticator() authn.Authenticator {
@@ -165,6 +167,12 @@ func (h *handler) GetArtifactInfo(r *http.Request) (pkg.ArtifactInfo, error) {
 			"registry %s not found for root: %s. Reason: %s", registryIdentifier, rootSpace.Identifier, err,
 		)
 		return pkg.ArtifactInfo{}, usererror.NotFoundf("Registry not found: %s", registryIdentifier)
+	}
+
+	if registry.PackageType != pathPackageType {
+		return pkg.ArtifactInfo{}, usererror.NotFoundf(
+			"Registry package type mismatch: %s != %s", registry.PackageType, pathPackageType,
+		)
 	}
 
 	_, err = h.SpaceStore.Find(r.Context(), registry.ParentID)

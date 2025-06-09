@@ -21,10 +21,12 @@ import (
 	"github.com/harness/gitness/app/services/refcache"
 	corestore "github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
+	cargo2 "github.com/harness/gitness/registry/app/api/controller/pkg/cargo"
 	"github.com/harness/gitness/registry/app/api/controller/pkg/npm"
 	nuget2 "github.com/harness/gitness/registry/app/api/controller/pkg/nuget"
 	python2 "github.com/harness/gitness/registry/app/api/controller/pkg/python"
 	rpm2 "github.com/harness/gitness/registry/app/api/controller/pkg/rpm"
+	cargo "github.com/harness/gitness/registry/app/api/handler/cargo"
 	"github.com/harness/gitness/registry/app/api/handler/generic"
 	mavenhandler "github.com/harness/gitness/registry/app/api/handler/maven"
 	npm2 "github.com/harness/gitness/registry/app/api/handler/npm"
@@ -182,6 +184,13 @@ func NewGenericHandlerProvider(
 	)
 }
 
+func NewCargoHandlerProvider(
+	controller cargo2.Controller,
+	packageHandler packages.Handler,
+) cargo.Handler {
+	return cargo.NewHandler(controller, packageHandler)
+}
+
 var WireSet = wire.NewSet(
 	BlobStorageProvider,
 	NewHandlerProvider,
@@ -192,6 +201,7 @@ var WireSet = wire.NewSet(
 	NewNugetHandlerProvider,
 	NewNPMHandlerProvider,
 	NewRpmHandlerProvider,
+	NewCargoHandlerProvider,
 	database.WireSet,
 	pkg.WireSet,
 	docker.WireSet,
@@ -209,6 +219,7 @@ var WireSet = wire.NewSet(
 	base.WireSet,
 	rpm2.ControllerSet,
 	rpmregistry.WireSet,
+	cargo2.ControllerSet,
 )
 
 func Wire(_ *types.Config) (RegistryApp, error) {

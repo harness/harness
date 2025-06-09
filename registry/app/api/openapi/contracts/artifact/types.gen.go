@@ -26,6 +26,7 @@ const (
 
 // Defines values for PackageType.
 const (
+	PackageTypeCARGO   PackageType = "CARGO"
 	PackageTypeDOCKER  PackageType = "DOCKER"
 	PackageTypeGENERIC PackageType = "GENERIC"
 	PackageTypeHELM    PackageType = "HELM"
@@ -92,6 +93,7 @@ const (
 // Defines values for UpstreamConfigSource.
 const (
 	UpstreamConfigSourceAwsEcr       UpstreamConfigSource = "AwsEcr"
+	UpstreamConfigSourceCrates       UpstreamConfigSource = "Crates"
 	UpstreamConfigSourceCustom       UpstreamConfigSource = "Custom"
 	UpstreamConfigSourceDockerhub    UpstreamConfigSource = "Dockerhub"
 	UpstreamConfigSourceMavenCentral UpstreamConfigSource = "MavenCentral"
@@ -215,6 +217,11 @@ type ArtifactVersionSummary struct {
 
 // AuthType Authentication type
 type AuthType string
+
+// CargoArtifactDetailConfig Config for Cargo artifact details
+type CargoArtifactDetailConfig struct {
+	Metadata *map[string]interface{} `json:"metadata,omitempty"`
+}
 
 // CleanupPolicy Cleanup Policy for Harness Artifact Registries
 type CleanupPolicy struct {
@@ -1683,6 +1690,36 @@ func (t *ArtifactDetail) MergeNugetArtifactDetailConfig(v NugetArtifactDetailCon
 	return err
 }
 
+// AsCargoArtifactDetailConfig returns the union data inside the ArtifactDetail as a CargoArtifactDetailConfig
+func (t ArtifactDetail) AsCargoArtifactDetailConfig() (CargoArtifactDetailConfig, error) {
+	var body CargoArtifactDetailConfig
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCargoArtifactDetailConfig overwrites any union data inside the ArtifactDetail as the provided CargoArtifactDetailConfig
+func (t *ArtifactDetail) FromCargoArtifactDetailConfig(v CargoArtifactDetailConfig) error {
+	t.PackageType = "CARGO"
+
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCargoArtifactDetailConfig performs a merge with any union data inside the ArtifactDetail, using the provided CargoArtifactDetailConfig
+func (t *ArtifactDetail) MergeCargoArtifactDetailConfig(v CargoArtifactDetailConfig) error {
+	t.PackageType = "CARGO"
+
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
 func (t ArtifactDetail) Discriminator() (string, error) {
 	var discriminator struct {
 		Discriminator string `json:"packageType"`
@@ -1697,6 +1734,8 @@ func (t ArtifactDetail) ValueByDiscriminator() (interface{}, error) {
 		return nil, err
 	}
 	switch discriminator {
+	case "CARGO":
+		return t.AsCargoArtifactDetailConfig()
 	case "DOCKER":
 		return t.AsDockerArtifactDetailConfig()
 	case "GENERIC":

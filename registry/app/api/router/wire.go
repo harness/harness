@@ -22,6 +22,7 @@ import (
 	corestore "github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/audit"
+	"github.com/harness/gitness/registry/app/api/handler/cargo"
 	"github.com/harness/gitness/registry/app/api/handler/generic"
 	"github.com/harness/gitness/registry/app/api/handler/maven"
 	"github.com/harness/gitness/registry/app/api/handler/npm"
@@ -132,6 +133,7 @@ func PackageHandlerProvider(
 	nugetHandler nuget.Handler,
 	npmHandler npm.Handler,
 	rpmHandler rpm.Handler,
+	cargoHandler cargo.Handler,
 ) packagerrouter.Handler {
 	return packagerrouter.NewRouter(
 		handler,
@@ -141,6 +143,7 @@ func PackageHandlerProvider(
 		nugetHandler,
 		npmHandler,
 		rpmHandler,
+		cargoHandler,
 	)
 }
 
