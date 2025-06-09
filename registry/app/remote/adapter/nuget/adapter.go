@@ -148,8 +148,8 @@ func (a adapter) GetPackage(ctx context.Context, pkg, version, proxyEndpoint, fi
 		if err != nil {
 			return nil, err
 		}
-		packageEndpoint = fmt.Sprintf("%s/%s/%s/%s.%s.%s", strings.TrimRight(baseURL, "/"), pkg,
-			version, pkg, version, fileName)
+		packageEndpoint = fmt.Sprintf("%s/%s/%s/%s", strings.TrimRight(baseURL, "/"), pkg,
+			version, fileName)
 	}
 
 	log.Ctx(ctx).Info().Msgf("Package URL: %s", packageEndpoint)
