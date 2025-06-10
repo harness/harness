@@ -120,7 +120,7 @@ func Rebase(
 	for _, commitSHA := range sourceSHAs {
 		var treeSHA sha.SHA
 
-		commitInfo, err := api.GetCommit(ctx, s.Directory(), commitSHA.String())
+		commitInfo, err := api.GetCommit(ctx, s.Directory(), commitSHA)
 		if err != nil {
 			return sha.None, nil, fmt.Errorf("failed to get commit data in rebase merge: %w", err)
 		}

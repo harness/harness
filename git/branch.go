@@ -99,7 +99,7 @@ func (s *Service) CreateBranch(ctx context.Context, params *CreateBranchParams) 
 	}
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
-	targetCommit, err := s.git.GetCommit(ctx, repoPath, strings.TrimSpace(params.Target))
+	targetCommit, err := s.git.GetCommitFromRev(ctx, repoPath, strings.TrimSpace(params.Target))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get target commit: %w", err)
 	}
@@ -208,14 +208,14 @@ func (s *Service) ListBranches(ctx context.Context, params *ListBranchesParams) 
 			commitSHAs[i] = gitBranches[i].SHA.String()
 		}
 
-		var gitCommits []*api.Commit
+		var gitCommits []api.Commit
 		gitCommits, err = s.git.GetCommits(ctx, repoPath, commitSHAs)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get commit: %w", err)
 		}
 
 		for i := range gitCommits {
-			gitBranches[i].Commit = gitCommits[i]
+			gitBranches[i].Commit = &gitCommits[i]
 		}
 	}
 

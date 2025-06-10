@@ -58,7 +58,7 @@ func (g *Git) GetBranch(
 	}
 
 	ref := GetReferenceFromBranchName(branchName)
-	commit, err := GetCommit(ctx, repoPath, ref+"^{commit}") //nolint:goconst
+	commit, err := g.GetCommitFromRev(ctx, repoPath, ref+"^{commit}") //nolint:goconst
 	if err != nil {
 		return nil, fmt.Errorf("failed to find the commit for the branch: %w", err)
 	}

@@ -59,7 +59,7 @@ func GetBlob(
 		cancel()
 		return nil, fmt.Errorf("cat-file returned object sha '%s' but expected '%s'", output.SHA, sha)
 	}
-	if output.Type != string(GitObjectTypeBlob) {
+	if output.Type != GitObjectTypeBlob {
 		cancel()
 		return nil, errors.InvalidArgument(
 			"cat-file returned object type '%s' but expected '%s'", output.Type, GitObjectTypeBlob)

@@ -212,7 +212,7 @@ func (s *Service) ListCommitTags(
 		}
 
 		for i := range gitCommits {
-			c, err := mapCommit(gitCommits[i])
+			c, err := mapCommit(&gitCommits[i])
 			if err != nil {
 				return nil, fmt.Errorf("commit mapping error: %w", err)
 			}
@@ -233,7 +233,7 @@ func (s *Service) CreateCommitTag(ctx context.Context, params *CreateCommitTagPa
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
-	targetCommit, err := s.git.GetCommit(ctx, repoPath, params.Target)
+	targetCommit, err := s.git.GetCommitFromRev(ctx, repoPath, params.Target)
 	if errors.IsNotFound(err) {
 		return nil, errors.NotFound("target '%s' doesn't exist", params.Target)
 	}

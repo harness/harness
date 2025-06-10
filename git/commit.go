@@ -84,7 +84,7 @@ func (s *Service) GetCommit(ctx context.Context, params *GetCommitParams) (*GetC
 		return nil, ErrNoParamsProvided
 	}
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
-	result, err := s.git.GetCommit(ctx, repoPath, params.Revision)
+	result, err := s.git.GetCommitFromRev(ctx, repoPath, params.Revision)
 	if err != nil {
 		return nil, err
 	}
@@ -196,7 +196,7 @@ func (s *Service) ListCommits(ctx context.Context, params *ListCommitsParams) (*
 
 	commits := make([]Commit, len(gitCommits))
 	for i := range gitCommits {
-		commit, err := mapCommit(gitCommits[i])
+		commit, err := mapCommit(&gitCommits[i])
 		if err != nil {
 			return nil, fmt.Errorf("failed to map rpc commit: %w", err)
 		}
