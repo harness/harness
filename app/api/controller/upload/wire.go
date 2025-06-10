@@ -18,6 +18,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/blob"
+	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
 )
@@ -31,6 +32,7 @@ func ProvideController(
 	authorizer authz.Authorizer,
 	repoFinder refcache.RepoFinder,
 	blobStore blob.Store,
+	config *types.Config,
 ) *Controller {
-	return NewController(authorizer, repoFinder, blobStore)
+	return NewController(authorizer, repoFinder, blobStore, config)
 }

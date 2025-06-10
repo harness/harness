@@ -32,7 +32,7 @@ func HandleUpload(controller *upload.Controller) http.HandlerFunc {
 			return
 		}
 
-		r.Body = http.MaxBytesReader(w, r.Body, upload.MaxFileSize)
+		r.Body = http.MaxBytesReader(w, r.Body, controller.GetMaxFileSize())
 
 		res, err := controller.Upload(ctx, session, repoRef, r.Body)
 		if err != nil {

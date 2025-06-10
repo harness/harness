@@ -468,7 +468,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	v2 := check2.ProvideCheckSanitizers()
 	checkController := check2.ProvideController(transactor, authorizer, spaceStore, checkStore, spaceFinder, repoFinder, gitInterface, v2, streamer)
 	systemController := system.NewController(principalStore, config)
-	uploadController := upload.ProvideController(authorizer, repoFinder, blobStore)
+	uploadController := upload.ProvideController(authorizer, repoFinder, blobStore, config)
 	searcher := keywordsearch.ProvideSearcher(localIndexSearcher)
 	keywordsearchController := keywordsearch2.ProvideController(authorizer, searcher, repoController, spaceController)
 	infraproviderController := infraprovider3.ProvideController(authorizer, spaceFinder, infraproviderService)

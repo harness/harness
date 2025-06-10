@@ -184,6 +184,8 @@ type Config struct {
 
 	// BlobStore defines the blob storage configuration parameters.
 	BlobStore struct {
+		// MaxFileSize defines the maximum size of files that can be uploaded (in bytes)
+		MaxFileSize int64 `envconfig:"GITNESS_BLOBSTORE_MAX_FILE_SIZE" default:"10485760"` // 10MB default
 		// Provider is a name of blob storage service like filesystem or gcs or cloudflare
 		Provider blob.Provider `envconfig:"GITNESS_BLOBSTORE_PROVIDER" default:"filesystem"`
 		// Bucket is a path to the directory where the files will be stored when using filesystem blob storage,

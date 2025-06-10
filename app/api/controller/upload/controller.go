@@ -35,7 +35,6 @@ import (
 )
 
 const (
-	MaxFileSize       = 10 << 20 // 10 MB file limit set in Handler
 	fileBucketPathFmt = "uploads/%d/%s"
 	peekBytes         = 512
 )
@@ -46,20 +45,28 @@ var supportedFileTypes = map[string]struct{}{
 }
 
 type Controller struct {
-	authorizer authz.Authorizer
-	repoFinder refcache.RepoFinder
-	blobStore  blob.Store
+	authorizer  authz.Authorizer
+	repoFinder  refcache.RepoFinder
+	blobStore   blob.Store
+	blobMaxSize int64
 }
 
-func NewController(authorizer authz.Authorizer,
+func NewController(
+	authorizer authz.Authorizer,
 	repoFinder refcache.RepoFinder,
 	blobStore blob.Store,
+	config *types.Config,
 ) *Controller {
 	return &Controller{
-		authorizer: authorizer,
-		repoFinder: repoFinder,
-		blobStore:  blobStore,
+		authorizer:  authorizer,
+		repoFinder:  repoFinder,
+		blobStore:   blobStore,
+		blobMaxSize: config.BlobStore.MaxFileSize,
 	}
+}
+
+func (c *Controller) GetMaxFileSize() int64 {
+	return c.blobMaxSize
 }
 
 //nolint:unparam
