@@ -28,17 +28,9 @@ func (h *Handler) PushArtifact(w http.ResponseWriter, r *http.Request) {
 		handleErrors(r.Context(), err, w)
 		return
 	}
-
-	file, _, err1 := r.FormFile("file")
-	if err1 != nil {
-		handleErrors(r.Context(),
-			errcode.ErrCodeInvalidRequest.WithMessage(fmt.Sprintf("failed to parse file: %s, "+
-				"please provide correct file path ", err.Message)), w)
-		return
-	}
+	// Process the upload
 	ctx := r.Context()
-	defer file.Close()
-	headers, sha256, err := h.Controller.UploadArtifact(ctx, info, file)
+	headers, sha256, err := h.Controller.UploadArtifact(ctx, info, r)
 	if commons.IsEmptyError(err) {
 		headers.WriteToResponse(w)
 		_, err := w.Write([]byte(fmt.Sprintf("Pushed.\nSha256: %s", sha256)))
@@ -46,6 +38,7 @@ func (h *Handler) PushArtifact(w http.ResponseWriter, r *http.Request) {
 			handleErrors(r.Context(), errcode.ErrCodeUnknown.WithDetail(err), w)
 			return
 		}
+	} else {
+		handleErrors(r.Context(), err, w)
 	}
-	handleErrors(r.Context(), err, w)
 }

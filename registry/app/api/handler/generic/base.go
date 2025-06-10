@@ -43,7 +43,6 @@ import (
 const (
 	packageNameRegex = `^[a-zA-Z0-9][a-zA-Z0-9._-]*[a-zA-Z0-9]$`
 	versionRegex     = `^[a-z0-9][a-z0-9.-]*[a-z0-9]$`
-	filenameRegex    = `^[a-zA-Z0-9][a-zA-Z0-9._~@,/-]*[a-zA-Z0-9]$`
 	// Add other route types here.
 )
 
@@ -92,7 +91,7 @@ func (h *Handler) GetGenericArtifactInfo(r *http.Request) (pkg.GenericArtifactIn
 		return pkg.GenericArtifactInfo{}, errcode.ErrCodeInvalidRequest.WithDetail(err)
 	}
 
-	if err := validatePackageVersionAndFileName(artifact, tag, fileName); err != nil {
+	if err := validatePackageVersion(artifact, tag); err != nil {
 		return pkg.GenericArtifactInfo{}, errcode.ErrCodeInvalidRequest.WithDetail(err)
 	}
 
@@ -209,13 +208,7 @@ func ExtractPathVars(r *http.Request) (
 		}
 		artifact = segments[0]
 		tag = segments[1]
-
-		fileName = r.FormValue("filename")
-		if fileName == "" {
-			return "", "", "", "", "", "", fmt.Errorf("filename not provided in path or form parameter")
-		}
 	}
-	description = r.FormValue("description")
 
 	return rootIdentifier, registry, artifact, tag, fileName, description, nil
 }
@@ -228,11 +221,10 @@ func handleErrors(ctx context.Context, err errcode.Error, w http.ResponseWriter)
 	}
 }
 
-func validatePackageVersionAndFileName(packageName, version, filename string) error {
+func validatePackageVersion(packageName, version string) error {
 	// Compile the regular expressions
 	packageNameRe := regexp.MustCompile(packageNameRegex)
 	versionRe := regexp.MustCompile(versionRegex)
-	filenameRe := regexp.MustCompile(filenameRegex)
 
 	// Validate package name
 	if !packageNameRe.MatchString(packageName) {
@@ -242,11 +234,6 @@ func validatePackageVersionAndFileName(packageName, version, filename string) er
 	// Validate version
 	if !versionRe.MatchString(version) {
 		return fmt.Errorf("invalid version: %s", version)
-	}
-
-	// Validate filename
-	if !filenameRe.MatchString(filename) {
-		return fmt.Errorf("invalid filename: %s", filename)
 	}
 
 	return nil
@@ -261,19 +248,15 @@ func (h *Handler) GetPackageArtifactInfo(r *http.Request) (pkg.PackageArtifactIn
 
 	info.Image = r.PathValue("package")
 	version := r.PathValue("version")
-	fileName := r.FormValue("filename")
-	description := r.FormValue("description")
 
-	if err := validatePackageVersionAndFileName(info.Image, version, fileName); err != nil {
-		log.Error().Msgf("Invalid image name/version/fileName: %s/%s/%s", info.Image, version, fileName)
+	if err := validatePackageVersion(info.Image, version); err != nil {
+		log.Error().Msgf("Invalid image name/version/fileName: %s/%s", info.Image, version)
 		return nil, err
 	}
 
 	return pkg.GenericArtifactInfo{
 		ArtifactInfo: &info,
 		Version:      version,
-		FileName:     fileName,
-		Description:  description,
 		RegistryID:   info.RegistryID,
 	}, nil
 }

@@ -39,7 +39,7 @@ func GetGenericFilePath(imageName string, version string) string {
 	if version != "" {
 		filePathPrefix += "/" + version
 	}
-	return filePathPrefix
+	return filePathPrefix + "/"
 }
 
 func GetRpmFilePath(imageName string, version string) string {
