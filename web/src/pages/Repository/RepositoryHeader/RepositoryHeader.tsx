@@ -17,21 +17,23 @@
 import React from 'react'
 import { Layout, Text } from '@harnessio/uicore'
 import { BookmarkBook } from 'iconoir-react'
-
 import { FontVariation } from '@harnessio/design-system'
 import { RepoTypeLabel } from 'components/RepoTypeLabel/RepoTypeLabel'
 import type { GitInfoProps } from 'utils/GitUtils'
+import FavoriteStar from 'components/FavoriteStar/FavoriteStar'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import type { RepoRepositoryOutput } from 'services/code'
 import css from './RepositoryHeader.module.scss'
+
 interface RepositoryHeaderProps extends Pick<GitInfoProps, 'repoMetadata'> {
   repoMetadata: RepoRepositoryOutput
-  className?: string
   isFile: boolean
+  updateRepoMetadata: (repoPath: string, field: keyof RepoRepositoryOutput, value: any) => void
+  className?: string
 }
 
 export function RepositoryHeader(props: RepositoryHeaderProps) {
-  const { repoMetadata, className, isFile } = props
+  const { repoMetadata, className, isFile, updateRepoMetadata } = props
   return (
     <RepositoryPageHeader
       className={isFile ? className : undefined}
@@ -41,10 +43,16 @@ export function RepositoryHeader(props: RepositoryHeaderProps) {
           <span className={css.customIcon}>
             <BookmarkBook />
           </span>
-          {/* <Icon name={CodeIcon.Repo} size={20} /> */}
           <Text inline className={css.repoDropdown} font={{ variation: FontVariation.H4 }}>
             {repoMetadata.identifier}
           </Text>
+          <FavoriteStar
+            isFavorite={repoMetadata.is_favorite}
+            resourceId={repoMetadata.id || 0}
+            resourceType={'REPOSITORY'}
+            key={repoMetadata.id}
+            onChange={favorite => updateRepoMetadata(repoMetadata.path || '', 'is_favorite', favorite)}
+          />
           <RepoTypeLabel isPublic={repoMetadata.is_public} isArchived={repoMetadata.archived} />
         </Layout.Horizontal>
       }

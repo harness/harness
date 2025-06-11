@@ -18,6 +18,8 @@
 // This is an auto-generated file
 export declare const comingSoonContainer: string
 export declare const desc: string
+export declare const favorite: string
+export declare const favoriteActive: string
 export declare const featureContainer: string
 export declare const featureContent: string
 export declare const featureText: string

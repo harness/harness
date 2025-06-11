@@ -453,6 +453,10 @@ export interface StringsMap {
   failedToSavePipeline: string
   failureIgnored: string
   fastForwardMerge: string
+  'favorite.add': string
+  'favorite.errorFavorite': string
+  'favorite.errorUnFavorite': string
+  'favorite.remove': string
   featureRoadmap: string
   fileDeleted: string
   fileTooLarge: string

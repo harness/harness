@@ -74,6 +74,19 @@ export function useGetRepositoryMetadata() {
     }
   }, [data, setRepoMetadata])
 
+  const updateRepoMetadata = (repoMetadataPath: string, field: keyof RepoRepositoryOutput, value: any) => {
+    setRepoMetadata(prevMetadata => {
+      // Ensure repoMetadata exists and we are updating the correct repository
+      if (prevMetadata && prevMetadata.path === repoMetadataPath) {
+        return {
+          ...prevMetadata,
+          [field]: value
+        }
+      }
+      return prevMetadata
+    })
+  }
+
   return {
     space,
     repoName,
@@ -91,6 +104,7 @@ export function useGetRepositoryMetadata() {
     commitSHA,
     ruleId,
     settingSectionMode,
+    updateRepoMetadata,
     ...otherPathParams
   }
 }

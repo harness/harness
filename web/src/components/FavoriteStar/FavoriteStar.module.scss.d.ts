@@ -14,34 +14,7 @@
  * limitations under the License.
  */
 
-.name {
-  align-items: center;
-}
-
-.breadcrumb {
-  align-items: center;
-}
-
-.repoDropdown {
-  color: var(--grey-700) !important;
-  font-size: 18px !important;
-  line-height: 28px !important;
-  cursor: pointer;
-
-  span[icon] {
-    padding-top: 2px;
-  }
-}
-
-.targetClassName {
-  display: inline-flex !important;
-}
-
-.customIcon {
-  margin-top: var(--spacing-xsmall);
-  color: var(--grey-800);
-  svg {
-    height: 24px !important;
-    width: 24px !important;
-  }
-}
+/* eslint-disable */
+// This is an auto-generated file
+export declare const favorite: string
+export declare const star: string

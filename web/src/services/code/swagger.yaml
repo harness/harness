@@ -2104,17 +2104,19 @@ paths:
           schema:
             default: ''
             type: string
-        - description: Epoch since when commit information should be retrieved.
+        - description: Epoch timestamp since when commit information should be retrieved.
           in: query
           name: since
           required: false
           schema:
+            example: 1.728348213e+09
             type: integer
-        - description: Epoch until when commit information should be retrieved.
+        - description: Epoch timestamp until when commit information should be retrieved.
           in: query
           name: until
           required: false
           schema:
+            example: 1.746668446e+09
             type: integer
         - description: Committer pattern for which commit information should be retrieved.
           in: query
@@ -2122,6 +2124,33 @@ paths:
           required: false
           schema:
             type: string
+        - description: Committer principal IDs for which commit information should be
+            retrieved.
+          explode: true
+          in: query
+          name: committer_id
+          required: false
+          schema:
+            items:
+              type: integer
+            type: array
+          style: form
+        - description: Author pattern for which commit information should be retrieved.
+          in: query
+          name: author
+          required: false
+          schema:
+            type: string
+        - description: Author principal IDs for which commit information should be retrieved.
+          explode: true
+          in: query
+          name: author_id
+          required: false
+          schema:
+            items:
+              type: integer
+            type: array
+          style: form
         - description: The page to return.
           in: query
           name: page
@@ -5173,60 +5202,6 @@ paths:
           description: Internal Server Error
       tags:
         - pullreq
-    put:
-      operationId: changeTargetBranch
-      parameters:
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: pullreq_number
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        content:
-          application/json:
-            schema:
-              properties:
-                branch_name:
-                  type: string
-              type: object
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TypesPullReq'
-          description: OK
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Bad Request
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Unauthorized
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Forbidden
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Internal Server Error
-      tags:
-        - pullreq
   /repos/{repo_ref}/pullreq/{pullreq_number}/checks:
     get:
       operationId: checksPullReq
@@ -6239,6 +6214,71 @@ paths:
           description: Internal Server Error
       tags:
         - pullreq
+  /repos/{repo_ref}/pullreq/{pullreq_number}/revert:
+    post:
+      operationId: revertPullReqOp
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pullreq_number
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                message:
+                  type: string
+                revert_branch:
+                  type: string
+                title:
+                  type: string
+              type: object
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesRevertResponse'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Method Not Allowed
+      tags:
+        - pullreq
   /repos/{repo_ref}/pullreq/{pullreq_number}/reviewers:
     get:
       operationId: reviewerListPullReq
@@ -6487,6 +6527,61 @@ paths:
           description: Internal Server Error
       tags:
         - pullreq
+  /repos/{repo_ref}/pullreq/{pullreq_number}/target-branch:
+    put:
+      operationId: changeTargetBranch
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pullreq_number
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                branch_name:
+                  type: string
+              type: object
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesPullReq'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pullreq
   /repos/{repo_ref}/pullreq/{target_branch}...{source_branch}:
     get:
       operationId: getPullReqByBranches
@@ -6559,6 +6654,57 @@ paths:
               schema:
                 $ref: '#/components/schemas/UsererrorError'
           description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pullreq
+  /repos/{repo_ref}/pullreq/candidates:
+    get:
+      operationId: prCandidates
+      parameters:
+        - description: The maximum number of results to return.
+          in: query
+          name: limit
+          required: false
+          schema:
+            default: 30
+            maximum: 100
+            minimum: 1
+            type: integer
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesBranchTable'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
         '500':
           content:
             application/json:
@@ -10635,6 +10781,14 @@ paths:
             maximum: 100
             minimum: 1
             type: integer
+        - description: The result should contain only the favorite entries for the logged
+            in user.
+          in: query
+          name: only_favorites
+          required: false
+          schema:
+            default: false
+            type: boolean
         - in: path
           name: space_ref
           required: true
@@ -12096,6 +12250,72 @@ paths:
           description: Internal Server Error
       tags:
         - user
+  /user/favorite:
+    delete:
+      operationId: deleteFavorite
+      responses:
+        '204':
+          description: No Content
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - user
+    post:
+      operationId: createFavorite
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TypesFavoriteResource'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesFavoriteResource'
+          description: Created
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - user
   /user/keys:
     get:
       operationId: listPublicKey
@@ -12144,6 +12364,28 @@ paths:
               - asc
               - desc
             type: string
+        - description: The public key usage.
+          in: query
+          name: public_key_usage
+          required: false
+          schema:
+            items:
+              enum:
+                - auth
+                - sign
+              type: string
+            type: array
+        - description: The public key scheme.
+          in: query
+          name: public_key_scheme
+          required: false
+          schema:
+            items:
+              enum:
+                - pgp
+                - ssh
+              type: string
+            type: array
       responses:
         '200':
           content:
@@ -12469,6 +12711,9 @@ components:
         - bitbucket
         - unknown
         - gitness
+        - gitlab_on_prem
+        - bitbucket_server
+        - github_enterprise
       type: string
     EnumGitspaceEntityType:
       enum:
@@ -12619,9 +12864,15 @@ components:
         - serviceaccount
         - user
       type: string
+    EnumPublicKeyScheme:
+      enum:
+        - pgp
+        - ssh
+      type: string
     EnumPublicKeyUsage:
       enum:
         - auth
+        - sign
       type: string
     EnumPullReqActivityKind:
       enum:
@@ -12675,6 +12926,21 @@ components:
       nullable: true
       type: integer
     EnumResolverType:
+      type: string
+    EnumResourceType:
+      enum:
+        - SPACE
+        - REPOSITORY
+        - USER
+        - SERVICEACCOUNT
+        - SERVICE
+        - PIPELINE
+        - SECRET
+        - CONNECTOR
+        - TEMPLATE
+        - GITSPACE
+        - INFRAPROVIDER
+        - REGISTRY
       type: string
     EnumRuleState:
       enum:
@@ -12735,6 +13001,7 @@ components:
         - pullreq_merged
         - pullreq_reopened
         - pullreq_review_submitted
+        - pullreq_target_branch_changed
         - pullreq_updated
         - tag_created
         - tag_deleted
@@ -13322,8 +13589,12 @@ components:
     OpenapiGeneralSettingsRequest:
       properties:
         file_size_limit:
+          description: file size limit in bytes
           nullable: true
           type: integer
+        git_lfs_enabled:
+          nullable: true
+          type: boolean
       type: object
     OpenapiGetContentOutput:
       properties:
@@ -13764,7 +14035,7 @@ components:
         bypass:
           $ref: '#/components/schemas/ProtectionDefBypass'
         lifecycle:
-          $ref: '#/components/schemas/ProtectionDefLifecycle'
+          $ref: '#/components/schemas/ProtectionDefBranchLifecycle'
         pullreq:
           $ref: '#/components/schemas/ProtectionDefPullReq'
       type: object
@@ -13779,6 +14050,17 @@ components:
         require_minimum_default_reviewer_count:
           type: integer
         require_no_change_request:
+          type: boolean
+      type: object
+    ProtectionDefBranchLifecycle:
+      properties:
+        create_forbidden:
+          type: boolean
+        delete_forbidden:
+          type: boolean
+        update_forbidden:
+          type: boolean
+        update_force_forbidden:
           type: boolean
       type: object
     ProtectionDefBypass:
@@ -13797,17 +14079,6 @@ components:
     ProtectionDefComments:
       properties:
         require_resolve_all:
-          type: boolean
-      type: object
-    ProtectionDefLifecycle:
-      properties:
-        create_forbidden:
-          type: boolean
-        delete_forbidden:
-          type: boolean
-        update_forbidden:
-          type: boolean
-        update_force_forbidden:
           type: boolean
       type: object
     ProtectionDefMerge:
@@ -14007,6 +14278,8 @@ components:
           type: boolean
         is_empty:
           type: boolean
+        is_favorite:
+          type: boolean
         is_public:
           type: boolean
         last_git_push:
@@ -14026,6 +14299,10 @@ components:
         path:
           type: string
         size:
+          description: size of the repository in KiB
+          type: integer
+        size_lfs:
+          description: size of the repository LFS in KiB
           type: integer
         size_updated:
           type: integer
@@ -14056,8 +14333,12 @@ components:
     ReposettingsGeneralSettings:
       properties:
         file_size_limit:
+          description: file size limit in bytes
           nullable: true
           type: integer
+        git_lfs_enabled:
+          nullable: true
+          type: boolean
       type: object
     ReposettingsSecuritySettings:
       properties:
@@ -14202,6 +14483,19 @@ components:
           type: array
         sha:
           $ref: '#/components/schemas/ShaSHA'
+      type: object
+    TypesBranchTable:
+      properties:
+        created:
+          type: integer
+        created_by:
+          type: integer
+        name:
+          type: string
+        updated:
+          type: integer
+        updated_by:
+          type: integer
       type: object
     TypesChangeStats:
       properties:
@@ -14348,6 +14642,11 @@ components:
       type: object
     TypesCommitFilesResponse:
       properties:
+        changed_files:
+          items:
+            $ref: '#/components/schemas/TypesFileReference'
+          nullable: true
+          type: array
         commit_id:
           type: string
         dry_run_rules:
@@ -14561,6 +14860,20 @@ components:
         trigger:
           type: string
       type: object
+    TypesFavoriteResource:
+      properties:
+        resource_id:
+          type: integer
+        resource_type:
+          $ref: '#/components/schemas/EnumResourceType'
+      type: object
+    TypesFileReference:
+      properties:
+        blob_sha:
+          type: string
+        path:
+          type: string
+      type: object
     TypesGithubConnectorData:
       properties:
         api_url:
@@ -14593,6 +14906,8 @@ components:
         ide:
           $ref: '#/components/schemas/EnumIDEType'
         identifier:
+          type: string
+        initialize_log_key:
           type: string
         instance:
           $ref: '#/components/schemas/TypesGitspaceInstance'
@@ -15059,6 +15374,8 @@ components:
           type: string
         identifier:
           type: string
+        scheme:
+          $ref: '#/components/schemas/EnumPublicKeyScheme'
         type:
           type: string
         usage:
@@ -15102,6 +15419,9 @@ components:
         merge_target_sha:
           nullable: true
           type: string
+        merge_violations_bypassed:
+          nullable: true
+          type: boolean
         merged:
           nullable: true
           type: integer
@@ -15375,6 +15695,13 @@ components:
           $ref: '#/components/schemas/TypesRepositoryPullReqSummary'
         tag_count:
           type: integer
+      type: object
+    TypesRevertResponse:
+      properties:
+        branch:
+          type: string
+        commit:
+          $ref: '#/components/schemas/TypesCommit'
       type: object
     TypesRuleInfo:
       properties:
@@ -15714,11 +16041,17 @@ components:
       type: object
     TypesUsageMetric:
       properties:
-        bandwidth:
+        bandwidth_in:
+          type: integer
+        bandwidth_out:
+          type: integer
+        lfs_storage_total:
+          type: integer
+        pushes:
           type: integer
         root_space_id:
           type: integer
-        storage:
+        storage_total:
           type: integer
       type: object
     TypesUser:
@@ -15833,6 +16166,8 @@ components:
           type: string
         identifier:
           type: string
+        scheme:
+          $ref: '#/components/schemas/EnumPublicKeyScheme'
         usage:
           $ref: '#/components/schemas/EnumPublicKeyUsage'
       type: object

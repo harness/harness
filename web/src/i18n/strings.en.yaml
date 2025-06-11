@@ -1361,3 +1361,8 @@ rebaseBranch: Rebase branch
 updateWithRebase: Update with rebase
 updatedBranchMessageRebase: Updated branch with rebase
 onLatestChanges: on latest changes
+favorite:
+  add: Add to Favorites
+  remove: Remove from Favorites
+  errorFavorite: Failed to mark this entity as a favorite.
+  errorUnFavorite: Failed to remove this entity from your favorites.

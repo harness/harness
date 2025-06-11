@@ -46,7 +46,8 @@ const regexPatterns = {
 }
 
 export default function Repository() {
-  const { gitRef, resourcePath, repoMetadata, error, loading, refetch, commitRef } = useGetRepositoryMetadata()
+  const { gitRef, resourcePath, repoMetadata, error, loading, refetch, commitRef, updateRepoMetadata } =
+    useGetRepositoryMetadata()
   const { routes } = useAppContext()
   const history = useHistory()
   const {
@@ -87,7 +88,11 @@ export default function Repository() {
     <Container className={cx(css.main, !!resourceContent && css.withFileViewer)} ref={domRef}>
       <Match expr={resourceError?.status === 404}>
         <Truthy>
-          <RepositoryHeader isFile={false} repoMetadata={repoMetadata as RepoRepositoryOutput} />
+          <RepositoryHeader
+            isFile={false}
+            repoMetadata={repoMetadata as RepoRepositoryOutput}
+            updateRepoMetadata={updateRepoMetadata}
+          />
           <Layout.Vertical>
             <Container padding={{ left: 'xlarge' }}>
               <ContentHeader
@@ -154,6 +159,7 @@ export default function Repository() {
                   repoMetadata={repoMetadata}
                   isFile={!isDir(resourceContent)}
                   className={css.headerContainer}
+                  updateRepoMetadata={updateRepoMetadata}
                 />
                 {resourceContent ? (
                   <RepositoryContent

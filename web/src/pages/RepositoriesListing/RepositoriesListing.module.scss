@@ -208,3 +208,18 @@
 .launchIcon {
   padding-bottom: 1px !important;
 }
+
+.row {
+  .favorite {
+    visibility: hidden;
+  }
+  .favoriteActive {
+    visibility: visible;
+  }
+
+  &:hover {
+    .favorite {
+      visibility: visible;
+    }
+  }
+}

@@ -17,6 +17,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ButtonVariation,
+  Checkbox,
+  CheckboxVariant,
   Container,
   FlexExpander,
   Layout,
@@ -30,22 +32,26 @@ import {
 import { ProgressBar, Intent } from '@blueprintjs/core'
 import { Color, FontVariation } from '@harnessio/design-system'
 import type { CellProps, Column } from 'react-table'
+import { debounce, isEmpty } from 'lodash-es'
 import Keywords from 'react-keywords'
 import cx from 'classnames'
 import { useGet } from 'restful-react'
 import { useHistory } from 'react-router-dom'
+import { Icon } from '@harnessio/icons'
 import { useStrings, String } from 'framework/strings'
+import { useAppContext } from 'AppContext'
 import { voidFn, formatDate, getErrorMessage, LIST_FETCHING_LIMIT, PageBrowserProps } from 'utils/Utils'
 import { NewRepoModalButton } from 'components/NewRepoModalButton/NewRepoModalButton'
 import type { RepoRepositoryOutput } from 'services/code'
 import { useDeleteRepository } from 'services/code'
+import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { useQueryParams } from 'hooks/useQueryParams'
 import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
 import useSpaceSSE from 'hooks/useSpaceSSE'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
-import { useAppContext } from 'AppContext'
+import FavoriteStar from 'components/FavoriteStar/FavoriteStar'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
@@ -78,12 +84,14 @@ export default function RepositoriesListing() {
   const rowContainerRef = useRef<HTMLDivElement>(null)
   const [nameTextWidth, setNameTextWidth] = useState(600)
   const space = useGetSpaceParam()
-  const [searchTerm, setSearchTerm] = useState<string | undefined>()
   const { routes, standalone, hooks, routingId } = useAppContext()
   const { updateQueryParams, replaceQueryParams } = useUpdateQueryParams()
-  const pageBrowser = useQueryParams<PageBrowserProps>()
+  const { updateRepoMetadata } = useGetRepositoryMetadata()
+  const pageBrowser = useQueryParams<PageBrowserProps & { only_favorites?: string }>()
   const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
   const [page, setPage] = usePageIndex(pageInit)
+  const [searchTerm, setSearchTerm] = useState<string | undefined>()
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm)
   const { showError, showSuccess } = useToaster()
   const [updatedRepositories, setUpdatedRepositories] = useState<RepoRepositoryOutput[]>()
 
@@ -95,9 +103,21 @@ export default function RepositoriesListing() {
     response
   } = useGet<RepoRepositoryOutput[]>({
     path: `/api/v1/spaces/${space}/+/repos`,
-    queryParams: { page: pageBrowser.page, limit: LIST_FETCHING_LIMIT, query: searchTerm },
-    debounce: 500
+    queryParams: {
+      page: pageBrowser.page,
+      limit: LIST_FETCHING_LIMIT,
+      query: debouncedSearchTerm,
+      only_favorites: pageBrowser.only_favorites
+    }
   })
+
+  const debouncedRefetch = useCallback(
+    debounce((value: string) => {
+      setDebouncedSearchTerm(value)
+      setPage(1)
+    }, 500),
+    []
+  )
 
   const onEvent = useCallback(
     data => {
@@ -218,17 +238,33 @@ export default function RepositoriesListing() {
         Header: getString('repos.updated'),
         width: '180px',
         Cell: ({ row }: CellProps<TypesRepoExtended>) => {
-          return [ImportStatus.FAILED, ImportStatus.FETCH_FAILED].includes(
-            row?.original?.importProgress as ImportStatus
-          ) ? null : row.original.importing ? (
+          if (
+            [ImportStatus.FAILED, ImportStatus.FETCH_FAILED].includes(row?.original?.importProgress as ImportStatus)
+          ) {
+            return null
+          }
+
+          return row.original.importing ? (
             <Layout.Horizontal style={{ alignItems: 'center' }} padding={{ right: 'large' }}>
               <ProgressBar intent={Intent.PRIMARY} className={css.progressBar} />
             </Layout.Horizontal>
           ) : (
-            <Layout.Horizontal style={{ alignItems: 'center' }}>
+            <Layout.Horizontal style={{ alignItems: 'center', justifyContent: 'space-between' }}>
               <Text color={Color.BLACK} lineClamp={1} rightIconProps={{ size: 10 }} width={120}>
                 {formatDate(row.original.updated as number)}
               </Text>
+              <FavoriteStar
+                isFavorite={row.original.is_favorite}
+                resourceId={row.original.id || 0}
+                resourceType={'REPOSITORY'}
+                className={css.favorite}
+                activeClassName={css.favoriteActive}
+                key={row.original.id}
+                onChange={favorite => {
+                  row.original.is_favorite = favorite
+                  updateRepoMetadata(row.original.path || '', 'is_favorite', favorite)
+                }}
+              />
             </Layout.Horizontal>
           )
         },
@@ -369,24 +405,37 @@ export default function RepositoriesListing() {
         error={error ? getErrorMessage(error) : null}
         retryOnError={voidFn(refetch)}
         noData={{
-          when: () => repositories?.length === 0 && searchTerm === undefined,
+          when: () =>
+            !loading &&
+            isEmpty(repositories) &&
+            debouncedSearchTerm === undefined &&
+            !JSON.parse(pageBrowser.only_favorites || 'false'),
           image: noRepoImage,
           message: getString('repos.noDataMessage'),
           button: NewRepoButton
         }}>
-        <LoadingSpinner visible={loading && searchTerm === undefined} className={css.spinner} />
+        <LoadingSpinner visible={loading} className={css.spinner} />
         <Layout.Horizontal>
           <Container className={css.repoListingContainer} margin={{ top: 'medium' }}>
             <Container padding="xlarge">
               <Layout.Horizontal spacing="large" className={css.layout}>
                 {NewRepoButton}
+                <Checkbox
+                  variant={CheckboxVariant.BOXED}
+                  checked={JSON.parse(pageBrowser.only_favorites || 'false')}
+                  labelElement={<Icon name="star" color={Color.YELLOW_900} size={14} />}
+                  onChange={e => {
+                    updateQueryParams({ only_favorites: e.currentTarget.checked.toString() })
+                    setPage(1)
+                  }}
+                />
                 <FlexExpander />
                 <SearchInputWithSpinner
-                  loading={loading && searchTerm !== undefined}
+                  loading={loading && debouncedSearchTerm !== undefined}
                   query={searchTerm}
                   setQuery={value => {
                     setSearchTerm(value)
-                    setPage(1)
+                    debouncedRefetch(value)
                   }}
                 />
               </Layout.Horizontal>
@@ -408,8 +457,11 @@ export default function RepositoriesListing() {
               )}
 
               <NoResultCard
-                showWhen={() => !!repositories && repositories.length === 0 && !!searchTerm?.length}
-                forSearch={true}
+                showWhen={() =>
+                  isEmpty(repositories) && (JSON.parse(pageBrowser.only_favorites || 'false') || !!searchTerm?.length)
+                }
+                forSearch={!isEmpty(debouncedSearchTerm)}
+                forFilter={JSON.parse(pageBrowser.only_favorites || 'false')}
               />
             </Container>
             <ResourceListingPagination response={response} page={page} setPage={setPage} />
