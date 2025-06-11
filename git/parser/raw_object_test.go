@@ -17,6 +17,7 @@ package parser
 import (
 	"bytes"
 	"encoding/pem"
+	"strings"
 	"testing"
 
 	"github.com/harness/gitness/app/services/publickey"
@@ -31,6 +32,33 @@ func TestObject(t *testing.T) {
 		data string
 		want ObjectRaw
 	}{
+		{
+			name: "empty",
+			data: "",
+			want: ObjectRaw{
+				Headers: []ObjectHeader{},
+				Message: "",
+			},
+		},
+		{
+			name: "no_header",
+			data: "\nline1\nline2\n",
+			want: ObjectRaw{
+				Headers: []ObjectHeader{},
+				Message: "line1\nline2\n",
+			},
+		},
+		{
+			name: "no_body",
+			data: "header 1\nheader 2\n",
+			want: ObjectRaw{
+				Headers: []ObjectHeader{
+					{Type: "header", Value: "1\n"},
+					{Type: "header", Value: "2\n"},
+				},
+				Message: "",
+			},
+		},
 		{
 			name: "dummy_content",
 			data: "header 1\nheader 2\n\nblah blah\nblah",
@@ -255,13 +283,13 @@ Rv18ZouJpO2LRIXdZpxAE=
 			}
 
 			if len(object.Signature) == 0 || object.SignatureType != "SSH SIGNATURE" {
-				t.Logf("test %s does not contain a signature", test.name)
+				// skip testing signed content because the data doesn't contain a signature
 				return
 			}
 
 			// If git object from the test contains a signature,
-			// we verify if object.SignedContent is correct.
-			// In other words, if it's possible to verify the signature from the content.
+			// we verify if object.SignedContent is correct
+			// (if it's possible to verify the signature from the content).
 
 			block, rest := pem.Decode(object.Signature)
 			if block == nil || len(rest) > 0 || block.Type != object.SignatureType {
@@ -289,7 +317,6 @@ Rv18ZouJpO2LRIXdZpxAE=
 				t.Errorf("failed to parse signature key: %s", err.Error())
 				return
 			}
-			t.Logf("test %s is signed with %s", test.name, ssh.FingerprintSHA256(key))
 
 			signedMessage := ssh.Marshal(publickey.SSHMessageWrapper{
 				Namespace:     signature.Namespace,
@@ -304,6 +331,50 @@ Rv18ZouJpO2LRIXdZpxAE=
 			if err != nil {
 				t.Errorf("failed to verify signature: %s", err.Error())
 				return
+			}
+		})
+	}
+}
+
+func TestObjectNegative(t *testing.T) {
+	tests := []struct {
+		name   string
+		data   string
+		errStr string
+	}{
+		{
+			name:   "header_without_EOL",
+			data:   "header 1\nheader 2",
+			errStr: "header line must end with EOL character",
+		},
+		{
+			name:   "header_without_value",
+			data:   "header\n\nbody",
+			errStr: "malformed header",
+		},
+		{
+			name:   "header_without_type",
+			data:   " 1\n",
+			errStr: "malformed header",
+		},
+		{
+			name:   "header_invalid_sig",
+			data:   "gpgsig this is\n not a sig\n\nbody",
+			errStr: "invalid signature header",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			_, err := Object([]byte(test.data))
+
+			if err == nil {
+				t.Error("expected error but got none")
+				return
+			}
+
+			if want, got := test.errStr, err.Error(); !strings.HasPrefix(got, want) {
+				t.Errorf("want error message to start with %s, got %s", want, got)
 			}
 		})
 	}

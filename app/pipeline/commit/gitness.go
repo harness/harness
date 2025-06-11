@@ -50,7 +50,7 @@ func (f *service) FindRef(
 	}
 
 	// convert the RPC commit output to a types.Commit.
-	return controller.MapCommit(branchOutput.Branch.Commit)
+	return controller.MapCommit(branchOutput.Branch.Commit), nil
 }
 
 // FindCommit finds information about a commit in Harness for the git SHA.
@@ -71,5 +71,5 @@ func (f *service) FindCommit(
 	}
 
 	// convert the RPC commit output to a types.Commit.
-	return controller.MapCommit(&commitOutput.Commit)
+	return controller.MapCommit(&commitOutput.Commit), nil
 }

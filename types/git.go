@@ -18,6 +18,7 @@ import (
 	"time"
 
 	gitenum "github.com/harness/gitness/git/enum"
+	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -90,11 +91,13 @@ type CommitStats struct {
 
 type Commit struct {
 	SHA        string       `json:"sha"`
-	ParentSHAs []string     `json:"parent_shas,omitempty"`
+	TreeSHA    sha.SHA      `json:"-"`
+	ParentSHAs []sha.SHA    `json:"parent_shas,omitempty"`
 	Title      string       `json:"title"`
 	Message    string       `json:"message"`
 	Author     Signature    `json:"author"`
 	Committer  Signature    `json:"committer"`
+	SignedData *SignedData  `json:"-"`
 	Stats      *CommitStats `json:"stats,omitempty"`
 }
 
@@ -106,6 +109,12 @@ type Signature struct {
 type Identity struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
+}
+
+type SignedData struct {
+	Type          string
+	Signature     []byte
+	SignedContent []byte
 }
 
 type RenameDetails struct {

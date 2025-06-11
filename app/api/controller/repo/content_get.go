@@ -300,10 +300,7 @@ func mapToContentInfo(node git.TreeNode, commit *git.Commit, includeLatestCommit
 
 	// parse commit only if available
 	if commit != nil && includeLatestCommit {
-		res.LatestCommit, err = controller.MapCommit(commit)
-		if err != nil {
-			return ContentInfo{}, err
-		}
+		res.LatestCommit = controller.MapCommit(commit)
 	}
 
 	return res, nil

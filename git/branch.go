@@ -203,9 +203,9 @@ func (s *Service) ListBranches(ctx context.Context, params *ListBranchesParams) 
 
 	// get commits if needed (single call for perf savings: 1s-4s vs 5s-20s)
 	if params.IncludeCommit {
-		commitSHAs := make([]string, len(gitBranches))
+		commitSHAs := make([]sha.SHA, len(gitBranches))
 		for i := range gitBranches {
-			commitSHAs[i] = gitBranches[i].SHA.String()
+			commitSHAs[i] = gitBranches[i].SHA
 		}
 
 		var gitCommits []api.Commit

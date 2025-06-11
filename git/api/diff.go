@@ -174,12 +174,12 @@ func (g *Git) RawDiff(
 
 	baseTag, err := g.GetAnnotatedTag(ctx, repoPath, baseRef)
 	if err == nil {
-		baseRef = baseTag.TargetSha.String()
+		baseRef = baseTag.TargetSHA.String()
 	}
 
 	headTag, err := g.GetAnnotatedTag(ctx, repoPath, headRef)
 	if err == nil {
-		headRef = headTag.TargetSha.String()
+		headRef = headTag.TargetSHA.String()
 	}
 
 	cmd := command.New("diff",

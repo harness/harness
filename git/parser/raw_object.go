@@ -162,9 +162,9 @@ func getHeader(raw []byte) (headerType string, headerContent *bytes.Buffer, adva
 				return "", nil, 1, nil
 			}
 
-			idxSpace := bytes.IndexByte(line, ' ')
-			if idxSpace < 0 {
-				return "", nil, 0, fmt.Errorf("missing header type: %s", line[:len(line)-1])
+			idxSpace := bytes.IndexByte(line, ' ') // expected header form is "<header-type><space><header_value>"
+			if idxSpace <= 0 {
+				return "", nil, 0, fmt.Errorf("malformed header: %s", line[:len(line)-1])
 			}
 
 			headerType = string(line[:idxSpace])

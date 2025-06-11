@@ -50,8 +50,8 @@ func (c *Controller) Commits(
 		ReadParams: git.CreateReadParams(repo),
 		GitREF:     gitRef,
 		After:      afterRef,
-		Page:       int32(filter.Page),
-		Limit:      int32(filter.Limit),
+		Page:       int32(filter.Page),  //nolint:gosec
+		Limit:      int32(filter.Limit), //nolint:gosec
 	})
 	if err != nil {
 		return nil, err
@@ -59,12 +59,7 @@ func (c *Controller) Commits(
 
 	commits := make([]types.Commit, len(output.Commits))
 	for i := range output.Commits {
-		var commit *types.Commit
-		commit, err = controller.MapCommit(&output.Commits[i])
-		if err != nil {
-			return nil, fmt.Errorf("failed to map commit: %w", err)
-		}
-		commits[i] = *commit
+		commits[i] = *controller.MapCommit(&output.Commits[i])
 	}
 
 	return commits, nil

@@ -25,12 +25,12 @@ import (
 type Tag struct {
 	Sha        sha.SHA
 	Name       string
-	TargetSha  sha.SHA
+	TargetSHA  sha.SHA
 	TargetType GitObjectType
 	Title      string
 	Message    string
 	Tagger     Signature
-	Signature  *SignatureInfo
+	SignedData *SignedData
 }
 
 type CreateTagOptions struct {
@@ -51,21 +51,16 @@ func (g *Git) GetAnnotatedTag(
 	repoPath string,
 	rev string,
 ) (*Tag, error) {
-	tags, err := CatFileAnnotatedTags(ctx, repoPath, nil, []string{rev})
-	if err != nil || len(tags) == 0 {
-		return nil, processGitErrorf(err, "failed to get annotated tag with sha '%s'", rev)
-	}
-
-	return &tags[0], nil
+	return CatFileAnnotatedTag(ctx, repoPath, nil, rev)
 }
 
 // GetAnnotatedTags returns the tags for a specific list of tag sha.
 func (g *Git) GetAnnotatedTags(
 	ctx context.Context,
 	repoPath string,
-	revs []string,
+	tagSHAs []sha.SHA,
 ) ([]Tag, error) {
-	return CatFileAnnotatedTags(ctx, repoPath, nil, revs)
+	return CatFileAnnotatedTagFromSHAs(ctx, repoPath, nil, tagSHAs)
 }
 
 // CreateTag creates the tag pointing at the provided SHA (could be any type, e.g. commit, tag, blob, ...)

@@ -28,15 +28,6 @@ type Signature struct {
 	When time.Time
 }
 
-// DecodeSignature decodes a byte array representing a signature to signature.
-func DecodeSignature(b []byte) (Signature, error) {
-	sig, err := NewSignatureFromCommitLine(b)
-	if err != nil {
-		return Signature{}, fmt.Errorf("failed to read signature from commit: %w", err)
-	}
-	return sig, nil
-}
-
 func (s Signature) String() string {
 	return fmt.Sprintf("%s <%s>", s.Identity.Name, s.Identity.Email)
 }

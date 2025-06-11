@@ -99,10 +99,7 @@ func (c *Controller) CreateCommitTag(ctx context.Context,
 		return nil, nil, err
 	}
 
-	commitTag, err := mapCommitTag(rpcOut.CommitTag)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to map tag received from service output: %w", err)
-	}
+	commitTag := mapCommitTag(rpcOut.CommitTag)
 
 	err = c.instrumentation.Track(ctx, instrument.Event{
 		Type:      instrument.EventTypeCreateTag,

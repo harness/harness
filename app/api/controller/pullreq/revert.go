@@ -127,13 +127,8 @@ func (c *Controller) Revert(
 		return nil, fmt.Errorf("failed to get revert commit: %w", err)
 	}
 
-	commit, err := controller.MapCommit(&gitCommit.Commit)
-	if err != nil {
-		return nil, fmt.Errorf("failed to map revert commit: %w", err)
-	}
-
 	return &types.RevertResponse{
 		Branch: revertBranch,
-		Commit: *commit,
+		Commit: *controller.MapCommit(&gitCommit.Commit),
 	}, nil
 }

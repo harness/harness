@@ -93,51 +93,29 @@ func CreateRPCSystemReferencesWriteParams(
 }
 
 func MapBranch(b git.Branch) (types.Branch, error) {
-	var commit *types.Commit
-	if b.Commit != nil {
-		var err error
-		commit, err = MapCommit(b.Commit)
-		if err != nil {
-			return types.Branch{}, err
-		}
-	}
 	return types.Branch{
 		Name:   b.Name,
 		SHA:    b.SHA,
-		Commit: commit,
+		Commit: MapCommit(b.Commit),
 	}, nil
 }
 
-func MapCommit(c *git.Commit) (*types.Commit, error) {
+func MapCommit(c *git.Commit) *types.Commit {
 	if c == nil {
-		return nil, fmt.Errorf("commit is nil")
-	}
-
-	author, err := MapSignature(&c.Author)
-	if err != nil {
-		return nil, fmt.Errorf("failed to map author: %w", err)
-	}
-
-	committer, err := MapSignature(&c.Committer)
-	if err != nil {
-		return nil, fmt.Errorf("failed to map committer: %w", err)
-	}
-
-	parentSHAs := make([]string, len(c.ParentSHAs))
-	for i, sha := range c.ParentSHAs {
-		parentSHAs[i] = sha.String()
+		return nil
 	}
 
 	return &types.Commit{
-			SHA:        c.SHA.String(),
-			ParentSHAs: parentSHAs,
-			Title:      c.Title,
-			Message:    c.Message,
-			Author:     *author,
-			Committer:  *committer,
-			Stats:      mapStats(c),
-		},
-		nil
+		SHA:        c.SHA.String(),
+		TreeSHA:    c.TreeSHA,
+		ParentSHAs: c.ParentSHAs,
+		Title:      c.Title,
+		Message:    c.Message,
+		Author:     MapSignature(c.Author),
+		Committer:  MapSignature(c.Committer),
+		SignedData: (*types.SignedData)(c.SignedData),
+		Stats:      mapStats(c),
+	}
 }
 
 func mapStats(c *git.Commit) *types.CommitStats {
@@ -193,18 +171,11 @@ func MapRenameDetails(c *git.RenameDetails) *types.RenameDetails {
 	}
 }
 
-func MapSignature(s *git.Signature) (*types.Signature, error) {
-	if s == nil {
-		return nil, fmt.Errorf("signature is nil")
+func MapSignature(s git.Signature) types.Signature {
+	return types.Signature{
+		Identity: types.Identity(s.Identity),
+		When:     s.When,
 	}
-
-	return &types.Signature{
-		Identity: types.Identity{
-			Name:  s.Identity.Name,
-			Email: s.Identity.Email,
-		},
-		When: s.When,
-	}, nil
 }
 
 func IdentityFromPrincipalInfo(p types.PrincipalInfo) *git.Identity {

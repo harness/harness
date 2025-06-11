@@ -140,15 +140,15 @@ func (s *Service) ListCommitTags(
 	}
 
 	// get all tag and commit SHAs
-	annotatedTagSHAs := make([]string, 0, len(tags))
-	commitSHAs := make([]string, len(tags))
+	annotatedTagSHAs := make([]sha.SHA, 0, len(tags))
+	commitSHAs := make([]sha.SHA, len(tags))
 
 	for i, tag := range tags {
 		// always set the commit sha (will be overwritten for annotated tags)
-		commitSHAs[i] = tag.SHA.String()
+		commitSHAs[i] = tag.SHA
 
 		if tag.IsAnnotated {
-			annotatedTagSHAs = append(annotatedTagSHAs, tag.SHA.String())
+			annotatedTagSHAs = append(annotatedTagSHAs, tag.SHA)
 		}
 	}
 
@@ -183,17 +183,15 @@ func (s *Service) ListCommitTags(
 			}
 
 			// correct the commitSHA for the annotated tag (currently it is the tag sha, not the commit sha)
-			commitSHAs[wi] = aTags[ai].TargetSha.String()
+			commitSHAs[wi] = aTags[ai].TargetSHA
+
+			tagger := mapSignature(aTags[ai].Tagger)
 
 			// update tag information with annotation details
 			// NOTE: we keep the name from the reference and ignore the annotated name (similar to github)
 			tags[wi].Message = aTags[ai].Message
 			tags[wi].Title = aTags[ai].Title
-			tagger, err := mapSignature(&aTags[ai].Tagger)
-			if err != nil {
-				return nil, fmt.Errorf("signature mapping error: %w", err)
-			}
-			tags[wi].Tagger = tagger
+			tags[wi].Tagger = &tagger
 
 			ai++
 			wi++

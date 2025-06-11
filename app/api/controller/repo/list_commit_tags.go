@@ -16,18 +16,18 @@ package repo
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
 type CommitTag struct {
 	Name        string           `json:"name"`
-	SHA         string           `json:"sha"`
+	SHA         sha.SHA          `json:"sha"`
 	IsAnnotated bool             `json:"is_annotated"`
 	Title       string           `json:"title,omitempty"`
 	Message     string           `json:"message,omitempty"`
@@ -53,8 +53,8 @@ func (c *Controller) ListCommitTags(ctx context.Context,
 		Query:         filter.Query,
 		Sort:          mapToRPCTagSortOption(filter.Sort),
 		Order:         mapToRPCSortOrder(filter.Order),
-		Page:          int32(filter.Page),
-		PageSize:      int32(filter.Size),
+		Page:          int32(filter.Page), //nolint:gosec
+		PageSize:      int32(filter.Size), //nolint:gosec
 	})
 	if err != nil {
 		return nil, err
@@ -62,10 +62,7 @@ func (c *Controller) ListCommitTags(ctx context.Context,
 
 	tags := make([]CommitTag, len(rpcOut.Tags))
 	for i := range rpcOut.Tags {
-		tags[i], err = mapCommitTag(rpcOut.Tags[i])
-		if err != nil {
-			return nil, fmt.Errorf("failed to map CommitTag: %w", err)
-		}
+		tags[i] = mapCommitTag(rpcOut.Tags[i])
 	}
 
 	return tags, nil
@@ -85,32 +82,20 @@ func mapToRPCTagSortOption(o enum.TagSortOption) git.TagSortOption {
 	}
 }
 
-func mapCommitTag(t git.CommitTag) (CommitTag, error) {
-	var commit *types.Commit
-	if t.Commit != nil {
-		var err error
-		commit, err = controller.MapCommit(t.Commit)
-		if err != nil {
-			return CommitTag{}, err
-		}
-	}
-
+func mapCommitTag(t git.CommitTag) CommitTag {
 	var tagger *types.Signature
 	if t.Tagger != nil {
-		var err error
-		tagger, err = controller.MapSignature(t.Tagger)
-		if err != nil {
-			return CommitTag{}, err
-		}
+		tagger = &types.Signature{}
+		*tagger = controller.MapSignature(*t.Tagger)
 	}
 
 	return CommitTag{
 		Name:        t.Name,
-		SHA:         t.SHA.String(),
+		SHA:         t.SHA,
 		IsAnnotated: t.IsAnnotated,
 		Title:       t.Title,
 		Message:     t.Message,
 		Tagger:      tagger,
-		Commit:      commit,
-	}, nil
+		Commit:      controller.MapCommit(t.Commit),
+	}
 }

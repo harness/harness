@@ -47,23 +47,15 @@ func mapCommit(c *api.Commit) (*Commit, error) {
 		return nil, fmt.Errorf("rpc commit is nil")
 	}
 
-	author, err := mapSignature(&c.Author)
-	if err != nil {
-		return nil, fmt.Errorf("failed to map rpc author: %w", err)
-	}
-
-	comitter, err := mapSignature(&c.Committer)
-	if err != nil {
-		return nil, fmt.Errorf("failed to map rpc committer: %w", err)
-	}
-
 	return &Commit{
 		SHA:        c.SHA,
+		TreeSHA:    c.TreeSHA,
 		ParentSHAs: c.ParentSHAs,
 		Title:      c.Title,
 		Message:    c.Message,
-		Author:     *author,
-		Committer:  *comitter,
+		Author:     mapSignature(c.Author),
+		Committer:  mapSignature(c.Committer),
+		SignedData: (*SignedData)(c.SignedData),
 		FileStats:  mapFileStats(c.FileStats),
 	}, nil
 }
@@ -84,31 +76,11 @@ func mapFileStats(typeStats []api.CommitFileStats) []CommitFileStats {
 	return stats
 }
 
-func mapSignature(s *api.Signature) (*Signature, error) {
-	if s == nil {
-		return nil, fmt.Errorf("rpc signature is nil")
-	}
-
-	identity, err := mapIdentity(&s.Identity)
-	if err != nil {
-		return nil, fmt.Errorf("failed to map rpc identity: %w", err)
-	}
-
-	return &Signature{
-		Identity: identity,
+func mapSignature(s api.Signature) Signature {
+	return Signature{
+		Identity: Identity(s.Identity),
 		When:     s.When,
-	}, nil
-}
-
-func mapIdentity(id *api.Identity) (Identity, error) {
-	if id == nil {
-		return Identity{}, fmt.Errorf("rpc identity is nil")
 	}
-
-	return Identity{
-		Name:  id.Name,
-		Email: id.Email,
-	}, nil
 }
 
 func mapBranchesSortOption(o BranchSortOption) api.GitReferenceField {
@@ -126,13 +98,13 @@ func mapBranchesSortOption(o BranchSortOption) api.GitReferenceField {
 }
 
 func mapAnnotatedTag(tag *api.Tag) *CommitTag {
-	tagger, _ := mapSignature(&tag.Tagger)
+	tagger := mapSignature(tag.Tagger)
 	return &CommitTag{
 		Name:        tag.Name,
 		SHA:         tag.Sha,
 		Title:       tag.Title,
 		Message:     tag.Message,
-		Tagger:      tagger,
+		Tagger:      &tagger,
 		IsAnnotated: true,
 		Commit:      nil,
 	}

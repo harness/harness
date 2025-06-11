@@ -32,13 +32,6 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-// SignatureInfo represents a git signature part.
-type SignatureInfo struct {
-	Type          string
-	Signature     []byte
-	SignedContent []byte
-}
-
 type CommitChangesOptions struct {
 	Committer Signature
 	Author    Signature
@@ -54,15 +47,15 @@ type CommitFileStats struct {
 }
 
 type Commit struct {
-	SHA        sha.SHA   `json:"sha"`
-	TreeSHA    sha.SHA   `json:"tree_sha"`
-	ParentSHAs []sha.SHA `json:"parent_shas"`
-	Title      string    `json:"title"`
-	Message    string    `json:"message,omitempty"`
-	Author     Signature `json:"author"`
-	Committer  Signature `json:"committer"`
-	Signature  *SignatureInfo
-	FileStats  []CommitFileStats `json:"file_stats,omitempty"`
+	SHA        sha.SHA
+	TreeSHA    sha.SHA
+	ParentSHAs []sha.SHA
+	Title      string
+	Message    string
+	Author     Signature
+	Committer  Signature
+	SignedData *SignedData
+	FileStats  []CommitFileStats
 }
 
 type CommitFilter struct {
@@ -538,33 +531,14 @@ func (g *Git) GetCommitFromRev(
 	return GetCommit(ctx, repoPath, commitSHA)
 }
 
-// GetCommits returns the (latest) commits for a specific list of refs.
-// Note: ref can be Branch / Tag / CommitSHA.
+// GetCommits returns the commits for a specific list of SHAs.
 func (g *Git) GetCommits(
 	ctx context.Context,
 	repoPath string,
-	refs []string,
+	commitSHAs []sha.SHA,
 ) ([]Commit, error) {
 	if repoPath == "" {
 		return nil, ErrRepositoryPathEmpty
-	}
-
-	commitSHAs := make([]sha.SHA, 0, len(refs))
-	for _, ref := range refs {
-		var commitSHA sha.SHA
-
-		commitSHA, err := sha.New(ref)
-		if err == nil {
-			commitSHAs = append(commitSHAs, commitSHA)
-			continue
-		}
-
-		commitSHA, err = g.ResolveRev(ctx, repoPath, ref)
-		if err != nil {
-			return nil, fmt.Errorf("failed to resolve reference %q: %w", ref, err)
-		}
-
-		commitSHAs = append(commitSHAs, commitSHA)
 	}
 
 	commits, err := CatFileCommits(ctx, repoPath, nil, commitSHAs)

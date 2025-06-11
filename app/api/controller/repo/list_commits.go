@@ -76,12 +76,7 @@ func (c *Controller) ListCommits(ctx context.Context,
 
 	commits := make([]types.Commit, len(rpcOut.Commits))
 	for i := range rpcOut.Commits {
-		var commit *types.Commit
-		commit, err = controller.MapCommit(&rpcOut.Commits[i])
-		if err != nil {
-			return types.ListCommitResponse{}, fmt.Errorf("failed to map commit: %w", err)
-		}
-		commits[i] = *commit
+		commits[i] = *controller.MapCommit(&rpcOut.Commits[i])
 	}
 
 	renameDetailList := make([]types.RenameDetails, len(rpcOut.RenameDetails))

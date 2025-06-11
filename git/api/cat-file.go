@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"io"
 	"iter"
-	"slices"
 	"strconv"
 	"strings"
 
@@ -147,7 +146,7 @@ func ReadBatchHeaderLine(rd *bufio.Reader) (*BatchHeaderResponse, error) {
 	}, nil
 }
 
-func CatFileObjects(
+func catFileObjects(
 	ctx context.Context,
 	repoPath string,
 	alternateObjectDirs []string,
@@ -209,19 +208,19 @@ func CatFileCommits(
 	ctx context.Context,
 	repoPath string,
 	alternateObjectDirs []string,
-	shas []sha.SHA,
+	commitSHAs []sha.SHA,
 ) ([]Commit, error) {
-	commits := make([]Commit, 0, len(shas))
+	commits := make([]Commit, 0, len(commitSHAs))
 
 	seq := func(yield func(string) bool) {
-		for _, commitSHA := range shas {
+		for _, commitSHA := range commitSHAs {
 			if !yield(commitSHA.String()) {
 				return
 			}
 		}
 	}
 
-	err := CatFileObjects(ctx, repoPath, alternateObjectDirs, seq, func(
+	err := catFileObjects(ctx, repoPath, alternateObjectDirs, seq, func(
 		_ string,
 		commitSHA sha.SHA,
 		objectType GitObjectType,
@@ -252,17 +251,51 @@ func CatFileCommits(
 	return commits, nil
 }
 
-func CatFileAnnotatedTags(
+func CatFileAnnotatedTag(
 	ctx context.Context,
 	repoPath string,
 	alternateObjectDirs []string,
-	revs []string,
+	rev string,
+) (*Tag, error) {
+	var tags []Tag
+
+	seq := func(yield func(string) bool) { yield(rev) }
+
+	tags, err := catFileAnnotatedTags(ctx, repoPath, alternateObjectDirs, tags, seq)
+	if err != nil {
+		return nil, err
+	}
+
+	return &tags[0], nil
+}
+
+func CatFileAnnotatedTagFromSHAs(
+	ctx context.Context,
+	repoPath string,
+	alternateObjectDirs []string,
+	tagSHAs []sha.SHA,
 ) ([]Tag, error) {
-	tags := make([]Tag, 0, len(revs))
+	tags := make([]Tag, 0, len(tagSHAs))
 
-	seq := slices.Values(revs)
+	seq := func(yield func(string) bool) {
+		for _, tagSHA := range tagSHAs {
+			if !yield(tagSHA.String()) {
+				return
+			}
+		}
+	}
 
-	err := CatFileObjects(ctx, repoPath, alternateObjectDirs, seq, func(
+	return catFileAnnotatedTags(ctx, repoPath, alternateObjectDirs, tags, seq)
+}
+
+func catFileAnnotatedTags(
+	ctx context.Context,
+	repoPath string,
+	alternateObjectDirs []string,
+	tags []Tag,
+	seq iter.Seq[string],
+) ([]Tag, error) {
+	err := catFileObjects(ctx, repoPath, alternateObjectDirs, seq, func(
 		objectName string,
 		tagSHA sha.SHA,
 		objectType GitObjectType,
@@ -353,9 +386,9 @@ func asCommit(commitSHA sha.SHA, raw parser.ObjectRaw) (Commit, error) {
 
 	title := parser.ExtractSubject(raw.Message)
 
-	var signature *SignatureInfo
+	var signedData *SignedData
 	if raw.SignatureType != "" {
-		signature = &SignatureInfo{
+		signedData = &SignedData{
 			Type:          raw.SignatureType,
 			Signature:     raw.Signature,
 			SignedContent: raw.SignedContent,
@@ -370,7 +403,7 @@ func asCommit(commitSHA sha.SHA, raw parser.ObjectRaw) (Commit, error) {
 		Message:    raw.Message,
 		Author:     author,
 		Committer:  committer,
-		Signature:  signature,
+		SignedData: signedData,
 		FileStats:  nil,
 	}, nil
 }
@@ -427,9 +460,9 @@ func asTag(tagSHA sha.SHA, raw parser.ObjectRaw) (Tag, error) {
 
 	title := parser.ExtractSubject(raw.Message)
 
-	var signature *SignatureInfo
+	var signedData *SignedData
 	if raw.SignatureType != "" {
-		signature = &SignatureInfo{
+		signedData = &SignedData{
 			Type:          raw.SignatureType,
 			Signature:     raw.Signature,
 			SignedContent: raw.SignedContent,
@@ -439,11 +472,11 @@ func asTag(tagSHA sha.SHA, raw parser.ObjectRaw) (Tag, error) {
 	return Tag{
 		Sha:        tagSHA,
 		Name:       tagName,
-		TargetSha:  objectSHA,
+		TargetSHA:  objectSHA,
 		TargetType: tagType,
 		Title:      title,
 		Message:    raw.Message,
 		Tagger:     tagger,
-		Signature:  signature,
+		SignedData: signedData,
 	}, nil
 }

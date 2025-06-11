@@ -45,11 +45,13 @@ type GetCommitParams struct {
 
 type Commit struct {
 	SHA        sha.SHA           `json:"sha"`
+	TreeSHA    sha.SHA           `json:"tree_sha"`
 	ParentSHAs []sha.SHA         `json:"parent_shas,omitempty"`
 	Title      string            `json:"title"`
 	Message    string            `json:"message,omitempty"`
 	Author     Signature         `json:"author"`
 	Committer  Signature         `json:"committer"`
+	SignedData *SignedData       `json:"signature"`
 	FileStats  []CommitFileStats `json:"file_stats,omitempty"`
 }
 

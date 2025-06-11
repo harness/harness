@@ -29,7 +29,7 @@ import (
 func (c *Controller) GetCommit(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
-	sha string,
+	rev string,
 ) (*types.Commit, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
@@ -38,17 +38,13 @@ func (c *Controller) GetCommit(ctx context.Context,
 
 	rpcOut, err := c.git.GetCommit(ctx, &git.GetCommitParams{
 		ReadParams: git.CreateReadParams(repo),
-		Revision:   sha,
+		Revision:   rev,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get commit: %w", err)
 	}
 
-	rpcCommit := rpcOut.Commit
-	commit, err := controller.MapCommit(&rpcCommit)
-	if err != nil {
-		return nil, fmt.Errorf("failed to map commit: %w", err)
-	}
+	commit := controller.MapCommit(&rpcOut.Commit)
 
 	return commit, nil
 }
