@@ -106,6 +106,7 @@ func mapAnnotatedTag(tag *api.Tag) *CommitTag {
 		Message:     tag.Message,
 		Tagger:      &tagger,
 		IsAnnotated: true,
+		SignedData:  (*SignedData)(tag.SignedData),
 		Commit:      nil,
 	}
 }

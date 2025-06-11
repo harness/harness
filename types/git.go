@@ -90,7 +90,7 @@ type CommitStats struct {
 }
 
 type Commit struct {
-	SHA        string       `json:"sha"`
+	SHA        sha.SHA      `json:"sha"`
 	TreeSHA    sha.SHA      `json:"-"`
 	ParentSHAs []sha.SHA    `json:"parent_shas,omitempty"`
 	Title      string       `json:"title"`

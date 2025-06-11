@@ -26,13 +26,14 @@ import (
 )
 
 type CommitTag struct {
-	Name        string           `json:"name"`
-	SHA         sha.SHA          `json:"sha"`
-	IsAnnotated bool             `json:"is_annotated"`
-	Title       string           `json:"title,omitempty"`
-	Message     string           `json:"message,omitempty"`
-	Tagger      *types.Signature `json:"tagger,omitempty"`
-	Commit      *types.Commit    `json:"commit,omitempty"`
+	Name        string            `json:"name"`
+	SHA         sha.SHA           `json:"sha"`
+	IsAnnotated bool              `json:"is_annotated"`
+	Title       string            `json:"title,omitempty"`
+	Message     string            `json:"message,omitempty"`
+	Tagger      *types.Signature  `json:"tagger,omitempty"`
+	SignedData  *types.SignedData `json:"-"`
+	Commit      *types.Commit     `json:"commit,omitempty"`
 }
 
 // ListCommitTags lists the commit tags of a repo.
@@ -96,6 +97,7 @@ func mapCommitTag(t git.CommitTag) CommitTag {
 		Title:       t.Title,
 		Message:     t.Message,
 		Tagger:      tagger,
+		SignedData:  (*types.SignedData)(t.SignedData),
 		Commit:      controller.MapCommit(t.Commit),
 	}
 }

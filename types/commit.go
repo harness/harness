@@ -14,14 +14,16 @@
 
 package types
 
+import "github.com/harness/gitness/git/sha"
+
 // CommitFilesResponse holds commit id.
 type CommitFilesResponse struct {
-	CommitID string `json:"commit_id"`
+	CommitID sha.SHA `json:"commit_id"`
 	DryRunRulesOutput
 	ChangedFiles []FileReference `json:"changed_files"`
 }
 
 type FileReference struct {
-	Path string `json:"path"`
-	SHA  string `json:"blob_sha"`
+	Path string  `json:"path"`
+	SHA  sha.SHA `json:"blob_sha"`
 }

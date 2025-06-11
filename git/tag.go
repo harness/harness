@@ -69,6 +69,7 @@ type CommitTag struct {
 	Title       string
 	Message     string
 	Tagger      *Signature
+	SignedData  *SignedData
 	Commit      *Commit
 }
 
@@ -192,6 +193,7 @@ func (s *Service) ListCommitTags(
 			tags[wi].Message = aTags[ai].Message
 			tags[wi].Title = aTags[ai].Title
 			tags[wi].Tagger = &tagger
+			tags[wi].SignedData = (*SignedData)(aTags[ai].SignedData)
 
 			ai++
 			wi++

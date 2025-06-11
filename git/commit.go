@@ -45,13 +45,13 @@ type GetCommitParams struct {
 
 type Commit struct {
 	SHA        sha.SHA           `json:"sha"`
-	TreeSHA    sha.SHA           `json:"tree_sha"`
+	TreeSHA    sha.SHA           `json:"-"`
 	ParentSHAs []sha.SHA         `json:"parent_shas,omitempty"`
 	Title      string            `json:"title"`
 	Message    string            `json:"message,omitempty"`
 	Author     Signature         `json:"author"`
 	Committer  Signature         `json:"committer"`
-	SignedData *SignedData       `json:"signature"`
+	SignedData *SignedData       `json:"-"`
 	FileStats  []CommitFileStats `json:"file_stats,omitempty"`
 }
 
@@ -64,9 +64,17 @@ type Signature struct {
 	When     time.Time `json:"when"`
 }
 
+func (s *Signature) String() string {
+	return s.Identity.String() + " " + s.When.String()
+}
+
 type Identity struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
+}
+
+func (i *Identity) String() string {
+	return fmt.Sprintf("%s <%s>", i.Name, i.Email)
 }
 
 func (i *Identity) Validate() error {

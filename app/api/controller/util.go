@@ -106,7 +106,7 @@ func MapCommit(c *git.Commit) *types.Commit {
 	}
 
 	return &types.Commit{
-		SHA:        c.SHA.String(),
+		SHA:        c.SHA,
 		TreeSHA:    c.TreeSHA,
 		ParentSHAs: c.ParentSHAs,
 		Title:      c.Title,

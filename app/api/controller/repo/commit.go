@@ -78,7 +78,7 @@ func mapChangedFiles(files []git.FileReference) []types.FileReference {
 	for i, file := range files {
 		changedFiles[i] = types.FileReference{
 			Path: file.Path,
-			SHA:  file.SHA.String(),
+			SHA:  file.SHA,
 		}
 	}
 	return changedFiles
@@ -221,7 +221,7 @@ func (c *Controller) CommitFiles(ctx context.Context,
 	}
 
 	return types.CommitFilesResponse{
-		CommitID: commit.CommitID.String(),
+		CommitID: commit.CommitID,
 		DryRunRulesOutput: types.DryRunRulesOutput{
 			RuleViolations: violations,
 		},
