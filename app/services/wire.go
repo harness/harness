@@ -32,6 +32,7 @@ import (
 	"github.com/harness/gitness/app/services/trigger"
 	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/job"
+	registryasyncprocessing "github.com/harness/gitness/registry/services/asyncprocessing"
 	registrywebhooks "github.com/harness/gitness/registry/services/webhook"
 
 	"github.com/google/wire"
@@ -42,22 +43,23 @@ var WireSet = wire.NewSet(
 )
 
 type Services struct {
-	Webhook                 *webhook.Service
-	PullReq                 *pullreq.Service
-	Trigger                 *trigger.Service
-	JobScheduler            *job.Scheduler
-	MetricCollector         *metric.CollectorJob
-	RepoSizeCalculator      *repo.SizeCalculator
-	Repo                    *repo.Service
-	Cleanup                 *cleanup.Service
-	Notification            *notification.Service
-	Keywordsearch           *keywordsearch.Service
-	GitspaceService         *GitspaceServices
-	Instrumentation         instrument.Service
-	instrumentConsumer      instrument.Consumer
-	instrumentRepoCounter   *instrument.RepositoryCount
-	registryWebhooksService *registrywebhooks.Service
-	Branch                  *branch.Service
+	Webhook                        *webhook.Service
+	PullReq                        *pullreq.Service
+	Trigger                        *trigger.Service
+	JobScheduler                   *job.Scheduler
+	MetricCollector                *metric.CollectorJob
+	RepoSizeCalculator             *repo.SizeCalculator
+	Repo                           *repo.Service
+	Cleanup                        *cleanup.Service
+	Notification                   *notification.Service
+	Keywordsearch                  *keywordsearch.Service
+	GitspaceService                *GitspaceServices
+	Instrumentation                instrument.Service
+	instrumentConsumer             instrument.Consumer
+	instrumentRepoCounter          *instrument.RepositoryCount
+	registryWebhooksService        *registrywebhooks.Service
+	Branch                         *branch.Service
+	registryAsyncProcessingService *registryasyncprocessing.Service
 }
 
 type GitspaceServices struct {
@@ -104,23 +106,25 @@ func ProvideServices(
 	instrumentRepoCounter *instrument.RepositoryCount,
 	registryWebhooksService *registrywebhooks.Service,
 	branchSvc *branch.Service,
+	registryAsyncProcessingService *registryasyncprocessing.Service,
 ) Services {
 	return Services{
-		Webhook:                 webhooksSvc,
-		PullReq:                 pullReqSvc,
-		Trigger:                 triggerSvc,
-		JobScheduler:            jobScheduler,
-		MetricCollector:         metricCollector,
-		RepoSizeCalculator:      repoSizeCalculator,
-		Repo:                    repo,
-		Cleanup:                 cleanupSvc,
-		Notification:            notificationSvc,
-		Keywordsearch:           keywordsearchSvc,
-		GitspaceService:         gitspaceSvc,
-		Instrumentation:         instrumentation,
-		instrumentConsumer:      instrumentConsumer,
-		instrumentRepoCounter:   instrumentRepoCounter,
-		registryWebhooksService: registryWebhooksService,
-		Branch:                  branchSvc,
+		Webhook:                        webhooksSvc,
+		PullReq:                        pullReqSvc,
+		Trigger:                        triggerSvc,
+		JobScheduler:                   jobScheduler,
+		MetricCollector:                metricCollector,
+		RepoSizeCalculator:             repoSizeCalculator,
+		Repo:                           repo,
+		Cleanup:                        cleanupSvc,
+		Notification:                   notificationSvc,
+		Keywordsearch:                  keywordsearchSvc,
+		GitspaceService:                gitspaceSvc,
+		Instrumentation:                instrumentation,
+		instrumentConsumer:             instrumentConsumer,
+		instrumentRepoCounter:          instrumentRepoCounter,
+		registryWebhooksService:        registryWebhooksService,
+		Branch:                         branchSvc,
+		registryAsyncProcessingService: registryAsyncProcessingService,
 	}
 }

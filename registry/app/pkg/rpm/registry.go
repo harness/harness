@@ -16,13 +16,17 @@ package rpm
 
 import (
 	"context"
+	"fmt"
 	"io"
-	"mime/multipart"
+	"net/http"
 
 	"github.com/harness/gitness/registry/app/pkg"
+	"github.com/harness/gitness/registry/app/pkg/base"
 	"github.com/harness/gitness/registry/app/pkg/commons"
-	rpm "github.com/harness/gitness/registry/app/pkg/types/rpm"
+	"github.com/harness/gitness/registry/app/pkg/filemanager"
+	"github.com/harness/gitness/registry/app/pkg/types/rpm"
 	"github.com/harness/gitness/registry/app/storage"
+	rpmutil "github.com/harness/gitness/registry/app/utils/rpm"
 )
 
 type Registry interface {
@@ -31,7 +35,7 @@ type Registry interface {
 	UploadPackageFile(
 		ctx context.Context,
 		info rpm.ArtifactInfo,
-		file multipart.Part,
+		file io.Reader,
 		fileName string,
 	) (*commons.ResponseHeaders, string, error)
 
@@ -47,4 +51,40 @@ type Registry interface {
 		io.ReadCloser,
 		string,
 		error)
+}
+
+func downloadPackageFile(
+	ctx context.Context,
+	info rpm.ArtifactInfo,
+	localBase base.LocalBase,
+) (*commons.ResponseHeaders, *storage.FileReader, io.ReadCloser, string, error) {
+	headers, fileReader, redirectURL, err := localBase.Download(
+		ctx, info.ArtifactInfo,
+		fmt.Sprintf("%s/%s", info.Version, info.Arch),
+		info.FileName,
+	)
+	if err != nil {
+		return nil, nil, nil, "", err
+	}
+	return headers, fileReader, nil, redirectURL, nil
+}
+
+func getRepoData(
+	ctx context.Context,
+	info rpm.ArtifactInfo,
+	fileName string,
+	fileManager filemanager.FileManager,
+) (*commons.ResponseHeaders, *storage.FileReader, io.ReadCloser, string, error) {
+	responseHeaders := &commons.ResponseHeaders{
+		Headers: make(map[string]string),
+		Code:    0,
+	}
+	fileReader, _, redirectURL, err := fileManager.DownloadFile(
+		ctx, "/"+rpmutil.RepoDataPrefix+fileName, info.RegistryID, info.RegIdentifier, info.RootIdentifier, true,
+	)
+	if err != nil {
+		return responseHeaders, nil, nil, "", err
+	}
+	responseHeaders.Code = http.StatusOK
+	return responseHeaders, fileReader, nil, redirectURL, nil
 }

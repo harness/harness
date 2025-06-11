@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/metadata"
@@ -62,7 +63,7 @@ type LocalBase interface {
 		file io.ReadCloser,
 		metadata metadata.Metadata,
 	) (*commons.ResponseHeaders, string, error)
-	MoveTempFile(
+	MoveTempFileAndCreateArtifact(
 		ctx context.Context,
 		info pkg.ArtifactInfo,
 		tempFileName,
@@ -70,7 +71,7 @@ type LocalBase interface {
 		path string,
 		metadata metadata.Metadata,
 		fileInfo types.FileInfo,
-	) (*commons.ResponseHeaders, string, error)
+	) (*commons.ResponseHeaders, string, int64, bool, error)
 	Download(ctx context.Context, info pkg.ArtifactInfo, version string, fileName string) (
 		*commons.ResponseHeaders,
 		*storage.FileReader,
@@ -143,7 +144,7 @@ func (l *localBase) Upload(
 	return l.uploadInternal(ctx, info, fileName, version, path, nil, file, metadata)
 }
 
-func (l *localBase) MoveTempFile(
+func (l *localBase) MoveTempFileAndCreateArtifact(
 	ctx context.Context,
 	info pkg.ArtifactInfo,
 	tempFileName,
@@ -151,42 +152,43 @@ func (l *localBase) MoveTempFile(
 	path string,
 	metadata metadata.Metadata,
 	fileInfo types.FileInfo,
-) (*commons.ResponseHeaders, string, error) {
+) (response *commons.ResponseHeaders, sha256 string, artifactID int64, isExistent bool, err error) {
 	responseHeaders := &commons.ResponseHeaders{
 		Headers: make(map[string]string),
 		Code:    0,
 	}
 
-	err := l.CheckIfFileAlreadyExist(ctx, info, version, metadata, fileInfo.Filename, path)
+	err = l.CheckIfFileAlreadyExist(ctx, info, version, metadata, fileInfo.Filename, path)
 	if err != nil {
 		if !errors.IsConflict(err) {
-			return nil, "", err
+			return nil, "", 0, false, err
 		}
-		_, sha256, err2 := l.GetSHA256ByPath(ctx, info.RegistryID, path)
-		if err2 != nil {
-			return responseHeaders, "", err2
+		_, sha256, err := l.GetSHA256ByPath(ctx, info.RegistryID, path)
+		if err != nil {
+			return responseHeaders, "", 0, true, err
 		}
 
 		responseHeaders.Code = http.StatusCreated
-		return responseHeaders, sha256, nil
+		return responseHeaders, sha256, 0, true, nil
 	}
 
 	registry, err := l.registryDao.GetByRootParentIDAndName(ctx, info.RootParentID, info.RegIdentifier)
 	if err != nil {
-		return responseHeaders, "", errcode.ErrCodeUnknown.WithDetail(err)
+		return responseHeaders, "", 0, false, errcode.ErrCodeUnknown.WithDetail(err)
 	}
+	session, _ := request.AuthSessionFrom(ctx)
 	err = l.fileManager.MoveTempFile(ctx, path, registry.ID,
-		info.RootParentID, info.RootIdentifier, fileInfo, tempFileName)
+		info.RootParentID, info.RootIdentifier, fileInfo, tempFileName, session.Principal.ID)
 	if err != nil {
-		return responseHeaders, "", errcode.ErrCodeUnknown.WithDetail(err)
+		return responseHeaders, "", 0, false, errcode.ErrCodeUnknown.WithDetail(err)
 	}
 
-	err = l.postUploadArtifact(ctx, info, registry, version, metadata, fileInfo)
+	artifactID, err = l.postUploadArtifact(ctx, info, registry, version, metadata, fileInfo)
 	if err != nil {
-		return responseHeaders, "", err
+		return responseHeaders, "", 0, false, err
 	}
 	responseHeaders.Code = http.StatusCreated
-	return responseHeaders, fileInfo.Sha256, nil
+	return responseHeaders, fileInfo.Sha256, artifactID, false, nil
 }
 
 func (l *localBase) uploadInternal(
@@ -223,12 +225,13 @@ func (l *localBase) uploadInternal(
 	if err != nil {
 		return responseHeaders, "", errcode.ErrCodeUnknown.WithDetail(err)
 	}
+	session, _ := request.AuthSessionFrom(ctx)
 	fileInfo, err := l.fileManager.UploadFile(ctx, path, registry.ID,
-		info.RootParentID, info.RootIdentifier, file, fileReadCloser, fileName)
+		info.RootParentID, info.RootIdentifier, file, fileReadCloser, fileName, session.Principal.ID)
 	if err != nil {
 		return responseHeaders, "", errcode.ErrCodeUnknown.WithDetail(err)
 	}
-	err = l.postUploadArtifact(ctx, info, registry, version, metadata, fileInfo)
+	_, err = l.postUploadArtifact(ctx, info, registry, version, metadata, fileInfo)
 	if err != nil {
 		return responseHeaders, "", err
 	}
@@ -243,8 +246,9 @@ func (l *localBase) postUploadArtifact(
 	version string,
 	metadata metadata.Metadata,
 	fileInfo types.FileInfo,
-) error {
-	return l.tx.WithTx(
+) (int64, error) {
+	var artifactID int64
+	err := l.tx.WithTx(
 		ctx, func(ctx context.Context) error {
 			image := &types.Image{
 				Name:       info.Image,
@@ -273,7 +277,7 @@ func (l *localBase) postUploadArtifact(
 				return fmt.Errorf("failed to parse metadata for artifact: [%s] with error: %w", info.Image, err)
 			}
 
-			err = l.artifactDao.CreateOrUpdate(ctx, &types.Artifact{
+			artifactID, err = l.artifactDao.CreateOrUpdate(ctx, &types.Artifact{
 				ImageID:  image.ID,
 				Version:  version,
 				Metadata: metadataJSON,
@@ -283,6 +287,7 @@ func (l *localBase) postUploadArtifact(
 			}
 			return nil
 		})
+	return artifactID, err
 }
 
 func (l *localBase) Download(
@@ -300,7 +305,7 @@ func (l *localBase) Download(
 	reg, _ := l.registryDao.GetByRootParentIDAndName(ctx, info.RootParentID, info.RegIdentifier)
 
 	fileReader, _, redirectURL, err := l.fileManager.DownloadFile(ctx, path, reg.ID,
-		info.RegIdentifier, info.RootIdentifier)
+		info.RegIdentifier, info.RootIdentifier, true)
 	if err != nil {
 		return responseHeaders, nil, "", err
 	}

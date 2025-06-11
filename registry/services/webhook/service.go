@@ -24,7 +24,7 @@ import (
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"
-	events2 "github.com/harness/gitness/registry/app/events"
+	events2 "github.com/harness/gitness/registry/app/events/artifact"
 	registrystore "github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/secret"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -104,7 +104,7 @@ func NewService(
 			return nil
 		})
 	if err != nil {
-		return nil, fmt.Errorf("failed to launch git event reader for webhooks: %w", err)
+		return nil, fmt.Errorf("failed to launch registry event reader for webhooks: %w", err)
 	}
 
 	return service, nil

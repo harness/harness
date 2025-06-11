@@ -29,7 +29,7 @@ import (
 	"github.com/harness/gitness/registry/app/api/controller/metadata"
 	"github.com/harness/gitness/registry/app/api/controller/mocks"
 	api "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
-	registryevents "github.com/harness/gitness/registry/app/events"
+	registryevents "github.com/harness/gitness/registry/app/events/artifact"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/registry/utils"
@@ -260,9 +260,9 @@ func TestCreateRegistry(t *testing.T) {
 					nil, // webhookService.
 					eventReporter,
 					nil, // downloadStatRepository.
-					nil, // registryIndexService - not needed for this test.
 					"",
 					nil, // registryBlobStore - not needed for this test.
+					nil, // PostProcessingReporter - not needed for this test.
 				)
 			},
 		},
@@ -330,9 +330,9 @@ func TestCreateRegistry(t *testing.T) {
 					nil, // webhookService.
 					eventReporter,
 					nil, //
-					nil, // downloadStatRepository.
-					"",
-					nil, // registryIndexService - not needed for this test.
+					"",  // downloadStatRepository.
+					nil,
+					nil, // PostProcessingReporter - not needed for this test.
 				)
 			},
 		},
