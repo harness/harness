@@ -42,6 +42,7 @@ import (
 	"github.com/harness/gitness/registry/app/driver/s3-aws"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/base"
+	cargoregistry "github.com/harness/gitness/registry/app/pkg/cargo"
 	"github.com/harness/gitness/registry/app/pkg/docker"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	generic2 "github.com/harness/gitness/registry/app/pkg/generic"
@@ -220,6 +221,7 @@ var WireSet = wire.NewSet(
 	rpm2.ControllerSet,
 	rpmregistry.WireSet,
 	cargo2.ControllerSet,
+	cargoregistry.WireSet,
 )
 
 func Wire(_ *types.Config) (RegistryApp, error) {

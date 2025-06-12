@@ -16,8 +16,11 @@ package cargo
 
 import (
 	"context"
+	"io"
 
 	urlprovider "github.com/harness/gitness/app/url"
+	cargometadata "github.com/harness/gitness/registry/app/metadata/cargo"
+	"github.com/harness/gitness/registry/app/pkg/cargo"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	cargotype "github.com/harness/gitness/registry/app/pkg/types/cargo"
 	"github.com/harness/gitness/registry/app/store"
@@ -26,6 +29,9 @@ import (
 
 type Controller interface {
 	GetRegistryConfig(ctx context.Context, info *cargotype.ArtifactInfo) (*GetRegistryConfigResponse, error)
+	UploadPackage(
+		ctx context.Context, info *cargotype.ArtifactInfo, metadata *cargometadata.VersionMetadata, fileReader io.ReadCloser,
+	) (*UploadArtifactResponse, error)
 }
 
 // Controller handles Cargo package operations.
@@ -37,6 +43,7 @@ type controller struct {
 	imageDao    store.ImageRepository
 	artifactDao store.ArtifactRepository
 	urlProvider urlprovider.Provider
+	local       cargo.LocalRegistry
 }
 
 // NewController creates a new Cargo controller.
@@ -48,6 +55,7 @@ func NewController(
 	fileManager filemanager.FileManager,
 	tx dbtx.Transactor,
 	urlProvider urlprovider.Provider,
+	local cargo.LocalRegistry,
 ) Controller {
 	return &controller{
 		proxyStore:  proxyStore,
@@ -57,5 +65,6 @@ func NewController(
 		fileManager: fileManager,
 		tx:          tx,
 		urlProvider: urlProvider,
+		local:       local,
 	}
 }

@@ -20,6 +20,7 @@ import (
 )
 
 var _ response.Response = (*GetRegistryConfigResponse)(nil)
+var _ response.Response = (*UploadArtifactResponse)(nil)
 
 type BaseResponse struct {
 	Error           error
@@ -39,4 +40,15 @@ type RegistryConfig struct {
 type GetRegistryConfigResponse struct {
 	BaseResponse
 	Config *RegistryConfig
+}
+
+type UploadArtifactWarnings struct {
+	InvalidCategories []string `json:"invalid_categories,omitempty"`
+	InvalidBadges     []string `json:"invalid_badges,omitempty"`
+	Other             []string `json:"other,omitempty"`
+}
+
+type UploadArtifactResponse struct {
+	BaseResponse `json:"-"`
+	Warnings     *UploadArtifactWarnings `json:"warnings,omitempty"`
 }

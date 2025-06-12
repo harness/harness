@@ -127,7 +127,7 @@ import (
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/pubsub"
 	api2 "github.com/harness/gitness/registry/app/api"
-	"github.com/harness/gitness/registry/app/api/controller/pkg/cargo"
+	cargo3 "github.com/harness/gitness/registry/app/api/controller/pkg/cargo"
 	npm2 "github.com/harness/gitness/registry/app/api/controller/pkg/npm"
 	nuget2 "github.com/harness/gitness/registry/app/api/controller/pkg/nuget"
 	python2 "github.com/harness/gitness/registry/app/api/controller/pkg/python"
@@ -136,6 +136,7 @@ import (
 	events12 "github.com/harness/gitness/registry/app/events"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/base"
+	cargo2 "github.com/harness/gitness/registry/app/pkg/cargo"
 	"github.com/harness/gitness/registry/app/pkg/docker"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/generic"
@@ -145,6 +146,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/python"
 	rpm2 "github.com/harness/gitness/registry/app/pkg/rpm"
 	database2 "github.com/harness/gitness/registry/app/store/database"
+	"github.com/harness/gitness/registry/app/utils/cargo"
 	"github.com/harness/gitness/registry/app/utils/rpm"
 	"github.com/harness/gitness/registry/gc"
 	"github.com/harness/gitness/registry/services/index"
@@ -565,7 +567,9 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	rpmProxy := rpm2.ProxyProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider)
 	rpmController := rpm3.ControllerProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, rpmLocalRegistry, rpmProxy)
 	rpmHandler := api2.NewRpmHandlerProvider(rpmController, packagesHandler)
-	cargoController := cargo.ControllerProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider)
+	cargoRegistryHelper := cargo.LocalRegistryHelperProvider(fileManager, artifactRepository)
+	cargoLocalRegistry := cargo2.LocalRegistryProvider(localBase, fileManager, upstreamProxyConfigRepository, transactor, registryRepository, imageRepository, artifactRepository, provider, cargoRegistryHelper)
+	cargoController := cargo3.ControllerProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, cargoLocalRegistry)
 	cargoHandler := api2.NewCargoHandlerProvider(cargoController, packagesHandler)
 	handler4 := router.PackageHandlerProvider(packagesHandler, mavenHandler, genericHandler, pythonHandler, nugetHandler, npmHandler, rpmHandler, cargoHandler)
 	appRouter := router.AppRouterProvider(registryOCIHandler, apiHandler, handler2, handler3, handler4)

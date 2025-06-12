@@ -252,6 +252,9 @@ func NewRouter(
 			r.With(middleware.StoreArtifactInfo(cargoHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionRegistryView)).
 				Get("/index/config.json", cargoHandler.GetRegistryConfig)
+			r.With(middleware.StoreArtifactInfo(cargoHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
+				Put("/api/v1/crates/new", cargoHandler.UploadPackage)
 		})
 	})
 

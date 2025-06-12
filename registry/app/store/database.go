@@ -458,6 +458,10 @@ type ImageRepository interface {
 type ArtifactRepository interface {
 	// Get an Artifact specified by ID
 	GetByName(ctx context.Context, imageID int64, version string) (*types.Artifact, error)
+	// Get an Artifact specified by RegistryID, image name and version
+	GetByRegistryImageAndVersion(
+		ctx context.Context, registryID int64, image string, version string,
+	) (*types.Artifact, error)
 	// Create an Artifact
 	CreateOrUpdate(ctx context.Context, artifact *types.Artifact) error
 	Count(ctx context.Context) (int64, error)
@@ -509,6 +513,10 @@ type ArtifactRepository interface {
 
 	GetAllArtifactsByRepo(
 		ctx context.Context, registryID int64, batchSize int, artifactID int64,
+	) (*[]types.ArtifactMetadata, error)
+
+	GetArtifactsByRepoAndImageBatch(
+		ctx context.Context, registryID int64, imageName string, batchSize int, artifactID int64,
 	) (*[]types.ArtifactMetadata, error)
 
 	SearchLatestByName(

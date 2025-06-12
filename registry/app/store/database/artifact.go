@@ -77,6 +77,30 @@ func (a ArtifactDao) GetByName(ctx context.Context, imageID int64, version strin
 	return a.mapToArtifact(ctx, dst)
 }
 
+func (a ArtifactDao) GetByRegistryImageAndVersion(
+	ctx context.Context, registryID int64, image string, version string,
+) (*types.Artifact, error) {
+	q := databaseg.Builder.Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(artifactDB{}), ",")).
+		From("artifacts a").
+		Join("images i ON a.artifact_image_id = i.image_id").
+		Where("i.image_registry_id = ?", registryID).
+		Where("i.image_name = ?", image).
+		Where("a.artifact_version = ?", version)
+
+	sql, args, err := q.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, a.db)
+
+	dst := new(artifactDB)
+	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to get artifact")
+	}
+	return a.mapToArtifact(ctx, dst)
+}
+
 func (a ArtifactDao) GetByRegistryIDAndImage(ctx context.Context, registryID int64, image string) (
 	*[]types.Artifact,
 	error,
@@ -922,6 +946,40 @@ func (a ArtifactDao) GetAllArtifactsByRepo(
 	var dst []*artifactMetadataDB
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
 		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing GetAllArtifactsByRepo query")
+	}
+
+	return a.mapToArtifactMetadataList(dst)
+}
+
+// GetArtifactsByRepoAndImageBatch retrieves a batch of artifacts by repository and image name.
+// Initial lastArtifactID can be set to 0 to start from the beginning.
+// max batchSize is the maximum number of artifacts to return, capped at 100.
+// If there is an error executing the query, the function will return an error.
+func (a ArtifactDao) GetArtifactsByRepoAndImageBatch(
+	ctx context.Context, registryID int64, imageName string, batchSize int, lastArtifactID int64,
+) (*[]types.ArtifactMetadata, error) {
+	q := databaseg.Builder.Select(
+		`r.registry_name as repo_name, i.image_name as name,
+        a.artifact_id as artifact_id, a.artifact_version as version, a.artifact_metadata as metadata`,
+	).
+		From("artifacts a").
+		Join("images i ON i.image_id = a.artifact_image_id").
+		Join("registries r ON i.image_registry_id = r.registry_id").
+		Where("artifact_id > ? AND r.registry_id = ?", lastArtifactID, registryID).
+		Where("i.image_name = ?", imageName).
+		OrderBy("artifact_id ASC").
+		Limit(util.SafeIntToUInt64(util.MinInt(batchSize, 100)))
+
+	sql, args, err := q.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, a.db)
+
+	var dst []*artifactMetadataDB
+	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing GetAllArtifactsByRepoAndImage query")
 	}
 
 	return a.mapToArtifactMetadataList(dst)

@@ -15,29 +15,17 @@
 package cargo
 
 import (
-	urlprovider "github.com/harness/gitness/app/url"
-	"github.com/harness/gitness/registry/app/pkg/cargo"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
-	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/google/wire"
 )
 
-func ControllerProvider(
-	proxyStore store.UpstreamProxyConfigRepository,
-	registryDao store.RegistryRepository,
-	imageDao store.ImageRepository,
-	artifactDao store.ArtifactRepository,
+func LocalRegistryHelperProvider(
 	fileManager filemanager.FileManager,
-	tx dbtx.Transactor,
-	urlProvider urlprovider.Provider,
-	local cargo.LocalRegistry,
-) Controller {
-	return NewController(
-		proxyStore, registryDao, imageDao, artifactDao,
-		fileManager, tx, urlProvider, local,
-	)
+	artifactDao store.ArtifactRepository,
+) RegistryHelper {
+	return NewRegistryHelper(fileManager, artifactDao)
 }
 
-var ControllerSet = wire.NewSet(ControllerProvider)
+var WireSet = wire.NewSet(LocalRegistryHelperProvider)

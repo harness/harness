@@ -95,3 +95,10 @@ func SafeIntToUInt64(i int) uint64 {
 	}
 	return uint64(i)
 }
+
+func MinInt(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}

@@ -136,6 +136,7 @@ import (
 	"github.com/harness/gitness/pubsub"
 	registryevents "github.com/harness/gitness/registry/app/events"
 	"github.com/harness/gitness/registry/app/pkg/docker"
+	cargoutils "github.com/harness/gitness/registry/app/utils/cargo"
 	rpmutils "github.com/harness/gitness/registry/app/utils/rpm"
 	registryindex "github.com/harness/gitness/registry/services/index"
 	registrywebhooks "github.com/harness/gitness/registry/services/webhook"
@@ -299,6 +300,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		rpmutils.WireSet,
 		cliserver.ProvideBranchConfig,
 		branch.WireSet,
+		cargoutils.WireSet,
 	)
 	return &cliserver.System{}, nil
 }
