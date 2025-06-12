@@ -384,7 +384,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opRepos.WithTags("space")
 	opRepos.WithMapOfAnything(map[string]interface{}{"operationId": "listRepos"})
 	opRepos.WithParameters(queryParameterQueryRepo, queryParameterSortRepo, queryParameterOrder,
-		QueryParameterPage, QueryParameterLimit, queryParameterRecursive, queryParameterOnlyFavorites)
+		QueryParameterPage, QueryParameterLimit, QueryParameterRecursive, queryParameterOnlyFavorites)
 	_ = reflector.SetRequest(&opRepos, new(spaceRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opRepos, []repo.RepositoryOutput{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opRepos, new(usererror.Error), http.StatusInternalServerError)

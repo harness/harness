@@ -110,7 +110,7 @@ func checkOperations(reflector *openapi3.Reflector) {
 	listStatusCheckRecentSpace := openapi3.Operation{}
 	listStatusCheckRecentSpace.WithTags(tag)
 	listStatusCheckRecentSpace.WithParameters(
-		queryParameterStatusCheckQuery, queryParameterStatusCheckSince, queryParameterRecursive)
+		queryParameterStatusCheckQuery, queryParameterStatusCheckSince, QueryParameterRecursive)
 	listStatusCheckRecentSpace.WithMapOfAnything(map[string]interface{}{"operationId": "listStatusCheckRecentSpace"})
 	_ = reflector.SetRequest(&listStatusCheckRecentSpace, struct {
 		spaceRequest

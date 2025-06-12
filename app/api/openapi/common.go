@@ -157,7 +157,7 @@ var queryParameterUpdatedGt = openapi3.ParameterOrRef{
 	},
 }
 
-var queryParameterRecursive = openapi3.ParameterOrRef{
+var QueryParameterRecursive = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamRecursive,
 		In:          openapi3.ParameterInQuery,
