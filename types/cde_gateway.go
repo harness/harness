@@ -16,6 +16,7 @@ package types
 
 const GatewayHealthHealthy = "healthy"
 const GatewayHealthUnhealthy = "unhealthy"
+const GatewayHealthUnknown = "unknown"
 
 type CDEGatewayStats struct {
 	Name        string `json:"name"`
@@ -39,7 +40,9 @@ type CDEGateway struct {
 }
 
 type CDEGatewayFilter struct {
-	Health                     string  `json:"health,omitempty"`
-	HealthReportValidityInMins int     `json:"health_report_validity_in_mins,omitempty"`
-	InfraProviderConfigIDs     []int64 `json:"infra_provider_config_ids,omitempty"`
+	IsLatest                       bool     `json:"is_latest,omitempty"`
+	Health                         string   `json:"health,omitempty"`
+	HealthReportValidityInMins     int      `json:"health_report_validity_in_mins,omitempty"`
+	InfraProviderConfigIDs         []int64  `json:"infra_provider_config_ids,omitempty"`
+	InfraProviderConfigIdentifiers []string `json:"infra_provider_config_identifiers,omitempty"`
 }

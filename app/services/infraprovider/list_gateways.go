@@ -57,6 +57,7 @@ func (c *Service) ListGateways(ctx context.Context, filter *types.CDEGatewayFilt
 
 		if gateway.Updated < time.Now().Add(-time.Duration(filter.HealthReportValidityInMins)*time.Minute).UnixMilli() {
 			gateway.Health = types.GatewayHealthUnhealthy
+			gateway.EnvoyHealth = types.GatewayHealthUnknown
 		}
 
 		if gateway.Health != types.GatewayHealthHealthy || gateway.EnvoyHealth != types.GatewayHealthHealthy {

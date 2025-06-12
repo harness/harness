@@ -16,6 +16,7 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/harness/gitness/app/store"
@@ -122,6 +123,23 @@ func (c *CDEGatewayStore) List(ctx context.Context, filter *types.CDEGatewayFilt
 					time.Minute * -time.Duration(filter.HealthReportValidityInMins)).UnixMilli()},
 				squirrel.Eq{"cgate_envoy_health": filter.Health},
 			},
+		)
+	}
+
+	if filter != nil && filter.IsLatest {
+		subQuery := squirrel.
+			Select("MAX(cgate_updated) AS max_updated", "cgate_region AS max_region").
+			From(cdeGatewayTable).
+			GroupBy("cgate_region")
+
+		subQuerySQL, subQueryArgs, err := subQuery.ToSql()
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to build subquery for latest entries")
+		}
+
+		stmt = stmt.JoinClause(fmt.Sprintf(
+			"JOIN (%s) AS latest ON latest.max_region = cgate_region AND latest.max_updated = cgate_updated", subQuerySQL),
+			subQueryArgs...,
 		)
 	}
 
