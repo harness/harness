@@ -141,8 +141,11 @@ const (
 	GitspaceEventTypeAgentGitspaceStateReportStopped GitspaceEventType = "agent_gitspace_state_report_stopped"
 	GitspaceEventTypeAgentGitspaceStateReportUnknown GitspaceEventType = "agent_gitspace_state_report_unknown"
 
-	// AutoStop action events.
+	// AutoStop action event.
 	GitspaceEventTypeGitspaceAutoStop GitspaceEventType = "gitspace_action_auto_stop"
+
+	// Cleanup job events.
+	GitspaceEventTypeGitspaceCleanupJob GitspaceEventType = "gitspace_action_cleanup_job"
 
 	// Infra reset events.
 	GitspaceEventTypeInfraResetStart  GitspaceEventType = "infra_reset_start"
@@ -213,6 +216,8 @@ func EventsMessageMapping() map[GitspaceEventType]string {
 		GitspaceEventTypeAgentGitspaceStateReportError:   "Gitspace has an error",
 
 		GitspaceEventTypeGitspaceAutoStop: "Triggering auto-stopping due to inactivity...",
+
+		GitspaceEventTypeGitspaceCleanupJob: "Triggering cleanup job...",
 
 		GitspaceEventTypeInfraCleanupStart:     "Cleaning up infrastructure...",
 		GitspaceEventTypeInfraCleanupCompleted: "Successfully cleaned up infrastructure",

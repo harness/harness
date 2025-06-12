@@ -32,6 +32,10 @@ func (s *Service) handleGitspaceInfraResumeEvent(
 	ctx context.Context,
 	event *events.Event[*gitspaceInfraEvents.GitspaceInfraEventPayload],
 ) error {
+	log.Debug().Msgf("received infra resume event, type: %s, gitspace configID: %s",
+		event.Payload.Type,
+		event.Payload.Infra.GitspaceConfigIdentifier,
+	)
 	payload := event.Payload
 	ctxWithTimedOut, cancel := context.WithTimeout(ctx, time.Duration(s.config.TimeoutInMins)*time.Minute)
 	defer cancel()

@@ -22,6 +22,8 @@ import (
 	gitspaceevents "github.com/harness/gitness/app/events/gitspace"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/types"
+
+	"github.com/rs/zerolog/log"
 )
 
 func (s *Service) handleGitspaceEvent(
@@ -37,6 +39,11 @@ func (s *Service) handleGitspaceEvent(
 		Created:    time.Now().UnixMilli(),
 	}
 
+	log.Debug().Msgf("received gitspace event, event type: %s, entity type: %s, entity id: %d",
+		gitspaceEvent.Event,
+		gitspaceEvent.EntityType,
+		gitspaceEvent.EntityID,
+	)
 	err := s.gitspaceEventStore.Create(ctx, gitspaceEvent)
 	if err != nil {
 		return fmt.Errorf("failed to create gitspace event: %w", err)

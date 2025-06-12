@@ -34,7 +34,9 @@ func (s *Service) handleGitspaceOperationsEvent(
 	event *events.Event[*gitspaceOperationsEvents.GitspaceOperationsEventPayload],
 ) error {
 	logr := log.With().Str("event", string(event.Payload.Type)).Logger()
-	logr.Debug().Msg("Received gitspace operations event")
+	logr.Debug().Msgf("Received gitspace operations event, gitspace configID: %s",
+		event.Payload.Infra.GitspaceConfigIdentifier,
+	)
 
 	payload := event.Payload
 	ctxWithTimedOut, cancel := context.WithTimeout(ctx, time.Duration(s.config.TimeoutInMins)*time.Minute)
