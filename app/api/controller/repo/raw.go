@@ -28,6 +28,7 @@ import (
 	"github.com/harness/gitness/git/parser"
 	"github.com/harness/gitness/git/sha"
 	gitness_store "github.com/harness/gitness/store"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -35,15 +36,6 @@ type RawContent struct {
 	Data io.ReadCloser
 	Size int64
 	SHA  sha.SHA
-}
-
-type multiReadCloser struct {
-	io.Reader
-	closeFunc func() error
-}
-
-func (m *multiReadCloser) Close() error {
-	return m.closeFunc()
 }
 
 // Raw finds the file of the repo at the given path and returns its raw content.
@@ -133,9 +125,9 @@ func (c *Controller) Raw(ctx context.Context,
 	}
 
 	return &RawContent{
-		Data: &multiReadCloser{
+		Data: &types.MultiReadCloser{
 			Reader:    io.MultiReader(bytes.NewBuffer(headerContent), blobReader.Content),
-			closeFunc: blobReader.Content.Close,
+			CloseFunc: blobReader.Content.Close,
 		},
 		Size: blobReader.ContentSize,
 		SHA:  blobReader.SHA,
