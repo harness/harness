@@ -79,6 +79,8 @@ var queryParameterSortRepo = openapi3.ParameterOrRef{
 					ptr.String(enum.RepoAttrIdentifier.String()),
 					ptr.String(enum.RepoAttrCreated.String()),
 					ptr.String(enum.RepoAttrUpdated.String()),
+					ptr.String(enum.RepoAttrDeleted.String()),
+					ptr.String(enum.RepoAttrLastGITPush.String()),
 				},
 			},
 		},
@@ -382,7 +384,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opRepos.WithTags("space")
 	opRepos.WithMapOfAnything(map[string]interface{}{"operationId": "listRepos"})
 	opRepos.WithParameters(queryParameterQueryRepo, queryParameterSortRepo, queryParameterOrder,
-		QueryParameterPage, QueryParameterLimit, queryParameterOnlyFavorites)
+		QueryParameterPage, QueryParameterLimit, queryParameterRecursive, queryParameterOnlyFavorites)
 	_ = reflector.SetRequest(&opRepos, new(spaceRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opRepos, []repo.RepositoryOutput{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opRepos, new(usererror.Error), http.StatusInternalServerError)

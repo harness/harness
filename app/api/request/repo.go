@@ -45,7 +45,7 @@ func ParseOnlyFavoritesFromQuery(r *http.Request) (bool, error) {
 
 // ParseRepoFilter extracts the repository filter from the url.
 func ParseRepoFilter(r *http.Request, session *auth.Session) (*types.RepoFilter, error) {
-	// recursive is optional to get all repos in a sapce and its subsapces recursively.
+	// recursive is optional to get all repos in a space and its subspaces recursively.
 	recursive, err := ParseRecursiveFromQuery(r)
 	if err != nil {
 		return nil, err

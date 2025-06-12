@@ -54,21 +54,6 @@ var queryParameterStatusCheckSince = openapi3.ParameterOrRef{
 	},
 }
 
-var QueryParameterRecursive = openapi3.ParameterOrRef{
-	Parameter: &openapi3.Parameter{
-		Name:        request.QueryParamRecursive,
-		In:          openapi3.ParameterInQuery,
-		Description: ptr.String("The result should include entities from child spaces."),
-		Required:    ptr.Bool(false),
-		Schema: &openapi3.SchemaOrRef{
-			Schema: &openapi3.Schema{
-				Type:    ptrSchemaType(openapi3.SchemaTypeBoolean),
-				Default: ptrptr(false),
-			},
-		},
-	},
-}
-
 func checkOperations(reflector *openapi3.Reflector) {
 	const tag = "status_checks"
 
@@ -125,7 +110,7 @@ func checkOperations(reflector *openapi3.Reflector) {
 	listStatusCheckRecentSpace := openapi3.Operation{}
 	listStatusCheckRecentSpace.WithTags(tag)
 	listStatusCheckRecentSpace.WithParameters(
-		queryParameterStatusCheckQuery, queryParameterStatusCheckSince, QueryParameterRecursive)
+		queryParameterStatusCheckQuery, queryParameterStatusCheckSince, queryParameterRecursive)
 	listStatusCheckRecentSpace.WithMapOfAnything(map[string]interface{}{"operationId": "listStatusCheckRecentSpace"})
 	_ = reflector.SetRequest(&listStatusCheckRecentSpace, struct {
 		spaceRequest

@@ -157,6 +157,21 @@ var queryParameterUpdatedGt = openapi3.ParameterOrRef{
 	},
 }
 
+var queryParameterRecursive = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamRecursive,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The result should include entities from child spaces."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeBoolean),
+				Default: ptrptr(false),
+			},
+		},
+	},
+}
+
 var queryParameterIncludeSubspaces = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamIncludeSubspaces,
