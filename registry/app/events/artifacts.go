@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package artifact
+package events
 
-//nolint:revive
 import (
 	"context"
 
@@ -29,7 +28,6 @@ const ArtifactsCategory = "artifacts"
 const ArtifactCreatedEvent events.EventType = "artifact-created"
 const ArtifactDeletedEvent events.EventType = "artifact-deleted"
 
-//nolint:revive
 type ArtifactCreatedPayload struct {
 	RegistryID   int64                `json:"registry_id"`
 	PrincipalID  int64                `json:"principal_id"`
@@ -68,7 +66,6 @@ func (a *HelmArtifact) GetInfo() string {
 	return a.Ref
 }
 
-//nolint:revive
 type ArtifactInfo struct {
 	Type     artifact.PackageType `json:"type"`
 	Name     string               `json:"name"`
@@ -103,7 +100,6 @@ type HelmArtifactChange struct {
 	New HelmArtifact
 }
 
-//nolint:revive
 type ArtifactDeletedPayload struct {
 	RegistryID   int64                `json:"registry_id"`
 	PrincipalID  int64                `json:"principal_id"`

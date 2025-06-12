@@ -29,10 +29,10 @@ import (
 	"github.com/harness/gitness/registry/app/api/middleware"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	storagedriver "github.com/harness/gitness/registry/app/driver"
-	registryevents "github.com/harness/gitness/registry/app/events/artifact"
-	registrypostprocessingevents "github.com/harness/gitness/registry/app/events/asyncprocessing"
+	registryevents "github.com/harness/gitness/registry/app/events"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
+	"github.com/harness/gitness/registry/services/index"
 	registrywebhook "github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -79,9 +79,9 @@ func NewAPIHandler(
 	spacePathStore corestore.SpacePathStore,
 	artifactEventReporter registryevents.Reporter,
 	downloadStatRepository store.DownloadStatRepository,
+	registryIndexService index.Service,
 	gitnessConfig *types.Config,
 	registryBlobsDao store.RegistryBlobRepository,
-	postProcessingReporter *registrypostprocessingevents.Reporter,
 ) APIHandler {
 	r := chi.NewRouter()
 	r.Use(audit.Middleware())
@@ -111,9 +111,9 @@ func NewAPIHandler(
 		&webhookService,
 		artifactEventReporter,
 		downloadStatRepository,
+		registryIndexService,
 		gitnessConfig.Registry.SetupDetailsAuthHeaderPrefix,
 		registryBlobsDao,
-		postProcessingReporter,
 	)
 
 	handler := artifact.NewStrictHandler(apiController, []artifact.StrictMiddlewareFunc{})

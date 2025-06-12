@@ -88,13 +88,13 @@ type MockLocalBase struct {
 	mock.Mock
 }
 
-func (m *MockLocalBase) MoveTempFileAndCreateArtifact(
+func (m *MockLocalBase) MoveTempFile(
 	_ context.Context,
 	_ pkg.ArtifactInfo,
 	_, _, _ string,
 	_ metadata.Metadata,
 	_ types.FileInfo,
-) (*commons.ResponseHeaders, string, int64, bool, error) {
+) (*commons.ResponseHeaders, string, error) {
 	// TODO implement me
 	panic("implement me")
 }

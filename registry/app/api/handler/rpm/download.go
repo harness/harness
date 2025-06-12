@@ -36,7 +36,6 @@ func (h *handler) DownloadPackageFile(w http.ResponseWriter, r *http.Request) {
 	info.Image = r.PathValue("name")
 	info.Arch = r.PathValue("architecture")
 	info.FileName = r.PathValue("file")
-	info.PackagePath = r.PathValue("*")
 	response := h.controller.DownloadPackageFile(ctx, *info)
 	if response == nil {
 		h.HandleErrors(ctx, []error{fmt.Errorf("failed to get response from controller")}, w)

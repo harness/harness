@@ -21,11 +21,10 @@ import (
 
 type ArtifactInfo struct {
 	pkg.ArtifactInfo
-	Version     string
-	Arch        string
-	FileName    string
-	PackagePath string
-	Metadata    rpm.Metadata
+	Version  string
+	Arch     string
+	FileName string
+	Metadata rpm.Metadata
 }
 
 func (a ArtifactInfo) GetVersion() string {

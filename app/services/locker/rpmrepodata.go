@@ -1,4 +1,4 @@
-//  Copyright 2023 Harness, Inc.
+// Copyright 2023 Harness, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,14 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package rpm
+package locker
 
-type RemoteRegistryHelper interface {
-}
+import (
+	"context"
+	"fmt"
+	"time"
+)
 
-type remoteRegistryHelper struct {
-}
+func (l Locker) LockRpmRepoData(
+	ctx context.Context,
+	registryID int64,
+	expiry time.Duration,
+) (func(), error) {
+	key := fmt.Sprintf("%d/repodata", registryID)
 
-func NewRemoteRegistryHelper() RemoteRegistryHelper {
-	return &remoteRegistryHelper{}
+	unlockFn, err := l.lock(ctx, namespaceRegistry, key, expiry)
+	if err != nil {
+		return nil, fmt.Errorf("failed to lock mutex for registry [%d] RPM repodata: %w", registryID, err)
+	}
+
+	return unlockFn, nil
 }

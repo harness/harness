@@ -19,7 +19,6 @@ import (
 	"mime/multipart"
 
 	urlprovider "github.com/harness/gitness/app/url"
-	registrypostprocessingevents "github.com/harness/gitness/registry/app/events/asyncprocessing"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/rpm"
 	rpmtype "github.com/harness/gitness/registry/app/pkg/types/rpm"
@@ -49,17 +48,15 @@ type Controller interface {
 
 // Controller handles RPM package operations.
 type controller struct {
-	fileManager            filemanager.FileManager
-	proxyStore             store.UpstreamProxyConfigRepository
-	tx                     dbtx.Transactor
-	registryDao            store.RegistryRepository
-	imageDao               store.ImageRepository
-	artifactDao            store.ArtifactRepository
-	urlProvider            urlprovider.Provider
-	local                  rpm.LocalRegistry
-	proxy                  rpm.Proxy
-	upstreamProxyStore     store.UpstreamProxyConfigRepository
-	postProcessingReporter *registrypostprocessingevents.Reporter
+	fileManager filemanager.FileManager
+	proxyStore  store.UpstreamProxyConfigRepository
+	tx          dbtx.Transactor
+	registryDao store.RegistryRepository
+	imageDao    store.ImageRepository
+	artifactDao store.ArtifactRepository
+	urlProvider urlprovider.Provider
+	local       rpm.LocalRegistry
+	proxy       rpm.Proxy
 }
 
 // NewController creates a new RPM controller.
@@ -73,20 +70,16 @@ func NewController(
 	urlProvider urlprovider.Provider,
 	local rpm.LocalRegistry,
 	proxy rpm.Proxy,
-	upstreamProxyStore store.UpstreamProxyConfigRepository,
-	postProcessingReporter *registrypostprocessingevents.Reporter,
 ) Controller {
 	return &controller{
-		proxyStore:             proxyStore,
-		registryDao:            registryDao,
-		imageDao:               imageDao,
-		artifactDao:            artifactDao,
-		fileManager:            fileManager,
-		tx:                     tx,
-		urlProvider:            urlProvider,
-		local:                  local,
-		proxy:                  proxy,
-		upstreamProxyStore:     upstreamProxyStore,
-		postProcessingReporter: postProcessingReporter,
+		proxyStore:  proxyStore,
+		registryDao: registryDao,
+		imageDao:    imageDao,
+		artifactDao: artifactDao,
+		fileManager: fileManager,
+		tx:          tx,
+		urlProvider: urlProvider,
+		local:       local,
+		proxy:       proxy,
 	}
 }

@@ -54,7 +54,7 @@ func (c *controller) DownloadPackageFile(
 		}
 	}
 
-	result, err := base.NoProxyWrapper(ctx, c.registryDao, f, info)
+	result, err := base.ProxyWrapper(ctx, c.registryDao, f, info)
 	if err != nil {
 		return &GetArtifactResponse{
 			BaseResponse{

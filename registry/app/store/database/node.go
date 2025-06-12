@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/app/store/database/util"
 	"github.com/harness/gitness/registry/types"
@@ -99,8 +100,7 @@ func (n NodeDao) GetByNameAndRegistryID(ctx context.Context, registryID int64, n
 	return n.mapToNode(ctx, dst)
 }
 
-func (n NodeDao) FindByPathAndRegistryID(
-	ctx context.Context, registryID int64, path string,
+func (n NodeDao) FindByPathAndRegistryID(ctx context.Context, registryID int64, path string,
 ) (*types.Node, error) {
 	q := databaseg.Builder.
 		Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(Nodes{}), ",")).
@@ -123,8 +123,7 @@ func (n NodeDao) FindByPathAndRegistryID(
 	return n.mapToNode(ctx, dst)
 }
 
-func (n NodeDao) CountByPathAndRegistryID(
-	ctx context.Context, registryID int64, path string,
+func (n NodeDao) CountByPathAndRegistryID(ctx context.Context, registryID int64, path string,
 ) (int64, error) {
 	q := databaseg.Builder.
 		Select("COUNT(*)").
@@ -174,7 +173,7 @@ func (n NodeDao) Create(ctx context.Context, node *types.Node) error {
 		    RETURNING node_id`
 
 	db := dbtx.GetAccessor(ctx, n.sqlDB)
-	query, arg, err := db.BindNamed(sqlQuery, n.mapToInternalNode(node))
+	query, arg, err := db.BindNamed(sqlQuery, n.mapToInternalNode(ctx, node))
 	if err != nil {
 		return databaseg.ProcessSQLErrorf(ctx, err, "Failed to bind node object")
 	}
@@ -252,11 +251,15 @@ func (n NodeDao) mapToNode(_ context.Context, dst *Nodes) (*types.Node, error) {
 	}, nil
 }
 
-func (n NodeDao) mapToInternalNode(node *types.Node) interface{} {
+func (n NodeDao) mapToInternalNode(ctx context.Context, node *types.Node) interface{} {
+	session, _ := request.AuthSessionFrom(ctx)
+
 	if node.CreatedAt.IsZero() {
 		node.CreatedAt = time.Now()
 	}
-
+	if node.CreatedBy == 0 {
+		node.CreatedBy = session.Principal.ID
+	}
 	if node.ID == "" {
 		node.ID = uuid.NewString()
 	}
@@ -283,8 +286,7 @@ func (n NodeDao) mapToInternalNode(node *types.Node) interface{} {
 	}
 }
 
-func (n NodeDao) GetFilesMetadataByPathAndRegistryID(
-	ctx context.Context, registryID int64, path string,
+func (n NodeDao) GetFilesMetadataByPathAndRegistryID(ctx context.Context, registryID int64, path string,
 	sortByField string,
 	sortByOrder string,
 	limit int,
@@ -323,40 +325,6 @@ func (n NodeDao) GetFilesMetadataByPathAndRegistryID(
 	}
 
 	return n.mapToNodesMetadata(dst)
-}
-
-func (n NodeDao) GetFileMetadataByPathAndRegistryID(
-	ctx context.Context,
-	registryID int64,
-	path string,
-) (*types.FileNodeMetadata, error) {
-	q := databaseg.Builder.
-		Select(`n.node_name AS name,
-		n.node_created_at AS created_at,
-        n.node_path AS path,
-		gb.generic_blob_sha_1  AS sha1,
-		gb.generic_blob_sha_256  AS sha256,
-		gb.generic_blob_sha_512  AS sha512,
-        gb.generic_blob_md5   AS md5,
-		 gb.generic_blob_size  AS size`).
-		From("nodes n").
-		Where("n.node_is_file = true").
-		Join("generic_blobs gb ON gb.generic_blob_id = n.node_generic_blob_id").
-		Where("n.node_is_file = true AND n.node_path LIKE ? AND n.node_registry_id = ?", path, registryID)
-
-	db := dbtx.GetAccessor(ctx, n.sqlDB)
-
-	dst := FileNodeMetadataDB{}
-	sql, args, err := q.ToSql()
-	if err != nil {
-		return nil, errors.Wrap(err, "Failed to convert query to sql")
-	}
-
-	if err = db.GetContext(ctx, &dst, sql, args...); err != nil {
-		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to find node with registry id %d", registryID)
-	}
-
-	return n.mapToNodeMetadata(&dst), nil
 }
 
 func (n NodeDao) mapToNodesMetadata(dst []*FileNodeMetadataDB) (*[]types.FileNodeMetadata, error) {

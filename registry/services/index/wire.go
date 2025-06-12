@@ -12,31 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package artifact
+package index
 
 import (
-	"encoding/gob"
-
-	"github.com/harness/gitness/events"
+	"github.com/harness/gitness/app/services/locker"
+	"github.com/harness/gitness/registry/app/utils/rpm"
 
 	"github.com/google/wire"
 )
 
-func ProvideReaderFactory(eventsSystem *events.System) (*events.ReaderFactory[*Reader], error) {
-	return NewReaderFactory(eventsSystem)
-}
-
-func ProvideArtifactReporter(eventsSystem *events.System) (*Reporter, error) {
-	reporter, err := NewReporter(eventsSystem)
-	if err != nil {
-		return nil, err
-	}
-	gob.Register(&DockerArtifact{})
-	gob.Register(&HelmArtifact{})
-	return reporter, nil
-}
-
+// WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
-	ProvideReaderFactory,
-	ProvideArtifactReporter,
+	ProvideService,
 )
+
+func ProvideService(
+	rpmRegistryHelper rpm.RegistryHelper,
+	locker *locker.Locker,
+) Service {
+	return NewService(rpmRegistryHelper, locker)
+}

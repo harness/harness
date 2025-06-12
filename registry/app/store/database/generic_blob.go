@@ -19,6 +19,7 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/app/store/database/util"
 	"github.com/harness/gitness/registry/types"
@@ -78,10 +79,8 @@ func (g GenericBlobDao) TotalSizeByRootParentID(ctx context.Context, rootID int6
 	return size, nil
 }
 
-func (g GenericBlobDao) FindBySha256AndRootParentID(
-	ctx context.Context,
-	sha256 string, rootParentID int64,
-) (
+func (g GenericBlobDao) FindBySha256AndRootParentID(ctx context.Context,
+	sha256 string, rootParentID int64) (
 	*types.GenericBlob, error) {
 	q := databaseg.Builder.
 		Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(GenericBlob{}), ",")).
@@ -130,7 +129,7 @@ func (g GenericBlobDao) Create(ctx context.Context, gb *types.GenericBlob) (bool
         RETURNING generic_blob_id`
 
 	db := dbtx.GetAccessor(ctx, g.sqlDB)
-	query, arg, err := db.BindNamed(sqlQuery, g.mapToInternalGenericBlob(gb))
+	query, arg, err := db.BindNamed(sqlQuery, g.mapToInternalGenericBlob(ctx, gb))
 	if err != nil {
 		return false, databaseg.ProcessSQLErrorf(ctx, err, "Failed to bind generic blob object")
 	}
@@ -163,9 +162,14 @@ func (g GenericBlobDao) mapToGenericBlob(_ context.Context, dst *GenericBlob) (*
 	}, nil
 }
 
-func (g GenericBlobDao) mapToInternalGenericBlob(gb *types.GenericBlob) interface{} {
+func (g GenericBlobDao) mapToInternalGenericBlob(ctx context.Context, gb *types.GenericBlob) interface{} {
+	session, _ := request.AuthSessionFrom(ctx)
+
 	if gb.CreatedAt.IsZero() {
 		gb.CreatedAt = time.Now()
+	}
+	if gb.CreatedBy == 0 {
+		gb.CreatedBy = session.Principal.ID
 	}
 	if gb.ID == "" {
 		gb.ID = uuid.NewString()

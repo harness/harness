@@ -550,12 +550,6 @@ type Config struct {
 			BlobsStorageTimeoutDuration time.Duration `envconfig:"GITNESS_REGISTRY_GARBAGE_COLLECTION_BLOB_STORAGE_TIMEOUT_DURATION" default:"5s"` //nolint:lll
 		}
 		SetupDetailsAuthHeaderPrefix string `envconfig:"SETUP_DETAILS_AUTH_PREFIX" default:"Authorization: Bearer"`
-
-		PostProcessing struct {
-			Concurrency   int  `envconfig:"GITNESS_REGISTRY_POST_PROCESSING_CONCURRENCY" default:"4"`
-			MaxRetries    int  `envconfig:"GITNESS_REGISTRY_POST_PROCESSING_MAX_RETRIES" default:"3"`
-			AllowLoopback bool `envconfig:"GITNESS_REGISTRY_POST_PROCESSING_ALLOW_LOOPBACK" default:"false"`
-		}
 	}
 
 	Instrumentation struct {

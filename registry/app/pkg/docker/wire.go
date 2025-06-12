@@ -21,7 +21,7 @@ import (
 	"github.com/harness/gitness/app/url"
 	storagedriver "github.com/harness/gitness/registry/app/driver"
 	"github.com/harness/gitness/registry/app/event"
-	registryevents "github.com/harness/gitness/registry/app/events/artifact"
+	registryevents "github.com/harness/gitness/registry/app/events"
 	"github.com/harness/gitness/registry/app/manifest/manifestlist"
 	"github.com/harness/gitness/registry/app/manifest/schema2"
 	"github.com/harness/gitness/registry/app/pkg"

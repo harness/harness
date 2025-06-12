@@ -18,44 +18,41 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"net/http"
+	"mime/multipart"
 
-	"github.com/harness/gitness/app/paths"
-	"github.com/harness/gitness/app/services/refcache"
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/pkg"
-	"github.com/harness/gitness/registry/app/pkg/base"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	rpmtype "github.com/harness/gitness/registry/app/pkg/types/rpm"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
-	cfg "github.com/harness/gitness/registry/config"
-	"github.com/harness/gitness/secret"
 	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/rs/zerolog/log"
-
-	_ "github.com/harness/gitness/registry/app/remote/adapter/rpm" // This is required to init rpm adapter
 )
 
 var _ pkg.Artifact = (*proxy)(nil)
 var _ Registry = (*proxy)(nil)
 
 type proxy struct {
-	fileManager    filemanager.FileManager
-	proxyStore     store.UpstreamProxyConfigRepository
-	tx             dbtx.Transactor
-	registryDao    store.RegistryRepository
-	imageDao       store.ImageRepository
-	artifactDao    store.ArtifactRepository
-	urlProvider    urlprovider.Provider
-	localBase      base.LocalBase
-	registryHelper RegistryHelper
-	spaceFinder    refcache.SpaceFinder
-	service        secret.Service
+	fileManager filemanager.FileManager
+	proxyStore  store.UpstreamProxyConfigRepository
+	tx          dbtx.Transactor
+	registryDao store.RegistryRepository
+	imageDao    store.ImageRepository
+	artifactDao store.ArtifactRepository
+	urlProvider urlprovider.Provider
+}
+
+func (r *proxy) DownloadPackageFile(
+	_ context.Context,
+	_ rpmtype.ArtifactInfo,
+) (*commons.ResponseHeaders, *storage.FileReader, io.ReadCloser, string, error) {
+	// TODO implement me
+	panic("implement me")
 }
 
 type Proxy interface {
@@ -70,23 +67,15 @@ func NewProxy(
 	imageDao store.ImageRepository,
 	artifactDao store.ArtifactRepository,
 	urlProvider urlprovider.Provider,
-	localBase base.LocalBase,
-	registryHelper RegistryHelper,
-	spaceFinder refcache.SpaceFinder,
-	service secret.Service,
 ) Proxy {
 	return &proxy{
-		proxyStore:     proxyStore,
-		registryDao:    registryDao,
-		imageDao:       imageDao,
-		artifactDao:    artifactDao,
-		fileManager:    fileManager,
-		tx:             tx,
-		urlProvider:    urlProvider,
-		localBase:      localBase,
-		registryHelper: registryHelper,
-		spaceFinder:    spaceFinder,
-		service:        service,
+		proxyStore:  proxyStore,
+		registryDao: registryDao,
+		imageDao:    imageDao,
+		artifactDao: artifactDao,
+		fileManager: fileManager,
+		tx:          tx,
+		urlProvider: urlProvider,
 	}
 }
 
@@ -98,73 +87,18 @@ func (r *proxy) GetPackageTypes() []artifact.PackageType {
 	return []artifact.PackageType{artifact.PackageTypeRPM}
 }
 
-func (r *proxy) DownloadPackageFile(
-	ctx context.Context,
-	info rpmtype.ArtifactInfo,
-) (*commons.ResponseHeaders, *storage.FileReader, io.ReadCloser, string, error) {
-	headers, fileReader, readcloser, redirect, err := downloadPackageFile(ctx, info, r.localBase)
-	if err == nil {
-		return headers, fileReader, readcloser, redirect, err
-	}
-
-	if info.PackagePath == "" {
-		log.Ctx(ctx).Error().Msgf("Package path is empty for registry %s", info.RegIdentifier)
-		return nil, nil, nil, "", errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("package path is empty"))
-	}
-
-	upstream, err := r.proxyStore.Get(ctx, info.RegistryID)
-	if err != nil {
-		return nil, nil, nil, "", err
-	}
-
-	helper, err := NewRemoteRegistryHelper(ctx, r.spaceFinder, *upstream, r.service)
-	if err != nil {
-		return nil, nil, nil, "", err
-	}
-
-	closer, err := helper.GetPackage(ctx, info.PackagePath)
-	if err != nil {
-		return nil, nil, nil, "", err
-	}
-	go func() {
-		ctx2 := context.WithoutCancel(ctx)
-		ctx2 = context.WithValue(ctx2, cfg.GoRoutineKey, "goRoutine")
-		closer2, err2 := helper.GetPackage(ctx2, info.PackagePath)
-		if err2 != nil {
-			log.Ctx(ctx2).Error().Stack().Err(err).Msgf("error while putting file to localRegistry, %v", err)
-			return
-		}
-		_, filename, err := paths.DisectLeaf(info.PackagePath)
-		if err != nil {
-			log.Ctx(ctx2).Error().Msgf("error while disecting file name for [%s]: %v", info.PackagePath, err)
-			return
-		}
-		_, _, err = r.registryHelper.UploadPackage(ctx2, info, closer2, filename)
-		if err != nil {
-			log.Ctx(ctx2).Error().Stack().Err(err).Msgf("error while putting file to localRegistry, %v", err)
-			return
-		}
-		log.Ctx(ctx2).Info().Msgf("Successfully updated file: %s, registry: %s", info.FileName, info.RegIdentifier)
-	}()
-
-	return &commons.ResponseHeaders{
-		Headers: make(map[string]string),
-		Code:    http.StatusOK,
-	}, nil, closer, "", nil
-}
-
-// GetRepoData returns the metadata of a RPM package.
+// GetPackageMetadata returns the metadata of a RPM package.
 func (r *proxy) GetRepoData(
-	ctx context.Context,
-	info rpmtype.ArtifactInfo,
-	fileName string,
+	_ context.Context,
+	_ rpmtype.ArtifactInfo,
+	_ string,
 ) (*commons.ResponseHeaders,
 	*storage.FileReader,
 	io.ReadCloser,
 	string,
 	error,
 ) {
-	return getRepoData(ctx, info, fileName, r.fileManager)
+	return nil, nil, nil, "", nil
 }
 
 // UploadPackageFile FIXME: Extract this upload function for all types of packageTypes
@@ -172,7 +106,7 @@ func (r *proxy) GetRepoData(
 func (r *proxy) UploadPackageFile(
 	ctx context.Context,
 	_ rpmtype.ArtifactInfo,
-	_ io.Reader,
+	_ multipart.Part,
 	_ string,
 ) (*commons.ResponseHeaders, string, error) {
 	log.Error().Ctx(ctx).Msg("Not implemented")

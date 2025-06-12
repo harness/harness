@@ -69,28 +69,22 @@ type localRegistry struct {
 	urlProvider urlprovider.Provider
 }
 
-func (c *localRegistry) GetServiceEndpoint(
-	ctx context.Context,
-	info nugettype.ArtifactInfo,
-) *nugettype.ServiceEndpoint {
+func (c *localRegistry) GetServiceEndpoint(ctx context.Context,
+	info nugettype.ArtifactInfo) *nugettype.ServiceEndpoint {
 	packageURL := c.urlProvider.PackageURL(ctx, info.RootIdentifier+"/"+info.RegIdentifier, "nuget")
 	serviceEndpoints := buildServiceEndpoint(packageURL)
 	return serviceEndpoints
 }
 
-func (c *localRegistry) GetServiceEndpointV2(
-	ctx context.Context,
-	info nugettype.ArtifactInfo,
-) *nugettype.ServiceEndpointV2 {
+func (c *localRegistry) GetServiceEndpointV2(ctx context.Context,
+	info nugettype.ArtifactInfo) *nugettype.ServiceEndpointV2 {
 	packageURL := c.urlProvider.PackageURL(ctx, info.RootIdentifier+"/"+info.RegIdentifier, "nuget")
 	serviceEndpoints := buildServiceV2Endpoint(packageURL)
 	return serviceEndpoints
 }
 
-func (c *localRegistry) ListPackageVersion(
-	ctx context.Context,
-	info nugettype.ArtifactInfo,
-) (response *nugettype.PackageVersion, err error) {
+func (c *localRegistry) ListPackageVersion(ctx context.Context,
+	info nugettype.ArtifactInfo) (response *nugettype.PackageVersion, err error) {
 	artifacts, err2 := c.artifactDao.GetByRegistryIDAndImage(ctx, info.RegistryID, info.Image)
 	if err2 != nil {
 		return nil, fmt.Errorf(
@@ -108,10 +102,8 @@ func (c *localRegistry) ListPackageVersion(
 	}, nil
 }
 
-func (c *localRegistry) ListPackageVersionV2(
-	ctx context.Context,
-	info nugettype.ArtifactInfo,
-) (response *nugettype.FeedResponse, err error) {
+func (c *localRegistry) ListPackageVersionV2(ctx context.Context,
+	info nugettype.ArtifactInfo) (response *nugettype.FeedResponse, err error) {
 	packageURL := c.urlProvider.PackageURL(ctx, info.RootIdentifier+"/"+info.RegIdentifier, "nuget")
 	artifacts, err2 := c.artifactDao.GetByRegistryIDAndImage(ctx, info.RegistryID, info.Image)
 	if err2 != nil {
@@ -124,10 +116,8 @@ func (c *localRegistry) ListPackageVersionV2(
 	return createFeedResponse(packageURL, info, artifacts)
 }
 
-func (c *localRegistry) GetPackageMetadata(
-	ctx context.Context,
-	info nugettype.ArtifactInfo,
-) (nugettype.RegistrationResponse, error) {
+func (c *localRegistry) GetPackageMetadata(ctx context.Context,
+	info nugettype.ArtifactInfo) (nugettype.RegistrationResponse, error) {
 	packageURL := c.urlProvider.PackageURL(ctx, info.RootIdentifier+"/"+info.RegIdentifier, "nuget")
 	artifacts, err2 := c.artifactDao.GetByRegistryIDAndImage(ctx, info.RegistryID, info.Image)
 	if err2 != nil {
@@ -140,10 +130,8 @@ func (c *localRegistry) GetPackageMetadata(
 	return createRegistrationIndexResponse(packageURL, info, artifacts)
 }
 
-func (c *localRegistry) GetPackageVersionMetadataV2(
-	ctx context.Context,
-	info nugettype.ArtifactInfo,
-) (*nugettype.FeedEntryResponse, error) {
+func (c *localRegistry) GetPackageVersionMetadataV2(ctx context.Context,
+	info nugettype.ArtifactInfo) (*nugettype.FeedEntryResponse, error) {
 	packageURL := c.urlProvider.PackageURL(ctx, info.RootIdentifier+"/"+info.RegIdentifier, "nuget")
 	image, err2 := c.imageDao.GetByName(ctx, info.RegistryID, info.Image)
 	if err2 != nil {
@@ -158,10 +146,8 @@ func (c *localRegistry) GetPackageVersionMetadataV2(
 	return createFeedEntryResponse(packageURL, info, artifact)
 }
 
-func (c *localRegistry) GetPackageVersionMetadata(
-	ctx context.Context,
-	info nugettype.ArtifactInfo,
-) (*nugettype.RegistrationLeafResponse, error) {
+func (c *localRegistry) GetPackageVersionMetadata(ctx context.Context,
+	info nugettype.ArtifactInfo) (*nugettype.RegistrationLeafResponse, error) {
 	packageURL := c.urlProvider.PackageURL(ctx, info.RootIdentifier+"/"+info.RegIdentifier, "nuget")
 	image, err2 := c.imageDao.GetByName(ctx, info.RegistryID, info.Image)
 	if err2 != nil {
@@ -177,8 +163,7 @@ func (c *localRegistry) GetPackageVersionMetadata(
 	return createRegistrationLeafResponse(packageURL, info, artifact), nil
 }
 
-func (c *localRegistry) UploadPackage(
-	ctx context.Context, info nugettype.ArtifactInfo,
+func (c *localRegistry) UploadPackage(ctx context.Context, info nugettype.ArtifactInfo,
 	fileReader io.ReadCloser, fileBundleType FileBundleType,
 ) (headers *commons.ResponseHeaders, sha256 string, err error) {
 	tmpFileName := info.RootIdentifier + "-" + uuid.NewString()
@@ -230,12 +215,10 @@ func (c *localRegistry) UploadPackage(
 
 	path := info.Image + "/" + info.Version + "/" + fileName
 
-	h, checkSum, _, _, err := c.localBase.MoveTempFileAndCreateArtifact(ctx, info.ArtifactInfo,
-		tempFileName, info.Version, path,
+	return c.localBase.MoveTempFile(ctx, info.ArtifactInfo, tempFileName, info.Version, path,
 		&nugetmetadata.NugetMetadata{
 			Metadata: info.Metadata,
 		}, fileInfo)
-	return h, checkSum, err
 }
 
 func (c *localRegistry) buildMetadata(fileReader io.Reader) (metadata nugetmetadata.Metadata, err error) {
@@ -291,10 +274,8 @@ func (c *localRegistry) parseReadme(f io.Reader) (readme string, err error) {
 	return string(data), nil
 }
 
-func (c *localRegistry) DownloadPackage(
-	ctx context.Context,
-	info nugettype.ArtifactInfo,
-) (*commons.ResponseHeaders, *storage.FileReader, string, io.ReadCloser, error) {
+func (c *localRegistry) DownloadPackage(ctx context.Context,
+	info nugettype.ArtifactInfo) (*commons.ResponseHeaders, *storage.FileReader, string, io.ReadCloser, error) {
 	responseHeaders := &commons.ResponseHeaders{
 		Headers: make(map[string]string),
 		Code:    0,
@@ -304,7 +285,7 @@ func (c *localRegistry) DownloadPackage(
 
 	fileReader, size, redirectURL, err := c.fileManager.DownloadFile(ctx, path,
 		info.RegistryID,
-		info.RegIdentifier, info.RootIdentifier, true)
+		info.RegIdentifier, info.RootIdentifier)
 	if err != nil {
 		return responseHeaders, nil, "", nil, err
 	}
@@ -314,10 +295,8 @@ func (c *localRegistry) DownloadPackage(
 	return responseHeaders, fileReader, redirectURL, nil, nil
 }
 
-func (c *localRegistry) DeletePackage(
-	ctx context.Context,
-	info nugettype.ArtifactInfo,
-) (*commons.ResponseHeaders, error) {
+func (c *localRegistry) DeletePackage(ctx context.Context,
+	info nugettype.ArtifactInfo) (*commons.ResponseHeaders, error) {
 	responseHeaders := &commons.ResponseHeaders{
 		Headers: make(map[string]string),
 		Code:    0,

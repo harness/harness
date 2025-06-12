@@ -15,13 +15,11 @@
 package rpm
 
 import (
-	"github.com/harness/gitness/app/services/refcache"
 	urlprovider "github.com/harness/gitness/app/url"
-	"github.com/harness/gitness/registry/app/events/asyncprocessing"
 	"github.com/harness/gitness/registry/app/pkg/base"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
-	"github.com/harness/gitness/secret"
+	"github.com/harness/gitness/registry/services/index"
 	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/google/wire"
@@ -36,24 +34,12 @@ func LocalRegistryProvider(
 	imageDao store.ImageRepository,
 	artifactDao store.ArtifactRepository,
 	urlProvider urlprovider.Provider,
-	registryHelper RegistryHelper,
+	registryIndexService index.Service,
 ) LocalRegistry {
-	registry := NewLocalRegistry(localBase, fileManager, proxyStore, tx, registryDao,
-		imageDao, artifactDao, urlProvider, registryHelper)
+	registry := NewLocalRegistry(localBase, fileManager, proxyStore, tx, registryDao, imageDao, artifactDao,
+		urlProvider, registryIndexService)
 	base.Register(registry)
 	return registry
-}
-
-func RegistryHelperProvider(
-	localBase base.LocalBase,
-	fileManager filemanager.FileManager,
-	postProcessingReporter *asyncprocessing.Reporter,
-) RegistryHelper {
-	return NewRegistryHelper(
-		localBase,
-		fileManager,
-		postProcessingReporter,
-	)
 }
 
 func ProxyProvider(
@@ -64,26 +50,10 @@ func ProxyProvider(
 	fileManager filemanager.FileManager,
 	tx dbtx.Transactor,
 	urlProvider urlprovider.Provider,
-	localBase base.LocalBase,
-	registryHelper RegistryHelper,
-	spaceFinder refcache.SpaceFinder,
-	service secret.Service,
 ) Proxy {
-	proxy := NewProxy(
-		fileManager,
-		proxyStore,
-		tx,
-		registryDao,
-		imageDao,
-		artifactDao,
-		urlProvider,
-		localBase,
-		registryHelper,
-		spaceFinder,
-		service,
-	)
+	proxy := NewProxy(fileManager, proxyStore, tx, registryDao, imageDao, artifactDao, urlProvider)
 	base.Register(proxy)
 	return proxy
 }
 
-var WireSet = wire.NewSet(LocalRegistryProvider, ProxyProvider, RegistryHelperProvider)
+var WireSet = wire.NewSet(LocalRegistryProvider, ProxyProvider)

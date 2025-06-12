@@ -92,6 +92,7 @@ func (c *APIController) DeleteArtifactVersion(ctx context.Context, r artifact.De
 		}, nil
 	}
 
+	//nolint: exhaustive
 	switch regInfo.PackageType {
 	case artifact.PackageTypeDOCKER:
 		err = c.deleteTagWithAudit(ctx, regInfo, registryName, session.Principal, artifactName,
@@ -114,7 +115,8 @@ func (c *APIController) DeleteArtifactVersion(ctx context.Context, r artifact.De
 		if err != nil {
 			break
 		}
-		c.PostProcessingReporter.BuildRegistryIndex(ctx, regInfo.RegistryID, make([]registryTypes.SourceRef, 0))
+		err = c.RegistryIndexService.RegenerateRpmRepoData(ctx, regInfo.RegistryID,
+			regInfo.RootIdentifierID, regInfo.RootIdentifier)
 	default:
 		err = fmt.Errorf("unsupported package type: %s", regInfo.PackageType)
 	}

@@ -1,4 +1,4 @@
-// Copyright 2023 Harness, Inc.
+//  Copyright 2023 Harness, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,23 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package locker
+package rpm
 
 import (
-	"context"
-	"fmt"
-	"time"
+	"github.com/harness/gitness/registry/app/pkg/filemanager"
+	"github.com/harness/gitness/registry/app/store"
+
+	"github.com/google/wire"
 )
 
-func (l Locker) LockResource(
-	ctx context.Context,
-	key string,
-	expiry time.Duration,
-) (func(), error) {
-	unlockFn, err := l.lock(ctx, namespaceRegistry, key, expiry)
-	if err != nil {
-		return nil, fmt.Errorf("failed to lock mutex for key [%s]: %w", key, err)
-	}
-
-	return unlockFn, nil
+func LocalRegistryHelperProvider(
+	fileManager filemanager.FileManager,
+	artifactDao store.ArtifactRepository,
+) RegistryHelper {
+	return NewRegistryHelper(fileManager, artifactDao)
 }
+
+var WireSet = wire.NewSet(LocalRegistryHelperProvider)

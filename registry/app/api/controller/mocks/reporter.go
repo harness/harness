@@ -3,7 +3,7 @@ package mocks
 import (
 	"context"
 
-	registryevents "github.com/harness/gitness/registry/app/events/artifact"
+	registryevents "github.com/harness/gitness/registry/app/events"
 
 	"github.com/stretchr/testify/mock"
 )

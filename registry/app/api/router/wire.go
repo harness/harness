@@ -37,10 +37,10 @@ import (
 	"github.com/harness/gitness/registry/app/api/router/oci"
 	packagerrouter "github.com/harness/gitness/registry/app/api/router/packages"
 	storagedriver "github.com/harness/gitness/registry/app/driver"
-	registryevents "github.com/harness/gitness/registry/app/events/artifact"
-	registrypostprocessingevents "github.com/harness/gitness/registry/app/events/asyncprocessing"
+	registryevents "github.com/harness/gitness/registry/app/events"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
+	"github.com/harness/gitness/registry/services/index"
 	registrywebhook "github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -80,9 +80,9 @@ func APIHandlerProvider(
 	spacePathStore corestore.SpacePathStore,
 	artifactEventReporter *registryevents.Reporter,
 	downloadStatRepository store.DownloadStatRepository,
+	registryIndexService index.Service,
 	gitnessConfig *types.Config,
 	registryBlobsDao store.RegistryBlobRepository,
-	postProcessingReporter *registrypostprocessingevents.Reporter,
 ) harness.APIHandler {
 	return harness.NewAPIHandler(
 		repoDao,
@@ -107,9 +107,9 @@ func APIHandlerProvider(
 		spacePathStore,
 		*artifactEventReporter,
 		downloadStatRepository,
+		registryIndexService,
 		gitnessConfig,
 		registryBlobsDao,
-		postProcessingReporter,
 	)
 }
 

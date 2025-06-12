@@ -17,7 +17,7 @@ package rpm
 import (
 	"net/http"
 
-	"github.com/harness/gitness/registry/app/api/controller/pkg/rpm"
+	rpm "github.com/harness/gitness/registry/app/api/controller/pkg/rpm"
 	"github.com/harness/gitness/registry/app/api/handler/packages"
 	"github.com/harness/gitness/registry/app/pkg"
 	rpmtype "github.com/harness/gitness/registry/app/pkg/types/rpm"

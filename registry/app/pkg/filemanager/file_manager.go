@@ -79,7 +79,6 @@ func (f *FileManager) UploadFile(
 	file multipart.File,
 	fileReader io.Reader,
 	fileName string,
-	principalID int64,
 ) (types.FileInfo, error) {
 	// uploading the file to temporary path in file storage
 	blobContext := f.GetBlobsContext(ctx, rootIdentifier)
@@ -96,7 +95,7 @@ func (f *FileManager) UploadFile(
 		return fileInfo, err
 	}
 
-	blobID, created, err := f.dbSaveFile(ctx, filePath, regID, rootParentID, fileInfo, principalID)
+	blobID, created, err := f.dbSaveFile(ctx, filePath, regID, rootParentID, fileInfo)
 	if err != nil {
 		return fileInfo, err
 	}
@@ -127,7 +126,6 @@ func (f *FileManager) dbSaveFile(
 	regID int64,
 	rootParentID int64,
 	fileInfo types.FileInfo,
-	createdBy int64,
 ) (string, bool, error) {
 	// Saving in the generic blobs table
 	var blobID = ""
@@ -138,7 +136,6 @@ func (f *FileManager) dbSaveFile(
 		Sha512:       fileInfo.Sha512,
 		MD5:          fileInfo.MD5,
 		Size:         fileInfo.Size,
-		CreatedBy:    createdBy,
 	}
 	created, err := f.genericBlobDao.Create(ctx, gb)
 	if err != nil {
@@ -150,7 +147,7 @@ func (f *FileManager) dbSaveFile(
 	blobID = gb.ID
 	// Saving the nodes
 	err = f.tx.WithTx(ctx, func(ctx context.Context) error {
-		err = f.createNodes(ctx, filePath, blobID, regID, createdBy)
+		err = f.createNodes(ctx, filePath, blobID, regID)
 		if err != nil {
 			return err
 		}
@@ -185,13 +182,7 @@ func (f *FileManager) moveFile(
 	return nil
 }
 
-func (f *FileManager) createNodes(
-	ctx context.Context,
-	filePath string,
-	blobID string,
-	regID int64,
-	principalID int64,
-) error {
+func (f *FileManager) createNodes(ctx context.Context, filePath string, blobID string, regID int64) error {
 	segments := strings.Split(filePath, rootPathString)
 	parentID := ""
 	// Start with root (-1)
@@ -209,13 +200,13 @@ func (f *FileManager) createNodes(
 		nodePath += rootPathString + segment
 		if i == len(segments)-1 {
 			nodeID, err = f.SaveNode(ctx, filePath, blobID, regID, segment,
-				parentID, nodePath, true, principalID)
+				parentID, nodePath, true)
 			if err != nil {
 				return err
 			}
 		} else {
 			nodeID, err = f.SaveNode(ctx, filePath, "", regID, segment,
-				parentID, nodePath, false, principalID)
+				parentID, nodePath, false)
 			if err != nil {
 				return err
 			}
@@ -227,7 +218,7 @@ func (f *FileManager) createNodes(
 
 func (f *FileManager) SaveNode(
 	ctx context.Context, filePath string, blobID string, regID int64, segment string,
-	parentID string, nodePath string, isFile bool, createdBy int64,
+	parentID string, nodePath string, isFile bool,
 ) (string, error) {
 	node := &types.Node{
 		Name:         segment,
@@ -236,7 +227,6 @@ func (f *FileManager) SaveNode(
 		IsFile:       isFile,
 		NodePath:     nodePath,
 		BlobID:       blobID,
-		CreatedBy:    createdBy,
 	}
 	err := f.nodesDao.Create(ctx, node)
 	if err != nil {
@@ -252,7 +242,6 @@ func (f *FileManager) DownloadFile(
 	registryID int64,
 	registryIdentifier string,
 	rootIdentifier string,
-	allowRedirect bool,
 ) (fileReader *storage.FileReader, size int64, redirectURL string, err error) {
 	node, err := f.nodesDao.GetByPathAndRegistryID(ctx, registryID, filePath)
 	if err != nil {
@@ -268,18 +257,17 @@ func (f *FileManager) DownloadFile(
 
 	completeFilaPath := path.Join(rootPathString + rootIdentifier + rootPathString + files + rootPathString + blob.Sha256)
 	blobContext := f.GetBlobsContext(ctx, rootIdentifier)
-
-	if allowRedirect {
-		fileReader, redirectURL, err = blobContext.genericBlobStore.Get(ctx, completeFilaPath, blob.Size, node.Name)
-	} else {
-		fileReader, err = blobContext.genericBlobStore.GetWithNoRedirect(ctx, completeFilaPath, blob.Size)
-	}
+	reader, redirectURL, err := blobContext.genericBlobStore.Get(ctx, completeFilaPath, blob.Size, node.Name)
 
 	if err != nil {
 		return nil, 0, "", fmt.Errorf(failedToGetFile, completeFilaPath, err)
 	}
 
-	return fileReader, blob.Size, redirectURL, nil
+	if redirectURL != "" {
+		return reader, blob.Size, redirectURL, nil
+	}
+
+	return reader, blob.Size, "", nil
 }
 
 func (f *FileManager) DeleteNode(
@@ -463,7 +451,6 @@ func (f *FileManager) MoveTempFile(
 	rootIdentifier string,
 	fileInfo types.FileInfo,
 	tempFileName string,
-	principalID int64,
 ) error {
 	// uploading the file to temporary path in file storage
 	blobContext := f.GetBlobsContext(ctx, rootIdentifier)
@@ -474,7 +461,7 @@ func (f *FileManager) MoveTempFile(
 		return err
 	}
 
-	blobID, created, err := f.dbSaveFile(ctx, filePath, regID, rootParentID, fileInfo, principalID)
+	blobID, created, err := f.dbSaveFile(ctx, filePath, regID, rootParentID, fileInfo)
 	if err != nil {
 		return err
 	}
@@ -485,16 +472,4 @@ func (f *FileManager) MoveTempFile(
 			f.config)
 	}
 	return nil
-}
-
-func (f *FileManager) GetFileMetadataByPathAndRegistryID(
-	ctx context.Context,
-	registryID int64,
-	path string,
-) (*types.FileNodeMetadata, error) {
-	metadata, err := f.nodesDao.GetFileMetadataByPathAndRegistryID(ctx, registryID, path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get [%s] for registry [%d], error: %w", path, registryID, err)
-	}
-	return metadata, nil
 }

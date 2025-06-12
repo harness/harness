@@ -28,7 +28,7 @@ import (
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/event"
-	registryevents "github.com/harness/gitness/registry/app/events/artifact"
+	registryevents "github.com/harness/gitness/registry/app/events"
 	"github.com/harness/gitness/registry/app/manifest"
 	"github.com/harness/gitness/registry/app/manifest/manifestlist"
 	"github.com/harness/gitness/registry/app/manifest/ocischema"
@@ -413,7 +413,7 @@ func (l *manifestService) upsertImageAndArtifact(
 		Version: dgst.String(),
 	}
 
-	if _, err := l.artifactDao.CreateOrUpdate(ctx, dbArtifact); err != nil {
+	if err := l.artifactDao.CreateOrUpdate(ctx, dbArtifact); err != nil {
 		return err
 	}
 	return nil

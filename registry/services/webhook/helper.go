@@ -21,7 +21,7 @@ import (
 
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
-	registryevents "github.com/harness/gitness/registry/app/events/artifact"
+	registryevents "github.com/harness/gitness/registry/app/events"
 	"github.com/harness/gitness/registry/app/pkg"
 
 	"github.com/rs/zerolog/log"

@@ -245,9 +245,6 @@ func NewRouter(
 			r.With(middleware.StoreArtifactInfo(rpmHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/package/{name}/{version}/{architecture}/{file}", rpmHandler.DownloadPackageFile)
-			r.With(middleware.StoreArtifactInfo(rpmHandler)).
-				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
-				Get("/package/{name}/{version}/{architecture}/{file}/*", rpmHandler.DownloadPackageFile)
 		})
 		r.Route("/cargo", func(r chi.Router) {
 			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))

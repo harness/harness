@@ -12,28 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package artifact
+package events
 
 import (
-	"errors"
+	"encoding/gob"
 
 	"github.com/harness/gitness/events"
+
+	"github.com/google/wire"
 )
 
-// Reporter is the event reporter for this package.
-// It exposes typesafe send methods for all events of this package.
-// NOTE: Event send methods are in the event's dedicated file.
-type Reporter struct {
-	innerReporter *events.GenericReporter
+func ProvideReaderFactory(eventsSystem *events.System) (*events.ReaderFactory[*Reader], error) {
+	return NewReaderFactory(eventsSystem)
 }
 
-func NewReporter(eventsSystem *events.System) (*Reporter, error) {
-	innerReporter, err := events.NewReporter(eventsSystem, ArtifactsCategory)
+func ProvideArtifactReporter(eventsSystem *events.System) (*Reporter, error) {
+	reporter, err := NewReporter(eventsSystem)
 	if err != nil {
-		return nil, errors.New("failed to create new GenericReporter from event system")
+		return nil, err
 	}
-
-	return &Reporter{
-		innerReporter: innerReporter,
-	}, nil
+	gob.Register(&DockerArtifact{})
+	gob.Register(&HelmArtifact{})
+	return reporter, nil
 }
+
+var WireSet = wire.NewSet(
+	ProvideReaderFactory,
+	ProvideArtifactReporter,
+)

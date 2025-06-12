@@ -131,9 +131,9 @@ func (a ArtifactDao) GetLatestByImageID(ctx context.Context, imageID int64) (*ty
 	return a.mapToArtifact(ctx, dst)
 }
 
-func (a ArtifactDao) CreateOrUpdate(ctx context.Context, artifact *types.Artifact) (int64, error) {
+func (a ArtifactDao) CreateOrUpdate(ctx context.Context, artifact *types.Artifact) error {
 	if commons.IsEmpty(artifact.Version) {
-		return 0, errors.New("version is empty")
+		return errors.New("version is empty")
 	}
 
 	const sqlQuery = `
@@ -161,13 +161,13 @@ func (a ArtifactDao) CreateOrUpdate(ctx context.Context, artifact *types.Artifac
 	db := dbtx.GetAccessor(ctx, a.db)
 	query, arg, err := db.BindNamed(sqlQuery, a.mapToInternalArtifact(ctx, artifact))
 	if err != nil {
-		return 0, databaseg.ProcessSQLErrorf(ctx, err, "Failed to bind artifact object")
+		return databaseg.ProcessSQLErrorf(ctx, err, "Failed to bind artifact object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&artifact.ID); err != nil && !errors.Is(err, sql.ErrNoRows) {
-		return 0, databaseg.ProcessSQLErrorf(ctx, err, "Insert query failed")
+		return databaseg.ProcessSQLErrorf(ctx, err, "Insert query failed")
 	}
-	return artifact.ID, nil
+	return nil
 }
 
 func (a ArtifactDao) Count(ctx context.Context) (int64, error) {
@@ -690,8 +690,7 @@ func (a ArtifactDao) GetLatestArtifactMetadata(
 	return a.mapToArtifactMetadata(dst)
 }
 
-func (a ArtifactDao) mapArtifactToArtifactMetadataList(
-	ctx context.Context,
+func (a ArtifactDao) mapArtifactToArtifactMetadataList(ctx context.Context,
 	dst []*artifactDB,
 ) (*[]types.Artifact, error) {
 	artifacts := make([]types.Artifact, 0, len(dst))
@@ -954,6 +953,7 @@ func (a ArtifactDao) mapToNonOCIMetadata(
 ) *types.NonOCIArtifactMetadata {
 	var size string
 	var fileCount int64
+
 	if dst.Size != nil {
 		size = *dst.Size
 	}
