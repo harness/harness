@@ -65,7 +65,9 @@ const BasicDetails = ({ formikProps }: BasicDetailProps) => {
         <br />
         <CustomSelectDropdown
           value={machineTypeOption.find(item => item.label === values?.machine_type)}
-          onChange={(data: string) => setFieldValue('machine_type', data)}
+          onChange={(data: { label: string; value: string }) => {
+            setFieldValue('machine_type', data.value)
+          }}
           allowCustom
           label={getString('cde.configureInfra.machineType')}
           options={machineTypeOption}

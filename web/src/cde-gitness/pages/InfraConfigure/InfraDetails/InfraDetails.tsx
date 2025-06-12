@@ -147,7 +147,7 @@ const InfraDetails = () => {
                     },
                     gateway: {
                       machine_type,
-                      instances: parseInt(instances || '0')
+                      instances: parseInt(instances || '1')
                     }
                   },
                   name,
