@@ -67,20 +67,17 @@ export const UpstreamProxyPackageTypeList: UpstreamRepositoryPackageTypeListItem
   {
     label: 'repositoryTypes.pypi',
     value: UpstreamProxyPackageType.PYTHON,
-    icon: 'python',
-    tag: ThumbnailTagEnum.Beta
+    icon: 'python'
   },
   {
     label: 'repositoryTypes.npm',
     value: UpstreamProxyPackageType.NPM,
-    icon: 'npm-repository-type',
-    tag: ThumbnailTagEnum.Beta
+    icon: 'npm-repository-type'
   },
   {
     label: 'repositoryTypes.nuget',
     value: UpstreamProxyPackageType.NUGET,
-    icon: 'nuget-repository-type',
-    tag: ThumbnailTagEnum.Beta
+    icon: 'nuget-repository-type'
   },
   {
     label: 'repositoryTypes.rpm',

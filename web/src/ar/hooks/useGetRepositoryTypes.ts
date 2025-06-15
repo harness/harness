@@ -70,20 +70,17 @@ const RepositoryTypes: RepositoryTypeListItem[] = [
   {
     label: 'repositoryTypes.pypi',
     value: RepositoryPackageType.PYTHON,
-    icon: 'python',
-    tag: ThumbnailTagEnum.Beta
+    icon: 'python'
   },
   {
     label: 'repositoryTypes.npm',
     value: RepositoryPackageType.NPM,
-    icon: 'npm-repository-type',
-    tag: ThumbnailTagEnum.Beta
+    icon: 'npm-repository-type'
   },
   {
     label: 'repositoryTypes.nuget',
     value: RepositoryPackageType.NUGET,
-    icon: 'nuget-repository-type',
-    tag: ThumbnailTagEnum.Beta
+    icon: 'nuget-repository-type'
   },
   {
     label: 'repositoryTypes.rpm',
