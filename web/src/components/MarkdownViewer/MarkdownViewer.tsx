@@ -29,7 +29,9 @@ import { visit } from 'unist-util-visit'
 import type { TypesPrincipalInfo } from 'services/code'
 import { INITIAL_ZOOM_LEVEL } from 'utils/Utils'
 import ImageCarousel from 'components/ImageCarousel/ImageCarousel'
+import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import type { SuggestionBlock } from 'components/SuggestionBlock/SuggestionBlock'
+import { getConfig } from 'services/config'
 import { CodeSuggestionBlock } from './CodeSuggestionBlock'
 import css from './MarkdownViewer.module.scss'
 interface MarkdownViewerProps {
@@ -54,6 +56,7 @@ export function MarkdownViewer({
   mentions
 }: MarkdownViewerProps) {
   const [isOpen, setIsOpen] = useState<boolean>(false)
+  const { repoMetadata } = useGetRepositoryMetadata()
   const history = useHistory()
   const [zoomLevel, setZoomLevel] = useState(INITIAL_ZOOM_LEVEL)
   const [imgEvent, setImageEvent] = useState<string[]>([])
@@ -245,6 +248,91 @@ export function MarkdownViewer({
           [rehypeReplaceMentions]
         ]}
         components={{
+          // Custom image component to handle relative image paths
+          img: ({
+            alt,
+            src: originalSrc,
+            ...props
+          }: {
+            alt?: string
+            src?: string
+            node?: any
+            [key: string]: any
+          }) => {
+            // Process the image source to handle relative paths
+            let src = originalSrc || ''
+            // XSS Protection: Validate the source before processing
+            // Reject potentially dangerous sources like javascript: URLs
+            if (src && /^javascript:/i.test(src)) {
+              // eslint-disable-next-line no-console
+              console.error('Potentially malicious image source detected:', src)
+              src = ''
+              return <img alt="Invalid image source" />
+            }
+
+            // Handle relative image paths by transforming them to use the raw API endpoint
+            if (
+              src &&
+              !src.startsWith('/') &&
+              !src.startsWith('http:') &&
+              !src.startsWith('https:') &&
+              !src.startsWith('data:')
+            ) {
+              try {
+                // Normalize paths that start with ./
+                if (src.startsWith('./')) {
+                  src = src.replace('./', '')
+                }
+
+                if (repoMetadata?.path) {
+                  const apiBaseUrl = getConfig('code/api/v1') //apiBaseUrl includes gateway
+                  const baseUrl = window.location.origin
+                  src = `${baseUrl}${apiBaseUrl}/repos/${repoMetadata?.path}/+/raw/${src}`
+                }
+              } catch (e) {
+                // eslint-disable-next-line no-console
+                console.error('Error processing relative image path:', e)
+              }
+            }
+
+            // XSS Protection: Sanitize all props to prevent attribute-based XSS attacks
+            const safeProps = { ...props }
+
+            // Remove potentially dangerous props
+            delete safeProps.node
+            delete safeProps.dangerouslySetInnerHTML
+            delete safeProps.onLoad
+            delete safeProps.onError
+
+            // Sanitize event handlers that could be used for XSS
+            // Only string-based handlers are dangerous (e.g., onClick="alert('XSS')")
+            // Function handlers like onClick={event => {...}} are safe
+            const eventHandlerProps = Object.keys(safeProps).filter(
+              prop => prop.startsWith('on') && typeof safeProps[prop] === 'string'
+            )
+
+            // Remove any string-based event handlers (which could contain JS code)
+            eventHandlerProps.forEach(prop => delete safeProps[prop])
+
+            // Ensure alt text is a string and sanitize it
+            const altText = typeof alt === 'string' ? alt.replace(/[<>]/g, '') : ''
+
+            return (
+              <img
+                src={src}
+                alt={altText}
+                {...safeProps}
+                onClick={event => {
+                  if (event.target === event.currentTarget) {
+                    event.stopPropagation()
+                    setIsOpen(true)
+                    setImageEvent([src])
+                  }
+                }}
+              />
+            )
+          },
+
           // Rewriting the code component to support code suggestions
           code: ({ children = [], className: _className, ...props }) => {
             const code = props.node && props.node.children ? getCodeString(props.node.children) : children
