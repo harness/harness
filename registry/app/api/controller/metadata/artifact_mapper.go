@@ -247,9 +247,12 @@ func GetArtifactFilesMetadata(
 		var downloadCommand string
 		//nolint:exhaustive
 		switch packageType {
-		case artifactapi.PackageTypeGENERIC, artifactapi.PackageTypePYTHON, artifactapi.PackageTypeNPM:
+		case artifactapi.PackageTypeGENERIC, artifactapi.PackageTypePYTHON:
 			downloadCommand = GetGenericArtifactFileDownloadCommand(registryURL, artifactName,
 				version, filename, setupDetailsAuthHeaderPrefix)
+		case artifactapi.PackageTypeNPM:
+			downloadCommand = GetNPMArtifactFileDownloadCommand(registryURL, artifactName,
+				version, filename)
 		case artifactapi.PackageTypeMAVEN:
 			artifactName = strings.ReplaceAll(artifactName, ".", "/")
 			artifactName = strings.ReplaceAll(artifactName, ":", "/")

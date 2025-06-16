@@ -271,7 +271,7 @@ func TrackDownloadStats(
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(
 			func(w http.ResponseWriter, r *http.Request) {
-				ctx := r.Context()
+				ctx := context.WithoutCancel(r.Context())
 				sw := &StatusWriter{ResponseWriter: w}
 				next.ServeHTTP(sw, r)
 				if sw.StatusCode != http.StatusOK && sw.StatusCode != http.StatusTemporaryRedirect {

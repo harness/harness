@@ -1226,10 +1226,10 @@ func (c *APIController) generateNpmClientSetupDetail(
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: utils.StringPtr("https:<REGISTRY_URL>/"),
+						Value: utils.StringPtr("registry=https:<REGISTRY_URL>/"),
 					},
 					{
-						Value: utils.StringPtr("<REGISTRY_URL>/:_authToken <TOKEN>"),
+						Value: utils.StringPtr("<REGISTRY_URL>/:_authToken=<TOKEN>"),
 					},
 				},
 			},

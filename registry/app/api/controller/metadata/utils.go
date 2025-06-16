@@ -488,6 +488,27 @@ func GetGenericArtifactFileDownloadCommand(
 	return downloadCommand
 }
 
+func GetNPMArtifactFileDownloadCommand(
+	regURL, artifact, version, filename string,
+) string {
+	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>/-/<FILENAME>'" +
+		" --header 'Authorization: Bearer <API_KEY>'" +
+		" -J -O"
+	// Replace the placeholders with the actual values
+	replacements := map[string]string{
+		"<HOSTNAME>": regURL,
+		"<ARTIFACT>": artifact,
+		"<VERSION>":  version,
+		"<FILENAME>": filename,
+	}
+
+	for placeholder, value := range replacements {
+		downloadCommand = strings.ReplaceAll(downloadCommand, placeholder, value)
+	}
+
+	return downloadCommand
+}
+
 func GetRPMArtifactFileDownloadCommand(regURL, filename string, setupDetailsAuthHeaderPrefix string) string {
 	downloadCommand := "curl --location '<HOSTNAME>/package<FILENAME>' --header '<AUTH_HEADER_PREFIX> <API_KEY>'" +
 		" -J -O"
