@@ -70,7 +70,8 @@ export const scmOptions: SCMType[] = [
 export const onPremSCMOptions: SCMType[] = [
   { name: 'GitHub Enterprise', value: EnumGitspaceCodeRepoType.GITHUB_ENTERPRISE, icon: github },
   { name: 'GitLab On-prem', value: EnumGitspaceCodeRepoType.GITLAB_ON_PREM, icon: gitlab },
-  { name: 'Bitbucket Server', value: EnumGitspaceCodeRepoType.BITBUCKET_SERVER, icon: bitbucket }
+  { name: 'Bitbucket Server', value: EnumGitspaceCodeRepoType.BITBUCKET_SERVER, icon: bitbucket },
+  { name: 'Any public Git repository', value: EnumGitspaceCodeRepoType.UNKNOWN, icon: genericGit }
 ]
 
 export const scmOptionsCDE: SCMType[] = [
