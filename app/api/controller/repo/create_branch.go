@@ -65,13 +65,14 @@ func (c *Controller) CreateBranch(ctx context.Context,
 	}
 
 	violations, err := rules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
-		Actor:       &session.Principal,
-		AllowBypass: in.BypassRules,
-		IsRepoOwner: isRepoOwner,
-		Repo:        repo,
-		RefAction:   protection.RefActionCreate,
-		RefType:     protection.RefTypeBranch,
-		RefNames:    []string{in.Name},
+		ResolveUserGroupID: c.userGroupService.ListUserIDsByGroupIDs,
+		Actor:              &session.Principal,
+		AllowBypass:        in.BypassRules,
+		IsRepoOwner:        isRepoOwner,
+		Repo:               repo,
+		RefAction:          protection.RefActionCreate,
+		RefType:            protection.RefTypeBranch,
+		RefNames:           []string{in.Name},
 	})
 	if err != nil {
 		return types.CreateBranchOutput{}, nil, fmt.Errorf("failed to verify protection rules: %w", err)

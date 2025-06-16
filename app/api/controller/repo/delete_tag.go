@@ -44,13 +44,14 @@ func (c *Controller) DeleteTag(ctx context.Context,
 	}
 
 	violations, err := rules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
-		Actor:       &session.Principal,
-		AllowBypass: bypassRules,
-		IsRepoOwner: isRepoOwner,
-		Repo:        repo,
-		RefAction:   protection.RefActionDelete,
-		RefType:     protection.RefTypeTag,
-		RefNames:    []string{tagName},
+		ResolveUserGroupID: c.userGroupService.ListUserIDsByGroupIDs,
+		Actor:              &session.Principal,
+		AllowBypass:        bypassRules,
+		IsRepoOwner:        isRepoOwner,
+		Repo:               repo,
+		RefAction:          protection.RefActionDelete,
+		RefType:            protection.RefTypeTag,
+		RefNames:           []string{tagName},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to verify protection rules: %w", err)

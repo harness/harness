@@ -115,13 +115,14 @@ func (c *Controller) CommentApplySuggestions(
 		return CommentApplySuggestionsOutput{}, nil, fmt.Errorf("failed to fetch rules: %w", err)
 	}
 	violations, err := protectionRules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
-		Actor:       &session.Principal,
-		AllowBypass: in.BypassRules,
-		IsRepoOwner: isRepoOwner,
-		Repo:        repo,
-		RefAction:   protection.RefActionUpdate,
-		RefType:     protection.RefTypeBranch,
-		RefNames:    []string{pr.SourceBranch},
+		ResolveUserGroupID: c.userGroupService.ListUserIDsByGroupIDs,
+		Actor:              &session.Principal,
+		AllowBypass:        in.BypassRules,
+		IsRepoOwner:        isRepoOwner,
+		Repo:               repo,
+		RefAction:          protection.RefActionUpdate,
+		RefType:            protection.RefTypeBranch,
+		RefNames:           []string{pr.SourceBranch},
 	})
 	if err != nil {
 		return CommentApplySuggestionsOutput{}, nil, fmt.Errorf("failed to verify protection rules: %w", err)

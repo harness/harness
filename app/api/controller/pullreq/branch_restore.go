@@ -61,13 +61,14 @@ func (c *Controller) RestoreBranch(ctx context.Context,
 		return types.CreateBranchOutput{}, nil, fmt.Errorf("failed to fetch rules: %w", err)
 	}
 	violations, err := rules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
-		Actor:       &session.Principal,
-		AllowBypass: in.BypassRules,
-		IsRepoOwner: isRepoOwner,
-		Repo:        repo,
-		RefAction:   protection.RefActionCreate,
-		RefType:     protection.RefTypeBranch,
-		RefNames:    []string{pr.SourceBranch},
+		ResolveUserGroupID: c.userGroupService.ListUserIDsByGroupIDs,
+		Actor:              &session.Principal,
+		AllowBypass:        in.BypassRules,
+		IsRepoOwner:        isRepoOwner,
+		Repo:               repo,
+		RefAction:          protection.RefActionCreate,
+		RefType:            protection.RefTypeBranch,
+		RefNames:           []string{pr.SourceBranch},
 	})
 	if err != nil {
 		return types.CreateBranchOutput{}, nil, fmt.Errorf("failed to verify protection rules: %w", err)

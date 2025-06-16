@@ -61,13 +61,14 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 		return types.DeleteBranchOutput{}, nil, fmt.Errorf("failed to fetch rules: %w", err)
 	}
 	violations, err := rules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
-		Actor:       &session.Principal,
-		AllowBypass: bypassRules,
-		IsRepoOwner: isRepoOwner,
-		Repo:        repo,
-		RefAction:   protection.RefActionDelete,
-		RefType:     protection.RefTypeBranch,
-		RefNames:    []string{branchName},
+		ResolveUserGroupID: c.userGroupService.ListUserIDsByGroupIDs,
+		Actor:              &session.Principal,
+		AllowBypass:        bypassRules,
+		IsRepoOwner:        isRepoOwner,
+		Repo:               repo,
+		RefAction:          protection.RefActionDelete,
+		RefType:            protection.RefTypeBranch,
+		RefNames:           []string{branchName},
 	})
 	if err != nil {
 		return types.DeleteBranchOutput{}, nil, fmt.Errorf("failed to verify protection rules: %w", err)
