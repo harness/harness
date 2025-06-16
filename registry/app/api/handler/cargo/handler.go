@@ -26,6 +26,8 @@ import (
 type Handler interface {
 	pkg.ArtifactInfoProvider
 	GetRegistryConfig(writer http.ResponseWriter, request *http.Request)
+	DownloadPackageIndex(writer http.ResponseWriter, request *http.Request)
+	DownloadPackage(writer http.ResponseWriter, request *http.Request)
 	UploadPackage(writer http.ResponseWriter, request *http.Request)
 }
 

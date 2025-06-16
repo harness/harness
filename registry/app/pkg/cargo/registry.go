@@ -22,12 +22,22 @@ import (
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	cargotype "github.com/harness/gitness/registry/app/pkg/types/cargo"
+	"github.com/harness/gitness/registry/app/storage"
 )
 
 type Registry interface {
 	pkg.Artifact
+	// Upload package to registry using cargo CLI
 	UploadPackage(
 		ctx context.Context, info cargotype.ArtifactInfo,
 		metadata *cargometadata.VersionMetadata, crateFile io.ReadCloser,
 	) (responseHeaders *commons.ResponseHeaders, err error)
+	// download package index metadata file
+	DownloadPackageIndex(
+		ctx context.Context, info cargotype.ArtifactInfo,
+		filePath string,
+	) (*commons.ResponseHeaders, *storage.FileReader, io.ReadCloser, string, error)
+	DownloadPackage(
+		ctx context.Context, info cargotype.ArtifactInfo,
+	) (*commons.ResponseHeaders, *storage.FileReader, io.ReadCloser, string, error)
 }

@@ -23,3 +23,7 @@ func getCrateFileName(imageName string, version string) string {
 func getCrateFilePath(imageName string, version string) string {
 	return fmt.Sprintf("/crates/%s/%s/%s", imageName, version, getCrateFileName(imageName, version))
 }
+
+func getPackageIndexFilePath(filePath string) string {
+	return fmt.Sprintf("/%s/%s", "index", filePath)
+}

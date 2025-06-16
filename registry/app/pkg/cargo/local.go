@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	cargotype "github.com/harness/gitness/registry/app/pkg/types/cargo"
+	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/app/utils/cargo"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -130,4 +131,42 @@ func (c *localRegistry) regeneratePackageIndex(
 		return fmt.Errorf("failed to update package index: %w", err)
 	}
 	return nil
+}
+
+func (c *localRegistry) DownloadPackageIndex(
+	ctx context.Context, info cargotype.ArtifactInfo,
+	filePath string,
+) (*commons.ResponseHeaders, *storage.FileReader, io.ReadCloser, string, error) {
+	path := getPackageIndexFilePath(filePath)
+	response, fileReader, redirectURL, err := c.downloadFileInternal(ctx, info, path)
+	if err != nil {
+		return response, nil, nil, "", fmt.Errorf("failed to download package index file: %w", err)
+	}
+	return response, fileReader, nil, redirectURL, nil
+}
+
+func (c *localRegistry) DownloadPackage(
+	ctx context.Context, info cargotype.ArtifactInfo,
+) (*commons.ResponseHeaders, *storage.FileReader, io.ReadCloser, string, error) {
+	path := getCrateFilePath(info.Image, info.Version)
+	response, fileReader, redirectURL, err := c.downloadFileInternal(ctx, info, path)
+	if err != nil {
+		return response, nil, nil, "", fmt.Errorf("failed to download package file: %w", err)
+	}
+	return response, fileReader, nil, redirectURL, nil
+}
+
+func (c *localRegistry) downloadFileInternal(
+	ctx context.Context, info cargotype.ArtifactInfo, path string,
+) (*commons.ResponseHeaders, *storage.FileReader, string, error) {
+	responseHeaders := &commons.ResponseHeaders{
+		Headers: make(map[string]string),
+		Code:    0,
+	}
+	fileReader, _, redirectURL, err := c.fileManager.DownloadFile(ctx, path, info.RegistryID,
+		info.RegIdentifier, info.RootIdentifier)
+	if err != nil {
+		return responseHeaders, nil, "", fmt.Errorf("failed to download file %s: %w", path, err)
+	}
+	return responseHeaders, fileReader, redirectURL, nil
 }

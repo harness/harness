@@ -29,6 +29,12 @@ import (
 
 type Controller interface {
 	GetRegistryConfig(ctx context.Context, info *cargotype.ArtifactInfo) (*GetRegistryConfigResponse, error)
+	DownloadPackageIndex(
+		ctx context.Context, info *cargotype.ArtifactInfo, filePath string,
+	) *GetPackageIndexResponse
+	DownloadPackage(
+		ctx context.Context, info *cargotype.ArtifactInfo,
+	) *GetPackageResponse
 	UploadPackage(
 		ctx context.Context, info *cargotype.ArtifactInfo, metadata *cargometadata.VersionMetadata, fileReader io.ReadCloser,
 	) (*UploadArtifactResponse, error)

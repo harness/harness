@@ -15,8 +15,11 @@
 package cargo
 
 import (
+	"io"
+
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/response"
+	"github.com/harness/gitness/registry/app/storage"
 )
 
 var _ response.Response = (*GetRegistryConfigResponse)(nil)
@@ -51,4 +54,19 @@ type UploadArtifactWarnings struct {
 type UploadArtifactResponse struct {
 	BaseResponse `json:"-"`
 	Warnings     *UploadArtifactWarnings `json:"warnings,omitempty"`
+}
+
+type DownloadFileResponse struct {
+	BaseResponse
+	RedirectURL string
+	Body        *storage.FileReader
+	ReadCloser  io.ReadCloser
+}
+
+type GetPackageIndexResponse struct {
+	DownloadFileResponse
+}
+
+type GetPackageResponse struct {
+	DownloadFileResponse
 }
