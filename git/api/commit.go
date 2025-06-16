@@ -524,6 +524,9 @@ func (g *Git) GetCommitFromRev(
 	}
 
 	commitSHA, err := g.ResolveRev(ctx, repoPath, rev)
+	if errors.IsInvalidArgument(err) {
+		return nil, errors.NotFound("revision %q not found", rev)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve revision %q: %w", rev, err)
 	}
