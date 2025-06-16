@@ -39,7 +39,7 @@ func GetGenericFilePath(imageName string, version string) string {
 	if version != "" {
 		filePathPrefix += "/" + version
 	}
-	return filePathPrefix + "/"
+	return filePathPrefix
 }
 
 func GetRpmFilePath(imageName string, version string) string {
@@ -70,6 +70,8 @@ func GetFilePath(
 		return GetGenericFilePath(imageName, version), nil
 	case artifact.PackageTypeRPM:
 		return GetRpmFilePath(imageName, version), nil
+	case artifact.PackageTypeCARGO:
+		return GetGenericFilePath(imageName, version), nil
 	default:
 		return "", fmt.Errorf("unsupported package type: %s", packageType)
 	}
