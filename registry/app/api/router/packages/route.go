@@ -262,6 +262,12 @@ func NewRouter(
 				With(middleware.TrackDownloadStats(packageHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/api/v1/crates/{name}/{version}/download", cargoHandler.DownloadPackage)
+			r.With(middleware.StoreArtifactInfo(cargoHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
+				Delete("/api/v1/crates/{name}/{version}/yank", cargoHandler.YankVersion)
+			r.With(middleware.StoreArtifactInfo(cargoHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
+				Put("/api/v1/crates/{name}/{version}/unyank", cargoHandler.UnYankVersion)
 		})
 	})
 

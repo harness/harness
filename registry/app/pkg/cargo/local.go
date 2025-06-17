@@ -16,8 +16,10 @@ package cargo
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
@@ -169,4 +171,55 @@ func (c *localRegistry) downloadFileInternal(
 		return responseHeaders, nil, "", fmt.Errorf("failed to download file %s: %w", path, err)
 	}
 	return responseHeaders, fileReader, redirectURL, nil
+}
+
+func (c *localRegistry) UpdateYank(
+	ctx context.Context, info cargotype.ArtifactInfo,
+	yanked bool,
+) (*commons.ResponseHeaders, error) {
+	responseHeaders := &commons.ResponseHeaders{
+		Headers: make(map[string]string),
+		Code:    0,
+	}
+	// update yanked status in the database
+	err := c.updateYankInternal(ctx, info, yanked)
+	if err != nil {
+		return responseHeaders, fmt.Errorf("failed to update yank status: %w", err)
+	}
+
+	// regenerate package index for cargo client to consume
+	err = c.regeneratePackageIndex(ctx, info)
+	if err != nil {
+		return responseHeaders, fmt.Errorf("failed to update package index: %w", err)
+	}
+	responseHeaders.Code = http.StatusOK
+	return responseHeaders, nil
+}
+
+func (c *localRegistry) updateYankInternal(ctx context.Context, info cargotype.ArtifactInfo, yanked bool) error {
+	a, err := c.artifactDao.GetByRegistryImageAndVersion(
+		ctx, info.RegistryID, info.Image, info.Version,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to get artifact by image and version: %w", err)
+	}
+
+	metadata := cargometadata.VersionMetadataDB{}
+	err = json.Unmarshal(a.Metadata, &metadata)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal metadata for artifact %s: %w", a.Version, err)
+	}
+	// Mark the version as yanked
+	metadata.Yanked = yanked
+	metadataJSON, err := json.Marshal(metadata)
+	if err != nil {
+		return fmt.Errorf("failed to marshal metadata: %w", err)
+	}
+	// Update the artifact with the new metadata
+	a.Metadata = metadataJSON
+	err = c.artifactDao.CreateOrUpdate(ctx, a)
+	if err != nil {
+		return fmt.Errorf("failed to update artifact: %w", err)
+	}
+	return nil
 }

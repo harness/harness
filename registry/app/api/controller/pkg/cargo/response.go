@@ -70,3 +70,8 @@ type GetPackageIndexResponse struct {
 type GetPackageResponse struct {
 	DownloadFileResponse
 }
+
+type UpdateYankResponse struct {
+	BaseResponse `json:"-"`
+	Ok           bool `json:"ok"`
+}

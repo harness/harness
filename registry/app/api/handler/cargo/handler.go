@@ -29,6 +29,8 @@ type Handler interface {
 	DownloadPackageIndex(writer http.ResponseWriter, request *http.Request)
 	DownloadPackage(writer http.ResponseWriter, request *http.Request)
 	UploadPackage(writer http.ResponseWriter, request *http.Request)
+	YankVersion(writer http.ResponseWriter, request *http.Request)
+	UnYankVersion(writer http.ResponseWriter, request *http.Request)
 }
 
 type handler struct {

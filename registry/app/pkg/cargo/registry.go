@@ -40,4 +40,7 @@ type Registry interface {
 	DownloadPackage(
 		ctx context.Context, info cargotype.ArtifactInfo,
 	) (*commons.ResponseHeaders, *storage.FileReader, io.ReadCloser, string, error)
+	UpdateYank(
+		ctx context.Context, info cargotype.ArtifactInfo, yank bool,
+	) (*commons.ResponseHeaders, error)
 }

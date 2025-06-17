@@ -38,6 +38,7 @@ type Controller interface {
 	UploadPackage(
 		ctx context.Context, info *cargotype.ArtifactInfo, metadata *cargometadata.VersionMetadata, fileReader io.ReadCloser,
 	) (*UploadArtifactResponse, error)
+	UpdateYank(ctx context.Context, info *cargotype.ArtifactInfo, yank bool) (*UpdateYankResponse, error)
 }
 
 // Controller handles Cargo package operations.
