@@ -51,7 +51,8 @@ function MachineLocationContent({
 
   const { data: gatewayResponse, loading: gatewayAPILoading } = useListGateways({
     accountIdentifier: accountInfo?.identifier,
-    infraprovider_identifier
+    infraprovider_identifier,
+    queryParams: { is_latest: 'true' } as any
   })
 
   function ActionCell(row: Unknown) {
