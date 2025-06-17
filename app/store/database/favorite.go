@@ -128,7 +128,11 @@ func (s *FavoriteStore) Delete(ctx context.Context, principalID int64, in *types
 		return database.ProcessSQLErrorf(ctx, err, "failed to fetch table and column name for favorite resource")
 	}
 
-	favoriteResourceDelete := fmt.Sprintf(favoriteDelete, tableName, resourceColumnName)
+	favoriteResourceDelete := fmt.Sprintf(
+		`DELETE FROM %s WHERE %s = $1 AND favorite_principal_id = $2`,
+		tableName,
+		resourceColumnName,
+	)
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
@@ -158,9 +162,4 @@ INSERT INTO %s (
 	:favorite_principal_id,
 	:favorite_created
 )
-`
-
-const favoriteDelete = `
-DELETE FROM %s
-WHERE %s = :favorite_resource_id AND favorite_principal_id = :favorite_principal_id
 `
