@@ -166,7 +166,7 @@ func (c *localRegistry) downloadFileInternal(
 		Code:    0,
 	}
 	fileReader, _, redirectURL, err := c.fileManager.DownloadFile(ctx, path, info.RegistryID,
-		info.RegIdentifier, info.RootIdentifier)
+		info.RegIdentifier, info.RootIdentifier, true)
 	if err != nil {
 		return responseHeaders, nil, "", fmt.Errorf("failed to download file %s: %w", path, err)
 	}
@@ -217,7 +217,7 @@ func (c *localRegistry) updateYankInternal(ctx context.Context, info cargotype.A
 	}
 	// Update the artifact with the new metadata
 	a.Metadata = metadataJSON
-	err = c.artifactDao.CreateOrUpdate(ctx, a)
+	_, err = c.artifactDao.CreateOrUpdate(ctx, a)
 	if err != nil {
 		return fmt.Errorf("failed to update artifact: %w", err)
 	}
