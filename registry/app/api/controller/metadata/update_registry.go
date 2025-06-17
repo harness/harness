@@ -126,6 +126,7 @@ func (c *APIController) ModifyRegistry(
 	if err != nil {
 		return throwModifyRegistry500Error(err), err
 	}
+	c.PostProcessingReporter.BuildRegistryIndex(ctx, registry.ID, make([]types.SourceRef, 0))
 	return artifact.ModifyRegistry200JSONResponse{
 		RegistryResponseJSONResponse: *CreateUpstreamProxyResponseJSONResponse(modifiedRepoEntity),
 	}, nil
@@ -162,6 +163,7 @@ func (c *APIController) updateVirtualRegistry(
 	if err != nil {
 		return throwModifyRegistry500Error(err), nil
 	}
+	c.PostProcessingReporter.BuildRegistryIndex(ctx, registry.ID, make([]types.SourceRef, 0))
 	err = c.updateRegistryWithAudit(ctx, repoEntity, registry, session.Principal, regInfo.ParentRef)
 
 	if err != nil {

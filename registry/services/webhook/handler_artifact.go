@@ -21,7 +21,7 @@ import (
 	gitnesswebhook "github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
-	registryevents "github.com/harness/gitness/registry/app/events"
+	registryevents "github.com/harness/gitness/registry/app/events/artifact"
 	registrytypes "github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"

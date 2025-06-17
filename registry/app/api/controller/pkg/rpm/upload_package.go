@@ -47,7 +47,7 @@ func (c *controller) UploadPackageFile(
 				"",
 			}
 		}
-		headers, sha256, err := rpmRegistry.UploadPackageFile(ctx, info, file, fileName)
+		headers, sha256, err := rpmRegistry.UploadPackageFile(ctx, info, &file, fileName)
 		return &PutArtifactResponse{
 			BaseResponse{
 				Error:           err,

@@ -12,21 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package model
+package registry
 
-// Database ...
-type Database struct {
-	Type       string      `json:"type"`
-	PostGreSQL *PostGreSQL `json:"postgresql,omitempty"`
-	Sqlite     *Sqlite
-}
+import (
+	"context"
+	"io"
+)
 
-// PostGreSQL ...
-type PostGreSQL struct {
-	Datasource string
-}
-
-// PostGreSQL ...
-type Sqlite struct {
-	Datasource string
+type RpmRegistry interface {
+	GetMetadataFile(ctx context.Context, filePath string) (io.ReadCloser, error)
+	GetPackage(ctx context.Context, filePath string) (io.ReadCloser, error)
 }

@@ -20,10 +20,10 @@ import (
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/registry/app/api/interfaces"
 	storagedriver "github.com/harness/gitness/registry/app/driver"
-	registryevents "github.com/harness/gitness/registry/app/events"
+	registryevents "github.com/harness/gitness/registry/app/events/artifact"
+	registrypostprocessingevents "github.com/harness/gitness/registry/app/events/asyncprocessing"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
-	"github.com/harness/gitness/registry/services/index"
 	"github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/store/database/dbtx"
 )
@@ -52,9 +52,9 @@ type APIController struct {
 	WebhookService               webhook.ServiceInterface
 	ArtifactEventReporter        registryevents.Reporter
 	DownloadStatRepository       store.DownloadStatRepository
-	RegistryIndexService         index.Service
 	SetupDetailsAuthHeaderPrefix string
 	RegistryBlobStore            store.RegistryBlobRepository
+	PostProcessingReporter       *registrypostprocessingevents.Reporter
 }
 
 func NewAPIController(
@@ -80,9 +80,9 @@ func NewAPIController(
 	webhookService webhook.ServiceInterface,
 	artifactEventReporter registryevents.Reporter,
 	downloadStatRepository store.DownloadStatRepository,
-	registryIndexService index.Service,
 	setupDetailsAuthHeaderPrefix string,
 	registryBlobStore store.RegistryBlobRepository,
+	postProcessingReporter *registrypostprocessingevents.Reporter,
 ) *APIController {
 	return &APIController{
 		fileManager:                  fileManager,
@@ -107,8 +107,8 @@ func NewAPIController(
 		WebhookService:               webhookService,
 		ArtifactEventReporter:        artifactEventReporter,
 		DownloadStatRepository:       downloadStatRepository,
-		RegistryIndexService:         registryIndexService,
 		SetupDetailsAuthHeaderPrefix: setupDetailsAuthHeaderPrefix,
 		RegistryBlobStore:            registryBlobStore,
+		PostProcessingReporter:       postProcessingReporter,
 	}
 }

@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/harness/gitness/app/api/request"
 	"io"
 	"strings"
 
@@ -146,9 +147,10 @@ func (h *registryHelper) uploadIndexMetadata(
 		}
 		metadataList = append(metadataList, string(metadataJSON))
 	}
+	session, _ := request.AuthSessionFrom(ctx)
 	_, err := h.fileManager.UploadFile(
 		ctx, filePath, registryID, rootParentID, rootIdentifier, nil,
-		io.NopCloser(strings.NewReader(strings.Join(metadataList, "\n"))), fileName,
+		io.NopCloser(strings.NewReader(strings.Join(metadataList, "\n"))), fileName, session.Principal.ID,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to upload package index metadata: %w", err)

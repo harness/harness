@@ -52,9 +52,9 @@ type BlobRepository interface {
 }
 
 type CleanupPolicyRepository interface {
-	// GetIdsByRegistryId the CleanupPolicy Ids specified by Registry Key
+	// GetIDsByRegistryID the CleanupPolicy Ids specified by Registry Key
 	GetIDsByRegistryID(ctx context.Context, id int64) (ids []int64, err error)
-	// GetByRegistryId the CleanupPolicy specified by Registry Key
+	// GetByRegistryID the CleanupPolicy specified by Registry Key
 	GetByRegistryID(
 		ctx context.Context,
 		id int64,
@@ -463,7 +463,7 @@ type ArtifactRepository interface {
 		ctx context.Context, registryID int64, image string, version string,
 	) (*types.Artifact, error)
 	// Create an Artifact
-	CreateOrUpdate(ctx context.Context, artifact *types.Artifact) error
+	CreateOrUpdate(ctx context.Context, artifact *types.Artifact) (int64, error)
 	Count(ctx context.Context) (int64, error)
 	GetAllArtifactsByParentID(
 		ctx context.Context, id int64,
@@ -615,6 +615,12 @@ type NodesRepository interface {
 		search string,
 	) (*[]types.FileNodeMetadata, error)
 
+	GetFileMetadataByPathAndRegistryID(
+		ctx context.Context,
+		registryID int64,
+		path string,
+	) (*types.FileNodeMetadata, error)
+
 	DeleteByNodePathAndRegistryID(ctx context.Context, nodePath string, regID int64) (err error)
 }
 
@@ -692,4 +698,32 @@ type PackageTagRepository interface {
 
 	DeleteByTagAndImageName(ctx context.Context, tag string, image string, regID int64) error
 	DeleteByImageNameAndRegID(ctx context.Context, image string, regID int64) error
+}
+
+type TaskRepository interface {
+	Find(ctx context.Context, key string) (*types.Task, error)
+
+	UpsertTask(ctx context.Context, task *types.Task) error
+
+	LockForUpdate(ctx context.Context, task *types.Task) (types.TaskStatus, error)
+
+	SetRunAgain(ctx context.Context, taskKey string, runAgain bool) error
+
+	UpdateStatus(ctx context.Context, taskKey string, status types.TaskStatus) error
+
+	CompleteTask(ctx context.Context, key string, status types.TaskStatus) (bool, error)
+
+	ListPendingTasks(ctx context.Context, limit int) ([]*types.Task, error)
+}
+
+type TaskSourceRepository interface {
+	InsertSource(ctx context.Context, key string, source types.SourceRef) error
+
+	ClaimSources(ctx context.Context, key string, runID string) error
+
+	UpdateSourceStatus(ctx context.Context, runID string, status types.TaskStatus, errMsg string) error
+}
+
+type TaskEventRepository interface {
+	LogTaskEvent(ctx context.Context, key string, event string, payload []byte) error
 }

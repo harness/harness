@@ -74,7 +74,7 @@ func proxyInternal(
 
 	for _, registry := range registries {
 		log.Ctx(ctx).Info().Msgf("Using Registry: %s, Type: %s", registry.Name, registry.Type)
-		art := getArtifactRegistry(registry)
+		art := GetArtifactRegistry(registry)
 		if art != nil {
 			r = f(registry, art)
 			if r.GetError() == nil {
@@ -106,7 +106,7 @@ func getFactoryKey(packageType artifact.PackageType, registryType artifact.Regis
 	return string(packageType) + ":" + string(registryType)
 }
 
-func getArtifactRegistry(registry registrytypes.Registry) pkg.Artifact {
+func GetArtifactRegistry(registry registrytypes.Registry) pkg.Artifact {
 	key := getFactoryKey(registry.PackageType, registry.Type)
 	return factory(key)
 }
@@ -118,7 +118,7 @@ func filterRegs(
 	info pkg.PackageArtifactInfo,
 	upstream bool,
 ) (included []registrytypes.Registry, skipped []registrytypes.Registry, err error) {
-	registries, err := getOrderedRepos(ctx, registryDao, repoKey, info.BaseArtifactInfo().ParentID, upstream)
+	registries, err := GetOrderedRepos(ctx, registryDao, repoKey, info.BaseArtifactInfo().ParentID, upstream)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -143,7 +143,7 @@ func filterRegs(
 	return included, skipped, nil
 }
 
-func getOrderedRepos(
+func GetOrderedRepos(
 	ctx context.Context,
 	registryDao store.RegistryRepository,
 	repoKey string,

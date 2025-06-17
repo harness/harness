@@ -121,6 +121,9 @@ func (c *APIController) CreateRegistry(
 		return throwCreateRegistry400Error(err), nil //nolint:nilerr
 	}
 
+	if registry.PackageType == artifact.PackageTypeRPM {
+		c.PostProcessingReporter.BuildRegistryIndex(ctx, registry.ID, make([]registrytypes.SourceRef, 0))
+	}
 	return artifact.CreateRegistry201JSONResponse{
 		RegistryResponseJSONResponse: *CreateUpstreamProxyResponseJSONResponse(upstreamproxyEntity),
 	}, nil

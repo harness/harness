@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/metadata"
 	"github.com/harness/gitness/registry/app/pkg"
@@ -111,7 +112,7 @@ func (r *LocalRegistry) FetchArtifact(ctx context.Context, info pkg.MavenArtifac
 	var fileReader *storage.FileReader
 	if serveFile {
 		fileReader, _, redirectURL, err = r.fileManager.DownloadFile(ctx, filePath, info.RegistryID,
-			info.RootIdentifier, info.RootIdentifier)
+			info.RootIdentifier, info.RootIdentifier, true)
 		if err != nil {
 			return processError(err)
 		}
@@ -142,9 +143,9 @@ func (r *LocalRegistry) PutArtifact(ctx context.Context, info pkg.MavenArtifactI
 					info.Version, info.FileName, info.RegIdentifier)}
 		}
 	}
-
+	session, _ := request.AuthSessionFrom(ctx)
 	fileInfo, err := r.fileManager.UploadFile(ctx, filePath,
-		info.RegistryID, info.RootParentID, info.RootIdentifier, nil, fileReader, info.FileName)
+		info.RegistryID, info.RootParentID, info.RootIdentifier, nil, fileReader, info.FileName, session.Principal.ID)
 	if err != nil {
 		return responseHeaders, []error{errcode.ErrCodeUnknown.WithDetail(err)}
 	}
@@ -191,7 +192,7 @@ func (r *LocalRegistry) PutArtifact(ctx context.Context, info pkg.MavenArtifactI
 				Metadata: metadataJSON,
 			}
 
-			err2 = r.DBStore.ArtifactDao.CreateOrUpdate(ctx, dbArtifact)
+			_, err2 = r.DBStore.ArtifactDao.CreateOrUpdate(ctx, dbArtifact)
 			if err2 != nil {
 				return err2
 			}

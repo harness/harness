@@ -115,8 +115,7 @@ func (c *APIController) DeleteArtifactVersion(ctx context.Context, r artifact.De
 		if err != nil {
 			break
 		}
-		err = c.RegistryIndexService.RegenerateRpmRepoData(ctx, regInfo.RegistryID,
-			regInfo.RootIdentifierID, regInfo.RootIdentifier)
+		c.PostProcessingReporter.BuildRegistryIndex(ctx, regInfo.RegistryID, make([]registryTypes.SourceRef, 0))
 	default:
 		err = fmt.Errorf("unsupported package type: %s", regInfo.PackageType)
 	}

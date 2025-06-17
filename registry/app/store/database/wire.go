@@ -107,6 +107,16 @@ func ProvideGenericBlobDao(db *sqlx.DB) store.GenericBlobRepository {
 	return NewGenericBlobDao(db)
 }
 
+func ProvideTaskRepository(db *sqlx.DB, tx dbtx.Transactor) store.TaskRepository {
+	return NewTaskStore(db, tx)
+}
+func ProvideTaskSourceRepository(db *sqlx.DB, tx dbtx.Transactor) store.TaskSourceRepository {
+	return NewTaskSourceStore(db, tx)
+}
+func ProvideTaskEventRepository(db *sqlx.DB) store.TaskEventRepository {
+	return NewTaskEventStore(db)
+}
+
 var WireSet = wire.NewSet(
 	ProvideUpstreamDao,
 	ProvideRepoDao,
@@ -128,4 +138,7 @@ var WireSet = wire.NewSet(
 	ProvideWebhookDao,
 	ProvideWebhookExecutionDao,
 	ProvidePackageTagDao,
+	ProvideTaskRepository,
+	ProvideTaskSourceRepository,
+	ProvideTaskEventRepository,
 )

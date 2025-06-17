@@ -27,6 +27,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/auth/authz"
 	corestore "github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
@@ -166,7 +167,7 @@ func (c Controller) UploadArtifact(
 					regNameFormat, info.Image, info.RegIdentifier)
 			}
 
-			err = c.DBStore.ArtifactDao.CreateOrUpdate(ctx, &types.Artifact{
+			_, err = c.DBStore.ArtifactDao.CreateOrUpdate(ctx, &types.Artifact{
 				ImageID:  image.ID,
 				Version:  info.Version,
 				Metadata: metadataJSON,
@@ -240,7 +241,7 @@ func (c Controller) PullArtifact(ctx context.Context, info pkg.GenericArtifactIn
 
 	path := "/" + info.Image + "/" + info.Version + "/" + info.FileName
 	fileReader, _, redirectURL, err := c.fileManager.DownloadFile(ctx, path, info.RegistryID,
-		info.RegIdentifier, info.RootIdentifier)
+		info.RegIdentifier, info.RootIdentifier, true)
 	if err != nil {
 		return responseHeaders, nil, "", errcode.ErrCodeRootNotFound.WithDetail(err)
 	}
@@ -387,9 +388,10 @@ func (c Controller) UploadFile(ctx context.Context, reader *multipart.Reader,
 			fmt.Errorf("file already exist: [%w] ", err)
 	}
 
+	session, _ := request.AuthSessionFrom(ctx)
 	filePath := path.Join(info.Image, info.Version, fileInfo.Filename)
 	err = c.fileManager.MoveTempFile(ctx, filePath, info.RegistryID,
-		info.RootParentID, info.RootIdentifier, fileInfo, tmpFileName)
+		info.RootParentID, info.RootIdentifier, fileInfo, tmpFileName, session.Principal.ID)
 	if err != nil {
 		return types.FileInfo{}, err
 	}

@@ -134,11 +134,11 @@ import (
 	"github.com/harness/gitness/livelog"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/pubsub"
-	registryevents "github.com/harness/gitness/registry/app/events"
+	registryevents "github.com/harness/gitness/registry/app/events/artifact"
+	registrypostporcessingevents "github.com/harness/gitness/registry/app/events/asyncprocessing"
 	"github.com/harness/gitness/registry/app/pkg/docker"
 	cargoutils "github.com/harness/gitness/registry/app/utils/cargo"
-	rpmutils "github.com/harness/gitness/registry/app/utils/rpm"
-	registryindex "github.com/harness/gitness/registry/services/index"
+	registryindex "github.com/harness/gitness/registry/services/asyncprocessing"
 	registrywebhooks "github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/ssh"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -297,10 +297,11 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		gitspacedeleteevents.WireSet,
 		gitspacedeleteeventservice.WireSet,
 		registryindex.WireSet,
-		rpmutils.WireSet,
 		cliserver.ProvideBranchConfig,
 		branch.WireSet,
 		cargoutils.WireSet,
+		registrypostporcessingevents.ProvideAsyncProcessingReporter,
+		registrypostporcessingevents.ProvideReaderFactory,
 	)
 	return &cliserver.System{}, nil
 }

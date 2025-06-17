@@ -23,7 +23,7 @@ import (
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"
-	registryevents "github.com/harness/gitness/registry/app/events"
+	"github.com/harness/gitness/registry/app/events/artifact"
 	registrystore "github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/secret"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -40,7 +40,7 @@ func ProvideService(
 	ctx context.Context,
 	config gitnesswebhook.Config,
 	tx dbtx.Transactor,
-	artifactsReaderFactory *events.ReaderFactory[*registryevents.Reader],
+	artifactsReaderFactory *events.ReaderFactory[*artifact.Reader],
 	webhookStore registrystore.WebhooksRepository,
 	webhookExecutionStore registrystore.WebhooksExecutionRepository,
 	spaceStore store.SpaceStore,
@@ -52,8 +52,8 @@ func ProvideService(
 	registryRepository registrystore.RegistryRepository,
 	encrypter encrypt.Encrypter,
 ) (*Service, error) {
-	gob.Register(&registryevents.DockerArtifact{})
-	gob.Register(&registryevents.HelmArtifact{})
+	gob.Register(&artifact.DockerArtifact{})
+	gob.Register(&artifact.HelmArtifact{})
 	return NewService(
 		ctx,
 		config,

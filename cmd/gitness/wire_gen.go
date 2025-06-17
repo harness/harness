@@ -131,9 +131,10 @@ import (
 	npm2 "github.com/harness/gitness/registry/app/api/controller/pkg/npm"
 	nuget2 "github.com/harness/gitness/registry/app/api/controller/pkg/nuget"
 	python2 "github.com/harness/gitness/registry/app/api/controller/pkg/python"
-	rpm3 "github.com/harness/gitness/registry/app/api/controller/pkg/rpm"
+	rpm2 "github.com/harness/gitness/registry/app/api/controller/pkg/rpm"
 	"github.com/harness/gitness/registry/app/api/router"
-	events12 "github.com/harness/gitness/registry/app/events"
+	"github.com/harness/gitness/registry/app/events/artifact"
+	"github.com/harness/gitness/registry/app/events/asyncprocessing"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/base"
 	cargo2 "github.com/harness/gitness/registry/app/pkg/cargo"
@@ -144,12 +145,11 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/npm"
 	"github.com/harness/gitness/registry/app/pkg/nuget"
 	"github.com/harness/gitness/registry/app/pkg/python"
-	rpm2 "github.com/harness/gitness/registry/app/pkg/rpm"
+	"github.com/harness/gitness/registry/app/pkg/rpm"
 	database2 "github.com/harness/gitness/registry/app/store/database"
 	"github.com/harness/gitness/registry/app/utils/cargo"
-	"github.com/harness/gitness/registry/app/utils/rpm"
 	"github.com/harness/gitness/registry/gc"
-	"github.com/harness/gitness/registry/services/index"
+	asyncprocessing2 "github.com/harness/gitness/registry/services/asyncprocessing"
 	webhook3 "github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/ssh"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -500,11 +500,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	layerRepository := database2.ProvideLayerDao(db, mediaTypesRepository)
 	eventReporter := docker.ProvideReporter()
 	ociImageIndexMappingRepository := database2.ProvideOCIImageIndexMappingDao(db)
-	reporter10, err := events12.ProvideArtifactReporter(eventsSystem)
+	artifactReporter, err := artifact.ProvideArtifactReporter(eventsSystem)
 	if err != nil {
 		return nil, err
 	}
-	manifestService := docker.ManifestServiceProvider(registryRepository, manifestRepository, blobRepository, mediaTypesRepository, manifestReferenceRepository, tagRepository, imageRepository, artifactRepository, layerRepository, gcService, transactor, eventReporter, spaceFinder, ociImageIndexMappingRepository, reporter10, provider)
+	manifestService := docker.ManifestServiceProvider(registryRepository, manifestRepository, blobRepository, mediaTypesRepository, manifestReferenceRepository, tagRepository, imageRepository, artifactRepository, layerRepository, gcService, transactor, eventReporter, spaceFinder, ociImageIndexMappingRepository, artifactReporter, provider)
 	registryBlobRepository := database2.ProvideRegistryBlobDao(db)
 	bandwidthStatRepository := database2.ProvideBandwidthStatDao(db)
 	downloadStatRepository := database2.ProvideDownloadStatDao(db)
@@ -523,7 +523,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	cleanupPolicyRepository := database2.ProvideCleanupPolicyDao(db, transactor)
 	webhooksRepository := database2.ProvideWebhookDao(db)
 	webhooksExecutionRepository := database2.ProvideWebhookExecutionDao(db)
-	readerFactory2, err := events12.ProvideReaderFactory(eventsSystem)
+	readerFactory2, err := artifact.ProvideReaderFactory(eventsSystem)
 	if err != nil {
 		return nil, err
 	}
@@ -531,9 +531,14 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	registryHelper := rpm.LocalRegistryHelperProvider(fileManager, artifactRepository)
-	indexService := index.ProvideService(registryHelper, lockerLocker)
-	apiHandler := router.APIHandlerProvider(registryRepository, upstreamProxyConfigRepository, fileManager, tagRepository, manifestRepository, cleanupPolicyRepository, imageRepository, storageDriver, spaceFinder, transactor, authenticator, provider, authorizer, auditService, artifactRepository, webhooksRepository, webhooksExecutionRepository, service2, spacePathStore, reporter10, downloadStatRepository, indexService, config, registryBlobRepository)
+	taskRepository := database2.ProvideTaskRepository(db, transactor)
+	taskSourceRepository := database2.ProvideTaskSourceRepository(db, transactor)
+	taskEventRepository := database2.ProvideTaskEventRepository(db)
+	asyncprocessingReporter, err := asyncprocessing.ProvideAsyncProcessingReporter(transactor, eventsSystem, taskRepository, taskSourceRepository, taskEventRepository)
+	if err != nil {
+		return nil, err
+	}
+	apiHandler := router.APIHandlerProvider(registryRepository, upstreamProxyConfigRepository, fileManager, tagRepository, manifestRepository, cleanupPolicyRepository, imageRepository, storageDriver, spaceFinder, transactor, authenticator, provider, authorizer, auditService, artifactRepository, webhooksRepository, webhooksExecutionRepository, service2, spacePathStore, artifactReporter, downloadStatRepository, config, registryBlobRepository, asyncprocessingReporter)
 	packageTagRepository := database2.ProvidePackageTagDao(db)
 	localBase := base.LocalBaseProvider(registryRepository, fileManager, transactor, imageRepository, artifactRepository, nodesRepository, packageTagRepository)
 	mavenDBStore := maven.DBStoreProvider(registryRepository, imageRepository, artifactRepository, spaceStore, bandwidthStatRepository, downloadStatRepository, nodesRepository, upstreamProxyConfigRepository)
@@ -563,9 +568,10 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	npmProxy := npm.ProxyProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, spaceFinder, secretService, npmLocalRegistryHelper)
 	npmController := npm2.ControllerProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, downloadStatRepository, provider, npmLocalRegistry, npmProxy)
 	npmHandler := api2.NewNPMHandlerProvider(npmController, packagesHandler)
-	rpmLocalRegistry := rpm2.LocalRegistryProvider(localBase, fileManager, upstreamProxyConfigRepository, transactor, registryRepository, imageRepository, artifactRepository, provider, indexService)
-	rpmProxy := rpm2.ProxyProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider)
-	rpmController := rpm3.ControllerProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, rpmLocalRegistry, rpmProxy)
+	registryHelper := rpm.RegistryHelperProvider(localBase, fileManager, asyncprocessingReporter)
+	rpmLocalRegistry := rpm.LocalRegistryProvider(localBase, fileManager, upstreamProxyConfigRepository, transactor, registryRepository, imageRepository, artifactRepository, provider, registryHelper)
+	rpmProxy := rpm.ProxyProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, localBase, registryHelper, spaceFinder, secretService)
+	rpmController := rpm2.ControllerProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, rpmLocalRegistry, rpmProxy, asyncprocessingReporter)
 	rpmHandler := api2.NewRpmHandlerProvider(rpmController, packagesHandler)
 	cargoRegistryHelper := cargo.LocalRegistryHelperProvider(fileManager, artifactRepository)
 	cargoLocalRegistry := cargo2.LocalRegistryProvider(localBase, fileManager, upstreamProxyConfigRepository, transactor, registryRepository, imageRepository, artifactRepository, provider, cargoRegistryHelper)
@@ -691,7 +697,17 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	servicesServices := services.ProvideServices(webhookService, pullreqService, triggerService, jobScheduler, collectorJob, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceServices, instrumentService, consumer, repositoryCount, service2, branchService)
+	rpmHelper := asyncprocessing2.ProvideRpmHelper(fileManager, artifactRepository, upstreamProxyConfigRepository, spaceFinder, secretService, registryRepository)
+	readerFactory10, err := asyncprocessing.ProvideReaderFactory(eventsSystem)
+	if err != nil {
+		return nil, err
+	}
+	asyncprocessingConfig := asyncprocessing2.ProvideRegistryPostProcessingConfig(config)
+	asyncprocessingService, err := asyncprocessing2.ProvideService(ctx, transactor, rpmHelper, lockerLocker, readerFactory10, asyncprocessingConfig, registryRepository, taskRepository, taskSourceRepository, taskEventRepository, eventsSystem)
+	if err != nil {
+		return nil, err
+	}
+	servicesServices := services.ProvideServices(webhookService, pullreqService, triggerService, jobScheduler, collectorJob, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceServices, instrumentService, consumer, repositoryCount, service2, branchService, asyncprocessingService)
 	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, sshServer, poller, resolverManager, servicesServices)
 	return serverSystem, nil
 }
