@@ -538,7 +538,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	apiHandler := router.APIHandlerProvider(registryRepository, upstreamProxyConfigRepository, fileManager, tagRepository, manifestRepository, cleanupPolicyRepository, imageRepository, storageDriver, spaceFinder, transactor, authenticator, provider, authorizer, auditService, artifactRepository, webhooksRepository, webhooksExecutionRepository, service2, spacePathStore, artifactReporter, downloadStatRepository, config, registryBlobRepository, asyncprocessingReporter)
+	registryHelper := cargo.LocalRegistryHelperProvider(fileManager, artifactRepository)
+	apiHandler := router.APIHandlerProvider(registryRepository, upstreamProxyConfigRepository, fileManager, tagRepository, manifestRepository, cleanupPolicyRepository, imageRepository, storageDriver, spaceFinder, transactor, authenticator, provider, authorizer, auditService, artifactRepository, webhooksRepository, webhooksExecutionRepository, service2, spacePathStore, artifactReporter, downloadStatRepository, config, registryBlobRepository, asyncprocessingReporter, registryHelper)
 	packageTagRepository := database2.ProvidePackageTagDao(db)
 	localBase := base.LocalBaseProvider(registryRepository, fileManager, transactor, imageRepository, artifactRepository, nodesRepository, packageTagRepository)
 	mavenDBStore := maven.DBStoreProvider(registryRepository, imageRepository, artifactRepository, spaceStore, bandwidthStatRepository, downloadStatRepository, nodesRepository, upstreamProxyConfigRepository)
@@ -568,13 +569,12 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	npmProxy := npm.ProxyProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, spaceFinder, secretService, npmLocalRegistryHelper)
 	npmController := npm2.ControllerProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, downloadStatRepository, provider, npmLocalRegistry, npmProxy)
 	npmHandler := api2.NewNPMHandlerProvider(npmController, packagesHandler)
-	registryHelper := rpm.RegistryHelperProvider(localBase, fileManager, asyncprocessingReporter)
-	rpmLocalRegistry := rpm.LocalRegistryProvider(localBase, fileManager, upstreamProxyConfigRepository, transactor, registryRepository, imageRepository, artifactRepository, provider, registryHelper)
-	rpmProxy := rpm.ProxyProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, localBase, registryHelper, spaceFinder, secretService)
+	rpmRegistryHelper := rpm.RegistryHelperProvider(localBase, fileManager, asyncprocessingReporter)
+	rpmLocalRegistry := rpm.LocalRegistryProvider(localBase, fileManager, upstreamProxyConfigRepository, transactor, registryRepository, imageRepository, artifactRepository, provider, rpmRegistryHelper)
+	rpmProxy := rpm.ProxyProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, localBase, rpmRegistryHelper, spaceFinder, secretService)
 	rpmController := rpm2.ControllerProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, rpmLocalRegistry, rpmProxy, asyncprocessingReporter)
 	rpmHandler := api2.NewRpmHandlerProvider(rpmController, packagesHandler)
-	cargoRegistryHelper := cargo.LocalRegistryHelperProvider(fileManager, artifactRepository)
-	cargoLocalRegistry := cargo2.LocalRegistryProvider(localBase, fileManager, upstreamProxyConfigRepository, transactor, registryRepository, imageRepository, artifactRepository, provider, cargoRegistryHelper)
+	cargoLocalRegistry := cargo2.LocalRegistryProvider(localBase, fileManager, upstreamProxyConfigRepository, transactor, registryRepository, imageRepository, artifactRepository, provider, registryHelper)
 	cargoController := cargo3.ControllerProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, cargoLocalRegistry)
 	cargoHandler := api2.NewCargoHandlerProvider(cargoController, packagesHandler)
 	handler4 := router.PackageHandlerProvider(packagesHandler, mavenHandler, genericHandler, pythonHandler, nugetHandler, npmHandler, rpmHandler, cargoHandler)

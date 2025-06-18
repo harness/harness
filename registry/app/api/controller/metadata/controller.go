@@ -24,6 +24,7 @@ import (
 	registrypostprocessingevents "github.com/harness/gitness/registry/app/events/asyncprocessing"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
+	"github.com/harness/gitness/registry/app/utils/cargo"
 	"github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/store/database/dbtx"
 )
@@ -55,6 +56,7 @@ type APIController struct {
 	SetupDetailsAuthHeaderPrefix string
 	RegistryBlobStore            store.RegistryBlobRepository
 	PostProcessingReporter       *registrypostprocessingevents.Reporter
+	CargoRegistryHelper          cargo.RegistryHelper
 }
 
 func NewAPIController(
@@ -83,6 +85,7 @@ func NewAPIController(
 	setupDetailsAuthHeaderPrefix string,
 	registryBlobStore store.RegistryBlobRepository,
 	postProcessingReporter *registrypostprocessingevents.Reporter,
+	cargoRegistryHelper cargo.RegistryHelper,
 ) *APIController {
 	return &APIController{
 		fileManager:                  fileManager,
@@ -110,5 +113,6 @@ func NewAPIController(
 		SetupDetailsAuthHeaderPrefix: setupDetailsAuthHeaderPrefix,
 		RegistryBlobStore:            registryBlobStore,
 		PostProcessingReporter:       postProcessingReporter,
+		CargoRegistryHelper:          cargoRegistryHelper,
 	}
 }

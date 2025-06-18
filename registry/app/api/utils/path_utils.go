@@ -49,6 +49,14 @@ func GetRpmFilePath(imageName string, version string) string {
 	return "/" + imageName + "/" + rpmVersion + "/" + rpmArch
 }
 
+func GetCargoFilePath(imageName string, version string) string {
+	filePathPrefix := "/crates/" + imageName
+	if version != "" {
+		filePathPrefix += "/" + version
+	}
+	return filePathPrefix
+}
+
 func GetFilePath(
 	packageType artifact.PackageType,
 	imageName string, version string,
@@ -71,7 +79,7 @@ func GetFilePath(
 	case artifact.PackageTypeRPM:
 		return GetRpmFilePath(imageName, version), nil
 	case artifact.PackageTypeCARGO:
-		return GetGenericFilePath(imageName, version), nil
+		return GetCargoFilePath(imageName, version), nil
 	default:
 		return "", fmt.Errorf("unsupported package type: %s", packageType)
 	}

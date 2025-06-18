@@ -128,6 +128,8 @@ func (c *APIController) GenerateClientSetupDetails(
 			username, registryRef, image, tag)
 	case string(artifact.PackageTypeNUGET):
 		return c.generateNugetClientSetupDetail(ctx, registryRef, username, image, tag, registryType)
+	case string(artifact.PackageTypeCARGO):
+		return c.generateCargoClientSetupDetail(ctx, registryRef, username, image, tag, registryType)
 	default:
 		log.Debug().Ctx(ctx).Msgf("Unknown package type for client details: %s", packageType)
 		return nil
@@ -1197,6 +1199,115 @@ func (c *APIController) generateNugetClientSetupDetail(
 
 	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, image, tag, registryURL, "",
 		string(artifact.PackageTypeNUGET))
+
+	return &artifact.ClientSetupDetailsResponseJSONResponse{
+		Data:   clientSetupDetails,
+		Status: artifact.StatusSUCCESS,
+	}
+}
+
+func (c *APIController) generateCargoClientSetupDetail(
+	ctx context.Context,
+	registryRef string,
+	username string,
+	image *artifact.ArtifactParam,
+	tag *artifact.VersionParam,
+	registryType artifact.RegistryType,
+) *artifact.ClientSetupDetailsResponseJSONResponse {
+	staticStepType := artifact.ClientSetupStepTypeStatic
+	generateTokenType := artifact.ClientSetupStepTypeGenerateToken
+
+	// Authentication section
+	section1 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Configure Authentication"),
+	}
+	_ = section1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Create or update ~/.cargo/config.toml with the following content:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("[registries.harness]" + "\n" + `index = "sparse+<REGISTRY_URL>/index/"`),
+					},
+				},
+			},
+			{
+				Header: utils.StringPtr("Generate an identity token for authentication"),
+				Type:   &generateTokenType,
+			},
+			{
+				Header: utils.StringPtr("Create or update ~/.cargo/credentials.toml with the following content:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("[registries.harness]" + "\n" + `token = "<TOKEN>"`),
+					},
+				},
+			},
+		},
+	})
+
+	// Publish section
+	section2 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Publish Package"),
+	}
+	_ = section2.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Publish your package:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("cargo publish --registry harness"),
+					},
+				},
+			},
+		},
+	})
+
+	// Install section
+	section3 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Install Package"),
+	}
+	_ = section3.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Install a package using cargo"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("cargo add <ARTIFACT_NAME>@<VERSION> --registry harness"),
+					},
+				},
+			},
+		},
+	})
+
+	sections := []artifact.ClientSetupSection{
+		section1,
+		section2,
+		section3,
+	}
+
+	if registryType == artifact.RegistryTypeUPSTREAM {
+		sections = []artifact.ClientSetupSection{
+			section1,
+			section3,
+		}
+	}
+
+	clientSetupDetails := artifact.ClientSetupDetails{
+		MainHeader: "Cargo Client Setup",
+		SecHeader:  "Follow these instructions to install/use cargo packages from this registry.",
+		Sections:   sections,
+	}
+
+	registryURL := c.URLProvider.PackageURL(ctx, registryRef, "cargo")
+	registryURL = strings.TrimPrefix(registryURL, "http:")
+	registryURL = strings.TrimPrefix(registryURL, "https:")
+	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, image, tag, registryURL, "",
+		string(artifact.PackageTypeCARGO))
 
 	return &artifact.ClientSetupDetailsResponseJSONResponse{
 		Data:   clientSetupDetails,

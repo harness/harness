@@ -41,6 +41,7 @@ import (
 	registrypostprocessingevents "github.com/harness/gitness/registry/app/events/asyncprocessing"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
+	cargoutils "github.com/harness/gitness/registry/app/utils/cargo"
 	registrywebhook "github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -83,6 +84,7 @@ func APIHandlerProvider(
 	gitnessConfig *types.Config,
 	registryBlobsDao store.RegistryBlobRepository,
 	postProcessingReporter *registrypostprocessingevents.Reporter,
+	cargoRegistryHelper cargoutils.RegistryHelper,
 ) harness.APIHandler {
 	return harness.NewAPIHandler(
 		repoDao,
@@ -110,6 +112,7 @@ func APIHandlerProvider(
 		gitnessConfig,
 		registryBlobsDao,
 		postProcessingReporter,
+		cargoRegistryHelper,
 	)
 }
 

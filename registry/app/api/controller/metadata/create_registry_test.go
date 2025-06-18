@@ -263,6 +263,7 @@ func TestCreateRegistry(t *testing.T) {
 					"",
 					nil, // registryBlobStore - not needed for this test.
 					nil, // PostProcessingReporter - not needed for this test.
+					nil,
 				)
 			},
 		},
@@ -333,6 +334,7 @@ func TestCreateRegistry(t *testing.T) {
 					"",  // downloadStatRepository.
 					nil,
 					nil, // PostProcessingReporter - not needed for this test.
+					nil,
 				)
 			},
 		},

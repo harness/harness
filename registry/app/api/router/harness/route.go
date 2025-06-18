@@ -33,6 +33,7 @@ import (
 	registrypostprocessingevents "github.com/harness/gitness/registry/app/events/asyncprocessing"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
+	"github.com/harness/gitness/registry/app/utils/cargo"
 	registrywebhook "github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -82,6 +83,7 @@ func NewAPIHandler(
 	gitnessConfig *types.Config,
 	registryBlobsDao store.RegistryBlobRepository,
 	postProcessingReporter *registrypostprocessingevents.Reporter,
+	cargoRegistryHelper cargo.RegistryHelper,
 ) APIHandler {
 	r := chi.NewRouter()
 	r.Use(audit.Middleware())
@@ -114,6 +116,7 @@ func NewAPIHandler(
 		gitnessConfig.Registry.SetupDetailsAuthHeaderPrefix,
 		registryBlobsDao,
 		postProcessingReporter,
+		cargoRegistryHelper,
 	)
 
 	handler := artifact.NewStrictHandler(apiController, []artifact.StrictMiddlewareFunc{})
