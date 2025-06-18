@@ -813,7 +813,7 @@ func (a ArtifactDao) fetchDownloadStatsForArtifacts(ctx context.Context,
 		return nil
 	}
 
-	query, args, err := sq.
+	query, args, err := databaseg.Builder.
 		Select("download_stat_artifact_id", "COUNT(*) AS download_count").
 		From("download_stats").
 		Where(sq.Eq{"download_stat_artifact_id": artifactIDs}).
