@@ -130,7 +130,10 @@ function ReadmeViewer({ metadata, gitRef, readmeInfo, contentOnly, maxWidth }: F
       </Render>
       <Render when={(data?.content as RepoFileContent)?.data}>
         <Container className={css.readmeContent}>
-          <MarkdownViewer source={decodeGitContent((data?.content as RepoFileContent)?.data)} />
+          <MarkdownViewer
+            repoMetadata={repoMetadata}
+            source={decodeGitContent((data?.content as RepoFileContent)?.data)}
+          />
         </Container>
       </Render>
     </Container>

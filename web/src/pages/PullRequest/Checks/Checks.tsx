@@ -257,7 +257,7 @@ export const Checks: React.FC<ChecksProps> = ({ repoMetadata, pullReqMetadata, p
               <Match expr={isCheckDataMarkdown}>
                 <Truthy>
                   <Container className={css.markdownContainer}>
-                    <MarkdownViewer darkMode source={logContent} />
+                    <MarkdownViewer darkMode source={logContent} repoMetadata={repoMetadata} />
                   </Container>
                 </Truthy>
                 <Falsy>

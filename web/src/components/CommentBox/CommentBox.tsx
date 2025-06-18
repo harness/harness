@@ -752,6 +752,7 @@ const CommentsThread = <T = unknown,>({
                       </Truthy>
                       <Else>
                         <MarkdownViewer
+                          repoMetadata={repoMetadata}
                           source={commentItem?.content}
                           mentions={(commentItem as CommentItem<TypesPullReqActivity>)?.payload?.mentions}
                           suggestionBlock={Object.assign(

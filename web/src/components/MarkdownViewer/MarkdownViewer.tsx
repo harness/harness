@@ -26,10 +26,9 @@ import rehypeVideo from 'rehype-video'
 import rehypeExternalLinks from 'rehype-external-links'
 import type { Plugin } from 'unified'
 import { visit } from 'unist-util-visit'
-import type { TypesPrincipalInfo } from 'services/code'
+import type { RepoRepositoryOutput, TypesPrincipalInfo } from 'services/code'
 import { INITIAL_ZOOM_LEVEL } from 'utils/Utils'
 import ImageCarousel from 'components/ImageCarousel/ImageCarousel'
-import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import type { SuggestionBlock } from 'components/SuggestionBlock/SuggestionBlock'
 import { getConfig } from 'services/config'
 import { CodeSuggestionBlock } from './CodeSuggestionBlock'
@@ -44,6 +43,7 @@ interface MarkdownViewerProps {
   mentions?: {
     [key: string]: TypesPrincipalInfo
   }
+  repoMetadata?: RepoRepositoryOutput
 }
 
 export function MarkdownViewer({
@@ -53,10 +53,10 @@ export function MarkdownViewer({
   darkMode,
   suggestionBlock,
   suggestionCheckSums,
-  mentions
+  mentions,
+  repoMetadata
 }: MarkdownViewerProps) {
   const [isOpen, setIsOpen] = useState<boolean>(false)
-  const { repoMetadata } = useGetRepositoryMetadata()
   const history = useHistory()
   const [zoomLevel, setZoomLevel] = useState(INITIAL_ZOOM_LEVEL)
   const [imgEvent, setImageEvent] = useState<string[]>([])

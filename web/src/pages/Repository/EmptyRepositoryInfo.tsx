@@ -161,6 +161,7 @@ export const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata'>> =
           source={getString('repoEmptyMarkdownClonePush')
             .replace(/REPO_NAME/g, repoMetadata.identifier || '')
             .replace(/DEFAULT_BRANCH/g, repoMetadata.default_branch || '')}
+          repoMetadata={repoMetadata}
         />
       </Container>
       <Container
@@ -168,6 +169,7 @@ export const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata'>> =
         padding={{ top: 'xxlarge', bottom: 'xxlarge', left: 'xxlarge', right: 'xxlarge' }}
         className={css.divContainer}>
         <MarkdownViewer
+          repoMetadata={repoMetadata}
           source={getString('repoEmptyMarkdownExisting')
             .replace(/REPO_URL/g, repoMetadata.git_url || '')
             .replace(/REPO_NAME/g, repoMetadata.identifier || '')

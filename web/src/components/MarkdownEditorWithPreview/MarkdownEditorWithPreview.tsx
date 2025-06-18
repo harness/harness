@@ -705,6 +705,7 @@ export function MarkdownEditorWithPreview({
             mentions={mentionsMap}
             maxHeight={800}
             suggestionBlock={suggestionBlock}
+            repoMetadata={repoMetadata}
           />
         )}
         {!standalone && showFeedback && (
