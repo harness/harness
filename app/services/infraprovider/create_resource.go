@@ -71,8 +71,13 @@ func (c *Service) createMissingResources(
 
 		cpuStr := getMetadataVal(updatedMetadata, "cpu")
 		memoryStr := getMetadataVal(updatedMetadata, "memory")
-		resource.CPU = &cpuStr
-		resource.Memory = &memoryStr
+		if resource.CPU == nil || (resource.CPU != nil && *resource.CPU == "") {
+			resource.CPU = &cpuStr
+		}
+
+		if resource.Memory == nil || (resource.Memory != nil && *resource.Memory == "") {
+			resource.Memory = &memoryStr
+		}
 
 		if err := c.validateResource(ctx, resource); err != nil {
 			return err
