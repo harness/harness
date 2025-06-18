@@ -523,7 +523,7 @@ func (g *Git) GetCommitFromRev(
 		return nil, ErrRepositoryPathEmpty
 	}
 
-	commitSHA, err := g.ResolveRev(ctx, repoPath, rev)
+	commitSHA, err := g.ResolveRev(ctx, repoPath, rev+"^{commit}")
 	if errors.IsInvalidArgument(err) {
 		return nil, errors.NotFound("revision %q not found", rev)
 	}

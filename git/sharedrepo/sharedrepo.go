@@ -391,7 +391,6 @@ func (r *SharedRepo) CommitTree(
 
 	messageBytes := new(bytes.Buffer)
 	_, _ = messageBytes.WriteString(message)
-	_, _ = messageBytes.WriteString("\n")
 
 	if signoff {
 		// Signed-off-by
