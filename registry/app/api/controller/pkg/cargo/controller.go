@@ -51,6 +51,7 @@ type controller struct {
 	artifactDao store.ArtifactRepository
 	urlProvider urlprovider.Provider
 	local       cargo.LocalRegistry
+	proxy       cargo.Proxy
 }
 
 // NewController creates a new Cargo controller.
@@ -63,6 +64,7 @@ func NewController(
 	tx dbtx.Transactor,
 	urlProvider urlprovider.Provider,
 	local cargo.LocalRegistry,
+	proxy cargo.Proxy,
 ) Controller {
 	return &controller{
 		proxyStore:  proxyStore,
@@ -73,5 +75,6 @@ func NewController(
 		tx:          tx,
 		urlProvider: urlProvider,
 		local:       local,
+		proxy:       proxy,
 	}
 }

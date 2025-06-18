@@ -17,6 +17,7 @@ package cargo
 import (
 	"io"
 
+	"github.com/harness/gitness/registry/app/metadata/cargo"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/response"
 	"github.com/harness/gitness/registry/app/storage"
@@ -34,15 +35,9 @@ func (r BaseResponse) GetError() error {
 	return r.Error
 }
 
-type RegistryConfig struct {
-	DownloadURL  string `json:"dl"`
-	APIURL       string `json:"api"`
-	AuthRequired bool   `json:"auth-required"` //nolint:tagliatelle
-}
-
 type GetRegistryConfigResponse struct {
 	BaseResponse
-	Config *RegistryConfig
+	Config *cargo.RegistryConfig
 }
 
 type UploadArtifactWarnings struct {

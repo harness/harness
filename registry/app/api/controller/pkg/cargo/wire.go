@@ -33,10 +33,11 @@ func ControllerProvider(
 	tx dbtx.Transactor,
 	urlProvider urlprovider.Provider,
 	local cargo.LocalRegistry,
+	proxy cargo.Proxy,
 ) Controller {
 	return NewController(
 		proxyStore, registryDao, imageDao, artifactDao,
-		fileManager, tx, urlProvider, local,
+		fileManager, tx, urlProvider, local, proxy,
 	)
 }
 

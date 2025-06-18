@@ -23,12 +23,6 @@ import (
 	"github.com/harness/gitness/registry/request"
 )
 
-type GetRegistryConfigResponse struct {
-	DownloadURL  string `json:"dl"`
-	APIURL       string `json:"api"`
-	AuthRequired bool   `json:"auth-required,omitempty"` //nolint:tagliatelle
-}
-
 func (h *handler) GetRegistryConfig(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	info, ok := request.ArtifactInfoFrom(ctx).(*cargotype.ArtifactInfo)

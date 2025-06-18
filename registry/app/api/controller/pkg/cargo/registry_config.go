@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/registry/app/api/controller/metadata"
+	"github.com/harness/gitness/registry/app/metadata/cargo"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	cargotype "github.com/harness/gitness/registry/app/pkg/types/cargo"
 )
@@ -42,7 +43,7 @@ func (c *controller) GetRegistryConfig(
 		BaseResponse: BaseResponse{
 			ResponseHeaders: responseHeaders,
 		},
-		Config: &RegistryConfig{
+		Config: &cargo.RegistryConfig{
 			DownloadURL:  downloadURL,
 			APIURL:       apiURL,
 			AuthRequired: true,

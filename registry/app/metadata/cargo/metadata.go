@@ -16,6 +16,12 @@ package cargo
 
 import "github.com/harness/gitness/registry/app/metadata"
 
+type RegistryConfig struct {
+	DownloadURL  string `json:"dl"`
+	APIURL       string `json:"api"`
+	AuthRequired bool   `json:"auth-required"` //nolint:tagliatelle
+}
+
 type DependencyKindType string
 
 var (
