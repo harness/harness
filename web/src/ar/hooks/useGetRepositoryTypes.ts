@@ -39,6 +39,7 @@ export const useGetRepositoryTypes = (): RepositoryTypeListItem[] => {
       return {
         ...repo,
         disabled: false,
+        tag: repo.tag === ThumbnailTagEnum.ComingSoon ? ThumbnailTagEnum.Beta : repo.tag,
         tooltip: undefined
       }
     }
@@ -92,6 +93,15 @@ const RepositoryTypes: RepositoryTypeListItem[] = [
     featureFlag: FeatureFlags.HAR_RPM_PACKAGE_TYPE_ENABLED
   },
   {
+    label: 'repositoryTypes.cargo',
+    value: RepositoryPackageType.CARGO,
+    icon: 'rust-logo',
+    tooltip: 'Coming Soon!',
+    disabled: true,
+    tag: ThumbnailTagEnum.ComingSoon,
+    featureFlag: FeatureFlags.HAR_CARGO_PACKAGE_TYPE_ENABLED
+  },
+  {
     label: 'repositoryTypes.go',
     value: RepositoryPackageType.GO,
     icon: 'go-logo',
@@ -111,14 +121,6 @@ const RepositoryTypes: RepositoryTypeListItem[] = [
     label: 'repositoryTypes.alpine',
     value: RepositoryPackageType.ALPINE,
     icon: 'alpine-logo',
-    tooltip: 'Coming Soon!',
-    disabled: true,
-    tag: ThumbnailTagEnum.ComingSoon
-  },
-  {
-    label: 'repositoryTypes.rust',
-    value: RepositoryPackageType.RUST,
-    icon: 'rust-logo',
     tooltip: 'Coming Soon!',
     disabled: true,
     tag: ThumbnailTagEnum.ComingSoon

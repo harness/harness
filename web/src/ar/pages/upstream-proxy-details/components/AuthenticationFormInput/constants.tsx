@@ -70,5 +70,9 @@ export const URLSourceToSupportedAuthTypesMapping: Record<
   [UpstreamRepositoryURLInputSource.NugetOrg]: [
     UpstreamProxyAuthenticationMode.USER_NAME_AND_PASSWORD,
     UpstreamProxyAuthenticationMode.ANONYMOUS
+  ],
+  [UpstreamRepositoryURLInputSource.Crates]: [
+    UpstreamProxyAuthenticationMode.USER_NAME_AND_PASSWORD,
+    UpstreamProxyAuthenticationMode.ANONYMOUS
   ]
 }

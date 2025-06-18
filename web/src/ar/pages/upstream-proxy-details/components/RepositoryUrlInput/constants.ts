@@ -49,5 +49,9 @@ export const UpstreamURLSourceConfig: Record<UpstreamRepositoryURLInputSource, R
   [UpstreamRepositoryURLInputSource.NugetOrg]: {
     label: 'upstreamProxyDetails.createForm.source.nugetOrg',
     value: UpstreamRepositoryURLInputSource.NugetOrg
+  },
+  [UpstreamRepositoryURLInputSource.Crates]: {
+    label: 'upstreamProxyDetails.createForm.source.crates',
+    value: UpstreamRepositoryURLInputSource.Crates
   }
 }

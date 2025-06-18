@@ -118,9 +118,14 @@ export function getFormattedFormDataForAuthType(
       set(draft, 'config.auth', null)
     }
     if (
-      [UpstreamRepositoryURLInputSource.Dockerhub, UpstreamRepositoryURLInputSource.MavenCentral].includes(
-        draft.config.source as UpstreamRepositoryURLInputSource
-      )
+      [
+        UpstreamRepositoryURLInputSource.Dockerhub,
+        UpstreamRepositoryURLInputSource.MavenCentral,
+        UpstreamRepositoryURLInputSource.Crates,
+        UpstreamRepositoryURLInputSource.NpmJS,
+        UpstreamRepositoryURLInputSource.NugetOrg,
+        UpstreamRepositoryURLInputSource.PyPi
+      ].includes(draft.config.source as UpstreamRepositoryURLInputSource)
     ) {
       set(draft, 'config.url', '')
     }

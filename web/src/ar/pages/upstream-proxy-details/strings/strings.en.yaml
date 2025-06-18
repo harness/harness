@@ -16,6 +16,7 @@ createForm:
     npmjs: npmjs
     pypi: PyPI
     nugetOrg: NuGet.org
+    crates: Crates.io
   authentication:
     title: Authentication
     userNameAndPassword: Username and Password

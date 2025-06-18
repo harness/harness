@@ -56,6 +56,7 @@ overview:
     description: Description
     pullCommand: Pull command
     repository: Repository
+    documentation: Documentation
     homepage: Homepage
     license: License
     buildHost: Build Host

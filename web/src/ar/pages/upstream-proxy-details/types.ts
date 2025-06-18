@@ -28,7 +28,7 @@ export enum UpstreamProxyPackageType {
   RPM = 'RPM',
   GO = 'GO',
   DEBIAN = 'DEBIAN',
-  RUST = 'RUST',
+  CARGO = 'CARGO',
   ALPINE = 'ALPINE'
 }
 
@@ -39,7 +39,8 @@ export enum UpstreamRepositoryURLInputSource {
   AwsEcr = 'AwsEcr',
   Custom = 'Custom',
   PyPi = 'PyPi',
-  NugetOrg = 'NugetOrg'
+  NugetOrg = 'NugetOrg',
+  Crates = 'Crates'
 }
 
 export enum UpstreamProxyAuthenticationMode {

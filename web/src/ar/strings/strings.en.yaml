@@ -86,6 +86,7 @@ packageTypes:
   pythonPackage: Python Package
   nugetPackage: NuGet Package
   rpmPackage: RPM Package
+  cargoPackage: Cargo Package
 repositoryTypes:
   docker: Docker
   helm: Helm
@@ -98,7 +99,7 @@ repositoryTypes:
   rpm: RPM
   go: Go
   debian: Debian
-  rust: Rust
+  cargo: Cargo
   alpine: Alpine
 sideNav:
   repositories: '{{ $.repositoryList.pageHeading }}'

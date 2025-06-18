@@ -149,6 +149,7 @@ export interface StringsMap {
   'upstreamProxyDetails.createForm.create': string
   'upstreamProxyDetails.createForm.key': string
   'upstreamProxyDetails.createForm.packageType': string
+  'upstreamProxyDetails.createForm.source.crates': string
   'upstreamProxyDetails.createForm.source.custom': string
   'upstreamProxyDetails.createForm.source.dockerHub': string
   'upstreamProxyDetails.createForm.source.ecr': string
@@ -225,6 +226,7 @@ export interface StringsMap {
   'versionDetails.overview.generalInformation.createdAt': string
   'versionDetails.overview.generalInformation.description': string
   'versionDetails.overview.generalInformation.digest': string
+  'versionDetails.overview.generalInformation.documentation': string
   'versionDetails.overview.generalInformation.downloads': string
   'versionDetails.overview.generalInformation.homepage': string
   'versionDetails.overview.generalInformation.license': string
@@ -371,6 +373,7 @@ export interface StringsMap {
   nonProd: string
   nonProdCount: string
   optionalField: string
+  'packageTypes.cargoPackage': string
   'packageTypes.dockerPackage': string
   'packageTypes.genericPackage': string
   'packageTypes.helmPackage': string
@@ -384,6 +387,7 @@ export interface StringsMap {
   prod: string
   prodCount: string
   'repositoryTypes.alpine': string
+  'repositoryTypes.cargo': string
   'repositoryTypes.debian': string
   'repositoryTypes.docker': string
   'repositoryTypes.generic': string
@@ -395,7 +399,6 @@ export interface StringsMap {
   'repositoryTypes.nuget': string
   'repositoryTypes.pypi': string
   'repositoryTypes.rpm': string
-  'repositoryTypes.rust': string
   retriableError: string
   save: string
   search: string

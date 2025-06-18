@@ -56,7 +56,7 @@ export enum RepositoryPackageType {
   RPM = 'RPM',
   GO = 'GO',
   DEBIAN = 'DEBIAN',
-  RUST = 'RUST',
+  CARGO = 'CARGO',
   ALPINE = 'ALPINE'
 }
 

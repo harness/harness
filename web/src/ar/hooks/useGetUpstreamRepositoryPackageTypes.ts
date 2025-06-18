@@ -41,6 +41,7 @@ export const useGetUpstreamRepositoryPackageTypes = (): UpstreamRepositoryPackag
       return {
         ...repo,
         disabled: false,
+        tag: repo.tag === ThumbnailTagEnum.ComingSoon ? ThumbnailTagEnum.Beta : repo.tag,
         tooltip: undefined
       }
     }
@@ -89,6 +90,15 @@ export const UpstreamProxyPackageTypeList: UpstreamRepositoryPackageTypeListItem
     featureFlag: FeatureFlags.HAR_RPM_PACKAGE_TYPE_ENABLED
   },
   {
+    label: 'repositoryTypes.cargo',
+    value: UpstreamProxyPackageType.CARGO,
+    icon: 'rust-logo',
+    tooltip: 'Coming Soon!',
+    disabled: true,
+    tag: ThumbnailTagEnum.ComingSoon,
+    featureFlag: FeatureFlags.HAR_CARGO_PACKAGE_TYPE_ENABLED
+  },
+  {
     label: 'repositoryTypes.go',
     value: UpstreamProxyPackageType.GO,
     icon: 'go-logo',
@@ -108,14 +118,6 @@ export const UpstreamProxyPackageTypeList: UpstreamRepositoryPackageTypeListItem
     label: 'repositoryTypes.alpine',
     value: UpstreamProxyPackageType.ALPINE,
     icon: 'alpine-logo',
-    tooltip: 'Coming Soon!',
-    disabled: true,
-    tag: ThumbnailTagEnum.ComingSoon
-  },
-  {
-    label: 'repositoryTypes.rust',
-    value: UpstreamProxyPackageType.RUST,
-    icon: 'rust-logo',
     tooltip: 'Coming Soon!',
     disabled: true,
     tag: ThumbnailTagEnum.ComingSoon
