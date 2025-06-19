@@ -15,10 +15,12 @@
  */
 
 import React from 'react'
+import { Render } from 'react-jsx-match'
 import { Layout, Text } from '@harnessio/uicore'
 import { BookmarkBook } from 'iconoir-react'
 import { FontVariation } from '@harnessio/design-system'
 import { RepoTypeLabel } from 'components/RepoTypeLabel/RepoTypeLabel'
+import { useAppContext } from 'AppContext'
 import type { GitInfoProps } from 'utils/GitUtils'
 import FavoriteStar from 'components/FavoriteStar/FavoriteStar'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
@@ -33,6 +35,7 @@ interface RepositoryHeaderProps extends Pick<GitInfoProps, 'repoMetadata'> {
 }
 
 export function RepositoryHeader(props: RepositoryHeaderProps) {
+  const { isCurrentSessionPublic } = useAppContext()
   const { repoMetadata, className, isFile, updateRepoMetadata } = props
   return (
     <RepositoryPageHeader
@@ -46,13 +49,15 @@ export function RepositoryHeader(props: RepositoryHeaderProps) {
           <Text inline className={css.repoDropdown} font={{ variation: FontVariation.H4 }}>
             {repoMetadata.identifier}
           </Text>
-          <FavoriteStar
-            isFavorite={repoMetadata.is_favorite}
-            resourceId={repoMetadata.id || 0}
-            resourceType={'REPOSITORY'}
-            key={repoMetadata.id}
-            onChange={favorite => updateRepoMetadata(repoMetadata.path || '', 'is_favorite', favorite)}
-          />
+          <Render when={!isCurrentSessionPublic}>
+            <FavoriteStar
+              isFavorite={repoMetadata.is_favorite}
+              resourceId={repoMetadata.id || 0}
+              resourceType={'REPOSITORY'}
+              key={repoMetadata.id}
+              onChange={favorite => updateRepoMetadata(repoMetadata.path || '', 'is_favorite', favorite)}
+            />
+          </Render>
           <RepoTypeLabel isPublic={repoMetadata.is_public} isArchived={repoMetadata.archived} />
         </Layout.Horizontal>
       }

@@ -85,15 +85,21 @@ func (c *Controller) ListRepositoriesNoAuth(
 		return []*repoCtrl.RepositoryOutput{}, 0, nil
 	}
 
-	// Get repo IDs
-	repoIDs := make([]int64, len(repos))
-	for i, repo := range repos {
-		repoIDs[i] = repo.ID
-	}
-	// Get favorites
-	favoritesMap, err := c.favoriteStore.Map(ctx, principalID, enum.ResourceTypeRepo, repoIDs)
-	if err != nil {
-		return nil, 0, fmt.Errorf("fetch favorite repos for principal %d failed: %w", principalID, err)
+	favoritesMap := make(map[int64]bool)
+	// We will initialize favoritesMap only in the case when favorites filter is not applied
+	// and use the session's principal id in the case to populate the favoritesMap.
+	// TODO: [CODE-4005] fix the filters to either add OnlyFavorites as boolean or use OnlyFavoritesFor everywhere.
+	if filter.OnlyFavoritesFor == nil {
+		// Get repo IDs
+		repoIDs := make([]int64, len(repos))
+		for i, repo := range repos {
+			repoIDs[i] = repo.ID
+		}
+		// Get favorites
+		favoritesMap, err = c.favoriteStore.Map(ctx, principalID, enum.ResourceTypeRepo, repoIDs)
+		if err != nil {
+			return nil, 0, fmt.Errorf("fetch favorite repos for principal %d failed: %w", principalID, err)
+		}
 	}
 
 	reposOut := make([]*repoCtrl.RepositoryOutput, 0, len(repos))
@@ -106,7 +112,10 @@ func (c *Controller) ListRepositoriesNoAuth(
 		if err != nil {
 			return nil, 0, fmt.Errorf("failed to get repo %q output: %w", repo.Path, err)
 		}
-		repoOut.IsFavorite = favoritesMap[repo.ID]
+
+		// We will populate the IsFavorite as true if the favorites filter is applied
+		// otherwise take the value out from the favoritesMap.
+		repoOut.IsFavorite = filter.OnlyFavoritesFor != nil || favoritesMap[repo.ID]
 
 		reposOut = append(reposOut, repoOut)
 	}
