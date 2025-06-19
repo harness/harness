@@ -21,7 +21,7 @@ import (
 
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
-	"github.com/harness/gitness/registry/app/dist_temp/errcode"
+	"github.com/harness/gitness/registry/app/metadata/cargo"
 	"github.com/harness/gitness/registry/app/remote/adapter"
 	crates "github.com/harness/gitness/registry/app/remote/adapter/crates"
 	"github.com/harness/gitness/registry/app/remote/registry"
@@ -32,6 +32,9 @@ import (
 )
 
 type RemoteRegistryHelper interface {
+	// GetRegistryConfig Fetches the registry configuration for the remote registry
+	GetRegistryConfig() (*cargo.RegistryConfig, error)
+
 	// GetFile Downloads the file for the given package and filename
 	GetPackageFile(ctx context.Context, pkg string, version string) (io.ReadCloser, error)
 
@@ -96,6 +99,15 @@ func (r *remoteRegistryHelper) init(
 	return nil
 }
 
+func (r *remoteRegistryHelper) GetRegistryConfig() (*cargo.RegistryConfig, error) {
+	config, err := r.adapter.GetRegistryConfig()
+	if err != nil {
+		log.Error().Err(err).Msg("failed to get registry config")
+		return nil, fmt.Errorf("failed to get registry config: %w", err)
+	}
+	return config, nil
+}
+
 func (r *remoteRegistryHelper) GetPackageIndex(
 	pkg string, filePath string,
 ) (io.ReadCloser, error) {
@@ -110,8 +122,18 @@ func (r *remoteRegistryHelper) GetPackageIndex(
 }
 
 func (r *remoteRegistryHelper) GetPackageFile(
-	ctx context.Context, _ string, _ string,
+	ctx context.Context, pkg string, version string,
 ) (io.ReadCloser, error) {
-	log.Error().Ctx(ctx).Msg("Not implemented")
-	return nil, errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
+	// get the file for the package
+	filePath := downloadPackageFilePath(pkg, version)
+	data, err := r.adapter.GetPackageFile(filePath)
+	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Msgf("failed to get package file: %s, %s", pkg, filePath)
+		return nil, fmt.Errorf("failed to get package file: %s, %s", pkg, filePath)
+	}
+	if data == nil {
+		log.Ctx(ctx).Error().Msgf("file not found for package: %s, %s", pkg, filePath)
+		return nil, fmt.Errorf("file not found for package: %s, %s", pkg, filePath)
+	}
+	return data, nil
 }
