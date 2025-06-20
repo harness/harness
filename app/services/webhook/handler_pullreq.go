@@ -573,7 +573,7 @@ type PullReqActivityStatusUpdatedPayload struct {
 	PullReqCommentStatusUpdatedSegment
 }
 
-// handleEventPullReqCommentUpdated handles status updated events for pull request comments.
+// handleEventPullReqCommentStatusUpdated handles status updated events for pull request comments.
 func (s *Service) handleEventPullReqCommentStatusUpdated(
 	ctx context.Context,
 	event *events.Event[*pullreqevents.CommentStatusUpdatedPayload],
