@@ -1241,7 +1241,7 @@ func (c *APIController) generateCargoClientSetupDetail(
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: utils.StringPtr("[registries.harness]" + "\n" + `token = "<TOKEN>"`),
+						Value: utils.StringPtr("[registries.harness]" + "\n" + `token = "Bearer <TOKEN>"`),
 					},
 				},
 			},
@@ -1304,8 +1304,6 @@ func (c *APIController) generateCargoClientSetupDetail(
 	}
 
 	registryURL := c.URLProvider.PackageURL(ctx, registryRef, "cargo")
-	registryURL = strings.TrimPrefix(registryURL, "http:")
-	registryURL = strings.TrimPrefix(registryURL, "https:")
 	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, image, tag, registryURL, "",
 		string(artifact.PackageTypeCARGO))
 
