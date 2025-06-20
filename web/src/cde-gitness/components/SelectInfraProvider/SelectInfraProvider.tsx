@@ -45,7 +45,6 @@ export const SelectInfraProvider = () => {
 
   useEffect(() => {
     const infraOptions: dropdownProps[] = []
-    let isHybridAvailable = false
     data?.forEach(infra => {
       const payload = {
         label: infra?.name ?? '',
@@ -55,22 +54,13 @@ export const SelectInfraProvider = () => {
         infraOptions.push(payload)
       }
       if (infra.type === HYBRID_VM_GCP && CDE_HYBRID_ENABLED) {
-        isHybridAvailable = true
         infraOptions.push(payload)
       }
       if (infra.type !== HARNESS_GCP && infra.type !== HYBRID_VM_GCP) {
         infraOptions.push(payload)
       }
     })
-    if (CDE_HYBRID_ENABLED && !isHybridAvailable && data) {
-      // history.push(
-      //   routes.toCDEGitspaceInfra({
-      //     accountId: accountInfo?.identifier
-      //   })
-      // )
-    } else {
-      setInfraProvider(infraOptions)
-    }
+    setInfraProvider(infraOptions)
   }, [data])
 
   useEffect(() => {
