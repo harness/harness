@@ -32,9 +32,9 @@ func (h *handler) DownloadPackageFile(w http.ResponseWriter, r *http.Request) {
 		h.HandleErrors(ctx, []error{fmt.Errorf("failed to fetch info from context")}, w)
 		return
 	}
-	info.Version = r.PathValue("version")
 	info.Image = r.PathValue("name")
 	info.Arch = r.PathValue("architecture")
+	info.Version = r.PathValue("version") + "." + info.Arch
 	info.FileName = r.PathValue("file")
 	info.PackagePath = r.PathValue("*")
 	response := h.controller.DownloadPackageFile(ctx, *info)

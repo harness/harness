@@ -243,9 +243,11 @@ func NewRouter(
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/repodata/{file}", rpmHandler.GetRepoData)
 			r.With(middleware.StoreArtifactInfo(rpmHandler)).
+				With(middleware.TrackDownloadStats(packageHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/package/{name}/{version}/{architecture}/{file}", rpmHandler.DownloadPackageFile)
 			r.With(middleware.StoreArtifactInfo(rpmHandler)).
+				With(middleware.TrackDownloadStats(packageHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/package/{name}/{version}/{architecture}/{file}/*", rpmHandler.DownloadPackageFile)
 		})

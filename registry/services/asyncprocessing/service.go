@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/harness/gitness/app/services/locker"
@@ -39,14 +40,15 @@ const (
 )
 
 type Service struct {
-	tx                   dbtx.Transactor
-	rpmRegistryHelper    RpmHelper
-	locker               *locker.Locker
-	registryDao          store.RegistryRepository
-	taskRepository       store.TaskRepository
-	taskSourceRepository store.TaskSourceRepository
-	taskEventRepository  store.TaskEventRepository
-	innerReporter        *events.GenericReporter
+	tx                     dbtx.Transactor
+	rpmRegistryHelper      RpmHelper
+	locker                 *locker.Locker
+	registryDao            store.RegistryRepository
+	taskRepository         store.TaskRepository
+	taskSourceRepository   store.TaskSourceRepository
+	taskEventRepository    store.TaskEventRepository
+	innerReporter          *events.GenericReporter
+	postProcessingReporter *asyncprocessing.Reporter
 }
 
 func NewService(
@@ -61,6 +63,7 @@ func NewService(
 	taskSourceRepository store.TaskSourceRepository,
 	taskEventRepository store.TaskEventRepository,
 	eventsSystem *events.System,
+	postProcessingReporter *asyncprocessing.Reporter,
 ) (*Service, error) {
 	if err := config.Prepare(); err != nil {
 		return nil, fmt.Errorf("provided postprocessing service config is invalid: %w", err)
@@ -70,14 +73,15 @@ func NewService(
 		return nil, errors.New("failed to create new GenericReporter for registry async processing from event system")
 	}
 	s := &Service{
-		rpmRegistryHelper:    rpmRegistryHelper,
-		locker:               locker,
-		tx:                   tx,
-		registryDao:          registryDao,
-		taskRepository:       taskRepository,
-		taskSourceRepository: taskSourceRepository,
-		taskEventRepository:  taskEventRepository,
-		innerReporter:        innerReporter,
+		rpmRegistryHelper:      rpmRegistryHelper,
+		locker:                 locker,
+		tx:                     tx,
+		registryDao:            registryDao,
+		taskRepository:         taskRepository,
+		taskSourceRepository:   taskSourceRepository,
+		taskEventRepository:    taskEventRepository,
+		innerReporter:          innerReporter,
+		postProcessingReporter: postProcessingReporter,
 	}
 	_, err = artifactsReaderFactory.Launch(ctx, eventsReaderGroupName, config.EventReaderName,
 		func(r *asyncprocessing.Reader) error {
@@ -155,6 +159,7 @@ func (s *Service) handleEventExecuteAsyncTask(
 	}
 
 	var processingErr error
+	//nolint:nestif
 	if task.Kind == types.TaskKindBuildRegistryIndex {
 		var payload types.BuildRegistryIndexTaskPayload
 		err = json.Unmarshal(task.Payload, &payload)
@@ -176,6 +181,23 @@ func (s *Service) handleEventExecuteAsyncTask(
 				processingErr = fmt.Errorf("failed to build RPM registry files for registry [%d]: %w",
 					payload.RegistryID, err)
 			}
+			if registry.Type != artifact.RegistryTypeVIRTUAL {
+				registryIDs, err2 := s.registryDao.FetchRegistriesIDByUpstreamProxyID(
+					ctx, strconv.FormatInt(registry.ID, 10), registry.RootParentID,
+				)
+				if err2 != nil {
+					log.Ctx(ctx).Error().Msgf("failed to fetch registries whyle building registry "+
+						"files by upstream proxy ID for registry [%d]: %v", payload.RegistryID, err2)
+				}
+				if len(registryIDs) > 0 {
+					for _, id := range registryIDs {
+						s.postProcessingReporter.BuildRegistryIndexWithPrincipal(
+							ctx, id, make([]types.SourceRef, 0), payload.PrincipalID,
+						)
+					}
+				}
+			}
+
 		default:
 			log.Ctx(ctx).Error().Msgf("unsupported package type [%s] for registry [%d] in task [%s]",
 				registry.PackageType, payload.RegistryID, task.Key)

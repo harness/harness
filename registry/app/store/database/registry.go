@@ -697,7 +697,16 @@ func (r registryDao) FetchRegistriesIDByUpstreamProxyID(
 	stmt := databaseg.Builder.Select("registry_id").
 		From("registries").
 		Where("registry_root_parent_id = ?", rootParentID).
-		Where("registry_upstream_proxies LIKE ?", "%"+upstreamProxyID+"%").
+		Where(
+			"(registry_upstream_proxies = ? "+
+				"OR registry_upstream_proxies LIKE ? "+
+				"OR registry_upstream_proxies LIKE ? "+
+				"OR registry_upstream_proxies LIKE ?)",
+			upstreamProxyID,
+			upstreamProxyID+"^_%",
+			"%^_"+upstreamProxyID+"^_%",
+			"%^_"+upstreamProxyID,
+		).
 		Where("registry_type = ?", artifact.RegistryTypeVIRTUAL)
 
 	db := dbtx.GetAccessor(ctx, r.db)

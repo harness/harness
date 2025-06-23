@@ -49,6 +49,7 @@ func ProvideService(
 	taskSourceRepository store.TaskSourceRepository,
 	taskEventRepository store.TaskEventRepository,
 	eventsSystem *events.System,
+	postProcessingReporter *asyncprocessing.Reporter,
 ) (*Service, error) {
 	return NewService(
 		ctx,
@@ -62,6 +63,7 @@ func ProvideService(
 		taskSourceRepository,
 		taskEventRepository,
 		eventsSystem,
+		postProcessingReporter,
 	)
 }
 

@@ -836,7 +836,7 @@ func (c *APIController) generateRpmClientSetupDetail(
 							"enabled=1\n" +
 							"gpgcheck=0\n" +
 							"username=<USERNAME>\n" +
-							"password=*see step 2*\n"),
+							"password=*see step 1*\n"),
 					},
 				},
 			},
@@ -903,7 +903,9 @@ func (c *APIController) generateRpmClientSetupDetail(
 							"name=harness-<REGISTRY_NAME>\n" +
 							"baseurl=<REGISTRY_URL>\n" +
 							"enabled=1\n" +
-							"gpgcheck=0\n"),
+							"gpgcheck=0\n" +
+							"username=<USERNAME>\n" +
+							"password=*see step 1*\n"),
 					},
 				},
 			},

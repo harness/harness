@@ -23,6 +23,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/url"
 	artifactapi "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/metadata"
@@ -264,6 +265,7 @@ func GetArtifactFilesMetadata(
 				version, filename, setupDetailsAuthHeaderPrefix)
 		case artifactapi.PackageTypeRPM:
 			downloadCommand = GetRPMArtifactFileDownloadCommand(registryURL, filename, setupDetailsAuthHeaderPrefix)
+			_, filename, _ = paths.DisectLeaf(filename)
 		case artifactapi.PackageTypeNUGET:
 			downloadCommand = GetNugetArtifactFileDownloadCommand(registryURL, artifactName,
 				version, filename, setupDetailsAuthHeaderPrefix)

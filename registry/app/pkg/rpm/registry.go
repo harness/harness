@@ -16,9 +16,9 @@ package rpm
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/base"
@@ -58,10 +58,10 @@ func downloadPackageFile(
 	info rpm.ArtifactInfo,
 	localBase base.LocalBase,
 ) (*commons.ResponseHeaders, *storage.FileReader, io.ReadCloser, string, error) {
+	lastDotIndex := strings.LastIndex(info.Version, ".")
+	versionPath := info.Version[:lastDotIndex] + "/" + info.Arch
 	headers, fileReader, redirectURL, err := localBase.Download(
-		ctx, info.ArtifactInfo,
-		fmt.Sprintf("%s/%s", info.Version, info.Arch),
-		info.FileName,
+		ctx, info.ArtifactInfo, versionPath, info.FileName,
 	)
 	if err != nil {
 		return nil, nil, nil, "", err

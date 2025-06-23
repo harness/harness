@@ -99,11 +99,15 @@ func (c *APIController) GetArtifactFiles(
 		}, nil
 	}
 
-	registryURL := c.URLProvider.RegistryURL(ctx,
-		reqInfo.RootIdentifier, strings.ToLower(string(registry.PackageType)), reqInfo.RegistryIdentifier)
-
-	if registry.PackageType == artifact.PackageTypeNPM {
+	var registryURL string
+	switch registry.PackageType {
+	case artifact.PackageTypeNPM:
 		registryURL = c.URLProvider.PackageURL(ctx, reqInfo.RootIdentifier+"/"+reqInfo.RegistryIdentifier, "npm")
+	case artifact.PackageTypeRPM:
+		registryURL = c.URLProvider.PackageURL(ctx, reqInfo.RootIdentifier+"/"+reqInfo.RegistryIdentifier, "rpm")
+	default:
+		registryURL = c.URLProvider.RegistryURL(ctx,
+			reqInfo.RootIdentifier, strings.ToLower(string(registry.PackageType)), reqInfo.RegistryIdentifier)
 	}
 
 	filePathPrefix, err := utils.GetFilePath(registry.PackageType, img.Name, art.Version)

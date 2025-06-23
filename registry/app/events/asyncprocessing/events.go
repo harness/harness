@@ -35,6 +35,15 @@ type ExecuteAsyncTaskPayload struct {
 func (r *Reporter) BuildRegistryIndex(ctx context.Context, registryID int64, sources []types.SourceRef) {
 	session, _ := request.AuthSessionFrom(ctx)
 	principalID := session.Principal.ID
+	r.BuildRegistryIndexWithPrincipal(ctx, registryID, sources, principalID)
+}
+
+func (r *Reporter) BuildRegistryIndexWithPrincipal(
+	ctx context.Context,
+	registryID int64,
+	sources []types.SourceRef,
+	principalID int64,
+) {
 	key := fmt.Sprintf("registry_%d", registryID)
 	payload, err := json.Marshal(&types.BuildRegistryIndexTaskPayload{
 		Key:         key,
