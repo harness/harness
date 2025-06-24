@@ -57,8 +57,8 @@ func (c *Controller) PreReceive(
 
 	if err := c.limiter.RepoSize(ctx, in.RepoID); err != nil {
 		return hook.Output{}, fmt.Errorf(
-			"resource limit exceeded: %w",
-			limiter.ErrMaxRepoSizeReached)
+			"resource limit exceeded: %w", limiter.ErrMaxRepoSizeReached,
+		)
 	}
 
 	forced := make([]bool, len(in.RefUpdates))
@@ -86,6 +86,18 @@ func (c *Controller) PreReceive(
 	}
 
 	var principal *types.Principal
+	var protectionRules []types.RuleInfoInternal
+	var isRepoOwner bool
+
+	protectionRules, err = c.protectionManager.ListRepoRules(
+		ctx, repo.ID, protection.TypeBranch, protection.TypeTag, protection.TypePush,
+	)
+	if err != nil {
+		return hook.Output{}, fmt.Errorf(
+			"failed to fetch protection rules for the repository: %w", err,
+		)
+	}
+
 	// For internal calls - through the application interface (API) - no need to verify protection rules.
 	if !in.Internal && repo.State == enum.RepoStateActive {
 		// TODO: use store.PrincipalInfoCache once we abstracted principals.
@@ -95,33 +107,41 @@ func (c *Controller) PreReceive(
 		}
 
 		dummySession := &auth.Session{Principal: *principal, Metadata: nil}
-
-		err = c.checkProtectionRules(ctx, dummySession, repo, refUpdates, &output)
-		if output.Error != nil {
-			return output, nil
+		isRepoOwner, err = apiauth.IsRepoOwner(ctx, c.authorizer, dummySession, repo)
+		if err != nil {
+			return hook.Output{}, fmt.Errorf("failed to determine if user is repo owner: %w", err)
 		}
+
+		err = c.checkProtectionRules(
+			ctx, dummySession, repo, refUpdates, protectionRules, isRepoOwner, &output,
+		)
 		if err != nil {
 			return hook.Output{}, fmt.Errorf("failed to check protection rules: %w", err)
+		}
+		if output.Error != nil {
+			return output, nil
 		}
 	}
 
 	err = c.scanSecrets(ctx, rgit, repo, in, &output)
+	if err != nil {
+		return hook.Output{}, fmt.Errorf("failed to scan secrets: %w", err)
+	}
 	if output.Error != nil {
 		return output, nil
-	}
-	if err != nil {
-		return hook.Output{}, err
 	}
 
 	err = c.preReceiveExtender.Extend(ctx, rgit, session, repo, in, &output)
-	if output.Error != nil {
-		return output, nil
-	}
 	if err != nil {
 		return hook.Output{}, fmt.Errorf("failed to extend pre-receive hook: %w", err)
 	}
+	if output.Error != nil {
+		return output, nil
+	}
 
-	if err = c.processObjects(ctx, repo, principal, refUpdates, in, &output); err != nil {
+	if err = c.processObjects(
+		ctx, repo, principal, refUpdates, protectionRules, isRepoOwner, in, &output,
+	); err != nil {
 		return hook.Output{}, fmt.Errorf("failed to process pre-receive objects: %w", err)
 	}
 
@@ -148,19 +168,10 @@ func (c *Controller) checkProtectionRules(
 	session *auth.Session,
 	repo *types.RepositoryCore,
 	refUpdates changedRefs,
+	protectionRules []types.RuleInfoInternal,
+	isRepoOwner bool,
 	output *hook.Output,
 ) error {
-	isRepoOwner, err := apiauth.IsRepoOwner(ctx, c.authorizer, session, repo)
-	if err != nil {
-		return fmt.Errorf("failed to determine if user is repo owner: %w", err)
-	}
-
-	protectionRules, err := c.protectionManager.ListRepoRules(
-		ctx, repo.ID, protection.TypeBranch, protection.TypeTag,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to fetch protection rules for the repository: %w", err)
-	}
 	branchProtection := c.protectionManager.FilterCreateBranchProtection(protectionRules)
 	tagProtection := c.protectionManager.FilterCreateTagProtection(protectionRules)
 
@@ -169,7 +180,7 @@ func (c *Controller) checkProtectionRules(
 
 	//nolint:unparam
 	checkAction := func(
-		refProtection protection.Protection,
+		refProtection protection.RefProtection,
 		refAction protection.RefAction,
 		refType protection.RefType,
 		names []string,
@@ -179,13 +190,14 @@ func (c *Controller) checkProtectionRules(
 		}
 
 		violations, err := refProtection.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
-			Actor:       &session.Principal,
-			AllowBypass: true,
-			IsRepoOwner: isRepoOwner,
-			Repo:        repo,
-			RefAction:   refAction,
-			RefType:     refType,
-			RefNames:    names,
+			ResolveUserGroupID: c.userGroupService.ListUserIDsByGroupIDs,
+			Actor:              &session.Principal,
+			AllowBypass:        true,
+			IsRepoOwner:        isRepoOwner,
+			Repo:               repo,
+			RefAction:          refAction,
+			RefType:            refType,
+			RefNames:           names,
 		})
 		if err != nil {
 			errCheckAction = fmt.Errorf("failed to verify protection rules for git push: %w", err)

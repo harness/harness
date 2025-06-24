@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/services/settings"
+	"github.com/harness/gitness/app/services/usergroup"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
@@ -59,6 +60,7 @@ type Controller struct {
 	sseStreamer         sse.Streamer
 	lfsStore            store.LFSObjectStore
 	auditService        audit.Service
+	userGroupService    usergroup.Service
 }
 
 func NewController(
@@ -80,6 +82,7 @@ func NewController(
 	sseStreamer sse.Streamer,
 	lfsStore store.LFSObjectStore,
 	auditService audit.Service,
+	userGroupService usergroup.Service,
 ) *Controller {
 	return &Controller{
 		authorizer:          authorizer,
@@ -100,6 +103,7 @@ func NewController(
 		sseStreamer:         sseStreamer,
 		lfsStore:            lfsStore,
 		auditService:        auditService,
+		userGroupService:    userGroupService,
 	}
 }
 

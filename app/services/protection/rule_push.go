@@ -1,0 +1,69 @@
+// Copyright 2023 Harness, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package protection
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/harness/gitness/types"
+)
+
+const TypePush types.RuleType = "push"
+
+// Push implements protection rules for the rule type TypePush.
+type Push struct {
+	Bypass      DefBypass      `json:"bypass"`
+	PushObjects DefPushObjects `json:"push_objects"`
+}
+
+var (
+	_ Definition     = (*Push)(nil)
+	_ PushProtection = (*Push)(nil)
+)
+
+func (p *Push) PushObjectsVerify(
+	ctx context.Context,
+	in PushObjectsVerifyInput,
+) (PushObjectsVerifyOutput, []types.RuleViolations, error) {
+	out, violations, err := p.PushObjects.PushObjectsVerify(ctx, in)
+	if err != nil {
+		return PushObjectsVerifyOutput{}, nil, fmt.Errorf("file size limit verify error: %w", err)
+	}
+
+	bypassable := p.Bypass.matches(ctx, in.Actor, in.IsRepoOwner, in.ResolveUserGroupID)
+	for i := range violations {
+		violations[i].Bypassable = bypassable
+		violations[i].Bypassed = bypassable
+	}
+
+	return out, violations, nil
+}
+
+func (p *Push) UserIDs() ([]int64, error) {
+	return p.Bypass.UserIDs, nil
+}
+
+func (p *Push) UserGroupIDs() ([]int64, error) {
+	return p.Bypass.UserGroupIDs, nil
+}
+
+func (p *Push) Sanitize() error {
+	if err := p.Bypass.Sanitize(); err != nil {
+		return fmt.Errorf("bypass: %w", err)
+	}
+
+	return nil
+}

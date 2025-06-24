@@ -35,5 +35,9 @@ func ProvideManager(ruleStore store.RuleStore) (*Manager, error) {
 		return nil, err
 	}
 
+	if err := m.Register(TypePush, func() Definition { return &Push{} }); err != nil {
+		return nil, err
+	}
+
 	return m, nil
 }

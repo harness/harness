@@ -33,18 +33,28 @@ type (
 	}
 
 	Protection interface {
-		RefChangeVerifier
 		UserIDs() ([]int64, error)
 		UserGroupIDs() ([]int64, error)
 	}
 
+	RefProtection interface {
+		RefChangeVerifier
+	}
+
 	BranchProtection interface {
+		RefProtection
 		MergeVerifier
 		CreatePullReqVerifier
 		Protection
 	}
 
 	TagProtection interface {
+		RefProtection
+		Protection
+	}
+
+	PushProtection interface {
+		PushObjectsVerifier
 		Protection
 	}
 
@@ -187,6 +197,21 @@ func (m *Manager) ListRepoTagRules(
 	}, nil
 }
 
+func (m *Manager) ListRepoPushRules(
+	ctx context.Context,
+	repoID int64,
+) (PushProtection, error) {
+	ruleInfos, err := m.ListRepoRules(ctx, repoID, TypePush)
+	if err != nil {
+		return pushRuleSet{}, err
+	}
+
+	return pushRuleSet{
+		rules:   ruleInfos,
+		manager: m,
+	}, nil
+}
+
 func (m *Manager) FilterCreateBranchProtection(rules []types.RuleInfoInternal) BranchProtection {
 	var branchRules []types.RuleInfoInternal
 
@@ -213,6 +238,21 @@ func (m *Manager) FilterCreateTagProtection(rules []types.RuleInfoInternal) TagP
 
 	return tagRuleSet{
 		rules:   tagRules,
+		manager: m,
+	}
+}
+
+func (m *Manager) FilterCreatePushProtection(rules []types.RuleInfoInternal) PushProtection {
+	var pushRules []types.RuleInfoInternal
+
+	for _, rule := range rules {
+		if rule.Type == TypePush {
+			pushRules = append(pushRules, rule)
+		}
+	}
+
+	return pushRuleSet{
+		rules:   pushRules,
 		manager: m,
 	}
 }

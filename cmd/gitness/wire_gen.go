@@ -463,7 +463,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	githookController := githook.ProvideController(authorizer, principalStore, repoStore, repoFinder, reporter9, eventsReporter, gitInterface, pullReqStore, provider, protectionManager, clientFactory, resourceLimiter, settingsService, preReceiveExtender, updateExtender, postReceiveExtender, streamer, lfsObjectStore, auditService)
+	githookController := githook.ProvideController(authorizer, principalStore, repoStore, repoFinder, reporter9, eventsReporter, gitInterface, pullReqStore, provider, protectionManager, clientFactory, resourceLimiter, settingsService, preReceiveExtender, updateExtender, postReceiveExtender, streamer, lfsObjectStore, auditService, usergroupService)
 	serviceaccountController := serviceaccount.NewController(principalUID, authorizer, principalStore, spaceStore, repoStore, tokenStore)
 	principalController := principal.ProvideController(principalStore, authorizer)
 	usergroupController := usergroup2.ProvideController(userGroupStore, spaceStore, spaceFinder, authorizer, usergroupService)

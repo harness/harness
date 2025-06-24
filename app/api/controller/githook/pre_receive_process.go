@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/git/hook"
@@ -31,6 +32,8 @@ func (c *Controller) processObjects(
 	repo *types.RepositoryCore,
 	principal *types.Principal,
 	refUpdates changedRefs,
+	protectionRules []types.RuleInfoInternal,
+	isRepoOwner bool,
 	in types.GithookPreReceiveInput,
 	output *hook.Output,
 ) error {
@@ -38,8 +41,21 @@ func (c *Controller) processObjects(
 		return nil
 	}
 
+	pushProtection := c.protectionManager.FilterCreatePushProtection(protectionRules)
+	out, _, err := pushProtection.PushObjectsVerify(
+		ctx,
+		protection.PushObjectsVerifyInput{
+			ResolveUserGroupID: c.userGroupService.ListUserIDsByGroupIDs,
+			Actor:              principal,
+			IsRepoOwner:        isRepoOwner,
+			RepoID:             repo.ID,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to verify git objects: %w", err)
+	}
+
 	var sizeLimit int64
-	var err error
 	sizeLimit, err = settings.RepoGet(
 		ctx,
 		c.settings,
@@ -49,6 +65,9 @@ func (c *Controller) processObjects(
 	)
 	if err != nil {
 		return fmt.Errorf("failed to check settings for file size limit: %w", err)
+	}
+	if sizeLimit == 0 || (out.FileSizeLimit > 0 && sizeLimit > out.FileSizeLimit) {
+		sizeLimit = out.FileSizeLimit
 	}
 
 	principalCommitterMatch, err := settings.RepoGet(
@@ -61,6 +80,7 @@ func (c *Controller) processObjects(
 	if err != nil {
 		return fmt.Errorf("failed to check settings for principal committer match: %w", err)
 	}
+	principalCommitterMatch = principalCommitterMatch || out.PrincipalCommitterMatch
 
 	gitLFSEnabled, err := settings.RepoGet(
 		ctx,

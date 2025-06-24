@@ -76,8 +76,8 @@ func refChangeVerifyFunc(
 	ctx context.Context,
 	in RefChangeVerifyInput,
 	violations *[]types.RuleViolations,
-) func(r *types.RuleInfoInternal, p Protection, matched []string) error {
-	return func(r *types.RuleInfoInternal, p Protection, matched []string) error {
+) func(r *types.RuleInfoInternal, p RefProtection, matched []string) error {
+	return func(r *types.RuleInfoInternal, p RefProtection, matched []string) error {
 		ruleIn := in
 		ruleIn.RefNames = matched
 
@@ -96,7 +96,7 @@ func forEachRuleMatchRefs(
 	rules []types.RuleInfoInternal,
 	defaultBranch string,
 	refNames []string,
-	fn func(r *types.RuleInfoInternal, p Protection, matched []string) error,
+	fn func(r *types.RuleInfoInternal, p RefProtection, matched []string) error,
 ) error {
 	for i := range rules {
 		r := rules[i]
@@ -111,14 +111,23 @@ func forEachRuleMatchRefs(
 
 		protection, err := manager.FromJSON(r.Type, r.Definition, false)
 		if err != nil {
-			return fmt.Errorf("forEachRuleMatchRefs: failed to parse protection definition ID=%d Type=%s: %w",
-				r.ID, r.Type, err)
+			return fmt.Errorf(
+				"forEachRuleMatchRefs: failed to parse protection definition ID=%d Type=%s: %w",
+				r.ID, r.Type, err,
+			)
 		}
 
-		err = fn(&r, protection, matched)
+		refProtection, ok := protection.(RefProtection)
+		if !ok {
+			return fmt.Errorf("unexpected type for protection: got %T, expected RefProtection", protection)
+		}
+
+		err = fn(&r, refProtection, matched)
 		if err != nil {
-			return fmt.Errorf("forEachRuleMatchRefs: failed to process rule ID=%d Type=%s: %w",
-				r.ID, r.Type, err)
+			return fmt.Errorf(
+				"forEachRuleMatchRefs: failed to process rule ID=%d Type=%s: %w",
+				r.ID, r.Type, err,
+			)
 		}
 	}
 
