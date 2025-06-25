@@ -171,24 +171,21 @@ func (l *rpmHelper) buildForVirtual(
 	if err != nil {
 		return err
 	}
-	if fileListsRegistryData != nil {
-		fileLists, err = l.buildFileLists(ctx, existingPackageInfos, registryID, rootParentID,
-			rootIdentifier, fileListsRegistryData, principalID)
-		if err != nil {
-			return err
-		}
+	fileLists, err = l.buildFileLists(ctx, existingPackageInfos, registryID, rootParentID,
+		rootIdentifier, fileListsRegistryData, principalID)
+	if err != nil {
+		return err
 	}
 
 	otherRegistryData, err := l.getRegistryData(ctx, registries, rootIdentifier, "other")
 	if err != nil {
 		return err
 	}
-	if otherRegistryData != nil {
-		other, err = l.buildOther(ctx, existingPackageInfos, registryID, rootParentID,
-			rootIdentifier, otherRegistryData, principalID)
-		if err != nil {
-			return err
-		}
+
+	other, err = l.buildOther(ctx, existingPackageInfos, registryID, rootParentID,
+		rootIdentifier, otherRegistryData, principalID)
+	if err != nil {
+		return err
 	}
 
 	err = l.buildRepoMDFile(ctx, registryID, rootParentID,
@@ -269,7 +266,7 @@ func (l *rpmHelper) getRegistryData(
 	rootIdentifier string,
 	refType string,
 ) ([]registryData, error) {
-	var rd []registryData
+	var rd = make([]registryData, 0)
 	for i := 1; i < len(registries); i++ {
 		r := registries[i]
 		fileRef, err := l.getRefsForHarnessRepos(ctx, r.ID, r.Name, rootIdentifier, refType)
