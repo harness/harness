@@ -239,7 +239,7 @@ func (o Orchestrator) FinishStopGitspaceContainer(
 	return nil
 }
 
-func (o Orchestrator) stopAndRemoveGitspaceContainer(
+func (o Orchestrator) removeGitspaceContainer(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 	infra types.Infrastructure,
@@ -268,7 +268,7 @@ func (o Orchestrator) stopAndRemoveGitspaceContainer(
 	return nil
 }
 
-func (o Orchestrator) FinishStopAndRemoveGitspaceContainer(
+func (o Orchestrator) FinishRemoveGitspaceContainer(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 	infra types.Infrastructure,
@@ -347,15 +347,15 @@ func (o Orchestrator) TriggerCleanupInstanceResources(ctx context.Context, gitsp
 	return nil
 }
 
-// TriggerStopAndDeleteGitspace removes the Gitspace container and triggers infra deprovisioning to deprovision
+// TriggerDeleteGitspace removes the Gitspace container and triggers infra deprovisioning to deprovision
 // the infra resources.
 // canDeleteUserData = false -> trigger deprovision of all resources except storage associated to user data.
 // canDeleteUserData = true -> trigger deprovision of all resources.
-func (o Orchestrator) TriggerStopAndDeleteGitspace(
+func (o Orchestrator) TriggerDeleteGitspace(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 	canDeleteUserData bool,
-) error {
+) *types.GitspaceError {
 	infra, err := o.getProvisionedInfra(ctx, gitspaceConfig,
 		[]enum.InfraStatus{
 			enum.InfraStatusPending,
@@ -366,14 +366,23 @@ func (o Orchestrator) TriggerStopAndDeleteGitspace(
 			enum.InfraStatusUnknown,
 		})
 	if err != nil {
-		return fmt.Errorf(
+		err := fmt.Errorf(
 			"unable to find provisioned infra while triggering delete for gitspace instance %s: %w",
 			gitspaceConfig.GitspaceInstance.Identifier, err)
+		return &types.GitspaceError{
+			Error:        err,
+			ErrorMessage: ptr.String(err.Error()),
+		}
 	}
-	if err = o.stopAndRemoveGitspaceContainer(ctx, gitspaceConfig, *infra, canDeleteUserData); err != nil {
+	if err = o.removeGitspaceContainer(ctx, gitspaceConfig, *infra, canDeleteUserData); err != nil {
 		log.Warn().Msgf("error stopping and removing gitspace container: %v", err)
 		// If stop fails, delete the gitspace anyway
-		return o.triggerDeleteGitspace(ctx, gitspaceConfig, infra, canDeleteUserData)
+		if err := o.triggerDeleteGitspace(ctx, gitspaceConfig, infra, canDeleteUserData); err != nil {
+			return &types.GitspaceError{
+				Error:        err,
+				ErrorMessage: ptr.String(err.Error()),
+			}
+		}
 	}
 
 	// TODO: Add a job for cleanup of infra if stop fails
@@ -382,7 +391,12 @@ func (o Orchestrator) TriggerStopAndDeleteGitspace(
 		gitspaceConfig.GitspaceInstance.Identifier,
 	)
 	if err = o.waitForGitspaceCleanupOrTimeout(ctx, gitspaceConfig, 15*time.Minute, 60*time.Second); err != nil {
-		return o.triggerDeleteGitspace(ctx, gitspaceConfig, infra, canDeleteUserData)
+		if err := o.triggerDeleteGitspace(ctx, gitspaceConfig, infra, canDeleteUserData); err != nil {
+			return &types.GitspaceError{
+				Error:        err,
+				ErrorMessage: ptr.String(err.Error()),
+			}
+		}
 	}
 	return nil
 }

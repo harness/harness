@@ -289,7 +289,7 @@ func (o Orchestrator) ResumeDeleteGitspace(
 
 	instanceState = enum.GitspaceInstanceStateDeleted
 
-	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeGitspaceActionStopCompleted)
+	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeGitspaceActionResetCompleted)
 	return instanceState, nil
 }
 

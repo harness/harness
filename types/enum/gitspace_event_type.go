@@ -67,6 +67,10 @@ var gitspaceEventTypes = []GitspaceEventType{
 	GitspaceEventTypeAgentGitspaceStateReportUnknown,
 
 	GitspaceEventTypeGitspaceAutoStop,
+
+	GitspaceEventTypeGitspaceActionReset,
+	GitspaceEventTypeGitspaceActionResetCompleted,
+	GitspaceEventTypeGitspaceActionResetFailed,
 }
 
 const (
@@ -79,6 +83,11 @@ const (
 	GitspaceEventTypeGitspaceActionStop          GitspaceEventType = "gitspace_action_stop"
 	GitspaceEventTypeGitspaceActionStopCompleted GitspaceEventType = "gitspace_action_stop_completed"
 	GitspaceEventTypeGitspaceActionStopFailed    GitspaceEventType = "gitspace_action_stop_failed"
+
+	// Reset action events.
+	GitspaceEventTypeGitspaceActionReset                            = "gitspace_action_reset"
+	GitspaceEventTypeGitspaceActionResetCompleted GitspaceEventType = "gitspace_action_reset_completed"
+	GitspaceEventTypeGitspaceActionResetFailed    GitspaceEventType = "gitspace_action_reset_failed"
 
 	// Fetch devcontainer config events.
 	GitspaceEventTypeFetchDevcontainerStart     GitspaceEventType = "fetch_devcontainer_start"
@@ -170,6 +179,10 @@ func EventsMessageMapping() map[GitspaceEventType]string {
 		GitspaceEventTypeGitspaceActionStop:          "Stopping gitspace...",
 		GitspaceEventTypeGitspaceActionStopCompleted: "Stopped gitspace",
 		GitspaceEventTypeGitspaceActionStopFailed:    "Stopping gitspace failed",
+
+		GitspaceEventTypeGitspaceActionReset:          "Resetting gitspace...",
+		GitspaceEventTypeGitspaceActionResetCompleted: "Resetted gitspace",
+		GitspaceEventTypeGitspaceActionResetFailed:    "Failed to reset gitspace",
 
 		GitspaceEventTypeFetchDevcontainerStart:     "Fetching devcontainer config...",
 		GitspaceEventTypeFetchDevcontainerCompleted: "Fetched devcontainer config",

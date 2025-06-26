@@ -115,17 +115,17 @@ func (s *Service) handleGitspaceOperationsEvent(
 		if !ok {
 			return fmt.Errorf("failed to cast delete response")
 		}
-		finishStopAndRemoveErr := s.orchestrator.FinishStopAndRemoveGitspaceContainer(
+		finishRemoveErr := s.orchestrator.FinishRemoveGitspaceContainer(
 			ctxWithTimedOut,
 			*config,
 			payload.Infra,
 			deleteResponse,
 		)
-		if finishStopAndRemoveErr != nil {
-			s.emitGitspaceConfigEvent(ctxWithTimedOut, config, enum.GitspaceEventTypeGitspaceActionStopFailed)
+		if finishRemoveErr != nil {
+			s.emitGitspaceConfigEvent(ctxWithTimedOut, config, enum.GitspaceEventTypeGitspaceActionResetFailed)
 			instance.State = enum.GitspaceInstanceStateError
-			instance.ErrorMessage = finishStopAndRemoveErr.ErrorMessage
-			err = fmt.Errorf("failed to finish trigger start gitspace: %w", finishStopAndRemoveErr.Error)
+			instance.ErrorMessage = finishRemoveErr.ErrorMessage
+			err = fmt.Errorf("failed to finish trigger reset gitspace: %w", finishRemoveErr.Error)
 		}
 
 	default:

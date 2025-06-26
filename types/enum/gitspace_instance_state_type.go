@@ -30,6 +30,7 @@ var gitspaceInstanceStateTypes = []GitspaceInstanceStateType{
 	GitspaceInstanceStateStopping,
 	GitSpaceInstanceStateCleaning,
 	GitspaceInstanceStateCleaned,
+	GitSpaceInstanceStateResetting,
 }
 
 const (
@@ -41,9 +42,10 @@ const (
 	GitspaceInstanceStateDeleted       GitspaceInstanceStateType = "deleted"
 	GitspaceInstanceStateCleaned       GitspaceInstanceStateType = "cleaned"
 
-	GitspaceInstanceStateStarting GitspaceInstanceStateType = "starting"
-	GitspaceInstanceStateStopping GitspaceInstanceStateType = "stopping"
-	GitSpaceInstanceStateCleaning GitspaceInstanceStateType = "cleaning"
+	GitspaceInstanceStateStarting  GitspaceInstanceStateType = "starting"
+	GitspaceInstanceStateStopping  GitspaceInstanceStateType = "stopping"
+	GitSpaceInstanceStateCleaning  GitspaceInstanceStateType = "cleaning"
+	GitSpaceInstanceStateResetting GitspaceInstanceStateType = "resetting"
 )
 
 func (g GitspaceInstanceStateType) IsFinalStatus() bool {
@@ -63,7 +65,8 @@ func (g GitspaceInstanceStateType) IsBusyStatus() bool {
 	switch g {
 	case GitspaceInstanceStateStarting,
 		GitspaceInstanceStateStopping,
-		GitSpaceInstanceStateCleaning:
+		GitSpaceInstanceStateCleaning,
+		GitSpaceInstanceStateResetting:
 		return true
 	default:
 		return false

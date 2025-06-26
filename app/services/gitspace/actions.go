@@ -35,7 +35,7 @@ const defaultMachineUser = "harness"
 const AllowedUIDAlphabet = "abcdefghijklmnopqrstuvwxyz0123456789"
 
 // gitspaceInstanceCleaningTimedOutMins is timeout for which a gitspace instance can be in cleaning state.
-const gitspaceInstanceCleaningTimedOutMins = 15
+const gitspaceInstanceCleaningTimedOutMins = 10
 
 func (c *Service) gitspaceBusyOperation(
 	ctx context.Context,
@@ -67,6 +67,8 @@ func (c *Service) submitAsyncOps(
 		config.GitspaceInstance.State = enum.GitspaceInstanceStateStarting
 	case enum.GitspaceActionTypeStop:
 		config.GitspaceInstance.State = enum.GitspaceInstanceStateStopping
+	case enum.GitspaceActionTypeReset:
+		config.GitspaceInstance.State = enum.GitSpaceInstanceStateResetting
 	}
 	if updateErr := c.UpdateInstance(ctx, config.GitspaceInstance); updateErr != nil {
 		log.Err(updateErr).Msgf(
@@ -104,6 +106,8 @@ func (c *Service) submitAsyncOps(
 				c.EmitGitspaceConfigEvent(submitCtx, config, enum.GitspaceEventTypeGitspaceActionStartFailed)
 			case enum.GitspaceActionTypeStop:
 				c.EmitGitspaceConfigEvent(submitCtx, config, enum.GitspaceEventTypeGitspaceActionStopFailed)
+			case enum.GitspaceActionTypeReset:
+				c.EmitGitspaceConfigEvent(submitCtx, config, enum.GitspaceEventTypeGitspaceActionResetFailed)
 			}
 		}
 
@@ -125,10 +129,12 @@ func (c *Service) triggerOrchestrator(
 		orchestrateErr = c.orchestrator.TriggerStartGitspace(ctxWithTimedOut, config)
 	case enum.GitspaceActionTypeStop:
 		orchestrateErr = c.orchestrator.TriggerStopGitspace(ctxWithTimedOut, config)
+	case enum.GitspaceActionTypeReset:
+		orchestrateErr = c.orchestrator.TriggerDeleteGitspace(ctxWithTimedOut, config, false)
 	}
 	if orchestrateErr != nil {
 		orchestrateErr.Error =
-			fmt.Errorf("failed to start/stop gitspace: %s %w", config.Identifier, orchestrateErr.Error)
+			fmt.Errorf("failed to start/stop/reset gitspace: %s %w", config.Identifier, orchestrateErr.Error)
 		errChannel <- orchestrateErr
 	}
 }
