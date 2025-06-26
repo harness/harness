@@ -42,6 +42,7 @@ func ProvideOrchestrator(
 	ideFactory ide.Factory,
 	secretResolverFactory *secret.ResolverFactory,
 	gitspaceInstanceStore store.GitspaceInstanceStore,
+	gitspaceConfigStore store.GitspaceConfigStore,
 ) Orchestrator {
 	return NewOrchestrator(
 		scm,
@@ -53,5 +54,6 @@ func ProvideOrchestrator(
 		ideFactory,
 		secretResolverFactory,
 		gitspaceInstanceStore,
+		gitspaceConfigStore,
 	)
 }

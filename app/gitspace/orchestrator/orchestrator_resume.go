@@ -181,8 +181,18 @@ func (o Orchestrator) FinishResumeStartGitspace(
 	gitspaceInstance.LastHeartbeat = &now
 	gitspaceInstance.State = enum.GitspaceInstanceStateRunning
 
-	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeGitspaceActionStartCompleted)
+	if gitspaceConfig.IsMarkedForReset {
+		gitspaceConfig.IsMarkedForReset = false
+		err := o.gitspaceConfigStore.Update(ctx, &gitspaceConfig)
+		if err != nil {
+			return *gitspaceInstance, &types.GitspaceError{
+				Error:        err,
+				ErrorMessage: ptr.String(err.Error()),
+			}
+		}
+	}
 
+	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeGitspaceActionStartCompleted)
 	return *gitspaceInstance, nil
 }
 

@@ -390,7 +390,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	ideFactory := ide.ProvideIDEFactory(vsCode, vsCodeWeb, v)
 	passwordResolver := secret.ProvidePasswordResolver()
 	resolverFactory := secret.ProvideResolverFactory(passwordResolver)
-	orchestratorOrchestrator := orchestrator.ProvideOrchestrator(scmSCM, platformConnector, infraProvisioner, containerFactory, reporter3, orchestratorConfig, ideFactory, resolverFactory, gitspaceInstanceStore)
+	orchestratorOrchestrator := orchestrator.ProvideOrchestrator(scmSCM, platformConnector, infraProvisioner, containerFactory, reporter3, orchestratorConfig, ideFactory, resolverFactory, gitspaceInstanceStore, gitspaceConfigStore)
 	reporter6, err := events8.ProvideReporter(eventsSystem)
 	if err != nil {
 		return nil, err

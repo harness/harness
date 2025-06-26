@@ -52,6 +52,7 @@ type Orchestrator struct {
 	ideFactory                   ide.Factory
 	secretResolverFactory        *secret.ResolverFactory
 	gitspaceInstanceStore        store.GitspaceInstanceStore
+	gitspaceConfigStore          store.GitspaceConfigStore
 }
 
 func NewOrchestrator(
@@ -64,6 +65,7 @@ func NewOrchestrator(
 	ideFactory ide.Factory,
 	secretResolverFactory *secret.ResolverFactory,
 	gitspaceInstanceStore store.GitspaceInstanceStore,
+	gitspaceConfigStore store.GitspaceConfigStore,
 ) Orchestrator {
 	return Orchestrator{
 		scm:                          scm,
@@ -75,6 +77,7 @@ func NewOrchestrator(
 		ideFactory:                   ideFactory,
 		secretResolverFactory:        secretResolverFactory,
 		gitspaceInstanceStore:        gitspaceInstanceStore,
+		gitspaceConfigStore:          gitspaceConfigStore,
 	}
 }
 
@@ -257,7 +260,7 @@ func (o Orchestrator) stopAndRemoveGitspaceContainer(
 	// NOTE: Currently we use a static identifier as the Gitspace user.
 	gitspaceConfig.GitspaceUser.Identifier = harnessUser
 
-	err = containerOrchestrator.StopAndRemoveGitspace(ctx, gitspaceConfig, infra, canDeleteUserData)
+	err = containerOrchestrator.RemoveGitspace(ctx, gitspaceConfig, infra, canDeleteUserData)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceDeletionFailed)
 		log.Err(err).Msgf("error stopping the Gitspace container")

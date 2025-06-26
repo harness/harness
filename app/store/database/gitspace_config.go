@@ -53,8 +53,8 @@ const (
         gconf_code_repo_ref,
 		gconf_ssh_token_identifier,
         gconf_created_by,
-		gconf_is_marked_for_deletion
-	`
+		gconf_is_marked_for_deletion,
+        gconf_is_marked_for_reset`
 	gitspaceConfigsTable        = `gitspace_configs`
 	ReturningClause             = "RETURNING "
 	gitspaceConfigSelectColumns = "gconf_id," + gitspaceConfigInsertColumns
@@ -83,6 +83,7 @@ type gitspaceConfig struct {
 	SSHTokenIdentifier  string   `db:"gconf_ssh_token_identifier"`
 	CreatedBy           null.Int `db:"gconf_created_by"`
 	IsMarkedForDeletion bool     `db:"gconf_is_marked_for_deletion"`
+	IsMarkedForReset    bool     `db:"gconf_is_marked_for_reset"`
 }
 
 type gitspaceConfigWithLatestInstance struct {
@@ -236,6 +237,7 @@ func (s gitspaceConfigStore) Create(ctx context.Context, gitspaceConfig *types.G
 			gitspaceConfig.SSHTokenIdentifier,
 			gitspaceConfig.GitspaceUser.ID,
 			gitspaceConfig.IsMarkedForDeletion,
+			gitspaceConfig.IsMarkedForReset,
 		).
 		Suffix(ReturningClause + "gconf_id")
 	sql, args, err := stmt.ToSql()
@@ -261,6 +263,7 @@ func (s gitspaceConfigStore) Update(ctx context.Context,
 		Set("gconf_infra_provider_resource_id", dbGitspaceConfig.InfraProviderResourceID).
 		Set("gconf_is_deleted", dbGitspaceConfig.IsDeleted).
 		Set("gconf_is_marked_for_deletion", dbGitspaceConfig.IsMarkedForDeletion).
+		Set("gconf_is_marked_for_reset", dbGitspaceConfig.IsMarkedForReset).
 		Where("gconf_id = ?", gitspaceConfig.ID)
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -293,6 +296,7 @@ func mapToInternalGitspaceConfig(config *types.GitspaceConfig) *gitspaceConfig {
 		SpaceID:                 config.SpaceID,
 		IsDeleted:               config.IsDeleted,
 		IsMarkedForDeletion:     config.IsMarkedForDeletion,
+		IsMarkedForReset:        config.IsMarkedForReset,
 		Created:                 config.Created,
 		Updated:                 config.Updated,
 		SSHTokenIdentifier:      config.SSHTokenIdentifier,
@@ -479,6 +483,7 @@ func (s gitspaceConfigStore) mapDBToGitspaceConfig(
 		Updated:             in.Updated,
 		SSHTokenIdentifier:  in.SSHTokenIdentifier,
 		IsMarkedForDeletion: in.IsMarkedForDeletion,
+		IsMarkedForReset:    in.IsMarkedForReset,
 		IsDeleted:           in.IsDeleted,
 		CodeRepo:            codeRepo,
 		GitspaceUser: types.GitspaceUser{

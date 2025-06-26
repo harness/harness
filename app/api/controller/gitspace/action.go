@@ -91,6 +91,19 @@ func (c *Controller) Action(
 		c.gitspaceSvc.EmitGitspaceConfigEvent(ctx, *gitspaceConfig, enum.GitspaceEventTypeGitspaceActionStop)
 		err = c.gitspaceSvc.StopGitspaceAction(ctx, *gitspaceConfig, time.Now())
 		return gitspaceConfig, err
+	case enum.GitspaceActionTypeReset:
+		c.gitspaceSvc.EmitGitspaceConfigEvent(ctx, *gitspaceConfig, enum.GitspaceEventTypeInfraResetStart)
+		// Resetting the gitspace will remove the latest gitspace instance and all its resources.
+		// TODO: This is synchronous, we should make it asynchronous in the future.
+		err = c.gitspaceSvc.RemoveGitspace(ctx, *gitspaceConfig, false)
+		if err != nil {
+			return nil, fmt.Errorf("failed to remove gitspace for resetting: %w", err)
+		}
+		gitspaceConfig.IsMarkedForReset = true
+		if err := c.gitspaceSvc.UpdateConfig(ctx, gitspaceConfig); err != nil {
+			return nil, fmt.Errorf("failed to update gitspace config for resetting: %w", err)
+		}
+		return gitspaceConfig, err
 	default:
 		return nil, fmt.Errorf("unknown action %s on gitspace : %s", string(in.Action), gitspaceConfig.Identifier)
 	}

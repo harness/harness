@@ -31,6 +31,7 @@ type GitspaceConfig struct {
 	SpaceID               int64                  `json:"-"`
 	IsDeleted             bool                   `json:"-"`
 	IsMarkedForDeletion   bool                   `json:"-"`
+	IsMarkedForReset      bool                   `json:"-"`
 	GitspaceInstance      *GitspaceInstance      `json:"instance"`
 	SpacePath             string                 `json:"space_path"`
 	Created               int64                  `json:"created"`
@@ -118,9 +119,12 @@ func (g *GitspaceInstance) GetGitspaceState() (enum.GitspaceStateType, error) {
 	switch instanceState {
 	case enum.GitspaceInstanceStateRunning:
 		return enum.GitspaceStateRunning, nil
-	case enum.GitspaceInstanceStateStopped, enum.GitspaceInstanceStateDeleted, enum.GitspaceInstanceStateCleaned:
+	case enum.GitspaceInstanceStateStopped:
 		return enum.GitspaceStateStopped, nil
-	case emptyGitspaceInstanceState, enum.GitspaceInstanceStateUninitialized:
+	case emptyGitspaceInstanceState,
+		enum.GitspaceInstanceStateUninitialized,
+		enum.GitspaceInstanceStateDeleted,
+		enum.GitspaceInstanceStateCleaned:
 		return enum.GitspaceStateUninitialized, nil
 	case enum.GitspaceInstanceStateError,
 		enum.GitspaceInstanceStateUnknown:

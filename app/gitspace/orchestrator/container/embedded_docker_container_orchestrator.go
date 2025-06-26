@@ -132,6 +132,13 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 	// todo : update the code when private repository integration is supported in gitness
 	imagAuthMap := make(map[string]gitspaceTypes.DockerRegistryAuth)
 
+	if gitspaceConfig.IsMarkedForReset {
+		logger.Debug().Msg("Resetting gitspace instance")
+		if err = e.RemoveGitspace(ctx, gitspaceConfig, infra, false); err != nil {
+			return fmt.Errorf("error resetting gitspace instance: %w", err)
+		}
+	}
+
 	// Step 3: Check the current state of the container
 	state, err := e.checkContainerState(ctx, dockerClient, containerName)
 	if err != nil {
@@ -358,9 +365,9 @@ func (e *EmbeddedDockerOrchestrator) Status(_ context.Context, _ types.Infrastru
 	return nil
 }
 
-// StopAndRemoveGitspace stops the container if not stopped and removes it.
+// RemoveGitspace force removes the container and the operation is idempotent.
 // If the container is already removed, it returns.
-func (e *EmbeddedDockerOrchestrator) StopAndRemoveGitspace(
+func (e *EmbeddedDockerOrchestrator) RemoveGitspace(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 	infra types.Infrastructure,
@@ -376,18 +383,6 @@ func (e *EmbeddedDockerOrchestrator) StopAndRemoveGitspace(
 	}
 	defer e.closeDockerClient(dockerClient)
 
-	// Step 2: Check the current state of the container
-	state, err := e.checkContainerState(ctx, dockerClient, containerName)
-	if err != nil {
-		return err
-	}
-
-	// Step 3: Handle container states
-	if state == ContainerStateRemoved {
-		logger.Debug().Msg("gitspace is already removed")
-		return nil
-	}
-
 	// Step 4: Create logger stream for stopping and removing the container
 	logStreamInstance, err := e.createLogStream(ctx, gitspaceConfig.ID)
 	if err != nil {
@@ -395,21 +390,15 @@ func (e *EmbeddedDockerOrchestrator) StopAndRemoveGitspace(
 	}
 	defer e.flushLogStream(logStreamInstance, gitspaceConfig.ID)
 
-	// Step 5: Stop the container if it's not already stopped
-	if state != ContainerStateStopped {
-		logger.Debug().Msg("stopping gitspace")
-		if err = ManageContainer(
-			ctx, ContainerActionStop, containerName, dockerClient, logStreamInstance); err != nil {
-			return fmt.Errorf("failed to stop gitspace %s: %w", containerName, err)
-		}
-		logger.Debug().Msg("stopped gitspace")
-	}
-
-	// Step 6: Remove the container
 	logger.Debug().Msg("removing gitspace")
 	if err = ManageContainer(
 		ctx, ContainerActionRemove, containerName, dockerClient, logStreamInstance); err != nil {
-		return fmt.Errorf("failed to remove gitspace %s: %w", containerName, err)
+		if client.IsErrNotFound(err) {
+			logger.Debug().Msg("gitspace is already removed")
+			err = nil
+		} else {
+			return fmt.Errorf("failed to remove gitspace %s: %w", containerName, err)
+		}
 	}
 
 	err = e.eventReporter.EmitGitspaceOperationsEvent(

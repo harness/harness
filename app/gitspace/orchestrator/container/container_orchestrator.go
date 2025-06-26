@@ -41,8 +41,8 @@ type Orchestrator interface {
 	// StopGitspace stops the gitspace container.
 	StopGitspace(ctx context.Context, config types.GitspaceConfig, infra types.Infrastructure) error
 
-	// StopAndRemoveGitspace stops and removes the gitspace container.
-	StopAndRemoveGitspace(
+	// RemoveGitspace force removes the gitspace container.
+	RemoveGitspace(
 		ctx context.Context,
 		config types.GitspaceConfig,
 		infra types.Infrastructure,

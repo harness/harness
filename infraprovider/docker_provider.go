@@ -186,13 +186,11 @@ func (d DockerProvider) Stop(
 // CleanupInstanceResources is NOOP as this provider does not utilise infra exclusively associated to a gitspace
 // instance.
 func (d DockerProvider) CleanupInstanceResources(ctx context.Context, infra types.Infrastructure) error {
+	infra.Status = enum.InfraStatusStopped
 	event := &events.GitspaceInfraEventPayload{
 		Infra: infra,
 		Type:  enum.InfraEventCleanup,
 	}
-
-	infra.Status = enum.InfraStatusStopped
-
 	err := d.eventReporter.EmitGitspaceInfraEvent(ctx, events.GitspaceInfraEvent, event)
 	if err != nil {
 		return fmt.Errorf("error emitting gitspace infra event for cleanup: %w", err)
