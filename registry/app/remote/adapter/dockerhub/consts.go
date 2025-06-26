@@ -17,29 +17,6 @@
 package dockerhub
 
 const (
-	baseURL             = "https://hub.docker.com"
-	registryURL         = "https://registry-1.docker.io"
-	loginPath           = "/v2/users/login/"
-	listNamespacePath   = "/v2/repositories/namespaces"
-	createNamespacePath = "/v2/orgs/"
+	baseURL     = "https://hub.docker.com"
+	registryURL = "https://registry-1.docker.io"
 )
-
-// func getNamespacePath(namespace string) string {
-// 	return fmt.Sprintf("/v2/orgs/%s/", namespace)
-// }
-
-// func listReposPath(namespace, name string, page, pageSize int) string {
-// 	if len(name) == 0 {
-// 		return fmt.Sprintf("/v2/repositories/%s/?page=%d&page_size=%d", namespace, page, pageSize)
-// 	}
-
-// 	return fmt.Sprintf("/v2/repositories/%s/?name=%s&page=%d&page_size=%d", namespace, name, page, pageSize)
-// }
-
-// func listTagsPath(namespace, registry string, page, pageSize int) string {
-// 	return fmt.Sprintf("/v2/repositories/%s/%s/tags/?page=%d&page_size=%d", namespace, registry, page, pageSize)
-// }
-
-// func deleteTagPath(namespace, registry, tag string) string {
-// 	return fmt.Sprintf("/v2/repositories/%s/%s/tags/%s/", namespace, registry, tag)
-// }

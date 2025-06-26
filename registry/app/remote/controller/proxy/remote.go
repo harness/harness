@@ -123,6 +123,9 @@ func (r *remoteHelper) GetImageName(
 	ctx context.Context, spaceFinder refcache.SpaceFinder, imageName string,
 ) (string, error) {
 	adapterType := r.upstreamProxy.Source
+	if adapterType == string(api.UpstreamConfigSourceCustom) {
+		return imageName, nil
+	}
 	factory, err := adapter.GetFactory(adapterType)
 	if err != nil {
 		return "", err
