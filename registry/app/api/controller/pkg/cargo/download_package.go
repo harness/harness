@@ -35,6 +35,7 @@ func (c *controller) DownloadPackage(
 		info.RegIdentifier = registry.Name
 		info.RegistryID = registry.ID
 		info.Registry = registry
+		info.ParentID = registry.ParentID
 		cargoRegistry, ok := a.(cargo.Registry)
 		if !ok {
 			return c.getDownloadPackageErrorResponse(
