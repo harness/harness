@@ -509,6 +509,20 @@ func GetGenericArtifactFileDownloadCommand(
 	return downloadCommand
 }
 
+func getDownloadURL(registryURL string,
+	packageType a.PackageType, artifact, version, filename string) string {
+	//nolint:exhaustive
+	switch packageType {
+	case a.PackageTypeGENERIC:
+		return fmt.Sprintf("%s/%s:%s:%s", registryURL, artifact, version, filename)
+	case a.PackageTypeCARGO, a.PackageTypeMAVEN, a.PackageTypeNPM, a.PackageTypeNUGET, a.PackageTypePYTHON,
+		a.PackageTypeRPM:
+		return fmt.Sprintf("%s/%s/%s/%s", registryURL, artifact, version, filename)
+	default:
+		return ""
+	}
+}
+
 func GetNPMArtifactFileDownloadCommand(
 	regURL, artifact, version, filename string,
 ) string {

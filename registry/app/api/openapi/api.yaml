@@ -765,6 +765,31 @@ paths:
           $ref: "#/components/responses/NotFound"
         500:
           $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/{artifact}/version/{version}/file/{file_name}:
+    get:
+      summary: Get Artifact file
+      description: just validate existence of Artifact file
+      operationId:  GetArtifactFile
+      tags:
+        - Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/versionPathParam"
+        - $ref: "#/components/parameters/fileNamePathParam"
+      responses:
+        200:
+          $ref: "#/components/responses/ArtifactFileResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
 
   #Tag: Docker Artifacts
   /registry/{registry_ref}/artifact/{artifact}/version/{version}/docker/details:
@@ -1287,6 +1312,21 @@ components:
               - status
               - data
               - files
+    ArtifactFileResponse:
+      description: response to head artifact file
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              downloadUrl:
+                type: string
+                description: download url of artifact
+              status:
+                $ref: "#/components/schemas/Status"
+            required:
+              - status
+              - downloadUrl
     HelmArtifactDetailResponse:
       description: response to get helm artifact detail
       content:
@@ -3017,6 +3057,13 @@ components:
       in: path
       required: true
       description: Name of Artifact Version.
+      schema:
+        type: string
+    fileNamePathParam:
+      name: file_name
+      in: path
+      required: true
+      description: Name of Artifact File.
       schema:
         type: string
     digestParam:

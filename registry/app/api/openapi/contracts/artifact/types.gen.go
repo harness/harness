@@ -866,6 +866,9 @@ type ChildVersionParam string
 // DigestParam defines model for digestParam.
 type DigestParam string
 
+// FileNamePathParam defines model for fileNamePathParam.
+type FileNamePathParam string
+
 // FromDateParam defines model for fromDateParam.
 type FromDateParam string
 
@@ -921,6 +924,15 @@ type WebhookIdentifierPathParam string
 type ArtifactDetailResponse struct {
 	// Data Artifact Detail
 	Data ArtifactDetail `json:"data"`
+
+	// Status Indicates if the request was successful or not
+	Status Status `json:"status"`
+}
+
+// ArtifactFileResponse defines model for ArtifactFileResponse.
+type ArtifactFileResponse struct {
+	// DownloadUrl download url of artifact
+	DownloadUrl string `json:"downloadUrl"`
 
 	// Status Indicates if the request was successful or not
 	Status Status `json:"status"`

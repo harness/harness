@@ -235,6 +235,18 @@ func GetAllArtifactFilesResponse(
 	}
 }
 
+func GetArtifactFileResponseJSONResponse(
+	registryURL string,
+	packageType artifactapi.PackageType,
+	artifactName string,
+	version string,
+	fileName string,
+) *artifactapi.ArtifactFileResponseJSONResponse {
+	return &artifactapi.ArtifactFileResponseJSONResponse{
+		Status:      artifactapi.StatusSUCCESS,
+		DownloadUrl: getDownloadURL(registryURL, packageType, artifactName, version, fileName),
+	}
+}
 func GetArtifactFilesMetadata(
 	metadata *[]types.FileNodeMetadata,
 	registryURL string,
