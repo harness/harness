@@ -146,6 +146,8 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/nuget"
 	"github.com/harness/gitness/registry/app/pkg/python"
 	"github.com/harness/gitness/registry/app/pkg/rpm"
+	refcache2 "github.com/harness/gitness/registry/app/services/refcache"
+	cache2 "github.com/harness/gitness/registry/app/store/cache"
 	database2 "github.com/harness/gitness/registry/app/store/database"
 	"github.com/harness/gitness/registry/app/utils/cargo"
 	"github.com/harness/gitness/registry/gc"
@@ -491,7 +493,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	storageService := docker.StorageServiceProvider(config, storageDriver)
 	gcService := gc.ServiceProvider()
 	app := docker.NewApp(ctx, storageDeleter, blobRepository, spaceStore, config, storageService, gcService)
-	registryRepository := database2.ProvideRepoDao(db, mediaTypesRepository)
+	registryRepository := database2.ProvideRegistryDao(db, mediaTypesRepository)
 	manifestRepository := database2.ProvideManifestDao(db, mediaTypesRepository)
 	manifestReferenceRepository := database2.ProvideManifestRefDao(db)
 	tagRepository := database2.ProvideTagDao(db)
@@ -514,8 +516,12 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	remoteRegistry := docker.RemoteRegistryProvider(localRegistry, app, upstreamProxyConfigRepository, spaceFinder, secretService, proxyController)
 	coreController := pkg.CoreControllerProvider(registryRepository)
 	dbStore := docker.DBStoreProvider(blobRepository, imageRepository, artifactRepository, bandwidthStatRepository, downloadStatRepository)
-	dockerController := docker.ControllerProvider(localRegistry, remoteRegistry, coreController, spaceStore, authorizer, dbStore)
-	handler := api2.NewHandlerProvider(dockerController, spaceFinder, spaceStore, tokenStore, controller, authenticator, provider, authorizer, config)
+	dockerController := docker.ControllerProvider(localRegistry, remoteRegistry, coreController, spaceStore, authorizer, dbStore, spaceFinder)
+	evictor2 := cache2.ProvideEvictorRegistryCore(pubSub)
+	registryIDCache := cache2.ProvideRegistryIDCache(ctx, registryRepository, evictor2)
+	registryRootRefCache := cache2.ProvideRegRootRefCache(ctx, registryRepository, evictor2)
+	registryFinder := refcache2.ProvideRegistryFinder(registryRepository, registryIDCache, registryRootRefCache, evictor2, spaceFinder)
+	handler := api2.NewHandlerProvider(dockerController, spaceFinder, spaceStore, tokenStore, controller, authenticator, provider, authorizer, config, registryFinder)
 	registryOCIHandler := router.OCIHandlerProvider(handler)
 	genericBlobRepository := database2.ProvideGenericBlobDao(db)
 	nodesRepository := database2.ProvideNodeDao(db)
@@ -539,20 +545,20 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	registryHelper := cargo.LocalRegistryHelperProvider(fileManager, artifactRepository)
-	apiHandler := router.APIHandlerProvider(registryRepository, upstreamProxyConfigRepository, fileManager, tagRepository, manifestRepository, cleanupPolicyRepository, imageRepository, storageDriver, spaceFinder, transactor, authenticator, provider, authorizer, auditService, artifactRepository, webhooksRepository, webhooksExecutionRepository, service2, spacePathStore, artifactReporter, downloadStatRepository, config, registryBlobRepository, asyncprocessingReporter, registryHelper)
+	apiHandler := router.APIHandlerProvider(registryRepository, upstreamProxyConfigRepository, fileManager, tagRepository, manifestRepository, cleanupPolicyRepository, imageRepository, storageDriver, spaceFinder, transactor, authenticator, provider, authorizer, auditService, artifactRepository, webhooksRepository, webhooksExecutionRepository, service2, spacePathStore, artifactReporter, downloadStatRepository, config, registryBlobRepository, registryFinder, asyncprocessingReporter, registryHelper)
 	packageTagRepository := database2.ProvidePackageTagDao(db)
 	localBase := base.LocalBaseProvider(registryRepository, fileManager, transactor, imageRepository, artifactRepository, nodesRepository, packageTagRepository)
 	mavenDBStore := maven.DBStoreProvider(registryRepository, imageRepository, artifactRepository, spaceStore, bandwidthStatRepository, downloadStatRepository, nodesRepository, upstreamProxyConfigRepository)
 	mavenLocalRegistry := maven.LocalRegistryProvider(localBase, mavenDBStore, transactor, fileManager)
 	mavenController := maven.ProvideProxyController(mavenLocalRegistry, secretService, spaceFinder)
 	mavenRemoteRegistry := maven.RemoteRegistryProvider(mavenDBStore, transactor, mavenLocalRegistry, mavenController)
-	controller2 := maven.ControllerProvider(mavenLocalRegistry, mavenRemoteRegistry, authorizer, mavenDBStore)
-	mavenHandler := api2.NewMavenHandlerProvider(controller2, spaceStore, tokenStore, controller, authenticator, authorizer)
+	controller2 := maven.ControllerProvider(mavenLocalRegistry, mavenRemoteRegistry, authorizer, mavenDBStore, spaceFinder)
+	mavenHandler := api2.NewMavenHandlerProvider(controller2, spaceStore, tokenStore, controller, authenticator, authorizer, spaceFinder)
 	handler2 := router.MavenHandlerProvider(mavenHandler)
 	genericDBStore := generic.DBStoreProvider(imageRepository, artifactRepository, bandwidthStatRepository, downloadStatRepository, registryRepository)
-	genericController := generic.ControllerProvider(spaceStore, authorizer, fileManager, genericDBStore, transactor)
-	packagesHandler := api2.NewPackageHandlerProvider(registryRepository, downloadStatRepository, spaceStore, tokenStore, controller, authenticator, provider, authorizer)
-	genericHandler := api2.NewGenericHandlerProvider(spaceStore, genericController, tokenStore, controller, authenticator, provider, authorizer, packagesHandler)
+	genericController := generic.ControllerProvider(spaceStore, authorizer, fileManager, genericDBStore, transactor, spaceFinder)
+	packagesHandler := api2.NewPackageHandlerProvider(registryRepository, downloadStatRepository, spaceStore, tokenStore, controller, authenticator, provider, authorizer, spaceFinder, registryFinder)
+	genericHandler := api2.NewGenericHandlerProvider(spaceStore, genericController, tokenStore, controller, authenticator, provider, authorizer, packagesHandler, spaceFinder)
 	handler3 := router.GenericHandlerProvider(genericHandler)
 	pythonLocalRegistry := python.LocalRegistryProvider(localBase, fileManager, upstreamProxyConfigRepository, transactor, registryRepository, imageRepository, artifactRepository, provider)
 	localRegistryHelper := python.LocalRegistryHelperProvider(pythonLocalRegistry, localBase)

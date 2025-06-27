@@ -19,6 +19,7 @@ import (
 	"io"
 
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/refcache"
 	corestore "github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
@@ -44,11 +45,12 @@ const (
 var TypeRegistry = map[ArtifactType]Artifact{}
 
 type Controller struct {
-	local      *LocalRegistry
-	remote     *RemoteRegistry
-	authorizer authz.Authorizer
-	DBStore    *DBStore
-	_          dbtx.Transactor
+	local       *LocalRegistry
+	remote      *RemoteRegistry
+	authorizer  authz.Authorizer
+	DBStore     *DBStore
+	_           dbtx.Transactor
+	SpaceFinder refcache.SpaceFinder
 }
 
 type DBStore struct {
@@ -67,12 +69,14 @@ func NewController(
 	remote *RemoteRegistry,
 	authorizer authz.Authorizer,
 	dBStore *DBStore,
+	spaceFinder refcache.SpaceFinder,
 ) *Controller {
 	c := &Controller{
-		local:      local,
-		remote:     remote,
-		authorizer: authorizer,
-		DBStore:    dBStore,
+		local:       local,
+		remote:      remote,
+		authorizer:  authorizer,
+		DBStore:     dBStore,
+		SpaceFinder: spaceFinder,
 	}
 
 	TypeRegistry[LocalRegistryType] = local
@@ -122,10 +126,8 @@ func (c *Controller) GetArtifactRegistry(registry registrytypes.Registry) Artifa
 }
 
 func (c *Controller) GetArtifact(ctx context.Context, info pkg.MavenArtifactInfo) Response {
-	err := pkg.GetRegistryCheckAccess(
-		ctx, c.DBStore.RegistryDao, c.authorizer, c.DBStore.SpaceStore, info.RegIdentifier, info.ParentID,
-		enum.PermissionArtifactsDownload,
-	)
+	err := pkg.GetRegistryCheckAccess(ctx, c.authorizer, c.SpaceFinder, info.ParentID, *info.ArtifactInfo,
+		enum.PermissionArtifactsDownload)
 	if err != nil {
 		return &GetArtifactResponse{
 			Errors: []error{errcode.ErrCodeDenied},
@@ -151,10 +153,8 @@ func (c *Controller) GetArtifact(ctx context.Context, info pkg.MavenArtifactInfo
 }
 
 func (c *Controller) HeadArtifact(ctx context.Context, info pkg.MavenArtifactInfo) Response {
-	err := pkg.GetRegistryCheckAccess(
-		ctx, c.DBStore.RegistryDao, c.authorizer, c.DBStore.SpaceStore, info.RegIdentifier, info.ParentID,
-		enum.PermissionArtifactsDownload,
-	)
+	err := pkg.GetRegistryCheckAccess(ctx, c.authorizer, c.SpaceFinder, info.ParentID, *info.ArtifactInfo,
+		enum.PermissionArtifactsDownload)
 	if err != nil {
 		return &HeadArtifactResponse{
 			Errors: []error{errcode.ErrCodeDenied},
@@ -177,10 +177,8 @@ func (c *Controller) HeadArtifact(ctx context.Context, info pkg.MavenArtifactInf
 }
 
 func (c *Controller) PutArtifact(ctx context.Context, info pkg.MavenArtifactInfo, fileReader io.Reader) Response {
-	err := pkg.GetRegistryCheckAccess(
-		ctx, c.DBStore.RegistryDao, c.authorizer, c.DBStore.SpaceStore, info.RegIdentifier, info.ParentID,
-		enum.PermissionArtifactsUpload,
-	)
+	err := pkg.GetRegistryCheckAccess(ctx, c.authorizer, c.SpaceFinder, info.ParentID, *info.ArtifactInfo,
+		enum.PermissionArtifactsUpload)
 	if err != nil {
 		return &PutArtifactResponse{
 			Errors: []error{errcode.ErrCodeDenied},

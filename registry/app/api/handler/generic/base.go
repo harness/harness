@@ -24,6 +24,7 @@ import (
 	usercontroller "github.com/harness/gitness/app/api/controller/user"
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/refcache"
 	corestore "github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/api/controller/metadata"
@@ -49,7 +50,7 @@ const (
 func NewGenericArtifactHandler(
 	spaceStore corestore.SpaceStore, controller *generic.Controller, tokenStore corestore.TokenStore,
 	userCtrl *usercontroller.Controller, authenticator authn.Authenticator, urlProvider urlprovider.Provider,
-	authorizer authz.Authorizer, packageHandler packages.Handler,
+	authorizer authz.Authorizer, packageHandler packages.Handler, spaceFinder refcache.SpaceFinder,
 ) *Handler {
 	return &Handler{
 		Handler:       packageHandler,
@@ -60,6 +61,7 @@ func NewGenericArtifactHandler(
 		Authenticator: authenticator,
 		URLProvider:   urlProvider,
 		Authorizer:    authorizer,
+		SpaceFinder:   spaceFinder,
 	}
 }
 
@@ -72,6 +74,7 @@ type Handler struct {
 	Authenticator authn.Authenticator
 	URLProvider   urlprovider.Provider
 	Authorizer    authz.Authorizer
+	SpaceFinder   refcache.SpaceFinder
 }
 
 func (h *Handler) GetGenericArtifactInfo(r *http.Request) (pkg.GenericArtifactInfo, errcode.Error) {
@@ -95,9 +98,14 @@ func (h *Handler) GetGenericArtifactInfo(r *http.Request) (pkg.GenericArtifactIn
 		return pkg.GenericArtifactInfo{}, errcode.ErrCodeInvalidRequest.WithDetail(err)
 	}
 
-	rootSpace, err := h.SpaceStore.FindByRefCaseInsensitive(ctx, rootIdentifier)
+	rootSpaceID, err := h.SpaceStore.FindByRefCaseInsensitive(ctx, rootIdentifier)
 	if err != nil {
-		log.Ctx(ctx).Error().Msgf("Root space not found: %s", rootIdentifier)
+		log.Ctx(ctx).Error().Msgf("Root spaceID not found: %s", rootIdentifier)
+		return pkg.GenericArtifactInfo{}, errcode.ErrCodeRootNotFound.WithDetail(err)
+	}
+	rootSpace, err := h.SpaceFinder.FindByID(ctx, rootSpaceID)
+	if err != nil {
+		log.Ctx(ctx).Error().Msgf("Root space not found: %d", rootSpaceID)
 		return pkg.GenericArtifactInfo{}, errcode.ErrCodeRootNotFound.WithDetail(err)
 	}
 
@@ -117,7 +125,7 @@ func (h *Handler) GetGenericArtifactInfo(r *http.Request) (pkg.GenericArtifactIn
 			" not a generic artifact registry", registryIdentifier))
 	}
 
-	_, err = h.SpaceStore.Find(r.Context(), registry.ParentID)
+	_, err = h.SpaceFinder.FindByID(r.Context(), registry.ParentID)
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("Parent space not found: %d", registry.ParentID)
 		return pkg.GenericArtifactInfo{}, errcode.ErrCodeParentNotFound.WithDetail(err)

@@ -16,6 +16,7 @@ package generic
 
 import (
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/refcache"
 	gitnessstore "github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
@@ -40,8 +41,9 @@ func ControllerProvider(
 	fileManager filemanager.FileManager,
 	dBStore *DBStore,
 	tx dbtx.Transactor,
+	spaceFinder refcache.SpaceFinder,
 ) *Controller {
-	return NewController(spaceStore, authorizer, fileManager, dBStore, tx)
+	return NewController(spaceStore, authorizer, fileManager, dBStore, tx, spaceFinder)
 }
 
 var DBStoreSet = wire.NewSet(DBStoreProvider)

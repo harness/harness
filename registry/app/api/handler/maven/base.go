@@ -25,6 +25,7 @@ import (
 	usercontroller "github.com/harness/gitness/app/api/controller/user"
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/refcache"
 	corestore "github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/registry/app/api/controller/metadata"
@@ -47,11 +48,13 @@ type Handler struct {
 	UserCtrl      *usercontroller.Controller
 	Authenticator authn.Authenticator
 	Authorizer    authz.Authorizer
+	SpaceFinder   refcache.SpaceFinder
 }
 
 func NewHandler(
 	controller *maven.Controller, spaceStore corestore.SpaceStore, tokenStore corestore.TokenStore,
 	userCtrl *usercontroller.Controller, authenticator authn.Authenticator, authorizer authz.Authorizer,
+	spaceFinder refcache.SpaceFinder,
 ) *Handler {
 	return &Handler{
 		Controller:    controller,
@@ -60,6 +63,7 @@ func NewHandler(
 		UserCtrl:      userCtrl,
 		Authenticator: authenticator,
 		Authorizer:    authorizer,
+		SpaceFinder:   spaceFinder,
 	}
 }
 
@@ -79,10 +83,15 @@ func (h *Handler) GetArtifactInfo(r *http.Request, remoteSupport bool) (pkg.Mave
 		return pkg.MavenArtifactInfo{}, err
 	}
 
-	rootSpace, err := h.SpaceStore.FindByRefCaseInsensitive(ctx, rootIdentifier)
+	rootSpaceID, err := h.SpaceStore.FindByRefCaseInsensitive(ctx, rootIdentifier)
 	if err != nil {
-		log.Ctx(ctx).Error().Msgf("Root space not found: %s", rootIdentifier)
-		return pkg.MavenArtifactInfo{}, errcode.ErrCodeRootNotFound
+		log.Ctx(ctx).Error().Msgf("Root spaceID not found: %s", rootIdentifier)
+		return pkg.MavenArtifactInfo{}, errcode.ErrCodeRootNotFound.WithDetail(err)
+	}
+	rootSpace, err := h.SpaceFinder.FindByID(ctx, rootSpaceID)
+	if err != nil {
+		log.Ctx(ctx).Error().Msgf("Root space not found: %d", rootSpaceID)
+		return pkg.MavenArtifactInfo{}, errcode.ErrCodeRootNotFound.WithDetail(err)
 	}
 
 	registry, err := h.Controller.DBStore.RegistryDao.GetByRootParentIDAndName(ctx, rootSpace.ID, registryIdentifier)
@@ -92,7 +101,7 @@ func (h *Handler) GetArtifactInfo(r *http.Request, remoteSupport bool) (pkg.Mave
 		)
 		return pkg.MavenArtifactInfo{}, errcode.ErrCodeRegNotFound
 	}
-	_, err = h.SpaceStore.Find(r.Context(), registry.ParentID)
+	_, err = h.SpaceFinder.FindByID(r.Context(), registry.ParentID)
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("Parent space not found: %d", registry.ParentID)
 		return pkg.MavenArtifactInfo{}, errcode.ErrCodeParentNotFound

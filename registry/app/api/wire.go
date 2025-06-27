@@ -26,7 +26,7 @@ import (
 	nuget2 "github.com/harness/gitness/registry/app/api/controller/pkg/nuget"
 	python2 "github.com/harness/gitness/registry/app/api/controller/pkg/python"
 	rpm2 "github.com/harness/gitness/registry/app/api/controller/pkg/rpm"
-	cargo "github.com/harness/gitness/registry/app/api/handler/cargo"
+	"github.com/harness/gitness/registry/app/api/handler/cargo"
 	"github.com/harness/gitness/registry/app/api/handler/generic"
 	mavenhandler "github.com/harness/gitness/registry/app/api/handler/maven"
 	npm2 "github.com/harness/gitness/registry/app/api/handler/npm"
@@ -51,7 +51,9 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/nuget"
 	"github.com/harness/gitness/registry/app/pkg/python"
 	rpmregistry "github.com/harness/gitness/registry/app/pkg/rpm"
+	refcache2 "github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/store"
+	"github.com/harness/gitness/registry/app/store/cache"
 	"github.com/harness/gitness/registry/app/store/database"
 	"github.com/harness/gitness/registry/config"
 	"github.com/harness/gitness/registry/gc"
@@ -90,9 +92,16 @@ func BlobStorageProvider(c *types.Config) (storagedriver.StorageDriver, error) {
 }
 
 func NewHandlerProvider(
-	controller *docker.Controller, spaceFinder refcache.SpaceFinder, spaceStore corestore.SpaceStore,
-	tokenStore corestore.TokenStore, userCtrl *usercontroller.Controller, authenticator authn.Authenticator,
-	urlProvider urlprovider.Provider, authorizer authz.Authorizer, config *types.Config,
+	controller *docker.Controller,
+	spaceFinder refcache.SpaceFinder,
+	spaceStore corestore.SpaceStore,
+	tokenStore corestore.TokenStore,
+	userCtrl *usercontroller.Controller,
+	authenticator authn.Authenticator,
+	urlProvider urlprovider.Provider,
+	authorizer authz.Authorizer,
+	config *types.Config,
+	registryFinder refcache2.RegistryFinder,
 ) *ocihandler.Handler {
 	return ocihandler.NewHandler(
 		controller,
@@ -104,13 +113,14 @@ func NewHandlerProvider(
 		urlProvider,
 		authorizer,
 		config.Registry.HTTP.RelativeURL,
+		registryFinder,
 	)
 }
 
 func NewMavenHandlerProvider(
 	controller *maven.Controller, spaceStore corestore.SpaceStore,
 	tokenStore corestore.TokenStore, userCtrl *usercontroller.Controller, authenticator authn.Authenticator,
-	authorizer authz.Authorizer,
+	authorizer authz.Authorizer, spaceFinder refcache.SpaceFinder,
 ) *mavenhandler.Handler {
 	return mavenhandler.NewHandler(
 		controller,
@@ -119,6 +129,7 @@ func NewMavenHandlerProvider(
 		userCtrl,
 		authenticator,
 		authorizer,
+		spaceFinder,
 	)
 }
 
@@ -126,7 +137,8 @@ func NewPackageHandlerProvider(
 	registryDao store.RegistryRepository, downloadStatDao store.DownloadStatRepository,
 	spaceStore corestore.SpaceStore, tokenStore corestore.TokenStore,
 	userCtrl *usercontroller.Controller, authenticator authn.Authenticator,
-	urlProvider urlprovider.Provider, authorizer authz.Authorizer,
+	urlProvider urlprovider.Provider, authorizer authz.Authorizer, spaceFinder refcache.SpaceFinder,
+	regFinder refcache2.RegistryFinder,
 ) packages.Handler {
 	return packages.NewHandler(
 		registryDao,
@@ -137,6 +149,8 @@ func NewPackageHandlerProvider(
 		authenticator,
 		urlProvider,
 		authorizer,
+		spaceFinder,
+		regFinder,
 	)
 }
 
@@ -171,7 +185,7 @@ func NewRpmHandlerProvider(
 func NewGenericHandlerProvider(
 	spaceStore corestore.SpaceStore, controller *generic2.Controller, tokenStore corestore.TokenStore,
 	userCtrl *usercontroller.Controller, authenticator authn.Authenticator, urlProvider urlprovider.Provider,
-	authorizer authz.Authorizer, packageHandler packages.Handler,
+	authorizer authz.Authorizer, packageHandler packages.Handler, spaceFinder refcache.SpaceFinder,
 ) *generic.Handler {
 	return generic.NewGenericArtifactHandler(
 		spaceStore,
@@ -182,6 +196,7 @@ func NewGenericHandlerProvider(
 		urlProvider,
 		authorizer,
 		packageHandler,
+		spaceFinder,
 	)
 }
 
@@ -204,6 +219,8 @@ var WireSet = wire.NewSet(
 	NewRpmHandlerProvider,
 	NewCargoHandlerProvider,
 	database.WireSet,
+	cache.WireSet,
+	refcache2.WireSet,
 	pkg.WireSet,
 	docker.WireSet,
 	filemanager.WireSet,

@@ -57,8 +57,9 @@ func ControllerProvider(
 	remote *RemoteRegistry,
 	authorizer authz.Authorizer,
 	dBStore *DBStore,
+	spaceFinder refcache.SpaceFinder,
 ) *Controller {
-	return NewController(local, remote, authorizer, dBStore)
+	return NewController(local, remote, authorizer, dBStore, spaceFinder)
 }
 
 func DBStoreProvider(

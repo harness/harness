@@ -106,7 +106,6 @@ type ManifestService interface {
 		mfst manifest.Manifest,
 		d digest.Digest,
 		tag string,
-		repoKey string,
 		headers *commons.ResponseHeaders,
 		info pkg.RegistryInfo,
 	) error
@@ -114,7 +113,6 @@ type ManifestService interface {
 		ctx context.Context,
 		mfst manifest.Manifest,
 		d digest.Digest,
-		repoKey string,
 		headers *commons.ResponseHeaders,
 		info pkg.RegistryInfo,
 	) error
@@ -124,7 +122,7 @@ type ManifestService interface {
 	DBFindRepositoryBlob(
 		ctx context.Context, desc manifest.Descriptor, repoID int64, imageName string,
 	) (*types.Blob, error)
-	UpsertImage(ctx context.Context, repoKey string, info pkg.RegistryInfo) error
+	UpsertImage(ctx context.Context, info pkg.RegistryInfo) error
 }
 
 func (l *manifestService) DBTag(
@@ -132,7 +130,6 @@ func (l *manifestService) DBTag(
 	mfst manifest.Manifest,
 	d digest.Digest,
 	tag string,
-	repoKey string,
 	headers *commons.ResponseHeaders,
 	info pkg.RegistryInfo,
 ) error {
@@ -140,7 +137,7 @@ func (l *manifestService) DBTag(
 
 	if err := l.dbTagManifest(ctx, d, tag, imageName, info); err != nil {
 		log.Ctx(ctx).Error().Err(err).Msg("failed to create tag in database")
-		err2 := l.handleTagError(ctx, mfst, d, tag, repoKey, headers, info, err, imageName)
+		err2 := l.handleTagError(ctx, mfst, d, tag, headers, info, err, imageName)
 		if err2 != nil {
 			return err2
 		}
@@ -154,7 +151,6 @@ func (l *manifestService) handleTagError(
 	mfst manifest.Manifest,
 	d digest.Digest,
 	tag string,
-	repoKey string,
 	headers *commons.ResponseHeaders,
 	info pkg.RegistryInfo,
 	err error,
@@ -169,7 +165,7 @@ func (l *manifestService) handleTagError(
 		// This should be extremely rare, if it ever occurs, but if it does, we should recreate the manifest
 		// and tag it, instead of returning a "manifest not found response" to clients. It's expected that
 		// this route handles the creation of a manifest if it doesn't exist already.
-		if err = l.DBPut(ctx, mfst, "", repoKey, headers, info); err != nil {
+		if err = l.DBPut(ctx, mfst, "", headers, info); err != nil {
 			return fmt.Errorf("failed to recreate manifest in database: %w", err)
 		}
 		if err = l.dbTagManifest(ctx, d, tag, imageName, info); err != nil {
@@ -187,10 +183,7 @@ func (l *manifestService) dbTagManifest(
 	tagName, imageName string,
 	info pkg.RegistryInfo,
 ) error {
-	dbRegistry, err := l.registryDao.GetByParentIDAndName(ctx, info.ParentID, info.RegIdentifier)
-	if err != nil {
-		return formatFailedToTagErr(err)
-	}
+	dbRegistry := info.Registry
 	newDigest, err := types.NewDigest(dgst)
 	if err != nil {
 		return formatFailedToTagErr(err)
@@ -227,14 +220,9 @@ func (l *manifestService) dbTagManifest(
 	if err != nil {
 		return formatFailedToTagErr(err)
 	}
-	spacePath, packageType, err := l.getSpacePathAndPackageType(ctx, dbRegistry)
+	spacePath, packageType, err := l.getSpacePathAndPackageType(ctx, &dbRegistry)
 	if err == nil {
-		reg, err := l.registryDao.GetByParentIDAndName(ctx, info.ParentID, info.RegIdentifier)
-		if err != nil {
-			log.Ctx(ctx).Err(err).Msgf("Failed to get registry for parent_id=%d, registry_identifier=%s",
-				info.ParentID, info.RegIdentifier)
-			return err
-		}
+		reg := info.Registry
 		l.reportEventAsync(
 			ctx, reg.ID, info.RegIdentifier, imageName, tagName, packageType,
 			spacePath, dbManifest.ID,
@@ -333,7 +321,6 @@ func (l *manifestService) DBPut(
 	ctx context.Context,
 	mfst manifest.Manifest,
 	d digest.Digest,
-	repoKey string,
 	headers *commons.ResponseHeaders,
 	info pkg.RegistryInfo,
 ) error {
@@ -342,7 +329,7 @@ func (l *manifestService) DBPut(
 		return err
 	}
 
-	err = l.dbPutManifest(ctx, mfst, payload, d, repoKey, headers, info)
+	err = l.dbPutManifest(ctx, mfst, payload, d, headers, info)
 	var mtErr util.UnknownMediaTypeError
 	if errors.As(err, &mtErr) {
 		return errcode.ErrorCodeManifestInvalid.WithDetail(mtErr.Error())
@@ -355,45 +342,36 @@ func (l *manifestService) dbPutManifest(
 	manifest manifest.Manifest,
 	payload []byte,
 	d digest.Digest,
-	repoKey string,
 	headers *commons.ResponseHeaders,
 	info pkg.RegistryInfo,
 ) error {
 	switch reqManifest := manifest.(type) {
 	case *schema2.DeserializedManifest:
 		log.Ctx(ctx).Debug().Msgf("Putting schema2 manifest %s to database", d.String())
-		if err := l.dbPutManifestSchema2(ctx, reqManifest, payload, d, repoKey, headers, info); err != nil {
+		if err := l.dbPutManifestSchema2(ctx, reqManifest, payload, d, headers, info); err != nil {
 			return err
 		}
-		return l.upsertImageAndArtifact(ctx, d, repoKey, info)
+		return l.upsertImageAndArtifact(ctx, d, info)
 	case *ocischema.DeserializedManifest:
 		log.Ctx(ctx).Debug().Msgf("Putting ocischema manifest %s to database", d.String())
-		if err := l.dbPutManifestOCI(ctx, reqManifest, payload, d, repoKey, headers, info); err != nil {
+		if err := l.dbPutManifestOCI(ctx, reqManifest, payload, d, headers, info); err != nil {
 			return err
 		}
-		return l.upsertImageAndArtifact(ctx, d, repoKey, info)
+		return l.upsertImageAndArtifact(ctx, d, info)
 	case *manifestlist.DeserializedManifestList:
 		log.Ctx(ctx).Debug().Msgf("Putting manifestlist manifest %s to database", d.String())
-		return l.dbPutManifestList(ctx, reqManifest, payload, d, repoKey, headers, info)
+		return l.dbPutManifestList(ctx, reqManifest, payload, d, headers, info)
 	case *ocischema.DeserializedImageIndex:
 		log.Ctx(ctx).Debug().Msgf("Putting ocischema image index %s to database", d.String())
-		return l.dbPutImageIndex(ctx, reqManifest, payload, d, repoKey, headers, info)
+		return l.dbPutImageIndex(ctx, reqManifest, payload, d, headers, info)
 	default:
 		log.Ctx(ctx).Info().Msgf("Invalid manifest type: %T", reqManifest)
 		return errcode.ErrorCodeManifestInvalid.WithDetail("manifest type unsupported")
 	}
 }
 
-func (l *manifestService) upsertImageAndArtifact(
-	ctx context.Context,
-	d digest.Digest,
-	repoKey string,
-	info pkg.RegistryInfo,
-) error {
-	dbRepo, err := l.registryDao.GetByParentIDAndName(ctx, info.ParentID, repoKey)
-	if err != nil {
-		return err
-	}
+func (l *manifestService) upsertImageAndArtifact(ctx context.Context, d digest.Digest, info pkg.RegistryInfo) error {
+	dbRepo := info.Registry
 	dbImage := &types.Image{
 		Name:       info.Image,
 		RegistryID: dbRepo.ID,
@@ -421,14 +399,9 @@ func (l *manifestService) upsertImageAndArtifact(
 
 func (l *manifestService) UpsertImage(
 	ctx context.Context,
-	repoKey string,
 	info pkg.RegistryInfo,
 ) error {
-	dbRepo, err := l.registryDao.GetByParentIDAndName(ctx, info.ParentID, repoKey)
-	if err != nil {
-		return err
-	}
-
+	dbRepo := info.Registry
 	image, err := l.imageDao.GetByName(ctx, dbRepo.ID, info.Image)
 	if err != nil && !errors.Is(err, gitnessstore.ErrResourceNotFound) {
 		return err
@@ -453,11 +426,10 @@ func (l *manifestService) dbPutManifestSchema2(
 	manifest *schema2.DeserializedManifest,
 	payload []byte,
 	d digest.Digest,
-	repoKey string,
 	headers *commons.ResponseHeaders,
 	info pkg.RegistryInfo,
 ) error {
-	return l.dbPutManifestV2(ctx, manifest, payload, false, d, repoKey, headers, info)
+	return l.dbPutManifestV2(ctx, manifest, payload, false, d, headers, info)
 }
 
 func (l *manifestService) dbPutManifestV2(
@@ -466,18 +438,11 @@ func (l *manifestService) dbPutManifestV2(
 	payload []byte,
 	nonConformant bool,
 	digest digest.Digest,
-	repoKey string,
 	headers *commons.ResponseHeaders,
 	info pkg.RegistryInfo,
 ) error {
 	// find target repository
-	dbRepo, err := l.registryDao.GetByParentIDAndName(ctx, info.ParentID, repoKey)
-	if err != nil {
-		return err
-	}
-	if dbRepo == nil {
-		return errors.New("repository not found in database")
-	}
+	dbRepo := info.Registry
 
 	// Find the config now to ensure that the config's blob is associated with the repository.
 	dbCfgBlob, err := l.DBFindRepositoryBlob(ctx, mfst.Config(), dbRepo.ID, info.Image)
@@ -539,7 +504,7 @@ func (l *manifestService) dbPutManifestV2(
 	if ok {
 		subjectHandlingError := l.handleSubject(
 			ctx, ocim.Subject(), ocim.ArtifactType(),
-			ocim.Annotations(), dbRepo, m, headers, info,
+			ocim.Annotations(), &dbRepo, m, headers, info,
 		)
 		if subjectHandlingError != nil {
 			return subjectHandlingError
@@ -696,11 +661,10 @@ func (l *manifestService) dbPutManifestOCI(
 	manifest *ocischema.DeserializedManifest,
 	payload []byte,
 	d digest.Digest,
-	repoKey string,
 	headers *commons.ResponseHeaders,
 	info pkg.RegistryInfo,
 ) error {
-	return l.dbPutManifestV2(ctx, manifest, payload, false, d, repoKey, headers, info)
+	return l.dbPutManifestV2(ctx, manifest, payload, false, d, headers, info)
 }
 
 func (l *manifestService) dbPutManifestList(
@@ -708,22 +672,14 @@ func (l *manifestService) dbPutManifestList(
 	manifestList *manifestlist.DeserializedManifestList,
 	payload []byte,
 	digest digest.Digest,
-	repoKey string,
 	headers *commons.ResponseHeaders,
 	info pkg.RegistryInfo,
 ) error {
 	if LikelyBuildxCache(manifestList) {
-		return l.dbPutBuildkitIndex(ctx, manifestList, payload, digest, repoKey, headers, info)
+		return l.dbPutBuildkitIndex(ctx, manifestList, payload, digest, headers, info)
 	}
 
-	r, err := l.registryDao.GetByParentIDAndName(ctx, info.ParentID, repoKey)
-	if err != nil {
-		return err
-	}
-	if r == nil {
-		return errors.New("repository not found in database")
-	}
-
+	r := info.Registry
 	dgst, err := types.NewDigest(digest)
 	if err != nil {
 		return err
@@ -751,7 +707,7 @@ func (l *manifestService) dbPutManifestList(
 		ImageName:     info.Image,
 	}
 
-	mm, ids, err2 := l.validateManifestList(ctx, manifestList, r, info)
+	mm, ids, err2 := l.validateManifestList(ctx, manifestList, info)
 	if err2 != nil {
 		return err2
 	}
@@ -801,7 +757,7 @@ func (l *manifestService) dbPutManifestList(
 				}
 			}
 
-			err = l.mapManifestList(ctx, ml.ID, manifestList, r)
+			err = l.mapManifestList(ctx, ml.ID, manifestList, &info.Registry)
 			if err != nil {
 				return fmt.Errorf("failed to map manifest list: %w", err)
 			}
@@ -859,13 +815,15 @@ func (l *manifestService) mapManifestIndex(
 }
 
 func (l *manifestService) validateManifestList(
-	ctx context.Context, manifestList *manifestlist.DeserializedManifestList, r *types.Registry, info pkg.RegistryInfo,
+	ctx context.Context,
+	manifestList *manifestlist.DeserializedManifestList,
+	info pkg.RegistryInfo,
 ) ([]*types.Manifest, []int64, error) {
 	mm := make([]*types.Manifest, 0, len(manifestList.Manifests))
 	ids := make([]int64, 0, len(manifestList.Manifests))
 	for _, desc := range manifestList.Manifests {
-		m, err := l.dbFindManifestListManifest(ctx, r, info.Image, desc.Digest)
-		if errors.Is(err, gitnessstore.ErrResourceNotFound) && r.Type == artifact.RegistryTypeUPSTREAM {
+		m, err := l.dbFindManifestListManifest(ctx, &info.Registry, info.Image, desc.Digest)
+		if errors.Is(err, gitnessstore.ErrResourceNotFound) && info.Registry.Type == artifact.RegistryTypeUPSTREAM {
 			continue
 		}
 		if err != nil {
@@ -903,11 +861,10 @@ func (l *manifestService) dbPutImageIndex(
 	imageIndex *ocischema.DeserializedImageIndex,
 	payload []byte,
 	digest digest.Digest,
-	repoKey string,
 	headers *commons.ResponseHeaders,
 	info pkg.RegistryInfo,
 ) error {
-	r, err := l.registryDao.GetByParentIDAndName(ctx, info.ParentID, repoKey)
+	r, err := l.registryDao.GetByParentIDAndName(ctx, info.ParentID, info.RegIdentifier)
 	if err != nil {
 		return err
 	}
@@ -1019,7 +976,6 @@ func (l *manifestService) dbPutBuildkitIndex(
 	ml *manifestlist.DeserializedManifestList,
 	payload []byte,
 	digest digest.Digest,
-	repoKey string,
 	headers *commons.ResponseHeaders,
 	info pkg.RegistryInfo,
 ) error {
@@ -1037,7 +993,7 @@ func (l *manifestService) dbPutBuildkitIndex(
 	// Therefore, we keep behavioral consistency for
 	// the outside world by preserving the index payload and digest while
 	//  storing things internally as an OCI manifest.
-	return l.dbPutManifestV2(ctx, m, payload, true, digest, repoKey, headers, info)
+	return l.dbPutManifestV2(ctx, m, payload, true, digest, headers, info)
 }
 
 func (l *manifestService) dbFindManifestListManifest(
@@ -1105,7 +1061,8 @@ func (l *manifestService) DeleteTag(
 	if existingDigest != "" {
 		session, _ := request.AuthSessionFrom(ctx)
 		payload := webhook.GetArtifactDeletedPayload(ctx, session.Principal.ID, registry.ID,
-			registry.Name, tag, existingDigest.String(), info.RootIdentifier, info.PackageType, info.Image, l.urlProvider)
+			registry.Name, tag, existingDigest.String(), info.RootIdentifier, info.PackageType, info.Image,
+			l.urlProvider)
 		l.artifactEventReporter.ArtifactDeleted(ctx, &payload)
 	}
 

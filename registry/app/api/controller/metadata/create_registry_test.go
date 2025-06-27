@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//nolint:lll,revive // revive:disable:unused-parameter
+//nolint:lll,revive,errcheck  // revive:disable:unused-parameter
 
 package metadata_test
 
@@ -125,6 +125,7 @@ func TestCreateRegistry(t *testing.T) {
 			setupMocks: func() *metadata.APIController {
 				mockRegistryMetadataHelper := new(mocks.RegistryMetadataHelper)
 				mockRegistryRepo := new(mocks.RegistryRepository)
+				mockRegFinder := new(mocks.RegistryFinder)
 				mockSpaceFinder := new(mocks.SpaceFinder)
 				mockAuthorizer := new(mocks.Authorizer)
 				mockAuditService := new(mocks.AuditService)
@@ -163,7 +164,8 @@ func TestCreateRegistry(t *testing.T) {
 				}
 
 				// 1. Mock the initial registry metadata lookup.
-				mockRegistryMetadataHelper.On("GetRegistryRequestBaseInfo", mock.Anything, "root", "").Return(baseInfo, nil).Once()
+				mockRegistryMetadataHelper.On("GetRegistryRequestBaseInfo", mock.Anything, "root", "").Return(baseInfo,
+					nil).Once()
 
 				// 2. Mock the space lookup.
 				mockSpaceFinder.On("FindByRef", mock.Anything, "root").Return(space, nil).Once()
@@ -185,6 +187,7 @@ func TestCreateRegistry(t *testing.T) {
 
 				// 5. Mock registry retrieval.
 				mockRegistryRepo.On("Get", mock.Anything, baseInfo.RegistryID).Return(registry, nil).Once()
+				mockRegFinder.On("Get", mock.Anything, baseInfo.RegistryID).Return(registry, nil).Once()
 
 				// 6. Mock cleanup policy retrieval.
 				mockCleanupPolicyRepo.On("GetByRegistryID", mock.Anything,
@@ -218,7 +221,8 @@ func TestCreateRegistry(t *testing.T) {
 				).Return(nil).Once()
 
 				// Setup registry repo mock.
-				mockRegistryRepo.On("FetchUpstreamProxyKeys", mock.Anything, mock.Anything).Return([]string{}, nil).Once()
+				mockRegistryRepo.On("FetchUpstreamProxyKeys", mock.Anything, mock.Anything).Return([]string{},
+					nil).Once()
 				mockCleanupPolicyRepo.On("GetByRegistryID", mock.Anything,
 					baseInfo.RegistryID).Return(&[]types.CleanupPolicy{}, nil).Once()
 
@@ -262,6 +266,7 @@ func TestCreateRegistry(t *testing.T) {
 					nil, // downloadStatRepository.
 					"",
 					nil, // registryBlobStore - not needed for this test.
+					mockRegFinder,
 					nil, // PostProcessingReporter - not needed for this test.
 					nil,
 				)
@@ -291,6 +296,7 @@ func TestCreateRegistry(t *testing.T) {
 			setupMocks: func() *metadata.APIController {
 				mockRegistryMetadataHelper := new(mocks.RegistryMetadataHelper)
 				mockRegistryRepo := new(mocks.RegistryRepository)
+				mockRegFinder := new(mocks.RegistryFinder)
 				mockTransactor := new(mocks.Transactor)
 				mockGenericBlobRepo := new(mocks.GenericBlobRepository)
 
@@ -333,6 +339,7 @@ func TestCreateRegistry(t *testing.T) {
 					nil, //
 					"",  // downloadStatRepository.
 					nil,
+					mockRegFinder,
 					nil, // PostProcessingReporter - not needed for this test.
 					nil,
 				)
@@ -367,7 +374,8 @@ func TestCreateRegistry(t *testing.T) {
 				assert.Equal(t, expected.Status, actualResp.Status, "Response status should match")
 
 				// Verify registry data fields individually.
-				assert.Equal(t, expected.Data.Identifier, actualResp.Data.Identifier, "Registry identifier should match")
+				assert.Equal(t, expected.Data.Identifier, actualResp.Data.Identifier,
+					"Registry identifier should match")
 				assert.Equal(t, expected.Data.PackageType, actualResp.Data.PackageType, "Package type should match")
 				assert.Equal(t, expected.Data.Url, actualResp.Data.Url, "Registry URL should match")
 				assert.Equal(t, expected.Data.Description, actualResp.Data.Description, "Description should match")
@@ -379,7 +387,9 @@ func TestCreateRegistry(t *testing.T) {
 				assert.Equal(t, expected.Data.Config.Type, actualResp.Data.Config.Type, "Config type should match")
 
 				// Verify mock expectations for success case.
-				called := controller.RegistryRepository.(*mocks.RegistryRepository).AssertCalled(t, "Create", //nolint:errcheck
+				//nolint:errcheck
+				called := controller.RegistryRepository.(*mocks.RegistryRepository).AssertCalled(t,
+					"Create",
 					mock.Anything, mock.MatchedBy(func(r *types.Registry) bool {
 						return r.Name == tt.request.Body.Identifier &&
 							r.Type == tt.request.Body.Config.Type &&
@@ -399,7 +409,9 @@ func TestCreateRegistry(t *testing.T) {
 				assert.True(t, auditAssertOk, "Mock expectations failed for AuditService")
 
 				// Verify audit expectations.
-				logCalled := controller.AuditService.(*mocks.AuditService).AssertCalled(t, "Log", mock.Anything, //nolint:errcheck
+				//nolint:errcheck
+				logCalled := controller.AuditService.(*mocks.AuditService).AssertCalled(t, "Log",
+					mock.Anything,
 					mock.Anything, mock.Anything, audit.ActionCreated, mock.Anything, mock.Anything)
 				assert.True(t, logCalled, "Expected Log call not made")
 
@@ -464,9 +476,9 @@ func TestCreateRegistry(t *testing.T) {
 			}
 			if controller.SpaceFinder != nil {
 				spaceFinder, finderOk := controller.SpaceFinder.(*mocks.SpaceFinder)
-				assert.True(t, finderOk, "Type assertion to SpaceFinder failed")
+				assert.True(t, finderOk, "Type assertion to spaceFinder failed")
 				spaceFinderOk := spaceFinder.AssertExpectations(t)
-				assert.True(t, spaceFinderOk, "Mock expectations failed for SpaceFinder")
+				assert.True(t, spaceFinderOk, "Mock expectations failed for spaceFinder")
 			}
 			if controller.Authorizer != nil {
 				auth, authOk := controller.Authorizer.(*mocks.Authorizer)

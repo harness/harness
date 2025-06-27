@@ -31,10 +31,6 @@ func ProvideUpstreamDao(
 	return NewUpstreamproxyDao(db, registryDao, spaceFinder)
 }
 
-func ProvideRepoDao(db *sqlx.DB, mtRepository store.MediaTypesRepository) store.RegistryRepository {
-	return NewRegistryDao(db, mtRepository)
-}
-
 func ProvideMediaTypeDao(db *sqlx.DB) store.MediaTypesRepository {
 	return NewMediaTypesDao(db)
 }
@@ -107,6 +103,11 @@ func ProvideGenericBlobDao(db *sqlx.DB) store.GenericBlobRepository {
 	return NewGenericBlobDao(db)
 }
 
+func ProvideRegistryDao(
+	db *sqlx.DB, mtRepository store.MediaTypesRepository,
+) store.RegistryRepository {
+	return NewRegistryDao(db, mtRepository)
+}
 func ProvideTaskRepository(db *sqlx.DB, tx dbtx.Transactor) store.TaskRepository {
 	return NewTaskStore(db, tx)
 }
@@ -119,7 +120,7 @@ func ProvideTaskEventRepository(db *sqlx.DB) store.TaskEventRepository {
 
 var WireSet = wire.NewSet(
 	ProvideUpstreamDao,
-	ProvideRepoDao,
+	ProvideRegistryDao,
 	ProvideMediaTypeDao,
 	ProvideBlobDao,
 	ProvideRegistryBlobDao,

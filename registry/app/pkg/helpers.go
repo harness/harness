@@ -21,8 +21,7 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/auth/authz"
-	corestore "github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/registry/app/store"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -33,18 +32,14 @@ import (
 // and checks if the current user has permission to access it.
 func GetRegistryCheckAccess(
 	ctx context.Context,
-	registryStore store.RegistryRepository,
 	authorizer authz.Authorizer,
-	spaceStore corestore.SpaceStore,
-	repoName string,
+	spaceFinder refcache.SpaceFinder,
 	parentID int64,
+	art ArtifactInfo,
 	reqPermissions ...enum.Permission,
 ) error {
-	registry, err := registryStore.GetByParentIDAndName(ctx, parentID, repoName)
-	if err != nil {
-		return fmt.Errorf("failed to find registry: %w", err)
-	}
-	space, err := spaceStore.Find(ctx, parentID)
+	registry := art.Registry
+	space, err := spaceFinder.FindByID(ctx, parentID)
 	if err != nil {
 		return fmt.Errorf("failed to find parent by ref: %w", err)
 	}

@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/harness/gitness/app/services/refcache"
 	gitnesswebhook "github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
@@ -48,6 +49,7 @@ type Service struct {
 	config             gitnesswebhook.Config
 	spacePathStore     store.SpacePathStore
 	registryRepository registrystore.RegistryRepository
+	spaceFinder        refcache.SpaceFinder
 }
 
 func NewService(

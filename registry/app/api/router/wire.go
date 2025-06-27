@@ -40,6 +40,7 @@ import (
 	registryevents "github.com/harness/gitness/registry/app/events/artifact"
 	registrypostprocessingevents "github.com/harness/gitness/registry/app/events/asyncprocessing"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
+	refcache2 "github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/store"
 	cargoutils "github.com/harness/gitness/registry/app/utils/cargo"
 	registrywebhook "github.com/harness/gitness/registry/services/webhook"
@@ -83,6 +84,7 @@ func APIHandlerProvider(
 	downloadStatRepository store.DownloadStatRepository,
 	gitnessConfig *types.Config,
 	registryBlobsDao store.RegistryBlobRepository,
+	regFinder refcache2.RegistryFinder,
 	postProcessingReporter *registrypostprocessingevents.Reporter,
 	cargoRegistryHelper cargoutils.RegistryHelper,
 ) harness.APIHandler {
@@ -111,6 +113,7 @@ func APIHandlerProvider(
 		downloadStatRepository,
 		gitnessConfig,
 		registryBlobsDao,
+		regFinder,
 		postProcessingReporter,
 		cargoRegistryHelper,
 	)

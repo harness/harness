@@ -23,6 +23,7 @@ import (
 	registryevents "github.com/harness/gitness/registry/app/events/artifact"
 	registrypostprocessingevents "github.com/harness/gitness/registry/app/events/asyncprocessing"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
+	"github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/app/utils/cargo"
 	"github.com/harness/gitness/registry/services/webhook"
@@ -55,6 +56,7 @@ type APIController struct {
 	DownloadStatRepository       store.DownloadStatRepository
 	SetupDetailsAuthHeaderPrefix string
 	RegistryBlobStore            store.RegistryBlobRepository
+	RegFinder                    refcache.RegistryFinder
 	PostProcessingReporter       *registrypostprocessingevents.Reporter
 	CargoRegistryHelper          cargo.RegistryHelper
 }
@@ -84,6 +86,7 @@ func NewAPIController(
 	downloadStatRepository store.DownloadStatRepository,
 	setupDetailsAuthHeaderPrefix string,
 	registryBlobStore store.RegistryBlobRepository,
+	regFinder refcache.RegistryFinder,
 	postProcessingReporter *registrypostprocessingevents.Reporter,
 	cargoRegistryHelper cargo.RegistryHelper,
 ) *APIController {
@@ -112,6 +115,7 @@ func NewAPIController(
 		DownloadStatRepository:       downloadStatRepository,
 		SetupDetailsAuthHeaderPrefix: setupDetailsAuthHeaderPrefix,
 		RegistryBlobStore:            registryBlobStore,
+		RegFinder:                    regFinder,
 		PostProcessingReporter:       postProcessingReporter,
 		CargoRegistryHelper:          cargoRegistryHelper,
 	}

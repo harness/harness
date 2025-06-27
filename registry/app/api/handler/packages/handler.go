@@ -28,12 +28,14 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/refcache"
 	corestore "github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
 	artifact2 "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
+	refcache2 "github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/request"
@@ -47,7 +49,8 @@ func NewHandler(
 	downloadStatDao store.DownloadStatRepository,
 	spaceStore corestore.SpaceStore, tokenStore corestore.TokenStore,
 	userCtrl *usercontroller.Controller, authenticator authn.Authenticator,
-	urlProvider urlprovider.Provider, authorizer authz.Authorizer,
+	urlProvider urlprovider.Provider, authorizer authz.Authorizer, spaceFinder refcache.SpaceFinder,
+	regFinder refcache2.RegistryFinder,
 ) Handler {
 	return &handler{
 		RegistryDao:     registryDao,
@@ -58,6 +61,8 @@ func NewHandler(
 		Authenticator:   authenticator,
 		URLProvider:     urlProvider,
 		Authorizer:      authorizer,
+		SpaceFinder:     spaceFinder,
+		RegFinder:       regFinder,
 	}
 }
 
@@ -70,6 +75,8 @@ type handler struct {
 	Authenticator   authn.Authenticator
 	URLProvider     urlprovider.Provider
 	Authorizer      authz.Authorizer
+	SpaceFinder     refcache.SpaceFinder
+	RegFinder       refcache2.RegistryFinder
 }
 
 type Handler interface {
@@ -128,9 +135,8 @@ func (h *handler) GetRegistryCheckAccess(
 	if err != nil {
 		return err
 	}
-	return pkg.GetRegistryCheckAccess(ctx, h.RegistryDao, h.Authorizer,
-		h.SpaceStore,
-		info.RegIdentifier, info.ParentID, reqPermissions...)
+	return pkg.GetRegistryCheckAccess(ctx, h.Authorizer, h.SpaceFinder,
+		info.ParentID, info, reqPermissions...)
 }
 
 func (h *handler) TrackDownloadStats(
@@ -154,13 +160,18 @@ func (h *handler) GetArtifactInfo(r *http.Request) (pkg.ArtifactInfo, error) {
 		return pkg.ArtifactInfo{}, errcode.ErrCodeInvalidRequest.WithDetail(err)
 	}
 
-	rootSpace, err := h.SpaceStore.FindByRefCaseInsensitive(ctx, rootIdentifier)
+	rootSpaceID, err := h.SpaceStore.FindByRefCaseInsensitive(ctx, rootIdentifier)
 	if err != nil {
-		log.Ctx(ctx).Error().Msgf("Root space not found: %s", rootIdentifier)
+		log.Ctx(ctx).Error().Msgf("Root spaceID not found: %s", rootIdentifier)
+		return pkg.ArtifactInfo{}, usererror.NotFoundf("Root not found: %s", rootIdentifier)
+	}
+	rootSpace, err := h.SpaceFinder.FindByID(ctx, rootSpaceID)
+	if err != nil {
+		log.Ctx(ctx).Error().Msgf("Root space not found: %d", rootSpaceID)
 		return pkg.ArtifactInfo{}, usererror.NotFoundf("Root not found: %s", rootIdentifier)
 	}
 
-	registry, err := h.RegistryDao.GetByRootParentIDAndName(ctx, rootSpace.ID, registryIdentifier)
+	registry, err := h.RegFinder.FindByRootParentID(ctx, rootSpaceID, registryIdentifier)
 
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf(
@@ -175,7 +186,7 @@ func (h *handler) GetArtifactInfo(r *http.Request) (pkg.ArtifactInfo, error) {
 		)
 	}
 
-	_, err = h.SpaceStore.Find(r.Context(), registry.ParentID)
+	_, err = h.SpaceFinder.FindByID(r.Context(), registry.ParentID)
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("Parent space not found: %d", registry.ParentID)
 		return pkg.ArtifactInfo{}, usererror.NotFoundf("Parent not found for registry: %s", registryIdentifier)

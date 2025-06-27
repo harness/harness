@@ -54,7 +54,7 @@ func (s *Service) handleEventArtifactCreated(
 			principal *types.Principal,
 			registry *registrytypes.Registry,
 		) (any, error) {
-			space, err := s.spaceStore.Find(ctx, registry.ParentID)
+			space, err := s.spaceFinder.FindByID(ctx, registry.ParentID)
 			if err != nil {
 				return nil, err
 			}
@@ -92,7 +92,7 @@ func (s *Service) handleEventArtifactDeleted(
 			principal *types.Principal,
 			registry *registrytypes.Registry,
 		) (any, error) {
-			space, err := s.spaceStore.Find(ctx, registry.ParentID)
+			space, err := s.spaceFinder.FindByID(ctx, registry.ParentID)
 			if err != nil {
 				return nil, err
 			}

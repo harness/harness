@@ -306,10 +306,7 @@ func dbBandwidthStat(
 	bandwidthType types.BandwidthType,
 ) error {
 	dgst := digest.Digest(info.Digest)
-	registry, err := c.RegistryDao.GetByParentIDAndName(ctx, info.ParentID, info.RegIdentifier)
-	if err != nil {
-		return err
-	}
+	registry := info.Registry
 
 	blob, err := c.DBStore.BlobRepo.FindByDigestAndRootParentID(ctx, dgst, info.RootParentID)
 	if err != nil {
@@ -337,7 +334,7 @@ func dbBandwidthStat(
 }
 
 func getImageFromUpstreamProxy(ctx context.Context, c *docker.Controller, info pkg.RegistryInfo) (*types.Image, error) {
-	repos, err := c.GetOrderedRepos(ctx, info.RegIdentifier, *info.BaseInfo)
+	repos, err := c.GetOrderedRepos(ctx, info)
 	if err != nil {
 		return nil, err
 	}

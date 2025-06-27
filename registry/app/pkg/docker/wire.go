@@ -93,8 +93,9 @@ func ControllerProvider(
 	spaceStore gitnessstore.SpaceStore,
 	authorizer authz.Authorizer,
 	dBStore *DBStore,
+	spaceFinder refcache.SpaceFinder,
 ) *Controller {
-	return NewController(local, remote, controller, spaceStore, authorizer, dBStore)
+	return NewController(local, remote, controller, spaceStore, authorizer, dBStore, spaceFinder)
 }
 
 func DBStoreProvider(

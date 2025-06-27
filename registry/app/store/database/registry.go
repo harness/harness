@@ -49,7 +49,6 @@ type registryDao struct {
 func NewRegistryDao(db *sqlx.DB, mtRepository store.MediaTypesRepository) store.RegistryRepository {
 	return &registryDao{
 		db: db,
-
 		//FIXME: Arvind: Move this to controller layer later
 		mtRepository: mtRepository,
 	}
@@ -104,6 +103,7 @@ func (r registryDao) GetByParentIDAndName(
 	ctx context.Context, parentID int64,
 	name string,
 ) (*types.Registry, error) {
+	log.Info().Msgf("GetByParentIDAndName: parentID: %d, name: %s", parentID, name)
 	stmt := databaseg.Builder.
 		Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(registryDB{}), ",")).
 		From("registries").
@@ -320,10 +320,13 @@ func (r registryDao) GetAll(
 			LeftJoin("upstream_proxy_configs u ON r.registry_id = u.upstream_proxy_config_registry_id").
 			LeftJoin(fmt.Sprintf("(%s) AS artifact_count ON r.registry_id = artifact_count.image_registry_id",
 				artifactCountSubquery)).
-			LeftJoin(fmt.Sprintf("(%s) AS blob_sizes ON r.registry_id = blob_sizes.rblob_registry_id", blobSizesSubquery)).
+			LeftJoin(fmt.Sprintf("(%s) AS blob_sizes ON r.registry_id = blob_sizes.rblob_registry_id",
+				blobSizesSubquery)).
 			//nolint:lll
-			LeftJoin(fmt.Sprintf("(%s) AS generic_blob_sizes ON r.registry_id = generic_blob_sizes.node_registry_id", genericBlobSizesSubquery)).
-			LeftJoin(fmt.Sprintf("(%s) AS download_stats ON r.registry_id = download_stats.registry_id", downloadStatsSubquery))
+			LeftJoin(fmt.Sprintf("(%s) AS generic_blob_sizes ON r.registry_id = generic_blob_sizes.node_registry_id",
+				genericBlobSizesSubquery)).
+			LeftJoin(fmt.Sprintf("(%s) AS download_stats ON r.registry_id = download_stats.registry_id",
+				downloadStatsSubquery))
 	} else {
 		query = databaseg.Builder.
 			Select(selectFields).
@@ -331,10 +334,13 @@ func (r registryDao) GetAll(
 			LeftJoin("upstream_proxy_configs u ON r.registry_id = u.upstream_proxy_config_registry_id").
 			LeftJoin(fmt.Sprintf("(%s) AS artifact_count ON r.registry_id = artifact_count.image_registry_id",
 				artifactCountSubquery)).
-			LeftJoin(fmt.Sprintf("(%s) AS blob_sizes ON r.registry_id = blob_sizes.rblob_registry_id", blobSizesSubquery)).
+			LeftJoin(fmt.Sprintf("(%s) AS blob_sizes ON r.registry_id = blob_sizes.rblob_registry_id",
+				blobSizesSubquery)).
 			//nolint:lll
-			LeftJoin(fmt.Sprintf("(%s) AS generic_blob_sizes ON r.registry_id = generic_blob_sizes.node_registry_id", genericBlobSizesSubquery)).
-			LeftJoin(fmt.Sprintf("(%s) AS download_stats ON r.registry_id = download_stats.registry_id", downloadStatsSubquery)).
+			LeftJoin(fmt.Sprintf("(%s) AS generic_blob_sizes ON r.registry_id = generic_blob_sizes.node_registry_id",
+				genericBlobSizesSubquery)).
+			LeftJoin(fmt.Sprintf("(%s) AS download_stats ON r.registry_id = download_stats.registry_id",
+				downloadStatsSubquery)).
 			Where("r.registry_parent_id = ?", parentID)
 	}
 	// Apply search filter

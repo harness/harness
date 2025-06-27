@@ -183,7 +183,7 @@ type (
 		FindByRef(ctx context.Context, spaceRef string) (*types.Space, error)
 
 		// FindByRefCaseInsensitive finds the space using the spaceRef.
-		FindByRefCaseInsensitive(ctx context.Context, spaceRef string) (*types.Space, error)
+		FindByRefCaseInsensitive(ctx context.Context, spaceRef string) (int64, error)
 
 		// FindByRefAndDeletedAt finds the space using the spaceRef and deleted timestamp.
 		FindByRefAndDeletedAt(ctx context.Context, spaceRef string, deletedAt int64) (*types.Space, error)

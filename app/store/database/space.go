@@ -148,10 +148,10 @@ func (s *SpaceStore) FindByRef(ctx context.Context, spaceRef string) (*types.Spa
 }
 
 // FindByRefCaseInsensitive finds the space using the spaceRef.
-func (s *SpaceStore) FindByRefCaseInsensitive(ctx context.Context, spaceRef string) (*types.Space, error) {
+func (s *SpaceStore) FindByRefCaseInsensitive(ctx context.Context, spaceRef string) (int64, error) {
 	segments := paths.Segments(spaceRef)
 	if len(segments) < 1 {
-		return nil, fmt.Errorf("invalid space reference provided")
+		return -1, fmt.Errorf("invalid space reference provided")
 	}
 
 	var stmt squirrel.SelectBuilder
@@ -169,17 +169,17 @@ func (s *SpaceStore) FindByRefCaseInsensitive(ctx context.Context, spaceRef stri
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
-		return nil, fmt.Errorf("failed to create sql query: %w", err)
+		return -1, fmt.Errorf("failed to create sql query: %w", err)
 	}
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	var spaceID int64
 	if err = db.GetContext(ctx, &spaceID, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom select query")
+		return -1, database.ProcessSQLErrorf(ctx, err, "Failed executing custom select query")
 	}
 
-	return s.find(ctx, spaceID, nil)
+	return spaceID, nil
 }
 
 // FindByRefAndDeletedAt finds the space using the spaceRef as either the id or the space path and deleted timestamp.

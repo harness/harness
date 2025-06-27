@@ -62,22 +62,15 @@ func (c *CoreController) GetArtifact(registry types.Registry) Artifact {
 	return c.factory(RemoteRegistry)
 }
 
-func (c *CoreController) GetOrderedRepos(
-	ctx context.Context,
-	repoKey string,
-	artInfo BaseInfo,
-) ([]types.Registry, error) {
+func (c *CoreController) GetOrderedRepos(ctx context.Context, artInfo RegistryInfo) ([]types.Registry, error) {
 	var result []types.Registry
-	registry, err := c.RegistryDao.GetByParentIDAndName(ctx, artInfo.ParentID, repoKey)
-	if err != nil {
-		return result, err
-	}
-	result = append(result, *registry)
+	registry := artInfo.Registry
+	result = append(result, registry)
 	proxies := registry.UpstreamProxies
 	if len(proxies) > 0 {
 		upstreamRepos, err2 := c.RegistryDao.GetByIDIn(ctx, proxies)
 		if err2 != nil {
-			log.Error().Msgf("Failed to get upstream proxies for %s: %v", repoKey, err2)
+			log.Error().Msgf("Failed to get upstream proxies for %s: %v", registry.Name, err2)
 			return result, err2
 		}
 		repoMap := make(map[int64]types.Registry)

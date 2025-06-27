@@ -86,10 +86,7 @@ func dbDownloadStat(
 	c *docker.Controller,
 	info pkg.RegistryInfo,
 ) error {
-	registry, err := c.RegistryDao.GetByParentIDAndName(ctx, info.ParentID, info.RegIdentifier)
-	if err != nil {
-		return err
-	}
+	registry := info.Registry
 
 	image, err := c.DBStore.ImageDao.GetByName(ctx, registry.ID, info.Image)
 	if errors.Is(err, store.ErrResourceNotFound) {

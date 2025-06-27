@@ -258,7 +258,7 @@ func (c *APIController) updateRegistryWithAudit(
 	ctx context.Context, oldRegistry *types.Registry,
 	newRegistry *types.Registry, principal types2.Principal, parentRef string,
 ) error {
-	err := c.RegistryRepository.Update(ctx, newRegistry)
+	err := c.RegFinder.Update(ctx, newRegistry)
 	if err != nil {
 		return err
 	}
@@ -399,7 +399,8 @@ func (c *APIController) UpdateUpstreamProxyEntity(
 		}
 
 		if res.SecretSpacePath != nil && len(*res.SecretSpacePath) > 0 {
-			upstreamProxyConfigEntity.SecretSpaceID, err = c.RegistryMetadataHelper.GetSecretSpaceID(ctx, res.SecretSpacePath)
+			upstreamProxyConfigEntity.SecretSpaceID, err = c.RegistryMetadataHelper.GetSecretSpaceID(ctx,
+				res.SecretSpacePath)
 			if err != nil {
 				return nil, nil, err
 			}

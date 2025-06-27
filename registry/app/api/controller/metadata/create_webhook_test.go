@@ -103,7 +103,8 @@ func TestCreateWebhook(t *testing.T) {
 
 				// Set up expectations.
 				mockSpaceFinder.On("FindByRef", mock.Anything, "root/parent").Return(space, nil)
-				mockRegistryMetadataHelper.On("GetRegistryRequestBaseInfo", mock.Anything, "", "reg").Return(regInfo, nil)
+				mockRegistryMetadataHelper.On("GetRegistryRequestBaseInfo", mock.Anything, "", "reg").Return(regInfo,
+					nil)
 				mockRegistryMetadataHelper.On(
 					"GetPermissionChecks",
 					mock.Anything,
@@ -185,7 +186,7 @@ func TestCreateWebhook(t *testing.T) {
 					Return(regInfo, nil)
 				c.RegistryMetadataHelper = mockRegistryMetadataHelper
 
-				// 2. Mock SpaceFinder
+				// 2. Mock spaceFinder
 				mockSpaceFinder := new(mocks.SpaceFinder)
 				space := &coretypes.SpaceCore{
 					Path: "root/parent",
@@ -277,7 +278,7 @@ func TestCreateWebhook(t *testing.T) {
 				mockRegistryMetadataHelper.On("GetRegistryRequestBaseInfo", mock.Anything, "", "reg").
 					Return(regInfo, nil)
 
-				// 2. Mock SpaceFinder
+				// 2. Mock spaceFinder
 				mockSpaceFinder := new(mocks.SpaceFinder)
 				space := &coretypes.SpaceCore{
 					Path: "root/parent",
@@ -300,7 +301,8 @@ func TestCreateWebhook(t *testing.T) {
 
 				// Mock authorizer with manual response
 				mockAuthorizer := new(mocks.Authorizer)
-				mockAuthorizer.On("CheckAll", mock.Anything, (*auth.Session)(nil), permissionCheck).Return(false, apiauth.ErrUnauthorized)
+				mockAuthorizer.On("CheckAll", mock.Anything, (*auth.Session)(nil), permissionCheck).Return(false,
+					apiauth.ErrUnauthorized)
 				c.Authorizer = mockAuthorizer
 			},
 			request: api.CreateWebhookRequestObject{

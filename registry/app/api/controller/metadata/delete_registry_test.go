@@ -88,7 +88,8 @@ func TestDeleteRegistry(t *testing.T) {
 				}
 
 				mockSpaceFinder.On("FindByRef", mock.Anything, "root/parent").Return(space, nil)
-				mockRegistryMetadataHelper.On("GetRegistryRequestBaseInfo", mock.Anything, "", "reg").Return(regInfo, nil)
+				mockRegistryMetadataHelper.On("GetRegistryRequestBaseInfo", mock.Anything, "", "reg").Return(regInfo,
+					nil)
 				mockRegistryMetadataHelper.On(
 					"GetPermissionChecks",
 					space,
@@ -110,7 +111,8 @@ func TestDeleteRegistry(t *testing.T) {
 				mockImageStore.On("DeleteDownloadStatByRegistryID", mock.Anything, regInfo.RegistryID).Return(nil)
 				mockImageStore.On("DeleteBandwidthStatByRegistryID", mock.Anything, regInfo.RegistryID).Return(nil)
 				mockImageStore.On("DeleteByRegistryID", mock.Anything, regInfo.RegistryID).Return(nil)
-				mockRegistryRepository.On("Delete", mock.Anything, regInfo.ParentID, regInfo.RegistryIdentifier).Return(nil)
+				mockRegistryRepository.On("Delete", mock.Anything, regInfo.ParentID,
+					regInfo.RegistryIdentifier).Return(nil)
 				mockAuditService.On(
 					"Log",
 					mock.Anything,
@@ -187,7 +189,8 @@ func TestDeleteRegistry(t *testing.T) {
 				}
 
 				mockSpaceFinder.On("FindByRef", mock.Anything, "root/parent").Return(space, nil)
-				mockRegistryMetadataHelper.On("GetRegistryRequestBaseInfo", mock.Anything, "", "reg").Return(regInfo, nil)
+				mockRegistryMetadataHelper.On("GetRegistryRequestBaseInfo", mock.Anything, "", "reg").Return(regInfo,
+					nil)
 				mockRegistryMetadataHelper.On(
 					"GetPermissionChecks",
 					space,
@@ -241,7 +244,8 @@ func TestDeleteRegistry(t *testing.T) {
 				}
 
 				mockSpaceFinder.On("FindByRef", mock.Anything, "root/parent").Return(space, nil)
-				mockRegistryMetadataHelper.On("GetRegistryRequestBaseInfo", mock.Anything, "", "reg").Return(regInfo, nil)
+				mockRegistryMetadataHelper.On("GetRegistryRequestBaseInfo", mock.Anything, "", "reg").Return(regInfo,
+					nil)
 				mockRegistryMetadataHelper.On(
 					"GetPermissionChecks",
 					space,
@@ -313,7 +317,8 @@ func TestDeleteRegistry(t *testing.T) {
 				}
 
 				mockSpaceFinder.On("FindByRef", mock.Anything, "root/parent").Return(space, nil)
-				mockRegistryMetadataHelper.On("GetRegistryRequestBaseInfo", mock.Anything, "", "reg").Return(regInfo, nil)
+				mockRegistryMetadataHelper.On("GetRegistryRequestBaseInfo", mock.Anything, "", "reg").Return(regInfo,
+					nil)
 				mockRegistryMetadataHelper.On(
 					"GetPermissionChecks",
 					space,
@@ -338,11 +343,13 @@ func TestDeleteRegistry(t *testing.T) {
 					[]string{regInfo.RegistryIdentifier},
 					regInfo.ParentID,
 				).Return([]int64{}, nil)
-				mockUpstreamProxyStore.On("Delete", mock.Anything, regInfo.ParentID, regInfo.RegistryIdentifier).Return(nil)
+				mockUpstreamProxyStore.On("Delete", mock.Anything, regInfo.ParentID,
+					regInfo.RegistryIdentifier).Return(nil)
 				mockImageStore.On("DeleteDownloadStatByRegistryID", mock.Anything, regInfo.RegistryID).Return(nil)
 				mockImageStore.On("DeleteBandwidthStatByRegistryID", mock.Anything, regInfo.RegistryID).Return(nil)
 				mockImageStore.On("DeleteByRegistryID", mock.Anything, regInfo.RegistryID).Return(nil)
-				mockRegistryRepository.On("Delete", mock.Anything, regInfo.ParentID, regInfo.RegistryIdentifier).Return(nil)
+				mockRegistryRepository.On("Delete", mock.Anything, regInfo.ParentID,
+					regInfo.RegistryIdentifier).Return(nil)
 				mockAuditService.On(
 					"Log",
 					mock.Anything,
@@ -430,7 +437,7 @@ func TestDeleteRegistry(t *testing.T) {
 			if controller.SpaceFinder != nil {
 				mockSpaceFinder, ok := controller.SpaceFinder.(*mocks.SpaceFinder)
 				if !ok {
-					t.Fatal("Expected SpaceFinder to be of type *mocks.SpaceFinder")
+					t.Fatal("Expected spaceFinder to be of type *mocks.spaceFinder")
 				}
 				mockSpaceFinder.AssertExpectations(t)
 			}

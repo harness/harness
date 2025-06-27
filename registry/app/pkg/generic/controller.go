@@ -29,6 +29,7 @@ import (
 
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/refcache"
 	corestore "github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/metadata"
@@ -56,6 +57,7 @@ type Controller struct {
 	DBStore     *DBStore
 	fileManager filemanager.FileManager
 	tx          dbtx.Transactor
+	spaceFinder refcache.SpaceFinder
 }
 
 type DBStore struct {
@@ -73,6 +75,7 @@ func NewController(
 	fileManager filemanager.FileManager,
 	dBStore *DBStore,
 	tx dbtx.Transactor,
+	spaceFinder refcache.SpaceFinder,
 ) *Controller {
 	return &Controller{
 		SpaceStore:  spaceStore,
@@ -80,6 +83,7 @@ func NewController(
 		fileManager: fileManager,
 		DBStore:     dBStore,
 		tx:          tx,
+		spaceFinder: spaceFinder,
 	}
 }
 
@@ -109,10 +113,8 @@ func (c Controller) UploadArtifact(
 		Headers: make(map[string]string),
 		Code:    0,
 	}
-	err := pkg.GetRegistryCheckAccess(
-		ctx, c.DBStore.RegistryDao, c.Authorizer, c.SpaceStore, info.RegIdentifier, info.ParentID,
-		enum.PermissionArtifactsUpload,
-	)
+	err := pkg.GetRegistryCheckAccess(ctx, c.Authorizer, c.spaceFinder, info.ParentID, *info.ArtifactInfo,
+		enum.PermissionArtifactsUpload)
 	if err != nil {
 		return nil, "", errcode.ErrCodeDenied.WithDetail(err)
 	}
@@ -231,10 +233,8 @@ func (c Controller) PullArtifact(ctx context.Context, info pkg.GenericArtifactIn
 		Headers: make(map[string]string),
 		Code:    0,
 	}
-	err := pkg.GetRegistryCheckAccess(
-		ctx, c.DBStore.RegistryDao, c.Authorizer, c.SpaceStore, info.RegIdentifier, info.ParentID,
-		enum.PermissionArtifactsDownload,
-	)
+	err := pkg.GetRegistryCheckAccess(ctx, c.Authorizer, c.spaceFinder, info.ParentID, *info.ArtifactInfo,
+		enum.PermissionArtifactsDownload)
 	if err != nil {
 		return nil, nil, "", errcode.ErrCodeDenied.WithDetail(err)
 	}
@@ -285,9 +285,11 @@ func (c Controller) CheckIfFileAlreadyExist(ctx context.Context, info pkg.Generi
 	return nil
 }
 
-func (c Controller) ParseAndUploadToTmp(ctx context.Context, reader *multipart.Reader,
+func (c Controller) ParseAndUploadToTmp(
+	ctx context.Context, reader *multipart.Reader,
 	info pkg.GenericArtifactInfo, fileToFind string,
-	formKeys []string) (types.FileInfo, string, map[string]string, error) {
+	formKeys []string,
+) (types.FileInfo, string, map[string]string, error) {
 	formValues := make(map[string]string)
 	var fileInfo types.FileInfo
 	var filename string
@@ -361,8 +363,10 @@ func (c Controller) ParseAndUploadToTmp(ctx context.Context, reader *multipart.R
 	return fileInfo, filename, formValues, nil
 }
 
-func (c Controller) UploadFile(ctx context.Context, reader *multipart.Reader,
-	info *pkg.GenericArtifactInfo) (types.FileInfo, error) {
+func (c Controller) UploadFile(
+	ctx context.Context, reader *multipart.Reader,
+	info *pkg.GenericArtifactInfo,
+) (types.FileInfo, error) {
 	fileInfo, tmpFileName, formValues, err :=
 		c.ParseAndUploadToTmp(ctx, reader, *info, "file", []string{"filename", "description"})
 

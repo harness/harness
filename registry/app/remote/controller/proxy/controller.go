@@ -125,7 +125,7 @@ func (c *controller) EnsureTag(
 	}
 
 	// Fixme: Need to properly pick tag.
-	e := c.localManifestRegistry.DBTag(ctx, mfst, desc.Digest, info.Reference, info.RegIdentifier, rsHeaders, info)
+	e := c.localManifestRegistry.DBTag(ctx, mfst, desc.Digest, info.Reference, rsHeaders, info)
 	if e != nil {
 		log.Error().Err(e).Msgf("Error in ensuring tag: %s", e)
 	}

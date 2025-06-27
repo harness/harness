@@ -82,7 +82,6 @@ type registryManifestInterface interface {
 		mfst manifest.Manifest,
 		d digest.Digest,
 		tag string,
-		repoKey string,
 		headers *commons.ResponseHeaders,
 		info pkg.RegistryInfo,
 	) error

@@ -172,18 +172,10 @@ func (r *LocalRegistry) GetPackageTypes() []artifact.PackageType {
 func (r *LocalRegistry) getManifest(
 	ctx context.Context,
 	manifestDigest digest.Digest,
-	repoKey string,
 	imageName string,
 	info pkg.RegistryInfo,
 ) (manifest.Manifest, error) {
-	dbRepo, err := r.registryDao.GetByParentIDAndName(ctx, info.ParentID, repoKey)
-	if err != nil {
-		return nil, err
-	}
-
-	if dbRepo == nil {
-		return nil, manifest.RegistryUnknownError{Name: repoKey}
-	}
+	dbRepo := info.Registry
 
 	log.Ctx(ctx).Debug().Msgf("getting manifest by digest from database")
 
@@ -193,7 +185,7 @@ func (r *LocalRegistry) getManifest(
 	if err != nil {
 		if errors.Is(err, store2.ErrResourceNotFound) {
 			return nil, manifest.UnknownRevisionError{
-				Name:     repoKey,
+				Name:     info.RegIdentifier,
 				Revision: manifestDigest,
 			}
 		}
@@ -273,15 +265,7 @@ func DBManifestToManifest(dbm *types.Manifest) (manifest.Manifest, error) {
 }
 
 func (r *LocalRegistry) getTag(ctx context.Context, info pkg.RegistryInfo) (*manifest.Descriptor, error) {
-	dbRepo, err := r.registryDao.GetByParentIDAndName(ctx, info.ParentID, info.RegIdentifier)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if dbRepo == nil {
-		return nil, manifest.RegistryUnknownError{Name: info.RegIdentifier}
-	}
+	dbRepo := info.Registry
 
 	log.Ctx(ctx).Info().Msgf("getting manifest by tag from database")
 	dbManifest, err := r.manifestDao.FindManifestByTagName(ctx, dbRepo.ID, info.Image, info.Tag)
@@ -386,7 +370,7 @@ func (r *LocalRegistry) fetchBlobInternal(
 	var dgst digest.Digest
 	blobs := ctx.OciBlobStore
 
-	if err := r.dbBlobLinkExists(ctx, ctx.Digest, info.RegIdentifier, info); err != nil { //nolint:contextcheck
+	if err := r.dbBlobLinkExists(ctx, ctx.Digest, info); err != nil { //nolint:contextcheck
 		errs = append(errs, errcode.FromUnknownError(err))
 		return responseHeaders, nil, -1, nil, "", errs
 	}
@@ -482,7 +466,7 @@ func (r *LocalRegistry) ManifestExist(
 		return r2, manifest.Descriptor{Digest: d}, nil, nil
 	}
 
-	manifestResult, err = r.getManifest(ctx, d, artInfo.RegIdentifier, artInfo.Image, artInfo)
+	manifestResult, err = r.getManifest(ctx, d, artInfo.Image, artInfo)
 	if err != nil {
 		var manifestUnknownRevisionError manifest.UnknownRevisionError
 		if errors.As(err, &manifestUnknownRevisionError) {
@@ -571,10 +555,7 @@ func (r *LocalRegistry) rewriteManifest(
 		return "", nil, errcode.ErrCodeManifestUnknown
 	}
 
-	manifestResult, err := r.getManifest(
-		ctx, manifestDigest,
-		artInfo.RegIdentifier, artInfo.Image, artInfo,
-	)
+	manifestResult, err := r.getManifest(ctx, manifestDigest, artInfo.Image, artInfo)
 	if err != nil {
 		var manifestUnknownRevisionError manifest.UnknownRevisionError
 		if errors.As(err, &manifestUnknownRevisionError) {
@@ -752,20 +733,14 @@ func (r *LocalRegistry) PutManifest(
 	// We don't need to store manifest file in S3 storage
 	// manifestServicePut(ctx, _manifest, options...)
 
-	if err = r.ms.DBPut(
-		ctx, unmarshalManifest, d, artInfo.RegIdentifier,
-		responseHeaders, artInfo,
-	); err != nil {
+	if err = r.ms.DBPut(ctx, unmarshalManifest, d, responseHeaders, artInfo); err != nil {
 		errs = r.appendPutError(err, errs)
 		return responseHeaders, errs
 	}
 
 	// Tag this manifest
 	if tag != "" {
-		if err = r.ms.DBTag(
-			ctx, unmarshalManifest, d, tag, artInfo.RegIdentifier,
-			responseHeaders, artInfo,
-		); err != nil {
+		if err = r.ms.DBTag(ctx, unmarshalManifest, d, tag, responseHeaders, artInfo); err != nil {
 			errs = r.appendPutError(err, errs)
 			return responseHeaders, errs
 		}
@@ -1112,14 +1087,7 @@ func (r *LocalRegistry) PushBlob(
 	}
 
 	//nolint:contextcheck
-	err = r.dbPutBlobUploadComplete(
-		ctx,
-		artInfo.RegIdentifier,
-		"application/octet-stream",
-		artInfo.Digest,
-		int(desc.Size),
-		artInfo,
-	)
+	err = r.dbPutBlobUploadComplete(ctx, "application/octet-stream", artInfo.Digest, int(desc.Size), artInfo)
 	if err != nil {
 		errs = append(errs, err)
 		log.Error().Stack().Err(err).Msgf(
@@ -1252,7 +1220,7 @@ func (r *LocalRegistry) DeleteBlob(
 
 	errs = make([]error, 0)
 
-	err := r.dbDeleteBlob(ctx, r.App.Config, artInfo.RegIdentifier, digest.Digest(artInfo.Digest), artInfo)
+	err := r.dbDeleteBlob(ctx, r.App.Config, digest.Digest(artInfo.Digest), artInfo)
 	if err != nil {
 		switch {
 		case errors.Is(err, storage.ErrUnsupported):
@@ -1294,14 +1262,7 @@ func (r *LocalRegistry) ListReferrers(
 	if artifactType != "" {
 		rsHeaders.Headers["OCI-Filters-Applied"] = "artifactType"
 	}
-	registry, err := r.registryDao.GetByParentIDAndName(ctx, artInfo.ParentID, artInfo.RegIdentifier)
-	if err != nil {
-		return nil, rsHeaders, err
-	}
-	if registry == nil {
-		err := errcode.ErrCodeNameUnknown.WithDetail(artInfo.RegIdentifier)
-		return nil, rsHeaders, err
-	}
+	registry := artInfo.Registry
 	subjectDigest, err := types.NewDigest(digest.Digest(artInfo.Digest))
 	if err != nil {
 		return nil, rsHeaders, err
@@ -1531,18 +1492,8 @@ func parseContentRange(cr string) (start int64, end int64, err error) {
 	return start, end, nil
 }
 
-func (r *LocalRegistry) dbBlobLinkExists(
-	ctx context.Context, dgst digest.Digest, repoKey string,
-	info pkg.RegistryInfo,
-) error {
-	reg, err := r.registryDao.GetByParentIDAndName(ctx, info.ParentID, repoKey)
-	if err != nil {
-		return err
-	}
-	if r == nil {
-		err := errcode.ErrCodeNameUnknown.WithDetail(repoKey)
-		return err
-	}
+func (r *LocalRegistry) dbBlobLinkExists(ctx context.Context, dgst digest.Digest, info pkg.RegistryInfo) error {
+	reg := info.Registry
 	blob, err := r.blobRepo.FindByDigestAndRootParentID(ctx, dgst, info.RootParentID)
 	if err != nil {
 		if errors.Is(err, store2.ErrResourceNotFound) {
@@ -1594,7 +1545,6 @@ func (r *LocalRegistry) dbBlobLinkExists(
 
 func (r *LocalRegistry) dbPutBlobUploadComplete(
 	ctx *Context,
-	repoName string,
 	mediaType string,
 	digestVal string,
 	size int,
@@ -1611,22 +1561,19 @@ func (r *LocalRegistry) dbPutBlobUploadComplete(
 	created := false
 	err := r.tx.WithTx(
 		ctx.Context, func(ctx context.Context) error {
-			registry, err := r.registryDao.GetByParentIDAndName(ctx, info.ParentID, repoName)
-			if err != nil {
-				return err
-			}
-
+			registry := info.Registry
+			var err error
 			storedBlob, created, err = r.blobRepo.CreateOrFind(ctx, blob)
 			if err != nil && !errors.Is(err, store2.ErrResourceNotFound) {
 				return err
 			}
 
 			// link blob to repository
-			if err := r.registryBlobDao.LinkBlob(ctx, info.Image, registry, storedBlob.ID); err != nil {
+			if err := r.registryBlobDao.LinkBlob(ctx, info.Image, &registry, storedBlob.ID); err != nil {
 				return err
 			}
 
-			err = r.ms.UpsertImage(ctx, repoName, info)
+			err = r.ms.UpsertImage(ctx, info)
 			if err != nil {
 				return err
 			}
@@ -1652,8 +1599,10 @@ func (r *LocalRegistry) dbPutBlobUploadComplete(
 // (that's GC's responsibility), it only unlinks it from
 // a repository.
 func (r *LocalRegistry) dbDeleteBlob(
-	ctx *Context, config *gitnesstypes.Config,
-	repoName string, d digest.Digest, info pkg.RegistryInfo,
+	ctx *Context,
+	config *gitnesstypes.Config,
+	d digest.Digest,
+	info pkg.RegistryInfo,
 ) error {
 	log.Debug().Msgf("deleting blob from repository in database")
 
@@ -1661,14 +1610,7 @@ func (r *LocalRegistry) dbDeleteBlob(
 		return storage.ErrUnsupported
 	}
 
-	reg, err := r.registryDao.GetByParentIDAndName(ctx, info.ParentID, repoName)
-
-	if err != nil {
-		return err
-	}
-	if r == nil {
-		return storage.RegistryUnknownError{Name: repoName}
-	}
+	reg := info.Registry
 
 	blob, err := r.blobRepo.FindByDigestAndRepoID(ctx, d, reg.ID, info.Image)
 	if err != nil {
@@ -1677,7 +1619,7 @@ func (r *LocalRegistry) dbDeleteBlob(
 		}
 		return err
 	}
-	found, err := r.registryBlobDao.UnlinkBlob(ctx, info.Image, reg, blob.ID)
+	found, err := r.registryBlobDao.UnlinkBlob(ctx, info.Image, &reg, blob.ID)
 	if err != nil {
 		return err
 	}
@@ -1695,14 +1637,7 @@ func (r *LocalRegistry) dbGetTags(
 ) ([]string, bool, error) {
 	log.Debug().Msgf("finding tags in database")
 
-	reg, err := r.registryDao.GetByParentIDAndName(ctx, info.ParentID, info.RegIdentifier)
-	if err != nil {
-		return nil, false, err
-	}
-	if r == nil {
-		return nil, false,
-			errcode.ErrCodeNameUnknown.WithDetail(map[string]string{"name": info.RegIdentifier})
-	}
+	reg := info.Registry
 
 	tt, err := r.tagDao.TagsPaginated(ctx, reg.ID, info.Image, filters)
 	if err != nil {

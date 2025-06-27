@@ -38,3 +38,5 @@ type Registry struct {
 	CreatedBy       int64
 	UpdatedBy       int64
 }
+
+func (r Registry) Identifier() int64 { return r.ID }

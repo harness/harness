@@ -34,6 +34,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/docker"
+	refcache2 "github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/request"
 
 	v2 "github.com/distribution/distribution/v3/registry/api/v2"
@@ -45,7 +46,7 @@ func NewHandler(
 	controller *docker.Controller, spaceFinder refcache.SpaceFinder, spaceStore corestore.SpaceStore,
 	tokenStore corestore.TokenStore,
 	userCtrl *usercontroller.Controller, authenticator authn.Authenticator, urlProvider urlprovider.Provider,
-	authorizer authz.Authorizer, ociRelativeURL bool,
+	authorizer authz.Authorizer, ociRelativeURL bool, registryFinder refcache2.RegistryFinder,
 ) *Handler {
 	return &Handler{
 		Controller:     controller,
@@ -57,6 +58,7 @@ func NewHandler(
 		URLProvider:    urlProvider,
 		Authorizer:     authorizer,
 		OCIRelativeURL: ociRelativeURL,
+		registryFinder: registryFinder,
 	}
 }
 
@@ -69,6 +71,7 @@ type Handler struct {
 	Authenticator  authn.Authenticator
 	URLProvider    urlprovider.Provider
 	Authorizer     authz.Authorizer
+	registryFinder refcache2.RegistryFinder
 	OCIRelativeURL bool
 }
 
@@ -197,20 +200,25 @@ func (h *Handler) GetRegistryInfo(r *http.Request, remoteSupport bool) (pkg.Regi
 		return pkg.RegistryInfo{}, err
 	}
 
-	rootSpace, err := h.SpaceStore.FindByRefCaseInsensitive(ctx, rootIdentifier)
+	rootSpaceID, err := h.SpaceStore.FindByRefCaseInsensitive(ctx, rootIdentifier)
 	if err != nil {
-		log.Ctx(ctx).Error().Msgf("Root space not found: %s", rootIdentifier)
-		return pkg.RegistryInfo{}, errcode.ErrCodeRootNotFound
+		log.Ctx(ctx).Error().Msgf("Root spaceID not found: %s", rootIdentifier)
+		return pkg.RegistryInfo{}, errcode.ErrCodeRootNotFound.WithDetail(err)
+	}
+	rootSpace, err := h.SpaceFinder.FindByID(ctx, rootSpaceID)
+	if err != nil {
+		log.Ctx(ctx).Error().Msgf("Root space not found: %d", rootSpaceID)
+		return pkg.RegistryInfo{}, errcode.ErrCodeRootNotFound.WithDetail(err)
 	}
 
-	registry, err := h.Controller.RegistryDao.GetByRootParentIDAndName(ctx, rootSpace.ID, registryIdentifier)
+	registry, err := h.registryFinder.FindByRootParentID(ctx, rootSpaceID, registryIdentifier)
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf(
 			"registry %s not found for root: %s. Reason: %s", registryIdentifier, rootSpace.Identifier, err,
 		)
 		return pkg.RegistryInfo{}, errcode.ErrCodeRegNotFound
 	}
-	_, err = h.SpaceStore.Find(r.Context(), registry.ParentID)
+	_, err = h.SpaceFinder.FindByID(r.Context(), registry.ParentID)
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("Parent space not found: %d", registry.ParentID)
 		return pkg.RegistryInfo{}, errcode.ErrCodeParentNotFound
@@ -228,6 +236,7 @@ func (h *Handler) GetRegistryInfo(r *http.Request, remoteSupport bool) (pkg.Regi
 			},
 			RegIdentifier: registryIdentifier,
 			Image:         image,
+			Registry:      *registry,
 		},
 		Reference:   ref,
 		Digest:      dgst,
