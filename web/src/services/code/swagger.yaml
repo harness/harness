@@ -10753,6 +10753,8 @@ paths:
               - identifier
               - created
               - updated
+              - deleted
+              - last_git_push
             type: string
         - description: The order of the output.
           in: query
@@ -10781,6 +10783,13 @@ paths:
             maximum: 100
             minimum: 1
             type: integer
+        - description: The result should include entities from child spaces.
+          in: query
+          name: recursive
+          required: false
+          schema:
+            default: false
+            type: boolean
         - description: The result should contain only the favorite entries for the logged
             in user.
           in: query
@@ -12942,6 +12951,14 @@ components:
         - INFRAPROVIDER
         - REGISTRY
       type: string
+    EnumRevocationReason:
+      enum:
+        - compromised
+        - retired
+        - superseded
+        - unknown
+      nullable: true
+      type: string
     EnumRuleState:
       enum:
         - active
@@ -14184,7 +14201,7 @@ components:
         name:
           type: string
         sha:
-          type: string
+          $ref: '#/components/schemas/ShaSHA'
         tagger:
           $ref: '#/components/schemas/TypesSignature'
         title:
@@ -14609,10 +14626,10 @@ components:
           type: string
         parent_shas:
           items:
-            type: string
+            $ref: '#/components/schemas/ShaSHA'
           type: array
         sha:
-          type: string
+          $ref: '#/components/schemas/ShaSHA'
         stats:
           $ref: '#/components/schemas/TypesCommitStats'
         title:
@@ -14648,7 +14665,7 @@ components:
           nullable: true
           type: array
         commit_id:
-          type: string
+          $ref: '#/components/schemas/ShaSHA'
         dry_run_rules:
           type: boolean
         rule_violations:
@@ -14870,7 +14887,7 @@ components:
     TypesFileReference:
       properties:
         blob_sha:
-          type: string
+          $ref: '#/components/schemas/ShaSHA'
         path:
           type: string
       type: object
@@ -15374,12 +15391,21 @@ components:
           type: string
         identifier:
           type: string
+        metadata: {}
+        revocation_reason:
+          $ref: '#/components/schemas/EnumRevocationReason'
         scheme:
           $ref: '#/components/schemas/EnumPublicKeyScheme'
         type:
           type: string
         usage:
           $ref: '#/components/schemas/EnumPublicKeyUsage'
+        valid_from:
+          nullable: true
+          type: integer
+        valid_to:
+          nullable: true
+          type: integer
         verified:
           nullable: true
           type: integer

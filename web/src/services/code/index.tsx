@@ -197,6 +197,8 @@ export type EnumResourceType =
   | 'INFRAPROVIDER'
   | 'REGISTRY'
 
+export type EnumRevocationReason = 'compromised' | 'retired' | 'superseded' | 'unknown' | null
+
 export type EnumRuleState = 'active' | 'disabled' | 'monitor' | null
 
 export type EnumTokenType = string
@@ -877,7 +879,7 @@ export interface RepoCommitTag {
   is_annotated?: boolean
   message?: string
   name?: string
-  sha?: string
+  sha?: ShaSHA
   tagger?: TypesSignature
   title?: string
 }
@@ -1134,8 +1136,8 @@ export interface TypesCommit {
   author?: TypesSignature
   committer?: TypesSignature
   message?: string
-  parent_shas?: string[]
-  sha?: string
+  parent_shas?: ShaSHA[]
+  sha?: ShaSHA
   stats?: TypesCommitStats
   title?: string
 }
@@ -1156,7 +1158,7 @@ export interface TypesCommitFileStats {
 
 export interface TypesCommitFilesResponse {
   changed_files?: TypesFileReference[] | null
-  commit_id?: string
+  commit_id?: ShaSHA
   dry_run_rules?: boolean
   rule_violations?: TypesRuleViolations[]
 }
@@ -1277,7 +1279,7 @@ export interface TypesFavoriteResource {
 }
 
 export interface TypesFileReference {
-  blob_sha?: string
+  blob_sha?: ShaSHA
   path?: string
 }
 
@@ -1536,9 +1538,13 @@ export interface TypesPublicKey {
   created?: number
   fingerprint?: string
   identifier?: string
+  metadata?: {}
+  revocation_reason?: EnumRevocationReason
   scheme?: EnumPublicKeyScheme
   type?: string
   usage?: EnumPublicKeyUsage
+  valid_from?: number | null
+  valid_to?: number | null
   verified?: number | null
 }
 
@@ -9583,7 +9589,7 @@ export interface ListReposQueryParams {
   /**
    * The data by which the repositories are sorted.
    */
-  sort?: 'identifier' | 'created' | 'updated'
+  sort?: 'identifier' | 'created' | 'updated' | 'deleted' | 'last_git_push'
   /**
    * The order of the output.
    */
@@ -9596,6 +9602,10 @@ export interface ListReposQueryParams {
    * The maximum number of results to return.
    */
   limit?: number
+  /**
+   * The result should include entities from child spaces.
+   */
+  recursive?: boolean
   /**
    * The result should contain only the favorite entries for the logged in user.
    */

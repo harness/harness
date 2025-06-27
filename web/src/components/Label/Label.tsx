@@ -38,6 +38,7 @@ interface Label {
 interface LabelTitleProps extends Label {
   labelType?: LabelType
   value_count?: number
+  isScopeName?: boolean
 }
 
 interface LabelProps extends Label {
@@ -66,7 +67,7 @@ export const Label: React.FC<LabelProps> = props => {
   } = props
   const { getString } = useStrings()
   const { standalone } = useAppContext()
-  const scopeIcon = getScopeIcon(scope, standalone)
+  const scopeIcon = getScopeIcon(standalone, scope)
   if (valueName) {
     const colorObj = getColorsObj(valueColor ?? label_color ?? ColorName.Blue)
 
@@ -217,10 +218,10 @@ export const Label: React.FC<LabelProps> = props => {
 }
 
 export const LabelTitle: React.FC<LabelTitleProps> = props => {
-  const { name, scope, label_color, value_count, labelType } = props
+  const { name, scope, label_color, value_count, labelType, isScopeName } = props
   const { standalone } = useAppContext()
   const colorObj = getColorsObj(label_color ?? ColorName.Blue)
-  const scopeIcon = getScopeIcon(scope, standalone)
+  const scopeIcon = getScopeIcon(standalone, scope)
   if (value_count || (labelType && labelType === LabelType.DYNAMIC)) {
     return (
       <Tag className={css.labelTag}>
@@ -267,7 +268,8 @@ export const LabelTitle: React.FC<LabelTitleProps> = props => {
           className={css.standaloneKey}
           flex={{ alignItems: 'center' }}
           style={{
-            border: `1px solid ${colorObj.stroke}`
+            border: `1px solid ${isScopeName ? 'var(--grey-200)' : colorObj.stroke}`,
+            ...(isScopeName && { backgroundColor: 'var(--grey-100) !important' })
           }}>
           {scopeIcon && (
             <Icon
@@ -283,7 +285,7 @@ export const LabelTitle: React.FC<LabelTitleProps> = props => {
               color: `${colorObj.text}`
             }}
             lineClamp={1}
-            font={{ variation: FontVariation.SMALL_SEMI }}>
+            font={{ variation: isScopeName ? FontVariation.SMALL_BOLD : FontVariation.SMALL_SEMI }}>
             {name}
           </Text>
         </Layout.Horizontal>

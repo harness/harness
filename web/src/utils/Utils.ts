@@ -22,6 +22,7 @@ import type { EditorDidMount } from 'react-monaco-editor'
 import type { editor } from 'monaco-editor'
 import type { EditorView } from '@codemirror/view'
 import type { FormikProps } from 'formik'
+import type { SelectOption } from '@harnessio/uicore'
 import type {
   TypesRuleViolations,
   TypesViolation,
@@ -678,6 +679,7 @@ export enum CodeOwnerReqDecision {
   APPROVED = 'approved',
   WAIT_FOR_APPROVAL = ''
 }
+
 /**
  * Convert number of bytes into human readable format
  *
@@ -696,6 +698,7 @@ export function formatBytes(bytes: number, decimals = 2) {
 
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
 }
+
 export enum ScopeLevelEnum {
   ALL = 'all',
   CURRENT = 'current'
@@ -858,14 +861,6 @@ export const colorsPanel: Record<ColorName, ColorDetails> = {
 export const getColorsObj = (colorKey: ColorName): ColorDetails => {
   return colorsPanel[colorKey]
 }
-export const getScopeIcon = (scope: any, standalone: boolean) => {
-  if (scope === 0) return undefined
-  if (scope === 1 && standalone) return 'nav-project' as IconName
-  if (scope === 1 && !standalone) return 'Account' as IconName
-  if (scope === 2) return 'nav-organization' as IconName
-  if (scope === 3) return 'nav-project' as IconName
-  return undefined
-}
 
 export function customEncodeURIComponent(str: string) {
   return encodeURIComponent(str).replace(/!/g, '%21')
@@ -903,58 +898,141 @@ export interface LabelListingProps {
   activeTab?: string
 }
 
-export const getScopeData = (space: string, scope: number, standalone: boolean) => {
-  const accountIdentifier = space?.split('/')[0]
-  const orgIdentifier = space?.split('/')[1]
-  const projectIdentifier = space?.split('/')[2]
-  if (standalone) {
-    return { scopeRef: space, scopeIcon: 'nav-project' as IconName, scopeId: space }
-  }
-  switch (scope) {
-    case 1:
-      return { scopeRef: accountIdentifier as string, scopeIcon: 'Account' as IconName, scopeId: accountIdentifier }
-    case 2:
-      return {
-        scopeRef: `${accountIdentifier}/${orgIdentifier}` as string,
-        scopeIcon: 'nav-organization' as IconName,
-        scopeId: orgIdentifier
-      }
-    case 3:
-      return {
-        scopeRef: `${accountIdentifier}/${orgIdentifier}/${projectIdentifier}` as string,
-        scopeIcon: 'nav-project' as IconName,
-        scopeId: projectIdentifier
-      }
-    default:
-      return { scopeRef: space, scopeIcon: 'nav-project' as IconName, scopeId: scope }
-  }
-}
-
-export enum scopeEnum {
+export enum ScopeEnum {
   REPO_SCOPE = 0,
   ACCOUNT_SCOPE = 1,
   ORG_SCOPE = 2,
   PROJECT_SCOPE = 3
 }
 
-export const getScopeFromParams = (params: Identifier, standalone: boolean, repoMetadata?: RepoRepositoryOutput) => {
-  if (repoMetadata) return scopeEnum.REPO_SCOPE
+export interface ScopeData {
+  scopeRef: string
+  scopeIcon: IconName
+  scopeId: string
+  scopeName: ResourceType
+  scopeColor: ColorName
+}
+
+export const getScopeIcon = (standalone: boolean, scope?: number): IconName | undefined => {
+  switch (scope) {
+    case 0:
+      return undefined
+    case 1:
+      return standalone ? ('nav-project' as IconName) : ('Account' as IconName)
+    case 2:
+      return 'nav-organization' as IconName
+    case 3:
+      return 'nav-project' as IconName
+    default:
+      return undefined
+  }
+}
+
+export const getScopeData = (space: string, scope: number, standalone: boolean): ScopeData => {
+  const [accountId, orgIdentifier, projectIdentifier] = space.split('/')
+  const scopeData: ScopeData = {
+    scopeRef: space,
+    scopeIcon: 'nav-project' as IconName,
+    scopeId: space,
+    scopeName: ResourceType.PROJECT,
+    scopeColor: ColorName.Blue
+  }
+
+  if (standalone) {
+    return { ...scopeData, scopeName: ResourceType.SPACE, scopeColor: ColorName.Indigo }
+  }
+  switch (scope) {
+    case 1:
+      return {
+        ...scopeData,
+        scopeRef: accountId,
+        scopeIcon: 'Account' as IconName,
+        scopeId: accountId,
+        scopeName: ResourceType.ACCOUNT,
+        scopeColor: ColorName.Indigo
+      }
+    case 2:
+      return {
+        ...scopeData,
+        scopeRef: `${accountId}/${orgIdentifier}`,
+        scopeIcon: 'nav-organization' as IconName,
+        scopeId: orgIdentifier,
+        scopeName: ResourceType.ORGANIZATION,
+        scopeColor: ColorName.Purple
+      }
+    case 3:
+      return {
+        ...scopeData,
+        scopeRef: `${accountId}/${orgIdentifier}/${projectIdentifier}`,
+        scopeId: projectIdentifier
+      }
+    default:
+      return scopeData
+  }
+}
+
+export const getScopeFromParams = (
+  params: Identifier,
+  standalone: boolean,
+  repoMetadata?: RepoRepositoryOutput
+): number => {
+  if (repoMetadata) return ScopeEnum.REPO_SCOPE
 
   const { accountId, orgIdentifier, projectIdentifier } = params
 
   if (standalone && projectIdentifier) {
-    return scopeEnum.ACCOUNT_SCOPE
+    return ScopeEnum.ACCOUNT_SCOPE
   }
 
   if (accountId) {
     if (!orgIdentifier) {
-      return scopeEnum.ACCOUNT_SCOPE
+      return ScopeEnum.ACCOUNT_SCOPE
     }
 
-    return projectIdentifier ? scopeEnum.PROJECT_SCOPE : scopeEnum.ORG_SCOPE
+    return projectIdentifier ? ScopeEnum.PROJECT_SCOPE : ScopeEnum.ORG_SCOPE
   }
 
-  return scopeEnum.REPO_SCOPE
+  return ScopeEnum.REPO_SCOPE
+}
+
+export const getScopeOptions = (
+  getString: (key: StringKeys) => string,
+  accountIdentifier: string,
+  orgIdentifier?: string
+): SelectOption[] =>
+  [
+    accountIdentifier && !orgIdentifier
+      ? {
+          label: getString('searchScope.allScopes'),
+          value: ScopeLevelEnum.ALL
+        }
+      : null,
+    accountIdentifier && !orgIdentifier
+      ? { label: getString('searchScope.accOnly'), value: ScopeLevelEnum.CURRENT }
+      : null,
+    orgIdentifier ? { label: getString('searchScope.orgAndProj'), value: ScopeLevelEnum.ALL } : null,
+    orgIdentifier ? { label: getString('searchScope.orgOnly'), value: ScopeLevelEnum.CURRENT } : null
+  ].filter(Boolean) as SelectOption[]
+
+export const getCurrentScopeLabel = (
+  getString: (key: StringKeys) => string,
+  scopeLevel: ScopeLevelEnum,
+  accountIdentifier: string,
+  orgIdentifier?: string
+): SelectOption => {
+  return scopeLevel === ScopeLevelEnum.ALL
+    ? {
+        label:
+          accountIdentifier && !orgIdentifier
+            ? getString('searchScope.allScopes')
+            : getString('searchScope.orgAndProj'),
+        value: ScopeLevelEnum.ALL
+      }
+    : {
+        label:
+          accountIdentifier && !orgIdentifier ? getString('searchScope.accOnly') : getString('searchScope.orgOnly'),
+        value: ScopeLevelEnum.CURRENT
+      }
 }
 
 export const getEditPermissionRequestFromScope = (

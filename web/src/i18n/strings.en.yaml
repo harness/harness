@@ -124,6 +124,7 @@ repos:
   activities: Monthly Activities
   updated: Updated Date
   lastChange: Last Change
+  lastPush: Last Push
   noDataMessage: There are no repositories in this project.  Create a new repository, or import an existing Git repository by clicking below.
   enterBranchName: Enter a branch name
 createRepoModal:
@@ -1286,6 +1287,7 @@ artifacts: Artifacts
 recursiveSearchTooltip: Disabling recursive search will only search at the account level and exclude organization and project repositories.
 recursiveSearchLabel: 'Recursive search: show results across Repositories within {account} Organization and Projects'
 accounts: "Account's"
+scope: Scope
 searchScope:
   base: 'Search scope: {scope}'
   allScopes: Account, organizations and projects

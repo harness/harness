@@ -1003,6 +1003,7 @@ export interface StringsMap {
   'repos.data': string
   'repos.enterBranchName': string
   'repos.lastChange': string
+  'repos.lastPush': string
   'repos.name': string
   'repos.noDataMessage': string
   'repos.updated': string
@@ -1030,6 +1031,7 @@ export interface StringsMap {
   samplePayloadUrl: string
   save: string
   scanAlerts: string
+  scope: string
   scrollToTop: string
   search: string
   searchBranches: string

@@ -377,7 +377,7 @@ const BranchProtectionListing = (props: {
             [space, repoMetadata, scope]
           )
 
-          const scopeIcon = getScopeIcon(row.original?.scope, standalone)
+          const scopeIcon = getScopeIcon(standalone, row.original?.scope)
           return (
             <Layout.Horizontal spacing="medium" padding={{ left: 'medium' }}>
               <Container onClick={Utils.stopEvent}>

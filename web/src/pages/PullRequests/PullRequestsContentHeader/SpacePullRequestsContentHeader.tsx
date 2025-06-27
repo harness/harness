@@ -20,7 +20,7 @@ import {
   Layout,
   FlexExpander,
   DropDown,
-  SelectOption,
+  FiltersSelectDropDown,
   MultiSelectDropDown,
   MultiSelectOption
 } from '@harnessio/uicore'
@@ -31,7 +31,7 @@ import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import type { TypesPrincipalInfo } from 'services/code'
 import { useAppContext } from 'AppContext'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
-import { ScopeLevelEnum, ScopeLevel } from 'utils/Utils'
+import { getCurrentScopeLabel, getScopeOptions, ScopeLevel, ScopeLevelEnum } from 'utils/Utils'
 import { LabelFilter } from 'components/Label/LabelFilter/LabelFilter'
 import usePRFiltersContext from 'hooks/usePRFiltersContext'
 import ToggleTabsBtn from 'components/ToggleTabs/ToggleTabsBtn'
@@ -87,34 +87,7 @@ export function SpacePullRequestsContentHeader({
 
   const bearerToken = hooks?.useGetToken?.() || ''
 
-  const scopeOption = [
-    accountIdentifier && !orgIdentifier
-      ? {
-          label: getString('searchScope.allScopes'),
-          value: ScopeLevelEnum.ALL
-        }
-      : null,
-    accountIdentifier && !orgIdentifier
-      ? { label: getString('searchScope.accOnly'), value: ScopeLevelEnum.CURRENT }
-      : null,
-    orgIdentifier ? { label: getString('searchScope.orgAndProj'), value: ScopeLevelEnum.ALL } : null,
-    orgIdentifier ? { label: getString('searchScope.orgOnly'), value: ScopeLevelEnum.CURRENT } : null
-  ].filter(Boolean) as SelectOption[]
-
-  const currentScopeLabel =
-    includeSubspaces === ScopeLevelEnum.ALL
-      ? {
-          label:
-            accountIdentifier && !orgIdentifier
-              ? getString('searchScope.allScopes')
-              : getString('searchScope.orgAndProj'),
-          value: ScopeLevelEnum.ALL
-        }
-      : {
-          label:
-            accountIdentifier && !orgIdentifier ? getString('searchScope.accOnly') : getString('searchScope.orgOnly'),
-          value: ScopeLevelEnum.CURRENT
-        }
+  const currentScopeLabel = getCurrentScopeLabel(getString, includeSubspaces, accountIdentifier, orgIdentifier)
 
   const dashboardEncapFilters = [
     { label: 'All', value: DashboardFilter.ALL },
@@ -165,10 +138,11 @@ export function SpacePullRequestsContentHeader({
         </Layout.Horizontal>
         <Layout.Horizontal spacing="medium" style={{ width: '100%' }}>
           <Render when={!projectIdentifier}>
-            <DropDown
-              placeholder={currentScopeLabel.label}
+            <FiltersSelectDropDown
+              placeholder={getString('scope')}
+              showDropDownIcon
               value={currentScopeLabel}
-              items={scopeOption}
+              items={getScopeOptions(getString, accountIdentifier, orgIdentifier)}
               onChange={e => {
                 setIncludeSubspaces(e.value as ScopeLevelEnum)
               }}

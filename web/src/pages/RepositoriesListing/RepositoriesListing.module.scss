@@ -50,11 +50,13 @@
 }
 
 .table {
+  margin-top: var(--spacing-medium);
+
   [class*='TableV2--header'] [class*='variation-table-headers'] {
-    text-transform: none;
-    color: var(--grey-400);
-    font-weight: 500;
-    font-size: 13px;
+    text-transform: uppercase;
+    color: var(--grey-900);
+    font-weight: 600;
+    font-size: 11px;
   }
 
   .row {

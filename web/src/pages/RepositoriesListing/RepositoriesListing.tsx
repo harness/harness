@@ -20,10 +20,12 @@ import {
   Checkbox,
   CheckboxVariant,
   Container,
+  FiltersSelectDropDown,
   FlexExpander,
   Layout,
   PageBody,
   PageHeader,
+  SortDropdown,
   TableV2 as Table,
   Text,
   useToaster,
@@ -31,8 +33,9 @@ import {
 } from '@harnessio/uicore'
 import { ProgressBar, Intent } from '@blueprintjs/core'
 import { Color, FontVariation } from '@harnessio/design-system'
+import { Render } from 'react-jsx-match'
 import type { CellProps, Column } from 'react-table'
-import { debounce, isEmpty } from 'lodash-es'
+import { compact, debounce, isEmpty } from 'lodash-es'
 import Keywords from 'react-keywords'
 import cx from 'classnames'
 import { useGet } from 'restful-react'
@@ -40,7 +43,19 @@ import { useHistory } from 'react-router-dom'
 import { Icon } from '@harnessio/icons'
 import { useStrings, String } from 'framework/strings'
 import { useAppContext } from 'AppContext'
-import { voidFn, formatDate, getErrorMessage, LIST_FETCHING_LIMIT, PageBrowserProps } from 'utils/Utils'
+import {
+  voidFn,
+  formatDate,
+  getErrorMessage,
+  LIST_FETCHING_LIMIT,
+  PageBrowserProps,
+  getCurrentScopeLabel,
+  getScopeOptions,
+  ScopeLevelEnum,
+  getScopeData,
+  ScopeEnum,
+  getScopeFromParams
+} from 'utils/Utils'
 import { NewRepoModalButton } from 'components/NewRepoModalButton/NewRepoModalButton'
 import type { RepoRepositoryOutput } from 'services/code'
 import { useDeleteRepository } from 'services/code'
@@ -52,6 +67,7 @@ import useSpaceSSE from 'hooks/useSpaceSSE'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import FavoriteStar from 'components/FavoriteStar/FavoriteStar'
+import { LabelTitle } from 'components/Label/Label'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
@@ -78,6 +94,14 @@ interface ProgressState {
   state: string
 }
 
+export enum RepoSortMethod {
+  IdentifierAsc = 'identifier,asc',
+  IdentifierDesc = 'identifier,desc',
+  Newest = 'created,desc',
+  Oldest = 'created,asc',
+  LastPush = 'last_git_push,desc'
+}
+
 export default function RepositoriesListing() {
   const { getString } = useStrings()
   const history = useHistory()
@@ -87,13 +111,41 @@ export default function RepositoriesListing() {
   const { routes, standalone, hooks, routingId } = useAppContext()
   const { updateQueryParams, replaceQueryParams } = useUpdateQueryParams()
   const { updateRepoMetadata } = useGetRepositoryMetadata()
-  const pageBrowser = useQueryParams<PageBrowserProps & { only_favorites?: string }>()
+  const pageBrowser = useQueryParams<PageBrowserProps & { only_favorites?: string; subspace?: string; sort?: string }>()
   const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
   const [page, setPage] = usePageIndex(pageInit)
   const [searchTerm, setSearchTerm] = useState<string | undefined>()
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm)
+  const [showScopeInfo, setShowScopeInfo] = useState(pageBrowser.subspace === 'all')
+  const [selectedSortMethod, setSelectedSortMethod] = useState(pageBrowser.sort || RepoSortMethod.IdentifierAsc)
   const { showError, showSuccess } = useToaster()
   const [updatedRepositories, setUpdatedRepositories] = useState<RepoRepositoryOutput[]>()
+  const [accountIdentifier, orgIdentifier, projectIdentifier] = space?.split('/') || []
+
+  const currentScope = useMemo(
+    () => getScopeFromParams({ accountId: accountIdentifier, orgIdentifier, projectIdentifier }, standalone),
+    [accountIdentifier, orgIdentifier, projectIdentifier, standalone]
+  )
+  const currentScopeLabel = useMemo(
+    () =>
+      getCurrentScopeLabel(
+        getString,
+        pageBrowser.subspace === 'all' ? ScopeLevelEnum.ALL : ScopeLevelEnum.CURRENT,
+        accountIdentifier,
+        orgIdentifier
+      ),
+    [getString, pageBrowser.subspace, accountIdentifier, orgIdentifier]
+  )
+  const repoSortOptions = useMemo(
+    () => [
+      { label: 'Name (A->Z, 0->9)', value: RepoSortMethod.IdentifierAsc },
+      { label: 'Name (Z->A, 9->0)', value: RepoSortMethod.IdentifierDesc },
+      { label: 'Newest', value: RepoSortMethod.Newest },
+      { label: 'Oldest', value: RepoSortMethod.Oldest },
+      { label: getString('repos.lastPush'), value: RepoSortMethod.LastPush }
+    ],
+    [getString]
+  )
 
   const {
     data: repositories,
@@ -107,7 +159,10 @@ export default function RepositoriesListing() {
       page: pageBrowser.page,
       limit: LIST_FETCHING_LIMIT,
       query: debouncedSearchTerm,
-      only_favorites: pageBrowser.only_favorites
+      only_favorites: pageBrowser.only_favorites,
+      recursive: pageBrowser.subspace === 'all',
+      sort: selectedSortMethod.split(',')[0],
+      order: selectedSortMethod.split(',')[1]
     }
   })
 
@@ -121,7 +176,7 @@ export default function RepositoriesListing() {
 
   const onEvent = useCallback(
     data => {
-      // should I include repo id here? what if a new repo is created? coould check for ids that are higher than the lowest id on the page?
+      // should I include repo id here? what if a new repo is created? could check for ids that are higher than the lowest id on the page?
       if (repositories?.some(repository => repository.id === data?.id && repository.parent_id === data?.parent_id)) {
         //TODO - revisit full refresh - can I use the message to update the execution?
         refetch()
@@ -194,9 +249,12 @@ export default function RepositoriesListing() {
   const columns: Column<TypesRepoExtended>[] = useMemo(
     () => [
       {
-        Header: getString('repos.name'),
-        width: 'calc(100% - 210px)',
-
+        id: 'extraPadding',
+        width: '1%'
+      },
+      {
+        Header: getString('pageTitle.repository'),
+        width: showScopeInfo ? '35%' : '83%',
         Cell: ({ row }: CellProps<TypesRepoExtended>) => {
           const record = row.original
           const renderImportProgressText = () => {
@@ -216,7 +274,7 @@ export default function RepositoriesListing() {
             <Container className={css.nameContainer}>
               <Layout.Horizontal spacing="small" style={{ flexGrow: 1 }}>
                 <Layout.Vertical flex className={css.name} ref={rowContainerRef}>
-                  <Text className={css.repoName} width={nameTextWidth} lineClamp={2}>
+                  <Text className={css.repoName} width={showScopeInfo ? '95%' : nameTextWidth} lineClamp={2}>
                     <Keywords value={searchTerm}>{record.identifier}</Keywords>
                     <RepoTypeLabel
                       isPublic={row.original.is_public}
@@ -225,7 +283,7 @@ export default function RepositoriesListing() {
                     />
                   </Text>
 
-                  <Text className={css.desc} width={nameTextWidth} lineClamp={1}>
+                  <Text className={css.desc} width={showScopeInfo ? '95%' : nameTextWidth} lineClamp={1}>
                     {renderImportProgressText()}
                   </Text>
                 </Layout.Vertical>
@@ -235,8 +293,48 @@ export default function RepositoriesListing() {
         }
       },
       {
+        id: 'scopeInfo',
+        width: showScopeInfo ? '48%' : '0',
+        Cell: ({ row }: CellProps<TypesRepoExtended>) => {
+          if (!showScopeInfo) {
+            return null
+          }
+
+          const [accountId, repoOrgIdentifier, repoProjectIdentifier] = row.original.path?.split('/').slice(0, -1) || []
+          const repoScope = getScopeFromParams(
+            { accountId, orgIdentifier: repoOrgIdentifier, projectIdentifier: repoProjectIdentifier },
+            standalone
+          )
+          const repoSpace = compact([accountId, repoOrgIdentifier, repoProjectIdentifier]).join('/')
+          const { scopeColor, scopeName } = getScopeData(repoSpace, repoScope, standalone)
+
+          // Show the relative space reference depending on the current scope
+          const relativeSpaceRef =
+            currentScope === ScopeEnum.ACCOUNT_SCOPE
+              ? repoScope === ScopeEnum.PROJECT_SCOPE
+                ? `${repoOrgIdentifier}/${repoProjectIdentifier}`
+                : repoScope === ScopeEnum.ORG_SCOPE
+                ? repoOrgIdentifier
+                : null
+              : currentScope === ScopeEnum.ORG_SCOPE && repoScope === ScopeEnum.PROJECT_SCOPE
+              ? repoProjectIdentifier
+              : null
+
+          return (
+            <Layout.Vertical spacing="xsmall">
+              <LabelTitle name={scopeName} scope={repoScope} label_color={scopeColor} isScopeName />
+              {relativeSpaceRef && (
+                <Text font={{ size: 'small' }} lineClamp={1}>
+                  {relativeSpaceRef}
+                </Text>
+              )}
+            </Layout.Vertical>
+          )
+        }
+      },
+      {
         Header: getString('repos.updated'),
-        width: '180px',
+        width: '13%',
         Cell: ({ row }: CellProps<TypesRepoExtended>) => {
           if (
             [ImportStatus.FAILED, ImportStatus.FETCH_FAILED].includes(row?.original?.importProgress as ImportStatus)
@@ -272,7 +370,7 @@ export default function RepositoriesListing() {
       },
       {
         id: 'action',
-        width: '30px',
+        width: '3%',
         Cell: ({ row }: CellProps<TypesRepoExtended>) => {
           const { mutate: deleteRepo } = useDeleteRepository({})
           const confirmCancelImport = useConfirmAct()
@@ -429,7 +527,30 @@ export default function RepositoriesListing() {
                     setPage(1)
                   }}
                 />
+                <Render when={!projectIdentifier}>
+                  <FiltersSelectDropDown
+                    showDropDownIcon
+                    placeholder={getString('scope')}
+                    value={currentScopeLabel}
+                    items={getScopeOptions(getString, accountIdentifier, orgIdentifier)}
+                    onChange={e => {
+                      updateQueryParams({ subspace: e.value === ScopeLevelEnum.ALL ? 'all' : 'current' })
+                      setPage(1)
+                      setShowScopeInfo(e.value === ScopeLevelEnum.ALL)
+                    }}
+                  />
+                </Render>
                 <FlexExpander />
+                <SortDropdown
+                  sortOptions={repoSortOptions}
+                  selectedSortMethod={selectedSortMethod}
+                  onSortMethodChange={option => {
+                    const sortArray = (option.value as RepoSortMethod)?.split(',')
+                    updateQueryParams({ sort: sortArray.join(',') })
+                    setSelectedSortMethod(option.value as RepoSortMethod)
+                    setPage(1)
+                  }}
+                />
                 <SearchInputWithSpinner
                   loading={loading && debouncedSearchTerm !== undefined}
                   query={searchTerm}

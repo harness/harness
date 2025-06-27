@@ -55,11 +55,12 @@ const FavoriteStar: React.FC<FavoriteStarProps> = props => {
       resource_type: resourceType
     })
       .then(() => {
-        onChange?.(!isFavorite)
         setIsFavorite(!isFavorite)
+        onChange?.(!isFavorite)
       })
       .catch(() => {
         showError(getString(isFavorite ? 'favorite.errorUnFavorite' : 'favorite.errorFavorite'))
+        setIsFavorite(isFavorite)
       })
       .finally(() => {
         setAPIInProgress(false)
