@@ -264,6 +264,7 @@ export interface StringsMap {
   commitsOn: string
   committed: string
   compare: string
+  compareAndPullRequest: string
   compareEmptyDiffMessage: string
   compareEmptyDiffTitle: string
   comparingChanges: string
@@ -818,6 +819,7 @@ export interface StringsMap {
   'pr.commitSuggestions': string
   'pr.copyLinkToComment': string
   'pr.createDraftPR': string
+  'pr.createPRBannerInfo': string
   'pr.createRevertPR': string
   'pr.descHasTooLongLine': string
   'pr.descIsRequired': string

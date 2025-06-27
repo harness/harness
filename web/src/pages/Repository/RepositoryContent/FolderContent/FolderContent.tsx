@@ -29,7 +29,6 @@ import { Color, FontVariation } from '@harnessio/design-system'
 import cx from 'classnames'
 import type { CellProps, Column } from 'react-table'
 import { Page } from 'iconoir-react'
-
 import { Render } from 'react-jsx-match'
 import { chunk, defaultTo, sortBy, throttle } from 'lodash-es'
 import { useGet, useMutate } from 'restful-react'
@@ -341,7 +340,7 @@ const CommitMessageLinks: React.FC<CommitMessageLinksProps> = ({ repoMetadata, r
                 pullRequestId
               })}
               text={`#${pullRequestId}`}
-              className={css.hightlight}
+              className={css.highlight}
               wrapperClassName={css.noShrink}
             />
           )

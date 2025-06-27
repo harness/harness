@@ -14,16 +14,6 @@
  * limitations under the License.
  */
 
-.link {
-  background-color: var(--primary-1);
-  color: var(--primary-7);
-  border-radius: 4px;
-  line-height: 20px;
-  font-size: var(--font-size-small);
-  font-weight: 600;
-  padding: 2px 6px !important;
-}
-
 .copyContainer {
   background-color: var(--primary-1) !important;
   color: var(--primary-7) !important;
@@ -37,10 +27,6 @@
   padding-bottom: 1px !important;
 }
 
-.linkText {
-  color: var(--primary-7) !important;
-}
-
 .link {
   background-color: var(--primary-1) !important;
   color: var(--primary-7) !important;
@@ -51,4 +37,8 @@
   padding: 2px 6px !important;
   width: fit-content !important;
   padding-bottom: 3px !important;
+}
+
+.linkText {
+  color: var(--primary-7) !important;
 }

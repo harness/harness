@@ -94,7 +94,7 @@ export default function Repository() {
             updateRepoMetadata={updateRepoMetadata}
           />
           <Layout.Vertical>
-            <Container padding={{ left: 'xlarge' }}>
+            <Container>
               <ContentHeader
                 repoMetadata={repoMetadata as RepoRepositoryOutput}
                 gitRef={gitRef}
@@ -102,7 +102,7 @@ export default function Repository() {
                 resourceContent={resourceContent as OpenapiGetContentOutput}
               />
               {notFoundError === NotFoundType.FILE && (
-                <Container className={css.bannerContainer} padding={{ left: 'xlarge' }}>
+                <Container className={css.bannerContainer}>
                   <Text font={'small'} padding={{ left: 'large' }}>
                     <StringSubstitute
                       str={getString('branchDoesNotHaveFile')}

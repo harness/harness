@@ -15,7 +15,7 @@
  */
 
 .main {
-  padding: var(--spacing-large) var(--spacing-xlarge) 0 var(--spacing-xlarge) !important;
+  padding: var(--spacing-large) var(--spacing-xlarge) !important;
   position: relative;
 
   div[class*='TextInput'] {
@@ -30,8 +30,6 @@
 
   > div {
     align-items: center;
-    padding-bottom: var(--spacing-large) !important;
-    // border-bottom: 1px solid var(--grey-100);
   }
 
   .btnColorFix > span[data-icon] {
@@ -106,9 +104,11 @@
 }
 
 .mainBorder {
+  padding-bottom: var(--spacing-large) !important;
   border-bottom: 1px solid var(--grey-200) !important;
 }
 
 .mainContainer {
   background: var(--grey-0) !important;
+  padding-bottom: 0 !important;
 }

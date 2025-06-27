@@ -228,6 +228,7 @@ newPullRequest: New Pull Request
 pullRequestEmpty: There are no pull requests in your repo. Click the button below to create a pull request.
 pullRequestNotFoundforFilter: No pull requests match the applied filters
 comparingChanges: Comparing Changes
+compareAndPullRequest: Compare & pull request
 selectToViewMore: Select branch to view more here.
 createPullRequest: Create pull request
 prefixBase: 'base: '
@@ -320,6 +321,7 @@ pr:
   prMerged: This Pull Request was merged
   prClosed: This Pull Request was closed.
   closedPrBranchDelete: '{source} branch has unmerged changes.'
+  createPRBannerInfo: 'You pushed to {branch} {time}'
   reviewSubmitted: Review submitted.
   requestSubmitted: Request for changes submitted.
   requestedChanges: '{{user}} requested changes to the pull request'

@@ -15,6 +15,7 @@
  */
 
 import React from 'react'
+import cx from 'classnames'
 import { Link } from 'react-router-dom'
 import { Layout } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
@@ -23,15 +24,16 @@ import { useStrings } from 'framework/strings'
 import { CodeIcon } from 'utils/GitUtils'
 import css from './GitRefLink.module.scss'
 
-export const GitRefLink: React.FC<{ text: string; url: string; showCopy: boolean }> = ({
+export const GitRefLink: React.FC<{ text: string; url: string; showCopy: boolean; className?: string }> = ({
   text,
   url,
-  showCopy = true
+  showCopy = true,
+  className
 }) => {
   const { getString } = useStrings()
 
   return (
-    <Layout.Horizontal className={css.link} inline>
+    <Layout.Horizontal className={cx(css.link, className)} inline>
       <Link className={css.linkText} to={url}>
         {text}
       </Link>

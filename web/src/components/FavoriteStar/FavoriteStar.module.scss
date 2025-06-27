@@ -6,6 +6,8 @@
  */
 
 .star {
+  cursor: pointer;
+
   &:hover {
     svg path {
       stroke: var(--yellow-700) !important;

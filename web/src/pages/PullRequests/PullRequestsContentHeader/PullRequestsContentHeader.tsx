@@ -14,18 +14,20 @@
  * limitations under the License.
  */
 
-import { useHistory } from 'react-router-dom'
 import React, { useEffect, useMemo, useState } from 'react'
+import { useHistory } from 'react-router-dom'
+import { useGet } from 'restful-react'
 import { Container, Layout, FlexExpander, DropDown, ButtonVariation, Button } from '@harnessio/uicore'
 import { useStrings } from 'framework/strings'
 import { CodeIcon, GitInfoProps, makeDiffRefs, PullRequestFilterOption } from 'utils/GitUtils'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
-import type { TypesPrincipalInfo } from 'services/code'
+import type { TypesBranchTable, TypesPrincipalInfo } from 'services/code'
 import { useAppContext } from 'AppContext'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import { LabelFilterObj, PageBrowserProps, ScopeLevel, permissionProps } from 'utils/Utils'
 import { useQueryParams } from 'hooks/useQueryParams'
 import { LabelFilter } from 'components/Label/LabelFilter/LabelFilter'
+import { PRBanner } from 'components/PRBanner/PRBanner'
 import { PRAuthorFilter } from './PRAuthorFilter'
 import css from './PullRequestsContentHeader.module.scss'
 
@@ -72,6 +74,10 @@ export function PullRequestsContentHeader({
     [space]
   )
 
+  const { data: prCandidateBranches } = useGet<TypesBranchTable[]>({
+    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/candidates`
+  })
+
   useEffect(() => {
     setLabelFilterOption(activePullRequestLabelFilterOption)
   }, [activePullRequestLabelFilterOption])
@@ -94,6 +100,11 @@ export function PullRequestsContentHeader({
 
   return (
     <Container className={css.main} padding="xlarge">
+      {prCandidateBranches
+        ?.filter(branch => branch.name !== repoMetadata.default_branch)
+        .map(branch => (
+          <PRBanner key={branch.name} repoMetadata={repoMetadata} candidateBranch={branch} />
+        ))}
       <Layout.Horizontal spacing="medium">
         <SearchInputWithSpinner
           loading={loading}
