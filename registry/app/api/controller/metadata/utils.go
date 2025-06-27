@@ -485,11 +485,35 @@ func GetPythonDownloadCommand(artifact, version string) string {
 	return downloadCommand
 }
 
-func GetGenericArtifactFileDownloadCommand(
+func GetGenericFileDownloadCommand(
 	regURL, artifact, version, filename string,
 	setupDetailsAuthHeaderPrefix string,
 ) string {
 	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>:<VERSION>:<FILENAME>'" +
+		" --header '<AUTH_HEADER_PREFIX> <API_KEY>'" +
+		" -J -O"
+
+	// Replace the placeholders with the actual values
+	replacements := map[string]string{
+		"<HOSTNAME>":           regURL,
+		"<ARTIFACT>":           artifact,
+		"<VERSION>":            version,
+		"<FILENAME>":           filename,
+		"<AUTH_HEADER_PREFIX>": setupDetailsAuthHeaderPrefix,
+	}
+
+	for placeholder, value := range replacements {
+		downloadCommand = strings.ReplaceAll(downloadCommand, placeholder, value)
+	}
+
+	return downloadCommand
+}
+
+func GetGenericArtifactFileDownloadCommand(
+	regURL, artifact, version, filename string,
+	setupDetailsAuthHeaderPrefix string,
+) string {
+	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>/<VERSION>?filename=<FILENAME>'" +
 		" --header '<AUTH_HEADER_PREFIX> <API_KEY>'" +
 		" -J -O"
 

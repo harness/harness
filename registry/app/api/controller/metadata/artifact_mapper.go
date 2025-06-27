@@ -262,8 +262,11 @@ func GetArtifactFilesMetadata(
 		var downloadCommand string
 		//nolint:exhaustive
 		switch packageType {
-		case artifactapi.PackageTypeGENERIC, artifactapi.PackageTypePYTHON:
+		case artifactapi.PackageTypeGENERIC:
 			downloadCommand = GetGenericArtifactFileDownloadCommand(registryURL, artifactName,
+				version, filename, setupDetailsAuthHeaderPrefix)
+		case artifactapi.PackageTypePYTHON:
+			downloadCommand = GetGenericFileDownloadCommand(registryURL, artifactName,
 				version, filename, setupDetailsAuthHeaderPrefix)
 		case artifactapi.PackageTypeNPM:
 			downloadCommand = GetNPMArtifactFileDownloadCommand(registryURL, artifactName,

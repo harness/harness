@@ -30,7 +30,9 @@ func (h *Handler) PullArtifact(w http.ResponseWriter, r *http.Request) {
 		handleErrors(r.Context(), err, w)
 		return
 	}
-	info.FileName = r.FormValue("filename")
+	if info.FileName == "" {
+		info.FileName = r.FormValue("filename")
+	}
 
 	headers, fileReader, redirectURL, err := h.Controller.PullArtifact(ctx, info)
 	if commons.IsEmptyError(err) {
