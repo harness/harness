@@ -172,81 +172,82 @@ const (
 
 func EventsMessageMapping() map[GitspaceEventType]string {
 	var gitspaceConfigsMap = map[GitspaceEventType]string{
-		GitspaceEventTypeGitspaceActionStart:          "Starting gitspace...",
-		GitspaceEventTypeGitspaceActionStartCompleted: "Started gitspace",
-		GitspaceEventTypeGitspaceActionStartFailed:    "Starting gitspace failed",
+		GitspaceEventTypeGitspaceActionStart:          "Setting up Gitspace...",
+		GitspaceEventTypeGitspaceActionStartCompleted: "Gitspace set up successfully",
+		GitspaceEventTypeGitspaceActionStartFailed:    "Failed to set up Gitspace",
 
-		GitspaceEventTypeGitspaceActionStop:          "Stopping gitspace...",
-		GitspaceEventTypeGitspaceActionStopCompleted: "Stopped gitspace",
-		GitspaceEventTypeGitspaceActionStopFailed:    "Stopping gitspace failed",
+		GitspaceEventTypeGitspaceActionStop:          "Stopping Gitspace...",
+		GitspaceEventTypeGitspaceActionStopCompleted: "Gitspace stopped successfully",
+		GitspaceEventTypeGitspaceActionStopFailed:    "Failed to stop Gitspace",
 
-		GitspaceEventTypeGitspaceActionReset:          "Resetting gitspace...",
-		GitspaceEventTypeGitspaceActionResetCompleted: "Resetted gitspace",
-		GitspaceEventTypeGitspaceActionResetFailed:    "Failed to reset gitspace",
+		GitspaceEventTypeGitspaceActionReset:          "Resetting Gitspace...",
+		GitspaceEventTypeGitspaceActionResetCompleted: "Gitspace reset successfully",
+		GitspaceEventTypeGitspaceActionResetFailed:    "Failed to reset Gitspace",
 
-		GitspaceEventTypeFetchDevcontainerStart:     "Fetching devcontainer config...",
-		GitspaceEventTypeFetchDevcontainerCompleted: "Fetched devcontainer config",
-		GitspaceEventTypeFetchDevcontainerFailed:    "Fetching devcontainer config failed",
+		GitspaceEventTypeFetchDevcontainerStart:     "Fetching Devcontainer configuration...",
+		GitspaceEventTypeFetchDevcontainerCompleted: "Devcontainer configuration fetched",
+		GitspaceEventTypeFetchDevcontainerFailed:    "Failed to fetch Devcontainer configuration",
 
-		GitspaceEventTypeFetchConnectorsDetailsStart:     "Fetching platform connectors details...",
-		GitspaceEventTypeFetchConnectorsDetailsCompleted: "Fetched platform connectors details",
-		GitspaceEventTypeFetchConnectorsDetailsFailed:    "Fetching platform connectors details failed",
+		GitspaceEventTypeFetchConnectorsDetailsStart:     "Fetching platform connector details...",
+		GitspaceEventTypeFetchConnectorsDetailsCompleted: "Platform connector details fetched",
+		GitspaceEventTypeFetchConnectorsDetailsFailed:    "Failed to fetch platform connector details",
 
 		GitspaceEventTypeInfraProvisioningStart:     "Provisioning infrastructure...",
-		GitspaceEventTypeInfraProvisioningCompleted: "Provisioning infrastructure completed",
-		GitspaceEventTypeInfraProvisioningFailed:    "Provisioning infrastructure failed",
+		GitspaceEventTypeInfraProvisioningCompleted: "Infrastructure provisioned successfully",
+		GitspaceEventTypeInfraProvisioningFailed:    "Failed to provision infrastructure",
 
 		GitspaceEventTypeInfraGatewayRouteStart:     "Updating gateway routing...",
-		GitspaceEventTypeInfraGatewayRouteCompleted: "Updating gateway routing completed",
-		GitspaceEventTypeInfraGatewayRouteFailed:    "Updating gateway routing failed",
+		GitspaceEventTypeInfraGatewayRouteCompleted: "Gateway routing updated successfully",
+		GitspaceEventTypeInfraGatewayRouteFailed:    "Failed to update gateway routing",
 
 		GitspaceEventTypeInfraStopStart:     "Stopping infrastructure...",
-		GitspaceEventTypeInfraStopCompleted: "Stopping infrastructure completed",
-		GitspaceEventTypeInfraStopFailed:    "Stopping infrastructure failed",
+		GitspaceEventTypeInfraStopCompleted: "Infrastructure stopped successfully",
+		GitspaceEventTypeInfraStopFailed:    "Failed to stop infrastructure",
 
 		GitspaceEventTypeInfraDeprovisioningStart:     "Deprovisioning infrastructure...",
-		GitspaceEventTypeInfraDeprovisioningCompleted: "Deprovisioning infrastructure completed",
-		GitspaceEventTypeInfraDeprovisioningFailed:    "Deprovisioning infrastructure failed",
+		GitspaceEventTypeInfraDeprovisioningCompleted: "Infrastructure deprovisioned successfully",
+		GitspaceEventTypeInfraDeprovisioningFailed:    "Failed to deprovision infrastructure",
 
-		GitspaceEventTypeAgentConnectStart:     "Connecting to the gitspace agent...",
-		GitspaceEventTypeAgentConnectCompleted: "Connected to the gitspace agent",
-		GitspaceEventTypeAgentConnectFailed:    "Failed connecting to the gitspace agent",
+		GitspaceEventTypeAgentConnectStart:     "Connecting to Gitspace agent...",
+		GitspaceEventTypeAgentConnectCompleted: "Connected to Gitspace agent",
+		GitspaceEventTypeAgentConnectFailed:    "Failed to connect to Gitspace agent",
 
-		GitspaceEventTypeAgentGitspaceCreationStart:     "Setting up the gitspace...",
-		GitspaceEventTypeAgentGitspaceCreationCompleted: "Successfully setup the gitspace",
-		GitspaceEventTypeAgentGitspaceCreationFailed:    "Failed to setup the gitspace",
+		GitspaceEventTypeAgentGitspaceCreationStart:     "Setting up Gitspace container...",
+		GitspaceEventTypeAgentGitspaceCreationCompleted: "Gitspace container set up successfully",
+		GitspaceEventTypeAgentGitspaceCreationFailed:    "Failed to set up Gitspace",
 
-		GitspaceEventTypeAgentGitspaceStopStart:     "Stopping the gitspace...",
-		GitspaceEventTypeAgentGitspaceStopCompleted: "Successfully stopped the gitspace",
-		GitspaceEventTypeAgentGitspaceStopFailed:    "Failed to stop the gitspace",
+		GitspaceEventTypeAgentGitspaceStopStart:     "Stopping Gitspace container...",
+		GitspaceEventTypeAgentGitspaceStopCompleted: "Gitspace container stopped successfully",
+		GitspaceEventTypeAgentGitspaceStopFailed:    "Failed to stop Gitspace contaier",
 
-		GitspaceEventTypeAgentGitspaceDeletionStart:      "Removing the gitspace...",
-		GitspaceEventTypeAgentGitspaceDeletionCompleted:  "Successfully removed the gitspace",
-		GitspaceEventTypeAgentGitspaceDeletionFailed:     "Failed to remove the gitspace",
+		GitspaceEventTypeAgentGitspaceDeletionStart:     "Removing Gitspace...",
+		GitspaceEventTypeAgentGitspaceDeletionCompleted: "Gitspace removed successfully",
+		GitspaceEventTypeAgentGitspaceDeletionFailed:    "Failed to remove Gitspace",
+
 		GitspaceEventTypeAgentGitspaceStateReportRunning: "Gitspace is running",
 		GitspaceEventTypeAgentGitspaceStateReportStopped: "Gitspace is stopped",
-		GitspaceEventTypeAgentGitspaceStateReportUnknown: "Gitspace is in unknown state",
-		GitspaceEventTypeAgentGitspaceStateReportError:   "Gitspace has an error",
+		GitspaceEventTypeAgentGitspaceStateReportUnknown: "Gitspace state is unknown",
+		GitspaceEventTypeAgentGitspaceStateReportError:   "Gitspace encountered an error",
 
-		GitspaceEventTypeGitspaceAutoStop: "Triggering auto-stopping due to inactivity...",
+		GitspaceEventTypeGitspaceAutoStop: "Auto-stopping Gitspace due to inactivity...",
 
-		GitspaceEventTypeGitspaceCleanupJob: "Triggering cleanup job...",
+		GitspaceEventTypeGitspaceCleanupJob: "Running Gitspace cleanup job...",
 
 		GitspaceEventTypeInfraCleanupStart:     "Cleaning up infrastructure...",
-		GitspaceEventTypeInfraCleanupCompleted: "Successfully cleaned up infrastructure",
-		GitspaceEventTypeInfraCleanupFailed:    "Failed to cleaned up infrastructure",
+		GitspaceEventTypeInfraCleanupCompleted: "Infrastructure cleaned up successfully",
+		GitspaceEventTypeInfraCleanupFailed:    "Failed to clean up infrastructure",
 
-		GitspaceEventTypeInfraResetStart:  "Resetting the gitspace infrastructure...",
-		GitspaceEventTypeInfraResetFailed: "Failed to reset the gitspace infrastructure",
+		GitspaceEventTypeInfraResetStart:  "Resetting infrastructure for Gitspace...",
+		GitspaceEventTypeInfraResetFailed: "Failed to reset infrastructure for Gitspace",
 
 		GitspaceEventTypeDelegateTaskSubmitted: "Delegate task submitted",
 
-		GitspaceEventTypeInfraVMCreationStart:     "Creating Virtual Machine...",
-		GitspaceEventTypeInfraVMCreationCompleted: "Successfully created Virtual Machine",
-		GitspaceEventTypeInfraVMCreationFailed:    "Failed to created Virtual Machine",
+		GitspaceEventTypeInfraVMCreationStart:     "Creating virtual machine...",
+		GitspaceEventTypeInfraVMCreationCompleted: "Virtual machine created successfully",
+		GitspaceEventTypeInfraVMCreationFailed:    "Failed to create virtual machine",
 
-		GitspaceEventTypeInfraPublishGatewayCompleted: "Published machine port mapping to Gateway",
-		GitspaceEventTypeInfraPublishGatewayFailed:    "Failed to publish machine port mapping to Gateway",
+		GitspaceEventTypeInfraPublishGatewayCompleted: "Published machine port mapping to gateway",
+		GitspaceEventTypeInfraPublishGatewayFailed:    "Failed to  publish machine port mapping to gateway",
 	}
 
 	return gitspaceConfigsMap

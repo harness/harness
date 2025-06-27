@@ -374,6 +374,18 @@ func (o Orchestrator) TriggerDeleteGitspace(
 			ErrorMessage: ptr.String(err.Error()),
 		}
 	}
+
+	// If marked for reset, skip container removal and waiting
+	if gitspaceConfig.IsMarkedForReset && infra.ProviderType != enum.InfraProviderTypeDocker {
+		if err := o.triggerDeleteGitspace(ctx, gitspaceConfig, infra, canDeleteUserData); err != nil {
+			return &types.GitspaceError{
+				Error:        err,
+				ErrorMessage: ptr.String(err.Error()),
+			}
+		}
+		return nil
+	}
+
 	if err = o.removeGitspaceContainer(ctx, gitspaceConfig, *infra, canDeleteUserData); err != nil {
 		log.Warn().Msgf("error stopping and removing gitspace container: %v", err)
 		// If stop fails, delete the gitspace anyway
