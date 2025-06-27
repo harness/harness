@@ -33,12 +33,8 @@ import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { getErrorMessage } from 'utils/Utils'
 import css from '../../RepositorySettings.module.scss'
 
-interface ArchiveRepoModalProps {
-  refetch: () => void
-}
-
-const useArchiveRepoModal = ({ refetch: refetchMetaData }: ArchiveRepoModalProps) => {
-  const { repoMetadata } = useGetRepositoryMetadata()
+const useArchiveRepoModal = () => {
+  const { repoMetadata, updateRepoMetadata } = useGetRepositoryMetadata()
   const { getString } = useStrings()
   const { mutate: archiveRepository, loading: archivingRepository } = useUpdateRepository({
     repo_ref: `${repoMetadata?.path as string}/+`
@@ -86,14 +82,15 @@ const useArchiveRepoModal = ({ refetch: refetchMetaData }: ArchiveRepoModalProps
               margin={{ right: 'small' }}
               onClick={async () => {
                 try {
-                  await archiveRepository({ state: repoMetadata?.archived ? 0 : 4 })
+                  const newArchivedState = repoMetadata?.archived ? 0 : 4
+                  await archiveRepository({ state: newArchivedState })
+                  updateRepoMetadata(repoMetadata?.path || '', 'archived', newArchivedState === 4)
                   showSuccess(getString('repoUpdate'))
-                  hideModal()
-                  refetchMetaData()
                 } catch (exception) {
-                  showError(getErrorMessage(exception), 0, 'failed to archive the repository')
+                  showError(getErrorMessage(exception), 0, 'failed to update archive state of the repository')
+                } finally {
+                  hideModal()
                 }
-                refetchMetaData()
               }}>
               <StringSubstitute
                 str={getString('repoArchive.confirmButton')}

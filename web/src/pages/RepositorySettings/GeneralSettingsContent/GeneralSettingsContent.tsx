@@ -70,7 +70,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
   const { getString } = useStrings()
   const currRepoVisibility = repoMetadata?.is_public === true ? RepoVisibility.PUBLIC : RepoVisibility.PRIVATE
   const repoState = repoMetadata?.archived === true ? RepoState.ARCHIVED : RepoState.UNARCHIVED
-  const { openModal: openArchiveRepoModal } = useArchiveRepoModal({ refetch })
+  const { openModal: openArchiveRepoModal } = useArchiveRepoModal()
   const [repoVis, setRepoVis] = useState<RepoVisibility>(currRepoVisibility)
 
   const { mutate } = useMutate({
