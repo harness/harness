@@ -955,7 +955,7 @@ func applySortFilter(stmt squirrel.SelectBuilder, filter *types.RepoFilter) squi
 		// NOTE: string concatenation is safe because the
 		// order attribute is an enum and is not user-defined,
 		// and is therefore not subject to injection attacks.
-		stmt = stmt.OrderBy("repo_state desc, repo_uid " + filter.Order.String())
+		stmt = stmt.OrderBy("LOWER(repo_uid) " + filter.Order.String())
 	case enum.RepoAttrCreated:
 		stmt = stmt.OrderBy("repo_created " + filter.Order.String())
 	case enum.RepoAttrUpdated:
