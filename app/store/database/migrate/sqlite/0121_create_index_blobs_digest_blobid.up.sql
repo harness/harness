@@ -1,6 +1,0 @@
-CREATE INDEX idx_blobs_digest_blobid
-    ON blobs (blob_digest, blob_id);
-
-CREATE INDEX idx_rblobs_regid_name_blobid
-    ON registry_blobs
-        (rblob_registry_id, rblob_image_name, rblob_blob_id);
