@@ -78,6 +78,19 @@ func (b *branch) ToType() types.BranchTable {
 	}
 }
 
+// mapInternalBranch converts the external branch type to the internal branch type.
+func mapInternalBranch(b *types.BranchTable, repoID int64) branch {
+	return branch{
+		Name:      b.Name,
+		RepoID:    repoID,
+		SHA:       b.SHA.String(),
+		CreatedBy: b.CreatedBy,
+		Created:   b.Created,
+		UpdatedBy: b.UpdatedBy,
+		Updated:   b.Updated,
+	}
+}
+
 // FindBranchesWithoutPRs finds branches without pull requests for a repository.
 func (s *branchStore) FindBranchesWithoutPRs(
 	ctx context.Context,
@@ -92,12 +105,12 @@ func (s *branchStore) FindBranchesWithoutPRs(
 		LEFT JOIN pullreqs ON branch_repo_id = pullreq_source_repo_id
 			AND branch_name = pullreq_source_branch 
 			AND pullreq_state = 'open'
-		WHERE branch_repo_id = ?
-			AND branch_updated_by = ?
-			AND branch_updated > ?
+		WHERE branch_repo_id = $1
+			AND branch_updated_by = $2
+			AND branch_updated > $3
 			AND pullreq_id IS NULL
 		ORDER BY branch_updated DESC
-		LIMIT ?
+		LIMIT $4
 	`
 
 	dst := make([]*branch, 0, limit)
@@ -129,7 +142,7 @@ func (s *branchStore) Delete(ctx context.Context, repoID int64, name string) err
 
 	const sqlQuery = `
 		DELETE FROM branches
-		WHERE branch_repo_id = ? AND branch_name = ?
+		WHERE branch_repo_id = $1 AND branch_name = $2
 	`
 
 	if _, err := db.ExecContext(ctx, sqlQuery, repoID, name); err != nil {
@@ -152,30 +165,25 @@ func (s *branchStore) Upsert(ctx context.Context, repoID int64, branch *types.Br
 			,branch_updated_by
 			,branch_updated
 		) VALUES (
-			 ?
-			,?
-			,?
-			,?
-			,?
-			,?
-			,?
-		) ON CONFLICT(branch_repo_id, branch_name) DO UPDATE SET
+			 :branch_repo_id
+			,:branch_name
+			,:branch_sha
+			,:branch_created_by
+			,:branch_created
+			,:branch_updated_by
+			,:branch_updated
+		) ON CONFLICT (branch_repo_id, branch_name) DO UPDATE SET
 			 branch_sha = EXCLUDED.branch_sha
 			,branch_updated_by = EXCLUDED.branch_updated_by
 			,branch_updated = EXCLUDED.branch_updated
 	`
 
-	_, err := db.ExecContext(
-		ctx,
-		sqlQuery,
-		repoID,
-		branch.Name,
-		branch.SHA.String(),
-		branch.CreatedBy,
-		branch.Created,
-		branch.UpdatedBy,
-		branch.Updated,
-	)
+	query, args, err := db.BindNamed(sqlQuery, mapInternalBranch(branch, repoID))
+	if err != nil {
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind branch parameters")
+	}
+
+	_, err = db.ExecContext(ctx, query, args...)
 
 	if err != nil {
 		return database.ProcessSQLErrorf(ctx, err, "Failed to upsert branch")

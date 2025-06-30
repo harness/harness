@@ -44,16 +44,29 @@ func (c *Controller) PRBranchCandidates(
 
 	cutOffTime := time.Now().Add(-PRBannerDuration)
 
+	// Request extra branch to account for potentially filtering out default branch
 	branches, err := c.branchStore.FindBranchesWithoutPRs(
 		ctx,
 		repo.ID,
 		session.Principal.ID,
 		cutOffTime.UnixMilli(),
-		limit,
+		limit+1,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list branches: %w", err)
 	}
 
-	return branches, nil
+	// Filter out default branch if present
+	result := make([]types.BranchTable, 0, len(branches))
+	for _, branch := range branches {
+		if branch.Name != repo.DefaultBranch {
+			result = append(result, branch)
+		}
+		// Stop once we've reached the limit
+		if uint64(len(result)) >= limit {
+			break
+		}
+	}
+
+	return result, nil
 }
