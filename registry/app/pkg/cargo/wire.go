@@ -17,6 +17,7 @@ package cargo
 import (
 	"github.com/harness/gitness/app/services/refcache"
 	urlprovider "github.com/harness/gitness/app/url"
+	registryevents "github.com/harness/gitness/registry/app/events/artifact"
 	"github.com/harness/gitness/registry/app/pkg/base"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
@@ -37,10 +38,11 @@ func LocalRegistryProvider(
 	artifactDao store.ArtifactRepository,
 	urlProvider urlprovider.Provider,
 	registryHelper cargo.RegistryHelper,
+	artifactEventReporter *registryevents.Reporter,
 ) LocalRegistry {
 	registry := NewLocalRegistry(
 		localBase, fileManager, proxyStore, tx, registryDao, imageDao, artifactDao,
-		urlProvider, registryHelper,
+		urlProvider, registryHelper, artifactEventReporter,
 	)
 	base.Register(registry)
 	return registry
@@ -57,9 +59,10 @@ func ProxyProvider(
 	spaceFinder refcache.SpaceFinder,
 	service secret.Service,
 	localRegistryHelper LocalRegistryHelper,
+	artifactEventReporter *registryevents.Reporter,
 ) Proxy {
 	proxy := NewProxy(fileManager, proxyStore, tx, registryDao, imageDao, artifactDao, urlProvider,
-		spaceFinder, service, localRegistryHelper)
+		spaceFinder, service, localRegistryHelper, artifactEventReporter)
 	base.Register(proxy)
 	return proxy
 }

@@ -20,10 +20,12 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/services/refcache"
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
+	registryevents "github.com/harness/gitness/registry/app/events/artifact"
 	cargometadata "github.com/harness/gitness/registry/app/metadata/cargo"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
@@ -32,6 +34,7 @@ import (
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
 	cfg "github.com/harness/gitness/registry/config"
+	"github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/secret"
 	"github.com/harness/gitness/store/database/dbtx"
 
@@ -43,16 +46,17 @@ var _ pkg.Artifact = (*proxy)(nil)
 var _ Registry = (*proxy)(nil)
 
 type proxy struct {
-	fileManager         filemanager.FileManager
-	proxyStore          store.UpstreamProxyConfigRepository
-	tx                  dbtx.Transactor
-	registryDao         store.RegistryRepository
-	imageDao            store.ImageRepository
-	artifactDao         store.ArtifactRepository
-	urlProvider         urlprovider.Provider
-	spaceFinder         refcache.SpaceFinder
-	service             secret.Service
-	localRegistryHelper LocalRegistryHelper
+	fileManager           filemanager.FileManager
+	proxyStore            store.UpstreamProxyConfigRepository
+	tx                    dbtx.Transactor
+	registryDao           store.RegistryRepository
+	imageDao              store.ImageRepository
+	artifactDao           store.ArtifactRepository
+	urlProvider           urlprovider.Provider
+	spaceFinder           refcache.SpaceFinder
+	service               secret.Service
+	localRegistryHelper   LocalRegistryHelper
+	artifactEventReporter *registryevents.Reporter
 }
 
 type Proxy interface {
@@ -70,18 +74,20 @@ func NewProxy(
 	spaceFinder refcache.SpaceFinder,
 	service secret.Service,
 	localRegistryHelper LocalRegistryHelper,
+	artifactEventReporter *registryevents.Reporter,
 ) Proxy {
 	return &proxy{
-		fileManager:         fileManager,
-		proxyStore:          proxyStore,
-		tx:                  tx,
-		registryDao:         registryDao,
-		imageDao:            imageDao,
-		artifactDao:         artifactDao,
-		urlProvider:         urlProvider,
-		spaceFinder:         spaceFinder,
-		service:             service,
-		localRegistryHelper: localRegistryHelper,
+		fileManager:           fileManager,
+		proxyStore:            proxyStore,
+		tx:                    tx,
+		registryDao:           registryDao,
+		imageDao:              imageDao,
+		artifactDao:           artifactDao,
+		urlProvider:           urlProvider,
+		spaceFinder:           spaceFinder,
+		service:               service,
+		localRegistryHelper:   localRegistryHelper,
+		artifactEventReporter: artifactEventReporter,
 	}
 }
 
@@ -238,10 +244,21 @@ func (r *proxy) putFileToLocal(ctx context.Context, info *cargotype.ArtifactInfo
 	_, _, _, _, err = r.localRegistryHelper.MoveTempFile(
 		ctx, info, fileInfo, tempFileName, metadata,
 	)
-
 	if err != nil {
 		return fmt.Errorf("failed to move temp file: %w", err)
 	}
+
+	// publish artifact created event
+	session, _ := request.AuthSessionFrom(ctx)
+	payload := webhook.GetArtifactCreatedPayloadForCommonArtifacts(
+		session.Principal.ID,
+		info.RegistryID,
+		artifact.PackageTypeCARGO,
+		info.Image,
+		info.Version,
+	)
+	r.artifactEventReporter.ArtifactCreated(ctx, &payload)
+
 	// regenerate package index
 	err = r.localRegistryHelper.UpdatePackageIndex(ctx, *info)
 	if err != nil {

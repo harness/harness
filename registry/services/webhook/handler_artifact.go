@@ -130,6 +130,11 @@ func getArtifactInfo(eventArtifact registryevents.Artifact) *registryevents.Arti
 		artifactInfo.Name = helmArtifact.Name
 		artifactInfo.Version = helmArtifact.Tag
 		artifactInfo.Artifact = &helmArtifact
+	} else if commonArtifact, ok := eventArtifact.(*registryevents.CommonArtifact); ok {
+		artifactInfo.Type = commonArtifact.Type
+		artifactInfo.Name = commonArtifact.Name
+		artifactInfo.Version = commonArtifact.Version
+		artifactInfo.Artifact = &commonArtifact
 	}
 	return &artifactInfo
 }

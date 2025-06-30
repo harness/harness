@@ -68,6 +68,16 @@ func (a *HelmArtifact) GetInfo() string {
 	return a.Ref
 }
 
+type CommonArtifact struct {
+	BaseArtifact
+	Type    artifact.PackageType `json:"package_type"`
+	Version string               `json:"version"`
+}
+
+func (a *CommonArtifact) GetInfo() string {
+	return a.Ref
+}
+
 //nolint:revive
 type ArtifactInfo struct {
 	Type     artifact.PackageType `json:"type"`

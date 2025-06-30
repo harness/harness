@@ -21,8 +21,10 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/harness/gitness/app/api/request"
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	registryevents "github.com/harness/gitness/registry/app/events/artifact"
 	cargometadata "github.com/harness/gitness/registry/app/metadata/cargo"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/base"
@@ -32,6 +34,7 @@ import (
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/app/utils/cargo"
+	"github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/store/database/dbtx"
 )
 
@@ -39,15 +42,16 @@ var _ pkg.Artifact = (*localRegistry)(nil)
 var _ Registry = (*localRegistry)(nil)
 
 type localRegistry struct {
-	localBase      base.LocalBase
-	fileManager    filemanager.FileManager
-	proxyStore     store.UpstreamProxyConfigRepository
-	tx             dbtx.Transactor
-	registryDao    store.RegistryRepository
-	imageDao       store.ImageRepository
-	artifactDao    store.ArtifactRepository
-	urlProvider    urlprovider.Provider
-	registryHelper cargo.RegistryHelper
+	localBase             base.LocalBase
+	fileManager           filemanager.FileManager
+	proxyStore            store.UpstreamProxyConfigRepository
+	tx                    dbtx.Transactor
+	registryDao           store.RegistryRepository
+	imageDao              store.ImageRepository
+	artifactDao           store.ArtifactRepository
+	urlProvider           urlprovider.Provider
+	registryHelper        cargo.RegistryHelper
+	artifactEventReporter *registryevents.Reporter
 }
 
 type LocalRegistry interface {
@@ -64,17 +68,19 @@ func NewLocalRegistry(
 	artifactDao store.ArtifactRepository,
 	urlProvider urlprovider.Provider,
 	registryHelper cargo.RegistryHelper,
+	artifactEventReporter *registryevents.Reporter,
 ) LocalRegistry {
 	return &localRegistry{
-		localBase:      localBase,
-		fileManager:    fileManager,
-		proxyStore:     proxyStore,
-		tx:             tx,
-		registryDao:    registryDao,
-		imageDao:       imageDao,
-		artifactDao:    artifactDao,
-		urlProvider:    urlProvider,
-		registryHelper: registryHelper,
+		localBase:             localBase,
+		fileManager:           fileManager,
+		proxyStore:            proxyStore,
+		tx:                    tx,
+		registryDao:           registryDao,
+		imageDao:              imageDao,
+		artifactDao:           artifactDao,
+		urlProvider:           urlProvider,
+		registryHelper:        registryHelper,
+		artifactEventReporter: artifactEventReporter,
 	}
 }
 
@@ -95,6 +101,17 @@ func (c *localRegistry) UploadPackage(
 	if err != nil {
 		return response, fmt.Errorf("failed to upload crate file: %w", err)
 	}
+
+	// publish artifact created event
+	session, _ := request.AuthSessionFrom(ctx)
+	payload := webhook.GetArtifactCreatedPayloadForCommonArtifacts(
+		session.Principal.ID,
+		info.RegistryID,
+		artifact.PackageTypeCARGO,
+		info.Image,
+		info.Version,
+	)
+	c.artifactEventReporter.ArtifactCreated(ctx, &payload)
 
 	// regenerate package index for cargo client to consume
 	err = c.regeneratePackageIndex(ctx, info)

@@ -121,6 +121,10 @@ func (c *APIController) DeleteArtifactVersion(ctx context.Context, r artifact.De
 		if err != nil {
 			break
 		}
+		c.sendArtifactDeletedWebhookEvent(
+			ctx, session.Principal.ID, regInfo.RegistryID, regInfo.PackageType,
+			artifactName, versionName,
+		)
 		err = c.CargoRegistryHelper.UpdatePackageIndex(
 			ctx, regInfo.RootIdentifier, regInfo.ParentID, regInfo.RegistryID, artifactName,
 		)
@@ -220,6 +224,21 @@ func (c *APIController) deleteVersion(
 	}
 
 	return nil
+}
+
+func (c *APIController) sendArtifactDeletedWebhookEvent(
+	ctx context.Context, principalID int64,
+	registryID int64, packageType artifact.PackageType,
+	artifact string, version string,
+) {
+	payload := webhook.GetArtifactDeletedPayloadForCommonArtifacts(
+		principalID,
+		registryID,
+		packageType,
+		artifact,
+		version,
+	)
+	c.ArtifactEventReporter.ArtifactDeleted(ctx, &payload)
 }
 
 func throwDeleteArtifactVersion500Error(err error) artifact.DeleteArtifactVersion500JSONResponse {

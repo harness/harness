@@ -31,6 +31,7 @@ func ProvideArtifactReporter(eventsSystem *events.System) (*Reporter, error) {
 	if err != nil {
 		return nil, err
 	}
+	gob.Register(&CommonArtifact{})
 	gob.Register(&DockerArtifact{})
 	gob.Register(&HelmArtifact{})
 	return reporter, nil

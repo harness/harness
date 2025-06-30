@@ -110,6 +110,50 @@ func GetArtifactDeletedPayload(
 	return payload
 }
 
+func GetArtifactCreatedPayloadForCommonArtifacts(
+	principalID int64,
+	registryID int64,
+	packageType artifact.PackageType,
+	artifact string,
+	version string,
+) registryevents.ArtifactCreatedPayload {
+	return registryevents.ArtifactCreatedPayload{
+		RegistryID:   registryID,
+		PrincipalID:  principalID,
+		ArtifactType: packageType,
+		Artifact: &registryevents.CommonArtifact{
+			BaseArtifact: registryevents.BaseArtifact{
+				Name: artifact,
+				Ref:  fmt.Sprintf("%s:%s", artifact, version),
+			},
+			Version: version,
+			Type:    packageType,
+		},
+	}
+}
+
+func GetArtifactDeletedPayloadForCommonArtifacts(
+	principalID int64,
+	registryID int64,
+	packageType artifact.PackageType,
+	artifact string,
+	version string,
+) registryevents.ArtifactDeletedPayload {
+	return registryevents.ArtifactDeletedPayload{
+		RegistryID:   registryID,
+		PrincipalID:  principalID,
+		ArtifactType: packageType,
+		Artifact: &registryevents.CommonArtifact{
+			BaseArtifact: registryevents.BaseArtifact{
+				Name: artifact,
+				Ref:  fmt.Sprintf("%s:%s", artifact, version),
+			},
+			Version: version,
+			Type:    packageType,
+		},
+	}
+}
+
 func GetRepoURLWithoutProtocol(registryURL string) string {
 	repoURL := registryURL
 	parsedURL, err := url.Parse(repoURL)
