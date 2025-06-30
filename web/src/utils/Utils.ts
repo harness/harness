@@ -137,7 +137,7 @@ export interface PageBrowserProps {
   state?: string
   tab?: string
   review?: string
-  subspace?: ScopeLevelEnum
+  recursive?: string
 }
 
 export const extractInfoFromRuleViolationArr = (ruleViolationArr: TypesRuleViolations[]) => {

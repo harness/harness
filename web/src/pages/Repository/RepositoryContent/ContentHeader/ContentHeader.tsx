@@ -77,7 +77,8 @@ export function ContentHeader({
   })
 
   const { data: prCandidateBranches } = useGet<TypesBranchTable[]>({
-    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/candidates`
+    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/candidates`,
+    lazy: repoPath.length > 1
   })
 
   const breadcrumbs = useMemo(() => {
@@ -95,11 +96,10 @@ export function ContentHeader({
 
   return (
     <Container className={cx(css.main, { [css.mainContainer]: !isDir(resourceContent) })}>
-      {prCandidateBranches
-        ?.filter(branch => branch.name !== repoMetadata.default_branch)
-        .map(branch => (
-          <PRBanner key={branch.name} repoMetadata={repoMetadata} candidateBranch={branch} />
-        ))}
+      {repoPath.length === 1 &&
+        prCandidateBranches
+          ?.filter(branch => branch.name !== repoMetadata.default_branch)
+          .map(branch => <PRBanner key={branch.name} repoMetadata={repoMetadata} candidateBranch={branch} />)}
       <Layout.Horizontal className={isDir(resourceContent) ? '' : css.mainBorder} spacing="medium">
         <BranchTagSelect
           repoMetadata={repoMetadata}

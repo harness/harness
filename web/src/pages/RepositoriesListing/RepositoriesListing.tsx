@@ -111,12 +111,12 @@ export default function RepositoriesListing() {
   const { routes, standalone, hooks, routingId } = useAppContext()
   const { updateQueryParams, replaceQueryParams } = useUpdateQueryParams()
   const { updateRepoMetadata } = useGetRepositoryMetadata()
-  const pageBrowser = useQueryParams<PageBrowserProps & { only_favorites?: string; subspace?: string; sort?: string }>()
+  const pageBrowser = useQueryParams<PageBrowserProps & { only_favorites?: string; sort?: string }>()
   const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
   const [page, setPage] = usePageIndex(pageInit)
   const [searchTerm, setSearchTerm] = useState<string | undefined>()
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm)
-  const [showScopeInfo, setShowScopeInfo] = useState(pageBrowser.subspace === 'all')
+  const [showScopeInfo, setShowScopeInfo] = useState(pageBrowser.recursive === 'true')
   const [selectedSortMethod, setSelectedSortMethod] = useState(pageBrowser.sort || RepoSortMethod.IdentifierAsc)
   const { showError, showSuccess } = useToaster()
   const [updatedRepositories, setUpdatedRepositories] = useState<RepoRepositoryOutput[]>()
@@ -130,11 +130,11 @@ export default function RepositoriesListing() {
     () =>
       getCurrentScopeLabel(
         getString,
-        pageBrowser.subspace === 'all' ? ScopeLevelEnum.ALL : ScopeLevelEnum.CURRENT,
+        pageBrowser.recursive === 'true' ? ScopeLevelEnum.ALL : ScopeLevelEnum.CURRENT,
         accountIdentifier,
         orgIdentifier
       ),
-    [getString, pageBrowser.subspace, accountIdentifier, orgIdentifier]
+    [getString, pageBrowser.recursive, accountIdentifier, orgIdentifier]
   )
   const repoSortOptions = useMemo(
     () => [
@@ -160,7 +160,7 @@ export default function RepositoriesListing() {
       limit: LIST_FETCHING_LIMIT,
       query: debouncedSearchTerm,
       only_favorites: pageBrowser.only_favorites,
-      recursive: pageBrowser.subspace === 'all',
+      recursive: pageBrowser.recursive === 'true',
       sort: selectedSortMethod.split(',')[0],
       order: selectedSortMethod.split(',')[1]
     }
@@ -534,7 +534,7 @@ export default function RepositoriesListing() {
                     value={currentScopeLabel}
                     items={getScopeOptions(getString, accountIdentifier, orgIdentifier)}
                     onChange={e => {
-                      updateQueryParams({ subspace: e.value === ScopeLevelEnum.ALL ? 'all' : 'current' })
+                      updateQueryParams({ recursive: e.value === ScopeLevelEnum.ALL ? 'true' : 'false' })
                       setPage(1)
                       setShowScopeInfo(e.value === ScopeLevelEnum.ALL)
                     }}

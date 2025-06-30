@@ -202,7 +202,7 @@ export const PRFilterProvider = ({ children }: { children: JSX.Element }): JSX.E
       : browserParams.author === String(currentUser.id) || isEmpty(browserParams) //for fresh mount
       ? DashboardFilter.CREATED
       : DashboardFilter.ALL,
-    includeSubspaces: browserParams?.subspace || ScopeLevelEnum.CURRENT,
+    includeSubspaces: browserParams?.recursive === 'true' ? ScopeLevelEnum.ALL : ScopeLevelEnum.CURRENT,
     prStateFilter: (browserParams?.state as PullRequestFilterOption) || (PullRequestFilterOption.OPEN as string),
     reviewFilter: (browserParams?.review as string) || '',
     authorFilter: isEmpty(browserParams) ? String(currentUser.id) : (browserParams?.author as string),
@@ -221,7 +221,9 @@ export const PRFilterProvider = ({ children }: { children: JSX.Element }): JSX.E
         ...(!isEmpty(state.prStateFilter) && { state: state.prStateFilter }),
         ...(!isEmpty(state.reviewFilter) && { review: state.reviewFilter }),
         ...(!isEmpty(state.authorFilter) && { author: state.authorFilter }),
-        ...(!isEmpty(state.includeSubspaces) && { subspace: state.includeSubspaces }),
+        ...(!isEmpty(state.includeSubspaces) && {
+          recursive: state.includeSubspaces === ScopeLevelEnum.ALL ? 'true' : 'false'
+        }),
         ...(state.page > 1 && { page: state.page.toString() })
       },
       undefined,
