@@ -48,7 +48,6 @@ type Controller struct {
 	repoFinder          refcache.RepoFinder
 	gitReporter         *gitevents.Reporter
 	repoReporter        *repoevents.Reporter
-	git                 git.Interface
 	pullreqStore        store.PullReqStore
 	urlProvider         url.Provider
 	protectionManager   *protection.Manager
@@ -70,7 +69,6 @@ func NewController(
 	repoFinder refcache.RepoFinder,
 	gitReporter *gitevents.Reporter,
 	repoReporter *repoevents.Reporter,
-	git git.Interface,
 	pullreqStore store.PullReqStore,
 	urlProvider url.Provider,
 	protectionManager *protection.Manager,
@@ -91,7 +89,6 @@ func NewController(
 		repoFinder:          repoFinder,
 		gitReporter:         gitReporter,
 		repoReporter:        repoReporter,
-		git:                 git,
 		pullreqStore:        pullreqStore,
 		urlProvider:         urlProvider,
 		protectionManager:   protectionManager,

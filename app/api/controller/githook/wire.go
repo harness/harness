@@ -40,7 +40,9 @@ var WireSet = wire.NewSet(
 
 func ProvideFactory() hook.ClientFactory {
 	return &ControllerClientFactory{
+		// fields are set in ProvideController to avoid import
 		githookCtrl: nil,
+		git:         nil,
 	}
 }
 
@@ -73,7 +75,6 @@ func ProvideController(
 		repoFinder,
 		gitReporter,
 		repoReporter,
-		git,
 		pullreqStore,
 		urlProvider,
 		protectionManager,

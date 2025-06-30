@@ -29,6 +29,7 @@ import (
 
 func (c *Controller) processObjects(
 	ctx context.Context,
+	rgit RestrictedGIT,
 	repo *types.RepositoryCore,
 	principal *types.Principal,
 	refUpdates changedRefs,
@@ -120,7 +121,7 @@ func (c *Controller) processObjects(
 		preReceiveObjsIn.FindLFSPointersParams = &git.FindLFSPointersParams{}
 	}
 
-	preReceiveObjsOut, err := c.git.ProcessPreReceiveObjects(
+	preReceiveObjsOut, err := rgit.ProcessPreReceiveObjects(
 		ctx,
 		preReceiveObjsIn,
 	)

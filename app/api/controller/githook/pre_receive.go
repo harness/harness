@@ -140,7 +140,7 @@ func (c *Controller) PreReceive(
 	}
 
 	if err = c.processObjects(
-		ctx, repo, principal, refUpdates, protectionRules, isRepoOwner, in, &output,
+		ctx, rgit, repo, principal, refUpdates, protectionRules, isRepoOwner, in, &output,
 	); err != nil {
 		return hook.Output{}, fmt.Errorf("failed to process pre-receive objects: %w", err)
 	}
