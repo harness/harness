@@ -527,7 +527,7 @@ export default function RepositoriesListing() {
                     setPage(1)
                   }}
                 />
-                <Render when={!projectIdentifier}>
+                <Render when={!projectIdentifier && !standalone}>
                   <FiltersSelectDropDown
                     showDropDownIcon
                     placeholder={getString('scope')}
