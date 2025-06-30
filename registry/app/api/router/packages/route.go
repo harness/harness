@@ -259,6 +259,9 @@ func NewRouter(
 				Get("/index/config.json", cargoHandler.GetRegistryConfig)
 			r.With(middleware.StoreArtifactInfo(cargoHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionRegistryView)).
+				Put("/index/{name}/regenerate", cargoHandler.RegeneratePackageIndex)
+			r.With(middleware.StoreArtifactInfo(cargoHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionRegistryView)).
 				Get("/index/*", cargoHandler.DownloadPackageIndex)
 			r.With(middleware.StoreArtifactInfo(cargoHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).

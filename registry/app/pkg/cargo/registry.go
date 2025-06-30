@@ -37,6 +37,9 @@ type Registry interface {
 		ctx context.Context, info cargotype.ArtifactInfo,
 		filePath string,
 	) (*commons.ResponseHeaders, *storage.FileReader, io.ReadCloser, string, error)
+	// regenerate package index
+	RegeneratePackageIndex(ctx context.Context, info cargotype.ArtifactInfo,
+	) (*commons.ResponseHeaders, error)
 	DownloadPackage(
 		ctx context.Context, info cargotype.ArtifactInfo,
 	) (*commons.ResponseHeaders, *storage.FileReader, io.ReadCloser, string, error)

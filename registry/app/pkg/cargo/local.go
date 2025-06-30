@@ -223,3 +223,20 @@ func (c *localRegistry) updateYankInternal(ctx context.Context, info cargotype.A
 	}
 	return nil
 }
+
+func (c *localRegistry) RegeneratePackageIndex(
+	ctx context.Context, info cargotype.ArtifactInfo,
+) (*commons.ResponseHeaders, error) {
+	responseHeaders := &commons.ResponseHeaders{
+		Headers: make(map[string]string),
+		Code:    0,
+	}
+
+	// regenerate package index for cargo client to consume
+	err := c.regeneratePackageIndex(ctx, info)
+	if err != nil {
+		return responseHeaders, fmt.Errorf("failed to update package index: %w", err)
+	}
+	responseHeaders.Code = http.StatusOK
+	return responseHeaders, nil
+}

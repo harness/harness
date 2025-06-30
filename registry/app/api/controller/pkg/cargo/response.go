@@ -70,3 +70,8 @@ type UpdateYankResponse struct {
 	BaseResponse `json:"-"`
 	Ok           bool `json:"ok"`
 }
+
+type RegeneratePackageIndexResponse struct {
+	BaseResponse `json:"-"`
+	Ok           bool `json:"ok"`
+}

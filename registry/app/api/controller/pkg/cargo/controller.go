@@ -32,6 +32,9 @@ type Controller interface {
 	DownloadPackageIndex(
 		ctx context.Context, info *cargotype.ArtifactInfo, filePath string,
 	) *GetPackageIndexResponse
+	RegeneratePackageIndex(
+		ctx context.Context, info *cargotype.ArtifactInfo,
+	) (*RegeneratePackageIndexResponse, error)
 	DownloadPackage(
 		ctx context.Context, info *cargotype.ArtifactInfo,
 	) *GetPackageResponse

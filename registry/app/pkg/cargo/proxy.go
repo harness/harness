@@ -196,6 +196,13 @@ func (r *proxy) UpdateYank(
 	return nil, errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
 }
 
+func (r *proxy) RegeneratePackageIndex(
+	ctx context.Context, _ cargotype.ArtifactInfo,
+) (*commons.ResponseHeaders, error) {
+	log.Error().Ctx(ctx).Msg("Not implemented")
+	return nil, errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
+}
+
 func (r *proxy) putFileToLocal(ctx context.Context, info *cargotype.ArtifactInfo,
 	remote RemoteRegistryHelper) error {
 	// Get pacakage from upstream source
