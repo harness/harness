@@ -67,6 +67,7 @@ func NewService(
 	secretService secret.Service,
 	registryRepository registrystore.RegistryRepository,
 	encrypter encrypt.Encrypter,
+	spaceFinder refcache.SpaceFinder,
 ) (*Service, error) {
 	if err := config.Prepare(); err != nil {
 		return nil, fmt.Errorf("provided webhook service config is invalid: %w", err)
@@ -87,6 +88,7 @@ func NewService(
 		config:             config,
 		spacePathStore:     spacePathStore,
 		registryRepository: registryRepository,
+		spaceFinder:        spaceFinder,
 	}
 
 	_, err := artifactsReaderFactory.Launch(ctx, eventsReaderGroupName, config.EventReaderName,

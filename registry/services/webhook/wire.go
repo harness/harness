@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/gob"
 
+	"github.com/harness/gitness/app/services/refcache"
 	gitnesswebhook "github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
@@ -51,6 +52,7 @@ func ProvideService(
 	secretService secret.Service,
 	registryRepository registrystore.RegistryRepository,
 	encrypter encrypt.Encrypter,
+	spaceFinder refcache.SpaceFinder,
 ) (*Service, error) {
 	gob.Register(&artifact.DockerArtifact{})
 	gob.Register(&artifact.HelmArtifact{})
@@ -69,5 +71,6 @@ func ProvideService(
 		secretService,
 		registryRepository,
 		encrypter,
+		spaceFinder,
 	)
 }
