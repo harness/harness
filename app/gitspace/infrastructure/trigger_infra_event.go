@@ -95,9 +95,9 @@ func (i InfraProvisioner) TriggerInfraEventWithOpts(
 		return err
 	}
 
-	infraProvider, err := i.getInfraProvider(infraProviderEntity.Type)
+	infraProvider, err := i.providerFactory.GetInfraProvider(infraProviderEntity.Type)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to get infra provider of type %v: %w", infraProviderEntity.Type, err)
 	}
 
 	allParams, configMetadata, err := i.getAllParamsFromDB(ctx, gitspaceConfig.InfraProviderResource, infraProvider)
@@ -107,6 +107,8 @@ func (i InfraProvisioner) TriggerInfraEventWithOpts(
 
 	switch eventType {
 	case enum.InfraEventProvision:
+		// We usually suspend/hibernate infra so during subsequent provision we can reuse it.
+		// provision resume suspended infra(VM) if it was created before else create new infra during provision.
 		var stoppedInfra types.Infrastructure
 		stoppedInfra, err = i.GetStoppedInfraFromStoredInfo(ctx, gitspaceConfig)
 		if err != nil {

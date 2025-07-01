@@ -35,9 +35,9 @@ func (i InfraProvisioner) Find(
 		return nil, err
 	}
 
-	infraProvider, err := i.getInfraProvider(infraProviderEntity.Type)
+	infraProvider, err := i.providerFactory.GetInfraProvider(infraProviderEntity.Type)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to get infra provider of type %v: %w", infraProviderEntity.Type, err)
 	}
 
 	var infra *types.Infrastructure
@@ -203,16 +203,6 @@ func (i InfraProvisioner) getConfigFromResource(
 	return config, nil
 }
 
-func (i InfraProvisioner) getInfraProvider(
-	infraProviderType enum.InfraProviderType,
-) (infraprovider.InfraProvider, error) {
-	infraProvider, err := i.providerFactory.GetInfraProvider(infraProviderType)
-	if err != nil {
-		return nil, fmt.Errorf("unable to get infra provider of type %v: %w", infraProviderType, err)
-	}
-	return infraProvider, nil
-}
-
 func (i InfraProvisioner) getAllParamsFromDB(
 	ctx context.Context,
 	infraProviderResource types.InfraProviderResource,
@@ -280,7 +270,7 @@ func (i InfraProvisioner) paramsFromResource(
 		templateParamsMap[templateParam.Name] = true
 	}
 
-	params := make([]types.InfraProviderParameter, 0)
+	params := make([]types.InfraProviderParameter, 0, len(infraProviderResource.Metadata))
 
 	for key, value := range infraProviderResource.Metadata {
 		if key == "" || value == "" || templateParamsMap[key] {

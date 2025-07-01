@@ -34,9 +34,9 @@ func (i InfraProvisioner) PostInfraEventComplete(
 	infra types.Infrastructure,
 	eventType enum.InfraEvent,
 ) error {
-	infraProvider, err := i.getInfraProvider(infra.ProviderType)
+	infraProvider, err := i.providerFactory.GetInfraProvider(infra.ProviderType)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to get infra provider of type %v: %w", infra.ProviderType, err)
 	}
 
 	if infraProvider.ProvisioningType() != enum.InfraProvisioningTypeNew {
