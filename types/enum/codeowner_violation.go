@@ -23,6 +23,8 @@ const (
 	CodeOwnerViolationCodePatternInvalid CodeOwnerViolationCode = "pattern_invalid"
 	// CodeOwnerViolationCodePatternEmpty occurs when a pattern in codeowners file is empty.
 	CodeOwnerViolationCodePatternEmpty CodeOwnerViolationCode = "pattern_empty"
+	// CodeOwnerViolationCodeUserPatternInvalid occurs when a pattern of user is invalid.
+	CodeOwnerViolationCodeUserPatternInvalid CodeOwnerViolationCode = "user_pattern_invalid"
 )
 
 func (CodeOwnerViolationCode) Enum() []interface{} { return toInterfaceSlice(codeOwnerViolationCodes) }
@@ -31,4 +33,5 @@ var codeOwnerViolationCodes = sortEnum([]CodeOwnerViolationCode{
 	CodeOwnerViolationCodeUserNotFound,
 	CodeOwnerViolationCodePatternInvalid,
 	CodeOwnerViolationCodePatternEmpty,
+	CodeOwnerViolationCodeUserPatternInvalid,
 })

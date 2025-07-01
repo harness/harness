@@ -442,7 +442,8 @@ func (s *Service) Evaluate(
 					continue
 				}
 				if err != nil {
-					return nil, fmt.Errorf("error resolving usergroup :%w", err)
+					log.Ctx(ctx).Warn().Err(err).Msgf("error resolving usergroup %q", owner)
+					continue
 				}
 				userGroupOwnerEvaluations = append(userGroupOwnerEvaluations, *userGroupCodeOwner)
 				continue
@@ -454,7 +455,8 @@ func (s *Service) Evaluate(
 				continue
 			}
 			if err != nil {
-				return nil, fmt.Errorf("error resolving user by email : %w", err)
+				log.Ctx(ctx).Warn().Err(err).Msgf("error resolving user by email : %q", owner)
+				continue
 			}
 			if pr.CreatedBy == userCodeOwner.Owner.ID {
 				continue
@@ -555,6 +557,8 @@ func (s *Service) Validate(
 		for _, owner := range entry.Owners {
 			// todo: handle usergroup better
 			if strings.HasPrefix(owner, userGroupPrefixMarker) {
+				codeOwnerValidation.Addf(enum.CodeOwnerViolationCodeUserPatternInvalid,
+					"invalid codeowner pattern %q", owner)
 				continue
 			}
 			_, err := s.principalStore.FindByEmail(ctx, owner)
