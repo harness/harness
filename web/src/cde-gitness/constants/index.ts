@@ -53,6 +53,14 @@ export interface regionProp {
   proxySubnet: string
   domain: string
   identifier: number
+  zones?: ZoneConfig[]
+}
+
+export interface ZoneConfig {
+  zone: string
+  privateSubnet: string
+  proxySubnet: string
+  id: number
 }
 export const HYBRID_VM_GCP = 'hybrid_vm_gcp'
 export const HARNESS_GCP = 'harness_gcp'
@@ -228,7 +236,8 @@ export const GitspaceOwnerTypes = (getString: any) => [
 
 export enum GitspaceActionType {
   START = 'start',
-  STOP = 'stop'
+  STOP = 'stop',
+  RESET = 'reset'
 }
 
 export enum GitspaceRegion {

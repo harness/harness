@@ -61,8 +61,9 @@ export const getStatusColor = (status?: EnumGitspaceStateType) => {
     case GitspaceStatus.STOPPING:
       return '#FF832B'
     case GitspaceStatus.STOPPED:
-    case GitspaceStatus.UNINITIALIZED:
       return '#D0D0D9'
+    case GitspaceStatus.UNINITIALIZED:
+      return '#000000'
     case GitspaceStatus.ERROR:
       return '#FF0000'
     default:
@@ -83,7 +84,7 @@ export const getStatusText = (getString: UseStringsReturn['getString'], status?:
     case GitspaceStatus.STOPPING:
       return getString('cde.listing.stopping')
     case GitspaceStatus.UNINITIALIZED:
-      return GitspaceStatus.UNINITIALIZED.toLowerCase()
+      return getString('cde.listing.uninitialized')
     default:
       return getString('cde.listing.offline')
   }
@@ -298,7 +299,7 @@ export const RenderGitspaceStatus: Renderer<CellProps<TypesGitspaceConfig>> = ({
 export const StartStopButton = ({ state, loading }: { state?: EnumGitspaceStateType; loading?: boolean }) => {
   const { getString } = useStrings()
   return (
-    <Layout.Horizontal spacing="small" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
+    <Layout.Horizontal spacing="xsmall" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
       {loading ? <></> : state === GitspaceStatus.RUNNING ? <img src={pause} height={16} width={16} /> : <Play />}
       <Text icon={loading ? 'loading' : undefined}>
         {state === GitspaceStatus.RUNNING
@@ -313,11 +314,20 @@ export const StartStopButton = ({ state, loading }: { state?: EnumGitspaceStateT
   )
 }
 
+export const ResetButton = () => {
+  const { getString } = useStrings()
+  return (
+    <Text icon={'canvas-reset'} iconProps={{ size: 16 }}>
+      {getString('cde.resetGitspace')}
+    </Text>
+  )
+}
+
 export const OpenGitspaceButton = ({ ide }: { ide?: EnumIDEType }) => {
   const { getString } = useStrings()
 
   return (
-    <Layout.Horizontal spacing="small" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
+    <Layout.Horizontal spacing="xsmall" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
       {ide === IDEType.VSCODE ? <ModernTv /> : <img src={web} height={16} width={16} />}
       <Text>{ide === IDEType.VSCODE ? getString('cde.ide.openVSCode') : getString('cde.ide.openBrowser')}</Text>
     </Layout.Horizontal>
@@ -328,6 +338,7 @@ interface ActionMenuProps {
   data: TypesGitspaceConfig
   handleStartGitspace?: () => void
   handleStopGitspace?: () => void
+  handleReset?: (e: React.MouseEvent<any, MouseEvent>) => Promise<void>
   loading?: boolean
   actionLoading?: boolean
   deleteLoading?: boolean
@@ -339,6 +350,7 @@ const ActionMenu = ({
   deleteGitspace,
   handleStartGitspace,
   handleStopGitspace,
+  handleReset,
   actionLoading,
   deleteLoading
 }: ActionMenuProps) => {
@@ -424,6 +436,20 @@ const ActionMenu = ({
             />
           )}
 
+          {/* Reset Gitspace */}
+          <MenuItem
+            onClick={async e => {
+              try {
+                e.preventDefault()
+                e.stopPropagation()
+                await handleReset?.(e)
+              } catch (error) {
+                showError(getErrorMessage(error))
+              }
+            }}
+            text={<ResetButton />}
+          />
+
           <MenuItem
             onClick={() => {
               history.push(
@@ -440,7 +466,7 @@ const ActionMenu = ({
         <MenuItem
           onClick={deleteGitspace as Unknown as () => void}
           text={
-            <Layout.Horizontal spacing="small" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
+            <Layout.Horizontal spacing="xsmall" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
               {deleteLoading ? <></> : <img src={deleteIcon} height={16} width={16} />}
               <Text color={Color.RED_450} icon={deleteLoading ? 'loading' : undefined}>
                 {getString('cde.deleteGitspace')}
@@ -600,6 +626,28 @@ export const RenderActions = ({ row, refreshList }: RenderActionsProps) => {
     })
   }
 
+  const handleReset = async (e?: React.MouseEvent<any, MouseEvent>) => {
+    confirmDelete({
+      intent: 'danger',
+      title: `${getString('cde.resetGitspace')} '${name}'`,
+      message: getString('cde.resetGitspaceText'),
+      confirmText: getString('cde.reset'),
+      action: async () => {
+        try {
+          if (e) {
+            e.preventDefault()
+            e.stopPropagation()
+          }
+          await actionGitspace({ action: GitspaceActionType.RESET })
+          showSuccess(getString('cde.resetGitspaceSuccess'))
+          await refreshList()
+        } catch (exception) {
+          showError(getErrorMessage(exception))
+        }
+      }
+    })
+  }
+
   return (
     <Text
       onClick={e => {
@@ -616,6 +664,7 @@ export const RenderActions = ({ row, refreshList }: RenderActionsProps) => {
           deleteGitspace={handleDelete}
           handleStartGitspace={handleStartGitspace}
           handleStopGitspace={handleStopGitspace}
+          handleReset={handleReset}
         />
       }
       tooltipProps={{

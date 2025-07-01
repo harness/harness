@@ -221,6 +221,29 @@ const GitspaceDetails = () => {
 
   const confirmDelete = useConfirmAct()
 
+  const handleReset = async (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    confirmDelete({
+      intent: 'danger',
+      title: `${getString('cde.resetGitspace')} '${data?.name}'`,
+      message: getString('cde.resetGitspaceText'),
+      confirmText: getString('cde.reset'),
+      action: async () => {
+        try {
+          setStartPolling(GitspaceActionType.RESET)
+          e.preventDefault()
+          e.stopPropagation()
+          await actionMutate({ action: GitspaceActionType.RESET })
+          showSuccess(getString('cde.resetGitspaceSuccess'))
+          await refetch()
+          setStartPolling(undefined)
+        } catch (exception) {
+          showError(getErrorMessage(exception))
+          setStartPolling(undefined)
+        }
+      }
+    })
+  }
+
   const handleDelete = async (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     confirmDelete({
       intent: 'danger',
@@ -348,7 +371,7 @@ const GitspaceDetails = () => {
                       <MenuItem
                         text={
                           <Layout.Horizontal
-                            spacing="small"
+                            spacing="xsmall"
                             flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
                             {data?.state === GitspaceStatus.RUNNING ? (
                               <img src={pauseIcon} height={16} width={16} />
@@ -384,7 +407,7 @@ const GitspaceDetails = () => {
                     <MenuItem
                       text={
                         <Layout.Horizontal
-                          spacing="small"
+                          spacing="xsmall"
                           flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
                           <img src={homeIcon} height={16} width={16} />
                           <Text>{getString('cde.details.goToDashboard')}</Text>
@@ -395,10 +418,18 @@ const GitspaceDetails = () => {
                       }}
                     />
                     <MenuItem
+                      onClick={handleReset as Unknown as () => void}
+                      text={
+                        <Text icon={'canvas-reset'} iconProps={{ size: 16 }}>
+                          {getString('cde.resetGitspace')}
+                        </Text>
+                      }
+                    />
+                    <MenuItem
                       onClick={handleDelete as Unknown as () => void}
                       text={
                         <Layout.Horizontal
-                          spacing="small"
+                          spacing="xsmall"
                           flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
                           {deleteLoading ? <></> : <img src={deleteIcon} height={16} width={16} />}
                           <Text color={Color.RED_450} icon={deleteLoading ? 'loading' : undefined}>

@@ -1496,6 +1496,7 @@ export interface StringsMap {
   'cde.listing.ownerAndCreated': string
   'cde.listing.starting': string
   'cde.listing.stopping': string
+  'cde.listing.uninitialized': string
   'cde.logs': string
   'cde.machine': string
   'cde.machineValidationMessage': string
@@ -1531,6 +1532,11 @@ export interface StringsMap {
   'cde.repository.repositoryURL': string
   'cde.repository.selectRepository': string
   'cde.repositoryAndBranch': string
+  'cde.reset': string
+  'cde.resetGitspace': string
+  'cde.resetGitspaceSuccess': string
+  'cde.resetGitspaceText': string
+  'cde.resetGitspaceTitle': string
   'cde.retry': string
   'cde.sessionDuration': string
   'cde.sortBy': string

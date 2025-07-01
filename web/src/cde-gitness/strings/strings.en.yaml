@@ -6,6 +6,8 @@ introText3: Connect in seconds with a repository
 cloudDeveloperExperience: Cloud Development Environments
 createGitspace: Create Gitspace
 deleteGitspace: Delete Gitspace
+resetGitspace: Reset Gitspace
+reset: Reset
 editGitspace: Edit Gitspace
 viewGitspace: View Gitspace Details
 updateGitspace: Update Gitspace
@@ -48,6 +50,9 @@ sessionDuration: Last Started
 lastActivated: Last Activated
 deleteGitspaceTitle: Delete Gitspace '{{name}}'
 deleteGitspaceText: 'This action cannot be undone. Are you sure you want to proceed to delete?'
+resetGitspaceTitle: Reset Gitspace '{{name}}'
+resetGitspaceText: 'This action cannot be undone. Are you sure you want to proceed to reset?'
+resetGitspaceSuccess: Gitspace reset successfully
 deleteSuccess: Gitspace deleted successfully
 deleteInfraSuccess: Gitspace Infrastructure deleted successfully
 deleteMachineSuccess: Machine type deleted successfully
@@ -175,6 +180,7 @@ listing:
   error: Error
   starting: Starting
   stopping: Stopping
+  uninitialized: Uninitialized
   ownerAndCreated: Owner & Created On
 create:
   repositoryDetails: Repository Details
