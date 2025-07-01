@@ -16,13 +16,14 @@ package metadata
 
 import (
 	"context"
+	"net/http"
+	"strings"
+
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/api/utils"
 	"github.com/harness/gitness/types/enum"
-	"net/http"
-	"strings"
 )
 
 func (c *APIController) GetArtifactFile(
@@ -95,13 +96,17 @@ func (c *APIController) GetArtifactFile(
 			),
 		}, nil
 	}
-
-	registryURL := c.URLProvider.RegistryURL(ctx,
-		regInfo.RootIdentifier, strings.ToLower(string(registry.PackageType)), regInfo.RegistryIdentifier)
+	registryURL := c.URLProvider.PackageURL(ctx, regInfo.RootIdentifier+"/"+regInfo.RegistryIdentifier,
+		strings.ToLower(string(registry.PackageType)))
 	filePathPrefix, err := utils.GetFilePath(registry.PackageType, img.Name, art.Version)
-
+	if err != nil {
+		return artifact.GetArtifactFile500JSONResponse{
+			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
+				*GetErrorResponse(http.StatusInternalServerError, err.Error()),
+			),
+		}, nil
+	}
 	filePath := filePathPrefix + "/" + file
-
 	fileInfo, err := c.fileManager.GetFileMetadata(ctx, filePath, img.RegistryID)
 
 	if err != nil {
@@ -111,10 +116,8 @@ func (c *APIController) GetArtifactFile(
 			),
 		}, nil
 	}
-
 	return artifact.GetArtifactFile200JSONResponse{
 		ArtifactFileResponseJSONResponse: *GetArtifactFileResponseJSONResponse(
 			registryURL, registry.PackageType, img.Name, art.Version, fileInfo.Filename),
 	}, nil
-
 }

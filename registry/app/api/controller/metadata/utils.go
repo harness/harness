@@ -538,7 +538,7 @@ func getDownloadURL(registryURL string,
 	//nolint:exhaustive
 	switch packageType {
 	case a.PackageTypeGENERIC:
-		return fmt.Sprintf("%s/%s:%s:%s", registryURL, artifact, version, filename)
+		return fmt.Sprintf("%s/%s/%s?filename=%s", registryURL, artifact, version, filename)
 	case a.PackageTypeCARGO, a.PackageTypeMAVEN, a.PackageTypeNPM, a.PackageTypeNUGET, a.PackageTypePYTHON,
 		a.PackageTypeRPM:
 		return fmt.Sprintf("%s/%s/%s/%s", registryURL, artifact, version, filename)
