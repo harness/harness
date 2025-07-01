@@ -43,9 +43,9 @@ func (c *Controller) processObjects(
 	}
 
 	pushProtection := c.protectionManager.FilterCreatePushProtection(protectionRules)
-	out, _, err := pushProtection.PushObjectsVerify(
+	out, _, err := pushProtection.PushVerify(
 		ctx,
-		protection.PushObjectsVerifyInput{
+		protection.PushVerifyInput{
 			ResolveUserGroupID: c.userGroupService.ListUserIDsByGroupIDs,
 			Actor:              principal,
 			IsRepoOwner:        isRepoOwner,

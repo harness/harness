@@ -28,12 +28,12 @@ type pushRuleSet struct {
 
 var _ PushProtection = pushRuleSet{}
 
-func (s pushRuleSet) PushObjectsVerify(
+func (s pushRuleSet) PushVerify(
 	ctx context.Context,
-	in PushObjectsVerifyInput,
-) (PushObjectsVerifyOutput, []types.RuleViolations, error) {
+	in PushVerifyInput,
+) (PushVerifyOutput, []types.RuleViolations, error) {
 	var violations []types.RuleViolations
-	var out PushObjectsVerifyOutput
+	var out PushVerifyOutput
 
 	for _, r := range s.rules {
 		protection, err := s.manager.FromJSON(r.Type, r.Definition, false)
@@ -52,7 +52,7 @@ func (s pushRuleSet) PushObjectsVerify(
 			)
 		}
 
-		rOut, rViolations, err := pushProtection.PushObjectsVerify(ctx, in)
+		rOut, rViolations, err := pushProtection.PushVerify(ctx, in)
 		if err != nil {
 			return out, nil, fmt.Errorf("failed to process push rule in push rule set: %w", err)
 		}

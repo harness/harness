@@ -21,36 +21,36 @@ import (
 )
 
 type (
-	PushObjectsVerifyInput struct {
+	PushVerifyInput struct {
 		ResolveUserGroupID func(ctx context.Context, userGroupIDs []int64) ([]int64, error)
 		Actor              *types.Principal
 		IsRepoOwner        bool
 		RepoID             int64
 	}
 
-	PushObjectsVerifyOutput struct {
+	PushVerifyOutput struct {
 		FileSizeLimit           int64
 		PrincipalCommitterMatch bool
 	}
 
-	PushObjectsVerifier interface {
-		PushObjectsVerify(
+	PushVerifier interface {
+		PushVerify(
 			ctx context.Context,
-			in PushObjectsVerifyInput,
-		) (PushObjectsVerifyOutput, []types.RuleViolations, error)
+			in PushVerifyInput,
+		) (PushVerifyOutput, []types.RuleViolations, error)
 	}
 
-	DefPushObjects struct {
+	DefPush struct {
 		FileSizeLimit           int64 `json:"file_size_limit"`
 		PrincipalCommitterMatch bool  `json:"principal_committer_match"`
 	}
 )
 
-func (v *DefPushObjects) PushObjectsVerify(
+func (v *DefPush) PushVerify(
 	_ context.Context,
-	_ PushObjectsVerifyInput,
-) (PushObjectsVerifyOutput, []types.RuleViolations, error) {
-	return PushObjectsVerifyOutput{
+	_ PushVerifyInput,
+) (PushVerifyOutput, []types.RuleViolations, error) {
+	return PushVerifyOutput{
 		FileSizeLimit:           v.FileSizeLimit,
 		PrincipalCommitterMatch: v.PrincipalCommitterMatch,
 	}, nil, nil

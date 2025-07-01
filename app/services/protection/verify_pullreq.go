@@ -462,14 +462,6 @@ type DefReviewers struct {
 	DefaultReviewerIDs []int64 `json:"default_reviewer_ids,omitempty"`
 }
 
-type DefPush struct {
-	Block bool `json:"block,omitempty"`
-}
-
-func (v *DefPush) Sanitize() error {
-	return nil
-}
-
 type DefPullReq struct {
 	Approvals    DefApprovals    `json:"approvals"`
 	Comments     DefComments     `json:"comments"`

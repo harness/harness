@@ -25,8 +25,8 @@ const TypePush types.RuleType = "push"
 
 // Push implements protection rules for the rule type TypePush.
 type Push struct {
-	Bypass      DefBypass      `json:"bypass"`
-	PushObjects DefPushObjects `json:"push_objects"`
+	Bypass DefBypass `json:"bypass"`
+	Push   DefPush   `json:"push"`
 }
 
 var (
@@ -34,13 +34,13 @@ var (
 	_ PushProtection = (*Push)(nil)
 )
 
-func (p *Push) PushObjectsVerify(
+func (p *Push) PushVerify(
 	ctx context.Context,
-	in PushObjectsVerifyInput,
-) (PushObjectsVerifyOutput, []types.RuleViolations, error) {
-	out, violations, err := p.PushObjects.PushObjectsVerify(ctx, in)
+	in PushVerifyInput,
+) (PushVerifyOutput, []types.RuleViolations, error) {
+	out, violations, err := p.Push.PushVerify(ctx, in)
 	if err != nil {
-		return PushObjectsVerifyOutput{}, nil, fmt.Errorf("file size limit verify error: %w", err)
+		return PushVerifyOutput{}, nil, fmt.Errorf("file size limit verify error: %w", err)
 	}
 
 	bypassable := p.Bypass.matches(ctx, in.Actor, in.IsRepoOwner, in.ResolveUserGroupID)

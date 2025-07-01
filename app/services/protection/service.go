@@ -54,7 +54,7 @@ type (
 	}
 
 	PushProtection interface {
-		PushObjectsVerifier
+		PushVerifier
 		Protection
 	}
 
