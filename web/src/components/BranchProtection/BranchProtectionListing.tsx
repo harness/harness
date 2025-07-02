@@ -30,7 +30,6 @@ import {
   StringSubstitute
 } from '@harnessio/uicore'
 import cx from 'classnames'
-
 import type { CellProps, Column } from 'react-table'
 import { useGet, useMutate } from 'restful-react'
 import { FontVariation } from '@harnessio/design-system'
@@ -48,22 +47,22 @@ import {
   RuleFields,
   BranchProtectionRulesMapType,
   createRuleFieldsMap,
-  LabelsPageScope,
   getScopeData,
   getScopeIcon,
   getEditPermissionRequestFromScope,
-  getEditPermissionRequestFromIdentifier
+  getEditPermissionRequestFromIdentifier,
+  ScopeEnum
 } from 'utils/Utils'
 import { SettingTypeMode } from 'utils/GitUtils'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { useStrings } from 'framework/strings'
-
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import type { OpenapiRule, ProtectionPattern, RepoRepositoryOutput } from 'services/code'
 import { useAppContext } from 'AppContext'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
+import { useGetCurrentPageScope } from 'hooks/useGetCurrentPageScope'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import type { CODEProps } from 'RouteDefinitions'
 import { getConfig } from 'services/config'
@@ -73,12 +72,8 @@ import BranchProtectionForm from './BranchProtectionForm/BranchProtectionForm'
 import BranchProtectionHeader from './BranchProtectionHeader/BranchProtectionHeader'
 import css from './BranchProtectionListing.module.scss'
 
-const BranchProtectionListing = (props: {
-  activeTab: string
-  repoMetadata?: RepoRepositoryOutput
-  currentPageScope: LabelsPageScope
-}) => {
-  const { activeTab, repoMetadata, currentPageScope } = props
+const BranchProtectionListing = (props: { activeTab: string; repoMetadata?: RepoRepositoryOutput }) => {
+  const { activeTab, repoMetadata } = props
   const { getString } = useStrings()
   const { showError, showSuccess } = useToaster()
   const history = useHistory()
@@ -93,18 +88,19 @@ const BranchProtectionListing = (props: {
   const [showParentScopeFilter, setShowParentScopeFilter] = useState<boolean>(true)
   const [inheritRules, setInheritRules] = useState<boolean>(false)
   const space = useGetSpaceParam()
+  const currentPageScope = useGetCurrentPageScope()
 
   useEffect(() => {
     if (currentPageScope) {
-      if (currentPageScope === LabelsPageScope.ACCOUNT) setShowParentScopeFilter(false)
-      else if (currentPageScope === LabelsPageScope.SPACE) setShowParentScopeFilter(false)
+      if ([ScopeEnum.ACCOUNT_SCOPE, ScopeEnum.SPACE_SCOPE].includes(currentPageScope)) setShowParentScopeFilter(false)
     }
-  }, [currentPageScope, standalone])
+  }, [currentPageScope])
 
-  const getRulesPath = () =>
-    currentPageScope === LabelsPageScope.REPOSITORY
-      ? `/repos/${repoMetadata?.path}/+/rules`
-      : `/spaces/${space}/+/rules`
+  const getRulesPath = useMemo(
+    () =>
+      currentPageScope === ScopeEnum.REPO_SCOPE ? `/repos/${repoMetadata?.path}/+/rules` : `/spaces/${space}/+/rules`,
+    [currentPageScope, repoMetadata?.path, space]
+  )
 
   const {
     data: rules,
@@ -113,7 +109,7 @@ const BranchProtectionListing = (props: {
     response
   } = useGet<OpenapiRule[]>({
     base: getConfig('code/api/v1'),
-    path: getRulesPath(),
+    path: getRulesPath,
     queryParams: {
       limit: LIST_FETCHING_LIMIT,
       inherited: inheritRules,
@@ -585,7 +581,6 @@ const BranchProtectionListing = (props: {
           repoMetadata={repoMetadata}
           refetchRules={refetchRules}
           settingSectionMode={settingSectionMode}
-          currentPageScope={currentPageScope}
         />
       ) : (
         <Container padding="xlarge">

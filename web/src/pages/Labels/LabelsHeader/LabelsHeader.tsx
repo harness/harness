@@ -19,7 +19,6 @@ import { Render } from 'react-jsx-match'
 import { useStrings } from 'framework/strings'
 import { CodeIcon } from 'utils/GitUtils'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
-import type { LabelsPageScope } from 'utils/Utils'
 import type { RepoRepositoryOutput } from 'services/code'
 import css from './LabelsHeader.module.scss'
 
@@ -79,7 +78,6 @@ interface LabelsHeaderProps {
   onSearchTermChanged: (searchTerm: string) => void
   repoMetadata?: RepoRepositoryOutput
   spaceRef?: string
-  currentPageScope: LabelsPageScope
   showParentScopeFilter: boolean
   setInheritLabels: (value: boolean) => void
   inheritLabels: boolean

@@ -45,7 +45,7 @@ import {
 } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import {
-  LabelsPageScope,
+  ScopeEnum,
   REGEX_VALID_REPO_NAME,
   RulesFormPayload,
   getEditPermissionRequestFromScope,
@@ -66,12 +66,13 @@ import type {
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useAppContext } from 'AppContext'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
+import { useGetCurrentPageScope } from 'hooks/useGetCurrentPageScope'
 import { getConfig } from 'services/config'
 import type { Identifier } from 'utils/types'
 import ProtectionRulesForm from './ProtectionRulesForm/ProtectionRulesForm'
+import BypassList from './BypassList'
 import Include from '../../../icons/Include.svg?url'
 import Exclude from '../../../icons/Exclude.svg?url'
-import BypassList from './BypassList'
 import css from './BranchProtectionForm.module.scss'
 
 const BranchProtectionForm = (props: {
@@ -79,14 +80,13 @@ const BranchProtectionForm = (props: {
   repoMetadata?: RepoRepositoryOutput | undefined
   refetchRules: () => void
   settingSectionMode: SettingTypeMode
-  currentPageScope: LabelsPageScope
 }) => {
   const { routes, routingId, standalone, hooks } = useAppContext()
   const params = useParams<Identifier>()
   const { ruleId } = useGetRepositoryMetadata()
   const { showError, showSuccess } = useToaster()
   const space = useGetSpaceParam()
-  const { editMode = false, repoMetadata, refetchRules, settingSectionMode, currentPageScope } = props
+  const { editMode = false, repoMetadata, refetchRules, settingSectionMode } = props
   const { getString } = useStrings()
   const [searchTerm, setSearchTerm] = useState('')
   const [searchStatusTerm, setSearchStatusTerm] = useState('')
@@ -94,16 +94,15 @@ const BranchProtectionForm = (props: {
   const { scopeRef } =
     typeof currentRuleScope === 'number' ? getScopeData(space, currentRuleScope, standalone) : { scopeRef: space }
   const [accountIdentifier, orgIdentifier, projectIdentifier] = scopeRef?.split('/') || []
+  const currentPageScope = useGetCurrentPageScope()
 
   const getUpdateRulePath = () =>
-    currentPageScope === LabelsPageScope.REPOSITORY
+    currentPageScope === ScopeEnum.REPO_SCOPE
       ? `/repos/${repoMetadata?.path}/+/rules/${encodeURIComponent(ruleId)}`
       : `/spaces/${scopeRef}/+/rules/${encodeURIComponent(ruleId)}`
 
   const getCreateRulePath = () =>
-    currentPageScope === LabelsPageScope.REPOSITORY
-      ? `/repos/${repoMetadata?.path}/+/rules`
-      : `/spaces/${space}/+/rules`
+    currentPageScope === ScopeEnum.REPO_SCOPE ? `/repos/${repoMetadata?.path}/+/rules` : `/spaces/${space}/+/rules`
 
   const { data: rule } = useGet<OpenapiRule>({
     base: getConfig('code/api/v1'),

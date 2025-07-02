@@ -15,18 +15,20 @@
  */
 
 import { useParams } from 'react-router-dom'
-import { LabelsPageScope } from 'utils/Utils'
+import type { CODEProps } from 'RouteDefinitions'
+import { ScopeEnum } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import type { Identifier } from 'utils/types'
 
-export function useGetCurrentPageScope() {
+export function useGetCurrentPageScope(): ScopeEnum {
   const { routingId: accountIdentifier, standalone } = useAppContext()
-  const { orgIdentifier, projectIdentifier } = useParams<Identifier>()
-  if (standalone) return LabelsPageScope.SPACE
-  else if (projectIdentifier) return LabelsPageScope.PROJECT
-  else {
-    if (orgIdentifier) return LabelsPageScope.ORG
-    else if (accountIdentifier) LabelsPageScope.ACCOUNT
-  }
-  return LabelsPageScope.ACCOUNT
+  const { orgIdentifier, projectIdentifier, repoName } = useParams<Identifier & CODEProps>()
+
+  if (repoName) return ScopeEnum.REPO_SCOPE
+  if (standalone) return ScopeEnum.SPACE_SCOPE
+  if (projectIdentifier) return ScopeEnum.PROJECT_SCOPE
+  if (orgIdentifier) return ScopeEnum.ORG_SCOPE
+  if (accountIdentifier) return ScopeEnum.ACCOUNT_SCOPE
+
+  return ScopeEnum.ACCOUNT_SCOPE
 }

@@ -42,7 +42,7 @@ import {
   ColorName,
   LabelTypes,
   LabelListingProps,
-  LabelsPageScope,
+  ScopeEnum,
   getScopeData
 } from 'utils/Utils'
 import { CodeIcon } from 'utils/GitUtils'
@@ -50,6 +50,7 @@ import { ResourceListingPagination } from 'components/ResourceListingPagination/
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { useStrings, String } from 'framework/strings'
 import { useConfirmAction } from 'hooks/useConfirmAction'
+import { useGetCurrentPageScope } from 'hooks/useGetCurrentPageScope'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { useAppContext } from 'AppContext'
 import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
@@ -61,7 +62,7 @@ import useLabelModal from './LabelModal/LabelModal'
 import css from './LabelsListing.module.scss'
 
 const LabelsListing = (props: LabelListingProps) => {
-  const { activeTab, currentPageScope, repoMetadata, space } = props
+  const { activeTab, repoMetadata, space } = props
   const { standalone } = useAppContext()
   const { getString } = useStrings()
   const { showError, showSuccess } = useToaster()
@@ -73,6 +74,7 @@ const LabelsListing = (props: LabelListingProps) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [showParentScopeFilter, setShowParentScopeFilter] = useState<boolean>(true)
   const [inheritLabels, setInheritLabels] = useState<boolean>(false)
+  const currentPageScope = useGetCurrentPageScope()
 
   useEffect(() => {
     const params = {
@@ -89,16 +91,16 @@ const LabelsListing = (props: LabelListingProps) => {
   }, [page]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (currentPageScope) {
-      if (currentPageScope === LabelsPageScope.ACCOUNT) setShowParentScopeFilter(false)
-      else if (currentPageScope === LabelsPageScope.SPACE) setShowParentScopeFilter(false)
+    if ([ScopeEnum.ACCOUNT_SCOPE, ScopeEnum.SPACE_SCOPE].includes(currentPageScope)) {
+      setShowParentScopeFilter(false)
     }
   }, [currentPageScope, standalone])
 
-  const getLabelPath = () =>
-    currentPageScope === LabelsPageScope.REPOSITORY
-      ? `/repos/${repoMetadata?.path}/+/labels`
-      : `/spaces/${space}/+/labels`
+  const getLabelPath = useMemo(
+    () =>
+      currentPageScope === ScopeEnum.REPO_SCOPE ? `/repos/${repoMetadata?.path}/+/labels` : `/spaces/${space}/+/labels`,
+    [currentPageScope, repoMetadata?.path, space]
+  )
 
   const {
     data: labelsList,
@@ -107,7 +109,7 @@ const LabelsListing = (props: LabelListingProps) => {
     response
   } = useGet<LabelTypes[]>({
     base: getConfig('code/api/v1'),
-    path: getLabelPath(),
+    path: getLabelPath,
     queryParams: {
       limit: LIST_FETCHING_LIMIT,
       inherited: inheritLabels,
@@ -335,7 +337,6 @@ const LabelsListing = (props: LabelListingProps) => {
         openLabelCreateModal={openLabelCreateModal}
         repoMetadata={repoMetadata}
         spaceRef={space}
-        currentPageScope={currentPageScope}
       />
 
       <Container className={css.main} padding={{ bottom: 'large', right: 'xlarge', left: 'xlarge' }}>

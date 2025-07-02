@@ -883,16 +883,7 @@ export interface LabelFilterObj {
   valueObj?: TypesLabelValue
 }
 
-export enum LabelsPageScope {
-  ACCOUNT = 'acc',
-  ORG = 'org',
-  PROJECT = 'project',
-  SPACE = 'space',
-  REPOSITORY = 'repo'
-}
-
 export interface LabelListingProps {
-  currentPageScope: LabelsPageScope
   repoMetadata?: RepoRepositoryOutput
   space?: string
   activeTab?: string
@@ -902,7 +893,8 @@ export enum ScopeEnum {
   REPO_SCOPE = 0,
   ACCOUNT_SCOPE = 1,
   ORG_SCOPE = 2,
-  PROJECT_SCOPE = 3
+  PROJECT_SCOPE = 3,
+  SPACE_SCOPE = 4
 }
 
 export interface ScopeData {

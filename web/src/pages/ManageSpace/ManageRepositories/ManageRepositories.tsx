@@ -25,13 +25,11 @@ import { SettingsTab } from 'utils/GitUtils'
 import LabelsListing from 'pages/Labels/LabelsListing'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import type { CODEProps } from 'RouteDefinitions'
-import { useGetCurrentPageScope } from 'hooks/useGetCurrentPageScope'
 import css from '../ManageSpace.module.scss'
 
 export default function ManageRepositories() {
   const { settingSection } = useParams<CODEProps>()
   const space = useGetSpaceParam()
-  const pageScope = useGetCurrentPageScope()
   const history = useHistory()
   const { routes } = useAppContext()
   const [activeTab, setActiveTab] = React.useState<string>(settingSection || SettingsTab.labels)
@@ -41,12 +39,12 @@ export default function ManageRepositories() {
     {
       id: SettingsTab.labels,
       title: getString('labels.labels'),
-      panel: <LabelsListing activeTab={activeTab} currentPageScope={pageScope} space={space} />
+      panel: <LabelsListing activeTab={activeTab} space={space} />
     },
     {
       id: SettingsTab.branchProtection,
       title: getString('branchProtection.title'),
-      panel: <BranchProtectionListing activeTab={activeTab} currentPageScope={pageScope} />
+      panel: <BranchProtectionListing activeTab={activeTab} />
     }
   ]
   return (

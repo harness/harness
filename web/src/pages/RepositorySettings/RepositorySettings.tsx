@@ -24,12 +24,11 @@ import { useDisableCodeMainLinks } from 'hooks/useDisableCodeMainLinks'
 import { useGetResourceContent } from 'hooks/useGetResourceContent'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
-import { LabelsPageScope, getErrorMessage, voidFn } from 'utils/Utils'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
-// import Webhooks from 'pages/Webhooks/Webhooks'
-import { useAppContext } from 'AppContext'
 import BranchProtectionListing from 'components/BranchProtection/BranchProtectionListing'
+import { useAppContext } from 'AppContext'
 import { SettingsTab, normalizeGitRef } from 'utils/GitUtils'
+import { getErrorMessage, voidFn } from 'utils/Utils'
 import SecurityScanSettings from 'pages/RepositorySettings/SecurityScanSettings/SecurityScanSettings'
 import LabelsListing from 'pages/Labels/LabelsListing'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
@@ -67,25 +66,12 @@ export default function RepositorySettings() {
     {
       id: SettingsTab.labels,
       title: getString('labels.labels'),
-      panel: (
-        <LabelsListing
-          activeTab={activeTab}
-          repoMetadata={repoMetadata}
-          currentPageScope={LabelsPageScope.REPOSITORY}
-          space={space}
-        />
-      )
+      panel: <LabelsListing activeTab={activeTab} repoMetadata={repoMetadata} space={space} />
     },
     {
       id: SettingsTab.branchProtection,
       title: getString('branchProtection.title'),
-      panel: (
-        <BranchProtectionListing
-          repoMetadata={repoMetadata}
-          activeTab={activeTab}
-          currentPageScope={LabelsPageScope.REPOSITORY}
-        />
-      )
+      panel: <BranchProtectionListing repoMetadata={repoMetadata} activeTab={activeTab} />
     },
     {
       id: SettingsTab.security,
