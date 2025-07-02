@@ -97,12 +97,9 @@ func (c *Controller) CreateResources(
 		enum.PermissionGitspaceView); err != nil {
 		return nil, err
 	}
-	infraProviderConfig, err := c.infraproviderSvc.Find(ctx, space, configIdentifier)
-	if err != nil {
-		return nil, fmt.Errorf("failed to find infraprovider config by ref: %q %w", configIdentifier, err)
-	}
+
 	resources := c.MapToResourceEntity(in, space, now)
-	err = c.infraproviderSvc.CreateResources(ctx, space.ID, resources, infraProviderConfig.ID, configIdentifier)
+	err = c.infraproviderSvc.CreateResources(ctx, space.ID, resources, configIdentifier)
 	if err != nil {
 		return nil, err
 	}

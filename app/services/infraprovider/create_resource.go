@@ -29,7 +29,6 @@ func (c *Service) CreateResources(
 	ctx context.Context,
 	spaceID int64,
 	resources []types.InfraProviderResource,
-	configID int64,
 	configIdentifier string,
 ) error {
 	config, err := c.infraProviderConfigStore.FindByIdentifier(ctx, spaceID, configIdentifier)
@@ -38,7 +37,7 @@ func (c *Service) CreateResources(
 	}
 
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
-		return c.createMissingResources(ctx, resources, configID, spaceID, *config)
+		return c.createMissingResources(ctx, resources, config.ID, spaceID, *config)
 	})
 	if err != nil {
 		return fmt.Errorf("failed to complete create txn for the infraprovider resource %w", err)
