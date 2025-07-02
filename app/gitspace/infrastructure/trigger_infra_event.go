@@ -322,7 +322,8 @@ func (i InfraProvisioner) deprovisionNewInfrastructure(
 	}
 
 	if infraProvisionedLatest.InfraStatus == enum.InfraStatusDestroyed {
-		return nil
+		log.Debug().Msgf(
+			"infra already deprovisioned for gitspace instance %d", gitspaceConfig.GitspaceInstance.ID)
 	}
 
 	err = infraProvider.Deprovision(ctx, infra, gitspaceConfig, canDeleteUserData, configMetadata, params)
