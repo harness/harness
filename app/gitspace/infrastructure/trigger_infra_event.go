@@ -34,7 +34,7 @@ type Config struct {
 
 type InfraEventOpts struct {
 	RequiredGitspacePorts []types.GitspacePort
-	CanDeleteUserData     bool
+	DeleteUserData        bool
 }
 
 type InfraProvisioner struct {
@@ -71,7 +71,7 @@ func (i InfraProvisioner) TriggerInfraEvent(
 	gitspaceConfig types.GitspaceConfig,
 	infra *types.Infrastructure,
 ) error {
-	opts := InfraEventOpts{CanDeleteUserData: false}
+	opts := InfraEventOpts{DeleteUserData: false}
 	return i.TriggerInfraEventWithOpts(ctx, eventType, gitspaceConfig, infra, opts)
 }
 
@@ -147,12 +147,12 @@ func (i InfraProvisioner) TriggerInfraEventWithOpts(
 				infraProvider,
 				gitspaceConfig,
 				*infra,
-				opts.CanDeleteUserData,
+				opts.DeleteUserData,
 				configMetadata,
 				allParams,
 			)
 		}
-		return infraProvider.Deprovision(ctx, *infra, gitspaceConfig, opts.CanDeleteUserData, configMetadata, allParams)
+		return infraProvider.Deprovision(ctx, *infra, gitspaceConfig, opts.DeleteUserData, configMetadata, allParams)
 
 	case enum.InfraEventCleanup:
 		return infraProvider.CleanupInstanceResources(ctx, *infra)

@@ -291,7 +291,7 @@ func (o Orchestrator) FinishRemoveGitspaceContainer(
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraResetStart)
 	}
 
-	opts := infrastructure.InfraEventOpts{CanDeleteUserData: deleteResponse.CanDeleteUserData}
+	opts := infrastructure.InfraEventOpts{DeleteUserData: deleteResponse.CanDeleteUserData}
 	err := o.infraProvisioner.TriggerInfraEventWithOpts(ctx, enum.InfraEventDeprovision, gitspaceConfig, &infra, opts)
 	if err != nil {
 		if deleteResponse.CanDeleteUserData {
@@ -419,7 +419,7 @@ func (o Orchestrator) triggerDeleteGitspace(
 	infra *types.Infrastructure,
 	canDeleteUserData bool,
 ) error {
-	opts := infrastructure.InfraEventOpts{CanDeleteUserData: true}
+	opts := infrastructure.InfraEventOpts{DeleteUserData: canDeleteUserData}
 	err := o.infraProvisioner.TriggerInfraEventWithOpts(
 		ctx,
 		enum.InfraEventDeprovision,
