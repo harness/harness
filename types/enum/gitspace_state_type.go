@@ -27,6 +27,7 @@ var gitspaceStateTypes = []GitspaceStateType{
 	GitspaceStateUninitialized,
 	GitspaceStateStarting,
 	GitspaceStateStopping,
+	GitSpaceStateCleaning,
 }
 
 const (
@@ -34,6 +35,7 @@ const (
 	GitspaceStateStopped       GitspaceStateType = "stopped"
 	GitspaceStateStarting      GitspaceStateType = "starting"
 	GitspaceStateStopping      GitspaceStateType = "stopping"
+	GitSpaceStateCleaning      GitspaceStateType = "cleaning"
 	GitspaceStateError         GitspaceStateType = "error"
 	GitspaceStateUninitialized GitspaceStateType = "uninitialized"
 )

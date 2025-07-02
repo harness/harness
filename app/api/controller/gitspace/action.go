@@ -85,15 +85,21 @@ func (c *Controller) Action(
 		}
 
 		c.gitspaceSvc.EmitGitspaceConfigEvent(ctx, *gitspaceConfig, enum.GitspaceEventTypeGitspaceActionStart)
-		err = c.gitspaceSvc.StartGitspaceAction(ctx, *gitspaceConfig)
+		if err = c.gitspaceSvc.StartGitspaceAction(ctx, *gitspaceConfig); err == nil {
+			gitspaceConfig.State = enum.GitspaceStateStarting
+		}
 		return gitspaceConfig, err
 	case enum.GitspaceActionTypeStop:
 		c.gitspaceSvc.EmitGitspaceConfigEvent(ctx, *gitspaceConfig, enum.GitspaceEventTypeGitspaceActionStop)
-		err = c.gitspaceSvc.StopGitspaceAction(ctx, *gitspaceConfig, time.Now())
+		if err = c.gitspaceSvc.StopGitspaceAction(ctx, *gitspaceConfig, time.Now()); err == nil {
+			gitspaceConfig.State = enum.GitspaceStateStopping
+		}
 		return gitspaceConfig, err
 	case enum.GitspaceActionTypeReset:
 		c.gitspaceSvc.EmitGitspaceConfigEvent(ctx, *gitspaceConfig, enum.GitspaceEventTypeGitspaceActionReset)
-		err = c.gitspaceSvc.ResetGitspaceAction(ctx, *gitspaceConfig)
+		if err = c.gitspaceSvc.ResetGitspaceAction(ctx, *gitspaceConfig); err == nil {
+			gitspaceConfig.State = enum.GitSpaceStateCleaning
+		}
 		return gitspaceConfig, err
 	default:
 		return nil, fmt.Errorf("unknown action %s on gitspace : %s", string(in.Action), gitspaceConfig.Identifier)
