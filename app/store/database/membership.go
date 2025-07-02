@@ -474,7 +474,7 @@ func (s *MembershipStore) mapToMembershipSpaces(ctx context.Context,
 		res[i].Membership = mapToMembership(&m.membership)
 		space, err := mapToSpace(ctx, s.db, s.spacePathStore, &m.space)
 		if err != nil {
-			return nil, fmt.Errorf("faild to map space %d: %w", m.space.ID, err)
+			return nil, fmt.Errorf("failed to map space %d: %w", m.space.ID, err)
 		}
 		res[i].Space = *space
 		if addedBy, ok := infoMap[m.membership.CreatedBy]; ok {

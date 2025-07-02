@@ -1123,7 +1123,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 		queryParameterQueryTags, queryParameterOrder, queryParameterSortTags,
 		QueryParameterPage, QueryParameterLimit)
 	_ = reflector.SetRequest(&opListTags, new(listTagsRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&opListTags, []repo.CommitTag{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opListTags, []*types.CommitTag{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opListTags, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opListTags, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opListTags, new(usererror.Error), http.StatusForbidden)
@@ -1134,7 +1134,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opCreateTag.WithTags("repository")
 	opCreateTag.WithMapOfAnything(map[string]interface{}{"operationId": "createTag"})
 	_ = reflector.SetRequest(&opCreateTag, new(createTagRequest), http.MethodPost)
-	_ = reflector.SetJSONResponse(&opCreateTag, new(repo.CommitTag), http.StatusCreated)
+	_ = reflector.SetJSONResponse(&opCreateTag, new(types.CommitTag), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opCreateTag, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opCreateTag, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opCreateTag, new(usererror.Error), http.StatusUnauthorized)

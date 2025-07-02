@@ -151,6 +151,14 @@ func (c *Controller) GetContent(ctx context.Context,
 		return nil, err
 	}
 
+	if info.LatestCommit != nil {
+		err = c.signatureVerifyService.VerifyCommits(ctx, repo.ID, []*types.Commit{info.LatestCommit})
+		if err != nil {
+			return nil, fmt.Errorf("failed to verify signature of the last commit SHA=%s: %w",
+				info.LatestCommit.SHA.String(), err)
+		}
+	}
+
 	return &GetContentOutput{
 		ContentInfo: info,
 		Content:     content,

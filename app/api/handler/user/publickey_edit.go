@@ -12,43 +12,42 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package repo
+package user
 
 import (
+	"encoding/json"
 	"net/http"
 
-	"github.com/harness/gitness/app/api/controller/repo"
+	"github.com/harness/gitness/app/api/controller/user"
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
 )
 
-func HandleListCommitTags(repoCtrl *repo.Controller) http.HandlerFunc {
+func HandleUpdatePublicKey(userCtrl *user.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
-		repoRef, err := request.GetRepoRefFromPath(r)
+		userUID := session.Principal.UID
+
+		id, err := request.GetPublicKeyIdentifierFromPath(r)
+		if err != nil {
+			render.BadRequest(ctx, w)
+			return
+		}
+
+		in := new(user.UpdatePublicKeyInput)
+		err = json.NewDecoder(r.Body).Decode(in)
+		if err != nil {
+			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
+			return
+		}
+
+		key, err := userCtrl.UpdatePublicKey(ctx, session, userUID, id, in)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		includeCommit, err := request.GetIncludeCommitFromQueryOrDefault(r, false)
-		if err != nil {
-			render.TranslatedUserError(ctx, w, err)
-			return
-		}
-
-		filter := request.ParseTagFilter(r)
-
-		tags, err := repoCtrl.ListCommitTags(ctx, session, repoRef, includeCommit, filter)
-		if err != nil {
-			render.TranslatedUserError(ctx, w, err)
-			return
-		}
-
-		// TODO: get last page indicator explicitly - current check is wrong in case len % pageSize == 0
-		isLastPage := len(tags) < filter.Size
-		render.PaginationNoTotal(r, w, filter.Page, filter.Size, isLastPage)
-		render.JSON(w, http.StatusOK, tags)
+		render.JSON(w, http.StatusOK, key)
 	}
 }

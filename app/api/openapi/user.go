@@ -182,6 +182,18 @@ func buildUser(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opKeyDelete, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.Spec.AddOperation(http.MethodDelete, "/user/keys/{public_key_identifier}", opKeyDelete)
 
+	opKeyUpdate := openapi3.Operation{}
+	opKeyUpdate.WithTags("user")
+	opKeyUpdate.WithMapOfAnything(map[string]interface{}{"operationId": "updatePublicKey"})
+	_ = reflector.SetRequest(&opKeyUpdate, struct {
+		ID string `path:"public_key_identifier"`
+	}{}, http.MethodPatch)
+	_ = reflector.SetJSONResponse(&opKeyUpdate, &types.PublicKey{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opKeyUpdate, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opKeyUpdate, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.SetJSONResponse(&opKeyUpdate, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.Spec.AddOperation(http.MethodPatch, "/user/keys/{public_key_identifier}", opKeyUpdate)
+
 	opKeyList := openapi3.Operation{}
 	opKeyList.WithTags("user")
 	opKeyList.WithMapOfAnything(map[string]interface{}{"operationId": "listPublicKey"})

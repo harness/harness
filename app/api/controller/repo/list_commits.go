@@ -56,7 +56,7 @@ func (c *Controller) ListCommits(ctx context.Context,
 		return types.ListCommitResponse{}, fmt.Errorf("failed create author regex: %w", err)
 	}
 
-	rpcOut, err := c.git.ListCommits(ctx, &git.ListCommitsParams{
+	result, err := c.git.ListCommits(ctx, &git.ListCommitsParams{
 		ReadParams:   git.CreateReadParams(repo),
 		GitREF:       gitRef,
 		After:        filter.After,
@@ -74,23 +74,29 @@ func (c *Controller) ListCommits(ctx context.Context,
 		return types.ListCommitResponse{}, err
 	}
 
-	commits := make([]types.Commit, len(rpcOut.Commits))
-	for i := range rpcOut.Commits {
-		commits[i] = *controller.MapCommit(&rpcOut.Commits[i])
+	commits := make([]*types.Commit, len(result.Commits))
+	for i := range result.Commits {
+		commits[i] = controller.MapCommit(&result.Commits[i])
 	}
 
-	renameDetailList := make([]types.RenameDetails, len(rpcOut.RenameDetails))
-	for i := range rpcOut.RenameDetails {
-		renameDetails := controller.MapRenameDetails(rpcOut.RenameDetails[i])
+	err = c.signatureVerifyService.VerifyCommits(ctx, repo.ID, commits)
+	if err != nil {
+		return types.ListCommitResponse{}, fmt.Errorf("failed to verify signature of commits: %w", err)
+	}
+
+	renameDetailList := make([]types.RenameDetails, len(result.RenameDetails))
+	for i := range result.RenameDetails {
+		renameDetails := controller.MapRenameDetails(result.RenameDetails[i])
 		if renameDetails == nil {
 			return types.ListCommitResponse{}, fmt.Errorf("rename details was nil")
 		}
 		renameDetailList[i] = *renameDetails
 	}
+
 	return types.ListCommitResponse{
 		Commits:       commits,
 		RenameDetails: renameDetailList,
-		TotalCommits:  rpcOut.TotalCommits,
+		TotalCommits:  result.TotalCommits,
 	}, nil
 }
 

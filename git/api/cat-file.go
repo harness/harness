@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"iter"
 	"strconv"
 	"strings"
 
@@ -30,7 +31,6 @@ import (
 
 	"github.com/djherbis/buffer"
 	"github.com/djherbis/nio/v3"
-	"iter"
 )
 
 // WriteCloserError wraps an io.WriteCloser with an additional CloseWithError function.
@@ -168,11 +168,11 @@ func catFileObjects(
 
 	for objectName := range iter {
 		if _, err := writer.Write([]byte(objectName)); err != nil {
-			return fmt.Errorf("faild to write object sha to cat-file stdin: %w", err)
+			return fmt.Errorf("failed to write object sha to cat-file stdin: %w", err)
 		}
 
 		if _, err := writer.Write([]byte{'\n'}); err != nil {
-			return fmt.Errorf("faild to write EOL to cat-file stdin: %w", err)
+			return fmt.Errorf("failed to write EOL to cat-file stdin: %w", err)
 		}
 
 		output, err := ReadBatchHeaderLine(reader)
@@ -180,14 +180,14 @@ func catFileObjects(
 			if errors.Is(err, io.EOF) || errors.IsNotFound(err) {
 				return fmt.Errorf("object %s does not exist", objectName)
 			}
-			return fmt.Errorf("faild to read cat-file object header line: %w", err)
+			return fmt.Errorf("failed to read cat-file object header line: %w", err)
 		}
 
 		buf.Reset()
 
 		_, err = io.CopyN(buf, reader, output.Size)
 		if err != nil {
-			return fmt.Errorf("faild to read object raw data: %w", err)
+			return fmt.Errorf("failed to read object raw data: %w", err)
 		}
 
 		_, err = reader.Discard(1)

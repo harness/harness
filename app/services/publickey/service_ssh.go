@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/harness/gitness/app/services/publickey/keyssh"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/types"
@@ -56,7 +57,7 @@ func (s sshAuthService) ValidateKey(
 	_ string,
 	publicKey ssh.PublicKey,
 ) (*types.PrincipalInfo, error) {
-	key := FromSSH(publicKey)
+	key := keyssh.FromSSH(publicKey)
 	fingerprint := key.Fingerprint()
 
 	existingKeys, err := s.publicKeyStore.ListByFingerprint(

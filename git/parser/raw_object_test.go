@@ -15,12 +15,15 @@
 package parser
 
 import (
-	"bytes"
-	"encoding/pem"
+	"context"
 	"strings"
 	"testing"
+	"time"
 
-	"github.com/harness/gitness/app/services/publickey"
+	"github.com/harness/gitness/app/services/publickey/keyssh"
+	"github.com/harness/gitness/git/sha"
+	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/crypto/ssh"
@@ -270,6 +273,12 @@ Rv18ZouJpO2LRIXdZpxAE=
 		},
 	}
 
+	objectSHA := sha.Must("123456789")
+	person := types.Signature{
+		Identity: types.Identity{Name: "Michelangelo", Email: "michelangelo@harness.io"},
+		When:     time.Now(),
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			object, err := Object([]byte(test.data))
@@ -282,55 +291,27 @@ Rv18ZouJpO2LRIXdZpxAE=
 				t.Errorf("failed:\n%s\n", diff)
 			}
 
-			if len(object.Signature) == 0 || object.SignatureType != "SSH SIGNATURE" {
+			if len(object.Signature) == 0 {
 				// skip testing signed content because the data doesn't contain a signature
 				return
 			}
 
-			// If git object from the test contains a signature,
-			// we verify if object.SignedContent is correct
-			// (if it's possible to verify the signature from the content).
+			ctx := context.Background()
+			var verify keyssh.Verify
 
-			block, rest := pem.Decode(object.Signature)
-			if block == nil || len(rest) > 0 || block.Type != object.SignatureType {
-				t.Errorf("failed to decode signature")
-				return
+			signature := object.Signature
+			content := object.SignedContent
+
+			if status := verify.Parse(ctx, signature, objectSHA); status != "" {
+				t.Errorf("failed to extract key from the signature: %s", status)
 			}
 
-			var signature publickey.SSHSignatureBlob
-			if err := ssh.Unmarshal(block.Bytes, &signature); err != nil {
-				t.Errorf("failed to parse signature: %s", err.Error())
-				return
-			}
+			// we use the public key directly from the signature
+			publicKey, _ := ssh.ParsePublicKey(verify.SignaturePublicKey())
+			pk := ssh.MarshalAuthorizedKey(publicKey)
 
-			sshSig := ssh.Signature{}
-			if err := ssh.Unmarshal(signature.Signature, &sshSig); err != nil {
-				t.Errorf("failed to unmarshal ssh signature: %s", err.Error())
-				return
-			}
-
-			h, _ := publickey.SSHHash(signature.HashAlgorithm)
-			h.Write(object.SignedContent)
-
-			key, err := ssh.ParsePublicKey(signature.PublicKey) // we get the public key directly from the signature
-			if err != nil {
-				t.Errorf("failed to parse signature key: %s", err.Error())
-				return
-			}
-
-			signedMessage := ssh.Marshal(publickey.SSHMessageWrapper{
-				Namespace:     signature.Namespace,
-				HashAlgorithm: signature.HashAlgorithm,
-				Hash:          h.Sum(nil),
-			})
-			buf := bytes.NewBuffer(nil)
-			buf.Write(signature.MagicPreamble[:])
-			buf.Write(signedMessage)
-
-			err = key.Verify(buf.Bytes(), &sshSig)
-			if err != nil {
-				t.Errorf("failed to verify signature: %s", err.Error())
-				return
+			if status := verify.Verify(ctx, pk, content, objectSHA, person); status != enum.GitSignatureGood {
+				t.Errorf("failed to verify the signature: %s", status)
 			}
 		})
 	}

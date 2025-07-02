@@ -204,6 +204,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	tokenStore := database.ProvideTokenStore(db)
 	publicKeyStore := database.ProvidePublicKeyStore(db)
 	publicKeySubKeyStore := database.ProvidePublicKeySubKeyStore(db)
+	gitSignatureResultStore := database.ProvideGitSignatureResultStore(db)
 	eventsConfig := server.ProvideEventsConfig(config)
 	eventsSystem, err := events.ProvideSystem(eventsConfig, universalClient)
 	if err != nil {
@@ -214,7 +215,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	favoriteStore := database.ProvideFavoriteStore(db)
-	controller := user.ProvideController(transactor, principalUID, authorizer, principalStore, tokenStore, membershipStore, publicKeyStore, publicKeySubKeyStore, reporter, repoFinder, favoriteStore)
+	controller := user.ProvideController(transactor, principalUID, authorizer, principalStore, tokenStore, membershipStore, publicKeyStore, publicKeySubKeyStore, gitSignatureResultStore, reporter, repoFinder, favoriteStore)
 	serviceController := service.NewController(principalUID, authorizer, principalStore)
 	bootstrapBootstrap := bootstrap.ProvideBootstrap(config, controller, serviceController)
 	authenticator := authn.ProvideAuthenticator(config, principalStore, tokenStore)
@@ -307,7 +308,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	remoteauthService := remoteauth.ProvideRemoteAuth(tokenStore, principalStore)
 	lfsController := lfs.ProvideController(authorizer, repoFinder, repoStore, principalStore, lfsObjectStore, blobStore, remoteauthService, provider, settingsService)
-	repoController := repo.ProvideController(config, transactor, provider, authorizer, repoStore, spaceStore, pipelineStore, principalStore, executionStore, ruleStore, checkStore, pullReqStore, settingsService, principalInfoCache, protectionManager, gitInterface, spaceFinder, repoFinder, repository, codeownersService, eventsReporter, indexer, resourceLimiter, lockerLocker, auditService, mutexManager, repoIdentifier, repoCheck, publicaccessService, labelService, instrumentService, userGroupStore, usergroupService, rulesService, streamer, lfsController, favoriteStore)
+	signatureVerifyService := publickey.ProvideSignatureVerifyService(principalStore, publicKeyStore, publicKeySubKeyStore, gitSignatureResultStore)
+	repoController := repo.ProvideController(config, transactor, provider, authorizer, repoStore, spaceStore, pipelineStore, principalStore, executionStore, ruleStore, checkStore, pullReqStore, settingsService, principalInfoCache, protectionManager, gitInterface, spaceFinder, repoFinder, repository, codeownersService, eventsReporter, indexer, resourceLimiter, lockerLocker, auditService, mutexManager, repoIdentifier, repoCheck, publicaccessService, labelService, instrumentService, userGroupStore, usergroupService, rulesService, streamer, lfsController, favoriteStore, signatureVerifyService)
 	reposettingsController := reposettings.ProvideController(authorizer, repoFinder, settingsService, auditService)
 	stageStore := database.ProvideStageStore(db)
 	schedulerScheduler, err := scheduler.ProvideScheduler(stageStore, mutexManager)

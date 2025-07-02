@@ -36,6 +36,7 @@ import (
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/publickey"
+	"github.com/harness/gitness/app/services/publickey/keyssh"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/types"
@@ -377,7 +378,7 @@ func (s *Server) publicKeyHandler(ctx ssh.Context, key ssh.PublicKey) bool {
 	log := getLoggerWithRequestID(ctx.SessionID())
 	request.WithRequestIDSSH(ctx, getRequestID(ctx.SessionID()))
 
-	if slices.Contains(publickey.DisallowedTypes, key.Type()) {
+	if slices.Contains(keyssh.DisallowedTypes, key.Type()) {
 		log.Warn().Msgf("public key type not supported: %s", key.Type())
 		return false
 	}

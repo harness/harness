@@ -118,6 +118,25 @@ func MapCommit(c *git.Commit) *types.Commit {
 	}
 }
 
+func MapCommitTag(t git.CommitTag) types.CommitTag {
+	var tagger *types.Signature
+	if t.Tagger != nil {
+		tagger = &types.Signature{}
+		*tagger = MapSignature(*t.Tagger)
+	}
+
+	return types.CommitTag{
+		Name:        t.Name,
+		SHA:         t.SHA,
+		IsAnnotated: t.IsAnnotated,
+		Title:       t.Title,
+		Message:     t.Message,
+		Tagger:      tagger,
+		SignedData:  (*types.SignedData)(t.SignedData),
+		Commit:      MapCommit(t.Commit),
+	}
+}
+
 func mapStats(c *git.Commit) *types.CommitStats {
 	if len(c.FileStats) == 0 {
 		return nil

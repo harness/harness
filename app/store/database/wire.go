@@ -64,6 +64,7 @@ var WireSet = wire.NewSet(
 	ProvidePluginStore,
 	ProvidePublicKeyStore,
 	ProvidePublicKeySubKeyStore,
+	ProvideGitSignatureResultStore,
 	ProvideInfraProviderConfigStore,
 	ProvideInfraProviderResourceStore,
 	ProvideGitspaceConfigStore,
@@ -325,6 +326,10 @@ func ProvidePublicKeyStore(db *sqlx.DB) store.PublicKeyStore {
 // ProvidePublicKeySubKeyStore provides a public key sub key store.
 func ProvidePublicKeySubKeyStore(db *sqlx.DB) store.PublicKeySubKeyStore {
 	return NewPublicKeySubKeyStore(db)
+}
+
+func ProvideGitSignatureResultStore(db *sqlx.DB) store.GitSignatureResultStore {
+	return NewGitSignatureResultStore(db)
 }
 
 // ProvideBranchStore provides a branch store.

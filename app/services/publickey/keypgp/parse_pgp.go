@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package publickey
+package keypgp
 
 import (
 	"bytes"
@@ -31,7 +31,7 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-type PGPKeyMetadata struct {
+type KeyMetadata struct {
 	// ID of the key.
 	ID string `json:"id"`
 
@@ -54,43 +54,43 @@ type PGPKeyMetadata struct {
 	BitLength uint16 `json:"bit_length"`
 }
 
-type PGPEntityMetadata struct {
+type EntityMetadata struct {
 	PrimaryIdentity *types.Identity  `json:"primary_identity,omitempty"`
 	Identities      []types.Identity `json:"identities,omitempty"`
-	PrimaryKey      PGPKeyMetadata   `json:"primary_key"`
-	SubKeys         []PGPKeyMetadata `json:"sub_keys,omitempty"`
+	PrimaryKey      KeyMetadata      `json:"primary_key"`
+	SubKeys         []KeyMetadata    `json:"sub_keys,omitempty"`
 }
 
-func parsePGP(r io.Reader) (PGPKeyInfo, error) {
+func Parse(r io.Reader, principal *types.Principal) (KeyInfo, error) {
 	keyRing, err := openpgp.ReadArmoredKeyRing(r)
 	if err != nil {
-		return PGPKeyInfo{}, errors.InvalidArgument("failed to read PGP key ring: %s", err.Error())
+		return KeyInfo{}, errors.InvalidArgument("failed to read PGP key ring: %s", err.Error())
 	}
 
 	if len(keyRing) == 0 {
-		return PGPKeyInfo{}, errors.InvalidArgument("PGP key ring contains no keys")
+		return KeyInfo{}, errors.InvalidArgument("PGP key ring contains no keys")
 	}
 
 	if len(keyRing) > 1 {
-		return PGPKeyInfo{}, errors.InvalidArgument("can't accept a PGP key ring with multiple primary keys")
+		return KeyInfo{}, errors.InvalidArgument("can't accept a PGP key ring with multiple primary keys")
 	}
 
 	keyEntity := keyRing[0]
 
 	if keyEntity == nil || keyEntity.PrimaryKey == nil {
 		// Should not happen.
-		return PGPKeyInfo{}, errors.InvalidArgument("PGP key ring entity is nil")
+		return KeyInfo{}, errors.InvalidArgument("PGP key ring entity is nil")
 	}
 
 	if keyEntity.PrivateKey != nil {
-		return PGPKeyInfo{}, errors.InvalidArgument("refusing to accept private key: please upload a public key")
+		return KeyInfo{}, errors.InvalidArgument("refusing to accept private key: please upload a public key")
 	}
 
 	primarySignature, primaryIdentity := keyEntity.PrimarySelfSignature()
 
 	if primarySignature == nil {
 		// Should not happen.
-		return PGPKeyInfo{}, errors.InvalidArgument("PGP key entity is missing primary signature")
+		return KeyInfo{}, errors.InvalidArgument("PGP key entity is missing primary signature")
 	}
 
 	// Extract the validity period from the key's primary signature.
@@ -99,6 +99,13 @@ func parsePGP(r io.Reader) (PGPKeyInfo, error) {
 
 	var identity *types.Identity
 	var comment string
+
+	foundPrincipal := false
+	if principal == nil {
+		// If principal is nil, it means that no particular principal is needed.
+		// By `foundPrincipal = true` we declare that we have "found" it.
+		foundPrincipal = true
+	}
 
 	// Process the primary identity (name and email address for the key) if it exists.
 	// The identity can also have revocations. We ignore the revocation reason, but honor
@@ -114,6 +121,8 @@ func parsePGP(r io.Reader) (PGPKeyInfo, error) {
 			Email: primaryIdentity.UserId.Email,
 		}
 
+		foundPrincipal = foundPrincipal || strings.EqualFold(identity.Email, principal.Email)
+
 		comment = primaryIdentity.UserId.Comment
 	}
 
@@ -123,12 +132,20 @@ func parsePGP(r io.Reader) (PGPKeyInfo, error) {
 			Name:  ident.UserId.Name,
 			Email: ident.UserId.Email,
 		})
+
+		foundPrincipal = foundPrincipal || strings.EqualFold(ident.UserId.Email, principal.Email)
 	}
 
-	var subKeys []PGPKeyMetadata
+	// PGP keys can have multiple identities and one of those must match the current user's.
+	// The email address must match, the name can be different.
+	if !foundPrincipal {
+		return KeyInfo{}, errors.InvalidArgument("key identities don't contain the user's email address")
+	}
+
+	var subKeys []KeyMetadata
 	for _, subKey := range keyEntity.Subkeys {
 		if subKey.PublicKey == nil || subKey.Sig == nil {
-			return PGPKeyInfo{}, errors.InvalidArgument("found a subkey without public key")
+			return KeyInfo{}, errors.InvalidArgument("found a subkey without public key")
 		}
 
 		// We'll only consider keys than can be used for signing
@@ -142,7 +159,7 @@ func parsePGP(r io.Reader) (PGPKeyInfo, error) {
 
 		subKeyValidFrom, subKeyValidTo := validitySubkey.Milliseconds()
 		bits, _ := subKey.PublicKey.BitLength()
-		subKeys = append(subKeys, PGPKeyMetadata{
+		subKeys = append(subKeys, KeyMetadata{
 			ID:               subKey.PublicKey.KeyIdString(),
 			Fingerprint:      fmt.Sprintf("%X", subKey.PublicKey.Fingerprint),
 			RevocationReason: getRevocationReason(subKey.Revocations),
@@ -155,10 +172,10 @@ func parsePGP(r io.Reader) (PGPKeyInfo, error) {
 
 	keyValidFrom, keyValidTo := validityKey.Milliseconds()
 	bits, _ := keyEntity.PrimaryKey.BitLength()
-	metadata := PGPEntityMetadata{
+	metadata := EntityMetadata{
 		PrimaryIdentity: identity,
 		Identities:      identities,
-		PrimaryKey: PGPKeyMetadata{
+		PrimaryKey: KeyMetadata{
 			ID:               keyEntity.PrimaryKey.KeyIdString(),
 			Fingerprint:      fmt.Sprintf("%X", keyEntity.PrimaryKey.Fingerprint),
 			RevocationReason: getRevocationReason(keyEntity.Revocations),
@@ -170,7 +187,7 @@ func parsePGP(r io.Reader) (PGPKeyInfo, error) {
 		SubKeys: subKeys,
 	}
 
-	keyInfo := PGPKeyInfo{
+	keyInfo := KeyInfo{
 		entity:    keyEntity,
 		metadata:  metadata,
 		validFrom: keyValidFrom,
@@ -181,20 +198,20 @@ func parsePGP(r io.Reader) (PGPKeyInfo, error) {
 	return keyInfo, nil
 }
 
-type PGPKeyInfo struct {
+type KeyInfo struct {
 	// entity holds the original PGP key
 	entity *openpgp.Entity
 
 	// metadata holds additional key info
-	metadata PGPEntityMetadata
+	metadata EntityMetadata
 
 	validFrom int64
 	validTo   *int64
 	comment   string
 }
 
-func (key PGPKeyInfo) Matches(s string) bool {
-	otherKey, err := parsePGP(strings.NewReader(s))
+func (key KeyInfo) Matches(s string) bool {
+	otherKey, err := Parse(strings.NewReader(s), nil)
 	if err != nil {
 		return false
 	}
@@ -212,45 +229,46 @@ func (key PGPKeyInfo) Matches(s string) bool {
 	return slices.Equal(buf1.Bytes(), buf2.Bytes())
 }
 
-func (key PGPKeyInfo) Fingerprint() string {
+func (key KeyInfo) Fingerprint() string {
 	return key.metadata.PrimaryKey.Fingerprint
 }
 
-func (key PGPKeyInfo) Type() string {
+func (key KeyInfo) Type() string {
 	return pgpAlgo(key.entity.PrimaryKey.PubKeyAlgo)
 }
 
-func (key PGPKeyInfo) Scheme() enum.PublicKeyScheme {
+func (key KeyInfo) Scheme() enum.PublicKeyScheme {
 	return enum.PublicKeySchemePGP
 }
 
-func (key PGPKeyInfo) Comment() string {
+func (key KeyInfo) Comment() string {
 	return key.comment
 }
 
-func (key PGPKeyInfo) ValidFrom() *int64 {
+func (key KeyInfo) ValidFrom() *int64 {
 	return &key.validFrom
 }
 
-func (key PGPKeyInfo) ValidTo() *int64 {
+func (key KeyInfo) ValidTo() *int64 {
 	return key.validTo
 }
 
-func (key PGPKeyInfo) Identities() []types.Identity {
+func (key KeyInfo) Identities() []types.Identity {
 	return key.metadata.Identities
 }
 
-func (key PGPKeyInfo) RevocationReason() *enum.RevocationReason {
+func (key KeyInfo) RevocationReason() *enum.RevocationReason {
 	return key.metadata.PrimaryKey.RevocationReason
 }
 
-func (key PGPKeyInfo) Metadata() json.RawMessage {
+func (key KeyInfo) Metadata() json.RawMessage {
 	data, _ := json.Marshal(key.metadata)
 	return data
 }
 
-func (key PGPKeyInfo) SubKeyIDs() []string {
+func (key KeyInfo) SubKeyIDs() []string {
 	subKeyIDs := make([]string, 0)
+	subKeyIDs = append(subKeyIDs, key.entity.PrimaryKey.KeyIdString())
 	for i := range key.entity.Subkeys {
 		if key.entity.Subkeys[i].PublicKey.CanSign() {
 			subKeyIDs = append(subKeyIDs, key.entity.Subkeys[i].PublicKey.KeyIdString())

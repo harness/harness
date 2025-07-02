@@ -396,7 +396,7 @@ func (r *SharedRepo) CommitTree(
 		// Signed-off-by
 		_, _ = messageBytes.WriteString("\n")
 		_, _ = messageBytes.WriteString("Signed-off-by: ")
-		_, _ = messageBytes.WriteString(fmt.Sprintf("%s <%s>", committer.Identity.Name, committer.Identity.Email))
+		_, _ = messageBytes.WriteString(fmt.Sprintf("%s <%s>\n", committer.Identity.Name, committer.Identity.Email))
 	}
 
 	stdout := bytes.NewBuffer(nil)

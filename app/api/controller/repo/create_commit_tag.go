@@ -49,7 +49,7 @@ func (c *Controller) CreateCommitTag(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 	in *CreateCommitTagInput,
-) (*CommitTag, []types.RuleViolations, error) {
+) (*types.CommitTag, []types.RuleViolations, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush)
 	if err != nil {
 		return nil, nil, err
@@ -100,7 +100,7 @@ func (c *Controller) CreateCommitTag(ctx context.Context,
 		return nil, nil, err
 	}
 
-	commitTag := mapCommitTag(rpcOut.CommitTag)
+	commitTag := controller.MapCommitTag(rpcOut.CommitTag)
 
 	err = c.instrumentation.Track(ctx, instrument.Event{
 		Type:      instrument.EventTypeCreateTag,

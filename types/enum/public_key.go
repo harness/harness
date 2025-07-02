@@ -99,3 +99,48 @@ func (s RevocationReason) Sanitize() (RevocationReason, bool) {
 func GetAllRevocationReasons() ([]RevocationReason, RevocationReason) {
 	return revocationReasons, ""
 }
+
+// GitSignatureResult is outcome of a git object's signature verification.
+type GitSignatureResult string
+
+const (
+	// GitSignatureInvalid is used when the signature itself is malformed.
+	// Shouldn't be stored to the DB.
+	GitSignatureInvalid GitSignatureResult = "invalid"
+
+	// GitSignatureUnsupported is used when the system is unable to verify the signature
+	// because the signature version is not supported by the system.
+	// Shouldn't be stored to the DB.
+	GitSignatureUnsupported GitSignatureResult = "unsupported"
+
+	// GitSignatureUnverified is used when the signer is not in the DB or
+	// when the key to verify the signature is missing.
+	// Shouldn't be stored to the DB.
+	GitSignatureUnverified GitSignatureResult = "unverified"
+
+	// GitSignatureGood is used when the signature is cryptographically valid for the signed object.
+	GitSignatureGood GitSignatureResult = "good"
+
+	// GitSignatureBad is used when the signature is bad (doesn’t match the object contents).
+	GitSignatureBad GitSignatureResult = "bad"
+
+	// GitSignatureKeyExpired is used when the content's timestamp is not within the key's validity period.
+	GitSignatureKeyExpired GitSignatureResult = "key_expired"
+
+	// GitSignatureRevoked is used when the signature is valid, but is signed with a revoked key.
+	GitSignatureRevoked GitSignatureResult = "revoked"
+)
+
+var gitSignatureResults = sortEnum([]GitSignatureResult{
+	GitSignatureInvalid,
+	GitSignatureUnsupported,
+	GitSignatureUnverified,
+	GitSignatureGood,
+	GitSignatureBad,
+	GitSignatureKeyExpired,
+	GitSignatureRevoked,
+})
+
+func (GitSignatureResult) Enum() []interface{} {
+	return toInterfaceSlice(gitSignatureResults)
+}

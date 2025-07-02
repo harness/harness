@@ -14,7 +14,9 @@
 
 package types
 
-import "github.com/harness/gitness/git/sha"
+import (
+	"github.com/harness/gitness/git/sha"
+)
 
 // CommitFilesResponse holds commit id.
 type CommitFilesResponse struct {
@@ -26,4 +28,9 @@ type CommitFilesResponse struct {
 type FileReference struct {
 	Path string  `json:"path"`
 	SHA  sha.SHA `json:"blob_sha"`
+}
+
+type PathDetails struct {
+	Path       string  `json:"path"`
+	LastCommit *Commit `json:"last_commit,omitempty"`
 }

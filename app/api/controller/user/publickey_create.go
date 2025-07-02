@@ -17,7 +17,6 @@ package user
 import (
 	"context"
 	"fmt"
-	"slices"
 	"strings"
 	"time"
 
@@ -77,25 +76,13 @@ func (c *Controller) CreatePublicKey(
 		return nil, err
 	}
 
-	key, err := publickey.ParseString(in.Content)
+	key, err := publickey.ParseString(in.Content, &session.Principal)
 	if err != nil {
 		return nil, errors.InvalidArgument("unrecognized key content")
 	}
 
 	if in.Scheme != "" && key.Scheme() != in.Scheme {
 		return nil, errors.InvalidArgument("key is not a valid %s key", in.Scheme)
-	}
-
-	// SSH keys don't have an embedded identity, by PGP keys do.
-	// If a key has identities, one of those must match the current user's.
-	// The email address must match, the name can be different.
-	if identities := key.Identities(); len(identities) > 0 {
-		found := slices.ContainsFunc(identities, func(identity types.Identity) bool {
-			return strings.EqualFold(identity.Email, session.Principal.Email)
-		})
-		if !found {
-			return nil, errors.InvalidArgument("key identities don't contain the current user's email address")
-		}
 	}
 
 	switch key.Scheme() {

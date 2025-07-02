@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/publicaccess"
+	"github.com/harness/gitness/app/services/publickey"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/services/rules"
 	"github.com/harness/gitness/app/services/settings"
@@ -87,6 +88,7 @@ func ProvideController(
 	sseStreamer sse.Streamer,
 	lfsCtrl *lfs.Controller,
 	favoriteStore store.FavoriteStore,
+	signatureVerifyService publickey.SignatureVerifyService,
 ) *Controller {
 	return NewController(config, tx, urlProvider,
 		authorizer,
@@ -95,7 +97,7 @@ func ProvideController(
 		principalInfoCache, protectionManager, rpcClient, spaceFinder, repoFinder, importer,
 		codeOwners, repoReporter, indexer, limiter, locker, auditService, mtxManager, identifierCheck,
 		repoChecks, publicAccess, labelSvc, instrumentation, userGroupStore, userGroupService,
-		rulesSvc, sseStreamer, lfsCtrl, favoriteStore,
+		rulesSvc, sseStreamer, lfsCtrl, favoriteStore, signatureVerifyService,
 	)
 }
 

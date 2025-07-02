@@ -16,10 +16,13 @@ package repo
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -28,7 +31,7 @@ type PathsDetailsInput struct {
 }
 
 type PathsDetailsOutput struct {
-	Details []git.PathDetails `json:"details"`
+	Details []types.PathDetails `json:"details"`
 }
 
 // PathsDetails finds the additional info about the provided paths of the repo.
@@ -68,7 +71,25 @@ func (c *Controller) PathsDetails(ctx context.Context,
 		return PathsDetailsOutput{}, err
 	}
 
-	return PathsDetailsOutput{
-		Details: result.Details,
-	}, nil
+	commits := make([]*types.Commit, 0, len(result.Details))
+	output := PathsDetailsOutput{
+		Details: make([]types.PathDetails, len(result.Details)),
+	}
+	for i, d := range result.Details {
+		lastCommit := controller.MapCommit(d.LastCommit)
+		output.Details[i] = types.PathDetails{
+			Path:       d.Path,
+			LastCommit: lastCommit,
+		}
+		if lastCommit != nil {
+			commits = append(commits, lastCommit)
+		}
+	}
+
+	err = c.signatureVerifyService.VerifyCommits(ctx, repo.ID, commits)
+	if err != nil {
+		return PathsDetailsOutput{}, fmt.Errorf("failed to verify signature of commits: %w", err)
+	}
+
+	return output, nil
 }

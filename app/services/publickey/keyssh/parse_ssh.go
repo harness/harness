@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package publickey
+package keyssh
 
 import (
 	"crypto/sha256"
@@ -29,31 +29,31 @@ import (
 )
 
 func FromSSH(key gossh.PublicKey) KeyInfo {
-	return SSHKeyInfo{
+	return KeyInfo{
 		PublicKey:  key,
 		KeyComment: "",
 	}
 }
 
-func parseSSH(keyData []byte) (SSHKeyInfo, error) {
+func Parse(keyData []byte) (KeyInfo, error) {
 	publicKey, comment, _, _, err := gossh.ParseAuthorizedKey(keyData)
 	if err != nil {
-		return SSHKeyInfo{}, errors.InvalidArgument("invalid SSH key data: %s" + err.Error())
+		return KeyInfo{}, errors.InvalidArgument("invalid SSH key data: %s" + err.Error())
 	}
 
 	keyType := publicKey.Type()
 
 	// explicitly disallowed
 	if slices.Contains(DisallowedTypes, keyType) {
-		return SSHKeyInfo{}, errors.InvalidArgument("keys of type %s are not allowed", keyType)
+		return KeyInfo{}, errors.InvalidArgument("keys of type %s are not allowed", keyType)
 	}
 
 	// only allowed
 	if !slices.Contains(AllowedTypes, keyType) {
-		return SSHKeyInfo{}, errors.InvalidArgument("allowed key types are %v", AllowedTypes)
+		return KeyInfo{}, errors.InvalidArgument("allowed key types are %v", AllowedTypes)
 	}
 
-	return SSHKeyInfo{
+	return KeyInfo{
 		PublicKey:  publicKey,
 		KeyComment: comment,
 	}, nil
@@ -73,12 +73,12 @@ var DisallowedTypes = []string{
 	gossh.KeyAlgoDSA,
 }
 
-type SSHKeyInfo struct {
+type KeyInfo struct {
 	PublicKey  gossh.PublicKey
 	KeyComment string
 }
 
-func (key SSHKeyInfo) Matches(s string) bool {
+func (key KeyInfo) Matches(s string) bool {
 	otherKey, _, _, _, err := gossh.ParseAuthorizedKey([]byte(s))
 	if err != nil {
 		return false
@@ -87,48 +87,48 @@ func (key SSHKeyInfo) Matches(s string) bool {
 	return key.matchesKey(otherKey)
 }
 
-func (key SSHKeyInfo) matchesKey(otherKey gossh.PublicKey) bool {
+func (key KeyInfo) matchesKey(otherKey gossh.PublicKey) bool {
 	return ssh.KeysEqual(key.PublicKey, otherKey)
 }
 
-func (key SSHKeyInfo) Fingerprint() string {
+func (key KeyInfo) Fingerprint() string {
 	sum := sha256.New()
 	sum.Write(key.PublicKey.Marshal())
 	return "SHA256:" + base64.RawStdEncoding.EncodeToString(sum.Sum(nil))
 }
 
-func (key SSHKeyInfo) Type() string {
+func (key KeyInfo) Type() string {
 	return key.PublicKey.Type()
 }
 
-func (key SSHKeyInfo) Scheme() enum.PublicKeyScheme {
+func (key KeyInfo) Scheme() enum.PublicKeyScheme {
 	return enum.PublicKeySchemeSSH
 }
 
-func (key SSHKeyInfo) Comment() string {
+func (key KeyInfo) Comment() string {
 	return key.KeyComment
 }
 
-func (key SSHKeyInfo) ValidFrom() *int64 {
+func (key KeyInfo) ValidFrom() *int64 {
 	return nil // SSH keys do not have validity period
 }
 
-func (key SSHKeyInfo) ValidTo() *int64 {
+func (key KeyInfo) ValidTo() *int64 {
 	return nil // SSH keys do not have validity period
 }
 
-func (key SSHKeyInfo) Identities() []types.Identity {
+func (key KeyInfo) Identities() []types.Identity {
 	return nil // SSH keys do not have identities
 }
 
-func (key SSHKeyInfo) RevocationReason() *enum.RevocationReason {
-	return nil
+func (key KeyInfo) RevocationReason() *enum.RevocationReason {
+	return nil // SSH keys do not have revocations
 }
 
-func (key SSHKeyInfo) Metadata() json.RawMessage {
+func (key KeyInfo) Metadata() json.RawMessage {
 	return json.RawMessage("{}")
 }
 
-func (key SSHKeyInfo) SubKeyIDs() []string {
-	return nil
+func (key KeyInfo) SubKeyIDs() []string {
+	return nil // SSH keys do not have subkeys
 }

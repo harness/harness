@@ -1141,6 +1141,9 @@ type (
 		// Create creates a new public key.
 		Create(ctx context.Context, publicKey *types.PublicKey) error
 
+		// Update updates a public key.
+		Update(ctx context.Context, publicKey *types.PublicKey) error
+
 		// DeleteByIdentifier deletes a public key.
 		DeleteByIdentifier(ctx context.Context, principalID int64, identifier string) error
 
@@ -1174,6 +1177,25 @@ type (
 
 	PublicKeySubKeyStore interface {
 		Create(ctx context.Context, publicKeyID int64, subKeyIDs []string) error
+		List(ctx context.Context, publicKeyID int64) ([]string, error)
+	}
+
+	GitSignatureResultStore interface {
+		Map(
+			ctx context.Context,
+			repoID int64,
+			objectSHAs []sha.SHA,
+		) (map[sha.SHA]types.GitSignatureResult, error)
+
+		Create(ctx context.Context, sigResult types.GitSignatureResult) error
+		TryCreateAll(ctx context.Context, sigResult []*types.GitSignatureResult) error
+
+		UpdateAll(
+			ctx context.Context,
+			result enum.GitSignatureResult,
+			principalID int64,
+			keyIDs, keyFingerprints []string,
+		) error
 	}
 
 	GitspaceEventStore interface {

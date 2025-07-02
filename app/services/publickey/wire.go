@@ -22,6 +22,7 @@ import (
 
 var WireSet = wire.NewSet(
 	ProvideSSHAuthService,
+	ProvideSignatureVerifyService,
 )
 
 func ProvideSSHAuthService(
@@ -29,4 +30,17 @@ func ProvideSSHAuthService(
 	pCache store.PrincipalInfoCache,
 ) SSHAuthService {
 	return NewSSHAuthService(publicKeyStore, pCache)
+}
+
+func ProvideSignatureVerifyService(
+	principalStore store.PrincipalStore,
+	publicKeyStore store.PublicKeyStore,
+	publicKeySubKeyStore store.PublicKeySubKeyStore,
+	gitSignatureResultStore store.GitSignatureResultStore,
+) SignatureVerifyService {
+	return NewSignatureVerifyService(
+		principalStore,
+		publicKeyStore,
+		publicKeySubKeyStore,
+		gitSignatureResultStore)
 }

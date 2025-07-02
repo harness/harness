@@ -99,7 +99,32 @@ type Commit struct {
 	Committer  Signature    `json:"committer"`
 	SignedData *SignedData  `json:"-"`
 	Stats      *CommitStats `json:"stats,omitempty"`
+
+	Signature *GitSignatureResult `json:"signature"`
 }
+
+func (c *Commit) GetSHA() sha.SHA                      { return c.SHA }
+func (c *Commit) SetSignature(sig *GitSignatureResult) { c.Signature = sig }
+func (c *Commit) GetSigner() *Signature                { return &c.Committer }
+func (c *Commit) GetSignedData() *SignedData           { return c.SignedData }
+
+type CommitTag struct {
+	Name        string      `json:"name"`
+	SHA         sha.SHA     `json:"sha"`
+	IsAnnotated bool        `json:"is_annotated"`
+	Title       string      `json:"title,omitempty"`
+	Message     string      `json:"message,omitempty"`
+	Tagger      *Signature  `json:"tagger,omitempty"`
+	SignedData  *SignedData `json:"-"`
+	Commit      *Commit     `json:"commit,omitempty"`
+
+	Signature *GitSignatureResult `json:"signature"`
+}
+
+func (t *CommitTag) GetSHA() sha.SHA                      { return t.SHA }
+func (t *CommitTag) SetSignature(sig *GitSignatureResult) { t.Signature = sig }
+func (t *CommitTag) GetSigner() *Signature                { return t.Tagger }
+func (t *CommitTag) GetSignedData() *SignedData           { return t.SignedData }
 
 type Signature struct {
 	Identity Identity  `json:"identity"`
@@ -125,7 +150,33 @@ type RenameDetails struct {
 }
 
 type ListCommitResponse struct {
-	Commits       []Commit        `json:"commits"`
+	Commits       []*Commit       `json:"commits"`
 	RenameDetails []RenameDetails `json:"rename_details"`
 	TotalCommits  int             `json:"total_commits,omitempty"`
+}
+
+type GitSignatureResult struct {
+	RepoID     int64   `json:"-"`
+	ObjectSHA  sha.SHA `json:"-"`
+	ObjectTime int64   `json:"-"`
+
+	// Created is the timestamp when the signature was first verified.
+	Created int64 `json:"created,omitempty"`
+
+	// Updated is the timestamp when result has been updated (i.e. because of key revocation).
+	Updated int64 `json:"updated,omitempty"`
+
+	// Result is the result of the signature verification.
+	Result enum.GitSignatureResult `json:"result"`
+
+	// PrincipalID is owner of the key with which signature has been checked.
+	PrincipalID int64 `json:"-"`
+
+	KeyScheme enum.PublicKeyScheme `json:"key_scheme,omitempty"`
+
+	// KeyID is the ID of the key with which signature has been checked.
+	KeyID string `json:"key_id,omitempty"`
+
+	// KeyFingerprint is the fingerprint of the key with which signature has been checked.
+	KeyFingerprint string `json:"key_fingerprint,omitempty"`
 }

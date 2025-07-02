@@ -36,6 +36,7 @@ import (
 	"github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/publicaccess"
+	"github.com/harness/gitness/app/services/publickey"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/services/rules"
 	"github.com/harness/gitness/app/services/settings"
@@ -78,42 +79,43 @@ func (r RepositoryOutput) MarshalJSON() ([]byte, error) {
 type Controller struct {
 	defaultBranch string
 
-	tx                 dbtx.Transactor
-	urlProvider        url.Provider
-	authorizer         authz.Authorizer
-	repoStore          store.RepoStore
-	spaceStore         store.SpaceStore
-	pipelineStore      store.PipelineStore
-	executionStore     store.ExecutionStore
-	principalStore     store.PrincipalStore
-	ruleStore          store.RuleStore
-	checkStore         store.CheckStore
-	pullReqStore       store.PullReqStore
-	settings           *settings.Service
-	principalInfoCache store.PrincipalInfoCache
-	userGroupStore     store.UserGroupStore
-	userGroupService   usergroup.Service
-	protectionManager  *protection.Manager
-	git                git.Interface
-	spaceFinder        refcache.SpaceFinder
-	repoFinder         refcache.RepoFinder
-	importer           *importer.Repository
-	codeOwners         *codeowners.Service
-	eventReporter      *repoevents.Reporter
-	indexer            keywordsearch.Indexer
-	resourceLimiter    limiter.ResourceLimiter
-	locker             *locker.Locker
-	auditService       audit.Service
-	mtxManager         lock.MutexManager
-	identifierCheck    check.RepoIdentifier
-	repoCheck          Check
-	publicAccess       publicaccess.Service
-	labelSvc           *label.Service
-	instrumentation    instrument.Service
-	rulesSvc           *rules.Service
-	sseStreamer        sse.Streamer
-	lfsCtrl            *lfs.Controller
-	favoriteStore      store.FavoriteStore
+	tx                     dbtx.Transactor
+	urlProvider            url.Provider
+	authorizer             authz.Authorizer
+	repoStore              store.RepoStore
+	spaceStore             store.SpaceStore
+	pipelineStore          store.PipelineStore
+	executionStore         store.ExecutionStore
+	principalStore         store.PrincipalStore
+	ruleStore              store.RuleStore
+	checkStore             store.CheckStore
+	pullReqStore           store.PullReqStore
+	settings               *settings.Service
+	principalInfoCache     store.PrincipalInfoCache
+	userGroupStore         store.UserGroupStore
+	userGroupService       usergroup.Service
+	protectionManager      *protection.Manager
+	git                    git.Interface
+	spaceFinder            refcache.SpaceFinder
+	repoFinder             refcache.RepoFinder
+	importer               *importer.Repository
+	codeOwners             *codeowners.Service
+	eventReporter          *repoevents.Reporter
+	indexer                keywordsearch.Indexer
+	resourceLimiter        limiter.ResourceLimiter
+	locker                 *locker.Locker
+	auditService           audit.Service
+	mtxManager             lock.MutexManager
+	identifierCheck        check.RepoIdentifier
+	repoCheck              Check
+	publicAccess           publicaccess.Service
+	labelSvc               *label.Service
+	instrumentation        instrument.Service
+	rulesSvc               *rules.Service
+	sseStreamer            sse.Streamer
+	lfsCtrl                *lfs.Controller
+	favoriteStore          store.FavoriteStore
+	signatureVerifyService publickey.SignatureVerifyService
 }
 
 func NewController(
@@ -154,45 +156,47 @@ func NewController(
 	sseStreamer sse.Streamer,
 	lfsCtrl *lfs.Controller,
 	favoriteStore store.FavoriteStore,
+	signatureVerifyService publickey.SignatureVerifyService,
 ) *Controller {
 	return &Controller{
-		defaultBranch:      config.Git.DefaultBranch,
-		tx:                 tx,
-		urlProvider:        urlProvider,
-		authorizer:         authorizer,
-		repoStore:          repoStore,
-		spaceStore:         spaceStore,
-		pipelineStore:      pipelineStore,
-		executionStore:     executionStore,
-		principalStore:     principalStore,
-		ruleStore:          ruleStore,
-		checkStore:         checkStore,
-		pullReqStore:       pullReqStore,
-		settings:           settings,
-		principalInfoCache: principalInfoCache,
-		protectionManager:  protectionManager,
-		git:                git,
-		spaceFinder:        spaceFinder,
-		repoFinder:         repoFinder,
-		importer:           importer,
-		codeOwners:         codeOwners,
-		eventReporter:      eventReporter,
-		indexer:            indexer,
-		resourceLimiter:    limiter,
-		locker:             locker,
-		auditService:       auditService,
-		mtxManager:         mtxManager,
-		identifierCheck:    identifierCheck,
-		repoCheck:          repoCheck,
-		publicAccess:       publicAccess,
-		labelSvc:           labelSvc,
-		instrumentation:    instrumentation,
-		userGroupStore:     userGroupStore,
-		userGroupService:   userGroupService,
-		rulesSvc:           rulesSvc,
-		sseStreamer:        sseStreamer,
-		lfsCtrl:            lfsCtrl,
-		favoriteStore:      favoriteStore,
+		defaultBranch:          config.Git.DefaultBranch,
+		tx:                     tx,
+		urlProvider:            urlProvider,
+		authorizer:             authorizer,
+		repoStore:              repoStore,
+		spaceStore:             spaceStore,
+		pipelineStore:          pipelineStore,
+		executionStore:         executionStore,
+		principalStore:         principalStore,
+		ruleStore:              ruleStore,
+		checkStore:             checkStore,
+		pullReqStore:           pullReqStore,
+		settings:               settings,
+		principalInfoCache:     principalInfoCache,
+		protectionManager:      protectionManager,
+		git:                    git,
+		spaceFinder:            spaceFinder,
+		repoFinder:             repoFinder,
+		importer:               importer,
+		codeOwners:             codeOwners,
+		eventReporter:          eventReporter,
+		indexer:                indexer,
+		resourceLimiter:        limiter,
+		locker:                 locker,
+		auditService:           auditService,
+		mtxManager:             mtxManager,
+		identifierCheck:        identifierCheck,
+		repoCheck:              repoCheck,
+		publicAccess:           publicAccess,
+		labelSvc:               labelSvc,
+		instrumentation:        instrumentation,
+		userGroupStore:         userGroupStore,
+		userGroupService:       userGroupService,
+		rulesSvc:               rulesSvc,
+		sseStreamer:            sseStreamer,
+		lfsCtrl:                lfsCtrl,
+		favoriteStore:          favoriteStore,
+		signatureVerifyService: signatureVerifyService,
 	}
 }
 

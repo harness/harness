@@ -186,6 +186,32 @@ func (s PublicKeyStore) Create(ctx context.Context, key *types.PublicKey) error 
 	return nil
 }
 
+func (s PublicKeyStore) Update(ctx context.Context, publicKey *types.PublicKey) error {
+	const sqlQuery = `
+		UPDATE public_keys
+		SET
+			 public_key_valid_from = :public_key_valid_from
+			,public_key_valid_to = :public_key_valid_to
+			,public_key_revocation_reason = :public_key_revocation_reason
+		WHERE public_key_id = :public_key_id`
+
+	dbPublicKey := mapToInternalPublicKey(publicKey)
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	query, arg, err := db.BindNamed(sqlQuery, dbPublicKey)
+	if err != nil {
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind public key object")
+	}
+
+	_, err = db.ExecContext(ctx, query, arg...)
+	if err != nil {
+		return database.ProcessSQLErrorf(ctx, err, "Failed to update public key")
+	}
+
+	return nil
+}
+
 // DeleteByIdentifier deletes a public key.
 func (s PublicKeyStore) DeleteByIdentifier(ctx context.Context, principalID int64, identifier string) error {
 	const sqlQuery = `DELETE FROM public_keys WHERE public_key_principal_id = $1 and LOWER(public_key_identifier) = $2`

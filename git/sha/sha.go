@@ -16,6 +16,7 @@ package sha
 
 import (
 	"bytes"
+	"database/sql/driver"
 	"encoding/gob"
 	"encoding/json"
 	"fmt"
@@ -140,4 +141,8 @@ func (s SHA) JSONSchema() (jsonschema.Schema, error) {
 	schema.WithDescription("Git object hash")
 
 	return schema, nil
+}
+
+func (s SHA) Value() (driver.Value, error) {
+	return s.str, nil
 }

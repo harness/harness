@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/harness/gitness/app/services/publickey/keypgp"
+	"github.com/harness/gitness/app/services/publickey/keyssh"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -42,7 +44,7 @@ type KeyInfo interface {
 	SubKeyIDs() []string
 }
 
-func ParseString(keyData string) (KeyInfo, error) {
+func ParseString(keyData string, principal *types.Principal) (KeyInfo, error) {
 	if len(keyData) == 0 {
 		return nil, errors.InvalidArgument("empty key")
 	}
@@ -51,7 +53,7 @@ func ParseString(keyData string) (KeyInfo, error) {
 	const pgpFooter = "-----END PGP PUBLIC KEY BLOCK-----"
 
 	if strings.HasPrefix(keyData, pgpHeader) && strings.HasSuffix(keyData, pgpFooter) {
-		key, err := parsePGP(strings.NewReader(keyData))
+		key, err := keypgp.Parse(strings.NewReader(keyData), principal)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse PGP key: %w", err)
 		}
@@ -59,7 +61,7 @@ func ParseString(keyData string) (KeyInfo, error) {
 		return key, nil
 	}
 
-	key, err := parseSSH([]byte(keyData))
+	key, err := keyssh.Parse([]byte(keyData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse SSH key: %w", err)
 	}
