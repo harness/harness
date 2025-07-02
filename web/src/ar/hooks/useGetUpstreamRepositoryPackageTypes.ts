@@ -84,10 +84,7 @@ export const UpstreamProxyPackageTypeList: UpstreamRepositoryPackageTypeListItem
     label: 'repositoryTypes.rpm',
     value: UpstreamProxyPackageType.RPM,
     icon: 'red-hat-logo',
-    tooltip: 'Coming Soon!',
-    disabled: true,
-    tag: ThumbnailTagEnum.ComingSoon,
-    featureFlag: FeatureFlags.HAR_RPM_PACKAGE_TYPE_ENABLED
+    tag: ThumbnailTagEnum.Beta
   },
   {
     label: 'repositoryTypes.cargo',
