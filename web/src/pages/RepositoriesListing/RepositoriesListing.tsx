@@ -68,7 +68,6 @@ import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import FavoriteStar from 'components/FavoriteStar/FavoriteStar'
 import { LabelTitle } from 'components/Label/Label'
-import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { RepoTypeLabel } from 'components/RepoTypeLabel/RepoTypeLabel'
@@ -117,7 +116,7 @@ export default function RepositoriesListing() {
   const [searchTerm, setSearchTerm] = useState<string | undefined>()
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm)
   const [showScopeInfo, setShowScopeInfo] = useState(pageBrowser.recursive === 'true')
-  const [selectedSortMethod, setSelectedSortMethod] = useState(pageBrowser.sort || RepoSortMethod.IdentifierAsc)
+  const [selectedSortMethod, setSelectedSortMethod] = useState(pageBrowser.sort || RepoSortMethod.LastPush)
   const { showError, showSuccess } = useToaster()
   const [updatedRepositories, setUpdatedRepositories] = useState<RepoRepositoryOutput[]>()
   const [accountIdentifier, orgIdentifier, projectIdentifier] = space?.split('/') || []
@@ -499,11 +498,13 @@ export default function RepositoriesListing() {
     <Container className={css.main}>
       <PageHeader title={getString('repositories')} toolbar={standalone ? null : <KeywordSearch />} />
       <PageBody
-        className={cx({ [css.withError]: !!error })}
+        className={cx({ [css.withError]: !!error, [css.spinner]: loading })}
         error={error ? getErrorMessage(error) : null}
         retryOnError={voidFn(refetch)}
+        loading={loading}
         noData={{
           when: () =>
+            standalone &&
             !loading &&
             isEmpty(repositories) &&
             debouncedSearchTerm === undefined &&
@@ -512,7 +513,6 @@ export default function RepositoriesListing() {
           message: getString('repos.noDataMessage'),
           button: NewRepoButton
         }}>
-        <LoadingSpinner visible={loading} className={css.spinner} />
         <Layout.Horizontal>
           <Container className={css.repoListingContainer} margin={{ top: 'medium' }}>
             <Container padding="xlarge">
@@ -579,10 +579,11 @@ export default function RepositoriesListing() {
 
               <NoResultCard
                 showWhen={() =>
-                  isEmpty(repositories) && (JSON.parse(pageBrowser.only_favorites || 'false') || !!searchTerm?.length)
+                  isEmpty(repositories) &&
+                  (JSON.parse(pageBrowser.only_favorites || 'false') || !!searchTerm?.length || !standalone)
                 }
                 forSearch={!isEmpty(debouncedSearchTerm)}
-                forFilter={JSON.parse(pageBrowser.only_favorites || 'false')}
+                forFilter={!standalone || JSON.parse(pageBrowser.only_favorites || 'false')}
               />
             </Container>
             <ResourceListingPagination response={response} page={page} setPage={setPage} />

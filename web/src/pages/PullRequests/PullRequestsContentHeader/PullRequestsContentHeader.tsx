@@ -100,11 +100,9 @@ export function PullRequestsContentHeader({
 
   return (
     <Container className={css.main} padding="xlarge">
-      {prCandidateBranches
-        ?.filter(branch => branch.name !== repoMetadata.default_branch)
-        .map(branch => (
-          <PRBanner key={branch.name} repoMetadata={repoMetadata} candidateBranch={branch} />
-        ))}
+      {prCandidateBranches?.map(branch => (
+        <PRBanner key={branch.name} repoMetadata={repoMetadata} branch={branch} />
+      ))}
       <Layout.Horizontal spacing="medium">
         <SearchInputWithSpinner
           loading={loading}

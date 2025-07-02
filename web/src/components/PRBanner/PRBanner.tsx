@@ -38,10 +38,10 @@ import Branches from '../../icons/Branches.svg?url'
 import css from './PRBanner.module.scss'
 
 export const PRBanner = ({
-  candidateBranch,
+  branch: candidateBranch,
   repoMetadata
 }: {
-  candidateBranch: TypesBranchTable
+  branch: TypesBranchTable
   repoMetadata: RepoRepositoryOutput
 }) => {
   const { getString } = useStrings()

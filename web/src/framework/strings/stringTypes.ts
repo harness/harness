@@ -617,6 +617,8 @@ export interface StringsMap {
   'labels.updateLabel': string
   'labels.updated': string
   language: string
+  lastCommit: string
+  lastCommitDate: string
   lastTriggeredAt: string
   leaveAComment: string
   lfsInfo: string

@@ -27,6 +27,8 @@ files: Files
 commit: Commit
 committed: committed
 commits: Commits
+lastCommit: Last Commit
+lastCommitDate: Last Commit Date
 commitChanges: Commit changes
 pullRequests: Pull Requests
 settings: Settings

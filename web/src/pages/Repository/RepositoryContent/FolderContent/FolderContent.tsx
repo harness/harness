@@ -35,6 +35,7 @@ import { useGet, useMutate } from 'restful-react'
 import { Link, useHistory } from 'react-router-dom'
 import { useAppContext } from 'AppContext'
 import type { OpenapiContentInfo, OpenapiDirContent, TypesCommit } from 'services/code'
+import { useStrings } from 'framework/strings'
 import { isInViewport, LIST_FETCHING_LIMIT, PAGE_CONTAINER_WIDTH } from 'utils/Utils'
 import {
   findReadmeInfo,
@@ -73,11 +74,13 @@ const checkIcon = (row: OpenapiContentInfo): React.ReactElement => {
 }
 export function FolderContent({ repoMetadata, resourceContent, gitRef, resourcePath }: FolderContentProps) {
   const history = useHistory()
+  const { getString } = useStrings()
   const { routes, standalone } = useAppContext()
+
   const columns: Column<OpenapiContentInfo>[] = useMemo(
     () => [
       {
-        Header: 'Files',
+        Header: getString('name'),
         id: 'name',
         width: '30%',
         Cell: ({ row }: CellProps<OpenapiContentInfo>) => {
@@ -101,9 +104,9 @@ export function FolderContent({ repoMetadata, resourceContent, gitRef, resourceP
         }
       },
       {
-        Header: 'Last Updated',
+        Header: getString('lastCommitDate'),
         id: 'when',
-        width: '150px',
+        width: '200px',
         Cell: ({ row }: CellProps<OpenapiContentInfo>) => {
           return (
             <Text lineClamp={1}>
@@ -118,9 +121,9 @@ export function FolderContent({ repoMetadata, resourceContent, gitRef, resourceP
         }
       },
       {
-        Header: 'Commits',
+        Header: getString('lastCommit'),
         id: 'message',
-        width: 'calc(70% - 150px)',
+        width: 'calc(70% - 200px)',
         Cell: ({ row }: CellProps<OpenapiContentInfo>) => (
           <Container className={css.commitContainer}>
             <CommitMessageLinks repoMetadata={repoMetadata} rowData={row.original} />
