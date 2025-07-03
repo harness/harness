@@ -172,9 +172,10 @@ const (
 	/*
 		----- ARTIFACTS -----
 	*/
-	PermissionArtifactsDownload Permission = "artifacts_download"
-	PermissionArtifactsUpload   Permission = "artifacts_upload"
-	PermissionArtifactsDelete   Permission = "artifacts_delete"
+	PermissionArtifactsDownload   Permission = "artifacts_download"
+	PermissionArtifactsUpload     Permission = "artifacts_upload"
+	PermissionArtifactsDelete     Permission = "artifacts_delete"
+	PermissionArtifactsQuarantine Permission = "artifacts_quarantine"
 )
 
 const (

@@ -103,6 +103,7 @@ var membershipRoleSpaceOwnerPermissions = slices.Clip(slices.Insert(membershipRo
 
 	PermissionArtifactsUpload,
 	PermissionArtifactsDelete,
+	PermissionArtifactsQuarantine,
 
 	PermissionRegistryEdit,
 	PermissionRegistryDelete,
