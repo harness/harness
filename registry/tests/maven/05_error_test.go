@@ -19,6 +19,8 @@ import (
 	"log"
 	"time"
 
+	conformanceutils "github.com/harness/gitness/registry/tests/utils"
+
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
 )
@@ -67,7 +69,7 @@ var test05ErrorHandling = func() {
 		ginkgo.Context("Authentication", func() {
 			ginkgo.It("should reject unauthorized access", func() {
 				// Create a new client with invalid credentials.
-				invalidClient := NewClient(TestConfig.RootURL, "invalid")
+				invalidClient := conformanceutils.NewClient(TestConfig.RootURL, "invalid", TestConfig.Debug)
 				path := fmt.Sprintf("/maven/%s/%s/com/example/test-artifact/1.0/test-artifact-1.0.jar",
 					TestConfig.Namespace,
 					TestConfig.RegistryName)

@@ -44,7 +44,7 @@ build: generate ## Build the all-in-one Harness binary
 
 test: generate  ## Run the go tests
 	@echo "Running tests"
-	@go test -v -coverprofile=coverage.out `go list ./... | grep -v "./registry/tests/maven"`
+	@go test -v -coverprofile=coverage.out `go list ./... | egrep -v "./registry/tests/(maven|cargo)"`
 	@go tool cover -html=coverage.out
 
 
@@ -77,6 +77,10 @@ ar-hot-conformance-test:
 	./registry/tests/maven/scripts/setup_test.sh localhost:3000
 	@chmod +x /tmp/maven_env.sh
 	source /tmp/maven_env.sh && go test -v ./registry/tests/maven/... -ginkgo.v || true
+	@echo "Running Cargo conformance tests..."
+	./registry/tests/cargo/scripts/setup_test.sh localhost:3000
+	@chmod +x /tmp/cargo_env.sh
+	source /tmp/cargo_env.sh && go test -v ./registry/tests/cargo/... -ginkgo.v || true
 
 ar-api-update:
 	@set -e; \

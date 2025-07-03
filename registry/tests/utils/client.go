@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mavenconformance
+package conformanceutils
 
 import (
 	"bytes"
@@ -31,14 +31,16 @@ type Client struct {
 	baseURL string
 	token   string
 	client  *http.Client
+	debug   bool
 }
 
 // NewClient creates a new Maven registry client.
-func NewClient(baseURL, token string) *Client {
+func NewClient(baseURL, token string, debug bool) *Client {
 	return &Client{
 		baseURL: baseURL,
 		token:   token,
 		client:  &http.Client{},
+		debug:   debug,
 	}
 }
 
@@ -136,7 +138,7 @@ func (c *Client) Do(req *Request) (*Response, error) {
 	}
 
 	// Only log details if DEBUG is enabled
-	if TestConfig.Debug {
+	if c.debug {
 		log.Printf("Making %s request to: %s\n", httpReq.Method, httpReq.URL)
 		if httpReq.Body != nil {
 			log.Printf("Request Body: %v\n", httpReq.Body)
@@ -150,7 +152,7 @@ func (c *Client) Do(req *Request) (*Response, error) {
 	if c.token != "" {
 		// Always use Bearer token authentication for Gitness
 		httpReq.Header.Set("Authorization", "Bearer "+c.token)
-		if TestConfig.Debug {
+		if c.debug {
 			log.Printf("Using Gitness Bearer token for authentication\n")
 		}
 	} else {
@@ -177,7 +179,7 @@ func (c *Client) Do(req *Request) (*Response, error) {
 	defer resp.Body.Close()
 
 	// Print response details only if DEBUG is enabled
-	if TestConfig.Debug {
+	if c.debug {
 		log.Printf("Response Status: %d %s\n", resp.StatusCode, resp.Status)
 		for k, v := range resp.Header {
 			log.Printf("Response Header: %s: %v\n", k, v)

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mavenconformance
+package cargoconformance
 
 import (
 	"fmt"
@@ -28,16 +28,16 @@ var (
 	client *conformanceutils.Client
 )
 
-func TestMavenConformance(t *testing.T) {
+func TestCargoConformance(t *testing.T) {
 	gomega.RegisterFailHandler(ginkgo.Fail)
-	ginkgo.RunSpecs(t, "Maven Registry Conformance Test Suite")
+	ginkgo.RunSpecs(t, "Cargo Registry Conformance Test Suite")
 }
 
 var _ = ginkgo.BeforeSuite(func() {
 	InitConfig()
 
 	// Log authentication details for debugging
-	ginkgo.By("Initializing Maven client with configuration")
+	ginkgo.By("Initializing Cargo client with configuration")
 	ginkgo.By(fmt.Sprintf("RootURL: %s", TestConfig.RootURL))
 	ginkgo.By(fmt.Sprintf("Username: %s", TestConfig.Username))
 	ginkgo.By(fmt.Sprintf("Namespace: %s", TestConfig.Namespace))
@@ -53,11 +53,12 @@ var _ = ginkgo.BeforeSuite(func() {
 	client = conformanceutils.NewClient(TestConfig.RootURL, TestConfig.Password, TestConfig.Debug)
 })
 
-var _ = ginkgo.Describe("Maven Registry Conformance Tests", func() {
+var _ = ginkgo.Describe("Cargo Registry Conformance Tests", func() {
 	// Test categories will be defined in separate files.
 	test01Download()
 	test02Upload()
-	test03ContentDiscovery()
+	test03UpdateYank()
+	test04ContentDiscovery()
 	test05ErrorHandling()
 })
 
