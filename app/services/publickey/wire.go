@@ -15,6 +15,7 @@
 package publickey
 
 import (
+	"github.com/harness/gitness/app/services/keyfetcher"
 	"github.com/harness/gitness/app/store"
 
 	"github.com/google/wire"
@@ -34,13 +35,11 @@ func ProvideSSHAuthService(
 
 func ProvideSignatureVerifyService(
 	principalStore store.PrincipalStore,
-	publicKeyStore store.PublicKeyStore,
-	publicKeySubKeyStore store.PublicKeySubKeyStore,
+	keyFetcher keyfetcher.Service,
 	gitSignatureResultStore store.GitSignatureResultStore,
 ) SignatureVerifyService {
 	return NewSignatureVerifyService(
 		principalStore,
-		publicKeyStore,
-		publicKeySubKeyStore,
+		keyFetcher,
 		gitSignatureResultStore)
 }

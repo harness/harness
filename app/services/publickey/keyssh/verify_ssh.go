@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"hash"
 
-	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/app/services/keyfetcher"
 	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -165,12 +165,12 @@ func (v *Verify) Parse(
 
 func (v *Verify) Key(
 	ctx context.Context,
-	publicKeyStore store.PublicKeyStore,
+	keyFetcher keyfetcher.Service,
 	principalID int64,
 ) (*types.PublicKey, error) {
 	schemes := []enum.PublicKeyScheme{enum.PublicKeySchemeSSH}
 	usages := []enum.PublicKeyUsage{enum.PublicKeyUsageSign}
-	keys, err := publicKeyStore.ListByFingerprint(ctx, v.KeyFingerprint(), &principalID, usages, schemes)
+	keys, err := keyFetcher.FetchByFingerprint(ctx, v.KeyFingerprint(), principalID, usages, schemes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list SSH public keys by fingerprint: %w", err)
 	}

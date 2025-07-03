@@ -22,6 +22,7 @@ import (
 	"slices"
 	"time"
 
+	"github.com/harness/gitness/app/services/keyfetcher"
 	"github.com/harness/gitness/app/services/publickey/keypgp"
 	"github.com/harness/gitness/app/services/publickey/keyssh"
 	"github.com/harness/gitness/app/store"
@@ -35,21 +36,18 @@ import (
 
 type SignatureVerifyService struct {
 	principalStore          store.PrincipalStore
-	publicKeyStore          store.PublicKeyStore
-	publicKeySubKeyStore    store.PublicKeySubKeyStore
+	keyFetcher              keyfetcher.Service
 	gitSignatureResultStore store.GitSignatureResultStore
 }
 
 func NewSignatureVerifyService(
 	principalStore store.PrincipalStore,
-	publicKeyStore store.PublicKeyStore,
-	publicKeySubKeyStore store.PublicKeySubKeyStore,
+	keyFetcher keyfetcher.Service,
 	gitSignatureResultStore store.GitSignatureResultStore,
 ) SignatureVerifyService {
 	return SignatureVerifyService{
 		principalStore:          principalStore,
-		publicKeyStore:          publicKeyStore,
-		publicKeySubKeyStore:    publicKeySubKeyStore,
+		keyFetcher:              keyFetcher,
 		gitSignatureResultStore: gitSignatureResultStore,
 	}
 }
@@ -148,7 +146,7 @@ func (s *VerifySession) fetchKey(
 		return key, nil
 	}
 
-	key, err := v.Key(ctx, s.publicKeyStore, principalID)
+	key, err := v.Key(ctx, s.keyFetcher, principalID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get public key from verifier: %w", err)
 	}
@@ -362,7 +360,7 @@ type verifier interface {
 	// Key fetches the key from the DB.
 	Key(
 		ctx context.Context,
-		publicKeyStore store.PublicKeyStore,
+		keyFetcher keyfetcher.Service,
 		principalID int64,
 	) (*types.PublicKey, error)
 

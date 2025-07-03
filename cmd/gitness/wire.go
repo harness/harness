@@ -19,6 +19,7 @@ package main
 
 import (
 	"context"
+	"github.com/harness/gitness/app/services/keyfetcher"
 
 	checkcontroller "github.com/harness/gitness/app/api/controller/check"
 	"github.com/harness/gitness/app/api/controller/connector"
@@ -266,6 +267,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		audit.WireSet,
 		ssh.WireSet,
 		publickey.WireSet,
+		keyfetcher.ProvideService,
 		remoteauth.WireSet,
 		migrate.WireSet,
 		scm.WireSet,

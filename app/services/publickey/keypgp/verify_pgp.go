@@ -22,7 +22,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/app/services/keyfetcher"
 	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -100,12 +100,12 @@ func (v *Verify) Parse(
 
 func (v *Verify) Key(
 	ctx context.Context,
-	publicKeyStore store.PublicKeyStore,
+	keyFetcher keyfetcher.Service,
 	principalID int64,
 ) (*types.PublicKey, error) {
 	schemes := []enum.PublicKeyScheme{enum.PublicKeySchemePGP}
 	usages := []enum.PublicKeyUsage{enum.PublicKeyUsageSign}
-	keys, err := publicKeyStore.ListBySubKeyID(ctx, v.KeyID(), &principalID, usages, schemes)
+	keys, err := keyFetcher.FetchBySubKeyID(ctx, v.KeyID(), principalID, usages, schemes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list PGP public keys by subkey ID: %w", err)
 	}
