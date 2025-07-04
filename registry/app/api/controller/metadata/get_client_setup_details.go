@@ -1230,7 +1230,11 @@ func (c *APIController) generateCargoClientSetupDetail(
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: utils.StringPtr("[registries.harness]" + "\n" + `index = "sparse+<REGISTRY_URL>/index/"`),
+						Value: utils.StringPtr("[registry]\n" +
+							`global-credential-providers = ["cargo:token", "cargo:libsecret", "cargo:macos-keychain", "cargo:wincred"]` +
+							"\n\n" +
+							"[registries.harness-<REGISTRY_NAME>]\n" +
+							`index = "sparse+<REGISTRY_URL>/index/"`),
 					},
 				},
 			},
@@ -1243,7 +1247,7 @@ func (c *APIController) generateCargoClientSetupDetail(
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: utils.StringPtr("[registries.harness]" + "\n" + `token = "Bearer <TOKEN>"`),
+						Value: utils.StringPtr("[registries.harness-<REGISTRY_NAME>]" + "\n" + `token = "Bearer <token from step 2>"`),
 					},
 				},
 			},
@@ -1261,7 +1265,7 @@ func (c *APIController) generateCargoClientSetupDetail(
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: utils.StringPtr("cargo publish --registry harness"),
+						Value: utils.StringPtr("cargo publish --registry harness-<REGISTRY_NAME>"),
 					},
 				},
 			},
@@ -1279,7 +1283,7 @@ func (c *APIController) generateCargoClientSetupDetail(
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: utils.StringPtr("cargo add <ARTIFACT_NAME>@<VERSION> --registry harness"),
+						Value: utils.StringPtr("cargo add <ARTIFACT_NAME>@<VERSION> --registry harness-<REGISTRY_NAME>"),
 					},
 				},
 			},

@@ -606,9 +606,9 @@ func GetNugetArtifactFileDownloadCommand(regURL, artifact, version, filename,
 	return downloadCommand
 }
 
-func GetCargoArtifactFileDownloadCommand(regURL, artifact, version, filename,
+func GetCargoArtifactFileDownloadCommand(regURL, artifact, version,
 	setupDetailsAuthHeaderPrefix string) string {
-	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>/<VERSION>/<FILENAME>'" +
+	downloadCommand := "curl --location '<HOSTNAME>/api/v1/crates/<ARTIFACT>/<VERSION>/download'" +
 		" --header '<AUTH_HEADER_PREFIX> <API_KEY>'" +
 		" -J -O"
 
@@ -617,7 +617,6 @@ func GetCargoArtifactFileDownloadCommand(regURL, artifact, version, filename,
 		"<HOSTNAME>":           regURL,
 		"<ARTIFACT>":           artifact,
 		"<VERSION>":            version,
-		"<FILENAME>":           filename,
 		"<AUTH_HEADER_PREFIX>": setupDetailsAuthHeaderPrefix,
 	}
 

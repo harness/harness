@@ -285,9 +285,8 @@ func GetArtifactFilesMetadata(
 			downloadCommand = GetNugetArtifactFileDownloadCommand(registryURL, artifactName,
 				version, filename, setupDetailsAuthHeaderPrefix)
 		case artifactapi.PackageTypeCARGO:
-			filename = strings.Replace(filename, "/crates", "", 1)
 			downloadCommand = GetCargoArtifactFileDownloadCommand(registryURL, artifactName,
-				version, filename, setupDetailsAuthHeaderPrefix)
+				version, setupDetailsAuthHeaderPrefix)
 		}
 		files = append(files, artifactapi.FileDetail{
 			Checksums:       getCheckSums(file),

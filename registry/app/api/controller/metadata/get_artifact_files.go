@@ -107,6 +107,8 @@ func (c *APIController) GetArtifactFiles(
 		registryURL = c.URLProvider.PackageURL(ctx, reqInfo.RootIdentifier+"/"+reqInfo.RegistryIdentifier, "npm")
 	case artifact.PackageTypeRPM:
 		registryURL = c.URLProvider.PackageURL(ctx, reqInfo.RootIdentifier+"/"+reqInfo.RegistryIdentifier, "rpm")
+	case artifact.PackageTypeCARGO:
+		registryURL = c.URLProvider.PackageURL(ctx, reqInfo.RootIdentifier+"/"+reqInfo.RegistryIdentifier, "cargo")
 	default:
 		registryURL = c.URLProvider.RegistryURL(ctx,
 			reqInfo.RootIdentifier, strings.ToLower(string(registry.PackageType)), reqInfo.RegistryIdentifier)
