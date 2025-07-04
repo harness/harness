@@ -39,7 +39,7 @@ func New(status int, message string, detail interface{}) *Error {
 	return &Error{Status: status, Message: message, Detail: detail}
 }
 
-// NotFound returns a new user facing not found error.
+// NotFoundError returns a new user facing not found error.
 func NotFoundError(message string, detail interface{}) *Error {
 	return New(http.StatusNotFound, message, detail)
 }
