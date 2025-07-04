@@ -587,7 +587,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	cargoLocalRegistry := cargo2.LocalRegistryProvider(localBase, fileManager, upstreamProxyConfigRepository, transactor, registryRepository, imageRepository, artifactRepository, provider, registryHelper, artifactReporter)
 	cargoLocalRegistryHelper := cargo2.LocalRegistryHelperProvider(cargoLocalRegistry, localBase, registryHelper)
 	cargoProxy := cargo2.ProxyProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, spaceFinder, secretService, cargoLocalRegistryHelper, artifactReporter)
-	cargoController := cargo3.ControllerProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, cargoLocalRegistry, cargoProxy)
+	cargoController := cargo3.ControllerProvider(upstreamProxyConfigRepository, registryRepository, registryFinder, imageRepository, artifactRepository, fileManager, transactor, provider, cargoLocalRegistry, cargoProxy)
 	cargoHandler := api2.NewCargoHandlerProvider(cargoController, packagesHandler)
 	handler4 := router.PackageHandlerProvider(packagesHandler, mavenHandler, genericHandler, pythonHandler, nugetHandler, npmHandler, rpmHandler, cargoHandler)
 	appRouter := router.AppRouterProvider(registryOCIHandler, apiHandler, handler2, handler3, handler4)

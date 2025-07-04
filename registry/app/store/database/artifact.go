@@ -415,6 +415,7 @@ func (a ArtifactDao) GetAllArtifactsByParentID(
 		a.artifact_version as version, 
 		a.artifact_updated_at as modified_at, 
 		i.image_labels as labels, 
+		a.artifact_metadata as metadata,
 		COALESCE(t2.download_count,0) as download_count `,
 	).
 		From("artifacts a").
@@ -453,7 +454,7 @@ func (a ArtifactDao) GetAllArtifactsByParentID(
 	}
 
 	if search != "" {
-		q = q.Where("image_name LIKE ?", sqlPartialMatch(search))
+		q = q.Where("i.image_name LIKE ?", sqlPartialMatch(search))
 	}
 	sortField := "i." + sortByField
 	if sortByField == downloadCount {

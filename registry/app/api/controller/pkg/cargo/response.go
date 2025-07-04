@@ -75,3 +75,19 @@ type RegeneratePackageIndexResponse struct {
 	BaseResponse `json:"-"`
 	Ok           bool `json:"ok"`
 }
+
+type SearchPackageResponse struct {
+	BaseResponse `json:"-"`
+	Crates       []SearchPackageResponseCrate  `json:"crates"`
+	Metadata     SearchPackageResponseMetadata `json:"meta"`
+}
+
+type SearchPackageResponseCrate struct {
+	Name        string `json:"name"`
+	MaxVersion  string `json:"max_version"`
+	Description string `json:"description"`
+}
+
+type SearchPackageResponseMetadata struct {
+	Total int64 `json:"total"`
+}

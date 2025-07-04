@@ -23,12 +23,18 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/cargo"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	cargotype "github.com/harness/gitness/registry/app/pkg/types/cargo"
+	"github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
 )
 
 type Controller interface {
 	GetRegistryConfig(ctx context.Context, info *cargotype.ArtifactInfo) (*GetRegistryConfigResponse, error)
+	SearchPackage(
+		ctx context.Context,
+		info *cargotype.ArtifactInfo,
+		requestInfo *cargotype.SearchPackageRequestParams,
+	) (*SearchPackageResponse, error)
 	DownloadPackageIndex(
 		ctx context.Context, info *cargotype.ArtifactInfo, filePath string,
 	) *GetPackageIndexResponse
@@ -46,21 +52,23 @@ type Controller interface {
 
 // Controller handles Cargo package operations.
 type controller struct {
-	fileManager filemanager.FileManager
-	proxyStore  store.UpstreamProxyConfigRepository
-	tx          dbtx.Transactor
-	registryDao store.RegistryRepository
-	imageDao    store.ImageRepository
-	artifactDao store.ArtifactRepository
-	urlProvider urlprovider.Provider
-	local       cargo.LocalRegistry
-	proxy       cargo.Proxy
+	fileManager    filemanager.FileManager
+	proxyStore     store.UpstreamProxyConfigRepository
+	tx             dbtx.Transactor
+	registryDao    store.RegistryRepository
+	registryFinder refcache.RegistryFinder
+	imageDao       store.ImageRepository
+	artifactDao    store.ArtifactRepository
+	urlProvider    urlprovider.Provider
+	local          cargo.LocalRegistry
+	proxy          cargo.Proxy
 }
 
 // NewController creates a new Cargo controller.
 func NewController(
 	proxyStore store.UpstreamProxyConfigRepository,
 	registryDao store.RegistryRepository,
+	registryFinder refcache.RegistryFinder,
 	imageDao store.ImageRepository,
 	artifactDao store.ArtifactRepository,
 	fileManager filemanager.FileManager,
@@ -70,14 +78,15 @@ func NewController(
 	proxy cargo.Proxy,
 ) Controller {
 	return &controller{
-		proxyStore:  proxyStore,
-		registryDao: registryDao,
-		imageDao:    imageDao,
-		artifactDao: artifactDao,
-		fileManager: fileManager,
-		tx:          tx,
-		urlProvider: urlProvider,
-		local:       local,
-		proxy:       proxy,
+		proxyStore:     proxyStore,
+		registryDao:    registryDao,
+		registryFinder: registryFinder,
+		imageDao:       imageDao,
+		artifactDao:    artifactDao,
+		fileManager:    fileManager,
+		tx:             tx,
+		urlProvider:    urlProvider,
+		local:          local,
+		proxy:          proxy,
 	}
 }

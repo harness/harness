@@ -18,6 +18,7 @@ import (
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/pkg/cargo"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
+	"github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
 
@@ -27,6 +28,7 @@ import (
 func ControllerProvider(
 	proxyStore store.UpstreamProxyConfigRepository,
 	registryDao store.RegistryRepository,
+	registryFinder refcache.RegistryFinder,
 	imageDao store.ImageRepository,
 	artifactDao store.ArtifactRepository,
 	fileManager filemanager.FileManager,
@@ -36,7 +38,7 @@ func ControllerProvider(
 	proxy cargo.Proxy,
 ) Controller {
 	return NewController(
-		proxyStore, registryDao, imageDao, artifactDao,
+		proxyStore, registryDao, registryFinder, imageDao, artifactDao,
 		fileManager, tx, urlProvider, local, proxy,
 	)
 }

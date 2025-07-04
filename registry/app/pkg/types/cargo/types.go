@@ -40,3 +40,16 @@ func (a ArtifactInfo) GetImageVersion() (exists bool, imageVersion string) {
 	}
 	return false, ""
 }
+
+type SearchPackageRequestParams struct {
+	SearchTerm *string
+	Size       *int32
+}
+
+type SearchPackageRequestInfo struct {
+	SearchTerm string
+	Limit      int
+	Offset     int
+	SortField  string
+	SortOrder  string
+}
