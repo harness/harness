@@ -262,8 +262,8 @@ export function useCommitModal({
                                 <Icon intent={Intent.WARNING} name="danger-icon" size={16} />
                                 <Text font={{ variation: FontVariation.BODY2 }} color={Color.RED_800}>
                                   {bypassable
-                                    ? getString('branchProtection.commitDirectlyAlertText')
-                                    : getString('branchProtection.commitDirectlyBlockText')}
+                                    ? getString('protectionRules.commitDirectlyAlertText')
+                                    : getString('protectionRules.commitDirectlyBlockText')}
                                 </Text>
                               </Layout.Horizontal>
                             </Render>
@@ -280,8 +280,8 @@ export function useCommitModal({
                                 <Icon intent={Intent.WARNING} name="danger-icon" size={16} />
                                 <Text font={{ variation: FontVariation.BODY2 }} color={Color.RED_800}>
                                   {bypassable
-                                    ? getString('branchProtection.commitNewBranchAlertText')
-                                    : getString('branchProtection.commitNewBranchBlockText')}
+                                    ? getString('protectionRules.commitNewBranchAlertText')
+                                    : getString('protectionRules.commitNewBranchBlockText')}
                                 </Text>
                               </Layout.Horizontal>
                             </Render>
@@ -327,8 +327,8 @@ export function useCommitModal({
                       variation={ButtonVariation.SECONDARY}
                       text={
                         targetBranchOption === CommitToGitRefOption.NEW_BRANCH
-                          ? getString('branchProtection.commitNewBranchAlertBtn')
-                          : getString('branchProtection.commitDirectlyAlertBtn')
+                          ? getString('protectionRules.commitNewBranchAlertBtn')
+                          : getString('protectionRules.commitDirectlyAlertBtn')
                       }
                     />
                   )}

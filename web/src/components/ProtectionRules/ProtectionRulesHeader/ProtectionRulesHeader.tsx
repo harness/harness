@@ -23,8 +23,18 @@ import { useAppContext } from 'AppContext'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { getEditPermissionRequestFromIdentifier, permissionProps } from 'utils/Utils'
-import css from './BranchProtectionHeader.module.scss'
-const BranchProtectionHeader = ({
+import css from './ProtectionRulesHeader.module.scss'
+
+interface ProtectionRulesHeaderProps extends Partial<Pick<GitInfoProps, 'repoMetadata'>> {
+  loading?: boolean
+  activeTab?: string
+  showParentScopeFilter: boolean
+  inheritRules: boolean
+  setInheritRules: (value: boolean) => void
+  onSearchTermChanged: (searchTerm: string) => void
+}
+
+const ProtectionRulesHeader = ({
   repoMetadata,
   loading,
   onSearchTermChanged,
@@ -32,25 +42,25 @@ const BranchProtectionHeader = ({
   showParentScopeFilter,
   inheritRules,
   setInheritRules
-}: BranchProtectionHeaderProps) => {
+}: ProtectionRulesHeaderProps) => {
   const history = useHistory()
   const [searchTerm, setSearchTerm] = useState('')
   const { routes } = useAppContext()
   const { getString } = useStrings()
   const { hooks, standalone } = useAppContext()
-
   const space = useGetSpaceParam()
 
   const permPushResult = hooks?.usePermissionTranslate(getEditPermissionRequestFromIdentifier(space, repoMetadata), [
     space,
     repoMetadata
   ])
+
   return (
     <Container className={css.main} padding="xlarge">
       <Layout.Horizontal spacing="medium">
         <Button
           variation={ButtonVariation.PRIMARY}
-          text={getString('branchProtection.newRule')}
+          text={getString('protectionRules.newRule')}
           icon={CodeIcon.Add}
           onClick={() =>
             repoMetadata
@@ -82,7 +92,7 @@ const BranchProtectionHeader = ({
         <Render when={showParentScopeFilter}>
           <Checkbox
             className={css.scopeCheckbox}
-            label={getString('branchProtection.showRulesScope')}
+            label={getString('protectionRules.showRulesScope')}
             checked={inheritRules}
             onChange={event => {
               setInheritRules(event.currentTarget.checked)
@@ -104,13 +114,4 @@ const BranchProtectionHeader = ({
   )
 }
 
-export default BranchProtectionHeader
-
-interface BranchProtectionHeaderProps extends Partial<Pick<GitInfoProps, 'repoMetadata'>> {
-  loading?: boolean
-  activeTab?: string
-  showParentScopeFilter: boolean
-  inheritRules: boolean
-  setInheritRules: (value: boolean) => void
-  onSearchTermChanged: (searchTerm: string) => void
-}
+export default ProtectionRulesHeader

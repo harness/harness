@@ -1,16 +1,33 @@
+/*
+ * Copyright 2023 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import React, { useMemo } from 'react'
 import cx from 'classnames'
 import { Icon } from '@harnessio/icons'
 import { Container, FlexExpander, Layout, Text } from '@harnessio/uicore'
 import { Classes, Popover, PopoverInteractionKind, PopoverPosition } from '@blueprintjs/core'
 import { Color, FontVariation } from '@harnessio/design-system'
-import css from '../BranchProtectionForm.module.scss'
+import css from '../ProtectionRulesForm.module.scss'
 
 const DefaultReviewersList = (props: {
   defaultReviewersList?: string[] // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  setFieldValue: (field: string, value: any, shouldValidate?: boolean | undefined) => void
+  setFieldValue: (field: string, value: any, shouldValidate?: boolean) => void
 }) => {
   const { defaultReviewersList, setFieldValue } = props
+
   const defaultReviewerContent = useMemo(() => {
     return (
       <Layout.Horizontal className={cx(css.widthContainer, css.defaultReviewerContainer)} padding={{ bottom: 'large' }}>
@@ -51,7 +68,8 @@ const DefaultReviewersList = (props: {
       </Layout.Horizontal>
     )
   }, [defaultReviewersList, setFieldValue])
-  return <>{defaultReviewerContent}</>
+
+  return defaultReviewerContent
 }
 
 export default DefaultReviewersList

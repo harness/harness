@@ -1029,7 +1029,7 @@ imageUpload:
   readyToUpload: Ready for upload
   upload: Upload
   text: Drag and drop a file here or click browse to select a file.
-branchProtection:
+protectionRules:
   namePlaceholder: Enter the rule name here
   descPlaceholder: Enter the description here
   title: Rules
@@ -1047,6 +1047,7 @@ branchProtection:
   requireMinReviewersContent: Require approval on pull requests from a minimum number of reviewers
   minNumber: Minimum number
   minNumberPlaceholder: Enter the minimum number
+  numberOfRulesApplied: '{{count}} {{type}} {{rulesLabel}} applied'
   addCodeownersToReviewTitle: Add Code Owners as reviewers
   addCodeownersToReviewText: Automatically add relevant Code Owners as reviewers
   reqReviewFromCodeOwnerTitle: Require review from code owners

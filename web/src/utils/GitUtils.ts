@@ -127,11 +127,11 @@ export enum GitContentType {
   SUBMODULE = 'submodule'
 }
 export enum SettingsTab {
-  webhooks = 'webhook',
-  general = '/',
-  branchProtection = 'rules',
-  security = 'security',
-  labels = 'labels'
+  WEBHOOKS = 'webhook',
+  GENERAL = '/',
+  PROTECTION_RULES = 'rules',
+  SECURITY = 'security',
+  LABELS = 'labels'
 }
 
 export enum SpacePRTabs {
@@ -143,11 +143,6 @@ export enum DashboardFilter {
   ALL = 'all',
   CREATED = 'created',
   REVIEW_REQUESTED = 'review_requested'
-}
-
-export enum SpaceSettingsTab {
-  general = '/',
-  labels = 'labels'
 }
 
 export enum WebhookTabs {

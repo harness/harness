@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import React from 'react'
 import cx from 'classnames'
 import { Container, FlexExpander, FormInput, Layout, SelectOption, Text } from '@harnessio/uicore'
@@ -24,9 +25,9 @@ import { useStrings } from 'framework/strings'
 import type { RulesFormPayload } from 'utils/Utils'
 import type { SettingTypeMode } from 'utils/GitUtils'
 import DefaultReviewersSection from './DefaultReviewersSection'
-import css from '../BranchProtectionForm.module.scss'
+import css from '../ProtectionRulesForm.module.scss'
 
-const ProtectionRulesForm = (props: {
+const RulesDefinitionForm = (props: {
   requireStatusChecks: boolean
   minReviewers: boolean
   statusOptions: SelectOption[]
@@ -60,32 +61,32 @@ const ProtectionRulesForm = (props: {
   return (
     <Container margin={{ top: 'medium' }} className={css.generalContainer}>
       <Text className={css.headingSize} padding={{ bottom: 'medium' }} font={{ variation: FontVariation.H4 }}>
-        {getString('branchProtection.protectionSelectAll')}
+        {getString('protectionRules.protectionSelectAll')}
       </Text>
 
       <FormInput.CheckBox
         className={css.checkboxLabel}
-        label={getString('branchProtection.blockBranchCreation')}
+        label={getString('protectionRules.blockBranchCreation')}
         name={'blockBranchCreation'}
       />
       <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
-        {getString('branchProtection.blockBranchCreationText')}
+        {getString('protectionRules.blockBranchCreationText')}
       </Text>
 
       <hr className={css.dividerContainer} />
       <FormInput.CheckBox
         className={css.checkboxLabel}
-        label={getString('branchProtection.blockBranchDeletion')}
+        label={getString('protectionRules.blockBranchDeletion')}
         name={'blockBranchDeletion'}
       />
       <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
-        {getString('branchProtection.blockBranchDeletionText')}
+        {getString('protectionRules.blockBranchDeletionText')}
       </Text>
 
       <hr className={css.dividerContainer} />
       <FormInput.CheckBox
         className={css.checkboxLabel}
-        label={getString('branchProtection.blockBranchUpdate')}
+        label={getString('protectionRules.blockBranchUpdate')}
         name={'blockBranchUpdate'}
         onChange={() => {
           setFieldValue('blockForcePush', !(values.blockBranchUpdate && values.blockForcePush))
@@ -93,7 +94,7 @@ const ProtectionRulesForm = (props: {
         }}
       />
       <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
-        {getString('branchProtection.blockBranchUpdateText')}
+        {getString('protectionRules.blockBranchUpdateText')}
       </Text>
 
       <hr className={css.dividerContainer} />
@@ -113,11 +114,11 @@ const ProtectionRulesForm = (props: {
           <FormInput.CheckBox
             disabled={values.blockBranchUpdate || values.requirePr}
             className={css.checkboxLabel}
-            label={getString('branchProtection.blockForcePush')}
+            label={getString('protectionRules.blockForcePush')}
             name={'blockForcePush'}
           />
           <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
-            {getString('branchProtection.blockForcePushText')}
+            {getString('protectionRules.blockForcePushText')}
           </Text>
         </>
       </Popover>
@@ -139,14 +140,14 @@ const ProtectionRulesForm = (props: {
           <FormInput.CheckBox
             disabled={values.blockBranchUpdate}
             className={css.checkboxLabel}
-            label={getString('branchProtection.requirePr')}
+            label={getString('protectionRules.requirePr')}
             name={'requirePr'}
             onChange={() => {
               setFieldValue('blockForcePush', !values.requirePr)
             }}
           />
           <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
-            {getString('branchProtection.requirePrText')}
+            {getString('protectionRules.requirePrText')}
           </Text>
         </>
       </Popover>
@@ -155,7 +156,7 @@ const ProtectionRulesForm = (props: {
       <DefaultReviewersSection formik={formik} defaultReviewerProps={defaultReviewerProps} />
       <FormInput.CheckBox
         className={css.checkboxLabel}
-        label={getString('branchProtection.requireMinReviewersTitle')}
+        label={getString('protectionRules.requireMinReviewersTitle')}
         name={'requireMinReviewers'}
         onChange={e => {
           if ((e.target as HTMLInputElement).checked) {
@@ -164,74 +165,74 @@ const ProtectionRulesForm = (props: {
         }}
       />
       <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
-        {getString('branchProtection.requireMinReviewersContent')}
+        {getString('protectionRules.requireMinReviewersContent')}
       </Text>
       {minReviewers && (
         <Container padding={{ left: 'xlarge', top: 'medium' }}>
           <FormInput.Text
             className={cx(css.widthContainer, css.minText)}
             name={'minReviewers'}
-            placeholder={getString('branchProtection.minNumberPlaceholder')}
-            label={getString('branchProtection.minNumber')}
+            placeholder={getString('protectionRules.minNumberPlaceholder')}
+            label={getString('protectionRules.minNumber')}
           />
         </Container>
       )}
       <hr className={css.dividerContainer} />
       <FormInput.CheckBox
         className={css.checkboxLabel}
-        label={getString('branchProtection.addCodeownersToReviewTitle')}
+        label={getString('protectionRules.addCodeownersToReviewTitle')}
         name={'autoAddCodeOwner'}
       />
       <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
-        {getString('branchProtection.addCodeownersToReviewText')}
+        {getString('protectionRules.addCodeownersToReviewText')}
       </Text>
 
       <hr className={css.dividerContainer} />
       <FormInput.CheckBox
         className={css.checkboxLabel}
-        label={getString('branchProtection.reqReviewFromCodeOwnerTitle')}
+        label={getString('protectionRules.reqReviewFromCodeOwnerTitle')}
         name={'requireCodeOwner'}
       />
       <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
-        {getString('branchProtection.reqReviewFromCodeOwnerText')}
+        {getString('protectionRules.reqReviewFromCodeOwnerText')}
       </Text>
 
       <hr className={css.dividerContainer} />
       <FormInput.CheckBox
         className={css.checkboxLabel}
-        label={getString('branchProtection.reqNewChangesTitle')}
+        label={getString('protectionRules.reqNewChangesTitle')}
         name={'requireNewChanges'}
       />
       <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
-        {getString('branchProtection.reqNewChangesText')}
+        {getString('protectionRules.reqNewChangesText')}
       </Text>
       <hr className={css.dividerContainer} />
       <FormInput.CheckBox
         className={css.checkboxLabel}
-        label={getString('branchProtection.reqResOfChanges')}
+        label={getString('protectionRules.reqResOfChanges')}
         name={'reqResOfChanges'}
       />
       <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
-        {getString('branchProtection.reqResOfChangesText')}
+        {getString('protectionRules.reqResOfChangesText')}
       </Text>
       <hr className={css.dividerContainer} />
       <FormInput.CheckBox
         className={css.checkboxLabel}
-        label={getString('branchProtection.reqCommentResolutionTitle')}
+        label={getString('protectionRules.reqCommentResolutionTitle')}
         name={'requireCommentResolution'}
       />
       <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
-        {getString('branchProtection.reqCommentResolutionText')}
+        {getString('protectionRules.reqCommentResolutionText')}
       </Text>
 
       <hr className={css.dividerContainer} />
       <FormInput.CheckBox
         className={css.checkboxLabel}
-        label={getString('branchProtection.reqStatusChecksTitle')}
+        label={getString('protectionRules.reqStatusChecksTitle')}
         name={'requireStatusChecks'}
       />
       <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
-        {getString('branchProtection.reqStatusChecksText')}
+        {getString('protectionRules.reqStatusChecksText')}
       </Text>
       {requireStatusChecks && (
         <Container padding={{ left: 'xlarge', top: 'large' }} className={css.widthContainer}>
@@ -245,7 +246,7 @@ const ProtectionRulesForm = (props: {
               const uniqueArr = Array.from(new Set(statusChecks))
               setFieldValue('statusChecks', uniqueArr)
             }}
-            label={getString('branchProtection.statusCheck')}
+            label={getString('protectionRules.statusCheck')}
             name={'statusSelect'}></FormInput.Select>
         </Container>
       )}
@@ -277,11 +278,11 @@ const ProtectionRulesForm = (props: {
       <hr className={css.dividerContainer} />
       <FormInput.CheckBox
         className={css.checkboxLabel}
-        label={getString('branchProtection.limitMergeStrategies')}
+        label={getString('protectionRules.limitMergeStrategies')}
         name={'limitMergeStrategies'}
       />
       <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
-        {getString('branchProtection.limitMergeStrategiesText')}
+        {getString('protectionRules.limitMergeStrategiesText')}
       </Text>
       {limitMergeStrats && (
         <Container padding={{ left: 'xlarge', top: 'large' }}>
@@ -300,14 +301,14 @@ const ProtectionRulesForm = (props: {
       <hr className={css.dividerContainer} />
       <FormInput.CheckBox
         className={css.checkboxLabel}
-        label={getString('branchProtection.autoDeleteTitle')}
+        label={getString('protectionRules.autoDeleteTitle')}
         name={'autoDelete'}
       />
       <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
-        {getString('branchProtection.autoDeleteText')}
+        {getString('protectionRules.autoDeleteText')}
       </Text>
     </Container>
   )
 }
 
-export default ProtectionRulesForm
+export default RulesDefinitionForm

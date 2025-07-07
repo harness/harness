@@ -69,17 +69,17 @@ import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useGetCurrentPageScope } from 'hooks/useGetCurrentPageScope'
 import { getConfig } from 'services/config'
 import type { Identifier } from 'utils/types'
-import ProtectionRulesForm from './ProtectionRulesForm/ProtectionRulesForm'
-import BypassList from './BypassList'
+import RulesDefinitionForm from './components/RulesDefinitionForm'
+import BypassList from './components/BypassList'
 import Include from '../../../icons/Include.svg?url'
 import Exclude from '../../../icons/Exclude.svg?url'
-import css from './BranchProtectionForm.module.scss'
+import css from './ProtectionRulesForm.module.scss'
 
-const BranchProtectionForm = (props: {
+const ProtectionRulesForm = (props: {
   editMode: boolean
-  repoMetadata?: RepoRepositoryOutput | undefined
   refetchRules: () => void
   settingSectionMode: SettingTypeMode
+  repoMetadata?: RepoRepositoryOutput
 }) => {
   const { routes, routingId, standalone, hooks } = useAppContext()
   const params = useParams<Identifier>()
@@ -214,16 +214,16 @@ const BranchProtectionForm = (props: {
         repoMetadata
           ? routes.toCODESettings({
               repoPath: repoMetadata?.path as string,
-              settingSection: SettingsTab.branchProtection
+              settingSection: SettingsTab.PROTECTION_RULES
             })
           : standalone
           ? routes.toCODESpaceSettings({
               space,
-              settingSection: SettingsTab.branchProtection
+              settingSection: SettingsTab.PROTECTION_RULES
             })
           : routes.toCODEManageRepositories({
               space,
-              settingSection: SettingsTab.branchProtection
+              settingSection: SettingsTab.PROTECTION_RULES
             })
       )
       refetchRules?.()
@@ -351,7 +351,7 @@ const BranchProtectionForm = (props: {
           .of(yup.string())
           .test(
             'min-reviewers', // Name of the test
-            getString('branchProtection.atLeastMinReviewer', { count: 1 }),
+            getString('protectionRules.atLeastMinReviewer', { count: 1 }),
             function (defaultReviewersList) {
               const { minDefaultReviewers, requireMinDefaultReviewers, defaultReviewersEnabled } = this.parent
               const minReviewers = Number(minDefaultReviewers) || 0
@@ -363,8 +363,8 @@ const BranchProtectionForm = (props: {
                   this.createError({
                     message:
                       minReviewers > 1
-                        ? getString('branchProtection.atLeastMinReviewers', { count: minReviewers })
-                        : getString('branchProtection.atLeastMinReviewer', { count: minReviewers })
+                        ? getString('protectionRules.atLeastMinReviewers', { count: minReviewers })
+                        : getString('protectionRules.atLeastMinReviewer', { count: minReviewers })
                   })
                 )
               }
@@ -447,9 +447,9 @@ const BranchProtectionForm = (props: {
           delete (payload?.definition as ProtectionBranch)?.pullreq?.approvals?.require_minimum_default_reviewer_count
         }
         if (editMode) {
-          handleSubmit(updateRule(payload), getString('branchProtection.ruleUpdated'), resetForm)
+          handleSubmit(updateRule(payload), getString('protectionRules.ruleUpdated'), resetForm)
         } else {
-          handleSubmit(mutate(payload), getString('branchProtection.ruleCreated'), resetForm)
+          handleSubmit(mutate(payload), getString('protectionRules.ruleCreated'), resetForm)
         }
       }}>
       {formik => {
@@ -475,7 +475,7 @@ const BranchProtectionForm = (props: {
                     className={css.headingSize}
                     padding={{ bottom: 'medium' }}
                     font={{ variation: FontVariation.H4 }}>
-                    {editMode ? getString('branchProtection.edit') : getString('branchProtection.create')}
+                    {editMode ? getString('protectionRules.edit') : getString('protectionRules.create')}
                   </Text>
                   <FormInput.CheckBox
                     margin={{ top: 'medium', left: 'medium' }}
@@ -487,7 +487,7 @@ const BranchProtectionForm = (props: {
                 <FormInput.Text
                   name="name"
                   label={getString('name')}
-                  placeholder={getString('branchProtection.namePlaceholder')}
+                  placeholder={getString('protectionRules.namePlaceholder')}
                   tooltipProps={{
                     dataTooltipId: 'branchProtectionName'
                   }}
@@ -497,7 +497,7 @@ const BranchProtectionForm = (props: {
                 <FormInput.TextArea
                   name="desc"
                   label={getString('description')}
-                  placeholder={getString('branchProtection.descPlaceholder')}
+                  placeholder={getString('protectionRules.descPlaceholder')}
                   tooltipProps={{
                     dataTooltipId: 'branchProtectionDesc'
                   }}
@@ -510,16 +510,16 @@ const BranchProtectionForm = (props: {
                     label={
                       <Layout.Vertical className={cx(css.checkContainer, css.targetContainer)}>
                         <Text margin={{ bottom: 'small' }} className={css.label}>
-                          {getString('branchProtection.targetBranches')}
+                          {getString('protectionRules.targetBranches')}
                         </Text>
                         <FormInput.CheckBox
                           margin={{ bottom: 'medium' }}
-                          label={getString('branchProtection.defaultBranch')}
+                          label={getString('protectionRules.defaultBranch')}
                           name={'targetDefault'}
                         />
                       </Layout.Vertical>
                     }
-                    placeholder={getString('branchProtection.targetPlaceholder')}
+                    placeholder={getString('protectionRules.targetPlaceholder')}
                     tooltipProps={{
                       dataTooltipId: 'branchProtectionTarget'
                     }}
@@ -580,7 +580,7 @@ const BranchProtectionForm = (props: {
                   </Container>
                 </Layout.Horizontal>
                 <Text className={css.hintText} margin={{ bottom: 'medium' }}>
-                  {getString('branchProtection.targetPatternHint')}
+                  {getString('protectionRules.targetPatternHint')}
                 </Text>
                 <Layout.Horizontal spacing={'small'} className={css.targetBox}>
                   {targetList.map((target, idx) => {
@@ -609,9 +609,9 @@ const BranchProtectionForm = (props: {
               </Container>
               <Container margin={{ top: 'medium' }} className={css.generalContainer}>
                 <Text className={css.headingSize} padding={{ bottom: 'medium' }} font={{ variation: FontVariation.H4 }}>
-                  {getString('branchProtection.bypassList')}
+                  {getString('protectionRules.bypassList')}
                 </Text>
-                <FormInput.CheckBox label={getString('branchProtection.allRepoOwners')} name={'allRepoOwners'} />
+                <FormInput.CheckBox label={getString('protectionRules.allRepoOwners')} name={'allRepoOwners'} />
                 <FormInput.Select
                   items={filteredPrincipalOptions}
                   onQueryChange={setSearchTerm}
@@ -631,7 +631,7 @@ const BranchProtectionForm = (props: {
                   name={'bypassSelect'}></FormInput.Select>
                 <BypassList bypassList={bypassList} setFieldValue={formik.setFieldValue} />
               </Container>
-              <ProtectionRulesForm
+              <RulesDefinitionForm
                 formik={formik}
                 requireStatusChecks={requireStatusChecks}
                 minReviewers={minReviewers}
@@ -648,7 +648,7 @@ const BranchProtectionForm = (props: {
                       formik.submitForm()
                     }}
                     type="button"
-                    text={editMode ? getString('branchProtection.saveRule') : getString('branchProtection.createRule')}
+                    text={editMode ? getString('protectionRules.saveRule') : getString('protectionRules.createRule')}
                     variation={ButtonVariation.PRIMARY}
                     disabled={false}
                     {...permissionProps(permPushResult, standalone)}
@@ -670,4 +670,4 @@ const BranchProtectionForm = (props: {
   )
 }
 
-export default BranchProtectionForm
+export default ProtectionRulesForm

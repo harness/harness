@@ -340,11 +340,11 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                     : unchecked
                     ? 'pr.checkingToMerge'
                     : mergeable === false && isOpen
-                    ? 'branchProtection.prFailedText'
+                    ? 'protectionRules.prFailedText'
                     : ruleViolation
-                    ? 'branchProtection.prFailedText'
+                    ? 'protectionRules.prFailedText'
                     : mergeOption.method === MergeStrategy.FAST_FORWARD && rebasePossible
-                    ? 'branchProtection.prFailedText'
+                    ? 'protectionRules.prFailedText'
                     : 'pr.branchHasNoConflicts'
                 )}
               </Text>
@@ -423,7 +423,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                             <Checkbox
                               className={css.checkbox}
                               checked={bypass}
-                              label={getString('branchProtection.mergeCheckboxAlert')}
+                              label={getString('protectionRules.mergeCheckboxAlert')}
                               onChange={event => {
                                 setBypass(event.currentTarget.checked)
                               }}

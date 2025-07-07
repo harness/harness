@@ -17,50 +17,52 @@
   width: 100%;
   .row {
     .title {
-      font-weight: 600 !important;
-      font-size: 14px !important;
-      font-style: normal !important;
-      color: var(--grey-800) !important;
+      font-weight: 600;
+      font-size: 14px;
+      font-style: normal;
+      color: var(--grey-800);
+      padding-bottom: var(--spacing-xsmall);
     }
+
     .text {
       font-size: 13px !important;
       font-style: normal !important;
       font-weight: 500 !important;
-      color: var(--grey-400) !important;
-      word-wrap: break-word;
-      word-break: break-all;
-      white-space: normal;
+      margin-top: var(--spacing-xsmall) !important;
+      color: var(--grey-700);
     }
-    .targetText {
-      font-size: 14px !important;
-      font-weight: 400 !important;
-      color: var(--grey-400) !important;
-    }
+
     .greyButton {
       border-radius: 4px;
-      border: 1px solid var(--grey-200);
-      background: var(--grey-100) !important;
+      background: #f2f2f5 !important;
       display: flex;
       width: fit-content;
-      padding: 1px 6px !important;
+      padding: 2px 8px !important;
       max-width: 200px;
       justify-content: center;
       align-items: center;
       gap: 8px;
     }
+
+    .pattern {
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .rulesText {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--grey-700);
+      padding-right: var(--spacing-small);
+    }
+
+    .rulesContainer {
+      flex-wrap: wrap;
+      width: 88%;
+      row-gap: var(--spacing-xsmall);
+      justify-content: flex-start !important;
+    }
   }
-}
-
-.dividerContainer {
-  opacity: 0.2;
-  height: 1px;
-  color: var(--grey-100);
-  margin: 10px 0;
-  width: 95%;
-}
-
-.border {
-  border-bottom: 1px solid var(--grey-100) !important;
 }
 
 .hideDetailsContainer {
@@ -68,12 +70,10 @@
 }
 
 .appliedRulesTextContainer {
-  border-radius: 4px;
-  background: var(--grey-50) !important;
   font-size: 12px !important;
-  font-weight: 500 !important;
-  padding: var(--spacing-small) !important;
-  margin-bottom: var(--spacing-xsmall) !important;
+  font-weight: 400;
+  color: var(--grey-500);
+  padding: 0 var(--spacing-medium) !important;
 }
 
 .popover {
@@ -88,6 +88,10 @@
   flex-wrap: wrap;
 }
 
+.appliedRulesContainer {
+  padding-top: 12px !important;
+}
+
 .hideButtonIcon {
   :global {
     [class*='ConfirmationDialog--header'] {
@@ -100,4 +104,10 @@
       padding-left: 3px !important;
     }
   }
+}
+
+.divider {
+  height: 18px;
+  width: 1px;
+  background-color: var(--grey-500);
 }

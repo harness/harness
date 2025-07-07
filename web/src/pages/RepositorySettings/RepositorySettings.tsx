@@ -16,7 +16,6 @@
 
 import React from 'react'
 import cx from 'classnames'
-
 import { PageBody, Container, Tabs } from '@harnessio/uicore'
 import { useHistory } from 'react-router-dom'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
@@ -25,7 +24,7 @@ import { useGetResourceContent } from 'hooks/useGetResourceContent'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
-import BranchProtectionListing from 'components/BranchProtection/BranchProtectionListing'
+import ProtectionRulesListing from 'components/ProtectionRules/ProtectionRulesListing'
 import { useAppContext } from 'AppContext'
 import { SettingsTab, normalizeGitRef } from 'utils/GitUtils'
 import { getErrorMessage, voidFn } from 'utils/Utils'
@@ -40,7 +39,7 @@ export default function RepositorySettings() {
   const space = useGetSpaceParam()
   const history = useHistory()
   const { routes } = useAppContext()
-  const [activeTab, setActiveTab] = React.useState<string>(settingSection || SettingsTab.general)
+  const [activeTab, setActiveTab] = React.useState<string>(settingSection || SettingsTab.GENERAL)
   const { getString } = useStrings()
   const { isRepositoryEmpty } = useGetResourceContent({
     repoMetadata,
@@ -50,7 +49,7 @@ export default function RepositorySettings() {
   useDisableCodeMainLinks(!!isRepositoryEmpty)
   const tabListArray = [
     {
-      id: SettingsTab.general,
+      id: SettingsTab.GENERAL,
       title: getString('settings'),
       panel: (
         <Container padding={'large'}>
@@ -64,29 +63,20 @@ export default function RepositorySettings() {
       )
     },
     {
-      id: SettingsTab.labels,
+      id: SettingsTab.LABELS,
       title: getString('labels.labels'),
       panel: <LabelsListing activeTab={activeTab} repoMetadata={repoMetadata} space={space} />
     },
     {
-      id: SettingsTab.branchProtection,
-      title: getString('branchProtection.title'),
-      panel: <BranchProtectionListing repoMetadata={repoMetadata} activeTab={activeTab} />
+      id: SettingsTab.PROTECTION_RULES,
+      title: getString('protectionRules.title'),
+      panel: <ProtectionRulesListing repoMetadata={repoMetadata} activeTab={activeTab} />
     },
     {
-      id: SettingsTab.security,
+      id: SettingsTab.SECURITY,
       title: getString('security'),
       panel: <SecurityScanSettings repoMetadata={repoMetadata} activeTab={activeTab} />
     }
-    // {
-    //   id: SettingsTab.webhooks,
-    //   title: getString('webhooks'),
-    //   panel: (
-    //     <Container padding={'large'}>
-    //       <Webhooks />
-    //     </Container>
-    //   )
-    // }
   ]
   return (
     <Container className={css.main}>
@@ -111,7 +101,7 @@ export default function RepositorySettings() {
                   routes.toCODESettings({
                     repoPath: repoMetadata?.path as string,
 
-                    settingSection: id !== SettingsTab.general ? (id as string) : ''
+                    settingSection: id !== SettingsTab.GENERAL ? (id as string) : ''
                   })
                 )
               }}

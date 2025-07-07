@@ -20,7 +20,7 @@ import { Container, Tabs, Page } from '@harnessio/uicore'
 import { useHistory, useParams } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
-import BranchProtectionListing from 'components/BranchProtection/BranchProtectionListing'
+import ProtectionRulesListing from 'components/ProtectionRules/ProtectionRulesListing'
 import { SettingsTab } from 'utils/GitUtils'
 import LabelsListing from 'pages/Labels/LabelsListing'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
@@ -32,19 +32,19 @@ export default function ManageRepositories() {
   const space = useGetSpaceParam()
   const history = useHistory()
   const { routes } = useAppContext()
-  const [activeTab, setActiveTab] = React.useState<string>(settingSection || SettingsTab.labels)
+  const [activeTab, setActiveTab] = React.useState<string>(settingSection || SettingsTab.LABELS)
   const { getString } = useStrings()
 
   const tabListArray = [
     {
-      id: SettingsTab.labels,
+      id: SettingsTab.LABELS,
       title: getString('labels.labels'),
       panel: <LabelsListing activeTab={activeTab} space={space} />
     },
     {
-      id: SettingsTab.branchProtection,
-      title: getString('branchProtection.title'),
-      panel: <BranchProtectionListing activeTab={activeTab} />
+      id: SettingsTab.PROTECTION_RULES,
+      title: getString('protectionRules.title'),
+      panel: <ProtectionRulesListing activeTab={activeTab} />
     }
   ]
   return (
@@ -62,7 +62,7 @@ export default function ManageRepositories() {
             history.replace(
               routes.toCODEManageRepositories({
                 space,
-                settingSection: id !== SettingsTab.labels ? (id as string) : ''
+                settingSection: id !== SettingsTab.LABELS ? (id as string) : ''
               })
             )
           }}

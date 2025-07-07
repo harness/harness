@@ -16,16 +16,18 @@
 
 /* eslint-disable */
 // This is an auto-generated file
+export declare const appliedRulesContainer: string
 export declare const appliedRulesTextContainer: string
-export declare const border: string
-export declare const dividerContainer: string
+export declare const divider: string
 export declare const greyButton: string
 export declare const hideButtonIcon: string
 export declare const hideDetailsContainer: string
+export declare const pattern: string
 export declare const popover: string
 export declare const row: string
+export declare const rulesContainer: string
+export declare const rulesText: string
 export declare const table: string
-export declare const targetText: string
 export declare const text: string
 export declare const title: string
 export declare const widthContainer: string

@@ -184,7 +184,7 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
           const { showSuccess, showError } = useToaster()
           const confirmDeleteBranch = useConfirmAction({
             title: getString('deleteBranch'),
-            confirmText: !bypassable ? getString('delete') : getString('branchProtection.deleteBranchAlertBtn'),
+            confirmText: !bypassable ? getString('delete') : getString('protectionRules.deleteBranchAlertBtn'),
             intent: Intent.DANGER,
             message: <String useRichText stringID="deleteBranchConfirm" vars={{ name: row.original.name }} />,
             persistDialog: persistModal,
@@ -219,8 +219,8 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
                   <Icon intent={Intent.WARNING} name="danger-icon" size={16} />
                   <Text font={{ variation: FontVariation.BODY2 }} color={Color.RED_800}>
                     {bypassable
-                      ? getString('branchProtection.deleteBranchAlertText')
-                      : getString('branchProtection.deleteBranchBlockText')}
+                      ? getString('protectionRules.deleteBranchAlertText')
+                      : getString('protectionRules.deleteBranchBlockText')}
                   </Text>
                 </Layout.Horizontal>
               </Render>

@@ -16,16 +16,15 @@
 
 import React from 'react'
 import cx from 'classnames'
-
 import { PageBody, Container, Tabs, Page } from '@harnessio/uicore'
 import { useHistory } from 'react-router-dom'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
-import { SettingsTab, SpaceSettingsTab } from 'utils/GitUtils'
+import { SettingsTab } from 'utils/GitUtils'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import LabelsListing from 'pages/Labels/LabelsListing'
-import BranchProtectionListing from 'components/BranchProtection/BranchProtectionListing'
+import ProtectionRulesListing from 'components/ProtectionRules/ProtectionRulesListing'
 import GeneralSpaceSettings from './GeneralSettings/GeneralSpaceSettings'
 import css from './SpaceSettings.module.scss'
 
@@ -34,12 +33,12 @@ export default function SpaceSettings() {
   const history = useHistory()
   const { routes } = useAppContext()
   const space = useGetSpaceParam()
-  const [activeTab, setActiveTab] = React.useState<string>(settingSection || SpaceSettingsTab.general)
+  const [activeTab, setActiveTab] = React.useState<string>(settingSection || SettingsTab.GENERAL)
   const { getString } = useStrings()
 
   const tabListArray = [
     {
-      id: SettingsTab.general,
+      id: SettingsTab.GENERAL,
       title: 'General',
       panel: (
         <Container padding={'large'}>
@@ -48,14 +47,14 @@ export default function SpaceSettings() {
       )
     },
     {
-      id: SettingsTab.labels,
+      id: SettingsTab.LABELS,
       title: getString('labels.labels'),
       panel: <LabelsListing activeTab={activeTab} space={space} />
     },
     {
-      id: SettingsTab.branchProtection,
-      title: getString('branchProtection.title'),
-      panel: <BranchProtectionListing activeTab={activeTab} />
+      id: SettingsTab.PROTECTION_RULES,
+      title: getString('protectionRules.title'),
+      panel: <ProtectionRulesListing activeTab={activeTab} />
     }
   ]
   return (
@@ -73,7 +72,7 @@ export default function SpaceSettings() {
               history.replace(
                 routes.toCODESpaceSettings({
                   space: space as string,
-                  settingSection: id !== SpaceSettingsTab.general ? (id as string) : ''
+                  settingSection: id !== SettingsTab.GENERAL ? (id as string) : ''
                 })
               )
             }}

@@ -203,7 +203,7 @@ export function useCreateBranchModal({
                       disabled={loading}
                       type="submit"
                       variation={ButtonVariation.SECONDARY}
-                      text={getString('branchProtection.createBranchAlertBtn')}
+                      text={getString('protectionRules.createBranchAlertBtn')}
                     />
                   )}
                   <Button text={getString('cancel')} variation={ButtonVariation.LINK} onClick={hideModal} />
@@ -216,8 +216,8 @@ export function useCreateBranchModal({
                     <Icon intent={Intent.WARNING} name="danger-icon" size={16} />
                     <Text font={{ variation: FontVariation.BODY2 }} color={Color.RED_800}>
                       {bypassable
-                        ? getString('branchProtection.createBranchAlertText')
-                        : getString('branchProtection.createBranchBlockText')}
+                        ? getString('protectionRules.createBranchAlertText')
+                        : getString('protectionRules.createBranchBlockText')}
                     </Text>
                   </Layout.Horizontal>
                 </Render>

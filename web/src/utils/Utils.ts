@@ -110,8 +110,7 @@ export function showToaster(message: string, props?: Partial<IToastProps>): IToa
 }
 
 export function permissionProps(permResult: { disabled: boolean; tooltip: JSX.Element | string }, standalone: boolean) {
-  const perm = standalone ? true : false
-  return !perm ? permResult : undefined
+  return standalone ? undefined : permResult
 }
 
 export function generateAlphaNumericHash(length: number) {
@@ -490,6 +489,12 @@ export enum PRCommentFilterType {
   MY_COMMENTS = 'myComments',
   RESOLVED_COMMENTS = 'resolvedComments',
   UNRESOLVED_COMMENTS = 'unresolvedComments'
+}
+
+export enum RuleState {
+  ACTIVE = 'active',
+  MONITOR = 'monitor',
+  DISABLED = 'disabled'
 }
 
 const MONACO_SUPPORTED_LANGUAGES = [

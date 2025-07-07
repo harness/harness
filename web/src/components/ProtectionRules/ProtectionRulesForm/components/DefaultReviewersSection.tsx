@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import React, { useMemo } from 'react'
 import cx from 'classnames'
 import { Container, FormInput, SelectOption, Text } from '@harnessio/uicore'
@@ -23,7 +24,7 @@ import { useStrings } from 'framework/strings'
 import type { RulesFormPayload } from 'utils/Utils'
 import { SettingTypeMode } from 'utils/GitUtils'
 import DefaultReviewersList from './DefaultReviewersList'
-import css from '../BranchProtectionForm.module.scss'
+import css from '../ProtectionRulesForm.module.scss'
 
 const DefaultReviewersSection = (props: {
   formik: FormikProps<RulesFormPayload>
@@ -39,10 +40,14 @@ const DefaultReviewersSection = (props: {
   const { getString } = useStrings()
   const setFieldValue = formik.setFieldValue
 
-  const defaultReviewersList =
-    settingSectionMode === SettingTypeMode.EDIT || formik.values.defaultReviewersSet
-      ? formik.values.defaultReviewersList
-      : []
+  const defaultReviewersList = useMemo(
+    () =>
+      settingSectionMode === SettingTypeMode.EDIT || formik.values.defaultReviewersSet
+        ? formik.values.defaultReviewersList
+        : [],
+    [settingSectionMode, formik.values.defaultReviewersSet, formik.values.defaultReviewersList]
+  )
+
   const minDefaultReviewers = formik.values.requireMinDefaultReviewers
   const defaultReviewersEnabled = formik.values.defaultReviewersEnabled
   const filteredPrincipalOptions = userPrincipalOptions.filter(
@@ -58,10 +63,10 @@ const DefaultReviewersSection = (props: {
       let showWarning = false
 
       if (reviewerCount === 1) {
-        message = getString('branchProtection.defaultReviewerWarning')
+        message = getString('protectionRules.defaultReviewerWarning')
         showWarning = true
       } else if (reviewerCount > 1) {
-        message = getString('branchProtection.defaultReviewersWarning')
+        message = getString('protectionRules.defaultReviewersWarning')
         showWarning = true
       }
 
@@ -69,13 +74,13 @@ const DefaultReviewersSection = (props: {
     }
 
     return { message: '', showWarning: false }
-  }, [formik.values, defaultReviewersList])
+  }, [getString, formik.values, defaultReviewersList])
 
   return (
     <>
       <FormInput.CheckBox
         className={css.checkboxLabel}
-        label={getString('branchProtection.enableDefaultReviewersTitle')}
+        label={getString('protectionRules.enableDefaultReviewersTitle')}
         name={'defaultReviewersEnabled'}
         onChange={e => {
           if (!(e.target as HTMLInputElement).checked) {
@@ -85,7 +90,7 @@ const DefaultReviewersSection = (props: {
         }}
       />
       <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
-        {getString('branchProtection.enableDefaultReviewersText')}
+        {getString('protectionRules.enableDefaultReviewersText')}
       </Text>
 
       <Render when={defaultReviewersEnabled}>
@@ -121,7 +126,7 @@ const DefaultReviewersSection = (props: {
 
           <FormInput.CheckBox
             className={css.checkboxLabel}
-            label={getString('branchProtection.requireMinDefaultReviewersTitle')}
+            label={getString('protectionRules.requireMinDefaultReviewersTitle')}
             name={'requireMinDefaultReviewers'}
             onChange={e => {
               if ((e.target as HTMLInputElement).checked) {
@@ -131,15 +136,15 @@ const DefaultReviewersSection = (props: {
             }}
           />
           <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
-            {getString('branchProtection.requireMinDefaultReviewersContent')}
+            {getString('protectionRules.requireMinDefaultReviewersContent')}
           </Text>
           {minDefaultReviewers && (
             <Container padding={{ left: 'xlarge', top: 'medium' }}>
               <FormInput.Text
                 className={cx(css.widthContainer, css.minText)}
                 name={'minDefaultReviewers'}
-                placeholder={getString('branchProtection.minNumberPlaceholder')}
-                label={getString('branchProtection.minNumber')}
+                placeholder={getString('protectionRules.minNumberPlaceholder')}
+                label={getString('protectionRules.minNumber')}
               />
             </Container>
           )}
