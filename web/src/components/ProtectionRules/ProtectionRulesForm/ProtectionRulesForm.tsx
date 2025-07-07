@@ -35,6 +35,8 @@ import { Menu, PopoverPosition } from '@blueprintjs/core'
 import { Icon } from '@harnessio/icons'
 import { useHistory, useParams } from 'react-router-dom'
 import { useGet, useMutate } from 'restful-react'
+import { isEmpty } from 'lodash-es'
+import { useStrings } from 'framework/strings'
 import {
   BranchTargetType,
   MergeStrategy,
@@ -43,7 +45,6 @@ import {
   SettingsTab,
   branchTargetOptions
 } from 'utils/GitUtils'
-import { useStrings } from 'framework/strings'
 import {
   ScopeEnum,
   REGEX_VALID_REPO_NAME,
@@ -60,7 +61,6 @@ import type {
   OpenapiRule,
   TypesPrincipalInfo,
   EnumMergeMethod,
-  ProtectionPattern,
   ProtectionBranch
 } from 'services/code'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
@@ -145,14 +145,15 @@ const ProtectionRulesForm = (props: {
     })
   }
 
-  const usersMap = rule?.users
+  const { definition, description, identifier, pattern, state, type: ruleType, users: usersMap } = rule || {}
+  const { bypass, lifecycle, pullreq } = definition || {}
 
-  const bypassListUsers = rule?.definition?.bypass?.user_ids?.map(id => usersMap?.[id])
+  const bypassListUsers = bypass?.user_ids?.map(id => usersMap?.[id])
   const transformBypassListArray = transformDataToArray(bypassListUsers || [])
   const usersArrayCurr = transformBypassListArray?.map(user => `${user.id} ${user.display_name}`)
   const [userArrayState, setUserArrayState] = useState<string[]>(usersArrayCurr)
 
-  const defaultReviewersUsers = rule?.definition?.pullreq?.reviewers?.default_reviewer_ids?.map(id => usersMap?.[id])
+  const defaultReviewersUsers = pullreq?.reviewers?.default_reviewer_ids?.map(id => usersMap?.[id])
   const transformDefaultReviewersArray = transformDataToArray(defaultReviewersUsers || [])
   const reviewerArrayCurr = transformDefaultReviewersArray?.map(user => `${user.id} ${user.display_name}`)
   const [defaultReviewersState, setDefaultReviewersState] = useState<string[]>(reviewerArrayCurr)
@@ -173,6 +174,7 @@ const ProtectionRulesForm = (props: {
     },
     debounce: 500
   })
+
   const statusOptions: SelectOption[] = useMemo(
     () =>
       statuses?.map(status => ({
@@ -183,20 +185,23 @@ const ProtectionRulesForm = (props: {
   )
   const principalOptions: SelectOption[] = useMemo(
     () =>
-      principals?.map(principal => ({
-        value: `${principal.id?.toString() as string} ${principal.uid}`,
-        label: `${principal.display_name} (${principal.email})` as string
-      })) || [],
+      principals?.map(principal => {
+        const { id, uid, display_name, email } = principal
+        return {
+          value: `${id?.toString()} ${uid}`,
+          label: `${display_name} (${email})` as string
+        }
+      }) || [],
     [principals]
   )
-
   const userPrincipalOptions: SelectOption[] = useMemo(
     () =>
       principals?.reduce<SelectOption[]>((acc, principal) => {
         if (principal?.type === PrincipalUserType.USER) {
+          const { id, uid, display_name, email } = principal
           acc.push({
-            value: `${principal.id?.toString() as string} ${principal.uid}`,
-            label: `${principal?.display_name} (${principal.email})`
+            value: `${id?.toString()} ${uid}`,
+            label: `${display_name} (${email})`
           })
         }
         return acc
@@ -234,26 +239,17 @@ const ProtectionRulesForm = (props: {
 
   const initialValues = useMemo((): RulesFormPayload => {
     if (editMode && rule) {
-      const minReviewerCheck =
-        ((rule.definition as ProtectionBranch)?.pullreq?.approvals?.require_minimum_count as number) > 0
-      const minDefaultReviewerCheck =
-        ((rule.definition as ProtectionBranch)?.pullreq?.approvals?.require_minimum_default_reviewer_count as number) >
-        0
-      const isMergePresent = (rule.definition as ProtectionBranch)?.pullreq?.merge?.strategies_allowed?.includes(
-        MergeStrategy.MERGE
-      )
-      const isSquashPresent = (rule.definition as ProtectionBranch)?.pullreq?.merge?.strategies_allowed?.includes(
-        MergeStrategy.SQUASH
-      )
-      const isRebasePresent = (rule.definition as ProtectionBranch)?.pullreq?.merge?.strategies_allowed?.includes(
-        MergeStrategy.REBASE
-      )
-      const isFFMergePresent = (rule.definition as ProtectionBranch)?.pullreq?.merge?.strategies_allowed?.includes(
-        MergeStrategy.FAST_FORWARD
-      )
+      const minReviewerCheck = (pullreq?.approvals?.require_minimum_count as number) > 0
+      const minDefaultReviewerCheck = (pullreq?.approvals?.require_minimum_default_reviewer_count as number) > 0
+      const isMergePresent = pullreq?.merge?.strategies_allowed?.includes(MergeStrategy.MERGE)
+      const isSquashPresent = pullreq?.merge?.strategies_allowed?.includes(MergeStrategy.SQUASH)
+      const isRebasePresent = pullreq?.merge?.strategies_allowed?.includes(MergeStrategy.REBASE)
+      const isFFMergePresent = pullreq?.merge?.strategies_allowed?.includes(MergeStrategy.FAST_FORWARD)
+
       // List of strings to be included in the final array
-      const includeList = (rule?.pattern as ProtectionPattern)?.include ?? []
-      const excludeList = (rule?.pattern as ProtectionPattern)?.exclude ?? []
+      const includeList = pattern?.include ?? []
+      const excludeList = pattern?.exclude ?? []
+
       // Create a new array based on the "include" key from the JSON object and the strings array
       const includeArr = includeList?.map((arr: string) => ['include', arr])
       const excludeArr = excludeList?.map((arr: string) => ['exclude', arr])
@@ -272,49 +268,38 @@ const ProtectionRulesForm = (props: {
           : reviewersArray?.map(user => `${user.id} ${user.display_name} (${user.email})`)
 
       return {
-        name: rule?.identifier,
-        desc: rule.description,
-        enable: rule.state !== 'disabled',
+        name: identifier,
+        desc: description,
+        enable: state !== 'disabled',
         target: '',
-        targetDefault: (rule?.pattern as ProtectionPattern)?.default,
+        targetDefault: pattern?.default,
         targetList: finalArray,
-        allRepoOwners: (rule.definition as ProtectionBranch)?.bypass?.repo_owners,
+        allRepoOwners: bypass?.repo_owners,
         bypassList: bypassList,
-        defaultReviewersEnabled: (rule.definition as any)?.pullreq?.reviewers?.default_reviewer_ids?.length > 0,
+        defaultReviewersEnabled: (pullreq?.reviewers?.default_reviewer_ids?.length || 0) > 0,
         defaultReviewersList: defaultReviewersList,
         requireMinReviewers: minReviewerCheck,
         requireMinDefaultReviewers: minDefaultReviewerCheck,
-        minReviewers: minReviewerCheck
-          ? (rule.definition as ProtectionBranch)?.pullreq?.approvals?.require_minimum_count
-          : '',
-        minDefaultReviewers: minDefaultReviewerCheck
-          ? (rule.definition as ProtectionBranch)?.pullreq?.approvals?.require_minimum_default_reviewer_count
-          : '',
-        autoAddCodeOwner: (rule.definition as ProtectionBranch)?.pullreq?.reviewers?.request_code_owners,
-        requireCodeOwner: (rule.definition as ProtectionBranch)?.pullreq?.approvals?.require_code_owners,
-        requireNewChanges: (rule.definition as ProtectionBranch)?.pullreq?.approvals?.require_latest_commit,
-        reqResOfChanges: (rule.definition as ProtectionBranch)?.pullreq?.approvals?.require_no_change_request,
-        requireCommentResolution: (rule.definition as ProtectionBranch)?.pullreq?.comments?.require_resolve_all, // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        requireStatusChecks: (rule.definition as any)?.pullreq?.status_checks?.require_identifiers?.length > 0,
-        statusChecks:
-          (rule.definition as ProtectionBranch)?.pullreq?.status_checks?.require_identifiers || ([] as string[]),
-        limitMergeStrategies: !!(rule.definition as ProtectionBranch)?.pullreq?.merge?.strategies_allowed,
+        minReviewers: minReviewerCheck ? pullreq?.approvals?.require_minimum_count : '',
+        minDefaultReviewers: minDefaultReviewerCheck ? pullreq?.approvals?.require_minimum_default_reviewer_count : '',
+        autoAddCodeOwner: pullreq?.reviewers?.request_code_owners,
+        requireCodeOwner: pullreq?.approvals?.require_code_owners,
+        requireNewChanges: pullreq?.approvals?.require_latest_commit,
+        reqResOfChanges: pullreq?.approvals?.require_no_change_request,
+        requireCommentResolution: pullreq?.comments?.require_resolve_all,
+        requireStatusChecks: (pullreq?.status_checks?.require_identifiers?.length || 0) > 0,
+        statusChecks: pullreq?.status_checks?.require_identifiers || [],
+        limitMergeStrategies: !!pullreq?.merge?.strategies_allowed,
         mergeCommit: isMergePresent,
         squashMerge: isSquashPresent,
         rebaseMerge: isRebasePresent,
         fastForwardMerge: isFFMergePresent,
-        autoDelete: (rule.definition as ProtectionBranch)?.pullreq?.merge?.delete_branch,
-        blockBranchCreation: (rule.definition as ProtectionBranch)?.lifecycle?.create_forbidden,
-        blockBranchUpdate:
-          (rule.definition as ProtectionBranch)?.lifecycle?.update_forbidden &&
-          (rule.definition as ProtectionBranch)?.pullreq?.merge?.block,
-        blockBranchDeletion: (rule.definition as ProtectionBranch)?.lifecycle?.delete_forbidden,
-        blockForcePush:
-          (rule.definition as ProtectionBranch)?.lifecycle?.update_forbidden ||
-          (rule.definition as ProtectionBranch)?.lifecycle?.update_force_forbidden,
-        requirePr:
-          (rule.definition as ProtectionBranch)?.lifecycle?.update_forbidden &&
-          !(rule.definition as ProtectionBranch)?.pullreq?.merge?.block,
+        autoDelete: pullreq?.merge?.delete_branch,
+        blockBranchCreation: lifecycle?.create_forbidden,
+        blockBranchUpdate: lifecycle?.update_forbidden && pullreq?.merge?.block,
+        blockBranchDeletion: lifecycle?.delete_forbidden,
+        blockForcePush: lifecycle?.update_forbidden || lifecycle?.update_force_forbidden,
+        requirePr: lifecycle?.update_forbidden && !pullreq?.merge?.block,
         targetSet: false,
         bypassSet: false,
         defaultReviewersSet: false
@@ -467,14 +452,16 @@ const ProtectionRulesForm = (props: {
 
         return (
           <FormikForm>
-            <Container className={css.main} padding="xlarge">
+            <Layout.Vertical spacing={'medium'} className={css.main} padding="xlarge">
               <Container className={css.generalContainer}>
                 <Layout.Horizontal flex={{ align: 'center-center' }}>
                   <Text
                     className={css.headingSize}
                     padding={{ bottom: 'medium' }}
                     font={{ variation: FontVariation.H4 }}>
-                    {editMode ? getString('protectionRules.edit') : getString('protectionRules.create')}
+                    {editMode
+                      ? getString('protectionRules.edit', { ruleType })
+                      : getString('protectionRules.create', { ruleType })}
                   </Text>
                   <FormInput.CheckBox
                     margin={{ top: 'medium', left: 'medium' }}
@@ -502,13 +489,18 @@ const ProtectionRulesForm = (props: {
                   }}
                   className={cx(css.widthContainer, css.label)}
                 />
-                <hr className={css.dividerContainer} />
+              </Container>
+
+              <Container className={css.generalContainer}>
                 <Layout.Horizontal>
                   <FormInput.Text
                     name="target"
                     label={
                       <Layout.Vertical className={cx(css.checkContainer, css.targetContainer)}>
-                        <Text margin={{ bottom: 'small' }} className={css.label}>
+                        <Text
+                          className={css.headingSize}
+                          padding={{ bottom: 'medium' }}
+                          font={{ variation: FontVariation.H4 }}>
                           {getString('protectionRules.targetBranches')}
                         </Text>
                         <FormInput.CheckBox
@@ -525,9 +517,9 @@ const ProtectionRulesForm = (props: {
                     className={cx(css.widthContainer, css.targetSpacingContainer, css.label)}
                   />
                   <Container
-                    className={css.paddingTop}
-                    flex={{ align: 'center-center' }}
-                    padding={{ top: 'xxlarge', left: 'small' }}>
+                    flex={{ alignItems: 'flex-end' }}
+                    padding={{ left: 'medium' }}
+                    className={css.targetSpacingContainer}>
                     <SplitButton
                       className={css.buttonContainer}
                       variation={ButtonVariation.TERTIARY}
@@ -581,32 +573,35 @@ const ProtectionRulesForm = (props: {
                 <Text className={css.hintText} margin={{ bottom: 'medium' }}>
                   {getString('protectionRules.targetPatternHint')}
                 </Text>
-                <Layout.Horizontal spacing={'small'} className={css.targetBox}>
-                  {targetList.map((target, idx) => {
-                    return (
-                      <Container key={`${idx}-${target[1]}`} className={css.greyButton}>
-                        {target[0] === BranchTargetType.INCLUDE ? (
-                          <img width={16} height={17} src={Include} />
-                        ) : (
-                          <img width={16} height={16} src={Exclude} />
-                        )}
-                        <Text lineClamp={1}>{target[1]}</Text>
-                        <Icon
-                          name="code-close"
-                          onClick={() => {
-                            const filteredData = targetList.filter(
-                              item => !(item[0] === target[0] && item[1] === target[1])
-                            )
-                            formik.setFieldValue('targetList', filteredData)
-                          }}
-                          className={css.codeClose}
-                        />
-                      </Container>
-                    )
-                  })}
-                </Layout.Horizontal>
+                {!isEmpty(targetList) && (
+                  <Layout.Horizontal spacing={'small'} className={css.targetBox}>
+                    {targetList.map((target, idx) => {
+                      return (
+                        <Container key={`${idx}-${target[1]}`} className={css.greyButton}>
+                          {target[0] === BranchTargetType.INCLUDE ? (
+                            <img width={16} height={17} src={Include} />
+                          ) : (
+                            <img width={16} height={16} src={Exclude} />
+                          )}
+                          <Text lineClamp={1}>{target[1]}</Text>
+                          <Icon
+                            name="code-close"
+                            onClick={() => {
+                              const filteredData = targetList.filter(
+                                item => !(item[0] === target[0] && item[1] === target[1])
+                              )
+                              formik.setFieldValue('targetList', filteredData)
+                            }}
+                            className={css.codeClose}
+                          />
+                        </Container>
+                      )
+                    })}
+                  </Layout.Horizontal>
+                )}
               </Container>
-              <Container margin={{ top: 'medium' }} className={css.generalContainer}>
+
+              <Container className={css.generalContainer}>
                 <Text className={css.headingSize} padding={{ bottom: 'medium' }} font={{ variation: FontVariation.H4 }}>
                   {getString('protectionRules.bypassList')}
                 </Text>
@@ -627,7 +622,8 @@ const ProtectionRulesForm = (props: {
                     formik.setFieldValue('bypassSet', true)
                     setUserArrayState([...uniqueArr])
                   }}
-                  name={'bypassSelect'}></FormInput.Select>
+                  name={'bypassSelect'}
+                />
                 <BypassList bypassList={bypassList} setFieldValue={formik.setFieldValue} />
               </Container>
               <RulesDefinitionForm
@@ -640,6 +636,7 @@ const ProtectionRulesForm = (props: {
                 setSearchStatusTerm={setSearchStatusTerm}
                 defaultReviewerProps={defaultReviewerProps}
               />
+
               <Container padding={{ top: 'large' }}>
                 <Layout.Horizontal spacing="small">
                   <Button
@@ -661,7 +658,7 @@ const ProtectionRulesForm = (props: {
                   />
                 </Layout.Horizontal>
               </Container>
-            </Container>
+            </Layout.Vertical>
           </FormikForm>
         )
       }}

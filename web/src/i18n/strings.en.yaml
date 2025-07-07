@@ -1033,8 +1033,8 @@ protectionRules:
   namePlaceholder: Enter the rule name here
   descPlaceholder: Enter the description here
   title: Rules
-  edit: Edit Rule
-  create: Create Rule
+  edit: Edit {{ruleType}} Rule
+  create: Create {{ruleType}} Rule
   targetBranches: Target Patterns
   targetPlaceholder: Enter the target patterns
   targetPatternHint: Match branches using globstar patterns (e.g. "golden", "feature-*", "releases/**")

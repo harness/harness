@@ -247,7 +247,8 @@ const RulesDefinitionForm = (props: {
               setFieldValue('statusChecks', uniqueArr)
             }}
             label={getString('protectionRules.statusCheck')}
-            name={'statusSelect'}></FormInput.Select>
+            name={'statusSelect'}
+          />
         </Container>
       )}
       {requireStatusChecks && (
@@ -286,15 +287,12 @@ const RulesDefinitionForm = (props: {
       </Text>
       {limitMergeStrats && (
         <Container padding={{ left: 'xlarge', top: 'large' }}>
-          <Container padding={'small'} className={cx(css.widthContainer, css.greyContainer)}>
-            <FormInput.CheckBox className={css.minText} label={getString('mergeCommit')} name={'mergeCommit'} />
-            <FormInput.CheckBox className={css.minText} label={getString('squashMerge')} name={'squashMerge'} />
-            <FormInput.CheckBox className={css.minText} label={getString('rebaseMerge')} name={'rebaseMerge'} />
-            <FormInput.CheckBox
-              className={css.minText}
-              label={getString('fastForwardMerge')}
-              name={'fastForwardMerge'}
-            />
+          <Container
+            padding={{ top: 'medium', left: 'medium', right: 'medium', bottom: 'small' }}
+            className={cx(css.widthContainer, css.greyContainer)}>
+            {['mergeCommit', 'squashMerge', 'rebaseMerge', 'fastForwardMerge'].map(method => (
+              <FormInput.CheckBox key={method} className={css.minText} label={getString(method as any)} name={method} />
+            ))}
           </Container>
         </Container>
       )}
