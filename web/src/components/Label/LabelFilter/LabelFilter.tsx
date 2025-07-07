@@ -40,7 +40,7 @@ import {
   LIST_FETCHING_LIMIT,
   LabelFilterObj,
   LabelFilterType,
-  ScopeLevel,
+  ScopeEnum,
   getErrorMessage,
   getScopeData
 } from 'utils/Utils'
@@ -55,7 +55,7 @@ interface LabelFilterProps {
   onPullRequestLabelFilterChanged: (labelFilter: LabelFilterObj[]) => void
   bearerToken: string
   spaceRef: string
-  filterScope: ScopeLevel
+  filterScope: ScopeEnum
   repoMetadata?: RepoRepositoryOutput
 }
 
@@ -122,7 +122,7 @@ export const LabelFilter = (props: LabelFilterProps) => {
   const getDropdownLabels = async (currentFilterOption?: LabelFilterObj[]) => {
     try {
       const fetchedLabels: TypesLabel[] =
-        filterScope === ScopeLevel.SPACE ? await getLabelsOnSpaceScope() : await getLabelsOnRepoScope()
+        filterScope === ScopeEnum.SPACE_SCOPE ? await getLabelsOnSpaceScope() : await getLabelsOnRepoScope()
       const updateLabelsList = mapToSelectOptions(fetchedLabels)
       const labelForTop = mapToSelectOptions(currentFilterOption?.map(({ labelObj }) => labelObj))
       const mergedArray = [...labelForTop, ...updateLabelsList]
@@ -148,7 +148,7 @@ export const LabelFilter = (props: LabelFilterProps) => {
     setLoadingLabelValues(true)
     const { scopeRef } = getScopeData(spaceRef, scope, standalone)
     const getPath = () =>
-      scope === 0
+      scope === ScopeEnum.REPO_SCOPE
         ? `/repos/${encodeURIComponent(repoMetadata?.path as string)}/labels/${encodeURIComponent(key)}/values`
         : `/spaces/${encodeURIComponent(scopeRef)}/labels/${encodeURIComponent(key)}/values`
 
@@ -171,7 +171,7 @@ export const LabelFilter = (props: LabelFilterProps) => {
     setLoadingLabelValues(true)
     const { scopeRef } = getScopeData(spaceRef, scope, standalone)
     const getPath = () =>
-      scope === 0
+      scope === ScopeEnum.REPO_SCOPE
         ? `/repos/${repoMetadata?.identifier}/labels/${encodeURIComponent(key)}/values`
         : `/labels/${encodeURIComponent(key)}/values`
 

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import {
   Container,
   Layout,
@@ -90,6 +90,7 @@ const ProtectionRulesListing = (props: { activeTab: string; repoMetadata?: RepoR
   const { activeTab, repoMetadata } = props
   const { getString } = useStrings()
   const { showError, showSuccess } = useToaster()
+  const space = useGetSpaceParam()
   const history = useHistory()
   const { routes, standalone, hooks } = useAppContext()
   const pageBrowser = useQueryParams<PageBrowserProps>()
@@ -100,16 +101,8 @@ const ProtectionRulesListing = (props: { activeTab: string; repoMetadata?: RepoR
   const { settingSection, ruleId, settingSectionMode } = useParams<CODEProps>()
   const newRule = settingSection && settingSectionMode === SettingTypeMode.NEW
   const editRule = !isEmpty(settingSection) && !isEmpty(ruleId) && settingSectionMode === SettingTypeMode.EDIT
-  const [showParentScopeFilter, setShowParentScopeFilter] = useState<boolean>(true)
   const [inheritRules, setInheritRules] = useState<boolean>(false)
-  const space = useGetSpaceParam()
   const currentPageScope = useGetCurrentPageScope()
-
-  useEffect(() => {
-    if (currentPageScope) {
-      if ([ScopeEnum.ACCOUNT_SCOPE, ScopeEnum.SPACE_SCOPE].includes(currentPageScope)) setShowParentScopeFilter(false)
-    }
-  }, [currentPageScope])
 
   const getRulesPath = useMemo(
     () =>
@@ -272,7 +265,7 @@ const ProtectionRulesListing = (props: { activeTab: string; repoMetadata?: RepoR
       ? getScopeData(currentSpace, currentScope, isStandalone ?? false)
       : { scopeRef: currentSpace }
 
-    if (metaData && currentScope === 0) {
+    if (metaData && currentScope === ScopeEnum.REPO_SCOPE) {
       history.push(
         routes.toCODESettings({
           repoPath: metaData.path as string,
@@ -311,7 +304,7 @@ const ProtectionRulesListing = (props: { activeTab: string; repoMetadata?: RepoR
           const { definition, description, identifier, pattern, scope, state, type } = row.original
           const { scopeRef, scopeIcon } = getScopeData(space, scope ?? 1, standalone)
           const getRuleIDPath = () =>
-            scope === 0 && repoMetadata
+            scope === ScopeEnum.REPO_SCOPE && repoMetadata
               ? `/repos/${repoMetadata?.path}/+/rules/${encodeURIComponent(identifier as string)}`
               : `/spaces/${scopeRef}/+/rules/${encodeURIComponent(identifier as string)}`
 
@@ -548,7 +541,7 @@ const ProtectionRulesListing = (props: { activeTab: string; repoMetadata?: RepoR
       {!newRule && !editRule && (
         <ProtectionRulesHeader
           activeTab={activeTab}
-          showParentScopeFilter={showParentScopeFilter}
+          currentPageScope={currentPageScope}
           onSearchTermChanged={(value: string) => {
             setSearchTerm(value)
             debouncedRefetch(value)
@@ -560,6 +553,7 @@ const ProtectionRulesListing = (props: { activeTab: string; repoMetadata?: RepoR
       )}
       {newRule || editRule ? (
         <ProtectionRulesForm
+          currentPageScope={currentPageScope}
           editMode={editRule}
           repoMetadata={repoMetadata}
           refetchRules={refetchRules}

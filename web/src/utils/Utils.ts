@@ -444,11 +444,6 @@ export const ButtonRoleProps = {
   style: { cursor: 'pointer ' }
 }
 
-export enum ScopeLevel {
-  REPOSITORY = 'repos',
-  SPACE = 'space'
-}
-
 export enum orderSortDate {
   ASC = 'asc',
   DESC = 'desc'
@@ -1039,7 +1034,7 @@ export const getEditPermissionRequestFromScope = (
 ) => {
   const [accountIdentifier, orgIdentifier, projectIdentifier] = space.split('/')
 
-  if (scope === 0 && repoMetadata) {
+  if (scope === ScopeEnum.REPO_SCOPE && repoMetadata) {
     return {
       resource: {
         resourceType: ResourceType.CODE_REPOSITORY,

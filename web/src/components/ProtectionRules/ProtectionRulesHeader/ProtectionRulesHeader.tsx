@@ -22,13 +22,13 @@ import { CodeIcon, GitInfoProps, SettingTypeMode } from 'utils/GitUtils'
 import { useAppContext } from 'AppContext'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
-import { getEditPermissionRequestFromIdentifier, permissionProps } from 'utils/Utils'
+import { getEditPermissionRequestFromIdentifier, permissionProps, ScopeEnum } from 'utils/Utils'
 import css from './ProtectionRulesHeader.module.scss'
 
 interface ProtectionRulesHeaderProps extends Partial<Pick<GitInfoProps, 'repoMetadata'>> {
   loading?: boolean
   activeTab?: string
-  showParentScopeFilter: boolean
+  currentPageScope: ScopeEnum
   inheritRules: boolean
   setInheritRules: (value: boolean) => void
   onSearchTermChanged: (searchTerm: string) => void
@@ -39,7 +39,7 @@ const ProtectionRulesHeader = ({
   loading,
   onSearchTermChanged,
   activeTab,
-  showParentScopeFilter,
+  currentPageScope,
   inheritRules,
   setInheritRules
 }: ProtectionRulesHeaderProps) => {
@@ -89,7 +89,7 @@ const ProtectionRulesHeader = ({
           }
           {...permissionProps(permPushResult, standalone)}
         />
-        <Render when={showParentScopeFilter}>
+        <Render when={[ScopeEnum.ACCOUNT_SCOPE, ScopeEnum.SPACE_SCOPE].includes(currentPageScope)}>
           <Checkbox
             className={css.scopeCheckbox}
             label={getString('protectionRules.showRulesScope')}

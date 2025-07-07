@@ -66,7 +66,6 @@ import type {
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useAppContext } from 'AppContext'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
-import { useGetCurrentPageScope } from 'hooks/useGetCurrentPageScope'
 import { getConfig } from 'services/config'
 import type { Identifier } from 'utils/types'
 import RulesDefinitionForm from './components/RulesDefinitionForm'
@@ -76,6 +75,7 @@ import Exclude from '../../../icons/Exclude.svg?url'
 import css from './ProtectionRulesForm.module.scss'
 
 const ProtectionRulesForm = (props: {
+  currentPageScope: ScopeEnum
   editMode: boolean
   refetchRules: () => void
   settingSectionMode: SettingTypeMode
@@ -86,7 +86,7 @@ const ProtectionRulesForm = (props: {
   const { ruleId } = useGetRepositoryMetadata()
   const { showError, showSuccess } = useToaster()
   const space = useGetSpaceParam()
-  const { editMode = false, repoMetadata, refetchRules, settingSectionMode } = props
+  const { currentPageScope, editMode = false, repoMetadata, refetchRules, settingSectionMode } = props
   const { getString } = useStrings()
   const [searchTerm, setSearchTerm] = useState('')
   const [searchStatusTerm, setSearchStatusTerm] = useState('')
@@ -94,7 +94,6 @@ const ProtectionRulesForm = (props: {
   const { scopeRef } =
     typeof currentRuleScope === 'number' ? getScopeData(space, currentRuleScope, standalone) : { scopeRef: space }
   const [accountIdentifier, orgIdentifier, projectIdentifier] = scopeRef?.split('/') || []
-  const currentPageScope = useGetCurrentPageScope()
 
   const getUpdateRulePath = () =>
     currentPageScope === ScopeEnum.REPO_SCOPE
@@ -159,7 +158,7 @@ const ProtectionRulesForm = (props: {
   const [defaultReviewersState, setDefaultReviewersState] = useState<string[]>(reviewerArrayCurr)
 
   const getUpdateChecksPath = () =>
-    currentRuleScope === 0 && repoMetadata
+    currentRuleScope === ScopeEnum.REPO_SCOPE && repoMetadata
       ? `/repos/${repoMetadata?.path}/+/checks/recent`
       : `/spaces/${scopeRef}/+/checks/recent`
 

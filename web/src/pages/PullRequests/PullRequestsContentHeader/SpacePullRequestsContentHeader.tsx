@@ -31,7 +31,7 @@ import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import type { TypesPrincipalInfo } from 'services/code'
 import { useAppContext } from 'AppContext'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
-import { getCurrentScopeLabel, getScopeOptions, ScopeLevel, ScopeLevelEnum } from 'utils/Utils'
+import { getCurrentScopeLabel, getScopeOptions, ScopeEnum, ScopeLevelEnum } from 'utils/Utils'
 import { LabelFilter } from 'components/Label/LabelFilter/LabelFilter'
 import usePRFiltersContext from 'hooks/usePRFiltersContext'
 import ToggleTabsBtn from 'components/ToggleTabs/ToggleTabsBtn'
@@ -163,7 +163,7 @@ export function SpacePullRequestsContentHeader({
             labelFilterOption={labelFilter}
             onPullRequestLabelFilterChanged={setLabelFilter}
             bearerToken={bearerToken}
-            filterScope={ScopeLevel.SPACE}
+            filterScope={ScopeEnum.SPACE_SCOPE}
             spaceRef={space}
           />
 

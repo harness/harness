@@ -24,7 +24,7 @@ import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import type { TypesBranchTable, TypesPrincipalInfo } from 'services/code'
 import { useAppContext } from 'AppContext'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
-import { LabelFilterObj, PageBrowserProps, ScopeLevel, permissionProps } from 'utils/Utils'
+import { LabelFilterObj, PageBrowserProps, ScopeEnum, permissionProps } from 'utils/Utils'
 import { useQueryParams } from 'hooks/useQueryParams'
 import { LabelFilter } from 'components/Label/LabelFilter/LabelFilter'
 import { PRBanner } from 'components/PRBanner/PRBanner'
@@ -122,7 +122,7 @@ export function PullRequestsContentHeader({
           bearerToken={bearerToken}
           repoMetadata={repoMetadata}
           spaceRef={space}
-          filterScope={ScopeLevel.REPOSITORY}
+          filterScope={ScopeEnum.REPO_SCOPE}
         />
 
         <PRAuthorFilter

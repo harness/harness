@@ -20,12 +20,25 @@ import { useStrings } from 'framework/strings'
 import { CodeIcon } from 'utils/GitUtils'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import type { RepoRepositoryOutput } from 'services/code'
+import { ScopeEnum } from 'utils/Utils'
 import css from './LabelsHeader.module.scss'
+
+interface LabelsHeaderProps {
+  loading?: boolean
+  currentPageScope: ScopeEnum
+  activeTab?: string
+  onSearchTermChanged: (searchTerm: string) => void
+  repoMetadata?: RepoRepositoryOutput
+  spaceRef?: string
+  setInheritLabels: (value: boolean) => void
+  inheritLabels: boolean
+  openLabelCreateModal: () => void
+}
 
 const LabelsHeader = ({
   loading,
+  currentPageScope,
   onSearchTermChanged,
-  showParentScopeFilter,
   inheritLabels,
   setInheritLabels,
   openLabelCreateModal
@@ -44,7 +57,7 @@ const LabelsHeader = ({
           icon={CodeIcon.Add}
           onClick={openLabelCreateModal}
         />
-        <Render when={showParentScopeFilter}>
+        <Render when={[ScopeEnum.ACCOUNT_SCOPE, ScopeEnum.SPACE_SCOPE].includes(currentPageScope)}>
           <Checkbox
             className={css.scopeCheckbox}
             label={getString('labels.showLabelsScope')}
@@ -71,15 +84,3 @@ const LabelsHeader = ({
 }
 
 export default LabelsHeader
-
-interface LabelsHeaderProps {
-  loading?: boolean
-  activeTab?: string
-  onSearchTermChanged: (searchTerm: string) => void
-  repoMetadata?: RepoRepositoryOutput
-  spaceRef?: string
-  showParentScopeFilter: boolean
-  setInheritLabels: (value: boolean) => void
-  inheritLabels: boolean
-  openLabelCreateModal: () => void
-}

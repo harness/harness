@@ -42,7 +42,16 @@ import { useModalHook } from 'hooks/useModalHook'
 import { useStrings } from 'framework/strings'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { CodeIcon } from 'utils/GitUtils'
-import { colorsPanel, ColorName, ColorDetails, getErrorMessage, LabelType, LabelTypes, getScopeData } from 'utils/Utils'
+import {
+  colorsPanel,
+  ColorName,
+  ColorDetails,
+  getErrorMessage,
+  LabelType,
+  LabelTypes,
+  getScopeData,
+  ScopeEnum
+} from 'utils/Utils'
 import { Label } from 'components/Label/Label'
 import type {
   EnumLabelColor,
@@ -64,7 +73,7 @@ interface ExtendedTypesLabelValue extends TypesLabelValue {
 }
 
 interface LabelModalProps {
-  refetchlabelsList: () => Promise<void>
+  refetchLabelsList: () => Promise<void>
 }
 
 interface LabelFormData extends TypesLabel {
@@ -153,7 +162,7 @@ const ColorSelectorDropdown = (props: {
   )
 }
 
-const useLabelModal = ({ refetchlabelsList }: LabelModalProps) => {
+const useLabelModal = ({ refetchLabelsList }: LabelModalProps) => {
   const { repoMetadata, space } = useGetRepositoryMetadata()
   const { standalone } = useAppContext()
   const { getString } = useStrings()
@@ -182,7 +191,7 @@ const useLabelModal = ({ refetchlabelsList }: LabelModalProps) => {
   })
 
   const getPath = () =>
-    updateLabel?.scope === 0 && repoMetadata
+    updateLabel?.scope === ScopeEnum.REPO_SCOPE && repoMetadata
       ? `/repos/${encodeURIComponent(repoMetadata?.path as string)}/labels/${encodeURIComponent(
           updateLabel?.key ? updateLabel?.key : ''
         )}/values`
@@ -203,7 +212,7 @@ const useLabelModal = ({ refetchlabelsList }: LabelModalProps) => {
   //ToDo : Remove getLabelValuesPromiseQuery component when Encoding is handled by BE for Harness
 
   const getPathHarness = () =>
-    updateLabel?.scope === 0 && repoMetadata
+    updateLabel?.scope === ScopeEnum.REPO_SCOPE && repoMetadata
       ? `/repos/${repoMetadata?.identifier}/labels/${encodeURIComponent(
           updateLabel?.key ? updateLabel?.key : ''
         )}/values`
@@ -249,7 +258,7 @@ const useLabelModal = ({ refetchlabelsList }: LabelModalProps) => {
       }
       if (
         (repoMetadata && modalMode === ModalMode.SAVE) ||
-        (modalMode === ModalMode.UPDATE && updateLabel?.scope === 0 && repoMetadata)
+        (modalMode === ModalMode.UPDATE && updateLabel?.scope === ScopeEnum.REPO_SCOPE && repoMetadata)
       ) {
         try {
           createUpdateLabel(createLabelPayload)
@@ -257,7 +266,7 @@ const useLabelModal = ({ refetchlabelsList }: LabelModalProps) => {
               showSuccess(
                 modalMode === ModalMode.SAVE ? getString('labels.labelCreated') : getString('labels.labelUpdated')
               )
-              refetchlabelsList()
+              refetchLabelsList()
               onClose()
             })
             .catch(error => showError(getErrorMessage(error), 1200, getString('labels.labelCreationFailed')))
@@ -271,7 +280,7 @@ const useLabelModal = ({ refetchlabelsList }: LabelModalProps) => {
               showSuccess(
                 modalMode === ModalMode.SAVE ? getString('labels.labelCreated') : getString('labels.labelUpdated')
               )
-              refetchlabelsList()
+              refetchLabelsList()
               onClose()
             })
             .catch(error => showError(getErrorMessage(error), 1200, getString('labels.labelUpdateFailed')))
@@ -577,7 +586,7 @@ const useLabelModal = ({ refetchlabelsList }: LabelModalProps) => {
     initLabelValuesQuery,
     initValueListLoading,
     initValueListLoadingQuery,
-    refetchlabelsList,
+    refetchLabelsList,
     refetchInitValuesListQuery,
     modalMode
   ])

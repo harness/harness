@@ -22,7 +22,7 @@ import css from '../ProtectionRulesForm.module.scss'
 
 const BypassList = (props: {
   bypassList?: string[] // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  setFieldValue: (field: string, value: any, shouldValidate?: boolean | undefined) => void
+  setFieldValue: (field: string, value: any, shouldValidate?: boolean) => void
 }) => {
   const { bypassList, setFieldValue } = props
 

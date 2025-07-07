@@ -72,7 +72,6 @@ const LabelsListing = (props: LabelListingProps) => {
   const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
   const [page, setPage] = usePageIndex(pageInit)
   const [searchTerm, setSearchTerm] = useState('')
-  const [showParentScopeFilter, setShowParentScopeFilter] = useState<boolean>(true)
   const [inheritLabels, setInheritLabels] = useState<boolean>(false)
   const currentPageScope = useGetCurrentPageScope()
 
@@ -89,12 +88,6 @@ const LabelsListing = (props: LabelListingProps) => {
       replaceQueryParams(updateParams, undefined, true)
     }
   }, [page]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if ([ScopeEnum.ACCOUNT_SCOPE, ScopeEnum.SPACE_SCOPE].includes(currentPageScope)) {
-      setShowParentScopeFilter(false)
-    }
-  }, [currentPageScope, standalone])
 
   const getLabelPath = useMemo(
     () =>
@@ -119,7 +112,7 @@ const LabelsListing = (props: LabelListingProps) => {
     debounce: 500
   })
 
-  const refetchlabelsList = useCallback(
+  const refetchLabelsList = useCallback(
     () =>
       refetch({
         queryParams: {
@@ -129,10 +122,10 @@ const LabelsListing = (props: LabelListingProps) => {
           query: searchTerm
         }
       }),
-    [inheritLabels, LIST_FETCHING_LIMIT, page, searchTerm]
+    [inheritLabels, page, searchTerm, refetch]
   )
 
-  const { openModal: openLabelCreateModal, openUpdateLabelModal } = useLabelModal({ refetchlabelsList })
+  const { openModal: openLabelCreateModal, openUpdateLabelModal } = useLabelModal({ refetchLabelsList })
   const renderRowSubComponent = React.useCallback(({ row }: { row: Row<LabelTypes> }) => {
     if (standalone) {
       return (
@@ -216,8 +209,8 @@ const LabelsListing = (props: LabelListingProps) => {
           const { scopeIcon, scopeId } = getScopeData(space as string, row.original.scope ?? 1, standalone)
           return (
             <Layout.Horizontal spacing={'xsmall'} flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
-              <Icon size={16} name={row.original.scope === 0 ? CodeIcon.Repo : scopeIcon} />
-              <Text>{row.original.scope === 0 ? repoMetadata?.identifier : scopeId}</Text>
+              <Icon size={16} name={row.original.scope === ScopeEnum.REPO_SCOPE ? CodeIcon.Repo : scopeIcon} />
+              <Text>{row.original.scope === ScopeEnum.REPO_SCOPE ? repoMetadata?.identifier : scopeId}</Text>
             </Layout.Horizontal>
           )
         }
@@ -238,7 +231,7 @@ const LabelsListing = (props: LabelListingProps) => {
           const encodedLabelKey = row.original.key ? encodeURIComponent(row.original.key) : ''
           const { scopeRef } = getScopeData(space as string, row.original?.scope ?? 1, standalone)
           const deleteLabelPath =
-            row.original?.scope === 0
+            row.original?.scope === ScopeEnum.REPO_SCOPE
               ? `/repos/${encodeURIComponent(repoMetadata?.path as string)}/labels/${encodedLabelKey}`
               : `/spaces/${encodeURIComponent(scopeRef as string)}/labels/${encodedLabelKey}`
 
@@ -250,7 +243,7 @@ const LabelsListing = (props: LabelListingProps) => {
 
           //ToDo : Remove the following block when Encoding is handled by BE for Harness
           const deleteLabelPathHarness =
-            row.original?.scope === 0
+            row.original?.scope === ScopeEnum.REPO_SCOPE
               ? `/repos/${repoMetadata?.identifier}/labels/${encodedLabelKey}`
               : `/labels/${encodedLabelKey}`
 
@@ -275,7 +268,7 @@ const LabelsListing = (props: LabelListingProps) => {
               e.stopPropagation()
               const handleSuccess = (tag: string) => {
                 showSuccess(<StringSubstitute str={getString('labels.deletedLabel')} vars={{ tag }} />, 5000)
-                refetchlabelsList()
+                refetchLabelsList()
                 setPage(1)
               }
 
@@ -327,11 +320,11 @@ const LabelsListing = (props: LabelListingProps) => {
     <Container>
       <LabelsHeader
         activeTab={activeTab}
+        currentPageScope={currentPageScope}
         onSearchTermChanged={(value: React.SetStateAction<string>) => {
           setSearchTerm(value)
           setPage(1)
         }}
-        showParentScopeFilter={showParentScopeFilter}
         inheritLabels={inheritLabels}
         setInheritLabels={setInheritLabels}
         openLabelCreateModal={openLabelCreateModal}

@@ -22,7 +22,7 @@ import { useGet } from 'restful-react'
 import { Menu, Spinner } from '@blueprintjs/core'
 import { Icon } from '@harnessio/icons'
 import { isEmpty } from 'lodash-es'
-import { ColorName, LabelType, getColorsObj, getScopeData, getScopeIcon } from 'utils/Utils'
+import { ColorName, LabelType, ScopeEnum, getColorsObj, getScopeData, getScopeIcon } from 'utils/Utils'
 import type { RepoRepositoryOutput, TypesLabelValue } from 'services/code'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
@@ -303,7 +303,7 @@ export const LabelValuesList: React.FC<{
 }> = ({ name, scope, repoMetadata, space = '', standalone }) => {
   const { scopeRef } = getScopeData(space as string, scope, standalone)
   const getPath = () =>
-    scope === 0
+    scope === ScopeEnum.REPO_SCOPE
       ? `/repos/${encodeURIComponent(repoMetadata?.path as string)}/labels/${encodeURIComponent(name)}/values`
       : `/spaces/${encodeURIComponent(scopeRef)}/labels/${encodeURIComponent(name)}/values`
 
@@ -350,7 +350,7 @@ export const LabelValuesListQuery: React.FC<{
   const { scopeRef } = getScopeData(space as string, scope, standalone)
 
   const getPath = () =>
-    scope === 0
+    scope === ScopeEnum.REPO_SCOPE
       ? `/repos/${repoMetadata?.identifier}/labels/${encodeURIComponent(name)}/values`
       : `/labels/${encodeURIComponent(name)}/values`
 
