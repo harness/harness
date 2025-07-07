@@ -44,10 +44,11 @@ import (
 )
 
 type MergeInput struct {
-	Method    enum.MergeMethod `json:"method"`
-	SourceSHA string           `json:"source_sha"`
-	Title     string           `json:"title"`
-	Message   string           `json:"message"`
+	Method             enum.MergeMethod `json:"method"`
+	SourceSHA          string           `json:"source_sha"`
+	Title              string           `json:"title"`
+	Message            string           `json:"message"`
+	DeleteSourceBranch bool             `json:"delete_source_branch"`
 
 	BypassRules bool `json:"bypass_rules"`
 	DryRun      bool `json:"dry_run"`
@@ -224,6 +225,8 @@ func (c *Controller) Merge(
 		return nil, nil, fmt.Errorf("failed to verify protection rules: %w", err)
 	}
 
+	deleteSourceBranch := in.DeleteSourceBranch || ruleOut.DeleteSourceBranch
+
 	if in.DryRunRules {
 		for _, approvals := range ruleOut.DefaultReviewerApprovals {
 			principalInfos, err := c.principalInfoCache.Map(ctx, approvals.PrincipalIDs)
@@ -234,7 +237,7 @@ func (c *Controller) Merge(
 		}
 
 		return &types.MergeResponse{
-			BranchDeleted:  ruleOut.DeleteSourceBranch,
+			BranchDeleted:  deleteSourceBranch,
 			RuleViolations: violations,
 
 			DryRunRules:                         true,
@@ -362,7 +365,7 @@ func (c *Controller) Merge(
 
 		// With in.DryRun=true this function never returns types.MergeViolations
 		out := &types.MergeResponse{
-			BranchDeleted:  ruleOut.DeleteSourceBranch,
+			BranchDeleted:  deleteSourceBranch,
 			RuleViolations: violations,
 
 			// values only returned by dry run
@@ -583,7 +586,7 @@ func (c *Controller) Merge(
 		pr.ActivitySeq++
 		activitySeqMerge = pr.ActivitySeq
 
-		if ruleOut.DeleteSourceBranch {
+		if deleteSourceBranch {
 			pr.ActivitySeq++
 			activitySeqBranchDeleted = pr.ActivitySeq
 		}
@@ -616,7 +619,7 @@ func (c *Controller) Merge(
 	})
 
 	var branchDeleted bool
-	if ruleOut.DeleteSourceBranch {
+	if deleteSourceBranch {
 		errDelete := c.git.DeleteBranch(ctx, &git.DeleteBranchParams{
 			WriteParams: sourceWriteParams,
 			BranchName:  pr.SourceBranch,
