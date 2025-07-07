@@ -16,7 +16,8 @@ package lock
 
 import (
 	"context"
-	"errors"
+
+	"github.com/harness/gitness/errors"
 
 	redislib "github.com/go-redis/redis/v8"
 	"github.com/go-redsync/redsync/v4"
@@ -106,9 +107,9 @@ func translateRedisErr(err error, key string) error {
 	switch {
 	case errors.Is(err, redsync.ErrFailed):
 		kind = ErrorKindCannotLock
-	case errors.Is(err, redsync.ErrExtendFailed), errors.Is(err, &redsync.RedisError{}):
+	case errors.Is(err, redsync.ErrExtendFailed), errors.IsType[*redsync.RedisError](err):
 		kind = ErrorKindProviderError
-	case errors.Is(err, &redsync.ErrTaken{}), errors.Is(err, &redsync.ErrNodeTaken{}):
+	case errors.IsType[*redsync.ErrTaken](err), errors.IsType[*redsync.ErrNodeTaken](err):
 		kind = ErrorKindLockHeld
 	}
 	return NewError(kind, key, err)
