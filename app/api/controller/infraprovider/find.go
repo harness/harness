@@ -18,15 +18,13 @@ import (
 	"context"
 	"fmt"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/enum"
 )
 
 func (c *Controller) Find(
 	ctx context.Context,
-	session *auth.Session,
+	_ *auth.Session,
 	spaceRef string,
 	identifier string,
 ) (*types.InfraProviderConfig, error) {
@@ -34,11 +32,10 @@ func (c *Controller) Find(
 	if err != nil {
 		return nil, fmt.Errorf("failed to find space: %w", err)
 	}
-	// todo: change the permission to PermissionInfraProviderView once infra provider resource is added to access
-	// control
-	err = apiauth.CheckGitspace(ctx, c.authorizer, session, space.Path, identifier, enum.PermissionGitspaceView)
-	if err != nil {
-		return nil, fmt.Errorf("failed to authorize: %w", err)
-	}
+	// todo: add acl check with PermissionInfraProviderView once infra provider resource is added to access control
+	// err = apiauth.CheckGitspace(ctx, c.authorizer, session, space.Path, identifier, enum.PermissionGitspaceView)
+	// if err != nil {
+	//	return nil, fmt.Errorf("failed to authorize: %w", err)
+	// }
 	return c.infraproviderSvc.Find(ctx, space, identifier)
 }
