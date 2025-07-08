@@ -123,7 +123,7 @@ func NewRouter(
 				Put("/", nugetHandler.UploadPackage)
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
-				Put("/symbolpackage", nugetHandler.UploadSymbolPackage)
+				Put("/symbolpackage/", nugetHandler.UploadSymbolPackage)
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
 				With(middleware.TrackDownloadStats(packageHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).

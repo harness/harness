@@ -163,13 +163,13 @@ func (l *localBase) MoveTempFileAndCreateArtifact(
 		if !errors.IsConflict(err) {
 			return nil, "", 0, false, err
 		}
-		_, sha256, err := l.GetSHA256ByPath(ctx, info.RegistryID, path)
-		if err != nil {
-			return responseHeaders, "", 0, true, err
+		_, fileSha256, err2 := l.GetSHA256ByPath(ctx, info.RegistryID, path)
+		if err2 != nil {
+			return responseHeaders, "", 0, true, err2
 		}
 
 		responseHeaders.Code = http.StatusCreated
-		return responseHeaders, sha256, 0, true, nil
+		return responseHeaders, fileSha256, 0, true, nil
 	}
 
 	registry, err := l.registryDao.GetByRootParentIDAndName(ctx, info.RootParentID, info.RegIdentifier)
@@ -330,13 +330,9 @@ func (l *localBase) ExistsByFilePath(ctx context.Context, registryID int64, file
 }
 
 func (l *localBase) CheckIfVersionExists(ctx context.Context, info pkg.PackageArtifactInfo) (bool, error) {
-	artifacts, err := l.artifactDao.GetArtifactMetadata(ctx,
-		info.BaseArtifactInfo().ParentID, info.BaseArtifactInfo().RegIdentifier,
-		info.BaseArtifactInfo().Image, info.GetVersion())
+	_, err := l.artifactDao.GetByRegistryImageAndVersion(ctx,
+		info.BaseArtifactInfo().RegistryID, info.BaseArtifactInfo().Image, info.GetVersion())
 	if err != nil {
-		return false, err
-	}
-	if artifacts != nil {
 		return false, err
 	}
 	return true, nil
