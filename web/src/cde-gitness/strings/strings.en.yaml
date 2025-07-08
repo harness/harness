@@ -181,6 +181,7 @@ listing:
   starting: Starting
   stopping: Stopping
   uninitialized: Uninitialized
+  cleaning: Cleaning
   ownerAndCreated: Owner & Created On
 create:
   repositoryDetails: Repository Details

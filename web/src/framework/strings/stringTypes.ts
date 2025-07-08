@@ -1493,6 +1493,7 @@ export interface StringsMap {
   'cde.lastStartedTooltip': string
   'cde.lastUsed': string
   'cde.lastUsedTooltip': string
+  'cde.listing.cleaning': string
   'cde.listing.error': string
   'cde.listing.offline': string
   'cde.listing.online': string

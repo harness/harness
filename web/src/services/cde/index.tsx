@@ -7,7 +7,7 @@ import { getConfig } from '../config'
 export const SPEC_VERSION = '0.0.0'
 export type EnumGitspaceAccessType = 'jwt_token' | 'user_credentials' | 'ssh_key'
 
-export type EnumGitspaceActionType = 'start' | 'stop'
+export type EnumGitspaceActionType = 'start' | 'stop' | 'reset'
 
 export type EnumGitspaceCodeRepoType =
   | 'github'
@@ -58,6 +58,9 @@ export type EnumGitspaceEventType =
   | 'agent_gitspace_state_report_stopped'
   | 'agent_gitspace_state_report_unknown'
   | 'gitspace_action_auto_stop'
+  | 'gitspace_action_reset'
+  | 'gitspace_action_reset_completed'
+  | 'gitspace_action_reset_failed'
 
 export type EnumGitspaceFilterState = 'error' | 'running' | 'stopped'
 
@@ -71,12 +74,20 @@ export type EnumGitspaceInstanceStateType =
   | 'stopping'
   | 'cleaning'
   | 'cleaned'
+  | 'resetting'
 
 export type EnumGitspaceOwner = 'all' | 'self'
 
 export type EnumGitspaceSort = 'created' | 'last_activated' | 'last_used'
 
-export type EnumGitspaceStateType = 'running' | 'stopped' | 'error' | 'uninitialized' | 'starting' | 'stopping'
+export type EnumGitspaceStateType =
+  | 'running'
+  | 'stopped'
+  | 'error'
+  | 'uninitialized'
+  | 'starting'
+  | 'stopping'
+  | 'cleaning'
 
 export type EnumIDEType =
   | 'vs_code'
@@ -515,6 +526,9 @@ export interface DeleteInfraProviderPathParams {
    * account identifier.
    */
   accountIdentifier: string
+  /**
+   * infra Provider Config Identifier.
+   */
   infraprovider_identifier: string
 }
 
@@ -527,10 +541,14 @@ export type DeleteInfraProviderProps = Omit<
 /**
  * Delete infraProviderConfig
  */
-export const DeleteInfraProvider = ({ accountIdentifier, ...props }: DeleteInfraProviderProps) => (
+export const DeleteInfraProvider = ({
+  accountIdentifier,
+  infraprovider_identifier,
+  ...props
+}: DeleteInfraProviderProps) => (
   <Mutate<void, unknown, void, string, DeleteInfraProviderPathParams>
     verb="DELETE"
-    path={`/accounts/${accountIdentifier}/infraproviders`}
+    path={`/accounts/${accountIdentifier}/infraproviders/${infraprovider_identifier}`}
     base={getConfig('cde/api/v1')}
     {...props}
   />
@@ -683,6 +701,13 @@ export const useUpdateInfraProvider = ({
     { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier, infraprovider_identifier }, ...props }
   )
 
+export interface ListGatewaysQueryParams {
+  /**
+   * Fetches the latest gateway per region when set
+   */
+  is_latest?: string
+}
+
 export interface ListGatewaysPathParams {
   /**
    * account identifier.
@@ -694,28 +719,34 @@ export interface ListGatewaysPathParams {
   infraprovider_identifier: string
 }
 
-export type ListGatewaysProps = Omit<GetProps<TypesCDEGateway[], unknown, void, ListGatewaysPathParams>, 'path'> &
+export type ListGatewaysProps = Omit<
+  GetProps<TypesCDEGateway[], unknown, ListGatewaysQueryParams, ListGatewaysPathParams>,
+  'path'
+> &
   ListGatewaysPathParams
 
 /**
  * List gateways
  */
 export const ListGateways = ({ accountIdentifier, infraprovider_identifier, ...props }: ListGatewaysProps) => (
-  <Get<TypesCDEGateway[], unknown, void, ListGatewaysPathParams>
+  <Get<TypesCDEGateway[], unknown, ListGatewaysQueryParams, ListGatewaysPathParams>
     path={`/accounts/${accountIdentifier}/infraproviders/${infraprovider_identifier}/gateways`}
     base={getConfig('cde/api/v1')}
     {...props}
   />
 )
 
-export type UseListGatewaysProps = Omit<UseGetProps<TypesCDEGateway[], unknown, void, ListGatewaysPathParams>, 'path'> &
+export type UseListGatewaysProps = Omit<
+  UseGetProps<TypesCDEGateway[], unknown, ListGatewaysQueryParams, ListGatewaysPathParams>,
+  'path'
+> &
   ListGatewaysPathParams
 
 /**
  * List gateways
  */
 export const useListGateways = ({ accountIdentifier, infraprovider_identifier, ...props }: UseListGatewaysProps) =>
-  useGet<TypesCDEGateway[], unknown, void, ListGatewaysPathParams>(
+  useGet<TypesCDEGateway[], unknown, ListGatewaysQueryParams, ListGatewaysPathParams>(
     (paramsInPath: ListGatewaysPathParams) =>
       `/accounts/${paramsInPath.accountIdentifier}/infraproviders/${paramsInPath.infraprovider_identifier}/gateways`,
     { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier, infraprovider_identifier }, ...props }
@@ -784,6 +815,9 @@ export interface DeleteInfraProviderResourcePathParams {
    * infra Provider Config Identifier.
    */
   infraprovider_identifier: string
+  /**
+   * infra Provider Resource Identifier.
+   */
   infraprovider_resource_identifier: string
 }
 
@@ -828,7 +862,7 @@ export const useDeleteInfraProviderResource = ({
   useMutate<void, unknown, void, string, DeleteInfraProviderResourcePathParams>(
     'DELETE',
     (paramsInPath: DeleteInfraProviderResourcePathParams) =>
-      `/accounts/${paramsInPath.accountIdentifier}/infraproviders/${paramsInPath.infraprovider_identifier}/resources/${infraprovider_resource_identifier}`,
+      `/accounts/${paramsInPath.accountIdentifier}/infraproviders/${paramsInPath.infraprovider_identifier}/resources/${paramsInPath.infraprovider_resource_identifier}`,
     {
       base: getConfig('cde/api/v1'),
       pathParams: { accountIdentifier, infraprovider_identifier, infraprovider_resource_identifier },
@@ -1886,706 +1920,4 @@ export const useRepoLookupForGitspace = ({
     (paramsInPath: RepoLookupForGitspacePathParams) =>
       `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/gitspaces/lookup-repo`,
     { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier, orgIdentifier, projectIdentifier }, ...props }
-  )
-
-export interface ListInfraProvidersDeprecatedPathParams {
-  /**
-   * account identifier.
-   */
-  accountIdentifier: string
-  /**
-   * org identifier.
-   */
-  orgIdentifier: string
-  /**
-   * project identifier.
-   */
-  projectIdentifier: string
-}
-
-export type ListInfraProvidersDeprecatedProps = Omit<
-  GetProps<TypesInfraProviderConfig[], unknown, void, ListInfraProvidersDeprecatedPathParams>,
-  'path'
-> &
-  ListInfraProvidersDeprecatedPathParams
-
-/**
- * List infraproviders
- */
-export const ListInfraProvidersDeprecated = ({
-  accountIdentifier,
-  orgIdentifier,
-  projectIdentifier,
-  ...props
-}: ListInfraProvidersDeprecatedProps) => (
-  <Get<TypesInfraProviderConfig[], unknown, void, ListInfraProvidersDeprecatedPathParams>
-    path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/infraproviders`}
-    base={getConfig('cde/api/v1')}
-    {...props}
-  />
-)
-
-export type UseListInfraProvidersDeprecatedProps = Omit<
-  UseGetProps<TypesInfraProviderConfig[], unknown, void, ListInfraProvidersDeprecatedPathParams>,
-  'path'
-> &
-  ListInfraProvidersDeprecatedPathParams
-
-/**
- * List infraproviders
- */
-export const useListInfraProvidersDeprecated = ({
-  accountIdentifier,
-  orgIdentifier,
-  projectIdentifier,
-  ...props
-}: UseListInfraProvidersDeprecatedProps) =>
-  useGet<TypesInfraProviderConfig[], unknown, void, ListInfraProvidersDeprecatedPathParams>(
-    (paramsInPath: ListInfraProvidersDeprecatedPathParams) =>
-      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/infraproviders`,
-    { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier, orgIdentifier, projectIdentifier }, ...props }
-  )
-
-export interface CreateInfraProviderDeprecatedPathParams {
-  /**
-   * account identifier.
-   */
-  accountIdentifier: string
-  /**
-   * org identifier.
-   */
-  orgIdentifier: string
-  /**
-   * project identifier.
-   */
-  projectIdentifier: string
-}
-
-export type CreateInfraProviderDeprecatedProps = Omit<
-  MutateProps<
-    TypesInfraProviderConfig,
-    UsererrorError,
-    void,
-    OpenapiCreateInfraProviderConfigRequest,
-    CreateInfraProviderDeprecatedPathParams
-  >,
-  'path' | 'verb'
-> &
-  CreateInfraProviderDeprecatedPathParams
-
-/**
- * Create infraProvider config
- */
-export const CreateInfraProviderDeprecated = ({
-  accountIdentifier,
-  orgIdentifier,
-  projectIdentifier,
-  ...props
-}: CreateInfraProviderDeprecatedProps) => (
-  <Mutate<
-    TypesInfraProviderConfig,
-    UsererrorError,
-    void,
-    OpenapiCreateInfraProviderConfigRequest,
-    CreateInfraProviderDeprecatedPathParams
-  >
-    verb="POST"
-    path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/infraproviders`}
-    base={getConfig('cde/api/v1')}
-    {...props}
-  />
-)
-
-export type UseCreateInfraProviderDeprecatedProps = Omit<
-  UseMutateProps<
-    TypesInfraProviderConfig,
-    UsererrorError,
-    void,
-    OpenapiCreateInfraProviderConfigRequest,
-    CreateInfraProviderDeprecatedPathParams
-  >,
-  'path' | 'verb'
-> &
-  CreateInfraProviderDeprecatedPathParams
-
-/**
- * Create infraProvider config
- */
-export const useCreateInfraProviderDeprecated = ({
-  accountIdentifier,
-  orgIdentifier,
-  projectIdentifier,
-  ...props
-}: UseCreateInfraProviderDeprecatedProps) =>
-  useMutate<
-    TypesInfraProviderConfig,
-    UsererrorError,
-    void,
-    OpenapiCreateInfraProviderConfigRequest,
-    CreateInfraProviderDeprecatedPathParams
-  >(
-    'POST',
-    (paramsInPath: CreateInfraProviderDeprecatedPathParams) =>
-      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/infraproviders`,
-    { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier, orgIdentifier, projectIdentifier }, ...props }
-  )
-
-export interface DeleteInfraProviderDeprecatedPathParams {
-  /**
-   * account identifier.
-   */
-  accountIdentifier: string
-  /**
-   * org identifier.
-   */
-  orgIdentifier: string
-  /**
-   * project identifier.
-   */
-  projectIdentifier: string
-}
-
-export type DeleteInfraProviderDeprecatedProps = Omit<
-  MutateProps<void, unknown, void, string, DeleteInfraProviderDeprecatedPathParams>,
-  'path' | 'verb'
-> &
-  DeleteInfraProviderDeprecatedPathParams
-
-/**
- * Delete infraProviderConfig
- */
-export const DeleteInfraProviderDeprecated = ({
-  accountIdentifier,
-  orgIdentifier,
-  projectIdentifier,
-  ...props
-}: DeleteInfraProviderDeprecatedProps) => (
-  <Mutate<void, unknown, void, string, DeleteInfraProviderDeprecatedPathParams>
-    verb="DELETE"
-    path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/infraproviders`}
-    base={getConfig('cde/api/v1')}
-    {...props}
-  />
-)
-
-export type UseDeleteInfraProviderDeprecatedProps = Omit<
-  UseMutateProps<void, unknown, void, string, DeleteInfraProviderDeprecatedPathParams>,
-  'path' | 'verb'
-> &
-  DeleteInfraProviderDeprecatedPathParams
-
-/**
- * Delete infraProviderConfig
- */
-export const useDeleteInfraProviderDeprecated = ({
-  accountIdentifier,
-  orgIdentifier,
-  projectIdentifier,
-  ...props
-}: UseDeleteInfraProviderDeprecatedProps) =>
-  useMutate<void, unknown, void, string, DeleteInfraProviderDeprecatedPathParams>(
-    'DELETE',
-    (paramsInPath: DeleteInfraProviderDeprecatedPathParams) =>
-      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/infraproviders`,
-    { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier, orgIdentifier, projectIdentifier }, ...props }
-  )
-
-export interface GetInfraProviderDeprecatedPathParams {
-  /**
-   * account identifier.
-   */
-  accountIdentifier: string
-  /**
-   * org identifier.
-   */
-  orgIdentifier: string
-  /**
-   * project identifier.
-   */
-  projectIdentifier: string
-  /**
-   * infra Provider Config Identifier.
-   */
-  infraprovider_identifier: string
-}
-
-export type GetInfraProviderDeprecatedProps = Omit<
-  GetProps<TypesInfraProviderConfig, UsererrorError, void, GetInfraProviderDeprecatedPathParams>,
-  'path'
-> &
-  GetInfraProviderDeprecatedPathParams
-
-/**
- * Get infraProviderConfig
- */
-export const GetInfraProviderDeprecated = ({
-  accountIdentifier,
-  orgIdentifier,
-  projectIdentifier,
-  infraprovider_identifier,
-  ...props
-}: GetInfraProviderDeprecatedProps) => (
-  <Get<TypesInfraProviderConfig, UsererrorError, void, GetInfraProviderDeprecatedPathParams>
-    path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/infraproviders/${infraprovider_identifier}`}
-    base={getConfig('cde/api/v1')}
-    {...props}
-  />
-)
-
-export type UseGetInfraProviderDeprecatedProps = Omit<
-  UseGetProps<TypesInfraProviderConfig, UsererrorError, void, GetInfraProviderDeprecatedPathParams>,
-  'path'
-> &
-  GetInfraProviderDeprecatedPathParams
-
-/**
- * Get infraProviderConfig
- */
-export const useGetInfraProviderDeprecated = ({
-  accountIdentifier,
-  orgIdentifier,
-  projectIdentifier,
-  infraprovider_identifier,
-  ...props
-}: UseGetInfraProviderDeprecatedProps) =>
-  useGet<TypesInfraProviderConfig, UsererrorError, void, GetInfraProviderDeprecatedPathParams>(
-    (paramsInPath: GetInfraProviderDeprecatedPathParams) =>
-      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/infraproviders/${paramsInPath.infraprovider_identifier}`,
-    {
-      base: getConfig('cde/api/v1'),
-      pathParams: { accountIdentifier, orgIdentifier, projectIdentifier, infraprovider_identifier },
-      ...props
-    }
-  )
-
-export interface UpdateInfraProviderDeprecatedPathParams {
-  /**
-   * account identifier.
-   */
-  accountIdentifier: string
-  /**
-   * org identifier.
-   */
-  orgIdentifier: string
-  /**
-   * project identifier.
-   */
-  projectIdentifier: string
-  /**
-   * infra Provider Config Identifier.
-   */
-  infraprovider_identifier: string
-}
-
-export type UpdateInfraProviderDeprecatedProps = Omit<
-  MutateProps<
-    TypesInfraProviderConfig,
-    UsererrorError,
-    void,
-    OpenapiUpdateInfraProviderConfigRequest,
-    UpdateInfraProviderDeprecatedPathParams
-  >,
-  'path' | 'verb'
-> &
-  UpdateInfraProviderDeprecatedPathParams
-
-/**
- * Update infraProviderConfig
- */
-export const UpdateInfraProviderDeprecated = ({
-  accountIdentifier,
-  orgIdentifier,
-  projectIdentifier,
-  infraprovider_identifier,
-  ...props
-}: UpdateInfraProviderDeprecatedProps) => (
-  <Mutate<
-    TypesInfraProviderConfig,
-    UsererrorError,
-    void,
-    OpenapiUpdateInfraProviderConfigRequest,
-    UpdateInfraProviderDeprecatedPathParams
-  >
-    verb="PUT"
-    path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/infraproviders/${infraprovider_identifier}`}
-    base={getConfig('cde/api/v1')}
-    {...props}
-  />
-)
-
-export type UseUpdateInfraProviderDeprecatedProps = Omit<
-  UseMutateProps<
-    TypesInfraProviderConfig,
-    UsererrorError,
-    void,
-    OpenapiUpdateInfraProviderConfigRequest,
-    UpdateInfraProviderDeprecatedPathParams
-  >,
-  'path' | 'verb'
-> &
-  UpdateInfraProviderDeprecatedPathParams
-
-/**
- * Update infraProviderConfig
- */
-export const useUpdateInfraProviderDeprecated = ({
-  accountIdentifier,
-  orgIdentifier,
-  projectIdentifier,
-  infraprovider_identifier,
-  ...props
-}: UseUpdateInfraProviderDeprecatedProps) =>
-  useMutate<
-    TypesInfraProviderConfig,
-    UsererrorError,
-    void,
-    OpenapiUpdateInfraProviderConfigRequest,
-    UpdateInfraProviderDeprecatedPathParams
-  >(
-    'PUT',
-    (paramsInPath: UpdateInfraProviderDeprecatedPathParams) =>
-      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/infraproviders/${paramsInPath.infraprovider_identifier}`,
-    {
-      base: getConfig('cde/api/v1'),
-      pathParams: { accountIdentifier, orgIdentifier, projectIdentifier, infraprovider_identifier },
-      ...props
-    }
-  )
-
-export interface CreateInfraProviderResourceDeprecatedPathParams {
-  /**
-   * account identifier.
-   */
-  accountIdentifier: string
-  /**
-   * org identifier.
-   */
-  orgIdentifier: string
-  /**
-   * project identifier.
-   */
-  projectIdentifier: string
-  /**
-   * infra Provider Config Identifier.
-   */
-  infraprovider_identifier: string
-}
-
-export type CreateInfraProviderResourceDeprecatedProps = Omit<
-  MutateProps<TypesInfraProviderResource[], unknown, void, void, CreateInfraProviderResourceDeprecatedPathParams>,
-  'path' | 'verb'
-> &
-  CreateInfraProviderResourceDeprecatedPathParams
-
-/**
- * Create InfraProvider Resource
- */
-export const CreateInfraProviderResourceDeprecated = ({
-  accountIdentifier,
-  orgIdentifier,
-  projectIdentifier,
-  infraprovider_identifier,
-  ...props
-}: CreateInfraProviderResourceDeprecatedProps) => (
-  <Mutate<TypesInfraProviderResource[], unknown, void, void, CreateInfraProviderResourceDeprecatedPathParams>
-    verb="POST"
-    path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/infraproviders/${infraprovider_identifier}/resources`}
-    base={getConfig('cde/api/v1')}
-    {...props}
-  />
-)
-
-export type UseCreateInfraProviderResourceDeprecatedProps = Omit<
-  UseMutateProps<TypesInfraProviderResource[], unknown, void, void, CreateInfraProviderResourceDeprecatedPathParams>,
-  'path' | 'verb'
-> &
-  CreateInfraProviderResourceDeprecatedPathParams
-
-/**
- * Create InfraProvider Resource
- */
-export const useCreateInfraProviderResourceDeprecated = ({
-  accountIdentifier,
-  orgIdentifier,
-  projectIdentifier,
-  infraprovider_identifier,
-  ...props
-}: UseCreateInfraProviderResourceDeprecatedProps) =>
-  useMutate<TypesInfraProviderResource[], unknown, void, void, CreateInfraProviderResourceDeprecatedPathParams>(
-    'POST',
-    (paramsInPath: CreateInfraProviderResourceDeprecatedPathParams) =>
-      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/infraproviders/${paramsInPath.infraprovider_identifier}/resources`,
-    {
-      base: getConfig('cde/api/v1'),
-      pathParams: { accountIdentifier, orgIdentifier, projectIdentifier, infraprovider_identifier },
-      ...props
-    }
-  )
-
-export interface SyncInfraProviderDeprecatedPathParams {
-  /**
-   * account identifier.
-   */
-  accountIdentifier: string
-  /**
-   * org identifier.
-   */
-  orgIdentifier: string
-  /**
-   * project identifier.
-   */
-  projectIdentifier: string
-  /**
-   * infra Provider Config Identifier.
-   */
-  infraprovider_identifier: string
-}
-
-export type SyncInfraProviderDeprecatedProps = Omit<
-  GetProps<TypesInfraProviderConfig, UsererrorError, void, SyncInfraProviderDeprecatedPathParams>,
-  'path'
-> &
-  SyncInfraProviderDeprecatedPathParams
-
-/**
- * Sync infraProviderConfig
- */
-export const SyncInfraProviderDeprecated = ({
-  accountIdentifier,
-  orgIdentifier,
-  projectIdentifier,
-  infraprovider_identifier,
-  ...props
-}: SyncInfraProviderDeprecatedProps) => (
-  <Get<TypesInfraProviderConfig, UsererrorError, void, SyncInfraProviderDeprecatedPathParams>
-    path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/infraproviders/${infraprovider_identifier}/sync`}
-    base={getConfig('cde/api/v1')}
-    {...props}
-  />
-)
-
-export type UseSyncInfraProviderDeprecatedProps = Omit<
-  UseGetProps<TypesInfraProviderConfig, UsererrorError, void, SyncInfraProviderDeprecatedPathParams>,
-  'path'
-> &
-  SyncInfraProviderDeprecatedPathParams
-
-/**
- * Sync infraProviderConfig
- */
-export const useSyncInfraProviderDeprecated = ({
-  accountIdentifier,
-  orgIdentifier,
-  projectIdentifier,
-  infraprovider_identifier,
-  ...props
-}: UseSyncInfraProviderDeprecatedProps) =>
-  useGet<TypesInfraProviderConfig, UsererrorError, void, SyncInfraProviderDeprecatedPathParams>(
-    (paramsInPath: SyncInfraProviderDeprecatedPathParams) =>
-      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/infraproviders/${paramsInPath.infraprovider_identifier}/sync`,
-    {
-      base: getConfig('cde/api/v1'),
-      pathParams: { accountIdentifier, orgIdentifier, projectIdentifier, infraprovider_identifier },
-      ...props
-    }
-  )
-
-export interface CreateInfraProviderTemplateDeprecatedPathParams {
-  /**
-   * account identifier.
-   */
-  accountIdentifier: string
-  /**
-   * org identifier.
-   */
-  orgIdentifier: string
-  /**
-   * project identifier.
-   */
-  projectIdentifier: string
-  /**
-   * infra Provider Config Identifier.
-   */
-  infraprovider_identifier: string
-}
-
-export type CreateInfraProviderTemplateDeprecatedProps = Omit<
-  MutateProps<
-    TypesInfraProviderTemplate,
-    unknown,
-    void,
-    OpenapiCreateInfraProviderTemplateRequest,
-    CreateInfraProviderTemplateDeprecatedPathParams
-  >,
-  'path' | 'verb'
-> &
-  CreateInfraProviderTemplateDeprecatedPathParams
-
-/**
- * Create InfraProvider Template
- */
-export const CreateInfraProviderTemplateDeprecated = ({
-  accountIdentifier,
-  orgIdentifier,
-  projectIdentifier,
-  infraprovider_identifier,
-  ...props
-}: CreateInfraProviderTemplateDeprecatedProps) => (
-  <Mutate<
-    TypesInfraProviderTemplate,
-    unknown,
-    void,
-    OpenapiCreateInfraProviderTemplateRequest,
-    CreateInfraProviderTemplateDeprecatedPathParams
-  >
-    verb="POST"
-    path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/infraproviders/${infraprovider_identifier}/templates`}
-    base={getConfig('cde/api/v1')}
-    {...props}
-  />
-)
-
-export type UseCreateInfraProviderTemplateDeprecatedProps = Omit<
-  UseMutateProps<
-    TypesInfraProviderTemplate,
-    unknown,
-    void,
-    OpenapiCreateInfraProviderTemplateRequest,
-    CreateInfraProviderTemplateDeprecatedPathParams
-  >,
-  'path' | 'verb'
-> &
-  CreateInfraProviderTemplateDeprecatedPathParams
-
-/**
- * Create InfraProvider Template
- */
-export const useCreateInfraProviderTemplateDeprecated = ({
-  accountIdentifier,
-  orgIdentifier,
-  projectIdentifier,
-  infraprovider_identifier,
-  ...props
-}: UseCreateInfraProviderTemplateDeprecatedProps) =>
-  useMutate<
-    TypesInfraProviderTemplate,
-    unknown,
-    void,
-    OpenapiCreateInfraProviderTemplateRequest,
-    CreateInfraProviderTemplateDeprecatedPathParams
-  >(
-    'POST',
-    (paramsInPath: CreateInfraProviderTemplateDeprecatedPathParams) =>
-      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/infraproviders/${paramsInPath.infraprovider_identifier}/templates`,
-    {
-      base: getConfig('cde/api/v1'),
-      pathParams: { accountIdentifier, orgIdentifier, projectIdentifier, infraprovider_identifier },
-      ...props
-    }
-  )
-
-export interface UpdateInfraProviderTemplateDeprecatedPathParams {
-  /**
-   * account identifier.
-   */
-  accountIdentifier: string
-  /**
-   * org identifier.
-   */
-  orgIdentifier: string
-  /**
-   * project identifier.
-   */
-  projectIdentifier: string
-  /**
-   * infra Provider Config Identifier.
-   */
-  infraprovider_identifier: string
-  /**
-   * infra Provider Template Identifier.
-   */
-  template_identifier: string
-}
-
-export type UpdateInfraProviderTemplateDeprecatedProps = Omit<
-  MutateProps<
-    TypesInfraProviderTemplate,
-    unknown,
-    void,
-    OpenapiUpdateInfraProviderTemplateRequest,
-    UpdateInfraProviderTemplateDeprecatedPathParams
-  >,
-  'path' | 'verb'
-> &
-  UpdateInfraProviderTemplateDeprecatedPathParams
-
-/**
- * Update InfraProvider Template
- */
-export const UpdateInfraProviderTemplateDeprecated = ({
-  accountIdentifier,
-  orgIdentifier,
-  projectIdentifier,
-  infraprovider_identifier,
-  template_identifier,
-  ...props
-}: UpdateInfraProviderTemplateDeprecatedProps) => (
-  <Mutate<
-    TypesInfraProviderTemplate,
-    unknown,
-    void,
-    OpenapiUpdateInfraProviderTemplateRequest,
-    UpdateInfraProviderTemplateDeprecatedPathParams
-  >
-    verb="PUT"
-    path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/infraproviders/${infraprovider_identifier}/templates/${template_identifier}`}
-    base={getConfig('cde/api/v1')}
-    {...props}
-  />
-)
-
-export type UseUpdateInfraProviderTemplateDeprecatedProps = Omit<
-  UseMutateProps<
-    TypesInfraProviderTemplate,
-    unknown,
-    void,
-    OpenapiUpdateInfraProviderTemplateRequest,
-    UpdateInfraProviderTemplateDeprecatedPathParams
-  >,
-  'path' | 'verb'
-> &
-  UpdateInfraProviderTemplateDeprecatedPathParams
-
-/**
- * Update InfraProvider Template
- */
-export const useUpdateInfraProviderTemplateDeprecated = ({
-  accountIdentifier,
-  orgIdentifier,
-  projectIdentifier,
-  infraprovider_identifier,
-  template_identifier,
-  ...props
-}: UseUpdateInfraProviderTemplateDeprecatedProps) =>
-  useMutate<
-    TypesInfraProviderTemplate,
-    unknown,
-    void,
-    OpenapiUpdateInfraProviderTemplateRequest,
-    UpdateInfraProviderTemplateDeprecatedPathParams
-  >(
-    'PUT',
-    (paramsInPath: UpdateInfraProviderTemplateDeprecatedPathParams) =>
-      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/infraproviders/${paramsInPath.infraprovider_identifier}/templates/${paramsInPath.template_identifier}`,
-    {
-      base: getConfig('cde/api/v1'),
-      pathParams: {
-        accountIdentifier,
-        orgIdentifier,
-        projectIdentifier,
-        infraprovider_identifier,
-        template_identifier
-      },
-      ...props
-    }
   )

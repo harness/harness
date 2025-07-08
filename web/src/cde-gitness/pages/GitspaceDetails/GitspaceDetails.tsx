@@ -146,9 +146,13 @@ const GitspaceDetails = () => {
 
   const pollingCondition = triggerPollingOnStart
     ? false
-    : [GitspaceStatus.RUNNING, GitspaceStatus.STOPPED, GitspaceStatus.ERROR, GitspaceStatus.UNINITIALIZED].includes(
-        data?.state as GitspaceStatus
-      )
+    : [
+        GitspaceStatus.RUNNING,
+        GitspaceStatus.STOPPED,
+        GitspaceStatus.ERROR,
+        GitspaceStatus.UNINITIALIZED,
+        GitspaceStatus.CLEANING
+      ].includes(data?.state as GitspaceStatus)
 
   const disabledActionButtons = [GitspaceStatus.STARTING, GitspaceStatus.STOPPING].includes(
     data?.state as GitspaceStatus

@@ -63,6 +63,7 @@ export const getStatusColor = (status?: EnumGitspaceStateType) => {
     case GitspaceStatus.STOPPED:
       return '#D0D0D9'
     case GitspaceStatus.UNINITIALIZED:
+    case GitspaceStatus.CLEANING:
       return '#000000'
     case GitspaceStatus.ERROR:
       return '#FF0000'
@@ -85,6 +86,8 @@ export const getStatusText = (getString: UseStringsReturn['getString'], status?:
       return getString('cde.listing.stopping')
     case GitspaceStatus.UNINITIALIZED:
       return getString('cde.listing.uninitialized')
+    case GitspaceStatus.CLEANING:
+      return getString('cde.listing.cleaning')
     default:
       return getString('cde.listing.offline')
   }

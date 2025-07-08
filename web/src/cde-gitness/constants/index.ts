@@ -182,7 +182,8 @@ export enum GitspaceStatus {
   ERROR = 'error',
   STARTING = 'starting',
   STOPPING = 'stopping',
-  UNINITIALIZED = 'uninitialized'
+  UNINITIALIZED = 'uninitialized',
+  CLEANING = 'cleaning'
 }
 
 export interface GitspaceStatusTypesListItem {
