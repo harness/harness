@@ -21,7 +21,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/harness/gitness/app/api/request"
+	"github.com/harness/gitness/app/services/refcache"
 	cargometadata "github.com/harness/gitness/registry/app/metadata/cargo"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
@@ -30,7 +30,7 @@ import (
 type RegistryHelper interface {
 	GetIndexFilePathFromImageName(imageName string) string
 	UpdatePackageIndex(
-		ctx context.Context, rootIdentifier string, rootParentID int64,
+		ctx context.Context, principalID int64, rootParentID int64,
 		registryID int64, image string,
 	) error
 }
@@ -38,15 +38,18 @@ type RegistryHelper interface {
 type registryHelper struct {
 	fileManager filemanager.FileManager
 	artifactDao store.ArtifactRepository
+	spaceFinder refcache.SpaceFinder
 }
 
 func NewRegistryHelper(
 	fileManager filemanager.FileManager,
 	artifactDao store.ArtifactRepository,
+	spaceFinder refcache.SpaceFinder,
 ) RegistryHelper {
 	return &registryHelper{
 		fileManager: fileManager,
 		artifactDao: artifactDao,
+		spaceFinder: spaceFinder,
 	}
 }
 
@@ -56,26 +59,31 @@ func (h *registryHelper) GetIndexFilePathFromImageName(imageName string) string 
 	case length == 0:
 		return imageName
 	case length == 1:
-		return fmt.Sprintf("index/1/%s", imageName)
+		return fmt.Sprintf("/index/1/%s", imageName)
 	case length == 2:
-		return fmt.Sprintf("index/2/%s", imageName)
+		return fmt.Sprintf("/index/2/%s", imageName)
 	case length == 3:
-		return fmt.Sprintf("index/3/%c/%s", imageName[0], imageName)
+		return fmt.Sprintf("/index/3/%c/%s", imageName[0], imageName)
 	default:
-		return fmt.Sprintf("index/%s/%s/%s", imageName[0:2], imageName[2:4], imageName)
+		return fmt.Sprintf("/index/%s/%s/%s", imageName[0:2], imageName[2:4], imageName)
 	}
 }
 
 func (h *registryHelper) UpdatePackageIndex(
-	ctx context.Context, rootIdentifier string, rootParentID int64,
+	ctx context.Context, principalID int64, rootParentID int64,
 	registryID int64, image string,
 ) error {
+	rootSpace, err := h.spaceFinder.FindByID(ctx, rootParentID)
+	if err != nil {
+		return fmt.Errorf("failed to find root space by ID: %w", err)
+	}
 	indexMetadataList, err := h.regeneratePackageIndex(ctx, registryID, image)
 	if err != nil {
 		return fmt.Errorf("failed to regenerate package index: %w", err)
 	}
 	return h.uploadIndexMetadata(
-		ctx, rootIdentifier, rootParentID, registryID, image, indexMetadataList,
+		ctx, principalID, rootSpace.Identifier, rootParentID, registryID,
+		image, indexMetadataList,
 	)
 }
 
@@ -131,7 +139,7 @@ func (h *registryHelper) regeneratePackageIndex(
 }
 
 func (h *registryHelper) uploadIndexMetadata(
-	ctx context.Context, rootIdentifier string,
+	ctx context.Context, principalID int64, rootIdentifier string,
 	rootParentID int64, registryID int64, image string,
 	indexMetadataList []*cargometadata.IndexMetadata,
 ) error {
@@ -147,10 +155,10 @@ func (h *registryHelper) uploadIndexMetadata(
 		}
 		metadataList = append(metadataList, string(metadataJSON))
 	}
-	session, _ := request.AuthSessionFrom(ctx)
 	_, err := h.fileManager.UploadFile(
 		ctx, filePath, registryID, rootParentID, rootIdentifier, nil,
-		io.NopCloser(strings.NewReader(strings.Join(metadataList, "\n"))), fileName, session.Principal.ID,
+		io.NopCloser(strings.NewReader(strings.Join(metadataList, "\n"))),
+		fileName, principalID,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to upload package index metadata: %w", err)

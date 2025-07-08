@@ -17,6 +17,8 @@ package cargoconformance
 
 import (
 	"fmt"
+	"net/http"
+	"time"
 
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
@@ -55,25 +57,23 @@ var test03UpdateYank = func() {
 			gomega.Expect(err).To(gomega.BeNil())
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(201))
 
+			time.Sleep(2 * time.Second)
 			// get package index
 			var indexArr []packageIndexMetadata
-			gomega.Eventually(func() int {
-				req = client.NewRequest(
-					"GET",
-					fmt.Sprintf("/pkg/%s/%s/cargo/%s",
-						TestConfig.Namespace, TestConfig.RegistryName,
-						getIndexFilePathFromImageName(packageName),
-					),
-				)
-				resp, err = client.Do(req)
-				gomega.Expect(err).To(gomega.BeNil())
-				gomega.Expect(resp.StatusCode).To(gomega.Equal(200))
-				gomega.Expect(resp.Headers.Get("Content-Type")).To(gomega.Equal("text/plain; charset=utf-8"))
-				indexArr, err = getPackageIndexContentFromText(string(resp.Body))
-				gomega.Expect(err).To(gomega.BeNil())
-				return len(indexArr)
-			}, 5, 1).Should(gomega.Equal(1))
-
+			req = client.NewRequest(
+				"GET",
+				fmt.Sprintf("/pkg/%s/%s/cargo/%s",
+					TestConfig.Namespace, TestConfig.RegistryName,
+					getIndexFilePathFromImageName(packageName),
+				),
+			)
+			resp, err = client.Do(req)
+			gomega.Expect(err).To(gomega.BeNil())
+			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK))
+			gomega.Expect(resp.Headers.Get("Content-Type")).To(gomega.Equal("text/plain; charset=utf-8"))
+			indexArr, err = getPackageIndexContentFromText(string(resp.Body))
+			gomega.Expect(err).To(gomega.BeNil())
+			gomega.Expect(len(indexArr)).To(gomega.Equal(1))
 			gomega.Expect(indexArr[0].Name).To(gomega.Equal(packageName))
 			gomega.Expect(indexArr[0].Version).To(gomega.Equal(version))
 			gomega.Expect(indexArr[0].Yanked).To(gomega.Equal(false))
@@ -90,26 +90,25 @@ var test03UpdateYank = func() {
 			gomega.Expect(err).To(gomega.BeNil())
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(200))
 
+			time.Sleep(2 * time.Second)
 			// get package index
-			gomega.Eventually(func() bool {
-				req = client.NewRequest(
-					"GET",
-					fmt.Sprintf("/pkg/%s/%s/cargo/%s",
-						TestConfig.Namespace, TestConfig.RegistryName,
-						getIndexFilePathFromImageName(packageName),
-					),
-				)
-				resp, err = client.Do(req)
-				gomega.Expect(err).To(gomega.BeNil())
-				gomega.Expect(resp.StatusCode).To(gomega.Equal(200))
-				gomega.Expect(resp.Headers.Get("Content-Type")).To(gomega.Equal("text/plain; charset=utf-8"))
-				indexArr, err = getPackageIndexContentFromText(string(resp.Body))
-				gomega.Expect(err).To(gomega.BeNil())
-				gomega.Expect(len(indexArr)).To(gomega.Equal(1))
-				gomega.Expect(indexArr[0].Name).To(gomega.Equal(packageName))
-				gomega.Expect(indexArr[0].Version).To(gomega.Equal(version))
-				return indexArr[0].Yanked
-			}, 5, 1).Should(gomega.Equal(true))
+			req = client.NewRequest(
+				"GET",
+				fmt.Sprintf("/pkg/%s/%s/cargo/%s",
+					TestConfig.Namespace, TestConfig.RegistryName,
+					getIndexFilePathFromImageName(packageName),
+				),
+			)
+			resp, err = client.Do(req)
+			gomega.Expect(err).To(gomega.BeNil())
+			gomega.Expect(resp.StatusCode).To(gomega.Equal(200))
+			gomega.Expect(resp.Headers.Get("Content-Type")).To(gomega.Equal("text/plain; charset=utf-8"))
+			indexArr, err = getPackageIndexContentFromText(string(resp.Body))
+			gomega.Expect(err).To(gomega.BeNil())
+			gomega.Expect(len(indexArr)).To(gomega.Equal(1))
+			gomega.Expect(indexArr[0].Name).To(gomega.Equal(packageName))
+			gomega.Expect(indexArr[0].Version).To(gomega.Equal(version))
+			gomega.Expect(indexArr[0].Yanked).To(gomega.Equal(true))
 		})
 
 		ginkgo.It("should update yank to false for a Cargo package", func() {
@@ -125,26 +124,25 @@ var test03UpdateYank = func() {
 			gomega.Expect(err).To(gomega.BeNil())
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(200))
 
+			time.Sleep(2 * time.Second)
 			// get package index
-			gomega.Eventually(func() bool {
-				req = client.NewRequest(
-					"GET",
-					fmt.Sprintf("/pkg/%s/%s/cargo/%s",
-						TestConfig.Namespace, TestConfig.RegistryName,
-						getIndexFilePathFromImageName(packageName),
-					),
-				)
-				resp, err = client.Do(req)
-				gomega.Expect(err).To(gomega.BeNil())
-				gomega.Expect(resp.StatusCode).To(gomega.Equal(200))
-				gomega.Expect(resp.Headers.Get("Content-Type")).To(gomega.Equal("text/plain; charset=utf-8"))
-				indexArr, err := getPackageIndexContentFromText(string(resp.Body))
-				gomega.Expect(err).To(gomega.BeNil())
-				gomega.Expect(len(indexArr)).To(gomega.Equal(1))
-				gomega.Expect(indexArr[0].Name).To(gomega.Equal(packageName))
-				gomega.Expect(indexArr[0].Version).To(gomega.Equal(version))
-				return indexArr[0].Yanked
-			}, 5, 1).Should(gomega.Equal(false))
+			req = client.NewRequest(
+				"GET",
+				fmt.Sprintf("/pkg/%s/%s/cargo/%s",
+					TestConfig.Namespace, TestConfig.RegistryName,
+					getIndexFilePathFromImageName(packageName),
+				),
+			)
+			resp, err = client.Do(req)
+			gomega.Expect(err).To(gomega.BeNil())
+			gomega.Expect(resp.StatusCode).To(gomega.Equal(200))
+			gomega.Expect(resp.Headers.Get("Content-Type")).To(gomega.Equal("text/plain; charset=utf-8"))
+			indexArr, err := getPackageIndexContentFromText(string(resp.Body))
+			gomega.Expect(err).To(gomega.BeNil())
+			gomega.Expect(len(indexArr)).To(gomega.Equal(1))
+			gomega.Expect(indexArr[0].Name).To(gomega.Equal(packageName))
+			gomega.Expect(indexArr[0].Version).To(gomega.Equal(version))
+			gomega.Expect(indexArr[0].Yanked).To(gomega.Equal(false))
 		})
 	})
 }

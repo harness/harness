@@ -32,6 +32,7 @@ type TaskKind string
 
 const (
 	TaskKindBuildRegistryIndex TaskKind = "build_registry_index"
+	TaskKindBuildPackageIndex  TaskKind = "build_package_index"
 )
 
 type SourceType string
@@ -76,5 +77,12 @@ type SourceRef struct {
 type BuildRegistryIndexTaskPayload struct {
 	Key         string `json:"key"`
 	RegistryID  int64  `json:"registry_id"`
+	PrincipalID int64  `json:"principal_id"` // TODO: setting service principal ID to run the task
+}
+
+type BuildPackageIndexTaskPayload struct {
+	Key         string `json:"key"`
+	RegistryID  int64  `json:"registry_id"`
+	Image       string `json:"image"`
 	PrincipalID int64  `json:"principal_id"` // TODO: setting service principal ID to run the task
 }

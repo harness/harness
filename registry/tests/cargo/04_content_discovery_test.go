@@ -79,22 +79,20 @@ var test04ContentDiscovery = func() {
 
 			ginkgo.It("should find all versions in package index", func() {
 				// Use the unique artifact name and version defined earlier.
+				time.Sleep(2 * time.Second)
 				var indexArr []packageIndexMetadata
-				gomega.Eventually(func() int {
-					path := fmt.Sprintf("/pkg/%s/%s/cargo/%s",
-						TestConfig.Namespace, TestConfig.RegistryName,
-						getIndexFilePathFromImageName(artifactName),
-					)
-					req := client.NewRequest("GET", path)
-					resp, err := client.Do(req)
-					gomega.Expect(err).To(gomega.BeNil())
-					gomega.Expect(resp.StatusCode).To(gomega.Equal(200))
-					gomega.Expect(resp.Headers.Get("Content-Type")).To(gomega.Equal("text/plain; charset=utf-8"))
-					indexArr, err = getPackageIndexContentFromText(string(resp.Body))
-					gomega.Expect(err).To(gomega.BeNil())
-					return len(indexArr)
-				}, 5, 1).Should(gomega.Equal(2))
-
+				path := fmt.Sprintf("/pkg/%s/%s/cargo/%s",
+					TestConfig.Namespace, TestConfig.RegistryName,
+					getIndexFilePathFromImageName(artifactName),
+				)
+				req := client.NewRequest("GET", path)
+				resp, err := client.Do(req)
+				gomega.Expect(err).To(gomega.BeNil())
+				gomega.Expect(resp.StatusCode).To(gomega.Equal(200))
+				gomega.Expect(resp.Headers.Get("Content-Type")).To(gomega.Equal("text/plain; charset=utf-8"))
+				indexArr, err = getPackageIndexContentFromText(string(resp.Body))
+				gomega.Expect(err).To(gomega.BeNil())
+				gomega.Expect(len(indexArr)).To(gomega.Equal(2))
 				gomega.Expect(indexArr[0].Name).To(gomega.Equal(artifactName))
 				gomega.Expect(indexArr[0].Version).To(gomega.Equal(version1))
 				gomega.Expect(indexArr[0].Yanked).To(gomega.Equal(false))

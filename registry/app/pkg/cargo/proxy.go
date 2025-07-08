@@ -260,10 +260,7 @@ func (r *proxy) putFileToLocal(ctx context.Context, info *cargotype.ArtifactInfo
 	r.artifactEventReporter.ArtifactCreated(ctx, &payload)
 
 	// regenerate package index
-	err = r.localRegistryHelper.UpdatePackageIndex(ctx, *info)
-	if err != nil {
-		return fmt.Errorf("failed to update package index: %w", err)
-	}
+	r.localRegistryHelper.UpdatePackageIndex(ctx, *info)
 
 	log.Info().Msgf("Successfully uploaded file for pkg: %s , version: %s",
 		info.Image, info.Version)

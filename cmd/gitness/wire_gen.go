@@ -548,7 +548,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	registryHelper := cargo.LocalRegistryHelperProvider(fileManager, artifactRepository)
+	registryHelper := cargo.LocalRegistryHelperProvider(fileManager, artifactRepository, spaceFinder)
 	apiHandler := router.APIHandlerProvider(registryRepository, upstreamProxyConfigRepository, fileManager, tagRepository, manifestRepository, cleanupPolicyRepository, imageRepository, storageDriver, spaceFinder, transactor, authenticator, provider, authorizer, auditService, artifactRepository, webhooksRepository, webhooksExecutionRepository, service2, spacePathStore, artifactReporter, downloadStatRepository, config, registryBlobRepository, registryFinder, asyncprocessingReporter, registryHelper)
 	packageTagRepository := database2.ProvidePackageTagDao(db)
 	localBase := base.LocalBaseProvider(registryRepository, fileManager, transactor, imageRepository, artifactRepository, nodesRepository, packageTagRepository)
@@ -584,8 +584,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	rpmProxy := rpm.ProxyProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, localBase, rpmRegistryHelper, spaceFinder, secretService)
 	rpmController := rpm2.ControllerProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, rpmLocalRegistry, rpmProxy, asyncprocessingReporter)
 	rpmHandler := api2.NewRpmHandlerProvider(rpmController, packagesHandler)
-	cargoLocalRegistry := cargo2.LocalRegistryProvider(localBase, fileManager, upstreamProxyConfigRepository, transactor, registryRepository, imageRepository, artifactRepository, provider, registryHelper, artifactReporter)
-	cargoLocalRegistryHelper := cargo2.LocalRegistryHelperProvider(cargoLocalRegistry, localBase, registryHelper)
+	cargoLocalRegistry := cargo2.LocalRegistryProvider(localBase, fileManager, upstreamProxyConfigRepository, transactor, registryRepository, imageRepository, artifactRepository, provider, artifactReporter, asyncprocessingReporter)
+	cargoLocalRegistryHelper := cargo2.LocalRegistryHelperProvider(cargoLocalRegistry, localBase, asyncprocessingReporter)
 	cargoProxy := cargo2.ProxyProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, spaceFinder, secretService, cargoLocalRegistryHelper, artifactReporter)
 	cargoController := cargo3.ControllerProvider(upstreamProxyConfigRepository, registryRepository, registryFinder, imageRepository, artifactRepository, fileManager, transactor, provider, cargoLocalRegistry, cargoProxy)
 	cargoHandler := api2.NewCargoHandlerProvider(cargoController, packagesHandler)
@@ -715,7 +715,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	asyncprocessingConfig := asyncprocessing2.ProvideRegistryPostProcessingConfig(config)
-	asyncprocessingService, err := asyncprocessing2.ProvideService(ctx, transactor, rpmHelper, lockerLocker, readerFactory10, asyncprocessingConfig, registryRepository, taskRepository, taskSourceRepository, taskEventRepository, eventsSystem, asyncprocessingReporter)
+	asyncprocessingService, err := asyncprocessing2.ProvideService(ctx, transactor, rpmHelper, registryHelper, lockerLocker, readerFactory10, asyncprocessingConfig, registryRepository, taskRepository, taskSourceRepository, taskEventRepository, eventsSystem, asyncprocessingReporter)
 	if err != nil {
 		return nil, err
 	}

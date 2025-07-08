@@ -55,13 +55,6 @@ cp test_output.txt "$MAVEN_ORIGINAL_DIR/" || echo "Warning: Could not copy test 
 # Return to the original directory after Maven tests
 cd "$MAVEN_ORIGINAL_DIR"
 
-# Display test output
-if [ -f "test_output.txt" ]; then
-    cat "test_output.txt"
-else
-    echo "Warning: test_output.txt not found"
-fi
-
 bash "./registry/tests/scripts/generate_report.sh" "test_output.txt" "maven"
 
 # Check for JUnit report generator script in Maven test directory

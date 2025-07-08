@@ -18,10 +18,10 @@ import (
 	"github.com/harness/gitness/app/services/refcache"
 	urlprovider "github.com/harness/gitness/app/url"
 	registryevents "github.com/harness/gitness/registry/app/events/artifact"
+	"github.com/harness/gitness/registry/app/events/asyncprocessing"
 	"github.com/harness/gitness/registry/app/pkg/base"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
-	"github.com/harness/gitness/registry/app/utils/cargo"
 	"github.com/harness/gitness/secret"
 	"github.com/harness/gitness/store/database/dbtx"
 
@@ -37,12 +37,12 @@ func LocalRegistryProvider(
 	imageDao store.ImageRepository,
 	artifactDao store.ArtifactRepository,
 	urlProvider urlprovider.Provider,
-	registryHelper cargo.RegistryHelper,
 	artifactEventReporter *registryevents.Reporter,
+	postProcessingReporter *asyncprocessing.Reporter,
 ) LocalRegistry {
 	registry := NewLocalRegistry(
 		localBase, fileManager, proxyStore, tx, registryDao, imageDao, artifactDao,
-		urlProvider, registryHelper, artifactEventReporter,
+		urlProvider, artifactEventReporter, postProcessingReporter,
 	)
 	base.Register(registry)
 	return registry
@@ -70,9 +70,9 @@ func ProxyProvider(
 func LocalRegistryHelperProvider(
 	localRegistry LocalRegistry,
 	localBase base.LocalBase,
-	registryHelper cargo.RegistryHelper,
+	postProcessingReporter *asyncprocessing.Reporter,
 ) LocalRegistryHelper {
-	return NewLocalRegistryHelper(localRegistry, localBase, registryHelper)
+	return NewLocalRegistryHelper(localRegistry, localBase, postProcessingReporter)
 }
 
 var WireSet = wire.NewSet(LocalRegistryProvider, ProxyProvider, LocalRegistryHelperProvider)

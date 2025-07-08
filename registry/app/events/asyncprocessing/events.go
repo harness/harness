@@ -74,6 +74,48 @@ func (r *Reporter) BuildRegistryIndexWithPrincipal(
 	}
 }
 
+func (r *Reporter) BuildPackageIndex(ctx context.Context, registryID int64, image string) {
+	session, _ := request.AuthSessionFrom(ctx)
+	principalID := session.Principal.ID
+	r.BuildPackageIndexWithPrincipal(ctx, registryID, image, principalID)
+}
+
+func (r *Reporter) BuildPackageIndexWithPrincipal(
+	ctx context.Context, registryID int64, image string, principalID int64,
+) {
+	key := fmt.Sprintf("package_%d_%s", registryID, image)
+	payload, err := json.Marshal(&types.BuildPackageIndexTaskPayload{
+		Key:         key,
+		RegistryID:  registryID,
+		Image:       image,
+		PrincipalID: principalID,
+	})
+	if err != nil {
+		log.Ctx(ctx).Err(err).Msgf("failed to send execute async task event")
+	}
+	task := &types.Task{
+		Key:     key,
+		Kind:    types.TaskKindBuildPackageIndex,
+		Payload: payload,
+	}
+
+	sources := make([]types.SourceRef, 0)
+	sources = append(sources, types.SourceRef{Type: types.SourceTypeRegistry, ID: registryID})
+	shouldEnqueue, err := r.upsertTask(ctx, task, sources)
+
+	if err == nil && shouldEnqueue {
+		payload := &ExecuteAsyncTaskPayload{
+			TaskKey: task.Key,
+		}
+		eventID, err := events.ReporterSendEvent(r.innerReporter, ctx, ExecuteAsyncTask, payload)
+		if err != nil {
+			log.Ctx(ctx).Err(err).Msgf("failed to send execute async task event")
+			return
+		}
+		log.Ctx(ctx).Debug().Msgf("reported execute async task event with id '%s'", eventID)
+	}
+}
+
 //nolint:nestif
 func (r *Reporter) upsertTask(ctx context.Context, task *types.Task, sources []types.SourceRef) (bool, error) {
 	shouldEnqueue := false

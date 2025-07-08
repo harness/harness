@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/events/asyncprocessing"
 	"github.com/harness/gitness/registry/app/store"
+	"github.com/harness/gitness/registry/app/utils/cargo"
 	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/stream"
@@ -42,6 +43,7 @@ const (
 type Service struct {
 	tx                     dbtx.Transactor
 	rpmRegistryHelper      RpmHelper
+	cargoRegistryHelper    cargo.RegistryHelper
 	locker                 *locker.Locker
 	registryDao            store.RegistryRepository
 	taskRepository         store.TaskRepository
@@ -55,6 +57,7 @@ func NewService(
 	ctx context.Context,
 	tx dbtx.Transactor,
 	rpmRegistryHelper RpmHelper,
+	cargoRegistryHelper cargo.RegistryHelper,
 	locker *locker.Locker,
 	artifactsReaderFactory *events.ReaderFactory[*asyncprocessing.Reader],
 	config Config,
@@ -74,6 +77,7 @@ func NewService(
 	}
 	s := &Service{
 		rpmRegistryHelper:      rpmRegistryHelper,
+		cargoRegistryHelper:    cargoRegistryHelper,
 		locker:                 locker,
 		tx:                     tx,
 		registryDao:            registryDao,
@@ -201,6 +205,33 @@ func (s *Service) handleEventExecuteAsyncTask(
 		default:
 			log.Ctx(ctx).Error().Msgf("unsupported package type [%s] for registry [%d] in task [%s]",
 				registry.PackageType, payload.RegistryID, task.Key)
+		}
+	} else if task.Kind == types.TaskKindBuildPackageIndex {
+		var payload types.BuildPackageIndexTaskPayload
+		err = json.Unmarshal(task.Payload, &payload)
+		if err != nil {
+			log.Ctx(ctx).Error().Msgf("failed to unmarshal task payload for task [%s]: %v", task.Key, err)
+			return fmt.Errorf("failed to unmarshal task payload: %w", err)
+		}
+		registry, err := s.registryDao.Get(ctx, payload.RegistryID)
+		if err != nil {
+			log.Ctx(ctx).Error().Msgf("failed to get registry [%d] for registry build index event: %s, err: %v",
+				payload.RegistryID, e.ID, err)
+			return fmt.Errorf("failed to get registry: %w", err)
+		}
+		//nolint:exhaustive
+		switch registry.PackageType {
+		case artifact.PackageTypeCARGO:
+			err := s.cargoRegistryHelper.UpdatePackageIndex(
+				ctx, payload.PrincipalID, registry.RootParentID, registry.ID, payload.Image,
+			)
+			if err != nil {
+				processingErr = fmt.Errorf("failed to build CARGO package index for registry [%d] package [%s]: %w",
+					payload.RegistryID, payload.Image, err)
+			}
+		default:
+			log.Ctx(ctx).Error().Msgf("unsupported package type [%s] for registry [%d] and image [%s] in task [%s]",
+				registry.PackageType, payload.RegistryID, payload.Image, task.Key)
 		}
 	}
 

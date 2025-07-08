@@ -125,9 +125,7 @@ func (c *APIController) DeleteArtifactVersion(ctx context.Context, r artifact.De
 			ctx, session.Principal.ID, regInfo.RegistryID, regInfo.PackageType,
 			artifactName, versionName,
 		)
-		err = c.CargoRegistryHelper.UpdatePackageIndex(
-			ctx, regInfo.RootIdentifier, regInfo.ParentID, regInfo.RegistryID, artifactName,
-		)
+		c.PostProcessingReporter.BuildPackageIndex(ctx, regInfo.RegistryID, artifactName)
 	default:
 		err = fmt.Errorf("unsupported package type: %s", regInfo.PackageType)
 	}

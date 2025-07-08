@@ -15,6 +15,7 @@
 package cargo
 
 import (
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
 
@@ -24,8 +25,9 @@ import (
 func LocalRegistryHelperProvider(
 	fileManager filemanager.FileManager,
 	artifactDao store.ArtifactRepository,
+	spaceFinder refcache.SpaceFinder,
 ) RegistryHelper {
-	return NewRegistryHelper(fileManager, artifactDao)
+	return NewRegistryHelper(fileManager, artifactDao, spaceFinder)
 }
 
 var WireSet = wire.NewSet(LocalRegistryHelperProvider)

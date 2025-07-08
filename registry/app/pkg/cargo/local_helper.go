@@ -19,12 +19,12 @@ import (
 	"io"
 	"strings"
 
+	"github.com/harness/gitness/registry/app/events/asyncprocessing"
 	cargometadata "github.com/harness/gitness/registry/app/metadata/cargo"
 	"github.com/harness/gitness/registry/app/pkg/base"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	cargotype "github.com/harness/gitness/registry/app/pkg/types/cargo"
 	"github.com/harness/gitness/registry/app/storage"
-	"github.com/harness/gitness/registry/app/utils/cargo"
 	"github.com/harness/gitness/registry/types"
 )
 
@@ -39,23 +39,23 @@ type LocalRegistryHelper interface {
 	) (*commons.ResponseHeaders, string, int64, bool, error)
 	UpdatePackageIndex(
 		ctx context.Context, info cargotype.ArtifactInfo,
-	) error
+	)
 }
 
 type localRegistryHelper struct {
-	localRegistry  LocalRegistry
-	localBase      base.LocalBase
-	registryHelper cargo.RegistryHelper
+	localRegistry          LocalRegistry
+	localBase              base.LocalBase
+	postProcessingReporter *asyncprocessing.Reporter
 }
 
 func NewLocalRegistryHelper(
 	localRegistry LocalRegistry, localBase base.LocalBase,
-	registryHelper cargo.RegistryHelper,
+	postProcessingReporter *asyncprocessing.Reporter,
 ) LocalRegistryHelper {
 	return &localRegistryHelper{
-		localRegistry:  localRegistry,
-		localBase:      localBase,
-		registryHelper: registryHelper,
+		localRegistry:          localRegistry,
+		localBase:              localBase,
+		postProcessingReporter: postProcessingReporter,
 	}
 }
 
@@ -71,8 +71,8 @@ func (h *localRegistryHelper) DownloadFile(ctx context.Context, info cargotype.A
 
 func (h *localRegistryHelper) UpdatePackageIndex(
 	ctx context.Context, info cargotype.ArtifactInfo,
-) error {
-	return h.registryHelper.UpdatePackageIndex(ctx, info.RootIdentifier, info.RootParentID, info.RegistryID, info.Image)
+) {
+	h.postProcessingReporter.BuildPackageIndex(ctx, info.RegistryID, info.Image)
 }
 
 func (h *localRegistryHelper) MoveTempFile(

@@ -25,6 +25,7 @@ import (
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	registryevents "github.com/harness/gitness/registry/app/events/artifact"
+	"github.com/harness/gitness/registry/app/events/asyncprocessing"
 	cargometadata "github.com/harness/gitness/registry/app/metadata/cargo"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/base"
@@ -33,7 +34,6 @@ import (
 	cargotype "github.com/harness/gitness/registry/app/pkg/types/cargo"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
-	"github.com/harness/gitness/registry/app/utils/cargo"
 	"github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/store/database/dbtx"
 )
@@ -42,16 +42,16 @@ var _ pkg.Artifact = (*localRegistry)(nil)
 var _ Registry = (*localRegistry)(nil)
 
 type localRegistry struct {
-	localBase             base.LocalBase
-	fileManager           filemanager.FileManager
-	proxyStore            store.UpstreamProxyConfigRepository
-	tx                    dbtx.Transactor
-	registryDao           store.RegistryRepository
-	imageDao              store.ImageRepository
-	artifactDao           store.ArtifactRepository
-	urlProvider           urlprovider.Provider
-	registryHelper        cargo.RegistryHelper
-	artifactEventReporter *registryevents.Reporter
+	localBase              base.LocalBase
+	fileManager            filemanager.FileManager
+	proxyStore             store.UpstreamProxyConfigRepository
+	tx                     dbtx.Transactor
+	registryDao            store.RegistryRepository
+	imageDao               store.ImageRepository
+	artifactDao            store.ArtifactRepository
+	urlProvider            urlprovider.Provider
+	artifactEventReporter  *registryevents.Reporter
+	postProcessingReporter *asyncprocessing.Reporter
 }
 
 type LocalRegistry interface {
@@ -67,20 +67,20 @@ func NewLocalRegistry(
 	imageDao store.ImageRepository,
 	artifactDao store.ArtifactRepository,
 	urlProvider urlprovider.Provider,
-	registryHelper cargo.RegistryHelper,
 	artifactEventReporter *registryevents.Reporter,
+	postProcessingReporter *asyncprocessing.Reporter,
 ) LocalRegistry {
 	return &localRegistry{
-		localBase:             localBase,
-		fileManager:           fileManager,
-		proxyStore:            proxyStore,
-		tx:                    tx,
-		registryDao:           registryDao,
-		imageDao:              imageDao,
-		artifactDao:           artifactDao,
-		urlProvider:           urlProvider,
-		registryHelper:        registryHelper,
-		artifactEventReporter: artifactEventReporter,
+		localBase:              localBase,
+		fileManager:            fileManager,
+		proxyStore:             proxyStore,
+		tx:                     tx,
+		registryDao:            registryDao,
+		imageDao:               imageDao,
+		artifactDao:            artifactDao,
+		urlProvider:            urlProvider,
+		artifactEventReporter:  artifactEventReporter,
+		postProcessingReporter: postProcessingReporter,
 	}
 }
 
@@ -103,21 +103,10 @@ func (c *localRegistry) UploadPackage(
 	}
 
 	// publish artifact created event
-	session, _ := request.AuthSessionFrom(ctx)
-	payload := webhook.GetArtifactCreatedPayloadForCommonArtifacts(
-		session.Principal.ID,
-		info.RegistryID,
-		artifact.PackageTypeCARGO,
-		info.Image,
-		info.Version,
-	)
-	c.artifactEventReporter.ArtifactCreated(ctx, &payload)
+	c.publishArtifactCreatedEvent(ctx, info)
 
 	// regenerate package index for cargo client to consume
-	err = c.regeneratePackageIndex(ctx, info)
-	if err != nil {
-		return nil, fmt.Errorf("failed to update package index: %w", err)
-	}
+	c.regeneratePackageIndex(ctx, info)
 	return response, nil
 }
 
@@ -140,16 +129,24 @@ func (c *localRegistry) uploadFile(
 	return response, nil
 }
 
+func (c *localRegistry) publishArtifactCreatedEvent(
+	ctx context.Context, info cargotype.ArtifactInfo,
+) {
+	session, _ := request.AuthSessionFrom(ctx)
+	payload := webhook.GetArtifactCreatedPayloadForCommonArtifacts(
+		session.Principal.ID,
+		info.RegistryID,
+		artifact.PackageTypeCARGO,
+		info.Image,
+		info.Version,
+	)
+	c.artifactEventReporter.ArtifactCreated(ctx, &payload)
+}
+
 func (c *localRegistry) regeneratePackageIndex(
 	ctx context.Context, info cargotype.ArtifactInfo,
-) error {
-	err := c.registryHelper.UpdatePackageIndex(
-		ctx, info.RootIdentifier, info.RootParentID, info.RegistryID, info.Image,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to update package index: %w", err)
-	}
-	return nil
+) {
+	c.postProcessingReporter.BuildPackageIndex(ctx, info.RegistryID, info.Image)
 }
 
 func (c *localRegistry) DownloadPackageIndex(
@@ -205,10 +202,7 @@ func (c *localRegistry) UpdateYank(
 	}
 
 	// regenerate package index for cargo client to consume
-	err = c.regeneratePackageIndex(ctx, info)
-	if err != nil {
-		return responseHeaders, fmt.Errorf("failed to update package index: %w", err)
-	}
+	c.regeneratePackageIndex(ctx, info)
 	responseHeaders.Code = http.StatusOK
 	return responseHeaders, nil
 }
@@ -250,10 +244,7 @@ func (c *localRegistry) RegeneratePackageIndex(
 	}
 
 	// regenerate package index for cargo client to consume
-	err := c.regeneratePackageIndex(ctx, info)
-	if err != nil {
-		return responseHeaders, fmt.Errorf("failed to update package index: %w", err)
-	}
+	c.regeneratePackageIndex(ctx, info)
 	responseHeaders.Code = http.StatusOK
 	return responseHeaders, nil
 }
