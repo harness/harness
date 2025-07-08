@@ -58,12 +58,12 @@ export const getStatusColor = (status?: EnumGitspaceStateType) => {
   switch (status) {
     case GitspaceStatus.RUNNING:
       return '#42AB45'
+    case GitspaceStatus.CLEANING:
     case GitspaceStatus.STOPPING:
       return '#FF832B'
     case GitspaceStatus.STOPPED:
       return '#D0D0D9'
     case GitspaceStatus.UNINITIALIZED:
-    case GitspaceStatus.CLEANING:
       return '#000000'
     case GitspaceStatus.ERROR:
       return '#FF0000'
