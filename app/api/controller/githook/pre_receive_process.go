@@ -33,8 +33,9 @@ func (c *Controller) processObjects(
 	repo *types.RepositoryCore,
 	principal *types.Principal,
 	refUpdates changedRefs,
-	protectionRules []types.RuleInfoInternal,
-	isRepoOwner bool,
+	sizeLimit int64,
+	principalCommitterMatch bool,
+	violationsInput *protection.PushViolationsInput,
 	in types.GithookPreReceiveInput,
 	output *hook.Output,
 ) error {
@@ -42,22 +43,8 @@ func (c *Controller) processObjects(
 		return nil
 	}
 
-	pushProtection := c.protectionManager.FilterCreatePushProtection(protectionRules)
-	out, _, err := pushProtection.PushVerify(
-		ctx,
-		protection.PushVerifyInput{
-			ResolveUserGroupID: c.userGroupService.ListUserIDsByGroupIDs,
-			Actor:              principal,
-			IsRepoOwner:        isRepoOwner,
-			RepoID:             repo.ID,
-		},
-	)
-	if err != nil {
-		return fmt.Errorf("failed to verify git objects: %w", err)
-	}
-
-	var sizeLimit int64
-	sizeLimit, err = settings.RepoGet(
+	// TODO: Remove this once push rules implementation and migration are complete.
+	settingsSizeLimit, err := settings.RepoGet(
 		ctx,
 		c.settings,
 		repo.ID,
@@ -67,21 +54,24 @@ func (c *Controller) processObjects(
 	if err != nil {
 		return fmt.Errorf("failed to check settings for file size limit: %w", err)
 	}
-	if sizeLimit == 0 || (out.FileSizeLimit > 0 && sizeLimit > out.FileSizeLimit) {
-		sizeLimit = out.FileSizeLimit
+
+	if sizeLimit == 0 || (settingsSizeLimit > 0 && sizeLimit > settingsSizeLimit) {
+		sizeLimit = settingsSizeLimit
 	}
 
-	principalCommitterMatch, err := settings.RepoGet(
-		ctx,
-		c.settings,
-		repo.ID,
-		settings.KeyPrincipalCommitterMatch,
-		settings.DefaultPrincipalCommitterMatch,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to check settings for principal committer match: %w", err)
+	// TODO: Remove this once push rules implementation and migration are complete.
+	if !principalCommitterMatch {
+		principalCommitterMatch, err = settings.RepoGet(
+			ctx,
+			c.settings,
+			repo.ID,
+			settings.KeyPrincipalCommitterMatch,
+			settings.DefaultPrincipalCommitterMatch,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to check settings for principal committer match: %w", err)
+		}
 	}
-	principalCommitterMatch = principalCommitterMatch || out.PrincipalCommitterMatch
 
 	gitLFSEnabled, err := settings.RepoGet(
 		ctx,
@@ -173,6 +163,13 @@ func (c *Controller) processObjects(
 				preReceiveObjsOut.FindLFSPointersOutput.Total,
 			)
 		}
+	}
+
+	violationsInput.FileSizeLimit = sizeLimit
+	violationsInput.FindOversizeFilesOutput = preReceiveObjsOut.FindOversizeFilesOutput
+	violationsInput.PrincipalCommitterMatch = principalCommitterMatch
+	if preReceiveObjsOut.FindCommitterMismatchOutput != nil {
+		violationsInput.CommitterMismatchCount = preReceiveObjsOut.FindCommitterMismatchOutput.Total
 	}
 
 	return nil

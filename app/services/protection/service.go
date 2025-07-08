@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/types"
@@ -257,21 +258,44 @@ func (m *Manager) FilterCreatePushProtection(rules []types.RuleInfoInternal) Pus
 	}
 }
 
+func printRuleScope(r types.RuleInfo) string {
+	switch {
+	case r.RepoPath != "":
+		return fmt.Sprintf("repository %q", r.RepoPath)
+	case r.SpacePath != "":
+		return fmt.Sprintf("scope %q", r.SpacePath)
+	default:
+		return "unknown scope"
+	}
+}
+
+func PrintViolations(violations []types.RuleViolations) string {
+	var builder strings.Builder
+
+	for _, violation := range violations {
+		fmt.Fprintf(
+			&builder,
+			"Operation violates %s protection rule %q defined in %s with violations:\n\n",
+			violation.Rule.Type,
+			violation.Rule.Identifier,
+			printRuleScope(violation.Rule),
+		)
+
+		for _, v := range violation.Violations {
+			builder.WriteString("  " + v.Message)
+			builder.WriteString("\n\n")
+		}
+
+		builder.WriteByte('\n')
+	}
+
+	return strings.TrimRight(builder.String(), "\n")
+}
+
 // GenerateErrorMessageForBlockingViolations generates an error message for a given slice of rule violations.
 // It simply takes the first blocking rule that has a violation and prints that, with indication if further
 // rules were violated.
 func GenerateErrorMessageForBlockingViolations(ruleViolations []types.RuleViolations) string {
-	printRuleScope := func(r types.RuleInfo) string {
-		switch {
-		case r.RepoPath != "":
-			return fmt.Sprintf("repository %q", r.RepoPath)
-		case r.SpacePath != "":
-			return fmt.Sprintf("space %q", r.SpacePath)
-		default:
-			return "unknown scope"
-		}
-	}
-
 	selectedIDX := -1
 	blockingRuleViolationCnt := 0
 	for i := range ruleViolations {

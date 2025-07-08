@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/git/hook"
@@ -38,20 +39,25 @@ func (c *Controller) scanSecrets(
 	ctx context.Context,
 	rgit RestrictedGIT,
 	repo *types.RepositoryCore,
+	scanningEnabled bool,
+	violationsInput *protection.PushViolationsInput,
 	in types.GithookPreReceiveInput,
 	output *hook.Output,
 ) error {
-	// check if scanning is enabled on the repo
-	scanningEnabled, err := settings.RepoGet(
-		ctx,
-		c.settings,
-		repo.ID,
-		settings.KeySecretScanningEnabled,
-		settings.DefaultSecretScanningEnabled,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to check settings whether secret scanning is enabled: %w", err)
+	if !scanningEnabled {
+		var err error
+		scanningEnabled, err = settings.RepoGet(
+			ctx,
+			c.settings,
+			repo.ID,
+			settings.KeySecretScanningEnabled,
+			settings.DefaultSecretScanningEnabled,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to check settings whether secret scanning is enabled: %w", err)
+		}
 	}
+
 	if !scanningEnabled {
 		return nil
 	}
@@ -75,6 +81,9 @@ func (c *Controller) scanSecrets(
 	if len(findings) > 0 {
 		output.Error = ptr.String("Changes blocked by security scan results")
 	}
+
+	violationsInput.SecretScanningEnabled = scanningEnabled
+	violationsInput.FoundSecretCount = len(findings)
 
 	return nil
 }

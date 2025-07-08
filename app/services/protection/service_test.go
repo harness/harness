@@ -176,7 +176,7 @@ func TestGenerateErrorMessageForBlockingViolations(t *testing.T) {
 					},
 				},
 			},
-			expected: `Operation violates branch protection rule "rule1" in space "space/path1"`,
+			expected: `Operation violates branch protection rule "rule1" in scope "space/path1"`,
 		},
 		{
 			name: "multiple violations without details",
@@ -199,7 +199,7 @@ func TestGenerateErrorMessageForBlockingViolations(t *testing.T) {
 				},
 			},
 			expected: `Operation violates 2 protection rules, including branch protection rule "rule1" ` +
-				`in space "space/path1"`,
+				`in scope "space/path1"`,
 		}, {
 			name: "single violation with details",
 			violations: []types.RuleViolations{

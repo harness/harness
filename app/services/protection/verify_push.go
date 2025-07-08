@@ -17,7 +17,14 @@ package protection
 import (
 	"context"
 
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
+)
+
+const (
+	codePushFileSizeLimit           = "push.file.size.limit"
+	codePushPrincipalCommitterMatch = "push.principal.committer.match"
+	codeSecretScanningEnabled       = "push.secret.scanning.enabled"
 )
 
 type (
@@ -28,9 +35,25 @@ type (
 		RepoID             int64
 	}
 
+	PushViolationsInput struct {
+		Protections             map[int64]PushProtection
+		FileSizeLimit           int64
+		FindOversizeFilesOutput *git.FindOversizeFilesOutput
+		PrincipalCommitterMatch bool
+		CommitterMismatchCount  int64
+		SecretScanningEnabled   bool
+		FoundSecretCount        int
+	}
+
+	PushViolationsOutput struct {
+		Violations []types.RuleViolations
+	}
+
 	PushVerifyOutput struct {
 		FileSizeLimit           int64
 		PrincipalCommitterMatch bool
+		SecretScanningEnabled   bool
+		Protections             map[int64]PushProtection
 	}
 
 	PushVerifier interface {
@@ -38,13 +61,22 @@ type (
 			ctx context.Context,
 			in PushVerifyInput,
 		) (PushVerifyOutput, []types.RuleViolations, error)
+
+		Violations(in *PushViolationsInput) (PushViolationsOutput, error)
 	}
 
 	DefPush struct {
 		FileSizeLimit           int64 `json:"file_size_limit"`
 		PrincipalCommitterMatch bool  `json:"principal_committer_match"`
+		SecretScanningEnabled   bool  `json:"secret_scanning_enabled"`
 	}
 )
+
+func (in *PushViolationsInput) HasViolations() bool {
+	return in.FindOversizeFilesOutput != nil && (in.FindOversizeFilesOutput.Total > 0) ||
+		in.CommitterMismatchCount > 0 ||
+		in.FoundSecretCount > 0
+}
 
 func (v *DefPush) PushVerify(
 	_ context.Context,
@@ -53,5 +85,6 @@ func (v *DefPush) PushVerify(
 	return PushVerifyOutput{
 		FileSizeLimit:           v.FileSizeLimit,
 		PrincipalCommitterMatch: v.PrincipalCommitterMatch,
+		SecretScanningEnabled:   v.SecretScanningEnabled,
 	}, nil, nil
 }

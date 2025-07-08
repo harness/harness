@@ -34,6 +34,7 @@ func (s pushRuleSet) PushVerify(
 ) (PushVerifyOutput, []types.RuleViolations, error) {
 	var violations []types.RuleViolations
 	var out PushVerifyOutput
+	out.Protections = make(map[int64]PushProtection, len(s.rules))
 
 	for _, r := range s.rules {
 		protection, err := s.manager.FromJSON(r.Type, r.Definition, false)
@@ -52,6 +53,8 @@ func (s pushRuleSet) PushVerify(
 			)
 		}
 
+		out.Protections[r.ID] = pushProtection
+
 		rOut, rViolations, err := pushProtection.PushVerify(ctx, in)
 		if err != nil {
 			return out, nil, fmt.Errorf("failed to process push rule in push rule set: %w", err)
@@ -64,10 +67,29 @@ func (s pushRuleSet) PushVerify(
 
 		out.PrincipalCommitterMatch = out.PrincipalCommitterMatch || rOut.PrincipalCommitterMatch
 
+		out.SecretScanningEnabled = out.SecretScanningEnabled || rOut.SecretScanningEnabled
+
 		violations = append(violations, rViolations...)
 	}
 
 	return out, violations, nil
+}
+
+func (s pushRuleSet) Violations(in *PushViolationsInput) (PushViolationsOutput, error) {
+	output := PushViolationsOutput{}
+
+	for _, r := range s.rules {
+		out, err := in.Protections[r.ID].Violations(in)
+		if err != nil {
+			return PushViolationsOutput{}, fmt.Errorf(
+				"failed to backfill violations: %w", err,
+			)
+		}
+
+		output.Violations = append(output.Violations, backFillRule(out.Violations, r.RuleInfo)...)
+	}
+
+	return output, nil
 }
 
 func (s pushRuleSet) UserIDs() ([]int64, error) {

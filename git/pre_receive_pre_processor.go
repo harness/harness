@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"slices"
 	"strings"
 
 	"github.com/harness/gitness/errors"
@@ -95,6 +96,11 @@ func (s *Service) ProcessPreReceiveObjects(
 	ctx context.Context,
 	params ProcessPreReceiveObjectsParams,
 ) (ProcessPreReceiveObjectsOutput, error) {
+	if params.FindOversizeFilesParams == nil && params.FindCommitterMismatchParams == nil &&
+		params.FindLFSPointersParams == nil {
+		return ProcessPreReceiveObjectsOutput{}, nil
+	}
+
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
 	var objects []parser.BatchCheckObject
@@ -105,6 +111,18 @@ func (s *Service) ProcessPreReceiveObjects(
 		}
 		objects = append(objects, objs...)
 	}
+
+	// sort objects in descending order by Size (largest to smallest)
+	slices.SortFunc(objects, func(a, b parser.BatchCheckObject) int {
+		switch {
+		case a.Size > b.Size:
+			return -1
+		case a.Size < b.Size:
+			return 1
+		default:
+			return 0
+		}
+	})
 
 	var output ProcessPreReceiveObjectsOutput
 

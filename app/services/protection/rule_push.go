@@ -52,6 +52,42 @@ func (p *Push) PushVerify(
 	return out, violations, nil
 }
 
+func (p *Push) Violations(in *PushViolationsInput) (PushViolationsOutput, error) {
+	var violations types.RuleViolations
+
+	if in.FindOversizeFilesOutput != nil {
+		for _, fileInfos := range in.FindOversizeFilesOutput.FileInfos {
+			if fileInfos.Size > p.Push.FileSizeLimit {
+				violations.Addf(codePushFileSizeLimit,
+					"Found file(s) exceeding the filesize limit of %d.",
+					p.Push.FileSizeLimit,
+				)
+				break
+			}
+		}
+	}
+
+	if p.Push.PrincipalCommitterMatch && in.PrincipalCommitterMatch &&
+		in.CommitterMismatchCount > 0 {
+		violations.Addf(codePushPrincipalCommitterMatch,
+			"Committer verification failed for total of %d commit(s).",
+			in.CommitterMismatchCount,
+		)
+	}
+
+	if p.Push.SecretScanningEnabled && in.SecretScanningEnabled &&
+		in.FoundSecretCount > 0 {
+		violations.Addf(codeSecretScanningEnabled,
+			"Found total of %d new secret(s)",
+			in.FoundSecretCount,
+		)
+	}
+
+	return PushViolationsOutput{
+		Violations: []types.RuleViolations{violations},
+	}, nil
+}
+
 func (p *Push) UserIDs() ([]int64, error) {
 	return p.Bypass.UserIDs, nil
 }

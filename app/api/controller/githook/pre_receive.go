@@ -85,11 +85,7 @@ func (c *Controller) PreReceive(
 		return output, nil
 	}
 
-	var principal *types.Principal
-	var protectionRules []types.RuleInfoInternal
-	var isRepoOwner bool
-
-	protectionRules, err = c.protectionManager.ListRepoRules(
+	protectionRules, err := c.protectionManager.ListRepoRules(
 		ctx, repo.ID, protection.TypeBranch, protection.TypeTag, protection.TypePush,
 	)
 	if err != nil {
@@ -98,6 +94,8 @@ func (c *Controller) PreReceive(
 		)
 	}
 
+	var principal *types.Principal
+	var isRepoOwner bool
 	// For internal calls - through the application interface (API) - no need to verify protection rules.
 	if !in.Internal && repo.State == enum.RepoStateActive {
 		// TODO: use store.PrincipalInfoCache once we abstracted principals.
@@ -123,14 +121,6 @@ func (c *Controller) PreReceive(
 		}
 	}
 
-	err = c.scanSecrets(ctx, rgit, repo, in, &output)
-	if err != nil {
-		return hook.Output{}, fmt.Errorf("failed to scan secrets: %w", err)
-	}
-	if output.Error != nil {
-		return output, nil
-	}
-
 	err = c.preReceiveExtender.Extend(ctx, rgit, session, repo, in, &output)
 	if err != nil {
 		return hook.Output{}, fmt.Errorf("failed to extend pre-receive hook: %w", err)
@@ -139,10 +129,47 @@ func (c *Controller) PreReceive(
 		return output, nil
 	}
 
+	pushProtection := c.protectionManager.FilterCreatePushProtection(protectionRules)
+	out, _, err := pushProtection.PushVerify(
+		ctx,
+		protection.PushVerifyInput{
+			ResolveUserGroupID: c.userGroupService.ListUserIDsByGroupIDs,
+			Actor:              principal,
+			IsRepoOwner:        isRepoOwner,
+			RepoID:             repo.ID,
+		},
+	)
+	if err != nil {
+		return hook.Output{}, fmt.Errorf("failed to verify git objects: %w", err)
+	}
+
+	violationsInput := &protection.PushViolationsInput{
+		Protections: out.Protections,
+	}
+
+	err = c.scanSecrets(ctx, rgit, repo, out.SecretScanningEnabled, violationsInput, in, &output)
+	if err != nil {
+		return hook.Output{}, fmt.Errorf("failed to scan secrets: %w", err)
+	}
+
 	if err = c.processObjects(
-		ctx, rgit, repo, principal, refUpdates, protectionRules, isRepoOwner, in, &output,
+		ctx, rgit,
+		repo, principal, refUpdates,
+		out.FileSizeLimit, out.PrincipalCommitterMatch, violationsInput,
+		in, &output,
 	); err != nil {
 		return hook.Output{}, fmt.Errorf("failed to process pre-receive objects: %w", err)
+	}
+
+	if violationsInput.HasViolations() {
+		violations, err := pushProtection.Violations(violationsInput)
+		if err != nil {
+			return hook.Output{}, fmt.Errorf("failed to backfill violations: %w", err)
+		}
+
+		if len(violations.Violations) > 0 {
+			output.Messages = append(output.Messages, protection.PrintViolations(violations.Violations))
+		}
 	}
 
 	return output, nil
