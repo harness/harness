@@ -1445,6 +1445,7 @@ export interface StringsMap {
   'cde.gitspaceInfraHome.proxySubnet': string
   'cde.gitspaceInfraHome.region': string
   'cde.gitspaceInfraHome.runnerVMRegion': string
+  'cde.gitspaceInfraHome.runnerVMZone': string
   'cde.gitspaceInfraHome.troubleshoot': string
   'cde.gitspaceInfraHome.waitingForConnection': string
   'cde.gitspaceInfraHome.waitingMessage': string

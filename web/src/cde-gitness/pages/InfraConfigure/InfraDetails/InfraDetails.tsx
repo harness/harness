@@ -25,7 +25,7 @@ interface InfraDetailsFormikProps {
   instances?: string
   project?: string
   delegateSelector?: string[]
-  runner_vm_region?: string[]
+  runner?: { region: string; zone: string }
 }
 
 const InfraDetails = () => {
@@ -69,7 +69,7 @@ const InfraDetails = () => {
         instances: metadata?.gateway?.instances,
         project: metadata?.project?.id,
         delegateSelector: delegate,
-        runner_vm_region: metadata?.runner_vm_region || []
+        runner: metadata?.runner
       }
       const regions: regionProp[] = []
       Object?.keys(data?.metadata?.region_configs ?? {}).forEach((key: string, index: number) => {
@@ -106,16 +106,7 @@ const InfraDetails = () => {
           onSubmit={async (values: InfraDetailsFormikProps) => {
             try {
               if (regionData?.length > 0) {
-                const {
-                  identifier,
-                  name,
-                  domain,
-                  machine_type,
-                  instances,
-                  project,
-                  delegateSelector,
-                  runner_vm_region
-                } = values
+                const { identifier, name, domain, machine_type, instances, project, delegateSelector, runner } = values
                 const region_configs: Unknown = {}
                 regionData?.forEach((region: regionProp) => {
                   const { location, defaultSubnet, proxySubnet, domain: regionDomain } = region
@@ -138,7 +129,7 @@ const InfraDetails = () => {
                   identifier,
                   metadata: {
                     domain,
-                    runner_vm_region,
+                    runner,
                     delegate_selectors: delegates,
                     name,
                     region_configs,
@@ -188,8 +179,8 @@ const InfraDetails = () => {
                     regionData={regionData}
                     setRegionData={setRegionData}
                     initialData={initialData}
-                    runnerVMRegion={formikProps?.values?.runner_vm_region || []}
-                    setRunnerVMRegion={result => formikProps?.setFieldValue('runner_vm_region', result)}
+                    runner={formikProps?.values?.runner || { region: '', zone: '' }}
+                    setRunner={result => formikProps?.setFieldValue('runner', result)}
                   />
                   <Layout.Horizontal className={css.formFooter}>
                     <Button

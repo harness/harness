@@ -1,14 +1,5 @@
-import React, { useRef, useState } from 'react'
-import {
-  Container,
-  HarnessDocTooltip,
-  Label,
-  Layout,
-  MultiSelectTypeInput,
-  SelectOption,
-  Text,
-  TextInput
-} from '@harnessio/uicore'
+import React, { useEffect, useRef, useState } from 'react'
+import { Container, HarnessDocTooltip, Label, Layout, Select, Text, TextInput } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
 import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance } from 'react-table'
 import { Icon } from '@harnessio/icons'
@@ -17,6 +8,7 @@ import { learnMoreRegion, type regionProp } from 'cde-gitness/constants'
 import { useStrings } from 'framework/strings'
 import RegionTable from 'cde-gitness/components/RegionTable/RegionTable'
 import NewRegionModal from './NewRegionModal'
+import { InfraDetails } from './InfraDetails.constants'
 import css from './InfraDetails.module.scss'
 
 type CellTypeWithActions<D extends Record<string, any>, V = any> = TableInstance<D> & {
@@ -43,11 +35,11 @@ interface LocationProps {
   regionData: regionProp[]
   setRegionData: (result: regionProp[]) => void
   initialData: regionProp
-  runnerVMRegion: string[]
-  setRunnerVMRegion: (result: string[]) => void
+  runner: { region: string; zone: string }
+  setRunner: (result: { region: string; zone: string }) => void
 }
 
-const ConfigureLocations = ({ regionData, runnerVMRegion, setRegionData, setRunnerVMRegion }: LocationProps) => {
+const ConfigureLocations = ({ regionData, setRegionData, runner, setRunner }: LocationProps) => {
   const { getString } = useStrings()
   const [isOpen, setIsOpen] = useState(false)
   const lastFocusRef = useRef<HTMLInputElement | null>(null)
@@ -185,6 +177,22 @@ const ConfigureLocations = ({ regionData, runnerVMRegion, setRegionData, setRunn
 
   const runnerVMRegionOptions = regionData.map(item => ({ label: item.location, value: item.location }))
 
+  // Get zones for the selected region
+  const selectedRegion = runner?.region || ''
+  const availableZones = selectedRegion
+    ? InfraDetails.regions[selectedRegion as keyof typeof InfraDetails.regions] || []
+    : []
+  const runnerVMZoneOptions = availableZones.map(zone => ({ label: zone, value: zone }))
+
+  // Reset zone selection if region changes or if the current zone doesn't belong to the selected region
+  useEffect(() => {
+    if (setRunner && runner?.zone) {
+      if (!availableZones.includes(runner?.zone)) {
+        setRunner({ ...runner, zone: '' })
+      }
+    }
+  }, [selectedRegion, availableZones, runner?.zone, setRunner])
+
   return (
     <Layout.Vertical spacing="none" className={css.containerSpacing}>
       <Text className={css.basicDetailsHeading}>{getString('cde.configureInfra.configureLocations')}</Text>
@@ -204,18 +212,39 @@ const ConfigureLocations = ({ regionData, runnerVMRegion, setRegionData, setRunn
 
       <NewRegionModal isOpen={isOpen} setIsOpen={setIsOpen} onSubmit={addNewRegion} />
       <RegionTable columns={columns} addNewRegion={openRegionModal} regionData={regionData} />
-      <Container className={css.regionContainer}>
-        <Label className={css.runnerregion}>{getString('cde.gitspaceInfraHome.runnerVMRegion')}</Label>
-        <MultiSelectTypeInput
-          name={getString('cde.gitspaceInfraHome.runnerVMRegion')}
-          multiSelectProps={{ items: runnerVMRegionOptions }}
-          value={runnerVMRegionOptions.filter(region => runnerVMRegion.includes(region.value))}
-          onChange={value => {
-            setRunnerVMRegion((value as SelectOption[])?.map(item => item.value as string))
-          }}
-          allowableTypes={[]}
-        />
-      </Container>
+      <Layout.Vertical className={css.regionContainer} spacing="large">
+        <Container>
+          <Label className={css.runnerregion}>{getString('cde.gitspaceInfraHome.runnerVMRegion')}</Label>
+          <Select
+            addClearBtn
+            name={getString('cde.gitspaceInfraHome.runnerVMRegion')}
+            items={runnerVMRegionOptions}
+            value={
+              runner?.region ? runnerVMRegionOptions.find(region => region.value === runner?.region) || null : null
+            }
+            onChange={value => {
+              setRunner({ ...runner, region: value?.value as string })
+            }}
+          />
+        </Container>
+        <Container>
+          <Label className={css.runnerregion}>{getString('cde.gitspaceInfraHome.runnerVMZone')}</Label>
+          <Select
+            addClearBtn
+            name={getString('cde.gitspaceInfraHome.runnerVMZone')}
+            items={runnerVMZoneOptions}
+            disabled={!selectedRegion}
+            value={
+              runner?.zone && availableZones.includes(runner?.zone)
+                ? runnerVMZoneOptions.find(zone => zone.value === runner?.zone) || null
+                : null
+            }
+            onChange={value => {
+              setRunner({ ...runner, zone: value?.value as string })
+            }}
+          />
+        </Container>
+      </Layout.Vertical>
     </Layout.Vertical>
   )
 }

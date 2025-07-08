@@ -95,6 +95,7 @@ gitspaceInfraHome:
   dnsManagedZone: DNS managed zone
   envoyHealth: Envoy health
   runnerVMRegion: Runner VM Region
+  runnerVMZone: Runner VM Zone
   machines: Machines
   machine: Machine
   diskType: Persistent Disk Type
