@@ -19,6 +19,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"io"
 	"net/http"
 	"regexp"
@@ -87,6 +88,12 @@ func (c *localRegistry) GetServiceEndpointV2(
 	return serviceEndpoints
 }
 
+func (c *localRegistry) GetServiceMetadataV2(_ context.Context,
+	_ nugettype.ArtifactInfo) *nugettype.ServiceMetadataV2 {
+	//todo: implement it
+	return nil
+}
+
 func (c *localRegistry) ListPackageVersion(
 	ctx context.Context,
 	info nugettype.ArtifactInfo,
@@ -122,6 +129,38 @@ func (c *localRegistry) ListPackageVersionV2(
 			"no artifacts found for registry: %d and image: %s", info.RegistryID, info.Image)
 	}
 	return createFeedResponse(packageURL, info, artifacts)
+}
+
+func (c *localRegistry) CountPackageVersionV2(
+	_ context.Context,
+	_ nugettype.ArtifactInfo,
+) (count int64, err error) {
+	//todo: implement
+	return 0, errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
+}
+
+func (c *localRegistry) CountPackageV2(
+	_ context.Context,
+	_ nugettype.ArtifactInfo,
+) (count int64, err error) {
+	//todo: implement
+	return 0, errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
+}
+
+func (c *localRegistry) SearchPackageV2(
+	_ context.Context,
+	_ nugettype.ArtifactInfo,
+) (*nugettype.FeedResponse, error) {
+	//todo: implement
+	return nil, errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
+}
+
+func (c *localRegistry) SearchPackage(
+	_ context.Context,
+	_ nugettype.ArtifactInfo,
+) (*nugettype.FeedResponse, error) {
+	//todo: implement
+	return nil, errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
 }
 
 func (c *localRegistry) GetPackageMetadata(

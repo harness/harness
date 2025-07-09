@@ -83,12 +83,82 @@ type ServiceWorkspace struct {
 	Collection ServiceCollection `xml:"collection"`
 }
 
+type MetadataEndpointV2 struct {
+	XMLName   xml.Name         `xml:"service"`
+	Base      string           `xml:"base,attr"`
+	Xmlns     string           `xml:"xmlns,attr"`
+	XmlnsAtom string           `xml:"xmlns:atom,attr"`
+	Workspace ServiceWorkspace `xml:"workspace"`
+}
+
 type ServiceEndpointV2 struct {
 	XMLName   xml.Name         `xml:"service"`
 	Base      string           `xml:"base,attr"`
 	Xmlns     string           `xml:"xmlns,attr"`
 	XmlnsAtom string           `xml:"xmlns:atom,attr"`
 	Workspace ServiceWorkspace `xml:"workspace"`
+}
+
+type EdmxPropertyRef struct {
+	Name string `xml:"Name,attr"`
+}
+
+type EdmxProperty struct {
+	Name     string `xml:"Name,attr"`
+	Type     string `xml:"Type,attr"`
+	Nullable bool   `xml:"Nullable,attr"`
+}
+
+type EdmxEntityType struct {
+	Name       string            `xml:"Name,attr"`
+	HasStream  bool              `xml:"m:HasStream,attr"`
+	Keys       []EdmxPropertyRef `xml:"Key>PropertyRef"`
+	Properties []EdmxProperty    `xml:"Property"`
+}
+
+type EdmxFunctionParameter struct {
+	Name string `xml:"Name,attr"`
+	Type string `xml:"Type,attr"`
+}
+
+type EdmxFunctionImport struct {
+	Name       string                  `xml:"Name,attr"`
+	ReturnType string                  `xml:"ReturnType,attr"`
+	EntitySet  string                  `xml:"EntitySet,attr"`
+	Parameter  []EdmxFunctionParameter `xml:"Parameter"`
+}
+
+type EdmxEntitySet struct {
+	Name       string `xml:"Name,attr"`
+	EntityType string `xml:"EntityType,attr"`
+}
+
+type EdmxEntityContainer struct {
+	Name                     string               `xml:"Name,attr"`
+	IsDefaultEntityContainer bool                 `xml:"m:IsDefaultEntityContainer,attr"`
+	EntitySet                EdmxEntitySet        `xml:"EntitySet"`
+	FunctionImports          []EdmxFunctionImport `xml:"FunctionImport"`
+}
+
+type EdmxSchema struct {
+	Xmlns           string               `xml:"xmlns,attr"`
+	Namespace       string               `xml:"Namespace,attr"`
+	EntityType      *EdmxEntityType      `xml:"EntityType,omitempty"`
+	EntityContainer *EdmxEntityContainer `xml:"EntityContainer,omitempty"`
+}
+
+type EdmxDataServices struct {
+	XmlnsM                string       `xml:"xmlns:m,attr"`
+	DataServiceVersion    string       `xml:"m:DataServiceVersion,attr"`
+	MaxDataServiceVersion string       `xml:"m:MaxDataServiceVersion,attr"`
+	Schema                []EdmxSchema `xml:"Schema"`
+}
+
+type ServiceMetadataV2 struct {
+	XMLName      xml.Name         `xml:"edmx:Edmx"`
+	XmlnsEdmx    string           `xml:"xmlns:edmx,attr"`
+	Version      string           `xml:"Version,attr"`
+	DataServices EdmxDataServices `xml:"edmx:DataServices"`
 }
 
 type PackageVersion struct {

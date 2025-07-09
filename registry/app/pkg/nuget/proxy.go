@@ -108,6 +108,38 @@ func (r *proxy) DeletePackage(ctx context.Context,
 	return nil, errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
 }
 
+func (r *proxy) CountPackageVersionV2(
+	ctx context.Context,
+	_ nugettype.ArtifactInfo,
+) (count int64, err error) {
+	log.Error().Ctx(ctx).Msg("Not implemented")
+	return 0, errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
+}
+
+func (r *proxy) CountPackageV2(
+	ctx context.Context,
+	_ nugettype.ArtifactInfo,
+) (count int64, err error) {
+	log.Error().Ctx(ctx).Msg("Not implemented")
+	return 0, errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
+}
+
+func (r *proxy) SearchPackageV2(
+	ctx context.Context,
+	_ nugettype.ArtifactInfo,
+) (*nugettype.FeedResponse, error) {
+	log.Error().Ctx(ctx).Msg("Not implemented")
+	return nil, errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
+}
+
+func (r *proxy) SearchPackage(
+	ctx context.Context,
+	_ nugettype.ArtifactInfo,
+) (*nugettype.FeedResponse, error) {
+	log.Error().Ctx(ctx).Msg("Not implemented")
+	return nil, errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
+}
+
 func (r *proxy) putFileToLocal(ctx context.Context, info *nugettype.ArtifactInfo,
 	remote RemoteRegistryHelper) error {
 	file, err := remote.GetFile(ctx, info.Image, info.Version, info.ProxyEndpoint, info.Filename)
@@ -314,6 +346,11 @@ func (r *proxy) GetServiceEndpointV2(ctx context.Context,
 	packageURL := r.urlProvider.PackageURL(ctx, info.RootIdentifier+"/"+info.RegIdentifier, "nuget")
 	serviceEndpoints := buildServiceV2Endpoint(packageURL)
 	return serviceEndpoints
+}
+
+func (r *proxy) GetServiceMetadataV2(ctx context.Context, _ nugettype.ArtifactInfo) *nugettype.ServiceMetadataV2 {
+	log.Error().Ctx(ctx).Msg("Not implemented")
+	return nil
 }
 
 type Proxy interface {

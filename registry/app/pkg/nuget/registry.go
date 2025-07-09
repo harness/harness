@@ -39,6 +39,14 @@ type Registry interface {
 
 	ListPackageVersionV2(ctx context.Context, info nuget.ArtifactInfo) (*nuget.FeedResponse, error)
 
+	CountPackageVersionV2(ctx context.Context, info nuget.ArtifactInfo) (int64, error)
+
+	SearchPackageV2(ctx context.Context, info nuget.ArtifactInfo) (*nuget.FeedResponse, error)
+
+	SearchPackage(ctx context.Context, info nuget.ArtifactInfo) (*nuget.FeedResponse, error)
+
+	CountPackageV2(ctx context.Context, info nuget.ArtifactInfo) (int64, error)
+
 	GetPackageMetadata(ctx context.Context, info nuget.ArtifactInfo) (nuget.RegistrationResponse, error)
 
 	GetPackageVersionMetadataV2(ctx context.Context, info nuget.ArtifactInfo) (*nuget.FeedEntryResponse, error)
@@ -48,4 +56,6 @@ type Registry interface {
 	GetServiceEndpoint(ctx context.Context, info nuget.ArtifactInfo) *nuget.ServiceEndpoint
 
 	GetServiceEndpointV2(ctx context.Context, info nuget.ArtifactInfo) *nuget.ServiceEndpointV2
+
+	GetServiceMetadataV2(ctx context.Context, info nuget.ArtifactInfo) *nuget.ServiceMetadataV2
 }

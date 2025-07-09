@@ -46,6 +46,11 @@ type GetServiceEndpointV2Response struct {
 	ServiceEndpoint *nuget.ServiceEndpointV2
 }
 
+type GetServiceMetadataV2Response struct {
+	BaseResponse
+	ServiceMetadata *nuget.ServiceMetadataV2
+}
+
 type GetArtifactResponse struct {
 	BaseResponse
 	RedirectURL string
@@ -67,6 +72,21 @@ type ListPackageVersionResponse struct {
 type ListPackageVersionV2Response struct {
 	BaseResponse
 	FeedResponse *nuget.FeedResponse
+}
+
+type SearchPackageV2Response struct {
+	BaseResponse
+	FeedResponse *nuget.FeedResponse
+}
+
+type SearchPackageResponse struct {
+	BaseResponse
+	FeedResponse *nuget.FeedResponse
+}
+
+type EntityCountResponse struct {
+	BaseResponse
+	Count int64
 }
 
 type GetPackageMetadataResponse struct {

@@ -49,6 +49,16 @@ type Controller interface {
 	GetPackageVersionMetadataV2(ctx context.Context, info nugettype.ArtifactInfo) *GetPackageVersionMetadataV2Response
 
 	GetPackageVersionMetadata(ctx context.Context, info nugettype.ArtifactInfo) *GetPackageVersionMetadataResponse
+
+	CountPackageVersionV2(ctx context.Context, info nugettype.ArtifactInfo) *EntityCountResponse
+
+	SearchPackage(ctx context.Context, info nugettype.ArtifactInfo) *SearchPackageResponse
+
+	SearchPackageV2(ctx context.Context, info nugettype.ArtifactInfo) *SearchPackageV2Response
+
+	CountPackageV2(ctx context.Context, info nugettype.ArtifactInfo) *EntityCountResponse
+
+	GetServiceMetadataV2(ctx context.Context, info nugettype.ArtifactInfo) *GetServiceMetadataV2Response
 }
 
 // Controller handles Python package operations.
