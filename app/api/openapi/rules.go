@@ -29,14 +29,14 @@ import (
 type RuleType string
 
 func (RuleType) Enum() []interface{} {
-	return []interface{}{protection.TypeBranch}
+	return []interface{}{protection.TypeBranch, protection.TypeTag, protection.TypePush}
 }
 
 // RuleDefinition is a plugin for types.Rule Definition to allow using oneof.
 type RuleDefinition struct{}
 
 func (RuleDefinition) JSONSchemaOneOf() []interface{} {
-	return []interface{}{protection.Branch{}}
+	return []interface{}{protection.Branch{}, protection.Tag{}, protection.Push{}}
 }
 
 type Rule struct {
