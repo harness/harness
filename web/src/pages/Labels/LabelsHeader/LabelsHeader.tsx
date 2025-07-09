@@ -57,7 +57,7 @@ const LabelsHeader = ({
           icon={CodeIcon.Add}
           onClick={openLabelCreateModal}
         />
-        <Render when={[ScopeEnum.ACCOUNT_SCOPE, ScopeEnum.SPACE_SCOPE].includes(currentPageScope)}>
+        <Render when={![ScopeEnum.ACCOUNT_SCOPE, ScopeEnum.SPACE_SCOPE].includes(currentPageScope)}>
           <Checkbox
             className={css.scopeCheckbox}
             label={getString('labels.showLabelsScope')}

@@ -89,7 +89,7 @@ const ProtectionRulesHeader = ({
           }
           {...permissionProps(permPushResult, standalone)}
         />
-        <Render when={[ScopeEnum.ACCOUNT_SCOPE, ScopeEnum.SPACE_SCOPE].includes(currentPageScope)}>
+        <Render when={![ScopeEnum.ACCOUNT_SCOPE, ScopeEnum.SPACE_SCOPE].includes(currentPageScope)}>
           <Checkbox
             className={css.scopeCheckbox}
             label={getString('protectionRules.showRulesScope')}
