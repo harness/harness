@@ -132,13 +132,6 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 	// todo : update the code when private repository integration is supported in gitness
 	imagAuthMap := make(map[string]gitspaceTypes.DockerRegistryAuth)
 
-	if gitspaceConfig.IsMarkedForReset {
-		logger.Debug().Msg("Resetting gitspace instance")
-		if err = e.RemoveGitspace(ctx, gitspaceConfig, infra, false); err != nil {
-			return fmt.Errorf("error resetting gitspace instance: %w", err)
-		}
-	}
-
 	// Step 3: Check the current state of the container
 	state, err := e.checkContainerState(ctx, dockerClient, containerName)
 	if err != nil {

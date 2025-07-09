@@ -80,6 +80,7 @@ func (s *Service) handleGitspaceOperationsEvent(
 		if !ok {
 			return fmt.Errorf("failed to cast start response")
 		}
+
 		updatedInstance, handleResumeStartErr := s.orchestrator.FinishResumeStartGitspace(
 			ctxWithTimedOut,
 			*config,
@@ -98,6 +99,7 @@ func (s *Service) handleGitspaceOperationsEvent(
 		if !ok {
 			return fmt.Errorf("failed to cast stop response")
 		}
+
 		finishStopErr := s.orchestrator.FinishStopGitspaceContainer(
 			ctxWithTimedOut,
 			*config,
@@ -108,13 +110,15 @@ func (s *Service) handleGitspaceOperationsEvent(
 			s.emitGitspaceConfigEvent(ctxWithTimedOut, config, enum.GitspaceEventTypeGitspaceActionStopFailed)
 			instance.State = enum.GitspaceInstanceStateError
 			instance.ErrorMessage = finishStopErr.ErrorMessage
-			err = fmt.Errorf("failed to finish trigger start gitspace: %w", finishStopErr.Error)
+			err = fmt.Errorf("failed to finish stop gitspace: %w", finishStopErr.Error)
 		}
+
 	case enum.GitspaceOperationsEventDelete:
 		deleteResponse, ok := payload.Response.(*response.DeleteResponse)
 		if !ok {
 			return fmt.Errorf("failed to cast delete response")
 		}
+
 		finishRemoveErr := s.orchestrator.FinishRemoveGitspaceContainer(
 			ctxWithTimedOut,
 			*config,
@@ -125,7 +129,7 @@ func (s *Service) handleGitspaceOperationsEvent(
 			s.emitGitspaceConfigEvent(ctxWithTimedOut, config, enum.GitspaceEventTypeGitspaceActionResetFailed)
 			instance.State = enum.GitspaceInstanceStateError
 			instance.ErrorMessage = finishRemoveErr.ErrorMessage
-			err = fmt.Errorf("failed to finish trigger reset gitspace: %w", finishRemoveErr.Error)
+			err = fmt.Errorf("failed to finish remove/reset gitspace: %w", finishRemoveErr.Error)
 		}
 
 	default:
