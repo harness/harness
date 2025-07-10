@@ -583,25 +583,32 @@ func GetContainerInfo(
 	return inspectResp.ID, usedPorts, remoteUser, nil
 }
 
-func ExtractMetadataAndUserFromImage(
+func ExtractImageData(
 	ctx context.Context,
 	imageName string,
 	dockerClient *client.Client,
-) (map[string]any, string, error) {
+) (*types.ImageData, error) {
 	imageInspect, _, err := dockerClient.ImageInspectWithRaw(ctx, imageName)
 	if err != nil {
-		return nil, "", fmt.Errorf("error while inspecting image: %w", err)
+		return nil, fmt.Errorf("error while inspecting image: %w", err)
 	}
 	imageUser := imageInspect.Config.User
 	if imageUser == "" {
 		imageUser = "root"
 	}
+
+	imageData := types.ImageData{
+		Arch: imageInspect.Architecture,
+		OS:   imageInspect.Os,
+		User: imageUser,
+	}
+
 	metadataMap := map[string]any{}
 	if metadata, ok := imageInspect.Config.Labels["devcontainer.metadata"]; ok {
 		dst := []map[string]any{}
 		unmarshalErr := json.Unmarshal([]byte(metadata), &dst)
 		if unmarshalErr != nil {
-			return nil, imageUser, fmt.Errorf("error while unmarshalling metadata: %w", err)
+			return &imageData, fmt.Errorf("error while unmarshalling metadata: %w", err)
 		}
 		for _, values := range dst {
 			for k, v := range values {
@@ -609,7 +616,9 @@ func ExtractMetadataAndUserFromImage(
 			}
 		}
 	}
-	return metadataMap, imageUser, nil
+	imageData.Metadata = metadataMap
+
+	return &imageData, nil
 }
 
 func CopyImage(

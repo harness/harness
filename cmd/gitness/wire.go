@@ -19,7 +19,6 @@ package main
 
 import (
 	"context"
-	"github.com/harness/gitness/app/services/keyfetcher"
 
 	checkcontroller "github.com/harness/gitness/app/api/controller/check"
 	"github.com/harness/gitness/app/api/controller/connector"
@@ -95,6 +94,7 @@ import (
 	"github.com/harness/gitness/app/services/gitspaceservice"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/app/services/instrument"
+	"github.com/harness/gitness/app/services/keyfetcher"
 	"github.com/harness/gitness/app/services/keywordsearch"
 	svclabel "github.com/harness/gitness/app/services/label"
 	locker "github.com/harness/gitness/app/services/locker"

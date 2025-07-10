@@ -388,7 +388,6 @@ func (e *EmbeddedDockerOrchestrator) RemoveGitspace(
 		ctx, ContainerActionRemove, containerName, dockerClient, logStreamInstance); err != nil {
 		if client.IsErrNotFound(err) {
 			logger.Debug().Msg("gitspace is already removed")
-			err = nil
 		} else {
 			return fmt.Errorf("failed to remove gitspace %s: %w", containerName, err)
 		}
@@ -452,7 +451,7 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 		return err
 	}
 
-	metadataFromImage, imageUser, err := ExtractMetadataAndUserFromImage(ctx, imageName, dockerClient)
+	imageData, err := ExtractImageData(ctx, imageName, dockerClient)
 	if err != nil {
 		return err
 	}
@@ -475,8 +474,8 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 		gitspaceLogger.Info(fmt.Sprintf("Setting Environment : %v", environment))
 	}
 
-	containerUser := GetContainerUser(runArgsMap, devcontainerConfig, metadataFromImage, imageUser)
-	remoteUser := GetRemoteUser(devcontainerConfig, metadataFromImage, containerUser)
+	containerUser := GetContainerUser(runArgsMap, devcontainerConfig, imageData.Metadata, imageData.User)
+	remoteUser := GetRemoteUser(devcontainerConfig, imageData.Metadata, containerUser)
 
 	containerUserHomeDir := GetUserHomeDir(containerUser)
 	remoteUserHomeDir := GetUserHomeDir(remoteUser)
@@ -514,7 +513,7 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 		remoteUser,
 		features,
 		resolvedRepoDetails.DevcontainerConfig,
-		metadataFromImage,
+		imageData.Metadata,
 	)
 	if err != nil {
 		return err
@@ -533,6 +532,8 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 		RemoteUser:        remoteUser,
 		AccessKey:         *gitspaceConfig.GitspaceInstance.AccessKey,
 		AccessType:        gitspaceConfig.GitspaceInstance.AccessType,
+		Arch:              imageData.Arch,
+		OS:                imageData.OS,
 	}
 
 	if err = e.setupGitspaceAndIDE(

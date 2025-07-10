@@ -46,6 +46,8 @@ type Exec struct {
 	RemoteUser        string
 	AccessKey         string
 	AccessType        enum.GitspaceAccessType
+	Arch              string
+	OS                string
 }
 
 type execResult struct {
@@ -174,7 +176,7 @@ func (e *Exec) executeCmdAsyncStream(
 		close(outputCh)
 		return nil
 	}
-	e.streamResponse(inspectExec, outputCh)
+	e.streamResponse(inspectExec, outputCh) // nolint:contextcheck
 	return nil
 }
 

@@ -17,9 +17,10 @@ package gitspace
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-	"time"
 )
 
 func (c *Service) ResetGitspaceAction(
