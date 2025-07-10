@@ -19,7 +19,6 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"io"
 	"net/http"
 	"regexp"
@@ -28,6 +27,7 @@ import (
 
 	urlprovider "github.com/harness/gitness/app/url"
 	apicontract "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	nugetmetadata "github.com/harness/gitness/registry/app/metadata/nuget"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/base"

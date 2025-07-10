@@ -188,7 +188,7 @@ func getScope(r *http.Request) string {
 	path := r.URL.Path
 	if path != "/v2/" && path != "/v2/token" {
 		paramMap := common.ExtractFirstQueryParams(r.URL.Query())
-		rootIdentifier, registryIdentifier, _, _, _, _ := oci.ExtractPathVars(path, paramMap)
+		rootIdentifier, registryIdentifier, _, _, _, _ := oci.ExtractPathVars(r.Context(), path, paramMap)
 		var access []registryauth.Access
 		access = registryauth.AppendAccess(access, r.Method, rootIdentifier+"/"+registryIdentifier)
 		if fromRepo := r.FormValue("from"); fromRepo != "" {

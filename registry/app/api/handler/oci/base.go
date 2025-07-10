@@ -122,9 +122,17 @@ func getRouteType(url string) routeType {
 // ExtractPathVars extracts registry, image, reference, digest and tag from the path
 // Path format: /v2/:rootSpace/:registry/:image/manifests/:reference (for ex:
 // /v2/myRootSpace/reg1/alpine/blobs/sha256:a258b2a6b59a7aa244d8ceab095c7f8df726f27075a69fca7ad8490f3f63148a).
-func ExtractPathVars(path string, paramMap map[string]string) (rootIdentifier, registry, image, ref, dgst, tag string) {
+func ExtractPathVars(
+	ctx context.Context,
+	path string,
+	paramMap map[string]string,
+) (rootIdentifier, registry, image, ref, dgst, tag string) {
 	path = strings.Trim(path, "/")
 	segments := strings.Split(path, "/")
+	if len(segments) < MinSizeOfURLSegments {
+		log.Error().Ctx(ctx).Msgf("Invalid route: %s", path)
+		return "", "", "", "", "", ""
+	}
 	rootIdentifier = segments[1]
 	registry = segments[2]
 	image = strings.Join(segments[3:len(segments)-2], "/")
@@ -195,7 +203,7 @@ func (h *Handler) GetRegistryInfo(r *http.Request, remoteSupport bool) (pkg.Regi
 	queryParams := r.URL.Query()
 	path := r.URL.Path
 	paramMap := common.ExtractFirstQueryParams(queryParams)
-	rootIdentifier, registryIdentifier, image, ref, dgst, tag := ExtractPathVars(path, paramMap)
+	rootIdentifier, registryIdentifier, image, ref, dgst, tag := ExtractPathVars(r.Context(), path, paramMap)
 	if err := metadata.ValidateIdentifier(rootIdentifier); err != nil {
 		return pkg.RegistryInfo{}, err
 	}
