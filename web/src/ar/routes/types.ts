@@ -15,9 +15,14 @@
  */
 
 import type { RepositoryPackageType } from '@ar/common/types'
+import type { ManageRegistriesDetailsTab } from '@ar/pages/manage-registries/constants'
 import type { RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
 import type { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
 import type { WebhookDetailsTab } from '@ar/pages/webhook-details/constants'
+
+export interface ManageRegistriesTabPathParams {
+  tab: ManageRegistriesDetailsTab
+}
 
 export interface RepositoryDetailsPathParams {
   repositoryIdentifier: string

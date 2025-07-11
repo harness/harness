@@ -18,11 +18,12 @@ import React, { useContext, useState } from 'react'
 import type { FormikProps } from 'formik'
 import { Expander } from '@blueprintjs/core'
 import { Redirect, Switch, useHistory } from 'react-router-dom'
-import { Button, ButtonVariation, Container, Layout, Tab, Tabs } from '@harnessio/uicore'
+import { Button, ButtonVariation, Layout, Tab, Tabs } from '@harnessio/uicore'
 
 import { useStrings } from '@ar/frameworks/strings'
 import type { RepositoryDetailsPathParams } from '@ar/routes/types'
 import RouteProvider from '@ar/components/RouteProvider/RouteProvider'
+import TabsContainer from '@ar/components/TabsContainer/TabsContainer'
 import {
   useDecodedParams,
   useFeatureFlags,
@@ -97,7 +98,7 @@ export default function RepositoryDetails(): JSX.Element | null {
 
   return (
     <>
-      <Container className={css.tabsContainer}>
+      <TabsContainer className={css.tabsContainer}>
         <Tabs id="repositoryTabDetails" selectedTabId={activeTab} onChange={handleTabChange}>
           {RepositoryDetailsTabs.filter(each => !each.featureFlag || featureFlags[each.featureFlag])
             .filter(each => !each.packageType || each.packageType === data.packageType)
@@ -109,7 +110,7 @@ export default function RepositoryDetails(): JSX.Element | null {
           <Expander />
           {activeTab === RepositoryDetailsTab.CONFIGURATION && renderActionBtns()}
         </Tabs>
-      </Container>
+      </TabsContainer>
       <Switch>
         <RouteProvider exact path={routeDefinitions.toARRepositoryDetails({ ...repositoryDetailsPathProps })}>
           <Redirect to={routes.toARRepositoryDetailsTab({ ...pathParams, tab: RepositoryDetailsTab.CONFIGURATION })} />

@@ -15,5 +15,26 @@
  */
 
 .tabsContainer {
-  --tab-container-page-header-height: var(--har-version-details-page-header-height);
+  position: sticky;
+  top: var(--tab-container-page-header-height);
+  background-color: var(--white);
+  z-index: 10;
+
+  & > :global(.bp3-tabs > .bp3-tab-list) {
+    border-bottom: 1px solid var(--grey-200);
+  }
+  :global {
+    .bp3-tab-panel {
+      margin-top: 0;
+    }
+
+    .bp3-tab-list {
+      background-color: var(--white);
+      width: 100%;
+      border-bottom: 0;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.13);
+      align-items: center;
+      padding: 0 var(--spacing-xlarge);
+    }
+  }
 }

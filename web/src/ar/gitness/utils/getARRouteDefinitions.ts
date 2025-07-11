@@ -36,6 +36,8 @@ export default function getARRouteDefinitions(routeParams: Record<string, string
       }
       return '/redirect'
     },
+    toARManageRegistries: () => '/manage-registries',
+    toARManageRegistriesTab: params => `/manage-registries/${params?.tab}`,
     toARRepositories: routeDefinitionWithMode(() => '/'),
     toARRepositoryDetails: routeDefinitionWithMode(params => `/${params?.repositoryIdentifier}`),
     toARRepositoryDetailsTab: routeDefinitionWithMode(params => `/${params?.repositoryIdentifier}/${params?.tab}`),

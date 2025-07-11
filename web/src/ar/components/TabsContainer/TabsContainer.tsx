@@ -14,6 +14,15 @@
  * limitations under the License.
  */
 
-.tabsContainer {
-  --tab-container-page-header-height: var(--har-version-details-page-header-height);
+import React from 'react'
+import classNames from 'classnames'
+import { Container } from '@harnessio/uicore'
+import type { ContainerProps } from '@harnessio/uicore/dist/components/Container/Container'
+
+import css from './TabsContainer.module.scss'
+
+function TabsContainer(props: React.PropsWithChildren<ContainerProps>) {
+  return <Container {...props} className={classNames(props.className, css.tabsContainer)} />
 }
+
+export default TabsContainer

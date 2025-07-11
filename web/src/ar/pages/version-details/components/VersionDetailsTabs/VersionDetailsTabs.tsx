@@ -16,7 +16,7 @@
 
 import React, { useCallback, useContext, useMemo, useState } from 'react'
 import { Redirect, Switch, useHistory } from 'react-router-dom'
-import { Container, Tab, Tabs } from '@harnessio/uicore'
+import { Tab, Tabs } from '@harnessio/uicore'
 
 import { useStrings } from '@ar/frameworks/strings'
 import { useQueryParams } from '@ar/__mocks__/hooks'
@@ -36,6 +36,7 @@ import {
   versionDetailsTabWithProjectPathParams,
   versionDetailsTabWithSSCADetailsPathParams
 } from '@ar/routes/RouteDestinations'
+import TabsContainer from '@ar/components/TabsContainer/TabsContainer'
 
 import { VersionDetailsTab, VersionDetailsTabList } from './constants'
 import css from './VersionDetailsTab.module.scss'
@@ -117,13 +118,13 @@ export default function VersionDetailsTabs(): JSX.Element {
   if (!data) return <></>
   return (
     <>
-      <Container className={css.tabsContainer}>
+      <TabsContainer className={css.tabsContainer}>
         <Tabs id="versionDetailsTab" selectedTabId={tab} onChange={handleTabChange}>
           {tabList.map(each => (
             <Tab key={each.value} id={each.value} disabled={each.disabled} title={getString(each.label)} />
           ))}
         </Tabs>
-      </Container>
+      </TabsContainer>
       <Switch>
         <RouteProvider exact path={routeDefinitions.toARVersionDetails({ ...versionDetailsPathParams })}>
           <Redirect

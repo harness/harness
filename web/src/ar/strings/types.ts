@@ -55,6 +55,10 @@ export interface StringsMap {
   'digestList.table.columns.size': string
   'digestList.table.columns.uploadedBy': string
   'digestList.table.noDigestTitle': string
+  'manageRegistries.comingSoon': string
+  'manageRegistries.pageHeading': string
+  'manageRegistries.tabs.cleanup_policies': string
+  'manageRegistries.tabs.labels': string
   'repositoryDetails.clientSetup.done': string
   'repositoryDetails.clientSetup.failedToGenerateToken': string
   'repositoryDetails.clientSetup.generateNewToken': string

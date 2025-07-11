@@ -18,6 +18,7 @@ import { defaultTo, isEmpty } from 'lodash-es'
 
 import type {
   ArtifactDetailsPathParams,
+  ManageRegistriesTabPathParams,
   RedirectPageQueryParams,
   RepositoryDetailsPathParams,
   RepositoryDetailsTabPathParams,
@@ -31,6 +32,8 @@ import { IRouteOptions, routeDefinitionWithMode } from './utils'
 export interface ARRouteDefinitionsReturn {
   toAR: () => string
   toARRedirect: (params?: RedirectPageQueryParams, options?: IRouteOptions) => string
+  toARManageRegistries: (_?: unknown, options?: IRouteOptions) => string
+  toARManageRegistriesTab: (params: ManageRegistriesTabPathParams, options?: IRouteOptions) => string
   toARRepositories: (_?: unknown, options?: IRouteOptions) => string
   toARRepositoryDetails: (params: RepositoryDetailsPathParams, options?: IRouteOptions) => string
   toARRepositoryDetailsTab: (params: RepositoryDetailsTabPathParams, options?: IRouteOptions) => string
@@ -57,6 +60,8 @@ export const routeDefinitions: ARRouteDefinitionsReturn = {
     }
     return '/redirect'
   },
+  toARManageRegistries: routeDefinitionWithMode(() => '/manage'),
+  toARManageRegistriesTab: routeDefinitionWithMode(params => `/manage/${params.tab}`),
   toARRepositories: routeDefinitionWithMode(() => '/registries'),
   toARRepositoryDetails: routeDefinitionWithMode(params => `/registries/${params?.repositoryIdentifier}`),
   toARRepositoryDetailsTab: routeDefinitionWithMode(
@@ -83,8 +88,10 @@ export const routeDefinitions: ARRouteDefinitionsReturn = {
     route += `/${params.versionTab}`
     return route
   }),
-  toARRepositoryWebhookDetails: params =>
-    `/registries/${params?.repositoryIdentifier}/webhooks/${params?.webhookIdentifier}`,
-  toARRepositoryWebhookDetailsTab: params =>
-    `/registries/${params?.repositoryIdentifier}/webhooks/${params?.webhookIdentifier}/${params.tab}`
+  toARRepositoryWebhookDetails: routeDefinitionWithMode(
+    params => `/registries/${params?.repositoryIdentifier}/webhooks/${params?.webhookIdentifier}`
+  ),
+  toARRepositoryWebhookDetailsTab: routeDefinitionWithMode(
+    params => `/registries/${params?.repositoryIdentifier}/webhooks/${params?.webhookIdentifier}/${params.tab}`
+  )
 }

@@ -14,6 +14,13 @@
  * limitations under the License.
  */
 
+.pageHeader {
+  height: var(--har-repository-list-page-header-height) !important;
+  background-color: var(--white) !important;
+  position: sticky;
+  top: 0;
+}
+
 .tabsContainer {
-  --tab-container-page-header-height: var(--har-version-details-page-header-height);
+  --tab-container-page-header-height: 80px;
 }

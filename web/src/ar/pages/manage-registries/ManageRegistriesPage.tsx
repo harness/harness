@@ -14,6 +14,19 @@
  * limitations under the License.
  */
 
-.tabsContainer {
-  --tab-container-page-header-height: var(--har-version-details-page-header-height);
+import React from 'react'
+import { Container } from '@harnessio/uicore'
+
+import ManageRegistriesHeader from './ManageRegistriesHeader'
+import ManageRegistriesDetails from './ManageRegistriesDetails'
+
+function ManageRegistriesPage() {
+  return (
+    <Container>
+      <ManageRegistriesHeader />
+      <ManageRegistriesDetails />
+    </Container>
+  )
 }
+
+export default ManageRegistriesPage

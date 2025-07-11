@@ -23,9 +23,11 @@ import RedirectPage from '@ar/pages/redirect-page/RedirectPage'
 import { RepositoryListViewTypeEnum } from '@ar/contexts/AppStoreContext'
 import type { WebhookDetailsTab } from '@ar/pages/webhook-details/constants'
 import type { RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
+import type { ManageRegistriesDetailsTab } from '@ar/pages/manage-registries/constants'
 
 import type {
   ArtifactDetailsPathParams,
+  ManageRegistriesTabPathParams,
   RepositoryDetailsPathParams,
   RepositoryDetailsTabPathParams,
   RepositoryWebhookDetailsPathParams,
@@ -35,6 +37,7 @@ import type {
 } from './types'
 
 const RepositoryListPage = React.lazy(() => import('@ar/pages/repository-list/RepositoryListPage'))
+const ManageRegistriesPage = React.lazy(() => import('@ar/pages/manage-registries/ManageRegistriesPage'))
 const RepositoryListTreeViewPage = React.lazy(() => import('@ar/pages/repository-list/RepositoryListTreeViewPage'))
 const RepositoryDetailsPage = React.lazy(() => import('@ar/pages/repository-details/RepositoryDetailsPage'))
 const ArtifactListPage = React.lazy(() => import('@ar/pages/artifact-list/ArtifactListPage'))
@@ -43,6 +46,10 @@ const VersionDetailsPage = React.lazy(() => import('@ar/pages/version-details/Ve
 const OSSVersionDetailsPage = React.lazy(() => import('@ar/pages/version-details/OSSVersionDetailsPage'))
 const RouteProvider = React.lazy(() => import('@ar/components/RouteProvider/RouteProvider'))
 const WebhookDetailsPage = React.lazy(() => import('@ar/pages/webhook-details/WebhookDetailsPage'))
+
+export const manageRegistriesTabPathProps: ManageRegistriesTabPathParams = {
+  tab: ':tab' as ManageRegistriesDetailsTab
+}
 
 export const repositoryDetailsPathProps: RepositoryDetailsPathParams = {
   repositoryIdentifier: ':repositoryIdentifier'
@@ -117,6 +124,9 @@ const RouteDestinations = (): JSX.Element => {
       </RouteProvider>
       <RouteProvider exact path={routes.toARArtifacts()}>
         <ArtifactListPage />
+      </RouteProvider>
+      <RouteProvider path={routes.toARManageRegistries()}>
+        <ManageRegistriesPage />
       </RouteProvider>
       {repositoryListViewType === RepositoryListViewTypeEnum.DIRECTORY && (
         <RouteProvider path={routes.toARRepositories()}>
