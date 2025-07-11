@@ -19,7 +19,11 @@ type InfraProviderType string
 func (InfraProviderType) Enum() []interface{} { return toInterfaceSlice(providerTypes) }
 
 var providerTypes = []InfraProviderType{
-	InfraProviderTypeDocker, InfraProviderTypeHarnessGCP, InfraProviderTypeHarnessCloud, InfraProviderTypeHybridVMGCP,
+	InfraProviderTypeDocker,
+	InfraProviderTypeHarnessGCP,
+	InfraProviderTypeHarnessCloud,
+	InfraProviderTypeHybridVMGCP,
+	InfraProviderTypeHybridVMAWS,
 }
 
 const (
