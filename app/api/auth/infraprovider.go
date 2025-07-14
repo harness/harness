@@ -37,7 +37,7 @@ func CheckInfraProvider(
 ) error {
 	scope := &types.Scope{SpacePath: parentPath}
 	resource := &types.Resource{
-		Type:       enum.ResourceTypeGitspace,
+		Type:       enum.ResourceTypeInfraProvider,
 		Identifier: identifier,
 	}
 

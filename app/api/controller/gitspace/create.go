@@ -131,10 +131,9 @@ func (c *Controller) Create(
 		ctx,
 		c.authorizer,
 		session,
-		// todo: modify to resource path(which is in account scope) after adding infra provider resource in acl
-		space.Path,
+		resourceSpace.Path,
 		"",
-		enum.PermissionGitspaceCreate); err != nil {
+		enum.PermissionInfraProviderView); err != nil {
 		return nil, err
 	}
 

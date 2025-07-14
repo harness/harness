@@ -52,7 +52,8 @@ func (c *Controller) LookupRepo(
 	if err != nil {
 		return nil, fmt.Errorf("failed to find space: %w", err)
 	}
-	err = apiauth.CheckGitspace(ctx, c.authorizer, session, space.Path, "", enum.PermissionGitspaceCreate)
+	err = apiauth.CheckInfraProvider(ctx, c.authorizer, session, space.Path,
+		"", enum.PermissionInfraProviderView)
 	if err != nil {
 		return nil, fmt.Errorf("failed to authorize: %w", err)
 	}

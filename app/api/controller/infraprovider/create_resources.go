@@ -38,15 +38,14 @@ func (c *Controller) CreateTemplate(
 	if err != nil {
 		return nil, fmt.Errorf("failed to find parent by ref: %w", err)
 	}
-	// todo: change the permission to PermissionInfraProviderView once infra provider resource is added to access
-	// control
 	if err = apiauth.CheckInfraProvider(
 		ctx,
 		c.authorizer,
 		session,
 		parentSpace.Path,
 		NoResourceIdentifier,
-		enum.PermissionGitspaceCreate); err != nil {
+		enum.PermissionInfraProviderEdit,
+	); err != nil {
 		return nil, err
 	}
 
@@ -94,7 +93,8 @@ func (c *Controller) CreateResources(
 		&session,
 		space.Path,
 		NoResourceIdentifier,
-		enum.PermissionGitspaceView); err != nil {
+		enum.PermissionInfraProviderEdit,
+	); err != nil {
 		return nil, err
 	}
 

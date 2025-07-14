@@ -165,7 +165,6 @@ const (
 	PermissionInfraProviderView   Permission = "infraprovider_view"
 	PermissionInfraProviderEdit   Permission = "infraprovider_edit"
 	PermissionInfraProviderDelete Permission = "infraprovider_delete"
-	PermissionInfraProviderAccess Permission = "infraprovider_access"
 )
 
 const (
