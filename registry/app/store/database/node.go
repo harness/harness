@@ -214,7 +214,7 @@ func (n NodeDao) DeleteByRegistryID(ctx context.Context, regID int64) (err error
 func (n NodeDao) DeleteByNodePathAndRegistryID(ctx context.Context, nodePath string, regID int64) (err error) {
 	db := dbtx.GetAccessor(ctx, n.sqlDB)
 	delStmt := databaseg.Builder.Delete("nodes").
-		Where("node_path = ? OR node_path LIKE ?", nodePath, nodePath+"/%").
+		Where("(node_path = ? OR node_path LIKE ?)", nodePath, nodePath+"/%").
 		Where("node_registry_id = ?", regID)
 
 	delQuery, delArgs, err := delStmt.ToSql()
