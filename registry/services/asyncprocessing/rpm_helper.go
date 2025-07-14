@@ -449,7 +449,13 @@ func (l *rpmHelper) buildPrimary(
 		}
 
 		for _, pi := range existingPis {
-			_, pp := getPrimaryPackage(pi)
+			var rootPackagePath string
+			if overridePath {
+				rootPackagePath = fmt.Sprintf("../../%s/rpm/package", repoKey)
+			} else {
+				rootPackagePath = "package"
+			}
+			_, pp := getPrimaryPackage(pi, rootPackagePath)
 			if err := encoder.Encode(pp); err != nil {
 				pw.CloseWithError(fmt.Errorf("failed to encode package: %w", err))
 				return
@@ -863,7 +869,7 @@ func (l *rpmHelper) buildRepomd(
 	return nil
 }
 
-func getPrimaryPackage(pi *rpmtypes.PackageInfo) (string, *rpmtypes.PrimaryPackage) {
+func getPrimaryPackage(pi *rpmtypes.PackageInfo, rootPackagePath string) (string, *rpmtypes.PrimaryPackage) {
 	files := make([]*rpmmetadata.File, 0, 3)
 	for _, f := range pi.FileMetadata.Files {
 		if f.IsExecutable {
@@ -872,6 +878,13 @@ func getPrimaryPackage(pi *rpmtypes.PackageInfo) (string, *rpmtypes.PrimaryPacka
 	}
 	packageVersion := fmt.Sprintf("%s-%s", pi.FileMetadata.Version, pi.FileMetadata.Release)
 	key := fmt.Sprintf("%s:%s:%s", pi.Name, packageVersion, pi.FileMetadata.Architecture)
+	location := fmt.Sprintf("%s/%s/%s/%s/%s",
+		rootPackagePath,
+		url.PathEscape(pi.Name),
+		url.PathEscape(packageVersion),
+		url.PathEscape(pi.FileMetadata.Architecture),
+		url.PathEscape(fmt.Sprintf("%s-%s.%s.rpm", pi.Name, packageVersion, pi.FileMetadata.Architecture)))
+
 	pp := &rpmtypes.PrimaryPackage{
 		Type:         "rpm",
 		Name:         pi.Name,
@@ -900,11 +913,7 @@ func getPrimaryPackage(pi *rpmtypes.PackageInfo) (string, *rpmtypes.PrimaryPacka
 			Archive:   pi.FileMetadata.ArchiveSize,
 		},
 		Location: rpmtypes.PrimaryLocation{
-			Href: fmt.Sprintf("package/%s/%s/%s/%s",
-				url.PathEscape(pi.Name),
-				url.PathEscape(packageVersion),
-				url.PathEscape(pi.FileMetadata.Architecture),
-				url.PathEscape(fmt.Sprintf("%s-%s.%s.rpm", pi.Name, packageVersion, pi.FileMetadata.Architecture))),
+			Href: location,
 		},
 		Format: rpmtypes.PrimaryFormat{
 			License:   pi.VersionMetadata.License,

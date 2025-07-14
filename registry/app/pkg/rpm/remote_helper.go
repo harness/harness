@@ -73,12 +73,12 @@ func (r *remoteRegistryHelper) init(
 		return err
 	}
 
-	pythonReg, ok := adpt.(registry.RpmRegistry)
+	rpmReg, ok := adpt.(registry.RpmRegistry)
 	if !ok {
 		log.Ctx(ctx).Error().Msg("failed to cast factory to rpm registry")
 		return err
 	}
-	r.adapter = pythonReg
+	r.adapter = rpmReg
 	return nil
 }
 
