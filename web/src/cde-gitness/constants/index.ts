@@ -49,6 +49,7 @@ export interface DelegateSelector {
 
 export interface regionProp {
   location: string
+  gatewayAmiId?: string
   defaultSubnet: string
   proxySubnet: string
   domain: string
@@ -56,14 +57,25 @@ export interface regionProp {
   zones?: ZoneConfig[]
 }
 
+export interface AwsRegionConfig {
+  region_name: string
+  private_cidr_block: string
+  public_cidr_block: string
+  zone: string
+  domain: string
+  gateway_ami_id: string
+}
+
 export interface ZoneConfig {
   zone: string
   privateSubnet: string
-  proxySubnet: string
+  publicSubnet?: string
+  proxySubnet?: string
   id: number
 }
 export const HYBRID_VM_GCP = 'hybrid_vm_gcp'
 export const HARNESS_GCP = 'harness_gcp'
+export const HYBRID_VM_AWS = 'hybrid_vm_aws'
 
 export interface ideType {
   label: keyof StringsMap

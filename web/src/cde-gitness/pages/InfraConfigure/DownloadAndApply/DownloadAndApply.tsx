@@ -12,13 +12,14 @@ import css from './DownloadAndApply.module.scss'
 
 interface RouteParamsProps {
   infraprovider_identifier?: string
+  provider: string
 }
 
 const DownloadAndApplySection = () => {
   const { getString } = useStrings()
   const { accountInfo } = useAppContext()
   const history = useHistory()
-  const { infraprovider_identifier } = useParams<RouteParamsProps>()
+  const { infraprovider_identifier, provider } = useParams<RouteParamsProps>()
 
   const { data } = useGetInfraDetails({
     accountIdentifier: accountInfo?.identifier,
@@ -81,7 +82,8 @@ const DownloadAndApplySection = () => {
               history.push(
                 routes.toCDEInfraConfigureDetail({
                   accountId: accountInfo?.identifier,
-                  infraprovider_identifier: infraprovider_identifier ?? ''
+                  infraprovider_identifier: infraprovider_identifier ?? '',
+                  provider: provider
                 })
               )
             }}
@@ -89,7 +91,11 @@ const DownloadAndApplySection = () => {
           <Button
             text={getString('cde.downloadAndApplySection.done')}
             variation={ButtonVariation.PRIMARY}
-            onClick={() => history.push(routes.toCDEGitspaceInfra({ accountId: accountInfo?.identifier }))}
+            onClick={() => {
+              const baseUrl = routes.toCDEGitspaceInfra({ accountId: accountInfo?.identifier })
+              const urlWithQuery = provider === 'hybrid_vm_aws' ? `${baseUrl}?type=hybrid_vm_aws` : baseUrl
+              history.push(urlWithQuery)
+            }}
           />
         </Layout.Horizontal>
       </Layout.Vertical>

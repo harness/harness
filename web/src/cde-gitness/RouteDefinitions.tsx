@@ -19,13 +19,15 @@ export interface CDEProps {
   gitspaceId?: string
   accountId?: string
   infraprovider_identifier?: string
+  provider?: string
 }
 
 export const pathProps: Readonly<Required<CDEProps>> = {
   space: ':space*',
   gitspaceId: ':gitspaceId',
   accountId: ':accountId',
-  infraprovider_identifier: ':infraprovider_identifier'
+  infraprovider_identifier: ':infraprovider_identifier',
+  provider: ':provider'
 }
 
 export interface CDERoutes {
@@ -34,11 +36,13 @@ export interface CDERoutes {
   toCDEGitspacesCreate: (args: Required<Pick<CDEProps, 'space'>>) => string
   toCDEGitspacesEdit: (args: Required<Pick<CDEProps, 'space' | 'gitspaceId'>>) => string
   toCDEGitspaceInfra: (args: Required<Pick<CDEProps, 'accountId'>>) => string
-  toCDEInfraConfigure: (args: Required<Pick<CDEProps, 'accountId'>>) => string
+  toCDEInfraConfigure: (args: Required<Pick<CDEProps, 'accountId' | 'provider'>>) => string
   toModuleRoute: (args: Required<Pick<CDEProps, 'accountId'>>) => string
-  toCDEInfraConfigureDetail: (args: Required<Pick<CDEProps, 'accountId' | 'infraprovider_identifier'>>) => string
+  toCDEInfraConfigureDetail: (
+    args: Required<Pick<CDEProps, 'accountId' | 'infraprovider_identifier' | 'provider'>>
+  ) => string
   toCDEInfraConfigureDetailDownload: (
-    args: Required<Pick<CDEProps, 'accountId' | 'infraprovider_identifier'>>
+    args: Required<Pick<CDEProps, 'accountId' | 'infraprovider_identifier' | 'provider'>>
   ) => string
 }
 
@@ -48,10 +52,11 @@ export const routes: CDERoutes = {
   toCDEGitspacesCreate: ({ space }) => `/${space}/gitspaces/create`,
   toCDEGitspacesEdit: ({ space, gitspaceId }) => `/${space}/gitspaces/edit/${gitspaceId}`,
   toCDEGitspaceInfra: ({ accountId }) => `/account/${accountId}/module/cde/gitspace-infrastructure`,
-  toCDEInfraConfigure: ({ accountId }) => `/account/${accountId}/module/cde/gitspace-infrastructure/configure`,
+  toCDEInfraConfigure: ({ accountId, provider }) =>
+    `/account/${accountId}/module/cde/gitspace-infrastructure/configure/${provider}`,
   toModuleRoute: ({ accountId }) => `/account/${accountId}/module/cde`,
-  toCDEInfraConfigureDetail: ({ accountId, infraprovider_identifier }) =>
-    `/account/${accountId}/module/cde/gitspace-infrastructure/configure/${infraprovider_identifier}`,
-  toCDEInfraConfigureDetailDownload: ({ accountId, infraprovider_identifier }) =>
-    `/account/${accountId}/module/cde/gitspace-infrastructure/configure/${infraprovider_identifier}/download`
+  toCDEInfraConfigureDetail: ({ accountId, infraprovider_identifier, provider }) =>
+    `/account/${accountId}/module/cde/gitspace-infrastructure/configure/${provider}/${infraprovider_identifier}`,
+  toCDEInfraConfigureDetailDownload: ({ accountId, infraprovider_identifier, provider }) =>
+    `/account/${accountId}/module/cde/gitspace-infrastructure/configure/${provider}/${infraprovider_identifier}/download`
 }

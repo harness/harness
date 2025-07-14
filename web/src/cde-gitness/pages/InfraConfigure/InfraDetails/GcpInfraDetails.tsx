@@ -28,7 +28,7 @@ interface InfraDetailsFormikProps {
   runner?: { region: string; zone: string }
 }
 
-const InfraDetails = () => {
+const GcpInfraDetails = () => {
   const initialData = {
     location: '',
     defaultSubnet: '',
@@ -93,7 +93,8 @@ const InfraDetails = () => {
     history.push(
       routes.toCDEInfraConfigureDetailDownload({
         accountId: accountInfo?.identifier,
-        infraprovider_identifier: infraprovider_identifier ?? identifier
+        infraprovider_identifier: infraprovider_identifier ?? identifier,
+        provider: HYBRID_VM_GCP
       })
     )
   }
@@ -205,4 +206,4 @@ const InfraDetails = () => {
   )
 }
 
-export default InfraDetails
+export default GcpInfraDetails

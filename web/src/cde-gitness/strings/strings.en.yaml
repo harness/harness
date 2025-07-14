@@ -67,6 +67,9 @@ copied: Copied
 id: ID
 gitspaceInfra: Gitspace Infrastructure
 configureGCPInfra: Configure GCP Infrastructure
+gcpInfrastructure: GCP Infrastructure
+awsInfrastructure: AWS Infrastructure
+configureAWSInfra: Configure AWS Infrastructure
 configureGitspaceInfra: Configure Gitspace Infrastructure
 delegate:
   DelegateSelector: Delegate Selector
@@ -75,6 +78,7 @@ gitspaceInfraHome:
   maxMessage: '{{field}} should not contain more than {{count}} characters'
   minNumber: '{{field}} should be greater than {{count}}'
   configureGCPButton: Configure GCP infrastructure
+  configureAWSButton: Configure AWS infrastructure
   gatewayGroupName: Gateway Group Name
   gatewayGroupHealth: Gateway Group Health
   gatewayInstanceName: Gateway Instance Name
@@ -87,6 +91,7 @@ gitspaceInfraHome:
   waitingMessage: It takes around 3-5 minutes to connect to the infrastructure. If it takes longer, please follow the
   troubleshoot: troubleshoot guidelines
   locationAndMachine: Locations and machines
+  regionsAndMachines: Regions and machines
   locationDetails: Location details
   region: Region
   locationName: Region Name
@@ -104,11 +109,15 @@ gitspaceInfraHome:
   persistentDisk: Persistent Disk
   bootSizeColumn: Boot Size
   bootDisk: Boot Disk
+  bootDiskType: Boot Disk Type
+  bootDiskSize: Boot Disk Size (in GB)
   bootSize: Boot Size (in GB)
   cpu: CPU (in Cores)
   memoryInGb: Memory (in GB)
   newMachine: New Machine
   newRegion: New Region
+  noRegionConfigured: No regions configured
+  noRegionConfiguredText: Configure a new region to let users create a Gitspace
   addnewRegion: Add New Region
   machineType: Machine Type
   zone: Zone
@@ -140,6 +149,7 @@ configureInfra:
   learnMoreAboutHybrid: Learn more about hybrid infra
   provideInfraDetails: Provide Infrastructure Details
   downloadAndApply: Download and Apply YAML
+  applyYamlAndVerifyConnection: Apply YAML and Verify Connection
   basicDetails: Basic Details
   learnMore: Learn More
   cancel: Cancel
@@ -147,14 +157,32 @@ configureInfra:
   infraName: Infrastructure Name
   name: Name
   domain: Domain
+  subdomain: Subdomain
   gateway: Gateway
   numberOfInstance: Number of Instances
   numberOfLocations: Number of Locations
   machineType: Machine Type
+  gatewayMachineType: Gateway Machine Type
   configureLocations: Configure Regions
   configureLocationNote: Users will only be able to host gitspaces in these regions only.
   gatewayNoteText: More number of instances better reliability of running the Gitspace. However more number of instances incur more costs
   basicNoteText: The domain on which all the gitspaces created by this infra will be accessible
+Aws:
+  title: AWS
+  VpcCidrBlock: VPC CIDR Block
+  domainExample: e.g. gitspace.harness.io
+  instanceType: Instance Type
+  gatewayInstanceType: Gateway Instance Type
+  configureRegionsAndZones: Configure Regions and Zones
+  gatewayAmi: Gateway AMI
+  gatewayAmiId: Gateway AMI ID
+  availabilityZone: Availability Zone
+  numberOfAvailabilityZone: '# of Availability Zone'
+  privateSubnet: Private Subnet CIDR Block
+  publicSubnet: Public Subnet CIDR Block
+  configureNewRegion: Configure New Region
+  selectAwsRegion: Select AWS Region
+  numberOfRegions: Number of Regions
 downloadAndApplySection:
   title: Download and apply YAML to terraform module
   back: Back

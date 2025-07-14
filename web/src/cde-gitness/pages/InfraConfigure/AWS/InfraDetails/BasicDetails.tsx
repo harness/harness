@@ -21,33 +21,29 @@ const BasicDetails = ({ formikProps }: BasicDetailProps) => {
     queryParams
   })
 
-  const { setFieldValue, values } = useFormikContext<{ machine_type?: string }>()
+  const { setFieldValue, values } = useFormikContext<{ instance_type?: string; machine_type?: string }>()
 
   const delegateHandler = (val: string[]) => {
     formikProps.setFieldValue('delegateSelector', val)
   }
 
-  const machineTypeOption = InfraDetails.machine_types.map(machine => {
+  const instanceTypeOption = InfraDetails.instance_types.map(instance => {
     return {
-      label: machine.name,
-      value: machine.name
+      label: instance.name,
+      value: instance.name
     }
   })
 
   return (
     <Layout.Vertical spacing="medium" className={css.containerSpacing}>
-      <Text className={css.basicDetailsHeading}>{getString('cde.configureInfra.basicDetails')}</Text>
+      <Text className={css.basicDetailsHeading}>{getString('overview')}</Text>
       <Container className={css.basicDetailsBody}>
         <FormInput.InputWithIdentifier
           inputLabel={getString('cde.configureInfra.infraName')}
           inputName="name"
           isIdentifierEditable={true}
         />
-        <FormInput.Text
-          name="project"
-          label={getString('cde.configureInfra.project')}
-          placeholder={getString('cde.configureInfra.project')}
-        />
+        <FormInput.Text name="vpc_cidr_block" label={getString('cde.Aws.VpcCidrBlock')} placeholder="10.6.0.0/16" />
         <FormInput.Text
           name="domain"
           className={css.inputWithNote}
@@ -59,19 +55,18 @@ const BasicDetails = ({ formikProps }: BasicDetailProps) => {
               {getString('cde.configureInfra.domain')}
             </Text>
           }
-          placeholder={getString('cde.configureInfra.domain')}
+          placeholder={getString('cde.Aws.domainExample')}
         />
         <Text font={{ variation: FontVariation.SMALL }}>{getString('cde.configureInfra.basicNoteText')}</Text>
         <br />
         <CustomSelectDropdown
-          value={machineTypeOption.find(item => item.label === values?.machine_type)}
+          value={instanceTypeOption.find(item => item.value === values?.machine_type)}
           onChange={(data: { label: string; value: string }) => {
             setFieldValue('machine_type', data.value)
           }}
           allowCustom
-          label={getString('cde.configureInfra.gatewayMachineType')}
-          options={machineTypeOption}
-          // placeholder={getString('cde.configureInfra.machineType')}
+          label={getString('cde.Aws.gatewayInstanceType')}
+          options={instanceTypeOption}
         />
         <Container className={css.delegateContainer}>
           <Text className={css.delegateSelector}>{getString('cde.delegate.DelegateSelector')}</Text>

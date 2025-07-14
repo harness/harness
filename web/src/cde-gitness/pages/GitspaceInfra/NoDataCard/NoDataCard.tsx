@@ -5,10 +5,11 @@ import { Link, useHistory } from 'react-router-dom'
 import { routes } from 'cde-gitness/RouteDefinitions'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
+import { HYBRID_VM_GCP } from 'cde-gitness/constants'
 import InfraLogo from '../../../../icons/infra_home_icon.svg?url'
 import css from './NoDataCard.module.scss'
 
-const NoDataCard = () => {
+const NoDataCard = ({ provider }: { provider: string }) => {
   const { getString } = useStrings()
   const history = useHistory()
   const { accountInfo } = useAppContext()
@@ -19,18 +20,26 @@ const NoDataCard = () => {
         <Layout.Vertical spacing="small" margin={{ bottom: 'medium' }}>
           <img src={InfraLogo} className={css.infraLogo} />
           <Text font={{ size: 'medium', weight: 'bold' }} className={css.containerHeading} color={Color.BLACK}>
-            {getString('cde.configureGitspaceInfra')}
+            {provider === HYBRID_VM_GCP ? getString('cde.configureGitspaceInfra') : getString('cde.configureAWSInfra')}
           </Text>
           <Text className={css.infraDescription}>{getString('cde.gitspaceInfraHome.description')}</Text>
           <Button
-            onClick={() => history.push(routes.toCDEInfraConfigure({ accountId: accountInfo?.identifier }))}
+            onClick={() =>
+              history.push(
+                routes.toCDEInfraConfigure({
+                  accountId: accountInfo?.identifier,
+                  provider
+                })
+              )
+            }
             font={{ size: 'small' }}
             className={css.configureButton}
             variation={ButtonVariation.PRIMARY}>
-            {getString('cde.gitspaceInfraHome.configureGCPButton')}
+            {provider === HYBRID_VM_GCP
+              ? getString('cde.gitspaceInfraHome.configureGCPButton')
+              : getString('cde.gitspaceInfraHome.configureAWSButton')}
           </Button>
           <Text className={css.supportText} icon="info-messaging">
-            {getString('cde.gitspaceInfraHome.gcpSupportText')}
             <Link to={'/'} className={css.learnMoreText} style={{ paddingLeft: '4px' }}>
               {getString('cde.gitspaceInfraHome.learnMore')}
             </Link>

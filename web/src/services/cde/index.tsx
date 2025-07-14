@@ -101,7 +101,7 @@ export type EnumIDEType =
   | 'rubymine'
   | 'rider'
 
-export type EnumInfraProviderType = 'docker' | 'harness_gcp' | 'harness_cloud' | 'hybrid_vm_gcp'
+export type EnumInfraProviderType = 'docker' | 'harness_gcp' | 'harness_cloud' | 'hybrid_vm_gcp' | 'hybrid_vm_aws'
 
 export interface OpenapiCreateGitspaceRequest {
   branch?: string

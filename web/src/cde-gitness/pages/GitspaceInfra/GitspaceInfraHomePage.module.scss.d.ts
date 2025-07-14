@@ -31,9 +31,11 @@ export declare const deleteInfraContainer: string
 export declare const deleteInfraTitle: string
 export declare const deleteMessage: string
 export declare const infraDetailCard: string
+export declare const infraTitle: string
 export declare const locationAndMachineCard: string
 export declare const locationAndMachineTitle: string
 export declare const main: string
 export declare const rowContent: string
 export declare const rowHeader: string
 export declare const tabHeading: string
+export declare const tabs: string

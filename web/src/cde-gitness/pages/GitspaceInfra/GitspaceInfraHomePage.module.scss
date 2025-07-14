@@ -8,6 +8,22 @@
   padding: var(--spacing-xxxlarge) 150px !important;
 }
 
+.tabs {
+  :global {
+    .bp3-tab-list {
+      background-color: var(--white);
+      width: 100%;
+      border-bottom: 0;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.13);
+      align-items: center;
+      padding: 0 var(--spacing-xlarge);
+    }
+    .bp3-tab-panel {
+      margin-top: 0;
+    }
+  }
+}
+
 .infraDetailCard {
   background: white !important;
   border-radius: var(--spacing-small) !important;
@@ -153,4 +169,8 @@
       }
     }
   }
+}
+
+.infraTitle {
+  margin-right: var(--spacing-small) !important;
 }

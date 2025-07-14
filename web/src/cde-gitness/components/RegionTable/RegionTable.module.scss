@@ -58,3 +58,32 @@
   background-color: var(--grey-0) !important;
   cursor: pointer !important;
 }
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tableRow {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  background-color: var(--grey-0) !important;
+  padding-top: var(--spacing-medium) !important;
+  padding-bottom: var(--spacing-medium) !important;
+}
+
+.tableRowSubComponent {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  padding-left: 5% !important;
+}
+
+.zonesTable {
+  border: 1px solid var(--grey-200) !important;
+  border-radius: var(--spacing-xsmall) !important;
+
+  > *:first-child[role='row'] {
+    background-color: var(--grey-100) !important;
+  }
+}

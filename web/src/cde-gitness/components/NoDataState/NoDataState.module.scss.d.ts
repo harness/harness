@@ -16,6 +16,6 @@
 
 /* eslint-disable */
 // This is an auto-generated file
-export declare const addMachineBtn: string
-export declare const addMachineText: string
-export declare const noMachineText: string
+export declare const contentWithIcon: string
+export declare const icon: string
+export declare const noDataContainer: string

@@ -1287,16 +1287,34 @@ export interface StringsMap {
   yours: string
   zoomIn: string
   zoomOut: string
+  'cde.Aws.VpcCidrBlock': string
+  'cde.Aws.availabilityZone': string
+  'cde.Aws.configureNewRegion': string
+  'cde.Aws.configureRegionsAndZones': string
+  'cde.Aws.domainExample': string
+  'cde.Aws.gatewayAmi': string
+  'cde.Aws.gatewayAmiId': string
+  'cde.Aws.gatewayInstanceType': string
+  'cde.Aws.instanceType': string
+  'cde.Aws.numberOfAvailabilityZone': string
+  'cde.Aws.numberOfRegions': string
+  'cde.Aws.privateSubnet': string
+  'cde.Aws.publicSubnet': string
+  'cde.Aws.selectAwsRegion': string
+  'cde.Aws.title': string
   'cde.account': string
   'cde.atleastOneRegion': string
+  'cde.awsInfrastructure': string
   'cde.branchPlaceholder': string
   'cde.branchValidationMessage': string
   'cde.changes': string
   'cde.changesTooltip.description': string
   'cde.changesTooltip.learnMore': string
   'cde.cloudDeveloperExperience': string
+  'cde.configureAWSInfra': string
   'cde.configureGCPInfra': string
   'cde.configureGitspaceInfra': string
+  'cde.configureInfra.applyYamlAndVerifyConnection': string
   'cde.configureInfra.basicDetails': string
   'cde.configureInfra.basicNoteText': string
   'cde.configureInfra.cancel': string
@@ -1306,6 +1324,7 @@ export interface StringsMap {
   'cde.configureInfra.domain': string
   'cde.configureInfra.downloadAndApply': string
   'cde.configureInfra.gateway': string
+  'cde.configureInfra.gatewayMachineType': string
   'cde.configureInfra.gatewayNoteText': string
   'cde.configureInfra.id': string
   'cde.configureInfra.infraName': string
@@ -1317,6 +1336,7 @@ export interface StringsMap {
   'cde.configureInfra.numberOfLocations': string
   'cde.configureInfra.project': string
   'cde.configureInfra.provideInfraDetails': string
+  'cde.configureInfra.subdomain': string
   'cde.copied': string
   'cde.cpu': string
   'cde.create.branchPlaceholder': string
@@ -1385,6 +1405,7 @@ export interface StringsMap {
   'cde.errorCard.unabletoResolve': string
   'cde.errorCard.viewLog': string
   'cde.eventTimeline': string
+  'cde.gcpInfrastructure': string
   'cde.getStarted': string
   'cde.gitspaceDetail': string
   'cde.gitspaceInfra': string
@@ -1392,11 +1413,14 @@ export interface StringsMap {
   'cde.gitspaceInfraHome.addMachineType': string
   'cde.gitspaceInfraHome.addnewRegion': string
   'cde.gitspaceInfraHome.bootDisk': string
+  'cde.gitspaceInfraHome.bootDiskSize': string
+  'cde.gitspaceInfraHome.bootDiskType': string
   'cde.gitspaceInfraHome.bootSize': string
   'cde.gitspaceInfraHome.bootSizeColumn': string
   'cde.gitspaceInfraHome.bootSizeMessage': string
   'cde.gitspaceInfraHome.bootType': string
   'cde.gitspaceInfraHome.bootTypeMessage': string
+  'cde.gitspaceInfraHome.configureAWSButton': string
   'cde.gitspaceInfraHome.configureGCPButton': string
   'cde.gitspaceInfraHome.cpu': string
   'cde.gitspaceInfraHome.cpuMessage': string
@@ -1441,9 +1465,12 @@ export interface StringsMap {
   'cde.gitspaceInfraHome.newMachine': string
   'cde.gitspaceInfraHome.newRegion': string
   'cde.gitspaceInfraHome.noMachineAvailable': string
+  'cde.gitspaceInfraHome.noRegionConfigured': string
+  'cde.gitspaceInfraHome.noRegionConfiguredText': string
   'cde.gitspaceInfraHome.persistentDisk': string
   'cde.gitspaceInfraHome.proxySubnet': string
   'cde.gitspaceInfraHome.region': string
+  'cde.gitspaceInfraHome.regionsAndMachines': string
   'cde.gitspaceInfraHome.runnerVMRegion': string
   'cde.gitspaceInfraHome.runnerVMZone': string
   'cde.gitspaceInfraHome.troubleshoot': string

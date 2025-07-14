@@ -1,0 +1,114 @@
+.zonesTable {
+  > *:first-child[role='row'] {
+    background-color: var(--grey-100) !important;
+  }
+
+  [role='cell'] {
+    padding: 8px 8px 8px 0px;
+    position: relative;
+    height: 64px;
+    vertical-align: top;
+  }
+
+  input {
+    width: 100%;
+  }
+
+  :global(.form-group) {
+    margin-bottom: 0 !important;
+    position: relative;
+  }
+}
+
+.addZoneButton {
+  border-top: 1px solid var(--grey-100);
+  padding: 15px;
+  display: flex;
+  align-items: center;
+}
+
+.zoneHeader {
+  display: flex !important;
+  align-items: center !important;
+  border: 1px solid var(--grey-100) !important;
+  background-color: var(--grey-50) !important;
+  padding: 14px var(--spacing-main) !important;
+}
+
+.zoneHeaderCell {
+  flex: 1 !important;
+  padding-right: var(--spacing-main) !important;
+}
+
+.zoneActionHeaderCell {
+  width: 60px !important;
+  text-align: end !important;
+}
+
+.zoneRow {
+  display: flex !important;
+  align-items: center !important;
+  border: 1px solid var(--grey-100) !important;
+  background-color: var(--grey-0) !important;
+  border-top: none !important;
+  padding: 8px var(--spacing-main) !important;
+}
+
+/* Added CSS classes to replace inline styles */
+.relativePosition {
+  position: relative;
+}
+
+.marginTop20 {
+  margin-top: 20px;
+}
+
+.zoneConfigTitle {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.actionButton {
+  margin-top: var(--spacing-small) !important;
+}
+
+.flexCenter {
+  display: flex;
+  justify-content: center;
+}
+
+.cursorPointer {
+  cursor: pointer;
+}
+
+.actionText {
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.zonesContainer {
+  border: 1px solid var(--grey-100);
+  border-radius: var(--spacing-xsmall);
+  margin-bottom: 15px;
+}
+
+.zoneCell {
+  flex: 1 !important;
+  padding: var(--padding-button) var(--padding-button) var(--padding-button) 14px !important;
+}
+
+.zoneActionCell {
+  width: 60px !important;
+  text-align: end !important;
+  padding: var(--padding-button) !important;
+}
+
+.domainSuffix {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888;
+  pointer-events: none;
+}

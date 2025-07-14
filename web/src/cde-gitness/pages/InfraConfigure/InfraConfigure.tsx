@@ -6,14 +6,17 @@ import { useParams } from 'react-router-dom'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
 import { routes } from 'cde-gitness/RouteDefinitions'
-import InfraDetails from './InfraDetails/InfraDetails'
+import AWSIcon from 'cde-gitness/assests/aws.svg?url'
+import AwsInfraDetails from './AWS/InfraDetails/AwsInfraDetails'
 import DownloadAndApplySection from './DownloadAndApply/DownloadAndApply'
 import GCPIcon from '../../../icons/google-cloud.svg?url'
+import GcpInfraDetails from './InfraDetails/GcpInfraDetails'
 import css from './InfraConfigure.module.scss'
 
 const InfraConfigurePage = () => {
   const { getString } = useStrings()
   const { accountInfo } = useAppContext()
+  const { infraprovider_identifier, provider } = useParams<{ infraprovider_identifier?: string; provider: string }>()
   const { type } = useParams<{ type?: string }>()
 
   const tabOptions = {
@@ -31,9 +34,9 @@ const InfraConfigurePage = () => {
       <Page.Header
         title={
           <Layout.Horizontal>
-            <img src={GCPIcon} width={24} />
+            <img src={provider === 'hybrid_vm_aws' ? AWSIcon : GCPIcon} width={26} />
             <Heading level={4} font={{ variation: FontVariation.H4 }} padding={{ left: 'small' }}>
-              {getString('cde.configureGCPInfra')}
+              {provider === 'hybrid_vm_aws' ? getString('cde.configureAWSInfra') : getString('cde.configureGCPInfra')}
             </Heading>
           </Layout.Horizontal>
         }
@@ -62,7 +65,11 @@ const InfraConfigurePage = () => {
                 label: getString('cde.gitspaceInfra')
               },
               {
-                url: routes.toCDEInfraConfigure({ accountId: accountInfo?.identifier }),
+                url: routes.toCDEInfraConfigureDetail({
+                  accountId: accountInfo?.identifier,
+                  infraprovider_identifier: infraprovider_identifier ?? '',
+                  provider: provider
+                }),
                 label: getString('cde.configureInfra.configure')
               }
             ]}
@@ -79,12 +86,12 @@ const InfraConfigurePage = () => {
                 id: tabOptions.tab1,
                 title: getString('cde.configureInfra.provideInfraDetails'),
                 disabled: tab !== tabOptions.tab1,
-                panel: <InfraDetails />
+                panel: provider === 'hybrid_vm_aws' ? <AwsInfraDetails /> : <GcpInfraDetails />
               },
               { id: '', title: <Icon name="chevron-right" size={16} />, disabled: true },
               {
                 id: tabOptions.tab2,
-                title: getString('cde.configureInfra.downloadAndApply'),
+                title: getString('cde.configureInfra.applyYamlAndVerifyConnection'),
                 disabled: tab !== tabOptions.tab2,
                 panel: <DownloadAndApplySection />
               }

@@ -13,16 +13,16 @@ import {
 import { Icon } from '@harnessio/icons'
 import { cloneDeep } from 'lodash-es'
 import { Color, FontVariation } from '@harnessio/design-system'
-import type { regionType } from 'cde-gitness/constants'
+import { HYBRID_VM_AWS, HYBRID_VM_GCP, type regionType } from 'cde-gitness/constants'
 import { useStrings } from 'framework/strings'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { getErrorMessage } from 'utils/Utils'
 import MachineModal from 'cde-gitness/components/MachineModal/MachineModal'
 import { useAppContext } from 'AppContext'
 import { TypesInfraProviderResource, useDeleteInfraProviderResource, useListGateways } from 'services/cde'
-import NoMachineCard from 'cde-gitness/components/NoMachineCard/NoMachineCard'
 import MachineDetailCard from 'cde-gitness/components/MachineDetailCard/MachineDetailCard'
-import NoMachineIcon from '../../../../icons/NoMachine.svg?url'
+import NoDataState from 'cde-gitness/components/NoDataState'
+import AwsMachineModal from 'cde-gitness/components/MachineModal/AwsMachineModal'
 import css from './MachineLocationContent.module.scss'
 
 interface MachineLocationContentProps {
@@ -32,6 +32,7 @@ interface MachineLocationContentProps {
   infraprovider_identifier: string
   setRegionData: (val: Unknown) => void
   regionData: regionType[]
+  provider: string
 }
 
 function MachineLocationContent({
@@ -40,7 +41,8 @@ function MachineLocationContent({
   machineData = [],
   infraprovider_identifier,
   setRegionData,
-  regionData
+  regionData,
+  provider
 }: MachineLocationContentProps) {
   const { getString } = useStrings()
   const confirmDelete = useConfirmAct()
@@ -115,94 +117,104 @@ function MachineLocationContent({
     )
   }
 
-  const columns: any = [
-    {
-      Header: (
-        <Layout.Horizontal>
-          <Text font={{ variation: FontVariation.TABLE_HEADERS }} className={css.headingText}>
-            {getString('cde.gitspaceInfraHome.machine')}
-          </Text>
-          <HarnessDocTooltip tooltipId="InfraProviderResourceMachine" useStandAlone={true} />
-        </Layout.Horizontal>
-      ),
-      accessor: 'name',
-      width: '16%'
-    },
-    {
-      Header: (
-        <Layout.Horizontal>
-          <Text font={{ variation: FontVariation.TABLE_HEADERS }} className={css.headingText}>
-            {getString('cde.gitspaceInfraHome.persistentDisk')}
-          </Text>
-          <HarnessDocTooltip tooltipId="InfraProviderResourceDiskType" useStandAlone={true} />
-        </Layout.Horizontal>
-      ),
-      accessor: 'disk',
-      Cell: CustomPersistentDiskColumn,
-      width: '17%'
-    },
-    {
-      Header: (
-        <Layout.Horizontal>
-          <Text font={{ variation: FontVariation.TABLE_HEADERS }} className={css.headingText}>
-            {getString('cde.gitspaceInfraHome.zone')}
-          </Text>
-          <HarnessDocTooltip tooltipId="InfraProviderResourceZone" useStandAlone={true} />
-        </Layout.Horizontal>
-      ),
-      accessor: 'metadata.zone',
-      width: '12%'
-    },
-    {
-      Header: (
-        <Layout.Horizontal>
-          <Text font={{ variation: FontVariation.TABLE_HEADERS }} className={css.headingText}>
-            {getString('cde.gitspaceInfraHome.bootDisk')}
-          </Text>
-          <HarnessDocTooltip tooltipId="InfraProviderResourceBootSize" useStandAlone={true} />
-        </Layout.Horizontal>
-      ),
-      accessor: 'metadata.boot_disk_size',
-      Cell: CustomDiskColumn,
-      width: '20%'
-    },
-    {
-      Header: (
-        <Layout.Horizontal>
-          <Text font={{ variation: FontVariation.TABLE_HEADERS }} className={css.headingText}>
-            {getString('cde.gitspaceInfraHome.cpu')}
-          </Text>
-          <HarnessDocTooltip tooltipId="InfraProviderResourceCPU" useStandAlone={true} />
-        </Layout.Horizontal>
-      ),
-      accessor: 'cpu',
-      width: '15%'
-    },
-    {
-      Header: (
-        <Layout.Horizontal>
-          <Text font={{ variation: FontVariation.TABLE_HEADERS }} className={css.headingText}>
-            {getString('cde.gitspaceInfraHome.memoryInGb')}
-          </Text>
-          <HarnessDocTooltip tooltipId="InfraProviderResourceMemory" useStandAlone={true} />
-        </Layout.Horizontal>
-      ),
-      accessor: 'memory',
-      width: '15%'
-    },
-    {
-      Header: '',
-      accessor: 'identifier',
-      Cell: ActionCell,
-      width: '5%'
-    }
-  ]
+  const createMachineColumns = (providerType: string): any[] => {
+    const isAws = providerType === HYBRID_VM_AWS
+    const machineTypeKey = isAws ? 'cde.Aws.instanceType' : 'cde.gitspaceInfraHome.machine'
+    const zoneKey = isAws ? 'cde.Aws.availabilityZone' : 'cde.gitspaceInfraHome.zone'
+
+    return [
+      {
+        Header: (
+          <Layout.Horizontal>
+            <Text font={{ variation: FontVariation.TABLE_HEADERS }} className={css.headingText}>
+              {getString(machineTypeKey)}
+            </Text>
+            <HarnessDocTooltip tooltipId="InfraProviderResourceMachine" useStandAlone={true} />
+          </Layout.Horizontal>
+        ),
+        accessor: 'name',
+        width: '16%'
+      },
+      {
+        Header: (
+          <Layout.Horizontal>
+            <Text font={{ variation: FontVariation.TABLE_HEADERS }} className={css.headingText}>
+              {getString('cde.gitspaceInfraHome.persistentDisk')}
+            </Text>
+            <HarnessDocTooltip tooltipId="InfraProviderResourceDiskType" useStandAlone={true} />
+          </Layout.Horizontal>
+        ),
+        accessor: 'disk',
+        Cell: CustomPersistentDiskColumn,
+        width: '17%'
+      },
+      {
+        Header: (
+          <Layout.Horizontal>
+            <Text font={{ variation: FontVariation.TABLE_HEADERS }} className={css.headingText}>
+              {getString(zoneKey)}
+            </Text>
+            <HarnessDocTooltip tooltipId="InfraProviderResourceZone" useStandAlone={true} />
+          </Layout.Horizontal>
+        ),
+        accessor: 'metadata.zone',
+        width: '12%'
+      },
+      {
+        Header: (
+          <Layout.Horizontal>
+            <Text font={{ variation: FontVariation.TABLE_HEADERS }} className={css.headingText}>
+              {getString('cde.gitspaceInfraHome.bootDisk')}
+            </Text>
+            <HarnessDocTooltip tooltipId="InfraProviderResourceBootSize" useStandAlone={true} />
+          </Layout.Horizontal>
+        ),
+        accessor: 'metadata.boot_disk_size',
+        Cell: CustomDiskColumn,
+        width: '20%'
+      },
+      {
+        Header: (
+          <Layout.Horizontal>
+            <Text font={{ variation: FontVariation.TABLE_HEADERS }} className={css.headingText}>
+              {getString('cde.gitspaceInfraHome.cpu')}
+            </Text>
+            <HarnessDocTooltip tooltipId="InfraProviderResourceCPU" useStandAlone={true} />
+          </Layout.Horizontal>
+        ),
+        accessor: 'cpu',
+        width: '15%'
+      },
+      {
+        Header: (
+          <Layout.Horizontal>
+            <Text font={{ variation: FontVariation.TABLE_HEADERS }} className={css.headingText}>
+              {getString('cde.gitspaceInfraHome.memoryInGb')}
+            </Text>
+            <HarnessDocTooltip tooltipId="InfraProviderResourceMemory" useStandAlone={true} />
+          </Layout.Horizontal>
+        ),
+        accessor: 'memory',
+        width: '15%'
+      },
+      {
+        Header: '',
+        accessor: 'identifier',
+        Cell: ActionCell,
+        width: '5%'
+      }
+    ]
+  }
+
+  const gcpColumns = createMachineColumns(HYBRID_VM_GCP)
+  const awsColumns = createMachineColumns(HYBRID_VM_AWS)
 
   const groupHealthData = gatewayResponse?.find(gateway => gateway.region === locationData.region_name)
+  const MachineComponent = provider === HYBRID_VM_AWS ? AwsMachineModal : MachineModal
 
   return (
     <Container className={css.main}>
-      <MachineModal
+      <MachineComponent
         isOpen={isOpen}
         setIsOpen={setIsOpen}
         infraproviderIdentifier={infraprovider_identifier}
@@ -249,14 +261,13 @@ function MachineLocationContent({
 
           <Container className={css.emptyMachineCard}>
             <Layout.Horizontal className={css.messageContainer}>
-              {machineData?.length === 0 ? <img className={css.noMachineIcon} src={NoMachineIcon} /> : <></>}
               {!isConnected ? (
                 <Text className={css.addMachineNote}>{getString('cde.gitspaceInfraHome.addMachineNote')}</Text>
               ) : machineData?.length === 0 ? (
-                <NoMachineCard setIsOpen={setIsOpen} />
+                <NoDataState type="machine" setIsOpen={setIsOpen} />
               ) : (
                 <Table
-                  columns={columns}
+                  columns={provider === HYBRID_VM_AWS ? awsColumns : gcpColumns}
                   bpTableProps={bpTableProps}
                   className={css.tableContainer}
                   data={machineData}

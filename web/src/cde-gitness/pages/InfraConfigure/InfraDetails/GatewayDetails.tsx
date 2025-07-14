@@ -1,6 +1,6 @@
 import React from 'react'
 import { Container, Label, Layout, Text, TextInput } from '@harnessio/uicore'
-import { Color } from '@harnessio/design-system'
+import { Color, FontVariation } from '@harnessio/design-system'
 import { useFormikContext, type FormikProps } from 'formik'
 import { useStrings } from 'framework/strings'
 import CustomSelectDropdown from 'cde-gitness/components/CustomSelectDropdown/CustomSelectDropdown'
@@ -41,7 +41,7 @@ const GatewayDetails = ({ formikProps }: GatewayProps) => {
           placeholder={getString('cde.configureInfra.numberOfInstance')}
         />
 
-        <Text className={css.noteText}>{getString('cde.configureInfra.gatewayNoteText')}</Text>
+        <Text font={{ variation: FontVariation.SMALL }}>{getString('cde.configureInfra.gatewayNoteText')}</Text>
         <br />
         <CustomSelectDropdown
           value={machineTypeOption.find(item => item.label === values?.machine_type)}
