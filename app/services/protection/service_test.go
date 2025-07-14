@@ -79,25 +79,25 @@ func TestIsCritical(t *testing.T) {
 func TestManager_SanitizeJSON(t *testing.T) {
 	tests := []struct {
 		name      string
-		ruleTypes []types.RuleType
-		ruleType  types.RuleType
+		ruleTypes []enum.RuleType
+		ruleType  enum.RuleType
 		errReg    error
 		errSan    error
 	}{
 		{
 			name:      "success",
-			ruleTypes: []types.RuleType{TypeBranch},
+			ruleTypes: []enum.RuleType{TypeBranch},
 			ruleType:  TypeBranch,
 		},
 		{
 			name:      "duplicate",
-			ruleTypes: []types.RuleType{TypeBranch, TypeBranch},
+			ruleTypes: []enum.RuleType{TypeBranch, TypeBranch},
 			ruleType:  TypeBranch,
 			errReg:    ErrAlreadyRegistered,
 		},
 		{
 			name:      "unregistered",
-			ruleTypes: []types.RuleType{},
+			ruleTypes: []enum.RuleType{},
 			ruleType:  TypeBranch,
 			errSan:    ErrUnrecognizedType,
 		},

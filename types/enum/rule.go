@@ -18,6 +18,30 @@ import (
 	"strings"
 )
 
+// RuleType represents rule type.
+type RuleType string
+
+// RuleType enumeration.
+const (
+	RuleTypeBranch RuleType = "branch"
+	RuleTypeTag    RuleType = "tag"
+	RuleTypePush   RuleType = "push"
+)
+
+var ruleTypes = sortEnum([]RuleType{
+	RuleTypeBranch,
+	RuleTypeTag,
+	RuleTypePush,
+})
+
+func (RuleType) Enum() []interface{} { return toInterfaceSlice(ruleTypes) }
+func (s RuleType) Sanitize() (RuleType, bool) {
+	return Sanitize(s, GetAllRuleTypes)
+}
+func GetAllRuleTypes() ([]RuleType, RuleType) {
+	return ruleTypes, ""
+}
+
 // RuleState represents rule state.
 type RuleState string
 

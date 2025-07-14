@@ -36,7 +36,7 @@ import (
 const ruleScopeRepo = int64(0)
 
 type CreateInput struct {
-	Type  types.RuleType `json:"type"`
+	Type  enum.RuleType  `json:"type"`
 	State enum.RuleState `json:"state"`
 	// TODO [CODE-1363]: remove after identifier migration.
 	UID         string             `json:"uid" deprecated:"true"`

@@ -19,9 +19,10 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
-const TypePush types.RuleType = "push"
+const TypePush enum.RuleType = "push"
 
 // Push implements protection rules for the rule type TypePush.
 type Push struct {

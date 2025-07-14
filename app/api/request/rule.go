@@ -33,6 +33,7 @@ func ParseRuleFilter(r *http.Request) *types.RuleFilter {
 	return &types.RuleFilter{
 		ListQueryFilter: ParseListQueryFilterFromRequest(r),
 		States:          parseRuleStates(r),
+		Types:           parseRuleTypes(r),
 		Sort:            parseRuleSort(r),
 		Order:           ParseOrder(r),
 	}
@@ -54,6 +55,24 @@ func parseRuleStates(r *http.Request) []enum.RuleState {
 	}
 
 	return states
+}
+
+// parseRuleTypes extracts the rule types from the url.
+func parseRuleTypes(r *http.Request) []enum.RuleType {
+	strTypes, _ := QueryParamList(r, QueryParamType)
+	m := make(map[enum.RuleType]struct{}) // use map to eliminate duplicates
+	for _, s := range strTypes {
+		if t, ok := enum.RuleType(s).Sanitize(); ok {
+			m[t] = struct{}{}
+		}
+	}
+
+	ruleTypes := make([]enum.RuleType, 0, len(m))
+	for t := range m {
+		ruleTypes = append(ruleTypes, t)
+	}
+
+	return ruleTypes
 }
 
 // GetRuleIdentifierFromPath extracts the protection rule identifier from the URL.

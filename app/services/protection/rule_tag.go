@@ -19,9 +19,10 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
-const TypeTag types.RuleType = "tag"
+const TypeTag enum.RuleType = "tag"
 
 // Tag implements protection rules for the rule type TypeTag.
 type Tag struct {

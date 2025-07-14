@@ -19,9 +19,10 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
-const TypeBranch types.RuleType = "branch"
+const TypeBranch enum.RuleType = "branch"
 
 // Branch implements protection rules for the rule type TypeBranch.
 type Branch struct {

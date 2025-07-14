@@ -17,11 +17,14 @@ package openapi
 import (
 	"net/http"
 
+	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/rules"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
+	"github.com/gotidy/ptr"
 	"github.com/swaggest/openapi-go/openapi3"
 )
 
@@ -48,6 +51,56 @@ type Rule struct {
 
 	// overshadow Pattern to correct the type
 	Pattern protection.Pattern `json:"pattern"`
+}
+
+var queryParameterRuleTypes = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamType,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The types of rules to include."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeArray),
+				Items: &openapi3.SchemaOrRef{
+					Schema: &openapi3.Schema{
+						Type: ptrSchemaType(openapi3.SchemaTypeString),
+						Enum: RuleType("").Enum(),
+					},
+				},
+			},
+		},
+	},
+}
+
+var queryParameterQueryRuleList = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamQuery,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The substring by which the repository protection rules are filtered."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeString),
+			},
+		},
+	},
+}
+
+var queryParameterSortRuleList = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamSort,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The field by which the protection rules are sorted."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeString),
+				Default: ptrptr(enum.RuleSortCreated),
+				Enum:    enum.RuleSort("").Enum(),
+			},
+		},
+	},
 }
 
 func rulesOperations(reflector *openapi3.Reflector) {
@@ -106,7 +159,7 @@ func rulesOperations(reflector *openapi3.Reflector) {
 	opSpaceRuleList.WithTags("space")
 	opSpaceRuleList.WithMapOfAnything(map[string]interface{}{"operationId": "spaceRuleList"})
 	opSpaceRuleList.WithParameters(
-		queryParameterQueryRuleList,
+		queryParameterQueryRuleList, queryParameterRuleTypes,
 		queryParameterOrder, queryParameterSortRuleList,
 		QueryParameterPage, QueryParameterLimit, QueryParameterInherited)
 	_ = reflector.SetRequest(&opSpaceRuleList, &struct {
@@ -188,7 +241,7 @@ func rulesOperations(reflector *openapi3.Reflector) {
 	opRepoRuleList.WithTags("repository")
 	opRepoRuleList.WithMapOfAnything(map[string]interface{}{"operationId": "repoRuleList"})
 	opRepoRuleList.WithParameters(
-		queryParameterQueryRuleList,
+		queryParameterQueryRuleList, queryParameterRuleTypes,
 		queryParameterOrder, queryParameterSortRuleList,
 		QueryParameterPage, QueryParameterLimit, QueryParameterInherited)
 	_ = reflector.SetRequest(&opRepoRuleList, &struct {

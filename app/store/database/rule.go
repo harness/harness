@@ -68,7 +68,7 @@ type rule struct {
 	Identifier  string `db:"rule_uid"`
 	Description string `db:"rule_description"`
 
-	Type  types.RuleType `db:"rule_type"`
+	Type  enum.RuleType  `db:"rule_type"`
 	State enum.RuleState `db:"rule_state"`
 
 	Pattern    string `db:"rule_pattern"`
@@ -355,7 +355,7 @@ type ruleInfo struct {
 	RepoPath   string         `db:"repo_path"`
 	ID         int64          `db:"rule_id"`
 	Identifier string         `db:"rule_uid"`
-	Type       types.RuleType `db:"rule_type"`
+	Type       enum.RuleType  `db:"rule_type"`
 	State      enum.RuleState `db:"rule_state"`
 	Pattern    string         `db:"rule_pattern"`
 	Definition string         `db:"rule_definition"`
@@ -425,7 +425,7 @@ var listRepoRulesQueryTypesPg = fmt.Sprintf(listRepoRulesQuery, "AND rule_type =
 func (s *RuleStore) ListAllRepoRules(
 	ctx context.Context,
 	repoID int64,
-	ruleTypes ...types.RuleType,
+	ruleTypes ...enum.RuleType,
 ) ([]types.RuleInfoInternal, error) {
 	useRuleTypes := len(ruleTypes) > 0
 
@@ -458,7 +458,7 @@ func (s *RuleStore) ListAllRepoRules(
 	return s.mapToRuleInfos(result), nil
 }
 
-func ruleTypeQuery(ruleTypes ...types.RuleType) string {
+func ruleTypeQuery(ruleTypes ...enum.RuleType) string {
 	var b strings.Builder
 	b.WriteString(`AND rule_type IN (`)
 
@@ -484,6 +484,12 @@ func (*RuleStore) applyFilter(
 		stmt = stmt.Where("rule_state = ?", filter.States[0])
 	} else if len(filter.States) > 1 {
 		stmt = stmt.Where(squirrel.Eq{"rule_state": filter.States})
+	}
+
+	if len(filter.Types) == 1 {
+		stmt = stmt.Where("rule_type = ?", filter.Types[0])
+	} else if len(filter.Types) > 1 {
+		stmt = stmt.Where(squirrel.Eq{"rule_type": filter.Types})
 	}
 
 	if filter.Query != "" {

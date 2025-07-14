@@ -69,7 +69,7 @@ type (
 
 	// Manager is used to enforce protection rules.
 	Manager struct {
-		defGenMap map[types.RuleType]DefinitionGenerator
+		defGenMap map[enum.RuleType]DefinitionGenerator
 		ruleStore store.RuleStore
 	}
 )
@@ -102,13 +102,13 @@ func IsBypassed(violations []types.RuleViolations) bool {
 // NewManager creates new protection Manager.
 func NewManager(ruleStore store.RuleStore) *Manager {
 	return &Manager{
-		defGenMap: make(map[types.RuleType]DefinitionGenerator),
+		defGenMap: make(map[enum.RuleType]DefinitionGenerator),
 		ruleStore: ruleStore,
 	}
 }
 
-// Register registers new types.RuleType.
-func (m *Manager) Register(ruleType types.RuleType, gen DefinitionGenerator) error {
+// Register registers new enum.RuleType.
+func (m *Manager) Register(ruleType enum.RuleType, gen DefinitionGenerator) error {
 	_, ok := m.defGenMap[ruleType]
 	if ok {
 		return ErrAlreadyRegistered
@@ -120,7 +120,7 @@ func (m *Manager) Register(ruleType types.RuleType, gen DefinitionGenerator) err
 }
 
 func (m *Manager) FromJSON(
-	ruleType types.RuleType, message json.RawMessage, strict bool,
+	ruleType enum.RuleType, message json.RawMessage, strict bool,
 ) (Protection, error) {
 	gen := m.defGenMap[ruleType]
 	if gen == nil {
@@ -146,7 +146,7 @@ func (m *Manager) FromJSON(
 	return r, nil
 }
 
-func (m *Manager) SanitizeJSON(ruleType types.RuleType, message json.RawMessage) (json.RawMessage, error) {
+func (m *Manager) SanitizeJSON(ruleType enum.RuleType, message json.RawMessage) (json.RawMessage, error) {
 	r, err := m.FromJSON(ruleType, message, true)
 	if err != nil {
 		return nil, err
@@ -158,7 +158,7 @@ func (m *Manager) SanitizeJSON(ruleType types.RuleType, message json.RawMessage)
 func (m *Manager) ListRepoRules(
 	ctx context.Context,
 	repoID int64,
-	ruleTypes ...types.RuleType,
+	ruleTypes ...enum.RuleType,
 ) ([]types.RuleInfoInternal, error) {
 	ruleInfos, err := m.ruleStore.ListAllRepoRules(ctx, repoID, ruleTypes...)
 	if err != nil {

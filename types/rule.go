@@ -38,7 +38,7 @@ type Rule struct {
 	Identifier  string `json:"identifier"`
 	Description string `json:"description"`
 
-	Type  RuleType       `json:"type"`
+	Type  enum.RuleType  `json:"type"`
 	State enum.RuleState `json:"state"`
 
 	Pattern    json.RawMessage `json:"pattern"`
@@ -134,13 +134,12 @@ func (r *Rule) IsEqual(rule *Rule) bool {
 		bytes.Equal(r.Definition, rule.Definition)
 }
 
-type RuleType string
-
 type RuleFilter struct {
 	ListQueryFilter
 	States []enum.RuleState
-	Sort   enum.RuleSort `json:"sort"`
-	Order  enum.Order    `json:"order"`
+	Types  []enum.RuleType `json:"types"`
+	Sort   enum.RuleSort   `json:"sort"`
+	Order  enum.Order      `json:"order"`
 }
 
 // Violation represents a single violation.
@@ -189,7 +188,7 @@ type RuleInfo struct {
 
 	ID         int64          `json:"-"`
 	Identifier string         `json:"identifier"`
-	Type       RuleType       `json:"type"`
+	Type       enum.RuleType  `json:"type"`
 	State      enum.RuleState `json:"state"`
 }
 

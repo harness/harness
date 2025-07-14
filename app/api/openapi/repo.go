@@ -618,36 +618,6 @@ var queryParameterAuthoredByID = openapi3.ParameterOrRef{
 	},
 }
 
-var queryParameterQueryRuleList = openapi3.ParameterOrRef{
-	Parameter: &openapi3.Parameter{
-		Name:        request.QueryParamQuery,
-		In:          openapi3.ParameterInQuery,
-		Description: ptr.String("The substring by which the repository protection rules are filtered."),
-		Required:    ptr.Bool(false),
-		Schema: &openapi3.SchemaOrRef{
-			Schema: &openapi3.Schema{
-				Type: ptrSchemaType(openapi3.SchemaTypeString),
-			},
-		},
-	},
-}
-
-var queryParameterSortRuleList = openapi3.ParameterOrRef{
-	Parameter: &openapi3.Parameter{
-		Name:        request.QueryParamSort,
-		In:          openapi3.ParameterInQuery,
-		Description: ptr.String("The field by which the protection rules are sorted."),
-		Required:    ptr.Bool(false),
-		Schema: &openapi3.SchemaOrRef{
-			Schema: &openapi3.Schema{
-				Type:    ptrSchemaType(openapi3.SchemaTypeString),
-				Default: ptrptr(enum.RuleSortCreated),
-				Enum:    enum.RuleSort("").Enum(),
-			},
-		},
-	},
-}
-
 var queryParameterBypassRules = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamBypassRules,

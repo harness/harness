@@ -596,7 +596,7 @@ type (
 		ListAllRepoRules(
 			ctx context.Context,
 			repoID int64,
-			ruleTypes ...types.RuleType,
+			ruleTypes ...enum.RuleType,
 		) ([]types.RuleInfoInternal, error)
 	}
 
