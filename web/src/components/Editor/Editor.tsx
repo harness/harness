@@ -34,7 +34,7 @@ import { debounce } from 'lodash-es'
 import type { RepoRepositoryOutput, TypesPrincipalInfo } from 'services/code'
 import { useStrings } from 'framework/strings'
 import { handleUpload } from 'utils/GitUtils'
-import { handleFileDrop, handlePaste } from 'utils/Utils'
+import { PrincipalType, handleFileDrop, handlePaste } from 'utils/Utils'
 import { getConfig, getUsingFetch } from 'services/config'
 import { useAppContext } from 'AppContext'
 import css from './Editor.module.scss'
@@ -145,7 +145,7 @@ export const Editor = React.memo(function CodeMirrorReactEditor({
           {
             queryParams: {
               query: query.trim(),
-              type: 'user',
+              type: PrincipalType.USER,
               limit: 50,
               accountIdentifier: routingId
             }

@@ -1,0 +1,63 @@
+.textInputWrapper {
+  margin-bottom: 0;
+  width: 100% !important;
+
+  .iconClass {
+    margin-top: 11px !important;
+  }
+
+  .rightIconClass {
+    width: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 32px;
+  }
+}
+
+.dropDownContainer {
+  width: 467px; /* Reduced width to match other elements */
+  min-width: 467px !important;
+
+  .popover {
+    & :global(.bp3-popover-target) {
+      width: 100% !important;
+    }
+  }
+  .popoverHeight {
+    max-height: 400px;
+    min-width: 467px !important; /* Make the popover match the input width */
+  }
+}
+
+:global {
+  /* Target the popover and menu to set max-width */
+  /* Prevent horizontal scrolling in menu */
+  .bp3-menu {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  .bp3-menu > div {
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+
+  .bp3-menu > div:hover {
+    background: var(--grey-100) !important;
+    color: var(--grey-1000) !important;
+    cursor: pointer;
+  }
+
+  .activeMenuItem {
+    background-color: var(--primary-2) !important;
+    color: var(--grey-1000) !important;
+  }
+
+  .bp3-menu > div.bp3-active,
+  .bp3-menu > div[aria-selected='true'] {
+    background: var(--primary-2) !important;
+    color: var(--grey-1000) !important;
+    outline: none !important;
+  }
+}

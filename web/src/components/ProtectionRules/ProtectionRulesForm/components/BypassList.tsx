@@ -17,31 +17,43 @@
 import React, { useMemo } from 'react'
 import cx from 'classnames'
 import { Icon } from '@harnessio/icons'
-import { Avatar, Container, FlexExpander, Layout, Text } from '@harnessio/uicore'
+import { Container, FlexExpander, Layout, Text } from '@harnessio/uicore'
+import { PopoverPosition } from '@blueprintjs/core'
+import type { NormalizedPrincipal, PrincipalType } from 'utils/Utils'
 import css from '../ProtectionRulesForm.module.scss'
 
 const BypassList = (props: {
-  bypassList?: string[] // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  renderPrincipalIcon: (type: PrincipalType, displayName: string) => JSX.Element
+  bypassList?: NormalizedPrincipal[]
   setFieldValue: (field: string, value: any, shouldValidate?: boolean) => void
 }) => {
-  const { bypassList, setFieldValue } = props
+  const { bypassList, setFieldValue, renderPrincipalIcon } = props
 
   const bypassContent = useMemo(() => {
     return (
       <Container className={cx(css.widthContainer, css.bypassContainer)}>
-        {bypassList?.map((owner: string, idx: number) => {
-          const name = owner.slice(owner.indexOf(' ') + 1)
+        {bypassList?.map((userObj, idx: number) => {
+          const { id, display_name, email_or_identifier, type } = userObj
           return (
-            <Layout.Horizontal key={`${name}-${idx}`} flex={{ align: 'center-center' }} padding={'small'}>
-              <Avatar hoverCard={false} size="small" name={name.toString()} />
-              <Text padding={{ top: 'tiny' }} lineClamp={1}>
-                {name}
+            <Layout.Horizontal
+              key={`${display_name}-${idx}-${id}-${email_or_identifier}`}
+              flex={{ align: 'center-center' }}
+              padding={{ right: 'small', left: 'small' }}>
+              {renderPrincipalIcon(type as PrincipalType, display_name)}
+              <Text
+                style={{ cursor: 'pointer' }}
+                tooltip={email_or_identifier}
+                tooltipProps={{
+                  interactionKind: 'hover',
+                  position: PopoverPosition.TOP
+                }}>
+                {display_name}
               </Text>
               <FlexExpander />
               <Icon
                 name="code-close"
                 onClick={() => {
-                  const filteredData = bypassList.filter(item => !(item === owner))
+                  const filteredData = bypassList.filter(item => !(item.id === id))
                   setFieldValue('bypassList', filteredData)
                 }}
                 className={css.codeClose}

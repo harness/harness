@@ -17,7 +17,7 @@
 import React, { useState } from 'react'
 import { PopoverInteractionKind, Spinner } from '@blueprintjs/core'
 import { useGet, useMutate } from 'restful-react'
-import { omit } from 'lodash-es'
+import { isEmpty, omit } from 'lodash-es'
 import cx from 'classnames'
 import { Container, Layout, Text, Avatar, FlexExpander, useToaster, Utils, stringSubstitute } from '@harnessio/uicore'
 import { Icon, IconName } from '@harnessio/icons'
@@ -125,36 +125,6 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
     return info
   }
 
-  // const { data: reviewersData,refetch:refetchReviewers } = useGet<Unknown[]>({
-  //   path: `/api/v1/principals`,
-  //   queryParams: {
-  //     query: searchTerm,
-  //     limit: LIST_FETCHING_LIMIT,
-  //     page: page,
-  //     accountIdentifier: 'kmpySmUISimoRrJL6NL73w',
-  //     type: 'user'
-  //   }
-  // })
-  // console.log(reviewers)
-
-  // interface PrReviewOption {
-  //   method: 'optional' | 'required' | 'reject'
-  //   title: string
-  //   disabled?: boolean
-  //   color: Color
-  // }
-  // const prDecisionOptions: PrReviewOption[] = [
-  //   {
-  //     method: 'optional',
-  //     title: getString('optional'),
-  //     color: Color.GREEN_700
-  //   },
-  //   {
-  //     method: 'required',
-  //     title: getString('required'),
-  //     color: Color.ORANGE_700
-  //   }
-  // ]
   const { mutate: updateCodeCommentStatus } = useMutate({
     verb: 'PUT',
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/reviewers`
@@ -181,8 +151,6 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
     debounce: 500
   })
 
-  // const [isOptionsOpen, setOptionsOpen] = React.useState(false)
-  // const [val, setVal] = useState<SelectOption>()
   //TODO: add actions when you click the options menu button and also api integration when there's optional and required reviwers
   return (
     <Container width={`30%`}>
@@ -193,39 +161,6 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
               {getString('reviewers')}
             </Text>
             <FlexExpander />
-
-            {/* <Popover
-              isOpen={isOptionsOpen}
-              onInteraction={nextOpenState => {
-                setOptionsOpen(nextOpenState)
-              }}
-              content={
-                <Menu>
-                  {prDecisionOptions.map(option => {
-                    return (
-                      <Menu.Item
-                        key={option.method}
-                        // className={css.menuReviewItem}
-                        disabled={false || option.disabled}
-                        text={
-                          <Layout.Horizontal>
-                            <Text flex width={'fit-content'} font={{ variation: FontVariation.BODY }}>
-                              {option.title}
-                            </Text>
-                          </Layout.Horizontal>
-                        }
-                        onClick={() => {
-                          // setDecisionOption(option)
-                        }}
-                      />
-                    )
-                  })}
-                </Menu>
-              }
-              usePortal={true}
-              minimal={true}
-              fill={false}
-              position={Position.BOTTOM_RIGHT}> */}
             <ReviewerSelect
               pullRequestMetadata={pullRequestMetadata}
               onSelect={function (id: number): void {
@@ -237,17 +172,11 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
                 if (refetchReviewers) {
                   refetchReviewers()
                 }
-              }}></ReviewerSelect>
-            {/* </Popover> */}
+              }}
+            />
           </Layout.Horizontal>
           <Container padding={{ top: 'medium', bottom: 'large' }}>
-            {/* <Text
-              className={css.semiBoldText}
-              padding={{ bottom: 'medium' }}
-              font={{ variation: FontVariation.FORM_LABEL, size: 'small' }}>
-              {getString('required')}
-            </Text> */}
-            {reviewers && reviewers?.length !== 0 ? (
+            {!isEmpty(reviewers) ? (
               reviewers.map(
                 (reviewer: {
                   reviewer: { display_name: string; id: number }
@@ -293,19 +222,9 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
                         icon="Options"
                         iconProps={{ size: 14 }}
                         style={{ paddingBottom: '9px' }}
-                        // disabled={!!commentItem?.deleted}
                         width="100px"
                         height="24px"
                         items={[
-                          // {
-                          //   text: getString('makeOptional'),
-                          //   onClick: noop
-                          // },
-                          // {
-                          //   text: getString('makeRequired'),
-                          //   onClick: noop
-                          // },
-                          // '-',
                           {
                             isDanger: true,
                             text: getString('remove'),
@@ -331,76 +250,7 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
                 {getString('noReviewers')}
               </Text>
             )}
-            {/* <Text
-              className={css.semiBoldText}
-              padding={{ top: 'medium', bottom: 'medium' }}
-              font={{ variation: FontVariation.BODY2_SEMI, size: 'small' }}>
-              {getString('optional')}
-            </Text>
-            {reviewers && reviewers?.length !== 0 ? (
-              reviewers.map((reviewer: { reviewer: { display_name: string; id: number }; review_decision: string }) => {
-                return (
-                  <Layout.Horizontal key={reviewer.reviewer.id}>
-                    <Icon className={css.reviewerPadding} name="dot" />
-                    <Avatar
-                      className={css.reviewerAvatar}
-                      name={reviewer.reviewer.display_name}
-                      size="small"
-                      hoverCard={false}
-                    />
-
-                    <Text className={css.reviewerName}>{reviewer.reviewer.display_name}</Text>
-                    <FlexExpander />
-                    <OptionsMenuButton
-                      isDark={true}
-                      icon="Options"
-                      iconProps={{ size: 14 }}
-                      style={{ paddingBottom: '9px' }}
-                      // disabled={!!commentItem?.deleted}
-                      width="100px"
-                      height="24px"
-                      items={[
-                        {
-                          text: getString('makeOptional'),
-                          onClick: noop
-                        },
-                        {
-                          text: getString('makeRequired'),
-                          onClick: noop
-                        },
-                        '-',
-                        {
-                          isDanger: true,
-                          text: getString('remove'),
-                          onClick: noop
-                        }
-                      ]}
-                    />
-                  </Layout.Horizontal>
-                )
-              })
-            ) : (
-              <Text color={Color.GREY_300} font={{ variation: FontVariation.BODY2_SEMI, size: 'small' }}>
-                {getString('noOptionalReviewers')}
-              </Text>
-            )} */}
           </Container>
-          {/* <Layout.Horizontal>
-            <Text style={{ lineHeight: '24px' }} font={{ variation: FontVariation.H6 }}>
-              {getString('tags')}
-            </Text>
-            <FlexExpander />
-            <Button text={'Add +'} size={ButtonSize.SMALL} variation={ButtonVariation.TERTIARY}></Button>
-          </Layout.Horizontal>
-          {tagArr.length !== 0 ? (
-            <></>
-          ) : (
-            <Text
-              font={{ variation: FontVariation.BODY2_SEMI, size: 'small' }}
-              padding={{ top: 'large', bottom: 'large' }}>
-              {getString('noneYet')}
-            </Text>
-          )} */}
         </Layout.Vertical>
 
         <Layout.Vertical>
@@ -424,7 +274,7 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
           </Layout.Horizontal>
           <Container padding={{ top: 'medium', bottom: 'large' }}>
             <Layout.Horizontal className={css.labelsLayout}>
-              {labels && labels.label_data?.length !== 0 ? (
+              {!isEmpty(labels?.label_data) ? (
                 labels?.label_data?.map((label, index) => (
                   <Label
                     key={index}

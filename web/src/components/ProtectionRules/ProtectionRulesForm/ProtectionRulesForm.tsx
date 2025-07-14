@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React, { useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import cx from 'classnames'
 import * as yup from 'yup'
 import {
+  Avatar,
   Button,
   ButtonVariation,
   Container,
@@ -37,14 +38,7 @@ import { useHistory, useParams } from 'react-router-dom'
 import { useGet, useMutate } from 'restful-react'
 import { isEmpty } from 'lodash-es'
 import { useStrings } from 'framework/strings'
-import {
-  BranchTargetType,
-  MergeStrategy,
-  PrincipalUserType,
-  SettingTypeMode,
-  SettingsTab,
-  branchTargetOptions
-} from 'utils/GitUtils'
+import { BranchTargetType, MergeStrategy, SettingTypeMode, SettingsTab, branchTargetOptions } from 'utils/GitUtils'
 import {
   ScopeEnum,
   REGEX_VALID_REPO_NAME,
@@ -54,7 +48,11 @@ import {
   getScopeData,
   getScopeFromParams,
   permissionProps,
-  rulesFormInitialPayload
+  rulesFormInitialPayload,
+  combineAndNormalizePrincipalsAndGroups,
+  PrincipalType,
+  NormalizedPrincipal,
+  INCLUDE_INHERITED_GROUPS
 } from 'utils/Utils'
 import type {
   RepoRepositoryOutput,
@@ -68,6 +66,7 @@ import { useAppContext } from 'AppContext'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { getConfig } from 'services/config'
 import type { Identifier } from 'utils/types'
+import { SearchDropDown } from 'components/SearchDropDown/SearchDropDown'
 import RulesDefinitionForm from './components/RulesDefinitionForm'
 import BypassList from './components/BypassList'
 import Include from '../../../icons/Include.svg?url'
@@ -121,11 +120,11 @@ const ProtectionRulesForm = (props: {
     path: getUpdateRulePath()
   })
 
-  const { data: principals } = useGet<TypesPrincipalInfo[]>({
+  const { data: principals, loading: loadingUsers } = useGet<TypesPrincipalInfo[]>({
     path: `/api/v1/principals`,
     queryParams: {
       query: searchTerm,
-      type: standalone ? 'user' : ['user', 'serviceaccount'],
+      type: standalone ? PrincipalType.USER : [PrincipalType.USER, PrincipalType.SERVICE_ACCOUNT],
       ...(!standalone && { inherited: true }),
       accountIdentifier: accountIdentifier || routingId,
       orgIdentifier,
@@ -136,6 +135,25 @@ const ProtectionRulesForm = (props: {
     },
     debounce: 500
   })
+
+  const { data: userGroups, loading: loadingUsersGroups } = useGet<any>({
+    path: `/api/v1/usergroups`,
+    queryParams: {
+      query: searchTerm,
+      filterType: INCLUDE_INHERITED_GROUPS,
+      accountIdentifier: accountIdentifier || routingId,
+      orgIdentifier,
+      projectIdentifier
+    },
+    debounce: 500,
+    lazy: standalone
+  })
+
+  const combinedOptions = useMemo(
+    () => combineAndNormalizePrincipalsAndGroups(principals, userGroups),
+    [principals, userGroups]
+  )
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const transformDataToArray = (data: any) => {
     return Object.keys(data).map(key => {
@@ -145,14 +163,24 @@ const ProtectionRulesForm = (props: {
     })
   }
 
-  const { definition, description, identifier, pattern, state, type: ruleType, users: usersMap } = rule || {}
+  const {
+    definition,
+    description,
+    identifier,
+    pattern,
+    state,
+    type: ruleType,
+    users: usersMap,
+    user_groups: userGroupsMap
+  } = rule || {}
   const { bypass, lifecycle, pullreq } = definition || {}
 
   const bypassListUsers = bypass?.user_ids?.map(id => usersMap?.[id])
-  const transformBypassListArray = transformDataToArray(bypassListUsers || [])
-  const usersArrayCurr = transformBypassListArray?.map(user => `${user.id} ${user.display_name}`)
-  const [userArrayState, setUserArrayState] = useState<string[]>(usersArrayCurr)
-
+  const bypassUserGroups = bypass?.user_group_ids?.map(id => userGroupsMap?.[id])
+  const usersBypassList = transformDataToArray(bypassListUsers || [])
+  const userGroupsBypassList = transformDataToArray(bypassUserGroups || [])
+  const combinedBypassListCurr = combineAndNormalizePrincipalsAndGroups(usersBypassList, userGroupsBypassList)
+  const [userArrayState, setUserArrayState] = useState<NormalizedPrincipal[]>(combinedBypassListCurr)
   const defaultReviewersUsers = pullreq?.reviewers?.default_reviewer_ids?.map(id => usersMap?.[id])
   const transformDefaultReviewersArray = transformDataToArray(defaultReviewersUsers || [])
   const reviewerArrayCurr = transformDefaultReviewersArray?.map(user => `${user.id} ${user.display_name}`)
@@ -183,21 +211,12 @@ const ProtectionRulesForm = (props: {
       })) || [],
     [statuses]
   )
-  const principalOptions: SelectOption[] = useMemo(
-    () =>
-      principals?.map(principal => {
-        const { id, uid, display_name, email } = principal
-        return {
-          value: `${id?.toString()} ${uid}`,
-          label: `${display_name} (${email})` as string
-        }
-      }) || [],
-    [principals]
-  )
+
+  // userPrincipalOptions used in default reviewers
   const userPrincipalOptions: SelectOption[] = useMemo(
     () =>
       principals?.reduce<SelectOption[]>((acc, principal) => {
-        if (principal?.type === PrincipalUserType.USER) {
+        if (principal?.type === PrincipalType.USER) {
           const { id, uid, display_name, email } = principal
           acc.push({
             value: `${id?.toString()} ${uid}`,
@@ -207,6 +226,17 @@ const ProtectionRulesForm = (props: {
         return acc
       }, []) || [],
     [principals]
+  )
+
+  const getBypassListOptions = useCallback(
+    (currentBypassList?: NormalizedPrincipal[]): SelectOption[] =>
+      combinedOptions
+        ?.filter(item => !currentBypassList?.some(principal => principal.id === item.id))
+        .map(principal => ({
+          value: JSON.stringify(principal),
+          label: `${principal.display_name} (${principal.email_or_identifier})`
+        })) || [],
+    [combinedOptions]
   )
 
   const handleSubmit = async (operation: Promise<OpenapiRule>, successMessage: string, resetForm: () => void) => {
@@ -255,11 +285,10 @@ const ProtectionRulesForm = (props: {
       const excludeArr = excludeList?.map((arr: string) => ['exclude', arr])
       const finalArray = [...includeArr, ...excludeArr]
       const usersArray = transformDataToArray(bypassListUsers || [])
+      const userGroupsArray = transformDataToArray(bypassUserGroups || [])
+      const combinedArr = combineAndNormalizePrincipalsAndGroups(usersArray, userGroupsArray)
 
-      const bypassList =
-        userArrayState.length > 0
-          ? userArrayState
-          : usersArray?.map(user => `${user.id} ${user.display_name} (${user.email})`)
+      const bypassList = !isEmpty(userArrayState) ? userArrayState : combinedArr
 
       const reviewersArray = transformDataToArray(defaultReviewersUsers || [])
       const defaultReviewersList =
@@ -369,7 +398,18 @@ const ProtectionRulesForm = (props: {
         const excludeArray =
           formData?.targetList?.filter(([type]) => type === 'exclude').map(([, value]) => value) ?? []
 
-        const bypassList = formData?.bypassList?.map(item => parseInt(item.split(' ')[0]))
+        const { userIds, userGroupIds } = formData?.bypassList?.reduce(
+          (acc, item: NormalizedPrincipal) => {
+            if (item.type === PrincipalType.USER_GROUP) {
+              acc.userGroupIds.push(item.id)
+            } else {
+              acc.userIds.push(item.id)
+            }
+            return acc
+          },
+          { userIds: [] as number[], userGroupIds: [] as number[] }
+        ) || { userIds: [], userGroupIds: [] }
+
         const defaultReviewersList = formData?.defaultReviewersList?.map(item => parseInt(item.split(' ')[0]))
         const payload: OpenapiRule = {
           identifier: formData.name,
@@ -383,7 +423,8 @@ const ProtectionRulesForm = (props: {
           },
           definition: {
             bypass: {
-              user_ids: bypassList,
+              user_ids: userIds,
+              user_group_ids: userGroupIds,
               repo_owners: formData.allRepoOwners
             },
             pullreq: {
@@ -445,10 +486,19 @@ const ProtectionRulesForm = (props: {
         const statusChecks = formik.values.statusChecks
         const limitMergeStrats = formik.values.limitMergeStrategies
         const requireStatusChecks = formik.values.requireStatusChecks
+        const bypassListOptions = getBypassListOptions(bypassList)
 
-        const filteredPrincipalOptions = principalOptions.filter(
-          (item: SelectOption) => !bypassList?.includes(item.value as string)
-        )
+        const renderPrincipalIcon = (type: PrincipalType, displayName: string) => {
+          switch (type) {
+            case PrincipalType.USER_GROUP:
+              return <Icon name="user-groups" className={cx(css.avatar, css.icon, css.ugicon)} size={24} />
+            case PrincipalType.SERVICE_ACCOUNT:
+              return <Icon name="service-accounts" className={cx(css.avatar, css.icon, css.saicon)} size={24} />
+            case PrincipalType.USER:
+            default:
+              return <Avatar className={css.avatar} name={displayName} size="normal" hoverCard={false} />
+          }
+        }
 
         return (
           <FormikForm>
@@ -606,25 +656,54 @@ const ProtectionRulesForm = (props: {
                   {getString('protectionRules.bypassList')}
                 </Text>
                 <FormInput.CheckBox label={getString('protectionRules.allRepoOwners')} name={'allRepoOwners'} />
-                <FormInput.Select
-                  items={filteredPrincipalOptions}
-                  onQueryChange={setSearchTerm}
+                <SearchDropDown
+                  searchTerm={searchTerm}
+                  placeholder={standalone ? getString('selectUsers') : getString('selectUsersUserGroupsAndServiceAcc')}
                   className={css.widthContainer}
-                  value={{ label: '', value: '' }}
-                  placeholder={standalone ? getString('selectUsers') : getString('selectUsersAndServiceAcc')}
-                  onChange={item => {
-                    const id = item.value?.toString().split(' ')[0]
-                    const displayName = item.label
-                    const bypassEntry = `${id} ${displayName}`
-                    bypassList?.push(bypassEntry)
-                    const uniqueArr = Array.from(new Set(bypassList))
+                  onChange={setSearchTerm}
+                  options={bypassListOptions}
+                  loading={loadingUsers || loadingUsersGroups}
+                  itemRenderer={(item, { handleClick, isActive }) => {
+                    const { id, type, display_name, email_or_identifier } = JSON.parse(item.value.toString())
+                    return (
+                      <Layout.Horizontal
+                        key={id}
+                        onClick={handleClick}
+                        padding={{ top: 'xsmall', bottom: 'xsmall' }}
+                        flex={{ align: 'center-center' }}
+                        className={cx({ [css.activeMenuItem]: isActive })}>
+                        {renderPrincipalIcon(type as PrincipalType, display_name)}
+                        <Layout.Vertical padding={{ left: 'small' }} width={400}>
+                          <Text className={css.truncateText}>
+                            <strong>{display_name}</strong>
+                          </Text>
+                          <Text className={css.truncateText} lineClamp={1}>
+                            {email_or_identifier}
+                          </Text>
+                        </Layout.Vertical>
+                      </Layout.Horizontal>
+                    )
+                  }}
+                  onClick={menuItem => {
+                    const value = JSON.parse(menuItem.value.toString()) as NormalizedPrincipal
+                    const updatedList = [value, ...(bypassList || [])]
+                    const uniqueArr = Array.from(new Map(updatedList.map(item => [item.id, item])).values())
                     formik.setFieldValue('bypassList', uniqueArr)
                     formik.setFieldValue('bypassSet', true)
-                    setUserArrayState([...uniqueArr])
+                    setUserArrayState(uniqueArr)
                   }}
-                  name={'bypassSelect'}
                 />
-                <BypassList bypassList={bypassList} setFieldValue={formik.setFieldValue} />
+
+                {!isEmpty(bypassList) && (
+                  <Text color="grey500" padding={{ top: 'medium', bottom: 'xsmall' }} font={{ weight: 'semi-bold' }}>
+                    Bypass List ({bypassList?.length})
+                  </Text>
+                )}
+                <BypassList
+                  renderPrincipalIcon={renderPrincipalIcon}
+                  bypassList={bypassList}
+                  setFieldValue={formik.setFieldValue}
+                />
               </Container>
               <RulesDefinitionForm
                 formik={formik}

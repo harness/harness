@@ -92,6 +92,14 @@ export enum REPO_EXPORT_STATE {
   SCHEDULED = 'scheduled'
 }
 
+export enum PrincipalType {
+  USER = 'user',
+  SERVICE = 'service',
+  SERVICE_ACCOUNT = 'serviceaccount',
+  USER_GROUP = 'usergroup'
+}
+
+export const INCLUDE_INHERITED_GROUPS = 'INCLUDE_INHERITED_GROUPS'
 export const LIST_FETCHING_LIMIT = 20
 export const DEFAULT_DATE_FORMAT = 'MM/DD/YYYY hh:mm a'
 export const DEFAULT_BRANCH_NAME = 'main'
@@ -363,7 +371,7 @@ export const rulesFormInitialPayload: RulesFormPayload = {
   targetDefault: false,
   targetList: [] as string[][],
   allRepoOwners: false,
-  bypassList: [] as string[],
+  bypassList: [] as NormalizedPrincipal[],
   defaultReviewersList: [] as string[],
   requireMinReviewers: false,
   requireMinDefaultReviewers: false,
@@ -399,7 +407,7 @@ export type RulesFormPayload = {
   targetDefault?: boolean
   targetList: string[][]
   allRepoOwners?: boolean
-  bypassList?: string[]
+  bypassList?: NormalizedPrincipal[]
   defaultReviewersList?: string[]
   requireMinReviewers: boolean
   requireMinDefaultReviewers: boolean
@@ -1281,4 +1289,50 @@ export const getUnifiedDefaultReviewersState = (info: TypesDefaultReviewerApprov
   })
 
   return defaultReviewState
+}
+
+/**
+ * Normalizes and combines principal and user group data into a unified format
+ * @param principals - Array of principal objects from principals API
+ * @param userGroups - Array of user group objects from usergroups API
+ * @returns Combined array of normalized objects with consistent structure
+ */
+
+export interface NormalizedPrincipal {
+  id: number
+  email_or_identifier: string
+  type: PrincipalType
+  display_name: string
+}
+export function combineAndNormalizePrincipalsAndGroups(
+  principals: TypesPrincipalInfo[] | null,
+  userGroups?: any[]
+): NormalizedPrincipal[] {
+  const normalizedData: NormalizedPrincipal[] = []
+
+  // Process principals data if available
+  if (principals && Array.isArray(principals)) {
+    principals.forEach(principal => {
+      normalizedData.push({
+        id: principal.id || -1,
+        email_or_identifier: principal.email || principal.uid || '',
+        type: (principal.type as PrincipalType) || PrincipalType.USER,
+        display_name: principal.display_name || principal.email || 'Unknown User'
+      })
+    })
+  }
+
+  // Process user groups data if available
+  if (userGroups && Array.isArray(userGroups)) {
+    userGroups.forEach(group => {
+      normalizedData.push({
+        id: group.id || '',
+        email_or_identifier: group.identifier || '',
+        type: PrincipalType.USER_GROUP,
+        display_name: group.name || group.identifier || 'Unknown Group'
+      })
+    })
+  }
+
+  return normalizedData.sort((a, b) => a.display_name.localeCompare(b.display_name))
 }

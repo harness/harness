@@ -173,12 +173,6 @@ export enum GitRefType {
   TAG = 'tag'
 }
 
-export enum PrincipalUserType {
-  USER = 'user',
-  SERVICE = 'service',
-  SERVICE_ACCOUNT = 'serviceaccount'
-}
-
 export enum SettingTypeMode {
   EDIT = 'edit',
   NEW = 'new'

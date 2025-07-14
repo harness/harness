@@ -16,6 +16,8 @@
 
 /* eslint-disable */
 // This is an auto-generated file
+export declare const activeMenuItem: string
+export declare const avatar: string
 export declare const buttonContainer: string
 export declare const bypassContainer: string
 export declare const checkboxLabel: string
@@ -30,6 +32,7 @@ export declare const greyButton: string
 export declare const greyContainer: string
 export declare const headingSize: string
 export declare const hintText: string
+export declare const icon: string
 export declare const label: string
 export declare const main: string
 export declare const menuItem: string
@@ -39,10 +42,13 @@ export declare const paddingTop: string
 export declare const popover: string
 export declare const reviewerBlock: string
 export declare const row: string
+export declare const saicon: string
 export declare const statusWidthContainer: string
 export declare const table: string
 export declare const targetBox: string
 export declare const targetContainer: string
 export declare const targetSpacingContainer: string
 export declare const title: string
+export declare const truncateText: string
+export declare const ugicon: string
 export declare const widthContainer: string

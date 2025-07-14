@@ -32,7 +32,7 @@ import { Color, FontVariation } from '@harnessio/design-system'
 import cx from 'classnames'
 import { useGet } from 'restful-react'
 import { useStrings } from 'framework/strings'
-import { getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
+import { getErrorMessage, LIST_FETCHING_LIMIT, PrincipalType } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import { CodeIcon } from 'utils/GitUtils'
 import { usePageIndex } from 'hooks/usePageIndex'
@@ -136,7 +136,7 @@ function ReviewerList({
       limit: LIST_FETCHING_LIMIT,
       page: page,
       accountIdentifier: routingId,
-      type: 'user'
+      type: PrincipalType.USER
     }
   })
 

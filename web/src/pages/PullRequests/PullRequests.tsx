@@ -433,8 +433,7 @@ export default function PullRequests() {
                     </Text>
                   </Render>
 
-                  {labelFilter &&
-                    labelFilter?.length !== 0 &&
+                  {!isEmpty(labelFilter) &&
                     labelFilter?.map((label, index) => (
                       <Label
                         key={index}

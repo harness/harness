@@ -22,6 +22,7 @@ import { getConfig, getUsingFetch } from 'services/config'
 import { useStrings } from 'framework/strings'
 import type { TypesPrincipalInfo, TypesUser } from 'services/code'
 import { useAppContext } from 'AppContext'
+import { PrincipalType } from 'utils/Utils'
 import css from './PullRequestsContentHeader.module.scss'
 
 interface PullRequestsContentHeaderProps {
@@ -65,7 +66,7 @@ export function PRAuthorFilter({
         const newAuthorsList = await getUsingFetch(getConfig('code/api/v1'), `/principals`, bearerToken, {
           queryParams: {
             query: user?.display_name?.trim(),
-            type: 'user',
+            type: PrincipalType.USER,
             accountIdentifier: routingId
           }
         })
@@ -89,7 +90,7 @@ export function PRAuthorFilter({
         {
           queryParams: {
             query: query?.trim(),
-            type: 'user',
+            type: PrincipalType.USER,
             accountIdentifier: routingId
           }
         }

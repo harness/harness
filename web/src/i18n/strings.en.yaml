@@ -1124,6 +1124,7 @@ enterANumber: Enter a number
 selectUsers: Select Users
 selectReviewers: Select Reviewers
 selectUsersAndServiceAcc: Select Users and Service Accounts
+selectUsersUserGroupsAndServiceAcc: Select Users, User Groups and Service Accounts
 selectStatuses: Select Statuses
 featureRoadmap: Feature Roadmap
 pipelineConfig:
