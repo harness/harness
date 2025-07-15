@@ -52,9 +52,13 @@ const DefaultReviewersSection = (props: {
     [settingSectionMode, defaultReviewersSet, formikDefaultReviewersList]
   )
 
-  const filteredPrincipalOptions = userPrincipalOptions.filter(
-    (item: SelectOption) => !defaultReviewersList?.includes(item.value as string)
-  )
+  const filteredPrincipalOptions = useMemo(() => {
+    const defaultReviewerIds = new Set((defaultReviewersList || []).map((user: string) => user.split(' ')[0]))
+    return userPrincipalOptions.filter((user: SelectOption) => {
+      const id = user.value.toString().split(' ')[0]
+      return !defaultReviewerIds.has(id)
+    })
+  }, [userPrincipalOptions, defaultReviewersList])
 
   const defReviewerWarning = useMemo(() => {
     const minReviewers = Number(minDefaultReviewers)
