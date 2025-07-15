@@ -17,6 +17,7 @@ package check
 import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
+	checkevents "github.com/harness/gitness/app/events/check"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
@@ -43,6 +44,7 @@ func ProvideController(
 	git git.Interface,
 	sanitizers map[enum.CheckPayloadKind]func(in *ReportInput, s *auth.Session) error,
 	sseStreamer sse.Streamer,
+	eventReporter *checkevents.Reporter,
 ) *Controller {
 	return NewController(
 		tx,
@@ -54,5 +56,6 @@ func ProvideController(
 		git,
 		sanitizers,
 		sseStreamer,
+		eventReporter,
 	)
 }

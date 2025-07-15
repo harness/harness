@@ -25,6 +25,7 @@ import (
 
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	events "github.com/harness/gitness/app/events/check"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
@@ -181,6 +182,15 @@ func (c *Controller) Report(
 	if err != nil {
 		return nil, fmt.Errorf("failed to upsert status check result for repo=%s: %w", repo.Identifier, err)
 	}
+
+	c.eventReporter.Reported(ctx, &events.ReportedPayload{
+		Base: events.Base{
+			RepoID: repo.ID,
+			SHA:    commitSHA,
+		},
+		Identifier: in.Identifier,
+		Status:     in.Status,
+	})
 
 	c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypeStatusCheckReportUpdated, statusCheckReport)
 

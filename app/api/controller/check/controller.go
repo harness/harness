@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
+	checkevents "github.com/harness/gitness/app/events/check"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
@@ -33,15 +34,16 @@ import (
 )
 
 type Controller struct {
-	tx          dbtx.Transactor
-	authorizer  authz.Authorizer
-	spaceStore  store.SpaceStore
-	checkStore  store.CheckStore
-	spaceFinder refcache.SpaceFinder
-	repoFinder  refcache.RepoFinder
-	git         git.Interface
-	sanitizers  map[enum.CheckPayloadKind]func(in *ReportInput, s *auth.Session) error
-	sseStreamer sse.Streamer
+	tx            dbtx.Transactor
+	authorizer    authz.Authorizer
+	spaceStore    store.SpaceStore
+	checkStore    store.CheckStore
+	spaceFinder   refcache.SpaceFinder
+	repoFinder    refcache.RepoFinder
+	git           git.Interface
+	sanitizers    map[enum.CheckPayloadKind]func(in *ReportInput, s *auth.Session) error
+	sseStreamer   sse.Streamer
+	eventReporter *checkevents.Reporter
 }
 
 func NewController(
@@ -54,17 +56,19 @@ func NewController(
 	git git.Interface,
 	sanitizers map[enum.CheckPayloadKind]func(in *ReportInput, s *auth.Session) error,
 	sseStreamer sse.Streamer,
+	eventReporter *checkevents.Reporter,
 ) *Controller {
 	return &Controller{
-		tx:          tx,
-		authorizer:  authorizer,
-		spaceStore:  spaceStore,
-		checkStore:  checkStore,
-		spaceFinder: spaceFinder,
-		repoFinder:  repoFinder,
-		git:         git,
-		sanitizers:  sanitizers,
-		sseStreamer: sseStreamer,
+		tx:            tx,
+		authorizer:    authorizer,
+		spaceStore:    spaceStore,
+		checkStore:    checkStore,
+		spaceFinder:   spaceFinder,
+		repoFinder:    repoFinder,
+		git:           git,
+		sanitizers:    sanitizers,
+		sseStreamer:   sseStreamer,
+		eventReporter: eventReporter,
 	}
 }
 

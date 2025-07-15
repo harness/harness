@@ -42,6 +42,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/bootstrap"
 	"github.com/harness/gitness/app/connector"
+	events12 "github.com/harness/gitness/app/events/check"
 	events11 "github.com/harness/gitness/app/events/git"
 	events5 "github.com/harness/gitness/app/events/gitspace"
 	events8 "github.com/harness/gitness/app/events/gitspacedelete"
@@ -474,7 +475,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	principalController := principal.ProvideController(principalStore, authorizer)
 	usergroupController := usergroup2.ProvideController(userGroupStore, spaceStore, spaceFinder, authorizer, usergroupService)
 	v2 := check2.ProvideCheckSanitizers()
-	checkController := check2.ProvideController(transactor, authorizer, spaceStore, checkStore, spaceFinder, repoFinder, gitInterface, v2, streamer)
+	reporter10, err := events12.ProvideReporter(eventsSystem)
+	if err != nil {
+		return nil, err
+	}
+	checkController := check2.ProvideController(transactor, authorizer, spaceStore, checkStore, spaceFinder, repoFinder, gitInterface, v2, streamer, reporter10)
 	systemController := system.NewController(principalStore, config)
 	uploadController := upload.ProvideController(authorizer, repoFinder, blobStore, config)
 	searcher := keywordsearch.ProvideSearcher(localIndexSearcher)
