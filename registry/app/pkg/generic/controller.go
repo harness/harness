@@ -213,6 +213,7 @@ func (c Controller) updateMetadata(
 			})
 			metadataInput.Files = files
 			metadataInput.FileCount++
+			metadataInput.Size += fileInfo.Size
 		}
 	} else {
 		files = append(files, metadata.File{
@@ -221,6 +222,7 @@ func (c Controller) updateMetadata(
 		})
 		metadataInput.Files = files
 		metadataInput.FileCount++
+		metadataInput.Size += fileInfo.Size
 	}
 	return nil
 }
