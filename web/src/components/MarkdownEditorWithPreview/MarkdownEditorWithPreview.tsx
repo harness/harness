@@ -46,7 +46,7 @@ import {
   handlePaste,
   removeSpecificTextOptimized
 } from 'utils/Utils'
-import { decodeGitContent, handleUpload, normalizeGitRef } from 'utils/GitUtils'
+import { CodeIcon, decodeGitContent, handleUpload, normalizeGitRef } from 'utils/GitUtils'
 import { defaultUsefulOrNot } from 'components/DefaultUsefulOrNot/UsefulOrNot'
 import { AidaClient } from 'utils/types'
 import type { RepoRepositoryOutput, TypesPrincipalInfo } from 'services/code'
@@ -595,7 +595,7 @@ export function MarkdownEditorWithPreview({
                 <Text>{formatBytes(file.size)}</Text>
               </Layout.Horizontal>
               <FlexExpander />
-              <Text icon={'tick'} iconProps={{ color: Color.GREEN_800 }} color={Color.GREEN_800}>
+              <Text icon={CodeIcon.Tick} iconProps={{ color: Color.GREEN_800 }} color={Color.GREEN_800}>
                 {getString('imageUpload.readyToUpload')}
               </Text>
             </Layout.Horizontal>

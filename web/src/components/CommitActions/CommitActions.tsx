@@ -55,7 +55,7 @@ export function CommitActions({ sha, href, enableCopy }: CommitActionButtonProps
           <Button
             id={css.commitCopyButton}
             variation={ButtonVariation.ICON}
-            icon={copied ? 'tick' : CodeIcon.Copy}
+            icon={copied ? CodeIcon.Tick : CodeIcon.Copy}
             iconProps={{ size: 14, color: copied ? Color.GREEN_500 : undefined }}
             onClick={() => {
               setCopied(true)

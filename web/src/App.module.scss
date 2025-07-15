@@ -18,6 +18,7 @@
 
 .main {
   @include vars;
+  --select-dropdown-width: 467px;
 
   &.fullPage {
     --font-family: Inter, sans-serif;

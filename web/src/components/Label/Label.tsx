@@ -22,7 +22,7 @@ import { useGet } from 'restful-react'
 import { Menu, Spinner } from '@blueprintjs/core'
 import { Icon } from '@harnessio/icons'
 import { isEmpty } from 'lodash-es'
-import { ColorName, LabelType, ScopeEnum, getColorsObj, getScopeData, getScopeIcon } from 'utils/Utils'
+import { ColorName, LabelType, ScopeEnum, getColorsObj, getScopeData } from 'utils/Utils'
 import type { RepoRepositoryOutput, TypesLabelValue } from 'services/code'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
@@ -67,7 +67,7 @@ export const Label: React.FC<LabelProps> = props => {
   } = props
   const { getString } = useStrings()
   const { standalone } = useAppContext()
-  const scopeIcon = getScopeIcon(standalone, scope)
+  const { scopeIcon } = getScopeData('', scope ?? 1, standalone)
   if (valueName) {
     const colorObj = getColorsObj(valueColor ?? label_color ?? ColorName.Blue)
 
@@ -221,7 +221,7 @@ export const LabelTitle: React.FC<LabelTitleProps> = props => {
   const { name, scope, label_color, value_count, labelType, isScopeName } = props
   const { standalone } = useAppContext()
   const colorObj = getColorsObj(label_color ?? ColorName.Blue)
-  const scopeIcon = getScopeIcon(standalone, scope)
+  const { scopeIcon } = getScopeData('', scope ?? 1, standalone)
   if (value_count || (labelType && labelType === LabelType.DYNAMIC)) {
     return (
       <Tag className={css.labelTag}>

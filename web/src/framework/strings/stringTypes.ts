@@ -315,6 +315,7 @@ export interface StringsMap {
   error: string
   error404Text: string
   event: string
+  exclude: string
   executionHistory: string
   executionId: string
   'executions.canceledTime': string
@@ -467,6 +468,7 @@ export interface StringsMap {
   'importSpace.title': string
   in: string
   inactiveBranches: string
+  include: string
   includeSubspacePR: string
   invalidResponse: string
   isRequired: string
@@ -867,14 +869,14 @@ export interface StringsMap {
   'protectionRules.atLeastMinReviewers': string
   'protectionRules.autoDeleteText': string
   'protectionRules.autoDeleteTitle': string
-  'protectionRules.blockBranchCreation': string
-  'protectionRules.blockBranchCreationText': string
-  'protectionRules.blockBranchDeletion': string
-  'protectionRules.blockBranchDeletionText': string
-  'protectionRules.blockBranchUpdate': string
-  'protectionRules.blockBranchUpdateText': string
+  'protectionRules.blockCreation': string
+  'protectionRules.blockCreationText': string
+  'protectionRules.blockDeletion': string
+  'protectionRules.blockDeletionText': string
   'protectionRules.blockForcePush': string
   'protectionRules.blockForcePushText': string
+  'protectionRules.blockUpdate': string
+  'protectionRules.blockUpdateText': string
   'protectionRules.bypassList': string
   'protectionRules.commitDirectlyAlertBtn': string
   'protectionRules.commitDirectlyAlertText': string

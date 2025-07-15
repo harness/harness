@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-import React, { useMemo } from 'react'
-import cx from 'classnames'
+import React from 'react'
 import { Icon } from '@harnessio/icons'
 import { Container, FlexExpander, Layout, Text } from '@harnessio/uicore'
 import { PopoverPosition } from '@blueprintjs/core'
-import type { NormalizedPrincipal, PrincipalType } from 'utils/Utils'
+import { isEmpty } from 'lodash-es'
+import { Color } from '@harnessio/design-system'
+import type { PrincipalType } from 'utils/Utils'
+import type { NormalizedPrincipal } from 'components/ProtectionRules/ProtectionRulesUtils'
 import css from '../ProtectionRulesForm.module.scss'
 
 const BypassList = (props: {
@@ -29,9 +31,14 @@ const BypassList = (props: {
 }) => {
   const { bypassList, setFieldValue, renderPrincipalIcon } = props
 
-  const bypassContent = useMemo(() => {
-    return (
-      <Container className={cx(css.widthContainer, css.bypassContainer)}>
+  return (
+    <Container>
+      {!isEmpty(bypassList) && (
+        <Text color={Color.GREY_500} padding={{ top: 'medium', bottom: 'small' }} font={{ weight: 'semi-bold' }}>
+          Bypass List ({bypassList?.length})
+        </Text>
+      )}
+      <Container className={css.bypassContainer}>
         {bypassList?.map((userObj, idx: number) => {
           const { id, display_name, email_or_identifier, type } = userObj
           return (
@@ -62,10 +69,8 @@ const BypassList = (props: {
           )
         })}
       </Container>
-    )
-  }, [bypassList, setFieldValue])
-
-  return bypassContent
+    </Container>
+  )
 }
 
 export default BypassList

@@ -43,7 +43,6 @@ export declare const popover: string
 export declare const reviewerBlock: string
 export declare const row: string
 export declare const saicon: string
-export declare const statusWidthContainer: string
 export declare const table: string
 export declare const targetBox: string
 export declare const targetContainer: string

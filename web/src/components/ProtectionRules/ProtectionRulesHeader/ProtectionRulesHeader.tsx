@@ -15,14 +15,19 @@
  */
 import { useHistory } from 'react-router-dom'
 import React, { useState } from 'react'
-import { Container, Layout, FlexExpander, ButtonVariation, Button, Checkbox } from '@harnessio/uicore'
+import { ButtonVariation, Container, Checkbox, FlexExpander, Layout, SplitButton, Text } from '@harnessio/uicore'
 import { Render } from 'react-jsx-match'
+import { Icon } from '@harnessio/icons'
+import { Menu } from '@blueprintjs/core'
+import { Color, FontVariation } from '@harnessio/design-system'
 import { useStrings } from 'framework/strings'
-import { CodeIcon, GitInfoProps, SettingTypeMode } from 'utils/GitUtils'
+import { CodeIcon, DashboardFilter, GitInfoProps, ProtectionRulesType, SettingTypeMode } from 'utils/GitUtils'
 import { useAppContext } from 'AppContext'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { getEditPermissionRequestFromIdentifier, permissionProps, ScopeEnum } from 'utils/Utils'
+import ToggleTabsBtn from 'components/ToggleTabs/ToggleTabsBtn'
+import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
 import css from './ProtectionRulesHeader.module.scss'
 
 interface ProtectionRulesHeaderProps extends Partial<Pick<GitInfoProps, 'repoMetadata'>> {
@@ -31,6 +36,7 @@ interface ProtectionRulesHeaderProps extends Partial<Pick<GitInfoProps, 'repoMet
   currentPageScope: ScopeEnum
   inheritRules: boolean
   setInheritRules: (value: boolean) => void
+  ruleTypeFilter: ProtectionRulesType
   onSearchTermChanged: (searchTerm: string) => void
 }
 
@@ -41,26 +47,36 @@ const ProtectionRulesHeader = ({
   activeTab,
   currentPageScope,
   inheritRules,
-  setInheritRules
+  setInheritRules,
+  ruleTypeFilter
 }: ProtectionRulesHeaderProps) => {
   const history = useHistory()
-  const [searchTerm, setSearchTerm] = useState('')
   const { routes } = useAppContext()
   const { getString } = useStrings()
   const { hooks, standalone } = useAppContext()
   const space = useGetSpaceParam()
+  const { updateQueryParams } = useUpdateQueryParams<{ type: ProtectionRulesType }>()
+  const [searchTerm, setSearchTerm] = useState('')
+  const [ruleType, setRuleType] = useState(ProtectionRulesType.BRANCH)
+  const isScopeCheckboxVisible = ![ScopeEnum.ACCOUNT_SCOPE, ScopeEnum.SPACE_SCOPE].includes(currentPageScope)
 
   const permPushResult = hooks?.usePermissionTranslate(getEditPermissionRequestFromIdentifier(space, repoMetadata), [
     space,
     repoMetadata
   ])
 
+  const ruleTypeFilters = [
+    { label: getString('all'), value: DashboardFilter.ALL },
+    { label: getString('branch'), value: ProtectionRulesType.BRANCH },
+    { label: getString('tag'), value: ProtectionRulesType.TAG }
+  ]
+
   return (
     <Container className={css.main} padding="xlarge">
       <Layout.Horizontal spacing="medium">
-        <Button
+        <SplitButton
           variation={ButtonVariation.PRIMARY}
-          text={getString('protectionRules.newRule')}
+          text={getString('protectionRules.newRule', { ruleType })}
           icon={CodeIcon.Add}
           onClick={() =>
             repoMetadata
@@ -68,7 +84,7 @@ const ProtectionRulesHeader = ({
                   routes.toCODESettings({
                     repoPath: repoMetadata?.path as string,
                     settingSection: activeTab,
-                    settingSectionMode: SettingTypeMode.NEW
+                    settingSectionMode: `${SettingTypeMode.NEW}?type=${ruleType}`
                   })
                 )
               : standalone
@@ -76,20 +92,44 @@ const ProtectionRulesHeader = ({
                   routes.toCODESpaceSettings({
                     space,
                     settingSection: activeTab,
-                    settingSectionMode: SettingTypeMode.NEW
+                    settingSectionMode: `${SettingTypeMode.NEW}?type=${ruleType}`
                   })
                 )
               : history.push(
                   routes.toCODEManageRepositories({
                     space,
                     settingSection: activeTab,
-                    settingSectionMode: SettingTypeMode.NEW
+                    settingSectionMode: `${SettingTypeMode.NEW}?type=${ruleType}`
                   })
                 )
           }
-          {...permissionProps(permPushResult, standalone)}
-        />
-        <Render when={![ScopeEnum.ACCOUNT_SCOPE, ScopeEnum.SPACE_SCOPE].includes(currentPageScope)}>
+          {...permissionProps(permPushResult, standalone)}>
+          <Container>
+            {Object.values(ProtectionRulesType)
+              .filter(type => type !== ProtectionRulesType.PUSH)
+              .map(type => {
+                return (
+                  <Menu.Item
+                    key={type}
+                    className={css.menuItem}
+                    text={
+                      <Layout.Horizontal>
+                        <Icon name={ruleType === type ? CodeIcon.Tick : CodeIcon.Blank} />
+                        <Text
+                          padding={{ left: 'xsmall' }}
+                          color={Color.BLACK}
+                          font={{ variation: FontVariation.BODY2_SEMI }}>
+                          {getString('protectionRules.newRule', { ruleType: type })}
+                        </Text>
+                      </Layout.Horizontal>
+                    }
+                    onClick={() => setRuleType(type)}
+                  />
+                )
+              })}
+          </Container>
+        </SplitButton>
+        <Render when={isScopeCheckboxVisible}>
           <Checkbox
             className={css.scopeCheckbox}
             label={getString('protectionRules.showRulesScope')}
@@ -99,6 +139,15 @@ const ProtectionRulesHeader = ({
             }}
           />
         </Render>
+        <ToggleTabsBtn
+          wrapperClassName={isScopeCheckboxVisible ? css.paddingLeftMedium : css.paddingLeftXLarge}
+          ctnWrapperClassName={css.stateCtn}
+          currentTab={ruleTypeFilter ?? DashboardFilter.ALL}
+          tabsList={ruleTypeFilters}
+          onTabChange={newTab => {
+            updateQueryParams({ type: newTab as ProtectionRulesType })
+          }}
+        />
         <FlexExpander />
         <SearchInputWithSpinner
           spinnerPosition="right"

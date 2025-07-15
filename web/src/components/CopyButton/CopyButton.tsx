@@ -17,6 +17,7 @@
 import React, { useEffect, useState } from 'react'
 import { Button, Utils, ButtonProps, ButtonVariation } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
+import { CodeIcon } from 'utils/GitUtils'
 
 interface CopyButtonProps extends ButtonProps {
   content: string
@@ -38,7 +39,7 @@ export function CopyButton({ content, icon, iconProps, ...props }: CopyButtonPro
   return (
     <Button
       variation={ButtonVariation.ICON}
-      icon={copied ? 'tick' : icon || 'copy-alt'}
+      icon={copied ? CodeIcon.Tick : icon || 'copy-alt'}
       iconProps={{ color: copied ? Color.GREEN_500 : undefined, ...iconProps }}
       onClick={async () => {
         setCopied(true)

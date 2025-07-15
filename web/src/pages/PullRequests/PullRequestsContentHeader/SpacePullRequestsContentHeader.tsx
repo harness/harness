@@ -90,9 +90,9 @@ export function SpacePullRequestsContentHeader({
   const currentScopeLabel = getCurrentScopeLabel(getString, includeSubspaces, accountIdentifier, orgIdentifier)
 
   const dashboardEncapFilters = [
-    { label: 'All', value: DashboardFilter.ALL },
-    { label: 'Created', value: DashboardFilter.CREATED },
-    { label: 'Review Requested', value: DashboardFilter.REVIEW_REQUESTED }
+    { label: getString('all'), value: DashboardFilter.ALL },
+    { label: getString('created'), value: DashboardFilter.CREATED },
+    { label: getString('pr.reviewRequested'), value: DashboardFilter.REVIEW_REQUESTED }
   ]
 
   const MemoizedPRAuthorFilter = useCallback(

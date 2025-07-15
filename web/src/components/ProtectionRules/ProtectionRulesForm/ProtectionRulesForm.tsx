@@ -36,59 +36,75 @@ import { Menu, PopoverPosition } from '@blueprintjs/core'
 import { Icon } from '@harnessio/icons'
 import { useHistory, useParams } from 'react-router-dom'
 import { useGet, useMutate } from 'restful-react'
-import { isEmpty } from 'lodash-es'
+import { capitalize, isEmpty } from 'lodash-es'
 import { useStrings } from 'framework/strings'
-import { BranchTargetType, MergeStrategy, SettingTypeMode, SettingsTab, branchTargetOptions } from 'utils/GitUtils'
+import {
+  CodeIcon,
+  MergeStrategy,
+  ProtectionRulesType,
+  RulesTargetType,
+  SettingTypeMode,
+  SettingsTab
+} from 'utils/GitUtils'
 import {
   ScopeEnum,
   REGEX_VALID_REPO_NAME,
-  RulesFormPayload,
   getEditPermissionRequestFromScope,
   getErrorMessage,
   getScopeData,
   getScopeFromParams,
   permissionProps,
-  rulesFormInitialPayload,
-  combineAndNormalizePrincipalsAndGroups,
   PrincipalType,
-  NormalizedPrincipal,
   INCLUDE_INHERITED_GROUPS
 } from 'utils/Utils'
 import type {
   RepoRepositoryOutput,
   OpenapiRule,
   TypesPrincipalInfo,
-  EnumMergeMethod,
-  ProtectionBranch
+  ProtectionBranch,
+  ProtectionTag
 } from 'services/code'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useAppContext } from 'AppContext'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { getConfig } from 'services/config'
 import type { Identifier } from 'utils/types'
-import { SearchDropDown } from 'components/SearchDropDown/SearchDropDown'
-import RulesDefinitionForm from './components/RulesDefinitionForm'
+import SearchDropDown from 'components/SearchDropDown/SearchDropDown'
+import { useQueryParams } from 'hooks/useQueryParams'
+import BranchRulesForm from './components/BranchRulesForm'
 import BypassList from './components/BypassList'
 import Include from '../../../icons/Include.svg?url'
 import Exclude from '../../../icons/Exclude.svg?url'
+import TagRulesForm from './components/TagRulesForm'
+import {
+  combineAndNormalizePrincipalsAndGroups,
+  getPayload,
+  NormalizedPrincipal,
+  rulesFormInitialPayload,
+  RulesFormPayload,
+  RuleState,
+  transformDataToArray
+} from '../ProtectionRulesUtils'
 import css from './ProtectionRulesForm.module.scss'
 
 const ProtectionRulesForm = (props: {
   currentPageScope: ScopeEnum
   editMode: boolean
-  refetchRules: () => void
   settingSectionMode: SettingTypeMode
   repoMetadata?: RepoRepositoryOutput
 }) => {
   const { routes, routingId, standalone, hooks } = useAppContext()
   const params = useParams<Identifier>()
+  const queryParams = useQueryParams<{ type: ProtectionRulesType }>()
   const { ruleId } = useGetRepositoryMetadata()
   const { showError, showSuccess } = useToaster()
   const space = useGetSpaceParam()
-  const { currentPageScope, editMode = false, repoMetadata, refetchRules, settingSectionMode } = props
+  const history = useHistory()
+  const { currentPageScope, editMode = false, repoMetadata, settingSectionMode } = props
   const { getString } = useStrings()
   const [searchTerm, setSearchTerm] = useState('')
   const [searchStatusTerm, setSearchStatusTerm] = useState('')
+  const [targetType, setTargetType] = useState(RulesTargetType.INCLUDE)
   const currentRuleScope = getScopeFromParams(params, standalone, repoMetadata)
   const { scopeRef } =
     typeof currentRuleScope === 'number' ? getScopeData(space, currentRuleScope, standalone) : { scopeRef: space }
@@ -120,7 +136,9 @@ const ProtectionRulesForm = (props: {
     path: getUpdateRulePath()
   })
 
-  const { data: principals, loading: loadingUsers } = useGet<TypesPrincipalInfo[]>({
+  const ruleType = queryParams?.type || rule?.type || ProtectionRulesType.BRANCH
+
+  const { data: principals, loading: loadingPrincipals } = useGet<TypesPrincipalInfo[]>({
     path: `/api/v1/principals`,
     queryParams: {
       query: searchTerm,
@@ -154,53 +172,21 @@ const ProtectionRulesForm = (props: {
     [principals, userGroups]
   )
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const transformDataToArray = (data: any) => {
-    return Object.keys(data).map(key => {
-      return {
-        ...data[key]
-      }
-    })
-  }
-
-  const {
-    definition,
-    description,
-    identifier,
-    pattern,
-    state,
-    type: ruleType,
-    users: usersMap,
-    user_groups: userGroupsMap
-  } = rule || {}
-  const { bypass, lifecycle, pullreq } = definition || {}
-
-  const bypassListUsers = bypass?.user_ids?.map(id => usersMap?.[id])
-  const bypassUserGroups = bypass?.user_group_ids?.map(id => userGroupsMap?.[id])
-  const usersBypassList = transformDataToArray(bypassListUsers || [])
-  const userGroupsBypassList = transformDataToArray(bypassUserGroups || [])
-  const combinedBypassListCurr = combineAndNormalizePrincipalsAndGroups(usersBypassList, userGroupsBypassList)
-  const [userArrayState, setUserArrayState] = useState<NormalizedPrincipal[]>(combinedBypassListCurr)
-  const defaultReviewersUsers = pullreq?.reviewers?.default_reviewer_ids?.map(id => usersMap?.[id])
-  const transformDefaultReviewersArray = transformDataToArray(defaultReviewersUsers || [])
-  const reviewerArrayCurr = transformDefaultReviewersArray?.map(user => `${user.id} ${user.display_name}`)
-  const [defaultReviewersState, setDefaultReviewersState] = useState<string[]>(reviewerArrayCurr)
-
-  const getUpdateChecksPath = () =>
+  const getRecentChecksPath = () =>
     currentRuleScope === ScopeEnum.REPO_SCOPE && repoMetadata
       ? `/repos/${repoMetadata?.path}/+/checks/recent`
       : `/spaces/${scopeRef}/+/checks/recent`
-
   const { data: statuses } = useGet<string[]>({
     base: getConfig('code/api/v1'),
-    path: getUpdateChecksPath(),
+    path: getRecentChecksPath(),
     queryParams: {
       query: searchStatusTerm,
       ...(!repoMetadata && {
         recursive: true
       })
     },
-    debounce: 500
+    debounce: 500,
+    lazy: ruleType !== ProtectionRulesType.BRANCH
   })
 
   const statusOptions: SelectOption[] = useMemo(
@@ -260,78 +246,104 @@ const ProtectionRulesForm = (props: {
               settingSection: SettingsTab.PROTECTION_RULES
             })
       )
-      refetchRules?.()
     } catch (exception) {
       showError(getErrorMessage(exception))
     }
   }
-  const history = useHistory()
 
   const initialValues = useMemo((): RulesFormPayload => {
     if (editMode && rule) {
-      const minReviewerCheck = (pullreq?.approvals?.require_minimum_count as number) > 0
-      const minDefaultReviewerCheck = (pullreq?.approvals?.require_minimum_default_reviewer_count as number) > 0
-      const isMergePresent = pullreq?.merge?.strategies_allowed?.includes(MergeStrategy.MERGE)
-      const isSquashPresent = pullreq?.merge?.strategies_allowed?.includes(MergeStrategy.SQUASH)
-      const isRebasePresent = pullreq?.merge?.strategies_allowed?.includes(MergeStrategy.REBASE)
-      const isFFMergePresent = pullreq?.merge?.strategies_allowed?.includes(MergeStrategy.FAST_FORWARD)
+      const {
+        definition,
+        description,
+        identifier,
+        pattern,
+        state,
+        users: usersMap,
+        user_groups: userGroupsMap
+      } = rule || {}
+      const { bypass } = definition || {}
 
-      // List of strings to be included in the final array
-      const includeList = pattern?.include ?? []
-      const excludeList = pattern?.exclude ?? []
+      const bypassListUsers = bypass?.user_ids?.map((id: number) => usersMap?.[id])
+      const bypassUserGroups = bypass?.user_group_ids?.map(id => userGroupsMap?.[id])
+      const transformedBypassList = transformDataToArray(bypassListUsers || [])
+      const transformedUserGroupsBypassList = transformDataToArray(bypassUserGroups || [])
+      const bypassList = combineAndNormalizePrincipalsAndGroups(transformedBypassList, transformedUserGroupsBypassList)
 
       // Create a new array based on the "include" key from the JSON object and the strings array
-      const includeArr = includeList?.map((arr: string) => ['include', arr])
-      const excludeArr = excludeList?.map((arr: string) => ['exclude', arr])
-      const finalArray = [...includeArr, ...excludeArr]
-      const usersArray = transformDataToArray(bypassListUsers || [])
-      const userGroupsArray = transformDataToArray(bypassUserGroups || [])
-      const combinedArr = combineAndNormalizePrincipalsAndGroups(usersArray, userGroupsArray)
+      const includeArr = pattern?.include?.map((arr: string) => [RulesTargetType.INCLUDE, arr]) ?? []
+      const excludeArr = pattern?.exclude?.map((arr: string) => [RulesTargetType.EXCLUDE, arr]) ?? []
 
-      const bypassList = !isEmpty(userArrayState) ? userArrayState : combinedArr
-
-      const reviewersArray = transformDataToArray(defaultReviewersUsers || [])
-      const defaultReviewersList =
-        defaultReviewersState.length > 0
-          ? defaultReviewersState
-          : reviewersArray?.map(user => `${user.id} ${user.display_name} (${user.email})`)
-
-      return {
+      const commonRulesForm = {
         name: identifier,
         desc: description,
-        enable: state !== 'disabled',
+        enable: state !== RuleState.DISABLED,
         target: '',
         targetDefault: pattern?.default,
-        targetList: finalArray,
+        targetList: [...includeArr, ...excludeArr],
         allRepoOwners: bypass?.repo_owners,
         bypassList: bypassList,
-        defaultReviewersEnabled: (pullreq?.reviewers?.default_reviewer_ids?.length || 0) > 0,
-        defaultReviewersList: defaultReviewersList,
-        requireMinReviewers: minReviewerCheck,
-        requireMinDefaultReviewers: minDefaultReviewerCheck,
-        minReviewers: minReviewerCheck ? pullreq?.approvals?.require_minimum_count : '',
-        minDefaultReviewers: minDefaultReviewerCheck ? pullreq?.approvals?.require_minimum_default_reviewer_count : '',
-        autoAddCodeOwner: pullreq?.reviewers?.request_code_owners,
-        requireCodeOwner: pullreq?.approvals?.require_code_owners,
-        requireNewChanges: pullreq?.approvals?.require_latest_commit,
-        reqResOfChanges: pullreq?.approvals?.require_no_change_request,
-        requireCommentResolution: pullreq?.comments?.require_resolve_all,
-        requireStatusChecks: (pullreq?.status_checks?.require_identifiers?.length || 0) > 0,
-        statusChecks: pullreq?.status_checks?.require_identifiers || [],
-        limitMergeStrategies: !!pullreq?.merge?.strategies_allowed,
-        mergeCommit: isMergePresent,
-        squashMerge: isSquashPresent,
-        rebaseMerge: isRebasePresent,
-        fastForwardMerge: isFFMergePresent,
-        autoDelete: pullreq?.merge?.delete_branch,
-        blockBranchCreation: lifecycle?.create_forbidden,
-        blockBranchUpdate: lifecycle?.update_forbidden && pullreq?.merge?.block,
-        blockBranchDeletion: lifecycle?.delete_forbidden,
-        blockForcePush: lifecycle?.update_forbidden || lifecycle?.update_force_forbidden,
-        requirePr: lifecycle?.update_forbidden && !pullreq?.merge?.block,
         targetSet: false,
-        bypassSet: false,
-        defaultReviewersSet: false
+        bypassSet: false
+      }
+
+      switch (ruleType) {
+        case ProtectionRulesType.BRANCH: {
+          const { lifecycle, pullreq } = (definition as ProtectionBranch) || {}
+
+          const defaultReviewersUsers = pullreq?.reviewers?.default_reviewer_ids?.map((id: number) => usersMap?.[id])
+          const transformedDefaultReviewersArray = transformDataToArray(defaultReviewersUsers || [])
+          const defaultReviewersList = transformedDefaultReviewersArray?.map(
+            user => `${user.id} ${user.display_name} (${user.email})`
+          )
+
+          const minReviewerCheck = (pullreq?.approvals?.require_minimum_count as number) > 0
+          const minDefaultReviewerCheck = (pullreq?.approvals?.require_minimum_default_reviewer_count as number) > 0
+          const isMergePresent = pullreq?.merge?.strategies_allowed?.includes(MergeStrategy.MERGE)
+          const isSquashPresent = pullreq?.merge?.strategies_allowed?.includes(MergeStrategy.SQUASH)
+          const isRebasePresent = pullreq?.merge?.strategies_allowed?.includes(MergeStrategy.REBASE)
+          const isFFMergePresent = pullreq?.merge?.strategies_allowed?.includes(MergeStrategy.FAST_FORWARD)
+
+          return {
+            ...commonRulesForm,
+            defaultReviewersEnabled: (pullreq?.reviewers?.default_reviewer_ids?.length || 0) > 0,
+            defaultReviewersList: defaultReviewersList,
+            requireMinReviewers: minReviewerCheck,
+            requireMinDefaultReviewers: minDefaultReviewerCheck,
+            minReviewers: minReviewerCheck ? pullreq?.approvals?.require_minimum_count : '',
+            minDefaultReviewers: minDefaultReviewerCheck
+              ? pullreq?.approvals?.require_minimum_default_reviewer_count
+              : '',
+            autoAddCodeOwner: pullreq?.reviewers?.request_code_owners,
+            requireCodeOwner: pullreq?.approvals?.require_code_owners,
+            requireNewChanges: pullreq?.approvals?.require_latest_commit,
+            reqResOfChanges: pullreq?.approvals?.require_no_change_request,
+            requireCommentResolution: pullreq?.comments?.require_resolve_all,
+            requireStatusChecks: (pullreq?.status_checks?.require_identifiers?.length || 0) > 0,
+            statusChecks: pullreq?.status_checks?.require_identifiers || [],
+            limitMergeStrategies: !!pullreq?.merge?.strategies_allowed,
+            mergeCommit: isMergePresent,
+            squashMerge: isSquashPresent,
+            rebaseMerge: isRebasePresent,
+            fastForwardMerge: isFFMergePresent,
+            autoDelete: pullreq?.merge?.delete_branch,
+            blockCreation: lifecycle?.create_forbidden,
+            blockUpdate: lifecycle?.update_forbidden && pullreq?.merge?.block,
+            blockDeletion: lifecycle?.delete_forbidden,
+            blockForcePush: lifecycle?.update_forbidden || lifecycle?.update_force_forbidden,
+            requirePr: lifecycle?.update_forbidden && !pullreq?.merge?.block,
+            defaultReviewersSet: false
+          }
+        }
+        case ProtectionRulesType.TAG: {
+          const { lifecycle } = (definition as ProtectionTag) || {}
+          return {
+            ...commonRulesForm,
+            blockCreation: lifecycle?.create_forbidden,
+            blockUpdate: lifecycle?.update_force_forbidden,
+            blockDeletion: lifecycle?.delete_forbidden
+          } as RulesFormPayload
+        }
       }
     }
 
@@ -342,13 +354,6 @@ const ProtectionRulesForm = (props: {
     getEditPermissionRequestFromScope(space, currentRuleScope ?? 0, repoMetadata),
     [space, currentRuleScope, repoMetadata]
   )
-
-  const defaultReviewerProps = {
-    setSearchTerm,
-    userPrincipalOptions,
-    settingSectionMode,
-    setDefaultReviewersState
-  }
 
   return (
     <Formik<RulesFormPayload>
@@ -387,94 +392,20 @@ const ProtectionRulesForm = (props: {
           )
       })}
       onSubmit={async (formData, { resetForm }) => {
-        const stratArray = [
-          formData.squashMerge && MergeStrategy.SQUASH,
-          formData.rebaseMerge && MergeStrategy.REBASE,
-          formData.mergeCommit && MergeStrategy.MERGE,
-          formData.fastForwardMerge && MergeStrategy.FAST_FORWARD
-        ].filter(Boolean) as EnumMergeMethod[]
-        const includeArray =
-          formData?.targetList?.filter(([type]) => type === 'include').map(([, value]) => value) ?? []
-        const excludeArray =
-          formData?.targetList?.filter(([type]) => type === 'exclude').map(([, value]) => value) ?? []
+        const payload = getPayload(formData, ruleType)
 
-        const { userIds, userGroupIds } = formData?.bypassList?.reduce(
-          (acc, item: NormalizedPrincipal) => {
-            if (item.type === PrincipalType.USER_GROUP) {
-              acc.userGroupIds.push(item.id)
-            } else {
-              acc.userIds.push(item.id)
-            }
-            return acc
-          },
-          { userIds: [] as number[], userGroupIds: [] as number[] }
-        ) || { userIds: [], userGroupIds: [] }
-
-        const defaultReviewersList = formData?.defaultReviewersList?.map(item => parseInt(item.split(' ')[0]))
-        const payload: OpenapiRule = {
-          identifier: formData.name,
-          type: 'branch',
-          description: formData.desc,
-          state: formData.enable === true ? 'active' : 'disabled',
-          pattern: {
-            default: formData.targetDefault,
-            exclude: excludeArray,
-            include: includeArray
-          },
-          definition: {
-            bypass: {
-              user_ids: userIds,
-              user_group_ids: userGroupIds,
-              repo_owners: formData.allRepoOwners
-            },
-            pullreq: {
-              approvals: {
-                require_code_owners: formData.requireCodeOwner,
-                require_minimum_count: parseInt(formData.minReviewers as string),
-                require_minimum_default_reviewer_count: parseInt(formData.minDefaultReviewers as string),
-                require_latest_commit: formData.requireNewChanges,
-                require_no_change_request: formData.reqResOfChanges
-              },
-              reviewers: {
-                request_code_owners: formData.autoAddCodeOwner,
-                default_reviewer_ids: defaultReviewersList
-              },
-              comments: {
-                require_resolve_all: formData.requireCommentResolution
-              },
-              merge: {
-                strategies_allowed: stratArray,
-                delete_branch: formData.autoDelete,
-                block: formData.blockBranchUpdate
-              },
-              status_checks: {
-                require_identifiers: formData.statusChecks
-              }
-            },
-            lifecycle: {
-              create_forbidden: formData.blockBranchCreation,
-              delete_forbidden: formData.blockBranchDeletion,
-              update_forbidden: formData.requirePr || formData.blockBranchUpdate,
-              update_force_forbidden: formData.blockForcePush && !formData.requirePr && !formData.blockBranchUpdate
-            }
-          }
-        }
-        if (!formData.requireStatusChecks) {
-          delete (payload?.definition as ProtectionBranch)?.pullreq?.status_checks
-        }
-        if (!formData.limitMergeStrategies) {
-          delete (payload?.definition as ProtectionBranch)?.pullreq?.merge?.strategies_allowed
-        }
-        if (!formData.requireMinReviewers) {
-          delete (payload?.definition as ProtectionBranch)?.pullreq?.approvals?.require_minimum_count
-        }
-        if (!formData.requireMinDefaultReviewers) {
-          delete (payload?.definition as ProtectionBranch)?.pullreq?.approvals?.require_minimum_default_reviewer_count
-        }
         if (editMode) {
-          handleSubmit(updateRule(payload), getString('protectionRules.ruleUpdated'), resetForm)
+          handleSubmit(
+            updateRule(payload),
+            getString('protectionRules.ruleUpdated', { ruleType: capitalize(ruleType) }),
+            resetForm
+          )
         } else {
-          handleSubmit(mutate(payload), getString('protectionRules.ruleCreated'), resetForm)
+          handleSubmit(
+            mutate(payload),
+            getString('protectionRules.ruleCreated', { ruleType: capitalize(ruleType) }),
+            resetForm
+          )
         }
       }}>
       {formik => {
@@ -482,10 +413,7 @@ const ProtectionRulesForm = (props: {
           settingSectionMode === SettingTypeMode.EDIT || formik.values.targetSet ? formik.values.targetList : []
         const bypassList =
           settingSectionMode === SettingTypeMode.EDIT || formik.values.bypassSet ? formik.values.bypassList : []
-        const minReviewers = formik.values.requireMinReviewers
-        const statusChecks = formik.values.statusChecks
-        const limitMergeStrats = formik.values.limitMergeStrategies
-        const requireStatusChecks = formik.values.requireStatusChecks
+
         const bypassListOptions = getBypassListOptions(bypassList)
 
         const renderPrincipalIcon = (type: PrincipalType, displayName: string) => {
@@ -510,8 +438,12 @@ const ProtectionRulesForm = (props: {
                     padding={{ bottom: 'medium' }}
                     font={{ variation: FontVariation.H4 }}>
                     {editMode
-                      ? getString('protectionRules.edit', { ruleType })
-                      : getString('protectionRules.create', { ruleType })}
+                      ? getString('protectionRules.edit', {
+                          ruleType: capitalize(ruleType)
+                        })
+                      : getString('protectionRules.create', {
+                          ruleType: capitalize(ruleType)
+                        })}
                   </Text>
                   <FormInput.CheckBox
                     margin={{ top: 'medium', left: 'medium' }}
@@ -575,12 +507,16 @@ const ProtectionRulesForm = (props: {
                       variation={ButtonVariation.TERTIARY}
                       text={
                         <Container flex={{ alignItems: 'center' }}>
-                          <img width={16} height={17} src={Include} />
+                          <img
+                            width={16}
+                            height={16}
+                            src={targetType === RulesTargetType.INCLUDE ? Include : Exclude}
+                          />
                           <Text
                             padding={{ left: 'xsmall' }}
                             color={Color.BLACK}
                             font={{ variation: FontVariation.BODY2_SEMI, weight: 'bold' }}>
-                            {branchTargetOptions[0].title}
+                            {getString(targetType)}
                           </Text>
                         </Container>
                       }
@@ -593,30 +529,29 @@ const ProtectionRulesForm = (props: {
                       onClick={() => {
                         if (formik.values.target !== '') {
                           formik.setFieldValue('targetSet', true)
-
-                          targetList.push([BranchTargetType.INCLUDE, formik.values.target ?? ''])
+                          targetList.push([targetType, formik.values.target ?? ''])
                           formik.setFieldValue('targetList', targetList)
                           formik.setFieldValue('target', '')
                         }
                       }}>
-                      {[branchTargetOptions[1]].map(option => {
-                        return (
-                          <Menu.Item
-                            className={css.menuItem}
-                            key={option.type}
-                            text={<Text font={{ variation: FontVariation.BODY2 }}>{option.title}</Text>}
-                            onClick={() => {
-                              if (formik.values.target !== '') {
-                                formik.setFieldValue('targetSet', true)
-
-                                targetList.push([BranchTargetType.EXCLUDE, formik.values.target ?? ''])
-                                formik.setFieldValue('targetList', targetList)
-                                formik.setFieldValue('target', '')
-                              }
-                            }}
-                          />
-                        )
-                      })}
+                      {Object.values(RulesTargetType).map(type => (
+                        <Menu.Item
+                          key={type}
+                          className={css.menuItem}
+                          text={
+                            <Container flex={{ justifyContent: 'flex-start' }}>
+                              <Icon name={type === targetType ? CodeIcon.Tick : CodeIcon.Blank} />
+                              <Text
+                                padding={{ left: 'xsmall' }}
+                                color={Color.BLACK}
+                                font={{ variation: FontVariation.BODY2_SEMI, weight: 'bold' }}>
+                                {getString(type)}
+                              </Text>
+                            </Container>
+                          }
+                          onClick={() => setTargetType(type)}
+                        />
+                      ))}
                     </SplitButton>
                   </Container>
                 </Layout.Horizontal>
@@ -628,11 +563,7 @@ const ProtectionRulesForm = (props: {
                     {targetList.map((target, idx) => {
                       return (
                         <Container key={`${idx}-${target[1]}`} className={css.greyButton}>
-                          {target[0] === BranchTargetType.INCLUDE ? (
-                            <img width={16} height={17} src={Include} />
-                          ) : (
-                            <img width={16} height={16} src={Exclude} />
-                          )}
+                          <img width={16} height={16} src={target[0] === RulesTargetType.INCLUDE ? Include : Exclude} />
                           <Text lineClamp={1}>{target[1]}</Text>
                           <Icon
                             name="code-close"
@@ -662,7 +593,7 @@ const ProtectionRulesForm = (props: {
                   className={css.widthContainer}
                   onChange={setSearchTerm}
                   options={bypassListOptions}
-                  loading={loadingUsers || loadingUsersGroups}
+                  loading={loadingPrincipals || loadingUsersGroups}
                   itemRenderer={(item, { handleClick, isActive }) => {
                     const { id, type, display_name, email_or_identifier } = JSON.parse(item.value.toString())
                     return (
@@ -690,31 +621,34 @@ const ProtectionRulesForm = (props: {
                     const uniqueArr = Array.from(new Map(updatedList.map(item => [item.id, item])).values())
                     formik.setFieldValue('bypassList', uniqueArr)
                     formik.setFieldValue('bypassSet', true)
-                    setUserArrayState(uniqueArr)
                   }}
                 />
-
-                {!isEmpty(bypassList) && (
-                  <Text color="grey500" padding={{ top: 'medium', bottom: 'xsmall' }} font={{ weight: 'semi-bold' }}>
-                    Bypass List ({bypassList?.length})
-                  </Text>
-                )}
                 <BypassList
                   renderPrincipalIcon={renderPrincipalIcon}
                   bypassList={bypassList}
                   setFieldValue={formik.setFieldValue}
                 />
               </Container>
-              <RulesDefinitionForm
-                formik={formik}
-                requireStatusChecks={requireStatusChecks}
-                minReviewers={minReviewers}
-                statusOptions={statusOptions}
-                statusChecks={statusChecks}
-                limitMergeStrats={limitMergeStrats}
-                setSearchStatusTerm={setSearchStatusTerm}
-                defaultReviewerProps={defaultReviewerProps}
-              />
+
+              <Container margin={{ top: 'medium' }} className={css.generalContainer}>
+                <Text className={css.headingSize} padding={{ bottom: 'medium' }} font={{ variation: FontVariation.H4 }}>
+                  {getString('protectionRules.protectionSelectAll')}
+                </Text>
+                {ruleType === ProtectionRulesType.BRANCH ? (
+                  <BranchRulesForm
+                    formik={formik}
+                    statusOptions={statusOptions}
+                    setSearchStatusTerm={setSearchStatusTerm}
+                    defaultReviewerProps={{
+                      setSearchTerm,
+                      userPrincipalOptions,
+                      settingSectionMode
+                    }}
+                  />
+                ) : (
+                  <TagRulesForm />
+                )}
+              </Container>
 
               <Container padding={{ top: 'large' }}>
                 <Layout.Horizontal spacing="small">

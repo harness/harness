@@ -27,7 +27,7 @@ import {
 import React, { useEffect, useMemo, useState } from 'react'
 import cx from 'classnames'
 import { Render } from 'react-jsx-match'
-import { isEmpty } from 'lodash-es'
+import { capitalize, isEmpty } from 'lodash-es'
 import type { IconName } from '@blueprintjs/core'
 import { Icon } from '@harnessio/icons'
 import { CodeOwnerReqDecision, findChangeReqDecisions, getUnifiedDefaultReviewersState } from 'utils/Utils'
@@ -41,7 +41,6 @@ import type {
   RepoRepositoryOutput,
   TypesDefaultReviewerApprovalsResponse
 } from 'services/code'
-import { capitalizeFirstLetter } from 'pages/PullRequest/Checks/ChecksUtils'
 import { defaultReviewerResponseWithDecision, findWaitingDecisions } from 'pages/PullRequest/PullRequestUtils'
 import { DefaultReviewersPanel } from 'pages/PullRequest/DefaultReviewers/DefaultReviewersPanel'
 import greyCircle from '../../../../../icons/greyCircle.svg?url'
@@ -139,9 +138,7 @@ const ChangesSection = (props: ChangesSectionProps) => {
   const changeReqEvaluations = reviewers?.filter(evaluation => evaluation.review_decision === 'changereq')
   const changeReqReviewer =
     changeReqEvaluations && !isEmpty(changeReqEvaluations)
-      ? capitalizeFirstLetter(
-          changeReqEvaluations[0].reviewer?.display_name || changeReqEvaluations[0].reviewer?.uid || ''
-        )
+      ? capitalize(changeReqEvaluations[0].reviewer?.display_name || changeReqEvaluations[0].reviewer?.uid || '')
       : 'Reviewer'
   const updatedDefaultApprovalRes = reviewers
     ? defaultReviewerResponseWithDecision(defaultReviewersInfoSet, reviewers)

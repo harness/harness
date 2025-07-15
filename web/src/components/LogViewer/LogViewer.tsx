@@ -19,11 +19,11 @@ import Anser from 'anser'
 import cx from 'classnames'
 import { Button, ButtonSize, ButtonVariation, Container, FlexExpander, Layout, Text, Utils } from '@harnessio/uicore'
 import { NavArrowRight } from 'iconoir-react'
-import { isEmpty } from 'lodash-es'
+import { capitalize, isEmpty } from 'lodash-es'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Render } from 'react-jsx-match'
 import { useStrings } from 'framework/strings'
-import { capitalizeFirstLetter, parseLogString } from 'pages/PullRequest/Checks/ChecksUtils'
+import { parseLogString } from 'pages/PullRequest/Checks/ChecksUtils'
 import { useAppContext } from 'AppContext'
 import { ButtonRoleProps, timeDistance } from 'utils/Utils'
 import { useScheduleJob } from 'hooks/useScheduleJob'
@@ -103,7 +103,7 @@ const LogTerminal: React.FC<LogViewerProps> = ({
 
     if (
       selectedItemData?.status === StepStatus.RUNNING &&
-      status !== capitalizeFirstLetter(StepStatus.SUCCESS) &&
+      status !== capitalize(StepStatus.SUCCESS) &&
       !isEmpty(logContent.streamData)
     ) {
       return streamingData.streamData[logBaseKey]

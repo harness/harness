@@ -22,6 +22,7 @@ export declare const divider: string
 export declare const greyButton: string
 export declare const hideButtonIcon: string
 export declare const hideDetailsContainer: string
+export declare const pageBody: string
 export declare const pattern: string
 export declare const popover: string
 export declare const row: string

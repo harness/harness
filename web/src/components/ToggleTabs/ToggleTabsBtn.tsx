@@ -24,16 +24,23 @@ interface ToggleTabsBtnProps {
   tabsList: SelectOption[]
   onTabChange: (newTab: string) => void
   wrapperClassName?: string
+  ctnWrapperClassName?: string
 }
 
-const ToggleTabsBtn: FC<ToggleTabsBtnProps> = ({ currentTab, tabsList, onTabChange, wrapperClassName }) => {
+const ToggleTabsBtn: FC<ToggleTabsBtnProps> = ({
+  currentTab,
+  tabsList,
+  onTabChange,
+  wrapperClassName,
+  ctnWrapperClassName
+}) => {
   return (
     <Layout.Horizontal className={cx(css.toggleTabs, wrapperClassName)}>
       <Container className={css.stateToggle}>
         {tabsList.map(tab => (
           <Text
             key={tab.value as string}
-            className={cx(css.stateCtn, { [css.isSelected]: currentTab === tab.value })}
+            className={cx(css.stateCtn, ctnWrapperClassName, { [css.isSelected]: currentTab === tab.value })}
             onClick={() => onTabChange(tab.value as string)}>
             {tab.label}
           </Text>

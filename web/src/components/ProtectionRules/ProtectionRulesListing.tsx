@@ -33,7 +33,7 @@ import {
 import cx from 'classnames'
 import type { CellProps, Column } from 'react-table'
 import { useGet, useMutate } from 'restful-react'
-import { debounce, isEmpty } from 'lodash-es'
+import { capitalize, debounce, isEmpty } from 'lodash-es'
 import { FontVariation } from '@harnessio/design-system'
 import { Position } from '@blueprintjs/core'
 import { useHistory, useParams } from 'react-router-dom'
@@ -45,17 +45,12 @@ import {
   LIST_FETCHING_LIMIT,
   permissionProps,
   type PageBrowserProps,
-  Rule,
-  RuleFields,
-  BranchProtectionRulesMapType,
-  createRuleFieldsMap,
   getScopeData,
   getEditPermissionRequestFromScope,
   getEditPermissionRequestFromIdentifier,
-  RuleState,
   ScopeEnum
 } from 'utils/Utils'
-import { SettingTypeMode } from 'utils/GitUtils'
+import { ProtectionRulesType, RulesTargetType, SettingTypeMode } from 'utils/GitUtils'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { useStrings } from 'framework/strings'
@@ -71,11 +66,19 @@ import ProtectionRulesForm from './ProtectionRulesForm/ProtectionRulesForm'
 import ProtectionRulesHeader from './ProtectionRulesHeader/ProtectionRulesHeader'
 import Include from '../../icons/Include.svg?url'
 import Exclude from '../../icons/Exclude.svg?url'
+import {
+  createRuleFieldsMap,
+  getProtectionRules,
+  ProtectionRulesMapType,
+  Rule,
+  RuleFields,
+  RuleState
+} from './ProtectionRulesUtils'
 import css from './ProtectionRulesListing.module.scss'
 
 const getPatterns = (pattern: ProtectionPattern, included: boolean) => {
-  return (pattern as ProtectionPattern)?.[included ? 'include' : 'exclude']?.map((ref: string, index: number) => {
-    return (
+  return (pattern as ProtectionPattern)?.[included ? RulesTargetType.INCLUDE : RulesTargetType.EXCLUDE]?.map(
+    (ref: string, index: number) => (
       <Container flex={{ align: 'center-center' }} className={css.greyButton} key={index}>
         <img width={12} height={12} src={included ? Include : Exclude} />
         <Text className={css.pattern} tooltipProps={{ popoverClassName: css.popover }} lineClamp={1}>
@@ -83,7 +86,7 @@ const getPatterns = (pattern: ProtectionPattern, included: boolean) => {
         </Text>
       </Container>
     )
-  })
+  )
 }
 
 const ProtectionRulesListing = (props: { activeTab: string; repoMetadata?: RepoRepositoryOutput }) => {
@@ -93,7 +96,7 @@ const ProtectionRulesListing = (props: { activeTab: string; repoMetadata?: RepoR
   const space = useGetSpaceParam()
   const history = useHistory()
   const { routes, standalone, hooks } = useAppContext()
-  const pageBrowser = useQueryParams<PageBrowserProps>()
+  const pageBrowser = useQueryParams<PageBrowserProps & { type: ProtectionRulesType }>()
   const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
   const [page, setPage] = usePageIndex(pageInit)
   const [searchTerm, setSearchTerm] = useState<string | undefined>()
@@ -114,6 +117,7 @@ const ProtectionRulesListing = (props: { activeTab: string; repoMetadata?: RepoR
     data: rules,
     refetch: refetchRules,
     loading: loadingRules,
+    error,
     response
   } = useGet<OpenapiRule[]>({
     base: getConfig('code/api/v1'),
@@ -124,7 +128,8 @@ const ProtectionRulesListing = (props: { activeTab: string; repoMetadata?: RepoR
       page,
       sort: 'date',
       order: 'desc',
-      query: debouncedSearchTerm
+      query: debouncedSearchTerm,
+      type: pageBrowser.type ?? ''
     },
     lazy: !!editRule
   })
@@ -136,113 +141,6 @@ const ProtectionRulesListing = (props: { activeTab: string; repoMetadata?: RepoR
     }, 500),
     []
   )
-
-  const branchProtectionRules = {
-    requireMinReviewersTitle: {
-      title: getString('protectionRules.requireMinReviewersTitle'),
-      requiredRule: {
-        [RuleFields.APPROVALS_REQUIRE_MINIMUM_COUNT]: true
-      }
-    },
-    reqReviewFromCodeOwnerTitle: {
-      title: getString('protectionRules.reqReviewFromCodeOwnerTitle'),
-      requiredRule: {
-        [RuleFields.APPROVALS_REQUIRE_CODE_OWNERS]: true
-      }
-    },
-    reqResOfChanges: {
-      title: getString('protectionRules.reqResOfChanges'),
-      requiredRule: {
-        [RuleFields.APPROVALS_REQUIRE_NO_CHANGE_REQUEST]: true
-      }
-    },
-    reqNewChangesTitle: {
-      title: getString('protectionRules.reqNewChangesTitle'),
-      requiredRule: {
-        [RuleFields.APPROVALS_REQUIRE_LATEST_COMMIT]: true
-      }
-    },
-    reqCommentResolutionTitle: {
-      title: getString('protectionRules.reqCommentResolutionTitle'),
-      requiredRule: {
-        [RuleFields.COMMENTS_REQUIRE_RESOLVE_ALL]: true
-      }
-    },
-    reqStatusChecksTitleAll: {
-      title: getString('protectionRules.reqStatusChecksTitle'),
-      requiredRule: {
-        [RuleFields.STATUS_CHECKS_ALL_MUST_SUCCEED]: true
-      }
-    },
-    reqStatusChecksTitle: {
-      title: getString('protectionRules.reqStatusChecksTitle'),
-      requiredRule: {
-        [RuleFields.STATUS_CHECKS_REQUIRE_IDENTIFIERS]: true
-      }
-    },
-    limitMergeStrategies: {
-      title: getString('protectionRules.limitMergeStrategies'),
-      requiredRule: {
-        [RuleFields.MERGE_STRATEGIES_ALLOWED]: true
-      }
-    },
-    autoDeleteTitle: {
-      title: getString('protectionRules.autoDeleteTitle'),
-      requiredRule: {
-        [RuleFields.MERGE_DELETE_BRANCH]: true
-      }
-    },
-    blockBranchCreation: {
-      title: getString('protectionRules.blockBranchCreation'),
-      requiredRule: {
-        [RuleFields.LIFECYCLE_CREATE_FORBIDDEN]: true
-      }
-    },
-    blockBranchDeletion: {
-      title: getString('protectionRules.blockBranchDeletion'),
-      requiredRule: {
-        [RuleFields.LIFECYCLE_DELETE_FORBIDDEN]: true
-      }
-    },
-    blockBranchUpdate: {
-      title: getString('protectionRules.blockBranchUpdate'),
-      requiredRule: {
-        [RuleFields.MERGE_BLOCK]: true,
-        [RuleFields.LIFECYCLE_UPDATE_FORBIDDEN]: true
-      }
-    },
-    requirePr: {
-      title: getString('protectionRules.requirePr'),
-      requiredRule: {
-        [RuleFields.LIFECYCLE_UPDATE_FORBIDDEN]: true,
-        [RuleFields.MERGE_BLOCK]: false
-      }
-    },
-    blockForcePush: {
-      title: getString('protectionRules.blockForcePush'),
-      requiredRule: {
-        [RuleFields.LIFECYCLE_UPDATE_FORCE_FORBIDDEN]: true
-      }
-    },
-    autoAddCodeownersToReview: {
-      title: getString('protectionRules.addCodeownersToReviewTitle'),
-      requiredRule: {
-        [RuleFields.AUTO_ADD_CODE_OWNERS]: true
-      }
-    },
-    requireMinDefaultReviewersTitle: {
-      title: getString('protectionRules.requireMinDefaultReviewersTitle'),
-      requiredRule: {
-        [RuleFields.APPROVALS_REQUIRE_MINIMUM_DEFAULT_REVIEWERS]: true
-      }
-    },
-    defaultReviewersAdded: {
-      title: getString('protectionRules.enableDefaultReviewersTitle'),
-      requiredRule: {
-        [RuleFields.DEFAULT_REVIEWERS_ADDED]: true
-      }
-    }
-  }
 
   function navigateToSettings({
     repoMetadata: metaData,
@@ -334,7 +232,7 @@ const ProtectionRulesListing = (props: { activeTab: string; repoMetadata?: RepoR
             </Text>
           )
 
-          const checkAppliedRules = (rulesData: Rule, rulesList: BranchProtectionRulesMapType): SelectOption[] => {
+          const checkAppliedRules = (rulesData: Rule, rulesList: ProtectionRulesMapType): SelectOption[] => {
             const nonEmptyFields: SelectOption[] = []
             const rulesDefinitionData: Record<RuleFields, boolean> = createRuleFieldsMap(rulesData)
             for (const [key, rule] of Object.entries(rulesList)) {
@@ -356,7 +254,7 @@ const ProtectionRulesListing = (props: { activeTab: string; repoMetadata?: RepoR
             return nonEmptyFields
           }
 
-          const nonEmptyRules = checkAppliedRules(definition as Rule, branchProtectionRules)
+          const nonEmptyRules = checkAppliedRules(definition as Rule, getProtectionRules(getString, type))
 
           const permPushResult = hooks?.usePermissionTranslate(
             getEditPermissionRequestFromScope(space, scope ?? 0, repoMetadata),
@@ -364,7 +262,7 @@ const ProtectionRulesListing = (props: { activeTab: string; repoMetadata?: RepoR
           )
 
           return (
-            <Layout.Vertical spacing="small" padding={{ left: 'medium' }}>
+            <Layout.Vertical spacing="small" padding={{ left: 'medium', bottom: 'xsmall' }}>
               <Layout.Horizontal flex={{ align: 'center-center' }}>
                 <Container onClick={Utils.stopEvent}>
                   <Popover
@@ -396,7 +294,9 @@ const ProtectionRulesListing = (props: { activeTab: string; repoMetadata?: RepoR
                                 const data = { state: checked ? RuleState.DISABLED : RuleState.ACTIVE }
                                 toggleRule(data)
                                   .then(() => {
-                                    showSuccess(getString('protectionRules.ruleUpdated'))
+                                    showSuccess(
+                                      getString('protectionRules.ruleUpdated', { ruleType: capitalize(type) })
+                                    )
                                   })
                                   .catch(err => {
                                     showError(getErrorMessage(err))
@@ -428,8 +328,8 @@ const ProtectionRulesListing = (props: { activeTab: string; repoMetadata?: RepoR
                     />
                   </Popover>
                 </Container>
-                <Layout.Horizontal padding={{ top: 'xsmall', left: 'small' }}>
-                  {inheritRules && <Icon padding={{ right: 'small' }} name={scopeIcon} size={16} />}
+                <Layout.Horizontal flex={{ align: 'center-center' }} padding={{ top: 'xsmall', left: 'small' }}>
+                  {inheritRules && <Icon padding={{ right: 'small', bottom: 'xsmall' }} name={scopeIcon} size={16} />}
                   <Text className={css.title}>{identifier}</Text>
                 </Layout.Horizontal>
                 <FlexExpander />
@@ -536,8 +436,9 @@ const ProtectionRulesListing = (props: { activeTab: string; repoMetadata?: RepoR
     space,
     repoMetadata
   ])
+
   return (
-    <PageBody loading={loadingRules}>
+    <PageBody loading={loadingRules} error={error} retryOnError={() => refetchRules()} className={css.pageBody}>
       {!newRule && !editRule && (
         <ProtectionRulesHeader
           activeTab={activeTab}
@@ -548,6 +449,7 @@ const ProtectionRulesListing = (props: { activeTab: string; repoMetadata?: RepoR
           }}
           inheritRules={inheritRules}
           setInheritRules={setInheritRules}
+          ruleTypeFilter={pageBrowser.type}
           {...(repoMetadata && { repoMetadata: repoMetadata })}
         />
       )}
@@ -556,7 +458,6 @@ const ProtectionRulesListing = (props: { activeTab: string; repoMetadata?: RepoR
           currentPageScope={currentPageScope}
           editMode={editRule}
           repoMetadata={repoMetadata}
-          refetchRules={refetchRules}
           settingSectionMode={settingSectionMode}
         />
       ) : (

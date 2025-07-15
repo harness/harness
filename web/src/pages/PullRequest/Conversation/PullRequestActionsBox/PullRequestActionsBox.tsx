@@ -33,7 +33,7 @@ import { Icon } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { MutateMethod, useMutate } from 'restful-react'
 import { Case, Else, Match, Render, Truthy } from 'react-jsx-match'
-import { Menu, PopoverPosition, Icon as BIcon } from '@blueprintjs/core'
+import { Menu, PopoverPosition } from '@blueprintjs/core'
 import cx from 'classnames'
 import { defaultTo } from 'lodash-es'
 import type {
@@ -384,7 +384,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                           disabled={option.disabled}
                           text={
                             <>
-                              <BIcon icon={draftOption.method === option.method ? 'tick' : 'blank'} />
+                              <Icon name={draftOption.method === option.method ? CodeIcon.Tick : CodeIcon.Blank} />
                               <strong>{option.title}</strong>
                               <p>{option.desc}</p>
                             </>
@@ -479,7 +479,9 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                                       disabled={option.method !== 'close' ? !mergeCheck : option.disabled}
                                       text={
                                         <>
-                                          <BIcon icon={mergeOption.method === option.method ? 'tick' : 'blank'} />
+                                          <Icon
+                                            name={mergeOption.method === option.method ? CodeIcon.Tick : CodeIcon.Blank}
+                                          />
                                           <strong>{option.title}</strong>
                                           <p>{option.desc}</p>
                                         </>

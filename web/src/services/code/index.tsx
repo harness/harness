@@ -36,9 +36,18 @@ export type EnumContentEncodingType = 'base64' | 'utf8'
 
 export type EnumFileDiffStatus = string
 
+export type EnumGitSignatureResult =
+  | 'bad'
+  | 'good'
+  | 'invalid'
+  | 'key_expired'
+  | 'revoked'
+  | 'unsupported'
+  | 'unverified'
+
 export type EnumGitspaceAccessType = 'jwt_token' | 'user_credentials' | 'ssh_key'
 
-export type EnumGitspaceActionType = 'start' | 'stop'
+export type EnumGitspaceActionType = 'start' | 'stop' | 'reset'
 
 export type EnumGitspaceCodeRepoType =
   | 'github'
@@ -89,6 +98,9 @@ export type EnumGitspaceEventType =
   | 'agent_gitspace_state_report_stopped'
   | 'agent_gitspace_state_report_unknown'
   | 'gitspace_action_auto_stop'
+  | 'gitspace_action_reset'
+  | 'gitspace_action_reset_completed'
+  | 'gitspace_action_reset_failed'
 
 export type EnumGitspaceFilterState = 'error' | 'running' | 'stopped'
 
@@ -102,12 +114,20 @@ export type EnumGitspaceInstanceStateType =
   | 'stopping'
   | 'cleaning'
   | 'cleaned'
+  | 'resetting'
 
 export type EnumGitspaceOwner = 'all' | 'self'
 
 export type EnumGitspaceSort = 'created' | 'last_activated' | 'last_used'
 
-export type EnumGitspaceStateType = 'running' | 'stopped' | 'error' | 'uninitialized' | 'starting' | 'stopping'
+export type EnumGitspaceStateType =
+  | 'running'
+  | 'stopped'
+  | 'error'
+  | 'uninitialized'
+  | 'starting'
+  | 'stopping'
+  | 'cleaning'
 
 export type EnumIDEType =
   | 'vs_code'
@@ -201,6 +221,8 @@ export type EnumRevocationReason = 'compromised' | 'retired' | 'superseded' | 'u
 
 export type EnumRuleState = 'active' | 'disabled' | 'monitor' | null
 
+export type EnumRuleType = 'branch' | 'push' | 'tag'
+
 export type EnumTokenType = string
 
 export type EnumTriggerAction =
@@ -253,7 +275,7 @@ export interface GitBlamePartPrevious {
   file_name?: string
 }
 
-export interface GitCommit {
+export type GitCommit = {
   author?: GitSignature
   committer?: GitSignature
   file_stats?: GitCommitFileStats[]
@@ -261,7 +283,7 @@ export interface GitCommit {
   parent_shas?: ShaSHA[]
   sha?: ShaSHA
   title?: string
-}
+} | null
 
 export interface GitCommitFileStats {
   [key: string]: any
@@ -287,11 +309,6 @@ export type GitIdentity = {
   email?: string
   name?: string
 } | null
-
-export interface GitPathDetails {
-  last_commit?: GitCommit
-  path?: string
-}
 
 export interface GitSignature {
   identity?: GitIdentity
@@ -589,6 +606,7 @@ export interface OpenapiLookupRepoGitspaceRequest {
 
 export interface OpenapiMergePullReq {
   bypass_rules?: boolean
+  delete_source_branch?: boolean
   dry_run?: boolean
   dry_run_rules?: boolean
   message?: string
@@ -666,9 +684,9 @@ export interface OpenapiRule {
   } | null
 }
 
-export type OpenapiRuleDefinition = ProtectionBranch
+export type OpenapiRuleDefinition = ProtectionBranch | ProtectionTag | ProtectionPush
 
-export type OpenapiRuleType = 'branch'
+export type OpenapiRuleType = 'branch' | 'tag' | 'push'
 
 export interface OpenapiSecuritySettingsRequest {
   principal_committer_match?: boolean | null
@@ -835,6 +853,12 @@ export interface ProtectionDefPullReq {
   status_checks?: ProtectionDefStatusChecks
 }
 
+export interface ProtectionDefPush {
+  file_size_limit?: number
+  principal_committer_match?: boolean
+  secret_scanning_enabled?: boolean
+}
+
 export interface ProtectionDefReviewers {
   default_reviewer_ids?: number[]
   request_code_owners?: boolean
@@ -844,11 +868,27 @@ export interface ProtectionDefStatusChecks {
   require_identifiers?: string[]
 }
 
+export interface ProtectionDefTagLifecycle {
+  create_forbidden?: boolean
+  delete_forbidden?: boolean
+  update_force_forbidden?: boolean
+}
+
 export type ProtectionPattern = {
   default?: boolean
   exclude?: string[]
   include?: string[]
 } | null
+
+export interface ProtectionPush {
+  bypass?: ProtectionDefBypass
+  push?: ProtectionDefPush
+}
+
+export interface ProtectionTag {
+  bypass?: ProtectionDefBypass
+  lifecycle?: ProtectionDefTagLifecycle
+}
 
 export interface PullreqCommentApplySuggestionsOutput {
   commit_id?: string
@@ -872,16 +912,6 @@ export interface RepoCommitFileAction {
   path?: string
   payload?: string
   sha?: ShaSHA
-}
-
-export interface RepoCommitTag {
-  commit?: TypesCommit
-  is_annotated?: boolean
-  message?: string
-  name?: string
-  sha?: ShaSHA
-  tagger?: TypesSignature
-  title?: string
 }
 
 // tslint:disable-next-line:no-empty-interface
@@ -917,7 +947,7 @@ export interface RepoMergeCheck {
 }
 
 export interface RepoPathsDetailsOutput {
-  details?: GitPathDetails[] | null
+  details?: TypesPathDetails[] | null
 }
 
 export interface RepoRepositoryOutput {
@@ -1138,6 +1168,7 @@ export interface TypesCommit {
   message?: string
   parent_shas?: ShaSHA[]
   sha?: ShaSHA
+  signature?: TypesGitSignatureResult
   stats?: TypesCommitStats
   title?: string
 }
@@ -1166,6 +1197,17 @@ export interface TypesCommitFilesResponse {
 export interface TypesCommitStats {
   files?: TypesCommitFileStats[]
   total?: TypesChangeStats
+}
+
+export interface TypesCommitTag {
+  commit?: TypesCommit
+  is_annotated?: boolean
+  message?: string
+  name?: string
+  sha?: ShaSHA
+  signature?: TypesGitSignatureResult
+  tagger?: TypesSignature
+  title?: string
 }
 
 export interface TypesConnector {
@@ -1282,6 +1324,15 @@ export interface TypesFileReference {
   blob_sha?: ShaSHA
   path?: string
 }
+
+export type TypesGitSignatureResult = {
+  created?: number
+  key_fingerprint?: string
+  key_id?: string
+  key_scheme?: EnumPublicKeyScheme
+  result?: EnumGitSignatureResult
+  updated?: number
+} | null
 
 export interface TypesGithubConnectorData {
   api_url?: string
@@ -1495,6 +1546,11 @@ export interface TypesOwnerEvaluation {
   owner?: TypesPrincipalInfo
   review_decision?: EnumPullReqReviewDecision
   review_sha?: string
+}
+
+export interface TypesPathDetails {
+  last_commit?: TypesCommit
+  path?: string
 }
 
 export interface TypesPipeline {
@@ -1725,10 +1781,8 @@ export interface TypesRuleInfo {
   repo_path?: string
   space_path?: string
   state?: EnumRuleState
-  type?: TypesRuleType
+  type?: EnumRuleType
 }
-
-export type TypesRuleType = string
 
 export interface TypesRuleViolations {
   bypassable?: boolean
@@ -7018,6 +7072,10 @@ export interface RepoRuleListQueryParams {
    */
   query?: string
   /**
+   * The types of rules to include.
+   */
+  type?: ('branch' | 'tag' | 'push')[]
+  /**
    * The order of the output.
    */
   order?: 'asc' | 'desc'
@@ -7540,13 +7598,13 @@ export interface ListTagsPathParams {
 }
 
 export type ListTagsProps = Omit<
-  GetProps<RepoCommitTag[], UsererrorError, ListTagsQueryParams, ListTagsPathParams>,
+  GetProps<TypesCommitTag[], UsererrorError, ListTagsQueryParams, ListTagsPathParams>,
   'path'
 > &
   ListTagsPathParams
 
 export const ListTags = ({ repo_ref, ...props }: ListTagsProps) => (
-  <Get<RepoCommitTag[], UsererrorError, ListTagsQueryParams, ListTagsPathParams>
+  <Get<TypesCommitTag[], UsererrorError, ListTagsQueryParams, ListTagsPathParams>
     path={`/repos/${repo_ref}/tags`}
     base={getConfig('code/api/v1')}
     {...props}
@@ -7554,13 +7612,13 @@ export const ListTags = ({ repo_ref, ...props }: ListTagsProps) => (
 )
 
 export type UseListTagsProps = Omit<
-  UseGetProps<RepoCommitTag[], UsererrorError, ListTagsQueryParams, ListTagsPathParams>,
+  UseGetProps<TypesCommitTag[], UsererrorError, ListTagsQueryParams, ListTagsPathParams>,
   'path'
 > &
   ListTagsPathParams
 
 export const useListTags = ({ repo_ref, ...props }: UseListTagsProps) =>
-  useGet<RepoCommitTag[], UsererrorError, ListTagsQueryParams, ListTagsPathParams>(
+  useGet<TypesCommitTag[], UsererrorError, ListTagsQueryParams, ListTagsPathParams>(
     (paramsInPath: ListTagsPathParams) => `/repos/${paramsInPath.repo_ref}/tags`,
     { base: getConfig('code/api/v1'), pathParams: { repo_ref }, ...props }
   )
@@ -7570,13 +7628,19 @@ export interface CreateTagPathParams {
 }
 
 export type CreateTagProps = Omit<
-  MutateProps<RepoCommitTag, UsererrorError | TypesRulesViolations, void, OpenapiCreateTagRequest, CreateTagPathParams>,
+  MutateProps<
+    TypesCommitTag,
+    UsererrorError | TypesRulesViolations,
+    void,
+    OpenapiCreateTagRequest,
+    CreateTagPathParams
+  >,
   'path' | 'verb'
 > &
   CreateTagPathParams
 
 export const CreateTag = ({ repo_ref, ...props }: CreateTagProps) => (
-  <Mutate<RepoCommitTag, UsererrorError | TypesRulesViolations, void, OpenapiCreateTagRequest, CreateTagPathParams>
+  <Mutate<TypesCommitTag, UsererrorError | TypesRulesViolations, void, OpenapiCreateTagRequest, CreateTagPathParams>
     verb="POST"
     path={`/repos/${repo_ref}/tags`}
     base={getConfig('code/api/v1')}
@@ -7586,7 +7650,7 @@ export const CreateTag = ({ repo_ref, ...props }: CreateTagProps) => (
 
 export type UseCreateTagProps = Omit<
   UseMutateProps<
-    RepoCommitTag,
+    TypesCommitTag,
     UsererrorError | TypesRulesViolations,
     void,
     OpenapiCreateTagRequest,
@@ -7597,7 +7661,7 @@ export type UseCreateTagProps = Omit<
   CreateTagPathParams
 
 export const useCreateTag = ({ repo_ref, ...props }: UseCreateTagProps) =>
-  useMutate<RepoCommitTag, UsererrorError | TypesRulesViolations, void, OpenapiCreateTagRequest, CreateTagPathParams>(
+  useMutate<TypesCommitTag, UsererrorError | TypesRulesViolations, void, OpenapiCreateTagRequest, CreateTagPathParams>(
     'POST',
     (paramsInPath: CreateTagPathParams) => `/repos/${paramsInPath.repo_ref}/tags`,
     { base: getConfig('code/api/v1'), pathParams: { repo_ref }, ...props }
@@ -9705,6 +9769,10 @@ export interface SpaceRuleListQueryParams {
    */
   query?: string
   /**
+   * The types of rules to include.
+   */
+  type?: ('branch' | 'tag' | 'push')[]
+  /**
    * The order of the output.
    */
   order?: 'asc' | 'desc'
@@ -10797,6 +10865,38 @@ export const useDeletePublicKey = (props: UseDeletePublicKeyProps) =>
     base: getConfig('code/api/v1'),
     ...props
   })
+
+export interface UpdatePublicKeyPathParams {
+  public_key_identifier: string
+}
+
+export type UpdatePublicKeyProps = Omit<
+  MutateProps<TypesPublicKey, UsererrorError, void, void, UpdatePublicKeyPathParams>,
+  'path' | 'verb'
+> &
+  UpdatePublicKeyPathParams
+
+export const UpdatePublicKey = ({ public_key_identifier, ...props }: UpdatePublicKeyProps) => (
+  <Mutate<TypesPublicKey, UsererrorError, void, void, UpdatePublicKeyPathParams>
+    verb="PATCH"
+    path={`/user/keys/${public_key_identifier}`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseUpdatePublicKeyProps = Omit<
+  UseMutateProps<TypesPublicKey, UsererrorError, void, void, UpdatePublicKeyPathParams>,
+  'path' | 'verb'
+> &
+  UpdatePublicKeyPathParams
+
+export const useUpdatePublicKey = ({ public_key_identifier, ...props }: UseUpdatePublicKeyProps) =>
+  useMutate<TypesPublicKey, UsererrorError, void, void, UpdatePublicKeyPathParams>(
+    'PATCH',
+    (paramsInPath: UpdatePublicKeyPathParams) => `/user/keys/${paramsInPath.public_key_identifier}`,
+    { base: getConfig('code/api/v1'), pathParams: { public_key_identifier }, ...props }
+  )
 
 export interface MembershipSpacesQueryParams {
   /**

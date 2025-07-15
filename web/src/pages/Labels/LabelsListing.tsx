@@ -25,7 +25,6 @@ import {
   Layout,
   Utils
 } from '@harnessio/uicore'
-
 import type { CellProps, Column, Renderer, Row, UseExpandedRowProps } from 'react-table'
 import { useGet, useMutate } from 'restful-react'
 import { Color } from '@harnessio/design-system'
@@ -209,7 +208,7 @@ const LabelsListing = (props: LabelListingProps) => {
           const { scopeIcon, scopeId } = getScopeData(space as string, row.original.scope ?? 1, standalone)
           return (
             <Layout.Horizontal spacing={'xsmall'} flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
-              <Icon size={16} name={row.original.scope === ScopeEnum.REPO_SCOPE ? CodeIcon.Repo : scopeIcon} />
+              <Icon size={16} name={scopeIcon} />
               <Text>{row.original.scope === ScopeEnum.REPO_SCOPE ? repoMetadata?.identifier : scopeId}</Text>
             </Layout.Horizontal>
           )

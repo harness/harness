@@ -35,7 +35,7 @@ interface SearchDropDownProps {
   loading?: boolean
 }
 
-export function SearchDropDown({
+export default function SearchDropDown({
   searchTerm,
   placeholder,
   className,

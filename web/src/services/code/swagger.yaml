@@ -6952,6 +6952,18 @@ paths:
           required: false
           schema:
             type: string
+        - description: The types of rules to include.
+          in: query
+          name: type
+          required: false
+          schema:
+            items:
+              enum:
+                - branch
+                - tag
+                - push
+              type: string
+            type: array
         - description: The order of the output.
           in: query
           name: order
@@ -7695,7 +7707,7 @@ paths:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/RepoCommitTag'
+                  $ref: '#/components/schemas/TypesCommitTag'
                 type: array
           description: OK
         '401':
@@ -7742,7 +7754,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RepoCommitTag'
+                $ref: '#/components/schemas/TypesCommitTag'
           description: Created
         '400':
           content:
@@ -10907,6 +10919,18 @@ paths:
           required: false
           schema:
             type: string
+        - description: The types of rules to include.
+          in: query
+          name: type
+          required: false
+          schema:
+            items:
+              enum:
+                - branch
+                - tag
+                - push
+              type: string
+            type: array
         - description: The order of the output.
           in: query
           name: order
@@ -12472,6 +12496,41 @@ paths:
           description: Internal Server Error
       tags:
         - user
+    patch:
+      operationId: updatePublicKey
+      parameters:
+        - in: path
+          name: public_key_identifier
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesPublicKey'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - user
   /user/memberships:
     get:
       operationId: membershipSpaces
@@ -12701,6 +12760,16 @@ components:
       type: string
     EnumFileDiffStatus:
       type: string
+    EnumGitSignatureResult:
+      enum:
+        - bad
+        - good
+        - invalid
+        - key_expired
+        - revoked
+        - unsupported
+        - unverified
+      type: string
     EnumGitspaceAccessType:
       enum:
         - jwt_token
@@ -12711,6 +12780,7 @@ components:
       enum:
         - start
         - stop
+        - reset
       type: string
     EnumGitspaceCodeRepoType:
       enum:
@@ -12766,6 +12836,9 @@ components:
         - agent_gitspace_state_report_stopped
         - agent_gitspace_state_report_unknown
         - gitspace_action_auto_stop
+        - gitspace_action_reset
+        - gitspace_action_reset_completed
+        - gitspace_action_reset_failed
       type: string
     EnumGitspaceFilterState:
       enum:
@@ -12784,6 +12857,7 @@ components:
         - stopping
         - cleaning
         - cleaned
+        - resetting
       type: string
     EnumGitspaceOwner:
       enum:
@@ -12804,6 +12878,7 @@ components:
         - uninitialized
         - starting
         - stopping
+        - cleaning
       type: string
     EnumIDEType:
       enum:
@@ -12966,6 +13041,12 @@ components:
         - monitor
       nullable: true
       type: string
+    EnumRuleType:
+      enum:
+        - branch
+        - push
+        - tag
+      type: string
     EnumTokenType:
       type: string
     EnumTriggerAction:
@@ -13044,6 +13125,7 @@ components:
           type: string
       type: object
     GitCommit:
+      nullable: true
       properties:
         author:
           $ref: '#/components/schemas/GitSignature'
@@ -13108,13 +13190,6 @@ components:
         email:
           type: string
         name:
-          type: string
-      type: object
-    GitPathDetails:
-      properties:
-        last_commit:
-          $ref: '#/components/schemas/GitCommit'
-        path:
           type: string
       type: object
     GitSignature:
@@ -13657,6 +13732,8 @@ components:
       properties:
         bypass_rules:
           type: boolean
+        delete_source_branch:
+          type: boolean
         dry_run:
           type: boolean
         dry_run_rules:
@@ -13795,10 +13872,14 @@ components:
     OpenapiRuleDefinition:
       oneOf:
         - $ref: '#/components/schemas/ProtectionBranch'
+        - $ref: '#/components/schemas/ProtectionTag'
+        - $ref: '#/components/schemas/ProtectionPush'
       type: object
     OpenapiRuleType:
       enum:
         - branch
+        - tag
+        - push
       type: string
     OpenapiSecuritySettingsRequest:
       properties:
@@ -14122,6 +14203,15 @@ components:
         status_checks:
           $ref: '#/components/schemas/ProtectionDefStatusChecks'
       type: object
+    ProtectionDefPush:
+      properties:
+        file_size_limit:
+          type: integer
+        principal_committer_match:
+          type: boolean
+        secret_scanning_enabled:
+          type: boolean
+      type: object
     ProtectionDefReviewers:
       properties:
         default_reviewer_ids:
@@ -14138,6 +14228,15 @@ components:
             type: string
           type: array
       type: object
+    ProtectionDefTagLifecycle:
+      properties:
+        create_forbidden:
+          type: boolean
+        delete_forbidden:
+          type: boolean
+        update_force_forbidden:
+          type: boolean
+      type: object
     ProtectionPattern:
       nullable: true
       properties:
@@ -14151,6 +14250,20 @@ components:
           items:
             type: string
           type: array
+      type: object
+    ProtectionPush:
+      properties:
+        bypass:
+          $ref: '#/components/schemas/ProtectionDefBypass'
+        push:
+          $ref: '#/components/schemas/ProtectionDefPush'
+      type: object
+    ProtectionTag:
+      properties:
+        bypass:
+          $ref: '#/components/schemas/ProtectionDefBypass'
+        lifecycle:
+          $ref: '#/components/schemas/ProtectionDefTagLifecycle'
       type: object
     PullreqCommentApplySuggestionsOutput:
       properties:
@@ -14189,23 +14302,6 @@ components:
           type: string
         sha:
           $ref: '#/components/schemas/ShaSHA'
-      type: object
-    RepoCommitTag:
-      properties:
-        commit:
-          $ref: '#/components/schemas/TypesCommit'
-        is_annotated:
-          type: boolean
-        message:
-          type: string
-        name:
-          type: string
-        sha:
-          $ref: '#/components/schemas/ShaSHA'
-        tagger:
-          $ref: '#/components/schemas/TypesSignature'
-        title:
-          type: string
       type: object
     RepoContent: {}
     RepoContentInfo:
@@ -14262,7 +14358,7 @@ components:
       properties:
         details:
           items:
-            $ref: '#/components/schemas/GitPathDetails'
+            $ref: '#/components/schemas/TypesPathDetails'
           nullable: true
           type: array
       type: object
@@ -14630,6 +14726,8 @@ components:
           type: array
         sha:
           $ref: '#/components/schemas/ShaSHA'
+        signature:
+          $ref: '#/components/schemas/TypesGitSignatureResult'
         stats:
           $ref: '#/components/schemas/TypesCommitStats'
         title:
@@ -14681,6 +14779,25 @@ components:
           type: array
         total:
           $ref: '#/components/schemas/TypesChangeStats'
+      type: object
+    TypesCommitTag:
+      properties:
+        commit:
+          $ref: '#/components/schemas/TypesCommit'
+        is_annotated:
+          type: boolean
+        message:
+          type: string
+        name:
+          type: string
+        sha:
+          $ref: '#/components/schemas/ShaSHA'
+        signature:
+          $ref: '#/components/schemas/TypesGitSignatureResult'
+        tagger:
+          $ref: '#/components/schemas/TypesSignature'
+        title:
+          type: string
       type: object
     TypesConnector:
       properties:
@@ -14890,6 +15007,22 @@ components:
           $ref: '#/components/schemas/ShaSHA'
         path:
           type: string
+      type: object
+    TypesGitSignatureResult:
+      nullable: true
+      properties:
+        created:
+          type: integer
+        key_fingerprint:
+          type: string
+        key_id:
+          type: string
+        key_scheme:
+          $ref: '#/components/schemas/EnumPublicKeyScheme'
+        result:
+          $ref: '#/components/schemas/EnumGitSignatureResult'
+        updated:
+          type: integer
       type: object
     TypesGithubConnectorData:
       properties:
@@ -15316,6 +15449,13 @@ components:
         review_sha:
           type: string
       type: object
+    TypesPathDetails:
+      properties:
+        last_commit:
+          $ref: '#/components/schemas/TypesCommit'
+        path:
+          type: string
+      type: object
     TypesPipeline:
       properties:
         config_path:
@@ -15740,10 +15880,8 @@ components:
         state:
           $ref: '#/components/schemas/EnumRuleState'
         type:
-          $ref: '#/components/schemas/TypesRuleType'
+          $ref: '#/components/schemas/EnumRuleType'
       type: object
-    TypesRuleType:
-      type: string
     TypesRuleViolations:
       properties:
         bypassable:

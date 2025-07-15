@@ -178,26 +178,16 @@ export enum SettingTypeMode {
   NEW = 'new'
 }
 
-export enum BranchTargetType {
+export enum ProtectionRulesType {
+  BRANCH = 'branch',
+  TAG = 'tag',
+  PUSH = 'push'
+}
+
+export enum RulesTargetType {
   INCLUDE = 'include',
   EXCLUDE = 'exclude'
 }
-
-export interface BranchTargetOption {
-  type: BranchTargetType
-  title: string
-}
-
-export const branchTargetOptions: BranchTargetOption[] = [
-  {
-    type: BranchTargetType.INCLUDE,
-    title: 'Include'
-  },
-  {
-    type: BranchTargetType.EXCLUDE,
-    title: 'Exclude'
-  }
-]
 
 export enum GitCommitAction {
   DELETE = 'DELETE',
@@ -258,40 +248,42 @@ export enum MergeMethodDisplay {
   FAST_FORWARDED = 'fast-forwarded'
 }
 
-export const CodeIcon = {
-  Logo: 'code' as IconName,
-  PullRequest: 'git-pull' as IconName,
-  Merged: 'code-merged' as IconName,
-  Draft: 'code-draft' as IconName,
-  Rejected: 'code-rejected' as IconName,
-  PullRequestRejected: 'main-close' as IconName,
-  Add: 'plus' as IconName,
-  BranchSmall: 'code-branch-small' as IconName,
-  Branch: 'code-branch' as IconName,
-  Tag: 'main-tags' as IconName,
-  Clone: 'code-clone' as IconName,
-  Close: 'code-close' as IconName,
-  CommitLight: 'code-commit-light' as IconName,
-  CommitSmall: 'code-commit-small' as IconName,
-  Commit: 'code-commit' as IconName,
-  Copy: 'code-copy' as IconName,
-  Delete: 'code-delete' as IconName,
-  Edit: 'code-edit' as IconName,
-  FileLight: 'code-file-light' as IconName,
-  File: 'code-file' as IconName,
-  Folder: 'code-folder' as IconName,
-  History: 'code-history' as IconName,
-  Info: 'code-info' as IconName,
-  More: 'code-more' as IconName,
-  Repo: 'code-repo' as IconName,
-  Settings: 'code-settings' as IconName,
-  Webhook: 'code-webhook' as IconName,
-  InputSpinner: 'steps-spinner' as IconName,
-  InputSearch: 'search' as IconName,
-  Chat: 'code-chat' as IconName,
-  Checks: 'main-tick' as IconName,
-  ChecksSuccess: 'success-tick' as IconName,
-  CheckIcon: 'code-checks' as IconName
+export const CodeIcon: Record<string, IconName> = {
+  Logo: 'code',
+  PullRequest: 'git-pull',
+  Merged: 'code-merged',
+  Draft: 'code-draft',
+  Rejected: 'code-rejected',
+  PullRequestRejected: 'main-close',
+  Add: 'plus',
+  BranchSmall: 'code-branch-small',
+  Branch: 'code-branch',
+  Tag: 'main-tags',
+  Clone: 'code-clone',
+  Close: 'code-close',
+  CommitLight: 'code-commit-light',
+  CommitSmall: 'code-commit-small',
+  Commit: 'code-commit',
+  Copy: 'code-copy',
+  Delete: 'code-delete',
+  Edit: 'code-edit',
+  FileLight: 'code-file-light',
+  File: 'code-file',
+  Folder: 'code-folder',
+  History: 'code-history',
+  Info: 'code-info',
+  More: 'code-more',
+  Repo: 'code-repo',
+  Settings: 'code-settings',
+  Webhook: 'code-webhook',
+  InputSpinner: 'steps-spinner',
+  InputSearch: 'search',
+  Chat: 'code-chat',
+  Checks: 'main-tick',
+  ChecksSuccess: 'success-tick',
+  CheckIcon: 'code-checks',
+  Tick: 'tick',
+  Blank: 'blank'
 }
 
 export const normalizeGitRef = (gitRef: string | undefined) => {

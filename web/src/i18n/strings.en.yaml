@@ -270,6 +270,8 @@ diff: Diff
 draft: Draft
 conversation: Conversation
 commandLine: command line
+include: Include
+exclude: Exclude
 pr:
   toggleComments: Toggle comments
   suggestedChange: Suggested change
@@ -1040,7 +1042,7 @@ protectionRules:
   targetPatternHint: Match branches using globstar patterns (e.g. "golden", "feature-*", "releases/**")
   defaultBranch: Default branch
   bypassList: Bypass List
-  newRule: New Branch Rule
+  newRule: New {{ruleType}} rule
   allRepoOwners: Allow users with edit permission on the repository to bypass
   protectionSelectAll: 'Rules: Select all that apply'
   requireMinReviewersTitle: Require a minimum number of reviewers
@@ -1065,14 +1067,14 @@ protectionRules:
   limitMergeStrategiesText: Limit which merge strategies are available to merge a pull request
   autoDeleteTitle: Auto delete branch on merge
   autoDeleteText: Automatically delete the source branch of a pull request after it is merged
-  blockBranchCreation: Block branch creation
-  blockBranchUpdate: Block branch update
-  blockBranchUpdateText: Only allow users with bypass permission to update matching branches
-  blockBranchCreationText: Only allow users with bypass permission to create matching branches
-  blockBranchDeletion: Block branch deletion
-  blockBranchDeletionText: Only allow users with bypass permission to delete matching branches
+  blockCreation: Block {{ruleType}} creation
+  blockUpdate: Block {{ruleType}} update
+  blockUpdateText: Only allow users with bypass permission to update matching {{refs}}
+  blockCreationText: Only allow users with bypass permission to create matching {{refs}}
+  blockDeletion: Block {{ruleType}} deletion
+  blockDeletionText: Only allow users with bypass permission to delete matching {{refs}}
   blockForcePush: Block force push
-  blockForcePushText: Only allow users with bypass permission to force push to matching branches
+  blockForcePushText: Only allow users with bypass permission to force push to matching {{refs}}
   editRule: Edit Rule
   saveRule: Save Rule
   deleteRule: Delete Rule
@@ -1083,9 +1085,9 @@ protectionRules:
   deleteProtectionRule: Delete protection rule
   deleteText: "Are you sure to delete the rule, '{{rule}}'?"
   disableTheRule: Disable the Rule
-  ruleUpdated: Rule Updated
+  ruleUpdated: '{{ruleType}} Rule updated'
   enableTheRule: Enable the Rule
-  ruleCreated: Rule Created
+  ruleCreated: '{{ruleType}} Rule created'
   requirePr: Require pull request
   requirePrText: Do not allow any changes to matching branches without a pull request
   prFailedText: 'Cannot merge pull request'

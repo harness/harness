@@ -13,6 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+.pageBody {
+  min-height: calc(90vh - var(--page-header-height, 64px)) !important;
+}
+
 .table {
   width: 100%;
   .row {
@@ -54,6 +59,7 @@
       font-weight: 500;
       color: var(--grey-700);
       padding-right: var(--spacing-small);
+      padding-top: 1px;
     }
 
     .rulesContainer {

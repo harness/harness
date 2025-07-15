@@ -26,7 +26,7 @@ import { noop } from 'lodash-es'
 import { String, useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 
-import type { TypesBranchExtended, RepoCommitTag, RepoRepositoryOutput } from 'services/code'
+import type { TypesBranchExtended, TypesCommitTag, RepoRepositoryOutput } from 'services/code'
 import { formatDate, getErrorMessage, voidFn } from 'utils/Utils'
 import { useConfirmAction } from 'hooks/useConfirmAction'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
@@ -54,7 +54,7 @@ export function TagsContent({ repoMetadata, searchTerm = '', branches, onDeleteS
       {
         Header: getString('tag'),
         width: '20%',
-        Cell: ({ row }: CellProps<RepoCommitTag>) => {
+        Cell: ({ row }: CellProps<TypesCommitTag>) => {
           return (
             <Text
               icon="code-tag"
@@ -79,7 +79,7 @@ export function TagsContent({ repoMetadata, searchTerm = '', branches, onDeleteS
       {
         Header: getString('description'),
         width: '35%',
-        Cell: ({ row }: CellProps<RepoCommitTag>) => {
+        Cell: ({ row }: CellProps<TypesCommitTag>) => {
           return (
             <Text className={cx(css.rowText)} color={Color.BLACK} lineClamp={1} width={`100%`}>
               {row.original?.message}
@@ -91,7 +91,7 @@ export function TagsContent({ repoMetadata, searchTerm = '', branches, onDeleteS
         Header: getString('commit'),
         Id: 'commit',
         width: '15%',
-        Cell: ({ row }: CellProps<RepoCommitTag>) => {
+        Cell: ({ row }: CellProps<TypesCommitTag>) => {
           return (
             <CommitActions
               sha={row.original.commit?.sha as string}
@@ -108,7 +108,7 @@ export function TagsContent({ repoMetadata, searchTerm = '', branches, onDeleteS
       {
         Header: getString('tagger'),
         width: '15%',
-        Cell: ({ row }: CellProps<RepoCommitTag>) => {
+        Cell: ({ row }: CellProps<TypesCommitTag>) => {
           return (
             <Text lineClamp={1} className={css.rowText} color={Color.BLACK} tag="div">
               {row.original.tagger?.identity?.name ? (
@@ -125,7 +125,7 @@ export function TagsContent({ repoMetadata, searchTerm = '', branches, onDeleteS
       {
         Header: getString('creationDate'),
         width: '200px',
-        Cell: ({ row }: CellProps<RepoCommitTag>) => {
+        Cell: ({ row }: CellProps<TypesCommitTag>) => {
           return row.original.tagger?.when ? (
             <Text className={css.rowText} color={Color.BLACK} tag="div">
               <span className={css.spacer} />

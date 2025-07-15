@@ -46,6 +46,7 @@ import {
 } from 'utils/Utils'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
+import { CodeIcon } from 'utils/GitUtils'
 import { Label, LabelTitle } from '../Label'
 import css from './LabelFilter.module.scss'
 
@@ -316,7 +317,7 @@ export const LabelFilter = (props: LabelFilterProps) => {
                       spacing={'small'}
                       flex={{ alignItems: 'center', justifyContent: 'space-between' }}
                       width={'100%'}>
-                      <Icon name={'tick'} size={16} style={{ opacity: offsetValue ? 1 : 0 }} />
+                      <Icon name={CodeIcon.Tick} size={16} style={{ opacity: offsetValue ? 1 : 0 }} />
                       <FlexExpander />
                       <LabelTitle
                         name={itemObj?.key as string}
@@ -409,7 +410,7 @@ export const LabelFilter = (props: LabelFilterProps) => {
                               flex={{ alignItems: 'center', justifyContent: 'flex-start' }}
                               width={'100%'}>
                               <Icon
-                                name={'tick'}
+                                name={CodeIcon.Tick}
                                 size={16}
                                 color={Color.PRIMARY_7}
                                 style={{
@@ -483,7 +484,7 @@ export const LabelFilter = (props: LabelFilterProps) => {
                                   flex={{ alignItems: 'center', justifyContent: 'flex-start' }}
                                   width={'100%'}>
                                   <Icon
-                                    name={'tick'}
+                                    name={CodeIcon.Tick}
                                     size={16}
                                     color={Color.PRIMARY_7}
                                     style={{ opacity: currentMarkedValue ? 1 : 0 }}
@@ -556,7 +557,7 @@ export const LabelFilter = (props: LabelFilterProps) => {
                         spacing={'small'}
                         flex={{ alignItems: 'center', justifyContent: 'space-between' }}
                         width={'100%'}>
-                        <Icon name={'tick'} size={16} style={{ opacity: offsetLabel ? 1 : 0 }} />
+                        <Icon name={CodeIcon.Tick} size={16} style={{ opacity: offsetLabel ? 1 : 0 }} />
                         <FlexExpander />
                         <LabelTitle
                           name={itemObj?.key as string}

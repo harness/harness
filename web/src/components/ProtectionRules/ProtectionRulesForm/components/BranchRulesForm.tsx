@@ -22,79 +22,71 @@ import { Color, FontVariation } from '@harnessio/design-system'
 import type { FormikProps } from 'formik'
 import { Classes, Popover, PopoverInteractionKind, PopoverPosition } from '@blueprintjs/core'
 import { useStrings } from 'framework/strings'
-import type { RulesFormPayload } from 'utils/Utils'
-import type { SettingTypeMode } from 'utils/GitUtils'
+import { ProtectionRulesType, type SettingTypeMode } from 'utils/GitUtils'
+import type { RulesFormPayload } from 'components/ProtectionRules/ProtectionRulesUtils'
 import DefaultReviewersSection from './DefaultReviewersSection'
 import css from '../ProtectionRulesForm.module.scss'
 
-const RulesDefinitionForm = (props: {
-  requireStatusChecks: boolean
-  minReviewers: boolean
+const BranchRulesForm = (props: {
   statusOptions: SelectOption[]
-  statusChecks: string[]
-  limitMergeStrats: boolean
   setSearchStatusTerm: React.Dispatch<React.SetStateAction<string>>
   formik: FormikProps<RulesFormPayload>
   defaultReviewerProps: {
     setSearchTerm: React.Dispatch<React.SetStateAction<string>>
     userPrincipalOptions: SelectOption[]
     settingSectionMode: SettingTypeMode
-    setDefaultReviewersState: React.Dispatch<React.SetStateAction<string[]>>
   }
 }) => {
-  const {
-    statusChecks,
-    setSearchStatusTerm,
-    minReviewers,
-    requireStatusChecks,
-    statusOptions,
-    limitMergeStrats,
-    formik,
-    defaultReviewerProps
-  } = props
+  const { formik, defaultReviewerProps, setSearchStatusTerm, statusOptions } = props
   const { getString } = useStrings()
-  const setFieldValue = formik.setFieldValue
+  const { setFieldValue } = formik
+  const {
+    blockUpdate,
+    blockForcePush,
+    limitMergeStrategies,
+    requireMinReviewers,
+    requirePr,
+    requireStatusChecks,
+    statusChecks
+  } = formik.values
+
   const filteredStatusOptions = statusOptions.filter(
     (item: SelectOption) => !statusChecks.includes(item.value as string)
   )
-  const { values } = formik
+
   return (
-    <Container margin={{ top: 'medium' }} className={css.generalContainer}>
-      <Text className={css.headingSize} padding={{ bottom: 'medium' }} font={{ variation: FontVariation.H4 }}>
-        {getString('protectionRules.protectionSelectAll')}
-      </Text>
-
+    <>
       <FormInput.CheckBox
         className={css.checkboxLabel}
-        label={getString('protectionRules.blockBranchCreation')}
-        name={'blockBranchCreation'}
+        label={getString('protectionRules.blockCreation', { ruleType: ProtectionRulesType.BRANCH })}
+        name={'blockCreation'}
       />
       <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
-        {getString('protectionRules.blockBranchCreationText')}
+        {getString('protectionRules.blockCreationText', { refs: 'branches' })}
       </Text>
 
       <hr className={css.dividerContainer} />
       <FormInput.CheckBox
         className={css.checkboxLabel}
-        label={getString('protectionRules.blockBranchDeletion')}
-        name={'blockBranchDeletion'}
+        label={getString('protectionRules.blockDeletion', { refs: 'branches' })}
+        name={'blockDeletion'}
       />
       <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
-        {getString('protectionRules.blockBranchDeletionText')}
+        {getString('protectionRules.blockDeletionText', { refs: 'branches' })}
       </Text>
 
       <hr className={css.dividerContainer} />
       <FormInput.CheckBox
         className={css.checkboxLabel}
-        label={getString('protectionRules.blockBranchUpdate')}
-        name={'blockBranchUpdate'}
+        label={getString('protectionRules.blockUpdate', { refs: 'branches' })}
+        name={'blockUpdate'}
         onChange={() => {
-          setFieldValue('blockForcePush', !(values.blockBranchUpdate && values.blockForcePush))
+          setFieldValue('blockForcePush', !(blockUpdate && blockForcePush))
           setFieldValue('requirePr', false)
         }}
       />
       <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
-        {getString('protectionRules.blockBranchUpdateText')}
+        {getString('protectionRules.blockUpdateText', { refs: 'branches' })}
       </Text>
 
       <hr className={css.dividerContainer} />
@@ -102,17 +94,17 @@ const RulesDefinitionForm = (props: {
         interactionKind={PopoverInteractionKind.HOVER}
         position={PopoverPosition.TOP_LEFT}
         popoverClassName={Classes.DARK}
-        disabled={!(values.blockBranchUpdate || values.requirePr)}
+        disabled={!(blockUpdate || requirePr)}
         content={
           <Container padding="medium">
             <Text font={{ variation: FontVariation.FORM_HELP }} color={Color.WHITE}>
-              {values.requirePr ? getString('pushBlockedMessage') : getString('ruleBlockedMessage')}
+              {requirePr ? getString('pushBlockedMessage') : getString('ruleBlockedMessage')}
             </Text>
           </Container>
         }>
         <>
           <FormInput.CheckBox
-            disabled={values.blockBranchUpdate || values.requirePr}
+            disabled={blockUpdate || requirePr}
             className={css.checkboxLabel}
             label={getString('protectionRules.blockForcePush')}
             name={'blockForcePush'}
@@ -128,7 +120,7 @@ const RulesDefinitionForm = (props: {
         interactionKind={PopoverInteractionKind.HOVER}
         position={PopoverPosition.TOP_LEFT}
         popoverClassName={Classes.DARK}
-        disabled={!values.blockBranchUpdate}
+        disabled={!blockUpdate}
         content={
           <Container padding="medium">
             <Text font={{ variation: FontVariation.FORM_HELP }} color={Color.WHITE}>
@@ -138,12 +130,12 @@ const RulesDefinitionForm = (props: {
         }>
         <>
           <FormInput.CheckBox
-            disabled={values.blockBranchUpdate}
+            disabled={blockUpdate}
             className={css.checkboxLabel}
             label={getString('protectionRules.requirePr')}
             name={'requirePr'}
             onChange={() => {
-              setFieldValue('blockForcePush', !values.requirePr)
+              setFieldValue('blockForcePush', !requirePr)
             }}
           />
           <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
@@ -154,6 +146,7 @@ const RulesDefinitionForm = (props: {
 
       <hr className={css.dividerContainer} />
       <DefaultReviewersSection formik={formik} defaultReviewerProps={defaultReviewerProps} />
+
       <FormInput.CheckBox
         className={css.checkboxLabel}
         label={getString('protectionRules.requireMinReviewersTitle')}
@@ -167,7 +160,7 @@ const RulesDefinitionForm = (props: {
       <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
         {getString('protectionRules.requireMinReviewersContent')}
       </Text>
-      {minReviewers && (
+      {requireMinReviewers && (
         <Container padding={{ left: 'xlarge', top: 'medium' }}>
           <FormInput.Text
             className={cx(css.widthContainer, css.minText)}
@@ -177,6 +170,7 @@ const RulesDefinitionForm = (props: {
           />
         </Container>
       )}
+
       <hr className={css.dividerContainer} />
       <FormInput.CheckBox
         className={css.checkboxLabel}
@@ -206,6 +200,7 @@ const RulesDefinitionForm = (props: {
       <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
         {getString('protectionRules.reqNewChangesText')}
       </Text>
+
       <hr className={css.dividerContainer} />
       <FormInput.CheckBox
         className={css.checkboxLabel}
@@ -215,6 +210,7 @@ const RulesDefinitionForm = (props: {
       <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
         {getString('protectionRules.reqResOfChangesText')}
       </Text>
+
       <hr className={css.dividerContainer} />
       <FormInput.CheckBox
         className={css.checkboxLabel}
@@ -235,8 +231,9 @@ const RulesDefinitionForm = (props: {
         {getString('protectionRules.reqStatusChecksText')}
       </Text>
       {requireStatusChecks && (
-        <Container padding={{ left: 'xlarge', top: 'large' }} className={css.widthContainer}>
+        <Container padding={{ left: 'xlarge', top: 'large' }}>
           <FormInput.Select
+            className={css.widthContainer}
             onQueryChange={setSearchStatusTerm}
             items={filteredStatusOptions}
             value={{ label: '', value: '' }}
@@ -249,33 +246,27 @@ const RulesDefinitionForm = (props: {
             label={getString('protectionRules.statusCheck')}
             name={'statusSelect'}
           />
-        </Container>
-      )}
-      {requireStatusChecks && (
-        <Container padding={{ left: 'xlarge' }}>
-          <Container className={cx(css.statusWidthContainer, css.bypassContainer)}>
-            {statusChecks?.map((status, idx) => {
-              return (
-                <Layout.Horizontal key={`${idx}-${status[1]}`} flex={{ align: 'center-center' }} padding={'small'}>
-                  {/* <Avatar hoverCard={false} size="small" name={status.value as string} /> */}
-                  <Text padding={{ top: 'tiny' }} lineClamp={1}>
-                    {status}
-                  </Text>
-                  <FlexExpander />
-                  <Icon
-                    className={css.codeClose}
-                    name="code-close"
-                    onClick={() => {
-                      const filteredData = statusChecks.filter(item => !(item === status))
-                      setFieldValue('statusChecks', filteredData)
-                    }}
-                  />
-                </Layout.Horizontal>
-              )
-            })}
+          <Container className={css.bypassContainer}>
+            {statusChecks?.map((status, idx) => (
+              <Layout.Horizontal key={`${idx}-${status[1]}`} flex={{ align: 'center-center' }} padding={'small'}>
+                <Text padding={{ top: 'tiny' }} lineClamp={1}>
+                  {status}
+                </Text>
+                <FlexExpander />
+                <Icon
+                  className={css.codeClose}
+                  name="code-close"
+                  onClick={() => {
+                    const filteredData = statusChecks.filter(item => !(item === status))
+                    setFieldValue('statusChecks', filteredData)
+                  }}
+                />
+              </Layout.Horizontal>
+            ))}
           </Container>
         </Container>
       )}
+
       <hr className={css.dividerContainer} />
       <FormInput.CheckBox
         className={css.checkboxLabel}
@@ -285,7 +276,7 @@ const RulesDefinitionForm = (props: {
       <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
         {getString('protectionRules.limitMergeStrategiesText')}
       </Text>
-      {limitMergeStrats && (
+      {limitMergeStrategies && (
         <Container padding={{ left: 'xlarge', top: 'large' }}>
           <Container
             padding={{ top: 'medium', left: 'medium', right: 'medium', bottom: 'small' }}
@@ -296,6 +287,7 @@ const RulesDefinitionForm = (props: {
           </Container>
         </Container>
       )}
+
       <hr className={css.dividerContainer} />
       <FormInput.CheckBox
         className={css.checkboxLabel}
@@ -305,8 +297,8 @@ const RulesDefinitionForm = (props: {
       <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
         {getString('protectionRules.autoDeleteText')}
       </Text>
-    </Container>
+    </>
   )
 }
 
-export default RulesDefinitionForm
+export default BranchRulesForm

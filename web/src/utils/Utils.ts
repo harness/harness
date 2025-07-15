@@ -37,6 +37,7 @@ import type {
 import type { StringKeys } from 'framework/strings'
 import { PullReqReviewDecision } from 'pages/PullRequest/PullRequestUtils'
 import type { Identifier } from './types'
+import { CodeIcon } from './GitUtils'
 
 export enum ACCESS_MODES {
   VIEW,
@@ -206,10 +207,6 @@ export interface SourceCodeEditorProps {
   editorOptions?: editor.IStandaloneEditorConstructionOptions
 }
 
-export type FieldCheck = {
-  [key: string]: string
-}
-
 export const displayDateTime = (value: number): string | null => {
   return value ? moment.unix(value / 1000).format(DEFAULT_DATE_FORMAT) : null
 }
@@ -294,7 +291,6 @@ export const handleFileDrop = (event: any, callback: FileDropCallback): void => 
 }
 
 type PasteCallback = (file: File) => void
-
 // handle file paste in image upload
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const handlePaste = (event: { preventDefault: () => void; clipboardData: any }, callback: PasteCallback) => {
@@ -363,80 +359,6 @@ export interface Violation {
   violation: string
 }
 
-export const rulesFormInitialPayload: RulesFormPayload = {
-  name: '',
-  desc: '',
-  enable: true,
-  target: '',
-  targetDefault: false,
-  targetList: [] as string[][],
-  allRepoOwners: false,
-  bypassList: [] as NormalizedPrincipal[],
-  defaultReviewersList: [] as string[],
-  requireMinReviewers: false,
-  requireMinDefaultReviewers: false,
-  minReviewers: '',
-  minDefaultReviewers: '',
-  requireCodeOwner: false,
-  requireNewChanges: false,
-  reqResOfChanges: false,
-  requireCommentResolution: false,
-  requireStatusChecks: false,
-  statusChecks: [] as string[],
-  limitMergeStrategies: false,
-  mergeCommit: false,
-  squashMerge: false,
-  rebaseMerge: false,
-  autoDelete: false,
-  blockBranchCreation: false,
-  blockBranchDeletion: false,
-  blockBranchUpdate: false,
-  blockForcePush: false,
-  requirePr: false,
-  bypassSet: false,
-  targetSet: false,
-  defaultReviewersSet: false,
-  defaultReviewersEnabled: false
-}
-
-export type RulesFormPayload = {
-  name?: string
-  desc?: string
-  enable: boolean
-  target?: string
-  targetDefault?: boolean
-  targetList: string[][]
-  allRepoOwners?: boolean
-  bypassList?: NormalizedPrincipal[]
-  defaultReviewersList?: string[]
-  requireMinReviewers: boolean
-  requireMinDefaultReviewers: boolean
-  minReviewers?: string | number
-  minDefaultReviewers?: string | number
-  autoAddCodeOwner?: boolean
-  requireCodeOwner?: boolean
-  requireNewChanges?: boolean
-  reqResOfChanges?: boolean
-  requireCommentResolution?: boolean
-  requireStatusChecks: boolean
-  statusChecks: string[]
-  limitMergeStrategies: boolean
-  mergeCommit?: boolean
-  squashMerge?: boolean
-  rebaseMerge?: boolean
-  fastForwardMerge?: boolean
-  autoDelete?: boolean
-  blockBranchCreation?: boolean
-  blockBranchDeletion?: boolean
-  blockBranchUpdate?: boolean
-  blockForcePush?: boolean
-  requirePr?: boolean
-  bypassSet: boolean
-  targetSet: boolean
-  defaultReviewersSet: boolean
-  defaultReviewersEnabled: boolean
-}
-
 /**
  * Make any HTML element as a clickable button with keyboard accessibility
  * support (hit Enter/Space will trigger click event)
@@ -492,12 +414,6 @@ export enum PRCommentFilterType {
   MY_COMMENTS = 'myComments',
   RESOLVED_COMMENTS = 'resolvedComments',
   UNRESOLVED_COMMENTS = 'unresolvedComments'
-}
-
-export enum RuleState {
-  ACTIVE = 'active',
-  MONITOR = 'monitor',
-  DISABLED = 'disabled'
 }
 
 const MONACO_SUPPORTED_LANGUAGES = [
@@ -913,21 +829,6 @@ export interface ScopeData {
   scopeColor: ColorName
 }
 
-export const getScopeIcon = (standalone: boolean, scope?: number): IconName | undefined => {
-  switch (scope) {
-    case 0:
-      return undefined
-    case 1:
-      return standalone ? ('nav-project' as IconName) : ('Account' as IconName)
-    case 2:
-      return 'nav-organization' as IconName
-    case 3:
-      return 'nav-project' as IconName
-    default:
-      return undefined
-  }
-}
-
 export const getScopeData = (space: string, scope: number, standalone: boolean): ScopeData => {
   const [accountId, orgIdentifier, projectIdentifier] = space.split('/')
   const scopeData: ScopeData = {
@@ -938,11 +839,18 @@ export const getScopeData = (space: string, scope: number, standalone: boolean):
     scopeColor: ColorName.Blue
   }
 
-  if (standalone) {
+  if (standalone && scope !== ScopeEnum.REPO_SCOPE) {
     return { ...scopeData, scopeName: ResourceType.SPACE, scopeColor: ColorName.Indigo }
   }
   switch (scope) {
-    case 1:
+    case ScopeEnum.REPO_SCOPE:
+      return {
+        ...scopeData,
+        scopeIcon: CodeIcon.Repo as IconName,
+        scopeName: ResourceType.CODE_REPOSITORY,
+        scopeColor: ColorName.Orange
+      }
+    case ScopeEnum.ACCOUNT_SCOPE:
       return {
         ...scopeData,
         scopeRef: accountId,
@@ -951,7 +859,7 @@ export const getScopeData = (space: string, scope: number, standalone: boolean):
         scopeName: ResourceType.ACCOUNT,
         scopeColor: ColorName.Indigo
       }
-    case 2:
+    case ScopeEnum.ORG_SCOPE:
       return {
         ...scopeData,
         scopeRef: `${accountId}/${orgIdentifier}`,
@@ -960,7 +868,7 @@ export const getScopeData = (space: string, scope: number, standalone: boolean):
         scopeName: ResourceType.ORGANIZATION,
         scopeColor: ColorName.Purple
       }
-    case 3:
+    case ScopeEnum.PROJECT_SCOPE:
       return {
         ...scopeData,
         scopeRef: `${accountId}/${orgIdentifier}/${projectIdentifier}`,
@@ -1117,110 +1025,6 @@ export const getEditPermissionRequestFromIdentifier = (space: string, repoMetada
     }
 }
 
-export enum RuleFields {
-  APPROVALS_REQUIRE_MINIMUM_COUNT = 'pullreq.approvals.require_minimum_count',
-  APPROVALS_REQUIRE_CODE_OWNERS = 'pullreq.approvals.require_code_owners',
-  APPROVALS_REQUIRE_NO_CHANGE_REQUEST = 'pullreq.approvals.require_no_change_request',
-  APPROVALS_REQUIRE_MINIMUM_DEFAULT_REVIEWERS = 'pullreq.approvals.require_minimum_default_reviewer_count',
-  APPROVALS_REQUIRE_LATEST_COMMIT = 'pullreq.approvals.require_latest_commit',
-  AUTO_ADD_CODE_OWNERS = 'pullreq.reviewers.request_code_owners',
-  DEFAULT_REVIEWERS_ADDED = 'pullreq.reviewers.default_reviewer_ids',
-  COMMENTS_REQUIRE_RESOLVE_ALL = 'pullreq.comments.require_resolve_all',
-  STATUS_CHECKS_ALL_MUST_SUCCEED = 'pullreq.status_checks.all_must_succeed',
-  STATUS_CHECKS_REQUIRE_IDENTIFIERS = 'pullreq.status_checks.require_identifiers',
-  MERGE_STRATEGIES_ALLOWED = 'pullreq.merge.strategies_allowed',
-  MERGE_DELETE_BRANCH = 'pullreq.merge.delete_branch',
-  LIFECYCLE_CREATE_FORBIDDEN = 'lifecycle.create_forbidden',
-  LIFECYCLE_DELETE_FORBIDDEN = 'lifecycle.delete_forbidden',
-  MERGE_BLOCK = 'pullreq.merge.block',
-  LIFECYCLE_UPDATE_FORBIDDEN = 'lifecycle.update_forbidden',
-  LIFECYCLE_UPDATE_FORCE_FORBIDDEN = 'lifecycle.update_force_forbidden'
-}
-export type RuleFieldsMap = Record<RuleFields, boolean>
-
-export type Rule = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any
-}
-
-export type BranchProtectionRule = {
-  title: string
-  requiredRule: {
-    [key in RuleFields]?: boolean
-  }
-}
-
-export type BranchProtectionRulesMapType = Record<string, BranchProtectionRule>
-
-export function createRuleFieldsMap(ruleDefinition: Rule): RuleFieldsMap {
-  const ruleFieldsMap: RuleFieldsMap = {
-    [RuleFields.APPROVALS_REQUIRE_MINIMUM_COUNT]: false,
-    [RuleFields.APPROVALS_REQUIRE_CODE_OWNERS]: false,
-    [RuleFields.APPROVALS_REQUIRE_NO_CHANGE_REQUEST]: false,
-    [RuleFields.APPROVALS_REQUIRE_LATEST_COMMIT]: false,
-    [RuleFields.APPROVALS_REQUIRE_MINIMUM_DEFAULT_REVIEWERS]: false,
-    [RuleFields.AUTO_ADD_CODE_OWNERS]: false,
-    [RuleFields.DEFAULT_REVIEWERS_ADDED]: false,
-    [RuleFields.COMMENTS_REQUIRE_RESOLVE_ALL]: false,
-    [RuleFields.STATUS_CHECKS_ALL_MUST_SUCCEED]: false,
-    [RuleFields.STATUS_CHECKS_REQUIRE_IDENTIFIERS]: false,
-    [RuleFields.MERGE_STRATEGIES_ALLOWED]: false,
-    [RuleFields.MERGE_DELETE_BRANCH]: false,
-    [RuleFields.LIFECYCLE_CREATE_FORBIDDEN]: false,
-    [RuleFields.LIFECYCLE_DELETE_FORBIDDEN]: false,
-    [RuleFields.MERGE_BLOCK]: false,
-    [RuleFields.LIFECYCLE_UPDATE_FORBIDDEN]: false,
-    [RuleFields.LIFECYCLE_UPDATE_FORCE_FORBIDDEN]: false
-  }
-  if (ruleDefinition.pullreq) {
-    if (ruleDefinition.pullreq.approvals) {
-      ruleFieldsMap[RuleFields.APPROVALS_REQUIRE_CODE_OWNERS] = !!ruleDefinition.pullreq.approvals.require_code_owners
-      ruleFieldsMap[RuleFields.APPROVALS_REQUIRE_LATEST_COMMIT] =
-        !!ruleDefinition.pullreq.approvals.require_latest_commit
-      ruleFieldsMap[RuleFields.APPROVALS_REQUIRE_MINIMUM_COUNT] =
-        typeof ruleDefinition.pullreq.approvals.require_minimum_count === 'number'
-      ruleFieldsMap[RuleFields.APPROVALS_REQUIRE_NO_CHANGE_REQUEST] =
-        !!ruleDefinition.pullreq.approvals.require_no_change_request
-      ruleFieldsMap[RuleFields.APPROVALS_REQUIRE_MINIMUM_DEFAULT_REVIEWERS] =
-        !!ruleDefinition.pullreq.approvals.require_minimum_default_reviewer_count
-    }
-
-    if (ruleDefinition.pullreq.comments) {
-      ruleFieldsMap[RuleFields.COMMENTS_REQUIRE_RESOLVE_ALL] = !!ruleDefinition.pullreq.comments.require_resolve_all
-    }
-
-    if (ruleDefinition.pullreq.merge) {
-      ruleFieldsMap[RuleFields.MERGE_BLOCK] = !!ruleDefinition.pullreq.merge.block
-      ruleFieldsMap[RuleFields.MERGE_DELETE_BRANCH] = !!ruleDefinition.pullreq.merge.delete_branch
-      ruleFieldsMap[RuleFields.MERGE_STRATEGIES_ALLOWED] =
-        Array.isArray(ruleDefinition.pullreq.merge.strategies_allowed) &&
-        ruleDefinition.pullreq.merge.strategies_allowed.length > 0
-    }
-
-    if (ruleDefinition.pullreq.status_checks) {
-      ruleFieldsMap[RuleFields.STATUS_CHECKS_REQUIRE_IDENTIFIERS] =
-        Array.isArray(ruleDefinition.pullreq.status_checks.require_identifiers) &&
-        ruleDefinition.pullreq.status_checks.require_identifiers.length > 0
-    }
-
-    if (ruleDefinition.pullreq.reviewers) {
-      ruleFieldsMap[RuleFields.AUTO_ADD_CODE_OWNERS] = !!ruleDefinition.pullreq.reviewers.request_code_owners
-      ruleFieldsMap[RuleFields.DEFAULT_REVIEWERS_ADDED] =
-        Array.isArray(ruleDefinition.pullreq.reviewers.default_reviewer_ids) &&
-        ruleDefinition.pullreq.reviewers.default_reviewer_ids.length > 0
-    }
-  }
-
-  if (ruleDefinition.lifecycle) {
-    ruleFieldsMap[RuleFields.LIFECYCLE_CREATE_FORBIDDEN] = !!ruleDefinition.lifecycle.create_forbidden
-    ruleFieldsMap[RuleFields.LIFECYCLE_DELETE_FORBIDDEN] = !!ruleDefinition.lifecycle.delete_forbidden
-    ruleFieldsMap[RuleFields.LIFECYCLE_UPDATE_FORBIDDEN] = !!ruleDefinition.lifecycle.update_forbidden
-    ruleFieldsMap[RuleFields.LIFECYCLE_UPDATE_FORCE_FORBIDDEN] = !!ruleDefinition.lifecycle.update_force_forbidden
-  }
-
-  return ruleFieldsMap
-}
-
 export const replaceMentionIdWithEmail = (
   input: string,
   mentionsMap: {
@@ -1289,50 +1093,4 @@ export const getUnifiedDefaultReviewersState = (info: TypesDefaultReviewerApprov
   })
 
   return defaultReviewState
-}
-
-/**
- * Normalizes and combines principal and user group data into a unified format
- * @param principals - Array of principal objects from principals API
- * @param userGroups - Array of user group objects from usergroups API
- * @returns Combined array of normalized objects with consistent structure
- */
-
-export interface NormalizedPrincipal {
-  id: number
-  email_or_identifier: string
-  type: PrincipalType
-  display_name: string
-}
-export function combineAndNormalizePrincipalsAndGroups(
-  principals: TypesPrincipalInfo[] | null,
-  userGroups?: any[]
-): NormalizedPrincipal[] {
-  const normalizedData: NormalizedPrincipal[] = []
-
-  // Process principals data if available
-  if (principals && Array.isArray(principals)) {
-    principals.forEach(principal => {
-      normalizedData.push({
-        id: principal.id || -1,
-        email_or_identifier: principal.email || principal.uid || '',
-        type: (principal.type as PrincipalType) || PrincipalType.USER,
-        display_name: principal.display_name || principal.email || 'Unknown User'
-      })
-    })
-  }
-
-  // Process user groups data if available
-  if (userGroups && Array.isArray(userGroups)) {
-    userGroups.forEach(group => {
-      normalizedData.push({
-        id: group.id || '',
-        email_or_identifier: group.identifier || '',
-        type: PrincipalType.USER_GROUP,
-        display_name: group.name || group.identifier || 'Unknown Group'
-      })
-    })
-  }
-
-  return normalizedData.sort((a, b) => a.display_name.localeCompare(b.display_name))
 }

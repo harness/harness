@@ -16,8 +16,7 @@
 }
 
 .dropDownContainer {
-  width: 467px; /* Reduced width to match other elements */
-  min-width: 467px !important;
+  min-width: var(--select-dropdown-width) !important;
 
   .popover {
     & :global(.bp3-popover-target) {
@@ -26,7 +25,7 @@
   }
   .popoverHeight {
     max-height: 400px;
-    min-width: 467px !important; /* Make the popover match the input width */
+    min-width: var(--select-dropdown-width) !important; /* Make the popover match the input width */
   }
 }
 

@@ -21,8 +21,8 @@ import { Color } from '@harnessio/design-system'
 import type { FormikProps } from 'formik'
 import { Render } from 'react-jsx-match'
 import { useStrings } from 'framework/strings'
-import type { RulesFormPayload } from 'utils/Utils'
 import { SettingTypeMode } from 'utils/GitUtils'
+import type { RulesFormPayload } from 'components/ProtectionRules/ProtectionRulesUtils'
 import DefaultReviewersList from './DefaultReviewersList'
 import css from '../ProtectionRulesForm.module.scss'
 
@@ -32,33 +32,35 @@ const DefaultReviewersSection = (props: {
     setSearchTerm: React.Dispatch<React.SetStateAction<string>>
     userPrincipalOptions: SelectOption[]
     settingSectionMode: SettingTypeMode
-    setDefaultReviewersState: React.Dispatch<React.SetStateAction<string[]>>
   }
 }) => {
   const { formik, defaultReviewerProps } = props
-  const { settingSectionMode, userPrincipalOptions, setSearchTerm, setDefaultReviewersState } = defaultReviewerProps
+  const { settingSectionMode, userPrincipalOptions, setSearchTerm } = defaultReviewerProps
   const { getString } = useStrings()
   const setFieldValue = formik.setFieldValue
+  const {
+    defaultReviewersEnabled,
+    defaultReviewersList: formikDefaultReviewersList,
+    defaultReviewersSet,
+    minDefaultReviewers,
+    requireMinDefaultReviewers
+  } = formik.values
+  const { defaultReviewersList: formikDefaultReviewersListError } = formik.errors
 
   const defaultReviewersList = useMemo(
-    () =>
-      settingSectionMode === SettingTypeMode.EDIT || formik.values.defaultReviewersSet
-        ? formik.values.defaultReviewersList
-        : [],
-    [settingSectionMode, formik.values.defaultReviewersSet, formik.values.defaultReviewersList]
+    () => (settingSectionMode === SettingTypeMode.EDIT || defaultReviewersSet ? formikDefaultReviewersList : []),
+    [settingSectionMode, defaultReviewersSet, formikDefaultReviewersList]
   )
 
-  const minDefaultReviewers = formik.values.requireMinDefaultReviewers
-  const defaultReviewersEnabled = formik.values.defaultReviewersEnabled
   const filteredPrincipalOptions = userPrincipalOptions.filter(
     (item: SelectOption) => !defaultReviewersList?.includes(item.value as string)
   )
 
   const defReviewerWarning = useMemo(() => {
-    const minReviewers = Number(formik.values.minDefaultReviewers)
+    const minReviewers = Number(minDefaultReviewers)
     const reviewerCount = defaultReviewersList?.length || 0
 
-    if (formik.values.requireMinDefaultReviewers && minReviewers === reviewerCount) {
+    if (defaultReviewersEnabled && minReviewers === reviewerCount) {
       let message = ''
       let showWarning = false
 
@@ -74,7 +76,7 @@ const DefaultReviewersSection = (props: {
     }
 
     return { message: '', showWarning: false }
-  }, [getString, formik.values, defaultReviewersList])
+  }, [getString, defaultReviewersEnabled, minDefaultReviewers, defaultReviewersList])
 
   return (
     <>
@@ -85,7 +87,7 @@ const DefaultReviewersSection = (props: {
         onChange={e => {
           if (!(e.target as HTMLInputElement).checked) {
             setFieldValue('requireMinDefaultReviewers', false)
-            formik.setFieldValue('defaultReviewersList', [])
+            setFieldValue('defaultReviewersList', [])
           }
         }}
       />
@@ -107,14 +109,14 @@ const DefaultReviewersSection = (props: {
               const defaultReviewerEntry = `${id} ${displayName}`
               defaultReviewersList?.push(defaultReviewerEntry)
               const uniqueArr = Array.from(new Set(defaultReviewersList))
-              formik.setFieldValue('defaultReviewersList', uniqueArr)
-              formik.setFieldValue('defaultReviewersSet', true)
-              setDefaultReviewersState([...uniqueArr])
+              setFieldValue('defaultReviewersList', uniqueArr)
+              setFieldValue('defaultReviewersSet', true)
             }}
-            name={'defaultReviewerSelect'}></FormInput.Select>
-          {formik.errors.defaultReviewersList && (
+            name={'defaultReviewerSelect'}
+          />
+          {formikDefaultReviewersListError && (
             <Text color={Color.RED_350} padding={{ bottom: 'medium' }}>
-              {formik.errors.defaultReviewersList}
+              {formikDefaultReviewersListError}
             </Text>
           )}
           <Render when={defReviewerWarning.showWarning}>
@@ -122,7 +124,7 @@ const DefaultReviewersSection = (props: {
               {defReviewerWarning.message}
             </Text>
           </Render>
-          <DefaultReviewersList defaultReviewersList={defaultReviewersList} setFieldValue={formik.setFieldValue} />
+          <DefaultReviewersList defaultReviewersList={defaultReviewersList} setFieldValue={setFieldValue} />
 
           <FormInput.CheckBox
             className={css.checkboxLabel}
@@ -138,7 +140,8 @@ const DefaultReviewersSection = (props: {
           <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
             {getString('protectionRules.requireMinDefaultReviewersContent')}
           </Text>
-          {minDefaultReviewers && (
+
+          {requireMinDefaultReviewers && (
             <Container padding={{ left: 'xlarge', top: 'medium' }}>
               <FormInput.Text
                 className={cx(css.widthContainer, css.minText)}

@@ -34,6 +34,10 @@
   .noData > div {
     height: calc(100vh - var(--page-header-height, 64px) - 120px) !important;
   }
+
+  .menuItem {
+    min-width: 160px !important;
+  }
 }
 
 .toggle {
@@ -66,4 +70,17 @@
   align-items: center;
   padding-right: var(--spacing-3) !important;
   padding-left: var(--spacing-3) !important;
+}
+
+.paddingLeftMedium {
+  padding-left: var(--spacing-medium) !important;
+}
+
+.paddingLeftXLarge {
+  padding-left: var(--spacing-xlarge) !important;
+}
+
+.stateCtn {
+  padding-top: 7px !important;
+  padding-bottom: 7px !important;
 }
