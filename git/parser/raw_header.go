@@ -22,7 +22,7 @@ import (
 )
 
 var (
-	reGitHeaderPerson = regexp.MustCompile(`^(.+) <(.+)> (\d+) (([-|+]\d\d)(\d\d))$`)
+	reGitHeaderPerson = regexp.MustCompile(`^(.+) <(.+)?> (\d+) (([-|+]\d\d)(\d\d))$`)
 )
 
 func ObjectHeaderIdentity(line string) (name string, email string, timestamp time.Time, err error) {
