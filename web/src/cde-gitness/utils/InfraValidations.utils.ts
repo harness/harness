@@ -13,7 +13,6 @@ export const validateInfraForm = (getString: UseStringsReturn['getString']) =>
       .max(20, getString('cde.gitspaceInfraHome.maxMessage', { field: 'Infrastructure Name', count: '20' })),
     domain: yup.string().trim().required(getString('cde.gitspaceInfraHome.domainMessage')),
     machine_type: yup.string().trim().required(getString('cde.gitspaceInfraHome.machineTypeMessage'))
-    // instances: yup.string().trim().required(getString('cde.gitspaceInfraHome.instanceMessage'))
   })
 
 // AWS-specific validation schema
@@ -26,7 +25,7 @@ export const validateAwsInfraForm = (getString: UseStringsReturn['getString']) =
       .min(5, getString('cde.gitspaceInfraHome.minMessage', { field: 'Infrastructure Name', count: '5' }))
       .max(20, getString('cde.gitspaceInfraHome.maxMessage', { field: 'Infrastructure Name', count: '20' })),
     domain: yup.string().trim().required(getString('cde.gitspaceInfraHome.domainMessage')),
-    machine_type: yup.string().trim().required(getString('cde.gitspaceInfraHome.machineTypeMessage')),
+    instance_type: yup.string().trim().required(getString('cde.gitspaceInfraHome.instanceTypeMessage')),
     vpc_cidr_block: yup
       .string()
       .trim()

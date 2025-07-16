@@ -39,7 +39,7 @@ function InfraDetailCard({ infraDetails, regionCount, provider }: InfraDetailCar
         { stringKey: 'cde.configureInfra.name', value: infraDetails?.metadata?.name },
         { stringKey: 'cde.Aws.VpcCidrBlock', value: infraDetails?.metadata?.vpc_cidr_block },
         { stringKey: 'cde.configureInfra.domain', value: infraDetails?.metadata?.domain },
-        { stringKey: 'cde.configureInfra.machineType', value: infraDetails?.metadata?.gateway?.machine_type },
+        { stringKey: 'cde.Aws.instanceType', value: infraDetails?.metadata?.gateway?.instance_type },
         { stringKey: 'cde.Aws.numberOfRegions', value: regionCount }
       ]
     }

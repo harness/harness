@@ -21,7 +21,7 @@ const BasicDetails = ({ formikProps }: BasicDetailProps) => {
     queryParams
   })
 
-  const { setFieldValue, values } = useFormikContext<{ instance_type?: string; machine_type?: string }>()
+  const { setFieldValue, values } = useFormikContext<{ instance_type?: string }>()
 
   const delegateHandler = (val: string[]) => {
     formikProps.setFieldValue('delegateSelector', val)
@@ -60,9 +60,9 @@ const BasicDetails = ({ formikProps }: BasicDetailProps) => {
         <Text font={{ variation: FontVariation.SMALL }}>{getString('cde.configureInfra.basicNoteText')}</Text>
         <br />
         <CustomSelectDropdown
-          value={instanceTypeOption.find(item => item.value === values?.machine_type)}
+          value={instanceTypeOption.find(item => item.value === values?.instance_type)}
           onChange={(data: { label: string; value: string }) => {
-            setFieldValue('machine_type', data.value)
+            setFieldValue('instance_type', data.value)
           }}
           allowCustom
           label={getString('cde.Aws.gatewayInstanceType')}

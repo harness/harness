@@ -1451,6 +1451,7 @@ export interface StringsMap {
   'cde.gitspaceInfraHome.gcpSupportText': string
   'cde.gitspaceInfraHome.infraDetails': string
   'cde.gitspaceInfraHome.instanceMessage': string
+  'cde.gitspaceInfraHome.instanceTypeMessage': string
   'cde.gitspaceInfraHome.learnMore': string
   'cde.gitspaceInfraHome.locationAndMachine': string
   'cde.gitspaceInfraHome.locationDetails': string

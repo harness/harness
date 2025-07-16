@@ -136,6 +136,7 @@ gitspaceInfraHome:
   nameMessage: Name is required
   domainMessage: Domain is required
   machineTypeMessage: Machine type is required
+  instanceTypeMessage: Instance type is required
   instanceMessage: Instance is required
   dangerZone: Danger Zone
   deleteThisInfra: Delete this infrastructure

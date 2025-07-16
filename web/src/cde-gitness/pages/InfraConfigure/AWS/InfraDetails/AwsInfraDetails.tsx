@@ -22,8 +22,7 @@ interface InfraDetailsFormikProps {
   name?: string
   type?: string
   domain?: string
-  machine_type?: string
-  instance_type?: string // Added for BasicDetails component
+  instance_type?: string
   instances?: string
   delegateSelector?: string[]
   vpc_cidr_block?: string
@@ -73,8 +72,7 @@ const AwsInfraDetails = () => {
         identifier: identifier,
         name: metadata?.name,
         domain: metadata?.domain,
-        machine_type: metadata?.gateway?.machine_type,
-        instance_type: metadata?.gateway?.machine_type, // Add instance_type to match what BasicDetails expects
+        instance_type: metadata?.gateway?.instance_type,
         instances: metadata?.gateway?.instances,
         delegateSelector: delegate,
         vpc_cidr_block: metadata?.vpc_cidr_block // Extract VPC CIDR block from API data
@@ -126,7 +124,7 @@ const AwsInfraDetails = () => {
   const handleSubmit = async (values: InfraDetailsFormikProps) => {
     try {
       if (regionData?.length > 0) {
-        const { identifier, name, domain, machine_type, instances, delegateSelector, vpc_cidr_block } = values
+        const { identifier, name, domain, instance_type, instances, delegateSelector, vpc_cidr_block } = values
         const region_configs: Record<string, any> = {}
 
         regionData?.forEach((region: ExtendedAwsRegionConfig) => {
@@ -164,7 +162,7 @@ const AwsInfraDetails = () => {
             name,
             region_configs,
             gateway: {
-              machine_type,
+              instance_type,
               instances: parseInt(instances || '1')
             },
             vpc_cidr_block
