@@ -18,6 +18,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	nugettype "github.com/harness/gitness/registry/app/pkg/types/nuget"
 	"github.com/harness/gitness/registry/request"
@@ -33,14 +34,22 @@ func (h *handler) SearchPackageV2(w http.ResponseWriter, r *http.Request) {
 		h.HandleErrors(r.Context(), []error{fmt.Errorf("failed to fetch info from context")}, w)
 		return
 	}
-	response := h.controller.SearchPackageV2(r.Context(), *info)
+	offset, err := strconv.Atoi(r.URL.Query().Get("$skip"))
+	if err != nil {
+		offset = 0
+	}
+	limit, err := strconv.Atoi(r.URL.Query().Get("$top"))
+	if err != nil {
+		limit = 20
+	}
+	response := h.controller.SearchPackageV2(r.Context(), *info, nugettype.GetSearchTerm(r), limit, offset)
 
 	if response.GetError() != nil {
 		h.HandleError(r.Context(), w, response.GetError())
 		return
 	}
 	w.Header().Set("Content-Type", "application/atom+xml; charset=utf-8")
-	_, err := w.Write([]byte(xml.Header))
+	_, err = w.Write([]byte(xml.Header))
 	if err != nil {
 		h.HandleErrors(r.Context(), []error{err}, w)
 		return

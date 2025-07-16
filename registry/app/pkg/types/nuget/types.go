@@ -16,6 +16,9 @@ package nuget
 
 import (
 	"encoding/xml"
+	"net/http"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/harness/gitness/registry/app/metadata/nuget"
@@ -44,6 +47,22 @@ func (a ArtifactInfo) GetImageVersion() (exists bool, imageVersion string) {
 
 func (a ArtifactInfo) GetVersion() string {
 	return a.Version
+}
+
+var searchTermExtract = regexp.MustCompile(`'([^']+)'`)
+
+func GetSearchTerm(r *http.Request) string {
+	searchTerm := strings.Trim(r.URL.Query().Get("searchTerm"), "'")
+	if searchTerm == "" {
+		// $filter contains a query like:
+		// (((Id ne null) and substringof('microsoft',tolower(Id)))
+		// We don't support these queries, just extract the search term.
+		match := searchTermExtract.FindStringSubmatch(r.URL.Query().Get("$filter"))
+		if len(match) == 2 {
+			searchTerm = strings.TrimSpace(match[1])
+		}
+	}
+	return searchTerm
 }
 
 type File struct {
@@ -83,12 +102,12 @@ type ServiceWorkspace struct {
 	Collection ServiceCollection `xml:"collection"`
 }
 
-type MetadataEndpointV2 struct {
-	XMLName   xml.Name         `xml:"service"`
-	Base      string           `xml:"base,attr"`
-	Xmlns     string           `xml:"xmlns,attr"`
-	XmlnsAtom string           `xml:"xmlns:atom,attr"`
-	Workspace ServiceWorkspace `xml:"workspace"`
+type ServiceMetadataV2 struct {
+	XMLName   xml.Name `xml:"edmx:Edmx"`
+	XmlnsEdmx string   `xml:"xmlns:edmx,attr"`
+	//nolint: tagliatelle
+	Version      string           `xml:"Version,attr"`
+	DataServices EdmxDataServices `xml:"edmx:DataServices"`
 }
 
 type ServiceEndpointV2 struct {
@@ -100,65 +119,80 @@ type ServiceEndpointV2 struct {
 }
 
 type EdmxPropertyRef struct {
+	//nolint: tagliatelle
 	Name string `xml:"Name,attr"`
 }
 
 type EdmxProperty struct {
-	Name     string `xml:"Name,attr"`
-	Type     string `xml:"Type,attr"`
-	Nullable bool   `xml:"Nullable,attr"`
+	//nolint: tagliatelle
+	Name string `xml:"Name,attr"`
+	//nolint: tagliatelle
+	Type string `xml:"Type,attr"`
+	//nolint: tagliatelle
+	Nullable bool `xml:"Nullable,attr"`
 }
 
 type EdmxEntityType struct {
-	Name       string            `xml:"Name,attr"`
-	HasStream  bool              `xml:"m:HasStream,attr"`
-	Keys       []EdmxPropertyRef `xml:"Key>PropertyRef"`
-	Properties []EdmxProperty    `xml:"Property"`
+	//nolint: tagliatelle
+	Name      string `xml:"Name,attr"`
+	HasStream bool   `xml:"m:HasStream,attr"`
+	//nolint: tagliatelle
+	Keys []EdmxPropertyRef `xml:"Key>PropertyRef"`
+	//nolint: tagliatelle
+	Properties []EdmxProperty `xml:"Property"`
 }
 
 type EdmxFunctionParameter struct {
+	//nolint: tagliatelle
 	Name string `xml:"Name,attr"`
+	//nolint: tagliatelle
 	Type string `xml:"Type,attr"`
 }
 
 type EdmxFunctionImport struct {
-	Name       string                  `xml:"Name,attr"`
-	ReturnType string                  `xml:"ReturnType,attr"`
-	EntitySet  string                  `xml:"EntitySet,attr"`
-	Parameter  []EdmxFunctionParameter `xml:"Parameter"`
+	//nolint: tagliatelle
+	Name string `xml:"Name,attr"`
+	//nolint: tagliatelle
+	ReturnType string `xml:"ReturnType,attr"`
+	//nolint: tagliatelle
+	EntitySet string `xml:"EntitySet,attr"`
+	//nolint: tagliatelle
+	Parameter []EdmxFunctionParameter `xml:"Parameter"`
 }
 
 type EdmxEntitySet struct {
-	Name       string `xml:"Name,attr"`
+	//nolint: tagliatelle
+	Name string `xml:"Name,attr"`
+	//nolint: tagliatelle
 	EntityType string `xml:"EntityType,attr"`
 }
 
 type EdmxEntityContainer struct {
-	Name                     string               `xml:"Name,attr"`
-	IsDefaultEntityContainer bool                 `xml:"m:IsDefaultEntityContainer,attr"`
-	EntitySet                EdmxEntitySet        `xml:"EntitySet"`
-	FunctionImports          []EdmxFunctionImport `xml:"FunctionImport"`
+	//nolint: tagliatelle
+	Name                     string `xml:"Name,attr"`
+	IsDefaultEntityContainer bool   `xml:"m:IsDefaultEntityContainer,attr"`
+	//nolint: tagliatelle
+	EntitySet EdmxEntitySet `xml:"EntitySet"`
+	//nolint: tagliatelle
+	FunctionImports []EdmxFunctionImport `xml:"FunctionImport"`
 }
 
 type EdmxSchema struct {
-	Xmlns           string               `xml:"xmlns,attr"`
-	Namespace       string               `xml:"Namespace,attr"`
-	EntityType      *EdmxEntityType      `xml:"EntityType,omitempty"`
+	Xmlns string `xml:"xmlns,attr"`
+	//nolint: tagliatelle
+	Namespace string `xml:"Namespace,attr"`
+	//nolint: tagliatelle
+	EntityType *EdmxEntityType `xml:"EntityType,omitempty"`
+	//nolint: tagliatelle
 	EntityContainer *EdmxEntityContainer `xml:"EntityContainer,omitempty"`
 }
 
 type EdmxDataServices struct {
-	XmlnsM                string       `xml:"xmlns:m,attr"`
-	DataServiceVersion    string       `xml:"m:DataServiceVersion,attr"`
-	MaxDataServiceVersion string       `xml:"m:MaxDataServiceVersion,attr"`
-	Schema                []EdmxSchema `xml:"Schema"`
-}
-
-type ServiceMetadataV2 struct {
-	XMLName      xml.Name         `xml:"edmx:Edmx"`
-	XmlnsEdmx    string           `xml:"xmlns:edmx,attr"`
-	Version      string           `xml:"Version,attr"`
-	DataServices EdmxDataServices `xml:"edmx:DataServices"`
+	XmlnsM                string `xml:"xmlns:m,attr"`
+	DataServiceVersion    string `xml:"m:DataServiceVersion,attr"`
+	MaxDataServiceVersion string `xml:"m:MaxDataServiceVersion,attr"`
+	//nolint: tagliatelle
+	Schema []EdmxSchema `xml:"Schema"`
 }
 
 type PackageVersion struct {
@@ -243,6 +277,31 @@ type FeedResponse struct {
 	Links   []FeedEntryLink      `xml:"link"`
 	Entries []*FeedEntryResponse `xml:"entry"`
 	Count   int64                `xml:"m:count"`
+}
+
+// https://docs.microsoft.com/en-us/nuget/api/search-query-service-resource#response
+type SearchResultResponse struct {
+	//nolint: tagliatelle
+	TotalHits int64           `json:"totalHits"`
+	Data      []*SearchResult `json:"data"`
+}
+
+// https://docs.microsoft.com/en-us/nuget/api/search-query-service-resource#search-result
+type SearchResult struct {
+	ID          string                 `json:"id"`
+	Version     string                 `json:"version"`
+	Versions    []*SearchResultVersion `json:"versions"`
+	Description string                 `json:"description"`
+	Authors     string                 `json:"authors"`
+	//nolint: tagliatelle
+	ProjectURL           string `json:"projectURL"`
+	RegistrationIndexURL string `json:"registration"`
+}
+
+// https://docs.microsoft.com/en-us/nuget/api/search-query-service-resource#search-result
+type SearchResultVersion struct {
+	RegistrationLeafURL string `json:"@id"`
+	Version             string `json:"version"`
 }
 
 type FeedEntryCategory struct {

@@ -52,11 +52,13 @@ type Controller interface {
 
 	CountPackageVersionV2(ctx context.Context, info nugettype.ArtifactInfo) *EntityCountResponse
 
-	SearchPackage(ctx context.Context, info nugettype.ArtifactInfo) *SearchPackageResponse
+	SearchPackage(ctx context.Context, info nugettype.ArtifactInfo, searchTerm string,
+		limit, offset int) *SearchPackageResponse
 
-	SearchPackageV2(ctx context.Context, info nugettype.ArtifactInfo) *SearchPackageV2Response
+	SearchPackageV2(ctx context.Context, info nugettype.ArtifactInfo, searchTerm string,
+		limit, offset int) *SearchPackageV2Response
 
-	CountPackageV2(ctx context.Context, info nugettype.ArtifactInfo) *EntityCountResponse
+	CountPackageV2(ctx context.Context, info nugettype.ArtifactInfo, searchTerm string) *EntityCountResponse
 
 	GetServiceMetadataV2(ctx context.Context, info nugettype.ArtifactInfo) *GetServiceMetadataV2Response
 }

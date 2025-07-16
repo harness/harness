@@ -40,6 +40,11 @@ type Handler interface {
 	GetPackageMetadata(http.ResponseWriter, *http.Request)
 	GetPackageVersionMetadataV2(http.ResponseWriter, *http.Request)
 	GetPackageVersionMetadata(http.ResponseWriter, *http.Request)
+	SearchPackage(http.ResponseWriter, *http.Request)
+	SearchPackageV2(http.ResponseWriter, *http.Request)
+	CountPackageV2(http.ResponseWriter, *http.Request)
+	GetPackageVersionCountV2(http.ResponseWriter, *http.Request)
+	GetServiceMetadataV2(http.ResponseWriter, *http.Request)
 }
 
 type handler struct {

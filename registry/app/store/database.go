@@ -526,6 +526,13 @@ type ArtifactRepository interface {
 	CountLatestByName(
 		ctx context.Context, regID int64, name string,
 	) (int64, error)
+
+	SearchByImageName(ctx context.Context, regID int64, name string,
+		limit int, offset int) (*[]types.ArtifactMetadata, error)
+
+	CountByImageName(
+		ctx context.Context, regID int64, name string,
+	) (int64, error)
 }
 
 type DownloadStatRepository interface {

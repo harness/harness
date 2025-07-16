@@ -1110,11 +1110,10 @@ func (c *APIController) generateNugetClientSetupDetail(
 	staticStepType := artifact.ClientSetupStepTypeStatic
 	generateTokenType := artifact.ClientSetupStepTypeGenerateToken
 
-	// Authentication section
-	section1 := artifact.ClientSetupSection{
+	nugetSection1 := artifact.ClientSetupSection{
 		Header: utils.StringPtr("Configure Authentication"),
 	}
-	_ = section1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+	_ = nugetSection1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
 		Steps: &[]artifact.ClientSetupStep{
 			{
 				Header: utils.StringPtr("Add the Harness Registry as a package source:"),
@@ -1142,11 +1141,61 @@ func (c *APIController) generateNugetClientSetupDetail(
 		},
 	})
 
-	// Publish section
-	section2 := artifact.ClientSetupSection{
+	dotnetSection1 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Configure Authentication"),
+	}
+	_ = dotnetSection1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Add the Harness Registry as a package source:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("dotnet nuget add source  " +
+							"<REGISTRY_URL>/index.json " +
+							"--name harness --username <USERNAME> " +
+							"--password <TOKEN> --store-password-in-clear-text\n\n"),
+					},
+					{
+						Label: utils.StringPtr("Note: For Nuget V2 Client, use this url: <REGISTRY_URL>/"),
+						Value: utils.StringPtr("<REGISTRY_URL>/"),
+					},
+				},
+			},
+			{
+				Header: utils.StringPtr("Generate an identity token for authentication"),
+				Type:   &generateTokenType,
+			},
+		},
+	})
+
+	visualStudioSection1 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Configure Nuget Package Source"),
+	}
+	_ = visualStudioSection1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Add below config in Nuget.Config file to add Harness Registry as package source:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						//nolint:lll
+						Value: utils.StringPtr("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<configuration>\n <packageSources>\n     <clear />\n     <add key=\"harness\" value=\"<REGISTRY_URL>/index.json\" />\n </packageSources>\n <packageSourceCredentials>\n     <harness>\n         <add key=\"Username\" value=\"<USERNAME>\" />\n         <add key=\"ClearTextPassword\" value=\"<TOKEN>\" />\n     </harness>\n </packageSourceCredentials>\n</configuration>"),
+					},
+				},
+			},
+			{
+				Header: utils.StringPtr("Generate an identity token for authentication"),
+				Type:   &generateTokenType,
+			},
+		},
+	})
+
+	nugetSection2 := artifact.ClientSetupSection{
 		Header: utils.StringPtr("Publish Package"),
 	}
-	_ = section2.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+
+	_ = nugetSection2.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
 		Steps: &[]artifact.ClientSetupStep{
 			{
 				Header: utils.StringPtr("Publish your package:"),
@@ -1160,11 +1209,29 @@ func (c *APIController) generateNugetClientSetupDetail(
 		},
 	})
 
-	// Install section
-	section3 := artifact.ClientSetupSection{
+	dotnetSection2 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Publish Package"),
+	}
+
+	_ = dotnetSection2.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Publish your package:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("dotnet nuget push <PACKAGE_FILE> --api-key <TOKEN> --source harness"),
+					},
+				},
+			},
+		},
+	})
+
+	nugetSection3 := artifact.ClientSetupSection{
 		Header: utils.StringPtr("Install Package"),
 	}
-	_ = section3.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+
+	_ = nugetSection3.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
 		Steps: &[]artifact.ClientSetupStep{
 			{
 				Header: utils.StringPtr("Install a package using nuget:"),
@@ -1178,17 +1245,59 @@ func (c *APIController) generateNugetClientSetupDetail(
 		},
 	})
 
-	sections := []artifact.ClientSetupSection{
-		section1,
-		section2,
-		section3,
+	dotnetSection3 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Install Package"),
 	}
 
-	if registryType == artifact.RegistryTypeUPSTREAM {
-		sections = []artifact.ClientSetupSection{
-			section1,
-			section3,
+	_ = dotnetSection3.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Add a package using dotnet:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("dotnet package add <ARTIFACT_NAME> --version <VERSION> --source harness"),
+					},
+				},
+			},
+		},
+	})
+	section := artifact.ClientSetupSection{}
+	config := artifact.TabSetupStepConfig{
+		Tabs: &[]artifact.TabSetupStep{
+			{
+				Header: utils.StringPtr("Nuget"),
+				Sections: &[]artifact.ClientSetupSection{
+					nugetSection1,
+					nugetSection3,
+				},
+			},
+			{
+				Header: utils.StringPtr("Dotnet"),
+				Sections: &[]artifact.ClientSetupSection{
+					dotnetSection1,
+					dotnetSection3,
+				},
+			},
+			{
+				Header: utils.StringPtr("Visual Studio"),
+				Sections: &[]artifact.ClientSetupSection{
+					visualStudioSection1,
+				},
+			},
+		},
+	}
+
+	if registryType == artifact.RegistryTypeVIRTUAL {
+		for i, remoteSection := range []artifact.ClientSetupSection{nugetSection2, dotnetSection2} {
+			*(*config.Tabs)[i].Sections = append(*(*config.Tabs)[i].Sections, remoteSection)
 		}
+	}
+
+	_ = section.FromTabSetupStepConfig(config)
+
+	sections := []artifact.ClientSetupSection{
+		section,
 	}
 
 	clientSetupDetails := artifact.ClientSetupDetails{
@@ -1207,7 +1316,6 @@ func (c *APIController) generateNugetClientSetupDetail(
 		Status: artifact.StatusSUCCESS,
 	}
 }
-
 func (c *APIController) generateCargoClientSetupDetail(
 	ctx context.Context,
 	registryRef string,

@@ -15,9 +15,10 @@
 package nuget
 
 import (
-	"encoding/xml"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	nugettype "github.com/harness/gitness/registry/app/pkg/types/nuget"
 	"github.com/harness/gitness/registry/request"
@@ -33,21 +34,24 @@ func (h *handler) SearchPackage(w http.ResponseWriter, r *http.Request) {
 		h.HandleErrors(r.Context(), []error{fmt.Errorf("failed to fetch info from context")}, w)
 		return
 	}
-	response := h.controller.SearchPackage(r.Context(), *info)
+	searchTerm := r.URL.Query().Get("q")
+	offset, err := strconv.Atoi(r.URL.Query().Get("skip"))
+	if err != nil {
+		offset = 0
+	}
+	limit, err2 := strconv.Atoi(r.URL.Query().Get("take"))
+	if err2 != nil {
+		limit = 20
+	}
+	response := h.controller.SearchPackage(r.Context(), *info, searchTerm, limit, offset)
 
 	if response.GetError() != nil {
 		h.HandleError(r.Context(), w, response.GetError())
 		return
 	}
-	w.Header().Set("Content-Type", "application/atom+xml; charset=utf-8")
-	_, err := w.Write([]byte(xml.Header))
-	if err != nil {
-		h.HandleErrors(r.Context(), []error{err}, w)
-		return
-	}
-	err = xml.NewEncoder(w).Encode(response.FeedResponse)
-	if err != nil {
-		h.HandleErrors(r.Context(), []error{err}, w)
+	err3 := json.NewEncoder(w).Encode(response.SearchResponse)
+	if err3 != nil {
+		h.HandleErrors(r.Context(), []error{err3}, w)
 		return
 	}
 }

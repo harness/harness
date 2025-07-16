@@ -116,26 +116,19 @@ func (r *proxy) CountPackageVersionV2(
 	return 0, errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
 }
 
-func (r *proxy) CountPackageV2(
-	ctx context.Context,
-	_ nugettype.ArtifactInfo,
-) (count int64, err error) {
+func (r *proxy) CountPackageV2(ctx context.Context, _ nugettype.ArtifactInfo, _ string) (count int64, err error) {
 	log.Error().Ctx(ctx).Msg("Not implemented")
 	return 0, errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
 }
 
-func (r *proxy) SearchPackageV2(
-	ctx context.Context,
-	_ nugettype.ArtifactInfo,
-) (*nugettype.FeedResponse, error) {
+func (r *proxy) SearchPackageV2(ctx context.Context, _ nugettype.ArtifactInfo,
+	_ string, _ int, _ int) (*nugettype.FeedResponse, error) {
 	log.Error().Ctx(ctx).Msg("Not implemented")
 	return nil, errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
 }
 
-func (r *proxy) SearchPackage(
-	ctx context.Context,
-	_ nugettype.ArtifactInfo,
-) (*nugettype.FeedResponse, error) {
+func (r *proxy) SearchPackage(ctx context.Context, _ nugettype.ArtifactInfo,
+	_ string, _ int, _ int) (*nugettype.SearchResultResponse, error) {
 	log.Error().Ctx(ctx).Msg("Not implemented")
 	return nil, errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
 }
@@ -348,9 +341,8 @@ func (r *proxy) GetServiceEndpointV2(ctx context.Context,
 	return serviceEndpoints
 }
 
-func (r *proxy) GetServiceMetadataV2(ctx context.Context, _ nugettype.ArtifactInfo) *nugettype.ServiceMetadataV2 {
-	log.Error().Ctx(ctx).Msg("Not implemented")
-	return nil
+func (r *proxy) GetServiceMetadataV2(_ context.Context, _ nugettype.ArtifactInfo) *nugettype.ServiceMetadataV2 {
+	return getServiceMetadataV2()
 }
 
 type Proxy interface {

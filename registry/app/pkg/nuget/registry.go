@@ -41,11 +41,13 @@ type Registry interface {
 
 	CountPackageVersionV2(ctx context.Context, info nuget.ArtifactInfo) (int64, error)
 
-	SearchPackageV2(ctx context.Context, info nuget.ArtifactInfo) (*nuget.FeedResponse, error)
+	SearchPackageV2(ctx context.Context, info nuget.ArtifactInfo,
+		searchTerm string, limit int, offset int) (*nuget.FeedResponse, error)
 
-	SearchPackage(ctx context.Context, info nuget.ArtifactInfo) (*nuget.FeedResponse, error)
+	SearchPackage(ctx context.Context, info nuget.ArtifactInfo,
+		searchTerm string, limit int, offset int) (*nuget.SearchResultResponse, error)
 
-	CountPackageV2(ctx context.Context, info nuget.ArtifactInfo) (int64, error)
+	CountPackageV2(ctx context.Context, info nuget.ArtifactInfo, searchTerm string) (int64, error)
 
 	GetPackageMetadata(ctx context.Context, info nuget.ArtifactInfo) (nuget.RegistrationResponse, error)
 

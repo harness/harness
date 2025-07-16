@@ -81,7 +81,7 @@ type SearchPackageV2Response struct {
 
 type SearchPackageResponse struct {
 	BaseResponse
-	FeedResponse *nuget.FeedResponse
+	SearchResponse *nuget.SearchResultResponse
 }
 
 type EntityCountResponse struct {

@@ -90,8 +90,7 @@ func (c *localRegistry) GetServiceEndpointV2(
 
 func (c *localRegistry) GetServiceMetadataV2(_ context.Context,
 	_ nugettype.ArtifactInfo) *nugettype.ServiceMetadataV2 {
-	//todo: implement it
-	return nil
+	return getServiceMetadataV2()
 }
 
 func (c *localRegistry) ListPackageVersion(
@@ -132,35 +131,48 @@ func (c *localRegistry) ListPackageVersionV2(
 }
 
 func (c *localRegistry) CountPackageVersionV2(
-	_ context.Context,
-	_ nugettype.ArtifactInfo,
+	ctx context.Context,
+	info nugettype.ArtifactInfo,
 ) (count int64, err error) {
-	//todo: implement
-	return 0, errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
+	count, err = c.artifactDao.CountByImageName(ctx, info.RegistryID, info.Image)
+	if err != nil {
+		return 0, fmt.Errorf(
+			"failed to get artifacts count for registry: %d and image: %s: %w", info.RegistryID, info.Image, err)
+	}
+	return count, nil
 }
 
-func (c *localRegistry) CountPackageV2(
-	_ context.Context,
-	_ nugettype.ArtifactInfo,
-) (count int64, err error) {
-	//todo: implement
-	return 0, errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
+func (c *localRegistry) CountPackageV2(ctx context.Context, info nugettype.ArtifactInfo,
+	searchTerm string) (count int64, err error) {
+	count, err = c.artifactDao.CountByImageName(ctx, info.RegistryID, searchTerm)
+	if err != nil {
+		return 0, fmt.Errorf(
+			"failed to get artifacts count for registry: %d and image: %s: %w", info.RegistryID, info.Image, err)
+	}
+	return count, nil
 }
 
-func (c *localRegistry) SearchPackageV2(
-	_ context.Context,
-	_ nugettype.ArtifactInfo,
-) (*nugettype.FeedResponse, error) {
-	//todo: implement
-	return nil, errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
+func (c *localRegistry) SearchPackageV2(ctx context.Context, info nugettype.ArtifactInfo,
+	searchTerm string, limit int, offset int) (*nugettype.FeedResponse, error) {
+	packageURL := c.urlProvider.PackageURL(ctx, info.RootIdentifier+"/"+info.RegIdentifier, "nuget")
+	artifacts, err := c.artifactDao.SearchByImageName(ctx, info.RegistryID, searchTerm, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"failed to get artifacts for registry: %d and image: %s: %w", info.RegistryID, info.Image, err)
+	}
+	return createSearchV2Response(packageURL, artifacts, searchTerm, limit, offset)
 }
 
-func (c *localRegistry) SearchPackage(
-	_ context.Context,
-	_ nugettype.ArtifactInfo,
-) (*nugettype.FeedResponse, error) {
-	//todo: implement
-	return nil, errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
+func (c *localRegistry) SearchPackage(ctx context.Context,
+	info nugettype.ArtifactInfo,
+	searchTerm string, limit int, offset int) (*nugettype.SearchResultResponse, error) {
+	packageURL := c.urlProvider.PackageURL(ctx, info.RootIdentifier+"/"+info.RegIdentifier, "nuget")
+	artifacts, err := c.artifactDao.SearchByImageName(ctx, info.RegistryID, searchTerm, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"failed to get artifacts for registry: %d and image: %s: %w", info.RegistryID, info.Image, err)
+	}
+	return createSearchResponse(packageURL, artifacts)
 }
 
 func (c *localRegistry) GetPackageMetadata(
@@ -246,10 +258,16 @@ func (c *localRegistry) UploadPackage(
 	}
 	info.Image = strings.ToLower(metadata.PackageMetadata.ID)
 	info.Version = metadata.PackageMetadata.Version
+	normalisedVersion, err2 := validateAndNormaliseVersion(info.Version)
+	if err2 != nil {
+		return headers, "", fmt.Errorf("nuspec file contains an invalid version: %s with "+
+			"package name: %s, registry name: %s", info.Version, info.Image, info.RegIdentifier)
+	}
+	info.Version = normalisedVersion
 	info.Metadata = metadata
 	if fileBundleType == SymbolsFile {
-		versionExists, err2 := c.localBase.CheckIfVersionExists(ctx, info)
-		if err2 != nil {
+		versionExists, err3 := c.localBase.CheckIfVersionExists(ctx, info)
+		if err3 != nil {
 			return headers, "", fmt.Errorf(
 				"failed to check package version existence for id: %s , version: %s "+
 					"with registry: %d with error: %w", info.Image, info.Version, info.RegistryID, err)

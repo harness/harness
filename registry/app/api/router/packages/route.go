@@ -139,10 +139,34 @@ func NewRouter(
 				Get("/", nugetHandler.GetServiceEndpointV2)
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Get("/$metadata", nugetHandler.GetServiceMetadataV2)
+			r.With(middleware.StoreArtifactInfo(nugetHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/package/{id}/index.json", nugetHandler.ListPackageVersion)
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/FindPackagesById()", nugetHandler.ListPackageVersionV2)
+			r.With(middleware.StoreArtifactInfo(nugetHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Get("/query", nugetHandler.SearchPackage)
+			r.With(middleware.StoreArtifactInfo(nugetHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Get("/Packages()", nugetHandler.SearchPackageV2)
+			r.With(middleware.StoreArtifactInfo(nugetHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Get("/Packages()/$count", nugetHandler.CountPackageV2)
+			r.With(middleware.StoreArtifactInfo(nugetHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Get("/Search()", nugetHandler.SearchPackageV2)
+			r.With(middleware.StoreArtifactInfo(nugetHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Get("/Search()/$count", nugetHandler.CountPackageV2)
+			r.With(middleware.StoreArtifactInfo(nugetHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Get("/FindPackagesById()", nugetHandler.ListPackageVersionV2)
+			r.With(middleware.StoreArtifactInfo(nugetHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Get("/FindPackagesById()/$count", nugetHandler.GetPackageVersionCountV2)
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/registration/{id}/index.json", nugetHandler.GetPackageMetadata)

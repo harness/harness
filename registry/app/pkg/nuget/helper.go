@@ -19,13 +19,24 @@ import (
 	"encoding/xml"
 	"fmt"
 	"net/url"
+	"regexp"
+	"sort"
+	"strconv"
 	"strings"
 	"time"
 
 	nugetmetadata "github.com/harness/gitness/registry/app/metadata/nuget"
+	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/types/nuget"
 	"github.com/harness/gitness/registry/types"
 )
+
+var semverRegexp = regexp.MustCompile("^" + SemverRegexpRaw + "$")
+
+const SemverRegexpRaw string = `v?([0-9]+(\.[0-9]+)*?)` +
+	`(-([0-9]+[0-9A-Za-z\-]*(\.[0-9A-Za-z\-]+)*)|(-([A-Za-z\-]+[0-9A-Za-z\-]*(\.[0-9A-Za-z\-]+)*)))?` +
+	`(\+([0-9A-Za-z\-]+(\.[0-9A-Za-z\-]+)*))?` +
+	`?`
 
 func buildServiceEndpoint(baseURL string) *nuget.ServiceEndpoint {
 	return &nuget.ServiceEndpoint{
@@ -127,9 +138,52 @@ func getInnerXMLField(baseURL, id, version string) string {
 		packageMetadataURL, packageMetadataURL)
 }
 
+// https://learn.microsoft.com/en-us/nuget/concepts/package-versioning#normalized-version-numbers
+// https://github.com/NuGet/NuGet.Client/blob/dccbd304b11103e08b97abf4cf4bcc1499d9235a/
+// src/NuGet.Core/NuGet.Versioning/VersionFormatter.cs#L121.
+func validateAndNormaliseVersion(v string) (string, error) {
+	matches := semverRegexp.FindStringSubmatch(v)
+	if matches == nil {
+		return "", fmt.Errorf("malformed version: %s", v)
+	}
+	segmentsStr := strings.Split(matches[1], ".")
+	if len(segmentsStr) > 4 {
+		return "", fmt.Errorf("malformed version: %s", v)
+	}
+	segments := make([]int64, len(segmentsStr))
+	for i, str := range segmentsStr {
+		val, err := strconv.ParseInt(str, 10, 64)
+		if err != nil {
+			return "", fmt.Errorf(
+				"error parsing version: %w", err)
+		}
+
+		segments[i] = val
+	}
+
+	// Even though we could support more than three segments, if we
+	// got less than three, pad it with 0s. This is to cover the basic
+	// default usecase of semver, which is MAJOR.MINOR.PATCH at the minimum
+	for i := len(segments); i < 3; i++ {
+		//nolint:makezero
+		segments = append(segments, 0)
+	}
+
+	normalizedVersion := fmt.Sprintf("%d.%d.%d", segments[0], segments[1], segments[2])
+	if len(segments) > 3 && segments[3] > 0 {
+		normalizedVersion = fmt.Sprintf("%s.%d", normalizedVersion, segments[3])
+	}
+	if len(matches) > 3 && matches[3] != "" {
+		normalizedVersion = fmt.Sprintf("%s%s", normalizedVersion, matches[3])
+	}
+	return normalizedVersion, nil
+}
+
 func createRegistrationIndexResponse(baseURL string, info nuget.ArtifactInfo, artifacts *[]types.Artifact) (
 	*nuget.RegistrationIndexResponse, error) {
-	//todo: sort in ascending order
+	sort.Slice(*artifacts, func(i, j int) bool {
+		return (*artifacts)[i].Version < (*artifacts)[j].Version
+	})
 
 	items := make([]*nuget.RegistrationIndexPageItem, 0, len(*artifacts))
 	for _, p := range *artifacts {
@@ -153,6 +207,134 @@ func createRegistrationIndexResponse(baseURL string, info nuget.ArtifactInfo, ar
 			},
 		},
 	}, nil
+}
+
+func createSearchV2Response(baseURL string, artifacts *[]types.ArtifactMetadata,
+	searchTerm string, limit int, offset int) (
+	*nuget.FeedResponse, error) {
+	links := []nuget.FeedEntryLink{
+		{Rel: "self", Href: xml.CharData(baseURL)},
+	}
+	if artifacts == nil || len(*artifacts) == 0 {
+		return &nuget.FeedResponse{
+			Xmlns:   "http://www.w3.org/2005/Atom",
+			Base:    baseURL,
+			XmlnsD:  "http://schemas.microsoft.com/ado/2007/08/dataservices",
+			XmlnsM:  "http://schemas.microsoft.com/ado/2007/08/dataservices/metadata",
+			ID:      "http://schemas.datacontract.org/2004/07/",
+			Updated: time.Now(),
+			Links:   links,
+			Count:   0,
+		}, nil
+	}
+	nextURL := ""
+	if len(*artifacts) == limit {
+		u, _ := url.Parse(baseURL)
+		u = u.JoinPath("Search()")
+		q := u.Query()
+		q.Add("$skip", strconv.Itoa(limit+offset))
+		q.Add("$top", strconv.Itoa(limit))
+		if searchTerm != "" {
+			q.Add("searchTerm", searchTerm)
+		}
+		u.RawQuery = q.Encode()
+		nextURL = u.String()
+	}
+
+	if nextURL != "" {
+		links = append(links, nuget.FeedEntryLink{
+			Rel:  "next",
+			Href: xml.CharData(nextURL),
+		})
+	}
+
+	entries := make([]*nuget.FeedEntryResponse, 0, len(*artifacts))
+	for _, p := range *artifacts {
+		feedEntry, err := createFeedEntryResponse(baseURL,
+			nuget.ArtifactInfo{ArtifactInfo: pkg.ArtifactInfo{Image: p.Name}},
+			&types.Artifact{Version: p.Version, CreatedAt: p.CreatedAt, Metadata: p.Metadata, UpdatedAt: p.ModifiedAt})
+		if err != nil {
+			return nil, fmt.Errorf("error creating feed entry: %w", err)
+		}
+		entries = append(entries, feedEntry)
+	}
+
+	return &nuget.FeedResponse{
+		Xmlns:   "http://www.w3.org/2005/Atom",
+		Base:    baseURL,
+		XmlnsD:  "http://schemas.microsoft.com/ado/2007/08/dataservices",
+		XmlnsM:  "http://schemas.microsoft.com/ado/2007/08/dataservices/metadata",
+		ID:      "http://schemas.datacontract.org/2004/07/",
+		Updated: time.Now(),
+		Links:   links,
+		Count:   int64(len(*artifacts)),
+		Entries: entries,
+	}, nil
+}
+
+func createSearchResponse(baseURL string, artifacts *[]types.ArtifactMetadata) (
+	*nuget.SearchResultResponse, error) {
+	if artifacts == nil || len(*artifacts) == 0 {
+		return &nuget.SearchResultResponse{
+			TotalHits: 0,
+		}, nil
+	}
+
+	var items []*nuget.SearchResult
+
+	currentArtifact := ""
+	for i := 0; i < len(*artifacts); i++ {
+		if currentArtifact != (*artifacts)[i].Name {
+			currentArtifact = (*artifacts)[i].Name
+			searchResultItem, err := createSearchResultItem(baseURL, artifacts, currentArtifact, i)
+			if err != nil {
+				return nil, fmt.Errorf("error creating search result page item: %w", err)
+			}
+			items = append(items, searchResultItem)
+		}
+	}
+	return &nuget.SearchResultResponse{
+		TotalHits: int64(len(items)),
+		Data:      items,
+	}, nil
+}
+
+func createSearchResultItem(baseURL string, artifacts *[]types.ArtifactMetadata,
+	currentArtifact string, key int) (
+	*nuget.SearchResult, error) {
+	var items []*nuget.SearchResultVersion
+	searchArtifact := &nuget.SearchResult{
+		ID:                   currentArtifact,
+		RegistrationIndexURL: getRegistrationIndexURL(baseURL, currentArtifact),
+		Versions:             items,
+	}
+	for i := key; i < len(*artifacts); i++ {
+		searchVersion := &nuget.SearchResultVersion{
+			Version:             (*artifacts)[i].Version,
+			RegistrationLeafURL: getRegistrationLeafURL(baseURL, (*artifacts)[i].Name, (*artifacts)[i].Version),
+		}
+		if (*artifacts)[i].Name != currentArtifact ||
+			((*artifacts)[i].Name == currentArtifact && i == len(*artifacts)-1) {
+			artifactMetadata := &nugetmetadata.NugetMetadata{}
+			j := i - 1
+			if (*artifacts)[i].Name == currentArtifact && i == len(*artifacts)-1 {
+				items = append(items, searchVersion)
+				j = i
+			}
+			err := json.Unmarshal((*artifacts)[j].Metadata, artifactMetadata)
+			if err != nil {
+				return nil, fmt.Errorf("error unmarshalling nuget metadata: %w", err)
+			}
+			searchArtifact.Description = artifactMetadata.PackageMetadata.Description
+			searchArtifact.Authors = artifactMetadata.PackageMetadata.Authors
+			searchArtifact.ProjectURL = artifactMetadata.PackageMetadata.ProjectURL
+			searchArtifact.Version = (*artifacts)[j].Version
+			searchArtifact.Versions = items
+			return searchArtifact, nil
+		}
+		items = append(items, searchVersion)
+	}
+	return searchArtifact, nil
 }
 
 func modifyContent(feed *nuget.FeedEntryResponse, packageURL, pkg, version string) error {
@@ -192,9 +374,146 @@ func replaceBaseWithURL(input, baseURL string) (string, error) {
 	return baseURL + path, nil
 }
 
-func createFeedResponse(baseURL string, info nuget.ArtifactInfo, artifacts *[]types.Artifact) (
-	*nuget.FeedResponse, error) {
-	//todo: sort in ascending order
+func getServiceMetadataV2() *nuget.ServiceMetadataV2 {
+	return &nuget.ServiceMetadataV2{
+		XmlnsEdmx: "http://schemas.microsoft.com/ado/2007/06/edmx",
+		Version:   "1.0",
+		DataServices: nuget.EdmxDataServices{
+			XmlnsM:                "http://schemas.microsoft.com/ado/2007/08/dataservices/metadata",
+			DataServiceVersion:    "2.0",
+			MaxDataServiceVersion: "2.0",
+			Schema: []nuget.EdmxSchema{
+				{
+					Xmlns:     "http://schemas.microsoft.com/ado/2006/04/edm",
+					Namespace: "NuGetGallery.OData",
+					EntityType: &nuget.EdmxEntityType{
+						Name:      "V2FeedPackage",
+						HasStream: true,
+						Keys: []nuget.EdmxPropertyRef{
+							{Name: "Id"},
+							{Name: "Version"},
+						},
+						Properties: []nuget.EdmxProperty{
+							{
+								Name: "Id",
+								Type: "Edm.String",
+							},
+							{
+								Name: "Version",
+								Type: "Edm.String",
+							},
+							{
+								Name:     "NormalizedVersion",
+								Type:     "Edm.String",
+								Nullable: true,
+							},
+							{
+								Name:     "Authors",
+								Type:     "Edm.String",
+								Nullable: true,
+							},
+							{
+								Name: "Created",
+								Type: "Edm.DateTime",
+							},
+							{
+								Name: "Dependencies",
+								Type: "Edm.String",
+							},
+							{
+								Name: "Description",
+								Type: "Edm.String",
+							},
+							{
+								Name: "DownloadCount",
+								Type: "Edm.Int64",
+							},
+							{
+								Name: "LastUpdated",
+								Type: "Edm.DateTime",
+							},
+							{
+								Name: "Published",
+								Type: "Edm.DateTime",
+							},
+							{
+								Name: "PackageSize",
+								Type: "Edm.Int64",
+							},
+							{
+								Name:     "ProjectUrl",
+								Type:     "Edm.String",
+								Nullable: true,
+							},
+							{
+								Name:     "ReleaseNotes",
+								Type:     "Edm.String",
+								Nullable: true,
+							},
+							{
+								Name:     "RequireLicenseAcceptance",
+								Type:     "Edm.Boolean",
+								Nullable: false,
+							},
+							{
+								Name:     "Title",
+								Type:     "Edm.String",
+								Nullable: true,
+							},
+							{
+								Name:     "VersionDownloadCount",
+								Type:     "Edm.Int64",
+								Nullable: false,
+							},
+						},
+					},
+				},
+				{
+					Xmlns:     "http://schemas.microsoft.com/ado/2006/04/edm",
+					Namespace: "NuGetGallery",
+					EntityContainer: &nuget.EdmxEntityContainer{
+						Name:                     "V2FeedContext",
+						IsDefaultEntityContainer: true,
+						EntitySet: nuget.EdmxEntitySet{
+							Name:       "Packages",
+							EntityType: "NuGetGallery.OData.V2FeedPackage",
+						},
+						FunctionImports: []nuget.EdmxFunctionImport{
+							{
+								Name:       "Search",
+								ReturnType: "Collection(NuGetGallery.OData.V2FeedPackage)",
+								EntitySet:  "Packages",
+								Parameter: []nuget.EdmxFunctionParameter{
+									{
+										Name: "searchTerm",
+										Type: "Edm.String",
+									},
+								},
+							},
+							{
+								Name:       "FindPackagesById",
+								ReturnType: "Collection(NuGetGallery.OData.V2FeedPackage)",
+								EntitySet:  "Packages",
+								Parameter: []nuget.EdmxFunctionParameter{
+									{
+										Name: "id",
+										Type: "Edm.String",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func createFeedResponse(baseURL string, info nuget.ArtifactInfo,
+	artifacts *[]types.Artifact) (*nuget.FeedResponse, error) {
+	sort.Slice(*artifacts, func(i, j int) bool {
+		return (*artifacts)[i].Version < (*artifacts)[j].Version
+	})
 
 	links := []nuget.FeedEntryLink{
 		{Rel: "self", Href: xml.CharData(baseURL)},
@@ -273,6 +592,9 @@ func createFeedEntryResponse(baseURL string, info nuget.ArtifactInfo, artifact *
 func buildDependencyString(metadata *nugetmetadata.NugetMetadata) string {
 	var b strings.Builder
 	first := true
+	if metadata.PackageMetadata.Dependencies == nil || metadata.PackageMetadata.Dependencies.Groups == nil {
+		return ""
+	}
 	for _, deps := range metadata.PackageMetadata.Dependencies.Groups {
 		for _, dep := range deps.Dependencies {
 			if !first {
