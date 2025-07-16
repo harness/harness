@@ -15,29 +15,35 @@
  */
 
 import React from 'react'
-import { FontVariation } from '@harnessio/design-system'
-import { HarnessDocTooltip, Page, Text } from '@harnessio/uicore'
 
 import { useParentComponents } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
+import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
 
-import css from './ManageRegistriesPage.module.scss'
+import type { LabelActionProps } from './type'
 
-function ManageRegistriesHeader() {
+export default function EditLabelActionItem(props: LabelActionProps): JSX.Element {
+  const { data, readonly } = props
   const { getString } = useStrings()
-  const { NGBreadcrumbs } = useParentComponents()
+  const { RbacMenuItem } = useParentComponents()
+
+  const handleEditService = (): void => {
+    // TODO: implement edit label flow
+  }
+
   return (
-    <Page.Header
-      className={css.pageHeader}
-      title={
-        <div className="ng-tooltip-native">
-          <Text font={{ variation: FontVariation.H4 }}>{getString('manageRegistries.pageHeading')}</Text>
-          <HarnessDocTooltip tooltipId="manageRegistriesPageHeading" useStandAlone={true} />
-        </div>
-      }
-      breadcrumbs={<NGBreadcrumbs links={[]} />}
+    <RbacMenuItem
+      icon="code-edit"
+      text={getString('labelsList.table.actions.edit')}
+      onClick={handleEditService}
+      disabled={readonly}
+      permission={{
+        resource: {
+          resourceType: ResourceType.ARTIFACT_REGISTRY,
+          resourceIdentifier: data.key
+        },
+        permission: PermissionIdentifier.EDIT_ARTIFACT_REGISTRY
+      }}
     />
   )
 }
-
-export default ManageRegistriesHeader

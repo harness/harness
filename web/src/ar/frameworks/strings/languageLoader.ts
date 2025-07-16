@@ -31,12 +31,14 @@ import webhookList from '@ar/pages/webhook-list/strings/strings.en.yaml'
 import webhookDetails from '@ar/pages/webhook-details/strings/strings.en.yaml'
 import webhookExecutionList from '@ar/pages/webhook-execution-list/strings/strings.en.yaml'
 import manageRegistries from '@ar/pages/manage-registries/strings/strings.en.yaml'
+import labelsList from '@ar/pages/labels-list/strings/strings.en.yaml'
 
 export default function languageLoader() {
   return {
     artifactDetails,
     artifactList,
     manageRegistries,
+    labelsList,
     digestList,
     repositoryDetails,
     repositoryList,

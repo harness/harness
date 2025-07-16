@@ -19,6 +19,7 @@ import { Text } from '@harnessio/uicore'
 
 import { useDecodedParams } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
+import LabelsListPage from '@ar/pages/labels-list/LabelsListPage'
 import type { ManageRegistriesTabPathParams } from '@ar/routes/types'
 
 import { ManageRegistriesDetailsTab } from './constants'
@@ -28,8 +29,7 @@ function ManageRegistriesTabs() {
   const { tab } = useDecodedParams<ManageRegistriesTabPathParams>()
   switch (tab) {
     case ManageRegistriesDetailsTab.LABELS:
-      // TODO: Add labels tab
-      return <>Labels</>
+      return <LabelsListPage />
     case ManageRegistriesDetailsTab.CLEANUP_POLICIES:
       // TODO: Add cleanup policies tab
       return <>Cleanup Policies</>

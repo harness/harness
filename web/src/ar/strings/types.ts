@@ -55,6 +55,16 @@ export interface StringsMap {
   'digestList.table.columns.size': string
   'digestList.table.columns.uploadedBy': string
   'digestList.table.noDigestTitle': string
+  'labelsList.deleteLabelModal.contentText': string
+  'labelsList.deleteLabelModal.labelDeleted': string
+  'labelsList.deleteLabelModal.title': string
+  'labelsList.table.actions.delete': string
+  'labelsList.table.actions.edit': string
+  'labelsList.table.columns.associations': string
+  'labelsList.table.columns.description': string
+  'labelsList.table.columns.name': string
+  'labelsList.table.columns.scope': string
+  'labelsList.table.noData': string
   'manageRegistries.comingSoon': string
   'manageRegistries.pageHeading': string
   'manageRegistries.tabs.cleanup_policies': string

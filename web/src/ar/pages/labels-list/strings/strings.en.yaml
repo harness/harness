@@ -1,0 +1,14 @@
+table:
+  noData: There are no labels available.
+  columns:
+    name: Name
+    scope: Created In
+    description: Description
+    associations: Associations
+  actions:
+    delete: Delete
+    edit: Edit
+deleteLabelModal:
+  title: Delete Label
+  contentText: Are you sure you want to delete the label?
+  labelDeleted: Label deleted successfully!
