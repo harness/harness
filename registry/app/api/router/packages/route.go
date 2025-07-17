@@ -21,6 +21,7 @@ import (
 	middlewareauthn "github.com/harness/gitness/app/api/middleware/authn"
 	"github.com/harness/gitness/registry/app/api/handler/cargo"
 	"github.com/harness/gitness/registry/app/api/handler/generic"
+	"github.com/harness/gitness/registry/app/api/handler/gopackage"
 	"github.com/harness/gitness/registry/app/api/handler/maven"
 	"github.com/harness/gitness/registry/app/api/handler/npm"
 	"github.com/harness/gitness/registry/app/api/handler/nuget"
@@ -52,6 +53,7 @@ func NewRouter(
 	npmHandler npm.Handler,
 	rpmHandler rpm.Handler,
 	cargoHandler cargo.Handler,
+	gopackageHandler gopackage.Handler,
 ) Handler {
 	r := chi.NewRouter()
 
@@ -303,6 +305,18 @@ func NewRouter(
 			r.With(middleware.StoreArtifactInfo(cargoHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
 				Put("/api/v1/crates/{name}/{version}/unyank", cargoHandler.UnYankVersion)
+		})
+		// GO Package uses Basic Authorization
+		r.Route("/go", func(r chi.Router) {
+			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
+			r.Use(middleware.CheckAuth())
+			r.With(middleware.StoreArtifactInfo(gopackageHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
+				Put("/upload", gopackageHandler.UploadPackage)
+			r.With(middleware.StoreArtifactInfo(gopackageHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Get("/*", gopackageHandler.DownloadPackageFile)
+			// TODO: Add api for regenerate package index and download latest package info file
 		})
 	})
 

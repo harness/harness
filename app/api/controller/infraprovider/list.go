@@ -19,10 +19,9 @@ import (
 	"fmt"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
-	"github.com/harness/gitness/types/enum"
-
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 func (c *Controller) List(

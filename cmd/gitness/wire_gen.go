@@ -130,6 +130,7 @@ import (
 	"github.com/harness/gitness/pubsub"
 	api2 "github.com/harness/gitness/registry/app/api"
 	cargo3 "github.com/harness/gitness/registry/app/api/controller/pkg/cargo"
+	gopackage2 "github.com/harness/gitness/registry/app/api/controller/pkg/gopackage"
 	npm2 "github.com/harness/gitness/registry/app/api/controller/pkg/npm"
 	nuget2 "github.com/harness/gitness/registry/app/api/controller/pkg/nuget"
 	python2 "github.com/harness/gitness/registry/app/api/controller/pkg/python"
@@ -143,6 +144,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/docker"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/generic"
+	"github.com/harness/gitness/registry/app/pkg/gopackage"
 	"github.com/harness/gitness/registry/app/pkg/maven"
 	"github.com/harness/gitness/registry/app/pkg/npm"
 	"github.com/harness/gitness/registry/app/pkg/nuget"
@@ -594,7 +596,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	cargoProxy := cargo2.ProxyProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, spaceFinder, secretService, cargoLocalRegistryHelper, artifactReporter)
 	cargoController := cargo3.ControllerProvider(upstreamProxyConfigRepository, registryRepository, registryFinder, imageRepository, artifactRepository, fileManager, transactor, provider, cargoLocalRegistry, cargoProxy)
 	cargoHandler := api2.NewCargoHandlerProvider(cargoController, packagesHandler)
-	handler4 := router.PackageHandlerProvider(packagesHandler, mavenHandler, genericHandler, pythonHandler, nugetHandler, npmHandler, rpmHandler, cargoHandler)
+	gopackageLocalRegistry := gopackage.LocalRegistryProvider(localBase, fileManager, upstreamProxyConfigRepository, transactor, registryRepository, imageRepository, artifactRepository, provider, artifactReporter, asyncprocessingReporter)
+	gopackageProxy := gopackage.ProxyProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, spaceFinder, secretService, artifactReporter)
+	gopackageController := gopackage2.ControllerProvider(upstreamProxyConfigRepository, registryRepository, registryFinder, imageRepository, artifactRepository, fileManager, transactor, provider, gopackageLocalRegistry, gopackageProxy)
+	gopackageHandler := api2.NewGoPackageHandlerProvider(gopackageController, packagesHandler)
+	handler4 := router.PackageHandlerProvider(packagesHandler, mavenHandler, genericHandler, pythonHandler, nugetHandler, npmHandler, rpmHandler, cargoHandler, gopackageHandler)
 	appRouter := router.AppRouterProvider(registryOCIHandler, apiHandler, handler2, handler3, handler4)
 	readerFactory3, err := events3.ProvideReaderFactory(eventsSystem)
 	if err != nil {

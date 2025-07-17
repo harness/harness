@@ -120,6 +120,7 @@ var validPackageTypes = []string{
 	string(a.PackageTypeRPM),
 	string(a.PackageTypeNUGET),
 	string(a.PackageTypeCARGO),
+	string(a.PackageTypeGO),
 }
 
 var validUpstreamSources = []string{
@@ -131,6 +132,7 @@ var validUpstreamSources = []string{
 	string(a.UpstreamConfigSourceNpmJs),
 	string(a.UpstreamConfigSourceNugetOrg),
 	string(a.UpstreamConfigSourceCrates),
+	string(a.UpstreamConfigSourceGoProxy),
 }
 
 func ValidatePackageTypes(packageTypes []string) error {

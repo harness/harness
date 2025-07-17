@@ -769,7 +769,7 @@ paths:
     get:
       summary: Get Artifact file
       description: just validate existence of Artifact file
-      operationId:  GetArtifactFile
+      operationId: GetArtifactFile
       tags:
         - Artifacts
       parameters:
@@ -2290,6 +2290,7 @@ components:
           RPM: "#/components/schemas/RpmArtifactDetailConfig"
           NUGET: "#/components/schemas/NugetArtifactDetailConfig"
           CARGO: "#/components/schemas/CargoArtifactDetailConfig"
+          GO: "#/components/schemas/GoArtifactDetailConfig"
       oneOf:
         - $ref: "#/components/schemas/DockerArtifactDetailConfig"
         - $ref: "#/components/schemas/HelmArtifactDetailConfig"
@@ -2300,6 +2301,7 @@ components:
         - $ref: "#/components/schemas/RpmArtifactDetailConfig"
         - $ref: "#/components/schemas/NugetArtifactDetailConfig"
         - $ref: "#/components/schemas/CargoArtifactDetailConfig"
+        - $ref: "#/components/schemas/GoArtifactDetailConfig"
       required:
         - imageName
         - version
@@ -2357,6 +2359,13 @@ components:
     CargoArtifactDetailConfig:
       type: object
       description: Config for Cargo artifact details
+      properties:
+        metadata:
+          type: object
+          additionalProperties: true
+    GoArtifactDetailConfig:
+      type: object
+      description: Config for Go artifact details
       properties:
         metadata:
           type: object
@@ -2713,6 +2722,7 @@ components:
             - NpmJs
             - NugetOrg
             - Crates
+            - GoProxy
       x-discriminator-value: UPSTREAM
       required:
         - authType
@@ -2777,6 +2787,7 @@ components:
         - NPM
         - RPM
         - CARGO
+        - GO
     SectionType:
       type: string
       description: refers to client setup section type

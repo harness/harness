@@ -29,6 +29,7 @@ const (
 	PackageTypeCARGO   PackageType = "CARGO"
 	PackageTypeDOCKER  PackageType = "DOCKER"
 	PackageTypeGENERIC PackageType = "GENERIC"
+	PackageTypeGO      PackageType = "GO"
 	PackageTypeHELM    PackageType = "HELM"
 	PackageTypeMAVEN   PackageType = "MAVEN"
 	PackageTypeNPM     PackageType = "NPM"
@@ -96,6 +97,7 @@ const (
 	UpstreamConfigSourceCrates       UpstreamConfigSource = "Crates"
 	UpstreamConfigSourceCustom       UpstreamConfigSource = "Custom"
 	UpstreamConfigSourceDockerhub    UpstreamConfigSource = "Dockerhub"
+	UpstreamConfigSourceGoProxy      UpstreamConfigSource = "GoProxy"
 	UpstreamConfigSourceMavenCentral UpstreamConfigSource = "MavenCentral"
 	UpstreamConfigSourceNpmJs        UpstreamConfigSource = "NpmJs"
 	UpstreamConfigSourceNugetOrg     UpstreamConfigSource = "NugetOrg"
@@ -356,6 +358,11 @@ type FileDetail struct {
 // GenericArtifactDetailConfig Config for generic artifact details
 type GenericArtifactDetailConfig struct {
 	Description *string `json:"description,omitempty"`
+}
+
+// GoArtifactDetailConfig Config for Go artifact details
+type GoArtifactDetailConfig struct {
+	Metadata *map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // HelmArtifactDetail Helm Artifact Detail
@@ -1732,6 +1739,36 @@ func (t *ArtifactDetail) MergeCargoArtifactDetailConfig(v CargoArtifactDetailCon
 	return err
 }
 
+// AsGoArtifactDetailConfig returns the union data inside the ArtifactDetail as a GoArtifactDetailConfig
+func (t ArtifactDetail) AsGoArtifactDetailConfig() (GoArtifactDetailConfig, error) {
+	var body GoArtifactDetailConfig
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromGoArtifactDetailConfig overwrites any union data inside the ArtifactDetail as the provided GoArtifactDetailConfig
+func (t *ArtifactDetail) FromGoArtifactDetailConfig(v GoArtifactDetailConfig) error {
+	t.PackageType = "GO"
+
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeGoArtifactDetailConfig performs a merge with any union data inside the ArtifactDetail, using the provided GoArtifactDetailConfig
+func (t *ArtifactDetail) MergeGoArtifactDetailConfig(v GoArtifactDetailConfig) error {
+	t.PackageType = "GO"
+
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
 func (t ArtifactDetail) Discriminator() (string, error) {
 	var discriminator struct {
 		Discriminator string `json:"packageType"`
@@ -1752,6 +1789,8 @@ func (t ArtifactDetail) ValueByDiscriminator() (interface{}, error) {
 		return t.AsDockerArtifactDetailConfig()
 	case "GENERIC":
 		return t.AsGenericArtifactDetailConfig()
+	case "GO":
+		return t.AsGoArtifactDetailConfig()
 	case "HELM":
 		return t.AsHelmArtifactDetailConfig()
 	case "MAVEN":
