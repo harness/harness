@@ -16,6 +16,7 @@ package gopackage
 
 import (
 	"context"
+	"io"
 
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
@@ -27,7 +28,10 @@ import (
 )
 
 type Controller interface {
-	UploadPackage(ctx context.Context, info *gopackagetype.ArtifactInfo) *BaseResponse
+	UploadPackage(
+		ctx context.Context, info *gopackagetype.ArtifactInfo,
+		mod io.ReadCloser, zip io.ReadCloser,
+	) *UploadFileResponse
 	DownloadPackageFile(
 		ctx context.Context,
 		info *gopackagetype.ArtifactInfo,

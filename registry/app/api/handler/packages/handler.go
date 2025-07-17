@@ -110,6 +110,7 @@ const (
 	PathPackageTypeNpm     PathPackageType = "npm"
 	PathPackageTypeRPM     PathPackageType = "rpm"
 	PathPackageTypeCargo   PathPackageType = "cargo"
+	PathPackageTypeGo      PathPackageType = "go"
 )
 
 var packageTypeMap = map[PathPackageType]artifact2.PackageType{
@@ -120,6 +121,7 @@ var packageTypeMap = map[PathPackageType]artifact2.PackageType{
 	PathPackageTypeNpm:     artifact2.PackageTypeNPM,
 	PathPackageTypeRPM:     artifact2.PackageTypeRPM,
 	PathPackageTypeCargo:   artifact2.PackageTypeCARGO,
+	PathPackageTypeGo:      artifact2.PackageTypeGO,
 }
 
 func (h *handler) GetAuthenticator() authn.Authenticator {

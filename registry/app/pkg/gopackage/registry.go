@@ -29,6 +29,7 @@ type Registry interface {
 	// Upload package to registry using harness CLI
 	UploadPackage(
 		ctx context.Context, info gopackagetype.ArtifactInfo,
+		mod io.ReadCloser, zip io.ReadCloser,
 	) (responseHeaders *commons.ResponseHeaders, err error)
 	// download package file
 	DownloadPackageFile(

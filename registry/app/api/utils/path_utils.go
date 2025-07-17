@@ -57,6 +57,14 @@ func GetCargoFilePath(imageName string, version string) string {
 	return filePathPrefix
 }
 
+func GetGoFilePath(imageName string, version string) string {
+	filePathPrefix := "/" + imageName + "/@v"
+	if version != "" {
+		filePathPrefix += "/" + version
+	}
+	return filePathPrefix
+}
+
 func GetFilePath(
 	packageType artifact.PackageType,
 	imageName string, version string,
@@ -80,6 +88,8 @@ func GetFilePath(
 		return GetRpmFilePath(imageName, version), nil
 	case artifact.PackageTypeCARGO:
 		return GetCargoFilePath(imageName, version), nil
+	case artifact.PackageTypeGO:
+		return GetGoFilePath(imageName, version), nil
 	default:
 		return "", fmt.Errorf("unsupported package type: %s", packageType)
 	}

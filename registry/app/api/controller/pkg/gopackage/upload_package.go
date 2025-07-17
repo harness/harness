@@ -17,9 +17,12 @@ package gopackage
 import (
 	"context"
 	"fmt"
+	"io"
+	"net/http"
 
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/base"
+	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/gopackage"
 	"github.com/harness/gitness/registry/app/pkg/response"
 	gopackagetype "github.com/harness/gitness/registry/app/pkg/types/gopackage"
@@ -28,39 +31,55 @@ import (
 
 func (c *controller) UploadPackage(
 	ctx context.Context, info *gopackagetype.ArtifactInfo,
-) *BaseResponse {
+	mod io.ReadCloser, zip io.ReadCloser,
+) *UploadFileResponse {
 	f := func(registry registrytypes.Registry, a pkg.Artifact) response.Response {
 		info.RegIdentifier = registry.Name
 		info.RegistryID = registry.ID
 		gopackageRegistry, ok := a.(gopackage.Registry)
 		if !ok {
-			return &BaseResponse{
-				Error:           fmt.Errorf("invalid registry type: expected gopackage.Registry"),
-				ResponseHeaders: nil,
-			}
+			return c.getUploadPackageFileErrorResponse(
+				fmt.Errorf("invalid registry type: expected gopackage.Registry"),
+				nil,
+			)
 		}
-		headers, err := gopackageRegistry.UploadPackage(ctx, *info)
-		return &BaseResponse{
-			Error:           err,
-			ResponseHeaders: headers,
-		}
+		headers, err := gopackageRegistry.UploadPackage(ctx, *info, mod, zip)
+		return c.getUploadPackageFileErrorResponse(
+			err,
+			headers,
+		)
 	}
 
 	result, err := base.NoProxyWrapper(ctx, c.registryDao, f, info)
 
 	if err != nil {
-		return &BaseResponse{
-			Error:           err,
-			ResponseHeaders: nil,
-		}
+		return c.getUploadPackageFileErrorResponse(
+			err,
+			nil,
+		)
 	}
 
-	putResponse, ok := result.(*BaseResponse)
+	putResponse, ok := result.(*UploadFileResponse)
 	if !ok {
-		return &BaseResponse{
-			Error:           fmt.Errorf("invalid response type: expected BaseResponse"),
-			ResponseHeaders: nil,
-		}
+		return c.getUploadPackageFileErrorResponse(
+			fmt.Errorf("invalid response type: expected BaseResponse"),
+			nil,
+		)
 	}
+	putResponse.ResponseHeaders.Code = http.StatusOK
+	putResponse.Status = "success"
+	putResponse.Image = info.Image
+	putResponse.Version = info.Version
 	return putResponse
+}
+
+func (c *controller) getUploadPackageFileErrorResponse(
+	err error, headers *commons.ResponseHeaders,
+) *UploadFileResponse {
+	return &UploadFileResponse{
+		BaseResponse: BaseResponse{
+			err,
+			headers,
+		},
+	}
 }

@@ -39,3 +39,10 @@ type DownloadFileResponse struct {
 	Body        *storage.FileReader
 	ReadCloser  io.ReadCloser
 }
+
+type UploadFileResponse struct {
+	BaseResponse `json:"-"`
+	Status       string `json:"status,omitempty"`
+	Image        string `json:"image,omitempty"`
+	Version      string `json:"version,omitempty"`
+}

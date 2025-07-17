@@ -15,15 +15,21 @@
 package gopackage
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
+	"strings"
 
+	"github.com/harness/gitness/app/api/request"
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/registry/app/api/utils"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	registryevents "github.com/harness/gitness/registry/app/events/artifact"
 	"github.com/harness/gitness/registry/app/events/asyncprocessing"
+	gopackagemetadata "github.com/harness/gitness/registry/app/metadata/gopackage"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/base"
 	"github.com/harness/gitness/registry/app/pkg/commons"
@@ -31,6 +37,7 @@ import (
 	gopackagetype "github.com/harness/gitness/registry/app/pkg/types/gopackage"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
+	"github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/rs/zerolog/log"
@@ -91,10 +98,100 @@ func (c *localRegistry) GetPackageTypes() []artifact.PackageType {
 }
 
 func (c *localRegistry) UploadPackage(
-	ctx context.Context, _ gopackagetype.ArtifactInfo,
+	ctx context.Context, info gopackagetype.ArtifactInfo,
+	modfile io.ReadCloser, zipfile io.ReadCloser,
 ) (*commons.ResponseHeaders, error) {
-	log.Error().Ctx(ctx).Msg("Not implemented")
-	return nil, errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
+	// Check if version exists
+	checkIfVersionExists, err := c.localBase.CheckIfVersionExists(ctx, info)
+	if err != nil && !strings.Contains(err.Error(), "resource not found") {
+		return nil, fmt.Errorf("failed to check if version exists: %w", err)
+	}
+	if checkIfVersionExists {
+		return nil, fmt.Errorf("version %s already exists", info.Version)
+	}
+
+	// Get file path
+	filePath, err := utils.GetFilePath(artifact.PackageTypeGO, info.Image, info.Version)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get file path: %w", err)
+	}
+	// upload .info
+	infoFilePath := filePath + ".info"
+	infoFileName := info.Version + ".info"
+	infoFile, err := metadataToReadCloser(info.Metadata)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert metadata to io.ReadCloser: %w", err)
+	}
+	response, err := c.uploadFile(ctx, info, &info.Metadata, infoFile, infoFileName, infoFilePath)
+	if err != nil {
+		return response, fmt.Errorf("failed to upload info file: %w", err)
+	}
+	// upload .mod
+	modFilePath := filePath + ".mod"
+	modFileName := info.Version + ".mod"
+	response, err = c.uploadFile(ctx, info, &info.Metadata, modfile, modFileName, modFilePath)
+	if err != nil {
+		return response, fmt.Errorf("failed to upload mod file: %w", err)
+	}
+	// upload .zip
+	zipFilePath := filePath + ".zip"
+	zipFileName := info.Version + ".zip"
+
+	response, err = c.uploadFile(ctx, info, &info.Metadata, zipfile, zipFileName, zipFilePath)
+	if err != nil {
+		return response, fmt.Errorf("failed to upload zip file: %w", err)
+	}
+	// publish artifact created event
+	c.publishArtifactCreatedEvent(ctx, info)
+
+	// regenerate package index for cargo client to consume
+	c.regeneratePackageIndex(ctx, info)
+	return response, nil
+}
+
+func metadataToReadCloser(meta gopackagemetadata.VersionMetadata) (io.ReadCloser, error) {
+	b, err := json.Marshal(meta)
+	if err != nil {
+		return nil, err
+	}
+	return io.NopCloser(bytes.NewReader(b)), nil
+}
+
+func (c *localRegistry) uploadFile(
+	ctx context.Context, info gopackagetype.ArtifactInfo,
+	metadata *gopackagemetadata.VersionMetadata, fileReader io.ReadCloser,
+	filename string, path string,
+) (responseHeaders *commons.ResponseHeaders, err error) {
+	response, _, err := c.localBase.Upload(
+		ctx, info.ArtifactInfo, filename, info.Version, path, fileReader,
+		&gopackagemetadata.VersionMetadataDB{
+			VersionMetadata: *metadata,
+		})
+	if err != nil {
+		return response, fmt.Errorf("failed to upload file %s: %w", filename, err)
+	}
+
+	return response, nil
+}
+
+func (c *localRegistry) publishArtifactCreatedEvent(
+	ctx context.Context, info gopackagetype.ArtifactInfo,
+) {
+	session, _ := request.AuthSessionFrom(ctx)
+	payload := webhook.GetArtifactCreatedPayloadForCommonArtifacts(
+		session.Principal.ID,
+		info.RegistryID,
+		artifact.PackageTypeGO,
+		info.Image,
+		info.Version,
+	)
+	c.artifactEventReporter.ArtifactCreated(ctx, &payload)
+}
+
+func (c *localRegistry) regeneratePackageIndex(
+	ctx context.Context, info gopackagetype.ArtifactInfo,
+) {
+	c.postProcessingReporter.BuildPackageIndex(ctx, info.RegistryID, info.Image)
 }
 
 func (c *localRegistry) DownloadPackageFile(

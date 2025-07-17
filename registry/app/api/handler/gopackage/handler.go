@@ -15,6 +15,10 @@
 package gopackage
 
 import (
+	"bytes"
+	"fmt"
+	"io"
+	"mime/multipart"
 	"net/http"
 
 	"github.com/harness/gitness/registry/app/api/controller/pkg/gopackage"
@@ -60,4 +64,61 @@ func (h *handler) GetPackageArtifactInfo(r *http.Request) (pkg.PackageArtifactIn
 
 func (h *handler) handleGoPackageAPIError(writer http.ResponseWriter, request *http.Request, err error) {
 	h.HandleErrors(request.Context(), []error{err}, writer)
+}
+
+func (h *handler) parseDataFromPayload(r *http.Request) (*bytes.Buffer, *bytes.Buffer, io.ReadCloser, error) {
+	var (
+		infoBytes = &bytes.Buffer{}
+		modBytes  = &bytes.Buffer{}
+		zipRC     *multipart.Part
+	)
+
+	reader, err := r.MultipartReader()
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("error reading multipart: %w", err)
+	}
+
+	for {
+		if infoBytes.Len() > 0 && modBytes.Len() > 0 && zipRC != nil {
+			break
+		}
+		part, err := reader.NextPart()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, nil, nil, fmt.Errorf("error reading multipart: %w", err)
+		}
+
+		switch part.FormName() {
+		case "info":
+			if _, err := io.Copy(infoBytes, part); err != nil {
+				return nil, nil, nil, fmt.Errorf("error reading 'info': %w", err)
+			}
+			part.Close()
+		case "mod":
+			if _, err := io.Copy(modBytes, part); err != nil {
+				return nil, nil, nil, fmt.Errorf("error reading 'mod': %w", err)
+			}
+			part.Close()
+		case "zip":
+			zipRC = part
+		default:
+			part.Close()
+		}
+	}
+
+	if infoBytes.Len() == 0 {
+		return nil, nil, nil, fmt.Errorf("'info' part not found")
+	}
+
+	if modBytes.Len() == 0 {
+		return nil, nil, nil, fmt.Errorf("'mod' part not found")
+	}
+
+	if zipRC == nil {
+		return nil, nil, nil, fmt.Errorf("'zip' part not found")
+	}
+
+	return infoBytes, modBytes, zipRC, nil
 }

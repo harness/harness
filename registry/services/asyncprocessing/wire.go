@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/app/utils/cargo"
+	"github.com/harness/gitness/registry/app/utils/gopackage"
 	"github.com/harness/gitness/secret"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -43,6 +44,7 @@ func ProvideService(
 	tx dbtx.Transactor,
 	rpmRegistryHelper RpmHelper,
 	cargoRegistryHelper cargo.RegistryHelper,
+	gopackageRegistryHelper gopackage.RegistryHelper,
 	locker *locker.Locker,
 	artifactsReaderFactory *events.ReaderFactory[*asyncprocessing.Reader],
 	config Config,
@@ -58,6 +60,7 @@ func ProvideService(
 		tx,
 		rpmRegistryHelper,
 		cargoRegistryHelper,
+		gopackageRegistryHelper,
 		locker,
 		artifactsReaderFactory,
 		config,

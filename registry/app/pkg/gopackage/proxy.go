@@ -92,6 +92,7 @@ func (r *proxy) GetPackageTypes() []artifact.PackageType {
 
 func (r *proxy) UploadPackage(
 	ctx context.Context, _ gopackagetype.ArtifactInfo,
+	_ io.ReadCloser, _ io.ReadCloser,
 ) (*commons.ResponseHeaders, error) {
 	log.Error().Ctx(ctx).Msg("Not implemented")
 	return nil, errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))

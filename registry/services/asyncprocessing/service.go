@@ -28,6 +28,7 @@ import (
 	"github.com/harness/gitness/registry/app/events/asyncprocessing"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/app/utils/cargo"
+	"github.com/harness/gitness/registry/app/utils/gopackage"
 	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/stream"
@@ -41,16 +42,17 @@ const (
 )
 
 type Service struct {
-	tx                     dbtx.Transactor
-	rpmRegistryHelper      RpmHelper
-	cargoRegistryHelper    cargo.RegistryHelper
-	locker                 *locker.Locker
-	registryDao            store.RegistryRepository
-	taskRepository         store.TaskRepository
-	taskSourceRepository   store.TaskSourceRepository
-	taskEventRepository    store.TaskEventRepository
-	innerReporter          *events.GenericReporter
-	postProcessingReporter *asyncprocessing.Reporter
+	tx                      dbtx.Transactor
+	rpmRegistryHelper       RpmHelper
+	cargoRegistryHelper     cargo.RegistryHelper
+	gopackageRegistryHelper gopackage.RegistryHelper
+	locker                  *locker.Locker
+	registryDao             store.RegistryRepository
+	taskRepository          store.TaskRepository
+	taskSourceRepository    store.TaskSourceRepository
+	taskEventRepository     store.TaskEventRepository
+	innerReporter           *events.GenericReporter
+	postProcessingReporter  *asyncprocessing.Reporter
 }
 
 func NewService(
@@ -58,6 +60,7 @@ func NewService(
 	tx dbtx.Transactor,
 	rpmRegistryHelper RpmHelper,
 	cargoRegistryHelper cargo.RegistryHelper,
+	gopackageRegistryHelper gopackage.RegistryHelper,
 	locker *locker.Locker,
 	artifactsReaderFactory *events.ReaderFactory[*asyncprocessing.Reader],
 	config Config,
@@ -76,16 +79,17 @@ func NewService(
 		return nil, errors.New("failed to create new GenericReporter for registry async processing from event system")
 	}
 	s := &Service{
-		rpmRegistryHelper:      rpmRegistryHelper,
-		cargoRegistryHelper:    cargoRegistryHelper,
-		locker:                 locker,
-		tx:                     tx,
-		registryDao:            registryDao,
-		taskRepository:         taskRepository,
-		taskSourceRepository:   taskSourceRepository,
-		taskEventRepository:    taskEventRepository,
-		innerReporter:          innerReporter,
-		postProcessingReporter: postProcessingReporter,
+		rpmRegistryHelper:       rpmRegistryHelper,
+		cargoRegistryHelper:     cargoRegistryHelper,
+		gopackageRegistryHelper: gopackageRegistryHelper,
+		locker:                  locker,
+		tx:                      tx,
+		registryDao:             registryDao,
+		taskRepository:          taskRepository,
+		taskSourceRepository:    taskSourceRepository,
+		taskEventRepository:     taskEventRepository,
+		innerReporter:           innerReporter,
+		postProcessingReporter:  postProcessingReporter,
 	}
 	_, err = artifactsReaderFactory.Launch(ctx, eventsReaderGroupName, config.EventReaderName,
 		func(r *asyncprocessing.Reader) error {
@@ -227,6 +231,14 @@ func (s *Service) handleEventExecuteAsyncTask(
 			)
 			if err != nil {
 				processingErr = fmt.Errorf("failed to build CARGO package index for registry [%d] package [%s]: %w",
+					payload.RegistryID, payload.Image, err)
+			}
+		case artifact.PackageTypeGO:
+			err := s.gopackageRegistryHelper.UpdatePackageIndex(
+				ctx, payload.PrincipalID, registry.RootParentID, registry.ID, payload.Image,
+			)
+			if err != nil {
+				processingErr = fmt.Errorf("failed to build GO package index for registry [%d] package [%s]: %w",
 					payload.RegistryID, payload.Image, err)
 			}
 		default:

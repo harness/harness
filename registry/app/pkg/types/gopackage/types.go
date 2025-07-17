@@ -14,12 +14,16 @@
 
 package gopackage
 
-import "github.com/harness/gitness/registry/app/pkg"
+import (
+	"github.com/harness/gitness/registry/app/metadata/gopackage"
+	"github.com/harness/gitness/registry/app/pkg"
+)
 
 type ArtifactInfo struct {
 	pkg.ArtifactInfo
 	Version  string
 	FileName string
+	Metadata gopackage.VersionMetadata
 }
 
 func (a ArtifactInfo) GetVersion() string {

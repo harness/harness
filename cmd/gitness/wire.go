@@ -141,6 +141,7 @@ import (
 	registrypostporcessingevents "github.com/harness/gitness/registry/app/events/asyncprocessing"
 	"github.com/harness/gitness/registry/app/pkg/docker"
 	cargoutils "github.com/harness/gitness/registry/app/utils/cargo"
+	gopackageutils "github.com/harness/gitness/registry/app/utils/gopackage"
 	registryindex "github.com/harness/gitness/registry/services/asyncprocessing"
 	registrywebhooks "github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/ssh"
@@ -304,6 +305,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		cliserver.ProvideBranchConfig,
 		branch.WireSet,
 		cargoutils.WireSet,
+		gopackageutils.WireSet,
 		registrypostporcessingevents.ProvideAsyncProcessingReporter,
 		registrypostporcessingevents.ProvideReaderFactory,
 		checkevents.WireSet,

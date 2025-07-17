@@ -154,6 +154,7 @@ import (
 	cache2 "github.com/harness/gitness/registry/app/store/cache"
 	database2 "github.com/harness/gitness/registry/app/store/database"
 	"github.com/harness/gitness/registry/app/utils/cargo"
+	gopackage3 "github.com/harness/gitness/registry/app/utils/gopackage"
 	"github.com/harness/gitness/registry/gc"
 	asyncprocessing2 "github.com/harness/gitness/registry/services/asyncprocessing"
 	webhook3 "github.com/harness/gitness/registry/services/webhook"
@@ -721,12 +722,13 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	rpmHelper := asyncprocessing2.ProvideRpmHelper(fileManager, artifactRepository, upstreamProxyConfigRepository, spaceFinder, secretService, registryRepository)
+	gopackageRegistryHelper := gopackage3.LocalRegistryHelperProvider(fileManager, artifactRepository, spaceFinder)
 	readerFactory10, err := asyncprocessing.ProvideReaderFactory(eventsSystem)
 	if err != nil {
 		return nil, err
 	}
 	asyncprocessingConfig := asyncprocessing2.ProvideRegistryPostProcessingConfig(config)
-	asyncprocessingService, err := asyncprocessing2.ProvideService(ctx, transactor, rpmHelper, registryHelper, lockerLocker, readerFactory10, asyncprocessingConfig, registryRepository, taskRepository, taskSourceRepository, taskEventRepository, eventsSystem, asyncprocessingReporter)
+	asyncprocessingService, err := asyncprocessing2.ProvideService(ctx, transactor, rpmHelper, registryHelper, gopackageRegistryHelper, lockerLocker, readerFactory10, asyncprocessingConfig, registryRepository, taskRepository, taskSourceRepository, taskEventRepository, eventsSystem, asyncprocessingReporter)
 	if err != nil {
 		return nil, err
 	}
