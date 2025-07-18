@@ -45,7 +45,13 @@ func HandleDeleteCommitTag(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		violations, err := repoCtrl.DeleteTag(ctx, session, repoRef, tagName, bypassRules)
+		dryRunRules, err := request.ParseDryRunRulesFromQuery(r)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+
+		out, violations, err := repoCtrl.DeleteCommitTag(ctx, session, repoRef, tagName, bypassRules, dryRunRules)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
@@ -55,6 +61,6 @@ func HandleDeleteCommitTag(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		render.DeleteSuccessful(w)
+		render.JSON(w, http.StatusOK, out)
 	}
 }

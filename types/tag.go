@@ -18,3 +18,7 @@ type CreateCommitTagOutput struct {
 	CommitTag
 	DryRunRulesOutput
 }
+
+type DeleteCommitTagOutput struct {
+	DryRunRulesOutput
+}

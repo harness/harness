@@ -26,21 +26,22 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-// DeleteTag deletes a tag from the repo.
-func (c *Controller) DeleteTag(ctx context.Context,
+// DeleteCommitTag deletes a tag from the repo.
+func (c *Controller) DeleteCommitTag(ctx context.Context,
 	session *auth.Session,
 	repoRef,
 	tagName string,
 	bypassRules bool,
-) ([]types.RuleViolations, error) {
+	dryRunRules bool,
+) (types.DeleteCommitTagOutput, []types.RuleViolations, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush)
 	if err != nil {
-		return nil, err
+		return types.DeleteCommitTagOutput{}, nil, err
 	}
 
 	rules, isRepoOwner, err := c.fetchTagRules(ctx, session, repo)
 	if err != nil {
-		return nil, err
+		return types.DeleteCommitTagOutput{}, nil, err
 	}
 
 	violations, err := rules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
@@ -54,15 +55,25 @@ func (c *Controller) DeleteTag(ctx context.Context,
 		RefNames:           []string{tagName},
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to verify protection rules: %w", err)
+		return types.DeleteCommitTagOutput{}, nil, fmt.Errorf("failed to verify protection rules: %w", err)
 	}
+
+	if dryRunRules {
+		return types.DeleteCommitTagOutput{
+			DryRunRulesOutput: types.DryRunRulesOutput{
+				DryRunRules:    true,
+				RuleViolations: violations,
+			},
+		}, nil, nil
+	}
+
 	if protection.IsCritical(violations) {
-		return violations, nil
+		return types.DeleteCommitTagOutput{}, violations, nil
 	}
 
 	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create RPC write params: %w", err)
+		return types.DeleteCommitTagOutput{}, nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}
 
 	err = c.git.DeleteTag(ctx, &git.DeleteTagParams{
@@ -70,8 +81,11 @@ func (c *Controller) DeleteTag(ctx context.Context,
 		WriteParams: writeParams,
 	})
 	if err != nil {
-		return nil, err
+		return types.DeleteCommitTagOutput{}, nil, err
 	}
 
-	return nil, nil
+	return types.DeleteCommitTagOutput{
+		DryRunRulesOutput: types.DryRunRulesOutput{
+			RuleViolations: violations,
+		}}, nil, nil
 }
