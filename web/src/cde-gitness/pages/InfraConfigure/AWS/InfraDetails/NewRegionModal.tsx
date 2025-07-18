@@ -41,15 +41,11 @@ interface NewRegionModalForm {
   identifier: number
 }
 
-const validationSchema = (context: { domain: string }) =>
+const validationSchema = () =>
   Yup.object().shape({
     location: Yup.string().required('Location is required'),
     // gatewayAmiId: Yup.string().required('Gateway AMI ID is required'),
-    domain: Yup.string()
-      .required('Domain is required')
-      .test('ends-with-domain', `Domain must end with ${context.domain}`, function (value) {
-        return value ? value.endsWith(context.domain) : false
-      }),
+    domain: Yup.string().required('Domain is required'),
     zones: Yup.array()
       .of(
         Yup.object().shape({
@@ -92,14 +88,16 @@ const NewRegionModal = ({ isOpen, setIsOpen, onSubmit, initialValues, isEditMode
     }
   ]
 
-  const getInitialValues = () => {
-    if (isEditMode && initialValues) {
+  const getInitialValues = (): NewRegionModalForm => {
+    if (initialValues) {
+      const domainPrefix = initialValues.domain ? initialValues.domain.replace(`.${values?.domain}`, '') : ''
+
       return {
         location: initialValues.location || '',
         gatewayAmiId: initialValues.gatewayAmiId || '',
         defaultSubnet: initialValues.defaultSubnet || '',
         proxySubnet: initialValues.proxySubnet || '',
-        domain: initialValues.domain || '',
+        domain: domainPrefix,
         zones: initialValues.zones && initialValues.zones.length >= 2 ? initialValues.zones : getDefaultZones(),
         identifier: initialValues.identifier || 0
       }
@@ -110,7 +108,7 @@ const NewRegionModal = ({ isOpen, setIsOpen, onSubmit, initialValues, isEditMode
       gatewayAmiId: '',
       defaultSubnet: '',
       proxySubnet: '',
-      domain: `*.${values?.domain}`,
+      domain: '',
       zones: getDefaultZones(),
       identifier: 0
     }
@@ -123,8 +121,14 @@ const NewRegionModal = ({ isOpen, setIsOpen, onSubmit, initialValues, isEditMode
       width={850}
       title={isEditMode ? 'Edit Region' : getString('cde.Aws.configureNewRegion')}>
       <Formik<NewRegionModalForm>
-        validationSchema={validationSchema({ domain: values.domain })}
-        onSubmit={onSubmit}
+        validationSchema={validationSchema}
+        onSubmit={formValues => {
+          const fullDomain = formValues.domain ? `${formValues.domain}.${values.domain}` : values.domain
+          onSubmit({
+            ...formValues,
+            domain: fullDomain
+          })
+        }}
         formName={''}
         initialValues={getInitialValues()}>
         {formikProps => {
@@ -146,17 +150,22 @@ const NewRegionModal = ({ isOpen, setIsOpen, onSubmit, initialValues, isEditMode
                 </Text>
                 <FormInput.Text name="gatewayAmiId" placeholder="e.g. ami-12345678" />
               </div> */}
-              <div className="form-group">
+              <div className={`form-group ${css.marginTop20}`}>
                 <Text className="form-group--label" font={{ variation: FontVariation.BODY }} color={Color.GREY_500}>
                   {getString('cde.configureInfra.subdomain')}
                 </Text>
-                <div className={`input-group ${css.relativePosition}`}>
-                  <FormInput.Text name="domain" placeholder="us-west" />
+                <div className={css.inputContainer}>
+                  <div className={css.inputWrapper}>
+                    <FormInput.Text name="domain" placeholder="us-west" />
+                    <span className={css.domainSuffix}>.{values?.domain}</span>
+                  </div>
                 </div>
               </div>
 
               <div className={`form-group ${css.marginTop20}`}>
-                <Text className={css.zoneConfigTitle}>Configure Zones</Text>
+                <Text font={{ variation: FontVariation.BODY }} color={Color.GREY_500} className={css.zoneConfigTitle}>
+                  {getString('cde.configureInfra.configureZones')}
+                </Text>
 
                 <ZonesTable formikProps={formikProps} />
               </div>
@@ -292,6 +301,7 @@ const ZonesTable = ({ formikProps }: ZonesTableProps) => {
 
   // Also memoize the table data to prevent unnecessary re-renders
   const tableData = React.useMemo(() => zones, [zones])
+  const { getString } = useStrings()
 
   return (
     <Container>
@@ -305,7 +315,7 @@ const ZonesTable = ({ formikProps }: ZonesTableProps) => {
               color={Color.PRIMARY_7}
               onClick={handleAddZone}
               className={css.actionText}>
-              New zone
+              {getString('cde.configureInfra.newZone')}
             </Text>
           </div>
         </div>

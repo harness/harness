@@ -1,12 +1,23 @@
 import React from 'react'
-import { Button, ButtonVariation, Formik, FormikForm, FormInput, ModalDialog, SelectOption } from '@harnessio/uicore'
+import {
+  Button,
+  ButtonVariation,
+  Formik,
+  FormikForm,
+  FormInput,
+  ModalDialog,
+  SelectOption,
+  Text
+} from '@harnessio/uicore'
 import * as Yup from 'yup'
 import cidrRegex from 'cidr-regex'
 import { useFormikContext } from 'formik'
+import { Color, FontVariation } from '@harnessio/design-system'
 import type { regionProp } from 'cde-gitness/constants'
 import { useStrings } from 'framework/strings'
 import CustomSelectDropdown from 'cde-gitness/components/CustomSelectDropdown/CustomSelectDropdown'
 import { InfraDetails } from './InfraDetails.constants'
+import css from './NewRegionModal.module.scss'
 
 interface NewRegionModalProps {
   isOpen: boolean
@@ -16,7 +27,7 @@ interface NewRegionModalProps {
 
 type NewRegionModalForm = regionProp
 
-const validationSchema = (context: { domain: string }) =>
+const validationSchema = () =>
   Yup.object().shape({
     location: Yup.string().required('Location is required'),
     defaultSubnet: Yup.string()
@@ -25,11 +36,7 @@ const validationSchema = (context: { domain: string }) =>
     proxySubnet: Yup.string()
       .matches(cidrRegex({ exact: true }), 'Invalid CIDR format')
       .required('Proxy Subnet is required'),
-    domain: Yup.string()
-      .required('Domain is required')
-      .test('ends-with-domain', `Domain must end with ${context.domain}`, function (value) {
-        return value ? value.endsWith(context.domain) : false
-      })
+    domain: Yup.string().required('Domain is required')
   })
 
 const NewRegionModal = ({ isOpen, setIsOpen, onSubmit }: NewRegionModalProps) => {
@@ -44,6 +51,16 @@ const NewRegionModal = ({ isOpen, setIsOpen, onSubmit }: NewRegionModalProps) =>
     }
   })
 
+  const getInitialValues = (): NewRegionModalForm => {
+    return {
+      location: '',
+      defaultSubnet: '',
+      proxySubnet: '',
+      domain: '',
+      identifier: 0
+    }
+  }
+
   return (
     <ModalDialog
       isOpen={isOpen}
@@ -51,16 +68,16 @@ const NewRegionModal = ({ isOpen, setIsOpen, onSubmit }: NewRegionModalProps) =>
       width={700}
       title={getString('cde.gitspaceInfraHome.newRegion')}>
       <Formik<NewRegionModalForm>
-        validationSchema={validationSchema({ domain: values.domain })}
-        onSubmit={onSubmit}
+        validationSchema={validationSchema()}
+        onSubmit={formValues => {
+          const fullDomain = formValues.domain ? `${formValues.domain}.${values.domain}` : values.domain
+          onSubmit({
+            ...formValues,
+            domain: fullDomain
+          })
+        }}
         formName={''}
-        initialValues={{
-          location: '',
-          defaultSubnet: '',
-          proxySubnet: '',
-          domain: `*.${values?.domain}`,
-          identifier: 0
-        }}>
+        initialValues={getInitialValues()}>
         {formikProps => {
           return (
             <FormikForm>
@@ -84,13 +101,23 @@ const NewRegionModal = ({ isOpen, setIsOpen, onSubmit }: NewRegionModalProps) =>
                 name="proxySubnet"
                 label={getString('cde.gitspaceInfraHome.proxySubnet')}
               />
-              <FormInput.Text
-                name="domain"
-                placeholder="e.g us-west-ga.io"
-                label={getString('cde.configureInfra.domain')}
-              />
+              <div className="form-group">
+                <Text className="form-group--label" font={{ variation: FontVariation.BODY }} color={Color.GREY_500}>
+                  {getString('cde.configureInfra.domain')}
+                </Text>
+                <div className={css.inputContainer}>
+                  <div className={css.inputWrapper}>
+                    <FormInput.Text name="domain" placeholder="e.g us-west-ga.io" />
+                    <span className={css.domainSuffix}>.{values?.domain}</span>
+                  </div>
+                </div>
+              </div>
 
-              <Button variation={ButtonVariation.PRIMARY} type="submit" style={{ marginLeft: '75%' }}>
+              <Button
+                variation={ButtonVariation.PRIMARY}
+                type="submit"
+                style={{ marginLeft: '75%' }}
+                margin={{ top: 'medium' }}>
                 {getString('cde.gitspaceInfraHome.addnewRegion')}
               </Button>
             </FormikForm>

@@ -60,13 +60,11 @@
 }
 
 .marginTop20 {
-  margin-top: 20px;
+  margin-top: 30px;
 }
 
 .zoneConfigTitle {
-  font-weight: 600;
-  font-size: 14px;
-  margin-bottom: 10px;
+  margin-bottom: var(--spacing-xsmall) !important;
 }
 
 .actionButton {
@@ -104,11 +102,50 @@
   padding: var(--padding-button) !important;
 }
 
+.relativePosition {
+  position: relative;
+}
+
+.inputContainer {
+  margin-bottom: 0;
+  display: inline-block;
+  width: 100%;
+}
+
+.inputWrapper {
+  position: relative;
+  width: 100%;
+  height: var(--spacing-8);
+  border-radius: var(--spacing-2);
+  border: 1px solid var(--bp3-intent-color, var(--grey-200));
+  outline: none;
+  box-shadow: none;
+
+  :global(input) {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    background-color: transparent !important;
+    height: 100%;
+    width: 100%;
+    padding-right: 75px; /* Make space for the suffix */
+  }
+}
+
+.customInput {
+  border: none;
+  background-color: transparent;
+  outline: none;
+  flex: 1;
+  height: 100%;
+  font-size: var(--font-size-normal);
+}
+
 .domainSuffix {
   position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #888;
+  right: 12px;
+  top: 20%;
+  color: var(--grey-500);
   pointer-events: none;
+  z-index: 1;
 }

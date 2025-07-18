@@ -16,23 +16,6 @@
 
 /* eslint-disable */
 // This is an auto-generated file
-export declare const actionButton: string
-export declare const actionText: string
-export declare const addZoneButton: string
-export declare const cursorPointer: string
-export declare const customInput: string
 export declare const domainSuffix: string
-export declare const flexCenter: string
 export declare const inputContainer: string
 export declare const inputWrapper: string
-export declare const marginTop20: string
-export declare const relativePosition: string
-export declare const zoneActionCell: string
-export declare const zoneActionHeaderCell: string
-export declare const zoneCell: string
-export declare const zoneConfigTitle: string
-export declare const zoneHeader: string
-export declare const zoneHeaderCell: string
-export declare const zoneRow: string
-export declare const zonesContainer: string
-export declare const zonesTable: string

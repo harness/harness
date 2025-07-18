@@ -148,6 +148,8 @@ configureInfra:
   project: GCP Project
   configure: Configure
   learnMoreAboutHybrid: Learn more about hybrid infra
+  configureZones: Configure Zones
+  newZone: New Zone
   provideInfraDetails: Provide Infrastructure Details
   downloadAndApply: Download and Apply YAML
   applyYamlAndVerifyConnection: Apply YAML and Verify Connection

@@ -1324,6 +1324,7 @@ export interface StringsMap {
   'cde.configureInfra.configure': string
   'cde.configureInfra.configureLocationNote': string
   'cde.configureInfra.configureLocations': string
+  'cde.configureInfra.configureZones': string
   'cde.configureInfra.domain': string
   'cde.configureInfra.downloadAndApply': string
   'cde.configureInfra.gateway': string
@@ -1335,6 +1336,7 @@ export interface StringsMap {
   'cde.configureInfra.learnMoreAboutHybrid': string
   'cde.configureInfra.machineType': string
   'cde.configureInfra.name': string
+  'cde.configureInfra.newZone': string
   'cde.configureInfra.numberOfInstance': string
   'cde.configureInfra.numberOfLocations': string
   'cde.configureInfra.project': string

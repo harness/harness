@@ -1,0 +1,34 @@
+.inputContainer {
+  margin-bottom: 0;
+  display: inline-block;
+  width: 100%;
+}
+
+.inputWrapper {
+  position: relative;
+  width: 100%;
+  height: var(--spacing-8);
+  border-radius: var(--spacing-2);
+  border: 1px solid var(--bp3-intent-color, var(--grey-200));
+  outline: none;
+  box-shadow: none;
+
+  :global(input) {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    background-color: transparent !important;
+    height: 100%;
+    width: 100%;
+    padding-right: 75px;
+  }
+}
+
+.domainSuffix {
+  position: absolute;
+  right: 12px;
+  top: 20%;
+  color: var(--grey-500);
+  pointer-events: none;
+  z-index: 1;
+}
