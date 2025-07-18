@@ -65,12 +65,20 @@ func getImageAndFileNameFromURL(path string) (string, string, error) {
 }
 
 func getVersionFromFileName(filename string) (string, error) {
-	parts := strings.SplitN(filename, ".", 2)
-	if len(parts) != 2 {
-		return "", fmt.Errorf("invalid file name: %s", filename)
+	switch filename {
+	case "list":
+		return "", nil
+	default:
+		parts := strings.SplitN(filename, ".", 2)
+		if len(parts) != 2 {
+			return "", fmt.Errorf("invalid file name: %s", filename)
+		}
+		version := parts[1]
+		if version == "" {
+			return "", fmt.Errorf("empty version in file name: %s", filename)
+		}
+		return version, nil
 	}
-	version := parts[1]
-	return version, nil
 }
 
 func GetArtifactInfoFromURL(path string) (string, string, string, error) {
@@ -79,14 +87,17 @@ func GetArtifactInfoFromURL(path string) (string, string, string, error) {
 		version  string
 		filename string
 	)
+	// sample endpoint pkg/artifact-registry/go-repo/go/example.com/hello/@latest
+	if strings.HasSuffix(path, "/@latest") {
+		image = strings.Replace(path, "/@latest", "", 1)
+		return image, "@latest", "", nil
+	}
 
+	// sample endpoint pkg/artifact-registry/go-repo/go/example.com/hello/@v/v1.0.2.zip
+	// pkg/artifact-registry/go-repo/go/example.com/hello/@v/list
 	image, filename, err := getImageAndFileNameFromURL(path)
 	if err != nil {
 		return "", "", "", fmt.Errorf("failed to get image and file name from URL: %w", err)
-	}
-
-	if filename == "list" {
-		return image, "", "index", nil
 	}
 
 	version, err = getVersionFromFileName(filename)

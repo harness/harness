@@ -24,6 +24,10 @@ import (
 	"github.com/harness/gitness/registry/app/storage"
 )
 
+const (
+	LatestVersionKey = "@latest"
+)
+
 type Registry interface {
 	pkg.Artifact
 	// Upload package to registry using harness CLI

@@ -16,6 +16,7 @@ package gopackage
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -24,6 +25,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/gopackage/utils"
 	"github.com/harness/gitness/registry/app/store"
+	gitnessstore "github.com/harness/gitness/store"
 )
 
 type RegistryHelper interface {
@@ -79,6 +81,9 @@ func (h *registryHelper) regeneratePackageIndex(
 		artifacts, err := h.artifactDao.GetArtifactsByRepoAndImageBatch(
 			ctx, registryID, image, artifactBatchLimit, lastArtifactID,
 		)
+		if err != nil && errors.Is(err, gitnessstore.ErrResourceNotFound) {
+			break
+		}
 		if err != nil {
 			return nil, fmt.Errorf("failed to get artifacts: %w", err)
 		}
