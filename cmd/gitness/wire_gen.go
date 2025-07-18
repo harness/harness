@@ -569,7 +569,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	handler2 := router.MavenHandlerProvider(mavenHandler)
 	genericDBStore := generic.DBStoreProvider(imageRepository, artifactRepository, bandwidthStatRepository, downloadStatRepository, registryRepository)
 	genericController := generic.ControllerProvider(spaceStore, authorizer, fileManager, genericDBStore, transactor, spaceFinder)
-	packagesHandler := api2.NewPackageHandlerProvider(registryRepository, downloadStatRepository, spaceStore, tokenStore, controller, authenticator, provider, authorizer, spaceFinder, registryFinder)
+	packagesHandler := api2.NewPackageHandlerProvider(registryRepository, downloadStatRepository, spaceStore, tokenStore, controller, authenticator, provider, authorizer, spaceFinder, registryFinder, fileManager)
 	genericHandler := api2.NewGenericHandlerProvider(spaceStore, genericController, tokenStore, controller, authenticator, provider, authorizer, packagesHandler, spaceFinder)
 	handler3 := router.GenericHandlerProvider(genericHandler)
 	pythonLocalRegistry := python.LocalRegistryProvider(localBase, fileManager, upstreamProxyConfigRepository, transactor, registryRepository, imageRepository, artifactRepository, provider)

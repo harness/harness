@@ -35,6 +35,8 @@ import (
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
+	"github.com/harness/gitness/registry/app/pkg/filemanager"
+	commons2 "github.com/harness/gitness/registry/app/pkg/types/commons"
 	refcache2 "github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
@@ -50,7 +52,7 @@ func NewHandler(
 	spaceStore corestore.SpaceStore, tokenStore corestore.TokenStore,
 	userCtrl *usercontroller.Controller, authenticator authn.Authenticator,
 	urlProvider urlprovider.Provider, authorizer authz.Authorizer, spaceFinder refcache.SpaceFinder,
-	regFinder refcache2.RegistryFinder,
+	regFinder refcache2.RegistryFinder, fileManager filemanager.FileManager,
 ) Handler {
 	return &handler{
 		RegistryDao:     registryDao,
@@ -63,6 +65,7 @@ func NewHandler(
 		Authorizer:      authorizer,
 		SpaceFinder:     spaceFinder,
 		RegFinder:       regFinder,
+		fileManager:     fileManager,
 	}
 }
 
@@ -77,6 +80,7 @@ type handler struct {
 	Authorizer      authz.Authorizer
 	SpaceFinder     refcache.SpaceFinder
 	RegFinder       refcache2.RegistryFinder
+	fileManager     filemanager.FileManager
 }
 
 type Handler interface {
@@ -86,11 +90,12 @@ type Handler interface {
 		reqPermissions ...enum.Permission,
 	) error
 	GetArtifactInfo(r *http.Request) (pkg.ArtifactInfo, error)
-
+	DownloadFile(w http.ResponseWriter, r *http.Request)
 	TrackDownloadStats(
 		ctx context.Context,
 		r *http.Request,
 	) error
+	GetPackageArtifactInfo(r *http.Request) (pkg.PackageArtifactInfo, error)
 	GetAuthenticator() authn.Authenticator
 	HandleErrors2(ctx context.Context, errors errcode.Error, w http.ResponseWriter)
 	HandleErrors(ctx context.Context, errors errcode.Errors, w http.ResponseWriter)
@@ -133,7 +138,13 @@ func (h *handler) GetRegistryCheckAccess(
 	r *http.Request,
 	reqPermissions ...enum.Permission,
 ) error {
-	info, err := h.GetArtifactInfo(r)
+	// Get artifact info from context or request
+	info, err := func() (pkg.ArtifactInfo, error) {
+		if pkgInfo := request.ArtifactInfoFrom(ctx); pkgInfo != nil {
+			return pkgInfo.BaseArtifactInfo(), nil
+		}
+		return h.GetArtifactInfo(r)
+	}()
 	if err != nil {
 		return err
 	}
@@ -205,6 +216,57 @@ func (h *handler) GetArtifactInfo(r *http.Request) (pkg.ArtifactInfo, error) {
 		RegistryID:    registry.ID,
 		Registry:      *registry,
 		Image:         "",
+	}, nil
+}
+
+// GetUtilityMethodArtifactInfo : /pkg/{rootIdentifier}/{registryIdentifier}/{utilityMethod}...
+const minPathComponents = 5
+
+func (h *handler) GetUtilityMethodArtifactInfo(r *http.Request) (pkg.ArtifactInfo, error) {
+	ctx := r.Context()
+	path := r.URL.Path
+	parts := strings.Split(path, "/")
+	if len(parts) < minPathComponents {
+		return pkg.ArtifactInfo{}, errcode.ErrCodeInvalidRequest.WithMessage(fmt.Sprintf("invalid path: %s", path))
+	}
+	rootIdentifier := parts[2]
+	registryIdentifier := parts[3]
+
+	rootSpaceID, err := h.SpaceStore.FindByRefCaseInsensitive(ctx, rootIdentifier)
+	if err != nil {
+		log.Ctx(ctx).Error().Msgf("Root spaceID not found: %s", rootIdentifier)
+		return pkg.ArtifactInfo{}, usererror.NotFoundf("Root not found: %s", rootIdentifier)
+	}
+	rootSpace, err := h.SpaceFinder.FindByID(ctx, rootSpaceID)
+	if err != nil {
+		log.Ctx(ctx).Error().Msgf("Root space not found: %d", rootSpaceID)
+		return pkg.ArtifactInfo{}, usererror.NotFoundf("Root not found: %s", rootIdentifier)
+	}
+
+	registry, err := h.RegFinder.FindByRootParentID(ctx, rootSpaceID, registryIdentifier)
+
+	if err != nil {
+		log.Ctx(ctx).Error().Msgf(
+			"registry %s not found for root: %s. Reason: %s", registryIdentifier, rootSpace.Identifier, err,
+		)
+		return pkg.ArtifactInfo{}, usererror.NotFoundf("Registry not found: %s", registryIdentifier)
+	}
+
+	_, err = h.SpaceFinder.FindByID(r.Context(), registry.ParentID)
+	if err != nil {
+		log.Ctx(ctx).Error().Msgf("Parent space not found: %d", registry.ParentID)
+		return pkg.ArtifactInfo{}, usererror.NotFoundf("Parent not found for registry: %s", registryIdentifier)
+	}
+
+	return pkg.ArtifactInfo{
+		BaseInfo: &pkg.BaseInfo{
+			RootIdentifier: rootIdentifier,
+			RootParentID:   rootSpace.ID,
+			ParentID:       registry.ParentID,
+		},
+		RegIdentifier: registryIdentifier,
+		RegistryID:    registry.ID,
+		Registry:      *registry,
 	}, nil
 }
 
@@ -280,4 +342,14 @@ func (h *handler) ServeContent(
 	if fileReader != nil {
 		http.ServeContent(w, r, filename, time.Time{}, fileReader)
 	}
+}
+
+func (h *handler) GetPackageArtifactInfo(r *http.Request) (pkg.PackageArtifactInfo, error) {
+	info, err := h.GetUtilityMethodArtifactInfo(r)
+	if err != nil {
+		return nil, err
+	}
+	return commons2.ArtifactInfo{
+		ArtifactInfo: info,
+	}, nil
 }

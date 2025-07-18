@@ -141,7 +141,7 @@ func NewPackageHandlerProvider(
 	spaceStore corestore.SpaceStore, tokenStore corestore.TokenStore,
 	userCtrl *usercontroller.Controller, authenticator authn.Authenticator,
 	urlProvider urlprovider.Provider, authorizer authz.Authorizer, spaceFinder refcache.SpaceFinder,
-	regFinder refcache2.RegistryFinder,
+	regFinder refcache2.RegistryFinder, fileManager filemanager.FileManager,
 ) packages.Handler {
 	return packages.NewHandler(
 		registryDao,
@@ -154,6 +154,7 @@ func NewPackageHandlerProvider(
 		authorizer,
 		spaceFinder,
 		regFinder,
+		fileManager,
 	)
 }
 

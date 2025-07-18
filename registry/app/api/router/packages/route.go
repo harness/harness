@@ -115,6 +115,14 @@ func NewRouter(
 			})
 		})
 
+		r.Route("/download", func(r chi.Router) {
+			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
+			r.Use(middleware.CheckAuth())
+			r.With(middleware.StoreArtifactInfo(packageHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Get("/", packageHandler.DownloadFile)
+		})
+
 		r.Route("/nuget", func(r chi.Router) {
 			r.Use(middleware.CheckNugetAPIKey())
 			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
