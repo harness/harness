@@ -23,6 +23,8 @@ interface NewRegionModalProps {
   isOpen: boolean
   setIsOpen: (value: boolean) => void
   onSubmit: (value: NewRegionModalForm) => void
+  initialValues?: regionProp | null
+  isEditMode?: boolean
 }
 
 type NewRegionModalForm = regionProp
@@ -39,7 +41,7 @@ const validationSchema = () =>
     domain: Yup.string().required('Domain is required')
   })
 
-const NewRegionModal = ({ isOpen, setIsOpen, onSubmit }: NewRegionModalProps) => {
+const NewRegionModal = ({ isOpen, setIsOpen, onSubmit, initialValues, isEditMode = false }: NewRegionModalProps) => {
   const { getString } = useStrings()
 
   const { values } = useFormikContext<{ domain: string }>()
@@ -52,6 +54,17 @@ const NewRegionModal = ({ isOpen, setIsOpen, onSubmit }: NewRegionModalProps) =>
   })
 
   const getInitialValues = (): NewRegionModalForm => {
+    if (initialValues) {
+      const domainPrefix = initialValues.domain ? initialValues.domain.replace(`.${values?.domain}`, '') : ''
+
+      return {
+        location: initialValues.location || '',
+        defaultSubnet: initialValues.defaultSubnet || '',
+        proxySubnet: initialValues.proxySubnet || '',
+        domain: domainPrefix,
+        identifier: initialValues.identifier || 0
+      }
+    }
     return {
       location: '',
       defaultSubnet: '',
@@ -66,7 +79,7 @@ const NewRegionModal = ({ isOpen, setIsOpen, onSubmit }: NewRegionModalProps) =>
       isOpen={isOpen}
       onClose={() => setIsOpen(false)}
       width={700}
-      title={getString('cde.gitspaceInfraHome.newRegion')}>
+      title={isEditMode ? 'Edit Region' : getString('cde.gitspaceInfraHome.newRegion')}>
       <Formik<NewRegionModalForm>
         validationSchema={validationSchema()}
         onSubmit={formValues => {

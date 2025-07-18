@@ -9,8 +9,9 @@
 .tableContainer {
   width: 100% !important;
 
-  th {
-    padding: 14px var(--spacing-main) !important;
+  th,
+  td {
+    padding: 14px var(--spacing-xlarge) !important;
   }
 
   thead {
@@ -34,7 +35,6 @@
       background-color: var(--grey-0) !important;
 
       td {
-        padding: var(--padding-button) var(--padding-button) var(--padding-button) 14px !important;
         background-color: var(--grey-0) !important;
       }
     }

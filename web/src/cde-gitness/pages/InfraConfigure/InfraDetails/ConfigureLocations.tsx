@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { Container, HarnessDocTooltip, Label, Layout, Select, Text, TextInput } from '@harnessio/uicore'
+import React, { useEffect, useState } from 'react'
+import { Container, HarnessDocTooltip, Label, Layout, Select, Text } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
 import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance } from 'react-table'
 import { Icon } from '@harnessio/icons'
@@ -42,8 +42,8 @@ interface LocationProps {
 const ConfigureLocations = ({ regionData, setRegionData, runner, setRunner }: LocationProps) => {
   const { getString } = useStrings()
   const [isOpen, setIsOpen] = useState(false)
-  const lastFocusRef = useRef<HTMLInputElement | null>(null)
-  const currentFocusRef = useRef('')
+  const [editingRegion, setEditingRegion] = useState<regionProp | null>(null)
+  const [isEditMode, setIsEditMode] = useState(false)
 
   const deleteRegion = (indx: number) => {
     const clonedData = cloneDeep(regionData)
@@ -59,47 +59,16 @@ const ConfigureLocations = ({ regionData, setRegionData, runner, setRunner }: Lo
   const ActionCell: CellType = (row: any) => {
     return (
       <Container className={css.deleteContainer}>
+        {/* <Icon name="code-edit" size={24} onClick={() => openRegionModal(row?.row?.index)} /> */}
         <Icon name="code-delete" size={24} onClick={() => deleteRegion(row?.row?.index)} />
       </Container>
     )
   }
 
-  const inputHandler = (key: string, value: Unknown, index: number) => {
-    const clonedData = cloneDeep(regionData)
-    const result: regionProp[] = clonedData?.map((region: regionProp, indx: number) => {
-      if (index === indx) {
-        region = {
-          ...region,
-          [key]: value
-        }
-      }
-      return region
-    })
-    setRegionData(result)
-
-    // Wait for the next render cycle to set focus
-    setTimeout(() => {
-      const parentNode: any = lastFocusRef?.current?.childNodes?.[0]
-      const inputNode = parentNode?.querySelector('input')
-      inputNode?.focus()
-    }, 0)
-  }
-
-  const CustomCell: any = (row: customCellProps) => {
-    const { id, placeholder } = row?.column
-    const focusId = `${id}_${row?.row?.index}`
-
+  const DisplayCell: any = (row: customCellProps) => {
     return (
-      <Container className={css.inputContainer} ref={currentFocusRef?.current === focusId ? lastFocusRef : null}>
-        <TextInput
-          placeholder={placeholder}
-          name={id}
-          value={row?.value}
-          onFocus={() => {
-            currentFocusRef.current = focusId ?? ''
-          }}
-          onChange={(e: any) => inputHandler(id, e.target.value, row?.row?.index)}
-        />
+      <Container className={css.inputContainer}>
+        <Text>{row?.value || '-'}</Text>
       </Container>
     )
   }
@@ -111,7 +80,7 @@ const ConfigureLocations = ({ regionData, setRegionData, runner, setRunner }: Lo
           <HarnessDocTooltip tooltipId="InfraProviderRegionLocation" useStandAlone={true} />
         </Layout.Horizontal>
       ),
-      Cell: CustomCell,
+      Cell: DisplayCell,
       accessor: 'location',
       placeholder: 'e.g us-west1',
       width: '20%'
@@ -123,7 +92,7 @@ const ConfigureLocations = ({ regionData, setRegionData, runner, setRunner }: Lo
           <HarnessDocTooltip tooltipId="InfraProviderRegionDefaultSubnet" useStandAlone={true} />
         </Layout.Horizontal>
       ),
-      Cell: CustomCell,
+      Cell: DisplayCell,
       accessor: 'defaultSubnet',
       placeholder: 'e.g 10.6.0.0/16',
       width: '15%'
@@ -135,7 +104,7 @@ const ConfigureLocations = ({ regionData, setRegionData, runner, setRunner }: Lo
           <HarnessDocTooltip tooltipId="InfraProviderRegionProxySubnet" useStandAlone={true} />
         </Layout.Horizontal>
       ),
-      Cell: CustomCell,
+      Cell: DisplayCell,
       accessor: 'proxySubnet',
       placeholder: 'e.g 10.3.0.0/16',
       width: '15%'
@@ -147,7 +116,7 @@ const ConfigureLocations = ({ regionData, setRegionData, runner, setRunner }: Lo
           <HarnessDocTooltip tooltipId="InfraProviderRegionDomain" useStandAlone={true} />
         </Layout.Horizontal>
       ),
-      Cell: CustomCell,
+      Cell: DisplayCell,
       accessor: 'domain',
       placeholder: 'e.g us-west-ga.io',
       width: '25%'
@@ -164,14 +133,32 @@ const ConfigureLocations = ({ regionData, setRegionData, runner, setRunner }: Lo
     const clonedData: regionProp[] = cloneDeep(regionData)
     const payload: regionProp = {
       ...data,
-      identifier: clonedData?.length + 1
+      identifier: editingRegion?.identifier ?? clonedData.length + 1
     }
-    clonedData.push(payload)
+
+    const regionIndex =
+      isEditMode && editingRegion ? clonedData.findIndex(r => r.identifier === editingRegion.identifier) : -1
+
+    if (regionIndex !== -1) {
+      clonedData[regionIndex] = payload
+    } else {
+      clonedData.push(payload)
+    }
+
     setRegionData(clonedData)
     setIsOpen(false)
+    setEditingRegion(null)
+    setIsEditMode(false)
   }
 
-  const openRegionModal = () => {
+  const openRegionModal = (regionIndex?: number) => {
+    if (regionIndex !== undefined) {
+      setEditingRegion(regionData[regionIndex])
+      setIsEditMode(true)
+    } else {
+      setEditingRegion(null)
+      setIsEditMode(false)
+    }
     setIsOpen(true)
   }
 
@@ -210,7 +197,13 @@ const ConfigureLocations = ({ regionData, setRegionData, runner, setRunner }: Lo
         </Text>
       </Layout.Horizontal>
 
-      <NewRegionModal isOpen={isOpen} setIsOpen={setIsOpen} onSubmit={addNewRegion} />
+      <NewRegionModal
+        isOpen={isOpen}
+        setIsOpen={setIsOpen}
+        onSubmit={addNewRegion}
+        initialValues={editingRegion}
+        isEditMode={isEditMode}
+      />
       <RegionTable columns={columns} addNewRegion={openRegionModal} regionData={regionData} />
       <Layout.Vertical className={css.regionContainer} spacing="large">
         <Container>

@@ -61,7 +61,7 @@ const ConfigureLocations = ({ regionData, setRegionData }: LocationProps) => {
   const ActionCell: CellType = (row: any) => {
     return (
       <Container className={css.deleteContainer}>
-        <Icon name="edit" size={24} onClick={() => openRegionModal(row?.row?.index)} />
+        {/* <Icon name="code-edit" size={24} onClick={() => openRegionModal(row?.row?.index)} /> */}
         <Icon name="code-delete" size={24} onClick={() => deleteRegion(row?.row?.index)} />
       </Container>
     )
