@@ -1962,10 +1962,10 @@
   resolved "https://registry.yarnpkg.com/@harnessio/react-ssca-manager-client/-/react-ssca-manager-client-0.65.0.tgz#8088869e282c5268bf1fefb9715652e0fc1a8940"
   integrity sha512-sNLDf1lyBfdzD9TqlrsMib61YffrEpb5WJwhRKuPGKD9Po0peAqE6NGLHVFbyra4tRGvvg8gnNpzzp4hMBYeCQ==
 
-"@harnessio/uicore@^4.3.1":
-  version "4.3.1"
-  resolved "https://registry.yarnpkg.com/@harnessio/uicore/-/uicore-4.3.1.tgz#81a4e6582103417361452205de823e8e963d77eb"
-  integrity sha512-zhCsLOhzqqvvrEus5TJYKfYeVHFPjGjtQ1pMdyP1mgWSypfKEn2N5M0dBP8I+bQRUpBXN379y2Bz1HNJI8DRHQ==
+"@harnessio/uicore@^4.3.4":
+  version "4.3.4"
+  resolved "https://registry.yarnpkg.com/@harnessio/uicore/-/uicore-4.3.4.tgz#b741a112026886a1fbf01500ef68f637debae60c"
+  integrity sha512-18rBb9t0kYW/DqHuCKaTJZG4BHF0rru5J3Pxh+RAgy97u+/rGe2vCJgcyTWj4+3LI5a5WiZ+Km3Ae8Uf2c2i2Q==
 
 "@humanwhocodes/config-array@^0.5.0":
   version "0.5.0"

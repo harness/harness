@@ -248,6 +248,7 @@ export interface StringsMap {
   delete: string
   deleteBranch: string
   deleteBranchConfirm: string
+  deleteBranchDryRunFailed: string
   deleteBranchText: string
   deleteCommentConfirm: string
   deleteFailedImport: string

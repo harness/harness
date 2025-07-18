@@ -83,9 +83,10 @@
 .warningMessage {
   order: 3;
   display: flex !important;
-  gap: 0.5rem;
+  gap: var(--spacing-small);
   align-items: center;
-  margin-top: 1rem !important;
+  margin-top: var(--spacing-small) !important;
+  padding-top: var(--spacing-xsmall) !important;
 }
 
 .popover {

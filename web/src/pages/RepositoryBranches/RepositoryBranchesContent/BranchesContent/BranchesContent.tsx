@@ -27,7 +27,7 @@ import {
   useIsMounted
 } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
-import { noop } from 'lodash-es'
+import { isEmpty, noop } from 'lodash-es'
 import { Color, Intent, FontVariation } from '@harnessio/design-system'
 import { Render } from 'react-jsx-match'
 import type { CellProps, Column } from 'react-table'
@@ -175,23 +175,45 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
         width: '30px',
         Cell: ({ row }: CellProps<TypesBranchExtended>) => {
           const { violation, bypassable, bypassed, setAllStates } = useRuleViolationCheck()
-          const [persistModal, setPersistModal] = useState(true)
+          const [persistDialog, setPersistDialog] = useState(true)
+          const [dryRun, setDryRun] = useState(true)
           const { mutate: deleteBranch } = useMutate({
             verb: 'DELETE',
             path: `/api/v1/repos/${repoMetadata.path}/+/branches/${row.original.name}`,
-            queryParams: { bypass_rules: bypassed }
+            queryParams: { dry_run_rules: dryRun, bypass_rules: bypassed }
           })
           const { showSuccess, showError } = useToaster()
           const confirmDeleteBranch = useConfirmAction({
             title: getString('deleteBranch'),
-            confirmText: !bypassable ? getString('delete') : getString('protectionRules.deleteBranchAlertBtn'),
+            confirmText:
+              !dryRun && (!violation || !bypassable)
+                ? getString('delete')
+                : getString('protectionRules.deleteBranchAlertBtn'),
+            buttonDisabled: !dryRun && !bypassable,
             intent: Intent.DANGER,
             message: <String useRichText stringID="deleteBranchConfirm" vars={{ name: row.original.name }} />,
-            persistDialog: persistModal,
+            persistDialog,
+            onOpen: () => {
+              deleteBranch({})
+                .then(res => {
+                  if (!isEmpty(res?.rule_violations)) {
+                    setAllStates({
+                      violation: true,
+                      bypassed: true,
+                      bypassable: res?.rule_violations[0]?.bypassable
+                    })
+                  } else setAllStates({ bypassable: true })
+                })
+                .catch(error => {
+                  setPersistDialog(false)
+                  showError(getErrorMessage(error), 0, 'deleteBranchDryRunFailed')
+                })
+                .finally(() => setDryRun(false))
+            },
             action: async () => {
               deleteBranch({})
                 .then(() => {
-                  setPersistModal(false)
+                  setPersistDialog(false)
                   showSuccess(
                     <StringSubstitute
                       str={getString('branchDeleted')}
@@ -204,13 +226,7 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
                   onDeleteSuccess()
                 })
                 .catch(error => {
-                  if (error.status === 422) {
-                    setAllStates({
-                      violation: true,
-                      bypassed: true,
-                      bypassable: error?.data?.violations[0]?.bypassable
-                    })
-                  } else showError(getErrorMessage(error), 0, 'failedToDeleteBranch')
+                  showError(getErrorMessage(error), 0, 'failedToDeleteBranch')
                 })
             },
             childtag: (

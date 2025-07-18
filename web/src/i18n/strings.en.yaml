@@ -199,7 +199,8 @@ repoDeleted: Repository {{repo}} deleted.
 branchDeleted: Branch {branch} deleted.
 branchRestored: Branch {branch} restored.
 tagDeleted: Tag {tag} deleted.
-failedToDeleteBranch: Failed to delete Branch. Please try again.
+failedToDeleteBranch: Failed to delete branch. Please try again.
+deleteBranchDryRunFailed: Dry run failed to try deleting branch. Please try again.
 createFile: Create __path__
 updateFile: Update __path__
 renameFile: Rename __path__ to __newPath__

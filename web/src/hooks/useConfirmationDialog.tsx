@@ -25,6 +25,7 @@ export interface UseConfirmationDialogProps {
   cancelButtonText?: React.ReactNode
   intent?: Intent
   buttonIntent?: ButtonProps['intent']
+  buttonDisabled?: boolean
   confirmButtonText?: React.ReactNode
   onCloseDialog?: (isConfirmed: boolean) => void
   customButtons?: React.ReactNode
@@ -48,6 +49,7 @@ export const useConfirmationDialog = (props: UseConfirmationDialogProps): UseCon
     cancelButtonText,
     intent = Intent.NONE,
     buttonIntent = Intent.PRIMARY,
+    buttonDisabled = false,
     confirmButtonText,
     onCloseDialog,
     customButtons,
@@ -71,6 +73,7 @@ export const useConfirmationDialog = (props: UseConfirmationDialogProps): UseCon
         cancelButtonText={cancelButtonText}
         intent={intent}
         buttonIntent={buttonIntent}
+        buttonDisabled={buttonDisabled}
         customButtons={customButtons}
         showCloseButton={showCloseButton}
         canOutsideClickClose={canOutsideClickClose}

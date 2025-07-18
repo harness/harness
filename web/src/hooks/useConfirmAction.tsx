@@ -28,8 +28,10 @@ export interface UseConfirmActionDialogProps {
   intent?: Intent
   title?: string
   confirmText?: string
+  buttonDisabled?: boolean
   cancelText?: string
   action: (params?: Unknown) => void
+  onOpen?: () => void
   persistDialog?: boolean
 }
 
@@ -37,9 +39,10 @@ export interface UseConfirmActionDialogProps {
  * @deprecated Use useConfirmAct() hook instead
  */
 export const useConfirmAction = (props: UseConfirmActionDialogProps) => {
-  const { title, message, confirmText, cancelText, intent, childtag, action, persistDialog } = props
+  const { title, message, confirmText, buttonDisabled, cancelText, intent, childtag, action, persistDialog, onOpen } =
+    props
   const { getString } = useStrings()
-  const [params, setParams] = useState<Unknown>()
+  const paramsRef = useRef<Unknown>()
   const { openDialog } = useConfirmationDialog({
     intent,
     persistDialog: persistDialog,
@@ -48,19 +51,21 @@ export const useConfirmAction = (props: UseConfirmActionDialogProps) => {
     confirmButtonText: confirmText || getString('confirm'),
     cancelButtonText: cancelText || getString('cancel'),
     buttonIntent: intent || Intent.DANGER,
+    buttonDisabled,
     onCloseDialog: async (isConfirmed: boolean) => {
       if (isConfirmed) {
-        action(params)
+        action(paramsRef.current)
       }
     },
     children: childtag || <></>
   })
   const confirm = useCallback(
     (_params?: Unknown) => {
-      setParams(_params)
+      paramsRef.current = _params
+      onOpen?.()
       openDialog()
     },
-    [openDialog]
+    [openDialog, onOpen]
   )
 
   return confirm
