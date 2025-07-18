@@ -750,6 +750,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 		pullReqRequest
 		pullreq.RestoreBranchInput
 	}{}, http.MethodPost)
+	_ = reflector.SetJSONResponse(&opRestoreBranch, new(types.CreateBranchOutput), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opRestoreBranch, new(types.CreateBranchOutput), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opRestoreBranch, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opRestoreBranch, new(usererror.Error), http.StatusInternalServerError)

@@ -50,6 +50,10 @@ func HandleCreateBranch(repoCtrl *repo.Controller) http.HandlerFunc {
 			render.Violations(w, violations)
 			return
 		}
+		if in.DryRunRules {
+			render.JSON(w, http.StatusOK, out)
+			return
+		}
 
 		render.JSON(w, http.StatusCreated, out)
 	}

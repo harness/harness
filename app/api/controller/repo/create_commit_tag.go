@@ -41,6 +41,7 @@ type CreateCommitTagInput struct {
 	// the tag will be lightweight, otherwise it'll be annotated.
 	Message string `json:"message"`
 
+	DryRunRules bool `json:"dry_run_rules"`
 	BypassRules bool `json:"bypass_rules"`
 }
 
@@ -49,10 +50,10 @@ func (c *Controller) CreateCommitTag(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 	in *CreateCommitTagInput,
-) (*types.CommitTag, []types.RuleViolations, error) {
+) (types.CreateCommitTagOutput, []types.RuleViolations, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush)
 	if err != nil {
-		return nil, nil, err
+		return types.CreateCommitTagOutput{}, nil, err
 	}
 
 	// set target to default branch in case no branch or commit was provided
@@ -62,7 +63,7 @@ func (c *Controller) CreateCommitTag(ctx context.Context,
 
 	rules, isRepoOwner, err := c.fetchTagRules(ctx, session, repo)
 	if err != nil {
-		return nil, nil, err
+		return types.CreateCommitTagOutput{}, nil, err
 	}
 
 	violations, err := rules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
@@ -76,15 +77,25 @@ func (c *Controller) CreateCommitTag(ctx context.Context,
 		RefNames:           []string{in.Name},
 	})
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to verify protection rules: %w", err)
+		return types.CreateCommitTagOutput{}, nil, fmt.Errorf("failed to verify protection rules: %w", err)
 	}
+
+	if in.DryRunRules {
+		return types.CreateCommitTagOutput{
+			DryRunRulesOutput: types.DryRunRulesOutput{
+				DryRunRules:    true,
+				RuleViolations: violations,
+			},
+		}, nil, nil
+	}
+
 	if protection.IsCritical(violations) {
-		return nil, violations, nil
+		return types.CreateCommitTagOutput{}, violations, nil
 	}
 
 	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create RPC write params: %w", err)
+		return types.CreateCommitTagOutput{}, nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}
 
 	now := time.Now()
@@ -97,7 +108,7 @@ func (c *Controller) CreateCommitTag(ctx context.Context,
 		TaggerDate:  &now,
 	})
 	if err != nil {
-		return nil, nil, err
+		return types.CreateCommitTagOutput{}, nil, err
 	}
 
 	commitTag := controller.MapCommitTag(rpcOut.CommitTag)
@@ -114,5 +125,11 @@ func (c *Controller) CreateCommitTag(ctx context.Context,
 	if err != nil {
 		log.Ctx(ctx).Warn().Msgf("failed to insert instrumentation record for create tag operation: %s", err)
 	}
-	return &commitTag, nil, nil
+
+	return types.CreateCommitTagOutput{
+		CommitTag: commitTag,
+		DryRunRulesOutput: types.DryRunRulesOutput{
+			RuleViolations: violations,
+		},
+	}, nil, nil
 }

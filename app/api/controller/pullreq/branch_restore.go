@@ -133,5 +133,8 @@ func (c *Controller) RestoreBranch(ctx context.Context,
 
 	return types.CreateBranchOutput{
 		Branch: branch,
+		DryRunRulesOutput: types.DryRunRulesOutput{
+			RuleViolations: violations,
+		},
 	}, nil, nil
 }

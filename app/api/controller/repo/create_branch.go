@@ -159,5 +159,8 @@ func (c *Controller) CreateBranch(ctx context.Context,
 
 	return types.CreateBranchOutput{
 		Branch: branch,
+		DryRunRulesOutput: types.DryRunRulesOutput{
+			RuleViolations: violations,
+		},
 	}, nil, nil
 }

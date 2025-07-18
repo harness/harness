@@ -40,7 +40,7 @@ func HandleCreateCommitTag(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		tag, violations, err := repoCtrl.CreateCommitTag(ctx, session, repoRef, in)
+		out, violations, err := repoCtrl.CreateCommitTag(ctx, session, repoRef, in)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
@@ -49,7 +49,11 @@ func HandleCreateCommitTag(repoCtrl *repo.Controller) http.HandlerFunc {
 			render.Violations(w, violations)
 			return
 		}
+		if in.DryRunRules {
+			render.JSON(w, http.StatusOK, out)
+			return
+		}
 
-		render.JSON(w, http.StatusCreated, tag)
+		render.JSON(w, http.StatusCreated, out)
 	}
 }
