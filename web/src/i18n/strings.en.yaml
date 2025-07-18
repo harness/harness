@@ -1095,9 +1095,9 @@ protectionRules:
   mergePrAlertTitle: Merge pull request alert
   mergePrAlertText: 'Merge cannot be completed. {{ruleCount}} branch rules failed: '
   mergeCheckboxAlert: Bypass and merge anyway
-  createBranchAlertBtn: Bypass rules and create branch
-  createBranchAlertText: Some rules will be bypassed by creating branch
-  createBranchBlockText: Some rules don't allow you to create branch
+  createRefAlertBtn: Bypass rules and create {{ref}}
+  createRefAlertText: Some rules will be bypassed while creating {{ref}}
+  createRefBlockText: Some rules don't allow you to create {{ref}}
   deleteBranchAlertBtn: Bypass rule and confirm delete
   deleteBranchAlertText: Some rules will be bypassed while deleting branch
   deleteBranchBlockText: Some rules don't allow you to delete branch

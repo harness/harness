@@ -29,66 +29,72 @@ import {
   useToaster,
   FormInput,
   Label,
+  Text,
   ButtonVariation,
   StringSubstitute
 } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
-import { FontVariation } from '@harnessio/design-system'
+import { FontVariation, Color } from '@harnessio/design-system'
 import { useMutate } from 'restful-react'
 import { get } from 'lodash-es'
+import { Render } from 'react-jsx-match'
 import { useModalHook } from 'hooks/useModalHook'
 import { useStrings } from 'framework/strings'
 import { getErrorMessage, permissionProps } from 'utils/Utils'
-import { GitInfoProps, normalizeGitRef, isGitBranchNameValid } from 'utils/GitUtils'
+import { GitInfoProps, normalizeGitRef, isGitBranchNameValid, GitRefType } from 'utils/GitUtils'
 import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
 import type { TypesBranchExtended } from 'services/code'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
+import { useRuleViolationCheck } from 'hooks/useRuleViolationCheck'
 import { useAppContext } from 'AppContext'
-import css from './CreateTagModal.module.scss'
+import css from '../CreateRefModal.module.scss'
 
 interface FormData {
   name: string
   sourceBranch: string
-  description: string
 }
 
-interface UseCreateTagModalProps extends Pick<GitInfoProps, 'repoMetadata'> {
+interface UseCreateBranchModalProps extends Pick<GitInfoProps, 'repoMetadata'> {
   suggestedBranchName?: string
   suggestedSourceBranch?: string
   onSuccess: (data: TypesBranchExtended) => void
   showSuccessMessage?: boolean
+  showBranchTag?: boolean
+  refIsATag?: boolean
 }
 
-interface CreateTagModalButtonProps extends Omit<ButtonProps, 'onClick'>, UseCreateTagModalProps {
+interface CreateBranchModalButtonProps extends Omit<ButtonProps, 'onClick'>, UseCreateBranchModalProps {
   onSuccess: (data: TypesBranchExtended) => void
   showSuccessMessage?: boolean
 }
 
-export function useCreateTagModal({
+export function useCreateBranchModal({
   suggestedBranchName = '',
   suggestedSourceBranch = '',
   onSuccess,
   repoMetadata,
-  showSuccessMessage
-}: CreateTagModalButtonProps) {
+  showSuccessMessage,
+  showBranchTag = true,
+  refIsATag = false
+}: UseCreateBranchModalProps) {
   const [branchName, setBranchName] = useState(suggestedBranchName)
   const ModalComponent: React.FC = () => {
     const { getString } = useStrings()
     const [sourceBranch, setSourceBranch] = useState(suggestedSourceBranch || (repoMetadata.default_branch as string))
     const { showError, showSuccess } = useToaster()
-    const { mutate: createTag, loading } = useMutate<TypesBranchExtended>({
+    const { violation, bypassable, bypassed, setAllStates } = useRuleViolationCheck()
+    const { mutate: createBranch, loading } = useMutate<TypesBranchExtended>({
       verb: 'POST',
-      path: `/api/v1/repos/${repoMetadata.path}/+/tags`
+      path: `/api/v1/repos/${repoMetadata.path}/+/branches`
     })
+
     const handleSubmit = (formData: FormData) => {
       const name = get(formData, 'name').trim()
-      const description = get(formData, 'description').trim()
-
       try {
-        createTag({
+        createBranch({
           name,
-          message: description,
-          target: normalizeGitRef(sourceBranch)
+          target: normalizeGitRef(refIsATag ? `refs/tags/${sourceBranch}` : sourceBranch),
+          bypass_rules: bypassed
         })
           .then(response => {
             hideModal()
@@ -96,9 +102,9 @@ export function useCreateTagModal({
             if (showSuccessMessage) {
               showSuccess(
                 <StringSubstitute
-                  str={getString('tagCreated')}
+                  str={getString('branchCreated')}
                   vars={{
-                    tag: name
+                    branch: name
                   }}
                 />,
                 5000
@@ -106,10 +112,16 @@ export function useCreateTagModal({
             }
           })
           .catch(_error => {
-            showError(getErrorMessage(_error), 0, 'failedToCreateTag')
+            if (_error.status === 422) {
+              setAllStates({
+                violation: true,
+                bypassed: true,
+                bypassable: _error?.data?.violations[0]?.bypassable
+              })
+            } else showError(getErrorMessage(_error), 0, 'failedToCreateBranch')
           })
       } catch (exception) {
-        showError(getErrorMessage(exception), 0, 'failedToCreateTag')
+        showError(getErrorMessage(exception), 0, 'failedToCreateBranch')
       }
     }
 
@@ -120,29 +132,27 @@ export function useCreateTagModal({
         onClose={hideModal}
         title={''}
         style={{ width: 585, maxHeight: '95vh', overflow: 'auto' }}>
-        <Layout.Vertical padding={{ left: 'xxlarge' }} style={{ height: '100%' }} className={css.main}>
+        <Layout.Vertical style={{ height: '100%' }} className={css.main}>
           <Heading className={css.title} font={{ variation: FontVariation.H3 }} margin={{ bottom: 'xlarge' }}>
-            {getString('createATag')}
+            {getString('createABranch')}
           </Heading>
-          <Container className={css.container} margin={{ right: 'xxlarge' }}>
+          <Container className={css.container}>
             <Formik<FormData>
               initialValues={{
                 name: branchName,
-                sourceBranch: suggestedSourceBranch,
-                description: ''
+                sourceBranch: suggestedSourceBranch
               }}
-              formName="createGitTag"
-              enableReinitialize={true}
+              formName="createGitBranch"
+              enableReinitialize
               validationSchema={yup.object().shape({
                 name: yup
                   .string()
                   .trim()
                   .required()
-                  .test('valid-tag-name', getString('validation.gitTagNameInvalid'), value => {
+                  .test('valid-branch-name', getString('validation.gitBranchNameInvalid'), value => {
                     const val = value || ''
                     return !!val && isGitBranchNameValid(val)
-                  }),
-                description: yup.string().required()
+                  })
               })}
               validateOnChange
               validateOnBlur
@@ -151,50 +161,67 @@ export function useCreateTagModal({
                 <FormInput.Text
                   name="name"
                   label={getString('name')}
-                  placeholder={getString('enterTagPlaceholder')}
+                  placeholder={getString('enterBranchPlaceholder')}
                   tooltipProps={{
-                    dataTooltipId: 'repositoryTagTextField'
+                    dataTooltipId: 'repositoryBranchTextField'
                   }}
                   inputGroup={{ autoFocus: true }}
+                  onChange={() => {
+                    setAllStates({ violation: false, bypassable: false, bypassed: false })
+                  }}
                 />
-                <Container margin={{ top: 'medium', bottom: 'medium' }}>
+                <Container margin={{ top: 'medium' }}>
                   <Label className={css.label}>{getString('basedOn')}</Label>
-                  {/* <Text className={css.branchSourceDesc}>{getString('branchSourceDesc')}</Text> */}
                   <Layout.Horizontal className={css.selectContainer} padding={{ top: 'xsmall' }}>
                     <BranchTagSelect
                       className={css.branchTagSelect}
                       repoMetadata={repoMetadata}
                       disableBranchCreation
                       disableViewAllBranches
-                      gitRef={sourceBranch}
+                      forBranchesOnly={showBranchTag}
+                      gitRef={refIsATag ? `refs/tags/${sourceBranch}` : sourceBranch}
                       onSelect={setSourceBranch}
                       popoverClassname={css.popoverContainer}
                     />
-                    <FlexExpander />
                   </Layout.Horizontal>
                 </Container>
-                <FormInput.TextArea
-                  label={getString('description')}
-                  className={css.extendedDescription}
-                  name="description"
-                  placeholder={getString('tagDescription')}
-                />
 
-                <Layout.Horizontal
-                  spacing="small"
-                  padding={{ right: 'xxlarge', top: 'xxlarge', bottom: 'large' }}
-                  style={{ alignItems: 'center' }}>
-                  <Button
-                    type="submit"
-                    text={getString('createTag')}
-                    variation={ButtonVariation.PRIMARY}
-                    disabled={loading}
-                  />
-                  <Button text={getString('cancel')} variation={ButtonVariation.LINK} onClick={hideModal} />
-                  <FlexExpander />
-
-                  {loading && <Icon intent={Intent.PRIMARY} name="steps-spinner" size={16} />}
-                </Layout.Horizontal>
+                <Container margin={{ bottom: 'large' }}>
+                  <Layout.Horizontal
+                    spacing="small"
+                    padding={{ right: 'xxlarge', top: 'xxlarge' }}
+                    style={{ alignItems: 'center' }}>
+                    {!bypassable ? (
+                      <Button
+                        type="submit"
+                        text={getString('createBranch')}
+                        variation={ButtonVariation.PRIMARY}
+                        disabled={loading}
+                      />
+                    ) : (
+                      <Button
+                        intent={Intent.DANGER}
+                        disabled={loading}
+                        type="submit"
+                        variation={ButtonVariation.SECONDARY}
+                        text={getString('protectionRules.createRefAlertBtn', { ref: GitRefType.BRANCH })}
+                      />
+                    )}
+                    <Button text={getString('cancel')} variation={ButtonVariation.LINK} onClick={hideModal} />
+                    <FlexExpander />
+                    {loading && <Icon intent={Intent.PRIMARY} name="steps-spinner" size={16} />}
+                  </Layout.Horizontal>
+                  <Render when={violation}>
+                    <Layout.Horizontal className={css.warningMessage}>
+                      <Icon intent={Intent.WARNING} name="danger-icon" size={16} />
+                      <Text font={{ variation: FontVariation.BODY2 }} color={Color.RED_800}>
+                        {bypassable
+                          ? getString('protectionRules.createRefAlertText', { ref: GitRefType.BRANCH })
+                          : getString('protectionRules.createRefBlockText', { ref: GitRefType.BRANCH })}
+                      </Text>
+                    </Layout.Horizontal>
+                  </Render>
+                </Container>
               </FormikForm>
             </Formik>
           </Container>
@@ -221,13 +248,13 @@ export function useCreateTagModal({
   return fn
 }
 
-export const CreateTagModalButton: React.FC<CreateTagModalButtonProps> = ({
+export const CreateBranchModalButton: React.FC<CreateBranchModalButtonProps> = ({
   onSuccess,
   repoMetadata,
   showSuccessMessage,
   ...props
 }) => {
-  const openModal = useCreateTagModal({ repoMetadata, onSuccess, showSuccessMessage })
+  const openModal = useCreateBranchModal({ repoMetadata, onSuccess, showSuccessMessage, showBranchTag: false })
   const { standalone } = useAppContext()
   const { hooks } = useAppContext()
   const space = useGetSpaceParam()

@@ -886,9 +886,9 @@ export interface StringsMap {
   'protectionRules.commitNewBranchAlertText': string
   'protectionRules.commitNewBranchBlockText': string
   'protectionRules.create': string
-  'protectionRules.createBranchAlertBtn': string
-  'protectionRules.createBranchAlertText': string
-  'protectionRules.createBranchBlockText': string
+  'protectionRules.createRefAlertBtn': string
+  'protectionRules.createRefAlertText': string
+  'protectionRules.createRefBlockText': string
   'protectionRules.createRule': string
   'protectionRules.defaultBranch': string
   'protectionRules.defaultReviewerWarning': string

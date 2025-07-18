@@ -16,6 +16,7 @@
 
 .main {
   padding-left: var(--spacing-10) !important;
+
   .title {
     --typography-size: 20px !important;
   }
@@ -34,18 +35,12 @@
     display: flex;
     gap: 0.5rem;
     align-items: center;
+    margin-top: var(--spacing-small);
   }
-
-  // .branchSourceDesc {
-  //   color: var(--grey-400) !important;
-  //   font-size: var(--form-input-font-size) !important;
-  //   font-weight: 500 !important;
-  //   padding: var(--spacing-xsmall) 0 var(--spacing-small) !important;
-  // }
 }
 
-.maxContainer {
-  max-width: 250px;
+.extendedDescription textarea {
+  height: 73px !important;
 }
 
 .branchTagSelect {
@@ -71,4 +66,8 @@
 
 .popoverContainer {
   width: 489px;
+}
+
+.extendedDescription {
+  margin: unset !important;
 }

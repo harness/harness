@@ -86,6 +86,7 @@ export function RepositoryBranchesContent({ repoMetadata }: Partial<Pick<GitInfo
                 })
               )
             }}
+            searchTerm={searchTerm || ''}
             onSearchTermChanged={value => {
               setSearchTerm(value)
               setPage(1)

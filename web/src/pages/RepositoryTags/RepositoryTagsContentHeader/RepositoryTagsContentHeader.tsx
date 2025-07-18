@@ -19,7 +19,7 @@ import { Container, Layout, FlexExpander, ButtonVariation } from '@harnessio/uic
 import { useStrings } from 'framework/strings'
 import { GitBranchType, CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
-import { CreateTagModalButton } from 'components/CreateTagModal/CreateTagModal'
+import { CreateTagModalButton } from 'components/CreateRefModal/CreateTagModal/CreateTagModal'
 import css from './RepositoryTagsContentHeader.module.scss'
 
 interface RepositoryTagsContentHeaderProps extends Pick<GitInfoProps, 'repoMetadata'> {
