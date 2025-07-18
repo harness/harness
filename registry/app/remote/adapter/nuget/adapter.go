@@ -124,7 +124,8 @@ func (a adapter) GetPackageMetadata(ctx context.Context, pkg, proxyEndpoint stri
 
 func (a adapter) GetPackageVersionMetadataV2(ctx context.Context, pkg, version string) (io.ReadCloser, error) {
 	baseURL := a.client.url
-	packageVersionEndpoint := fmt.Sprintf("%s/Packages(Id='%s',Version='%s')", baseURL, pkg, version)
+	packageVersionEndpoint := fmt.Sprintf("%s/Packages(Id='%s',Version='%s')",
+		strings.TrimRight(baseURL, "/"), pkg, version)
 	log.Ctx(ctx).Info().Msgf("Package Version V2 Metadata URL: %s", packageVersionEndpoint)
 
 	_, readCloser, err := a.GetFileFromURL(packageVersionEndpoint)
@@ -148,8 +149,8 @@ func (a adapter) GetPackage(ctx context.Context, pkg, version, proxyEndpoint, fi
 		if err != nil {
 			return nil, err
 		}
-		packageEndpoint = fmt.Sprintf("%s/%s/%s/%s", strings.TrimRight(baseURL, "/"), pkg,
-			version, fileName)
+		packageEndpoint = fmt.Sprintf("%s/%s/%s/%s", strings.TrimRight(baseURL, "/"), pkg, version,
+			fileName)
 	}
 
 	log.Ctx(ctx).Info().Msgf("Package URL: %s", packageEndpoint)
@@ -170,7 +171,7 @@ func (a adapter) ListPackageVersion(ctx context.Context, pkg string) (io.ReadClo
 	if err != nil {
 		return nil, err
 	}
-	versionEndpoint := fmt.Sprintf("%s/%s/index.json", baseURL, pkg)
+	versionEndpoint := fmt.Sprintf("%s/%s/index.json", strings.TrimRight(baseURL, "/"), pkg)
 	log.Ctx(ctx).Info().Msgf("List Version URL: %s", versionEndpoint)
 	_, closer, err := a.GetFileFromURL(versionEndpoint)
 	if err != nil {
@@ -182,7 +183,7 @@ func (a adapter) ListPackageVersion(ctx context.Context, pkg string) (io.ReadClo
 
 func (a adapter) ListPackageVersionV2(ctx context.Context, pkg string) (io.ReadCloser, error) {
 	baseURL := a.client.url
-	versionEndpoint := fmt.Sprintf("%s/FindPackagesById()?id='%s'", baseURL, pkg)
+	versionEndpoint := fmt.Sprintf("%s/FindPackagesById()?id='%s'", strings.TrimRight(baseURL, "/"), pkg)
 	log.Ctx(ctx).Info().Msgf("List Version V2 URL: %s", versionEndpoint)
 	_, closer, err := a.GetFileFromURL(versionEndpoint)
 	if err != nil {
