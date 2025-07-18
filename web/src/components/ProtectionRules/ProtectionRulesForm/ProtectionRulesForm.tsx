@@ -481,15 +481,18 @@ const ProtectionRulesForm = (props: {
                       <Layout.Vertical className={cx(css.checkContainer, css.targetContainer)}>
                         <Text
                           className={css.headingSize}
-                          padding={{ bottom: 'medium' }}
+                          padding={{ bottom: 'small' }}
                           font={{ variation: FontVariation.H4 }}>
                           {getString('protectionRules.targetBranches')}
                         </Text>
-                        <FormInput.CheckBox
-                          margin={{ bottom: 'medium' }}
-                          label={getString('protectionRules.defaultBranch')}
-                          name={'targetDefault'}
-                        />
+                        {ruleType === ProtectionRulesType.BRANCH && (
+                          <Container padding={{ top: 'small' }}>
+                            <FormInput.CheckBox
+                              label={getString('protectionRules.defaultBranch')}
+                              name={'targetDefault'}
+                            />
+                          </Container>
+                        )}
                       </Layout.Vertical>
                     }
                     placeholder={getString('protectionRules.targetPlaceholder')}

@@ -39,6 +39,14 @@ import { PullReqReviewDecision } from 'pages/PullRequest/PullRequestUtils'
 import type { Identifier } from './types'
 import { CodeIcon } from './GitUtils'
 
+/**
+ * Utility to check if the value of the string is 'true'.
+ * Useful for query param string checks.
+ */
+export function isParamTrue(val?: string): boolean {
+  return val === 'true'
+}
+
 export enum ACCESS_MODES {
   VIEW,
   EDIT
@@ -145,7 +153,10 @@ export interface PageBrowserProps {
   state?: string
   tab?: string
   review?: string
+  sort?: string
+  only_favorites?: string
   recursive?: string
+  inherit?: string
 }
 
 export const extractInfoFromRuleViolationArr = (ruleViolationArr: TypesRuleViolations[]) => {

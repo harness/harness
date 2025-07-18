@@ -53,7 +53,8 @@ import {
   ScopeLevelEnum,
   getScopeData,
   ScopeEnum,
-  getScopeFromParams
+  getScopeFromParams,
+  isParamTrue
 } from 'utils/Utils'
 import { NewRepoModalButton } from 'components/NewRepoModalButton/NewRepoModalButton'
 import type { RepoRepositoryOutput } from 'services/code'
@@ -110,12 +111,12 @@ export default function RepositoriesListing() {
   const { routes, standalone, hooks, routingId } = useAppContext()
   const { updateQueryParams, replaceQueryParams } = useUpdateQueryParams()
   const { updateRepoMetadata } = useGetRepositoryMetadata()
-  const pageBrowser = useQueryParams<PageBrowserProps & { only_favorites?: string; sort?: string }>()
+  const pageBrowser = useQueryParams<PageBrowserProps>()
   const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
   const [page, setPage] = usePageIndex(pageInit)
   const [searchTerm, setSearchTerm] = useState<string | undefined>()
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm)
-  const [showScopeInfo, setShowScopeInfo] = useState(pageBrowser.recursive === 'true')
+  const [showScopeInfo, setShowScopeInfo] = useState(isParamTrue(pageBrowser.recursive))
   const [selectedSortMethod, setSelectedSortMethod] = useState(pageBrowser.sort || RepoSortMethod.LastPush)
   const { showError, showSuccess } = useToaster()
   const [updatedRepositories, setUpdatedRepositories] = useState<RepoRepositoryOutput[]>()
@@ -129,7 +130,7 @@ export default function RepositoriesListing() {
     () =>
       getCurrentScopeLabel(
         getString,
-        pageBrowser.recursive === 'true' ? ScopeLevelEnum.ALL : ScopeLevelEnum.CURRENT,
+        isParamTrue(pageBrowser.recursive) ? ScopeLevelEnum.ALL : ScopeLevelEnum.CURRENT,
         accountIdentifier,
         orgIdentifier
       ),
@@ -159,7 +160,7 @@ export default function RepositoriesListing() {
       limit: LIST_FETCHING_LIMIT,
       query: debouncedSearchTerm,
       only_favorites: pageBrowser.only_favorites,
-      recursive: pageBrowser.recursive === 'true',
+      recursive: isParamTrue(pageBrowser.recursive),
       sort: selectedSortMethod.split(',')[0],
       order: selectedSortMethod.split(',')[1]
     }

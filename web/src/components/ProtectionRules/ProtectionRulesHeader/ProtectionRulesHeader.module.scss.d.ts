@@ -20,12 +20,11 @@ export declare const cancelButton: string
 export declare const main: string
 export declare const menuItem: string
 export declare const noData: string
-export declare const paddingLeftMedium: string
-export declare const paddingLeftXLarge: string
 export declare const row: string
 export declare const scopeCheckbox: string
 export declare const stateCtn: string
 export declare const table: string
+export declare const tabsContainer: string
 export declare const title: string
 export declare const toggle: string
 export declare const toggleDisable: string

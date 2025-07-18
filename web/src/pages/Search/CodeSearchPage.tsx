@@ -41,7 +41,7 @@ import { useQueryParams } from 'hooks/useQueryParams'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
-import { ButtonRoleProps, getErrorMessage } from 'utils/Utils'
+import { ButtonRoleProps, getErrorMessage, isParamTrue } from 'utils/Utils'
 
 import { Editor } from 'components/Editor/Editor'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
@@ -78,19 +78,18 @@ const Search = () => {
   const [searchMode, setSearchMode] = useState(mode)
   const [selectedRepositories, setSelectedRepositories] = useState<SelectOption[]>([])
   const [selectedLanguages, setSelectedLanguages] = useState<(SelectOption & { extension?: string })[]>([])
-  const [keywordSearchResults, setKeyowordSearchResults] = useState<KeywordSearchResponse>()
+  const [keywordSearchResults, setKeywordSearchResults] = useState<KeywordSearchResponse>()
   const projectId = space?.split('/')[2]
 
-  const [recursiveSearchEnabled, setRecursiveSearchEnabled] = useState(!projectId ? true : false)
+  const [recursiveSearchEnabled, setRecursiveSearchEnabled] = useState(!projectId)
   const [curScopeLabel, setCurScopeLabel] = useState<SelectOption>()
-  const [regexEnabled, setRegexEnabled] = useState<boolean>(regex === 'true' ? true : false)
+  const [regexEnabled, setRegexEnabled] = useState<boolean>(isParamTrue(regex))
 
   //semantic
-  // const [loadingSearch, setLoadingSearch] = useState(false)
   const [semanticSearchResult, setSemanticSearchResult] = useState<SemanticSearchResultType[]>([])
   const [uniqueFiles, setUniqueFiles] = useState(0)
   const history = useHistory()
-  //
+
   const { mutate, loading: isSearching } = useMutate<KeywordSearchResponse>({
     path: `/api/v1/search`,
     verb: 'POST'
@@ -127,7 +126,7 @@ const Search = () => {
           }
 
           // Clear previous results
-          setKeyowordSearchResults(undefined)
+          setKeywordSearchResults(undefined)
           const res = await mutate({
             repo_paths: repoPath ? [repoPath] : repoPaths,
             space_paths: !repoPath && !repoPaths.length ? [space] : [],
@@ -137,9 +136,9 @@ const Search = () => {
             enable_regex: regexEnabled
           })
 
-          setKeyowordSearchResults(res)
+          setKeywordSearchResults(res)
         } else {
-          setKeyowordSearchResults(undefined)
+          setKeywordSearchResults(undefined)
         }
       } catch (error) {
         showError(getErrorMessage(error))
@@ -149,9 +148,6 @@ const Search = () => {
   )
 
   const performSemanticSearch = useCallback(() => {
-    // setLoadingSearch(true)
-    // history.replace({ pathname: location.pathname, search: `q=${searchTerm}` })
-
     sendSemanticSearch({ query: searchTerm })
       .then(response => {
         setSemanticSearchResult(response)
@@ -161,9 +157,7 @@ const Search = () => {
       .catch(exception => {
         showError(getErrorMessage(exception), 0)
       })
-      .finally(() => {
-        // setLoadingSearch(false)
-      }) // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, history, location, repoPath, sendSemanticSearch, showError, mode])
 
   useEffect(() => {
@@ -198,7 +192,7 @@ const Search = () => {
             }}
             onSearch={text => {
               cancelPreviousSearch()
-              setKeyowordSearchResults(undefined)
+              setKeywordSearchResults(undefined)
               setSemanticSearchResult([])
               updateQueryParams({ q: text, mode: searchMode })
               if (searchMode === SEARCH_MODE.SEMANTIC) {
@@ -217,7 +211,7 @@ const Search = () => {
               setSearchTerm(text)
             }}
             onSearch={text => {
-              setKeyowordSearchResults(undefined)
+              setKeywordSearchResults(undefined)
               updateQueryParams({ q: text })
               debouncedSearch(text)
             }}
@@ -257,7 +251,6 @@ const Search = () => {
             })}
           </>
         ) : null}
-        {/* semantic search results -> */}
         {semanticSearchResult?.length ? (
           <>
             <Layout.Horizontal spacing="xsmall" margin={{ bottom: 'large' }}>

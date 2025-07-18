@@ -25,7 +25,7 @@ import { CodeIcon, DashboardFilter, GitInfoProps, ProtectionRulesType, SettingTy
 import { useAppContext } from 'AppContext'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
-import { getEditPermissionRequestFromIdentifier, permissionProps, ScopeEnum } from 'utils/Utils'
+import { getEditPermissionRequestFromIdentifier, PageBrowserProps, permissionProps, ScopeEnum } from 'utils/Utils'
 import ToggleTabsBtn from 'components/ToggleTabs/ToggleTabsBtn'
 import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
 import css from './ProtectionRulesHeader.module.scss'
@@ -35,7 +35,6 @@ interface ProtectionRulesHeaderProps extends Partial<Pick<GitInfoProps, 'repoMet
   activeTab?: string
   currentPageScope: ScopeEnum
   inheritRules: boolean
-  setInheritRules: (value: boolean) => void
   ruleTypeFilter: ProtectionRulesType
   onSearchTermChanged: (searchTerm: string) => void
 }
@@ -47,7 +46,6 @@ const ProtectionRulesHeader = ({
   activeTab,
   currentPageScope,
   inheritRules,
-  setInheritRules,
   ruleTypeFilter
 }: ProtectionRulesHeaderProps) => {
   const history = useHistory()
@@ -55,10 +53,9 @@ const ProtectionRulesHeader = ({
   const { getString } = useStrings()
   const { hooks, standalone } = useAppContext()
   const space = useGetSpaceParam()
-  const { updateQueryParams } = useUpdateQueryParams<{ type: ProtectionRulesType }>()
+  const { updateQueryParams } = useUpdateQueryParams<PageBrowserProps | { type: ProtectionRulesType }>()
   const [searchTerm, setSearchTerm] = useState('')
   const [ruleType, setRuleType] = useState(ProtectionRulesType.BRANCH)
-  const isScopeCheckboxVisible = ![ScopeEnum.ACCOUNT_SCOPE, ScopeEnum.SPACE_SCOPE].includes(currentPageScope)
 
   const permPushResult = hooks?.usePermissionTranslate(getEditPermissionRequestFromIdentifier(space, repoMetadata), [
     space,
@@ -129,18 +126,8 @@ const ProtectionRulesHeader = ({
               })}
           </Container>
         </SplitButton>
-        <Render when={isScopeCheckboxVisible}>
-          <Checkbox
-            className={css.scopeCheckbox}
-            label={getString('protectionRules.showRulesScope')}
-            checked={inheritRules}
-            onChange={event => {
-              setInheritRules(event.currentTarget.checked)
-            }}
-          />
-        </Render>
         <ToggleTabsBtn
-          wrapperClassName={isScopeCheckboxVisible ? css.paddingLeftMedium : css.paddingLeftXLarge}
+          wrapperClassName={css.tabsContainer}
           ctnWrapperClassName={css.stateCtn}
           currentTab={ruleTypeFilter ?? DashboardFilter.ALL}
           tabsList={ruleTypeFilters}
@@ -148,6 +135,16 @@ const ProtectionRulesHeader = ({
             updateQueryParams({ type: newTab as ProtectionRulesType })
           }}
         />
+        <Render when={![ScopeEnum.ACCOUNT_SCOPE, ScopeEnum.SPACE_SCOPE].includes(currentPageScope)}>
+          <Checkbox
+            className={css.scopeCheckbox}
+            label={getString('protectionRules.showRulesScope')}
+            checked={inheritRules}
+            onChange={event => {
+              updateQueryParams({ inherit: event.currentTarget.checked.toString() })
+            }}
+          />
+        </Render>
         <FlexExpander />
         <SearchInputWithSpinner
           spinnerPosition="right"

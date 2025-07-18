@@ -47,9 +47,9 @@ import {
   type PageBrowserProps,
   getScopeData,
   getEditPermissionRequestFromScope,
-  getEditPermissionRequestFromIdentifier,
   ScopeEnum,
-  OrderSortDate
+  OrderSortDate,
+  isParamTrue
 } from 'utils/Utils'
 import { ProtectionRulesType, RulesTargetType, SettingTypeMode } from 'utils/GitUtils'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
@@ -105,7 +105,6 @@ const ProtectionRulesListing = (props: { activeTab: string; repoMetadata?: RepoR
   const { settingSection, ruleId, settingSectionMode } = useParams<CODEProps>()
   const newRule = settingSection && settingSectionMode === SettingTypeMode.NEW
   const editRule = !isEmpty(settingSection) && !isEmpty(ruleId) && settingSectionMode === SettingTypeMode.EDIT
-  const [inheritRules, setInheritRules] = useState<boolean>(false)
   const currentPageScope = useGetCurrentPageScope()
 
   const getRulesPath = useMemo(
@@ -125,7 +124,7 @@ const ProtectionRulesListing = (props: { activeTab: string; repoMetadata?: RepoR
     path: getRulesPath,
     queryParams: {
       limit: LIST_FETCHING_LIMIT,
-      inherited: inheritRules,
+      inherited: isParamTrue(pageBrowser.inherit),
       page,
       sort: 'date',
       order: OrderSortDate.DESC,
@@ -330,7 +329,9 @@ const ProtectionRulesListing = (props: { activeTab: string; repoMetadata?: RepoR
                   </Popover>
                 </Container>
                 <Layout.Horizontal flex={{ align: 'center-center' }} padding={{ top: 'xsmall', left: 'small' }}>
-                  {inheritRules && <Icon padding={{ right: 'small', bottom: 'xsmall' }} name={scopeIcon} size={16} />}
+                  {isParamTrue(pageBrowser.inherit) && (
+                    <Icon padding={{ right: 'small', bottom: 'xsmall' }} name={scopeIcon} size={16} />
+                  )}
                   <Text className={css.title}>{identifier}</Text>
                 </Layout.Horizontal>
                 <FlexExpander />
@@ -433,11 +434,6 @@ const ProtectionRulesListing = (props: { activeTab: string; repoMetadata?: RepoR
     [history, getString, repoMetadata?.path, setPage, showError, showSuccess]
   )
 
-  const permPushResult = hooks?.usePermissionTranslate(getEditPermissionRequestFromIdentifier(space, repoMetadata), [
-    space,
-    repoMetadata
-  ])
-
   return (
     <PageBody loading={loadingRules} error={error} retryOnError={() => refetchRules()} className={css.pageBody}>
       {!newRule && !editRule && (
@@ -448,8 +444,7 @@ const ProtectionRulesListing = (props: { activeTab: string; repoMetadata?: RepoR
             setSearchTerm(value)
             debouncedRefetch(value)
           }}
-          inheritRules={inheritRules}
-          setInheritRules={setInheritRules}
+          inheritRules={isParamTrue(pageBrowser.inherit)}
           ruleTypeFilter={pageBrowser.type}
           {...(repoMetadata && { repoMetadata: repoMetadata })}
         />
@@ -491,18 +486,8 @@ const ProtectionRulesListing = (props: { activeTab: string; repoMetadata?: RepoR
           <NoResultCard
             showWhen={() => isEmpty(rules) && !loadingRules}
             forSearch={!!searchTerm}
+            forFilter
             message={getString('protectionRules.ruleEmpty')}
-            buttonText={getString('protectionRules.newRule')}
-            onButtonClick={() => {
-              navigateToSettings({
-                repoMetadata,
-                standalone,
-                space,
-                settingSection,
-                settingSectionMode: SettingTypeMode.NEW
-              })
-            }}
-            permissionProp={permissionProps(permPushResult, standalone)}
           />
         </Container>
       )}

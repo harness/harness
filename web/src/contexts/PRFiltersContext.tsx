@@ -20,7 +20,7 @@ import { useAppContext } from 'AppContext'
 import { useQueryParams } from 'hooks/useQueryParams'
 import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
 import { DashboardFilter, PullRequestFilterOption } from 'utils/GitUtils'
-import { LabelFilterObj, PageBrowserProps, ScopeLevelEnum } from 'utils/Utils'
+import { isParamTrue, LabelFilterObj, PageBrowserProps, ScopeLevelEnum } from 'utils/Utils'
 
 type FilterState = {
   searchTerm: string
@@ -202,7 +202,7 @@ export const PRFilterProvider = ({ children }: { children: JSX.Element }): JSX.E
       : browserParams.author === String(currentUser.id) || isEmpty(browserParams) //for fresh mount
       ? DashboardFilter.CREATED
       : DashboardFilter.ALL,
-    includeSubspaces: browserParams?.recursive === 'true' ? ScopeLevelEnum.ALL : ScopeLevelEnum.CURRENT,
+    includeSubspaces: isParamTrue(browserParams?.recursive) ? ScopeLevelEnum.ALL : ScopeLevelEnum.CURRENT,
     prStateFilter: (browserParams?.state as PullRequestFilterOption) || (PullRequestFilterOption.OPEN as string),
     reviewFilter: (browserParams?.review as string) || '',
     authorFilter: isEmpty(browserParams) ? String(currentUser.id) : (browserParams?.author as string),
