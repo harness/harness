@@ -18,5 +18,6 @@
 // This is an auto-generated file
 export declare const authorDropdownItem: string
 export declare const authorName: string
+export declare const banners: string
 export declare const branchDropdown: string
 export declare const main: string

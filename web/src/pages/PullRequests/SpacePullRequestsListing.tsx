@@ -349,16 +349,16 @@ export function SpacePullRequestsListing() {
                         scope={label.labelObj.scope}
                         removeLabelBtn={true}
                         handleRemoveClick={() => {
-                          if (label.type === 'value') {
+                          if (label.type === LabelFilterType.VALUE) {
                             const updateFilterObjArr = labelFilter.filter(filterObj => {
-                              if (!(filterObj.labelId === label.labelId && filterObj.type === 'value')) {
+                              if (!(filterObj.labelId === label.labelId && filterObj.type === LabelFilterType.VALUE)) {
                                 return filterObj
                               }
                             })
                             setLabelFilter(updateFilterObjArr)
-                          } else if (label.type === 'label') {
+                          } else if (label.type === LabelFilterType.LABEL) {
                             const updateFilterObjArr = labelFilter.filter(filterObj => {
-                              if (!(filterObj.labelId === label.labelId && filterObj.type === 'label')) {
+                              if (!(filterObj.labelId === label.labelId && filterObj.type === LabelFilterType.LABEL)) {
                                 return filterObj
                               }
                             })

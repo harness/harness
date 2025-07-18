@@ -45,7 +45,7 @@ import { CommentAction, CommentBox, CommentBoxOutletPosition, CommentItem } from
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import {
   getErrorMessage,
-  orderSortDate,
+  OrderSortDate,
   ButtonRoleProps,
   PullRequestSection,
   filenameToLanguage,
@@ -123,9 +123,9 @@ export const Conversation: React.FC<ConversationProps> = ({
   })
 
   const { showError } = useToaster()
-  const [dateOrderSort, setDateOrderSort] = useUserPreference<orderSortDate.ASC | orderSortDate.DESC>(
+  const [dateOrderSort, setDateOrderSort] = useUserPreference<OrderSortDate.ASC | OrderSortDate.DESC>(
     UserPreference.PULL_REQUEST_ACTIVITY_ORDER,
-    orderSortDate.ASC
+    OrderSortDate.ASC
   )
   const activityFilters = useActivityFilters()
   const [activityFilter, setActivityFilter] = useUserPreference<SelectOption>(
@@ -477,25 +477,25 @@ export const Conversation: React.FC<ConversationProps> = ({
                       {...ButtonRoleProps}
                       className={css.timeButton}
                       rightIconProps={{ size: 24 }}
-                      rightIcon={dateOrderSort === orderSortDate.ASC ? 'code-ascending' : 'code-descending'}
+                      rightIcon={dateOrderSort === OrderSortDate.ASC ? 'code-ascending' : 'code-descending'}
                       onClick={() => {
-                        if (dateOrderSort === orderSortDate.ASC) {
-                          setDateOrderSort(orderSortDate.DESC)
+                        if (dateOrderSort === OrderSortDate.ASC) {
+                          setDateOrderSort(OrderSortDate.DESC)
                         } else {
-                          setDateOrderSort(orderSortDate.ASC)
+                          setDateOrderSort(OrderSortDate.ASC)
                         }
                       }}>
-                      {dateOrderSort === orderSortDate.ASC ? getString('ascending') : getString('descending')}
+                      {dateOrderSort === OrderSortDate.ASC ? getString('ascending') : getString('descending')}
                     </Text>
                   </Layout.Horizontal>
 
-                  {dateOrderSort != orderSortDate.DESC ? null : (
+                  {dateOrderSort != OrderSortDate.DESC ? null : (
                     <Container className={css.descContainer}>{newCommentBox}</Container>
                   )}
 
                   {renderedActivityBlocks}
 
-                  {dateOrderSort != orderSortDate.ASC ? null : (
+                  {dateOrderSort != OrderSortDate.ASC ? null : (
                     <Container className={css.ascContainer}>{newCommentBox}</Container>
                   )}
                 </Layout.Vertical>

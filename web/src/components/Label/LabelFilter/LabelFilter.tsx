@@ -60,12 +60,6 @@ interface LabelFilterProps {
   repoMetadata?: RepoRepositoryOutput
 }
 
-enum utilFilterType {
-  LABEL = 'label',
-  VALUE = 'value',
-  FOR_VALUE = 'for_value'
-}
-
 const mapToSelectOptions = (items: TypesLabelValue[] | TypesLabel[] = []) =>
   items.map(item => ({
     label: JSON.stringify(item),
@@ -194,24 +188,24 @@ export const LabelFilter = (props: LabelFilterProps) => {
     }
   }
 
-  const containsFilter = (filterObjArr: LabelFilterObj[], currentObj: any, type: utilFilterType) => {
+  const containsFilter = (filterObjArr: LabelFilterObj[], currentObj: any, type: LabelFilterType) => {
     let res = false
     if (filterObjArr && filterObjArr.length === 0) return res
-    else if (type === utilFilterType.LABEL) {
+    else if (type === LabelFilterType.LABEL) {
       res = filterObjArr.some(
         filterObj =>
           filterObj.labelId === currentObj.id &&
           filterObj.valueId === undefined &&
           filterObj.type === LabelFilterType.LABEL
       )
-    } else if (type === utilFilterType.VALUE) {
+    } else if (type === LabelFilterType.VALUE) {
       const labelId = currentObj?.valueId === -1 ? currentObj.labelId : currentObj.label_id
       const valueId = currentObj?.valueId === -1 ? currentObj.valueId : currentObj.id
       res = filterObjArr.some(
         filterObj =>
           filterObj.labelId === labelId && filterObj.valueId === valueId && filterObj.type === LabelFilterType.VALUE
       )
-    } else if (type === utilFilterType.FOR_VALUE) {
+    } else if (type === LabelFilterType.FOR_VALUE) {
       res = filterObjArr.some(
         filterObj =>
           filterObj.labelId === currentObj.id &&
@@ -276,8 +270,8 @@ export const LabelFilter = (props: LabelFilterProps) => {
       }}
       itemRenderer={(item, { handleClick }) => {
         const itemObj = JSON.parse(item.label)
-        const offsetValue = labelFilterOption && containsFilter(labelFilterOption, itemObj, utilFilterType.FOR_VALUE)
-        const offsetLabel = labelFilterOption && containsFilter(labelFilterOption, itemObj, utilFilterType.LABEL)
+        const offsetValue = labelFilterOption && containsFilter(labelFilterOption, itemObj, LabelFilterType.FOR_VALUE)
+        const offsetLabel = labelFilterOption && containsFilter(labelFilterOption, itemObj, LabelFilterType.LABEL)
         const anyValueObj = {
           labelId: itemObj.id as number,
           type: LabelFilterType.VALUE,
@@ -389,7 +383,7 @@ export const LabelFilter = (props: LabelFilterProps) => {
                         key={itemObj.key + getString('labels.anyValue')}
                         onClick={event => {
                           if (offsetValue) {
-                            if (containsFilter(labelFilterOption, anyValueObj, utilFilterType.VALUE)) {
+                            if (containsFilter(labelFilterOption, anyValueObj, LabelFilterType.VALUE)) {
                               removeValueFromFilter(labelFilterOption, anyValueObj.valueObj)
                             } else {
                               replaceValueFilter(labelFilterOption, anyValueObj.valueObj)
@@ -414,7 +408,7 @@ export const LabelFilter = (props: LabelFilterProps) => {
                                 size={16}
                                 color={Color.PRIMARY_7}
                                 style={{
-                                  opacity: containsFilter(labelFilterOption, anyValueObj, utilFilterType.VALUE) ? 1 : 0
+                                  opacity: containsFilter(labelFilterOption, anyValueObj, LabelFilterType.VALUE) ? 1 : 0
                                 }}
                               />
                               <Label
@@ -444,7 +438,7 @@ export const LabelFilter = (props: LabelFilterProps) => {
                       {labelsValueList.map(value => {
                         const valueObj = JSON.parse(value.label)
                         const currentMarkedValue = labelFilterOption
-                          ? containsFilter(labelFilterOption, valueObj, utilFilterType.VALUE)
+                          ? containsFilter(labelFilterOption, valueObj, LabelFilterType.VALUE)
                           : {}
                         const updatedValueFilterOption = labelFilterOption
                           ? [

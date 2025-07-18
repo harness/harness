@@ -23,7 +23,7 @@ import cx from 'classnames'
 import { useGet } from 'restful-react'
 import { noop } from 'lodash-es'
 import { String, useStrings } from 'framework/strings'
-import { getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
+import { getErrorMessage, LIST_FETCHING_LIMIT, OrderSortDate } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import { CodeIcon, GitInfoProps, GitRefType, isRefATag, REFS_TAGS_PREFIX } from 'utils/GitUtils'
 import Branches from '../../icons/Branches.svg?url'
@@ -256,7 +256,7 @@ function GitRefList({
       limit: LIST_FETCHING_LIMIT,
       page: 1,
       sort: 'date',
-      order: 'desc',
+      order: OrderSortDate.DESC,
       include_commit: false,
       query
     }

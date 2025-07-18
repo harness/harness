@@ -53,3 +53,10 @@
     }
   }
 }
+
+.banners {
+  // Only add margin-bottom to the last child if it exists
+  > :last-child {
+    margin-bottom: var(--spacing-medium);
+  }
+}

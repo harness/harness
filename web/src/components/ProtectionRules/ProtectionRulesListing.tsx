@@ -48,7 +48,8 @@ import {
   getScopeData,
   getEditPermissionRequestFromScope,
   getEditPermissionRequestFromIdentifier,
-  ScopeEnum
+  ScopeEnum,
+  OrderSortDate
 } from 'utils/Utils'
 import { ProtectionRulesType, RulesTargetType, SettingTypeMode } from 'utils/GitUtils'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
@@ -127,7 +128,7 @@ const ProtectionRulesListing = (props: { activeTab: string; repoMetadata?: RepoR
       inherited: inheritRules,
       page,
       sort: 'date',
-      order: 'desc',
+      order: OrderSortDate.DESC,
       query: debouncedSearchTerm,
       type: pageBrowser.type ?? ''
     },

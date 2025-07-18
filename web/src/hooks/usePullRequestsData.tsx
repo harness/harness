@@ -16,7 +16,7 @@
 
 import { useGet } from 'restful-react'
 import type { TypesPullReqRepo } from 'services/code'
-import { LIST_FETCHING_LIMIT, PageAction, ScopeLevelEnum } from 'utils/Utils'
+import { LabelFilterType, LIST_FETCHING_LIMIT, OrderSortDate, PageAction, ScopeLevelEnum } from 'utils/Utils'
 import { DashboardFilter, PullRequestFilterOption } from 'utils/GitUtils'
 import { useAppContext } from 'AppContext'
 import { useGetSpaceParam } from './useGetSpaceParam'
@@ -49,7 +49,7 @@ export const usePullRequestsData = (pageAction: { action: PageAction; timestamp:
       exclude_description: true,
       page: page,
       sort: prStateFilter == PullRequestFilterOption.MERGED ? 'merged' : 'number',
-      order: 'desc',
+      order: OrderSortDate.DESC,
       query: searchTerm,
       include_subspaces: includeSubspaces === ScopeLevelEnum.ALL,
       state: urlParams.state ? urlParams.state : prStateFilter == PullRequestFilterOption.ALL ? '' : prStateFilter,
@@ -64,14 +64,14 @@ export const usePullRequestsData = (pageAction: { action: PageAction; timestamp:
           created_by: Number(authorFilter)
         }),
 
-      ...(labelFilter.filter(({ type, valueId }) => type === 'label' || valueId === -1).length && {
+      ...(labelFilter.filter(({ type, valueId }) => type === LabelFilterType.LABEL || valueId === -1).length && {
         label_id: labelFilter
-          .filter(({ type, valueId }) => type === 'label' || valueId === -1)
+          .filter(({ type, valueId }) => type === LabelFilterType.LABEL || valueId === -1)
           .map(({ labelId }) => labelId)
       }),
-      ...(labelFilter.filter(({ type }) => type === 'value').length && {
+      ...(labelFilter.filter(({ type }) => type === LabelFilterType.VALUE).length && {
         value_id: labelFilter
-          .filter(({ type, valueId }) => type === 'value' && valueId !== -1)
+          .filter(({ type, valueId }) => type === LabelFilterType.VALUE && valueId !== -1)
           .map(({ valueId }) => valueId)
       }),
 

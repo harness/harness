@@ -21,7 +21,7 @@ import { Render } from 'react-jsx-match'
 import { useHistory } from 'react-router-dom'
 import type { TypesBranchExtended, RepoRepositoryOutput } from 'services/code'
 import { usePageIndex } from 'hooks/usePageIndex'
-import { LIST_FETCHING_LIMIT, PageBrowserProps } from 'utils/Utils'
+import { LIST_FETCHING_LIMIT, OrderSortDate, PageBrowserProps } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
@@ -54,7 +54,7 @@ export function RepositoryBranchesContent({ repoMetadata }: Partial<Pick<GitInfo
       limit: LIST_FETCHING_LIMIT,
       page,
       sort: 'date',
-      order: 'desc',
+      order: OrderSortDate.DESC,
       include_commit: true,
       query: searchTerm
     },

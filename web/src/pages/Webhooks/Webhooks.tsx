@@ -40,7 +40,14 @@ import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
-import { voidFn, getErrorMessage, LIST_FETCHING_LIMIT, PageBrowserProps, permissionProps } from 'utils/Utils'
+import {
+  voidFn,
+  getErrorMessage,
+  LIST_FETCHING_LIMIT,
+  PageBrowserProps,
+  permissionProps,
+  OrderSortDate
+} from 'utils/Utils'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { usePageIndex } from 'hooks/usePageIndex'
@@ -79,7 +86,7 @@ export default function Webhooks() {
       limit: LIST_FETCHING_LIMIT,
       page,
       sort: 'date',
-      order: 'desc',
+      order: OrderSortDate.DESC,
       query: searchTerm
     },
     debounce: 500,

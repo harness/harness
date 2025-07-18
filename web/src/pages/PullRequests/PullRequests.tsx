@@ -46,7 +46,8 @@ import {
   PageBrowserProps,
   ColorName,
   LabelFilterObj,
-  LabelFilterType
+  LabelFilterType,
+  OrderSortDate
 } from 'utils/Utils'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
@@ -136,19 +137,18 @@ export default function PullRequests() {
       exclude_description: true,
       page: browserParams.page,
       sort: filter == PullRequestFilterOption.MERGED ? 'merged' : 'number',
-      order: 'desc',
+      order: OrderSortDate.DESC,
       query: searchTerm,
       state: browserParams.state ? browserParams.state : filter == PullRequestFilterOption.ALL ? '' : filter,
       ...(authorFilter && { created_by: Number(authorFilter) }),
-
-      ...(labelFilter.filter(({ type, valueId }) => type === 'label' || valueId === -1).length && {
+      ...(labelFilter.filter(({ type, valueId }) => type === LabelFilterType.LABEL || valueId === -1).length && {
         label_id: labelFilter
-          .filter(({ type, valueId }) => type === 'label' || valueId === -1)
+          .filter(({ type, valueId }) => type === LabelFilterType.LABEL || valueId === -1)
           .map(({ labelId }) => labelId)
       }),
-      ...(labelFilter.filter(({ type }) => type === 'value').length && {
+      ...(labelFilter.filter(({ type }) => type === LabelFilterType.VALUE).length && {
         value_id: labelFilter
-          .filter(({ type, valueId }) => type === 'value' && valueId !== -1)
+          .filter(({ type, valueId }) => type === LabelFilterType.VALUE && valueId !== -1)
           .map(({ valueId }) => valueId)
       })
     },
@@ -419,7 +419,7 @@ export default function PullRequests() {
               }}
             />
             <Container padding="xlarge">
-              <Container padding={{ top: 'medium', bottom: 'large' }}>
+              <Container padding={{ bottom: 'large' }}>
                 <Layout.Horizontal
                   flex={{ alignItems: 'center', justifyContent: 'flex-start' }}
                   style={{ flexWrap: 'wrap', gap: '5px' }}>
@@ -446,17 +446,17 @@ export default function PullRequests() {
                         scope={label.labelObj.scope}
                         removeLabelBtn={true}
                         handleRemoveClick={() => {
-                          if (label.type === 'value') {
+                          if (label.type === LabelFilterType.VALUE) {
                             const updateFilterObjArr = labelFilter.filter(filterObj => {
-                              if (!(filterObj.labelId === label.labelId && filterObj.type === 'value')) {
+                              if (!(filterObj.labelId === label.labelId && filterObj.type === LabelFilterType.VALUE)) {
                                 return filterObj
                               }
                             })
                             setLabelFilter(updateFilterObjArr)
                             setPage(1)
-                          } else if (label.type === 'label') {
+                          } else if (label.type === LabelFilterType.LABEL) {
                             const updateFilterObjArr = labelFilter.filter(filterObj => {
-                              if (!(filterObj.labelId === label.labelId && filterObj.type === 'label')) {
+                              if (!(filterObj.labelId === label.labelId && filterObj.type === LabelFilterType.LABEL)) {
                                 return filterObj
                               }
                             })

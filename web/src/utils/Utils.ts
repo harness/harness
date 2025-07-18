@@ -374,7 +374,7 @@ export const ButtonRoleProps = {
   style: { cursor: 'pointer ' }
 }
 
-export enum orderSortDate {
+export enum OrderSortDate {
   ASC = 'asc',
   DESC = 'desc'
 }
@@ -796,7 +796,8 @@ export interface LabelTypes extends TypesLabel {
 
 export enum LabelFilterType {
   LABEL = 'label',
-  VALUE = 'value'
+  VALUE = 'value',
+  FOR_VALUE = 'for_value'
 }
 
 export interface LabelFilterObj {

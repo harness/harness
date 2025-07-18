@@ -96,8 +96,13 @@ export function ContentHeader({
 
   return (
     <Container className={cx(css.main, { [css.mainContainer]: !isDir(resourceContent) })}>
-      {repoPath.length === 1 &&
-        prCandidateBranches?.map(branch => <PRBanner key={branch.name} repoMetadata={repoMetadata} branch={branch} />)}
+      {repoPath.length === 1 && (
+        <Layout.Vertical spacing="small" className={css.banners}>
+          {prCandidateBranches?.map(branch => (
+            <PRBanner key={branch.name} repoMetadata={repoMetadata} branch={branch} />
+          ))}
+        </Layout.Vertical>
+      )}
       <Layout.Horizontal className={isDir(resourceContent) ? '' : css.mainBorder} spacing="medium">
         <BranchTagSelect
           repoMetadata={repoMetadata}

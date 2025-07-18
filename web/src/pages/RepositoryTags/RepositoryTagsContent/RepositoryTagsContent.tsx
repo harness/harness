@@ -20,7 +20,7 @@ import { useGet } from 'restful-react'
 import { useHistory } from 'react-router-dom'
 import type { TypesCommitTag } from 'services/code'
 import { usePageIndex } from 'hooks/usePageIndex'
-import { LIST_FETCHING_LIMIT, permissionProps, PageBrowserProps } from 'utils/Utils'
+import { LIST_FETCHING_LIMIT, permissionProps, PageBrowserProps, OrderSortDate } from 'utils/Utils'
 import { useQueryParams } from 'hooks/useQueryParams'
 import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
 import { useAppContext } from 'AppContext'
@@ -65,7 +65,7 @@ export function RepositoryTagsContent({ repoMetadata }: Pick<GitInfoProps, 'repo
       limit: LIST_FETCHING_LIMIT,
       page,
       sort: 'date',
-      order: 'desc',
+      order: OrderSortDate.DESC,
       include_commit: true,
       query: searchTerm
     },

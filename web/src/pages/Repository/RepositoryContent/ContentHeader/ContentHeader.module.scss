@@ -112,3 +112,10 @@
   background: var(--grey-0) !important;
   padding-bottom: 0 !important;
 }
+
+.banners {
+  // Only add margin-bottom to the last child if it exists
+  > :last-child {
+    margin-bottom: var(--spacing-medium);
+  }
+}
