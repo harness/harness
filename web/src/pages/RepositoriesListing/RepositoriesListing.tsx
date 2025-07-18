@@ -35,7 +35,7 @@ import { ProgressBar, Intent } from '@blueprintjs/core'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Render } from 'react-jsx-match'
 import type { CellProps, Column } from 'react-table'
-import { compact, debounce, isEmpty } from 'lodash-es'
+import { compact, debounce, defaultTo, isEmpty } from 'lodash-es'
 import Keywords from 'react-keywords'
 import cx from 'classnames'
 import { useGet } from 'restful-react'
@@ -45,7 +45,6 @@ import { useStrings, String } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import {
   voidFn,
-  formatDate,
   getErrorMessage,
   LIST_FETCHING_LIMIT,
   PageBrowserProps,
@@ -75,6 +74,7 @@ import KeywordSearch from 'components/CodeSearch/KeywordSearch'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { getUsingFetch, getConfig } from 'services/config'
+import { TimePopoverWithLocal } from 'utils/timePopoverLocal/TimePopoverWithLocal'
 import noRepoImage from './no-repo.svg?url'
 import css from './RepositoriesListing.module.scss'
 
@@ -253,7 +253,7 @@ export default function RepositoriesListing() {
       },
       {
         Header: getString('pageTitle.repository'),
-        width: showScopeInfo ? '35%' : '83%',
+        width: showScopeInfo ? '36%' : '81%',
         Cell: ({ row }: CellProps<TypesRepoExtended>) => {
           const record = row.original
           const renderImportProgressText = () => {
@@ -293,7 +293,7 @@ export default function RepositoriesListing() {
       },
       {
         id: 'scopeInfo',
-        width: showScopeInfo ? '48%' : '0',
+        width: showScopeInfo ? '45%' : '0',
         Cell: ({ row }: CellProps<TypesRepoExtended>) => {
           if (!showScopeInfo) {
             return null
@@ -332,8 +332,8 @@ export default function RepositoriesListing() {
         }
       },
       {
-        Header: getString('repos.updated'),
-        width: '13%',
+        Header: getString('lastUpdated'),
+        width: '16%',
         Cell: ({ row }: CellProps<TypesRepoExtended>) => {
           if (
             [ImportStatus.FAILED, ImportStatus.FETCH_FAILED].includes(row?.original?.importProgress as ImportStatus)
@@ -347,8 +347,12 @@ export default function RepositoriesListing() {
             </Layout.Horizontal>
           ) : (
             <Layout.Horizontal style={{ alignItems: 'center', justifyContent: 'space-between' }}>
-              <Text color={Color.BLACK} lineClamp={1} rightIconProps={{ size: 10 }} width={120}>
-                {formatDate(row.original.updated as number)}
+              <Text lineClamp={1}>
+                <TimePopoverWithLocal
+                  time={defaultTo(row.original.updated, 0) as number}
+                  inline={false}
+                  color={Color.BLACK}
+                />
               </Text>
               <FavoriteStar
                 isFavorite={row.original.is_favorite}

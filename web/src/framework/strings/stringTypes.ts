@@ -541,6 +541,7 @@ export interface StringsMap {
   lastCommit: string
   lastCommitDate: string
   lastTriggeredAt: string
+  lastUpdated: string
   leaveAComment: string
   lfsInfo: string
   license: string
@@ -1011,7 +1012,6 @@ export interface StringsMap {
   'repos.lastPush': string
   'repos.name': string
   'repos.noDataMessage': string
-  'repos.updated': string
   repositories: string
   repositoryName: string
   reqChanges: string
@@ -1201,6 +1201,7 @@ export interface StringsMap {
   updateWithRebase: string
   updated: string
   updatedBranchMessageRebase: string
+  updatedDate: string
   upload: string
   uploadAFileError: string
   user: string

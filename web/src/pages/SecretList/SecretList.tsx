@@ -106,7 +106,7 @@ const SecretList = () => {
         }
       },
       {
-        Header: getString('repos.updated'),
+        Header: getString('updatedDate'),
         width: '180px',
         Cell: ({ row }: CellProps<TypesSecret>) => {
           return (

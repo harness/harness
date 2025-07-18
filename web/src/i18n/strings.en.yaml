@@ -90,6 +90,8 @@ tagDescription: Enter tag description here
 findBranch: Find a branch
 searchBranches: Search branches
 updated: Updated
+lastUpdated: Last Updated
+updatedDate: Updated Date
 cloneHTTPS: Git clone URL
 nameYourFile: Name your file...
 noResultTitle: Sorry, no result found
@@ -124,7 +126,6 @@ repos:
   name: Repository Name
   data: Repo Data
   activities: Monthly Activities
-  updated: Updated Date
   lastChange: Last Change
   lastPush: Last Push
   noDataMessage: There are no repositories in this project.  Create a new repository, or import an existing Git repository by clicking below.
