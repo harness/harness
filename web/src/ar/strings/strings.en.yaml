@@ -87,6 +87,7 @@ packageTypes:
   nugetPackage: NuGet Package
   rpmPackage: RPM Package
   cargoPackage: Cargo Package
+  goPackage: Go Package
 repositoryTypes:
   docker: Docker
   helm: Helm

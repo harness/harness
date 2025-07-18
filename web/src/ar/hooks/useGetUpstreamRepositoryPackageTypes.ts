@@ -101,7 +101,8 @@ export const UpstreamProxyPackageTypeList: UpstreamRepositoryPackageTypeListItem
     icon: 'go-logo',
     tooltip: 'Coming Soon!',
     disabled: true,
-    tag: ThumbnailTagEnum.ComingSoon
+    tag: ThumbnailTagEnum.ComingSoon,
+    featureFlag: FeatureFlags.HAR_GO_PACKAGE_TYPE_ENABLED
   },
   {
     label: 'repositoryTypes.debian',

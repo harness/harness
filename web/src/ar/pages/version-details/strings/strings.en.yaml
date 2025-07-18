@@ -65,6 +65,9 @@ overview:
     platform: Platform
     sourceRpm: Source RPM
     vendor: Vendor
+    vcs: VCS
+    ref: Ref
+    hash: Hash
 artifactDetails:
   tabs:
     layers: Layers

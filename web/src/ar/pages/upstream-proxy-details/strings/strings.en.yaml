@@ -17,6 +17,7 @@ createForm:
     pypi: PyPI
     nugetOrg: NuGet.org
     crates: Crates.io
+    goproxy: GoProxy
   authentication:
     title: Authentication
     userNameAndPassword: Username and Password

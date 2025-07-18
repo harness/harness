@@ -167,6 +167,7 @@ export interface StringsMap {
   'upstreamProxyDetails.createForm.source.custom': string
   'upstreamProxyDetails.createForm.source.dockerHub': string
   'upstreamProxyDetails.createForm.source.ecr': string
+  'upstreamProxyDetails.createForm.source.goproxy': string
   'upstreamProxyDetails.createForm.source.mavenCentral': string
   'upstreamProxyDetails.createForm.source.npmjs': string
   'upstreamProxyDetails.createForm.source.nugetOrg': string
@@ -242,6 +243,7 @@ export interface StringsMap {
   'versionDetails.overview.generalInformation.digest': string
   'versionDetails.overview.generalInformation.documentation': string
   'versionDetails.overview.generalInformation.downloads': string
+  'versionDetails.overview.generalInformation.hash': string
   'versionDetails.overview.generalInformation.homepage': string
   'versionDetails.overview.generalInformation.license': string
   'versionDetails.overview.generalInformation.modifiedAt': string
@@ -250,6 +252,7 @@ export interface StringsMap {
   'versionDetails.overview.generalInformation.packager': string
   'versionDetails.overview.generalInformation.platform': string
   'versionDetails.overview.generalInformation.pullCommand': string
+  'versionDetails.overview.generalInformation.ref': string
   'versionDetails.overview.generalInformation.repository': string
   'versionDetails.overview.generalInformation.repositoryPath': string
   'versionDetails.overview.generalInformation.size': string
@@ -257,6 +260,7 @@ export interface StringsMap {
   'versionDetails.overview.generalInformation.title': string
   'versionDetails.overview.generalInformation.uploadedBy': string
   'versionDetails.overview.generalInformation.url': string
+  'versionDetails.overview.generalInformation.vcs': string
   'versionDetails.overview.generalInformation.vendor': string
   'versionDetails.overview.generalInformation.version': string
   'versionDetails.page': string
@@ -390,6 +394,7 @@ export interface StringsMap {
   'packageTypes.cargoPackage': string
   'packageTypes.dockerPackage': string
   'packageTypes.genericPackage': string
+  'packageTypes.goPackage': string
   'packageTypes.helmPackage': string
   'packageTypes.mavenPackage': string
   'packageTypes.npmPackage': string

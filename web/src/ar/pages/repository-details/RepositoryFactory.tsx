@@ -24,6 +24,7 @@ import { PythonRepositoryType } from './PythonRepository/PythonRepositoryType'
 import { NuGetRepositoryType } from './NuGetRepository/NuGetRepositoryType'
 import { RPMRepositoryType } from './RPMRepository/RPMRepositoryType'
 import { CargoRepositoryType } from './CargoRepository/CargoRepositoryType'
+import { GoRepositoryType } from './GoRepository/GoRepositoryType'
 
 repositoryFactory.registerStep(new DockerRepositoryType())
 repositoryFactory.registerStep(new HelmRepositoryType())
@@ -34,3 +35,4 @@ repositoryFactory.registerStep(new PythonRepositoryType())
 repositoryFactory.registerStep(new NuGetRepositoryType())
 repositoryFactory.registerStep(new RPMRepositoryType())
 repositoryFactory.registerStep(new CargoRepositoryType())
+repositoryFactory.registerStep(new GoRepositoryType())

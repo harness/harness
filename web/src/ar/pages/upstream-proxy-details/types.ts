@@ -40,7 +40,8 @@ export enum UpstreamRepositoryURLInputSource {
   Custom = 'Custom',
   PyPi = 'PyPi',
   NugetOrg = 'NugetOrg',
-  Crates = 'Crates'
+  Crates = 'Crates',
+  GoProxy = 'GoProxy'
 }
 
 export enum UpstreamProxyAuthenticationMode {

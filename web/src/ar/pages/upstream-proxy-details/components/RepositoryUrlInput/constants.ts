@@ -53,5 +53,9 @@ export const UpstreamURLSourceConfig: Record<UpstreamRepositoryURLInputSource, R
   [UpstreamRepositoryURLInputSource.Crates]: {
     label: 'upstreamProxyDetails.createForm.source.crates',
     value: UpstreamRepositoryURLInputSource.Crates
+  },
+  [UpstreamRepositoryURLInputSource.GoProxy]: {
+    label: 'upstreamProxyDetails.createForm.source.goproxy',
+    value: UpstreamRepositoryURLInputSource.GoProxy
   }
 }
