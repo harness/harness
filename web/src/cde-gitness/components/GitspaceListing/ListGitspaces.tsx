@@ -52,6 +52,7 @@ import { getGitspaceChanges, getIconByRepoType } from 'cde-gitness/utils/SelectR
 import { usePaginationProps } from 'cde-gitness/hooks/usePaginationProps'
 import ResourceDetails from '../ResourceDetails/ResourceDetails'
 import CopyButton from '../CopyButton/CopyButton'
+import { getRepoNameFromURL } from '../../utils/SelectRepository.utils'
 import css from './ListGitspaces.module.scss'
 
 export const getStatusColor = (status?: EnumGitspaceStateType) => {
@@ -187,6 +188,7 @@ export const OwnerAndCreatedAt: Renderer<CellProps<TypesGitspaceConfig>> = ({ ro
 export const RenderRepository: Renderer<CellProps<TypesGitspaceConfig>> = ({ row }) => {
   const details = row.original
   const { name, branch, branch_url, code_repo_type, code_repo_url, instance } = details || {}
+  const repoName = getRepoNameFromURL(code_repo_url) || ''
   const { has_git_changes } = instance || {}
 
   const { getString } = useStrings()
@@ -208,7 +210,7 @@ export const RenderRepository: Renderer<CellProps<TypesGitspaceConfig>> = ({ row
             {getIconByRepoType({ repoType: code_repo_type, height: 24 })}
           </Container>
           <Text lineClamp={1} color={Color.PRIMARY_7} title={name} font={{ align: 'left', size: 'normal' }}>
-            {name}
+            {repoName}
           </Text>
         </Layout.Horizontal>
         <Layout.Horizontal

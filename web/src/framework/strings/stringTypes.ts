@@ -1348,6 +1348,10 @@ export interface StringsMap {
   'cde.create.gitnessRepositories': string
   'cde.create.gitspaceCreateFailed': string
   'cde.create.gitspaceCreateSuccess': string
+  'cde.create.gitspaceNameHelpertext1': string
+  'cde.create.gitspaceNameHelpertext2': string
+  'cde.create.gitspaceNameLabel': string
+  'cde.create.gitspaceNamePlaceholder': string
   'cde.create.importWarning': string
   'cde.create.infraProviderFailed': string
   'cde.create.infraProviderSuccess': string
@@ -1484,6 +1488,7 @@ export interface StringsMap {
   'cde.gitspaceInfraHome.waitingMessage': string
   'cde.gitspaceInfraHome.zone': string
   'cde.gitspaceInfraHome.zoneMessage': string
+  'cde.gitspaceNameValidation': string
   'cde.gitspaceOwners.allGitspaces': string
   'cde.gitspaceOwners.myGitspaces': string
   'cde.gitspaceStatus.active': string

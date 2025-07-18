@@ -41,6 +41,7 @@ regionSelectWarning: Select a region first
 gitspaceUpdateSuccess: Gitspace updated successfully
 regionValidationMessage: Region is required
 repoValidationMessage: Repository is required
+gitspaceNameValidation: New Gitspace name must not be blank
 branchValidationMessage: Branch is required
 machineValidationMessage: Machine Type is required
 sshValidationMessage: SSH Key is required
@@ -224,6 +225,10 @@ create:
   searchRepositoryPlaceholder: Search for a repository
   searchBranchPlaceholder: Search for a branch
   repoNotFound: 'Create a repo <strong>{{repo}}</strong>'
+  gitspaceNameLabel: Gitspace name
+  gitspaceNamePlaceholder: Provide name
+  gitspaceNameHelpertext1: Great Gitspace names are short and memorable. Need some inspiration?
+  gitspaceNameHelpertext2: "Try this:"
   gitspaceCreateSuccess: Gitspace created successfully
   gitspaceCreateFailed: Gitspace creation failed
   infraProviderSuccess: Gitspace Infrastructure created successfully

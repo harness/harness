@@ -22,13 +22,13 @@ import { GitFork, Repository } from 'iconoir-react'
 import { Menu, MenuItem } from '@blueprintjs/core'
 import { Color } from '@harnessio/design-system'
 import type { OpenapiCreateGitspaceRequest, TypesRepoResponse } from 'services/cde'
-import { useListGitspaceRepos, useListGitspaceBranches, useRepoLookupForGitspace } from 'services/cde'
+import { useListGitspaceBranches, useListGitspaceRepos, useRepoLookupForGitspace } from 'services/cde'
 import { useGetCDEAPIParams } from 'cde-gitness/hooks/useGetCDEAPIParams'
 import {
   onPremSCMOptions,
+  type RepoQueryParams,
   scmOptions,
-  SCMType,
-  type RepoQueryParams
+  SCMType
 } from 'cde-gitness/pages/GitspaceCreate/CDECreateGitspace'
 import { useQueryParams } from 'hooks/useQueryParams'
 import { getRepoIdFromURL, getRepoNameFromURL, isValidUrl } from 'cde-gitness/utils/SelectRepository.utils'
@@ -182,7 +182,7 @@ export const CDEAnyGitImport = () => {
                 code_repo_url: response.url,
                 ...branchValue,
                 identifier: getRepoIdFromURL(response.url),
-                name: getRepoNameFromURL(response.url),
+                name: '',
                 code_repo_type: values?.code_repo_type
               }
             })
@@ -209,7 +209,7 @@ export const CDEAnyGitImport = () => {
                 code_repo_url: url,
                 ...branchValue,
                 identifier: getRepoIdFromURL(url),
-                name: getRepoNameFromURL(url),
+                name: '',
                 code_repo_type: values?.code_repo_type
               }
             })

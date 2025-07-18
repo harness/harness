@@ -27,6 +27,7 @@
     h2 {
       font-size: 24px !important;
     }
+
     p {
       font-size: 16px !important;
       color: #383946;
@@ -34,7 +35,7 @@
   }
 
   .cardMain {
-    width: 50%;
+    width: 51%;
   }
 
   .cardTitle {
@@ -75,5 +76,56 @@
 
   button {
     margin-bottom: none;
+  }
+}
+
+.gitspaceNameContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-medium);
+  padding: var(--spacing-small) 0;
+  width: 100%;
+}
+
+.leftSection {
+  display: flex;
+  align-items: start;
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-right: 7px !important;
+}
+
+.textSection {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.suggestedName {
+  color: #0066ff !important;
+  cursor: pointer;
+  text-decoration: underline;
+  width: fit-content;
+}
+
+.inputFieldContainer {
+  :global {
+    input.bp3-input {
+      background: #f3f3fa !important;
+      color: #6b6d85 !important;
+      width: 100% !important;
+      height: 40px !important;
+      font-size: var(--font-size) !important;
+      padding-left: 20px !important;
+    }
+
+    input.bp3-input:hover {
+      background: transparent !important;
+    }
   }
 }

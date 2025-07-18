@@ -25,7 +25,7 @@ export const validateGitnessForm = (getString: UseStringsReturn['getString'], is
     identifier: yup.string().trim().required(),
     ide: yup.string().trim().required(),
     resource_identifier: yup.string().trim().required(getString('cde.machineValidationMessage')),
-    name: yup.string().trim().required(),
+    name: yup.string().trim().required(getString('cde.gitspaceNameValidation')),
     ssh_token_identifier: yup.string().when('ide', {
       is: ide => {
         const selectedIDE = getIDEOption(ide, getString)

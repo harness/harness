@@ -14,18 +14,29 @@
  * limitations under the License.
  */
 import React, { useEffect, useState } from 'react'
-import { Button, ButtonVariation, Container, Formik, FormikForm, Layout, Text, useToaster } from '@harnessio/uicore'
+import {
+  Button,
+  ButtonVariation,
+  Container,
+  Formik,
+  FormikForm,
+  FormInput,
+  Layout,
+  Text,
+  useToaster
+} from '@harnessio/uicore'
 import { useHistory } from 'react-router-dom'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Menu, MenuItem } from '@blueprintjs/core'
 import { defaultTo, omit } from 'lodash-es'
-import { getRepoIdFromURL, getRepoNameFromURL } from 'cde-gitness/utils/SelectRepository.utils'
+import { getRepoIdFromURL } from 'cde-gitness/utils/SelectRepository.utils'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import { getErrorMessage } from 'utils/Utils'
 import { GitspaceSelect } from 'cde-gitness/components/GitspaceSelect/GitspaceSelect'
 import harnessCode from 'cde-gitness/assests/harnessCode.svg?url'
+import codeSandboxIcon from 'cde-gitness/assests/codeSandboxLogo.svg?url'
 import genericGit from 'cde-gitness/assests/genericGit.svg?url'
 import gitnessIcon from 'cde-gitness/assests/gitness.svg?url'
 import github from 'cde-gitness/assests/github.svg?url'
@@ -42,6 +53,7 @@ import { useQueryParams } from 'hooks/useQueryParams'
 import { CDEUnknownSCM } from 'cde-gitness/components/CDEAnyGitImport/CDEUnknownSCM'
 import { gitnessFormInitialValues } from './GitspaceCreate.constants'
 import { validateGitnessForm } from './GitspaceCreate.utils'
+import { generateGitspaceName } from '../../utils/nameGenerator.utils'
 import css from './GitspaceCreate.module.scss'
 
 export interface SCMType {
@@ -88,6 +100,7 @@ export const CDECreateGitspace = () => {
   const { useGetUserSourceCodeManagers } = hooks
   const history = useHistory()
   const space = useGetSpaceParam()
+  const suggestedName = generateGitspaceName()
 
   const { accountIdentifier = '', orgIdentifier = '', projectIdentifier = '' } = useGetCDEAPIParams()
   const { showSuccess, showError } = useToaster()
@@ -106,7 +119,7 @@ export const CDECreateGitspace = () => {
       setrepoURLviaQueryParam(prv => {
         return {
           ...prv,
-          name: getRepoNameFromURL(codeRepoURL),
+          name: '',
           identifier: getRepoIdFromURL(codeRepoURL),
           branch: queryParamBranch,
           codeRepoURL,
@@ -126,7 +139,7 @@ export const CDECreateGitspace = () => {
           code_repo_url: repoQueryParams.codeRepoURL,
           branch: repoQueryParams.branch,
           identifier: getRepoIdFromURL(repoQueryParams.codeRepoURL),
-          name: getRepoNameFromURL(repoQueryParams.codeRepoURL),
+          name: '',
           code_repo_type: repoQueryParams.codeRepoType
         }
       : {}
@@ -266,7 +279,41 @@ export const CDECreateGitspace = () => {
                   )}
                 </Container>
               </Container>
+
               <Container className={css.formOuterContainer}>
+                <Layout.Horizontal className={css.gitspaceNameContainer}>
+                  <Container width="69.5%">
+                    <Layout.Horizontal className={css.leftSection}>
+                      <img src={codeSandboxIcon} alt="gitspace" className={css.icon} />
+                      <Layout.Vertical className={css.textSection} spacing={'small'}>
+                        <Text>{getString('cde.create.gitspaceNameLabel')}</Text>
+                        <Layout.Vertical spacing={'xsmall'}>
+                          <Text font={'small'}>{getString('cde.create.gitspaceNameHelpertext1')}</Text>
+                          <Layout.Horizontal>
+                            <Text font={'small'}>{getString('cde.create.gitspaceNameHelpertext2')}</Text>
+                            <Text
+                              className={css.suggestedName}
+                              font={{ variation: FontVariation.SMALL }}
+                              onClick={e => {
+                                e.stopPropagation()
+                                formik.setFieldValue('name', suggestedName)
+                              }}>
+                              {suggestedName}
+                            </Text>
+                          </Layout.Horizontal>
+                        </Layout.Vertical>
+                      </Layout.Vertical>
+                    </Layout.Horizontal>
+                  </Container>
+                  <Container width="30.5%">
+                    <FormInput.Text
+                      name="name"
+                      placeholder={getString('cde.create.gitspaceNamePlaceholder')}
+                      className={css.inputFieldContainer}
+                    />
+                  </Container>
+                </Layout.Horizontal>
+
                 <CDEIDESelect onChange={formik.setFieldValue} selectedIde={formik.values.ide} />
                 {selectedIDE?.allowSSH ? <CDESSHSelect /> : <></>}
                 <SelectInfraProvider />

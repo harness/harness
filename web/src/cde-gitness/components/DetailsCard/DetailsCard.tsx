@@ -15,11 +15,11 @@
  */
 
 import { Color } from '@harnessio/design-system'
-import { Button, Layout, Text, ButtonVariation, Container } from '@harnessio/uicore'
+import { Button, ButtonVariation, Container, Layout, Text } from '@harnessio/uicore'
 import React from 'react'
 import ReactTimeago from 'react-timeago'
 import { PopoverPosition } from '@blueprintjs/core'
-import { InfoEmpty, Circle } from 'iconoir-react'
+import { Circle, InfoEmpty } from 'iconoir-react'
 import type { IconName } from '@harnessio/icons'
 import { useStrings } from 'framework/strings'
 import { GitspaceStatus } from 'cde-gitness/constants'
@@ -27,6 +27,7 @@ import { getGitspaceChanges, getIconByRepoType } from 'cde-gitness/utils/SelectR
 import type { TypesGitspaceConfig } from 'services/cde'
 import { getStatusColor, getStatusText } from '../GitspaceListing/ListGitspaces'
 import ResourceDetails from '../ResourceDetails/ResourceDetails'
+import { getRepoNameFromURL } from '../../utils/SelectRepository.utils'
 import css from './DetailsCard.module.scss'
 
 export const DetailsCard = ({
@@ -37,6 +38,8 @@ export const DetailsCard = ({
 }) => {
   const { getString } = useStrings()
   const { branch, state, name, branch_url, code_repo_url, code_repo_type, instance, resource } = data || {}
+  const repoName = getRepoNameFromURL(code_repo_url) || ''
+
   const { has_git_changes } = instance || {}
   const gitChanges = getGitspaceChanges(has_git_changes, getString, '--')
   const color = getStatusColor(state)
@@ -84,7 +87,7 @@ export const DetailsCard = ({
               style={{ cursor: 'pointer' }}
               font={{ align: 'left', size: 'normal' }}
               onClick={() => window.open(code_repo_url, '_blank')}>
-              {name}
+              {repoName}
             </Text>
           </Layout.Horizontal>
         </Layout.Vertical>
