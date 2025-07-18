@@ -200,7 +200,8 @@ branchDeleted: Branch {branch} deleted.
 branchRestored: Branch {branch} restored.
 tagDeleted: Tag {tag} deleted.
 failedToDeleteBranch: Failed to delete branch. Please try again.
-deleteBranchDryRunFailed: Dry run failed to try deleting branch. Please try again.
+deleteBranchDryRunFailed: Dry run failed while trying to delete branch. Please try again.
+deleteTagDryRunFailed: Dry run failed while trying to delete tag. Please try again.
 createFile: Create __path__
 updateFile: Update __path__
 renameFile: Rename __path__ to __newPath__
@@ -1099,9 +1100,9 @@ protectionRules:
   createRefAlertBtn: Bypass rules and create {{ref}}
   createRefAlertText: Some rules will be bypassed while creating {{ref}}
   createRefBlockText: Some rules don't allow you to create {{ref}}
-  deleteBranchAlertBtn: Bypass rule and confirm delete
-  deleteBranchAlertText: Some rules will be bypassed while deleting branch
-  deleteBranchBlockText: Some rules don't allow you to delete branch
+  deleteRefAlertBtn: Bypass rule and confirm delete
+  deleteRefAlertText: Some rules will be bypassed while deleting {{ref}}
+  deleteRefBlockText: Some rules don't allow you to delete {{ref}}
   commitNewBranchAlertBtn: Bypass rules and commit via new branch
   commitNewBranchAlertText: Some rules will be bypassed to commit by creating branch
   commitNewBranchBlockText: Some rules don't allow you to create new branch for commit

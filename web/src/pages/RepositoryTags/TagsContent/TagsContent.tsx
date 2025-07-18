@@ -14,25 +14,27 @@
  * limitations under the License.
  */
 
-import React, { useMemo } from 'react'
-import { Container, TableV2 as Table, Text, Avatar, useToaster, StringSubstitute } from '@harnessio/uicore'
-import { Color, Intent } from '@harnessio/design-system'
+import React, { useMemo, useState } from 'react'
+import { Container, TableV2 as Table, Text, Avatar, useToaster, StringSubstitute, Layout } from '@harnessio/uicore'
+import { Color, FontVariation, Intent } from '@harnessio/design-system'
 import type { CellProps, Column } from 'react-table'
 import { Link, useHistory } from 'react-router-dom'
 import cx from 'classnames'
 import Keywords from 'react-keywords'
 import { useMutate } from 'restful-react'
-import { noop } from 'lodash-es'
+import { isEmpty, noop } from 'lodash-es'
+import { Icon } from '@harnessio/icons'
+import { Render } from 'react-jsx-match'
 import { String, useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
-
 import type { TypesBranchExtended, TypesCommitTag, RepoRepositoryOutput } from 'services/code'
 import { formatDate, getErrorMessage, voidFn } from 'utils/Utils'
 import { useConfirmAction } from 'hooks/useConfirmAction'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { useCreateBranchModal } from 'components/CreateRefModal/CreateBranchModal/CreateBranchModal'
 import { CommitActions } from 'components/CommitActions/CommitActions'
-import { CodeIcon, REFS_TAGS_PREFIX } from 'utils/GitUtils'
+import { CodeIcon, GitRefType, REFS_TAGS_PREFIX } from 'utils/GitUtils'
+import { useRuleViolationCheck } from 'hooks/useRuleViolationCheck'
 import css from './TagsContent.module.scss'
 
 interface TagsContentProps {
@@ -140,18 +142,44 @@ export function TagsContent({ repoMetadata, searchTerm = '', branches, onDeleteS
         id: 'action',
         width: '30px',
         Cell: ({ row }: CellProps<TypesBranchExtended>) => {
-          const { mutate: deleteBranch } = useMutate({
+          const { violation, bypassable, bypassed, setAllStates } = useRuleViolationCheck()
+          const [persistDialog, setPersistDialog] = useState(true)
+          const [dryRun, setDryRun] = useState(true)
+          const { mutate: deleteTag } = useMutate({
             verb: 'DELETE',
-            path: `/api/v1/repos/${repoMetadata.path}/+/tags/${row.original.name}`
+            path: `/api/v1/repos/${repoMetadata.path}/+/tags/${row.original.name}`,
+            queryParams: { dry_run_rules: dryRun, bypass_rules: bypassed }
           })
           const { showSuccess, showError } = useToaster()
           const confirmDeleteTag = useConfirmAction({
             title: getString('deleteTag'),
-            confirmText: getString('confirmDelete'),
+            confirmText:
+              !dryRun && (!violation || !bypassable)
+                ? getString('delete')
+                : getString('protectionRules.deleteRefAlertBtn', { ref: GitRefType.TAG }),
+            buttonDisabled: !dryRun && !bypassable,
             intent: Intent.DANGER,
             message: <String useRichText stringID="deleteTagConfirm" vars={{ name: row.original.name }} />,
+            persistDialog,
+            onOpen: () => {
+              deleteTag({})
+                .then(res => {
+                  if (!isEmpty(res?.rule_violations)) {
+                    setAllStates({
+                      violation: true,
+                      bypassed: true,
+                      bypassable: res?.rule_violations[0]?.bypassable
+                    })
+                  } else setAllStates({ bypassable: true })
+                })
+                .catch(error => {
+                  setPersistDialog(false)
+                  showError(getErrorMessage(error), 0, 'deleteTagDryRunFailed')
+                })
+                .finally(() => setDryRun(false))
+            },
             action: async () => {
-              deleteBranch({})
+              deleteTag({})
                 .then(() => {
                   showSuccess(
                     <StringSubstitute
@@ -167,7 +195,20 @@ export function TagsContent({ repoMetadata, searchTerm = '', branches, onDeleteS
                 .catch(error => {
                   showError(getErrorMessage(error), 0, 'failedToDeleteTag')
                 })
-            }
+                .finally(() => setDryRun(false))
+            },
+            childtag: (
+              <Render when={violation}>
+                <Layout.Horizontal className={css.warningMessage}>
+                  <Icon intent={Intent.WARNING} name="danger-icon" size={16} />
+                  <Text font={{ variation: FontVariation.BODY2 }} color={Color.RED_800}>
+                    {bypassable
+                      ? getString('protectionRules.deleteRefAlertText', { ref: GitRefType.TAG })
+                      : getString('protectionRules.deleteRefBlockText', { ref: GitRefType.TAG })}
+                  </Text>
+                </Layout.Horizontal>
+              </Render>
+            )
           })
           const openModal = useCreateBranchModal({
             repoMetadata,

@@ -141,7 +141,7 @@ export type EnumIDEType =
   | 'rubymine'
   | 'rider'
 
-export type EnumInfraProviderType = 'docker' | 'harness_gcp' | 'harness_cloud' | 'hybrid_vm_gcp'
+export type EnumInfraProviderType = 'docker' | 'harness_gcp' | 'harness_cloud' | 'hybrid_vm_gcp' | 'hybrid_vm_aws'
 
 export type EnumLabelColor =
   | 'blue'
@@ -532,6 +532,7 @@ export interface OpenapiCreateSpaceWebhookRequest {
 
 export interface OpenapiCreateTagRequest {
   bypass_rules?: boolean
+  dry_run_rules?: boolean
   message?: string
   name?: string
   target?: string
@@ -1243,6 +1244,19 @@ export interface TypesCreateBranchOutput {
   sha?: ShaSHA
 }
 
+export interface TypesCreateCommitTagOutput {
+  commit?: TypesCommit
+  dry_run_rules?: boolean
+  is_annotated?: boolean
+  message?: string
+  name?: string
+  rule_violations?: TypesRuleViolations[]
+  sha?: ShaSHA
+  signature?: TypesGitSignatureResult
+  tagger?: TypesSignature
+  title?: string
+}
+
 export interface TypesDefaultReviewerApprovalsResponse {
   current_count?: number
   minimum_required_count?: number
@@ -1251,6 +1265,11 @@ export interface TypesDefaultReviewerApprovalsResponse {
 }
 
 export interface TypesDeleteBranchOutput {
+  dry_run_rules?: boolean
+  rule_violations?: TypesRuleViolations[]
+}
+
+export interface TypesDeleteCommitTagOutput {
   dry_run_rules?: boolean
   rule_violations?: TypesRuleViolations[]
 }
@@ -7629,7 +7648,7 @@ export interface CreateTagPathParams {
 
 export type CreateTagProps = Omit<
   MutateProps<
-    TypesCommitTag,
+    TypesCreateCommitTagOutput,
     UsererrorError | TypesRulesViolations,
     void,
     OpenapiCreateTagRequest,
@@ -7640,7 +7659,13 @@ export type CreateTagProps = Omit<
   CreateTagPathParams
 
 export const CreateTag = ({ repo_ref, ...props }: CreateTagProps) => (
-  <Mutate<TypesCommitTag, UsererrorError | TypesRulesViolations, void, OpenapiCreateTagRequest, CreateTagPathParams>
+  <Mutate<
+    TypesCreateCommitTagOutput,
+    UsererrorError | TypesRulesViolations,
+    void,
+    OpenapiCreateTagRequest,
+    CreateTagPathParams
+  >
     verb="POST"
     path={`/repos/${repo_ref}/tags`}
     base={getConfig('code/api/v1')}
@@ -7650,7 +7675,7 @@ export const CreateTag = ({ repo_ref, ...props }: CreateTagProps) => (
 
 export type UseCreateTagProps = Omit<
   UseMutateProps<
-    TypesCommitTag,
+    TypesCreateCommitTagOutput,
     UsererrorError | TypesRulesViolations,
     void,
     OpenapiCreateTagRequest,
@@ -7661,17 +7686,27 @@ export type UseCreateTagProps = Omit<
   CreateTagPathParams
 
 export const useCreateTag = ({ repo_ref, ...props }: UseCreateTagProps) =>
-  useMutate<TypesCommitTag, UsererrorError | TypesRulesViolations, void, OpenapiCreateTagRequest, CreateTagPathParams>(
-    'POST',
-    (paramsInPath: CreateTagPathParams) => `/repos/${paramsInPath.repo_ref}/tags`,
-    { base: getConfig('code/api/v1'), pathParams: { repo_ref }, ...props }
-  )
+  useMutate<
+    TypesCreateCommitTagOutput,
+    UsererrorError | TypesRulesViolations,
+    void,
+    OpenapiCreateTagRequest,
+    CreateTagPathParams
+  >('POST', (paramsInPath: CreateTagPathParams) => `/repos/${paramsInPath.repo_ref}/tags`, {
+    base: getConfig('code/api/v1'),
+    pathParams: { repo_ref },
+    ...props
+  })
 
 export interface DeleteTagQueryParams {
   /**
    * Bypass rule violations if possible.
    */
   bypass_rules?: boolean
+  /**
+   * Dry run rules for operations
+   */
+  dry_run_rules?: boolean
 }
 
 export interface DeleteTagPathParams {
@@ -7679,13 +7714,25 @@ export interface DeleteTagPathParams {
 }
 
 export type DeleteTagProps = Omit<
-  MutateProps<void, UsererrorError | TypesRulesViolations, DeleteTagQueryParams, string, DeleteTagPathParams>,
+  MutateProps<
+    TypesDeleteCommitTagOutput,
+    UsererrorError | TypesRulesViolations,
+    DeleteTagQueryParams,
+    string,
+    DeleteTagPathParams
+  >,
   'path' | 'verb'
 > &
   DeleteTagPathParams
 
 export const DeleteTag = ({ repo_ref, ...props }: DeleteTagProps) => (
-  <Mutate<void, UsererrorError | TypesRulesViolations, DeleteTagQueryParams, string, DeleteTagPathParams>
+  <Mutate<
+    TypesDeleteCommitTagOutput,
+    UsererrorError | TypesRulesViolations,
+    DeleteTagQueryParams,
+    string,
+    DeleteTagPathParams
+  >
     verb="DELETE"
     path={`/repos/${repo_ref}/tags`}
     base={getConfig('code/api/v1')}
@@ -7694,17 +7741,29 @@ export const DeleteTag = ({ repo_ref, ...props }: DeleteTagProps) => (
 )
 
 export type UseDeleteTagProps = Omit<
-  UseMutateProps<void, UsererrorError | TypesRulesViolations, DeleteTagQueryParams, string, DeleteTagPathParams>,
+  UseMutateProps<
+    TypesDeleteCommitTagOutput,
+    UsererrorError | TypesRulesViolations,
+    DeleteTagQueryParams,
+    string,
+    DeleteTagPathParams
+  >,
   'path' | 'verb'
 > &
   DeleteTagPathParams
 
 export const useDeleteTag = ({ repo_ref, ...props }: UseDeleteTagProps) =>
-  useMutate<void, UsererrorError | TypesRulesViolations, DeleteTagQueryParams, string, DeleteTagPathParams>(
-    'DELETE',
-    (paramsInPath: DeleteTagPathParams) => `/repos/${paramsInPath.repo_ref}/tags`,
-    { base: getConfig('code/api/v1'), pathParams: { repo_ref }, ...props }
-  )
+  useMutate<
+    TypesDeleteCommitTagOutput,
+    UsererrorError | TypesRulesViolations,
+    DeleteTagQueryParams,
+    string,
+    DeleteTagPathParams
+  >('DELETE', (paramsInPath: DeleteTagPathParams) => `/repos/${paramsInPath.repo_ref}/tags`, {
+    base: getConfig('code/api/v1'),
+    pathParams: { repo_ref },
+    ...props
+  })
 
 export interface RepoArtifactUploadPathParams {
   repo_ref: string

@@ -49,7 +49,7 @@ import { useConfirmAction } from 'hooks/useConfirmAction'
 import { useRuleViolationCheck } from 'hooks/useRuleViolationCheck'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { CommitDivergence } from 'components/CommitDivergence/CommitDivergence'
-import { makeDiffRefs, normalizeGitRef } from 'utils/GitUtils'
+import { GitRefType, makeDiffRefs, normalizeGitRef } from 'utils/GitUtils'
 import css from './BranchesContent.module.scss'
 
 interface BranchesContentProps {
@@ -188,7 +188,7 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
             confirmText:
               !dryRun && (!violation || !bypassable)
                 ? getString('delete')
-                : getString('protectionRules.deleteBranchAlertBtn'),
+                : getString('protectionRules.deleteRefAlertBtn', { ref: GitRefType.BRANCH }),
             buttonDisabled: !dryRun && !bypassable,
             intent: Intent.DANGER,
             message: <String useRichText stringID="deleteBranchConfirm" vars={{ name: row.original.name }} />,
@@ -213,7 +213,6 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
             action: async () => {
               deleteBranch({})
                 .then(() => {
-                  setPersistDialog(false)
                   showSuccess(
                     <StringSubstitute
                       str={getString('branchDeleted')}
@@ -228,6 +227,7 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
                 .catch(error => {
                   showError(getErrorMessage(error), 0, 'failedToDeleteBranch')
                 })
+                .finally(() => setDryRun(false))
             },
             childtag: (
               <Render when={violation}>
@@ -235,8 +235,8 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
                   <Icon intent={Intent.WARNING} name="danger-icon" size={16} />
                   <Text font={{ variation: FontVariation.BODY2 }} color={Color.RED_800}>
                     {bypassable
-                      ? getString('protectionRules.deleteBranchAlertText')
-                      : getString('protectionRules.deleteBranchBlockText')}
+                      ? getString('protectionRules.deleteRefAlertText', { ref: GitRefType.BRANCH })
+                      : getString('protectionRules.deleteRefBlockText', { ref: GitRefType.BRANCH })}
                   </Text>
                 </Layout.Horizontal>
               </Render>

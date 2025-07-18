@@ -75,6 +75,15 @@
   }
 }
 
+.warningMessage {
+  order: 3;
+  display: flex !important;
+  gap: var(--spacing-small);
+  align-items: center;
+  margin-top: var(--spacing-small) !important;
+  padding-top: var(--spacing-xsmall) !important;
+}
+
 .popover {
   padding: var(--spacing-small);
 }

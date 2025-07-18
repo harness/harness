@@ -1118,7 +1118,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opDeleteTag := openapi3.Operation{}
 	opDeleteTag.WithTags("repository")
 	opDeleteTag.WithMapOfAnything(map[string]interface{}{"operationId": "deleteTag"})
-	opDeleteTag.WithParameters(queryParameterBypassRules)
+	opDeleteTag.WithParameters(queryParameterBypassRules, queryParameterDryRunRules)
 	_ = reflector.SetRequest(&opDeleteTag, new(deleteTagRequest), http.MethodDelete)
 	_ = reflector.SetJSONResponse(&opDeleteTag, new(types.DeleteCommitTagOutput), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opDeleteTag, new(usererror.Error), http.StatusInternalServerError)

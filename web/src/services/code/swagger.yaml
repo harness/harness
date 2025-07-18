@@ -1640,6 +1640,12 @@ paths:
             schema:
               $ref: '#/components/schemas/OpenapiCreateBranchRequest'
       responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesCreateBranchOutput'
+          description: OK
         '201':
           content:
             application/json:
@@ -5158,6 +5164,12 @@ paths:
                   type: boolean
               type: object
       responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesCreateBranchOutput'
+          description: OK
         '201':
           content:
             application/json:
@@ -7750,11 +7762,17 @@ paths:
             schema:
               $ref: '#/components/schemas/OpenapiCreateTagRequest'
       responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesCreateCommitTagOutput'
+          description: OK
         '201':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TypesCommitTag'
+                $ref: '#/components/schemas/TypesCreateCommitTagOutput'
           description: Created
         '400':
           content:
@@ -7805,6 +7823,13 @@ paths:
           schema:
             default: false
             type: boolean
+        - description: Dry run rules for operations
+          in: query
+          name: dry_run_rules
+          required: false
+          schema:
+            default: false
+            type: boolean
         - in: path
           name: repo_ref
           required: true
@@ -7816,8 +7841,12 @@ paths:
           schema:
             type: string
       responses:
-        '204':
-          description: No Content
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesDeleteCommitTagOutput'
+          description: OK
         '401':
           content:
             application/json:
@@ -12899,6 +12928,7 @@ components:
         - harness_gcp
         - harness_cloud
         - hybrid_vm_gcp
+        - hybrid_vm_aws
       type: string
     EnumLabelColor:
       enum:
@@ -13611,6 +13641,8 @@ components:
     OpenapiCreateTagRequest:
       properties:
         bypass_rules:
+          type: boolean
+        dry_run_rules:
           type: boolean
         message:
           type: string
@@ -14856,6 +14888,31 @@ components:
         sha:
           $ref: '#/components/schemas/ShaSHA'
       type: object
+    TypesCreateCommitTagOutput:
+      properties:
+        commit:
+          $ref: '#/components/schemas/TypesCommit'
+        dry_run_rules:
+          type: boolean
+        is_annotated:
+          type: boolean
+        message:
+          type: string
+        name:
+          type: string
+        rule_violations:
+          items:
+            $ref: '#/components/schemas/TypesRuleViolations'
+          type: array
+        sha:
+          $ref: '#/components/schemas/ShaSHA'
+        signature:
+          $ref: '#/components/schemas/TypesGitSignatureResult'
+        tagger:
+          $ref: '#/components/schemas/TypesSignature'
+        title:
+          type: string
+      type: object
     TypesDefaultReviewerApprovalsResponse:
       properties:
         current_count:
@@ -14871,6 +14928,15 @@ components:
           type: array
       type: object
     TypesDeleteBranchOutput:
+      properties:
+        dry_run_rules:
+          type: boolean
+        rule_violations:
+          items:
+            $ref: '#/components/schemas/TypesRuleViolations'
+          type: array
+      type: object
+    TypesDeleteCommitTagOutput:
       properties:
         dry_run_rules:
           type: boolean

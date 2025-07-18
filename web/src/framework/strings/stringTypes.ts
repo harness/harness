@@ -262,6 +262,7 @@ export interface StringsMap {
   deleteSpace: string
   deleteTag: string
   deleteTagConfirm: string
+  deleteTagDryRunFailed: string
   deleteToken: string
   deleteTokenMsg: string
   deleteUser: string
@@ -894,10 +895,10 @@ export interface StringsMap {
   'protectionRules.defaultBranch': string
   'protectionRules.defaultReviewerWarning': string
   'protectionRules.defaultReviewersWarning': string
-  'protectionRules.deleteBranchAlertBtn': string
-  'protectionRules.deleteBranchAlertText': string
-  'protectionRules.deleteBranchBlockText': string
   'protectionRules.deleteProtectionRule': string
+  'protectionRules.deleteRefAlertBtn': string
+  'protectionRules.deleteRefAlertText': string
+  'protectionRules.deleteRefBlockText': string
   'protectionRules.deleteRule': string
   'protectionRules.deleteText': string
   'protectionRules.descPlaceholder': string
