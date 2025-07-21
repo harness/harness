@@ -93,10 +93,7 @@ const RepositoryTypes: RepositoryTypeListItem[] = [
     label: 'repositoryTypes.cargo',
     value: RepositoryPackageType.CARGO,
     icon: 'rust-logo',
-    tooltip: 'Coming Soon!',
-    disabled: true,
-    tag: ThumbnailTagEnum.ComingSoon,
-    featureFlag: FeatureFlags.HAR_CARGO_PACKAGE_TYPE_ENABLED
+    tag: ThumbnailTagEnum.Beta
   },
   {
     label: 'repositoryTypes.go',
