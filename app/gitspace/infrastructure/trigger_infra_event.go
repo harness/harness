@@ -328,7 +328,7 @@ func (i InfraProvisioner) deprovisionNewInfrastructure(
 
 	err = infraProvider.Deprovision(ctx, infra, gitspaceConfig, canDeleteUserData, configMetadata, params)
 	if err != nil {
-		return fmt.Errorf("unable to trigger deprovision infra %+v: %w", infra, err)
+		return fmt.Errorf("unable to trigger deprovision infra %s: %w", infra.Identifier, err)
 	}
 
 	return err
