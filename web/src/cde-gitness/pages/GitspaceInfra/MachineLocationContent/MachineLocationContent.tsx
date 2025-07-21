@@ -117,6 +117,15 @@ function MachineLocationContent({
     )
   }
 
+  function CustomMachineColumn(row: Unknown) {
+    const { resource_name, machine_type } = row?.row?.original?.metadata
+    return (
+      <Text color={Color.GREY_1000}>
+        {resource_name} ({machine_type})
+      </Text>
+    )
+  }
+
   const createMachineColumns = (providerType: string): any[] => {
     const isAws = providerType === HYBRID_VM_AWS
     const machineTypeKey = isAws ? 'cde.Aws.instanceType' : 'cde.gitspaceInfraHome.machine'
@@ -132,8 +141,9 @@ function MachineLocationContent({
             <HarnessDocTooltip tooltipId="InfraProviderResourceMachine" useStandAlone={true} />
           </Layout.Horizontal>
         ),
+        Cell: CustomMachineColumn,
         accessor: 'name',
-        width: '16%'
+        width: '22%'
       },
       {
         Header: (
@@ -171,7 +181,7 @@ function MachineLocationContent({
         ),
         accessor: 'metadata.boot_disk_size',
         Cell: CustomDiskColumn,
-        width: '20%'
+        width: '18%'
       },
       {
         Header: (
@@ -183,7 +193,7 @@ function MachineLocationContent({
           </Layout.Horizontal>
         ),
         accessor: 'cpu',
-        width: '15%'
+        width: '13%'
       },
       {
         Header: (
@@ -195,7 +205,7 @@ function MachineLocationContent({
           </Layout.Horizontal>
         ),
         accessor: 'memory',
-        width: '15%'
+        width: '13%'
       },
       {
         Header: '',
