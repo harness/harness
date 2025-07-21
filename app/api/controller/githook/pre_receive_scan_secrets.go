@@ -44,11 +44,6 @@ func (c *Controller) scanSecrets(
 	in types.GithookPreReceiveInput,
 	output *hook.Output,
 ) error {
-	if in.Internal {
-		log.Ctx(ctx).Debug().Msg("skipping secret scanning for PR merge operation")
-		return nil
-	}
-
 	if !scanningEnabled {
 		var err error
 		scanningEnabled, err = settings.RepoGet(
