@@ -28,40 +28,30 @@ import {
 import { Color } from '@harnessio/design-system'
 import React, { useMemo } from 'react'
 import { Link, useHistory } from 'react-router-dom'
-import { useGet } from 'restful-react'
 import { defaultTo } from 'lodash-es'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
-import type { TypesCommit, RepoRepositoryOutput } from 'services/code'
+import type { RepoRepositoryOutput, TypesCommit } from 'services/code'
 import type { GitInfoProps } from 'utils/GitUtils'
 import type { CODERoutes } from 'RouteDefinitions'
 import { CommitActions } from 'components/CommitActions/CommitActions'
-import { LIST_FETCHING_LIMIT } from 'utils/Utils'
 import { TimePopoverWithLocal } from 'utils/timePopoverLocal/TimePopoverWithLocal'
 import { useDocumentTitle } from 'hooks/useDocumentTitle'
 import css from './CommitInfo.module.scss'
 
-const CommitInfo = (props: { repoMetadata: RepoRepositoryOutput; commitRef: string }) => {
-  const { repoMetadata, commitRef } = props
+const CommitInfo = (props: { commitRef: string; commits: TypesCommit[]; repoMetadata: RepoRepositoryOutput }) => {
+  const { commitRef, commits, repoMetadata } = props
   const history = useHistory()
   const { getString } = useStrings()
   const { routes } = useAppContext()
-  const { data: commits } = useGet<{ commits: TypesCommit[] }>({
-    path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
-    queryParams: {
-      limit: LIST_FETCHING_LIMIT,
-      git_ref: commitRef || repoMetadata?.default_branch
-    },
-    lazy: !repoMetadata
-  })
+
   const commitURL = routes.toCODECommit({
     repoPath: repoMetadata.path as string,
     commitRef: commitRef
   })
-  const commitData = useMemo(
-    () => commits?.commits?.filter(commit => commit.sha === commitRef)?.[0],
-    [commitRef, commits?.commits]
-  )
+
+  const commitData = useMemo(() => commits?.filter(commit => commit.sha === commitRef)?.[0], [commitRef, commits])
+
   function renderPullRequestLinkFromCommitMessage(
     repositoryMetadata: GitInfoProps['repoMetadata'],
     codeRoutes: CODERoutes,

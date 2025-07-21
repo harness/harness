@@ -34,7 +34,7 @@ import { useGet } from 'restful-react'
 import { chunk, isEqual, throttle } from 'lodash-es'
 import { useHistory } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
-import { normalizeGitRef, type GitInfoProps, FILE_VIEWED_OBSOLETE_SHA } from 'utils/GitUtils'
+import { normalizeGitRef, type GitInfoProps, FILE_VIEWED_OBSOLETE_SHA, PullRequestState } from 'utils/GitUtils'
 import { formatNumber, getErrorMessage, isInViewport, PullRequestSection, voidFn } from 'utils/Utils'
 import {
   DiffViewer,
@@ -205,7 +205,9 @@ const ChangesInternal: React.FC<ChangesProps> = ({
     [diffs]
   )
   const shouldHideReviewButton = useMemo(
-    () => readOnly || pullRequestMetadata?.state === 'merged' || pullRequestMetadata?.state === 'closed',
+    () =>
+      readOnly ||
+      [PullRequestState.MERGED, PullRequestState.CLOSED].includes(pullRequestMetadata?.state as PullRequestState),
     [readOnly, pullRequestMetadata?.state]
   )
   const { currentUser } = useAppContext()
@@ -514,16 +516,16 @@ const ChangesInternal: React.FC<ChangesProps> = ({
             <Container flex={{ alignItems: 'center' }}>
               <Layout.Horizontal spacing="medium">
                 <PullReqSuggestionsBatch />
-
-                <ReviewSplitButton
-                  shouldHide={shouldHideReviewButton}
-                  repoMetadata={repoMetadata}
-                  pullRequestMetadata={pullRequestMetadata}
-                  refreshPr={() => {
-                    refetchActivities?.()
-                  }}
-                  disabled={isActiveUserPROwner}
-                />
+                {!shouldHideReviewButton && (
+                  <ReviewSplitButton
+                    repoMetadata={repoMetadata}
+                    pullRequestMetadata={pullRequestMetadata}
+                    refreshPr={() => {
+                      refetchActivities?.()
+                    }}
+                    disabled={isActiveUserPROwner}
+                  />
+                )}
               </Layout.Horizontal>
             </Container>
           </Layout.Horizontal>

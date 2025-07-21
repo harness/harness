@@ -15,13 +15,13 @@
  */
 
 import React, { useMemo, useRef } from 'react'
-import { Container, FlexExpander, Layout, PageBody } from '@harnessio/uicore'
+import { Container, Layout, PageBody } from '@harnessio/uicore'
 import { useGet } from 'restful-react'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useSetPageContainerWidthVar } from 'hooks/useSetPageContainerWidthVar'
 import { useAppContext } from 'AppContext'
 import type { TypesCommit } from 'services/code'
-import { voidFn, getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
+import { voidFn, getErrorMessage } from 'utils/Utils'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
@@ -36,13 +36,13 @@ export default function RepositoryCommits() {
   const { getString } = useStrings()
 
   const {
-    data: commits,
+    data,
     error: errorCommits,
     loading: loadingCommits
   } = useGet<{ commits: TypesCommit[] }>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
     queryParams: {
-      limit: LIST_FETCHING_LIMIT,
+      limit: 1,
       git_ref: normalizeGitRef(commitRef || repoMetadata?.default_branch)
     },
     lazy: !repoMetadata
@@ -54,7 +54,7 @@ export default function RepositoryCommits() {
         <Container className={css.changesContainer}>
           <Changes
             showCommitsDropdown={false}
-            readOnly={true}
+            readOnly
             repoMetadata={repoMetadata}
             commitSHA={commitRef}
             emptyTitle={getString('noChanges')}
@@ -88,19 +88,17 @@ export default function RepositoryCommits() {
       />
 
       <PageBody error={getErrorMessage(error || errorCommits)} retryOnError={voidFn(refetch)}>
-        <LoadingSpinner visible={loading || loadingCommits} withBorder={!!commits && loadingCommits} />
-        {(repoMetadata && commitRef && !!commits?.commits?.length && (
+        <LoadingSpinner visible={loading || loadingCommits} withBorder={!!data && loadingCommits} />
+        {repoMetadata && commitRef && !!data?.commits?.length ? (
           <Container padding="xlarge" className={css.resourceContent}>
             <Container className={css.contentHeader}>
               <Layout.Horizontal>
-                <CommitInfo repoMetadata={repoMetadata} commitRef={commitRef} />
-                <FlexExpander />
+                <CommitInfo repoMetadata={repoMetadata} commitRef={commitRef} commits={data?.commits} />
               </Layout.Horizontal>
             </Container>
             {ChangesTab}
           </Container>
-        )) ||
-          null}
+        ) : null}
       </PageBody>
     </Container>
   )
