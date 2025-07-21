@@ -54,7 +54,6 @@ import (
 	"github.com/harness/gitness/app/bootstrap"
 	connectorservice "github.com/harness/gitness/app/connector"
 	checkevents "github.com/harness/gitness/app/events/check"
-
 	gitevents "github.com/harness/gitness/app/events/git"
 	gitspaceevents "github.com/harness/gitness/app/events/gitspace"
 	gitspacedeleteevents "github.com/harness/gitness/app/events/gitspacedelete"

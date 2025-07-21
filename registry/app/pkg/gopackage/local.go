@@ -116,8 +116,8 @@ func (c *localRegistry) UploadPackage(
 		return nil, fmt.Errorf("failed to get file path: %w", err)
 	}
 	// upload .info
-	infoFilePath := filePath + ".info"
 	infoFileName := info.Version + ".info"
+	infoFilePath := filepath.Join(filePath, infoFileName)
 	infoFile, err := metadataToReadCloser(info.Metadata)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert metadata to io.ReadCloser: %w", err)
@@ -127,15 +127,15 @@ func (c *localRegistry) UploadPackage(
 		return response, fmt.Errorf("failed to upload info file: %w", err)
 	}
 	// upload .mod
-	modFilePath := filePath + ".mod"
 	modFileName := info.Version + ".mod"
+	modFilePath := filepath.Join(filePath, modFileName)
 	response, err = c.uploadFile(ctx, info, &info.Metadata, modfile, modFileName, modFilePath)
 	if err != nil {
 		return response, fmt.Errorf("failed to upload mod file: %w", err)
 	}
 	// upload .zip
-	zipFilePath := filePath + ".zip"
 	zipFileName := info.Version + ".zip"
+	zipFilePath := filepath.Join(filePath, zipFileName)
 
 	response, err = c.uploadFile(ctx, info, &info.Metadata, zipfile, zipFileName, zipFilePath)
 	if err != nil {
@@ -205,7 +205,7 @@ func (c *localRegistry) DownloadPackageFile(
 		// Download latest version
 		return c.DownloadPackageLatestVersionInfo(ctx, info)
 	}
-	path, err := utils.GetFilePath(artifact.PackageTypeGO, info.Image, "")
+	path, err := utils.GetFilePath(artifact.PackageTypeGO, info.Image, info.Version)
 	if err != nil {
 		return nil, nil, nil, "", fmt.Errorf("failed to get file path: %w", err)
 	}

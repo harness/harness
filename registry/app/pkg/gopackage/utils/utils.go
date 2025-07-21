@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"path/filepath"
 	"strings"
 
 	gopackagemetadata "github.com/harness/gitness/registry/app/metadata/gopackage"
@@ -69,11 +70,9 @@ func getVersionFromFileName(filename string) (string, error) {
 	case "list":
 		return "", nil
 	default:
-		parts := strings.SplitN(filename, ".", 2)
-		if len(parts) != 2 {
-			return "", fmt.Errorf("invalid file name: %s", filename)
-		}
-		version := parts[1]
+		// v1.0.0.zip => v1.0.0
+		ext := filepath.Ext(filename)                // e.g., ".zip"
+		version := strings.TrimSuffix(filename, ext) // remove extension
 		if version == "" {
 			return "", fmt.Errorf("empty version in file name: %s", filename)
 		}
@@ -109,5 +108,5 @@ func GetArtifactInfoFromURL(path string) (string, string, string, error) {
 }
 
 func GetIndexFilePath(image string) string {
-	return "/" + image + "/index"
+	return filepath.Join("/", image, "index")
 }

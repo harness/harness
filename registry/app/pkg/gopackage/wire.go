@@ -49,6 +49,7 @@ func LocalRegistryProvider(
 }
 
 func ProxyProvider(
+	localBase base.LocalBase,
 	proxyStore store.UpstreamProxyConfigRepository,
 	registryDao store.RegistryRepository,
 	imageDao store.ImageRepository,
@@ -59,11 +60,20 @@ func ProxyProvider(
 	spaceFinder refcache.SpaceFinder,
 	service secret.Service,
 	artifactEventReporter *registryevents.Reporter,
+	localRegistryHelper LocalRegistryHelper,
 ) Proxy {
-	proxy := NewProxy(fileManager, proxyStore, tx, registryDao, imageDao, artifactDao, urlProvider,
-		spaceFinder, service, artifactEventReporter)
+	proxy := NewProxy(localBase, fileManager, proxyStore, tx, registryDao, imageDao, artifactDao, urlProvider,
+		spaceFinder, service, artifactEventReporter, localRegistryHelper)
 	base.Register(proxy)
 	return proxy
 }
 
-var WireSet = wire.NewSet(LocalRegistryProvider, ProxyProvider)
+func LocalRegistryHelperProvider(
+	localRegistry LocalRegistry,
+	localBase base.LocalBase,
+	postProcessingReporter *asyncprocessing.Reporter,
+) LocalRegistryHelper {
+	return NewLocalRegistryHelper(localRegistry, localBase, postProcessingReporter)
+}
+
+var WireSet = wire.NewSet(LocalRegistryProvider, ProxyProvider, LocalRegistryHelperProvider)
