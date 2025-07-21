@@ -20,10 +20,14 @@ import (
 
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/services/protection"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 // DeleteCommitTag deletes a tag from the repo.
@@ -82,6 +86,40 @@ func (c *Controller) DeleteCommitTag(ctx context.Context,
 	})
 	if err != nil {
 		return types.DeleteCommitTagOutput{}, nil, err
+	}
+
+	if protection.IsBypassed(violations) {
+		err = c.auditService.Log(ctx,
+			session.Principal,
+			audit.NewResource(
+				audit.ResourceTypeRepository,
+				repo.Identifier,
+				audit.RepoPath,
+				repo.Path,
+				audit.BypassedResourceType,
+				audit.BypassedResourceTypeBranch,
+				audit.BypassedResourceName,
+				tagName,
+				audit.BypassAction,
+				audit.BypassActionDeleted,
+				audit.ResourceName,
+				fmt.Sprintf(
+					audit.BypassSHALabelFormat,
+					repo.Identifier,
+					tagName,
+				),
+			),
+			audit.ActionBypassed,
+			paths.Parent(repo.Path),
+			audit.WithNewObject(audit.CommitTagObject{
+				TagName:        tagName,
+				RepoPath:       repo.Path,
+				RuleViolations: violations,
+			}),
+		)
+		if err != nil {
+			log.Ctx(ctx).Warn().Msgf("failed to insert audit log for delete tag operation: %s", err)
+		}
 	}
 
 	return types.DeleteCommitTagOutput{

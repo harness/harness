@@ -44,6 +44,12 @@ type CommitObject struct {
 	RuleViolations []types.RuleViolations `yaml:"rule_violations"`
 }
 
+type CommitTagObject struct {
+	TagName        string                 `yaml:"tag_name"`
+	RepoPath       string                 `yaml:"repo_path"`
+	RuleViolations []types.RuleViolations `yaml:"rule_violations"`
+}
+
 type BranchObject struct {
 	BranchName     string                 `yaml:"branch_name"`
 	RepoPath       string                 `yaml:"repo_path"`

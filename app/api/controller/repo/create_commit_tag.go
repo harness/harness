@@ -21,8 +21,10 @@ import (
 
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/protection"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -112,6 +114,40 @@ func (c *Controller) CreateCommitTag(ctx context.Context,
 	}
 
 	commitTag := controller.MapCommitTag(rpcOut.CommitTag)
+
+	if protection.IsBypassed(violations) {
+		err = c.auditService.Log(ctx,
+			session.Principal,
+			audit.NewResource(
+				audit.ResourceTypeRepository,
+				repo.Identifier,
+				audit.RepoPath,
+				repo.Path,
+				audit.BypassedResourceType,
+				audit.BypassedResourceTypeBranch,
+				audit.BypassedResourceName,
+				commitTag.Name,
+				audit.BypassAction,
+				audit.BypassActionCreated,
+				audit.ResourceName,
+				fmt.Sprintf(
+					audit.BypassSHALabelFormat,
+					repo.Identifier,
+					commitTag.Name,
+				),
+			),
+			audit.ActionBypassed,
+			paths.Parent(repo.Path),
+			audit.WithNewObject(audit.CommitTagObject{
+				TagName:        commitTag.Name,
+				RepoPath:       repo.Path,
+				RuleViolations: violations,
+			}),
+		)
+		if err != nil {
+			log.Ctx(ctx).Warn().Msgf("failed to insert audit log for create tag operation: %s", err)
+		}
+	}
 
 	err = c.instrumentation.Track(ctx, instrument.Event{
 		Type:      instrument.EventTypeCreateTag,
