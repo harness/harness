@@ -1,4 +1,5 @@
 import React from 'react'
+import { useParams } from 'react-router-dom'
 import { Container, FormInput, Layout, Text } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { useFormikContext, type FormikProps } from 'formik'
@@ -20,6 +21,8 @@ const BasicDetails = ({ formikProps }: BasicDetailProps) => {
   const { data: delegateData } = hooks.useGetDelegateSelectorsUpTheHierarchyV2({
     queryParams
   })
+  const { infraprovider_identifier } = useParams<{ infraprovider_identifier?: string }>()
+  const editMode = infraprovider_identifier !== undefined
 
   const { setFieldValue, values } = useFormikContext<{ machine_type?: string }>()
 
@@ -47,6 +50,7 @@ const BasicDetails = ({ formikProps }: BasicDetailProps) => {
           name="project"
           label={getString('cde.configureInfra.project')}
           placeholder={getString('cde.configureInfra.project')}
+          disabled={editMode}
         />
         <FormInput.Text
           name="domain"
@@ -60,6 +64,7 @@ const BasicDetails = ({ formikProps }: BasicDetailProps) => {
             </Text>
           }
           placeholder={getString('cde.configureInfra.domain')}
+          disabled={editMode}
         />
         <Text font={{ variation: FontVariation.SMALL }}>{getString('cde.configureInfra.basicNoteText')}</Text>
         <br />
