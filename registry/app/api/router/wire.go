@@ -15,6 +15,7 @@
 package router
 
 import (
+	spacecontroller "github.com/harness/gitness/app/api/controller/space"
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/config"
@@ -88,6 +89,7 @@ func APIHandlerProvider(
 	regFinder refcache2.RegistryFinder,
 	postProcessingReporter *registrypostprocessingevents.Reporter,
 	cargoRegistryHelper cargoutils.RegistryHelper,
+	spaceController *spacecontroller.Controller,
 ) harness.APIHandler {
 	return harness.NewAPIHandler(
 		repoDao,
@@ -117,6 +119,7 @@ func APIHandlerProvider(
 		regFinder,
 		postProcessingReporter,
 		cargoRegistryHelper,
+		spaceController,
 	)
 }
 

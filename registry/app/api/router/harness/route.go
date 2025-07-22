@@ -15,6 +15,7 @@
 package harness
 
 import (
+	spacecontroller "github.com/harness/gitness/app/api/controller/space"
 	"net/http"
 
 	middlewareauthn "github.com/harness/gitness/app/api/middleware/authn"
@@ -86,6 +87,7 @@ func NewAPIHandler(
 	regFinder refcache.RegistryFinder,
 	postProcessingReporter *registrypostprocessingevents.Reporter,
 	cargoRegistryHelper cargo.RegistryHelper,
+	spaceController *spacecontroller.Controller,
 ) APIHandler {
 	r := chi.NewRouter()
 	r.Use(audit.Middleware())
@@ -120,6 +122,7 @@ func NewAPIHandler(
 		regFinder,
 		postProcessingReporter,
 		cargoRegistryHelper,
+		spaceController,
 	)
 
 	handler := artifact.NewStrictHandler(apiController, []artifact.StrictMiddlewareFunc{})

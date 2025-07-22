@@ -15,6 +15,7 @@
 package metadata
 
 import (
+	spacecontroller "github.com/harness/gitness/app/api/controller/space"
 	"github.com/harness/gitness/app/auth/authz"
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/audit"
@@ -59,6 +60,7 @@ type APIController struct {
 	RegFinder                    refcache.RegistryFinder
 	PostProcessingReporter       *registrypostprocessingevents.Reporter
 	CargoRegistryHelper          cargo.RegistryHelper
+	SpaceController              *spacecontroller.Controller
 }
 
 func NewAPIController(
@@ -89,6 +91,7 @@ func NewAPIController(
 	regFinder refcache.RegistryFinder,
 	postProcessingReporter *registrypostprocessingevents.Reporter,
 	cargoRegistryHelper cargo.RegistryHelper,
+	spaceController *spacecontroller.Controller,
 ) *APIController {
 	return &APIController{
 		fileManager:                  fileManager,
@@ -118,5 +121,6 @@ func NewAPIController(
 		RegFinder:                    regFinder,
 		PostProcessingReporter:       postProcessingReporter,
 		CargoRegistryHelper:          cargoRegistryHelper,
+		SpaceController:              spaceController,
 	}
 }

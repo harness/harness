@@ -269,6 +269,7 @@ func TestCreateRegistry(t *testing.T) {
 					mockRegFinder,
 					nil, // PostProcessingReporter - not needed for this test.
 					nil,
+					nil,
 				)
 			},
 		},
@@ -341,6 +342,7 @@ func TestCreateRegistry(t *testing.T) {
 					nil,
 					mockRegFinder,
 					nil, // PostProcessingReporter - not needed for this test.
+					nil,
 					nil,
 				)
 			},
