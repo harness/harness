@@ -920,7 +920,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	opPRCandidates.WithMapOfAnything(map[string]interface{}{"operationId": "prCandidates"})
 	opPRCandidates.WithParameters(QueryParameterLimit)
 	_ = reflector.SetRequest(&opPRCandidates, new(repoRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&opPRCandidates, new(types.BranchTable), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opPRCandidates, new([]types.BranchTable), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opPRCandidates, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opPRCandidates, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opPRCandidates, new(usererror.Error), http.StatusUnauthorized)
