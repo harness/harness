@@ -120,7 +120,7 @@ func (c *Controller) CreatePublicKey(
 		Metadata:         key.Metadata(),
 	}
 
-	subKeyIDs := key.SubKeyIDs()
+	keyIDs := key.KeyIDs()
 
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
 		if err := c.checkKeyExistence(ctx, user.ID, key, k); err != nil {
@@ -131,8 +131,23 @@ func (c *Controller) CreatePublicKey(
 			return fmt.Errorf("failed to insert public key: %w", err)
 		}
 
-		if err = c.publicKeySubKeyStore.Create(ctx, k.ID, subKeyIDs); err != nil {
+		if err = c.publicKeySubKeyStore.Create(ctx, k.ID, keyIDs); err != nil {
 			return fmt.Errorf("failed to insert public key subkey: %w", err)
+		}
+
+		// If the uploaded key (or a subkey) is revoked (only possible with PGP keys) with reason=compromised
+		// then we revoke all existing signatures in the DB signed with the key.
+		compromisedKeyIDs := key.CompromisedIDs()
+		if len(compromisedKeyIDs) > 0 {
+			if err = c.gitSignatureResultStore.UpdateAll(
+				ctx,
+				enum.GitSignatureRevoked,
+				user.ID,
+				compromisedKeyIDs, nil,
+			); err != nil {
+				return fmt.Errorf("failed to revoke all PGP signatures signed with compromised keys %v: %w",
+					compromisedKeyIDs, err)
+			}
 		}
 
 		return nil

@@ -41,7 +41,11 @@ type KeyInfo interface {
 
 	Metadata() json.RawMessage
 
-	SubKeyIDs() []string
+	// KeyIDs returns all key IDs: the primary key ID and all signing sub-key IDs.
+	KeyIDs() []string
+
+	// CompromisedIDs returns all key IDs that are revoked with reason=compromised.
+	CompromisedIDs() []string
 }
 
 func ParseString(keyData string, principal *types.Principal) (KeyInfo, error) {

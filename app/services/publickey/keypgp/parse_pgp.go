@@ -266,7 +266,7 @@ func (key KeyInfo) Metadata() json.RawMessage {
 	return data
 }
 
-func (key KeyInfo) SubKeyIDs() []string {
+func (key KeyInfo) KeyIDs() []string {
 	subKeyIDs := make([]string, 0)
 	subKeyIDs = append(subKeyIDs, key.entity.PrimaryKey.KeyIdString())
 	for i := range key.entity.Subkeys {
@@ -275,6 +275,35 @@ func (key KeyInfo) SubKeyIDs() []string {
 		}
 	}
 	return subKeyIDs
+}
+
+func (key KeyInfo) CompromisedIDs() []string {
+	var revokedIDs []string
+	var primaryRevoked bool
+
+	revocationReason := getRevocationReason(key.entity.Revocations)
+	if revocationReason != nil && *revocationReason == enum.RevocationReasonCompromised {
+		revokedIDs = append(revokedIDs, key.entity.PrimaryKey.KeyIdString())
+		primaryRevoked = true
+	}
+
+	for i := range key.entity.Subkeys {
+		if !key.entity.Subkeys[i].PublicKey.CanSign() {
+			continue
+		}
+
+		if primaryRevoked {
+			revokedIDs = append(revokedIDs, key.entity.Subkeys[i].PublicKey.KeyIdString())
+			continue
+		}
+
+		revocationReason = getRevocationReason(key.entity.Subkeys[i].Revocations)
+		if revocationReason != nil && *revocationReason == enum.RevocationReasonCompromised {
+			revokedIDs = append(revokedIDs, key.entity.Subkeys[i].PublicKey.KeyIdString())
+		}
+	}
+
+	return revokedIDs
 }
 
 func pgpAlgo(algorithm packet.PublicKeyAlgorithm) string {

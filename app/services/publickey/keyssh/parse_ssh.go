@@ -129,6 +129,10 @@ func (key KeyInfo) Metadata() json.RawMessage {
 	return json.RawMessage("{}")
 }
 
-func (key KeyInfo) SubKeyIDs() []string {
+func (key KeyInfo) KeyIDs() []string {
 	return nil // SSH keys do not have subkeys
+}
+
+func (key KeyInfo) CompromisedIDs() []string {
+	return nil // SSH keys do not have a revocation reason
 }
