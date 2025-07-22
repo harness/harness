@@ -741,4 +741,6 @@ type QuarantineArtifactRepository interface {
 		registryID int64,
 		version string,
 		artifact string) ([]*types.QuarantineArtifact, error)
+	DeleteByRegistryIDArtifactAndFilePath(ctx context.Context, registryID int64,
+		artifactID *int64, imageID int64, nodeID *string) error
 }

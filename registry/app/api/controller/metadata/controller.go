@@ -61,6 +61,7 @@ type APIController struct {
 	PostProcessingReporter       *registrypostprocessingevents.Reporter
 	CargoRegistryHelper          cargo.RegistryHelper
 	SpaceController              *spacecontroller.Controller
+	QuarantineArtifactRepository store.QuarantineArtifactRepository
 }
 
 func NewAPIController(
@@ -92,6 +93,7 @@ func NewAPIController(
 	postProcessingReporter *registrypostprocessingevents.Reporter,
 	cargoRegistryHelper cargo.RegistryHelper,
 	spaceController *spacecontroller.Controller,
+	quarantineArtifactRepository store.QuarantineArtifactRepository,
 ) *APIController {
 	return &APIController{
 		fileManager:                  fileManager,
@@ -122,5 +124,6 @@ func NewAPIController(
 		PostProcessingReporter:       postProcessingReporter,
 		CargoRegistryHelper:          cargoRegistryHelper,
 		SpaceController:              spaceController,
+		QuarantineArtifactRepository: quarantineArtifactRepository,
 	}
 }

@@ -294,6 +294,18 @@ func (f *FileManager) DeleteNode(
 	return nil
 }
 
+func (f *FileManager) GetNode(
+	ctx context.Context,
+	regID int64,
+	filePath string,
+) (*types.Node, error) {
+	node, err := f.nodesDao.GetByPathAndRegistryID(ctx, regID, filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to delete file for path: %s, with error: %w", filePath, err)
+	}
+	return node, nil
+}
+
 func (f *FileManager) HeadFile(
 	ctx context.Context,
 	filePath string,

@@ -16,6 +16,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/harness/gitness/app/api/request"
@@ -109,7 +110,7 @@ func (q QuarantineArtifactDao) Create(ctx context.Context, artifact *types.Quara
 			:quarantined_path_created_at,
 			:quarantined_path_created_by
 		) 
-		ON CONFLICT (quarantined_path_node_id, quarantined_path_reason, 
+		ON CONFLICT (quarantined_path_node_id, 
 		quarantined_path_registry_id, quarantined_path_artifact_id, quarantined_path_image_id)
 		DO NOTHING
 		RETURNING quarantined_path_id`
@@ -120,7 +121,7 @@ func (q QuarantineArtifactDao) Create(ctx context.Context, artifact *types.Quara
 		return databaseg.ProcessSQLErrorf(ctx, err, "Failed to bind quarantine artifact object")
 	}
 
-	if err = db.QueryRowContext(ctx, query, arg...).Scan(&artifact.ID); err != nil {
+	if err = db.QueryRowContext(ctx, query, arg...).Scan(&artifact.ID); err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return databaseg.ProcessSQLErrorf(ctx, err, "Insert query failed")
 	}
 
@@ -203,4 +204,36 @@ func (q QuarantineArtifactDao) mapToInternalQuarantineArtifact(ctx context.Conte
 		CreatedAt:  in.CreatedAt.Unix(),
 		CreatedBy:  in.CreatedBy,
 	}
+}
+
+func (q QuarantineArtifactDao) DeleteByRegistryIDArtifactAndFilePath(ctx context.Context,
+	registryID int64, artifactID *int64, imageID int64, nodeID *string) error {
+	// Build the delete query
+	stmtBuilder := databaseg.Builder.
+		Delete("quarantined_paths").
+		Where("quarantined_path_registry_id = ?"+
+			" AND quarantined_path_image_id = ?", registryID,
+			imageID)
+
+	if artifactID != nil {
+		stmtBuilder = stmtBuilder.Where("quarantined_path_artifact_id = ?", *artifactID)
+	}
+
+	if nodeID != nil {
+		stmtBuilder = stmtBuilder.Where("quarantined_path_node_id = ?", *nodeID)
+	}
+
+	// Execute the query
+	db := dbtx.GetAccessor(ctx, q.db)
+	sql, args, err := stmtBuilder.ToSql()
+	if err != nil {
+		return errors.Wrap(err, "Failed to convert delete query to SQL")
+	}
+
+	_, err = db.ExecContext(ctx, sql, args...)
+	if err != nil {
+		return databaseg.ProcessSQLErrorf(ctx, err, "Failed to delete quarantine artifact with the provided criteria")
+	}
+
+	return nil
 }

@@ -299,6 +299,27 @@ func GetArtifactFilesMetadata(
 	return files
 }
 
+func GetQuarantinePathJSONResponse(
+	id string,
+	registryID int64,
+	artifactID int64,
+	versionID int64,
+	reason string,
+	filePath string,
+) *artifactapi.QuarantinePathResponseJSONResponse {
+	return &artifactapi.QuarantinePathResponseJSONResponse{
+		Status: artifactapi.StatusSUCCESS,
+		Data: artifactapi.QuarantinePath{
+			Id:         id,
+			RegistryId: registryID,
+			ArtifactId: artifactID,
+			VersionId:  &versionID,
+			FilePath:   &filePath,
+			Reason:     reason,
+		},
+	}
+}
+
 func getCheckSums(file types.FileNodeMetadata) []string {
 	return []string{
 		fmt.Sprintf("SHA-512: %s", file.Sha512),

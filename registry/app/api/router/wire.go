@@ -90,6 +90,7 @@ func APIHandlerProvider(
 	postProcessingReporter *registrypostprocessingevents.Reporter,
 	cargoRegistryHelper cargoutils.RegistryHelper,
 	spaceController *spacecontroller.Controller,
+	quarantineArtifactRepository store.QuarantineArtifactRepository,
 ) harness.APIHandler {
 	return harness.NewAPIHandler(
 		repoDao,
@@ -120,6 +121,7 @@ func APIHandlerProvider(
 		postProcessingReporter,
 		cargoRegistryHelper,
 		spaceController,
+		quarantineArtifactRepository,
 	)
 }
 

@@ -852,6 +852,24 @@ type WebhookRequest struct {
 	Url              string         `json:"url"`
 }
 
+// QuarantinePath quarantine path
+type QuarantinePath struct {
+	ArtifactId int64   `json:"artifactId"`
+	FilePath   *string `json:"filePath,omitempty"`
+	Id         string  `json:"id"`
+	Reason     string  `json:"reason"`
+	RegistryId int64   `json:"registryId"`
+	VersionId  *int64  `json:"versionId,omitempty"`
+}
+
+// QuarantineRequest defines model for quarantineRequest.
+type QuarantineRequest struct {
+	Artifact string  `json:"artifact"`
+	FilePath *string `json:"filePath,omitempty"`
+	Reason   string  `json:"reason"`
+	Version  *string `json:"version,omitempty"`
+}
+
 // LabelsParam defines model for LabelsParam.
 type LabelsParam []string
 
@@ -875,6 +893,9 @@ type DigestParam string
 
 // FileNamePathParam defines model for fileNamePathParam.
 type FileNamePathParam string
+
+// FilePathParam defines model for filePathParam.
+type FilePathParam string
 
 // FromDateParam defines model for fromDateParam.
 type FromDateParam string
@@ -1202,6 +1223,15 @@ type WebhookResponse struct {
 	Status Status `json:"status"`
 }
 
+// QuarantinePathResponse defines model for quarantinePathResponse.
+type QuarantinePathResponse struct {
+	// Data quarantine path
+	Data QuarantinePath `json:"data"`
+
+	// Status Indicates if the request was successful or not
+	Status Status `json:"status"`
+}
+
 // CreateRegistryParams defines parameters for CreateRegistry.
 type CreateRegistryParams struct {
 	// SpaceRef Unique path identifier for the final space in the branch. The value can be provided either as a fully URL-encoded path (e.g., `organization%2Fproject`) or as a plain path ending with a trailing plus sign (`+`) as separator (e.g., `organization/project/+`).
@@ -1326,6 +1356,18 @@ type GetClientSetupDetailsParams struct {
 
 	// Version Version
 	Version *VersionParam `form:"version,omitempty" json:"version,omitempty"`
+}
+
+// DeleteQuarantineFilePathParams defines parameters for DeleteQuarantineFilePath.
+type DeleteQuarantineFilePathParams struct {
+	// Artifact Artifat
+	Artifact *ArtifactParam `form:"artifact,omitempty" json:"artifact,omitempty"`
+
+	// Version Version
+	Version *VersionParam `form:"version,omitempty" json:"version,omitempty"`
+
+	// FilePath filePath
+	FilePath *FilePathParam `form:"file_path,omitempty" json:"file_path,omitempty"`
 }
 
 // ListWebhooksParams defines parameters for ListWebhooks.
@@ -1456,6 +1498,9 @@ type ModifyRegistryJSONRequestBody RegistryRequest
 
 // UpdateArtifactLabelsJSONRequestBody defines body for UpdateArtifactLabels for application/json ContentType.
 type UpdateArtifactLabelsJSONRequestBody ArtifactLabelRequest
+
+// QuarantineFilePathJSONRequestBody defines body for QuarantineFilePath for application/json ContentType.
+type QuarantineFilePathJSONRequestBody QuarantineRequest
 
 // CreateWebhookJSONRequestBody defines body for CreateWebhook for application/json ContentType.
 type CreateWebhookJSONRequestBody WebhookRequest

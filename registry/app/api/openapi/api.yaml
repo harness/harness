@@ -1121,7 +1121,50 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         500:
           $ref: "#/components/responses/InternalServerError"
-
+  /registry/{registry_ref}/quarantine:
+    put:
+      summary: quarantineFilePath
+      description: quarantine file path
+      operationId: quarantineFilePath
+      tags:
+        - quarantine
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+      requestBody:
+        $ref: "#/components/requestBodies/quarantineRequest"
+      responses:
+        200:
+          $ref: "#/components/responses/quarantinePathResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      summary: deleteQuarantineFilePath
+      description: delete Quarantine file path
+      operationId: deleteQuarantineFilePath
+      tags:
+        - quarantine
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactParam"
+        - $ref: "#/components/parameters/versionParam"
+        - $ref: "#/components/parameters/filePathParam"
+      responses:
+        204:
+          $ref: "#/components/responses/Success"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        500:
+          $ref: "#/components/responses/InternalServerError"
 components:
   requestBodies:
     RegistryRequest:
@@ -1142,6 +1185,12 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/WebhookRequest"
+    quarantineRequest:
+      description: request to quarantine specific file path
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/quarantineRequest"
     ReplicationRuleRequest:
       description: request for create and update replication rule
       content:
@@ -1244,6 +1293,20 @@ components:
                 $ref: "#/components/schemas/Status"
               data:
                 $ref: "#/components/schemas/WebhookExecution"
+            required:
+              - status
+              - data
+    quarantinePathResponse:
+      description: quarantine path response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/quarantinePath"
             required:
               - status
               - data
@@ -2458,6 +2521,30 @@ components:
           $ref: "#/components/schemas/WebhookExecRequest"
         response:
           $ref: "#/components/schemas/WebhookExecResponse"
+    quarantinePath:
+      type: object
+      description: quarantine path
+      properties:
+        id:
+          type: string
+        registryId:
+          type: integer
+          format: int64
+        artifactId:
+          type: integer
+          format: int64
+        versionId:
+          type: integer
+          format: int64
+        filePath:
+          type: string
+        reason:
+          type: string
+      required:
+        - id
+        - registryId
+        - artifactId
+        - reason
     WebhookExecRequest:
       type: object
       description: Harness Regstries HTTP Webhook Request
@@ -2909,6 +2996,20 @@ components:
         - identifier
         - url
         - name
+    quarantineRequest:
+      type: object
+      properties:
+        filePath:
+          type: string
+        artifact:
+          type: string
+        version:
+          type: string
+        reason:
+          type: string
+      required:
+        - artifact
+        - reason
     ArtifactLabelRequest:
       type: object
       properties:
@@ -3054,6 +3155,13 @@ components:
       in: query
       required: false
       description: Version
+      schema:
+        type: string
+    filePathParam:
+      name: file_path
+      in: query
+      required: false
+      description: filePath
       schema:
         type: string
     artifactPathParam:
