@@ -31,7 +31,7 @@ import {
   SCMType
 } from 'cde-gitness/pages/GitspaceCreate/CDECreateGitspace'
 import { useQueryParams } from 'hooks/useQueryParams'
-import { getRepoIdFromURL, getRepoNameFromURL, isValidUrl } from 'cde-gitness/utils/SelectRepository.utils'
+import { isValidUrl, getRepoIdFromURL } from 'cde-gitness/utils/SelectRepository.utils'
 import { useAppContext } from 'AppContext'
 import { GitspaceSelect } from '../GitspaceSelect/GitspaceSelect'
 import css from './CDEAnyGitImport.module.scss'
@@ -308,7 +308,7 @@ export const CDEAnyGitImport = () => {
                                 code_repo_url: data,
                                 branch: item.default_branch,
                                 identifier: getRepoIdFromURL(item.name),
-                                name: item.name,
+                                name: '',
                                 code_repo_type: values?.code_repo_type
                               }
                             })
@@ -321,7 +321,7 @@ export const CDEAnyGitImport = () => {
                                 code_repo_url: item.clone_url,
                                 branch: item.default_branch,
                                 identifier: getRepoIdFromURL(item.clone_url),
-                                name: getRepoNameFromURL(item.clone_url),
+                                name: '',
                                 code_repo_type: values?.code_repo_type
                               }
                             })

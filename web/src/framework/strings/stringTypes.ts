@@ -1491,6 +1491,8 @@ export interface StringsMap {
   'cde.gitspaceInfraHome.waitingMessage': string
   'cde.gitspaceInfraHome.zone': string
   'cde.gitspaceInfraHome.zoneMessage': string
+  'cde.gitspaceNameFormatValidation': string
+  'cde.gitspaceNameMaxLengthValidation': string
   'cde.gitspaceNameValidation': string
   'cde.gitspaceOwners.allGitspaces': string
   'cde.gitspaceOwners.myGitspaces': string

@@ -15,7 +15,17 @@
  */
 
 import React, { useState } from 'react'
-import { Button, ButtonVariation, Container, Formik, FormikForm, Layout, Text, useToaster } from '@harnessio/uicore'
+import {
+  Button,
+  ButtonVariation,
+  Container,
+  Formik,
+  FormikForm,
+  FormInput,
+  Layout,
+  Text,
+  useToaster
+} from '@harnessio/uicore'
 import { useHistory } from 'react-router-dom'
 import { FontVariation } from '@harnessio/design-system'
 import { useCreateGitspace, type OpenapiCreateGitspaceRequest } from 'cde-gitness/services'
@@ -23,14 +33,16 @@ import RepositoryTypeButton, { RepositoryType } from 'cde-gitness/components/Rep
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
+import codeSandboxIcon from 'cde-gitness/assests/codeSandboxLogo.svg?url'
 import { getErrorMessage } from 'utils/Utils'
 import { GitnessRepoImportForm } from 'cde-gitness/components/GitnessRepoImportForm/GitnessRepoImportForm'
 import { ThirdPartyRepoImportForm } from 'cde-gitness/components/ThirdPartyRepoImportForm/ThirdPartyRepoImportForm'
 import { CDEIDESelect } from 'cde-gitness/components/CDEIDESelect/CDEIDESelect'
 import { gitnessFormInitialValues } from './GitspaceCreate.constants'
 import { validateGitnessForm } from './GitspaceCreate.utils'
-import css from './GitspaceCreate.module.scss'
+import { generateGitspaceName, getIdenifierFromName } from '../../utils/nameGenerator.utils'
 
+import css from './GitspaceCreate.module.scss'
 export const GitnessCreateGitspace = () => {
   const { getString } = useStrings()
   const { routes } = useAppContext()
@@ -39,12 +51,13 @@ export const GitnessCreateGitspace = () => {
   const [activeButton, setActiveButton] = useState(RepositoryType.GITNESS)
   const { showSuccess, showError } = useToaster()
   const { mutate } = useCreateGitspace({})
+  const suggestedName = generateGitspaceName()
 
   return (
     <Formik
       onSubmit={async data => {
         try {
-          const payload = data
+          const payload = { ...data, identifier: getIdenifierFromName(data.name) }
           const response = await mutate({
             ...payload,
             space_ref: space
@@ -96,6 +109,38 @@ export const GitnessCreateGitspace = () => {
                 )}
               </Container>
               <Container className={css.formOuterContainer}>
+                <Layout.Horizontal className={css.gitspaceNameContainer}>
+                  <Container width="69.5%">
+                    <Layout.Horizontal className={css.leftSection}>
+                      <img src={codeSandboxIcon} alt="gitspace" className={css.icon} />
+                      <Layout.Vertical className={css.textSection} spacing={'small'}>
+                        <Text>{getString('cde.create.gitspaceNameLabel')}</Text>
+                        <Layout.Vertical spacing={'xsmall'}>
+                          <Text font={'small'}>{getString('cde.create.gitspaceNameHelpertext1')}</Text>
+                          <Layout.Horizontal>
+                            <Text font={'small'}>{getString('cde.create.gitspaceNameHelpertext2')}</Text>
+                            <Text
+                              className={css.suggestedName}
+                              font={{ variation: FontVariation.SMALL }}
+                              onClick={e => {
+                                e.stopPropagation()
+                                formik.setFieldValue('name', suggestedName)
+                              }}>
+                              {suggestedName}
+                            </Text>
+                          </Layout.Horizontal>
+                        </Layout.Vertical>
+                      </Layout.Vertical>
+                    </Layout.Horizontal>
+                  </Container>
+                  <Container width="30.5%">
+                    <FormInput.Text
+                      name="name"
+                      placeholder={getString('cde.create.gitspaceNamePlaceholder')}
+                      className={css.inputFieldContainer}
+                    />
+                  </Container>
+                </Layout.Horizontal>
                 <CDEIDESelect onChange={formik.setFieldValue} selectedIde={formik.values.ide} />
                 <Button width={'100%'} variation={ButtonVariation.PRIMARY} height={50} type="submit">
                   {getString('cde.createGitspace')}

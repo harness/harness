@@ -29,7 +29,6 @@ import { useHistory } from 'react-router-dom'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Menu, MenuItem } from '@blueprintjs/core'
 import { defaultTo, omit } from 'lodash-es'
-import { getRepoIdFromURL } from 'cde-gitness/utils/SelectRepository.utils'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
@@ -53,7 +52,7 @@ import { useQueryParams } from 'hooks/useQueryParams'
 import { CDEUnknownSCM } from 'cde-gitness/components/CDEAnyGitImport/CDEUnknownSCM'
 import { gitnessFormInitialValues } from './GitspaceCreate.constants'
 import { validateGitnessForm } from './GitspaceCreate.utils'
-import { generateGitspaceName } from '../../utils/nameGenerator.utils'
+import { generateGitspaceName, getIdenifierFromName } from '../../utils/nameGenerator.utils'
 import css from './GitspaceCreate.module.scss'
 
 export interface SCMType {
@@ -120,7 +119,7 @@ export const CDECreateGitspace = () => {
         return {
           ...prv,
           name: '',
-          identifier: getRepoIdFromURL(codeRepoURL),
+          identifier: '',
           branch: queryParamBranch,
           codeRepoURL,
           codeRepoType
@@ -138,7 +137,7 @@ export const CDECreateGitspace = () => {
       ? {
           code_repo_url: repoQueryParams.codeRepoURL,
           branch: repoQueryParams.branch,
-          identifier: getRepoIdFromURL(repoQueryParams.codeRepoURL),
+          identifier: '',
           name: '',
           code_repo_type: repoQueryParams.codeRepoType
         }
@@ -148,7 +147,7 @@ export const CDECreateGitspace = () => {
     <Formik
       onSubmit={async data => {
         try {
-          const payload = data
+          const payload = { ...data, identifier: getIdenifierFromName(data.name) }
           const response = await mutate({
             ...omit(payload, 'metadata'),
             space_ref: space,
@@ -173,6 +172,7 @@ export const CDECreateGitspace = () => {
         code_repo_type: EnumGitspaceCodeRepoType.HARNESS_CODE,
         ...includeQueryParams
       }}
+      validateOnChange={true}
       validationSchema={validateGitnessForm(getString, true)}
       formName="importRepoForm"
       enableReinitialize>

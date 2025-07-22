@@ -337,3 +337,8 @@ export function generateGitspaceName(): string {
   const hash = generateHash()
   return `${adjective}-${superhero}-${hash}`
 }
+
+export function getIdenifierFromName(name?: string) {
+  const processed = name?.replace(/(?!^)-+(?!$)/g, '')
+  return processed
+}
