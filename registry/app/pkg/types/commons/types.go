@@ -39,3 +39,7 @@ func (a ArtifactInfo) GetImageVersion() (exists bool, imageVersion string) {
 func (a ArtifactInfo) GetVersion() string {
 	return a.Version
 }
+
+func (a ArtifactInfo) GetFileName() string {
+	return a.FilePath
+}

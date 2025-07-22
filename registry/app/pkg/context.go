@@ -93,3 +93,7 @@ func (a GenericArtifactInfo) GetImageVersion() (exists bool, imageVersion string
 func (a GenericArtifactInfo) GetVersion() string {
 	return a.Version
 }
+
+func (a GenericArtifactInfo) GetFileName() string {
+	return a.FileName
+}

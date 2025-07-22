@@ -53,3 +53,7 @@ type SearchPackageRequestInfo struct {
 	SortField  string
 	SortOrder  string
 }
+
+func (a ArtifactInfo) GetFileName() string {
+	return a.FileName
+}

@@ -79,7 +79,8 @@ func NewRouter(
 				r.Use(middleware.TrackDownloadStatForGenericArtifact(genericHandler))
 				r.Use(middleware.TrackBandwidthStatForGenericArtifacts(genericHandler))
 
-				r.With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				r.With(middleware.CheckQuarantineStatus(packageHandler)).
+					With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 					Get("/", genericHandler.PullArtifact)
 
 				r.With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).

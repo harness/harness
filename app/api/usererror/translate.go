@@ -96,6 +96,9 @@ func Translate(ctx context.Context, err error) *Error {
 	case errors.Is(err, store.ErrLicenseNotFound):
 		return BadRequestf("license not found.")
 
+	case errors.Is(err, ErrQuarantinedArtifact):
+		return ErrQuarantinedArtifact
+
 	// git errors
 	case errors.As(err, &appError):
 		if appError.Err != nil {

@@ -44,6 +44,10 @@ func (a ArtifactInfo) GetVersion() string {
 	return a.Version
 }
 
+func (a ArtifactInfo) GetFileName() string {
+	return a.Filename
+}
+
 type File struct {
 	FileURL        string
 	Name           string

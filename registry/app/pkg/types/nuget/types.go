@@ -65,6 +65,10 @@ func GetSearchTerm(r *http.Request) string {
 	return searchTerm
 }
 
+func (a ArtifactInfo) GetFileName() string {
+	return a.Filename
+}
+
 type File struct {
 	FileURL string
 	Name    string

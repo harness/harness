@@ -26,6 +26,8 @@ type PackageArtifactInfo interface {
 	GetImageVersion() (bool, string)
 
 	GetVersion() string
+
+	GetFileName() string
 }
 
 // ArtifactInfoProvider is an interface that must be implemented by package handlers

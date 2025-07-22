@@ -256,6 +256,7 @@ func (h *Handler) GetPackageArtifactInfo(r *http.Request) (pkg.PackageArtifactIn
 
 	info.Image = r.PathValue("package")
 	version := r.PathValue("version")
+	filename := r.FormValue("filename")
 
 	if err := validatePackageVersion(info.Image, version); err != nil {
 		log.Error().Msgf("Invalid image name/version/fileName: %s/%s", info.Image, version)
@@ -266,5 +267,6 @@ func (h *Handler) GetPackageArtifactInfo(r *http.Request) (pkg.PackageArtifactIn
 		ArtifactInfo: &info,
 		Version:      version,
 		RegistryID:   info.RegistryID,
+		FileName:     filename,
 	}, nil
 }

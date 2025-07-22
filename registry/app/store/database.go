@@ -734,3 +734,11 @@ type TaskSourceRepository interface {
 type TaskEventRepository interface {
 	LogTaskEvent(ctx context.Context, key string, event string, payload []byte) error
 }
+
+type QuarantineArtifactRepository interface {
+	Create(ctx context.Context, artifact *types.QuarantineArtifact) error
+	GetByFilePath(ctx context.Context, filePath string,
+		registryID int64,
+		version string,
+		artifact string) ([]*types.QuarantineArtifact, error)
+}

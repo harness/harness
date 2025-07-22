@@ -41,3 +41,6 @@ func (a ArtifactInfo) GetImageVersion() (exists bool, imageVersion string) {
 	}
 	return false, ""
 }
+func (a ArtifactInfo) GetFileName() string {
+	return a.FileName
+}

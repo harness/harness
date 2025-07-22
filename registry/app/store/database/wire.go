@@ -95,6 +95,10 @@ func ProvideNodeDao(db *sqlx.DB) store.NodesRepository {
 	return NewNodeDao(db)
 }
 
+func ProvideQuarantineArtifactDao(db *sqlx.DB) store.QuarantineArtifactRepository {
+	return NewQuarantineArtifactDao(db)
+}
+
 func ProvidePackageTagDao(db *sqlx.DB) store.PackageTagRepository {
 	return NewPackageTagDao(db)
 }
@@ -122,6 +126,7 @@ var WireSet = wire.NewSet(
 	ProvideUpstreamDao,
 	ProvideRegistryDao,
 	ProvideMediaTypeDao,
+	ProvideQuarantineArtifactDao,
 	ProvideBlobDao,
 	ProvideRegistryBlobDao,
 	ProvideTagDao,

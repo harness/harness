@@ -95,6 +95,8 @@ var (
 
 	// ErrGitLFSDisabled is returned if the Git LFS is disabled but LFS endpoint is requested.
 	ErrGitLFSDisabled = New(http.StatusBadRequest, "Git LFS is disabled")
+
+	ErrQuarantinedArtifact = New(http.StatusForbidden, "Artifact is quarantined")
 )
 
 // Error represents a json-encoded API error.
