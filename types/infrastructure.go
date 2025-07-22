@@ -101,4 +101,5 @@ type Infrastructure struct {
 	// to make the runner stateless
 	InstanceInfo InstanceInfo
 	GatewayHost  string
+	RoutingKey   string
 }

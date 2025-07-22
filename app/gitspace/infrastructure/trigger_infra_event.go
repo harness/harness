@@ -25,11 +25,13 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
 
 type Config struct {
-	AgentPort int
+	AgentPort   int
+	UseSSHPiper bool
 }
 
 type InfraEventOpts struct {
@@ -215,6 +217,11 @@ func (i InfraProvisioner) provisionNewInfrastructure(
 		InstanceInfo:               stoppedInfra.InstanceInfo,
 		Status:                     enum.InfraStatusPending,
 	}
+
+	if i.useRoutingKey(infraProviderType, gitspaceConfig.GitspaceInstance.AccessType) {
+		infrastructure.RoutingKey = i.getRoutingKey(gitspaceConfig.SpacePath, gitspaceConfig.Identifier)
+	}
+
 	responseMetadata, err := json.Marshal(infrastructure)
 	if err != nil {
 		return fmt.Errorf("unable to marshal infra object %+v: %w", responseMetadata, err)
@@ -340,4 +347,17 @@ func serializeInfraProviderParams(in []types.InfraProviderParameter) (string, er
 		return "", fmt.Errorf("unable to marshal infra provider params: %w", err)
 	}
 	return string(output), nil
+}
+
+func (i InfraProvisioner) useRoutingKey(
+	infraProviderType enum.InfraProviderType,
+	accessType enum.GitspaceAccessType,
+) bool {
+	return i.config.UseSSHPiper && infraProviderType == enum.InfraProviderTypeHybridVMAWS &&
+		accessType == enum.GitspaceAccessTypeSSHKey
+}
+
+func (i InfraProvisioner) getRoutingKey(spacePath string, gitspaceConfigIdentifier string) string {
+	return uuid.NewSHA1(uuid.NameSpaceURL,
+		[]byte(fmt.Sprintf("%s%s", spacePath, gitspaceConfigIdentifier))).String()
 }

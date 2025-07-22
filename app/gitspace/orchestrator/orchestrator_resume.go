@@ -215,7 +215,12 @@ func generateIDEURL(
 		host = provisionedInfra.ProxyGitspaceHost
 	}
 
-	return ideSvc.GenerateURL(startResponse.AbsoluteRepoPath, host, forwardedPort, startResponse.RemoteUser)
+	user := startResponse.RemoteUser
+	if provisionedInfra.RoutingKey != "" {
+		user = provisionedInfra.RoutingKey
+	}
+
+	return ideSvc.GenerateURL(startResponse.AbsoluteRepoPath, host, forwardedPort, user)
 }
 
 // ResumeStopGitspace saves the deprovisioned infra details.
