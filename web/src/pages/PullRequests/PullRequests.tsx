@@ -77,7 +77,7 @@ const SSE_EVENTS = ['pullreq_updated']
 export default function PullRequests() {
   const { getString } = useStrings()
   const history = useHistory()
-  const { routes, hooks, standalone, routingId } = useAppContext()
+  const { routes, hooks, standalone } = useAppContext()
   const [searchTerm, setSearchTerm] = useState<string | undefined>()
   const browserParams = useQueryParams<PageBrowserProps>()
   const [filter, setFilter] = useState(browserParams?.state || (PullRequestFilterOption.OPEN as string))
@@ -91,9 +91,6 @@ export default function PullRequests() {
   const { data: principal, refetch: refetchPrincipal } = useGet<TypesPrincipalInfo>({
     base: getConfig('code/api/v1'),
     path: `/principals/${browserParams.author}`,
-    queryParams: {
-      accountIdentifier: routingId
-    },
     lazy: true
   })
 

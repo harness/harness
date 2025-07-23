@@ -108,7 +108,7 @@ export default function RepositoriesListing() {
   const rowContainerRef = useRef<HTMLDivElement>(null)
   const [nameTextWidth, setNameTextWidth] = useState(600)
   const space = useGetSpaceParam()
-  const { routes, standalone, hooks, routingId } = useAppContext()
+  const { routes, standalone, routingId } = useAppContext()
   const { updateQueryParams, replaceQueryParams } = useUpdateQueryParams()
   const { updateRepoMetadata } = useGetRepositoryMetadata()
   const pageBrowser = useQueryParams<PageBrowserProps>()
@@ -204,8 +204,6 @@ export default function RepositoriesListing() {
     }
   }, [space, page]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const bearerToken = hooks?.useGetToken?.() || ''
-
   const addImportProgressToData = async (repos: RepoRepositoryOutput[]) => {
     return await Promise.all(
       repos.map(async repo => {
@@ -214,7 +212,6 @@ export default function RepositoriesListing() {
             const importProgress = await getUsingFetch(
               getConfig('code/api/v1'),
               `/repos/${repo.path}/+/import-progress`,
-              bearerToken,
               {
                 queryParams: {
                   accountIdentifier: routingId

@@ -15,7 +15,7 @@
  */
 
 import React, { useEffect } from 'react'
-import SecureStorage from '@ar/utils/SecureStorage'
+import SecureStorage from 'utils/SecureStorage'
 import { useLocalStorage } from '@ar/hooks'
 
 export enum PreferenceScope {

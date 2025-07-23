@@ -19,6 +19,7 @@ import { isEqual } from 'lodash-es'
 import { EventSourcePolyfill } from 'event-source-polyfill'
 import { useAppContext } from 'AppContext'
 import { getConfig } from 'services/config'
+import SessionToken from 'utils/SessionToken'
 
 type UseSpaceSSEProps = {
   space: string
@@ -30,10 +31,10 @@ type UseSpaceSSEProps = {
 }
 
 const useSpaceSSE = ({ space, events: _events, onEvent, onError, shouldRun = true }: UseSpaceSSEProps) => {
-  const { standalone, routingId, hooks } = useAppContext()
+  const { standalone, routingId } = useAppContext()
   const [events, setEvents] = useState(_events)
   const eventSourceRef = useRef<EventSource | null>(null)
-  const bearerToken = hooks?.useGetToken?.() || ''
+  const bearerToken = SessionToken.getToken()
 
   useEffect(() => {
     if (!isEqual(events, _events)) {

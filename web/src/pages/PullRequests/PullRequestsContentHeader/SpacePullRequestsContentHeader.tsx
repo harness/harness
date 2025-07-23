@@ -29,7 +29,6 @@ import { useStrings } from 'framework/strings'
 import { DashboardFilter, PullRequestFilterOption, PullRequestReviewFilterOption } from 'utils/GitUtils'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import type { TypesPrincipalInfo } from 'services/code'
-import { useAppContext } from 'AppContext'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import { getCurrentScopeLabel, getScopeOptions, ScopeEnum, ScopeLevelEnum } from 'utils/Utils'
 import { LabelFilter } from 'components/Label/LabelFilter/LabelFilter'
@@ -63,7 +62,6 @@ export function SpacePullRequestsContentHeader({
   const { searchTerm, prStateFilter, includeSubspaces, reviewFilter, authorFilter, labelFilter, encapFilter } = state
 
   const space = useGetSpaceParam()
-  const { hooks } = useAppContext()
   const [accountIdentifier, orgIdentifier, projectIdentifier] = space?.split('/') || []
 
   const items = useMemo(
@@ -85,8 +83,6 @@ export function SpacePullRequestsContentHeader({
     [getString]
   )
 
-  const bearerToken = hooks?.useGetToken?.() || ''
-
   const currentScopeLabel = getCurrentScopeLabel(getString, includeSubspaces, accountIdentifier, orgIdentifier)
 
   const dashboardEncapFilters = [
@@ -101,7 +97,6 @@ export function SpacePullRequestsContentHeader({
         onPullRequestAuthorFilterChanged={setAuthorFilter}
         activePullRequestAuthorFilterOption={authorFilter}
         activePullRequestAuthorObj={activePullRequestAuthorObj}
-        bearerToken={bearerToken}
       />
     ),
     [authorFilter, encapFilter]
@@ -162,7 +157,6 @@ export function SpacePullRequestsContentHeader({
           <LabelFilter
             labelFilterOption={labelFilter}
             onPullRequestLabelFilterChanged={setLabelFilter}
-            bearerToken={bearerToken}
             filterScope={ScopeEnum.SPACE_SCOPE}
             spaceRef={space}
           />

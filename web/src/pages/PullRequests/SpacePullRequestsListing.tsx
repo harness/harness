@@ -64,7 +64,7 @@ import css from './PullRequests.module.scss'
 
 export function SpacePullRequestsListing() {
   const { getString } = useStrings()
-  const { routes, routingId } = useAppContext()
+  const { routes } = useAppContext()
   const browserParams = useQueryParams<PageBrowserProps>()
   const [pageAction, setPageAction] = useState<{ action: PageAction; timestamp: number }>({
     action: PageAction.NEXT,
@@ -73,10 +73,7 @@ export function SpacePullRequestsListing() {
 
   const { data: principal } = useGet<TypesPrincipalInfo>({
     base: getConfig('code/api/v1'),
-    path: `/principals/${browserParams.author}`,
-    queryParams: {
-      accountIdentifier: routingId
-    }
+    path: `/principals/${browserParams.author}`
   })
 
   const { state, setPage, setLabelFilter } = usePRFiltersContext()

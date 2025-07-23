@@ -36,7 +36,6 @@ import { useStrings } from 'framework/strings'
 import { handleUpload } from 'utils/GitUtils'
 import { PrincipalType, handleFileDrop, handlePaste } from 'utils/Utils'
 import { getConfig, getUsingFetch } from 'services/config'
-import { useAppContext } from 'AppContext'
 import css from './Editor.module.scss'
 
 export interface EditorProps {
@@ -89,7 +88,6 @@ export const Editor = React.memo(function CodeMirrorReactEditor({
   const view = useRef<EditorView>()
   const ref = useRef<HTMLDivElement>()
   const [fileData, setFile] = useState<File>()
-  const { hooks } = useAppContext()
   const languageConfig = useMemo(() => new Compartment(), [])
   const [markdownContent, setMarkdownContent] = useState('')
   const markdownLanguageSupport = useMemo(() => markdown({ codeLanguages: languages }), [])
@@ -134,23 +132,17 @@ export const Editor = React.memo(function CodeMirrorReactEditor({
 
   const [uploading, setUploading] = useState(false)
 
-  const bearerToken = hooks?.useGetToken?.() || ''
   const fetchUsers = useCallback(
     debounce(async (query: string) => {
       try {
-        const updatedAuthorsList: TypesPrincipalInfo[] = await getUsingFetch(
-          getConfig('code/api/v1'),
-          `/principals`,
-          bearerToken,
-          {
-            queryParams: {
-              query: query.trim(),
-              type: PrincipalType.USER,
-              limit: 50,
-              accountIdentifier: routingId
-            }
+        const updatedAuthorsList: TypesPrincipalInfo[] = await getUsingFetch(getConfig('code/api/v1'), `/principals`, {
+          queryParams: {
+            query: query.trim(),
+            type: PrincipalType.USER,
+            limit: 50,
+            accountIdentifier: routingId
           }
-        )
+        })
 
         setFetchedUsers?.(updatedAuthorsList || [])
 
@@ -159,7 +151,7 @@ export const Editor = React.memo(function CodeMirrorReactEditor({
         showError('Failed to fetch users.')
       }
     }, 500),
-    [bearerToken, routingId]
+    [routingId]
   )
 
   const applyUserMention = (user: TypesPrincipalInfo, viewState: EditorView) => {

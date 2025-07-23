@@ -96,8 +96,6 @@ export function PullRequestsContentHeader({
     [getString]
   )
 
-  const bearerToken = hooks?.useGetToken?.() || ''
-
   return (
     <Container className={css.main} padding="xlarge">
       <Layout.Vertical spacing="small" className={css.banners}>
@@ -121,7 +119,6 @@ export function PullRequestsContentHeader({
           labelFilterOption={labelFilterOption}
           setLabelFilterOption={setLabelFilterOption}
           onPullRequestLabelFilterChanged={onPullRequestLabelFilterChanged}
-          bearerToken={bearerToken}
           repoMetadata={repoMetadata}
           spaceRef={space}
           filterScope={ScopeEnum.REPO_SCOPE}
@@ -131,7 +128,6 @@ export function PullRequestsContentHeader({
           onPullRequestAuthorFilterChanged={onPullRequestAuthorFilterChanged}
           activePullRequestAuthorFilterOption={activePullRequestAuthorFilterOption}
           activePullRequestAuthorObj={activePullRequestAuthorObj}
-          bearerToken={bearerToken}
         />
 
         <DropDown

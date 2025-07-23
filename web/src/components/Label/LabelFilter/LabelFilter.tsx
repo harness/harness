@@ -54,7 +54,6 @@ interface LabelFilterProps {
   labelFilterOption?: LabelFilterObj[]
   setLabelFilterOption?: React.Dispatch<React.SetStateAction<LabelFilterObj[] | undefined>>
   onPullRequestLabelFilterChanged: (labelFilter: LabelFilterObj[]) => void
-  bearerToken: string
   spaceRef: string
   filterScope: ScopeEnum
   repoMetadata?: RepoRepositoryOutput
@@ -71,7 +70,6 @@ export const LabelFilter = (props: LabelFilterProps) => {
     labelFilterOption,
     setLabelFilterOption,
     onPullRequestLabelFilterChanged,
-    bearerToken,
     repoMetadata,
     filterScope,
     spaceRef
@@ -91,7 +89,7 @@ export const LabelFilter = (props: LabelFilterProps) => {
   const [accountIdentifier, orgIdentifier, projectIdentifier] = spaceRef?.split('/') || []
 
   const getLabelsOnRepoScope = () =>
-    getUsingFetch(getConfig('code/api/v1'), `/repos/${repoMetadata?.path}/+/labels`, bearerToken, {
+    getUsingFetch(getConfig('code/api/v1'), `/repos/${repoMetadata?.path}/+/labels`, {
       queryParams: {
         page: 1,
         limit: LIST_FETCHING_LIMIT,
@@ -102,7 +100,7 @@ export const LabelFilter = (props: LabelFilterProps) => {
     })
 
   const getLabelsOnSpaceScope = () =>
-    getUsingFetch(getConfig('code/api/v1'), `/labels`, bearerToken, {
+    getUsingFetch(getConfig('code/api/v1'), `/labels`, {
       queryParams: {
         accountIdentifier: accountIdentifier ?? routingId,
         orgIdentifier,
@@ -148,7 +146,7 @@ export const LabelFilter = (props: LabelFilterProps) => {
         : `/spaces/${encodeURIComponent(scopeRef)}/labels/${encodeURIComponent(key)}/values`
 
     try {
-      const fetchedValues: TypesLabelValue[] = await getUsingFetch(getConfig('code/api/v1'), getPath(), bearerToken, {
+      const fetchedValues: TypesLabelValue[] = await getUsingFetch(getConfig('code/api/v1'), getPath(), {
         queryParams: { accountIdentifier: routingId }
       })
       const updatedValuesList = mapToSelectOptions(fetchedValues)
@@ -171,7 +169,7 @@ export const LabelFilter = (props: LabelFilterProps) => {
         : `/labels/${encodeURIComponent(key)}/values`
 
     try {
-      const fetchedValues: TypesLabelValue[] = await getUsingFetch(getConfig('code/api/v1'), getPath(), bearerToken, {
+      const fetchedValues: TypesLabelValue[] = await getUsingFetch(getConfig('code/api/v1'), getPath(), {
         queryParams: {
           accountIdentifier: scopeRef?.split('/')[0],
           orgIdentifier: scopeRef?.split('/')[1],

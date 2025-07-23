@@ -26,7 +26,6 @@ import { PrincipalType } from 'utils/Utils'
 import css from './PullRequestsContentHeader.module.scss'
 
 interface PullRequestsContentHeaderProps {
-  bearerToken: string
   activePullRequestAuthorFilterOption?: string
   activePullRequestAuthorObj?: TypesPrincipalInfo | null
   onPullRequestAuthorFilterChanged: (authorFilter: string) => void
@@ -35,8 +34,7 @@ interface PullRequestsContentHeaderProps {
 export function PRAuthorFilter({
   onPullRequestAuthorFilterChanged,
   activePullRequestAuthorFilterOption,
-  activePullRequestAuthorObj,
-  bearerToken
+  activePullRequestAuthorObj
 }: PullRequestsContentHeaderProps) {
   const { getString } = useStrings()
   const [authorFilterOption, setAuthorFilterOption] = useState(activePullRequestAuthorFilterOption)
@@ -63,7 +61,7 @@ export function PRAuthorFilter({
       updateList(targetIndex, sortedList)
     } else {
       if (user) {
-        const newAuthorsList = await getUsingFetch(getConfig('code/api/v1'), `/principals`, bearerToken, {
+        const newAuthorsList = await getUsingFetch(getConfig('code/api/v1'), `/principals`, {
           queryParams: {
             query: user?.display_name?.trim(),
             type: PrincipalType.USER,
@@ -83,18 +81,13 @@ export function PRAuthorFilter({
   const getAuthorsPromise = async (): Promise<SelectOption[]> => {
     setLoadingAuthors(true)
     try {
-      const fetchedAuthors: TypesPrincipalInfo[] = await getUsingFetch(
-        getConfig('code/api/v1'),
-        `/principals`,
-        bearerToken,
-        {
-          queryParams: {
-            query: query?.trim(),
-            type: PrincipalType.USER,
-            accountIdentifier: routingId
-          }
+      const fetchedAuthors: TypesPrincipalInfo[] = await getUsingFetch(getConfig('code/api/v1'), `/principals`, {
+        queryParams: {
+          query: query?.trim(),
+          type: PrincipalType.USER,
+          accountIdentifier: routingId
         }
-      )
+      })
 
       const authors = Array.isArray(fetchedAuthors) ? [...fetchedAuthors] : []
       if (activePullRequestAuthorObj?.id) {
