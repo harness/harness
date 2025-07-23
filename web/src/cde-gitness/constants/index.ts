@@ -18,6 +18,7 @@ import vsCodeIcon from 'cde-gitness/assests/VSCode.svg?url'
 import intellijIcon from 'cde-gitness/assests/intellij.svg?url'
 import cLionIcon from 'cde-gitness/assests/clion.svg?url'
 import phpStormIcon from 'cde-gitness/assests/phpStorm.svg?url'
+import type { EnumIDEType } from 'services/cde'
 import pyCharmIcon from 'cde-gitness/assests/pyCharm.svg?url'
 import rubyMineIcon from 'cde-gitness/assests/rubyMine.svg?url'
 import webStormIcon from 'cde-gitness/assests/webStorm.svg?url'
@@ -88,12 +89,21 @@ export interface dropdownProps {
   value: string
 }
 
+export interface IDEOption {
+  value: EnumIDEType
+  label: string
+  icon: string
+  group: string
+  buttonText: string
+  allowSSH?: boolean
+}
+
 export const groupEnums = {
   VSCODE: 'vscode',
   JETBRAIN: 'jetbrain'
 }
 
-export const getIDETypeOptions = (getString: any) => [
+export const getIDETypeOptions = (getString: any): IDEOption[] => [
   {
     label: getString('cde.ide.browser'),
     value: IDEType.VSCODEWEB,
@@ -218,12 +228,11 @@ export const GitspaceStatusTypes = (getString: any) => [
   }
 ]
 
-export const getIDEOption: any = (type = '', getString = null) => {
-  let ideItem = null
+export const getIDEOption = (type = '', getString: (key: keyof StringsMap) => string): IDEOption | null => {
   if (type && getString) {
-    ideItem = getIDETypeOptions(getString).find((ide: ideType) => ide?.value === type)
+    return getIDETypeOptions(getString).find((ide: IDEOption) => ide?.value === type) || null
   }
-  return ideItem
+  return null
 }
 
 export enum GitspaceOwnerType {

@@ -178,7 +178,7 @@ export const CDECreateGitspace = () => {
       enableReinitialize>
       {formik => {
         const scmOption = scmOptionsCDE.find(item => item.value === formik.values?.code_repo_type) as SCMType
-        const selectedIDE = formik?.values?.ide ? getIDEOption(formik?.values?.ide, getString) : {}
+        const selectedIDE = formik?.values?.ide ? getIDEOption(formik?.values?.ide, getString) : null
         return (
           <>
             <Layout.Horizontal

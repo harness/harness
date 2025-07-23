@@ -46,7 +46,7 @@ const GitProviders: React.FC<GitProvidersProps> = ({ settings }) => {
   const [selectAllChecked, setSelectAllChecked] = useState(true)
 
   const providerSections: ProviderSection[] = useMemo(() => {
-    const sections: ProviderSection[] = JSON.parse(JSON.stringify(providerSectionsTemplate))
+    const sections: ProviderSection[] = structuredClone(providerSectionsTemplate)
 
     scmOptionsCDE.forEach((provider: SCMType) => {
       const sectionKey = sectionMapping[provider.value]

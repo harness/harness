@@ -83,11 +83,17 @@ settings:
   availableGitProviders: Available Git Providers
   gitProvidersDescription: Customize which git provider you want to use
   selectAllGitProviders: Select all git providers
+  availableCodeEditors: Available Code Editors
+  codeEditorsDescription: Limit the available Code Editors
   selectAllCodeEditors: Select All Code Editors
   providers:
     github: GitHub
     gitlab: GitLab
     bitbucket: Bitbucket
+    other: Other
+  editors:
+    vsCode: By Microsoft
+    jetbrains: By JetBrains
   other: Other
 delegate:
   DelegateSelector: Delegate Selector

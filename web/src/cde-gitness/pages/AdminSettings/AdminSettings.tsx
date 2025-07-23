@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import {
   Breadcrumbs,
   Container,
@@ -14,22 +14,22 @@ import {
 } from '@harnessio/uicore'
 import { Formik, Form } from 'formik'
 import { FontVariation } from '@harnessio/design-system'
-import {
-  useFindGitspaceSettings,
-  useUpsertGitspaceSettings,
-  TypesGitspaceSettingsData,
-  EnumGitspaceCodeRepoType
-} from 'services/cde'
+import { useFindGitspaceSettings, useUpsertGitspaceSettings, TypesGitspaceSettingsData } from 'services/cde'
 import { scmOptionsCDE, SCMType } from 'cde-gitness/pages/GitspaceCreate/CDECreateGitspace'
+import { getIDETypeOptions, IDEOption } from 'cde-gitness/constants'
 import { routes } from 'cde-gitness/RouteDefinitions'
 import { getErrorMessage } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
 import GitProviders from './GitProviders/GitProviders'
+import CodeEditors from './CodeEditors/CodeEditors'
 import css from './AdminSettings.module.scss'
 
 interface AdminSettingsFormValues {
   gitProviders: {
+    [key: string]: boolean
+  }
+  codeEditors: {
     [key: string]: boolean
   }
 }
@@ -61,10 +61,18 @@ const AdminSettingsPage = () => {
 
   const [selectedTab, setSelectedTab] = useState(tabOptions.gitProviders)
 
+  const availableEditors = useMemo(() => getIDETypeOptions(getString), [getString])
+
   const initialValues: AdminSettingsFormValues = {
     gitProviders: {
       ...scmOptionsCDE.reduce((acc, provider: SCMType) => {
         acc[provider.value] = true
+        return acc
+      }, {} as { [key: string]: boolean })
+    },
+    codeEditors: {
+      ...availableEditors.reduce((acc: { [key: string]: boolean }, editor: IDEOption) => {
+        acc[editor.value] = true
         return acc
       }, {} as { [key: string]: boolean })
     }
@@ -72,9 +80,10 @@ const AdminSettingsPage = () => {
 
   const handleSave = async (values: AdminSettingsFormValues) => {
     const allProviders = scmOptionsCDE.map(p => p.value)
-    const deniedProviders = allProviders.filter(
-      provider => !values.gitProviders[provider]
-    ) as EnumGitspaceCodeRepoType[]
+    const deniedProviders = allProviders.filter(provider => !values.gitProviders[provider])
+
+    const allEditors = availableEditors.map((editor: IDEOption) => editor.value)
+    const deniedEditors = allEditors.filter(editor => !values.codeEditors[editor])
 
     const payload: TypesGitspaceSettingsData = {
       ...settings?.settings,
@@ -84,6 +93,12 @@ const AdminSettingsPage = () => {
           access_list: {
             mode: 'deny',
             list: deniedProviders
+          }
+        },
+        ide: {
+          access_list: {
+            mode: 'deny',
+            list: deniedEditors
           }
         }
       }
@@ -148,8 +163,7 @@ const AdminSettingsPage = () => {
                     {
                       id: tabOptions.codeEditors,
                       title: getString('cde.settings.codeEditors'),
-                      disabled: true,
-                      panel: <></>
+                      panel: <CodeEditors settings={settings} />
                     },
                     {
                       id: tabOptions.cloudRegions,
