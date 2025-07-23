@@ -1,13 +1,20 @@
-import React, { useState } from 'react'
-import { Container, HarnessDocTooltip, Layout, Text } from '@harnessio/uicore'
+import React, { useEffect, useState } from 'react'
+import { Container, FormInput, HarnessDocTooltip, Label, Layout, Select, Text } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
 import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance } from 'react-table'
 import { Icon } from '@harnessio/icons'
 import { cloneDeep } from 'lodash-es'
-import { AwsRegionConfig, learnMoreRegion, type regionProp, ZoneConfig } from 'cde-gitness/constants'
+import {
+  AwsRegionConfig,
+  learnMoreRegionAws,
+  type regionProp,
+  ZoneConfig,
+  learMoreVMRunner
+} from 'cde-gitness/constants'
 import { useStrings } from 'framework/strings'
 import RegionTable from 'cde-gitness/components/RegionTable/AwsRegionTable'
 import NewRegionModal from './NewRegionModal'
+import { InfraDetails } from './InfraDetails.constants'
 import css from './InfraDetails.module.scss'
 
 interface ExtendedAwsRegionConfig extends AwsRegionConfig {
@@ -39,9 +46,11 @@ interface LocationProps {
   regionData: ExtendedAwsRegionConfig[]
   setRegionData: (result: ExtendedAwsRegionConfig[]) => void
   initialData: ExtendedAwsRegionConfig
+  runner: { region: string; availability_zones: string; ami_id: string }
+  setRunner: (result: { region: string; availability_zones: string; ami_id: string }) => void
 }
 
-const ConfigureLocations = ({ regionData, setRegionData }: LocationProps) => {
+const ConfigureLocations = ({ regionData, setRegionData, runner, setRunner }: LocationProps) => {
   const { getString } = useStrings()
   const [isOpen, setIsOpen] = useState(false)
   const [editingRegion, setEditingRegion] = useState<ExtendedAwsRegionConfig | null>(null)
@@ -106,7 +115,6 @@ const ConfigureLocations = ({ regionData, setRegionData }: LocationProps) => {
       accessor: 'region_name',
       width: '27%'
     },
-    /*
     {
       Header: (
         <Layout.Horizontal>
@@ -120,7 +128,6 @@ const ConfigureLocations = ({ regionData, setRegionData }: LocationProps) => {
       accessor: 'gateway_ami_id',
       width: '21%'
     },
-    */
     {
       Header: (
         <Layout.Horizontal>
@@ -206,6 +213,23 @@ const ConfigureLocations = ({ regionData, setRegionData }: LocationProps) => {
     setIsOpen(true)
   }
 
+  const runnerVMRegionOptions = regionData.map(item => ({ label: item.region_name, value: item.region_name }))
+
+  // Get zones for the selected region
+  const selectedRegion = runner?.region || ''
+  const availableZones = selectedRegion
+    ? InfraDetails.regions[selectedRegion as keyof typeof InfraDetails.regions] || []
+    : []
+  const runnerVMZoneOptions = availableZones.map(zone => ({ label: zone, value: zone }))
+
+  // Reset zone selection if region changes or if the current zone doesn't belong to the selected region
+  useEffect(() => {
+    if (setRunner && runner?.availability_zones) {
+      if (!availableZones.includes(runner?.availability_zones)) {
+        setRunner({ ...runner, availability_zones: '' })
+      }
+    }
+  }, [selectedRegion, availableZones, runner?.availability_zones, setRunner])
   return (
     <Layout.Vertical spacing="none" className={css.containerSpacing}>
       <Text className={css.basicDetailsHeading}>{getString('cde.Aws.configureRegionsAndZones')}</Text>
@@ -217,7 +241,7 @@ const ConfigureLocations = ({ regionData, setRegionData }: LocationProps) => {
           color={Color.PRIMARY_7}
           className={css.headerLinkText}
           onClick={() => {
-            window.open(learnMoreRegion, '_blank')
+            window.open(learnMoreRegionAws, '_blank')
           }}>
           {getString('cde.configureInfra.learnMore')}
         </Text>
@@ -231,8 +255,71 @@ const ConfigureLocations = ({ regionData, setRegionData }: LocationProps) => {
         }}
         initialValues={editingRegion as regionProp | null}
         isEditMode={isEditMode}
+        existingRegions={regionData.map(region => region.region_name)}
       />
       <RegionTable columns={columns} addNewRegion={openRegionModal} regionData={regionData} />
+      <br />
+      <Text className={css.basicDetailsHeading}>{getString('cde.gitspaceInfraHome.configureVMRunnerImage')}</Text>
+      <Layout.Horizontal spacing="small">
+        <Text color={Color.GREY_400} className={css.headerLinkText}>
+          {getString('cde.gitspaceInfraHome.configureVMRunnerImageNote')}
+        </Text>
+        <Text
+          color={Color.PRIMARY_7}
+          className={css.headerLinkText}
+          onClick={() => {
+            window.open(learMoreVMRunner, '_blank')
+          }}>
+          {getString('cde.configureInfra.learnMore')}
+        </Text>
+      </Layout.Horizontal>
+      <Layout.Vertical className={css.regionContainer} spacing="large">
+        <Container>
+          <Label className={css.runnerregion}>{getString('cde.gitspaceInfraHome.runnerVMRegion')}</Label>
+          <Select
+            addClearBtn
+            name={getString('cde.gitspaceInfraHome.runnerVMRegion')}
+            items={runnerVMRegionOptions}
+            value={
+              runner?.region ? runnerVMRegionOptions.find(region => region.value === runner?.region) || null : null
+            }
+            onChange={value => {
+              setRunner({ ...runner, region: value?.value as string })
+            }}
+          />
+        </Container>
+        <Container>
+          <Label className={css.runnerregion}>{getString('cde.gitspaceInfraHome.runnerVMZone')}</Label>
+          <Select
+            addClearBtn
+            name={getString('cde.gitspaceInfraHome.runnerVMZone')}
+            items={runnerVMZoneOptions}
+            disabled={!selectedRegion}
+            value={
+              runner?.availability_zones && availableZones.includes(runner?.availability_zones)
+                ? runnerVMZoneOptions.find(zone => zone.value === runner?.availability_zones) || null
+                : null
+            }
+            onChange={value => {
+              setRunner({ ...runner, availability_zones: value?.value as string })
+            }}
+          />
+        </Container>
+        <Container>
+          {/*<Layout.Horizontal spacing="xsmall" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>*/}
+          {/*  <Label className={css.runnerregion}>{getString('cde.gitspaceInfraHome.machineImageName')}</Label>*/}
+          {/*</Layout.Horizontal>*/}
+          <FormInput.Text
+            name="runner.ami_id"
+            label={getString('cde.Aws.runnerAmiId')}
+            placeholder={getString('cde.Aws.runnerAmiIdPlaceholder')}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              // Also update local state for immediate UI updates
+              setRunner({ ...runner, ami_id: e.target.value })
+            }}
+          />
+        </Container>
+      </Layout.Vertical>
     </Layout.Vertical>
   )
 }

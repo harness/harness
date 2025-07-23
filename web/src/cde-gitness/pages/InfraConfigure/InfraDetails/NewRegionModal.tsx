@@ -25,6 +25,7 @@ interface NewRegionModalProps {
   onSubmit: (value: NewRegionModalForm) => void
   initialValues?: regionProp | null
   isEditMode?: boolean
+  existingRegions?: string[]
 }
 
 type NewRegionModalForm = regionProp
@@ -41,18 +42,37 @@ const validationSchema = () =>
     domain: Yup.string().required('Domain is required')
   })
 
-const NewRegionModal = ({ isOpen, setIsOpen, onSubmit, initialValues, isEditMode = false }: NewRegionModalProps) => {
+const NewRegionModal = ({
+  isOpen,
+  setIsOpen,
+  onSubmit,
+  initialValues,
+  isEditMode = false,
+  existingRegions = []
+}: NewRegionModalProps) => {
   const { getString } = useStrings()
 
   const { values } = useFormikContext<{ domain: string }>()
 
-  const regionOptions = Object.keys(InfraDetails.regions).map(item => {
-    return {
-      label: item,
-      value: item
-    }
-  })
-
+  // const regionOptions = Object.keys(InfraDetails.regions).map(item => {
+  //   return {
+  //     label: item,
+  //     value: item
+  //   }
+  // })
+  const regionOptions = Object.keys(InfraDetails.regions)
+    .filter(region => {
+      // Include the current region if in edit mode, exclude if already in existingRegions
+      return isEditMode
+        ? initialValues?.location === region || !existingRegions.includes(region)
+        : !existingRegions.includes(region)
+    })
+    .map(item => {
+      return {
+        label: item,
+        value: item
+      }
+    })
   const getInitialValues = (): NewRegionModalForm => {
     if (initialValues) {
       const domainPrefix = initialValues.domain ? initialValues.domain.replace(`.${values?.domain}`, '') : ''

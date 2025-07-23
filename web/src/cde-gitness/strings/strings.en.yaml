@@ -123,8 +123,14 @@ gitspaceInfraHome:
   proxySubnet: Proxy subnet IP range
   dnsManagedZone: DNS managed zone
   envoyHealth: Envoy health
-  runnerVMRegion: Runner VM Region
-  runnerVMZone: Runner VM Zone
+  configureVMRunnerImage: VM Runner Image Details
+  configureVMRunnerImageNote: Configure the region and zone of the VM runner image.
+  machineImageName: "Machine Image Name"
+  machineImageNamePlaceholder: "Enter machine image name"
+  machineImageNameRequired: "Machine Image Name is required"
+  runnerVMRegion: Region
+  runnerVMZone: Availability Zone
+  invalidImageNameFormat: "Invalid image name format"
   machines: Machines
   machine: Machine
   diskType: Persistent Disk Type
@@ -172,6 +178,9 @@ configureInfra:
   project: GCP Project
   configure: Configure
   learnMoreAboutHybrid: Learn more about hybrid infra
+  gatewayImageName: Gateway Machine Image Name
+  gatewayImageNamePlaceholder: Enter gateway image name
+  gatewayImageNameRequired: Gateway Image Name is required
   configureZones: Configure Zones
   newZone: New Zone
   provideInfraDetails: Provide Infrastructure Details
@@ -203,6 +212,13 @@ Aws:
   configureRegionsAndZones: Configure Regions and Zones
   gatewayAmi: Gateway AMI
   gatewayAmiId: Gateway AMI ID
+  runnerAmiId: AMI ID
+  runnerAmiIdPlaceholder: Enter AMI ID
+  runnerAmiIdRequired: AMI ID is required
+  machineAmiId: "Machine AMI ID"
+  machineAmiIdPlaceholder: "Enter AMI ID"
+  machineAmiIdRequired: "Machine AMI ID is required"
+  invalidAmiIdFormat: Invalid AMI ID format
   availabilityZone: Availability Zone
   numberOfAvailabilityZone: '# of Availability Zone'
   privateSubnet: Private Subnet CIDR Block

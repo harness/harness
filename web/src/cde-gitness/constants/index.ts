@@ -29,7 +29,9 @@ import type { TypesInfraProviderResource } from 'services/cde'
 
 export const docLink = 'https://developer.harness.io/docs/cloud-development-environments'
 export const learnMoreRegion = 'https://cloud.google.com/compute/docs/regions-zones'
-
+export const learnMoreRegionAws = 'https://aws.amazon.com/about-aws/global-infrastructure/regions_az/'
+export const learMoreVMRunner =
+  'https://developer.harness.io/docs/cloud-development-environments/self-hosted-gitspaces/fundamentals#vm-runner'
 export enum IDEType {
   VSCODE = 'vs_code',
   VSCODEWEB = 'vs_code_web',

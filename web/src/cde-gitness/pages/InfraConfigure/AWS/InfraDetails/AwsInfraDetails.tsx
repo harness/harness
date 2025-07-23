@@ -26,6 +26,7 @@ interface InfraDetailsFormikProps {
   instances?: string
   delegateSelector?: string[]
   vpc_cidr_block?: string
+  runner?: { region: string; availability_zones: string; ami_id: string }
 }
 
 interface ExtendedAwsRegionConfig extends AwsRegionConfig {
@@ -75,7 +76,8 @@ const AwsInfraDetails = () => {
         instance_type: metadata?.gateway?.instance_type,
         instances: metadata?.gateway?.instances,
         delegateSelector: delegate,
-        vpc_cidr_block: metadata?.vpc_cidr_block // Extract VPC CIDR block from API data
+        vpc_cidr_block: metadata?.vpc_cidr_block, // Extract VPC CIDR block from API data
+        runner: metadata?.runner
       }
 
       const regions: ExtendedAwsRegionConfig[] = []
@@ -124,7 +126,7 @@ const AwsInfraDetails = () => {
   const handleSubmit = async (values: InfraDetailsFormikProps) => {
     try {
       if (regionData?.length > 0) {
-        const { identifier, name, domain, instance_type, instances, delegateSelector, vpc_cidr_block } = values
+        const { identifier, name, domain, instance_type, instances, delegateSelector, vpc_cidr_block, runner } = values
         const region_configs: Record<string, any> = {}
 
         regionData?.forEach((region: ExtendedAwsRegionConfig) => {
@@ -161,8 +163,13 @@ const AwsInfraDetails = () => {
             delegate_selectors: delegates,
             name,
             region_configs,
+            runner: {
+              region: runner?.region,
+              availability_zones: runner?.availability_zones, // Change from zone
+              ami_id: runner?.ami_id
+            },
             gateway: {
-              instance_type,
+              machine_type: instance_type,
               instances: parseInt(instances || '1')
             },
             vpc_cidr_block
@@ -201,13 +208,20 @@ const AwsInfraDetails = () => {
           onSubmit={handleSubmit}
           initialValues={infraDetails ?? {}}
           validationSchema={validateAwsInfraForm(getString)}
-          enableReinitialize>
+          enableReinitialize
+          validateOnBlur={true}>
           {formikProps => {
             return (
               <FormikForm>
                 <Layout.Vertical spacing="medium">
                   <BasicDetails formikProps={formikProps} />
-                  <ConfigureLocations regionData={regionData} setRegionData={setRegionData} initialData={initialData} />
+                  <ConfigureLocations
+                    regionData={regionData}
+                    setRegionData={setRegionData}
+                    initialData={initialData}
+                    runner={formikProps?.values?.runner || { region: '', availability_zones: '', ami_id: '' }}
+                    setRunner={result => formikProps?.setFieldValue('runner', result)}
+                  />
                   <Layout.Horizontal className={css.formFooter}>
                     <Button
                       text={getString('cde.configureInfra.cancel')}

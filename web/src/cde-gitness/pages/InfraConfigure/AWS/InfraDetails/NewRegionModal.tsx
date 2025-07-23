@@ -19,6 +19,7 @@ import { Color, FontVariation } from '@harnessio/design-system'
 import type { Column } from 'react-table'
 import type { ZoneConfig, regionProp } from 'cde-gitness/constants'
 import { useStrings } from 'framework/strings'
+import { AWS_AMI_ID_PATTERN } from 'cde-gitness/utils/InfraValidations.utils'
 import CustomSelectDropdown from 'cde-gitness/components/CustomSelectDropdown/CustomSelectDropdown'
 import { InfraDetails } from './InfraDetails.constants'
 import css from './NewRegionModal.module.scss'
@@ -29,6 +30,7 @@ interface NewRegionModalProps {
   onSubmit: (value: NewRegionModalForm) => void
   initialValues?: regionProp | null
   isEditMode?: boolean
+  existingRegions?: string[]
 }
 
 interface NewRegionModalForm {
@@ -44,7 +46,9 @@ interface NewRegionModalForm {
 const validationSchema = () =>
   Yup.object().shape({
     location: Yup.string().required('Location is required'),
-    // gatewayAmiId: Yup.string().required('Gateway AMI ID is required'),
+    gatewayAmiId: Yup.string()
+      .required('Gateway AMI ID is required')
+      .matches(AWS_AMI_ID_PATTERN, 'Invalid AMI ID format.'),
     domain: Yup.string().required('Domain is required'),
     zones: Yup.array()
       .of(
@@ -61,17 +65,30 @@ const validationSchema = () =>
       .min(2, 'At least 2 zones are required')
   })
 
-const NewRegionModal = ({ isOpen, setIsOpen, onSubmit, initialValues, isEditMode = false }: NewRegionModalProps) => {
+const NewRegionModal = ({
+  isOpen,
+  setIsOpen,
+  onSubmit,
+  initialValues,
+  isEditMode = false,
+  existingRegions = []
+}: NewRegionModalProps) => {
   const { getString } = useStrings()
 
   const { values } = useFormikContext<{ domain: string }>()
 
-  const regionOptions = Object.keys(InfraDetails.regions).map(item => {
-    return {
-      label: item,
-      value: item
-    }
-  })
+  const regionOptions = Object.keys(InfraDetails.regions)
+    .filter(region => {
+      return isEditMode
+        ? initialValues?.location === region || !existingRegions.includes(region)
+        : !existingRegions.includes(region)
+    })
+    .map(item => {
+      return {
+        label: item,
+        value: item
+      }
+    })
 
   const getDefaultZones = () => [
     {
@@ -144,12 +161,12 @@ const NewRegionModal = ({ isOpen, setIsOpen, onSubmit, initialValues, isEditMode
                 error={formikProps.errors.location}
               />
 
-              {/* <div className="form-group">
+              <div className="form-group">
                 <Text className="form-group--label" font={{ variation: FontVariation.BODY }} color={Color.GREY_500}>
                   {getString('cde.Aws.gatewayAmiId')}
                 </Text>
                 <FormInput.Text name="gatewayAmiId" placeholder="e.g. ami-12345678" />
-              </div> */}
+              </div>
               <div className={`form-group ${css.marginTop20}`}>
                 <Text className="form-group--label" font={{ variation: FontVariation.BODY }} color={Color.GREY_500}>
                   {getString('cde.configureInfra.subdomain')}

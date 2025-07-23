@@ -78,6 +78,11 @@ const BasicDetails = ({ formikProps }: BasicDetailProps) => {
           options={machineTypeOption}
           // placeholder={getString('cde.configureInfra.machineType')}
         />
+        <FormInput.Text
+          name="gateway.vm_image_name"
+          label={getString('cde.configureInfra.gatewayImageName')}
+          placeholder={getString('cde.configureInfra.gatewayImageNamePlaceholder')}
+        />
         <Container className={css.delegateContainer}>
           <Text className={css.delegateSelector}>{getString('cde.delegate.DelegateSelector')}</Text>
           <DelegateSelectorsV2

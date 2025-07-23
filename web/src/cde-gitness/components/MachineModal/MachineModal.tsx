@@ -39,6 +39,7 @@ interface MachineModalForm {
   disk_size: string
   boot_type: string
   zone: string
+  image_name: string
 }
 
 function MachineModal({
@@ -60,7 +61,7 @@ function MachineModal({
 
   const onSubmitHandler = async (values: MachineModalForm) => {
     try {
-      const { name, disk_type, boot_size, machine_type, identifier, disk_size, boot_type, zone } = values
+      const { name, disk_type, boot_size, machine_type, identifier, disk_size, boot_type, zone, image_name } = values
       const payload: any = [
         {
           identifier,
@@ -75,7 +76,8 @@ function MachineModal({
             boot_disk_type: boot_type,
             region_name: regionIdentifier,
             machine_type,
-            zone
+            zone,
+            vm_image_name: image_name
           }
         }
       ]
@@ -128,6 +130,11 @@ function MachineModal({
                   onChange={(value: { label: string; value: string }) => formik.setFieldValue('zone', value?.value)}
                   error={formik?.submitCount ? get(formik?.errors, 'zone') : ''}
                   allowCustom
+                />
+                <FormInput.Text
+                  name="image_name"
+                  label={getString('cde.gitspaceInfraHome.machineImageName')}
+                  placeholder={getString('cde.gitspaceInfraHome.machineImageNamePlaceholder')}
                 />
                 <CustomSelectDropdown
                   options={persistentDiskTypes?.map((options: string) => getStringDropdownOptions(options))}

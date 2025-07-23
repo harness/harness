@@ -1302,10 +1302,17 @@ export interface StringsMap {
   'cde.Aws.gatewayAmiId': string
   'cde.Aws.gatewayInstanceType': string
   'cde.Aws.instanceType': string
+  'cde.Aws.invalidAmiIdFormat': string
+  'cde.Aws.machineAmiId': string
+  'cde.Aws.machineAmiIdPlaceholder': string
+  'cde.Aws.machineAmiIdRequired': string
   'cde.Aws.numberOfAvailabilityZone': string
   'cde.Aws.numberOfRegions': string
   'cde.Aws.privateSubnet': string
   'cde.Aws.publicSubnet': string
+  'cde.Aws.runnerAmiId': string
+  'cde.Aws.runnerAmiIdPlaceholder': string
+  'cde.Aws.runnerAmiIdRequired': string
   'cde.Aws.selectAwsRegion': string
   'cde.Aws.title': string
   'cde.account': string
@@ -1331,6 +1338,9 @@ export interface StringsMap {
   'cde.configureInfra.domain': string
   'cde.configureInfra.downloadAndApply': string
   'cde.configureInfra.gateway': string
+  'cde.configureInfra.gatewayImageName': string
+  'cde.configureInfra.gatewayImageNamePlaceholder': string
+  'cde.configureInfra.gatewayImageNameRequired': string
   'cde.configureInfra.gatewayMachineType': string
   'cde.configureInfra.gatewayNoteText': string
   'cde.configureInfra.id': string
@@ -1434,6 +1444,8 @@ export interface StringsMap {
   'cde.gitspaceInfraHome.bootTypeMessage': string
   'cde.gitspaceInfraHome.configureAWSButton': string
   'cde.gitspaceInfraHome.configureGCPButton': string
+  'cde.gitspaceInfraHome.configureVMRunnerImage': string
+  'cde.gitspaceInfraHome.configureVMRunnerImageNote': string
   'cde.gitspaceInfraHome.cpu': string
   'cde.gitspaceInfraHome.cpuMessage': string
   'cde.gitspaceInfraHome.create': string
@@ -1461,11 +1473,15 @@ export interface StringsMap {
   'cde.gitspaceInfraHome.infraDetails': string
   'cde.gitspaceInfraHome.instanceMessage': string
   'cde.gitspaceInfraHome.instanceTypeMessage': string
+  'cde.gitspaceInfraHome.invalidImageNameFormat': string
   'cde.gitspaceInfraHome.learnMore': string
   'cde.gitspaceInfraHome.locationAndMachine': string
   'cde.gitspaceInfraHome.locationDetails': string
   'cde.gitspaceInfraHome.locationName': string
   'cde.gitspaceInfraHome.machine': string
+  'cde.gitspaceInfraHome.machineImageName': string
+  'cde.gitspaceInfraHome.machineImageNamePlaceholder': string
+  'cde.gitspaceInfraHome.machineImageNameRequired': string
   'cde.gitspaceInfraHome.machineType': string
   'cde.gitspaceInfraHome.machineTypeMessage': string
   'cde.gitspaceInfraHome.machines': string

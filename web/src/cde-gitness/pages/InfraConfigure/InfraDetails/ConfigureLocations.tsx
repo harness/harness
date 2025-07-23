@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react'
-import { Container, HarnessDocTooltip, Label, Layout, Select, Text } from '@harnessio/uicore'
+import { Container, HarnessDocTooltip, Label, Layout, Select, Text, FormInput } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
 import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance } from 'react-table'
 import { Icon } from '@harnessio/icons'
 import { cloneDeep } from 'lodash-es'
-import { learnMoreRegion, type regionProp } from 'cde-gitness/constants'
+import { learnMoreRegion, type regionProp, learMoreVMRunner } from 'cde-gitness/constants'
 import { useStrings } from 'framework/strings'
 import RegionTable from 'cde-gitness/components/RegionTable/RegionTable'
 import NewRegionModal from './NewRegionModal'
@@ -35,8 +35,8 @@ interface LocationProps {
   regionData: regionProp[]
   setRegionData: (result: regionProp[]) => void
   initialData: regionProp
-  runner: { region: string; zone: string }
-  setRunner: (result: { region: string; zone: string }) => void
+  runner: { region: string; zone: string; vm_image_name: string }
+  setRunner: (result: { region: string; zone: string; vm_image_name: string }) => void
 }
 
 const ConfigureLocations = ({ regionData, setRegionData, runner, setRunner }: LocationProps) => {
@@ -179,7 +179,6 @@ const ConfigureLocations = ({ regionData, setRegionData, runner, setRunner }: Lo
       }
     }
   }, [selectedRegion, availableZones, runner?.zone, setRunner])
-
   return (
     <Layout.Vertical spacing="none" className={css.containerSpacing}>
       <Text className={css.basicDetailsHeading}>{getString('cde.configureInfra.configureLocations')}</Text>
@@ -203,8 +202,24 @@ const ConfigureLocations = ({ regionData, setRegionData, runner, setRunner }: Lo
         onSubmit={addNewRegion}
         initialValues={editingRegion}
         isEditMode={isEditMode}
+        existingRegions={regionData.map(region => region.location)}
       />
       <RegionTable columns={columns} addNewRegion={openRegionModal} regionData={regionData} />
+      <br />
+      <Text className={css.basicDetailsHeading}>{getString('cde.gitspaceInfraHome.configureVMRunnerImage')}</Text>
+      <Layout.Horizontal spacing="small">
+        <Text color={Color.GREY_400} className={css.headerLinkText}>
+          {getString('cde.gitspaceInfraHome.configureVMRunnerImageNote')}
+        </Text>
+        <Text
+          color={Color.PRIMARY_7}
+          className={css.headerLinkText}
+          onClick={() => {
+            window.open(learMoreVMRunner, '_blank')
+          }}>
+          {getString('cde.configureInfra.learnMore')}
+        </Text>
+      </Layout.Horizontal>
       <Layout.Vertical className={css.regionContainer} spacing="large">
         <Container>
           <Label className={css.runnerregion}>{getString('cde.gitspaceInfraHome.runnerVMRegion')}</Label>
@@ -234,6 +249,20 @@ const ConfigureLocations = ({ regionData, setRegionData, runner, setRunner }: Lo
             }
             onChange={value => {
               setRunner({ ...runner, zone: value?.value as string })
+            }}
+          />
+        </Container>
+        <Container>
+          {/*<Layout.Horizontal spacing="xsmall" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>*/}
+          {/*  <Label className={css.runnerregion}>{getString('cde.gitspaceInfraHome.machineImageName')}</Label>*/}
+          {/*</Layout.Horizontal>*/}
+          <FormInput.Text
+            name="runner.vm_image_name"
+            label={getString('cde.gitspaceInfraHome.machineImageName')}
+            placeholder={getString('cde.gitspaceInfraHome.machineImageNamePlaceholder')}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              // Also update local state for immediate UI updates
+              setRunner({ ...runner, vm_image_name: e.target.value })
             }}
           />
         </Container>

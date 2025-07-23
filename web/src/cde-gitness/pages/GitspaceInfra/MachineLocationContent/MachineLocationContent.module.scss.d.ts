@@ -35,3 +35,4 @@ export declare const noMachineIcon: string
 export declare const rowContent: string
 export declare const rowHeader: string
 export declare const tableContainer: string
+export declare const truncateText: string

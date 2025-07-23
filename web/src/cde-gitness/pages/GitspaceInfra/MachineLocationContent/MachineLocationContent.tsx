@@ -117,6 +117,21 @@ function MachineLocationContent({
     )
   }
 
+  function CustomImageColumn(row: Unknown) {
+    const { vm_image_name, image_name } = row?.row?.original?.metadata
+    const displayValue = vm_image_name || image_name || ''
+
+    // Get the first line by splitting on '/' and taking the last part
+    const displayParts = displayValue.split('/')
+    const firstLineDisplay = displayParts.length > 0 ? displayParts[displayParts.length - 1] : displayValue
+
+    return (
+      <Text color={Color.GREY_1000} tooltip={displayValue} className={css.truncateText}>
+        {firstLineDisplay}
+      </Text>
+    )
+  }
+
   function CustomMachineColumn(row: Unknown) {
     const { resource_name, machine_type } = row?.row?.original?.metadata
     return (
@@ -130,6 +145,7 @@ function MachineLocationContent({
     const isAws = providerType === HYBRID_VM_AWS
     const machineTypeKey = isAws ? 'cde.Aws.instanceType' : 'cde.gitspaceInfraHome.machine'
     const zoneKey = isAws ? 'cde.Aws.availabilityZone' : 'cde.gitspaceInfraHome.zone'
+    const imageKey = isAws ? 'cde.Aws.machineAmiId' : 'cde.gitspaceInfraHome.machineImageName'
 
     return [
       {
@@ -144,6 +160,19 @@ function MachineLocationContent({
         Cell: CustomMachineColumn,
         accessor: 'name',
         width: '22%'
+      },
+      {
+        Header: (
+          <Layout.Horizontal>
+            <Text font={{ variation: FontVariation.TABLE_HEADERS }} className={css.headingText}>
+              {getString(imageKey)}
+            </Text>
+            <HarnessDocTooltip tooltipId="InfraProviderResourceImage" useStandAlone={true} />
+          </Layout.Horizontal>
+        ),
+        accessor: 'image',
+        Cell: CustomImageColumn,
+        width: '16%'
       },
       {
         Header: (
@@ -181,7 +210,7 @@ function MachineLocationContent({
         ),
         accessor: 'metadata.boot_disk_size',
         Cell: CustomDiskColumn,
-        width: '18%'
+        width: '19%'
       },
       {
         Header: (

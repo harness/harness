@@ -14,7 +14,7 @@ import { TypesInfraProviderResource, useCreateInfraProviderResource } from 'serv
 import { useAppContext } from 'AppContext'
 import { getErrorMessage } from 'utils/Utils'
 import { getStringDropdownOptions, HYBRID_VM_AWS, regionType } from 'cde-gitness/constants'
-import { validateMachineForm } from 'cde-gitness/utils/InfraValidations.utils'
+import { validateAwsMachineForm } from 'cde-gitness/utils/InfraValidations.utils'
 import { InfraDetails } from 'cde-gitness/pages/InfraConfigure/AWS/InfraDetails/InfraDetails.constants'
 import { useStrings } from 'framework/strings'
 import CustomSelectDropdown from '../CustomSelectDropdown/CustomSelectDropdown'
@@ -39,6 +39,7 @@ interface AwsMachineModalForm {
   disk_size: string
   boot_type: string
   zone: string
+  vm_image_name: string
 }
 
 function AwsMachineModal({
@@ -75,7 +76,7 @@ function AwsMachineModal({
 
   const onSubmitHandler = async (values: AwsMachineModalForm) => {
     try {
-      const { name, disk_type, boot_size, machine_type, identifier, disk_size, boot_type, zone } = values
+      const { name, disk_type, boot_size, machine_type, identifier, disk_size, boot_type, zone, vm_image_name } = values
       const payload: any = [
         {
           identifier,
@@ -90,7 +91,8 @@ function AwsMachineModal({
             boot_disk_type: boot_type,
             region_name: regionIdentifier,
             machine_type,
-            zone
+            zone,
+            vm_image_name
           }
         }
       ]
@@ -125,7 +127,7 @@ function AwsMachineModal({
           onSubmitHandler(values)
         }}
         initialValues={{} as AwsMachineModalForm}
-        validationSchema={validateMachineForm(getString)}>
+        validationSchema={validateAwsMachineForm(getString)}>
         {formik => {
           const { zone, disk_type, machine_type, disk_size, boot_size, boot_type } = formik?.values
           return (
@@ -143,6 +145,11 @@ function AwsMachineModal({
                   onChange={(value: { label: string; value: string }) => formik.setFieldValue('zone', value?.value)}
                   error={formik?.submitCount ? get(formik?.errors, 'zone') : ''}
                   allowCustom
+                />
+                <FormInput.Text
+                  name="vm_image_name"
+                  label={getString('cde.Aws.machineAmiId')}
+                  placeholder={getString('cde.Aws.machineAmiIdPlaceholder')}
                 />
                 <CustomSelectDropdown
                   options={volumeTypeOptions?.map((options: string) => getStringDropdownOptions(options))}

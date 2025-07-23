@@ -25,7 +25,8 @@ interface InfraDetailsFormikProps {
   instances?: string
   project?: string
   delegateSelector?: string[]
-  runner?: { region: string; zone: string }
+  runner?: { region: string; zone: string; vm_image_name: string }
+  gateway?: { vm_image_name: string }
 }
 
 const GcpInfraDetails = () => {
@@ -69,7 +70,8 @@ const GcpInfraDetails = () => {
         instances: metadata?.gateway?.instances,
         project: metadata?.project?.id,
         delegateSelector: delegate,
-        runner: metadata?.runner
+        runner: metadata?.runner,
+        gateway: metadata?.gateway
       }
       const regions: regionProp[] = []
       Object?.keys(data?.metadata?.region_configs ?? {}).forEach((key: string, index: number) => {
@@ -107,7 +109,17 @@ const GcpInfraDetails = () => {
           onSubmit={async (values: InfraDetailsFormikProps) => {
             try {
               if (regionData?.length > 0) {
-                const { identifier, name, domain, machine_type, instances, project, delegateSelector, runner } = values
+                const {
+                  identifier,
+                  name,
+                  domain,
+                  machine_type,
+                  instances,
+                  project,
+                  delegateSelector,
+                  runner,
+                  gateway
+                } = values
                 const region_configs: Unknown = {}
                 regionData?.forEach((region: regionProp) => {
                   const { location, defaultSubnet, proxySubnet, domain: regionDomain } = region
@@ -139,7 +151,8 @@ const GcpInfraDetails = () => {
                     },
                     gateway: {
                       machine_type,
-                      instances: parseInt(instances || '1')
+                      instances: parseInt(instances || '1'),
+                      vm_image_name: gateway?.vm_image_name
                     }
                   },
                   name,
@@ -169,7 +182,8 @@ const GcpInfraDetails = () => {
           }}
           initialValues={infraDetails ?? {}}
           validationSchema={validateInfraForm(getString)}
-          enableReinitialize>
+          enableReinitialize
+          validateOnBlur={true}>
           {formikProps => {
             return (
               <FormikForm>
@@ -180,7 +194,7 @@ const GcpInfraDetails = () => {
                     regionData={regionData}
                     setRegionData={setRegionData}
                     initialData={initialData}
-                    runner={formikProps?.values?.runner || { region: '', zone: '' }}
+                    runner={formikProps?.values?.runner || { region: '', zone: '', vm_image_name: '' }}
                     setRunner={result => formikProps?.setFieldValue('runner', result)}
                   />
                   <Layout.Horizontal className={css.formFooter}>
