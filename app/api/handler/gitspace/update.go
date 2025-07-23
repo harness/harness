@@ -47,12 +47,12 @@ func HandleUpdateConfig(gitspaceCtrl *gitspace.Controller) http.HandlerFunc {
 			return
 		}
 
-		err = gitspaceCtrl.Update(ctx, session, spaceRef, gitspaceConfigIdentifier, in)
+		gitspaceConfig, err := gitspaceCtrl.Update(ctx, session, spaceRef, gitspaceConfigIdentifier, in)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		render.JSON(w, http.StatusOK, nil)
+		render.JSON(w, http.StatusOK, gitspaceConfig)
 	}
 }
