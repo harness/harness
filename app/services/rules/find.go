@@ -33,7 +33,7 @@ func (s *Service) Find(ctx context.Context,
 		return nil, fmt.Errorf("failed to find protection rule by identifier: %w", err)
 	}
 
-	userMap, userGroupMap, err := s.getRuleUserAndUserGroups(ctx, rule)
+	userMap, _, userGroupMap, _, err := s.getRuleUserAndUserGroups(ctx, rule)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get rule users and user groups: %w", err)
 	}

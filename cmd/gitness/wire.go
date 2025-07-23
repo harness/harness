@@ -261,6 +261,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		cliserver.ProvideKeywordSearchConfig,
 		keywordsearch.WireSet,
 		rules.WireSet,
+		rules.ProvideValidator,
 		controllerkeywordsearch.WireSet,
 		settings.WireSet,
 		usergroup.WireSet,

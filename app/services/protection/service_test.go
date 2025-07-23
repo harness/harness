@@ -16,6 +16,7 @@ package protection
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 
 	"github.com/harness/gitness/types"
@@ -85,8 +86,23 @@ func TestManager_SanitizeJSON(t *testing.T) {
 		errSan    error
 	}{
 		{
-			name:      "success",
+			name:      "success branch",
 			ruleTypes: []enum.RuleType{TypeBranch},
+			ruleType:  TypeBranch,
+		},
+		{
+			name:      "success push",
+			ruleTypes: []enum.RuleType{TypePush},
+			ruleType:  TypePush,
+		},
+		{
+			name:      "success tag",
+			ruleTypes: []enum.RuleType{TypeTag},
+			ruleType:  TypeTag,
+		},
+		{
+			name:      "all rule types",
+			ruleTypes: []enum.RuleType{TypeBranch, TypePush, TypeTag},
 			ruleType:  TypeBranch,
 		},
 		{
@@ -123,10 +139,8 @@ func TestManager_SanitizeJSON(t *testing.T) {
 			}
 
 			_, err = m.SanitizeJSON(test.ruleType, json.RawMessage("{}"))
-			// nolint:errorlint // deliberately comparing errors with ==
-			if test.errSan != err {
-				t.Errorf("register type error mismatch: want=%v got=%v", test.errSan, err)
-				return
+			if !errors.Is(err, test.errSan) {
+				t.Errorf("register type error mismatch: want error containing %v, got %v", test.errSan, err)
 			}
 		})
 	}

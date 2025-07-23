@@ -100,7 +100,7 @@ func (s *Service) Update(ctx context.Context,
 	oldRule := rule.Clone()
 
 	if in.isEmpty() {
-		userMap, userGroupMap, err := s.getRuleUserAndUserGroups(ctx, rule)
+		userMap, _, userGroupMap, _, err := s.getRuleUserAndUserGroups(ctx, rule)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get rule users and user groups: %w", err)
 		}
@@ -130,9 +130,13 @@ func (s *Service) Update(ctx context.Context,
 		}
 	}
 
-	userMap, userGroupMap, err := s.getRuleUserAndUserGroups(ctx, rule)
+	userMap, ruleUserIDs, userGroupMap, _, err := s.getRuleUserAndUserGroups(ctx, rule)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get rule users and user groups: %w", err)
+	}
+
+	if err := s.ruleValidator.Validate(ctx, ruleUserIDs, userMap); err != nil {
+		return nil, fmt.Errorf("failed to validate users: %w", err)
 	}
 
 	rule.Users = userMap

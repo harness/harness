@@ -39,6 +39,7 @@ type Service struct {
 	userGroupStore     store.UserGroupStore
 	userGroupService   usergroup.Service
 	eventReporter      *ruleevents.Reporter
+	ruleValidator      Validator
 
 	sseStreamer sse.Streamer
 }
@@ -56,6 +57,7 @@ func NewService(
 	userGroupService usergroup.Service,
 	eventReporter *ruleevents.Reporter,
 	sseStreamer sse.Streamer,
+	ruleValidator Validator,
 ) *Service {
 	return &Service{
 		tx:                 tx,
@@ -70,5 +72,6 @@ func NewService(
 		userGroupService:   userGroupService,
 		eventReporter:      eventReporter,
 		sseStreamer:        sseStreamer,
+		ruleValidator:      ruleValidator,
 	}
 }

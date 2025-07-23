@@ -74,7 +74,7 @@ func (s *Service) List(ctx context.Context,
 	}
 
 	for i := range list {
-		list[i].Users, list[i].UserGroups, err = s.getRuleUserAndUserGroups(ctx, &list[i])
+		list[i].Users, _, list[i].UserGroups, _, err = s.getRuleUserAndUserGroups(ctx, &list[i])
 		if err != nil {
 			return nil, 0, err
 		}

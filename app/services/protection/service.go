@@ -146,13 +146,21 @@ func (m *Manager) FromJSON(
 	return r, nil
 }
 
-func (m *Manager) SanitizeJSON(ruleType enum.RuleType, message json.RawMessage) (json.RawMessage, error) {
+func (m *Manager) SanitizeJSON(
+	ruleType enum.RuleType,
+	message json.RawMessage,
+) (json.RawMessage, error) {
 	r, err := m.FromJSON(ruleType, message, true)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get rule protection from JSON: %w", err)
 	}
 
-	return ToJSON(r)
+	rawMsg, err := ToJSON(r)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert rule protection to JSON: %w", err)
+	}
+
+	return rawMsg, nil
 }
 
 func (m *Manager) ListRepoRules(

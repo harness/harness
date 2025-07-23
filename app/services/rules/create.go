@@ -92,7 +92,9 @@ func (s *Service) Create(ctx context.Context,
 	}
 
 	var err error
-	in.Definition, err = s.protectionManager.SanitizeJSON(in.Type, in.Definition)
+	in.Definition, err = s.protectionManager.SanitizeJSON(
+		in.Type, in.Definition,
+	)
 	if err != nil {
 		return nil, usererror.BadRequestf("invalid rule definition: %s", err.Error())
 	}
@@ -129,6 +131,15 @@ func (s *Service) Create(ctx context.Context,
 		rule.SpaceID = &parentID
 	}
 
+	userMap, ruleUserIDs, userGroupMap, _, err := s.getRuleUserAndUserGroups(ctx, rule)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get rule users and user groups: %w", err)
+	}
+
+	if err := s.ruleValidator.Validate(ctx, ruleUserIDs, userMap); err != nil {
+		return nil, fmt.Errorf("failed to validate users: %w", err)
+	}
+
 	err = s.ruleStore.Create(ctx, rule)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create protection rule: %w", err)
@@ -143,11 +154,6 @@ func (s *Service) Create(ctx context.Context,
 	)
 	if err != nil {
 		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for create branch rule operation: %s", err)
-	}
-
-	userMap, userGroupMap, err := s.getRuleUserAndUserGroups(ctx, rule)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get rule users and user groups: %w", err)
 	}
 
 	rule.Users = userMap

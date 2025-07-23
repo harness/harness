@@ -45,6 +45,7 @@ func ProvideService(
 	userGroupService usergroup.Service,
 	eventReporter *ruleevents.Reporter,
 	sseStreamer sse.Streamer,
+	ruleValidator Validator,
 ) *Service {
 	return NewService(
 		tx,
@@ -59,5 +60,10 @@ func ProvideService(
 		userGroupService,
 		eventReporter,
 		sseStreamer,
+		ruleValidator,
 	)
+}
+
+func ProvideValidator() Validator {
+	return validator{}
 }
