@@ -37,7 +37,7 @@ type UpdateInput struct {
 	Name               string       `json:"name"`
 	SSHTokenIdentifier string       `json:"ssh_token_identifier"`
 	Identifier         string       `json:"-"`
-	SpaceRef           string       `json:"space_ref"`
+	SpaceRef           string       `json:"-"`
 }
 
 func (c *Controller) Update(
