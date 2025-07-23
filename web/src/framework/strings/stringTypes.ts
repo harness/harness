@@ -1587,6 +1587,19 @@ export interface StringsMap {
   'cde.resetGitspaceTitle': string
   'cde.retry': string
   'cde.sessionDuration': string
+  'cde.settings.availableGitProviders': string
+  'cde.settings.cloudRegionsAndMachineTypes': string
+  'cde.settings.codeEditors': string
+  'cde.settings.gitProviders': string
+  'cde.settings.gitProvidersDescription': string
+  'cde.settings.gitspaceImages': string
+  'cde.settings.other': string
+  'cde.settings.providers.bitbucket': string
+  'cde.settings.providers.github': string
+  'cde.settings.providers.gitlab': string
+  'cde.settings.saveSuccess': string
+  'cde.settings.selectAllCodeEditors': string
+  'cde.settings.selectAllGitProviders': string
   'cde.sortBy': string
   'cde.sshSelect.180days': string
   'cde.sshSelect.30days': string

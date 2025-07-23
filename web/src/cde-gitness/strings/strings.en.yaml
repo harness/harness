@@ -74,6 +74,21 @@ gcpInfrastructure: GCP Infrastructure
 awsInfrastructure: AWS Infrastructure
 configureAWSInfra: Configure AWS Infrastructure
 configureGitspaceInfra: Configure Gitspace Infrastructure
+settings:
+  saveSuccess: Settings saved successfully
+  gitProviders: Git Providers
+  codeEditors: Code Editors
+  cloudRegionsAndMachineTypes: Cloud Regions and Machine types
+  gitspaceImages: Gitspace Images
+  availableGitProviders: Available Git Providers
+  gitProvidersDescription: Customize which git provider you want to use
+  selectAllGitProviders: Select all git providers
+  selectAllCodeEditors: Select All Code Editors
+  providers:
+    github: GitHub
+    gitlab: GitLab
+    bitbucket: Bitbucket
+  other: Other
 delegate:
   DelegateSelector: Delegate Selector
 gitspaceInfraHome:
@@ -230,7 +245,7 @@ create:
   gitspaceNameLabel: Gitspace name
   gitspaceNamePlaceholder: Provide name
   gitspaceNameHelpertext1: Great Gitspace names are short and memorable. Need some inspiration?
-  gitspaceNameHelpertext2: "Try this:"
+  gitspaceNameHelpertext2: 'Try this:'
   gitspaceCreateSuccess: Gitspace created successfully
   gitspaceCreateFailed: Gitspace creation failed
   infraProviderSuccess: Gitspace Infrastructure created successfully

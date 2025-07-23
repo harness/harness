@@ -1,0 +1,33 @@
+.gitProvidersContainer {
+  display: flex;
+  flex-direction: column;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--spacing-large);
+  gap: var(--spacing-large);
+}
+
+.mainContentCard {
+  padding: var(--spacing-large);
+  margin: 0;
+  border-radius: var(--border-radius-medium);
+  box-shadow: 0 2px 8px rgba(96, 97, 112, 0.16);
+  width: 100%;
+  background: var(--white);
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+}
+
+.providerCheckbox {
+  padding: 12px !important;
+  width: 100%;
+  max-width: 528px;
+  margin: 0;
+  background-color: var(--grey-50) !important;
+  border: 1px solid var(--grey-100);
+  border-radius: var(--border-radius-small);
+  box-shadow: none;
+}

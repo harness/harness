@@ -34,7 +34,8 @@ module.exports = {
     './GitspaceDetail': './src/cde-gitness/pages/GitspaceDetails/GitspaceDetails.tsx',
     './GitspaceList': './src/cde-gitness/pages/GitspaceListing/GitspaceListing.tsx',
     './GitspaceInfra': './src/cde-gitness/pages/GitspaceInfra/GitspaceInfraHomePage.tsx',
-    './GitspaceInfraDetail': './src/cde-gitness/pages/InfraConfigure/InfraConfigure.tsx'
+    './GitspaceInfraDetail': './src/cde-gitness/pages/InfraConfigure/InfraConfigure.tsx',
+    './GitspaceAdminSettings': './src/cde-gitness/pages/AdminSettings/AdminSettings.tsx'
   },
   shared: Object.assign(
     {},

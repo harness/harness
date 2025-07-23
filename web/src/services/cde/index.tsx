@@ -196,6 +196,27 @@ export interface ScmCodeRepositoryResponse {
   url?: string
 }
 
+export interface TypesAccessListGithubComHarnessGitnessTypesEnumGitspaceCodeRepoType {
+  list?: EnumGitspaceCodeRepoType[] | null
+  mode?: TypesListMode
+}
+
+export interface TypesAccessListGithubComHarnessGitnessTypesEnumIDEType {
+  list?: EnumIDEType[] | null
+  mode?: TypesListMode
+}
+
+export interface TypesAccessListString {
+  list?: string[] | null
+  mode?: TypesListMode
+}
+
+export interface TypesAvailableSettings {
+  infra_provider_resources?: {
+    [key: string]: TypesGitspaceRegionMachines[]
+  }
+}
+
 export interface TypesBranchResponse {
   name?: string
 }
@@ -215,6 +236,16 @@ export interface TypesCDEGateway {
   updated?: number
   version?: string
   zone?: string
+}
+
+export interface TypesDevcontainerImage {
+  access_list?: TypesAccessListString
+  image_connector_ref?: string
+  image_name?: string
+}
+
+export interface TypesDevcontainerSettings {
+  devcontainer_image?: TypesDevcontainerImage
 }
 
 export interface TypesGitspaceConfig {
@@ -240,6 +271,12 @@ export interface TypesGitspaceConfig {
   user_display_name?: string
   user_email?: string
   user_id?: string
+}
+
+export interface TypesGitspaceConfigSettings {
+  devcontainer?: TypesDevcontainerSettings
+  ide?: TypesIDESettings
+  scm?: TypesSCMProviderSettings
 }
 
 export interface TypesGitspaceEventResponse {
@@ -272,6 +309,31 @@ export type TypesGitspaceInstance = {
   updated?: number
   url?: string | null
 } | null
+
+export interface TypesGitspaceRegionMachines {
+  machine_types?: TypesInfraProviderResource[] | null
+  region?: string
+}
+
+export interface TypesGitspaceSettingsData {
+  gitspace_config?: TypesGitspaceConfigSettings
+  infra_provider?: {
+    [key: string]: TypesInfraProviderSettings
+  }
+}
+
+export interface TypesGitspaceSettingsResponse {
+  available_settings?: TypesAvailableSettings
+  created?: number
+  settings?: TypesGitspaceSettingsData
+  space_path?: string
+  updated?: number
+}
+
+export interface TypesIDESettings {
+  access_list?: TypesAccessListGithubComHarnessGitnessTypesEnumIDEType
+  default_ide?: EnumIDEType
+}
 
 export interface TypesInfraProviderConfig {
   created?: number
@@ -307,6 +369,12 @@ export interface TypesInfraProviderResource {
   updated?: number
 }
 
+export interface TypesInfraProviderSettings {
+  access_list?: TypesAccessListString
+  auto_stopping_time_in_mins?: number | null
+  infra_provider_type?: EnumInfraProviderType
+}
+
 export interface TypesInfraProviderTemplate {
   config_identifier?: string
   created?: number
@@ -322,6 +390,8 @@ export interface TypesListBranchesResponse {
   branches?: TypesBranchResponse[] | null
 }
 
+export type TypesListMode = string
+
 export interface TypesListRepoResponse {
   repositories?: TypesRepoResponse[] | null
 }
@@ -330,6 +400,10 @@ export interface TypesRepoResponse {
   clone_url?: string
   default_branch?: string
   name?: string
+}
+
+export interface TypesSCMProviderSettings {
+  access_list?: TypesAccessListGithubComHarnessGitnessTypesEnumGitspaceCodeRepoType
 }
 
 export interface TypesUsage {
@@ -341,6 +415,110 @@ export interface UsererrorError {
   message?: string
   values?: { [key: string]: any }
 }
+
+export interface FindGitspaceSettingsPathParams {
+  /**
+   * account identifier.
+   */
+  accountIdentifier: string
+}
+
+export type FindGitspaceSettingsProps = Omit<
+  GetProps<TypesGitspaceSettingsResponse, UsererrorError, void, FindGitspaceSettingsPathParams>,
+  'path'
+> &
+  FindGitspaceSettingsPathParams
+
+/**
+ * Get gitspace settings for a given space
+ */
+export const FindGitspaceSettings = ({ accountIdentifier, ...props }: FindGitspaceSettingsProps) => (
+  <Get<TypesGitspaceSettingsResponse, UsererrorError, void, FindGitspaceSettingsPathParams>
+    path={`/accounts/${accountIdentifier}/gitspace-settings`}
+    base={getConfig('cde/api/v1')}
+    {...props}
+  />
+)
+
+export type UseFindGitspaceSettingsProps = Omit<
+  UseGetProps<TypesGitspaceSettingsResponse, UsererrorError, void, FindGitspaceSettingsPathParams>,
+  'path'
+> &
+  FindGitspaceSettingsPathParams
+
+/**
+ * Get gitspace settings for a given space
+ */
+export const useFindGitspaceSettings = ({ accountIdentifier, ...props }: UseFindGitspaceSettingsProps) =>
+  useGet<TypesGitspaceSettingsResponse, UsererrorError, void, FindGitspaceSettingsPathParams>(
+    (paramsInPath: FindGitspaceSettingsPathParams) => `/accounts/${paramsInPath.accountIdentifier}/gitspace-settings`,
+    { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier }, ...props }
+  )
+
+export interface UpsertGitspaceSettingsPathParams {
+  /**
+   * account identifier.
+   */
+  accountIdentifier: string
+}
+
+export type UpsertGitspaceSettingsProps = Omit<
+  MutateProps<
+    TypesGitspaceSettingsResponse,
+    UsererrorError,
+    void,
+    TypesGitspaceSettingsData,
+    UpsertGitspaceSettingsPathParams
+  >,
+  'path' | 'verb'
+> &
+  UpsertGitspaceSettingsPathParams
+
+/**
+ * Upsert gitspace settings
+ */
+export const UpsertGitspaceSettings = ({ accountIdentifier, ...props }: UpsertGitspaceSettingsProps) => (
+  <Mutate<
+    TypesGitspaceSettingsResponse,
+    UsererrorError,
+    void,
+    TypesGitspaceSettingsData,
+    UpsertGitspaceSettingsPathParams
+  >
+    verb="PUT"
+    path={`/accounts/${accountIdentifier}/gitspace-settings`}
+    base={getConfig('cde/api/v1')}
+    {...props}
+  />
+)
+
+export type UseUpsertGitspaceSettingsProps = Omit<
+  UseMutateProps<
+    TypesGitspaceSettingsResponse,
+    UsererrorError,
+    void,
+    TypesGitspaceSettingsData,
+    UpsertGitspaceSettingsPathParams
+  >,
+  'path' | 'verb'
+> &
+  UpsertGitspaceSettingsPathParams
+
+/**
+ * Upsert gitspace settings
+ */
+export const useUpsertGitspaceSettings = ({ accountIdentifier, ...props }: UseUpsertGitspaceSettingsProps) =>
+  useMutate<
+    TypesGitspaceSettingsResponse,
+    UsererrorError,
+    void,
+    TypesGitspaceSettingsData,
+    UpsertGitspaceSettingsPathParams
+  >(
+    'PUT',
+    (paramsInPath: UpsertGitspaceSettingsPathParams) => `/accounts/${paramsInPath.accountIdentifier}/gitspace-settings`,
+    { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier }, ...props }
+  )
 
 export interface ListGitspacesForAccountPathParams {
   /**
