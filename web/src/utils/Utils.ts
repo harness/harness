@@ -509,7 +509,8 @@ const EXTENSION_TO_LANG: Record<string, string> = {
   tfvars: 'hcl',
   workspace: 'python',
   tfstate: 'hcl',
-  ipynb: 'json'
+  ipynb: 'json',
+  mjs: 'javascript'
 }
 
 export const PLAIN_TEXT = 'plaintext'
@@ -535,7 +536,7 @@ export type EnumPublicKeyUsage = 'auth'
 
 export interface TypeKeys {
   created: number
-  verified: number | undefined
+  verified?: number
   identifier: string
   usage: EnumPublicKeyUsage
   fingerprint: string
