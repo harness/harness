@@ -46,6 +46,15 @@ const (
 	OptimizeRepoStrategyFull      OptimizeRepoStrategy = 2
 )
 
+func (s OptimizeRepoStrategy) Validate() error {
+	switch s {
+	case OptimizeRepoStrategyGC, OptimizeRepoStrategyHeuristic, OptimizeRepoStrategyFull:
+		return nil
+	default:
+		return fmt.Errorf("invalid optimization strategy: %d", s)
+	}
+}
+
 type OptimizeRepositoryParams struct {
 	ReadParams
 	Strategy OptimizeRepoStrategy
@@ -53,13 +62,15 @@ type OptimizeRepositoryParams struct {
 }
 
 func (p OptimizeRepositoryParams) Validate() error {
-	switch p.Strategy {
-	case OptimizeRepoStrategyGC, OptimizeRepoStrategyHeuristic, OptimizeRepoStrategyFull:
-	default:
-		return fmt.Errorf("unknown optimize repository strategy: %d", p.Strategy)
+	if err := p.ReadParams.Validate(); err != nil {
+		return err
 	}
 
-	return p.ReadParams.Validate()
+	if err := p.Strategy.Validate(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func parseGCArgs(args map[string]string) api.GCParams {
