@@ -274,8 +274,20 @@ function MachineLocationContent({
             {locationData.region_name}
           </Text>
           {gatewayAPILoading && <Icon name="loading" />}
-          {groupHealthData?.overall_health === 'healthy' && <Tag intent="success">HEALTHY</Tag>}
-          {groupHealthData?.overall_health === 'unhealthy' && <Tag intent="danger">UNHEALTHY</Tag>}
+          {!gatewayAPILoading && (
+            <>
+              {(!groupHealthData || (Array.isArray(groupHealthData) && groupHealthData.length === 0)) && (
+                <Tag intent="danger">UNHEALTHY</Tag>
+              )}
+              {groupHealthData?.overall_health === 'healthy' && <Tag intent="success">HEALTHY</Tag>}
+              {groupHealthData?.overall_health === 'unhealthy' && <Tag intent="danger">UNHEALTHY</Tag>}
+              {groupHealthData &&
+                groupHealthData.overall_health &&
+                !['healthy', 'unhealthy'].includes(groupHealthData.overall_health) && (
+                  <Tag intent="warning">UNKNOWN</Tag>
+                )}
+            </>
+          )}
         </Container>
 
         <MachineDetailCard loading={gatewayAPILoading} locationData={locationData} groupHealthData={groupHealthData} />
