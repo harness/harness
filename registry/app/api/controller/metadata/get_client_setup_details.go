@@ -130,6 +130,8 @@ func (c *APIController) GenerateClientSetupDetails(
 		return c.generateNugetClientSetupDetail(ctx, registryRef, username, image, tag, registryType)
 	case string(artifact.PackageTypeCARGO):
 		return c.generateCargoClientSetupDetail(ctx, registryRef, username, image, tag, registryType)
+	case string(artifact.PackageTypeGO):
+		return c.generateGoClientSetupDetail(ctx, registryRef, username, image, tag, registryType)
 	default:
 		log.Debug().Ctx(ctx).Msgf("Unknown package type for client details: %s", packageType)
 		return nil
@@ -1427,6 +1429,106 @@ func (c *APIController) generateCargoClientSetupDetail(
 	}
 }
 
+func (c *APIController) generateGoClientSetupDetail(
+	ctx context.Context,
+	registryRef string,
+	username string,
+	image *artifact.ArtifactParam,
+	tag *artifact.VersionParam,
+	registryType artifact.RegistryType,
+) *artifact.ClientSetupDetailsResponseJSONResponse {
+	staticStepType := artifact.ClientSetupStepTypeStatic
+	generateTokenType := artifact.ClientSetupStepTypeGenerateToken
+
+	// Authentication section
+	section1 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Configure Authentication"),
+	}
+	_ = section1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr(`To resolve a Go package from this registry using Go, 
+				first set your default Harness Go registry by running the following command:`),
+				Type: &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr(`export GOPROXY="<UPLOAD_URL>"`),
+					},
+				},
+			},
+			{
+				Header: utils.StringPtr("Generate an identity token for authentication"),
+				Type:   &generateTokenType,
+			},
+		},
+	})
+
+	// Publish section
+	section2 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Publish Package"),
+	}
+	_ = section2.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr(`To deploy a Go package into a Harness registry, 
+				you need to run the following Harness CLI command from your project’s root directory:`),
+				Type: &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("hns ar push go <REGISTRY_NAME> <ARTIFACT_VERSION> --pkg-url <LOGIN_HOSTNAME>"),
+					},
+				},
+			},
+		},
+	})
+
+	// Install section
+	section3 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Install Package"),
+	}
+	_ = section3.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Install a package using go client"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("go get <ARTIFACT_NAME>@<VERSION>"),
+					},
+				},
+			},
+		},
+	})
+
+	sections := []artifact.ClientSetupSection{
+		section1,
+		section2,
+		section3,
+	}
+
+	if registryType == artifact.RegistryTypeUPSTREAM {
+		sections = []artifact.ClientSetupSection{
+			section1,
+			section3,
+		}
+	}
+
+	clientSetupDetails := artifact.ClientSetupDetails{
+		MainHeader: "Go Client Setup",
+		SecHeader:  "Follow these instructions to install/use go packages from this registry.",
+		Sections:   sections,
+	}
+
+	registryURL := c.URLProvider.PackageURL(ctx, registryRef, "go")
+	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, image, tag, registryURL, "",
+		string(artifact.PackageTypeGO))
+
+	return &artifact.ClientSetupDetailsResponseJSONResponse{
+		Data:   clientSetupDetails,
+		Status: artifact.StatusSUCCESS,
+	}
+}
+
 func (c *APIController) generateNpmClientSetupDetail(
 	ctx context.Context,
 	registryRef string,
@@ -1545,7 +1647,7 @@ func (c *APIController) replacePlaceholders(
 	pkgType string,
 ) {
 	uploadURL := ""
-	if pkgType == string(artifact.PackageTypePYTHON) {
+	if pkgType == string(artifact.PackageTypePYTHON) || pkgType == string(artifact.PackageTypeGO) {
 		regURL, _ := url.Parse(registryURL)
 		// append username:password to the host
 		regURL.User = url.UserPassword(username, "identity-token")

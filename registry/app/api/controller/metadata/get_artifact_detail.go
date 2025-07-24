@@ -188,6 +188,17 @@ func (c *APIController) GetArtifactDetails(
 			}, nil
 		}
 		artifactDetails = GetCargoArtifactDetail(img, art, result, downloadCount)
+	case artifact.PackageTypeGO:
+		var result map[string]interface{}
+		err := json.Unmarshal(art.Metadata, &result)
+		if err != nil {
+			return artifact.GetArtifactDetails500JSONResponse{
+				InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
+					*GetErrorResponse(http.StatusInternalServerError, err.Error()),
+				),
+			}, nil
+		}
+		artifactDetails = GetGoArtifactDetail(img, art, result, downloadCount)
 	case artifact.PackageTypeDOCKER:
 	case artifact.PackageTypeHELM:
 	default:

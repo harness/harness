@@ -105,6 +105,8 @@ func (c *APIController) DeleteArtifact(ctx context.Context, r artifact.DeleteArt
 		err = fmt.Errorf("delete artifact not supported for rpm")
 	case artifact.PackageTypeCARGO:
 		err = c.deleteGenericImage(ctx, regInfo, artifactName)
+	case artifact.PackageTypeGO:
+		err = c.deleteGenericImage(ctx, regInfo, artifactName)
 	default:
 		err = fmt.Errorf("unsupported package type: %s", regInfo.PackageType)
 	}

@@ -109,6 +109,8 @@ func (c *APIController) GetArtifactFiles(
 		registryURL = c.URLProvider.PackageURL(ctx, reqInfo.RootIdentifier+"/"+reqInfo.RegistryIdentifier, "rpm")
 	case artifact.PackageTypeCARGO:
 		registryURL = c.URLProvider.PackageURL(ctx, reqInfo.RootIdentifier+"/"+reqInfo.RegistryIdentifier, "cargo")
+	case artifact.PackageTypeGO:
+		registryURL = c.URLProvider.PackageURL(ctx, reqInfo.RootIdentifier+"/"+reqInfo.RegistryIdentifier, "go")
 	default:
 		registryURL = c.URLProvider.RegistryURL(ctx,
 			reqInfo.RootIdentifier, strings.ToLower(string(registry.PackageType)), reqInfo.RegistryIdentifier)
@@ -141,7 +143,7 @@ func (c *APIController) GetArtifactFiles(
 	switch registry.PackageType {
 	case artifact.PackageTypeGENERIC, artifact.PackageTypeMAVEN, artifact.PackageTypePYTHON,
 		artifact.PackageTypeNPM, artifact.PackageTypeRPM, artifact.PackageTypeNUGET,
-		artifact.PackageTypeCARGO:
+		artifact.PackageTypeCARGO, artifact.PackageTypeGO:
 		return artifact.GetArtifactFiles200JSONResponse{
 			FileDetailResponseJSONResponse: *GetAllArtifactFilesResponse(
 				fileMetadataList, count, reqInfo.pageNumber, reqInfo.limit, registryURL, img.Name, art.Version,

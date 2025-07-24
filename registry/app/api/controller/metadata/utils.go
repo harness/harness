@@ -193,7 +193,8 @@ func ValidateUpstream(config *a.RegistryConfig) error {
 		*upstreamConfig.Source != a.UpstreamConfigSourcePyPi &&
 		*upstreamConfig.Source != a.UpstreamConfigSourceNpmJs &&
 		*upstreamConfig.Source != a.UpstreamConfigSourceNugetOrg &&
-		*upstreamConfig.Source != a.UpstreamConfigSourceCrates {
+		*upstreamConfig.Source != a.UpstreamConfigSourceCrates &&
+		*upstreamConfig.Source != a.UpstreamConfigSourceGoProxy {
 		if commons.IsEmpty(upstreamConfig.Url) {
 			return errors.New("URL is required for upstream repository")
 		}
@@ -391,6 +392,8 @@ func GetPullCommand(
 		return GetNugetDownloadCommand(image, tag)
 	case string(a.PackageTypeCARGO):
 		return GetCargoDownloadCommand(image, tag)
+	case string(a.PackageTypeGO):
+		return GetGoDownloadCommand(image, tag)
 	default:
 		return ""
 	}
@@ -441,6 +444,22 @@ func GetNugetDownloadCommand(artifact, version string) string {
 
 func GetCargoDownloadCommand(artifact, version string) string {
 	downloadCommand := "cargo add <ARTIFACT>@<VERSION> --registry <REGISTRY>"
+
+	// Replace the placeholders with the actual values
+	replacements := map[string]string{
+		"<ARTIFACT>": artifact,
+		"<VERSION>":  version,
+	}
+
+	for placeholder, value := range replacements {
+		downloadCommand = strings.ReplaceAll(downloadCommand, placeholder, value)
+	}
+
+	return downloadCommand
+}
+
+func GetGoDownloadCommand(artifact, version string) string {
+	downloadCommand := "go get <ARTIFACT>@<VERSION>"
 
 	// Replace the placeholders with the actual values
 	replacements := map[string]string{
@@ -619,6 +638,27 @@ func GetCargoArtifactFileDownloadCommand(regURL, artifact, version,
 		"<HOSTNAME>":           regURL,
 		"<ARTIFACT>":           artifact,
 		"<VERSION>":            version,
+		"<AUTH_HEADER_PREFIX>": setupDetailsAuthHeaderPrefix,
+	}
+
+	for placeholder, value := range replacements {
+		downloadCommand = strings.ReplaceAll(downloadCommand, placeholder, value)
+	}
+
+	return downloadCommand
+}
+
+func GetGoArtifactFileDownloadCommand(regURL, artifact, filename,
+	setupDetailsAuthHeaderPrefix string) string {
+	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>/@v/<FILENAME>'" +
+		" --header '<AUTH_HEADER_PREFIX> <API_KEY>'" +
+		" -J -O"
+
+	// Replace the placeholders with the actual values
+	replacements := map[string]string{
+		"<HOSTNAME>":           regURL,
+		"<ARTIFACT>":           artifact,
+		"<FILENAME>":           filename,
 		"<AUTH_HEADER_PREFIX>": setupDetailsAuthHeaderPrefix,
 	}
 

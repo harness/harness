@@ -26,6 +26,7 @@ import (
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/url"
 	artifactapi "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/registry/app/api/utils"
 	"github.com/harness/gitness/registry/app/metadata"
 	npm2 "github.com/harness/gitness/registry/app/metadata/npm"
 	"github.com/harness/gitness/registry/types"
@@ -137,6 +138,8 @@ func toPackageType(packageTypeStr string) (artifactapi.PackageType, error) {
 		return artifactapi.PackageTypeNUGET, nil
 	case string(artifactapi.PackageTypeCARGO):
 		return artifactapi.PackageTypeCARGO, nil
+	case string(artifactapi.PackageTypeGO):
+		return artifactapi.PackageTypeGO, nil
 	default:
 		return "", errors.New("invalid package type")
 	}
@@ -287,6 +290,11 @@ func GetArtifactFilesMetadata(
 		case artifactapi.PackageTypeCARGO:
 			downloadCommand = GetCargoArtifactFileDownloadCommand(registryURL, artifactName,
 				version, setupDetailsAuthHeaderPrefix)
+		case artifactapi.PackageTypeGO:
+			goFilePath := utils.GetGoFilePath(artifactName, version)
+			filename = strings.Replace(file.Path, goFilePath+"/", "", 1)
+			downloadCommand = GetGoArtifactFileDownloadCommand(registryURL, artifactName,
+				filename, setupDetailsAuthHeaderPrefix)
 		}
 		files = append(files, artifactapi.FileDetail{
 			Checksums:       getCheckSums(file),
@@ -628,6 +636,36 @@ func GetCargoArtifactDetail(
 	})
 	if err != nil {
 		log.Error().Err(err).Msgf("Error setting the artifact details for cargo package: [%s]", image.Name)
+		return artifactapi.ArtifactDetail{}
+	}
+	return *artifactDetail
+}
+
+func GetGoArtifactDetail(
+	image *types.Image, artifact *types.Artifact,
+	metadata map[string]interface{},
+	downloadCount int64,
+) artifactapi.ArtifactDetail {
+	createdAt := GetTimeInMs(artifact.CreatedAt)
+	modifiedAt := GetTimeInMs(artifact.UpdatedAt)
+	size, ok := metadata["size"].(float64)
+	if !ok {
+		log.Error().Msg("failed to get size from Go metadata")
+	}
+	totalSize := GetSize(int64(size))
+	artifactDetail := &artifactapi.ArtifactDetail{
+		CreatedAt:     &createdAt,
+		ModifiedAt:    &modifiedAt,
+		Name:          &image.Name,
+		Version:       artifact.Version,
+		DownloadCount: &downloadCount,
+		Size:          &totalSize,
+	}
+	err := artifactDetail.FromGoArtifactDetailConfig(artifactapi.GoArtifactDetailConfig{
+		Metadata: &metadata,
+	})
+	if err != nil {
+		log.Error().Err(err).Msgf("Error setting the artifact details for go package: [%s]", image.Name)
 		return artifactapi.ArtifactDetail{}
 	}
 	return *artifactDetail

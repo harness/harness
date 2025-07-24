@@ -116,7 +116,7 @@ func (c *APIController) DeleteArtifactVersion(ctx context.Context, r artifact.De
 			break
 		}
 		c.PostProcessingReporter.BuildRegistryIndex(ctx, regInfo.RegistryID, make([]registryTypes.SourceRef, 0))
-	case artifact.PackageTypeCARGO:
+	case artifact.PackageTypeCARGO, artifact.PackageTypeGO:
 		err = c.deleteVersion(ctx, regInfo, imageInfo, artifactName, versionName)
 		if err != nil {
 			break
