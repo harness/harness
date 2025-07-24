@@ -38,12 +38,13 @@ type PublicKeyUsage string
 
 // PublicKeyUsage enumeration.
 const (
-	PublicKeyUsageAuth PublicKeyUsage = "auth"
-	PublicKeyUsageSign PublicKeyUsage = "sign"
+	PublicKeyUsageAuth     PublicKeyUsage = "auth"
+	PublicKeyUsageSign     PublicKeyUsage = "sign"
+	PublicKeyUsageAuthSign PublicKeyUsage = "auth_or_sign"
 )
 
 var publicKeyTypes = sortEnum([]PublicKeyUsage{
-	PublicKeyUsageAuth, PublicKeyUsageSign,
+	PublicKeyUsageAuth, PublicKeyUsageSign, PublicKeyUsageAuthSign,
 })
 
 func (PublicKeyUsage) Enum() []interface{} { return toInterfaceSlice(publicKeyTypes) }

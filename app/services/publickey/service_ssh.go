@@ -64,7 +64,7 @@ func (s sshAuthService) ValidateKey(
 		ctx,
 		fingerprint,
 		nil,
-		[]enum.PublicKeyUsage{enum.PublicKeyUsageAuth},
+		[]enum.PublicKeyUsage{enum.PublicKeyUsageAuth, enum.PublicKeyUsageAuthSign},
 		[]enum.PublicKeyScheme{enum.PublicKeySchemeSSH},
 	)
 	if err != nil {

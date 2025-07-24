@@ -95,7 +95,7 @@ func (c *Controller) CreatePublicKey(
 			in.Usage = enum.PublicKeyUsageSign
 		} else if in.Usage != enum.PublicKeyUsageSign {
 			return nil, errors.InvalidArgument(
-				"invalid key usage: PGP keys can only be used for verification of commit signatures")
+				"invalid key usage: PGP keys can only be used for verification of signatures")
 		}
 	default:
 		return nil, errors.InvalidArgument("unrecognized public key scheme")
