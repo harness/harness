@@ -16,7 +16,7 @@
 
 import React from 'react'
 import { defaultTo } from 'lodash-es'
-import { Link, useParams } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance, UseExpandedRowProps } from 'react-table'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Icon } from '@harnessio/icons'
@@ -120,7 +120,7 @@ export const VersionPublishedAtCell: CellType = ({ value }) => {
 
 export const VersionActionsCell: CellType = ({ row }) => {
   const { original } = row
-  const { artifactIdentifier, repositoryIdentifier } = useParams<ArtifactDetailsPathParams>()
+  const { artifactIdentifier, repositoryIdentifier } = useDecodedParams<ArtifactDetailsPathParams>()
   return (
     <VersionActionsWidget
       data={original}

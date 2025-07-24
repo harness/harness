@@ -19,11 +19,11 @@ import { Spinner } from '@blueprintjs/core'
 import { getErrorInfoFromErrorObject, Layout, PageError, Text } from '@harnessio/uicore'
 
 import type { ColorName } from 'utils/Utils'
-import { Label } from 'components/Label/Label'
 import { type TypesLabel, useListSpaceLabelValues } from 'services/code'
 
 import { useGetSpaceRef } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
+import LabelValuesListContent from './LabelValuesListContent'
 
 interface LabelValuesListProps {
   data: TypesLabel
@@ -47,14 +47,13 @@ function LabelValuesList({ data }: LabelValuesListProps) {
   if (!response || !response.length) return <Text>{getString('labelsList.table.noData')}</Text>
   return (
     <Layout.Horizontal spacing="xlarge">
-      {response.map(value => (
-        <Label
-          key={`${data.key}-${value.value}`}
-          name={data.key || ''}
-          scope={data.scope}
-          label_value={{ name: value.value, color: value.color as ColorName }}
-        />
-      ))}
+      <LabelValuesListContent
+        list={response}
+        labelName={data.key}
+        scope={data.scope}
+        color={data.color as ColorName}
+        allowDynamicValues={data.type === 'dynamic'}
+      />
     </Layout.Horizontal>
   )
 }

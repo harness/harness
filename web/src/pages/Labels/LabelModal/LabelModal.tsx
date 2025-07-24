@@ -83,7 +83,7 @@ interface LabelFormData extends TypesLabel {
   labelValues: ExtendedTypesLabelValue[]
 }
 
-const ColorSelectorDropdown = (props: {
+export const ColorSelectorDropdown = (props: {
   onClick: (color: ColorName) => void
   currentColorName: ColorName | undefined | false
   disabled?: boolean

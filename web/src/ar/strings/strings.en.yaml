@@ -36,7 +36,7 @@ soon: SOON
 failedToLoadData: Failed to load data. Please try again!
 all: All
 noResultsFound: No results found
-optionalField: '{{name}} (optional)'
+optionalField: '{{name}} (Optional)'
 description: '{{ $.versionDetails.overview.generalInformation.description }}'
 tagsLabel: '{{ $.artifactList.table.columns.tags }}'
 plusNewName: + New {{name}}
@@ -126,6 +126,10 @@ validationMessages:
   accessKeyRequired: Access key is required
   secretKeyRequired: Secret key is required
   headerAlreadyExists: Header already exists
+  entityRequired: '{{entity}} is required'
+  stringMax: '{{entity}} must be 50 characters or less'
+  noNewLine: '{{entity}} cannot contain new lines'
+  uniqueValues: '{{entity}} must be unique'
 vulnerabilityStatus:
   critical: 'C {{count}}'
   high: 'H {{count}}'

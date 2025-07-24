@@ -29,6 +29,7 @@ import { useParsePaginationInfo } from 'components/ResourceListingPagination/Res
 import type { PaginationResponse } from './types'
 import LabelsListTable from './LabelsListTable'
 import { LabelsListPageQueryParams, useLabelsQueryParamOptions } from './utils'
+import CreateLabelButton from './components/CreateLabelButton/CreateLabelButton'
 
 import css from './LabelsListPage.module.scss'
 
@@ -68,7 +69,7 @@ function LabelsListPage() {
     <>
       <Page.SubHeader className={css.subHeader}>
         <div className={css.subHeaderItems}>
-          {/* <CreateRepository /> */}
+          <CreateLabelButton refetch={refetch} />
           <Expander />
           <ExpandingSearchInput
             alwaysExpanded
@@ -95,7 +96,7 @@ function LabelsListPage() {
           button: hasFilter ? (
             <Button text={getString('clearFilters')} variation={ButtonVariation.LINK} onClick={handleClearFilters} />
           ) : (
-            <Button />
+            <CreateLabelButton refetch={refetch} />
           )
         }}>
         {data && (

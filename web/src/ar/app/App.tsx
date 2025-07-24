@@ -32,6 +32,7 @@ import DefaultNavComponent from '@ar/__mocks__/components/DefaultNavComponent'
 import AppErrorBoundary from '@ar/components/AppErrorBoundary/AppErrorBoundary'
 
 import useOpenApiClient from './useOpenApiClient'
+import '@ar/utils/customYupValidators'
 
 // Start: Add all factory registractions here
 import '@ar/pages/version-details/VersionFactory'

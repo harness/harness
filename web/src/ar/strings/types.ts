@@ -55,15 +55,29 @@ export interface StringsMap {
   'digestList.table.columns.size': string
   'digestList.table.columns.uploadedBy': string
   'digestList.table.noDigestTitle': string
+  'labelsList.canbeAddedByUsers': string
+  'labelsList.createLabelModal.actions.cancel': string
+  'labelsList.createLabelModal.actions.create': string
+  'labelsList.createLabelModal.labelCreated': string
+  'labelsList.createLabelModal.title': string
+  'labelsList.defaultLabelName': string
   'labelsList.deleteLabelModal.contentText': string
   'labelsList.deleteLabelModal.labelDeleted': string
   'labelsList.deleteLabelModal.title': string
+  'labelsList.labelForm.description': string
+  'labelsList.labelForm.dynamic': string
+  'labelsList.labelForm.name': string
+  'labelsList.labelForm.newValue': string
+  'labelsList.labelForm.preview': string
+  'labelsList.labelForm.value': string
+  'labelsList.labelForm.values': string
   'labelsList.table.actions.delete': string
   'labelsList.table.actions.edit': string
   'labelsList.table.columns.associations': string
   'labelsList.table.columns.description': string
   'labelsList.table.columns.name': string
   'labelsList.table.columns.scope': string
+  'labelsList.table.newLabel': string
   'labelsList.table.noData': string
   'manageRegistries.comingSoon': string
   'manageRegistries.pageHeading': string
@@ -437,14 +451,18 @@ export interface StringsMap {
   'validationMessages.cleanupPolicy.expireDaysRequired': string
   'validationMessages.cleanupPolicy.nameRequired': string
   'validationMessages.cleanupPolicy.positiveExpireDays': string
+  'validationMessages.entityRequired': string
   'validationMessages.genericURLPattern': string
   'validationMessages.headerAlreadyExists': string
   'validationMessages.identifierRequired': string
   'validationMessages.nameRequired': string
+  'validationMessages.noNewLine': string
   'validationMessages.passwordRequired': string
   'validationMessages.repokeyRegExMessage': string
   'validationMessages.required': string
   'validationMessages.secretKeyRequired': string
+  'validationMessages.stringMax': string
+  'validationMessages.uniqueValues': string
   'validationMessages.urlPattern': string
   'validationMessages.urlRequired': string
   'validationMessages.userNameRequired': string
