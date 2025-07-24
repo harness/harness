@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
+	"github.com/harness/gitness/app/api/controller/gitspace/common"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/paths"
@@ -146,8 +147,8 @@ func (c *Controller) updateResourceIdentifier(
 	}
 
 	// Validate the resource spec change
-	isValid, markForHardReset, err := c.isResourceSpecChangeAllowed(existingResource, newResource)
-	if !isValid {
+	markForHardReset, err := common.IsResourceSpecChangeAllowed(existingResource, newResource)
+	if err != nil {
 		return err
 	}
 
@@ -222,176 +223,4 @@ func (c *Controller) sanitizeUpdateInput(in *UpdateInput) error {
 	}
 
 	return nil
-}
-
-// isResourceSpecChangeAllowed checks if the new resource specs are valid and determines if a hard reset is needed.
-// Returns (isAllowed, markForHardReset, error) where error contains details about why the validation failed.
-func (c *Controller) isResourceSpecChangeAllowed(
-	existingResource *gitnessTypes.InfraProviderResource,
-	newResource *gitnessTypes.InfraProviderResource,
-) (bool, bool, error) {
-	// If either resource is nil, we can't compare properly
-	if existingResource == nil || newResource == nil {
-		return false, false, fmt.Errorf("cannot validate resource change: missing resource information")
-	}
-
-	// Validate region is the same
-	if existingResource.Region != newResource.Region {
-		return false, false, usererror.BadRequestf(
-			"region mismatch: current region '%s' does not match target region '%s'",
-			existingResource.Region, newResource.Region)
-	}
-
-	// Check zone from metadata if available
-	existingZone, existingHasZone := existingResource.Metadata["zone"]
-	newZone, newHasZone := newResource.Metadata["zone"]
-
-	// If both resources have zone info, they must match
-	if existingHasZone && newHasZone && existingZone != newZone {
-		return false, false, usererror.BadRequestf(
-			"zone mismatch: current zone '%s' does not match target zone '%s'",
-			existingZone, newZone,
-		)
-	}
-
-	markForHardReset := false
-
-	// Check boot disk changes
-	isAllowed, needsHardReset, err := c.validateBootDiskChanges(existingResource.Metadata, newResource.Metadata)
-	if !isAllowed {
-		return false, false, err
-	}
-	if needsHardReset {
-		markForHardReset = true
-	}
-
-	// Check persistent disk changes
-	isAllowed, needsHardReset, err = c.validatePersistentDiskChanges(existingResource.Metadata, newResource.Metadata)
-	if !isAllowed {
-		return false, false, err
-	}
-	if needsHardReset {
-		markForHardReset = true
-	}
-
-	// Check machine type changes
-	machineTypeResetNeeded := c.validateMachineTypeChanges(existingResource.Metadata, newResource.Metadata)
-	markForHardReset = markForHardReset || machineTypeResetNeeded
-
-	// All checks passed
-	return true, markForHardReset, nil
-}
-
-// validateBootDiskChanges checks if boot disk changes are valid and if they require a hard reset.
-// Returns (isAllowed, needsHardReset, error).
-func (c *Controller) validateBootDiskChanges(existingMeta, newMeta map[string]string) (bool, bool, error) {
-	markForHardReset := false
-
-	// Check boot disk size changes
-	existingBoot, existingOK := existingMeta["boot_disk_size"]
-	newBoot, newOK := newMeta["boot_disk_size"]
-	if !existingOK || !newOK {
-		return false, false, fmt.Errorf(
-			"invalid boot disk size format: cannot parse boot disk sizes for comparison")
-	}
-
-	existingVal, eErr := strconv.Atoi(existingBoot)
-	newVal, nErr := strconv.Atoi(newBoot)
-	if eErr != nil || nErr != nil {
-		return false, false, fmt.Errorf(
-			"invalid boot disk size format: cannot parse boot disk sizes for comparison")
-	}
-	if newVal < existingVal {
-		return false, false, usererror.BadRequestf(
-			"reducing boot disk size is not allowed: from %d to %d",
-			existingVal, newVal)
-	}
-	if newVal != existingVal {
-		markForHardReset = true
-	}
-
-	// Check boot disk type changes
-	existingBootType, existingOK := existingMeta["boot_disk_type"]
-	newBootType, newOK := newMeta["boot_disk_type"]
-	if !existingOK || !newOK {
-		return false, false, fmt.Errorf(
-			"invalid boot disk type format: cannot parse boot disk types for comparison")
-	}
-	if existingBootType != newBootType {
-		markForHardReset = true
-	}
-
-	return true, markForHardReset, nil
-}
-
-// validatePersistentDiskChanges checks if persistent disk changes are valid and if they require a hard reset.
-// Returns (isAllowed, needsHardReset, error).
-func (c *Controller) validatePersistentDiskChanges(existingMeta, newMeta map[string]string) (bool, bool, error) {
-	existingDisk, existingOK := existingMeta["persistent_disk_size"]
-	newDisk, newOK := newMeta["persistent_disk_size"]
-	if !existingOK || !newOK {
-		return false, false, fmt.Errorf(
-			"invalid persistent disk size format: cannot parse persistent disk sizes for comparison")
-	}
-
-	isAllowed, markForHardReset, err := c.checkPersistentDiskSizeChange(existingDisk, newDisk)
-	if !isAllowed && err != nil {
-		return false, false, usererror.BadRequestf(err.Error())
-	}
-
-	existingDiskType, existingOK := existingMeta["persistent_disk_type"]
-	newDiskType, newOK := newMeta["persistent_disk_type"]
-	if !existingOK || !newOK {
-		return false, false, fmt.Errorf(
-			"invalid persistent disk type format: cannot parse persistent disk types for comparison")
-	}
-	if existingDiskType != newDiskType {
-		return false, false, usererror.BadRequestf(
-			"persistent disk type change not allowed: from '%s' to '%s'",
-			existingDiskType, newDiskType)
-	}
-
-	return true, markForHardReset, nil
-}
-
-// validateMachineTypeChanges checks if machine type changes require a hard reset.
-// Returns needsHardReset.
-func (c *Controller) validateMachineTypeChanges(existingMeta, newMeta map[string]string) bool {
-	existingMachine, existingOK := existingMeta["machine_type"]
-	newMachine, newOK := newMeta["machine_type"]
-	if existingOK && newOK && existingMachine != newMachine {
-		return true
-	}
-
-	return false
-}
-
-// checkPersistentDiskSizeChange compares existing and new persistent disk sizes.
-// and determines if the change is allowed and if hard reset is needed.
-// Returns (isAllowed, needsHardReset, error).
-func (c *Controller) checkPersistentDiskSizeChange(existingDisk, newDisk string) (bool, bool, error) {
-	existingVal, eErr := strconv.Atoi(existingDisk)
-	newVal, nErr := strconv.Atoi(newDisk)
-
-	if eErr != nil {
-		return false, false, fmt.Errorf("invalid disk size format: cannot parse existing disk size: %w", eErr)
-	}
-	if nErr != nil {
-		return false, false, fmt.Errorf("invalid disk size format: cannot parse new disk size: %w", nErr)
-	}
-
-	// If persistent disk size reduced, return error
-	if newVal < existingVal {
-		return false, false, fmt.Errorf(
-			"reducing persistent disk size is not allowed: from %d to %d",
-			existingVal, newVal)
-	}
-
-	// If persistent disk size increased, mark for hard reset
-	if newVal > existingVal {
-		return true, true, nil
-	}
-
-	// Equal sizes, no hard reset needed
-	return true, false, nil
 }
