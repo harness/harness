@@ -22,16 +22,15 @@ import { useStrings } from 'framework/strings'
 import { CodeIcon } from 'utils/GitUtils'
 import { getErrorMessage } from 'utils/Utils'
 import type {
-  CreateBranchPathParams,
   DeletePullReqSourceBranchQueryParams,
-  OpenapiCreateBranchRequest
+  RestorePullReqSourceBranchPathParams,
+  RestorePullReqSourceBranchRequestBody
 } from 'services/code'
 import css from '../PullRequestOverviewPanel.module.scss'
 
 interface BranchActionsSectionProps {
-  sourceSha: string
   sourceBranch: string
-  createBranch: MutateMethod<any, any, OpenapiCreateBranchRequest, CreateBranchPathParams>
+  restoreBranch: MutateMethod<any, any, RestorePullReqSourceBranchRequestBody, RestorePullReqSourceBranchPathParams>
   refetchActivities: () => void
   refetchBranch: () => Promise<void>
   deleteBranch: MutateMethod<any, any, DeletePullReqSourceBranchQueryParams, unknown>
@@ -71,9 +70,8 @@ const BranchActionsSection = (props: BranchActionsSectionProps) => {
 }
 
 export const BranchActionsButton = ({
-  sourceSha,
   sourceBranch,
-  createBranch,
+  restoreBranch,
   refetchActivities,
   refetchBranch,
   deleteBranch,
@@ -109,7 +107,7 @@ export const BranchActionsButton = ({
                 )
               })
               .catch(err => showError(getErrorMessage(err)))
-          : createBranch({ name: sourceBranch, target: sourceSha, bypass_rules: true })
+          : restoreBranch({ bypass_rules: true })
               .then(() => {
                 refetchBranch()
                 setIsSourceBranchDeleted?.(false)

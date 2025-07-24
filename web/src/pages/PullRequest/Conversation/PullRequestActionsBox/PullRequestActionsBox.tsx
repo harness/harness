@@ -37,12 +37,12 @@ import { Menu, PopoverPosition } from '@blueprintjs/core'
 import cx from 'classnames'
 import { defaultTo } from 'lodash-es'
 import type {
-  CreateBranchPathParams,
   DeletePullReqSourceBranchQueryParams,
-  OpenapiCreateBranchRequest,
   OpenapiStatePullReqRequest,
   RebaseBranchRequestBody,
   RepoRepositoryOutput,
+  RestorePullReqSourceBranchPathParams,
+  RestorePullReqSourceBranchRequestBody,
   TypesListCommitResponse,
   TypesPullReq,
   TypesRuleViolations
@@ -58,14 +58,13 @@ import {
 } from 'utils/GitUtils'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useAppContext } from 'AppContext'
-import { getMergeOptions, PRDraftOption, type PRMergeOption } from 'pages/PullRequest/PullRequestUtils'
 import {
   extractInfoFromRuleViolationArr,
-  getErrorMessage,
-  inlineMergeFormRefType,
-  MergeCheckStatus,
-  permissionProps
-} from 'utils/Utils'
+  getMergeOptions,
+  PRDraftOption,
+  type PRMergeOption
+} from 'pages/PullRequest/PullRequestUtils'
+import { getErrorMessage, inlineMergeFormRefType, MergeCheckStatus, permissionProps } from 'utils/Utils'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { PullReqSuggestionsBatch } from 'components/PullReqSuggestionsBatch/PullReqSuggestionsBatch'
@@ -85,7 +84,7 @@ export interface PullRequestActionsBoxProps extends Pick<GitInfoProps, 'repoMeta
   setConflictingFiles: React.Dispatch<React.SetStateAction<string[] | undefined>>
   refetchPullReq: () => void
   refetchActivities: () => void
-  createBranch: MutateMethod<any, any, OpenapiCreateBranchRequest, CreateBranchPathParams>
+  restoreBranch: MutateMethod<any, any, RestorePullReqSourceBranchRequestBody, RestorePullReqSourceBranchPathParams>
   refetchBranch: () => Promise<void>
   deleteBranch: MutateMethod<any, any, DeletePullReqSourceBranchQueryParams, unknown>
   showRestoreBranchButton: boolean
@@ -108,7 +107,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   setConflictingFiles,
   refetchPullReq,
   refetchActivities,
-  createBranch,
+  restoreBranch,
   refetchBranch,
   deleteBranch,
   showRestoreBranchButton,
@@ -297,7 +296,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
         setShowRestoreBranchButton={setShowRestoreBranchButton}
         refetchActivities={refetchActivities}
         refetchBranch={refetchBranch}
-        createBranch={createBranch}
+        restoreBranch={restoreBranch}
         deleteBranch={deleteBranch}
         repoMetadata={repoMetadata}
       />
@@ -611,7 +610,7 @@ const MergeInfo: React.FC<{
   setShowRestoreBranchButton: React.Dispatch<React.SetStateAction<boolean>>
   refetchActivities: () => void
   refetchBranch: () => Promise<void>
-  createBranch: MutateMethod<any, any, OpenapiCreateBranchRequest, CreateBranchPathParams>
+  restoreBranch: MutateMethod<any, any, RestorePullReqSourceBranchRequestBody, RestorePullReqSourceBranchPathParams>
   deleteBranch: MutateMethod<any, any, DeletePullReqSourceBranchQueryParams, unknown>
 }> = props => {
   const { pullRequestMetadata, showRestoreBranchButton, showDeleteBranchButton, repoMetadata } = props
@@ -684,11 +683,7 @@ const MergeInfo: React.FC<{
         <FlexExpander />
         <RevertPRButton pullRequestMetadata={pullRequestMetadata} repoMetadata={repoMetadata} />
         {(showDeleteBranchButton || showRestoreBranchButton) && (
-          <BranchActionsButton
-            {...props}
-            sourceSha={pullRequestMetadata.source_sha || ''}
-            sourceBranch={pullRequestMetadata.source_branch || ''}
-          />
+          <BranchActionsButton {...props} sourceBranch={pullRequestMetadata.source_branch || ''} />
         )}
       </Layout.Horizontal>
     </Container>

@@ -28,7 +28,9 @@ import type {
   TypesPrincipalInfo,
   TypesPullReq,
   TypesPullReqActivity,
-  TypesPullReqReviewer
+  TypesPullReqReviewer,
+  TypesRuleViolations,
+  TypesViolation
 } from 'services/code'
 
 export interface PRMergeOption extends SelectOption {
@@ -225,4 +227,21 @@ export type ActivityLabel = {
   label_scope: number
   value: string
   value_color: ColorName
+}
+
+export const extractInfoFromRuleViolationArr = (ruleViolationArr: TypesRuleViolations[]) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const tempArray: any[] = ruleViolationArr?.flatMap(
+    (item: { violations?: TypesViolation[] | null }) => item?.violations?.map(violation => violation.message) ?? []
+  )
+  const uniqueViolations = new Set(tempArray)
+  const violationArr = [...uniqueViolations].map(violation => ({ violation: violation }))
+
+  const checkIfBypassNotAllowed = ruleViolationArr.some(ruleViolation => ruleViolation.bypassed === false)
+
+  return {
+    uniqueViolations,
+    checkIfBypassNotAllowed,
+    violationArr
+  }
 }

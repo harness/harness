@@ -24,8 +24,6 @@ import type { EditorView } from '@codemirror/view'
 import type { FormikProps } from 'formik'
 import type { SelectOption } from '@harnessio/uicore'
 import type {
-  TypesRuleViolations,
-  TypesViolation,
   TypesCodeOwnerEvaluationEntry,
   RepoRepositoryOutput,
   TypesLabel,
@@ -157,23 +155,6 @@ export interface PageBrowserProps {
   only_favorites?: string
   recursive?: string
   inherit?: string
-}
-
-export const extractInfoFromRuleViolationArr = (ruleViolationArr: TypesRuleViolations[]) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const tempArray: any[] = ruleViolationArr?.flatMap(
-    (item: { violations?: TypesViolation[] | null }) => item?.violations?.map(violation => violation.message) ?? []
-  )
-  const uniqueViolations = new Set(tempArray)
-  const violationArr = [...uniqueViolations].map(violation => ({ violation: violation }))
-
-  const checkIfBypassNotAllowed = ruleViolationArr.some(ruleViolation => ruleViolation.bypassed === false)
-
-  return {
-    uniqueViolations,
-    checkIfBypassNotAllowed,
-    violationArr
-  }
 }
 
 export interface RenameDetails {

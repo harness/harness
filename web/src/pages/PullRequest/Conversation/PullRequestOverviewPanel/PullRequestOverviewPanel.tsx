@@ -33,10 +33,11 @@ import type {
 import {
   PRMergeOption,
   PanelSectionOutletPosition,
+  extractInfoFromRuleViolationArr,
   extractSpecificViolations,
   getMergeOptions
 } from 'pages/PullRequest/PullRequestUtils'
-import { MergeCheckStatus, extractInfoFromRuleViolationArr } from 'utils/Utils'
+import { MergeCheckStatus } from 'utils/Utils'
 import { MergeStrategy, PullRequestState, dryMerge } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import type { PRChecksDecisionResult } from 'hooks/usePRChecksDecision'
@@ -140,7 +141,7 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullReqMetadata.number}/branch`,
     queryParams: { bypass_rules: true, dry_run_rules: true } as DeletePullReqSourceBranchQueryParams
   })
-  const { mutate: createBranch } = useMutate({
+  const { mutate: restoreBranch } = useMutate({
     verb: 'POST',
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullReqMetadata.number}/branch`
   })
@@ -164,40 +165,42 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
   useEffect(() => {
     if (error && error.status === 404) {
       setIsSourceBranchDeleted(true)
-      createBranch({
-        name: pullReqMetadata.source_branch,
-        target: pullReqMetadata.source_sha,
+      restoreBranch({
         bypass_rules: true,
         dry_run_rules: true
-      }).then(res => {
-        if (res?.rule_violations) {
-          const { checkIfBypassNotAllowed } = extractInfoFromRuleViolationArr(res.rule_violations)
-          if (!checkIfBypassNotAllowed) {
-            setShowRestoreBranchButton(true)
-          } else {
-            setShowRestoreBranchButton(false)
-          }
-        } else {
-          setShowRestoreBranchButton(true)
-        }
       })
+        .then(res => {
+          if (res?.rule_violations) {
+            const { checkIfBypassNotAllowed } = extractInfoFromRuleViolationArr(res.rule_violations)
+            if (!checkIfBypassNotAllowed) {
+              setShowRestoreBranchButton(true)
+            } else {
+              setShowRestoreBranchButton(false)
+            }
+          } else {
+            setShowRestoreBranchButton(true)
+          }
+        })
+        .catch(err => console.error('Dry run failed while trying to restore branch', err)) // eslint-disable-line no-console
     }
   }, [error])
 
   useEffect(() => {
     if (sourceBranch?.sha === pullReqMetadata?.source_sha) {
-      deleteBranch({}).then(res => {
-        if (res?.rule_violations) {
-          const { checkIfBypassNotAllowed } = extractInfoFromRuleViolationArr(res.rule_violations)
-          if (!checkIfBypassNotAllowed) {
-            setShowDeleteBranchButton(true)
+      deleteBranch({})
+        .then(res => {
+          if (res?.rule_violations) {
+            const { checkIfBypassNotAllowed } = extractInfoFromRuleViolationArr(res.rule_violations)
+            if (!checkIfBypassNotAllowed) {
+              setShowDeleteBranchButton(true)
+            } else {
+              setShowDeleteBranchButton(false)
+            }
           } else {
-            setShowDeleteBranchButton(false)
+            setShowDeleteBranchButton(true)
           }
-        } else {
-          setShowDeleteBranchButton(true)
-        }
-      })
+        })
+        .catch(err => console.error('Dry run failed while trying to delete branch', err)) // eslint-disable-line no-console
     }
   }, [sourceBranch, pullReqMetadata?.source_sha])
 
@@ -267,7 +270,7 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
           PRStateLoading={PRStateLoading || loadingReviewers}
           refetchPullReq={refetchPullReq}
           refetchActivities={refetchActivities}
-          createBranch={createBranch}
+          restoreBranch={restoreBranch}
           refetchBranch={refetchBranch}
           deleteBranch={deleteBranch}
           showRestoreBranchButton={showRestoreBranchButton}
@@ -342,9 +345,8 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
             outlets={{
               [PanelSectionOutletPosition.BRANCH_ACTIONS]: (showDeleteBranchButton || showRestoreBranchButton) && (
                 <BranchActionsSection
-                  sourceSha={pullReqMetadata.source_sha || ''}
                   sourceBranch={sourceBranch?.name || pullReqMetadata.source_branch || ''}
-                  createBranch={createBranch}
+                  restoreBranch={restoreBranch}
                   refetchBranch={refetchBranch}
                   refetchActivities={refetchActivities}
                   deleteBranch={deleteBranch}
