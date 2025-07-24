@@ -28,6 +28,7 @@ import (
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/app/store/database/util"
 	"github.com/harness/gitness/registry/types"
+	gitness_store "github.com/harness/gitness/store"
 	databaseg "github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
 
@@ -979,6 +980,45 @@ func (a ArtifactDao) GetArtifactMetadata(
 	}
 
 	return a.mapToArtifactMetadata(dst)
+}
+
+func (a ArtifactDao) UpdateArtifactMetadata(
+	ctx context.Context, metadata json.RawMessage,
+	artifactID int64,
+) (err error) {
+	var principalID int64
+	session, _ := request.AuthSessionFrom(ctx)
+	if session != nil {
+		principalID = session.Principal.ID
+	}
+
+	q := databaseg.Builder.Update("artifacts").
+		Set("artifact_metadata", metadata).
+		Set("artifact_updated_at", time.Now().UnixMilli()).
+		Set("artifact_updated_by", principalID).
+		Where("artifact_id = ?", artifactID)
+
+	sql, args, err := q.ToSql()
+
+	if err != nil {
+		return databaseg.ProcessSQLErrorf(ctx, err, "Failed to bind artifacts object")
+	}
+
+	result, err := a.db.ExecContext(ctx, sql, args...)
+	if err != nil {
+		return databaseg.ProcessSQLErrorf(ctx, err, "Failed to update artifact")
+	}
+
+	count, err := result.RowsAffected()
+	if err != nil {
+		return databaseg.ProcessSQLErrorf(ctx, err, "Failed to get number of updated rows")
+	}
+
+	if count == 0 {
+		return gitness_store.ErrResourceNotFound
+	}
+
+	return nil
 }
 
 func (a ArtifactDao) GetAllArtifactsByRepo(

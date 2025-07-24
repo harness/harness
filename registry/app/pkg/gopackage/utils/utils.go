@@ -18,12 +18,16 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"path/filepath"
 	"strings"
 
 	gopackagemetadata "github.com/harness/gitness/registry/app/metadata/gopackage"
+	zs "github.com/harness/gitness/registry/app/pkg/commons/zipreader"
+
+	"golang.org/x/mod/modfile"
 )
 
 // get the module name from mod file.
@@ -44,15 +48,6 @@ func GetModuleNameFromModFile(modBytes io.Reader) (string, error) {
 		return "", fmt.Errorf("module name not found in mod file")
 	}
 	return moduleName, nil
-}
-
-// get the package metadata from info file.
-func GetPackageMetadataFromInfoFile(infoBytes *bytes.Buffer) (gopackagemetadata.VersionMetadata, error) {
-	var metadata gopackagemetadata.VersionMetadata
-	if err := json.NewDecoder(infoBytes).Decode(&metadata); err != nil {
-		return gopackagemetadata.VersionMetadata{}, fmt.Errorf("error decoding info file: %w", err)
-	}
-	return metadata, nil
 }
 
 func getImageAndFileNameFromURL(path string) (string, string, error) {
@@ -109,4 +104,67 @@ func GetArtifactInfoFromURL(path string) (string, string, string, error) {
 
 func GetIndexFilePath(image string) string {
 	return filepath.Join("/", image, "index")
+}
+
+// get the package metadata from info file.
+func GetPackageMetadataFromInfoFile(infoBytes *bytes.Buffer) (gopackagemetadata.VersionMetadata, error) {
+	var metadata gopackagemetadata.VersionMetadata
+	if err := json.NewDecoder(infoBytes).Decode(&metadata); err != nil {
+		return gopackagemetadata.VersionMetadata{}, fmt.Errorf("error decoding info file: %w", err)
+	}
+	return metadata, nil
+}
+
+func UpdateMetadataFromModFile(
+	modBytes *bytes.Buffer, metadata *gopackagemetadata.VersionMetadata,
+) error {
+	data := modBytes.Bytes()
+	modFile, err := modfile.Parse("go.mod", data, nil)
+	if err != nil {
+		return fmt.Errorf("error parsing mod file: %w", err)
+	}
+	var deps []gopackagemetadata.Dependency
+	for _, r := range modFile.Require {
+		deps = append(deps, gopackagemetadata.Dependency{
+			Name:    r.Mod.Path,
+			Version: r.Mod.Version,
+		})
+	}
+	metadata.Dependencies = deps
+	return nil
+}
+
+func UpdateMetadataFromZipFile(
+	reader io.ReadCloser, metadata *gopackagemetadata.VersionMetadata,
+) error {
+	zr := zs.NewReader(reader)
+
+	for {
+		header, err := zr.Next()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("failed to read zip file with error: %w", err)
+		}
+
+		if strings.HasSuffix(header.Name, "README.md") || strings.HasSuffix(header.Name, "README") {
+			readme, err := parseReadme(zr)
+			if err != nil {
+				return fmt.Errorf("failed to parse metadata from README.md file: %w", err)
+			}
+			if readme != "" {
+				metadata.Readme = readme
+			}
+		}
+	}
+	return nil
+}
+
+func parseReadme(f io.Reader) (readme string, err error) {
+	data, err := io.ReadAll(f)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
 }

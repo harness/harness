@@ -260,6 +260,8 @@ func (r *proxy) putFileToLocal(
 
 	// regenerate package index
 	r.localRegistryHelper.RegeneratePackageIndex(ctx, *info)
+	// regenerate package metadata
+	r.localRegistryHelper.RegeneratePackageMetadata(ctx, *info)
 	return nil
 }
 

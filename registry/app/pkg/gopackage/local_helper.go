@@ -29,6 +29,7 @@ import (
 type LocalRegistryHelper interface {
 	FileExists(ctx context.Context, info gopackage.ArtifactInfo, filepath string) bool
 	RegeneratePackageIndex(ctx context.Context, info gopackage.ArtifactInfo)
+	RegeneratePackageMetadata(ctx context.Context, info gopackage.ArtifactInfo)
 	DownloadFile(ctx context.Context, info gopackage.ArtifactInfo) (
 		*commons.ResponseHeaders, *storage.FileReader, io.ReadCloser, string, error,
 	)
@@ -61,6 +62,12 @@ func (h *localRegistryHelper) RegeneratePackageIndex(
 	ctx context.Context, info gopackage.ArtifactInfo,
 ) {
 	h.postProcessingReporter.BuildPackageIndex(ctx, info.RegistryID, info.Image)
+}
+
+func (h *localRegistryHelper) RegeneratePackageMetadata(
+	ctx context.Context, info gopackage.ArtifactInfo,
+) {
+	h.postProcessingReporter.BuildPackageMetadata(ctx, info.RegistryID, info.Image, info.Version)
 }
 
 func (h *localRegistryHelper) DownloadFile(ctx context.Context, info gopackage.ArtifactInfo) (

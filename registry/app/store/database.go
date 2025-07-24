@@ -16,6 +16,7 @@ package store
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
@@ -500,6 +501,10 @@ type ArtifactRepository interface {
 		ctx context.Context, id int64, identifier string,
 		image string, version string,
 	) (*types.ArtifactMetadata, error)
+	UpdateArtifactMetadata(
+		ctx context.Context, metadata json.RawMessage,
+		artifactID int64,
+	) (err error)
 
 	GetByRegistryIDAndImage(ctx context.Context, registryID int64, image string) (
 		*[]types.Artifact,

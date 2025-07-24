@@ -17,6 +17,7 @@ package gopackage
 import (
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
+	refcache2 "github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/store"
 
 	"github.com/google/wire"
@@ -26,8 +27,9 @@ func LocalRegistryHelperProvider(
 	fileManager filemanager.FileManager,
 	artifactDao store.ArtifactRepository,
 	spaceFinder refcache.SpaceFinder,
+	registryFinder refcache2.RegistryFinder,
 ) RegistryHelper {
-	return NewRegistryHelper(fileManager, artifactDao, spaceFinder)
+	return NewRegistryHelper(fileManager, artifactDao, spaceFinder, registryFinder)
 }
 
 var WireSet = wire.NewSet(LocalRegistryHelperProvider)

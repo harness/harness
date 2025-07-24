@@ -23,6 +23,7 @@ type VersionMetadata struct {
 	Time         string       `json:"Time"`
 	Origin       Origin       `json:"Origin,omitempty"`
 	Dependencies []Dependency `json:"Dependencies,omitempty"`
+	Readme       string       `json:"Readme,omitempty"`
 }
 
 // nolint:tagliatelle

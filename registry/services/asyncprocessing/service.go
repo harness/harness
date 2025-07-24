@@ -22,6 +22,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/harness/gitness/app/api/request"
+	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
@@ -32,6 +34,7 @@ import (
 	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/stream"
+	coretypes "github.com/harness/gitness/types"
 
 	"github.com/rs/zerolog/log"
 )
@@ -168,83 +171,24 @@ func (s *Service) handleEventExecuteAsyncTask(
 
 	var processingErr error
 	//nolint:nestif
-	if task.Kind == types.TaskKindBuildRegistryIndex {
-		var payload types.BuildRegistryIndexTaskPayload
-		err = json.Unmarshal(task.Payload, &payload)
+	switch task.Kind {
+	case types.TaskKindBuildRegistryIndex:
+		err := s.handleBuildRegistryIndex(ctx, task, e.ID)
 		if err != nil {
-			log.Ctx(ctx).Error().Msgf("failed to unmarshal task payload for task [%s]: %v", task.Key, err)
-			return fmt.Errorf("failed to unmarshal task payload: %w", err)
+			processingErr = fmt.Errorf("failed to build registry index: %w", err)
 		}
-		registry, err := s.registryDao.Get(ctx, payload.RegistryID)
+	case types.TaskKindBuildPackageIndex:
+		err := s.handleBuildPackageIndex(ctx, task, e.ID)
 		if err != nil {
-			log.Ctx(ctx).Error().Msgf("failed to get registry [%d] for registry build index event: %s, err: %v",
-				payload.RegistryID, e.ID, err)
-			return fmt.Errorf("failed to get registry: %w", err)
+			processingErr = fmt.Errorf("failed to build package index: %w", err)
 		}
-		//nolint:exhaustive
-		switch registry.PackageType {
-		case artifact.PackageTypeRPM:
-			err := s.rpmRegistryHelper.BuildRegistryFiles(ctx, *registry, payload.PrincipalID)
-			if err != nil {
-				processingErr = fmt.Errorf("failed to build RPM registry files for registry [%d]: %w",
-					payload.RegistryID, err)
-			}
-			if registry.Type != artifact.RegistryTypeVIRTUAL {
-				registryIDs, err2 := s.registryDao.FetchRegistriesIDByUpstreamProxyID(
-					ctx, strconv.FormatInt(registry.ID, 10), registry.RootParentID,
-				)
-				if err2 != nil {
-					log.Ctx(ctx).Error().Msgf("failed to fetch registries whyle building registry "+
-						"files by upstream proxy ID for registry [%d]: %v", payload.RegistryID, err2)
-				}
-				if len(registryIDs) > 0 {
-					for _, id := range registryIDs {
-						s.postProcessingReporter.BuildRegistryIndexWithPrincipal(
-							ctx, id, make([]types.SourceRef, 0), payload.PrincipalID,
-						)
-					}
-				}
-			}
-
-		default:
-			log.Ctx(ctx).Error().Msgf("unsupported package type [%s] for registry [%d] in task [%s]",
-				registry.PackageType, payload.RegistryID, task.Key)
-		}
-	} else if task.Kind == types.TaskKindBuildPackageIndex {
-		var payload types.BuildPackageIndexTaskPayload
-		err = json.Unmarshal(task.Payload, &payload)
+	case types.TaskKindBuildPackageMetadata:
+		err := s.handleBuildPackageMetadata(ctx, task, e.ID)
 		if err != nil {
-			log.Ctx(ctx).Error().Msgf("failed to unmarshal task payload for task [%s]: %v", task.Key, err)
-			return fmt.Errorf("failed to unmarshal task payload: %w", err)
+			processingErr = fmt.Errorf("failed to build package metadata: %w", err)
 		}
-		registry, err := s.registryDao.Get(ctx, payload.RegistryID)
-		if err != nil {
-			log.Ctx(ctx).Error().Msgf("failed to get registry [%d] for registry build index event: %s, err: %v",
-				payload.RegistryID, e.ID, err)
-			return fmt.Errorf("failed to get registry: %w", err)
-		}
-		//nolint:exhaustive
-		switch registry.PackageType {
-		case artifact.PackageTypeCARGO:
-			err := s.cargoRegistryHelper.UpdatePackageIndex(
-				ctx, payload.PrincipalID, registry.RootParentID, registry.ID, payload.Image,
-			)
-			if err != nil {
-				processingErr = fmt.Errorf("failed to build CARGO package index for registry [%d] package [%s]: %w",
-					payload.RegistryID, payload.Image, err)
-			}
-		case artifact.PackageTypeGO:
-			err := s.gopackageRegistryHelper.UpdatePackageIndex(
-				ctx, payload.PrincipalID, registry.RootParentID, registry.ID, payload.Image,
-			)
-			if err != nil {
-				processingErr = fmt.Errorf("failed to build GO package index for registry [%d] package [%s]: %w",
-					payload.RegistryID, payload.Image, err)
-			}
-		default:
-			log.Ctx(ctx).Error().Msgf("unsupported package type [%s] for registry [%d] and image [%s] in task [%s]",
-				registry.PackageType, payload.RegistryID, payload.Image, task.Key)
-		}
+	default:
+		processingErr = fmt.Errorf("unsupported task kind [%s] for task [%s]", task.Kind, task.Key)
 	}
 
 	runAgain, err := s.finalStatusUpdate(ctx, e, task, processingErr)
@@ -261,6 +205,137 @@ func (s *Service) handleEventExecuteAsyncTask(
 		log.Ctx(ctx).Debug().Msgf("reported execute async task event with id '%s'", eventID)
 	}
 	return nil
+}
+
+func (s *Service) handleBuildRegistryIndex(ctx context.Context, task *types.Task, eventID string) error {
+	var processingErr error
+	var payload types.BuildRegistryIndexTaskPayload
+	err := json.Unmarshal(task.Payload, &payload)
+	if err != nil {
+		log.Ctx(ctx).Error().Msgf("failed to unmarshal task payload for task [%s]: %v", task.Key, err)
+		return fmt.Errorf("failed to unmarshal task payload: %w", err)
+	}
+	registry, err := s.registryDao.Get(ctx, payload.RegistryID)
+	if err != nil {
+		log.Ctx(ctx).Error().Msgf("failed to get registry [%d] for registry build index event: %s, err: %v",
+			payload.RegistryID, eventID, err)
+		return fmt.Errorf("failed to get registry: %w", err)
+	}
+	//nolint:exhaustive
+	switch registry.PackageType {
+	case artifact.PackageTypeRPM:
+		err := s.rpmRegistryHelper.BuildRegistryFiles(ctx, *registry, payload.PrincipalID)
+		if err != nil {
+			processingErr = fmt.Errorf("failed to build RPM registry files for registry [%d]: %w",
+				payload.RegistryID, err)
+		}
+		if registry.Type != artifact.RegistryTypeVIRTUAL {
+			registryIDs, err2 := s.registryDao.FetchRegistriesIDByUpstreamProxyID(
+				ctx, strconv.FormatInt(registry.ID, 10), registry.RootParentID,
+			)
+			if err2 != nil {
+				log.Ctx(ctx).Error().Msgf("failed to fetch registries whyle building registry "+
+					"files by upstream proxy ID for registry [%d]: %v", payload.RegistryID, err2)
+			}
+			if len(registryIDs) > 0 {
+				for _, id := range registryIDs {
+					s.postProcessingReporter.BuildRegistryIndexWithPrincipal(
+						ctx, id, make([]types.SourceRef, 0), payload.PrincipalID,
+					)
+				}
+			}
+		}
+
+	default:
+		log.Ctx(ctx).Error().Msgf("unsupported package type [%s] for registry [%d] in task [%s]",
+			registry.PackageType, payload.RegistryID, task.Key)
+	}
+	return processingErr
+}
+
+func (s *Service) handleBuildPackageIndex(
+	ctx context.Context,
+	task *types.Task,
+	eventID string,
+) error {
+	var processingErr error
+	var payload types.BuildPackageIndexTaskPayload
+	err := json.Unmarshal(task.Payload, &payload)
+	if err != nil {
+		log.Ctx(ctx).Error().Msgf("failed to unmarshal task payload for task [%s]: %v", task.Key, err)
+		return fmt.Errorf("failed to unmarshal task payload: %w", err)
+	}
+	registry, err := s.registryDao.Get(ctx, payload.RegistryID)
+	if err != nil {
+		log.Ctx(ctx).Error().Msgf("failed to get registry [%d] for registry build index event: %s, err: %v",
+			payload.RegistryID, eventID, err)
+		return fmt.Errorf("failed to get registry: %w", err)
+	}
+	//nolint:exhaustive
+	switch registry.PackageType {
+	case artifact.PackageTypeCARGO:
+		err := s.cargoRegistryHelper.UpdatePackageIndex(
+			ctx, payload.PrincipalID, registry.RootParentID, registry.ID, payload.Image,
+		)
+		if err != nil {
+			processingErr = fmt.Errorf("failed to build CARGO package index for registry [%d] package [%s]: %w",
+				payload.RegistryID, payload.Image, err)
+		}
+	case artifact.PackageTypeGO:
+		err := s.gopackageRegistryHelper.UpdatePackageIndex(
+			ctx, payload.PrincipalID, registry.RootParentID, registry.ID, payload.Image,
+		)
+		if err != nil {
+			processingErr = fmt.Errorf("failed to build GO package index for registry [%d] package [%s]: %w",
+				payload.RegistryID, payload.Image, err)
+		}
+	default:
+		log.Ctx(ctx).Error().Msgf("unsupported package type [%s] for registry [%d] and image [%s] in task [%s]",
+			registry.PackageType, payload.RegistryID, payload.Image, task.Key)
+	}
+	return processingErr
+}
+
+func (s *Service) handleBuildPackageMetadata(
+	ctx context.Context,
+	task *types.Task,
+	eventID string,
+) error {
+	var processingErr error
+	var payload types.BuildPackageMetadataTaskPayload
+	err := json.Unmarshal(task.Payload, &payload)
+	if err != nil {
+		log.Ctx(ctx).Error().Msgf("failed to unmarshal task payload for task [%s]: %v", task.Key, err)
+		return fmt.Errorf("failed to unmarshal task payload: %w", err)
+	}
+	// Set auth session
+	ctx2 := request.WithAuthSession(ctx, &auth.Session{
+		Principal: coretypes.Principal{
+			ID: payload.PrincipalID,
+		},
+	})
+	// Get registry
+	registry, err := s.registryDao.Get(ctx2, payload.RegistryID)
+	if err != nil {
+		log.Ctx(ctx2).Error().Msgf("failed to get registry [%d] for registry build index event: %s, err: %v",
+			payload.RegistryID, eventID, err)
+		return fmt.Errorf("failed to get registry: %w", err)
+	}
+	//nolint:exhaustive
+	switch registry.PackageType {
+	case artifact.PackageTypeGO:
+		err := s.gopackageRegistryHelper.UpdatePackageMetadata(
+			ctx2, registry.RootParentID, registry.ID, payload.Image, payload.Version,
+		)
+		if err != nil {
+			processingErr = fmt.Errorf("failed to build GO package metadata for registry [%d] package [%s]: %w",
+				payload.RegistryID, payload.Image, err)
+		}
+	default:
+		log.Ctx(ctx2).Error().Msgf("unsupported package type [%s] for registry [%d] and image [%s] in task [%s]",
+			registry.PackageType, payload.RegistryID, payload.Image, task.Key)
+	}
+	return processingErr
 }
 
 //nolint:nestif

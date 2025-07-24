@@ -146,6 +146,9 @@ func (c *localRegistry) UploadPackage(
 
 	// regenerate package index for go package
 	c.regeneratePackageIndex(ctx, info)
+
+	// regenerate package metadata for go package
+	c.regeneratePackageMetadata(ctx, info)
 	return response, nil
 }
 
@@ -192,6 +195,14 @@ func (c *localRegistry) regeneratePackageIndex(
 	ctx context.Context, info gopackagetype.ArtifactInfo,
 ) {
 	c.postProcessingReporter.BuildPackageIndex(ctx, info.RegistryID, info.Image)
+}
+
+func (c *localRegistry) regeneratePackageMetadata(
+	ctx context.Context, info gopackagetype.ArtifactInfo,
+) {
+	c.postProcessingReporter.BuildPackageMetadata(
+		ctx, info.RegistryID, info.Image, info.Version,
+	)
 }
 
 func (c *localRegistry) DownloadPackageFile(

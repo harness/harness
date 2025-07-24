@@ -725,7 +725,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	rpmHelper := asyncprocessing2.ProvideRpmHelper(fileManager, artifactRepository, upstreamProxyConfigRepository, spaceFinder, secretService, registryRepository)
-	gopackageRegistryHelper := gopackage3.LocalRegistryHelperProvider(fileManager, artifactRepository, spaceFinder)
+	gopackageRegistryHelper := gopackage3.LocalRegistryHelperProvider(fileManager, artifactRepository, spaceFinder, registryFinder)
 	readerFactory10, err := asyncprocessing.ProvideReaderFactory(eventsSystem)
 	if err != nil {
 		return nil, err
