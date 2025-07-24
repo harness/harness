@@ -296,7 +296,7 @@ type SearchResult struct {
 	Version     string                 `json:"version"`
 	Versions    []*SearchResultVersion `json:"versions"`
 	Description string                 `json:"description"`
-	Authors     string                 `json:"authors"`
+	Authors     []string               `json:"authors"`
 	//nolint: tagliatelle
 	ProjectURL           string `json:"projectURL"`
 	RegistrationIndexURL string `json:"registration"`

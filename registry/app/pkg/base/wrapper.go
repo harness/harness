@@ -178,3 +178,84 @@ func GetOrderedRepos(
 	}
 	return result, nil
 }
+
+func SearchPackagesProxyWrapper(
+	ctx context.Context,
+	registryDao store.RegistryRepository,
+	f func(registry registrytypes.Registry, a pkg.Artifact, limit, offset int) response.Response,
+	extractResponseDataFunc func(searchResponse response.Response) ([]interface{}, int64),
+	info pkg.PackageArtifactInfo,
+	limit int,
+	offset int,
+) ([]interface{}, int64, error) {
+	requestRepoKey := info.BaseArtifactInfo().RegIdentifier
+
+	// Get all registries (local + proxies) - Z = [x, p1, p2, p3...]
+	registries, skipped, err := filterRegs(ctx, registryDao, requestRepoKey, info, true)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Pre-allocate slice for aggregated results (generic interface{})
+	var aggregatedResults []interface{}
+	var totalCount int64
+
+	currentOffset := offset
+	remainingLimit := limit
+
+	// Loop through each registry R in Z
+	for _, registry := range registries {
+		if remainingLimit <= 0 {
+			break
+		}
+
+		log.Ctx(ctx).Info().Msgf("Searching in Registry: %s, Type: %s", registry.Name, registry.Type)
+		art := GetArtifactRegistry(registry)
+		if art == nil {
+			log.Ctx(ctx).Warn().Msgf("No artifact registry found for: %s", registry.Name)
+			continue
+		}
+
+		// 1. Call f with remainingLimit and currentOffset
+		searchResponse := f(registry, art, remainingLimit, currentOffset)
+		if searchResponse.GetError() != nil {
+			log.Ctx(ctx).Warn().Msgf("Search failed for registry %s: %v", registry.Name, searchResponse.GetError())
+			continue
+		}
+
+		// Extract response data using the provided function
+		nativeResults, totalHits := extractResponseDataFunc(searchResponse)
+		resultsSize := len(nativeResults)
+		totalCount += totalHits
+
+		if resultsSize == 0 {
+			continue
+		}
+
+		// 2. Append search results (preserve native types)
+		aggregatedResults = append(aggregatedResults, nativeResults...)
+
+		// 3. Update currentOffset = max(0, currentOffset - registryResults.size)
+		currentOffset = max(0, currentOffset-resultsSize)
+
+		// 4. Update remainingLimit = remainingLimit - registryResults.size
+		remainingLimit -= resultsSize
+
+		// Early exit if we have enough results
+		if remainingLimit <= 0 {
+			break
+		}
+	}
+
+	// Log skipped registries if any
+	if !pkg.IsEmpty(skipped) {
+		skippedRegNames := make([]string, 0, len(skipped))
+		for _, registry := range skipped {
+			skippedRegNames = append(skippedRegNames, registry.Name)
+		}
+		log.Ctx(ctx).Warn().Msgf("Skipped registries due to policies: [%s]",
+			pkg.JoinWithSeparator(", ", skippedRegNames...))
+	}
+
+	return aggregatedResults, totalCount, nil
+}

@@ -171,7 +171,13 @@ func (c *localRegistry) SearchPackage(ctx context.Context,
 		return nil, fmt.Errorf(
 			"failed to get artifacts for registry: %d and image: %s: %w", info.RegistryID, info.Image, err)
 	}
-	return createSearchResponse(packageURL, artifacts)
+	count, err2 := c.artifactDao.CountByImageName(ctx, info.RegistryID, searchTerm)
+	if err2 != nil {
+		return nil, fmt.Errorf(
+			"failed to get artifacts count for registry: %d and image: %s: %w",
+			info.RegistryID, info.Image, err2)
+	}
+	return createSearchResponse(packageURL, artifacts, count)
 }
 
 func (c *localRegistry) GetPackageMetadata(

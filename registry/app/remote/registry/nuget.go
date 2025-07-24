@@ -28,4 +28,8 @@ type NugetRegistry interface {
 	GetPackageVersionMetadataV2(ctx context.Context, pkg, version string) (io.ReadCloser, error)
 	ListPackageVersion(ctx context.Context, pkg string) (io.ReadCloser, error)
 	ListPackageVersionV2(ctx context.Context, pkg string) (io.ReadCloser, error)
+	SearchPackageV2(ctx context.Context, searchTerm string, limit, offset int) (io.ReadCloser, error)
+	SearchPackage(ctx context.Context, searchTerm string, limit, offset int) (io.ReadCloser, error)
+	CountPackageV2(ctx context.Context, searchTerm string) (int64, error)
+	CountPackageVersionV2(ctx context.Context, pkg string) (int64, error)
 }

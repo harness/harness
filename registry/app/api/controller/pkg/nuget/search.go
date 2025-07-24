@@ -28,7 +28,7 @@ import (
 
 func (c *controller) SearchPackage(ctx context.Context, info nugettype.ArtifactInfo,
 	searchTerm string, limit, offset int) *SearchPackageResponse {
-	f := func(registry registrytypes.Registry, a pkg.Artifact) response.Response {
+	f := func(registry registrytypes.Registry, a pkg.Artifact, l, o int) response.Response {
 		info.RegIdentifier = registry.Name
 		info.RegistryID = registry.ID
 		nugetRegistry, ok := a.(nuget.Registry)
@@ -40,7 +40,7 @@ func (c *controller) SearchPackage(ctx context.Context, info nugettype.ArtifactI
 				}, nil,
 			}
 		}
-		feedResponse, err := nugetRegistry.SearchPackage(ctx, info, searchTerm, limit, offset)
+		feedResponse, err := nugetRegistry.SearchPackage(ctx, info, searchTerm, l, o)
 		return &SearchPackageResponse{
 			BaseResponse{
 				err,
@@ -49,7 +49,8 @@ func (c *controller) SearchPackage(ctx context.Context, info nugettype.ArtifactI
 		}
 	}
 
-	result, err := base.NoProxyWrapper(ctx, c.registryDao, f, info)
+	aggregatedResults, totalCount, err := base.SearchPackagesProxyWrapper(ctx, c.registryDao,
+		f, extractResponseData, info, limit, offset)
 
 	if err != nil {
 		return &SearchPackageResponse{
@@ -59,14 +60,39 @@ func (c *controller) SearchPackage(ctx context.Context, info nugettype.ArtifactI
 			}, nil,
 		}
 	}
-	searchPackageResponse, ok := result.(*SearchPackageResponse)
-	if !ok {
-		return &SearchPackageResponse{
-			BaseResponse{
-				fmt.Errorf("invalid response type: expected SearchPackageV2Response"),
-				nil,
-			}, nil,
+
+	// Create response using the aggregated results
+	searchResults := make([]*nugettype.SearchResult, 0, len(aggregatedResults))
+	for _, result := range aggregatedResults {
+		if searchResult, ok := result.(*nugettype.SearchResult); ok {
+			searchResults = append(searchResults, searchResult)
 		}
 	}
-	return searchPackageResponse
+
+	searchResultResponse := &nugettype.SearchResultResponse{
+		TotalHits: totalCount,
+		Data:      searchResults,
+	}
+
+	return &SearchPackageResponse{
+		BaseResponse: BaseResponse{
+			Error:           nil,
+			ResponseHeaders: nil,
+		},
+		SearchResponse: searchResultResponse,
+	}
+}
+
+func extractResponseData(searchResponse response.Response) ([]interface{}, int64) {
+	var nativeResults []interface{}
+	var totalHits int64
+
+	if searchResp, ok := searchResponse.(*SearchPackageResponse); ok && searchResp.SearchResponse != nil {
+		totalHits = searchResp.SearchResponse.TotalHits
+		for _, result := range searchResp.SearchResponse.Data {
+			nativeResults = append(nativeResults, result)
+		}
+	}
+
+	return nativeResults, totalHits
 }

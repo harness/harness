@@ -41,6 +41,12 @@ import (
 	_ "github.com/harness/gitness/registry/app/remote/adapter/nuget" // This is required to init nuget adapter
 )
 
+const (
+	// XML namespace constants for NuGet feed responses.
+	xmlnsDataServices         = "http://schemas.microsoft.com/ado/2007/08/dataservices"
+	xmlnsDataServicesMetadata = "http://schemas.microsoft.com/ado/2007/08/dataservices/metadata"
+)
+
 var _ pkg.Artifact = (*proxy)(nil)
 var _ Registry = (*proxy)(nil)
 
@@ -110,46 +116,145 @@ func (r *proxy) DeletePackage(ctx context.Context,
 
 func (r *proxy) CountPackageVersionV2(
 	ctx context.Context,
-	_ nugettype.ArtifactInfo,
+	info nugettype.ArtifactInfo,
 ) (count int64, err error) {
-	log.Error().Ctx(ctx).Msg("Not implemented")
-	return 0, errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
-}
-
-func (r *proxy) CountPackageV2(ctx context.Context, _ nugettype.ArtifactInfo, _ string) (count int64, err error) {
-	log.Error().Ctx(ctx).Msg("Not implemented")
-	return 0, errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
-}
-
-func (r *proxy) SearchPackageV2(ctx context.Context, _ nugettype.ArtifactInfo,
-	_ string, _ int, _ int) (*nugettype.FeedResponse, error) {
-	log.Error().Ctx(ctx).Msg("Not implemented")
-	return nil, errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
-}
-
-func (r *proxy) SearchPackage(ctx context.Context, _ nugettype.ArtifactInfo,
-	_ string, _ int, _ int) (*nugettype.SearchResultResponse, error) {
-	log.Error().Ctx(ctx).Msg("Not implemented")
-	return nil, errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
-}
-
-func (r *proxy) putFileToLocal(ctx context.Context, info *nugettype.ArtifactInfo,
-	remote RemoteRegistryHelper) error {
-	file, err := remote.GetFile(ctx, info.Image, info.Version, info.ProxyEndpoint, info.Filename)
+	upstreamProxy, err := r.proxyStore.GetByRegistryIdentifier(ctx, info.ParentID, info.RegIdentifier)
 	if err != nil {
-		log.Ctx(ctx).Error().Stack().Err(err).Msgf("fetching file for pkg: %s failed, %v", info.Image, err)
-		return err
+		return 0, err
 	}
-	defer file.Close()
 
-	_, sha256, err2 := r.localRegistryHelper.UploadPackageFile(ctx, *info, file)
-	if err2 != nil {
-		log.Ctx(ctx).Error().Stack().Err(err2).Msgf("uploading file for pkg: %s failed, %v", info.Image, err)
-		return err2
+	helper, err := NewRemoteRegistryHelper(ctx, r.spaceFinder, *upstreamProxy, r.service)
+	if err != nil {
+		return 0, err
 	}
-	log.Info().Msgf("Successfully uploaded file for pkg: %s , version: %s with SHA256: %s",
-		info.Image, info.Version, sha256)
-	return nil
+
+	// Use the adapter's CountPackageVersionV2 method directly
+	count, err = helper.CountPackageVersionV2(ctx, info.Image)
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
+func (r *proxy) CountPackageV2(ctx context.Context, info nugettype.ArtifactInfo,
+	searchTerm string) (count int64, err error) {
+	upstreamProxy, err := r.proxyStore.GetByRegistryIdentifier(ctx, info.ParentID, info.RegIdentifier)
+	if err != nil {
+		return 0, err
+	}
+
+	helper, err := NewRemoteRegistryHelper(ctx, r.spaceFinder, *upstreamProxy, r.service)
+	if err != nil {
+		return 0, err
+	}
+
+	// Use the adapter's CountPackageV2 method directly
+	count, err = helper.CountPackageV2(ctx, searchTerm)
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
+func (r *proxy) SearchPackageV2(ctx context.Context, info nugettype.ArtifactInfo,
+	searchTerm string, limit int, offset int) (*nugettype.FeedResponse, error) {
+	upstreamProxy, err := r.proxyStore.GetByRegistryIdentifier(ctx, info.ParentID, info.RegIdentifier)
+	if err != nil {
+		return &nugettype.FeedResponse{}, err
+	}
+
+	helper, err := NewRemoteRegistryHelper(ctx, r.spaceFinder, *upstreamProxy, r.service)
+	if err != nil {
+		return &nugettype.FeedResponse{}, err
+	}
+
+	fileReader, err := helper.SearchPackageV2(ctx, searchTerm, limit, offset)
+	if err != nil {
+		return &nugettype.FeedResponse{}, err
+	}
+	defer fileReader.Close()
+
+	var result nugettype.FeedResponse
+	if err = xml.NewDecoder(fileReader).Decode(&result); err != nil {
+		return &nugettype.FeedResponse{}, err
+	}
+
+	// Update URLs to point to our proxy, similar to ListPackageVersionV2
+	packageURL := r.urlProvider.PackageURL(ctx, info.RootIdentifier+"/"+info.RegIdentifier, "nuget")
+	result.XmlnsD = xmlnsDataServices
+	result.XmlnsM = xmlnsDataServicesMetadata
+	result.Base = packageURL
+
+	links := []nugettype.FeedEntryLink{
+		{Rel: "self", Href: xml.CharData(packageURL)},
+	}
+	result.Links = links
+
+	// Update each entry's content URLs to point to our proxy
+	for _, entry := range result.Entries {
+		re := regexp.MustCompile(`Version='([^']+)'`)
+		matches := re.FindStringSubmatch(entry.ID)
+		if len(matches) > 1 {
+			version := matches[1]
+			err = modifyContent(entry, packageURL, info.Image, version)
+			if err != nil {
+				return &nugettype.FeedResponse{}, fmt.Errorf("failed to modify content: %w", err)
+			}
+		}
+	}
+
+	return &result, nil
+}
+
+func (r *proxy) SearchPackage(ctx context.Context, info nugettype.ArtifactInfo,
+	searchTerm string, limit int, offset int) (*nugettype.SearchResultResponse, error) {
+	upstreamProxy, err := r.proxyStore.GetByRegistryIdentifier(ctx, info.ParentID, info.RegIdentifier)
+	if err != nil {
+		return nil, err
+	}
+
+	helper, err := NewRemoteRegistryHelper(ctx, r.spaceFinder, *upstreamProxy, r.service)
+	if err != nil {
+		return nil, err
+	}
+
+	// Use the v3 search API directly
+	fileReader, err := helper.SearchPackage(ctx, searchTerm, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer fileReader.Close()
+
+	// Parse the v3 search response directly
+	var result nugettype.SearchResultResponse
+	if err = json.NewDecoder(fileReader).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	// Update URLs in search results to point to our proxy
+	packageURL := r.urlProvider.PackageURL(ctx, info.RootIdentifier+"/"+info.RegIdentifier, "nuget")
+
+	for _, searchResult := range result.Data {
+		if searchResult != nil {
+			// Update RegistrationIndexURL to point to our proxy
+			if searchResult.RegistrationIndexURL != "" {
+				registrationURL := getRegistrationIndexURL(packageURL, searchResult.ID)
+				searchResult.RegistrationIndexURL = registrationURL
+			}
+
+			// Update RegistrationLeafURL in versions to point to our proxy
+			for _, version := range searchResult.Versions {
+				if version != nil && version.RegistrationLeafURL != "" {
+					registrationURL := getRegistrationIndexURL(packageURL, searchResult.ID)
+					version.RegistrationLeafURL = getProxyURL(registrationURL, version.RegistrationLeafURL)
+				}
+			}
+		}
+	}
+
+	return &result, nil
 }
 
 func (r *proxy) ListPackageVersion(ctx context.Context,
@@ -228,8 +333,8 @@ func (r *proxy) ListPackageVersionV2(ctx context.Context,
 		return &nugettype.FeedResponse{}, err
 	}
 	packageURL := r.urlProvider.PackageURL(ctx, info.RootIdentifier+"/"+info.RegIdentifier, "nuget")
-	result.XmlnsD = "http://schemas.microsoft.com/ado/2007/08/dataservices"
-	result.XmlnsM = "http://schemas.microsoft.com/ado/2007/08/dataservices/metadata"
+	result.XmlnsD = xmlnsDataServices
+	result.XmlnsM = xmlnsDataServicesMetadata
 	result.Base = packageURL
 	links := []nugettype.FeedEntryLink{
 		{Rel: "self", Href: xml.CharData(packageURL)},
@@ -270,8 +375,8 @@ func (r *proxy) GetPackageVersionMetadataV2(ctx context.Context,
 	if err = xml.NewDecoder(fileReader).Decode(&result); err != nil {
 		return &nugettype.FeedEntryResponse{}, err
 	}
-	result.XmlnsD = "http://schemas.microsoft.com/ado/2007/08/dataservices"
-	result.XmlnsM = "http://schemas.microsoft.com/ado/2007/08/dataservices/metadata"
+	result.XmlnsD = xmlnsDataServices
+	result.XmlnsM = xmlnsDataServicesMetadata
 	err = modifyContent(&result, packageURL, info.Image, info.Version)
 	if err != nil {
 		return &nugettype.FeedEntryResponse{}, fmt.Errorf("failed to modify content: %w", err)
@@ -381,4 +486,23 @@ func (r *proxy) GetArtifactType() artifact.RegistryType {
 
 func (r *proxy) GetPackageTypes() []artifact.PackageType {
 	return []artifact.PackageType{artifact.PackageTypeNUGET}
+}
+
+func (r *proxy) putFileToLocal(ctx context.Context, info *nugettype.ArtifactInfo,
+	remote RemoteRegistryHelper) error {
+	file, err := remote.GetFile(ctx, info.Image, info.Version, info.ProxyEndpoint, info.Filename)
+	if err != nil {
+		log.Ctx(ctx).Error().Stack().Err(err).Msgf("fetching file for pkg: %s failed, %v", info.Image, err)
+		return err
+	}
+	defer file.Close()
+
+	_, sha256, err2 := r.localRegistryHelper.UploadPackageFile(ctx, *info, file)
+	if err2 != nil {
+		log.Ctx(ctx).Error().Stack().Err(err2).Msgf("uploading file for pkg: %s failed, %v", info.Image, err)
+		return err2
+	}
+	log.Info().Msgf("Successfully uploaded file for pkg: %s , version: %s with SHA256: %s",
+		info.Image, info.Version, sha256)
+	return nil
 }

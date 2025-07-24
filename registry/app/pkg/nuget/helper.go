@@ -272,11 +272,11 @@ func createSearchV2Response(baseURL string, artifacts *[]types.ArtifactMetadata,
 	}, nil
 }
 
-func createSearchResponse(baseURL string, artifacts *[]types.ArtifactMetadata) (
+func createSearchResponse(baseURL string, artifacts *[]types.ArtifactMetadata, totalHits int64) (
 	*nuget.SearchResultResponse, error) {
 	if artifacts == nil || len(*artifacts) == 0 {
 		return &nuget.SearchResultResponse{
-			TotalHits: 0,
+			TotalHits: totalHits,
 		}, nil
 	}
 
@@ -294,7 +294,7 @@ func createSearchResponse(baseURL string, artifacts *[]types.ArtifactMetadata) (
 		}
 	}
 	return &nuget.SearchResultResponse{
-		TotalHits: int64(len(items)),
+		TotalHits: totalHits,
 		Data:      items,
 	}, nil
 }
@@ -326,7 +326,7 @@ func createSearchResultItem(baseURL string, artifacts *[]types.ArtifactMetadata,
 				return nil, fmt.Errorf("error unmarshalling nuget metadata: %w", err)
 			}
 			searchArtifact.Description = artifactMetadata.PackageMetadata.Description
-			searchArtifact.Authors = artifactMetadata.PackageMetadata.Authors
+			searchArtifact.Authors = []string{artifactMetadata.PackageMetadata.Authors}
 			searchArtifact.ProjectURL = artifactMetadata.PackageMetadata.ProjectURL
 			searchArtifact.Version = (*artifacts)[j].Version
 			searchArtifact.Versions = items

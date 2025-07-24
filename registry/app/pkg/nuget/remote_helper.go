@@ -39,6 +39,14 @@ type RemoteRegistryHelper interface {
 	ListPackageVersion(ctx context.Context, pkg string) (io.ReadCloser, error)
 
 	ListPackageVersionV2(ctx context.Context, pkg string) (io.ReadCloser, error)
+
+	SearchPackageV2(ctx context.Context, searchTerm string, limit, offset int) (io.ReadCloser, error)
+
+	SearchPackage(ctx context.Context, searchTerm string, limit, offset int) (io.ReadCloser, error)
+
+	CountPackageV2(ctx context.Context, searchTerm string) (int64, error)
+
+	CountPackageVersionV2(ctx context.Context, pkg string) (int64, error)
 }
 
 type remoteRegistryHelper struct {
@@ -140,4 +148,44 @@ func (r *remoteRegistryHelper) GetPackageVersionMetadataV2(ctx context.Context,
 		return nil, err
 	}
 	return metadata, nil
+}
+
+func (r *remoteRegistryHelper) SearchPackageV2(ctx context.Context,
+	searchTerm string, limit, offset int) (io.ReadCloser, error) {
+	searchResults, err := r.adapter.SearchPackageV2(ctx, searchTerm, limit, offset)
+	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Msgf("failed to search packages with term: %s", searchTerm)
+		return nil, err
+	}
+	return searchResults, nil
+}
+
+func (r *remoteRegistryHelper) SearchPackage(ctx context.Context,
+	searchTerm string, limit, offset int) (io.ReadCloser, error) {
+	searchResults, err := r.adapter.SearchPackage(ctx, searchTerm, limit, offset)
+	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Msgf("failed to search packages (v3) with term: %s", searchTerm)
+		return nil, err
+	}
+	return searchResults, nil
+}
+
+func (r *remoteRegistryHelper) CountPackageV2(ctx context.Context,
+	searchTerm string) (int64, error) {
+	count, err := r.adapter.CountPackageV2(ctx, searchTerm)
+	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Msgf("failed to count packages with term: %s", searchTerm)
+		return 0, err
+	}
+	return count, nil
+}
+
+func (r *remoteRegistryHelper) CountPackageVersionV2(ctx context.Context,
+	pkg string) (int64, error) {
+	count, err := r.adapter.CountPackageVersionV2(ctx, pkg)
+	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Msgf("failed to count package versions for pkg: %s", pkg)
+		return 0, err
+	}
+	return count, nil
 }

@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 
 	"github.com/harness/gitness/app/services/refcache"
@@ -191,6 +192,100 @@ func (a adapter) ListPackageVersionV2(ctx context.Context, pkg string) (io.ReadC
 		return nil, err
 	}
 	return closer, nil
+}
+
+func (a adapter) SearchPackageV2(ctx context.Context, searchTerm string, limit, offset int) (io.ReadCloser, error) {
+	baseURL := a.client.url
+
+	searchEndpoint := fmt.Sprintf("%s/Packages()?"+
+		"$filter=substringof('%s',tolower(Id))&$skip=%d&$top=%d&semVerLevel=2.0.0",
+		strings.TrimRight(baseURL, "/"), searchTerm, offset, limit)
+	log.Ctx(ctx).Info().Msgf("Search Package V2 URL: %s", searchEndpoint)
+	_, closer, err := a.GetFileFromURL(searchEndpoint)
+	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Msgf("Failed to get file from URL: %s", searchEndpoint)
+		return nil, err
+	}
+	return closer, nil
+}
+
+func (a adapter) SearchPackage(ctx context.Context, searchTerm string, limit, offset int) (io.ReadCloser, error) {
+	// For v3 API, we need to use the search service endpoint
+	endpoint, err := a.GetServiceEndpoint()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get service endpoint: %w", err)
+	}
+
+	searchURL, err := getResourceByTypePrefix(endpoint, "SearchQueryService")
+	if err != nil {
+		return nil, fmt.Errorf("failed to get search service URL: %w", err)
+	}
+
+	searchEndpoint := fmt.Sprintf("%s?q=%s&skip=%d&take=%d",
+		strings.TrimRight(searchURL, "/"), searchTerm, offset, limit)
+	log.Ctx(ctx).Info().Msgf("Search Package V3 URL: %s", searchEndpoint)
+	_, closer, err := a.GetFileFromURL(searchEndpoint)
+	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Msgf("Failed to get file from URL: %s", searchEndpoint)
+		return nil, err
+	}
+	return closer, nil
+}
+
+func (a adapter) CountPackageV2(ctx context.Context, searchTerm string) (int64, error) {
+	baseURL := a.client.url
+
+	countEndpoint := fmt.Sprintf("%s/Packages()/$count?$filter=substringof('%s',tolower(Id))&semVerLevel=2.0.0",
+		strings.TrimRight(baseURL, "/"), searchTerm)
+	log.Ctx(ctx).Info().Msgf("Count Package V2 URL: %s", countEndpoint)
+	_, closer, err := a.GetFileFromURL(countEndpoint)
+	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Msgf("Failed to get file from URL: %s", countEndpoint)
+		return 0, err
+	}
+	defer closer.Close()
+
+	// Read the count response (should be a plain text number)
+	countBytes, err := io.ReadAll(closer)
+	if err != nil {
+		return 0, fmt.Errorf("failed to read count response: %w", err)
+	}
+
+	countStr := strings.TrimSpace(string(countBytes))
+	count, err := strconv.ParseInt(countStr, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("failed to parse count: %w", err)
+	}
+
+	return count, nil
+}
+
+func (a adapter) CountPackageVersionV2(ctx context.Context, pkg string) (int64, error) {
+	baseURL := a.client.url
+
+	countEndpoint := fmt.Sprintf("%s/FindPackagesById()/$count?id='%s'",
+		strings.TrimRight(baseURL, "/"), pkg)
+	log.Ctx(ctx).Info().Msgf("Count Package Version V2 URL: %s", countEndpoint)
+	_, closer, err := a.GetFileFromURL(countEndpoint)
+	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Msgf("Failed to get file from URL: %s", countEndpoint)
+		return 0, err
+	}
+	defer closer.Close()
+
+	// Read the count response (should be a plain text number)
+	countBytes, err := io.ReadAll(closer)
+	if err != nil {
+		return 0, fmt.Errorf("failed to read count response: %w", err)
+	}
+
+	countStr := strings.TrimSpace(string(countBytes))
+	count, err := strconv.ParseInt(countStr, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("failed to parse count: %w", err)
+	}
+
+	return count, nil
 }
 
 func ParseServiceEndpointResponse(r io.ReadCloser) (nuget.ServiceEndpoint, error) {
