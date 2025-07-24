@@ -28,6 +28,11 @@ func (c *Service) UpdateConfig(ctx context.Context, infraProviderConfig *types.I
 		return err
 	}
 
+	infraProviderConfig, err = c.updateConfig(infraProviderConfig)
+	if err != nil {
+		return err
+	}
+
 	existingConfig, err := c.infraProviderConfigStore.FindByIdentifier(ctx, infraProviderConfig.SpaceID,
 		infraProviderConfig.Identifier)
 	if err != nil {

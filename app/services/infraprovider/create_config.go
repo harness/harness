@@ -80,6 +80,11 @@ func (c *Service) createConfig(ctx context.Context, infraProviderConfig *types.I
 		return 0, err
 	}
 
+	infraProviderConfig, err = c.updateConfig(infraProviderConfig)
+	if err != nil {
+		return 0, err
+	}
+
 	err = c.infraProviderConfigStore.Create(ctx, infraProviderConfig)
 	if err != nil {
 		return 0, fmt.Errorf("failed to create infraprovider config for %s: %w", infraProviderConfig.Identifier, err)
@@ -106,4 +111,18 @@ func (c *Service) validateConfig(infraProviderConfig *types.InfraProviderConfig)
 	}
 
 	return nil
+}
+
+func (c *Service) updateConfig(infraProviderConfig *types.InfraProviderConfig) (*types.InfraProviderConfig, error) {
+	infraProvider, err := c.infraProviderFactory.GetInfraProvider(infraProviderConfig.Type)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch infra provider for type %s: %w", infraProviderConfig.Type, err)
+	}
+
+	updatedConfig, err := infraProvider.UpdateConfig(infraProviderConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return updatedConfig, nil
 }

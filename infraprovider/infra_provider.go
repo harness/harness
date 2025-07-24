@@ -88,6 +88,9 @@ type InfraProvider interface {
 	// ProvisioningType specifies whether the provider will provision new infra resources or it will reuse existing.
 	ProvisioningType() enum.InfraProvisioningType
 
+	// UpdateConfig update infraProvider config to add or modify config.
+	UpdateConfig(infraProviderConfig *types.InfraProviderConfig) (*types.InfraProviderConfig, error)
+
 	// ValidateConfig checks if the provided infra config is as per the provider.
 	ValidateConfig(infraProviderConfig *types.InfraProviderConfig) error
 

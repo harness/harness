@@ -306,6 +306,12 @@ func (d DockerProvider) ProvisioningType() enum.InfraProvisioningType {
 	return enum.InfraProvisioningTypeExisting
 }
 
+func (d DockerProvider) UpdateConfig(
+	config *types.InfraProviderConfig,
+) (*types.InfraProviderConfig, error) {
+	return config, nil
+}
+
 func (d DockerProvider) dockerHostInfo(
 	ctx context.Context,
 	dockerClient *client.Client,
