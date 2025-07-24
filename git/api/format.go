@@ -22,4 +22,7 @@ const (
 
 	fmtFieldObjectType = "%(objecttype)"
 	fmtFieldPath       = "%(path)"
+
+	// RFC2822DateFormat is the date format that Git typically uses for dates.
+	RFC2822DateFormat = "Mon Jan 02 2006 15:04:05 -0700"
 )

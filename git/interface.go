@@ -117,4 +117,9 @@ type Interface interface {
 	 */
 	ScanSecrets(ctx context.Context, param *ScanSecretsParams) (*ScanSecretsOutput, error)
 	Archive(ctx context.Context, params ArchiveParams, w io.Writer) error
+
+	/*
+	 * Repository optimizer
+	 */
+	OptimizeRepository(ctx context.Context, params OptimizeRepositoryParams) error
 }
