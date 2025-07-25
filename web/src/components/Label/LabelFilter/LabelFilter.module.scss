@@ -75,7 +75,7 @@
 
 .childBox {
   width: fit-content !important;
-  max-width: 250px;
+  max-width: 250px !important;
   position: absolute;
   box-shadow: 0px 0px 1px rgb(40 41 61 / 4%), 0px 2px 4px rgb(96 97 112 / 16%);
   border: 0.5px solid rgba(0, 0, 0, 0.1);
