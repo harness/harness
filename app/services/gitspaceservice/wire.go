@@ -18,9 +18,7 @@ import (
 	"github.com/harness/gitness/app/services/gitspace"
 	"github.com/harness/gitness/app/services/gitspaceinfraevent"
 	"github.com/harness/gitness/app/services/gitspaceoperationsevent"
-	"github.com/harness/gitness/app/services/gitspacesettings"
 	"github.com/harness/gitness/app/services/infraprovider"
-	"github.com/harness/gitness/app/store/database"
 
 	"github.com/google/wire"
 )
@@ -28,8 +26,6 @@ import (
 var WireSet = wire.NewSet(
 	gitspace.WireSet,
 	gitspaceinfraevent.WireSet,
-	gitspacesettings.WireSet,
 	infraprovider.WireSet,
 	gitspaceoperationsevent.WireSet,
-	database.ProvideGitspaceSettingsStore,
 )
