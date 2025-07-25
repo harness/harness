@@ -169,7 +169,7 @@ func (v *Verify) Key(
 	principalID int64,
 ) (*types.PublicKey, error) {
 	schemes := []enum.PublicKeyScheme{enum.PublicKeySchemeSSH}
-	usages := []enum.PublicKeyUsage{enum.PublicKeyUsageSign}
+	usages := []enum.PublicKeyUsage{enum.PublicKeyUsageSign, enum.PublicKeyUsageAuthSign}
 	keys, err := keyFetcher.FetchByFingerprint(ctx, v.KeyFingerprint(), principalID, usages, schemes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list SSH public keys by fingerprint: %w", err)
