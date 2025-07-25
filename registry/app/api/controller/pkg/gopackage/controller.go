@@ -36,6 +36,14 @@ type Controller interface {
 		ctx context.Context,
 		info *gopackagetype.ArtifactInfo,
 	) *DownloadFileResponse
+	RegeneratePackageIndex(
+		ctx context.Context,
+		info *gopackagetype.ArtifactInfo,
+	) *RegeneratePackageIndexResponse
+	RegeneratePackageMetadata(
+		ctx context.Context,
+		info *gopackagetype.ArtifactInfo,
+	) *RegeneratePackageMetadataResponse
 }
 
 type controller struct {

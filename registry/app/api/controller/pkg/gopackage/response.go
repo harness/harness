@@ -46,3 +46,13 @@ type UploadFileResponse struct {
 	Image        string `json:"image,omitempty"`
 	Version      string `json:"version,omitempty"`
 }
+
+type RegeneratePackageIndexResponse struct {
+	BaseResponse `json:"-"`
+	Ok           bool `json:"ok,omitempty"`
+}
+
+type RegeneratePackageMetadataResponse struct {
+	BaseResponse `json:"-"`
+	Ok           bool `json:"ok,omitempty"`
+}

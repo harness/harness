@@ -297,3 +297,27 @@ func (r *proxy) cacheFileAndCreateOrUpdateVersion(
 
 	return nil
 }
+
+func (r *proxy) RegeneratePackageIndex(
+	ctx context.Context, info gopackagetype.ArtifactInfo,
+) (*commons.ResponseHeaders, error) {
+	responseHeaders := &commons.ResponseHeaders{
+		Headers: make(map[string]string),
+		Code:    0,
+	}
+	r.localRegistryHelper.RegeneratePackageIndex(ctx, info)
+	responseHeaders.Code = http.StatusOK
+	return responseHeaders, nil
+}
+
+func (r *proxy) RegeneratePackageMetadata(
+	ctx context.Context, info gopackagetype.ArtifactInfo,
+) (*commons.ResponseHeaders, error) {
+	responseHeaders := &commons.ResponseHeaders{
+		Headers: make(map[string]string),
+		Code:    0,
+	}
+	r.localRegistryHelper.RegeneratePackageMetadata(ctx, info)
+	responseHeaders.Code = http.StatusOK
+	return responseHeaders, nil
+}

@@ -39,4 +39,12 @@ type Registry interface {
 	DownloadPackageFile(
 		ctx context.Context, info gopackagetype.ArtifactInfo,
 	) (*commons.ResponseHeaders, *storage.FileReader, io.ReadCloser, string, error)
+	// regenerate package index
+	RegeneratePackageIndex(
+		ctx context.Context, info gopackagetype.ArtifactInfo,
+	) (*commons.ResponseHeaders, error)
+	// regenerate package metadata
+	RegeneratePackageMetadata(
+		ctx context.Context, info gopackagetype.ArtifactInfo,
+	) (*commons.ResponseHeaders, error)
 }

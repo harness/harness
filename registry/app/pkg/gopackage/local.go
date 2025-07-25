@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"path/filepath"
 
 	"github.com/harness/gitness/app/api/request"
@@ -276,4 +277,28 @@ func (c *localRegistry) downloadFileInternal(
 		return responseHeaders, nil, "", fmt.Errorf("failed to download file %s: %w", path, err)
 	}
 	return responseHeaders, fileReader, redirectURL, nil
+}
+
+func (c *localRegistry) RegeneratePackageIndex(
+	ctx context.Context, info gopackagetype.ArtifactInfo,
+) (*commons.ResponseHeaders, error) {
+	responseHeaders := &commons.ResponseHeaders{
+		Headers: make(map[string]string),
+		Code:    0,
+	}
+	c.regeneratePackageIndex(ctx, info)
+	responseHeaders.Code = http.StatusOK
+	return responseHeaders, nil
+}
+
+func (c *localRegistry) RegeneratePackageMetadata(
+	ctx context.Context, info gopackagetype.ArtifactInfo,
+) (*commons.ResponseHeaders, error) {
+	responseHeaders := &commons.ResponseHeaders{
+		Headers: make(map[string]string),
+		Code:    0,
+	}
+	c.regeneratePackageMetadata(ctx, info)
+	responseHeaders.Code = http.StatusOK
+	return responseHeaders, nil
 }

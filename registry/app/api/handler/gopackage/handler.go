@@ -31,6 +31,8 @@ type Handler interface {
 	pkg.ArtifactInfoProvider
 	UploadPackage(writer http.ResponseWriter, request *http.Request)
 	DownloadPackageFile(writer http.ResponseWriter, request *http.Request)
+	RegeneratePackageIndex(writer http.ResponseWriter, request *http.Request)
+	RegeneratePackageMetadata(writer http.ResponseWriter, request *http.Request)
 }
 
 type handler struct {

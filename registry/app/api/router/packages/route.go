@@ -317,11 +317,18 @@ func NewRouter(
 		})
 		// GO Package uses Basic Authorization
 		r.Route("/go", func(r chi.Router) {
+			r.Use(middleware.CheckAuthHeader())
 			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
 			r.Use(middleware.CheckAuth())
 			r.With(middleware.StoreArtifactInfo(gopackageHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
 				Put("/upload", gopackageHandler.UploadPackage)
+			r.With(middleware.StoreArtifactInfo(gopackageHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
+				Put("/regenerate-index", gopackageHandler.RegeneratePackageIndex)
+			r.With(middleware.StoreArtifactInfo(gopackageHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
+				Put("/regenerate-metadata", gopackageHandler.RegeneratePackageMetadata)
 			r.With(middleware.StoreArtifactInfo(gopackageHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				With(middleware.TrackDownloadStatsForGoPackage(packageHandler)).
