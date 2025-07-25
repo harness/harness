@@ -39,7 +39,7 @@ type Controller struct {
 	gitspaceSvc        *gitspace.Service
 	gitspaceLimiter    limiter.Gitspace
 	repoFinder         refcache.RepoFinder
-	settingsService    gitspacesettings.GitspaceSettingsService
+	settingsService    gitspacesettings.Service
 }
 
 func NewController(
@@ -54,7 +54,7 @@ func NewController(
 	gitspaceSvc *gitspace.Service,
 	gitspaceLimiter limiter.Gitspace,
 	repoFinder refcache.RepoFinder,
-	settingsService gitspacesettings.GitspaceSettingsService,
+	settingsService gitspacesettings.Service,
 ) *Controller {
 	return &Controller{
 		tx:                 tx,

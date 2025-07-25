@@ -30,7 +30,7 @@ var WireSet = wire.NewSet(
 func ProvideService(
 	ctx context.Context,
 	gitspaceSettingsStore store.GitspaceSettingsStore,
-) (GitspaceSettingsService, error) {
+) (Service, error) {
 	return NewSettingsService(
 		ctx,
 		gitspaceSettingsStore,

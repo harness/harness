@@ -59,14 +59,14 @@ func (p *GitspaceCodeRepoType) IsOnPrem() bool {
 	return *p == CodeRepoTypeGitlabOnPrem || *p == CodeRepoTypeBitbucketServer || *p == CodeRepoTypeGithubEnterprise
 }
 
-func (t *GitspaceCodeRepoType) UnmarshalJSON(data []byte) error {
+func (p *GitspaceCodeRepoType) UnmarshalJSON(data []byte) error {
 	var s string
 	if err := json.Unmarshal(data, &s); err != nil {
 		return err
 	}
 	for _, v := range codeRepoTypes {
 		if GitspaceCodeRepoType(s) == v {
-			*t = v
+			*p = v
 			return nil
 		}
 	}

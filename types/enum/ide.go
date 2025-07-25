@@ -68,14 +68,14 @@ func IsJetBrainsIDE(t IDEType) bool {
 	return exist
 }
 
-func (t *IDEType) UnmarshalJSON(data []byte) error {
+func (i *IDEType) UnmarshalJSON(data []byte) error {
 	var s string
 	if err := json.Unmarshal(data, &s); err != nil {
 		return err
 	}
 	for _, v := range ideTypes {
 		if IDEType(s) == v {
-			*t = v
+			*i = v
 			return nil
 		}
 	}

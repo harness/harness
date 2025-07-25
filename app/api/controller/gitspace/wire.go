@@ -46,7 +46,7 @@ func ProvideController(
 	gitspaceSvc *gitspace.Service,
 	gitspaceLimiter limiter.Gitspace,
 	repoFinder refcache.RepoFinder,
-	settingsService gitspacesettings.GitspaceSettingsService,
+	settingsService gitspacesettings.Service,
 ) *Controller {
 	return NewController(
 		tx,

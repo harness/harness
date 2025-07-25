@@ -54,7 +54,7 @@ type Orchestrator struct {
 	secretResolverFactory        *secret.ResolverFactory
 	gitspaceInstanceStore        store.GitspaceInstanceStore
 	gitspaceConfigStore          store.GitspaceConfigStore
-	settingsService              gitspacesettings.GitspaceSettingsService
+	settingsService              gitspacesettings.Service
 }
 
 func NewOrchestrator(
@@ -68,7 +68,7 @@ func NewOrchestrator(
 	secretResolverFactory *secret.ResolverFactory,
 	gitspaceInstanceStore store.GitspaceInstanceStore,
 	gitspaceConfigStore store.GitspaceConfigStore,
-	settingsService gitspacesettings.GitspaceSettingsService,
+	settingsService gitspacesettings.Service,
 ) Orchestrator {
 	return Orchestrator{
 		scm:                          scm,

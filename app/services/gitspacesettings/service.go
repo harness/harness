@@ -22,7 +22,7 @@ import (
 	"github.com/harness/gitness/types"
 )
 
-type GitspaceSettingsService interface {
+type Service interface {
 	GetGitspaceConfigSettings(
 		ctx context.Context,
 		spaceID int64,
@@ -48,50 +48,50 @@ type GitspaceSettingsService interface {
 	) *types.GitspaceError
 }
 
-// Existing SettingsService struct implements GitspaceSettingsService
-var _ GitspaceSettingsService = (*settingsService)(nil)
+// Existing SettingsService struct implements gitspacesettings.Service.
+var _ Service = (*settingsService)(nil)
 
 type settingsService struct {
 	gitspaceSettingsStore store.GitspaceSettingsStore
 }
 
 func (s *settingsService) GetInfraProviderSettings(
-	ctx context.Context,
-	spaceID int64,
-	criteria *types.GitspaceSettingsCriteria,
+	_ context.Context,
+	_ int64,
+	_ *types.GitspaceSettingsCriteria,
 ) (*types.InfraProviderSettings, error) {
-	return nil, nil
+	return nil, nil // nolint: nilnil
 }
 
 func NewSettingsService(
 	_ context.Context,
 	store store.GitspaceSettingsStore,
-) GitspaceSettingsService {
+) Service {
 	return &settingsService{
 		gitspaceSettingsStore: store,
 	}
 }
 
 func (s *settingsService) GetGitspaceConfigSettings(
-	ctx context.Context,
-	spaceID int64,
-	criteria *types.GitspaceSettingsCriteria,
+	_ context.Context,
+	_ int64,
+	_ *types.GitspaceSettingsCriteria,
 ) (*types.GitspaceConfigSettings, error) {
-	return nil, nil
+	return nil, nil // nolint: nilnil
 }
 
 func (s *settingsService) ValidateGitspaceConfigCreate(
-	ctx context.Context,
-	resource types.InfraProviderResource,
-	gitspaceConfig types.GitspaceConfig,
+	_ context.Context,
+	_ types.InfraProviderResource,
+	_ types.GitspaceConfig,
 ) error {
 	return nil
 }
 
 func (s *settingsService) ValidateResolvedSCMDetails(
-	ctx context.Context,
-	gitspaceConfig types.GitspaceConfig,
-	scmResolvedDetails *scm.ResolvedDetails,
+	_ context.Context,
+	_ types.GitspaceConfig,
+	_ *scm.ResolvedDetails,
 ) *types.GitspaceError {
 	return nil
 }
