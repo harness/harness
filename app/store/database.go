@@ -782,6 +782,15 @@ type (
 		// Find returns a infra provider config given a ID from the datastore.
 		Find(ctx context.Context, id int64, includeDeleted bool) (*types.InfraProviderConfig, error)
 
+		// FindByType returns a infra provider config given a type from the datastore.
+		FindByType(
+			ctx context.Context,
+			spaceID int64,
+			infraType enum.InfraProviderType,
+			includeDeleted bool,
+		) (
+			*types.InfraProviderConfig, error)
+
 		// FindByIdentifier returns a infra provider config with a given UID in a space
 		FindByIdentifier(ctx context.Context, spaceID int64, identifier string) (*types.InfraProviderConfig, error)
 
@@ -1212,6 +1221,26 @@ type (
 			eventType enum.GitspaceEventType,
 			gitspaceConfigID int64,
 		) (*types.GitspaceEvent, error)
+	}
+
+	GitspaceSettingsStore interface {
+		// Upsert creates a new settings or updates an existing one.
+		Upsert(ctx context.Context, gitspaceSettings *types.GitspaceSettings) error
+
+		// FindByType finds a gitspace settings defined in a specified space with a specified type.
+		FindByType(
+			ctx context.Context,
+			spaceID int64,
+			settingsType enum.GitspaceSettingsType,
+			criteria *types.GitspaceSettingsCriteria,
+		) (*types.GitspaceSettings, error)
+
+		// List finds a gitspace settings defined in a specified space.
+		List(
+			ctx context.Context,
+			spaceID int64,
+			filter *types.GitspaceSettingsFilter,
+		) ([]*types.GitspaceSettings, error)
 	}
 
 	LabelStore interface {

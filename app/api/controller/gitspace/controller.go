@@ -20,6 +20,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/logutil"
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/app/services/gitspace"
+	"github.com/harness/gitness/app/services/gitspacesettings"
 	"github.com/harness/gitness/app/services/infraprovider"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
@@ -38,6 +39,7 @@ type Controller struct {
 	gitspaceSvc        *gitspace.Service
 	gitspaceLimiter    limiter.Gitspace
 	repoFinder         refcache.RepoFinder
+	settingsService    gitspacesettings.GitspaceSettingsService
 }
 
 func NewController(
@@ -52,6 +54,7 @@ func NewController(
 	gitspaceSvc *gitspace.Service,
 	gitspaceLimiter limiter.Gitspace,
 	repoFinder refcache.RepoFinder,
+	settingsService gitspacesettings.GitspaceSettingsService,
 ) *Controller {
 	return &Controller{
 		tx:                 tx,
@@ -65,5 +68,6 @@ func NewController(
 		gitspaceSvc:        gitspaceSvc,
 		gitspaceLimiter:    gitspaceLimiter,
 		repoFinder:         repoFinder,
+		settingsService:    settingsService,
 	}
 }

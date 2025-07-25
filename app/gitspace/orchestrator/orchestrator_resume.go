@@ -110,13 +110,36 @@ func (o Orchestrator) ResumeStartGitspace(
 	// fetch connector information and send details to gitspace agent
 	gitspaceSpecs := scmResolvedDetails.DevcontainerConfig.Customizations.ExtractGitspaceSpec()
 	connectorRefs := getConnectorRefs(gitspaceSpecs)
+
+	gitspaceConfigSettings, err := o.settingsService.GetGitspaceConfigSettings(
+		ctx,
+		gitspaceConfig.InfraProviderResource.SpaceID,
+		&types.ApplyAlwaysToSpaceCriteria,
+	)
+	if err != nil {
+		return *gitspaceInstance, &types.GitspaceError{
+			Error: fmt.Errorf("failed to fetch gitspace settings for space ID %d: %w",
+				gitspaceConfig.InfraProviderResource.SpaceID, err),
+			ErrorMessage: ptr.String(err.Error()),
+		}
+	}
+
+	if gitspaceConfigSettings != nil {
+		if scmResolvedDetails.DevcontainerConfig.Image == "" {
+			defaultImage := gitspaceConfigSettings.Devcontainer.DevcontainerImage
+			if len(defaultImage.ImageName) > 0 {
+				scmResolvedDetails.DevcontainerConfig.Image = defaultImage.ImageName
+				if len(defaultImage.ImageConnectorRef) > 0 {
+					connectorRefs = append(connectorRefs, defaultImage.ImageConnectorRef)
+				}
+			}
+		}
+	}
+
 	if len(connectorRefs) > 0 {
 		connectors, err := o.platformConnector.FetchConnectors(ctx, connectorRefs, gitspaceConfig.SpacePath)
 		if err != nil {
-			fetchConnectorErr := fmt.Errorf("failed to fetch connectors for gitspace: %v :%w",
-				connectorRefs,
-				err,
-			)
+			fetchConnectorErr := fmt.Errorf("failed to fetch connectors for gitspace: %v :%w", connectorRefs, err)
 			return *gitspaceInstance, &types.GitspaceError{
 				Error:        fetchConnectorErr,
 				ErrorMessage: ptr.String(fetchConnectorErr.Error()),

@@ -14,11 +14,26 @@
 
 package enum
 
+import (
+	"encoding/json"
+	"fmt"
+)
+
 type IDEType string
 
-func (i IDEType) Enum() []interface{} { return toInterfaceSlice(ideTypes) }
+func (i *IDEType) Enum() []interface{} {
+	if i == nil {
+		return nil
+	}
+	return toInterfaceSlice(ideTypes)
+}
 
-func (i IDEType) String() string { return string(i) }
+func (i *IDEType) String() string {
+	if i == nil {
+		return ""
+	}
+	return string(*i)
+}
 
 var ideTypes = []IDEType{IDETypeVSCode, IDETypeVSCodeWeb, IDETypeIntelliJ, IDETypePyCharm, IDETypeGoland,
 	IDETypeWebStorm, IDETypeCLion, IDETypePHPStorm, IDETypeRubyMine, IDETypeRider}
@@ -51,4 +66,18 @@ const (
 func IsJetBrainsIDE(t IDEType) bool {
 	_, exist := jetBrainsIDESet[t]
 	return exist
+}
+
+func (t *IDEType) UnmarshalJSON(data []byte) error {
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+	for _, v := range ideTypes {
+		if IDEType(s) == v {
+			*t = v
+			return nil
+		}
+	}
+	return fmt.Errorf("invalid IDEType: %s", s)
 }

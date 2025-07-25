@@ -14,9 +14,19 @@
 
 package enum
 
+import (
+	"encoding/json"
+	"fmt"
+)
+
 type InfraProviderType string
 
-func (InfraProviderType) Enum() []interface{} { return toInterfaceSlice(providerTypes) }
+func (p *InfraProviderType) Enum() []interface{} {
+	if p == nil {
+		return nil
+	}
+	return toInterfaceSlice(providerTypes)
+}
 
 var providerTypes = []InfraProviderType{
 	InfraProviderTypeDocker,
@@ -26,6 +36,10 @@ var providerTypes = []InfraProviderType{
 	InfraProviderTypeHybridVMAWS,
 }
 
+func AllInfraProviderTypes() []InfraProviderType {
+	return providerTypes
+}
+
 const (
 	InfraProviderTypeDocker       InfraProviderType = "docker"
 	InfraProviderTypeHarnessGCP   InfraProviderType = "harness_gcp"
@@ -33,3 +47,17 @@ const (
 	InfraProviderTypeHybridVMGCP  InfraProviderType = "hybrid_vm_gcp"
 	InfraProviderTypeHybridVMAWS  InfraProviderType = "hybrid_vm_aws"
 )
+
+func (p *InfraProviderType) UnmarshalJSON(data []byte) error {
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+	for _, v := range providerTypes {
+		if InfraProviderType(s) == v {
+			*p = v
+			return nil
+		}
+	}
+	return fmt.Errorf("invalid InfraProviderType: %s", s)
+}

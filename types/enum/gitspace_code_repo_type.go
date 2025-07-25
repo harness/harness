@@ -14,9 +14,19 @@
 
 package enum
 
+import (
+	"encoding/json"
+	"fmt"
+)
+
 type GitspaceCodeRepoType string
 
-func (GitspaceCodeRepoType) Enum() []interface{} { return toInterfaceSlice(codeRepoTypes) }
+func (p *GitspaceCodeRepoType) Enum() []interface{} {
+	if p == nil {
+		return nil
+	}
+	return toInterfaceSlice(codeRepoTypes)
+}
 
 var codeRepoTypes = []GitspaceCodeRepoType{
 	CodeRepoTypeGithub,
@@ -42,6 +52,23 @@ const (
 	CodeRepoTypeGithubEnterprise GitspaceCodeRepoType = "github_enterprise"
 )
 
-func (p GitspaceCodeRepoType) IsOnPrem() bool {
-	return p == CodeRepoTypeGitlabOnPrem || p == CodeRepoTypeBitbucketServer || p == CodeRepoTypeGithubEnterprise
+func (p *GitspaceCodeRepoType) IsOnPrem() bool {
+	if p == nil {
+		return false
+	}
+	return *p == CodeRepoTypeGitlabOnPrem || *p == CodeRepoTypeBitbucketServer || *p == CodeRepoTypeGithubEnterprise
+}
+
+func (t *GitspaceCodeRepoType) UnmarshalJSON(data []byte) error {
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+	for _, v := range codeRepoTypes {
+		if GitspaceCodeRepoType(s) == v {
+			*t = v
+			return nil
+		}
+	}
+	return fmt.Errorf("invalid GitspaceCodeRepoType: %s", s)
 }

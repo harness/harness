@@ -162,6 +162,7 @@ type InfraProviderTemplate struct {
 }
 
 type InfraProviderConfigFilter struct {
-	SpaceIDs []int64
-	Type     enum.InfraProviderType
+	SpaceIDs          []int64
+	Type              enum.InfraProviderType
+	ApplyResourcesACL bool
 }

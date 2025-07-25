@@ -14,29 +14,17 @@
 
 package enum
 
-// ScmType defines the different SCM types supported for CI.
-type ScmType string
+type GitspaceSettingsType string
 
-func (ScmType) Enum() []interface{} { return toInterfaceSlice(scmTypes) }
+var gitspaceSettingsTypes = []GitspaceSettingsType{
+	SettingsTypeGitspaceConfig, SettingsTypeInfraProvider,
+}
 
-var scmTypes = ([]ScmType{
-	ScmTypeGitness,
-	ScmTypeGithub,
-	ScmTypeGitlab,
-	ScmTypeUnknown,
-})
+func (GitspaceSettingsType) Enum() []interface{} {
+	return toInterfaceSlice(gitspaceSettingsTypes)
+}
 
 const (
-	ScmTypeUnknown ScmType = "UNKNOWN"
-	ScmTypeGitness ScmType = "GITNESS"
-	ScmTypeGithub  ScmType = "GITHUB"
-	ScmTypeGitlab  ScmType = "GITLAB"
+	SettingsTypeGitspaceConfig GitspaceSettingsType = "gitspace_configuration"
+	SettingsTypeInfraProvider  GitspaceSettingsType = "infra_provider"
 )
-
-func AllSCMTypeStrings() []string {
-	result := make([]string, len(scmTypes))
-	for i, t := range scmTypes {
-		result[i] = string(t)
-	}
-	return result
-}

@@ -79,6 +79,7 @@ var WireSet = wire.NewSet(
 	ProvideUsageMetricStore,
 	ProvideCDEGatewayStore,
 	ProvideFavoriteStore,
+	ProvideGitspaceSettingsStore,
 )
 
 // migrator is helper function to set up the database by performing automated
@@ -190,6 +191,11 @@ func ProvideGitspaceConfigStore(
 	rCache store.InfraProviderResourceCache,
 ) store.GitspaceConfigStore {
 	return NewGitspaceConfigStore(db, pCache, rCache)
+}
+
+// ProvideGitspaceSettingsStore provides a gitspace settings store.
+func ProvideGitspaceSettingsStore(db *sqlx.DB) store.GitspaceSettingsStore {
+	return NewGitspaceSettingsStore(db)
 }
 
 // ProvideGitspaceInstanceStore provides a gitspace instance store.

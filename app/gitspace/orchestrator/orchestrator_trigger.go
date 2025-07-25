@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/platformconnector"
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/app/gitspace/secret"
+	"github.com/harness/gitness/app/services/gitspacesettings"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -53,6 +54,7 @@ type Orchestrator struct {
 	secretResolverFactory        *secret.ResolverFactory
 	gitspaceInstanceStore        store.GitspaceInstanceStore
 	gitspaceConfigStore          store.GitspaceConfigStore
+	settingsService              gitspacesettings.GitspaceSettingsService
 }
 
 func NewOrchestrator(
@@ -66,6 +68,7 @@ func NewOrchestrator(
 	secretResolverFactory *secret.ResolverFactory,
 	gitspaceInstanceStore store.GitspaceInstanceStore,
 	gitspaceConfigStore store.GitspaceConfigStore,
+	settingsService gitspacesettings.GitspaceSettingsService,
 ) Orchestrator {
 	return Orchestrator{
 		scm:                          scm,
@@ -78,6 +81,7 @@ func NewOrchestrator(
 		secretResolverFactory:        secretResolverFactory,
 		gitspaceInstanceStore:        gitspaceInstanceStore,
 		gitspaceConfigStore:          gitspaceConfigStore,
+		settingsService:              settingsService,
 	}
 }
 
@@ -100,6 +104,12 @@ func (o Orchestrator) TriggerStartGitspace(
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeFetchDevcontainerCompleted)
 	gitspaceSpecs := devcontainerConfig.Customizations.ExtractGitspaceSpec()
 	connectorRefs := getConnectorRefs(gitspaceSpecs)
+
+	validateSettingsErr := o.settingsService.ValidateResolvedSCMDetails(ctx, gitspaceConfig, scmResolvedDetails)
+	if validateSettingsErr != nil {
+		return validateSettingsErr
+	}
+
 	if len(connectorRefs) > 0 {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeFetchConnectorsDetailsStart)
 		connectors, err := o.platformConnector.FetchConnectors(

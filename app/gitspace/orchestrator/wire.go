@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/platformconnector"
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/app/gitspace/secret"
+	"github.com/harness/gitness/app/services/gitspacesettings"
 	"github.com/harness/gitness/app/store"
 
 	"github.com/google/wire"
@@ -43,6 +44,7 @@ func ProvideOrchestrator(
 	secretResolverFactory *secret.ResolverFactory,
 	gitspaceInstanceStore store.GitspaceInstanceStore,
 	gitspaceConfigStore store.GitspaceConfigStore,
+	settingsService gitspacesettings.GitspaceSettingsService,
 ) Orchestrator {
 	return NewOrchestrator(
 		scm,
@@ -55,5 +57,6 @@ func ProvideOrchestrator(
 		secretResolverFactory,
 		gitspaceInstanceStore,
 		gitspaceConfigStore,
+		settingsService,
 	)
 }

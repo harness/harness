@@ -32,8 +32,7 @@ func HandleListInfraProviderConfigs(infraProviderCtrl *infraprovider.Controller)
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
-
-		infraProviderConfigs, err := infraProviderCtrl.List(ctx, session, spaceRef)
+		infraProviderConfigs, err := infraProviderCtrl.List(ctx, session, spaceRef, false)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return

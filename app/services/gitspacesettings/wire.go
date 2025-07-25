@@ -12,31 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package enum
+package gitspacesettings
 
-// ScmType defines the different SCM types supported for CI.
-type ScmType string
+import (
+	"context"
 
-func (ScmType) Enum() []interface{} { return toInterfaceSlice(scmTypes) }
+	"github.com/harness/gitness/app/store"
 
-var scmTypes = ([]ScmType{
-	ScmTypeGitness,
-	ScmTypeGithub,
-	ScmTypeGitlab,
-	ScmTypeUnknown,
-})
-
-const (
-	ScmTypeUnknown ScmType = "UNKNOWN"
-	ScmTypeGitness ScmType = "GITNESS"
-	ScmTypeGithub  ScmType = "GITHUB"
-	ScmTypeGitlab  ScmType = "GITLAB"
+	"github.com/google/wire"
 )
 
-func AllSCMTypeStrings() []string {
-	result := make([]string, len(scmTypes))
-	for i, t := range scmTypes {
-		result[i] = string(t)
-	}
-	return result
+// WireSet provides a wire set for this package.
+var WireSet = wire.NewSet(
+	ProvideService,
+)
+
+func ProvideService(
+	ctx context.Context,
+	gitspaceSettingsStore store.GitspaceSettingsStore,
+) (GitspaceSettingsService, error) {
+	return NewSettingsService(
+		ctx,
+		gitspaceSettingsStore,
+	), nil
 }

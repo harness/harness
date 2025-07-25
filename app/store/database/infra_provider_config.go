@@ -73,6 +73,30 @@ type infraProviderConfigStore struct {
 	db *sqlx.DB
 }
 
+func (i infraProviderConfigStore) FindByType(
+	ctx context.Context,
+	spaceID int64,
+	infraType enum.InfraProviderType,
+	includeDeleted bool,
+) (*types.InfraProviderConfig, error) {
+	stmt := database.Builder.
+		Select(infraProviderConfigSelectColumns).
+		From(infraProviderConfigTable).
+		Where("ipconf_is_deleted = ?", includeDeleted).
+		Where("ipconf_type = ?", string(infraType)).
+		Where("ipconf_space_id = ?", spaceID)
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")
+	}
+	dst := new(infraProviderConfig)
+	db := dbtx.GetAccessor(ctx, i.db)
+	if err := db.GetContext(ctx, dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraprovider config %v", infraType)
+	}
+	return i.mapToInfraProviderConfig(dst)
+}
+
 func (i infraProviderConfigStore) Update(ctx context.Context, infraProviderConfig *types.InfraProviderConfig) error {
 	dbinfraProviderConfig, err := i.mapToInternalInfraProviderConfig(infraProviderConfig)
 	if err != nil {
@@ -202,8 +226,9 @@ func (i infraProviderConfigStore) Create(ctx context.Context, infraProviderConfi
 	db := dbtx.GetAccessor(ctx, i.db)
 	if err = db.QueryRowContext(ctx, sql, args...).Scan(&dbinfraProviderConfig.ID); err != nil {
 		return database.ProcessSQLErrorf(
-			ctx, err, "infraprovider config create query failed for %s", dbinfraProviderConfig.Identifier)
+			ctx, err, "infraprovider config create query failed for %s", infraProviderConfig.Identifier)
 	}
+	infraProviderConfig.ID = dbinfraProviderConfig.ID
 	return nil
 }
 

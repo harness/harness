@@ -19,7 +19,8 @@ type GitspaceEntityType string
 func (GitspaceEntityType) Enum() []interface{} { return toInterfaceSlice(gitspaceEntityTypes) }
 
 var gitspaceEntityTypes = []GitspaceEntityType{
-	GitspaceEntityTypeGitspaceConfig, GitspaceEntityTypeGitspaceInstance,
+	GitspaceEntityTypeGitspaceConfig,
+	GitspaceEntityTypeGitspaceInstance,
 }
 
 const (

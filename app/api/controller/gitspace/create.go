@@ -148,6 +148,7 @@ func (c *Controller) Create(
 	if err != nil {
 		return nil, err
 	}
+
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
 		codeRepo := types.CodeRepo{
 			URL:              in.CodeRepoURL,
@@ -178,6 +179,12 @@ func (c *Controller) Create(
 			GitspaceUser:       user,
 		}
 		gitspaceConfig.InfraProviderResource = *infraProviderResource
+
+		if err = c.settingsService.ValidateGitspaceConfigCreate(
+			ctx, *infraProviderResource, *gitspaceConfig); err != nil {
+			return err
+		}
+
 		err = c.gitspaceSvc.Create(ctx, gitspaceConfig)
 		if err != nil {
 			return fmt.Errorf("failed to create gitspace config for : %q %w", identifier, err)

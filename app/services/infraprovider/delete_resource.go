@@ -56,8 +56,10 @@ func (c *Service) DeleteResource(
 			return usererror.NewWithPayload(http.StatusForbidden, fmt.Sprintf("There are %d active gitspace "+
 				"configs for infra resource %s, expected 0", len(activeGitspaces), identifier))
 		}
-
-		return c.infraProviderResourceStore.Delete(ctx, infraProviderResource.ID)
+		if err = c.infraProviderResourceStore.Delete(ctx, infraProviderResource.ID); err != nil {
+			return fmt.Errorf("failed to delete infra provider resource %s: %w", infraProviderResource.UID, err)
+		}
+		return nil
 	}
 
 	if useTransaction {

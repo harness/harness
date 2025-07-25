@@ -53,7 +53,7 @@ func (c *Service) populateDetails(
 	}
 	infraProviderConfig.Resources = resources
 
-	setupYAML, err := c.getSetupYAML(infraProviderConfig)
+	setupYAML, err := c.GetSetupYAML(infraProviderConfig)
 	if err != nil {
 		return err
 	}
@@ -67,10 +67,9 @@ func (c *Service) getResources(
 	spacePath string,
 	infraProviderConfig *types.InfraProviderConfig,
 ) ([]types.InfraProviderResource, error) {
-	resources, err := c.infraProviderResourceStore.List(ctx, infraProviderConfig.ID, types.ListQueryFilter{})
+	resources, err := c.ListResources(ctx, infraProviderConfig.ID, types.ListQueryFilter{})
 	if err != nil {
-		return nil, fmt.Errorf("failed to find infraprovider resources for config: %q %w",
-			infraProviderConfig.Identifier, err)
+		return nil, err
 	}
 
 	var providerResources []types.InfraProviderResource
@@ -89,7 +88,20 @@ func (c *Service) getResources(
 	return providerResources, nil
 }
 
-func (c *Service) getSetupYAML(infraProviderConfig *types.InfraProviderConfig) (string, error) {
+func (c *Service) ListResources(
+	ctx context.Context,
+	configID int64,
+	filter types.ListQueryFilter,
+) ([]*types.InfraProviderResource, error) {
+	resources, err := c.infraProviderResourceStore.List(ctx, configID, filter)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find infraprovider resources for config %d: %w",
+			configID, err)
+	}
+	return resources, nil
+}
+
+func (c *Service) GetSetupYAML(infraProviderConfig *types.InfraProviderConfig) (string, error) {
 	provider, err := c.infraProviderFactory.GetInfraProvider(infraProviderConfig.Type)
 	if err != nil {
 		return "", fmt.Errorf("failed to get infra provider of type %s before getting setup yaml for infra "+

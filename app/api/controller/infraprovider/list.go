@@ -28,6 +28,7 @@ func (c *Controller) List(
 	ctx context.Context,
 	session *auth.Session,
 	spaceRef string,
+	applyACLFilter bool,
 ) ([]*types.InfraProviderConfig, error) {
 	space, err := c.spaceFinder.FindByRef(ctx, spaceRef)
 	if err != nil {
@@ -38,7 +39,8 @@ func (c *Controller) List(
 		return nil, fmt.Errorf("failed to authorize: %w", err)
 	}
 	filter := types.InfraProviderConfigFilter{
-		SpaceIDs: []int64{space.ID},
+		SpaceIDs:          []int64{space.ID},
+		ApplyResourcesACL: applyACLFilter,
 	}
 	return c.infraproviderSvc.List(ctx, &filter)
 }

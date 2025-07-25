@@ -93,6 +93,7 @@ import (
 	gitspacedeleteeventservice "github.com/harness/gitness/app/services/gitspacedeleteevent"
 	"github.com/harness/gitness/app/services/gitspaceevent"
 	"github.com/harness/gitness/app/services/gitspaceservice"
+	"github.com/harness/gitness/app/services/gitspacesettings"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/keyfetcher"
@@ -287,6 +288,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		ide.WireSet,
 		gitspaceinfraevents.WireSet,
 		gitspaceservice.WireSet,
+		gitspacesettings.WireSet,
 		gitspaceoperationsevents.WireSet,
 		cliserver.ProvideGitspaceInfraProvisionerConfig,
 		cliserver.ProvideIDEVSCodeConfig,
