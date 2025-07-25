@@ -168,3 +168,7 @@ func parseReadme(f io.Reader) (readme string, err error) {
 	}
 	return string(data), nil
 }
+
+func IsMainArtifactFile(filename string) bool {
+	return filepath.Ext(filename) == ".zip"
+}

@@ -324,6 +324,7 @@ func NewRouter(
 				Put("/upload", gopackageHandler.UploadPackage)
 			r.With(middleware.StoreArtifactInfo(gopackageHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				With(middleware.TrackDownloadStatsForGoPackage(packageHandler)).
 				Get("/*", gopackageHandler.DownloadPackageFile)
 			// TODO: Add api for regenerate package index and download latest package info file
 		})
