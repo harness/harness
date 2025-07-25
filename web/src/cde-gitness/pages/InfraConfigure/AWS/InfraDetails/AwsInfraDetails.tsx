@@ -169,7 +169,7 @@ const AwsInfraDetails = () => {
               ami_id: runner?.ami_id
             },
             gateway: {
-              machine_type: instance_type,
+              instance_type: instance_type,
               instances: parseInt(instances || '1')
             },
             vpc_cidr_block
