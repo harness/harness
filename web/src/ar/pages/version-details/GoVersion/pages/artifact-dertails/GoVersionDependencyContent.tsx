@@ -27,10 +27,10 @@ export default function GoVersionDependencyContent() {
   const { metadata } = data
 
   const dependencies = useMemo(() => {
-    const _dependencies = metadata?.dependencies || []
+    const _dependencies = metadata?.Dependencies || []
     return _dependencies.reduce((acc: IDependencyList, dep) => {
-      const { name, version } = dep
-      return [...acc, { name: name, version: version }]
+      const { Name, Version } = dep
+      return [...acc, { name: Name, version: Version }]
     }, [])
   }, [metadata])
 

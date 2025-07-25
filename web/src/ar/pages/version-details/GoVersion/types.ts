@@ -27,8 +27,8 @@ export interface GoVersionDetailsQueryParams extends VersionDetailsQueryParams {
 }
 
 export type GoArtifactDependency = {
-  name: string
-  version: string
+  Name: string
+  Version: string
 }
 
 export type LocalGoArtifactDetailConfig = {
@@ -36,10 +36,10 @@ export type LocalGoArtifactDetailConfig = {
     name: string
     version: string
     size: number
-    readme: string
+    Readme: string
     description: string
     license: string
-    dependencies: GoArtifactDependency[]
+    Dependencies: GoArtifactDependency[]
     Origin?: {
       VCS?: string
       URL?: string

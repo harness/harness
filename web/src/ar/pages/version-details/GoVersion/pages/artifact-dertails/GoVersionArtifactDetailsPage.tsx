@@ -53,7 +53,7 @@ export default function GoVersionArtifactDetailsPage() {
           iconProps={{ size: 12 }}
           panel={
             <Container>
-              <ReadmeFileContent source={metadata?.readme || getString('noReadme')} />
+              <ReadmeFileContent source={metadata?.Readme || getString('noReadme')} />
             </Container>
           }
           title={getString('versionDetails.artifactDetails.tabs.readme')}
