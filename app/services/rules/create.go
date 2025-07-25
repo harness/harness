@@ -147,13 +147,13 @@ func (s *Service) Create(ctx context.Context,
 
 	err = s.auditService.Log(ctx,
 		*principal,
-		audit.NewResource(audit.ResourceTypeBranchRule, rule.Identifier, nameKey, scopeIdentifier),
+		audit.NewResource(ruleTypeToResourceType(rule.Type), rule.Identifier, nameKey, scopeIdentifier),
 		audit.ActionCreated,
 		spacePath,
 		audit.WithNewObject(rule),
 	)
 	if err != nil {
-		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for create branch rule operation: %s", err)
+		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for create rule operation: %s", err)
 	}
 
 	rule.Users = userMap

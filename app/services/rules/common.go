@@ -19,11 +19,25 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/app/services/protection"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
 )
+
+// ruleTypeToResourceType maps a protection rule type to the correct audit.ResourceType.
+func ruleTypeToResourceType(ruleType enum.RuleType) audit.ResourceType {
+	switch ruleType {
+	case protection.TypeBranch:
+		return audit.ResourceTypeBranchRule
+	case protection.TypeTag:
+		return audit.ResourceTypeTagRule
+	case protection.TypePush:
+		return audit.ResourceTypePushRule
+	}
+	return audit.ResourceTypeBranchRule
+}
 
 func (s *Service) getRuleUserAndUserGroups(
 	ctx context.Context,

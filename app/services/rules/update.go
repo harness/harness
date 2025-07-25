@@ -157,14 +157,14 @@ func (s *Service) Update(ctx context.Context,
 	}
 	err = s.auditService.Log(ctx,
 		*principal,
-		audit.NewResource(audit.ResourceTypeBranchRule, rule.Identifier, nameKey, scopeIdentifier),
+		audit.NewResource(ruleTypeToResourceType(rule.Type), rule.Identifier, nameKey, scopeIdentifier),
 		audit.ActionUpdated,
 		paths.Parent(path),
 		audit.WithOldObject(oldRule),
 		audit.WithNewObject(rule),
 	)
 	if err != nil {
-		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for update branch rule operation: %s", err)
+		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for update rule operation: %s", err)
 	}
 
 	s.sendSSE(ctx, parentID, parentType, enum.SSETypeRuleUpdated, rule)

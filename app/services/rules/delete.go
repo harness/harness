@@ -52,7 +52,7 @@ func (s *Service) Delete(ctx context.Context,
 	err = s.auditService.Log(ctx,
 		*principal,
 		audit.NewResource(
-			audit.ResourceTypeBranchRule,
+			ruleTypeToResourceType(rule.Type),
 			rule.Identifier,
 			nameKey,
 			scopeIdentifier,
@@ -62,7 +62,7 @@ func (s *Service) Delete(ctx context.Context,
 		audit.WithOldObject(rule),
 	)
 	if err != nil {
-		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for delete branch rule operation: %s", err)
+		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for delete rule operation: %s", err)
 	}
 
 	s.sendSSE(ctx, parentID, parentType, enum.SSETypeRuleDeleted, rule)

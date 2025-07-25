@@ -39,6 +39,7 @@ const (
 	RepoPath                        = "repoPath"
 	BypassedResourceTypePullRequest = "pull_request"
 	BypassedResourceTypeBranch      = "branch"
+	BypassedResourceTypeTag         = "tag"
 	BypassedResourceTypeCommit      = "commit"
 	BypassAction                    = "bypass_action"
 	BypassActionDeleted             = "deleted"
@@ -74,6 +75,9 @@ const (
 	ResourceTypeRepository            ResourceType = "repository"
 	ResourceTypeBranchRule            ResourceType = "branch_rule"
 	ResourceTypeBranch                ResourceType = "branch"
+	ResourceTypeTag                   ResourceType = "tag"
+	ResourceTypeTagRule               ResourceType = "tag_rule"
+	ResourceTypePushRule              ResourceType = "push_rule"
 	ResourceTypePullRequest           ResourceType = "pull_request"
 	ResourceTypeRepositorySettings    ResourceType = "repository_settings"
 	ResourceTypeRegistry              ResourceType = "registry"
@@ -86,6 +90,9 @@ func (a ResourceType) Validate() error {
 	case ResourceTypeRepository,
 		ResourceTypeBranchRule,
 		ResourceTypeBranch,
+		ResourceTypeTag,
+		ResourceTypeTagRule,
+		ResourceTypePushRule,
 		ResourceTypePullRequest,
 		ResourceTypeRepositorySettings,
 		ResourceTypeRegistry,
