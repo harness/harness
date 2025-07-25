@@ -77,17 +77,27 @@ func (c *Controller) MembershipAdd(ctx context.Context,
 		return nil, fmt.Errorf("failed to find the user: %w", err)
 	}
 
+	membershipKey := types.MembershipKey{
+		SpaceID:     space.ID,
+		PrincipalID: user.ID,
+	}
+
+	_, err = c.membershipStore.Find(ctx, membershipKey)
+	if err == nil {
+		return nil, usererror.BadRequestf("User '%s' is already a member of the space", in.UserUID)
+	}
+	if !errors.Is(err, store.ErrResourceNotFound) {
+		return nil, fmt.Errorf("failed to check existing membership: %w", err)
+	}
+
 	now := time.Now().UnixMilli()
 
 	membership := types.Membership{
-		MembershipKey: types.MembershipKey{
-			SpaceID:     space.ID,
-			PrincipalID: user.ID,
-		},
-		CreatedBy: session.Principal.ID,
-		Created:   now,
-		Updated:   now,
-		Role:      in.Role,
+		MembershipKey: membershipKey,
+		CreatedBy:     session.Principal.ID,
+		Created:       now,
+		Updated:       now,
+		Role:          in.Role,
 	}
 
 	err = c.membershipStore.Create(ctx, &membership)
