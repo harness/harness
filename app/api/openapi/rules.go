@@ -53,7 +53,7 @@ type Rule struct {
 	Pattern protection.Pattern `json:"pattern"`
 }
 
-var queryParameterRuleTypes = openapi3.ParameterOrRef{
+var QueryParameterRuleTypes = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamType,
 		In:          openapi3.ParameterInQuery,
@@ -70,6 +70,8 @@ var queryParameterRuleTypes = openapi3.ParameterOrRef{
 				},
 			},
 		},
+		Style:   ptr.String(string(openapi3.EncodingStyleForm)),
+		Explode: ptr.Bool(true),
 	},
 }
 
@@ -159,7 +161,7 @@ func rulesOperations(reflector *openapi3.Reflector) {
 	opSpaceRuleList.WithTags("space")
 	opSpaceRuleList.WithMapOfAnything(map[string]interface{}{"operationId": "spaceRuleList"})
 	opSpaceRuleList.WithParameters(
-		queryParameterQueryRuleList, queryParameterRuleTypes,
+		queryParameterQueryRuleList, QueryParameterRuleTypes,
 		queryParameterOrder, queryParameterSortRuleList,
 		QueryParameterPage, QueryParameterLimit, QueryParameterInherited)
 	_ = reflector.SetRequest(&opSpaceRuleList, &struct {
@@ -241,7 +243,7 @@ func rulesOperations(reflector *openapi3.Reflector) {
 	opRepoRuleList.WithTags("repository")
 	opRepoRuleList.WithMapOfAnything(map[string]interface{}{"operationId": "repoRuleList"})
 	opRepoRuleList.WithParameters(
-		queryParameterQueryRuleList, queryParameterRuleTypes,
+		queryParameterQueryRuleList, QueryParameterRuleTypes,
 		queryParameterOrder, queryParameterSortRuleList,
 		QueryParameterPage, QueryParameterLimit, QueryParameterInherited)
 	_ = reflector.SetRequest(&opRepoRuleList, &struct {
