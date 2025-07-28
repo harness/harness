@@ -21,10 +21,7 @@ import (
 
 type GitspaceCodeRepoType string
 
-func (p *GitspaceCodeRepoType) Enum() []interface{} {
-	if p == nil {
-		return nil
-	}
+func (p GitspaceCodeRepoType) Enum() []interface{} {
 	return toInterfaceSlice(codeRepoTypes)
 }
 

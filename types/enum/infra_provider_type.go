@@ -21,10 +21,7 @@ import (
 
 type InfraProviderType string
 
-func (p *InfraProviderType) Enum() []interface{} {
-	if p == nil {
-		return nil
-	}
+func (p InfraProviderType) Enum() []interface{} {
 	return toInterfaceSlice(providerTypes)
 }
 

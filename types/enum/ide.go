@@ -21,10 +21,7 @@ import (
 
 type IDEType string
 
-func (i *IDEType) Enum() []interface{} {
-	if i == nil {
-		return nil
-	}
+func (i IDEType) Enum() []interface{} {
 	return toInterfaceSlice(ideTypes)
 }
 
