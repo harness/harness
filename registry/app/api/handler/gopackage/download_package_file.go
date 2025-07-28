@@ -39,7 +39,10 @@ func (h *handler) DownloadPackageFile(
 	path := r.PathValue("*")
 	image, version, filename, err := utils.GetArtifactInfoFromURL(path)
 	if err != nil {
-		h.handleGoPackageAPIError(w, r, fmt.Errorf("failed to get artifact info from URL: %w", err))
+		http.Error(w,
+			fmt.Sprintf("image and version not found in path %s: %s", path, err.Error()),
+			http.StatusNotFound, // go client need 404 for incorrect path
+		)
 		return
 	}
 
