@@ -6697,7 +6697,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TypesBranchTable'
+                items:
+                  $ref: '#/components/schemas/TypesBranchTable'
+                type: array
           description: OK
         '400':
           content:
@@ -6965,6 +6967,7 @@ paths:
           schema:
             type: string
         - description: The types of rules to include.
+          explode: true
           in: query
           name: type
           required: false
@@ -6976,6 +6979,7 @@ paths:
                 - push
               type: string
             type: array
+          style: form
         - description: The order of the output.
           in: query
           name: order
@@ -10949,6 +10953,7 @@ paths:
           schema:
             type: string
         - description: The types of rules to include.
+          explode: true
           in: query
           name: type
           required: false
@@ -10960,6 +10965,7 @@ paths:
                 - push
               type: string
             type: array
+          style: form
         - description: The order of the output.
           in: query
           name: order
@@ -12313,37 +12319,6 @@ paths:
       tags:
         - user
   /user/favorite:
-    delete:
-      operationId: deleteFavorite
-      responses:
-        '204':
-          description: No Content
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Unauthorized
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Forbidden
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Not Found
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Internal Server Error
-      tags:
-        - user
     post:
       operationId: createFavorite
       requestBody:
@@ -12370,6 +12345,63 @@ paths:
               schema:
                 $ref: '#/components/schemas/UsererrorError'
           description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - user
+  /user/favorite/{resource_id}:
+    delete:
+      operationId: deleteFavorite
+      parameters:
+        - description: The type of the resource to be unfavorited.
+          in: query
+          name: resource_type
+          required: false
+          schema:
+            enum:
+              - SPACE
+              - REPOSITORY
+              - USER
+              - SERVICEACCOUNT
+              - SERVICE
+              - PIPELINE
+              - SECRET
+              - CONNECTOR
+              - TEMPLATE
+              - GITSPACE
+              - INFRAPROVIDER
+              - REGISTRY
+            type: string
+        - in: path
+          name: resource_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: No Content
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
         '500':
           content:
             application/json:
@@ -12434,6 +12466,7 @@ paths:
             items:
               enum:
                 - auth
+                - auth_or_sign
                 - sign
               type: string
             type: array
@@ -12812,16 +12845,6 @@ components:
         - reset
       type: string
     EnumGitspaceCodeRepoType:
-      enum:
-        - github
-        - gitlab
-        - harness_code
-        - bitbucket
-        - unknown
-        - gitness
-        - gitlab_on_prem
-        - bitbucket_server
-        - github_enterprise
       type: string
     EnumGitspaceEntityType:
       enum:
@@ -12910,25 +12933,8 @@ components:
         - cleaning
       type: string
     EnumIDEType:
-      enum:
-        - vs_code
-        - vs_code_web
-        - intellij
-        - pycharm
-        - goland
-        - webstorm
-        - clion
-        - phpstorm
-        - rubymine
-        - rider
       type: string
     EnumInfraProviderType:
-      enum:
-        - docker
-        - harness_gcp
-        - harness_cloud
-        - hybrid_vm_gcp
-        - hybrid_vm_aws
       type: string
     EnumLabelColor:
       enum:
@@ -12986,6 +12992,7 @@ components:
     EnumPublicKeyUsage:
       enum:
         - auth
+        - auth_or_sign
         - sign
       type: string
     EnumPullReqActivityKind:
@@ -15127,6 +15134,10 @@ components:
           type: string
         instance:
           $ref: '#/components/schemas/TypesGitspaceInstance'
+        is_marked_for_reset:
+          type: boolean
+        is_marked_for_soft_reset:
+          type: boolean
         log_key:
           type: string
         name:

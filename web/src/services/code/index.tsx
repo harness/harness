@@ -49,16 +49,7 @@ export type EnumGitspaceAccessType = 'jwt_token' | 'user_credentials' | 'ssh_key
 
 export type EnumGitspaceActionType = 'start' | 'stop' | 'reset'
 
-export type EnumGitspaceCodeRepoType =
-  | 'github'
-  | 'gitlab'
-  | 'harness_code'
-  | 'bitbucket'
-  | 'unknown'
-  | 'gitness'
-  | 'gitlab_on_prem'
-  | 'bitbucket_server'
-  | 'github_enterprise'
+export type EnumGitspaceCodeRepoType = string
 
 export type EnumGitspaceEntityType = 'gitspace_config' | 'gitspace_instance'
 
@@ -129,19 +120,9 @@ export type EnumGitspaceStateType =
   | 'stopping'
   | 'cleaning'
 
-export type EnumIDEType =
-  | 'vs_code'
-  | 'vs_code_web'
-  | 'intellij'
-  | 'pycharm'
-  | 'goland'
-  | 'webstorm'
-  | 'clion'
-  | 'phpstorm'
-  | 'rubymine'
-  | 'rider'
+export type EnumIDEType = string
 
-export type EnumInfraProviderType = 'docker' | 'harness_gcp' | 'harness_cloud' | 'hybrid_vm_gcp' | 'hybrid_vm_aws'
+export type EnumInfraProviderType = string
 
 export type EnumLabelColor =
   | 'blue'
@@ -172,7 +153,7 @@ export type EnumPrincipalType = 'service' | 'serviceaccount' | 'user'
 
 export type EnumPublicKeyScheme = 'pgp' | 'ssh'
 
-export type EnumPublicKeyUsage = 'auth' | 'sign'
+export type EnumPublicKeyUsage = 'auth' | 'auth_or_sign' | 'sign'
 
 export type EnumPullReqActivityKind = 'change-comment' | 'comment' | 'system'
 
@@ -1372,6 +1353,8 @@ export interface TypesGitspaceConfig {
   identifier?: string
   initialize_log_key?: string
   instance?: TypesGitspaceInstance
+  is_marked_for_reset?: boolean
+  is_marked_for_soft_reset?: boolean
   log_key?: string
   name?: string
   resource?: TypesInfraProviderResource
@@ -6860,13 +6843,13 @@ export interface PrCandidatesPathParams {
 }
 
 export type PrCandidatesProps = Omit<
-  GetProps<TypesBranchTable, UsererrorError, PrCandidatesQueryParams, PrCandidatesPathParams>,
+  GetProps<TypesBranchTable[], UsererrorError, PrCandidatesQueryParams, PrCandidatesPathParams>,
   'path'
 > &
   PrCandidatesPathParams
 
 export const PrCandidates = ({ repo_ref, ...props }: PrCandidatesProps) => (
-  <Get<TypesBranchTable, UsererrorError, PrCandidatesQueryParams, PrCandidatesPathParams>
+  <Get<TypesBranchTable[], UsererrorError, PrCandidatesQueryParams, PrCandidatesPathParams>
     path={`/repos/${repo_ref}/pullreq/candidates`}
     base={getConfig('code/api/v1')}
     {...props}
@@ -6874,13 +6857,13 @@ export const PrCandidates = ({ repo_ref, ...props }: PrCandidatesProps) => (
 )
 
 export type UsePrCandidatesProps = Omit<
-  UseGetProps<TypesBranchTable, UsererrorError, PrCandidatesQueryParams, PrCandidatesPathParams>,
+  UseGetProps<TypesBranchTable[], UsererrorError, PrCandidatesQueryParams, PrCandidatesPathParams>,
   'path'
 > &
   PrCandidatesPathParams
 
 export const usePrCandidates = ({ repo_ref, ...props }: UsePrCandidatesProps) =>
-  useGet<TypesBranchTable, UsererrorError, PrCandidatesQueryParams, PrCandidatesPathParams>(
+  useGet<TypesBranchTable[], UsererrorError, PrCandidatesQueryParams, PrCandidatesPathParams>(
     (paramsInPath: PrCandidatesPathParams) => `/repos/${paramsInPath.repo_ref}/pullreq/candidates`,
     { base: getConfig('code/api/v1'), pathParams: { repo_ref }, ...props }
   )
@@ -10782,25 +10765,6 @@ export const useUpdateUser = (props: UseUpdateUserProps) =>
     ...props
   })
 
-export type DeleteFavoriteProps = Omit<MutateProps<void, UsererrorError, void, void, void>, 'path' | 'verb'>
-
-export const DeleteFavorite = (props: DeleteFavoriteProps) => (
-  <Mutate<void, UsererrorError, void, void, void>
-    verb="DELETE"
-    path={`/user/favorite`}
-    base={getConfig('code/api/v1')}
-    {...props}
-  />
-)
-
-export type UseDeleteFavoriteProps = Omit<UseMutateProps<void, UsererrorError, void, void, void>, 'path' | 'verb'>
-
-export const useDeleteFavorite = (props: UseDeleteFavoriteProps) =>
-  useMutate<void, UsererrorError, void, void, void>('DELETE', `/user/favorite`, {
-    base: getConfig('code/api/v1'),
-    ...props
-  })
-
 export type CreateFavoriteProps = Omit<
   MutateProps<TypesFavoriteResource, UsererrorError, void, TypesFavoriteResource, void>,
   'path' | 'verb'
@@ -10822,6 +10786,50 @@ export type UseCreateFavoriteProps = Omit<
 
 export const useCreateFavorite = (props: UseCreateFavoriteProps) =>
   useMutate<TypesFavoriteResource, UsererrorError, void, TypesFavoriteResource, void>('POST', `/user/favorite`, {
+    base: getConfig('code/api/v1'),
+    ...props
+  })
+
+export interface DeleteFavoriteQueryParams {
+  /**
+   * The type of the resource to be unfavorited.
+   */
+  resource_type?:
+    | 'SPACE'
+    | 'REPOSITORY'
+    | 'USER'
+    | 'SERVICEACCOUNT'
+    | 'SERVICE'
+    | 'PIPELINE'
+    | 'SECRET'
+    | 'CONNECTOR'
+    | 'TEMPLATE'
+    | 'GITSPACE'
+    | 'INFRAPROVIDER'
+    | 'REGISTRY'
+}
+
+export type DeleteFavoriteProps = Omit<
+  MutateProps<void, UsererrorError, DeleteFavoriteQueryParams, number, void>,
+  'path' | 'verb'
+>
+
+export const DeleteFavorite = (props: DeleteFavoriteProps) => (
+  <Mutate<void, UsererrorError, DeleteFavoriteQueryParams, number, void>
+    verb="DELETE"
+    path={`/user/favorite`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseDeleteFavoriteProps = Omit<
+  UseMutateProps<void, UsererrorError, DeleteFavoriteQueryParams, number, void>,
+  'path' | 'verb'
+>
+
+export const useDeleteFavorite = (props: UseDeleteFavoriteProps) =>
+  useMutate<void, UsererrorError, DeleteFavoriteQueryParams, number, void>('DELETE', `/user/favorite`, {
     base: getConfig('code/api/v1'),
     ...props
   })
@@ -10850,7 +10858,7 @@ export interface ListPublicKeyQueryParams {
   /**
    * The public key usage.
    */
-  public_key_usage?: ('auth' | 'sign')[]
+  public_key_usage?: ('auth' | 'auth_or_sign' | 'sign')[]
   /**
    * The public key scheme.
    */

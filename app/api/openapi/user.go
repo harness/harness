@@ -31,6 +31,11 @@ type tokensRequest struct {
 	Identifier string `path:"token_identifier"`
 }
 
+type favoriteRequest struct {
+	ResourceID   int64  `path:"resource_id"`
+	ResourceType string `query:"resource_type"`
+}
+
 var queryParameterMembershipSpaces = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamQuery,
@@ -126,6 +131,21 @@ var queryParameterSchemePublicKey = openapi3.ParameterOrRef{
 						Enum: enum.PublicKeyScheme("").Enum(),
 					},
 				},
+			},
+		},
+	},
+}
+
+var QueryParameterResourceType = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamResourceType,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The type of the resource to be unfavorited."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeString),
+				Enum: enum.ResourceType("").Enum(),
 			},
 		},
 	},
@@ -251,11 +271,12 @@ func buildUser(reflector *openapi3.Reflector) {
 	opDeleteFavorite := openapi3.Operation{}
 	opDeleteFavorite.WithTags("user")
 	opDeleteFavorite.WithMapOfAnything(map[string]interface{}{"operationId": "deleteFavorite"})
-	_ = reflector.SetRequest(&opDeleteFavorite, new(types.FavoriteResource), http.MethodDelete)
+	opDeleteFavorite.WithParameters(QueryParameterResourceType)
+	_ = reflector.SetRequest(&opDeleteFavorite, new(favoriteRequest), http.MethodDelete)
 	_ = reflector.SetJSONResponse(&opDeleteFavorite, nil, http.StatusNoContent)
 	_ = reflector.SetJSONResponse(&opDeleteFavorite, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opDeleteFavorite, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opDeleteFavorite, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.SetJSONResponse(&opDeleteFavorite, new(usererror.Error), http.StatusInternalServerError)
-	_ = reflector.Spec.AddOperation(http.MethodDelete, "/user/favorite", opDeleteFavorite)
+	_ = reflector.Spec.AddOperation(http.MethodDelete, "/user/favorite/{resource_id}", opDeleteFavorite)
 }

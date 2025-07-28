@@ -44,27 +44,31 @@ const FavoriteStar: React.FC<FavoriteStarProps> = props => {
   })
   const { mutate: deleteFavoritePromise } = useMutate<TypesFavoriteResource>({
     verb: 'DELETE',
-    path: `/api/v1/user/favorite`
+    path: `/api/v1/user/favorite/${resourceId}`,
+    queryParams: {
+      resource_type: resourceType
+    }
   })
 
   const toggleFavorite = async () => {
     setAPIInProgress(true)
-    const promise = isFavorite ? deleteFavoritePromise : createFavoritePromise
-    await promise({
-      resource_id: resourceId,
-      resource_type: resourceType
-    })
-      .then(() => {
-        setIsFavorite(!isFavorite)
-        onChange?.(!isFavorite)
-      })
-      .catch(() => {
-        showError(getString(isFavorite ? 'favorite.errorUnFavorite' : 'favorite.errorFavorite'))
-        setIsFavorite(isFavorite)
-      })
-      .finally(() => {
-        setAPIInProgress(false)
-      })
+    try {
+      if (isFavorite) {
+        await deleteFavoritePromise({})
+      } else {
+        await createFavoritePromise({
+          resource_id: resourceId,
+          resource_type: resourceType
+        })
+      }
+      setIsFavorite(!isFavorite)
+      onChange?.(!isFavorite)
+    } catch {
+      showError(getString(isFavorite ? 'favorite.errorUnFavorite' : 'favorite.errorFavorite'))
+      setIsFavorite(isFavorite)
+    } finally {
+      setAPIInProgress(false)
+    }
   }
 
   const handleClick = (e: React.MouseEvent<Element, MouseEvent>): void => {

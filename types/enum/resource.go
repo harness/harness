@@ -14,6 +14,48 @@
 
 package enum
 
+// ResourceType represents the different types of resources that can be guarded with permissions.
+type ResourceType string
+
+const (
+	ResourceTypeSpace          ResourceType = "SPACE"
+	ResourceTypeRepo           ResourceType = "REPOSITORY"
+	ResourceTypeUser           ResourceType = "USER"
+	ResourceTypeServiceAccount ResourceType = "SERVICEACCOUNT"
+	ResourceTypeService        ResourceType = "SERVICE"
+	ResourceTypePipeline       ResourceType = "PIPELINE"
+	ResourceTypeSecret         ResourceType = "SECRET"
+	ResourceTypeConnector      ResourceType = "CONNECTOR"
+	ResourceTypeTemplate       ResourceType = "TEMPLATE"
+	ResourceTypeGitspace       ResourceType = "GITSPACE"
+	ResourceTypeInfraProvider  ResourceType = "INFRAPROVIDER"
+	ResourceTypeRegistry       ResourceType = "REGISTRY"
+)
+
+func (ResourceType) Enum() []interface{} {
+	return toInterfaceSlice(resourceTypes)
+}
+func (r ResourceType) Sanitize() (ResourceType, bool) { return Sanitize(r, GetAllResourceTypes) }
+func GetAllResourceTypes() ([]ResourceType, ResourceType) {
+	return resourceTypes, ""
+}
+
+// All valid resource types
+var resourceTypes = sortEnum([]ResourceType{
+	ResourceTypeSpace,
+	ResourceTypeRepo,
+	ResourceTypeUser,
+	ResourceTypeServiceAccount,
+	ResourceTypeService,
+	ResourceTypePipeline,
+	ResourceTypeSecret,
+	ResourceTypeConnector,
+	ResourceTypeTemplate,
+	ResourceTypeGitspace,
+	ResourceTypeInfraProvider,
+	ResourceTypeRegistry,
+})
+
 // ParentResourceType defines the different types of parent resources.
 type ParentResourceType string
 

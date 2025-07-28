@@ -15,7 +15,6 @@
 package user
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/user"
@@ -30,14 +29,19 @@ func HandleDeleteFavorite(userCtrl *user.Controller) http.HandlerFunc {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
 
-		in := new(types.FavoriteResource)
-		err := json.NewDecoder(r.Body).Decode(in)
+		resourceID, err := request.GetResourceIDFromPath(r)
 		if err != nil {
-			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
+			render.BadRequest(ctx, w)
 			return
 		}
 
-		err = userCtrl.DeleteFavorite(ctx, session, in)
+		resourceType, err := request.ParseResourceType(r)
+		if err != nil {
+			render.BadRequestf(ctx, w, "Invalid query param: %s.", err)
+			return
+		}
+
+		err = userCtrl.DeleteFavorite(ctx, session, &types.FavoriteResource{Type: resourceType, ID: resourceID})
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
