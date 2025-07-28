@@ -80,6 +80,12 @@ export const HYBRID_VM_GCP = 'hybrid_vm_gcp'
 export const HARNESS_GCP = 'harness_gcp'
 export const HYBRID_VM_AWS = 'hybrid_vm_aws'
 
+export const INFRA_PROVIDER_DISPLAY_NAMES: Record<string, string> = {
+  [HARNESS_GCP]: 'Harness Hosted Infra',
+  [HYBRID_VM_GCP]: 'GCP Hybrid Infra',
+  [HYBRID_VM_AWS]: 'AWS Hybrid Infra'
+}
+
 export interface ideType {
   label: keyof StringsMap
   value: string

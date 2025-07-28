@@ -42,8 +42,8 @@ gitspaceUpdateSuccess: Gitspace updated successfully
 regionValidationMessage: Region is required
 repoValidationMessage: Repository is required
 gitspaceNameValidation: New Gitspace name must not be blank
-gitspaceNameMaxLengthValidation: "Name cannot exceed 34 characters"
-gitspaceNameFormatValidation: "Name can contain letters, numbers, hyphens, underscores, and question marks, and must start and end with a letter or number."
+gitspaceNameMaxLengthValidation: 'Name cannot exceed 34 characters'
+gitspaceNameFormatValidation: 'Name can contain letters, numbers, hyphens, underscores, and question marks, and must start and end with a letter or number.'
 branchValidationMessage: Branch is required
 machineValidationMessage: Machine Type is required
 sshValidationMessage: SSH Key is required
@@ -95,6 +95,15 @@ settings:
     vsCode: By Microsoft
     jetbrains: By JetBrains
   other: Other
+  regions:
+    availableCloudRegions: Available Cloud Regions
+    availableCloudRegionsDesc: Customize which IDEs will be available while creating Gitspaces
+    regionsAvailable: regions available
+    selectRegionsDesc: Select which regions and machines will be available to create a Gitspace
+    region: Region
+    machinesSelected: machines selected
+    selectMachineTypes: Select which machine types will be available to create a Gitspace
+    selectAllMachineTypes: Select all machine types
 delegate:
   DelegateSelector: Delegate Selector
 gitspaceInfraHome:

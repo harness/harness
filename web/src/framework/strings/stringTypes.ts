@@ -1618,6 +1618,14 @@ export interface StringsMap {
   'cde.settings.providers.github': string
   'cde.settings.providers.gitlab': string
   'cde.settings.providers.other': string
+  'cde.settings.regions.availableCloudRegions': string
+  'cde.settings.regions.availableCloudRegionsDesc': string
+  'cde.settings.regions.machinesSelected': string
+  'cde.settings.regions.region': string
+  'cde.settings.regions.regionsAvailable': string
+  'cde.settings.regions.selectAllMachineTypes': string
+  'cde.settings.regions.selectMachineTypes': string
+  'cde.settings.regions.selectRegionsDesc': string
   'cde.settings.saveSuccess': string
   'cde.settings.selectAllCodeEditors': string
   'cde.settings.selectAllGitProviders': string

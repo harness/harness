@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React from 'react'
 import {
   Breadcrumbs,
   Container,
@@ -8,109 +8,36 @@ import {
   Tabs,
   Button,
   ButtonVariation,
-  useToaster,
   PageSpinner,
   PageError
 } from '@harnessio/uicore'
 import { Formik, Form } from 'formik'
 import { FontVariation } from '@harnessio/design-system'
-import { useFindGitspaceSettings, useUpsertGitspaceSettings, TypesGitspaceSettingsData } from 'services/cde'
-import { scmOptionsCDE, SCMType } from 'cde-gitness/pages/GitspaceCreate/CDECreateGitspace'
-import { getIDETypeOptions, IDEOption } from 'cde-gitness/constants'
 import { routes } from 'cde-gitness/RouteDefinitions'
-import { getErrorMessage } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
+import { useAdminSettings } from './hooks/useAdminSettings'
 import GitProviders from './GitProviders/GitProviders'
 import CodeEditors from './CodeEditors/CodeEditors'
+import CloudRegions from './CloudRegions/CloudRegions'
 import css from './AdminSettings.module.scss'
-
-interface AdminSettingsFormValues {
-  gitProviders: {
-    [key: string]: boolean
-  }
-  codeEditors: {
-    [key: string]: boolean
-  }
-}
 
 const AdminSettingsPage = () => {
   const { getString } = useStrings()
-  const { showSuccess, showError } = useToaster()
   const { accountInfo } = useAppContext()
 
   const {
-    data: settings,
-    loading: loadingSettings,
-    error: errorSettings,
-    refetch
-  } = useFindGitspaceSettings({
-    accountIdentifier: accountInfo?.identifier
-  })
-
-  const { mutate: upsertSettings } = useUpsertGitspaceSettings({
-    accountIdentifier: accountInfo?.identifier
-  })
-
-  const tabOptions = {
-    gitProviders: 'git-providers',
-    codeEditors: 'code-editors',
-    cloudRegions: 'cloud-regions',
-    gitspaceImages: 'gitspace-images'
-  }
-
-  const [selectedTab, setSelectedTab] = useState(tabOptions.gitProviders)
-
-  const availableEditors = useMemo(() => getIDETypeOptions(getString), [getString])
-
-  const initialValues: AdminSettingsFormValues = {
-    gitProviders: {
-      ...scmOptionsCDE.reduce((acc, provider: SCMType) => {
-        acc[provider.value] = true
-        return acc
-      }, {} as { [key: string]: boolean })
-    },
-    codeEditors: {
-      ...availableEditors.reduce((acc: { [key: string]: boolean }, editor: IDEOption) => {
-        acc[editor.value] = true
-        return acc
-      }, {} as { [key: string]: boolean })
-    }
-  }
-
-  const handleSave = async (values: AdminSettingsFormValues) => {
-    const allProviders = scmOptionsCDE.map(p => p.value)
-    const deniedProviders = allProviders.filter(provider => !values.gitProviders[provider])
-
-    const allEditors = availableEditors.map((editor: IDEOption) => editor.value)
-    const deniedEditors = allEditors.filter(editor => !values.codeEditors[editor])
-
-    const payload: TypesGitspaceSettingsData = {
-      ...settings?.settings,
-      gitspace_config: {
-        ...settings?.settings?.gitspace_config,
-        scm: {
-          access_list: {
-            mode: 'deny',
-            list: deniedProviders
-          }
-        },
-        ide: {
-          access_list: {
-            mode: 'deny',
-            list: deniedEditors
-          }
-        }
-      }
-    }
-
-    try {
-      await upsertSettings(payload)
-      showSuccess(getString('cde.settings.saveSuccess'))
-    } catch (err) {
-      showError(getErrorMessage(err))
-    }
-  }
+    settings,
+    tabs,
+    initialValues,
+    selectedTab,
+    loadingSettings,
+    errorSettings,
+    handleSave,
+    handleTabChange,
+    refetch,
+    loadingUpsert
+  } = useAdminSettings()
 
   return (
     <Formik initialValues={initialValues} onSubmit={handleSave} enableReinitialize>
@@ -143,7 +70,7 @@ const AdminSettingsPage = () => {
               />
             }
           />
-          <Page.Body>
+          <Page.Body loading={loadingUpsert}>
             {loadingSettings ? (
               <PageSpinner />
             ) : errorSettings ? (
@@ -153,31 +80,18 @@ const AdminSettingsPage = () => {
                 <Tabs
                   id={'adminSettingsTabs'}
                   selectedTabId={selectedTab}
-                  onChange={(tabId: string) => setSelectedTab(tabId)}
-                  tabList={[
-                    {
-                      id: tabOptions.gitProviders,
-                      title: getString('cde.settings.gitProviders'),
-                      panel: <GitProviders settings={settings} />
-                    },
-                    {
-                      id: tabOptions.codeEditors,
-                      title: getString('cde.settings.codeEditors'),
-                      panel: <CodeEditors settings={settings} />
-                    },
-                    {
-                      id: tabOptions.cloudRegions,
-                      title: getString('cde.settings.cloudRegionsAndMachineTypes'),
-                      disabled: true,
-                      panel: <></>
-                    },
-                    {
-                      id: tabOptions.gitspaceImages,
-                      title: getString('cde.settings.gitspaceImages'),
-                      disabled: true,
-                      panel: <></>
-                    }
-                  ]}
+                  onChange={handleTabChange}
+                  tabList={tabs.map(tab => ({
+                    id: tab.id,
+                    title: tab.title,
+                    panel: (
+                      <>
+                        {tab.id === 'gitProviders' && <GitProviders settings={settings} />}
+                        {tab.id === 'codeEditors' && <CodeEditors settings={settings} />}
+                        {tab.id === 'cloudRegions' && <CloudRegions settings={settings} />}
+                      </>
+                    )
+                  }))}
                 />
               </Container>
             )}
