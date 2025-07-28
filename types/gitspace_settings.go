@@ -43,29 +43,6 @@ type GitspaceSettings struct {
 	Created      int64                     `json:"created,omitempty"`
 	Updated      int64                     `json:"updated,omitempty"`
 }
-
-type GitspaceSettingsData struct {
-	// Constraints on what user can choose
-	GitspaceConfigSettings *GitspaceConfigSettings                          `json:"gitspace_config,omitempty"`
-	InfraProviderSettings  map[enum.InfraProviderType]InfraProviderSettings `json:"infra_provider,omitempty"`
-}
-
-type GitspaceSettingsResponse struct {
-	Settings          GitspaceSettingsData `json:"settings"`
-	AvailableSettings AvailableSettings    `json:"available_settings"`
-	SpacePath         string               `json:"space_path"`
-	Created           int64                `json:"created"`
-	Updated           int64                `json:"updated"`
-}
-
-type AvailableSettings struct {
-	InfraProviderResources map[enum.InfraProviderType][]GitspaceRegionMachines `json:"infra_provider_resources,omitempty"` //nolint:lll
-}
-type GitspaceRegionMachines struct {
-	Region       string                  `json:"region"`
-	MachineTypes []InfraProviderResource `json:"machine_types"`
-}
-
 type GitspaceSettingsCriteria map[string]interface{}
 
 var ApplyAlwaysToSpaceCriteria = GitspaceSettingsCriteria{}
