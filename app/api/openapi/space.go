@@ -224,6 +224,20 @@ var queryParameterOnlyFavorites = openapi3.ParameterOrRef{
 	},
 }
 
+var QueryParameterQueryUsergroup = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamQuery,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The substring which is used to filter usergroups by their identifier."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeString),
+			},
+		},
+	},
+}
+
 //nolint:funlen // api spec generation no need for checking func complexity
 func spaceOperations(reflector *openapi3.Reflector) {
 	opCreate := openapi3.Operation{}
@@ -747,4 +761,16 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opGetUsageMetrics, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opGetUsageMetrics, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{space_ref}/usage/metric", opGetUsageMetrics)
+
+	opUsergroups := openapi3.Operation{}
+	opUsergroups.WithTags("space")
+	opUsergroups.WithMapOfAnything(map[string]interface{}{"operationId": "listUsergroups"})
+	opUsergroups.WithParameters(QueryParameterQueryUsergroup, QueryParameterPage, QueryParameterLimit)
+	_ = reflector.SetRequest(&opUsergroups, new(spaceRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opUsergroups, new([]*types.UserGroupInfo), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opUsergroups, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opUsergroups, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opUsergroups, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opUsergroups, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{space_ref}/usergroups", opUsergroups)
 }
