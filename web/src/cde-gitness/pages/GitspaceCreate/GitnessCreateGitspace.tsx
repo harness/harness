@@ -40,7 +40,7 @@ import { ThirdPartyRepoImportForm } from 'cde-gitness/components/ThirdPartyRepoI
 import { CDEIDESelect } from 'cde-gitness/components/CDEIDESelect/CDEIDESelect'
 import { gitnessFormInitialValues } from './GitspaceCreate.constants'
 import { validateGitnessForm } from './GitspaceCreate.utils'
-import { generateGitspaceName, getIdenifierFromName } from '../../utils/nameGenerator.utils'
+import { generateGitspaceName, getIdentifierFromName } from '../../utils/nameGenerator.utils'
 
 import css from './GitspaceCreate.module.scss'
 export const GitnessCreateGitspace = () => {
@@ -57,7 +57,7 @@ export const GitnessCreateGitspace = () => {
     <Formik
       onSubmit={async data => {
         try {
-          const payload = { ...data, identifier: getIdenifierFromName(data.name) }
+          const payload = { ...data, identifier: getIdentifierFromName(data.name) }
           const response = await mutate({
             ...payload,
             space_ref: space

@@ -43,7 +43,7 @@ regionValidationMessage: Region is required
 repoValidationMessage: Repository is required
 gitspaceNameValidation: New Gitspace name must not be blank
 gitspaceNameMaxLengthValidation: 'Name cannot exceed 34 characters'
-gitspaceNameFormatValidation: 'Name can contain letters, numbers, hyphens, underscores, and question marks, and must start and end with a letter or number.'
+gitspaceNameFormatValidation: 'Name can contain letters, numbers, hyphens, underscores, and spaces, and must start and end with a letter or number.'
 branchValidationMessage: Branch is required
 machineValidationMessage: Machine Type is required
 sshValidationMessage: SSH Key is required

@@ -52,7 +52,7 @@ import { useQueryParams } from 'hooks/useQueryParams'
 import { CDEUnknownSCM } from 'cde-gitness/components/CDEAnyGitImport/CDEUnknownSCM'
 import { gitnessFormInitialValues } from './GitspaceCreate.constants'
 import { validateGitnessForm } from './GitspaceCreate.utils'
-import { generateGitspaceName, getIdenifierFromName } from '../../utils/nameGenerator.utils'
+import { generateGitspaceName, getIdentifierFromName } from '../../utils/nameGenerator.utils'
 import css from './GitspaceCreate.module.scss'
 
 export interface SCMType {
@@ -147,7 +147,7 @@ export const CDECreateGitspace = () => {
     <Formik
       onSubmit={async data => {
         try {
-          const payload = { ...data, identifier: getIdenifierFromName(data.name) }
+          const payload = { ...data, identifier: getIdentifierFromName(data.name) }
           const response = await mutate({
             ...omit(payload, 'metadata'),
             space_ref: space,

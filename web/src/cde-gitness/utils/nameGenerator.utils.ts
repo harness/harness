@@ -338,7 +338,8 @@ export function generateGitspaceName(): string {
   return `${adjective}-${superhero}-${hash}`
 }
 
-export function getIdenifierFromName(name?: string) {
-  const processed = name?.replace(/(?!^)-+(?!$)/g, '')
-  return processed
+export function getIdentifierFromName(name?: string) {
+  if (!name) return name
+  const filteredName = name.replace(/[^a-zA-Z0-9-]/g, '')
+  return filteredName
 }

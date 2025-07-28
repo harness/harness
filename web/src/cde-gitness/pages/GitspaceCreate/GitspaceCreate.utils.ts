@@ -30,7 +30,7 @@ export const validateGitnessForm = (getString: UseStringsReturn['getString'], is
       .trim()
       .required(getString('cde.gitspaceNameValidation'))
       .max(34, getString('cde.gitspaceNameMaxLengthValidation'))
-      .matches(/^[a-zA-Z0-9][a-zA-Z0-9_?-]*[a-zA-Z0-9]$|^[a-zA-Z0-9]$/, getString('cde.gitspaceNameFormatValidation')),
+      .matches(/^[a-zA-Z0-9][a-zA-Z0-9_ -]*[a-zA-Z0-9]$|^[a-zA-Z0-9]$/, getString('cde.gitspaceNameFormatValidation')),
     ssh_token_identifier: yup.string().when('ide', {
       is: ide => {
         const selectedIDE = getIDEOption(ide, getString)

@@ -39,6 +39,7 @@ import (
 const (
 	defaultResourceIdentifier               = "default"
 	maxGitspaceConfigIdentifierPrefixLength = 50
+	suffixLen                               = 6
 )
 
 var (
@@ -278,9 +279,6 @@ func wrapString(str string) *string {
 }
 
 func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
-	if err := check.Identifier(in.Identifier); err != nil {
-		return err
-	}
 	if err := check.Identifier(in.ResourceIdentifier); err != nil {
 		return err
 	}
@@ -293,30 +291,32 @@ func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
 }
 
 func buildIdentifier(identifier string) (string, error) {
-	const suffixLen = 6
+	toLower := strings.ToLower(identifier)
+
+	err := validateIdentifier(toLower)
+	if err != nil {
+		return "", err
+	}
 
 	suffixUID, err := gonanoid.Generate(gitspace.AllowedUIDAlphabet, suffixLen)
 	if err != nil {
-		return "", fmt.Errorf("could not generate UID for gitspace config: %q %w", identifier, err)
+		return "", fmt.Errorf("could not generate UID for gitspace config: %q %w", toLower, err)
 	}
 
-	sanitized := sanitizeIdentifier(strings.ToLower(identifier))
-	return sanitized + "-" + suffixUID, nil
+	return toLower + "-" + suffixUID, nil
 }
 
-func sanitizeIdentifier(identifier string) string {
-	// Replace invalid characters with hyphen (keep existing hyphens)
-	identifier = regexp.MustCompile(`[^a-z0-9-]`).ReplaceAllString(identifier, "-")
-
-	// Trim leading non-letters
-	for len(identifier) > 0 && (identifier[0] < 'a' || identifier[0] > 'z') {
-		identifier = identifier[1:]
+func validateIdentifier(identifier string) error {
+	invalidCharPattern := regexp.MustCompile(`[^a-z0-9-]`)
+	if invalidCharPattern.MatchString(identifier) {
+		return usererror.BadRequestf("identifier %s contains invalid characters: only lowercase letters, "+
+			"digits, and hyphens are allowed", identifier)
 	}
 
-	// Truncate to 50 characters
 	if len(identifier) > maxGitspaceConfigIdentifierPrefixLength {
-		identifier = identifier[:maxGitspaceConfigIdentifierPrefixLength]
+		return fmt.Errorf("identifier %s length should be upto 50 characters, is %d characters",
+			identifier, len(identifier))
 	}
 
-	return identifier
+	return nil
 }
