@@ -18,7 +18,15 @@ const GitspaceInfraHomePage = () => {
   const location = useLocation()
   const [selectedInfraTab, setSelectedInfraTab] = useState(HYBRID_VM_GCP)
 
-  const { data: listResponse, loading = false, refetch } = useInfraListingApi()
+  const {
+    data: listResponse,
+    loading = false,
+    refetch
+  } = useInfraListingApi({
+    queryParams: {
+      acl_filter: 'false'
+    }
+  })
 
   useEffect(() => {
     refetch()

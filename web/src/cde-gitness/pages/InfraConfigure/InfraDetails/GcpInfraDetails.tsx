@@ -47,7 +47,10 @@ const GcpInfraDetails = () => {
   const [infraDetails, setInfraDetails] = useState<InfraDetailsFormikProps>({})
   const { data } = useGetInfraDetails({
     infraprovider_identifier: infraprovider_identifier ?? 'undefined',
-    accountIdentifier: accountInfo?.identifier
+    accountIdentifier: accountInfo?.identifier,
+    queryParams: {
+      acl_filter: 'false'
+    }
   })
 
   const { mutate } = useCreateInfraProvider({

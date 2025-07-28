@@ -261,6 +261,8 @@ export interface TypesGitspaceConfig {
   identifier?: string
   initialize_log_key?: string
   instance?: TypesGitspaceInstance
+  is_marked_for_reset?: boolean
+  is_marked_for_soft_reset?: boolean
   log_key?: string
   name?: string
   resource?: TypesInfraProviderResource
@@ -313,6 +315,7 @@ export type TypesGitspaceInstance = {
 export interface TypesGitspaceRegionMachines {
   machine_types?: TypesInfraProviderResource[] | null
   region?: string
+  region_display_name?: string
 }
 
 export interface TypesGitspaceSettingsData {
@@ -332,7 +335,6 @@ export interface TypesGitspaceSettingsResponse {
 
 export interface TypesIDESettings {
   access_list?: TypesAccessListGithubComHarnessGitnessTypesEnumIDEType
-  default_ide?: EnumIDEType
 }
 
 export interface TypesInfraProviderConfig {
@@ -595,6 +597,13 @@ export const useGetUsageForAccount = ({ accountIdentifier, ...props }: UseGetUsa
     { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier }, ...props }
   )
 
+export interface ListInfraProvidersQueryParams {
+  /**
+   * ACL filter should be applied to the request
+   */
+  acl_filter?: string
+}
+
 export interface ListInfraProvidersPathParams {
   /**
    * account identifier.
@@ -603,7 +612,7 @@ export interface ListInfraProvidersPathParams {
 }
 
 export type ListInfraProvidersProps = Omit<
-  GetProps<TypesInfraProviderConfig[], unknown, void, ListInfraProvidersPathParams>,
+  GetProps<TypesInfraProviderConfig[], unknown, ListInfraProvidersQueryParams, ListInfraProvidersPathParams>,
   'path'
 > &
   ListInfraProvidersPathParams
@@ -612,7 +621,7 @@ export type ListInfraProvidersProps = Omit<
  * List infraproviders
  */
 export const ListInfraProviders = ({ accountIdentifier, ...props }: ListInfraProvidersProps) => (
-  <Get<TypesInfraProviderConfig[], unknown, void, ListInfraProvidersPathParams>
+  <Get<TypesInfraProviderConfig[], unknown, ListInfraProvidersQueryParams, ListInfraProvidersPathParams>
     path={`/accounts/${accountIdentifier}/infraproviders`}
     base={getConfig('cde/api/v1')}
     {...props}
@@ -620,7 +629,7 @@ export const ListInfraProviders = ({ accountIdentifier, ...props }: ListInfraPro
 )
 
 export type UseListInfraProvidersProps = Omit<
-  UseGetProps<TypesInfraProviderConfig[], unknown, void, ListInfraProvidersPathParams>,
+  UseGetProps<TypesInfraProviderConfig[], unknown, ListInfraProvidersQueryParams, ListInfraProvidersPathParams>,
   'path'
 > &
   ListInfraProvidersPathParams
@@ -629,7 +638,7 @@ export type UseListInfraProvidersProps = Omit<
  * List infraproviders
  */
 export const useListInfraProviders = ({ accountIdentifier, ...props }: UseListInfraProvidersProps) =>
-  useGet<TypesInfraProviderConfig[], unknown, void, ListInfraProvidersPathParams>(
+  useGet<TypesInfraProviderConfig[], unknown, ListInfraProvidersQueryParams, ListInfraProvidersPathParams>(
     (paramsInPath: ListInfraProvidersPathParams) => `/accounts/${paramsInPath.accountIdentifier}/infraproviders`,
     { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier }, ...props }
   )
@@ -753,6 +762,13 @@ export const useDeleteInfraProvider = ({
     { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier, infraprovider_identifier }, ...props }
   )
 
+export interface GetInfraProviderQueryParams {
+  /**
+   * ACL filter should be applied to the request
+   */
+  acl_filter?: string
+}
+
 export interface GetInfraProviderPathParams {
   /**
    * account identifier.
@@ -765,7 +781,7 @@ export interface GetInfraProviderPathParams {
 }
 
 export type GetInfraProviderProps = Omit<
-  GetProps<TypesInfraProviderConfig, UsererrorError, void, GetInfraProviderPathParams>,
+  GetProps<TypesInfraProviderConfig, UsererrorError, GetInfraProviderQueryParams, GetInfraProviderPathParams>,
   'path'
 > &
   GetInfraProviderPathParams
@@ -774,7 +790,7 @@ export type GetInfraProviderProps = Omit<
  * Get infraProviderConfig
  */
 export const GetInfraProvider = ({ accountIdentifier, infraprovider_identifier, ...props }: GetInfraProviderProps) => (
-  <Get<TypesInfraProviderConfig, UsererrorError, void, GetInfraProviderPathParams>
+  <Get<TypesInfraProviderConfig, UsererrorError, GetInfraProviderQueryParams, GetInfraProviderPathParams>
     path={`/accounts/${accountIdentifier}/infraproviders/${infraprovider_identifier}`}
     base={getConfig('cde/api/v1')}
     {...props}
@@ -782,7 +798,7 @@ export const GetInfraProvider = ({ accountIdentifier, infraprovider_identifier, 
 )
 
 export type UseGetInfraProviderProps = Omit<
-  UseGetProps<TypesInfraProviderConfig, UsererrorError, void, GetInfraProviderPathParams>,
+  UseGetProps<TypesInfraProviderConfig, UsererrorError, GetInfraProviderQueryParams, GetInfraProviderPathParams>,
   'path'
 > &
   GetInfraProviderPathParams
@@ -795,7 +811,7 @@ export const useGetInfraProvider = ({
   infraprovider_identifier,
   ...props
 }: UseGetInfraProviderProps) =>
-  useGet<TypesInfraProviderConfig, UsererrorError, void, GetInfraProviderPathParams>(
+  useGet<TypesInfraProviderConfig, UsererrorError, GetInfraProviderQueryParams, GetInfraProviderPathParams>(
     (paramsInPath: GetInfraProviderPathParams) =>
       `/accounts/${paramsInPath.accountIdentifier}/infraproviders/${paramsInPath.infraprovider_identifier}`,
     { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier, infraprovider_identifier }, ...props }

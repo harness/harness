@@ -14,18 +14,21 @@
  * limitations under the License.
  */
 
-import { useGetInfraProvider } from 'services/cde'
+import { ListInfraProvidersQueryParams, useGetInfraProvider } from 'services/cde'
 
 export const useGetInfraDetails = ({
   infraprovider_identifier,
-  accountIdentifier
+  accountIdentifier,
+  queryParams
 }: {
   infraprovider_identifier: string
   accountIdentifier: string
+  queryParams: ListInfraProvidersQueryParams
 }) => {
   const infraDetails = useGetInfraProvider({
     accountIdentifier,
-    infraprovider_identifier
+    infraprovider_identifier,
+    queryParams
   })
 
   return infraDetails

@@ -23,7 +23,10 @@ const DownloadAndApplySection = () => {
 
   const { data } = useGetInfraDetails({
     accountIdentifier: accountInfo?.identifier,
-    infraprovider_identifier: infraprovider_identifier ?? 'undefined'
+    infraprovider_identifier: infraprovider_identifier ?? 'undefined',
+    queryParams: {
+      acl_filter: 'false'
+    }
   })
 
   useEffect(() => {

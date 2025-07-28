@@ -33,7 +33,11 @@ export const SelectInfraProvider = () => {
   const [infraProviders, setInfraProvider] = useState<dropdownProps[]>()
   const { values, setFieldValue: onChange } = useFormikContext<OpenapiCreateGitspaceRequest>()
 
-  const { data, refetch } = useInfraListingApi()
+  const { data, refetch } = useInfraListingApi({
+    queryParams: {
+      acl_filter: 'true'
+    }
+  })
 
   useEffect(() => {
     refetch()
