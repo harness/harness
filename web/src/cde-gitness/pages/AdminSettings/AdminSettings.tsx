@@ -8,7 +8,6 @@ import {
   Tabs,
   Button,
   ButtonVariation,
-  PageSpinner,
   PageError
 } from '@harnessio/uicore'
 import { Formik, Form } from 'formik'
@@ -70,10 +69,8 @@ const AdminSettingsPage = () => {
               />
             }
           />
-          <Page.Body loading={loadingUpsert}>
-            {loadingSettings ? (
-              <PageSpinner />
-            ) : errorSettings ? (
+          <Page.Body loading={loadingUpsert || loadingSettings}>
+            {errorSettings ? (
               <PageError message={errorSettings.message} onClick={() => refetch()} />
             ) : (
               <Container className={css.tabContainer}>

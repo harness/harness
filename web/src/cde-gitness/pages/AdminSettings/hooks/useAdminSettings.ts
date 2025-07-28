@@ -48,6 +48,7 @@ export const useAdminSettings = () => {
       const payload = buildAdminSettingsPayload(values, availableEditors, settings)
       await upsertSettings(payload)
       showSuccess(getString('cde.settings.saveSuccess'))
+      refetch()
     } catch (err) {
       showError(getErrorMessage(err))
     }
