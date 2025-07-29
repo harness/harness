@@ -71,7 +71,7 @@ func FillFromForm(r *http.Request, data interface{}) error {
 
 		case reflect.Map:
 			// Check if it's a map[string]string
-			if fieldVal.Type().Key().Kind() == reflect.String &&
+			if fieldVal.Type().Key().Kind() == reflect.String && // nolint:nestif
 				fieldVal.Type().Elem().Kind() == reflect.String {
 				// We'll assume the form value is a JSON string. For example:
 				// extra={"foo":"bar","something":"else"}
@@ -81,7 +81,12 @@ func FillFromForm(r *http.Request, data interface{}) error {
 				} else {
 					m := make(map[string]string)
 					if err := json.Unmarshal([]byte(formVal), &m); err != nil {
-						return fmt.Errorf("cannot unmarshal map from key %q: %w", key, err)
+						splitVal := strings.Split(formVal, ", ")
+						if len(splitVal) > 1 {
+							m[splitVal[0]] = splitVal[1]
+						} else {
+							return fmt.Errorf("cannot unmarshal map from key %q: %w", key, err)
+						}
 					}
 					fieldVal.Set(reflect.ValueOf(m))
 				}
