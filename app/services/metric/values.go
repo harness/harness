@@ -17,6 +17,8 @@ package metric
 import (
 	"context"
 	"fmt"
+	"os"
+	"strconv"
 
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/types"
@@ -35,7 +37,10 @@ func NewValues(
 	config *types.Config,
 	settingsSrv *settings.Service,
 ) (*Values, error) {
-	if !config.Metric.Enabled {
+	doNotTrackEnv, _ := os.LookupEnv("DO_NOT_TRACK") // https://consoledonottrack.com/
+	doNotTrack, _ := strconv.ParseBool(doNotTrackEnv)
+
+	if doNotTrack || !config.Metric.Enabled {
 		return &Values{
 			Enabled:   false,
 			InstallID: "",

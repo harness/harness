@@ -32,6 +32,8 @@ import (
 const postHogGroupInstall = "install"
 const postHogServerUserID = "harness-server"
 
+var postHogAPIKey string
+
 type PostHog struct {
 	client             posthog.Client
 	installID          string
@@ -53,7 +55,16 @@ func NewPostHog(
 	principalStore store.PrincipalStore,
 	principalInfoCache store.PrincipalInfoCache,
 ) (*PostHog, error) {
-	if !values.Enabled || values.InstallID == "" || config.Metric.PostHogProjectAPIKey == "" {
+	if !values.Enabled || values.InstallID == "" {
+		return nil, nil //nolint:nilnil // PostHog is disabled
+	}
+
+	apiKey := postHogAPIKey
+	if apiKey == "" {
+		apiKey = config.Metric.PostHogProjectAPIKey
+	}
+
+	if apiKey == "" {
 		return nil, nil //nolint:nilnil // PostHog is disabled
 	}
 
