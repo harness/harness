@@ -51,9 +51,16 @@ const RegionAccordion: React.FC<RegionAccordionProps> = ({
                   <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_500}>
                     {getString('cde.settings.regions.region')}
                   </Text>
-                  <Text font={{ variation: FontVariation.CARD_TITLE }} color={Color.GREY_700}>
-                    {regionData.region_display_name}
-                  </Text>
+                  <Layout.Horizontal spacing={'small'}>
+                    <Text font={{ variation: FontVariation.CARD_TITLE }} color={Color.GREY_700}>
+                      {regionData.region}
+                    </Text>
+                    {regionData.region_display_name !== '' && (
+                      <Text font={{ variation: FontVariation.CARD_TITLE }} color={Color.GREY_700}>
+                        ({regionData.region_display_name})
+                      </Text>
+                    )}
+                  </Layout.Horizontal>
                 </Layout.Vertical>
                 <div className={css.machinesCountTag}>
                   <Text font={{ variation: FontVariation.BODY2 }} color={Color.PRIMARY_7}>
