@@ -16,7 +16,11 @@ package nuget
 
 import (
 	"context"
+	"encoding/xml"
 	"fmt"
+	"net/url"
+	"strconv"
+	"time"
 
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/base"
@@ -70,7 +74,41 @@ func (c *controller) SearchPackageV2(ctx context.Context, info nugettype.Artifac
 		}
 	}
 
+	// Get the base URL for proper XML namespace fields
+	baseURL := c.urlProvider.PackageURL(ctx, info.RootIdentifier+"/"+info.RegIdentifier, "nuget")
+
+	links := []nugettype.FeedEntryLink{
+		{Rel: "self", Href: xml.CharData(baseURL)},
+	}
+	nextURL := ""
+	if len(feedEntries) == limit {
+		u, _ := url.Parse(baseURL)
+		u = u.JoinPath("Search()")
+		q := u.Query()
+		q.Add("$skip", strconv.Itoa(limit+offset))
+		q.Add("$top", strconv.Itoa(limit))
+		if searchTerm != "" {
+			q.Add("searchTerm", searchTerm)
+		}
+		u.RawQuery = q.Encode()
+		nextURL = u.String()
+	}
+
+	if nextURL != "" {
+		links = append(links, nugettype.FeedEntryLink{
+			Rel:  "next",
+			Href: xml.CharData(nextURL),
+		})
+	}
+	// Create FeedResponse with proper XML namespace fields
 	feedResponse := &nugettype.FeedResponse{
+		Xmlns:   nuget.XMLNamespaceAtom,
+		Base:    baseURL,
+		XmlnsD:  nuget.XMLNamespaceDataServices,
+		XmlnsM:  nuget.XMLNamespaceDataServicesMetadata,
+		ID:      nuget.XMLNamespaceDataContract,
+		Updated: time.Now(),
+		Links:   links,
 		Count:   totalCount,
 		Entries: feedEntries,
 	}

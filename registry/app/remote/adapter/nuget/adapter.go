@@ -197,8 +197,7 @@ func (a adapter) ListPackageVersionV2(ctx context.Context, pkg string) (io.ReadC
 func (a adapter) SearchPackageV2(ctx context.Context, searchTerm string, limit, offset int) (io.ReadCloser, error) {
 	baseURL := a.client.url
 
-	searchEndpoint := fmt.Sprintf("%s/Packages()?"+
-		"$filter=substringof('%s',tolower(Id))&$skip=%d&$top=%d&semVerLevel=2.0.0",
+	searchEndpoint := fmt.Sprintf("%s/Search()?searchTerm='%s'&$skip=%d&$top=%d&semVerLevel=2.0.0",
 		strings.TrimRight(baseURL, "/"), searchTerm, offset, limit)
 	log.Ctx(ctx).Info().Msgf("Search Package V2 URL: %s", searchEndpoint)
 	_, closer, err := a.GetFileFromURL(searchEndpoint)
@@ -235,7 +234,7 @@ func (a adapter) SearchPackage(ctx context.Context, searchTerm string, limit, of
 func (a adapter) CountPackageV2(ctx context.Context, searchTerm string) (int64, error) {
 	baseURL := a.client.url
 
-	countEndpoint := fmt.Sprintf("%s/Packages()/$count?$filter=substringof('%s',tolower(Id))&semVerLevel=2.0.0",
+	countEndpoint := fmt.Sprintf("%s/Search()/$count?searchTerm='%s'&semVerLevel=2.0.0",
 		strings.TrimRight(baseURL, "/"), searchTerm)
 	log.Ctx(ctx).Info().Msgf("Count Package V2 URL: %s", countEndpoint)
 	_, closer, err := a.GetFileFromURL(countEndpoint)

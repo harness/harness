@@ -31,6 +31,16 @@ import (
 	"github.com/harness/gitness/registry/types"
 )
 
+// XML namespace constants.
+const (
+	XMLNamespaceApp                  = "http://www.w3.org/2007/app"
+	XMLNamespaceAtom                 = "http://www.w3.org/2005/Atom"
+	XMLNamespaceDataContract         = "http://schemas.datacontract.org/2004/07/"
+	XMLNamespaceDataServicesMetadata = "http://schemas.microsoft.com/ado/2007/08/dataservices/metadata"
+	XMLNamespaceDataServices         = "http://schemas.microsoft.com/ado/2007/08/dataservices"
+	XMLNamespaceEdmx                 = "http://schemas.microsoft.com/ado/2007/06/edmx"
+)
+
 var semverRegexp = regexp.MustCompile("^" + SemverRegexpRaw + "$")
 
 const SemverRegexpRaw string = `v?([0-9]+(\.[0-9]+)*?)` +
@@ -85,8 +95,8 @@ func buildServiceEndpoint(baseURL string) *nuget.ServiceEndpoint {
 func buildServiceV2Endpoint(baseURL string) *nuget.ServiceEndpointV2 {
 	return &nuget.ServiceEndpointV2{
 		Base:      baseURL,
-		Xmlns:     "http://www.w3.org/2007/app",
-		XmlnsAtom: "http://www.w3.org/2005/Atom",
+		Xmlns:     XMLNamespaceApp,
+		XmlnsAtom: XMLNamespaceAtom,
 		Workspace: nuget.ServiceWorkspace{
 			Title: nuget.AtomTitle{
 				Type: "text",
@@ -217,11 +227,11 @@ func createSearchV2Response(baseURL string, artifacts *[]types.ArtifactMetadata,
 	}
 	if artifacts == nil || len(*artifacts) == 0 {
 		return &nuget.FeedResponse{
-			Xmlns:   "http://www.w3.org/2005/Atom",
+			Xmlns:   XMLNamespaceAtom,
 			Base:    baseURL,
-			XmlnsD:  "http://schemas.microsoft.com/ado/2007/08/dataservices",
-			XmlnsM:  "http://schemas.microsoft.com/ado/2007/08/dataservices/metadata",
-			ID:      "http://schemas.datacontract.org/2004/07/",
+			XmlnsD:  XMLNamespaceDataServices,
+			XmlnsM:  XMLNamespaceDataServicesMetadata,
+			ID:      XMLNamespaceDataContract,
 			Updated: time.Now(),
 			Links:   links,
 			Count:   0,
@@ -260,11 +270,11 @@ func createSearchV2Response(baseURL string, artifacts *[]types.ArtifactMetadata,
 	}
 
 	return &nuget.FeedResponse{
-		Xmlns:   "http://www.w3.org/2005/Atom",
+		Xmlns:   XMLNamespaceAtom,
 		Base:    baseURL,
-		XmlnsD:  "http://schemas.microsoft.com/ado/2007/08/dataservices",
-		XmlnsM:  "http://schemas.microsoft.com/ado/2007/08/dataservices/metadata",
-		ID:      "http://schemas.datacontract.org/2004/07/",
+		XmlnsD:  XMLNamespaceDataServices,
+		XmlnsM:  XMLNamespaceDataServicesMetadata,
+		ID:      XMLNamespaceDataContract,
 		Updated: time.Now(),
 		Links:   links,
 		Count:   int64(len(*artifacts)),
@@ -376,10 +386,10 @@ func replaceBaseWithURL(input, baseURL string) (string, error) {
 
 func getServiceMetadataV2() *nuget.ServiceMetadataV2 {
 	return &nuget.ServiceMetadataV2{
-		XmlnsEdmx: "http://schemas.microsoft.com/ado/2007/06/edmx",
+		XmlnsEdmx: XMLNamespaceEdmx,
 		Version:   "1.0",
 		DataServices: nuget.EdmxDataServices{
-			XmlnsM:                "http://schemas.microsoft.com/ado/2007/08/dataservices/metadata",
+			XmlnsM:                XMLNamespaceDataServicesMetadata,
 			DataServiceVersion:    "2.0",
 			MaxDataServiceVersion: "2.0",
 			Schema: []nuget.EdmxSchema{
@@ -529,11 +539,11 @@ func createFeedResponse(baseURL string, info nuget.ArtifactInfo,
 	}
 
 	return &nuget.FeedResponse{
-		Xmlns:   "http://www.w3.org/2005/Atom",
+		Xmlns:   XMLNamespaceAtom,
 		Base:    baseURL,
-		XmlnsD:  "http://schemas.microsoft.com/ado/2007/08/dataservices",
-		XmlnsM:  "http://schemas.microsoft.com/ado/2007/08/dataservices/metadata",
-		ID:      "http://schemas.datacontract.org/2004/07/",
+		XmlnsD:  XMLNamespaceDataServices,
+		XmlnsM:  XMLNamespaceDataServicesMetadata,
+		ID:      XMLNamespaceDataContract,
 		Updated: time.Now(),
 		Links:   links,
 		Count:   int64(len(*artifacts)),
@@ -557,10 +567,10 @@ func createFeedEntryResponse(baseURL string, info nuget.ArtifactInfo, artifact *
 	}
 
 	return &nuget.FeedEntryResponse{
-		Xmlns:  "http://www.w3.org/2005/Atom",
+		Xmlns:  XMLNamespaceAtom,
 		Base:   baseURL,
-		XmlnsD: "http://schemas.microsoft.com/ado/2007/08/dataservices",
-		XmlnsM: "http://schemas.microsoft.com/ado/2007/08/dataservices/metadata",
+		XmlnsD: XMLNamespaceDataServices,
+		XmlnsM: XMLNamespaceDataServicesMetadata,
 		Category: nuget.FeedEntryCategory{Term: "NuGetGallery.OData.V2FeedPackage",
 			Scheme: "http://schemas.microsoft.com/ado/2007/08/dataservices/scheme"},
 		Title:   nuget.TypedValue[string]{Type: "text", Value: info.Image},

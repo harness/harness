@@ -49,7 +49,7 @@ func (c *controller) CountPackageV2(ctx context.Context, info nugettype.Artifact
 		}
 	}
 
-	result, err := base.NoProxyWrapper(ctx, c.registryDao, f, info)
+	result, err := base.ProxyWrapper(ctx, c.registryDao, f, info)
 
 	if err != nil {
 		return &EntityCountResponse{

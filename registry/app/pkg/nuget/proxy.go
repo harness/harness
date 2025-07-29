@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"regexp"
+	"time"
 
 	"github.com/harness/gitness/app/services/refcache"
 	urlprovider "github.com/harness/gitness/app/url"
@@ -183,9 +184,12 @@ func (r *proxy) SearchPackageV2(ctx context.Context, info nugettype.ArtifactInfo
 
 	// Update URLs to point to our proxy, similar to ListPackageVersionV2
 	packageURL := r.urlProvider.PackageURL(ctx, info.RootIdentifier+"/"+info.RegIdentifier, "nuget")
+	result.Xmlns = "http://www.w3.org/2005/Atom"
 	result.XmlnsD = xmlnsDataServices
 	result.XmlnsM = xmlnsDataServicesMetadata
 	result.Base = packageURL
+	result.ID = "http://schemas.datacontract.org/2004/07/"
+	result.Updated = time.Now()
 
 	links := []nugettype.FeedEntryLink{
 		{Rel: "self", Href: xml.CharData(packageURL)},
@@ -333,9 +337,12 @@ func (r *proxy) ListPackageVersionV2(ctx context.Context,
 		return &nugettype.FeedResponse{}, err
 	}
 	packageURL := r.urlProvider.PackageURL(ctx, info.RootIdentifier+"/"+info.RegIdentifier, "nuget")
+	result.Xmlns = "http://www.w3.org/2005/Atom"
 	result.XmlnsD = xmlnsDataServices
 	result.XmlnsM = xmlnsDataServicesMetadata
 	result.Base = packageURL
+	result.ID = "http://schemas.datacontract.org/2004/07/"
+	result.Updated = time.Now()
 	links := []nugettype.FeedEntryLink{
 		{Rel: "self", Href: xml.CharData(packageURL)},
 	}
