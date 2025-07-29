@@ -56,7 +56,7 @@ const (
         gconf_created_by,
 		gconf_is_marked_for_deletion,
 		gconf_is_marked_for_reset,
-        gconf_is_marked_for_soft_reset`
+        gconf_is_marked_for_infra_reset`
 	ReturningClause             = "RETURNING "
 	gitspaceConfigSelectColumns = "gconf_id," + gitspaceConfigInsertColumns
 )
@@ -76,16 +76,16 @@ type gitspaceConfig struct {
 	DevcontainerPath        null.String               `db:"gconf_devcontainer_path"`
 	Branch                  string                    `db:"gconf_branch"`
 	// TODO: migrate to principal int64 id to use principal cache and consistent with Harness code.
-	UserUID              string   `db:"gconf_user_uid"`
-	SpaceID              int64    `db:"gconf_space_id"`
-	Created              int64    `db:"gconf_created"`
-	Updated              int64    `db:"gconf_updated"`
-	IsDeleted            bool     `db:"gconf_is_deleted"`
-	SSHTokenIdentifier   string   `db:"gconf_ssh_token_identifier"`
-	CreatedBy            null.Int `db:"gconf_created_by"`
-	IsMarkedForDeletion  bool     `db:"gconf_is_marked_for_deletion"`
-	IsMarkedForReset     bool     `db:"gconf_is_marked_for_reset"`
-	IsMarkedForSoftReset bool     `db:"gconf_is_marked_for_soft_reset"`
+	UserUID               string   `db:"gconf_user_uid"`
+	SpaceID               int64    `db:"gconf_space_id"`
+	Created               int64    `db:"gconf_created"`
+	Updated               int64    `db:"gconf_updated"`
+	IsDeleted             bool     `db:"gconf_is_deleted"`
+	SSHTokenIdentifier    string   `db:"gconf_ssh_token_identifier"`
+	CreatedBy             null.Int `db:"gconf_created_by"`
+	IsMarkedForDeletion   bool     `db:"gconf_is_marked_for_deletion"`
+	IsMarkedForReset      bool     `db:"gconf_is_marked_for_reset"`
+	IsMarkedForInfraReset bool     `db:"gconf_is_marked_for_infra_reset"`
 }
 
 type gitspaceConfigWithLatestInstance struct {
@@ -240,7 +240,7 @@ func (s gitspaceConfigStore) Create(ctx context.Context, gitspaceConfig *types.G
 			gitspaceConfig.GitspaceUser.ID,
 			gitspaceConfig.IsMarkedForDeletion,
 			gitspaceConfig.IsMarkedForReset,
-			gitspaceConfig.IsMarkedForSoftReset,
+			gitspaceConfig.IsMarkedForInfraReset,
 		).
 		Suffix(ReturningClause + "gconf_id")
 	sql, args, err := stmt.ToSql()
@@ -267,7 +267,7 @@ func (s gitspaceConfigStore) Update(ctx context.Context,
 		Set("gconf_is_deleted", dbGitspaceConfig.IsDeleted).
 		Set("gconf_is_marked_for_deletion", dbGitspaceConfig.IsMarkedForDeletion).
 		Set("gconf_is_marked_for_reset", dbGitspaceConfig.IsMarkedForReset).
-		Set("gconf_is_marked_for_soft_reset", dbGitspaceConfig.IsMarkedForSoftReset).
+		Set("gconf_is_marked_for_infra_reset", dbGitspaceConfig.IsMarkedForInfraReset).
 		Set("gconf_ssh_token_identifier", dbGitspaceConfig.SSHTokenIdentifier).
 		Where("gconf_id = ?", gitspaceConfig.ID)
 	sql, args, err := stmt.ToSql()
@@ -302,7 +302,7 @@ func mapToInternalGitspaceConfig(config *types.GitspaceConfig) *gitspaceConfig {
 		IsDeleted:               config.IsDeleted,
 		IsMarkedForDeletion:     config.IsMarkedForDeletion,
 		IsMarkedForReset:        config.IsMarkedForReset,
-		IsMarkedForSoftReset:    config.IsMarkedForSoftReset,
+		IsMarkedForInfraReset:   config.IsMarkedForInfraReset,
 		Created:                 config.Created,
 		Updated:                 config.Updated,
 		SSHTokenIdentifier:      config.SSHTokenIdentifier,
@@ -480,19 +480,19 @@ func (s gitspaceConfigStore) mapDBToGitspaceConfig(
 		AuthID:           in.CodeAuthID,
 	}
 	var result = &types.GitspaceConfig{
-		ID:                   in.ID,
-		Identifier:           in.Identifier,
-		Name:                 in.Name,
-		IDE:                  in.IDE,
-		SpaceID:              in.SpaceID,
-		Created:              in.Created,
-		Updated:              in.Updated,
-		SSHTokenIdentifier:   in.SSHTokenIdentifier,
-		IsMarkedForDeletion:  in.IsMarkedForDeletion,
-		IsMarkedForReset:     in.IsMarkedForReset,
-		IsMarkedForSoftReset: in.IsMarkedForSoftReset,
-		IsDeleted:            in.IsDeleted,
-		CodeRepo:             codeRepo,
+		ID:                    in.ID,
+		Identifier:            in.Identifier,
+		Name:                  in.Name,
+		IDE:                   in.IDE,
+		SpaceID:               in.SpaceID,
+		Created:               in.Created,
+		Updated:               in.Updated,
+		SSHTokenIdentifier:    in.SSHTokenIdentifier,
+		IsMarkedForDeletion:   in.IsMarkedForDeletion,
+		IsMarkedForReset:      in.IsMarkedForReset,
+		IsMarkedForInfraReset: in.IsMarkedForInfraReset,
+		IsDeleted:             in.IsDeleted,
+		CodeRepo:              codeRepo,
 		GitspaceUser: types.GitspaceUser{
 			ID:         in.CreatedBy.Ptr(),
 			Identifier: in.UserUID},

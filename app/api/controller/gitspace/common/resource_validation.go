@@ -103,7 +103,7 @@ func IsResourceSpecChangeAllowed(
 		)
 	}
 
-	markForHardReset := false
+	markForInfraReset := false
 
 	// Check boot disk changes
 	needsHardReset, err := validateBootDiskChanges(existingResource.Metadata, newResource.Metadata)
@@ -111,7 +111,7 @@ func IsResourceSpecChangeAllowed(
 		return false, err
 	}
 	if needsHardReset {
-		markForHardReset = true
+		markForInfraReset = true
 	}
 
 	// Check persistent disk changes
@@ -120,15 +120,15 @@ func IsResourceSpecChangeAllowed(
 		return false, err
 	}
 	if needsHardReset {
-		markForHardReset = true
+		markForInfraReset = true
 	}
 
 	// Check machine type changes
 	machineTypeResetNeeded := validateMachineTypeChanges(existingResource.Metadata, newResource.Metadata)
-	markForHardReset = markForHardReset || machineTypeResetNeeded
+	markForInfraReset = markForInfraReset || machineTypeResetNeeded
 
 	// All checks passed
-	return markForHardReset, nil
+	return markForInfraReset, nil
 }
 
 // validatePersistentDiskChanges checks if persistent disk changes are valid and if they require a hard reset.

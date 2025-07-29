@@ -92,7 +92,7 @@ func (c *Controller) Update(
 func (c *Controller) updateIDE(in *UpdateInput, gitspaceConfig *gitnessTypes.GitspaceConfig) {
 	if in.IDE != "" && in.IDE != gitspaceConfig.IDE {
 		gitspaceConfig.IDE = in.IDE
-		gitspaceConfig.IsMarkedForSoftReset = true
+		gitspaceConfig.IsMarkedForReset = true
 	}
 
 	// Always clear SSH token if IDE is VS Code Web
@@ -110,7 +110,7 @@ func (c *Controller) handleSSHToken(in *UpdateInput, gitspaceConfig *gitnessType
 		// For other IDEs, update the token
 		if in.SSHTokenIdentifier != gitspaceConfig.SSHTokenIdentifier {
 			gitspaceConfig.SSHTokenIdentifier = in.SSHTokenIdentifier
-			gitspaceConfig.IsMarkedForSoftReset = true
+			gitspaceConfig.IsMarkedForReset = true
 		}
 	}
 
@@ -147,12 +147,12 @@ func (c *Controller) updateResourceIdentifier(
 	}
 
 	// Validate the resource spec change
-	markForHardReset, err := common.IsResourceSpecChangeAllowed(existingResource, newResource)
+	markForInfraReset, err := common.IsResourceSpecChangeAllowed(existingResource, newResource)
 	if err != nil {
 		return err
 	}
 
-	gitspaceConfig.IsMarkedForReset = gitspaceConfig.IsMarkedForReset || markForHardReset
+	gitspaceConfig.IsMarkedForInfraReset = gitspaceConfig.IsMarkedForInfraReset || markForInfraReset
 	gitspaceConfig.InfraProviderResource = *newResource
 
 	return nil

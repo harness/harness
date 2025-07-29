@@ -204,8 +204,9 @@ func (o Orchestrator) FinishResumeStartGitspace(
 	gitspaceInstance.LastHeartbeat = &now
 	gitspaceInstance.State = enum.GitspaceInstanceStateRunning
 
-	if gitspaceConfig.IsMarkedForReset {
+	if gitspaceConfig.IsMarkedForReset || gitspaceConfig.IsMarkedForInfraReset {
 		gitspaceConfig.IsMarkedForReset = false
+		gitspaceConfig.IsMarkedForInfraReset = false
 		err := o.gitspaceConfigStore.Update(ctx, &gitspaceConfig)
 		if err != nil {
 			return *gitspaceInstance, &types.GitspaceError{

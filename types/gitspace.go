@@ -32,7 +32,7 @@ type GitspaceConfig struct {
 	IsDeleted             bool                   `json:"-"`
 	IsMarkedForDeletion   bool                   `json:"-"`
 	IsMarkedForReset      bool                   `json:"is_marked_for_reset"`
-	IsMarkedForSoftReset  bool                   `json:"is_marked_for_soft_reset"`
+	IsMarkedForInfraReset bool                   `json:"is_marked_for_infra_reset"`
 	GitspaceInstance      *GitspaceInstance      `json:"instance"`
 	SpacePath             string                 `json:"space_path"`
 	Created               int64                  `json:"created"`
