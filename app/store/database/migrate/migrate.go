@@ -48,6 +48,18 @@ func Migrate(ctx context.Context, db *sqlx.DB) error {
 	if err != nil {
 		return fmt.Errorf("failed to get migrator: %w", err)
 	}
+	if db.DriverName() == "sqlite3" {
+		if _, err := db.ExecContext(ctx, `PRAGMA foreign_keys = OFF;`); err != nil {
+			return fmt.Errorf("failed to disable foreign keys: %w", err)
+		}
+		defer func() {
+			_, fkOnErr := db.ExecContext(ctx, `PRAGMA foreign_keys = ON;`)
+			if err == nil && fkOnErr != nil {
+				err = fmt.Errorf("failed to enable foreign keys: %w", fkOnErr)
+			}
+		}()
+	}
+
 	return migrate.New(opts).MigrateUp(ctx)
 }
 
@@ -56,6 +68,17 @@ func To(ctx context.Context, db *sqlx.DB, version string) error {
 	opts, err := getMigrator(db)
 	if err != nil {
 		return fmt.Errorf("failed to get migrator: %w", err)
+	}
+	if db.DriverName() == "sqlite3" {
+		if _, err := db.ExecContext(ctx, `PRAGMA foreign_keys = OFF;`); err != nil {
+			return fmt.Errorf("failed to disable foreign keys: %w", err)
+		}
+		defer func() {
+			_, fkOnErr := db.ExecContext(ctx, `PRAGMA foreign_keys = ON;`)
+			if err == nil && fkOnErr != nil {
+				err = fmt.Errorf("failed to enable foreign keys: %w", fkOnErr)
+			}
+		}()
 	}
 	return migrate.New(opts).MigrateTo(ctx, version)
 }

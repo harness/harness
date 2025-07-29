@@ -193,24 +193,6 @@ func (n NodeDao) DeleteByID(_ context.Context, _ int64) (err error) {
 	panic("implement me")
 }
 
-func (n NodeDao) DeleteByRegistryID(ctx context.Context, regID int64) (err error) {
-	db := dbtx.GetAccessor(ctx, n.sqlDB)
-	delStmt := databaseg.Builder.Delete("nodes").
-		Where("node_registry_id = ?", regID)
-
-	delQuery, delArgs, err := delStmt.ToSql()
-	if err != nil {
-		return fmt.Errorf("failed to convert purge query to sql: %w", err)
-	}
-
-	_, err = db.ExecContext(ctx, delQuery, delArgs...)
-	if err != nil {
-		return databaseg.ProcessSQLErrorf(ctx, err, "the delete query failed")
-	}
-
-	return nil
-}
-
 func (n NodeDao) DeleteByNodePathAndRegistryID(ctx context.Context, nodePath string, regID int64) (err error) {
 	db := dbtx.GetAccessor(ctx, n.sqlDB)
 	delStmt := databaseg.Builder.Delete("nodes").

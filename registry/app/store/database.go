@@ -308,9 +308,6 @@ type UpstreamProxyConfigRepository interface {
 		err error,
 	)
 
-	// Delete the upstreamProxyConfig specified by registry key
-	Delete(ctx context.Context, parentID int64, repoKey string) (err error)
-
 	// Update updates the upstreamproxy.
 	Update(ctx context.Context, upstreamproxyRecord *types.UpstreamProxyConfig) (err error)
 
@@ -447,11 +444,6 @@ type ImageRepository interface {
 
 	UpdateStatus(ctx context.Context, artifact *types.Image) (err error)
 
-	DeleteByRegistryID(ctx context.Context, registryID int64) (err error)
-
-	DeleteBandwidthStatByRegistryID(ctx context.Context, registryID int64) (err error)
-	DeleteDownloadStatByRegistryID(ctx context.Context, registryID int64) (err error)
-
 	DeleteByImageNameAndRegID(ctx context.Context, regID int64, image string) (err error)
 	DeleteByImageNameIfNoLinkedArtifacts(ctx context.Context, regID int64, image string) (err error)
 }
@@ -532,8 +524,10 @@ type ArtifactRepository interface {
 		ctx context.Context, regID int64, name string,
 	) (int64, error)
 
-	SearchByImageName(ctx context.Context, regID int64, name string,
-		limit int, offset int) (*[]types.ArtifactMetadata, error)
+	SearchByImageName(
+		ctx context.Context, regID int64, name string,
+		limit int, offset int,
+	) (*[]types.ArtifactMetadata, error)
 
 	CountByImageName(
 		ctx context.Context, regID int64, name string,
@@ -610,8 +604,6 @@ type NodesRepository interface {
 	Create(ctx context.Context, node *types.Node) error
 	// delete a node
 	DeleteByID(ctx context.Context, id int64) (err error)
-
-	DeleteByRegistryID(ctx context.Context, id int64) (err error)
 
 	GetByPathAndRegistryID(
 		ctx context.Context, registryID int64,
@@ -742,10 +734,14 @@ type TaskEventRepository interface {
 
 type QuarantineArtifactRepository interface {
 	Create(ctx context.Context, artifact *types.QuarantineArtifact) error
-	GetByFilePath(ctx context.Context, filePath string,
+	GetByFilePath(
+		ctx context.Context, filePath string,
 		registryID int64,
 		version string,
-		artifact string) ([]*types.QuarantineArtifact, error)
-	DeleteByRegistryIDArtifactAndFilePath(ctx context.Context, registryID int64,
-		artifactID *int64, imageID int64, nodeID *string) error
+		artifact string,
+	) ([]*types.QuarantineArtifact, error)
+	DeleteByRegistryIDArtifactAndFilePath(
+		ctx context.Context, registryID int64,
+		artifactID *int64, imageID int64, nodeID *string,
+	) error
 }

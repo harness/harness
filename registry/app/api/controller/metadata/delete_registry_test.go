@@ -108,6 +108,8 @@ func TestDeleteRegistry(t *testing.T) {
 					regInfo.ParentID,
 					regInfo.RegistryIdentifier,
 				).Return(registry, nil)
+				mockRegistryRepository.On("FetchRegistriesIDByUpstreamProxyID", mock.Anything,
+					mock.Anything, regInfo.RootIdentifierID).Return([]int64{}, nil)
 				mockImageStore.On("DeleteDownloadStatByRegistryID", mock.Anything, regInfo.RegistryID).Return(nil)
 				mockImageStore.On("DeleteBandwidthStatByRegistryID", mock.Anything, regInfo.RegistryID).Return(nil)
 				mockImageStore.On("DeleteByRegistryID", mock.Anything, regInfo.RegistryID).Return(nil)
@@ -343,6 +345,8 @@ func TestDeleteRegistry(t *testing.T) {
 					[]string{regInfo.RegistryIdentifier},
 					regInfo.ParentID,
 				).Return([]int64{}, nil)
+				mockRegistryRepository.On("FetchRegistriesIDByUpstreamProxyID", mock.Anything,
+					mock.Anything, regInfo.RootIdentifierID).Return([]int64{}, nil)
 				mockUpstreamProxyStore.On("Delete", mock.Anything, regInfo.ParentID,
 					regInfo.RegistryIdentifier).Return(nil)
 				mockImageStore.On("DeleteDownloadStatByRegistryID", mock.Anything, regInfo.RegistryID).Return(nil)

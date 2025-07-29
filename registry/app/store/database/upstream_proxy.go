@@ -238,26 +238,6 @@ func (r UpstreamproxyDao) Create(
 	return upstreamproxyRecord.ID, nil
 }
 
-func (r UpstreamproxyDao) Delete(ctx context.Context, parentID int64, repoKey string) (err error) {
-	stmt := databaseg.Builder.Delete("upstream_proxy_configs").
-		Where("upstream_proxy_config_registry_id in (SELECT registry_id from registries"+
-			" WHERE registry_parent_id = ? AND registry_name = ?)", parentID, repoKey)
-
-	sql, args, err := stmt.ToSql()
-	if err != nil {
-		return fmt.Errorf("failed to convert purge registry query to sql: %w", err)
-	}
-
-	db := dbtx.GetAccessor(ctx, r.db)
-
-	_, err = db.ExecContext(ctx, sql, args...)
-	if err != nil {
-		return databaseg.ProcessSQLErrorf(ctx, err, "the delete query failed")
-	}
-
-	return nil
-}
-
 func (r UpstreamproxyDao) Update(
 	ctx context.Context,
 	upstreamProxyRecord *types.UpstreamProxyConfig,

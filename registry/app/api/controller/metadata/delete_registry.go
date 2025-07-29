@@ -79,44 +79,32 @@ func (c *APIController) DeleteRegistry(
 		}, nil
 	}
 
-	if string(repoEntity.Type) == string(artifact.RegistryTypeVIRTUAL) {
-		err = c.tx.WithTx(
-			ctx, func(ctx context.Context) error {
-				err = c.deleteRegistryWithAudit(ctx, regInfo, repoEntity, session.Principal, regInfo.ParentRef)
+	err = c.checkIfRegistryUsedAsUpstream(
+		ctx, regInfo, repoEntity.Name, repoEntity.ID,
+	)
 
-				if err != nil {
-					log.Ctx(ctx).Error().Msgf("failed to delete registry: %s with error: %s",
-						regInfo.RegistryIdentifier, err)
-					return fmt.Errorf("failed to delete registry: %w", err)
-				}
-				return nil
-			},
-		)
-	} else {
-		err = c.tx.WithTx(
-			ctx, func(ctx context.Context) error {
-				err = c.deleteUpstreamProxyWithAudit(
-					ctx, regInfo, session.Principal, regInfo.ParentRef, repoEntity.Name,
-				)
-
-				if err != nil {
-					log.Ctx(ctx).Error().Msgf("failed to delete upstream proxies for registry: %s with error: %s",
-						regInfo.RegistryIdentifier, err)
-					return fmt.Errorf("failed to delete upstream proxy: %w", err)
-				}
-
-				err = c.deleteRegistryWithAudit(ctx, regInfo, repoEntity, session.Principal, regInfo.ParentRef)
-
-				if err != nil {
-					log.Ctx(ctx).Error().Msgf("failed to delete registry: %s with error: %s",
-						regInfo.RegistryIdentifier, err)
-					return fmt.Errorf("failed to delete registry: %w", err)
-				}
-
-				return nil
-			},
-		)
+	if err != nil {
+		log.Ctx(ctx).Error().Msgf("failed to delete upstream proxies for registry: %s with error: %s",
+			regInfo.RegistryIdentifier, err)
+		return artifact.DeleteRegistry400JSONResponse{
+			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
+				*GetErrorResponse(http.StatusBadRequest, err.Error()),
+			),
+		}, err
 	}
+
+	err = c.tx.WithTx(
+		ctx, func(ctx context.Context) error {
+			err = c.deleteRegistryWithAudit(ctx, regInfo, repoEntity, session.Principal, regInfo.ParentRef)
+			if err != nil {
+				log.Ctx(ctx).Error().Msgf("failed to delete registry: %s with error: %s",
+					regInfo.RegistryIdentifier, err)
+				return fmt.Errorf("failed to delete registry: %w", err)
+			}
+			return nil
+		},
+	)
+
 	if err != nil {
 		if strings.Contains(err.Error(), "delete query failed") {
 			msg := "Internal Error"
@@ -130,88 +118,61 @@ func (c *APIController) DeleteRegistry(
 	}, nil
 }
 
-func (c *APIController) deleteUpstreamProxyWithAudit(
+func (c *APIController) checkIfRegistryUsedAsUpstream(
 	ctx context.Context,
-	regInfo *registrytypes.RegistryRequestBaseInfo, principal types.Principal, parentRef string, registryName string,
+	regInfo *registrytypes.RegistryRequestBaseInfo,
+	registryName string,
+	registryID int64,
 ) error {
-	upstreamProxies, err := c.RegistryRepository.FetchUpstreamProxyIDs(ctx,
-		[]string{regInfo.RegistryIdentifier}, regInfo.ParentID)
+	registryIDs, err := c.RegistryRepository.FetchRegistriesIDByUpstreamProxyID(
+		ctx, strconv.FormatInt(registryID, 10), regInfo.RootIdentifierID)
 	if err != nil {
-		log.Ctx(ctx).Error().Msgf("failed to fetch upstream proxy IDs: %s", err)
-		return fmt.Errorf("failed to fectch upstream proxy IDs :%w", err)
+		log.Ctx(ctx).Error().Msgf("failed to fetch registryIDs: %s", err)
+		return fmt.Errorf("failed to fetch registryIDs IDs: %w", err)
 	}
-	//nolint:nestif
-	if len(upstreamProxies) > 0 {
-		registryIDs, err := c.RegistryRepository.FetchRegistriesIDByUpstreamProxyID(
-			ctx, strconv.FormatInt(upstreamProxies[0], 10), regInfo.RootIdentifierID)
+	if len(registryIDs) > 0 {
+		registries, err := c.RegistryRepository.GetByIDIn(ctx, registryIDs)
 		if err != nil {
-			log.Ctx(ctx).Error().Msgf("failed to fetch registryIDs: %s", err)
-			return fmt.Errorf("failed to fetch registryIDs IDs :%w", err)
+			log.Ctx(ctx).Error().Msgf("failed to fetch registries: %s", err)
+			return fmt.Errorf("failed to fetch registries: %w", err)
 		}
-		if len(registryIDs) > 0 {
-			log.Ctx(ctx).Info().Msgf("upstream proxy with id: %d is already being used in registryIDs: %d",
-				upstreamProxies[0], registryIDs)
-
-			registry, err := c.RegistryRepository.Get(ctx, registryIDs[0])
+		var registryScopeMappings []string
+		for _, registry := range *registries {
+			name := registry.Name
+			space, err := c.SpaceFinder.FindByID(ctx, registry.ParentID)
 			if err != nil {
-				log.Ctx(ctx).Error().Msgf("failed to fetch registry: %s", err)
-				return fmt.Errorf("failed to fetch registry :%w", err)
+				log.Ctx(ctx).Error().Msgf("failed to fetch space details: %s", err)
+				continue
 			}
-			spaceDetails, err := c.SpaceFinder.FindByID(ctx, registry.ParentID)
-			if err != nil {
-				return fmt.Errorf("failed to fetch space details: %w", err)
-			}
-			return fmt.Errorf(
-				"upstream Proxy : [%s] is being used inside Registry: [%s] which is created under scope: [%s]. ",
-				registryName, registry.Name, spaceDetails.Path,
-			)
+			path := space.Path
+			registryScopeMappings = append(registryScopeMappings, name+" ("+path+")")
 		}
-	}
-
-	err = c.UpstreamProxyStore.Delete(ctx, regInfo.ParentID, regInfo.RegistryIdentifier)
-	if err != nil {
-		return err
-	}
-
-	auditErr := c.AuditService.Log(
-		ctx,
-		principal,
-		audit.NewResource(audit.ResourceTypeRegistryUpstreamProxy, registryName),
-		audit.ActionDeleted,
-		parentRef,
-		audit.WithData("registry name", registryName),
-	)
-	if auditErr != nil {
-		log.Ctx(ctx).Warn().Msgf(
-			"failed to insert audit log for delete upstream proxy config operation: %s", auditErr,
+		return fmt.Errorf(
+			"upstream Proxy: [%s] is being used inside Registry: [%s]",
+			registryName, strings.Join(registryScopeMappings, ", "),
 		)
 	}
 
-	return err
+	return nil
 }
 
 func (c *APIController) deleteRegistryWithAudit(
 	ctx context.Context, regInfo *registrytypes.RegistryRequestBaseInfo,
 	registry *registrytypes.Registry, principal types.Principal, parentRef string,
 ) error {
-	err := c.ImageStore.DeleteByRegistryID(ctx, regInfo.RegistryID)
+	err := c.RegFinder.Delete(ctx, regInfo.ParentID, regInfo.RegistryIdentifier)
 	if err != nil {
 		return err
 	}
 
-	err = c.fileManager.DeleteFileByRegistryID(ctx, regInfo.RegistryID, regInfo.RegistryIdentifier)
-	if err != nil {
-		return err
-	}
-
-	err = c.RegFinder.Delete(ctx, regInfo.ParentID, regInfo.RegistryIdentifier)
-	if err != nil {
-		return err
+	typeRegistry := audit.ResourceTypeRegistry
+	if registry.Type == artifact.RegistryTypeUPSTREAM {
+		typeRegistry = audit.ResourceTypeRegistryUpstreamProxy
 	}
 	auditErr := c.AuditService.Log(
 		ctx,
 		principal,
-		audit.NewResource(audit.ResourceTypeRegistry, registry.Name),
+		audit.NewResource(typeRegistry, registry.Name),
 		audit.ActionDeleted,
 		parentRef,
 		audit.WithOldObject(
@@ -219,7 +180,9 @@ func (c *APIController) deleteRegistryWithAudit(
 				Registry: *registry,
 			},
 		),
+		audit.WithData("registry name", registry.Name),
 	)
+
 	if auditErr != nil {
 		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for delete registry operation: %s", auditErr)
 	}

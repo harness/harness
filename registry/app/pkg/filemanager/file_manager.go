@@ -353,18 +353,6 @@ func (f *FileManager) GetFileMetadata(
 	}, nil
 }
 
-func (f *FileManager) DeleteFileByRegistryID(
-	ctx context.Context,
-	regID int64,
-	regName string,
-) error {
-	err := f.nodesDao.DeleteByRegistryID(ctx, regID)
-	if err != nil {
-		return fmt.Errorf("failed to delete all the files for registry with name: %s, with error %w", regName, err)
-	}
-	return nil
-}
-
 func (f *FileManager) GetFilesMetadata(
 	ctx context.Context,
 	filePath string,
