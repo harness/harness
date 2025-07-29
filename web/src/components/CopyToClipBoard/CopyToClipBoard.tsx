@@ -8,7 +8,7 @@
 import React, { useState } from 'react'
 import { Position, Popover } from '@blueprintjs/core'
 import { Icon } from '@harnessio/icons'
-import { useToaster } from '@harnessio/uicore'
+import { Container, useToaster } from '@harnessio/uicore'
 
 import css from './CopyToClipBoard.module.scss'
 
@@ -30,9 +30,9 @@ const CopyToClipboard: React.FC<CopyToClipboardProps> = props => {
 
   const getPopoverContent = (): JSX.Element => {
     return (
-      <div className={css.popoverContent}>
+      <Container className={css.popoverContent}>
         <span className={css.tooltipLabel}>Copied!</span>
-      </div>
+      </Container>
     )
   }
 
@@ -63,9 +63,9 @@ const CopyToClipboard: React.FC<CopyToClipboardProps> = props => {
   return (
     <>
       <Popover minimal position={Position.TOP_RIGHT} isOpen={!hidePopover && isOpen} content={getPopoverContent()}>
-        <div className={className}>
+        <Container className={className}>
           <Icon name="copy-alt" size={props.iconSize ?? 20} onClick={handleCopy} className={css.copyIcon} />
-        </div>
+        </Container>
       </Popover>
     </>
   )

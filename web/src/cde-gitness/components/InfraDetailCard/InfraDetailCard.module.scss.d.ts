@@ -24,7 +24,6 @@ export declare const collapsibleHeader: string
 export declare const collapsibleSection: string
 export declare const copyButton: string
 export declare const copyButtonContainer: string
-export declare const copyTooltip: string
 export declare const delegateTag: string
 export declare const delegateTagExtra: string
 export declare const delegateTagExtraText: string
@@ -41,7 +40,4 @@ export declare const noTagsMessage: string
 export declare const rowContent: string
 export declare const rowHeader: string
 export declare const sectionTitle: string
-export declare const tagTooltip: string
-export declare const tooltipItem: string
-export declare const tooltipList: string
 export declare const truncateText: string

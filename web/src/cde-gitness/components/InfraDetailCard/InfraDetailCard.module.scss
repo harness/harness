@@ -130,36 +130,6 @@
     }
   }
 
-  .copyTooltip {
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    margin-bottom: 8px;
-    padding: 8px 12px;
-    background-color: var(--primary-9);
-    color: white;
-    font-size: 12px;
-    font-weight: 500;
-    border-radius: 3px;
-    white-space: nowrap;
-    pointer-events: none;
-    z-index: 1000;
-    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.15);
-    animation: fadeIn 0.2s ease-in-out;
-
-    &:after {
-      content: '';
-      position: absolute;
-      top: 100%;
-      left: 50%;
-      margin-left: -5px;
-      border-width: 5px;
-      border-style: solid;
-      border-color: var(--primary-9) transparent transparent transparent;
-    }
-  }
-
   @keyframes fadeIn {
     from {
       opacity: 0;
@@ -171,7 +141,6 @@
     }
   }
 
-  // Delegate tag styles
   .delegateTagsContainer {
     border: none;
     background-color: transparent;
@@ -199,38 +168,6 @@
     padding: 0 8px;
     cursor: default;
     white-space: nowrap; // Prevent text wrapping
-
-    &:hover {
-      position: relative;
-
-      .tagTooltip {
-        display: block;
-      }
-    }
-
-    .tagTooltip {
-      display: none;
-      position: absolute;
-      bottom: 30px;
-      left: 0;
-      background: var(--grey-900);
-      color: var(--white);
-      padding: 5px 10px;
-      border-radius: 4px;
-      font-size: var(--font-size-small);
-      white-space: nowrap;
-      z-index: 1000;
-
-      &::after {
-        content: '';
-        position: absolute;
-        top: 100%;
-        left: 10px;
-        border-width: 5px;
-        border-style: solid;
-        border-color: var(--grey-900) transparent transparent transparent;
-      }
-    }
   }
 
   .delegateTagText {
@@ -264,23 +201,6 @@
     color: var(--grey-400);
     font-size: var(--font-size-small);
   }
-}
-
-.tooltipList {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-}
-
-.tooltipItem {
-  padding: 4px 0;
-  font-size: var(--font-size-small);
-  color: var(--white);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.tooltipItem:last-child {
-  border-bottom: none;
 }
 
 .delegateTooltipContent {

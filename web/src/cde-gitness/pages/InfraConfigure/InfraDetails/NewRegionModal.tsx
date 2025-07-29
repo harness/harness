@@ -130,17 +130,17 @@ const NewRegionModal = ({
                 name="proxySubnet"
                 label={getString('cde.gitspaceInfraHome.proxySubnet')}
               />
-              <div className="form-group">
+              <Container className="form-group">
                 <Text className="form-group--label" font={{ variation: FontVariation.BODY }} color={Color.GREY_500}>
                   {getString('cde.configureInfra.domain')}
                 </Text>
-                <div className={css.inputContainer}>
-                  <div className={css.inputWrapper}>
+                <Container className={css.inputContainer}>
+                  <Container className={css.inputWrapper}>
                     <FormInput.Text name="domain" placeholder="e.g us-west-ga.io" />
                     <span className={css.domainSuffix}>.{values?.domain}</span>
-                  </div>
-                </div>
-              </div>
+                  </Container>
+                </Container>
+              </Container>
 
               {/*<Button*/}
               {/*  variation={ButtonVariation.PRIMARY}*/}

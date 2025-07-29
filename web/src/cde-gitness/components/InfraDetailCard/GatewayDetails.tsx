@@ -1,5 +1,5 @@
 import React from 'react'
-import { Layout, Text } from '@harnessio/uicore'
+import { Container, Layout, Text } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
 import { useStrings } from 'framework/strings'
 import { HYBRID_VM_GCP } from 'cde-gitness/constants'
@@ -19,8 +19,8 @@ const GatewayDetails: React.FC<GatewayDetailsProps> = ({ infraDetails, provider,
   const { getString } = useStrings()
 
   return (
-    <div className={css.collapsibleSection}>
-      <div className={css.collapsibleHeader} onClick={() => setIsOpen(!isOpen)}>
+    <Container className={css.collapsibleSection}>
+      <Container className={css.collapsibleHeader} onClick={() => setIsOpen(!isOpen)}>
         <Layout.Horizontal spacing="small" flex>
           <Text
             className={css.sectionTitle}
@@ -30,21 +30,21 @@ const GatewayDetails: React.FC<GatewayDetailsProps> = ({ infraDetails, provider,
             {getString('cde.configureInfra.gatewayDetails')}
           </Text>
         </Layout.Horizontal>
-      </div>
+      </Container>
 
       {isOpen && (
-        <div className={css.collapsibleContent}>
-          <div className={css.detailsGrid}>
-            <div className={css.detailsGridItem}>
+        <Container className={css.collapsibleContent}>
+          <Container className={css.detailsGrid}>
+            <Container className={css.detailsGridItem}>
               <Text className={css.rowHeader}>{getString('cde.configureInfra.machineType')}</Text>
               <Text className={css.rowContent}>
                 {provider === HYBRID_VM_GCP
                   ? infraDetails?.metadata?.gateway?.machine_type || ''
                   : infraDetails?.metadata?.gateway?.instance_type || ''}
               </Text>
-            </div>
+            </Container>
             {provider === HYBRID_VM_GCP && (
-              <div className={css.detailsGridItem}>
+              <Container className={css.detailsGridItem}>
                 <Text className={css.rowHeader}>{getString('cde.configureInfra.machineImageName')}</Text>
                 <Layout.Horizontal className={css.imageNameContainer} spacing="small">
                   <Text
@@ -52,20 +52,20 @@ const GatewayDetails: React.FC<GatewayDetailsProps> = ({ infraDetails, provider,
                     tooltip={infraDetails?.metadata?.gateway?.vm_image_name || ''}>
                     {getTruncatedValue(infraDetails?.metadata?.gateway?.vm_image_name || '')}
                   </Text>
-                  <div className={css.copyButtonContainer}>
+                  <Container className={css.copyButtonContainer}>
                     <CopyToClipboard
                       content={infraDetails?.metadata?.gateway?.vm_image_name || ''}
                       iconSize={16}
                       className={css.copyButton}
                     />
-                  </div>
+                  </Container>
                 </Layout.Horizontal>
-              </div>
+              </Container>
             )}
-          </div>
-        </div>
+          </Container>
+        </Container>
       )}
-    </div>
+    </Container>
   )
 }
 

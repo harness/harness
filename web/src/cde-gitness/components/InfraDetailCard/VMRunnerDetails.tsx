@@ -1,5 +1,5 @@
 import React from 'react'
-import { Layout, Text } from '@harnessio/uicore'
+import { Layout, Text, Container } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
 import { useStrings } from 'framework/strings'
 import { HYBRID_VM_GCP } from 'cde-gitness/constants'
@@ -19,8 +19,8 @@ const VMRunnerDetails: React.FC<VMRunnerDetailsProps> = ({ infraDetails, provide
   const { getString } = useStrings()
 
   return (
-    <div className={css.collapsibleSection}>
-      <div className={css.collapsibleHeader} onClick={() => setIsOpen(!isOpen)}>
+    <Container className={css.collapsibleSection}>
+      <Container className={css.collapsibleHeader} onClick={() => setIsOpen(!isOpen)}>
         <Layout.Horizontal spacing="small" flex>
           <Text
             className={css.sectionTitle}
@@ -30,12 +30,12 @@ const VMRunnerDetails: React.FC<VMRunnerDetailsProps> = ({ infraDetails, provide
             {getString('cde.configureInfra.vmRunnerDetails')}
           </Text>
         </Layout.Horizontal>
-      </div>
+      </Container>
 
       {isOpen && (
-        <div className={css.collapsibleContent}>
-          <div className={css.detailsGrid}>
-            <div className={css.detailsGridItem}>
+        <Container className={css.collapsibleContent}>
+          <Container className={css.detailsGrid}>
+            <Container className={css.detailsGridItem}>
               <Text className={css.rowHeader}>Region</Text>
               <Text
                 className={css.rowContent}
@@ -46,16 +46,16 @@ const VMRunnerDetails: React.FC<VMRunnerDetailsProps> = ({ infraDetails, provide
                   ? infraDetails?.metadata?.runner?.region || ''
                   : infraDetails?.metadata?.runner?.region || ''}
               </Text>
-            </div>
-            <div className={css.detailsGridItem}>
+            </Container>
+            <Container className={css.detailsGridItem}>
               <Text className={css.rowHeader}>Zone</Text>
               <Text className={css.rowContent}>
                 {provider === HYBRID_VM_GCP
                   ? infraDetails?.metadata?.runner?.zone || ''
                   : infraDetails?.metadata?.runner?.availability_zones || ''}
               </Text>
-            </div>
-            <div className={css.detailsGridItem}>
+            </Container>
+            <Container className={css.detailsGridItem}>
               <Text className={css.rowHeader}>
                 {provider === HYBRID_VM_GCP
                   ? getString('cde.gitspaceInfraHome.machineImageName')
@@ -75,7 +75,7 @@ const VMRunnerDetails: React.FC<VMRunnerDetailsProps> = ({ infraDetails, provide
                       : infraDetails?.metadata?.runner?.ami_id || ''
                   )}
                 </Text>
-                <div className={css.copyButtonContainer}>
+                <Container className={css.copyButtonContainer}>
                   <CopyToClipboard
                     content={
                       provider === HYBRID_VM_GCP
@@ -85,13 +85,13 @@ const VMRunnerDetails: React.FC<VMRunnerDetailsProps> = ({ infraDetails, provide
                     iconSize={16}
                     className={css.copyButton}
                   />
-                </div>
+                </Container>
               </Layout.Horizontal>
-            </div>
-          </div>
-        </div>
+            </Container>
+          </Container>
+        </Container>
       )}
-    </div>
+    </Container>
   )
 }
 

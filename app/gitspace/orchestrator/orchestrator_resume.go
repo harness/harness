@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/orchestrator/container/response"
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
 	"github.com/harness/gitness/app/gitspace/orchestrator/utils"
+	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -38,73 +39,59 @@ func (o Orchestrator) ResumeStartGitspace(
 ) (types.GitspaceInstance, *types.GitspaceError) {
 	gitspaceInstance := gitspaceConfig.GitspaceInstance
 	gitspaceInstance.State = enum.GitspaceInstanceStateStarting
+
 	secretValue, err := utils.ResolveSecret(ctx, o.secretResolverFactory, gitspaceConfig)
 	if err != nil {
-		return *gitspaceInstance, &types.GitspaceError{
-			Error: fmt.Errorf("cannot resolve secret for ID %s: %w",
-				gitspaceConfig.InfraProviderResource.UID, err),
-			ErrorMessage: ptr.String(err.Error()),
-		}
+		return *gitspaceInstance, newGitspaceError(
+			fmt.Errorf("cannot resolve secret for ID %s: %w", gitspaceConfig.InfraProviderResource.UID, err),
+		)
 	}
 	gitspaceInstance.AccessKey = secretValue
 
 	ideSvc, err := o.ideFactory.GetIDE(gitspaceConfig.IDE)
 	if err != nil {
-		return *gitspaceInstance, &types.GitspaceError{
-			Error:        err,
-			ErrorMessage: ptr.String(err.Error()),
-		}
+		return *gitspaceInstance, newGitspaceError(err)
 	}
 
 	err = o.infraProvisioner.PostInfraEventComplete(ctx, gitspaceConfig, provisionedInfra, enum.InfraEventProvision)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraProvisioningFailed)
-
-		return *gitspaceInstance, &types.GitspaceError{
-			Error: fmt.Errorf("cannot provision infrastructure for ID %s: %w",
-				gitspaceConfig.InfraProviderResource.UID, err),
-			ErrorMessage: ptr.String(err.Error()),
-		}
+		return *gitspaceInstance, newGitspaceError(
+			fmt.Errorf("cannot provision infrastructure for ID %s: %w", gitspaceConfig.InfraProviderResource.UID, err),
+		)
 	}
 
 	if provisionedInfra.Status != enum.InfraStatusProvisioned {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraProvisioningFailed)
 		infraStateErr := fmt.Errorf(
-			"infra state is %v, should be %v for gitspace instance identifier %s",
+			"infra state is %s, should be %s for gitspace instance identifier %s",
 			provisionedInfra.Status,
 			enum.InfraStatusProvisioned,
 			gitspaceConfig.GitspaceInstance.Identifier,
 		)
-		return *gitspaceInstance, &types.GitspaceError{
-			Error:        infraStateErr,
-			ErrorMessage: ptr.String(infraStateErr.Error()),
-		}
+		return *gitspaceInstance, newGitspaceError(infraStateErr)
 	}
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraProvisioningCompleted)
 
 	scmResolvedDetails, err := o.scm.GetSCMRepoDetails(ctx, gitspaceConfig)
 	if err != nil {
-		return *gitspaceInstance, &types.GitspaceError{
-			Error: fmt.Errorf("failed to fetch code repo details for gitspace config ID %d: %w",
-				gitspaceConfig.ID, err),
-			ErrorMessage: ptr.String(err.Error()),
-		}
+		return *gitspaceInstance, newGitspaceError(
+			fmt.Errorf("failed to fetch code repo details for gitspace config ID %d: %w", gitspaceConfig.ID, err),
+		)
 	}
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentConnectStart)
 
 	containerOrchestrator, err := o.containerOrchestratorFactory.GetContainerOrchestrator(provisionedInfra.ProviderType)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentConnectFailed)
-		return *gitspaceInstance, &types.GitspaceError{
-			Error: fmt.Errorf("failed to get the container orchestrator for infra provider type %s: %w",
+		return *gitspaceInstance, newGitspaceError(
+			fmt.Errorf("failed to get the container orchestrator for infra provider type %s: %w",
 				provisionedInfra.ProviderType, err),
-			ErrorMessage: ptr.String(err.Error()),
-		}
+		)
 	}
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentConnectCompleted)
-
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceCreationStart)
 
 	// fetch connector information and send details to gitspace agent
@@ -117,52 +104,62 @@ func (o Orchestrator) ResumeStartGitspace(
 		&types.ApplyAlwaysToSpaceCriteria,
 	)
 	if err != nil {
-		return *gitspaceInstance, &types.GitspaceError{
-			Error: fmt.Errorf("failed to fetch gitspace settings for space ID %d: %w",
+		return *gitspaceInstance, newGitspaceError(
+			fmt.Errorf("failed to fetch gitspace settings for space ID %d: %w",
 				gitspaceConfig.InfraProviderResource.SpaceID, err),
-			ErrorMessage: ptr.String(err.Error()),
-		}
+		)
 	}
 
-	if gitspaceConfigSettings != nil {
-		if scmResolvedDetails.DevcontainerConfig.Image == "" {
-			defaultImage := gitspaceConfigSettings.Devcontainer.DevcontainerImage
-			if len(defaultImage.ImageName) > 0 {
-				scmResolvedDetails.DevcontainerConfig.Image = defaultImage.ImageName
-				if len(defaultImage.ImageConnectorRef) > 0 {
-					connectorRefs = append(connectorRefs, defaultImage.ImageConnectorRef)
-				}
-			}
-		}
-	}
+	applyDefaultImageIfNeeded(scmResolvedDetails, gitspaceConfigSettings, &connectorRefs)
 
 	if len(connectorRefs) > 0 {
 		connectors, err := o.platformConnector.FetchConnectors(ctx, connectorRefs, gitspaceConfig.SpacePath)
 		if err != nil {
 			fetchConnectorErr := fmt.Errorf("failed to fetch connectors for gitspace: %v :%w", connectorRefs, err)
-			return *gitspaceInstance, &types.GitspaceError{
-				Error:        fetchConnectorErr,
-				ErrorMessage: ptr.String(fetchConnectorErr.Error()),
-			}
+			return *gitspaceInstance, newGitspaceError(fetchConnectorErr)
 		}
 		gitspaceConfig.Connectors = connectors
 	}
 
-	// NOTE: Currently we use a static identifier as the Gitspace user.
 	gitspaceConfig.GitspaceUser.Identifier = harnessUser
 
 	err = containerOrchestrator.CreateAndStartGitspace(
 		ctx, gitspaceConfig, provisionedInfra, *scmResolvedDetails, o.config.DefaultBaseImage, ideSvc)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceCreationFailed)
-
-		return *gitspaceInstance, &types.GitspaceError{
-			Error:        fmt.Errorf("couldn't call the agent start API: %w", err),
-			ErrorMessage: ptr.String(err.Error()), // TODO: Fetch explicit error msg from container orchestrator
-		}
+		return *gitspaceInstance, newGitspaceError(
+			fmt.Errorf("couldn't call the agent start API: %w", err),
+		)
 	}
 
 	return *gitspaceConfig.GitspaceInstance, nil
+}
+
+func newGitspaceError(err error) *types.GitspaceError {
+	return &types.GitspaceError{
+		Error:        err,
+		ErrorMessage: ptr.String(err.Error()),
+	}
+}
+
+func applyDefaultImageIfNeeded(
+	scmResolvedDetails *scm.ResolvedDetails,
+	gitspaceConfigSettings *types.GitspaceConfigSettings,
+	connectorRefs *[]string,
+) {
+	if gitspaceConfigSettings == nil {
+		return
+	}
+	if scmResolvedDetails.DevcontainerConfig.Image != "" {
+		return
+	}
+	defaultImage := gitspaceConfigSettings.Devcontainer.DevcontainerImage
+	if len(defaultImage.ImageName) > 0 {
+		scmResolvedDetails.DevcontainerConfig.Image = defaultImage.ImageName
+		if len(defaultImage.ImageConnectorRef) > 0 {
+			*connectorRefs = append(*connectorRefs, defaultImage.ImageConnectorRef)
+		}
+	}
 }
 
 // FinishResumeStartGitspace needs to be called from the API Handler.

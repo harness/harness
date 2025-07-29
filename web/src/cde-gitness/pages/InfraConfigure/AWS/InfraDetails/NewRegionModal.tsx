@@ -346,7 +346,6 @@ const ZonesTable = ({ formikProps, isEditMode = false }: ZonesTableProps) => {
     [ZoneCell, PrivateSubnetCell, PublicSubnetCell, ActionCell]
   )
 
-  // Also memoize the table data to prevent unnecessary re-renders
   const tableData = React.useMemo(() => zones, [zones])
   const { getString } = useStrings()
 

@@ -43,7 +43,7 @@ function InfraDetailCard({ infraDetails, regionCount, provider }: InfraDetailCar
     const excessTags = delegateSelectors.length - 2
 
     return (
-      <div className={css.delegateTagsWrapper}>
+      <Container className={css.delegateTagsWrapper}>
         {displayTags.map((tag: string, index: number) => (
           <Tag key={`delegate-tag-${index}`} intent="none" className={css.delegateTag}>
             {tag}
@@ -54,7 +54,7 @@ function InfraDetailCard({ infraDetails, regionCount, provider }: InfraDetailCar
             <span className={css.delegateTagExtraText}>+{excessTags}</span>
           </Tag>
         )}
-      </div>
+      </Container>
     )
   }
 
@@ -63,11 +63,11 @@ function InfraDetailCard({ infraDetails, regionCount, provider }: InfraDetailCar
       infraDetails?.metadata?.delegate_selectors?.map((d: { selector: string }) => d.selector) || []
 
     return (
-      <div className={css.delegateTooltipContent}>
+      <Container className={css.delegateTooltipContent}>
         {delegateSelectors.map((selector: string, index: number) => (
-          <div key={`tooltip-selector-${index}`}>{selector}</div>
+          <Container key={`tooltip-selector-${index}`}>{selector}</Container>
         ))}
-      </div>
+      </Container>
     )
   }
 
@@ -83,12 +83,12 @@ function InfraDetailCard({ infraDetails, regionCount, provider }: InfraDetailCar
           customRender:
             infraDetails?.metadata?.delegate_selectors?.length > 0 ? (
               <Popover content={getDelegateTooltipContent()} position={Position.BOTTOM_RIGHT}>
-                <div className={css.delegateTagsContainer}>{renderDelegateTags()}</div>
+                <Container className={css.delegateTagsContainer}>{renderDelegateTags()}</Container>
               </Popover>
             ) : (
-              <div className={css.delegateTagsContainer}>
+              <Container className={css.delegateTagsContainer}>
                 <Text className={css.noTagsMessage}>{getString('cde.delegate.noDelegateSelectors')}</Text>
-              </div>
+              </Container>
             )
         },
         {
@@ -109,12 +109,12 @@ function InfraDetailCard({ infraDetails, regionCount, provider }: InfraDetailCar
           customRender:
             infraDetails?.metadata?.delegate_selectors?.length > 0 ? (
               <Popover content={getDelegateTooltipContent()} position={Position.BOTTOM_RIGHT}>
-                <div className={css.delegateTagsContainer}>{renderDelegateTags()}</div>
+                <Container className={css.delegateTagsContainer}>{renderDelegateTags()}</Container>
               </Popover>
             ) : (
-              <div className={css.delegateTagsContainer}>
+              <Container className={css.delegateTagsContainer}>
                 <Text className={css.noTagsMessage}>{getString('cde.delegate.noDelegateSelectors')}</Text>
-              </div>
+              </Container>
             )
         },
         {
@@ -134,14 +134,14 @@ function InfraDetailCard({ infraDetails, regionCount, provider }: InfraDetailCar
           <img src={currentConfig.icon} width={24} />
           <Text className={css.cardTitle}>{getString('cde.gitspaceInfraHome.infraDetails')}</Text>
         </Layout.Horizontal>
-        <div className={css.cardGridContainer}>
+        <Container className={css.cardGridContainer}>
           {currentConfig.fields.map((field, index) => (
-            <div key={index} className={`${css.cardGridItem}`}>
+            <Container key={index} className={`${css.cardGridItem}`}>
               <Text className={css.rowHeader}>{getString(field.stringKey)}</Text>
               {field.customRender ? field.customRender : <Text className={css.rowContent}>{field.value}</Text>}
-            </div>
+            </Container>
           ))}
-        </div>
+        </Container>
         {/* Gateway Image Details */}
         <GatewayDetails infraDetails={infraDetails} provider={provider} initialOpen={gatewayDetailsOpen} />
         <VMRunnerDetails infraDetails={infraDetails} provider={provider} initialOpen={runnerDetailsOpen} />
