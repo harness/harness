@@ -25,7 +25,6 @@ import (
 	"github.com/harness/gitness/app/services/refcache"
 	corestore "github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
-	"github.com/harness/gitness/registry/app/api/controller/metadata"
 	"github.com/harness/gitness/registry/app/api/handler/utils"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/common"
@@ -204,9 +203,7 @@ func (h *Handler) GetRegistryInfo(r *http.Request, remoteSupport bool) (pkg.Regi
 	path := r.URL.Path
 	paramMap := common.ExtractFirstQueryParams(queryParams)
 	rootIdentifier, registryIdentifier, image, ref, dgst, tag := ExtractPathVars(r.Context(), path, paramMap)
-	if err := metadata.ValidateIdentifier(rootIdentifier); err != nil {
-		return pkg.RegistryInfo{}, err
-	}
+	// Skip rootIdentifier validation since it may not be OCI compliant. We do modifications on it before it reaches here.
 
 	rootSpaceID, err := h.SpaceStore.FindByRefCaseInsensitive(ctx, rootIdentifier)
 	if err != nil {
