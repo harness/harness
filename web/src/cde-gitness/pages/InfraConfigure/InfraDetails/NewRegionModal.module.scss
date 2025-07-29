@@ -32,3 +32,17 @@
   pointer-events: none;
   z-index: 1;
 }
+
+.buttonContainer {
+  display: flex;
+  margin-top: var(--spacing-medium) !important;
+  gap: var(--spacing-small);
+}
+
+.actionButton {
+  margin-top: 0 !important;
+}
+
+.cancelButton {
+  margin-top: 0 !important;
+}

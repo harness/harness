@@ -102,6 +102,37 @@
   padding: var(--padding-button) !important;
 }
 
+.buttonContainer {
+  display: flex;
+  margin-top: var(--spacing-medium) !important;
+  gap: var(--spacing-medium);
+}
+
+.actionButton {
+  margin-top: 0 !important;
+}
+
+.cancelButton {
+  margin-top: 0 !important;
+}
+
+.infoNoteContainer {
+  margin-top: var(--spacing-medium) !important;
+}
+
+.infoNote {
+  display: flex;
+  align-items: flex-start;
+}
+
+.infoIcon {
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  color: var(--primary-7);
+  margin-top: 2px;
+}
+
 .relativePosition {
   position: relative;
 }

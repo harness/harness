@@ -9,7 +9,8 @@ import {
   SelectOption,
   Container,
   Text,
-  TableV2
+  TableV2,
+  Layout
 } from '@harnessio/uicore'
 import * as Yup from 'yup'
 import cidrRegex from 'cidr-regex'
@@ -21,6 +22,7 @@ import type { ZoneConfig, regionProp } from 'cde-gitness/constants'
 import { useStrings } from 'framework/strings'
 import { AWS_AMI_ID_PATTERN } from 'cde-gitness/utils/InfraValidations.utils'
 import CustomSelectDropdown from 'cde-gitness/components/CustomSelectDropdown/CustomSelectDropdown'
+import SolidInfoIcon from 'cde-gitness/assests/solidInfo.svg?url'
 import { InfraDetails } from './InfraDetails.constants'
 import css from './NewRegionModal.module.scss'
 
@@ -135,7 +137,8 @@ const NewRegionModal = ({
     <ModalDialog
       isOpen={isOpen}
       onClose={() => setIsOpen(false)}
-      width={850}
+      width={950}
+      height={720}
       title={isEditMode ? 'Edit Region' : getString('cde.Aws.configureNewRegion')}>
       <Formik<NewRegionModalForm>
         validationSchema={validationSchema}
@@ -159,6 +162,7 @@ const NewRegionModal = ({
                 label={getString('cde.Aws.selectAwsRegion')}
                 options={regionOptions}
                 error={formikProps.errors.location}
+                disabled={isEditMode}
               />
 
               <div className="form-group">
@@ -173,7 +177,7 @@ const NewRegionModal = ({
                 </Text>
                 <div className={css.inputContainer}>
                   <div className={css.inputWrapper}>
-                    <FormInput.Text name="domain" placeholder="us-west" />
+                    <FormInput.Text name="domain" placeholder="us-west" disabled={isEditMode} />
                     <span className={css.domainSuffix}>.{values?.domain}</span>
                   </div>
                 </div>
@@ -184,12 +188,31 @@ const NewRegionModal = ({
                   {getString('cde.configureInfra.configureZones')}
                 </Text>
 
-                <ZonesTable formikProps={formikProps} />
+                <ZonesTable formikProps={formikProps} isEditMode={isEditMode} />
               </div>
 
-              <Button variation={ButtonVariation.PRIMARY} type="submit" className={css.actionButton}>
-                {isEditMode ? getString('save') : getString('cde.gitspaceInfraHome.addnewRegion')}
-              </Button>
+              <Container className={css.buttonContainer}>
+                <Button variation={ButtonVariation.PRIMARY} type="submit" className={css.actionButton}>
+                  {isEditMode ? getString('save') : getString('cde.gitspaceInfraHome.addnewRegion')}
+                </Button>
+                <Button
+                  variation={ButtonVariation.TERTIARY}
+                  text={getString('cancel')}
+                  onClick={() => setIsOpen(false)}
+                  className={css.cancelButton}
+                />
+              </Container>
+
+              {!isEditMode && (
+                <Container className={css.infoNoteContainer}>
+                  <Layout.Horizontal spacing="small" className={css.infoNote}>
+                    <img src={SolidInfoIcon} alt="Info" className={css.infoIcon} />
+                    <Text font={{ variation: FontVariation.BODY }} color={Color.GREY_500}>
+                      {getString('cde.Aws.regionConfigNote')}
+                    </Text>
+                  </Layout.Horizontal>
+                </Container>
+              )}
             </FormikForm>
           )
         }}
@@ -200,9 +223,10 @@ const NewRegionModal = ({
 
 interface ZonesTableProps {
   formikProps: any
+  isEditMode?: boolean
 }
 
-const ZonesTable = ({ formikProps }: ZonesTableProps) => {
+const ZonesTable = ({ formikProps, isEditMode = false }: ZonesTableProps) => {
   const zones = formikProps.values.zones || []
 
   // Create a stable reference to setFieldValue to prevent re-renders
@@ -219,18 +243,18 @@ const ZonesTable = ({ formikProps }: ZonesTableProps) => {
       id: Date.now()
     }
     setFieldValueRef.current('zones', [...zones, newZone])
-  }, [zones])
+  }, [zones, isEditMode])
 
   const handleDeleteZone = React.useCallback(
     (index: number) => {
       // Prevent deletion if only 2 zones remain (minimum requirement)
-      if (zones.length <= 2) {
+      if (isEditMode || zones.length <= 2) {
         return
       }
       const updatedZones = zones.filter((_: any, i: number) => i !== index)
       setFieldValueRef.current('zones', updatedZones)
     },
-    [zones]
+    [zones, isEditMode]
   )
 
   const ZoneCell = React.useCallback(
@@ -253,35 +277,41 @@ const ZonesTable = ({ formikProps }: ZonesTableProps) => {
           name={`zones[${index}].zone`}
           placeholder={selectedRegion ? 'Select zone' : 'Select region first'}
           items={zoneOptions}
-          disabled={!selectedRegion || zoneOptions.length === 0}
+          disabled={isEditMode || !selectedRegion || zoneOptions.length === 0}
         />
       )
     },
-    [formikProps.values.location]
+    [formikProps.values.location, isEditMode]
   )
 
-  const PrivateSubnetCell = React.useCallback(({ row }: { row: any }) => {
-    const index = row.index
-    return <FormInput.Text name={`zones[${index}].privateSubnet`} placeholder="10.0.1.0/24" />
-  }, [])
+  const PrivateSubnetCell = React.useCallback(
+    ({ row }: { row: any }) => {
+      const index = row.index
+      return <FormInput.Text name={`zones[${index}].privateSubnet`} placeholder="10.0.1.0/24" disabled={isEditMode} />
+    },
+    [isEditMode]
+  )
 
-  const PublicSubnetCell = React.useCallback(({ row }: { row: any }) => {
-    const index = row.index
-    return <FormInput.Text name={`zones[${index}].publicSubnet`} placeholder="10.0.1.0/24" />
-  }, [])
+  const PublicSubnetCell = React.useCallback(
+    ({ row }: { row: any }) => {
+      const index = row.index
+      return <FormInput.Text name={`zones[${index}].publicSubnet`} placeholder="10.0.1.0/24" disabled={isEditMode} />
+    },
+    [isEditMode]
+  )
 
   const ActionCell = React.useCallback(
     ({ row }: { row: any }) => {
       const index = row.index
       return (
         <Container className={css.flexCenter}>
-          {zones.length > 2 && (
+          {zones.length > 2 && !isEditMode && (
             <Icon name="code-delete" size={24} className={css.cursorPointer} onClick={() => handleDeleteZone(index)} />
           )}
         </Container>
       )
     },
-    [zones.length, handleDeleteZone]
+    [zones.length, handleDeleteZone, isEditMode]
   )
 
   // Stabilize column structure using useMemo to prevent re-creation on each render
@@ -325,16 +355,18 @@ const ZonesTable = ({ formikProps }: ZonesTableProps) => {
       <Container className={css.zonesContainer}>
         <div className={css.zonesTable}>
           <TableV2<ZoneConfig> columns={zoneColumns} data={tableData} className={css.zonesTable} minimal />
-          <div className={css.addZoneButton}>
-            <Text
-              icon="plus"
-              iconProps={{ size: 10, color: Color.PRIMARY_7 }}
-              color={Color.PRIMARY_7}
-              onClick={handleAddZone}
-              className={css.actionText}>
-              {getString('cde.configureInfra.newZone')}
-            </Text>
-          </div>
+          {
+            <div className={css.addZoneButton}>
+              <Text
+                icon="plus"
+                iconProps={{ size: 10, color: Color.PRIMARY_7 }}
+                color={Color.PRIMARY_7}
+                onClick={handleAddZone}
+                className={css.actionText}>
+                {getString('cde.configureInfra.newZone')}
+              </Text>
+            </div>
+          }
         </div>
       </Container>
     </Container>

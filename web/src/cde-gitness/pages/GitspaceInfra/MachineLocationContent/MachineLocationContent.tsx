@@ -19,7 +19,12 @@ import { useConfirmAct } from 'hooks/useConfirmAction'
 import { getErrorMessage } from 'utils/Utils'
 import MachineModal from 'cde-gitness/components/MachineModal/MachineModal'
 import { useAppContext } from 'AppContext'
-import { TypesInfraProviderResource, useDeleteInfraProviderResource, useListGateways } from 'services/cde'
+import {
+  TypesInfraProviderResource,
+  useDeleteInfraProviderResource,
+  useListGateways,
+  TypesInfraProviderConfig
+} from 'services/cde'
 import MachineDetailCard from 'cde-gitness/components/MachineDetailCard/MachineDetailCard'
 import NoDataState from 'cde-gitness/components/NoDataState'
 import AwsMachineModal from 'cde-gitness/components/MachineModal/AwsMachineModal'
@@ -33,6 +38,8 @@ interface MachineLocationContentProps {
   setRegionData: (val: Unknown) => void
   regionData: regionType[]
   provider: string
+  infraDetails?: TypesInfraProviderConfig
+  refetch: () => void
 }
 
 function MachineLocationContent({
@@ -42,7 +49,9 @@ function MachineLocationContent({
   infraprovider_identifier,
   setRegionData,
   regionData,
-  provider
+  provider,
+  infraDetails,
+  refetch
 }: MachineLocationContentProps) {
   const { getString } = useStrings()
   const confirmDelete = useConfirmAct()
@@ -85,6 +94,7 @@ function MachineLocationContent({
               updatedData.push(region)
             })
             setRegionData(updatedData)
+            refetch?.()
           } catch (exception) {
             showError(getErrorMessage(exception))
           }
@@ -121,7 +131,6 @@ function MachineLocationContent({
     const { vm_image_name, image_name } = row?.row?.original?.metadata
     const displayValue = vm_image_name || image_name || ''
 
-    // Get the first line by splitting on '/' and taking the last part
     const displayParts = displayValue.split('/')
     const firstLineDisplay = displayParts.length > 0 ? displayParts[displayParts.length - 1] : displayValue
 
@@ -172,7 +181,7 @@ function MachineLocationContent({
         ),
         accessor: 'image',
         Cell: CustomImageColumn,
-        width: '16%'
+        width: '20%'
       },
       {
         Header: (
@@ -234,7 +243,7 @@ function MachineLocationContent({
           </Layout.Horizontal>
         ),
         accessor: 'memory',
-        width: '13%'
+        width: '11%'
       },
       {
         Header: '',
@@ -260,6 +269,7 @@ function MachineLocationContent({
         regionIdentifier={locationData?.region_name}
         setRegionData={setRegionData}
         regionData={regionData}
+        refetch={refetch}
       />
       <Layout.Vertical>
         <Container
@@ -277,20 +287,35 @@ function MachineLocationContent({
           {!gatewayAPILoading && (
             <>
               {(!groupHealthData || (Array.isArray(groupHealthData) && groupHealthData.length === 0)) && (
-                <Tag intent="danger">UNHEALTHY</Tag>
+                <Tag intent="danger">{getString('cde.gitspaceInfraHome.unhealthy')}</Tag>
               )}
-              {groupHealthData?.overall_health === 'healthy' && <Tag intent="success">HEALTHY</Tag>}
-              {groupHealthData?.overall_health === 'unhealthy' && <Tag intent="danger">UNHEALTHY</Tag>}
+              {groupHealthData?.overall_health === 'healthy' && (
+                <Tag intent="success" className={css.filledTag}>
+                  {getString('cde.gitspaceInfraHome.healthy')}
+                </Tag>
+              )}
+              {groupHealthData?.overall_health === 'unhealthy' && (
+                <Tag intent="danger" className={css.filledTag}>
+                  {getString('cde.gitspaceInfraHome.unhealthy')}
+                </Tag>
+              )}
               {groupHealthData &&
                 groupHealthData.overall_health &&
                 !['healthy', 'unhealthy'].includes(groupHealthData.overall_health) && (
-                  <Tag intent="warning">UNKNOWN</Tag>
+                  <Tag intent="warning" className={css.filledTag}>
+                    {getString('cde.gitspaceInfraHome.unknown')}
+                  </Tag>
                 )}
             </>
           )}
         </Container>
 
-        <MachineDetailCard loading={gatewayAPILoading} locationData={locationData} groupHealthData={groupHealthData} />
+        <MachineDetailCard
+          loading={gatewayAPILoading}
+          locationData={locationData}
+          groupHealthData={groupHealthData}
+          infraDetails={infraDetails}
+        />
 
         <Container className={css.machineDetail}>
           <Layout.Horizontal spacing={'none'} className={css.machineHeader} flex={{ justifyContent: 'space-between' }}>

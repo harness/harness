@@ -1300,6 +1300,7 @@ export interface StringsMap {
   'cde.Aws.domainExample': string
   'cde.Aws.gatewayAmi': string
   'cde.Aws.gatewayAmiId': string
+  'cde.Aws.gatewayAmiImage': string
   'cde.Aws.gatewayInstanceType': string
   'cde.Aws.instanceType': string
   'cde.Aws.invalidAmiIdFormat': string
@@ -1309,7 +1310,10 @@ export interface StringsMap {
   'cde.Aws.numberOfAvailabilityZone': string
   'cde.Aws.numberOfRegions': string
   'cde.Aws.privateSubnet': string
+  'cde.Aws.privateSubnetCidr': string
   'cde.Aws.publicSubnet': string
+  'cde.Aws.publicSubnetCidr': string
+  'cde.Aws.regionConfigNote': string
   'cde.Aws.runnerAmiId': string
   'cde.Aws.runnerAmiIdPlaceholder': string
   'cde.Aws.runnerAmiIdRequired': string
@@ -1318,6 +1322,7 @@ export interface StringsMap {
   'cde.account': string
   'cde.atleastOneRegion': string
   'cde.awsInfrastructure': string
+  'cde.awsInfrastructureName': string
   'cde.branchPlaceholder': string
   'cde.branchValidationMessage': string
   'cde.changes': string
@@ -1335,9 +1340,12 @@ export interface StringsMap {
   'cde.configureInfra.configureLocationNote': string
   'cde.configureInfra.configureLocations': string
   'cde.configureInfra.configureZones': string
+  'cde.configureInfra.defaultImageNoteText': string
   'cde.configureInfra.domain': string
   'cde.configureInfra.downloadAndApply': string
+  'cde.configureInfra.downloadInfraYaml': string
   'cde.configureInfra.gateway': string
+  'cde.configureInfra.gatewayDetails': string
   'cde.configureInfra.gatewayImageName': string
   'cde.configureInfra.gatewayImageNamePlaceholder': string
   'cde.configureInfra.gatewayImageNameRequired': string
@@ -1347,6 +1355,7 @@ export interface StringsMap {
   'cde.configureInfra.infraName': string
   'cde.configureInfra.learnMore': string
   'cde.configureInfra.learnMoreAboutHybrid': string
+  'cde.configureInfra.machineImageName': string
   'cde.configureInfra.machineType': string
   'cde.configureInfra.name': string
   'cde.configureInfra.newZone': string
@@ -1355,6 +1364,10 @@ export interface StringsMap {
   'cde.configureInfra.project': string
   'cde.configureInfra.provideInfraDetails': string
   'cde.configureInfra.subdomain': string
+  'cde.configureInfra.updateTime': string
+  'cde.configureInfra.vmRunnerDetails': string
+  'cde.configureInfra.yamlLoading': string
+  'cde.configureInfra.yamlNotAvailable': string
   'cde.copied': string
   'cde.cpu': string
   'cde.create.branchPlaceholder': string
@@ -1384,6 +1397,8 @@ export interface StringsMap {
   'cde.createRepo': string
   'cde.created': string
   'cde.delegate.DelegateSelector': string
+  'cde.delegate.delegateSelectorTags': string
+  'cde.delegate.noDelegateSelectors': string
   'cde.deleteGitspace': string
   'cde.deleteGitspaceText': string
   'cde.deleteGitspaceTitle': string
@@ -1428,6 +1443,7 @@ export interface StringsMap {
   'cde.errorCard.viewLog': string
   'cde.eventTimeline': string
   'cde.gcpInfrastructure': string
+  'cde.gcpInfrastructureName': string
   'cde.getStarted': string
   'cde.gitspaceDetail': string
   'cde.gitspaceInfra': string
@@ -1470,10 +1486,12 @@ export interface StringsMap {
   'cde.gitspaceInfraHome.gatewayInstanceName': string
   'cde.gitspaceInfraHome.gatewayversionnumber': string
   'cde.gitspaceInfraHome.gcpSupportText': string
+  'cde.gitspaceInfraHome.healthy': string
   'cde.gitspaceInfraHome.infraDetails': string
   'cde.gitspaceInfraHome.instanceMessage': string
   'cde.gitspaceInfraHome.instanceTypeMessage': string
   'cde.gitspaceInfraHome.invalidImageNameFormat': string
+  'cde.gitspaceInfraHome.lastHeartbeat': string
   'cde.gitspaceInfraHome.learnMore': string
   'cde.gitspaceInfraHome.locationAndMachine': string
   'cde.gitspaceInfraHome.locationDetails': string
@@ -1496,16 +1514,21 @@ export interface StringsMap {
   'cde.gitspaceInfraHome.noMachineAvailable': string
   'cde.gitspaceInfraHome.noRegionConfigured': string
   'cde.gitspaceInfraHome.noRegionConfiguredText': string
+  'cde.gitspaceInfraHome.noZonesAvailable': string
   'cde.gitspaceInfraHome.persistentDisk': string
   'cde.gitspaceInfraHome.proxySubnet': string
   'cde.gitspaceInfraHome.region': string
   'cde.gitspaceInfraHome.regionsAndMachines': string
   'cde.gitspaceInfraHome.runnerVMRegion': string
   'cde.gitspaceInfraHome.runnerVMZone': string
+  'cde.gitspaceInfraHome.status': string
   'cde.gitspaceInfraHome.troubleshoot': string
+  'cde.gitspaceInfraHome.unhealthy': string
+  'cde.gitspaceInfraHome.unknown': string
   'cde.gitspaceInfraHome.waitingForConnection': string
   'cde.gitspaceInfraHome.waitingMessage': string
   'cde.gitspaceInfraHome.zone': string
+  'cde.gitspaceInfraHome.zoneDetails': string
   'cde.gitspaceInfraHome.zoneMessage': string
   'cde.gitspaceNameFormatValidation': string
   'cde.gitspaceNameMaxLengthValidation': string

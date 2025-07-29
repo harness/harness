@@ -7,6 +7,7 @@ import {
   FormInput,
   Layout,
   ModalDialog,
+  Text,
   useToaster
 } from '@harnessio/uicore'
 import { cloneDeep, get } from 'lodash-es'
@@ -28,6 +29,7 @@ interface MachineModalProps {
   regionIdentifier: string
   setRegionData: (val: regionType[]) => void
   regionData: regionType[]
+  refetch: () => void
 }
 
 interface MachineModalForm {
@@ -48,7 +50,8 @@ function MachineModal({
   infraproviderIdentifier,
   regionIdentifier,
   setRegionData,
-  regionData
+  regionData,
+  refetch
 }: MachineModalProps) {
   const { getString } = useStrings()
   const { accountInfo } = useAppContext()
@@ -92,6 +95,7 @@ function MachineModal({
         updatedData.push(region)
       })
       setRegionData(updatedData)
+      refetch?.()
       setIsOpen(false)
     } catch (err) {
       showError(getString('cde.create.machineCreateFailed'))
@@ -133,9 +137,11 @@ function MachineModal({
                 />
                 <FormInput.Text
                   name="image_name"
+                  className={css.inputWithNote}
                   label={getString('cde.gitspaceInfraHome.machineImageName')}
                   placeholder={getString('cde.gitspaceInfraHome.machineImageNamePlaceholder')}
                 />
+                <Text className={css.noteText}>{getString('cde.configureInfra.defaultImageNoteText')}</Text>
                 <CustomSelectDropdown
                   options={persistentDiskTypes?.map((options: string) => getStringDropdownOptions(options))}
                   value={{ value: disk_type, label: disk_type }}

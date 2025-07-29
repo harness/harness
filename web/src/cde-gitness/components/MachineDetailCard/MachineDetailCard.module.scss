@@ -28,6 +28,13 @@
       line-height: var(--spacing-large) !important;
       font-weight: 400 !important;
     }
+
+    .activityIcon {
+      width: 16px;
+      height: 16px;
+      margin-right: var(--spacing-xsmall);
+      align-self: center;
+    }
   }
 }
 
@@ -47,4 +54,91 @@
 .machineHeader {
   padding: var(--spacing-5) !important;
   border-bottom: 1px solid var(--grey-100) !important;
+}
+.zoneDetailsContainer {
+  padding: 0 !important;
+  border-top: 1px solid var(--grey-100) !important;
+}
+
+.collapsibleSection {
+  width: 100%;
+}
+
+.collapsibleHeader {
+  padding: var(--spacing-5) !important;
+  cursor: pointer;
+  border-bottom: 1px solid var(--grey-100) !important;
+}
+
+.sectionTitle {
+  font-size: var(--font-size-normal) !important;
+  font-weight: 600 !important;
+}
+
+.zoneDetailsContent {
+  padding: var(--spacing-5) !important;
+  background-color: var(--grey-50) !important;
+}
+
+.zoneDetailsTable {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.zoneDetailsTableHeader {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  background-color: var(--white);
+  border: 1px solid var(--grey-200);
+  border-radius: var(--spacing-xsmall) var(--spacing-xsmall) 0 0;
+}
+
+.zoneDetailsTableRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  border-bottom: 1px solid var(--grey-200);
+  border-left: 1px solid var(--grey-200);
+  border-right: 1px solid var(--grey-200);
+  background-color: var(--white);
+
+  &:last-child {
+    border-radius: 0 0 var(--spacing-xsmall) var(--spacing-xsmall);
+  }
+}
+
+.zoneDetailsTableCell {
+  padding: var(--spacing-3) var(--spacing-4);
+  border-right: 1px solid var(--grey-200);
+
+  &:last-child {
+    border-right: none;
+  }
+}
+
+.tableHeaderText {
+  font-size: var(--font-size-small) !important;
+  font-weight: 900 !important;
+}
+
+.filledTag {
+  :global(.bp3-tag) {
+    background-color: inherit !important;
+    border: none !important;
+  }
+
+  &:global(.bp3-intent-success) {
+    background-color: rgba(15, 153, 96, 0.15) !important;
+    color: rgb(15, 153, 96) !important;
+  }
+
+  &:global(.bp3-intent-danger) {
+    background-color: rgba(219, 55, 55, 0.15) !important;
+    color: rgb(219, 55, 55) !important;
+  }
+
+  &:global(.bp3-intent-warning) {
+    background-color: rgba(255, 170, 0, 0.15) !important;
+    color: rgb(255, 140, 0) !important;
+  }
 }

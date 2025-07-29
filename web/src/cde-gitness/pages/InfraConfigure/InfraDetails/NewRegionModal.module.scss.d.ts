@@ -16,6 +16,9 @@
 
 /* eslint-disable */
 // This is an auto-generated file
+export declare const actionButton: string
+export declare const buttonContainer: string
+export declare const cancelButton: string
 export declare const domainSuffix: string
 export declare const inputContainer: string
 export declare const inputWrapper: string

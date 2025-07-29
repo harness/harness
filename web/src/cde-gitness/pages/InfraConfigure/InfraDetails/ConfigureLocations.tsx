@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Container, HarnessDocTooltip, Label, Layout, Select, Text, FormInput } from '@harnessio/uicore'
-import { Color } from '@harnessio/design-system'
+import { Color, FontVariation } from '@harnessio/design-system'
 import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance } from 'react-table'
 import { Icon } from '@harnessio/icons'
 import { cloneDeep } from 'lodash-es'
@@ -59,7 +59,7 @@ const ConfigureLocations = ({ regionData, setRegionData, runner, setRunner }: Lo
   const ActionCell: CellType = (row: any) => {
     return (
       <Container className={css.deleteContainer}>
-        {/* <Icon name="code-edit" size={24} onClick={() => openRegionModal(row?.row?.index)} /> */}
+        {/*<Icon name="code-edit" size={24} onClick={() => openRegionModal(row?.row?.index)} />*/}
         <Icon name="code-delete" size={24} onClick={() => deleteRegion(row?.row?.index)} />
       </Container>
     )
@@ -204,7 +204,7 @@ const ConfigureLocations = ({ regionData, setRegionData, runner, setRunner }: Lo
         isEditMode={isEditMode}
         existingRegions={regionData.map(region => region.location)}
       />
-      <RegionTable columns={columns} addNewRegion={openRegionModal} regionData={regionData} />
+      <RegionTable columns={columns} addNewRegion={() => openRegionModal()} regionData={regionData} />
       <br />
       <Text className={css.basicDetailsHeading}>{getString('cde.gitspaceInfraHome.configureVMRunnerImage')}</Text>
       <Layout.Horizontal spacing="small">
@@ -253,18 +253,19 @@ const ConfigureLocations = ({ regionData, setRegionData, runner, setRunner }: Lo
           />
         </Container>
         <Container>
-          {/*<Layout.Horizontal spacing="xsmall" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>*/}
-          {/*  <Label className={css.runnerregion}>{getString('cde.gitspaceInfraHome.machineImageName')}</Label>*/}
-          {/*</Layout.Horizontal>*/}
           <FormInput.Text
             name="runner.vm_image_name"
             label={getString('cde.gitspaceInfraHome.machineImageName')}
             placeholder={getString('cde.gitspaceInfraHome.machineImageNamePlaceholder')}
+            className={css.inputWithNote}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               // Also update local state for immediate UI updates
               setRunner({ ...runner, vm_image_name: e.target.value })
             }}
           />
+          <Text color={Color.GREY_500} font={{ variation: FontVariation.SMALL }}>
+            {getString('cde.configureInfra.defaultImageNoteText')}
+          </Text>
         </Container>
       </Layout.Vertical>
     </Layout.Vertical>

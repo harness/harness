@@ -70,7 +70,7 @@ const ConfigureLocations = ({ regionData, setRegionData, runner, setRunner }: Lo
   const ActionCell: CellType = (row: any) => {
     return (
       <Container className={css.deleteContainer}>
-        {/* <Icon name="code-edit" size={24} onClick={() => openRegionModal(row?.row?.index)} /> */}
+        <Icon name="code-edit" size={24} onClick={() => openRegionModal(row?.row?.index)} />
         <Icon name="code-delete" size={24} onClick={() => deleteRegion(row?.row?.index)} />
       </Container>
     )
@@ -306,9 +306,6 @@ const ConfigureLocations = ({ regionData, setRegionData, runner, setRunner }: Lo
           />
         </Container>
         <Container>
-          {/*<Layout.Horizontal spacing="xsmall" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>*/}
-          {/*  <Label className={css.runnerregion}>{getString('cde.gitspaceInfraHome.machineImageName')}</Label>*/}
-          {/*</Layout.Horizontal>*/}
           <FormInput.Text
             name="runner.ami_id"
             label={getString('cde.Aws.runnerAmiId')}

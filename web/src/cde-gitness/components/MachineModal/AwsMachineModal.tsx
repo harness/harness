@@ -28,6 +28,7 @@ interface AwsMachineModalProps {
   regionIdentifier: string
   setRegionData: (val: regionType[]) => void
   regionData: regionType[]
+  refetch: () => void
 }
 
 interface AwsMachineModalForm {
@@ -48,7 +49,8 @@ function AwsMachineModal({
   infraproviderIdentifier,
   regionIdentifier,
   setRegionData,
-  regionData
+  regionData,
+  refetch
 }: AwsMachineModalProps) {
   const { getString } = useStrings()
   const { accountInfo } = useAppContext()
@@ -107,6 +109,7 @@ function AwsMachineModal({
         updatedData.push(region)
       })
       setRegionData(updatedData)
+      refetch?.()
       setIsOpen(false)
     } catch (err) {
       showError(getString('cde.create.machineCreateFailed'))

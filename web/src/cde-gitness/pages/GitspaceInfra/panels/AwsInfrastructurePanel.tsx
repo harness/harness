@@ -10,8 +10,10 @@ import { useAwsInfrastructure } from 'cde-gitness/hooks/useAwsInfrastructure'
 import { useDeleteInfraProvider } from 'services/cde'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { getErrorMessage } from 'utils/Utils'
+import { downloadYaml } from 'cde-gitness/utils/helper.utils'
 import { routes } from 'cde-gitness/RouteDefinitions'
 import InfraDetailCard from 'cde-gitness/components/InfraDetailCard/InfraDetailCard'
+import { useGetInfraDetails } from 'cde-gitness/hooks/useInfraDetailAPI'
 import AWSIcon from 'cde-gitness/assests/aws.svg?url'
 import NoDataCard from '../NoDataCard/NoDataCard'
 import MachineLocationContent from '../MachineLocationContent/MachineLocationContent'
@@ -26,7 +28,7 @@ interface TabData {
 interface AwsInfrastructurePanelProps {
   listResponse?: TypesInfraProviderConfig[] | null
   loading?: boolean
-  refetch?: () => void
+  refetch: () => void
 }
 
 const AwsInfrastructurePanel: React.FC<AwsInfrastructurePanelProps> = ({ listResponse, loading, refetch }) => {
@@ -46,6 +48,12 @@ const AwsInfrastructurePanel: React.FC<AwsInfrastructurePanelProps> = ({ listRes
   const { mutate: deleteInfraProvider } = useDeleteInfraProvider({
     accountIdentifier: accountInfo?.identifier,
     infraprovider_identifier: awsInfraDetails?.identifier ?? ''
+  })
+
+  const { data: infraDetailsData, loading: infraDetailsLoading } = useGetInfraDetails({
+    accountIdentifier: accountInfo?.identifier,
+    infraprovider_identifier: awsInfraDetails?.identifier ?? 'undefined',
+    queryParams: {}
   })
 
   const confirmDelete = useConfirmAct()
@@ -78,6 +86,8 @@ const AwsInfrastructurePanel: React.FC<AwsInfrastructurePanelProps> = ({ listRes
             setRegionData={setAwsRegionData}
             regionData={awsRegionData}
             provider={HYBRID_VM_AWS}
+            infraDetails={awsInfraDetails}
+            refetch={refetch}
           />
         )
       })
@@ -116,6 +126,12 @@ const AwsInfrastructurePanel: React.FC<AwsInfrastructurePanelProps> = ({ listRes
     return <NoDataCard provider={HYBRID_VM_AWS} />
   }
 
+  const handleDownloadYaml = () => {
+    downloadYaml(infraDetailsData?.setup_yaml, 'aws-infra-config.yaml', () =>
+      showError(getString('cde.configureInfra.yamlNotAvailable'))
+    )
+  }
+
   return (
     <Page.Body className={css.main}>
       <Layout.Vertical spacing={'xlarge'}>
@@ -124,26 +140,46 @@ const AwsInfrastructurePanel: React.FC<AwsInfrastructurePanelProps> = ({ listRes
             <img src={AWSIcon} width={24} className={css.infraTitle} />
             <Layout.Vertical>
               <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_500}>
-                {getString('cde.awsInfrastructure')}
+                {getString('cde.awsInfrastructureName')}
               </Text>
               <Text font={{ variation: FontVariation.H4 }}>{awsInfraDetails?.metadata?.name}</Text>
             </Layout.Vertical>
           </Layout.Horizontal>
-          <Button
-            icon="Edit"
-            iconProps={{ size: 12 }}
-            variation={ButtonVariation.SECONDARY}
-            text={getString('cde.edit')}
-            onClick={() =>
-              history.push(
-                routes.toCDEInfraConfigureDetail({
-                  accountId: accountInfo?.identifier,
-                  infraprovider_identifier: awsInfraDetails?.identifier ?? '',
-                  provider: HYBRID_VM_AWS
-                })
-              )
-            }
-          />
+          <Layout.Horizontal spacing={'medium'}>
+            <Button
+              icon="Edit"
+              iconProps={{ size: 12 }}
+              variation={ButtonVariation.SECONDARY}
+              text={getString('cde.edit')}
+              onClick={() =>
+                history.push(
+                  routes.toCDEInfraConfigureDetail({
+                    accountId: accountInfo?.identifier,
+                    infraprovider_identifier: awsInfraDetails?.identifier ?? '',
+                    provider: HYBRID_VM_AWS
+                  })
+                )
+              }
+            />
+            <Button
+              icon="download-manifests-inverse"
+              iconProps={{ size: 14 }}
+              variation={ButtonVariation.PRIMARY}
+              text={
+                infraDetailsLoading
+                  ? getString('cde.configureInfra.yamlLoading')
+                  : getString('cde.configureInfra.downloadInfraYaml')
+              }
+              onClick={handleDownloadYaml}
+              className={css.downloadButton}
+              disabled={infraDetailsLoading || !infraDetailsData?.setup_yaml}
+              tooltip={
+                infraDetailsLoading || !infraDetailsData?.setup_yaml
+                  ? getString('cde.configureInfra.yamlNotAvailable')
+                  : ''
+              }
+            />
+          </Layout.Horizontal>
         </Layout.Horizontal>
         <InfraDetailCard
           provider={HYBRID_VM_AWS}

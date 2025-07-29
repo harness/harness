@@ -134,3 +134,25 @@
 .headingText {
   text-transform: uppercase !important;
 }
+
+.filledTag {
+  :global(.bp3-tag) {
+    background-color: inherit !important;
+    border: none !important;
+  }
+
+  &:global(.bp3-intent-success) {
+    background-color: rgba(15, 153, 96, 0.15) !important;
+    color: rgb(15, 153, 96) !important;
+  }
+
+  &:global(.bp3-intent-danger) {
+    background-color: rgba(219, 55, 55, 0.15) !important;
+    color: rgb(219, 55, 55) !important;
+  }
+
+  &:global(.bp3-intent-warning) {
+    background-color: rgba(255, 170, 0, 0.15) !important;
+    color: rgb(255, 140, 0) !important;
+  }
+}

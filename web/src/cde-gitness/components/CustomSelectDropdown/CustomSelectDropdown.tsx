@@ -10,7 +10,8 @@ const CustomSelectDropdown = ({
   onChange,
   allowCustom = false,
   label = '',
-  error = ''
+  error = '',
+  disabled = false
 }: {
   options?: any
   value: { label: string; value: string } | undefined
@@ -19,6 +20,7 @@ const CustomSelectDropdown = ({
   label: string
   error?: any
   placeholder?: string
+  disabled?: boolean
 }) => {
   return (
     <Layout.Vertical id="primary-borderless-buttons" className={css.mb15}>
@@ -29,6 +31,7 @@ const CustomSelectDropdown = ({
         onChange={onChange}
         className={cx(css.customSelect, error ? css.errorClass : '')}
         allowCreatingNewItems={allowCustom}
+        disabled={disabled}
         itemRenderer={(item, props) => (
           <Button
             style={{ width: '100%', display: 'block' }}

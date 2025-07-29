@@ -66,7 +66,9 @@ const BasicDetails = ({ formikProps }: BasicDetailProps) => {
           placeholder={getString('cde.configureInfra.domain')}
           disabled={editMode}
         />
-        <Text font={{ variation: FontVariation.SMALL }}>{getString('cde.configureInfra.basicNoteText')}</Text>
+        <Text color={Color.GREY_500} font={{ variation: FontVariation.SMALL }}>
+          {getString('cde.configureInfra.basicNoteText')}
+        </Text>
         <br />
         <CustomSelectDropdown
           value={machineTypeOption.find(item => item.label === values?.machine_type)}
@@ -78,11 +80,16 @@ const BasicDetails = ({ formikProps }: BasicDetailProps) => {
           options={machineTypeOption}
           // placeholder={getString('cde.configureInfra.machineType')}
         />
+
         <FormInput.Text
           name="gateway.vm_image_name"
+          className={css.inputWithNote}
           label={getString('cde.configureInfra.gatewayImageName')}
           placeholder={getString('cde.configureInfra.gatewayImageNamePlaceholder')}
         />
+        <Text color={Color.GREY_500} font={{ variation: FontVariation.SMALL }}>
+          {getString('cde.configureInfra.defaultImageNoteText')}
+        </Text>
         <Container className={css.delegateContainer}>
           <Text className={css.delegateSelector}>{getString('cde.delegate.DelegateSelector')}</Text>
           <DelegateSelectorsV2

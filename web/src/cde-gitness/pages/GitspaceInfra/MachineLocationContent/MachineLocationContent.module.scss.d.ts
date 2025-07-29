@@ -25,6 +25,7 @@ export declare const countLabel: string
 export declare const deleteContainer: string
 export declare const dnone: string
 export declare const emptyMachineCard: string
+export declare const filledTag: string
 export declare const headingText: string
 export declare const locationDetail: string
 export declare const machineDetail: string

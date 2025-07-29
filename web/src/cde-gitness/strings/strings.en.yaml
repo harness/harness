@@ -71,7 +71,9 @@ id: ID
 gitspaceInfra: Gitspace Infrastructure
 configureGCPInfra: Configure GCP Infrastructure
 gcpInfrastructure: GCP Infrastructure
+gcpInfrastructureName : GCP Infrastructure Name
 awsInfrastructure: AWS Infrastructure
+awsInfrastructureName : AWS Infrastructure Name
 configureAWSInfra: Configure AWS Infrastructure
 configureGitspaceInfra: Configure Gitspace Infrastructure
 settings:
@@ -106,6 +108,8 @@ settings:
     selectAllMachineTypes: Select all machine types
 delegate:
   DelegateSelector: Delegate Selector
+  delegateSelectorTags: Delegate Selector Tags
+  noDelegateSelectors: No delegate selectors selected
 gitspaceInfraHome:
   minMessage: '{{field}} should contain minimum {{count}} characters'
   maxMessage: '{{field}} should not contain more than {{count}} characters'
@@ -120,19 +124,26 @@ gitspaceInfraHome:
   gcpSupportText: Currently we support GCP based infrastructure only.
   learnMore: Learn more about Gitspace Infrastructure
   infraDetails: Infrastructure details
+  status: Status
+  lastHeartbeat: Last Heartbeat
+  zoneDetails: Zone Details
+  noZonesAvailable: No zones available
   waitingForConnection: Waiting for Connection
   waitingMessage: It takes around 3-5 minutes to connect to the infrastructure. If it takes longer, please follow the
   troubleshoot: troubleshoot guidelines
   locationAndMachine: Locations and machines
   regionsAndMachines: Regions and machines
   locationDetails: Location details
+  healthy : HEALTHY
+  unhealthy: UNHEALTHY
+  unknown: UNKNOWN
   region: Region
   locationName: Region Name
   defaultSubnet: Default subnet IP range
   proxySubnet: Proxy subnet IP range
   dnsManagedZone: DNS managed zone
   envoyHealth: Envoy health
-  configureVMRunnerImage: VM Runner Image Details
+  configureVMRunnerImage: VM Runner Details
   configureVMRunnerImageNote: Configure the region and zone of the VM runner image.
   machineImageName: "Machine Image Name"
   machineImageNamePlaceholder: "Enter machine image name"
@@ -188,12 +199,19 @@ configureInfra:
   configure: Configure
   learnMoreAboutHybrid: Learn more about hybrid infra
   gatewayImageName: Gateway Machine Image Name
+  machineImageName: Machine Image Name
+  gatewayDetails: Gateway Details
+  vmRunnerDetails: VM Runner Details
   gatewayImageNamePlaceholder: Enter gateway image name
   gatewayImageNameRequired: Gateway Image Name is required
   configureZones: Configure Zones
   newZone: New Zone
+  updateTime: Last Updated
   provideInfraDetails: Provide Infrastructure Details
   downloadAndApply: Download and Apply YAML
+  downloadInfraYaml: Download Infra YAML
+  yamlNotAvailable: YAML not available yet
+  yamlLoading : Loading...
   applyYamlAndVerifyConnection: Apply YAML and Verify Connection
   basicDetails: Basic Details
   learnMore: Learn More
@@ -212,20 +230,25 @@ configureInfra:
   configureLocationNote: Users will only be able to host gitspaces in these regions only.
   gatewayNoteText: More number of instances better reliability of running the Gitspace. However more number of instances incur more costs
   basicNoteText: The domain on which all the gitspaces created by this infra will be accessible
+  defaultImageNoteText : If not specified, Harness will use a default image name
 Aws:
   title: AWS
   VpcCidrBlock: VPC CIDR Block
   domainExample: e.g. gitspace.harness.io
   instanceType: Instance Type
+  privateSubnetCidr: Private Subnet CIDR
+  publicSubnetCidr: Public Subnet CIDR
   gatewayInstanceType: Gateway Instance Type
   configureRegionsAndZones: Configure Regions and Zones
+  regionConfigNote: Once the region is configured, you can't change the AWS region selection, sub-domain and configured zones.
   gatewayAmi: Gateway AMI
   gatewayAmiId: Gateway AMI ID
-  runnerAmiId: AMI ID
-  runnerAmiIdPlaceholder: Enter AMI ID
-  runnerAmiIdRequired: AMI ID is required
+  gatewayAmiImage : Gateway AMI Image
+  runnerAmiId: Runner AMI ID
+  runnerAmiIdPlaceholder: Enter Runner AMI ID
+  runnerAmiIdRequired: Runner AMI ID is required
   machineAmiId: "Machine AMI ID"
-  machineAmiIdPlaceholder: "Enter AMI ID"
+  machineAmiIdPlaceholder: "Enter Machine AMI ID"
   machineAmiIdRequired: "Machine AMI ID is required"
   invalidAmiIdFormat: Invalid AMI ID format
   availabilityZone: Availability Zone

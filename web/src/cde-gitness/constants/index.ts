@@ -76,6 +76,12 @@ export interface ZoneConfig {
   proxySubnet?: string
   id: number
 }
+
+export interface AWSZoneConfig {
+  private_cidr_block: string
+  public_cidr_block: string
+  zone: string
+}
 export const HYBRID_VM_GCP = 'hybrid_vm_gcp'
 export const HARNESS_GCP = 'harness_gcp'
 export const HYBRID_VM_AWS = 'hybrid_vm_aws'

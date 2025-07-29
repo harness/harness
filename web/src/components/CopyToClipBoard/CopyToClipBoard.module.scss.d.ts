@@ -16,8 +16,6 @@
 
 /* eslint-disable */
 // This is an auto-generated file
-export declare const formContainer: string
-export declare const inputWithNote: string
-export declare const machineModal: string
-export declare const modalFooter: string
-export declare const noteText: string
+export declare const copyIcon: string
+export declare const popoverContent: string
+export declare const tooltipLabel: string

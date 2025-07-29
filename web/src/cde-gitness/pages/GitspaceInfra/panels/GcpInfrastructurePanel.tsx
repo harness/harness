@@ -10,8 +10,10 @@ import { useGcpInfrastructure } from 'cde-gitness/hooks/useGcpInfrastructure'
 import { useDeleteInfraProvider } from 'services/cde'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { getErrorMessage } from 'utils/Utils'
+import { downloadYaml } from 'cde-gitness/utils/helper.utils'
 import { routes } from 'cde-gitness/RouteDefinitions'
 import InfraDetailCard from 'cde-gitness/components/InfraDetailCard/InfraDetailCard'
+import { useGetInfraDetails } from 'cde-gitness/hooks/useInfraDetailAPI'
 import GCPIcon from '../../../../icons/google-cloud.svg?url'
 import NoDataCard from '../NoDataCard/NoDataCard'
 import MachineLocationContent from '../MachineLocationContent/MachineLocationContent'
@@ -26,7 +28,7 @@ interface TabData {
 interface GcpInfrastructurePanelProps {
   listResponse?: TypesInfraProviderConfig[] | null
   loading?: boolean
-  refetch?: () => void
+  refetch: () => void
 }
 
 const GcpInfrastructurePanel: React.FC<GcpInfrastructurePanelProps> = ({ listResponse, loading, refetch }) => {
@@ -47,6 +49,12 @@ const GcpInfrastructurePanel: React.FC<GcpInfrastructurePanelProps> = ({ listRes
   const { mutate: deleteInfraProvider } = useDeleteInfraProvider({
     accountIdentifier: accountInfo?.identifier,
     infraprovider_identifier: gcpInfraDetails?.identifier ?? ''
+  })
+
+  const { data: infraDetailsData, loading: infraDetailsLoading } = useGetInfraDetails({
+    accountIdentifier: accountInfo?.identifier,
+    infraprovider_identifier: gcpInfraDetails?.identifier ?? 'undefined',
+    queryParams: {}
   })
 
   const confirmDelete = useConfirmAct()
@@ -79,6 +87,8 @@ const GcpInfrastructurePanel: React.FC<GcpInfrastructurePanelProps> = ({ listRes
             setRegionData={setGcpRegionData}
             regionData={gcpRegionData}
             provider={HYBRID_VM_GCP}
+            infraDetails={gcpInfraDetails}
+            refetch={refetch}
           />
         )
       })
@@ -117,6 +127,12 @@ const GcpInfrastructurePanel: React.FC<GcpInfrastructurePanelProps> = ({ listRes
     return <NoDataCard provider={HYBRID_VM_GCP} />
   }
 
+  const handleDownloadYaml = () => {
+    downloadYaml(infraDetailsData?.setup_yaml, 'gcp-infra-config.yaml', () =>
+      showError(getString('cde.configureInfra.yamlNotAvailable'))
+    )
+  }
+
   return (
     <Page.Body className={css.main}>
       <Layout.Vertical spacing={'xlarge'}>
@@ -125,32 +141,53 @@ const GcpInfrastructurePanel: React.FC<GcpInfrastructurePanelProps> = ({ listRes
             <img src={GCPIcon} width={24} className={css.infraTitle} />
             <Layout.Vertical>
               <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_500}>
-                {getString('cde.gcpInfrastructure')}
+                {getString('cde.gcpInfrastructureName')}
               </Text>
               <Text font={{ variation: FontVariation.H4 }}>{gcpInfraDetails?.metadata?.name}</Text>
             </Layout.Vertical>
           </Layout.Horizontal>
-          <Button
-            icon="Edit"
-            iconProps={{ size: 12 }}
-            variation={ButtonVariation.SECONDARY}
-            text={getString('cde.edit')}
-            onClick={() =>
-              history.push(
-                routes.toCDEInfraConfigureDetail({
-                  accountId: accountInfo?.identifier,
-                  infraprovider_identifier: gcpInfraDetails?.identifier ?? '',
-                  provider: HYBRID_VM_GCP
-                })
-              )
-            }
-          />
+          <Layout.Horizontal spacing={'medium'}>
+            <Button
+              icon="Edit"
+              iconProps={{ size: 12 }}
+              variation={ButtonVariation.SECONDARY}
+              text={getString('cde.edit')}
+              onClick={() =>
+                history.push(
+                  routes.toCDEInfraConfigureDetail({
+                    accountId: accountInfo?.identifier,
+                    infraprovider_identifier: gcpInfraDetails?.identifier ?? '',
+                    provider: HYBRID_VM_GCP
+                  })
+                )
+              }
+            />
+            <Button
+              icon="download-manifests-inverse"
+              iconProps={{ size: 14 }}
+              variation={ButtonVariation.PRIMARY}
+              text={
+                infraDetailsLoading
+                  ? getString('cde.configureInfra.yamlLoading')
+                  : getString('cde.configureInfra.downloadInfraYaml')
+              }
+              onClick={handleDownloadYaml}
+              className={css.downloadButton}
+              disabled={infraDetailsLoading || !infraDetailsData?.setup_yaml}
+              tooltip={
+                infraDetailsLoading || !infraDetailsData?.setup_yaml
+                  ? getString('cde.configureInfra.yamlNotAvailable')
+                  : ''
+              }
+            />
+          </Layout.Horizontal>
         </Layout.Horizontal>
         <InfraDetailCard
           infraDetails={gcpInfraDetails}
           regionCount={gcpRegionData?.length ?? 0}
           provider={HYBRID_VM_GCP}
         />
+
         <Container className={css.locationAndMachineCard}>
           <Layout.Vertical spacing={'none'}>
             <Text className={css.locationAndMachineTitle} color={Color.GREY_1000}>

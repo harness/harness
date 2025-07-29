@@ -2,6 +2,7 @@ import React from 'react'
 import {
   Button,
   ButtonVariation,
+  Container,
   Formik,
   FormikForm,
   FormInput,
@@ -54,12 +55,6 @@ const NewRegionModal = ({
 
   const { values } = useFormikContext<{ domain: string }>()
 
-  // const regionOptions = Object.keys(InfraDetails.regions).map(item => {
-  //   return {
-  //     label: item,
-  //     value: item
-  //   }
-  // })
   const regionOptions = Object.keys(InfraDetails.regions)
     .filter(region => {
       // Include the current region if in edit mode, exclude if already in existingRegions
@@ -98,7 +93,7 @@ const NewRegionModal = ({
     <ModalDialog
       isOpen={isOpen}
       onClose={() => setIsOpen(false)}
-      width={700}
+      width={800}
       title={isEditMode ? 'Edit Region' : getString('cde.gitspaceInfraHome.newRegion')}>
       <Formik<NewRegionModalForm>
         validationSchema={validationSchema()}
@@ -122,6 +117,7 @@ const NewRegionModal = ({
                 label={getString('cde.gitspaceInfraHome.locationName')}
                 options={regionOptions}
                 error={formikProps.errors.location}
+                disabled={isEditMode}
                 // placeholder="e.g us-west1"
               />
               <FormInput.Text
@@ -146,13 +142,25 @@ const NewRegionModal = ({
                 </div>
               </div>
 
-              <Button
-                variation={ButtonVariation.PRIMARY}
-                type="submit"
-                style={{ marginLeft: '75%' }}
-                margin={{ top: 'medium' }}>
-                {getString('cde.gitspaceInfraHome.addnewRegion')}
-              </Button>
+              {/*<Button*/}
+              {/*  variation={ButtonVariation.PRIMARY}*/}
+              {/*  type="submit"*/}
+              {/*  style={{ marginLeft: '75%' }}*/}
+              {/*  margin={{ top: 'medium' }}>*/}
+              {/*  {getString('cde.gitspaceInfraHome.addnewRegion')}*/}
+              {/*</Button>*/}
+
+              <Container className={css.buttonContainer}>
+                <Button variation={ButtonVariation.PRIMARY} type="submit" className={css.actionButton}>
+                  {isEditMode ? getString('save') : getString('cde.gitspaceInfraHome.addnewRegion')}
+                </Button>
+                <Button
+                  variation={ButtonVariation.TERTIARY}
+                  text={getString('cancel')}
+                  onClick={() => setIsOpen(false)}
+                  className={css.cancelButton}
+                />
+              </Container>
             </FormikForm>
           )
         }}

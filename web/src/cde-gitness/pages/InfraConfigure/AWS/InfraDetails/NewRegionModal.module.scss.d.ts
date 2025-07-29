@@ -19,10 +19,15 @@
 export declare const actionButton: string
 export declare const actionText: string
 export declare const addZoneButton: string
+export declare const buttonContainer: string
+export declare const cancelButton: string
 export declare const cursorPointer: string
 export declare const customInput: string
 export declare const domainSuffix: string
 export declare const flexCenter: string
+export declare const infoIcon: string
+export declare const infoNote: string
+export declare const infoNoteContainer: string
 export declare const inputContainer: string
 export declare const inputWrapper: string
 export declare const marginTop20: string

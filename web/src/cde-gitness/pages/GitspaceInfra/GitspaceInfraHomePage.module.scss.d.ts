@@ -30,6 +30,7 @@ export declare const deleteInfraCard: string
 export declare const deleteInfraContainer: string
 export declare const deleteInfraTitle: string
 export declare const deleteMessage: string
+export declare const downloadButton: string
 export declare const infraDetailCard: string
 export declare const infraTitle: string
 export declare const locationAndMachineCard: string

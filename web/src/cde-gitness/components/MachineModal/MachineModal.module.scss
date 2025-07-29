@@ -24,4 +24,13 @@
   [class*='InputWithIdentifier--txtNameContainer'] {
     margin-bottom: 0 !important;
   }
+  .inputWithNote {
+    margin-bottom: var(--spacing-xsmall) !important;
+  }
+
+  .noteText {
+    color: var(--grey-350);
+    font-size: var(--font-size-small);
+    margin-bottom: var(--spacing-xsmall) !important;
+  }
 }
