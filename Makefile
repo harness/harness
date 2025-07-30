@@ -174,7 +174,7 @@ $(GOBIN)/dbmate:
 	go install github.com/amacneil/dbmate@v1.15.0
 
 $(GOBIN)/govulncheck:
-	go install golang.org/x/vuln/cmd/govulncheck@v1.1.1
+	go install golang.org/x/vuln/cmd/govulncheck@v1.1.4
 
 $(GOBIN)/protoc-gen-go:
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28

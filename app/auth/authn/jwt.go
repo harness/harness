@@ -27,7 +27,7 @@ import (
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/types"
 
-	gojwt "github.com/golang-jwt/jwt"
+	gojwt "github.com/golang-jwt/jwt/v5"
 )
 
 const (

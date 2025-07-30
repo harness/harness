@@ -21,7 +21,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 const (
@@ -38,7 +38,7 @@ const (
 
 // Claims defines Harness jwt claims.
 type Claims struct {
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 
 	PrincipalID int64 `json:"pid,omitempty"`
 
@@ -73,17 +73,17 @@ type AccessPermissions struct {
 
 // GenerateForToken generates a jwt for a given token.
 func GenerateForToken(token *types.Token, secret string) (string, error) {
-	var expiresAt int64
+	var expiresAt *jwt.NumericDate
 	if token.ExpiresAt != nil {
-		expiresAt = *token.ExpiresAt
+		expiresAt = jwt.NewNumericDate(time.UnixMilli(*token.ExpiresAt))
 	}
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
-		StandardClaims: jwt.StandardClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer: issuer,
 			// times required to be in sec not millisec
-			IssuedAt:  token.IssuedAt / 1000,
-			ExpiresAt: expiresAt / 1000,
+			IssuedAt:  jwt.NewNumericDate(time.UnixMilli(token.IssuedAt)),
+			ExpiresAt: expiresAt,
 		},
 		PrincipalID: token.PrincipalID,
 		Token: &SubClaimsToken{
@@ -112,11 +112,11 @@ func GenerateWithMembership(
 	expiresAt := issuedAt.Add(lifetime)
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
-		StandardClaims: jwt.StandardClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer: issuer,
 			// times required to be in sec
-			IssuedAt:  issuedAt.Unix(),
-			ExpiresAt: expiresAt.Unix(),
+			IssuedAt:  jwt.NewNumericDate(issuedAt),
+			ExpiresAt: jwt.NewNumericDate(expiresAt),
 		},
 		PrincipalID: principalID,
 		Membership: &SubClaimsMembership{
@@ -146,10 +146,10 @@ func GenerateForTokenWithAccessPermissions(
 	expiresAt := issuedAt.Add(*lifetime)
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
-		StandardClaims: jwt.StandardClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    issuer,
-			IssuedAt:  issuedAt.Unix(),
-			ExpiresAt: expiresAt.Unix(),
+			IssuedAt:  jwt.NewNumericDate(issuedAt),
+			ExpiresAt: jwt.NewNumericDate(expiresAt),
 		},
 		PrincipalID:       principalID,
 		AccessPermissions: accessPermissions,
