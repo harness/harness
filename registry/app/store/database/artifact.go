@@ -33,6 +33,7 @@ import (
 	"github.com/harness/gitness/store/database/dbtx"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -50,6 +51,7 @@ func NewArtifactDao(db *sqlx.DB) store.ArtifactRepository {
 
 type artifactDB struct {
 	ID        int64            `db:"artifact_id"`
+	UUID      string           `db:"artifact_uuid"`
 	Version   string           `db:"artifact_version"`
 	ImageID   int64            `db:"artifact_image_id"`
 	Metadata  *json.RawMessage `db:"artifact_metadata"`
@@ -170,6 +172,7 @@ func (a ArtifactDao) CreateOrUpdate(ctx context.Context, artifact *types.Artifac
 				,artifact_updated_at
 				,artifact_created_by
 				,artifact_updated_by
+				,artifact_uuid
 		    ) VALUES (
 						 :artifact_image_id
 						,:artifact_version
@@ -178,6 +181,7 @@ func (a ArtifactDao) CreateOrUpdate(ctx context.Context, artifact *types.Artifac
 						,:artifact_updated_at
 						,:artifact_created_by
 						,:artifact_updated_by
+						,:artifact_uuid
 		    ) 
             ON CONFLICT (artifact_image_id, artifact_version)
 		    DO UPDATE SET artifact_metadata = :artifact_metadata
@@ -292,8 +296,13 @@ func (a ArtifactDao) mapToInternalArtifact(ctx context.Context, in *types.Artifa
 	in.UpdatedAt = time.Now()
 	in.UpdatedBy = session.Principal.ID
 
+	if in.UUID == "" {
+		in.UUID = uuid.NewString()
+	}
+
 	return &artifactDB{
 		ID:        in.ID,
+		UUID:      in.UUID,
 		Version:   in.Version,
 		ImageID:   in.ImageID,
 		Metadata:  &metadata,
@@ -313,6 +322,7 @@ func (a ArtifactDao) mapToArtifact(_ context.Context, dst *artifactDB) (*types.A
 	}
 	return &types.Artifact{
 		ID:        dst.ID,
+		UUID:      dst.UUID,
 		Version:   dst.Version,
 		ImageID:   dst.ImageID,
 		Metadata:  metadata,

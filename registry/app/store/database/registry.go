@@ -18,6 +18,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/google/uuid"
 	"time"
 
 	"github.com/harness/gitness/app/api/request"
@@ -57,6 +58,7 @@ func NewRegistryDao(db *sqlx.DB, mtRepository store.MediaTypesRepository) store.
 // registryDB holds the record of a registry in DB.
 type registryDB struct {
 	ID              int64                 `db:"registry_id"`
+	UUID            string                `db:"registry_uuid"`
 	Name            string                `db:"registry_name"`
 	ParentID        int64                 `db:"registry_parent_id"`
 	RootParentID    int64                 `db:"registry_root_parent_id"`
@@ -556,6 +558,7 @@ func (r registryDao) Create(ctx context.Context, registry *types.Registry) (id i
 			,registry_created_by
 			,registry_updated_by
 			,registry_labels
+			,registry_uuid
 		) VALUES (
 			:registry_name
 			,:registry_root_parent_id
@@ -571,6 +574,7 @@ func (r registryDao) Create(ctx context.Context, registry *types.Registry) (id i
 			,:registry_created_by
 			,:registry_updated_by
 			,:registry_labels
+			,:registry_uuid
 		) RETURNING registry_id`
 
 	db := dbtx.GetAccessor(ctx, r.db)
@@ -597,8 +601,13 @@ func mapToInternalRegistry(ctx context.Context, in *types.Registry) *registryDB 
 	}
 	in.UpdatedBy = session.Principal.ID
 
+	if in.UUID == "" {
+		in.UUID = uuid.NewString()
+	}
+
 	return &registryDB{
 		ID:              in.ID,
+		UUID:            in.UUID,
 		Name:            in.Name,
 		ParentID:        in.ParentID,
 		RootParentID:    in.RootParentID,
@@ -744,6 +753,7 @@ func (r registryDao) mapToRegistries(ctx context.Context, dst []*registryDB) (*[
 func (r registryDao) mapToRegistry(_ context.Context, dst *registryDB) (*types.Registry, error) {
 	return &types.Registry{
 		ID:              dst.ID,
+		UUID:            dst.UUID,
 		Name:            dst.Name,
 		ParentID:        dst.ParentID,
 		RootParentID:    dst.RootParentID,

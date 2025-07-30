@@ -29,6 +29,7 @@ import (
 	databaseg "github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
 
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
@@ -45,6 +46,7 @@ func NewImageDao(db *sqlx.DB) store.ImageRepository {
 
 type imageDB struct {
 	ID         int64          `db:"image_id"`
+	UUID       string         `db:"image_uuid"`
 	Name       string         `db:"image_name"`
 	RegistryID int64          `db:"image_registry_id"`
 	Labels     sql.NullString `db:"image_labels"`
@@ -151,6 +153,7 @@ func (i ImageDao) CreateOrUpdate(ctx context.Context, image *types.Image) error 
 				,image_updated_at
 				,image_created_by
 				,image_updated_by
+				,image_uuid
 		    ) VALUES (
 						 :image_registry_id
 						,:image_name
@@ -159,6 +162,7 @@ func (i ImageDao) CreateOrUpdate(ctx context.Context, image *types.Image) error 
 						,:image_updated_at
 						,:image_created_by
 						,:image_updated_by
+					    ,:image_uuid
 		    ) 
             ON CONFLICT (image_registry_id, image_name)
 		    DO UPDATE SET
@@ -340,10 +344,15 @@ func (i ImageDao) mapToInternalImage(ctx context.Context, in *types.Image) *imag
 	in.UpdatedAt = time.Now()
 	in.UpdatedBy = session.Principal.ID
 
+	if in.UUID == "" {
+		in.UUID = uuid.NewString()
+	}
+
 	sort.Strings(in.Labels)
 
 	return &imageDB{
 		ID:         in.ID,
+		UUID:       in.UUID,
 		Name:       in.Name,
 		RegistryID: in.RegistryID,
 		Labels:     util.GetEmptySQLString(util.ArrToString(in.Labels)),
@@ -360,6 +369,7 @@ func (i ImageDao) mapToImage(_ context.Context, dst *imageDB) (*types.Image, err
 	updatedBy := dst.UpdatedBy
 	return &types.Image{
 		ID:         dst.ID,
+		UUID:       dst.UUID,
 		Name:       dst.Name,
 		RegistryID: dst.RegistryID,
 		Labels:     util.StringToArr(dst.Labels.String),

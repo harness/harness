@@ -21,6 +21,7 @@ import (
 // Image DTO object.
 type Image struct {
 	ID         int64
+	UUID       string
 	Name       string
 	RegistryID int64
 	Enabled    bool

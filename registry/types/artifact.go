@@ -24,6 +24,7 @@ import (
 // Artifact DTO object.
 type Artifact struct {
 	ID        int64
+	UUID      string
 	Version   string
 	ImageID   int64
 	Metadata  json.RawMessage

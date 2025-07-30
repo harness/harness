@@ -23,6 +23,7 @@ import (
 // Registry DTO object.
 type Registry struct {
 	ID              int64
+	UUID            string
 	Name            string
 	ParentID        int64
 	RootParentID    int64
