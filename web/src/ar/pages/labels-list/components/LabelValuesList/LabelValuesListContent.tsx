@@ -34,9 +34,11 @@ interface LabelValuesListContentProps {
 export function LabelValuesListContent(props: LabelValuesListContentProps) {
   const { list, allowDynamicValues, defaultLabelName, labelName, scope, color } = props
   const { getString } = useStrings()
-  if (!list.length && !allowDynamicValues) {
+  const filteredList = list.filter(each => !!each.value)
+  if (!filteredList.length && !allowDynamicValues) {
     return (
       <Label
+        key={`${labelName}-default-value`}
         name={labelName || defaultLabelName || getString('labelsList.defaultLabelName')}
         label_color={color || ColorName.Blue}
       />
@@ -44,16 +46,17 @@ export function LabelValuesListContent(props: LabelValuesListContentProps) {
   }
   return (
     <>
-      {list.map(value => (
+      {filteredList.map(each => (
         <Label
-          key={`${labelName}-${value.value}`}
+          key={`${labelName}-${each.value}`}
           name={labelName || ''}
           scope={scope}
-          label_value={{ name: value.value, color: value.color as ColorName }}
+          label_value={{ name: each.value, color: each.color as ColorName }}
         />
       ))}
       {allowDynamicValues && (
         <Label
+          key={`${labelName}-dynamic-value`}
           name={labelName || defaultLabelName || getString('labelsList.defaultLabelName')}
           label_color={color || ColorName.Blue}
           label_value={{ name: getString('labelsList.canbeAddedByUsers') }}

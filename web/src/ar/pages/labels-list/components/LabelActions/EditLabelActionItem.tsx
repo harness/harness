@@ -15,20 +15,34 @@
  */
 
 import React from 'react'
+import { useToaster } from '@harnessio/uicore'
 
 import { useParentComponents } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
 
 import type { LabelActionProps } from './type'
+import { useUpdateLabelModal } from '../../hooks/useUpdateLabelModal'
 
 export default function EditLabelActionItem(props: LabelActionProps): JSX.Element {
-  const { data, readonly } = props
+  const { data, readonly, onClose } = props
   const { getString } = useStrings()
   const { RbacMenuItem } = useParentComponents()
+  const { showSuccess, clear } = useToaster()
+
+  const handleAfterUpdateLabel = (): void => {
+    clear()
+    showSuccess(getString('labelsList.updateLabelModal.labelUpdated'))
+    onClose?.(true)
+  }
+
+  const [openModal] = useUpdateLabelModal({
+    data,
+    onSuccess: handleAfterUpdateLabel
+  })
 
   const handleEditService = (): void => {
-    // TODO: implement edit label flow
+    openModal()
   }
 
   return (

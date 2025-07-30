@@ -79,6 +79,10 @@ export interface StringsMap {
   'labelsList.table.columns.scope': string
   'labelsList.table.newLabel': string
   'labelsList.table.noData': string
+  'labelsList.updateLabelModal.actions.cancel': string
+  'labelsList.updateLabelModal.actions.update': string
+  'labelsList.updateLabelModal.labelUpdated': string
+  'labelsList.updateLabelModal.title': string
   'manageRegistries.comingSoon': string
   'manageRegistries.pageHeading': string
   'manageRegistries.tabs.cleanup_policies': string

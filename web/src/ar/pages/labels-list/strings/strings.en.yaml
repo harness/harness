@@ -19,6 +19,12 @@ createLabelModal:
     create: Create
     cancel: Cancel
   labelCreated: Label created successfully!
+updateLabelModal:
+  title: Update Label
+  actions:
+    update: Update
+    cancel: Cancel
+  labelUpdated: Label updated successfully!
 labelForm:
   name: Label Name
   description: Description
