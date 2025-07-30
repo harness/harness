@@ -8,14 +8,17 @@ import type { OpenapiCreateGitspaceRequest, TypesInfraProviderConfig } from 'ser
 import { HARNESS_GCP, HYBRID_VM_GCP, HYBRID_VM_AWS } from 'cde-gitness/constants'
 import googleCloudIcon from 'icons/google-cloud.svg?url'
 import awsIcon from 'cde-gitness/assests/aws.svg?url'
+import HarnessIcon from 'icons/Harness.svg?url'
 import type { dropdownProps } from 'cde-gitness/constants'
 import { CDECustomDropdown } from '../CDECustomDropdown/CDECustomDropdown'
 import css from './SelectInfraProviderType.module.scss'
 
 // Function to get provider icon based on provider type
 const getProviderIcon = (providerType: string) => {
-  if (providerType === HARNESS_GCP || providerType === HYBRID_VM_GCP) {
+  if (providerType === HYBRID_VM_GCP) {
     return googleCloudIcon
+  } else if (providerType === HARNESS_GCP) {
+    return HarnessIcon
   } else if (providerType === HYBRID_VM_AWS) {
     return awsIcon
   }
@@ -98,7 +101,11 @@ const SelectInfraProviderType = ({ infraProviders, allProviders = [] }: SelectIn
                         minHeight: '24px'
                       }}>
                       {providerIcon ? (
-                        <img src={providerIcon} height={17} width={17} />
+                        providerType === HARNESS_GCP ? (
+                          <img src={providerIcon} height={20} width={20} />
+                        ) : (
+                          <img src={providerIcon} height={17} width={17} />
+                        )
                       ) : (
                         <Cloud height={17} width={17} />
                       )}
