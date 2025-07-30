@@ -236,6 +236,9 @@ const ZonesTable = ({ formikProps, isEditMode = false }: ZonesTableProps) => {
   })
 
   const handleAddZone = React.useCallback(() => {
+    if (isEditMode) {
+      return
+    }
     const newZone: ZoneConfig = {
       zone: '',
       privateSubnet: '',
@@ -354,7 +357,7 @@ const ZonesTable = ({ formikProps, isEditMode = false }: ZonesTableProps) => {
       <Container className={css.zonesContainer}>
         <div className={css.zonesTable}>
           <TableV2<ZoneConfig> columns={zoneColumns} data={tableData} className={css.zonesTable} minimal />
-          {
+          {!isEditMode && (
             <div className={css.addZoneButton}>
               <Text
                 icon="plus"
@@ -365,7 +368,7 @@ const ZonesTable = ({ formikProps, isEditMode = false }: ZonesTableProps) => {
                 {getString('cde.configureInfra.newZone')}
               </Text>
             </div>
-          }
+          )}
         </div>
       </Container>
     </Container>
