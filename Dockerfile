@@ -18,7 +18,7 @@ RUN yarn && yarn build && yarn cache clean
 # ---------------------------------------------------------#
 #                   Build Harness image                    #
 # ---------------------------------------------------------#
-FROM --platform=$BUILDPLATFORM golang:1.23-alpine3.20 as builder
+FROM --platform=$BUILDPLATFORM golang:1.23.10-alpine3.22 as builder
 
 RUN apk update \
     && apk add --no-cache protoc build-base git
@@ -69,7 +69,7 @@ RUN apk --update add ca-certificates
 # ---------------------------------------------------------#
 #                   Create final image                     #
 # ---------------------------------------------------------#
-FROM --platform=$TARGETPLATFORM alpine/git:2.43.0 as final
+FROM --platform=$TARGETPLATFORM alpine/git:2.49.1 as final
 
 # setup app dir and its content
 WORKDIR /app
