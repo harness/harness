@@ -101,6 +101,7 @@ func mapToArtifactMetadata(
 		PackageType:        &packageType,
 		DownloadsCount:     &artifact.DownloadCount,
 		PullCommand:        &pullCommand,
+		IsQuarantined:      &artifact.IsQuarantined,
 	}
 }
 
@@ -115,6 +116,7 @@ func mapToRegistryArtifactMetadata(artifact types.ArtifactMetadata) *artifactapi
 		LastModified:       &lastModified,
 		PackageType:        &packageType,
 		DownloadsCount:     &artifact.DownloadCount,
+		IsQuarantined:      &artifact.IsQuarantined,
 	}
 }
 
@@ -469,6 +471,7 @@ func GetNonOCIArtifactMetadata(
 			LastModified:   &modifiedAt,
 			PullCommand:    &command,
 			DownloadsCount: &downloadCount,
+			IsQuarantined:  &tag.IsQuarantined,
 		}
 		artifactVersionMetadataList = append(artifactVersionMetadataList, *artifactVersionMetadata)
 	}

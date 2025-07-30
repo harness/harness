@@ -41,4 +41,5 @@ type NonOCIArtifactMetadata struct {
 	FileCount     int64
 	ModifiedAt    time.Time
 	DownloadCount int64
+	IsQuarantined bool
 }

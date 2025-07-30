@@ -46,6 +46,7 @@ type ArtifactMetadata struct {
 	ModifiedAt    time.Time
 	Version       string
 	Metadata      json.RawMessage
+	IsQuarantined bool
 }
 
 type ImageMetadata struct {

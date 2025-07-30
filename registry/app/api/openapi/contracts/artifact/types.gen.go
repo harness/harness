@@ -160,6 +160,7 @@ type ArtifactLabelRequest struct {
 // ArtifactMetadata Artifact Metadata
 type ArtifactMetadata struct {
 	DownloadsCount *int64    `json:"downloadsCount,omitempty"`
+	IsQuarantined  *bool     `json:"isQuarantined,omitempty"`
 	Labels         *[]string `json:"labels,omitempty"`
 	LastModified   *string   `json:"lastModified,omitempty"`
 	Name           string    `json:"name"`
@@ -197,6 +198,7 @@ type ArtifactVersionMetadata struct {
 	DigestCount    *int    `json:"digestCount,omitempty"`
 	DownloadsCount *int64  `json:"downloadsCount,omitempty"`
 	FileCount      *int64  `json:"fileCount,omitempty"`
+	IsQuarantined  *bool   `json:"isQuarantined,omitempty"`
 	LastModified   *string `json:"lastModified,omitempty"`
 	Name           string  `json:"name"`
 
@@ -619,6 +621,7 @@ type Registry struct {
 // RegistryArtifactMetadata Artifact Metadata
 type RegistryArtifactMetadata struct {
 	DownloadsCount *int64    `json:"downloadsCount,omitempty"`
+	IsQuarantined  *bool     `json:"isQuarantined,omitempty"`
 	Labels         *[]string `json:"labels,omitempty"`
 	LastModified   *string   `json:"lastModified,omitempty"`
 	LatestVersion  string    `json:"latestVersion"`

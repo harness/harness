@@ -591,7 +591,8 @@ func (a ArtifactDao) GetArtifactsByRepo(
 		`r.registry_name as repo_name, i.image_name as name, 
 		r.registry_package_type as package_type, a.artifact_version as latest_version, 
 		a.artifact_updated_at as modified_at, i.image_labels as labels, 
-		COALESCE(t2.download_count, 0) as download_count `,
+		COALESCE(t2.download_count, 0) as download_count,
+		(qp.quarantined_path_id IS NOT NULL) AS is_quarantined`,
 	).
 		From("artifacts a").
 		Join(
@@ -604,6 +605,8 @@ func (a ArtifactDao) GetArtifactsByRepo(
 		).
 		Join("images i ON i.image_id = a.artifact_image_id").
 		Join("registries r ON i.image_registry_id = r.registry_id").
+		LeftJoin("quarantined_paths qp ON qp.quarantined_path_image_id = i.image_id "+
+			"AND qp.quarantined_path_registry_id = i.image_registry_id").
 		LeftJoin(
 			`( SELECT i.image_name, SUM(COALESCE(t1.download_count, 0)) as download_count FROM 
 			( SELECT a.artifact_image_id, COUNT(d.download_stat_id) as download_count 
@@ -814,8 +817,9 @@ func (a ArtifactDao) GetAllVersionsByRepoAndImage(
         a.artifact_version AS name, 
         a.artifact_metadata ->> 'size' AS size, 
         a.artifact_metadata ->> 'file_count' AS file_count,
-        a.artifact_updated_at AS modified_at
-    `)
+        a.artifact_updated_at AS modified_at,
+        (qp.quarantined_path_id IS NOT NULL) AS is_quarantined`,
+		)
 
 	if a.db.DriverName() == SQLITE3 {
 		q = databaseg.Builder.Select(`
@@ -823,12 +827,16 @@ func (a ArtifactDao) GetAllVersionsByRepoAndImage(
         a.artifact_version AS name, 
         json_extract(a.artifact_metadata, '$.size') AS size,
         json_extract(a.artifact_metadata, '$.file_count') AS file_count,
-        a.artifact_updated_at AS modified_at
-    `)
+        a.artifact_updated_at AS modified_at,
+        (qp.quarantined_path_id IS NOT NULL) AS is_quarantined`,
+		)
 	}
 
 	q = q.From("artifacts a").
 		Join("images i ON i.image_id = a.artifact_image_id").
+		LeftJoin("quarantined_paths qp ON ((qp.quarantined_path_artifact_id = a.artifact_id "+
+			"OR qp.quarantined_path_artifact_id IS NULL) "+
+			"AND qp.quarantined_path_image_id = i.image_id) AND qp.quarantined_path_registry_id = ?", regID).
 		Where(
 			" i.image_registry_id = ? AND i.image_name = ?",
 			regID, image,
@@ -1098,6 +1106,7 @@ func (a ArtifactDao) mapToArtifactMetadata(
 		CreatedAt:     time.UnixMilli(dst.CreatedAt),
 		ModifiedAt:    time.UnixMilli(dst.ModifiedAt),
 		Version:       dst.Version,
+		IsQuarantined: dst.IsQuarantined,
 	}
 	if dst.Metadata != nil {
 		artifactMetadata.Metadata = *dst.Metadata
@@ -1124,6 +1133,7 @@ func (a ArtifactDao) mapToNonOCIMetadata(
 		Size:          size,
 		FileCount:     fileCount,
 		ModifiedAt:    time.UnixMilli(dst.ModifiedAt),
+		IsQuarantined: dst.IsQuarantined,
 	}
 }
 
@@ -1146,6 +1156,7 @@ type nonOCIArtifactMetadataDB struct {
 	FileCount     *int64               `db:"file_count"`
 	ModifiedAt    int64                `db:"modified_at"`
 	DownloadCount int64                `db:"download_count"`
+	IsQuarantined bool                 `db:"is_quarantined"`
 }
 
 type downloadCountResult struct {

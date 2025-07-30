@@ -86,6 +86,7 @@ type artifactMetadataDB struct {
 	Tag           *string              `db:"tag"`
 	Version       string               `db:"version"`
 	Metadata      *json.RawMessage     `db:"metadata"`
+	IsQuarantined bool                 `db:"is_quarantined"`
 }
 
 type tagMetadataDB struct {
@@ -469,12 +470,16 @@ func (t tagDao) GetAllArtifactOnParentIDQueryForNonOCI(
 		ar.artifact_version as version, 
 		ar.artifact_updated_at as modified_at, 
 		i.image_labels as labels, 
-		COALESCE(t2.download_count, 0) as download_count `,
+		COALESCE(t2.download_count, 0) as download_count,
+		(qp.quarantined_path_id IS NOT NULL) AS is_quarantined`,
 	).
 		From("artifacts ar").
 		Join("images i ON i.image_id = ar.artifact_image_id").
 		Join("registries r ON i.image_registry_id = r.registry_id").
 		Where("r.registry_parent_id = ? AND r.registry_package_type NOT IN ('DOCKER', 'HELM')", parentID).
+		LeftJoin("quarantined_paths qp ON ((qp.quarantined_path_artifact_id = ar.artifact_id "+
+			"OR qp.quarantined_path_artifact_id IS NULL) "+
+			"AND qp.quarantined_path_image_id = i.image_id) AND qp.quarantined_path_registry_id = r.registry_id").
 		LeftJoin(
 			`( SELECT a.artifact_version, SUM(COALESCE(t1.download_count, 0)) as download_count FROM 
 			( SELECT a.artifact_id, COUNT(d.download_stat_id) as download_count 
@@ -864,7 +869,8 @@ func (t tagDao) GetAllArtifactsByRepo(
 		`r.registry_name as repo_name, t.tag_image_name as name, 
 		r.registry_package_type as package_type, t.tag_name as latest_version, 
 		t.tag_updated_at as modified_at, ar.image_labels as labels, 
-		COALESCE(t2.download_count, 0) as download_count `,
+		COALESCE(t2.download_count, 0) as download_count,
+        (qp.quarantined_path_id IS NOT NULL) AS is_quarantined`,
 	).
 		From("tags t").
 		Join(
@@ -879,6 +885,8 @@ func (t tagDao) GetAllArtifactsByRepo(
 			"images ar ON ar.image_registry_id = t.tag_registry_id"+
 				" AND ar.image_name = t.tag_image_name",
 		).
+		LeftJoin("quarantined_paths qp ON (qp.quarantined_path_image_id = ar.image_id "+
+			"AND qp.quarantined_path_registry_id = r.registry_id)").
 		LeftJoin(
 			`( SELECT i.image_name, SUM(COALESCE(t1.download_count, 0)) as download_count FROM 
 			( SELECT a.artifact_image_id, COUNT(d.download_stat_id) as download_count 
@@ -1178,6 +1186,7 @@ func (t tagDao) mapToArtifactMetadata(
 		CreatedAt:     time.UnixMilli(dst.CreatedAt),
 		ModifiedAt:    time.UnixMilli(dst.ModifiedAt),
 		Version:       version,
+		IsQuarantined: dst.IsQuarantined,
 	}, nil
 }
 

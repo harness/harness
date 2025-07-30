@@ -2214,6 +2214,8 @@ components:
           type: string
         pullCommand:
           type: string
+        isQuarantined:
+          type: boolean
         packageType:
           $ref: "#/components/schemas/PackageType"
       required:
@@ -2242,6 +2244,8 @@ components:
           type: string
         lastModified:
           type: string
+        isQuarantined:
+          type: boolean
         packageType:
           $ref: "#/components/schemas/PackageType"
       required:
@@ -2273,6 +2277,8 @@ components:
           format: int64
         lastModified:
           type: string
+        isQuarantined:
+          type: boolean
         packageType:
           $ref: "#/components/schemas/PackageType"
       required:
