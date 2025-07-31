@@ -41,7 +41,8 @@ export const useAdminSettings = () => {
     [getString]
   )
 
-  const initialValues = useMemo(() => createInitialValues(availableEditors), [availableEditors])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const initialValues = useMemo(() => createInitialValues(settings, getString), [settings])
 
   const handleSave = async (values: AdminSettingsFormValues) => {
     try {

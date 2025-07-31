@@ -5,18 +5,8 @@ import { useFormikContext, getIn } from 'formik'
 import { useStrings } from 'framework/strings'
 import type { StringsMap } from 'framework/strings/stringTypes'
 import { scmOptionsCDE, SCMType } from 'cde-gitness/pages/GitspaceCreate/CDECreateGitspace'
-import type { TypesGitspaceSettingsResponse, EnumGitspaceCodeRepoType } from 'services/cde'
+import type { AdminSettingsFormValues } from '../utils/adminSettingsUtils'
 import css from './GitProviders.module.scss'
-
-interface AdminSettingsFormValues {
-  gitProviders: {
-    [key: string]: boolean
-  }
-}
-
-interface GitProvidersProps {
-  settings: TypesGitspaceSettingsResponse | null
-}
 
 type Provider = { name: string; labelKey: string; icon: string }
 type ProviderSection = { titleKey: keyof StringsMap; providers: Provider[] }
@@ -40,7 +30,7 @@ const sectionMapping: Record<string, string> = {
   unknown: 'cde.settings.other'
 }
 
-const GitProviders: React.FC<GitProvidersProps> = ({ settings }) => {
+const GitProviders: React.FC = () => {
   const { getString } = useStrings()
   const { values, setFieldValue } = useFormikContext<AdminSettingsFormValues>()
   const [selectAllChecked, setSelectAllChecked] = useState(true)
@@ -59,21 +49,6 @@ const GitProviders: React.FC<GitProvidersProps> = ({ settings }) => {
 
     return sections
   }, [])
-
-  useEffect(() => {
-    if (settings) {
-      const scmSettings = settings.settings?.gitspace_config?.scm
-      const deniedList = scmSettings?.access_list?.list || []
-      const allProviders = scmOptionsCDE.map(p => p.value)
-      const newGitProviderValues: Record<string, boolean> = {}
-
-      allProviders.forEach(provider => {
-        newGitProviderValues[provider] = !deniedList.includes(provider as EnumGitspaceCodeRepoType)
-      })
-
-      setFieldValue('gitProviders', newGitProviderValues, false)
-    }
-  }, [settings])
 
   useEffect(() => {
     if (values.gitProviders) {

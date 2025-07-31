@@ -83,8 +83,8 @@ const AdminSettingsPage = () => {
                     title: tab.title,
                     panel: (
                       <>
-                        {tab.id === 'gitProviders' && <GitProviders settings={settings} />}
-                        {tab.id === 'codeEditors' && <CodeEditors settings={settings} />}
+                        {tab.id === 'gitProviders' && <GitProviders />}
+                        {tab.id === 'codeEditors' && <CodeEditors />}
                         {tab.id === 'cloudRegions' && <CloudRegions settings={settings} />}
                       </>
                     )

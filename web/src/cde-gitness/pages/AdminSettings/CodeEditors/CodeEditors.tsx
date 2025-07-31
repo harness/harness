@@ -4,19 +4,10 @@ import { Color, FontVariation } from '@harnessio/design-system'
 import { useFormikContext, getIn } from 'formik'
 import { useStrings } from 'framework/strings'
 import type { StringsMap } from 'framework/strings/stringTypes'
-import type { TypesGitspaceSettingsResponse, EnumIDEType } from 'services/cde'
+import type { EnumIDEType } from 'services/cde'
 import { getIDETypeOptions, groupEnums } from 'cde-gitness/constants'
+import type { AdminSettingsFormValues } from '../utils/adminSettingsUtils'
 import css from './CodeEditors.module.scss'
-
-interface AdminSettingsFormValues {
-  codeEditors: {
-    [key: string]: boolean
-  }
-}
-
-interface CodeEditorsProps {
-  settings: TypesGitspaceSettingsResponse | null
-}
 
 type Editor = { value: EnumIDEType; label: string; icon: string; group: string }
 type EditorSection = { titleKey: keyof StringsMap; editors: Editor[] }
@@ -31,7 +22,7 @@ const groupMapping: Record<string, keyof StringsMap> = {
   [groupEnums.JETBRAIN]: 'cde.settings.editors.jetbrains'
 }
 
-const CodeEditors: React.FC<CodeEditorsProps> = ({ settings }) => {
+const CodeEditors: React.FC = () => {
   const { getString } = useStrings()
   const { values, setFieldValue } = useFormikContext<AdminSettingsFormValues>()
   const [selectAllChecked, setSelectAllChecked] = useState(true)
@@ -57,22 +48,6 @@ const CodeEditors: React.FC<CodeEditorsProps> = ({ settings }) => {
 
     return sections
   }, [availableEditors])
-
-  useEffect(() => {
-    if (settings) {
-      const ideSettings = settings.settings?.gitspace_config?.ide
-      const deniedList = ideSettings?.access_list?.list || []
-      const allEditors = availableEditors.map(e => e.value)
-
-      const newCodeEditorValues: Record<string, boolean> = {}
-
-      allEditors.forEach(editor => {
-        newCodeEditorValues[editor] = !deniedList.includes(editor as EnumIDEType)
-      })
-
-      setFieldValue('codeEditors', newCodeEditorValues, false)
-    }
-  }, [settings])
 
   useEffect(() => {
     if (values.codeEditors) {

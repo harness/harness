@@ -2,11 +2,13 @@ import type {
   TypesGitspaceSettingsData,
   TypesGitspaceSettingsResponse,
   TypesGitspaceRegionMachines,
-  TypesInfraProviderSettings
+  TypesInfraProviderSettings,
+  TypesDevcontainerImage
 } from 'services/cde'
 import { scmOptionsCDE } from 'cde-gitness/pages/GitspaceCreate/CDECreateGitspace'
-import type { IDEOption } from 'cde-gitness/constants'
+import { getIDETypeOptions, type IDEOption } from 'cde-gitness/constants'
 import type { EnumInfraProviderType } from 'cde-gitness/services'
+import type { StringsMap } from 'framework/strings/stringTypes'
 
 export interface AdminSettingsFormValues {
   gitProviders: {
@@ -22,22 +24,39 @@ export interface AdminSettingsFormValues {
       }
     }
   }
+  gitspaceImages?: TypesDevcontainerImage
 }
 
 /**
  * Creates initial form values for all admin settings tabs
  */
-export const createInitialValues = (availableEditors: IDEOption[]): AdminSettingsFormValues => {
+export const createInitialValues = (
+  settings: TypesGitspaceSettingsResponse | null,
+  getString: (key: keyof StringsMap) => string
+): AdminSettingsFormValues => {
+  const gitspace_config = settings?.settings?.gitspace_config || {}
+  const availableEditors = getIDETypeOptions(getString)
+
   return {
     gitProviders: scmOptionsCDE.reduce((acc, provider) => {
-      acc[provider.value] = true
+      const isDenied = gitspace_config.scm?.access_list?.list?.includes(provider.value) ?? false
+      acc[provider.value] = !isDenied
       return acc
     }, {} as { [key: string]: boolean }),
     codeEditors: availableEditors.reduce((acc, editor) => {
-      acc[editor.value] = true
+      const isDenied = gitspace_config.ide?.access_list?.list?.includes(editor.value) ?? false
+      acc[editor.value] = !isDenied
       return acc
     }, {} as { [key: string]: boolean }),
-    cloudRegions: {}
+    cloudRegions: {},
+    gitspaceImages: {
+      image_connector_ref: '',
+      image_name: '',
+      access_list: {
+        mode: 'allow',
+        list: []
+      }
+    }
   }
 }
 
@@ -110,6 +129,21 @@ export const transformCloudRegionsToPayload = (
 }
 
 /**
+ * Transforms Gitspace Images form data to API payload format
+ */
+export const transformGitspaceImagesToPayload = (formValues: AdminSettingsFormValues) => {
+  if (!formValues.gitspaceImages) {
+    return {}
+  }
+
+  return {
+    devcontainer_image: {
+      ...formValues.gitspaceImages
+    }
+  }
+}
+
+/**
  * Constructs the complete API payload for admin settings
  */
 export const buildAdminSettingsPayload = (
@@ -122,7 +156,11 @@ export const buildAdminSettingsPayload = (
     gitspace_config: {
       ...settings?.settings?.gitspace_config,
       scm: transformGitProvidersToPayload(formValues),
-      ide: transformCodeEditorsToPayload(formValues, availableEditors)
+      ide: transformCodeEditorsToPayload(formValues, availableEditors),
+      devcontainer: {
+        ...settings?.settings?.gitspace_config?.devcontainer,
+        ...transformGitspaceImagesToPayload(formValues)
+      }
     },
     infra_provider: transformCloudRegionsToPayload(formValues, settings)
   }
