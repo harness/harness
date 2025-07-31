@@ -43,12 +43,12 @@ const (
 )
 
 // Migrate performs the database migration.
-func Migrate(ctx context.Context, db *sqlx.DB) error {
+func Migrate(ctx context.Context, db *sqlx.DB) (err error) {
 	opts, err := getMigrator(db)
 	if err != nil {
 		return fmt.Errorf("failed to get migrator: %w", err)
 	}
-	if db.DriverName() == "sqlite3" {
+	if db.DriverName() == sqliteDriverName {
 		if _, err := db.ExecContext(ctx, `PRAGMA foreign_keys = OFF;`); err != nil {
 			return fmt.Errorf("failed to disable foreign keys: %w", err)
 		}
@@ -64,12 +64,12 @@ func Migrate(ctx context.Context, db *sqlx.DB) error {
 }
 
 // To performs the database migration to the specific version.
-func To(ctx context.Context, db *sqlx.DB, version string) error {
+func To(ctx context.Context, db *sqlx.DB, version string) (err error) {
 	opts, err := getMigrator(db)
 	if err != nil {
 		return fmt.Errorf("failed to get migrator: %w", err)
 	}
-	if db.DriverName() == "sqlite3" {
+	if db.DriverName() == sqliteDriverName {
 		if _, err := db.ExecContext(ctx, `PRAGMA foreign_keys = OFF;`); err != nil {
 			return fmt.Errorf("failed to disable foreign keys: %w", err)
 		}
