@@ -261,8 +261,8 @@ export interface TypesGitspaceConfig {
   identifier?: string
   initialize_log_key?: string
   instance?: TypesGitspaceInstance
+  is_marked_for_infra_reset?: boolean
   is_marked_for_reset?: boolean
-  is_marked_for_soft_reset?: boolean
   log_key?: string
   name?: string
   resource?: TypesInfraProviderResource
@@ -946,6 +946,85 @@ export const useListGateways = ({ accountIdentifier, infraprovider_identifier, .
     { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier, infraprovider_identifier }, ...props }
   )
 
+export interface ListInfraProviderResourcesQueryParams {
+  /**
+   * ACL filter should be applied to the request
+   */
+  acl_filter?: string
+}
+
+export interface ListInfraProviderResourcesPathParams {
+  /**
+   * account identifier.
+   */
+  accountIdentifier: string
+  /**
+   * infra Provider Config Identifier.
+   */
+  infraprovider_identifier: string
+}
+
+export type ListInfraProviderResourcesProps = Omit<
+  GetProps<
+    TypesInfraProviderResource[],
+    unknown,
+    ListInfraProviderResourcesQueryParams,
+    ListInfraProviderResourcesPathParams
+  >,
+  'path'
+> &
+  ListInfraProviderResourcesPathParams
+
+/**
+ * List infraprovider resources
+ */
+export const ListInfraProviderResources = ({
+  accountIdentifier,
+  infraprovider_identifier,
+  ...props
+}: ListInfraProviderResourcesProps) => (
+  <Get<
+    TypesInfraProviderResource[],
+    unknown,
+    ListInfraProviderResourcesQueryParams,
+    ListInfraProviderResourcesPathParams
+  >
+    path={`/accounts/${accountIdentifier}/infraproviders/${infraprovider_identifier}/resources`}
+    base={getConfig('cde/api/v1')}
+    {...props}
+  />
+)
+
+export type UseListInfraProviderResourcesProps = Omit<
+  UseGetProps<
+    TypesInfraProviderResource[],
+    unknown,
+    ListInfraProviderResourcesQueryParams,
+    ListInfraProviderResourcesPathParams
+  >,
+  'path'
+> &
+  ListInfraProviderResourcesPathParams
+
+/**
+ * List infraprovider resources
+ */
+export const useListInfraProviderResources = ({
+  accountIdentifier,
+  infraprovider_identifier,
+  ...props
+}: UseListInfraProviderResourcesProps) =>
+  useGet<
+    TypesInfraProviderResource[],
+    unknown,
+    ListInfraProviderResourcesQueryParams,
+    ListInfraProviderResourcesPathParams
+  >(
+    (paramsInPath: ListInfraProviderResourcesPathParams) =>
+      `/accounts/${paramsInPath.accountIdentifier}/infraproviders/${paramsInPath.infraprovider_identifier}/resources`,
+    { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier, infraprovider_identifier }, ...props }
+  )
+
 export interface CreateInfraProviderResourcePathParams {
   /**
    * account identifier.
@@ -1583,7 +1662,7 @@ export const UpdateGitspace = ({
   ...props
 }: UpdateGitspaceProps) => (
   <Mutate<TypesGitspaceConfig, UsererrorError, void, OpenapiUpdateGitspaceRequest, UpdateGitspacePathParams>
-    verb="PUT"
+    verb="PATCH"
     path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/gitspaces/${gitspace_identifier}`}
     base={getConfig('cde/api/v1')}
     {...props}
@@ -1607,7 +1686,7 @@ export const useUpdateGitspace = ({
   ...props
 }: UseUpdateGitspaceProps) =>
   useMutate<TypesGitspaceConfig, UsererrorError, void, OpenapiUpdateGitspaceRequest, UpdateGitspacePathParams>(
-    'PUT',
+    'PATCH',
     (paramsInPath: UpdateGitspacePathParams) =>
       `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/gitspaces/${paramsInPath.gitspace_identifier}`,
     {

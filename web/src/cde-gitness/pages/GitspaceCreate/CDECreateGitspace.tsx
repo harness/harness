@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import {
   Button,
   ButtonVariation,
@@ -44,15 +44,16 @@ import bitbucket from 'cde-gitness/assests/bitbucket.svg?url'
 import { CDEAnyGitImport } from 'cde-gitness/components/CDEAnyGitImport/CDEAnyGitImport'
 import { CDEIDESelect } from 'cde-gitness/components/CDEIDESelect/CDEIDESelect'
 import { SelectInfraProvider } from 'cde-gitness/components/SelectInfraProvider/SelectInfraProvider'
-import { OpenapiCreateGitspaceRequest, useCreateGitspace } from 'services/cde'
+import { OpenapiCreateGitspaceRequest, useCreateGitspace, TypesGitspaceSettingsResponse } from 'services/cde'
 import { useGetCDEAPIParams } from 'cde-gitness/hooks/useGetCDEAPIParams'
-import { EnumGitspaceCodeRepoType, getIDEOption } from 'cde-gitness/constants'
+import { EnumGitspaceCodeRepoType, getIDETypeOptions, getIDEOption } from 'cde-gitness/constants'
 import { CDESSHSelect } from 'cde-gitness/components/CDESSHSelect/CDESSHSelect'
 import { useQueryParams } from 'hooks/useQueryParams'
 import { CDEUnknownSCM } from 'cde-gitness/components/CDEAnyGitImport/CDEUnknownSCM'
 import { gitnessFormInitialValues } from './GitspaceCreate.constants'
 import { validateGitnessForm } from './GitspaceCreate.utils'
 import { generateGitspaceName, getIdentifierFromName } from '../../utils/nameGenerator.utils'
+import type { EnumIDEType } from '../../../services/cde'
 import css from './GitspaceCreate.module.scss'
 
 export interface SCMType {
@@ -67,6 +68,10 @@ export interface RepoQueryParams {
   branch?: string
   codeRepoURL?: string
   codeRepoType?: EnumGitspaceCodeRepoType
+}
+
+export interface CDECreateGitspaceProps {
+  gitspaceSettings: TypesGitspaceSettingsResponse | null
 }
 
 export const scmOptions: SCMType[] = [
@@ -93,7 +98,7 @@ export const scmOptionsCDE: SCMType[] = [
   ...onPremSCMOptions
 ]
 
-export const CDECreateGitspace = () => {
+export const CDECreateGitspace = ({ gitspaceSettings }: CDECreateGitspaceProps) => {
   const { getString } = useStrings()
   const { routes, currentUserProfileURL, hooks, currentUser } = useAppContext()
   const { useGetUserSourceCodeManagers } = hooks
@@ -105,8 +110,43 @@ export const CDECreateGitspace = () => {
   const { showSuccess, showError } = useToaster()
   const { mutate } = useCreateGitspace({ accountIdentifier, orgIdentifier, projectIdentifier })
   const repoQueryParams = useQueryParams<RepoQueryParams>()
+  const [filteredSCMOptions, setFilteredSCMOptions] = useState<SCMType[]>(scmOptionsCDE)
+
+  const ideOptions = useMemo(() => getIDETypeOptions(getString) ?? [], [getString])
 
   const [repoURLviaQueryParam, setrepoURLviaQueryParam] = useState<RepoQueryParams>({ ...repoQueryParams })
+
+  useEffect(() => {
+    if (gitspaceSettings?.settings?.gitspace_config) {
+      const { scm } = gitspaceSettings.settings.gitspace_config
+
+      if (scm?.access_list?.mode === 'deny' && Array.isArray(scm.access_list.list)) {
+        const scmDenyList = scm.access_list.list
+        const filteredOptions = scmOptionsCDE.filter(
+          option => !scmDenyList.includes(option.value as EnumGitspaceCodeRepoType)
+        )
+        setFilteredSCMOptions(filteredOptions)
+      }
+    }
+  }, [gitspaceSettings])
+
+  const filteredIdeOptions = useMemo(() => {
+    if (!gitspaceSettings?.settings?.gitspace_config?.ide?.access_list) {
+      return ideOptions
+    }
+
+    const { mode, list } = gitspaceSettings.settings.gitspace_config.ide.access_list
+
+    if (mode === 'deny' && Array.isArray(list) && list.length > 0) {
+      return ideOptions.filter(option => !list.includes(option.value as EnumIDEType))
+    }
+
+    return ideOptions
+  }, [gitspaceSettings, ideOptions])
+
+  const defaultIdeType = useMemo(() => {
+    return filteredIdeOptions.length > 0 ? filteredIdeOptions[0].value : undefined
+  }, [filteredIdeOptions])
 
   const { data: OauthSCMs } = useGetUserSourceCodeManagers({
     queryParams: { accountIdentifier, userIdentifier: currentUser?.uid }
@@ -169,7 +209,8 @@ export const CDECreateGitspace = () => {
       }}
       initialValues={{
         ...gitnessFormInitialValues,
-        code_repo_type: EnumGitspaceCodeRepoType.HARNESS_CODE,
+        code_repo_type: filteredSCMOptions.length > 0 ? filteredSCMOptions[0].value : getString('cde.create.scmEmpty'),
+        ide: defaultIdeType || getString('cde.create.ideEmpty'),
         ...includeQueryParams
       }}
       validateOnChange={true}
@@ -177,7 +218,10 @@ export const CDECreateGitspace = () => {
       formName="importRepoForm"
       enableReinitialize>
       {formik => {
-        const scmOption = scmOptionsCDE.find(item => item.value === formik.values?.code_repo_type) as SCMType
+        const scmOption = formik.values?.code_repo_type
+          ? filteredSCMOptions.find(item => item.value === formik.values.code_repo_type) ||
+            scmOptionsCDE.find(item => item.value === formik.values.code_repo_type)
+          : undefined
         const selectedIDE = formik?.values?.ide ? getIDEOption(formik?.values?.ide, getString) : null
         return (
           <>
@@ -193,23 +237,34 @@ export const CDECreateGitspace = () => {
                     formikName="code_repo_type"
                     text={
                       <Layout.Horizontal spacing="large" flex={{ justifyContent: 'flex-start', alignItems: 'center' }}>
-                        <img
-                          height={32}
-                          width={32}
-                          src={defaultTo(scmOption?.icon, '')}
-                          style={{ marginRight: '10px' }}
-                        />
-                        <Layout.Vertical>
-                          <Text font={{ variation: FontVariation.SMALL }}>Git Provider</Text>
-                          <Text>{defaultTo(scmOption?.name || {}, '')}</Text>
-                        </Layout.Vertical>
+                        {filteredSCMOptions.length === 0 ? (
+                          <Layout.Vertical>
+                            <Text font={{ variation: FontVariation.SMALL }}>{getString('cde.create.gitprovider')}</Text>
+                            <Text>{getString('cde.create.scmEmpty')}</Text>
+                          </Layout.Vertical>
+                        ) : (
+                          <>
+                            <img
+                              height={32}
+                              width={32}
+                              src={defaultTo(scmOption?.icon, '')}
+                              style={{ marginRight: '10px' }}
+                            />
+                            <Layout.Vertical>
+                              <Text font={{ variation: FontVariation.SMALL }}>
+                                {getString('cde.create.gitprovider')}
+                              </Text>
+                              <Text>{defaultTo(scmOption?.name || {}, '')}</Text>
+                            </Layout.Vertical>
+                          </>
+                        )}
                       </Layout.Horizontal>
                     }
                     renderMenu={
                       <Menu>
-                        {scmOptionsCDE.map(item => (
+                        {filteredSCMOptions.map(item => (
                           <MenuItem
-                            active={item.name === scmOption.name}
+                            active={item.name === scmOption?.name}
                             key={item.name}
                             text={
                               <Layout.Horizontal
@@ -240,31 +295,29 @@ export const CDECreateGitspace = () => {
                     EnumGitspaceCodeRepoType.HARNESS_CODE,
                     EnumGitspaceCodeRepoType.UNKNOWN,
                     ...oauthSCMsListTypes
-                  ].includes(scmOption.value) ? (
+                  ].includes(scmOption?.value) ? (
                     <Layout.Vertical spacing="large">
                       <Container padding="medium" background={Color.YELLOW_100} border={{ color: Color.YELLOW_400 }}>
                         <Layout.Vertical spacing="large">
-                          <Text>Please Configure the GitHub OAuth to connect to the repositories you have access</Text>
+                          <Text>{getString('cde.create.githubOauthhelpertext1')}</Text>
                           <Button
                             width="250px"
                             variation={ButtonVariation.PRIMARY}
                             onClick={() => {
                               history.push(currentUserProfileURL)
                             }}>
-                            Configure the OAuth in Profile
+                            {getString('cde.create.githubOauthhelpertext2')}
                           </Button>
                           <Container>
                             <ol style={{ paddingLeft: '16px' }}>
                               <li>
-                                <Text>Visit the User Profile Settings.</Text>
+                                <Text>{getString('cde.create.githubOauthhelpertext3')}</Text>
                               </li>
                               <li>
-                                <Text>Under OAuth section, select Github and connect</Text>
+                                <Text>{getString('cde.create.githubOauthhelpertext4')}</Text>
                               </li>
                               <li>
-                                <Text>
-                                  After configuring return back to this page to connect the private repositories
-                                </Text>
+                                <Text>{getString('cde.create.githubOauthhelpertext5')}</Text>
                               </li>
                             </ol>
                           </Container>
@@ -272,7 +325,7 @@ export const CDECreateGitspace = () => {
                       </Container>
                       <CDEAnyGitImport />
                     </Layout.Vertical>
-                  ) : scmOption.value === EnumGitspaceCodeRepoType.UNKNOWN ? (
+                  ) : scmOption?.value === EnumGitspaceCodeRepoType.UNKNOWN ? (
                     <CDEUnknownSCM />
                   ) : (
                     <CDEAnyGitImport />
@@ -314,7 +367,11 @@ export const CDECreateGitspace = () => {
                   </Container>
                 </Layout.Horizontal>
 
-                <CDEIDESelect onChange={formik.setFieldValue} selectedIde={formik.values.ide} />
+                <CDEIDESelect
+                  onChange={formik.setFieldValue}
+                  selectedIde={formik.values.ide}
+                  filteredIdeOptions={filteredIdeOptions}
+                />
                 {selectedIDE?.allowSSH ? <CDESSHSelect /> : <></>}
                 <SelectInfraProvider />
                 <Button width={'100%'} variation={ButtonVariation.PRIMARY} height={50} type="submit">

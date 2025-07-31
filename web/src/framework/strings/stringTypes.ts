@@ -1371,13 +1371,21 @@ export interface StringsMap {
   'cde.copied': string
   'cde.cpu': string
   'cde.create.branchPlaceholder': string
+  'cde.create.githubOauthhelpertext1': string
+  'cde.create.githubOauthhelpertext2': string
+  'cde.create.githubOauthhelpertext3': string
+  'cde.create.githubOauthhelpertext4': string
+  'cde.create.githubOauthhelpertext5': string
   'cde.create.gitnessRepositories': string
+  'cde.create.gitprovider': string
   'cde.create.gitspaceCreateFailed': string
   'cde.create.gitspaceCreateSuccess': string
   'cde.create.gitspaceNameHelpertext1': string
   'cde.create.gitspaceNameHelpertext2': string
   'cde.create.gitspaceNameLabel': string
   'cde.create.gitspaceNamePlaceholder': string
+  'cde.create.ideEmpty': string
+  'cde.create.ideNote': string
   'cde.create.importWarning': string
   'cde.create.infraProviderFailed': string
   'cde.create.infraProviderSuccess': string
@@ -1385,9 +1393,12 @@ export interface StringsMap {
   'cde.create.machineCreateSuccess': string
   'cde.create.repoNotFound': string
   'cde.create.repositoryDetails': string
+  'cde.create.scmEmpty': string
   'cde.create.searchBranchPlaceholder': string
   'cde.create.searchRepositoryPlaceholder': string
   'cde.create.selectBranchPlaceholder': string
+  'cde.create.selectGitProvider': string
+  'cde.create.selectIde': string
   'cde.create.subtext': string
   'cde.create.thirdPartyGitRepositories': string
   'cde.create.unsaved.message': string

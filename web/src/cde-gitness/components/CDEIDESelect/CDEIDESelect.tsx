@@ -22,19 +22,20 @@ import { getIDETypeOptions, groupEnums } from 'cde-gitness/constants'
 import { useStrings } from 'framework/strings'
 import { CDECustomDropdown } from '../CDECustomDropdown/CDECustomDropdown'
 import { CustomIDESection } from '../IDEDropdownSection/IDEDropdownSection'
+import type { IDEOption } from '../../constants'
 import css from './CDEIDESelect.module.scss'
 
-export const CDEIDESelect = ({
-  onChange,
-  selectedIde
-}: {
+interface CDEIDESelectProps {
   onChange: (field: string, value: any) => void
   selectedIde?: string
-}) => {
+  filteredIdeOptions?: IDEOption[]
+}
+
+export const CDEIDESelect = ({ onChange, selectedIde, filteredIdeOptions = [] }: CDEIDESelectProps) => {
   const { getString } = useStrings()
   const ideOptions = getIDETypeOptions(getString) ?? []
 
-  const { label, icon }: any = ideOptions.find(item => item.value === selectedIde) || {}
+  const selectedIDEOption = selectedIde ? ideOptions.find(item => item.value === selectedIde) : undefined
 
   return (
     <CDECustomDropdown
@@ -44,27 +45,33 @@ export const CDEIDESelect = ({
           <Code height={20} width={20} style={{ marginRight: '8px', alignItems: 'center' }} />
           <Layout.Vertical spacing="small">
             <Text>IDE</Text>
-            <Text font="small">Your Gitspace will open in the selected IDE to code</Text>
+            <Text font="small">{getString('cde.create.ideNote')}</Text>
           </Layout.Vertical>
         </Layout.Horizontal>
       }
       label={
-        <Layout.Horizontal width="100%" spacing="medium" flex={{ alignItems: 'center', justifyContent: 'start' }}>
-          <img height={16} width={16} src={icon} />
-          <Text>{label}</Text>
-        </Layout.Horizontal>
+        filteredIdeOptions.length === 0 ? (
+          <Layout.Horizontal width="100%" spacing="medium" flex={{ alignItems: 'center', justifyContent: 'start' }}>
+            <Text>{getString('cde.create.ideEmpty')}</Text>
+          </Layout.Horizontal>
+        ) : (
+          <Layout.Horizontal width="100%" spacing="medium" flex={{ alignItems: 'center', justifyContent: 'start' }}>
+            <img height={16} width={16} src={selectedIDEOption?.icon} />
+            <Text>{selectedIDEOption?.label}</Text>
+          </Layout.Horizontal>
+        )
       }
       menu={
         <Menu>
           <CustomIDESection
-            options={ideOptions.filter(val => val.group === groupEnums.VSCODE)}
+            options={filteredIdeOptions.filter(val => val.group === groupEnums.VSCODE)}
             heading={getString('cde.ide.bymircosoft')}
             value={selectedIde}
             onChange={onChange}
           />
           <hr className={css.divider} />
           <CustomIDESection
-            options={ideOptions.filter(val => val.group === groupEnums.JETBRAIN)}
+            options={filteredIdeOptions.filter(val => val.group === groupEnums.JETBRAIN)}
             heading={getString('cde.ide.byjetbrain')}
             value={selectedIde}
             onChange={onChange}

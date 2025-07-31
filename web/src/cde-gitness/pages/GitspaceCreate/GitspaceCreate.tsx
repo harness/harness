@@ -20,6 +20,8 @@ import { Color } from '@harnessio/design-system'
 import { useStrings } from 'framework/strings'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useAppContext } from 'AppContext'
+import { useFindGitspaceSettings } from 'services/cde'
+import { useGetCDEAPIParams } from 'cde-gitness/hooks/useGetCDEAPIParams'
 import { GitnessCreateGitspace } from './GitnessCreateGitspace'
 import { CDECreateGitspace } from './CDECreateGitspace'
 import css from './GitspaceCreate.module.scss'
@@ -28,6 +30,15 @@ const GitspaceCreate = () => {
   const { getString } = useStrings()
   const space = useGetSpaceParam()
   const { standalone, routes } = useAppContext()
+  const { accountIdentifier = '' } = useGetCDEAPIParams()
+
+  const {
+    data: gitspaceSettings,
+    loading: settingsLoading,
+    error: settingsError
+  } = useFindGitspaceSettings({
+    accountIdentifier
+  })
 
   return (
     <>
@@ -42,7 +53,7 @@ const GitspaceCreate = () => {
           />
         }
       />
-      <Page.Body className={css.main}>
+      <Page.Body className={css.main} loading={settingsLoading} error={settingsError}>
         <Container className={css.titleContainer}>
           <Layout.Vertical spacing="small" margin={{ bottom: 'medium' }}>
             <Heading font={{ weight: 'bold' }} color={Color.BLACK} level={2}>
@@ -53,7 +64,7 @@ const GitspaceCreate = () => {
         </Container>
         <Card className={css.cardMain}>
           <Container className={css.subContainers}>
-            {standalone ? <GitnessCreateGitspace /> : <CDECreateGitspace />}
+            {standalone ? <GitnessCreateGitspace /> : <CDECreateGitspace gitspaceSettings={gitspaceSettings} />}
           </Container>
         </Card>
       </Page.Body>
