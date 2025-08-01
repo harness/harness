@@ -87,6 +87,8 @@ type (
 		IsRepoOwner        bool
 		DefaultBranch      string
 		TargetBranch       string
+		RepoID             int64
+		RepoIdentifier     string
 	}
 
 	CreatePullReqVerifyOutput struct {

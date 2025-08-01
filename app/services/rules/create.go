@@ -39,11 +39,12 @@ type CreateInput struct {
 	Type  enum.RuleType  `json:"type"`
 	State enum.RuleState `json:"state"`
 	// TODO [CODE-1363]: remove after identifier migration.
-	UID         string             `json:"uid" deprecated:"true"`
-	Identifier  string             `json:"identifier"`
-	Description string             `json:"description"`
-	Pattern     protection.Pattern `json:"pattern"`
-	Definition  json.RawMessage    `json:"definition"`
+	UID         string                `json:"uid" deprecated:"true"`
+	Identifier  string                `json:"identifier"`
+	Description string                `json:"description"`
+	Pattern     protection.Pattern    `json:"pattern"`
+	RepoTarget  protection.RepoTarget `json:"repo_target"`
+	Definition  json.RawMessage       `json:"definition"`
 }
 
 // sanitize validates and sanitizes the create rule input data.
@@ -59,6 +60,10 @@ func (in *CreateInput) sanitize() error {
 
 	if err := in.Pattern.Validate(); err != nil {
 		return usererror.BadRequestf("invalid pattern: %s", err)
+	}
+
+	if err := in.RepoTarget.Validate(); err != nil {
+		return usererror.BadRequestf("invalid repo target: %s", err)
 	}
 
 	var ok bool
@@ -116,6 +121,7 @@ func (s *Service) Create(ctx context.Context,
 		Identifier:    in.Identifier,
 		Description:   in.Description,
 		Pattern:       in.Pattern.JSON(),
+		RepoTarget:    in.RepoTarget.JSON(),
 		Definition:    in.Definition,
 		Scope:         scope,
 		CreatedByInfo: types.PrincipalInfo{},

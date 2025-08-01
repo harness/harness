@@ -94,18 +94,28 @@ func refChangeVerifyFunc(
 func forEachRuleMatchRefs(
 	manager *Manager,
 	rules []types.RuleInfoInternal,
-	defaultBranch string,
+	repoID int64,
+	repoIdentifier string,
+	defaultRef string,
 	refNames []string,
 	fn func(r *types.RuleInfoInternal, p RefProtection, matched []string) error,
 ) error {
 	for i := range rules {
 		r := rules[i]
 
-		matched, err := matchedNames(r.Pattern, defaultBranch, refNames...)
+		matchedRepo, err := matchesRepo(r.RepoTarget, repoID, repoIdentifier)
 		if err != nil {
 			return err
 		}
-		if len(matched) == 0 {
+		if !matchedRepo {
+			continue
+		}
+
+		matchedRefs, err := matchesRefs(r.Pattern, defaultRef, refNames...)
+		if err != nil {
+			return err
+		}
+		if len(matchedRefs) == 0 {
 			continue
 		}
 
@@ -118,11 +128,11 @@ func forEachRuleMatchRefs(
 		}
 
 		refProtection, ok := protection.(RefProtection)
-		if !ok {
+		if !ok { // theoretically, should never happen
 			return fmt.Errorf("unexpected type for protection: got %T, expected RefProtection", protection)
 		}
 
-		err = fn(&r, refProtection, matched)
+		err = fn(&r, refProtection, matchedRefs)
 		if err != nil {
 			return fmt.Errorf(
 				"forEachRuleMatchRefs: failed to process rule ID=%d Type=%s: %w",

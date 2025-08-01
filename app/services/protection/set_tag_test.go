@@ -22,6 +22,8 @@ import (
 )
 
 func TestTagRuleSet_SetRefChangeVerify(t *testing.T) {
+	dummyRepo := &types.RepositoryCore{ID: 1, Identifier: "dummy"}
+
 	tests := []struct {
 		name    string
 		rules   []types.RuleInfoInternal
@@ -36,6 +38,7 @@ func TestTagRuleSet_SetRefChangeVerify(t *testing.T) {
 				RefAction: RefActionCreate,
 				RefType:   RefTypeTag,
 				RefNames:  []string{"feat-a"},
+				Repo:      dummyRepo,
 			},
 			expViol: []types.RuleViolations{},
 		},
@@ -47,6 +50,7 @@ func TestTagRuleSet_SetRefChangeVerify(t *testing.T) {
 				RefAction: RefActionDelete,
 				RefType:   RefTypeTag,
 				RefNames:  []string{"feat-a"},
+				Repo:      dummyRepo,
 			},
 			expViol: []types.RuleViolations{},
 		},
@@ -57,6 +61,7 @@ func TestTagRuleSet_SetRefChangeVerify(t *testing.T) {
 					RuleInfo:   types.RuleInfo{Type: TypeTag},
 					Definition: []byte(`{"lifecycle": {"create_forbidden": true}}`),
 					Pattern:    []byte(`{"include": ["feat-*"]}`),
+					RepoTarget: emptyRepoTarget,
 				},
 			},
 			input: RefChangeVerifyInput{
@@ -64,6 +69,7 @@ func TestTagRuleSet_SetRefChangeVerify(t *testing.T) {
 				RefAction: RefActionCreate,
 				RefType:   RefTypeTag,
 				RefNames:  []string{"feat-a"},
+				Repo:      dummyRepo,
 			},
 			expViol: []types.RuleViolations{
 				{
@@ -81,6 +87,7 @@ func TestTagRuleSet_SetRefChangeVerify(t *testing.T) {
 					RuleInfo:   types.RuleInfo{Type: TypeTag},
 					Definition: []byte(`{"lifecycle": {"create_forbidden": true}}`),
 					Pattern:    []byte(`{"include": ["feat-*"]}`),
+					RepoTarget: emptyRepoTarget,
 				},
 			},
 			input: RefChangeVerifyInput{
@@ -88,6 +95,7 @@ func TestTagRuleSet_SetRefChangeVerify(t *testing.T) {
 				RefAction: RefActionCreate,
 				RefType:   RefTypeTag,
 				RefNames:  []string{"dev-a"},
+				Repo:      dummyRepo,
 			},
 			expViol: []types.RuleViolations{},
 		},
@@ -98,6 +106,7 @@ func TestTagRuleSet_SetRefChangeVerify(t *testing.T) {
 					RuleInfo:   types.RuleInfo{Type: TypeTag},
 					Definition: []byte(`{"lifecycle": {"delete_forbidden": true}}`),
 					Pattern:    []byte(`{"include": ["feat-*"]}`),
+					RepoTarget: emptyRepoTarget,
 				},
 			},
 			input: RefChangeVerifyInput{
@@ -105,6 +114,7 @@ func TestTagRuleSet_SetRefChangeVerify(t *testing.T) {
 				RefAction: RefActionDelete,
 				RefType:   RefTypeTag,
 				RefNames:  []string{"feat-a"},
+				Repo:      dummyRepo,
 			},
 			expViol: []types.RuleViolations{
 				{
@@ -124,6 +134,7 @@ func TestTagRuleSet_SetRefChangeVerify(t *testing.T) {
 					},
 					Definition: []byte(`{"lifecycle": {"delete_forbidden": true}}`),
 					Pattern:    []byte(`{"include": ["feat-*"]}`),
+					RepoTarget: emptyRepoTarget,
 				},
 			},
 			input: RefChangeVerifyInput{
@@ -131,6 +142,7 @@ func TestTagRuleSet_SetRefChangeVerify(t *testing.T) {
 				RefAction: RefActionDelete,
 				RefType:   RefTypeTag,
 				RefNames:  []string{"dev-a"},
+				Repo:      dummyRepo,
 			},
 			expViol: []types.RuleViolations{},
 		},
@@ -141,11 +153,13 @@ func TestTagRuleSet_SetRefChangeVerify(t *testing.T) {
 					RuleInfo:   types.RuleInfo{Type: TypeTag},
 					Definition: []byte(`{"lifecycle": {"create_forbidden": true}}`),
 					Pattern:    []byte(`{"include": ["feat-*"]}`),
+					RepoTarget: emptyRepoTarget,
 				},
 				{
 					RuleInfo:   types.RuleInfo{Type: TypeTag},
 					Definition: []byte(`{"lifecycle": {"create_forbidden": true}}`),
 					Pattern:    []byte(`{"include": ["*-experimental"]}`),
+					RepoTarget: emptyRepoTarget,
 				},
 			},
 			input: RefChangeVerifyInput{
@@ -153,6 +167,7 @@ func TestTagRuleSet_SetRefChangeVerify(t *testing.T) {
 				RefAction: RefActionCreate,
 				RefType:   RefTypeTag,
 				RefNames:  []string{"feat-experimental"},
+				Repo:      dummyRepo,
 			},
 			expViol: []types.RuleViolations{
 				{
@@ -176,11 +191,13 @@ func TestTagRuleSet_SetRefChangeVerify(t *testing.T) {
 					RuleInfo:   types.RuleInfo{Type: TypeTag},
 					Definition: []byte(`{"lifecycle": {"create_forbidden": true}}`),
 					Pattern:    []byte(`{"include": ["feat-*"]}`),
+					RepoTarget: emptyRepoTarget,
 				},
 				{
 					RuleInfo:   types.RuleInfo{Type: TypeTag},
 					Definition: []byte(`{"lifecycle": {"delete_forbidden": true}}`),
 					Pattern:    []byte(`{"include": ["*-experimental"]}`),
+					RepoTarget: emptyRepoTarget,
 				},
 			},
 			input: RefChangeVerifyInput{
@@ -188,6 +205,7 @@ func TestTagRuleSet_SetRefChangeVerify(t *testing.T) {
 				RefAction: RefActionDelete,
 				RefType:   RefTypeTag,
 				RefNames:  []string{"feat-experimental"},
+				Repo:      dummyRepo,
 			},
 			expViol: []types.RuleViolations{
 				{

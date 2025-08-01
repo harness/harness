@@ -32,12 +32,13 @@ import (
 
 type UpdateInput struct {
 	// TODO [CODE-1363]: remove after identifier migration.
-	UID         *string             `json:"uid" deprecated:"true"`
-	Identifier  *string             `json:"identifier"`
-	State       *enum.RuleState     `json:"state"`
-	Description *string             `json:"description"`
-	Pattern     *protection.Pattern `json:"pattern"`
-	Definition  *json.RawMessage    `json:"definition"`
+	UID         *string                `json:"uid" deprecated:"true"`
+	Identifier  *string                `json:"identifier"`
+	State       *enum.RuleState        `json:"state"`
+	Description *string                `json:"description"`
+	Pattern     *protection.Pattern    `json:"pattern"`
+	RepoTarget  *protection.RepoTarget `json:"repo_target"`
+	Definition  *json.RawMessage       `json:"definition"`
 }
 
 // sanitize validates and sanitizes the update rule input data.
@@ -65,6 +66,12 @@ func (in *UpdateInput) sanitize() error {
 	if in.Pattern != nil {
 		if err := in.Pattern.Validate(); err != nil {
 			return usererror.BadRequestf("invalid pattern: %s", err)
+		}
+	}
+
+	if in.RepoTarget != nil {
+		if err := in.RepoTarget.Validate(); err != nil {
+			return usererror.BadRequestf("invalid repo target: %s", err)
 		}
 	}
 
@@ -122,6 +129,9 @@ func (s *Service) Update(ctx context.Context,
 	}
 	if in.Pattern != nil {
 		rule.Pattern = in.Pattern.JSON()
+	}
+	if in.RepoTarget != nil {
+		rule.RepoTarget = in.RepoTarget.JSON()
 	}
 	if in.Definition != nil {
 		rule.Definition, err = s.protectionManager.SanitizeJSON(rule.Type, *in.Definition)

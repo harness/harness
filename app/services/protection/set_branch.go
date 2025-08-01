@@ -44,6 +44,8 @@ func (s branchRuleSet) MergeVerify(
 	out.AllowedMethods = slices.Clone(enum.MergeMethods)
 
 	err := s.forEachRuleMatchBranch(
+		in.TargetRepo.ID,
+		in.TargetRepo.Identifier,
 		in.TargetRepo.DefaultBranch,
 		in.PullReq.TargetBranch,
 		func(r *types.RuleInfoInternal, p BranchProtection) error {
@@ -82,6 +84,8 @@ func (s branchRuleSet) RequiredChecks(
 	bypassableIDMap := map[string]struct{}{}
 
 	err := s.forEachRuleMatchBranch(
+		in.Repo.ID,
+		in.Repo.Identifier,
 		in.Repo.DefaultBranch,
 		in.PullReq.TargetBranch,
 		func(_ *types.RuleInfoInternal, p BranchProtection) error {
@@ -121,6 +125,8 @@ func (s branchRuleSet) CreatePullReqVerify(
 	var violations []types.RuleViolations
 
 	err := s.forEachRuleMatchBranch(
+		in.RepoID,
+		in.RepoIdentifier,
 		in.DefaultBranch,
 		in.TargetBranch,
 		func(r *types.RuleInfoInternal, p BranchProtection) error {
@@ -151,6 +157,8 @@ func (s branchRuleSet) RefChangeVerify(ctx context.Context, in RefChangeVerifyIn
 	err := forEachRuleMatchRefs(
 		s.manager,
 		s.rules,
+		in.Repo.ID,
+		in.Repo.Identifier,
 		in.Repo.DefaultBranch,
 		in.RefNames,
 		refChangeVerifyFunc(ctx, in, &violations),
@@ -171,6 +179,8 @@ func (s branchRuleSet) UserGroupIDs() ([]int64, error) {
 }
 
 func (s branchRuleSet) forEachRuleMatchBranch(
+	repoID int64,
+	repoIdentifier string,
 	defaultBranch string,
 	branchName string,
 	fn func(r *types.RuleInfoInternal, p BranchProtection) error,
@@ -178,11 +188,19 @@ func (s branchRuleSet) forEachRuleMatchBranch(
 	for i := range s.rules {
 		r := s.rules[i]
 
-		matches, err := matchesName(r.Pattern, defaultBranch, branchName)
+		matchedRepo, err := matchesRepo(r.RepoTarget, repoID, repoIdentifier)
 		if err != nil {
 			return err
 		}
-		if !matches {
+		if !matchedRepo {
+			continue
+		}
+
+		matchedRef, err := matchesRef(r.Pattern, defaultBranch, branchName)
+		if err != nil {
+			return err
+		}
+		if !matchedRef {
 			continue
 		}
 
@@ -200,8 +218,10 @@ func (s branchRuleSet) forEachRuleMatchBranch(
 
 		err = fn(&r, branchProtection)
 		if err != nil {
-			return fmt.Errorf("forEachRuleMatchBranch: failed to process rule ID=%d Type=%s: %w",
-				r.ID, r.Type, err)
+			return fmt.Errorf(
+				"forEachRuleMatchBranch: failed to process rule ID=%d Type=%s: %w",
+				r.ID, r.Type, err,
+			)
 		}
 	}
 

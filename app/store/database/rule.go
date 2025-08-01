@@ -72,6 +72,7 @@ type rule struct {
 	State enum.RuleState `db:"rule_state"`
 
 	Pattern    string `db:"rule_pattern"`
+	RepoTarget string `db:"rule_repo_target"`
 	Definition string `db:"rule_definition"`
 
 	Scope int64 `db:"rule_scope"`
@@ -91,6 +92,7 @@ const (
 		,rule_type
 		,rule_state
 		,rule_pattern
+		,rule_repo_target
 		,rule_definition
 		,rule_scope`
 
@@ -168,6 +170,7 @@ func (s *RuleStore) Create(ctx context.Context, rule *types.Rule) error {
 			,rule_type
 			,rule_state
 			,rule_pattern
+			,rule_repo_target
 			,rule_definition
 			,rule_scope
 		) values (
@@ -182,6 +185,7 @@ func (s *RuleStore) Create(ctx context.Context, rule *types.Rule) error {
 			,:rule_type
 			,:rule_state
 			,:rule_pattern
+			,:rule_repo_target
 			,:rule_definition
 			,:rule_scope
 		) RETURNING rule_id`
@@ -217,6 +221,7 @@ func (s *RuleStore) Update(ctx context.Context, rule *types.Rule) error {
 			,rule_description = :rule_description
 			,rule_state = :rule_state
 			,rule_pattern = :rule_pattern
+			,rule_repo_target = :rule_repo_target
 			,rule_definition = :rule_definition
 		WHERE rule_id = :rule_id AND rule_version = :rule_version - 1`
 
@@ -358,6 +363,7 @@ type ruleInfo struct {
 	Type       enum.RuleType  `db:"rule_type"`
 	State      enum.RuleState `db:"rule_state"`
 	Pattern    string         `db:"rule_pattern"`
+	RepoTarget string         `db:"rule_repo_target"`
 	Definition string         `db:"rule_definition"`
 }
 
@@ -398,6 +404,7 @@ SELECT
 	,rule_type
 	,rule_state
 	,rule_pattern
+	,rule_repo_target
 	,rule_definition
 FROM spaces_with_path
 INNER JOIN rules ON rules.rule_space_id = spaces_with_path.space_id
@@ -411,6 +418,7 @@ SELECT
 	,rule_type
 	,rule_state
 	,rule_pattern
+	,rule_repo_target
 	,rule_definition
 FROM rules
 INNER JOIN repo_info ON repo_info.repo_id = rules.rule_repo_id
@@ -516,6 +524,7 @@ func (s *RuleStore) mapToRule(
 		Type:        in.Type,
 		State:       in.State,
 		Pattern:     json.RawMessage(in.Pattern),
+		RepoTarget:  json.RawMessage(in.RepoTarget),
 		Definition:  json.RawMessage(in.Definition),
 		Scope:       in.Scope,
 	}
@@ -557,6 +566,7 @@ func mapToInternalRule(in *types.Rule) rule {
 		Type:        in.Type,
 		State:       in.State,
 		Pattern:     string(in.Pattern),
+		RepoTarget:  string(in.RepoTarget),
 		Definition:  string(in.Definition),
 		Scope:       in.Scope,
 	}
@@ -573,6 +583,7 @@ func (*RuleStore) mapToRuleInfo(in *ruleInfo) types.RuleInfoInternal {
 			State:      in.State,
 		},
 		Pattern:    json.RawMessage(in.Pattern),
+		RepoTarget: json.RawMessage(in.RepoTarget),
 		Definition: json.RawMessage(in.Definition),
 	}
 }

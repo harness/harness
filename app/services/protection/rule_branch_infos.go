@@ -30,6 +30,8 @@ var RuleInfoFilterStatusActive = func(r *types.RuleInfoInternal) (bool, error) {
 }
 
 func GetBranchRuleInfos(
+	repoID int64,
+	repoIdentifier string,
 	protection BranchProtection,
 	defaultBranch string,
 	branchName string,
@@ -41,6 +43,8 @@ func GetBranchRuleInfos(
 	}
 
 	err = v.forEachRuleMatchBranch(
+		repoID,
+		repoIdentifier,
 		defaultBranch,
 		branchName,
 		func(r *types.RuleInfoInternal, _ BranchProtection) error {

@@ -24,6 +24,8 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
+var emptyRepoTarget = []byte(`{"include": {}, "exclude": {}}`)
+
 // nolint:gocognit // it's a unit test
 func TestRuleSet_MergeVerify(t *testing.T) {
 	tests := []struct {
@@ -76,6 +78,7 @@ func TestRuleSet_MergeVerify(t *testing.T) {
 					},
 					Pattern:    []byte(`{"default":true}`),
 					Definition: []byte(`{"pullreq":{"merge":{"strategies_allowed":["merge"],"delete_branch":true}}}`),
+					RepoTarget: emptyRepoTarget,
 				},
 				{
 					RuleInfo: types.RuleInfo{
@@ -88,6 +91,7 @@ func TestRuleSet_MergeVerify(t *testing.T) {
 					},
 					Pattern:    []byte(`{"default":true}`),
 					Definition: []byte(`{"pullreq":{"approvals":{"require_minimum_count":1}}}`),
+					RepoTarget: emptyRepoTarget,
 				},
 			},
 			input: MergeVerifyInput{
@@ -146,6 +150,7 @@ func TestRuleSet_MergeVerify(t *testing.T) {
 					},
 					Pattern:    []byte(`{"default":true}`),
 					Definition: []byte(`{"pullreq":{"merge":{"strategies_allowed":["merge","rebase"]}}}`),
+					RepoTarget: emptyRepoTarget,
 				},
 				{
 					RuleInfo: types.RuleInfo{
@@ -158,6 +163,7 @@ func TestRuleSet_MergeVerify(t *testing.T) {
 					},
 					Pattern:    []byte(`{"default":true}`),
 					Definition: []byte(`{"pullreq":{"merge":{"strategies_allowed":["rebase"]}}}`),
+					RepoTarget: emptyRepoTarget,
 				},
 			},
 			input: MergeVerifyInput{
@@ -201,6 +207,7 @@ func TestRuleSet_MergeVerify(t *testing.T) {
 							}
 						}
 					}`),
+					RepoTarget: emptyRepoTarget,
 				},
 				{
 					RuleInfo: types.RuleInfo{
@@ -229,6 +236,7 @@ func TestRuleSet_MergeVerify(t *testing.T) {
 							}
 						}
 					}`),
+					RepoTarget: emptyRepoTarget,
 				},
 				{
 					RuleInfo: types.RuleInfo{
@@ -257,6 +265,7 @@ func TestRuleSet_MergeVerify(t *testing.T) {
 								}
 							}
 						}`),
+					RepoTarget: emptyRepoTarget,
 				},
 			},
 			input: MergeVerifyInput{
@@ -409,6 +418,7 @@ func TestRuleSet_RequiredChecks(t *testing.T) {
 						"bypass":{"repo_owners":true},
 						"pullreq":{"status_checks":{"require_identifiers":["a", "b"]}}
 					}`),
+					RepoTarget: emptyRepoTarget,
 				},
 				{
 					RuleInfo: types.RuleInfo{
@@ -421,6 +431,7 @@ func TestRuleSet_RequiredChecks(t *testing.T) {
 					},
 					Pattern:    []byte(`{"default":true}`),
 					Definition: []byte(`{"pullreq":{"status_checks":{"require_identifiers":["b","c"]}}}`),
+					RepoTarget: emptyRepoTarget,
 				},
 			},
 			input: RequiredChecksInput{

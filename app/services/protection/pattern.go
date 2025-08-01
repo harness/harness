@@ -113,28 +113,28 @@ func patternMatches(pattern, branchName string) bool {
 	return ok
 }
 
-func matchesName(rawPattern json.RawMessage, defaultBranchName, branchName string) (bool, error) {
+func matchesRef(rawPattern json.RawMessage, defaultRef, ref string) (bool, error) {
 	pattern := Pattern{}
 
 	if err := json.Unmarshal(rawPattern, &pattern); err != nil {
-		return false, fmt.Errorf("failed to parse branch pattern: %w", err)
+		return false, fmt.Errorf("failed to parse ref pattern: %w", err)
 	}
 
-	return pattern.Matches(branchName, defaultBranchName), nil
+	return pattern.Matches(ref, defaultRef), nil
 }
 
-func matchedNames(rawPattern json.RawMessage, defaultBranchName string, branchNames ...string) ([]string, error) {
+func matchesRefs(rawPattern json.RawMessage, defaultRef string, refs ...string) ([]string, error) {
 	pattern := Pattern{}
 
 	if err := json.Unmarshal(rawPattern, &pattern); err != nil {
-		return nil, fmt.Errorf("failed to parse branch pattern: %w", err)
+		return nil, fmt.Errorf("failed to parse ref pattern: %w", err)
 	}
 
-	matched := make([]string, 0, len(branchNames))
+	matched := make([]string, 0, len(refs))
 
-	for _, branchName := range branchNames {
-		if pattern.Matches(branchName, defaultBranchName) {
-			matched = append(matched, branchName)
+	for _, ref := range refs {
+		if pattern.Matches(ref, defaultRef) {
+			matched = append(matched, ref)
 		}
 	}
 

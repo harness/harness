@@ -115,6 +115,8 @@ func (c *Controller) collectBranchMetadata(
 			branchName := branches[i].Name
 
 			branchRuleInfos, err := protection.GetBranchRuleInfos(
+				repo.ID,
+				repo.Identifier,
 				rules,
 				repo.DefaultBranch,
 				branchName,

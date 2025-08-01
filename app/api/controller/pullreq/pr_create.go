@@ -384,6 +384,8 @@ func (c *Controller) prepareRuleReviewers(
 		IsRepoOwner:        isRepoOwner,
 		DefaultBranch:      targetRepo.DefaultBranch,
 		TargetBranch:       in.TargetBranch,
+		RepoID:             targetRepo.ID,
+		RepoIdentifier:     targetRepo.Identifier,
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to verify protection rules: %w", err)

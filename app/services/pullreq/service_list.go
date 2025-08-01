@@ -328,11 +328,13 @@ func (c *ListService) backfillRules(
 
 	repoBranchNames := make(map[int64][]string)
 	repoDefaultBranch := make(map[int64]string)
+	repoIdentifier := make(map[int64]string)
 	for _, entry := range list {
 		repoID := entry.Repository.ID
 		branchNames := repoBranchNames[repoID]
 		repoBranchNames[repoID] = append(branchNames, entry.PullRequest.TargetBranch)
 		repoDefaultBranch[repoID] = entry.Repository.DefaultBranch
+		repoIdentifier[repoID] = entry.Repository.Identifier
 	}
 
 	// fetch checks for every repository
@@ -351,6 +353,8 @@ func (c *ListService) backfillRules(
 
 		for _, branchName := range branchNames {
 			branchRuleInfos, err := protection.GetBranchRuleInfos(
+				repoID,
+				repoIdentifier[repoID],
 				repoProtection,
 				repoDefaultBranch[repoID],
 				branchName,

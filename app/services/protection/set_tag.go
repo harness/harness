@@ -34,6 +34,8 @@ func (s tagRuleSet) RefChangeVerify(ctx context.Context, in RefChangeVerifyInput
 	err := forEachRuleMatchRefs(
 		s.manager,
 		s.rules,
+		in.Repo.ID,
+		in.Repo.Identifier,
 		"",
 		in.RefNames,
 		refChangeVerifyFunc(ctx, in, &violations),

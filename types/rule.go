@@ -42,6 +42,7 @@ type Rule struct {
 	State enum.RuleState `json:"state"`
 
 	Pattern    json.RawMessage `json:"pattern"`
+	RepoTarget json.RawMessage `json:"repo_target"`
 	Definition json.RawMessage `json:"definition"`
 
 	CreatedByInfo PrincipalInfo `json:"created_by"`
@@ -131,6 +132,7 @@ func (r Rule) Clone() Rule {
 func (r *Rule) IsEqual(rule *Rule) bool {
 	return r.Identifier == rule.Identifier && r.State == rule.State &&
 		r.Description == rule.Description && bytes.Equal(r.Pattern, rule.Pattern) &&
+		bytes.Equal(r.RepoTarget, rule.RepoTarget) &&
 		bytes.Equal(r.Definition, rule.Definition)
 }
 
@@ -207,6 +209,7 @@ func (r RuleInfo) MarshalJSON() ([]byte, error) {
 
 type RuleInfoInternal struct {
 	RuleInfo
+	RepoTarget json.RawMessage
 	Pattern    json.RawMessage
 	Definition json.RawMessage
 }
