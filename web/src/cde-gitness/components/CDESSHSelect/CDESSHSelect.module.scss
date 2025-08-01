@@ -24,3 +24,17 @@
   justify-content: flex-start;
   font-size: var(--font-size-small) !important;
 }
+
+.textSection {
+  display: flex;
+  flex-direction: column;
+  gap: 3px !important;
+}
+
+.icon {
+  width: 23px;
+  height: 23px;
+  flex-shrink: 0;
+  align-items: center;
+  margin-right: 7px !important;
+}

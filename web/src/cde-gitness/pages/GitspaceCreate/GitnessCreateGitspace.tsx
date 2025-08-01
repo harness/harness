@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
   Button,
   ButtonVariation,
@@ -51,7 +51,7 @@ export const GitnessCreateGitspace = () => {
   const [activeButton, setActiveButton] = useState(RepositoryType.GITNESS)
   const { showSuccess, showError } = useToaster()
   const { mutate } = useCreateGitspace({})
-  const suggestedName = generateGitspaceName()
+  const suggestedName = useMemo(() => generateGitspaceName(), [])
 
   return (
     <Formik

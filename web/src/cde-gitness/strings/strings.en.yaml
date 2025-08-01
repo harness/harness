@@ -43,7 +43,7 @@ regionValidationMessage: Region is required
 repoValidationMessage: Repository is required
 gitspaceNameValidation: New Gitspace name must not be blank
 gitspaceNameMaxLengthValidation: 'Name cannot exceed 34 characters'
-gitspaceNameFormatValidation: 'Name can contain letters, numbers, hyphens, underscores, and question marks, and must start and end with a letter or number.'
+gitspaceNameFormatValidation: 'Name can contain letters, numbers, hyphens, underscores, and spaces, and must start and end with a letter or number.'
 branchValidationMessage: Branch is required
 machineValidationMessage: Machine Type is required
 sshValidationMessage: SSH Key is required
@@ -321,27 +321,36 @@ create:
   searchRepositoryPlaceholder: Search for a repository
   searchBranchPlaceholder: Search for a branch
   repoNotFound: 'Create a repo <strong>{{repo}}</strong>'
-  gitspaceNameLabel: Gitspace name
+  gitspaceNameLabel: Gitspace Name
   gitspaceNamePlaceholder: Provide name
   gitspaceNameHelpertext1: Great Gitspace names are short and memorable. Need some inspiration?
   gitspaceNameHelpertext2: 'Try this:'
+  sshKey: SSH Key
+  gitspaceSSHhelpertext1: By default we will create the SSH key used to login to the Gitspace.
+  gitspaceSSHhelpertext2: You can add keys under Preferences in User Settings.
   gitspaceCreateSuccess: Gitspace created successfully
   gitspaceCreateFailed: Gitspace creation failed
   infraProviderSuccess: Gitspace Infrastructure created successfully
   infraProviderFailed: Gitspace Infrastructure creation failed
   machineCreateSuccess: Machine created successfully
   machineCreateFailed: Machine creation failed
-  gitprovider: Git Provider
-  scmEmpty: All SCM options are disabled
-  ideEmpty: All IDEs disabled
-  selectGitProvider: Select a Git Provider
-  githubOauthhelpertext1: Please Configure the GitHub OAuth to connect to the repositories you have access
-  githubOauthhelpertext2: Configure the OAuth in Profile
-  githubOauthhelpertext3: Visit the User Profile Settings.
-  githubOauthhelpertext4: Under OAuth section, select Github and connect
-  githubOauthhelpertext5: After configuring return back to this page to connect the private repositories
-  ideNote: Your Gitspace will open in the selected IDE to code
-  selectIde: Select an IDE
+  gitprovider : Git Provider
+  infraProviderType : Infra Provider Type
+  infraProviderTypeText : Your Gitspace will run on the selected infra provider type
+  machineType : Machine Type
+  region : Region
+  regionText : Your Gitspace will run in the selected region
+  machineTypeNote: Resources for your Gitspace
+  scmEmpty : All SCM options are disabled
+  ideEmpty : All IDEs disabled
+  selectGitProvider : Select a Git Provider
+  githubOauthhelpertext1 : Please Configure the GitHub OAuth to connect to the repositories you have access
+  githubOauthhelpertext2 : Configure the OAuth in Profile
+  githubOauthhelpertext3 : Visit the User Profile Settings.
+  githubOauthhelpertext4 : Under OAuth section, select Github and connect
+  githubOauthhelpertext5 : After configuring return back to this page to connect the private repositories
+  ideNote : Your Gitspace will open in the selected IDE to code
+  selectIde : Select an IDE
 
   subtext: Start Coding, no setup required. Dedicated cloud development environments with your favorite editor.
   importWarning:

@@ -206,13 +206,15 @@ export const CDESSHSelect = () => {
     <CDECustomDropdown
       leftElement={
         <Layout.Horizontal>
-          <img src={Secret} height={20} width={20} style={{ marginRight: '8px', alignItems: 'center' }} />
-          <Layout.Vertical spacing="small">
-            <Text>SSH Key </Text>
-            <Text font="small" width="56%">
-              By default we will create the SSH key used to login to the Gitspace. You can add keys under Preferences in
-              User Settings
+          <img src={Secret} className={css.icon} />
+          <Layout.Vertical spacing="small" className={css.textSection}>
+            <Text color={Color.GREY_500} font={{ weight: 'bold' }}>
+              {getString('cde.create.sshKey')}
             </Text>
+            <Layout.Vertical spacing={'xsmall'}>
+              <Text font="small">{getString('cde.create.gitspaceSSHhelpertext1')}</Text>
+              <Text font="small">{getString('cde.create.gitspaceSSHhelpertext2')}</Text>
+            </Layout.Vertical>
           </Layout.Vertical>
         </Layout.Horizontal>
       }

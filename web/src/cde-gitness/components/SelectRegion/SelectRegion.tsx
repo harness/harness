@@ -17,8 +17,9 @@
 import React, { useEffect, useState } from 'react'
 import { Container, Layout, Text } from '@harnessio/uicore'
 import { Menu, MenuItem } from '@blueprintjs/core'
-import { Map } from 'iconoir-react'
 import { useFormikContext } from 'formik'
+import { Color } from '@harnessio/design-system'
+import globe from 'cde-gitness/assests/globe.svg?url'
 import { useStrings } from 'framework/strings'
 import { GitspaceRegion } from 'cde-gitness/constants'
 import type { OpenapiCreateGitspaceRequest, TypesInfraProviderResource } from 'services/cde'
@@ -28,6 +29,7 @@ import USEast from './assests/USEast.png'
 import Australia from './assests/Aus.png'
 import Europe from './assests/Europe.png'
 import Empty from './assests/Empty.png'
+import css from './SelectRegion.module.scss'
 
 interface SelectRegionInterface {
   disabled?: boolean
@@ -77,10 +79,12 @@ export const SelectRegion = ({ options, disabled, defaultValue }: SelectRegionIn
         }
         leftElement={
           <Layout.Horizontal>
-            <Map height={20} width={20} style={{ marginRight: '8px', alignItems: 'center' }} />
+            <img src={globe} className={css.icon} />
             <Layout.Vertical spacing="small">
-              <Text>Region</Text>
-              <Text font="small">Your Gitspace will run in the selected region</Text>
+              <Text color={Color.GREY_500} font={{ weight: 'bold' }}>
+                {getString('cde.create.region')}
+              </Text>
+              <Text font="small"> {getString('cde.create.regionText')}</Text>
             </Layout.Vertical>
           </Layout.Horizontal>
         }

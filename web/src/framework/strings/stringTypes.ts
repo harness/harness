@@ -1388,13 +1388,21 @@ export interface StringsMap {
   'cde.create.gitspaceNameHelpertext2': string
   'cde.create.gitspaceNameLabel': string
   'cde.create.gitspaceNamePlaceholder': string
+  'cde.create.gitspaceSSHhelpertext1': string
+  'cde.create.gitspaceSSHhelpertext2': string
   'cde.create.ideEmpty': string
   'cde.create.ideNote': string
   'cde.create.importWarning': string
   'cde.create.infraProviderFailed': string
   'cde.create.infraProviderSuccess': string
+  'cde.create.infraProviderType': string
+  'cde.create.infraProviderTypeText': string
   'cde.create.machineCreateFailed': string
   'cde.create.machineCreateSuccess': string
+  'cde.create.machineType': string
+  'cde.create.machineTypeNote': string
+  'cde.create.region': string
+  'cde.create.regionText': string
   'cde.create.repoNotFound': string
   'cde.create.repositoryDetails': string
   'cde.create.scmEmpty': string
@@ -1403,6 +1411,7 @@ export interface StringsMap {
   'cde.create.selectBranchPlaceholder': string
   'cde.create.selectGitProvider': string
   'cde.create.selectIde': string
+  'cde.create.sshKey': string
   'cde.create.subtext': string
   'cde.create.thirdPartyGitRepositories': string
   'cde.create.unsaved.message': string

@@ -3,9 +3,11 @@ import React from 'react'
 import { Cloud } from 'iconoir-react'
 import { Menu, MenuItem } from '@blueprintjs/core'
 import { useFormikContext } from 'formik'
+import { Color } from '@harnessio/design-system'
 import { useStrings } from 'framework/strings'
 import type { OpenapiCreateGitspaceRequest, TypesInfraProviderConfig } from 'services/cde'
 import { HARNESS_GCP, HYBRID_VM_GCP, HYBRID_VM_AWS } from 'cde-gitness/constants'
+import infrasvg from 'icons/Infrastructure.svg?url'
 import googleCloudIcon from 'icons/google-cloud.svg?url'
 import awsIcon from 'cde-gitness/assests/aws.svg?url'
 import HarnessIcon from 'icons/Harness.svg?url'
@@ -61,11 +63,11 @@ const SelectInfraProviderType = ({ infraProviders, allProviders = [] }: SelectIn
                 src={selectedProviderIcon}
                 height={16}
                 width={16}
-                style={{ marginRight: '9px', display: 'flex', alignSelf: 'center' }}
+                style={{ marginRight: '12px', display: 'flex', alignSelf: 'center' }}
               />
             )}
             {!selectedProviderIcon && (
-              <Cloud height={16} width={16} style={{ marginRight: '9px', display: 'flex', alignSelf: 'center' }} />
+              <Cloud height={16} width={16} style={{ marginRight: '12px', display: 'flex', alignSelf: 'center' }} />
             )}
             <Layout.Vertical>
               <Text font={'normal'}>{selectedInfraProvider?.label || getString('cde.infraProvider')}</Text>
@@ -74,10 +76,12 @@ const SelectInfraProviderType = ({ infraProviders, allProviders = [] }: SelectIn
         }
         leftElement={
           <Layout.Horizontal>
-            <Cloud height={20} width={20} style={{ marginRight: '8px', alignItems: 'center' }} />
+            <img src={infrasvg} className={css.icon} />
             <Layout.Vertical spacing="small">
-              <Text>Infra Provider Type</Text>
-              <Text font="small">Your Gitspace will run on the selected infra provider type</Text>
+              <Text color={Color.GREY_500} font={{ weight: 'bold' }}>
+                {getString('cde.create.infraProviderType')}
+              </Text>
+              <Text font="small">{getString('cde.create.infraProviderTypeText')}</Text>
             </Layout.Vertical>
           </Layout.Horizontal>
         }

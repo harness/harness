@@ -18,3 +18,11 @@
   background: var(--grey-100) !important;
   border-radius: 10px;
 }
+
+.icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  align-items: center;
+  margin-right: var(--spacing-small) !important;
+}

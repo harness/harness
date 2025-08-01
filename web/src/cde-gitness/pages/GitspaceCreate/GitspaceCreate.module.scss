@@ -18,7 +18,7 @@
   display: flex;
   align-items: center;
   flex-direction: column;
-  margin-top: 10% !important;
+  margin-top: 4% !important;
 
   .titleContainer {
     width: 50%;
@@ -35,7 +35,8 @@
   }
 
   .cardMain {
-    width: 51%;
+    width: 72.2% !important;
+    margin-bottom: 30px !important;
   }
 
   .cardTitle {
@@ -55,6 +56,7 @@
 
 .formTitleContainer {
   padding: var(--spacing-medium) var(--spacing-large) !important;
+  margin: var(--spacing-medium) !important;
   border: 1px solid var(--grey-200);
   border-radius: 5px;
   border-bottom-left-radius: 0;
@@ -65,6 +67,7 @@
   border: 1px solid var(--grey-200);
   border-radius: 5px;
   padding: var(--spacing-medium) var(--spacing-large) !important;
+  margin: var(--spacing-medium) !important;
   border-top-right-radius: 0px;
   border-top-left-radius: 0px;
   border-top: none;
@@ -73,6 +76,7 @@
 .formOuterContainer {
   padding: var(--spacing-medium) 0 !important;
   padding-bottom: 0px !important;
+  margin: var(--spacing-medium) !important;
 
   button {
     margin-bottom: none;
@@ -97,13 +101,14 @@
   width: 20px;
   height: 20px;
   flex-shrink: 0;
-  margin-right: 7px !important;
+  align-items: center;
+  margin-right: var(--spacing-small) !important;
 }
 
 .textSection {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 3px !important;
 }
 
 .suggestedName {
@@ -111,6 +116,8 @@
   cursor: pointer;
   text-decoration: underline;
   width: fit-content;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 .inputFieldContainer {
@@ -119,9 +126,10 @@
       background: #f3f3fa !important;
       color: #6b6d85 !important;
       width: 100% !important;
-      height: 40px !important;
+      height: 45px !important;
       font-size: var(--font-size) !important;
       padding-left: 20px !important;
+      line-height: 20px !important;
     }
 
     input.bp3-input:hover {

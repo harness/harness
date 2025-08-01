@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React, { useEffect, useState, useMemo } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   Button,
   ButtonVariation,
@@ -25,6 +25,7 @@ import {
   Text,
   useToaster
 } from '@harnessio/uicore'
+import { Icon } from '@harnessio/icons'
 import { useHistory } from 'react-router-dom'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Menu, MenuItem } from '@blueprintjs/core'
@@ -104,7 +105,9 @@ export const CDECreateGitspace = ({ gitspaceSettings }: CDECreateGitspaceProps) 
   const { useGetUserSourceCodeManagers } = hooks
   const history = useHistory()
   const space = useGetSpaceParam()
-  const suggestedName = generateGitspaceName()
+  const [isGeneratingName, setIsGeneratingName] = useState(true)
+  const [generatedName, setGeneratedName] = useState<string>('')
+  const suggestedName = useMemo(() => generateGitspaceName(), [])
 
   const { accountIdentifier = '', orgIdentifier = '', projectIdentifier = '' } = useGetCDEAPIParams()
   const { showSuccess, showError } = useToaster()
@@ -129,6 +132,16 @@ export const CDECreateGitspace = ({ gitspaceSettings }: CDECreateGitspaceProps) 
       }
     }
   }, [gitspaceSettings])
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setGeneratedName(suggestedName)
+      setIsGeneratingName(false)
+    }, 2000)
+    return () => {
+      clearTimeout(timeoutId)
+    }
+  }, [suggestedName])
 
   const filteredIdeOptions = useMemo(() => {
     if (!gitspaceSettings?.settings?.gitspace_config?.ide?.access_list) {
@@ -339,19 +352,21 @@ export const CDECreateGitspace = ({ gitspaceSettings }: CDECreateGitspaceProps) 
                     <Layout.Horizontal className={css.leftSection}>
                       <img src={codeSandboxIcon} alt="gitspace" className={css.icon} />
                       <Layout.Vertical className={css.textSection} spacing={'small'}>
-                        <Text>{getString('cde.create.gitspaceNameLabel')}</Text>
+                        <Text color={Color.GREY_500} font={{ weight: 'bold' }}>
+                          {getString('cde.create.gitspaceNameLabel')}
+                        </Text>
                         <Layout.Vertical spacing={'xsmall'}>
                           <Text font={'small'}>{getString('cde.create.gitspaceNameHelpertext1')}</Text>
-                          <Layout.Horizontal>
+                          <Layout.Horizontal spacing={'xsmall'}>
                             <Text font={'small'}>{getString('cde.create.gitspaceNameHelpertext2')}</Text>
                             <Text
                               className={css.suggestedName}
-                              font={{ variation: FontVariation.SMALL }}
+                              font={'small'}
                               onClick={e => {
                                 e.stopPropagation()
                                 formik.setFieldValue('name', suggestedName)
                               }}>
-                              {suggestedName}
+                              {isGeneratingName ? <Icon name="loading" /> : generatedName}
                             </Text>
                           </Layout.Horizontal>
                         </Layout.Vertical>
@@ -374,9 +389,11 @@ export const CDECreateGitspace = ({ gitspaceSettings }: CDECreateGitspaceProps) 
                 />
                 {selectedIDE?.allowSSH ? <CDESSHSelect /> : <></>}
                 <SelectInfraProvider />
-                <Button width={'100%'} variation={ButtonVariation.PRIMARY} height={50} type="submit">
-                  {getString('cde.createGitspace')}
-                </Button>
+                <Container style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <Button width={'20%'} variation={ButtonVariation.PRIMARY} height={50} type="submit">
+                    {getString('cde.createGitspace')}
+                  </Button>
+                </Container>
               </Container>
             </FormikForm>
           </>

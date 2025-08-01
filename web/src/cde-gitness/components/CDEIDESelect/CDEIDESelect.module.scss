@@ -72,3 +72,12 @@
 .divider {
   border: 0.5px solid var(--grey-100) !important;
 }
+
+.icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  align-items: center;
+  margin-right: var(--spacing-small) !important;
+  color: #6b6d85;
+}

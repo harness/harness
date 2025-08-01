@@ -16,6 +16,7 @@
 
 import React from 'react'
 import { Layout, Text } from '@harnessio/uicore'
+import { Color } from '@harnessio/design-system'
 import { Menu } from '@blueprintjs/core'
 import { Code } from 'iconoir-react'
 import { getIDETypeOptions, groupEnums } from 'cde-gitness/constants'
@@ -26,7 +27,7 @@ import type { IDEOption } from '../../constants'
 import css from './CDEIDESelect.module.scss'
 
 interface CDEIDESelectProps {
-  onChange: (field: string, value: any) => void
+  onChange: (field: string, value: IDEOption['value']) => void
   selectedIde?: string
   filteredIdeOptions?: IDEOption[]
 }
@@ -42,10 +43,12 @@ export const CDEIDESelect = ({ onChange, selectedIde, filteredIdeOptions = [] }:
       ideDropdown={true}
       leftElement={
         <Layout.Horizontal>
-          <Code height={20} width={20} style={{ marginRight: '8px', alignItems: 'center' }} />
+          <Code className={css.icon} />
           <Layout.Vertical spacing="small">
-            <Text>IDE</Text>
-            <Text font="small">{getString('cde.create.ideNote')}</Text>
+            <Text color={Color.GREY_500} font={{ weight: 'bold' }}>
+              IDE
+            </Text>
+            <Text font="small">Your Gitspace will open in the selected IDE to code</Text>
           </Layout.Vertical>
         </Layout.Horizontal>
       }

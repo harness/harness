@@ -19,7 +19,7 @@ import { Container, Layout, Text } from '@harnessio/uicore'
 import { Menu, MenuItem } from '@blueprintjs/core'
 import { Cpu } from 'iconoir-react'
 import { useFormikContext } from 'formik'
-import { FontVariation } from '@harnessio/design-system'
+import { Color, FontVariation } from '@harnessio/design-system'
 import { useParams } from 'react-router-dom'
 import type { OpenapiCreateGitspaceRequest, TypesInfraProviderResource } from 'services/cde'
 import { useStrings } from 'framework/strings'
@@ -74,10 +74,12 @@ export const SelectMachine = ({ options, defaultValue }: SelectMachineInterface)
         overridePopOverWidth
         leftElement={
           <Layout.Horizontal>
-            <Cpu height={20} width={20} style={{ marginRight: '8px', alignItems: 'center' }} />
+            <Cpu className={css.icon} />
             <Layout.Vertical spacing="small">
-              <Text>Machine Type</Text>
-              <Text font="small">Resources for your Gitspace</Text>
+              <Text color={Color.GREY_500} font={{ weight: 'bold' }}>
+                {getString('cde.create.machineType')}
+              </Text>
+              <Text font="small"> {getString('cde.create.machineTypeNote')}</Text>
             </Layout.Vertical>
           </Layout.Horizontal>
         }
