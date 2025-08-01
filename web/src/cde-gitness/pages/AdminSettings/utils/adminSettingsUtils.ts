@@ -24,7 +24,7 @@ export interface AdminSettingsFormValues {
       }
     }
   }
-  gitspaceImages?: TypesDevcontainerImage
+  gitspaceImages?: { default_image_added: boolean } & TypesDevcontainerImage
 }
 
 /**
@@ -35,6 +35,7 @@ export const createInitialValues = (
   getString: (key: keyof StringsMap) => string
 ): AdminSettingsFormValues => {
   const gitspace_config = settings?.settings?.gitspace_config || {}
+  const devcontainer_image = settings?.settings?.gitspace_config?.devcontainer?.devcontainer_image || {}
   const availableEditors = getIDETypeOptions(getString)
 
   return {
@@ -50,12 +51,10 @@ export const createInitialValues = (
     }, {} as { [key: string]: boolean }),
     cloudRegions: {},
     gitspaceImages: {
-      image_connector_ref: '',
-      image_name: '',
-      access_list: {
-        mode: 'allow',
-        list: []
-      }
+      default_image_added: Boolean((devcontainer_image?.image_name?.trim().length ?? 0) > 0),
+      image_connector_ref: devcontainer_image?.image_connector_ref,
+      image_name: devcontainer_image?.image_name,
+      access_list: devcontainer_image?.access_list
     }
   }
 }
@@ -148,7 +147,7 @@ export const transformGitspaceImagesToPayload = (formValues: AdminSettingsFormVa
  */
 export const buildAdminSettingsPayload = (
   formValues: AdminSettingsFormValues,
-  availableEditors: IDEOption[],
+  getString: (key: keyof StringsMap) => string,
   settings: TypesGitspaceSettingsResponse | null
 ): TypesGitspaceSettingsData => {
   return {
@@ -156,7 +155,7 @@ export const buildAdminSettingsPayload = (
     gitspace_config: {
       ...settings?.settings?.gitspace_config,
       scm: transformGitProvidersToPayload(formValues),
-      ide: transformCodeEditorsToPayload(formValues, availableEditors),
+      ide: transformCodeEditorsToPayload(formValues, getIDETypeOptions(getString)),
       devcontainer: {
         ...settings?.settings?.gitspace_config?.devcontainer,
         ...transformGitspaceImagesToPayload(formValues)

@@ -28,6 +28,7 @@ import { useGetSettingValue } from 'hooks/useGetSettingValue'
 import { useFeatureFlags } from 'hooks/useFeatureFlag'
 import { defaultUsefulOrNot } from 'components/DefaultUsefulOrNot/UsefulOrNot'
 import { defaultDelegateSelectorsV2 } from 'components/DelegateSelector/DelegateSelector'
+import { defaultMultiTypeConnectorField } from 'components/FormMultiTypeConnectorField/FormMultiTypeConnectorField'
 
 interface AppContextProps extends AppProps {
   setAppContext: (value: Partial<AppProps>) => void
@@ -52,7 +53,8 @@ const AppContext = React.createContext<AppContextProps>({
   currentUser: defaultCurrentUser,
   customComponents: {
     UsefulOrNot: defaultUsefulOrNot,
-    DelegateSelectorsV2: defaultDelegateSelectorsV2
+    DelegateSelectorsV2: defaultDelegateSelectorsV2,
+    MultiTypeConnectorField: defaultMultiTypeConnectorField
   },
   currentUserProfileURL: '',
   routingId: '',

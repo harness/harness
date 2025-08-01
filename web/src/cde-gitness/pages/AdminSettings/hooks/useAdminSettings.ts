@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useToaster } from '@harnessio/uicore'
 import { useFindGitspaceSettings, useUpsertGitspaceSettings } from 'services/cde'
-import { getIDETypeOptions } from 'cde-gitness/constants'
 import { getErrorMessage } from 'utils/Utils'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
@@ -30,13 +29,12 @@ export const useAdminSettings = () => {
     accountIdentifier: accountInfo?.identifier
   })
 
-  const availableEditors = useMemo(() => getIDETypeOptions(getString), [getString])
-
   const tabs = useMemo(
     () => [
       { id: 'gitProviders', title: getString('cde.settings.gitProviders') },
       { id: 'codeEditors', title: getString('cde.settings.codeEditors') },
-      { id: 'cloudRegions', title: getString('cde.settings.cloudRegionsAndMachineTypes') }
+      { id: 'cloudRegions', title: getString('cde.settings.cloudRegionsAndMachineTypes') },
+      { id: 'gitspaceImages', title: getString('cde.settings.gitspaceImages') }
     ],
     [getString]
   )
@@ -46,7 +44,7 @@ export const useAdminSettings = () => {
 
   const handleSave = async (values: AdminSettingsFormValues) => {
     try {
-      const payload = buildAdminSettingsPayload(values, availableEditors, settings)
+      const payload = buildAdminSettingsPayload(values, getString, settings)
       await upsertSettings(payload)
       showSuccess(getString('cde.settings.saveSuccess'))
       refetch()
@@ -61,15 +59,13 @@ export const useAdminSettings = () => {
 
   return {
     settings,
-    availableEditors,
     tabs,
     initialValues,
     selectedTab,
-    loadingSettings,
+    loading: loadingSettings || loadingUpsert,
     errorSettings,
     handleSave,
     handleTabChange,
-    refetch,
-    loadingUpsert
+    refetch
   }
 }

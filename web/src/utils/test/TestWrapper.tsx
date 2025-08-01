@@ -17,6 +17,7 @@ import { AppContextProvider, defaultCurrentUser } from 'AppContext'
 import { defaultUsefulOrNot } from 'components/DefaultUsefulOrNot/UsefulOrNot'
 import { StringsContextProvider } from 'framework/strings/StringsContextProvider'
 import { defaultDelegateSelectorsV2 } from 'components/DelegateSelector/DelegateSelector'
+import { defaultMultiTypeConnectorField } from 'components/FormMultiTypeConnectorField/FormMultiTypeConnectorField'
 
 export interface TestWrapperProps {
   path?: string
@@ -72,7 +73,8 @@ export default function TestWrapper(props: PropsWithChildren<TestWrapperProps>) 
           currentUser,
           customComponents: {
             UsefulOrNot: defaultUsefulOrNot,
-            DelegateSelectorsV2: defaultDelegateSelectorsV2
+            DelegateSelectorsV2: defaultDelegateSelectorsV2,
+            MultiTypeConnectorField: defaultMultiTypeConnectorField
           },
           currentUserProfileURL,
           defaultSettingsURL,

@@ -1223,6 +1223,7 @@ export interface StringsMap {
   userUpdateSuccess: string
   users: string
   'validation.confirmPasswordRequired': string
+  'validation.connectorRequired': string
   'validation.emailInvalid': string
   'validation.emailRequired': string
   'validation.expirationDateRequired': string
@@ -1647,6 +1648,29 @@ export interface StringsMap {
   'cde.settings.gitProviders': string
   'cde.settings.gitProvidersDescription': string
   'cde.settings.gitspaceImages': string
+  'cde.settings.images.allowedImagePathsAndRegistries': string
+  'cde.settings.images.allowedImagePathsDescription': string
+  'cde.settings.images.apply': string
+  'cde.settings.images.artifactRegistryConnector': string
+  'cde.settings.images.cancel': string
+  'cde.settings.images.defaultGitspaceImage': string
+  'cde.settings.images.defaultImageDescription': string
+  'cde.settings.images.defaultPathToPrivateGitspaceImagePath': string
+  'cde.settings.images.defaultPathToPublicGitspaceImagePath': string
+  'cde.settings.images.imagePathPlaceholder': string
+  'cde.settings.images.imageRegistryOrPath': string
+  'cde.settings.images.manageGitspaceImages': string
+  'cde.settings.images.manageGitspaceImagesDescription': string
+  'cde.settings.images.newImagePath': string
+  'cde.settings.images.private': string
+  'cde.settings.images.privateRegistryDescription': string
+  'cde.settings.images.provideDefaultImage': string
+  'cde.settings.images.provideDefaultImagePathOrRegistry': string
+  'cde.settings.images.public': string
+  'cde.settings.images.publicRegistryDescription': string
+  'cde.settings.images.selectConnector': string
+  'cde.settings.images.selectImageRegistryAccessType': string
+  'cde.settings.images.selectImageRegistryConnector': string
   'cde.settings.other': string
   'cde.settings.providers.bitbucket': string
   'cde.settings.providers.github': string

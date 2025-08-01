@@ -24,6 +24,7 @@ import { useGetSettingValue } from 'hooks/useGetSettingValue'
 import { useGetAuthSettings } from 'hooks/useGetAuthSettings'
 import { defaultUsefulOrNot } from 'components/DefaultUsefulOrNot/UsefulOrNot'
 import { defaultDelegateSelectorsV2 } from 'components/DelegateSelector/DelegateSelector'
+import { defaultMultiTypeConnectorField } from 'components/FormMultiTypeConnectorField/FormMultiTypeConnectorField'
 import App from './App'
 import './bootstrap.scss'
 
@@ -49,7 +50,8 @@ ReactDOM.render(
     currentUser={defaultCurrentUser}
     customComponents={{
       UsefulOrNot: defaultUsefulOrNot,
-      DelegateSelectorsV2: defaultDelegateSelectorsV2
+      DelegateSelectorsV2: defaultDelegateSelectorsV2,
+      MultiTypeConnectorField: defaultMultiTypeConnectorField
     }}
     currentUserProfileURL=""
     routingId=""

@@ -1,4 +1,4 @@
-import type { TypesGitspaceSettingsResponse } from 'services/cde'
+import type { TypesDevcontainerImage, TypesGitspaceSettingsResponse } from 'services/cde'
 
 export interface MachineType {
   identifier: string
@@ -32,6 +32,7 @@ export interface AdminSettingsFormValues {
       }
     }
   }
+  gitspaceImages?: TypesDevcontainerImage
 }
 
 export const getCloudRegionFieldPath = (infraProvider: string, region: string, machineTypeId: string): string => {

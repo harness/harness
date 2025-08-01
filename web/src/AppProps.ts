@@ -62,6 +62,7 @@ export interface AppProps {
   customComponents: {
     UsefulOrNot: (props: UsefulOrNotProps) => React.ReactElement
     DelegateSelectorsV2: (props: DelegateSelectorsV2Props) => React.ReactElement
+    MultiTypeConnectorField: (props: any) => React.ReactElement
   }
   /** React Hooks that Harness Platform passes down. Note: Pass only hooks that your app need */
   hooks: Partial<{
@@ -83,6 +84,7 @@ export interface AppProps {
     useGetPaginatedListOfBranchesByRefConnector?: Unknown
     useGetRepoURL?: Unknown
     getRepoURLPromise?: Unknown
+    useGetConnector?: Unknown
   }>
 
   currentUser: Required<TypesUser>

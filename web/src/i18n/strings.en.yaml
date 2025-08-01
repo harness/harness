@@ -146,6 +146,7 @@ validation:
   emailRequired: Email is required
   uidRequired: User ID is required
   nameIsRequired: Name is required
+  connectorRequired: Connector is required
   expirationDateRequired: Expiration date is required
   newPasswordRequired: New password is a required field
   confirmPasswordRequired: Confirm Password is a required field
