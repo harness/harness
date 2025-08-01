@@ -7,14 +7,15 @@ import { useAppContext } from 'AppContext'
 import {
   createInitialValues,
   buildAdminSettingsPayload,
-  type AdminSettingsFormValues
+  type AdminSettingsFormValues,
+  AdminSettingsTabs
 } from '../utils/adminSettingsUtils'
 
 export const useAdminSettings = () => {
   const { getString } = useStrings()
   const { showSuccess, showError } = useToaster()
   const { accountInfo } = useAppContext()
-  const [selectedTab, setSelectedTab] = useState('gitProviders')
+  const [selectedTab, setSelectedTab] = useState(AdminSettingsTabs.GIT_PROVIDERS)
 
   const {
     data: settings,
@@ -31,10 +32,10 @@ export const useAdminSettings = () => {
 
   const tabs = useMemo(
     () => [
-      { id: 'gitProviders', title: getString('cde.settings.gitProviders') },
-      { id: 'codeEditors', title: getString('cde.settings.codeEditors') },
-      { id: 'cloudRegions', title: getString('cde.settings.cloudRegionsAndMachineTypes') },
-      { id: 'gitspaceImages', title: getString('cde.settings.gitspaceImages') }
+      { id: AdminSettingsTabs.GIT_PROVIDERS, title: getString('cde.settings.gitProviders') },
+      { id: AdminSettingsTabs.CODE_EDITORS, title: getString('cde.settings.codeEditors') },
+      { id: AdminSettingsTabs.CLOUD_REGIONS, title: getString('cde.settings.cloudRegionsAndMachineTypes') },
+      { id: AdminSettingsTabs.GITSPACE_IMAGES, title: getString('cde.settings.gitspaceImages') }
     ],
     [getString]
   )
@@ -53,7 +54,7 @@ export const useAdminSettings = () => {
     }
   }
 
-  const handleTabChange = (tabId: string) => {
+  const handleTabChange = (tabId: AdminSettingsTabs) => {
     setSelectedTab(tabId)
   }
 

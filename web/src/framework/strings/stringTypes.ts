@@ -1229,6 +1229,8 @@ export interface StringsMap {
   'validation.expirationDateRequired': string
   'validation.gitBranchNameInvalid': string
   'validation.gitTagNameInvalid': string
+  'validation.imagePathIsRequired': string
+  'validation.invalidImage': string
   'validation.key': string
   'validation.nameInvalid': string
   'validation.nameIsRequired': string
@@ -1236,6 +1238,7 @@ export interface StringsMap {
   'validation.nameTooLong': string
   'validation.nameTooShort': string
   'validation.newPasswordRequired': string
+  'validation.pathIsRequired': string
   'validation.repoNamePatternIsNotValid': string
   'validation.spaceNamePatternIsNotValid': string
   'validation.uidInvalid': string
@@ -1657,6 +1660,7 @@ export interface StringsMap {
   'cde.settings.images.defaultImageDescription': string
   'cde.settings.images.defaultPathToPrivateGitspaceImagePath': string
   'cde.settings.images.defaultPathToPublicGitspaceImagePath': string
+  'cde.settings.images.imagePath': string
   'cde.settings.images.imagePathPlaceholder': string
   'cde.settings.images.imageRegistryOrPath': string
   'cde.settings.images.manageGitspaceImages': string

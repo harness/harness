@@ -5,11 +5,8 @@ import type { TypesGitspaceSettingsResponse } from 'services/cde'
 import InfraProviderPanel from 'cde-gitness/components/InfraProviderPanel/InfraProviderPanel'
 import RegionsPanel from 'cde-gitness/components/RegionsPanel/RegionsPanel'
 import { useInfraProviderResources } from 'cde-gitness/pages/AdminSettings/CloudRegions/hooks/useInfraProviderResources'
-import {
-  AdminSettingsFormValues,
-  getCloudRegionFieldPath,
-  processInfraProviderDenyList
-} from 'cde-gitness/utils/cloudRegionsUtils'
+import { getCloudRegionFieldPath, processInfraProviderDenyList } from 'cde-gitness/utils/cloudRegionsUtils'
+import type { AdminSettingsFormValues } from '../utils/adminSettingsUtils'
 import css from './CloudRegions.module.scss'
 
 interface CloudRegionsProps {

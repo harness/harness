@@ -3,6 +3,7 @@ import { Text, Layout } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { useStrings } from 'framework/strings'
 import { DefaultGitspaceImage } from 'cde-gitness/components/DefaultGitspaceImage/DefaultGitspaceImage'
+import { AllowedImagePaths } from 'cde-gitness/components/AllowedImagePaths/AllowedImagePaths'
 import type { TypesGitspaceSettingsResponse } from 'services/cde'
 import css from './GitspaceImages.module.scss'
 
@@ -23,6 +24,7 @@ const GitspaceImages: React.FC<GitspaceImagesProps> = ({ settings }: GitspaceIma
       </Layout.Vertical>
 
       <DefaultGitspaceImage settings={settings} />
+      <AllowedImagePaths />
     </div>
   )
 }

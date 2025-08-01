@@ -16,20 +16,10 @@
   min-height: 60px;
 }
 
-.tableContainer {
-  border: 1px solid var(--grey-200);
-  border-radius: var(--radius-default);
-}
-
 .defaultImageTable {
   :global {
     .bp3-table {
       border: none;
-    }
-
-    .bp3-table-header {
-      background: var(--grey-50);
-      border-bottom: 1px solid var(--grey-200);
     }
 
     .bp3-table-cell {
@@ -43,5 +33,6 @@
 }
 
 .defaultImageTableRow {
-  padding: var(--spacing-large) var(--spacing-medium) var(--spacing-small) var(--spacing-medium) !important;
+  padding: 0 !important;
+  border-bottom: none !important;
 }

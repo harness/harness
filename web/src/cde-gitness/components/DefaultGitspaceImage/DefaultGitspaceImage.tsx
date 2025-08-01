@@ -5,7 +5,7 @@ import { Color, FontVariation } from '@harnessio/design-system'
 import { useFormikContext } from 'formik'
 import { useStrings } from 'framework/strings'
 import { ProvideDefaultImageModal } from 'components/ProvideDefaultImage/ProvideDefaultImage'
-import type { AdminSettingsFormValues } from 'cde-gitness/utils/cloudRegionsUtils'
+import type { AdminSettingsFormValues } from 'cde-gitness/pages/AdminSettings/utils/adminSettingsUtils'
 import { useAppContext } from 'AppContext'
 import type { TypesGitspaceSettingsResponse } from 'services/cde'
 import { getConnectorIcon } from 'cde-gitness/pages/AdminSettings/utils/connectorUtils'
@@ -16,11 +16,11 @@ interface DefaultGitspaceImageProps {
 }
 
 interface ConnectorRowData {
-  name?: string
-  identifier?: string
-  type?: string
-  id?: string
-  imagePath?: string
+  name: string
+  identifier: string
+  type: string
+  id: string
+  imagePath: string
 }
 
 interface TableRowProps {
@@ -61,6 +61,7 @@ export const DefaultGitspaceImage: React.FC<DefaultGitspaceImageProps> = ({ sett
           iconProps={{ size: 24 }}
           onClick={() => {
             setFieldValue('gitspaceImages', {
+              ...values.gitspaceImages,
               image_name: undefined,
               image_connector_ref: undefined,
               default_image_added: false
@@ -70,7 +71,7 @@ export const DefaultGitspaceImage: React.FC<DefaultGitspaceImageProps> = ({ sett
         />
       </Container>
     ),
-    [setFieldValue]
+    [setFieldValue, values.gitspaceImages]
   )
 
   const ImagePathCell = useCallback(
@@ -194,7 +195,6 @@ export const DefaultGitspaceImage: React.FC<DefaultGitspaceImageProps> = ({ sett
           setIsModalOpen(false)
           if (formValues?.imagePath) {
             setShowRow(true)
-            setFieldValue('gitspaceImages.default_image_added', true)
           }
         }}
       />

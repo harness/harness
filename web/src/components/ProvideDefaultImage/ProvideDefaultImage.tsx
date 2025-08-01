@@ -4,7 +4,7 @@ import { Button, ButtonVariation, Dialog, FormInput, Layout, Text, FormikForm, F
 import { Color, FontVariation } from '@harnessio/design-system'
 import { useFormikContext } from 'formik'
 import { useStrings } from 'framework/strings'
-import type { AdminSettingsFormValues } from 'cde-gitness/utils/cloudRegionsUtils'
+import type { AdminSettingsFormValues } from 'cde-gitness/pages/AdminSettings/utils/adminSettingsUtils'
 import { useAppContext } from 'AppContext'
 import {
   PublicPrivateRegistrySelect,
@@ -26,12 +26,12 @@ interface ProvideDefaultImageModalProps {
 
 export const ProvideDefaultImageModal: React.FC<ProvideDefaultImageModalProps> = ({ isOpen, onClose }) => {
   const { getString } = useStrings()
-  const { setFieldValue } = useFormikContext<AdminSettingsFormValues>()
+  const { values, setFieldValue } = useFormikContext<AdminSettingsFormValues>()
   const { customComponents, accountInfo } = useAppContext()
   const { MultiTypeConnectorField } = customComponents
 
   const validationSchema = Yup.object({
-    imagePath: Yup.string().required(getString('validation.nameIsRequired')),
+    imagePath: Yup.string().required(getString('validation.pathIsRequired')),
     connectorRef: Yup.mixed().when('accessType', {
       is: 'private',
       then: () => Yup.mixed().required(getString('validation.connectorRequired')),
@@ -40,16 +40,20 @@ export const ProvideDefaultImageModal: React.FC<ProvideDefaultImageModalProps> =
   })
 
   const handleApply = useCallback(
-    (values: ModalFormValues) => {
+    (modalValues: ModalFormValues) => {
+      const currentGitspaceImages = values.gitspaceImages || {}
+
       const defaultImageData = {
-        image_name: values.imagePath,
-        image_connector_ref: values.connectorRef
+        ...currentGitspaceImages,
+        image_name: modalValues.imagePath,
+        image_connector_ref: modalValues.connectorRef,
+        default_image_added: true
       }
 
       setFieldValue('gitspaceImages', defaultImageData)
-      onClose(values)
+      onClose(modalValues)
     },
-    [setFieldValue, onClose]
+    [setFieldValue, onClose, values.gitspaceImages]
   )
 
   if (!isOpen) {
@@ -108,7 +112,7 @@ export const ProvideDefaultImageModal: React.FC<ProvideDefaultImageModalProps> =
 
                 <Layout.Vertical spacing="small" margin={{ bottom: 'medium' }}>
                   <Text font={{ variation: FontVariation.BODY2_SEMI }} color={Color.GREY_700}>
-                    {getString('cde.settings.images.imageRegistryOrPath')}
+                    {getString('cde.settings.images.imagePath')}
                   </Text>
                   <FormInput.Text name="imagePath" placeholder="e.g mcr.microsoft.com/devcontainers/java" />
                 </Layout.Vertical>

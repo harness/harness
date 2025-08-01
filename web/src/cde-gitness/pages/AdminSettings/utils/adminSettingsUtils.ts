@@ -1,3 +1,4 @@
+import * as Yup from 'yup'
 import type {
   TypesGitspaceSettingsData,
   TypesGitspaceSettingsResponse,
@@ -9,6 +10,13 @@ import { scmOptionsCDE } from 'cde-gitness/pages/GitspaceCreate/CDECreateGitspac
 import { getIDETypeOptions, type IDEOption } from 'cde-gitness/constants'
 import type { EnumInfraProviderType } from 'cde-gitness/services'
 import type { StringsMap } from 'framework/strings/stringTypes'
+
+export enum AdminSettingsTabs {
+  GIT_PROVIDERS = 'gitProviders',
+  CODE_EDITORS = 'codeEditors',
+  CLOUD_REGIONS = 'cloudRegions',
+  GITSPACE_IMAGES = 'gitspaceImages'
+}
 
 export interface AdminSettingsFormValues {
   gitProviders: {
@@ -137,7 +145,12 @@ export const transformGitspaceImagesToPayload = (formValues: AdminSettingsFormVa
 
   return {
     devcontainer_image: {
-      ...formValues.gitspaceImages
+      access_list: {
+        mode: 'allow' as const,
+        list: formValues.gitspaceImages.access_list?.list || []
+      },
+      image_name: formValues.gitspaceImages.image_name,
+      image_connector_ref: formValues.gitspaceImages.image_connector_ref
     }
   }
 }
@@ -163,4 +176,28 @@ export const buildAdminSettingsPayload = (
     },
     infra_provider: transformCloudRegionsToPayload(formValues, settings)
   }
+}
+
+const imagePattern = /^[^*]*\*?$/
+
+export const getValidationSchema = (getString: (key: keyof StringsMap) => string) => {
+  return Yup.object({
+    gitspaceImages: Yup.object({
+      access_list: Yup.object({
+        list: Yup.array()
+          .of(
+            Yup.string()
+              .required(getString('validation.imagePathIsRequired'))
+              .matches(imagePattern, getString('validation.invalidImage'))
+          )
+          .notRequired()
+      }).notRequired(),
+      image_name: Yup.string().when('default_image_added', {
+        is: true,
+        then: (schema: Yup.StringSchema) =>
+          schema.required(getString('validation.pathIsRequired')).trim().min(1, getString('validation.pathIsRequired')),
+        otherwise: (schema: Yup.StringSchema) => schema.notRequired()
+      })
+    }).notRequired()
+  })
 }

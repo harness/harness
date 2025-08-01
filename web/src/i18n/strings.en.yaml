@@ -146,6 +146,9 @@ validation:
   emailRequired: Email is required
   uidRequired: User ID is required
   nameIsRequired: Name is required
+  pathIsRequired: Path is required
+  imagePathIsRequired: Image path is required
+  invalidImage: "Invalid image expression: the wildcard character '*' can appear at most once and only at the end."
   connectorRequired: Connector is required
   expirationDateRequired: Expiration date is required
   newPasswordRequired: New password is a required field

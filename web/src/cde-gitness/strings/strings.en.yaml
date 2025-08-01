@@ -102,7 +102,8 @@ settings:
     privateRegistryDescription: Use private registry with authenticated access
     selectImageRegistryConnector: Select Image Registry Connector
     selectConnector: -Select Connector-
-    imageRegistryOrPath: Image Registry or path
+    imageRegistryOrPath: Image Registry or Path
+    imagePath: Image Path
     apply: Apply
     cancel: Cancel
     allowedImagePathsAndRegistries: Allowed Image Paths and Registries
@@ -330,17 +331,17 @@ create:
   infraProviderFailed: Gitspace Infrastructure creation failed
   machineCreateSuccess: Machine created successfully
   machineCreateFailed: Machine creation failed
-  gitprovider : Git Provider
-  scmEmpty : All SCM options are disabled
-  ideEmpty : All IDEs disabled
-  selectGitProvider : Select a Git Provider
-  githubOauthhelpertext1 : Please Configure the GitHub OAuth to connect to the repositories you have access
-  githubOauthhelpertext2 : Configure the OAuth in Profile
-  githubOauthhelpertext3 : Visit the User Profile Settings.
-  githubOauthhelpertext4 : Under OAuth section, select Github and connect
-  githubOauthhelpertext5 : After configuring return back to this page to connect the private repositories
-  ideNote : Your Gitspace will open in the selected IDE to code
-  selectIde : Select an IDE
+  gitprovider: Git Provider
+  scmEmpty: All SCM options are disabled
+  ideEmpty: All IDEs disabled
+  selectGitProvider: Select a Git Provider
+  githubOauthhelpertext1: Please Configure the GitHub OAuth to connect to the repositories you have access
+  githubOauthhelpertext2: Configure the OAuth in Profile
+  githubOauthhelpertext3: Visit the User Profile Settings.
+  githubOauthhelpertext4: Under OAuth section, select Github and connect
+  githubOauthhelpertext5: After configuring return back to this page to connect the private repositories
+  ideNote: Your Gitspace will open in the selected IDE to code
+  selectIde: Select an IDE
 
   subtext: Start Coding, no setup required. Dedicated cloud development environments with your favorite editor.
   importWarning:

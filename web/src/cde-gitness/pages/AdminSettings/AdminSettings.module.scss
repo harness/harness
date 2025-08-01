@@ -16,17 +16,13 @@
 
 .tabContainer {
   width: 100% !important;
-  height: calc(var(--page-height) - var(--page-header-height, 64px));
+  min-height: calc(var(--page-height) - var(--page-header-height, 64px));
   display: flex;
 
   [class*='bp3-tab-list'] {
     background-color: var(--grey-0) !important;
     border-bottom: 1px solid var(--grey-200) !important;
     padding: 0 var(--spacing-xlarge) !important;
-  }
-
-  [class*='bp3-tab'] {
-    margin-right: 0 !important;
   }
 
   :global(.bp3-tabs) {
@@ -38,11 +34,10 @@
   :global(.bp3-tab-panel) {
     flex-grow: 1;
     margin-top: 0;
-    padding: 0 !important; /* The panel should not have its own padding if the content inside handles it */
+    padding: 0 !important;
   }
 }
 
 .tabContent {
   padding: var(--spacing-large);
-  min-height: 400px;
 }
