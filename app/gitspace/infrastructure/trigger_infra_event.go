@@ -254,7 +254,7 @@ func (i InfraProvisioner) provisionNewInfrastructure(
 		requiredGitspacePorts,
 		allParams,
 		configMetadata,
-		infrastructure.InstanceInfo,
+		infrastructure,
 	)
 	if err != nil {
 		infraProvisioned.InfraStatus = enum.InfraStatusUnknown
@@ -298,7 +298,7 @@ func (i InfraProvisioner) provisionExistingInfrastructure(
 		requiredGitspacePorts,
 		allParams,
 		configMetadata,
-		stoppedInfra.InstanceInfo,
+		stoppedInfra,
 	)
 	if err != nil {
 		return fmt.Errorf(

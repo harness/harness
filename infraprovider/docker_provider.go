@@ -57,7 +57,7 @@ func (d DockerProvider) Provision(
 	requiredGitspacePorts []types.GitspacePort,
 	inputParameters []types.InfraProviderParameter,
 	_ map[string]any,
-	_ types.InstanceInfo,
+	_ types.Infrastructure,
 ) error {
 	dockerClient, err := d.dockerClientFactory.NewDockerClient(ctx, types.Infrastructure{
 		ProviderType:    enum.InfraProviderTypeDocker,
