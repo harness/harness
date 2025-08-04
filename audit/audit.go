@@ -80,8 +80,10 @@ const (
 	ResourceTypePushRule              ResourceType = "push_rule"
 	ResourceTypePullRequest           ResourceType = "pull_request"
 	ResourceTypeRepositorySettings    ResourceType = "repository_settings"
+	ResourceTypeCodeWebhook           ResourceType = "code_webhook"
 	ResourceTypeRegistry              ResourceType = "registry"
 	ResourceTypeRegistryUpstreamProxy ResourceType = "registry_upstream_proxy"
+	ResourceTypeRegistryWebhook       ResourceType = "registry_webhook"
 	ResourceTypeRegistryArtifact      ResourceType = "registry_artifact"
 )
 
@@ -95,8 +97,10 @@ func (a ResourceType) Validate() error {
 		ResourceTypePushRule,
 		ResourceTypePullRequest,
 		ResourceTypeRepositorySettings,
+		ResourceTypeCodeWebhook,
 		ResourceTypeRegistry,
 		ResourceTypeRegistryUpstreamProxy,
+		ResourceTypeRegistryWebhook,
 		ResourceTypeRegistryArtifact:
 		return nil
 

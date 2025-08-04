@@ -17,15 +17,22 @@ package webhook
 import (
 	"context"
 
+	"github.com/harness/gitness/audit"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 // Delete deletes an existing webhook.
 func (s *Service) Delete(
 	ctx context.Context,
+	principal *types.Principal,
 	parentID int64,
 	parentType enum.WebhookParent,
 	webhookIdentifier string,
+	spacePath string,
+	scopeIdentifier string,
 	allowDeletingInternal bool,
 ) error {
 	hook, err := s.GetWebhookVerifyOwnership(ctx, parentID, parentType, webhookIdentifier)
@@ -39,6 +46,21 @@ func (s *Service) Delete(
 
 	if err := s.webhookStore.Delete(ctx, hook.ID); err != nil {
 		return err
+	}
+
+	nameKey := audit.RepoName
+	if parentType == enum.WebhookParentSpace {
+		nameKey = audit.SpaceName
+	}
+	err = s.auditService.Log(ctx,
+		*principal,
+		audit.NewResource(webhookToResourceType(parentType), hook.Identifier, nameKey, scopeIdentifier),
+		audit.ActionDeleted,
+		spacePath,
+		audit.WithOldObject(hook),
+	)
+	if err != nil {
+		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for delete webhook operation: %s", err)
 	}
 
 	s.sendSSE(ctx, parentID, parentType, enum.SSETypeWebhookDeleted, hook)

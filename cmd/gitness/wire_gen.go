@@ -458,7 +458,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	webhookExecutionStore := database.ProvideWebhookExecutionStore(db)
 	urlProvider := webhook.ProvideURLProvider(ctx)
 	secretService := secret3.ProvideSecretService(secretStore, encrypter, spaceFinder)
-	webhookService, err := webhook.ProvideService(ctx, webhookConfig, transactor, readerFactory, eventsReaderFactory, webhookStore, webhookExecutionStore, spaceStore, repoStore, pullReqStore, pullReqActivityStore, provider, principalStore, gitInterface, encrypter, labelStore, urlProvider, labelValueStore, streamer, secretService, spacePathStore)
+	webhookService, err := webhook.ProvideService(ctx, webhookConfig, transactor, readerFactory, eventsReaderFactory, webhookStore, webhookExecutionStore, spaceStore, repoStore, pullReqStore, pullReqActivityStore, provider, principalStore, gitInterface, encrypter, labelStore, urlProvider, labelValueStore, auditService, streamer, secretService, spacePathStore)
 	if err != nil {
 		return nil, err
 	}

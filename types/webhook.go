@@ -23,13 +23,13 @@ import (
 // Webhook represents a webhook.
 type Webhook struct {
 	// TODO [CODE-1364]: Hide once UID/Identifier migration is completed.
-	ID         int64              `json:"id"`
-	Version    int64              `json:"version"`
-	ParentID   int64              `json:"parent_id"`
-	ParentType enum.WebhookParent `json:"parent_type"`
-	CreatedBy  int64              `json:"created_by"`
-	Created    int64              `json:"created"`
-	Updated    int64              `json:"updated"`
+	ID         int64              `json:"id" yaml:"id"`
+	Version    int64              `json:"version" yaml:"-"`
+	ParentID   int64              `json:"parent_id" yaml:"-"`
+	ParentType enum.WebhookParent `json:"parent_type" yaml:"-"`
+	CreatedBy  int64              `json:"created_by" yaml:"created_by"`
+	Created    int64              `json:"created" yaml:"created"`
+	Updated    int64              `json:"updated" yaml:"updated"`
 	Type       enum.WebhookType   `json:"-"`
 
 	// scope 0 indicates repo; scope > 0 indicates space depth level
@@ -37,14 +37,14 @@ type Webhook struct {
 
 	Identifier string `json:"identifier"`
 	// TODO [CODE-1364]: Remove once UID/Identifier migration is completed.
-	DisplayName           string                       `json:"display_name"`
-	Description           string                       `json:"description"`
-	URL                   string                       `json:"url"`
-	Secret                string                       `json:"-"`
-	Enabled               bool                         `json:"enabled"`
-	Insecure              bool                         `json:"insecure"`
-	Triggers              []enum.WebhookTrigger        `json:"triggers"`
-	LatestExecutionResult *enum.WebhookExecutionResult `json:"latest_execution_result,omitempty"`
+	DisplayName           string                       `json:"display_name" yaml:"display_name"`
+	Description           string                       `json:"description" yaml:"description"`
+	URL                   string                       `json:"url" yaml:"url"`
+	Secret                string                       `json:"-" yaml:"-"`
+	Enabled               bool                         `json:"enabled" yaml:"enabled"`
+	Insecure              bool                         `json:"insecure" yaml:"insecure"`
+	Triggers              []enum.WebhookTrigger        `json:"triggers" yaml:"triggers"`
+	LatestExecutionResult *enum.WebhookExecutionResult `json:"latest_execution_result,omitempty" yaml:"-"`
 }
 
 // MarshalJSON overrides the default json marshaling for `Webhook` allowing us to inject the `HasSecret` field.
@@ -67,6 +67,26 @@ func (w *Webhook) MarshalJSON() ([]byte, error) {
 		// TODO [CODE-1363]: remove after identifier migration.
 		UID: w.Identifier,
 	})
+}
+
+// Clone makes a deep copy of the webhook object.
+func (w Webhook) Clone() Webhook {
+	webhook := w
+
+	// Deep copy the LatestExecutionResult pointer if it exists
+	if w.LatestExecutionResult != nil {
+		result := *w.LatestExecutionResult
+		webhook.LatestExecutionResult = &result
+	}
+
+	// Deep copy the Triggers slice
+	if len(w.Triggers) > 0 {
+		triggers := make([]enum.WebhookTrigger, len(w.Triggers))
+		copy(triggers, w.Triggers)
+		webhook.Triggers = triggers
+	}
+
+	return webhook
 }
 
 type WebhookCreateInput struct {

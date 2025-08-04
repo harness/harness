@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -42,5 +43,7 @@ func (c *Controller) UpdateRepo(
 		return nil, fmt.Errorf("failed to preprocess update input: %w", err)
 	}
 
-	return c.webhookService.Update(ctx, repo.ID, enum.WebhookParentRepo, webhookIdentifier, typ, in)
+	return c.webhookService.Update(
+		ctx, &session.Principal, repo.ID, enum.WebhookParentRepo,
+		webhookIdentifier, typ, paths.Parent(repo.Path), repo.Identifier, in)
 }

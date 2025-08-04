@@ -19,9 +19,12 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 func (s *Service) sanitizeUpdateInput(in *types.WebhookUpdateInput) error {
@@ -67,16 +70,20 @@ func (s *Service) sanitizeUpdateInput(in *types.WebhookUpdateInput) error {
 
 func (s *Service) Update(
 	ctx context.Context,
+	principal *types.Principal,
 	parentID int64,
 	parentType enum.WebhookParent,
 	webhookIdentifier string,
 	typ enum.WebhookType,
+	spacePath string,
+	scopeIdentifier string,
 	in *types.WebhookUpdateInput,
 ) (*types.Webhook, error) {
 	hook, err := s.GetWebhookVerifyOwnership(ctx, parentID, parentType, webhookIdentifier)
 	if err != nil {
 		return nil, fmt.Errorf("failed to verify webhook ownership: %w", err)
 	}
+	oldHook := hook.Clone()
 
 	if err := s.sanitizeUpdateInput(in); err != nil {
 		return nil, err
@@ -118,6 +125,22 @@ func (s *Service) Update(
 
 	if err := s.webhookStore.Update(ctx, hook); err != nil {
 		return nil, err
+	}
+
+	nameKey := audit.RepoName
+	if parentType == enum.WebhookParentSpace {
+		nameKey = audit.SpaceName
+	}
+	err = s.auditService.Log(ctx,
+		*principal,
+		audit.NewResource(audit.ResourceTypeCodeWebhook, hook.Identifier, nameKey, scopeIdentifier),
+		audit.ActionUpdated,
+		spacePath,
+		audit.WithOldObject(oldHook),
+		audit.WithNewObject(hook),
+	)
+	if err != nil {
+		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for update webhook operation: %s", err)
 	}
 
 	s.sendSSE(ctx, parentID, parentType, enum.SSETypeWebhookUpdated, hook)

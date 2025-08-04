@@ -43,6 +43,7 @@ func (c *Controller) UpdateSpace(
 	}
 
 	return c.webhookService.Update(
-		ctx, space.ID, enum.WebhookParentSpace, webhookIdentifier, typ, in,
+		ctx, &session.Principal, space.ID, enum.WebhookParentSpace,
+		webhookIdentifier, typ, space.Path, space.Identifier, in,
 	)
 }

@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/store/database/migrate"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
@@ -74,10 +75,12 @@ func (s *Service) sanitizeCreateInput(in *types.WebhookCreateInput, internal boo
 
 func (s *Service) Create(
 	ctx context.Context,
-	principalID int64,
+	principal *types.Principal,
 	parentID int64,
 	parentType enum.WebhookParent,
 	typ enum.WebhookType,
+	spacePath string,
+	scopeIdentifier string,
 	in *types.WebhookCreateInput,
 ) (*types.Webhook, error) {
 	err := s.sanitizeCreateInput(in, typ == enum.WebhookTypeInternal)
@@ -91,7 +94,9 @@ func (s *Service) Create(
 	}
 
 	scope := webhookScopeRepo
+	nameKey := audit.RepoName
 	if parentType == enum.WebhookParentSpace {
+		nameKey = audit.SpaceName
 		scope, err = s.spaceStore.GetTreeLevel(ctx, parentID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get parent tree level: %w", err)
@@ -103,7 +108,7 @@ func (s *Service) Create(
 	hook := &types.Webhook{
 		ID:         0, // the ID will be populated in the data layer
 		Version:    0, // the Version will be populated in the data layer
-		CreatedBy:  principalID,
+		CreatedBy:  principal.ID,
 		Created:    now,
 		Updated:    now,
 		ParentID:   parentID,
@@ -124,9 +129,8 @@ func (s *Service) Create(
 	}
 
 	err = s.webhookStore.Create(ctx, hook)
-
 	// internal hooks are hidden from non-internal read requests - properly communicate their existence on duplicate.
-	// This is best effort, any error we just ignore and fallback to original duplicate error.
+	// This is the best effort, any error we just ignore and fallback to original duplicate error.
 	if errors.Is(err, store.ErrDuplicate) && !(typ == enum.WebhookTypeInternal) {
 		existingHook, derr := s.webhookStore.FindByIdentifier(
 			ctx, enum.WebhookParentRepo, parentID, hook.Identifier)
@@ -141,9 +145,19 @@ func (s *Service) Create(
 			return nil, errors.Conflict("The provided identifier is reserved for internal purposes.")
 		}
 	}
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to store webhook: %w", err)
+	}
+
+	err = s.auditService.Log(ctx,
+		*principal,
+		audit.NewResource(webhookToResourceType(parentType), hook.Identifier, nameKey, scopeIdentifier),
+		audit.ActionCreated,
+		spacePath,
+		audit.WithNewObject(hook),
+	)
+	if err != nil {
+		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for create webhook operation: %s", err)
 	}
 
 	s.sendSSE(ctx, parentID, parentType, enum.SSETypeWebhookCreated, hook)

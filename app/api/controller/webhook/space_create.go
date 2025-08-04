@@ -41,7 +41,9 @@ func (c *Controller) CreateSpace(
 		return nil, fmt.Errorf("failed to preprocess create input: %w", err)
 	}
 
-	hook, err := c.webhookService.Create(ctx, session.Principal.ID, space.ID, enum.WebhookParentSpace, internal, in)
+	hook, err := c.webhookService.Create(ctx,
+		&session.Principal, space.ID, enum.WebhookParentSpace,
+		internal, space.Path, space.Identifier, in)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create webhook: %w", err)
 	}

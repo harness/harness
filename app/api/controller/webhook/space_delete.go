@@ -35,7 +35,8 @@ func (c *Controller) DeleteSpace(
 	}
 
 	return c.webhookService.Delete(
-		ctx, space.ID, enum.WebhookParentSpace, webhookIdentifier,
+		ctx, &session.Principal, space.ID, enum.WebhookParentSpace,
+		webhookIdentifier, space.Path, space.Identifier,
 		c.preprocessor.IsInternalCall(session.Principal.Type),
 	)
 }

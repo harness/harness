@@ -26,6 +26,7 @@ import (
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/git"
@@ -164,6 +165,7 @@ type Service struct {
 	labelValueStore       store.LabelValueStore
 	encrypter             encrypt.Encrypter
 	config                Config
+	auditService          audit.Service
 	sseStreamer           sse.Streamer
 }
 
@@ -186,6 +188,7 @@ func NewService(
 	labelStore store.LabelStore,
 	webhookURLProvider URLProvider,
 	labelValueStore store.LabelValueStore,
+	auditService audit.Service,
 	sseStreamer sse.Streamer,
 	secretService secret.Service,
 	spacePathStore store.SpacePathStore,
@@ -216,6 +219,7 @@ func NewService(
 		config:                config,
 		labelStore:            labelStore,
 		labelValueStore:       labelValueStore,
+		auditService:          auditService,
 		sseStreamer:           sseStreamer,
 	}
 

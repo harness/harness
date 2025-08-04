@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/git"
@@ -56,6 +57,7 @@ func ProvideService(
 	labelStore store.LabelStore,
 	webhookURLProvider URLProvider,
 	labelValueStore store.LabelValueStore,
+	auditService audit.Service,
 	sseStreamer sse.Streamer,
 	secretService secret.Service,
 	spacePathStore store.SpacePathStore,
@@ -78,6 +80,7 @@ func ProvideService(
 		labelStore,
 		webhookURLProvider,
 		labelValueStore,
+		auditService,
 		sseStreamer,
 		secretService,
 		spacePathStore,

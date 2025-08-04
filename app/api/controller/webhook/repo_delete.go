@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -35,7 +36,8 @@ func (c *Controller) DeleteRepo(
 	}
 
 	return c.webhookService.Delete(
-		ctx, repo.ID, enum.WebhookParentRepo, webhookIdentifier,
+		ctx, &session.Principal, repo.ID, enum.WebhookParentRepo,
+		webhookIdentifier, paths.Parent(repo.Path), repo.Identifier,
 		c.preprocessor.IsInternalCall(session.Principal.Type),
 	)
 }

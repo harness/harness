@@ -19,6 +19,7 @@ import (
 	"net"
 	"net/url"
 
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
@@ -83,7 +84,7 @@ func CheckURL(rawURL string, allowLoopback bool, allowPrivateNetwork bool, inter
 	return nil
 }
 
-// checkSecret validates the secret of a webhook.
+// CheckSecret validates the secret of a webhook.
 func CheckSecret(secret string) error {
 	if len(secret) > webhookMaxSecretLength {
 		return check.NewValidationErrorf("The secret of a webhook can be at most %d characters long.",
@@ -130,6 +131,16 @@ func ConvertTriggers(vals []string) []enum.WebhookTrigger {
 		res[i] = enum.WebhookTrigger(vals[i])
 	}
 	return res
+}
+
+func webhookToResourceType(parentType enum.WebhookParent) audit.ResourceType {
+	switch parentType {
+	case enum.WebhookParentSpace, enum.WebhookParentRepo:
+		return audit.ResourceTypeCodeWebhook
+	case enum.WebhookParentRegistry:
+		return audit.ResourceTypeRegistryWebhook
+	}
+	return audit.ResourceTypeCodeWebhook
 }
 
 func (s *Service) sendSSE(

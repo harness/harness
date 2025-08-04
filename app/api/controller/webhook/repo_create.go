@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -42,10 +43,10 @@ func (c *Controller) CreateRepo(
 	}
 
 	hook, err := c.webhookService.Create(
-		ctx, session.Principal.ID, repo.ID, enum.WebhookParentRepo, typ, in,
+		ctx, &session.Principal, repo.ID, enum.WebhookParentRepo, typ, paths.Parent(repo.Path), repo.Identifier, in,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed create webhook: %w", err)
+		return nil, fmt.Errorf("failed to create webhook: %w", err)
 	}
 
 	return hook, nil
