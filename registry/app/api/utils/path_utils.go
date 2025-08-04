@@ -90,6 +90,8 @@ func GetFilePath(
 		return GetCargoFilePath(imageName, version), nil
 	case artifact.PackageTypeGO:
 		return GetGoFilePath(imageName, version), nil
+	case artifact.PackageTypeHUGGINGFACE:
+		return GetGenericFilePath(imageName, version), nil
 	default:
 		return "", fmt.Errorf("unsupported package type: %s", packageType)
 	}

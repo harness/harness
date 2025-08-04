@@ -132,6 +132,8 @@ func (c *APIController) GenerateClientSetupDetails(
 		return c.generateCargoClientSetupDetail(ctx, registryRef, username, image, tag, registryType)
 	case string(artifact.PackageTypeGO):
 		return c.generateGoClientSetupDetail(ctx, registryRef, username, image, tag, registryType)
+	case string(artifact.PackageTypeHUGGINGFACE):
+		return c.generateHuggingFaceClientSetupDetail(ctx, registryRef, username, image, tag, registryType)
 	default:
 		log.Debug().Ctx(ctx).Msgf("Unknown package type for client details: %s", packageType)
 		return nil
@@ -1725,21 +1727,24 @@ func (c *APIController) replaceText(
 	if username != "" {
 		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<USERNAME>", username))
 		if (*st.Commands)[i].Label != nil {
-			(*st.Commands)[i].Label = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Label, "<USERNAME>", username))
+			(*st.Commands)[i].Label = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Label, "<USERNAME>",
+				username))
 		}
 	}
 	if groupID != "" {
 		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<GROUP_ID>", groupID))
 	}
 	if registryURL != "" {
-		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<REGISTRY_URL>", registryURL))
+		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<REGISTRY_URL>",
+			registryURL))
 		if (*st.Commands)[i].Label != nil {
 			(*st.Commands)[i].Label = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Label,
 				"<REGISTRY_URL>", registryURL))
 		}
 	}
 	if uploadURL != "" {
-		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<UPLOAD_URL>", uploadURL))
+		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<UPLOAD_URL>",
+			uploadURL))
 	}
 	if hostname != "" {
 		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<HOSTNAME>", hostname))
@@ -1749,7 +1754,8 @@ func (c *APIController) replaceText(
 			"<LOGIN_HOSTNAME>", common.GetHost(hostname)))
 	}
 	if repoName != "" {
-		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<REGISTRY_NAME>", repoName))
+		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<REGISTRY_NAME>",
+			repoName))
 	}
 	if image != nil {
 		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<IMAGE_NAME>",
@@ -1761,6 +1767,186 @@ func (c *APIController) replaceText(
 	}
 	if tag != nil {
 		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<TAG>", string(*tag)))
-		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<VERSION>", string(*tag)))
+		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<VERSION>",
+			string(*tag)))
+	}
+}
+
+func (c *APIController) generateHuggingFaceClientSetupDetail(
+	ctx context.Context,
+	registryRef string,
+	username string,
+	image *artifact.ArtifactParam,
+	tag *artifact.VersionParam,
+	registryType artifact.RegistryType,
+) *artifact.ClientSetupDetailsResponseJSONResponse {
+	staticStepType := artifact.ClientSetupStepTypeStatic
+	generateTokenType := artifact.ClientSetupStepTypeGenerateToken
+
+	// Configuration section
+	section1 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Configure Hugging Face Client"),
+	}
+	_ = section1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Set up environment variables to connect to Artifact Registry:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("export HF_HUB_ETAG_TIMEOUT=86400\nexport HF_HUB_DOWNLOAD_TIMEOUT=86400\nexport HF_ENDPOINT=<REGISTRY_URL>"),
+					},
+				},
+			},
+			{
+				Header: utils.StringPtr("For Hugging Face client version 0.19.0 and above, this timeout setting enables model resolution via pipelines and tokenizer libraries."),
+				Type:   &staticStepType,
+			},
+		},
+	})
+
+	// Authentication section
+	section2 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Configure Authentication"),
+	}
+	_ = section2.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Set up authentication for the Hugging Face client:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("export HF_TOKEN=<TOKEN>"),
+					},
+				},
+			},
+			{
+				Header: utils.StringPtr("Generate an identity token for authentication"),
+				Type:   &generateTokenType,
+			},
+		},
+	})
+
+	// Deploy Model section
+	section3 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Deploy Model"),
+	}
+	_ = section3.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Upload a model to Artifact Registry using the huggingface_hub library:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("from huggingface_hub import HfApi\napi = HfApi()\napi.upload_folder(\n    folder_path=\"<folder_name>\", # local folder containing model files\n    repo_id=\"<ARTIFACT_NAME>\", # name for the model in the registry\n    revision=\"<VERSION>\", # model version (defaults to 'main')\n    repo_type=\"model\"\n)"),
+					},
+				},
+			},
+		},
+	})
+
+	// Deploy Dataset section
+	section4 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Deploy Dataset"),
+	}
+	_ = section4.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Upload a dataset to Artifact Registry using the huggingface_hub library:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("from huggingface_hub import HfApi\napi = HfApi()\napi.upload_folder(\n    folder_path=\"<folder_name>\", # local folder containing dataset files\n    repo_id=\"<ARTIFACT_NAME>\", # name for the dataset in the registry\n    revision=\"<VERSION>\", # dataset version (defaults to 'main')\n    repo_type=\"dataset\"\n)"),
+					},
+				},
+			},
+		},
+	})
+
+	// Resolve Model section
+	section5 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Resolve Model"),
+	}
+	_ = section5.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Download a model from Artifact Registry:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("from huggingface_hub import snapshot_download\nsnapshot_download(\n    repo_id=\"<ARTIFACT_NAME>\", revision=\"<VERSION>\", etag_timeout=86400\n)"),
+					},
+				},
+			},
+			{
+				Header: utils.StringPtr("With Hugging Face client version 0.19.0+ and HF_HUB_ETAG_TIMEOUT set, you can resolve models with transformers, diffusers, and other libraries."),
+				Type:   &staticStepType,
+			},
+		},
+	})
+
+	// Resolve Dataset section
+	section6 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Resolve Dataset"),
+	}
+	_ = section6.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Artifact Registry supports resolving datasets using Hugging Face dataset libraries:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("from datasets import load_dataset\ndataset = load_dataset(\"<ARTIFACT_NAME>\")"),
+					},
+				},
+			},
+			{
+				Header: utils.StringPtr("Or download an entire dataset repository using the snapshot_download API:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("from huggingface_hub import snapshot_download\nsnapshot_download(\n    repo_id=\"<ARTIFACT_NAME>\", revision=\"<VERSION>\", repo_type=\"dataset\", etag_timeout=86400\n)"),
+					},
+				},
+			},
+			{
+				Header: utils.StringPtr("Note: Artifact Registry fully caches only datasets hosted directly on Hugging Face, not those referencing external sources."),
+				Type:   &staticStepType,
+			},
+		},
+	})
+
+	sections := []artifact.ClientSetupSection{
+		section1,
+		section2,
+		section3,
+		section4,
+		section5,
+		section6,
+	}
+
+	if registryType == artifact.RegistryTypeUPSTREAM {
+		// For upstream registry, only include configuration, authentication, and resolve sections
+		sections = []artifact.ClientSetupSection{
+			section1,
+			section2,
+			section5,
+			section6,
+		}
+	}
+
+	clientSetupDetails := artifact.ClientSetupDetails{
+		MainHeader: "Hugging Face Client Setup",
+		SecHeader:  "Follow these instructions to interact with Hugging Face models and datasets in this registry.",
+		Sections:   sections,
+	}
+
+	registryURL := c.URLProvider.PackageURL(ctx, registryRef, "huggingface")
+	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, image, tag, registryURL, "",
+		string(artifact.PackageTypeHUGGINGFACE))
+
+	return &artifact.ClientSetupDetailsResponseJSONResponse{
+		Data:   clientSetupDetails,
+		Status: artifact.StatusSUCCESS,
 	}
 }

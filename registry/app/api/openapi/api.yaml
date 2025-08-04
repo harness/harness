@@ -71,6 +71,7 @@ paths:
         - $ref: "#/components/parameters/searchTerm"
         - $ref: "#/components/parameters/latestVersion"
         - $ref: "#/components/parameters/packageTypeParam"
+        - $ref: "#/components/parameters/artifactTypeParam"
       responses:
         200:
           $ref: "#/components/responses/ListArtifactResponse"
@@ -475,6 +476,7 @@ paths:
         - $ref: "#/components/parameters/sortOrder"
         - $ref: "#/components/parameters/sortField"
         - $ref: "#/components/parameters/searchTerm"
+        - $ref: "#/components/parameters/artifactTypeParam"
       responses:
         200:
           $ref: "#/components/responses/ListRegistryArtifactResponse"
@@ -549,6 +551,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/registryRefPathParam"
         - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/artifactTypeParam"
       responses:
         200:
           $ref: "#/components/responses/Success"
@@ -573,6 +576,7 @@ paths:
         - $ref: "#/components/parameters/registryRefPathParam"
         - $ref: "#/components/parameters/artifactPathParam"
         - $ref: "#/components/parameters/versionPathParam"
+        - $ref: "#/components/parameters/artifactTypeParam"
       responses:
         200:
           $ref: "#/components/responses/Success"
@@ -596,6 +600,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/registryRefPathParam"
         - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/artifactTypeParam"
       responses:
         200:
           $ref: "#/components/responses/ArtifactSummaryResponse"
@@ -619,6 +624,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/registryRefPathParam"
         - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/artifactTypeParam"
         - $ref: "#/components/parameters/pageNumber"
         - $ref: "#/components/parameters/pageSize"
         - $ref: "#/components/parameters/sortOrder"
@@ -647,6 +653,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/registryRefPathParam"
         - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/artifactTypeParam"
       requestBody:
         $ref: "#/components/requestBodies/ArtifactLabelRequest"
       responses:
@@ -697,6 +704,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/registryRefPathParam"
         - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/artifactTypeParam"
         - $ref: "#/components/parameters/versionPathParam"
       responses:
         200:
@@ -721,6 +729,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/registryRefPathParam"
         - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/artifactTypeParam"
         - $ref: "#/components/parameters/versionPathParam"
         - $ref: "#/components/parameters/childVersionParam"
       responses:
@@ -746,6 +755,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/registryRefPathParam"
         - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/artifactTypeParam"
         - $ref: "#/components/parameters/versionPathParam"
         - $ref: "#/components/parameters/pageNumber"
         - $ref: "#/components/parameters/pageSize"
@@ -775,6 +785,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/registryRefPathParam"
         - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/artifactTypeParam"
         - $ref: "#/components/parameters/versionPathParam"
         - $ref: "#/components/parameters/fileNamePathParam"
       responses:
@@ -2218,6 +2229,8 @@ components:
           type: boolean
         packageType:
           $ref: "#/components/schemas/PackageType"
+        artifactType:
+          $ref: "#/components/schemas/ArtifactType"
       required:
         - name
         - registryIdentifier
@@ -2248,6 +2261,8 @@ components:
           type: boolean
         packageType:
           $ref: "#/components/schemas/PackageType"
+        artifactType:
+          $ref: "#/components/schemas/ArtifactType"
       required:
         - name
         - registryIdentifier
@@ -2281,6 +2296,8 @@ components:
           type: boolean
         packageType:
           $ref: "#/components/schemas/PackageType"
+        artifactType:
+          $ref: "#/components/schemas/ArtifactType"
       required:
         - name
         - registryIdentifier
@@ -2347,6 +2364,8 @@ components:
           type: string
         packageType:
           $ref: "#/components/schemas/PackageType"
+        artifactType:
+          $ref: "#/components/schemas/ArtifactType"
       discriminator:
         propertyName: packageType
         mapping:
@@ -2360,6 +2379,7 @@ components:
           NUGET: "#/components/schemas/NugetArtifactDetailConfig"
           CARGO: "#/components/schemas/CargoArtifactDetailConfig"
           GO: "#/components/schemas/GoArtifactDetailConfig"
+          HUGGINGFACE: "#/components/schemas/HuggingFaceArtifactDetailConfig"
       oneOf:
         - $ref: "#/components/schemas/DockerArtifactDetailConfig"
         - $ref: "#/components/schemas/HelmArtifactDetailConfig"
@@ -2371,6 +2391,7 @@ components:
         - $ref: "#/components/schemas/NugetArtifactDetailConfig"
         - $ref: "#/components/schemas/CargoArtifactDetailConfig"
         - $ref: "#/components/schemas/GoArtifactDetailConfig"
+        - $ref: "#/components/schemas/HuggingFaceArtifactDetailConfig"
       required:
         - imageName
         - version
@@ -2445,6 +2466,13 @@ components:
       properties:
         pullCommand:
           type: string
+    HuggingFaceArtifactDetailConfig:
+      type: object
+      description: Config for huggingface artifact details
+      properties:
+        metadata:
+          type: object
+          additionalProperties: true
     Webhook:
       type: object
       description: Harness Regstries Webhook
@@ -2665,6 +2693,8 @@ components:
           type: string
         packageType:
           $ref: "#/components/schemas/PackageType"
+        artifactType:
+          $ref: "#/components/schemas/ArtifactType"
         labels:
           type: array
           items:
@@ -2689,6 +2719,8 @@ components:
           type: string
         packageType:
           $ref: "#/components/schemas/PackageType"
+        artifactType:
+          $ref: "#/components/schemas/ArtifactType"
       required:
         - imageName
         - version
@@ -2816,6 +2848,7 @@ components:
             - NugetOrg
             - Crates
             - GoProxy
+            - HuggingFace
       x-discriminator-value: UPSTREAM
       required:
         - authType
@@ -2881,6 +2914,13 @@ components:
         - RPM
         - CARGO
         - GO
+        - HUGGINGFACE
+    ArtifactType:
+      type: string
+      description: refers to artifact type
+      enum:
+        - MODEL
+        - DATASET
     SectionType:
       type: string
       description: refers to client setup section type
@@ -3212,6 +3252,16 @@ components:
       description: search Term.
       schema:
         type: string
+    artifactTypeParam:
+      name: artifact_type
+      in: query
+      required: false
+      description: artifact type.
+      schema:
+        type: string
+        enum:
+          - MODEL
+          - DATASET
     pageNumber:
       name: page
       in: query

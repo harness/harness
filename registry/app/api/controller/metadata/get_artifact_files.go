@@ -143,7 +143,7 @@ func (c *APIController) GetArtifactFiles(
 	switch registry.PackageType {
 	case artifact.PackageTypeGENERIC, artifact.PackageTypeMAVEN, artifact.PackageTypePYTHON,
 		artifact.PackageTypeNPM, artifact.PackageTypeRPM, artifact.PackageTypeNUGET,
-		artifact.PackageTypeCARGO, artifact.PackageTypeGO:
+		artifact.PackageTypeCARGO, artifact.PackageTypeGO, artifact.PackageTypeHUGGINGFACE:
 		return artifact.GetArtifactFiles200JSONResponse{
 			FileDetailResponseJSONResponse: *GetAllArtifactFilesResponse(
 				fileMetadataList, count, reqInfo.pageNumber, reqInfo.limit, registryURL, img.Name, art.Version,

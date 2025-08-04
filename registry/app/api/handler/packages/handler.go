@@ -117,25 +117,27 @@ type Handler interface {
 type PathPackageType string
 
 const (
-	PathPackageTypeGeneric PathPackageType = "generic"
-	PathPackageTypeMaven   PathPackageType = "maven"
-	PathPackageTypePython  PathPackageType = "python"
-	PathPackageTypeNuget   PathPackageType = "nuget"
-	PathPackageTypeNpm     PathPackageType = "npm"
-	PathPackageTypeRPM     PathPackageType = "rpm"
-	PathPackageTypeCargo   PathPackageType = "cargo"
-	PathPackageTypeGo      PathPackageType = "go"
+	PathPackageTypeGeneric     PathPackageType = "generic"
+	PathPackageTypeMaven       PathPackageType = "maven"
+	PathPackageTypePython      PathPackageType = "python"
+	PathPackageTypeNuget       PathPackageType = "nuget"
+	PathPackageTypeNpm         PathPackageType = "npm"
+	PathPackageTypeRPM         PathPackageType = "rpm"
+	PathPackageTypeCargo       PathPackageType = "cargo"
+	PathPackageTypeGo          PathPackageType = "go"
+	PathPackageTypeHuggingFace PathPackageType = "huggingface"
 )
 
 var packageTypeMap = map[PathPackageType]artifact2.PackageType{
-	PathPackageTypeGeneric: artifact2.PackageTypeGENERIC,
-	PathPackageTypeMaven:   artifact2.PackageTypeMAVEN,
-	PathPackageTypePython:  artifact2.PackageTypePYTHON,
-	PathPackageTypeNuget:   artifact2.PackageTypeNUGET,
-	PathPackageTypeNpm:     artifact2.PackageTypeNPM,
-	PathPackageTypeRPM:     artifact2.PackageTypeRPM,
-	PathPackageTypeCargo:   artifact2.PackageTypeCARGO,
-	PathPackageTypeGo:      artifact2.PackageTypeGO,
+	PathPackageTypeGeneric:     artifact2.PackageTypeGENERIC,
+	PathPackageTypeMaven:       artifact2.PackageTypeMAVEN,
+	PathPackageTypePython:      artifact2.PackageTypePYTHON,
+	PathPackageTypeNuget:       artifact2.PackageTypeNUGET,
+	PathPackageTypeNpm:         artifact2.PackageTypeNPM,
+	PathPackageTypeRPM:         artifact2.PackageTypeRPM,
+	PathPackageTypeCargo:       artifact2.PackageTypeCARGO,
+	PathPackageTypeGo:          artifact2.PackageTypeGO,
+	PathPackageTypeHuggingFace: artifact2.PackageTypeHUGGINGFACE,
 }
 
 func (h *handler) GetAuthenticator() authn.Authenticator {

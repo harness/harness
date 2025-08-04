@@ -44,19 +44,19 @@ type ServerInterface interface {
 	GetArtifactStatsForRegistry(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, params GetArtifactStatsForRegistryParams)
 	// Delete Artifact
 	// (DELETE /registry/{registry_ref}/artifact/{artifact})
-	DeleteArtifact(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam)
+	DeleteArtifact(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, params DeleteArtifactParams)
 	// Update Artifact Labels
 	// (PUT /registry/{registry_ref}/artifact/{artifact}/labels)
-	UpdateArtifactLabels(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam)
+	UpdateArtifactLabels(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, params UpdateArtifactLabelsParams)
 	// Get Artifact Stats
 	// (GET /registry/{registry_ref}/artifact/{artifact}/stats)
 	GetArtifactStats(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, params GetArtifactStatsParams)
 	// Get Artifact Summary
 	// (GET /registry/{registry_ref}/artifact/{artifact}/summary)
-	GetArtifactSummary(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam)
+	GetArtifactSummary(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, params GetArtifactSummaryParams)
 	// Delete an Artifact Version
 	// (DELETE /registry/{registry_ref}/artifact/{artifact}/version/{version})
-	DeleteArtifactVersion(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, version VersionPathParam)
+	DeleteArtifactVersion(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, version VersionPathParam, params DeleteArtifactVersionParams)
 	// Describe Artifact Details
 	// (GET /registry/{registry_ref}/artifact/{artifact}/version/{version}/details)
 	GetArtifactDetails(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, version VersionPathParam, params GetArtifactDetailsParams)
@@ -74,7 +74,7 @@ type ServerInterface interface {
 	GetDockerArtifactManifests(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, version VersionPathParam)
 	// Get Artifact file
 	// (GET /registry/{registry_ref}/artifact/{artifact}/version/{version}/file/{file_name})
-	GetArtifactFile(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, version VersionPathParam, fileName FileNamePathParam)
+	GetArtifactFile(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, version VersionPathParam, fileName FileNamePathParam, params GetArtifactFileParams)
 	// Describe Artifact files
 	// (GET /registry/{registry_ref}/artifact/{artifact}/version/{version}/files)
 	GetArtifactFiles(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, version VersionPathParam, params GetArtifactFilesParams)
@@ -86,7 +86,7 @@ type ServerInterface interface {
 	GetHelmArtifactManifest(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, version VersionPathParam)
 	// Get Artifact Version Summary
 	// (GET /registry/{registry_ref}/artifact/{artifact}/version/{version}/summary)
-	GetArtifactVersionSummary(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, version VersionPathParam)
+	GetArtifactVersionSummary(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, version VersionPathParam, params GetArtifactVersionSummaryParams)
 	// List Artifact Versions
 	// (GET /registry/{registry_ref}/artifact/{artifact}/versions)
 	GetAllArtifactVersions(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, params GetAllArtifactVersionsParams)
@@ -206,13 +206,13 @@ func (_ Unimplemented) GetArtifactStatsForRegistry(w http.ResponseWriter, r *htt
 
 // Delete Artifact
 // (DELETE /registry/{registry_ref}/artifact/{artifact})
-func (_ Unimplemented) DeleteArtifact(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam) {
+func (_ Unimplemented) DeleteArtifact(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, params DeleteArtifactParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // Update Artifact Labels
 // (PUT /registry/{registry_ref}/artifact/{artifact}/labels)
-func (_ Unimplemented) UpdateArtifactLabels(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam) {
+func (_ Unimplemented) UpdateArtifactLabels(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, params UpdateArtifactLabelsParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -224,13 +224,13 @@ func (_ Unimplemented) GetArtifactStats(w http.ResponseWriter, r *http.Request, 
 
 // Get Artifact Summary
 // (GET /registry/{registry_ref}/artifact/{artifact}/summary)
-func (_ Unimplemented) GetArtifactSummary(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam) {
+func (_ Unimplemented) GetArtifactSummary(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, params GetArtifactSummaryParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // Delete an Artifact Version
 // (DELETE /registry/{registry_ref}/artifact/{artifact}/version/{version})
-func (_ Unimplemented) DeleteArtifactVersion(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, version VersionPathParam) {
+func (_ Unimplemented) DeleteArtifactVersion(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, version VersionPathParam, params DeleteArtifactVersionParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -266,7 +266,7 @@ func (_ Unimplemented) GetDockerArtifactManifests(w http.ResponseWriter, r *http
 
 // Get Artifact file
 // (GET /registry/{registry_ref}/artifact/{artifact}/version/{version}/file/{file_name})
-func (_ Unimplemented) GetArtifactFile(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, version VersionPathParam, fileName FileNamePathParam) {
+func (_ Unimplemented) GetArtifactFile(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, version VersionPathParam, fileName FileNamePathParam, params GetArtifactFileParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -290,7 +290,7 @@ func (_ Unimplemented) GetHelmArtifactManifest(w http.ResponseWriter, r *http.Re
 
 // Get Artifact Version Summary
 // (GET /registry/{registry_ref}/artifact/{artifact}/version/{version}/summary)
-func (_ Unimplemented) GetArtifactVersionSummary(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, version VersionPathParam) {
+func (_ Unimplemented) GetArtifactVersionSummary(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, version VersionPathParam, params GetArtifactVersionSummaryParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -674,8 +674,19 @@ func (siw *ServerInterfaceWrapper) DeleteArtifact(w http.ResponseWriter, r *http
 		return
 	}
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params DeleteArtifactParams
+
+	// ------------- Optional query parameter "artifact_type" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "artifact_type", r.URL.Query(), &params.ArtifactType)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "artifact_type", Err: err})
+		return
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.DeleteArtifact(w, r, registryRef, artifact)
+		siw.Handler.DeleteArtifact(w, r, registryRef, artifact, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -708,8 +719,19 @@ func (siw *ServerInterfaceWrapper) UpdateArtifactLabels(w http.ResponseWriter, r
 		return
 	}
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params UpdateArtifactLabelsParams
+
+	// ------------- Optional query parameter "artifact_type" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "artifact_type", r.URL.Query(), &params.ArtifactType)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "artifact_type", Err: err})
+		return
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.UpdateArtifactLabels(w, r, registryRef, artifact)
+		siw.Handler.UpdateArtifactLabels(w, r, registryRef, artifact, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -795,8 +817,19 @@ func (siw *ServerInterfaceWrapper) GetArtifactSummary(w http.ResponseWriter, r *
 		return
 	}
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetArtifactSummaryParams
+
+	// ------------- Optional query parameter "artifact_type" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "artifact_type", r.URL.Query(), &params.ArtifactType)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "artifact_type", Err: err})
+		return
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetArtifactSummary(w, r, registryRef, artifact)
+		siw.Handler.GetArtifactSummary(w, r, registryRef, artifact, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -838,8 +871,19 @@ func (siw *ServerInterfaceWrapper) DeleteArtifactVersion(w http.ResponseWriter, 
 		return
 	}
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params DeleteArtifactVersionParams
+
+	// ------------- Optional query parameter "artifact_type" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "artifact_type", r.URL.Query(), &params.ArtifactType)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "artifact_type", Err: err})
+		return
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.DeleteArtifactVersion(w, r, registryRef, artifact, version)
+		siw.Handler.DeleteArtifactVersion(w, r, registryRef, artifact, version, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -883,6 +927,14 @@ func (siw *ServerInterfaceWrapper) GetArtifactDetails(w http.ResponseWriter, r *
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params GetArtifactDetailsParams
+
+	// ------------- Optional query parameter "artifact_type" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "artifact_type", r.URL.Query(), &params.ArtifactType)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "artifact_type", Err: err})
+		return
+	}
 
 	// ------------- Optional query parameter "childVersion" -------------
 
@@ -1170,8 +1222,19 @@ func (siw *ServerInterfaceWrapper) GetArtifactFile(w http.ResponseWriter, r *htt
 		return
 	}
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetArtifactFileParams
+
+	// ------------- Optional query parameter "artifact_type" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "artifact_type", r.URL.Query(), &params.ArtifactType)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "artifact_type", Err: err})
+		return
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetArtifactFile(w, r, registryRef, artifact, version, fileName)
+		siw.Handler.GetArtifactFile(w, r, registryRef, artifact, version, fileName, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -1215,6 +1278,14 @@ func (siw *ServerInterfaceWrapper) GetArtifactFiles(w http.ResponseWriter, r *ht
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params GetArtifactFilesParams
+
+	// ------------- Optional query parameter "artifact_type" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "artifact_type", r.URL.Query(), &params.ArtifactType)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "artifact_type", Err: err})
+		return
+	}
 
 	// ------------- Optional query parameter "page" -------------
 
@@ -1385,8 +1456,19 @@ func (siw *ServerInterfaceWrapper) GetArtifactVersionSummary(w http.ResponseWrit
 		return
 	}
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetArtifactVersionSummaryParams
+
+	// ------------- Optional query parameter "artifact_type" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "artifact_type", r.URL.Query(), &params.ArtifactType)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "artifact_type", Err: err})
+		return
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetArtifactVersionSummary(w, r, registryRef, artifact, version)
+		siw.Handler.GetArtifactVersionSummary(w, r, registryRef, artifact, version, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -1421,6 +1503,14 @@ func (siw *ServerInterfaceWrapper) GetAllArtifactVersions(w http.ResponseWriter,
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params GetAllArtifactVersionsParams
+
+	// ------------- Optional query parameter "artifact_type" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "artifact_type", r.URL.Query(), &params.ArtifactType)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "artifact_type", Err: err})
+		return
+	}
 
 	// ------------- Optional query parameter "page" -------------
 
@@ -1535,6 +1625,14 @@ func (siw *ServerInterfaceWrapper) GetAllArtifactsByRegistry(w http.ResponseWrit
 	err = runtime.BindQueryParameter("form", true, false, "search_term", r.URL.Query(), &params.SearchTerm)
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "search_term", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "artifact_type" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "artifact_type", r.URL.Query(), &params.ArtifactType)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "artifact_type", Err: err})
 		return
 	}
 
@@ -2399,6 +2497,14 @@ func (siw *ServerInterfaceWrapper) GetAllArtifacts(w http.ResponseWriter, r *htt
 	err = runtime.BindQueryParameter("form", true, false, "package_type", r.URL.Query(), &params.PackageType)
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "package_type", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "artifact_type" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "artifact_type", r.URL.Query(), &params.ArtifactType)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "artifact_type", Err: err})
 		return
 	}
 
@@ -3402,6 +3508,7 @@ func (response GetArtifactStatsForRegistry500JSONResponse) VisitGetArtifactStats
 type DeleteArtifactRequestObject struct {
 	RegistryRef RegistryRefPathParam `json:"registry_ref"`
 	Artifact    ArtifactPathParam    `json:"artifact"`
+	Params      DeleteArtifactParams
 }
 
 type DeleteArtifactResponseObject interface {
@@ -3467,6 +3574,7 @@ func (response DeleteArtifact500JSONResponse) VisitDeleteArtifactResponse(w http
 type UpdateArtifactLabelsRequestObject struct {
 	RegistryRef RegistryRefPathParam `json:"registry_ref"`
 	Artifact    ArtifactPathParam    `json:"artifact"`
+	Params      UpdateArtifactLabelsParams
 	Body        *UpdateArtifactLabelsJSONRequestBody
 }
 
@@ -3603,6 +3711,7 @@ func (response GetArtifactStats500JSONResponse) VisitGetArtifactStatsResponse(w 
 type GetArtifactSummaryRequestObject struct {
 	RegistryRef RegistryRefPathParam `json:"registry_ref"`
 	Artifact    ArtifactPathParam    `json:"artifact"`
+	Params      GetArtifactSummaryParams
 }
 
 type GetArtifactSummaryResponseObject interface {
@@ -3671,6 +3780,7 @@ type DeleteArtifactVersionRequestObject struct {
 	RegistryRef RegistryRefPathParam `json:"registry_ref"`
 	Artifact    ArtifactPathParam    `json:"artifact"`
 	Version     VersionPathParam     `json:"version"`
+	Params      DeleteArtifactVersionParams
 }
 
 type DeleteArtifactVersionResponseObject interface {
@@ -4082,6 +4192,7 @@ type GetArtifactFileRequestObject struct {
 	Artifact    ArtifactPathParam    `json:"artifact"`
 	Version     VersionPathParam     `json:"version"`
 	FileName    FileNamePathParam    `json:"file_name"`
+	Params      GetArtifactFileParams
 }
 
 type GetArtifactFileResponseObject interface {
@@ -4353,6 +4464,7 @@ type GetArtifactVersionSummaryRequestObject struct {
 	RegistryRef RegistryRefPathParam `json:"registry_ref"`
 	Artifact    ArtifactPathParam    `json:"artifact"`
 	Version     VersionPathParam     `json:"version"`
+	Params      GetArtifactVersionSummaryParams
 }
 
 type GetArtifactVersionSummaryResponseObject interface {
@@ -6346,11 +6458,12 @@ func (sh *strictHandler) GetArtifactStatsForRegistry(w http.ResponseWriter, r *h
 }
 
 // DeleteArtifact operation middleware
-func (sh *strictHandler) DeleteArtifact(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam) {
+func (sh *strictHandler) DeleteArtifact(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, params DeleteArtifactParams) {
 	var request DeleteArtifactRequestObject
 
 	request.RegistryRef = registryRef
 	request.Artifact = artifact
+	request.Params = params
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
 		return sh.ssi.DeleteArtifact(ctx, request.(DeleteArtifactRequestObject))
@@ -6373,11 +6486,12 @@ func (sh *strictHandler) DeleteArtifact(w http.ResponseWriter, r *http.Request, 
 }
 
 // UpdateArtifactLabels operation middleware
-func (sh *strictHandler) UpdateArtifactLabels(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam) {
+func (sh *strictHandler) UpdateArtifactLabels(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, params UpdateArtifactLabelsParams) {
 	var request UpdateArtifactLabelsRequestObject
 
 	request.RegistryRef = registryRef
 	request.Artifact = artifact
+	request.Params = params
 
 	var body UpdateArtifactLabelsJSONRequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -6435,11 +6549,12 @@ func (sh *strictHandler) GetArtifactStats(w http.ResponseWriter, r *http.Request
 }
 
 // GetArtifactSummary operation middleware
-func (sh *strictHandler) GetArtifactSummary(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam) {
+func (sh *strictHandler) GetArtifactSummary(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, params GetArtifactSummaryParams) {
 	var request GetArtifactSummaryRequestObject
 
 	request.RegistryRef = registryRef
 	request.Artifact = artifact
+	request.Params = params
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
 		return sh.ssi.GetArtifactSummary(ctx, request.(GetArtifactSummaryRequestObject))
@@ -6462,12 +6577,13 @@ func (sh *strictHandler) GetArtifactSummary(w http.ResponseWriter, r *http.Reque
 }
 
 // DeleteArtifactVersion operation middleware
-func (sh *strictHandler) DeleteArtifactVersion(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, version VersionPathParam) {
+func (sh *strictHandler) DeleteArtifactVersion(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, version VersionPathParam, params DeleteArtifactVersionParams) {
 	var request DeleteArtifactVersionRequestObject
 
 	request.RegistryRef = registryRef
 	request.Artifact = artifact
 	request.Version = version
+	request.Params = params
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
 		return sh.ssi.DeleteArtifactVersion(ctx, request.(DeleteArtifactVersionRequestObject))
@@ -6634,13 +6750,14 @@ func (sh *strictHandler) GetDockerArtifactManifests(w http.ResponseWriter, r *ht
 }
 
 // GetArtifactFile operation middleware
-func (sh *strictHandler) GetArtifactFile(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, version VersionPathParam, fileName FileNamePathParam) {
+func (sh *strictHandler) GetArtifactFile(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, version VersionPathParam, fileName FileNamePathParam, params GetArtifactFileParams) {
 	var request GetArtifactFileRequestObject
 
 	request.RegistryRef = registryRef
 	request.Artifact = artifact
 	request.Version = version
 	request.FileName = fileName
+	request.Params = params
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
 		return sh.ssi.GetArtifactFile(ctx, request.(GetArtifactFileRequestObject))
@@ -6748,12 +6865,13 @@ func (sh *strictHandler) GetHelmArtifactManifest(w http.ResponseWriter, r *http.
 }
 
 // GetArtifactVersionSummary operation middleware
-func (sh *strictHandler) GetArtifactVersionSummary(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, version VersionPathParam) {
+func (sh *strictHandler) GetArtifactVersionSummary(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, version VersionPathParam, params GetArtifactVersionSummaryParams) {
 	var request GetArtifactVersionSummaryRequestObject
 
 	request.RegistryRef = registryRef
 	request.Artifact = artifact
 	request.Version = version
+	request.Params = params
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
 		return sh.ssi.GetArtifactVersionSummary(ctx, request.(GetArtifactVersionSummaryRequestObject))
@@ -7483,121 +7601,123 @@ func (sh *strictHandler) GetAllRegistries(w http.ResponseWriter, r *http.Request
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"H4sIAAAAAAAC/+xde3PbOJL/KjjebdVuLWNlZnNXV766PxRb9njXdrSynK2pvZQHJiGJG4pUANCOJ+Xv",
+	"foUXCZIACeplOeE/M46IR6Px60bj0d3fvCBdrtIEJZR4x9+8FcRwiSjC/F+X8B7FZMx+Y/8MEQlwtKJR",
+	"mnjH4uOR53sR+9eXDOEnz/cSuETesRezj57vkWCBlpBVjiha8kbp04qVIBRHydx79tUPEGP45D0/+94E",
+	"zSNC8dNFiBIazSKELSSogqAoaaEHo/ldpBfaiLDp0wq1kcTKWIih4lNBAkqypXf8T+/jxWR6O7z0fO92",
+	"fDOdjIZX3ie/Stez70FMoxkMqIWGIf9MLb2ryiUKmvqgC0s/13CJQDoDqmgOhhWkC2OHGH3JIoxC75ji",
+	"DLkR0MBsVQSw2kct472zsv3qw+mIMf10OB3ejKZmngeLKA4/IkyiNLGQc8KKgAdRBkRJAAnnz2kafEY4",
+	"ZxOxUap30TI7YTRHxDb/p/yjrRdRteNkzKIYsel2QMNQTcpZFCMLJFhzd/zv7mQ0kKA+W0bOe5WENPaC",
+	"0+UppDbUsU9H4CzFS0jBG3B1NTg9Hfz666+/2rrF6bKlxxhSRKiaeoOqZZ+B/M4YSxG2q15W+O7BjqP7",
+	"NI0RTHjPKxh8hnPkotHGomiTZpOt1UWtg5JdwTm6zpb3CBskLMMYJRSwMiARhWyUzMsUhGgGs5h6xz/5",
+	"3ozPnXfsRQn9r3deTkSUUDRHOCfjJvodGYDO+2VQ56MCK4SB7M5ECWGNGCn5+a0bKRgFGSbRg22G/rFA",
+	"dIEwoCmII0IBFjMWIQLyqvHTkXVplEXMRM5gTJBvgo7s5mmCZg0yeZtEXzIEmNiBYgUGsxQDukBgFiUw",
+	"VhQ/gSjhv95jmASLIzBdIPAA4wyBACbgHoEVTh+iEIUARXzIkAAIZlkcP4HbyeUblAQp+8p7+yM6mh/5",
+	"4LcUz2ES/Q4ZQX/4+WyF03+hgP7h5zPV629/AqlsahXDKBHVURJGyRw8RnQBIKAYRjH79yrOCCDRPAF/",
+	"/O3Pv/2JVSOImU00xcYuB7LDgepu8Off/nT0f4lZM6pCdxjNOipHgiAOFlOEDbMgvgH20YYDUeSOsvot",
+	"HaWYnkUoDg395J8snaSY3s1kgbY+PuDQpASKTw19pLJAYx8rGKAtoJe3s0fo7gmvTTDlQ14Ho5Llf2dT",
+	"1vO8hedVYGtMb2IyTbdovdC0pbeHRpu4MGdNjT84Gbt5D+62p+zWYn4W3XbB7iO6X6Tp59FXFGSs34uw",
+	"XXHIOgCpShqiLcTJKnd5lbsoXI9Sff/sSqgzeaXdtDtxz6IwIvR9GkaI24Rq1viJwkR8Zb8HaUJRwv+E",
+	"q1UcBUJW/kWEjVx08h9MJo69fx8UhxkD8ZUMjI1zOsp8kFQxIypbhZCifL8G+GEG8bQDgG0TWW23gT6m",
+	"BgOMOIFJqGhVZoMgMidjksVo+7Qam1+D5LwdgLMYMdL/IcC1bZIrzXYmVWKeUfglgxgmNEq2ztd6y80o",
+	"LcoDskJBNIsCwHa4fGWSBjpZpQkpC9kpojCKJ/JTJ+pXOF0hTKXUhpA6C5/olPGPUEgz0lbvRpRS2kKo",
+	"ln+qyr7ouzimSe/Z4mnmlxgnY9gc0UKmQ04RF2pF5FnE0Lw5X9LHJE5heIvjurZVH0GGY/3ozPPrO+Mt",
+	"sUojpyvHFgiGBcsYuHR+SY26VyDdZMslFGruUJDEVwegPusMYn2TfTOI9XlI7GFNETN7xFz2CCIFSYpK",
+	"ab++DIvKnR8Ap8LyAXp+xK4x7j0Mt70gjzBOsYm89zAEWK3RvncSRyihN4hmK7HO7Uvm6x2/5Fxx04lT",
+	"BAgjSV9ixQ3Ii5ggpq4PENJhTliZ4CuYRDNE6ItwS3V+gPxaaqQJoi/hE8Jkr3wSXR6kTcIIK3ijJnK/",
+	"7Ml7PUzWMHt/a6qIGcfEcBUvbmTSGfgF4gQRUr4eZUPKr8aa+FLQWr8zE02cpJmgukzAdMFYQGEsr8vy",
+	"ayvP99BXuFzFyO1KTNyIdeiFFS/38vatcz8XSYi+mvsJtDtAvXn3xs3XeqztxH61pzOr3uwW0e1LLG2E",
+	"ctHEs+/9guLli6y79Y4PQAssULw0rbk6sXtecU1dHxyn9NX2IqEIJzC+QfgBYWEk79zkVp0CwnsFSBT0",
+	"vcuI0Jc4kKj1+9KmN19nDEfWOqEvwJuDYkuVH3Kj+wJsUddih8AduZsmpfNIyamraI45By6WcI72yKhy",
+	"xy/Ap0mNT0tFEoiW3LaRPFKXNy8gZdWuD1LaisutvfPlIPih380J4ioXaHtkS6nng5Cq6jVgLlby0o7k",
+	"9+17ZFSt75fYwnL2yKtHUrwgKB+m69S+AIMOQsAeNWKuU3qWZkm4e5OU7RflxSsK2ZykGQ4QeIQEJCkF",
+	"M07Fs++NYxglU/TVti5Q9JUO+Jui/wHBAmKC6P9mdPbmv8s05vtPtlmJUx88pjgO/61+cVindCifLLGe",
+	"SuDZs2Y+FK0sLvh9sWN2fEOxJwYdlH6uqmbJKEbWTRYEiJAN+LGNgbmMSFIKJhrubxOY0QVKKCMW7UFX",
+	"VDvMaUhx9Pv+CJC9FQ9t9r22Vrt9AYTXX+TpGjF/KbRPdhyoPjS+ehpDutgTd8qdvgCTtBdW/LVvAZRn",
+	"9cRRPK3iGuZv6OkGBRjRv6Gn+oChKmN0goHlFjR3RofSNysYoAuuRBwOwE2VOX9NPRE1oBaK8nLdaClX",
+	"s1BRnUYDSZ+efW+YpMnTMuXw0B5SyKNni49kQIEs4HthxL4vowRScaK5hKsVo+D4m3cynJx/sF7DQzxP",
+	"y/2dpMksmnu+d/rh5G+jSZe76bzq+eh6NLk4sdU9RwnCUWCrbKX23EbqL6PLK/fD/KLa7fn5xfX52fBk",
+	"ZK2dzedRMj+DAbI0cjX8OLq2Vb+CDyixVLweW2m+XtlIvr49H02t1bI5opaK41+nv3yw0jl+oovURujE",
+	"TujEQuizr3TI03XJvY474D37XpqgDzPv+J/dH0DkPXS9w3Gs2ATOtrr26W6r2TABbVWvV+sNdLJmPTvK",
+	"2mratU3rpKxXrU16nz/51bVO89x2fXOmMC1skXBIjeuM/PrevIqqp675JbXDErRMQ76Bt3QonB4MH3RR",
+	"bBniuCy1RN4+15p8KNx/m5dAfvx8LbyndVcWsX2VDtAZZouaTmbd5PGtrhflCZW3Sd38eHWKZQNNFFwh",
+	"CpVVaFmq8yLbBJwCDemCmoj8PbcNQ5Nntb8Gz1gdQq8kIPcFx1UWxyfpcgkTc5e4FoyjsZjVlHRGdx4W",
+	"oNZv1U++0msTusSz6Bq0ao9yRDnf8qS/C0RUHfXYxKEKf0FzQ1OsvVFxqJatOvXz3MQm+ZTNgVGy5P50",
+	"/3qCmqtKU5PryGjLgrGuIDaoeFcdrvqs7vRnCBNAU1CKluL5HcKf1N6lOyhrFaxiN0qbxzDJgWCXvk5g",
+	"mUUx2voq8P1qdIshsw91XvFQqDs5i9fCNTDuQms1q5j1p3FDc7BVa2R0YdYYw+KomvGsoi1uCcJjSMhj",
+	"ikPPN5196WcxJl1i38HU473w3/khJa9V99+rzuRS00wwDCPWEIzHWhnhoVw9/DNw6IQJcbYap3EUGDAm",
+	"PwPxndNYWyUneSSWGqHo6yrC6BQ+EbMGa1MMY4xm0ddua5dypO9c1cyemveJgUfcH4QXAqe2KYNR8guC",
+	"of1ssfmruJ/XR+PoNHMj6rbuXjQCdXK0zj8180d11MwfVar5KPLi+vLieuQyOopW+fHTdPj+xlZnCu+r",
+	"FepHT7TTmZOZjLaTBhMhtcOFxbpIoQ4qWE6B0SSjNk1aGWzbLLMi1UEFYrleD8WcW2K5N8j8YjOOVDrK",
+	"OdPGBc0AaWEGUEV906mDeS8J48xierTTZVlpWueIULRae4I6q9Sc2RZKS4WqazTbxUaB53v8HBZSNE0/",
+	"o8S4GBvd41rtqfzSpALjfW/gdrQZc7ehuxrH4lzuUE7/Gq4Gmkwxs+9ifWFvZuJzK0G5O0QrHvOSddui",
+	"aKKZrXlJO6O4u98ooU4HJMI30KbpN9hQqRZa6CStZzmimHVPJOOEms9NnmSEYCddWOOeYZlKyRAHDte/",
+	"kir74BUUrDap80w1KzM7d9bSc9bxu8IiD+saq+HIJttZ1cCkokiVPS2KWW+6A0iqs2ffxKynKE3MyF2Y",
+	"qpIaWrwEF5SuhAcS4IU050Dv3dt3plguoQ2Nw3yPqtQogPdpRnlcO+HlZCB5iQiBcwt5GEGSisB4eVgj",
+	"GMUo9PxW1cJHo1o3MusrxbCwsiuBSOXbKl4I5NukMl8/W97ANBh1Oo2f+QmDKGwiUPOUrdHHvlltlwUK",
+	"PpNs2fE42M3kaTIlrBv9TudrMspsMYp65zqxJs41Xdo3mQNzUa/dHii14GQPnHc/Jzrf7yGRwc21rkxR",
+	"vGy1nXOvmYZ7720a1r3pvJHpbH0a04RNk/vxNsxmow9xCwx3bTK3PRtp5JOoO4MB2qsw/3WG07n+CF95",
+	"BNSMA6Z1eThWi/CI83H1mtOhkPZw0ob7XKgzHJlsjIwgbFlMKhMnIF6MwTR/JSfehrgWqgyxajTiUt01",
+	"EEbtuUgfDuPgwmFU0FbgoA1nl+rEzzmIishQU9+c7AUB6zwf6FHjiJqGJ2MmR3oHFZM7uls11UdVoGNr",
+	"nTRX9QlFr8BevwKrRCtogE8tiIDxXGU3CKzHVOiBd9DAKxilT43Wtz5GX0HHBlLdmnVeYBteMPRgeemo",
+	"Y0Win/Xn1ElzKOjYF60KcjXK2uB4gJuMKmn9Wv0drdVVJ/sG3NRjk/Q68CVn/61RCWYtkTe1CQeTLO6i",
+	"9WrhGBqVXsflWhBug2keYcVBsxcKvYiF0iP10FbrR4cZNc+kE1q1YAKNKM3bbUOeFvxoPQxqMYsMz19d",
+	"Gm9ttAtnSlEn+mX8oJdxbZKNME0DGDsd1Ds5O5iN11KEAQMRdkflpruNJavVfquhCliuBOY4zVYXrvdD",
+	"9eMJw5mDpSf+bQrn5jsMnM6xjAPUFBTZgUabB3YTL5PVcq/3Q3av7UYqM2PmoR3SOS5f3tocwuQdp/Zw",
+	"VIarUAEZ8ogHRTQKGSdCBVEQERhEeANfhsng0SfKgSFML08bvPWbuLni1fbKTvvBiW1rbfAwiuP0EYVj",
+	"SCnCSbc7g/s4DT6vWTeoOrE4vl7Wa5mazSfKZR9deBW0PGRofCDie1Gzx9oBuXPaHiuYH++UcinKt9xu",
+	"zxCsJxW9F73d57KWbX0fXpnb8brcpXNlRVprCLrJ7qUeLvINphh8jDDNYAxSDG5XhGIEl7oabPJluh3f",
+	"TCejoTUyjmovd2P6eDGZ3g4vbeUlKVtyYqq21ly6QmvdccnF20bxrZsDUu101n2datcGnSS6TYGvpya2",
+	"r/VbVcQGz99sz9qU/N3Ynrd1B4jjKiNXFH1MlTUnMyaHNOa77c0ag1nzAobLJghlm/8JK9/6YNJgmLia",
+	"JG27D1ZRHLJLVRQdIfBQLCaZVKimNcSi19U2Ri0TfrHCmHYglgMEt9XBegTRtlBYHxk+f6oHHm6TOLKJ",
+	"yG33qTsilE2QFAHXc3Ut5rLWgsKOmlDObE8+0GQbzJOxcUZb5KzV2LcLhu+J+N5rjk1UXm9YTTIpiSqz",
+	"v9Rdna9+DUN1YOjMKPGtzYnAnnz8UGB8EEA9FDDtCj9GaKxxwjcZX+31qEcPANCwdpXynMooEMoJu+ti",
+	"JQM6yBgNJrDc5Oeo1aRYIY8nTkA0K7l7PUICiIh7Psv4YpqkVPcPvz05Gd3ceL53Nry4vJ2w3keTyYeJ",
+	"sXs9LIPhzB/eS695YvKaX+w/dEdtUg1xJVqGAQK146zs4eC9O7klvrkRiqP53ORYp1lNskgxmcPJ9OJs",
+	"eDK9O5mMhtMLflqb/3Y6uhzx30wTW9myWuQwk+8VjQFuVBNjnH41vRGDmdgNudlUpdhCbXZUEWSotWQ9",
+	"RhG3taAWAqmxvipXUtz5mTl3XF1k957vnWSEpsxiHT6SUcBmiV8SnaCEYq6cx0/jyOOXHX9lzOIXCh8w",
+	"A9oJZpLM9HbKmPnklVxojPPntPnLB1lTyb739U1JWb2RLpiF1cxAos9JPYuDS7xyskaYcuIQnTwjCF+7",
+	"Obyokmzay+c6HVCvTrpcHkdmFcHYMNiSuty3nuxM0FxelKui3fzZS5F1t3DSgxJ4H9tOdVHhROyuTnXP",
+	"Y9MFfjMGo4SgIMPITFAk00vaDqEpIlTPlZHFtMOjA1lhg2jDLypmcsnpsPDJNcowSw4unC4BTK37ocKz",
+	"zSswqM3+J7tsiZnKtyttYvbLdDpWsgZUvarM3aeh2dl9UYDfXa03U17k5OhIuqy4FdqtV/7q04mMquAS",
+	"lbYuQg2GUS2vi9HenYymk4vh+8vRnbB3mQU8HV7e2a3f2uMhdxUMRhotRmXsqmzlauRYHKmAFobzEccm",
+	"cCEIzkpO1OCVCyy6q8g8Bw9eX79iJJXVh5nzQGUNpirM6l8WcLEUNc0n8eioiRvgbz1C+b6W4B917auu",
+	"ZopJpeXLssSZVrNK1qSatqokNWp5eOYYNdnKv8gWAwISC2qLu2zH/qXp4C5oZeOhdH3u+fr4czqb+Ww/",
+	"42wK6dHItgb+OAe7gIXTi3UYz1wsZ6nK5CWJFbLYcGv8BoToAcVssERC8thbULoix4PB4+Pj0UJUPYpS",
+	"LgkRjZsbHI4vtJgcx95PR2+P3vKr+hVK4Cryjr2/8J/EBStn7wDrrz5Tk9l2wpdZAPOOjjzepHwNGeZF",
+	"9HdbEMMlolzoLecVRZEBD6AwQbO/Zwg/jdnv/Opfrp/vpQ1laqQoEqHiTtGwjPLB/vz2J3tDstygls/z",
+	"2ffevX3bXvE9DLWO37n0ZUhp+O7tX1zrFZkI/9OFPpX+/4Zn/1dZDn2PqBh3aqb1eaZwzqbQ03bpn1il",
+	"HDeDb+qvO4xmzwI+MaIGI/qU/64BCUQiwhYMgjRLKD8nYP+eRw8oASJIVRlooom1gYbzuZ0xtaFDrQQT",
+	"B26q5J2vAB3v3r5rr5Tn/N0enGrzbcOT782RQfFMEM1wQgq4yIB23WFzjughYOY1qpaXAo9t8u0YWmUG",
+	"DN3yNJxkI6XDHzk97QJAW1/fehBuFYR19KyxJA6UETkonigZ9d1lRGg1Kk/d1qrF+iFbQqTfWm8F5+ia",
+	"uya5lubv9BzKEgRxsJgivK5qrXGlh3c7vE2A0wBeBAxwxDdRCcKM8D5HtJIj7Mi0UJeyjZ2leMt6tx2L",
+	"M5wuTyFFzhVoqhVfC72lMffIbUduHUub4Pab+stl+6JaP7JsTrQ4GfvBqyJ+rUrTpxXqt0H72AZpuNgC",
+	"UDVbosHubbcmRLkXsie2ityOtrQxaevzJsq7Nzs6WdXbNDw0udi+DXLY4tBbKz+utTIgRXoSB7iLws2A",
+	"L/KYfP+2S2XQPZK7IjkHyzawLO+tBt/kH11scZWbtM0m/6hl9jxYeKsEk705f9C3GkkNfbsShIGW+KZd",
+	"zRfn5FYtryURfVVafjeyEyyiOPyoKm6+nAju9quJiygxFN8jE3h3JEncz8BJoMzpGo1yZUoBSL6/RUZk",
+	"R9tEREyM6gWlg6BYc4gqcakU2KrUFBkLnYUmTwvYIjNF+sBeZEwiI/jTi8oGopJDbB+ioud/chYWLZtU",
+	"i7joead6gWlaYxSnetHZQHQ0uO1TeMha0kPcxefVLTgbCEQ+5l4StiAJO19HZlGMBt/Yf+8SuETPVlH4",
+	"V0YoeIBxxO9U0NeIUJQEqJTjhjXTdB5wJr73hwGE8/0aLtGmQqeztpe4jgfLEq+7OQJgjTsepYmiLYLT",
+	"H6Pt/HFgiukHHLo1zAqfRSgO9/LssEiU3Qv5Oud9SsJ2I+oLFC+dzvpMyaWNgl/PWPxj2JD1cfd474B3",
+	"S/JyhfrS5y1C3+kUwprRuhH8r/UEYmP09wcKG+PfcJywAwno9DZGXv85vZGRZV/rU5m9SY2ZX73cdNwM",
+	"VaC5XWOp2RmJABjH3DmuSo3l2WQcD6tZoL8/8fghNzqGdOG9JHf1sNKEYl0Z7iqwRESALXyomoSWvH/a",
+	"u7eVePz9wwjf/p7ymdID9yLbUWRr4tPZ+VdEOX7Doxy/aTuLUE7vJ5cXQATqlfF0VeSDe0hQCNJEpR1T",
+	"8ZJrUq2F+X25c4qu9ub6YK8Pt4e6e4wFG9zWwXsR0qnp/bb4HRSpq/hJoAqmZXrCXRQ9U0GfXgmg3S6d",
+	"Gndb776rl9tbQm9ox4VCrQZGa4SQLy4Y3Bn61nFdrEdNW8tvsRzk7gcMd/XFGTpNCk/PSN24qF/KfMwq",
+	"sKntmqGUuPw7CO1x2JtaxekfEP8VoCnk5z9xlWkMCagg3QZlEVBOC6b+QhqzEgV2rbiAeRs/aFjAYhYN",
+	"QHFRkINv8q+7IhSrW7zAomuTZbhdeLWrnTwosRpEH0pwT053jRBsCSLYpqrOEX31QPpxVVRp9swLWbYB",
+	"OETEioPDR78K7hFiVQxscxUc5AkX2rcRtbwI+eEgs+eadhOjopNDgPDuNiUbbwb0NDU/8K6gBJgd4b34",
+	"nv92F4XP64tBw8peSiXyCvD/WCH7ItyShfAj49sMh/2ie5BnTGnCuShhTIRTRvgEyYwZPc57nBeXO3ZQ",
+	"WNGep8od4KzJTYKfZcI4BloVIKqYDJBKQmOyvQwR692KV9Ir9zeFTpfiprku7gfzbw3nhnkqkWpT1owi",
+	"5UTuL5dYxJiQe8346z361stLYoSNGYBGbTb4Jg3L1gPHVniqPCQt8IxYq/JCUeYDksmSVIohkVRbJL4y",
+	"pSPqDxR3nJvEGVK+/Rm5A2B4BpLDREuvkNZ6oN0JOk0xmh3QI0ruC0D94vgKoylvZXEcLKO5gN0gWsJ5",
+	"2wYgLw1EaZlDByaAw66+D7hSFS5E6ztA8Gt86rD2TqbMz15aHDcyVdxuQ1IG3/j/+elOnM51yalZAvm0",
+	"XaZzcpZiPns7EgZTI5LQ3ZsW4xhGyRR97R+eOxoVBTIZhvjjcyhRuhlICYWY2nN83rDPWu9NipyXzSHc",
+	"b3peD8Iqs7wpotJVE6DSlTOe0lUPp1cJJ32OG9HED+LI4Bv/f+esYaooIDJ3QmvSMJ6QfO3jwj4Bx/e4",
+	"X6+CSKGVY4W0A9XV9bIo3+JtuR98TvLE7MXdXO9sKUvHkCKSp4VwGiT3u+vkML5Nj87ek7PjXk+XRleJ",
+	"x4Wzm5vIFxVscRE0/7m9SP06OFWa4oeKhuA7vIkIMkyih615Y/ey63zhrAlNXXhZBd6AEKPq+5ncZzvD",
+	"sXfsDeAqGjz8xOdPtlWtMxxfEEBTEPD7Rh9k/GjVB3GNGLkR0aSaAcnc2hxR2YSui2QLhTHQ2ACQnuMg",
+	"nQERJdnUWC0SrXObCxQvTS1W4jLZ2zOy7LFwLpLt5Q9Onj89/38AAAD//063Z503KQEA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

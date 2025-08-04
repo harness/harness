@@ -142,6 +142,8 @@ func toPackageType(packageTypeStr string) (artifactapi.PackageType, error) {
 		return artifactapi.PackageTypeCARGO, nil
 	case string(artifactapi.PackageTypeGO):
 		return artifactapi.PackageTypeGO, nil
+	case string(artifactapi.PackageTypeHUGGINGFACE):
+		return artifactapi.PackageTypeHUGGINGFACE, nil
 	default:
 		return "", errors.New("invalid package type")
 	}
@@ -194,7 +196,8 @@ func GetAllArtifactResponse(
 	if artifacts == nil {
 		artifactMetadataList = make([]artifactapi.ArtifactMetadata, 0)
 	} else {
-		artifactMetadataList = GetArtifactMetadata(ctx, *artifacts, rootIdentifier, urlProvider, setupDetailsAuthHeaderPrefix)
+		artifactMetadataList = GetArtifactMetadata(ctx, *artifacts, rootIdentifier, urlProvider,
+			setupDetailsAuthHeaderPrefix)
 	}
 	pageCount := GetPageCount(count, pageSize)
 	listArtifact := &artifactapi.ListArtifact{
@@ -614,6 +617,36 @@ func GetNugetArtifactDetail(
 	return *artifactDetail
 }
 
+func GetHFArtifactDetail(
+	image *types.Image, artifact *types.Artifact,
+	metadata map[string]interface{},
+	downloadCount int64,
+) artifactapi.ArtifactDetail {
+	createdAt := GetTimeInMs(artifact.CreatedAt)
+	modifiedAt := GetTimeInMs(artifact.UpdatedAt)
+	size, ok := metadata["size"].(float64)
+	if !ok {
+		log.Error().Msg("failed to get size from Hugging face metadata")
+	}
+	totalSize := GetSize(int64(size))
+	artifactDetail := &artifactapi.ArtifactDetail{
+		CreatedAt:     &createdAt,
+		ModifiedAt:    &modifiedAt,
+		Name:          &image.Name,
+		Version:       artifact.Version,
+		DownloadCount: &downloadCount,
+		Size:          &totalSize,
+	}
+	err := artifactDetail.FromHuggingFaceArtifactDetailConfig(artifactapi.HuggingFaceArtifactDetailConfig{
+		Metadata: &metadata,
+	})
+	if err != nil {
+		log.Error().Err(err).Msgf("Error setting the artifact details for hugging face package: [%s]", image.Name)
+		return artifactapi.ArtifactDetail{}
+	}
+	return *artifactDetail
+}
+
 func GetCargoArtifactDetail(
 	image *types.Image, artifact *types.Artifact,
 	metadata map[string]interface{},
@@ -737,7 +770,8 @@ func GetRPMArtifactDetail(
 		Metadata: &metadata,
 	})
 	if err != nil {
-		log.Error().Err(err).Msgf("Error setting the artifact details for artifact: [%s/%s].", image.Name, artifact.Version)
+		log.Error().Err(err).Msgf("Error setting the artifact details for artifact: [%s/%s].", image.Name,
+			artifact.Version)
 		return artifactapi.ArtifactDetail{}
 	}
 	return *artifactDetail

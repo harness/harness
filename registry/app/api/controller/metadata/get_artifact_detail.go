@@ -177,6 +177,17 @@ func (c *APIController) GetArtifactDetails(
 			}, nil
 		}
 		artifactDetails = GetNugetArtifactDetail(img, art, result, downloadCount)
+	case artifact.PackageTypeHUGGINGFACE:
+		var result map[string]interface{}
+		err := json.Unmarshal(art.Metadata, &result)
+		if err != nil {
+			return artifact.GetArtifactDetails500JSONResponse{
+				InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
+					*GetErrorResponse(http.StatusInternalServerError, err.Error()),
+				),
+			}, nil
+		}
+		artifactDetails = GetHFArtifactDetail(img, art, result, downloadCount)
 	case artifact.PackageTypeCARGO:
 		var result map[string]interface{}
 		err := json.Unmarshal(art.Metadata, &result)

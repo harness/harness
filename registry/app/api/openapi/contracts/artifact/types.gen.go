@@ -11,6 +11,12 @@ import (
 	"github.com/oapi-codegen/runtime"
 )
 
+// Defines values for ArtifactType.
+const (
+	ArtifactTypeDATASET ArtifactType = "DATASET"
+	ArtifactTypeMODEL   ArtifactType = "MODEL"
+)
+
 // Defines values for AuthType.
 const (
 	AuthTypeAccessKeySecretKey AuthType = "AccessKeySecretKey"
@@ -26,16 +32,17 @@ const (
 
 // Defines values for PackageType.
 const (
-	PackageTypeCARGO   PackageType = "CARGO"
-	PackageTypeDOCKER  PackageType = "DOCKER"
-	PackageTypeGENERIC PackageType = "GENERIC"
-	PackageTypeGO      PackageType = "GO"
-	PackageTypeHELM    PackageType = "HELM"
-	PackageTypeMAVEN   PackageType = "MAVEN"
-	PackageTypeNPM     PackageType = "NPM"
-	PackageTypeNUGET   PackageType = "NUGET"
-	PackageTypePYTHON  PackageType = "PYTHON"
-	PackageTypeRPM     PackageType = "RPM"
+	PackageTypeCARGO       PackageType = "CARGO"
+	PackageTypeDOCKER      PackageType = "DOCKER"
+	PackageTypeGENERIC     PackageType = "GENERIC"
+	PackageTypeGO          PackageType = "GO"
+	PackageTypeHELM        PackageType = "HELM"
+	PackageTypeHUGGINGFACE PackageType = "HUGGINGFACE"
+	PackageTypeMAVEN       PackageType = "MAVEN"
+	PackageTypeNPM         PackageType = "NPM"
+	PackageTypeNUGET       PackageType = "NUGET"
+	PackageTypePYTHON      PackageType = "PYTHON"
+	PackageTypeRPM         PackageType = "RPM"
 )
 
 // Defines values for RegistryType.
@@ -98,6 +105,7 @@ const (
 	UpstreamConfigSourceCustom       UpstreamConfigSource = "Custom"
 	UpstreamConfigSourceDockerhub    UpstreamConfigSource = "Dockerhub"
 	UpstreamConfigSourceGoProxy      UpstreamConfigSource = "GoProxy"
+	UpstreamConfigSourceHuggingFace  UpstreamConfigSource = "HuggingFace"
 	UpstreamConfigSourceMavenCentral UpstreamConfigSource = "MavenCentral"
 	UpstreamConfigSourceNpmJs        UpstreamConfigSource = "NpmJs"
 	UpstreamConfigSourceNugetOrg     UpstreamConfigSource = "NugetOrg"
@@ -115,6 +123,78 @@ const (
 const (
 	UPSTREAM RegistryTypeParam = "UPSTREAM"
 	VIRTUAL  RegistryTypeParam = "VIRTUAL"
+)
+
+// Defines values for ArtifactTypeParam.
+const (
+	DATASET ArtifactTypeParam = "DATASET"
+	MODEL   ArtifactTypeParam = "MODEL"
+)
+
+// Defines values for DeleteArtifactParamsArtifactType.
+const (
+	DeleteArtifactParamsArtifactTypeDATASET DeleteArtifactParamsArtifactType = "DATASET"
+	DeleteArtifactParamsArtifactTypeMODEL   DeleteArtifactParamsArtifactType = "MODEL"
+)
+
+// Defines values for UpdateArtifactLabelsParamsArtifactType.
+const (
+	UpdateArtifactLabelsParamsArtifactTypeDATASET UpdateArtifactLabelsParamsArtifactType = "DATASET"
+	UpdateArtifactLabelsParamsArtifactTypeMODEL   UpdateArtifactLabelsParamsArtifactType = "MODEL"
+)
+
+// Defines values for GetArtifactSummaryParamsArtifactType.
+const (
+	GetArtifactSummaryParamsArtifactTypeDATASET GetArtifactSummaryParamsArtifactType = "DATASET"
+	GetArtifactSummaryParamsArtifactTypeMODEL   GetArtifactSummaryParamsArtifactType = "MODEL"
+)
+
+// Defines values for DeleteArtifactVersionParamsArtifactType.
+const (
+	DeleteArtifactVersionParamsArtifactTypeDATASET DeleteArtifactVersionParamsArtifactType = "DATASET"
+	DeleteArtifactVersionParamsArtifactTypeMODEL   DeleteArtifactVersionParamsArtifactType = "MODEL"
+)
+
+// Defines values for GetArtifactDetailsParamsArtifactType.
+const (
+	GetArtifactDetailsParamsArtifactTypeDATASET GetArtifactDetailsParamsArtifactType = "DATASET"
+	GetArtifactDetailsParamsArtifactTypeMODEL   GetArtifactDetailsParamsArtifactType = "MODEL"
+)
+
+// Defines values for GetArtifactFileParamsArtifactType.
+const (
+	GetArtifactFileParamsArtifactTypeDATASET GetArtifactFileParamsArtifactType = "DATASET"
+	GetArtifactFileParamsArtifactTypeMODEL   GetArtifactFileParamsArtifactType = "MODEL"
+)
+
+// Defines values for GetArtifactFilesParamsArtifactType.
+const (
+	GetArtifactFilesParamsArtifactTypeDATASET GetArtifactFilesParamsArtifactType = "DATASET"
+	GetArtifactFilesParamsArtifactTypeMODEL   GetArtifactFilesParamsArtifactType = "MODEL"
+)
+
+// Defines values for GetArtifactVersionSummaryParamsArtifactType.
+const (
+	GetArtifactVersionSummaryParamsArtifactTypeDATASET GetArtifactVersionSummaryParamsArtifactType = "DATASET"
+	GetArtifactVersionSummaryParamsArtifactTypeMODEL   GetArtifactVersionSummaryParamsArtifactType = "MODEL"
+)
+
+// Defines values for GetAllArtifactVersionsParamsArtifactType.
+const (
+	GetAllArtifactVersionsParamsArtifactTypeDATASET GetAllArtifactVersionsParamsArtifactType = "DATASET"
+	GetAllArtifactVersionsParamsArtifactTypeMODEL   GetAllArtifactVersionsParamsArtifactType = "MODEL"
+)
+
+// Defines values for GetAllArtifactsByRegistryParamsArtifactType.
+const (
+	GetAllArtifactsByRegistryParamsArtifactTypeDATASET GetAllArtifactsByRegistryParamsArtifactType = "DATASET"
+	GetAllArtifactsByRegistryParamsArtifactTypeMODEL   GetAllArtifactsByRegistryParamsArtifactType = "MODEL"
+)
+
+// Defines values for GetAllArtifactsParamsArtifactType.
+const (
+	GetAllArtifactsParamsArtifactTypeDATASET GetAllArtifactsParamsArtifactType = "DATASET"
+	GetAllArtifactsParamsArtifactTypeMODEL   GetAllArtifactsParamsArtifactType = "MODEL"
 )
 
 // Defines values for GetAllRegistriesParamsType.
@@ -139,11 +219,13 @@ type Anonymous interface{}
 
 // ArtifactDetail Artifact Detail
 type ArtifactDetail struct {
-	CreatedAt     *string `json:"createdAt,omitempty"`
-	CreatedBy     *string `json:"createdBy,omitempty"`
-	DownloadCount *int64  `json:"downloadCount,omitempty"`
-	ModifiedAt    *string `json:"modifiedAt,omitempty"`
-	Name          *string `json:"name,omitempty"`
+	// ArtifactType refers to artifact type
+	ArtifactType  *ArtifactType `json:"artifactType,omitempty"`
+	CreatedAt     *string       `json:"createdAt,omitempty"`
+	CreatedBy     *string       `json:"createdBy,omitempty"`
+	DownloadCount *int64        `json:"downloadCount,omitempty"`
+	ModifiedAt    *string       `json:"modifiedAt,omitempty"`
+	Name          *string       `json:"name,omitempty"`
 
 	// PackageType refers to package
 	PackageType PackageType `json:"packageType"`
@@ -159,11 +241,13 @@ type ArtifactLabelRequest struct {
 
 // ArtifactMetadata Artifact Metadata
 type ArtifactMetadata struct {
-	DownloadsCount *int64    `json:"downloadsCount,omitempty"`
-	IsQuarantined  *bool     `json:"isQuarantined,omitempty"`
-	Labels         *[]string `json:"labels,omitempty"`
-	LastModified   *string   `json:"lastModified,omitempty"`
-	Name           string    `json:"name"`
+	// ArtifactType refers to artifact type
+	ArtifactType   *ArtifactType `json:"artifactType,omitempty"`
+	DownloadsCount *int64        `json:"downloadsCount,omitempty"`
+	IsQuarantined  *bool         `json:"isQuarantined,omitempty"`
+	Labels         *[]string     `json:"labels,omitempty"`
+	LastModified   *string       `json:"lastModified,omitempty"`
+	Name           string        `json:"name"`
 
 	// PackageType refers to package
 	PackageType        *PackageType `json:"packageType,omitempty"`
@@ -183,24 +267,31 @@ type ArtifactStats struct {
 
 // ArtifactSummary Harness Artifact Summary
 type ArtifactSummary struct {
-	CreatedAt      *string   `json:"createdAt,omitempty"`
-	DownloadsCount *int64    `json:"downloadsCount,omitempty"`
-	ImageName      string    `json:"imageName"`
-	Labels         *[]string `json:"labels,omitempty"`
-	ModifiedAt     *string   `json:"modifiedAt,omitempty"`
+	// ArtifactType refers to artifact type
+	ArtifactType   *ArtifactType `json:"artifactType,omitempty"`
+	CreatedAt      *string       `json:"createdAt,omitempty"`
+	DownloadsCount *int64        `json:"downloadsCount,omitempty"`
+	ImageName      string        `json:"imageName"`
+	Labels         *[]string     `json:"labels,omitempty"`
+	ModifiedAt     *string       `json:"modifiedAt,omitempty"`
 
 	// PackageType refers to package
 	PackageType PackageType `json:"packageType"`
 }
 
+// ArtifactType refers to artifact type
+type ArtifactType string
+
 // ArtifactVersionMetadata Artifact Version Metadata
 type ArtifactVersionMetadata struct {
-	DigestCount    *int    `json:"digestCount,omitempty"`
-	DownloadsCount *int64  `json:"downloadsCount,omitempty"`
-	FileCount      *int64  `json:"fileCount,omitempty"`
-	IsQuarantined  *bool   `json:"isQuarantined,omitempty"`
-	LastModified   *string `json:"lastModified,omitempty"`
-	Name           string  `json:"name"`
+	// ArtifactType refers to artifact type
+	ArtifactType   *ArtifactType `json:"artifactType,omitempty"`
+	DigestCount    *int          `json:"digestCount,omitempty"`
+	DownloadsCount *int64        `json:"downloadsCount,omitempty"`
+	FileCount      *int64        `json:"fileCount,omitempty"`
+	IsQuarantined  *bool         `json:"isQuarantined,omitempty"`
+	LastModified   *string       `json:"lastModified,omitempty"`
+	Name           string        `json:"name"`
 
 	// PackageType refers to package
 	PackageType        *PackageType `json:"packageType,omitempty"`
@@ -212,7 +303,9 @@ type ArtifactVersionMetadata struct {
 
 // ArtifactVersionSummary Docker Artifact Version Summary
 type ArtifactVersionSummary struct {
-	ImageName string `json:"imageName"`
+	// ArtifactType refers to artifact type
+	ArtifactType *ArtifactType `json:"artifactType,omitempty"`
+	ImageName    string        `json:"imageName"`
 
 	// PackageType refers to package
 	PackageType PackageType `json:"packageType"`
@@ -391,6 +484,11 @@ type HelmArtifactDetailConfig struct {
 // HelmArtifactManifest Helm Artifact Manifest
 type HelmArtifactManifest struct {
 	Manifest string `json:"manifest"`
+}
+
+// HuggingFaceArtifactDetailConfig Config for huggingface artifact details
+type HuggingFaceArtifactDetailConfig struct {
+	Metadata *map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // JfrogReplicationRegistry defines model for JfrogReplicationRegistry.
@@ -620,12 +718,14 @@ type Registry struct {
 
 // RegistryArtifactMetadata Artifact Metadata
 type RegistryArtifactMetadata struct {
-	DownloadsCount *int64    `json:"downloadsCount,omitempty"`
-	IsQuarantined  *bool     `json:"isQuarantined,omitempty"`
-	Labels         *[]string `json:"labels,omitempty"`
-	LastModified   *string   `json:"lastModified,omitempty"`
-	LatestVersion  string    `json:"latestVersion"`
-	Name           string    `json:"name"`
+	// ArtifactType refers to artifact type
+	ArtifactType   *ArtifactType `json:"artifactType,omitempty"`
+	DownloadsCount *int64        `json:"downloadsCount,omitempty"`
+	IsQuarantined  *bool         `json:"isQuarantined,omitempty"`
+	Labels         *[]string     `json:"labels,omitempty"`
+	LastModified   *string       `json:"lastModified,omitempty"`
+	LatestVersion  string        `json:"latestVersion"`
+	Name           string        `json:"name"`
 
 	// PackageType refers to package
 	PackageType        *PackageType `json:"packageType,omitempty"`
@@ -887,6 +987,9 @@ type ArtifactParam string
 
 // ArtifactPathParam defines model for artifactPathParam.
 type ArtifactPathParam string
+
+// ArtifactTypeParam defines model for artifactTypeParam.
+type ArtifactTypeParam string
 
 // ChildVersionParam defines model for childVersionParam.
 type ChildVersionParam string
@@ -1262,6 +1365,24 @@ type GetArtifactStatsForRegistryParams struct {
 	To *ToDateParam `form:"to,omitempty" json:"to,omitempty"`
 }
 
+// DeleteArtifactParams defines parameters for DeleteArtifact.
+type DeleteArtifactParams struct {
+	// ArtifactType artifact type.
+	ArtifactType *DeleteArtifactParamsArtifactType `form:"artifact_type,omitempty" json:"artifact_type,omitempty"`
+}
+
+// DeleteArtifactParamsArtifactType defines parameters for DeleteArtifact.
+type DeleteArtifactParamsArtifactType string
+
+// UpdateArtifactLabelsParams defines parameters for UpdateArtifactLabels.
+type UpdateArtifactLabelsParams struct {
+	// ArtifactType artifact type.
+	ArtifactType *UpdateArtifactLabelsParamsArtifactType `form:"artifact_type,omitempty" json:"artifact_type,omitempty"`
+}
+
+// UpdateArtifactLabelsParamsArtifactType defines parameters for UpdateArtifactLabels.
+type UpdateArtifactLabelsParamsArtifactType string
+
 // GetArtifactStatsParams defines parameters for GetArtifactStats.
 type GetArtifactStatsParams struct {
 	// From Date. Format - MM/DD/YYYY
@@ -1271,11 +1392,35 @@ type GetArtifactStatsParams struct {
 	To *ToDateParam `form:"to,omitempty" json:"to,omitempty"`
 }
 
+// GetArtifactSummaryParams defines parameters for GetArtifactSummary.
+type GetArtifactSummaryParams struct {
+	// ArtifactType artifact type.
+	ArtifactType *GetArtifactSummaryParamsArtifactType `form:"artifact_type,omitempty" json:"artifact_type,omitempty"`
+}
+
+// GetArtifactSummaryParamsArtifactType defines parameters for GetArtifactSummary.
+type GetArtifactSummaryParamsArtifactType string
+
+// DeleteArtifactVersionParams defines parameters for DeleteArtifactVersion.
+type DeleteArtifactVersionParams struct {
+	// ArtifactType artifact type.
+	ArtifactType *DeleteArtifactVersionParamsArtifactType `form:"artifact_type,omitempty" json:"artifact_type,omitempty"`
+}
+
+// DeleteArtifactVersionParamsArtifactType defines parameters for DeleteArtifactVersion.
+type DeleteArtifactVersionParamsArtifactType string
+
 // GetArtifactDetailsParams defines parameters for GetArtifactDetails.
 type GetArtifactDetailsParams struct {
+	// ArtifactType artifact type.
+	ArtifactType *GetArtifactDetailsParamsArtifactType `form:"artifact_type,omitempty" json:"artifact_type,omitempty"`
+
 	// ChildVersion Child version incase of Docker artifacts.
 	ChildVersion *ChildVersionParam `form:"childVersion,omitempty" json:"childVersion,omitempty"`
 }
+
+// GetArtifactDetailsParamsArtifactType defines parameters for GetArtifactDetails.
+type GetArtifactDetailsParamsArtifactType string
 
 // GetDockerArtifactDetailsParams defines parameters for GetDockerArtifactDetails.
 type GetDockerArtifactDetailsParams struct {
@@ -1295,8 +1440,20 @@ type GetDockerArtifactManifestParams struct {
 	Digest DigestParam `form:"digest" json:"digest"`
 }
 
+// GetArtifactFileParams defines parameters for GetArtifactFile.
+type GetArtifactFileParams struct {
+	// ArtifactType artifact type.
+	ArtifactType *GetArtifactFileParamsArtifactType `form:"artifact_type,omitempty" json:"artifact_type,omitempty"`
+}
+
+// GetArtifactFileParamsArtifactType defines parameters for GetArtifactFile.
+type GetArtifactFileParamsArtifactType string
+
 // GetArtifactFilesParams defines parameters for GetArtifactFiles.
 type GetArtifactFilesParams struct {
+	// ArtifactType artifact type.
+	ArtifactType *GetArtifactFilesParamsArtifactType `form:"artifact_type,omitempty" json:"artifact_type,omitempty"`
+
 	// Page Current page number
 	Page *PageNumber `form:"page,omitempty" json:"page,omitempty"`
 
@@ -1312,9 +1469,24 @@ type GetArtifactFilesParams struct {
 	// SearchTerm search Term.
 	SearchTerm *SearchTerm `form:"search_term,omitempty" json:"search_term,omitempty"`
 }
+
+// GetArtifactFilesParamsArtifactType defines parameters for GetArtifactFiles.
+type GetArtifactFilesParamsArtifactType string
+
+// GetArtifactVersionSummaryParams defines parameters for GetArtifactVersionSummary.
+type GetArtifactVersionSummaryParams struct {
+	// ArtifactType artifact type.
+	ArtifactType *GetArtifactVersionSummaryParamsArtifactType `form:"artifact_type,omitempty" json:"artifact_type,omitempty"`
+}
+
+// GetArtifactVersionSummaryParamsArtifactType defines parameters for GetArtifactVersionSummary.
+type GetArtifactVersionSummaryParamsArtifactType string
 
 // GetAllArtifactVersionsParams defines parameters for GetAllArtifactVersions.
 type GetAllArtifactVersionsParams struct {
+	// ArtifactType artifact type.
+	ArtifactType *GetAllArtifactVersionsParamsArtifactType `form:"artifact_type,omitempty" json:"artifact_type,omitempty"`
+
 	// Page Current page number
 	Page *PageNumber `form:"page,omitempty" json:"page,omitempty"`
 
@@ -1330,6 +1502,9 @@ type GetAllArtifactVersionsParams struct {
 	// SearchTerm search Term.
 	SearchTerm *SearchTerm `form:"search_term,omitempty" json:"search_term,omitempty"`
 }
+
+// GetAllArtifactVersionsParamsArtifactType defines parameters for GetAllArtifactVersions.
+type GetAllArtifactVersionsParamsArtifactType string
 
 // GetAllArtifactsByRegistryParams defines parameters for GetAllArtifactsByRegistry.
 type GetAllArtifactsByRegistryParams struct {
@@ -1350,7 +1525,13 @@ type GetAllArtifactsByRegistryParams struct {
 
 	// SearchTerm search Term.
 	SearchTerm *SearchTerm `form:"search_term,omitempty" json:"search_term,omitempty"`
+
+	// ArtifactType artifact type.
+	ArtifactType *GetAllArtifactsByRegistryParamsArtifactType `form:"artifact_type,omitempty" json:"artifact_type,omitempty"`
 }
+
+// GetAllArtifactsByRegistryParamsArtifactType defines parameters for GetAllArtifactsByRegistry.
+type GetAllArtifactsByRegistryParamsArtifactType string
 
 // GetClientSetupDetailsParams defines parameters for GetClientSetupDetails.
 type GetClientSetupDetailsParams struct {
@@ -1461,7 +1642,13 @@ type GetAllArtifactsParams struct {
 
 	// PackageType Registry Package Type
 	PackageType *PackageTypeParam `form:"package_type,omitempty" json:"package_type,omitempty"`
+
+	// ArtifactType artifact type.
+	ArtifactType *GetAllArtifactsParamsArtifactType `form:"artifact_type,omitempty" json:"artifact_type,omitempty"`
 }
+
+// GetAllArtifactsParamsArtifactType defines parameters for GetAllArtifacts.
+type GetAllArtifactsParamsArtifactType string
 
 // GetAllRegistriesParams defines parameters for GetAllRegistries.
 type GetAllRegistriesParams struct {
@@ -1817,6 +2004,36 @@ func (t *ArtifactDetail) MergeGoArtifactDetailConfig(v GoArtifactDetailConfig) e
 	return err
 }
 
+// AsHuggingFaceArtifactDetailConfig returns the union data inside the ArtifactDetail as a HuggingFaceArtifactDetailConfig
+func (t ArtifactDetail) AsHuggingFaceArtifactDetailConfig() (HuggingFaceArtifactDetailConfig, error) {
+	var body HuggingFaceArtifactDetailConfig
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromHuggingFaceArtifactDetailConfig overwrites any union data inside the ArtifactDetail as the provided HuggingFaceArtifactDetailConfig
+func (t *ArtifactDetail) FromHuggingFaceArtifactDetailConfig(v HuggingFaceArtifactDetailConfig) error {
+	t.PackageType = "HUGGINGFACE"
+
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeHuggingFaceArtifactDetailConfig performs a merge with any union data inside the ArtifactDetail, using the provided HuggingFaceArtifactDetailConfig
+func (t *ArtifactDetail) MergeHuggingFaceArtifactDetailConfig(v HuggingFaceArtifactDetailConfig) error {
+	t.PackageType = "HUGGINGFACE"
+
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
 func (t ArtifactDetail) Discriminator() (string, error) {
 	var discriminator struct {
 		Discriminator string `json:"packageType"`
@@ -1841,6 +2058,8 @@ func (t ArtifactDetail) ValueByDiscriminator() (interface{}, error) {
 		return t.AsGoArtifactDetailConfig()
 	case "HELM":
 		return t.AsHelmArtifactDetailConfig()
+	case "HUGGINGFACE":
+		return t.AsHuggingFaceArtifactDetailConfig()
 	case "MAVEN":
 		return t.AsMavenArtifactDetailConfig()
 	case "NPM":
@@ -1866,6 +2085,13 @@ func (t ArtifactDetail) MarshalJSON() ([]byte, error) {
 		err = json.Unmarshal(b, &object)
 		if err != nil {
 			return nil, err
+		}
+	}
+
+	if t.ArtifactType != nil {
+		object["artifactType"], err = json.Marshal(t.ArtifactType)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'artifactType': %w", err)
 		}
 	}
 
@@ -1934,6 +2160,13 @@ func (t *ArtifactDetail) UnmarshalJSON(b []byte) error {
 	err = json.Unmarshal(b, &object)
 	if err != nil {
 		return err
+	}
+
+	if raw, found := object["artifactType"]; found {
+		err = json.Unmarshal(raw, &t.ArtifactType)
+		if err != nil {
+			return fmt.Errorf("error reading 'artifactType': %w", err)
+		}
 	}
 
 	if raw, found := object["createdAt"]; found {

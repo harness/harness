@@ -121,6 +121,7 @@ var validPackageTypes = []string{
 	string(a.PackageTypeNUGET),
 	string(a.PackageTypeCARGO),
 	string(a.PackageTypeGO),
+	string(a.PackageTypeHUGGINGFACE),
 }
 
 var validUpstreamSources = []string{
@@ -133,6 +134,7 @@ var validUpstreamSources = []string{
 	string(a.UpstreamConfigSourceNugetOrg),
 	string(a.UpstreamConfigSourceCrates),
 	string(a.UpstreamConfigSourceGoProxy),
+	string(a.UpstreamConfigSourceHuggingFace),
 }
 
 func ValidatePackageTypes(packageTypes []string) error {
@@ -381,7 +383,8 @@ func GetPullCommand(
 	case string(a.PackageTypeHELM):
 		return GetHelmPullCommand(image, tag, registryURL)
 	case string(a.PackageTypeGENERIC):
-		return GetGenericArtifactFileDownloadCommand(registryURL, image, tag, "<FILENAME>", setupDetailsAuthHeaderPrefix)
+		return GetGenericArtifactFileDownloadCommand(registryURL, image, tag, "<FILENAME>",
+			setupDetailsAuthHeaderPrefix)
 	case string(a.PackageTypePYTHON):
 		return GetPythonDownloadCommand(image, tag)
 	case string(a.PackageTypeNPM):
@@ -605,8 +608,10 @@ func GetRPMArtifactFileDownloadCommand(regURL, filename string, setupDetailsAuth
 	return downloadCommand
 }
 
-func GetNugetArtifactFileDownloadCommand(regURL, artifact, version, filename,
-	setupDetailsAuthHeaderPrefix string) string {
+func GetNugetArtifactFileDownloadCommand(
+	regURL, artifact, version, filename,
+	setupDetailsAuthHeaderPrefix string,
+) string {
 	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>/<VERSION>/<FILENAME>'" +
 		" --header '<AUTH_HEADER_PREFIX> <API_KEY>'" +
 		" -J -O"
