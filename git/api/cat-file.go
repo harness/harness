@@ -327,7 +327,10 @@ func catFileAnnotatedTags(
 	return tags, nil
 }
 
-func asCommit(commitSHA sha.SHA, raw parser.ObjectRaw) (Commit, error) {
+func asCommit(
+	commitSHA sha.SHA,
+	raw parser.ObjectRaw,
+) (Commit, error) {
 	var (
 		treeCount      int
 		authorCount    int
@@ -375,7 +378,7 @@ func asCommit(commitSHA sha.SHA, raw parser.ObjectRaw) (Commit, error) {
 		case "mergetag":
 			// encoding is not currently processed
 		default:
-			return Commit{}, fmt.Errorf("unknown commit header type %q", header.Type)
+			return Commit{}, nil
 		}
 	}
 
