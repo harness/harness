@@ -71,7 +71,7 @@ function RepositoryConfigurationFormContent(
   }
 
   return (
-    <Container padding="xxlarge">
+    <Container>
       <Container>
         <Text className={css.cardHeading} font={{ variation: FontVariation.CARD_TITLE }}>
           {getString('repositoryDetails.repositoryForm.title')}

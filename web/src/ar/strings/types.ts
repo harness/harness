@@ -395,6 +395,13 @@ export interface StringsMap {
   harLabel: string
   harnessAI: string
   id: string
+  'labels.addLabel': string
+  'labels.addNewValue': string
+  'labels.addNewValueDynamic': string
+  'labels.findALabel': string
+  'labels.findAValue': string
+  'labels.findOrAddValue': string
+  'labels.title': string
   lastUpdated: string
   loadMore: string
   loading: string

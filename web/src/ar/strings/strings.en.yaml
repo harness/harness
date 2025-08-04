@@ -135,3 +135,11 @@ vulnerabilityStatus:
   high: 'H {{count}}'
   medium: 'M {{count}}'
   low: 'L {{count}}'
+labels:
+  title: Labels
+  addLabel: Add Label
+  addNewValue: Add New Value
+  addNewValueDynamic: 'Add New Value {{value}}'
+  findALabel: Find a Label
+  findAValue: Find a Value
+  findOrAddValue: Find or Add Value

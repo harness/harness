@@ -19,8 +19,9 @@
 }
 
 .cardContainer {
-  width: 60%;
-  min-width: 1024px;
+  width: 80%;
+  min-width: 900px;
+  max-width: 1024px;
   padding: var(--spacing-7) !important;
   background-color: var(--white);
 }
@@ -30,7 +31,8 @@
 }
 
 .upstreamProxiesContainer {
-  max-width: 80%;
+  width: 95%;
+  max-width: 1024px;
 }
 
 .upstreamProxiesWrapper {

@@ -16,10 +16,10 @@
 
 import React, { useContext } from 'react'
 import { useEffect } from 'react'
-import { Text } from '@harnessio/uicore'
+import { Layout, Text } from '@harnessio/uicore'
 import type { FormikProps } from 'formik'
 
-import { useDecodedParams } from '@ar/hooks'
+import { useDecodedParams, useFeatureFlags } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import type { RepositoryDetailsTabPathParams } from '@ar/routes/types'
 import type { RepositoryConfigType, RepositoryPackageType } from '@ar/common/types'
@@ -29,6 +29,7 @@ import { RepositoryDetailsTab } from './constants'
 import WebhookListPage from '../webhook-list/WebhookListPage'
 import { RepositoryProviderContext } from './context/RepositoryProvider'
 import RegistryArtifactListPage from '../artifact-list/RegistryArtifactListPage'
+import ManageRepositoryMetadata from './components/ManageRepositoryMetadata/ManageRepositoryMetadata'
 
 import css from './RepositoryDetailsPage.module.scss'
 
@@ -42,6 +43,7 @@ export default function RepositoryDetailsTabPage(props: RepositoryDetailsTabPage
   const { getString } = useStrings()
   const { tab } = useDecodedParams<RepositoryDetailsTabPathParams>()
   const { data, isReadonly } = useContext(RepositoryProviderContext)
+  const { HAR_CUSTOM_METADATA_ENABLED } = useFeatureFlags()
 
   useEffect(() => {
     onInit(tab)
@@ -52,12 +54,18 @@ export default function RepositoryDetailsTabPage(props: RepositoryDetailsTabPage
       return <RegistryArtifactListPage pageBodyClassName={css.packagesPageBody} />
     case RepositoryDetailsTab.CONFIGURATION:
       return (
-        <RepositoryConfigurationFormWidget
-          packageType={data?.packageType as RepositoryPackageType}
-          type={data?.config.type as RepositoryConfigType}
-          ref={stepRef}
-          readonly={isReadonly}
-        />
+        <Layout.Horizontal
+          padding="xlarge"
+          spacing="medium"
+          flex={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <RepositoryConfigurationFormWidget
+            packageType={data?.packageType as RepositoryPackageType}
+            type={data?.config.type as RepositoryConfigType}
+            ref={stepRef}
+            readonly={isReadonly}
+          />
+          {HAR_CUSTOM_METADATA_ENABLED && <ManageRepositoryMetadata />}
+        </Layout.Horizontal>
       )
     case RepositoryDetailsTab.WEBHOOKS:
       return <WebhookListPage />

@@ -15,18 +15,16 @@
  */
 
 import React from 'react'
-import QueryString from 'qs'
 import { defaultTo } from 'lodash-es'
 import { Link } from 'react-router-dom'
 import { Position } from '@blueprintjs/core'
-import { Color, FontVariation } from '@harnessio/design-system'
-import { Button, ButtonVariation, Layout, Text } from '@harnessio/uicore'
-import type { ArtifactMetadata, StoDigestMetadata } from '@harnessio/react-har-service-client'
+import { Color } from '@harnessio/design-system'
+import { Layout, Text } from '@harnessio/uicore'
+import type { ArtifactMetadata } from '@harnessio/react-har-service-client'
 import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance, UseExpandedRowProps } from 'react-table'
 
 import { useRoutes } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
-import { getShortDigest } from '@ar/pages/digest-list/utils'
 import TableCells from '@ar/components/TableCells/TableCells'
 import versionFactory from '@ar/frameworks/Version/VersionFactory'
 import { PageType, RepositoryPackageType } from '@ar/common/types'
@@ -35,8 +33,6 @@ import { useGetRepositoryTypes } from '@ar/hooks/useGetRepositoryTypes'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import VersionActionsWidget from '@ar/frameworks/Version/VersionActionsWidget'
 import { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
-
-import css from './ArtifactListTable.module.scss'
 
 type CellTypeWithActions<D extends Record<string, any>, V = any> = TableInstance<D> & {
   column: ColumnInstance<D>
@@ -163,75 +159,6 @@ export const ArtifactListPullCommandCell: CellType = ({ value, row }) => {
     default:
       return <TableCells.CopyTextCell value={value}>{getString('copy')}</TableCells.CopyTextCell>
   }
-}
-
-interface ScannedDigestListProps {
-  list: StoDigestMetadata[]
-  metadata: ArtifactMetadata
-}
-
-const ScannedDigestList = (props: ScannedDigestListProps) => {
-  const { list, metadata } = props
-  const routes = useRoutes()
-  return (
-    <Layout.Vertical width={450}>
-      {list.map(each => (
-        <Layout.Horizontal
-          padding="small"
-          spacing="medium"
-          flex={{ alignItems: 'center', justifyContent: 'space-between' }}
-          key={each.digest}>
-          <TableCells.LinkCell
-            linkTo={
-              routes.toARVersionDetailsTab({
-                repositoryIdentifier: metadata.registryIdentifier,
-                artifactIdentifier: metadata.name,
-                versionIdentifier: metadata.version,
-                versionTab: VersionDetailsTab.OVERVIEW
-              }) + `?${QueryString.stringify({ digest: each.digest }, { skipNulls: true })}`
-            }
-            label={getShortDigest(each.digest || '')}
-          />
-          <TableCells.TextCell value={each.osArch} />
-          <TableCells.VulnerabilityCell
-            critical={each.stoDetails?.critical}
-            high={each.stoDetails?.high}
-            low={each.stoDetails?.low}
-            medium={each.stoDetails?.medium}
-          />
-        </Layout.Horizontal>
-      ))}
-    </Layout.Vertical>
-  )
-}
-
-export const ArtifactListVulnerabilitiesCell: CellType = ({ row }) => {
-  const { original } = row
-  const { stoMetadata } = original
-  const { scannedCount, totalCount, digestMetadata } = stoMetadata || {}
-  const { getString } = useStrings()
-
-  if (!scannedCount) {
-    return <Text>{getString('artifactList.table.actions.VulnerabilityStatus.nonScanned')}</Text>
-  }
-
-  return (
-    <Button className={css.cellBtn} variation={ButtonVariation.LINK}>
-      <Text
-        font={{ variation: FontVariation.BODY }}
-        color={Color.PRIMARY_7}
-        tooltipProps={{
-          interactionKind: 'click',
-          position: Position.BOTTOM
-        }}
-        tooltip={<ScannedDigestList list={digestMetadata || []} metadata={original} />}>
-        {getString('artifactList.table.actions.VulnerabilityStatus.partiallyScanned', {
-          total: defaultTo(totalCount, 0),
-          scanned: defaultTo(scannedCount, 0)
-        })}
-      </Text>
-    </Button>
-  )
 }
 
 export const ScanStatusCell: CellType = ({ row }) => {
