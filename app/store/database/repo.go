@@ -758,7 +758,11 @@ func (s *RepoStore) ListSizeInfos(ctx context.Context) ([]*types.RepositorySizeI
 		Select("repo_id", "repo_git_uid", "repo_size", "repo_lfs_size", "repo_size_updated").
 		From("repositories").
 		Where("repo_last_git_push >= repo_size_updated").
-		Where("repo_deleted IS NULL")
+		Where("repo_deleted IS NULL").
+		Where("repo_state NOT IN (?, ?)",
+			enum.RepoStateGitImport,
+			enum.RepoStateMigrateGitPush,
+		)
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
