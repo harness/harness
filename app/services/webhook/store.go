@@ -65,10 +65,14 @@ func (s *GitnessWebhookExecutorStore) ListForTrigger(
 
 func (s *GitnessWebhookExecutorStore) CreateWebhookExecution(
 	ctx context.Context,
-	hook *types.WebhookExecutionCore,
+	executionCore *types.WebhookExecutionCore,
 ) error {
-	webhookExecution := CoreWebhookExecutionToGitnessWebhookExecution(hook)
-	return s.webhookExecutionStore.Create(ctx, webhookExecution)
+	execution := CoreWebhookExecutionToGitnessWebhookExecution(executionCore)
+	if err := s.webhookExecutionStore.Create(ctx, execution); err != nil {
+		return err
+	}
+	executionCore.ID = execution.ID
+	return nil
 }
 
 func (s *GitnessWebhookExecutorStore) UpdateOptLock(
