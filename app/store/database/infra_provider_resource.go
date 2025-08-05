@@ -262,6 +262,8 @@ type InfraProviderResourceView struct {
 	spaceStore store.SpaceStore
 }
 
+var _ store.InfraProviderResourceView = (*InfraProviderResourceView)(nil)
+
 func (i InfraProviderResourceView) Find(ctx context.Context, id int64) (*types.InfraProviderResource, error) {
 	stmt := database.Builder.
 		Select(infraProviderResourceSelectColumns).
@@ -346,6 +348,41 @@ func (s infraProviderResourceStore) Delete(ctx context.Context, id int64) error 
 	if _, err := db.ExecContext(ctx, sql, args...); err != nil {
 		return database.ProcessSQLErrorf(
 			ctx, err, "Failed to update infraprovider resource %d", id)
+	}
+	return nil
+}
+
+// Update updates an existing infra provider resource in the database.
+func (s infraProviderResourceStore) Update(ctx context.Context, infraProviderResource *types.InfraProviderResource) error {
+	metadata, err := json.Marshal(infraProviderResource.Metadata)
+	if err != nil {
+		return errors.Wrap(err, "Failed to marshal metadata")
+	}
+
+	now := time.Now().UnixMilli()
+	infraProviderResource.Updated = now
+
+	stmt := database.Builder.
+		Update(infraProviderResourceTable).
+		Set("ipreso_display_name", infraProviderResource.Name).
+		Set("ipreso_updated", infraProviderResource.Updated).
+		Set("ipreso_cpu", infraProviderResource.CPU).
+		Set("ipreso_memory", infraProviderResource.Memory).
+		Set("ipreso_disk", infraProviderResource.Disk).
+		Set("ipreso_network", infraProviderResource.Network).
+		Set("ipreso_region", infraProviderResource.Region).
+		Set("ipreso_metadata", metadata).
+		Set("ipreso_is_deleted", infraProviderResource.IsDeleted).
+		Set("ipreso_deleted", infraProviderResource.Deleted).
+		Where("ipreso_id = $1", infraProviderResource.ID)
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return errors.Wrap(err, "Failed to convert squirrel builder to sql")
+	}
+	db := dbtx.GetAccessor(ctx, s.db)
+	if _, err := db.ExecContext(ctx, sql, args...); err != nil {
+		return database.ProcessSQLErrorf(
+			ctx, err, "infra provider resource update failed %s", infraProviderResource.UID)
 	}
 	return nil
 }

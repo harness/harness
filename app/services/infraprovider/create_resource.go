@@ -37,7 +37,7 @@ func (c *Service) CreateResources(
 	}
 
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
-		return c.createMissingResources(ctx, resources, config.ID, spaceID, *config)
+		return c.upsertResources(ctx, resources, config.ID, spaceID, *config, false)
 	})
 	if err != nil {
 		return fmt.Errorf("failed to complete create txn for the infraprovider resource %w", err)
@@ -45,12 +45,13 @@ func (c *Service) CreateResources(
 	return nil
 }
 
-func (c *Service) createMissingResources(
+func (c *Service) upsertResources(
 	ctx context.Context,
 	resources []types.InfraProviderResource,
 	configID int64,
 	spaceID int64,
 	config types.InfraProviderConfig,
+	allowUpdates bool,
 ) error {
 	emptyStr := ""
 	for idx := range resources {
@@ -83,11 +84,28 @@ func (c *Service) createMissingResources(
 		}
 		existingResource, err := c.infraProviderResourceStore.FindByConfigAndIdentifier(ctx, resource.SpaceID,
 			configID, resource.UID)
-		if (err != nil && errors.Is(err, store.ErrResourceNotFound)) || existingResource == nil {
+		if err != nil {
+			if !errors.Is(err, store.ErrResourceNotFound) {
+				return fmt.Errorf("failed to check existing resource %s: %w", resource.UID, err)
+			}
+			// Resource doesn't exist, create it
 			if err = c.infraProviderResourceStore.Create(ctx, resource); err != nil {
 				return fmt.Errorf("failed to create infraprovider resource for %s: %w", resource.UID, err)
 			}
-			log.Info().Msgf("created new resource %s/%s", resource.InfraProviderConfigIdentifier, resource.UID)
+		} else {
+			// Resource exists
+			if allowUpdates {
+				if err := c.updateExistingResource(ctx, resource, existingResource); err != nil {
+					return fmt.Errorf("failed to update existing resource %s: %w", resource.UID, err)
+				}
+				log.Info().Msgf(
+					"updated existing resource %s/%s",
+					resource.InfraProviderConfigIdentifier,
+					resource.UID,
+				)
+			} else {
+				return fmt.Errorf("resource %s already exists", resource.UID)
+			}
 		}
 	}
 	return nil
@@ -164,4 +182,25 @@ func getMetadataVal(metadata map[string]string, key string) string {
 		return val
 	}
 	return ""
+}
+
+// updateExistingResource updates an existing resource with new information while preserving
+// immutable fields.
+func (c *Service) updateExistingResource(
+	ctx context.Context,
+	resource *types.InfraProviderResource,
+	existingResource *types.InfraProviderResource,
+) error {
+	// Keep the ID and created timestamp from the existing resource
+	resource.ID = existingResource.ID
+	resource.Created = existingResource.Created
+
+	// Preserve immutable fields
+	resource.UID = existingResource.UID
+	resource.InfraProviderConfigID = existingResource.InfraProviderConfigID
+	resource.SpaceID = existingResource.SpaceID
+	resource.InfraProviderType = existingResource.InfraProviderType
+
+	// Update the resource
+	return c.infraProviderResourceStore.Update(ctx, resource)
 }

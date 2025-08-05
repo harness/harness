@@ -830,6 +830,9 @@ type (
 			filter types.ListQueryFilter,
 		) ([]*types.InfraProviderResource, error)
 
+		// Update tries to update the infra provider resource in the datastore
+		Update(ctx context.Context, infraProviderResource *types.InfraProviderResource) error
+
 		// Delete soft deletes the Infra provider resource with the given id.
 		Delete(ctx context.Context, id int64) error
 	}
