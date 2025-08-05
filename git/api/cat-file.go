@@ -378,7 +378,7 @@ func asCommit(
 		case "mergetag":
 			// encoding is not currently processed
 		default:
-			return Commit{}, nil
+			// custom headers not processed.
 		}
 	}
 
@@ -452,7 +452,6 @@ func asTag(tagSHA sha.SHA, raw parser.ObjectRaw) (Tag, error) {
 			taggerCount++
 			tagger = Signature{Identity: Identity{Name: name, Email: email}, When: when}
 		default:
-			return Tag{}, fmt.Errorf("unknown tag header type %q", header.Type)
 		}
 	}
 
