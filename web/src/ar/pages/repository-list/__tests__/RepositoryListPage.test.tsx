@@ -138,7 +138,8 @@ describe('Test Registry List Page', () => {
           page: 0,
           size: 50,
           sort_field: 'updatedAt',
-          sort_order: 'DESC'
+          sort_order: 'DESC',
+          scope: 'none'
         },
         space_ref: 'undefined/+',
         stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
@@ -167,7 +168,8 @@ describe('Test Registry List Page', () => {
           page: 0,
           size: 50,
           sort_field: 'updatedAt',
-          sort_order: 'DESC'
+          sort_order: 'DESC',
+          scope: 'none'
         },
         space_ref: 'undefined/+',
         stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
@@ -185,7 +187,8 @@ describe('Test Registry List Page', () => {
           size: 50,
           sort_field: 'updatedAt',
           sort_order: 'DESC',
-          type: 'VIRTUAL'
+          type: 'VIRTUAL',
+          scope: 'none'
         },
         space_ref: 'undefined/+',
         stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
@@ -203,7 +206,8 @@ describe('Test Registry List Page', () => {
           size: 50,
           sort_field: 'updatedAt',
           sort_order: 'DESC',
-          type: 'VIRTUAL'
+          type: 'VIRTUAL',
+          scope: 'none'
         },
         space_ref: 'undefined/+',
         stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
@@ -223,7 +227,8 @@ describe('Test Registry List Page', () => {
           sort_field: 'updatedAt',
           sort_order: 'DESC',
           type: 'VIRTUAL',
-          search_term: '1234'
+          search_term: '1234',
+          scope: 'none'
         },
         space_ref: 'undefined/+',
         stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
@@ -242,7 +247,8 @@ describe('Test Registry List Page', () => {
           sort_field: 'identifier',
           sort_order: 'ASC',
           type: 'VIRTUAL',
-          search_term: '1234'
+          search_term: '1234',
+          scope: 'none'
         },
         space_ref: 'undefined/+',
         stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
@@ -261,7 +267,8 @@ describe('Test Registry List Page', () => {
           sort_field: 'identifier',
           sort_order: 'ASC',
           type: 'VIRTUAL',
-          search_term: '1234'
+          search_term: '1234',
+          scope: 'none'
         },
         space_ref: 'undefined/+',
         stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
@@ -281,7 +288,8 @@ describe('Test Registry List Page', () => {
           sort_field: 'identifier',
           sort_order: 'ASC',
           type: 'VIRTUAL',
-          search_term: '1234'
+          search_term: '1234',
+          scope: 'none'
         },
         space_ref: 'undefined/+',
         stringifyQueryParamsOptions: { arrayFormat: 'repeat' }

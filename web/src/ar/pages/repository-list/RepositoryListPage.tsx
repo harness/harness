@@ -32,6 +32,8 @@ import { useGetAllRegistriesQuery } from '@harnessio/react-har-service-client'
 import { useStrings } from '@ar/frameworks/strings'
 import { DEFAULT_PAGE_INDEX, PreferenceScope } from '@ar/constants'
 import { RepositoryListViewTypeEnum } from '@ar/contexts/AppStoreContext'
+import { EntityScope, Parent, RepositoryScopeType } from '@ar/common/types'
+import useGetPageScope from '@ar/hooks/useGetPageScope'
 import {
   useParentComponents,
   useParentHooks,
@@ -47,6 +49,7 @@ import { RepositoryListTable } from './components/RepositoryListTable'
 import { useArtifactRepositoriesQueryParamOptions } from './utils'
 import type { ArtifactRepositoryListPageQueryParams } from './utils'
 import RepositoryTypeSelector from './components/RepositoryTypeSelector/RepositoryTypeSelector'
+import RepositoryScopeSelector from './components/RepositoryScopeSelector/RepositoryScopeSelector'
 
 import css from './RepositoryListPage.module.scss'
 
@@ -55,15 +58,17 @@ function RepositoryListPage(): JSX.Element {
   const { getString } = useStrings()
   const { NGBreadcrumbs } = useParentComponents()
   const { useQueryParams, useUpdateQueryParams, usePreferenceStore } = useParentHooks()
-  const { HAR_TREE_VIEW_ENABLED } = useFeatureFlags()
+  const { HAR_TREE_VIEW_ENABLED, HAR_REGISTRY_SCOPE_FILTER } = useFeatureFlags()
   const { updateQueryParams } = useUpdateQueryParams<Partial<ArtifactRepositoryListPageQueryParams>>()
-  const { setRepositoryListViewType } = useAppStore()
+  const { setRepositoryListViewType, parent } = useAppStore()
   const repositoryListViewType = useGetRepositoryListViewType()
 
   const spaceRef = useGetSpaceRef()
   const queryParamOptions = useArtifactRepositoriesQueryParamOptions()
   const queryParams = useQueryParams<ArtifactRepositoryListPageQueryParams>(queryParamOptions)
-  const { searchTerm, page, size, repositoryTypes, configType } = queryParams
+  const { searchTerm, page, size, repositoryTypes, configType, scope } = queryParams
+
+  const pageScope = useGetPageScope()
 
   const { preference: sortingPreference, setPreference: setSortingPreference } = usePreferenceStore<string | undefined>(
     PreferenceScope.USER,
@@ -90,7 +95,8 @@ function RepositoryListPage(): JSX.Element {
       sort_order: sortOrder,
       package_type: repositoryTypes,
       search_term: searchTerm,
-      type: configType
+      type: configType,
+      scope: scope
     },
     stringifyQueryParamsOptions: {
       arrayFormat: 'repeat'
@@ -103,7 +109,8 @@ function RepositoryListPage(): JSX.Element {
       page: undefined,
       searchTerm: undefined,
       repositoryTypes: undefined,
-      configType: undefined
+      configType: undefined,
+      scope: undefined
     })
   }
 
@@ -138,6 +145,18 @@ function RepositoryListPage(): JSX.Element {
               updateQueryParams({ repositoryTypes: val, page: DEFAULT_PAGE_INDEX })
             }}
           />
+          {parent === Parent.Enterprise && HAR_REGISTRY_SCOPE_FILTER && pageScope !== EntityScope.PROJECT && (
+            <RepositoryScopeSelector
+              scope={pageScope}
+              value={scope}
+              onChange={val => {
+                updateQueryParams({
+                  scope: val,
+                  page: DEFAULT_PAGE_INDEX
+                })
+              }}
+            />
+          )}
           <Expander />
           <ExpandingSearchInput
             alwaysExpanded
@@ -188,6 +207,7 @@ function RepositoryListPage(): JSX.Element {
               updateQueryParams({ sort: sortArray, page: DEFAULT_PAGE_INDEX })
             }}
             sortBy={sort}
+            showScope={scope !== RepositoryScopeType.NONE}
           />
         )}
       </Page.Body>

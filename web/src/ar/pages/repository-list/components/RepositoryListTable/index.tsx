@@ -21,9 +21,10 @@ import type { Column } from 'react-table'
 import { TableV2, type PaginationProps } from '@harnessio/uicore'
 import type { ListRegistry, RegistryMetadata } from '@harnessio/react-har-service-client'
 
-import { useParentHooks, useRoutes } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
-import { RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
+import { useFeatureFlags, useParentHooks, useRoutes } from '@ar/hooks'
+import { useParentUtils } from '@ar/hooks/useParentUtils'
+import useGetScopeFromRegistryPath from '@ar/pages/repository-details/hooks/useGetScopeFromRegistryPath/useGetScopeFromRegistryPath'
 
 import {
   LastModifiedCell,
@@ -32,6 +33,7 @@ import {
   RepositoryDownloadsCell,
   RepositoryLocationBadgeCell,
   RepositoryNameCell,
+  RepositoryScopeCell,
   RepositorySizeCell,
   RepositoryUrlCell
 } from './RepositoryListCells'
@@ -48,14 +50,17 @@ export interface RepositoryListTableProps extends RepositoryListColumnActions {
   setSortBy: (sortBy: string[]) => void
   sortBy: string[]
   minimal?: boolean
+  showScope?: boolean
 }
 
 export function RepositoryListTable(props: RepositoryListTableProps): JSX.Element {
-  const { data, gotoPage, onPageSizeChange, sortBy, setSortBy } = props
+  const { data, gotoPage, onPageSizeChange, sortBy, setSortBy, showScope } = props
+  const { HAR_REGISTRY_SCOPE_FILTER } = useFeatureFlags()
   const { useDefaultPaginationProps } = useParentHooks()
+  const { routeToRegistryDetails } = useParentUtils()
+  const routes = useRoutes()
   const { getString } = useStrings()
   const history = useHistory()
-  const routes = useRoutes()
 
   const { registries, itemCount = 0, pageCount = 0, pageIndex, pageSize = 0 } = data
   const paginationProps = useDefaultPaginationProps({
@@ -67,6 +72,26 @@ export function RepositoryListTable(props: RepositoryListTableProps): JSX.Elemen
     onPageSizeChange
   })
   const [currentSort, currentOrder] = sortBy
+
+  const { getScopeFromRegistryPath } = useGetScopeFromRegistryPath()
+
+  const handleNavigateToRegistryDetails = (rowDetails: RegistryMetadata) => {
+    if (HAR_REGISTRY_SCOPE_FILTER) {
+      history.push(
+        routeToRegistryDetails({
+          ...getScopeFromRegistryPath(rowDetails.path),
+          module: 'har',
+          repositoryIdentifier: rowDetails.identifier
+        })
+      )
+    } else {
+      history.push(
+        routes.toARRepositoryDetails({
+          repositoryIdentifier: rowDetails.identifier
+        })
+      )
+    }
+  }
 
   const columns: Column<RegistryMetadata>[] = React.useMemo(() => {
     const getServerSortProps = (id: string) => {
@@ -86,6 +111,13 @@ export function RepositoryListTable(props: RepositoryListTableProps): JSX.Elemen
         Cell: RepositoryNameCell,
         serverSortProps: getServerSortProps('identifier')
       },
+      showScope &&
+        HAR_REGISTRY_SCOPE_FILTER && {
+          Header: '',
+          accessor: 'path',
+          Cell: RepositoryScopeCell,
+          disableSortBy: true
+        },
       {
         Header: getString('repositoryList.table.columns.type'),
         accessor: 'type',
@@ -129,24 +161,19 @@ export function RepositoryListTable(props: RepositoryListTableProps): JSX.Elemen
         disableSortBy: true
       }
     ].filter(Boolean) as unknown as Column<RegistryMetadata>[]
-  }, [currentOrder, currentSort, getString])
+  }, [currentOrder, currentSort, getString, showScope, HAR_REGISTRY_SCOPE_FILTER])
 
   return (
     <TableV2
-      className={cx(css.table, css.alignColumns)}
+      className={cx(css.table, css.alignColumns, {
+        [css.scopeColumn]: showScope
+      })}
       columns={columns}
       data={registries}
       pagination={paginationProps}
       sortable
       getRowClassName={() => css.tableRow}
-      onRowClick={rowDetails =>
-        history.push(
-          routes.toARRepositoryDetailsTab({
-            repositoryIdentifier: rowDetails.identifier,
-            tab: RepositoryDetailsTab.PACKAGES
-          })
-        )
-      }
+      onRowClick={handleNavigateToRegistryDetails}
     />
   )
 }

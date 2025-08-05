@@ -18,6 +18,7 @@ import React from 'react'
 import { RouteComponentProps, withRouter } from 'react-router-dom'
 
 import GitnessApp from '@ar/app/GitnessApp'
+import { normalizePath } from '@ar/routes/utils'
 import type { CustomComponents, CustomUtils, ParentContextObj } from '@ar/MFEAppTypes'
 
 import { handle401 } from 'AppUtils'
@@ -42,6 +43,12 @@ function ArApp(props: RouteComponentProps<Record<string, string>>) {
     })
   }
 
+  const routeToRegistryDetails: CustomUtils['routeToRegistryDetails'] = routeParams => {
+    const route = getARRouteDefinitions(params)
+    const toRegistryDetails = route.toARRepositoryDetails(routeParams)
+    return normalizePath(`${url}${toRegistryDetails}`)
+  }
+
   return (
     <ArAppProvider>
       <GitnessApp
@@ -62,7 +69,8 @@ function ArApp(props: RouteComponentProps<Record<string, string>>) {
         customUtils={
           {
             getRouteDefinitions: getARRouteDefinitions,
-            generateToken
+            generateToken,
+            routeToRegistryDetails
           } as CustomUtils
         }
       />

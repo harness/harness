@@ -112,6 +112,7 @@ export interface CustomUtils {
   getRouteToPipelineExecutionView?: (params: Scope & PipelineExecutionPathProps) => string
   getRouteToServiceDetailsView?: (params: Scope & ServiceDetailsPathProps) => string
   routeToMode?: (params: Scope & { module: string }) => string
+  routeToRegistryDetails: (params: Scope & { module: string; repositoryIdentifier: string }) => string
 }
 
 export interface MFEAppProps {
@@ -136,5 +137,6 @@ export enum FeatureFlags {
   HAR_TRIGGERS = 'HAR_TRIGGERS',
   HAR_GO_PACKAGE_TYPE_ENABLED = 'HAR_GO_PACKAGE_TYPE_ENABLED',
   HAR_TREE_VIEW_ENABLED = 'HAR_TREE_VIEW_ENABLED',
-  HAR_CUSTOM_METADATA_ENABLED = 'HAR_CUSTOM_METADATA_ENABLED'
+  HAR_CUSTOM_METADATA_ENABLED = 'HAR_CUSTOM_METADATA_ENABLED',
+  HAR_REGISTRY_SCOPE_FILTER = 'HAR_REGISTRY_SCOPE_FILTER'
 }

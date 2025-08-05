@@ -146,10 +146,15 @@ export interface StringsMap {
   'repositoryList.newRepository': string
   'repositoryList.pageHeading': string
   'repositoryList.registryCount': string
+  'repositoryList.scope.accountOnly': string
+  'repositoryList.scope.accountRecursive': string
+  'repositoryList.scope.orgOnly': string
+  'repositoryList.scope.orgRecursive': string
   'repositoryList.selectEnvironments': string
   'repositoryList.selectLabels': string
   'repositoryList.selectPackageTypes': string
   'repositoryList.selectRegistryType': string
+  'repositoryList.selectScope': string
   'repositoryList.table.columns.artifacts': string
   'repositoryList.table.columns.downloads': string
   'repositoryList.table.columns.lastModified': string
@@ -359,7 +364,10 @@ export interface StringsMap {
   'actions.setupClient': string
   add: string
   all: string
+  'badges.accountScope': string
   'badges.artifactRegistry': string
+  'badges.orgScope': string
+  'badges.projectScope': string
   'badges.upstreamProxy': string
   beta: string
   'breadcrumbs.artifacts': string

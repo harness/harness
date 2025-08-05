@@ -75,3 +75,15 @@ export enum Scanners {
   AQUA_TRIVY = 'AQUA_TRIVY',
   GRYPE = 'GRYPE'
 }
+
+export enum EntityScope {
+  ACCOUNT = 'ACCOUNT',
+  ORG = 'ORG',
+  PROJECT = 'PROJECT'
+}
+
+export enum RepositoryScopeType {
+  NONE = 'none',
+  ANCESTORS = 'ancestors',
+  DESCENDANTS = 'descendants'
+}

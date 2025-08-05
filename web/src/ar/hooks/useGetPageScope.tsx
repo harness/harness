@@ -1,11 +1,11 @@
 /*
- * Copyright 2023 Harness, Inc.
+ * Copyright 2024 Harness, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-/* eslint-disable */
-// This is an auto-generated file
-export declare const alignColumns: string
-export declare const nameCellContainer: string
-export declare const scopeColumn: string
-export declare const table: string
-export declare const tableRow: string
+import { EntityScope } from '@ar/common/types'
+import { useAppStore } from './useAppStore'
+
+function useGetPageScope() {
+  const { scope } = useAppStore()
+  return scope.projectIdentifier ? EntityScope.PROJECT : scope.orgIdentifier ? EntityScope.ORG : EntityScope.ACCOUNT
+}
+
+export default useGetPageScope

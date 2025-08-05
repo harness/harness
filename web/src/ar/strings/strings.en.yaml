@@ -109,6 +109,9 @@ sideNav:
 badges:
   artifactRegistry: '{{ $.repositoryList.artifactRegistry.label }}'
   upstreamProxy: '{{ $.repositoryList.upstreamProxy.label }}'
+  projectScope: Project
+  orgScope: Organization
+  accountScope: Account
 validationMessages:
   required: Required
   repokeyRegExMessage: Registry name must start with letter and can only contain lowercase alphanumerics, _, . and -

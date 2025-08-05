@@ -21,13 +21,15 @@ import { Layout, Text } from '@harnessio/uicore'
 import type { RegistryMetadata } from '@harnessio/react-har-service-client'
 import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance } from 'react-table'
 
-import { PageType, type RepositoryConfigType, type RepositoryPackageType } from '@ar/common/types'
+import useGetPageScope from '@ar/hooks/useGetPageScope'
+import ScopeBadge from '@ar/components/Badge/ScopeBadge'
 import { useStrings } from '@ar/frameworks/strings/String'
 import TableCells from '@ar/components/TableCells/TableCells'
 import LabelsPopover from '@ar/components/LabelsPopover/LabelsPopover'
-import DescriptionPopover from '@ar/components/DescriptionPopover/DescriptionPopover'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
+import DescriptionPopover from '@ar/components/DescriptionPopover/DescriptionPopover'
 import RepositoryActionsWidget from '@ar/frameworks/RepositoryStep/RepositoryActionsWidget'
+import { PageType, type RepositoryConfigType, type RepositoryPackageType } from '@ar/common/types'
 
 import css from './RepositoryListTable.module.scss'
 
@@ -53,6 +55,15 @@ export const RepositoryNameCell: CellType = ({ value, row }) => {
       {description && <DescriptionPopover text={description} />}
     </Layout.Horizontal>
   )
+}
+
+export const RepositoryScopeCell: CellType = ({ row }) => {
+  const { original } = row
+  const { path } = original
+  const entityScope = useGetPageScope()
+  // remove accountId and registryId from path for helper text
+  const helperText = path?.split('/').slice(1, -1).join('/')
+  return <ScopeBadge scope={entityScope} helperText={helperText} />
 }
 
 export const RepositoryLocationBadgeCell: CellType = ({ value }) => {

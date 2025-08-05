@@ -15,7 +15,7 @@
  */
 
 import type { StringsMap } from '@ar/frameworks/strings'
-import { EnvironmentType, RepositoryConfigType } from './types'
+import { EntityScope, EnvironmentType, RepositoryConfigType, RepositoryScopeType } from './types'
 
 interface EnvironmentTypeListItem {
   label: keyof StringsMap
@@ -49,5 +49,34 @@ export const RepositoryConfigTypes: RepositoryConfigTypesListItem[] = [
   {
     label: 'repositoryList.upstreamProxy.label',
     value: RepositoryConfigType.UPSTREAM
+  }
+]
+
+interface RepositoryScopeTypesListItem {
+  label: keyof StringsMap
+  value: RepositoryScopeType
+  scope: EntityScope
+}
+
+export const RepositoryScopeTypes: RepositoryScopeTypesListItem[] = [
+  {
+    label: 'repositoryList.scope.accountOnly',
+    value: RepositoryScopeType.NONE,
+    scope: EntityScope.ACCOUNT
+  },
+  {
+    label: 'repositoryList.scope.orgOnly',
+    value: RepositoryScopeType.NONE,
+    scope: EntityScope.ORG
+  },
+  {
+    label: 'repositoryList.scope.accountRecursive',
+    value: RepositoryScopeType.DESCENDANTS,
+    scope: EntityScope.ACCOUNT
+  },
+  {
+    label: 'repositoryList.scope.orgRecursive',
+    value: RepositoryScopeType.DESCENDANTS,
+    scope: EntityScope.ORG
   }
 ]

@@ -33,6 +33,27 @@
   }
 }
 
+.scopeColumn {
+  div[class*='TableV2--cells'],
+  div[class*='TableV2--header'] {
+    grid-template-columns: minmax(var(--har-table-name-column-min-width), 1fr) 10rem 10rem 8rem 9rem 10rem 10rem 10rem 50px;
+  }
+  div[class*='TableV2--header'],
+  div[class*='TableV2--cells'] {
+    & > div[class*='TableV2--cell'] {
+      &:nth-child(4),
+      &:nth-child(5),
+      &:nth-child(6) {
+        display: flex;
+        justify-content: flex-end;
+      }
+      &:nth-child(6) {
+        padding-right: var(--spacing-large);
+      }
+    }
+  }
+}
+
 .alignColumns {
   div[class*='TableV2--header'] > div[class*='TableV2--cell'] {
     &:nth-child(3),

@@ -26,7 +26,7 @@ import { useGetAllRegistriesQuery } from '@harnessio/react-har-service-client'
 import { useGetSpaceRef } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import { queryClient } from '@ar/utils/queryClient'
-import { RepositoryConfigType } from '@ar/common/types'
+import { RepositoryConfigType, RepositoryScopeType } from '@ar/common/types'
 import ReorderSelect from '@ar/components/ReorderSelect/ReorderSelect'
 import type { VirtualRegistryRequest } from '@ar/pages/repository-details/types'
 import type { UpstreamProxyPackageType } from '@ar/pages/upstream-proxy-details/types'
@@ -64,7 +64,7 @@ function UpstreamProxiesSelect(props: UpstreamProxiesSelectProps): JSX.Element {
         package_type: [packageType],
         type: RepositoryConfigType.UPSTREAM,
         search_term: searchTerm,
-        recursive: true
+        scope: RepositoryScopeType.ANCESTORS
       },
       stringifyQueryParamsOptions: {
         arrayFormat: 'comma'
