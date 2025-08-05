@@ -353,7 +353,10 @@ func (s infraProviderResourceStore) Delete(ctx context.Context, id int64) error 
 }
 
 // Update updates an existing infra provider resource in the database.
-func (s infraProviderResourceStore) Update(ctx context.Context, infraProviderResource *types.InfraProviderResource) error {
+func (s infraProviderResourceStore) Update(
+	ctx context.Context,
+	infraProviderResource *types.InfraProviderResource,
+) error {
 	metadata, err := json.Marshal(infraProviderResource.Metadata)
 	if err != nil {
 		return errors.Wrap(err, "Failed to marshal metadata")
@@ -374,7 +377,7 @@ func (s infraProviderResourceStore) Update(ctx context.Context, infraProviderRes
 		Set("ipreso_metadata", metadata).
 		Set("ipreso_is_deleted", infraProviderResource.IsDeleted).
 		Set("ipreso_deleted", infraProviderResource.Deleted).
-		Where("ipreso_id = $1", infraProviderResource.ID)
+		Where("ipreso_id = ?", infraProviderResource.ID)
 	sql, args, err := stmt.ToSql()
 	if err != nil {
 		return errors.Wrap(err, "Failed to convert squirrel builder to sql")

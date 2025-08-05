@@ -218,6 +218,8 @@ func validateBootDiskChanges(existingMeta, newMeta map[string]string) (bool, err
 // checkPersistentDiskSizeChange compares existing and new persistent disk sizes.
 // and determines if the change is allowed and if hard reset is needed.
 // Returns (needsHardReset, error).
+//
+//nolint:unparam // the bool return value is kept for future extension
 func checkPersistentDiskSizeChange(existingDisk, newDisk string) (bool, error) {
 	existingVal, eErr := strconv.Atoi(existingDisk)
 	if eErr != nil {
@@ -229,16 +231,11 @@ func checkPersistentDiskSizeChange(existingDisk, newDisk string) (bool, error) {
 		return false, fmt.Errorf("invalid disk size format: cannot parse new disk size: %w", nErr)
 	}
 
-	// If persistent disk size reduced, return error
-	if newVal < existingVal {
+	// Disallow any changes to persistent disk size
+	if newVal != existingVal {
 		return false, fmt.Errorf(
-			"reducing persistent disk size is not allowed: from %d to %d",
+			"changing persistent disk size is not allowed: from %d to %d",
 			existingVal, newVal)
-	}
-
-	// If persistent disk size increased, mark for hard reset
-	if newVal > existingVal {
-		return true, nil
 	}
 
 	// Equal sizes, no hard reset needed
