@@ -28,7 +28,8 @@ export const useGetInfraDetails = ({
   const infraDetails = useGetInfraProvider({
     accountIdentifier,
     infraprovider_identifier,
-    queryParams
+    queryParams,
+    lazy: !infraprovider_identifier
   })
 
   return infraDetails

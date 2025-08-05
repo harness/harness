@@ -127,6 +127,11 @@ function MachineLocationContent({
     )
   }
 
+  function CustomMemoryColumn(row: Unknown) {
+    const { memory } = row?.row?.original?.metadata
+    return <Text color={Color.GREY_1000}>{memory}GB</Text>
+  }
+
   function CustomImageColumn(row: Unknown) {
     const { vm_image_name, image_name } = row?.row?.original?.metadata
     const displayValue = vm_image_name || image_name || ''
@@ -243,6 +248,7 @@ function MachineLocationContent({
           </Layout.Horizontal>
         ),
         accessor: 'memory',
+        Cell: CustomMemoryColumn,
         width: '11%'
       },
       {

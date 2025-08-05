@@ -64,14 +64,13 @@ function MachineModal({
 
   const onSubmitHandler = async (values: MachineModalForm) => {
     try {
-      const { name, disk_type, boot_size, machine_type, identifier, disk_size, boot_type, zone, image_name } = values
+      const { name, disk_type, boot_size, machine_type, disk_size, boot_type, zone, image_name } = values
       const payload: any = [
         {
-          identifier,
           name,
           infra_provider_type: HYBRID_VM_GCP,
           region: regionIdentifier,
-          disk: disk_type,
+          disk: disk_size,
           metadata: {
             persistent_disk_type: disk_type,
             boot_disk_size: boot_size,
@@ -122,11 +121,7 @@ function MachineModal({
           return (
             <FormikForm>
               <Layout.Vertical spacing="normal" className={css.formContainer}>
-                <FormInput.InputWithIdentifier
-                  inputLabel={getString('cde.configureInfra.name')}
-                  inputName="name"
-                  isIdentifierEditable={true}
-                />
+                <FormInput.Text label={getString('cde.configureInfra.name')} name="name" />
                 <CustomSelectDropdown
                   options={zoneOptions?.map(options => getStringDropdownOptions(options))}
                   value={{ value: zone, label: zone }}
@@ -156,9 +151,14 @@ function MachineModal({
                   label={getString('cde.gitspaceInfraHome.diskSize')}
                   name="disk_size"
                   placeholder="e.g 100"
-                  type="number"
+                  type="text"
                   value={disk_size}
-                  onChange={(form: { value: string }) => formik.setFieldValue('disk_size', form.value)}
+                  autoComplete="off"
+                  onChange={(form: { value: string }) => {
+                    if (form.value === '' || (/\d+/.test(form.value) && parseInt(form.value, 10) >= 0)) {
+                      formik.setFieldValue('disk_size', form.value)
+                    }
+                  }}
                   error={formik?.submitCount ? get(formik?.errors, 'disk_size') : ''}
                 />
                 <CustomSelectDropdown
@@ -175,9 +175,14 @@ function MachineModal({
                   label={getString('cde.gitspaceInfraHome.bootSize')}
                   name="boot_size"
                   placeholder="e.g 100"
-                  type="number"
+                  type="text"
+                  autoComplete="off"
                   value={boot_size}
-                  onChange={(form: { value: string }) => formik.setFieldValue('boot_size', form.value)}
+                  onChange={(form: { value: string }) => {
+                    if (form.value === '' || (/\d+/.test(form.value) && parseInt(form.value, 10) >= 0)) {
+                      formik.setFieldValue('boot_size', form.value)
+                    }
+                  }}
                   error={formik?.submitCount ? get(formik?.errors, 'boot_size') : ''}
                 />
                 <CustomSelectDropdown

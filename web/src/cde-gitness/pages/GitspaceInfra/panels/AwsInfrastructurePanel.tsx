@@ -52,7 +52,7 @@ const AwsInfrastructurePanel: React.FC<AwsInfrastructurePanelProps> = ({ listRes
 
   const { data: infraDetailsData, loading: infraDetailsLoading } = useGetInfraDetails({
     accountIdentifier: accountInfo?.identifier,
-    infraprovider_identifier: awsInfraDetails?.identifier ?? 'undefined',
+    infraprovider_identifier: awsInfraDetails?.identifier ?? '',
     queryParams: {}
   })
 
@@ -142,7 +142,7 @@ const AwsInfrastructurePanel: React.FC<AwsInfrastructurePanelProps> = ({ listRes
               <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_500}>
                 {getString('cde.awsInfrastructureName')}
               </Text>
-              <Text font={{ variation: FontVariation.H4 }}>{awsInfraDetails?.metadata?.name}</Text>
+              <Text font={{ variation: FontVariation.H4 }}>{awsInfraDetails?.name}</Text>
             </Layout.Vertical>
           </Layout.Horizontal>
           <Layout.Horizontal spacing={'medium'}>

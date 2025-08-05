@@ -53,7 +53,7 @@ const AwsInfraDetails = () => {
   const { infraprovider_identifier } = useParams<RouteParamsProps>()
   const [infraDetails, setInfraDetails] = useState<InfraDetailsFormikProps>({})
   const { data } = useGetInfraDetails({
-    infraprovider_identifier: infraprovider_identifier ?? 'undefined',
+    infraprovider_identifier: infraprovider_identifier ?? '',
     accountIdentifier: accountInfo?.identifier,
     queryParams: {
       acl_filter: 'false'
@@ -70,11 +70,11 @@ const AwsInfraDetails = () => {
 
   useEffect(() => {
     if (data) {
-      const { identifier, metadata }: OpenapiCreateInfraProviderConfigRequest = data
+      const { identifier, name, metadata }: OpenapiCreateInfraProviderConfigRequest = data
       const delegate = metadata?.delegate_selectors?.map((del: { selector: string }) => del.selector)
       const payload: InfraDetailsFormikProps = {
         identifier: identifier,
-        name: metadata?.name,
+        name: name,
         domain: metadata?.domain,
         instance_type: metadata?.gateway?.instance_type,
         instances: metadata?.gateway?.instances,
@@ -160,11 +160,10 @@ const AwsInfraDetails = () => {
         })
         const delegates = delegateSelector?.map((del: string) => ({ selector: del }))
         const payload: OpenapiCreateInfraProviderConfigRequest = {
-          identifier,
           metadata: {
             domain,
             delegate_selectors: delegates,
-            name,
+            name: identifier,
             region_configs,
             runner: {
               region: runner?.region,

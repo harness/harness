@@ -11,9 +11,10 @@ interface CustomInputProps {
   placeholder?: string
   error: any
   type: string
+  autoComplete?: string
 }
 
-function CustomInput({ label, name, value, onChange, placeholder, error, type }: CustomInputProps) {
+function CustomInput({ label, name, value, onChange, placeholder, error, type, autoComplete }: CustomInputProps) {
   return (
     <Container className={css.mb15}>
       <Text className={css.inputLabel}>{label}</Text>
@@ -23,6 +24,7 @@ function CustomInput({ label, name, value, onChange, placeholder, error, type }:
         value={value}
         type={type}
         className={error ? css.errorClass : ''}
+        autoComplete={autoComplete}
         onChange={(e: React.FormEvent) => onChange(e.target)}
       />
       <FormError message={error} />

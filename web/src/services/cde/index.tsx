@@ -153,16 +153,11 @@ export interface OpenapiLookupRepoGitspaceRequest {
 }
 
 export interface OpenapiUpdateGitspaceRequest {
-  branch?: string
-  devcontainer_path?: string
-  id?: string
   ide?: EnumIDEType
-  infra_provider_config_identifier?: string
-  infra_provider_resource_id?: string
-  metadata?: {
-    [key: string]: string
-  } | null
   name?: string
+  resource_identifier?: string
+  resource_space_ref?: string
+  ssh_token_identifier?: string
 }
 
 export interface OpenapiUpdateInfraProviderConfigRequest {
@@ -599,7 +594,7 @@ export const useGetUsageForAccount = ({ accountIdentifier, ...props }: UseGetUsa
 
 export interface ListInfraProvidersQueryParams {
   /**
-   * ACL filter should be applied to the request
+   * acl filter should be applied to the request
    */
   acl_filter?: string
 }
@@ -764,7 +759,7 @@ export const useDeleteInfraProvider = ({
 
 export interface GetInfraProviderQueryParams {
   /**
-   * ACL filter should be applied to the request
+   * acl filter should be applied to the request
    */
   acl_filter?: string
 }
@@ -948,9 +943,13 @@ export const useListGateways = ({ accountIdentifier, infraprovider_identifier, .
 
 export interface ListInfraProviderResourcesQueryParams {
   /**
-   * ACL filter should be applied to the request
+   * acl filter should be applied to the request
    */
   acl_filter?: string
+  /**
+   * current resource identifier, used to filter resources which are compatible with the current resource
+   */
+  current_resource_identifier?: string
 }
 
 export interface ListInfraProviderResourcesPathParams {

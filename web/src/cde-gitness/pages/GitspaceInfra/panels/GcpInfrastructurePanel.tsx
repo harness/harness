@@ -53,7 +53,7 @@ const GcpInfrastructurePanel: React.FC<GcpInfrastructurePanelProps> = ({ listRes
 
   const { data: infraDetailsData, loading: infraDetailsLoading } = useGetInfraDetails({
     accountIdentifier: accountInfo?.identifier,
-    infraprovider_identifier: gcpInfraDetails?.identifier ?? 'undefined',
+    infraprovider_identifier: gcpInfraDetails?.identifier ?? '',
     queryParams: {}
   })
 
@@ -143,7 +143,7 @@ const GcpInfrastructurePanel: React.FC<GcpInfrastructurePanelProps> = ({ listRes
               <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_500}>
                 {getString('cde.gcpInfrastructureName')}
               </Text>
-              <Text font={{ variation: FontVariation.H4 }}>{gcpInfraDetails?.metadata?.name}</Text>
+              <Text font={{ variation: FontVariation.H4 }}>{gcpInfraDetails?.name}</Text>
             </Layout.Vertical>
           </Layout.Horizontal>
           <Layout.Horizontal spacing={'medium'}>

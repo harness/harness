@@ -46,7 +46,7 @@ const GcpInfraDetails = () => {
   const { infraprovider_identifier } = useParams<RouteParamsProps>()
   const [infraDetails, setInfraDetails] = useState<InfraDetailsFormikProps>({})
   const { data } = useGetInfraDetails({
-    infraprovider_identifier: infraprovider_identifier ?? 'undefined',
+    infraprovider_identifier: infraprovider_identifier ?? '',
     accountIdentifier: accountInfo?.identifier,
     queryParams: {
       acl_filter: 'false'
@@ -63,11 +63,11 @@ const GcpInfraDetails = () => {
 
   useEffect(() => {
     if (data) {
-      const { identifier, metadata }: OpenapiCreateInfraProviderConfigRequest = data
+      const { identifier, name, metadata }: OpenapiCreateInfraProviderConfigRequest = data
       const delegate = metadata?.delegate_selectors?.map((del: { selector: string }) => del.selector)
       const payload: InfraDetailsFormikProps = {
         identifier: identifier,
-        name: metadata?.name,
+        name: name,
         domain: metadata?.domain,
         machine_type: metadata?.gateway?.machine_type,
         instances: metadata?.gateway?.instances,
@@ -142,12 +142,11 @@ const GcpInfraDetails = () => {
                 })
                 const delegates = delegateSelector?.map((del: string) => ({ selector: del }))
                 const payload: OpenapiCreateInfraProviderConfigRequest = {
-                  identifier,
                   metadata: {
                     domain,
                     runner,
                     delegate_selectors: delegates,
-                    name,
+                    name: identifier,
                     region_configs,
                     project: {
                       id: project

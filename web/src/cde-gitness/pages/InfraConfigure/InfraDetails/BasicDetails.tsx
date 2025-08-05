@@ -44,7 +44,7 @@ const BasicDetails = ({ formikProps }: BasicDetailProps) => {
         <FormInput.InputWithIdentifier
           inputLabel={getString('cde.configureInfra.infraName')}
           inputName="name"
-          isIdentifierEditable={true}
+          isIdentifierEditable={false}
         />
         <FormInput.Text
           name="project"
