@@ -41,6 +41,7 @@ paths:
         - $ref: "#/components/parameters/sortField"
         - $ref: "#/components/parameters/searchTerm"
         - $ref: "#/components/parameters/recursiveParam"
+        - $ref: "#/components/parameters/scopeParam"
       responses:
         200:
           $ref: "#/components/responses/ListRegistryResponse"
@@ -3141,11 +3142,35 @@ components:
     recursiveParam:
       name: recursive
       in: query
-      description: Whether to list registries recursively.
+      description: |
+        Whether to list registries recursively.
+
+        **Deprecated.** Use the new `scope` parameter.
+
+        * `recursive=true`  → `scope=ancestors`
+        * `recursive=false` → `scope=none`
       required: false
       schema:
         type: boolean
         default: false
+    scopeParam:
+      name: scope
+      in: query
+      description: >
+        **Scope of registries to list**
+
+        * **none** – current space only (default)  
+        * **ancestors** – current space **plus** all parent spaces  
+        * **descendants** – current space **plus** all child spaces  
+
+        If omitted, `none` is assumed.
+      required: false
+      schema:
+        type: string
+        enum:
+          - ancestors
+          - descendants
+          - none
     spaceRefPathParam:
       name: space_ref
       in: path

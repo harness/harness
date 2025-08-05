@@ -91,6 +91,7 @@ func APIHandlerProvider(
 	cargoRegistryHelper cargoutils.RegistryHelper,
 	spaceController *spacecontroller.Controller,
 	quarantineArtifactRepository store.QuarantineArtifactRepository,
+	spaceStore corestore.SpaceStore,
 ) harness.APIHandler {
 	return harness.NewAPIHandler(
 		repoDao,
@@ -122,6 +123,7 @@ func APIHandlerProvider(
 		cargoRegistryHelper,
 		spaceController,
 		quarantineArtifactRepository,
+		spaceStore,
 	)
 }
 

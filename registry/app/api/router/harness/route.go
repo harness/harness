@@ -89,6 +89,7 @@ func NewAPIHandler(
 	cargoRegistryHelper cargo.RegistryHelper,
 	spaceController *spacecontroller.Controller,
 	quarantineArtifactRepository store.QuarantineArtifactRepository,
+	spaceStore corestore.SpaceStore,
 ) APIHandler {
 	r := chi.NewRouter()
 	r.Use(audit.Middleware())
@@ -125,6 +126,7 @@ func NewAPIHandler(
 		cargoRegistryHelper,
 		spaceController,
 		quarantineArtifactRepository,
+		spaceStore,
 	)
 
 	handler := artifact.NewStrictHandler(apiController, []artifact.StrictMiddlewareFunc{})

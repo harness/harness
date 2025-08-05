@@ -81,8 +81,8 @@ func (_c *RegistryRepository_Count_Call) RunAndReturn(run func(context.Context) 
 }
 
 // CountAll provides a mock function with given fields: ctx, parentID, packageTypes, search, repoType
-func (_m *RegistryRepository) CountAll(ctx context.Context, parentID int64, packageTypes []string, search string, repoType string) (int64, error) {
-	ret := _m.Called(ctx, parentID, packageTypes, search, repoType)
+func (_m *RegistryRepository) CountAll(ctx context.Context, parentIDs []int64, packageTypes []string, search string, repoType string) (int64, error) {
+	ret := _m.Called(ctx, parentIDs, packageTypes, search, repoType)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CountAll")
@@ -90,17 +90,17 @@ func (_m *RegistryRepository) CountAll(ctx context.Context, parentID int64, pack
 
 	var r0 int64
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int64, []string, string, string) (int64, error)); ok {
-		return rf(ctx, parentID, packageTypes, search, repoType)
+	if rf, ok := ret.Get(0).(func(context.Context, []int64, []string, string, string) (int64, error)); ok {
+		return rf(ctx, parentIDs, packageTypes, search, repoType)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int64, []string, string, string) int64); ok {
-		r0 = rf(ctx, parentID, packageTypes, search, repoType)
+	if rf, ok := ret.Get(0).(func(context.Context, []int64, []string, string, string) int64); ok {
+		r0 = rf(ctx, parentIDs, packageTypes, search, repoType)
 	} else {
 		r0 = ret.Get(0).(int64)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, int64, []string, string, string) error); ok {
-		r1 = rf(ctx, parentID, packageTypes, search, repoType)
+	if rf, ok := ret.Get(1).(func(context.Context, []int64, []string, string, string) error); ok {
+		r1 = rf(ctx, parentIDs, packageTypes, search, repoType)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -115,17 +115,17 @@ type RegistryRepository_CountAll_Call struct {
 
 // CountAll is a helper method to define mock.On call
 //   - ctx context.Context
-//   - parentID int64
+//   - parentIDs []int64
 //   - packageTypes []string
 //   - search string
 //   - repoType string
-func (_e *RegistryRepository_Expecter) CountAll(ctx interface{}, parentID interface{}, packageTypes interface{}, search interface{}, repoType interface{}) *RegistryRepository_CountAll_Call {
-	return &RegistryRepository_CountAll_Call{Call: _e.mock.On("CountAll", ctx, parentID, packageTypes, search, repoType)}
+func (_e *RegistryRepository_Expecter) CountAll(ctx interface{}, parentIDs interface{}, packageTypes interface{}, search interface{}, repoType interface{}) *RegistryRepository_CountAll_Call {
+	return &RegistryRepository_CountAll_Call{Call: _e.mock.On("CountAll", ctx, parentIDs, packageTypes, search, repoType)}
 }
 
-func (_c *RegistryRepository_CountAll_Call) Run(run func(ctx context.Context, parentID int64, packageTypes []string, search string, repoType string)) *RegistryRepository_CountAll_Call {
+func (_c *RegistryRepository_CountAll_Call) Run(run func(ctx context.Context, parentIDs []int64, packageTypes []string, search string, repoType string)) *RegistryRepository_CountAll_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(int64), args[2].([]string), args[3].(string), args[4].(string))
+		run(args[0].(context.Context), args[1].([]int64), args[2].([]string), args[3].(string), args[4].(string))
 	})
 	return _c
 }
@@ -135,7 +135,7 @@ func (_c *RegistryRepository_CountAll_Call) Return(count int64, err error) *Regi
 	return _c
 }
 
-func (_c *RegistryRepository_CountAll_Call) RunAndReturn(run func(context.Context, int64, []string, string, string) (int64, error)) *RegistryRepository_CountAll_Call {
+func (_c *RegistryRepository_CountAll_Call) RunAndReturn(run func(context.Context, []int64, []string, string, string) (int64, error)) *RegistryRepository_CountAll_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -484,8 +484,8 @@ func (_c *RegistryRepository_Get_Call) RunAndReturn(run func(context.Context, in
 }
 
 // GetAll provides a mock function with given fields: ctx, parentID, packageTypes, sortByField, sortByOrder, limit, offset, search, repoType, recursive
-func (_m *RegistryRepository) GetAll(ctx context.Context, parentID int64, packageTypes []string, sortByField string, sortByOrder string, limit int, offset int, search string, repoType string, recursive bool) (*[]store.RegistryMetadata, error) {
-	ret := _m.Called(ctx, parentID, packageTypes, sortByField, sortByOrder, limit, offset, search, repoType, recursive)
+func (_m *RegistryRepository) GetAll(ctx context.Context, parentIDs []int64, packageTypes []string, sortByField string, sortByOrder string, limit int, offset int, search string, repoType string) (*[]store.RegistryMetadata, error) {
+	ret := _m.Called(ctx, parentIDs, packageTypes, sortByField, sortByOrder, limit, offset, search, repoType)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetAll")
@@ -493,19 +493,19 @@ func (_m *RegistryRepository) GetAll(ctx context.Context, parentID int64, packag
 
 	var r0 *[]store.RegistryMetadata
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int64, []string, string, string, int, int, string, string, bool) (*[]store.RegistryMetadata, error)); ok {
-		return rf(ctx, parentID, packageTypes, sortByField, sortByOrder, limit, offset, search, repoType, recursive)
+	if rf, ok := ret.Get(0).(func(context.Context, []int64, []string, string, string, int, int, string, string) (*[]store.RegistryMetadata, error)); ok {
+		return rf(ctx, parentIDs, packageTypes, sortByField, sortByOrder, limit, offset, search, repoType)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int64, []string, string, string, int, int, string, string, bool) *[]store.RegistryMetadata); ok {
-		r0 = rf(ctx, parentID, packageTypes, sortByField, sortByOrder, limit, offset, search, repoType, recursive)
+	if rf, ok := ret.Get(0).(func(context.Context, []int64, []string, string, string, int, int, string, string) *[]store.RegistryMetadata); ok {
+		r0 = rf(ctx, parentIDs, packageTypes, sortByField, sortByOrder, limit, offset, search, repoType)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*[]store.RegistryMetadata)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, int64, []string, string, string, int, int, string, string, bool) error); ok {
-		r1 = rf(ctx, parentID, packageTypes, sortByField, sortByOrder, limit, offset, search, repoType, recursive)
+	if rf, ok := ret.Get(1).(func(context.Context, []int64, []string, string, string, int, int, string, string) error); ok {
+		r1 = rf(ctx, parentIDs, packageTypes, sortByField, sortByOrder, limit, offset, search, repoType)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -520,7 +520,7 @@ type RegistryRepository_GetAll_Call struct {
 
 // GetAll is a helper method to define mock.On call
 //   - ctx context.Context
-//   - parentID int64
+//   - parentIDs []int64
 //   - packageTypes []string
 //   - sortByField string
 //   - sortByOrder string
@@ -528,14 +528,13 @@ type RegistryRepository_GetAll_Call struct {
 //   - offset int
 //   - search string
 //   - repoType string
-//   - recursive bool
-func (_e *RegistryRepository_Expecter) GetAll(ctx interface{}, parentID interface{}, packageTypes interface{}, sortByField interface{}, sortByOrder interface{}, limit interface{}, offset interface{}, search interface{}, repoType interface{}, recursive interface{}) *RegistryRepository_GetAll_Call {
-	return &RegistryRepository_GetAll_Call{Call: _e.mock.On("GetAll", ctx, parentID, packageTypes, sortByField, sortByOrder, limit, offset, search, repoType, recursive)}
+func (_e *RegistryRepository_Expecter) GetAll(ctx interface{}, parentIDs interface{}, packageTypes interface{}, sortByField interface{}, sortByOrder interface{}, limit interface{}, offset interface{}, search interface{}, repoType interface{}) *RegistryRepository_GetAll_Call {
+	return &RegistryRepository_GetAll_Call{Call: _e.mock.On("GetAll", ctx, parentIDs, packageTypes, sortByField, sortByOrder, limit, offset, search, repoType)}
 }
 
-func (_c *RegistryRepository_GetAll_Call) Run(run func(ctx context.Context, parentID int64, packageTypes []string, sortByField string, sortByOrder string, limit int, offset int, search string, repoType string, recursive bool)) *RegistryRepository_GetAll_Call {
+func (_c *RegistryRepository_GetAll_Call) Run(run func(ctx context.Context, parentIDs []int64, packageTypes []string, sortByField string, sortByOrder string, limit int, offset int, search string, repoType string)) *RegistryRepository_GetAll_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(int64), args[2].([]string), args[3].(string), args[4].(string), args[5].(int), args[6].(int), args[7].(string), args[8].(string), args[9].(bool))
+		run(args[0].(context.Context), args[1].([]int64), args[2].([]string), args[3].(string), args[4].(string), args[5].(int), args[6].(int), args[7].(string), args[8].(string))
 	})
 	return _c
 }

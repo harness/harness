@@ -17,6 +17,7 @@ package metadata
 import (
 	spacecontroller "github.com/harness/gitness/app/api/controller/space"
 	"github.com/harness/gitness/app/auth/authz"
+	gstore "github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/registry/app/api/interfaces"
@@ -62,6 +63,7 @@ type APIController struct {
 	CargoRegistryHelper          cargo.RegistryHelper
 	SpaceController              *spacecontroller.Controller
 	QuarantineArtifactRepository store.QuarantineArtifactRepository
+	SpaceStore                   gstore.SpaceStore
 }
 
 func NewAPIController(
@@ -94,6 +96,7 @@ func NewAPIController(
 	cargoRegistryHelper cargo.RegistryHelper,
 	spaceController *spacecontroller.Controller,
 	quarantineArtifactRepository store.QuarantineArtifactRepository,
+	spaceStore gstore.SpaceStore,
 ) *APIController {
 	return &APIController{
 		fileManager:                  fileManager,
@@ -125,5 +128,6 @@ func NewAPIController(
 		CargoRegistryHelper:          cargoRegistryHelper,
 		SpaceController:              spaceController,
 		QuarantineArtifactRepository: quarantineArtifactRepository,
+		SpaceStore:                   spaceStore,
 	}
 }

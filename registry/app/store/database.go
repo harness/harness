@@ -330,6 +330,7 @@ type UpstreamProxyConfigRepository interface {
 
 type RegistryMetadata struct {
 	RegID         string
+	ParentID      int64
 	RegIdentifier string
 	Description   string
 	PackageType   artifact.PackageType
@@ -367,7 +368,7 @@ type RegistryRepository interface {
 
 	GetAll(
 		ctx context.Context,
-		parentID int64,
+		parentIDs []int64,
 		packageTypes []string,
 		sortByField string,
 		sortByOrder string,
@@ -375,11 +376,10 @@ type RegistryRepository interface {
 		offset int,
 		search string,
 		repoType string,
-		recursive bool,
 	) (repos *[]RegistryMetadata, err error)
 
 	CountAll(
-		ctx context.Context, parentID int64, packageTypes []string,
+		ctx context.Context, parentIDs []int64, packageTypes []string,
 		search string, repoType string,
 	) (count int64, err error)
 

@@ -131,6 +131,13 @@ const (
 	MODEL   ArtifactTypeParam = "MODEL"
 )
 
+// Defines values for ScopeParam.
+const (
+	Ancestors   ScopeParam = "ancestors"
+	Descendants ScopeParam = "descendants"
+	None        ScopeParam = "none"
+)
+
 // Defines values for DeleteArtifactParamsArtifactType.
 const (
 	DeleteArtifactParamsArtifactTypeDATASET DeleteArtifactParamsArtifactType = "DATASET"
@@ -201,6 +208,13 @@ const (
 const (
 	GetAllRegistriesParamsTypeUPSTREAM GetAllRegistriesParamsType = "UPSTREAM"
 	GetAllRegistriesParamsTypeVIRTUAL  GetAllRegistriesParamsType = "VIRTUAL"
+)
+
+// Defines values for GetAllRegistriesParamsScope.
+const (
+	GetAllRegistriesParamsScopeAncestors   GetAllRegistriesParamsScope = "ancestors"
+	GetAllRegistriesParamsScopeDescendants GetAllRegistriesParamsScope = "descendants"
+	GetAllRegistriesParamsScopeNone        GetAllRegistriesParamsScope = "none"
 )
 
 // AccessKeySecretKey defines model for AccessKeySecretKey.
@@ -1024,6 +1038,9 @@ type RecursiveParam bool
 // RegistryRefPathParam defines model for registryRefPathParam.
 type RegistryRefPathParam string
 
+// ScopeParam defines model for scopeParam.
+type ScopeParam string
+
 // SearchTerm defines model for searchTerm.
 type SearchTerm string
 
@@ -1674,11 +1691,24 @@ type GetAllRegistriesParams struct {
 	SearchTerm *SearchTerm `form:"search_term,omitempty" json:"search_term,omitempty"`
 
 	// Recursive Whether to list registries recursively.
+	//
+	// **Deprecated.** Use the new `scope` parameter.
+	//
+	// * `recursive=true`  → `scope=ancestors`
+	// * `recursive=false` → `scope=none`
 	Recursive *RecursiveParam `form:"recursive,omitempty" json:"recursive,omitempty"`
+
+	// Scope **Scope of registries to list**
+	// * **none** – current space only (default)   * **ancestors** – current space **plus** all parent spaces   * **descendants** – current space **plus** all child spaces
+	// If omitted, `none` is assumed.
+	Scope *GetAllRegistriesParamsScope `form:"scope,omitempty" json:"scope,omitempty"`
 }
 
 // GetAllRegistriesParamsType defines parameters for GetAllRegistries.
 type GetAllRegistriesParamsType string
+
+// GetAllRegistriesParamsScope defines parameters for GetAllRegistries.
+type GetAllRegistriesParamsScope string
 
 // CreateRegistryJSONRequestBody defines body for CreateRegistry for application/json ContentType.
 type CreateRegistryJSONRequestBody RegistryRequest

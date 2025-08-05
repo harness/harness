@@ -110,6 +110,12 @@ var validRepositoryTypes = []string{
 	string(a.RegistryTypeVIRTUAL),
 }
 
+var validScopes = []string{
+	string(a.Ancestors),
+	string(a.Descendants),
+	string(a.None),
+}
+
 var validPackageTypes = []string{
 	string(a.PackageTypeDOCKER),
 	string(a.PackageTypeHELM),
@@ -142,6 +148,13 @@ func ValidatePackageTypes(packageTypes []string) error {
 		return nil
 	}
 	return errors.New("invalid package type")
+}
+
+func ValidateScope(scope string) error {
+	if len(scope) == 0 || IsScopeValid(scope) {
+		return nil
+	}
+	return errors.New("invalid scope")
 }
 
 func ValidatePackageType(packageType string) error {
@@ -252,6 +265,15 @@ func IsPackageTypesValid(packageTypes []string) bool {
 		}
 	}
 	return true
+}
+
+func IsScopeValid(scope string) bool {
+	for _, item := range validScopes {
+		if item == scope {
+			return true
+		}
+	}
+	return false
 }
 
 func GetTimeInMs(t time.Time) string {

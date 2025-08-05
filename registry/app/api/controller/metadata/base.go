@@ -49,6 +49,7 @@ type RegistryRequestInfo struct {
 	labels       []string
 	registryIDs  []string
 	recursive    bool
+	scope        string
 }
 
 type RegistryRequestParams struct {
@@ -63,7 +64,8 @@ type RegistryRequestParams struct {
 	sortOrder         *api.SortOrder
 	sortField         *api.SortField
 	registryIDsParam  *api.RegistryIdentifierParam
-	recursive         bool
+	recursive         *api.RecursiveParam
+	scope             *api.GetAllRegistriesParamsScope
 }
 
 type ArtifactFilesRequestInfo struct {
@@ -122,6 +124,16 @@ func (c *APIController) GetRegistryRequestInfo(
 		return nil, err
 	}
 
+	scope := ""
+	if registryRequestParams.scope != nil {
+		scope = string(*registryRequestParams.scope)
+	}
+
+	recursive := false
+	if registryRequestParams.recursive != nil {
+		recursive = bool(*registryRequestParams.recursive)
+	}
+
 	return &RegistryRequestInfo{
 		RegistryRequestBaseInfo: baseInfo,
 		packageTypes:            packageTypes,
@@ -133,7 +145,8 @@ func (c *APIController) GetRegistryRequestInfo(
 		searchTerm:              searchTerm,
 		labels:                  labels,
 		registryIDs:             registryIDs,
-		recursive:               registryRequestParams.recursive,
+		recursive:               recursive,
+		scope:                   scope,
 	}, nil
 }
 
@@ -180,7 +193,7 @@ func (c *APIController) setUpstreamProxyIDs(
 
 	repos, err := c.RegistryRepository.GetAll(
 		ctx,
-		parentID,
+		[]int64{parentID},
 		[]string{string(registry.PackageType)},
 		"id",
 		"",
@@ -188,7 +201,6 @@ func (c *APIController) setUpstreamProxyIDs(
 		0,
 		"",
 		string(api.RegistryTypeUPSTREAM),
-		true,
 	)
 
 	if repos == nil || err != nil {

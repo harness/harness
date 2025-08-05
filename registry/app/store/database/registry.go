@@ -18,7 +18,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/google/uuid"
 	"time"
 
 	"github.com/harness/gitness/app/api/request"
@@ -33,6 +32,7 @@ import (
 	"github.com/harness/gitness/store/database/dbtx"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -239,6 +239,7 @@ func (r registryDao) GetByIDIn(ctx context.Context, ids []int64) (*[]types.Regis
 
 type RegistryMetadataDB struct {
 	RegID         string                `db:"registry_id"`
+	ParentID      int64                 `db:"parent_id"`
 	RegIdentifier string                `db:"reg_identifier"`
 	Description   sql.NullString        `db:"description"`
 	PackageType   artifact.PackageType  `db:"package_type"`
@@ -253,7 +254,7 @@ type RegistryMetadataDB struct {
 
 func (r registryDao) GetAll(
 	ctx context.Context,
-	parentID int64,
+	parentIDs []int64,
 	packageTypes []string,
 	sortByField string,
 	sortByOrder string,
@@ -261,13 +262,13 @@ func (r registryDao) GetAll(
 	offset int,
 	search string,
 	repoType string,
-	recursive bool,
 ) (repos *[]store.RegistryMetadata, err error) {
 	if limit < 0 || offset < 0 {
 		return nil, fmt.Errorf("limit and offset must be non-negative")
 	}
 	selectFields := `
 		r.registry_id AS registry_id,
+		r.registry_parent_id AS parent_id,
 		r.registry_name AS reg_identifier,
 		COALESCE(r.registry_description, '') AS description, 
 		r.registry_package_type AS package_type,
@@ -314,37 +315,20 @@ func (r registryDao) GetAll(
 	`
 
 	var query sq.SelectBuilder
-	if recursive {
-		query = databaseg.Builder.
-			Select(selectFields).
-			From("registry_hierarchy_u rh").
-			InnerJoin("registries r ON rh.registry_id = r.registry_id").
-			LeftJoin("upstream_proxy_configs u ON r.registry_id = u.upstream_proxy_config_registry_id").
-			LeftJoin(fmt.Sprintf("(%s) AS artifact_count ON r.registry_id = artifact_count.image_registry_id",
-				artifactCountSubquery)).
-			LeftJoin(fmt.Sprintf("(%s) AS blob_sizes ON r.registry_id = blob_sizes.rblob_registry_id",
-				blobSizesSubquery)).
-			//nolint:lll
-			LeftJoin(fmt.Sprintf("(%s) AS generic_blob_sizes ON r.registry_id = generic_blob_sizes.node_registry_id",
-				genericBlobSizesSubquery)).
-			LeftJoin(fmt.Sprintf("(%s) AS download_stats ON r.registry_id = download_stats.registry_id",
-				downloadStatsSubquery))
-	} else {
-		query = databaseg.Builder.
-			Select(selectFields).
-			From("registries r").
-			LeftJoin("upstream_proxy_configs u ON r.registry_id = u.upstream_proxy_config_registry_id").
-			LeftJoin(fmt.Sprintf("(%s) AS artifact_count ON r.registry_id = artifact_count.image_registry_id",
-				artifactCountSubquery)).
-			LeftJoin(fmt.Sprintf("(%s) AS blob_sizes ON r.registry_id = blob_sizes.rblob_registry_id",
-				blobSizesSubquery)).
-			//nolint:lll
-			LeftJoin(fmt.Sprintf("(%s) AS generic_blob_sizes ON r.registry_id = generic_blob_sizes.node_registry_id",
-				genericBlobSizesSubquery)).
-			LeftJoin(fmt.Sprintf("(%s) AS download_stats ON r.registry_id = download_stats.registry_id",
-				downloadStatsSubquery)).
-			Where("r.registry_parent_id = ?", parentID)
-	}
+	query = databaseg.Builder.
+		Select(selectFields).
+		From("registries r").
+		LeftJoin("upstream_proxy_configs u ON r.registry_id = u.upstream_proxy_config_registry_id").
+		LeftJoin(fmt.Sprintf("(%s) AS artifact_count ON r.registry_id = artifact_count.image_registry_id",
+			artifactCountSubquery)).
+		LeftJoin(fmt.Sprintf("(%s) AS blob_sizes ON r.registry_id = blob_sizes.rblob_registry_id",
+			blobSizesSubquery)).
+		//nolint:lll
+		LeftJoin(fmt.Sprintf("(%s) AS generic_blob_sizes ON r.registry_id = generic_blob_sizes.node_registry_id",
+			genericBlobSizesSubquery)).
+		LeftJoin(fmt.Sprintf("(%s) AS download_stats ON r.registry_id = download_stats.registry_id",
+			downloadStatsSubquery)).
+		Where(sq.Eq{"r.registry_parent_id": parentIDs})
 	// Apply search filter
 	if search != "" {
 		query = query.Where("r.registry_name LIKE ?", "%"+search+"%")
@@ -379,16 +363,6 @@ func (r registryDao) GetAll(
 		return nil, errors.Wrap(err, "Failed to convert query to SQL")
 	}
 
-	if recursive {
-		var cte string
-		if r.db.DriverName() == SQLITE3 {
-			cte = buildCTESqlite(parentID)
-		} else {
-			cte = buildCTE(parentID)
-		}
-		// Add CTE to the query
-		sql = cte + sql
-	}
 	// Log the final query
 	finalQuery := util.ConstructQuery(sql, args)
 	log.Ctx(ctx).Debug().
@@ -406,113 +380,13 @@ func (r registryDao) GetAll(
 	return r.mapToRegistryMetadataList(ctx, dst)
 }
 
-// buildCTE constructs a Common Table Expression (CTE) query in SQL for traversing
-// a hierarchical structure of spaces and retrieving relevant registry IDs.
-//
-// Parameters:
-// - parentID (int64): The starting space ID for the hierarchy traversal.
-//
-// Returns:
-// - A formatted SQL string representing the CTE.
-//
-// Explanation:
-// 1. The CTE is recursive and consists of two parts:
-//    - Base case: Selects the initial node (space) with the given space_id (`parentID`).
-//      It initializes the recursion level and tracks the path of visited nodes.
-//    - Recursive step: Traverses the hierarchy upwards by joining the parent ID of
-//      the current level with the space ID of the next level.
-//      It ensures nodes are not revisited (`NOT s.space_id = ANY(sh.path)`), the recursion
-//      doesn't exceed a depth of 10 (`sh.recursion_level < 10`), and parent IDs are valid.
-//
-// 2. Once the hierarchy is built, a second CTE (`registry_hierarchy_u`) selects unique
-//    registry IDs from the `registries` table where `registry_parent_id` matches any
-//    `space_id` from the hierarchical result.
-//
-// 3. The function uses `fmt.Sprintf` to inject the `parentID` into the SQL query template
-//    before returning the final query string.
-
-func buildCTE(parentID int64) string {
-	cte := `
-	WITH RECURSIVE space_hierarchy AS (
-		-- Base case: Start with nodes having registry_parent_id = $1
-		SELECT
-			s.space_id,
-			s.space_parent_id,
-			CAST(1 AS INTEGER) AS recursion_level, -- Initialize recursion level
-			ARRAY[s.space_id] AS path -- Track visited nodes
-		FROM
-			spaces s
-		WHERE
-			s.space_id = %d
-		UNION 
-		-- Recursive step: Traverse the hierarchy upward to the root
-		SELECT
-			s.space_id,
-			s.space_parent_id,
-			sh.recursion_level + 1 AS recursion_level, -- Increment recursion level
-			sh.path || s.space_id -- Append current node to the path
-		FROM
-			spaces s
-		INNER JOIN
-			space_hierarchy sh ON sh.space_parent_id = s.space_id -- Match parent to child
-		WHERE
-			NOT s.space_id = ANY(sh.path) -- Avoid revisiting nodes	
-			AND sh.space_parent_id IS NOT NULL
-			AND sh.recursion_level < 10 -- Limit recursion depth
-	),
-	registry_hierarchy_u AS (
-		SELECT DISTINCT registry_id FROM registries where registry_parent_id IN (
-		  SELECT DISTINCT space_id FROM space_hierarchy))
-`
-	cte = fmt.Sprintf(cte, parentID)
-	return cte
-}
-
-// buildCTESqlite is equivalent to buildCTE but for SQLite.
-func buildCTESqlite(parentID int64) string {
-	cte := `
-	WITH RECURSIVE space_hierarchy AS (
-		-- Base case: Start with nodes having registry_parent_id = %d
-		SELECT
-			s.space_id,
-			s.space_parent_id,
-			CAST(1 AS INTEGER) AS recursion_level, -- Initialize recursion level
-			json_array(s.space_id) AS path -- Track visited nodes
-		FROM
-			spaces s
-		WHERE
-			s.space_id = %d
-		UNION 
-		-- Recursive step: Traverse the hierarchy upward to the root
-		SELECT
-			s.space_id,
-			s.space_parent_id,
-			sh.recursion_level + 1 AS recursion_level, -- Increment recursion level
-			json(sh.path || ',' || json(s.space_id)) -- Append current node to the path
-		FROM
-			spaces s
-		INNER JOIN
-			space_hierarchy sh ON sh.space_parent_id = s.space_id -- Match parent to child
-		WHERE
-			s.space_id NOT IN (SELECT value FROM json_each(sh.path)) -- Avoid revisiting nodes
-			AND sh.space_parent_id IS NOT NULL
-			AND sh.recursion_level < 10 -- Limit recursion depth
-	),
-	registry_hierarchy_u AS (
-		SELECT DISTINCT registry_id FROM registries where registry_parent_id IN (
-		  SELECT DISTINCT space_id FROM space_hierarchy))
-	`
-	// Correctly format the string using parentID
-	return fmt.Sprintf(cte, parentID, parentID)
-}
-
 func (r registryDao) CountAll(
-	ctx context.Context, parentID int64,
+	ctx context.Context, parentIDs []int64,
 	packageTypes []string, search string, repoType string,
 ) (int64, error) {
 	stmt := databaseg.Builder.Select("COUNT(*)").
 		From("registries").
-		Where("registry_parent_id = ?", parentID)
+		Where(sq.Eq{"registry_parent_id": parentIDs})
 
 	if !commons.IsEmpty(search) {
 		stmt = stmt.Where("registry_name LIKE ?", "%"+search+"%")
@@ -786,6 +660,7 @@ func (r registryDao) mapToRegistryMetadataList(
 func (r registryDao) mapToRegistryMetadata(_ context.Context, dst *RegistryMetadataDB) *store.RegistryMetadata {
 	return &store.RegistryMetadata{
 		RegID:         dst.RegID,
+		ParentID:      dst.ParentID,
 		RegIdentifier: dst.RegIdentifier,
 		Description:   dst.Description.String,
 		PackageType:   dst.PackageType,

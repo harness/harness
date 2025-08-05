@@ -17,6 +17,7 @@ package metadata
 import (
 	"context"
 	"net/http"
+	"path"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
@@ -27,6 +28,7 @@ import (
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/gotidy/ptr"
+	"github.com/rs/zerolog/log"
 )
 
 func (c *APIController) GetAllRegistries(
@@ -45,7 +47,8 @@ func (c *APIController) GetAllRegistries(
 		sortOrder:         r.Params.SortOrder,
 		sortField:         r.Params.SortField,
 		registryIDsParam:  nil,
-		recursive:         r.Params.Recursive != nil && bool(*r.Params.Recursive), // default is false
+		recursive:         r.Params.Recursive,
+		scope:             r.Params.Scope,
 	}
 	regInfo, err := c.GetRegistryRequestInfo(ctx, *registryRequestParams)
 	if err != nil {
@@ -89,14 +92,47 @@ func (c *APIController) GetAllRegistries(
 	if e != nil {
 		return nil, e
 	}
+	e = ValidateScope(regInfo.scope)
+	if e != nil {
+		return artifact.GetAllRegistries400JSONResponse{
+			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
+				*GetErrorResponse(http.StatusBadRequest, e.Error()),
+			),
+		}, nil
+	}
 	e = ValidateRepoType(repoType)
 	if e != nil {
 		return nil, e
 	}
+
+	parentIDs := []int64{regInfo.ParentID}
+
+	if regInfo.recursive || regInfo.scope == string(artifact.Ancestors) {
+		parentIDs, err = c.SpaceStore.GetAncestorIDs(ctx, regInfo.ParentID)
+		if err != nil {
+			return artifact.GetAllRegistries500JSONResponse{
+				InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
+					*GetErrorResponse(http.StatusInternalServerError, err.Error()),
+				),
+			}, nil
+		}
+	}
+
+	if regInfo.scope == string(artifact.Descendants) {
+		parentIDs, err = c.SpaceStore.GetDescendantsIDs(ctx, regInfo.ParentID)
+		if err != nil {
+			return artifact.GetAllRegistries500JSONResponse{
+				InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
+					*GetErrorResponse(http.StatusInternalServerError, err.Error()),
+				),
+			}, nil
+		}
+	}
+
 	var count int64
 	repos, err = c.RegistryRepository.GetAll(
 		ctx,
-		regInfo.ParentID,
+		parentIDs,
 		regInfo.packageTypes,
 		regInfo.sortByField,
 		regInfo.sortByOrder,
@@ -104,11 +140,10 @@ func (c *APIController) GetAllRegistries(
 		regInfo.offset,
 		regInfo.searchTerm,
 		repoType,
-		regInfo.recursive,
 	)
 	count, _ = c.RegistryRepository.CountAll(
 		ctx,
-		regInfo.ParentID,
+		parentIDs,
 		regInfo.packageTypes,
 		regInfo.searchTerm,
 		repoType,
@@ -121,14 +156,14 @@ func (c *APIController) GetAllRegistries(
 		}, nil
 	}
 	return artifact.GetAllRegistries200JSONResponse{
-		ListRegistryResponseJSONResponse: *GetAllRegistryResponse(ctx,
+		ListRegistryResponseJSONResponse: *c.GetAllRegistryResponse(ctx,
 			repos, count, regInfo.pageNumber,
 			regInfo.limit, regInfo.RootIdentifier, c.URLProvider,
 		),
 	}, nil
 }
 
-func GetAllRegistryResponse(
+func (c *APIController) GetAllRegistryResponse(
 	ctx context.Context,
 	repos *[]store.RegistryMetadata,
 	count int64,
@@ -137,7 +172,7 @@ func GetAllRegistryResponse(
 	rootIdentifier string,
 	urlProvider url.Provider,
 ) *artifact.ListRegistryResponseJSONResponse {
-	repoMetadataList := GetRegistryMetadata(ctx, repos, rootIdentifier, urlProvider)
+	repoMetadataList := c.GetRegistryMetadata(ctx, repos, rootIdentifier, urlProvider)
 	pageCount := GetPageCount(count, pageSize)
 	listRepository := &artifact.ListRegistry{
 		ItemCount:  &count,
@@ -153,7 +188,7 @@ func GetAllRegistryResponse(
 	return response
 }
 
-func GetRegistryMetadata(
+func (c *APIController) GetRegistryMetadata(
 	ctx context.Context,
 	registryMetadatas *[]store.RegistryMetadata,
 	rootIdentifier string,
@@ -184,6 +219,8 @@ func GetRegistryMetadata(
 		if reg.PackageType == artifact.PackageTypeGENERIC {
 			regURL = urlProvider.RegistryURL(ctx, rootIdentifier, "generic", reg.RegIdentifier)
 		}
+
+		path := c.GetRegistryPath(ctx, reg.ParentID, reg.RegIdentifier)
 		// fix: refactor it
 		size := GetSize(reg.Size)
 		repoMetadata := artifact.RegistryMetadata{
@@ -197,8 +234,23 @@ func GetRegistryMetadata(
 			DownloadsCount: downloadCount,
 			RegistrySize:   &size,
 			Labels:         labels,
+			Path:           &path,
 		}
 		repoMetadataList = append(repoMetadataList, repoMetadata)
 	}
 	return repoMetadataList
+}
+
+func (c *APIController) GetRegistryPath(ctx context.Context, parentID int64, regIdentifier string) string {
+	if parentID != 0 {
+		space, err := c.SpaceFinder.FindByID(ctx, parentID)
+		if err != nil {
+			log.Ctx(ctx).Error().Msgf("Failed to find space by id %d: %s", parentID, err.Error())
+			return ""
+		}
+		if space != nil {
+			return path.Join(space.Path, regIdentifier)
+		}
+	}
+	return ""
 }

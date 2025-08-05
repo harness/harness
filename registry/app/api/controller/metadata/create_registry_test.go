@@ -271,6 +271,7 @@ func TestCreateRegistry(t *testing.T) {
 					nil,
 					nil,
 					nil,
+					nil,
 				)
 			},
 		},
@@ -343,6 +344,7 @@ func TestCreateRegistry(t *testing.T) {
 					nil,
 					mockRegFinder,
 					nil, // PostProcessingReporter - not needed for this test.
+					nil,
 					nil,
 					nil,
 					nil,
