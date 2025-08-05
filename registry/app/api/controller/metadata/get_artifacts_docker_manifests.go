@@ -159,6 +159,20 @@ func (c *APIController) getManifestDetails(
 	if mConfig != nil {
 		manifestDetails.OsArch = fmt.Sprintf("%s/%s", mConfig.Os, mConfig.Arch)
 	}
+
+	quarantinedArtifacts, err := c.QuarantineArtifactRepository.GetByFilePath(ctx, "",
+		m.RegistryID, image.Name, dgst.String())
+	if err != nil {
+		return artifact.DockerManifestDetails{}, err
+	}
+	if len(quarantinedArtifacts) > 0 {
+		isQuarantined := true
+		manifestDetails.IsQuarantined = &isQuarantined
+		manifestDetails.QuarantineReason = &quarantinedArtifacts[0].Reason
+	} else {
+		isQuarantined := false
+		manifestDetails.IsQuarantined = &isQuarantined
+	}
 	return manifestDetails, nil
 }
 

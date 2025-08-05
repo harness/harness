@@ -35,18 +35,19 @@ type Tag struct {
 }
 
 type ArtifactMetadata struct {
-	ID            int64
-	Name          string
-	RepoName      string
-	DownloadCount int64
-	PackageType   artifact.PackageType
-	Labels        []string
-	LatestVersion string
-	CreatedAt     time.Time
-	ModifiedAt    time.Time
-	Version       string
-	Metadata      json.RawMessage
-	IsQuarantined bool
+	ID               int64
+	Name             string
+	RepoName         string
+	DownloadCount    int64
+	PackageType      artifact.PackageType
+	Labels           []string
+	LatestVersion    string
+	CreatedAt        time.Time
+	ModifiedAt       time.Time
+	Version          string
+	Metadata         json.RawMessage
+	IsQuarantined    bool
+	QuarantineReason *string
 }
 
 type ImageMetadata struct {

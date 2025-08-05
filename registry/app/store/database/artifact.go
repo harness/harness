@@ -602,7 +602,7 @@ func (a ArtifactDao) GetArtifactsByRepo(
 		r.registry_package_type as package_type, a.artifact_version as latest_version, 
 		a.artifact_updated_at as modified_at, i.image_labels as labels, 
 		COALESCE(t2.download_count, 0) as download_count,
-		(qp.quarantined_path_id IS NOT NULL) AS is_quarantined`,
+        (qp.quarantined_path_id IS NOT NULL) AS is_quarantined`,
 	).
 		From("artifacts a").
 		Join(
@@ -828,7 +828,8 @@ func (a ArtifactDao) GetAllVersionsByRepoAndImage(
         a.artifact_metadata ->> 'size' AS size, 
         a.artifact_metadata ->> 'file_count' AS file_count,
         a.artifact_updated_at AS modified_at,
-        (qp.quarantined_path_id IS NOT NULL) AS is_quarantined`,
+        (qp.quarantined_path_id IS NOT NULL) AS is_quarantined,
+         qp.quarantined_path_reason as quarantined_reason`,
 		)
 
 	if a.db.DriverName() == SQLITE3 {
@@ -838,7 +839,8 @@ func (a ArtifactDao) GetAllVersionsByRepoAndImage(
         json_extract(a.artifact_metadata, '$.size') AS size,
         json_extract(a.artifact_metadata, '$.file_count') AS file_count,
         a.artifact_updated_at AS modified_at,
-        (qp.quarantined_path_id IS NOT NULL) AS is_quarantined`,
+        (qp.quarantined_path_id IS NOT NULL) AS is_quarantined,
+         qp.quarantined_path_reason as quarantine_reason`,
 		)
 	}
 
@@ -1106,17 +1108,18 @@ func (a ArtifactDao) mapToArtifactMetadata(
 	dst *artifactMetadataDB,
 ) (*types.ArtifactMetadata, error) {
 	artifactMetadata := &types.ArtifactMetadata{
-		ID:            dst.ID,
-		Name:          dst.Name,
-		RepoName:      dst.RepoName,
-		DownloadCount: dst.DownloadCount,
-		PackageType:   dst.PackageType,
-		LatestVersion: dst.LatestVersion,
-		Labels:        util.StringToArr(dst.Labels.String),
-		CreatedAt:     time.UnixMilli(dst.CreatedAt),
-		ModifiedAt:    time.UnixMilli(dst.ModifiedAt),
-		Version:       dst.Version,
-		IsQuarantined: dst.IsQuarantined,
+		ID:               dst.ID,
+		Name:             dst.Name,
+		RepoName:         dst.RepoName,
+		DownloadCount:    dst.DownloadCount,
+		PackageType:      dst.PackageType,
+		LatestVersion:    dst.LatestVersion,
+		Labels:           util.StringToArr(dst.Labels.String),
+		CreatedAt:        time.UnixMilli(dst.CreatedAt),
+		ModifiedAt:       time.UnixMilli(dst.ModifiedAt),
+		Version:          dst.Version,
+		IsQuarantined:    dst.IsQuarantined,
+		QuarantineReason: dst.QuarantineReason,
 	}
 	if dst.Metadata != nil {
 		artifactMetadata.Metadata = *dst.Metadata
@@ -1137,13 +1140,14 @@ func (a ArtifactDao) mapToNonOCIMetadata(
 		fileCount = *dst.FileCount
 	}
 	return &types.NonOCIArtifactMetadata{
-		Name:          dst.Name,
-		DownloadCount: dst.DownloadCount,
-		PackageType:   dst.PackageType,
-		Size:          size,
-		FileCount:     fileCount,
-		ModifiedAt:    time.UnixMilli(dst.ModifiedAt),
-		IsQuarantined: dst.IsQuarantined,
+		Name:             dst.Name,
+		DownloadCount:    dst.DownloadCount,
+		PackageType:      dst.PackageType,
+		Size:             size,
+		FileCount:        fileCount,
+		ModifiedAt:       time.UnixMilli(dst.ModifiedAt),
+		IsQuarantined:    dst.IsQuarantined,
+		QuarantineReason: dst.QuarantineReason,
 	}
 }
 
@@ -1159,14 +1163,15 @@ func (a ArtifactDao) mapToNonOCIMetadataList(
 }
 
 type nonOCIArtifactMetadataDB struct {
-	ID            string               `db:"id"`
-	Name          string               `db:"name"`
-	Size          *string              `db:"size"`
-	PackageType   artifact.PackageType `db:"package_type"`
-	FileCount     *int64               `db:"file_count"`
-	ModifiedAt    int64                `db:"modified_at"`
-	DownloadCount int64                `db:"download_count"`
-	IsQuarantined bool                 `db:"is_quarantined"`
+	ID               string               `db:"id"`
+	Name             string               `db:"name"`
+	Size             *string              `db:"size"`
+	PackageType      artifact.PackageType `db:"package_type"`
+	FileCount        *int64               `db:"file_count"`
+	ModifiedAt       int64                `db:"modified_at"`
+	DownloadCount    int64                `db:"download_count"`
+	IsQuarantined    bool                 `db:"is_quarantined"`
+	QuarantineReason *string              `db:"quarantine_reason"`
 }
 
 type downloadCountResult struct {

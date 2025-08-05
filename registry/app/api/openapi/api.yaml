@@ -2228,6 +2228,8 @@ components:
           type: string
         isQuarantined:
           type: boolean
+        quarantineReason:
+          type: string
         packageType:
           $ref: "#/components/schemas/PackageType"
         artifactType:
@@ -2295,6 +2297,8 @@ components:
           type: string
         isQuarantined:
           type: boolean
+        quarantineReason:
+          type: string
         packageType:
           $ref: "#/components/schemas/PackageType"
         artifactType:
@@ -2362,6 +2366,10 @@ components:
         modifiedAt:
           type: string
         createdBy:
+          type: string
+        isQuarantined:
+          type: boolean
+        quarantineReason:
           type: string
         packageType:
           $ref: "#/components/schemas/PackageType"
@@ -2627,6 +2635,10 @@ components:
           type: string
         modifiedAt:
           type: string
+        isQuarantined:
+          type: boolean
+        quarantineReason:
+          type: string
       required:
         - imageName
         - version
@@ -2767,6 +2779,10 @@ components:
         downloadsCount:
           type: integer
           format: int64
+        isQuarantined:
+          type: boolean
+        quarantineReason:
+          type: string
       required:
         - digest
         - layers

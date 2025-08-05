@@ -102,6 +102,7 @@ func mapToArtifactMetadata(
 		DownloadsCount:     &artifact.DownloadCount,
 		PullCommand:        &pullCommand,
 		IsQuarantined:      &artifact.IsQuarantined,
+		QuarantineReason:   artifact.QuarantineReason,
 	}
 }
 
@@ -467,14 +468,15 @@ func GetNonOCIArtifactMetadata(
 		}
 		fileCount := tag.FileCount
 		artifactVersionMetadata := &artifactapi.ArtifactVersionMetadata{
-			PackageType:    &packageType,
-			FileCount:      &fileCount,
-			Name:           tag.Name,
-			Size:           &size,
-			LastModified:   &modifiedAt,
-			PullCommand:    &command,
-			DownloadsCount: &downloadCount,
-			IsQuarantined:  &tag.IsQuarantined,
+			PackageType:      &packageType,
+			FileCount:        &fileCount,
+			Name:             tag.Name,
+			Size:             &size,
+			LastModified:     &modifiedAt,
+			PullCommand:      &command,
+			DownloadsCount:   &downloadCount,
+			IsQuarantined:    &tag.IsQuarantined,
+			QuarantineReason: tag.QuarantineReason,
 		}
 		artifactVersionMetadataList = append(artifactVersionMetadataList, *artifactVersionMetadata)
 	}
@@ -487,6 +489,8 @@ func GetDockerArtifactDetails(
 	manifest *types.Manifest,
 	registryURL string,
 	downloadCount int64,
+	isQuarantined bool,
+	quarantineReason *string,
 ) *artifactapi.DockerArtifactDetailResponseJSONResponse {
 	repoPath := getRepoPath(registry.Name, tag.ImageName, manifest.Digest.String())
 	pullCommand := GetDockerPullCommand(tag.ImageName, tag.Name, registryURL)
@@ -494,16 +498,18 @@ func GetDockerArtifactDetails(
 	modifiedAt := GetTimeInMs(tag.UpdatedAt)
 	size := GetSize(manifest.TotalSize)
 	artifactDetail := &artifactapi.DockerArtifactDetail{
-		ImageName:      tag.ImageName,
-		Version:        tag.Name,
-		PackageType:    registry.PackageType,
-		CreatedAt:      &createdAt,
-		ModifiedAt:     &modifiedAt,
-		RegistryPath:   repoPath,
-		PullCommand:    &pullCommand,
-		Url:            GetTagURL(tag.ImageName, tag.Name, registryURL),
-		Size:           &size,
-		DownloadsCount: &downloadCount,
+		ImageName:        tag.ImageName,
+		Version:          tag.Name,
+		PackageType:      registry.PackageType,
+		CreatedAt:        &createdAt,
+		ModifiedAt:       &modifiedAt,
+		RegistryPath:     repoPath,
+		PullCommand:      &pullCommand,
+		Url:              GetTagURL(tag.ImageName, tag.Name, registryURL),
+		Size:             &size,
+		DownloadsCount:   &downloadCount,
+		IsQuarantined:    &isQuarantined,
+		QuarantineReason: quarantineReason,
 	}
 
 	response := &artifactapi.DockerArtifactDetailResponseJSONResponse{

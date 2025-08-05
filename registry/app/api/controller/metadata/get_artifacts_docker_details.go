@@ -104,10 +104,22 @@ func (c *APIController) GetDockerArtifactDetails(
 		return getArtifactDetailsErrResponse(err)
 	}
 
+	quarantineArtifacts, err := c.QuarantineArtifactRepository.GetByFilePath(ctx, "",
+		regInfo.RegistryID, image, dgst.String())
+	if err != nil {
+		return getArtifactDetailsErrResponse(err)
+	}
+	var isQuarantined bool
+	var quarantineReason *string
+	if len(quarantineArtifacts) > 0 {
+		isQuarantined = true
+		quarantineReason = &quarantineArtifacts[0].Reason
+	}
+
 	return artifact.GetDockerArtifactDetails200JSONResponse{
 		DockerArtifactDetailResponseJSONResponse: *GetDockerArtifactDetails(
 			registry, tag, m, c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, registry.Name),
-			art.DownloadCount,
+			art.DownloadCount, isQuarantined, quarantineReason,
 		),
 	}, nil
 }

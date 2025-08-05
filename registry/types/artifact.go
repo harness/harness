@@ -35,12 +35,13 @@ type Artifact struct {
 }
 
 type NonOCIArtifactMetadata struct {
-	ID            string
-	Name          string
-	Size          string
-	PackageType   artifact.PackageType
-	FileCount     int64
-	ModifiedAt    time.Time
-	DownloadCount int64
-	IsQuarantined bool
+	ID               string
+	Name             string
+	Size             string
+	PackageType      artifact.PackageType
+	FileCount        int64
+	ModifiedAt       time.Time
+	DownloadCount    int64
+	IsQuarantined    bool
+	QuarantineReason *string
 }

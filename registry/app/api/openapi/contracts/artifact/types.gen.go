@@ -238,14 +238,16 @@ type ArtifactDetail struct {
 	CreatedAt     *string       `json:"createdAt,omitempty"`
 	CreatedBy     *string       `json:"createdBy,omitempty"`
 	DownloadCount *int64        `json:"downloadCount,omitempty"`
+	IsQuarantined *bool         `json:"isQuarantined,omitempty"`
 	ModifiedAt    *string       `json:"modifiedAt,omitempty"`
 	Name          *string       `json:"name,omitempty"`
 
 	// PackageType refers to package
-	PackageType PackageType `json:"packageType"`
-	Size        *string     `json:"size,omitempty"`
-	Version     string      `json:"version"`
-	union       json.RawMessage
+	PackageType      PackageType `json:"packageType"`
+	QuarantineReason *string     `json:"quarantineReason,omitempty"`
+	Size             *string     `json:"size,omitempty"`
+	Version          string      `json:"version"`
+	union            json.RawMessage
 }
 
 // ArtifactLabelRequest defines model for ArtifactLabelRequest.
@@ -266,6 +268,7 @@ type ArtifactMetadata struct {
 	// PackageType refers to package
 	PackageType        *PackageType `json:"packageType,omitempty"`
 	PullCommand        *string      `json:"pullCommand,omitempty"`
+	QuarantineReason   *string      `json:"quarantineReason,omitempty"`
 	RegistryIdentifier string       `json:"registryIdentifier"`
 	RegistryPath       string       `json:"registryPath"`
 	Version            *string      `json:"version,omitempty"`
@@ -310,6 +313,7 @@ type ArtifactVersionMetadata struct {
 	// PackageType refers to package
 	PackageType        *PackageType `json:"packageType,omitempty"`
 	PullCommand        *string      `json:"pullCommand,omitempty"`
+	QuarantineReason   *string      `json:"quarantineReason,omitempty"`
 	RegistryIdentifier string       `json:"registryIdentifier"`
 	RegistryPath       string       `json:"registryPath"`
 	Size               *string      `json:"size,omitempty"`
@@ -387,15 +391,17 @@ type DockerArtifactDetail struct {
 	CreatedAt      *string `json:"createdAt,omitempty"`
 	DownloadsCount *int64  `json:"downloadsCount,omitempty"`
 	ImageName      string  `json:"imageName"`
+	IsQuarantined  *bool   `json:"isQuarantined,omitempty"`
 	ModifiedAt     *string `json:"modifiedAt,omitempty"`
 
 	// PackageType refers to package
-	PackageType  PackageType `json:"packageType"`
-	PullCommand  *string     `json:"pullCommand,omitempty"`
-	RegistryPath string      `json:"registryPath"`
-	Size         *string     `json:"size,omitempty"`
-	Url          string      `json:"url"`
-	Version      string      `json:"version"`
+	PackageType      PackageType `json:"packageType"`
+	PullCommand      *string     `json:"pullCommand,omitempty"`
+	QuarantineReason *string     `json:"quarantineReason,omitempty"`
+	RegistryPath     string      `json:"registryPath"`
+	Size             *string     `json:"size,omitempty"`
+	Url              string      `json:"url"`
+	Version          string      `json:"version"`
 }
 
 // DockerArtifactDetailConfig Config for docker artifact details
@@ -423,11 +429,13 @@ type DockerLayersSummary struct {
 
 // DockerManifestDetails Harness Artifact Layers
 type DockerManifestDetails struct {
-	CreatedAt      *string `json:"createdAt,omitempty"`
-	Digest         string  `json:"digest"`
-	DownloadsCount *int64  `json:"downloadsCount,omitempty"`
-	OsArch         string  `json:"osArch"`
-	Size           *string `json:"size,omitempty"`
+	CreatedAt        *string `json:"createdAt,omitempty"`
+	Digest           string  `json:"digest"`
+	DownloadsCount   *int64  `json:"downloadsCount,omitempty"`
+	IsQuarantined    *bool   `json:"isQuarantined,omitempty"`
+	OsArch           string  `json:"osArch"`
+	QuarantineReason *string `json:"quarantineReason,omitempty"`
+	Size             *string `json:"size,omitempty"`
 }
 
 // DockerManifests Harness Manifests
@@ -2146,6 +2154,13 @@ func (t ArtifactDetail) MarshalJSON() ([]byte, error) {
 		}
 	}
 
+	if t.IsQuarantined != nil {
+		object["isQuarantined"], err = json.Marshal(t.IsQuarantined)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'isQuarantined': %w", err)
+		}
+	}
+
 	if t.ModifiedAt != nil {
 		object["modifiedAt"], err = json.Marshal(t.ModifiedAt)
 		if err != nil {
@@ -2163,6 +2178,13 @@ func (t ArtifactDetail) MarshalJSON() ([]byte, error) {
 	object["packageType"], err = json.Marshal(t.PackageType)
 	if err != nil {
 		return nil, fmt.Errorf("error marshaling 'packageType': %w", err)
+	}
+
+	if t.QuarantineReason != nil {
+		object["quarantineReason"], err = json.Marshal(t.QuarantineReason)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'quarantineReason': %w", err)
+		}
 	}
 
 	if t.Size != nil {
@@ -2220,6 +2242,13 @@ func (t *ArtifactDetail) UnmarshalJSON(b []byte) error {
 		}
 	}
 
+	if raw, found := object["isQuarantined"]; found {
+		err = json.Unmarshal(raw, &t.IsQuarantined)
+		if err != nil {
+			return fmt.Errorf("error reading 'isQuarantined': %w", err)
+		}
+	}
+
 	if raw, found := object["modifiedAt"]; found {
 		err = json.Unmarshal(raw, &t.ModifiedAt)
 		if err != nil {
@@ -2238,6 +2267,13 @@ func (t *ArtifactDetail) UnmarshalJSON(b []byte) error {
 		err = json.Unmarshal(raw, &t.PackageType)
 		if err != nil {
 			return fmt.Errorf("error reading 'packageType': %w", err)
+		}
+	}
+
+	if raw, found := object["quarantineReason"]; found {
+		err = json.Unmarshal(raw, &t.QuarantineReason)
+		if err != nil {
+			return fmt.Errorf("error reading 'quarantineReason': %w", err)
 		}
 	}
 

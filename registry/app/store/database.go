@@ -737,8 +737,8 @@ type QuarantineArtifactRepository interface {
 	GetByFilePath(
 		ctx context.Context, filePath string,
 		registryID int64,
-		version string,
 		artifact string,
+		version string,
 	) ([]*types.QuarantineArtifact, error)
 	DeleteByRegistryIDArtifactAndFilePath(
 		ctx context.Context, registryID int64,

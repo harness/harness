@@ -220,6 +220,22 @@ func (c *APIController) GetArtifactDetails(
 		}, nil
 	}
 
+	quarantinedArtifacts, err := c.QuarantineArtifactRepository.GetByFilePath(ctx, "", regInfo.RegistryID, image, version)
+	if err != nil {
+		return artifact.GetArtifactDetails500JSONResponse{
+			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
+				*GetErrorResponse(http.StatusInternalServerError, err.Error()),
+			),
+		}, nil
+	}
+	if len(quarantinedArtifacts) > 0 {
+		isQuarantined := true
+		artifactDetails.IsQuarantined = &isQuarantined
+		artifactDetails.QuarantineReason = &quarantinedArtifacts[0].Reason
+	} else {
+		isQuarantined := false
+		artifactDetails.IsQuarantined = &isQuarantined
+	}
 	return artifact.GetArtifactDetails200JSONResponse{
 		ArtifactDetailResponseJSONResponse: artifact.ArtifactDetailResponseJSONResponse{
 			Data:   artifactDetails,

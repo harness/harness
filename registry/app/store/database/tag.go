@@ -74,19 +74,20 @@ type tagDB struct {
 }
 
 type artifactMetadataDB struct {
-	ID            int64                `db:"artifact_id"`
-	Name          string               `db:"name"`
-	RepoName      string               `db:"repo_name"`
-	DownloadCount int64                `db:"download_count"`
-	PackageType   artifact.PackageType `db:"package_type"`
-	Labels        sql.NullString       `db:"labels"`
-	LatestVersion string               `db:"latest_version"`
-	CreatedAt     int64                `db:"created_at"`
-	ModifiedAt    int64                `db:"modified_at"`
-	Tag           *string              `db:"tag"`
-	Version       string               `db:"version"`
-	Metadata      *json.RawMessage     `db:"metadata"`
-	IsQuarantined bool                 `db:"is_quarantined"`
+	ID               int64                `db:"artifact_id"`
+	Name             string               `db:"name"`
+	RepoName         string               `db:"repo_name"`
+	DownloadCount    int64                `db:"download_count"`
+	PackageType      artifact.PackageType `db:"package_type"`
+	Labels           sql.NullString       `db:"labels"`
+	LatestVersion    string               `db:"latest_version"`
+	CreatedAt        int64                `db:"created_at"`
+	ModifiedAt       int64                `db:"modified_at"`
+	Tag              *string              `db:"tag"`
+	Version          string               `db:"version"`
+	Metadata         *json.RawMessage     `db:"metadata"`
+	IsQuarantined    bool                 `db:"is_quarantined"`
+	QuarantineReason *string              `db:"quarantine_reason"`
 }
 
 type tagMetadataDB struct {
@@ -414,7 +415,9 @@ func (t tagDao) GetAllArtifactsQueryByParentIDForOCI(
 		t.tag_name as version, 
 		t.tag_updated_at as modified_at, 
 		i.image_labels as labels, 
-		COALESCE(t2.download_count,0) as download_count `,
+		COALESCE(t2.download_count,0) as download_count,
+		false as is_quarantined,
+		'' as quarantine_reason `,
 	).
 		From("tags t").
 		Join("registries r ON t.tag_registry_id = r.registry_id").
@@ -471,7 +474,8 @@ func (t tagDao) GetAllArtifactOnParentIDQueryForNonOCI(
 		ar.artifact_updated_at as modified_at, 
 		i.image_labels as labels, 
 		COALESCE(t2.download_count, 0) as download_count,
-		(qp.quarantined_path_id IS NOT NULL) AS is_quarantined`,
+		(qp.quarantined_path_id IS NOT NULL) AS is_quarantined,
+	     qp.quarantined_path_reason as quarantine_reason`,
 	).
 		From("artifacts ar").
 		Join("images i ON i.image_id = ar.artifact_image_id").
@@ -1177,16 +1181,17 @@ func (t tagDao) mapToArtifactMetadata(
 		version = *dst.Tag
 	}
 	return &types.ArtifactMetadata{
-		Name:          dst.Name,
-		RepoName:      dst.RepoName,
-		DownloadCount: dst.DownloadCount,
-		PackageType:   dst.PackageType,
-		LatestVersion: dst.LatestVersion,
-		Labels:        util.StringToArr(dst.Labels.String),
-		CreatedAt:     time.UnixMilli(dst.CreatedAt),
-		ModifiedAt:    time.UnixMilli(dst.ModifiedAt),
-		Version:       version,
-		IsQuarantined: dst.IsQuarantined,
+		Name:             dst.Name,
+		RepoName:         dst.RepoName,
+		DownloadCount:    dst.DownloadCount,
+		PackageType:      dst.PackageType,
+		LatestVersion:    dst.LatestVersion,
+		Labels:           util.StringToArr(dst.Labels.String),
+		CreatedAt:        time.UnixMilli(dst.CreatedAt),
+		ModifiedAt:       time.UnixMilli(dst.ModifiedAt),
+		Version:          version,
+		IsQuarantined:    dst.IsQuarantined,
+		QuarantineReason: dst.QuarantineReason,
 	}, nil
 }
 
