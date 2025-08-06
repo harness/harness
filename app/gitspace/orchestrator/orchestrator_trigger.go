@@ -385,21 +385,8 @@ func (o Orchestrator) TriggerDeleteGitspace(
 		}
 	}
 
-	// If marked for reset, skip container removal and waiting
-	if gitspaceConfig.IsMarkedForReset && infra.ProviderType != enum.InfraProviderTypeDocker {
-		if err := o.triggerDeleteGitspace(ctx, gitspaceConfig, infra, canDeleteUserData); err != nil {
-			return &types.GitspaceError{
-				Error:        err,
-				ErrorMessage: ptr.String(err.Error()),
-			}
-		}
-		return nil
-	}
-
-	if err = o.removeGitspaceContainer(ctx, gitspaceConfig, *infra, canDeleteUserData); err != nil {
-		log.Warn().Msgf("error stopping and removing gitspace container: %v", err)
-		// If stop fails, delete the gitspace anyway
-		if err := o.triggerDeleteGitspace(ctx, gitspaceConfig, infra, canDeleteUserData); err != nil {
+	if infra.ProviderType == enum.InfraProviderTypeDocker {
+		if err = o.removeGitspaceContainer(ctx, gitspaceConfig, *infra, canDeleteUserData); err != nil {
 			return &types.GitspaceError{
 				Error:        err,
 				ErrorMessage: ptr.String(err.Error()),
@@ -407,17 +394,10 @@ func (o Orchestrator) TriggerDeleteGitspace(
 		}
 	}
 
-	// TODO: Add a job for cleanup of infra if stop fails
-	log.Warn().Msgf(
-		"Checking and force deleting the infra if required for gitspace instance %s",
-		gitspaceConfig.GitspaceInstance.Identifier,
-	)
-	if err = o.waitForGitspaceCleanupOrTimeout(ctx, gitspaceConfig, 15*time.Minute, 60*time.Second); err != nil {
-		if err := o.triggerDeleteGitspace(ctx, gitspaceConfig, infra, canDeleteUserData); err != nil {
-			return &types.GitspaceError{
-				Error:        err,
-				ErrorMessage: ptr.String(err.Error()),
-			}
+	if err := o.triggerDeleteGitspace(ctx, gitspaceConfig, infra, canDeleteUserData); err != nil {
+		return &types.GitspaceError{
+			Error:        err,
+			ErrorMessage: ptr.String(err.Error()),
 		}
 	}
 	return nil
@@ -450,41 +430,6 @@ func (o Orchestrator) triggerDeleteGitspace(
 		)
 	}
 	return nil
-}
-
-func (o Orchestrator) waitForGitspaceCleanupOrTimeout(
-	ctx context.Context,
-	gitspaceConfig types.GitspaceConfig,
-	timeoutDuration time.Duration,
-	tickInterval time.Duration,
-) error {
-	ticker := time.NewTicker(tickInterval)
-	defer ticker.Stop()
-
-	timeout := time.After(timeoutDuration)
-
-	for {
-		select {
-		case <-ticker.C:
-			instance, err := o.gitspaceInstanceStore.Find(ctx, gitspaceConfig.GitspaceInstance.ID)
-			if err != nil {
-				return fmt.Errorf(
-					"failed to find gitspace instance %s: %w",
-					gitspaceConfig.GitspaceInstance.Identifier,
-					err,
-				)
-			}
-			if instance.State == enum.GitspaceInstanceStateDeleted ||
-				instance.State == enum.GitspaceInstanceStateCleaned {
-				return nil
-			}
-		case <-timeout:
-			return fmt.Errorf(
-				"timeout waiting for gitspace cleanup for instance %s",
-				gitspaceConfig.GitspaceInstance.Identifier,
-			)
-		}
-	}
 }
 
 func (o Orchestrator) emitGitspaceEvent(
