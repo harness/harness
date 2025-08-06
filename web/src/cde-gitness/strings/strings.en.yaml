@@ -124,7 +124,7 @@ settings:
   other: Other
   regions:
     availableCloudRegions: Available Cloud Regions
-    availableCloudRegionsDesc: Customize which IDEs will be available while creating Gitspaces
+    availableCloudRegionsDesc: Customize which cloud regions will be available while creating Gitspaces
     regionsAvailable: regions available
     selectRegionsDesc: Select which regions and machines will be available to create a Gitspace
     region: Region
