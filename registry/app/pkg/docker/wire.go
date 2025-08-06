@@ -45,11 +45,12 @@ func LocalRegistryProvider(
 	tagDao store.TagRepository, imageDao store.ImageRepository, artifactDao store.ArtifactRepository,
 	bandwidthStatDao store.BandwidthStatRepository, downloadStatDao store.DownloadStatRepository,
 	gcService gc.Service, tx dbtx.Transactor, reporter event.Reporter,
+	quarantineArtifactDao store.QuarantineArtifactRepository,
 ) *LocalRegistry {
 	registry, ok := NewLocalRegistry(
 		app, ms, manifestDao, registryDao, registryBlobDao, blobRepo,
 		mtRepository, tagDao, imageDao, artifactDao, bandwidthStatDao, downloadStatDao,
-		gcService, tx, reporter,
+		gcService, tx, reporter, quarantineArtifactDao,
 	).(*LocalRegistry)
 	if !ok {
 		return nil
@@ -104,8 +105,10 @@ func DBStoreProvider(
 	artifactDao store.ArtifactRepository,
 	bandwidthStatDao store.BandwidthStatRepository,
 	downloadStatDao store.DownloadStatRepository,
+	manifestDao store.ManifestRepository,
+	quarantineDao store.QuarantineArtifactRepository,
 ) *DBStore {
-	return NewDBStore(blobRepo, imageDao, artifactDao, bandwidthStatDao, downloadStatDao)
+	return NewDBStore(blobRepo, imageDao, artifactDao, bandwidthStatDao, downloadStatDao, manifestDao, quarantineDao)
 }
 
 func StorageServiceProvider(cfg *types.Config, driver storagedriver.StorageDriver) *storage.Service {

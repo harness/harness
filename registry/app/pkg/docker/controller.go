@@ -54,10 +54,12 @@ type Controller struct {
 
 type DBStore struct {
 	BlobRepo         store.BlobRepository
+	ManifestDao      store.ManifestRepository
 	ImageDao         store.ImageRepository
 	ArtifactDao      store.ArtifactRepository
 	BandwidthStatDao store.BandwidthStatRepository
 	DownloadStatDao  store.DownloadStatRepository
+	QuarantineDao    store.QuarantineArtifactRepository
 }
 
 type TagsAPIResponse struct {
@@ -98,6 +100,8 @@ func NewDBStore(
 	artifactDao store.ArtifactRepository,
 	bandwidthStatDao store.BandwidthStatRepository,
 	downloadStatDao store.DownloadStatRepository,
+	manifestDao store.ManifestRepository,
+	quarantineDao store.QuarantineArtifactRepository,
 ) *DBStore {
 	return &DBStore{
 		BlobRepo:         blobRepo,
@@ -105,6 +109,8 @@ func NewDBStore(
 		ArtifactDao:      artifactDao,
 		BandwidthStatDao: bandwidthStatDao,
 		DownloadStatDao:  downloadStatDao,
+		ManifestDao:      manifestDao,
+		QuarantineDao:    quarantineDao,
 	}
 }
 
@@ -150,7 +156,11 @@ func (c *Controller) ProxyWrapper(
 	if response != nil && !pkg.IsEmpty(response.GetErrors()) {
 		switch resourceType {
 		case ResourceTypeManifest:
-			response.SetError(errcode.ErrCodeManifestUnknown)
+			if errors.Is(response.GetErrors()[0], errcode.ErrCodeManifestQuarantined) {
+				response.SetError(errcode.ErrCodeManifestQuarantined)
+			} else {
+				response.SetError(errcode.ErrCodeManifestUnknown)
+			}
 		case ResourceTypeBlob:
 			response.SetError(errcode.ErrCodeBlobUnknown)
 		default:

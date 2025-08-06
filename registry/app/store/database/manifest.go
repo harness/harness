@@ -535,6 +535,37 @@ func (dao manifestDao) FindManifestByTagName(
 	return dao.mapToManifest(dst)
 }
 
+// FindManifestDigestByTagName finds a manifest digest by tag name within a repository.
+func (dao manifestDao) FindManifestDigestByTagName(
+	ctx context.Context, regID int64,
+	imageName string, tag string,
+) (types.Digest, error) {
+	stmt := database.Builder.Select("manifest_digest").
+		From("manifests m").
+		Join("tags t ON t.tag_manifest_id = m.manifest_id").
+		Where(
+			"manifest_registry_id = ? AND manifest_image_name = ? AND t.tag_name = ?",
+			regID, imageName, tag,
+		)
+
+	toSQL, args, err := stmt.ToSql()
+	if err != nil {
+		return "", fmt.Errorf("failed to convert manifest digest query to sql: %w", err)
+	}
+
+	var manifestDigestBytes []byte
+	db := dbtx.GetAccessor(ctx, dao.sqlDB)
+
+	if err = db.GetContext(ctx, &manifestDigestBytes, toSQL, args...); err != nil {
+		err := database.ProcessSQLErrorf(ctx, err, "Failed to find manifest digest")
+		return "", err
+	}
+
+	// Convert byte digest to hex-encoded string
+	manifestDigest := types.Digest(util.GetHexEncodedString(manifestDigestBytes))
+	return manifestDigest, nil
+}
+
 func (dao manifestDao) GetManifestPayload(
 	ctx context.Context,
 	parentID int64,
@@ -646,7 +677,7 @@ func (dao manifestDao) ListManifestsBySubject(
 	dst := []*manifestMetadataDB{}
 	db := dbtx.GetAccessor(ctx, dao.sqlDB)
 
-	if err = db.SelectContext(ctx, dst, toSQL, args...); err != nil {
+	if err = db.SelectContext(ctx, &dst, toSQL, args...); err != nil {
 		err := database.ProcessSQLErrorf(ctx, err, "Failed to find manifest")
 		return nil, err
 	}

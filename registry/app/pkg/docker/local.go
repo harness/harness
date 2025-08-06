@@ -114,42 +114,45 @@ func NewLocalRegistry(
 	tagDao store.TagRepository, imageDao store.ImageRepository, artifactDao store.ArtifactRepository,
 	bandwidthStatDao store.BandwidthStatRepository, downloadStatDao store.DownloadStatRepository,
 	gcService gc.Service, tx dbtx.Transactor, reporter event.Reporter,
+	quarantineArtifactDao store.QuarantineArtifactRepository,
 ) Registry {
 	return &LocalRegistry{
-		App:              app,
-		ms:               ms,
-		registryDao:      registryDao,
-		manifestDao:      manifestDao,
-		registryBlobDao:  registryBlobDao,
-		blobRepo:         blobRepo,
-		mtRepository:     mtRepository,
-		tagDao:           tagDao,
-		imageDao:         imageDao,
-		artifactDao:      artifactDao,
-		bandwidthStatDao: bandwidthStatDao,
-		downloadStatDao:  downloadStatDao,
-		gcService:        gcService,
-		tx:               tx,
-		reporter:         reporter,
+		App:                   app,
+		ms:                    ms,
+		registryDao:           registryDao,
+		manifestDao:           manifestDao,
+		registryBlobDao:       registryBlobDao,
+		blobRepo:              blobRepo,
+		mtRepository:          mtRepository,
+		tagDao:                tagDao,
+		imageDao:              imageDao,
+		artifactDao:           artifactDao,
+		bandwidthStatDao:      bandwidthStatDao,
+		downloadStatDao:       downloadStatDao,
+		gcService:             gcService,
+		tx:                    tx,
+		reporter:              reporter,
+		quarantineArtifactDao: quarantineArtifactDao,
 	}
 }
 
 type LocalRegistry struct {
-	App              *App
-	ms               ManifestService
-	registryDao      store.RegistryRepository
-	manifestDao      store.ManifestRepository
-	registryBlobDao  store.RegistryBlobRepository
-	blobRepo         store.BlobRepository
-	mtRepository     store.MediaTypesRepository
-	tagDao           store.TagRepository
-	imageDao         store.ImageRepository
-	artifactDao      store.ArtifactRepository
-	bandwidthStatDao store.BandwidthStatRepository
-	downloadStatDao  store.DownloadStatRepository
-	gcService        gc.Service
-	tx               dbtx.Transactor
-	reporter         event.Reporter
+	App                   *App
+	ms                    ManifestService
+	registryDao           store.RegistryRepository
+	manifestDao           store.ManifestRepository
+	registryBlobDao       store.RegistryBlobRepository
+	blobRepo              store.BlobRepository
+	mtRepository          store.MediaTypesRepository
+	tagDao                store.TagRepository
+	imageDao              store.ImageRepository
+	artifactDao           store.ArtifactRepository
+	bandwidthStatDao      store.BandwidthStatRepository
+	downloadStatDao       store.DownloadStatRepository
+	gcService             gc.Service
+	tx                    dbtx.Transactor
+	reporter              event.Reporter
+	quarantineArtifactDao store.QuarantineArtifactRepository
 }
 
 func (r *LocalRegistry) Base() error {

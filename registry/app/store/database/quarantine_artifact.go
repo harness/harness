@@ -77,12 +77,12 @@ func (q QuarantineArtifactDao) GetByFilePath(ctx context.Context,
 	db := dbtx.GetAccessor(ctx, q.db)
 
 	dst := []*QuarantineArtifactDB{}
-	sql, args, err := stmtBuilder.ToSql()
+	sqlQuery, args, err := stmtBuilder.ToSql()
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to convert query to sql")
 	}
 
-	if err := db.SelectContext(ctx, &dst, sql, args...); err != nil {
+	if err := db.SelectContext(ctx, &dst, sqlQuery, args...); err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to find quarantine artifacts with the provided criteria")
 	}
 

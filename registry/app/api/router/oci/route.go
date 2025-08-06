@@ -89,6 +89,7 @@ func NewOCIHandler(handlerV2 *oci.Handler) RegistryOCIHandler {
 			r.Use(middleware.BlockNonOciSourceToken(handlerV2.URLProvider))
 			r.Use(middleware.TrackDownloadStat(handlerV2))
 			r.Use(middleware.TrackBandwidthStat(handlerV2))
+			r.Use(middleware.CheckQuarantineStatusOCI(handlerV2))
 
 			r.Handle("/*", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 				path := req.URL.Path

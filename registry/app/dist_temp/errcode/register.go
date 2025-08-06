@@ -238,6 +238,17 @@ var (
 		},
 	)
 
+	// ErrCodeManifestQuarantined returned when image manifest is quarantined.
+	ErrCodeManifestQuarantined = register(
+		errGroup, ErrorDescriptor{
+			Value:   "ARTIFACT_QUARANTINED",
+			Message: "artifact quarantined",
+			Description: `This error is returned when the manifest, identified by
+		name or tag is quarantined`,
+			HTTPStatusCode: http.StatusForbidden,
+		},
+	)
+
 	// ErrCodeManifestReferencedInList is returned when attempting to delete a manifest that is still referenced by at
 	// least one manifest list.
 	ErrCodeManifestReferencedInList = register(

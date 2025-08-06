@@ -122,6 +122,11 @@ type ManifestRepository interface {
 		imageName string,
 		digest types.Digest,
 	) (*types.Payload, error)
+
+	FindManifestDigestByTagName(
+		ctx context.Context, regID int64,
+		imageName string, tag string,
+	) (types.Digest, error)
 	Get(ctx context.Context, manifestID int64) (*types.Manifest, error)
 	DeleteManifest(
 		ctx context.Context, repoID int64,
