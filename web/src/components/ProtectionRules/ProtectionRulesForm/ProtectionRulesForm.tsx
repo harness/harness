@@ -644,8 +644,7 @@ const ProtectionRulesForm = (props: {
                     setSearchStatusTerm={setSearchStatusTerm}
                     defaultReviewerProps={{
                       setSearchTerm,
-                      userPrincipalOptions,
-                      settingSectionMode
+                      userPrincipalOptions
                     }}
                   />
                 ) : (

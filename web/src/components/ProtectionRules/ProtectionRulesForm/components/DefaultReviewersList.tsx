@@ -23,8 +23,8 @@ import { Color, FontVariation } from '@harnessio/design-system'
 import css from '../ProtectionRulesForm.module.scss'
 
 const DefaultReviewersList = (props: {
-  defaultReviewersList?: string[] // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setFieldValue: (field: string, value: any, shouldValidate?: boolean) => void
+  defaultReviewersList?: string[]
 }) => {
   const { defaultReviewersList, setFieldValue } = props
 

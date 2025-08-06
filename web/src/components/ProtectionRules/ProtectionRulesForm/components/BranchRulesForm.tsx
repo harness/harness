@@ -22,7 +22,7 @@ import { Color, FontVariation } from '@harnessio/design-system'
 import type { FormikProps } from 'formik'
 import { Classes, Popover, PopoverInteractionKind, PopoverPosition } from '@blueprintjs/core'
 import { useStrings } from 'framework/strings'
-import { ProtectionRulesType, type SettingTypeMode } from 'utils/GitUtils'
+import { ProtectionRulesType } from 'utils/GitUtils'
 import type { RulesFormPayload } from 'components/ProtectionRules/ProtectionRulesUtils'
 import DefaultReviewersSection from './DefaultReviewersSection'
 import css from '../ProtectionRulesForm.module.scss'
@@ -34,7 +34,6 @@ const BranchRulesForm = (props: {
   defaultReviewerProps: {
     setSearchTerm: React.Dispatch<React.SetStateAction<string>>
     userPrincipalOptions: SelectOption[]
-    settingSectionMode: SettingTypeMode
   }
 }) => {
   const { formik, defaultReviewerProps, setSearchStatusTerm, statusOptions } = props
@@ -163,6 +162,7 @@ const BranchRulesForm = (props: {
       {requireMinReviewers && (
         <Container padding={{ left: 'xlarge', top: 'medium' }}>
           <FormInput.Text
+            inputGroup={{ type: 'number' }}
             className={cx(css.widthContainer, css.minText)}
             name={'minReviewers'}
             placeholder={getString('protectionRules.minNumberPlaceholder')}

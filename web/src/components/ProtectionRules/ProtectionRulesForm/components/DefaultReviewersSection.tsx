@@ -21,7 +21,6 @@ import { Color } from '@harnessio/design-system'
 import type { FormikProps } from 'formik'
 import { Render } from 'react-jsx-match'
 import { useStrings } from 'framework/strings'
-import { SettingTypeMode } from 'utils/GitUtils'
 import type { RulesFormPayload } from 'components/ProtectionRules/ProtectionRulesUtils'
 import DefaultReviewersList from './DefaultReviewersList'
 import css from '../ProtectionRulesForm.module.scss'
@@ -31,34 +30,27 @@ const DefaultReviewersSection = (props: {
   defaultReviewerProps: {
     setSearchTerm: React.Dispatch<React.SetStateAction<string>>
     userPrincipalOptions: SelectOption[]
-    settingSectionMode: SettingTypeMode
   }
 }) => {
   const { formik, defaultReviewerProps } = props
-  const { settingSectionMode, userPrincipalOptions, setSearchTerm } = defaultReviewerProps
+  const { userPrincipalOptions, setSearchTerm } = defaultReviewerProps
   const { getString } = useStrings()
   const setFieldValue = formik.setFieldValue
-  const {
-    defaultReviewersEnabled,
-    defaultReviewersList: formikDefaultReviewersList,
-    defaultReviewersSet,
-    minDefaultReviewers,
-    requireMinDefaultReviewers
-  } = formik.values
+  const { defaultReviewersEnabled, defaultReviewersList, minDefaultReviewers, requireMinDefaultReviewers } =
+    formik.values
   const { defaultReviewersList: formikDefaultReviewersListError } = formik.errors
 
-  const defaultReviewersList = useMemo(
-    () => (settingSectionMode === SettingTypeMode.EDIT || defaultReviewersSet ? formikDefaultReviewersList : []),
-    [settingSectionMode, defaultReviewersSet, formikDefaultReviewersList]
+  const defaultReviewerIds = useMemo(
+    () => new Set((defaultReviewersList || []).map((user: string) => user.split(' ')[0])),
+    [defaultReviewersList]
   )
 
   const filteredPrincipalOptions = useMemo(() => {
-    const defaultReviewerIds = new Set((defaultReviewersList || []).map((user: string) => user.split(' ')[0]))
     return userPrincipalOptions.filter((user: SelectOption) => {
       const id = user.value.toString().split(' ')[0]
       return !defaultReviewerIds.has(id)
     })
-  }, [userPrincipalOptions, defaultReviewersList])
+  }, [userPrincipalOptions, defaultReviewerIds])
 
   const defReviewerWarning = useMemo(() => {
     const minReviewers = Number(minDefaultReviewers)
@@ -111,9 +103,8 @@ const DefaultReviewersSection = (props: {
               const id = item.value?.toString().split(' ')[0]
               const displayName = item.label
               const defaultReviewerEntry = `${id} ${displayName}`
-              defaultReviewersList?.push(defaultReviewerEntry)
-              const uniqueArr = Array.from(new Set(defaultReviewersList))
-              setFieldValue('defaultReviewersList', uniqueArr)
+              const newList = [...(defaultReviewersList || []), defaultReviewerEntry]
+              setFieldValue('defaultReviewersList', newList)
               setFieldValue('defaultReviewersSet', true)
             }}
             name={'defaultReviewerSelect'}
@@ -148,6 +139,7 @@ const DefaultReviewersSection = (props: {
           {requireMinDefaultReviewers && (
             <Container padding={{ left: 'xlarge', top: 'medium' }}>
               <FormInput.Text
+                inputGroup={{ type: 'number' }}
                 className={cx(css.widthContainer, css.minText)}
                 name={'minDefaultReviewers'}
                 placeholder={getString('protectionRules.minNumberPlaceholder')}
