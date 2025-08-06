@@ -171,7 +171,7 @@ export const CDECreateGitspace = ({ gitspaceSettings }: CDECreateGitspaceProps) 
       setrepoURLviaQueryParam(prv => {
         return {
           ...prv,
-          name: '',
+          name: prv.name,
           identifier: '',
           branch: queryParamBranch,
           codeRepoURL,
@@ -294,7 +294,7 @@ export const CDECreateGitspace = ({ gitspaceSettings }: CDECreateGitspaceProps) 
                                   code_repo_url: undefined,
                                   branch: undefined,
                                   identifier: undefined,
-                                  name: undefined,
+                                  name: prvValues.name,
                                   code_repo_type: item.value
                                 }
                               })

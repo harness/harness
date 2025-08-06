@@ -124,7 +124,7 @@ export const RenderGitspaceName: Renderer<
   const ideItem = getIDEOption(ide, getString)
   return standalone ? (
     <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'start' }}>
-      <img src={ideItem?.icon} height={20} width={20} />
+      <img src={ideItem?.icon} height={20} width={20} style={{ marginRight: '2px' }} />
       <Text
         lineClamp={1}
         color={Color.BLACK}
@@ -136,7 +136,7 @@ export const RenderGitspaceName: Renderer<
   ) : (
     <Layout.Vertical spacing={'medium'} className={css.gitspaceIdContainer}>
       <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'start' }}>
-        <img src={ideItem?.icon} height={20} width={20} />
+        <img src={ideItem?.icon} height={20} width={20} style={{ marginRight: '2px' }} />
         <Text
           width="90%"
           lineClamp={1}
@@ -147,7 +147,7 @@ export const RenderGitspaceName: Renderer<
         </Text>
       </Layout.Horizontal>
       <Layout.Horizontal spacing={'xsmall'} flex={{ alignItems: 'center', justifyContent: 'start' }}>
-        <Text font={{ size: 'small' }}>
+        <Text font={{ size: 'small' }} lineClamp={1}>
           {getString('cde.id')}: {identifier}
         </Text>
         <CopyButton value={identifier} className={css.copyBtn} />

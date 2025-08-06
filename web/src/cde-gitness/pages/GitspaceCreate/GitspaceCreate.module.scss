@@ -21,8 +21,10 @@
   margin-top: 4% !important;
 
   .titleContainer {
-    width: 50%;
+    width: 72.2%;
     margin-bottom: var(--spacing-medium) !important;
+    align-self: flex-start;
+    padding-left: calc((100% - 72.2%) / 2);
 
     h2 {
       font-size: 24px !important;

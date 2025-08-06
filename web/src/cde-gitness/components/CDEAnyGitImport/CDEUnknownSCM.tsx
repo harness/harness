@@ -82,7 +82,7 @@ export const CDEUnknownSCM = () => {
                 code_repo_url: response.url,
                 branch: undefined,
                 identifier: undefined,
-                name: undefined,
+                name: prvValues.name,
                 code_repo_type: values?.code_repo_type
               }
             })
@@ -97,7 +97,7 @@ export const CDEUnknownSCM = () => {
                 code_repo_url: response.url,
                 ...branchValue,
                 identifier: getRepoIdFromURL(response.url),
-                name: '',
+                name: prvValues.name,
                 code_repo_type: values?.code_repo_type
               }
             })

@@ -182,7 +182,7 @@ export const CDEAnyGitImport = () => {
                 code_repo_url: response.url,
                 ...branchValue,
                 identifier: getRepoIdFromURL(response.url),
-                name: '',
+                name: prvValues.name,
                 code_repo_type: values?.code_repo_type
               }
             })
@@ -209,7 +209,7 @@ export const CDEAnyGitImport = () => {
                 code_repo_url: url,
                 ...branchValue,
                 identifier: getRepoIdFromURL(url),
-                name: '',
+                name: prvValues.name,
                 code_repo_type: values?.code_repo_type
               }
             })
@@ -308,7 +308,7 @@ export const CDEAnyGitImport = () => {
                                 code_repo_url: data,
                                 branch: item.default_branch,
                                 identifier: getRepoIdFromURL(item.name),
-                                name: '',
+                                name: prvValues.name,
                                 code_repo_type: values?.code_repo_type
                               }
                             })
@@ -321,7 +321,7 @@ export const CDEAnyGitImport = () => {
                                 code_repo_url: item.clone_url,
                                 branch: item.default_branch,
                                 identifier: getRepoIdFromURL(item.clone_url),
-                                name: '',
+                                name: prvValues.name,
                                 code_repo_type: values?.code_repo_type
                               }
                             })
