@@ -21,6 +21,7 @@ import { type ArtifactDetail, useGetArtifactDetailsQuery } from '@harnessio/reac
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import { useDecodedParams, useGetSpaceRef } from '@ar/hooks'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
+import { LocalArtifactType } from '@ar/pages/repository-details/constants'
 
 interface VersionOverviewProviderProps<T = ArtifactDetail> {
   data: T
@@ -49,7 +50,9 @@ const VersionOverviewProvider = (props: PropsWithChildren<unknown>) => {
     registry_ref: spaceRef,
     artifact: encodeRef(pathParams.artifactIdentifier),
     version: pathParams.versionIdentifier,
-    queryParams: {}
+    queryParams: {
+      artifact_type: pathParams.artifactType === LocalArtifactType.ARTIFACTS ? undefined : pathParams.artifactType
+    }
   })
   const responseData = data?.content?.data
 

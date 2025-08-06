@@ -16,7 +16,7 @@
 
 import { Intent } from '@blueprintjs/core'
 import { getErrorInfoFromErrorObject, useToaster } from '@harnessio/uicore'
-import { useDeleteArtifactVersionMutation } from '@harnessio/react-har-service-client'
+import { ArtifactType, useDeleteArtifactVersionMutation } from '@harnessio/react-har-service-client'
 
 import { useGetSpaceRef, useParentHooks } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
@@ -26,10 +26,11 @@ interface useDeleteVersionModalProps {
   repoKey: string
   artifactKey: string
   versionKey: string
+  artifactType?: ArtifactType
   onSuccess: () => void
 }
 export default function useDeleteVersionModal(props: useDeleteVersionModalProps) {
-  const { repoKey, onSuccess, artifactKey, versionKey } = props
+  const { repoKey, onSuccess, artifactKey, versionKey, artifactType } = props
   const { getString } = useStrings()
   const { showSuccess, showError, clear } = useToaster()
   const { useConfirmationDialog } = useParentHooks()
@@ -43,7 +44,10 @@ export default function useDeleteVersionModal(props: useDeleteVersionModalProps)
         const response = await deleteVersion({
           registry_ref: spaceRef,
           artifact: encodeRef(artifactKey),
-          version: versionKey
+          version: versionKey,
+          queryParams: {
+            artifact_type: artifactType
+          }
         })
         if (response.content.status === 'SUCCESS') {
           clear()

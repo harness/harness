@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
+import type { ArtifactType } from '@harnessio/react-har-service-client'
 import type { RepositoryPackageType } from '@ar/common/types'
 import type { ManageRegistriesDetailsTab } from '@ar/pages/manage-registries/constants'
-import type { RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
+import type { LocalArtifactType, RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
 import type { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
 import type { WebhookDetailsTab } from '@ar/pages/webhook-details/constants'
 
@@ -34,6 +35,7 @@ export interface RepositoryDetailsTabPathParams extends RepositoryDetailsPathPar
 
 export interface ArtifactDetailsPathParams extends RepositoryDetailsPathParams {
   artifactIdentifier: string
+  artifactType: LocalArtifactType
 }
 
 export interface VersionDetailsPathParams extends ArtifactDetailsPathParams {
@@ -59,6 +61,7 @@ export interface RedirectPageQueryParams {
   artifactId?: string
   versionId?: string
   versionDetailsTab?: VersionDetailsTab
+  artifactType?: ArtifactType
 }
 
 export interface RepositoryWebhookDetailsPathParams extends RepositoryDetailsPathParams {

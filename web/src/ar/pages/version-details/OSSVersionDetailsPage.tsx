@@ -36,7 +36,8 @@ export default function OSSVersionDetailsPage() {
     history.push(
       routes.toARArtifactDetails({
         repositoryIdentifier: pathParams.repositoryIdentifier,
-        artifactIdentifier: pathParams.artifactIdentifier
+        artifactIdentifier: pathParams.artifactIdentifier,
+        artifactType: pathParams.artifactType
       })
     )
   }

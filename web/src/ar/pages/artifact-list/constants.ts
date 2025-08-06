@@ -14,7 +14,16 @@
  * limitations under the License.
  */
 
+import type { ArtifactType } from '@harnessio/react-har-service-client'
+
+import { RepositoryDetailsTab } from '../repository-details/constants'
+
 export enum ArtifactListVersionFilter {
   LATEST_VERSION = 'latest_version',
   ALL_VERSION = 'all_version'
+}
+
+export const RepositoryTabToArtifactTypeMap: Partial<Record<RepositoryDetailsTab, ArtifactType>> = {
+  [RepositoryDetailsTab.DATASETS]: 'DATASET',
+  [RepositoryDetailsTab.MODELS]: 'MODEL'
 }

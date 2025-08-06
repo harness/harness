@@ -93,7 +93,7 @@ describe('Verify GenericVersionHeader component render', () => {
 
   test('verify version selector: Success Case', async () => {
     const { container } = render(
-      <ArTestWrapper>
+      <ArTestWrapper path="/registries/:artifactType/versions" pathParams={{ artifactType: 'artifacts' }}>
         <VersionDetailsPage />
       </ArTestWrapper>
     )

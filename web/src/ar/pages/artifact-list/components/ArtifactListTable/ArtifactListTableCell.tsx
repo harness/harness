@@ -33,6 +33,7 @@ import { useGetRepositoryTypes } from '@ar/hooks/useGetRepositoryTypes'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import VersionActionsWidget from '@ar/frameworks/Version/VersionActionsWidget'
 import { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
+import { LocalArtifactType } from '@ar/pages/repository-details/constants'
 
 type CellTypeWithActions<D extends Record<string, any>, V = any> = TableInstance<D> & {
   column: ColumnInstance<D>
@@ -80,7 +81,7 @@ export const ArtifactNameCell: Renderer<{
   const { original } = row
   const { onClickLabel } = column
   const routes = useRoutes()
-  const { name: value, version, packageType, registryIdentifier } = original
+  const { name: value, version, packageType, registryIdentifier, artifactType } = original
   return (
     <Layout.Vertical>
       <TableCells.LinkCell
@@ -90,7 +91,8 @@ export const ArtifactNameCell: Renderer<{
           registryId: registryIdentifier,
           artifactId: value,
           versionId: version,
-          versionDetailsTab: VersionDetailsTab.OVERVIEW
+          versionDetailsTab: VersionDetailsTab.OVERVIEW,
+          artifactType
         })}
         label={value}
         subLabel={version}
@@ -140,7 +142,7 @@ export const ArtifactDeploymentsCell: CellType = ({ row }) => {
 export const ArtifactListPullCommandCell: CellType = ({ value, row }) => {
   const { original } = row
   const routes = useRoutes()
-  const { packageType } = original
+  const { packageType, artifactType } = original
   const { getString } = useStrings()
   switch (packageType) {
     case RepositoryPackageType.MAVEN:
@@ -151,7 +153,8 @@ export const ArtifactListPullCommandCell: CellType = ({ value, row }) => {
             repositoryIdentifier: original.registryIdentifier,
             artifactIdentifier: original.name,
             versionIdentifier: original.version as string,
-            versionTab: VersionDetailsTab.ARTIFACT_DETAILS
+            versionTab: VersionDetailsTab.ARTIFACT_DETAILS,
+            artifactType: (artifactType ?? LocalArtifactType.ARTIFACTS) as LocalArtifactType
           })}
           label={getString('artifactList.viewArtifactDetails')}
         />
@@ -164,13 +167,14 @@ export const ArtifactListPullCommandCell: CellType = ({ value, row }) => {
 export const ScanStatusCell: CellType = ({ row }) => {
   const { original } = row
   const router = useRoutes()
-  const { version = '', name, registryIdentifier } = original
+  const { version = '', name, registryIdentifier, artifactType } = original
   const { getString } = useStrings()
   const linkTo = router.toARVersionDetailsTab({
     repositoryIdentifier: registryIdentifier,
     artifactIdentifier: name,
     versionIdentifier: version,
-    versionTab: VersionDetailsTab.OVERVIEW
+    versionTab: VersionDetailsTab.OVERVIEW,
+    artifactType: (artifactType ?? LocalArtifactType.ARTIFACTS) as LocalArtifactType
   })
   return (
     <Link to={linkTo} target="_blank">

@@ -24,6 +24,7 @@ import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import { useQueryParams } from 'hooks/useQueryParams'
 
 import type { DockerRedirectPageQueryParams } from './types'
+import { LocalArtifactType } from '../../constants'
 
 export default function DockerRedirectPage() {
   const { registryId, artifactId, versionId, digest, versionDetailsTab } =
@@ -61,7 +62,8 @@ export default function DockerRedirectPage() {
         repositoryIdentifier: registryId,
         artifactIdentifier: artifactId,
         versionIdentifier: versionId,
-        versionTab: versionDetailsTab
+        versionTab: versionDetailsTab,
+        artifactType: LocalArtifactType.ARTIFACTS
       })
       return `${url}?digest=${defaultDigest}`
     }
@@ -70,14 +72,16 @@ export default function DockerRedirectPage() {
       const url = routes.toARVersionDetails({
         repositoryIdentifier: registryId,
         artifactIdentifier: artifactId,
-        versionIdentifier: versionId
+        versionIdentifier: versionId,
+        artifactType: LocalArtifactType.ARTIFACTS
       })
       return `${url}?digest=${defaultDigest}`
     }
     if (registryId && artifactId) {
       return routes.toARArtifactDetails({
         repositoryIdentifier: registryId,
-        artifactIdentifier: artifactId
+        artifactIdentifier: artifactId,
+        artifactType: LocalArtifactType.ARTIFACTS
       })
     }
     if (registryId) {

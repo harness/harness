@@ -21,14 +21,14 @@ import { useRoutes } from '@ar/hooks'
 import { PageType } from '@ar/common/types'
 import type { ArtifactDetailsPathParams } from '@ar/routes/types'
 import { encodeRef, useGetSpaceRef } from '@ar/hooks/useGetSpaceRef'
-import { RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
+import { LocalArtifactType, RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
 import { queryClient } from '@ar/utils/queryClient'
 
 export function useUtilsForDeleteVersion() {
   const routes = useRoutes()
   const history = useHistory()
   const registryRef = useGetSpaceRef()
-  const { repositoryIdentifier, artifactIdentifier } = useParams<ArtifactDetailsPathParams>()
+  const { repositoryIdentifier, artifactIdentifier, artifactType } = useParams<ArtifactDetailsPathParams>()
 
   async function handleRedirectToVersionListURL(): Promise<void> {
     try {
@@ -43,7 +43,8 @@ export function useUtilsForDeleteVersion() {
       history.push(
         routes.toARArtifactDetails({
           repositoryIdentifier,
-          artifactIdentifier
+          artifactIdentifier,
+          artifactType: artifactType ?? LocalArtifactType.ARTIFACTS
         })
       )
     } catch (e) {

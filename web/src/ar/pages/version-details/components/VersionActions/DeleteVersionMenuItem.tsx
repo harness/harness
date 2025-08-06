@@ -25,7 +25,7 @@ import useDeleteVersionModal from '../../hooks/useDeleteVersionModal'
 import { useUtilsForDeleteVersion } from '../../hooks/useUtilsForDeleteVersion'
 
 export default function DeleteVersionMenuItem(props: VersionActionProps): JSX.Element {
-  const { artifactKey, repoKey, readonly, onClose, versionKey, pageType } = props
+  const { artifactKey, repoKey, readonly, onClose, versionKey, pageType, data } = props
   const { getString } = useStrings()
   const { RbacMenuItem } = useParentComponents()
 
@@ -40,6 +40,7 @@ export default function DeleteVersionMenuItem(props: VersionActionProps): JSX.El
     artifactKey,
     repoKey,
     versionKey,
+    artifactType: data?.artifactType,
     onSuccess: handleAfterDeleteVersion
   })
 

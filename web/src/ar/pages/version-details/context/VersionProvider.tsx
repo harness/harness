@@ -20,6 +20,7 @@ import { ArtifactVersionSummary, useGetArtifactVersionSummaryQuery } from '@harn
 
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
+import { LocalArtifactType } from '@ar/pages/repository-details/constants'
 import { useDecodedParams, useGetSpaceRef, useParentHooks } from '@ar/hooks'
 
 import type { DockerVersionDetailsQueryParams } from '../DockerVersion/types'
@@ -46,7 +47,8 @@ const VersionProvider: FC<PropsWithChildren<VersionProviderSpcs>> = ({
 }): JSX.Element => {
   const { useQueryParams } = useParentHooks()
   const { digest } = useQueryParams<DockerVersionDetailsQueryParams>()
-  const { repositoryIdentifier, artifactIdentifier, versionIdentifier } = useDecodedParams<VersionDetailsPathParams>()
+  const { repositoryIdentifier, artifactIdentifier, versionIdentifier, artifactType } =
+    useDecodedParams<VersionDetailsPathParams>()
 
   const spaceRef = useGetSpaceRef(repoKey ?? repositoryIdentifier)
   const {
@@ -59,7 +61,8 @@ const VersionProvider: FC<PropsWithChildren<VersionProviderSpcs>> = ({
     artifact: encodeRef(artifactKey ?? artifactIdentifier),
     version: versionKey ?? versionIdentifier,
     queryParams: {
-      digest
+      digest,
+      artifact_type: artifactType === LocalArtifactType.ARTIFACTS ? undefined : artifactType
     }
   })
 

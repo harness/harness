@@ -26,6 +26,7 @@ import {
   type ArtifactFileListPageQueryParams,
   useArtifactFileListQueryParamOptions
 } from '@ar/pages/version-details/components/ArtifactFileListTable/utils'
+import { LocalArtifactType } from '@ar/pages/repository-details/constants'
 import ArtifactFileListTable from '@ar/pages/version-details/components/ArtifactFileListTable/ArtifactFileListTable'
 import versionDetailsPageCss from '../../styles.module.scss'
 
@@ -54,7 +55,8 @@ export default function GenericArtifactDetailsPage() {
       page,
       size,
       sort_field: sortField,
-      sort_order: sortOrder
+      sort_order: sortOrder,
+      artifact_type: pathParams.artifactType === LocalArtifactType.ARTIFACTS ? undefined : pathParams.artifactType
     }
   })
   const response = data?.content

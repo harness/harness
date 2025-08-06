@@ -46,7 +46,8 @@ export default function VersionDetailsHeaderContent(props: VersionDetailsHeaderC
       routes.toARVersionDetails({
         repositoryIdentifier: pathParams.repositoryIdentifier,
         artifactIdentifier: pathParams.artifactIdentifier,
-        versionIdentifier: newVersion
+        versionIdentifier: newVersion,
+        artifactType: pathParams.artifactType
       })
     )
   }

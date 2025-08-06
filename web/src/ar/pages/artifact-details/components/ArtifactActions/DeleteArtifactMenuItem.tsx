@@ -20,14 +20,13 @@ import { useHistory } from 'react-router-dom'
 import { useStrings } from '@ar/frameworks/strings'
 import { queryClient } from '@ar/utils/queryClient'
 import { useParentComponents, useRoutes } from '@ar/hooks'
-import { RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
 import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
 
 import type { ArtifactActionProps } from './types'
 import useDeleteArtifactModal from '../../hooks/useDeleteArtifactModal/useDeleteArtifactModal'
 
 export default function DeleteArtifactMenuItem(props: ArtifactActionProps): JSX.Element {
-  const { artifactKey, repoKey, readonly, onClose } = props
+  const { artifactKey, repoKey, readonly, onClose, data } = props
   const { getString } = useStrings()
   const { RbacMenuItem } = useParentComponents()
   const history = useHistory()
@@ -37,9 +36,8 @@ export default function DeleteArtifactMenuItem(props: ArtifactActionProps): JSX.
     onClose?.()
     queryClient.invalidateQueries(['GetAllArtifactsByRegistry'])
     history.push(
-      routes.toARRepositoryDetailsTab({
-        repositoryIdentifier: repoKey,
-        tab: RepositoryDetailsTab.PACKAGES
+      routes.toARRepositoryDetails({
+        repositoryIdentifier: repoKey
       })
     )
   }
@@ -47,7 +45,8 @@ export default function DeleteArtifactMenuItem(props: ArtifactActionProps): JSX.
   const { triggerDelete } = useDeleteArtifactModal({
     artifactKey,
     repoKey,
-    onSuccess: handleAfterDeleteRepository
+    onSuccess: handleAfterDeleteRepository,
+    artifactType: data?.artifactType
   })
 
   const handleDeleteService = (): void => {

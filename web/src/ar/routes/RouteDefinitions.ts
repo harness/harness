@@ -54,7 +54,8 @@ export const routeDefinitions: ARRouteDefinitionsReturn = {
         registryId: defaultTo(params?.registryId, ''),
         artifactId: defaultTo(params?.artifactId, ''),
         versionId: defaultTo(params?.versionId, ''),
-        versionDetailsTab: defaultTo(params?.versionDetailsTab, '')
+        versionDetailsTab: defaultTo(params?.versionDetailsTab, ''),
+        artifactType: defaultTo(params?.artifactType, '')
       })
       return `/redirect?${queryParams.toString()}`
     }
@@ -69,14 +70,14 @@ export const routeDefinitions: ARRouteDefinitionsReturn = {
   ),
   toARArtifacts: routeDefinitionWithMode(() => '/artifacts'),
   toARArtifactDetails: routeDefinitionWithMode(
-    params => `/registries/${params?.repositoryIdentifier}/artifacts/${params?.artifactIdentifier}`
+    params => `/registries/${params?.repositoryIdentifier}/${params?.artifactType}/${params?.artifactIdentifier}`
   ),
   toARVersionDetails: routeDefinitionWithMode(
     params =>
-      `/registries/${params?.repositoryIdentifier}/artifacts/${params?.artifactIdentifier}/versions/${params?.versionIdentifier}`
+      `/registries/${params?.repositoryIdentifier}/${params?.artifactType}/${params?.artifactIdentifier}/versions/${params?.versionIdentifier}`
   ),
   toARVersionDetailsTab: routeDefinitionWithMode(params => {
-    let route = `/registries/${params?.repositoryIdentifier}/artifacts/${params?.artifactIdentifier}/versions/${params?.versionIdentifier}`
+    let route = `/registries/${params?.repositoryIdentifier}/${params?.artifactType}/${params?.artifactIdentifier}/versions/${params?.versionIdentifier}`
     if (params.orgIdentifier) route += `/orgs/${params.orgIdentifier}`
     if (params.projectIdentifier) route += `/projects/${params.projectIdentifier}`
     if (params.sourceId && params.artifactId) {

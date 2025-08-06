@@ -29,7 +29,7 @@ import TableCells from '@ar/components/TableCells/TableCells'
 import LabelsPopover from '@ar/components/LabelsPopover/LabelsPopover'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import { PageType, type RepositoryPackageType } from '@ar/common/types'
-import { RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
+import { LocalArtifactType, RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
 import ArtifactActionsWidget from '@ar/frameworks/Version/ArtifactActionsWidget'
 import { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
 
@@ -59,7 +59,8 @@ export const RegistryArtifactNameCell: Renderer<{
       prefix={<RepositoryIcon packageType={original.packageType as RepositoryPackageType} />}
       linkTo={routes.toARArtifactDetails({
         repositoryIdentifier: original.registryIdentifier,
-        artifactIdentifier: value
+        artifactIdentifier: value,
+        artifactType: (original.artifactType ?? LocalArtifactType.ARTIFACTS) as LocalArtifactType
       })}
       label={value}
       postfix={

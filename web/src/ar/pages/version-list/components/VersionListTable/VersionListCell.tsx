@@ -28,6 +28,7 @@ import { useDecodedParams, useRoutes } from '@ar/hooks'
 import TableCells from '@ar/components/TableCells/TableCells'
 import type { ArtifactDetailsPathParams } from '@ar/routes/types'
 import { PageType, type RepositoryPackageType } from '@ar/common/types'
+import { LocalArtifactType } from '@ar/pages/repository-details/constants'
 import VersionActionsWidget from '@ar/frameworks/Version/VersionActionsWidget'
 import { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
 
@@ -61,7 +62,8 @@ export const ToggleAccordionCell: Renderer<{
   )
 }
 
-export const VersionNameCell: CellType = ({ value }) => {
+export const VersionNameCell: CellType = ({ value, row }) => {
+  const { original } = row
   const routes = useRoutes()
   const pathParams = useDecodedParams<ArtifactDetailsPathParams>()
   return (
@@ -72,7 +74,8 @@ export const VersionNameCell: CellType = ({ value }) => {
           repositoryIdentifier: pathParams.repositoryIdentifier,
           artifactIdentifier: pathParams.artifactIdentifier,
           versionIdentifier: value,
-          versionTab: VersionDetailsTab.OVERVIEW
+          versionTab: VersionDetailsTab.OVERVIEW,
+          artifactType: (original.artifactType ?? LocalArtifactType.ARTIFACTS) as LocalArtifactType
         })}>
         <Text lineClamp={1} color={Color.PRIMARY_7} font={{ variation: FontVariation.SMALL }}>
           {value}

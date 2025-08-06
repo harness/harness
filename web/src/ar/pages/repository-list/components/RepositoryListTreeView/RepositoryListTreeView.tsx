@@ -48,6 +48,7 @@ import RepositoryTreeNodeViewWidget from '@ar/frameworks/RepositoryStep/Reposito
 
 import { Split } from 'components/Split/Split'
 
+import { TreeNodeEntityEnum } from './types'
 import { useRepositoryTreeViewUtils } from './utils'
 import { TreeViewSortingOptions } from '../../constants'
 import { type TreeViewRepositoryQueryParams, useTreeViewRepositoriesQueryParamOptions } from '../../utils'
@@ -95,6 +96,7 @@ export default function RepositoryListTreeView() {
     const initialActivePath = lodashCompact([
       ROOT_NODE_ID,
       values.repositoryIdentifier,
+      values.artifactType,
       values.artifactIdentifier ? encodeURIComponent(values.artifactIdentifier) : '',
       values.versionIdentifier,
       digest
@@ -105,86 +107,103 @@ export default function RepositoryListTreeView() {
 
   const handleFetchTreeNodesByPath = async (node: ITreeNode): Promise<Array<INode>> => {
     const { metadata } = node
-    const { repositoryIdentifier, artifactIdentifier, versionIdentifier } = metadata || {}
-    if (versionIdentifier) {
-      return RepositoryTreeViewUtils.fetchDockerDigestList(node, node.metadata)
-    } else if (artifactIdentifier) {
-      return RepositoryTreeViewUtils.fetchArtifactVersionList(node, node.metadata)
-    } else if (repositoryIdentifier) {
-      return RepositoryTreeViewUtils.fetchArtifactList(node, node.metadata)
-    } else {
-      return RepositoryTreeViewUtils.fetchRegistryList(node, node.metadata)
+    const { entityType, artifactType } = metadata || {}
+    switch (entityType) {
+      case TreeNodeEntityEnum.REGISTRY: {
+        if (artifactType) {
+          return RepositoryTreeViewUtils.fetchArtifactList(node, node.metadata)
+        }
+        return RepositoryTreeViewUtils.fetchArtifactTypeList(node, node.metadata)
+      }
+      case TreeNodeEntityEnum.ARTIFACT_TYPE:
+        return RepositoryTreeViewUtils.fetchArtifactList(node, node.metadata)
+      case TreeNodeEntityEnum.ARTIFACT:
+        return RepositoryTreeViewUtils.fetchArtifactVersionList(node, node.metadata)
+      case TreeNodeEntityEnum.VERSION:
+        return RepositoryTreeViewUtils.fetchDockerDigestList(node, node.metadata)
+      default:
+        return RepositoryTreeViewUtils.fetchRegistryList(node, node.metadata)
     }
   }
 
   const handleClickNode = (node: ITreeNode) => {
     const { id: pathId, metadata } = node
-    const { repositoryIdentifier, artifactIdentifier, versionIdentifier, digestIdentifier } = metadata || {}
+    const { entityType } = metadata || {}
     setActivePath(pathId)
-    if (digestIdentifier) {
-      return RepositoryTreeViewUtils.handleNavigateToDigestDetails(node)
-    } else if (versionIdentifier) {
-      return RepositoryTreeViewUtils.handleNavigateToVersionDetails(node)
-    } else if (artifactIdentifier) {
-      return RepositoryTreeViewUtils.handleNavigateToArtifactDetials(node)
-    } else if (repositoryIdentifier) {
-      return RepositoryTreeViewUtils.handleNavigateToRepositoryDetials(node)
+    switch (entityType) {
+      case TreeNodeEntityEnum.REGISTRY:
+        return RepositoryTreeViewUtils.handleNavigateToRepositoryDetials(node)
+      case TreeNodeEntityEnum.ARTIFACT:
+        return RepositoryTreeViewUtils.handleNavigateToArtifactDetials(node)
+      case TreeNodeEntityEnum.VERSION:
+        return RepositoryTreeViewUtils.handleNavigateToVersionDetails(node)
+      case TreeNodeEntityEnum.DIGEST:
+        return RepositoryTreeViewUtils.handleNavigateToDigestDetails(node)
+      case TreeNodeEntityEnum.ARTIFACT_TYPE:
+      default:
+        return
     }
   }
 
   const renderNodeAction = (node: ITreeNode): JSX.Element => {
     const { metadata } = node
-    const { repositoryIdentifier, artifactIdentifier, versionIdentifier, digestIdentifier } = metadata || {}
-    if (digestIdentifier) {
-      return <></>
-    } else if (versionIdentifier) {
-      return (
-        <VersionActionsWidget
-          packageType={metadata.packageType}
-          data={node.metadata}
-          repoKey={repositoryIdentifier}
-          artifactKey={artifactIdentifier}
-          versionKey={versionIdentifier}
-          pageType={PageType.GlobalList}
-        />
-      )
-    } else if (artifactIdentifier) {
-      return (
-        <ArtifactActionsWidget
-          packageType={metadata.packageType}
-          data={node.metadata}
-          repoKey={repositoryIdentifier}
-          artifactKey={artifactIdentifier}
-          pageType={PageType.Table}
-        />
-      )
-    } else if (repositoryIdentifier) {
-      return (
-        <RepositoryActionsWidget
-          packageType={metadata.packageType}
-          data={node.metadata}
-          pageType={PageType.Table}
-          type={metadata.type}
-          readonly={false}
-        />
-      )
+    const { entityType, repositoryIdentifier, artifactIdentifier, versionIdentifier } = metadata || {}
+    switch (entityType) {
+      case TreeNodeEntityEnum.REGISTRY:
+        return (
+          <RepositoryActionsWidget
+            packageType={metadata.packageType}
+            data={node.metadata}
+            pageType={PageType.Table}
+            type={metadata.type}
+            readonly={false}
+          />
+        )
+      case TreeNodeEntityEnum.ARTIFACT:
+        return (
+          <ArtifactActionsWidget
+            packageType={metadata.packageType}
+            data={node.metadata}
+            repoKey={repositoryIdentifier}
+            artifactKey={artifactIdentifier}
+            pageType={PageType.Table}
+          />
+        )
+      case TreeNodeEntityEnum.VERSION:
+        return (
+          <VersionActionsWidget
+            packageType={metadata.packageType}
+            data={node.metadata}
+            repoKey={repositoryIdentifier}
+            artifactKey={artifactIdentifier}
+            versionKey={versionIdentifier}
+            pageType={PageType.GlobalList}
+          />
+        )
+      case TreeNodeEntityEnum.ARTIFACT_TYPE:
+      case TreeNodeEntityEnum.DIGEST:
+      default:
+        return <></>
     }
-    return <></>
   }
 
   const renderNodeLabel = (node: ITreeNode): JSX.Element => {
     const { metadata } = node
-    const { repositoryIdentifier, artifactIdentifier, versionIdentifier, digestIdentifier } = metadata || {}
-    if (digestIdentifier) {
-      return <TreeNodeContent label={node.label} compact={compact} />
-    } else if (versionIdentifier) {
-      return <VersionTreeNodeViewWidget data={node.metadata} packageType={node.metadata.packageType} />
-    } else if (artifactIdentifier) {
-      return <ArtifactTreeNodeViewWidget data={node.metadata} packageType={node.metadata.packageType} />
-    } else if (repositoryIdentifier) {
-      return <RepositoryTreeNodeViewWidget data={node.metadata} packageType={node.metadata.packageType} />
+    const { entityType } = metadata || {}
+    switch (entityType) {
+      case TreeNodeEntityEnum.REGISTRY:
+        return <RepositoryTreeNodeViewWidget data={node.metadata} packageType={node.metadata.packageType} />
+      case TreeNodeEntityEnum.ARTIFACT_TYPE:
+        return <TreeNodeContent icon="folder" label={node.label} compact={compact} />
+      case TreeNodeEntityEnum.ARTIFACT:
+        return <ArtifactTreeNodeViewWidget data={node.metadata} packageType={node.metadata.packageType} />
+      case TreeNodeEntityEnum.VERSION:
+        return <VersionTreeNodeViewWidget data={node.metadata} packageType={node.metadata.packageType} />
+      case TreeNodeEntityEnum.DIGEST:
+        return <TreeNodeContent label={node.label} compact={compact} />
+      default:
+        return <TreeNodeContent label={node.label} compact={compact} />
     }
-    return <></>
   }
 
   return (

@@ -50,7 +50,8 @@ export default function DockerVersionHeader(props: DockerVersionHeaderProps): JS
       routes.toARVersionDetails({
         repositoryIdentifier: pathParams.repositoryIdentifier,
         artifactIdentifier: pathParams.artifactIdentifier,
-        versionIdentifier: newVersion
+        versionIdentifier: newVersion,
+        artifactType: pathParams.artifactType
       })
     )
   }

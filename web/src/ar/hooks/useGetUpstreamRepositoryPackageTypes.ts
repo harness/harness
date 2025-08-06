@@ -102,6 +102,15 @@ export const UpstreamProxyPackageTypeList: UpstreamRepositoryPackageTypeListItem
     featureFlag: FeatureFlags.HAR_GO_PACKAGE_TYPE_ENABLED
   },
   {
+    label: 'repositoryTypes.huggingface',
+    value: UpstreamProxyPackageType.HUGGINGFACE,
+    icon: 'huggingface',
+    tooltip: 'Coming Soon!',
+    disabled: true,
+    tag: ThumbnailTagEnum.ComingSoon,
+    featureFlag: FeatureFlags.HAR_HUGGINGFACE_PACKAGE_TYPE_ENABLED
+  },
+  {
     label: 'repositoryTypes.debian',
     value: UpstreamProxyPackageType.DEBIAN,
     icon: 'debian-logo',

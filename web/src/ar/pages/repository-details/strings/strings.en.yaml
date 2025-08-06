@@ -40,6 +40,8 @@ repositoryForm:
 tabs:
   configuration: Configuration
   packages: '{{ $.artifactList.pageHeading }}'
+  datasets: Datasets
+  models: Models
   webhooks: Webhooks
 upstreamProxiesSelectList:
   selectList:

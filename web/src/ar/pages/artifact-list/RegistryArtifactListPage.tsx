@@ -22,13 +22,16 @@ import { ExpandingSearchInput, Page, type ExpandingSearchInputHandle, Button, Bu
 import { useGetAllArtifactsByRegistryQuery } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
+import type { RepositoryDetailsTabPathParams } from '@ar/routes/types'
 import { DEFAULT_PAGE_INDEX, PreferenceScope } from '@ar/constants'
-import { useGetSpaceRef, useParentHooks } from '@ar/hooks'
+import { useDecodedParams, useGetSpaceRef, useParentHooks } from '@ar/hooks'
+
+import { RepositoryTabToArtifactTypeMap } from './constants'
+import RegistryArtifactListTable from './components/RegistryArtifactListTable/RegistryArtifactListTable'
 import {
   useRegistryArtifactListQueryParamOptions,
   type RegistryArtifactListPageQueryParams
 } from './components/RegistryArtifactListTable/utils'
-import RegistryArtifactListTable from './components/RegistryArtifactListTable/RegistryArtifactListTable'
 
 import css from './ArtifactListPage.module.scss'
 
@@ -40,6 +43,7 @@ function RegistryArtifactListPage({ pageBodyClassName }: RegistryArtifactListPag
   const { getString } = useStrings()
   const { useQueryParams, useUpdateQueryParams, usePreferenceStore } = useParentHooks()
   const searchRef = useRef({} as ExpandingSearchInputHandle)
+  const { tab } = useDecodedParams<RepositoryDetailsTabPathParams>()
   const { updateQueryParams } = useUpdateQueryParams<Partial<RegistryArtifactListPageQueryParams>>()
   const queryParams = useQueryParams<RegistryArtifactListPageQueryParams>(useRegistryArtifactListQueryParamOptions())
   const { searchTerm, isDeployedArtifacts, packageTypes, page, size, labels } = queryParams
@@ -68,7 +72,8 @@ function RegistryArtifactListPage({ pageBodyClassName }: RegistryArtifactListPag
       size,
       search_term: searchTerm,
       sort_field: sortField,
-      sort_order: sortOrder
+      sort_order: sortOrder,
+      artifact_type: RepositoryTabToArtifactTypeMap[tab]
     },
     stringifyQueryParamsOptions: {
       arrayFormat: 'repeat'

@@ -22,7 +22,7 @@ import { useAppStore, useGetRepositoryListViewType, useRoutes } from '@ar/hooks'
 import RedirectPage from '@ar/pages/redirect-page/RedirectPage'
 import { RepositoryListViewTypeEnum } from '@ar/contexts/AppStoreContext'
 import type { WebhookDetailsTab } from '@ar/pages/webhook-details/constants'
-import type { RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
+import type { LocalArtifactType, RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
 import type { ManageRegistriesDetailsTab } from '@ar/pages/manage-registries/constants'
 
 import type {
@@ -62,7 +62,8 @@ export const repositoryDetailsTabPathProps: RepositoryDetailsTabPathParams = {
 
 export const artifactDetailsPathProps: ArtifactDetailsPathParams = {
   ...repositoryDetailsPathProps,
-  artifactIdentifier: ':artifactIdentifier'
+  artifactIdentifier: ':artifactIdentifier',
+  artifactType: ':artifactType' as LocalArtifactType
 }
 
 export const versionDetailsPathParams: VersionDetailsPathParams = {
@@ -138,6 +139,9 @@ const RouteDestinations = (): JSX.Element => {
           <RepositoryListPage />
         </RouteProvider>
       )}
+      <RouteProvider path={routes.toARRepositoryWebhookDetails({ ...repositoryWebhookDetailsPathParams })}>
+        <WebhookDetailsPage />
+      </RouteProvider>
       {/* IF Enterprise then will use different route for version details page
        * IF repositoryListViewType = DIRECTORY then will use different route for version details page
        * IF OSS then will use version details as sub route for artifact details page
@@ -161,9 +165,6 @@ const RouteDestinations = (): JSX.Element => {
           <VersionDetailsPage />
         </RouteProvider>
       )}
-      <RouteProvider path={routes.toARRepositoryWebhookDetails({ ...repositoryWebhookDetailsPathParams })}>
-        <WebhookDetailsPage />
-      </RouteProvider>
       <RouteProvider path={routes.toARRepositoryDetails({ ...repositoryDetailsPathProps })}>
         <RepositoryDetailsPage />
       </RouteProvider>

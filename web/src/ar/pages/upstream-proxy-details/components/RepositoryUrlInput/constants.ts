@@ -57,5 +57,9 @@ export const UpstreamURLSourceConfig: Record<UpstreamRepositoryURLInputSource, R
   [UpstreamRepositoryURLInputSource.GoProxy]: {
     label: 'upstreamProxyDetails.createForm.source.goproxy',
     value: UpstreamRepositoryURLInputSource.GoProxy
+  },
+  [UpstreamRepositoryURLInputSource.HuggingFace]: {
+    label: 'upstreamProxyDetails.createForm.source.huggingface',
+    value: UpstreamRepositoryURLInputSource.HuggingFace
   }
 }

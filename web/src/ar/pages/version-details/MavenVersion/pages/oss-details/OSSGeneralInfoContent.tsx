@@ -21,6 +21,7 @@ import { ArtifactDetail, useGetArtifactDetailsQuery } from '@harnessio/react-har
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import { useDecodedParams, useGetSpaceRef } from '@ar/hooks'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
+import { LocalArtifactType } from '@ar/pages/repository-details/constants'
 
 import MavnGeneralInformationCard from '../overview/MavnGeneralInformationCard'
 
@@ -38,7 +39,9 @@ export default function OSSGeneralInfoContent() {
     registry_ref: spaceRef,
     artifact: encodeRef(pathParams.artifactIdentifier),
     version: pathParams.versionIdentifier,
-    queryParams: {}
+    queryParams: {
+      artifact_type: pathParams.artifactType === LocalArtifactType.ARTIFACTS ? undefined : pathParams.artifactType
+    }
   })
 
   const response = data?.content?.data as ArtifactDetail

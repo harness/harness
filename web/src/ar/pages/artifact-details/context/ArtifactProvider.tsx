@@ -21,6 +21,7 @@ import { PageError, PageSpinner } from '@harnessio/uicore'
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import { useDecodedParams, useGetSpaceRef } from '@ar/hooks'
 import type { ArtifactDetailsPathParams } from '@ar/routes/types'
+import { LocalArtifactType } from '@ar/pages/repository-details/constants'
 
 export interface ArtifactProviderProps {
   data: ArtifactSummary | undefined
@@ -35,7 +36,7 @@ const ArtifactProvider: FC<PropsWithChildren<{ repoKey?: string; artifact?: stri
   repoKey,
   artifact
 }): JSX.Element => {
-  const { repositoryIdentifier, artifactIdentifier } = useDecodedParams<ArtifactDetailsPathParams>()
+  const { repositoryIdentifier, artifactIdentifier, artifactType } = useDecodedParams<ArtifactDetailsPathParams>()
   const spaceRef = useGetSpaceRef(repoKey ?? repositoryIdentifier)
   const {
     data,
@@ -44,7 +45,10 @@ const ArtifactProvider: FC<PropsWithChildren<{ repoKey?: string; artifact?: stri
     refetch
   } = useGetArtifactSummaryQuery({
     registry_ref: spaceRef,
-    artifact: encodeRef(artifact ?? artifactIdentifier)
+    artifact: encodeRef(artifact ?? artifactIdentifier),
+    queryParams: {
+      artifact_type: artifactType === LocalArtifactType.ARTIFACTS ? undefined : artifactType
+    }
   })
 
   const responseData = data?.content?.data

@@ -25,7 +25,7 @@ import { useParentComponents, useDecodedParams, useRoutes } from '@ar/hooks'
 import { getIdentifierStringForBreadcrumb } from '@ar/common/utils'
 import { VersionProviderContext } from '@ar/pages/version-details/context/VersionProvider'
 
-import { RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
+import { LocalArtifactType, RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
 import VersionDetailsHeaderWidget from '@ar/frameworks/Version/VersionDetailsHeaderWidget'
 import css from './VersionDetailsHeader.module.scss'
 
@@ -58,7 +58,8 @@ export function VersionDetailsHeader(props: VersionDetailsHeaderProps): JSX.Elem
             {
               url: routes.toARArtifactDetails({
                 repositoryIdentifier,
-                artifactIdentifier
+                artifactIdentifier,
+                artifactType: (data?.artifactType ?? LocalArtifactType.ARTIFACTS) as LocalArtifactType
               }),
               label: getIdentifierStringForBreadcrumb(getString('breadcrumbs.artifacts'), artifactIdentifier)
             }

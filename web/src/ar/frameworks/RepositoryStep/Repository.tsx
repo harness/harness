@@ -16,6 +16,7 @@
 
 import type { IconName } from '@harnessio/icons'
 import type { RegistryMetadata } from '@harnessio/react-har-service-client'
+import { LocalArtifactType, RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
 import type { UpstreamRepositoryURLInputSource } from '@ar/pages/upstream-proxy-details/types'
 import type { FormikFowardRef, RepositoryPackageType, RepositoryConfigType, PageType, Scanners } from '@ar/common/types'
 import type { StringKeys } from '../strings'
@@ -65,6 +66,8 @@ export abstract class RepositoryStep<T, U = unknown> {
   protected repositoryIconSize?: number
   protected supportedScanners?: Scanners[]
   protected supportedUpstreamURLSources?: UpstreamRepositoryURLInputSource[]
+  supportedRepositoryTabs?: RepositoryDetailsTab[]
+  supportedArtifactTypes?: LocalArtifactType[]
   enterpriseAdvancedOptionSubTitle?: StringKeys
   ossAdvancedOptionSubTitle?: StringKeys
 
@@ -74,6 +77,20 @@ export abstract class RepositoryStep<T, U = unknown> {
 
   getSupportedScanners(): Scanners[] {
     return this.supportedScanners ?? []
+  }
+
+  getSupportedRepositoryTabs(): RepositoryDetailsTab[] {
+    return (
+      this.supportedRepositoryTabs ?? [
+        RepositoryDetailsTab.PACKAGES,
+        RepositoryDetailsTab.CONFIGURATION,
+        RepositoryDetailsTab.WEBHOOKS
+      ]
+    )
+  }
+
+  getSupportedArtifactTypes(): LocalArtifactType[] {
+    return this.supportedArtifactTypes ?? [LocalArtifactType.ARTIFACTS]
   }
 
   getSupportedUpstreamURLSources(): UpstreamRepositoryURLInputSource[] {

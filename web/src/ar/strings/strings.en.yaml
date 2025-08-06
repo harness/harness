@@ -102,6 +102,7 @@ repositoryTypes:
   debian: Debian
   cargo: Cargo
   alpine: Alpine
+  huggingface: Huggingface
 sideNav:
   repositories: '{{ $.repositoryList.pageHeading }}'
   artifacts: '{{ $.artifactList.pageHeading }}'

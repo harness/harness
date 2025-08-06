@@ -35,3 +35,11 @@ export interface APIQueryParams {
   versionIdentifier?: string
   digest?: string
 }
+
+export enum TreeNodeEntityEnum {
+  REGISTRY = 'REGISTRY',
+  ARTIFACT_TYPE = 'ARTIFACT_TYPE',
+  ARTIFACT = 'ARTIFACT',
+  VERSION = 'VERSION',
+  DIGEST = 'DIGEST'
+}

@@ -24,8 +24,16 @@ import { RepositoryConfigType, RepositoryPackageType, Scanners } from '@ar/commo
 
 export enum RepositoryDetailsTab {
   PACKAGES = 'packages',
+  DATASETS = 'datasets',
+  MODELS = 'models',
   CONFIGURATION = 'configuration',
   WEBHOOKS = 'webhooks'
+}
+
+export enum LocalArtifactType {
+  ARTIFACTS = 'artifacts',
+  DATASET = 'DATASET',
+  MODEL = 'MODEL'
 }
 
 export interface ScannerConfigSpec {
@@ -51,6 +59,7 @@ export const ContainerScannerConfig: Record<Scanners, ScannerConfigSpec> = {
 interface RepositoryDetailsTabSpec {
   label: StringKeys
   value: RepositoryDetailsTab
+  artifactType?: LocalArtifactType
   packageType?: RepositoryPackageType
   type?: RepositoryConfigType
   mode?: RepositoryListViewTypeEnum
@@ -61,7 +70,20 @@ export const RepositoryDetailsTabs: RepositoryDetailsTabSpec[] = [
   {
     label: 'repositoryDetails.tabs.packages',
     value: RepositoryDetailsTab.PACKAGES,
-    mode: RepositoryListViewTypeEnum.LIST
+    mode: RepositoryListViewTypeEnum.LIST,
+    artifactType: LocalArtifactType.ARTIFACTS
+  },
+  {
+    label: 'repositoryDetails.tabs.datasets',
+    value: RepositoryDetailsTab.DATASETS,
+    mode: RepositoryListViewTypeEnum.LIST,
+    artifactType: LocalArtifactType.DATASET
+  },
+  {
+    label: 'repositoryDetails.tabs.models',
+    value: RepositoryDetailsTab.MODELS,
+    mode: RepositoryListViewTypeEnum.LIST,
+    artifactType: LocalArtifactType.MODEL
   },
   {
     label: 'repositoryDetails.tabs.configuration',

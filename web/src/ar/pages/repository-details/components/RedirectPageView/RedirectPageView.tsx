@@ -16,19 +16,23 @@
 
 import React from 'react'
 import { useEffect } from 'react'
+import { defaultTo } from 'lodash-es'
 import { useHistory } from 'react-router-dom'
 
 import { useRoutes } from '@ar/hooks'
 import type { RedirectPageQueryParams } from '@ar/routes/types'
 
 import { useQueryParams } from 'hooks/useQueryParams'
+import { LocalArtifactType } from '../../constants'
 
 export default function RedirectPageView() {
-  const { registryId, artifactId, versionId, versionDetailsTab } = useQueryParams<RedirectPageQueryParams>()
+  const { registryId, artifactId, versionId, versionDetailsTab, artifactType } =
+    useQueryParams<RedirectPageQueryParams>()
 
   const history = useHistory()
 
   const routes = useRoutes()
+  const type = defaultTo(artifactType, LocalArtifactType.ARTIFACTS) as LocalArtifactType
 
   const getRedirectLink = async () => {
     if (registryId && artifactId && versionId && versionDetailsTab) {
@@ -36,20 +40,23 @@ export default function RedirectPageView() {
         repositoryIdentifier: registryId,
         artifactIdentifier: artifactId,
         versionIdentifier: versionId,
-        versionTab: versionDetailsTab
+        versionTab: versionDetailsTab,
+        artifactType: type || LocalArtifactType.ARTIFACTS
       })
     }
     if (registryId && artifactId && versionId) {
       return routes.toARVersionDetails({
         repositoryIdentifier: registryId,
         artifactIdentifier: artifactId,
-        versionIdentifier: versionId
+        versionIdentifier: versionId,
+        artifactType: type || LocalArtifactType.ARTIFACTS
       })
     }
     if (registryId && artifactId) {
       return routes.toARArtifactDetails({
         repositoryIdentifier: registryId,
-        artifactIdentifier: artifactId
+        artifactIdentifier: artifactId,
+        artifactType: type || LocalArtifactType.ARTIFACTS
       })
     }
     if (registryId) {

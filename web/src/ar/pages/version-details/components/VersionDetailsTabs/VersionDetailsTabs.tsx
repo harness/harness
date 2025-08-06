@@ -74,6 +74,7 @@ export default function VersionDetailsTabs(): JSX.Element {
               versionIdentifier: pathParams.versionIdentifier,
               artifactIdentifier: pathParams.artifactIdentifier,
               repositoryIdentifier: pathParams.repositoryIdentifier,
+              artifactType: pathParams.artifactType,
               versionTab: nextTab,
               sourceId: data?.sscaArtifactSourceId,
               artifactId: data?.sscaArtifactId,
@@ -89,6 +90,7 @@ export default function VersionDetailsTabs(): JSX.Element {
               versionIdentifier: pathParams.versionIdentifier,
               artifactIdentifier: pathParams.artifactIdentifier,
               repositoryIdentifier: pathParams.repositoryIdentifier,
+              artifactType: pathParams.artifactType,
               versionTab: nextTab,
               executionIdentifier: data?.stoExecutionId,
               pipelineIdentifier: data?.stoPipelineId,
@@ -104,6 +106,7 @@ export default function VersionDetailsTabs(): JSX.Element {
               versionIdentifier: pathParams.versionIdentifier,
               artifactIdentifier: pathParams.artifactIdentifier,
               repositoryIdentifier: pathParams.repositoryIdentifier,
+              artifactType: pathParams.artifactType,
               versionTab: nextTab
             },
             { queryParams }
@@ -132,6 +135,7 @@ export default function VersionDetailsTabs(): JSX.Element {
               versionIdentifier: pathParams.versionIdentifier,
               artifactIdentifier: pathParams.artifactIdentifier,
               repositoryIdentifier: pathParams.repositoryIdentifier,
+              artifactType: pathParams.artifactType,
               versionTab: VersionDetailsTab.OVERVIEW
             })}
           />

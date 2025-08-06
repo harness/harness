@@ -115,7 +115,7 @@ describe('Verify DockerVersionHeader component render', () => {
 
   test('verify version selector: Success Case', async () => {
     const { container } = render(
-      <ArTestWrapper>
+      <ArTestWrapper path="/registries/:artifactType/versions" pathParams={{ artifactType: 'artifacts' }}>
         <VersionDetailsPage />
       </ArTestWrapper>
     )
@@ -272,6 +272,8 @@ describe('Verify DockerVersionHeader component render', () => {
   test('verify tab navigation with ssca and sto data', async () => {
     const { container } = render(
       <ArTestWrapper
+        path="/registries/:artifactType/versions/overview"
+        pathParams={{ artifactType: 'artifacts' }}
         queryParams={{
           digest: 'sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
         }}>
@@ -313,6 +315,8 @@ describe('Verify DockerVersionHeader component render', () => {
     }))
     const { container } = render(
       <ArTestWrapper
+        path="/registries/:artifactType/versions/overview"
+        pathParams={{ artifactType: 'artifacts' }}
         queryParams={{
           digest: 'sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
         }}>

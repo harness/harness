@@ -18,6 +18,7 @@ createForm:
     nugetOrg: NuGet.org
     crates: Crates.io
     goproxy: GoProxy
+    huggingface: Huggingface
   authentication:
     title: Authentication
     userNameAndPassword: Username and Password

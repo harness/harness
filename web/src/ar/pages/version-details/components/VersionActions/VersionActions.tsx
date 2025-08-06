@@ -22,6 +22,7 @@ import { useStrings } from '@ar/frameworks/strings'
 import ActionButton from '@ar/components/ActionButton/ActionButton'
 import CopyMenuItem from '@ar/components/MenuItemTypes/CopyMenuItem'
 import LinkMenuItem from '@ar/components/MenuItemTypes/LinkMenuItem'
+import { LocalArtifactType } from '@ar/pages/repository-details/constants'
 
 import SetupClientMenuItem from './SetupClientMenuItem'
 import DeleteVersionMenuItem from './DeleteVersionMenuItem'
@@ -85,7 +86,8 @@ export default function VersionActions({
             repositoryIdentifier: repoKey,
             artifactIdentifier: artifactKey,
             versionIdentifier: versionKey,
-            versionTab: VersionDetailsTab.OVERVIEW
+            versionTab: VersionDetailsTab.OVERVIEW,
+            artifactType: (data?.artifactType ?? LocalArtifactType.ARTIFACTS) as LocalArtifactType
           })}>
           {getString('view')}
         </LinkMenuItem>

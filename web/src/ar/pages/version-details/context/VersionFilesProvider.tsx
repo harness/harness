@@ -20,6 +20,7 @@ import { type FileDetailResponseResponse, useGetArtifactFilesQuery } from '@harn
 
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
+import { LocalArtifactType } from '@ar/pages/repository-details/constants'
 import { useDecodedParams, useGetSpaceRef, useParentHooks } from '@ar/hooks'
 import type { UseUpdateQueryParamsReturn } from '@ar/__mocks__/hooks/useUpdateQueryParams'
 import { DEFAULT_ARTIFACT_LIST_TABLE_SORT, DEFAULT_PAGE_INDEX, DEFAULT_PAGE_SIZE } from '@ar/constants'
@@ -78,7 +79,8 @@ const VersionFilesProvider = (props: PropsWithChildren<IVersionFilesProviderProp
       page,
       size,
       sort_field: sortField,
-      sort_order: sortOrder
+      sort_order: sortOrder,
+      artifact_type: pathParams.artifactType === LocalArtifactType.ARTIFACTS ? undefined : pathParams.artifactType
     }
   })
   const responseData = data?.content

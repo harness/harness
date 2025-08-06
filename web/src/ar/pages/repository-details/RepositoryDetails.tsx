@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useContext, useState } from 'react'
+import React, { useContext, useMemo, useState } from 'react'
 import type { FormikProps } from 'formik'
 import { Expander } from '@blueprintjs/core'
 import { Redirect, Switch, useHistory } from 'react-router-dom'
@@ -32,6 +32,7 @@ import {
   useRoutes
 } from '@ar/hooks'
 import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
+import repositoryFactory from '@ar/frameworks/RepositoryStep/RepositoryFactory'
 import { repositoryDetailsPathProps, repositoryDetailsTabPathProps } from '@ar/routes/RouteDestinations'
 
 import { RepositoryDetailsTab, RepositoryDetailsTabs } from './constants'
@@ -54,6 +55,16 @@ export default function RepositoryDetails(): JSX.Element | null {
   const repositoryListViewType = useGetRepositoryListViewType()
 
   const { isDirty, data, isUpdating } = useContext(RepositoryProviderContext)
+
+  const repositoryTabs = useMemo(() => {
+    if (!data) return []
+    const repositoryType = repositoryFactory.getRepositoryType(data?.packageType)
+    const tabs = repositoryType?.getSupportedRepositoryTabs() || []
+    return RepositoryDetailsTabs.filter(each => tabs.includes(each.value))
+      .filter(each => !each.featureFlag || featureFlags[each.featureFlag])
+      .filter(each => !each.type || each.type === data?.config.type)
+      .filter(each => !each.mode || each.mode === repositoryListViewType)
+  }, [data, featureFlags, repositoryListViewType])
 
   const handleTabChange = (nextTab: RepositoryDetailsTab): void => {
     setActiveTab(nextTab)
@@ -100,20 +111,16 @@ export default function RepositoryDetails(): JSX.Element | null {
     <>
       <TabsContainer className={css.tabsContainer}>
         <Tabs id="repositoryTabDetails" selectedTabId={activeTab} onChange={handleTabChange}>
-          {RepositoryDetailsTabs.filter(each => !each.featureFlag || featureFlags[each.featureFlag])
-            .filter(each => !each.packageType || each.packageType === data.packageType)
-            .filter(each => !each.type || each.type === data.config.type)
-            .filter(each => !each.mode || each.mode === repositoryListViewType)
-            .map(each => (
-              <Tab key={each.value} id={each.value} title={getString(each.label)} />
-            ))}
+          {repositoryTabs.map(each => (
+            <Tab key={each.value} id={each.value} title={getString(each.label)} />
+          ))}
           <Expander />
           {activeTab === RepositoryDetailsTab.CONFIGURATION && renderActionBtns()}
         </Tabs>
       </TabsContainer>
       <Switch>
         <RouteProvider exact path={routeDefinitions.toARRepositoryDetails({ ...repositoryDetailsPathProps })}>
-          <Redirect to={routes.toARRepositoryDetailsTab({ ...pathParams, tab: RepositoryDetailsTab.CONFIGURATION })} />
+          <Redirect to={routes.toARRepositoryDetailsTab({ ...pathParams, tab: repositoryTabs[0].value })} />
         </RouteProvider>
         <RouteProvider exact path={[routeDefinitions.toARRepositoryDetailsTab({ ...repositoryDetailsTabPathProps })]}>
           <RepositoryDetailsTabPage

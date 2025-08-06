@@ -51,6 +51,8 @@ export default function RepositoryDetailsTabPage(props: RepositoryDetailsTabPage
 
   switch (tab) {
     case RepositoryDetailsTab.PACKAGES:
+    case RepositoryDetailsTab.DATASETS:
+    case RepositoryDetailsTab.MODELS:
       return <RegistryArtifactListPage pageBodyClassName={css.packagesPageBody} />
     case RepositoryDetailsTab.CONFIGURATION:
       return (

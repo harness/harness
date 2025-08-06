@@ -129,6 +129,8 @@ export interface StringsMap {
   'repositoryDetails.repositoryForm.upstreamProxiesSubTitle': string
   'repositoryDetails.repositoryForm.upstreamProxiesTitle': string
   'repositoryDetails.tabs.configuration': string
+  'repositoryDetails.tabs.datasets': string
+  'repositoryDetails.tabs.models': string
   'repositoryDetails.tabs.packages': string
   'repositoryDetails.tabs.webhooks': string
   'repositoryDetails.upstreamProxiesSelectList.addUpstreamProxies': string
@@ -191,6 +193,7 @@ export interface StringsMap {
   'upstreamProxyDetails.createForm.source.dockerHub': string
   'upstreamProxyDetails.createForm.source.ecr': string
   'upstreamProxyDetails.createForm.source.goproxy': string
+  'upstreamProxyDetails.createForm.source.huggingface': string
   'upstreamProxyDetails.createForm.source.mavenCentral': string
   'upstreamProxyDetails.createForm.source.npmjs': string
   'upstreamProxyDetails.createForm.source.nugetOrg': string
@@ -446,6 +449,7 @@ export interface StringsMap {
   'repositoryTypes.go': string
   'repositoryTypes.gradle': string
   'repositoryTypes.helm': string
+  'repositoryTypes.huggingface': string
   'repositoryTypes.maven': string
   'repositoryTypes.npm': string
   'repositoryTypes.nuget': string

@@ -29,11 +29,12 @@ import { RepositoryPackageType } from '@ar/common/types'
 import { getShortDigest } from '@ar/pages/digest-list/utils'
 import { encodeRef, getSpaceRef } from '@ar/hooks/useGetSpaceRef'
 import { useAppStore, useRoutes } from '@ar/hooks'
-import { RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
+import { LocalArtifactType, RepositoryDetailsTab, RepositoryDetailsTabs } from '@ar/pages/repository-details/constants'
 import { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
 import { ITreeNode, NodeTypeEnum, INode } from '@ar/components/TreeView/types'
+import repositoryFactory from '@ar/frameworks/RepositoryStep/RepositoryFactory'
 
-import type { APIQueryParams } from './types'
+import { TreeNodeEntityEnum, type APIQueryParams } from './types'
 import type { TreeViewRepositoryQueryParams } from '../../utils'
 
 const getLoadMoreNodeConfig = (parentNode: ITreeNode, metadata: APIQueryParams): INode => {
@@ -98,6 +99,7 @@ export function useRepositoryTreeViewUtils(queryParams: TreeViewRepositoryQueryP
         type: NodeTypeEnum.File,
         metadata: {
           ...each,
+          entityType: TreeNodeEntityEnum.DIGEST,
           repositoryIdentifier,
           artifactIdentifier,
           versionIdentifier: value,
@@ -133,6 +135,7 @@ export function useRepositoryTreeViewUtils(queryParams: TreeViewRepositoryQueryP
         type: each.packageType === RepositoryPackageType.DOCKER ? NodeTypeEnum.Folder : NodeTypeEnum.File,
         metadata: {
           ...each,
+          entityType: TreeNodeEntityEnum.VERSION,
           repositoryIdentifier,
           artifactIdentifier: value,
           versionIdentifier: each.name
@@ -156,8 +159,9 @@ export function useRepositoryTreeViewUtils(queryParams: TreeViewRepositoryQueryP
   }
 
   const fetchArtifactList = async (node: ITreeNode, filters?: APIQueryParams): Promise<INode[]> => {
-    const { id: pathId, value } = node
-    const registryRef = getSpaceRef(filters?.space ?? space, filters?.repositoryIdentifier ?? value)
+    const { id: pathId, metadata } = node
+    const { repositoryIdentifier } = metadata || {}
+    const registryRef = getSpaceRef(filters?.space ?? space, filters?.repositoryIdentifier ?? repositoryIdentifier)
     try {
       const response = await getAllArtifactsByRegistry({
         registry_ref: registryRef,
@@ -176,7 +180,8 @@ export function useRepositoryTreeViewUtils(queryParams: TreeViewRepositoryQueryP
         type: NodeTypeEnum.Folder,
         metadata: {
           ...each,
-          repositoryIdentifier: value,
+          entityType: TreeNodeEntityEnum.ARTIFACT,
+          repositoryIdentifier,
           artifactIdentifier: each.name
         }
       }))
@@ -187,7 +192,7 @@ export function useRepositoryTreeViewUtils(queryParams: TreeViewRepositoryQueryP
             ...filters,
             page: pageIndex + 1,
             size: DEFAULT_PAGE_SIZE,
-            repositoryIdentifier: filters?.repositoryIdentifier ?? value
+            repositoryIdentifier: filters?.repositoryIdentifier ?? repositoryIdentifier
           })
         )
       }
@@ -195,6 +200,27 @@ export function useRepositoryTreeViewUtils(queryParams: TreeViewRepositoryQueryP
     } catch (e: any) {
       throw getErrorInfoFromErrorObject(e, true)
     }
+  }
+
+  const fetchArtifactTypeList = async (node: ITreeNode, _filters?: APIQueryParams): Promise<INode[]> => {
+    const { metadata, id: pathId } = node
+    const { packageType } = metadata || {}
+    const repositoryType = repositoryFactory.getRepositoryType(packageType)
+    const supportedArtifactTypes = repositoryType?.getSupportedArtifactTypes() || []
+    const tabs = RepositoryDetailsTabs.filter(
+      each => each.artifactType && supportedArtifactTypes?.includes(each.artifactType)
+    )
+    return tabs.map(each => ({
+      id: `${pathId}/${each.artifactType ?? each.value}`,
+      label: getString(each.label),
+      value: each.artifactType ?? each.value,
+      type: NodeTypeEnum.Folder,
+      metadata: {
+        ...metadata,
+        entityType: TreeNodeEntityEnum.ARTIFACT_TYPE,
+        artifactType: each.artifactType
+      }
+    }))
   }
 
   const fetchRegistryList = async (node: ITreeNode, filters?: APIQueryParams): Promise<INode[]> => {
@@ -220,16 +246,25 @@ export function useRepositoryTreeViewUtils(queryParams: TreeViewRepositoryQueryP
       })
       const registryList = response.content.data.registries || []
       const { pageIndex = 0, pageCount = 1, itemCount = 0 } = response.content.data
-      const data: Array<INode> = registryList.map(each => ({
-        id: `${pathId}/${each.identifier}`,
-        label: each.identifier,
-        value: each.identifier,
-        type: NodeTypeEnum.Folder,
-        metadata: {
-          ...each,
-          repositoryIdentifier: each.identifier
+      const data: Array<INode> = registryList.map(each => {
+        const repositoryType = repositoryFactory.getRepositoryType(each.packageType)
+        const allowedArtifactTypes = repositoryType?.getSupportedArtifactTypes() || []
+        const defaultArtifactType = allowedArtifactTypes.length === 1 ? allowedArtifactTypes[0] : undefined
+        return {
+          id: defaultArtifactType
+            ? `${pathId}/${each.identifier}/${defaultArtifactType}`
+            : `${pathId}/${each.identifier}`,
+          label: each.identifier,
+          value: each.identifier,
+          type: NodeTypeEnum.Folder,
+          metadata: {
+            ...each,
+            repositoryIdentifier: each.identifier,
+            entityType: TreeNodeEntityEnum.REGISTRY,
+            artifactType: defaultArtifactType
+          }
         }
-      }))
+      })
       if (pageNumber === 0) {
         data.unshift(getTotalCountNodeConfig(node, itemCount))
       }
@@ -260,35 +295,38 @@ export function useRepositoryTreeViewUtils(queryParams: TreeViewRepositoryQueryP
 
   const handleNavigateToArtifactDetials = (node: ITreeNode) => {
     const { value, metadata } = node
-    const { repositoryIdentifier } = metadata
+    const { repositoryIdentifier, artifactType } = metadata
     const newRoute = routes.toARArtifactDetails({
       repositoryIdentifier,
-      artifactIdentifier: value
+      artifactIdentifier: value,
+      artifactType: artifactType ?? LocalArtifactType.ARTIFACTS
     })
     history.push(newRoute)
   }
 
   const handleNavigateToVersionDetails = (node: ITreeNode) => {
     const { value, metadata } = node
-    const { artifactIdentifier, repositoryIdentifier } = metadata
+    const { artifactIdentifier, repositoryIdentifier, artifactType } = metadata
     const newRoute = routes.toARVersionDetailsTab({
       repositoryIdentifier,
       artifactIdentifier,
       versionIdentifier: value,
-      versionTab: VersionDetailsTab.OVERVIEW
+      versionTab: VersionDetailsTab.OVERVIEW,
+      artifactType: artifactType ?? LocalArtifactType.ARTIFACTS
     })
     history.push(newRoute)
   }
 
   const handleNavigateToDigestDetails = (node: ITreeNode) => {
     const { value, metadata } = node
-    const { artifactIdentifier, repositoryIdentifier, versionIdentifier } = metadata
+    const { artifactIdentifier, repositoryIdentifier, versionIdentifier, artifactType } = metadata
     const newRoute = routes.toARVersionDetailsTab(
       {
         repositoryIdentifier,
         artifactIdentifier,
         versionIdentifier,
-        versionTab: VersionDetailsTab.OVERVIEW
+        versionTab: VersionDetailsTab.OVERVIEW,
+        artifactType: artifactType ?? LocalArtifactType.ARTIFACTS
       },
       {
         queryParams: { digest: value }
@@ -301,6 +339,7 @@ export function useRepositoryTreeViewUtils(queryParams: TreeViewRepositoryQueryP
     fetchDockerDigestList,
     fetchArtifactVersionList,
     fetchArtifactList,
+    fetchArtifactTypeList,
     fetchRegistryList,
     handleNavigateToRepositoryDetials,
     handleNavigateToArtifactDetials,

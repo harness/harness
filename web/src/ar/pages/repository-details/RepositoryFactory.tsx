@@ -25,6 +25,7 @@ import { NuGetRepositoryType } from './NuGetRepository/NuGetRepositoryType'
 import { RPMRepositoryType } from './RPMRepository/RPMRepositoryType'
 import { CargoRepositoryType } from './CargoRepository/CargoRepositoryType'
 import { GoRepositoryType } from './GoRepository/GoRepositoryType'
+import { HuggingfaceRepositoryType } from './HuggingfaceRepositoryType/HuggingfaceRepositoryType'
 
 repositoryFactory.registerStep(new DockerRepositoryType())
 repositoryFactory.registerStep(new HelmRepositoryType())
@@ -36,3 +37,4 @@ repositoryFactory.registerStep(new NuGetRepositoryType())
 repositoryFactory.registerStep(new RPMRepositoryType())
 repositoryFactory.registerStep(new CargoRepositoryType())
 repositoryFactory.registerStep(new GoRepositoryType())
+repositoryFactory.registerStep(new HuggingfaceRepositoryType())

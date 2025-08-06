@@ -41,21 +41,21 @@ export default function getARRouteDefinitions(routeParams: Record<string, string
     toARRepositories: routeDefinitionWithMode(() => '/'),
     toARRepositoryDetails: routeDefinitionWithMode(params => `/${params?.repositoryIdentifier}`),
     toARRepositoryDetailsTab: routeDefinitionWithMode(params => `/${params?.repositoryIdentifier}/${params?.tab}`),
-    toARArtifacts: routeDefinitionWithMode(() => `/${routeParams?.repositoryIdentifier}/packages`),
+    toARArtifacts: routeDefinitionWithMode(() => `/${routeParams?.repositoryIdentifier}`),
     toARArtifactDetails: routeDefinitionWithMode(
-      params => `/${params?.repositoryIdentifier}/artifacts/${params?.artifactIdentifier}`
+      params => `/${params?.repositoryIdentifier}/${params?.artifactType}/${params?.artifactIdentifier}`
     ),
     toARVersionDetails: routeDefinitionWithMode(
       params =>
-        `/${params?.repositoryIdentifier}/artifacts/${params?.artifactIdentifier}/versions/${params?.versionIdentifier}`
+        `/${params?.repositoryIdentifier}/${params?.artifactType}/${params?.artifactIdentifier}/versions/${params?.versionIdentifier}`
     ),
     // anything random, as this route will not be used in gitness
     toARVersionDetailsTab: routeDefinitionWithMode(params => {
-      let route = `/${params.repositoryIdentifier}/artifacts/${params.artifactIdentifier}/versions/${params.versionIdentifier}`
+      let route = `/${params.repositoryIdentifier}/${params?.artifactType}/${params?.artifactIdentifier}/versions/${params.versionIdentifier}`
       if (params.orgIdentifier) route += `/orgs/${params.orgIdentifier}`
       if (params.projectIdentifier) route += `/projects/${params.projectIdentifier}`
       if (params.sourceId && params.artifactId) {
-        route += `/artifact-sources/${params.sourceId}/artifacts/${params.artifactId}`
+        route += `/artifact-sources/${params.sourceId}/${params?.artifactType}/${params.artifactId}`
       }
       if (params.pipelineIdentifier && params.executionIdentifier) {
         route += `/pipelines/${params.pipelineIdentifier}/executions/${params.executionIdentifier}`

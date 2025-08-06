@@ -24,6 +24,7 @@ import { useRoutes } from '@ar/hooks'
 import { getShortDigest } from '@ar/pages/digest-list/utils'
 import TableCells from '@ar/components/TableCells/TableCells'
 import { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
+import { LocalArtifactType } from '@ar/pages/repository-details/constants'
 
 type CellTypeWithActions<D extends Record<string, any>, V = any> = TableInstance<D> & {
   column: ColumnInstance<D>
@@ -53,7 +54,8 @@ export const DigestNameCell: Renderer<{
     repositoryIdentifier,
     artifactIdentifier,
     versionIdentifier,
-    versionTab: VersionDetailsTab.OVERVIEW
+    versionTab: VersionDetailsTab.OVERVIEW,
+    artifactType: LocalArtifactType.ARTIFACTS
   })
   return <TableCells.LinkCell label={getShortDigest(value)} linkTo={`${linkTo}?digest=${value}`} />
 }

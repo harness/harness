@@ -318,7 +318,10 @@ describe('Test Registry Artifact List Page', () => {
     await waitFor(() => {
       expect(deleteArtifact).toHaveBeenCalledWith({
         artifact: 'podinfo-artifact/+',
-        registry_ref: 'undefined/docker-repo/+'
+        registry_ref: 'undefined/docker-repo/+',
+        queryParams: {
+          artifact_type: undefined
+        }
       })
     })
   })

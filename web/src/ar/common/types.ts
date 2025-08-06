@@ -57,7 +57,8 @@ export enum RepositoryPackageType {
   GO = 'GO',
   DEBIAN = 'DEBIAN',
   CARGO = 'CARGO',
-  ALPINE = 'ALPINE'
+  ALPINE = 'ALPINE',
+  HUGGINGFACE = 'HUGGINGFACE'
 }
 
 export enum RepositoryConfigType {

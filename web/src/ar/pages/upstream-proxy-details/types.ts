@@ -29,7 +29,8 @@ export enum UpstreamProxyPackageType {
   GO = 'GO',
   DEBIAN = 'DEBIAN',
   CARGO = 'CARGO',
-  ALPINE = 'ALPINE'
+  ALPINE = 'ALPINE',
+  HUGGINGFACE = 'HUGGINGFACE'
 }
 
 export enum UpstreamRepositoryURLInputSource {
@@ -41,7 +42,8 @@ export enum UpstreamRepositoryURLInputSource {
   PyPi = 'PyPi',
   NugetOrg = 'NugetOrg',
   Crates = 'Crates',
-  GoProxy = 'GoProxy'
+  GoProxy = 'GoProxy',
+  HuggingFace = 'HuggingFace'
 }
 
 export enum UpstreamProxyAuthenticationMode {

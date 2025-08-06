@@ -81,6 +81,7 @@ export default function VersionOverviewCards(props: VersionOverviewCardsProps) {
       versionIdentifier: pathParams.versionIdentifier,
       artifactIdentifier: pathParams.artifactIdentifier,
       repositoryIdentifier: pathParams.repositoryIdentifier,
+      artifactType: pathParams.artifactType,
       versionTab: tab,
       ...options
     })
