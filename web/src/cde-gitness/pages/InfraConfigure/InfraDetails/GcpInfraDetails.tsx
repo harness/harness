@@ -142,6 +142,7 @@ const GcpInfraDetails = () => {
                 })
                 const delegates = delegateSelector?.map((del: string) => ({ selector: del }))
                 const payload: OpenapiCreateInfraProviderConfigRequest = {
+                  identifier,
                   metadata: {
                     domain,
                     runner,

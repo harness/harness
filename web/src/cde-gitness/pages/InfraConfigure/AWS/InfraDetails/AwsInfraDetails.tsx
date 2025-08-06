@@ -160,6 +160,7 @@ const AwsInfraDetails = () => {
         })
         const delegates = delegateSelector?.map((del: string) => ({ selector: del }))
         const payload: OpenapiCreateInfraProviderConfigRequest = {
+          identifier,
           metadata: {
             domain,
             delegate_selectors: delegates,
