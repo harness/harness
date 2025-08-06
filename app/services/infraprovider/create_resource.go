@@ -84,7 +84,7 @@ func (c *Service) upsertResources(
 		}
 		existingResource, err := c.infraProviderResourceStore.FindByConfigAndIdentifier(ctx, resource.SpaceID,
 			configID, resource.UID)
-		if err != nil {
+		if err != nil { //nolint:nestif
 			if !errors.Is(err, store.ErrResourceNotFound) {
 				return fmt.Errorf("failed to check existing resource %s: %w", resource.UID, err)
 			}

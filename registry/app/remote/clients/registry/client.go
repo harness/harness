@@ -101,32 +101,41 @@ func init() {
 // Client defines the methods that a registry client should implements.
 type Client interface {
 	// Ping the base API endpoint "/v2/"
-	Ping() (err error)
+	Ping(ctx context.Context) (err error)
 	// Catalog the repositories
-	Catalog() (repositories []string, err error)
+	Catalog(ctx context.Context) (repositories []string, err error)
 	// ListTags lists the tags under the specified repository
-	ListTags(repository string) (tags []string, err error)
+	ListTags(ctx context.Context, repository string) (tags []string, err error)
 	// ManifestExist checks the existence of the manifest
-	ManifestExist(repository, reference string) (exist bool, desc *manifest.Descriptor, err error)
+	ManifestExist(ctx context.Context, repository, reference string) (exist bool, desc *manifest.Descriptor, err error)
 	// PullManifest pulls the specified manifest
 	PullManifest(
+		ctx context.Context,
 		repository, reference string,
 		acceptedMediaTypes ...string,
 	) (manifest manifest.Manifest, digest string, err error)
 	// PushManifest pushes the specified manifest
-	PushManifest(repository, reference, mediaType string, payload []byte) (digest string, err error)
+	PushManifest(ctx context.Context, repository, reference, mediaType string, payload []byte) (
+		digest string,
+		err error,
+	)
 	// DeleteManifest deletes the specified manifest. The "reference" can be "tag" or "digest"
-	DeleteManifest(repository, reference string) (err error)
+	DeleteManifest(ctx context.Context, repository, reference string) (err error)
 	// BlobExist checks the existence of the specified blob
-	BlobExist(repository, digest string) (exist bool, err error)
+	BlobExist(ctx context.Context, repository, digest string) (exist bool, err error)
 	// PullBlob pulls the specified blob. The caller must close the returned "blob"
-	PullBlob(repository, digest string) (size int64, blob io.ReadCloser, err error)
+	PullBlob(ctx context.Context, repository, digest string) (size int64, blob io.ReadCloser, err error)
 	// PullBlobChunk pulls the specified blob, but by chunked
-	PullBlobChunk(repository, digest string, blobSize, start, end int64) (size int64, blob io.ReadCloser, err error)
+	PullBlobChunk(ctx context.Context, repository, digest string, blobSize, start, end int64) (
+		size int64,
+		blob io.ReadCloser,
+		err error,
+	)
 	// PushBlob pushes the specified blob
-	PushBlob(repository, digest string, size int64, blob io.Reader) error
+	PushBlob(ctx context.Context, repository, digest string, size int64, blob io.Reader) error
 	// PushBlobChunk pushes the specified blob, but by chunked
 	PushBlobChunk(
+		ctx context.Context,
 		repository, digest string,
 		blobSize int64,
 		chunk io.Reader,
@@ -134,25 +143,29 @@ type Client interface {
 		location string,
 	) (nextUploadLocation string, endRange int64, err error)
 	// MountBlob mounts the blob from the source repository
-	MountBlob(srcRepository, digest, dstRepository string) (err error)
+	MountBlob(ctx context.Context, srcRepository, digest, dstRepository string) (err error)
 	// DeleteBlob deletes the specified blob
-	DeleteBlob(repository, digest string) (err error)
+	DeleteBlob(ctx context.Context, repository, digest string) (err error)
 	// Copy the artifact from source repository to the destination. The "override"
 	// is used to specify whether the destination artifact will be overridden if
 	// its name is same with source but digest isn't
-	Copy(srcRepository, srcReference, dstRepository, dstReference string, override bool) (err error)
+	Copy(
+		ctx context.Context,
+		srcRepository, srcReference, dstRepository, dstReference string,
+		override bool,
+	) (err error)
 	// Do send generic HTTP requests to the target registry service
 	Do(req *http.Request) (*http.Response, error)
 
 	// GetFile Download the file
-	GetFile(filePath string) (*commons.ResponseHeaders, io.ReadCloser, error)
+	GetFile(ctx context.Context, filePath string) (*commons.ResponseHeaders, io.ReadCloser, error)
 
 	// HeadFile Check existence of file
-	HeadFile(filePath string) (*commons.ResponseHeaders, bool, error)
+	HeadFile(ctx context.Context, filePath string) (*commons.ResponseHeaders, bool, error)
 
 	// GetFileFromURL Download the file from URL instead of provided endpoint. Authorizer still remains the same.
-	GetFileFromURL(url string) (*commons.ResponseHeaders, io.ReadCloser, error)
-	GetURL(filePath string) string
+	GetFileFromURL(ctx context.Context, url string) (*commons.ResponseHeaders, io.ReadCloser, error)
+	GetURL(ctx context.Context, filePath string) string
 }
 
 // NewClient creates a registry client with the default authorizer which determines the auth scheme
@@ -188,8 +201,8 @@ type client struct {
 	client       *http.Client
 }
 
-func (c *client) Ping() error {
-	req, err := http.NewRequestWithContext(context.TODO(), http.MethodGet, buildPingURL(c.url), nil)
+func (c *client) Ping(ctx context.Context) error {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, buildPingURL(c.url), nil)
 	if err != nil {
 		return err
 	}
@@ -201,11 +214,11 @@ func (c *client) Ping() error {
 	return nil
 }
 
-func (c *client) Catalog() ([]string, error) {
+func (c *client) Catalog(ctx context.Context) ([]string, error) {
 	var repositories []string
 	url := buildCatalogURL(c.url)
 	for {
-		repos, next, err := c.catalog(url)
+		repos, next, err := c.catalog(ctx, url)
 		if err != nil {
 			return nil, err
 		}
@@ -224,8 +237,8 @@ func (c *client) Catalog() ([]string, error) {
 	return repositories, nil
 }
 
-func (c *client) catalog(url string) ([]string, string, error) {
-	req, err := http.NewRequestWithContext(context.TODO(), http.MethodGet, url, nil)
+func (c *client) catalog(ctx context.Context, url string) ([]string, string, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, "", err
 	}
@@ -248,11 +261,11 @@ func (c *client) catalog(url string) ([]string, string, error) {
 	return repositories.Repositories, next(resp.Header.Get("Link")), nil
 }
 
-func (c *client) ListTags(repository string) ([]string, error) {
+func (c *client) ListTags(ctx context.Context, repository string) ([]string, error) {
 	var tags []string
 	url := buildTagListURL(c.url, repository)
 	for {
-		tgs, next, err := c.listTags(url)
+		tgs, next, err := c.listTags(ctx, url)
 		if err != nil {
 			return nil, err
 		}
@@ -271,8 +284,8 @@ func (c *client) ListTags(repository string) ([]string, error) {
 	return tags, nil
 }
 
-func (c *client) listTags(url string) ([]string, string, error) {
-	req, err := http.NewRequestWithContext(context.TODO(), http.MethodGet, url, nil)
+func (c *client) listTags(ctx context.Context, url string) ([]string, string, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, "", err
 	}
@@ -295,10 +308,9 @@ func (c *client) listTags(url string) ([]string, string, error) {
 	return tgs.Tags, next(resp.Header.Get("Link")), nil
 }
 
-func (c *client) ManifestExist(repository, reference string) (bool, *manifest.Descriptor, error) {
+func (c *client) ManifestExist(ctx context.Context, repository, reference string) (bool, *manifest.Descriptor, error) {
 	req, err := http.NewRequestWithContext(
-		context.TODO(),
-		http.MethodHead, buildManifestURL(c.url, repository, reference), nil,
+		ctx, http.MethodHead, buildManifestURL(c.url, repository, reference), nil,
 	)
 	if err != nil {
 		return false, nil, err
@@ -321,11 +333,13 @@ func (c *client) ManifestExist(repository, reference string) (bool, *manifest.De
 	return true, &manifest.Descriptor{Digest: digest.Digest(dig), MediaType: contentType, Size: int64(length)}, nil
 }
 
-func (c *client) PullManifest(repository, reference string, acceptedMediaTypes ...string) (
-	manifest.Manifest, string, error,
-) {
+func (c *client) PullManifest(
+	ctx context.Context,
+	repository, reference string,
+	acceptedMediaTypes ...string,
+) (manifest.Manifest, string, error) {
 	req, err := http.NewRequestWithContext(
-		context.TODO(),
+		ctx,
 		http.MethodGet, buildManifestURL(
 			c.url, repository,
 			reference,
@@ -358,9 +372,12 @@ func (c *client) PullManifest(repository, reference string, acceptedMediaTypes .
 	return manifest, digest, nil
 }
 
-func (c *client) PushManifest(repository, reference, mediaType string, payload []byte) (string, error) {
+func (c *client) PushManifest(ctx context.Context, repository, reference, mediaType string, payload []byte) (
+	string,
+	error,
+) {
 	req, err := http.NewRequestWithContext(
-		context.TODO(), http.MethodPut, buildManifestURL(c.url, repository, reference),
+		ctx, http.MethodPut, buildManifestURL(c.url, repository, reference),
 		bytes.NewReader(payload),
 	)
 	if err != nil {
@@ -375,11 +392,11 @@ func (c *client) PushManifest(repository, reference, mediaType string, payload [
 	return resp.Header.Get("Docker-Content-Digest"), nil
 }
 
-func (c *client) DeleteManifest(repository, reference string) error {
+func (c *client) DeleteManifest(ctx context.Context, repository, reference string) error {
 	_, err := digest.Parse(reference)
 	if err != nil {
 		// the reference is tag, get the digest first
-		exist, desc, err := c.ManifestExist(repository, reference)
+		exist, desc, err := c.ManifestExist(ctx, repository, reference)
 		if err != nil {
 			return err
 		}
@@ -390,7 +407,7 @@ func (c *client) DeleteManifest(repository, reference string) error {
 		reference = string(desc.Digest)
 	}
 	req, err := http.NewRequestWithContext(
-		context.TODO(), http.MethodDelete,
+		ctx, http.MethodDelete,
 		buildManifestURL(c.url, repository, reference), nil,
 	)
 	if err != nil {
@@ -404,9 +421,9 @@ func (c *client) DeleteManifest(repository, reference string) error {
 	return nil
 }
 
-func (c *client) BlobExist(repository, digest string) (bool, error) {
+func (c *client) BlobExist(ctx context.Context, repository, digest string) (bool, error) {
 	req, err := http.NewRequestWithContext(
-		context.TODO(), http.MethodHead, buildBlobURL(c.url, repository, digest), nil,
+		ctx, http.MethodHead, buildBlobURL(c.url, repository, digest), nil,
 	)
 	if err != nil {
 		return false, err
@@ -422,8 +439,8 @@ func (c *client) BlobExist(repository, digest string) (bool, error) {
 	return true, nil
 }
 
-func (c *client) PullBlob(repository, digest string) (int64, io.ReadCloser, error) {
-	req, err := http.NewRequestWithContext(context.TODO(), http.MethodGet, buildBlobURL(c.url, repository, digest), nil)
+func (c *client) PullBlob(ctx context.Context, repository, digest string) (int64, io.ReadCloser, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, buildBlobURL(c.url, repository, digest), nil)
 	if err != nil {
 		return 0, nil, err
 	}
@@ -451,8 +468,12 @@ func (c *client) PullBlob(repository, digest string) (int64, io.ReadCloser, erro
 // PullBlobChunk pulls the specified blob, but by chunked, refer to
 // https://github.com/opencontainers/distribution-spec/blob/main/spec.md#pull
 // for more details.
-func (c *client) PullBlobChunk(repository, digest string, _ int64, start, end int64) (int64, io.ReadCloser, error) {
-	req, err := http.NewRequestWithContext(context.TODO(), http.MethodGet, buildBlobURL(c.url, repository, digest), nil)
+func (c *client) PullBlobChunk(ctx context.Context, repository, digest string, _ int64, start, end int64) (
+	int64,
+	io.ReadCloser,
+	error,
+) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, buildBlobURL(c.url, repository, digest), nil)
 	if err != nil {
 		return 0, nil, err
 	}
@@ -478,18 +499,19 @@ func (c *client) PullBlobChunk(repository, digest string, _ int64, start, end in
 	return size, resp.Body, nil
 }
 
-func (c *client) PushBlob(repository, digest string, size int64, blob io.Reader) error {
-	location, err := c.initiateBlobUpload(repository)
+func (c *client) PushBlob(ctx context.Context, repository, digest string, size int64, blob io.Reader) error {
+	location, err := c.initiateBlobUpload(ctx, repository)
 	if err != nil {
 		return err
 	}
-	return c.monolithicBlobUpload(location, digest, size, blob)
+	return c.monolithicBlobUpload(ctx, location, digest, size, blob)
 }
 
 // PushBlobChunk pushes the specified blob, but by chunked,
 // refer to https://github.com/opencontainers/distribution-spec/blob/main/spec.md#push
 // for more details.
 func (c *client) PushBlobChunk(
+	ctx context.Context,
 	repository, digest string,
 	blobSize int64,
 	chunk io.Reader,
@@ -499,7 +521,7 @@ func (c *client) PushBlobChunk(
 	var err error
 	// first chunk need to initialize blob upload location
 	if start == 0 {
-		location, err = c.initiateBlobUpload(repository)
+		location, err = c.initiateBlobUpload(ctx, repository)
 		if err != nil {
 			return location, end, err
 		}
@@ -517,7 +539,7 @@ func (c *client) PushBlobChunk(
 	if lastChunk {
 		method = http.MethodPut
 	}
-	req, err := http.NewRequestWithContext(context.TODO(), method, url, chunk)
+	req, err := http.NewRequestWithContext(ctx, method, url, chunk)
 	if err != nil {
 		return location, end, err
 	}
@@ -527,7 +549,7 @@ func (c *client) PushBlobChunk(
 	resp, err := c.do(req)
 	if err != nil {
 		// if push chunk error, we should query the upload progress for new location and end range.
-		newLocation, newEnd, err1 := c.getUploadStatus(location)
+		newLocation, newEnd, err1 := c.getUploadStatus(ctx, location)
 		if err1 == nil {
 			return newLocation, newEnd, err
 		}
@@ -540,8 +562,8 @@ func (c *client) PushBlobChunk(
 	return resp.Header.Get("Location"), end, nil
 }
 
-func (c *client) getUploadStatus(location string) (string, int64, error) {
-	req, err := http.NewRequestWithContext(context.TODO(), http.MethodGet, location, nil)
+func (c *client) getUploadStatus(ctx context.Context, location string) (string, int64, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, location, nil)
 	if err != nil {
 		return location, -1, err
 	}
@@ -561,26 +583,9 @@ func (c *client) getUploadStatus(location string) (string, int64, error) {
 	return resp.Header.Get("Location"), end, nil
 }
 
-func parseContentRange(cr string) (int64, int64, error) {
-	ranges := strings.Split(cr, "-")
-	if len(ranges) != 2 {
-		return -1, -1, fmt.Errorf("invalid content range format, %s", cr)
-	}
-	start, err := strconv.ParseInt(ranges[0], 10, 64)
-	if err != nil {
-		return -1, -1, err
-	}
-	end, err := strconv.ParseInt(ranges[1], 10, 64)
-	if err != nil {
-		return -1, -1, err
-	}
-
-	return start, end, nil
-}
-
-func (c *client) initiateBlobUpload(repository string) (string, error) {
+func (c *client) initiateBlobUpload(ctx context.Context, repository string) (string, error) {
 	req, err := http.NewRequestWithContext(
-		context.TODO(), http.MethodPost,
+		ctx, http.MethodPost,
 		buildInitiateBlobUploadURL(c.url, repository), nil,
 	)
 	if err != nil {
@@ -595,12 +600,12 @@ func (c *client) initiateBlobUpload(repository string) (string, error) {
 	return resp.Header.Get("Location"), nil
 }
 
-func (c *client) monolithicBlobUpload(location, digest string, size int64, data io.Reader) error {
+func (c *client) monolithicBlobUpload(ctx context.Context, location, digest string, size int64, data io.Reader) error {
 	url, err := buildMonolithicBlobUploadURL(c.url, location, digest)
 	if err != nil {
 		return err
 	}
-	req, err := http.NewRequestWithContext(context.TODO(), http.MethodPut, url, data)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, data)
 	if err != nil {
 		return err
 	}
@@ -613,9 +618,9 @@ func (c *client) monolithicBlobUpload(location, digest string, size int64, data 
 	return nil
 }
 
-func (c *client) MountBlob(srcRepository, digest, dstRepository string) error {
+func (c *client) MountBlob(ctx context.Context, srcRepository, digest, dstRepository string) (err error) {
 	req, err := http.NewRequestWithContext(
-		context.TODO(), http.MethodPost,
+		ctx, http.MethodPost,
 		buildMountBlobURL(c.url, dstRepository, digest, srcRepository), nil,
 	)
 	if err != nil {
@@ -630,9 +635,9 @@ func (c *client) MountBlob(srcRepository, digest, dstRepository string) error {
 	return nil
 }
 
-func (c *client) DeleteBlob(repository, digest string) error {
+func (c *client) DeleteBlob(ctx context.Context, repository, digest string) (err error) {
 	req, err := http.NewRequestWithContext(
-		context.TODO(), http.MethodDelete, buildBlobURL(c.url, repository, digest), nil,
+		ctx, http.MethodDelete, buildBlobURL(c.url, repository, digest), nil,
 	)
 	if err != nil {
 		return err
@@ -645,15 +650,19 @@ func (c *client) DeleteBlob(repository, digest string) error {
 	return nil
 }
 
-func (c *client) Copy(srcRepo, srcRef, dstRepo, dstRef string, override bool) error {
+func (c *client) Copy(
+	ctx context.Context,
+	srcRepository, srcReference, dstRepository, dstReference string,
+	override bool,
+) (err error) {
 	// pull the manifest from the source repository
-	manifest, srcDgt, err := c.PullManifest(srcRepo, srcRef)
+	manifest, srcDgt, err := c.PullManifest(ctx, srcRepository, srcReference)
 	if err != nil {
 		return err
 	}
 
 	// check the existence of the artifact on the destination repository
-	blobExist, desc, err := c.ManifestExist(dstRepo, dstRef)
+	blobExist, desc, err := c.ManifestExist(ctx, dstRepository, dstReference)
 	if err != nil {
 		return err
 	}
@@ -679,12 +688,12 @@ func (c *client) Copy(srcRepo, srcRef, dstRepo, dstRef string, override bool) er
 		case v1.MediaTypeImageIndex, manifestlist.MediaTypeManifestList,
 			v1.MediaTypeImageManifest, schema2.MediaTypeManifest,
 			MediaTypeSignedManifest, MediaTypeManifest:
-			if err = c.Copy(srcRepo, digest, dstRepo, digest, false); err != nil {
+			if err = c.Copy(ctx, srcRepository, digest, dstRepository, digest, false); err != nil {
 				return err
 			}
 		// common layer
 		default:
-			blobExist, err = c.BlobExist(dstRepo, digest)
+			blobExist, err = c.BlobExist(ctx, dstRepository, digest)
 			if err != nil {
 				return err
 			}
@@ -693,7 +702,7 @@ func (c *client) Copy(srcRepo, srcRef, dstRepo, dstRef string, override bool) er
 				continue
 			}
 			// when the copy happens inside the same registry, use mount
-			if err = c.MountBlob(srcRepo, digest, dstRepo); err != nil {
+			if err = c.MountBlob(ctx, srcRepository, digest, dstRepository); err != nil {
 				return err
 			}
 		}
@@ -704,7 +713,7 @@ func (c *client) Copy(srcRepo, srcRef, dstRepo, dstRef string, override bool) er
 		return err
 	}
 	// push manifest to the destination repository
-	if _, err = c.PushManifest(dstRepo, dstRef, mediaType, payload); err != nil {
+	if _, err = c.PushManifest(ctx, dstRepository, dstReference, mediaType, payload); err != nil {
 		return err
 	}
 
@@ -827,8 +836,8 @@ func buildMonolithicBlobUploadURL(endpoint, location, digest string) (string, er
 	return endpoint + url.String(), nil
 }
 
-func (c *client) GetFile(filePath string) (*commons.ResponseHeaders, io.ReadCloser, error) {
-	req, err := http.NewRequestWithContext(context.TODO(), http.MethodGet,
+func (c *client) GetFile(ctx context.Context, filePath string) (*commons.ResponseHeaders, io.ReadCloser, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet,
 		buildFileURL(c.url, filePath), nil)
 	if err != nil {
 		return nil, nil, err
@@ -842,8 +851,8 @@ func (c *client) GetFile(filePath string) (*commons.ResponseHeaders, io.ReadClos
 	return responseHeaders, resp.Body, nil
 }
 
-func (c *client) GetFileFromURL(url string) (*commons.ResponseHeaders, io.ReadCloser, error) {
-	req, err := http.NewRequestWithContext(context.TODO(), http.MethodGet,
+func (c *client) GetFileFromURL(ctx context.Context, url string) (*commons.ResponseHeaders, io.ReadCloser, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet,
 		url, nil)
 	if err != nil {
 		return nil, nil, err
@@ -857,8 +866,8 @@ func (c *client) GetFileFromURL(url string) (*commons.ResponseHeaders, io.ReadCl
 	return responseHeaders, resp.Body, nil
 }
 
-func (c *client) HeadFile(filePath string) (*commons.ResponseHeaders, bool, error) {
-	req, err := http.NewRequestWithContext(context.TODO(), http.MethodHead,
+func (c *client) HeadFile(ctx context.Context, filePath string) (*commons.ResponseHeaders, bool, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodHead,
 		buildFileURL(c.url, filePath), nil)
 	if err != nil {
 		return nil, false, err
@@ -877,6 +886,23 @@ func buildFileURL(endpoint, filePath string) string {
 	return fmt.Sprintf("%s/%s", endpoint, filePath)
 }
 
-func (c *client) GetURL(filePath string) string {
+func (c *client) GetURL(_ context.Context, filePath string) string {
 	return buildFileURL(c.url, filePath)
+}
+
+func parseContentRange(cr string) (int64, int64, error) {
+	ranges := strings.Split(cr, "-")
+	if len(ranges) != 2 {
+		return -1, -1, fmt.Errorf("invalid content range format, %s", cr)
+	}
+	start, err := strconv.ParseInt(ranges[0], 10, 64)
+	if err != nil {
+		return -1, -1, err
+	}
+	end, err := strconv.ParseInt(ranges[1], 10, 64)
+	if err != nil {
+		return -1, -1, err
+	}
+
+	return start, end, nil
 }

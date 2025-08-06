@@ -81,8 +81,8 @@ func init() {
 	}
 }
 
-func (a *adapter) GetPackageMetadata(_ context.Context, pkg string) (*npm.PackageMetadata, error) {
-	_, readCloser, err := a.GetFile(pkg)
+func (a *adapter) GetPackageMetadata(ctx context.Context, pkg string) (*npm.PackageMetadata, error) {
+	_, readCloser, err := a.GetFile(ctx, pkg)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +114,7 @@ func (a *adapter) GetPackage(ctx context.Context, pkg string, version string) (i
 	}
 
 	log.Ctx(ctx).Info().Msgf("Download URL: %s", downloadURL)
-	_, closer, err := a.GetFileFromURL(downloadURL)
+	_, closer, err := a.GetFileFromURL(ctx, downloadURL)
 	if err != nil {
 		log.Ctx(ctx).Error().Err(err).Msgf("Failed to get file from URL: %s", downloadURL)
 		return nil, err

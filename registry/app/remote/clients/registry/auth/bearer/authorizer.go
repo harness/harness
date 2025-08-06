@@ -60,34 +60,34 @@ func (a *authorizer) Modify(req *http.Request) error {
 	scopes := parseScopes(req)
 
 	// get token
-	token, err := a.getToken(scopes)
+	_token, err := a.getToken(req.Context(), scopes)
 	if err != nil {
 		return err
 	}
 
 	// set authorization header
-	if token != nil && len(token.Token) > 0 {
-		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token.Token))
+	if _token != nil && len(_token.Token) > 0 {
+		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", _token.Token))
 	}
 	return nil
 }
 
-func (a *authorizer) getToken(scopes []*scope) (*token, error) {
+func (a *authorizer) getToken(ctx context.Context, scopes []*scope) (*token, error) {
 	// get token from cache first
-	token := a.cache.get(scopes)
-	if token != nil {
-		return token, nil
+	_token := a.cache.get(scopes)
+	if _token != nil {
+		return _token, nil
 	}
 
 	// get no token from cache, fetch it from the token service
-	token, err := a.fetchToken(scopes)
+	_token, err := a.fetchToken(ctx, scopes)
 	if err != nil {
 		return nil, err
 	}
 
 	// set the token into the cache
-	a.cache.set(scopes, token)
-	return token, nil
+	a.cache.set(scopes, _token)
+	return _token, nil
 }
 
 type token struct {
@@ -97,7 +97,7 @@ type token struct {
 	IssuedAt    string `json:"issued_at"`
 }
 
-func (a *authorizer) fetchToken(scopes []*scope) (*token, error) {
+func (a *authorizer) fetchToken(ctx context.Context, scopes []*scope) (*token, error) {
 	url, err := url.Parse(a.realm)
 	if err != nil {
 		return nil, err
@@ -109,7 +109,7 @@ func (a *authorizer) fetchToken(scopes []*scope) (*token, error) {
 	}
 	url.RawQuery = query.Encode()
 
-	req, err := http.NewRequestWithContext(context.TODO(), http.MethodGet, url.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url.String(), nil)
 	if err != nil {
 		return nil, err
 	}

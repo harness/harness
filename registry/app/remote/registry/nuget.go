@@ -23,7 +23,7 @@ import (
 
 type NugetRegistry interface {
 	GetPackage(ctx context.Context, pkg, version, proxyEndpoint, fileName string) (io.ReadCloser, error)
-	GetServiceEndpoint() (*nuget.ServiceEndpoint, error)
+	GetServiceEndpoint(ctx context.Context) (*nuget.ServiceEndpoint, error)
 	GetPackageMetadata(ctx context.Context, pkg, proxyEndpoint string) (io.ReadCloser, error)
 	GetPackageVersionMetadataV2(ctx context.Context, pkg, version string) (io.ReadCloser, error)
 	ListPackageVersion(ctx context.Context, pkg string) (io.ReadCloser, error)

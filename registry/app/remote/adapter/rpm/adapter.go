@@ -37,7 +37,7 @@ type adapter struct {
 }
 
 func (a *adapter) GetMetadataFile(ctx context.Context, filePath string) (io.ReadCloser, error) {
-	_, closer, err := a.GetFile(filePath)
+	_, closer, err := a.GetFile(ctx, filePath)
 	if err != nil {
 		log.Ctx(ctx).Error().Err(err).Msgf("Failed to get file: %s", filePath)
 		return nil, err
@@ -46,7 +46,7 @@ func (a *adapter) GetMetadataFile(ctx context.Context, filePath string) (io.Read
 }
 
 func (a *adapter) GetPackage(ctx context.Context, pkg string) (io.ReadCloser, error) {
-	_, closer, err := a.GetFile(pkg)
+	_, closer, err := a.GetFile(ctx, pkg)
 	if err != nil {
 		log.Ctx(ctx).Error().Err(err).Msgf("Failed to get package: %s", pkg)
 		return nil, err

@@ -72,7 +72,7 @@ func (a *awsAuthCredential) Modify(req *http.Request) error {
 		return nil
 	}
 	if !a.isTokenValid() {
-		endpoint, user, pass, expiresAt, err := a.getAuthorization(req.URL.String(), req.URL.Host)
+		endpoint, user, pass, expiresAt, err := a.getAuthorization(req.Context(), req.URL.String(), req.URL.Host)
 
 		if err != nil {
 			return err
@@ -103,7 +103,7 @@ func (a *awsAuthCredential) Modify(req *http.Request) error {
 	return nil
 }
 
-func getAwsSvc(accessKey, secretKey string, reg types.UpstreamProxy) (*awsecrapi.ECR, error) {
+func getAwsSvc(ctx context.Context, accessKey, secretKey string, reg types.UpstreamProxy) (*awsecrapi.ECR, error) {
 	_, region, err := parseAccountRegion(reg.RepoURL)
 	if err != nil {
 		return nil, err
@@ -113,7 +113,7 @@ func getAwsSvc(accessKey, secretKey string, reg types.UpstreamProxy) (*awsecrapi
 		return nil, err
 	}
 	var cred *credentials.Credentials
-	log.Info().Msgf("Aws Ecr getAuthorization %s", accessKey)
+	log.Ctx(ctx).Info().Msgf("Aws Ecr getAuthorization %s", accessKey)
 	if accessKey != "" {
 		cred = credentials.NewStaticCredentials(
 			accessKey,
@@ -148,7 +148,7 @@ func getCreds(
 		return "", "", true, nil
 	}
 	if api.AuthType(reg.RepoAuthType) != api.AuthTypeAccessKeySecretKey {
-		log.Debug().Msgf("invalid auth type: %s", reg.RepoAuthType)
+		log.Ctx(ctx).Debug().Msgf("invalid auth type: %s", reg.RepoAuthType)
 		return "", "", false, nil
 	}
 	secretKey, err := getSecretValue(ctx, spaceFinder, secretService, reg.SecretSpaceID,
@@ -173,20 +173,27 @@ func getSecretValue(
 ) (string, error) {
 	spacePath, err := spaceFinder.FindByID(ctx, secretSpaceID)
 	if err != nil {
-		log.Error().Msgf("failed to find space path: %d, %v", secretSpaceID, err)
+		log.Ctx(ctx).Error().Msgf("failed to find space path: %d, %v", secretSpaceID, err)
 		return "", err
 	}
 	decryptSecret, err := secretService.DecryptSecret(ctx, spacePath.Path, secretSpacePath)
 	if err != nil {
-		log.Error().Msgf("failed to decrypt secret at path: %s, secret: %s, %v", spacePath.Path, secretSpacePath, err)
+		log.Ctx(ctx).Error().Msgf("failed to decrypt secret at path: %s, secret: %s, %v", spacePath.Path,
+			secretSpacePath, err)
 		return "", err
 	}
 	return decryptSecret, nil
 }
 
-func (a *awsAuthCredential) getAuthorization(url, host string) (string, string, string, *time.Time, error) {
+func (a *awsAuthCredential) getAuthorization(ctx context.Context, url, host string) (
+	string,
+	string,
+	string,
+	*time.Time,
+	error,
+) {
 	if a.isPublic {
-		token, err := a.getPublicECRToken(host)
+		token, err := a.getPublicECRToken(ctx, host)
 		if err != nil {
 			return "", "", "", nil, err
 		}
@@ -202,7 +209,7 @@ func (a *awsAuthCredential) getAuthorization(url, host string) (string, string, 
 		input = &awsecrapi.GetAuthorizationTokenInput{RegistryIds: []*string{&id}}
 	}
 	svc := a.awssvc
-	result, err := svc.GetAuthorizationToken(input)
+	result, err := svc.GetAuthorizationTokenWithContext(ctx, input)
 	if err != nil {
 		var awsErr *awserr.Error
 
@@ -223,7 +230,7 @@ func (a *awsAuthCredential) getAuthorization(url, host string) (string, string, 
 	payload, _ := base64.StdEncoding.DecodeString(*theOne.AuthorizationToken)
 	pair := strings.SplitN(string(payload), ":", 2)
 
-	log.Debug().Msgf("Aws Ecr getAuthorization %s result: %d %s...", a.accessKey, len(pair[1]), pair[1][:25])
+	log.Ctx(ctx).Debug().Msgf("Aws Ecr getAuthorization %s result: %d %s...", a.accessKey, len(pair[1]), pair[1][:25])
 
 	return *(theOne.ProxyEndpoint), pair[0], pair[1], expiresAt, nil
 }
@@ -252,11 +259,11 @@ func NewAuth(accessKey string, awssvc *awsecrapi.ECR, isPublic bool) Credential 
 	}
 }
 
-func (a *awsAuthCredential) getPublicECRToken(host string) (string, error) {
+func (a *awsAuthCredential) getPublicECRToken(ctx context.Context, host string) (string, error) {
 	c := &http.Client{
 		Transport: commonhttp.GetHTTPTransport(commonhttp.WithInsecure(true)),
 	}
-	req, err := http.NewRequestWithContext(context.TODO(), http.MethodGet, buildTokenURL(host, host), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, buildTokenURL(host, host), nil)
 	if err != nil {
 		return "", fmt.Errorf("failed to create request: %w", err)
 	}

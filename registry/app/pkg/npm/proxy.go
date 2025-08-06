@@ -224,6 +224,6 @@ func (r *proxy) putFileToLocal(ctx context.Context, info npm2.ArtifactInfo, remo
 		log.Ctx(ctx).Error().Stack().Err(err2).Msgf("uploading file %s failed, %v", info.Filename, err)
 		return err2
 	}
-	log.Info().Msgf("Successfully uploaded %s with SHA256: %s", info.Filename, sha256)
+	log.Ctx(ctx).Info().Msgf("Successfully uploaded %s with SHA256: %s", info.Filename, sha256)
 	return nil
 }

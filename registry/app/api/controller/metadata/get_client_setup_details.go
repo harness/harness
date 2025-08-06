@@ -1702,13 +1702,14 @@ func (c *APIController) replacePlaceholdersInSection(
 			continue
 		}
 		for j := range *st.Commands {
-			c.replaceText(username, st, j, hostname, registryName, image, tag, registryURL, groupID, uploadURL)
+			c.replaceText(ctx, username, st, j, hostname, registryName, image, tag, registryURL, groupID, uploadURL)
 		}
 	}
 	_ = clientSetupSection.FromClientSetupStepConfig(sec)
 }
 
 func (c *APIController) replaceText(
+	ctx context.Context,
 	username string,
 	st artifact.ClientSetupStep,
 	i int,
@@ -1751,7 +1752,7 @@ func (c *APIController) replaceText(
 	}
 	if hostname != "" {
 		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value,
-			"<LOGIN_HOSTNAME>", common.GetHost(hostname)))
+			"<LOGIN_HOSTNAME>", common.GetHost(ctx, hostname)))
 	}
 	if repoName != "" {
 		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<REGISTRY_NAME>",

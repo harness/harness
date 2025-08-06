@@ -57,7 +57,7 @@ func newAdapter(
 	}
 	var svc *awsecrapi.ECR
 	if !isPublic {
-		svc, err = getAwsSvc(accessKey, secretKey, registry)
+		svc, err = getAwsSvc(ctx, accessKey, secretKey, registry)
 		if err != nil {
 			return nil, err
 		}

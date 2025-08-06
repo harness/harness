@@ -49,10 +49,10 @@ func NewClient(_ types.UpstreamProxy) (*Client, error) {
 }
 
 // Do performs http request to DockerHub, it will set token automatically.
-func (c *Client) Do(method, path string, body io.Reader) (*http.Response, error) {
+func (c *Client) Do(ctx context.Context, method, path string, body io.Reader) (*http.Response, error) {
 	url := baseURL + path
-	log.Info().Msgf("%s %s", method, url)
-	req, err := http.NewRequestWithContext(context.TODO(), method, url, body)
+	log.Ctx(ctx).Info().Msgf("%s %s", method, url)
+	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
 		return nil, err
 	}

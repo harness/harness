@@ -69,7 +69,7 @@ func (bw *blobWriter) resumeDigest(ctx context.Context) error {
 
 	if hashStateMatch.offset == 0 {
 		// No need to load any state, just reset the hasher.
-		h.(hash.Hash).Reset()
+		h.(hash.Hash).Reset() //nolint:errcheck
 	} else {
 		storedState, err := bw.driver.GetContent(ctx, hashStateMatch.path)
 		if err != nil {
@@ -126,7 +126,7 @@ func (bw *blobWriter) getStoredHashStates(ctx context.Context) ([]hashStateEntry
 		// The suffix should be the offset.
 		offset, err := strconv.ParseInt(pathSuffix, 0, 64)
 		if err != nil {
-			log.Error().Msgf("unable to parse offset from upload state path %q: %s", p, err)
+			log.Ctx(ctx).Error().Msgf("unable to parse offset from upload state path %q: %s", p, err)
 		}
 
 		hashStateEntries = append(hashStateEntries, hashStateEntry{offset: offset, path: p})

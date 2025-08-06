@@ -15,12 +15,13 @@
 package registry
 
 import (
+	"context"
 	"io"
 
 	"github.com/harness/gitness/registry/app/metadata/cargo"
 )
 
 type CargoRegistry interface {
-	GetRegistryConfig() (*cargo.RegistryConfig, error)
-	GetPackageFile(filepath string) (io.ReadCloser, error)
+	GetRegistryConfig(ctx context.Context) (*cargo.RegistryConfig, error)
+	GetPackageFile(ctx context.Context, filepath string) (io.ReadCloser, error)
 }

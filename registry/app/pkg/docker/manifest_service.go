@@ -464,7 +464,7 @@ func (l *manifestService) dbPutManifestV2(
 		return nil
 	}
 
-	log.Debug().Msgf("manifest %s not found in database", dgst.String())
+	log.Ctx(ctx).Debug().Msgf("manifest %s not found in database", dgst.String())
 
 	cfg := &types.Configuration{
 		MediaType: mfst.Config().MediaType,

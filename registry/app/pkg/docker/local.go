@@ -807,11 +807,10 @@ func (r *LocalRegistry) handlePutManifestErrors(
 			case errors.As(verificationError, &manifest.BlobUnknownError{}):
 				var manifestBlobUnknownError manifest.BlobUnknownError
 				errors.As(verificationError, &manifestBlobUnknownError)
-				dgst := manifestBlobUnknownError.Digest
 				errs = append(
 					errs,
 					errcode.ErrCodeManifestBlobUnknown.WithDetail(
-						dgst,
+						manifestBlobUnknownError.Digest,
 					),
 				)
 			case errors.As(verificationError, &manifest.NameInvalidError{}):
@@ -974,8 +973,8 @@ func (r *LocalRegistry) PushBlobChunk(
 	}
 
 	if err := blobUploadResponse(
-		ctx, responseHeaders, artInfo.RegIdentifier,
-		artInfo,
+		ctx, responseHeaders,
+		artInfo.RegIdentifier, artInfo,
 	); err != nil {
 		errs = append(errs, errcode.ErrCodeUnknown.WithDetail(err))
 		return responseHeaders, errs
@@ -1082,9 +1081,7 @@ func (r *LocalRegistry) PushBlob(
 		// Clean up the backend blob data if there was an error.
 		if err := ctx.Upload.Cancel(ctx); err != nil {
 			// If the cleanup fails, all we can do is observe and report.
-			log.Error().Stack().Err(
-				err,
-			).Msgf("error canceling upload after error: %v", err)
+			log.Ctx(ctx).Error().Stack().Err(err).Msgf("error canceling upload after error: %v", err)
 		}
 		return responseHeaders, errs
 	}
@@ -1093,10 +1090,7 @@ func (r *LocalRegistry) PushBlob(
 	err = r.dbPutBlobUploadComplete(ctx, "application/octet-stream", artInfo.Digest, int(desc.Size), artInfo)
 	if err != nil {
 		errs = append(errs, err)
-		log.Error().Stack().Err(err).Msgf(
-			"ensure blob %s failed, error: %v",
-			artInfo.Digest, err,
-		)
+		log.Ctx(ctx).Error().Msgf("failed to put blob in database: %v", err) //nolint:contextcheck
 		return responseHeaders, errs
 	}
 
@@ -1168,7 +1162,7 @@ func (r *LocalRegistry) DeleteManifest(
 	ctx context.Context,
 	artInfo pkg.RegistryInfo,
 ) (errs []error, responseHeaders *commons.ResponseHeaders) {
-	log.Debug().Msg("DeleteImageManifest")
+	log.Ctx(ctx).Debug().Msg("DeleteImageManifest")
 	var tag = artInfo.Tag
 	var d = artInfo.Digest
 
@@ -1176,7 +1170,7 @@ func (r *LocalRegistry) DeleteManifest(
 
 	// TODO: If Tag is not empty, we just untag the tag, nothing more!
 	if tag != "" {
-		log.Debug().Msg("DeleteImageTag")
+		log.Ctx(ctx).Debug().Msg("DeleteImageTag")
 		_, err := r.ms.DeleteTag(ctx, artInfo.RegIdentifier, tag, artInfo)
 		if err != nil {
 			errs = append(errs, err)
@@ -1322,7 +1316,7 @@ func (r *LocalRegistry) GetBlobUploadStatus(
 	}
 
 	errList := make([]error, 0)
-	log.Debug().Msgf("GetBlobUploadStatus")
+	log.Ctx(ctx.Context).Debug().Msgf("GetBlobUploadStatus")
 
 	if ctx.Upload == nil {
 		blobs := ctx.OciBlobStore
@@ -1432,7 +1426,7 @@ func blobUploadResponse(
 		context.State,
 	)
 	if err != nil {
-		log.Info().Msgf("error building upload state token: %s", err)
+		log.Ctx(context.Context).Info().Msgf("error building upload state token: %s", err)
 		return err
 	}
 	image := info.Image
@@ -1447,7 +1441,7 @@ func blobUploadResponse(
 		},
 	)
 	if err != nil {
-		log.Info().Msgf("error building upload url: %s", err)
+		log.Ctx(context.Context).Info().Msgf("error building upload url: %s", err)
 		return err
 	}
 
@@ -1585,7 +1579,7 @@ func (r *LocalRegistry) dbPutBlobUploadComplete(
 		}, dbtx.TxDefault,
 	)
 	if err != nil {
-		log.Error().Msgf("failed to put blob in database: %v", err)
+		log.Ctx(ctx.Context).Error().Msgf("failed to put blob in database: %v", err)
 		return fmt.Errorf("committing database transaction: %w", err)
 	}
 
@@ -1607,7 +1601,7 @@ func (r *LocalRegistry) dbDeleteBlob(
 	d digest.Digest,
 	info pkg.RegistryInfo,
 ) error {
-	log.Debug().Msgf("deleting blob from repository in database")
+	log.Ctx(ctx.Context).Debug().Msgf("deleting blob from repository in database")
 
 	if !config.Registry.Storage.S3Storage.Delete {
 		return storage.ErrUnsupported
@@ -1638,7 +1632,7 @@ func (r *LocalRegistry) dbGetTags(
 	ctx context.Context, filters types.FilterParams,
 	info pkg.RegistryInfo,
 ) ([]string, bool, error) {
-	log.Debug().Msgf("finding tags in database")
+	log.Ctx(ctx).Debug().Msgf("finding tags in database")
 
 	reg := info.Registry
 
@@ -1668,7 +1662,7 @@ func (r *LocalRegistry) dbMountBlob(
 	ctx context.Context, fromImageRef, toRepo string,
 	d digest.Digest, info pkg.RegistryInfo,
 ) error {
-	log.Debug().Msgf("cross repository blob mounting")
+	log.Ctx(ctx).Debug().Msgf("cross repository blob mounting")
 
 	destRepo, err := r.registryDao.GetByParentIDAndName(ctx, info.ParentID, toRepo)
 	if err != nil {

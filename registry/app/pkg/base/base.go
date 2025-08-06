@@ -467,7 +467,8 @@ func (l *localBase) DeletePackage(ctx context.Context, info pkg.PackageArtifactI
 				return err
 			}
 
-			err = l.imageDao.DeleteByImageNameAndRegID(ctx, info.BaseArtifactInfo().RegistryID, info.BaseArtifactInfo().Image)
+			err = l.imageDao.DeleteByImageNameAndRegID(ctx, info.BaseArtifactInfo().RegistryID,
+				info.BaseArtifactInfo().Image)
 
 			if err != nil {
 				return err
@@ -475,7 +476,7 @@ func (l *localBase) DeletePackage(ctx context.Context, info pkg.PackageArtifactI
 			return nil
 		})
 	if err != nil {
-		log.Warn().Msgf("Failed to delete the package %v", info.BaseArtifactInfo().Image)
+		log.Ctx(ctx).Warn().Msgf("Failed to delete the package %v", info.BaseArtifactInfo().Image)
 		return err
 	}
 
@@ -501,7 +502,8 @@ func (l *localBase) DeleteVersion(ctx context.Context, info pkg.PackageArtifactI
 			return nil
 		})
 	if err != nil {
-		log.Warn().Msgf("Failed to delete the version for artifact %v:%v", info.BaseArtifactInfo().Image, info.GetVersion())
+		log.Ctx(ctx).Warn().Msgf("Failed to delete the version for artifact %v:%v", info.BaseArtifactInfo().Image,
+			info.GetVersion())
 		return err
 	}
 	return nil

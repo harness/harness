@@ -83,17 +83,17 @@ func init() {
 	}
 }
 
-func (a *adapter) GetMetadata(_ context.Context, pkg string) (*pypi.SimpleMetadata, error) {
+func (a *adapter) GetMetadata(ctx context.Context, pkg string) (*pypi.SimpleMetadata, error) {
 	filePath := "simple/" + pkg
 	if a.registry.RepoURL != PyPiURL {
 		filePath += "/index.html"
 	}
-	_, readCloser, err := a.GetFile(filePath)
+	_, readCloser, err := a.GetFile(ctx, filePath)
 	if err != nil {
 		return nil, err
 	}
 	defer readCloser.Close()
-	response, err := ParsePyPISimple(readCloser, a.GetURL(filePath))
+	response, err := ParsePyPISimple(readCloser, a.GetURL(ctx, filePath))
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +135,7 @@ func (a *adapter) GetPackage(ctx context.Context, pkg string, filename string) (
 	}
 
 	log.Ctx(ctx).Info().Msgf("Download URL: %s", downloadURL)
-	_, closer, err := a.GetFileFromURL(downloadURL)
+	_, closer, err := a.GetFileFromURL(ctx, downloadURL)
 	if err != nil {
 		log.Ctx(ctx).Error().Err(err).Msgf("Failed to get file from URL: %s", downloadURL)
 		return nil, err
@@ -144,7 +144,7 @@ func (a *adapter) GetPackage(ctx context.Context, pkg string, filename string) (
 }
 
 func (a *adapter) GetJSON(ctx context.Context, pkg string, version string) (*python.Metadata, error) {
-	_, readCloser, err := a.GetFile(fmt.Sprintf("pypi/%s/%s/json", pkg, version))
+	_, readCloser, err := a.GetFile(ctx, fmt.Sprintf("pypi/%s/%s/json", pkg, version))
 	if err != nil {
 		return nil, err
 	}

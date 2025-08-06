@@ -174,7 +174,7 @@ func init() {
 
 // TODO: figure-out why init is not called automatically
 func Register() {
-	log.Info().Msgf("registering s3 driver")
+	log.Ctx(context.Background()).Info().Msgf("registering s3 driver")
 }
 
 // s3DriverFactory implements the factory.StorageDriverFactory interface.
@@ -583,7 +583,7 @@ func getS3LogLevelFromParam(param interface{}) aws.LogLevelType {
 	}
 	logLevelParam, ok := param.(string)
 	if !ok {
-		log.Warn().Msg("Error: param is not of type string")
+		log.Ctx(context.Background()).Warn().Msg("Error: param is not of type string")
 	}
 	var logLevel aws.LogLevelType
 	switch strings.ToLower(logLevelParam) {

@@ -72,8 +72,8 @@ func init() {
 	}
 }
 
-func (a *adapter) GetRegistryConfig() (*cargo.RegistryConfig, error) {
-	_, readCloser, err := a.GetFile("config.json")
+func (a *adapter) GetRegistryConfig(ctx context.Context) (*cargo.RegistryConfig, error) {
+	_, readCloser, err := a.GetFile(ctx, "config.json")
 	if err != nil {
 		return nil, err
 	}
@@ -91,8 +91,8 @@ func (a *adapter) GetRegistryConfig() (*cargo.RegistryConfig, error) {
 	return &config, nil
 }
 
-func (a *adapter) GetPackageFile(filePath string) (io.ReadCloser, error) {
-	_, readCloser, err := a.GetFile(filePath)
+func (a *adapter) GetPackageFile(ctx context.Context, filepath string) (io.ReadCloser, error) {
+	_, readCloser, err := a.GetFile(ctx, filepath)
 	if err != nil {
 		return nil, err
 	}

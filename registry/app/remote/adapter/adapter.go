@@ -53,38 +53,40 @@ type Adapter interface {
 
 // ArtifactRegistry defines the capabilities that an artifact registry should have.
 type ArtifactRegistry interface {
-	ManifestExist(repository, reference string) (exist bool, desc *manifest.Descriptor, err error)
+	ManifestExist(ctx context.Context, repository, reference string) (exist bool, desc *manifest.Descriptor, err error)
 	PullManifest(
+		ctx context.Context,
 		repository, reference string,
 		accepttedMediaTypes ...string,
 	) (manifest manifest.Manifest, digest string, err error)
-	PushManifest(repository, reference, mediaType string, payload []byte) (string, error)
-	DeleteManifest(
-		repository, reference string,
-	) error // the "reference" can be "tag" or "digest", the function needs to handle both
-	BlobExist(repository, digest string) (exist bool, err error)
-	PullBlob(repository, digest string) (size int64, blob io.ReadCloser, err error)
-	PullBlobChunk(repository, digest string, blobSize, start, end int64) (size int64, blob io.ReadCloser, err error)
+	PushManifest(ctx context.Context, repository, reference, mediaType string, payload []byte) (string, error)
+	DeleteManifest(ctx context.Context, repository, reference string) error
+	// the "reference" can be "tag" or "digest", the function needs to handle both
+	BlobExist(ctx context.Context, repository, digest string) (exist bool, err error)
+	PullBlob(ctx context.Context, repository, digest string) (size int64, blob io.ReadCloser, err error)
+	PullBlobChunk(ctx context.Context, repository, digest string, blobSize, start, end int64) (
+		size int64,
+		blob io.ReadCloser,
+		err error,
+	)
 	PushBlobChunk(
+		ctx context.Context,
 		repository, digest string,
 		size int64,
 		chunk io.Reader,
 		start, end int64,
 		location string,
 	) (nextUploadLocation string, endRange int64, err error)
-	PushBlob(repository, digest string, size int64, blob io.Reader) error
-	MountBlob(srcRepository, digest, dstRepository string) (err error)
-	CanBeMount(
-		digest string,
-	) (mount bool, repository string, err error) // check whether the blob can be mounted from the remote registry
-	DeleteTag(repository, tag string) error
-	ListTags(repository string) (tags []string, err error)
-
+	PushBlob(ctx context.Context, repository, digest string, size int64, blob io.Reader) error
+	MountBlob(ctx context.Context, srcRepository, digest, dstRepository string) (err error)
+	CanBeMount(ctx context.Context, digest string) (mount bool, repository string, err error)
+	// check whether the blob can be mounted from the remote registry
+	DeleteTag(ctx context.Context, repository, tag string) error
+	ListTags(ctx context.Context, repository string) (tags []string, err error)
 	// Download the file
-	GetFile(filePath string) (*commons.ResponseHeaders, io.ReadCloser, error)
-
+	GetFile(ctx context.Context, filePath string) (*commons.ResponseHeaders, io.ReadCloser, error)
 	// Check existence of file
-	HeadFile(filePath string) (*commons.ResponseHeaders, bool, error)
+	HeadFile(ctx context.Context, filePath string) (*commons.ResponseHeaders, bool, error)
 }
 
 // RegisterFactory registers one adapter factory to the registry.

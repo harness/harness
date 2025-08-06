@@ -124,7 +124,7 @@ func (r *proxy) DownloadPackageIndex(
 	if err != nil {
 		return nil, nil, nil, "", fmt.Errorf("failed to create remote registry helper: %w", err)
 	}
-	result, err := helper.GetPackageIndex(info.Image, filePath)
+	result, err := helper.GetPackageIndex(ctx, info.Image, filePath)
 	if err != nil {
 		return nil, nil, nil, "", fmt.Errorf("failed to get package index file: %w", err)
 	}
@@ -163,7 +163,7 @@ func (r *proxy) DownloadPackage(
 	if err != nil {
 		return nil, nil, nil, "", fmt.Errorf("failed to create remote registry helper: %w", err)
 	}
-	registryConfig, err := helper.GetRegistryConfig()
+	registryConfig, err := helper.GetRegistryConfig(ctx)
 	if err != nil {
 		return nil, nil, nil, "", fmt.Errorf("failed to get registry config: %w", err)
 	}
@@ -209,8 +209,10 @@ func (r *proxy) RegeneratePackageIndex(
 	return nil, errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
 }
 
-func (r *proxy) putFileToLocal(ctx context.Context, info *cargotype.ArtifactInfo,
-	remote RemoteRegistryHelper) error {
+func (r *proxy) putFileToLocal(
+	ctx context.Context, info *cargotype.ArtifactInfo,
+	remote RemoteRegistryHelper,
+) error {
 	// Get pacakage from upstream source
 	file, err := remote.GetPackageFile(ctx, info.Image, info.Version)
 	if err != nil {
@@ -262,7 +264,7 @@ func (r *proxy) putFileToLocal(ctx context.Context, info *cargotype.ArtifactInfo
 	// regenerate package index
 	r.localRegistryHelper.UpdatePackageIndex(ctx, *info)
 
-	log.Info().Msgf("Successfully uploaded file for pkg: %s , version: %s",
+	log.Ctx(ctx).Info().Msgf("Successfully uploaded file for pkg: %s , version: %s",
 		info.Image, info.Version)
 	return nil
 }

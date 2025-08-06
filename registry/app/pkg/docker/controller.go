@@ -139,7 +139,7 @@ func (c *Controller) ProxyWrapper(
 	}
 	for _, registry := range repos {
 		log.Ctx(ctx).Info().Msgf("Using Repository: %s, Type: %s", registry.Name, registry.Type)
-		artifact, ok := c.GetArtifact(registry).(Registry)
+		artifact, ok := c.GetArtifact(ctx, registry).(Registry)
 		if !ok {
 			log.Ctx(ctx).Warn().Msgf("artifact %s is not a registry", registry.Name)
 			continue

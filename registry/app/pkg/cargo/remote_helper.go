@@ -33,13 +33,13 @@ import (
 
 type RemoteRegistryHelper interface {
 	// GetRegistryConfig Fetches the registry configuration for the remote registry
-	GetRegistryConfig() (*cargo.RegistryConfig, error)
+	GetRegistryConfig(ctx context.Context) (*cargo.RegistryConfig, error)
 
 	// GetFile Downloads the file for the given package and filename
 	GetPackageFile(ctx context.Context, pkg string, version string) (io.ReadCloser, error)
 
 	// GetPackageIndex Fetches the package index for the given package
-	GetPackageIndex(pkg string, filePath string) (io.ReadCloser, error)
+	GetPackageIndex(ctx context.Context, pkg string, filePath string) (io.ReadCloser, error)
 }
 
 type remoteRegistryHelper struct {
@@ -99,19 +99,20 @@ func (r *remoteRegistryHelper) init(
 	return nil
 }
 
-func (r *remoteRegistryHelper) GetRegistryConfig() (*cargo.RegistryConfig, error) {
-	config, err := r.adapter.GetRegistryConfig()
+func (r *remoteRegistryHelper) GetRegistryConfig(ctx context.Context) (*cargo.RegistryConfig, error) {
+	config, err := r.adapter.GetRegistryConfig(ctx)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to get registry config")
+		log.Ctx(ctx).Error().Err(err).Msg("failed to get registry config")
 		return nil, fmt.Errorf("failed to get registry config: %w", err)
 	}
 	return config, nil
 }
 
-func (r *remoteRegistryHelper) GetPackageIndex(
-	pkg string, filePath string,
-) (io.ReadCloser, error) {
-	data, err := r.adapter.GetPackageFile(filePath)
+func (r *remoteRegistryHelper) GetPackageIndex(ctx context.Context, pkg string, filePath string) (
+	io.ReadCloser,
+	error,
+) {
+	data, err := r.adapter.GetPackageFile(ctx, filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get package index: %s", pkg)
 	}
@@ -126,7 +127,7 @@ func (r *remoteRegistryHelper) GetPackageFile(
 ) (io.ReadCloser, error) {
 	// get the file for the package
 	filePath := downloadPackageFilePath(pkg, version)
-	data, err := r.adapter.GetPackageFile(filePath)
+	data, err := r.adapter.GetPackageFile(ctx, filePath)
 	if err != nil {
 		log.Ctx(ctx).Error().Err(err).Msgf("failed to get package file: %s, %s", pkg, filePath)
 		return nil, fmt.Errorf("failed to get package file: %s, %s", pkg, filePath)

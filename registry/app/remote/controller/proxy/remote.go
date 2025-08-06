@@ -38,13 +38,13 @@ const DockerHubURL = "https://registry-1.docker.io"
 // RemoteInterface defines operations related to remote repository under proxy.
 type RemoteInterface interface {
 	// BlobReader create a reader for remote blob.
-	BlobReader(registry, dig string) (int64, io.ReadCloser, error)
+	BlobReader(ctx context.Context, registry, dig string) (int64, io.ReadCloser, error)
 	// Manifest get manifest by reference.
-	Manifest(registry string, ref string) (manifest.Manifest, string, error)
+	Manifest(ctx context.Context, registry string, ref string) (manifest.Manifest, string, error)
 	// ManifestExist checks manifest exist, if exist, return digest.
-	ManifestExist(registry string, ref string) (bool, *manifest.Descriptor, error)
+	ManifestExist(ctx context.Context, registry string, ref string) (bool, *manifest.Descriptor, error)
 	// ListTags returns all tags of the registry.
-	ListTags(registry string) ([]string, error)
+	ListTags(ctx context.Context, registry string) ([]string, error)
 
 	GetImageName(ctx context.Context, spacePathStore refcache.SpaceFinder, imageName string) (string, error)
 }
@@ -97,26 +97,30 @@ func (r *remoteHelper) init(ctx context.Context, spaceFinder refcache.SpaceFinde
 	}
 	reg, ok := adp.(adapter.ArtifactRegistry)
 	if !ok {
-		log.Warn().Msgf("Error: adp is not of type adapter.ArtifactRegistry")
+		log.Ctx(ctx).Warn().Msgf("Error: adp is not of type adapter.ArtifactRegistry")
 	}
 	r.registry = reg
 	return nil
 }
 
-func (r *remoteHelper) BlobReader(registry, dig string) (int64, io.ReadCloser, error) {
-	return r.registry.PullBlob(registry, dig)
+func (r *remoteHelper) BlobReader(ctx context.Context, registry, dig string) (int64, io.ReadCloser, error) {
+	return r.registry.PullBlob(ctx, registry, dig)
 }
 
-func (r *remoteHelper) Manifest(registry string, ref string) (manifest.Manifest, string, error) {
-	return r.registry.PullManifest(registry, ref)
+func (r *remoteHelper) Manifest(ctx context.Context, registry string, ref string) (manifest.Manifest, string, error) {
+	return r.registry.PullManifest(ctx, registry, ref)
 }
 
-func (r *remoteHelper) ManifestExist(registry string, ref string) (bool, *manifest.Descriptor, error) {
-	return r.registry.ManifestExist(registry, ref)
+func (r *remoteHelper) ManifestExist(ctx context.Context, registry string, ref string) (
+	bool,
+	*manifest.Descriptor,
+	error,
+) {
+	return r.registry.ManifestExist(ctx, registry, ref)
 }
 
-func (r *remoteHelper) ListTags(registry string) ([]string, error) {
-	return r.registry.ListTags(registry)
+func (r *remoteHelper) ListTags(ctx context.Context, registry string) ([]string, error) {
+	return r.registry.ListTags(ctx, registry)
 }
 
 func (r *remoteHelper) GetImageName(

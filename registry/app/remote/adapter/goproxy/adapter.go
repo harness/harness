@@ -69,8 +69,8 @@ func init() {
 	}
 }
 
-func (a *adapter) GetPackageFile(filePath string) (io.ReadCloser, error) {
-	_, readCloser, err := a.GetFile(filePath)
+func (a *adapter) GetPackageFile(ctx context.Context, filepath string) (io.ReadCloser, error) {
+	_, readCloser, err := a.GetFile(ctx, filepath)
 	if err != nil {
 		return nil, err
 	}

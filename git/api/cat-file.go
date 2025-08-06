@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"iter"
 	"strconv"
 	"strings"
 
@@ -31,6 +30,7 @@ import (
 
 	"github.com/djherbis/buffer"
 	"github.com/djherbis/nio/v3"
+	"iter"
 )
 
 // WriteCloserError wraps an io.WriteCloser with an additional CloseWithError function.

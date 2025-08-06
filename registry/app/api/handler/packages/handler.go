@@ -170,7 +170,7 @@ func (h *handler) TrackDownloadStats(
 	info := request.ArtifactInfoFrom(r.Context()) //nolint:contextcheck
 	if err := h.DownloadStatDao.CreateByRegistryIDImageAndArtifactName(ctx,
 		info.BaseArtifactInfo().RegistryID, info.BaseArtifactInfo().Image, info.GetVersion()); err != nil {
-		log.Error().Msgf("failed to create download stat: %v", err.Error())
+		log.Ctx(ctx).Error().Msgf("failed to create download stat: %v", err.Error())
 		return usererror.ErrInternal
 	}
 	return nil
@@ -183,7 +183,7 @@ func (h *handler) CheckQuarantineStatus(
 	filePath, err := utils.GetFilePath(info.BaseArtifactInfo().PathPackageType,
 		info.BaseArtifactInfo().Image, info.GetVersion())
 	if err != nil {
-		log.Error().Msgf("failed to find the file paths for artifact: [%s], "+
+		log.Ctx(ctx).Error().Msgf("failed to find the file paths for artifact: [%s], "+
 			"version: [%s] with registryID: [%d] with error: %v",
 			info.BaseArtifactInfo().Image, info.GetVersion(), info.BaseArtifactInfo().RegistryID, err.Error())
 		return usererror.ErrInternal
@@ -192,13 +192,13 @@ func (h *handler) CheckQuarantineStatus(
 	paths, err := h.QuarantineArtifactDao.GetByFilePath(ctx, filePath,
 		info.BaseArtifactInfo().RegistryID, info.BaseArtifactInfo().Image, info.GetVersion())
 	if err != nil {
-		log.Error().Msgf("failed to find the qurantine paths for artifact: [%s], "+
+		log.Ctx(ctx).Error().Msgf("failed to find the qurantine paths for artifact: [%s], "+
 			"version: [%s] with registryID: [%d] with error: %v",
 			info.BaseArtifactInfo().Image, info.GetVersion(), info.BaseArtifactInfo().RegistryID, err.Error())
 		return usererror.ErrInternal
 	}
 	if len(paths) != 0 {
-		log.Error().Msgf("Requested artifact: [%s] with "+
+		log.Ctx(ctx).Error().Msgf("Requested artifact: [%s] with "+
 			"version: [%s] and filename: [%s] with registryID: [%d] is quarantined",
 			info.BaseArtifactInfo().Image, info.GetVersion(), info.GetFileName(), info.BaseArtifactInfo().RegistryID)
 		return usererror.ErrQuarantinedArtifact

@@ -106,23 +106,23 @@ func NewDBStore(
 	}
 }
 
-func (c *Controller) factory(t ArtifactType) Artifact {
+func (c *Controller) factory(ctx context.Context, t ArtifactType) Artifact {
 	switch t {
 	case LocalRegistryType:
 		return TypeRegistry[t]
 	case RemoteRegistryType:
 		return TypeRegistry[t]
 	default:
-		log.Error().Stack().Msgf("Invalid artifact type %v", t)
+		log.Ctx(ctx).Error().Stack().Msgf("Invalid artifact type %v", t)
 		return nil
 	}
 }
 
-func (c *Controller) GetArtifactRegistry(registry registrytypes.Registry) Artifact {
+func (c *Controller) GetArtifactRegistry(ctx context.Context, registry registrytypes.Registry) Artifact {
 	if string(registry.Type) == string(artifact.RegistryTypeVIRTUAL) {
-		return c.factory(LocalRegistryType)
+		return c.factory(ctx, LocalRegistryType)
 	}
-	return c.factory(RemoteRegistryType)
+	return c.factory(ctx, RemoteRegistryType)
 }
 
 func (c *Controller) GetArtifact(ctx context.Context, info pkg.MavenArtifactInfo) Response {
@@ -140,7 +140,7 @@ func (c *Controller) GetArtifact(ctx context.Context, info pkg.MavenArtifactInfo
 		info.ParentID = registry.ParentID
 		r, ok := a.(Registry)
 		if !ok {
-			log.Error().Stack().Msgf("Proxy wrapper has invalid registry set")
+			log.Ctx(ctx).Error().Stack().Msgf("Proxy wrapper has invalid registry set")
 			return nil
 		}
 		headers, body, fileReader, redirectURL, e := r.GetArtifact(ctx, info) //nolint:errcheck
@@ -167,7 +167,7 @@ func (c *Controller) HeadArtifact(ctx context.Context, info pkg.MavenArtifactInf
 		info.ParentID = registry.ParentID
 		r, ok := a.(Registry)
 		if !ok {
-			log.Error().Stack().Msgf("Proxy wrapper has invalid registry set")
+			log.Ctx(ctx).Error().Stack().Msgf("Proxy wrapper has invalid registry set")
 			return nil
 		}
 		headers, e := r.HeadArtifact(ctx, info)
@@ -208,7 +208,7 @@ func (c *Controller) ProxyWrapper(
 	if repos, err := c.GetOrderedRepos(ctx, requestRepoKey, *info.BaseInfo); err == nil {
 		for _, registry := range repos {
 			log.Ctx(ctx).Info().Msgf("Using Repository: %s, Type: %s", registry.Name, registry.Type)
-			artifact, ok := c.GetArtifactRegistry(registry).(Registry)
+			artifact, ok := c.GetArtifactRegistry(ctx, registry).(Registry)
 			if !ok {
 				log.Ctx(ctx).Warn().Msgf("artifact %s is not a registry", registry.Name)
 				continue

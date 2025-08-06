@@ -45,7 +45,7 @@ func GetArtifactCreatedPayload(
 		ArtifactType: info.PackageType,
 	}
 	artifactURL := urlProvider.RegistryURL(ctx, info.RootIdentifier, regIdentifier) + "/" + info.Image + ":" + tag
-	urlWithoutProtocol := GetRepoURLWithoutProtocol(artifactURL)
+	urlWithoutProtocol := GetRepoURLWithoutProtocol(ctx, artifactURL)
 	baseArtifact := registryevents.BaseArtifact{
 		Name: info.Image,
 		Ref:  fmt.Sprintf("%s:%s", info.Image, tag),
@@ -86,7 +86,7 @@ func GetArtifactDeletedPayload(
 		ArtifactType: packageType,
 	}
 	artifactURL := urlProvider.RegistryURL(ctx, rootIdentifier, regIdentifier) + "/" + image + ":" + tag
-	urlWithoutProtocol := GetRepoURLWithoutProtocol(artifactURL)
+	urlWithoutProtocol := GetRepoURLWithoutProtocol(ctx, artifactURL)
 
 	baseArtifact := registryevents.BaseArtifact{
 		Name: image,
@@ -154,11 +154,11 @@ func GetArtifactDeletedPayloadForCommonArtifacts(
 	}
 }
 
-func GetRepoURLWithoutProtocol(registryURL string) string {
+func GetRepoURLWithoutProtocol(ctx context.Context, registryURL string) string {
 	repoURL := registryURL
 	parsedURL, err := url.Parse(repoURL)
 	if err != nil {
-		log.Error().Stack().Err(err).Msg("Error parsing URL: ")
+		log.Ctx(ctx).Error().Stack().Err(err).Msg("Error parsing URL: ")
 		return ""
 	}
 

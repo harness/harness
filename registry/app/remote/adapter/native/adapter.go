@@ -57,7 +57,7 @@ func NewAdapter(
 	url := reg.RepoURL
 	accessKey, secretKey, _, err := commons.GetCredentials(ctx, spaceFinder, service, reg)
 	if err != nil {
-		log.Error().Err(err).Msgf("error getting credentials for registry: %s", reg.RepoKey)
+		log.Ctx(ctx).Error().Err(err).Msgf("error getting credentials for registry: %s", reg.RepoKey)
 		return nil
 	}
 
@@ -81,8 +81,8 @@ func (a *Adapter) HealthCheck() (string, error) {
 
 // PingSimple checks whether the proxy is available. It checks the connectivity and certificate (if TLS enabled)
 // only, regardless of 401/403 error.
-func (a *Adapter) PingSimple() error {
-	err := a.Ping()
+func (a *Adapter) PingSimple(ctx context.Context) error {
+	err := a.Ping(ctx)
 	if err == nil {
 		return nil
 	}
@@ -93,12 +93,12 @@ func (a *Adapter) PingSimple() error {
 }
 
 // DeleteTag isn't supported for docker proxy.
-func (a *Adapter) DeleteTag(_, _ string) error {
+func (a *Adapter) DeleteTag(_ context.Context, _, _ string) error {
 	return errors.New("the tag deletion isn't supported")
 }
 
 // CanBeMount isn't supported for docker proxy.
-func (a *Adapter) CanBeMount(_ string) (mount bool, repository string, err error) {
+func (a *Adapter) CanBeMount(_ context.Context, _ string) (mount bool, repository string, err error) {
 	return false, "", nil
 }
 

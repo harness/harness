@@ -509,7 +509,7 @@ func (r *proxy) putFileToLocal(ctx context.Context, info *nugettype.ArtifactInfo
 		log.Ctx(ctx).Error().Stack().Err(err2).Msgf("uploading file for pkg: %s failed, %v", info.Image, err)
 		return err2
 	}
-	log.Info().Msgf("Successfully uploaded file for pkg: %s , version: %s with SHA256: %s",
+	log.Ctx(ctx).Info().Msgf("Successfully uploaded file for pkg: %s , version: %s with SHA256: %s",
 		info.Image, info.Version, sha256)
 	return nil
 }

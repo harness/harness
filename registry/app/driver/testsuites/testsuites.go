@@ -778,13 +778,13 @@ func (suite *DriverSuite) TestRedirectURL() {
 	err := suite.StorageDriver.PutContent(suite.ctx, filename, contents)
 	suite.Require().NoError(err)
 
-	url, err := suite.StorageDriver.RedirectURL(context.TODO(), "", filename, "")
+	url, err := suite.StorageDriver.RedirectURL(suite.ctx, "", filename, "")
 	if url == "" && err == nil {
 		return
 	}
 	client := &http.Client{}
 	suite.Require().NoError(err)
-	req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, url, nil)
+	req, _ := http.NewRequestWithContext(suite.ctx, http.MethodGet, url, nil)
 
 	response, err := client.Do(req)
 	suite.Require().NoError(err)
@@ -794,12 +794,12 @@ func (suite *DriverSuite) TestRedirectURL() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(contents, read)
 
-	url, err = suite.StorageDriver.RedirectURL(context.TODO(), "", filename, "")
+	url, err = suite.StorageDriver.RedirectURL(suite.ctx, "", filename, "")
 	if url == "" && err == nil {
 		return
 	}
 	suite.Require().NoError(err)
-	req, _ = http.NewRequestWithContext(context.TODO(), http.MethodHead, url, nil)
+	req, _ = http.NewRequestWithContext(suite.ctx, http.MethodHead, url, nil)
 
 	response, err = client.Do(req)
 	suite.Require().NoError(err)

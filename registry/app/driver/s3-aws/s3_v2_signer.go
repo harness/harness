@@ -23,6 +23,7 @@
 package s3
 
 import (
+	"context"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
@@ -79,7 +80,7 @@ func setv2Handlers(svc *s3.S3) {
 		func(r *request.Request) {
 			parsedURL, err := url.Parse(r.HTTPRequest.URL.String())
 			if err != nil {
-				log.Fatal().Msgf("Failed to parse URL: %v", err)
+				log.Ctx(context.Background()).Fatal().Msgf("Failed to parse URL: %v", err)
 			}
 			r.HTTPRequest.URL.Opaque = parsedURL.Path
 		},
@@ -109,13 +110,13 @@ func Sign(req *request.Request) {
 	}
 
 	// nolint:errcheck.
-	err := v2.Sign()
+	err := v2.Sign(req.Context())
 	if err != nil {
-		log.Fatal().Msgf("Error in signing s3: %v", err)
+		log.Ctx(req.Context()).Fatal().Msgf("Error in signing s3: %v", err)
 	}
 }
 
-func (v2 *signer) Sign() error {
+func (v2 *signer) Sign(ctx context.Context) error {
 	credValue, err := v2.Credentials.Get()
 	if err != nil {
 		return err
@@ -217,7 +218,7 @@ func (v2 *signer) Sign() error {
 		headers["Authorization"] = []string{"AWS " + accessKey + ":" + v2.signature}
 	}
 
-	log.Debug().
+	log.Ctx(ctx).Debug().
 		Interface("string-to-sign", v2.stringToSign).
 		Interface("signature", v2.signature).
 		Msg("request signature")

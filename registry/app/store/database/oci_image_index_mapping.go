@@ -146,7 +146,7 @@ func mapToInternalOCIMapping(ctx context.Context, in *types.OCIImageIndexMapping
 	in.UpdatedBy = session.Principal.ID
 	childBytes, err := types.GetDigestBytes(in.ChildManifestDigest)
 	if err != nil {
-		log.Error().Msgf("failed to get digest bytes: %v", err)
+		log.Ctx(ctx).Error().Msgf("failed to get digest bytes: %v", err)
 	}
 
 	return &ociImageIndexMappingDB{

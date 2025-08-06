@@ -35,10 +35,10 @@ const MavenCentralURL = "https://repo1.maven.org/maven2"
 // RemoteInterface defines operations related to remote repository under proxy.
 type RemoteInterface interface {
 	// Download the file
-	GetFile(filePath string) (*commons.ResponseHeaders, io.ReadCloser, error)
+	GetFile(ctx context.Context, filePath string) (*commons.ResponseHeaders, io.ReadCloser, error)
 
 	// Check existence of file
-	HeadFile(filePath string) (*commons.ResponseHeaders, bool, error)
+	HeadFile(ctx context.Context, filePath string) (*commons.ResponseHeaders, bool, error)
 }
 
 type remoteHelper struct {
@@ -81,16 +81,16 @@ func (r *remoteHelper) init(ctx context.Context, spaceFinder refcache.SpaceFinde
 	}
 	reg, ok := adp.(adapter.ArtifactRegistry)
 	if !ok {
-		log.Warn().Msgf("Error: adp is not of type adapter.ArtifactRegistry")
+		log.Ctx(ctx).Warn().Msgf("Error: adp is not of type adapter.ArtifactRegistry")
 	}
 	r.registry = reg
 	return nil
 }
 
-func (r *remoteHelper) GetFile(filePath string) (*commons.ResponseHeaders, io.ReadCloser, error) {
-	return r.registry.GetFile(filePath)
+func (r *remoteHelper) GetFile(ctx context.Context, filePath string) (*commons.ResponseHeaders, io.ReadCloser, error) {
+	return r.registry.GetFile(ctx, filePath)
 }
 
-func (r *remoteHelper) HeadFile(filePath string) (*commons.ResponseHeaders, bool, error) {
-	return r.registry.HeadFile(filePath)
+func (r *remoteHelper) HeadFile(ctx context.Context, filePath string) (*commons.ResponseHeaders, bool, error) {
+	return r.registry.HeadFile(ctx, filePath)
 }

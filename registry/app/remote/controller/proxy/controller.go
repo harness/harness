@@ -127,7 +127,7 @@ func (c *controller) EnsureTag(
 	// Fixme: Need to properly pick tag.
 	e := c.localManifestRegistry.DBTag(ctx, mfst, desc.Digest, info.Reference, rsHeaders, info)
 	if e != nil {
-		log.Error().Err(e).Msgf("Error in ensuring tag: %s", e)
+		log.Ctx(ctx).Error().Err(e).Msgf("Error in ensuring tag: %s", e)
 	}
 	return e
 }
@@ -167,7 +167,7 @@ func (c *controller) UseLocalManifest(
 	}
 
 	remoteRepo := getRemoteRepo(art)
-	exist, desc, err := remote.ManifestExist(remoteRepo, getReference(art)) // HEAD.
+	exist, desc, err := remote.ManifestExist(ctx, remoteRepo, getReference(art)) // HEAD.
 	// TODO: Check for rate limit error.
 	if err != nil {
 		if errors.IsRateLimitError(err) { // if rate limit, use localRegistry if it exists, otherwise return error.
@@ -177,7 +177,7 @@ func (c *controller) UseLocalManifest(
 		log.Ctx(ctx).Warn().Msgf("Error in checking remote manifest exist: %v", err)
 		return false, nil, err
 	}
-	log.Info().Msgf("Manifest exist: %t %s %d %s", exist, desc.Digest.String(), desc.Size, desc.MediaType)
+	log.Ctx(ctx).Info().Msgf("Manifest exist: %t %s %d %s", exist, desc.Digest.String(), desc.Size, desc.MediaType)
 
 	// TODO: Delete if does not exist on remote. Validate this
 	if !exist || desc == nil {
@@ -187,7 +187,7 @@ func (c *controller) UseLocalManifest(
 		return false, nil, errors.NotFoundError(fmt.Errorf("registry %v, tag %v not found", art.RegIdentifier, art.Tag))
 	}
 
-	log.Info().Msgf("Manifest: %s", getReference(art))
+	log.Ctx(ctx).Info().Msgf("Manifest: %s", getReference(art))
 	mediaType, payload, _ := man.Payload()
 
 	return true, &ManifestList{payload, d.Digest.String(), mediaType}, nil
@@ -211,10 +211,10 @@ func (c *controller) ProxyManifest(
 	var man manifest.Manifest
 	remoteRepo := getRemoteRepo(art)
 	ref := getReference(art)
-	man, dig, err := remote.Manifest(remoteRepo, ref)
+	man, dig, err := remote.Manifest(ctx, remoteRepo, ref)
 	if err != nil {
 		if errors.IsNotFoundErr(err) {
-			log.Info().Msgf("TODO: Delete manifest %s from localRegistry registry", dig)
+			log.Ctx(ctx).Info().Msgf("TODO: Delete manifest %s from localRegistry registry", dig)
 			// go func() {
 			//	c.localRegistry.DeleteManifest(remoteRepo, art.Tag)
 			// }()
@@ -222,7 +222,7 @@ func (c *controller) ProxyManifest(
 		return man, err
 	}
 	ct, _, err := man.Payload()
-	log.Info().Msgf("Content type: %s", ct)
+	log.Ctx(ctx).Info().Msgf("Content type: %s", ct)
 	if err != nil {
 		return man, err
 	}
@@ -281,13 +281,13 @@ func (c *controller) ProxyManifest(
 }
 
 func (c *controller) HeadManifest(
-	_ context.Context,
+	ctx context.Context,
 	art pkg.RegistryInfo,
 	remote RemoteInterface,
 ) (bool, *manifest.Descriptor, error) {
 	remoteRepo := getRemoteRepo(art)
 	ref := getReference(art)
-	return remote.ManifestExist(remoteRepo, ref)
+	return remote.ManifestExist(ctx, remoteRepo, ref)
 }
 
 func (c *controller) ProxyBlob(
@@ -304,11 +304,11 @@ func (c *controller) ProxyBlob(
 	}
 
 	remoteImage := getRemoteRepo(art)
-	log.Debug().Msgf("The blob doesn't exist, proxy the request to the target server, url:%v", remoteImage)
+	log.Ctx(ctx).Debug().Msgf("The blob doesn't exist, proxy the request to the target server, url:%v", remoteImage)
 
-	size, bReader, err := rHelper.BlobReader(remoteImage, art.Digest)
+	size, bReader, err := rHelper.BlobReader(ctx, remoteImage, art.Digest)
 	if err != nil {
-		log.Error().Stack().Err(err).Msgf("failed to pull blob, error %v", err)
+		log.Ctx(ctx).Error().Stack().Err(err).Msgf("failed to pull blob, error %v", err)
 		return 0, nil, errcode.ErrorCodeBlobUnknown.WithDetail(art.Digest)
 	}
 	desc := manifest.Descriptor{Size: size, Digest: digest.Digest(art.Digest)}
@@ -318,7 +318,7 @@ func (c *controller) ProxyBlob(
 		// Cloning Context.
 		session, ok := request.AuthSessionFrom(ctx)
 		if !ok {
-			log.Error().Stack().Err(err).Msg("failed to get auth session from context")
+			log.Ctx(ctx).Error().Stack().Err(err).Msg("failed to get auth session from context")
 			return
 		}
 		ctx2 := request.WithAuthSession(ctx, session)
@@ -344,27 +344,27 @@ func (c *controller) putBlobToLocal(
 	desc manifest.Descriptor,
 	r RemoteInterface,
 ) error {
-	log.Debug().
+	log.Ctx(ctx).Debug().
 		Msgf(
 			"Put blob to localRegistry registry!, sourceRepo:%v, localRepo:%v, digest: %v", image, localRepo,
 			desc.Digest,
 		)
-	cl, bReader, err := r.BlobReader(image, string(desc.Digest))
+	cl, bReader, err := r.BlobReader(ctx, image, string(desc.Digest))
 	if err != nil {
-		log.Error().Stack().Err(err).Msgf("failed to create blob reader, error %v", err)
+		log.Ctx(ctx).Error().Stack().Err(err).Msgf("failed to create blob reader, error %v", err)
 		return err
 	}
 	defer bReader.Close()
 	headers, errs := c.localRegistry.InitBlobUpload(ctx, art, "", "")
 	if len(errs) > 0 {
-		log.Error().Stack().Err(err).Msgf("failed to init blob upload, error %v", errs)
+		log.Ctx(ctx).Error().Stack().Err(err).Msgf("failed to init blob upload, error %v", errs)
 		return errs[0]
 	}
 
 	location, uuid := headers.Headers["Location"], headers.Headers["Docker-Upload-UUID"]
 	parsedURL, err := url.Parse(location)
 	if err != nil {
-		log.Error().Err(err).Msgf("Error parsing URL: %s", err)
+		log.Ctx(ctx).Error().Err(err).Msgf("Error parsing URL: %s", err)
 		return err
 	}
 	stateToken := parsedURL.Query().Get("_state")
@@ -385,7 +385,7 @@ func (c *controller) waitAndPushManifest(
 	}
 	err := h.CacheContent(ctx, art, contentType, man)
 	if err != nil {
-		log.Error().Stack().Err(err).Msgf("Error in caching manifest: %s", err)
+		log.Ctx(ctx).Error().Stack().Err(err).Msgf("Error in caching manifest: %s", err)
 		return err
 	}
 	return nil
@@ -449,7 +449,7 @@ func (m *ManifestCache) CacheContent(
 		time.Sleep(maxManifestMappingIntervalSec * time.Second)
 		err = m.localManifestRegistry.AddManifestAssociation(ctx, art.RegIdentifier, digest.Digest(art.Digest), art)
 		if err != nil {
-			log.Error().Stack().Err(err).Msgf("failed to add manifest association, error %v", err)
+			log.Ctx(ctx).Error().Stack().Err(err).Msgf("failed to add manifest association, error %v", err)
 			continue
 		}
 		return nil
@@ -464,11 +464,11 @@ func (m *ManifestListCache) CacheContent(
 ) error {
 	_, payload, err := man.Payload()
 	if err != nil {
-		log.Error().Msg("failed to get payload")
+		log.Ctx(ctx).Error().Msg("failed to get payload")
 		return err
 	}
 	if len(getReference(art)) == 0 {
-		log.Error().Msg("failed to get reference, reference is empty, skip to cache manifest list")
+		log.Ctx(ctx).Error().Msg("failed to get reference, reference is empty, skip to cache manifest list")
 		return fmt.Errorf("failed to get reference, reference is empty, skip to cache manifest list")
 	}
 	// cache key should contain digest if digest exist
@@ -477,7 +477,7 @@ func (m *ManifestListCache) CacheContent(
 	}
 
 	if err = m.push(ctx, art, man, contentType); err != nil {
-		log.Error().Msgf("error when push manifest list to local :%v", err)
+		log.Ctx(ctx).Error().Msgf("error when push manifest list to local :%v", err)
 		return err
 	}
 	log.Ctx(ctx).Info().Msgf("Successfully cached manifest list for image: %s, tag: %s, digest: %s",
@@ -493,10 +493,10 @@ func (m *ManifestListCache) push(
 	}
 	_, pl, err := man.Payload()
 	if err != nil {
-		log.Error().Msgf("failed to get payload, error %v", err)
+		log.Ctx(ctx).Error().Msgf("failed to get payload, error %v", err)
 		return err
 	}
-	log.Debug().Msgf("The manifest list payload: %v", string(pl))
+	log.Ctx(ctx).Debug().Msgf("The manifest list payload: %v", string(pl))
 	newDig := digest.FromBytes(pl)
 	// Because the manifest list maybe updated, need to recheck if it is exist in local
 	_, descriptor, manifest2, _ := m.localRegistry.PullManifest(ctx, art, nil, nil)

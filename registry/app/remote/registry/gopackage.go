@@ -15,9 +15,10 @@
 package registry
 
 import (
+	"context"
 	"io"
 )
 
 type GoPackageRegistry interface {
-	GetPackageFile(filepath string) (io.ReadCloser, error)
+	GetPackageFile(ctx context.Context, filepath string) (io.ReadCloser, error)
 }

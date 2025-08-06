@@ -81,9 +81,9 @@ func (c *controller) ProxyFile(
 	filePath = strings.Trim(filePath, "/")
 
 	if serveFile {
-		responseHeaders, body, err = rHelper.GetFile(filePath)
+		responseHeaders, body, err = rHelper.GetFile(ctx, filePath)
 	} else {
-		responseHeaders, _, err = rHelper.HeadFile(filePath)
+		responseHeaders, _, err = rHelper.HeadFile(ctx, filePath)
 	}
 
 	if err != nil {
@@ -98,7 +98,7 @@ func (c *controller) ProxyFile(
 		// Cloning Context.
 		session, ok := request.AuthSessionFrom(ctx)
 		if !ok {
-			log.Error().Stack().Err(err).Msg("failed to get auth session from context")
+			log.Ctx(ctx).Error().Stack().Err(err).Msg("failed to get auth session from context")
 			return
 		}
 		ctx2 := request.WithAuthSession(ctx, session)
@@ -125,7 +125,7 @@ func (c *controller) putFileToLocal(
 
 	filePath = strings.Trim(filePath, "/")
 
-	_, fileReader, err := r.GetFile(filePath)
+	_, fileReader, err := r.GetFile(ctx, filePath)
 	if err != nil {
 		return err
 	}

@@ -15,6 +15,7 @@
 package common
 
 import (
+	"context"
 	"net/url"
 	"strings"
 
@@ -33,25 +34,25 @@ func GenerateSetupClientHostnameAndRegistry(registryURL string) (hostname string
 	return regURL.Host, strings.Trim(regURL.Path, "/")
 }
 
-func GetHost(urlStr string) string {
+func GetHost(ctx context.Context, urlStr string) string {
 	if !strings.Contains(urlStr, "://") {
 		urlStr = "https://" + urlStr
 	}
 	u, err := url.Parse(urlStr)
 	if err != nil {
-		log.Warn().Msgf("Failed to parse URL: %s", urlStr)
+		log.Ctx(ctx).Warn().Msgf("Failed to parse URL: %s", urlStr)
 		return ""
 	}
 	return u.Host
 }
 
-func GetHostName(urlStr string) string {
+func GetHostName(ctx context.Context, urlStr string) string {
 	if !strings.Contains(urlStr, "://") {
 		urlStr = "https://" + urlStr
 	}
 	u, err := url.Parse(urlStr)
 	if err != nil {
-		log.Warn().Msgf("Failed to parse URL: %s", urlStr)
+		log.Ctx(ctx).Warn().Msgf("Failed to parse URL: %s", urlStr)
 		return ""
 	}
 	return u.Hostname()

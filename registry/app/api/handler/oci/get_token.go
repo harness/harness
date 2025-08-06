@@ -43,19 +43,19 @@ func (h *Handler) GetToken(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	session, ok := request.AuthSessionFrom(ctx)
 	if !ok || session.Principal == auth.AnonymousPrincipal {
-		returnForbiddenResponse(w, fmt.Errorf("no auth session found"))
+		returnForbiddenResponse(ctx, w, fmt.Errorf("no auth session found"))
 		return
 	}
 
 	if tokenMetadata, okt := session.Metadata.(*auth.TokenMetadata); okt &&
 		tokenMetadata.TokenType != enum.TokenTypePAT {
-		returnForbiddenResponse(w, fmt.Errorf("only personal access token allowed"))
+		returnForbiddenResponse(ctx, w, fmt.Errorf("only personal access token allowed"))
 		return
 	}
 
 	user, err := h.UserCtrl.FindNoAuth(ctx, session.Principal.UID)
 	if err != nil {
-		returnForbiddenResponse(w, err)
+		returnForbiddenResponse(ctx, w, err)
 		return
 	}
 
@@ -79,7 +79,7 @@ func (h *Handler) GetToken(w http.ResponseWriter, r *http.Request) {
 
 	jwtToken, err := h.getTokenDetails(user, subClaimsAccessPermissions)
 	if err != nil {
-		returnForbiddenResponse(w, err)
+		returnForbiddenResponse(ctx, w, err)
 		return
 	}
 	if jwtToken != "" {
@@ -90,7 +90,7 @@ func (h *Handler) GetToken(w http.ResponseWriter, r *http.Request) {
 				Token: jwtToken,
 			},
 		); err != nil {
-			log.Error().Msgf("failed to write token response: %v", err)
+			log.Ctx(ctx).Error().Msgf("failed to write token response: %v", err)
 		}
 		return
 	}
@@ -147,11 +147,11 @@ func getPermissionFromAction(ctx context.Context, action string) (enum.Permissio
 	}
 }
 
-func returnForbiddenResponse(w http.ResponseWriter, err error) {
+func returnForbiddenResponse(ctx context.Context, w http.ResponseWriter, err error) {
 	w.WriteHeader(http.StatusForbidden)
 	_, err2 := w.Write([]byte(fmt.Sprintf("requested access to the resource is denied: %v", err)))
 	if err2 != nil {
-		log.Error().Msgf("failed to write token response: %v", err2)
+		log.Ctx(ctx).Error().Msgf("failed to write token response: %v", err2)
 	}
 }
 

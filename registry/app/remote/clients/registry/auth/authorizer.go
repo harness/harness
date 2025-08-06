@@ -65,7 +65,7 @@ func (a *authorizer) Modify(req *http.Request) error {
 		// to avoid concurrent issue
 		a.Lock()
 		defer a.Unlock()
-		if err := a.initialize(req.URL); err != nil {
+		if err := a.initialize(req.Context(), req.URL); err != nil {
 			return err
 		}
 	}
@@ -80,7 +80,7 @@ func (a *authorizer) Modify(req *http.Request) error {
 	return a.authorizer.Modify(req)
 }
 
-func (a *authorizer) initialize(u *url.URL) error {
+func (a *authorizer) initialize(ctx context.Context, u *url.URL) error {
 	if a.authorizer != nil {
 		return nil
 	}
@@ -96,7 +96,7 @@ func (a *authorizer) initialize(u *url.URL) error {
 	}
 	a.url = url
 
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, a.url.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, a.url.String(), nil)
 	if err != nil {
 		return err
 	}

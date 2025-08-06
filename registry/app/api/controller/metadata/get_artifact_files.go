@@ -118,19 +118,19 @@ func (c *APIController) GetArtifactFiles(
 
 	filePathPrefix, err := utils.GetFilePath(registry.PackageType, img.Name, art.Version)
 	if err != nil {
-		return failedToFetchFilesResponse(err, art)
+		return failedToFetchFilesResponse(ctx, err, art)
 	}
 	filePathPattern := filePathPrefix + "/%"
 	fileMetadataList, err := c.fileManager.GetFilesMetadata(ctx, filePathPattern, img.RegistryID,
 		reqInfo.sortByField, reqInfo.sortByOrder, reqInfo.limit, reqInfo.offset, reqInfo.searchTerm)
 	if err != nil {
-		return failedToFetchFilesResponse(err, art)
+		return failedToFetchFilesResponse(ctx, err, art)
 	}
 
 	count, err := c.fileManager.CountFilesByPath(ctx, filePathPattern, img.RegistryID)
 
 	if err != nil {
-		log.Error().Msgf("Failed to count files for artifact, err: %v", err.Error())
+		log.Ctx(ctx).Error().Msgf("Failed to count files for artifact, err: %v", err.Error())
 		return artifact.GetArtifactFiles500JSONResponse{
 			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
 				*GetErrorResponse(http.StatusInternalServerError,
@@ -158,8 +158,12 @@ func (c *APIController) GetArtifactFiles(
 	}
 }
 
-func failedToFetchFilesResponse(err error, art *types.Artifact) (artifact.GetArtifactFilesResponseObject, error) {
-	log.Error().Msgf("Failed to fetch files for artifact, err: %v", err.Error())
+func failedToFetchFilesResponse(
+	ctx context.Context,
+	err error,
+	art *types.Artifact,
+) (artifact.GetArtifactFilesResponseObject, error) {
+	log.Ctx(ctx).Error().Msgf("Failed to fetch files for artifact, err: %v", err.Error())
 	return artifact.GetArtifactFiles500JSONResponse{
 		InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
 			*GetErrorResponse(http.StatusInternalServerError,

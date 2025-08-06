@@ -36,7 +36,7 @@ func GetCredentials(
 		secretKey, err = getSecretValue(ctx, spaceFinder, secretService, reg.SecretSpaceID,
 			reg.SecretIdentifier)
 		if err != nil {
-			log.Error().Err(err).Msgf("failed to get secret for registry: %s", reg.RepoKey)
+			log.Ctx(ctx).Error().Err(err).Msgf("failed to get secret for registry: %s", reg.RepoKey)
 			return "", "", false, fmt.Errorf("failed to get secret for registry: %s", reg.RepoKey)
 		}
 		return reg.UserName, secretKey, false, nil
@@ -45,14 +45,14 @@ func GetCredentials(
 		accessKey, err = getSecretValue(ctx, spaceFinder, secretService, reg.UserNameSecretSpaceID,
 			reg.UserNameSecretIdentifier)
 		if err != nil {
-			log.Error().Err(err).Msgf("failed to get access secret for registry: %s", reg.RepoKey)
+			log.Ctx(ctx).Error().Err(err).Msgf("failed to get access secret for registry: %s", reg.RepoKey)
 			return "", "", false, fmt.Errorf("failed to get access key for registry: %s", reg.RepoKey)
 		}
 
 		secretKey, err = getSecretValue(ctx, spaceFinder, secretService, reg.SecretSpaceID,
 			reg.SecretIdentifier)
 		if err != nil {
-			log.Error().Err(err).Msgf("failed to get user secret for registry: %s", reg.RepoKey)
+			log.Ctx(ctx).Error().Err(err).Msgf("failed to get user secret for registry: %s", reg.RepoKey)
 			return "", "", false, fmt.Errorf("failed to get secret key for registry: %s", reg.RepoKey)
 		}
 		return accessKey, secretKey, false, nil
@@ -66,12 +66,12 @@ func getSecretValue(
 ) (string, error) {
 	spacePath, err := spaceFinder.FindByID(ctx, secretSpaceID)
 	if err != nil {
-		log.Error().Msgf("failed to find space path: %v", err)
+		log.Ctx(ctx).Error().Msgf("failed to find space path: %v", err)
 		return "", err
 	}
 	decryptSecret, err := secretService.DecryptSecret(ctx, spacePath.Path, secretSpacePath)
 	if err != nil {
-		log.Error().Msgf("failed to decrypt secret: %v", err)
+		log.Ctx(ctx).Error().Msgf("failed to decrypt secret: %v", err)
 		return "", err
 	}
 	return decryptSecret, nil

@@ -93,7 +93,7 @@ func (r *remoteRegistryHelper) GetPackageFile(
 ) (io.ReadCloser, error) {
 	// remove first / from filepath
 	filePath = strings.TrimPrefix(filePath, "/")
-	data, err := r.adapter.GetPackageFile(filePath)
+	data, err := r.adapter.GetPackageFile(ctx, filePath)
 	if err != nil {
 		log.Ctx(ctx).Error().Err(err).Msgf("failed to get package file: %s, %s", pkg, filePath)
 		return nil, fmt.Errorf("failed to get package file: %s, %s", pkg, filePath)

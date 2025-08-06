@@ -85,8 +85,8 @@ func init() {
 	}
 }
 
-func (a adapter) GetServiceEndpoint() (*nuget.ServiceEndpoint, error) {
-	_, readCloser, err := a.GetFileFromURL(a.client.url)
+func (a adapter) GetServiceEndpoint(ctx context.Context) (*nuget.ServiceEndpoint, error) {
+	_, readCloser, err := a.GetFileFromURL(ctx, a.client.url)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +103,7 @@ func (a adapter) GetPackageMetadata(ctx context.Context, pkg, proxyEndpoint stri
 	if proxyEndpoint != "" {
 		packageMetadataEndpoint = proxyEndpoint
 	} else {
-		svcEndpoints, err := a.GetServiceEndpoint()
+		svcEndpoints, err := a.GetServiceEndpoint(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -115,7 +115,7 @@ func (a adapter) GetPackageMetadata(ctx context.Context, pkg, proxyEndpoint stri
 	}
 	log.Ctx(ctx).Info().Msgf("Package Metadata URL: %s", packageMetadataEndpoint)
 
-	_, readCloser, err := a.GetFileFromURL(packageMetadataEndpoint)
+	_, readCloser, err := a.GetFileFromURL(ctx, packageMetadataEndpoint)
 	if err != nil {
 		log.Ctx(ctx).Error().Err(err).Msgf("Failed to get file from URL: %s", packageMetadataEndpoint)
 		return nil, err
@@ -129,7 +129,7 @@ func (a adapter) GetPackageVersionMetadataV2(ctx context.Context, pkg, version s
 		strings.TrimRight(baseURL, "/"), pkg, version)
 	log.Ctx(ctx).Info().Msgf("Package Version V2 Metadata URL: %s", packageVersionEndpoint)
 
-	_, readCloser, err := a.GetFileFromURL(packageVersionEndpoint)
+	_, readCloser, err := a.GetFileFromURL(ctx, packageVersionEndpoint)
 	if err != nil {
 		log.Ctx(ctx).Error().Err(err).Msgf("Failed to get file from URL: %s", packageVersionEndpoint)
 		return nil, err
@@ -142,7 +142,7 @@ func (a adapter) GetPackage(ctx context.Context, pkg, version, proxyEndpoint, fi
 	if proxyEndpoint != "" {
 		packageEndpoint = proxyEndpoint
 	} else {
-		svcEndpoints, err := a.GetServiceEndpoint()
+		svcEndpoints, err := a.GetServiceEndpoint(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -155,7 +155,7 @@ func (a adapter) GetPackage(ctx context.Context, pkg, version, proxyEndpoint, fi
 	}
 
 	log.Ctx(ctx).Info().Msgf("Package URL: %s", packageEndpoint)
-	_, closer, err := a.GetFileFromURL(packageEndpoint)
+	_, closer, err := a.GetFileFromURL(ctx, packageEndpoint)
 	if err != nil {
 		log.Ctx(ctx).Error().Err(err).Msgf("Failed to get file from URL: %s", packageEndpoint)
 		return nil, err
@@ -164,7 +164,7 @@ func (a adapter) GetPackage(ctx context.Context, pkg, version, proxyEndpoint, fi
 }
 
 func (a adapter) ListPackageVersion(ctx context.Context, pkg string) (io.ReadCloser, error) {
-	svcEndpoints, err := a.GetServiceEndpoint()
+	svcEndpoints, err := a.GetServiceEndpoint(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -174,7 +174,7 @@ func (a adapter) ListPackageVersion(ctx context.Context, pkg string) (io.ReadClo
 	}
 	versionEndpoint := fmt.Sprintf("%s/%s/index.json", strings.TrimRight(baseURL, "/"), pkg)
 	log.Ctx(ctx).Info().Msgf("List Version URL: %s", versionEndpoint)
-	_, closer, err := a.GetFileFromURL(versionEndpoint)
+	_, closer, err := a.GetFileFromURL(ctx, versionEndpoint)
 	if err != nil {
 		log.Ctx(ctx).Error().Err(err).Msgf("Failed to get file from URL: %s", versionEndpoint)
 		return nil, err
@@ -186,7 +186,7 @@ func (a adapter) ListPackageVersionV2(ctx context.Context, pkg string) (io.ReadC
 	baseURL := a.client.url
 	versionEndpoint := fmt.Sprintf("%s/FindPackagesById()?id='%s'", strings.TrimRight(baseURL, "/"), pkg)
 	log.Ctx(ctx).Info().Msgf("List Version V2 URL: %s", versionEndpoint)
-	_, closer, err := a.GetFileFromURL(versionEndpoint)
+	_, closer, err := a.GetFileFromURL(ctx, versionEndpoint)
 	if err != nil {
 		log.Ctx(ctx).Error().Err(err).Msgf("Failed to get file from URL: %s", versionEndpoint)
 		return nil, err
@@ -200,7 +200,7 @@ func (a adapter) SearchPackageV2(ctx context.Context, searchTerm string, limit, 
 	searchEndpoint := fmt.Sprintf("%s/Search()?searchTerm='%s'&$skip=%d&$top=%d&semVerLevel=2.0.0",
 		strings.TrimRight(baseURL, "/"), searchTerm, offset, limit)
 	log.Ctx(ctx).Info().Msgf("Search Package V2 URL: %s", searchEndpoint)
-	_, closer, err := a.GetFileFromURL(searchEndpoint)
+	_, closer, err := a.GetFileFromURL(ctx, searchEndpoint)
 	if err != nil {
 		log.Ctx(ctx).Error().Err(err).Msgf("Failed to get file from URL: %s", searchEndpoint)
 		return nil, err
@@ -210,7 +210,7 @@ func (a adapter) SearchPackageV2(ctx context.Context, searchTerm string, limit, 
 
 func (a adapter) SearchPackage(ctx context.Context, searchTerm string, limit, offset int) (io.ReadCloser, error) {
 	// For v3 API, we need to use the search service endpoint
-	endpoint, err := a.GetServiceEndpoint()
+	endpoint, err := a.GetServiceEndpoint(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get service endpoint: %w", err)
 	}
@@ -223,7 +223,7 @@ func (a adapter) SearchPackage(ctx context.Context, searchTerm string, limit, of
 	searchEndpoint := fmt.Sprintf("%s?q=%s&skip=%d&take=%d",
 		strings.TrimRight(searchURL, "/"), searchTerm, offset, limit)
 	log.Ctx(ctx).Info().Msgf("Search Package V3 URL: %s", searchEndpoint)
-	_, closer, err := a.GetFileFromURL(searchEndpoint)
+	_, closer, err := a.GetFileFromURL(ctx, searchEndpoint)
 	if err != nil {
 		log.Ctx(ctx).Error().Err(err).Msgf("Failed to get file from URL: %s", searchEndpoint)
 		return nil, err
@@ -237,7 +237,7 @@ func (a adapter) CountPackageV2(ctx context.Context, searchTerm string) (int64, 
 	countEndpoint := fmt.Sprintf("%s/Search()/$count?searchTerm='%s'&semVerLevel=2.0.0",
 		strings.TrimRight(baseURL, "/"), searchTerm)
 	log.Ctx(ctx).Info().Msgf("Count Package V2 URL: %s", countEndpoint)
-	_, closer, err := a.GetFileFromURL(countEndpoint)
+	_, closer, err := a.GetFileFromURL(ctx, countEndpoint)
 	if err != nil {
 		log.Ctx(ctx).Error().Err(err).Msgf("Failed to get file from URL: %s", countEndpoint)
 		return 0, err
@@ -265,7 +265,7 @@ func (a adapter) CountPackageVersionV2(ctx context.Context, pkg string) (int64, 
 	countEndpoint := fmt.Sprintf("%s/FindPackagesById()/$count?id='%s'",
 		strings.TrimRight(baseURL, "/"), pkg)
 	log.Ctx(ctx).Info().Msgf("Count Package Version V2 URL: %s", countEndpoint)
-	_, closer, err := a.GetFileFromURL(countEndpoint)
+	_, closer, err := a.GetFileFromURL(ctx, countEndpoint)
 	if err != nil {
 		log.Ctx(ctx).Error().Err(err).Msgf("Failed to get file from URL: %s", countEndpoint)
 		return 0, err

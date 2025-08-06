@@ -43,23 +43,23 @@ func NewCoreController(registryDao store2.RegistryRepository) *CoreController {
 	}
 }
 
-func (c *CoreController) factory(t ArtifactType) Artifact {
+func (c *CoreController) factory(ctx context.Context, t ArtifactType) Artifact {
 	switch t {
 	case LocalRegistry:
 		return TypeRegistry[t]
 	case RemoteRegistry:
 		return TypeRegistry[t]
 	default:
-		log.Error().Stack().Msgf("Invalid artifact type %v", t)
+		log.Ctx(ctx).Error().Stack().Msgf("Invalid artifact type %v", t)
 		return nil
 	}
 }
 
-func (c *CoreController) GetArtifact(registry types.Registry) Artifact {
+func (c *CoreController) GetArtifact(ctx context.Context, registry types.Registry) Artifact {
 	if string(registry.Type) == string(artifact.RegistryTypeVIRTUAL) {
-		return c.factory(LocalRegistry)
+		return c.factory(ctx, LocalRegistry)
 	}
-	return c.factory(RemoteRegistry)
+	return c.factory(ctx, RemoteRegistry)
 }
 
 func (c *CoreController) GetOrderedRepos(ctx context.Context, artInfo RegistryInfo) ([]types.Registry, error) {
@@ -70,7 +70,7 @@ func (c *CoreController) GetOrderedRepos(ctx context.Context, artInfo RegistryIn
 	if len(proxies) > 0 {
 		upstreamRepos, err2 := c.RegistryDao.GetByIDIn(ctx, proxies)
 		if err2 != nil {
-			log.Error().Msgf("Failed to get upstream proxies for %s: %v", registry.Name, err2)
+			log.Ctx(ctx).Error().Msgf("Failed to get upstream proxies for %s: %v", registry.Name, err2)
 			return result, err2
 		}
 		repoMap := make(map[int64]types.Registry)

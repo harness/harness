@@ -133,7 +133,7 @@ func (c *localRegistry) GetPackageMetadata(ctx context.Context, info npm.Artifac
 	versions := make(map[string]*npm2.PackageMetadataVersion)
 	artifacts, err := c.artifactDao.GetByRegistryIDAndImage(ctx, info.RegistryID, info.Image)
 	if err != nil {
-		log.Warn().Msgf("Failed to fetch artifact for image:[%s], Reg:[%s]",
+		log.Ctx(ctx).Warn().Msgf("Failed to fetch artifact for image:[%s], Reg:[%s]",
 			info.BaseArtifactInfo().Image, info.BaseArtifactInfo().RegIdentifier)
 		return packageMetadata, usererror.ErrInternal
 	}

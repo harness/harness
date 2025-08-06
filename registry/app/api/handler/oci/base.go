@@ -56,8 +56,8 @@ func NewHandler(
 		Authenticator:  authenticator,
 		URLProvider:    urlProvider,
 		Authorizer:     authorizer,
-		OCIRelativeURL: ociRelativeURL,
 		registryFinder: registryFinder,
+		OCIRelativeURL: ociRelativeURL,
 	}
 }
 
@@ -129,7 +129,7 @@ func ExtractPathVars(
 	path = strings.Trim(path, "/")
 	segments := strings.Split(path, "/")
 	if len(segments) < MinSizeOfURLSegments {
-		log.Error().Ctx(ctx).Msgf("Invalid route: %s", path)
+		log.Ctx(ctx).Error().Msgf("Invalid route: %s", path)
 		return "", "", "", "", "", ""
 	}
 	rootIdentifier = segments[1]
@@ -161,12 +161,12 @@ func ExtractPathVars(
 	case Referrers:
 		dgst = segments[len(segments)-1]
 	case Invalid:
-		log.Warn().Msgf("Invalid route: %s", path)
+		log.Ctx(ctx).Warn().Msgf("Invalid route: %s", path)
 	default:
-		log.Warn().Msgf("Unknown route type: %s", typ)
+		log.Ctx(ctx).Warn().Msgf("Unknown route type: %s", typ)
 	}
 
-	log.Debug().Msgf(
+	log.Ctx(ctx).Debug().Msgf(
 		"For path: %s, rootIdentifier: %s, registry: %s, image: %s, ref: %s, dgst: %s, tag: %s",
 		path, rootIdentifier, registry, image, ref, dgst, tag,
 	)

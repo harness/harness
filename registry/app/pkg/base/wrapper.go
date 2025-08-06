@@ -125,7 +125,7 @@ func filterRegs(
 
 	exists, imageVersion := info.GetImageVersion()
 	if !exists {
-		log.Debug().Msgf("image version not ready for %s, skipping filter", repoKey)
+		log.Ctx(ctx).Debug().Msgf("image version not ready for %s, skipping filter", repoKey)
 		return registries, nil, nil
 	}
 
@@ -134,7 +134,7 @@ func filterRegs(
 		blockedPatterns := repo.BlockedPattern
 		isAllowed, err := utils.IsPatternAllowed(allowedPatterns, blockedPatterns, imageVersion)
 		if !isAllowed || err != nil {
-			log.Debug().Ctx(ctx).Msgf("Skipping repository %s", repo.Name)
+			log.Ctx(ctx).Debug().Msgf("Skipping repository %s", repo.Name)
 			skipped = append(skipped, repo)
 			continue
 		}
@@ -163,7 +163,7 @@ func GetOrderedRepos(
 	if len(proxies) > 0 {
 		upstreamRepos, err2 := registryDao.GetByIDIn(ctx, proxies)
 		if err2 != nil {
-			log.Error().Msgf("Failed to get upstream proxies for %s: %v", repoKey, err2)
+			log.Ctx(ctx).Error().Msgf("Failed to get upstream proxies for %s: %v", repoKey, err2)
 			return result, err2
 		}
 		repoMap := make(map[int64]registrytypes.Registry)

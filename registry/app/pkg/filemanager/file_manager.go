@@ -142,7 +142,7 @@ func (f *FileManager) dbSaveFile(
 	}
 	created, err := f.genericBlobDao.Create(ctx, gb)
 	if err != nil {
-		log.Error().Msgf("failed to save generic blob in db with "+
+		log.Ctx(ctx).Error().Msgf("failed to save generic blob in db with "+
 			"sha256 : %s, err: %s", fileInfo.Sha256, err.Error())
 		return "", false, fmt.Errorf("failed to save generic blob"+
 			" in db with sha256 : %s, err: %w", fileInfo.Sha256, err)
@@ -157,7 +157,7 @@ func (f *FileManager) dbSaveFile(
 		return nil
 	})
 	if err != nil {
-		log.Error().Msgf("failed to save nodes for file : %s, with "+
+		log.Ctx(ctx).Error().Msgf("failed to save nodes for file : %s, with "+
 			"path : %s, err: %s", fileInfo.Filename, filePath, err)
 		return "", false, fmt.Errorf("failed to save nodes for"+
 			" file : %s, with path : %s, err: %w", fileInfo.Filename, filePath, err)
@@ -177,7 +177,7 @@ func (f *FileManager) moveFile(
 	err := blobContext.genericBlobStore.Move(ctx, tmpPath, fileStoragePath)
 
 	if err != nil {
-		log.Error().Msgf("failed to Move the file on permanent location "+
+		log.Ctx(ctx).Error().Msgf("failed to Move the file on permanent location "+
 			"with name : %s with error : %s", fileInfo.Filename, err.Error())
 		return fmt.Errorf("failed to Move the file on permanent"+
 			" location with name : %s with error : %w", fileInfo.Filename, err)
@@ -422,7 +422,7 @@ func (f *FileManager) uploadTempFileInternal(
 	fw, err := blobContext.genericBlobStore.Create(ctx, tmpPath)
 
 	if err != nil {
-		log.Error().Msgf("failed to initiate the file upload for file with"+
+		log.Ctx(ctx).Error().Msgf("failed to initiate the file upload for file with"+
 			" name : %s with error : %s", fileName, err.Error())
 		return types.FileInfo{}, tmpPath, fmt.Errorf("failed to initiate the file upload "+
 			"for file with name : %s with error : %w", fileName, err)
@@ -431,7 +431,7 @@ func (f *FileManager) uploadTempFileInternal(
 
 	fileInfo, err := blobContext.genericBlobStore.Write(ctx, fw, file, fileReader)
 	if err != nil {
-		log.Error().Msgf("failed to upload the file on temparary location"+
+		log.Ctx(ctx).Error().Msgf("failed to upload the file on temparary location"+
 			" with name : %s with error : %s", fileName, err.Error())
 		return types.FileInfo{}, tmpPath, fmt.Errorf("failed to upload the file on temparary "+
 			"location with name : %s with error : %w", fileName, err)
