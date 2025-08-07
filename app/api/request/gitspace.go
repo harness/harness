@@ -25,6 +25,8 @@ const (
 	PathParamGitspaceIdentifier = "gitspace_identifier"
 	QueryParamGitspaceOwner     = "gitspace_owner"
 	QueryParamGitspaceStates    = "gitspace_states"
+	QueryParamOrgs              = "org_identifiers"
+	QueryParamProjects          = "project_identifiers"
 )
 
 func GetGitspaceRefFromPath(r *http.Request) (string, error) {
@@ -63,6 +65,38 @@ func ParseGitspaceStates(r *http.Request) []enum.GitspaceFilterState {
 	return res
 }
 
+// ParseScopeFilter extracts scope filter from the url.
+func ParseScopeFilter(r *http.Request) types.ScopeFilter {
+	orgsTypesRaw := r.URL.Query()[QueryParamOrgs]
+	orgs := make([]string, 0, len(orgsTypesRaw))
+	orgsSet := make(map[string]struct{})
+	for _, pTypeRaw := range orgsTypesRaw {
+		if _, ok := orgsSet[pTypeRaw]; ok {
+			// already added
+			continue
+		}
+		orgs = append(orgs, pTypeRaw)
+		orgsSet[pTypeRaw] = struct{}{}
+	}
+
+	projectsTypesRaw := r.URL.Query()[QueryParamProjects]
+	projects := make([]string, 0, len(projectsTypesRaw))
+	projectsSet := make(map[string]struct{})
+	for _, pTypeRaw := range projectsTypesRaw {
+		if _, ok := projectsSet[pTypeRaw]; ok {
+			// already added
+			continue
+		}
+		projects = append(projects, pTypeRaw)
+		projectsSet[pTypeRaw] = struct{}{}
+	}
+
+	return types.ScopeFilter{
+		Orgs:     orgs,
+		Projects: projects,
+	}
+}
+
 // ParseGitspaceFilter extracts the gitspace filter from the url.
 func ParseGitspaceFilter(r *http.Request) types.GitspaceFilter {
 	return types.GitspaceFilter{
@@ -71,5 +105,6 @@ func ParseGitspaceFilter(r *http.Request) types.GitspaceFilter {
 		Sort:                 ParseGitspaceSort(r),
 		Owner:                ParseGitspaceOwner(r),
 		Order:                ParseOrder(r),
+		ScopeFilter:          ParseScopeFilter(r),
 	}
 }

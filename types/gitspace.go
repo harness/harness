@@ -100,6 +100,14 @@ type GitspaceFilter struct {
 	Deleted              *bool // not nil when we want to add this filter
 	MarkedForDeletion    *bool // not nil when we want to add this filter
 	GitspaceInstanceFilter
+	ScopeFilter
+}
+
+type ScopeFilter struct {
+	// each org will be of the format "orgID"
+	Orgs []string
+	// each project will be of the format "orgID/projectID"
+	Projects []string
 }
 
 type GitspaceInstanceFilter struct {
