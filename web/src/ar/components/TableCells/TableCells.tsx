@@ -19,9 +19,10 @@ import classNames from 'classnames'
 import { defaultTo } from 'lodash-es'
 import copy from 'clipboard-copy'
 import { Link } from 'react-router-dom'
+import { Position } from '@blueprintjs/core'
 import type { TableExpandedToggleProps } from 'react-table'
-import { Button, ButtonProps, ButtonVariation, Layout, Text, TextProps } from '@harnessio/uicore'
-import type { IconName, IconProps } from '@harnessio/icons'
+import { Button, ButtonProps, ButtonVariation, Layout, Popover, Text, TextProps } from '@harnessio/uicore'
+import { Icon, type IconName, type IconProps } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
 
 import { killEvent } from '@ar/common/utils'
@@ -298,6 +299,22 @@ export const VulnerabilityCell = ({ critical, high, medium, low }: Vulnerability
   )
 }
 
+interface QuarantineIconProps {
+  reason?: string
+}
+
+export const QuarantineIcon = ({ reason }: QuarantineIconProps) => {
+  return (
+    <Popover
+      content={<Text padding="small">{reason}</Text>}
+      interactionKind="hover"
+      position={Position.TOP}
+      disabled={!reason}>
+      <Icon name="warning-icon" size={20} color={Color.ORANGE_900} />
+    </Popover>
+  )
+}
+
 export default {
   UrlCell,
   SizeCell,
@@ -311,5 +328,6 @@ export default {
   LastModifiedCell,
   ToggleAccordionCell,
   RepositoryLocationBadgeCell,
-  VulnerabilityCell
+  VulnerabilityCell,
+  QuarantineIcon
 }

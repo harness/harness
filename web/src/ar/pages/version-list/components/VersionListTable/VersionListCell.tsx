@@ -65,10 +65,15 @@ export const ToggleAccordionCell: Renderer<{
 export const VersionNameCell: CellType = ({ value, row }) => {
   const { original } = row
   const routes = useRoutes()
+  const { isQuarantined, quarantineReason } = original
   const pathParams = useDecodedParams<ArtifactDetailsPathParams>()
   return (
     <Layout.Horizontal className={css.nameCellContainer} spacing="small">
-      <Icon name="store-artifact-bundle" size={24} />
+      {isQuarantined ? (
+        <TableCells.QuarantineIcon reason={quarantineReason} />
+      ) : (
+        <Icon name="store-artifact-bundle" size={24} />
+      )}
       <Link
         to={routes.toARVersionDetailsTab({
           repositoryIdentifier: pathParams.repositoryIdentifier,

@@ -57,7 +57,13 @@ export const DigestNameCell: Renderer<{
     versionTab: VersionDetailsTab.OVERVIEW,
     artifactType: LocalArtifactType.ARTIFACTS
   })
-  return <TableCells.LinkCell label={getShortDigest(value)} linkTo={`${linkTo}?digest=${value}`} />
+  return (
+    <TableCells.LinkCell
+      prefix={original.isQuarantined ? <TableCells.QuarantineIcon reason={original.quarantineReason} /> : <></>}
+      label={getShortDigest(value)}
+      linkTo={`${linkTo}?digest=${value}`}
+    />
+  )
 }
 
 export const OsArchCell: CellType = ({ value }) => {

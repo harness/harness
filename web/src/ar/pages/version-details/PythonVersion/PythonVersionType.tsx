@@ -73,10 +73,11 @@ export class PythonVersionType extends VersionStep<ArtifactVersionSummary> {
     VersionAction.Delete,
     VersionAction.SetupClient,
     VersionAction.DownloadCommand,
-    VersionAction.ViewVersionDetails
+    VersionAction.ViewVersionDetails,
+    VersionAction.Quarantine
   ]
 
-  protected allowedActionsOnVersionDetailsPage = [VersionAction.Delete]
+  protected allowedActionsOnVersionDetailsPage = [VersionAction.Delete, VersionAction.Quarantine]
 
   renderVersionListTable(props: VersionListTableProps): JSX.Element {
     return <VersionListTable {...props} columnConfigs={this.versionListTableColumnConfig} />

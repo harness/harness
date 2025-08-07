@@ -73,7 +73,8 @@ export class CargoVersionType extends VersionStep<ArtifactVersionSummary> {
   protected allowedActionsOnVersion = [
     VersionAction.Delete,
     VersionAction.SetupClient,
-    VersionAction.ViewVersionDetails
+    VersionAction.ViewVersionDetails,
+    VersionAction.Quarantine
   ]
 
   protected allowedActionsOnVersionDetailsPage = [VersionAction.Delete]

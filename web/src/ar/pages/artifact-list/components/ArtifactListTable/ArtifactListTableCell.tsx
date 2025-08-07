@@ -81,11 +81,25 @@ export const ArtifactNameCell: Renderer<{
   const { original } = row
   const { onClickLabel } = column
   const routes = useRoutes()
-  const { name: value, version, packageType, registryIdentifier, artifactType } = original
+  const {
+    name: value,
+    version,
+    packageType,
+    registryIdentifier,
+    artifactType,
+    isQuarantined,
+    quarantineReason
+  } = original
   return (
     <Layout.Vertical>
       <TableCells.LinkCell
-        prefix={<RepositoryIcon packageType={original.packageType as RepositoryPackageType} />}
+        prefix={
+          isQuarantined ? (
+            <TableCells.QuarantineIcon reason={quarantineReason} />
+          ) : (
+            <RepositoryIcon packageType={original.packageType as RepositoryPackageType} />
+          )
+        }
         linkTo={routes.toARRedirect({
           packageType: packageType as RepositoryPackageType,
           registryId: registryIdentifier,

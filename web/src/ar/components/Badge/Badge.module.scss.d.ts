@@ -17,3 +17,4 @@
 /* eslint-disable */
 // This is an auto-generated file
 export declare const badge: string
+export declare const quarantineBadge: string

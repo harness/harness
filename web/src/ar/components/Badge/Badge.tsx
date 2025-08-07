@@ -15,13 +15,14 @@
  */
 
 import React, { FC, PropsWithChildren } from 'react'
+import classNames from 'classnames'
 import { Text, TextProps } from '@harnessio/uicore'
 
 import css from './Badge.module.scss'
 
-const Badge: FC<PropsWithChildren<TextProps>> = ({ children, ...rest }) => {
+const Badge: FC<PropsWithChildren<TextProps>> = ({ children, className, ...rest }) => {
   return (
-    <Text className={css.badge} tag="span" {...rest}>
+    <Text className={classNames(css.badge, className)} tag="span" {...rest}>
       {children}
     </Text>
   )

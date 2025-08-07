@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
+import { useState } from 'react'
 import { Intent } from '@blueprintjs/core'
 import { getErrorInfoFromErrorObject, useToaster } from '@harnessio/uicore'
 import { ArtifactType, useDeleteArtifactVersionMutation } from '@harnessio/react-har-service-client'
 
-import { useGetSpaceRef, useParentHooks } from '@ar/hooks'
+import { useConfirmationDialog, useGetSpaceRef } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 
@@ -31,15 +32,16 @@ interface useDeleteVersionModalProps {
 }
 export default function useDeleteVersionModal(props: useDeleteVersionModalProps) {
   const { repoKey, onSuccess, artifactKey, versionKey, artifactType } = props
+  const [submitting, setSubmitting] = useState(false)
   const { getString } = useStrings()
   const { showSuccess, showError, clear } = useToaster()
-  const { useConfirmationDialog } = useParentHooks()
   const spaceRef = useGetSpaceRef(repoKey)
 
   const { mutateAsync: deleteVersion } = useDeleteArtifactVersionMutation()
 
   const handleDeleteVersion = async (isConfirmed: boolean): Promise<void> => {
     if (isConfirmed) {
+      setSubmitting(true)
       try {
         const response = await deleteVersion({
           registry_ref: spaceRef,
@@ -53,20 +55,24 @@ export default function useDeleteVersionModal(props: useDeleteVersionModalProps)
           clear()
           showSuccess(getString('versionDetails.versionDeleted'))
           onSuccess()
+          closeDialog()
         }
       } catch (e: any) {
         showError(getErrorInfoFromErrorObject(e, true))
+      } finally {
+        setSubmitting(false)
       }
     }
   }
 
-  const { openDialog } = useConfirmationDialog({
+  const { openDialog, closeDialog } = useConfirmationDialog({
     titleText: getString('versionDetails.deleteVersionModal.title'),
     contentText: getString('versionDetails.deleteVersionModal.contentText'),
     confirmButtonText: getString('delete'),
     cancelButtonText: getString('cancel'),
     intent: Intent.DANGER,
-    onCloseDialog: handleDeleteVersion
+    onCloseDialog: handleDeleteVersion,
+    buttonDisabled: submitting
   })
 
   return { triggerDelete: openDialog }

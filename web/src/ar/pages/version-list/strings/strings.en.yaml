@@ -13,3 +13,5 @@ table:
     deployments: '{{ $.versionDetails.tabs.deployments }}'
 actions:
   deleteVersion: Delete Version
+  quarantine: Quarantine
+  removeQuarantine: Remove From Quarantine

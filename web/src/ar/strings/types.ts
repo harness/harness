@@ -290,6 +290,17 @@ export interface StringsMap {
   'versionDetails.overview.generalInformation.vendor': string
   'versionDetails.overview.generalInformation.version': string
   'versionDetails.page': string
+  'versionDetails.quarantineVersionModal.cancelButtonText': string
+  'versionDetails.quarantineVersionModal.confirmButtonText': string
+  'versionDetails.quarantineVersionModal.contentText': string
+  'versionDetails.quarantineVersionModal.reasonField': string
+  'versionDetails.quarantineVersionModal.title': string
+  'versionDetails.quarantineVersionModal.versionQuarantined': string
+  'versionDetails.removeFromQuarantineModal.cancelButtonText': string
+  'versionDetails.removeFromQuarantineModal.confirmButtonText': string
+  'versionDetails.removeFromQuarantineModal.contentText': string
+  'versionDetails.removeFromQuarantineModal.title': string
+  'versionDetails.removeFromQuarantineModal.versionRemovedFromQuarantine': string
   'versionDetails.selectDigestPlaceholder': string
   'versionDetails.tabs.artifactDetails': string
   'versionDetails.tabs.code': string
@@ -299,6 +310,8 @@ export interface StringsMap {
   'versionDetails.tabs.supplyChain': string
   'versionDetails.versionDeleted': string
   'versionList.actions.deleteVersion': string
+  'versionList.actions.quarantine': string
+  'versionList.actions.removeQuarantine': string
   'versionList.page': string
   'versionList.table.columns.activelyDeployed': string
   'versionList.table.columns.deployments': string
@@ -371,6 +384,7 @@ export interface StringsMap {
   'badges.artifactRegistry': string
   'badges.orgScope': string
   'badges.projectScope': string
+  'badges.quarantined': string
   'badges.upstreamProxy': string
   beta: string
   'breadcrumbs.artifacts': string

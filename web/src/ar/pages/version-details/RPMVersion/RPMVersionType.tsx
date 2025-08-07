@@ -72,10 +72,11 @@ export class RPMVersionType extends VersionStep<ArtifactVersionSummary> {
   protected allowedActionsOnVersion = [
     VersionAction.Delete,
     VersionAction.SetupClient,
-    VersionAction.ViewVersionDetails
+    VersionAction.ViewVersionDetails,
+    VersionAction.Quarantine
   ]
 
-  protected allowedActionsOnVersionDetailsPage = [VersionAction.Delete]
+  protected allowedActionsOnVersionDetailsPage = [VersionAction.Delete, VersionAction.Quarantine]
 
   renderVersionListTable(props: VersionListTableProps): JSX.Element {
     return <VersionListTable {...props} columnConfigs={this.versionListTableColumnConfig} />

@@ -23,6 +23,7 @@ import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client
 import { PageType, RepositoryPackageType } from '@ar/common/types'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 import { useDecodedParams, useParentHooks, useRoutes } from '@ar/hooks'
+import QuarantineBadge from '@ar/components/Badge/QuarantineBadge'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import VersionActionsWidget from '@ar/frameworks/Version/VersionActionsWidget'
 import SetupClientButton from '@ar/components/SetupClientButton/SetupClientButton'
@@ -37,7 +38,7 @@ interface DockerVersionHeaderProps {
 
 export default function DockerVersionHeader(props: DockerVersionHeaderProps): JSX.Element {
   const { iconSize = 40, data } = props
-  const { imageName: name, version, packageType } = data
+  const { imageName: name, version, packageType, isQuarantined, quarantineReason } = data
   const pathParams = useDecodedParams<VersionDetailsPathParams>()
   const { useUpdateQueryParams, useQueryParams } = useParentHooks()
   const { updateQueryParams } = useUpdateQueryParams()
@@ -73,6 +74,7 @@ export default function DockerVersionHeader(props: DockerVersionHeaderProps): JS
         onChangeDigest={handleChangeDigest}
         isLatestVersion={false}
       />
+      {isQuarantined && <QuarantineBadge reason={quarantineReason} />}
       <Expander />
       <SetupClientButton
         repositoryIdentifier={pathParams.repositoryIdentifier}

@@ -17,17 +17,19 @@
 import React, { useState } from 'react'
 import { get } from 'lodash-es'
 
-import { useRoutes } from '@ar/hooks'
+import { useFeatureFlags, useRoutes } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import ActionButton from '@ar/components/ActionButton/ActionButton'
 import CopyMenuItem from '@ar/components/MenuItemTypes/CopyMenuItem'
 import LinkMenuItem from '@ar/components/MenuItemTypes/LinkMenuItem'
 import { LocalArtifactType } from '@ar/pages/repository-details/constants'
 
+import QuarantineMenuItem from './QuarantineMenuItem'
 import SetupClientMenuItem from './SetupClientMenuItem'
 import DeleteVersionMenuItem from './DeleteVersionMenuItem'
 import { type VersionActionProps, VersionAction } from './types'
 import { VersionDetailsTab } from '../VersionDetailsTabs/constants'
+import RemoveQurantineMenuItem from './RemoveQurantineMenuItem'
 
 export default function VersionActions({
   data,
@@ -42,6 +44,7 @@ export default function VersionActions({
   const [open, setOpen] = useState(false)
   const routes = useRoutes()
   const { getString } = useStrings()
+  const { HAR_ARTIFACT_QUARANTINE_ENABLED } = useFeatureFlags()
 
   const isAllowed = (action: VersionAction): boolean => {
     if (!allowedActions) return true
@@ -91,6 +94,34 @@ export default function VersionActions({
           })}>
           {getString('view')}
         </LinkMenuItem>
+      )}
+      {isAllowed(VersionAction.Quarantine) && HAR_ARTIFACT_QUARANTINE_ENABLED && !data.isQuarantined && (
+        <QuarantineMenuItem
+          artifactKey={artifactKey}
+          repoKey={repoKey}
+          versionKey={versionKey}
+          data={data}
+          pageType={pageType}
+          readonly={readonly}
+          onClose={() => {
+            setOpen(false)
+            onClose?.()
+          }}
+        />
+      )}
+      {isAllowed(VersionAction.Quarantine) && HAR_ARTIFACT_QUARANTINE_ENABLED && data.isQuarantined && (
+        <RemoveQurantineMenuItem
+          artifactKey={artifactKey}
+          repoKey={repoKey}
+          versionKey={versionKey}
+          data={data}
+          pageType={pageType}
+          readonly={readonly}
+          onClose={() => {
+            setOpen(false)
+            onClose?.()
+          }}
+        />
       )}
     </ActionButton>
   )

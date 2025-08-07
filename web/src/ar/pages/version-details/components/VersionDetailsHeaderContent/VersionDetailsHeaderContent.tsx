@@ -23,6 +23,7 @@ import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client
 import { useDecodedParams, useRoutes } from '@ar/hooks'
 import { PageType, type RepositoryPackageType } from '@ar/common/types'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
+import QuarantineBadge from '@ar/components/Badge/QuarantineBadge'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import VersionActionsWidget from '@ar/frameworks/Version/VersionActionsWidget'
 import SetupClientButton from '@ar/components/SetupClientButton/SetupClientButton'
@@ -61,6 +62,7 @@ export default function VersionDetailsHeaderContent(props: VersionDetailsHeaderC
         onChangeVersion={handleChangeVersion}
         isLatestVersion={false}
       />
+      {data.isQuarantined && <QuarantineBadge reason={data.quarantineReason} />}
       <Expander />
       <SetupClientButton
         repositoryIdentifier={pathParams.repositoryIdentifier}

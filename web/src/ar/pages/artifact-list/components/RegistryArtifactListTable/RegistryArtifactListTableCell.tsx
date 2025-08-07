@@ -56,7 +56,13 @@ export const RegistryArtifactNameCell: Renderer<{
   const value = original.name
   return (
     <TableCells.LinkCell
-      prefix={<RepositoryIcon packageType={original.packageType as RepositoryPackageType} />}
+      prefix={
+        original.isQuarantined ? (
+          <TableCells.QuarantineIcon reason={original.quarantineReason} />
+        ) : (
+          <RepositoryIcon packageType={original.packageType as RepositoryPackageType} />
+        )
+      }
       linkTo={routes.toARArtifactDetails({
         repositoryIdentifier: original.registryIdentifier,
         artifactIdentifier: value,

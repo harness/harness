@@ -14,24 +14,6 @@
  * limitations under the License.
  */
 
-.badge {
-  --line-height: 1rem;
-  --typography-weight: 700;
-  --typography-size: 0.7rem;
-  --intent-color: var(--primary-7);
-
-  padding: 0px var(--spacing-small) !important;
-  background-color: var(--grey-100) !important;
-  border: 1px solid var(--grey-200);
-  border-radius: 4px;
-  max-width: max-content;
-  min-width: max-content;
-  flex-shrink: 0;
-  text-transform: uppercase;
-}
-
-.quarantineBadge {
-  background-color: var(--orange-200) !important;
-  border-color: var(--orange-200) !important;
-  --intent-color: var(--orange-900) !important;
+export interface QuarantineVersionFormData {
+  reason: string
 }

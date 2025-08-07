@@ -110,3 +110,16 @@ versionDeleted: Artifact version deleted successfully!
 deleteVersionModal:
   title: Delete Artifact Version
   contentText: Are you sure you want to delete the artifact version?
+quarantineVersionModal:
+  title: Add to Quarantine
+  contentText: Proceeding will put this artifact to quarantine, making it not generally accessible. Please provide a reason for this action.
+  reasonField: Reason
+  versionQuarantined: Artifact version quarantined successfully!
+  confirmButtonText: Quarantine
+  cancelButtonText: Cancel
+removeFromQuarantineModal:
+  title: Remove from Quarantine
+  contentText: Proceeding will remove this artifact from quarantine, making it generally accessible. Please provide a reason for this action.
+  confirmButtonText: Remove from Quarantine
+  cancelButtonText: Cancel
+  versionRemovedFromQuarantine: Artifact version removed from quarantine successfully!
