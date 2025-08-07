@@ -124,9 +124,7 @@ func (c *APIController) DeleteQuarantineFilePath(
 			),
 		}, nil
 	}
-	return artifact.DeleteQuarantineFilePath204JSONResponse{
-		SuccessJSONResponse: artifact.SuccessJSONResponse{
-			Status: "SUCCESS",
-		},
+	return artifact.DeleteQuarantineFilePath200JSONResponse{
+		SuccessJSONResponse: artifact.SuccessJSONResponse(*GetSuccessResponse()),
 	}, nil
 }

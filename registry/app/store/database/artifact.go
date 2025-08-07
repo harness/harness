@@ -829,7 +829,7 @@ func (a ArtifactDao) GetAllVersionsByRepoAndImage(
         a.artifact_metadata ->> 'file_count' AS file_count,
         a.artifact_updated_at AS modified_at,
         (qp.quarantined_path_id IS NOT NULL) AS is_quarantined,
-         qp.quarantined_path_reason as quarantined_reason`,
+         qp.quarantined_path_reason as quarantine_reason`,
 		)
 
 	if a.db.DriverName() == SQLITE3 {

@@ -804,11 +804,15 @@ func GetArtifactVersionSummary(
 	artifactName string,
 	packageType artifactapi.PackageType,
 	version string,
+	isQuarantined bool,
+	quarantineReason string,
 ) *artifactapi.ArtifactVersionSummaryResponseJSONResponse {
 	artifactVersionSummary := &artifactapi.ArtifactVersionSummary{
-		ImageName:   artifactName,
-		PackageType: packageType,
-		Version:     version,
+		ImageName:        artifactName,
+		PackageType:      packageType,
+		Version:          version,
+		IsQuarantined:    &isQuarantined,
+		QuarantineReason: &quarantineReason,
 	}
 	response := &artifactapi.ArtifactVersionSummaryResponseJSONResponse{
 		Data:   *artifactVersionSummary,

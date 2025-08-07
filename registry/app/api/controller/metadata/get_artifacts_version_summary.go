@@ -18,18 +18,23 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/opencontainers/go-digest"
+	"github.com/rs/zerolog/log"
 )
 
 func (c *APIController) GetArtifactVersionSummary(
 	ctx context.Context,
 	r artifact.GetArtifactVersionSummaryRequestObject,
 ) (artifact.GetArtifactVersionSummaryResponseObject, error) {
-	image, version, pkgType, err := c.FetchArtifactSummary(ctx, r)
+	image, version, pkgType, isQuarantine, quarantineReason, err := c.FetchArtifactSummary(ctx, r)
 	if err != nil {
 		return artifact.GetArtifactVersionSummary500JSONResponse{
 			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
@@ -39,7 +44,8 @@ func (c *APIController) GetArtifactVersionSummary(
 	}
 
 	return artifact.GetArtifactVersionSummary200JSONResponse{
-		ArtifactVersionSummaryResponseJSONResponse: *GetArtifactVersionSummary(image, pkgType, version),
+		ArtifactVersionSummaryResponseJSONResponse: *GetArtifactVersionSummary(image,
+			pkgType, version, isQuarantine, quarantineReason),
 	}, nil
 }
 
@@ -47,16 +53,16 @@ func (c *APIController) GetArtifactVersionSummary(
 func (c *APIController) FetchArtifactSummary(
 	ctx context.Context,
 	r artifact.GetArtifactVersionSummaryRequestObject,
-) (string, string, artifact.PackageType, error) {
+) (string, string, artifact.PackageType, bool, string, error) {
 	regInfo, err := c.RegistryMetadataHelper.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
 
 	if err != nil {
-		return "", "", "", fmt.Errorf("failed to get registry request base info: %w", err)
+		return "", "", "", false, "", fmt.Errorf("failed to get registry request base info: %w", err)
 	}
 
 	space, err := c.SpaceFinder.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
-		return "", "", "", err
+		return "", "", "", false, "", err
 	}
 
 	session, _ := request.AuthSessionFrom(ctx)
@@ -68,31 +74,54 @@ func (c *APIController) FetchArtifactSummary(
 		session,
 		permissionChecks...,
 	); err != nil {
-		return "", "", "", err
+		return "", "", "", false, "", err
 	}
 
 	image := string(r.Artifact)
 	version := string(r.Version)
+	artifactVersion := version
+
+	if r.Params.Digest != nil && strings.TrimSpace(string(*r.Params.Digest)) != "" {
+		parsedDigest, err := types.NewDigest(digest.Digest(*r.Params.Digest))
+		if err != nil {
+			log.Ctx(ctx).Err(err).Msg("Failed to parse digest")
+		}
+		artifactVersion = parsedDigest.String()
+	}
 
 	registry, err := c.RegistryRepository.Get(ctx, regInfo.RegistryID)
 	if err != nil {
-		return "", "", "", err
+		return "", "", "", false, "", err
+	}
+
+	quarantinePath, err := c.QuarantineArtifactRepository.GetByFilePath(ctx,
+		"", regInfo.RegistryID, image, artifactVersion)
+
+	if err != nil {
+		log.Ctx(ctx).Err(err).Msg("failed to get quarantine path")
+	}
+
+	var quarantineReason string
+	var isQuarantined bool
+	if len(quarantinePath) > 0 {
+		isQuarantined = true
+		quarantineReason = quarantinePath[0].Reason
 	}
 
 	if registry.PackageType == artifact.PackageTypeDOCKER || registry.PackageType == artifact.PackageTypeHELM {
 		tag, err := c.TagStore.GetTagMetadata(ctx, regInfo.ParentID, regInfo.RegistryIdentifier, image, version)
 		if err != nil {
-			return "", "", "", err
+			return "", "", "", false, "", err
 		}
 
-		return image, tag.Name, tag.PackageType, nil
+		return image, tag.Name, tag.PackageType, isQuarantined, quarantineReason, nil
 	}
 	artifact, err := c.ArtifactStore.GetArtifactMetadata(ctx, regInfo.ParentID,
 		regInfo.RegistryIdentifier, image, version)
 
 	if err != nil {
-		return "", "", "", err
+		return "", "", "", false, "", err
 	}
 
-	return image, artifact.Name, artifact.PackageType, nil
+	return image, artifact.Name, artifact.PackageType, isQuarantined, quarantineReason, nil
 }

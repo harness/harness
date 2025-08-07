@@ -375,7 +375,8 @@ func (t tagDao) GetAllArtifactsByParentID(
 
 	// Combine q1 and q2 with UNION ALL
 	finalQuery := fmt.Sprintf(`
-    SELECT repo_name, name, package_type, version, modified_at, labels, download_count
+    SELECT repo_name, name, package_type, version, modified_at,
+           labels, download_count, is_quarantined, quarantine_reason
     FROM (%s UNION ALL %s) AS combined
 `, q1SQL, q2SQL)
 

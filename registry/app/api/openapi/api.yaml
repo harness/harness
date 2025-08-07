@@ -707,6 +707,7 @@ paths:
         - $ref: "#/components/parameters/artifactPathParam"
         - $ref: "#/components/parameters/artifactTypeParam"
         - $ref: "#/components/parameters/versionPathParam"
+        - $ref: "#/components/parameters/digestOptParam"
       responses:
         200:
           $ref: "#/components/responses/ArtifactVersionSummaryResponse"
@@ -1167,8 +1168,8 @@ paths:
         - $ref: "#/components/parameters/versionParam"
         - $ref: "#/components/parameters/filePathParam"
       responses:
-        204:
-          $ref: "#/components/responses/Success"
+        200:
+          $ref:  "#/components/responses/Success"
         400:
           $ref: "#/components/responses/BadRequest"
         401:
@@ -1322,6 +1323,17 @@ components:
             required:
               - status
               - data
+    quarantinePathDeleteResponse:
+      description: quarantine path response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+            required:
+              - status
     DockerArtifactDetailResponse:
       description: response to get docker artifact detail
       content:
@@ -2730,6 +2742,10 @@ components:
           type: string
         version:
           type: string
+        isQuarantined:
+          type: boolean
+        quarantineReason:
+          type: string
         packageType:
           $ref: "#/components/schemas/PackageType"
         artifactType:
@@ -3214,6 +3230,13 @@ components:
         Unique path identifier for the final registry in the branch.
         The value can be provided either as a fully URL-encoded path (e.g., `organization%2Fproject%2Fregistry`)
         or as a plain path ending with a trailing plus sign (`+`) as separator (e.g., `organization/project/registry/+`).
+      schema:
+        type: string
+    digestOptParam:
+      name: digest
+      in: query
+      required: false
+      description: Digest.
       schema:
         type: string
     webhookIdentifierPathParam:

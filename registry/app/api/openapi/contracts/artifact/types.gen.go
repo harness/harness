@@ -322,12 +322,14 @@ type ArtifactVersionMetadata struct {
 // ArtifactVersionSummary Docker Artifact Version Summary
 type ArtifactVersionSummary struct {
 	// ArtifactType refers to artifact type
-	ArtifactType *ArtifactType `json:"artifactType,omitempty"`
-	ImageName    string        `json:"imageName"`
+	ArtifactType  *ArtifactType `json:"artifactType,omitempty"`
+	ImageName     string        `json:"imageName"`
+	IsQuarantined *bool         `json:"isQuarantined,omitempty"`
 
 	// PackageType refers to package
-	PackageType PackageType `json:"packageType"`
-	Version     string      `json:"version"`
+	PackageType      PackageType `json:"packageType"`
+	QuarantineReason *string     `json:"quarantineReason,omitempty"`
+	Version          string      `json:"version"`
 }
 
 // AuthType Authentication type
@@ -1016,6 +1018,9 @@ type ArtifactTypeParam string
 // ChildVersionParam defines model for childVersionParam.
 type ChildVersionParam string
 
+// DigestOptParam defines model for digestOptParam.
+type DigestOptParam string
+
 // DigestParam defines model for digestParam.
 type DigestParam string
 
@@ -1502,6 +1507,9 @@ type GetArtifactFilesParamsArtifactType string
 type GetArtifactVersionSummaryParams struct {
 	// ArtifactType artifact type.
 	ArtifactType *GetArtifactVersionSummaryParamsArtifactType `form:"artifact_type,omitempty" json:"artifact_type,omitempty"`
+
+	// Digest Digest.
+	Digest *DigestOptParam `form:"digest,omitempty" json:"digest,omitempty"`
 }
 
 // GetArtifactVersionSummaryParamsArtifactType defines parameters for GetArtifactVersionSummary.
