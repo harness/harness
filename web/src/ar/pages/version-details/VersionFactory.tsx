@@ -25,6 +25,7 @@ import { NuGetVersionType } from './NuGetVersion/NuGetVersionType'
 import { RPMVersionType } from './RPMVersion/RPMVersionType'
 import { CargoVersionType } from './CargoVersion/CargoVersionType'
 import { GoVersionType } from './GoVersion/GoVersionType'
+import { HuggingfaceVersionType } from './HuggingfaceVersion/HuggingfaceVersionType'
 
 versionFactory.registerStep(new DockerVersionType())
 versionFactory.registerStep(new HelmVersionType())
@@ -36,3 +37,4 @@ versionFactory.registerStep(new NuGetVersionType())
 versionFactory.registerStep(new RPMVersionType())
 versionFactory.registerStep(new CargoVersionType())
 versionFactory.registerStep(new GoVersionType())
+versionFactory.registerStep(new HuggingfaceVersionType())

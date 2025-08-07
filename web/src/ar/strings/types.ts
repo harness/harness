@@ -432,6 +432,7 @@ export interface StringsMap {
   'packageTypes.genericPackage': string
   'packageTypes.goPackage': string
   'packageTypes.helmPackage': string
+  'packageTypes.huggingfacePackage': string
   'packageTypes.mavenPackage': string
   'packageTypes.npmPackage': string
   'packageTypes.nugetPackage': string

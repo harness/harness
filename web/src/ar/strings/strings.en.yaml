@@ -88,6 +88,7 @@ packageTypes:
   rpmPackage: RPM Package
   cargoPackage: Cargo Package
   goPackage: Go Package
+  huggingfacePackage: Huggingface Package
 repositoryTypes:
   docker: Docker
   helm: Helm
