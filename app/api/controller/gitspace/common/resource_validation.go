@@ -29,41 +29,23 @@ import (
 // It removes any resources that are not compatible according to the IsResourceSpecChangeAllowed criteria.
 func FilterResourcesByCompatibility(
 	ctx context.Context,
-	resources []*types.InfraProviderResource,
-	referenceResourceID string,
+	filteredResources []*types.InfraProviderResource,
+	referenceResource *types.InfraProviderResource,
 ) ([]*types.InfraProviderResource, error) {
-	if referenceResourceID == "" {
-		return resources, nil
-	}
-
-	// Find reference resource and filter in a single pass
-	var referenceResource *types.InfraProviderResource
-	filteredResources := make([]*types.InfraProviderResource, 0)
-
-	for _, resource := range resources {
-		if resource.UID == referenceResourceID {
-			referenceResource = resource
-			continue
-		}
-		filteredResources = append(filteredResources, resource)
-	}
-
 	if referenceResource == nil {
-		log.Ctx(ctx).Warn().
-			Str("reference_resource_id", referenceResourceID).
-			Msg("reference resource not found, skipping compatibility filtering")
-		return resources, nil
+		return nil, fmt.Errorf("referenceResource cannot be nil")
 	}
+
+	compatibleResources := make([]*types.InfraProviderResource, 0)
 
 	// Now filter based on compatibility
-	compatibleResources := make([]*types.InfraProviderResource, 0)
 	for _, resource := range filteredResources {
 		_, err := IsResourceSpecChangeAllowed(referenceResource, resource)
 		if err != nil {
 			log.Ctx(ctx).Debug().
 				Err(err).
 				Str("resource_id", resource.UID).
-				Str("reference_id", referenceResourceID).
+				Str("reference_id", referenceResource.UID).
 				Msg("resource compatibility check failed")
 		} else {
 			compatibleResources = append(compatibleResources, resource)
