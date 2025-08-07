@@ -14,12 +14,17 @@
  * limitations under the License.
  */
 
+import type { Scope } from '@ar/MFEAppTypes'
 import { EntityScope } from '@ar/common/types'
 import { useAppStore } from './useAppStore'
 
+export const getEntityScopeType = (scope: Scope): EntityScope => {
+  return scope.projectIdentifier ? EntityScope.PROJECT : scope.orgIdentifier ? EntityScope.ORG : EntityScope.ACCOUNT
+}
+
 function useGetPageScope() {
   const { scope } = useAppStore()
-  return scope.projectIdentifier ? EntityScope.PROJECT : scope.orgIdentifier ? EntityScope.ORG : EntityScope.ACCOUNT
+  return getEntityScopeType(scope)
 }
 
 export default useGetPageScope
