@@ -73,6 +73,21 @@ func BlockNonOciSourceToken(urlProvider url.Provider) func(http.Handler) http.Ha
 	}
 }
 
+func CheckSig() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				// Check if the sig query parameter exists
+				if token := r.URL.Query().Get("sig"); token != "" {
+					// Set the token as a Bearer token in the Authorization header
+					r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+				}
+				next.ServeHTTP(w, r)
+			},
+		)
+	}
+}
+
 func CheckAuth() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(

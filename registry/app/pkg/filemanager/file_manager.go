@@ -165,6 +165,37 @@ func (f *FileManager) dbSaveFile(
 	return blobID, created, nil
 }
 
+func (f *FileManager) SaveNodes(
+	ctx context.Context,
+	filePath string,
+	regID int64,
+	rootParentID int64,
+	createdBy int64,
+	sha256 string,
+) error {
+	gb, err := f.genericBlobDao.FindBySha256AndRootParentID(ctx, sha256, rootParentID)
+	if err != nil {
+		log.Ctx(ctx).Error().Msgf("failed to find generic blob in db with "+
+			"sha256 : %s, err: %s", sha256, err.Error())
+		return fmt.Errorf("failed to find generic blob"+
+			" in db with sha256 : %s, err: %w", sha256, err)
+	}
+	// Saving the nodes
+	err = f.tx.WithTx(ctx, func(ctx context.Context) error {
+		err = f.createNodes(ctx, filePath, gb.ID, regID, createdBy)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		log.Ctx(ctx).Error().Msgf("failed to save nodes for file with "+
+			"path : %s, err: %s", filePath, err)
+		return fmt.Errorf("failed to save nodes for file with path : %s, err: %w", filePath, err)
+	}
+	return nil
+}
+
 func (f *FileManager) moveFile(
 	ctx context.Context,
 	rootIdentifier string,
@@ -310,20 +341,47 @@ func (f *FileManager) HeadFile(
 	ctx context.Context,
 	filePath string,
 	regID int64,
-) (string, error) {
+) (string, int64, error) {
 	node, err := f.nodesDao.GetByPathAndRegistryID(ctx, regID, filePath)
 
 	if err != nil {
-		return "", fmt.Errorf("failed to get the node path mapping for path: %s, "+
+		return "", 0, fmt.Errorf("failed to get the node path mapping for path: %s, "+
 			"with error %w", filePath, err)
 	}
 	blob, err := f.genericBlobDao.FindByID(ctx, node.BlobID)
 
 	if err != nil {
-		return "", fmt.Errorf("failed to get the blob for path: %s, with blob id: %s,"+
+		return "", 0, fmt.Errorf("failed to get the blob for path: %s, with blob id: %s,"+
 			" with error %w", filePath, node.BlobID, err)
 	}
-	return blob.Sha256, nil
+	return blob.Sha256, blob.Size, nil
+}
+
+func (f *FileManager) HeadSHA256(
+	ctx context.Context,
+	sha256 string,
+	regID int64,
+	rootParentID int64,
+) (string, error) {
+	blob, err := f.genericBlobDao.FindBySha256AndRootParentID(ctx, sha256, rootParentID)
+
+	if blob == nil || err != nil {
+		log.Ctx(ctx).Error().Msgf("failed to get the blob for sha256: %s, with root parent id: %d, with error %v",
+			sha256, rootParentID, err)
+		return "", fmt.Errorf("failed to get the blob for sha256: %s, with root parent id: %d, with error %w", sha256,
+			rootParentID, err)
+	}
+
+	node, err := f.nodesDao.GetByBlobIDAndRegistryID(ctx, blob.ID, regID)
+
+	if err != nil {
+		log.Ctx(ctx).Error().Msgf("failed to get the node for blob id: %s, with registry id: %d, with error %v",
+			blob.ID, regID, err)
+		return "", fmt.Errorf("failed to get the node for blob id: %s, with registry id: %d, with error %w", blob.ID,
+			regID, err)
+	}
+
+	return node.NodePath, nil
 }
 
 func (f *FileManager) GetFileMetadata(
@@ -409,6 +467,36 @@ func (f *FileManager) UploadTempFile(
 	return fileInfo, tempFileName, nil
 }
 
+func (f *FileManager) UploadTempFileToPath(
+	ctx context.Context,
+	rootIdentifier string,
+	file multipart.File,
+	fileName string,
+	tempFileName string,
+	fileReader io.Reader,
+) (types.FileInfo, string, error) {
+	blobContext := f.GetBlobsContext(ctx, rootIdentifier)
+	fileInfo, _, err := f.uploadTempFileInternal(ctx, blobContext, rootIdentifier,
+		file, fileName, fileReader, tempFileName)
+	if err != nil {
+		return fileInfo, tempFileName, err
+	}
+	return fileInfo, tempFileName, nil
+}
+
+func (f *FileManager) FileExists(
+	ctx context.Context,
+	rootIdentifier string,
+	filePath string,
+) (bool, int64, error) {
+	blobContext := f.GetBlobsContext(ctx, rootIdentifier)
+	size, err := blobContext.genericBlobStore.Stat(ctx, filePath)
+	if err != nil {
+		return false, -1, err
+	}
+	return size > 0, size, nil
+}
+
 func (f *FileManager) uploadTempFileInternal(
 	ctx context.Context,
 	blobContext *Context,
@@ -468,7 +556,6 @@ func (f *FileManager) MoveTempFile(
 	// uploading the file to temporary path in file storage
 	blobContext := f.GetBlobsContext(ctx, rootIdentifier)
 	tmpPath := path.Join(rootPathString, rootIdentifier, tmp, tempFileName)
-
 	err := f.moveFile(ctx, rootIdentifier, fileInfo, blobContext, tmpPath)
 	if err != nil {
 		return err

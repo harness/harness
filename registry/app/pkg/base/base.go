@@ -344,7 +344,7 @@ func (l *localBase) GetSHA256(ctx context.Context, info pkg.ArtifactInfo, path s
 	err error,
 ) {
 	filePath := "/" + path
-	sha256, err = l.fileManager.HeadFile(ctx, filePath, info.RegistryID)
+	sha256, _, err = l.fileManager.HeadFile(ctx, filePath, info.RegistryID)
 	if err != nil {
 		return false, "", err
 	}
@@ -358,7 +358,7 @@ func (l *localBase) GetSHA256ByPath(ctx context.Context, registryID int64, fileP
 	sha256 string,
 	err error,
 ) {
-	sha256, err = l.fileManager.HeadFile(ctx, "/"+filePath, registryID)
+	sha256, _, err = l.fileManager.HeadFile(ctx, "/"+filePath, registryID)
 	if err != nil {
 		return false, "", err
 	}

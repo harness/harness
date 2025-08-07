@@ -132,10 +132,12 @@ import (
 	api2 "github.com/harness/gitness/registry/app/api"
 	cargo3 "github.com/harness/gitness/registry/app/api/controller/pkg/cargo"
 	gopackage2 "github.com/harness/gitness/registry/app/api/controller/pkg/gopackage"
+	huggingface2 "github.com/harness/gitness/registry/app/api/controller/pkg/huggingface"
 	npm2 "github.com/harness/gitness/registry/app/api/controller/pkg/npm"
 	nuget2 "github.com/harness/gitness/registry/app/api/controller/pkg/nuget"
 	python2 "github.com/harness/gitness/registry/app/api/controller/pkg/python"
 	rpm2 "github.com/harness/gitness/registry/app/api/controller/pkg/rpm"
+	huggingface3 "github.com/harness/gitness/registry/app/api/handler/huggingface"
 	"github.com/harness/gitness/registry/app/api/router"
 	"github.com/harness/gitness/registry/app/events/artifact"
 	"github.com/harness/gitness/registry/app/events/asyncprocessing"
@@ -146,6 +148,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/generic"
 	"github.com/harness/gitness/registry/app/pkg/gopackage"
+	"github.com/harness/gitness/registry/app/pkg/huggingface"
 	"github.com/harness/gitness/registry/app/pkg/maven"
 	"github.com/harness/gitness/registry/app/pkg/npm"
 	"github.com/harness/gitness/registry/app/pkg/nuget"
@@ -610,7 +613,10 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	gopackageProxy := gopackage.ProxyProvider(localBase, upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, spaceFinder, secretService, artifactReporter, gopackageLocalRegistryHelper)
 	gopackageController := gopackage2.ControllerProvider(upstreamProxyConfigRepository, registryRepository, registryFinder, imageRepository, artifactRepository, fileManager, transactor, provider, gopackageLocalRegistry, gopackageProxy)
 	gopackageHandler := api2.NewGoPackageHandlerProvider(gopackageController, packagesHandler)
-	handler4 := router.PackageHandlerProvider(packagesHandler, mavenHandler, genericHandler, pythonHandler, nugetHandler, npmHandler, rpmHandler, cargoHandler, gopackageHandler)
+	huggingfaceLocalRegistry := huggingface.LocalRegistryProvider(localBase, fileManager, upstreamProxyConfigRepository, transactor, registryRepository, imageRepository, artifactRepository, provider)
+	huggingfaceController := huggingface2.ProvideController(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, huggingfaceLocalRegistry)
+	huggingfaceHandler := huggingface3.ProvideHandler(huggingfaceController, packagesHandler)
+	handler4 := router.PackageHandlerProvider(packagesHandler, mavenHandler, genericHandler, pythonHandler, nugetHandler, npmHandler, rpmHandler, cargoHandler, gopackageHandler, huggingfaceHandler)
 	appRouter := router.AppRouterProvider(registryOCIHandler, apiHandler, handler2, handler3, handler4)
 	readerFactory3, err := events3.ProvideReaderFactory(eventsSystem)
 	if err != nil {

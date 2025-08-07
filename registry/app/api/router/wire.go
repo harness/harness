@@ -26,6 +26,7 @@ import (
 	"github.com/harness/gitness/registry/app/api/handler/cargo"
 	"github.com/harness/gitness/registry/app/api/handler/generic"
 	"github.com/harness/gitness/registry/app/api/handler/gopackage"
+	"github.com/harness/gitness/registry/app/api/handler/huggingface"
 	"github.com/harness/gitness/registry/app/api/handler/maven"
 	"github.com/harness/gitness/registry/app/api/handler/npm"
 	"github.com/harness/gitness/registry/app/api/handler/nuget"
@@ -149,6 +150,7 @@ func PackageHandlerProvider(
 	rpmHandler rpm.Handler,
 	cargoHandler cargo.Handler,
 	gopackageHandler gopackage.Handler,
+	huggingfaceHandler huggingface.Handler,
 ) packagerrouter.Handler {
 	return packagerrouter.NewRouter(
 		handler,
@@ -160,6 +162,7 @@ func PackageHandlerProvider(
 		rpmHandler,
 		cargoHandler,
 		gopackageHandler,
+		huggingfaceHandler,
 	)
 }
 

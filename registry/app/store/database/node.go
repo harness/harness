@@ -99,6 +99,27 @@ func (n NodeDao) GetByNameAndRegistryID(ctx context.Context, registryID int64, n
 	return n.mapToNode(ctx, dst)
 }
 
+func (n NodeDao) GetByBlobIDAndRegistryID(ctx context.Context, blobID string, registryID int64) (*types.Node, error) {
+	q := databaseg.Builder.
+		Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(Nodes{}), ",")).
+		From("nodes").
+		Where("node_generic_blob_id = ? AND node_registry_id = ?", blobID, registryID).Limit(1)
+
+	db := dbtx.GetAccessor(ctx, n.sqlDB)
+
+	dst := new(Nodes)
+	_sql, args, err := q.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	if err = db.GetContext(ctx, dst, _sql, args...); err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to find node with registry id %d", registryID)
+	}
+
+	return n.mapToNode(ctx, dst)
+}
+
 func (n NodeDao) FindByPathAndRegistryID(
 	ctx context.Context, registryID int64, path string,
 ) (*types.Node, error) {

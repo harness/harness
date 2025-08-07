@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/registry/app/api/handler/cargo"
 	"github.com/harness/gitness/registry/app/api/handler/generic"
 	"github.com/harness/gitness/registry/app/api/handler/gopackage"
+	"github.com/harness/gitness/registry/app/api/handler/huggingface"
 	"github.com/harness/gitness/registry/app/api/handler/maven"
 	"github.com/harness/gitness/registry/app/api/handler/npm"
 	"github.com/harness/gitness/registry/app/api/handler/nuget"
@@ -54,6 +55,7 @@ func NewRouter(
 	rpmHandler rpm.Handler,
 	cargoHandler cargo.Handler,
 	gopackageHandler gopackage.Handler,
+	huggingfaceHandler huggingface.Handler,
 ) Handler {
 	r := chi.NewRouter()
 
@@ -334,6 +336,64 @@ func NewRouter(
 				With(middleware.TrackDownloadStatsForGoPackage(packageHandler)).
 				Get("/*", gopackageHandler.DownloadPackageFile)
 			// TODO: Add api for regenerate package index and download latest package info file
+		})
+
+		// Huggingface routes
+		r.Route("/huggingface", func(r chi.Router) {
+			r.Use(middleware.CheckSig())
+			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
+			r.Use(middleware.CheckAuth())
+
+			r.With(middleware.StoreArtifactInfo(huggingfaceHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Post("/api/validate-yaml", huggingfaceHandler.ValidateYAML)
+
+			r.With(middleware.StoreArtifactInfo(huggingfaceHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Post("/api/{repoType}/{repo}/preupload/{rev}", huggingfaceHandler.PreUpload)
+
+			r.With(middleware.StoreArtifactInfo(huggingfaceHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Get("/api/{repoType}/{repo}/revision/{rev}", huggingfaceHandler.RevisionInfo)
+
+			r.With(middleware.StoreArtifactInfo(huggingfaceHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Post("/{repo}.git/info/lfs/objects/batch", huggingfaceHandler.LfsInfo)
+
+			r.With(middleware.StoreArtifactInfo(huggingfaceHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Post("/{repoType}/{repo}.git/info/lfs/objects/batch", huggingfaceHandler.LfsInfo)
+
+			r.With(middleware.StoreArtifactInfo(huggingfaceHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
+				Put("/api/{repoType}/{repo}/{rev}/multipart/upload/{sha256}", huggingfaceHandler.LfsUpload)
+
+			r.With(middleware.StoreArtifactInfo(huggingfaceHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Post("/api/{repoType}/{repo}/{rev}/multipart/verify/{sha256}", huggingfaceHandler.LfsVerify)
+
+			r.With(middleware.StoreArtifactInfo(huggingfaceHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
+				Post("/api/{repoType}/{repo}/commit/{rev}", huggingfaceHandler.CommitRevision)
+
+			r.With(middleware.StoreArtifactInfo(huggingfaceHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Head("/{repo}/resolve/{rev}/*", huggingfaceHandler.HeadFile)
+
+			r.With(middleware.StoreArtifactInfo(huggingfaceHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Head("/{repoType}/{repo}/resolve/{rev}/*", huggingfaceHandler.HeadFile)
+
+			r.With(middleware.StoreArtifactInfo(huggingfaceHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				With(middleware.TrackDownloadStats(packageHandler)).
+				Get("/{repo}/resolve/{rev}/*", huggingfaceHandler.DownloadFile)
+
+			r.With(middleware.StoreArtifactInfo(huggingfaceHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				With(middleware.TrackDownloadStats(packageHandler)).
+				Get("/{repoType}/{repo}/resolve/{rev}/*", huggingfaceHandler.DownloadFile)
+
 		})
 	})
 

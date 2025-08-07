@@ -23,6 +23,7 @@ import (
 	urlprovider "github.com/harness/gitness/app/url"
 	cargo2 "github.com/harness/gitness/registry/app/api/controller/pkg/cargo"
 	gopackage2 "github.com/harness/gitness/registry/app/api/controller/pkg/gopackage"
+	"github.com/harness/gitness/registry/app/api/controller/pkg/huggingface"
 	"github.com/harness/gitness/registry/app/api/controller/pkg/npm"
 	nuget2 "github.com/harness/gitness/registry/app/api/controller/pkg/nuget"
 	python2 "github.com/harness/gitness/registry/app/api/controller/pkg/python"
@@ -30,6 +31,7 @@ import (
 	"github.com/harness/gitness/registry/app/api/handler/cargo"
 	"github.com/harness/gitness/registry/app/api/handler/generic"
 	"github.com/harness/gitness/registry/app/api/handler/gopackage"
+	hf2 "github.com/harness/gitness/registry/app/api/handler/huggingface"
 	mavenhandler "github.com/harness/gitness/registry/app/api/handler/maven"
 	npm2 "github.com/harness/gitness/registry/app/api/handler/npm"
 	nugethandler "github.com/harness/gitness/registry/app/api/handler/nuget"
@@ -49,6 +51,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	generic2 "github.com/harness/gitness/registry/app/pkg/generic"
 	gopackageregistry "github.com/harness/gitness/registry/app/pkg/gopackage"
+	hf3 "github.com/harness/gitness/registry/app/pkg/huggingface"
 	"github.com/harness/gitness/registry/app/pkg/maven"
 	npm22 "github.com/harness/gitness/registry/app/pkg/npm"
 	"github.com/harness/gitness/registry/app/pkg/nuget"
@@ -255,6 +258,9 @@ var WireSet = wire.NewSet(
 	cargoregistry.WireSet,
 	gopackage2.ControllerSet,
 	gopackageregistry.WireSet,
+	huggingface.WireSet,
+	hf2.WireSet,
+	hf3.WireSet,
 )
 
 func Wire(_ *types.Config) (RegistryApp, error) {

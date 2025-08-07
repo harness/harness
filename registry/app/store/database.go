@@ -615,6 +615,9 @@ type NodesRepository interface {
 		path string,
 	) (*types.Node, error)
 
+	// GetByBlobIDAndRegistryID retrieves a node by its blob ID and registry ID.
+	GetByBlobIDAndRegistryID(ctx context.Context, blobID string, registryID int64) (*types.Node, error)
+
 	GetFilesMetadataByPathAndRegistryID(
 		ctx context.Context, registryID int64, path string,
 		sortByField string,

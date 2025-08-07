@@ -95,6 +95,7 @@ func proxyInternal(
 			requestRepoKey, pkg.JoinWithSeparator(", ", skippedRegNames...))
 	}
 
+	//todo: fix error message
 	return r, errors.NotFound("no matching artifacts found in registry %s", requestRepoKey)
 }
 

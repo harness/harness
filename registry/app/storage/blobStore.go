@@ -157,3 +157,12 @@ func (bs *genericBlobStore) Delete(ctx context.Context, filePath string) error {
 	}
 	return nil
 }
+
+func (bs *genericBlobStore) Stat(ctx context.Context, filePath string) (int64, error) {
+	dcontext.GetLogger(ctx, log.Ctx(ctx).Debug()).Msg("(*genericBlobStore).Stat")
+	fileInfo, err := bs.driver.Stat(ctx, filePath)
+	if err != nil {
+		return -1, err
+	}
+	return fileInfo.Size(), nil
+}

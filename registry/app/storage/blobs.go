@@ -180,4 +180,5 @@ type GenericBlobStore interface {
 
 	Get(ctx context.Context, filePath string, size int64, filename string) (*FileReader, string, error)
 	GetWithNoRedirect(ctx context.Context, filePath string, size int64) (*FileReader, error)
+	Stat(ctx context.Context, filePath string) (int64, error)
 }
