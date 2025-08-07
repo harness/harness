@@ -13,7 +13,7 @@ To install Harness yourself, simply run the command below. Once the container is
 ```bash
 docker run -d \
   -p 3000:3000 \
-  -p 22:22 \
+  -p 3022:3022 \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v /tmp/harness:/data \
   --name harness \
