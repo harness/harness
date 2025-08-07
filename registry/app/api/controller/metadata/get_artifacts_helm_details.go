@@ -96,7 +96,7 @@ func (c *APIController) GetHelmArtifactDetails(
 		return getHelmArtifactDetailsErrResponse(err)
 	}
 
-	art, err := c.ArtifactStore.GetArtifactMetadata(ctx, registry.ParentID, registry.Name, image, parsedDigest.String())
+	art, err := c.ArtifactStore.GetArtifactMetadata(ctx, registry.ParentID, registry.Name, image, parsedDigest.String(), nil)
 	if err != nil {
 		return getHelmArtifactDetailsErrResponse(err)
 	}

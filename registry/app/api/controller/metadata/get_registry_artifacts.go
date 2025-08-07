@@ -83,6 +83,17 @@ func (c *APIController) GetAllArtifactsByRegistry(
 
 	var artifacts *[]types.ArtifactMetadata
 	var count int64
+	var artifactType *artifact.ArtifactType
+	if r.Params.ArtifactType != nil {
+		artifactType, err = ValidateAndGetArtifactType(registry.PackageType, string(*r.Params.ArtifactType))
+		if err != nil {
+			return artifact.GetAllArtifactsByRegistry400JSONResponse{
+				BadRequestJSONResponse: artifact.BadRequestJSONResponse(
+					*GetErrorResponse(http.StatusBadRequest, err.Error()),
+				),
+			}, nil
+		}
+	}
 	if registry.PackageType == artifact.PackageTypeDOCKER || registry.PackageType == artifact.PackageTypeHELM {
 		artifacts, err = c.TagStore.GetAllArtifactsByRepo(
 			ctx, regInfo.ParentID, regInfo.RegistryIdentifier,
@@ -102,10 +113,11 @@ func (c *APIController) GetAllArtifactsByRegistry(
 	} else {
 		artifacts, err = c.ArtifactStore.GetArtifactsByRepo(
 			ctx, regInfo.ParentID, regInfo.RegistryIdentifier,
-			regInfo.sortByField, regInfo.sortByOrder, regInfo.limit, regInfo.offset, regInfo.searchTerm, regInfo.labels)
+			regInfo.sortByField, regInfo.sortByOrder, regInfo.limit, regInfo.offset, regInfo.searchTerm, regInfo.labels,
+			artifactType)
 		count, _ = c.ArtifactStore.CountArtifactsByRepo(
 			ctx, regInfo.ParentID, regInfo.RegistryIdentifier,
-			regInfo.searchTerm, regInfo.labels)
+			regInfo.searchTerm, regInfo.labels, artifactType)
 		if err != nil {
 			return artifact.GetAllArtifactsByRegistry500JSONResponse{
 				InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(

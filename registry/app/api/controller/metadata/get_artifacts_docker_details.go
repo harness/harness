@@ -90,7 +90,8 @@ func (c *APIController) GetDockerArtifactDetails(
 	if err != nil {
 		return getArtifactDetailsErrResponse(err)
 	}
-	art, err := c.ArtifactStore.GetArtifactMetadata(ctx, registry.ParentID, registry.Name, image, dgst.String())
+	art, err := c.ArtifactStore.GetArtifactMetadata(ctx, registry.ParentID, registry.Name, image, dgst.String(),
+		nil)
 	if err != nil {
 		return getArtifactDetailsErrResponse(err)
 	}

@@ -17,6 +17,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"sort"
 	"time"
 
@@ -45,16 +46,17 @@ func NewImageDao(db *sqlx.DB) store.ImageRepository {
 }
 
 type imageDB struct {
-	ID         int64          `db:"image_id"`
-	UUID       string         `db:"image_uuid"`
-	Name       string         `db:"image_name"`
-	RegistryID int64          `db:"image_registry_id"`
-	Labels     sql.NullString `db:"image_labels"`
-	Enabled    bool           `db:"image_enabled"`
-	CreatedAt  int64          `db:"image_created_at"`
-	UpdatedAt  int64          `db:"image_updated_at"`
-	CreatedBy  int64          `db:"image_created_by"`
-	UpdatedBy  int64          `db:"image_updated_by"`
+	ID           int64                  `db:"image_id"`
+	UUID         string                 `db:"image_uuid"`
+	Name         string                 `db:"image_name"`
+	ArtifactType *artifact.ArtifactType `db:"image_type"`
+	RegistryID   int64                  `db:"image_registry_id"`
+	Labels       sql.NullString         `db:"image_labels"`
+	Enabled      bool                   `db:"image_enabled"`
+	CreatedAt    int64                  `db:"image_created_at"`
+	UpdatedAt    int64                  `db:"image_updated_at"`
+	CreatedBy    int64                  `db:"image_created_by"`
+	UpdatedBy    int64                  `db:"image_updated_by"`
 }
 
 type imageLabelDB struct {
@@ -139,6 +141,29 @@ func (i ImageDao) GetByName(ctx context.Context, registryID int64, name string) 
 	}
 	return i.mapToImage(ctx, dst)
 }
+func (i ImageDao) GetByNameAndType(ctx context.Context, registryID int64, name string,
+	artifactType *artifact.ArtifactType) (*types.Image, error) {
+	q := databaseg.Builder.Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(imageDB{}), ",")).
+		From("images").
+		Where("image_registry_id = ? AND image_name = ?", registryID, name)
+
+	if artifactType != nil && *artifactType != "" {
+		q = q.Where("image_type = ?", *artifactType)
+	}
+
+	sql, args, err := q.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, i.db)
+
+	dst := new(imageDB)
+	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to get image")
+	}
+	return i.mapToImage(ctx, dst)
+}
 
 func (i ImageDao) CreateOrUpdate(ctx context.Context, image *types.Image) error {
 	if commons.IsEmpty(image.Name) {
@@ -148,6 +173,7 @@ func (i ImageDao) CreateOrUpdate(ctx context.Context, image *types.Image) error 
 		INSERT INTO images ( 
 		         image_registry_id
 				,image_name
+				,image_type
 				,image_enabled
 				,image_created_at
 				,image_updated_at
@@ -157,6 +183,7 @@ func (i ImageDao) CreateOrUpdate(ctx context.Context, image *types.Image) error 
 		    ) VALUES (
 						 :image_registry_id
 						,:image_name
+						,:image_type
 						,:image_enabled
 						,:image_created_at
 						,:image_updated_at
@@ -164,7 +191,7 @@ func (i ImageDao) CreateOrUpdate(ctx context.Context, image *types.Image) error 
 						,:image_updated_by
 					    ,:image_uuid
 		    ) 
-            ON CONFLICT (image_registry_id, image_name)
+            ON CONFLICT (image_registry_id, image_name, image_type)
 		    DO UPDATE SET
 			   image_enabled = :image_enabled
             RETURNING image_id`
@@ -351,16 +378,17 @@ func (i ImageDao) mapToInternalImage(ctx context.Context, in *types.Image) *imag
 	sort.Strings(in.Labels)
 
 	return &imageDB{
-		ID:         in.ID,
-		UUID:       in.UUID,
-		Name:       in.Name,
-		RegistryID: in.RegistryID,
-		Labels:     util.GetEmptySQLString(util.ArrToString(in.Labels)),
-		Enabled:    in.Enabled,
-		CreatedAt:  in.CreatedAt.UnixMilli(),
-		UpdatedAt:  in.UpdatedAt.UnixMilli(),
-		CreatedBy:  in.CreatedBy,
-		UpdatedBy:  in.UpdatedBy,
+		ID:           in.ID,
+		UUID:         in.UUID,
+		Name:         in.Name,
+		ArtifactType: in.ArtifactType,
+		RegistryID:   in.RegistryID,
+		Labels:       util.GetEmptySQLString(util.ArrToString(in.Labels)),
+		Enabled:      in.Enabled,
+		CreatedAt:    in.CreatedAt.UnixMilli(),
+		UpdatedAt:    in.UpdatedAt.UnixMilli(),
+		CreatedBy:    in.CreatedBy,
+		UpdatedBy:    in.UpdatedBy,
 	}
 }
 
@@ -368,16 +396,17 @@ func (i ImageDao) mapToImage(_ context.Context, dst *imageDB) (*types.Image, err
 	createdBy := dst.CreatedBy
 	updatedBy := dst.UpdatedBy
 	return &types.Image{
-		ID:         dst.ID,
-		UUID:       dst.UUID,
-		Name:       dst.Name,
-		RegistryID: dst.RegistryID,
-		Labels:     util.StringToArr(dst.Labels.String),
-		Enabled:    dst.Enabled,
-		CreatedAt:  time.UnixMilli(dst.CreatedAt),
-		UpdatedAt:  time.UnixMilli(dst.UpdatedAt),
-		CreatedBy:  createdBy,
-		UpdatedBy:  updatedBy,
+		ID:           dst.ID,
+		UUID:         dst.UUID,
+		Name:         dst.Name,
+		ArtifactType: dst.ArtifactType,
+		RegistryID:   dst.RegistryID,
+		Labels:       util.StringToArr(dst.Labels.String),
+		Enabled:      dst.Enabled,
+		CreatedAt:    time.UnixMilli(dst.CreatedAt),
+		UpdatedAt:    time.UnixMilli(dst.UpdatedAt),
+		CreatedBy:    createdBy,
+		UpdatedBy:    updatedBy,
 	}, nil
 }
 

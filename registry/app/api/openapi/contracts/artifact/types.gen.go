@@ -13,8 +13,8 @@ import (
 
 // Defines values for ArtifactType.
 const (
-	ArtifactTypeDATASET ArtifactType = "DATASET"
-	ArtifactTypeMODEL   ArtifactType = "MODEL"
+	ArtifactTypeDataset ArtifactType = "dataset"
+	ArtifactTypeModel   ArtifactType = "model"
 )
 
 // Defines values for AuthType.
@@ -127,8 +127,8 @@ const (
 
 // Defines values for ArtifactTypeParam.
 const (
-	DATASET ArtifactTypeParam = "DATASET"
-	MODEL   ArtifactTypeParam = "MODEL"
+	Dataset ArtifactTypeParam = "dataset"
+	Model   ArtifactTypeParam = "model"
 )
 
 // Defines values for ScopeParam.
@@ -140,68 +140,62 @@ const (
 
 // Defines values for DeleteArtifactParamsArtifactType.
 const (
-	DeleteArtifactParamsArtifactTypeDATASET DeleteArtifactParamsArtifactType = "DATASET"
-	DeleteArtifactParamsArtifactTypeMODEL   DeleteArtifactParamsArtifactType = "MODEL"
+	DeleteArtifactParamsArtifactTypeDataset DeleteArtifactParamsArtifactType = "dataset"
+	DeleteArtifactParamsArtifactTypeModel   DeleteArtifactParamsArtifactType = "model"
 )
 
 // Defines values for UpdateArtifactLabelsParamsArtifactType.
 const (
-	UpdateArtifactLabelsParamsArtifactTypeDATASET UpdateArtifactLabelsParamsArtifactType = "DATASET"
-	UpdateArtifactLabelsParamsArtifactTypeMODEL   UpdateArtifactLabelsParamsArtifactType = "MODEL"
+	UpdateArtifactLabelsParamsArtifactTypeDataset UpdateArtifactLabelsParamsArtifactType = "dataset"
+	UpdateArtifactLabelsParamsArtifactTypeModel   UpdateArtifactLabelsParamsArtifactType = "model"
 )
 
 // Defines values for GetArtifactSummaryParamsArtifactType.
 const (
-	GetArtifactSummaryParamsArtifactTypeDATASET GetArtifactSummaryParamsArtifactType = "DATASET"
-	GetArtifactSummaryParamsArtifactTypeMODEL   GetArtifactSummaryParamsArtifactType = "MODEL"
+	GetArtifactSummaryParamsArtifactTypeDataset GetArtifactSummaryParamsArtifactType = "dataset"
+	GetArtifactSummaryParamsArtifactTypeModel   GetArtifactSummaryParamsArtifactType = "model"
 )
 
 // Defines values for DeleteArtifactVersionParamsArtifactType.
 const (
-	DeleteArtifactVersionParamsArtifactTypeDATASET DeleteArtifactVersionParamsArtifactType = "DATASET"
-	DeleteArtifactVersionParamsArtifactTypeMODEL   DeleteArtifactVersionParamsArtifactType = "MODEL"
+	DeleteArtifactVersionParamsArtifactTypeDataset DeleteArtifactVersionParamsArtifactType = "dataset"
+	DeleteArtifactVersionParamsArtifactTypeModel   DeleteArtifactVersionParamsArtifactType = "model"
 )
 
 // Defines values for GetArtifactDetailsParamsArtifactType.
 const (
-	GetArtifactDetailsParamsArtifactTypeDATASET GetArtifactDetailsParamsArtifactType = "DATASET"
-	GetArtifactDetailsParamsArtifactTypeMODEL   GetArtifactDetailsParamsArtifactType = "MODEL"
+	GetArtifactDetailsParamsArtifactTypeDataset GetArtifactDetailsParamsArtifactType = "dataset"
+	GetArtifactDetailsParamsArtifactTypeModel   GetArtifactDetailsParamsArtifactType = "model"
 )
 
 // Defines values for GetArtifactFileParamsArtifactType.
 const (
-	GetArtifactFileParamsArtifactTypeDATASET GetArtifactFileParamsArtifactType = "DATASET"
-	GetArtifactFileParamsArtifactTypeMODEL   GetArtifactFileParamsArtifactType = "MODEL"
+	GetArtifactFileParamsArtifactTypeDataset GetArtifactFileParamsArtifactType = "dataset"
+	GetArtifactFileParamsArtifactTypeModel   GetArtifactFileParamsArtifactType = "model"
 )
 
 // Defines values for GetArtifactFilesParamsArtifactType.
 const (
-	GetArtifactFilesParamsArtifactTypeDATASET GetArtifactFilesParamsArtifactType = "DATASET"
-	GetArtifactFilesParamsArtifactTypeMODEL   GetArtifactFilesParamsArtifactType = "MODEL"
+	GetArtifactFilesParamsArtifactTypeDataset GetArtifactFilesParamsArtifactType = "dataset"
+	GetArtifactFilesParamsArtifactTypeModel   GetArtifactFilesParamsArtifactType = "model"
 )
 
 // Defines values for GetArtifactVersionSummaryParamsArtifactType.
 const (
-	GetArtifactVersionSummaryParamsArtifactTypeDATASET GetArtifactVersionSummaryParamsArtifactType = "DATASET"
-	GetArtifactVersionSummaryParamsArtifactTypeMODEL   GetArtifactVersionSummaryParamsArtifactType = "MODEL"
+	GetArtifactVersionSummaryParamsArtifactTypeDataset GetArtifactVersionSummaryParamsArtifactType = "dataset"
+	GetArtifactVersionSummaryParamsArtifactTypeModel   GetArtifactVersionSummaryParamsArtifactType = "model"
 )
 
 // Defines values for GetAllArtifactVersionsParamsArtifactType.
 const (
-	GetAllArtifactVersionsParamsArtifactTypeDATASET GetAllArtifactVersionsParamsArtifactType = "DATASET"
-	GetAllArtifactVersionsParamsArtifactTypeMODEL   GetAllArtifactVersionsParamsArtifactType = "MODEL"
+	GetAllArtifactVersionsParamsArtifactTypeDataset GetAllArtifactVersionsParamsArtifactType = "dataset"
+	GetAllArtifactVersionsParamsArtifactTypeModel   GetAllArtifactVersionsParamsArtifactType = "model"
 )
 
 // Defines values for GetAllArtifactsByRegistryParamsArtifactType.
 const (
-	GetAllArtifactsByRegistryParamsArtifactTypeDATASET GetAllArtifactsByRegistryParamsArtifactType = "DATASET"
-	GetAllArtifactsByRegistryParamsArtifactTypeMODEL   GetAllArtifactsByRegistryParamsArtifactType = "MODEL"
-)
-
-// Defines values for GetAllArtifactsParamsArtifactType.
-const (
-	GetAllArtifactsParamsArtifactTypeDATASET GetAllArtifactsParamsArtifactType = "DATASET"
-	GetAllArtifactsParamsArtifactTypeMODEL   GetAllArtifactsParamsArtifactType = "MODEL"
+	GetAllArtifactsByRegistryParamsArtifactTypeDataset GetAllArtifactsByRegistryParamsArtifactType = "dataset"
+	GetAllArtifactsByRegistryParamsArtifactTypeModel   GetAllArtifactsByRegistryParamsArtifactType = "model"
 )
 
 // Defines values for GetAllRegistriesParamsType.
@@ -1675,13 +1669,7 @@ type GetAllArtifactsParams struct {
 
 	// PackageType Registry Package Type
 	PackageType *PackageTypeParam `form:"package_type,omitempty" json:"package_type,omitempty"`
-
-	// ArtifactType artifact type.
-	ArtifactType *GetAllArtifactsParamsArtifactType `form:"artifact_type,omitempty" json:"artifact_type,omitempty"`
 }
-
-// GetAllArtifactsParamsArtifactType defines parameters for GetAllArtifacts.
-type GetAllArtifactsParamsArtifactType string
 
 // GetAllRegistriesParams defines parameters for GetAllRegistries.
 type GetAllRegistriesParams struct {

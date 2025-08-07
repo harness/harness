@@ -79,6 +79,7 @@ func TestMigrationFilesNumbering(t *testing.T) {
 			"0111": true,
 			"0115": true,
 			"0122": true,
+			"0134": true,
 		},
 		"sqlite": {
 			"0000": true,
@@ -104,6 +105,7 @@ func TestMigrationFilesNumbering(t *testing.T) {
 			"0111": true,
 			"0115": true,
 			"0122": true,
+			"0134": true,
 		},
 	}
 

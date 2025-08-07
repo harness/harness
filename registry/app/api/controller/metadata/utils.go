@@ -143,6 +143,10 @@ var validUpstreamSources = []string{
 	string(a.UpstreamConfigSourceHuggingFace),
 }
 
+var validArtifactTypesMapping = map[string][]string{
+	string(a.PackageTypeHUGGINGFACE): {string(a.ArtifactTypeModel), string(a.ArtifactTypeDataset)},
+}
+
 func ValidatePackageTypes(packageTypes []string) error {
 	if commons.IsEmpty(packageTypes) || IsPackageTypesValid(packageTypes) {
 		return nil
@@ -155,6 +159,20 @@ func ValidateScope(scope string) error {
 		return nil
 	}
 	return errors.New("invalid scope")
+}
+
+func ValidateAndGetArtifactType(packageType a.PackageType, artifactTypeParam string) (*a.ArtifactType, error) {
+	validTypes, ok := validArtifactTypesMapping[string(packageType)]
+	if !ok {
+		return nil, errors.New("invalid package type")
+	}
+	for _, t := range validTypes {
+		if t == artifactTypeParam {
+			at := a.ArtifactType(artifactTypeParam)
+			return &at, nil
+		}
+	}
+	return nil, errors.New("invalid artifact type for package type")
 }
 
 func ValidatePackageType(packageType string) error {

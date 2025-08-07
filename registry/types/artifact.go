@@ -44,4 +44,5 @@ type NonOCIArtifactMetadata struct {
 	DownloadCount    int64
 	IsQuarantined    bool
 	QuarantineReason *string
+	ArtifactType     *artifact.ArtifactType
 }

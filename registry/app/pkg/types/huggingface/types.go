@@ -15,6 +15,7 @@
 package huggingface
 
 import (
+	apicontract "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	huggingfacemetadata "github.com/harness/gitness/registry/app/metadata/huggingface"
 	"github.com/harness/gitness/registry/app/pkg"
 )
@@ -24,7 +25,7 @@ type ArtifactInfo struct {
 	pkg.ArtifactInfo
 	Repo     string
 	Revision string
-	RepoType string
+	RepoType apicontract.ArtifactType
 	SHA256   string
 }
 

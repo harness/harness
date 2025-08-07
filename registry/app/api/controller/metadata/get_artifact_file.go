@@ -78,7 +78,19 @@ func (c *APIController) GetArtifactFile(
 			),
 		}, nil
 	}
-	img, err := c.ImageStore.GetByName(ctx, regInfo.RegistryID, image)
+
+	var artifactType *artifact.ArtifactType
+	if r.Params.ArtifactType != nil {
+		artifactType, err = ValidateAndGetArtifactType(registry.PackageType, string(*r.Params.ArtifactType))
+		if err != nil {
+			return artifact.GetArtifactFile400JSONResponse{
+				BadRequestJSONResponse: artifact.BadRequestJSONResponse(
+					*GetErrorResponse(http.StatusBadRequest, err.Error()),
+				),
+			}, nil
+		}
+	}
+	img, err := c.ImageStore.GetByNameAndType(ctx, regInfo.RegistryID, image, artifactType)
 
 	if err != nil {
 		return artifact.GetArtifactFile500JSONResponse{

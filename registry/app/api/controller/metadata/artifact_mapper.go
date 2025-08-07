@@ -103,6 +103,7 @@ func mapToArtifactMetadata(
 		PullCommand:        &pullCommand,
 		IsQuarantined:      &artifact.IsQuarantined,
 		QuarantineReason:   artifact.QuarantineReason,
+		ArtifactType:       artifact.ArtifactType,
 	}
 }
 
@@ -118,6 +119,7 @@ func mapToRegistryArtifactMetadata(artifact types.ArtifactMetadata) *artifactapi
 		PackageType:        &packageType,
 		DownloadsCount:     &artifact.DownloadCount,
 		IsQuarantined:      &artifact.IsQuarantined,
+		ArtifactType:       artifact.ArtifactType,
 	}
 }
 
@@ -477,6 +479,7 @@ func GetNonOCIArtifactMetadata(
 			DownloadsCount:   &downloadCount,
 			IsQuarantined:    &tag.IsQuarantined,
 			QuarantineReason: tag.QuarantineReason,
+			ArtifactType:     tag.ArtifactType,
 		}
 		artifactVersionMetadataList = append(artifactVersionMetadataList, *artifactVersionMetadata)
 	}
@@ -642,6 +645,7 @@ func GetHFArtifactDetail(
 		Version:       artifact.Version,
 		DownloadCount: &downloadCount,
 		Size:          &totalSize,
+		ArtifactType:  image.ArtifactType,
 	}
 	err := artifactDetail.FromHuggingFaceArtifactDetailConfig(artifactapi.HuggingFaceArtifactDetailConfig{
 		Metadata: &metadata,
@@ -792,6 +796,7 @@ func GetArtifactSummary(artifact types.ImageMetadata) *artifactapi.ArtifactSumma
 		DownloadsCount: &artifact.DownloadCount,
 		ImageName:      artifact.Name,
 		PackageType:    artifact.PackageType,
+		ArtifactType:   artifact.ArtifactType,
 	}
 	response := &artifactapi.ArtifactSummaryResponseJSONResponse{
 		Data:   *artifactVersionSummary,
@@ -806,6 +811,7 @@ func GetArtifactVersionSummary(
 	version string,
 	isQuarantined bool,
 	quarantineReason string,
+	artifactType *artifactapi.ArtifactType,
 ) *artifactapi.ArtifactVersionSummaryResponseJSONResponse {
 	artifactVersionSummary := &artifactapi.ArtifactVersionSummary{
 		ImageName:        artifactName,
@@ -813,6 +819,7 @@ func GetArtifactVersionSummary(
 		Version:          version,
 		IsQuarantined:    &isQuarantined,
 		QuarantineReason: &quarantineReason,
+		ArtifactType:     artifactType,
 	}
 	response := &artifactapi.ArtifactVersionSummaryResponseJSONResponse{
 		Data:   *artifactVersionSummary,

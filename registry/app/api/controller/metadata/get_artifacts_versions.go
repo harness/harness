@@ -87,6 +87,17 @@ func (c *APIController) GetAllArtifactVersions(
 	if err != nil {
 		return throw500Error(err)
 	}
+	var artifactType *artifact.ArtifactType
+	if r.Params.ArtifactType != nil {
+		artifactType, err = ValidateAndGetArtifactType(registry.PackageType, string(*r.Params.ArtifactType))
+		if err != nil {
+			return artifact.GetAllArtifactVersions400JSONResponse{
+				BadRequestJSONResponse: artifact.BadRequestJSONResponse(
+					*GetErrorResponse(http.StatusBadRequest, err.Error()),
+				),
+			}, nil
+		}
+	}
 	//nolint:nestif
 	if registry.PackageType == artifact.PackageTypeDOCKER || registry.PackageType == artifact.PackageTypeHELM {
 		tags, err := c.TagStore.GetAllTagsByRepoAndImage(
@@ -135,18 +146,15 @@ func (c *APIController) GetAllArtifactVersions(
 			),
 		}, nil
 	}
-	metadata, err := c.ArtifactStore.GetAllVersionsByRepoAndImage(
-		ctx, regInfo.RegistryID,
-		image, regInfo.sortByField, regInfo.sortByOrder, regInfo.limit, regInfo.offset, regInfo.searchTerm,
-	)
+	metadata, err := c.ArtifactStore.GetAllVersionsByRepoAndImage(ctx, regInfo.RegistryID, image,
+		regInfo.sortByField, regInfo.sortByOrder, regInfo.limit, regInfo.offset,
+		regInfo.searchTerm, artifactType)
 	if err != nil {
 		return throw500Error(err)
 	}
 
-	cnt, _ := c.ArtifactStore.CountAllVersionsByRepoAndImage(
-		ctx, regInfo.ParentID, regInfo.RegistryIdentifier,
-		image, regInfo.searchTerm,
-	)
+	cnt, _ := c.ArtifactStore.CountAllVersionsByRepoAndImage(ctx, regInfo.ParentID, regInfo.RegistryIdentifier, image,
+		regInfo.searchTerm, artifactType)
 
 	registryURL := c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, regInfo.RegistryIdentifier)
 	if registry.PackageType == artifact.PackageTypeGENERIC {

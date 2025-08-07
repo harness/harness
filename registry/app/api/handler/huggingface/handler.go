@@ -16,6 +16,8 @@ package huggingface
 
 import (
 	"fmt"
+	"github.com/harness/gitness/registry/app/api/controller/metadata"
+	apicontract "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"net/http"
 	"regexp"
 	"strings"
@@ -86,6 +88,11 @@ func (h *handler) GetPackageArtifactInfo(r *http.Request) (pkg.PackageArtifactIn
 	}
 
 	// Validate repoType
+	artifactType, err := metadata.ValidateAndGetArtifactType(apicontract.PackageTypeHUGGINGFACE, repoType)
+	if err != nil {
+		log.Ctx(r.Context()).Error().Msgf("unsupported repoType: %s with error: %v", repoType, err)
+		return nil, fmt.Errorf("unsupported repoType")
+	}
 	if !allowedTypes[repoType] {
 		log.Ctx(r.Context()).Error().Msgf("unsupported repoType: %s", repoType)
 		return nil, fmt.Errorf("unsupported repoType")
@@ -107,7 +114,7 @@ func (h *handler) GetPackageArtifactInfo(r *http.Request) (pkg.PackageArtifactIn
 		ArtifactInfo: info,
 		Repo:         repo,
 		Revision:     rev,
-		RepoType:     repoType,
+		RepoType:     *artifactType,
 		SHA256:       sha256,
 	}, nil
 }

@@ -72,7 +72,6 @@ paths:
         - $ref: "#/components/parameters/searchTerm"
         - $ref: "#/components/parameters/latestVersion"
         - $ref: "#/components/parameters/packageTypeParam"
-        - $ref: "#/components/parameters/artifactTypeParam"
       responses:
         200:
           $ref: "#/components/responses/ListArtifactResponse"
@@ -2952,8 +2951,8 @@ components:
       type: string
       description: refers to artifact type
       enum:
-        - MODEL
-        - DATASET
+        - model
+        - dataset
     SectionType:
       type: string
       description: refers to client setup section type
@@ -3324,8 +3323,8 @@ components:
       schema:
         type: string
         enum:
-          - MODEL
-          - DATASET
+          - model
+          - dataset
     pageNumber:
       name: page
       in: query

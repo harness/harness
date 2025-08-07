@@ -592,15 +592,13 @@ func (a ArtifactDao) CountAllArtifactsByParentID(
 	return count, nil
 }
 
-func (a ArtifactDao) GetArtifactsByRepo(
-	ctx context.Context, registryParentID int64, repoKey string,
-	sortByField string, sortByOrder string, limit int, offset int, search string,
-	labels []string,
-) (*[]types.ArtifactMetadata, error) {
+func (a ArtifactDao) GetArtifactsByRepo(ctx context.Context, parentID int64, repoKey string, sortByField string,
+	sortByOrder string, limit int, offset int, search string, labels []string,
+	artifactType *artifact.ArtifactType) (*[]types.ArtifactMetadata, error) {
 	q := databaseg.Builder.Select(
 		`r.registry_name as repo_name, i.image_name as name, 
 		r.registry_package_type as package_type, a.artifact_version as latest_version, 
-		a.artifact_updated_at as modified_at, i.image_labels as labels, 
+		a.artifact_updated_at as modified_at, i.image_labels as labels, i.image_type as artifact_type,
 		COALESCE(t2.download_count, 0) as download_count,
         (qp.quarantined_path_id IS NOT NULL) AS is_quarantined`,
 	).
@@ -611,7 +609,7 @@ func (a ArtifactDao) GetArtifactsByRepo(
             JOIN images i ON i.image_id = a.artifact_image_id  
 			JOIN registries r ON i.image_registry_id = r.registry_id  
 			WHERE r.registry_parent_id = ? AND r.registry_name = ? ) AS a1 
-			ON a.artifact_id = a1.id`, registryParentID, repoKey, // nolint:goconst
+			ON a.artifact_id = a1.id`, parentID, repoKey, // nolint:goconst
 		).
 		Join("images i ON i.image_id = a.artifact_image_id").
 		Join("registries r ON i.image_registry_id = r.registry_id").
@@ -626,12 +624,15 @@ func (a ArtifactDao) GetArtifactsByRepo(
 			JOIN images i ON i.image_id = t1.artifact_image_id 
 			JOIN registries r ON r.registry_id = i.image_registry_id 
 			WHERE r.registry_parent_id = ? AND r.registry_name = ? GROUP BY i.image_name) as t2 
-			ON i.image_name = t2.image_name`, registryParentID, repoKey,
+			ON i.image_name = t2.image_name`, parentID, repoKey,
 		).
 		Where("a1.rank = 1 ")
 
 	if search != "" {
 		q = q.Where("i.image_name LIKE ?", sqlPartialMatch(search))
+	}
+	if artifactType != nil && *artifactType != "" {
+		q = q.Where("i.image_type = ?", *artifactType)
 	}
 
 	if len(labels) > 0 {
@@ -665,10 +666,8 @@ func (a ArtifactDao) GetArtifactsByRepo(
 }
 
 // nolint:goconst
-func (a ArtifactDao) CountArtifactsByRepo(
-	ctx context.Context, parentID int64, repoKey string,
-	search string, labels []string,
-) (int64, error) {
+func (a ArtifactDao) CountArtifactsByRepo(ctx context.Context, parentID int64, repoKey, search string, labels []string,
+	artifactType *artifact.ArtifactType) (int64, error) {
 	q := databaseg.Builder.Select("COUNT(*)").
 		From("artifacts a").
 		Join(
@@ -677,6 +676,11 @@ func (a ArtifactDao) CountArtifactsByRepo(
 		Where("r.registry_parent_id = ? AND r.registry_name = ?", parentID, repoKey)
 	if search != "" {
 		q = q.Where("i.image_name LIKE ?", sqlPartialMatch(search))
+	}
+	if artifactType != nil && *artifactType != "" {
+	if artifactType != nil && *artifactType != "" {
+		q = q.Where("i.image_type = ?", *artifactType)
+	}
 	}
 
 	if len(labels) > 0 {
@@ -815,11 +819,9 @@ func (a ArtifactDao) mapToArtifactMetadataList(
 	return &artifacts, nil
 }
 
-func (a ArtifactDao) GetAllVersionsByRepoAndImage(
-	ctx context.Context, regID int64,
-	image string, sortByField string, sortByOrder string, limit int, offset int,
-	search string,
-) (*[]types.NonOCIArtifactMetadata, error) {
+func (a ArtifactDao) GetAllVersionsByRepoAndImage(ctx context.Context, regID int64, image string,
+	sortByField string, sortByOrder string, limit int, offset int, search string,
+	artifactType *artifact.ArtifactType) (*[]types.NonOCIArtifactMetadata, error) {
 	// Build the main query
 	q := databaseg.Builder.
 		Select(`
@@ -829,7 +831,8 @@ func (a ArtifactDao) GetAllVersionsByRepoAndImage(
         a.artifact_metadata ->> 'file_count' AS file_count,
         a.artifact_updated_at AS modified_at,
         (qp.quarantined_path_id IS NOT NULL) AS is_quarantined,
-         qp.quarantined_path_reason as quarantine_reason`,
+         qp.quarantined_path_reason as quarantine_reason,
+		i.image_type as artifact_type`,
 		)
 
 	if a.db.DriverName() == SQLITE3 {
@@ -840,7 +843,8 @@ func (a ArtifactDao) GetAllVersionsByRepoAndImage(
         json_extract(a.artifact_metadata, '$.file_count') AS file_count,
         a.artifact_updated_at AS modified_at,
         (qp.quarantined_path_id IS NOT NULL) AS is_quarantined,
-         qp.quarantined_path_reason as quarantine_reason`,
+         qp.quarantined_path_reason as quarantine_reason,
+		i.image_type as artifact_type`,
 		)
 	}
 
@@ -853,6 +857,9 @@ func (a ArtifactDao) GetAllVersionsByRepoAndImage(
 			" i.image_registry_id = ? AND i.image_name = ?",
 			regID, image,
 		)
+	if artifactType != nil && *artifactType != "" {
+		q = q.Where("i.image_type = ?", *artifactType)
+	}
 	if search != "" {
 		q = q.Where("artifact_version LIKE ?", sqlPartialMatch(search))
 	}
@@ -934,10 +941,8 @@ func (a ArtifactDao) fetchDownloadStatsForArtifacts(ctx context.Context,
 	return nil
 }
 
-func (a ArtifactDao) CountAllVersionsByRepoAndImage(
-	ctx context.Context, parentID int64,
-	repoKey string, image string, search string,
-) (int64, error) {
+func (a ArtifactDao) CountAllVersionsByRepoAndImage(ctx context.Context, parentID int64, repoKey string, image string,
+	search string, artifactType *artifact.ArtifactType) (int64, error) {
 	stmt := databaseg.Builder.Select("COUNT(*)").
 		From("artifacts a").
 		Join("images i ON i.image_id = a.artifact_image_id").
@@ -946,6 +951,10 @@ func (a ArtifactDao) CountAllVersionsByRepoAndImage(
 			"r.registry_parent_id = ? AND r.registry_name = ? "+
 				"AND i.image_name = ?", parentID, repoKey, image,
 		)
+
+	if artifactType != nil && *artifactType != "" {
+		stmt = stmt.Where("i.image_type = ?", *artifactType)
+	}
 
 	if search != "" {
 		stmt = stmt.Where("artifact_version LIKE ?", sqlPartialMatch(search))
@@ -966,13 +975,8 @@ func (a ArtifactDao) CountAllVersionsByRepoAndImage(
 	return count, nil
 }
 
-func (a ArtifactDao) GetArtifactMetadata(
-	ctx context.Context,
-	parentID int64,
-	repoKey string,
-	imageName string,
-	name string,
-) (*types.ArtifactMetadata, error) {
+func (a ArtifactDao) GetArtifactMetadata(ctx context.Context, id int64, identifier string, image string, version string,
+	artifactType *artifact.ArtifactType) (*types.ArtifactMetadata, error) {
 	q := databaseg.Builder.Select(
 		"r.registry_package_type as package_type, a.artifact_version as name,"+
 			"a.artifact_updated_at as modified_at, "+
@@ -983,9 +987,13 @@ func (a ArtifactDao) GetArtifactMetadata(
 		LeftJoin("download_stats dc ON dc.download_stat_artifact_id = a.artifact_id").
 		Where(
 			"r.registry_parent_id = ? AND r.registry_name = ?"+
-				" AND i.image_name = ? AND a.artifact_version = ?", parentID, repoKey, imageName, name,
+				" AND i.image_name = ? AND a.artifact_version = ?", id, identifier, image, version,
 		).
 		GroupBy("r.registry_package_type, a.artifact_version, a.artifact_updated_at")
+
+	if artifactType != nil && *artifactType != "" {
+		q = q.Where("i.image_type = ?", *artifactType)
+	}
 
 	sql, args, err := q.ToSql()
 	if err != nil {
@@ -1120,6 +1128,7 @@ func (a ArtifactDao) mapToArtifactMetadata(
 		Version:          dst.Version,
 		IsQuarantined:    dst.IsQuarantined,
 		QuarantineReason: dst.QuarantineReason,
+		ArtifactType:     dst.ArtifactType,
 	}
 	if dst.Metadata != nil {
 		artifactMetadata.Metadata = *dst.Metadata
@@ -1148,6 +1157,7 @@ func (a ArtifactDao) mapToNonOCIMetadata(
 		ModifiedAt:       time.UnixMilli(dst.ModifiedAt),
 		IsQuarantined:    dst.IsQuarantined,
 		QuarantineReason: dst.QuarantineReason,
+		ArtifactType:     dst.ArtifactType,
 	}
 }
 
@@ -1163,15 +1173,16 @@ func (a ArtifactDao) mapToNonOCIMetadataList(
 }
 
 type nonOCIArtifactMetadataDB struct {
-	ID               string               `db:"id"`
-	Name             string               `db:"name"`
-	Size             *string              `db:"size"`
-	PackageType      artifact.PackageType `db:"package_type"`
-	FileCount        *int64               `db:"file_count"`
-	ModifiedAt       int64                `db:"modified_at"`
-	DownloadCount    int64                `db:"download_count"`
-	IsQuarantined    bool                 `db:"is_quarantined"`
-	QuarantineReason *string              `db:"quarantine_reason"`
+	ID               string                 `db:"id"`
+	Name             string                 `db:"name"`
+	Size             *string                `db:"size"`
+	PackageType      artifact.PackageType   `db:"package_type"`
+	FileCount        *int64                 `db:"file_count"`
+	ModifiedAt       int64                  `db:"modified_at"`
+	DownloadCount    int64                  `db:"download_count"`
+	IsQuarantined    bool                   `db:"is_quarantined"`
+	QuarantineReason *string                `db:"quarantine_reason"`
+	ArtifactType     *artifact.ArtifactType `db:"artifact_type"`
 }
 
 type downloadCountResult struct {

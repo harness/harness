@@ -183,7 +183,7 @@ func (c *localRegistry) RevisionInfo(ctx context.Context, info huggingfacetype.A
 	}
 
 	//todo: add logs
-	image, err := c.imageDao.GetByName(ctx, info.RegistryID, info.Repo)
+	image, err := c.imageDao.GetByNameAndType(ctx, info.RegistryID, info.Repo, &info.RepoType)
 	if err != nil {
 		return headers, nil, err
 	}
@@ -433,9 +433,10 @@ func (c *localRegistry) CommitRevision(ctx context.Context, info huggingfacetype
 	err = c.tx.WithTx(
 		ctx, func(ctx context.Context) error {
 			dbImage := &types.Image{
-				Name:       info.Repo,
-				RegistryID: info.RegistryID,
-				Enabled:    true,
+				Name:         info.Repo,
+				RegistryID:   info.RegistryID,
+				Enabled:      true,
+				ArtifactType: &info.RepoType,
 			}
 			if err2 := c.imageDao.CreateOrUpdate(ctx, dbImage); err2 != nil {
 				log.Ctx(ctx).Error().Err(err2).Msgf("Failed to create image: %s", info.Repo)
@@ -477,9 +478,9 @@ func (c *localRegistry) HeadFile(ctx context.Context, info huggingfacetype.Artif
 	headers = &commons.ResponseHeaders{
 		Headers: map[string]string{},
 	}
-	dbImage, err := c.imageDao.GetByName(ctx, info.RegistryID, info.Repo)
+	dbImage, err := c.imageDao.GetByNameAndType(ctx, info.RegistryID, info.Repo, &info.RepoType)
 	if err != nil {
-		log.Ctx(ctx).Error().Err(err).Msgf("Failed to get image: %s", info.RepoType+"/"+info.Repo)
+		log.Ctx(ctx).Error().Err(err).Msgf("Failed to get image: %s", string(info.RepoType)+"/"+info.Repo)
 		headers.Headers["Content-Type"] = contentTypeJSON
 		headers.Code = http.StatusNotFound
 		return headers, err
@@ -493,7 +494,7 @@ func (c *localRegistry) HeadFile(ctx context.Context, info huggingfacetype.Artif
 		return headers, err
 	}
 
-	sha256, size, err := c.fileManager.HeadFile(ctx, "/"+info.RepoType+"/"+info.Repo+"/"+info.Revision+"/"+fileName,
+	sha256, size, err := c.fileManager.HeadFile(ctx, "/"+string(info.RepoType)+"/"+info.Repo+"/"+info.Revision+"/"+fileName,
 		info.RegistryID)
 	if err != nil {
 		log.Ctx(ctx).Error().Err(err).Msgf("Failed to get file: %s", fileName)
@@ -517,7 +518,7 @@ func (c *localRegistry) DownloadFile(ctx context.Context, info huggingfacetype.A
 	}
 
 	body, _, redirectURL, err = c.fileManager.DownloadFile(ctx,
-		"/"+info.RepoType+"/"+info.Repo+"/"+info.Revision+"/"+fileName, info.RegistryID,
+		"/"+string(info.RepoType)+"/"+info.Repo+"/"+info.Revision+"/"+fileName, info.RegistryID,
 		info.RegIdentifier, info.RootIdentifier, true)
 	return headers, body, redirectURL, err
 }

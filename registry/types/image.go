@@ -15,19 +15,21 @@
 package types
 
 import (
+	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"time"
 )
 
 // Image DTO object.
 type Image struct {
-	ID         int64
-	UUID       string
-	Name       string
-	RegistryID int64
-	Enabled    bool
-	Labels     []string
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
-	CreatedBy  int64
-	UpdatedBy  int64
+	ID           int64
+	UUID         string
+	Name         string
+	ArtifactType *artifact.ArtifactType
+	RegistryID   int64
+	Enabled      bool
+	Labels       []string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	CreatedBy    int64
+	UpdatedBy    int64
 }

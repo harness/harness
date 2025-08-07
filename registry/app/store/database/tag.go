@@ -74,20 +74,21 @@ type tagDB struct {
 }
 
 type artifactMetadataDB struct {
-	ID               int64                `db:"artifact_id"`
-	Name             string               `db:"name"`
-	RepoName         string               `db:"repo_name"`
-	DownloadCount    int64                `db:"download_count"`
-	PackageType      artifact.PackageType `db:"package_type"`
-	Labels           sql.NullString       `db:"labels"`
-	LatestVersion    string               `db:"latest_version"`
-	CreatedAt        int64                `db:"created_at"`
-	ModifiedAt       int64                `db:"modified_at"`
-	Tag              *string              `db:"tag"`
-	Version          string               `db:"version"`
-	Metadata         *json.RawMessage     `db:"metadata"`
-	IsQuarantined    bool                 `db:"is_quarantined"`
-	QuarantineReason *string              `db:"quarantine_reason"`
+	ID               int64                  `db:"artifact_id"`
+	Name             string                 `db:"name"`
+	RepoName         string                 `db:"repo_name"`
+	DownloadCount    int64                  `db:"download_count"`
+	PackageType      artifact.PackageType   `db:"package_type"`
+	Labels           sql.NullString         `db:"labels"`
+	LatestVersion    string                 `db:"latest_version"`
+	CreatedAt        int64                  `db:"created_at"`
+	ModifiedAt       int64                  `db:"modified_at"`
+	Tag              *string                `db:"tag"`
+	Version          string                 `db:"version"`
+	Metadata         *json.RawMessage       `db:"metadata"`
+	IsQuarantined    bool                   `db:"is_quarantined"`
+	QuarantineReason *string                `db:"quarantine_reason"`
+	ArtifactType     *artifact.ArtifactType `db:"artifact_type"`
 }
 
 type tagMetadataDB struct {
@@ -1193,6 +1194,7 @@ func (t tagDao) mapToArtifactMetadata(
 		Version:          version,
 		IsQuarantined:    dst.IsQuarantined,
 		QuarantineReason: dst.QuarantineReason,
+		ArtifactType:     dst.ArtifactType,
 	}, nil
 }
 

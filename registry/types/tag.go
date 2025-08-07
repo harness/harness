@@ -48,6 +48,7 @@ type ArtifactMetadata struct {
 	Metadata         json.RawMessage
 	IsQuarantined    bool
 	QuarantineReason *string
+	ArtifactType     *artifact.ArtifactType
 }
 
 type ImageMetadata struct {
@@ -55,6 +56,7 @@ type ImageMetadata struct {
 	RepoName      string
 	DownloadCount int64
 	PackageType   artifact.PackageType
+	ArtifactType  *artifact.ArtifactType
 	LatestVersion string
 	CreatedAt     time.Time
 	ModifiedAt    time.Time

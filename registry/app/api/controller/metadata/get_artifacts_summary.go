@@ -74,7 +74,18 @@ func (c *APIController) GetArtifactSummary(
 		}, nil
 	}
 
-	metadata, err := c.getImageMetadata(ctx, registry, image)
+	var artifactType *artifact.ArtifactType
+	if r.Params.ArtifactType != nil {
+		artifactType, err = ValidateAndGetArtifactType(registry.PackageType, string(*r.Params.ArtifactType))
+		if err != nil {
+			return artifact.GetArtifactSummary400JSONResponse{
+				BadRequestJSONResponse: artifact.BadRequestJSONResponse(
+					*GetErrorResponse(http.StatusBadRequest, err.Error()),
+				),
+			}, nil
+		}
+	}
+	metadata, err := c.getImageMetadata(ctx, registry, image, artifactType)
 	if err != nil {
 		return artifact.GetArtifactSummary500JSONResponse{
 			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
@@ -87,12 +98,9 @@ func (c *APIController) GetArtifactSummary(
 	}, nil
 }
 
-func (c *APIController) getImageMetadata(
-	ctx context.Context,
-	registry *types.Registry,
-	image string,
-) (*types.ImageMetadata, error) {
-	img, err := c.ImageStore.GetByName(ctx, registry.ID, image)
+func (c *APIController) getImageMetadata(ctx context.Context, registry *types.Registry, image string,
+	artifactType *artifact.ArtifactType) (*types.ImageMetadata, error) {
+	img, err := c.ImageStore.GetByNameAndType(ctx, registry.ID, image, artifactType)
 	if err != nil {
 		return nil, err
 	}
@@ -106,6 +114,7 @@ func (c *APIController) getImageMetadata(
 		RepoName:      registry.Name,
 		PackageType:   registry.PackageType,
 		CreatedAt:     img.CreatedAt,
+		ArtifactType:  img.ArtifactType,
 	}
 
 	if registry.PackageType == artifact.PackageTypeDOCKER || registry.PackageType == artifact.PackageTypeHELM {

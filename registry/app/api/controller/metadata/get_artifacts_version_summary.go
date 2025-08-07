@@ -34,7 +34,7 @@ func (c *APIController) GetArtifactVersionSummary(
 	ctx context.Context,
 	r artifact.GetArtifactVersionSummaryRequestObject,
 ) (artifact.GetArtifactVersionSummaryResponseObject, error) {
-	image, version, pkgType, isQuarantine, quarantineReason, err := c.FetchArtifactSummary(ctx, r)
+	image, version, pkgType, isQuarantine, quarantineReason, artifactType, err := c.FetchArtifactSummary(ctx, r)
 	if err != nil {
 		return artifact.GetArtifactVersionSummary500JSONResponse{
 			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
@@ -45,7 +45,7 @@ func (c *APIController) GetArtifactVersionSummary(
 
 	return artifact.GetArtifactVersionSummary200JSONResponse{
 		ArtifactVersionSummaryResponseJSONResponse: *GetArtifactVersionSummary(image,
-			pkgType, version, isQuarantine, quarantineReason),
+			pkgType, version, isQuarantine, quarantineReason, artifactType),
 	}, nil
 }
 
@@ -53,16 +53,16 @@ func (c *APIController) GetArtifactVersionSummary(
 func (c *APIController) FetchArtifactSummary(
 	ctx context.Context,
 	r artifact.GetArtifactVersionSummaryRequestObject,
-) (string, string, artifact.PackageType, bool, string, error) {
+) (string, string, artifact.PackageType, bool, string, *artifact.ArtifactType, error) {
 	regInfo, err := c.RegistryMetadataHelper.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
 
 	if err != nil {
-		return "", "", "", false, "", fmt.Errorf("failed to get registry request base info: %w", err)
+		return "", "", "", false, "", nil, fmt.Errorf("failed to get registry request base info: %w", err)
 	}
 
 	space, err := c.SpaceFinder.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
-		return "", "", "", false, "", err
+		return "", "", "", false, "", nil, err
 	}
 
 	session, _ := request.AuthSessionFrom(ctx)
@@ -74,7 +74,7 @@ func (c *APIController) FetchArtifactSummary(
 		session,
 		permissionChecks...,
 	); err != nil {
-		return "", "", "", false, "", err
+		return "", "", "", false, "", nil, err
 	}
 
 	image := string(r.Artifact)
@@ -91,7 +91,7 @@ func (c *APIController) FetchArtifactSummary(
 
 	registry, err := c.RegistryRepository.Get(ctx, regInfo.RegistryID)
 	if err != nil {
-		return "", "", "", false, "", err
+		return "", "", "", false, "", nil, err
 	}
 
 	quarantinePath, err := c.QuarantineArtifactRepository.GetByFilePath(ctx,
@@ -107,21 +107,28 @@ func (c *APIController) FetchArtifactSummary(
 		isQuarantined = true
 		quarantineReason = quarantinePath[0].Reason
 	}
+	var artifactType *artifact.ArtifactType
+	if r.Params.ArtifactType != nil {
+		artifactType, err = ValidateAndGetArtifactType(registry.PackageType, string(*r.Params.ArtifactType))
+		if err != nil {
+			return "", "", "", false, "", nil, err
+		}
+	}
 
 	if registry.PackageType == artifact.PackageTypeDOCKER || registry.PackageType == artifact.PackageTypeHELM {
 		tag, err := c.TagStore.GetTagMetadata(ctx, regInfo.ParentID, regInfo.RegistryIdentifier, image, version)
 		if err != nil {
-			return "", "", "", false, "", err
+			return "", "", "", false, "", nil, err
 		}
 
-		return image, tag.Name, tag.PackageType, isQuarantined, quarantineReason, nil
+		return image, tag.Name, tag.PackageType, isQuarantined, quarantineReason, nil, nil
 	}
-	artifact, err := c.ArtifactStore.GetArtifactMetadata(ctx, regInfo.ParentID,
-		regInfo.RegistryIdentifier, image, version)
+	art, err := c.ArtifactStore.GetArtifactMetadata(ctx, regInfo.ParentID, regInfo.RegistryIdentifier, image,
+		version, artifactType)
 
 	if err != nil {
-		return "", "", "", false, "", err
+		return "", "", "", false, "", nil, err
 	}
 
-	return image, artifact.Name, artifact.PackageType, isQuarantined, quarantineReason, nil
+	return image, art.Name, art.PackageType, isQuarantined, quarantineReason, art.ArtifactType, nil
 }
