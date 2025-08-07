@@ -115,6 +115,9 @@ export interface StringsMap {
   'repositoryDetails.repositoryForm.newExcludePattern': string
   'repositoryDetails.repositoryForm.newIncludePattern': string
   'repositoryDetails.repositoryForm.newUpstreamProxy': string
+  'repositoryDetails.repositoryForm.opaPolicy.addTitle': string
+  'repositoryDetails.repositoryForm.opaPolicy.subTitle': string
+  'repositoryDetails.repositoryForm.opaPolicy.title': string
   'repositoryDetails.repositoryForm.ossAdvancedOptionsSubTitle': string
   'repositoryDetails.repositoryForm.repositoryCreated': string
   'repositoryDetails.repositoryForm.repositoryDeleted': string

@@ -14,19 +14,20 @@
  * limitations under the License.
  */
 
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext, useEffect, useMemo, useState } from 'react'
 import type { FormikProps } from 'formik'
 import classNames from 'classnames'
 import { FontVariation } from '@harnessio/design-system'
 import { Card, Container, Layout, Text } from '@harnessio/uicore'
 
-import { useAppStore } from '@ar/hooks'
+import { useAppStore, useFeatureFlags } from '@ar/hooks'
 import { Parent, RepositoryPackageType } from '@ar/common/types'
 import { useStrings } from '@ar/frameworks/strings'
 import { Separator } from '@ar/components/Separator/Separator'
 import CollapseContainer from '@ar/components/CollapseContainer/CollapseContainer'
 import { RepositoryProviderContext } from '@ar/pages/repository-details/context/RepositoryProvider'
 import SelectContainerScannersFormSection from '@ar/pages/repository-details/components/FormContent/SelectContainerScannersFormSection'
+import RepositoryOpaPolicySelectorContent from '@ar/pages/repository-details/components/FormContent/RepositoryOpaPolicySelectorContent'
 
 import UpstreamProxyDetailsFormContent from './UpstreamProxyDetailsFormContent'
 import UpstreamProxyAuthenticationFormContent from './UpstreamProxyAuthenticationFormContent'
@@ -35,7 +36,6 @@ import UpstreamProxyCleanupPoliciesFormContent from './UpstreamProxyCleanupPolic
 import type { UpstreamRegistryRequest } from '../../types'
 
 import css from './FormContent.module.scss'
-
 interface UpstreamProxyConfigurationFormContentProps {
   formikProps: FormikProps<UpstreamRegistryRequest>
   readonly: boolean
@@ -50,6 +50,7 @@ export default function UpstreamProxyConfigurationFormContent(
   const { setIsDirty } = useContext(RepositoryProviderContext)
   const { dirty, values } = formikProps
   const [isCollapsedAdvancedConfig] = useState(getInitialStateOfCollapse())
+  const { HAR_ARTIFACT_QUARANTINE_ENABLED } = useFeatureFlags()
 
   useEffect(() => {
     setIsDirty(dirty)
@@ -60,8 +61,19 @@ export default function UpstreamProxyConfigurationFormContent(
     return isCleanupPoliciesAdded
   }
 
+  const advancedOptionsTitle = useMemo(() => {
+    return getString('upstreamProxyDetails.editForm.enterpriseAdvancedOptionsSubTitle', {
+      entities: [
+        HAR_ARTIFACT_QUARANTINE_ENABLED ? getString('repositoryDetails.repositoryForm.opaPolicy.title') : '',
+        getString('repositoryDetails.repositoryForm.cleanupPoliciesTitle')
+      ]
+        .filter(Boolean)
+        .join(', ')
+    })
+  }, [])
+
   return (
-    <Container padding="xxlarge">
+    <Container>
       <Container>
         <Text className={css.cardHeading} font={{ variation: FontVariation.CARD_TITLE }}>
           {getString('upstreamProxyDetails.form.title')}
@@ -91,9 +103,17 @@ export default function UpstreamProxyConfigurationFormContent(
           <CollapseContainer
             className={css.marginTopLarge}
             title={getString('repositoryDetails.repositoryForm.advancedOptionsTitle')}
-            subTitle={getString('upstreamProxyDetails.editForm.enterpriseAdvancedOptionsSubTitle')}
+            subTitle={advancedOptionsTitle}
             initialState={isCollapsedAdvancedConfig}>
             <Card className={classNames(css.cardContainer)}>
+              {HAR_ARTIFACT_QUARANTINE_ENABLED && (
+                <>
+                  <Container className={css.cleanupPoliciesContainer}>
+                    <RepositoryOpaPolicySelectorContent disabled={readonly} />
+                  </Container>
+                  <Separator />
+                </>
+              )}
               <Container className={css.cleanupPoliciesContainer}>
                 <UpstreamProxyCleanupPoliciesFormContent formikProps={formikProps} isEdit disabled />
               </Container>

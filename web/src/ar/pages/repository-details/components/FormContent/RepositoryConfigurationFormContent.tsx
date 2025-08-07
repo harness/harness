@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext, useEffect, useMemo, useState } from 'react'
 import classNames from 'classnames'
 import { FormikContextType, connect } from 'formik'
 import { FontVariation } from '@harnessio/design-system'
 import { Card, Container, Text } from '@harnessio/uicore'
 
-import { useAppStore } from '@ar/hooks'
+import { useAppStore, useFeatureFlags } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import { Separator } from '@ar/components/Separator/Separator'
 import { Parent, RepositoryPackageType } from '@ar/common/types'
@@ -30,6 +30,7 @@ import repositoryFactory from '@ar/frameworks/RepositoryStep/RepositoryFactory'
 
 import RepositoryDetailsFormContent from './RepositoryDetailsFormContent'
 import { RepositoryProviderContext } from '../../context/RepositoryProvider'
+import RepositoryOpaPolicySelectorContent from './RepositoryOpaPolicySelectorContent'
 import SelectContainerScannersFormSection from './SelectContainerScannersFormSection'
 import RepositoryUpstreamProxiesFormContent from './RepositoryUpstreamProxiesFormContent'
 import RepositoryCleanupPoliciesFormContent from './RepositoryCleanupPoliciesFormContent'
@@ -48,6 +49,7 @@ function RepositoryConfigurationFormContent(
   const { getString } = useStrings()
   const { setIsDirty } = useContext(RepositoryProviderContext)
   const { parent } = useAppStore()
+  const { HAR_ARTIFACT_QUARANTINE_ENABLED } = useFeatureFlags()
   const { dirty, values } = formik
   const { packageType } = values
   const [isCollapsedAdvancedConfig] = useState(getInitialStateOfCollapse())
@@ -69,6 +71,24 @@ function RepositoryConfigurationFormContent(
     }
     return true
   }
+
+  const advancedOptionsTitle = useMemo(() => {
+    return getString(
+      repositoryType?.enterpriseAdvancedOptionSubTitle ??
+        'repositoryDetails.repositoryForm.enterpriseAdvancedOptionsSubTitle',
+      {
+        entities: [
+          getString('repositoryDetails.repositoryForm.upstreamProxiesTitle'),
+          parent === Parent.Enterprise &&
+            HAR_ARTIFACT_QUARANTINE_ENABLED &&
+            getString('repositoryDetails.repositoryForm.opaPolicy.title'),
+          parent === Parent.Enterprise && getString('repositoryDetails.repositoryForm.cleanupPoliciesTitle')
+        ]
+          .filter(Boolean)
+          .join(', ')
+      }
+    )
+  }, [])
 
   return (
     <Container>
@@ -99,17 +119,7 @@ function RepositoryConfigurationFormContent(
         <CollapseContainer
           className={css.marginTopLarge}
           title={getString('repositoryDetails.repositoryForm.advancedOptionsTitle')}
-          subTitle={
-            parent === Parent.Enterprise
-              ? getString(
-                  repositoryType?.enterpriseAdvancedOptionSubTitle ??
-                    'repositoryDetails.repositoryForm.enterpriseAdvancedOptionsSubTitle'
-                )
-              : getString(
-                  repositoryType?.ossAdvancedOptionSubTitle ??
-                    'repositoryDetails.repositoryForm.ossAdvancedOptionsSubTitle'
-                )
-          }
+          subTitle={advancedOptionsTitle}
           initialState={isCollapsedAdvancedConfig}>
           <Card className={classNames(css.cardContainer)}>
             {repositoryType?.getSupportsUpstreamProxy() && (
@@ -119,6 +129,14 @@ function RepositoryConfigurationFormContent(
             )}
             {parent === Parent.Enterprise && (
               <>
+                {HAR_ARTIFACT_QUARANTINE_ENABLED && (
+                  <>
+                    <Separator />
+                    <Container className={css.upstreamProxiesContainer}>
+                      <RepositoryOpaPolicySelectorContent disabled={readonly} />
+                    </Container>
+                  </>
+                )}
                 <Separator />
                 <Container className={css.upstreamProxiesContainer}>
                   <RepositoryCleanupPoliciesFormContent isEdit disabled />

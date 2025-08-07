@@ -26,6 +26,7 @@ import DependencyView from '@ar/__mocks__/components/DependencyView'
 import SecretFormInput from '@ar/__mocks__/components/SecretFormInput'
 import VulnerabilityView from '@ar/__mocks__/components/VulnerabilityView'
 import { usePreferenceStore } from '@ar/__mocks__/contexts/PreferenceStoreContext'
+import PolicySetFixedTypeSelector from '@ar/__mocks__/components/PolicySetFixedTypeSelector'
 import {
   ModalProvider,
   useConfirmationDialog,
@@ -67,7 +68,8 @@ MockTestUtils.components = {
   SecretFormInput,
   VulnerabilityView,
   DependencyView,
-  ModalProvider
+  ModalProvider,
+  PolicySetFixedTypeSelector
 }
 
 MockTestUtils.utils = {

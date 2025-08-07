@@ -69,7 +69,6 @@ export abstract class RepositoryStep<T, U = unknown> {
   supportedRepositoryTabs?: RepositoryDetailsTab[]
   supportedArtifactTypes?: LocalArtifactType[]
   enterpriseAdvancedOptionSubTitle?: StringKeys
-  ossAdvancedOptionSubTitle?: StringKeys
 
   getPackageType(): string {
     return this.packageType

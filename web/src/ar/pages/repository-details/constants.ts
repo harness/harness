@@ -22,6 +22,9 @@ import type { StringKeys } from '@ar/frameworks/strings'
 import { RepositoryListViewTypeEnum } from '@ar/contexts/AppStoreContext'
 import { RepositoryConfigType, RepositoryPackageType, Scanners } from '@ar/common/types'
 
+export const POLICY_TYPE = 'securityTests'
+export const POLICY_ACTION = 'onstep'
+
 export enum RepositoryDetailsTab {
   PACKAGES = 'packages',
   DATASETS = 'datasets',

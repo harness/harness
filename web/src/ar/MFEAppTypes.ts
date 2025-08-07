@@ -23,6 +23,7 @@ import type NGBreadcrumbs from '@ar/__mocks__/components/NGBreadcrumbs'
 import type DependencyView from '@ar/__mocks__/components/DependencyView'
 import type SecretFormInput from '@ar/__mocks__/components/SecretFormInput'
 import type VulnerabilityView from '@ar/__mocks__/components/VulnerabilityView'
+import type PolicySetFixedTypeSelector from '@ar/__mocks__/components/PolicySetFixedTypeSelector'
 import type {
   ModalProvider,
   useConfirmationDialog,
@@ -102,6 +103,7 @@ export interface CustomComponents {
   SecretFormInput: typeof SecretFormInput
   VulnerabilityView: typeof VulnerabilityView
   DependencyView: typeof DependencyView
+  PolicySetFixedTypeSelector: typeof PolicySetFixedTypeSelector
 }
 
 export interface CustomUtils {
