@@ -33,12 +33,17 @@ export type HuggingfaceArtifactDependency = {
 
 export type LocalHuggingfaceArtifactDetailConfig = {
   metadata?: {
-    language: string
     projectUrl: string
-    tags: string
-    license: string
     readme: string
+    modelId: string
+    lastModified: string
+    createdAt: string
     dependencies: HuggingfaceArtifactDependency[]
+    cardData?: {
+      language?: string[]
+      tags?: string[]
+      license?: string
+    }
   }
 }
 

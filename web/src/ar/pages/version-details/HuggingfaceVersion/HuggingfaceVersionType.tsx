@@ -20,6 +20,7 @@ import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client
 
 import { String } from '@ar/frameworks/strings'
 import { PageType, RepositoryPackageType } from '@ar/common/types'
+import type { LocalArtifactType } from '@ar/pages/repository-details/constants'
 import { VersionListColumnEnum } from '@ar/pages/version-list/components/VersionListTable/types'
 import ArtifactActions from '@ar/pages/artifact-details/components/ArtifactActions/ArtifactActions'
 import ArtifactTreeNode from '@ar/pages/artifact-details/components/ArtifactTreeNode/ArtifactTreeNode'
@@ -72,10 +73,11 @@ export class HuggingfaceVersionType extends VersionStep<ArtifactVersionSummary> 
   protected allowedActionsOnVersion = [
     VersionAction.Delete,
     VersionAction.SetupClient,
-    VersionAction.ViewVersionDetails
+    VersionAction.ViewVersionDetails,
+    VersionAction.Quarantine
   ]
 
-  protected allowedActionsOnVersionDetailsPage = [VersionAction.Delete]
+  protected allowedActionsOnVersionDetailsPage = [VersionAction.Delete, VersionAction.Quarantine]
 
   renderVersionListTable(props: VersionListTableProps): JSX.Element {
     return <VersionListTable {...props} columnConfigs={this.versionListTableColumnConfig} />
@@ -134,6 +136,7 @@ export class HuggingfaceVersionType extends VersionStep<ArtifactVersionSummary> 
         repositoryIdentifier={props.data.registryIdentifier}
         artifactIdentifier={props.data.name}
         versionIdentifier={props.data.version}
+        artifactType={props.data.artifactType as LocalArtifactType}
         shouldUseLocalParams>
         <ArtifactFilesContent minimal />
       </VersionFilesProvider>

@@ -71,6 +71,7 @@ overview:
     hash: Hash
     language: Language
     tags: Tags
+    artifactType: Artifact Type
 artifactDetails:
   tabs:
     layers: Layers

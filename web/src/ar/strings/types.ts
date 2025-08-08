@@ -264,6 +264,7 @@ export interface StringsMap {
   'versionDetails.deploymentsTable.columns.type': string
   'versionDetails.deploymentsTable.noDeploymentsTitle': string
   'versionDetails.noDependencies': string
+  'versionDetails.overview.generalInformation.artifactType': string
   'versionDetails.overview.generalInformation.buildHost': string
   'versionDetails.overview.generalInformation.buildTime': string
   'versionDetails.overview.generalInformation.createdAndLastModifiedAt': string

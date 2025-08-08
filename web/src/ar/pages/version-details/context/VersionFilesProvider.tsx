@@ -45,10 +45,11 @@ interface IVersionFilesProviderProps {
   repositoryIdentifier?: string
   artifactIdentifier?: string
   versionIdentifier?: string
+  artifactType?: LocalArtifactType
 }
 
 const VersionFilesProvider = (props: PropsWithChildren<IVersionFilesProviderProps>) => {
-  const { shouldUseLocalParams, artifactIdentifier, versionIdentifier, repositoryIdentifier } = props
+  const { shouldUseLocalParams, artifactIdentifier, versionIdentifier, repositoryIdentifier, artifactType } = props
   const [localParams, setLocalParams] = useState<Partial<ArtifactFileListPageQueryParams>>({
     page: DEFAULT_PAGE_INDEX,
     size: DEFAULT_PAGE_SIZE,
@@ -66,6 +67,8 @@ const VersionFilesProvider = (props: PropsWithChildren<IVersionFilesProviderProp
 
   const [sortField, sortOrder] = sort || []
 
+  const transformedArtifactType = artifactType ?? pathParams.artifactType
+
   const {
     data,
     isFetching: loading,
@@ -80,7 +83,7 @@ const VersionFilesProvider = (props: PropsWithChildren<IVersionFilesProviderProp
       size,
       sort_field: sortField,
       sort_order: sortOrder,
-      artifact_type: pathParams.artifactType === LocalArtifactType.ARTIFACTS ? undefined : pathParams.artifactType
+      artifact_type: transformedArtifactType === LocalArtifactType.ARTIFACTS ? undefined : transformedArtifactType
     }
   })
   const responseData = data?.content
