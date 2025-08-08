@@ -395,12 +395,22 @@ func addGitspaceFilter(stmt squirrel.SelectBuilder, filter *types.GitspaceFilter
 			switch state {
 			case enum.GitspaceFilterStateError:
 				instanceStateTypes =
-					append(instanceStateTypes, enum.GitspaceInstanceStateError, enum.GitspaceInstanceStateCleaned)
+					append(
+						instanceStateTypes,
+						enum.GitspaceInstanceStateError,
+						enum.GitspaceInstanceStateUnknown,
+					)
 			case enum.GitspaceFilterStateRunning:
 				instanceStateTypes =
 					append(instanceStateTypes, enum.GitspaceInstanceStateRunning)
 			case enum.GitspaceFilterStateStopped:
-				instanceStateTypes = append(instanceStateTypes, enum.GitspaceInstanceStateDeleted)
+				instanceStateTypes = append(
+					instanceStateTypes,
+					enum.GitspaceInstanceStateStopped,
+					enum.GitspaceInstanceStateCleaned,
+					enum.GitspaceInstanceStateDeleted,
+					enum.GitspaceInstanceStateUninitialized,
+				)
 			}
 		}
 		stmt = stmt.Where(squirrel.Eq{"gits_state": instanceStateTypes})
