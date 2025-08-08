@@ -32,6 +32,17 @@ func (c *Service) StartGitspaceAction(
 	if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
 		return err
 	}
+
+	if config.IsMarkedForInfraReset && savedGitspaceInstance != nil {
+		savedGitspaceInstance.State = enum.GitspaceInstanceStateError
+		err = c.gitspaceInstanceStore.Update(ctx, savedGitspaceInstance)
+		return fmt.Errorf(
+			"failed to update gitspace instance state for config ID: %s %w",
+			config.Identifier,
+			err,
+		)
+	}
+
 	config.GitspaceInstance = savedGitspaceInstance
 	err = c.gitspaceBusyOperation(ctx, config)
 	if err != nil {
