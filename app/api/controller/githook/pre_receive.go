@@ -131,6 +131,15 @@ func (c *Controller) PreReceive(
 	}
 
 	if repo.State == enum.RepoStateActive {
+		// check secret scanning apart from push rules as it is enabled in repository settings.
+		err = c.scanSecrets(ctx, rgit, repo, false, nil, in, &output)
+		if err != nil {
+			return hook.Output{}, fmt.Errorf("failed to scan secrets: %w", err)
+		}
+		if output.Error != nil {
+			return output, nil
+		}
+
 		violations, err := c.processPushProtection(
 			ctx, rgit, repo, principal, isRepoOwner, refUpdates, protectionRules, in, &output,
 		)
