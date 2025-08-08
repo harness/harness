@@ -77,11 +77,6 @@ func (c *Controller) scanSecrets(
 	// always print result (handles both no results and results found)
 	printScanSecretsFindings(output, findings, len(in.RefUpdates) > 1, time.Since(startTime))
 
-	// block the push if any secrets were found
-	if len(findings) > 0 {
-		output.Error = ptr.String("Changes blocked by security scan results")
-	}
-
 	violationsInput.SecretScanningEnabled = scanningEnabled
 	violationsInput.FoundSecretCount = len(findings)
 

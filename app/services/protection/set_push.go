@@ -60,6 +60,8 @@ func (s pushRuleSet) PushVerify(
 			return out, nil, fmt.Errorf("failed to process push rule in push rule set: %w", err)
 		}
 
+		violations = append(violations, rViolations...)
+
 		if out.FileSizeLimit == 0 ||
 			(rOut.FileSizeLimit > 0 && out.FileSizeLimit > rOut.FileSizeLimit) {
 			out.FileSizeLimit = rOut.FileSizeLimit
@@ -68,18 +70,16 @@ func (s pushRuleSet) PushVerify(
 		out.PrincipalCommitterMatch = out.PrincipalCommitterMatch || rOut.PrincipalCommitterMatch
 
 		out.SecretScanningEnabled = out.SecretScanningEnabled || rOut.SecretScanningEnabled
-
-		violations = append(violations, rViolations...)
 	}
 
 	return out, violations, nil
 }
 
-func (s pushRuleSet) Violations(in *PushViolationsInput) (PushViolationsOutput, error) {
+func (s pushRuleSet) Violations(ctx context.Context, in *PushViolationsInput) (PushViolationsOutput, error) {
 	output := PushViolationsOutput{}
 
 	for _, r := range s.rules {
-		out, err := in.Protections[r.ID].Violations(in)
+		out, err := in.Protections[r.ID].Violations(ctx, in)
 		if err != nil {
 			return PushViolationsOutput{}, fmt.Errorf(
 				"failed to backfill violations: %w", err,

@@ -121,7 +121,6 @@ func (c *Controller) processObjects(
 
 	if preReceiveObjsOut.FindOversizeFilesOutput != nil &&
 		len(preReceiveObjsOut.FindOversizeFilesOutput.FileInfos) > 0 {
-		output.Error = ptr.String("Changes blocked by files exceeding the file size limit")
 		printOversizeFiles(
 			output,
 			preReceiveObjsOut.FindOversizeFilesOutput.FileInfos,
@@ -132,7 +131,6 @@ func (c *Controller) processObjects(
 
 	if preReceiveObjsOut.FindCommitterMismatchOutput != nil &&
 		len(preReceiveObjsOut.FindCommitterMismatchOutput.CommitInfos) > 0 {
-		output.Error = ptr.String("Committer verification failed: authenticated user and committer must match")
 		printCommitterMismatch(
 			output,
 			preReceiveObjsOut.FindCommitterMismatchOutput.CommitInfos,

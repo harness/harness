@@ -53,12 +53,15 @@ func (p *Push) PushVerify(
 	return out, violations, nil
 }
 
-func (p *Push) Violations(in *PushViolationsInput) (PushViolationsOutput, error) {
+func (p *Push) Violations(
+	ctx context.Context,
+	in *PushViolationsInput,
+) (PushViolationsOutput, error) {
 	var violations types.RuleViolations
 
 	if in.FindOversizeFilesOutput != nil {
 		for _, fileInfos := range in.FindOversizeFilesOutput.FileInfos {
-			if fileInfos.Size > p.Push.FileSizeLimit {
+			if p.Push.FileSizeLimit > 0 && fileInfos.Size > p.Push.FileSizeLimit {
 				violations.Addf(codePushFileSizeLimit,
 					"Found file(s) exceeding the filesize limit of %d.",
 					p.Push.FileSizeLimit,
@@ -83,6 +86,10 @@ func (p *Push) Violations(in *PushViolationsInput) (PushViolationsOutput, error)
 			in.FoundSecretCount,
 		)
 	}
+
+	bypassable := p.Bypass.matches(ctx, in.Actor, in.IsRepoOwner, in.ResolveUserGroupID)
+	violations.Bypassable = bypassable
+	violations.Bypassed = bypassable
 
 	return PushViolationsOutput{
 		Violations: []types.RuleViolations{violations},

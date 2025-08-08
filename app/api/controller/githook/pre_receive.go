@@ -138,9 +138,7 @@ func (c *Controller) PreReceive(
 			return hook.Output{}, err
 		}
 		ruleViolations = append(ruleViolations, violations...)
-	}
 
-	if len(ruleViolations) > 0 {
 		processRuleViolations(&output, ruleViolations)
 	}
 
@@ -174,7 +172,10 @@ func (c *Controller) processPushProtection(
 	}
 
 	violationsInput := &protection.PushViolationsInput{
-		Protections: out.Protections,
+		ResolveUserGroupID: c.userGroupService.ListUserIDsByGroupIDs,
+		Actor:              principal,
+		IsRepoOwner:        isRepoOwner,
+		Protections:        out.Protections,
 	}
 
 	err = c.scanSecrets(ctx, rgit, repo, out.SecretScanningEnabled, violationsInput, in, output)
@@ -193,7 +194,7 @@ func (c *Controller) processPushProtection(
 
 	var violations []types.RuleViolations
 	if violationsInput.HasViolations() {
-		pushViolations, err := pushProtection.Violations(violationsInput)
+		pushViolations, err := pushProtection.Violations(ctx, violationsInput)
 		if err != nil {
 			return nil, fmt.Errorf("failed to backfill violations: %w", err)
 		}
@@ -303,6 +304,10 @@ func processRuleViolations(
 	output *hook.Output,
 	ruleViolations []types.RuleViolations,
 ) {
+	if len(ruleViolations) == 0 {
+		return
+	}
+
 	var criticalViolation bool
 
 	for _, ruleViolation := range ruleViolations {

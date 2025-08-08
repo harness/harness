@@ -36,6 +36,9 @@ type (
 	}
 
 	PushViolationsInput struct {
+		ResolveUserGroupID      func(ctx context.Context, userGroupIDs []int64) ([]int64, error)
+		Actor                   *types.Principal
+		IsRepoOwner             bool
 		Protections             map[int64]PushProtection
 		FileSizeLimit           int64
 		FindOversizeFilesOutput *git.FindOversizeFilesOutput
@@ -62,7 +65,7 @@ type (
 			in PushVerifyInput,
 		) (PushVerifyOutput, []types.RuleViolations, error)
 
-		Violations(in *PushViolationsInput) (PushViolationsOutput, error)
+		Violations(context.Context, *PushViolationsInput) (PushViolationsOutput, error)
 	}
 
 	DefPush struct {
