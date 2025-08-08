@@ -76,11 +76,8 @@ func (s *Service) sanitizeCreateInput(in *types.WebhookCreateInput, internal boo
 func (s *Service) Create(
 	ctx context.Context,
 	principal *types.Principal,
-	parentID int64,
-	parentType enum.WebhookParent,
 	typ enum.WebhookType,
-	spacePath string,
-	scopeIdentifier string,
+	parentResource ParentResource,
 	in *types.WebhookCreateInput,
 ) (*types.Webhook, error) {
 	err := s.sanitizeCreateInput(in, typ == enum.WebhookTypeInternal)
@@ -94,10 +91,8 @@ func (s *Service) Create(
 	}
 
 	scope := webhookScopeRepo
-	nameKey := audit.RepoName
-	if parentType == enum.WebhookParentSpace {
-		nameKey = audit.SpaceName
-		scope, err = s.spaceStore.GetTreeLevel(ctx, parentID)
+	if parentResource.Type == enum.WebhookParentSpace {
+		scope, err = s.spaceStore.GetTreeLevel(ctx, parentResource.ID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get parent tree level: %w", err)
 		}
@@ -111,8 +106,8 @@ func (s *Service) Create(
 		CreatedBy:  principal.ID,
 		Created:    now,
 		Updated:    now,
-		ParentID:   parentID,
-		ParentType: parentType,
+		ParentID:   parentResource.ID,
+		ParentType: parentResource.Type,
 		Type:       typ,
 		Scope:      scope,
 
@@ -133,11 +128,11 @@ func (s *Service) Create(
 	// This is the best effort, any error we just ignore and fallback to original duplicate error.
 	if errors.Is(err, store.ErrDuplicate) && !(typ == enum.WebhookTypeInternal) {
 		existingHook, derr := s.webhookStore.FindByIdentifier(
-			ctx, enum.WebhookParentRepo, parentID, hook.Identifier)
+			ctx, enum.WebhookParentRepo, parentResource.ID, hook.Identifier)
 		if derr != nil {
 			log.Ctx(ctx).Warn().Err(derr).Msgf(
 				"failed to retrieve webhook for repo %d with identifier %q on duplicate error",
-				parentID,
+				parentResource.ID,
 				hook.Identifier,
 			)
 		}
@@ -149,18 +144,19 @@ func (s *Service) Create(
 		return nil, fmt.Errorf("failed to store webhook: %w", err)
 	}
 
+	resourceType, nameKey := getWebhookAuditInfo(parentResource.Type)
 	err = s.auditService.Log(ctx,
 		*principal,
-		audit.NewResource(webhookToResourceType(parentType), hook.Identifier, nameKey, scopeIdentifier),
+		audit.NewResource(resourceType, hook.Identifier, nameKey, parentResource.Identifier),
 		audit.ActionCreated,
-		spacePath,
+		parentResource.Path,
 		audit.WithNewObject(hook),
 	)
 	if err != nil {
 		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for create webhook operation: %s", err)
 	}
 
-	s.sendSSE(ctx, parentID, parentType, enum.SSETypeWebhookCreated, hook)
+	s.sendSSE(ctx, parentResource, enum.SSETypeWebhookCreated, hook)
 
 	return hook, nil
 }

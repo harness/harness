@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -35,8 +36,12 @@ func (c *Controller) DeleteSpace(
 	}
 
 	return c.webhookService.Delete(
-		ctx, &session.Principal, space.ID, enum.WebhookParentSpace,
-		webhookIdentifier, space.Path, space.Identifier,
+		ctx, &session.Principal, webhookIdentifier, webhook.ParentResource{
+			ID:         space.ID,
+			Identifier: space.Identifier,
+			Type:       enum.WebhookParentSpace,
+			Path:       space.Path,
+		},
 		c.preprocessor.IsInternalCall(session.Principal.Type),
 	)
 }

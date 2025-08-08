@@ -28,14 +28,11 @@ import (
 func (s *Service) Delete(
 	ctx context.Context,
 	principal *types.Principal,
-	parentID int64,
-	parentType enum.WebhookParent,
 	webhookIdentifier string,
-	spacePath string,
-	scopeIdentifier string,
+	parentResource ParentResource,
 	allowDeletingInternal bool,
 ) error {
-	hook, err := s.GetWebhookVerifyOwnership(ctx, parentID, parentType, webhookIdentifier)
+	hook, err := s.GetWebhookVerifyOwnership(ctx, parentResource.ID, parentResource.Type, webhookIdentifier)
 	if err != nil {
 		return err
 	}
@@ -48,22 +45,19 @@ func (s *Service) Delete(
 		return err
 	}
 
-	nameKey := audit.RepoName
-	if parentType == enum.WebhookParentSpace {
-		nameKey = audit.SpaceName
-	}
+	resourceType, nameKey := getWebhookAuditInfo(parentResource.Type)
 	err = s.auditService.Log(ctx,
 		*principal,
-		audit.NewResource(webhookToResourceType(parentType), hook.Identifier, nameKey, scopeIdentifier),
+		audit.NewResource(resourceType, hook.Identifier, nameKey, parentResource.Identifier),
 		audit.ActionDeleted,
-		spacePath,
+		parentResource.Path,
 		audit.WithOldObject(hook),
 	)
 	if err != nil {
 		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for delete webhook operation: %s", err)
 	}
 
-	s.sendSSE(ctx, parentID, parentType, enum.SSETypeWebhookDeleted, hook)
+	s.sendSSE(ctx, parentResource, enum.SSETypeWebhookDeleted, hook)
 
 	return nil
 }

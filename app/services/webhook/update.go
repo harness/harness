@@ -71,15 +71,12 @@ func (s *Service) sanitizeUpdateInput(in *types.WebhookUpdateInput) error {
 func (s *Service) Update(
 	ctx context.Context,
 	principal *types.Principal,
-	parentID int64,
-	parentType enum.WebhookParent,
 	webhookIdentifier string,
 	typ enum.WebhookType,
-	spacePath string,
-	scopeIdentifier string,
+	parentResource ParentResource,
 	in *types.WebhookUpdateInput,
 ) (*types.Webhook, error) {
-	hook, err := s.GetWebhookVerifyOwnership(ctx, parentID, parentType, webhookIdentifier)
+	hook, err := s.GetWebhookVerifyOwnership(ctx, parentResource.ID, parentResource.Type, webhookIdentifier)
 	if err != nil {
 		return nil, fmt.Errorf("failed to verify webhook ownership: %w", err)
 	}
@@ -127,15 +124,12 @@ func (s *Service) Update(
 		return nil, err
 	}
 
-	nameKey := audit.RepoName
-	if parentType == enum.WebhookParentSpace {
-		nameKey = audit.SpaceName
-	}
+	resourceType, nameKey := getWebhookAuditInfo(parentResource.Type)
 	err = s.auditService.Log(ctx,
 		*principal,
-		audit.NewResource(audit.ResourceTypeCodeWebhook, hook.Identifier, nameKey, scopeIdentifier),
+		audit.NewResource(resourceType, hook.Identifier, nameKey, parentResource.Identifier),
 		audit.ActionUpdated,
-		spacePath,
+		parentResource.Path,
 		audit.WithOldObject(oldHook),
 		audit.WithNewObject(hook),
 	)
@@ -143,7 +137,7 @@ func (s *Service) Update(
 		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for update webhook operation: %s", err)
 	}
 
-	s.sendSSE(ctx, parentID, parentType, enum.SSETypeWebhookUpdated, hook)
+	s.sendSSE(ctx, parentResource, enum.SSETypeWebhookUpdated, hook)
 
 	return hook, nil
 }

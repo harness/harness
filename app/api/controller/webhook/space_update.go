@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -43,7 +44,11 @@ func (c *Controller) UpdateSpace(
 	}
 
 	return c.webhookService.Update(
-		ctx, &session.Principal, space.ID, enum.WebhookParentSpace,
-		webhookIdentifier, typ, space.Path, space.Identifier, in,
+		ctx, &session.Principal, webhookIdentifier, typ, webhook.ParentResource{
+			ID:         space.ID,
+			Identifier: space.Identifier,
+			Type:       enum.WebhookParentSpace,
+			Path:       space.Path,
+		}, in,
 	)
 }

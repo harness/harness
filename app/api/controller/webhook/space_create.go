@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -41,9 +42,13 @@ func (c *Controller) CreateSpace(
 		return nil, fmt.Errorf("failed to preprocess create input: %w", err)
 	}
 
-	hook, err := c.webhookService.Create(ctx,
-		&session.Principal, space.ID, enum.WebhookParentSpace,
-		internal, space.Path, space.Identifier, in)
+	hook, err := c.webhookService.Create(
+		ctx, &session.Principal, internal, webhook.ParentResource{
+			ID:         space.ID,
+			Identifier: space.Identifier,
+			Type:       enum.WebhookParentSpace,
+			Path:       space.Path,
+		}, in)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create webhook: %w", err)
 	}

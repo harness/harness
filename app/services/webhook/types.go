@@ -348,3 +348,10 @@ type CodeCommentInfo struct {
 	LineOld      int    `json:"line_old"`
 	SpanOld      int    `json:"span_old"`
 }
+
+type ParentResource struct {
+	ID         int64
+	Identifier string
+	Type       enum.WebhookParent
+	Path       string
+}

@@ -34,6 +34,7 @@ const (
 	ResourceName                    = "resourceName"
 	RepoName                        = "repoName"
 	SpaceName                       = "spaceName"
+	RegistryName                    = "registryName"
 	BypassedResourceType            = "bypassedResourceType"
 	BypassedResourceName            = "bypassedResourceName"
 	RepoPath                        = "repoPath"

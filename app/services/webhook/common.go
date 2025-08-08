@@ -133,26 +133,28 @@ func ConvertTriggers(vals []string) []enum.WebhookTrigger {
 	return res
 }
 
-func webhookToResourceType(parentType enum.WebhookParent) audit.ResourceType {
+func getWebhookAuditInfo(parentType enum.WebhookParent) (audit.ResourceType, string) {
 	switch parentType {
-	case enum.WebhookParentSpace, enum.WebhookParentRepo:
-		return audit.ResourceTypeCodeWebhook
+	case enum.WebhookParentSpace:
+		return audit.ResourceTypeCodeWebhook, audit.SpaceName
 	case enum.WebhookParentRegistry:
-		return audit.ResourceTypeRegistryWebhook
+		return audit.ResourceTypeRegistryWebhook, audit.RegistryName
+	case enum.WebhookParentRepo:
+		return audit.ResourceTypeCodeWebhook, audit.RepoName
+	default:
+		return "", ""
 	}
-	return audit.ResourceTypeCodeWebhook
 }
 
 func (s *Service) sendSSE(
 	ctx context.Context,
-	parentID int64,
-	parentType enum.WebhookParent,
+	parentResource ParentResource,
 	sseType enum.SSEType,
 	webhook *types.Webhook,
 ) {
-	spaceID := parentID
-	if parentType == enum.WebhookParentRepo {
-		repo, err := s.repoStore.Find(ctx, parentID)
+	spaceID := parentResource.ID
+	if parentResource.Type == enum.WebhookParentRepo {
+		repo, err := s.repoStore.Find(ctx, parentResource.ID)
 		if err != nil {
 			log.Ctx(ctx).Warn().Err(err).Msg("failed to find repo")
 			return

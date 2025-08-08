@@ -20,6 +20,7 @@ import (
 
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/paths"
+	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -44,6 +45,10 @@ func (c *Controller) UpdateRepo(
 	}
 
 	return c.webhookService.Update(
-		ctx, &session.Principal, repo.ID, enum.WebhookParentRepo,
-		webhookIdentifier, typ, paths.Parent(repo.Path), repo.Identifier, in)
+		ctx, &session.Principal, webhookIdentifier, typ, webhook.ParentResource{
+			ID:         repo.ID,
+			Identifier: repo.Identifier,
+			Type:       enum.WebhookParentRepo,
+			Path:       paths.Parent(repo.Path),
+		}, in)
 }
