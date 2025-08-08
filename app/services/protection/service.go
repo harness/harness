@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/types"
@@ -275,29 +274,6 @@ func printRuleScope(r types.RuleInfo) string {
 	default:
 		return "unknown scope"
 	}
-}
-
-func PrintViolations(violations []types.RuleViolations) string {
-	var builder strings.Builder
-
-	for _, violation := range violations {
-		fmt.Fprintf(
-			&builder,
-			"Operation violates %s protection rule %q defined in %s with violations:\n\n",
-			violation.Rule.Type,
-			violation.Rule.Identifier,
-			printRuleScope(violation.Rule),
-		)
-
-		for _, v := range violation.Violations {
-			builder.WriteString("  " + v.Message)
-			builder.WriteString("\n\n")
-		}
-
-		builder.WriteByte('\n')
-	}
-
-	return strings.TrimRight(builder.String(), "\n")
 }
 
 // GenerateErrorMessageForBlockingViolations generates an error message for a given slice of rule violations.

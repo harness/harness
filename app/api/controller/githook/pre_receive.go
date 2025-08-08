@@ -94,6 +94,7 @@ func (c *Controller) PreReceive(
 		)
 	}
 
+	var ruleViolations []types.RuleViolations
 	var principal *types.Principal
 	var isRepoOwner bool
 	// For internal calls - through the application interface (API) - no need to verify protection rules.
@@ -110,8 +111,8 @@ func (c *Controller) PreReceive(
 			return hook.Output{}, fmt.Errorf("failed to determine if user is repo owner: %w", err)
 		}
 
-		err = c.checkProtectionRules(
-			ctx, dummySession, repo, refUpdates, protectionRules, isRepoOwner, &output,
+		ruleViolations, err = c.checkProtectionRules(
+			ctx, dummySession, repo, refUpdates, protectionRules, isRepoOwner,
 		)
 		if err != nil {
 			return hook.Output{}, fmt.Errorf("failed to check protection rules: %w", err)
@@ -129,6 +130,35 @@ func (c *Controller) PreReceive(
 		return output, nil
 	}
 
+	if repo.State == enum.RepoStateActive {
+		violations, err := c.processPushProtection(
+			ctx, rgit, repo, principal, isRepoOwner, refUpdates, protectionRules, in, &output,
+		)
+		if err != nil {
+			return hook.Output{}, err
+		}
+		ruleViolations = append(ruleViolations, violations...)
+	}
+
+	if len(ruleViolations) > 0 {
+		processRuleViolations(&output, ruleViolations)
+	}
+
+	return output, nil
+}
+
+// processPushProtection handles push protection verification for active repositories.
+func (c *Controller) processPushProtection(
+	ctx context.Context,
+	rgit RestrictedGIT,
+	repo *types.RepositoryCore,
+	principal *types.Principal,
+	isRepoOwner bool,
+	refUpdates changedRefs,
+	protectionRules []types.RuleInfoInternal,
+	in types.GithookPreReceiveInput,
+	output *hook.Output,
+) ([]types.RuleViolations, error) {
 	pushProtection := c.protectionManager.FilterCreatePushProtection(protectionRules)
 	out, _, err := pushProtection.PushVerify(
 		ctx,
@@ -140,39 +170,38 @@ func (c *Controller) PreReceive(
 		},
 	)
 	if err != nil {
-		return hook.Output{}, fmt.Errorf("failed to verify git objects: %w", err)
+		return nil, fmt.Errorf("failed to verify git objects: %w", err)
 	}
 
 	violationsInput := &protection.PushViolationsInput{
 		Protections: out.Protections,
 	}
 
-	err = c.scanSecrets(ctx, rgit, repo, out.SecretScanningEnabled, violationsInput, in, &output)
+	err = c.scanSecrets(ctx, rgit, repo, out.SecretScanningEnabled, violationsInput, in, output)
 	if err != nil {
-		return hook.Output{}, fmt.Errorf("failed to scan secrets: %w", err)
+		return nil, fmt.Errorf("failed to scan secrets: %w", err)
 	}
 
 	if err = c.processObjects(
 		ctx, rgit,
 		repo, principal, refUpdates,
 		out.FileSizeLimit, out.PrincipalCommitterMatch, violationsInput,
-		in, &output,
+		in, output,
 	); err != nil {
-		return hook.Output{}, fmt.Errorf("failed to process pre-receive objects: %w", err)
+		return nil, fmt.Errorf("failed to process pre-receive objects: %w", err)
 	}
 
+	var violations []types.RuleViolations
 	if violationsInput.HasViolations() {
-		violations, err := pushProtection.Violations(violationsInput)
+		pushViolations, err := pushProtection.Violations(violationsInput)
 		if err != nil {
-			return hook.Output{}, fmt.Errorf("failed to backfill violations: %w", err)
+			return nil, fmt.Errorf("failed to backfill violations: %w", err)
 		}
 
-		if len(violations.Violations) > 0 {
-			output.Messages = append(output.Messages, protection.PrintViolations(violations.Violations))
-		}
+		violations = pushViolations.Violations
 	}
 
-	return output, nil
+	return violations, nil
 }
 
 func (c *Controller) blockPullReqRefUpdate(refUpdates changedRefs, state enum.RepoState) bool {
@@ -197,8 +226,7 @@ func (c *Controller) checkProtectionRules(
 	refUpdates changedRefs,
 	protectionRules []types.RuleInfoInternal,
 	isRepoOwner bool,
-	output *hook.Output,
-) error {
+) ([]types.RuleViolations, error) {
 	branchProtection := c.protectionManager.FilterCreateBranchProtection(protectionRules)
 	tagProtection := c.protectionManager.FilterCreateTagProtection(protectionRules)
 
@@ -265,9 +293,16 @@ func (c *Controller) checkProtectionRules(
 	)
 
 	if errCheckAction != nil {
-		return errCheckAction
+		return nil, errCheckAction
 	}
 
+	return ruleViolations, nil
+}
+
+func processRuleViolations(
+	output *hook.Output,
+	ruleViolations []types.RuleViolations,
+) {
 	var criticalViolation bool
 
 	for _, ruleViolation := range ruleViolations {
@@ -286,8 +321,6 @@ func (c *Controller) checkProtectionRules(
 	if criticalViolation {
 		output.Error = ptr.String("Blocked by protection rules.")
 	}
-
-	return nil
 }
 
 type changes struct {
