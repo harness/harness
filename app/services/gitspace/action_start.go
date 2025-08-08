@@ -33,7 +33,7 @@ func (c *Service) StartGitspaceAction(
 		return err
 	}
 
-	if config.IsMarkedForInfraReset && savedGitspaceInstance != nil {
+	if config.IsMarkedForInfraReset && savedGitspaceInstance != nil && !savedGitspaceInstance.State.IsFinalStatus() {
 		savedGitspaceInstance.State = enum.GitspaceInstanceStateError
 		err = c.gitspaceInstanceStore.Update(ctx, savedGitspaceInstance)
 		return fmt.Errorf(
