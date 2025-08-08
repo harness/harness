@@ -106,6 +106,7 @@ func TestMigrationFilesNumbering(t *testing.T) {
 			"0115": true,
 			"0122": true,
 			"0134": true,
+			"0135": true,
 		},
 	}
 
