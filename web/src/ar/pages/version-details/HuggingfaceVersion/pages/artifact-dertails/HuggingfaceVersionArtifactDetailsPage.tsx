@@ -25,7 +25,6 @@ import ReadmeFileContent from '@ar/pages/version-details/components/ReadmeFileCo
 import { useVersionOverview } from '@ar/pages/version-details/context/VersionOverviewProvider'
 import ArtifactFilesContent from '@ar/pages/version-details/components/ArtifactFileListTable/ArtifactFilesContent'
 
-import HuggingfaceVersionDependencyContent from './HuggingfaceVersionDependencyContent'
 import {
   HuggingfaceArtifactDetails,
   HuggingfaceArtifactDetailsTabEnum,
@@ -58,7 +57,7 @@ export default function HuggingfaceVersionArtifactDetailsPage() {
           iconProps={{ size: 12 }}
           panel={
             <Container>
-              <ReadmeFileContent source={metadata?.Readme || getString('noReadme')} />
+              <ReadmeFileContent source={metadata?.readme || getString('noReadme')} />
             </Container>
           }
           title={getString('versionDetails.artifactDetails.tabs.readme')}
@@ -73,13 +72,6 @@ export default function HuggingfaceVersionArtifactDetailsPage() {
             </VersionFilesProvider>
           }
           title={getString('versionDetails.artifactDetails.tabs.files')}
-        />
-        <ButtonTab
-          id={HuggingfaceArtifactDetailsTabEnum.Dependencies}
-          icon="layers"
-          iconProps={{ size: 12 }}
-          panel={<HuggingfaceVersionDependencyContent />}
-          title={getString('versionDetails.artifactDetails.tabs.dependencies')}
         />
       </ButtonTabs>
     </Layout.Vertical>

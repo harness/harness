@@ -26,10 +26,10 @@ export default function HuggingfaceVersionDependencyContent() {
   const { metadata } = data
 
   const dependencies = useMemo(() => {
-    const _dependencies = metadata?.Dependencies || []
+    const _dependencies = metadata?.dependencies || []
     return _dependencies.map(dep => {
-      const { Name, Version } = dep
-      return { name: Name, version: Version }
+      const { name, version } = dep
+      return { name, version }
     })
   }, [metadata])
 

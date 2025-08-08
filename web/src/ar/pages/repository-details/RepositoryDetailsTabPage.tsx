@@ -25,7 +25,7 @@ import type { RepositoryDetailsTabPathParams } from '@ar/routes/types'
 import type { RepositoryConfigType, RepositoryPackageType } from '@ar/common/types'
 import RepositoryConfigurationFormWidget from '@ar/frameworks/RepositoryStep/RepositoryConfigurationFormWidget'
 
-import { RepositoryDetailsTab } from './constants'
+import { LocalArtifactType, RepositoryDetailsTab } from './constants'
 import WebhookListPage from '../webhook-list/WebhookListPage'
 import { RepositoryProviderContext } from './context/RepositoryProvider'
 import RegistryArtifactListPage from '../artifact-list/RegistryArtifactListPage'
@@ -51,9 +51,15 @@ export default function RepositoryDetailsTabPage(props: RepositoryDetailsTabPage
 
   switch (tab) {
     case RepositoryDetailsTab.PACKAGES:
-    case RepositoryDetailsTab.DATASETS:
-    case RepositoryDetailsTab.MODELS:
       return <RegistryArtifactListPage pageBodyClassName={css.packagesPageBody} />
+    case RepositoryDetailsTab.DATASETS:
+      return (
+        <RegistryArtifactListPage pageBodyClassName={css.packagesPageBody} artifactType={LocalArtifactType.DATASET} />
+      )
+    case RepositoryDetailsTab.MODELS:
+      return (
+        <RegistryArtifactListPage pageBodyClassName={css.packagesPageBody} artifactType={LocalArtifactType.MODEL} />
+      )
     case RepositoryDetailsTab.CONFIGURATION:
       return (
         <Layout.Horizontal

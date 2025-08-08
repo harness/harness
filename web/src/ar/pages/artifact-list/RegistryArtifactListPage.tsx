@@ -19,14 +19,12 @@ import classNames from 'classnames'
 import { flushSync } from 'react-dom'
 import { Expander } from '@blueprintjs/core'
 import { ExpandingSearchInput, Page, type ExpandingSearchInputHandle, Button, ButtonVariation } from '@harnessio/uicore'
-import { useGetAllArtifactsByRegistryQuery } from '@harnessio/react-har-service-client'
+import { type ArtifactType, useGetAllArtifactsByRegistryQuery } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
-import type { RepositoryDetailsTabPathParams } from '@ar/routes/types'
 import { DEFAULT_PAGE_INDEX, PreferenceScope } from '@ar/constants'
-import { useDecodedParams, useGetSpaceRef, useParentHooks } from '@ar/hooks'
+import { useGetSpaceRef, useParentHooks } from '@ar/hooks'
 
-import { RepositoryTabToArtifactTypeMap } from './constants'
 import RegistryArtifactListTable from './components/RegistryArtifactListTable/RegistryArtifactListTable'
 import {
   useRegistryArtifactListQueryParamOptions,
@@ -37,13 +35,13 @@ import css from './ArtifactListPage.module.scss'
 
 interface RegistryArtifactListPageProps {
   pageBodyClassName?: string
+  artifactType?: ArtifactType
 }
 
-function RegistryArtifactListPage({ pageBodyClassName }: RegistryArtifactListPageProps): JSX.Element {
+function RegistryArtifactListPage({ pageBodyClassName, artifactType }: RegistryArtifactListPageProps): JSX.Element {
   const { getString } = useStrings()
   const { useQueryParams, useUpdateQueryParams, usePreferenceStore } = useParentHooks()
   const searchRef = useRef({} as ExpandingSearchInputHandle)
-  const { tab } = useDecodedParams<RepositoryDetailsTabPathParams>()
   const { updateQueryParams } = useUpdateQueryParams<Partial<RegistryArtifactListPageQueryParams>>()
   const queryParams = useQueryParams<RegistryArtifactListPageQueryParams>(useRegistryArtifactListQueryParamOptions())
   const { searchTerm, isDeployedArtifacts, packageTypes, page, size, labels } = queryParams
@@ -73,7 +71,7 @@ function RegistryArtifactListPage({ pageBodyClassName }: RegistryArtifactListPag
       search_term: searchTerm,
       sort_field: sortField,
       sort_order: sortOrder,
-      artifact_type: RepositoryTabToArtifactTypeMap[tab]
+      artifact_type: artifactType
     },
     stringifyQueryParamsOptions: {
       arrayFormat: 'repeat'

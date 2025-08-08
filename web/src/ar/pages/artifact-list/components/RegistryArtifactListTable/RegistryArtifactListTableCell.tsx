@@ -29,7 +29,7 @@ import TableCells from '@ar/components/TableCells/TableCells'
 import LabelsPopover from '@ar/components/LabelsPopover/LabelsPopover'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import { PageType, type RepositoryPackageType } from '@ar/common/types'
-import { LocalArtifactType, RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
+import { LocalArtifactType } from '@ar/pages/repository-details/constants'
 import ArtifactActionsWidget from '@ar/frameworks/Version/ArtifactActionsWidget'
 import { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
 
@@ -110,9 +110,8 @@ export const RepositoryNameCell: CellType = ({ value }) => {
   const routes = useRoutes()
   return (
     <TableCells.LinkCell
-      linkTo={routes.toARRepositoryDetailsTab({
-        repositoryIdentifier: value,
-        tab: RepositoryDetailsTab.PACKAGES
+      linkTo={routes.toARRepositoryDetails({
+        repositoryIdentifier: value
       })}
       label={value}
     />

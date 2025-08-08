@@ -47,6 +47,7 @@ overview:
     repositoryPath: Registry path
     digest: Digest
     url: URL to file
+    projectUrl: Project URL
     size: '{{ $.digestList.table.columns.size }}'
     downloads: '{{ $.repositoryList.table.columns.downloads }}'
     uploadedBy: Uploaded At
@@ -68,6 +69,8 @@ overview:
     vcs: VCS
     ref: Ref
     hash: Hash
+    language: Language
+    tags: Tags
 artifactDetails:
   tabs:
     layers: Layers

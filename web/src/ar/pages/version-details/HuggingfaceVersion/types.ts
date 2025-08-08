@@ -27,25 +27,18 @@ export interface HuggingfaceVersionDetailsQueryParams extends VersionDetailsQuer
 }
 
 export type HuggingfaceArtifactDependency = {
-  Name: string
-  Version: string
+  name: string
+  version: string
 }
 
 export type LocalHuggingfaceArtifactDetailConfig = {
   metadata?: {
-    name: string
-    version: string
-    size: number
-    Readme: string
-    description: string
+    language: string
+    projectUrl: string
+    tags: string
     license: string
-    Dependencies: HuggingfaceArtifactDependency[]
-    Origin?: {
-      VCS?: string
-      URL?: string
-      Ref?: string
-      Hash?: string
-    }
+    readme: string
+    dependencies: HuggingfaceArtifactDependency[]
   }
 }
 

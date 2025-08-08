@@ -160,7 +160,7 @@ export function useRepositoryTreeViewUtils(queryParams: TreeViewRepositoryQueryP
 
   const fetchArtifactList = async (node: ITreeNode, filters?: APIQueryParams): Promise<INode[]> => {
     const { id: pathId, metadata } = node
-    const { repositoryIdentifier } = metadata || {}
+    const { repositoryIdentifier, artifactType } = metadata || {}
     const registryRef = getSpaceRef(filters?.space ?? space, filters?.repositoryIdentifier ?? repositoryIdentifier)
     try {
       const response = await getAllArtifactsByRegistry({
@@ -168,7 +168,8 @@ export function useRepositoryTreeViewUtils(queryParams: TreeViewRepositoryQueryP
         queryParams: {
           size: DEFAULT_PAGE_SIZE,
           page: filters?.page ?? page ?? 0,
-          search_term: filters?.searchTerm ?? undefined
+          search_term: filters?.searchTerm ?? undefined,
+          artifact_type: artifactType === LocalArtifactType.ARTIFACTS ? undefined : artifactType
         }
       })
       const artifactList = response.content.data.artifacts || []

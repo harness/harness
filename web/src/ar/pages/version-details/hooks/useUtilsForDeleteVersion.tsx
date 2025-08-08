@@ -21,7 +21,7 @@ import { useRoutes } from '@ar/hooks'
 import { PageType } from '@ar/common/types'
 import type { ArtifactDetailsPathParams } from '@ar/routes/types'
 import { encodeRef, useGetSpaceRef } from '@ar/hooks/useGetSpaceRef'
-import { LocalArtifactType, RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
+import { LocalArtifactType } from '@ar/pages/repository-details/constants'
 import { queryClient } from '@ar/utils/queryClient'
 
 export function useUtilsForDeleteVersion() {
@@ -49,9 +49,8 @@ export function useUtilsForDeleteVersion() {
       )
     } catch (e) {
       history.push(
-        routes.toARRepositoryDetailsTab({
-          repositoryIdentifier,
-          tab: RepositoryDetailsTab.PACKAGES
+        routes.toARRepositoryDetails({
+          repositoryIdentifier
         })
       )
     }

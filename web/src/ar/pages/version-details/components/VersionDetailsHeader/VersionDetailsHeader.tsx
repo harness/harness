@@ -25,7 +25,7 @@ import { useParentComponents, useDecodedParams, useRoutes } from '@ar/hooks'
 import { getIdentifierStringForBreadcrumb } from '@ar/common/utils'
 import { VersionProviderContext } from '@ar/pages/version-details/context/VersionProvider'
 
-import { LocalArtifactType, RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
+import { LocalArtifactType } from '@ar/pages/repository-details/constants'
 import VersionDetailsHeaderWidget from '@ar/frameworks/Version/VersionDetailsHeaderWidget'
 import css from './VersionDetailsHeader.module.scss'
 
@@ -49,9 +49,8 @@ export function VersionDetailsHeader(props: VersionDetailsHeaderProps): JSX.Elem
         <NGBreadcrumbs
           links={[
             {
-              url: routes.toARRepositoryDetailsTab({
-                repositoryIdentifier,
-                tab: RepositoryDetailsTab.PACKAGES
+              url: routes.toARRepositoryDetails({
+                repositoryIdentifier
               }),
               label: getIdentifierStringForBreadcrumb(getString('breadcrumbs.repositories'), repositoryIdentifier)
             },

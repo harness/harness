@@ -274,18 +274,21 @@ export interface StringsMap {
   'versionDetails.overview.generalInformation.downloads': string
   'versionDetails.overview.generalInformation.hash': string
   'versionDetails.overview.generalInformation.homepage': string
+  'versionDetails.overview.generalInformation.language': string
   'versionDetails.overview.generalInformation.license': string
   'versionDetails.overview.generalInformation.modifiedAt': string
   'versionDetails.overview.generalInformation.name': string
   'versionDetails.overview.generalInformation.packageType': string
   'versionDetails.overview.generalInformation.packager': string
   'versionDetails.overview.generalInformation.platform': string
+  'versionDetails.overview.generalInformation.projectUrl': string
   'versionDetails.overview.generalInformation.pullCommand': string
   'versionDetails.overview.generalInformation.ref': string
   'versionDetails.overview.generalInformation.repository': string
   'versionDetails.overview.generalInformation.repositoryPath': string
   'versionDetails.overview.generalInformation.size': string
   'versionDetails.overview.generalInformation.sourceRpm': string
+  'versionDetails.overview.generalInformation.tags': string
   'versionDetails.overview.generalInformation.title': string
   'versionDetails.overview.generalInformation.uploadedBy': string
   'versionDetails.overview.generalInformation.url': string

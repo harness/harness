@@ -22,7 +22,6 @@ import { useStrings } from '@ar/frameworks/strings'
 import type { ArtifactDetailsPathParams } from '@ar/routes/types'
 import { getIdentifierStringForBreadcrumb } from '@ar/common/utils'
 import { useDecodedParams, useParentComponents, useRoutes } from '@ar/hooks'
-import { RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
 
 import ArtifactDetailsHeaderContent from './ArtifactDetailsHeaderContent'
 
@@ -43,9 +42,8 @@ function ArtifactDetailsHeader(): JSX.Element {
         <NGBreadcrumbs
           links={[
             {
-              url: routes.toARRepositoryDetailsTab({
-                repositoryIdentifier,
-                tab: RepositoryDetailsTab.PACKAGES
+              url: routes.toARRepositoryDetails({
+                repositoryIdentifier
               }),
               label: getIdentifierStringForBreadcrumb(getString('breadcrumbs.repositories'), repositoryIdentifier)
             },

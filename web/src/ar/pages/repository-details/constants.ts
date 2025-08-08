@@ -35,8 +35,8 @@ export enum RepositoryDetailsTab {
 
 export enum LocalArtifactType {
   ARTIFACTS = 'artifacts',
-  DATASET = 'DATASET',
-  MODEL = 'MODEL'
+  DATASET = 'dataset',
+  MODEL = 'model'
 }
 
 export interface ScannerConfigSpec {

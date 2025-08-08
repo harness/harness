@@ -65,31 +65,31 @@ export default function HuggingfaceVersionGeneralInfo(props: HuggingfaceVersionG
               value={defaultTo(data.downloadCount?.toLocaleString(), 0)}
               type={LabelValueTypeEnum.Text}
             />
-            {data.metadata?.Origin?.VCS && (
+            {data.metadata?.projectUrl && (
               <LabelValueContent
-                label={getString('versionDetails.overview.generalInformation.vcs')}
-                value={data.metadata.Origin.VCS}
+                label={getString('versionDetails.overview.generalInformation.projectUrl')}
+                value={data.metadata.projectUrl}
                 type={LabelValueTypeEnum.Text}
               />
             )}
-            {data.metadata?.Origin?.URL && (
+            {data.metadata?.license && (
               <LabelValueContent
-                label={getString('versionDetails.overview.generalInformation.url')}
-                value={data.metadata.Origin.URL}
+                label={getString('versionDetails.overview.generalInformation.license')}
+                value={data.metadata.license}
                 type={LabelValueTypeEnum.Text}
               />
             )}
-            {data.metadata?.Origin?.Ref && (
+            {data.metadata?.tags && (
               <LabelValueContent
-                label={getString('versionDetails.overview.generalInformation.ref')}
-                value={data.metadata.Origin.Ref}
+                label={getString('versionDetails.overview.generalInformation.tags')}
+                value={data.metadata.tags}
                 type={LabelValueTypeEnum.Text}
               />
             )}
-            {data.metadata?.Origin?.Hash && (
+            {data.metadata?.language && (
               <LabelValueContent
-                label={getString('versionDetails.overview.generalInformation.hash')}
-                value={data.metadata.Origin.Hash}
+                label={getString('versionDetails.overview.generalInformation.language')}
+                value={data.metadata.language}
                 type={LabelValueTypeEnum.Text}
               />
             )}
