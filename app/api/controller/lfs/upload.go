@@ -15,11 +15,14 @@
 package lfs
 
 import (
-	"bufio"
+	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	"github.com/harness/gitness/app/api/usererror"
@@ -50,10 +53,34 @@ func (c *Controller) Upload(ctx context.Context,
 		return nil, usererror.BadRequest("no file or content provided")
 	}
 
-	bufReader := bufio.NewReader(io.LimitReader(file, pointer.Size))
+	_, err = c.lfsStore.Find(ctx, repoCore.ID, pointer.OId)
+	if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
+		return nil, fmt.Errorf("failed to check if object exists: %w", err)
+	}
+	if err == nil {
+		return nil, usererror.Conflict("LFS object already exists and cannot be modified")
+	}
+
+	limitedReader := io.LimitReader(file, pointer.Size)
+	content, err := io.ReadAll(limitedReader)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read uploaded content: %w", err)
+	}
+
+	hasher := sha256.New()
+	hasher.Write(content)
+	calculatedHash := hex.EncodeToString(hasher.Sum(nil))
+
+	expectedHash := strings.TrimPrefix(pointer.OId, "sha256:")
+
+	if calculatedHash != expectedHash {
+		return nil, usererror.BadRequest("content hash doesn't match provided OID")
+	}
+
+	contentReader := bytes.NewReader(content)
 	objPath := getLFSObjectPath(pointer.OId)
 
-	err = c.blobStore.Upload(ctx, bufReader, objPath)
+	err = c.blobStore.Upload(ctx, contentReader, objPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to upload file: %w", err)
 	}
@@ -70,7 +97,7 @@ func (c *Controller) Upload(ctx context.Context,
 	// create the object in lfs store after successful upload to the blob store.
 	err = c.lfsStore.Create(ctx, object)
 	if err != nil && !errors.Is(err, store.ErrDuplicate) {
-		return nil, fmt.Errorf("failed to find object: %w", err)
+		return nil, fmt.Errorf("failed to create object: %w", err)
 	}
 
 	return &UploadOut{
