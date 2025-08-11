@@ -38,3 +38,9 @@
   align-items: center;
   margin-right: 7px !important;
 }
+
+.editModal {
+  :global(.bp3-menu) {
+    min-width: 248px !important;
+  }
+}

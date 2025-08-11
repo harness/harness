@@ -51,10 +51,10 @@ import { EnumGitspaceCodeRepoType, getIDETypeOptions, getIDEOption } from 'cde-g
 import { CDESSHSelect } from 'cde-gitness/components/CDESSHSelect/CDESSHSelect'
 import { useQueryParams } from 'hooks/useQueryParams'
 import { CDEUnknownSCM } from 'cde-gitness/components/CDEAnyGitImport/CDEUnknownSCM'
+import { useFilteredIdeOptions } from 'cde-gitness/hooks/useFilteredIdeOptions'
 import { gitnessFormInitialValues } from './GitspaceCreate.constants'
 import { validateGitnessForm } from './GitspaceCreate.utils'
 import { generateGitspaceName, getIdentifierFromName } from '../../utils/nameGenerator.utils'
-import type { EnumIDEType } from '../../../services/cde'
 import css from './GitspaceCreate.module.scss'
 
 export interface SCMType {
@@ -143,19 +143,7 @@ export const CDECreateGitspace = ({ gitspaceSettings }: CDECreateGitspaceProps) 
     }
   }, [suggestedName])
 
-  const filteredIdeOptions = useMemo(() => {
-    if (!gitspaceSettings?.settings?.gitspace_config?.ide?.access_list) {
-      return ideOptions
-    }
-
-    const { mode, list } = gitspaceSettings.settings.gitspace_config.ide.access_list
-
-    if (mode === 'deny' && Array.isArray(list) && list.length > 0) {
-      return ideOptions.filter(option => !list.includes(option.value as EnumIDEType))
-    }
-
-    return ideOptions
-  }, [gitspaceSettings, ideOptions])
+  const filteredIdeOptions = useFilteredIdeOptions(ideOptions, gitspaceSettings, getString)
 
   const defaultIdeType = useMemo(() => {
     return filteredIdeOptions.length > 0 ? filteredIdeOptions[0].value : undefined

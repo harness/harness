@@ -26,6 +26,7 @@ interface CDECustomDropdownProps {
   overridePopOverWidth?: boolean
   formikName?: string
   ideDropdown?: boolean
+  isDisabled?: boolean
 }
 
 export const CDECustomDropdown = ({
@@ -34,7 +35,8 @@ export const CDECustomDropdown = ({
   leftElement,
   overridePopOverWidth,
   formikName = '',
-  ideDropdown = false
+  ideDropdown = false,
+  isDisabled = false
 }: CDECustomDropdownProps) => {
   const buttonRef = useRef<HTMLDivElement | null>(null)
   const [popoverWidth, setPopoverWidth] = useState(0)
@@ -61,6 +63,7 @@ export const CDECustomDropdown = ({
                 width="100%"
                 className={css.button}
                 text={label}
+                disabled={isDisabled}
                 rightIcon={'chevron-down'}
                 variation={ButtonVariation.TERTIARY}
                 iconProps={{ size: 14 }}
@@ -71,11 +74,13 @@ export const CDECustomDropdown = ({
                   popoverClassName: css.popover
                 }}
                 tooltip={
-                  <Container
-                    className={ideDropdown ? css.ideListContainer : css.listContainer}
-                    width={overridePopOverWidth ? '100%' : popoverWidth}>
-                    {menu}
-                  </Container>
+                  !isDisabled ? (
+                    <Container
+                      className={ideDropdown ? css.ideListContainer : css.listContainer}
+                      width={overridePopOverWidth ? '100%' : popoverWidth}>
+                      {menu}
+                    </Container>
+                  ) : undefined
                 }
               />
             )

@@ -16,7 +16,7 @@
 
 import { useGet } from 'restful-react'
 import { useEffect } from 'react'
-import type { TypesGitspaceConfig } from 'cde-gitness/services'
+import type { TypesGitspaceConfig } from 'services/cde'
 import { useGetCDEAPIParams } from 'cde-gitness/hooks/useGetCDEAPIParams'
 import { useAppContext } from 'AppContext'
 import { useFindGitspace } from 'services/cde'

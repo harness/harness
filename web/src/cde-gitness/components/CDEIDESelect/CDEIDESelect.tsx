@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import React from 'react'
-import { Layout, Text } from '@harnessio/uicore'
+import React, { useMemo } from 'react'
+import { Container, Layout, Text } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
 import { Menu } from '@blueprintjs/core'
 import { Code } from 'iconoir-react'
-import { getIDETypeOptions, groupEnums } from 'cde-gitness/constants'
+import { groupEnums } from 'cde-gitness/constants'
 import { useStrings } from 'framework/strings'
 import { CDECustomDropdown } from '../CDECustomDropdown/CDECustomDropdown'
 import { CustomIDESection } from '../IDEDropdownSection/IDEDropdownSection'
@@ -30,17 +30,33 @@ interface CDEIDESelectProps {
   onChange: (field: string, value: IDEOption['value']) => void
   selectedIde?: string
   filteredIdeOptions?: IDEOption[]
+  isEditMode?: boolean
 }
 
-export const CDEIDESelect = ({ onChange, selectedIde, filteredIdeOptions = [] }: CDEIDESelectProps) => {
+export const CDEIDESelect = ({ onChange, selectedIde, filteredIdeOptions = [], isEditMode }: CDEIDESelectProps) => {
   const { getString } = useStrings()
-  const ideOptions = getIDETypeOptions(getString) ?? []
 
-  const selectedIDEOption = selectedIde ? ideOptions.find(item => item.value === selectedIde) : undefined
+  const selectedIDEOption = useMemo(() => {
+    if (!selectedIde) return undefined
+
+    const foundOption = filteredIdeOptions.find(item => item.value === selectedIde)
+    return foundOption || (filteredIdeOptions.length > 0 ? filteredIdeOptions[0] : undefined)
+  }, [selectedIde, filteredIdeOptions])
+
+  const vscodeOptions = useMemo(
+    () => filteredIdeOptions.filter(val => val.group === groupEnums.VSCODE),
+    [filteredIdeOptions]
+  )
+  const jetbrainOptions = useMemo(
+    () => filteredIdeOptions.filter(val => val.group === groupEnums.JETBRAIN),
+    [filteredIdeOptions]
+  )
 
   return (
     <CDECustomDropdown
       ideDropdown={true}
+      overridePopOverWidth={isEditMode}
+      isDisabled={filteredIdeOptions.length === 0}
       leftElement={
         <Layout.Horizontal>
           <Code className={css.icon} />
@@ -65,21 +81,27 @@ export const CDEIDESelect = ({ onChange, selectedIde, filteredIdeOptions = [] }:
         )
       }
       menu={
-        <Menu>
-          <CustomIDESection
-            options={filteredIdeOptions.filter(val => val.group === groupEnums.VSCODE)}
-            heading={getString('cde.ide.bymircosoft')}
-            value={selectedIde}
-            onChange={onChange}
-          />
-          <hr className={css.divider} />
-          <CustomIDESection
-            options={filteredIdeOptions.filter(val => val.group === groupEnums.JETBRAIN)}
-            heading={getString('cde.ide.byjetbrain')}
-            value={selectedIde}
-            onChange={onChange}
-          />
-        </Menu>
+        <Container className={isEditMode ? css.editModal : undefined}>
+          <Menu>
+            {vscodeOptions.length > 0 && (
+              <CustomIDESection
+                options={vscodeOptions}
+                heading={getString('cde.ide.bymircosoft')}
+                value={selectedIde}
+                onChange={onChange}
+              />
+            )}
+            {vscodeOptions.length > 0 && jetbrainOptions.length > 0 && <hr className={css.divider} />}
+            {jetbrainOptions.length > 0 && (
+              <CustomIDESection
+                options={jetbrainOptions}
+                heading={getString('cde.ide.byjetbrain')}
+                value={selectedIde}
+                onChange={onChange}
+              />
+            )}
+          </Menu>
+        </Container>
       }
     />
   )

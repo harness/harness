@@ -1711,8 +1711,17 @@ export interface StringsMap {
   'cde.status': string
   'cde.stopingGitspace': string
   'cde.total': string
+  'cde.update.allMachineDisabled': string
+  'cde.update.editGitspace': string
+  'cde.update.errorAllIDE': string
+  'cde.update.errorAllResources': string
+  'cde.update.errorChosenIDE': string
+  'cde.update.gitspaceUpdateFailed': string
+  'cde.update.gitspaceUpdateNote': string
+  'cde.update.gitspaceUpdateSuccess': string
   'cde.update.infraProviderFailed': string
   'cde.update.infraProviderSuccess': string
+  'cde.update.updateGitspace': string
   'cde.updateGitspace': string
   'cde.used': string
   'cde.viewGitspace': string

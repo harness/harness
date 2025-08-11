@@ -28,6 +28,7 @@ import {
 import React, { useEffect, useState } from 'react'
 import { Color } from '@harnessio/design-system'
 import type { Renderer, CellProps } from 'react-table'
+import { Icon } from '@harnessio/icons'
 import ReactTimeago from 'react-timeago'
 import { Circle, Cpu, Clock, Play, Db, ModernTv } from 'iconoir-react'
 import { Intent, Menu, MenuItem, PopoverInteractionKind, Position } from '@blueprintjs/core'
@@ -39,7 +40,13 @@ import { useAppContext } from 'AppContext'
 import { getErrorMessage } from 'utils/Utils'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { getIDEOption, GitspaceActionType, GitspaceStatus, IDEType } from 'cde-gitness/constants'
-import type { EnumGitspaceStateType, EnumIDEType, TypesGitspaceConfig, TypesInfraProviderResource } from 'services/cde'
+import type {
+  EnumGitspaceStateType,
+  EnumIDEType,
+  TypesGitspaceConfig,
+  TypesInfraProviderResource,
+  TypesGitspaceSettingsResponse
+} from 'services/cde'
 import gitspaceIcon from 'cde-gitness/assests/gitspace.svg?url'
 import { useModalHook } from 'hooks/useModalHook'
 import pause from 'cde-gitness/assests/pause.svg?url'
@@ -52,6 +59,7 @@ import { getGitspaceChanges, getIconByRepoType } from 'cde-gitness/utils/SelectR
 import { usePaginationProps } from 'cde-gitness/hooks/usePaginationProps'
 import ResourceDetails from '../ResourceDetails/ResourceDetails'
 import CopyButton from '../CopyButton/CopyButton'
+import { EditGitspace } from '../EditGitspace/EditGitspace'
 import { getRepoNameFromURL } from '../../utils/SelectRepository.utils'
 import css from './ListGitspaces.module.scss'
 
@@ -163,7 +171,7 @@ export const RenderRegionAndMachine: Renderer<
   const { resource } = details
   return (
     <Layout.Vertical spacing={'medium'}>
-      <ResourceDetails resource={resource} />
+      <ResourceDetails resource={resource} isListingPage={true} />
     </Layout.Vertical>
   )
 }
@@ -348,6 +356,7 @@ interface ActionMenuProps {
   actionLoading?: boolean
   deleteLoading?: boolean
   deleteGitspace: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => Promise<void>
+  handleEditGitspace?: () => void
 }
 
 const ActionMenu = ({
@@ -357,7 +366,8 @@ const ActionMenu = ({
   handleStopGitspace,
   handleReset,
   actionLoading,
-  deleteLoading
+  deleteLoading,
+  handleEditGitspace
 }: ActionMenuProps) => {
   const { getString } = useStrings()
   const { showError } = useToaster()
@@ -366,7 +376,6 @@ const ActionMenu = ({
   const history = useHistory()
   const { routes, standalone } = useAppContext()
   const [accountIdentifier, orgIdentifier, projectIdentifier] = space_path?.split('/') || []
-  const topBorder = state === GitspaceStatus.RUNNING && !actionLoading ? { top: true } : {}
   const disabledActionButtons = [GitspaceStatus.STARTING, GitspaceStatus.STOPPING].includes(state as GitspaceStatus)
 
   const { refetchToken, setSelectedRowUrl } = useOpenVSCodeBrowserURL()
@@ -414,59 +423,76 @@ const ActionMenu = ({
           />
         )}
 
-        <Container border={{ bottom: true, ...topBorder }}>
-          {!disabledActionButtons && (
-            <MenuItem
-              onClick={async e => {
-                try {
-                  if (!actionLoading) {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    if (state === GitspaceStatus.RUNNING) {
-                      handleStopGitspace?.()
-                    } else {
-                      handleStartGitspace?.()
-                    }
-                  }
-                } catch (error) {
-                  showError(getErrorMessage(error))
-                }
-              }}
-              disabled={disabledActionButtons}
-              text={
-                <Layout.Horizontal spacing="small">
-                  <StartStopButton state={state} loading={actionLoading} />
-                </Layout.Horizontal>
-              }
-            />
-          )}
-
-          {/* Reset Gitspace */}
+        {!disabledActionButtons && (
           <MenuItem
             onClick={async e => {
               try {
-                e.preventDefault()
-                e.stopPropagation()
-                await handleReset?.(e)
+                if (!actionLoading) {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  if (state === GitspaceStatus.RUNNING) {
+                    handleStopGitspace?.()
+                  } else {
+                    handleStartGitspace?.()
+                  }
+                }
               } catch (error) {
                 showError(getErrorMessage(error))
               }
             }}
-            text={<ResetButton />}
+            disabled={disabledActionButtons}
+            text={
+              <Layout.Horizontal spacing="small">
+                <StartStopButton state={state} loading={actionLoading} />
+              </Layout.Horizontal>
+            }
           />
+        )}
 
+        {/* Reset Gitspace */}
+        <MenuItem
+          onClick={async e => {
+            try {
+              e.preventDefault()
+              e.stopPropagation()
+              await handleReset?.(e)
+            } catch (error) {
+              showError(getErrorMessage(error))
+            }
+          }}
+          text={<ResetButton />}
+        />
+
+        <MenuItem
+          onClick={() => {
+            history.push(
+              routes.toCDEGitspaceDetail({
+                space: space_path,
+                gitspaceId: identifier
+              })
+            )
+          }}
+          text={<Text icon="gitspace">{getString('cde.viewGitspace')}</Text>}
+        />
+
+        {/* Only show edit option for specific states */}
+        {[GitspaceStatus.UNINITIALIZED, GitspaceStatus.STOPPED, GitspaceStatus.ERROR].includes(
+          state as GitspaceStatus
+        ) && (
           <MenuItem
             onClick={() => {
-              history.push(
-                routes.toCDEGitspaceDetail({
-                  space: space_path,
-                  gitspaceId: identifier
-                })
-              )
+              if (handleEditGitspace) {
+                handleEditGitspace()
+              }
             }}
-            text={<Text icon="gitspace">{getString('cde.viewGitspace')}</Text>}
+            text={
+              <Layout.Horizontal spacing="xsmall" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
+                <Icon name="edit" size={16} />
+                <Text>{getString('cde.editGitspace') || 'Edit Gitspace'}</Text>
+              </Layout.Horizontal>
+            }
           />
-        </Container>
+        )}
 
         <MenuItem
           onClick={deleteGitspace as Unknown as () => void}
@@ -486,9 +512,10 @@ const ActionMenu = ({
 
 interface RenderActionsProps extends CellProps<TypesGitspaceConfig> {
   refreshList: () => void
+  gitspaceSettings: TypesGitspaceSettingsResponse | null
 }
 
-export const RenderActions = ({ row, refreshList }: RenderActionsProps) => {
+export const RenderActions = ({ row, refreshList, gitspaceSettings }: RenderActionsProps) => {
   const { getString } = useStrings()
   const history = useHistory()
   const { routes, standalone } = useAppContext()
@@ -500,6 +527,10 @@ export const RenderActions = ({ row, refreshList }: RenderActionsProps) => {
 
   const { mutate: actionGitspace, loading: actionLoading } = useGitspaceActions({ gitspaceId: identifier || '' })
 
+  const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false)
+  const handleEditGitspace = () => {
+    setIsEditModalOpen(true)
+  }
   const [handleStopGitspace, hideModal] = useModalHook(() => {
     return (
       <ConfirmationDialog
@@ -654,31 +685,64 @@ export const RenderActions = ({ row, refreshList }: RenderActionsProps) => {
   }
 
   return (
-    <Text
-      onClick={e => {
-        e.preventDefault()
-        e.stopPropagation()
-      }}
-      style={{ cursor: 'pointer' }}
-      icon={deleteLoading || false ? 'steps-spinner' : 'Options'}
-      tooltip={
-        <ActionMenu
-          data={details}
-          actionLoading={actionLoading}
-          deleteLoading={deleteLoading}
-          deleteGitspace={handleDelete}
-          handleStartGitspace={handleStartGitspace}
-          handleStopGitspace={handleStopGitspace}
-          handleReset={handleReset}
-        />
-      }
-      tooltipProps={{
-        interactionKind: PopoverInteractionKind.HOVER,
-        position: Position.BOTTOM_RIGHT,
-        usePortal: true,
-        popoverClassName: css.popover
-      }}
-    />
+    <>
+      <Text
+        onClick={e => {
+          e.preventDefault()
+          e.stopPropagation()
+        }}
+        style={{ cursor: 'pointer' }}
+        icon={deleteLoading || false ? 'steps-spinner' : 'Options'}
+        tooltip={
+          <ActionMenu
+            data={details}
+            actionLoading={actionLoading}
+            deleteLoading={deleteLoading}
+            deleteGitspace={handleDelete}
+            handleStartGitspace={handleStartGitspace}
+            handleStopGitspace={handleStopGitspace}
+            handleReset={handleReset}
+            handleEditGitspace={handleEditGitspace}
+          />
+        }
+        tooltipProps={{
+          interactionKind: PopoverInteractionKind.HOVER,
+          position: Position.BOTTOM_RIGHT,
+          usePortal: true,
+          popoverClassName: css.popover
+        }}
+      />
+      {/* Add the EditGitspace modal */}
+      {isEditModalOpen && (
+        <Container
+          onClick={e => {
+            e.stopPropagation()
+          }}>
+          <EditGitspace
+            isOpen={isEditModalOpen}
+            gitspaceSettings={gitspaceSettings}
+            onClose={() => setIsEditModalOpen(false)}
+            gitspaceId={identifier || ''}
+            gitspaceData={{
+              name: details.name || '',
+              ide: details.ide || IDEType.VSCODE,
+              branch: details.branch || '',
+              devcontainer_path: details.devcontainer_path || '',
+              ssh_token_identifier: details.ssh_token_identifier || '',
+              resource: details.resource && {
+                identifier: details.resource.identifier || '',
+                config_identifier: details.resource.config_identifier || '',
+                name: details.resource.name || '',
+                region: details.resource.region || '',
+                disk: details.resource.disk || '',
+                cpu: details.resource.cpu || '',
+                memory: details.resource.memory || ''
+              }
+            }}
+          />
+        </Container>
+      )}
+    </>
   )
 }
 
@@ -695,7 +759,8 @@ export const ListGitspaces = ({
   hasFilter,
   gotoPage,
   onPageSizeChange,
-  pageConfig
+  pageConfig,
+  gitspaceSettings
 }: {
   data: TypesGitspaceConfig[]
   refreshList: () => void
@@ -703,6 +768,7 @@ export const ListGitspaces = ({
   gotoPage: (pageNumber: number) => void
   onPageSizeChange?: (newSize: number) => void
   pageConfig: pageConfigProps
+  gitspaceSettings: TypesGitspaceSettingsResponse | null
 }) => {
   const history = useHistory()
   const { getString } = useStrings()
@@ -877,7 +943,9 @@ export const ListGitspaces = ({
             ...extraColumns,
             {
               id: 'action',
-              Cell: (props: RenderActionsProps) => <RenderActions {...props} refreshList={refreshList} />
+              Cell: (props: RenderActionsProps) => (
+                <RenderActions {...props} gitspaceSettings={gitspaceSettings} refreshList={refreshList} />
+              )
             }
           ]}
           data={data}

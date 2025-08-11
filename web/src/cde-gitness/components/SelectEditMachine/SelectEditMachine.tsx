@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-import React, { useEffect } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { Container, Layout, Text } from '@harnessio/uicore'
 import { Menu, MenuItem } from '@blueprintjs/core'
 import { Cpu } from 'iconoir-react'
 import { useFormikContext } from 'formik'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { useParams } from 'react-router-dom'
-import type { OpenapiCreateGitspaceRequest, TypesInfraProviderResource } from 'services/cde'
+import type { TypesInfraProviderResource } from 'services/cde'
 import { useStrings } from 'framework/strings'
 import { CDECustomDropdown } from 'cde-gitness/components/CDECustomDropdown/CDECustomDropdown'
-import css from './SelectMachine.module.scss'
+import css from './SelectEditMachine.module.scss'
 
 export const machineIdToLabel = {
   '4core_8gb_32gb': 'Standard',
@@ -39,41 +39,64 @@ export const labelToMachineId = {
 interface SelectMachineInterface {
   options: TypesInfraProviderResource[]
   defaultValue: TypesInfraProviderResource
+  isEditMode?: boolean
   isDisabled?: boolean
+  loading?: boolean
 }
 
-export const SelectMachine = ({ options, defaultValue, isDisabled = false }: SelectMachineInterface) => {
+interface resourceData {
+  resource?: {
+    identifier: string
+    config_identifier: string
+    name: string
+    region: string
+  }
+}
+
+export const SelectEditMachine = ({
+  options,
+  defaultValue,
+  isEditMode = false,
+  isDisabled = false,
+  loading = false
+}: SelectMachineInterface) => {
   const { getString } = useStrings()
-  const { values, setFieldValue: onChange } = useFormikContext<OpenapiCreateGitspaceRequest>()
-  const { resource_identifier: machine } = values
+  const { values, setFieldValue: onChange } = useFormikContext<resourceData>()
+  const { resource: machine } = values
   const { gitspaceId = '' } = useParams<{ gitspaceId?: string }>()
 
-  const machineTypes = options.map(item => {
-    const { cpu, disk, memory, identifier, name, space_path, metadata } = item
-    return {
-      identifier,
-      label: name,
-      cpu,
-      disk,
-      memory,
-      space_path,
-      disk_type: metadata?.persistent_disk_type
-    }
-  })
+  const isEmpty = !options || options.length === 0
+  isDisabled = isDisabled || isEmpty || loading
+
+  const machineTypes = useMemo(() => {
+    return options.map(item => {
+      const { cpu, disk, memory, identifier, name, space_path } = item
+      return {
+        identifier,
+        label: name,
+        cpu,
+        disk,
+        memory,
+        space_path
+      }
+    })
+  }, [options])
 
   useEffect(() => {
     if (defaultValue && !gitspaceId) {
-      onChange('resource_identifier', defaultValue.identifier)
-      onChange('resource_space_ref', defaultValue.space_path)
+      onChange('resource', {
+        ...values.resource,
+        identifier: defaultValue.identifier || ''
+      })
     }
   }, [defaultValue?.identifier, gitspaceId])
 
-  const data = (machineTypes?.find(item => item.identifier === machine) || {}) as (typeof machineTypes)[0]
+  const data = (machineTypes?.find(item => item.identifier === machine?.identifier) || {}) as (typeof machineTypes)[0]
 
   return (
     <Container>
       <CDECustomDropdown
-        overridePopOverWidth
+        overridePopOverWidth={isEditMode}
         isDisabled={isDisabled}
         leftElement={
           <Layout.Horizontal>
@@ -89,12 +112,20 @@ export const SelectMachine = ({ options, defaultValue, isDisabled = false }: Sel
         label={
           <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
             <Layout.Vertical>
-              <Text font={'normal'}>{data.label || getString('cde.machine')}</Text>
+              {loading ? (
+                <Text icon="loading" font={'normal'}></Text>
+              ) : !isDisabled ? (
+                <Text font={'normal'}>{data.label || getString('cde.machine')}</Text>
+              ) : (
+                <Text font={'normal'}>{getString('cde.update.allMachineDisabled')}</Text>
+              )}
             </Layout.Vertical>
           </Layout.Horizontal>
         }
         menu={
-          <Layout.Horizontal padding={{ top: 'small', bottom: 'small' }}>
+          <Layout.Horizontal
+            padding={{ top: 'small', bottom: 'small' }}
+            className={isEditMode ? css.editModal : undefined}>
             <Menu>
               {machineTypes.length ? (
                 <>
@@ -102,7 +133,7 @@ export const SelectMachine = ({ options, defaultValue, isDisabled = false }: Sel
                     return (
                       <MenuItem
                         key={item.identifier}
-                        active={values.resource_identifier === item.identifier}
+                        active={values.resource?.identifier === item.identifier}
                         text={
                           <Layout.Vertical>
                             <Text font={{ size: 'normal', weight: 'bold' }}>{item.label?.toUpperCase()}</Text>
@@ -111,18 +142,19 @@ export const SelectMachine = ({ options, defaultValue, isDisabled = false }: Sel
                                 {getString('cde.cpu')}: {item.cpu?.toUpperCase()}
                               </Text>
                               <Text padding={'small'} className={css.tags} font={{ variation: FontVariation.SMALL }}>
-                                {getString('cde.memory')}: {item.memory?.toUpperCase()}GB
+                                {getString('cde.memory')}: {item.memory?.toUpperCase()}
                               </Text>
                               <Text padding={'small'} className={css.tags} font={{ variation: FontVariation.SMALL }}>
-                                {getString('cde.disk')}: {item.disk?.toUpperCase()}GB{' '}
-                                {item.disk_type ? `(${item.disk_type})` : ''}
+                                {getString('cde.disk')}: {item.disk?.toUpperCase()}
                               </Text>
                             </Layout.Horizontal>
                           </Layout.Vertical>
                         }
                         onClick={() => {
-                          onChange('resource_identifier', item.identifier || '')
-                          onChange('resource_space_ref', item.space_path || '')
+                          onChange('resource', {
+                            ...values.resource,
+                            identifier: item.identifier || ''
+                          })
                         }}
                       />
                     )

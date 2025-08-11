@@ -37,11 +37,14 @@ import { useHistory, useParams } from 'react-router-dom'
 import { Color, FontVariation, PopoverProps } from '@harnessio/design-system'
 import { Menu, MenuItem, PopoverInteractionKind, PopoverPosition } from '@blueprintjs/core'
 import { defaultTo } from 'lodash-es'
+import { Icon } from '@harnessio/icons'
+import { EditGitspace } from 'cde-gitness/components/EditGitspace/EditGitspace'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
 import EventTimelineAccordion from 'cde-gitness/components/EventTimelineAccordion/EventTimelineAccordion'
 import { DetailsCard } from 'cde-gitness/components/DetailsCard/DetailsCard'
+import { useFindGitspaceSettings } from 'services/cde'
 import type { EnumGitspaceStateType, TypesGitspaceEventResponse } from 'cde-gitness/services'
 import { getIDEOption, GitspaceActionType, GitspaceStatus } from 'cde-gitness/constants'
 import { useQueryParams } from 'hooks/useQueryParams'
@@ -125,7 +128,7 @@ const GitspaceDetails = () => {
   const [isBottom, setIsBottom] = useState(false)
 
   const [startPolling, setStartPolling] = useState<GitspaceActionType | undefined>(undefined)
-
+  const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false)
   const { loading, data, refetch, error } = useGitspaceDetails({ gitspaceId })
 
   const { data: eventData, refetch: refetchEventData } = useGitspaceEvents({ gitspaceId })
@@ -153,7 +156,6 @@ const GitspaceDetails = () => {
   const disabledActionButtons = [GitspaceStatus.STARTING, GitspaceStatus.STOPPING].includes(
     data?.state as GitspaceStatus
   )
-
   useEffect(() => {
     const filteredEvent = (eventData as Unknown)?.filter(
       (item: Unknown) =>
@@ -267,6 +269,15 @@ const GitspaceDetails = () => {
   const formattedlogsdata = useGetLogStream({ response })
 
   const [accountIdentifier, orgIdentifier, projectIdentifier] = data?.space_path?.split('/') || []
+
+  const {
+    data: gitspaceSettings,
+    loading: settingsLoading,
+    error: settingsError
+  } = useFindGitspaceSettings({
+    accountIdentifier: accountIdentifier || '',
+    lazy: !accountIdentifier
+  })
 
   const { refetchToken, setSelectedRowUrl } = useOpenVSCodeBrowserURL()
 
@@ -417,6 +428,24 @@ const GitspaceDetails = () => {
                         history.push(routes.toCDEGitspaces({ space }))
                       }}
                     />
+
+                    {[GitspaceStatus.UNINITIALIZED, GitspaceStatus.STOPPED, GitspaceStatus.ERROR].includes(
+                      data?.state as GitspaceStatus
+                    ) && (
+                      <MenuItem
+                        text={
+                          <Layout.Horizontal
+                            spacing="xsmall"
+                            flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
+                            <Icon name="edit" size={16} />
+                            <Text>{getString('cde.editGitspace') || 'Edit Gitspace'}</Text>
+                          </Layout.Horizontal>
+                        }
+                        onClick={() => {
+                          setIsEditModalOpen(true)
+                        }}
+                      />
+                    )}
                     <MenuItem
                       onClick={handleReset as Unknown as () => void}
                       text={
@@ -526,8 +555,8 @@ const GitspaceDetails = () => {
       </Page.SubHeader>
 
       <Page.Body
-        loading={loading}
-        error={getErrorMessage(error)}
+        loading={loading || settingsLoading}
+        error={getErrorMessage(error) || getErrorMessage(settingsError)}
         noData={{
           when: () => !data?.identifier,
           message: getString('cde.details.noData')
@@ -623,6 +652,46 @@ const GitspaceDetails = () => {
           </Card>
         </Container>
       </Page.Body>
+      {/* EditGitspace Modal */}
+      {isEditModalOpen && data && (
+        <Container
+          onClick={e => {
+            e.stopPropagation()
+          }}>
+          <EditGitspace
+            isOpen={isEditModalOpen}
+            gitspaceSettings={gitspaceSettings}
+            onClose={() => setIsEditModalOpen(false)}
+            gitspaceId={gitspaceId}
+            onGitspaceUpdated={() => {
+              refetch()
+              refetchEventData()
+              if (standalone) {
+                refetchLogsData()
+              }
+            }}
+            gitspaceData={{
+              name: data.name || '',
+              ide: data.ide || 'vs_code',
+              branch: data.branch || '',
+              devcontainer_path: data.devcontainer_path || '',
+              ssh_token_identifier: data.ssh_token_identifier || '',
+              resource:
+                'resource' in data && data.resource
+                  ? {
+                      identifier: data.resource.identifier || '',
+                      config_identifier: data.resource.config_identifier || '',
+                      name: data.resource.name || '',
+                      region: data.resource.region || '',
+                      disk: data.resource.disk || '',
+                      cpu: data.resource.cpu || '',
+                      memory: data.resource.memory || ''
+                    }
+                  : undefined
+            }}
+          />
+        </Container>
+      )}
     </>
   )
 }

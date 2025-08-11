@@ -102,7 +102,11 @@ export const SelectInfraProvider = () => {
   return (
     <Layout.Vertical spacing="small">
       <SelectInfraProviderType infraProviders={infraProviders ?? []} allProviders={data ?? []} />
-      <SelectRegion defaultValue={regionOptions?.[0]} options={regionOptions} disabled={!!gitspaceId} />
+      <SelectRegion
+        defaultValue={regionOptions?.[0]}
+        options={regionOptions}
+        isDisabled={regionOptions?.length === 0}
+      />
       <SelectMachine options={machineOptions} defaultValue={machineOptions?.[0]} />
     </Layout.Vertical>
   )

@@ -42,8 +42,9 @@ import UsageMetrics from 'cde-gitness/components/UsageMetrics/UsageMetrics'
 import StatusDropdown from 'cde-gitness/components/StatusDropdown/StatusDropdown'
 import GitspaceOwnerDropdown from 'cde-gitness/components/GitspaceOwnerDropdown/GitspaceOwnerDropdown'
 import { docLink, GitspaceOwnerType, GitspaceStatus, SortByType } from 'cde-gitness/constants'
-
+import { useGetCDEAPIParams } from 'cde-gitness/hooks/useGetCDEAPIParams'
 import SortByDropdown from 'cde-gitness/components/SortByDropdown/SortByDropdown'
+import { useFindGitspaceSettings } from 'services/cde'
 import type { EnumGitspaceSort } from 'services/cde'
 import { useLisitngApi } from '../../hooks/useLisitngApi'
 import GraduationHat from '../../../images/graduation-hat.svg?url'
@@ -85,6 +86,15 @@ const GitspaceListing = () => {
   const { routes, standalone } = useAppContext()
   const pageBrowser = useQueryParams<pageCDEBrowser>()
   const statesString: any = pageBrowser.gitspace_states
+  const { accountIdentifier = '' } = useGetCDEAPIParams()
+  const {
+    data: gitspaceSettings,
+    loading: settingsLoading,
+    error: settingsError
+  } = useFindGitspaceSettings({
+    accountIdentifier: accountIdentifier || '',
+    lazy: !accountIdentifier
+  })
   const filterInit: filterProps = {
     gitspace_states: statesString?.split(',')?.map((state: string) => state.trim() as GitspaceStatus) ?? [],
     gitspace_owner: pageBrowser.gitspace_owner ?? GitspaceOwnerType.SELF,
@@ -250,9 +260,9 @@ const GitspaceListing = () => {
             <CDEHomePage />
           ) : (
             <Page.Body
-              loading={loading}
+              loading={loading || settingsLoading}
               error={
-                error ? (
+                error || settingsError ? (
                   <Layout.Vertical spacing={'large'}>
                     <Text font={{ variation: FontVariation.FORM_MESSAGE_DANGER }}>{getErrorMessage(error)}</Text>
                     <Button
@@ -276,6 +286,7 @@ const GitspaceListing = () => {
                   <ListGitspaces
                     data={(data as Unknown) || []}
                     hasFilter={gitspaceExists}
+                    gitspaceSettings={gitspaceSettings}
                     refreshList={refetch}
                     gotoPage={(pageNumber: number) => handlePagination('page', pageNumber + 1)}
                     onPageSizeChange={(newSize: number) => handlePagination('limit', newSize)}

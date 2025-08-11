@@ -81,3 +81,9 @@
   margin-right: var(--spacing-small) !important;
   color: #6b6d85;
 }
+
+.editModal {
+  :global(.bp3-menu) {
+    min-width: 248px !important;
+  }
+}

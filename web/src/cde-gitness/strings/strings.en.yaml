@@ -362,6 +362,15 @@ create:
 update:
   infraProviderFailed: Gitspace Infrastructure updation failed
   infraProviderSuccess: Gitspace Infrastructure updated successfully
+  editGitspace: Edit Gitspace
+  updateGitspace: Update Gitspace
+  gitspaceUpdateSuccess : 'Gitspace updated successfully'
+  gitspaceUpdateFailed : Failed to update gitspace
+  allMachineDisabled : All machine disabled
+  errorChosenIDE : Chosen IDE has been disabled by the admin. Please choose a different one.
+  errorAllIDE : All IDEs have been disabled by the admin. Cannot update the gitspace.
+  errorAllResources: Admin has disabled all available machine resources for this gitspace. Cannot update the gitspace.
+  gitspaceUpdateNote : Your changes won't be loss by updating the IDE or machine type. Your Gitspace has to be restarted after the update.
 details:
   actions: More Actions
   openEditor: Open VS Code Editor

@@ -32,7 +32,7 @@ import Empty from './assests/Empty.png'
 import css from './SelectRegion.module.scss'
 
 interface SelectRegionInterface {
-  disabled?: boolean
+  isDisabled?: boolean
   defaultValue: { label: string; value: TypesInfraProviderResource[] }
   options: { label: string; value: TypesInfraProviderResource[] }[]
 }
@@ -52,7 +52,7 @@ export const getMapFromRegion = (region: string) => {
   }
 }
 
-export const SelectRegion = ({ options, disabled, defaultValue }: SelectRegionInterface) => {
+export const SelectRegion = ({ options, isDisabled = false, defaultValue }: SelectRegionInterface) => {
   const { getString } = useStrings()
   const {
     values: { metadata },
@@ -61,7 +61,7 @@ export const SelectRegion = ({ options, disabled, defaultValue }: SelectRegionIn
   const [regionState, setRegionState] = useState<string | undefined>(metadata?.region)
 
   useEffect(() => {
-    if ((!regionState || metadata?.region !== regionState) && !disabled) {
+    if ((!regionState || metadata?.region !== regionState) && !isDisabled) {
       setRegionState(defaultValue?.label?.toLowerCase())
       onChange('metadata.region', defaultValue?.label?.toLowerCase())
     }
@@ -70,6 +70,7 @@ export const SelectRegion = ({ options, disabled, defaultValue }: SelectRegionIn
   return (
     <Container>
       <CDECustomDropdown
+        isDisabled={isDisabled}
         label={
           <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
             <Layout.Vertical>

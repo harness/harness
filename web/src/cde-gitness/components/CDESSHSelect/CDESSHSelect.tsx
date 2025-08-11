@@ -43,7 +43,7 @@ import { CDECustomDropdown } from '../CDECustomDropdown/CDECustomDropdown'
 import { getSelectedExpirationDate } from './CDESSHSelect.utils'
 import css from './CDESSHSelect.module.scss'
 
-export const CDESSHSelect = () => {
+export const CDESSHSelect = ({ isEditMode = false }: { isEditMode?: boolean }) => {
   const { getString } = useStrings()
   const { showError } = useToaster()
   const { values, setFieldValue } = useFormikContext<OpenapiCreateGitspaceRequest>()
@@ -204,6 +204,7 @@ export const CDESSHSelect = () => {
 
   return (
     <CDECustomDropdown
+      overridePopOverWidth={isEditMode}
       leftElement={
         <Layout.Horizontal>
           <img src={Secret} className={css.icon} />
@@ -221,51 +222,53 @@ export const CDESSHSelect = () => {
       label={<Text icon={loading ? 'loading' : undefined}>{values?.ssh_token_identifier || 'Select SSH Key'}</Text>}
       formikName="ssh_token_identifier"
       menu={
-        <Menu>
-          <Container border={{ bottom: true }}>
-            {tokenList.length ? (
-              <>
-                {tokenList.map((item: { name: string; identifier: string; apiKeyIdentifier: string }) => {
-                  return (
-                    <MenuItem
-                      key={item.identifier}
-                      text={
-                        <Text
-                          width="100%"
-                          flex={{ justifyContent: 'space-between' }}
-                          rightIcon="cross"
-                          rightIconProps={{
-                            size: 12,
-                            onClick: e => {
-                              handleDelete(e, item.identifier)
-                              setFieldValue('ssh_token_identifier', undefined)
-                            }
-                          }}>
-                          {item.name}
-                        </Text>
-                      }
-                      onClick={() => {
-                        setFieldValue('ssh_token_identifier', item.identifier)
-                      }}
-                    />
-                  )
-                })}
-              </>
-            ) : (
-              <Text padding="small">
-                There are no keys configured. By default we will create a SSH key to login into Gitspace.
-              </Text>
-            )}
-          </Container>
-          <Button
-            variation={ButtonVariation.LINK}
-            onClick={() => {
-              openModal()
-            }}
-            className={css.addsshButton}>
-            Add SSH Key
-          </Button>
-        </Menu>
+        <Container className={isEditMode ? css.editModal : undefined}>
+          <Menu>
+            <Container border={{ bottom: true }}>
+              {tokenList.length ? (
+                <>
+                  {tokenList.map((item: { name: string; identifier: string; apiKeyIdentifier: string }) => {
+                    return (
+                      <MenuItem
+                        key={item.identifier}
+                        text={
+                          <Text
+                            width="100%"
+                            flex={{ justifyContent: 'space-between' }}
+                            rightIcon="cross"
+                            rightIconProps={{
+                              size: 12,
+                              onClick: e => {
+                                handleDelete(e, item.identifier)
+                                setFieldValue('ssh_token_identifier', undefined)
+                              }
+                            }}>
+                            {item.name}
+                          </Text>
+                        }
+                        onClick={() => {
+                          setFieldValue('ssh_token_identifier', item.identifier)
+                        }}
+                      />
+                    )
+                  })}
+                </>
+              ) : (
+                <Text padding="small">
+                  There are no keys configured. By default we will create a SSH key to login into Gitspace.
+                </Text>
+              )}
+            </Container>
+            <Button
+              variation={ButtonVariation.LINK}
+              onClick={() => {
+                openModal()
+              }}
+              className={css.addsshButton}>
+              Add SSH Key
+            </Button>
+          </Menu>
+        </Container>
       }
     />
   )

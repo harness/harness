@@ -17,6 +17,7 @@
 /* eslint-disable */
 // This is an auto-generated file
 export declare const addsshButton: string
+export declare const editModal: string
 export declare const icon: string
 export declare const main: string
 export declare const note: string
