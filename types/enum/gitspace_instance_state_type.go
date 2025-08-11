@@ -31,16 +31,18 @@ var gitspaceInstanceStateTypes = []GitspaceInstanceStateType{
 	GitSpaceInstanceStateCleaning,
 	GitspaceInstanceStateCleaned,
 	GitSpaceInstanceStateResetting,
+	GitspaceInstanceStatePendingCleanup,
 }
 
 const (
-	GitspaceInstanceStateRunning       GitspaceInstanceStateType = "running"
-	GitspaceInstanceStateUninitialized GitspaceInstanceStateType = "uninitialized"
-	GitspaceInstanceStateUnknown       GitspaceInstanceStateType = "unknown"
-	GitspaceInstanceStateError         GitspaceInstanceStateType = "error"
-	GitspaceInstanceStateStopped       GitspaceInstanceStateType = "stopped"
-	GitspaceInstanceStateDeleted       GitspaceInstanceStateType = "deleted"
-	GitspaceInstanceStateCleaned       GitspaceInstanceStateType = "cleaned"
+	GitspaceInstanceStateRunning        GitspaceInstanceStateType = "running"
+	GitspaceInstanceStateUninitialized  GitspaceInstanceStateType = "uninitialized"
+	GitspaceInstanceStateUnknown        GitspaceInstanceStateType = "unknown"
+	GitspaceInstanceStateError          GitspaceInstanceStateType = "error"
+	GitspaceInstanceStateStopped        GitspaceInstanceStateType = "stopped"
+	GitspaceInstanceStateDeleted        GitspaceInstanceStateType = "deleted"
+	GitspaceInstanceStateCleaned        GitspaceInstanceStateType = "cleaned"
+	GitspaceInstanceStatePendingCleanup GitspaceInstanceStateType = "pending_cleanup"
 
 	GitspaceInstanceStateStarting  GitspaceInstanceStateType = "starting"
 	GitspaceInstanceStateStopping  GitspaceInstanceStateType = "stopping"

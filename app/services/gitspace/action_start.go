@@ -22,6 +22,8 @@ import (
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 func (c *Service) StartGitspaceAction(
@@ -34,13 +36,17 @@ func (c *Service) StartGitspaceAction(
 	}
 
 	if config.IsMarkedForInfraReset && savedGitspaceInstance != nil && !savedGitspaceInstance.State.IsFinalStatus() {
-		savedGitspaceInstance.State = enum.GitspaceInstanceStateError
+		savedGitspaceInstance.State = enum.GitspaceInstanceStatePendingCleanup
 		err = c.gitspaceInstanceStore.Update(ctx, savedGitspaceInstance)
-		return fmt.Errorf(
-			"failed to update gitspace instance state for config ID: %s %w",
-			config.Identifier,
-			err,
-		)
+		if err != nil {
+			log.Ctx(ctx).Warn().Err(err).Msgf(
+				"failed to mark old gitspace instance as pending cleanup for config ID: %s",
+				config.Identifier,
+			)
+		}
+		// Don't return here - continue to create a new instance
+		// The old instance will be cleaned up by the background job
+		savedGitspaceInstance = nil // Treat as if no instance exists so a new one is created
 	}
 
 	config.GitspaceInstance = savedGitspaceInstance
@@ -63,10 +69,10 @@ func (c *Service) StartGitspaceAction(
 		}
 	}
 	newGitspaceInstance, err := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, config.ID)
-	newGitspaceInstance.SpacePath = config.SpacePath
 	if err != nil {
 		return fmt.Errorf("failed to find gitspace with config ID : %s %w", config.Identifier, err)
 	}
+	newGitspaceInstance.SpacePath = config.SpacePath
 	config.GitspaceInstance = newGitspaceInstance
 	c.submitAsyncOps(ctx, config, enum.GitspaceActionTypeStart)
 	return nil
