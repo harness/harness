@@ -33,7 +33,7 @@ import (
 
 // Repo validation regex.
 var (
-	repoIDMatcher = regexp.MustCompile(`^[a-zA-Z0-9](?:[a-zA-Z0-9\-/]{0,126}[a-zA-Z0-9])?$`)
+	repoIDMatcher = regexp.MustCompile(`^[a-zA-Z0-9](?:[a-zA-Z0-9_\-/]{0,126}[a-zA-Z0-9])?$`)
 	allowedTypes  = map[string]bool{"model": true, "dataset": true}
 )
 

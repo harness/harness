@@ -122,15 +122,26 @@ func (c *APIController) GetArtifactFiles(
 		registryURL = c.URLProvider.PackageURL(ctx, reqInfo.RootIdentifier+"/"+reqInfo.RegistryIdentifier, "cargo")
 	case artifact.PackageTypeGO:
 		registryURL = c.URLProvider.PackageURL(ctx, reqInfo.RootIdentifier+"/"+reqInfo.RegistryIdentifier, "go")
+	case artifact.PackageTypeHUGGINGFACE:
+		registryURL = c.URLProvider.PackageURL(ctx, reqInfo.RootIdentifier+"/"+reqInfo.RegistryIdentifier, "huggingface")
 	default:
 		registryURL = c.URLProvider.RegistryURL(ctx,
 			reqInfo.RootIdentifier, strings.ToLower(string(registry.PackageType)), reqInfo.RegistryIdentifier)
 	}
 
-	filePathPrefix, err := utils.GetFilePath(registry.PackageType, img.Name, art.Version)
-	if err != nil {
-		return failedToFetchFilesResponse(ctx, err, art)
+	var filePathPrefix string
+	var err2 error
+	switch registry.PackageType { //nolint:exhaustive
+	case artifact.PackageTypeHUGGINGFACE:
+		filePathPrefix, err2 = utils.GetFilePathWithArtifactType(registry.PackageType,
+			img.Name, art.Version, artifactType)
+	default:
+		filePathPrefix, err2 = utils.GetFilePath(registry.PackageType, img.Name, art.Version)
 	}
+	if err2 != nil {
+		return failedToFetchFilesResponse(ctx, err2, art)
+	}
+
 	filePathPattern := filePathPrefix + "/%"
 	fileMetadataList, err := c.fileManager.GetFilesMetadata(ctx, filePathPattern, img.RegistryID,
 		reqInfo.sortByField, reqInfo.sortByOrder, reqInfo.limit, reqInfo.offset, reqInfo.searchTerm)
@@ -156,9 +167,9 @@ func (c *APIController) GetArtifactFiles(
 		artifact.PackageTypeNPM, artifact.PackageTypeRPM, artifact.PackageTypeNUGET,
 		artifact.PackageTypeCARGO, artifact.PackageTypeGO, artifact.PackageTypeHUGGINGFACE:
 		return artifact.GetArtifactFiles200JSONResponse{
-			FileDetailResponseJSONResponse: *GetAllArtifactFilesResponse(
-				fileMetadataList, count, reqInfo.pageNumber, reqInfo.limit, registryURL, img.Name, art.Version,
-				registry.PackageType, c.SetupDetailsAuthHeaderPrefix),
+			FileDetailResponseJSONResponse: *GetAllArtifactFilesResponse(fileMetadataList, count, reqInfo.pageNumber,
+				reqInfo.limit, registryURL, img.Name, art.Version, registry.PackageType,
+				c.SetupDetailsAuthHeaderPrefix, artifactType),
 		}, nil
 	default:
 		return artifact.GetArtifactFiles400JSONResponse{

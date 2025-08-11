@@ -208,7 +208,8 @@ func TestGetPullCommand(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := metadata.GetPullCommand(tt.image, tt.tag, tt.pkgType, tt.baseURL, "Authorization: Bearer")
+			result := metadata.GetPullCommand(tt.image, tt.tag, tt.pkgType, tt.baseURL,
+				"Authorization: Bearer", nil)
 			assert.Equal(t, tt.expected, result)
 		})
 	}

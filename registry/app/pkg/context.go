@@ -35,8 +35,9 @@ type ArtifactInfo struct {
 	RegistryID    int64
 	// Currently used only for Python packages
 	// TODO: extend to all package types
-	Registry types.Registry
-	Image    string
+	Registry     types.Registry
+	Image        string
+	ArtifactType *artifact.ArtifactType
 }
 
 type RegistryInfo struct {

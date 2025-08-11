@@ -180,8 +180,7 @@ func (h *handler) CheckQuarantineStatus(
 	ctx context.Context,
 ) error {
 	info := request.ArtifactInfoFrom(ctx)
-	filePath, err := utils.GetFilePath(info.BaseArtifactInfo().PathPackageType,
-		info.BaseArtifactInfo().Image, info.GetVersion())
+	filePath, err := utils.GetFilePath(info.BaseArtifactInfo().PathPackageType, info.BaseArtifactInfo().Image, info.GetVersion())
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("failed to find the file paths for artifact: [%s], "+
 			"version: [%s] with registryID: [%d] with error: %v",

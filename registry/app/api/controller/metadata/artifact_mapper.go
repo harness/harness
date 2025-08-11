@@ -90,8 +90,8 @@ func mapToArtifactMetadata(
 ) *artifactapi.ArtifactMetadata {
 	lastModified := GetTimeInMs(artifact.ModifiedAt)
 	packageType := artifact.PackageType
-	pullCommand := GetPullCommand(artifact.Name, artifact.Version,
-		string(packageType), registryURL, setupDetailsAuthHeaderPrefix)
+	pullCommand := GetPullCommand(artifact.Name, artifact.Version, string(packageType), registryURL,
+		setupDetailsAuthHeaderPrefix, artifact.ArtifactType)
 	return &artifactapi.ArtifactMetadata{
 		RegistryIdentifier: artifact.RepoName,
 		Name:               artifact.Name,
@@ -164,7 +164,8 @@ func GetTagMetadata(
 		modifiedAt := GetTimeInMs(tag.ModifiedAt)
 		size := GetImageSize(tag.Size)
 		digestCount := tag.DigestCount
-		command := GetPullCommand(image, tag.Name, string(tag.PackageType), registryURL, setupDetailsAuthHeaderPrefix)
+		command := GetPullCommand(image, tag.Name, string(tag.PackageType), registryURL, setupDetailsAuthHeaderPrefix,
+			nil)
 		packageType, err := toPackageType(string(tag.PackageType))
 		downloadCount := tag.DownloadCount
 		if err != nil {
@@ -217,23 +218,16 @@ func GetAllArtifactResponse(
 	return response
 }
 
-func GetAllArtifactFilesResponse(
-	files *[]types.FileNodeMetadata,
-	count int64,
-	pageNumber int64,
-	pageSize int,
-	registryURL string,
-	artifactName string,
-	version string,
-	packageType artifactapi.PackageType,
-	setupDetailsAuthHeaderPrefix string,
-) *artifactapi.FileDetailResponseJSONResponse {
+func GetAllArtifactFilesResponse(files *[]types.FileNodeMetadata, count int64, pageNumber int64, pageSize int,
+	registryURL string, artifactName string, version string,
+	packageType artifactapi.PackageType, setupDetailsAuthHeaderPrefix string,
+	artifactType *artifactapi.ArtifactType) *artifactapi.FileDetailResponseJSONResponse {
 	var fileMetadataList []artifactapi.FileDetail
 	if files == nil || len(*files) == 0 {
 		fileMetadataList = make([]artifactapi.FileDetail, 0)
 	} else {
-		fileMetadataList = GetArtifactFilesMetadata(files, registryURL, artifactName,
-			version, packageType, setupDetailsAuthHeaderPrefix)
+		fileMetadataList = GetArtifactFilesMetadata(files, registryURL, artifactName, version, packageType,
+			setupDetailsAuthHeaderPrefix, artifactType)
 	}
 	pageCount := GetPageCount(count, pageSize)
 	return &artifactapi.FileDetailResponseJSONResponse{
@@ -258,14 +252,9 @@ func GetArtifactFileResponseJSONResponse(
 		DownloadUrl: getDownloadURL(registryURL, packageType, artifactName, version, fileName),
 	}
 }
-func GetArtifactFilesMetadata(
-	metadata *[]types.FileNodeMetadata,
-	registryURL string,
-	artifactName string,
-	version string,
-	packageType artifactapi.PackageType,
-	setupDetailsAuthHeaderPrefix string,
-) []artifactapi.FileDetail {
+func GetArtifactFilesMetadata(metadata *[]types.FileNodeMetadata, registryURL string, artifactName string,
+	version string, packageType artifactapi.PackageType, setupDetailsAuthHeaderPrefix string,
+	artifactType *artifactapi.ArtifactType) []artifactapi.FileDetail {
 	var files []artifactapi.FileDetail
 	for _, file := range *metadata {
 		filePathPrefix := "/" + artifactName + "/" + version + "/"
@@ -303,6 +292,10 @@ func GetArtifactFilesMetadata(
 			filename = strings.Replace(file.Path, goFilePath+"/", "", 1)
 			downloadCommand = GetGoArtifactFileDownloadCommand(registryURL, artifactName,
 				filename, setupDetailsAuthHeaderPrefix)
+		case artifactapi.PackageTypeHUGGINGFACE:
+			filename = strings.Replace(filename, "/"+string(*artifactType), "", 1)
+			downloadCommand = GetHuggingFaceArtifactFileDownloadCommand(registryURL, artifactName,
+				version, filename, setupDetailsAuthHeaderPrefix, artifactType)
 		}
 		files = append(files, artifactapi.FileDetail{
 			Checksums:       getCheckSums(file),
@@ -461,7 +454,8 @@ func GetNonOCIArtifactMetadata(
 	for _, tag := range *tags {
 		modifiedAt := GetTimeInMs(tag.ModifiedAt)
 		size := GetImageSize(tag.Size)
-		command := GetPullCommand(image, tag.Name, pkgType, registryURL, setupDetailsAuthHeaderPrefix)
+		command := GetPullCommand(image, tag.Name, pkgType, registryURL, setupDetailsAuthHeaderPrefix,
+			tag.ArtifactType)
 		packageType, err := toPackageType(pkgType)
 		downloadCount := tag.DownloadCount
 		if err != nil {

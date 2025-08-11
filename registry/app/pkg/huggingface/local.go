@@ -16,10 +16,10 @@ package huggingface
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/harness/gitness/registry/app/pkg"
 	"io"
 	"net/http"
 	"path"
@@ -27,7 +27,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/api/usererror"
 	urlprovider "github.com/harness/gitness/app/url"
 	apicontract "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
@@ -114,7 +113,6 @@ func (c *localRegistry) ValidateYaml(_ context.Context, _ huggingfacetype.Artifa
 		field    string
 		validate func(map[string]interface{}, string) (*huggingfacetype.ValidateYamlResponse, bool)
 	}{
-		{"license", validateString},
 		{"pipeline_tag", validateString},
 		{"tags", validateSlice},
 		{"widget", validateSlice},
@@ -287,10 +285,12 @@ func (c *localRegistry) LfsUpload(ctx context.Context, info huggingfacetype.Arti
 		Headers: map[string]string{"Content-Type": contentTypeJSON},
 	}
 	resp := &huggingfacetype.LfsUploadResponse{}
-	tmpFileName := getTmpFileName(info, info.SHA256)
+	file := types.FileInfo{Sha256: info.SHA256}
+	info.Image = info.Repo
+	tmpFilePath := getTmpFilePath(&info.ArtifactInfo, &file)
 
 	fileInfo, tmpFileName, err := c.fileManager.UploadTempFileToPath(ctx, info.RootIdentifier, nil,
-		tmpFileName, tmpFileName, body)
+		tmpFilePath, tmpFilePath, body)
 	if err != nil {
 		log.Ctx(ctx).Info().Msgf("Upload failed for file %s, %v", tmpFileName, err)
 		headers.Code = http.StatusInternalServerError
@@ -329,7 +329,6 @@ func (c *localRegistry) CommitRevision(ctx context.Context, info huggingfacetype
 	headerInfo := &huggingfacetype.HeaderInfo{}
 	lfsFiles := &[]huggingfacetype.LfsFileInfo{}
 	siblings := &[]huggingfacemetadata.Sibling{}
-	session, _ := request.AuthSessionFrom(ctx)
 	commitBytes, _ := io.ReadAll(body)
 	commits := string(commitBytes)
 	scanner := bufio.NewScanner(strings.NewReader(commits))
@@ -375,49 +374,21 @@ func (c *localRegistry) CommitRevision(ctx context.Context, info huggingfacetype
 	}
 
 	var readme string
-	movedBlobs := make(map[string]bool)
+	var filesInfo []types.FileInfo
 	for _, lfsFile := range *lfsFiles {
-		filePath := fmt.Sprintf("/%s/%s/%s/%s", info.RepoType, info.Repo, info.Revision, lfsFile.Path)
-		savedPath, _ := c.fileManager.HeadSHA256(ctx, lfsFile.Oid, info.RegistryID, info.RootParentID)
-		if savedPath == filePath {
-			movedBlobs[lfsFile.Oid] = true
-			continue
-		}
-		if savedPath != "" && !movedBlobs[lfsFile.Oid] {
-			err = c.fileManager.SaveNodes(ctx, filePath, info.RegistryID, info.RootParentID, session.Principal.ID,
-				lfsFile.Oid)
-			if err != nil {
-				log.Ctx(ctx).Info().Msgf("Failed to move file with sha %s to %s", lfsFile.Oid, lfsFile.Path)
-				return headers, nil, err
-			}
-			continue
-		}
-		tmpFileName := getTmpFileName(info, lfsFile.Oid)
-		if strings.EqualFold(lfsFile.Path, "Readme.md") {
-			readme = c.readme(ctx, info, tmpFileName, lfsFile.Size)
-		}
 		fileInfo := types.FileInfo{
 			Size:     lfsFile.Size,
 			Sha256:   lfsFile.Oid,
 			Filename: lfsFile.Path,
 		}
-		err = c.fileManager.MoveTempFile(ctx, filePath, info.RegistryID, info.RootParentID, info.RootIdentifier,
-			fileInfo, tmpFileName, session.Principal.ID)
-		movedBlobs[lfsFile.Oid] = true
-
-		if err != nil {
-			log.Ctx(ctx).Info().Msgf("Failed to move file %s to %s", tmpFileName, lfsFile.Path)
-			return headers, nil, err
-		}
+		filesInfo = append(filesInfo, fileInfo)
 	}
 
-	readme = modifyReadme(readme)
+	readme = c.readme(ctx, info, lfsFiles)
 
 	modelMetadata := huggingfacemetadata.Metadata{
 		ID:           info.Repo,
 		ModelID:      info.Repo,
-		SHA:          "",
-		LibraryName:  "unknown",
 		Siblings:     *siblings,
 		LastModified: time.Now().UTC().Format(time.RFC3339),
 		Private:      true,
@@ -427,35 +398,15 @@ func (c *localRegistry) CommitRevision(ctx context.Context, info huggingfacetype
 	if headerInfo.Summary != "" {
 		modelMetadata.CardData.Tags = append(modelMetadata.CardData.Tags, "summary:"+headerInfo.Summary)
 	}
+	hfMetadata := huggingfacemetadata.HuggingFaceMetadata{
+		Metadata: modelMetadata,
+	}
 
-	modelMetadataBytes, _ := json.Marshal(modelMetadata)
-
-	err = c.tx.WithTx(
-		ctx, func(ctx context.Context) error {
-			dbImage := &types.Image{
-				Name:         info.Repo,
-				RegistryID:   info.RegistryID,
-				Enabled:      true,
-				ArtifactType: &info.RepoType,
-			}
-			if err2 := c.imageDao.CreateOrUpdate(ctx, dbImage); err2 != nil {
-				log.Ctx(ctx).Error().Err(err2).Msgf("Failed to create image: %s", info.Repo)
-				return err2
-			}
-			dbArtifact := &types.Artifact{
-				ImageID:   dbImage.ID,
-				Version:   info.Revision,
-				Metadata:  json.RawMessage(modelMetadataBytes),
-				UpdatedAt: time.Now(),
-			}
-			if _, err2 := c.artifactDao.CreateOrUpdate(ctx, dbArtifact); err2 != nil {
-				log.Ctx(ctx).Error().Err(err2).Msgf("Failed to create artifact: %s", info.Revision)
-				return err2
-			}
-
-			return nil
-		})
-
+	info.ArtifactType = &info.RepoType
+	info.Image = info.Repo
+	filePathPrefix := fmt.Sprintf("/%s/%s/%s", info.RepoType, info.Repo, info.Revision)
+	err = c.localBase.MoveMultipleTempFilesAndCreateArtifact(ctx, &info.ArtifactInfo, filePathPrefix, &hfMetadata,
+		&filesInfo, getTmpFilePath, info.Revision)
 	if err != nil {
 		return headers, nil, err
 	}
@@ -524,8 +475,10 @@ func (c *localRegistry) DownloadFile(ctx context.Context, info huggingfacetype.A
 }
 
 func (c *localRegistry) FileExists(ctx context.Context, info huggingfacetype.ArtifactInfo) bool {
-	tmpFileName := getTmpFileName(info, info.SHA256)
-	tmpPath := path.Join(rootPathString, info.RootIdentifier, tmp, tmpFileName)
+	file := types.FileInfo{Sha256: info.SHA256}
+	info.Image = info.Repo
+	tmpFilePath := getTmpFilePath(&info.ArtifactInfo, &file)
+	tmpPath := path.Join(rootPathString, info.RootIdentifier, tmp, tmpFilePath)
 	exists, _, err := c.fileManager.FileExists(ctx, info.RootIdentifier, tmpPath)
 	if err != nil {
 		log.Ctx(ctx).Error().Err(err).Msgf("Failed to check if file exists: %s", tmpPath)
@@ -538,63 +491,27 @@ func getBlobURL(pkgURL, operation, sha256, token string, info huggingfacetype.Ar
 		info.RepoType, info.Repo, info.Revision, operation, sha256, strings.TrimPrefix(token, "Bearer "))
 }
 
-func modifyReadme(readme string) string {
-	// Check if the README contains YAML frontmatter
-	yamlRegex := regexp.MustCompile(`(?s)^---\n(.+?)\n---\n(.+)$`)
-	matches := yamlRegex.FindStringSubmatch(readme)
-
-	if len(matches) < 3 {
-		// No YAML frontmatter found or invalid format, return original content
-		return readme
+func (c *localRegistry) readme(ctx context.Context, info huggingfacetype.ArtifactInfo,
+	lfsFiles *[]huggingfacetype.LfsFileInfo) string {
+	for _, lfsFile := range *lfsFiles {
+		file := types.FileInfo{Sha256: lfsFile.Oid}
+		tmpFileName := getTmpFilePath(&info.ArtifactInfo, &file)
+		if strings.ToLower(lfsFile.Path) == "readme.md" {
+			reader, _, err := c.fileManager.DownloadTempFile(ctx, lfsFile.Size, tmpFileName, info.RootIdentifier)
+			if err != nil {
+				log.Ctx(ctx).Warn().Msgf("Failed to download readme file %s", tmpFileName)
+				return ""
+			}
+			defer reader.Close()
+			readmeBytes, err2 := io.ReadAll(reader)
+			if err2 != nil {
+				log.Ctx(ctx).Warn().Msgf("Failed to read readme file %s", tmpFileName)
+				return ""
+			}
+			return string(readmeBytes)
+		}
 	}
-
-	// Extract YAML and Markdown parts
-	yamlContent := matches[1]
-	markdownContent := matches[2]
-
-	// Parse YAML into a map
-	var yamlData map[string]interface{}
-	err := yaml.Unmarshal([]byte(yamlContent), &yamlData)
-	if err != nil {
-		// Failed to parse YAML, return original content
-		return readme
-	}
-
-	// Marshal YAML data back to string with pretty formatting
-	prettyYamlBytes, err := yaml.Marshal(yamlData)
-	if err != nil {
-		// Failed to marshal YAML, return original content
-		return readme
-	}
-
-	// Convert bytes to string and prepare formatted output
-	prettyYamlString := string(prettyYamlBytes)
-
-	// Create pretty output with YAML in code block followed by markdown
-	var buffer bytes.Buffer
-	buffer.WriteString("## Card details\n")
-	buffer.WriteString("```yaml\n")
-	buffer.WriteString(prettyYamlString)
-	buffer.WriteString("\n```\n\n")
-	buffer.WriteString(markdownContent)
-
-	return buffer.String()
-}
-
-func (c *localRegistry) readme(ctx context.Context, info huggingfacetype.ArtifactInfo, tmpFileName string,
-	fileSize int64) string {
-	reader, _, err := c.fileManager.DownloadTempFile(ctx, fileSize, tmpFileName, info.RootIdentifier)
-	if err != nil {
-		log.Ctx(ctx).Warn().Msgf("Failed to download readme file %s", tmpFileName)
-		return ""
-	}
-	defer reader.Close()
-	readmeBytes, err2 := io.ReadAll(reader)
-	if err2 != nil {
-		log.Ctx(ctx).Warn().Msgf("Failed to read readme file %s", tmpFileName)
-		return ""
-	}
-	return string(readmeBytes)
+	return ""
 }
 
 func lfsAction(blobURL, oid, token string) huggingfacetype.LfsAction {
@@ -621,8 +538,8 @@ func validateSlice(meta map[string]interface{}, metaKey string) (*huggingfacetyp
 	return nil, true
 }
 
-func getTmpFileName(info huggingfacetype.ArtifactInfo, sha256 string) string {
-	return info.RootIdentifier + "/" + info.RegIdentifier + "/" + info.Repo + "/" + info.Revision + "/upload/" + sha256
+func getTmpFilePath(info *pkg.ArtifactInfo, fileInfo *types.FileInfo) string {
+	return info.RootIdentifier + "/" + info.RegIdentifier + "/" + info.Image + "/" + "/upload/" + fileInfo.Sha256
 }
 
 func validateString(meta map[string]interface{}, metaKey string) (*huggingfacetype.ValidateYamlResponse, bool) {

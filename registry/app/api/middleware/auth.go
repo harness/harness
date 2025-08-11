@@ -80,6 +80,8 @@ func CheckSig() func(http.Handler) http.Handler {
 				// Check if the sig query parameter exists
 				if token := r.URL.Query().Get("sig"); token != "" {
 					// Set the token as a Bearer token in the Authorization header
+					token = strings.TrimPrefix(token, "Bearer ")
+					token = strings.TrimPrefix(token, "Basic ")
 					r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 				}
 				next.ServeHTTP(w, r)

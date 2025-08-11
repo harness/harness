@@ -85,8 +85,8 @@ func (g GenericBlobDao) FindBySha256AndRootParentID(
 	*types.GenericBlob, error) {
 	q := databaseg.Builder.
 		Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(GenericBlob{}), ",")).
-		From("generic_blob").
-		Where("generic_blob_root_parent_id = ? AND generic_blob_sha256 = ?", rootParentID, sha256)
+		From("generic_blobs").
+		Where("generic_blob_root_parent_id = ? AND generic_blob_sha_256 = ?", rootParentID, sha256)
 
 	db := dbtx.GetAccessor(ctx, g.sqlDB)
 

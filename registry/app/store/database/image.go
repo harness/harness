@@ -17,11 +17,11 @@ package database
 import (
 	"context"
 	"database/sql"
-	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"sort"
 	"time"
 
 	"github.com/harness/gitness/app/api/request"
+	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/app/store/database/util"
@@ -169,7 +169,13 @@ func (i ImageDao) CreateOrUpdate(ctx context.Context, image *types.Image) error 
 	if commons.IsEmpty(image.Name) {
 		return errors.New("package/image name is empty")
 	}
-	const sqlQuery = `
+	var conflictCondition string
+	if image.ArtifactType == nil {
+		conflictCondition = ` ON CONFLICT (image_registry_id, image_name) WHERE image_type IS NULL `
+	} else {
+		conflictCondition = ` ON CONFLICT (image_registry_id, image_name, image_type) WHERE image_type IS NOT NULL `
+	}
+	var sqlQuery = `
 		INSERT INTO images ( 
 		         image_registry_id
 				,image_name
@@ -191,7 +197,7 @@ func (i ImageDao) CreateOrUpdate(ctx context.Context, image *types.Image) error 
 						,:image_updated_by
 					    ,:image_uuid
 		    ) 
-            ON CONFLICT (image_registry_id, image_name, image_type)
+           ` + conflictCondition + `
 		    DO UPDATE SET
 			   image_enabled = :image_enabled
             RETURNING image_id`

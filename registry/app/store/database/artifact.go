@@ -678,9 +678,7 @@ func (a ArtifactDao) CountArtifactsByRepo(ctx context.Context, parentID int64, r
 		q = q.Where("i.image_name LIKE ?", sqlPartialMatch(search))
 	}
 	if artifactType != nil && *artifactType != "" {
-	if artifactType != nil && *artifactType != "" {
 		q = q.Where("i.image_type = ?", *artifactType)
-	}
 	}
 
 	if len(labels) > 0 {

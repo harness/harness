@@ -161,6 +161,19 @@ func (m *MockLocalBase) UploadFile(
 	return args.Get(0).(*commons.ResponseHeaders), args.String(1), args.Error(2) //nolint:errcheck
 }
 
+func (m *MockLocalBase) MoveMultipleTempFilesAndCreateArtifact(
+	ctx context.Context,
+	info *pkg.ArtifactInfo,
+	pathPrefix string,
+	metadata metadata.Metadata,
+	filesInfo *[]types.FileInfo,
+	getTempFilePath func(info *pkg.ArtifactInfo, fileInfo *types.FileInfo) string,
+	version string,
+) error {
+	args := m.Called(ctx, info, pathPrefix, metadata, filesInfo, getTempFilePath, version)
+	return args.Error(0)
+}
+
 type MockReadCloser struct {
 	mock.Mock
 }
@@ -243,7 +256,8 @@ func TestLocalRegistryHelper_DownloadFile(t *testing.T) {
 	expectedRedirectURL := "http://example.com/download"
 	var expectedError error
 
-	mockLocalBase.On("Download", ctx, artifactInfo.ArtifactInfo, artifactInfo.Version, artifactInfo.Filename).
+	mockLocalBase.On("Download", ctx, artifactInfo.ArtifactInfo, artifactInfo.Version,
+		artifactInfo.Filename).
 		Return(expectedHeaders, expectedFileReader, expectedRedirectURL, expectedError)
 
 	headers, fileReader, redirectURL, err := helper.DownloadFile(ctx, artifactInfo)
@@ -278,7 +292,8 @@ func TestLocalRegistryHelper_DownloadFile_Error(t *testing.T) {
 
 	expectedError := errors.New("download error")
 
-	mockLocalBase.On("Download", ctx, artifactInfo.ArtifactInfo, artifactInfo.Version, artifactInfo.Filename).
+	mockLocalBase.On("Download", ctx, artifactInfo.ArtifactInfo, artifactInfo.Version,
+		artifactInfo.Filename).
 		Return((*commons.ResponseHeaders)(nil), (*storage.FileReader)(nil), "", expectedError)
 
 	headers, fileReader, redirectURL, err := helper.DownloadFile(ctx, artifactInfo)
@@ -318,7 +333,8 @@ func TestLocalRegistryHelper_UploadPackageFile(t *testing.T) {
 	expectedSHA256 := "abc123"
 	var expectedError error
 
-	mockLocalRegistry.On("UploadPackageFileReader", ctx, artifactInfo, mock.AnythingOfType("*python.MockReadCloser"),
+	mockLocalRegistry.On("UploadPackageFileReader", ctx, artifactInfo,
+		mock.AnythingOfType("*python.MockReadCloser"),
 		"package-1.0.0.whl").
 		Return(expectedHeaders, expectedSHA256, expectedError)
 
@@ -357,7 +373,8 @@ func TestLocalRegistryHelper_UploadPackageFile_Error(t *testing.T) {
 
 	expectedError := errors.New("upload error")
 
-	mockLocalRegistry.On("UploadPackageFileReader", ctx, artifactInfo, mock.AnythingOfType("*python.MockReadCloser"),
+	mockLocalRegistry.On("UploadPackageFileReader", ctx, artifactInfo,
+		mock.AnythingOfType("*python.MockReadCloser"),
 		"package-1.0.0.whl").
 		Return((*commons.ResponseHeaders)(nil), "", expectedError)
 
@@ -367,4 +384,26 @@ func TestLocalRegistryHelper_UploadPackageFile_Error(t *testing.T) {
 	assert.Equal(t, "", sha256, "SHA256 should be empty")
 	assert.Equal(t, expectedError, err, "Error should match expected error")
 	mockLocalRegistry.AssertExpectations(t)
+}
+
+func TestMockLocalBase_MoveMultipleTempFilesAndCreateArtifact(t *testing.T) {
+	mockLocalBase := new(MockLocalBase)
+	ctx := context.Background()
+	info := &pkg.ArtifactInfo{}
+	pathPrefix := "test/path"
+	var meta metadata.Metadata
+	filesInfo := &[]types.FileInfo{}
+	version := "1.0.0"
+
+	// Use mock.AnythingOfType for the func argument
+	mockLocalBase.On(
+		"MoveMultipleTempFilesAndCreateArtifact",
+		ctx, info, pathPrefix, meta, filesInfo, mock.AnythingOfType("func(*pkg.ArtifactInfo,"+
+			" *types.FileInfo) string"), version,
+	).Return(nil)
+
+	err := mockLocalBase.MoveMultipleTempFilesAndCreateArtifact(ctx, info, pathPrefix, meta, filesInfo,
+		func(_ *pkg.ArtifactInfo, _ *types.FileInfo) string { return "temp/path" }, version)
+	assert.Nil(t, err, "Expected no error from mock implementation")
+	mockLocalBase.AssertExpectations(t)
 }

@@ -21,6 +21,7 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"path"
 	"strings"
 	"time"
 
@@ -88,6 +89,10 @@ type LocalBase interface {
 	DeletePackage(ctx context.Context, info pkg.PackageArtifactInfo) error
 
 	DeleteVersion(ctx context.Context, info pkg.PackageArtifactInfo) error
+
+	MoveMultipleTempFilesAndCreateArtifact(ctx context.Context, info *pkg.ArtifactInfo, pathPrefix string,
+		metadata metadata.Metadata, filesInfo *[]types.FileInfo,
+		getTempFilePath func(info *pkg.ArtifactInfo, fileInfo *types.FileInfo) string, version string) error
 }
 
 type localBase struct {
@@ -189,6 +194,127 @@ func (l *localBase) MoveTempFileAndCreateArtifact(
 	}
 	responseHeaders.Code = http.StatusCreated
 	return responseHeaders, fileInfo.Sha256, artifactID, false, nil
+}
+
+func (l *localBase) MoveMultipleTempFilesAndCreateArtifact(ctx context.Context, info *pkg.ArtifactInfo,
+	pathPrefix string, metadata metadata.Metadata, filesInfo *[]types.FileInfo,
+	getTempFilePath func(info *pkg.ArtifactInfo, fileInfo *types.FileInfo) string, version string) error {
+	session, _ := request.AuthSessionFrom(ctx)
+	for _, fileInfo := range *filesInfo {
+		filePath := path.Join(pathPrefix, fileInfo.Filename)
+		_, err := l.fileManager.HeadSHA256(ctx, fileInfo.Sha256, info.RegistryID, info.RootParentID)
+		if err == nil {
+			// It means file already exist, or it was moved in some iteration, no need to move it, just save nodes
+			err = l.fileManager.SaveNodes(ctx, fileInfo.Sha256, info.RegistryID, info.RootParentID, session.Principal.ID,
+				fileInfo.Sha256)
+			if err != nil {
+				log.Ctx(ctx).Info().Msgf("Failed to move filesInfo with sha %s to %s", fileInfo.Sha256, fileInfo.Filename)
+				return err
+			}
+			continue
+		}
+		// Otherwise, move the file to permanent location and save nodes
+		err = l.fileManager.MoveTempFile(ctx, filePath, info.RegistryID, info.RootParentID, info.RootIdentifier,
+			fileInfo, getTempFilePath(info, &fileInfo), session.Principal.ID)
+		if err != nil {
+			log.Ctx(ctx).Info().Msgf("Failed to move filesInfo with sha %s to %s", fileInfo.Sha256,
+				fileInfo.Filename)
+			return err
+		}
+	}
+
+	err := l.tx.WithTx(
+		ctx, func(ctx context.Context) error {
+			image := &types.Image{
+				Name:         info.Image,
+				RegistryID:   info.RegistryID,
+				ArtifactType: info.ArtifactType,
+				Enabled:      true,
+			}
+			// Create or update image
+			err := l.imageDao.CreateOrUpdate(ctx, image)
+			if err != nil {
+				log.Ctx(ctx).Error().Msgf("Failed to create image for artifact: [%s] with error: %v",
+					info.Image, err)
+				return fmt.Errorf("failed to create image for artifact: [%s], error: %w",
+					info.Image, err)
+			}
+
+			dbArtifact, err := l.artifactDao.GetByName(ctx, image.ID, version)
+
+			if err != nil && !strings.Contains(err.Error(), "resource not found") {
+				log.Ctx(ctx).Error().Msgf("Failed to fetch artifact : [%s] with error: %v", version, err)
+				return fmt.Errorf("failed to fetch artifact : [%s] with error: %w", info.Image, err)
+			}
+
+			// Update metadata
+			err2 := l.updateFilesMetadata(ctx, dbArtifact, metadata, info, filesInfo)
+			if err2 != nil {
+				log.Ctx(ctx).Error().Msgf("Failed to update metadata for artifact: [%s] with error: %v",
+					info.Image, err2)
+				return fmt.Errorf("failed to update metadata for artifact: [%s] with error: %w", info.Image, err2)
+			}
+
+			metadataJSON, err := json.Marshal(metadata)
+
+			if err != nil {
+				log.Ctx(ctx).Error().Msgf("Failed to parse metadata for artifact: [%s] with error: %v",
+					info.Image, err)
+				return fmt.Errorf("failed to parse metadata for artifact: [%s] with error: %w", info.Image, err)
+			}
+
+			// Create or update artifact
+			_, err = l.artifactDao.CreateOrUpdate(ctx, &types.Artifact{
+				ImageID:  image.ID,
+				Version:  version,
+				Metadata: metadataJSON,
+			})
+			if err != nil {
+				log.Ctx(ctx).Error().Msgf("Failed to create artifact : [%s] with error: %v", info.Image, err)
+				return fmt.Errorf("failed to create artifact : [%s] with error: %w", info.Image, err)
+			}
+			return nil
+		})
+	return err
+
+}
+
+func (l *localBase) updateFilesMetadata(
+	ctx context.Context,
+	dbArtifact *types.Artifact,
+	inputMetadata metadata.Metadata,
+	info *pkg.ArtifactInfo,
+	filesInfo *[]types.FileInfo,
+) error {
+	var files []metadata.File
+	if dbArtifact != nil {
+		err := json.Unmarshal(dbArtifact.Metadata, inputMetadata)
+		if err != nil {
+			log.Ctx(ctx).Error().Msgf("Failed to get metadata for artifact: [%s] with registry: [%s] and"+
+				" error: %v", info.Image, info.RegIdentifier, err)
+			return fmt.Errorf("failed to get metadata for artifact: [%s] with registry: [%s] and error: %w",
+				info.Image, info.RegIdentifier, err)
+		}
+	}
+	for _, fileInfo := range *filesInfo {
+		fileExist := false
+		files = inputMetadata.GetFiles()
+		for _, file := range files {
+			if file.Filename == fileInfo.Filename {
+				fileExist = true
+			}
+		}
+		if !fileExist {
+			files = append(files, metadata.File{
+				Size: fileInfo.Size, Filename: fileInfo.Filename,
+				CreatedAt: time.Now().UnixMilli(),
+				Sha256:    fileInfo.Sha256,
+			})
+			inputMetadata.SetFiles(files)
+			inputMetadata.UpdateSize(fileInfo.Size)
+		}
+	}
+	return nil
 }
 
 func (l *localBase) uploadInternal(

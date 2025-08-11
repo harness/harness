@@ -413,10 +413,8 @@ func GetTagURL(artifact string, version string, registryURL string) string {
 	return url
 }
 
-func GetPullCommand(
-	image string, tag string,
-	packageType string, registryURL string, setupDetailsAuthHeaderPrefix string,
-) string {
+func GetPullCommand(image string, tag string, packageType string, registryURL string,
+	setupDetailsAuthHeaderPrefix string, artifactType *a.ArtifactType) string {
 	switch packageType {
 	case string(a.PackageTypeDOCKER):
 		return GetDockerPullCommand(image, tag, registryURL)
@@ -437,6 +435,9 @@ func GetPullCommand(
 		return GetCargoDownloadCommand(image, tag)
 	case string(a.PackageTypeGO):
 		return GetGoDownloadCommand(image, tag)
+	case string(a.PackageTypeHUGGINGFACE):
+		return GetHuggingFaceArtifactFileDownloadCommand(registryURL, image, tag, "<FILENAME>",
+			setupDetailsAuthHeaderPrefix, artifactType)
 	default:
 		return ""
 	}
@@ -584,6 +585,31 @@ func GetGenericArtifactFileDownloadCommand(
 	// Replace the placeholders with the actual values
 	replacements := map[string]string{
 		"<HOSTNAME>":           regURL,
+		"<ARTIFACT>":           artifact,
+		"<VERSION>":            version,
+		"<FILENAME>":           filename,
+		"<AUTH_HEADER_PREFIX>": setupDetailsAuthHeaderPrefix,
+	}
+
+	for placeholder, value := range replacements {
+		downloadCommand = strings.ReplaceAll(downloadCommand, placeholder, value)
+	}
+
+	return downloadCommand
+}
+
+func GetHuggingFaceArtifactFileDownloadCommand(
+	regURL, artifact, version, filename string,
+	setupDetailsAuthHeaderPrefix string, artifactType *a.ArtifactType,
+) string {
+	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT_TYPE>/<ARTIFACT>/resolve/<VERSION>/<FILENAME>'" +
+		" --header '<AUTH_HEADER_PREFIX> <API_KEY>'" +
+		" -J -O"
+
+	// Replace the placeholders with the actual values
+	replacements := map[string]string{
+		"<HOSTNAME>":           regURL,
+		"<ARTIFACT_TYPE>":      string(*artifactType),
 		"<ARTIFACT>":           artifact,
 		"<VERSION>":            version,
 		"<FILENAME>":           filename,

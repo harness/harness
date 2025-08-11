@@ -384,6 +384,22 @@ func (f *FileManager) HeadSHA256(
 	return node.NodePath, nil
 }
 
+func (f *FileManager) HeadBlob(
+	ctx context.Context,
+	sha256 string,
+	rootParentID int64,
+) (string, error) {
+	blob, err := f.genericBlobDao.FindBySha256AndRootParentID(ctx, sha256, rootParentID)
+
+	if err != nil {
+		log.Ctx(ctx).Error().Msgf("failed to get the blob for sha256: %s, with root parent id: %d, with error %v",
+			sha256, rootParentID, err)
+		return "", fmt.Errorf("failed to get the blob for sha256: %s, with root parent id: %d, with error %w", sha256,
+			rootParentID, err)
+	}
+	return blob.ID, nil
+}
+
 func (f *FileManager) GetFileMetadata(
 	ctx context.Context,
 	filePath string,

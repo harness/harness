@@ -65,10 +65,15 @@ func GetGoFilePath(imageName string, version string) string {
 	return filePathPrefix
 }
 
-func GetFilePath(
-	packageType artifact.PackageType,
-	imageName string, version string,
-) (string, error) {
+func GetHuggingFaceFilePath(imageName string, artifactType *artifact.ArtifactType, version string) string {
+	filePathPrefix := "/"
+	if artifactType != nil {
+		filePathPrefix += string(*artifactType) + "/"
+	}
+	return filePathPrefix + imageName + "/" + version
+}
+
+func GetFilePath(packageType artifact.PackageType, imageName string, version string) (string, error) {
 	switch packageType {
 	case artifact.PackageTypeDOCKER:
 		return "", fmt.Errorf("docker package type not supported")
@@ -90,9 +95,18 @@ func GetFilePath(
 		return GetCargoFilePath(imageName, version), nil
 	case artifact.PackageTypeGO:
 		return GetGoFilePath(imageName, version), nil
-	case artifact.PackageTypeHUGGINGFACE:
-		return GetGenericFilePath(imageName, version), nil
 	default:
 		return "", fmt.Errorf("unsupported package type: %s", packageType)
 	}
+}
+
+func GetFilePathWithArtifactType(packageType artifact.PackageType, imageName string, version string,
+	artifactType *artifact.ArtifactType) (string, error) {
+	switch packageType {
+	case artifact.PackageTypeHUGGINGFACE:
+		return GetHuggingFaceFilePath(imageName, artifactType, version), nil
+	default:
+		return "", fmt.Errorf("unsupported package type: %s", packageType)
+	}
+
 }
