@@ -15,9 +15,6 @@
 package npm
 
 import (
-	"bytes"
-	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -27,7 +24,6 @@ import (
 
 	npm3 "github.com/harness/gitness/registry/app/api/controller/pkg/npm"
 	"github.com/harness/gitness/registry/app/api/handler/packages"
-	npm2 "github.com/harness/gitness/registry/app/metadata/npm"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/types/npm"
@@ -124,54 +120,13 @@ func (h *handler) GetPackageArtifactInfo(r *http.Request) (pkg.PackageArtifactIn
 		return npmInfo, err
 	}
 
-	return GetNPMMetadata(r, info)
-}
-
-func GetNPMMetadata(r *http.Request, info pkg.ArtifactInfo) (pkg.PackageArtifactInfo, error) {
-	var md npm2.PackageUpload
-
-	// Read body into a buffer
-	var buf bytes.Buffer
-	tee := io.TeeReader(r.Body, &buf)
-	if err := json.NewDecoder(tee).Decode(&md); err != nil {
-		return npm.ArtifactInfo{}, err
-	}
-
-	r.Body = io.NopCloser(&buf)
-
-	for _, meta := range md.Versions {
-		a := npm.ArtifactInfo{
-			ArtifactInfo:        info,
-			Metadata:            md.PackageMetadata,
-			Version:             meta.Version,
-			DistTags:            make([]string, 0),
-			ParentRegIdentifier: info.RegIdentifier,
-		}
-		for tag := range md.DistTags {
-			a.DistTags = append(a.DistTags, tag)
-		}
-		a.Filename = strings.ToLower(fmt.Sprintf("%s-%s.tgz", md.Name, a.Version))
-		return a, nil
-	}
-	return npm.ArtifactInfo{}, ErrInvalidPackageVersion
+	return npm.ArtifactInfo{
+		ArtifactInfo: info,
+	}, nil
 }
 
 func GetNPMFile(r *http.Request) (io.ReadCloser, error) {
-	var md npm2.PackageUpload
-	if err := json.NewDecoder(r.Body).Decode(&md); err != nil {
-		return nil, err
-	}
-	attachment := func() *npm2.PackageAttachment {
-		for _, a := range md.Attachments {
-			return a
-		}
-		return nil
-	}()
-	if attachment == nil || len(attachment.Data) == 0 {
-		return nil, ErrInvalidAttachment
-	}
-	return io.NopCloser(base64.NewDecoder(base64.StdEncoding,
-		strings.NewReader(attachment.Data))), nil
+	return r.Body, nil
 }
 
 func isValidNameAndVersion(image, version string) bool {

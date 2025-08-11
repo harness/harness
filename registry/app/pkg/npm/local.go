@@ -15,11 +15,15 @@
 package npm
 
 import (
+	"bufio"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
+	"path"
 	"strings"
+	"time"
 
 	"github.com/harness/gitness/app/api/usererror"
 	urlprovider "github.com/harness/gitness/app/url"
@@ -113,19 +117,35 @@ func (c *localRegistry) UploadPackageFile(
 	info npm.ArtifactInfo,
 	file io.ReadCloser,
 ) (headers *commons.ResponseHeaders, sha256 string, err error) {
-	path := pkg.JoinWithSeparator("/", info.Image, info.Version, info.Filename)
-	response, sha, err := c.localBase.Upload(ctx, info.ArtifactInfo, info.Filename, info.Version, path, file,
+	var packageMetadata npm2.PackageMetadata
+	fileInfo, tempFileName, err := c.parseAndUploadNPMPackage(ctx, info, file, &packageMetadata)
+	if err != nil {
+		log.Ctx(ctx).Error().Msgf("failed to parse npm package: %v", err)
+		return nil, "", err
+	}
+	log.Info().Str("packageName", info.Image).Msg("Successfully parsed and uploaded NPM package to tmp location")
+	info.Metadata = packageMetadata
+	info.Image = packageMetadata.Name
+	for tag := range packageMetadata.DistTags {
+		info.DistTags = append(info.DistTags, tag)
+	}
+	for _, meta := range packageMetadata.Versions {
+		info.Version = meta.Version
+	}
+	info.Filename = info.Image + "-" + info.Version + ".tgz"
+	fileInfo.Filename = info.Filename
+	filePath := path.Join(info.Image, info.Version, fileInfo.Filename)
+
+	_, sha256, _, _, err = c.localBase.MoveTempFileAndCreateArtifact(ctx, info.ArtifactInfo,
+		tempFileName, info.Version, filePath,
 		&npm2.NpmMetadata{
 			PackageMetadata: info.Metadata,
-		})
-	if !commons.IsEmpty(err) {
-		return nil, "", err
-	}
-	_, err = c.AddTag(ctx, info)
+		}, fileInfo)
 	if err != nil {
+		log.Ctx(ctx).Error().Msgf("failed to move npm package: %v", err)
 		return nil, "", err
 	}
-	return response, sha, nil
+	return nil, sha256, nil
 }
 
 func (c *localRegistry) GetPackageMetadata(ctx context.Context, info npm.ArtifactInfo) (npm2.PackageMetadata, error) {
@@ -341,4 +361,264 @@ func (c *localRegistry) DeletePackage(ctx context.Context, info npm.ArtifactInfo
 
 func (c *localRegistry) DeleteVersion(ctx context.Context, info npm.ArtifactInfo) error {
 	return c.localBase.DeleteVersion(ctx, info)
+}
+
+func (c *localRegistry) parseAndUploadNPMPackage(ctx context.Context, info npm.ArtifactInfo,
+	reader io.Reader, packageMetadata *npm2.PackageMetadata) (types.FileInfo, string, error) {
+	decoder := json.NewDecoder(reader)
+
+	var fileInfo types.FileInfo
+	var tmpFileName string
+
+	// Parse top-level fields
+	for {
+		token, err := decoder.Token()
+
+		if err != nil {
+			// Check for both io.EOF and any error containing "EOF" in the message
+			if err == io.EOF || strings.Contains(err.Error(), "EOF") {
+				break
+			}
+			return types.FileInfo{}, "", fmt.Errorf("failed to parse JSON: %w", err)
+		}
+
+		//nolint:nestif
+		if token, ok := token.(string); ok {
+			switch token {
+			case "_id":
+				if err := decoder.Decode(&packageMetadata.ID); err != nil {
+					return types.FileInfo{}, "", fmt.Errorf("failed to parse _id: %w", err)
+				}
+			case "name":
+				if err := decoder.Decode(&packageMetadata.Name); err != nil {
+					return types.FileInfo{}, "", fmt.Errorf("failed to parse name: %w", err)
+				}
+			case "description":
+				if err := decoder.Decode(&packageMetadata.Description); err != nil {
+					return types.FileInfo{}, "", fmt.Errorf("failed to parse description: %w", err)
+				}
+			case "dist-tags":
+				packageMetadata.DistTags = make(map[string]string)
+				if err := decoder.Decode(&packageMetadata.DistTags); err != nil {
+					return types.FileInfo{}, "", fmt.Errorf("failed to parse dist-tags: %w", err)
+				}
+			case "versions":
+				packageMetadata.Versions = make(map[string]*npm2.PackageMetadataVersion)
+				if err := decoder.Decode(&packageMetadata.Versions); err != nil {
+					return types.FileInfo{}, "", fmt.Errorf("failed to parse versions: %w", err)
+				}
+			case "readme":
+				if err := decoder.Decode(&packageMetadata.Readme); err != nil {
+					return types.FileInfo{}, "", fmt.Errorf("failed to parse readme: %w", err)
+				}
+			case "maintainers":
+				if err := decoder.Decode(&packageMetadata.Maintainers); err != nil {
+					return types.FileInfo{}, "", fmt.Errorf("failed to parse maintainers: %w", err)
+				}
+			case "time":
+				packageMetadata.Time = make(map[string]time.Time)
+				if err := decoder.Decode(&packageMetadata.Time); err != nil {
+					return types.FileInfo{}, "", fmt.Errorf("failed to parse time: %w", err)
+				}
+			case "homepage":
+				if err := decoder.Decode(&packageMetadata.Homepage); err != nil {
+					return types.FileInfo{}, "", fmt.Errorf("failed to parse homepage: %w", err)
+				}
+			case "keywords":
+				if err := decoder.Decode(&packageMetadata.Keywords); err != nil {
+					return types.FileInfo{}, "", fmt.Errorf("failed to parse keywords: %w", err)
+				}
+			case "repository":
+				if err := decoder.Decode(&packageMetadata.Repository); err != nil {
+					return types.FileInfo{}, "", fmt.Errorf("failed to parse repository: %w", err)
+				}
+			case "author":
+				if err := decoder.Decode(&packageMetadata.Author); err != nil {
+					return types.FileInfo{}, "", fmt.Errorf("failed to parse author: %w", err)
+				}
+			case "readmeFilename":
+				if err := decoder.Decode(&packageMetadata.ReadmeFilename); err != nil {
+					return types.FileInfo{}, "", fmt.Errorf("failed to parse readmeFilename: %w", err)
+				}
+			case "users":
+				if err := decoder.Decode(&packageMetadata.Users); err != nil {
+					return types.FileInfo{}, "", fmt.Errorf("failed to parse users: %w", err)
+				}
+			case "license":
+				if err := decoder.Decode(&packageMetadata.License); err != nil {
+					return types.FileInfo{}, "", fmt.Errorf("failed to parse license: %w", err)
+				}
+			case "_attachments":
+				// Parse the attachments map
+				t, err := decoder.Token()
+				if err != nil {
+					return types.FileInfo{}, "", fmt.Errorf("failed to parse _attachments: %w", err)
+				}
+				if delim, ok := t.(json.Delim); !ok || delim != '{' {
+					return types.FileInfo{}, "", fmt.Errorf("expected '{' at start of _attachments")
+				}
+
+				// Process each attachment (e.g., "test-large-package-2.0.0.tgz")
+				for {
+					//nolint:govet
+					t, err := decoder.Token()
+					if err != nil {
+						// Check for both io.EOF and any error containing "EOF" in the message
+						if err == io.EOF || strings.Contains(err.Error(), "EOF") {
+							break
+						}
+						return types.FileInfo{}, "", fmt.Errorf("failed to parse JSON: %w", err)
+					}
+					if delim, ok := t.(json.Delim); ok && delim == '}' {
+						break // End of _attachments object
+					}
+					attachmentKey, ok := t.(string)
+					if !ok {
+						return types.FileInfo{}, "", fmt.Errorf("expected string key in _attachments")
+					}
+
+					// Expect the start of the attachment object
+					t, err = decoder.Token()
+					if err != nil {
+						return types.FileInfo{}, "", fmt.Errorf("failed to parse attachment %s: %w", attachmentKey, err)
+					}
+					if delim, ok := t.(json.Delim); !ok || delim != '{' {
+						return types.FileInfo{}, "", fmt.Errorf("expected '{' for attachment %s", attachmentKey)
+					}
+
+					// Process fields within the attachment object (e.g., content_type, data, length)
+					for {
+						//nolint:govet
+						t, err := decoder.Token()
+						if err != nil {
+							// Check for both io.EOF and any error containing "EOF" in the message
+							if err == io.EOF || strings.Contains(err.Error(), "EOF") {
+								break
+							}
+							return types.FileInfo{}, "", fmt.Errorf("failed to parse attachment %s fields: %w", attachmentKey, err)
+						}
+						if delim, ok := t.(json.Delim); ok && delim == '}' {
+							break // End of attachment object
+						}
+						field, ok := t.(string)
+						if !ok {
+							break
+						}
+
+						switch field {
+						case "data":
+							combinedReader := io.MultiReader(decoder.Buffered(), reader)
+							bufferedReader := bufio.NewReader(combinedReader)
+
+							// Expecting `:` character first
+							startByte, err := bufferedReader.ReadByte()
+							if err != nil {
+								return types.FileInfo{}, "",
+									fmt.Errorf("failed to upload"+
+										" attachment %s: Error while reading : character: %w", attachmentKey, err)
+							}
+							if startByte != ':' {
+								return types.FileInfo{}, "",
+									fmt.Errorf("failed to upload attachment %s: Expected : character, got %c", attachmentKey, startByte)
+							}
+
+							// Now expecting `"`, marking start of JSON string
+							startByte, err = bufferedReader.ReadByte()
+							if err != nil {
+								return types.FileInfo{}, "", fmt.Errorf("failed to upload"+
+									" attachment %s: Error while reading \" character: %w", attachmentKey, err)
+							}
+							if startByte != '"' {
+								return types.FileInfo{}, "", fmt.Errorf("failed to upload"+
+									" attachment %s: Expected \" character, got %c", attachmentKey, startByte)
+							}
+
+							// Now set up a reader that stops at the closing `"` of the string
+							b64StreamReader := NewJSONStringStreamReader(bufferedReader)
+
+							// Wrap base64 decoder with error handling
+							base64Reader := io.NopCloser(base64.NewDecoder(base64.StdEncoding, b64StreamReader))
+
+							log.Info().Str("packageName", info.Image).Msg("Uploading NPM package to tmp location")
+							fileInfo, tmpFileName, err =
+								c.fileManager.UploadTempFile(ctx, info.RootIdentifier, nil, "tmp", base64Reader)
+							if err != nil {
+								// Provide more detailed error message to help with debugging
+								if strings.Contains(err.Error(), "unexpected EOF") {
+									return types.FileInfo{}, "",
+										fmt.Errorf("failed to upload attachment %s:"+
+											" base64 data may be corrupted or missing closing quote: %w", attachmentKey, err)
+								}
+								return types.FileInfo{}, "", fmt.Errorf("failed to upload attachment %s: %w", attachmentKey, err)
+							}
+							log.Info().Str("packageName",
+								info.Image).Msg("Successfully uploaded NPM package to tmp location")
+						default:
+							continue
+						}
+					}
+				}
+			default:
+				var dummy interface{}
+				if err := decoder.Decode(&dummy); err != nil {
+					return types.FileInfo{}, "", fmt.Errorf("failed to parse field %s: %w", token, err)
+				}
+			}
+		}
+	}
+
+	return fileInfo, tmpFileName, nil
+}
+
+// NewJSONStringStreamReader returns an io.Reader that stops at the closing quote of a JSON string.
+// It handles escaped characters, including escaped quotes, and passes raw base64 content.
+func NewJSONStringStreamReader(r *bufio.Reader) io.Reader {
+	pr, pw := io.Pipe()
+
+	go func() {
+		defer pw.Close()
+
+		var (
+			escaped bool
+		)
+
+		for {
+			b, err := r.ReadByte()
+			if err != nil {
+				if err == io.EOF {
+					// Handle EOF gracefully - we might have reached the end of the JSON string
+					// without finding a closing quote, which is an error in JSON formatting
+					pw.CloseWithError(fmt.Errorf("unexpected EOF while reading base64 string: missing closing quote"))
+				} else {
+					pw.CloseWithError(fmt.Errorf("error while reading base64 string: %w", err))
+				}
+				return
+			}
+
+			if escaped {
+				// We’re inside an escape sequence — pass this byte through
+				// JSON escape sequences don’t affect base64, but we handle it for correctness
+				//nolint: errcheck
+				pw.Write([]byte{b})
+				escaped = false
+				continue
+			}
+
+			if b == '\\' {
+				escaped = true
+				continue
+			}
+
+			if b == '"' {
+				// End of the JSON string (unescaped quote)
+				return
+			}
+
+			// Normal base64 character
+			//nolint: errcheck
+			pw.Write([]byte{b})
+		}
+	}()
+
+	return pr
 }
