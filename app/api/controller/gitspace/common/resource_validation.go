@@ -40,6 +40,11 @@ func FilterResourcesByCompatibility(
 
 	// Now filter based on compatibility
 	for _, resource := range filteredResources {
+		// Skip the current resource itself
+		if resource.UID == referenceResource.UID {
+			continue
+		}
+
 		_, err := IsResourceSpecChangeAllowed(referenceResource, resource)
 		if err != nil {
 			log.Ctx(ctx).Debug().
