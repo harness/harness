@@ -42,7 +42,7 @@ func (c *Controller) FileViewDelete(
 	}
 
 	if filePath == "" {
-		return usererror.BadRequest("file path can't be empty")
+		return usererror.BadRequest("File path can't be empty")
 	}
 
 	err = c.fileViewStore.DeleteByFileForPrincipal(ctx, pr.ID, session.Principal.ID, filePath)

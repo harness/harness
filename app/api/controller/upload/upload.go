@@ -44,7 +44,7 @@ func (c *Controller) Upload(ctx context.Context,
 	}
 
 	if file == nil {
-		return nil, usererror.BadRequest("no file provided")
+		return nil, usererror.BadRequest("No file provided")
 	}
 
 	bufReader := bufio.NewReader(file)

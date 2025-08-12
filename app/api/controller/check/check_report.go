@@ -82,7 +82,7 @@ func (in *ReportInput) Sanitize(
 	}
 
 	if in.Ended != 0 && in.Ended < in.Started {
-		return usererror.BadRequest("started time reported after ended time")
+		return usererror.BadRequest("Started time reported after ended time")
 	}
 
 	return nil
@@ -137,7 +137,7 @@ func (c *Controller) Report(
 	}
 
 	if !git.ValidateCommitSHA(commitSHA) {
-		return nil, usererror.BadRequest("invalid commit SHA provided")
+		return nil, usererror.BadRequest("Invalid commit SHA provided")
 	}
 
 	_, err = c.git.GetCommit(ctx, &git.GetCommitParams{

@@ -237,7 +237,7 @@ func GetGitServiceTypeFromQuery(r *http.Request) (enum.GitServiceType, error) {
 		return "", fmt.Errorf("failed to get param from query: %w", err)
 	}
 	if !strings.HasPrefix(val, gitPrefix) {
-		return "", usererror.BadRequestf("not a git service type: %q", val)
+		return "", usererror.BadRequestf("Not a git service type: %q", val)
 	}
 
 	return enum.ParseGitServiceType(val[len(gitPrefix):])

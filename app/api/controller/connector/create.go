@@ -99,7 +99,7 @@ func (in *CreateInput) validate() error {
 
 	// check that the connector type is valid
 	if _, ok := in.Type.Sanitize(); !ok {
-		return usererror.BadRequest("invalid connector type")
+		return usererror.BadRequest("Invalid connector type")
 	}
 
 	// if the connector type is valid, validate the connector config

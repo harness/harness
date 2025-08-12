@@ -57,7 +57,7 @@ func (in *UpdateInput) sanitize() error {
 	if in.State != nil {
 		state, ok := in.State.Sanitize()
 		if !ok {
-			return usererror.BadRequest("rule state is invalid")
+			return usererror.BadRequest("Rule state is invalid")
 		}
 
 		in.State = &state
@@ -65,18 +65,18 @@ func (in *UpdateInput) sanitize() error {
 
 	if in.Pattern != nil {
 		if err := in.Pattern.Validate(); err != nil {
-			return usererror.BadRequestf("invalid pattern: %s", err)
+			return usererror.BadRequestf("Invalid pattern: %s", err)
 		}
 	}
 
 	if in.RepoTarget != nil {
 		if err := in.RepoTarget.Validate(); err != nil {
-			return usererror.BadRequestf("invalid repo target: %s", err)
+			return usererror.BadRequestf("Invalid repo target: %s", err)
 		}
 	}
 
 	if in.Definition != nil && len(*in.Definition) == 0 {
-		return usererror.BadRequest("rule definition missing")
+		return usererror.BadRequest("Rule definition missing")
 	}
 
 	return nil
@@ -136,7 +136,7 @@ func (s *Service) Update(ctx context.Context,
 	if in.Definition != nil {
 		rule.Definition, err = s.protectionManager.SanitizeJSON(rule.Type, *in.Definition)
 		if err != nil {
-			return nil, usererror.BadRequestf("invalid rule definition: %s", err.Error())
+			return nil, usererror.BadRequestf("Invalid rule definition: %s", err.Error())
 		}
 	}
 

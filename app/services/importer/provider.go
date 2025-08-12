@@ -149,7 +149,7 @@ func basicAuthTransport(username, password string) http.RoundTripper {
 // It validates that auth credentials are provided if authReq is true.
 func getScmClientWithTransport(provider Provider, slug string, authReq bool) (*scm.Client, error) { //nolint:gocognit
 	if authReq && (provider.Username == "" || provider.Password == "") {
-		return nil, usererror.BadRequest("scm provider authentication credentials missing")
+		return nil, usererror.BadRequest("SCM provider authentication credentials missing")
 	}
 	var c *scm.Client
 	var err error
@@ -255,19 +255,19 @@ func LoadRepositoryFromProvider(
 	repoSlug string,
 ) (RepositoryInfo, Provider, error) {
 	if repoSlug == "" {
-		return RepositoryInfo{}, provider, usererror.BadRequest("provider repository identifier is missing")
+		return RepositoryInfo{}, provider, usererror.BadRequest("Provider repository identifier is missing")
 	}
 
 	scmClient, err := getScmClientWithTransport(provider, repoSlug, false)
 	if err != nil {
-		return RepositoryInfo{}, provider, usererror.BadRequestf("could not create client: %s", err)
+		return RepositoryInfo{}, provider, usererror.BadRequestf("Could not create client: %s", err)
 	}
 
 	// Augment user information if it's not provided for certain vendors.
 	if provider.Password != "" && provider.Username == "" {
 		user, _, err := scmClient.Users.Find(ctx)
 		if err != nil {
-			return RepositoryInfo{}, provider, usererror.BadRequestf("could not find user: %s", err)
+			return RepositoryInfo{}, provider, usererror.BadRequestf("Could not find user: %s", err)
 		}
 		provider.Username = user.Login
 	}
@@ -275,7 +275,7 @@ func LoadRepositoryFromProvider(
 	if provider.Type == ProviderTypeAzure {
 		repoSlug, err = extractRepoFromSlug(repoSlug)
 		if err != nil {
-			return RepositoryInfo{}, provider, usererror.BadRequestf("invalid slug format: %s", err)
+			return RepositoryInfo{}, provider, usererror.BadRequestf("Invalid slug format: %s", err)
 		}
 	}
 	scmRepo, scmResp, err := scmClient.Repositories.Find(ctx, repoSlug)
@@ -299,13 +299,13 @@ func LoadRepositoriesFromProviderSpace(
 	spaceSlug string,
 ) ([]RepositoryInfo, Provider, error) {
 	if spaceSlug == "" {
-		return nil, provider, usererror.BadRequest("provider space identifier is missing")
+		return nil, provider, usererror.BadRequest("Provider space identifier is missing")
 	}
 
 	var err error
 	scmClient, err := getScmClientWithTransport(provider, spaceSlug, false)
 	if err != nil {
-		return nil, provider, usererror.BadRequestf("could not create client: %s", err)
+		return nil, provider, usererror.BadRequestf("Could not create client: %s", err)
 	}
 
 	opts := scm.ListOptions{
@@ -316,7 +316,7 @@ func LoadRepositoriesFromProviderSpace(
 	if provider.Password != "" && provider.Username == "" {
 		user, _, err := scmClient.Users.Find(ctx)
 		if err != nil {
-			return nil, provider, usererror.BadRequestf("could not find user: %s", err)
+			return nil, provider, usererror.BadRequestf("Could not find user: %s", err)
 		}
 		provider.Username = user.Login
 	}
@@ -413,26 +413,26 @@ func convertSCMError(provider Provider, slug string, r *scm.Response, err error)
 
 	if r == nil {
 		if provider.Host != "" {
-			return usererror.BadRequestf("failed to make HTTP request to %s (host=%s): %s",
+			return usererror.BadRequestf("Failed to make HTTP request to %s (host=%s): %s",
 				provider.Type, provider.Host, err)
 		}
 
-		return usererror.BadRequestf("failed to make HTTP request to %s: %s",
+		return usererror.BadRequestf("Failed to make HTTP request to %s: %s",
 			provider.Type, err)
 	}
 
 	switch r.Status {
 	case http.StatusNotFound:
-		return usererror.BadRequestf("couldn't find %s at %s: %s",
+		return usererror.BadRequestf("Couldn't find %s at %s: %s",
 			slug, provider.Type, err.Error())
 	case http.StatusUnauthorized:
-		return usererror.BadRequestf("bad credentials provided for %s at %s: %s",
+		return usererror.BadRequestf("Bad credentials provided for %s at %s: %s",
 			slug, provider.Type, err.Error())
 	case http.StatusForbidden:
-		return usererror.BadRequestf("access denied to %s at %s: %s",
+		return usererror.BadRequestf("Access denied to %s at %s: %s",
 			slug, provider.Type, err.Error())
 	default:
-		return usererror.BadRequestf("failed to fetch %s from %s (HTTP status %d): %s",
+		return usererror.BadRequestf("Failed to fetch %s from %s (HTTP status %d): %s",
 			slug, provider.Type, r.Status, err.Error())
 	}
 }

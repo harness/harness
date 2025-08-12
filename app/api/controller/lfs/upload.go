@@ -50,7 +50,7 @@ func (c *Controller) Upload(ctx context.Context,
 	}
 
 	if file == nil {
-		return nil, usererror.BadRequest("no file or content provided")
+		return nil, usererror.BadRequest("No file or content provided")
 	}
 
 	_, err = c.lfsStore.Find(ctx, repoCore.ID, pointer.OId)

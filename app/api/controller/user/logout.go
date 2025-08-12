@@ -47,7 +47,7 @@ func (c *Controller) Logout(ctx context.Context, session *auth.Session) error {
 	}
 
 	if tokenType != enum.TokenTypeSession {
-		return usererror.BadRequestf("unsupported logout token type %v", tokenType)
+		return usererror.BadRequestf("Unsupported logout token type %v", tokenType)
 	}
 
 	err := c.tokenStore.Delete(ctx, tokenID)

@@ -59,17 +59,17 @@ func (in *CreateInput) sanitize() error {
 	}
 
 	if err := in.Pattern.Validate(); err != nil {
-		return usererror.BadRequestf("invalid pattern: %s", err)
+		return usererror.BadRequestf("Invalid pattern: %s", err)
 	}
 
 	if err := in.RepoTarget.Validate(); err != nil {
-		return usererror.BadRequestf("invalid repo target: %s", err)
+		return usererror.BadRequestf("Invalid repo target: %s", err)
 	}
 
 	var ok bool
 	in.State, ok = in.State.Sanitize()
 	if !ok {
-		return usererror.BadRequest("rule state is invalid")
+		return usererror.BadRequest("Rule state is invalid")
 	}
 
 	if in.Type == "" {
@@ -77,7 +77,7 @@ func (in *CreateInput) sanitize() error {
 	}
 
 	if len(in.Definition) == 0 {
-		return usererror.BadRequest("rule definition missing")
+		return usererror.BadRequest("Rule definition missing")
 	}
 
 	return nil
@@ -101,7 +101,7 @@ func (s *Service) Create(ctx context.Context,
 		in.Type, in.Definition,
 	)
 	if err != nil {
-		return nil, usererror.BadRequestf("invalid rule definition: %s", err.Error())
+		return nil, usererror.BadRequestf("Invalid rule definition: %s", err.Error())
 	}
 
 	scope := ruleScopeRepo

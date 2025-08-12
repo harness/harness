@@ -75,13 +75,13 @@ func (c *localRegistry) ValidateYaml(_ context.Context, _ huggingfacetype.Artifa
 	req := &huggingfacetype.ValidateYamlRequest{}
 
 	if err = json.NewDecoder(body).Decode(&req); err != nil {
-		err = usererror.BadRequest("invalid request json body")
+		err = usererror.BadRequest("Invalid request json body")
 		headers.Code = http.StatusBadRequest
 		return headers, nil, err
 	}
 
 	if req.RepoType == nil || !allowedTypes[*req.RepoType] {
-		err = usererror.BadRequest("unsupported repoType")
+		err = usererror.BadRequest("Unsupported repoType")
 		headers.Code = http.StatusBadRequest
 		return headers, nil, err
 	}
@@ -140,12 +140,12 @@ func (c *localRegistry) PreUpload(_ context.Context, _ huggingfacetype.ArtifactI
 	}
 	req := &huggingfacetype.PreUploadRequest{}
 	if err = json.NewDecoder(body).Decode(&req); err != nil {
-		err = usererror.BadRequest("invalid request json body")
+		err = usererror.BadRequest("Invalid request json body")
 		headers.Code = http.StatusBadRequest
 		return headers, nil, err
 	}
 	if req.Files == nil || len(*req.Files) == 0 {
-		err = usererror.BadRequest("invalid request json body")
+		err = usererror.BadRequest("Invalid request json body")
 		headers.Code = http.StatusBadRequest
 		return
 	}
@@ -199,7 +199,7 @@ func (c *localRegistry) RevisionInfo(ctx context.Context, info huggingfacetype.A
 	metadata.SHA = info.Revision
 
 	if metadata.ID == "" {
-		err = usererror.BadRequest("repo id not found")
+		err = usererror.BadRequest("Repo ID not found")
 		headers.Code = http.StatusNotFound
 		return headers, nil, err
 	}
@@ -224,7 +224,7 @@ func (c *localRegistry) LfsInfo(ctx context.Context, info huggingfacetype.Artifa
 
 	req := &huggingfacetype.LfsInfoRequest{}
 	if err = json.NewDecoder(body).Decode(req); err != nil {
-		err = usererror.BadRequest("invalid LFS info body")
+		err = usererror.BadRequest("Invalid LFS info body")
 		headers.Code = http.StatusBadRequest
 		return headers, nil, err
 	}

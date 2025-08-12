@@ -54,7 +54,7 @@ func (c *Controller) PathsDetails(ctx context.Context,
 	const maxInputPaths = 50
 	if len(input.Paths) > maxInputPaths {
 		return PathsDetailsOutput{},
-			usererror.BadRequestf("maximum number of elements in the Paths array is %d", maxInputPaths)
+			usererror.BadRequestf("Maximum number of elements in the Paths array is %d", maxInputPaths)
 	}
 
 	// set gitRef to default branch in case an empty reference was provided

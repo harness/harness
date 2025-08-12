@@ -55,7 +55,7 @@ func (c *Controller) Restore(
 	}
 
 	if repo.Deleted == nil {
-		return nil, usererror.BadRequest("cannot restore a repo that hasn't been deleted")
+		return nil, usererror.BadRequest("Cannot restore a repo that hasn't been deleted")
 	}
 
 	parentID := repo.ParentID

@@ -150,7 +150,7 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 
 	mergeMethod, ok := params.Method.Sanitize()
 	if !ok && params.Method != "" {
-		return MergeOutput{}, errors.InvalidArgument("Unsupported merge method: %s", params.Method)
+		return MergeOutput{}, errors.InvalidArgument("Unsupported merge method: %q", params.Method)
 	}
 
 	var mergeFunc merge.Func
@@ -166,7 +166,7 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 		mergeFunc = merge.FastForward
 	default:
 		// should not happen, the call to Sanitize above should handle this case.
-		panic("unsupported merge method")
+		panic(fmt.Sprintf("unsupported merge method: %q", mergeMethod))
 	}
 
 	// find the commit SHAs

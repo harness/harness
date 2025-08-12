@@ -62,7 +62,7 @@ func (c *Controller) SoftDelete(
 	}
 
 	if repo.Deleted != nil {
-		return nil, usererror.BadRequest("repository has been already deleted")
+		return nil, usererror.BadRequest("Repository has already been deleted")
 	}
 
 	isPublic, err := c.publicAccess.Get(ctx, enum.PublicResourceTypeRepo, repo.Path)

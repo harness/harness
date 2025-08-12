@@ -118,7 +118,7 @@ func (c *Controller) LFSTransfer(ctx context.Context,
 		}
 
 	default:
-		return nil, usererror.BadRequestf("git-lfs operation %q is not supported", in.Operation)
+		return nil, usererror.BadRequestf("Git LFS operation %q is not supported", in.Operation)
 	}
 
 	return &TransferOutput{

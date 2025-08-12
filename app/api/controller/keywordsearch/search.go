@@ -33,7 +33,7 @@ func (c *Controller) Search(
 	in types.SearchInput,
 ) (types.SearchResult, error) {
 	if in.Query == "" {
-		return types.SearchResult{}, usererror.BadRequest("query cannot be empty.")
+		return types.SearchResult{}, usererror.BadRequest("Query cannot be empty.")
 	}
 
 	if len(in.RepoPaths) == 0 && len(in.SpacePaths) == 0 {
@@ -56,7 +56,7 @@ func (c *Controller) Search(
 	}
 
 	if len(repoIDToPathMap) == 0 {
-		return types.SearchResult{}, usererror.NotFound("no repositories found")
+		return types.SearchResult{}, usererror.NotFound("No repositories found")
 	}
 
 	repoIDs := make([]int64, 0, len(repoIDToPathMap))

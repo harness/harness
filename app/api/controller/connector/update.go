@@ -74,7 +74,7 @@ func (c *Controller) Update(
 		// We can revisit this once we start adding more connectors.
 		if in.ConnectorConfig != nil {
 			if err := in.ConnectorConfig.Validate(connector.Type); err != nil {
-				return usererror.BadRequestf("failed to validate connector config: %s", err.Error())
+				return usererror.BadRequestf("Failed to validate connector config: %s", err.Error())
 			}
 			original.ConnectorConfig = *in.ConnectorConfig
 		}

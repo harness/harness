@@ -37,7 +37,7 @@ var (
 		"The URL specified is not valid format.")
 	ErrRepoMissing = usererror.BadRequest(
 		"There must be URL or Ref specified fir repo.")
-	ErrBadURLScheme = usererror.BadRequest("the URL is missing scheme, it must start with http or https")
+	ErrBadURLScheme = usererror.BadRequest("The URL is missing scheme, it must start with http or https")
 )
 
 func (c *Controller) LookupRepo(

@@ -309,12 +309,12 @@ func buildIdentifier(identifier string) (string, error) {
 func validateIdentifier(identifier string) error {
 	invalidCharPattern := regexp.MustCompile(`[^a-z0-9-]`)
 	if invalidCharPattern.MatchString(identifier) {
-		return usererror.BadRequestf("identifier %s contains invalid characters: only lowercase letters, "+
+		return usererror.BadRequestf("Identifier %q contains invalid characters: only lowercase letters, "+
 			"digits, and hyphens are allowed", identifier)
 	}
 
 	if len(identifier) > maxGitspaceConfigIdentifierPrefixLength {
-		return fmt.Errorf("identifier %s length should be upto 50 characters, is %d characters",
+		return fmt.Errorf("identifier %q length should be upto 50 characters, is %d characters",
 			identifier, len(identifier))
 	}
 

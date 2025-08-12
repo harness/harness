@@ -69,23 +69,23 @@ func (in *CommentCreateInput) Sanitize() error {
 	}
 
 	if in.SourceCommitSHA == "" || in.TargetCommitSHA == "" {
-		return usererror.BadRequest("for code comments source commit SHA and target commit SHA must be provided")
+		return usererror.BadRequest("For code comments source commit SHA and target commit SHA must be provided")
 	}
 
 	if in.ParentID != 0 {
-		return usererror.BadRequest("can't create a reply that is a code comment")
+		return usererror.BadRequest("Can't create a reply that is a code comment")
 	}
 
 	if in.Path == "" {
-		return usererror.BadRequest("code comment requires file path")
+		return usererror.BadRequest("Code comment requires file path")
 	}
 
 	if in.LineStart <= 0 || in.LineEnd <= 0 {
-		return usererror.BadRequest("code comments require line numbers")
+		return usererror.BadRequest("Code comments require line numbers")
 	}
 
 	if in.LineStartNew && !in.LineEndNew || !in.LineStartNew && in.LineEndNew {
-		return usererror.BadRequest("code block must start and end on the same side")
+		return usererror.BadRequest("Code block must start and end on the same side")
 	}
 
 	return nil

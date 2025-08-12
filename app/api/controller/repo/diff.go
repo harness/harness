@@ -88,7 +88,7 @@ func parseDiffPath(path string) (CompareInfo, error) {
 		infos = strings.SplitN(path, "..", 2)
 	}
 	if len(infos) != 2 {
-		return CompareInfo{}, usererror.BadRequestf("invalid format \"%s\"", path)
+		return CompareInfo{}, usererror.BadRequestf("Invalid format %q", path)
 	}
 	return CompareInfo{
 		BaseRef:   infos[0],

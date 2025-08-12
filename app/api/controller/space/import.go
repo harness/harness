@@ -66,7 +66,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 	}
 
 	if len(remoteRepositories) == 0 {
-		return nil, usererror.BadRequestf("found no repositories at %s", in.ProviderSpace)
+		return nil, usererror.BadRequestf("Found no repositories in %q", in.ProviderSpace)
 	}
 
 	repoIDs := make([]int64, len(remoteRepositories))

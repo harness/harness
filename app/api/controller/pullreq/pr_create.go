@@ -98,7 +98,7 @@ func (c *Controller) Create(
 	}
 
 	if sourceRepo.ID == targetRepo.ID && in.TargetBranch == in.SourceBranch {
-		return nil, usererror.BadRequest("target and source branch can't be the same")
+		return nil, usererror.BadRequest("Target and source branch can't be the same")
 	}
 
 	var sourceSHA sha.SHA

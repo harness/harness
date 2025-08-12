@@ -57,17 +57,17 @@ type MergeInput struct {
 
 func (in *MergeInput) sanitize() error {
 	if in.Method == "" && !in.DryRun && !in.DryRunRules {
-		return usererror.BadRequest("merge method must be provided if dry run is false")
+		return usererror.BadRequest("Merge method must be provided if dry run is false")
 	}
 
 	if in.SourceSHA == "" {
-		return usererror.BadRequest("source SHA must be provided")
+		return usererror.BadRequest("Source SHA must be provided")
 	}
 
 	if in.Method != "" {
 		method, ok := in.Method.Sanitize()
 		if !ok {
-			return usererror.BadRequestf("unsupported merge method: %s", in.Method)
+			return usererror.BadRequestf("Unsupported merge method: %q", in.Method)
 		}
 
 		in.Method = method

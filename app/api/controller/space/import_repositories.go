@@ -63,7 +63,7 @@ func (c *Controller) ImportRepositories(
 	}
 
 	if len(remoteRepositories) == 0 {
-		return ImportRepositoriesOutput{}, usererror.BadRequestf("found no repositories at %s", in.ProviderSpace)
+		return ImportRepositoriesOutput{}, usererror.BadRequestf("Found no repositories in %q", in.ProviderSpace)
 	}
 
 	repos := make([]*types.Repository, 0, len(remoteRepositories))

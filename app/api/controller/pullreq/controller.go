@@ -156,7 +156,7 @@ func (c *Controller) verifyBranchExistence(ctx context.Context,
 	repo *types.RepositoryCore, branch string,
 ) (sha.SHA, error) {
 	if branch == "" {
-		return sha.SHA{}, usererror.BadRequest("branch name can't be empty")
+		return sha.SHA{}, usererror.BadRequest("Branch name can't be empty")
 	}
 
 	ref, err := c.git.GetRef(ctx,
@@ -315,7 +315,7 @@ func (c *Controller) checkIfAlreadyExists(ctx context.Context,
 	}
 	if len(existing) > 0 {
 		return usererror.ConflictWithPayload(
-			"a pull request for this target and source branch already exists",
+			"A pull request for this target and source branch already exists",
 			map[string]any{
 				"type":   "pr already exists",
 				"number": existing[0].Number,
@@ -339,12 +339,12 @@ func eventBase(pr *types.PullReq, principal *types.Principal) pullreqevents.Base
 
 func validateTitle(title string) error {
 	if title == "" {
-		return usererror.BadRequest("pull request title can't be empty")
+		return usererror.BadRequest("Pull request title can't be empty")
 	}
 
 	const maxLen = 256
 	if utf8.RuneCountInString(title) > maxLen {
-		return usererror.BadRequestf("pull request title is too long (maximum is %d characters)", maxLen)
+		return usererror.BadRequestf("Pull request title is too long (maximum is %d characters)", maxLen)
 	}
 
 	return nil
@@ -353,7 +353,7 @@ func validateTitle(title string) error {
 func validateDescription(desc string) error {
 	const maxLen = 64 << 10 // 64K
 	if len(desc) > maxLen {
-		return usererror.BadRequest("pull request description is too long")
+		return usererror.BadRequest("Pull request description is too long")
 	}
 
 	return nil
@@ -362,7 +362,7 @@ func validateDescription(desc string) error {
 func validateComment(desc string) error {
 	const maxLen = 16 << 10 // 16K
 	if len(desc) > maxLen {
-		return usererror.BadRequest("pull request comment is too long")
+		return usererror.BadRequest("Pull request comment is too long")
 	}
 
 	return nil

@@ -51,7 +51,7 @@ func (c *Controller) UpdateAdmin(ctx context.Context, session *auth.Session,
 		}
 
 		if admUsrCount <= 1 {
-			return nil, usererror.BadRequest("system requires at least one admin user")
+			return nil, usererror.BadRequest("System requires at least one admin user")
 		}
 	}
 

@@ -41,7 +41,7 @@ func (c *Controller) Delete(ctx context.Context, session *auth.Session,
 		}
 
 		if admUsrCount == 1 {
-			return usererror.BadRequest("cannot delete the only admin user")
+			return usererror.BadRequest("Cannot delete the only admin user")
 		}
 	}
 
