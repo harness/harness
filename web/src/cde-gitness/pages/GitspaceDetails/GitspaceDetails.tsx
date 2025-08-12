@@ -37,7 +37,7 @@ import { useHistory, useParams } from 'react-router-dom'
 import { Color, FontVariation, PopoverProps } from '@harnessio/design-system'
 import { Menu, MenuItem, PopoverInteractionKind, PopoverPosition } from '@blueprintjs/core'
 import { defaultTo } from 'lodash-es'
-import { Icon } from '@harnessio/icons'
+//import { Icon } from '@harnessio/icons'
 import { EditGitspace } from 'cde-gitness/components/EditGitspace/EditGitspace'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useAppContext } from 'AppContext'
@@ -429,23 +429,23 @@ const GitspaceDetails = () => {
                       }}
                     />
 
-                    {[GitspaceStatus.UNINITIALIZED, GitspaceStatus.STOPPED, GitspaceStatus.ERROR].includes(
-                      data?.state as GitspaceStatus
-                    ) && (
-                      <MenuItem
-                        text={
-                          <Layout.Horizontal
-                            spacing="xsmall"
-                            flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
-                            <Icon name="edit" size={16} />
-                            <Text>{getString('cde.editGitspace') || 'Edit Gitspace'}</Text>
-                          </Layout.Horizontal>
-                        }
-                        onClick={() => {
-                          setIsEditModalOpen(true)
-                        }}
-                      />
-                    )}
+                    {/*{[GitspaceStatus.UNINITIALIZED, GitspaceStatus.STOPPED, GitspaceStatus.ERROR].includes(*/}
+                    {/*  data?.state as GitspaceStatus*/}
+                    {/*) && (*/}
+                    {/*  <MenuItem*/}
+                    {/*    text={*/}
+                    {/*      <Layout.Horizontal*/}
+                    {/*        spacing="xsmall"*/}
+                    {/*        flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>*/}
+                    {/*        <Icon name="edit" size={16} />*/}
+                    {/*        <Text>{getString('cde.editGitspace') || 'Edit Gitspace'}</Text>*/}
+                    {/*      </Layout.Horizontal>*/}
+                    {/*    }*/}
+                    {/*    onClick={() => {*/}
+                    {/*      setIsEditModalOpen(true)*/}
+                    {/*    }}*/}
+                    {/*  />*/}
+                    {/*)}*/}
                     <MenuItem
                       onClick={handleReset as Unknown as () => void}
                       text={
