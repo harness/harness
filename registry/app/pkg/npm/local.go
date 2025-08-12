@@ -598,7 +598,7 @@ func NewJSONStringStreamReader(r *bufio.Reader) io.Reader {
 			if escaped {
 				// We’re inside an escape sequence — pass this byte through
 				// JSON escape sequences don’t affect base64, but we handle it for correctness
-				//nolint: errcheck
+				//nolint: errcheck,gosec
 				pw.Write([]byte{b})
 				escaped = false
 				continue
@@ -615,7 +615,7 @@ func NewJSONStringStreamReader(r *bufio.Reader) io.Reader {
 			}
 
 			// Normal base64 character
-			//nolint: errcheck
+			//nolint: errcheck,gosec
 			pw.Write([]byte{b})
 		}
 	}()

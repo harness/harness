@@ -179,11 +179,6 @@ func validateBootDiskChanges(existingMeta, newMeta map[string]string) (bool, err
 		return false, fmt.Errorf(
 			"invalid boot disk size format: cannot parse boot disk sizes for comparison")
 	}
-	if newVal < existingVal {
-		return false, usererror.BadRequestf(
-			"reducing boot disk size is not allowed: from %d to %d",
-			existingVal, newVal)
-	}
 	if newVal != existingVal {
 		markForHardReset = true
 	}

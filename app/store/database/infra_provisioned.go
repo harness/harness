@@ -214,7 +214,7 @@ func (i infraProvisionedStore) FindStoppedInfraForGitspaceConfigIdentifier(
     SELECT gits.gits_id
     FROM %s gits
 	JOIN %s conf ON gits.gits_gitspace_config_id = conf.gconf_id
-    WHERE conf.gconf_uid = '%s' AND gits.gits_state = 'starting'
+    WHERE conf.gconf_uid = '%s' AND (gits.gits_state = 'starting' OR gits.gits_state = 'pending_cleanup')
     LIMIT 1`,
 		gitspaceInstanceTable, gitspaceConfigsTable, gitspaceConfigIdentifier)
 

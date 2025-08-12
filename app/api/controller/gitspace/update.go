@@ -66,10 +66,9 @@ func (c *Controller) Update(
 	// Check the gitspace state. Update can be done only in stopped, error or uninitialized state
 	currentState := gitspaceConfig.State
 	if currentState != enum.GitspaceStateStopped &&
-		currentState != enum.GitspaceStateError &&
 		currentState != enum.GitspaceStateUninitialized {
 		return nil, usererror.BadRequest(
-			"Gitspace update can only be performed when gitspace is stopped, in error state, or uninitialized",
+			"Gitspace update can only be performed when gitspace is stopped or uninitialized",
 		)
 	}
 

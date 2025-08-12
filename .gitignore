@@ -24,6 +24,7 @@ dist
 .yalc
 yalc.lock
 node_modules
+.cursor
 
 # ignore any executables we build
 /gitness
