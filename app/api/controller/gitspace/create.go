@@ -89,11 +89,6 @@ func (c *Controller) Create(
 		return nil, err
 	}
 
-	err = c.gitspaceLimiter.Usage(ctx, space.ID)
-	if err != nil {
-		return nil, err
-	}
-
 	// check if it's an internal repo
 	if in.CodeRepoType == enum.CodeRepoTypeGitness && *in.CodeRepoRef != "" {
 		repo, err := c.repoFinder.FindByRef(ctx, *in.CodeRepoRef)
@@ -111,7 +106,7 @@ func (c *Controller) Create(
 	}
 	identifier, err := buildIdentifier(in.Identifier)
 	if err != nil {
-		return nil, fmt.Errorf("could not generate identrifier for gitspace config : %q %w", in.Identifier, err)
+		return nil, fmt.Errorf("could not generate identifier for gitspace config : %q %w", in.Identifier, err)
 	}
 	now := time.Now().UnixMilli()
 	var gitspaceConfig *types.GitspaceConfig
@@ -146,6 +141,11 @@ func (c *Controller) Create(
 
 	infraProviderResource, err := c.createOrFindInfraProviderResource(ctx, resourceSpace, resourceIdentifier,
 		in.InfraProviderConfigIdentifier, now)
+	if err != nil {
+		return nil, err
+	}
+
+	err = c.gitspaceLimiter.Usage(ctx, space.ID, infraProviderResource.InfraProviderType)
 	if err != nil {
 		return nil, err
 	}
