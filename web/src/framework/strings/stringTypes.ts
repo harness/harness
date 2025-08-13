@@ -1602,6 +1602,7 @@ export interface StringsMap {
   'cde.lastUsedTooltip': string
   'cde.listing.cleaning': string
   'cde.listing.error': string
+  'cde.listing.infrastructureDetails': string
   'cde.listing.offline': string
   'cde.listing.online': string
   'cde.listing.ownerAndCreated': string

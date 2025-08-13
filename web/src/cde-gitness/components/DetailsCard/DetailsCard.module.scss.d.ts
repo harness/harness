@@ -16,6 +16,15 @@
 
 /* eslint-disable */
 // This is an auto-generated file
+export declare const clickableText: string
+export declare const detailsContainer: string
+export declare const greyText: string
 export declare const horizontalContainer: string
+export declare const iconMarginRight: string
 export declare const infoButton: string
+export declare const infoIcon: string
+export declare const marginLeftContainer: string
+export declare const providerText: string
 export declare const rowHeaders: string
+export declare const standardIcon: string
+export declare const statusText: string

@@ -6,26 +6,12 @@ import { useFormikContext } from 'formik'
 import { Color } from '@harnessio/design-system'
 import { useStrings } from 'framework/strings'
 import type { OpenapiCreateGitspaceRequest, TypesInfraProviderConfig } from 'services/cde'
-import { HARNESS_GCP, HYBRID_VM_GCP, HYBRID_VM_AWS } from 'cde-gitness/constants'
+import { HARNESS_GCP } from 'cde-gitness/constants'
 import infrasvg from 'icons/Infrastructure.svg?url'
-import googleCloudIcon from 'icons/google-cloud.svg?url'
-import awsIcon from 'cde-gitness/assests/aws.svg?url'
-import HarnessIcon from 'icons/Harness.svg?url'
 import type { dropdownProps } from 'cde-gitness/constants'
+import getProviderIcon from '../../utils/InfraProvider.utils'
 import { CDECustomDropdown } from '../CDECustomDropdown/CDECustomDropdown'
 import css from './SelectInfraProviderType.module.scss'
-
-// Function to get provider icon based on provider type
-const getProviderIcon = (providerType: string) => {
-  if (providerType === HYBRID_VM_GCP) {
-    return googleCloudIcon
-  } else if (providerType === HARNESS_GCP) {
-    return HarnessIcon
-  } else if (providerType === HYBRID_VM_AWS) {
-    return awsIcon
-  }
-  return null
-}
 
 interface SelectInfraProviderTypeProps {
   infraProviders: dropdownProps[]

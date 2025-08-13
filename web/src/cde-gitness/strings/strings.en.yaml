@@ -312,6 +312,7 @@ listing:
   uninitialized: Uninitialized
   cleaning: Cleaning
   ownerAndCreated: Owner & Created On
+  infrastructureDetails: Infrastructure Details
 create:
   repositoryDetails: Repository Details
   gitnessRepositories: Harness Repositories

@@ -25,6 +25,8 @@ export declare const gitspaceIdContainer: string
 export declare const gitspaceUrl: string
 export declare const listContainer: string
 export declare const popover: string
+export declare const providerNameText: string
 export declare const repositoryCell: string
+export declare const standardProviderIcon: string
 export declare const stopModal: string
 export declare const table: string

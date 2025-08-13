@@ -6,42 +6,21 @@ import { useStrings } from 'framework/strings'
 import type { TypesInfraProviderResource } from 'services/cde'
 import css from './ResourceDetails.module.scss'
 
-const ResourceDetails = ({
-  resource,
-  isListingPage = false
-}: {
-  resource?: TypesInfraProviderResource
-  isListingPage?: boolean
-}) => {
+const ResourceDetails = ({ resource }: { resource?: TypesInfraProviderResource }) => {
   const { getString } = useStrings()
   const { region, name } = resource || {}
-  return isListingPage ? (
-    <Layout.Vertical spacing="small">
-      <span className={css.iconTextStyle}>
-        <img height={12} width={12} src={RegionIcon} />
-        <Text font={{ size: 'small' }} lineClamp={1}>
-          {region?.toUpperCase() || getString('cde.na')}
-        </Text>
-      </span>
-      <span className={css.iconTextStyle}>
-        <Cpu height={12} width={12} />
-        <Text font={{ size: 'small' }} lineClamp={1}>
-          {name || getString('cde.na')}
-        </Text>
-      </span>
-    </Layout.Vertical>
-  ) : (
-    <Layout.Horizontal spacing="small">
-      <Layout.Horizontal spacing={'xsmall'} flex={{ alignItems: 'center' }}>
-        <img height={12} width={12} src={RegionIcon} />{' '}
-        <Text font={{ size: 'small' }} lineClamp={1}>
+  return (
+    <Layout.Horizontal spacing="small" className={css.container}>
+      <Layout.Horizontal spacing={'xsmall'} flex={{ alignItems: 'center' }} className={css.textContainer}>
+        <img height={12} width={12} src={RegionIcon} className={css.iconContainer} />
+        <Text font={{ size: 'small' }} lineClamp={1} title={region?.toUpperCase() || getString('cde.na')}>
           {region?.toUpperCase() || getString('cde.na')}
         </Text>
       </Layout.Horizontal>
-      <Container width={'5px'} />
-      <Layout.Horizontal spacing={'xsmall'} flex={{ alignItems: 'center' }}>
-        <Cpu height={12} width={12} />{' '}
-        <Text font={{ size: 'small' }} lineClamp={1}>
+      <Container width={'3px'} />
+      <Layout.Horizontal spacing={'xsmall'} flex={{ alignItems: 'center' }} className={css.textContainer}>
+        <Cpu height={12} width={12} className={css.iconContainer} />
+        <Text font={{ size: 'small' }} title={name || getString('cde.na')} lineClamp={1} className={css.truncatedText}>
           {name || getString('cde.na')}
         </Text>
       </Layout.Horizontal>
