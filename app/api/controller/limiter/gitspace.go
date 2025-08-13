@@ -16,12 +16,14 @@ package limiter
 
 import (
 	"context"
+
+	"github.com/harness/gitness/types/enum"
 )
 
 // Gitspace is an interface for managing gitspace limitations.
 type Gitspace interface {
 	// Usage checks if the total usage for the root space and all sub-spaces is under a limit.
-	Usage(ctx context.Context, spaceID int64) error
+	Usage(ctx context.Context, spaceID int64, infraProviderType enum.InfraProviderType) error
 }
 
 var _ Gitspace = (*UnlimitedUsage)(nil)
@@ -34,6 +36,6 @@ func NewUnlimitedUsage() Gitspace {
 	return UnlimitedUsage{}
 }
 
-func (UnlimitedUsage) Usage(_ context.Context, _ int64) error {
+func (UnlimitedUsage) Usage(_ context.Context, _ int64, _ enum.InfraProviderType) error {
 	return nil
 }

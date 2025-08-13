@@ -79,7 +79,7 @@ func (c *Controller) Action(
 	// All the actions should be idempotent.
 	switch in.Action {
 	case enum.GitspaceActionTypeStart:
-		err = c.gitspaceLimiter.Usage(ctx, space.ID)
+		err = c.gitspaceLimiter.Usage(ctx, space.ID, gitspaceConfig.InfraProviderResource.InfraProviderType)
 		if err != nil {
 			return nil, err
 		}
