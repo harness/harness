@@ -210,7 +210,7 @@ export const GitnessRepoImportForm = ({ isCDE }: { isCDE?: boolean }) => {
                           code_repo_url: repo.git_url,
                           branch: repo.default_branch,
                           identifier: repoParams?.[repoParams.length - 1],
-                          name: repo.path,
+                          name: '',
                           code_repo_ref: repo.path,
                           ...codeRepoType
                         }
