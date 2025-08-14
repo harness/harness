@@ -60,6 +60,11 @@ var membershipRoleContributorPermissions = slices.Clip(slices.Insert(membershipR
 
 	PermissionArtifactsUpload,
 	PermissionArtifactsDelete,
+
+	PermissionGitspaceCreate,
+	PermissionGitspaceEdit,
+	PermissionGitspaceDelete,
+	PermissionGitspaceUse,
 ))
 
 var membershipRoleSpaceOwnerPermissions = slices.Clip(slices.Insert(membershipRoleReaderPermissions, 0,
@@ -92,6 +97,7 @@ var membershipRoleSpaceOwnerPermissions = slices.Clip(slices.Insert(membershipRo
 	PermissionTemplateDelete,
 	PermissionTemplateEdit,
 
+	PermissionGitspaceCreate,
 	PermissionGitspaceEdit,
 	PermissionGitspaceDelete,
 	PermissionGitspaceUse,
