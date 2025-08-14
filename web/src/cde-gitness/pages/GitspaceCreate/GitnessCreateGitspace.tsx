@@ -27,12 +27,13 @@ import {
   useToaster
 } from '@harnessio/uicore'
 import { useHistory } from 'react-router-dom'
-import { FontVariation } from '@harnessio/design-system'
+import { Color, FontVariation } from '@harnessio/design-system'
 import { useCreateGitspace, type OpenapiCreateGitspaceRequest } from 'cde-gitness/services'
 import RepositoryTypeButton, { RepositoryType } from 'cde-gitness/components/RepositoryTypeButton/RepositoryTypeButton'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
+import { getIDETypeOptions } from 'cde-gitness/constants'
 import codeSandboxIcon from 'cde-gitness/assests/codeSandboxLogo.svg?url'
 import { getErrorMessage } from 'utils/Utils'
 import { GitnessRepoImportForm } from 'cde-gitness/components/GitnessRepoImportForm/GitnessRepoImportForm'
@@ -51,6 +52,9 @@ export const GitnessCreateGitspace = () => {
   const [activeButton, setActiveButton] = useState(RepositoryType.GITNESS)
   const { showSuccess, showError } = useToaster()
   const { mutate } = useCreateGitspace({})
+  const allIdeOptions = useMemo(() => {
+    return getIDETypeOptions(getString)
+  }, [getString])
   const suggestedName = useMemo(() => generateGitspaceName(), [])
 
   return (
@@ -76,7 +80,10 @@ export const GitnessCreateGitspace = () => {
           showError(getErrorMessage(error))
         }
       }}
-      initialValues={gitnessFormInitialValues}
+      initialValues={{
+        ...gitnessFormInitialValues,
+        ide: allIdeOptions.length > 0 ? allIdeOptions[0].value : getString('cde.create.ideEmpty')
+      }}
       validationSchema={validateGitnessForm(getString)}
       formName="importRepoForm"
       enableReinitialize>
@@ -114,10 +121,12 @@ export const GitnessCreateGitspace = () => {
                     <Layout.Horizontal className={css.leftSection}>
                       <img src={codeSandboxIcon} alt="gitspace" className={css.icon} />
                       <Layout.Vertical className={css.textSection} spacing={'small'}>
-                        <Text>{getString('cde.create.gitspaceNameLabel')}</Text>
+                        <Text color={Color.GREY_500} font={{ weight: 'bold' }}>
+                          {getString('cde.create.gitspaceNameLabel')}
+                        </Text>
                         <Layout.Vertical spacing={'xsmall'}>
                           <Text font={'small'}>{getString('cde.create.gitspaceNameHelpertext1')}</Text>
-                          <Layout.Horizontal>
+                          <Layout.Horizontal spacing={'xsmall'}>
                             <Text font={'small'}>{getString('cde.create.gitspaceNameHelpertext2')}</Text>
                             <Text
                               className={css.suggestedName}
@@ -141,7 +150,11 @@ export const GitnessCreateGitspace = () => {
                     />
                   </Container>
                 </Layout.Horizontal>
-                <CDEIDESelect onChange={formik.setFieldValue} selectedIde={formik.values.ide} isFromGitness={true} />
+                <CDEIDESelect
+                  onChange={formik.setFieldValue}
+                  selectedIde={formik.values.ide}
+                  filteredIdeOptions={allIdeOptions}
+                />
                 <Button width={'100%'} variation={ButtonVariation.PRIMARY} height={50} type="submit">
                   {getString('cde.createGitspace')}
                 </Button>
