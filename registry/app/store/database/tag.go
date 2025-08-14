@@ -377,7 +377,7 @@ func (t tagDao) GetAllArtifactsByParentID(
 	// Combine q1 and q2 with UNION ALL
 	finalQuery := fmt.Sprintf(`
     SELECT repo_name, name, package_type, version, modified_at,
-           labels, download_count, is_quarantined, quarantine_reason
+           labels, download_count, is_quarantined, quarantine_reason, artifact_type
     FROM (%s UNION ALL %s) AS combined
 `, q1SQL, q2SQL)
 
@@ -419,7 +419,8 @@ func (t tagDao) GetAllArtifactsQueryByParentIDForOCI(
 		i.image_labels as labels, 
 		COALESCE(t2.download_count,0) as download_count,
 		false as is_quarantined,
-		'' as quarantine_reason `,
+		'' as quarantine_reason,
+        i.image_type as artifact_type `,
 	).
 		From("tags t").
 		Join("registries r ON t.tag_registry_id = r.registry_id").
@@ -477,7 +478,8 @@ func (t tagDao) GetAllArtifactOnParentIDQueryForNonOCI(
 		i.image_labels as labels, 
 		COALESCE(t2.download_count, 0) as download_count,
 		(qp.quarantined_path_id IS NOT NULL) AS is_quarantined,
-	     qp.quarantined_path_reason as quarantine_reason`,
+	     qp.quarantined_path_reason as quarantine_reason,
+        i.image_type as artifact_type `,
 	).
 		From("artifacts ar").
 		Join("images i ON i.image_id = ar.artifact_image_id").
