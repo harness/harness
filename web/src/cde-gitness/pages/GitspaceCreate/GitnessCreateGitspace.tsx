@@ -121,7 +121,7 @@ export const GitnessCreateGitspace = () => {
                             <Text font={'small'}>{getString('cde.create.gitspaceNameHelpertext2')}</Text>
                             <Text
                               className={css.suggestedName}
-                              font={{ variation: FontVariation.SMALL }}
+                              font={'small'}
                               onClick={e => {
                                 e.stopPropagation()
                                 formik.setFieldValue('name', suggestedName)
@@ -141,7 +141,7 @@ export const GitnessCreateGitspace = () => {
                     />
                   </Container>
                 </Layout.Horizontal>
-                <CDEIDESelect onChange={formik.setFieldValue} selectedIde={formik.values.ide} />
+                <CDEIDESelect onChange={formik.setFieldValue} selectedIde={formik.values.ide} isFromGitness={true} />
                 <Button width={'100%'} variation={ButtonVariation.PRIMARY} height={50} type="submit">
                   {getString('cde.createGitspace')}
                 </Button>

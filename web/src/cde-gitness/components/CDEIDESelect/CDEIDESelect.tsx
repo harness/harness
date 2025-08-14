@@ -19,7 +19,7 @@ import { Container, Layout, Text } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
 import { Menu } from '@blueprintjs/core'
 import { Code } from 'iconoir-react'
-import { groupEnums } from 'cde-gitness/constants'
+import { groupEnums, getIDETypeOptions } from 'cde-gitness/constants'
 import { useStrings } from 'framework/strings'
 import { CDECustomDropdown } from '../CDECustomDropdown/CDECustomDropdown'
 import { CustomIDESection } from '../IDEDropdownSection/IDEDropdownSection'
@@ -31,32 +31,49 @@ interface CDEIDESelectProps {
   selectedIde?: string
   filteredIdeOptions?: IDEOption[]
   isEditMode?: boolean
+  isFromGitness?: boolean
 }
 
-export const CDEIDESelect = ({ onChange, selectedIde, filteredIdeOptions = [], isEditMode }: CDEIDESelectProps) => {
+export const CDEIDESelect = ({
+  onChange,
+  selectedIde,
+  filteredIdeOptions = [],
+  isEditMode = false,
+  isFromGitness = false
+}: CDEIDESelectProps) => {
   const { getString } = useStrings()
 
-  const selectedIDEOption = useMemo(() => {
-    if (!selectedIde) return undefined
+  const allIdeOptions = useMemo(() => {
+    return isFromGitness ? getIDETypeOptions(getString) : []
+  }, [getString, isFromGitness])
 
-    const foundOption = filteredIdeOptions.find(item => item.value === selectedIde)
-    return foundOption || (filteredIdeOptions.length > 0 ? filteredIdeOptions[0] : undefined)
-  }, [selectedIde, filteredIdeOptions])
+  const effectiveIdeOptions = useMemo(() => {
+    return isFromGitness ? allIdeOptions : filteredIdeOptions
+  }, [isFromGitness, allIdeOptions, filteredIdeOptions])
+
+  const selectedIDEOption = useMemo(() => {
+    if (!selectedIde) {
+      return isFromGitness && effectiveIdeOptions.length > 0 ? effectiveIdeOptions[0] : undefined
+    }
+
+    const foundOption = effectiveIdeOptions.find(item => item.value === selectedIde)
+    return foundOption || (effectiveIdeOptions.length > 0 ? effectiveIdeOptions[0] : undefined)
+  }, [selectedIde, effectiveIdeOptions])
 
   const vscodeOptions = useMemo(
-    () => filteredIdeOptions.filter(val => val.group === groupEnums.VSCODE),
-    [filteredIdeOptions]
+    () => effectiveIdeOptions.filter(val => val.group === groupEnums.VSCODE),
+    [effectiveIdeOptions]
   )
   const jetbrainOptions = useMemo(
-    () => filteredIdeOptions.filter(val => val.group === groupEnums.JETBRAIN),
-    [filteredIdeOptions]
+    () => effectiveIdeOptions.filter(val => val.group === groupEnums.JETBRAIN),
+    [effectiveIdeOptions]
   )
 
   return (
     <CDECustomDropdown
       ideDropdown={true}
       overridePopOverWidth={isEditMode}
-      isDisabled={filteredIdeOptions.length === 0}
+      isDisabled={effectiveIdeOptions.length === 0}
       leftElement={
         <Layout.Horizontal>
           <Code className={css.icon} />
@@ -69,7 +86,7 @@ export const CDEIDESelect = ({ onChange, selectedIde, filteredIdeOptions = [], i
         </Layout.Horizontal>
       }
       label={
-        filteredIdeOptions.length === 0 ? (
+        effectiveIdeOptions.length === 0 ? (
           <Layout.Horizontal width="100%" spacing="medium" flex={{ alignItems: 'center', justifyContent: 'start' }}>
             <Text>{getString('cde.create.ideEmpty')}</Text>
           </Layout.Horizontal>

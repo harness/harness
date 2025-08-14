@@ -812,8 +812,10 @@ export const ListGitspaces = ({
   })
 
   useEffect(() => {
-    refetchInfraProviders()
-  }, [refetchInfraProviders])
+    if (!standalone) {
+      refetchInfraProviders()
+    }
+  }, [refetchInfraProviders, standalone])
 
   useEffect(() => {
     if (infraProvidersData) {

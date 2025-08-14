@@ -34,6 +34,7 @@ import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import { getErrorMessage } from 'utils/Utils'
+import { useFindGitspaceSettings } from 'services/cde'
 import { GitspaceSelect } from 'cde-gitness/components/GitspaceSelect/GitspaceSelect'
 import harnessCode from 'cde-gitness/assests/harnessCode.svg?url'
 import codeSandboxIcon from 'cde-gitness/assests/codeSandboxLogo.svg?url'
@@ -45,7 +46,7 @@ import bitbucket from 'cde-gitness/assests/bitbucket.svg?url'
 import { CDEAnyGitImport } from 'cde-gitness/components/CDEAnyGitImport/CDEAnyGitImport'
 import { CDEIDESelect } from 'cde-gitness/components/CDEIDESelect/CDEIDESelect'
 import { SelectInfraProvider } from 'cde-gitness/components/SelectInfraProvider/SelectInfraProvider'
-import { OpenapiCreateGitspaceRequest, useCreateGitspace, TypesGitspaceSettingsResponse } from 'services/cde'
+import { OpenapiCreateGitspaceRequest, useCreateGitspace } from 'services/cde'
 import { useGetCDEAPIParams } from 'cde-gitness/hooks/useGetCDEAPIParams'
 import { EnumGitspaceCodeRepoType, getIDETypeOptions, getIDEOption } from 'cde-gitness/constants'
 import { CDESSHSelect } from 'cde-gitness/components/CDESSHSelect/CDESSHSelect'
@@ -69,10 +70,6 @@ export interface RepoQueryParams {
   branch?: string
   codeRepoURL?: string
   codeRepoType?: EnumGitspaceCodeRepoType
-}
-
-export interface CDECreateGitspaceProps {
-  gitspaceSettings: TypesGitspaceSettingsResponse | null
 }
 
 export const scmOptions: SCMType[] = [
@@ -99,7 +96,7 @@ export const scmOptionsCDE: SCMType[] = [
   ...onPremSCMOptions
 ]
 
-export const CDECreateGitspace = ({ gitspaceSettings }: CDECreateGitspaceProps) => {
+export const CDECreateGitspace = () => {
   const { getString } = useStrings()
   const { routes, currentUserProfileURL, hooks, currentUser } = useAppContext()
   const { useGetUserSourceCodeManagers } = hooks
@@ -118,6 +115,16 @@ export const CDECreateGitspace = ({ gitspaceSettings }: CDECreateGitspaceProps) 
   const ideOptions = useMemo(() => getIDETypeOptions(getString) ?? [], [getString])
 
   const [repoURLviaQueryParam, setrepoURLviaQueryParam] = useState<RepoQueryParams>({ ...repoQueryParams })
+
+  const { data: gitspaceSettings, error: settingsError } = useFindGitspaceSettings({
+    accountIdentifier
+  })
+
+  useEffect(() => {
+    if (settingsError) {
+      showError(getErrorMessage(settingsError))
+    }
+  }, [settingsError, getString, showError])
 
   useEffect(() => {
     if (gitspaceSettings?.settings?.gitspace_config) {

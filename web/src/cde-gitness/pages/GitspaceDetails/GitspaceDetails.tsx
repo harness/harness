@@ -276,7 +276,7 @@ const GitspaceDetails = () => {
     error: settingsError
   } = useFindGitspaceSettings({
     accountIdentifier: accountIdentifier || '',
-    lazy: !accountIdentifier
+    lazy: !accountIdentifier || standalone
   })
 
   const { refetchToken, setSelectedRowUrl } = useOpenVSCodeBrowserURL()
@@ -575,7 +575,7 @@ const GitspaceDetails = () => {
           )}
           <Card className={css.cardContainer}>
             <Text font={{ variation: FontVariation.CARD_TITLE }}>{getString('cde.gitspaceDetail')}</Text>
-            <DetailsCard data={data} loading={mutateLoading} />
+            <DetailsCard data={data} standalone={standalone} loading={mutateLoading} />
           </Card>
           <Card className={css.cardContainer}>
             <EventTimelineAccordion data={eventData as TypesGitspaceEventResponse[]} />
@@ -660,7 +660,7 @@ const GitspaceDetails = () => {
           }}>
           <EditGitspace
             isOpen={isEditModalOpen}
-            gitspaceSettings={gitspaceSettings}
+            gitspaceSettings={gitspaceSettings || null}
             onClose={() => setIsEditModalOpen(false)}
             gitspaceId={gitspaceId}
             onGitspaceUpdated={() => {
