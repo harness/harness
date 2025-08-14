@@ -33,7 +33,14 @@ import ResourceDetails from '../ResourceDetails/ResourceDetails'
 import { getRepoNameFromURL } from '../../utils/SelectRepository.utils'
 import css from './DetailsCard.module.scss'
 
-export const DetailsCard = ({ data }: { data: TypesGitspaceConfig | null; loading?: boolean }) => {
+export const DetailsCard = ({
+  data,
+  standalone
+}: {
+  data: TypesGitspaceConfig | null
+  standalone?: boolean
+  loading?: boolean
+}) => {
   const { getString } = useStrings()
   const { branch, state, name, branch_url, code_repo_url, code_repo_type, instance, resource } = data || {}
   const repoName = getRepoNameFromURL(code_repo_url) || ''
@@ -50,8 +57,11 @@ export const DetailsCard = ({ data }: { data: TypesGitspaceConfig | null; loadin
   })
 
   useEffect(() => {
-    refetchInfraProviders()
-  }, [refetchInfraProviders])
+    // Only fetch infra providers if not in standalone mode
+    if (!standalone) {
+      refetchInfraProviders()
+    }
+  }, [refetchInfraProviders, standalone])
 
   useEffect(() => {
     if (infraProvidersData) {
@@ -84,7 +94,6 @@ export const DetailsCard = ({ data }: { data: TypesGitspaceConfig | null; loadin
             </Text>
           </Layout.Horizontal>
         </Layout.Vertical>
-
         <Layout.Vertical spacing="small" flex={{ justifyContent: 'center', alignItems: 'flex-start' }}>
           <Text className={css.rowHeaders}>{getString('cde.repository.repo')}</Text>
           <Layout.Horizontal
@@ -100,7 +109,6 @@ export const DetailsCard = ({ data }: { data: TypesGitspaceConfig | null; loadin
             </Text>
           </Layout.Horizontal>
         </Layout.Vertical>
-
         <Layout.Vertical spacing="small" flex={{ justifyContent: 'center', alignItems: 'flex-start' }}>
           <Text className={css.rowHeaders}>{getString('branch')}</Text>
           <Text
@@ -111,47 +119,48 @@ export const DetailsCard = ({ data }: { data: TypesGitspaceConfig | null; loadin
             {branch}
           </Text>
         </Layout.Vertical>
+        {!standalone && (
+          <Layout.Vertical spacing="small" flex={{ justifyContent: 'center', alignItems: 'flex-start' }}>
+            <Text className={css.rowHeaders}>{getString('cde.infraProvider')}</Text>
+            <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'start' }}>
+              {(() => {
+                const providerType = resource?.infra_provider_type || ''
+                const providerConfigId = resource?.config_identifier || ''
+                const providerIcon = getProviderIcon(providerType)
 
-        <Layout.Vertical spacing="small" flex={{ justifyContent: 'center', alignItems: 'flex-start' }}>
-          <Text className={css.rowHeaders}>{getString('cde.infraProvider')}</Text>
-          <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'start' }}>
-            {(() => {
-              const providerType = resource?.infra_provider_type || ''
-              const providerConfigId = resource?.config_identifier || ''
-              const providerIcon = getProviderIcon(providerType)
+                const provider = infraProvidersList.find(item => item.identifier === providerConfigId)
+                const displayName = provider?.name || providerConfigId
 
-              const provider = infraProvidersList.find(item => item.identifier === providerConfigId)
-              const displayName = provider?.name || providerConfigId
-
-              return (
-                <>
-                  {providerIcon ? (
-                    <img src={providerIcon} className={css.standardIcon} alt={'provider icon'} />
-                  ) : (
-                    <Cloud className={css.standardIcon} />
-                  )}
-                  {infraProvidersLoading ? (
-                    <Text
-                      icon="loading"
-                      iconProps={{ size: 16 }}
-                      lineClamp={1}
-                      font={{ align: 'left', size: 'normal' }}></Text>
-                  ) : (
-                    <Text lineClamp={1} className={css.providerText} title={displayName}>
-                      {displayName}
-                    </Text>
-                  )}
-                </>
-              )
-            })()}
-          </Layout.Horizontal>
-        </Layout.Vertical>
-
-        <Layout.Vertical spacing="small" flex={{ justifyContent: 'center', alignItems: 'flex-start' }}>
-          <Text className={css.rowHeaders}>{getString('cde.regionMachineType')}</Text>
-          <ResourceDetails resource={resource} />
-        </Layout.Vertical>
-
+                return (
+                  <>
+                    {providerIcon ? (
+                      <img src={providerIcon} className={css.standardIcon} alt={'provider icon'} />
+                    ) : (
+                      <Cloud className={css.standardIcon} />
+                    )}
+                    {infraProvidersLoading ? (
+                      <Text
+                        icon="loading"
+                        iconProps={{ size: 16 }}
+                        lineClamp={1}
+                        font={{ align: 'left', size: 'normal' }}></Text>
+                    ) : (
+                      <Text lineClamp={1} className={css.providerText} title={displayName}>
+                        {displayName}
+                      </Text>
+                    )}
+                  </>
+                )
+              })()}
+            </Layout.Horizontal>
+          </Layout.Vertical>
+        )}
+        {!standalone && (
+          <Layout.Vertical spacing="small" flex={{ justifyContent: 'center', alignItems: 'flex-start' }}>
+            <Text className={css.rowHeaders}>{getString('cde.regionMachineType')}</Text>
+            <ResourceDetails resource={resource} />
+          </Layout.Vertical>
+        )}
         {/* Conditional SSH Key field - only shown when ssh_token_identifier exists */}
         {data?.ssh_token_identifier && (
           <Layout.Vertical spacing="small" flex={{ justifyContent: 'center', alignItems: 'flex-start' }}>
@@ -164,7 +173,6 @@ export const DetailsCard = ({ data }: { data: TypesGitspaceConfig | null; loadin
             </Layout.Horizontal>
           </Layout.Vertical>
         )}
-
         <Layout.Vertical spacing="small" flex={{ justifyContent: 'center', alignItems: 'flex-start' }}>
           <Layout.Horizontal
             flex={{ alignItems: 'center', justifyContent: 'start' }}
@@ -192,7 +200,6 @@ export const DetailsCard = ({ data }: { data: TypesGitspaceConfig | null; loadin
             <Text className={css.greyText}>{getString('cde.na')}</Text>
           )}
         </Layout.Vertical>
-
         <Layout.Vertical spacing="small" flex={{ justifyContent: 'center', alignItems: 'flex-start' }}>
           <Layout.Horizontal
             flex={{ alignItems: 'center', justifyContent: 'start' }}
@@ -220,7 +227,6 @@ export const DetailsCard = ({ data }: { data: TypesGitspaceConfig | null; loadin
             <Text className={css.greyText}>{getString('cde.na')}</Text>
           )}
         </Layout.Vertical>
-
         <Layout.Vertical spacing="small" flex={{ justifyContent: 'center', alignItems: 'flex-start' }}>
           <Layout.Horizontal
             flex={{ alignItems: 'center', justifyContent: 'start' }}
