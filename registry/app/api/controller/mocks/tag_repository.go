@@ -4,6 +4,7 @@ package mocks
 
 import (
 	context "context"
+
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 
 	types "github.com/harness/gitness/registry/types"
@@ -242,7 +243,7 @@ func (_m *TagRepository) FindTag(ctx context.Context, repoID int64, imageName st
 }
 
 // GetAllArtifactsByParentID provides a mock function with given fields: ctx, parentID, registryIDs, sortByField, sortByOrder, limit, offset, search, latestVersion, packageTypes
-func (_m *TagRepository) GetAllArtifactsByParentID(ctx context.Context, parentID int64, registryIDs *[]string, sortByField string, sortByOrder string, limit int, offset int, search string, latestVersion bool, packageTypes []string, imageType string, ) (*[]types.ArtifactMetadata, error) {
+func (_m *TagRepository) GetAllArtifactsByParentID(ctx context.Context, parentID int64, registryIDs *[]string, sortByField string, sortByOrder string, limit int, offset int, search string, latestVersion bool, packageTypes []string, imageType string) (*[]types.ArtifactMetadata, error) {
 	ret := _m.Called(ctx, parentID, registryIDs, sortByField, sortByOrder, limit, offset, search, latestVersion, packageTypes)
 
 	if len(ret) == 0 {
@@ -272,7 +273,7 @@ func (_m *TagRepository) GetAllArtifactsByParentID(ctx context.Context, parentID
 }
 
 // GetAllArtifactsByRepo provides a mock function with given fields: ctx, parentID, repoKey, sortByField, sortByOrder, limit, offset, search, labels
-func (_m *TagRepository) GetAllArtifactsByRepo(ctx context.Context, parentID int64, repoKey string, sortByField string, sortByOrder string, limit int, offset int, search string, labels []string, imageType string, ) (*[]types.ArtifactMetadata, error) {
+func (_m *TagRepository) GetAllArtifactsByRepo(ctx context.Context, parentID int64, repoKey string, sortByField string, sortByOrder string, limit int, offset int, search string, labels []string, imageType string) (*[]types.ArtifactMetadata, error) {
 	ret := _m.Called(ctx, parentID, repoKey, sortByField, sortByOrder, limit, offset, search, labels)
 
 	if len(ret) == 0 {

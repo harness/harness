@@ -19,7 +19,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/harness/gitness/registry/app/pkg"
 	"io"
 	"net/http"
 	"path"
@@ -31,6 +30,7 @@ import (
 	urlprovider "github.com/harness/gitness/app/url"
 	apicontract "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	huggingfacemetadata "github.com/harness/gitness/registry/app/metadata/huggingface"
+	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/base"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
@@ -445,7 +445,8 @@ func (c *localRegistry) HeadFile(ctx context.Context, info huggingfacetype.Artif
 		return headers, err
 	}
 
-	sha256, size, err := c.fileManager.HeadFile(ctx, "/"+string(info.RepoType)+"/"+info.Repo+"/"+info.Revision+"/"+fileName,
+	sha256, size, err := c.fileManager.HeadFile(ctx,
+		"/"+string(info.RepoType)+"/"+info.Repo+"/"+info.Revision+"/"+fileName,
 		info.RegistryID)
 	if err != nil {
 		log.Ctx(ctx).Error().Err(err).Msgf("Failed to get file: %s", fileName)

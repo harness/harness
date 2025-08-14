@@ -4,6 +4,7 @@ package mocks
 
 import (
 	context "context"
+
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 
 	types "github.com/harness/gitness/registry/types"

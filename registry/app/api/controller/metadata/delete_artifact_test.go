@@ -159,7 +159,7 @@ func TestDeleteArtifact(t *testing.T) {
 					Message: "invalid registry reference",
 				},
 			},
-			expectedError: fmt.Errorf("invalid registry reference"),
+			expectedError: nil,
 		},
 		{
 			name: "permission_check_fails",
@@ -199,7 +199,7 @@ func TestDeleteArtifact(t *testing.T) {
 					Message: "not authorized",
 				},
 			},
-			expectedError: fmt.Errorf("not authorized"),
+			expectedError: nil,
 		},
 		{
 			name: "registry_not_found",

@@ -16,14 +16,14 @@ package huggingface
 
 import (
 	"fmt"
-	"github.com/harness/gitness/registry/app/api/controller/metadata"
-	apicontract "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"net/http"
 	"regexp"
 	"strings"
 
+	"github.com/harness/gitness/registry/app/api/controller/metadata"
 	"github.com/harness/gitness/registry/app/api/controller/pkg/huggingface"
 	"github.com/harness/gitness/registry/app/api/handler/packages"
+	apicontract "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/pkg"
 	hftype "github.com/harness/gitness/registry/app/pkg/types/huggingface"
 

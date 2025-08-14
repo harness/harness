@@ -16,6 +16,7 @@ package metadata
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -1652,8 +1653,8 @@ func (c *APIController) replacePlaceholders(
 	if pkgType == string(artifact.PackageTypePYTHON) || pkgType == string(artifact.PackageTypeGO) {
 		regURL, _ := url.Parse(registryURL)
 		// append username:password to the host
-		regURL.User = url.UserPassword(username, "identity-token")
-		uploadURL = regURL.String()
+		regURL.User = url.UserPassword(username, "<TOKEN>")
+		uploadURL = fmt.Sprintf("%s://%s:%s@%s%s", regURL.Scheme, regURL.User.Username(), "<TOKEN>", regURL.Host, regURL.Path)
 	}
 
 	for i := range *clientSetupSections {
@@ -1795,11 +1796,13 @@ func (c *APIController) generateHuggingFaceClientSetupDetail(
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
+						//nolint:lll
 						Value: utils.StringPtr("export HF_HUB_ETAG_TIMEOUT=86400\nexport HF_HUB_DOWNLOAD_TIMEOUT=86400\nexport HF_ENDPOINT=<REGISTRY_URL>"),
 					},
 				},
 			},
 			{
+				//nolint:lll
 				Header: utils.StringPtr("For Hugging Face client version 0.19.0 and above, this timeout setting enables model resolution via pipelines and tokenizer libraries."),
 				Type:   &staticStepType,
 			},
@@ -1839,6 +1842,7 @@ func (c *APIController) generateHuggingFaceClientSetupDetail(
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
+						//nolint:lll
 						Value: utils.StringPtr("from huggingface_hub import HfApi\napi = HfApi()\napi.upload_folder(\n    folder_path=\"<folder_name>\", # local folder containing model files\n    repo_id=\"<ARTIFACT_NAME>\", # name for the model in the registry\n    revision=\"<VERSION>\", # model version (defaults to 'main')\n    repo_type=\"model\"\n)"),
 					},
 				},
@@ -1857,6 +1861,7 @@ func (c *APIController) generateHuggingFaceClientSetupDetail(
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
+						//nolint:lll
 						Value: utils.StringPtr("from huggingface_hub import HfApi\napi = HfApi()\napi.upload_folder(\n    folder_path=\"<folder_name>\", # local folder containing dataset files\n    repo_id=\"<ARTIFACT_NAME>\", # name for the dataset in the registry\n    revision=\"<VERSION>\", # dataset version (defaults to 'main')\n    repo_type=\"dataset\"\n)"),
 					},
 				},
@@ -1875,11 +1880,13 @@ func (c *APIController) generateHuggingFaceClientSetupDetail(
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
+						//nolint:lll
 						Value: utils.StringPtr("from huggingface_hub import snapshot_download\nsnapshot_download(\n    repo_id=\"<ARTIFACT_NAME>\", revision=\"<VERSION>\", etag_timeout=86400\n)"),
 					},
 				},
 			},
 			{
+				//nolint:lll
 				Header: utils.StringPtr("With Hugging Face client version 0.19.0+ and HF_HUB_ETAG_TIMEOUT set, you can resolve models with transformers, diffusers, and other libraries."),
 				Type:   &staticStepType,
 			},
@@ -1897,6 +1904,7 @@ func (c *APIController) generateHuggingFaceClientSetupDetail(
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
+						//nolint:lll
 						Value: utils.StringPtr("from datasets import load_dataset\ndataset = load_dataset(\"<ARTIFACT_NAME>\")"),
 					},
 				},
@@ -1906,11 +1914,13 @@ func (c *APIController) generateHuggingFaceClientSetupDetail(
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
+						//nolint:lll
 						Value: utils.StringPtr("from huggingface_hub import snapshot_download\nsnapshot_download(\n    repo_id=\"<ARTIFACT_NAME>\", revision=\"<VERSION>\", repo_type=\"dataset\", etag_timeout=86400\n)"),
 					},
 				},
 			},
 			{
+				//nolint:lll
 				Header: utils.StringPtr("Note: Artifact Registry fully caches only datasets hosted directly on Hugging Face, not those referencing external sources."),
 				Type:   &staticStepType,
 			},

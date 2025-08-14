@@ -116,16 +116,13 @@ func (c *localRegistry) UploadPackage(
 	if err != nil {
 		return nil, fmt.Errorf("failed to get file path: %w", err)
 	}
-	// upload .info
-	infoFileName := info.Version + ".info"
-	infoFilePath := filepath.Join(filePath, infoFileName)
-	infoFile, err := metadataToReadCloser(info.Metadata)
+	// upload .zip
+	zipFileName := info.Version + ".zip"
+	zipFilePath := filepath.Join(filePath, zipFileName)
+
+	response, err := c.uploadFile(ctx, info, &info.Metadata, zipfile, zipFileName, zipFilePath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert metadata to io.ReadCloser: %w", err)
-	}
-	response, err := c.uploadFile(ctx, info, &info.Metadata, infoFile, infoFileName, infoFilePath)
-	if err != nil {
-		return response, fmt.Errorf("failed to upload info file: %w", err)
+		return response, fmt.Errorf("failed to upload zip file: %w", err)
 	}
 	// upload .mod
 	modFileName := info.Version + ".mod"
@@ -134,14 +131,18 @@ func (c *localRegistry) UploadPackage(
 	if err != nil {
 		return response, fmt.Errorf("failed to upload mod file: %w", err)
 	}
-	// upload .zip
-	zipFileName := info.Version + ".zip"
-	zipFilePath := filepath.Join(filePath, zipFileName)
-
-	response, err = c.uploadFile(ctx, info, &info.Metadata, zipfile, zipFileName, zipFilePath)
+	// upload .info
+	infoFileName := info.Version + ".info"
+	infoFilePath := filepath.Join(filePath, infoFileName)
+	infoFile, err := metadataToReadCloser(info.Metadata)
 	if err != nil {
-		return response, fmt.Errorf("failed to upload zip file: %w", err)
+		return nil, fmt.Errorf("failed to convert metadata to io.ReadCloser: %w", err)
 	}
+	response, err = c.uploadFile(ctx, info, &info.Metadata, infoFile, infoFileName, infoFilePath)
+	if err != nil {
+		return response, fmt.Errorf("failed to upload info file: %w", err)
+	}
+
 	// publish artifact created event
 	c.publishArtifactCreatedEvent(ctx, info)
 

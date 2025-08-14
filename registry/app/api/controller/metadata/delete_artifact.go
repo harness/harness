@@ -38,7 +38,7 @@ func (c *APIController) DeleteArtifact(ctx context.Context, r artifact.DeleteArt
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
 				*GetErrorResponse(http.StatusBadRequest, err.Error()),
 			),
-		}, err
+		}, nil
 	}
 	space, err := c.SpaceFinder.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
@@ -46,7 +46,7 @@ func (c *APIController) DeleteArtifact(ctx context.Context, r artifact.DeleteArt
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
 				*GetErrorResponse(http.StatusBadRequest, err.Error()),
 			),
-		}, err
+		}, nil
 	}
 
 	session, _ := request.AuthSessionFrom(ctx)
@@ -62,7 +62,7 @@ func (c *APIController) DeleteArtifact(ctx context.Context, r artifact.DeleteArt
 			UnauthorizedJSONResponse: artifact.UnauthorizedJSONResponse(
 				*GetErrorResponse(http.StatusForbidden, err.Error()),
 			),
-		}, err
+		}, nil
 	}
 
 	repoEntity, err := c.RegistryRepository.GetByParentIDAndName(ctx, regInfo.ParentID, regInfo.RegistryIdentifier)
@@ -107,6 +107,8 @@ func (c *APIController) DeleteArtifact(ctx context.Context, r artifact.DeleteArt
 		err = c.deleteGenericImage(ctx, regInfo, artifactName)
 	case artifact.PackageTypeGO:
 		err = c.deleteGenericImage(ctx, regInfo, artifactName)
+	case artifact.PackageTypeHUGGINGFACE:
+		err = fmt.Errorf("unsupported package type: %s", regInfo.PackageType)
 	default:
 		err = fmt.Errorf("unsupported package type: %s", regInfo.PackageType)
 	}

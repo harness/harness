@@ -38,19 +38,21 @@ func (c *APIController) DeleteRegistry(
 ) (artifact.DeleteRegistryResponseObject, error) {
 	regInfo, err := c.RegistryMetadataHelper.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
 	if err != nil {
+		//nolint:nilerr
 		return artifact.DeleteRegistry400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
 				*GetErrorResponse(http.StatusBadRequest, err.Error()),
 			),
-		}, err
+		}, nil
 	}
 	space, err := c.SpaceFinder.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
+		//nolint:nilerr
 		return artifact.DeleteRegistry400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
 				*GetErrorResponse(http.StatusBadRequest, err.Error()),
 			),
-		}, err
+		}, nil
 	}
 
 	session, _ := request.AuthSessionFrom(ctx)
@@ -62,11 +64,12 @@ func (c *APIController) DeleteRegistry(
 		session,
 		permissionChecks...,
 	); err != nil {
+		//nolint:nilerr
 		return artifact.DeleteRegistry403JSONResponse{
 			UnauthorizedJSONResponse: artifact.UnauthorizedJSONResponse(
 				*GetErrorResponse(http.StatusForbidden, err.Error()),
 			),
-		}, err
+		}, nil
 	}
 
 	repoEntity, err := c.RegistryRepository.GetByParentIDAndName(ctx, regInfo.ParentID, regInfo.RegistryIdentifier)
@@ -86,11 +89,12 @@ func (c *APIController) DeleteRegistry(
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("failed to delete upstream proxies for registry: %s with error: %s",
 			regInfo.RegistryIdentifier, err)
+		//nolint:nilerr
 		return artifact.DeleteRegistry400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
 				*GetErrorResponse(http.StatusBadRequest, err.Error()),
 			),
-		}, err
+		}, nil
 	}
 
 	err = c.tx.WithTx(

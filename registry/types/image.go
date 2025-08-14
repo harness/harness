@@ -15,8 +15,9 @@
 package types
 
 import (
-	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"time"
+
+	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 )
 
 // Image DTO object.
