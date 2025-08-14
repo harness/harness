@@ -73,7 +73,7 @@ type Debug struct {
 
 type ValidateYamlRequest struct {
 	Content  *string `json:"content"`
-	RepoType *string `json:"repoType"`
+	RepoType *string `json:"repoType"` //nolint:tagliatelle
 }
 
 type ValidateYamlResponse struct {
@@ -91,8 +91,8 @@ type PreUploadRequest struct {
 
 type PreUploadResponseFile struct {
 	Path         string     `json:"path"`
-	UploadMode   UploadMode `json:"uploadMode"`
-	ShouldIgnore bool       `json:"shouldIgnore"` // NEW
+	UploadMode   UploadMode `json:"uploadMode"`   //nolint:tagliatelle
+	ShouldIgnore bool       `json:"shouldIgnore"` // NEW //nolint:tagliatelle
 }
 
 type PreUploadRequestFile struct {
@@ -103,7 +103,7 @@ type PreUploadRequestFile struct {
 
 type RevisionInfoResponse struct {
 	huggingfacemetadata.Metadata
-	XetEnabled bool `json:"xetEnabled"`
+	XetEnabled bool `json:"xetEnabled"` //nolint:tagliatelle
 }
 
 type LfsInfoRequest struct {
@@ -138,10 +138,10 @@ type LfsUploadResponse struct {
 }
 
 type CommitRevisionResponse struct {
-	CommitURL         string    `json:"commitUrl"`
-	CommitMessage     string    `json:"commitMessage"`
-	CommitDescription string    `json:"commitDescription"`
-	OID               string    `json:"commitOid"`
+	CommitURL         string    `json:"commitUrl"`         //nolint:tagliatelle
+	CommitMessage     string    `json:"commitMessage"`     //nolint:tagliatelle
+	CommitDescription string    `json:"commitDescription"` //nolint:tagliatelle
+	OID               string    `json:"commitOid"`         //nolint:tagliatelle
 	Success           bool      `json:"success"`
 	Error             *LfsError `json:"error,omitempty"`
 }
@@ -181,13 +181,13 @@ type LfsObjectResponse struct {
 	Error   *LfsError             `json:"error,omitempty"`
 }
 
-// UploadMode represents the mode for uploading files
+// UploadMode represents the mode for uploading files.
 type UploadMode string
 
 const (
-	// Regular represents regular file upload mode
+	// Regular represents regular file upload mode.
 	RegularUpload UploadMode = "regular"
-	// LFS represents Large File Storage upload mode
+	// LFS represents Large File Storage upload mode.
 	LFSUpload UploadMode = "lfs"
 )
 

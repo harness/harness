@@ -276,7 +276,6 @@ func (l *localBase) MoveMultipleTempFilesAndCreateArtifact(ctx context.Context, 
 			return nil
 		})
 	return err
-
 }
 
 func (l *localBase) updateFilesMetadata(

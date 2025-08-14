@@ -102,12 +102,14 @@ func (r runnerDB) BindNamed(query string, arg interface{}) (string, []interface{
 func (r runnerDB) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
+	//nolint:sqlclosecheck
 	return r.db.QueryContext(ctx, query, args...)
 }
 
 func (r runnerDB) QueryxContext(ctx context.Context, query string, args ...interface{}) (*sqlx.Rows, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
+	//nolint:sqlclosecheck
 	return r.db.QueryxContext(ctx, query, args...)
 }
 
@@ -132,18 +134,21 @@ func (r runnerDB) QueryRowContext(ctx context.Context, query string, args ...any
 func (r runnerDB) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
+	//nolint:sqlclosecheck
 	return r.db.PrepareContext(ctx, query)
 }
 
 func (r runnerDB) PreparexContext(ctx context.Context, query string) (*sqlx.Stmt, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
+	//nolint:sqlclosecheck
 	return r.db.PreparexContext(ctx, query)
 }
 
 func (r runnerDB) PrepareNamedContext(ctx context.Context, query string) (*sqlx.NamedStmt, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
+	//nolint:sqlclosecheck
 	return r.db.PrepareNamedContext(ctx, query)
 }
 

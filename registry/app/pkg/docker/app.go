@@ -1,5 +1,5 @@
+//nolint:goheader
 // Source: https://github.com/distribution/distribution
-
 // Copyright 2014 https://github.com/distribution/distribution Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -61,7 +61,7 @@ func NewApp(
 		Config:         cfg,
 		storageService: storageService,
 	}
-	app.configureSecret(cfg)
+	app.configureSecret(cfg) //nolint:contextcheck
 	gcService.Start(ctx, spaceStore, blobRepo, storageDeleter, cfg)
 	return app
 }

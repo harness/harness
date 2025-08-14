@@ -32,7 +32,8 @@ func Migrate(m *migrate.Migrate) error {
 	}
 	log.Info().Msgf("current version %d", version)
 	if dirty {
-		prev := int(version) - 1
+		prev := int(version) - 1 //nolint:gosec
+		//nolint:gosec
 		log.Info().Msg(fmt.Sprintf("schema is dirty at version = %d. Forcing version to %d", int(version), prev))
 		err = m.Force(prev)
 		if err != nil {

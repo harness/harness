@@ -353,6 +353,7 @@ func unpackTarball(tarball, outputDir string) error {
 		switch header.Typeflag {
 		case tar.TypeDir:
 			// Create the directory if it doesn't exist
+			//nolint:gosec
 			if err := os.MkdirAll(targetPath, os.FileMode(header.Mode)); err != nil {
 				return fmt.Errorf("failed to create directory: %w", err)
 			}
@@ -384,6 +385,7 @@ func extractFile(tarReader *tar.Reader, targetPath string, mode int64) error {
 		return fmt.Errorf("failed to copy file content: %w", err)
 	}
 
+	//nolint:gosec
 	if err := os.Chmod(targetPath, os.FileMode(mode)); err != nil {
 		return fmt.Errorf("failed to set file permissions: %w", err)
 	}

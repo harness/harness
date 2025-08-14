@@ -150,7 +150,7 @@ filename file_name.go
 	}
 
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Error(diff)
 	}
 }
 

@@ -16,7 +16,7 @@ package pkg
 
 import "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 
-// Artifact Fixme: Name change to Registry as it provides Registry Type
+// Artifact Fixme: Name change to Registry as it provides Registry Type.
 type Artifact interface {
 	GetArtifactType() artifact.RegistryType
 	GetPackageTypes() []artifact.PackageType

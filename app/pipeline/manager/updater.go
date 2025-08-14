@@ -43,38 +43,38 @@ func (u *updater) do(ctx context.Context, step *types.Step) error {
 	if len(step.Error) > 500 {
 		step.Error = step.Error[:500]
 	}
-	err := u.Steps.Update(noContext, step)
+	err := u.Steps.Update(noContext, step) //nolint:contextcheck
 	if err != nil {
 		log.Error().Err(err).Msg("manager: cannot update step")
 		return err
 	}
 
-	stage, err := u.Stages.Find(noContext, step.StageID)
+	stage, err := u.Stages.Find(noContext, step.StageID) //nolint:contextcheck
 	if err != nil {
 		log.Error().Err(err).Msg("manager: cannot find stage")
 		return nil
 	}
 
-	execution, err := u.Executions.Find(noContext, stage.ExecutionID)
+	execution, err := u.Executions.Find(noContext, stage.ExecutionID) //nolint:contextcheck
 	if err != nil {
 		log.Error().Err(err).Msg("manager: cannot find execution")
 		return nil
 	}
 
-	repo, err := u.Repos.Find(noContext, execution.RepoID)
+	repo, err := u.Repos.Find(noContext, execution.RepoID) //nolint:contextcheck
 	if err != nil {
 		log.Error().Err(err).Msg("manager: cannot find repo")
 		return nil
 	}
 
-	stages, err := u.Stages.ListWithSteps(noContext, stage.ExecutionID)
+	stages, err := u.Stages.ListWithSteps(noContext, stage.ExecutionID) //nolint:contextcheck
 	if err != nil {
 		log.Error().Err(err).Msg("manager: cannot find stages")
 		return nil
 	}
 	execution.Stages = stages
 
-	u.SSEStreamer.Publish(noContext, repo.ParentID, enum.SSETypeExecutionUpdated, execution)
+	u.SSEStreamer.Publish(noContext, repo.ParentID, enum.SSETypeExecutionUpdated, execution) //nolint:contextcheck
 
 	return nil
 }

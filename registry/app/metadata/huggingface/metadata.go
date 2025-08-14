@@ -32,15 +32,15 @@ var _ metadata.Metadata = (*HuggingFaceMetadata)(nil)
 
 type Metadata struct {
 	ID           string    `json:"id"`
-	ModelID      string    `json:"modelId,omitempty"`
+	ModelID      string    `json:"modelId,omitempty"` //nolint:tagliatelle
 	SHA          string    `json:"sha,omitempty"`
 	Downloads    int64     `json:"downloads,omitempty"`
 	Likes        int64     `json:"likes,omitempty"`
-	LibraryName  string    `json:"libraryName,omitempty"`
+	LibraryName  string    `json:"libraryName,omitempty"` //nolint:tagliatelle
 	Tags         []string  `json:"tags,omitempty"`
-	CardData     *CardData `json:"cardData,omitempty"`
+	CardData     *CardData `json:"cardData,omitempty"` //nolint:tagliatelle
 	Siblings     []Sibling `json:"siblings,omitempty"`
-	LastModified string    `json:"lastModified,omitempty"`
+	LastModified string    `json:"lastModified,omitempty"` //nolint:tagliatelle
 	Private      bool      `json:"private,omitempty"`
 	Readme       string    `json:"readme,omitempty"`
 }

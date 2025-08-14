@@ -297,7 +297,7 @@ checkType:
 			fields := strings.Fields(subLine)
 			if len(fields) > 0 {
 				mode, _ := strconv.ParseUint(fields[len(fields)-1], 8, 64)
-				file.mode = enum.EntryMode(mode)
+				file.mode = enum.EntryMode(mode) //nolint:gosec
 				if file.oldMode == 0 {
 					file.oldMode = file.mode
 				}
@@ -308,7 +308,7 @@ checkType:
 			fields := strings.Fields(subLine)
 			if len(fields) > 0 {
 				mode, _ := strconv.ParseUint(fields[len(fields)-1], 8, 64)
-				file.mode = enum.EntryMode(mode)
+				file.mode = enum.EntryMode(mode) //nolint:gosec
 				if file.oldMode == 0 {
 					file.oldMode = file.mode
 				}
@@ -324,8 +324,8 @@ checkType:
 			file.SHA = shas[1]
 			if len(fields) > 1 {
 				mode, _ := strconv.ParseUint(fields[1], 8, 64)
-				file.mode = enum.EntryMode(mode)
-				file.oldMode = enum.EntryMode(mode)
+				file.mode = enum.EntryMode(mode)    //nolint:gosec
+				file.oldMode = enum.EntryMode(mode) //nolint:gosec
 			}
 			break checkType
 		case strings.HasPrefix(subLine, enum.DiffExtHeaderSimilarity):
@@ -341,13 +341,13 @@ checkType:
 			fields := strings.Fields(subLine)
 			if len(fields) > 0 {
 				mode, _ := strconv.ParseUint(fields[len(fields)-1], 8, 64)
-				file.mode = enum.EntryMode(mode)
+				file.mode = enum.EntryMode(mode) //nolint:gosec
 			}
 		case strings.HasPrefix(subLine, enum.DiffExtHeaderOldMode):
 			fields := strings.Fields(subLine)
 			if len(fields) > 0 {
 				mode, _ := strconv.ParseUint(fields[len(fields)-1], 8, 64)
-				file.oldMode = enum.EntryMode(mode)
+				file.oldMode = enum.EntryMode(mode) //nolint:gosec
 			}
 		}
 	}

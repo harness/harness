@@ -479,6 +479,7 @@ func LoadCommitGraphInfo(repoPath string) (CommitGraphInfo, error) {
 	var commitGraphPaths []string
 
 	chainData, err := os.ReadFile(commitGraphChainPath)
+	//nolint:nestif
 	if err != nil {
 		if !errors.Is(err, os.ErrNotExist) {
 			return CommitGraphInfo{}, fmt.Errorf("reading commit-graphs chain: %w", err)

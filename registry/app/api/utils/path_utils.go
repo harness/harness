@@ -74,7 +74,7 @@ func GetHuggingFaceFilePath(imageName string, artifactType *artifact.ArtifactTyp
 }
 
 func GetFilePath(packageType artifact.PackageType, imageName string, version string) (string, error) {
-	switch packageType {
+	switch packageType { //nolint:exhaustive
 	case artifact.PackageTypeDOCKER:
 		return "", fmt.Errorf("docker package type not supported")
 	case artifact.PackageTypeHELM:
@@ -102,11 +102,10 @@ func GetFilePath(packageType artifact.PackageType, imageName string, version str
 
 func GetFilePathWithArtifactType(packageType artifact.PackageType, imageName string, version string,
 	artifactType *artifact.ArtifactType) (string, error) {
-	switch packageType {
+	switch packageType { //nolint:exhaustive
 	case artifact.PackageTypeHUGGINGFACE:
 		return GetHuggingFaceFilePath(imageName, artifactType, version), nil
 	default:
 		return "", fmt.Errorf("unsupported package type: %s", packageType)
 	}
-
 }

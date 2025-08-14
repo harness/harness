@@ -240,7 +240,7 @@ func (m *Manager) Accept(_ context.Context, id int64, machine string) (*types.St
 		Logger()
 	log.Debug().Msg("manager: accept stage")
 
-	stage, err := m.Stages.Find(noContext, id)
+	stage, err := m.Stages.Find(noContext, id) //nolint:contextcheck
 	if err != nil {
 		log.Warn().Err(err).Msg("manager: cannot find stage")
 		return nil, err
@@ -252,7 +252,7 @@ func (m *Manager) Accept(_ context.Context, id int64, machine string) (*types.St
 
 	stage.Machine = machine
 	stage.Status = enum.CIStatusPending
-	err = m.Stages.Update(noContext, stage)
+	err = m.Stages.Update(noContext, stage) //nolint:contextcheck
 	switch {
 	case errors.Is(err, gitness_store.ErrVersionConflict):
 		log.Debug().Err(err).Msg("manager: stage processed by another agent")
@@ -286,27 +286,28 @@ func (m *Manager) UploadLogs(ctx context.Context, step int64, r io.Reader) error
 
 // Details provides details about the stage.
 func (m *Manager) Details(ctx context.Context, stageID int64) (*ExecutionContext, error) {
-	log := log.With().
+	log := log.With().Ctx(ctx).
 		Int64("stage-id", stageID).
 		Logger()
 	log.Debug().Msg("manager: fetching stage details")
 
+	//nolint:contextcheck
 	stage, err := m.Stages.Find(noContext, stageID)
 	if err != nil {
 		log.Warn().Err(err).Msg("manager: cannot find stage")
 		return nil, err
 	}
-	execution, err := m.Executions.Find(noContext, stage.ExecutionID)
+	execution, err := m.Executions.Find(noContext, stage.ExecutionID) //nolint:contextcheck
 	if err != nil {
 		log.Warn().Err(err).Msg("manager: cannot find build")
 		return nil, err
 	}
-	pipeline, err := m.Pipelines.Find(noContext, execution.PipelineID)
+	pipeline, err := m.Pipelines.Find(noContext, execution.PipelineID) //nolint:contextcheck
 	if err != nil {
 		log.Warn().Err(err).Msg("manager: cannot find pipeline")
 		return nil, err
 	}
-	repo, err := m.Repos.Find(noContext, execution.RepoID)
+	repo, err := m.Repos.Find(noContext, execution.RepoID) //nolint:contextcheck
 	if err != nil {
 		log.Warn().Err(err).Msg("manager: cannot find repo")
 		return nil, err
@@ -315,6 +316,7 @@ func (m *Manager) Details(ctx context.Context, stageID int64) (*ExecutionContext
 	// Backfill clone URL
 	repo.GitURL = m.urlProvider.GenerateContainerGITCloneURL(ctx, repo.Path)
 
+	//nolint:contextcheck
 	stages, err := m.Stages.List(noContext, stage.ExecutionID)
 	if err != nil {
 		log.Warn().Err(err).Msg("manager: cannot list stages")
@@ -328,20 +330,21 @@ func (m *Manager) Details(ctx context.Context, stageID int64) (*ExecutionContext
 
 	// TODO: Currently we fetch all the secrets from the same space.
 	// This logic can be updated when needed.
-	secrets, err := m.Secrets.ListAll(noContext, repo.ParentID)
+	secrets, err := m.Secrets.ListAll(noContext, repo.ParentID) //nolint:contextcheck
 	if err != nil {
 		log.Warn().Err(err).Msg("manager: cannot list secrets")
 		return nil, err
 	}
 
 	// Fetch contents of YAML from the execution ref at the pipeline config path.
-	file, err := m.FileService.Get(noContext, repo, pipeline.ConfigPath, execution.After)
+	file, err := m.FileService.Get(noContext, repo, pipeline.ConfigPath, execution.After) //nolint:contextcheck
 	if err != nil {
 		log.Warn().Err(err).Msg("manager: cannot fetch file")
 		return nil, err
 	}
 
 	// Get public access settings of the repo
+	//nolint:contextcheck
 	repoIsPublic, err := m.publicAccess.Get(noContext, enum.PublicResourceTypeRepo, repo.Path)
 	if err != nil {
 		log.Warn().Err(err).Msg("manager: cannot check if repo is public")
@@ -356,7 +359,7 @@ func (m *Manager) Details(ctx context.Context, stageID int64) (*ExecutionContext
 		File:         file,
 		RepoIsPublic: repoIsPublic,
 	}
-	file, err = m.ConverterService.Convert(noContext, args)
+	file, err = m.ConverterService.Convert(noContext, args) //nolint:contextcheck
 	if err != nil {
 		log.Warn().Err(err).Msg("manager: cannot convert template contents")
 		return nil, err
@@ -413,7 +416,7 @@ func (m *Manager) BeforeStep(_ context.Context, step *types.Step) error {
 		Logger()
 
 	log.Debug().Msg("manager: updating step status")
-
+	//nolint:contextcheck
 	err := m.Logz.Create(noContext, step.ID)
 	if err != nil {
 		log.Warn().Err(err).Msg("manager: cannot create log stream")
@@ -426,6 +429,7 @@ func (m *Manager) BeforeStep(_ context.Context, step *types.Step) error {
 		Steps:       m.Steps,
 		Stages:      m.Stages,
 	}
+	//nolint:contextcheck
 	return updater.do(noContext, step)
 }
 
@@ -446,12 +450,12 @@ func (m *Manager) AfterStep(_ context.Context, step *types.Step) error {
 		Steps:       m.Steps,
 		Stages:      m.Stages,
 	}
-
+	//nolint:contextcheck
 	if err := updater.do(noContext, step); err != nil {
 		retErr = err
 		log.Warn().Err(err).Msg("manager: cannot update step")
 	}
-
+	//nolint:contextcheck
 	if err := m.Logz.Delete(noContext, step.ID); err != nil && !errors.Is(err, livelog.ErrStreamNotFound) {
 		log.Warn().Err(err).Msg("manager: cannot teardown log stream")
 	}
@@ -470,7 +474,7 @@ func (m *Manager) BeforeStage(_ context.Context, stage *types.Stage) error {
 		Stages:      m.Stages,
 		Users:       m.Users,
 	}
-
+	//nolint:contextcheck
 	return s.do(noContext, stage)
 }
 
@@ -488,7 +492,7 @@ func (m *Manager) AfterStage(_ context.Context, stage *types.Stage) error {
 		Stages:      m.Stages,
 		Reporter:    m.reporter,
 	}
-	return t.do(noContext, stage)
+	return t.do(noContext, stage) //nolint:contextcheck
 }
 
 // Watch watches for build cancellation requests.

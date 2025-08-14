@@ -60,20 +60,20 @@ func TestWithTrace(t *testing.T) {
 		},
 	)
 	for _, tc := range tests {
-		tc := tc
+		testCase := tc
 		t.Run(
-			tc.key, func(t *testing.T) {
+			testCase.key, func(t *testing.T) {
 				t.Parallel()
-				v := ctx.Value(tc.key)
-				if tc.notnilorempty {
+				v := ctx.Value(testCase.key)
+				if testCase.notnilorempty {
 					if v == nil || v == "" {
 						t.Fatalf("value was nil or empty: %#v", v)
 					}
 					return
 				}
 
-				if v != tc.expected {
-					t.Fatalf("unexpected value: %v != %v", v, tc.expected)
+				if v != testCase.expected {
+					t.Fatalf("unexpected value: %v != %v", v, testCase.expected)
 				}
 			},
 		)
@@ -98,20 +98,20 @@ func TestWithTrace(t *testing.T) {
 			},
 		)
 		for _, tc := range tests1 {
-			tc := tc
+			testCase := tc
 			t.Run(
-				tc.key, func(t *testing.T) {
+				testCase.key, func(t *testing.T) {
 					t.Parallel()
-					v := ctx.Value(tc.key)
-					if tc.notnilorempty {
+					v := ctx.Value(testCase.key)
+					if testCase.notnilorempty {
 						if v == nil || v == "" {
 							t.Fatalf("value was nil or empty: %#v", v)
 						}
 						return
 					}
 
-					if v != tc.expected {
-						t.Fatalf("unexpected value: %v != %v", v, tc.expected)
+					if v != testCase.expected {
+						t.Fatalf("unexpected value: %v != %v", v, testCase.expected)
 					}
 				},
 			)

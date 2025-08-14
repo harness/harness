@@ -435,7 +435,7 @@ func (s *Scheduler) runJob(ctx context.Context, j *Job) {
 		// Use the context.Background() because we want to update the job even if the job's context is done.
 		// The context can be done because the job exceeded its deadline or the server is shutting down.
 		backgroundCtx := context.Background()
-
+		//nolint: contextcheck
 		if mx, err := globalLock(backgroundCtx, s.mxManager); err != nil {
 			// If locking failed, just log the error and proceed to update the DB anyway.
 			log.Ctx(ctx).Err(err).Msg("failed to obtain global lock to update job after execution")
@@ -446,7 +446,7 @@ func (s *Scheduler) runJob(ctx context.Context, j *Job) {
 				}
 			}()
 		}
-
+		//nolint: contextcheck
 		job, err := s.store.Find(backgroundCtx, jobUID)
 		if err != nil {
 			log.Ctx(ctx).Err(err).Msg("failed to find job after execution")
@@ -456,6 +456,7 @@ func (s *Scheduler) runJob(ctx context.Context, j *Job) {
 		// Update the job fields, reschedule if necessary.
 		postExec(job, execResult, execFailure)
 
+		//nolint: contextcheck
 		err = s.store.UpdateExecution(backgroundCtx, job)
 		if err != nil {
 			log.Ctx(ctx).Err(err).Msg("failed to update job after execution")
@@ -500,6 +501,7 @@ func (s *Scheduler) runJob(ctx context.Context, j *Job) {
 		}
 
 		// tell everybody that a job has finished execution
+		//nolint: contextcheck
 		if err := publishStateChange(backgroundCtx, s.pubsubService, job); err != nil {
 			log.Ctx(ctx).Err(err).Msg("failed to publish job state change")
 		}

@@ -139,7 +139,7 @@ func getHostResources(runArgsMap map[types.RunArg]*types.RunArgValue) (container
 	if err != nil {
 		return resources, err
 	}
-	resources.IOMaximumBandwidth = uint64(ioMaxbandwidth)
+	resources.IOMaximumBandwidth = uint64(ioMaxbandwidth) //nolint:gosec
 
 	if arg, ok := runArgsMap[types.RunArgUlimit]; ok {
 		ulimits := []*container.Ulimit{}

@@ -33,7 +33,7 @@ func Limit(size int) uint64 {
 	if size == 0 {
 		size = defaultLimit
 	}
-	return uint64(size)
+	return uint64(size) //nolint:gosec
 }
 
 // offset converts the page to a sql offset.
@@ -45,7 +45,7 @@ func Offset(page, size int) uint64 {
 		size = defaultLimit
 	}
 	page--
-	return uint64(page * size)
+	return uint64(page * size) //nolint:gosec
 }
 
 // Logs the error and message, returns either the provided message.

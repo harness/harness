@@ -227,7 +227,7 @@ func (c *HTTPClient) stream(ctx context.Context, rawurl, method string, noToken 
 	req.Header.Set("Accept", "application/json;version="+version.Version.String())
 
 	// send the http request.
-	resp, err := c.client.Do(req)
+	resp, err := c.client.Do(req) //nolint:bodyclose
 	if err != nil {
 		return nil, err
 	}

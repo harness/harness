@@ -180,7 +180,7 @@ func TestWithResponseWriter(t *testing.T) {
 	}
 
 	// Make sure flush propagates
-	rw.(http.Flusher).Flush()
+	rw.(http.Flusher).Flush() //nolint:errcheck
 
 	if !trw.flushed {
 		t.Fatalf("response writer not flushed")

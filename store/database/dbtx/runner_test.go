@@ -313,6 +313,7 @@ func (dbMockNop) QueryxContext(context.Context, string, ...interface{}) (*sqlx.R
 }
 func (dbMockNop) QueryRowxContext(context.Context, string, ...interface{}) *sqlx.Row { return nil }
 func (dbMockNop) ExecContext(context.Context, string, ...interface{}) (sql.Result, error) {
+	//nolint:nilnil
 	return nil, nil
 }
 func (dbMockNop) QueryRowContext(context.Context, string, ...any) *sql.Row {

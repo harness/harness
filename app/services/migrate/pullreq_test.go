@@ -67,6 +67,6 @@ func TestGenerateThreads(t *testing.T) {
 
 	gotThreads := generateThreads(comments)
 	if diff := cmp.Diff(gotThreads, wantThreads); diff != "" {
-		t.Errorf(diff)
+		t.Error(diff)
 	}
 }

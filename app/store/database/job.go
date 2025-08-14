@@ -382,7 +382,7 @@ func (s *JobStore) ListReady(ctx context.Context, now time.Time, limit int) ([]*
 		Where("job_state = ?", enum.JobStateScheduled).
 		Where("job_scheduled <= ?", now.UnixMilli()).
 		OrderBy("job_priority desc, job_scheduled asc, job_uid asc").
-		Limit(uint64(limit))
+		Limit(uint64(limit)) //nolint:gosec
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {

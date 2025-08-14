@@ -40,7 +40,7 @@ func GetAllResourceTypes() ([]ResourceType, ResourceType) {
 	return resourceTypes, ""
 }
 
-// All valid resource types
+// All valid resource types.
 var resourceTypes = sortEnum([]ResourceType{
 	ResourceTypeSpace,
 	ResourceTypeRepo,

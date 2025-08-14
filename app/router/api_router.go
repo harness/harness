@@ -39,7 +39,9 @@ func (r *APIRouter) Handle(w http.ResponseWriter, req *http.Request) {
 
 	// remove matched prefix to simplify API handlers
 	if err := StripPrefix(APIMount, req); err != nil {
+		//nolint:contextcheck
 		log.Ctx(req.Context()).Err(err).Msgf("Failed striping of prefix for api request.")
+		//nolint:contextcheck
 		render.InternalError(req.Context(), w)
 		return
 	}

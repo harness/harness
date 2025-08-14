@@ -105,7 +105,7 @@ index f043b93..0000000
 	}
 
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Error(diff)
 	}
 }
 

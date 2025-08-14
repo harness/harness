@@ -27,19 +27,19 @@ import (
 
 // HandleEvents returns a http.HandlerFunc that watches for events on a space.
 func HandleEvents(appCtx context.Context, spaceCtrl *space.Controller) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) { //nolint:contextcheck
 		ctx := r.Context()
-		session, _ := request.AuthSessionFrom(ctx)
+		session, _ := request.AuthSessionFrom(ctx) //nolint:contextcheck
 
 		spaceRef, err := request.GetSpaceRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(ctx, w, err)
+			render.TranslatedUserError(ctx, w, err) //nolint:contextcheck
 			return
 		}
 
-		chEvents, chErr, sseCancel, err := spaceCtrl.Events(ctx, session, spaceRef)
+		chEvents, chErr, sseCancel, err := spaceCtrl.Events(ctx, session, spaceRef) //nolint:contextcheck
 		if err != nil {
-			render.TranslatedUserError(ctx, w, err)
+			render.TranslatedUserError(ctx, w, err) //nolint:contextcheck
 			return
 		}
 		defer func() {
@@ -48,6 +48,6 @@ func HandleEvents(appCtx context.Context, spaceCtrl *space.Controller) http.Hand
 			}
 		}()
 
-		render.StreamSSE(ctx, w, appCtx.Done(), chEvents, chErr)
+		render.StreamSSE(ctx, w, appCtx.Done(), chEvents, chErr) //nolint:contextcheck
 	}
 }

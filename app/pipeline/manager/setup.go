@@ -41,7 +41,7 @@ type setup struct {
 }
 
 func (s *setup) do(ctx context.Context, stage *types.Stage) error {
-	execution, err := s.Executions.Find(noContext, stage.ExecutionID)
+	execution, err := s.Executions.Find(noContext, stage.ExecutionID) //nolint:contextcheck
 	if err != nil {
 		log.Error().Err(err).Msg("manager: cannot find the execution")
 		return err
@@ -54,7 +54,7 @@ func (s *setup) do(ctx context.Context, stage *types.Stage) error {
 		Int64("repo.id", execution.RepoID).
 		Logger()
 
-	repo, err := s.Repos.Find(noContext, execution.RepoID)
+	repo, err := s.Repos.Find(noContext, execution.RepoID) //nolint:contextcheck
 	if err != nil {
 		log.Error().Err(err).Msg("manager: cannot find the repository")
 		return err
@@ -63,7 +63,7 @@ func (s *setup) do(ctx context.Context, stage *types.Stage) error {
 	if len(stage.Error) > 500 {
 		stage.Error = stage.Error[:500]
 	}
-	err = s.Stages.Update(noContext, stage)
+	err = s.Stages.Update(noContext, stage) //nolint:contextcheck
 	if err != nil {
 		log.Error().Err(err).
 			Str("stage.status", string(stage.Status)).
@@ -76,7 +76,7 @@ func (s *setup) do(ctx context.Context, stage *types.Stage) error {
 		if len(step.Error) > 500 {
 			step.Error = step.Error[:500]
 		}
-		err := s.Steps.Create(noContext, step)
+		err := s.Steps.Create(noContext, step) //nolint:contextcheck
 		if err != nil {
 			log.Error().Err(err).
 				Str("stage.status", string(stage.Status)).
@@ -87,7 +87,7 @@ func (s *setup) do(ctx context.Context, stage *types.Stage) error {
 		}
 	}
 
-	_, err = s.updateExecution(noContext, execution)
+	_, err = s.updateExecution(noContext, execution) //nolint:contextcheck
 	if err != nil {
 		log.Error().Err(err).Msg("manager: cannot update the execution")
 		return err
@@ -102,14 +102,14 @@ func (s *setup) do(ctx context.Context, stage *types.Stage) error {
 	if err != nil {
 		log.Error().Err(err).Msg("manager: could not write to checks store")
 	}
-	stages, err := s.Stages.ListWithSteps(noContext, execution.ID)
+	stages, err := s.Stages.ListWithSteps(noContext, execution.ID) //nolint:contextcheck
 	if err != nil {
 		log.Error().Err(err).Msg("manager: could not list stages with steps")
 		return err
 	}
 	execution.Stages = stages
 
-	s.SSEStreamer.Publish(noContext, repo.ParentID, enum.SSETypeExecutionRunning, execution)
+	s.SSEStreamer.Publish(noContext, repo.ParentID, enum.SSETypeExecutionRunning, execution) //nolint:contextcheck
 
 	return nil
 }

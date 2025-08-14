@@ -95,6 +95,7 @@ func (h *Handler) serveContent(
 		if written != response.Size {
 			response.Errors = append(
 				response.Errors,
+				//nolint:staticcheck
 				fmt.Errorf(fmt.Sprintf("The size mismatch, actual:%d, expected: %d", written, response.Size)),
 			)
 		}

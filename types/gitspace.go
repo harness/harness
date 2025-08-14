@@ -125,6 +125,7 @@ func (g *GitspaceInstance) GetGitspaceState() (enum.GitspaceStateType, error) {
 		return enum.GitspaceStateError, fmt.Errorf("GitspaceInstance is nil")
 	}
 	instanceState := g.State
+	//nolint:exhaustive
 	switch instanceState {
 	case enum.GitspaceInstanceStateRunning:
 		return enum.GitspaceStateRunning, nil

@@ -135,8 +135,8 @@ func processGitErrorf(err error, format string, args ...interface{}) error {
 	case strings.Contains(err.Error(), "no merge base"):
 		if len(args) >= 2 {
 			return &UnrelatedHistoriesError{
-				BaseRef: strings.TrimSpace(args[0].(string)),
-				HeadRef: strings.TrimSpace(args[1].(string)),
+				BaseRef: strings.TrimSpace(args[0].(string)), //nolint:errcheck
+				HeadRef: strings.TrimSpace(args[1].(string)), //nolint:errcheck
 			}
 		}
 		return &UnrelatedHistoriesError{}

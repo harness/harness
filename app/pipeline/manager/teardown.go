@@ -54,7 +54,7 @@ func (t *teardown) do(ctx context.Context, stage *types.Stage) error {
 		Logger()
 	log.Debug().Msg("manager: stage is complete. teardown")
 
-	execution, err := t.Executions.Find(noContext, stage.ExecutionID)
+	execution, err := t.Executions.Find(noContext, stage.ExecutionID) //nolint:contextcheck
 	if err != nil {
 		log.Error().Err(err).Msg("manager: cannot find the execution")
 		return err
@@ -67,7 +67,7 @@ func (t *teardown) do(ctx context.Context, stage *types.Stage) error {
 		Str("stage.status", string(stage.Status)).
 		Logger()
 
-	repo, err := t.Repos.Find(noContext, execution.RepoID)
+	repo, err := t.Repos.Find(noContext, execution.RepoID) //nolint:contextcheck
 	if err != nil {
 		log.Error().Err(err).Msg("manager: cannot find the repository")
 		return err
@@ -77,7 +77,7 @@ func (t *teardown) do(ctx context.Context, stage *types.Stage) error {
 		if len(step.Error) > 500 {
 			step.Error = step.Error[:500]
 		}
-		err := t.Steps.Update(noContext, step)
+		err := t.Steps.Update(noContext, step) //nolint:contextcheck
 		if err != nil {
 			log = log.With().
 				Str("step.name", step.Name).
@@ -94,7 +94,7 @@ func (t *teardown) do(ctx context.Context, stage *types.Stage) error {
 		stage.Error = stage.Error[:500]
 	}
 
-	err = t.Stages.Update(noContext, stage)
+	err = t.Stages.Update(noContext, stage) //nolint:contextcheck
 	if err != nil {
 		log.Error().Err(err).
 			Msg("manager: cannot update the stage")
@@ -102,13 +102,13 @@ func (t *teardown) do(ctx context.Context, stage *types.Stage) error {
 	}
 
 	for _, step := range stage.Steps {
-		err = t.Logs.Delete(noContext, step.ID)
+		err = t.Logs.Delete(noContext, step.ID) //nolint:contextcheck
 		if err != nil && !errors.Is(err, livelog.ErrStreamNotFound) {
 			log.Warn().Err(err).Msgf("failed to delete log stream for step %d", step.ID)
 		}
 	}
 
-	stages, err := t.Stages.ListWithSteps(noContext, execution.ID)
+	stages, err := t.Stages.ListWithSteps(noContext, execution.ID) //nolint:contextcheck
 	if err != nil {
 		log.Warn().Err(err).
 			Msg("manager: cannot get stages")
@@ -157,7 +157,7 @@ func (t *teardown) do(ctx context.Context, stage *types.Stage) error {
 		execution.Started = execution.Finished
 	}
 
-	err = t.Executions.Update(noContext, execution)
+	err = t.Executions.Update(noContext, execution) //nolint:contextcheck
 	if errors.Is(err, gitness_store.ErrVersionConflict) {
 		log.Warn().Err(err).
 			Msg("manager: execution updated by another goroutine")
@@ -171,7 +171,7 @@ func (t *teardown) do(ctx context.Context, stage *types.Stage) error {
 
 	execution.Stages = stages
 
-	t.SSEStreamer.Publish(noContext, repo.ParentID, enum.SSETypeExecutionCompleted, execution)
+	t.SSEStreamer.Publish(noContext, repo.ParentID, enum.SSETypeExecutionCompleted, execution) //nolint:contextcheck
 
 	// send pipeline execution status
 	t.reportExecutionCompleted(ctx, execution)
@@ -241,7 +241,7 @@ func (t *teardown) cancelDownstream(
 		s.Status = enum.CIStatusSkipped
 		s.Started = time.Now().UnixMilli()
 		s.Stopped = time.Now().UnixMilli()
-		err := t.Stages.Update(noContext, s)
+		err := t.Stages.Update(noContext, s) //nolint:contextcheck
 		if errors.Is(err, gitness_store.ErrVersionConflict) {
 			rErr := t.resync(ctx, s)
 			if rErr != nil {
@@ -325,7 +325,7 @@ func (t *teardown) scheduleDownstream(
 		log.Debug().Msg("manager: schedule next stage")
 
 		sibling.Status = enum.CIStatusPending
-		err := t.Stages.Update(noContext, sibling)
+		err := t.Stages.Update(noContext, sibling) //nolint:contextcheck
 		if errors.Is(err, gitness_store.ErrVersionConflict) {
 			rErr := t.resync(ctx, sibling)
 			if rErr != nil {
@@ -339,7 +339,7 @@ func (t *teardown) scheduleDownstream(
 			errs = multierror.Append(errs, err)
 		}
 
-		err = t.Scheduler.Schedule(noContext, sibling)
+		err = t.Scheduler.Schedule(noContext, sibling) //nolint:contextcheck
 		if err != nil {
 			log.Error().Err(err).
 				Msg("manager: cannot schedule stage")

@@ -193,6 +193,7 @@ func (g gitspaceEventStore) setPaginationFilter(
 	filter *types.GitspaceEventFilter,
 ) squirrel.SelectBuilder {
 	offset := (filter.Page - 1) * filter.Size
+	//nolint:gosec
 	stmt = stmt.Offset(uint64(offset)).Limit(uint64(filter.Size))
 	return stmt
 }

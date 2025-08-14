@@ -61,6 +61,7 @@ func TestRemoteAddr(t *testing.T) {
 
 	// X-Forwarded-For set by proxy
 	expectedRemote = "127.0.0.1"
+	//nolint:noctx
 	proxyReq, err := http.NewRequest(http.MethodGet, frontend.URL, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -73,6 +74,7 @@ func TestRemoteAddr(t *testing.T) {
 	defer resp.Body.Close()
 
 	// RemoteAddr in X-Real-Ip
+	//nolint:noctx
 	getReq, err := http.NewRequest(http.MethodGet, backend.URL, nil)
 	if err != nil {
 		t.Fatal(err)

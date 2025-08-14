@@ -26,6 +26,7 @@ import (
 
 func TestModify(t *testing.T) {
 	authorizer := NewAuthorizer("u", "p")
+	//nolint:noctx
 	req, _ := http.NewRequest(http.MethodGet, "", nil)
 	err := authorizer.Modify(req)
 	require.Nil(t, err)

@@ -27,11 +27,3 @@ func pagelen(size, total int) int {
 		return quotient + 1
 	}
 }
-
-// max returns the largest of x or y.
-func max(x, y int) int {
-	if x > y {
-		return x
-	}
-	return y
-}

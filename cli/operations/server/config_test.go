@@ -147,9 +147,9 @@ func TestBackfillURLsBaseInvalidPort(t *testing.T) {
 
 func TestBackfillURLsBase(t *testing.T) {
 	config := &types.Config{}
-	config.HTTP.Host = "abc"
+	config.HTTP.Host = "xyz"
 	config.HTTP.Port = 1234
-	config.SSH.Host = "abc"
+	config.SSH.Host = "kmno"
 	config.SSH.Port = 421
 	config.URL.Base = "https://xyz:4321/test"
 

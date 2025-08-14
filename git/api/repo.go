@@ -341,7 +341,7 @@ func (g *Git) Commit(
 }
 
 // Push pushs local commits to given remote branch.
-// TODOD: return our own error types and move to above api.Push method
+// TODOD: return our own error types and move to above api.Push method.
 func (g *Git) Push(
 	ctx context.Context,
 	repoPath string,
@@ -447,6 +447,7 @@ func (g *Git) CountObjects(ctx context.Context, repoPath string) (ObjectCount, e
 	return objectCount, nil
 }
 
+//nolint:errcheck
 func parseGitCountObjectsOutput(ctx context.Context, output string) ObjectCount {
 	info := ObjectCount{}
 
@@ -458,19 +459,19 @@ func parseGitCountObjectsOutput(ctx context.Context, output string) ObjectCount 
 
 		switch fields[0] {
 		case "count:":
-			fmt.Sscanf(fields[1], "%d", &info.Count)
+			fmt.Sscanf(fields[1], "%d", &info.Count) //nolint:errcheck
 		case "size:":
-			fmt.Sscanf(fields[1], "%d", &info.Size)
+			fmt.Sscanf(fields[1], "%d", &info.Size) //nolint:errcheck
 		case "in-pack:":
-			fmt.Sscanf(fields[1], "%d", &info.InPack)
+			fmt.Sscanf(fields[1], "%d", &info.InPack) //nolint:errcheck
 		case "packs:":
-			fmt.Sscanf(fields[1], "%d", &info.Packs)
+			fmt.Sscanf(fields[1], "%d", &info.Packs) //nolint:errcheck
 		case "size-pack:":
-			fmt.Sscanf(fields[1], "%d", &info.SizePack)
+			fmt.Sscanf(fields[1], "%d", &info.SizePack) //nolint:errcheck
 		case "prune-packable:":
-			fmt.Sscanf(fields[1], "%d", &info.PrunePackable)
+			fmt.Sscanf(fields[1], "%d", &info.PrunePackable) //nolint:errcheck
 		case "garbage:":
-			fmt.Sscanf(fields[1], "%d", &info.Garbage)
+			fmt.Sscanf(fields[1], "%d", &info.Garbage) //nolint:errcheck
 		case "size-garbage:":
 			fmt.Sscanf(fields[1], "%d", &info.SizeGarbage)
 		default:

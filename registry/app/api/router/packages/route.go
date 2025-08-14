@@ -393,7 +393,6 @@ func NewRouter(
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				With(middleware.TrackDownloadStats(packageHandler)).
 				Get("/{repoType}/{repo}/resolve/{rev}/*", huggingfaceHandler.DownloadFile)
-
 		})
 	})
 
