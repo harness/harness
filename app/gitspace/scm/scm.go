@@ -119,7 +119,7 @@ func detectDefaultGitBranch(ctx context.Context, gitRepoDir string) (string, err
 	)
 	output := &bytes.Buffer{}
 	if err := cmd.Run(ctx, command.WithStdout(output)); err != nil {
-		return "", fmt.Errorf("failed to ls remote repo")
+		return "", fmt.Errorf("failed to ls remote repo: %w", err)
 	}
 	var lsRemoteHeadRegexp = regexp.MustCompile(`ref: refs/heads/([^\s]+)\s+HEAD`)
 	match := lsRemoteHeadRegexp.FindStringSubmatch(strings.TrimSpace(output.String()))
