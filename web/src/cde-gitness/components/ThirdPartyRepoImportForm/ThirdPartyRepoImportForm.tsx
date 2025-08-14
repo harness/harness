@@ -23,7 +23,7 @@ import { Color } from '@harnessio/design-system'
 import { useHistory } from 'react-router-dom'
 import { Icon } from '@harnessio/icons'
 import { useStrings } from 'framework/strings'
-import { getRepoIdFromURL, getRepoNameFromURL, isValidUrl } from 'cde-gitness/utils/SelectRepository.utils'
+import { getRepoIdFromURL, isValidUrl } from 'cde-gitness/utils/SelectRepository.utils'
 import { BranchInput } from 'cde-gitness/components/BranchInput/BranchInput'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import NewRepoModalButton from 'components/NewRepoModalButton/NewRepoModalButton'
@@ -69,7 +69,7 @@ export const ThirdPartyRepoImportForm = () => {
                 code_repo_url: response.url,
                 branch: response.branch,
                 identifier: getRepoIdFromURL(response.url),
-                name: getRepoNameFromURL(response.url),
+                name: '',
                 code_repo_type: EnumGitspaceCodeRepoType.UNKNOWN
               }
             })

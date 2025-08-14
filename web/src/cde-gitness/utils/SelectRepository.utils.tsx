@@ -65,7 +65,7 @@ export const getIconByRepoType = ({
 }): React.ReactNode => {
   const scmOption = [...scmOptions, ...onPremSCMOptions].find(option => option.value === repoType)
   return (
-    <img height={height} width={height} src={defaultTo(scmOption?.icon, genericGit)} style={{ marginRight: '10px' }} />
+    <img height={height} width={height} src={defaultTo(scmOption?.icon, genericGit)} style={{ marginRight: '4px' }} />
   )
 }
 

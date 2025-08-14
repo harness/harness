@@ -24,7 +24,6 @@ import (
 	"io"
 	"os/exec"
 	"path/filepath"
-	goruntime "runtime"
 	"strconv"
 	"strings"
 
@@ -312,9 +311,7 @@ func prepareHostConfig(
 	}
 
 	extraHosts := getExtraHosts(runArgsMap)
-	if goruntime.GOOS == "linux" {
-		extraHosts = append(extraHosts, "host.docker.internal:host-gateway")
-	}
+	extraHosts = append(extraHosts, "host.docker.internal:host-gateway")
 
 	restartPolicy, err := getRestartPolicy(runArgsMap)
 	if err != nil {

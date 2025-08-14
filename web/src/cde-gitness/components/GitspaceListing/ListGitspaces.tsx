@@ -30,7 +30,7 @@ import { Color } from '@harnessio/design-system'
 import type { Renderer, CellProps } from 'react-table'
 //import { Icon } from '@harnessio/icons'
 import ReactTimeago from 'react-timeago'
-import { Circle, Cpu, Clock, Play, Db, ModernTv } from 'iconoir-react'
+import { Circle, Cpu, Clock, Play, Db, ModernTv, Cloud } from 'iconoir-react'
 import { Intent, Menu, MenuItem, PopoverInteractionKind, Position } from '@blueprintjs/core'
 import { useHistory } from 'react-router-dom'
 import type { IconName } from '@harnessio/icons'
@@ -45,6 +45,7 @@ import type {
   EnumIDEType,
   TypesGitspaceConfig,
   TypesInfraProviderResource,
+  TypesInfraProviderConfig,
   TypesGitspaceSettingsResponse
 } from 'services/cde'
 import gitspaceIcon from 'cde-gitness/assests/gitspace.svg?url'
@@ -56,7 +57,9 @@ import { useGitspaceActions } from 'cde-gitness/hooks/useGitspaceActions'
 import { useDeleteGitspaces } from 'cde-gitness/hooks/useDeleteGitspaces'
 import { useOpenVSCodeBrowserURL } from 'cde-gitness/hooks/useOpenVSCodeBrowserURL'
 import { getGitspaceChanges, getIconByRepoType } from 'cde-gitness/utils/SelectRepository.utils'
+import { useInfraListingApi } from 'cde-gitness/hooks/useGetInfraListProvider'
 import { usePaginationProps } from 'cde-gitness/hooks/usePaginationProps'
+import getProviderIcon from '../../utils/InfraProvider.utils'
 import ResourceDetails from '../ResourceDetails/ResourceDetails'
 import CopyButton from '../CopyButton/CopyButton'
 import { EditGitspace } from '../EditGitspace/EditGitspace'
@@ -164,16 +167,36 @@ export const RenderGitspaceName: Renderer<
   )
 }
 
-export const RenderRegionAndMachine: Renderer<
-  CellProps<TypesGitspaceConfig & { resource?: TypesInfraProviderResource }>
-> = ({ row }) => {
-  const details = row.original
-  const { resource } = details
-  return (
-    <Layout.Vertical spacing={'medium'}>
-      <ResourceDetails resource={resource} isListingPage={true} />
-    </Layout.Vertical>
-  )
+const getRenderInfraProvider = (infraList: TypesInfraProviderConfig[], infraListLoading: boolean) => {
+  return ({ row }: CellProps<TypesGitspaceConfig & { resource?: TypesInfraProviderResource }>) => {
+    const details = row.original
+    const { resource } = details
+    const providerType = details.resource?.infra_provider_type || ''
+    const providerConfigId = details.resource?.config_identifier || ''
+    const providerIcon = getProviderIcon(providerType)
+
+    const provider = infraList.find(item => item.identifier === providerConfigId)
+    const displayName = provider?.name || ''
+    return (
+      <Layout.Vertical spacing={'medium'}>
+        <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'start' }}>
+          {providerIcon ? (
+            <img src={providerIcon} className={css.standardProviderIcon} />
+          ) : (
+            <Cloud className={css.standardProviderIcon} />
+          )}
+          {infraListLoading ? (
+            <Text icon="loading" iconProps={{ size: 16 }} lineClamp={1} className={css.providerNameText}></Text>
+          ) : (
+            <Text lineClamp={1} color={Color.BLACK} title={displayName} className={css.providerNameText}>
+              {displayName}
+            </Text>
+          )}
+        </Layout.Horizontal>
+        <ResourceDetails resource={resource} />
+      </Layout.Vertical>
+    )
+  }
 }
 
 export const OwnerAndCreatedAt: Renderer<CellProps<TypesGitspaceConfig>> = ({ row }) => {
@@ -775,6 +798,30 @@ export const ListGitspaces = ({
   const { routes, standalone } = useAppContext()
 
   const [currentRow, setCurrentRow] = useState<TypesGitspaceConfig>()
+  const [infraProvidersList, setInfraProvidersList] = useState<TypesInfraProviderConfig[]>([])
+
+  // Fetch the infrastructure providers list
+  const {
+    data: infraProvidersData,
+    refetch: refetchInfraProviders,
+    loading: infraProvidersLoading
+  } = useInfraListingApi({
+    queryParams: {
+      acl_filter: 'true'
+    }
+  })
+
+  useEffect(() => {
+    if (!standalone) {
+      refetchInfraProviders()
+    }
+  }, [refetchInfraProviders, standalone])
+
+  useEffect(() => {
+    if (infraProvidersData) {
+      setInfraProvidersList(infraProvidersData)
+    }
+  }, [infraProvidersData])
 
   const [handleStartGitspace, hideStartModal] = useModalHook(() => {
     return (
@@ -855,13 +902,13 @@ export const ListGitspaces = ({
         }
       ]
 
-  const regionColumn = standalone
+  const infraProviderColumn = standalone
     ? []
     : [
         {
-          id: 'gitsapceId',
-          Header: getString('cde.regionAndMachineSize'),
-          Cell: RenderRegionAndMachine
+          id: 'infraProvider',
+          Header: getString('cde.listing.infrastructureDetails'),
+          Cell: getRenderInfraProvider(infraProvidersList, infraProvidersLoading) // Pass the list here
         }
       ]
 
@@ -924,7 +971,7 @@ export const ListGitspaces = ({
               Header: getString('cde.gitspaces'),
               Cell: RenderGitspaceName
             },
-            ...regionColumn,
+            ...infraProviderColumn,
             {
               id: 'repository',
               Header: getString('cde.repositoryAndBranch'),

@@ -16,4 +16,8 @@
 
 /* eslint-disable */
 // This is an auto-generated file
+export declare const container: string
+export declare const iconContainer: string
 export declare const iconTextStyle: string
+export declare const textContainer: string
+export declare const truncatedText: string

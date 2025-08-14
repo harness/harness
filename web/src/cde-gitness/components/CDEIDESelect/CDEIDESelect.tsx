@@ -33,11 +33,18 @@ interface CDEIDESelectProps {
   isEditMode?: boolean
 }
 
-export const CDEIDESelect = ({ onChange, selectedIde, filteredIdeOptions = [], isEditMode }: CDEIDESelectProps) => {
+export const CDEIDESelect = ({
+  onChange,
+  selectedIde,
+  filteredIdeOptions = [],
+  isEditMode = false
+}: CDEIDESelectProps) => {
   const { getString } = useStrings()
 
   const selectedIDEOption = useMemo(() => {
-    if (!selectedIde) return undefined
+    if (!selectedIde) {
+      return undefined
+    }
 
     const foundOption = filteredIdeOptions.find(item => item.value === selectedIde)
     return foundOption || (filteredIdeOptions.length > 0 ? filteredIdeOptions[0] : undefined)

@@ -3,3 +3,23 @@
   align-items: center;
   gap: 4px;
 }
+
+.container {
+  width: 100%;
+  overflow: hidden;
+}
+
+.iconContainer {
+  flex-shrink: 0;
+}
+
+.textContainer {
+  overflow: hidden;
+}
+
+.truncatedText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 88%;
+}

@@ -24,7 +24,7 @@
   div[class*='TableV2--cells'],
   div[class*='TableV2--header'] {
     display: grid !important;
-    grid-template-columns: 1fr 1fr 1fr 0.7fr 50px;
+    grid-template-columns: 1fr 1fr 1fr 0.7fr 50px !important;
   }
 }
 
@@ -38,7 +38,7 @@
   div[class*='TableV2--cells'],
   div[class*='TableV2--header'] {
     display: grid !important;
-    grid-template-columns: 1.2fr 1fr 1.5fr 0.75fr 0.75fr 1fr 50px;
+    grid-template-columns: 1.4fr 1.4fr 1.5fr 0.6fr 0.7fr 0.8fr 50px !important;
   }
 }
 
@@ -106,4 +106,16 @@
   svg {
     fill: #004ba4;
   }
+}
+
+.standardProviderIcon {
+  height: 20px !important;
+  width: 20px !important;
+  margin-right: 1px !important;
+}
+
+.providerNameText {
+  color: var(--black) !important;
+  font-size: var(--font-size-normal) !important;
+  text-align: left !important;
 }
