@@ -26,7 +26,9 @@ import RepositoryProvider from '@ar/pages/repository-details/context/RepositoryP
 import {
   artifactDetailsPathProps,
   repositoryDetailsPathProps,
-  versionDetailsPathParams
+  repositoryDetailsTabPathProps,
+  versionDetailsPathParams,
+  versionDetailsTabPathParams
 } from '@ar/routes/RouteDestinations'
 import VersionProvider from '@ar/pages/version-details/context/VersionProvider'
 import ArtifactProvider from '@ar/pages/artifact-details/context/ArtifactProvider'
@@ -243,26 +245,34 @@ export default function RepositoryListTreeView() {
               <></>
             </RouteProvider>
             <RouteProvider
+              onLoad={handleUpdateActivePath}
+              exact
+              path={[
+                routeDefinitions.toARRepositoryDetails({ ...repositoryDetailsPathProps }),
+                routeDefinitions.toARRepositoryDetailsTab({ ...repositoryDetailsTabPathProps })
+              ]}>
+              <RepositoryProvider>
+                <RepositoryTreeNodeDetails />
+              </RepositoryProvider>
+            </RouteProvider>
+            <RouteProvider
+              exact
+              onLoad={handleUpdateActivePath}
+              path={[
+                routeDefinitions.toARVersionDetails({ ...versionDetailsPathParams }),
+                routeDefinitions.toARVersionDetailsTab({ ...versionDetailsTabPathParams })
+              ]}>
+              <VersionProvider>
+                <VersionTreeNodeDetails />
+              </VersionProvider>
+            </RouteProvider>
+            <RouteProvider
               exact
               onLoad={handleUpdateActivePath}
               path={[routeDefinitions.toARArtifactDetails({ ...artifactDetailsPathProps })]}>
               <ArtifactProvider>
                 <ArtifactTreeNodeDetails />
               </ArtifactProvider>
-            </RouteProvider>
-            <RouteProvider
-              onLoad={handleUpdateActivePath}
-              path={[routeDefinitions.toARVersionDetails({ ...versionDetailsPathParams })]}>
-              <VersionProvider>
-                <VersionTreeNodeDetails />
-              </VersionProvider>
-            </RouteProvider>
-            <RouteProvider
-              onLoad={handleUpdateActivePath}
-              path={[routeDefinitions.toARRepositoryDetails({ ...repositoryDetailsPathProps })]}>
-              <RepositoryProvider>
-                <RepositoryTreeNodeDetails />
-              </RepositoryProvider>
             </RouteProvider>
           </Switch>
         </Container>

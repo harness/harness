@@ -93,7 +93,9 @@ describe('Verify HelmVersionHeader component render', () => {
 
   test('verify version selector: Success Case', async () => {
     const { container } = render(
-      <ArTestWrapper path="/registries/:artifactType/versions" pathParams={{ artifactType: 'artifacts' }}>
+      <ArTestWrapper
+        path="/registries/:repositoryIdentifier/:artifactType/:artifactIdentifier/versions"
+        pathParams={{ repositoryIdentifier: 'reg1', artifactType: 'artifacts', artifactIdentifier: 'helm' }}>
         <VersionDetailsPage />
       </ArTestWrapper>
     )
@@ -108,7 +110,7 @@ describe('Verify HelmVersionHeader component render', () => {
     await testSelectChange(versionSelector, '1.0.1', data.version)
 
     await waitFor(() => {
-      expect(mockHistoryPush).toHaveBeenLastCalledWith('/registries/artifacts/versions/1.0.1')
+      expect(mockHistoryPush).toHaveBeenLastCalledWith('/registries/reg1/artifacts/helm/versions/1.0.1')
     })
   })
 

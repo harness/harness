@@ -14,25 +14,13 @@
  * limitations under the License.
  */
 
-import { get } from 'lodash-es'
 import { useParams } from 'react-router-dom'
 
 type ParamsType<T> = T & { [K in keyof T]: string }
-
-const transformPathParams = <T>(params: ParamsType<T>): T => {
-  const decodedParams: ParamsType<T> = Object.keys(params).reduce(
-    (acc, curr) => ({
-      ...acc,
-      [curr]: decodeURIComponent(get(params, curr, ''))
-    }),
-    {} as ParamsType<T>
-  )
-  return decodedParams
-}
 
 // Utility function to decode each parameter value
 // Decode parameters and return the decoded object
 export const useDecodedParams = <T>(): T => {
   const params = useParams<ParamsType<T>>()
-  return transformPathParams<T>(params)
+  return params
 }

@@ -31,6 +31,9 @@ import ArTestWrapper from '@ar/utils/testUtils/ArTestWrapper'
 
 import VersionDetailsPage from '../../VersionDetailsPage'
 import {
+  mockDockerArtifactDetails,
+  mockDockerArtifactIntegrationDetails,
+  mockDockerArtifactLayers,
   mockDockerManifestList,
   mockDockerVersionList,
   mockDockerVersionSummary,
@@ -64,7 +67,25 @@ jest.mock('@harnessio/react-har-service-client', () => ({
       new Promise(success => {
         success({ content: mockDockerVersionList })
       })
-  )
+  ),
+  useGetDockerArtifactDetailsQuery: jest.fn().mockImplementation(() => ({
+    data: { content: mockDockerArtifactDetails },
+    error: null,
+    isLoading: false,
+    refetch: jest.fn()
+  })),
+  useGetDockerArtifactIntegrationDetailsQuery: jest.fn().mockImplementation(() => ({
+    data: { content: mockDockerArtifactIntegrationDetails },
+    error: null,
+    isLoading: false,
+    refetch: jest.fn()
+  })),
+  useGetDockerArtifactLayersQuery: jest.fn().mockImplementation(() => ({
+    data: { content: mockDockerArtifactLayers },
+    error: null,
+    isLoading: false,
+    refetch: jest.fn()
+  }))
 }))
 
 describe('Verify DockerVersionHeader component render', () => {
@@ -115,7 +136,9 @@ describe('Verify DockerVersionHeader component render', () => {
 
   test('verify version selector: Success Case', async () => {
     const { container } = render(
-      <ArTestWrapper path="/registries/:artifactType/versions" pathParams={{ artifactType: 'artifacts' }}>
+      <ArTestWrapper
+        path="/registries/:repositoryIdentifier/:artifactType/:artifactIdentifier/versions"
+        pathParams={{ repositoryIdentifier: 'reg1', artifactType: 'artifacts', artifactIdentifier: 'docker' }}>
         <VersionDetailsPage />
       </ArTestWrapper>
     )
@@ -130,7 +153,7 @@ describe('Verify DockerVersionHeader component render', () => {
     await testSelectChange(versionSelector, '1.0.1', data.version)
 
     await waitFor(() => {
-      expect(mockHistoryPush).toHaveBeenCalledWith('/registries/artifacts/versions/1.0.1')
+      expect(mockHistoryPush).toHaveBeenCalledWith('/registries/reg1/artifacts/docker/versions/1.0.1')
     })
   })
 
@@ -272,8 +295,13 @@ describe('Verify DockerVersionHeader component render', () => {
   test('verify tab navigation with ssca and sto data', async () => {
     const { container } = render(
       <ArTestWrapper
-        path="/registries/:artifactType/versions/overview"
-        pathParams={{ artifactType: 'artifacts' }}
+        path="/registries/:repositoryIdentifier/:artifactType/:artifactIdentifier/versions/:versionIdentifier/overview"
+        pathParams={{
+          repositoryIdentifier: 'reg1',
+          artifactType: 'artifacts',
+          artifactIdentifier: 'docker',
+          versionIdentifier: '1.0.1'
+        }}
         queryParams={{
           digest: 'sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
         }}>
@@ -284,25 +312,25 @@ describe('Verify DockerVersionHeader component render', () => {
     const overviewTab = container.querySelector('div[data-tab-id=overview]')
     await userEvent.click(overviewTab!)
     expect(mockHistoryPush).toHaveBeenLastCalledWith(
-      '/registries/artifacts/versions/overview?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
+      '/registries/reg1/artifacts/docker/versions/1.0.1/overview?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
     )
 
     const artifactDetailsTab = container.querySelector('div[data-tab-id=artifact_details]')
     await userEvent.click(artifactDetailsTab!)
     expect(mockHistoryPush).toHaveBeenLastCalledWith(
-      '/registries/artifacts/versions/artifact_details?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
+      '/registries/reg1/artifacts/docker/versions/1.0.1/artifact_details?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
     )
 
     const sscaTab = container.querySelector('div[data-tab-id=supply_chain]')
     await userEvent.click(sscaTab!)
     expect(mockHistoryPush).toHaveBeenLastCalledWith(
-      '/registries/artifacts/versions/orgs/default/projects/default_project/artifact-sources/67a5dccf6d75916b0c3ea1b5/artifacts/67a5dccf6d75916b0c3ea1b6/supply_chain?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
+      '/registries/reg1/artifacts/docker/versions/1.0.1/orgs/default/projects/default_project/artifact-sources/67a5dccf6d75916b0c3ea1b5/artifacts/67a5dccf6d75916b0c3ea1b6/supply_chain?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
     )
 
     const stoTab = container.querySelector('div[data-tab-id=security_tests]')
     await userEvent.click(stoTab!)
     expect(mockHistoryPush).toHaveBeenLastCalledWith(
-      '/registries/artifacts/versions/orgs/default/projects/default_project/pipelines/HARNESS_ARTIFACT_SCAN_PIPELINE/executions/Tbi7s6nETjmOMKU3Qrnm7A/security_tests?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
+      '/registries/reg1/artifacts/docker/versions/1.0.1/orgs/default/projects/default_project/pipelines/HARNESS_ARTIFACT_SCAN_PIPELINE/executions/Tbi7s6nETjmOMKU3Qrnm7A/security_tests?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
     )
   })
 
@@ -315,8 +343,13 @@ describe('Verify DockerVersionHeader component render', () => {
     }))
     const { container } = render(
       <ArTestWrapper
-        path="/registries/:artifactType/versions/overview"
-        pathParams={{ artifactType: 'artifacts' }}
+        path="/registries/:repositoryIdentifier/:artifactType/:artifactIdentifier/versions/:versionIdentifier/overview"
+        pathParams={{
+          repositoryIdentifier: 'reg1',
+          artifactType: 'artifacts',
+          artifactIdentifier: 'docker',
+          versionIdentifier: '1.0.1'
+        }}
         queryParams={{
           digest: 'sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
         }}>
@@ -327,25 +360,25 @@ describe('Verify DockerVersionHeader component render', () => {
     const overviewTab = container.querySelector('div[data-tab-id=overview]')
     await userEvent.click(overviewTab!)
     expect(mockHistoryPush).toHaveBeenLastCalledWith(
-      '/registries/artifacts/versions/overview?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
+      '/registries/reg1/artifacts/docker/versions/1.0.1/overview?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
     )
 
     const artifactDetailsTab = container.querySelector('div[data-tab-id=artifact_details]')
     await userEvent.click(artifactDetailsTab!)
     expect(mockHistoryPush).toHaveBeenLastCalledWith(
-      '/registries/artifacts/versions/artifact_details?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
+      '/registries/reg1/artifacts/docker/versions/1.0.1/artifact_details?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
     )
 
     const sscaTab = container.querySelector('div[data-tab-id=supply_chain]')
     await userEvent.click(sscaTab!)
     expect(mockHistoryPush).toHaveBeenLastCalledWith(
-      '/registries/artifacts/versions/orgs/default/projects/default_project/supply_chain?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
+      '/registries/reg1/artifacts/docker/versions/1.0.1/orgs/default/projects/default_project/supply_chain?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
     )
 
     const stoTab = container.querySelector('div[data-tab-id=security_tests]')
     await userEvent.click(stoTab!)
     expect(mockHistoryPush).toHaveBeenLastCalledWith(
-      '/registries/artifacts/versions/orgs/default/projects/default_project/security_tests?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
+      '/registries/reg1/artifacts/docker/versions/1.0.1/orgs/default/projects/default_project/security_tests?digest=sha256:144cdab68a435424250fe06e9a4f8a5f6b6b8a8a55d257bc6ee77476a6ec520d'
     )
   })
 })

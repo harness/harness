@@ -62,7 +62,7 @@ export const repositoryDetailsTabPathProps: RepositoryDetailsTabPathParams = {
 
 export const artifactDetailsPathProps: ArtifactDetailsPathParams = {
   ...repositoryDetailsPathProps,
-  artifactIdentifier: ':artifactIdentifier',
+  artifactIdentifier: ':artifactIdentifier*',
   artifactType: ':artifactType' as LocalArtifactType
 }
 
@@ -142,6 +142,56 @@ const RouteDestinations = (): JSX.Element => {
       <RouteProvider path={routes.toARRepositoryWebhookDetails({ ...repositoryWebhookDetailsPathParams })}>
         <WebhookDetailsPage />
       </RouteProvider>
+      <RouteProvider
+        exact
+        path={[
+          routes.toARRepositoryDetails({ ...repositoryDetailsPathProps }),
+          routes.toARRepositoryDetailsTab({ ...repositoryDetailsTabPathProps })
+        ]}>
+        <RepositoryDetailsPage />
+      </RouteProvider>
+      {shouldUseSeperateVersionDetailsRoute && (
+        <RouteProvider
+          exact
+          path={[
+            routes.toARVersionDetails({ ...versionDetailsPathParams }),
+            routes.toARVersionDetailsTab({ ...versionDetailsTabPathParams }),
+            // with project and org data
+            routes.toARVersionDetailsTab({
+              ...versionDetailsTabWithOrgAndProjectPathParams
+            }),
+            // with project data
+            routes.toARVersionDetailsTab({
+              ...versionDetailsTabWithProjectPathParams
+            }),
+            // ssca with pipeline data
+            routes.toARVersionDetailsTab({ ...versionDetailsTabWithSSCADetailsPathParams }),
+            // ssca with project and pipeline data
+            routes.toARVersionDetailsTab({
+              ...versionDetailsTabWithSSCADetailsPathParams,
+              ...versionDetailsTabWithProjectPathParams
+            }),
+            // ssca with org, project and pipeline data
+            routes.toARVersionDetailsTab({
+              ...versionDetailsTabWithSSCADetailsPathParams,
+              ...versionDetailsTabWithOrgAndProjectPathParams
+            }),
+            // sto with pipeline data
+            routes.toARVersionDetailsTab({ ...versionDetailsTabWithPipelineDetailsPathParams }),
+            // sto with project and pipeline data
+            routes.toARVersionDetailsTab({
+              ...versionDetailsTabWithPipelineDetailsPathParams,
+              ...versionDetailsTabWithProjectPathParams
+            }),
+            // sto with org, project and pipeline data
+            routes.toARVersionDetailsTab({
+              ...versionDetailsTabWithPipelineDetailsPathParams,
+              ...versionDetailsTabWithOrgAndProjectPathParams
+            })
+          ]}>
+          <VersionDetailsPage />
+        </RouteProvider>
+      )}
       {/* IF Enterprise then will use different route for version details page
        * IF repositoryListViewType = DIRECTORY then will use different route for version details page
        * IF OSS then will use version details as sub route for artifact details page
@@ -159,14 +209,6 @@ const RouteDestinations = (): JSX.Element => {
             </Switch>
           )}
         </>
-      </RouteProvider>
-      {shouldUseSeperateVersionDetailsRoute && (
-        <RouteProvider path={routes.toARVersionDetails({ ...versionDetailsPathParams })}>
-          <VersionDetailsPage />
-        </RouteProvider>
-      )}
-      <RouteProvider path={routes.toARRepositoryDetails({ ...repositoryDetailsPathProps })}>
-        <RepositoryDetailsPage />
       </RouteProvider>
     </Switch>
   )
