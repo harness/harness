@@ -306,7 +306,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	validator := rules.ProvideValidator()
-	rulesService := rules.ProvideService(transactor, ruleStore, repoStore, spaceStore, protectionManager, auditService, instrumentService, principalInfoCache, userGroupStore, usergroupService, reporter2, streamer, validator)
+	rulesService := rules.ProvideService(transactor, ruleStore, repoStore, spaceStore, protectionManager, auditService, instrumentService, principalInfoCache, userGroupStore, usergroupService, reporter2, streamer, validator, repoIDCache)
 	lfsObjectStore := database.ProvideLFSObjectStore(db)
 	blobConfig, err := server.ProvideBlobStoreConfig(config)
 	if err != nil {

@@ -47,8 +47,9 @@ type Rule struct {
 
 	CreatedByInfo PrincipalInfo `json:"created_by"`
 
-	Users      map[int64]*PrincipalInfo `json:"users"`
-	UserGroups map[int64]*UserGroupInfo `json:"user_groups"`
+	Users        map[int64]*PrincipalInfo  `json:"users"`
+	UserGroups   map[int64]*UserGroupInfo  `json:"user_groups"`
+	Repositories map[int64]*RepositoryCore `json:"repositories"`
 
 	// scope 0 indicates repo; scope > 0 indicates space depth level
 	Scope int64 `json:"scope"`

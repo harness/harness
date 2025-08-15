@@ -16,10 +16,13 @@ package rules
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/audit"
+	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -133,4 +136,40 @@ func (s *Service) sendSSE(
 		spaceID = repo.ParentID
 	}
 	s.sseStreamer.Publish(ctx, spaceID, sseType, rule)
+}
+
+// backfillRuleRepositories populates the rule's Repositories field with
+// the repositories specified in the rule's RepoTarget.
+func (s *Service) backfillRuleRepositories(
+	ctx context.Context,
+	rule *types.Rule,
+) error {
+	var repoTarget protection.RepoTarget
+	err := json.Unmarshal(rule.RepoTarget, &repoTarget)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal rule.RepoTarget: %w", err)
+	}
+
+	ids := repoTarget.Include.IDs
+	ids = append(ids, repoTarget.Exclude.IDs...)
+
+	// Deduplicate IDs
+	uniqueIDs := make(map[int64]struct{})
+	for _, id := range ids {
+		uniqueIDs[id] = struct{}{}
+	}
+
+	rule.Repositories = make(map[int64]*types.RepositoryCore, len(uniqueIDs))
+	for repoID := range uniqueIDs {
+		repo, err := s.repoIDCache.Get(ctx, repoID)
+		if err != nil {
+			if errors.Is(err, store.ErrResourceNotFound) {
+				continue
+			}
+			return fmt.Errorf("failed to get repository from cache: %w", err)
+		}
+		rule.Repositories[repoID] = repo
+	}
+
+	return nil
 }

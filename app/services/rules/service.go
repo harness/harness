@@ -40,6 +40,7 @@ type Service struct {
 	userGroupService   usergroup.Service
 	eventReporter      *ruleevents.Reporter
 	ruleValidator      Validator
+	repoIDCache        store.RepoIDCache
 
 	sseStreamer sse.Streamer
 }
@@ -58,6 +59,7 @@ func NewService(
 	eventReporter *ruleevents.Reporter,
 	sseStreamer sse.Streamer,
 	ruleValidator Validator,
+	repoIDCache store.RepoIDCache,
 ) *Service {
 	return &Service{
 		tx:                 tx,
@@ -73,5 +75,6 @@ func NewService(
 		eventReporter:      eventReporter,
 		sseStreamer:        sseStreamer,
 		ruleValidator:      ruleValidator,
+		repoIDCache:        repoIDCache,
 	}
 }

@@ -46,6 +46,7 @@ func ProvideService(
 	eventReporter *ruleevents.Reporter,
 	sseStreamer sse.Streamer,
 	ruleValidator Validator,
+	repoIDCache store.RepoIDCache,
 ) *Service {
 	return NewService(
 		tx,
@@ -61,6 +62,7 @@ func ProvideService(
 		eventReporter,
 		sseStreamer,
 		ruleValidator,
+		repoIDCache,
 	)
 }
 

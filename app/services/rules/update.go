@@ -152,6 +152,11 @@ func (s *Service) Update(ctx context.Context,
 	rule.Users = userMap
 	rule.UserGroups = userGroupMap
 
+	err = s.backfillRuleRepositories(ctx, rule)
+	if err != nil {
+		return nil, fmt.Errorf("failed to backfill rule repositories: %w", err)
+	}
+
 	if rule.IsEqual(&oldRule) {
 		return rule, nil
 	}

@@ -74,9 +74,15 @@ func (s *Service) List(ctx context.Context,
 	}
 
 	for i := range list {
-		list[i].Users, _, list[i].UserGroups, _, err = s.getRuleUserAndUserGroups(ctx, &list[i])
+		rule := &list[i]
+		rule.Users, _, rule.UserGroups, _, err = s.getRuleUserAndUserGroups(ctx, rule)
 		if err != nil {
 			return nil, 0, err
+		}
+
+		err = s.backfillRuleRepositories(ctx, rule)
+		if err != nil {
+			return nil, 0, fmt.Errorf("failed to backfill rule repositories: %w", err)
 		}
 	}
 
