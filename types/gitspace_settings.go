@@ -165,8 +165,8 @@ type InfraProviderSettings struct {
 }
 
 var settingsTypeRegistry = map[enum.GitspaceSettingsType]reflect.Type{
-	enum.SettingsTypeInfraProvider:  reflect.TypeOf(InfraProviderSettings{}),
-	enum.SettingsTypeGitspaceConfig: reflect.TypeOf(GitspaceConfigSettings{}),
+	enum.SettingsTypeInfraProvider:  reflect.TypeFor[InfraProviderSettings](),
+	enum.SettingsTypeGitspaceConfig: reflect.TypeFor[GitspaceConfigSettings](),
 }
 
 func DecodeSettings[T any](data map[string]any) (*T, error) {
