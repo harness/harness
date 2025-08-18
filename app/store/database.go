@@ -529,8 +529,8 @@ type (
 		List(ctx context.Context, prID int64) ([]*types.PullReqReviewer, error)
 	}
 
-	// UserGroupReviewersStore defines the pull request usergroup reviewer storage.
-	UserGroupReviewersStore interface {
+	// UserGroupReviewerStore defines the pull request usergroup reviewer storage.
+	UserGroupReviewerStore interface {
 		Create(ctx context.Context, v *types.UserGroupReviewer) error
 		Delete(ctx context.Context, prID, principalID int64) error
 		List(ctx context.Context, prID int64) ([]*types.UserGroupReviewer, error)

@@ -53,7 +53,7 @@ func ProvideController(
 	repoStore store.RepoStore,
 	principalStore store.PrincipalStore,
 	userGroupStore store.UserGroupStore,
-	userGroupReviewerStore store.UserGroupReviewersStore,
+	userGroupReviewerStore store.UserGroupReviewerStore,
 	principalInfoCache store.PrincipalInfoCache,
 	fileViewStore store.PullReqFileViewStore,
 	membershipStore store.MembershipStore,
@@ -68,6 +68,7 @@ func ProvideController(
 	instrumentation instrument.Service,
 	userGroupService usergroup.Service,
 	branchStore store.BranchStore,
+	userGroupResolver usergroup.Resolver,
 ) *Controller {
 	return NewController(tx,
 		urlProvider,
@@ -101,5 +102,6 @@ func ProvideController(
 		instrumentation,
 		userGroupService,
 		branchStore,
+		userGroupResolver,
 	)
 }

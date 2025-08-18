@@ -57,7 +57,7 @@ type Controller struct {
 	codeCommentView        store.CodeCommentView
 	reviewStore            store.PullReqReviewStore
 	reviewerStore          store.PullReqReviewerStore
-	userGroupReviewerStore store.UserGroupReviewersStore
+	userGroupReviewerStore store.UserGroupReviewerStore
 	repoStore              store.RepoStore
 	principalStore         store.PrincipalStore
 	userGroupStore         store.UserGroupStore
@@ -80,6 +80,7 @@ type Controller struct {
 	instrumentation        instrument.Service
 	userGroupService       usergroup.Service
 	branchStore            store.BranchStore
+	userGroupResolver      usergroup.Resolver
 }
 
 func NewController(
@@ -95,7 +96,7 @@ func NewController(
 	repoStore store.RepoStore,
 	principalStore store.PrincipalStore,
 	userGroupStore store.UserGroupStore,
-	userGroupReviewerStore store.UserGroupReviewersStore,
+	userGroupReviewerStore store.UserGroupReviewerStore,
 	principalInfoCache store.PrincipalInfoCache,
 	fileViewStore store.PullReqFileViewStore,
 	membershipStore store.MembershipStore,
@@ -115,6 +116,7 @@ func NewController(
 	instrumentation instrument.Service,
 	userGroupService usergroup.Service,
 	branchStore store.BranchStore,
+	userGroupResolver usergroup.Resolver,
 ) *Controller {
 	return &Controller{
 		tx:                     tx,
@@ -149,6 +151,7 @@ func NewController(
 		instrumentation:        instrumentation,
 		userGroupService:       userGroupService,
 		branchStore:            branchStore,
+		userGroupResolver:      userGroupResolver,
 	}
 }
 

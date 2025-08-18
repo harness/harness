@@ -19,6 +19,8 @@ type CodeOwnerViolationCode string
 const (
 	// CodeOwnerViolationCodeUserNotFound occurs when user in codeowners file is not present.
 	CodeOwnerViolationCodeUserNotFound CodeOwnerViolationCode = "user_not_found"
+	// CodeOwnerViolationCodeUserGroupNotFound occurs when user group in codeowners file is not present.
+	CodeOwnerViolationCodeUserGroupNotFound CodeOwnerViolationCode = "user_group_not_found"
 	// CodeOwnerViolationCodePatternInvalid occurs when a pattern in codeowners file is incorrect.
 	CodeOwnerViolationCodePatternInvalid CodeOwnerViolationCode = "pattern_invalid"
 	// CodeOwnerViolationCodePatternEmpty occurs when a pattern in codeowners file is empty.

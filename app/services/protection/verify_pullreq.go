@@ -257,7 +257,7 @@ func (v *DefPullReq) MergeVerify(
 			if !v.Approvals.RequireLatestCommit {
 				continue
 			}
-			latestSHAApproved := slices.ContainsFunc(approvers, func(ev codeowners.OwnerEvaluation) bool {
+			latestSHAApproved := slices.ContainsFunc(approvers, func(ev codeowners.UserEvaluation) bool {
 				return ev.ReviewSHA == in.PullReq.SourceSHA
 			})
 			if !latestSHAApproved {
@@ -494,11 +494,11 @@ func (v *DefPullReq) Sanitize() error {
 
 func getCodeOwnerApprovalStatus(
 	entry codeowners.EvaluationEntry,
-) (enum.PullReqReviewDecision, []codeowners.OwnerEvaluation) {
-	approvers := make([]codeowners.OwnerEvaluation, 0)
+) (enum.PullReqReviewDecision, []codeowners.UserEvaluation) {
+	approvers := make([]codeowners.UserEvaluation, 0)
 
 	// users
-	for _, o := range entry.OwnerEvaluations {
+	for _, o := range entry.UserEvaluations {
 		if o.ReviewDecision == enum.PullReqReviewDecisionChangeReq {
 			return enum.PullReqReviewDecisionChangeReq, nil
 		}
@@ -508,7 +508,7 @@ func getCodeOwnerApprovalStatus(
 	}
 
 	// usergroups
-	for _, u := range entry.UserGroupOwnerEvaluations {
+	for _, u := range entry.UserGroupEvaluations {
 		for _, o := range u.Evaluations {
 			if o.ReviewDecision == enum.PullReqReviewDecisionChangeReq {
 				return enum.PullReqReviewDecisionChangeReq, nil

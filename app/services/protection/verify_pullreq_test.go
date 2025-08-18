@@ -381,19 +381,19 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 					EvaluationEntries: []codeowners.EvaluationEntry{
 						{
 							Pattern: "app",
-							OwnerEvaluations: []codeowners.OwnerEvaluation{
+							UserEvaluations: []codeowners.UserEvaluation{
 								{ReviewDecision: enum.PullReqReviewDecisionPending, ReviewSHA: "abc"},
 							},
 						},
 						{
 							Pattern: "doc",
-							OwnerEvaluations: []codeowners.OwnerEvaluation{
+							UserEvaluations: []codeowners.UserEvaluation{
 								{ReviewDecision: enum.PullReqReviewDecisionApproved, ReviewSHA: "abc"},
 							},
 						},
 						{
-							Pattern:          "data",
-							OwnerEvaluations: []codeowners.OwnerEvaluation{},
+							Pattern:         "data",
+							UserEvaluations: []codeowners.UserEvaluation{},
 						},
 					},
 					FileSha: "xyz",
@@ -419,13 +419,13 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 					EvaluationEntries: []codeowners.EvaluationEntry{
 						{
 							Pattern: "app",
-							OwnerEvaluations: []codeowners.OwnerEvaluation{
+							UserEvaluations: []codeowners.UserEvaluation{
 								{ReviewDecision: enum.PullReqReviewDecisionApproved, ReviewSHA: "abc"},
 							},
 						},
 						{
 							Pattern: "doc",
-							OwnerEvaluations: []codeowners.OwnerEvaluation{
+							UserEvaluations: []codeowners.UserEvaluation{
 								{ReviewDecision: enum.PullReqReviewDecisionApproved, ReviewSHA: "abc"},
 							},
 						},
@@ -448,7 +448,7 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 					EvaluationEntries: []codeowners.EvaluationEntry{
 						{
 							Pattern: "app",
-							OwnerEvaluations: []codeowners.OwnerEvaluation{
+							UserEvaluations: []codeowners.UserEvaluation{
 								{ReviewDecision: enum.PullReqReviewDecisionApproved, ReviewSHA: "abc"},
 								{ReviewDecision: enum.PullReqReviewDecisionChangeReq, ReviewSHA: "abc"},
 								{ReviewDecision: enum.PullReqReviewDecisionPending, ReviewSHA: "abc"},
@@ -456,7 +456,7 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 						},
 						{
 							Pattern: "data",
-							OwnerEvaluations: []codeowners.OwnerEvaluation{
+							UserEvaluations: []codeowners.UserEvaluation{
 								{ReviewDecision: enum.PullReqReviewDecisionApproved, ReviewSHA: "abc"},
 							},
 						},
@@ -481,13 +481,13 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 					EvaluationEntries: []codeowners.EvaluationEntry{
 						{
 							Pattern: "data",
-							OwnerEvaluations: []codeowners.OwnerEvaluation{
+							UserEvaluations: []codeowners.UserEvaluation{
 								{ReviewDecision: enum.PullReqReviewDecisionApproved, ReviewSHA: "old"},
 							},
 						},
 						{
 							Pattern: "app",
-							OwnerEvaluations: []codeowners.OwnerEvaluation{
+							UserEvaluations: []codeowners.UserEvaluation{
 								{ReviewDecision: enum.PullReqReviewDecisionApproved, ReviewSHA: "abc"},
 								{ReviewDecision: enum.PullReqReviewDecisionApproved, ReviewSHA: "old"},
 							},

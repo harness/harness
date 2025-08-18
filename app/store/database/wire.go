@@ -113,7 +113,7 @@ func ProvideUserGroupReviewerStore(
 	db *sqlx.DB,
 	pInfoCache store.PrincipalInfoCache,
 	userGroupStore store.UserGroupStore,
-) store.UserGroupReviewersStore {
+) store.UserGroupReviewerStore {
 	return NewUsergroupReviewerStore(db, pInfoCache, userGroupStore)
 }
 

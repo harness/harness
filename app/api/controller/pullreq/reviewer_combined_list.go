@@ -100,7 +100,9 @@ func (c *Controller) ReviewersListCombined(
 			userGroupReviewer.AddedBy = *addedBy
 		}
 
+		// compound user group decision
 		userGroupReviewer.Decision = enum.PullReqReviewDecisionPending
+		// individual decisions of the principals in the group
 		var userGroupReviewerDecisions []types.UserGroupReviewerDecision
 		for _, principal := range principals {
 			reviewer, ok := reviewersMap[principal.ID]

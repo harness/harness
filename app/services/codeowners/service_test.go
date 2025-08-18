@@ -256,7 +256,7 @@ g   user1@harness.io	#  user2@harness.io
 				git:       tt.fields.git,
 				config:    tt.fields.Config,
 			}
-			got, err := s.parseCodeOwner(tt.args.codeOwnersContent)
+			got, err := s.parseCodeOwnerFile(tt.args.codeOwnersContent)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ParseCodeOwner() error = %v, wantErr %v", err, tt.wantErr)
 				return
