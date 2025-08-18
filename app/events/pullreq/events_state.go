@@ -58,7 +58,8 @@ const ClosedEvent events.EventType = "closed"
 
 type ClosedPayload struct {
 	Base
-	SourceSHA string `json:"source_sha"`
+	SourceBranch string `json:"source_branch"`
+	SourceSHA    string `json:"source_sha"`
 }
 
 func (r *Reporter) Closed(ctx context.Context, payload *ClosedPayload) {
@@ -86,6 +87,7 @@ const ReopenedEvent events.EventType = "reopened"
 
 type ReopenedPayload struct {
 	Base
+	SourceBranch string `json:"source_branch"`
 	SourceSHA    string `json:"source_sha"`
 	MergeBaseSHA string `json:"merge_base_sha"`
 }

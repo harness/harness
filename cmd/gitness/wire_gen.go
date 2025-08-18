@@ -738,7 +738,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	branchConfig := server.ProvideBranchConfig(config)
-	branchService, err := branch.ProvideService(ctx, branchConfig, branchStore, readerFactory)
+	branchService, err := branch.ProvideService(ctx, branchConfig, branchStore, pullReqStore, readerFactory, eventsReaderFactory)
 	if err != nil {
 		return nil, err
 	}

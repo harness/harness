@@ -1399,20 +1399,27 @@ type (
 
 	// BranchStore defines operations on git branches.
 	BranchStore interface {
-		// FindBranchesWithoutPRs finds branches without pull requests for a repository
-		FindBranchesWithoutPRs(
+		// FindBranchesWithoutOpenPRs finds branches without pull requests for a repository
+		FindBranchesWithoutOpenPRs(
 			ctx context.Context,
 			repoID int64,
 			principalID int64,
 			cutOffTime int64,
 			limit uint64,
+			sha string,
 		) ([]types.BranchTable, error)
+
+		// Find finds a branch by repo ID and branch name.
+		Find(ctx context.Context, repoID int64, name string) (*types.BranchTable, error)
 
 		// Delete deletes a branch by repo ID and branch name.
 		Delete(ctx context.Context, repoID int64, name string) error
 
 		// Upsert creates a new branch or updates an existing one.
 		Upsert(ctx context.Context, repoID int64, branch *types.BranchTable) error
+
+		// UpdateLastPR updates the last created pull request ID for a branch.
+		UpdateLastPR(ctx context.Context, repoID int64, branchName string, pullReqID *int64) error
 	}
 
 	InfraProviderTemplateStore interface {

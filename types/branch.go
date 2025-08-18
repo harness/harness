@@ -26,10 +26,11 @@ type BranchTable struct {
 	Name string  `json:"name"`
 	SHA  sha.SHA `json:"-"`
 
-	CreatedBy int64 `json:"created_by"`
-	Created   int64 `json:"created"`
-	UpdatedBy int64 `json:"updated_by"`
-	Updated   int64 `json:"updated"`
+	CreatedBy            int64  `json:"created_by"`
+	Created              int64  `json:"created"`
+	UpdatedBy            int64  `json:"updated_by"`
+	Updated              int64  `json:"updated"`
+	LastCreatedPullReqID *int64 `json:"last_created_pull_req_id,omitempty"`
 }
 
 type BranchExtended struct {

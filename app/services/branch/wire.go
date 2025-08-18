@@ -18,6 +18,7 @@ import (
 	"context"
 
 	gitevents "github.com/harness/gitness/app/events/git"
+	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/events"
 
@@ -34,12 +35,16 @@ func ProvideService(
 	ctx context.Context,
 	config Config,
 	branchStore store.BranchStore,
+	pullReqStore store.PullReqStore,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
+	pullreqReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
 ) (*Service, error) {
 	return New(
 		ctx,
 		config,
 		branchStore,
 		gitReaderFactory,
+		pullreqReaderFactory,
+		pullReqStore,
 	)
 }

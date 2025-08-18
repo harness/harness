@@ -241,7 +241,8 @@ func (s *Service) closePullReqOnBranchDelete(ctx context.Context,
 				PrincipalID:  event.Payload.PrincipalID,
 				Number:       pr.Number,
 			},
-			SourceSHA: pr.SourceSHA,
+			SourceSHA:    pr.SourceSHA,
+			SourceBranch: pr.SourceBranch,
 		})
 
 		s.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullReqUpdated, pr)

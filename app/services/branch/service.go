@@ -18,16 +18,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	gitevents "github.com/harness/gitness/app/events/git"
+	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/events"
-	"github.com/harness/gitness/git/sha"
-	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/stream"
-	"github.com/harness/gitness/types"
 
 	"github.com/rs/zerolog/log"
 )
@@ -61,7 +58,8 @@ func (c *Config) Prepare() error {
 }
 
 type Service struct {
-	branchStore store.BranchStore
+	branchStore  store.BranchStore
+	pullReqStore store.PullReqStore
 }
 
 func New(
@@ -69,6 +67,8 @@ func New(
 	config Config,
 	branchStore store.BranchStore,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
+	pullreqReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
+	pullReqStore store.PullReqStore,
 ) (*Service, error) {
 	if err := config.Prepare(); err != nil {
 		return nil, fmt.Errorf("provided branch service config is invalid: %w", err)
@@ -77,7 +77,8 @@ func New(
 		config.EventReaderName, config.Concurrency, config.MaxRetries)
 
 	service := &Service{
-		branchStore: branchStore,
+		branchStore:  branchStore,
+		pullReqStore: pullReqStore,
 	}
 
 	_, err := gitReaderFactory.Launch(ctx, eventsReaderGroupName, config.EventReaderName,
@@ -100,79 +101,26 @@ func New(
 		return nil, fmt.Errorf("failed to launch git events reader: %w", err)
 	}
 
-	return service, nil
-}
+	// Register for pull request events to update branch information
+	_, err = pullreqReaderFactory.Launch(ctx, eventsReaderGroupName, config.EventReaderName,
+		func(r *pullreqevents.Reader) error {
+			const idleTimeout = 10 * time.Second
+			r.Configure(
+				stream.WithConcurrency(config.Concurrency),
+				stream.WithHandlerOptions(
+					stream.WithIdleTimeout(idleTimeout),
+					stream.WithMaxRetries(config.MaxRetries),
+				))
 
-func ExtractBranchName(ref string) string {
-	return strings.TrimPrefix(ref, refsBranchPrefix)
-}
+			_ = r.RegisterCreated(service.handleEventPullReqCreated)
+			_ = r.RegisterClosed(service.handleEventPullReqClosed)
+			_ = r.RegisterReopened(service.handleEventPullReqReopened)
 
-func (s *Service) handleEventBranchCreated(
-	ctx context.Context,
-	event *events.Event[*gitevents.BranchCreatedPayload],
-) error {
-	branchName := ExtractBranchName(event.Payload.Ref)
-
-	branchSHA := sha.Must(event.Payload.SHA)
-
-	now := time.Now().UnixMilli()
-	branch := &types.BranchTable{
-		Name:      branchName,
-		SHA:       branchSHA,
-		CreatedBy: event.Payload.PrincipalID,
-		Created:   now,
-		UpdatedBy: event.Payload.PrincipalID,
-		Updated:   now,
-	}
-
-	err := s.branchStore.Upsert(ctx, event.Payload.RepoID, branch)
+			return nil
+		})
 	if err != nil {
-		return fmt.Errorf("failed to create branch in database: %w", err)
+		return nil, fmt.Errorf("failed to launch pullreq events reader: %w", err)
 	}
 
-	return nil
-}
-
-// handleEventBranchUpdated handles the branch updated event.
-func (s *Service) handleEventBranchUpdated(
-	ctx context.Context,
-	event *events.Event[*gitevents.BranchUpdatedPayload],
-) error {
-	branchName := ExtractBranchName(event.Payload.Ref)
-
-	branchSHA := sha.Must(event.Payload.NewSHA)
-
-	now := time.Now().UnixMilli()
-	branch := &types.BranchTable{
-		Name:      branchName,
-		SHA:       branchSHA,
-		CreatedBy: event.Payload.PrincipalID,
-		Created:   now,
-		UpdatedBy: event.Payload.PrincipalID,
-		Updated:   now,
-	}
-
-	if err := s.branchStore.Upsert(ctx, event.Payload.RepoID, branch); err != nil {
-		return fmt.Errorf("failed to upsert branch in database: %w", err)
-	}
-	return nil
-}
-
-// handleEventBranchDeleted handles the branch deleted event.
-func (s *Service) handleEventBranchDeleted(
-	ctx context.Context,
-	event *events.Event[*gitevents.BranchDeletedPayload],
-) error {
-	branchName := ExtractBranchName(event.Payload.Ref)
-
-	err := s.branchStore.Delete(
-		ctx,
-		event.Payload.RepoID,
-		branchName,
-	)
-	if err != nil && !errors.Is(err, gitness_store.ErrResourceNotFound) {
-		return fmt.Errorf("failed to delete branch from database: %w", err)
-	}
-
-	return nil
+	return service, nil
 }

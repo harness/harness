@@ -44,14 +44,14 @@ func (c *Controller) PRBranchCandidates(
 
 	cutOffTime := time.Now().Add(-PRBannerDuration)
 
-	// Request extra branch to account for potentially filtering out default branch
-	branches, err := c.branchStore.FindBranchesWithoutPRs(
-		ctx,
-		repo.ID,
-		session.Principal.ID,
-		cutOffTime.UnixMilli(),
-		limit+1,
-	)
+	// getting latest sha from db instead of git as pr candidate need not be 100% accurate
+	defaultBranch, err := c.branchStore.Find(ctx, repo.ID, repo.DefaultBranch)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get default branch: %w", err)
+	}
+
+	branches, err := c.branchStore.FindBranchesWithoutOpenPRs(ctx, repo.ID,
+		session.Principal.ID, cutOffTime.UnixMilli(), limit+1, defaultBranch.SHA.String())
 	if err != nil {
 		return nil, fmt.Errorf("failed to list branches: %w", err)
 	}

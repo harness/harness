@@ -225,13 +225,15 @@ func (c *Controller) State(ctx context.Context,
 	case changeReopen:
 		c.eventReporter.Reopened(ctx, &pullreqevents.ReopenedPayload{
 			Base:         eventBase(pr, &session.Principal),
+			SourceBranch: pr.SourceBranch,
 			SourceSHA:    sourceSHA.String(),
 			MergeBaseSHA: mergeBaseSHA.String(),
 		})
 	case changeClose:
 		c.eventReporter.Closed(ctx, &pullreqevents.ClosedPayload{
-			Base:      eventBase(pr, &session.Principal),
-			SourceSHA: pr.SourceSHA,
+			Base:         eventBase(pr, &session.Principal),
+			SourceSHA:    pr.SourceSHA,
+			SourceBranch: pr.SourceBranch,
 		})
 	}
 
