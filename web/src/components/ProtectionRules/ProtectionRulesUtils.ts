@@ -3,6 +3,16 @@ import type { EnumMergeMethod, OpenapiRule, OpenapiRuleType, ProtectionBranch, T
 import { MergeStrategy, ProtectionRulesType, RulesTargetType } from 'utils/GitUtils'
 import { PrincipalType } from 'utils/Utils'
 
+// Maps an array to targetList
+export const convertToTargetList = (patterns: string[] | undefined, included: boolean): string[][] =>
+  patterns?.map(pattern => [included ? RulesTargetType.INCLUDE : RulesTargetType.EXCLUDE, String(pattern)]) ?? []
+
+// Extracts all values of a given type from a tuple
+export const extractValuesByType = (list: string[][] | undefined, included: boolean): string[] =>
+  list
+    ?.filter(([t]) => t === (included ? RulesTargetType.INCLUDE : RulesTargetType.EXCLUDE))
+    .map(([, value]) => value) ?? []
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const transformDataToArray = (data: any) => {
   return Object.keys(data).map(key => {
@@ -83,14 +93,15 @@ export type RulesFormPayload = {
   name?: string
   desc?: string
   enable: boolean
-  target?: string
-  targetDefault?: boolean
+  targetDefaultBranch?: boolean
   targetList: string[][]
+  repoTargetList: string[][]
+  repoList: string[][]
   allRepoOwners?: boolean
   bypassList?: NormalizedPrincipal[]
   defaultReviewersList?: string[]
-  requireMinReviewers: boolean
-  requireMinDefaultReviewers: boolean
+  requireMinReviewers?: boolean
+  requireMinDefaultReviewers?: boolean
   minReviewers?: string | number
   minDefaultReviewers?: string | number
   autoAddCodeOwner?: boolean
@@ -98,9 +109,9 @@ export type RulesFormPayload = {
   requireNewChanges?: boolean
   reqResOfChanges?: boolean
   requireCommentResolution?: boolean
-  requireStatusChecks: boolean
-  statusChecks: string[]
-  limitMergeStrategies: boolean
+  requireStatusChecks?: boolean
+  statusChecks?: string[]
+  limitMergeStrategies?: boolean
   mergeCommit?: boolean
   squashMerge?: boolean
   rebaseMerge?: boolean
@@ -111,10 +122,7 @@ export type RulesFormPayload = {
   blockUpdate?: boolean
   blockForcePush?: boolean
   requirePr?: boolean
-  bypassSet: boolean
-  targetSet: boolean
-  defaultReviewersSet: boolean
-  defaultReviewersEnabled: boolean
+  defaultReviewersEnabled?: boolean
 }
 
 export enum RuleFields {
@@ -338,9 +346,10 @@ export const rulesFormInitialPayload: RulesFormPayload = {
   name: '',
   desc: '',
   enable: true,
-  target: '',
-  targetDefault: false,
+  targetDefaultBranch: false,
   targetList: [] as string[][],
+  repoTargetList: [] as string[][],
+  repoList: [] as string[][],
   allRepoOwners: false,
   bypassList: [] as NormalizedPrincipal[],
   defaultReviewersList: [] as string[],
@@ -364,25 +373,27 @@ export const rulesFormInitialPayload: RulesFormPayload = {
   blockUpdate: false,
   blockForcePush: false,
   requirePr: false,
-  bypassSet: false,
-  targetSet: false,
-  defaultReviewersSet: false,
   defaultReviewersEnabled: false
 }
 
 export const getPayload = (formData: RulesFormPayload, ruleType: OpenapiRuleType): OpenapiRule => {
+  const { bypassList, fastForwardMerge, mergeCommit, rebaseMerge, repoList, repoTargetList, squashMerge, targetList } =
+    formData
   const stratArray = [
-    formData.squashMerge && MergeStrategy.SQUASH,
-    formData.rebaseMerge && MergeStrategy.REBASE,
-    formData.mergeCommit && MergeStrategy.MERGE,
-    formData.fastForwardMerge && MergeStrategy.FAST_FORWARD
+    squashMerge && MergeStrategy.SQUASH,
+    rebaseMerge && MergeStrategy.REBASE,
+    mergeCommit && MergeStrategy.MERGE,
+    fastForwardMerge && MergeStrategy.FAST_FORWARD
   ].filter(Boolean) as EnumMergeMethod[]
-  const includeArray =
-    formData?.targetList?.filter(([type]) => type === RulesTargetType.INCLUDE).map(([, value]) => value) ?? []
-  const excludeArray =
-    formData?.targetList?.filter(([type]) => type === RulesTargetType.EXCLUDE).map(([, value]) => value) ?? []
 
-  const { userIds, userGroupIds } = formData?.bypassList?.reduce(
+  const includeArray = extractValuesByType(targetList, true) as string[]
+  const excludeArray = extractValuesByType(targetList, false) as string[]
+  const repoIncludeArray = repoList.filter(([type]) => type === RulesTargetType.INCLUDE).map(([, , id]) => Number(id))
+  const repoExcludeArray = repoList.filter(([type]) => type === RulesTargetType.EXCLUDE).map(([, , id]) => Number(id))
+  const repoPatternsIncludeArray = extractValuesByType(repoTargetList, true) as string[]
+  const repoPatternsExcludeArray = extractValuesByType(repoTargetList, false) as string[]
+
+  const { userIds, userGroupIds } = bypassList?.reduce(
     (acc, item: NormalizedPrincipal) => {
       if (item.type === PrincipalType.USER_GROUP) {
         acc.userGroupIds.push(item.id)
@@ -402,9 +413,19 @@ export const getPayload = (formData: RulesFormPayload, ruleType: OpenapiRuleType
     description: formData.desc,
     state: formData.enable ? RuleState.ACTIVE : RuleState.DISABLED,
     pattern: {
-      default: formData.targetDefault,
+      default: formData.targetDefaultBranch,
       exclude: excludeArray,
       include: includeArray
+    },
+    repo_target: {
+      include: {
+        ids: repoIncludeArray,
+        patterns: repoPatternsIncludeArray
+      },
+      exclude: {
+        ids: repoExcludeArray,
+        patterns: repoPatternsExcludeArray
+      }
     },
     definition: {
       bypass: {

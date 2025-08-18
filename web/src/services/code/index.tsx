@@ -49,7 +49,16 @@ export type EnumGitspaceAccessType = 'jwt_token' | 'user_credentials' | 'ssh_key
 
 export type EnumGitspaceActionType = 'start' | 'stop' | 'reset'
 
-export type EnumGitspaceCodeRepoType = string
+export type EnumGitspaceCodeRepoType =
+  | 'github'
+  | 'gitlab'
+  | 'harness_code'
+  | 'bitbucket'
+  | 'unknown'
+  | 'gitness'
+  | 'gitlab_on_prem'
+  | 'bitbucket_server'
+  | 'github_enterprise'
 
 export type EnumGitspaceEntityType = 'gitspace_config' | 'gitspace_instance'
 
@@ -106,6 +115,7 @@ export type EnumGitspaceInstanceStateType =
   | 'cleaning'
   | 'cleaned'
   | 'resetting'
+  | 'pending_cleanup'
 
 export type EnumGitspaceOwner = 'all' | 'self'
 
@@ -120,9 +130,19 @@ export type EnumGitspaceStateType =
   | 'stopping'
   | 'cleaning'
 
-export type EnumIDEType = string
+export type EnumIDEType =
+  | 'vs_code'
+  | 'vs_code_web'
+  | 'intellij'
+  | 'pycharm'
+  | 'goland'
+  | 'webstorm'
+  | 'clion'
+  | 'phpstorm'
+  | 'rubymine'
+  | 'rider'
 
-export type EnumInfraProviderType = string
+export type EnumInfraProviderType = 'docker' | 'harness_gcp' | 'harness_cloud' | 'hybrid_vm_gcp' | 'hybrid_vm_aws'
 
 export type EnumLabelColor =
   | 'blue'
@@ -185,18 +205,18 @@ export type EnumRepoState = number | null
 export type EnumResolverType = string
 
 export type EnumResourceType =
-  | 'SPACE'
-  | 'REPOSITORY'
-  | 'USER'
-  | 'SERVICEACCOUNT'
-  | 'SERVICE'
-  | 'PIPELINE'
-  | 'SECRET'
   | 'CONNECTOR'
-  | 'TEMPLATE'
   | 'GITSPACE'
   | 'INFRAPROVIDER'
+  | 'PIPELINE'
   | 'REGISTRY'
+  | 'REPOSITORY'
+  | 'SECRET'
+  | 'SERVICE'
+  | 'SERVICEACCOUNT'
+  | 'SPACE'
+  | 'TEMPLATE'
+  | 'USER'
 
 export type EnumRevocationReason = 'compromised' | 'retired' | 'superseded' | 'unknown' | null
 
@@ -654,6 +674,10 @@ export interface OpenapiRule {
   description?: string
   identifier?: string
   pattern?: ProtectionPattern
+  repo_target?: ProtectionRepoTarget
+  repositories?: {
+    [key: string]: TypesRepositoryCore
+  } | null
   scope?: number
   state?: EnumRuleState
   type?: OpenapiRuleType
@@ -865,6 +889,16 @@ export type ProtectionPattern = {
 export interface ProtectionPush {
   bypass?: ProtectionDefBypass
   push?: ProtectionDefPush
+}
+
+export type ProtectionRepoTarget = {
+  exclude?: ProtectionRepoTargetFilter
+  include?: ProtectionRepoTargetFilter
+} | null
+
+export interface ProtectionRepoTargetFilter {
+  ids?: number[]
+  patterns?: string[]
 }
 
 export interface ProtectionTag {
@@ -1353,8 +1387,8 @@ export interface TypesGitspaceConfig {
   identifier?: string
   initialize_log_key?: string
   instance?: TypesGitspaceInstance
+  is_marked_for_infra_reset?: boolean
   is_marked_for_reset?: boolean
-  is_marked_for_soft_reset?: boolean
   log_key?: string
   name?: string
   resource?: TypesInfraProviderResource
@@ -7138,6 +7172,7 @@ export interface RepoRuleAddRequestBody {
   description?: string
   identifier?: string
   pattern?: ProtectionPattern
+  repo_target?: ProtectionRepoTarget
   state?: EnumRuleState
   type?: OpenapiRuleType
   uid?: string
@@ -7238,6 +7273,7 @@ export interface RepoRuleUpdateRequestBody {
   description?: string | null
   identifier?: string | null
   pattern?: ProtectionPattern
+  repo_target?: ProtectionRepoTarget
   state?: EnumRuleState
   type?: OpenapiRuleType
   uid?: string | null
@@ -9875,6 +9911,7 @@ export interface SpaceRuleAddRequestBody {
   description?: string
   identifier?: string
   pattern?: ProtectionPattern
+  repo_target?: ProtectionRepoTarget
   state?: EnumRuleState
   type?: OpenapiRuleType
   uid?: string
@@ -9978,6 +10015,7 @@ export interface SpaceRuleUpdateRequestBody {
   description?: string | null
   identifier?: string | null
   pattern?: ProtectionPattern
+  repo_target?: ProtectionRepoTarget
   state?: EnumRuleState
   type?: OpenapiRuleType
   uid?: string | null
@@ -10212,6 +10250,51 @@ export type UseGetSpaceUsageMetricProps = Omit<
 export const useGetSpaceUsageMetric = ({ space_ref, ...props }: UseGetSpaceUsageMetricProps) =>
   useGet<TypesUsageMetric, UsererrorError, void, GetSpaceUsageMetricPathParams>(
     (paramsInPath: GetSpaceUsageMetricPathParams) => `/spaces/${paramsInPath.space_ref}/usage/metric`,
+    { base: getConfig('code/api/v1'), pathParams: { space_ref }, ...props }
+  )
+
+export interface ListUsergroupsQueryParams {
+  /**
+   * The substring which is used to filter usergroups by their identifier.
+   */
+  query?: string
+  /**
+   * The page to return.
+   */
+  page?: number
+  /**
+   * The maximum number of results to return.
+   */
+  limit?: number
+}
+
+export interface ListUsergroupsPathParams {
+  space_ref: string
+}
+
+export type ListUsergroupsProps = Omit<
+  GetProps<TypesUserGroupInfo[], UsererrorError, ListUsergroupsQueryParams, ListUsergroupsPathParams>,
+  'path'
+> &
+  ListUsergroupsPathParams
+
+export const ListUsergroups = ({ space_ref, ...props }: ListUsergroupsProps) => (
+  <Get<TypesUserGroupInfo[], UsererrorError, ListUsergroupsQueryParams, ListUsergroupsPathParams>
+    path={`/spaces/${space_ref}/usergroups`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseListUsergroupsProps = Omit<
+  UseGetProps<TypesUserGroupInfo[], UsererrorError, ListUsergroupsQueryParams, ListUsergroupsPathParams>,
+  'path'
+> &
+  ListUsergroupsPathParams
+
+export const useListUsergroups = ({ space_ref, ...props }: UseListUsergroupsProps) =>
+  useGet<TypesUserGroupInfo[], UsererrorError, ListUsergroupsQueryParams, ListUsergroupsPathParams>(
+    (paramsInPath: ListUsergroupsPathParams) => `/spaces/${paramsInPath.space_ref}/usergroups`,
     { base: getConfig('code/api/v1'), pathParams: { space_ref }, ...props }
   )
 
@@ -10795,18 +10878,18 @@ export interface DeleteFavoriteQueryParams {
    * The type of the resource to be unfavorited.
    */
   resource_type?:
-    | 'SPACE'
-    | 'REPOSITORY'
-    | 'USER'
-    | 'SERVICEACCOUNT'
-    | 'SERVICE'
-    | 'PIPELINE'
-    | 'SECRET'
     | 'CONNECTOR'
-    | 'TEMPLATE'
     | 'GITSPACE'
     | 'INFRAPROVIDER'
+    | 'PIPELINE'
     | 'REGISTRY'
+    | 'REPOSITORY'
+    | 'SECRET'
+    | 'SERVICE'
+    | 'SERVICEACCOUNT'
+    | 'SPACE'
+    | 'TEMPLATE'
+    | 'USER'
 }
 
 export type DeleteFavoriteProps = Omit<

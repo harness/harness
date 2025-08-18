@@ -27,25 +27,16 @@ import {
   FormikForm,
   Layout,
   SelectOption,
-  SplitButton,
   Text,
   useToaster
 } from '@harnessio/uicore'
-import { Color, FontVariation } from '@harnessio/design-system'
-import { Menu, PopoverPosition } from '@blueprintjs/core'
+import { FontVariation } from '@harnessio/design-system'
 import { Icon } from '@harnessio/icons'
 import { useHistory, useParams } from 'react-router-dom'
 import { useGet, useMutate } from 'restful-react'
-import { capitalize, isEmpty } from 'lodash-es'
+import { capitalize } from 'lodash-es'
 import { useStrings } from 'framework/strings'
-import {
-  CodeIcon,
-  MergeStrategy,
-  ProtectionRulesType,
-  RulesTargetType,
-  SettingTypeMode,
-  SettingsTab
-} from 'utils/GitUtils'
+import { MergeStrategy, ProtectionRulesType, RulesTargetType, SettingsTab } from 'utils/GitUtils'
 import {
   ScopeEnum,
   REGEX_VALID_REPO_NAME,
@@ -73,11 +64,10 @@ import SearchDropDown from 'components/SearchDropDown/SearchDropDown'
 import { useQueryParams } from 'hooks/useQueryParams'
 import BranchRulesForm from './components/BranchRulesForm'
 import BypassList from './components/BypassList'
-import Include from '../../../icons/Include.svg?url'
-import Exclude from '../../../icons/Exclude.svg?url'
 import TagRulesForm from './components/TagRulesForm'
 import {
   combineAndNormalizePrincipalsAndGroups,
+  convertToTargetList,
   getPayload,
   NormalizedPrincipal,
   rulesFormInitialPayload,
@@ -85,12 +75,13 @@ import {
   RuleState,
   transformDataToArray
 } from '../ProtectionRulesUtils'
+import TargetPatternsSection from './components/TargetPatternsSection'
+import TargetRepositoriesSection from './components/TargetRepositoriesSection'
 import css from './ProtectionRulesForm.module.scss'
 
 const ProtectionRulesForm = (props: {
   currentPageScope: ScopeEnum
   editMode: boolean
-  settingSectionMode: SettingTypeMode
   repoMetadata?: RepoRepositoryOutput
 }) => {
   const { routes, routingId, standalone, hooks } = useAppContext()
@@ -100,11 +91,10 @@ const ProtectionRulesForm = (props: {
   const { showError, showSuccess } = useToaster()
   const space = useGetSpaceParam()
   const history = useHistory()
-  const { currentPageScope, editMode = false, repoMetadata, settingSectionMode } = props
+  const { currentPageScope, editMode = false, repoMetadata } = props
   const { getString } = useStrings()
   const [searchTerm, setSearchTerm] = useState('')
   const [searchStatusTerm, setSearchStatusTerm] = useState('')
-  const [targetType, setTargetType] = useState(RulesTargetType.INCLUDE)
   const currentRuleScope = getScopeFromParams(params, standalone, repoMetadata)
   const { scopeRef } =
     typeof currentRuleScope === 'number' ? getScopeData(space, currentRuleScope, standalone) : { scopeRef: space }
@@ -258,9 +248,11 @@ const ProtectionRulesForm = (props: {
         description,
         identifier,
         pattern,
+        repo_target,
         state,
         users: usersMap,
-        user_groups: userGroupsMap
+        user_groups: userGroupsMap,
+        repositories: repositoriesMap
       } = rule || {}
       const { bypass } = definition || {}
 
@@ -271,20 +263,32 @@ const ProtectionRulesForm = (props: {
       const bypassList = combineAndNormalizePrincipalsAndGroups(transformedBypassList, transformedUserGroupsBypassList)
 
       // Create a new array based on the "include" key from the JSON object and the strings array
-      const includeArr = pattern?.include?.map((arr: string) => [RulesTargetType.INCLUDE, arr]) ?? []
-      const excludeArr = pattern?.exclude?.map((arr: string) => [RulesTargetType.EXCLUDE, arr]) ?? []
+      const includeArr = convertToTargetList(pattern?.include, true)
+      const excludeArr = convertToTargetList(pattern?.exclude, false)
+      const repoIncludeArr =
+        repo_target?.include?.ids?.map(id => [
+          RulesTargetType.INCLUDE,
+          repositoriesMap?.[id]?.path || '',
+          String(id)
+        ]) ?? []
+      const repoExcludeArr =
+        repo_target?.exclude?.ids?.map(id => [
+          RulesTargetType.EXCLUDE,
+          repositoriesMap?.[id]?.path || '',
+          String(id)
+        ]) ?? []
+      const repoPatternsIncludeArr = convertToTargetList(repo_target?.include?.patterns, true)
+      const repoPatternsExcludeArr = convertToTargetList(repo_target?.exclude?.patterns, false)
 
       const commonRulesForm = {
         name: identifier,
         desc: description,
         enable: state !== RuleState.DISABLED,
-        target: '',
-        targetDefault: pattern?.default,
+        repoList: [...repoIncludeArr, ...repoExcludeArr],
+        repoTargetList: [...repoPatternsIncludeArr, ...repoPatternsExcludeArr],
         targetList: [...includeArr, ...excludeArr],
         allRepoOwners: bypass?.repo_owners,
-        bypassList: bypassList,
-        targetSet: false,
-        bypassSet: false
+        bypassList: bypassList
       }
 
       switch (ruleType) {
@@ -306,6 +310,7 @@ const ProtectionRulesForm = (props: {
 
           return {
             ...commonRulesForm,
+            targetDefaultBranch: pattern?.default,
             defaultReviewersEnabled: (pullreq?.reviewers?.default_reviewer_ids?.length || 0) > 0,
             defaultReviewersList: defaultReviewersList,
             requireMinReviewers: minReviewerCheck,
@@ -331,8 +336,7 @@ const ProtectionRulesForm = (props: {
             blockUpdate: lifecycle?.update_forbidden && pullreq?.merge?.block,
             blockDeletion: lifecycle?.delete_forbidden,
             blockForcePush: lifecycle?.update_forbidden || lifecycle?.update_force_forbidden,
-            requirePr: lifecycle?.update_forbidden && !pullreq?.merge?.block,
-            defaultReviewersSet: false
+            requirePr: lifecycle?.update_forbidden && !pullreq?.merge?.block
           }
         }
         case ProtectionRulesType.TAG: {
@@ -409,10 +413,7 @@ const ProtectionRulesForm = (props: {
         }
       }}>
       {formik => {
-        const targetList =
-          settingSectionMode === SettingTypeMode.EDIT || formik.values.targetSet ? formik.values.targetList : []
-        const bypassList =
-          settingSectionMode === SettingTypeMode.EDIT || formik.values.bypassSet ? formik.values.bypassList : []
+        const { bypassList = [] } = formik.values
 
         const bypassListOptions = getBypassListOptions(bypassList)
 
@@ -473,116 +474,54 @@ const ProtectionRulesForm = (props: {
                 />
               </Container>
 
-              <Container className={css.generalContainer}>
-                <Layout.Horizontal>
-                  <FormInput.Text
-                    name="target"
-                    label={
-                      <Layout.Vertical className={cx(css.checkContainer, css.targetContainer)}>
-                        <Text
-                          className={css.headingSize}
-                          padding={{ bottom: 'small' }}
-                          font={{ variation: FontVariation.H4 }}>
-                          {getString('protectionRules.targetBranches')}
-                        </Text>
-                        {ruleType === ProtectionRulesType.BRANCH && (
-                          <Container padding={{ top: 'small' }}>
-                            <FormInput.CheckBox
-                              label={getString('protectionRules.defaultBranch')}
-                              name={'targetDefault'}
-                            />
-                          </Container>
-                        )}
-                      </Layout.Vertical>
-                    }
-                    placeholder={getString('protectionRules.targetPlaceholder')}
-                    tooltipProps={{
-                      dataTooltipId: 'branchProtectionTarget'
-                    }}
-                    className={cx(css.widthContainer, css.targetSpacingContainer, css.label)}
+              {currentRuleScope !== ScopeEnum.REPO_SCOPE && (
+                <Container className={css.generalContainer}>
+                  <Text
+                    className={css.headingSize}
+                    padding={{ bottom: 'medium' }}
+                    font={{ variation: FontVariation.H4 }}>
+                    {getString('protectionRules.targetRepositories')}
+                  </Text>
+                  {/* <FormInput.Select
+                  className={css.widthContainer}
+                  label={getString('scope')}
+                  name="repoScope"
+                  items={getScopeOptions(getString, accountIdentifier, orgIdentifier)}
+                /> */}
+                  <TargetRepositoriesSection
+                    formik={formik}
+                    space={space}
+                    standalone={standalone}
+                    currentScope={currentRuleScope}
                   />
-                  <Container
-                    flex={{ alignItems: 'flex-end' }}
-                    padding={{ left: 'medium' }}
-                    className={css.targetSpacingContainer}>
-                    <SplitButton
-                      className={css.buttonContainer}
-                      variation={ButtonVariation.TERTIARY}
-                      text={
-                        <Container flex={{ alignItems: 'center' }}>
-                          <img
-                            width={16}
-                            height={16}
-                            src={targetType === RulesTargetType.INCLUDE ? Include : Exclude}
-                          />
-                          <Text
-                            padding={{ left: 'xsmall' }}
-                            color={Color.BLACK}
-                            font={{ variation: FontVariation.BODY2_SEMI, weight: 'bold' }}>
-                            {getString(targetType)}
-                          </Text>
-                        </Container>
-                      }
-                      popoverProps={{
-                        interactionKind: 'click',
-                        usePortal: true,
-                        popoverClassName: css.popover,
-                        position: PopoverPosition.BOTTOM_RIGHT
-                      }}
-                      onClick={() => {
-                        if (formik.values.target !== '') {
-                          formik.setFieldValue('targetSet', true)
-                          targetList.push([targetType, formik.values.target ?? ''])
-                          formik.setFieldValue('targetList', targetList)
-                          formik.setFieldValue('target', '')
-                        }
-                      }}>
-                      {Object.values(RulesTargetType).map(type => (
-                        <Menu.Item
-                          key={type}
-                          className={css.menuItem}
-                          text={
-                            <Container flex={{ justifyContent: 'flex-start' }}>
-                              <Icon name={type === targetType ? CodeIcon.Tick : CodeIcon.Blank} />
-                              <Text
-                                padding={{ left: 'xsmall' }}
-                                color={Color.BLACK}
-                                font={{ variation: FontVariation.BODY2_SEMI, weight: 'bold' }}>
-                                {getString(type)}
-                              </Text>
-                            </Container>
-                          }
-                          onClick={() => setTargetType(type)}
-                        />
-                      ))}
-                    </SplitButton>
-                  </Container>
-                </Layout.Horizontal>
-                <Text className={css.hintText} margin={{ bottom: 'medium' }}>
-                  {getString('protectionRules.targetPatternHint')}
-                </Text>
-                {!isEmpty(targetList) && (
-                  <Layout.Horizontal spacing={'small'} className={css.targetBox}>
-                    {targetList.map((target, idx) => {
-                      return (
-                        <Container key={`${idx}-${target[1]}`} className={css.greyButton}>
-                          <img width={16} height={16} src={target[0] === RulesTargetType.INCLUDE ? Include : Exclude} />
-                          <Text lineClamp={1}>{target[1]}</Text>
-                          <Icon
-                            name="code-close"
-                            onClick={() => {
-                              const filteredData = targetList.filter(
-                                item => !(item[0] === target[0] && item[1] === target[1])
-                              )
-                              formik.setFieldValue('targetList', filteredData)
-                            }}
-                            className={css.codeClose}
-                          />
-                        </Container>
-                      )
-                    })}
-                  </Layout.Horizontal>
-                )}
+                  <Text
+                    font={{ variation: FontVariation.FORM_LABEL }}
+                    className={css.labelText}
+                    padding={{ bottom: 'xsmall' }}>
+                    {getString('patterns')}
+                  </Text>
+                  <TargetPatternsSection formik={formik} repoTarget ruleType={ruleType} />
+                </Container>
+              )}
+
+              <Container className={css.generalContainer}>
+                <Layout.Vertical className={cx(css.checkContainer, css.targetContainer)}>
+                  <Text
+                    className={css.headingSize}
+                    padding={{ bottom: 'small' }}
+                    font={{ variation: FontVariation.H4 }}>
+                    {getString('protectionRules.targetPatterns')}
+                  </Text>
+                  {ruleType === ProtectionRulesType.BRANCH && (
+                    <Container padding={{ top: 'small', bottom: 'medium' }}>
+                      <FormInput.CheckBox
+                        label={getString('protectionRules.defaultBranch')}
+                        name={'targetDefaultBranch'}
+                      />
+                    </Container>
+                  )}
+                </Layout.Vertical>
+                <TargetPatternsSection formik={formik} tooltipId="branchProtectionTarget" ruleType={ruleType} />
               </Container>
 
               <Container className={css.generalContainer}>
@@ -623,7 +562,6 @@ const ProtectionRulesForm = (props: {
                     const updatedList = [value, ...(bypassList || [])]
                     const uniqueArr = Array.from(new Map(updatedList.map(item => [item.id, item])).values())
                     formik.setFieldValue('bypassList', uniqueArr)
-                    formik.setFieldValue('bypassSet', true)
                   }}
                 />
                 <BypassList

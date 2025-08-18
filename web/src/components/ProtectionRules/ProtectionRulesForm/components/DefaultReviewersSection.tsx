@@ -105,7 +105,6 @@ const DefaultReviewersSection = (props: {
               const defaultReviewerEntry = `${id} ${displayName}`
               const newList = [...(defaultReviewersList || []), defaultReviewerEntry]
               setFieldValue('defaultReviewersList', newList)
-              setFieldValue('defaultReviewersSet', true)
             }}
             name={'defaultReviewerSelect'}
           />

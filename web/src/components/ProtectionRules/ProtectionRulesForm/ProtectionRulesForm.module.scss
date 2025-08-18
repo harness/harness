@@ -60,6 +60,10 @@
   font-weight: 500 !important;
 }
 
+.labelText {
+  font-size: 13px !important;
+}
+
 .dividerContainer {
   opacity: 0.2;
   height: 1px;
@@ -77,7 +81,6 @@
   &:hover {
     background: var(--grey-100) !important;
     box-shadow: var(--elevation-2) !important;
-    padding: var(--spacing-xsmall) !important;
   }
 }
 
@@ -113,11 +116,7 @@
 }
 
 .targetSpacingContainer {
-  margin-bottom: 6px !important;
-
-  :global(.bp3-input-group) {
-    margin-top: 6px !important;
-  }
+  margin-bottom: 0 !important;
 }
 
 .buttonContainer {
@@ -188,6 +187,10 @@
   flex-wrap: wrap;
   max-width: calc(100% - 100px) !important;
   margin-bottom: var(--spacing-small) !important;
+
+  .target {
+    margin-bottom: var(--spacing-xsmall);
+  }
 }
 
 .reviewerBlock {
@@ -238,4 +241,20 @@
   padding: 2px !important;
   margin: 10px 7px !important;
   border-radius: 50%;
+}
+
+.modal {
+  min-height: 500px;
+}
+
+.noDataContainer {
+  min-height: inherit;
+}
+
+.dialog {
+  border-radius: 11px;
+  position: relative;
+  min-width: 800px;
+  padding: var(--spacing-xlarge);
+  max-height: 800px;
 }

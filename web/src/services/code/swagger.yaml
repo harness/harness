@@ -7087,6 +7087,8 @@ paths:
                   type: string
                 pattern:
                   $ref: '#/components/schemas/ProtectionPattern'
+                repo_target:
+                  $ref: '#/components/schemas/ProtectionRepoTarget'
                 state:
                   $ref: '#/components/schemas/EnumRuleState'
                 type:
@@ -7245,6 +7247,8 @@ paths:
                   type: string
                 pattern:
                   $ref: '#/components/schemas/ProtectionPattern'
+                repo_target:
+                  $ref: '#/components/schemas/ProtectionRepoTarget'
                 state:
                   $ref: '#/components/schemas/EnumRuleState'
                 type:
@@ -11073,6 +11077,8 @@ paths:
                   type: string
                 pattern:
                   $ref: '#/components/schemas/ProtectionPattern'
+                repo_target:
+                  $ref: '#/components/schemas/ProtectionRepoTarget'
                 state:
                   $ref: '#/components/schemas/EnumRuleState'
                 type:
@@ -11231,6 +11237,8 @@ paths:
                   type: string
                 pattern:
                   $ref: '#/components/schemas/ProtectionPattern'
+                repo_target:
+                  $ref: '#/components/schemas/ProtectionRepoTarget'
                 state:
                   $ref: '#/components/schemas/EnumRuleState'
                 type:
@@ -11558,6 +11566,73 @@ paths:
               schema:
                 $ref: '#/components/schemas/TypesUsageMetric'
           description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
+  /spaces/{space_ref}/usergroups:
+    get:
+      operationId: listUsergroups
+      parameters:
+        - description: The substring which is used to filter usergroups by their identifier.
+          in: query
+          name: query
+          required: false
+          schema:
+            type: string
+        - description: The page to return.
+          in: query
+          name: page
+          required: false
+          schema:
+            default: 1
+            minimum: 1
+            type: integer
+        - description: The maximum number of results to return.
+          in: query
+          name: limit
+          required: false
+          schema:
+            default: 30
+            maximum: 100
+            minimum: 1
+            type: integer
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TypesUserGroupInfo'
+                type: array
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
         '401':
           content:
             application/json:
@@ -12363,18 +12438,18 @@ paths:
           required: false
           schema:
             enum:
-              - SPACE
-              - REPOSITORY
-              - USER
-              - SERVICEACCOUNT
-              - SERVICE
-              - PIPELINE
-              - SECRET
               - CONNECTOR
-              - TEMPLATE
               - GITSPACE
               - INFRAPROVIDER
+              - PIPELINE
               - REGISTRY
+              - REPOSITORY
+              - SECRET
+              - SERVICE
+              - SERVICEACCOUNT
+              - SPACE
+              - TEMPLATE
+              - USER
             type: string
         - in: path
           name: resource_id
@@ -12845,6 +12920,16 @@ components:
         - reset
       type: string
     EnumGitspaceCodeRepoType:
+      enum:
+        - github
+        - gitlab
+        - harness_code
+        - bitbucket
+        - unknown
+        - gitness
+        - gitlab_on_prem
+        - bitbucket_server
+        - github_enterprise
       type: string
     EnumGitspaceEntityType:
       enum:
@@ -12910,6 +12995,7 @@ components:
         - cleaning
         - cleaned
         - resetting
+        - pending_cleanup
       type: string
     EnumGitspaceOwner:
       enum:
@@ -12933,8 +13019,25 @@ components:
         - cleaning
       type: string
     EnumIDEType:
+      enum:
+        - vs_code
+        - vs_code_web
+        - intellij
+        - pycharm
+        - goland
+        - webstorm
+        - clion
+        - phpstorm
+        - rubymine
+        - rider
       type: string
     EnumInfraProviderType:
+      enum:
+        - docker
+        - harness_gcp
+        - harness_cloud
+        - hybrid_vm_gcp
+        - hybrid_vm_aws
       type: string
     EnumLabelColor:
       enum:
@@ -13050,18 +13153,18 @@ components:
       type: string
     EnumResourceType:
       enum:
-        - SPACE
-        - REPOSITORY
-        - USER
-        - SERVICEACCOUNT
-        - SERVICE
-        - PIPELINE
-        - SECRET
         - CONNECTOR
-        - TEMPLATE
         - GITSPACE
         - INFRAPROVIDER
+        - PIPELINE
         - REGISTRY
+        - REPOSITORY
+        - SECRET
+        - SERVICE
+        - SERVICEACCOUNT
+        - SPACE
+        - TEMPLATE
+        - USER
       type: string
     EnumRevocationReason:
       enum:
@@ -13889,6 +13992,13 @@ components:
           type: string
         pattern:
           $ref: '#/components/schemas/ProtectionPattern'
+        repo_target:
+          $ref: '#/components/schemas/ProtectionRepoTarget'
+        repositories:
+          additionalProperties:
+            $ref: '#/components/schemas/TypesRepositoryCore'
+          nullable: true
+          type: object
         scope:
           type: integer
         state:
@@ -14296,6 +14406,25 @@ components:
           $ref: '#/components/schemas/ProtectionDefBypass'
         push:
           $ref: '#/components/schemas/ProtectionDefPush'
+      type: object
+    ProtectionRepoTarget:
+      nullable: true
+      properties:
+        exclude:
+          $ref: '#/components/schemas/ProtectionRepoTargetFilter'
+        include:
+          $ref: '#/components/schemas/ProtectionRepoTargetFilter'
+      type: object
+    ProtectionRepoTargetFilter:
+      properties:
+        ids:
+          items:
+            type: integer
+          type: array
+        patterns:
+          items:
+            type: string
+          type: array
       type: object
     ProtectionTag:
       properties:
@@ -15134,9 +15263,9 @@ components:
           type: string
         instance:
           $ref: '#/components/schemas/TypesGitspaceInstance'
-        is_marked_for_reset:
+        is_marked_for_infra_reset:
           type: boolean
-        is_marked_for_soft_reset:
+        is_marked_for_reset:
           type: boolean
         log_key:
           type: string

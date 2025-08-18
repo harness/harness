@@ -663,6 +663,7 @@ export interface StringsMap {
   password: string
   passwordApi: string
   passwordRequired: string
+  patterns: string
   payloadUrl: string
   payloadUrlLabel: string
   pending: string
@@ -920,6 +921,7 @@ export interface StringsMap {
   'protectionRules.numberOfRulesApplied': string
   'protectionRules.prFailedText': string
   'protectionRules.protectionSelectAll': string
+  'protectionRules.repoSelectionHint': string
   'protectionRules.reqCommentResolutionText': string
   'protectionRules.reqCommentResolutionTitle': string
   'protectionRules.reqNewChangesText': string
@@ -943,9 +945,10 @@ export interface StringsMap {
   'protectionRules.saveRule': string
   'protectionRules.showRulesScope': string
   'protectionRules.statusCheck': string
-  'protectionRules.targetBranches': string
   'protectionRules.targetPatternHint': string
+  'protectionRules.targetPatterns': string
   'protectionRules.targetPlaceholder': string
+  'protectionRules.targetRepositories': string
   'protectionRules.title': string
   public: string
   pullMustBeMadeFromBranches: string
@@ -1008,12 +1011,14 @@ export interface StringsMap {
   repoUpdate: string
   repoVisibility: string
   'repos.activities': string
+  'repos.confirmSelection': string
   'repos.data': string
   'repos.enterBranchName': string
   'repos.lastChange': string
   'repos.lastPush': string
   'repos.name': string
   'repos.noDataMessage': string
+  'repos.specificRepositories': string
   repositories: string
   repositoryName: string
   reqChanges: string
@@ -1087,6 +1092,7 @@ export interface StringsMap {
   selectLanguagePlaceholder: string
   selectMergeStrat: string
   selectRange: string
+  selectRepositories: string
   selectRepositoryPlaceholder: string
   selectReviewers: string
   selectSpace: string

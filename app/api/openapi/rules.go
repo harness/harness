@@ -51,6 +51,9 @@ type Rule struct {
 
 	// overshadow Pattern to correct the type
 	Pattern protection.Pattern `json:"pattern"`
+
+	// overshadow RepoTarget to correct the type
+	RepoTarget protection.RepoTarget `json:"repo_target"`
 }
 
 var QueryParameterRuleTypes = openapi3.ParameterOrRef{

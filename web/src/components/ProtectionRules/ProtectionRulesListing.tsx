@@ -262,7 +262,7 @@ const ProtectionRulesListing = (props: { activeTab: string; repoMetadata?: RepoR
           )
 
           return (
-            <Layout.Vertical spacing="small" padding={{ left: 'medium', bottom: 'xsmall' }}>
+            <Layout.Vertical key={identifier} spacing="small" padding={{ left: 'medium', bottom: 'xsmall' }}>
               <Layout.Horizontal flex={{ align: 'center-center' }}>
                 <Container onClick={Utils.stopEvent}>
                   <Popover
@@ -450,12 +450,7 @@ const ProtectionRulesListing = (props: { activeTab: string; repoMetadata?: RepoR
         />
       )}
       {newRule || editRule ? (
-        <ProtectionRulesForm
-          currentPageScope={currentPageScope}
-          editMode={editRule}
-          repoMetadata={repoMetadata}
-          settingSectionMode={settingSectionMode}
-        />
+        <ProtectionRulesForm currentPageScope={currentPageScope} editMode={editRule} repoMetadata={repoMetadata} />
       ) : (
         <Container padding="xlarge">
           {!!rules && (

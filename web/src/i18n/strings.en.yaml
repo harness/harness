@@ -32,8 +32,10 @@ lastCommitDate: Last Commit Date
 commitChanges: Commit changes
 pullRequests: Pull Requests
 settings: Settings
+patterns: Patterns
 manageRepository: Manage Repository
 manageRepositories: Manage Repositories
+selectRepositories: Select Repositories
 newFile: New File
 editFile: Edit File
 prev: Prev
@@ -130,6 +132,8 @@ repos:
   lastPush: Last Push
   noDataMessage: There are no repositories in this project.  Create a new repository, or import an existing Git repository by clicking below.
   enterBranchName: Enter a branch name
+  confirmSelection: Confirm Selection
+  specificRepositories: specific repositories
 createRepoModal:
   branchLabel: 'Your repository will be initialized with a '
   branch: ' branch.'
@@ -1044,9 +1048,11 @@ protectionRules:
   title: Rules
   edit: Edit {{ruleType}} Rule
   create: Create {{ruleType}} Rule
-  targetBranches: Target Patterns
-  targetPlaceholder: Enter the target patterns
-  targetPatternHint: Match branches using globstar patterns (e.g. "golden", "feature-*", "releases/**")
+  targetRepositories: Target Repositories
+  targetPatterns: Target Patterns
+  targetPlaceholder: Enter the {{target}} patterns
+  targetPatternHint: Match {{target}} using globstar patterns (e.g. "golden", "feature-*", "releases/**")
+  repoSelectionHint: If no repositories are selected, the rule applies to all
   defaultBranch: Default branch
   bypassList: Bypass List
   newRule: New {{ruleType}} rule
@@ -1304,9 +1310,9 @@ scope: Scope
 searchScope:
   base: 'Search scope: {scope}'
   allScopes: Account, organizations and projects
-  accOnly: Account Only
+  accOnly: Account only
   orgOnly: Organizations only
-  orgAndProj: Organizations and Projects
+  orgAndProj: Organizations and projects
   title: Search scope
 regex:
   tooltip: '{regex} search {enable}. Click to {disable}'

@@ -35,7 +35,7 @@ import { ProgressBar, Intent } from '@blueprintjs/core'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Render } from 'react-jsx-match'
 import type { CellProps, Column } from 'react-table'
-import { compact, debounce, defaultTo, isEmpty } from 'lodash-es'
+import { debounce, defaultTo, isEmpty } from 'lodash-es'
 import Keywords from 'react-keywords'
 import cx from 'classnames'
 import { useGet } from 'restful-react'
@@ -51,8 +51,6 @@ import {
   getCurrentScopeLabel,
   getScopeOptions,
   ScopeLevelEnum,
-  getScopeData,
-  ScopeEnum,
   getScopeFromParams,
   isParamTrue
 } from 'utils/Utils'
@@ -67,7 +65,6 @@ import useSpaceSSE from 'hooks/useSpaceSSE'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import FavoriteStar from 'components/FavoriteStar/FavoriteStar'
-import { LabelTitle } from 'components/Label/Label'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { RepoTypeLabel } from 'components/RepoTypeLabel/RepoTypeLabel'
@@ -76,6 +73,7 @@ import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButto
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { getUsingFetch, getConfig } from 'services/config'
 import { TimePopoverWithLocal } from 'utils/timePopoverLocal/TimePopoverWithLocal'
+import { ScopeBadge } from 'components/ScopeBadge/ScopeBadge'
 import noRepoImage from './no-repo.svg?url'
 import css from './RepositoriesListing.module.scss'
 
@@ -292,42 +290,9 @@ export default function RepositoriesListing() {
       {
         id: 'scopeInfo',
         width: showScopeInfo ? '45%' : '0',
-        Cell: ({ row }: CellProps<TypesRepoExtended>) => {
-          if (!showScopeInfo) {
-            return null
-          }
-
-          const [accountId, repoOrgIdentifier, repoProjectIdentifier] = row.original.path?.split('/').slice(0, -1) || []
-          const repoScope = getScopeFromParams(
-            { accountId, orgIdentifier: repoOrgIdentifier, projectIdentifier: repoProjectIdentifier },
-            standalone
-          )
-          const repoSpace = compact([accountId, repoOrgIdentifier, repoProjectIdentifier]).join('/')
-          const { scopeColor, scopeName } = getScopeData(repoSpace, repoScope, standalone)
-
-          // Show the relative space reference depending on the current scope
-          const relativeSpaceRef =
-            currentScope === ScopeEnum.ACCOUNT_SCOPE
-              ? repoScope === ScopeEnum.PROJECT_SCOPE
-                ? `${repoOrgIdentifier}/${repoProjectIdentifier}`
-                : repoScope === ScopeEnum.ORG_SCOPE
-                ? repoOrgIdentifier
-                : null
-              : currentScope === ScopeEnum.ORG_SCOPE && repoScope === ScopeEnum.PROJECT_SCOPE
-              ? repoProjectIdentifier
-              : null
-
-          return (
-            <Layout.Vertical spacing="xsmall">
-              <LabelTitle name={scopeName} scope={repoScope} label_color={scopeColor} isScopeName />
-              {relativeSpaceRef && (
-                <Text font={{ size: 'small' }} lineClamp={1}>
-                  {relativeSpaceRef}
-                </Text>
-              )}
-            </Layout.Vertical>
-          )
-        }
+        Cell: ({ row }: CellProps<TypesRepoExtended>) => (
+          <ScopeBadge standalone={standalone} currentScope={currentScope} path={row.original.path} />
+        )
       },
       {
         Header: getString('lastUpdated'),

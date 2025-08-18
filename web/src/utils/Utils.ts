@@ -882,8 +882,8 @@ export const getScopeFromParams = (
 
   const { accountId, orgIdentifier, projectIdentifier } = params
 
-  if (standalone && projectIdentifier) {
-    return ScopeEnum.ACCOUNT_SCOPE
+  if (standalone) {
+    return ScopeEnum.SPACE_SCOPE
   }
 
   if (accountId) {

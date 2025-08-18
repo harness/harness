@@ -50,7 +50,7 @@ const BranchRulesForm = (props: {
   } = formik.values
 
   const filteredStatusOptions = statusOptions.filter(
-    (item: SelectOption) => !statusChecks.includes(item.value as string)
+    (item: SelectOption) => !statusChecks?.includes(item.value as string)
   )
 
   return (
