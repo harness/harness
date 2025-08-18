@@ -28,7 +28,7 @@ import {
 import React, { useEffect, useState } from 'react'
 import { Color } from '@harnessio/design-system'
 import type { Renderer, CellProps } from 'react-table'
-//import { Icon } from '@harnessio/icons'
+import { Icon } from '@harnessio/icons'
 import ReactTimeago from 'react-timeago'
 import { Circle, Cpu, Clock, Play, Db, ModernTv, Cloud } from 'iconoir-react'
 import { Intent, Menu, MenuItem, PopoverInteractionKind, Position } from '@blueprintjs/core'
@@ -389,9 +389,9 @@ const ActionMenu = ({
   handleStopGitspace,
   handleReset,
   actionLoading,
-  deleteLoading
-}: //handleEditGitspace
-ActionMenuProps) => {
+  deleteLoading,
+  handleEditGitspace
+}: ActionMenuProps) => {
   const { getString } = useStrings()
   const { showError } = useToaster()
   const { instance, ide, identifier = '', space_path = '', state } = data
@@ -498,24 +498,21 @@ ActionMenuProps) => {
           text={<Text icon="gitspace">{getString('cde.viewGitspace')}</Text>}
         />
 
-        {/*/!* Only show edit option for specific states *!/*/}
-        {/*{[GitspaceStatus.UNINITIALIZED, GitspaceStatus.STOPPED, GitspaceStatus.ERROR].includes(*/}
-        {/*  state as GitspaceStatus*/}
-        {/*) && (*/}
-        {/*  <MenuItem*/}
-        {/*    onClick={() => {*/}
-        {/*      if (handleEditGitspace) {*/}
-        {/*        handleEditGitspace()*/}
-        {/*      }*/}
-        {/*    }}*/}
-        {/*    text={*/}
-        {/*      <Layout.Horizontal spacing="xsmall" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>*/}
-        {/*        <Icon name="edit" size={16} />*/}
-        {/*        <Text>{getString('cde.editGitspace') || 'Edit Gitspace'}</Text>*/}
-        {/*      </Layout.Horizontal>*/}
-        {/*    }*/}
-        {/*  />*/}
-        {/*)}*/}
+        {!standalone && [GitspaceStatus.UNINITIALIZED, GitspaceStatus.STOPPED].includes(state as GitspaceStatus) && (
+          <MenuItem
+            onClick={() => {
+              if (handleEditGitspace) {
+                handleEditGitspace()
+              }
+            }}
+            text={
+              <Layout.Horizontal spacing="xsmall" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
+                <Icon name="edit" size={16} />
+                <Text>{getString('cde.editGitspace') || 'Edit Gitspace'}</Text>
+              </Layout.Horizontal>
+            }
+          />
+        )}
 
         <MenuItem
           onClick={deleteGitspace as Unknown as () => void}
@@ -735,8 +732,8 @@ export const RenderActions = ({ row, refreshList, gitspaceSettings }: RenderActi
           popoverClassName: css.popover
         }}
       />
-      {/* Add the EditGitspace modal */}
-      {isEditModalOpen && (
+
+      {!standalone && isEditModalOpen && (
         <Container
           onClick={e => {
             e.stopPropagation()
