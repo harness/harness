@@ -119,7 +119,9 @@ export const CDEAnyGitImport = () => {
     lazy: true
   })
 
-  const branchOptions: { name: string }[] = isOnPremSCM
+  const branchOptions: { name: string }[] = !values.code_repo_url
+    ? []
+    : isOnPremSCM
     ? scmreposbranches?.data?.gitBranchesResponse?.branches
     : branchData?.branches || []
 
@@ -157,6 +159,16 @@ export const CDEAnyGitImport = () => {
       refetchBranch()
     }
   }, [searchBranch])
+
+  useEffect(() => {
+    if (searchBranch === '' && values.code_repo_url) {
+      if (isOnPremSCM) {
+        scmrefetchBranch()
+      } else {
+        refetchBranch()
+      }
+    }
+  }, [searchBranch, values.code_repo_url])
 
   useEffect(() => {
     if (isOnPremSCM) {
@@ -246,7 +258,19 @@ export const CDEAnyGitImport = () => {
                   onChange={async event => {
                     const target = event.target as HTMLInputElement
                     setSearchTerm(target?.value?.trim() || '')
-                    await onChange(target.value)
+                    if (!target?.value?.trim()) {
+                      setSearchBranch('')
+                      setValues((prvValues: any) => {
+                        return {
+                          ...prvValues,
+                          code_repo_url: '',
+                          branch: '',
+                          identifier: ''
+                        }
+                      })
+                    } else {
+                      await onChange(target.value)
+                    }
                   }}
                 />
               </Container>
@@ -360,6 +384,13 @@ export const CDEAnyGitImport = () => {
                         branch: target?.value?.trim() || ''
                       }
                     })
+                    if (!target?.value?.trim()) {
+                      if (isOnPremSCM) {
+                        scmrefetchBranch()
+                      } else {
+                        refetchBranch()
+                      }
+                    }
                   }}
                 />
               </Container>
@@ -369,8 +400,10 @@ export const CDEAnyGitImport = () => {
             withoutCurrentColor
             formikName="branch"
             renderMenu={
-              <Menu>
-                {branchOptions?.length ? (
+              <Menu style={{ maxHeight: 300 }}>
+                {loading || branchLoading || scmbranchLoading ? (
+                  <MenuItem text={<Text>Fetching Branches</Text>} />
+                ) : branchOptions?.length ? (
                   branchOptions?.map(item => {
                     return (
                       <MenuItem
@@ -388,8 +421,6 @@ export const CDEAnyGitImport = () => {
                       />
                     )
                   })
-                ) : loading || repoLoading || onPremRepoLoading || scmbranchLoading ? (
-                  <MenuItem text={<Text>Fetching Branches</Text>} />
                 ) : (
                   <MenuItem text={<Text>No Branches Found</Text>} />
                 )}
