@@ -1330,6 +1330,7 @@ export interface StringsMap {
   'cde.Aws.selectAwsRegion': string
   'cde.Aws.title': string
   'cde.account': string
+  'cde.allRegionDisabled': string
   'cde.atleastOneRegion': string
   'cde.awsInfrastructure': string
   'cde.awsInfrastructureName': string

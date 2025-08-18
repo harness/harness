@@ -20,6 +20,7 @@ noGitspaces: You have not created any Gitspace yet
 gitspaceDetail: Gitspace Detail
 machine: Machine
 region: Region
+allRegionDisabled: All regions disabled
 or: OR
 logs: Logs
 noData: No Data
@@ -369,7 +370,7 @@ update:
   updateGitspace: Update Gitspace
   gitspaceUpdateSuccess : 'Gitspace updated successfully'
   gitspaceUpdateFailed : Failed to update gitspace
-  allMachineDisabled : All machine disabled
+  allMachineDisabled : All machines disabled
   errorChosenIDE : Chosen IDE has been disabled by the admin. Please choose a different one.
   errorAllIDE : All IDEs have been disabled by the admin. Cannot update the gitspace.
   errorAllResources: Admin has disabled all available machine resources for this gitspace. Cannot update the gitspace.

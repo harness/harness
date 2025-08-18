@@ -107,7 +107,11 @@ export const SelectInfraProvider = () => {
         options={regionOptions}
         isDisabled={regionOptions?.length === 0}
       />
-      <SelectMachine options={machineOptions} defaultValue={machineOptions?.[0]} />
+      <SelectMachine
+        options={machineOptions}
+        defaultValue={machineOptions?.[0]}
+        isDisabled={machineOptions?.length === 0}
+      />
     </Layout.Vertical>
   )
 }

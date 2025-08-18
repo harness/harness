@@ -70,6 +70,8 @@ export const SelectMachine = ({ options, defaultValue, isDisabled = false }: Sel
 
   const data = (machineTypes?.find(item => item.identifier === machine) || {}) as (typeof machineTypes)[0]
 
+  const isNoMachineData = values?.metadata?.infraProvider && isDisabled && options.length === 0
+
   return (
     <Container>
       <CDECustomDropdown
@@ -89,7 +91,9 @@ export const SelectMachine = ({ options, defaultValue, isDisabled = false }: Sel
         label={
           <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
             <Layout.Vertical>
-              <Text font={'normal'}>{data.label || getString('cde.machine')}</Text>
+              <Text font={'normal'}>
+                {isNoMachineData ? getString('cde.update.allMachineDisabled') : data.label || getString('cde.machine')}
+              </Text>
             </Layout.Vertical>
           </Layout.Horizontal>
         }

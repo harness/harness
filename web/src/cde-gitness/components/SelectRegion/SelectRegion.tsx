@@ -67,6 +67,8 @@ export const SelectRegion = ({ options, isDisabled = false, defaultValue }: Sele
     }
   }, [defaultValue?.label?.toLowerCase()])
 
+  const isNoRegionData = isDisabled && metadata?.infraProvider && options.length === 0
+
   return (
     <Container>
       <CDECustomDropdown
@@ -74,7 +76,9 @@ export const SelectRegion = ({ options, isDisabled = false, defaultValue }: Sele
         label={
           <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
             <Layout.Vertical>
-              <Text font={'normal'}>{metadata?.region || getString('cde.region')}</Text>
+              <Text font={'normal'}>
+                {isNoRegionData ? getString('cde.allRegionDisabled') : metadata?.region || getString('cde.region')}
+              </Text>
             </Layout.Vertical>
           </Layout.Horizontal>
         }
