@@ -290,9 +290,12 @@ export default function RepositoriesListing() {
       {
         id: 'scopeInfo',
         width: showScopeInfo ? '45%' : '0',
-        Cell: ({ row }: CellProps<TypesRepoExtended>) => (
-          <ScopeBadge standalone={standalone} currentScope={currentScope} path={row.original.path} />
-        )
+        Cell: ({ row }: CellProps<TypesRepoExtended>) => {
+          if (!showScopeInfo) {
+            return null
+          }
+          return <ScopeBadge standalone={standalone} currentScope={currentScope} path={row.original.path} />
+        }
       },
       {
         Header: getString('lastUpdated'),
