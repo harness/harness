@@ -154,7 +154,7 @@ const GcpInfraDetails = () => {
                     },
                     gateway: {
                       machine_type,
-                      instances: parseInt(instances || '1'),
+                      instances: parseInt(instances || '3'),
                       vm_image_name: gateway?.vm_image_name
                     }
                   },

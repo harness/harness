@@ -173,7 +173,7 @@ const AwsInfraDetails = () => {
             },
             gateway: {
               instance_type: instance_type,
-              instances: parseInt(instances || '1')
+              instances: parseInt(instances || '3')
             },
             vpc_cidr_block
           },

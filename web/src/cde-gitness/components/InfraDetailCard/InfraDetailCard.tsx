@@ -77,6 +77,7 @@ function InfraDetailCard({ infraDetails, regionCount, provider }: InfraDetailCar
       fields: [
         { stringKey: 'cde.configureInfra.domain', value: infraDetails?.metadata?.domain },
         { stringKey: 'cde.configureInfra.numberOfLocations', value: regionCount },
+        { stringKey: 'cde.configureInfra.NumberOfInstance', value: infraDetails?.metadata?.gateway?.instances },
         {
           stringKey: 'cde.delegate.delegateSelectorTags',
           value: undefined,
@@ -103,6 +104,7 @@ function InfraDetailCard({ infraDetails, regionCount, provider }: InfraDetailCar
         { stringKey: 'cde.Aws.VpcCidrBlock', value: infraDetails?.metadata?.vpc_cidr_block },
         { stringKey: 'cde.configureInfra.domain', value: infraDetails?.metadata?.domain },
         { stringKey: 'cde.Aws.numberOfRegions', value: regionCount },
+        { stringKey: 'cde.configureInfra.NumberOfInstance', value: infraDetails?.metadata?.gateway?.instances },
         {
           stringKey: 'cde.delegate.delegateSelectorTags',
           value: undefined,

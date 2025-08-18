@@ -12,11 +12,22 @@ interface CustomInputProps {
   error: any
   type: string
   autoComplete?: string
+  marginBottom?: boolean
 }
 
-function CustomInput({ label, name, value, onChange, placeholder, error, type, autoComplete }: CustomInputProps) {
+function CustomInput({
+  label,
+  name,
+  value,
+  onChange,
+  placeholder,
+  error,
+  type,
+  autoComplete,
+  marginBottom = true
+}: CustomInputProps) {
   return (
-    <Container className={css.mb15}>
+    <Container className={marginBottom ? css.mb15 : undefined}>
       <Text className={css.inputLabel}>{label}</Text>
       <TextInput
         name={name}

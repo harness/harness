@@ -1336,6 +1336,7 @@ export interface StringsMap {
   'cde.configureAWSInfra': string
   'cde.configureGCPInfra': string
   'cde.configureGitspaceInfra': string
+  'cde.configureInfra.NumberOfInstance': string
   'cde.configureInfra.applyYamlAndVerifyConnection': string
   'cde.configureInfra.basicDetails': string
   'cde.configureInfra.basicNoteText': string
@@ -1357,6 +1358,7 @@ export interface StringsMap {
   'cde.configureInfra.gatewayNoteText': string
   'cde.configureInfra.id': string
   'cde.configureInfra.infraName': string
+  'cde.configureInfra.instanceNoteText': string
   'cde.configureInfra.learnMore': string
   'cde.configureInfra.learnMoreAboutHybrid': string
   'cde.configureInfra.machineImageName': string

@@ -6,6 +6,7 @@ import { useFormikContext, type FormikProps } from 'formik'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import CustomSelectDropdown from 'cde-gitness/components/CustomSelectDropdown/CustomSelectDropdown'
+import CustomInput from 'cde-gitness/components/CustomInput/CustomInput'
 import { InfraDetails } from './InfraDetails.constants'
 import css from './InfraDetails.module.scss'
 
@@ -24,7 +25,7 @@ const BasicDetails = ({ formikProps }: BasicDetailProps) => {
   const { infraprovider_identifier } = useParams<{ infraprovider_identifier?: string }>()
   const editMode = infraprovider_identifier !== undefined
 
-  const { setFieldValue, values } = useFormikContext<{ instance_type?: string }>()
+  const { setFieldValue, values, errors } = useFormikContext<{ instance_type?: string; instances?: string }>()
 
   const delegateHandler = (val: string[]) => {
     formikProps.setFieldValue('delegateSelector', val)
@@ -66,7 +67,9 @@ const BasicDetails = ({ formikProps }: BasicDetailProps) => {
           placeholder={getString('cde.Aws.domainExample')}
           disabled={editMode}
         />
-        <Text font={{ variation: FontVariation.SMALL }}>{getString('cde.configureInfra.basicNoteText')}</Text>
+        <Text color={Color.GREY_500} font={{ variation: FontVariation.SMALL }}>
+          {getString('cde.configureInfra.basicNoteText')}
+        </Text>
         <br />
         <CustomSelectDropdown
           value={instanceTypeOption.find(item => item.value === values?.instance_type)}
@@ -77,6 +80,29 @@ const BasicDetails = ({ formikProps }: BasicDetailProps) => {
           label={getString('cde.Aws.gatewayInstanceType')}
           options={instanceTypeOption}
         />
+        <CustomInput
+          marginBottom={false}
+          label={getString('cde.configureInfra.NumberOfInstance')}
+          name="instances"
+          type="text"
+          value={values.instances || ''}
+          autoComplete="off"
+          onChange={(form: { value: string }) => {
+            if (form.value === '' || /[0-9]+/.test(form.value)) {
+              const numValue = parseInt(form.value, 10)
+              if (form.value !== '' && numValue < 1) {
+                return
+              }
+              const valueWithoutLeadingZeros = form.value === '' ? '' : String(numValue)
+              setFieldValue('instances', valueWithoutLeadingZeros)
+            }
+          }}
+          placeholder="default: 3"
+          error={errors.instances}
+        />
+        <Text color={Color.GREY_500} font={{ variation: FontVariation.SMALL }}>
+          {getString('cde.configureInfra.instanceNoteText')}
+        </Text>
         <Container className={css.delegateContainer}>
           <Text className={css.delegateSelector}>{getString('cde.delegate.DelegateSelector')}</Text>
           <DelegateSelectorsV2

@@ -166,8 +166,13 @@ function AwsMachineModal({
                   value={disk_size}
                   autoComplete="off"
                   onChange={(form: { value: string }) => {
-                    if (form.value === '' || (/\d+/.test(form.value) && parseInt(form.value, 10) >= 0)) {
-                      formik.setFieldValue('disk_size', form.value)
+                    if (form.value === '' || /[0-9]+/.test(form.value)) {
+                      const numValue = parseInt(form.value, 10)
+                      if (form.value !== '' && numValue < 1) {
+                        return
+                      }
+                      const valueWithoutLeadingZeros = form.value === '' ? '' : String(numValue)
+                      formik.setFieldValue('disk_size', valueWithoutLeadingZeros)
                     }
                   }}
                   error={formik?.submitCount ? get(formik?.errors, 'disk_size') : ''}
@@ -190,8 +195,9 @@ function AwsMachineModal({
                   autoComplete="off"
                   value={boot_size}
                   onChange={(form: { value: string }) => {
-                    if (form.value === '' || (/\d+/.test(form.value) && parseInt(form.value, 10) >= 0)) {
-                      formik.setFieldValue('boot_size', form.value)
+                    if (form.value === '' || /^[0-9]+$/.test(form.value)) {
+                      const valueWithoutLeadingZeros = form.value === '' ? '' : String(parseInt(form.value, 10))
+                      formik.setFieldValue('boot_size', valueWithoutLeadingZeros)
                     }
                   }}
                   error={formik?.submitCount ? get(formik?.errors, 'boot_size') : ''}

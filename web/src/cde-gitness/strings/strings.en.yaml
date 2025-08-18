@@ -242,6 +242,7 @@ configureInfra:
   learnMore: Learn More
   cancel: Cancel
   id: Id
+  NumberOfInstance: Number of Gateway Instances
   infraName: Infrastructure Name
   name: Name
   domain: Domain
@@ -256,6 +257,7 @@ configureInfra:
   gatewayNoteText: More number of instances better reliability of running the Gitspace. However more number of instances incur more costs
   basicNoteText: The domain on which all the gitspaces created by this infra will be accessible
   defaultImageNoteText: If not specified, Harness will use a default image name
+  instanceNoteText: To ensure better availability, we recommend running more than one instance. If you don’t specify a number, 3 instances will be created by default.
 Aws:
   title: AWS
   VpcCidrBlock: VPC CIDR Block
