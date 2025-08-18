@@ -140,7 +140,7 @@ func getGitspaceScheme(ideType enum.IDEType, gitspaceSchemeFromMetadata string) 
 	switch ideType {
 	case enum.IDETypeVSCodeWeb:
 		return gitspaceSchemeFromMetadata, nil
-	case enum.IDETypeVSCode:
+	case enum.IDETypeVSCode, enum.IDETypeWindsurf, enum.IDETypeCursor, enum.IDETypeSSH:
 		return "ssh", nil
 	case enum.IDETypeIntelliJ, enum.IDETypePyCharm, enum.IDETypeGoland, enum.IDETypeWebStorm, enum.IDETypeCLion,
 		enum.IDETypePHPStorm, enum.IDETypeRubyMine, enum.IDETypeRider:

@@ -32,8 +32,9 @@ func (i *IDEType) String() string {
 	return string(*i)
 }
 
-var ideTypes = []IDEType{IDETypeVSCode, IDETypeVSCodeWeb, IDETypeIntelliJ, IDETypePyCharm, IDETypeGoland,
-	IDETypeWebStorm, IDETypeCLion, IDETypePHPStorm, IDETypeRubyMine, IDETypeRider}
+var ideTypes = []IDEType{IDETypeVSCode, IDETypeVSCodeWeb, IDETypeCursor, IDETypeWindsurf, IDETypeSSH,
+	IDETypeIntelliJ, IDETypePyCharm, IDETypeGoland, IDETypeWebStorm, IDETypeCLion, IDETypePHPStorm,
+	IDETypeRubyMine, IDETypeRider}
 
 var jetBrainsIDESet = map[IDEType]struct{}{
 	IDETypeIntelliJ: {},
@@ -49,6 +50,11 @@ var jetBrainsIDESet = map[IDEType]struct{}{
 const (
 	IDETypeVSCode    IDEType = "vs_code"
 	IDETypeVSCodeWeb IDEType = "vs_code_web"
+	// AI-based IDEs.
+	IDETypeCursor   IDEType = "cursor"
+	IDETypeWindsurf IDEType = "windsurf"
+	// direct SSH access.
+	IDETypeSSH IDEType = "ssh"
 	// all jetbrains IDEs.
 	IDETypeIntelliJ IDEType = "intellij"
 	IDETypePyCharm  IDEType = "pycharm"

@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"net/url"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
@@ -59,46 +58,20 @@ func (v *VSCode) Setup(
 	args map[gitspaceTypes.IDEArg]interface{},
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
-	gitspaceLogger.Info("Installing ssh-server inside container")
-	err := v.setupSSHServer(ctx, exec, gitspaceLogger)
+	gitspaceLogger.Info("Installing ssh-server inside container...")
+	err := setupSSHServer(ctx, exec, gitspaceLogger)
 	if err != nil {
-		return fmt.Errorf("failed to setup SSH server: %w", err)
+		return fmt.Errorf("failed to setup %s IDE: %w", enum.IDETypeVSCode, err)
 	}
 	gitspaceLogger.Info("Successfully installed ssh-server")
 
-	gitspaceLogger.Info("Installing vs-code extensions inside container")
-	gitspaceLogger.Info("IDE setup output...")
+	gitspaceLogger.Info("Installing vs-code extensions inside container...")
 	err = v.setupVSCodeExtensions(ctx, exec, args, gitspaceLogger)
 	if err != nil {
 		return fmt.Errorf("failed to setup vs code extensions: %w", err)
 	}
 	gitspaceLogger.Info("Successfully installed vs-code extensions")
-	gitspaceLogger.Info("Successfully set up IDE inside container")
-
-	return nil
-}
-
-func (v *VSCode) setupSSHServer(
-	ctx context.Context,
-	exec *devcontainer.Exec,
-	gitspaceLogger gitspaceTypes.GitspaceLogger,
-) error {
-	osInfoScript := utils.GetOSInfoScript()
-	payload := gitspaceTypes.SetupSSHServerPayload{
-		Username:     exec.RemoteUser,
-		AccessType:   exec.AccessType,
-		OSInfoScript: osInfoScript,
-	}
-	sshServerScript, err := utils.GenerateScriptFromTemplate(
-		templateSetupSSHServer, &payload)
-	if err != nil {
-		return fmt.Errorf(
-			"failed to generate scipt to setup ssh server from template %s: %w", templateSetupSSHServer, err)
-	}
-	err = exec.ExecuteCommandInHomeDirAndLog(ctx, sshServerScript, true, gitspaceLogger, false)
-	if err != nil {
-		return fmt.Errorf("failed to setup SSH serverr: %w", err)
-	}
+	gitspaceLogger.Info(fmt.Sprintf("Successfully set up %s IDE inside container", enum.IDETypeVSCode))
 
 	return nil
 }
@@ -142,19 +115,10 @@ func (v *VSCode) Run(
 	_ map[gitspaceTypes.IDEArg]interface{},
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
-	payload := gitspaceTypes.RunSSHServerPayload{
-		Port: strconv.Itoa(v.config.Port),
-	}
-	runSSHScript, err := utils.GenerateScriptFromTemplate(
-		templateRunSSHServer, &payload)
+	gitspaceLogger.Info("Running ssh-server...")
+	err := runSSHServer(ctx, exec, v.config.Port, gitspaceLogger)
 	if err != nil {
-		return fmt.Errorf(
-			"failed to generate scipt to run ssh server from template %s: %w", templateRunSSHServer, err)
-	}
-	gitspaceLogger.Info("SSH server run output...")
-	err = exec.ExecuteCommandInHomeDirAndLog(ctx, runSSHScript, true, gitspaceLogger, true)
-	if err != nil {
-		return fmt.Errorf("failed to run SSH server: %w", err)
+		return fmt.Errorf("failed to run %s IDE: %w", enum.IDETypeVSCode, err)
 	}
 	gitspaceLogger.Info("Successfully run ssh-server")
 

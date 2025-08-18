@@ -453,6 +453,27 @@ func ProvideIDEVSCodeConfig(config *types.Config) *ide.VSCodeConfig {
 	}
 }
 
+// ProvideIDECursorConfig loads the Cursor IDE config from the main config.
+func ProvideIDECursorConfig(config *types.Config) *ide.CursorConfig {
+	return &ide.CursorConfig{
+		Port: config.IDE.Cursor.Port,
+	}
+}
+
+// ProvideIDEWindsurfConfig loads the Windsurf IDE config from the main config.
+func ProvideIDEWindsurfConfig(config *types.Config) *ide.WindsurfConfig {
+	return &ide.WindsurfConfig{
+		Port: config.IDE.Windsurf.Port,
+	}
+}
+
+// ProvideIDESSHConfig loads the SSH IDE config from the main config.
+func ProvideIDESSHConfig(config *types.Config) *ide.SSHConfig {
+	return &ide.SSHConfig{
+		Port: config.IDE.SSH.Port,
+	}
+}
+
 // ProvideIDEJetBrainsConfig loads the IdeType IDE config from the main config.
 func ProvideIDEJetBrainsConfig(config *types.Config) *ide.JetBrainsIDEConfig {
 	return &ide.JetBrainsIDEConfig{

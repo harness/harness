@@ -101,12 +101,12 @@ func CloneCode(
 		return fmt.Errorf(
 			"failed to generate scipt to clone code from template %s: %w", templateCloneCode, err)
 	}
-	gitspaceLogger.Info("Cloning code inside container")
+	gitspaceLogger.Info(fmt.Sprintf("Cloning repository: %s inside container...", resolvedRepoDetails.RepoName))
 	err = exec.ExecuteCommandInHomeDirAndLog(ctx, script, false, gitspaceLogger, true)
 	if err != nil {
 		return fmt.Errorf("failed to clone code: %w", err)
 	}
-	gitspaceLogger.Info("Successfully clone code")
+	gitspaceLogger.Info(fmt.Sprintf("Successfully cloned repository: %s", resolvedRepoDetails.RepoName))
 
 	return nil
 }

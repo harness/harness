@@ -201,7 +201,9 @@ func AddIDECustomizationsArg(
 	args map[gitspaceTypes.IDEArg]interface{},
 ) map[gitspaceTypes.IDEArg]interface{} {
 	switch ideService.Type() {
-	case enum.IDETypeVSCodeWeb, enum.IDETypeVSCode:
+	case enum.IDETypeVSCodeWeb, enum.IDETypeVSCode, enum.IDETypeWindsurf, enum.IDETypeCursor:
+		// Cursor and Windsurf is a VSCode-based IDE, so it also uses the same customization
+		// specs as VSCode and Cursor.
 		vscodeSpecs := devcontainerConfig.Customizations.ExtractVSCodeSpec()
 		if vscodeSpecs != nil {
 			args[gitspaceTypes.VSCodeCustomizationArg] = *vscodeSpecs
@@ -212,6 +214,10 @@ func AddIDECustomizationsArg(
 		if jetbrainsSpecs != nil {
 			args[gitspaceTypes.JetBrainsCustomizationArg] = *jetbrainsSpecs
 		}
+	case enum.IDETypeSSH:
+		// SSH IDE does not have customizations, so we do not add any args.
+	default:
+		log.Warn().Msgf("No customizations available for IDE type: %s", ideService.Type())
 	}
 	return args
 }

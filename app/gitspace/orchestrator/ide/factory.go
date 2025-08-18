@@ -28,10 +28,16 @@ func NewFactory(
 	vscode *VSCode,
 	vscodeWeb *VSCodeWeb,
 	jetBrainsIDEsMap map[enum.IDEType]*JetBrainsIDE,
+	cursor *Cursor,
+	windsurf *Windsurf,
+	ssh *SSH,
 ) Factory {
 	ides := make(map[enum.IDEType]IDE)
 	ides[enum.IDETypeVSCode] = vscode
 	ides[enum.IDETypeVSCodeWeb] = vscodeWeb
+	ides[enum.IDETypeCursor] = cursor
+	ides[enum.IDETypeWindsurf] = windsurf
+	ides[enum.IDETypeSSH] = ssh
 	ides[enum.IDETypeIntelliJ] = jetBrainsIDEsMap[enum.IDETypeIntelliJ]
 	ides[enum.IDETypePyCharm] = jetBrainsIDEsMap[enum.IDETypePyCharm]
 	ides[enum.IDETypeGoland] = jetBrainsIDEsMap[enum.IDETypeGoland]

@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"net/url"
 	"path"
-	"strconv"
 	"strings"
 
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
@@ -80,8 +79,7 @@ func (jb *JetBrainsIDE) port() int {
 		return jb.config.RubyMinePort
 	case enum.IDETypeRider:
 		return jb.config.RiderPort
-	case enum.IDETypeVSCode:
-		// IDETypeVSCode is not JetBrainsIDE
+	case enum.IDETypeVSCode, enum.IDETypeCursor, enum.IDETypeWindsurf, enum.IDETypeSSH:
 		return 0
 	case enum.IDETypeVSCodeWeb:
 		// IDETypeVSCodeWeb is not JetBrainsIDE
@@ -98,54 +96,29 @@ func (jb *JetBrainsIDE) Setup(
 	args map[gitspaceTypes.IDEArg]interface{},
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
-	gitspaceLogger.Info("Installing ssh-server inside container")
-	err := jb.setupSSHServer(ctx, exec, gitspaceLogger)
+	gitspaceLogger.Info("Installing ssh-server inside container...")
+	err := setupSSHServer(ctx, exec, gitspaceLogger)
 	if err != nil {
-		return fmt.Errorf("failed to setup SSH server: %w", err)
+		return fmt.Errorf("failed to setup %s IDE: %w", jb.ideType, err)
 	}
 	gitspaceLogger.Info("Successfully installed ssh-server")
 
-	gitspaceLogger.Info(fmt.Sprintf("Installing %s IdeType inside container...", jb.ideType))
+	gitspaceLogger.Info(fmt.Sprintf("Installing %s IDE inside container...", jb.ideType))
 	gitspaceLogger.Info("IDE setup output...")
 	err = jb.setupJetbrainsIDE(ctx, exec, args, gitspaceLogger)
 	if err != nil {
-		return fmt.Errorf("failed to setup %s IdeType: %w", jb.ideType, err)
+		return fmt.Errorf("failed to setup %s IDE: %w", jb.ideType, err)
 	}
-	gitspaceLogger.Info(fmt.Sprintf("Successfully installed %s IdeType", jb.ideType))
+	gitspaceLogger.Info(fmt.Sprintf("Successfully installed %s IDE binary", jb.ideType))
 
 	gitspaceLogger.Info("Installing JetBrains plugins inside container...")
 	err = jb.setupJetbrainsPlugins(ctx, exec, args, gitspaceLogger)
 	if err != nil {
-		return fmt.Errorf("failed to setup JetBrains plugins for %s Ide: %w", jb.ideType, err)
+		return fmt.Errorf("failed to setup %s IDE: %w", jb.ideType, err)
 	}
-	gitspaceLogger.Info(fmt.Sprintf("Successfully installed JetBrains plugins for %s Ide", jb.ideType))
+	gitspaceLogger.Info(fmt.Sprintf("Successfully installed JetBrains plugins for %s IDE", jb.ideType))
 
-	gitspaceLogger.Info("Successfully set up IDE inside container")
-
-	return nil
-}
-
-func (jb *JetBrainsIDE) setupSSHServer(
-	ctx context.Context,
-	exec *devcontainer.Exec,
-	gitspaceLogger gitspaceTypes.GitspaceLogger,
-) error {
-	osInfoScript := utils.GetOSInfoScript()
-	payload := gitspaceTypes.SetupSSHServerPayload{
-		Username:     exec.RemoteUser,
-		AccessType:   exec.AccessType,
-		OSInfoScript: osInfoScript,
-	}
-	sshServerScript, err := utils.GenerateScriptFromTemplate(
-		templateSetupSSHServer, &payload)
-	if err != nil {
-		return fmt.Errorf(
-			"failed to generate scipt to setup ssh server from template %s: %w", templateSetupSSHServer, err)
-	}
-	err = exec.ExecuteCommandInHomeDirAndLog(ctx, sshServerScript, true, gitspaceLogger, false)
-	if err != nil {
-		return fmt.Errorf("failed to setup SSH serverr: %w", err)
-	}
+	gitspaceLogger.Info(fmt.Sprintf("Successfully set up %s IDE inside container", jb.ideType))
 
 	return nil
 }
@@ -240,7 +213,7 @@ func (jb *JetBrainsIDE) setupJetbrainsPlugins(
 	err = exec.ExecuteCommandInHomeDirAndLog(ctx, intellijIDEScript,
 		false, gitspaceLogger, true)
 	if err != nil {
-		return fmt.Errorf("failed to setup Jetbrains plugins IdeType: %w", err)
+		return fmt.Errorf("failed to setup Jetbrains plugins: %w", err)
 	}
 
 	return nil
@@ -253,43 +226,18 @@ func (jb *JetBrainsIDE) Run(
 	args map[gitspaceTypes.IDEArg]interface{},
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
-	gitspaceLogger.Info("SSH server run output...")
-	err := jb.runSSHServer(ctx, exec, args, gitspaceLogger)
+	gitspaceLogger.Info("Running ssh-server...")
+	err := runSSHServer(ctx, exec, jb.port(), gitspaceLogger)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to run %s IDE: %w", jb.ideType, err)
 	}
 	gitspaceLogger.Info("Successfully run ssh-server")
-	gitspaceLogger.Info(fmt.Sprintf("Remote %s ide run output...", jb.ideType))
+	gitspaceLogger.Info(fmt.Sprintf("Running remote %s IDE backend...", jb.ideType))
 	err = jb.runRemoteIDE(ctx, exec, args, gitspaceLogger)
 	if err != nil {
 		return err
 	}
-	gitspaceLogger.Info(fmt.Sprintf("Successfully run %s ide", jb.ideType))
-
-	return nil
-}
-
-func (jb *JetBrainsIDE) runSSHServer(
-	ctx context.Context,
-	exec *devcontainer.Exec,
-	_ map[gitspaceTypes.IDEArg]interface{},
-	gitspaceLogger gitspaceTypes.GitspaceLogger,
-) error {
-	payload := gitspaceTypes.RunSSHServerPayload{
-		Port: strconv.Itoa(jb.port()),
-	}
-	runSSHScript, err := utils.GenerateScriptFromTemplate(
-		templateRunSSHServer, &payload)
-	if err != nil {
-		return fmt.Errorf(
-			"failed to generate scipt to run ssh server from template %s: %w", templateRunSSHServer, err)
-	}
-
-	err = exec.ExecuteCommandInHomeDirAndLog(ctx, runSSHScript, true, gitspaceLogger, true)
-	if err != nil {
-		return fmt.Errorf("failed to run SSH server: %w", err)
-	}
-	gitspaceLogger.Info("Successfully run ssh-server")
+	gitspaceLogger.Info(fmt.Sprintf("Successfully run %s IDE backend", jb.ideType))
 
 	return nil
 }

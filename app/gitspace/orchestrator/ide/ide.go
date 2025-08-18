@@ -16,9 +16,12 @@ package ide
 
 import (
 	"context"
+	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
+	"github.com/harness/gitness/app/gitspace/orchestrator/utils"
 	gitspaceTypes "github.com/harness/gitness/app/gitspace/types"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -60,4 +63,56 @@ type IDE interface {
 func getHomePath(absoluteRepoPath string) string {
 	pathList := strings.Split(absoluteRepoPath, "/")
 	return strings.Join(pathList[:len(pathList)-1], "/")
+}
+
+// setupSSHServer is responsible for setting up the SSH server inside the container.
+// This is a common operation done by most of the IDEs that require SSH to connect.
+func setupSSHServer(
+	ctx context.Context,
+	exec *devcontainer.Exec,
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
+) error {
+	osInfoScript := utils.GetOSInfoScript()
+	payload := gitspaceTypes.SetupSSHServerPayload{
+		Username:     exec.RemoteUser,
+		AccessType:   exec.AccessType,
+		OSInfoScript: osInfoScript,
+	}
+	sshServerScript, err := utils.GenerateScriptFromTemplate(
+		templateSetupSSHServer, &payload)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to generate scipt to setup ssh server from template %s: %w", templateSetupSSHServer, err)
+	}
+	err = exec.ExecuteCommandInHomeDirAndLog(ctx, sshServerScript, true, gitspaceLogger, false)
+	if err != nil {
+		return fmt.Errorf("failed to setup SSH serverr: %w", err)
+	}
+
+	return nil
+}
+
+// runSSHServer runs the SSH server inside the container.
+// This is a common operation done by most of the IDEs that require ssh connection.
+func runSSHServer(
+	ctx context.Context,
+	exec *devcontainer.Exec,
+	port int,
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
+) error {
+	payload := gitspaceTypes.RunSSHServerPayload{
+		Port: strconv.Itoa(port),
+	}
+	runSSHScript, err := utils.GenerateScriptFromTemplate(
+		templateRunSSHServer, &payload)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to generate scipt to run ssh server from template %s: %w", templateRunSSHServer, err)
+	}
+
+	err = exec.ExecuteCommandInHomeDirAndLog(ctx, runSSHScript, true, gitspaceLogger, true)
+	if err != nil {
+		return fmt.Errorf("failed to run SSH server: %w", err)
+	}
+	return nil
 }

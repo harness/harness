@@ -36,7 +36,7 @@ func InstallTools(
 			return err
 		}
 		return nil
-	case enum.IDETypeVSCode:
+	case enum.IDETypeVSCode, enum.IDETypeCursor, enum.IDETypeWindsurf, enum.IDETypeSSH:
 		err := InstallToolsForVsCode(ctx, exec, gitspaceLogger)
 		if err != nil {
 			return err

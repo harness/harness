@@ -82,7 +82,7 @@ func (v *VSCodeWeb) Setup(
 	if err != nil {
 		return fmt.Errorf(
 			"failed to generate script to setup VSCode Web from template %s: %w",
-			templateRunVSCodeWeb,
+			templateSetupVSCodeWeb,
 			err,
 		)
 	}
@@ -93,7 +93,7 @@ func (v *VSCodeWeb) Setup(
 	if err = v.updateMediaContent(ctx, exec); err != nil {
 		return err
 	}
-	gitspaceLogger.Info("Successfully set up IDE inside container")
+	gitspaceLogger.Info(fmt.Sprintf("Successfully installed %s IDE inside container", enum.IDETypeVSCodeWeb))
 	return nil
 }
 
