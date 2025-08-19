@@ -8,8 +8,10 @@
 
 .detailsContainer {
   display: grid !important;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important;
-  gap: 20px;
+  grid-template-columns: repeat(4, 1fr) !important;
+  grid-template-rows: repeat(2, auto) !important;
+  column-gap: 20px;
+  row-gap: 30px;
 
   > div {
     margin-bottom: 10px;

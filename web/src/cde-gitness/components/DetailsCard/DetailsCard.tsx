@@ -95,7 +95,7 @@ export const DetailsCard = ({
           </Layout.Horizontal>
         </Layout.Vertical>
         <Layout.Vertical spacing="small" flex={{ justifyContent: 'center', alignItems: 'flex-start' }}>
-          <Text className={css.rowHeaders}>{getString('cde.repository.repo')}</Text>
+          <Text className={css.rowHeaders}>{getString('cde.repositoryAndBranch')}</Text>
           <Layout.Horizontal
             spacing="small"
             flex={{ alignItems: 'center', justifyContent: 'start' }}
@@ -107,17 +107,15 @@ export const DetailsCard = ({
             <Text title={'RepoName'} className={css.clickableText} onClick={() => window.open(code_repo_url, '_blank')}>
               {repoName}
             </Text>
+            <Text color={Color.PRIMARY_7}>:</Text>
+            <Text
+              iconProps={{ size: 10 }}
+              icon="git-branch"
+              className={css.clickableText}
+              onClick={() => window.open(branch_url, '_blank')}>
+              {branch}
+            </Text>
           </Layout.Horizontal>
-        </Layout.Vertical>
-        <Layout.Vertical spacing="small" flex={{ justifyContent: 'center', alignItems: 'flex-start' }}>
-          <Text className={css.rowHeaders}>{getString('branch')}</Text>
-          <Text
-            iconProps={{ size: 10 }}
-            icon="git-branch"
-            className={css.clickableText}
-            onClick={() => window.open(branch_url, '_blank')}>
-            {branch}
-          </Text>
         </Layout.Vertical>
         {!standalone && (
           <Layout.Vertical spacing="small" flex={{ justifyContent: 'center', alignItems: 'flex-start' }}>

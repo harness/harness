@@ -26,6 +26,7 @@ export declare const customSubheader: string
 export declare const expanded: string
 export declare const gitspaceIcon: string
 export declare const gitspaceIdContainer: string
+export declare const marginLeftContainer: string
 export declare const name: string
 export declare const noShrink: string
 export declare const pageMain: string

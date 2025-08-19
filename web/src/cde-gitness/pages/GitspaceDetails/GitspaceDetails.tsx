@@ -575,7 +575,9 @@ const GitspaceDetails = () => {
             <></>
           )}
           <Card className={css.cardContainer}>
-            <Text font={{ variation: FontVariation.CARD_TITLE }}>{getString('cde.gitspaceDetail')}</Text>
+            <Text font={{ variation: FontVariation.CARD_TITLE }} className={css.marginLeftContainer}>
+              {getString('cde.gitspaceDetail')}
+            </Text>
             <DetailsCard data={data} standalone={standalone} loading={mutateLoading} />
           </Card>
           <Card className={css.cardContainer}>
