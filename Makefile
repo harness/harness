@@ -38,6 +38,10 @@ tools: $(tools) ## Install tools required for the build
 #
 ###############################################################################
 
+web-build: ## Build the web frontend
+	@echo "Building web frontend"
+	@cd web && yarn install && yarn build
+
 build: generate ## Build the all-in-one Harness binary
 	@echo "Building Harness Server"
 	go build -o ./gitness ./cmd/gitness
