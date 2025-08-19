@@ -86,7 +86,9 @@ export CURRENT_DIR=$(pwd)
 
 bash "./registry/tests/scripts/oci_tests.sh" $1
 bash "./registry/tests/scripts/maven_tests.sh" $1
-bash "./registry/tests/scripts/cargo_tests.sh"
+bash "./registry/tests/scripts/cargo_tests.sh" $1
+bash "./registry/tests/scripts/go_tests.sh" $1
+
 
 cd "$CURRENT_DIR"
 
