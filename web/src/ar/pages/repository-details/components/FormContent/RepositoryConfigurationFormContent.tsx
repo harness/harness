@@ -79,9 +79,6 @@ function RepositoryConfigurationFormContent(
       {
         entities: [
           getString('repositoryDetails.repositoryForm.upstreamProxiesTitle'),
-          parent === Parent.Enterprise &&
-            HAR_ARTIFACT_QUARANTINE_ENABLED &&
-            getString('repositoryDetails.repositoryForm.opaPolicy.title'),
           parent === Parent.Enterprise && getString('repositoryDetails.repositoryForm.cleanupPoliciesTitle')
         ]
           .filter(Boolean)
@@ -110,6 +107,14 @@ function RepositoryConfigurationFormContent(
               packageType={packageType as RepositoryPackageType}
               readonly={readonly}
             />
+            {HAR_ARTIFACT_QUARANTINE_ENABLED && values.scanners && values.scanners.length > 0 && (
+              <>
+                <Separator />
+                <Container className={css.upstreamProxiesContainer}>
+                  <RepositoryOpaPolicySelectorContent disabled={readonly} />
+                </Container>
+              </>
+            )}
             <Separator />
             <RepositoryIncludeExcludePatternFormContent isEdit disabled={readonly} />
           </Card>
@@ -129,14 +134,6 @@ function RepositoryConfigurationFormContent(
             )}
             {parent === Parent.Enterprise && (
               <>
-                {HAR_ARTIFACT_QUARANTINE_ENABLED && (
-                  <>
-                    <Separator />
-                    <Container className={css.upstreamProxiesContainer}>
-                      <RepositoryOpaPolicySelectorContent disabled={readonly} />
-                    </Container>
-                  </>
-                )}
                 <Separator />
                 <Container className={css.upstreamProxiesContainer}>
                   <RepositoryCleanupPoliciesFormContent isEdit disabled />

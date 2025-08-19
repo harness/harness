@@ -38,9 +38,9 @@ repositoryForm:
       scannerNoteForRequiredConfiguration: To enable scanning for account level or org level registries, please create a project with id set to <b>default_project</b> in your <b>{{orgName}}</b> org.
       scannerNoteForRequiredLicense: You need a valid license of Supply Chain Security and Security Testing Orchestration to enabled scanning.
   opaPolicy:
-    title: OPA Policies
-    subTitle: Assign OPA policy to be evaluated against the artifact
-    addTitle: Add OPA Policy
+    title: Policy Sets
+    subTitle: Assign Policy Set to be evaluated against the artifact
+    addTitle: Add Policy Set
 tabs:
   configuration: Configuration
   packages: '{{ $.artifactList.pageHeading }}'

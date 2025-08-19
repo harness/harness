@@ -63,12 +63,7 @@ export default function UpstreamProxyConfigurationFormContent(
 
   const advancedOptionsTitle = useMemo(() => {
     return getString('upstreamProxyDetails.editForm.enterpriseAdvancedOptionsSubTitle', {
-      entities: [
-        HAR_ARTIFACT_QUARANTINE_ENABLED ? getString('repositoryDetails.repositoryForm.opaPolicy.title') : '',
-        getString('repositoryDetails.repositoryForm.cleanupPoliciesTitle')
-      ]
-        .filter(Boolean)
-        .join(', ')
+      entities: [getString('repositoryDetails.repositoryForm.cleanupPoliciesTitle')].filter(Boolean).join(', ')
     })
   }, [])
 
@@ -96,6 +91,14 @@ export default function UpstreamProxyConfigurationFormContent(
                 packageType={values.packageType as RepositoryPackageType}
                 readonly={readonly}
               />
+              {HAR_ARTIFACT_QUARANTINE_ENABLED && values.scanners && values.scanners.length > 0 && (
+                <>
+                  <Separator />
+                  <Container className={css.cleanupPoliciesContainer}>
+                    <RepositoryOpaPolicySelectorContent disabled={readonly} />
+                  </Container>
+                </>
+              )}
               <Separator />
               <UpstreamProxyIncludeExcludePatternFormContent formikProps={formikProps} isEdit readonly={readonly} />
             </Card>
@@ -106,14 +109,7 @@ export default function UpstreamProxyConfigurationFormContent(
             subTitle={advancedOptionsTitle}
             initialState={isCollapsedAdvancedConfig}>
             <Card className={classNames(css.cardContainer)}>
-              {HAR_ARTIFACT_QUARANTINE_ENABLED && (
-                <>
-                  <Container className={css.cleanupPoliciesContainer}>
-                    <RepositoryOpaPolicySelectorContent disabled={readonly} />
-                  </Container>
-                  <Separator />
-                </>
-              )}
+              <Separator />
               <Container className={css.cleanupPoliciesContainer}>
                 <UpstreamProxyCleanupPoliciesFormContent formikProps={formikProps} isEdit disabled />
               </Container>
