@@ -53,7 +53,7 @@ func (c *APIController) QuarantineFilePath(
 
 	session, _ := request.AuthSessionFrom(ctx)
 	permissionChecks := c.RegistryMetadataHelper.GetPermissionChecks(space,
-		regInfo.RegistryIdentifier, enum.PermissionArtifactsDownload)
+		regInfo.RegistryIdentifier, enum.PermissionArtifactsQuarantine)
 
 	if err = apiauth.CheckRegistry(
 		ctx,
