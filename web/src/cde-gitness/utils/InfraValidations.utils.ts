@@ -3,7 +3,7 @@ import cidrRegex from 'cidr-regex'
 import type { UseStringsReturn } from 'framework/strings'
 
 export const AWS_AMI_ID_PATTERN = /^ami-([0-9a-f]{8}|[0-9a-f]{17})$/
-const GCP_IMAGE_NAME_PATTERN = /^projects\/[a-zA-Z0-9-]+\/global\/images\/[a-zA-Z0-9-.]+$/
+const GCP_IMAGE_NAME_PATTERN = /^projects\/[a-zA-Z0-9-]+\/global\/images\/(family\/[a-zA-Z0-9-]+|[a-zA-Z0-9-]+)$/
 
 export const validateInfraForm = (getString: UseStringsReturn['getString']) =>
   yup.object().shape({
