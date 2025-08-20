@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
+import cx from 'classnames'
 import {
   Button,
   ButtonVariation,
@@ -17,6 +18,7 @@ import { Color, FontVariation } from '@harnessio/design-system'
 import { useGet } from 'restful-react'
 import type { CellProps, Column } from 'react-table'
 import type { FormikProps } from 'formik'
+import { compact } from 'lodash-es'
 import { RulesTargetType } from 'utils/GitUtils'
 import { CodeIcon } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
@@ -25,11 +27,58 @@ import type { RepoRepositoryOutput } from 'services/code'
 import ResourceHandlerTable, { ResourceHandlerTableData } from 'components/ResourceHandlerTable/ResourceHandlerTable'
 import type { RulesFormPayload } from 'components/ProtectionRules/ProtectionRulesUtils'
 import { ScopeBadge } from 'components/ScopeBadge/ScopeBadge'
-import type { ScopeEnum } from 'utils/Utils'
+import { getRelativeSpaceRef, getScopeFromParams, type ScopeEnum } from 'utils/Utils'
 import Include from '../../../../icons/Include.svg?url'
 import Exclude from '../../../../icons/Exclude.svg?url'
-import { TargetPatterns } from './TargetPatternsSection'
 import css from '../ProtectionRulesForm.module.scss'
+
+export function TargetRepositories({
+  formik,
+  fieldName,
+  targets,
+  currentScope,
+  standalone
+}: {
+  formik: FormikProps<RulesFormPayload>
+  fieldName: string
+  targets?: string[][]
+  currentScope: ScopeEnum
+  standalone: boolean
+}) {
+  if (!targets?.length) return null
+
+  return (
+    <Layout.Horizontal spacing={'small'} className={css.targetBox}>
+      {targets.map((tgt, idx) => {
+        const path = tgt[1]
+        const repoName = path?.split('/').at(-1)
+        const [accountId, repoOrgIdentifier, repoProjectIdentifier] = path?.split('/').slice(0, -1) || []
+        const repoScope = getScopeFromParams(
+          { accountId, orgIdentifier: repoOrgIdentifier, projectIdentifier: repoProjectIdentifier },
+          standalone
+        )
+        const relativeSpaceRef = getRelativeSpaceRef(currentScope, repoScope, repoOrgIdentifier, repoProjectIdentifier)
+
+        return (
+          <Container key={`${idx}-${path}`} className={cx(css.greyButton, css.target)}>
+            <img width={16} height={16} src={tgt[0] === RulesTargetType.INCLUDE ? Include : Exclude} />
+            <Text lineClamp={1} alwaysShowTooltip tooltip={compact([relativeSpaceRef, repoName]).join('/')}>
+              {repoName}
+            </Text>
+            <Icon
+              name="code-close"
+              onClick={() => {
+                const filteredData = targets.filter(item => !(item[0] === tgt[0] && item[1] === path))
+                formik.setFieldValue(fieldName, filteredData)
+              }}
+              className={css.codeClose}
+            />
+          </Container>
+        )
+      })}
+    </Layout.Horizontal>
+  )
+}
 
 const AddRepoModal = ({
   space,
@@ -74,7 +123,7 @@ const AddRepoModal = ({
       {
         Header: getString('repositories'),
         accessor: 'id',
-        width: '60%',
+        width: '55%',
         Cell: ({ row }: CellProps<RepoRepositoryOutput>) => {
           return (
             <Layout.Horizontal spacing={'small'}>
@@ -93,7 +142,7 @@ const AddRepoModal = ({
       {
         Header: '',
         id: 'scope',
-        width: '35%',
+        width: '40%',
         Cell: ({ row }: CellProps<RepoRepositoryOutput>) => {
           return <ScopeBadge standalone={standalone} currentScope={currentScope} path={row.original.path} />
         }
@@ -166,6 +215,7 @@ export const TargetRepositoriesSection = ({
 
   const [openModal, hideModal] = useModalHook(() => {
     const onClose = () => {
+      setSearchTerm('')
       hideModal()
     }
 
@@ -182,6 +232,7 @@ export const TargetRepositoriesSection = ({
           return [RulesTargetType.EXCLUDE, parts.slice(0, -1).join('/'), parts.at(-1)]
         }) ?? []
       formik.setFieldValue('repoList', [...includedArr, ...excludedArr])
+      setSearchTerm('')
       hideModal()
     }
 
@@ -191,7 +242,11 @@ export const TargetRepositoriesSection = ({
         enforceFocus={false}
         onClose={onClose}
         className={css.dialog}
-        title={getString('selectRepositories')}>
+        title={
+          (repoTargetType === RulesTargetType.INCLUDE ? getString('include') : getString('exclude')) +
+          ' ' +
+          getString('repositories')
+        }>
         <Layout.Vertical padding="xsmall">
           <ExpandingSearchInput
             alwaysExpanded
@@ -271,7 +326,13 @@ export const TargetRepositoriesSection = ({
       <Text className={css.hintText} margin={{ top: 'xsmall', bottom: 'small' }}>
         {getString('protectionRules.repoSelectionHint')}
       </Text>
-      <TargetPatterns formik={formik} fieldName={'repoList'} targets={repoList} />
+      <TargetRepositories
+        currentScope={currentScope}
+        standalone={standalone}
+        formik={formik}
+        fieldName={'repoList'}
+        targets={repoList}
+      />
     </Container>
   )
 }

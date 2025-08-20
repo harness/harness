@@ -823,6 +823,22 @@ export interface ScopeData {
   scopeColor: ColorName
 }
 
+export const getRelativeSpaceRef = (
+  spaceScope: ScopeEnum,
+  scope: number,
+  orgIdentifier: string,
+  projectIdentifier: string
+): string | null =>
+  spaceScope === ScopeEnum.ACCOUNT_SCOPE
+    ? scope === ScopeEnum.PROJECT_SCOPE
+      ? `${orgIdentifier}/${projectIdentifier}`
+      : scope === ScopeEnum.ORG_SCOPE
+      ? orgIdentifier
+      : null
+    : spaceScope === ScopeEnum.ORG_SCOPE && scope === ScopeEnum.PROJECT_SCOPE
+    ? projectIdentifier
+    : null
+
 export const getScopeData = (space: string, scope: number, standalone: boolean): ScopeData => {
   const [accountId, orgIdentifier, projectIdentifier] = space.split('/')
   const scopeData: ScopeData = {

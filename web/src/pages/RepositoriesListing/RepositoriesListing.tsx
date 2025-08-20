@@ -480,7 +480,7 @@ export default function RepositoriesListing() {
             debouncedSearchTerm === undefined &&
             !JSON.parse(pageBrowser.only_favorites || 'false'),
           image: noRepoImage,
-          message: getString('repos.noDataMessage'),
+          message: getString('repos.noDataMessage') + ' ' + getString('repos.createNewRepoMessage'),
           button: NewRepoButton
         }}>
         <Layout.Horizontal>

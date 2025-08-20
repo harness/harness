@@ -1012,6 +1012,7 @@ export interface StringsMap {
   repoVisibility: string
   'repos.activities': string
   'repos.confirmSelection': string
+  'repos.createNewRepoMessage': string
   'repos.data': string
   'repos.enterBranchName': string
   'repos.lastChange': string

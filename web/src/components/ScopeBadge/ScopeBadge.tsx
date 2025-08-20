@@ -1,7 +1,7 @@
 import React from 'react'
 import { compact } from 'lodash-es'
 import { Layout, Text } from '@harnessio/uicore'
-import { getScopeData, getScopeFromParams, ScopeEnum } from 'utils/Utils'
+import { getRelativeSpaceRef, getScopeData, getScopeFromParams, ScopeEnum } from 'utils/Utils'
 import { LabelTitle } from 'components/Label/Label'
 
 export const ScopeBadge = ({
@@ -30,16 +30,7 @@ export const ScopeBadge = ({
   )
 
   // Show the relative space reference depending on the current scope
-  const relativeSpaceRef =
-    currentScope === ScopeEnum.ACCOUNT_SCOPE
-      ? repoScope === ScopeEnum.PROJECT_SCOPE
-        ? `${repoOrgIdentifier}/${repoProjectIdentifier}`
-        : repoScope === ScopeEnum.ORG_SCOPE
-        ? repoOrgIdentifier
-        : null
-      : currentScope === ScopeEnum.ORG_SCOPE && repoScope === ScopeEnum.PROJECT_SCOPE
-      ? repoProjectIdentifier
-      : null
+  const relativeSpaceRef = getRelativeSpaceRef(currentScope, repoScope, repoOrgIdentifier, repoProjectIdentifier)
 
   return (
     <Layout.Vertical spacing="xsmall">

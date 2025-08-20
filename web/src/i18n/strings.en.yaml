@@ -130,7 +130,8 @@ repos:
   activities: Monthly Activities
   lastChange: Last Change
   lastPush: Last Push
-  noDataMessage: There are no repositories in this project.  Create a new repository, or import an existing Git repository by clicking below.
+  noDataMessage: There are no repositories in this project.
+  createNewRepoMessage: Create a new repository, or import an existing Git repository by clicking below.
   enterBranchName: Enter a branch name
   confirmSelection: Confirm Selection
   specificRepositories: specific repositories
