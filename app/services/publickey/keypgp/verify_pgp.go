@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"strings"
 	"time"
 
@@ -135,6 +136,52 @@ func (v *Verify) Verify(
 		return enum.GitSignatureUnverified
 	}
 
+	block, err := armor.Decode(bytes.NewReader(v.signature))
+	if err != nil {
+		return enum.GitSignatureInvalid
+	}
+
+	if block.Type != openpgp.SignatureType {
+		return enum.GitSignatureInvalid
+	}
+
+	signatureRaw, err := io.ReadAll(block.Body)
+	if err != nil {
+		return enum.GitSignatureInvalid
+	}
+
+	// signingTime is the time when the signature has been created.
+	// We use this time to verify the signature. We are checking for historical validity
+	// (Was this entity valid at the time it was signed, regardless of what happened to the signing key later).
+	// We shouldn't use committer time, because this time can be forged easily (GIT_COMMITTER_DATE).
+	var signingTime time.Time
+
+	packets := packet.NewReader(bytes.NewReader(signatureRaw))
+	for {
+		p, err := packets.Next()
+		if errors.Is(err, io.EOF) {
+			// signature packet not found while reading git signature
+			return enum.GitSignatureBad
+		}
+		if err != nil {
+			return enum.GitSignatureInvalid
+		}
+
+		sig, ok := p.(*packet.Signature)
+		if !ok || sig.IssuerKeyId == nil {
+			// we expect only signature packets in the packets of a git signature
+			// and every signature must have key ID
+			return enum.GitSignatureInvalid
+		}
+
+		if !hasSigningKey(keyRing, *sig.IssuerKeyId) {
+			continue
+		}
+
+		signingTime = sig.CreationTime
+		break
+	}
+
 	// CheckArmoredDetachedSignature returns an error if:
 	//   - The signature (or one of the binding signatures mentioned below)
 	//     has a unknown critical notation data subpacket
@@ -154,14 +201,12 @@ func (v *Verify) Verify(
 	// ignore ErrSignatureExpired or ErrKeyExpired errors, but should never
 	// ignore any other errors.
 	// NOTE 2: The comment above is copied from the openpgp library.
-	signer, err := openpgp.CheckArmoredDetachedSignature(
+	signer, err := openpgp.CheckDetachedSignature(
 		keyRing,
 		bytes.NewReader(signedContent),
-		bytes.NewReader(v.signature),
+		bytes.NewReader(signatureRaw),
 		&packet.Config{
-			Time: func() time.Time {
-				return committer.When
-			},
+			Time: func() time.Time { return signingTime },
 		},
 	)
 	// If error happened, try to convert it to one of the enum values.
@@ -209,7 +254,7 @@ func (v *Verify) Verify(
 		return enum.GitSignatureBad
 	}
 
-	if signatureIdentity.Revoked(committer.When) {
+	if signatureIdentity.Revoked(signingTime) {
 		return enum.GitSignatureRevoked
 	}
 
@@ -226,4 +271,25 @@ func (v *Verify) KeyID() string {
 
 func (v *Verify) KeyFingerprint() string {
 	return v.keyFingerprint
+}
+
+// hasSigningKey returns true if the provided key ring contains a key with provided ID that has signing capability.
+// The function verifies every key in the key ring. The signing key can be either the primary key or a sub key.
+func hasSigningKey(keyRing openpgp.EntityList, issuerKeyID uint64) bool {
+	for _, e := range keyRing {
+		if e.PrimaryKey.KeyId == issuerKeyID {
+			selfSig, _ := e.PrimarySelfSignature()
+			if selfSig != nil && selfSig.FlagSign {
+				return true
+			}
+		}
+
+		for _, subKey := range e.Subkeys {
+			if subKey.PublicKey.KeyId == issuerKeyID && subKey.Sig != nil && subKey.Sig.FlagSign {
+				return true
+			}
+		}
+	}
+
+	return false
 }
