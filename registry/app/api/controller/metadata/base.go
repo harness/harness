@@ -191,9 +191,13 @@ func (c *APIController) setUpstreamProxyIDs(
 		return nil
 	}
 
+	parentIDs, err := c.SpaceStore.GetAncestorIDs(ctx, parentID)
+	if err != nil {
+		return fmt.Errorf("failed to get ancestors upstream proxies: %w", err)
+	}
 	repos, err := c.RegistryRepository.GetAll(
 		ctx,
-		[]int64{parentID},
+		parentIDs,
 		[]string{string(registry.PackageType)},
 		"id",
 		"",
