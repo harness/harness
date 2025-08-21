@@ -67,6 +67,16 @@ type listPullReqActivitiesRequest struct {
 	pullReqRequest
 }
 
+type userGroupReviewerAddRequest struct {
+	pullReqRequest
+	pullreq.UserGroupReviewerAddInput
+}
+
+type userGroupReviewerDeleteRequest struct {
+	pullReqRequest
+	ID int64 `path:"user_group_id"`
+}
+
 type mergePullReq struct {
 	pullReqRequest
 	pullreq.MergeInput
@@ -688,6 +698,42 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&reviewSubmit, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodPost,
 		"/repos/{repo_ref}/pullreq/{pullreq_number}/reviews", reviewSubmit)
+
+	userGroupReviewerAdd := openapi3.Operation{}
+	userGroupReviewerAdd.WithTags("pullreq")
+	userGroupReviewerAdd.WithMapOfAnything(map[string]interface{}{"operationId": "userGroupReviewerAddPullReq"})
+	_ = reflector.SetRequest(&userGroupReviewerAdd, new(userGroupReviewerAddRequest), http.MethodPut)
+	_ = reflector.SetJSONResponse(&userGroupReviewerAdd, new(types.UserGroupReviewer), http.StatusOK)
+	_ = reflector.SetJSONResponse(&userGroupReviewerAdd, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&userGroupReviewerAdd, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&userGroupReviewerAdd, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&userGroupReviewerAdd, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodPut,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/reviewers/usergroups", userGroupReviewerAdd)
+
+	userGroupReviewerDelete := openapi3.Operation{}
+	userGroupReviewerDelete.WithTags("pullreq")
+	userGroupReviewerDelete.WithMapOfAnything(map[string]interface{}{"operationId": "userGroupReviewerDeletePullReq"})
+	_ = reflector.SetRequest(&userGroupReviewerDelete, new(userGroupReviewerDeleteRequest), http.MethodDelete)
+	_ = reflector.SetJSONResponse(&userGroupReviewerDelete, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&userGroupReviewerDelete, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&userGroupReviewerDelete, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&userGroupReviewerDelete, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&userGroupReviewerDelete, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodDelete,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/reviewers/usergroups/{user_group_id}", userGroupReviewerDelete)
+
+	combinedReviewerList := openapi3.Operation{}
+	combinedReviewerList.WithTags("pullreq")
+	combinedReviewerList.WithMapOfAnything(map[string]interface{}{"operationId": "reviewerCombinedListPullReq"})
+	_ = reflector.SetRequest(&combinedReviewerList, new(pullReqRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&combinedReviewerList, new(pullreq.CombinedListResponse), http.StatusOK)
+	_ = reflector.SetJSONResponse(&combinedReviewerList, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&combinedReviewerList, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&combinedReviewerList, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&combinedReviewerList, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodGet,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/reviewers/combined", combinedReviewerList)
 
 	mergePullReqOp := openapi3.Operation{}
 	mergePullReqOp.WithTags("pullreq")
