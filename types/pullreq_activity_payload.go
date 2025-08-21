@@ -133,12 +133,21 @@ func (a *PullRequestActivityPayloadReviewSubmit) ActivityType() enum.PullReqActi
 
 type PullRequestActivityPayloadReviewerAdd struct {
 	PrincipalID  int64                    `json:"principal_id,omitempty"`
-	PrinciaplIDs []int64                  `json:"principal_ids,omitempty"`
+	PrincipalIDs []int64                  `json:"principal_ids,omitempty"`
 	ReviewerType enum.PullReqReviewerType `json:"reviewer_type"`
 }
 
 func (a *PullRequestActivityPayloadReviewerAdd) ActivityType() enum.PullReqActivityType {
 	return enum.PullReqActivityTypeReviewerAdd
+}
+
+type PullRequestActivityPayloadUserGroupReviewerAdd struct {
+	UserGroupIDs []int64                  `json:"user_group_ids,omitempty"`
+	ReviewerType enum.PullReqReviewerType `json:"reviewer_type"`
+}
+
+func (a *PullRequestActivityPayloadUserGroupReviewerAdd) ActivityType() enum.PullReqActivityType {
+	return enum.PullReqActivityTypeUserGroupReviewerAdd
 }
 
 type PullRequestActivityPayloadReviewerDelete struct {
@@ -149,6 +158,14 @@ type PullRequestActivityPayloadReviewerDelete struct {
 
 func (a *PullRequestActivityPayloadReviewerDelete) ActivityType() enum.PullReqActivityType {
 	return enum.PullReqActivityTypeReviewerDelete
+}
+
+type PullRequestActivityPayloadUserGroupReviewerDelete struct {
+	UserGroupIDs []int64 `json:"user_group_ids"`
+}
+
+func (a *PullRequestActivityPayloadUserGroupReviewerDelete) ActivityType() enum.PullReqActivityType {
+	return enum.PullReqActivityTypeUserGroupReviewerDelete
 }
 
 type PullRequestActivityPayloadBranchUpdate struct {

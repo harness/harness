@@ -25,6 +25,8 @@ import (
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 type UserGroupReviewerAddInput struct {
@@ -109,6 +111,30 @@ func (c *Controller) UserGroupReviewerAdd(
 	}
 
 	c.reportUserGroupReviewerAdded(ctx, &session.Principal, pr, userGroupReviewer.UserGroupID)
+
+	err = func() error {
+		if pr, err = c.pullreqStore.UpdateActivitySeq(ctx, pr); err != nil {
+			return fmt.Errorf("failed to increment pull request activity sequence: %w", err)
+		}
+
+		payload := &types.PullRequestActivityPayloadUserGroupReviewerAdd{
+			UserGroupIDs: []int64{userGroupReviewer.UserGroupID},
+			ReviewerType: enum.PullReqReviewerTypeRequested,
+		}
+
+		if _, err := c.activityStore.CreateWithPayload(
+			ctx, pr, session.Principal.ID, payload, nil,
+		); err != nil {
+			return err
+		}
+
+		return nil
+	}()
+	if err != nil {
+		log.Ctx(ctx).Err(err).Msgf(
+			"failed to write pull request activity after reviewer addition: %s", err,
+		)
+	}
 
 	return userGroupReviewer, nil
 }

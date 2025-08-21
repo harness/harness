@@ -19,7 +19,10 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 // UserGroupReviewerDelete deletes reviewer from the UserGroupReviewers store for the given PR.
@@ -28,7 +31,7 @@ func (c *Controller) UserGroupReviewerDelete(
 	session *auth.Session,
 	repoRef string,
 	prNum,
-	userGroupReviewerID int64,
+	userGroupID int64,
 ) error {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush)
 	if err != nil {
@@ -40,9 +43,29 @@ func (c *Controller) UserGroupReviewerDelete(
 		return fmt.Errorf("failed to find pull request: %w", err)
 	}
 
-	err = c.userGroupReviewerStore.Delete(ctx, pr.ID, userGroupReviewerID)
+	err = c.userGroupReviewerStore.Delete(ctx, pr.ID, userGroupID)
 	if err != nil {
 		return fmt.Errorf("failed to delete user group reviewer: %w", err)
 	}
-	return nil
+
+	err = func() error {
+		if pr, err = c.pullreqStore.UpdateActivitySeq(ctx, pr); err != nil {
+			return fmt.Errorf("failed to increment pull request activity sequence: %w", err)
+		}
+
+		payload := &types.PullRequestActivityPayloadUserGroupReviewerDelete{
+			UserGroupIDs: []int64{userGroupID},
+		}
+
+		_, err = c.activityStore.CreateWithPayload(ctx, pr, session.Principal.ID, payload, nil)
+		if err != nil {
+			return fmt.Errorf("failed to create pull request activity: %w", err)
+		}
+
+		return nil
+	}()
+	if err != nil {
+		log.Ctx(ctx).Err(err).Msg("failed to write pull request activity after user group reviewer removal")
+	}
+	return err
 }

@@ -52,7 +52,8 @@ type CreateInput struct {
 	SourceBranch  string `json:"source_branch"`
 	TargetBranch  string `json:"target_branch"`
 
-	ReviewerIDs []int64 `json:"reviewer_ids"`
+	ReviewerIDs                  []int64  `json:"reviewer_ids"`
+	UserGroupReviewerIdentifiers []string `json:"user_group_reviewer_identifiers"`
 
 	Labels []*types.PullReqLabelAssignInput `json:"labels"`
 
@@ -155,14 +156,24 @@ func (c *Controller) Create(
 
 	// Payload based reviewers
 
-	userReviewerMap, err := c.preparePayloadReviewers(ctx, session, in.ReviewerIDs, targetRepo)
+	userReviewerMap, userGroupReviewerMap, err := c.preparePayloadReviewers(
+		ctx, session, in.ReviewerIDs, in.UserGroupReviewerIdentifiers, targetRepo,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare reviewers: %w", err)
 	}
 
 	payloadReviewerIDs := maps.Keys(userReviewerMap)
+	payloadUserGroupIDs := make([]int64, 0, len(userGroupReviewerMap))
+	for _, userGroup := range userGroupReviewerMap {
+		payloadUserGroupIDs = append(payloadUserGroupIDs, userGroup.ID)
+	}
 
 	if len(userReviewerMap) > 0 {
+		activitySeq++
+	}
+
+	if len(userGroupReviewerMap) > 0 {
 		activitySeq++
 	}
 
@@ -173,7 +184,7 @@ func (c *Controller) Create(
 		return nil, fmt.Errorf("failed to get create pull request protection: %w", err)
 	}
 
-	ownerUserReviewers, ownerUserGroupReviewers, err := c.getCodeownerReviewers(
+	ownerUserReviewers, ownerUserGroupReviewerMap, err := c.getCodeownerReviewers(
 		ctx,
 		out.RequestCodeOwners,
 		session.Principal.ID,
@@ -183,15 +194,24 @@ func (c *Controller) Create(
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare code owner reviewers: %w", err)
 	}
+	ownerUserGroupIDs := make([]int64, 0, len(ownerUserGroupReviewerMap))
+	for _, userGroup := range ownerUserGroupReviewerMap {
+		ownerUserGroupIDs = append(ownerUserGroupIDs, userGroup.ID)
+	}
+
+	if len(ownerUserReviewers) > 0 {
+		activitySeq++
+	}
+
+	if len(ownerUserGroupReviewerMap) > 0 {
+		activitySeq++
+	}
 
 	defaultUserReviewers, err := c.getDefaultReviewers(ctx, session.Principal.ID, out.DefaultReviewerIDs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare default reviewers: %w", err)
 	}
 
-	if len(ownerUserReviewers) > 0 {
-		activitySeq++
-	}
 	if len(defaultUserReviewers) > 0 {
 		activitySeq++
 	}
@@ -205,6 +225,12 @@ func (c *Controller) Create(
 	for _, reviewer := range defaultUserReviewers {
 		if _, ok := userReviewerMap[reviewer.ID]; !ok {
 			userReviewerMap[reviewer.ID] = reviewer
+		}
+	}
+
+	for identifier, userGroup := range ownerUserGroupReviewerMap {
+		if _, ok := userGroupReviewerMap[identifier]; !ok {
+			userGroupReviewerMap[identifier] = userGroup
 		}
 	}
 
@@ -266,7 +292,7 @@ func (c *Controller) Create(
 			return fmt.Errorf("failed to create user reviewers: %w", err)
 		}
 
-		if err = c.createUserGroupReviewers(ctx, session, ownerUserGroupReviewers, targetRepo, pr); err != nil {
+		if err = c.createUserGroupReviewers(ctx, session, userGroupReviewerMap, targetRepo, pr); err != nil {
 			return fmt.Errorf("failed to create user group reviewers: %w", err)
 		}
 
@@ -296,9 +322,17 @@ func (c *Controller) Create(
 	c.storeCreateReviewerActivity(
 		ctx, pr, session.Principal.ID, payloadReviewerIDs, enum.PullReqReviewerTypeRequested,
 	)
+	c.storeCreateUserGroupReviewerActivity(
+		ctx, pr, session.Principal.ID, payloadUserGroupIDs, enum.PullReqReviewerTypeRequested,
+	)
+
 	c.storeCreateReviewerActivity(
 		ctx, pr, session.Principal.ID, maps.Keys(ownerUserReviewers), enum.PullReqReviewerTypeCodeOwners,
 	)
+	c.storeCreateUserGroupReviewerActivity(
+		ctx, pr, session.Principal.ID, ownerUserGroupIDs, enum.PullReqReviewerTypeCodeOwners,
+	)
+
 	c.storeCreateReviewerActivity(
 		ctx, pr, session.Principal.ID, maps.Keys(defaultUserReviewers), enum.PullReqReviewerTypeDefault,
 	)
@@ -340,22 +374,24 @@ func (c *Controller) preparePayloadReviewers(
 	ctx context.Context,
 	session *auth.Session,
 	reviewers []int64,
+	userGroupReviewers []string,
 	repo *types.RepositoryCore,
-) (map[int64]*types.PrincipalInfo, error) {
-	if len(reviewers) == 0 {
-		return map[int64]*types.PrincipalInfo{}, nil
+) (map[int64]*types.PrincipalInfo, map[string]*types.UserGroupInfo, error) {
+	if len(reviewers) == 0 && len(userGroupReviewers) == 0 {
+		return map[int64]*types.PrincipalInfo{}, map[string]*types.UserGroupInfo{}, nil
 	}
 
-	principalEmailMap := make(map[int64]*types.PrincipalInfo, len(reviewers))
+	// Process individual user reviewers
 
+	principalEmailMap := make(map[int64]*types.PrincipalInfo, len(reviewers))
 	for _, id := range reviewers {
 		if id == session.Principal.ID {
-			return nil, usererror.BadRequest("PR creator cannot be added as a reviewer.")
+			return nil, nil, usererror.BadRequest("PR creator cannot be added as a reviewer.")
 		}
 
 		reviewerPrincipal, err := c.principalStore.Find(ctx, id)
 		if err != nil {
-			return nil, usererror.BadRequest("Failed to find principal reviewer.")
+			return nil, nil, usererror.BadRequest("Failed to find principal reviewer.")
 		}
 
 		// TODO: To check the reviewer's access to the repo we create a dummy session object. Fix it.
@@ -370,17 +406,29 @@ func (c *Controller) preparePayloadReviewers(
 			enum.PermissionRepoReview,
 		); err != nil {
 			if !errors.Is(err, apiauth.ErrForbidden) {
-				return nil, usererror.BadRequest(
+				return nil, nil, usererror.BadRequest(
 					"The reviewer doesn't have enough permissions for the repository.",
 				)
 			}
-			return nil, fmt.Errorf("reviewer principal %s check repo access error: %w", reviewerPrincipal.UID, err)
+			return nil, nil, fmt.Errorf("reviewer principal %s check repo access error: %w", reviewerPrincipal.UID, err)
 		}
 
 		principalEmailMap[reviewerPrincipal.ID] = reviewerPrincipal.ToPrincipalInfo()
 	}
 
-	return principalEmailMap, nil
+	// Process user group reviewers
+
+	userGroupMap := make(map[string]*types.UserGroupInfo, len(userGroupReviewers))
+	for _, identifier := range userGroupReviewers {
+		userGroup, err := c.userGroupResolver.Resolve(ctx, identifier)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to resolve user group %q: %w", identifier, err)
+		}
+
+		userGroupMap[identifier] = userGroup.ToUserGroupInfo()
+	}
+
+	return principalEmailMap, userGroupMap, nil
 }
 
 func (c *Controller) createPullReqVerify(
@@ -579,7 +627,7 @@ func (c *Controller) storeCreateReviewerActivity(
 
 	payload := &types.PullRequestActivityPayloadReviewerAdd{
 		ReviewerType: reviewerType,
-		PrinciaplIDs: reviewerIDs,
+		PrincipalIDs: reviewerIDs,
 	}
 
 	metadata := &types.PullReqActivityMetadata{
@@ -591,6 +639,33 @@ func (c *Controller) storeCreateReviewerActivity(
 	); err != nil {
 		log.Ctx(ctx).Err(err).Msgf(
 			"failed to write create %s reviewer pull req activity", reviewerType,
+		)
+	}
+}
+
+func (c *Controller) storeCreateUserGroupReviewerActivity(
+	ctx context.Context,
+	pr *types.PullReq,
+	authorID int64,
+	userGroupIDs []int64,
+	reviewerType enum.PullReqReviewerType,
+) {
+	if len(userGroupIDs) == 0 {
+		return
+	}
+
+	pr.ActivitySeq++
+
+	payload := &types.PullRequestActivityPayloadUserGroupReviewerAdd{
+		UserGroupIDs: userGroupIDs,
+		ReviewerType: reviewerType,
+	}
+
+	if _, err := c.activityStore.CreateWithPayload(
+		ctx, pr, authorID, payload, nil,
+	); err != nil {
+		log.Ctx(ctx).Err(err).Msgf(
+			"failed to write create %s user group reviewer pull req activity", reviewerType,
 		)
 	}
 }
