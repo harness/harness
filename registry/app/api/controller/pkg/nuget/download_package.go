@@ -31,8 +31,7 @@ func (c *controller) DownloadPackage(
 	info nugettype.ArtifactInfo,
 ) *GetArtifactResponse {
 	f := func(registry registrytypes.Registry, a pkg.Artifact) response.Response {
-		info.RegIdentifier = registry.Name
-		info.RegistryID = registry.ID
+		info.UpdateRegistryInfo(registry)
 		nugetRegistry, ok := a.(nuget.Registry)
 		if !ok {
 			return &GetArtifactResponse{

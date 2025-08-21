@@ -32,10 +32,7 @@ func (c *controller) DownloadPackage(
 	info *cargotype.ArtifactInfo,
 ) *GetPackageResponse {
 	f := func(registry registrytypes.Registry, a pkg.Artifact) response.Response {
-		info.RegIdentifier = registry.Name
-		info.RegistryID = registry.ID
-		info.Registry = registry
-		info.ParentID = registry.ParentID
+		info.UpdateRegistryInfo(registry)
 		cargoRegistry, ok := a.(cargo.Registry)
 		if !ok {
 			return c.getDownloadPackageErrorResponse(

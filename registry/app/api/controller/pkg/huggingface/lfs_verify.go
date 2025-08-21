@@ -29,8 +29,7 @@ import (
 
 func (c *controller) LfsVerify(ctx context.Context, info hftype.ArtifactInfo, body io.ReadCloser) *LfsVerifyResponse {
 	f := func(registry registrytypes.Registry, a pkg.Artifact) response.Response {
-		info.RegIdentifier = registry.Name
-		info.RegistryID = registry.ID
+		info.UpdateRegistryInfo(registry)
 		hfRegistry, ok := a.(huggingface.Registry)
 		if !ok {
 			return &LfsVerifyResponse{

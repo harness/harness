@@ -29,9 +29,7 @@ import (
 // Metadata represents the metadata of a Python package.
 func (c *controller) GetPackageMetadata(ctx context.Context, info pythontype.ArtifactInfo) *GetMetadataResponse {
 	f := func(registry registrytypes.Registry, a pkg.Artifact) response.Response {
-		info.RegIdentifier = registry.Name
-		info.RegistryID = registry.ID
-		info.Registry = registry
+		info.UpdateRegistryInfo(registry)
 		pythonRegistry, ok := a.(python.Registry)
 		if !ok {
 			return &GetMetadataResponse{

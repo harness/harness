@@ -30,11 +30,12 @@ import (
 	registrytypes "github.com/harness/gitness/registry/types"
 )
 
-func (c *controller) SearchPackageV2(ctx context.Context, info nugettype.ArtifactInfo,
-	searchTerm string, limit, offset int) *SearchPackageV2Response {
+func (c *controller) SearchPackageV2(
+	ctx context.Context, info nugettype.ArtifactInfo,
+	searchTerm string, limit, offset int,
+) *SearchPackageV2Response {
 	f := func(registry registrytypes.Registry, a pkg.Artifact, l, o int) response.Response {
-		info.RegIdentifier = registry.Name
-		info.RegistryID = registry.ID
+		info.UpdateRegistryInfo(registry)
 		nugetRegistry, ok := a.(nuget.Registry)
 		if !ok {
 			return &SearchPackageV2Response{

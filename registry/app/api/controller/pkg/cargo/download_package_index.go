@@ -33,10 +33,7 @@ func (c *controller) DownloadPackageIndex(
 	filePath string,
 ) *GetPackageIndexResponse {
 	f := func(registry registrytypes.Registry, a pkg.Artifact) response.Response {
-		info.RegIdentifier = registry.Name
-		info.RegistryID = registry.ID
-		info.Registry = registry
-		info.ParentID = registry.ParentID
+		info.UpdateRegistryInfo(registry)
 		cargoRegistry, ok := a.(cargo.Registry)
 		if !ok {
 			return c.getDownloadPackageIndexErrorResponse(

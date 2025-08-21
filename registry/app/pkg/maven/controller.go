@@ -135,9 +135,7 @@ func (c *Controller) GetArtifact(ctx context.Context, info pkg.MavenArtifactInfo
 	}
 
 	f := func(registry registrytypes.Registry, a Artifact) Response {
-		info.SetMavenRepoKey(registry.Name)
-		info.RegistryID = registry.ID
-		info.ParentID = registry.ParentID
+		info.UpdateRegistryInfo(registry)
 		r, ok := a.(Registry)
 		if !ok {
 			log.Ctx(ctx).Error().Stack().Msgf("Proxy wrapper has invalid registry set")
@@ -162,9 +160,7 @@ func (c *Controller) HeadArtifact(ctx context.Context, info pkg.MavenArtifactInf
 	}
 
 	f := func(registry registrytypes.Registry, a Artifact) Response {
-		info.SetMavenRepoKey(registry.Name)
-		info.RegistryID = registry.ID
-		info.ParentID = registry.ParentID
+		info.UpdateRegistryInfo(registry)
 		r, ok := a.(Registry)
 		if !ok {
 			log.Ctx(ctx).Error().Stack().Msgf("Proxy wrapper has invalid registry set")

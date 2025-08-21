@@ -32,8 +32,7 @@ func (c *controller) HeadFile(
 	fileName string,
 ) *HeadFileResponse {
 	f := func(registry registrytypes.Registry, a pkg.Artifact) response.Response {
-		info.RegIdentifier = registry.Name
-		info.RegistryID = registry.ID
+		info.UpdateRegistryInfo(registry)
 		hfRegistry, ok := a.(huggingface.Registry)
 		if !ok {
 			return &HeadFileResponse{

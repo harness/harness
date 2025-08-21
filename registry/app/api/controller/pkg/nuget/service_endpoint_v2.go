@@ -31,8 +31,7 @@ func (c *controller) GetServiceEndpointV2(
 	info nugettype.ArtifactInfo,
 ) *GetServiceEndpointV2Response {
 	f := func(registry registrytypes.Registry, a pkg.Artifact) response.Response {
-		info.RegIdentifier = registry.Name
-		info.RegistryID = registry.ID
+		info.UpdateRegistryInfo(registry)
 		nugetRegistry, ok := a.(nuget.Registry)
 		if !ok {
 			return &GetServiceEndpointV2Response{

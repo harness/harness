@@ -31,9 +31,7 @@ func (c *controller) DownloadPackageFile(
 	info pythontype.ArtifactInfo,
 ) *GetArtifactResponse {
 	f := func(registry registrytypes.Registry, a pkg.Artifact) response.Response {
-		info.RegIdentifier = registry.Name
-		info.RegistryID = registry.ID
-		info.Registry = registry
+		info.UpdateRegistryInfo(registry)
 		pythonRegistry, ok := a.(python.Registry)
 		if !ok {
 			return &GetArtifactResponse{

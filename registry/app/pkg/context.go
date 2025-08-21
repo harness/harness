@@ -40,6 +40,13 @@ type ArtifactInfo struct {
 	ArtifactType *artifact.ArtifactType
 }
 
+func (a *ArtifactInfo) UpdateRegistryInfo(r types.Registry) {
+	a.RegistryID = r.ID
+	a.RegIdentifier = r.Name
+	a.Registry = r
+	a.ParentID = r.ParentID
+}
+
 type RegistryInfo struct {
 	*ArtifactInfo
 	Reference   string

@@ -31,8 +31,7 @@ func (c *controller) RegeneratePackageIndex(
 	ctx context.Context, info *gopackagetype.ArtifactInfo,
 ) *RegeneratePackageIndexResponse {
 	f := func(registry registrytypes.Registry, a pkg.Artifact) response.Response {
-		info.RegIdentifier = registry.Name
-		info.RegistryID = registry.ID
+		info.UpdateRegistryInfo(registry)
 		goRegistry, ok := a.(gopackage.Registry)
 		if !ok {
 			return c.getRegeneratePackageIndexErrorResponse(

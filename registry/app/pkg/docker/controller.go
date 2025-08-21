@@ -185,8 +185,8 @@ func (c *Controller) HeadManifest(
 	}
 
 	f := func(registry registrytypes.Registry, imageName string, a pkg.Artifact) Response {
-		art.SetRepoKey(registry.Name)
-		art.ParentID = registry.ParentID
+		art.UpdateRegistryInfo(registry)
+
 		// Need to reassign original imageName to art because we are updating image name based on upstream proxy source inside
 		art.Image = imageName
 		//nolint:errcheck
@@ -218,8 +218,7 @@ func (c *Controller) PullManifest(
 		}
 	}
 	f := func(registry registrytypes.Registry, imageName string, a pkg.Artifact) Response {
-		art.SetRepoKey(registry.Name)
-		art.ParentID = registry.ParentID
+		art.UpdateRegistryInfo(registry)
 		// Need to reassign original imageName to art because we are updating image name based on upstream proxy source inside
 		art.Image = imageName
 		//nolint:errcheck
@@ -288,8 +287,7 @@ func (c *Controller) GetBlob(ctx context.Context, info pkg.RegistryInfo) Respons
 		}
 	}
 	f := func(registry registrytypes.Registry, imageName string, a pkg.Artifact) Response {
-		info.SetRepoKey(registry.Name)
-		info.ParentID = registry.ParentID
+		info.UpdateRegistryInfo(registry)
 		info.Image = imageName
 		//nolint:errcheck
 		headers, body, size, readCloser, redirectURL, errs := a.(Registry).GetBlob(ctx, info)

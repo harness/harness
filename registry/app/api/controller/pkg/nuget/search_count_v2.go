@@ -26,11 +26,12 @@ import (
 	registrytypes "github.com/harness/gitness/registry/types"
 )
 
-func (c *controller) CountPackageV2(ctx context.Context, info nugettype.ArtifactInfo,
-	searchTerm string) *EntityCountResponse {
+func (c *controller) CountPackageV2(
+	ctx context.Context, info nugettype.ArtifactInfo,
+	searchTerm string,
+) *EntityCountResponse {
 	f := func(registry registrytypes.Registry, a pkg.Artifact) response.Response {
-		info.RegIdentifier = registry.Name
-		info.RegistryID = registry.ID
+		info.UpdateRegistryInfo(registry)
 		nugetRegistry, ok := a.(nuget.Registry)
 		if !ok {
 			return &EntityCountResponse{
