@@ -282,7 +282,7 @@ function MachineDetailCard({
           value={locationData?.domain}
           provider={provider}
           isLoading={loading}
-          width={250}
+          className={css.domainOverFlow}
         />
 
         <DetailField

@@ -8,8 +8,9 @@
     padding: var(--spacing-5) !important;
     background-color: var(--grey-50) !important;
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)) !important;
     grid-row-gap: var(--spacing-xlarge);
+    grid-column-gap: var(--spacing-medium) !important;
 
     .rowHeader {
       font-size: var(--font-size-small) !important;
@@ -141,4 +142,10 @@
     background-color: rgba(255, 170, 0, 0.15) !important;
     color: rgb(255, 140, 0) !important;
   }
+}
+
+.domainOverFlow {
+  overflow: anywhere;
+  white-space: normal;
+  word-wrap: break-word;
 }

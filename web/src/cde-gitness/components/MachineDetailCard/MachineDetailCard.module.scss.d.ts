@@ -21,6 +21,7 @@ export declare const cardContent: string
 export declare const cardTitle: string
 export declare const collapsibleHeader: string
 export declare const collapsibleSection: string
+export declare const domainOverFlow: string
 export declare const emptyRowContent: string
 export declare const filledTag: string
 export declare const locationDetail: string
