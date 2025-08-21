@@ -25,6 +25,7 @@ export declare const delegateContainer: string
 export declare const delegateSelector: string
 export declare const deleteContainer: string
 export declare const dnone: string
+export declare const errorContainer: string
 export declare const formFooter: string
 export declare const headerLinkText: string
 export declare const headingText: string

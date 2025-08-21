@@ -224,6 +224,7 @@ const AwsInfraDetails = () => {
                     initialData={initialData}
                     runner={formikProps?.values?.runner || { region: '', availability_zones: '', ami_id: '' }}
                     setRunner={result => formikProps?.setFieldValue('runner', result)}
+                    formikProps={formikProps}
                   />
                   <Layout.Horizontal className={css.formFooter}>
                     <Button

@@ -1329,6 +1329,7 @@ export interface StringsMap {
   'cde.Aws.runnerAmiIdPlaceholder': string
   'cde.Aws.runnerAmiIdRequired': string
   'cde.Aws.selectAwsRegion': string
+  'cde.Aws.singleRegionRestriction': string
   'cde.Aws.title': string
   'cde.account': string
   'cde.allRegionDisabled': string

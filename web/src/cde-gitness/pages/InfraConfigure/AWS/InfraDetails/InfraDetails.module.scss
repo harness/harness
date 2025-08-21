@@ -158,3 +158,10 @@
   font-size: 13px !important;
   font-weight: 500 !important;
 }
+
+.errorContainer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-top: var(--spacing-small) !important;
+}

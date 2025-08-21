@@ -268,7 +268,7 @@ Aws:
   publicSubnetCidr: Public Subnet CIDR
   gatewayInstanceType: Gateway Instance Type
   configureRegionsAndZones: Configure Regions and Zones
-  regionConfigNote: Once the region is configured, you can't change the AWS region selection, sub-domain and configured zones.
+  regionConfigNote: Once the region is configured, you can't change the AWS region selection, sub-domain and configured zones. You can add only one region.
   gatewayAmi: Gateway AMI
   gatewayAmiId: Gateway AMI ID
   gatewayAmiImage: Gateway AMI Image
@@ -286,6 +286,7 @@ Aws:
   configureNewRegion: Configure New Region
   selectAwsRegion: Select AWS Region
   numberOfRegions: Number of Regions
+  singleRegionRestriction: AWS infrastructure is currently restricted to a single region.
 downloadAndApplySection:
   title: Download and apply YAML to terraform module
   back: Back

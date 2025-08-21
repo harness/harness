@@ -192,13 +192,13 @@ const GcpInfraDetails = () => {
               <FormikForm>
                 <Layout.Vertical spacing="medium">
                   <BasicDetails formikProps={formikProps} />
-                  {/* <GatewayDetails formikProps={formikProps} /> */}
                   <ConfigureLocations
                     regionData={regionData}
                     setRegionData={setRegionData}
                     initialData={initialData}
                     runner={formikProps?.values?.runner || { region: '', zone: '', vm_image_name: '' }}
                     setRunner={result => formikProps?.setFieldValue('runner', result)}
+                    formikProps={formikProps}
                   />
                   <Layout.Horizontal className={css.formFooter}>
                     <Button

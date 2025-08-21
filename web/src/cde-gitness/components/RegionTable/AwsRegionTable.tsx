@@ -16,9 +16,10 @@ interface RegionTableProps {
   columns: any
   regionData: ExtendedAwsRegionConfig[]
   addNewRegion: () => void
+  disableAddButton?: boolean
 }
 
-function RegionTable({ columns, regionData, addNewRegion }: RegionTableProps) {
+function RegionTable({ columns, regionData, addNewRegion, disableAddButton }: RegionTableProps) {
   const { getString } = useStrings()
 
   const zoneColumns: Column<ZoneConfig>[] = [
@@ -72,6 +73,7 @@ function RegionTable({ columns, regionData, addNewRegion }: RegionTableProps) {
       newRegionClassName={css.newRegion}
       newRegionLabel={getString('cde.gitspaceInfraHome.newRegion')}
       renderRowSubComponent={renderRowSubComponent}
+      disableAddButton={disableAddButton}
     />
   )
 }

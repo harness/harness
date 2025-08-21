@@ -25,6 +25,7 @@ interface GenericRegionTableProps {
   // Configuration props
   showNoDataState?: boolean
   autoExpandNewRegions?: boolean
+  disableAddButton?: boolean
 
   // Style props
   tableClassName?: string
@@ -60,7 +61,8 @@ function RegionTableV2({
   newRegionLabel,
   customToggleRenderer,
   customNoDataRenderer,
-  renderRowSubComponent
+  renderRowSubComponent,
+  disableAddButton
 }: GenericRegionTableProps) {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
   const [previousRegionCount, setPreviousRegionCount] = useState(regionData.length)
@@ -167,19 +169,31 @@ function RegionTableV2({
     )
   }
 
+  const renderAddNewRegionButton = () => {
+    if (disableAddButton) {
+      return (
+        <Text color={Color.GREY_500} className={newRegionClassName}>
+          {getString('cde.Aws.singleRegionRestriction')}
+        </Text>
+      )
+    }
+
+    return (
+      <Text
+        icon="plus"
+        iconProps={{ size: 10, color: Color.PRIMARY_7 }}
+        color={Color.PRIMARY_7}
+        onClick={addNewRegion}
+        className={newRegionClassName}>
+        {newRegionLabel || getString('cde.gitspaceInfraHome.newRegion')}
+      </Text>
+    )
+  }
+
   return (
     <Container>
       <Container className={containerClassName}>{renderTable()}</Container>
-      {regionData.length > 0 && (
-        <Text
-          icon="plus"
-          iconProps={{ size: 10, color: Color.PRIMARY_7 }}
-          color={Color.PRIMARY_7}
-          onClick={addNewRegion}
-          className={newRegionClassName}>
-          {newRegionLabel || getString('cde.gitspaceInfraHome.newRegion')}
-        </Text>
-      )}
+      {regionData.length > 0 && renderAddNewRegionButton()}
     </Container>
   )
 }

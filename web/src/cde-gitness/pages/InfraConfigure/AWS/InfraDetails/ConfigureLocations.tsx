@@ -4,12 +4,13 @@ import { Color, FontVariation } from '@harnessio/design-system'
 import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance } from 'react-table'
 import { Icon } from '@harnessio/icons'
 import { cloneDeep } from 'lodash-es'
+import type { FormikProps } from 'formik'
 import {
   AwsRegionConfig,
+  learMoreVMRunner,
   learnMoreRegionAws,
   type regionProp,
-  ZoneConfig,
-  learMoreVMRunner
+  ZoneConfig
 } from 'cde-gitness/constants'
 import { useStrings } from 'framework/strings'
 import RegionTable from 'cde-gitness/components/RegionTable/AwsRegionTable'
@@ -48,9 +49,10 @@ interface LocationProps {
   initialData: ExtendedAwsRegionConfig
   runner: { region: string; availability_zones: string; ami_id: string }
   setRunner: (result: { region: string; availability_zones: string; ami_id: string }) => void
+  formikProps?: FormikProps<any>
 }
 
-const ConfigureLocations = ({ regionData, setRegionData, runner, setRunner }: LocationProps) => {
+const ConfigureLocations = ({ regionData, setRegionData, runner, setRunner, formikProps }: LocationProps) => {
   const { getString } = useStrings()
   const [isOpen, setIsOpen] = useState(false)
   const [editingRegion, setEditingRegion] = useState<ExtendedAwsRegionConfig | null>(null)
@@ -224,12 +226,23 @@ const ConfigureLocations = ({ regionData, setRegionData, runner, setRunner }: Lo
 
   // Reset zone selection if region changes or if the current zone doesn't belong to the selected region
   useEffect(() => {
-    if (setRunner && runner?.availability_zones) {
-      if (!availableZones.includes(runner?.availability_zones)) {
+    if (setRunner && runner?.region) {
+      const regionExists = regionData.some(region => region.region_name === runner.region)
+
+      if (!regionExists) {
+        setRunner({ ...runner, region: '', availability_zones: '' })
+        if (formikProps) {
+          formikProps.setFieldValue('runner.region', '', true)
+          formikProps.setFieldValue('runner.availability_zones', '', true)
+        }
+      } else if (runner?.availability_zones && !availableZones.includes(runner.availability_zones)) {
         setRunner({ ...runner, availability_zones: '' })
+        if (formikProps) {
+          formikProps.setFieldValue('runner.availability_zones', '', true)
+        }
       }
     }
-  }, [selectedRegion, availableZones, runner?.availability_zones, setRunner])
+  }, [selectedRegion, availableZones, runner?.region, runner?.availability_zones, setRunner, regionData, formikProps])
   return (
     <Layout.Vertical spacing="none" className={css.containerSpacing}>
       <Text className={css.basicDetailsHeading}>{getString('cde.Aws.configureRegionsAndZones')}</Text>
@@ -257,7 +270,12 @@ const ConfigureLocations = ({ regionData, setRegionData, runner, setRunner }: Lo
         isEditMode={isEditMode}
         existingRegions={regionData.map(region => region.region_name)}
       />
-      <RegionTable columns={columns} addNewRegion={openRegionModal} regionData={regionData} />
+      <RegionTable
+        columns={columns}
+        addNewRegion={openRegionModal}
+        regionData={regionData}
+        disableAddButton={regionData.length > 0}
+      />
       <br />
       <Text className={css.basicDetailsHeading}>{getString('cde.gitspaceInfraHome.configureVMRunnerImage')}</Text>
       <Layout.Horizontal spacing="small">
@@ -278,21 +296,32 @@ const ConfigureLocations = ({ regionData, setRegionData, runner, setRunner }: Lo
           <Label className={css.runnerregion}>{getString('cde.gitspaceInfraHome.runnerVMRegion')}</Label>
           <Select
             addClearBtn
-            name={getString('cde.gitspaceInfraHome.runnerVMRegion')}
+            name="runner.region"
             items={runnerVMRegionOptions}
             value={
               runner?.region ? runnerVMRegionOptions.find(region => region.value === runner?.region) || null : null
             }
             onChange={value => {
               setRunner({ ...runner, region: value?.value as string })
+              if (formikProps) {
+                formikProps.setFieldValue('runner.region', value?.value || '', true)
+              }
             }}
           />
+          {formikProps && formikProps.getFieldMeta('runner.region').error && !runner?.region && (
+            <Layout.Horizontal spacing="xsmall" className={css.errorContainer}>
+              <Icon name="solid-error" size={13} />
+              <Text color={Color.RED_500} font={{ size: 'normal' }}>
+                {formikProps.getFieldMeta('runner.region').error}
+              </Text>
+            </Layout.Horizontal>
+          )}
         </Container>
         <Container>
           <Label className={css.runnerregion}>{getString('cde.gitspaceInfraHome.runnerVMZone')}</Label>
           <Select
             addClearBtn
-            name={getString('cde.gitspaceInfraHome.runnerVMZone')}
+            name="runner.availability_zones"
             items={runnerVMZoneOptions}
             disabled={!selectedRegion}
             value={
@@ -302,8 +331,21 @@ const ConfigureLocations = ({ regionData, setRegionData, runner, setRunner }: Lo
             }
             onChange={value => {
               setRunner({ ...runner, availability_zones: value?.value as string })
+              if (formikProps) {
+                formikProps.setFieldValue('runner.availability_zones', value?.value || '', true)
+              }
             }}
           />
+          {formikProps &&
+            formikProps.getFieldMeta('runner.availability_zones').error &&
+            !runner?.availability_zones && (
+              <Layout.Horizontal spacing="xsmall" className={css.errorContainer}>
+                <Icon name="solid-error" size={13} />
+                <Text color={Color.RED_500} font={{ size: 'normal' }}>
+                  {formikProps.getFieldMeta('runner.availability_zones').error}
+                </Text>
+              </Layout.Horizontal>
+            )}
         </Container>
         <Container>
           <FormInput.Text

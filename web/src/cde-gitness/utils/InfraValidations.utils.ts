@@ -23,8 +23,8 @@ export const validateInfraForm = (getString: UseStringsReturn['getString']) =>
         .matches(GCP_IMAGE_NAME_PATTERN, getString('cde.gitspaceInfraHome.invalidImageNameFormat'))
     }),
     runner: yup.object().shape({
-      region: yup.string().trim(),
-      zone: yup.string().trim(),
+      region: yup.string().trim().required('Region is required'),
+      zone: yup.string().trim().required('Zone is required'),
       vm_image_name: yup
         .string()
         .trim()
@@ -49,8 +49,8 @@ export const validateAwsInfraForm = (getString: UseStringsReturn['getString']) =
       .required('VPC CIDR Block is required')
       .matches(cidrRegex({ exact: true }), 'Invalid CIDR format'),
     runner: yup.object().shape({
-      region: yup.string().trim(),
-      availability_zones: yup.string().trim(),
+      region: yup.string().trim().required('Region is required'),
+      availability_zones: yup.string().trim().required('Availability Zone is required'),
       ami_id: yup
         .string()
         .trim()

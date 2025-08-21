@@ -4,6 +4,7 @@ import { Color, FontVariation } from '@harnessio/design-system'
 import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance } from 'react-table'
 import { Icon } from '@harnessio/icons'
 import { cloneDeep } from 'lodash-es'
+import type { FormikProps } from 'formik'
 import { learnMoreRegion, type regionProp, learMoreVMRunner } from 'cde-gitness/constants'
 import { useStrings } from 'framework/strings'
 import RegionTable from 'cde-gitness/components/RegionTable/RegionTable'
@@ -37,9 +38,10 @@ interface LocationProps {
   initialData: regionProp
   runner: { region: string; zone: string; vm_image_name: string }
   setRunner: (result: { region: string; zone: string; vm_image_name: string }) => void
+  formikProps?: FormikProps<any>
 }
 
-const ConfigureLocations = ({ regionData, setRegionData, runner, setRunner }: LocationProps) => {
+const ConfigureLocations = ({ regionData, setRegionData, runner, setRunner, formikProps }: LocationProps) => {
   const { getString } = useStrings()
   const [isOpen, setIsOpen] = useState(false)
   const [editingRegion, setEditingRegion] = useState<regionProp | null>(null)
@@ -173,12 +175,23 @@ const ConfigureLocations = ({ regionData, setRegionData, runner, setRunner }: Lo
 
   // Reset zone selection if region changes or if the current zone doesn't belong to the selected region
   useEffect(() => {
-    if (setRunner && runner?.zone) {
-      if (!availableZones.includes(runner?.zone)) {
+    if (setRunner && runner?.region) {
+      const regionExists = regionData.some(region => region.location === runner.region)
+
+      if (!regionExists) {
+        setRunner({ ...runner, region: '', zone: '' })
+        if (formikProps) {
+          formikProps.setFieldValue('runner.region', '', true)
+          formikProps.setFieldValue('runner.zone', '', true)
+        }
+      } else if (runner?.zone && !availableZones.includes(runner.zone)) {
         setRunner({ ...runner, zone: '' })
+        if (formikProps) {
+          formikProps.setFieldValue('runner.zone', '', true)
+        }
       }
     }
-  }, [selectedRegion, availableZones, runner?.zone, setRunner])
+  }, [selectedRegion, availableZones, runner?.region, runner?.zone, setRunner, regionData, formikProps])
   return (
     <Layout.Vertical spacing="none" className={css.containerSpacing}>
       <Text className={css.basicDetailsHeading}>{getString('cde.configureInfra.configureLocations')}</Text>
@@ -225,21 +238,32 @@ const ConfigureLocations = ({ regionData, setRegionData, runner, setRunner }: Lo
           <Label className={css.runnerregion}>{getString('cde.gitspaceInfraHome.runnerVMRegion')}</Label>
           <Select
             addClearBtn
-            name={getString('cde.gitspaceInfraHome.runnerVMRegion')}
+            name={'runner.region'}
             items={runnerVMRegionOptions}
             value={
               runner?.region ? runnerVMRegionOptions.find(region => region.value === runner?.region) || null : null
             }
             onChange={value => {
               setRunner({ ...runner, region: value?.value as string })
+              if (formikProps) {
+                formikProps.setFieldValue('runner.region', value?.value || '', true)
+              }
             }}
           />
+          {formikProps && formikProps.getFieldMeta('runner.region').error && !runner?.region && (
+            <Layout.Horizontal spacing="xsmall" className={css.errorContainer}>
+              <Icon name="solid-error" size={13} />
+              <Text color={Color.RED_500} font={{ size: 'normal' }}>
+                {formikProps.getFieldMeta('runner.region').error}
+              </Text>
+            </Layout.Horizontal>
+          )}
         </Container>
         <Container>
           <Label className={css.runnerregion}>{getString('cde.gitspaceInfraHome.runnerVMZone')}</Label>
           <Select
             addClearBtn
-            name={getString('cde.gitspaceInfraHome.runnerVMZone')}
+            name={'runner.zone'}
             items={runnerVMZoneOptions}
             disabled={!selectedRegion}
             value={
@@ -249,8 +273,19 @@ const ConfigureLocations = ({ regionData, setRegionData, runner, setRunner }: Lo
             }
             onChange={value => {
               setRunner({ ...runner, zone: value?.value as string })
+              if (formikProps) {
+                formikProps.setFieldValue('runner.zone', value?.value || '', true)
+              }
             }}
           />
+          {formikProps && formikProps.getFieldMeta('runner.zone').error && !runner?.zone && (
+            <Layout.Horizontal spacing="xsmall" className={css.errorContainer}>
+              <Icon name="solid-error" size={13} />
+              <Text color={Color.RED_500} font={{ size: 'normal' }}>
+                {formikProps.getFieldMeta('runner.zone').error}
+              </Text>
+            </Layout.Horizontal>
+          )}
         </Container>
         <Container>
           <FormInput.Text
