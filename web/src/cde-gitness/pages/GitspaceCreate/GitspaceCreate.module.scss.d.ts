@@ -18,6 +18,7 @@
 // This is an auto-generated file
 export declare const cardMain: string
 export declare const cardTitle: string
+export declare const customBreadcumbStyles: string
 export declare const formContainer: string
 export declare const formDivider: string
 export declare const formOuterContainer: string

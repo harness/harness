@@ -83,17 +83,17 @@ const GitspaceListing = () => {
 
   const history = useHistory()
   const { getString } = useStrings()
-  const { routes, standalone } = useAppContext()
+  const { routes, standalone, accountInfo } = useAppContext()
   const pageBrowser = useQueryParams<pageCDEBrowser>()
   const statesString: any = pageBrowser.gitspace_states
-  const { accountIdentifier = '' } = useGetCDEAPIParams()
+  const { accountIdentifier = '', orgIdentifier, projectIdentifier } = useGetCDEAPIParams()
   const {
     data: gitspaceSettings,
     loading: settingsLoading,
     error: settingsError
   } = useFindGitspaceSettings({
     accountIdentifier: accountIdentifier || '',
-    lazy: !accountIdentifier
+    lazy: !accountIdentifier || standalone
   })
   const filterInit: filterProps = {
     gitspace_states: statesString?.split(',')?.map((state: string) => state.trim() as GitspaceStatus) ?? [],
@@ -164,6 +164,30 @@ const GitspaceListing = () => {
     setPageConfig(payload)
   }
 
+  const getBreadcrumbLinks = () => {
+    if (standalone) {
+      return [{ url: routes.toCDEGitspaces({ space }), label: getString('cde.gitspaces') }]
+    }
+    return [
+      {
+        url: `/account/${accountIdentifier}/module/cde`,
+        label: `Account: ${accountInfo.name}`
+      },
+      {
+        url: `/account/${accountIdentifier}/module/cde/orgs/${orgIdentifier}`,
+        label: `Organization: ${orgIdentifier}`
+      },
+      {
+        url: `/account/${accountIdentifier}/module/cde/orgs/${orgIdentifier}/projects/${projectIdentifier}`,
+        label: `Project: ${projectIdentifier}`
+      },
+      {
+        url: routes.toCDEGitspaces({ space }),
+        label: getString('cde.gitspaces')
+      }
+    ]
+  }
+
   return (
     <>
       {((data && data?.length !== 0) || gitspaceExists) && (
@@ -194,12 +218,7 @@ const GitspaceListing = () => {
                 )}
               </Layout.Vertical>
             }
-            breadcrumbs={
-              <Breadcrumbs
-                className={standalone ? '' : css.breadcrumbs}
-                links={[{ url: routes.toCDEGitspaces({ space }), label: getString('cde.gitspaces') }]}
-              />
-            }
+            breadcrumbs={<Breadcrumbs className={standalone ? '' : css.breadcrumbs} links={getBreadcrumbLinks()} />}
             toolbar={
               standalone ? (
                 <Button

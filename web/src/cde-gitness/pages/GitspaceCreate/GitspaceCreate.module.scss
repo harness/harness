@@ -139,3 +139,9 @@
     }
   }
 }
+
+.customBreadcumbStyles {
+  [class*='Layout--horizontal']:last-child > span[class*='bp3-icon'] {
+    display: none !important;
+  }
+}

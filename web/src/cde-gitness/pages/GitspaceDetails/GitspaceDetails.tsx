@@ -113,7 +113,7 @@ const LogSection = (props: LoggerProps & { title: string; isBottom?: boolean; ha
 const GitspaceDetails = () => {
   const space = useGetSpaceParam()
   const { getString } = useStrings()
-  const { routes, standalone } = useAppContext()
+  const { routes, standalone, accountInfo } = useAppContext()
   const { showError, showSuccess } = useToaster()
   const history = useHistory()
   const containerRef = useRef<HTMLDivElement | null>(null)
@@ -331,19 +331,39 @@ const GitspaceDetails = () => {
       setIsBottom(false)
     }
   }
+  const getBreadcrumbLinks = () => {
+    if (standalone) {
+      return [
+        { url: routes.toCDEGitspaces({ space }), label: getString('cde.gitspaces') },
+        { url: routes.toCDEGitspaceDetail({ gitspaceId, space }), label: data?.name || 'Gitspace Name' }
+      ]
+    }
+    return [
+      {
+        url: `/account/${accountIdentifier}/module/cde`,
+        label: `Account: ${accountInfo.name}`
+      },
+      {
+        url: `/account/${accountIdentifier}/module/cde/orgs/${orgIdentifier}`,
+        label: `Organization: ${orgIdentifier}`
+      },
+      {
+        url: `/account/${accountIdentifier}/module/cde/orgs/${orgIdentifier}/projects/${projectIdentifier}`,
+        label: `Project: ${projectIdentifier}`
+      },
+      {
+        url: routes.toCDEGitspaces({ space }),
+        label: getString('cde.gitspaces')
+      },
+      { url: routes.toCDEGitspaceDetail({ gitspaceId, space }), label: data?.name || 'Gitspace Name' }
+    ]
+  }
 
   return (
     <>
       <Page.Header
         title=""
-        breadcrumbs={
-          <Breadcrumbs
-            links={[
-              { url: routes.toCDEGitspaces({ space }), label: getString('cde.gitspaces') },
-              { url: routes.toCDEGitspaceDetail({ gitspaceId, space }), label: data?.name || 'Gitspace Name' }
-            ]}
-          />
-        }
+        breadcrumbs={<Breadcrumbs className={css.customBreadcumbStyles} links={getBreadcrumbLinks()} />}
       />
       <Page.SubHeader className={css.customSubheader}>
         <Layout.Horizontal width="100%" flex={{ alignItems: 'center', justifyContent: 'space-between' }}>

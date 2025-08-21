@@ -20,6 +20,7 @@ import { Color } from '@harnessio/design-system'
 import { useStrings } from 'framework/strings'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useAppContext } from 'AppContext'
+import { useGetCDEAPIParams } from 'cde-gitness/hooks/useGetCDEAPIParams'
 import { GitnessCreateGitspace } from './GitnessCreateGitspace'
 import { CDECreateGitspace } from './CDECreateGitspace'
 import css from './GitspaceCreate.module.scss'
@@ -27,20 +28,46 @@ import css from './GitspaceCreate.module.scss'
 const GitspaceCreate = () => {
   const { getString } = useStrings()
   const space = useGetSpaceParam()
-  const { standalone, routes } = useAppContext()
+  const { standalone, routes, accountInfo } = useAppContext()
+  const params = useGetCDEAPIParams()
 
+  const getBreadcrumbLinks = () => {
+    if (standalone) {
+      return [
+        { url: routes.toCDEGitspaces({ space }), label: getString('cde.gitspaces') },
+        { url: routes.toCDEGitspacesCreate({ space }), label: getString('cde.createGitspace') }
+      ]
+    }
+    const accountIdentifier = accountInfo.identifier
+    const { orgIdentifier, projectIdentifier } = params
+    return [
+      {
+        url: `/account/${accountIdentifier}/module/cde`,
+        label: `Account: ${accountInfo.name}`
+      },
+      {
+        url: `/account/${accountIdentifier}/module/cde/orgs/${orgIdentifier}`,
+        label: `Organization: ${orgIdentifier}`
+      },
+      {
+        url: `/account/${accountIdentifier}/module/cde/orgs/${orgIdentifier}/projects/${projectIdentifier}`,
+        label: `Project: ${projectIdentifier}`
+      },
+      {
+        url: routes.toCDEGitspaces({ space }),
+        label: getString('cde.gitspaces')
+      },
+      {
+        url: routes.toCDEGitspacesCreate({ space }),
+        label: getString('cde.createGitspace')
+      }
+    ]
+  }
   return (
     <>
       <Page.Header
         title={getString('cde.createGitspace')}
-        breadcrumbs={
-          <Breadcrumbs
-            links={[
-              { url: routes.toCDEGitspaces({ space }), label: getString('cde.gitspaces') },
-              { url: routes.toCDEGitspacesCreate({ space }), label: getString('cde.createGitspace') }
-            ]}
-          />
-        }
+        breadcrumbs={<Breadcrumbs className={css.customBreadcumbStyles} links={getBreadcrumbLinks()} />}
       />
       <Page.Body className={css.main}>
         <Container className={css.titleContainer}>
