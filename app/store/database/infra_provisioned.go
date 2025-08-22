@@ -18,7 +18,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harness/gitness/app/store"
+	appstore "github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -51,7 +51,7 @@ const (
 	infraProvisionedTable = `infra_provisioned`
 )
 
-var _ store.InfraProvisionedStore = (*infraProvisionedStore)(nil)
+var _ appstore.InfraProvisionedStore = (*infraProvisionedStore)(nil)
 
 type infraProvisionedStore struct {
 	db *sqlx.DB
@@ -83,7 +83,7 @@ type infraProvisionedGatewayView struct {
 	Infrastructure             *string `db:"iprov_response_metadata"`
 }
 
-func NewInfraProvisionedStore(db *sqlx.DB) store.InfraProvisionedStore {
+func NewInfraProvisionedStore(db *sqlx.DB) appstore.InfraProvisionedStore {
 	return &infraProvisionedStore{
 		db: db,
 	}
@@ -206,17 +206,19 @@ func (i infraProvisionedStore) FindLatestByGitspaceInstanceIdentifier(
 	return entity.toDTO(), nil
 }
 
-func (i infraProvisionedStore) FindStoppedInfraForGitspaceConfigIdentifier(
+func (i infraProvisionedStore) FindStoppedInfraForGitspaceConfigIdentifierByState(
 	ctx context.Context,
 	gitspaceConfigIdentifier string,
+	state enum.GitspaceInstanceStateType,
 ) (*types.InfraProvisioned, error) {
 	gitsSubQuery := fmt.Sprintf(`
     SELECT gits.gits_id
     FROM %s gits
 	JOIN %s conf ON gits.gits_gitspace_config_id = conf.gconf_id
-    WHERE conf.gconf_uid = '%s' AND (gits.gits_state = 'starting' OR gits.gits_state = 'pending_cleanup')
+    WHERE conf.gconf_uid = '%s' AND gits.gits_state = '%s'
+	ORDER BY gits.gits_created DESC
     LIMIT 1`,
-		gitspaceInstanceTable, gitspaceConfigsTable, gitspaceConfigIdentifier)
+		gitspaceInstanceTable, gitspaceConfigsTable, gitspaceConfigIdentifier, state)
 
 	// Build the main query
 	stmt := database.Builder.
@@ -234,7 +236,8 @@ func (i infraProvisionedStore) FindStoppedInfraForGitspaceConfigIdentifier(
 	db := dbtx.GetAccessor(ctx, i.db)
 	if err := db.GetContext(ctx, entity, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(
-			ctx, err, "Failed to find last stopped infraprovisioned for config %s", gitspaceConfigIdentifier)
+			ctx, err, "Failed to find infraprovisioned for config %s with state %s",
+			gitspaceConfigIdentifier, state)
 	}
 
 	return entity.toDTO(), nil

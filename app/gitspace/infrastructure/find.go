@@ -174,12 +174,26 @@ func (i InfraProvisioner) GetStoppedInfraFromStoredInfo(
 	gitspaceConfig types.GitspaceConfig,
 ) (types.Infrastructure, error) {
 	var infra types.Infrastructure
-	infraProvisioned, err := i.infraProvisionedStore.FindStoppedInfraForGitspaceConfigIdentifier(
-		ctx,
-		gitspaceConfig.Identifier,
-	)
-	if err != nil {
-		return infra, fmt.Errorf("failed to find infraProvisioned: %w", err)
+	var infraProvisioned *types.InfraProvisioned
+	var err error
+	if gitspaceConfig.IsMarkedForInfraReset {
+		infraProvisioned, err = i.infraProvisionedStore.FindStoppedInfraForGitspaceConfigIdentifierByState(
+			ctx,
+			gitspaceConfig.Identifier,
+			enum.GitspaceInstanceStatePendingCleanup,
+		)
+		if err != nil {
+			return infra, fmt.Errorf("failed to find infraProvisioned: %w", err)
+		}
+	} else {
+		infraProvisioned, err = i.infraProvisionedStore.FindStoppedInfraForGitspaceConfigIdentifierByState(
+			ctx,
+			gitspaceConfig.Identifier,
+			enum.GitspaceInstanceStateStarting,
+		)
+		if err != nil {
+			return infra, fmt.Errorf("failed to find infraProvisioned: %w", err)
+		}
 	}
 	err = json.Unmarshal([]byte(*infraProvisioned.ResponseMetadata), &infra)
 	if err != nil {

@@ -1439,9 +1439,10 @@ type (
 			spaceID int64,
 			gitspaceInstanceIdentifier string,
 		) (*types.InfraProvisioned, error)
-		FindStoppedInfraForGitspaceConfigIdentifier(
-			ctc context.Context,
+		FindStoppedInfraForGitspaceConfigIdentifierByState(
+			ctx context.Context,
 			gitspaceConfigIdentifier string,
+			state enum.GitspaceInstanceStateType,
 		) (*types.InfraProvisioned, error)
 		Create(ctx context.Context, infraProvisioned *types.InfraProvisioned) error
 		Delete(ctx context.Context, id int64) error
