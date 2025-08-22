@@ -27,6 +27,9 @@ import (
 	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/opencontainers/go-digest"
+	"github.com/rs/zerolog/log"
 )
 
 func (c *APIController) QuarantineFilePath(
@@ -94,14 +97,38 @@ func (c *APIController) QuarantineFilePath(
 
 	var versionID int64
 	var rootPath string
-	if version != nil {
+	if version != nil { //nolint:nestif
+		if regInfo.PackageType == artifact.PackageTypeDOCKER || regInfo.PackageType == artifact.PackageTypeHELM {
+			parsedDigest, err := digest.Parse(*version)
+			if err != nil {
+				log.Ctx(ctx).Err(err).Msg("failed to parse digest for create quarantine file path")
+				return artifact.QuarantineFilePath500JSONResponse{
+					InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
+						*GetErrorResponse(http.StatusInternalServerError, err.Error()),
+					),
+				}, nil
+			}
+			typesDigest, err := types.NewDigest(parsedDigest)
+			if err != nil {
+				log.Ctx(ctx).Err(err).Msg("failed to create types digest for create quarantine file path")
+				return artifact.QuarantineFilePath500JSONResponse{
+					InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
+						*GetErrorResponse(http.StatusInternalServerError, err.Error()),
+					),
+				}, nil
+			}
+			digestVal := typesDigest.String()
+			version = &digestVal
+		}
 		art, err := c.ArtifactStore.GetByName(ctx, img.ID, *version)
-		if errors.Is(err, store.ErrResourceNotFound) {
-			return artifact.QuarantineFilePath400JSONResponse{
-				BadRequestJSONResponse: artifact.BadRequestJSONResponse(
-					*GetErrorResponse(http.StatusNotFound, "version not found"),
-				),
-			}, nil
+		if err != nil {
+			if errors.Is(err, store.ErrResourceNotFound) {
+				return artifact.QuarantineFilePath400JSONResponse{
+					BadRequestJSONResponse: artifact.BadRequestJSONResponse(
+						*GetErrorResponse(http.StatusNotFound, "version not found"),
+					),
+				}, nil
+			}
 		}
 		if err != nil {
 			return artifact.QuarantineFilePath500JSONResponse{
@@ -111,6 +138,17 @@ func (c *APIController) QuarantineFilePath(
 			}, nil
 		}
 		versionID = art.ID
+	}
+
+	var nodeID *string
+	if filePath != "" {
+		if version == nil {
+			return artifact.QuarantineFilePath400JSONResponse{
+				BadRequestJSONResponse: artifact.BadRequestJSONResponse(
+					*GetErrorResponse(http.StatusBadRequest, "version not provided"),
+				),
+			}, nil
+		}
 		rootPath, err = utils.GetFilePath(regInfo.PackageType, artifactName, *version)
 		if err != nil {
 			return artifact.QuarantineFilePath500JSONResponse{
@@ -119,10 +157,6 @@ func (c *APIController) QuarantineFilePath(
 				),
 			}, nil
 		}
-	}
-
-	var nodeID *string
-	if filePath != "" {
 		filePath = path.Join(rootPath, filePath)
 		node, err := c.fileManager.GetNode(ctx, regInfo.RegistryID, filePath)
 		if errors.Is(err, store.ErrResourceNotFound) {
