@@ -327,15 +327,10 @@ const superheroes = [
   'dagger'
 ]
 
-function generateHash(): string {
-  return Math.random().toString(16).substring(2, 6)
-}
-
 export function generateGitspaceName(): string {
   const adjective = adjectives[Math.floor(Math.random() * adjectives.length)]
   const superhero = superheroes[Math.floor(Math.random() * superheroes.length)]
-  const hash = generateHash()
-  return `${adjective}-${superhero}-${hash}`
+  return `${adjective}-${superhero}`
 }
 
 export function getIdentifierFromName(name?: string) {
