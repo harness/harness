@@ -105,3 +105,23 @@ func (a GenericArtifactInfo) GetVersion() string {
 func (a GenericArtifactInfo) GetFileName() string {
 	return a.FileName
 }
+
+// BaseArtifactInfo implements pkg.PackageArtifactInfo interface.
+func (a MavenArtifactInfo) BaseArtifactInfo() ArtifactInfo {
+	return *a.ArtifactInfo
+}
+
+func (a MavenArtifactInfo) GetImageVersion() (exists bool, imageVersion string) {
+	if a.Image != "" && a.Version != "" {
+		return true, JoinWithSeparator(":", a.GroupID, a.ArtifactID, a.Version)
+	}
+	return false, ""
+}
+
+func (a MavenArtifactInfo) GetVersion() string {
+	return a.Version
+}
+
+func (a MavenArtifactInfo) GetFileName() string {
+	return a.FileName
+}

@@ -236,3 +236,17 @@ func LogError(errList errcode.Errors) {
 		log.Error().Err(e1).Msgf("error: %v", e1)
 	}
 }
+
+func (h *Handler) GetPackageArtifactInfo(r *http.Request) (pkg.PackageArtifactInfo, error) {
+	info, e := h.GetArtifactInfo(r, true)
+	if e != nil {
+		return pkg.MavenArtifactInfo{}, e
+	}
+
+	artifactInfo := info.ArtifactInfo
+	artifactInfo.PathPackageType = artifact.PackageTypeMAVEN
+	return pkg.MavenArtifactInfo{
+		ArtifactInfo: artifactInfo,
+		Version:      info.Version,
+	}, nil
+}
