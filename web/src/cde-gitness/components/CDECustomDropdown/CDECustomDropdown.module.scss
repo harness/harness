@@ -70,6 +70,7 @@
 
   .ideListContainer {
     min-height: 50px;
+    max-height: 282px !important;
     overflow-y: auto;
 
     :global {

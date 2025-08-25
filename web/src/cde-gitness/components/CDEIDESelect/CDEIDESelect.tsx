@@ -59,6 +59,11 @@ export const CDEIDESelect = ({
     [filteredIdeOptions]
   )
 
+  const aiNativeOptions = useMemo(
+    () => filteredIdeOptions.filter(val => val.group === groupEnums.AI_NATIVE),
+    [filteredIdeOptions]
+  )
+
   return (
     <CDECustomDropdown
       ideDropdown={true}
@@ -98,7 +103,22 @@ export const CDEIDESelect = ({
                 onChange={onChange}
               />
             )}
-            {vscodeOptions.length > 0 && jetbrainOptions.length > 0 && <hr className={css.divider} />}
+
+            {vscodeOptions.length > 0 && (jetbrainOptions.length > 0 || aiNativeOptions.length > 0) && (
+              <hr className={css.divider} />
+            )}
+
+            {aiNativeOptions.length > 0 && (
+              <CustomIDESection
+                options={aiNativeOptions}
+                heading={getString('cde.ide.byainative')}
+                value={selectedIde}
+                onChange={onChange}
+              />
+            )}
+
+            {jetbrainOptions.length > 0 && aiNativeOptions.length > 0 && <hr className={css.divider} />}
+
             {jetbrainOptions.length > 0 && (
               <CustomIDESection
                 options={jetbrainOptions}

@@ -1441,6 +1441,7 @@ export interface StringsMap {
   'cde.deleteMachineSuccess': string
   'cde.deleteSuccess': string
   'cde.details.actions': string
+  'cde.details.connectToWindsurf': string
   'cde.details.containerLogs': string
   'cde.details.containerLogsSubText': string
   'cde.details.fetchingDetails': string
@@ -1454,6 +1455,7 @@ export interface StringsMap {
   'cde.details.noData': string
   'cde.details.noLogsFound': string
   'cde.details.openBrowser': string
+  'cde.details.openCursor': string
   'cde.details.openEditor': string
   'cde.details.openJetBrain': string
   'cde.details.provisioningGitspace': string
@@ -1585,10 +1587,13 @@ export interface StringsMap {
   'cde.hours': string
   'cde.id': string
   'cde.ide.browser': string
+  'cde.ide.byainative': string
   'cde.ide.byjetbrain': string
   'cde.ide.bymircosoft': string
   'cde.ide.clion': string
+  'cde.ide.cursor': string
   'cde.ide.desktop': string
+  'cde.ide.errorEmptyURL': string
   'cde.ide.goland': string
   'cde.ide.intellij': string
   'cde.ide.openBrowser': string
@@ -1601,6 +1606,7 @@ export interface StringsMap {
   'cde.ide.title': string
   'cde.ide.vsCode': string
   'cde.ide.webstorm': string
+  'cde.ide.windsurf': string
   'cde.importInto': string
   'cde.infraProvider': string
   'cde.introText1': string
@@ -1667,6 +1673,7 @@ export interface StringsMap {
   'cde.settings.cloudRegionsAndMachineTypes': string
   'cde.settings.codeEditors': string
   'cde.settings.codeEditorsDescription': string
+  'cde.settings.editors.aiNative': string
   'cde.settings.editors.jetbrains': string
   'cde.settings.editors.vsCode': string
   'cde.settings.gitProviders': string

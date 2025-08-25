@@ -14,12 +14,14 @@ type EditorSection = { titleKey: keyof StringsMap; editors: Editor[] }
 
 const editorSectionsTemplate: EditorSection[] = [
   { titleKey: 'cde.settings.editors.vsCode', editors: [] },
+  { titleKey: 'cde.settings.editors.aiNative', editors: [] },
   { titleKey: 'cde.settings.editors.jetbrains', editors: [] }
 ]
 
 const groupMapping: Record<string, keyof StringsMap> = {
   [groupEnums.VSCODE]: 'cde.settings.editors.vsCode',
-  [groupEnums.JETBRAIN]: 'cde.settings.editors.jetbrains'
+  [groupEnums.JETBRAIN]: 'cde.settings.editors.jetbrains',
+  [groupEnums.AI_NATIVE]: 'cde.settings.editors.aiNative'
 }
 
 const CodeEditors: React.FC = () => {

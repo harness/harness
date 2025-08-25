@@ -122,6 +122,7 @@ settings:
   editors:
     vsCode: By Microsoft
     jetbrains: By JetBrains
+    aiNative: AI Native IDEs
   other: Other
   regions:
     availableCloudRegions: Available Cloud Regions
@@ -378,6 +379,8 @@ update:
   gitspaceUpdateNote : Your changes won't be lost by updating the IDE or machine type. Your Gitspace has to be restarted after the update.
 details:
   actions: More Actions
+  openCursor: Open Cursor
+  connectToWindsurf: Connect to Windsurf
   openEditor: Open VS Code Editor
   openBrowser: Open VS Code Online
   openJetBrain: Open JetBrains Gateway
@@ -418,13 +421,17 @@ ide:
   rubymine: RubyMine
   pycharm: PyCharm
   rider: Rider
+  windsurf: Windsurf
+  cursor: Cursor
   bymircosoft: By Microsoft
   byjetbrain: By JetBrains
+  byainative: AI Native IDEs
   title: IDE
   selectIDE: Select IDE
   vsCode: VS Code
   openVSCode: Open in VS Code Desktop
   openBrowser: Open in Browser
+  errorEmptyURL : Base URL not set, refresh and try again
 regionMachineType: Region & Machine Type
 infraProvider: Infra Provider
 minuteUsage: Minute Usage

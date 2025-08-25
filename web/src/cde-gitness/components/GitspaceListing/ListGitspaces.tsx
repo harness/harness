@@ -55,7 +55,6 @@ import web from 'cde-gitness/assests/web.svg?url'
 import deleteIcon from 'cde-gitness/assests/delete.svg?url'
 import { useGitspaceActions } from 'cde-gitness/hooks/useGitspaceActions'
 import { useDeleteGitspaces } from 'cde-gitness/hooks/useDeleteGitspaces'
-import { useOpenVSCodeBrowserURL } from 'cde-gitness/hooks/useOpenVSCodeBrowserURL'
 import { getGitspaceChanges, getIconByRepoType } from 'cde-gitness/utils/SelectRepository.utils'
 import { useInfraListingApi } from 'cde-gitness/hooks/useGetInfraListProvider'
 import { usePaginationProps } from 'cde-gitness/hooks/usePaginationProps'
@@ -395,13 +394,9 @@ const ActionMenu = ({
   const { getString } = useStrings()
   const { showError } = useToaster()
   const { instance, ide, identifier = '', space_path = '', state } = data
-  const { url = '' } = instance || {}
   const history = useHistory()
   const { routes, standalone } = useAppContext()
-  const [accountIdentifier, orgIdentifier, projectIdentifier] = space_path?.split('/') || []
   const disabledActionButtons = [GitspaceStatus.STARTING, GitspaceStatus.STOPPING].includes(state as GitspaceStatus)
-
-  const { refetchToken, setSelectedRowUrl } = useOpenVSCodeBrowserURL()
 
   return (
     <Container
@@ -416,26 +411,9 @@ const ActionMenu = ({
             onClick={e => {
               e.preventDefault()
               e.stopPropagation()
-              if (ide === IDEType.VSCODE) {
-                const params = standalone ? '?gitness' : ''
-                const projectOrSpace = standalone ? space_path : projectIdentifier
-                const vscodeExtensionCode = standalone ? 'harness-inc.oss-gitspaces' : 'harness-inc.gitspaces'
-                const vsCodeURL = `vscode://${vscodeExtensionCode}/${projectOrSpace}/${identifier}${params}`
-                window.open(vsCodeURL, '_blank')
-              } else {
-                if (standalone) {
-                  window.open(url || '', '_blank')
-                } else {
-                  setSelectedRowUrl(url || '')
-                  refetchToken({
-                    pathParams: {
-                      accountIdentifier,
-                      projectIdentifier,
-                      orgIdentifier,
-                      gitspace_identifier: identifier || ''
-                    }
-                  })
-                }
+              const url = instance?.plugin_url ? instance?.plugin_url : instance?.url
+              {
+                !url ? showError(getString('cde.ide.errorEmptyURL')) : window.open(`${url}`, '_blank')
               }
             }}
             text={
@@ -910,8 +888,8 @@ export const ListGitspaces = ({
         }
       ]
 
-  const { refetchToken, setSelectedRowUrl } = useOpenVSCodeBrowserURL()
   const { page, pageSize, totalItems, totalPages } = pageConfig
+  const { showError } = useToaster()
 
   const paginationProps = usePaginationProps({
     itemCount: totalItems,
@@ -928,29 +906,10 @@ export const ListGitspaces = ({
         <TableV2<TypesGitspaceConfig>
           className={standalone ? css.table : css.cdeTable}
           onRowClick={row => {
-            const [accountIdentifier, orgIdentifier, projectIdentifier] = row?.space_path?.split('/') || []
-
             if (row?.state === GitspaceStatus.RUNNING) {
-              if (row?.ide === IDEType.VSCODE) {
-                const params = standalone ? '?gitness' : ''
-                const projectOrSpace = standalone ? row?.space_path : projectIdentifier
-                const vscodeExtensionCode = standalone ? 'harness-inc.oss-gitspaces' : 'harness-inc.gitspaces'
-                const vsCodeURL = `vscode://${vscodeExtensionCode}/${projectOrSpace}/${row?.identifier}${params}`
-                window.open(vsCodeURL, '_blank')
-              } else {
-                if (standalone) {
-                  window.open(row?.instance?.url || '', '_blank')
-                } else {
-                  setSelectedRowUrl(row.instance?.url || '')
-                  refetchToken({
-                    pathParams: {
-                      accountIdentifier,
-                      projectIdentifier,
-                      orgIdentifier,
-                      gitspace_identifier: row.identifier || ''
-                    }
-                  })
-                }
+              const rowUrl = row?.instance?.plugin_url ? row?.instance?.plugin_url : row?.instance?.url
+              {
+                !rowUrl ? showError(getString('cde.ide.errorEmptyURL')) : window.open(`${rowUrl}`, '_blank')
               }
             } else if (row?.state === GitspaceStatus.STOPPED) {
               setCurrentRow(row)

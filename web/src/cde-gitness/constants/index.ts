@@ -24,6 +24,8 @@ import rubyMineIcon from 'cde-gitness/assests/rubyMine.svg?url'
 import webStormIcon from 'cde-gitness/assests/webStorm.svg?url'
 import goLandIcon from 'cde-gitness/assests/goLand.svg?url'
 import riderIcon from 'cde-gitness/assests/rider.svg?url'
+import windsurfIcon from 'cde-gitness/assests/windsurf.svg?url'
+import cursorIcon from 'cde-gitness/assests/cursor.svg?url'
 import type { StringsMap } from 'framework/strings/stringTypes'
 import type { TypesInfraProviderResource } from 'services/cde'
 
@@ -42,7 +44,9 @@ export enum IDEType {
   CLION = 'clion',
   PHPSTORM = 'phpstorm',
   RUBYMINE = 'rubymine',
-  RIDER = 'rider'
+  RIDER = 'rider',
+  WINDSURF = 'windsurf',
+  CURSOR = 'cursor'
 }
 
 export interface DelegateSelector {
@@ -114,7 +118,8 @@ export interface IDEOption {
 
 export const groupEnums = {
   VSCODE: 'vscode',
-  JETBRAIN: 'jetbrain'
+  JETBRAIN: 'jetbrain',
+  AI_NATIVE: 'ai_native'
 }
 
 export const getIDETypeOptions = (getString: any): IDEOption[] => [
@@ -132,6 +137,22 @@ export const getIDETypeOptions = (getString: any): IDEOption[] => [
     allowSSH: true,
     group: groupEnums.VSCODE,
     buttonText: getString('cde.details.openEditor')
+  },
+  {
+    label: getString('cde.ide.cursor'),
+    value: IDEType.CURSOR,
+    icon: cursorIcon,
+    allowSSH: true,
+    group: groupEnums.AI_NATIVE,
+    buttonText: getString('cde.details.openCursor')
+  },
+  {
+    label: getString('cde.ide.windsurf'),
+    value: IDEType.WINDSURF,
+    icon: windsurfIcon,
+    allowSSH: true,
+    group: groupEnums.AI_NATIVE,
+    buttonText: getString('cde.details.connectToWindsurf')
   },
   {
     label: getString('cde.ide.clion'),

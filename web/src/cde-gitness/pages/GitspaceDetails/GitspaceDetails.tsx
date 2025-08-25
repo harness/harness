@@ -53,7 +53,6 @@ import { getErrorMessage } from 'utils/Utils'
 import { usePolling } from 'cde-gitness/hooks/usePolling'
 import deleteIcon from 'cde-gitness/assests/delete.svg?url'
 import pauseIcon from 'cde-gitness/assests/pause.svg?url'
-import { IDEType } from 'cde-gitness/constants'
 import homeIcon from 'cde-gitness/assests/home.svg?url'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { useGitspaceDetails } from 'cde-gitness/hooks/useGitspaceDetails'
@@ -61,7 +60,6 @@ import { useGitspaceEvents } from 'cde-gitness/hooks/useGitspaceEvents'
 import { useGitspaceActions } from 'cde-gitness/hooks/useGitspaceActions'
 import { useDeleteGitspaces } from 'cde-gitness/hooks/useDeleteGitspaces'
 import { useGitspacesLogs } from 'cde-gitness/hooks/useGitspaceLogs'
-import { useOpenVSCodeBrowserURL } from 'cde-gitness/hooks/useOpenVSCodeBrowserURL'
 import { ErrorCard } from 'cde-gitness/components/ErrorCard/ErrorCard'
 import CopyButton from 'cde-gitness/components/CopyButton/CopyButton'
 import ContainerLogs from '../../components/ContainerLogs/ContainerLogs'
@@ -129,6 +127,7 @@ const GitspaceDetails = () => {
 
   const [startPolling, setStartPolling] = useState<GitspaceActionType | undefined>(undefined)
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false)
+
   const { loading, data, refetch, error } = useGitspaceDetails({ gitspaceId })
 
   const { data: eventData, refetch: refetchEventData } = useGitspaceEvents({ gitspaceId })
@@ -278,8 +277,6 @@ const GitspaceDetails = () => {
     accountIdentifier: accountIdentifier || '',
     lazy: !accountIdentifier || standalone
   })
-
-  const { refetchToken, setSelectedRowUrl } = useOpenVSCodeBrowserURL()
 
   const accordionRef = useRef<AccordionHandle | null>(null)
   const myRef = useRef<any | null>(null)
@@ -519,26 +516,9 @@ const GitspaceDetails = () => {
                       onClick={e => {
                         e.preventDefault()
                         e.stopPropagation()
-                        if (data?.ide === IDEType.VSCODE) {
-                          const params = standalone ? '?gitness' : ''
-                          const projectOrSpace = standalone ? space : projectIdentifier
-                          const vscodeExtensionCode = standalone ? 'harness-inc.oss-gitspaces' : 'harness-inc.gitspaces'
-                          const vsCodeURL = `vscode://${vscodeExtensionCode}/${projectOrSpace}/${data?.identifier}${params}`
-                          window.open(vsCodeURL, '_blank')
-                        } else {
-                          if (standalone) {
-                            window.open(data?.instance?.url || '', '_blank')
-                          } else {
-                            setSelectedRowUrl(data?.instance?.url || '')
-                            refetchToken({
-                              pathParams: {
-                                accountIdentifier,
-                                projectIdentifier,
-                                orgIdentifier,
-                                gitspace_identifier: data?.identifier || ''
-                              }
-                            })
-                          }
+                        const url = data?.instance?.plugin_url ? data?.instance?.plugin_url : data?.instance?.url
+                        {
+                          !url ? showError(getString('cde.ide.errorEmptyURL')) : window.open(`${url}`, '_blank')
                         }
                       }}>
                       {selectedIde?.buttonText}

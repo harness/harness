@@ -100,6 +100,8 @@ export type EnumIDEType =
   | 'phpstorm'
   | 'rubymine'
   | 'rider'
+  | 'windsurf'
+  | 'cursor'
 
 export type EnumInfraProviderType = 'docker' | 'harness_gcp' | 'harness_cloud' | 'hybrid_vm_gcp' | 'hybrid_vm_aws'
 
@@ -305,6 +307,7 @@ export type TypesGitspaceInstance = {
   total_time_used?: number
   updated?: number
   url?: string | null
+  plugin_url?: string | null
 } | null
 
 export interface TypesGitspaceRegionMachines {
