@@ -22,6 +22,8 @@ import (
 	"github.com/harness/gitness/infraprovider"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 // Find finds the provisioned infra resources for the gitspace instance.
@@ -183,16 +185,17 @@ func (i InfraProvisioner) GetStoppedInfraFromStoredInfo(
 			enum.GitspaceInstanceStatePendingCleanup,
 		)
 		if err != nil {
-			return infra, fmt.Errorf("failed to find infraProvisioned: %w", err)
+			log.Warn().Err(err).Msgf("failed to find infraProvisioned with state pending cleanup: %v", err)
 		}
-	} else {
+	}
+	if infraProvisioned == nil {
 		infraProvisioned, err = i.infraProvisionedStore.FindStoppedInfraForGitspaceConfigIdentifierByState(
 			ctx,
 			gitspaceConfig.Identifier,
 			enum.GitspaceInstanceStateStarting,
 		)
 		if err != nil {
-			return infra, fmt.Errorf("failed to find infraProvisioned: %w", err)
+			return infra, fmt.Errorf("failed to find infraProvisioned with state starting: %w", err)
 		}
 	}
 	err = json.Unmarshal([]byte(*infraProvisioned.ResponseMetadata), &infra)
