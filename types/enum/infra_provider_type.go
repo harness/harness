@@ -50,6 +50,10 @@ func (p *InfraProviderType) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &s); err != nil {
 		return err
 	}
+	if s == "" {
+		*p = ""
+		return nil
+	}
 	for _, v := range providerTypes {
 		if InfraProviderType(s) == v {
 			*p = v

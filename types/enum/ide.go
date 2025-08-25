@@ -76,6 +76,11 @@ func (i *IDEType) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &s); err != nil {
 		return err
 	}
+	// Accept empty IDE type without failing JSON decode
+	if s == "" {
+		*i = ""
+		return nil
+	}
 	for _, v := range ideTypes {
 		if IDEType(s) == v {
 			*i = v
