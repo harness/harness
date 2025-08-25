@@ -426,7 +426,8 @@ type Config struct {
 
 		VSCode struct {
 			// Port is the port on which the SSH server for VSCode will be accessible.
-			Port int `envconfig:"GITNESS_IDE_VSCODE_PORT" default:"8088"`
+			Port       int    `envconfig:"GITNESS_IDE_VSCODE_PORT" default:"8088"`
+			PluginName string `envconfig:"GITNESS_IDE_VSCODE_Plugin_Name" default:"harness-inc.oss-gitspaces"`
 		}
 
 		Cursor struct {

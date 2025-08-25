@@ -284,3 +284,7 @@ func (v *VSCodeWeb) GenerateURL(absoluteRepoPath, host, port, _ string) string {
 
 	return ideURL.String()
 }
+
+func (v *VSCodeWeb) GeneratePluginURL(_, _ string) string {
+	return ""
+}

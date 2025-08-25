@@ -58,6 +58,9 @@ type IDE interface {
 
 	// GenerateURL returns the url to redirect user to ide from gitspace
 	GenerateURL(absoluteRepoPath, host, port, user string) string
+
+	// GenerateURL returns the url to redirect user to ide from gitspace
+	GeneratePluginURL(projectName, gitspaceInstaceUID string) string
 }
 
 func getHomePath(absoluteRepoPath string) string {

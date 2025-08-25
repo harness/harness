@@ -313,3 +313,7 @@ func (jb *JetBrainsIDE) GenerateURL(absoluteRepoPath, host, port, user string) s
 
 	return ideURL.String()
 }
+
+func (jb *JetBrainsIDE) GeneratePluginURL(_, _ string) string {
+	return ""
+}

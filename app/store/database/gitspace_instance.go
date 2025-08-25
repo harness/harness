@@ -55,7 +55,9 @@ const (
 		gits_active_time_started,
 		gits_active_time_ended,
 		gits_has_git_changes,
-		gits_error_message`
+		gits_error_message,
+		gits_ssh_command,
+		gits_plugin_url`
 	gitspaceInstanceSelectColumns = "gits_id," + gitspaceInstanceInsertColumns
 	gitspaceInstanceTable         = `gitspaces`
 )
@@ -64,6 +66,8 @@ type gitspaceInstance struct {
 	ID               int64                          `db:"gits_id"`
 	GitSpaceConfigID int64                          `db:"gits_gitspace_config_id"`
 	URL              null.String                    `db:"gits_url"`
+	SSHCommand       null.String                    `db:"gits_ssh_command"`
+	PluginURL        null.String                    `db:"gits_plugin_url"`
 	State            enum.GitspaceInstanceStateType `db:"gits_state"`
 	// TODO: migrate to principal int64 id to use principal cache and consistent with Harness code.
 	UserUID           string                  `db:"gits_user_uid"`
@@ -216,6 +220,8 @@ func (g gitspaceInstanceStore) Create(ctx context.Context, gitspaceInstance *typ
 			gitspaceInstance.ActiveTimeEnded,
 			gitspaceInstance.HasGitChanges,
 			gitspaceInstance.ErrorMessage,
+			gitspaceInstance.SSHCommand,
+			gitspaceInstance.PluginURL,
 		).
 		Suffix(ReturningClause + "gits_id")
 	sql, args, err := stmt.ToSql()
@@ -263,6 +269,14 @@ func (g gitspaceInstanceStore) Update(
 	}
 	if gitspaceInstance.ErrorMessage != nil {
 		stmt = stmt.Set("gits_error_message", *gitspaceInstance.ErrorMessage)
+	}
+
+	if gitspaceInstance.SSHCommand != nil {
+		stmt = stmt.Set("gits_ssh_command", *gitspaceInstance.SSHCommand)
+	}
+
+	if gitspaceInstance.PluginURL != nil {
+		stmt = stmt.Set("gits_plugin_url", *gitspaceInstance.PluginURL)
 	}
 
 	sql, args, err := stmt.ToSql()
@@ -418,6 +432,8 @@ func mapDBToGitspaceInstance(
 		Identifier:        in.Identifier,
 		GitSpaceConfigID:  in.GitSpaceConfigID,
 		URL:               in.URL.Ptr(),
+		SSHCommand:        in.SSHCommand.Ptr(),
+		PluginURL:         in.PluginURL.Ptr(),
 		State:             in.State,
 		UserID:            in.UserUID,
 		ResourceUsage:     in.ResourceUsage.Ptr(),

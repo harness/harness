@@ -108,3 +108,7 @@ func (c *Cursor) GenerateURL(absoluteRepoPath, host, port, user string) string {
 
 	return ideURL.String()
 }
+
+func (c *Cursor) GeneratePluginURL(_, _ string) string {
+	return ""
+}

@@ -109,3 +109,7 @@ func (w *Windsurf) GenerateURL(absoluteRepoPath, host, port, user string) string
 
 	return ideURL.String()
 }
+
+func (w *Windsurf) GeneratePluginURL(_, _ string) string {
+	return ""
+}

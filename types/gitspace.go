@@ -71,6 +71,7 @@ type GitspaceInstance struct {
 	Identifier        string                         `json:"identifier"`
 	URL               *string                        `json:"url,omitempty"`
 	SSHCommand        *string                        `json:"ssh_command,omitempty"`
+	PluginURL         *string                        `json:"plugin_url,omitempty"`
 	State             enum.GitspaceInstanceStateType `json:"state"`
 	UserID            string                         `json:"-"`
 	ResourceUsage     *string                        `json:"resource_usage"`

@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
 	"github.com/harness/gitness/app/gitspace/orchestrator/utils"
 	"github.com/harness/gitness/app/gitspace/scm"
+	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -201,6 +202,11 @@ func (o Orchestrator) FinishResumeStartGitspace(
 
 	sshCommand := generateSSHCommand(startResponse.AbsoluteRepoPath, ideHost, idePort, devcontainerUserName)
 	gitspaceInstance.SSHCommand = &sshCommand
+	pluginURLStr := ideSvc.GeneratePluginURL(
+		getProjectName(provisionedInfra.SpacePath),
+		provisionedInfra.GitspaceInstanceIdentifier,
+	)
+	gitspaceInstance.PluginURL = &pluginURLStr
 
 	now := time.Now().UnixMilli()
 	gitspaceInstance.LastUsed = &now
@@ -237,6 +243,15 @@ func (o Orchestrator) getIDEPort(
 	}
 
 	return strconv.Itoa(provisionedInfra.GitspacePortMappings[idePort.Port].ForwardedPort)
+}
+
+func getProjectName(spacePath string) string {
+	_, projectName, err := paths.DisectLeaf(spacePath)
+	if err != nil {
+		return ""
+	}
+
+	return projectName
 }
 
 // getHost returns the host used to connect to the IDE.

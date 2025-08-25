@@ -40,7 +40,8 @@ const (
 )
 
 type VSCodeConfig struct {
-	Port int
+	Port       int
+	PluginName string
 }
 
 type VSCode struct {
@@ -208,4 +209,14 @@ func (v *VSCode) GenerateURL(absoluteRepoPath, host, port, user string) string {
 	}
 
 	return ideURL.String()
+}
+
+func (v *VSCode) GeneratePluginURL(projectName, gitspaceInstanceUID string) string {
+	deepLinkURL := url.URL{
+		Scheme: "vscode",
+		Host:   "",
+		Path:   fmt.Sprintf("%s/%s/%s", v.config.PluginName, projectName, gitspaceInstanceUID),
+	}
+
+	return deepLinkURL.String()
 }

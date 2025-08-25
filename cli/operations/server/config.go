@@ -449,7 +449,8 @@ func ProvideIDEVSCodeWebConfig(config *types.Config) *ide.VSCodeWebConfig {
 // ProvideIDEVSCodeConfig loads the VSCode IDE config from the main config.
 func ProvideIDEVSCodeConfig(config *types.Config) *ide.VSCodeConfig {
 	return &ide.VSCodeConfig{
-		Port: config.IDE.VSCode.Port,
+		Port:       config.IDE.VSCode.Port,
+		PluginName: config.IDE.VSCode.PluginName,
 	}
 }
 
