@@ -82,7 +82,11 @@ func (c FileSystemStore) Upload(ctx context.Context,
 	return nil
 }
 
-func (c FileSystemStore) GetSignedURL(context.Context, string, time.Time) (string, error) {
+func (c *FileSystemStore) GetSignedURL(
+	context.Context,
+	string,
+	time.Time,
+	...SignURLOption) (string, error) {
 	return "", ErrNotSupported
 }
 

@@ -94,16 +94,32 @@ func (c *GCSStore) Upload(ctx context.Context, file io.Reader, filePath string) 
 	return nil
 }
 
-func (c *GCSStore) GetSignedURL(ctx context.Context, filePath string, expire time.Time) (string, error) {
+func (c *GCSStore) GetSignedURL(
+	ctx context.Context,
+	filePath string,
+	expire time.Time,
+	opts ...SignURLOption) (string, error) {
 	gcsClient, err := c.getClient(ctx)
 	if err != nil {
 		return "", fmt.Errorf("failed to retrieve latest client: %w", err)
 	}
 
+	config := SignURLConfig{
+		Method: http.MethodGet,
+	}
+
+	for _, opt := range opts {
+		opt.Apply(&config)
+	}
+
 	bkt := gcsClient.Bucket(c.config.Bucket)
 	signedURL, err := bkt.SignedURL(filePath, &storage.SignedURLOptions{
-		Method:  http.MethodGet,
-		Expires: expire,
+		Method:          config.Method,
+		Expires:         expire,
+		ContentType:     config.ContentType,
+		Headers:         config.Headers,
+		QueryParameters: config.QueryParameters,
+		Insecure:        config.Insecure,
 	})
 	if err != nil {
 		return "", fmt.Errorf("failed to create signed URL for file %q: %w", filePath, err)
