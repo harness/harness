@@ -16,6 +16,8 @@ package command
 
 import (
 	"fmt"
+	"math"
+	"runtime"
 	"strconv"
 	"strings"
 )
@@ -174,7 +176,8 @@ var descriptions = map[string]builder{
 		flags: NoRefUpdates,
 	},
 	"pack-objects": {
-		flags: NoRefUpdates,
+		flags:   NoRefUpdates,
+		options: configurePackOptions,
 	},
 	"patch-id": {
 		flags: NoRefUpdates | NoEndOfOptions,
@@ -269,10 +272,10 @@ var descriptions = map[string]builder{
 	"upload-pack": {
 		flags: NoRefUpdates,
 		options: func() []CmdOptionFunc {
-			return []CmdOptionFunc{
+			return append([]CmdOptionFunc{
 				WithConfig("uploadpack.allowFilter", "true"),
 				WithConfig("uploadpack.allowAnySHA1InWant", "true"),
-			}
+			}, configurePackOptions()...)
 		},
 	},
 	"version": {
@@ -328,4 +331,24 @@ func validatePositionalArg(arg string) error {
 		return fmt.Errorf("positional arg %q cannot start with dash '-': %w", arg, ErrInvalidArg)
 	}
 	return nil
+}
+
+// threadsConfigValue limits the number of threads to prevent overwhelming the system and
+// exhausting all available CPU resources.
+func threadsConfigValue(numCPUs int) string {
+	return fmt.Sprintf("%d", int(math.Max(1, math.Floor(math.Log2(float64(numCPUs))))))
+}
+
+func configurePackOptions() []CmdOptionFunc {
+	return []CmdOptionFunc{
+		// configuration variable that controls the maximum amount of memory a single thread can use
+		// for the "delta search window" during the packing process. The packing process, performed
+		// by git pack-objects, compresses Git objects (like commits, trees, blobs, and tags)
+		// into a more efficient "packfile" format.
+		WithConfig("pack.windowMemory", "100m"),
+		// configuration variable which controls the number of threads used during packing operations,
+		// specifically when resolving deltas and searching for optimal delta matches. This setting is
+		// relevant for commands like git repack and git pack-objects.
+		WithConfig("pack.threads", threadsConfigValue(runtime.NumCPU())),
+	}
 }
