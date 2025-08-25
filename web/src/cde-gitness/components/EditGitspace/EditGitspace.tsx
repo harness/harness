@@ -61,6 +61,7 @@ interface EditGitspaceProps {
       disk: string
       cpu: string
       memory: string
+      persistent_disk_type: string
     }
   }
   gitspaceSettings: TypesGitspaceSettingsResponse | null
@@ -162,7 +163,10 @@ export const EditGitspace: React.FC<EditGitspaceProps> = ({
           config_identifier: gitspaceData.resource.config_identifier,
           cpu: gitspaceData.resource.cpu || '',
           memory: gitspaceData.resource.memory || '',
-          disk: gitspaceData.resource.disk || ''
+          disk: gitspaceData.resource.disk || '',
+          metadata: {
+            persistent_disk_type: gitspaceData.resource.persistent_disk_type || ''
+          }
         } as TypesInfraProviderResource
       ]
     }

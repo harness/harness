@@ -70,14 +70,15 @@ export const SelectEditMachine = ({
 
   const machineTypes = useMemo(() => {
     return options.map(item => {
-      const { cpu, disk, memory, identifier, name, space_path } = item
+      const { cpu, disk, memory, identifier, name, space_path, metadata } = item
       return {
         identifier,
         label: name,
         cpu,
         disk,
         memory,
-        space_path
+        space_path,
+        disk_type: metadata?.persistent_disk_type
       }
     })
   }, [options])
@@ -145,7 +146,8 @@ export const SelectEditMachine = ({
                                 {getString('cde.memory')}: {item.memory?.toUpperCase()}
                               </Text>
                               <Text padding={'small'} className={css.tags} font={{ variation: FontVariation.SMALL }}>
-                                {getString('cde.disk')}: {item.disk?.toUpperCase()}
+                                {getString('cde.disk')}: {item.disk?.toUpperCase()}GB{' '}
+                                {item.disk_type ? `(${item.disk_type})` : ''}
                               </Text>
                             </Layout.Horizontal>
                           </Layout.Vertical>

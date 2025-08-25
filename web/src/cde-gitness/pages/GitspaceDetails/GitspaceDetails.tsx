@@ -708,7 +708,8 @@ const GitspaceDetails = () => {
                       region: data.resource.region || '',
                       disk: data.resource.disk || '',
                       cpu: data.resource.cpu || '',
-                      memory: data.resource.memory || ''
+                      memory: data.resource.memory || '',
+                      persistent_disk_type: data.resource.metadata?.persistent_disk_type || ''
                     }
                   : undefined
             }}

@@ -756,7 +756,8 @@ export const RenderActions = ({ row, refreshList, gitspaceSettings }: RenderActi
                 region: details.resource.region || '',
                 disk: details.resource.disk || '',
                 cpu: details.resource.cpu || '',
-                memory: details.resource.memory || ''
+                memory: details.resource.memory || '',
+                persistent_disk_type: details.resource.metadata?.persistent_disk_type || ''
               }
             }}
           />
