@@ -53,3 +53,13 @@ distro_name() {
 
   uname -sr
 }
+
+architecture() {
+  local arch=$(uname -m)
+  case "$arch" in
+    x86_64|amd64) echo "x86_64" ;;
+    aarch64|arm64) echo "aarch64" ;;
+    armv7l) echo "armv7hl" ;;
+    *) echo "$arch" ;;
+  esac
+}
