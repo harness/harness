@@ -173,13 +173,13 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 
 	baseCommitSHA := params.BaseSHA
 	if baseCommitSHA.IsEmpty() {
-		baseCommitSHA, err = s.git.ResolveRev(ctx, repoPath, params.BaseBranch)
+		baseCommitSHA, err = s.git.ResolveRev(ctx, repoPath, api.EnsureBranchPrefix(params.BaseBranch))
 		if err != nil {
 			return MergeOutput{}, fmt.Errorf("failed to get base branch commit SHA: %w", err)
 		}
 	}
 
-	headCommitSHA, err := s.git.ResolveRev(ctx, repoPath, params.HeadBranch)
+	headCommitSHA, err := s.git.ResolveRev(ctx, repoPath, api.EnsureBranchPrefix(params.HeadBranch))
 	if err != nil {
 		return MergeOutput{}, fmt.Errorf("failed to get head branch commit SHA: %w", err)
 	}

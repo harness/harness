@@ -44,6 +44,14 @@ type BranchFilter struct {
 // BranchPrefix base dir of the branch information file store on git.
 const BranchPrefix = "refs/heads/"
 
+// EnsureBranchPrefix ensures the ref always has "refs/heads/" as prefix.
+func EnsureBranchPrefix(ref string) string {
+	if !strings.HasPrefix(ref, BranchPrefix) {
+		return BranchPrefix + ref
+	}
+	return ref
+}
+
 // GetBranch gets an existing branch.
 func (g *Git) GetBranch(
 	ctx context.Context,
