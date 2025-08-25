@@ -79,7 +79,7 @@ func (jb *JetBrainsIDE) port() int {
 		return jb.config.RubyMinePort
 	case enum.IDETypeRider:
 		return jb.config.RiderPort
-	case enum.IDETypeVSCode, enum.IDETypeCursor, enum.IDETypeWindsurf, enum.IDETypeSSH:
+	case enum.IDETypeVSCode, enum.IDETypeCursor, enum.IDETypeWindsurf:
 		return 0
 	case enum.IDETypeVSCodeWeb:
 		// IDETypeVSCodeWeb is not JetBrainsIDE

@@ -70,6 +70,7 @@ type GitspaceInstance struct {
 	GitSpaceConfigID  int64                          `json:"-"`
 	Identifier        string                         `json:"identifier"`
 	URL               *string                        `json:"url,omitempty"`
+	SSHCommand        *string                        `json:"ssh_command,omitempty"`
 	State             enum.GitspaceInstanceStateType `json:"state"`
 	UserID            string                         `json:"-"`
 	ResourceUsage     *string                        `json:"resource_usage"`

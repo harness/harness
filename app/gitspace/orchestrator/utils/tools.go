@@ -36,8 +36,20 @@ func InstallTools(
 			return err
 		}
 		return nil
-	case enum.IDETypeVSCode, enum.IDETypeCursor, enum.IDETypeWindsurf, enum.IDETypeSSH:
+	case enum.IDETypeVSCode:
 		err := InstallToolsForVsCode(ctx, exec, gitspaceLogger)
+		if err != nil {
+			return err
+		}
+		return nil
+	case enum.IDETypeCursor:
+		err := InstallToolsForCursor(ctx, exec, gitspaceLogger)
+		if err != nil {
+			return err
+		}
+		return nil
+	case enum.IDETypeWindsurf:
+		err := InstallToolsForWindsurf(ctx, exec, gitspaceLogger)
 		if err != nil {
 			return err
 		}
@@ -124,5 +136,53 @@ func InstallToolsForJetBrains(
 		return fmt.Errorf("failed to install tools for %s: %w", ideType, err)
 	}
 	gitspaceLogger.Info(fmt.Sprintf("Successfully installed tools for %s in container", ideType))
+	return nil
+}
+
+func InstallToolsForWindsurf(
+	ctx context.Context,
+	exec *devcontainer.Exec,
+	gitspaceLogger types.GitspaceLogger,
+) error {
+	script, err := GenerateScriptFromTemplate(
+		templateWindsurfToolsInstallation, &types.InstallToolsPayload{
+			OSInfoScript: osDetectScript,
+		})
+	if err != nil {
+		return fmt.Errorf(
+			"failed to generate scipt to install tools for windsurf from template %s: %w",
+			templateWindsurfToolsInstallation, err)
+	}
+
+	gitspaceLogger.Info("Installing tools for windsurf in container")
+	err = exec.ExecuteCommandInHomeDirAndLog(ctx, script, true, gitspaceLogger, false)
+	if err != nil {
+		return fmt.Errorf("failed to install tools for windsurf: %w", err)
+	}
+	gitspaceLogger.Info("Successfully installed tools for windsurf")
+	return nil
+}
+
+func InstallToolsForCursor(
+	ctx context.Context,
+	exec *devcontainer.Exec,
+	gitspaceLogger types.GitspaceLogger,
+) error {
+	script, err := GenerateScriptFromTemplate(
+		templateCursorToolsInstallation, &types.InstallToolsPayload{
+			OSInfoScript: osDetectScript,
+		})
+	if err != nil {
+		return fmt.Errorf(
+			"failed to generate scipt to install tools for cursor from template %s: %w",
+			templateCursorToolsInstallation, err)
+	}
+
+	gitspaceLogger.Info("Installing tools for cursor in container")
+	err = exec.ExecuteCommandInHomeDirAndLog(ctx, script, true, gitspaceLogger, false)
+	if err != nil {
+		return fmt.Errorf("failed to install tools for cursor: %w", err)
+	}
+	gitspaceLogger.Info("Successfully installed tools for cursor")
 	return nil
 }

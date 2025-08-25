@@ -29,6 +29,8 @@ const (
 	templateVsCodeWebToolsInstallation = "install_tools_vs_code_web.sh"
 	templateVsCodeToolsInstallation    = "install_tools_vs_code.sh"
 	templateIntellijToolsInstallation  = "install_tools_intellij.sh"
+	templateWindsurfToolsInstallation  = "install_tools_windsurf.sh"
+	templateCursorToolsInstallation    = "install_tools_cursor.sh"
 	templateSetEnv                     = "set_env.sh"
 	templateGitInstallScript           = "install_git.sh"
 	templateSetupGitCredentials        = "setup_git_credentials.sh" // nolint:gosec

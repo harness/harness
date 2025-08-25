@@ -192,8 +192,15 @@ func (o Orchestrator) FinishResumeStartGitspace(
 		}
 	}
 
-	ideURLString := generateIDEURL(provisionedInfra, ideSvc, startResponse)
+	idePort := o.getIDEPort(provisionedInfra, ideSvc, startResponse)
+	ideHost := o.getHost(provisionedInfra)
+	devcontainerUserName := o.getUserName(provisionedInfra, startResponse)
+
+	ideURLString := ideSvc.GenerateURL(startResponse.AbsoluteRepoPath, ideHost, idePort, devcontainerUserName)
 	gitspaceInstance.URL = &ideURLString
+
+	sshCommand := generateSSHCommand(startResponse.AbsoluteRepoPath, ideHost, idePort, devcontainerUserName)
+	gitspaceInstance.SSHCommand = &sshCommand
 
 	now := time.Now().UnixMilli()
 	gitspaceInstance.LastUsed = &now
@@ -217,31 +224,52 @@ func (o Orchestrator) FinishResumeStartGitspace(
 	return *gitspaceInstance, nil
 }
 
-func generateIDEURL(
+// getIDEPort returns the port used to connect to the IDE.
+func (o Orchestrator) getIDEPort(
 	provisionedInfra types.Infrastructure,
 	ideSvc ide.IDE,
 	startResponse *response.StartResponse,
 ) string {
 	idePort := ideSvc.Port()
-	var forwardedPort string
 
 	if provisionedInfra.GitspacePortMappings[idePort.Port].PublishedPort == 0 {
-		forwardedPort = startResponse.PublishedPorts[idePort.Port]
-	} else {
-		forwardedPort = strconv.Itoa(provisionedInfra.GitspacePortMappings[idePort.Port].ForwardedPort)
+		return startResponse.PublishedPorts[idePort.Port]
 	}
 
-	host := provisionedInfra.GitspaceHost
+	return strconv.Itoa(provisionedInfra.GitspacePortMappings[idePort.Port].ForwardedPort)
+}
+
+// getHost returns the host used to connect to the IDE.
+func (o Orchestrator) getHost(
+	provisionedInfra types.Infrastructure,
+) string {
 	if provisionedInfra.ProxyGitspaceHost != "" {
-		host = provisionedInfra.ProxyGitspaceHost
+		return provisionedInfra.ProxyGitspaceHost
 	}
 
-	user := startResponse.RemoteUser
+	return provisionedInfra.GitspaceHost
+}
+
+func (o Orchestrator) getUserName(
+	provisionedInfra types.Infrastructure,
+	startResponse *response.StartResponse,
+) string {
 	if provisionedInfra.RoutingKey != "" {
-		user = provisionedInfra.RoutingKey
+		return provisionedInfra.RoutingKey
 	}
 
-	return ideSvc.GenerateURL(startResponse.AbsoluteRepoPath, host, forwardedPort, user)
+	return startResponse.RemoteUser
+}
+
+func generateSSHCommand(absoluteRepoPath, host, port, user string) string {
+	return fmt.Sprintf(
+		// -t flag to ssh to absoluteRepoPath directory
+		"ssh -t -p %s %s@%s 'cd %s; exec $SHELL -l'",
+		port,
+		user,
+		host,
+		absoluteRepoPath,
+	)
 }
 
 // ResumeStopGitspace saves the deprovisioned infra details.

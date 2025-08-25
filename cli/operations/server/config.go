@@ -467,13 +467,6 @@ func ProvideIDEWindsurfConfig(config *types.Config) *ide.WindsurfConfig {
 	}
 }
 
-// ProvideIDESSHConfig loads the SSH IDE config from the main config.
-func ProvideIDESSHConfig(config *types.Config) *ide.SSHConfig {
-	return &ide.SSHConfig{
-		Port: config.IDE.SSH.Port,
-	}
-}
-
 // ProvideIDEJetBrainsConfig loads the IdeType IDE config from the main config.
 func ProvideIDEJetBrainsConfig(config *types.Config) *ide.JetBrainsIDEConfig {
 	return &ide.JetBrainsIDEConfig{

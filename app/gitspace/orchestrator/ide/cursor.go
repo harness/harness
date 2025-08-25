@@ -17,12 +17,17 @@ package ide
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"path/filepath"
+	"strings"
 
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
 	gitspaceTypes "github.com/harness/gitness/app/gitspace/types"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
+
+const cursorURLScheme string = "cursor"
 
 var _ IDE = (*Cursor)(nil)
 
@@ -88,16 +93,18 @@ func (c *Cursor) Type() enum.IDEType {
 }
 
 // GenerateURL returns SSH config snippet that user need to add to ssh config to connect with cursor.
-func (c *Cursor) GenerateURL(_, host, port, user string) string { //nolint:revive // match interface
-	return fmt.Sprintf(`
-Host gitspace-%s-%s
-  HostName %s
-  Port %s
-  User %s
-  StrictHostKeyChecking no`,
-		host, port,
-		host,
-		port,
-		user,
-	)
+func (c *Cursor) GenerateURL(absoluteRepoPath, host, port, user string) string { //nolint:revive // match interface
+	relativeRepoPath := strings.TrimPrefix(absoluteRepoPath, "/")
+	ideURL := url.URL{
+		Scheme: cursorURLScheme,
+		Host:   "", // Empty since we include the host and port in the path
+		Path: fmt.Sprintf(
+			"vscode-remote:/ssh-remote+%s@%s:%s",
+			user,
+			host,
+			filepath.Join(port, relativeRepoPath),
+		),
+	}
+
+	return ideURL.String()
 }

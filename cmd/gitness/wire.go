@@ -294,7 +294,6 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		cliserver.ProvideIDEVSCodeConfig,
 		cliserver.ProvideIDECursorConfig,
 		cliserver.ProvideIDEWindsurfConfig,
-		cliserver.ProvideIDESSHConfig,
 		cliserver.ProvideIDEJetBrainsConfig,
 		instrument.WireSet,
 		docker.ProvideReporter,

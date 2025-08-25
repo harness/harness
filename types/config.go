@@ -439,11 +439,6 @@ type Config struct {
 			Port int `envconfig:"GITNESS_IDE_WINDSURF_PORT" default:"8099"`
 		}
 
-		SSH struct {
-			// Port is the port on which the SSH server for direct SSH access will be accessible.
-			Port int `envconfig:"GITNESS_IDE_SSH_PORT" default:"8100"`
-		}
-
 		Intellij struct {
 			// Port is the port on which the SSH server for IntelliJ will be accessible
 			Port int `envconfig:"CDE_MANAGER_GITSPACE_IDE_INTELLIJ_PORT" default:"8090"`

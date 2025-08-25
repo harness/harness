@@ -25,7 +25,6 @@ var WireSet = wire.NewSet(
 	ProvideVSCodeService,
 	ProvideCursorService,
 	ProvideWindsurfService,
-	ProvideSSHService,
 	ProvideJetBrainsIDEsService,
 	ProvideIDEFactory,
 )
@@ -44,10 +43,6 @@ func ProvideCursorService(config *CursorConfig) *Cursor {
 
 func ProvideWindsurfService(config *WindsurfConfig) *Windsurf {
 	return NewWindsurfService(config)
-}
-
-func ProvideSSHService(config *SSHConfig) *SSH {
-	return NewSSHService(config)
 }
 
 func ProvideJetBrainsIDEsService(config *JetBrainsIDEConfig) map[enum.IDEType]*JetBrainsIDE {
@@ -69,7 +64,6 @@ func ProvideIDEFactory(
 	jetBrainsIDEsMap map[enum.IDEType]*JetBrainsIDE,
 	cursor *Cursor,
 	windsurf *Windsurf,
-	ssh *SSH,
 ) Factory {
-	return NewFactory(vscode, vscodeWeb, jetBrainsIDEsMap, cursor, windsurf, ssh)
+	return NewFactory(vscode, vscodeWeb, jetBrainsIDEsMap, cursor, windsurf)
 }
