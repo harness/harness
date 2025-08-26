@@ -37,7 +37,7 @@ function RepositoryOpaPolicySelectorContent(
   const { getString } = useStrings()
   const { PolicySetFixedTypeSelector } = useParentComponents()
   const { values } = formik
-  const policies = get(values, 'config.policyRefs', []) || []
+  const policies = get(values, 'policyRefs', []) || []
   return (
     <Layout.Vertical spacing="xsmall">
       <Text font={{ variation: FontVariation.H6 }}>
@@ -50,7 +50,7 @@ function RepositoryOpaPolicySelectorContent(
         <Container padding={{ top: 'small' }}>
           <PolicySetFixedTypeSelector
             formik={formik}
-            name="config.policyRefs"
+            name="policyRefs"
             policySetIds={policies}
             policyType={POLICY_TYPE}
             policyAction={POLICY_ACTION}
