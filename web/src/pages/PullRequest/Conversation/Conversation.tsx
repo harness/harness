@@ -37,9 +37,9 @@ import type {
   TypesPullReq,
   TypesPullReqStats,
   TypesCodeOwnerEvaluation,
-  TypesPullReqReviewer,
   TypesListCommitResponse,
-  TypesScopesLabels
+  TypesScopesLabels,
+  PullreqCombinedListResponse
 } from 'services/code'
 import { CommentAction, CommentBox, CommentBoxOutletPosition, CommentItem } from 'components/CommentBox/CommentBox'
 import { useConfirmAct } from 'hooks/useConfirmAction'
@@ -103,11 +103,11 @@ export const Conversation: React.FC<ConversationProps> = ({
   const location = useLocation()
   const activities = usePullReqActivities()
   const {
-    data: reviewers,
+    data: combinedReviewers,
     refetch: refetchReviewers,
     loading: loadingReviewers
-  } = useGet<TypesPullReqReviewer[]>({
-    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullReqMetadata.number}/reviewers`,
+  } = useGet<PullreqCombinedListResponse>({
+    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullReqMetadata.number}/reviewers/combined`,
     debounce: 500
   })
 
@@ -435,7 +435,7 @@ export const Conversation: React.FC<ConversationProps> = ({
                         refetchReviewers={refetchReviewers}
                         prChecksDecisionResult={prChecksDecisionResult}
                         codeOwners={codeOwners}
-                        reviewers={reviewers}
+                        combinedReviewers={combinedReviewers}
                         pullReqCommits={pullReqCommits}
                         setActivityFilter={setActivityFilter}
                         loadingReviewers={loadingReviewers}
@@ -502,7 +502,7 @@ export const Conversation: React.FC<ConversationProps> = ({
               </Container>
 
               <PullRequestSideBar
-                reviewers={reviewers}
+                combinedReviewers={combinedReviewers}
                 repoMetadata={repoMetadata}
                 pullRequestMetadata={pullReqMetadata}
                 refetchReviewers={refetchReviewers}

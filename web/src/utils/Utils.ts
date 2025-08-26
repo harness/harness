@@ -30,7 +30,8 @@ import type {
   TypesLabelValue,
   TypesPrincipalInfo,
   EnumMembershipRole,
-  TypesDefaultReviewerApprovalsResponse
+  TypesDefaultReviewerApprovalsResponse,
+  TypesUserGroupInfo
 } from 'services/code'
 import type { StringKeys } from 'framework/strings'
 import { PullReqReviewDecision } from 'pages/PullRequest/PullRequestUtils'
@@ -300,10 +301,7 @@ export const handlePaste = (event: { preventDefault: () => void; clipboardData: 
 }
 
 // find code owner request decision from given entries
-export const findChangeReqDecisions = (
-  entries: TypesCodeOwnerEvaluationEntry[] | null | undefined,
-  decision: string
-) => {
+export const findReviewDecisions = (entries: TypesCodeOwnerEvaluationEntry[] | null | undefined, decision: string) => {
   if (entries === null || entries === undefined) {
     return []
   } else {
@@ -1063,6 +1061,55 @@ export const formatListWithAnd = (list: string[]): string => {
     if (list.length === 2) return list.join(' and ')
     return `${list.slice(0, -1).join(', ')} and ${list[list.length - 1]}`
   } else return ''
+}
+
+/**
+ * Normalizes and combines principal and user group data into a unified format
+ * @param principals - Array of principal objects from principals API
+ * @param userGroups - Array of user group objects from usergroups API
+ * @returns Combined array of normalized objects with consistent structure
+ */
+export interface NormalizedPrincipal {
+  id: number
+  email_or_identifier: string
+  type: PrincipalType
+  display_name: string
+}
+
+export function combineAndNormalizePrincipalsAndGroups(
+  principals: TypesPrincipalInfo[] | null,
+  userGroups?: TypesUserGroupInfo[] | null,
+  notSorted?: boolean
+): NormalizedPrincipal[] {
+  const normalizedData: NormalizedPrincipal[] = []
+
+  // Process user groups data if available
+  if (userGroups && Array.isArray(userGroups)) {
+    userGroups.forEach(group => {
+      normalizedData.push({
+        id: group.id || -1,
+        email_or_identifier: group.identifier || '',
+        type: PrincipalType.USER_GROUP,
+        display_name: group.name || group.identifier || 'Unknown Group'
+      })
+    })
+  }
+
+  // Process principals data if available
+  if (principals && Array.isArray(principals)) {
+    principals.forEach(principal => {
+      normalizedData.push({
+        id: principal.id || -1,
+        email_or_identifier: principal.email || principal.uid || '',
+        type: (principal.type as PrincipalType) || PrincipalType.USER,
+        display_name: principal.display_name || principal.email || 'Unknown User'
+      })
+    })
+  }
+
+  if (notSorted) return normalizedData
+
+  return normalizedData.sort((a, b) => a.display_name.localeCompare(b.display_name))
 }
 
 export interface TypesPrincipalInfoWithReviewDecision extends TypesPrincipalInfo {

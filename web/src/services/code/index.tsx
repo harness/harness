@@ -133,6 +133,8 @@ export type EnumGitspaceStateType =
 export type EnumIDEType =
   | 'vs_code'
   | 'vs_code_web'
+  | 'cursor'
+  | 'windsurf'
   | 'intellij'
   | 'pycharm'
   | 'goland'
@@ -476,6 +478,7 @@ export interface OpenapiCreatePullReqRequest {
   source_repo_ref?: string
   target_branch?: string
   title?: string
+  user_group_reviewer_identifiers?: string[] | null
 }
 
 export interface OpenapiCreateRepoWebhookRequest {
@@ -794,6 +797,10 @@ export interface OpenapiUpdateTriggerRequest {
   uid?: string | null
 }
 
+export interface OpenapiUserGroupReviewerAddRequest {
+  usergroup_id?: number
+}
+
 export interface OpenapiWebhookType {
   created?: number
   created_by?: number
@@ -904,6 +911,11 @@ export interface ProtectionRepoTargetFilter {
 export interface ProtectionTag {
   bypass?: ProtectionDefBypass
   lifecycle?: ProtectionDefTagLifecycle
+}
+
+export interface PullreqCombinedListResponse {
+  reviewers?: TypesPullReqReviewer[]
+  user_group_reviewers?: TypesUserGroupReviewer[]
 }
 
 export interface PullreqCommentApplySuggestionsOutput {
@@ -1115,6 +1127,7 @@ export interface TypesBranchExtended {
 export interface TypesBranchTable {
   created?: number
   created_by?: number
+  last_created_pull_req_id?: number | null
   name?: string
   updated?: number
   updated_by?: number
@@ -1424,8 +1437,10 @@ export type TypesGitspaceInstance = {
   last_heartbeat?: number | null
   last_used?: number | null
   machine_user?: string | null
+  plugin_url?: string | null
   resource_usage?: string | null
   space_path?: string
+  ssh_command?: string | null
   state?: EnumGitspaceInstanceStateType
   total_time_used?: number
   updated?: number
@@ -2028,6 +2043,21 @@ export interface TypesUserGroupOwnerEvaluation {
   evaluations?: TypesOwnerEvaluation[] | null
   id?: string
   name?: string
+}
+
+export interface TypesUserGroupReviewer {
+  added_by?: TypesPrincipalInfo
+  created?: number
+  decision?: EnumPullReqReviewDecision
+  updated?: number
+  user_decisions?: TypesUserGroupReviewerDecision[]
+  user_group?: TypesUserGroupInfo
+}
+
+export interface TypesUserGroupReviewerDecision {
+  decision?: EnumPullReqReviewDecision
+  reviewer?: TypesPrincipalInfo
+  sha?: string
 }
 
 export interface TypesViolation {
@@ -6698,6 +6728,154 @@ export const useReviewerDeletePullReq = ({ repo_ref, pullreq_number, ...props }:
     'DELETE',
     (paramsInPath: ReviewerDeletePullReqPathParams) =>
       `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/reviewers`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, pullreq_number }, ...props }
+  )
+
+export interface ReviewerCombinedListPullReqPathParams {
+  repo_ref: string
+  pullreq_number: number
+}
+
+export type ReviewerCombinedListPullReqProps = Omit<
+  GetProps<PullreqCombinedListResponse, UsererrorError, void, ReviewerCombinedListPullReqPathParams>,
+  'path'
+> &
+  ReviewerCombinedListPullReqPathParams
+
+export const ReviewerCombinedListPullReq = ({
+  repo_ref,
+  pullreq_number,
+  ...props
+}: ReviewerCombinedListPullReqProps) => (
+  <Get<PullreqCombinedListResponse, UsererrorError, void, ReviewerCombinedListPullReqPathParams>
+    path={`/repos/${repo_ref}/pullreq/${pullreq_number}/reviewers/combined`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseReviewerCombinedListPullReqProps = Omit<
+  UseGetProps<PullreqCombinedListResponse, UsererrorError, void, ReviewerCombinedListPullReqPathParams>,
+  'path'
+> &
+  ReviewerCombinedListPullReqPathParams
+
+export const useReviewerCombinedListPullReq = ({
+  repo_ref,
+  pullreq_number,
+  ...props
+}: UseReviewerCombinedListPullReqProps) =>
+  useGet<PullreqCombinedListResponse, UsererrorError, void, ReviewerCombinedListPullReqPathParams>(
+    (paramsInPath: ReviewerCombinedListPullReqPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/reviewers/combined`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, pullreq_number }, ...props }
+  )
+
+export interface UserGroupReviewerAddPullReqPathParams {
+  repo_ref: string
+  pullreq_number: number
+}
+
+export type UserGroupReviewerAddPullReqProps = Omit<
+  MutateProps<
+    TypesUserGroupReviewer,
+    UsererrorError,
+    void,
+    OpenapiUserGroupReviewerAddRequest,
+    UserGroupReviewerAddPullReqPathParams
+  >,
+  'path' | 'verb'
+> &
+  UserGroupReviewerAddPullReqPathParams
+
+export const UserGroupReviewerAddPullReq = ({
+  repo_ref,
+  pullreq_number,
+  ...props
+}: UserGroupReviewerAddPullReqProps) => (
+  <Mutate<
+    TypesUserGroupReviewer,
+    UsererrorError,
+    void,
+    OpenapiUserGroupReviewerAddRequest,
+    UserGroupReviewerAddPullReqPathParams
+  >
+    verb="PUT"
+    path={`/repos/${repo_ref}/pullreq/${pullreq_number}/reviewers/usergroups`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseUserGroupReviewerAddPullReqProps = Omit<
+  UseMutateProps<
+    TypesUserGroupReviewer,
+    UsererrorError,
+    void,
+    OpenapiUserGroupReviewerAddRequest,
+    UserGroupReviewerAddPullReqPathParams
+  >,
+  'path' | 'verb'
+> &
+  UserGroupReviewerAddPullReqPathParams
+
+export const useUserGroupReviewerAddPullReq = ({
+  repo_ref,
+  pullreq_number,
+  ...props
+}: UseUserGroupReviewerAddPullReqProps) =>
+  useMutate<
+    TypesUserGroupReviewer,
+    UsererrorError,
+    void,
+    OpenapiUserGroupReviewerAddRequest,
+    UserGroupReviewerAddPullReqPathParams
+  >(
+    'PUT',
+    (paramsInPath: UserGroupReviewerAddPullReqPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/reviewers/usergroups`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, pullreq_number }, ...props }
+  )
+
+export interface UserGroupReviewerDeletePullReqPathParams {
+  repo_ref: string
+  pullreq_number: number
+}
+
+export type UserGroupReviewerDeletePullReqProps = Omit<
+  MutateProps<void, UsererrorError, void, number, UserGroupReviewerDeletePullReqPathParams>,
+  'path' | 'verb'
+> &
+  UserGroupReviewerDeletePullReqPathParams
+
+export const UserGroupReviewerDeletePullReq = ({
+  repo_ref,
+  pullreq_number,
+  ...props
+}: UserGroupReviewerDeletePullReqProps) => (
+  <Mutate<void, UsererrorError, void, number, UserGroupReviewerDeletePullReqPathParams>
+    verb="DELETE"
+    path={`/repos/${repo_ref}/pullreq/${pullreq_number}/reviewers/usergroups`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseUserGroupReviewerDeletePullReqProps = Omit<
+  UseMutateProps<void, UsererrorError, void, number, UserGroupReviewerDeletePullReqPathParams>,
+  'path' | 'verb'
+> &
+  UserGroupReviewerDeletePullReqPathParams
+
+export const useUserGroupReviewerDeletePullReq = ({
+  repo_ref,
+  pullreq_number,
+  ...props
+}: UseUserGroupReviewerDeletePullReqProps) =>
+  useMutate<void, UsererrorError, void, number, UserGroupReviewerDeletePullReqPathParams>(
+    'DELETE',
+    (paramsInPath: UserGroupReviewerDeletePullReqPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/reviewers/usergroups`,
     { base: getConfig('code/api/v1'), pathParams: { repo_ref, pullreq_number }, ...props }
   )
 

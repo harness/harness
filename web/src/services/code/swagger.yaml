@@ -6439,6 +6439,153 @@ paths:
           description: Internal Server Error
       tags:
         - pullreq
+  /repos/{repo_ref}/pullreq/{pullreq_number}/reviewers/combined:
+    get:
+      operationId: reviewerCombinedListPullReq
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pullreq_number
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PullreqCombinedListResponse'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pullreq
+  /repos/{repo_ref}/pullreq/{pullreq_number}/reviewers/usergroups:
+    put:
+      operationId: userGroupReviewerAddPullReq
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pullreq_number
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiUserGroupReviewerAddRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesUserGroupReviewer'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pullreq
+  /repos/{repo_ref}/pullreq/{pullreq_number}/reviewers/usergroups/{user_group_id}:
+    delete:
+      operationId: userGroupReviewerDeletePullReq
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pullreq_number
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: user_group_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: No Content
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pullreq
   /repos/{repo_ref}/pullreq/{pullreq_number}/reviews:
     post:
       operationId: reviewSubmitPullReq
@@ -13022,6 +13169,8 @@ components:
       enum:
         - vs_code
         - vs_code_web
+        - cursor
+        - windsurf
         - intellij
         - pycharm
         - goland
@@ -13645,6 +13794,11 @@ components:
           type: string
         title:
           type: string
+        user_group_reviewer_identifiers:
+          items:
+            type: string
+          nullable: true
+          type: array
       type: object
     OpenapiCreateRepoWebhookRequest:
       properties:
@@ -14237,6 +14391,11 @@ components:
           nullable: true
           type: string
       type: object
+    OpenapiUserGroupReviewerAddRequest:
+      properties:
+        usergroup_id:
+          type: integer
+      type: object
     OpenapiWebhookType:
       properties:
         created:
@@ -14432,6 +14591,17 @@ components:
           $ref: '#/components/schemas/ProtectionDefBypass'
         lifecycle:
           $ref: '#/components/schemas/ProtectionDefTagLifecycle'
+      type: object
+    PullreqCombinedListResponse:
+      properties:
+        reviewers:
+          items:
+            $ref: '#/components/schemas/TypesPullReqReviewer'
+          type: array
+        user_group_reviewers:
+          items:
+            $ref: '#/components/schemas/TypesUserGroupReviewer'
+          type: array
       type: object
     PullreqCommentApplySuggestionsOutput:
       properties:
@@ -14770,6 +14940,9 @@ components:
         created:
           type: integer
         created_by:
+          type: integer
+        last_created_pull_req_id:
+          nullable: true
           type: integer
         name:
           type: string
@@ -15341,10 +15514,16 @@ components:
         machine_user:
           nullable: true
           type: string
+        plugin_url:
+          nullable: true
+          type: string
         resource_usage:
           nullable: true
           type: string
         space_path:
+          type: string
+        ssh_command:
+          nullable: true
           type: string
         state:
           $ref: '#/components/schemas/EnumGitspaceInstanceStateType'
@@ -16466,6 +16645,32 @@ components:
         id:
           type: string
         name:
+          type: string
+      type: object
+    TypesUserGroupReviewer:
+      properties:
+        added_by:
+          $ref: '#/components/schemas/TypesPrincipalInfo'
+        created:
+          type: integer
+        decision:
+          $ref: '#/components/schemas/EnumPullReqReviewDecision'
+        updated:
+          type: integer
+        user_decisions:
+          items:
+            $ref: '#/components/schemas/TypesUserGroupReviewerDecision'
+          type: array
+        user_group:
+          $ref: '#/components/schemas/TypesUserGroupInfo'
+      type: object
+    TypesUserGroupReviewerDecision:
+      properties:
+        decision:
+          $ref: '#/components/schemas/EnumPullReqReviewDecision'
+        reviewer:
+          $ref: '#/components/schemas/TypesPrincipalInfo'
+        sha:
           type: string
       type: object
     TypesViolation:

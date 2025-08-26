@@ -650,7 +650,8 @@ addLabel: Add
 updateLabel: Update
 users: Users
 findAUser: Find a user
-reviewerNotFound: 'Reviewer {reviewer} not found.'
+findAUserOrUserGroup: Find a user or user group
+noUsersFound: No users found
 spaces: Projects
 space: Project
 selectSpace: Select project here

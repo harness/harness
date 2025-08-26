@@ -22,6 +22,5 @@ export declare const labelsLayout: string
 export declare const redIcon: string
 export declare const reviewerAvatar: string
 export declare const reviewerName: string
-export declare const selectButton: string
-export declare const semiBoldText: string
 export declare const svgOutdated: string
+export declare const ugicon: string

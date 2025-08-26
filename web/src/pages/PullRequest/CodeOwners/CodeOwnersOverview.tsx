@@ -38,7 +38,7 @@ import { ExecutionState, ExecutionStatus } from 'components/ExecutionStatus/Exec
 import { useShowRequestError } from 'hooks/useShowRequestError'
 import type { TypesCodeOwnerEvaluation, TypesCodeOwnerEvaluationEntry } from 'services/code'
 import type { PRChecksDecisionResult } from 'hooks/usePRChecksDecision'
-import { CodeOwnerReqDecision, findChangeReqDecisions } from 'utils/Utils'
+import { CodeOwnerReqDecision, findReviewDecisions } from 'utils/Utils'
 import { PullReqReviewDecision, findWaitingDecisions } from '../PullRequestUtils'
 import css from './CodeOwnersOverview.module.scss'
 
@@ -63,14 +63,14 @@ export function CodeOwnersOverview({
 
   useShowRequestError(error)
 
-  const changeReqEntries = findChangeReqDecisions(codeOwners?.evaluation_entries, CodeOwnerReqDecision.CHANGEREQ)
+  const changeReqEntries = findReviewDecisions(codeOwners?.evaluation_entries, CodeOwnerReqDecision.CHANGEREQ)
   const waitingEntries = findWaitingDecisions(
     pullReqMetadata,
     reqCodeOwnerLatestApproval,
     codeOwners?.evaluation_entries
   )
 
-  const approvalEntries = findChangeReqDecisions(codeOwners?.evaluation_entries, CodeOwnerReqDecision.APPROVED)
+  const approvalEntries = findReviewDecisions(codeOwners?.evaluation_entries, CodeOwnerReqDecision.APPROVED)
 
   const checkEntries = (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

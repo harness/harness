@@ -20,14 +20,24 @@ import { useGet, useMutate } from 'restful-react'
 import { isEmpty, omit } from 'lodash-es'
 import cx from 'classnames'
 import { Container, Layout, Text, Avatar, FlexExpander, useToaster, Utils, stringSubstitute } from '@harnessio/uicore'
-import { Icon, IconName } from '@harnessio/icons'
+import { Icon } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { useStrings } from 'framework/strings'
-import type { TypesPullReq, RepoRepositoryOutput, EnumPullReqReviewDecision, TypesScopesLabels } from 'services/code'
-import { ColorName, getErrorMessage } from 'utils/Utils'
+import type {
+  TypesPullReq,
+  RepoRepositoryOutput,
+  TypesScopesLabels,
+  PullreqCombinedListResponse,
+  EnumPullReqReviewDecision
+} from 'services/code'
+import { ColorName, getErrorMessage, PrincipalType } from 'utils/Utils'
 import { ReviewerSelect } from 'components/ReviewerSelect/ReviewerSelect'
-import { PullReqReviewDecision, processReviewDecision } from 'pages/PullRequest/PullRequestUtils'
+import {
+  PullReqReviewDecision,
+  generateReviewDecisionInfo,
+  processReviewDecision
+} from 'pages/PullRequest/PullRequestUtils'
 import { LabelSelector } from 'components/Label/LabelSelector/LabelSelector'
 import { Label } from 'components/Label/Label'
 import { getConfig } from 'services/config'
@@ -35,7 +45,7 @@ import ignoreFailed from '../../../../icons/ignoreFailed.svg?url'
 import css from './PullRequestSideBar.module.scss'
 
 interface PullRequestSideBarProps {
-  reviewers?: Unknown
+  combinedReviewers?: PullreqCombinedListResponse | null
   labels: TypesScopesLabels | null
   repoMetadata: RepoRepositoryOutput
   pullRequestMetadata: TypesPullReq
@@ -46,92 +56,37 @@ interface PullRequestSideBarProps {
 
 const PullRequestSideBar = (props: PullRequestSideBarProps) => {
   const [labelQuery, setLabelQuery] = useState<string>('')
-  const { reviewers, repoMetadata, pullRequestMetadata, refetchReviewers, labels, refetchLabels, refetchActivities } =
-    props
+  const {
+    combinedReviewers,
+    repoMetadata,
+    pullRequestMetadata,
+    refetchReviewers,
+    labels,
+    refetchLabels,
+    refetchActivities
+  } = props
   const { getString } = useStrings()
   const { showError, showSuccess } = useToaster()
-  const generateReviewDecisionInfo = (
-    reviewDecision: EnumPullReqReviewDecision | PullReqReviewDecision.OUTDATED
-  ): {
-    name: IconName
-    color?: Color
-    size?: number
-    icon: IconName
-    className?: string
-    iconProps?: { color?: Color }
-    message: string
-  } => {
-    let info: {
-      name: IconName
-      color?: Color
-      size?: number
-      className?: string
-      icon: IconName
-      iconProps?: { color?: Color }
-      message: string
-    }
 
-    switch (reviewDecision) {
-      case PullReqReviewDecision.CHANGEREQ:
-        info = {
-          name: 'error-transparent-no-outline',
-          color: Color.RED_700,
-          size: 18,
-          className: css.redIcon,
-          icon: 'error-transparent-no-outline',
-          iconProps: { color: Color.RED_700 },
-          message: 'requested changes'
-        }
-        break
-      case PullReqReviewDecision.APPROVED:
-        info = {
-          name: 'tick-circle',
-          color: Color.GREEN_700,
-          size: 16,
-          icon: 'tick-circle',
-          iconProps: { color: Color.GREEN_700 },
-          message: 'approved changes'
-        }
-        break
-      case PullReqReviewDecision.PENDING:
-        info = {
-          name: 'waiting',
-          color: Color.GREY_700,
-          size: 16,
-          icon: 'waiting',
-          iconProps: { color: Color.GREY_700 },
-          message: 'pending review'
-        }
-        break
-      case PullReqReviewDecision.OUTDATED:
-        info = {
-          name: 'dot',
-          color: Color.GREY_100,
-          size: 16,
-          icon: 'dot',
-          message: 'outdated approval'
-        }
-        break
-      default:
-        info = {
-          name: 'dot',
-          color: Color.GREY_100,
-          size: 16,
-          icon: 'dot',
-          message: 'status'
-        }
-    }
+  const { reviewers, user_group_reviewers } = combinedReviewers || {}
 
-    return info
-  }
-
-  const { mutate: updateCodeCommentStatus } = useMutate({
+  const { mutate: addReviewer } = useMutate({
     verb: 'PUT',
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/reviewers`
   })
+  const { mutate: addUserGroupReviewer } = useMutate({
+    verb: 'PUT',
+    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/reviewers/usergroups`
+  })
+
   const { mutate: removeReviewer } = useMutate({
     verb: 'DELETE',
     path: ({ id }) => `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata?.number}/reviewers/${id}`
+  })
+  const { mutate: removeUserGroupReviewer } = useMutate({
+    verb: 'DELETE',
+    path: ({ id }) =>
+      `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata?.number}/reviewers/usergroups/${id}`
   })
 
   const { mutate: removeLabel, loading: removingLabel } = useMutate({
@@ -142,7 +97,7 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
 
   const {
     data: labelsList,
-    refetch: refetchlabelsList,
+    refetch: refetchLabelsList,
     loading: labelListLoading
   } = useGet<TypesScopesLabels>({
     base: getConfig('code/api/v1'),
@@ -163,89 +118,150 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
             <FlexExpander />
             <ReviewerSelect
               pullRequestMetadata={pullRequestMetadata}
-              onSelect={function (id: number): void {
-                updateCodeCommentStatus({ reviewer_id: id })
-                  .then(() => refetchActivities())
-                  .catch(err => {
-                    showError(getErrorMessage(err))
-                  })
-                if (refetchReviewers) {
-                  refetchReviewers()
+              onSelect={async normalizedPrincipal => {
+                try {
+                  const { id, type } = normalizedPrincipal
+                  if (type === PrincipalType.USER) {
+                    await addReviewer({ reviewer_id: id })
+                  } else {
+                    await addUserGroupReviewer({ usergroup_id: id })
+                  }
+                  refetchActivities?.()
+                  refetchReviewers?.()
+                } catch (err) {
+                  showError(getErrorMessage(err))
                 }
               }}
             />
           </Layout.Horizontal>
           <Container padding={{ top: 'medium', bottom: 'large' }}>
-            {!isEmpty(reviewers) ? (
-              reviewers.map(
-                (reviewer: {
-                  reviewer: { display_name: string; id: number }
-                  review_decision: EnumPullReqReviewDecision
-                  sha: string
-                }): Unknown => {
-                  const updatedReviewDecision = processReviewDecision(
-                    reviewer.review_decision,
-                    reviewer.sha,
-                    pullRequestMetadata?.source_sha
-                  )
-                  const reviewerInfo = generateReviewDecisionInfo(updatedReviewDecision)
-                  return (
-                    <Layout.Horizontal key={reviewer.reviewer.id} className={css.alignLayout}>
-                      <Utils.WrapOptionalTooltip
-                        tooltip={
-                          <Text color={Color.GREY_100} padding="small">
-                            {reviewerInfo.message}
-                          </Text>
-                        }
-                        tooltipProps={{ isDark: true, interactionKind: PopoverInteractionKind.HOVER }}>
-                        {updatedReviewDecision === PullReqReviewDecision.OUTDATED ? (
-                          <img className={css.svgOutdated} src={ignoreFailed} width={20} height={20} />
-                        ) : (
-                          <Icon {...omit(reviewerInfo, 'iconProps')} />
-                        )}
-                      </Utils.WrapOptionalTooltip>
-                      <Avatar
-                        className={cx(css.reviewerAvatar, {
-                          [css.iconPadding]: updatedReviewDecision !== PullReqReviewDecision.CHANGEREQ
-                        })}
-                        name={reviewer.reviewer.display_name}
-                        size="small"
-                        hoverCard={false}
-                      />
+            {!isEmpty(user_group_reviewers) &&
+              user_group_reviewers?.map(reviewer => {
+                const { decision = PullReqReviewDecision.PENDING, user_group } = reviewer
+                const areChangesRequested = decision === PullReqReviewDecision.CHANGEREQ
+                const reviewDecisionInfo = generateReviewDecisionInfo(decision)
 
-                      <Text lineClamp={1} className={css.reviewerName}>
-                        {reviewer.reviewer.display_name}
-                      </Text>
-                      <FlexExpander />
-                      <OptionsMenuButton
-                        isDark={true}
-                        icon="Options"
-                        iconProps={{ size: 14 }}
-                        style={{ paddingBottom: '9px' }}
-                        width="100px"
-                        height="24px"
-                        items={[
-                          {
-                            isDanger: true,
-                            text: getString('remove'),
-                            onClick: () => {
-                              removeReviewer({}, { pathParams: { id: reviewer.reviewer.id } })
-                                .then(() => refetchActivities())
-                                .catch(err => {
-                                  showError(getErrorMessage(err))
-                                })
-                              if (refetchReviewers) {
-                                refetchReviewers?.()
-                              }
+                return (
+                  <Container key={user_group?.id} className={css.alignLayout}>
+                    <Utils.WrapOptionalTooltip
+                      tooltip={
+                        <Text color={Color.GREY_100} padding="small">
+                          {reviewDecisionInfo.message}
+                        </Text>
+                      }
+                      tooltipProps={{ isDark: true, interactionKind: PopoverInteractionKind.HOVER }}>
+                      <Icon
+                        className={areChangesRequested ? css.redIcon : undefined}
+                        {...omit(reviewDecisionInfo, 'iconProps')}
+                      />
+                    </Utils.WrapOptionalTooltip>
+                    <Icon
+                      margin={'xsmall'}
+                      className={cx(css.reviewerAvatar, css.ugicon)}
+                      name="user-groups"
+                      size={18}
+                    />
+                    <Text lineClamp={1} style={{ paddingLeft: '3px' }} className={css.reviewerName}>
+                      {user_group?.name}
+                    </Text>
+                    <FlexExpander />
+                    <OptionsMenuButton
+                      isDark={true}
+                      icon="Options"
+                      iconProps={{ size: 14 }}
+                      style={{ paddingBottom: '9px' }}
+                      width="100px"
+                      height="24px"
+                      items={[
+                        {
+                          isDanger: true,
+                          text: getString('remove'),
+                          onClick: () => {
+                            removeUserGroupReviewer({}, { pathParams: { id: user_group?.id } })
+                              .then(() => refetchActivities())
+                              .catch(err => {
+                                showError(getErrorMessage(err))
+                              })
+                            if (refetchReviewers) {
+                              refetchReviewers?.()
                             }
                           }
-                        ]}
-                      />
-                    </Layout.Horizontal>
-                  )
-                }
-              )
-            ) : (
+                        }
+                      ]}
+                    />
+                  </Container>
+                )
+              })}
+            {!isEmpty(reviewers) &&
+              reviewers?.map(reviewer => {
+                const { review_decision, sha, reviewer: principal } = reviewer
+                const updatedReviewDecision = processReviewDecision(
+                  review_decision as EnumPullReqReviewDecision,
+                  sha,
+                  pullRequestMetadata?.source_sha
+                )
+                const areChangesRequested = updatedReviewDecision === PullReqReviewDecision.CHANGEREQ
+                const reviewDecisionInfo = generateReviewDecisionInfo(updatedReviewDecision)
+
+                return (
+                  <Layout.Horizontal key={principal?.id} className={css.alignLayout}>
+                    <Utils.WrapOptionalTooltip
+                      tooltip={
+                        <Text color={Color.GREY_100} padding="small">
+                          {reviewDecisionInfo.message}
+                        </Text>
+                      }
+                      tooltipProps={{ isDark: true, interactionKind: PopoverInteractionKind.HOVER }}>
+                      {updatedReviewDecision === PullReqReviewDecision.OUTDATED ? (
+                        <img className={css.svgOutdated} src={ignoreFailed} width={20} height={20} />
+                      ) : (
+                        <Icon
+                          className={areChangesRequested ? css.redIcon : undefined}
+                          {...omit(reviewDecisionInfo, 'iconProps')}
+                        />
+                      )}
+                    </Utils.WrapOptionalTooltip>
+                    <Avatar
+                      className={cx(css.reviewerAvatar, {
+                        [css.iconPadding]: !areChangesRequested
+                      })}
+                      name={principal?.display_name}
+                      size="small"
+                      hoverCard={false}
+                    />
+
+                    <Text lineClamp={1} className={css.reviewerName}>
+                      {principal?.display_name}
+                    </Text>
+                    <FlexExpander />
+                    <OptionsMenuButton
+                      isDark={true}
+                      icon="Options"
+                      iconProps={{ size: 14 }}
+                      style={{ paddingBottom: '9px' }}
+                      width="100px"
+                      height="24px"
+                      items={[
+                        {
+                          isDanger: true,
+                          text: getString('remove'),
+                          onClick: () => {
+                            removeReviewer({}, { pathParams: { id: principal?.id } })
+                              .then(() => refetchActivities())
+                              .catch(err => {
+                                showError(getErrorMessage(err))
+                              })
+                            if (refetchReviewers) {
+                              refetchReviewers?.()
+                            }
+                          }
+                        }
+                      ]}
+                    />
+                  </Layout.Horizontal>
+                )
+              })}
+            {isEmpty(reviewers) && isEmpty(user_group_reviewers) && (
               <Text color={Color.GREY_300} font={{ variation: FontVariation.BODY2_SEMI, size: 'small' }}>
                 {getString('noReviewers')}
               </Text>
@@ -264,7 +280,7 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
               pullRequestMetadata={pullRequestMetadata}
               allLabelsData={labelsList}
               refetchLabels={refetchLabels}
-              refetchlabelsList={refetchlabelsList}
+              refetchlabelsList={refetchLabelsList}
               repoMetadata={repoMetadata}
               query={labelQuery}
               setQuery={setLabelQuery}

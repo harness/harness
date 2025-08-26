@@ -46,14 +46,16 @@ import {
   getScopeFromParams,
   permissionProps,
   PrincipalType,
-  INCLUDE_INHERITED_GROUPS
+  combineAndNormalizePrincipalsAndGroups,
+  NormalizedPrincipal
 } from 'utils/Utils'
 import type {
   RepoRepositoryOutput,
   OpenapiRule,
   TypesPrincipalInfo,
   ProtectionBranch,
-  ProtectionTag
+  ProtectionTag,
+  TypesUserGroupInfo
 } from 'services/code'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useAppContext } from 'AppContext'
@@ -66,10 +68,8 @@ import BranchRulesForm from './components/BranchRulesForm'
 import BypassList from './components/BypassList'
 import TagRulesForm from './components/TagRulesForm'
 import {
-  combineAndNormalizePrincipalsAndGroups,
   convertToTargetList,
   getPayload,
-  NormalizedPrincipal,
   rulesFormInitialPayload,
   RulesFormPayload,
   RuleState,
@@ -144,11 +144,10 @@ const ProtectionRulesForm = (props: {
     debounce: 500
   })
 
-  const { data: userGroups, loading: loadingUsersGroups } = useGet<any>({
+  const { data: userGroups, loading: loadingUsersGroups } = useGet<TypesUserGroupInfo[]>({
     path: `/api/v1/usergroups`,
     queryParams: {
       query: searchTerm,
-      filterType: INCLUDE_INHERITED_GROUPS,
       accountIdentifier: accountIdentifier || routingId,
       orgIdentifier,
       projectIdentifier

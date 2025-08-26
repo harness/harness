@@ -15,6 +15,8 @@
  */
 
 import type { SelectOption } from '@harnessio/uicore'
+import type { IconName } from '@harnessio/icons'
+import { Color } from '@harnessio/design-system'
 import type { UseStringsReturn } from 'framework/strings'
 import type { CommentItem } from 'components/CommentBox/CommentBox'
 import type { ColorName, PullRequestSection } from 'utils/Utils'
@@ -82,6 +84,73 @@ export enum PullReqReviewDecision {
   OUTDATED = 'outdated'
 }
 
+export type ReviewDecisionInfo = {
+  name: IconName
+  color?: Color
+  size?: number
+  icon: IconName
+  iconProps?: { color?: Color }
+  message: string
+}
+
+export const generateReviewDecisionInfo = (
+  reviewDecision: EnumPullReqReviewDecision | PullReqReviewDecision.OUTDATED
+): ReviewDecisionInfo => {
+  let info: ReviewDecisionInfo
+
+  switch (reviewDecision) {
+    case PullReqReviewDecision.CHANGEREQ:
+      info = {
+        name: 'error-transparent-no-outline',
+        color: Color.RED_700,
+        size: 18,
+        icon: 'error-transparent-no-outline',
+        iconProps: { color: Color.RED_700 },
+        message: 'requested changes'
+      }
+      break
+    case PullReqReviewDecision.APPROVED:
+      info = {
+        name: 'tick-circle',
+        color: Color.GREEN_700,
+        size: 16,
+        icon: 'tick-circle',
+        iconProps: { color: Color.GREEN_700 },
+        message: 'approved changes'
+      }
+      break
+    case PullReqReviewDecision.PENDING:
+      info = {
+        name: 'waiting',
+        color: Color.GREY_700,
+        size: 16,
+        icon: 'waiting',
+        iconProps: { color: Color.GREY_700 },
+        message: 'pending review'
+      }
+      break
+    case PullReqReviewDecision.OUTDATED:
+      info = {
+        name: 'dot',
+        color: Color.GREY_100,
+        size: 16,
+        icon: 'dot',
+        message: 'outdated approval'
+      }
+      break
+    default:
+      info = {
+        name: 'dot',
+        color: Color.GREY_100,
+        size: 16,
+        icon: 'dot',
+        message: 'status'
+      }
+  }
+
+  return info
+}
+
 export const findWaitingDecisions = (
   pullReqMetadata: TypesPullReq,
   reqCodeOwnerLatestApproval: boolean,
@@ -109,13 +178,13 @@ export const findWaitingDecisions = (
 }
 
 export const processReviewDecision = (
-  review_decision: EnumPullReqReviewDecision,
+  reviewDecision: EnumPullReqReviewDecision,
   reviewedSHA?: string,
   sourceSHA?: string
 ) =>
-  review_decision === PullReqReviewDecision.APPROVED && reviewedSHA !== sourceSHA
+  reviewDecision === PullReqReviewDecision.APPROVED && reviewedSHA !== sourceSHA
     ? PullReqReviewDecision.OUTDATED
-    : review_decision
+    : reviewDecision
 
 export function getActivePullReqPageSection(): PullRequestSection | undefined {
   return (document.querySelector('[data-page-section]') as HTMLElement)?.dataset?.pageSection as PullRequestSection

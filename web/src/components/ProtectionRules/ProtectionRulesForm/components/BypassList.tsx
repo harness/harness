@@ -20,8 +20,7 @@ import { Container, FlexExpander, Layout, Text } from '@harnessio/uicore'
 import { PopoverPosition } from '@blueprintjs/core'
 import { isEmpty } from 'lodash-es'
 import { Color } from '@harnessio/design-system'
-import type { PrincipalType } from 'utils/Utils'
-import type { NormalizedPrincipal } from 'components/ProtectionRules/ProtectionRulesUtils'
+import type { NormalizedPrincipal, PrincipalType } from 'utils/Utils'
 import css from '../ProtectionRulesForm.module.scss'
 
 const BypassList = (props: {

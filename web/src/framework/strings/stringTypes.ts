@@ -388,6 +388,7 @@ export interface StringsMap {
   filterByAuthor: string
   findATag: string
   findAUser: string
+  findAUserOrUserGroup: string
   findBranch: string
   findOrCreateBranch: string
   firstTimeTitle: string
@@ -617,6 +618,7 @@ export interface StringsMap {
   noResultMessage: string
   noResultTitle: string
   noReviewers: string
+  noUsersFound: string
   noWebHooks: string
   none: string
   noneYet: string
@@ -1035,7 +1037,6 @@ export interface StringsMap {
   results: string
   retriggerExecution: string
   reviewProjectSettings: string
-  reviewerNotFound: string
   reviewers: string
   role: string
   ruleBlockedMessage: string

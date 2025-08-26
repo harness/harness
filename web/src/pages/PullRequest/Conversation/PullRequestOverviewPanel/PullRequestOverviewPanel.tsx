@@ -24,11 +24,11 @@ import type {
   TypesListCommitResponse,
   TypesPullReq,
   TypesPullReqActivity,
-  TypesPullReqReviewer,
   RepoRepositoryOutput,
   TypesRuleViolations,
   TypesBranchExtended,
-  TypesDefaultReviewerApprovalsResponse
+  TypesDefaultReviewerApprovalsResponse,
+  PullreqCombinedListResponse
 } from 'services/code'
 import {
   PRMergeOption,
@@ -60,7 +60,7 @@ interface PullRequestOverviewPanelProps {
   refetchReviewers: () => void
   prChecksDecisionResult: PRChecksDecisionResult
   codeOwners: TypesCodeOwnerEvaluation | null
-  reviewers: TypesPullReqReviewer[] | null
+  combinedReviewers: PullreqCombinedListResponse | null
   setActivityFilter: (val: SelectOption) => void
   loadingReviewers: boolean
   refetchActivities: () => void
@@ -78,7 +78,7 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
     pullReqMetadata,
     onPRStateChanged,
     refetchReviewers,
-    reviewers,
+    combinedReviewers,
     loadingReviewers,
     refetchActivities,
     refetchCodeOwners,
@@ -296,7 +296,7 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
                     atLeastOneReviewerRule={atLeastOneReviewerRule}
                     reqCodeOwnerApproval={reqCodeOwnerApproval}
                     minApproval={minApproval}
-                    reviewers={reviewers}
+                    combinedReviewers={combinedReviewers}
                     minReqLatestApproval={minReqLatestApproval}
                     reqCodeOwnerLatestApproval={reqCodeOwnerLatestApproval}
                     refetchCodeOwners={refetchCodeOwners}

@@ -61,12 +61,6 @@
     [role='tabpanel'] {
       margin-top: 0;
     }
-
-    &.branchesOnly {
-      [role='tablist'] {
-        display: none;
-      }
-    }
   }
 }
 
@@ -94,10 +88,6 @@
       background: var(--grey-100) !important;
     }
   }
-
-  .newBtnText {
-    font-weight: normal;
-  }
 }
 
 .avatar {
@@ -117,4 +107,11 @@
 .reviewerPopover {
   z-index: 999;
   padding: var(--spacing-small) !important;
+}
+
+.ugicon {
+  background-color: var(--yellow-700) !important;
+  color: var(--grey-0) !important;
+  border-radius: var(--spacing-xsmall);
+  padding: 3px !important;
 }

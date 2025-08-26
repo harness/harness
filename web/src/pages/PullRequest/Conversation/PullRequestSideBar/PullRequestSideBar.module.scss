@@ -24,27 +24,6 @@
   padding-right: var(--spacing-small);
 }
 
-.semiBoldText {
-  font-weight: 500 !important;
-  line-height: 18px !important;
-  --typography-color: var(--grey-500) !important;
-}
-
-.selectButton {
-  :global {
-    .bp3-input {
-      border: unset !important;
-      background: inherit !important;
-      // font-weight: 600 !important;
-      // color: var(--grey-800);
-    }
-
-    .bp3-input-action:last-child {
-      right: 10% !important;
-    }
-  }
-}
-
 .svgOutdated {
   padding: 3.5px 0 0 0 !important;
   margin: -2px;
@@ -72,4 +51,12 @@
   flex-wrap: wrap;
   justify-content: flex-start;
   gap: 7px;
+}
+
+.ugicon {
+  background-color: var(--yellow-700) !important;
+  color: var(--grey-0) !important;
+  border-radius: var(--spacing-xsmall);
+  padding: 3px !important;
+  margin: 0 10px !important;
 }

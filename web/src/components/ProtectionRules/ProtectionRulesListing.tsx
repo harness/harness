@@ -126,7 +126,7 @@ const ProtectionRulesListing = (props: { activeTab: string; repoMetadata?: RepoR
       limit: LIST_FETCHING_LIMIT,
       inherited: isParamTrue(pageBrowser.inherit),
       page,
-      sort: 'date',
+      sort: 'updated_at',
       order: OrderSortDate.DESC,
       query: debouncedSearchTerm,
       type: pageBrowser.type ?? ''

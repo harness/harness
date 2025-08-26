@@ -1,7 +1,7 @@
 import type { UseStringsReturn } from 'framework/strings'
-import type { EnumMergeMethod, OpenapiRule, OpenapiRuleType, ProtectionBranch, TypesPrincipalInfo } from 'services/code'
+import type { EnumMergeMethod, OpenapiRule, OpenapiRuleType, ProtectionBranch } from 'services/code'
 import { MergeStrategy, ProtectionRulesType, RulesTargetType } from 'utils/GitUtils'
-import { PrincipalType } from 'utils/Utils'
+import { NormalizedPrincipal, PrincipalType } from 'utils/Utils'
 
 // Maps an array to targetList
 export const convertToTargetList = (patterns: string[] | undefined, included: boolean): string[][] =>
@@ -40,53 +40,6 @@ export type ProtectionRule = {
   requiredRule: {
     [key in RuleFields]?: boolean
   }
-}
-
-/**
- * Normalizes and combines principal and user group data into a unified format
- * @param principals - Array of principal objects from principals API
- * @param userGroups - Array of user group objects from usergroups API
- * @returns Combined array of normalized objects with consistent structure
- */
-
-export interface NormalizedPrincipal {
-  id: number
-  email_or_identifier: string
-  type: PrincipalType
-  display_name: string
-}
-
-export function combineAndNormalizePrincipalsAndGroups(
-  principals: TypesPrincipalInfo[] | null,
-  userGroups?: any[]
-): NormalizedPrincipal[] {
-  const normalizedData: NormalizedPrincipal[] = []
-
-  // Process principals data if available
-  if (principals && Array.isArray(principals)) {
-    principals.forEach(principal => {
-      normalizedData.push({
-        id: principal.id || -1,
-        email_or_identifier: principal.email || principal.uid || '',
-        type: (principal.type as PrincipalType) || PrincipalType.USER,
-        display_name: principal.display_name || principal.email || 'Unknown User'
-      })
-    })
-  }
-
-  // Process user groups data if available
-  if (userGroups && Array.isArray(userGroups)) {
-    userGroups.forEach(group => {
-      normalizedData.push({
-        id: group.id || '',
-        email_or_identifier: group.identifier || '',
-        type: PrincipalType.USER_GROUP,
-        display_name: group.name || group.identifier || 'Unknown Group'
-      })
-    })
-  }
-
-  return normalizedData.sort((a, b) => a.display_name.localeCompare(b.display_name))
 }
 
 export type RulesFormPayload = {

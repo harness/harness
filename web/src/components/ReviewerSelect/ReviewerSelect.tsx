@@ -31,17 +31,26 @@ import {
 import { Color, FontVariation } from '@harnessio/design-system'
 import cx from 'classnames'
 import { useGet } from 'restful-react'
+import { isEmpty } from 'lodash-es'
+import { Icon } from '@harnessio/icons'
+import { useParams } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
-import { getErrorMessage, LIST_FETCHING_LIMIT, PrincipalType } from 'utils/Utils'
+import {
+  combineAndNormalizePrincipalsAndGroups,
+  getErrorMessage,
+  NormalizedPrincipal,
+  PrincipalType
+} from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import { CodeIcon } from 'utils/GitUtils'
-import { usePageIndex } from 'hooks/usePageIndex'
-import type { TypesPullReq } from 'services/code'
+import type { TypesPrincipalInfo, TypesPullReq, TypesUserGroupInfo } from 'services/code'
+import type { Identifier } from 'utils/types'
 import css from './ReviewerSelect.module.scss'
 
 export interface ReviewerSelectProps extends Omit<ButtonProps, 'onSelect'> {
   pullRequestMetadata: TypesPullReq
-  onSelect: (id: number) => void
+  onSelect: (principal: NormalizedPrincipal) => void
+  standalone?: boolean
 }
 
 export const ReviewerSelect: React.FC<ReviewerSelectProps> = ({ pullRequestMetadata, onSelect, ...props }) => {
@@ -53,14 +62,7 @@ export const ReviewerSelect: React.FC<ReviewerSelectProps> = ({ pullRequestMetad
       variation={ButtonVariation.TERTIARY}
       minimal
       size={ButtonSize.SMALL}
-      tooltip={
-        <PopoverContent
-          pullRequestMetadata={pullRequestMetadata}
-          onSelect={ref => {
-            onSelect(ref)
-          }}
-        />
-      }
+      tooltip={<PopoverContent pullRequestMetadata={pullRequestMetadata} onSelect={onSelect} />}
       tooltipProps={{
         interactionKind: 'click',
         usePortal: true,
@@ -73,7 +75,7 @@ export const ReviewerSelect: React.FC<ReviewerSelectProps> = ({ pullRequestMetad
   )
 }
 
-const PopoverContent: React.FC<ReviewerSelectProps> = ({ pullRequestMetadata, onSelect }) => {
+const PopoverContent: React.FC<ReviewerSelectProps> = ({ pullRequestMetadata, onSelect, standalone }) => {
   const { getString } = useStrings()
 
   const inputRef = useRef<HTMLInputElement | null>()
@@ -88,10 +90,10 @@ const PopoverContent: React.FC<ReviewerSelectProps> = ({ pullRequestMetadata, on
           inputRef={ref => (inputRef.current = ref)}
           defaultValue={query}
           autoFocus
-          placeholder={getString('findAUser')}
+          placeholder={standalone ? getString('findAUser') : getString('findAUserOrUserGroup')}
           onInput={e => {
-            const _value = (e.currentTarget.value || '').trim()
-            setQuery(_value)
+            const value = (e.currentTarget.value || '').trim()
+            setQuery(value)
           }}
           leftIcon={loading ? CodeIcon.InputSpinner : CodeIcon.InputSearch}
           leftIconProps={{
@@ -100,13 +102,13 @@ const PopoverContent: React.FC<ReviewerSelectProps> = ({ pullRequestMetadata, on
             color: Color.GREY_500
           }}
         />
-
         <Container className={cx(css.tabContainer)}>
           <ReviewerList
-            onSelect={display_name => onSelect(display_name)}
+            onSelect={onSelect}
             pullRequestMetadata={pullRequestMetadata}
             query={query}
             setLoading={setLoading}
+            standalone={standalone}
           />
         </Container>
       </Layout.Vertical>
@@ -119,76 +121,96 @@ interface ReviewerListProps extends Omit<ReviewerSelectProps, 'onQuery'> {
   setLoading: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-function ReviewerList({
-  pullRequestMetadata,
-  query,
-  onSelect,
-
-  setLoading
-}: ReviewerListProps) {
+function ReviewerList({ pullRequestMetadata, query, onSelect, setLoading, standalone }: ReviewerListProps) {
   const { getString } = useStrings()
-  const [page] = usePageIndex(1)
   const { routingId } = useAppContext()
-  const { data, error, loading } = useGet<Unknown[]>({
+  const { accountId, orgIdentifier, projectIdentifier } = useParams<Identifier>()
+
+  const {
+    data: principals,
+    error: principalsError,
+    loading: loadingPrincipals
+  } = useGet<TypesPrincipalInfo[]>({
     path: `/api/v1/principals`,
     queryParams: {
-      query: query,
-      limit: LIST_FETCHING_LIMIT,
-      page: page,
-      accountIdentifier: routingId,
+      query,
+      accountIdentifier: accountId || routingId,
       type: PrincipalType.USER
     }
   })
 
+  const {
+    data: userGroups,
+    error: userGroupsError,
+    loading: loadingUsersGroups
+  } = useGet<TypesUserGroupInfo[]>({
+    path: `/api/v1/usergroups`,
+    queryParams: {
+      query,
+      accountIdentifier: accountId || routingId,
+      orgIdentifier,
+      projectIdentifier
+    },
+    lazy: standalone
+  })
+
   useEffect(() => {
-    setLoading(loading)
-  }, [setLoading, loading])
+    setLoading(loadingPrincipals || loadingUsersGroups)
+  }, [setLoading, loadingPrincipals, loadingUsersGroups])
+
+  const error = principalsError || userGroupsError
+
+  const normalizedPrincipals = combineAndNormalizePrincipalsAndGroups(principals, userGroups)
 
   return (
     <Container>
       {!!error && (
         <Container flex={{ align: 'center-center' }} padding="large">
-          {!!error && <Text font={{ variation: FontVariation.FORM_MESSAGE_DANGER }}>{getErrorMessage(error)}</Text>}
+          <Text font={{ variation: FontVariation.FORM_MESSAGE_DANGER }}>{getErrorMessage(error)}</Text>
         </Container>
       )}
 
-      {!!data?.length && (
+      {!isEmpty(normalizedPrincipals) ? (
         <Container className={css.listContainer}>
           <Menu>
-            {data.map(({ display_name, email, id }) => {
+            {normalizedPrincipals?.map(principal => {
+              const { id, email_or_identifier, type, display_name } = principal
               const disabled = id === pullRequestMetadata?.author?.id
               return (
                 <MenuItem
-                  key={email}
+                  key={email_or_identifier}
                   className={cx(css.menuItem, { [css.disabled]: disabled })}
                   text={
-                    <Layout.Horizontal>
-                      <Avatar className={css.avatar} name={display_name} size="small" hoverCard={false} />
-
-                      <Layout.Vertical padding={{ left: 'small' }}>
+                    <Layout.Horizontal flex={{ alignItems: 'center', justifyContent: 'start' }}>
+                      {type === PrincipalType.USER ? (
+                        <Avatar className={css.avatar} name={display_name} size="small" hoverCard={false} />
+                      ) : (
+                        <Icon margin={'xsmall'} className={cx(css.avatar, css.ugicon)} name="user-groups" size={18} />
+                      )}
+                      <Layout.Vertical
+                        padding={{ left: 'small' }}
+                        style={type === PrincipalType.USER_GROUP ? { marginLeft: '2px' } : undefined}>
                         <Text>
                           <strong>{display_name}</strong>
                         </Text>
-                        <Text>{email}</Text>
+                        <Text>{email_or_identifier}</Text>
                       </Layout.Vertical>
                     </Layout.Horizontal>
                   }
                   labelElement={disabled ? <Text className={css.owner}>owner</Text> : undefined}
                   disabled={disabled}
-                  onClick={() => onSelect(id as number)}
+                  onClick={() => onSelect(principal)}
                 />
               )
             })}
           </Menu>
         </Container>
-      )}
-
-      {data?.length === 0 && (
+      ) : (
         <Container className={css.noTextContainer} flex={{ align: 'center-center' }} padding="large">
           {
             <Text className={css.noWrapText} flex padding={{ top: 'small' }}>
               <StringSubstitute
-                str={getString('reviewerNotFound')}
+                str={getString('noUsersFound')}
                 vars={{
                   reviewer: (
                     <Text

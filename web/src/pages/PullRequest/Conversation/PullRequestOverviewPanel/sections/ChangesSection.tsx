@@ -24,24 +24,27 @@ import {
   useToggle,
   stringSubstitute
 } from '@harnessio/uicore'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import cx from 'classnames'
 import { Render } from 'react-jsx-match'
 import { capitalize, isEmpty } from 'lodash-es'
 import type { IconName } from '@blueprintjs/core'
 import { Icon } from '@harnessio/icons'
-import { CodeOwnerReqDecision, findChangeReqDecisions, getUnifiedDefaultReviewersState } from 'utils/Utils'
+import { CodeOwnerReqDecision, findReviewDecisions, getUnifiedDefaultReviewersState } from 'utils/Utils'
 import { CodeOwnerSection } from 'pages/PullRequest/CodeOwners/CodeOwnersOverview'
 import { useStrings } from 'framework/strings'
 import type {
   TypesCodeOwnerEvaluation,
-  TypesCodeOwnerEvaluationEntry,
   TypesPullReq,
-  TypesPullReqReviewer,
   RepoRepositoryOutput,
-  TypesDefaultReviewerApprovalsResponse
+  TypesDefaultReviewerApprovalsResponse,
+  PullreqCombinedListResponse
 } from 'services/code'
-import { defaultReviewerResponseWithDecision, findWaitingDecisions } from 'pages/PullRequest/PullRequestUtils'
+import {
+  defaultReviewerResponseWithDecision,
+  findWaitingDecisions,
+  PullReqReviewDecision
+} from 'pages/PullRequest/PullRequestUtils'
 import { DefaultReviewersPanel } from 'pages/PullRequest/DefaultReviewers/DefaultReviewersPanel'
 import greyCircle from '../../../../../icons/greyCircle.svg?url'
 import emptyStatus from '../../../../../icons/emptyStatus.svg?url'
@@ -58,7 +61,7 @@ interface ChangesSectionProps {
   atLeastOneReviewerRule: boolean
   reqCodeOwnerApproval: boolean
   minApproval: number
-  reviewers: TypesPullReqReviewer[] | null
+  combinedReviewers: PullreqCombinedListResponse | null
   defaultReviewersInfoSet: TypesDefaultReviewerApprovalsResponse[]
   minReqLatestApproval: number
   reqCodeOwnerLatestApproval: boolean
@@ -70,13 +73,13 @@ interface ChangesSectionProps {
 
 const ChangesSection = (props: ChangesSectionProps) => {
   const {
-    reviewers: currReviewers,
+    combinedReviewers,
     defaultReviewersInfoSet,
     minApproval,
     reqCodeOwnerApproval,
     repoMetadata,
     pullReqMetadata,
-    codeOwners: currCodeOwners,
+    codeOwners,
     atLeastOneReviewerRule,
     reqCodeOwnerLatestApproval,
     minReqLatestApproval,
@@ -94,22 +97,14 @@ const ChangesSection = (props: ChangesSectionProps) => {
   const [status, setStatus] = useState('tick-circle')
   const [isExpanded, toggleExpanded] = useToggle(false)
   const [isNotRequiredFlag, setIsNotRequired] = useState(false)
-  const reviewers = useMemo(() => {
-    refetchCodeOwners()
-    return currReviewers // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currReviewers, refetchReviewers, mergeBlockedRule])
 
-  const codeOwners = useMemo(() => {
-    return currCodeOwners // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currCodeOwners, refetchCodeOwners, refetchReviewers])
+  const { evaluation_entries } = codeOwners || {}
+  const { reviewers } = combinedReviewers || {}
 
   const checkIfOutdatedSha = (reviewedSHA?: string, sourceSHA?: string) => reviewedSHA !== sourceSHA
-  const codeOwnerChangeReqEntries = findChangeReqDecisions(
-    codeOwners?.evaluation_entries,
-    CodeOwnerReqDecision.CHANGEREQ
-  )
+  const codeOwnerChangeReqEntries = findReviewDecisions(evaluation_entries, CodeOwnerReqDecision.CHANGEREQ)
 
-  const codeOwnerApprovalEntries = findChangeReqDecisions(codeOwners?.evaluation_entries, CodeOwnerReqDecision.APPROVED)
+  const codeOwnerApprovalEntries = findReviewDecisions(evaluation_entries, CodeOwnerReqDecision.APPROVED)
 
   const latestCodeOwnerApprovalArr = codeOwnerApprovalEntries
     ?.map(entry => {
@@ -125,17 +120,17 @@ const ChangesSection = (props: ChangesSectionProps) => {
     }) // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .filter((entry: any) => entry !== null && entry !== undefined) // Filter out the null entries
 
-  const codeOwnerPendingEntries = findWaitingDecisions(
-    pullReqMetadata,
-    reqCodeOwnerLatestApproval,
-    codeOwners?.evaluation_entries
+  const codeOwnerPendingEntries = findWaitingDecisions(pullReqMetadata, reqCodeOwnerLatestApproval, evaluation_entries)
+  const approvedEvaluations = reviewers?.filter(
+    evaluation => evaluation.review_decision === PullReqReviewDecision.APPROVED
   )
-  const approvedEvaluations = reviewers?.filter(evaluation => evaluation.review_decision === 'approved')
   const latestApprovalArr = approvedEvaluations?.filter(
     approved => !checkIfOutdatedSha(approved.sha, pullReqMetadata?.source_sha as string)
   )
 
-  const changeReqEvaluations = reviewers?.filter(evaluation => evaluation.review_decision === 'changereq')
+  const changeReqEvaluations = reviewers?.filter(
+    evaluation => evaluation.review_decision === PullReqReviewDecision.CHANGEREQ
+  )
   const changeReqReviewer =
     changeReqEvaluations && !isEmpty(changeReqEvaluations)
       ? capitalize(changeReqEvaluations[0].reviewer?.display_name || changeReqEvaluations[0].reviewer?.uid || '')
@@ -211,7 +206,6 @@ const ChangesSection = (props: ChangesSectionProps) => {
           count: approvedEvaluations?.length || '0',
           total: minApproval
         }) as string
-
         statusColor = Color.ORANGE_500
         statusIcon = 'execution-waiting'
       } else if (defReviewerApprovalRequiredByRule && !defReviewerApprovedChanges) {
@@ -220,7 +214,6 @@ const ChangesSection = (props: ChangesSectionProps) => {
           count: approvedEvaluations?.length || '0',
           total: minApproval
         }) as string
-
         statusColor = Color.ORANGE_500
         statusIcon = 'execution-waiting'
       } else if (reqCodeOwnerLatestApproval && latestCodeOwnerApprovalArr?.length > 0) {
@@ -288,8 +281,8 @@ const ChangesSection = (props: ChangesSectionProps) => {
     setStatus(curStatus)
     setIsNotRequired(isNotRequired) // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    currReviewers,
-    currCodeOwners,
+    combinedReviewers,
+    codeOwners,
     reqNoChangeReq,
     reqCodeOwnerApproval,
     minApproval,
@@ -302,7 +295,7 @@ const ChangesSection = (props: ChangesSectionProps) => {
   ])
 
   function renderCodeOwnerStatus() {
-    if (codeOwnerPendingEntries?.length > 0 && reqCodeOwnerLatestApproval) {
+    if (!isEmpty(codeOwnerPendingEntries) && reqCodeOwnerLatestApproval) {
       return (
         <Layout.Horizontal>
           <Container padding={{ left: 'large' }}>
@@ -316,7 +309,7 @@ const ChangesSection = (props: ChangesSectionProps) => {
       )
     }
 
-    if (codeOwnerPendingEntries?.length > 0 && reqCodeOwnerApproval) {
+    if (!isEmpty(codeOwnerPendingEntries) && reqCodeOwnerApproval) {
       return (
         <Layout.Horizontal>
           <Container padding={{ left: 'large' }}>
@@ -330,10 +323,7 @@ const ChangesSection = (props: ChangesSectionProps) => {
       )
     }
 
-    if (
-      (codeOwnerApprovalEntries as TypesCodeOwnerEvaluationEntry[])?.length > 0 &&
-      codeOwnerPendingEntries?.length > 0
-    ) {
+    if (!isEmpty(codeOwnerApprovalEntries) && !isEmpty(codeOwnerPendingEntries)) {
       return (
         <Layout.Horizontal>
           <Container padding={{ left: 'large' }}>
@@ -345,7 +335,7 @@ const ChangesSection = (props: ChangesSectionProps) => {
         </Layout.Horizontal>
       )
     }
-    if (latestCodeOwnerApprovalArr?.length > 0 && reqCodeOwnerLatestApproval) {
+    if (!isEmpty(latestCodeOwnerApprovalArr) && reqCodeOwnerLatestApproval) {
       return (
         <Text
           icon={'tick-circle'}
@@ -360,7 +350,7 @@ const ChangesSection = (props: ChangesSectionProps) => {
         </Text>
       )
     }
-    if (codeOwnerApprovalEntries?.length > 0 && reqCodeOwnerApproval) {
+    if (!isEmpty(codeOwnerApprovalEntries) && reqCodeOwnerApproval) {
       return (
         <Text
           icon={'tick-circle'}
@@ -375,7 +365,7 @@ const ChangesSection = (props: ChangesSectionProps) => {
         </Text>
       )
     }
-    if (codeOwnerApprovalEntries?.length > 0) {
+    if (!isEmpty(codeOwnerApprovalEntries)) {
       if (reqCodeOwnerLatestApproval && latestCodeOwnerApprovalArr.length < minReqLatestApproval) {
         return (
           <Layout.Horizontal>
