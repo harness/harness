@@ -127,6 +127,8 @@
 }
 
 .ownerContainer {
+  align-items: center !important;
+
   :global {
     [class*='Avatar--Avatar'] {
       cursor: unset !important;
@@ -171,4 +173,11 @@
       fill: var(--red-700) !important;
     }
   }
+}
+
+.ugicon {
+  background-color: var(--yellow-700) !important;
+  color: var(--grey-0) !important;
+  border-radius: var(--spacing-xsmall);
+  padding: 3px !important;
 }

@@ -27,18 +27,33 @@ import {
   TableV2,
   Layout,
   Avatar,
-  stringSubstitute
+  stringSubstitute,
+  Popover
 } from '@harnessio/uicore'
 import cx from 'classnames'
 import { Color, FontVariation } from '@harnessio/design-system'
 import type { CellProps, Column } from 'react-table'
+import { Icon } from '@harnessio/icons'
+import { isEmpty } from 'lodash-es'
+import { PopoverInteractionKind, Position } from '@blueprintjs/core'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import { ExecutionState, ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
 import { useShowRequestError } from 'hooks/useShowRequestError'
-import type { TypesCodeOwnerEvaluation, TypesCodeOwnerEvaluationEntry } from 'services/code'
+import type {
+  TypesCodeOwnerEvaluation,
+  TypesCodeOwnerEvaluationEntry,
+  TypesOwnerEvaluation,
+  TypesUserGroupInfo,
+  TypesUserGroupOwnerEvaluation
+} from 'services/code'
 import type { PRChecksDecisionResult } from 'hooks/usePRChecksDecision'
-import { CodeOwnerReqDecision, findReviewDecisions } from 'utils/Utils'
+import {
+  CodeOwnerReqDecision,
+  combineAndNormalizePrincipalsAndGroups,
+  findReviewDecisions,
+  PrincipalType
+} from 'utils/Utils'
 import { PullReqReviewDecision, findWaitingDecisions } from '../PullRequestUtils'
 import css from './CodeOwnersOverview.module.scss'
 
@@ -138,6 +153,75 @@ export function CodeOwnersOverview({
   ) : null
 }
 
+const RenderCodeOwners = ({
+  codeOwners,
+  userGroupOwners
+}: {
+  codeOwners: TypesOwnerEvaluation[]
+  userGroupOwners?: TypesUserGroupOwnerEvaluation[]
+}) => {
+  const ugOwners =
+    userGroupOwners?.map(
+      group =>
+        ({
+          identifier: group?.id || '',
+          name: group?.name || group?.id || 'Unknown Group'
+        } as TypesUserGroupInfo)
+    ) || []
+  const owners = combineAndNormalizePrincipalsAndGroups(
+    codeOwners?.map(({ owner }) => owner || {}),
+    ugOwners,
+    true
+  )
+
+  if (isEmpty(owners)) {
+    return null
+  }
+
+  return (
+    <Layout.Horizontal className={css.ownerContainer} spacing="tiny">
+      {owners?.slice(0, 3).map(({ display_name, email_or_identifier, type }) => {
+        if (type === PrincipalType.USER_GROUP) {
+          return (
+            <Popover
+              key={email_or_identifier}
+              interactionKind={PopoverInteractionKind.HOVER}
+              position={Position.TOP}
+              content={<Container padding={'small'}>{display_name}</Container>}>
+              <Icon margin={'xsmall'} className={css.ugicon} name="user-groups" size={18} />
+            </Popover>
+          )
+        }
+        return (
+          <Avatar
+            key={email_or_identifier}
+            hoverCard
+            email={email_or_identifier || ''}
+            size="small"
+            name={display_name || ''}
+          />
+        )
+      })}
+      {owners?.length > 3 && (
+        <Text
+          tooltipProps={{ isDark: true }}
+          tooltip={
+            <Container width={215} padding={'small'}>
+              <Layout.Horizontal className={css.ownerTooltip}>
+                {owners?.map(({ display_name }, idx) => (
+                  <Text key={`text-${display_name}`} lineClamp={1} color={Color.GREY_0} padding={{ right: 'small' }}>
+                    {`${display_name}${owners?.length === idx + 1 ? '' : ', '}`}
+                  </Text>
+                ))}
+              </Layout.Horizontal>
+            </Container>
+          }
+          flex={{ alignItems: 'center' }}>{`+${owners?.length - 3}`}</Text>
+      )}
+    </Layout.Horizontal>
+  )
+}
+
 interface CodeOwnerSectionsProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'> {
   data: TypesCodeOwnerEvaluation
   reqCodeOwnerLatestApproval?: boolean
@@ -165,9 +249,9 @@ export const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({
       [
         {
           id: 'CODE',
-          width: '40%',
-          sort: true,
+          width: '36%',
           Header: getString('code'),
+          sort: true,
           accessor: 'CODE',
           Cell: ({ row }: CellProps<TypesCodeOwnerEvaluationEntry>) => {
             return (
@@ -183,121 +267,33 @@ export const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({
         },
         {
           id: 'Owners',
-          width: '18%',
-          sort: true,
+          width: '20%',
           Header: getString('ownersHeading'),
           accessor: 'OWNERS',
-          Cell: ({ row }: CellProps<TypesCodeOwnerEvaluationEntry>) => {
-            return (
-              <Layout.Horizontal
-                key={`keyContainer-${row.original.pattern}`}
-                className={css.ownerContainer}
-                spacing="tiny">
-                {row.original.owner_evaluations?.map(({ owner }, idx) => {
-                  if (idx < 2) {
-                    return (
-                      <Avatar
-                        key={`text-${owner?.display_name}-${idx}-avatar`}
-                        hoverCard={true}
-                        email={owner?.email || ' '}
-                        size="small"
-                        name={owner?.display_name || ''}
-                      />
-                    )
-                  }
-                  if (
-                    idx === 2 &&
-                    row.original.owner_evaluations?.length &&
-                    row.original.owner_evaluations?.length > 2
-                  ) {
-                    return (
-                      <Text
-                        key={`text-${owner?.display_name}-${idx}-top`}
-                        padding={{ top: 'xsmall' }}
-                        tooltipProps={{ isDark: true }}
-                        tooltip={
-                          <Container width={215} padding={'small'}>
-                            <Layout.Horizontal key={`tooltip-${idx}`} className={css.ownerTooltip}>
-                              {row.original.owner_evaluations?.map((entry, entryidx) => (
-                                <Text
-                                  key={`text-${entry.owner?.display_name}-${entryidx}`}
-                                  lineClamp={1}
-                                  color={Color.GREY_0}
-                                  padding={{ right: 'small' }}>
-                                  {row.original.owner_evaluations?.length === entryidx + 1
-                                    ? `${entry.owner?.display_name}`
-                                    : `${entry.owner?.display_name}, `}
-                                </Text>
-                              ))}
-                            </Layout.Horizontal>
-                          </Container>
-                        }
-                        flex={{ alignItems: 'center' }}>{`+${row.original.owner_evaluations?.length - 2}`}</Text>
-                    )
-                  }
-                  return null
-                })}
-              </Layout.Horizontal>
-            )
-          }
+          Cell: ({ row }: CellProps<TypesCodeOwnerEvaluationEntry>) => (
+            <RenderCodeOwners
+              codeOwners={row.original.owner_evaluations || []}
+              userGroupOwners={row.original.user_group_owner_evaluations || []}
+            />
+          )
         },
         {
           id: 'changesRequested',
           Header: getString('changesRequestedBy'),
           width: '24%',
-          sort: true,
           accessor: 'ChangesRequested',
           Cell: ({ row }: CellProps<TypesCodeOwnerEvaluationEntry>) => {
             const changeReqEvaluations = row?.original?.owner_evaluations?.filter(
               evaluation => evaluation.review_decision === PullReqReviewDecision.CHANGEREQ
             )
-            return (
-              <Layout.Horizontal className={css.ownerContainer} spacing="tiny">
-                {changeReqEvaluations?.map(({ owner }, idx) => {
-                  if (idx < 2) {
-                    return (
-                      <Avatar
-                        key={`approved-${owner?.display_name}-avatar`}
-                        hoverCard={true}
-                        email={owner?.email || ' '}
-                        size="small"
-                        name={owner?.display_name || ''}
-                      />
-                    )
-                  }
-                  if (idx === 2 && changeReqEvaluations.length && changeReqEvaluations.length > 2) {
-                    return (
-                      <Text
-                        key={`approved-${owner?.display_name}-text`}
-                        padding={{ top: 'xsmall' }}
-                        tooltipProps={{ isDark: true }}
-                        tooltip={
-                          <Container width={215} padding={'small'}>
-                            <Layout.Horizontal className={css.ownerTooltip}>
-                              {changeReqEvaluations?.map(entry => (
-                                <Text
-                                  key={`approved-${entry.owner?.display_name}`}
-                                  lineClamp={1}
-                                  color={Color.GREY_0}
-                                  padding={{ right: 'small' }}>{`${entry.owner?.display_name}, `}</Text>
-                              ))}
-                            </Layout.Horizontal>
-                          </Container>
-                        }
-                        flex={{ alignItems: 'center' }}>{`+${changeReqEvaluations.length - 2}`}</Text>
-                    )
-                  }
-                  return null
-                })}
-              </Layout.Horizontal>
-            )
+
+            return <RenderCodeOwners codeOwners={changeReqEvaluations || []} />
           }
         },
         {
           id: 'approvedBy',
           Header: getString('approvedBy'),
-          sort: true,
-          width: '15%',
+          width: '20%',
           accessor: 'APPROVED BY',
           Cell: ({ row }: CellProps<TypesCodeOwnerEvaluationEntry>) => {
             const approvedEvaluations = row?.original?.owner_evaluations?.filter(
@@ -305,49 +301,12 @@ export const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({
                 evaluation.review_decision === PullReqReviewDecision.APPROVED &&
                 (reqCodeOwnerLatestApproval ? evaluation.review_sha === pullReqMetadata?.source_sha : true)
             )
-            return (
-              <Layout.Horizontal className={css.ownerContainer} spacing="tiny">
-                {approvedEvaluations?.map(({ owner }, idx) => {
-                  if (idx < 2) {
-                    return (
-                      <Avatar
-                        key={`approved-${owner?.display_name}-avatar`}
-                        hoverCard={true}
-                        email={owner?.email || ' '}
-                        size="small"
-                        name={owner?.display_name || ''}
-                      />
-                    )
-                  }
-                  if (idx === 2 && approvedEvaluations.length && approvedEvaluations.length > 2) {
-                    return (
-                      <Text
-                        key={`approved-${owner?.display_name}-text`}
-                        padding={{ top: 'xsmall' }}
-                        tooltipProps={{ isDark: true }}
-                        tooltip={
-                          <Container width={215} padding={'small'}>
-                            <Layout.Horizontal className={css.ownerTooltip}>
-                              {approvedEvaluations?.map(entry => (
-                                <Text
-                                  key={`approved-${entry.owner?.display_name}`}
-                                  lineClamp={1}
-                                  color={Color.GREY_0}
-                                  padding={{ right: 'small' }}>{`${entry.owner?.display_name}, `}</Text>
-                              ))}
-                            </Layout.Horizontal>
-                          </Container>
-                        }
-                        flex={{ alignItems: 'center' }}>{`+${approvedEvaluations.length - 2}`}</Text>
-                    )
-                  }
-                  return null
-                })}
-              </Layout.Horizontal>
-            )
+
+            return <RenderCodeOwners codeOwners={approvedEvaluations || []} />
           }
         }
-      ] as unknown as Column<TypesCodeOwnerEvaluationEntry>[], // eslint-disable-next-line react-hooks/exhaustive-deps
+      ] as Column<TypesCodeOwnerEvaluationEntry>[],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   )
   return (

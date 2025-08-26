@@ -38,7 +38,8 @@ import type {
   TypesPullReq,
   RepoRepositoryOutput,
   TypesDefaultReviewerApprovalsResponse,
-  PullreqCombinedListResponse
+  PullreqCombinedListResponse,
+  TypesPullReqReviewer
 } from 'services/code'
 import {
   defaultReviewerResponseWithDecision,
@@ -103,7 +104,6 @@ const ChangesSection = (props: ChangesSectionProps) => {
 
   const checkIfOutdatedSha = (reviewedSHA?: string, sourceSHA?: string) => reviewedSHA !== sourceSHA
   const codeOwnerChangeReqEntries = findReviewDecisions(evaluation_entries, CodeOwnerReqDecision.CHANGEREQ)
-
   const codeOwnerApprovalEntries = findReviewDecisions(evaluation_entries, CodeOwnerReqDecision.APPROVED)
 
   const latestCodeOwnerApprovalArr = codeOwnerApprovalEntries
@@ -121,16 +121,23 @@ const ChangesSection = (props: ChangesSectionProps) => {
     .filter((entry: any) => entry !== null && entry !== undefined) // Filter out the null entries
 
   const codeOwnerPendingEntries = findWaitingDecisions(pullReqMetadata, reqCodeOwnerLatestApproval, evaluation_entries)
-  const approvedEvaluations = reviewers?.filter(
-    evaluation => evaluation.review_decision === PullReqReviewDecision.APPROVED
-  )
+
+  const { approvedEvaluations, changeReqEvaluations } = reviewers?.reduce(
+    (acc, evaluation) => {
+      if (evaluation.review_decision === PullReqReviewDecision.APPROVED) {
+        acc.approvedEvaluations.push(evaluation)
+      } else if (evaluation.review_decision === PullReqReviewDecision.CHANGEREQ) {
+        acc.changeReqEvaluations.push(evaluation)
+      }
+      return acc
+    },
+    { approvedEvaluations: [] as TypesPullReqReviewer[], changeReqEvaluations: [] as TypesPullReqReviewer[] }
+  ) ?? { approvedEvaluations: [], changeReqEvaluations: [] }
+
   const latestApprovalArr = approvedEvaluations?.filter(
     approved => !checkIfOutdatedSha(approved.sha, pullReqMetadata?.source_sha as string)
   )
 
-  const changeReqEvaluations = reviewers?.filter(
-    evaluation => evaluation.review_decision === PullReqReviewDecision.CHANGEREQ
-  )
   const changeReqReviewer =
     changeReqEvaluations && !isEmpty(changeReqEvaluations)
       ? capitalize(changeReqEvaluations[0].reviewer?.display_name || changeReqEvaluations[0].reviewer?.uid || '')

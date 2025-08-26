@@ -34,4 +34,5 @@ export declare const showMore: string
 export declare const status: string
 export declare const table: string
 export declare const time: string
+export declare const ugicon: string
 export declare const waitingContainer: string
