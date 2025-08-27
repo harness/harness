@@ -68,11 +68,12 @@ func WithPullReqActivitySuggestionsMetadataUpdate(
 
 // PullReqActivityMentionsMetadata contains metadata for code comment mentions.
 type PullReqActivityMentionsMetadata struct {
-	IDs []int64 `json:"ids,omitempty"`
+	IDs          []int64 `json:"ids,omitempty"`
+	UserGroupIDs []int64 `json:"user_group_ids,omitempty"`
 }
 
 func (m *PullReqActivityMentionsMetadata) IsEmpty() bool {
-	return len(m.IDs) == 0
+	return len(m.IDs) == 0 && len(m.UserGroupIDs) == 0
 }
 
 func WithPullReqActivityMentionsMetadataUpdate(

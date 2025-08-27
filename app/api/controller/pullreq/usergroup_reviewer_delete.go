@@ -57,7 +57,11 @@ func (c *Controller) UserGroupReviewerDelete(
 			UserGroupIDs: []int64{userGroupID},
 		}
 
-		_, err = c.activityStore.CreateWithPayload(ctx, pr, session.Principal.ID, payload, nil)
+		metadata := &types.PullReqActivityMetadata{
+			Mentions: &types.PullReqActivityMentionsMetadata{UserGroupIDs: []int64{userGroupID}},
+		}
+
+		_, err = c.activityStore.CreateWithPayload(ctx, pr, session.Principal.ID, payload, metadata)
 		if err != nil {
 			return fmt.Errorf("failed to create pull request activity: %w", err)
 		}

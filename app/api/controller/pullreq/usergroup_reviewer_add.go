@@ -122,8 +122,14 @@ func (c *Controller) UserGroupReviewerAdd(
 			ReviewerType: enum.PullReqReviewerTypeRequested,
 		}
 
+		metadata := &types.PullReqActivityMetadata{
+			Mentions: &types.PullReqActivityMentionsMetadata{
+				UserGroupIDs: []int64{userGroupReviewer.UserGroupID},
+			},
+		}
+
 		if _, err := c.activityStore.CreateWithPayload(
-			ctx, pr, session.Principal.ID, payload, nil,
+			ctx, pr, session.Principal.ID, payload, metadata,
 		); err != nil {
 			return err
 		}
