@@ -38,6 +38,7 @@ func TestParse(t *testing.T) {
 			},
 			want: &Command{
 				Name: "version",
+				Envs: make(map[string]string),
 			},
 		},
 		{
@@ -49,6 +50,7 @@ func TestParse(t *testing.T) {
 				},
 			},
 			want: &Command{
+				Envs:    make(map[string]string),
 				Globals: []string{"--help"},
 			},
 		},
@@ -63,6 +65,7 @@ func TestParse(t *testing.T) {
 			},
 			want: &Command{
 				Name: "diff",
+				Envs: make(map[string]string),
 				Args: []string{"main...dev"},
 			},
 		},
@@ -87,6 +90,7 @@ func TestParse(t *testing.T) {
 					"file1",
 					"file2",
 				},
+				Envs: make(map[string]string),
 			},
 		},
 		{
@@ -105,6 +109,7 @@ func TestParse(t *testing.T) {
 				Flags:       []string{"--shortstat"},
 				Args:        []string{"main...dev"},
 				PostSepArgs: []string{},
+				Envs:        make(map[string]string),
 			},
 		},
 		{
@@ -122,6 +127,7 @@ func TestParse(t *testing.T) {
 				Name:   "remote",
 				Action: "set-url",
 				Args:   []string{"origin", "http://reponame"},
+				Envs:   make(map[string]string),
 			},
 		},
 		{
@@ -149,6 +155,7 @@ func TestParse(t *testing.T) {
 					"--progress",
 					"--delta-base-offset",
 				},
+				Envs: make(map[string]string),
 			},
 		},
 	}

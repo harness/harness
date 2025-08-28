@@ -48,7 +48,9 @@ import (
 //	git diff main...dev -- file1
 func Parse(args ...string) *Command {
 	actions := map[string]uint{}
-	c := &Command{}
+	c := &Command{
+		Envs: make(map[string]string),
+	}
 
 	globalPos := -1
 	namePos := -1
