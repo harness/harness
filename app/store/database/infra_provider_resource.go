@@ -286,6 +286,7 @@ func (i InfraProviderResourceView) Find(ctx context.Context, id int64) (*types.I
 	providerConfig, err := i.findInfraProviderConfig(ctx, providerResource.InfraProviderConfigID)
 	if err == nil && providerConfig != nil {
 		providerResource.InfraProviderConfigIdentifier = providerConfig.Identifier
+		providerResource.InfraProviderConfigName = providerConfig.Name
 	}
 	resourceSpace, err := i.spaceStore.Find(ctx, providerResource.SpaceID)
 	if err == nil {

@@ -46,6 +46,7 @@ type InfraProviderResource struct {
 	Name                          string                 `json:"name"`
 	InfraProviderConfigID         int64                  `json:"-"`
 	InfraProviderConfigIdentifier string                 `json:"config_identifier"`
+	InfraProviderConfigName       string                 `json:"config_name"`
 	CPU                           *string                `json:"cpu"`
 	Memory                        *string                `json:"memory"`
 	Disk                          *string                `json:"disk"`
