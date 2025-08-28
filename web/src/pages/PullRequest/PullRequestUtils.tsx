@@ -61,7 +61,9 @@ export enum CommentType {
   STATE_CHANGE = 'state-change',
   LABEL_MODIFY = 'label-modify',
   REVIEWER_ADD = 'reviewer-add',
+  USER_GROUP_REVIEWER_ADD = 'user-group-reviewer-add',
   REVIEWER_DELETE = 'reviewer-delete',
+  USER_GROUP_REVIEWER_DELETE = 'user-group-reviewer-delete',
   TARGET_BRANCH_CHANGE = 'target-branch-change'
 }
 

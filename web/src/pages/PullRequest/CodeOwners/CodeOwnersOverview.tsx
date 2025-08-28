@@ -160,18 +160,20 @@ const RenderCodeOwners = ({
   codeOwners: TypesOwnerEvaluation[]
   userGroupOwners?: TypesUserGroupOwnerEvaluation[]
 }) => {
-  const ugOwners =
-    userGroupOwners?.map(
-      group =>
-        ({
-          identifier: group?.id || '',
-          name: group?.name || group?.id || 'Unknown Group'
-        } as TypesUserGroupInfo)
-    ) || []
-  const owners = combineAndNormalizePrincipalsAndGroups(
-    codeOwners?.map(({ owner }) => owner || {}),
-    ugOwners,
-    true
+  const owners = useMemo(
+    () =>
+      combineAndNormalizePrincipalsAndGroups(
+        codeOwners?.map(({ owner }) => owner || {}),
+        userGroupOwners?.map(
+          group =>
+            ({
+              identifier: group?.id || '',
+              name: group?.name || group?.id || 'Unknown Group'
+            } as TypesUserGroupInfo)
+        ) || [],
+        true
+      ),
+    [codeOwners, userGroupOwners]
   )
 
   if (isEmpty(owners)) {

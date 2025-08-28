@@ -661,8 +661,14 @@ func (c *Controller) storeCreateUserGroupReviewerActivity(
 		ReviewerType: reviewerType,
 	}
 
+	metadata := &types.PullReqActivityMetadata{
+		Mentions: &types.PullReqActivityMentionsMetadata{
+			UserGroupIDs: userGroupIDs,
+		},
+	}
+
 	if _, err := c.activityStore.CreateWithPayload(
-		ctx, pr, authorID, payload, nil,
+		ctx, pr, authorID, payload, metadata,
 	); err != nil {
 		log.Ctx(ctx).Err(err).Msgf(
 			"failed to write create %s user group reviewer pull req activity", reviewerType,

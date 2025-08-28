@@ -193,6 +193,8 @@ export type EnumPullReqActivityType =
   | 'state-change'
   | 'target-branch-change'
   | 'title-change'
+  | 'user-group-reviewer-add'
+  | 'user-group-reviewer-delete'
 
 export type EnumPullReqCommentStatus = 'active' | 'resolved'
 
@@ -1710,10 +1712,14 @@ export interface TypesPullReqActivity {
   text?: string
   type?: EnumPullReqActivityType
   updated?: number
+  user_group_mentions?: {
+    [key: string]: TypesUserGroupInfo
+  }
 }
 
 export interface TypesPullReqActivityMentionsMetadata {
   ids?: number[]
+  user_group_ids?: number[]
 }
 
 export interface TypesPullReqActivityMetadata {
@@ -5569,6 +5575,8 @@ export interface ListPullReqActivitiesQueryParams {
     | 'state-change'
     | 'target-branch-change'
     | 'title-change'
+    | 'user-group-reviewer-add'
+    | 'user-group-reviewer-delete'
   )[]
   /**
    * The result should contain only entries created at and after this timestamp (unix millis).

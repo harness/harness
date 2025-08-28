@@ -128,12 +128,20 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
   const payload = commentItems[0].payload
   const type = payload?.type
   const { routes } = useAppContext()
+
   const displayNameList = useMemo(() => {
     const checkList = payload?.metadata?.mentions?.ids ?? []
     const uniqueList = [...new Set(checkList)]
     const mentionsMap = payload?.mentions ?? {}
     return uniqueList.map(id => mentionsMap[id]?.display_name ?? '')
   }, [payload?.metadata?.mentions?.ids, payload?.mentions])
+
+  const userGroupsDisplayNameList = useMemo(() => {
+    const ids = payload?.metadata?.mentions?.user_group_ids ?? []
+    const uniqueList = [...new Set(ids)]
+    const mentionsMap = payload?.user_group_mentions ?? {}
+    return uniqueList.map(id => mentionsMap[id]?.name ?? '')
+  }, [payload?.metadata?.mentions?.user_group_ids, payload?.user_group_mentions])
 
   const principalNameList = useMemo(() => {
     const checkList = (payload?.payload as any)?.principal_ids ?? []
@@ -577,6 +585,50 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
       )
     }
 
+    case CommentType.USER_GROUP_REVIEWER_ADD: {
+      const userGroupReviewers = formatListWithAndFragment(userGroupsDisplayNameList)
+
+      return (
+        <Container className={css.mergedBox}>
+          <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }}>
+            <Avatar name={payload?.author?.display_name} size="small" hoverCard={false} />
+            <Text tag="div">
+              <Match expr={(payload?.payload as ReviewerAddActivityPayload).reviewer_type}>
+                <Case val={ReviewerAddActivity.REQUESTED}>
+                  <StringSubstitute
+                    str={getString('prReview.requested')}
+                    vars={{
+                      author: <strong>{payload?.author?.display_name}</strong>,
+                      reviewer: userGroupReviewers
+                    }}
+                  />
+                </Case>
+                <Case val={ReviewerAddActivity.CODEOWNERS}>
+                  <StringSubstitute
+                    str={getString('prReview.codeowners')}
+                    vars={{
+                      author: <strong>{payload?.author?.display_name}</strong>,
+                      codeowners: userGroupReviewers,
+                      count: userGroupsDisplayNameList.length
+                    }}
+                  />
+                </Case>
+              </Match>
+            </Text>
+            <PipeSeparator height={9} />
+
+            <TimePopoverWithLocal
+              time={defaultTo(payload?.created as number, 0)}
+              inline={true}
+              width={100}
+              font={{ variation: FontVariation.SMALL }}
+              color={Color.GREY_400}
+            />
+          </Layout.Horizontal>
+        </Container>
+      )
+    }
+
     case CommentType.REVIEWER_DELETE: {
       const mentionId = payload?.metadata?.mentions?.ids?.[0] ?? 0
       const mentionDisplayName = payload?.mentions?.[mentionId]?.display_name ?? ''
@@ -604,6 +656,36 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
                   />
                 </Falsy>
               </Match>
+            </Text>
+            <PipeSeparator height={9} />
+
+            <TimePopoverWithLocal
+              time={defaultTo(payload?.created as number, 0)}
+              inline={true}
+              width={100}
+              font={{ variation: FontVariation.SMALL }}
+              color={Color.GREY_400}
+            />
+          </Layout.Horizontal>
+        </Container>
+      )
+    }
+
+    case CommentType.USER_GROUP_REVIEWER_DELETE: {
+      const userGroupReviewers = formatListWithAndFragment(userGroupsDisplayNameList)
+
+      return (
+        <Container className={css.mergedBox}>
+          <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }}>
+            <Avatar name={payload?.author?.display_name} size="small" hoverCard={false} />
+            <Text tag="div">
+              <StringSubstitute
+                str={getString('prReview.removed')}
+                vars={{
+                  author: <strong>{payload?.author?.display_name}</strong>,
+                  reviewer: <strong>{userGroupReviewers}</strong>
+                }}
+              />
             </Text>
             <PipeSeparator height={9} />
 

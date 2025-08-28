@@ -4995,6 +4995,8 @@ paths:
                 - state-change
                 - target-branch-change
                 - title-change
+                - user-group-reviewer-add
+                - user-group-reviewer-delete
               type: string
             type: array
         - description: The result should contain only entries created at and after this
@@ -13268,6 +13270,8 @@ components:
         - state-change
         - target-branch-change
         - title-change
+        - user-group-reviewer-add
+        - user-group-reviewer-delete
       type: string
     EnumPullReqCommentStatus:
       enum:
@@ -16055,10 +16059,18 @@ components:
           $ref: '#/components/schemas/EnumPullReqActivityType'
         updated:
           type: integer
+        user_group_mentions:
+          additionalProperties:
+            $ref: '#/components/schemas/TypesUserGroupInfo'
+          type: object
       type: object
     TypesPullReqActivityMentionsMetadata:
       properties:
         ids:
+          items:
+            type: integer
+          type: array
+        user_group_ids:
           items:
             type: integer
           type: array
