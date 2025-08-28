@@ -136,6 +136,9 @@ func (r *LocalRegistry) PutArtifact(ctx context.Context, info pkg.MavenArtifactI
 					info.GroupID, info.ArtifactID, info.Version, info.FileName, info.RegIdentifier, err)}
 		}
 		if fileExists {
+			responseHeaders = &commons.ResponseHeaders{
+				Code: http.StatusConflict,
+			}
 			return responseHeaders, []error{
 				fmt.Errorf("file already exists for GroupID: %s, "+
 					"ArtifactID: %s and Version: %s with file name: %s in registry: %s. "+

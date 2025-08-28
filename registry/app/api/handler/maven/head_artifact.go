@@ -18,16 +18,13 @@ import (
 	"net/http"
 
 	"github.com/harness/gitness/registry/app/pkg/commons"
-	"github.com/harness/gitness/registry/app/pkg/maven"
-
-	"github.com/rs/zerolog/log"
 )
 
 func (h *Handler) HeadArtifact(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	info, err := h.GetArtifactInfo(r, true)
 	if err != nil {
-		handleErrors(ctx, []error{err}, w)
+		handleErrors(ctx, []error{err}, w, nil)
 		return
 	}
 	result := h.Controller.HeadArtifact(
@@ -35,13 +32,8 @@ func (h *Handler) HeadArtifact(w http.ResponseWriter, r *http.Request) {
 		info,
 	)
 	if !commons.IsEmpty(result.GetErrors()) {
-		handleErrors(ctx, result.GetErrors(), w)
+		handleErrors(ctx, result.GetErrors(), w, result.ResponseHeaders)
 		return
 	}
-	response, ok := result.(*maven.HeadArtifactResponse)
-	if !ok {
-		log.Ctx(ctx).Error().Msg("Failed to cast result to HeadArtifactResponse")
-		return
-	}
-	response.ResponseHeaders.WriteToResponse(w)
+	result.ResponseHeaders.WriteToResponse(w)
 }

@@ -211,13 +211,15 @@ func getPathRoot(ctx context.Context) string {
 	return pathRoot
 }
 
-func handleErrors(ctx context.Context, errs errcode.Errors, w http.ResponseWriter) {
+func handleErrors(ctx context.Context, errs errcode.Errors, w http.ResponseWriter, headers *commons.ResponseHeaders) {
 	if !commons.IsEmpty(errs) {
 		LogError(errs)
 		log.Ctx(ctx).Error().Errs("errs occurred during maven operation: ", errs).Msgf("Error occurred")
 		err := errs[0]
 		var e *commons.Error
-		if errors.As(err, &e) {
+		if headers != nil {
+			headers.WriteToResponse(w)
+		} else if errors.As(err, &e) {
 			code := e.Status
 			w.WriteHeader(code)
 		} else {

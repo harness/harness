@@ -31,20 +31,15 @@ func (h *Handler) GetArtifact(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	info, err := h.GetArtifactInfo(r, true)
 	if err != nil {
-		handleErrors(ctx, []error{err}, w)
+		handleErrors(ctx, []error{err}, w, nil)
 		return
 	}
-	result := h.Controller.GetArtifact(
+	response := h.Controller.GetArtifact(
 		ctx,
 		info,
 	)
-	if !commons.IsEmpty(result.GetErrors()) {
-		handleErrors(ctx, result.GetErrors(), w)
-		return
-	}
-	response, ok := result.(*maven.GetArtifactResponse)
-	if !ok {
-		log.Ctx(ctx).Error().Msg("Failed to cast result to GetArtifactResponse")
+	if !commons.IsEmpty(response.GetErrors()) {
+		handleErrors(ctx, response.GetErrors(), w, response.ResponseHeaders)
 		return
 	}
 

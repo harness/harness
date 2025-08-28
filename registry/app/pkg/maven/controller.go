@@ -16,6 +16,7 @@ package maven
 
 import (
 	"context"
+	"fmt"
 	"io"
 
 	"github.com/harness/gitness/app/auth/authz"
@@ -125,7 +126,7 @@ func (c *Controller) GetArtifactRegistry(ctx context.Context, registry registryt
 	return c.factory(ctx, RemoteRegistryType)
 }
 
-func (c *Controller) GetArtifact(ctx context.Context, info pkg.MavenArtifactInfo) Response {
+func (c *Controller) GetArtifact(ctx context.Context, info pkg.MavenArtifactInfo) *GetArtifactResponse {
 	err := pkg.GetRegistryCheckAccess(ctx, c.authorizer, c.SpaceFinder, info.ParentID, *info.ArtifactInfo,
 		enum.PermissionArtifactsDownload)
 	if err != nil {
@@ -147,10 +148,18 @@ func (c *Controller) GetArtifact(ctx context.Context, info pkg.MavenArtifactInfo
 			body, fileReader,
 		}
 	}
-	return c.ProxyWrapper(ctx, f, info)
+	result := c.ProxyWrapper(ctx, f, info)
+	getArtifactResponse, ok := result.(*GetArtifactResponse)
+	if !ok {
+		return &GetArtifactResponse{
+			[]error{fmt.Errorf("invalid response type: expected GetArtifactResponse")},
+			nil, "", nil, nil}
+	}
+
+	return getArtifactResponse
 }
 
-func (c *Controller) HeadArtifact(ctx context.Context, info pkg.MavenArtifactInfo) Response {
+func (c *Controller) HeadArtifact(ctx context.Context, info pkg.MavenArtifactInfo) *HeadArtifactResponse {
 	err := pkg.GetRegistryCheckAccess(ctx, c.authorizer, c.SpaceFinder, info.ParentID, *info.ArtifactInfo,
 		enum.PermissionArtifactsDownload)
 	if err != nil {
@@ -169,10 +178,18 @@ func (c *Controller) HeadArtifact(ctx context.Context, info pkg.MavenArtifactInf
 		headers, e := r.HeadArtifact(ctx, info)
 		return &HeadArtifactResponse{e, headers}
 	}
-	return c.ProxyWrapper(ctx, f, info)
+	result := c.ProxyWrapper(ctx, f, info)
+	headArtifactResponse, ok := result.(*HeadArtifactResponse)
+	if !ok {
+		return &HeadArtifactResponse{
+			[]error{fmt.Errorf("invalid response type: expected HeadArtifactResponse")},
+			nil}
+	}
+
+	return headArtifactResponse
 }
 
-func (c *Controller) PutArtifact(ctx context.Context, info pkg.MavenArtifactInfo, fileReader io.Reader) Response {
+func (c *Controller) PutArtifact(ctx context.Context, info pkg.MavenArtifactInfo, fileReader io.Reader) *PutArtifactResponse {
 	err := pkg.GetRegistryCheckAccess(ctx, c.authorizer, c.SpaceFinder, info.ParentID, *info.ArtifactInfo,
 		enum.PermissionArtifactsUpload)
 	if err != nil {
