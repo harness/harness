@@ -145,6 +145,13 @@ func (c *localRegistry) UploadPackageFile(
 		log.Ctx(ctx).Error().Msgf("failed to move npm package: %v", err)
 		return nil, "", err
 	}
+	_, err = c.AddTag(ctx, info)
+
+	if err != nil {
+		log.Ctx(ctx).Error().Msgf("failed to add tag for npm package:%s, %v", info.Image, err)
+		return nil, "", err
+	}
+
 	return nil, sha256, nil
 }
 
