@@ -47,23 +47,6 @@ func (c *Service) FindWithLatestInstance(
 	spacePath string,
 	identifier string,
 ) (*types.GitspaceConfig, error) {
-	var gitspaceConfigResult *types.GitspaceConfig
-	txErr := c.tx.WithTx(ctx, func(ctx context.Context) error {
-		gitspaceConfig, err := c.gitspaceConfigStore.FindByIdentifier(ctx, spaceID, identifier)
-		if err != nil {
-			return fmt.Errorf("failed to find gitspace config: %w", err)
-		}
-		gitspaceConfigResult = gitspaceConfig
-		if err = c.setInstanceInGitspaceConfig(ctx, gitspaceConfigResult); err != nil {
-			return err
-		}
-		return nil
-	}, dbtx.TxDefaultReadOnly)
-	if txErr != nil {
-		return nil, txErr
-	}
-	gitspaceConfigResult.BranchURL = c.GetBranchURL(ctx, gitspaceConfigResult)
-
 	if spacePath == "" {
 		space, err := c.spaceFinder.FindByID(ctx, spaceID)
 		if err != nil {
@@ -73,7 +56,34 @@ func (c *Service) FindWithLatestInstance(
 		}
 	}
 
-	gitspaceConfigResult.SpacePath = spacePath
+	var gitspaceConfigResult *types.GitspaceConfig
+	txErr := c.tx.WithTx(ctx, func(ctx context.Context) error {
+		gitspaceConfig, err := c.gitspaceConfigStore.FindByIdentifier(ctx, spaceID, identifier)
+		if err != nil {
+			return fmt.Errorf("failed to find gitspace config: %w", err)
+		}
+		gitspaceConfig.SpacePath = spacePath
+		latestInstance, err := c.findLatestInstance(ctx, gitspaceConfig)
+		if err != nil {
+			return err
+		}
+
+		configState, err := getGitspaceConfigState(latestInstance)
+		if err != nil {
+			return err
+		}
+		// update gitspace config parameters based on latest instance
+		gitspaceConfig.GitspaceInstance = latestInstance
+		gitspaceConfig.State = configState
+		// store result in return variable
+		gitspaceConfigResult = gitspaceConfig
+		return nil
+	}, dbtx.TxDefaultReadOnly)
+	if txErr != nil {
+		return nil, txErr
+	}
+
+	gitspaceConfigResult.BranchURL = c.GetBranchURL(ctx, gitspaceConfigResult)
 	return gitspaceConfigResult, nil
 }
 
@@ -136,26 +146,12 @@ func getProjectName(spacePath string) string {
 	return projectName
 }
 
-func (c *Service) setInstanceInGitspaceConfig(
-	ctx context.Context,
-	gitspaceConfig *types.GitspaceConfig,
-) error {
-	latestInstance, err := c.findLatestInstance(ctx, gitspaceConfig)
-	if err != nil {
-		return err
+func getGitspaceConfigState(instance *types.GitspaceInstance) (enum.GitspaceStateType, error) {
+	if instance == nil {
+		return enum.GitspaceStateUninitialized, nil
 	}
 
-	if latestInstance != nil {
-		latestInstance.SpacePath = gitspaceConfig.SpacePath
-		gitspaceStateType, err := latestInstance.GetGitspaceState()
-		if err != nil {
-			return err
-		}
-		gitspaceConfig.State = gitspaceStateType
-	} else {
-		gitspaceConfig.State = enum.GitspaceStateUninitialized
-	}
-	return nil
+	return instance.GetGitspaceState()
 }
 
 func (c *Service) addOrUpdateInstanceParameters(
@@ -183,6 +179,7 @@ func (c *Service) addOrUpdateInstanceParameters(
 
 	if instance.URL != nil && gitspaceConfig.IDE == enum.IDETypeVSCodeWeb {
 		// token is jwt token issue by cde-manager which is validated in cde-gateway when accessing vscode web.
+		gitspaceConfig.GitspaceInstance = instance
 		token, err := c.getToken(ctx, gitspaceConfig)
 		if err != nil {
 			return nil, fmt.Errorf("unable to generate JWT token for vscode web: %w", err)
@@ -205,16 +202,32 @@ func (c *Service) FindWithLatestInstanceByID(
 	var gitspaceConfigResult *types.GitspaceConfig
 	txErr := c.tx.WithTx(ctx, func(ctx context.Context) error {
 		gitspaceConfig, err := c.gitspaceConfigStore.Find(ctx, id, includeDeleted)
-		gitspaceConfigResult = gitspaceConfig
 		if err != nil {
 			return fmt.Errorf("failed to find gitspace config: %w", err)
 		}
-		space, err := c.spaceFinder.FindByID(ctx, gitspaceConfigResult.SpaceID)
+
+		space, err := c.spaceFinder.FindByID(ctx, gitspaceConfig.SpaceID)
 		if err != nil {
 			return fmt.Errorf("failed to find space: %w", err)
 		}
-		gitspaceConfigResult.SpacePath = space.Path
-		return c.setInstanceInGitspaceConfig(ctx, gitspaceConfigResult)
+		gitspaceConfig.SpacePath = space.Path
+
+		latestInstance, err := c.findLatestInstance(ctx, gitspaceConfig)
+		if err != nil {
+			return err
+		}
+
+		configState, err := getGitspaceConfigState(latestInstance)
+		if err != nil {
+			return err
+		}
+		// update gitspace config parameters based on latest instance
+		gitspaceConfig.GitspaceInstance = latestInstance
+		gitspaceConfig.State = configState
+		// store result in return variable
+		gitspaceConfigResult = gitspaceConfig
+
+		return nil
 	}, dbtx.TxDefaultReadOnly)
 	if txErr != nil {
 		return nil, txErr
