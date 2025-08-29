@@ -351,6 +351,7 @@ export interface TypesInfraProviderConfig {
 
 export interface TypesInfraProviderResource {
   config_identifier?: string
+  config_name?: string
   cpu?: string | null
   created?: number
   deleted?: number | null

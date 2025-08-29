@@ -16,7 +16,7 @@
 
 import { Color } from '@harnessio/design-system'
 import { Button, ButtonVariation, Container, Layout, Text } from '@harnessio/uicore'
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import ReactTimeago from 'react-timeago'
 import { PopoverPosition } from '@blueprintjs/core'
 import { Circle, InfoEmpty, Cloud } from 'iconoir-react'
@@ -25,8 +25,7 @@ import Secret from 'cde-gitness/assests/secret.svg?url'
 import { useStrings } from 'framework/strings'
 import { GitspaceStatus } from 'cde-gitness/constants'
 import { getGitspaceChanges, getIconByRepoType } from 'cde-gitness/utils/SelectRepository.utils'
-import type { TypesGitspaceConfig, TypesInfraProviderConfig } from 'services/cde'
-import { useInfraListingApi } from 'cde-gitness/hooks/useGetInfraListProvider'
+import type { TypesGitspaceConfig } from 'services/cde'
 import { getStatusColor, getStatusText } from '../GitspaceListing/ListGitspaces'
 import getProviderIcon from '../../utils/InfraProvider.utils'
 import ResourceDetails from '../ResourceDetails/ResourceDetails'
@@ -44,30 +43,6 @@ export const DetailsCard = ({
   const { getString } = useStrings()
   const { branch, state, name, branch_url, code_repo_url, code_repo_type, instance, resource } = data || {}
   const repoName = getRepoNameFromURL(code_repo_url) || ''
-
-  const [infraProvidersList, setInfraProvidersList] = useState<TypesInfraProviderConfig[]>([])
-  const {
-    data: infraProvidersData,
-    refetch: refetchInfraProviders,
-    loading: infraProvidersLoading
-  } = useInfraListingApi({
-    queryParams: {
-      acl_filter: 'true'
-    }
-  })
-
-  useEffect(() => {
-    // Only fetch infra providers if not in standalone mode
-    if (!standalone) {
-      refetchInfraProviders()
-    }
-  }, [refetchInfraProviders, standalone])
-
-  useEffect(() => {
-    if (infraProvidersData) {
-      setInfraProvidersList(infraProvidersData)
-    }
-  }, [infraProvidersData])
 
   const { has_git_changes } = instance || {}
   const gitChanges = getGitspaceChanges(has_git_changes, getString, '--')
@@ -126,8 +101,7 @@ export const DetailsCard = ({
                 const providerConfigId = resource?.config_identifier || ''
                 const providerIcon = getProviderIcon(providerType)
 
-                const provider = infraProvidersList.find(item => item.identifier === providerConfigId)
-                const displayName = provider?.name || providerConfigId
+                const displayName = resource?.config_name || providerConfigId
 
                 return (
                   <>
@@ -136,17 +110,9 @@ export const DetailsCard = ({
                     ) : (
                       <Cloud className={css.standardIcon} />
                     )}
-                    {infraProvidersLoading ? (
-                      <Text
-                        icon="loading"
-                        iconProps={{ size: 16 }}
-                        lineClamp={1}
-                        font={{ align: 'left', size: 'normal' }}></Text>
-                    ) : (
-                      <Text lineClamp={1} className={css.providerText} title={displayName}>
-                        {displayName}
-                      </Text>
-                    )}
+                    <Text lineClamp={1} className={css.providerText} title={displayName}>
+                      {displayName}
+                    </Text>
                   </>
                 )
               })()}
