@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/app/gitspace/secret"
 	"github.com/harness/gitness/app/services/gitspacesettings"
+	"github.com/harness/gitness/app/services/infraprovider"
 	"github.com/harness/gitness/app/store"
 
 	"github.com/google/wire"
@@ -45,6 +46,8 @@ func ProvideOrchestrator(
 	gitspaceInstanceStore store.GitspaceInstanceStore,
 	gitspaceConfigStore store.GitspaceConfigStore,
 	settingsService gitspacesettings.Service,
+	spaceStore store.SpaceStore,
+	infraProviderSvc *infraprovider.Service,
 ) Orchestrator {
 	return NewOrchestrator(
 		scm,
@@ -58,5 +61,7 @@ func ProvideOrchestrator(
 		gitspaceInstanceStore,
 		gitspaceConfigStore,
 		settingsService,
+		spaceStore,
+		infraProviderSvc,
 	)
 }

@@ -28,6 +28,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/app/gitspace/secret"
 	"github.com/harness/gitness/app/services/gitspacesettings"
+	"github.com/harness/gitness/app/services/infraprovider"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -55,6 +56,8 @@ type Orchestrator struct {
 	gitspaceInstanceStore        store.GitspaceInstanceStore
 	gitspaceConfigStore          store.GitspaceConfigStore
 	settingsService              gitspacesettings.Service
+	spaceStore                   store.SpaceStore
+	infraProviderSvc             *infraprovider.Service
 }
 
 func NewOrchestrator(
@@ -69,6 +72,8 @@ func NewOrchestrator(
 	gitspaceInstanceStore store.GitspaceInstanceStore,
 	gitspaceConfigStore store.GitspaceConfigStore,
 	settingsService gitspacesettings.Service,
+	spaceStore store.SpaceStore,
+	infraProviderSvc *infraprovider.Service,
 ) Orchestrator {
 	return Orchestrator{
 		scm:                          scm,
@@ -82,6 +87,8 @@ func NewOrchestrator(
 		gitspaceInstanceStore:        gitspaceInstanceStore,
 		gitspaceConfigStore:          gitspaceConfigStore,
 		settingsService:              settingsService,
+		spaceStore:                   spaceStore,
+		infraProviderSvc:             infraProviderSvc,
 	}
 }
 

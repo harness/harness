@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -53,7 +54,7 @@ func (c *Service) FindWithLatestInstance(
 			return fmt.Errorf("failed to find gitspace config: %w", err)
 		}
 		gitspaceConfigResult = gitspaceConfig
-		if err = c.setInstance(ctx, gitspaceConfigResult); err != nil {
+		if err = c.setInstanceInGitspaceConfig(ctx, gitspaceConfigResult); err != nil {
 			return err
 		}
 		return nil
@@ -76,18 +77,77 @@ func (c *Service) FindWithLatestInstance(
 	return gitspaceConfigResult, nil
 }
 
-func (c *Service) setInstance(
+// findLatestInstance return latest gitspace instance for given gitspace config.
+// If no instance is found, it returns nil.
+func (c *Service) findLatestInstance(
+	ctx context.Context,
+	gitspaceConfig *types.GitspaceConfig,
+) (*types.GitspaceInstance, error) {
+	instance, err := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, gitspaceConfig.ID)
+	if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
+		return nil, err
+	}
+
+	if errors.Is(err, store.ErrResourceNotFound) {
+		// nolint:nilnil // return value is based on no resource
+		return nil, nil
+	}
+
+	// add or update various parameters of gitspace instance.
+	return c.addOrUpdateInstanceParameters(ctx, instance, gitspaceConfig)
+}
+
+func (c *Service) getToken(
+	ctx context.Context,
+	gitspaceConfig *types.GitspaceConfig,
+) (string, error) {
+	if gitspaceConfig.IDE != enum.IDETypeVSCodeWeb {
+		return "", nil
+	}
+
+	resourceSpace, err := c.spaceStore.FindByRef(ctx, gitspaceConfig.InfraProviderResource.SpacePath)
+	if err != nil || resourceSpace == nil {
+		return "", fmt.Errorf("failed to find space ref: %w", err)
+	}
+	infraProviderConfigIdentifier := gitspaceConfig.InfraProviderResource.InfraProviderConfigIdentifier
+	infraProviderConfig, err := c.infraProviderSvc.Find(ctx, resourceSpace.Core(), infraProviderConfigIdentifier)
+	if err != nil {
+		log.Warn().Msgf(
+			"Cannot get infraProviderConfig for resource : %s/%s",
+			resourceSpace.Path, infraProviderConfigIdentifier)
+		return "", err
+	}
+
+	return c.tokenGenerator.GenerateToken(
+		ctx,
+		gitspaceConfig,
+		gitspaceConfig.GitspaceUser.Identifier,
+		enum.PrincipalTypeUser,
+		infraProviderConfig,
+	)
+}
+
+func getProjectName(spacePath string) string {
+	_, projectName, err := paths.DisectLeaf(spacePath)
+	if err != nil {
+		return ""
+	}
+
+	return projectName
+}
+
+func (c *Service) setInstanceInGitspaceConfig(
 	ctx context.Context,
 	gitspaceConfig *types.GitspaceConfig,
 ) error {
-	instance, err := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, gitspaceConfig.ID)
-	if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
+	latestInstance, err := c.findLatestInstance(ctx, gitspaceConfig)
+	if err != nil {
 		return err
 	}
-	if instance != nil {
-		gitspaceConfig.GitspaceInstance = instance
-		instance.SpacePath = gitspaceConfig.SpacePath
-		gitspaceStateType, err := instance.GetGitspaceState()
+
+	if latestInstance != nil {
+		latestInstance.SpacePath = gitspaceConfig.SpacePath
+		gitspaceStateType, err := latestInstance.GetGitspaceState()
 		if err != nil {
 			return err
 		}
@@ -96,6 +156,45 @@ func (c *Service) setInstance(
 		gitspaceConfig.State = enum.GitspaceStateUninitialized
 	}
 	return nil
+}
+
+func (c *Service) addOrUpdateInstanceParameters(
+	ctx context.Context,
+	instance *types.GitspaceInstance,
+	gitspaceConfig *types.GitspaceConfig,
+) (*types.GitspaceInstance, error) {
+	if instance == nil || gitspaceConfig == nil {
+		// nolint:nilnil // return value is based on nil pointers
+		return nil, nil
+	}
+	// add or update various parameters of gitspace instance.
+	instance.SpacePath = gitspaceConfig.SpacePath
+
+	ideSvc, err := c.ideFactory.GetIDE(gitspaceConfig.IDE)
+	if err != nil {
+		return nil, err
+	}
+
+	projectName := getProjectName(gitspaceConfig.SpacePath)
+	pluginURL := ideSvc.GeneratePluginURL(projectName, instance.Identifier)
+	if pluginURL != "" {
+		instance.PluginURL = &pluginURL
+	}
+
+	if instance.URL != nil && gitspaceConfig.IDE == enum.IDETypeVSCodeWeb {
+		// token is jwt token issue by cde-manager which is validated in cde-gateway when accessing vscode web.
+		token, err := c.getToken(ctx, gitspaceConfig)
+		if err != nil {
+			return nil, fmt.Errorf("unable to generate JWT token for vscode web: %w", err)
+		}
+
+		if token != "" {
+			urlWithToken := fmt.Sprintf("%s&token=%s", *instance.URL, token)
+			instance.URL = &urlWithToken
+		}
+	}
+
+	return instance, nil
 }
 
 func (c *Service) FindWithLatestInstanceByID(
@@ -115,7 +214,7 @@ func (c *Service) FindWithLatestInstanceByID(
 			return fmt.Errorf("failed to find space: %w", err)
 		}
 		gitspaceConfigResult.SpacePath = space.Path
-		return c.setInstance(ctx, gitspaceConfigResult)
+		return c.setInstanceInGitspaceConfig(ctx, gitspaceConfigResult)
 	}, dbtx.TxDefaultReadOnly)
 	if txErr != nil {
 		return nil, txErr
@@ -188,5 +287,11 @@ func (c *Service) FindInstanceByIdentifier(
 	if txErr != nil {
 		return nil, txErr
 	}
-	return gitspaceInstanceResult, nil
+
+	gitspaceConfig, err := c.gitspaceConfigStore.Find(ctx, gitspaceInstanceResult.GitSpaceConfigID, true)
+	if err != nil {
+		return nil, fmt.Errorf("could not find gitspace config: %w", err)
+	}
+
+	return c.addOrUpdateInstanceParameters(ctx, gitspaceInstanceResult, gitspaceConfig)
 }

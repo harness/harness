@@ -217,12 +217,13 @@ func handleErrors(ctx context.Context, errs errcode.Errors, w http.ResponseWrite
 		log.Ctx(ctx).Error().Errs("errs occurred during maven operation: ", errs).Msgf("Error occurred")
 		err := errs[0]
 		var e *commons.Error
-		if headers != nil {
+		switch {
+		case headers != nil:
 			headers.WriteToResponse(w)
-		} else if errors.As(err, &e) {
+		case errors.As(err, &e):
 			code := e.Status
 			w.WriteHeader(code)
-		} else {
+		default:
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		w.Header().Set("Content-Type", "application/json")

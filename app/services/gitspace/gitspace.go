@@ -22,9 +22,11 @@ import (
 	gitspaceevents "github.com/harness/gitness/app/events/gitspace"
 	gitspacedeleteevents "github.com/harness/gitness/app/events/gitspacedelete"
 	"github.com/harness/gitness/app/gitspace/orchestrator"
+	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/app/services/infraprovider"
 	"github.com/harness/gitness/app/services/refcache"
+	"github.com/harness/gitness/app/services/tokengenerator"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -44,6 +46,9 @@ func NewService(
 	scm *scm.SCM,
 	config *types.Config,
 	gitspaceDeleteEventReporter *gitspacedeleteevents.Reporter,
+	ideFactory ide.Factory,
+	spaceStore store.SpaceStore,
+	tokenGenerator tokengenerator.TokenGenerator,
 ) *Service {
 	return &Service{
 		tx:                          tx,
@@ -57,6 +62,9 @@ func NewService(
 		scm:                         scm,
 		config:                      config,
 		gitspaceDeleteEventReporter: gitspaceDeleteEventReporter,
+		ideFactory:                  ideFactory,
+		spaceStore:                  spaceStore,
+		tokenGenerator:              tokenGenerator,
 	}
 }
 
@@ -72,6 +80,9 @@ type Service struct {
 	orchestrator                orchestrator.Orchestrator
 	scm                         *scm.SCM
 	config                      *types.Config
+	ideFactory                  ide.Factory
+	spaceStore                  store.SpaceStore
+	tokenGenerator              tokengenerator.TokenGenerator
 }
 
 func (c *Service) ListGitspacesWithInstance(
@@ -126,9 +137,11 @@ func (c *Service) ListGitspacesWithInstance(
 			return nil, 0, 0, err
 		}
 		gitspaceConfig.SpacePath = space.Path
-		if gitspaceConfig.GitspaceInstance != nil {
-			gitspaceConfig.GitspaceInstance.SpacePath = space.Path
+		updatedInstance, err := c.addOrUpdateInstanceParameters(ctx, gitspaceConfig.GitspaceInstance, gitspaceConfig)
+		if err != nil {
+			return nil, 0, 0, err
 		}
+		gitspaceConfig.GitspaceInstance = updatedInstance
 		gitspaceConfig.BranchURL = c.GetBranchURL(ctx, gitspaceConfig)
 	}
 

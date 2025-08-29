@@ -106,6 +106,7 @@ import (
 	"github.com/harness/gitness/app/services/rules"
 	secret3 "github.com/harness/gitness/app/services/secret"
 	"github.com/harness/gitness/app/services/settings"
+	"github.com/harness/gitness/app/services/tokengenerator"
 	trigger2 "github.com/harness/gitness/app/services/trigger"
 	"github.com/harness/gitness/app/services/usage"
 	"github.com/harness/gitness/app/services/usergroup"
@@ -414,12 +415,13 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	orchestratorOrchestrator := orchestrator.ProvideOrchestrator(scmSCM, platformConnector, infraProvisioner, containerFactory, reporter3, orchestratorConfig, ideFactory, resolverFactory, gitspaceInstanceStore, gitspaceConfigStore, gitspacesettingsService)
+	orchestratorOrchestrator := orchestrator.ProvideOrchestrator(scmSCM, platformConnector, infraProvisioner, containerFactory, reporter3, orchestratorConfig, ideFactory, resolverFactory, gitspaceInstanceStore, gitspaceConfigStore, gitspacesettingsService, spaceStore, infraproviderService)
 	reporter6, err := events8.ProvideReporter(eventsSystem)
 	if err != nil {
 		return nil, err
 	}
-	gitspaceService := gitspace.ProvideGitspace(transactor, gitspaceConfigStore, gitspaceInstanceStore, reporter3, gitspaceEventStore, spaceFinder, infraproviderService, orchestratorOrchestrator, scmSCM, config, reporter6)
+	tokenGenerator := tokengenerator.ProvideTokenGenerator()
+	gitspaceService := gitspace.ProvideGitspace(transactor, gitspaceConfigStore, gitspaceInstanceStore, reporter3, gitspaceEventStore, spaceFinder, infraproviderService, orchestratorOrchestrator, scmSCM, config, reporter6, ideFactory, spaceStore, tokenGenerator)
 	usageMetricStore := database.ProvideUsageMetricStore(db)
 	spaceController := space.ProvideController(config, transactor, provider, streamer, spaceIdentifier, authorizer, spacePathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, listService, spaceFinder, repository, exporterRepository, resourceLimiter, publicaccessService, auditService, gitspaceService, labelService, instrumentService, executionStore, rulesService, usageMetricStore, repoIdentifier, infraproviderService, favoriteStore)
 	reporter7, err := events9.ProvideReporter(eventsSystem)

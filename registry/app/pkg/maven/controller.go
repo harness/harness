@@ -189,7 +189,11 @@ func (c *Controller) HeadArtifact(ctx context.Context, info pkg.MavenArtifactInf
 	return headArtifactResponse
 }
 
-func (c *Controller) PutArtifact(ctx context.Context, info pkg.MavenArtifactInfo, fileReader io.Reader) *PutArtifactResponse {
+func (c *Controller) PutArtifact(
+	ctx context.Context,
+	info pkg.MavenArtifactInfo,
+	fileReader io.Reader,
+) *PutArtifactResponse {
 	err := pkg.GetRegistryCheckAccess(ctx, c.authorizer, c.SpaceFinder, info.ParentID, *info.ArtifactInfo,
 		enum.PermissionArtifactsUpload)
 	if err != nil {
