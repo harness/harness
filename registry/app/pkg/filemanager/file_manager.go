@@ -384,6 +384,16 @@ func (f *FileManager) HeadSHA256(
 	return node.NodePath, nil
 }
 
+func (f *FileManager) FindLatestFilePath(ctx context.Context, registryID int64,
+	filepathPrefix, filename string) (string, error) {
+	fileNode, err := f.nodesDao.FindByPathAndRegistryID(ctx, registryID, filepathPrefix, filename)
+	if err != nil {
+		return "", fmt.Errorf("failed to get the node for path: %s, file name: %s, with registry id: %d,"+
+			" with error %w", filepathPrefix, filename, registryID, err)
+	}
+	return fileNode.NodePath, nil
+}
+
 func (f *FileManager) HeadBlob(
 	ctx context.Context,
 	sha256 string,

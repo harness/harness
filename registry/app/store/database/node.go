@@ -121,12 +121,13 @@ func (n NodeDao) GetByBlobIDAndRegistryID(ctx context.Context, blobID string, re
 }
 
 func (n NodeDao) FindByPathAndRegistryID(
-	ctx context.Context, registryID int64, path string,
+	ctx context.Context, registryID int64, pathPrefix string, filename string,
 ) (*types.Node, error) {
 	q := databaseg.Builder.
 		Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(Nodes{}), ",")).
 		From("nodes").
-		Where("node_path LIKE ? AND node_registry_id = ?", path, registryID).
+		Where("node_registry_id = ? AND node_path LIKE ? AND node_is_file = true AND node_name = ?",
+			registryID, pathPrefix+"/%", filename).
 		OrderBy("node_created_at DESC").Limit(1)
 
 	db := dbtx.GetAccessor(ctx, n.sqlDB)

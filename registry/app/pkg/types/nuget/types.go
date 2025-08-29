@@ -30,6 +30,7 @@ type ArtifactInfo struct {
 	Version       string
 	Filename      string
 	ProxyEndpoint string
+	NestedPath    string
 	Metadata      nuget.Metadata
 }
 

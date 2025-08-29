@@ -79,6 +79,7 @@ func (h *handler) GetPackageArtifactInfo(r *http.Request) (pkg.PackageArtifactIn
 		image = strings.TrimPrefix(image, "'")
 		image = strings.TrimSuffix(image, "'")
 	}
+
 	var md nugetmetadata.Metadata
 
 	info.Image = image
@@ -88,5 +89,6 @@ func (h *handler) GetPackageArtifactInfo(r *http.Request) (pkg.PackageArtifactIn
 		Filename:      filename,
 		Version:       version,
 		ProxyEndpoint: proxyEndpoint,
+		NestedPath:    strings.TrimSuffix(r.PathValue("*"), "/"),
 	}, nil
 }

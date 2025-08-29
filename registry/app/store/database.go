@@ -595,7 +595,7 @@ type NodesRepository interface {
 	) (*types.Node, error)
 
 	FindByPathAndRegistryID(
-		ctx context.Context, registryID int64, path string,
+		ctx context.Context, registryID int64, pathPrefix string, filename string,
 	) (*types.Node, error)
 
 	CountByPathAndRegistryID(

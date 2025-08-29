@@ -39,6 +39,7 @@ import (
 	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 )
 
 var _ pkg.Artifact = (*localRegistry)(nil)
@@ -289,8 +290,13 @@ func (c *localRegistry) UploadPackage(
 		metadata.PackageMetadata.ID, metadata.PackageMetadata.Version, fileExtension))
 	info.Filename = fileName
 	fileInfo.Filename = fileName
+	var path string
 
-	path := info.Image + "/" + info.Version + "/" + fileName
+	if info.NestedPath != "" {
+		path = info.Image + "/" + info.Version + "/" + info.NestedPath + "/" + fileName
+	} else {
+		path = info.Image + "/" + info.Version + "/" + fileName
+	}
 
 	h, checkSum, _, _, err := c.localBase.MoveTempFileAndCreateArtifact(ctx, info.ArtifactInfo,
 		tempFileName, info.Version, path,
@@ -362,7 +368,14 @@ func (c *localRegistry) DownloadPackage(
 		Code:    0,
 	}
 
-	path := "/" + info.Image + "/" + info.Version + "/" + info.Filename
+	path, err := c.fileManager.FindLatestFilePath(ctx, info.RegistryID,
+		"/"+info.Image+"/"+info.Version, info.Filename)
+	if err != nil {
+		log.Ctx(ctx).Error().Msgf("failed to find file node for id: %s , version: %s "+
+			"with registry: %d with error: %v", info.Image, info.Version, info.RegistryID, err)
+		return responseHeaders, nil, "", nil, fmt.Errorf("failed to find file node for id: %s , version: %s "+
+			"with registry: %d with error: %w", info.Image, info.Version, info.RegistryID, err)
+	}
 
 	fileReader, size, redirectURL, err := c.fileManager.DownloadFile(ctx, path,
 		info.RegistryID,

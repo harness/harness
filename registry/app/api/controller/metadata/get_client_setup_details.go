@@ -1207,7 +1207,16 @@ func (c *APIController) generateNugetClientSetupDetail(
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: utils.StringPtr("nuget push <PACKAGE_FILE> -Source harness"),
+						Value: utils.StringPtr("nuget push <PACKAGE_FILE> -Source harness\n\n"),
+					},
+					{
+						Label: utils.StringPtr("Note: To publish your package with nested directory," +
+							" refer below command"),
+						Value: utils.StringPtr(""),
+					},
+					{
+						Value: utils.StringPtr("nuget push <PACKAGE_FILE> -Source <REGISTRY_URL>/<SUB_DIRECTORY>" +
+							" -ApiKey <TOKEN>"),
 					},
 				},
 			},
@@ -1225,7 +1234,17 @@ func (c *APIController) generateNugetClientSetupDetail(
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: utils.StringPtr("dotnet nuget push <PACKAGE_FILE> --api-key <TOKEN> --source harness"),
+						Value: utils.StringPtr("dotnet nuget push <PACKAGE_FILE> --api-key <TOKEN>" +
+							" --source harness\n\n"),
+					},
+					{
+						Label: utils.StringPtr("Note: To publish your package with nested directory," +
+							" refer below command"),
+						Value: utils.StringPtr(""),
+					},
+					{
+						Value: utils.StringPtr("dotnet nuget push <PACKAGE_FILE>" +
+							" --source <REGISTRY_URL>/<SUB_DIRECTORY> --api-key <TOKEN>"),
 					},
 				},
 			},
