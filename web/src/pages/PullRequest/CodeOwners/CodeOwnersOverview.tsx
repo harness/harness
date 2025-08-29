@@ -27,7 +27,6 @@ import {
   TableV2,
   Layout,
   Avatar,
-  stringSubstitute,
   Popover
 } from '@harnessio/uicore'
 import cx from 'classnames'
@@ -38,7 +37,7 @@ import { isEmpty } from 'lodash-es'
 import { PopoverInteractionKind, Position } from '@blueprintjs/core'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
-import { ExecutionState, ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
+import { ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
 import { useShowRequestError } from 'hooks/useShowRequestError'
 import type {
   TypesCodeOwnerEvaluation,
@@ -48,13 +47,14 @@ import type {
   TypesUserGroupOwnerEvaluation
 } from 'services/code'
 import type { PRChecksDecisionResult } from 'hooks/usePRChecksDecision'
+import { CodeOwnerReqDecision, combineAndNormalizePrincipalsAndGroups, PrincipalType } from 'utils/Utils'
 import {
-  CodeOwnerReqDecision,
-  combineAndNormalizePrincipalsAndGroups,
+  PullReqReviewDecision,
+  checkEntries,
+  getCombinedEvaluations,
   findReviewDecisions,
-  PrincipalType
-} from 'utils/Utils'
-import { PullReqReviewDecision, findWaitingDecisions } from '../PullRequestUtils'
+  findWaitingDecisions
+} from '../PullRequestUtils'
 import css from './CodeOwnersOverview.module.scss'
 
 interface ChecksOverviewProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'> {
@@ -79,43 +79,20 @@ export function CodeOwnersOverview({
   useShowRequestError(error)
 
   const changeReqEntries = findReviewDecisions(codeOwners?.evaluation_entries, CodeOwnerReqDecision.CHANGEREQ)
+  const approvalEntries = findReviewDecisions(codeOwners?.evaluation_entries, CodeOwnerReqDecision.APPROVED)
   const waitingEntries = findWaitingDecisions(
     pullReqMetadata,
     reqCodeOwnerLatestApproval,
     codeOwners?.evaluation_entries
   )
 
-  const approvalEntries = findReviewDecisions(codeOwners?.evaluation_entries, CodeOwnerReqDecision.APPROVED)
-
-  const checkEntries = (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    changeReqArr: any[], // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    waitingEntriesArr: any[], // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    approvalEntriesArr: any[]
-  ): { borderColor: string; message: string; overallStatus: ExecutionState } => {
-    if (changeReqArr.length !== 0) {
-      return {
-        borderColor: 'red800',
-        overallStatus: ExecutionState.FAILURE,
-        message: stringSubstitute(getString('codeOwner.changesRequested'), { count: changeReqArr.length }) as string
-      }
-    } else if (waitingEntriesArr.length !== 0) {
-      return {
-        borderColor: 'orange800',
-        message: stringSubstitute(getString('codeOwner.waitToApprove'), { count: waitingEntriesArr.length }) as string,
-        overallStatus: ExecutionState.PENDING
-      }
-    }
-    return {
-      borderColor: 'green800',
-      message: stringSubstitute(getString('codeOwner.approvalCompleted'), {
-        count: approvalEntriesArr.length || '0',
-        total: codeOwners?.evaluation_entries?.length
-      }) as string,
-      overallStatus: ExecutionState.SUCCESS
-    }
-  }
-  const { borderColor, message, overallStatus } = checkEntries(changeReqEntries, waitingEntries, approvalEntries)
+  const { borderColor, message, overallStatus } = checkEntries(
+    getString,
+    changeReqEntries,
+    waitingEntries,
+    approvalEntries,
+    codeOwners?.evaluation_entries?.length || 0
+  )
   return codeOwners?.evaluation_entries?.length ? (
     <Container
       className={cx(css.main, { [css.codeOwner]: !standalone })}
@@ -285,7 +262,7 @@ export const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({
           width: '24%',
           accessor: 'ChangesRequested',
           Cell: ({ row }: CellProps<TypesCodeOwnerEvaluationEntry>) => {
-            const changeReqEvaluations = row?.original?.owner_evaluations?.filter(
+            const changeReqEvaluations = getCombinedEvaluations(row?.original)?.filter(
               evaluation => evaluation.review_decision === PullReqReviewDecision.CHANGEREQ
             )
 
@@ -298,7 +275,7 @@ export const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({
           width: '20%',
           accessor: 'APPROVED BY',
           Cell: ({ row }: CellProps<TypesCodeOwnerEvaluationEntry>) => {
-            const approvedEvaluations = row?.original?.owner_evaluations?.filter(
+            const approvedEvaluations = getCombinedEvaluations(row?.original)?.filter(
               evaluation =>
                 evaluation.review_decision === PullReqReviewDecision.APPROVED &&
                 (reqCodeOwnerLatestApproval ? evaluation.review_sha === pullReqMetadata?.source_sha : true)

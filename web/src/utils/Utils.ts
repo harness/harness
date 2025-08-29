@@ -24,7 +24,6 @@ import type { EditorView } from '@codemirror/view'
 import type { FormikProps } from 'formik'
 import type { SelectOption } from '@harnessio/uicore'
 import type {
-  TypesCodeOwnerEvaluationEntry,
   RepoRepositoryOutput,
   TypesLabel,
   TypesLabelValue,
@@ -297,28 +296,6 @@ export const handlePaste = (event: { preventDefault: () => void; clipboardData: 
       const blob = firstItem.getAsFile()
       callback(blob)
     }
-  }
-}
-
-// find code owner request decision from given entries
-export const findReviewDecisions = (entries: TypesCodeOwnerEvaluationEntry[] | null | undefined, decision: string) => {
-  if (entries === null || entries === undefined) {
-    return []
-  } else {
-    return entries
-      .map((entry: TypesCodeOwnerEvaluationEntry) => {
-        // Filter the owner_evaluations for 'changereq' decisions
-        const changeReqEvaluations = entry?.owner_evaluations?.filter(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (evaluation: any) => evaluation?.review_decision === decision
-        )
-
-        // If there are any 'changereq' decisions, return the entry along with them
-        if (changeReqEvaluations && changeReqEvaluations?.length > 0) {
-          return { ...entry, owner_evaluations: changeReqEvaluations }
-        }
-      }) // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .filter((entry: any) => entry !== null && entry !== undefined) // Filter out the null entries
   }
 }
 

@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-import type { SelectOption } from '@harnessio/uicore'
+import { stringSubstitute, type SelectOption } from '@harnessio/uicore'
 import type { IconName } from '@harnessio/icons'
 import { Color } from '@harnessio/design-system'
+import { isEmpty } from 'lodash-es'
 import type { UseStringsReturn } from 'framework/strings'
 import type { CommentItem } from 'components/CommentBox/CommentBox'
 import type { ColorName, PullRequestSection } from 'utils/Utils'
@@ -34,6 +35,7 @@ import type {
   TypesRuleViolations,
   TypesViolation
 } from 'services/code'
+import { ExecutionState } from 'components/ExecutionStatus/ExecutionStatus'
 
 export interface PRMergeOption extends SelectOption {
   method: EnumMergeMethod | 'close'
@@ -153,30 +155,99 @@ export const generateReviewDecisionInfo = (
   return info
 }
 
+export const checkEntries = (
+  getString: UseStringsReturn['getString'],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  changeReqArr: any[], // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  waitingEntriesArr: any[], // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  approvalEntriesArr: any[],
+  totalCodeOwners: number
+): { borderColor: string; message: string; overallStatus: ExecutionState } => {
+  if (!isEmpty(changeReqArr)) {
+    return {
+      borderColor: 'red800',
+      overallStatus: ExecutionState.FAILURE,
+      message: stringSubstitute(getString('codeOwner.changesRequested'), { count: changeReqArr.length }) as string
+    }
+  } else if (!isEmpty(waitingEntriesArr)) {
+    return {
+      borderColor: 'orange800',
+      message: stringSubstitute(getString('codeOwner.waitToApprove'), { count: waitingEntriesArr.length }) as string,
+      overallStatus: ExecutionState.PENDING
+    }
+  }
+  return {
+    borderColor: 'green800',
+    message: stringSubstitute(getString('codeOwner.approvalCompleted'), {
+      count: approvalEntriesArr.length || '0',
+      total: totalCodeOwners
+    }) as string,
+    overallStatus: ExecutionState.SUCCESS
+  }
+}
+
 export const findWaitingDecisions = (
   pullReqMetadata: TypesPullReq,
   reqCodeOwnerLatestApproval: boolean,
   entries?: TypesCodeOwnerEvaluationEntry[] | null
 ) => {
-  if (entries === null || entries === undefined) {
+  if (!entries) {
     return []
-  } else {
-    return entries.filter((entry: TypesCodeOwnerEvaluationEntry) => {
-      const hasNoReview = entry?.owner_evaluations?.every(
-        (evaluation: TypesOwnerEvaluation | { review_decision: string }) => evaluation.review_decision === ''
-      )
-
-      // add entry if no review found from codeowners
-      if (hasNoReview) return true
-      // add entry to waiting decision array if approved changes are outdated or no approvals are found for the given entry
-      const hasApprovedDecision = entry?.owner_evaluations?.some(
-        evaluation =>
-          evaluation.review_decision === PullReqReviewDecision.APPROVED &&
-          (reqCodeOwnerLatestApproval ? evaluation.review_sha === pullReqMetadata?.source_sha : true)
-      )
-      return !hasApprovedDecision
-    })
   }
+
+  return entries.filter((entry: TypesCodeOwnerEvaluationEntry) => {
+    const uniqueEvaluations = getCombinedEvaluations(entry)
+
+    const hasNoReview = uniqueEvaluations?.every((evaluation: TypesOwnerEvaluation) =>
+      isEmpty(evaluation.review_decision)
+    )
+    // add entry if no review found from codeowners
+    if (hasNoReview) return true
+
+    // add entry to waiting decision array if approved changes are outdated or no approvals are found for the given entry
+    const hasApprovedDecision = uniqueEvaluations?.some(
+      evaluation =>
+        evaluation.review_decision === PullReqReviewDecision.APPROVED &&
+        (reqCodeOwnerLatestApproval ? evaluation.review_sha === pullReqMetadata?.source_sha : true)
+    )
+    return !hasApprovedDecision
+  })
+}
+
+// find code owner request decision from given entries
+// Utility: Deduplicate evaluations by owner.id
+export function getCombinedEvaluations(entry: TypesCodeOwnerEvaluationEntry): TypesOwnerEvaluation[] {
+  const ugUserEvaluations = (entry?.user_group_owner_evaluations || []).flatMap(ug => ug.evaluations || [])
+  const evaluations = [...(entry?.owner_evaluations || []), ...ugUserEvaluations]
+
+  const seen = new Set<number>()
+  return evaluations.filter(ev => {
+    const uniqueKey = ev?.owner?.id ?? -1
+    if (seen.has(uniqueKey)) {
+      return false
+    }
+    seen.add(uniqueKey)
+    return true
+  })
+}
+
+export const findReviewDecisions = (entries: TypesCodeOwnerEvaluationEntry[] | null | undefined, decision: string) => {
+  if (!entries) {
+    return []
+  }
+
+  return (
+    entries
+      ?.map((entry: TypesCodeOwnerEvaluationEntry) => {
+        const evaluations =
+          getCombinedEvaluations(entry).filter((evaluation: any) => evaluation?.review_decision === decision) || []
+
+        if (!isEmpty(evaluations)) {
+          return { ...entry, owner_evaluations: evaluations }
+        }
+      }) // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .filter((entry: any) => entry !== null && entry !== undefined) || []
+  ) // Filter out the null entries
 }
 
 export const processReviewDecision = (

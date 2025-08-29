@@ -30,7 +30,7 @@ import { Render } from 'react-jsx-match'
 import { capitalize, isEmpty } from 'lodash-es'
 import type { IconName } from '@blueprintjs/core'
 import { Icon } from '@harnessio/icons'
-import { CodeOwnerReqDecision, findReviewDecisions, getUnifiedDefaultReviewersState } from 'utils/Utils'
+import { CodeOwnerReqDecision, getUnifiedDefaultReviewersState } from 'utils/Utils'
 import { CodeOwnerSection } from 'pages/PullRequest/CodeOwners/CodeOwnersOverview'
 import { useStrings } from 'framework/strings'
 import type {
@@ -43,6 +43,7 @@ import type {
 } from 'services/code'
 import {
   defaultReviewerResponseWithDecision,
+  findReviewDecisions,
   findWaitingDecisions,
   PullReqReviewDecision
 } from 'pages/PullRequest/PullRequestUtils'
@@ -105,22 +106,19 @@ const ChangesSection = (props: ChangesSectionProps) => {
   const checkIfOutdatedSha = (reviewedSHA?: string, sourceSHA?: string) => reviewedSHA !== sourceSHA
   const codeOwnerChangeReqEntries = findReviewDecisions(evaluation_entries, CodeOwnerReqDecision.CHANGEREQ)
   const codeOwnerApprovalEntries = findReviewDecisions(evaluation_entries, CodeOwnerReqDecision.APPROVED)
+  const codeOwnerPendingEntries = findWaitingDecisions(pullReqMetadata, reqCodeOwnerLatestApproval, evaluation_entries)
 
   const latestCodeOwnerApprovalArr = codeOwnerApprovalEntries
     ?.map(entry => {
-      // Filter the owner_evaluations for 'changereq' decisions
-      const entryEvaluation = entry?.owner_evaluations.filter(
+      const entryEvaluation = entry?.owner_evaluations?.filter(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (evaluation: any) => !checkIfOutdatedSha(evaluation?.review_sha, pullReqMetadata?.source_sha as string)
       )
-      // If there are any 'changereq' decisions, return the entry along with them
-      if (entryEvaluation && entryEvaluation?.length > 0) {
+      if (!isEmpty(entryEvaluation)) {
         return { entryEvaluation }
       }
     }) // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .filter((entry: any) => entry !== null && entry !== undefined) // Filter out the null entries
-
-  const codeOwnerPendingEntries = findWaitingDecisions(pullReqMetadata, reqCodeOwnerLatestApproval, evaluation_entries)
 
   const { approvedEvaluations, changeReqEvaluations } = reviewers?.reduce(
     (acc, evaluation) => {
@@ -171,25 +169,24 @@ const ChangesSection = (props: ChangesSectionProps) => {
     ) {
       if (mergeBlockedRule) {
         title = getString('changesSection.prMergeBlockedTitle')
-        // statusMessage = getString('changesSection.prMergeBlockedMessage')
         statusColor = Color.RED_700
         statusIcon = 'warning-icon'
-      } else if (codeOwnerChangeReqEntries.length > 0 && (reqCodeOwnerApproval || reqCodeOwnerLatestApproval)) {
+      } else if (!isEmpty(codeOwnerChangeReqEntries) && (reqCodeOwnerApproval || reqCodeOwnerLatestApproval)) {
         title = getString('changesSection.reqChangeFromCodeOwners')
         statusMessage = getString('changesSection.codeOwnerReqChanges')
         statusColor = Color.RED_700
         statusIcon = 'warning-icon'
-      } else if (changeReqEvaluations && changeReqEvaluations?.length > 0 && reqNoChangeReq) {
+      } else if (!isEmpty(changeReqEvaluations) && reqNoChangeReq) {
         title = getString('requestChanges')
         statusMessage = getString('pr.requestedChanges', { user: changeReqReviewer })
         statusColor = Color.RED_700
         statusIcon = 'warning-icon'
-      } else if (codeOwnerPendingEntries && codeOwnerPendingEntries?.length > 0 && reqCodeOwnerLatestApproval) {
+      } else if (!isEmpty(codeOwnerPendingEntries) && reqCodeOwnerLatestApproval) {
         title = getString('changesSection.pendingAppFromCodeOwners')
         statusMessage = getString('changesSection.pendingLatestApprovalCodeOwners')
         statusColor = Color.ORANGE_500
         statusIcon = 'execution-waiting'
-      } else if (codeOwnerPendingEntries && codeOwnerPendingEntries?.length > 0 && reqCodeOwnerApproval) {
+      } else if (!isEmpty(codeOwnerPendingEntries) && reqCodeOwnerApproval) {
         title = getString('changesSection.pendingAppFromCodeOwners')
         statusMessage = getString('changesSection.waitingOnCodeOwner')
         statusColor = Color.ORANGE_500
@@ -223,12 +220,12 @@ const ChangesSection = (props: ChangesSectionProps) => {
         }) as string
         statusColor = Color.ORANGE_500
         statusIcon = 'execution-waiting'
-      } else if (reqCodeOwnerLatestApproval && latestCodeOwnerApprovalArr?.length > 0) {
+      } else if (reqCodeOwnerLatestApproval && !isEmpty(latestCodeOwnerApprovalArr)) {
         title = getString('changesSection.changesApproved')
         statusMessage = getString('changesSection.latestChangesWereAppByCodeOwner')
         statusColor = Color.GREEN_700
         statusIcon = 'tick-circle'
-      } else if (reqCodeOwnerApproval && codeOwnerApprovalEntries?.length > 0) {
+      } else if (reqCodeOwnerApproval && !isEmpty(codeOwnerApprovalEntries)) {
         title = getString('changesSection.changesApproved')
         statusMessage = getString('changesSection.changesWereAppByCodeOwner')
         statusColor = Color.GREEN_700
@@ -243,7 +240,7 @@ const ChangesSection = (props: ChangesSectionProps) => {
         statusMessage = getString('changesSection.changesWereAppByLatestReqRev')
         statusColor = Color.GREEN_700
         statusIcon = 'tick-circle'
-      } else if (approvedEvaluations && approvedEvaluations?.length > 0) {
+      } else if (!isEmpty(approvedEvaluations)) {
         title = getString('changesSection.changesApproved')
         statusMessage = stringSubstitute(getString('changesSection.changesAppByRev')) as string
         statusColor = Color.GREEN_700
@@ -256,17 +253,17 @@ const ChangesSection = (props: ChangesSectionProps) => {
       }
     } else {
       // When no rules are required
-      if (codeOwnerChangeReqEntries && codeOwnerChangeReqEntries?.length > 0) {
+      if (!isEmpty(codeOwnerChangeReqEntries)) {
         title = getString('changesSection.reqChangeFromCodeOwners')
         statusMessage = getString('changesSection.codeOwnerReqChanges')
         statusIcon = 'warning-icon'
         isNotRequired = true
-      } else if (changeReqEvaluations && changeReqEvaluations?.length > 0) {
+      } else if (!isEmpty(changeReqEvaluations)) {
         title = getString('requestChanges')
         statusMessage = getString('pr.requestedChanges', { user: changeReqReviewer })
         statusIcon = 'warning-icon'
         isNotRequired = true
-      } else if (approvedEvaluations?.length && approvedEvaluations?.length > 0) {
+      } else if (!isEmpty(approvedEvaluations)) {
         title = getString('changesSection.changesApproved')
         statusMessage = stringSubstitute(getString('changesSection.changesAppByRev')) as string
         statusIcon = 'tick-circle'
@@ -711,7 +708,7 @@ const ChangesSection = (props: ChangesSectionProps) => {
           {!isEmpty(codeOwners) && !isEmpty(codeOwners.evaluation_entries) && (
             <Container className={css.borderContainer} padding={{ left: 'xlarge', right: 'small' }}>
               <Layout.Horizontal className={css.paddingContainer} flex={{ justifyContent: 'space-between' }}>
-                {codeOwnerChangeReqEntries && codeOwnerChangeReqEntries?.length > 0 ? (
+                {!isEmpty(codeOwnerChangeReqEntries) ? (
                   <Text
                     className={cx(
                       css.sectionSubheader,
