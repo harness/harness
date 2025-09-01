@@ -220,11 +220,11 @@ func (s infraProviderResourceStore) mapToInfraProviderResource(
 	if err != nil {
 		return nil, err
 	}
-	if spaceCore, err := s.spaceIDCache.Get(ctx, res.SpaceID); err == nil {
-		res.SpacePath = spaceCore.Path
-	} else {
+	spaceCore, err := s.spaceIDCache.Get(ctx, res.SpaceID)
+	if err != nil {
 		return nil, fmt.Errorf("couldn't set space path to the infra resource in DB: %d", res.SpaceID)
 	}
+	res.SpacePath = spaceCore.Path
 	return res, nil
 }
 
@@ -362,7 +362,7 @@ func (i InfraProviderResourceView) FindMany(ctx context.Context, ids []int64) ([
 }
 
 func (i InfraProviderResourceView) mapToInfraProviderResources(
-	_ context.Context,
+	ctx context.Context,
 	resources []infraProviderResource,
 ) ([]*types.InfraProviderResource, error) {
 	var err error
@@ -371,6 +371,10 @@ func (i InfraProviderResourceView) mapToInfraProviderResources(
 		res[idx], err = toInfraProviderResource(&resources[idx])
 		if err != nil {
 			return nil, err
+		}
+		resourceSpace, err := i.spaceStore.Find(ctx, res[idx].SpaceID)
+		if err == nil {
+			res[idx].SpacePath = resourceSpace.Path
 		}
 	}
 	return res, nil

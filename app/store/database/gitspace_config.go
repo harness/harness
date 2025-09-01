@@ -518,16 +518,16 @@ func (s gitspaceConfigStore) mapDBToGitspaceConfig(
 		}
 	}
 
-	if resource, err := s.rCache.Get(ctx, in.InfraProviderResourceID); err == nil {
-		result.InfraProviderResource = *resource
-	} else {
+	resource, err := s.rCache.Get(ctx, in.InfraProviderResourceID)
+	if err != nil {
 		return nil, fmt.Errorf("couldn't set resource to the gitspace config in DB: %s", in.Identifier)
 	}
-	if spaceCore, err := s.spaceIDCache.Get(ctx, in.SpaceID); err == nil {
-		result.SpacePath = spaceCore.Path
-	} else {
+	result.InfraProviderResource = *resource
+	spaceCore, err := s.spaceIDCache.Get(ctx, in.SpaceID)
+	if err != nil {
 		return nil, fmt.Errorf("couldn't set space path to the gitspace config in DB: %d", in.SpaceID)
 	}
+	result.SpacePath = spaceCore.Path
 	return result, nil
 }
 
@@ -535,7 +535,7 @@ func (s gitspaceConfigStore) ToGitspaceConfig(
 	ctx context.Context,
 	in *gitspaceConfigWithLatestInstance,
 ) (*types.GitspaceConfig, error) {
-	var result, err = s.mapDBToGitspaceConfig(ctx, &in.gitspaceConfig)
+	result, err := s.mapDBToGitspaceConfig(ctx, &in.gitspaceConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -547,14 +547,14 @@ func (s gitspaceConfigStore) ToGitspaceConfig(
 		instance = nil
 	}
 
-	if instance != nil {
-		gitspaceStateType, err2 := instance.GetGitspaceState()
-		if err2 != nil {
-			return nil, err2
+	if instance == nil {
+		result.State = enum.GitspaceStateUninitialized
+	} else {
+		gitspaceStateType, err := instance.GetGitspaceState()
+		if err != nil {
+			return nil, err
 		}
 		result.State = gitspaceStateType
-	} else {
-		result.State = enum.GitspaceStateUninitialized
 	}
 	result.GitspaceInstance = instance
 
@@ -566,11 +566,11 @@ func (s gitspaceConfigStore) mapDBToGitspaceInstance(
 	in *gitspaceInstance,
 ) (*types.GitspaceInstance, error) {
 	res := toGitspaceInstance(in)
-	if spaceCore, err := s.spaceIDCache.Get(ctx, in.SpaceID); err == nil {
-		res.SpacePath = spaceCore.Path
-	} else {
+	spaceCore, err := s.spaceIDCache.Get(ctx, in.SpaceID)
+	if err != nil {
 		return nil, fmt.Errorf("couldn't set space path to the config in DB: %d", in.SpaceID)
 	}
+	res.SpacePath = spaceCore.Path
 	return res, nil
 }
 

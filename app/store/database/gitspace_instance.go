@@ -433,11 +433,11 @@ func (g gitspaceInstanceStore) mapDBToGitspaceInstance(
 	in *gitspaceInstance,
 ) (*types.GitspaceInstance, error) {
 	res := toGitspaceInstance(in)
-	if spaceCore, err := g.spaceIDCache.Get(ctx, in.SpaceID); err == nil {
-		res.SpacePath = spaceCore.Path
-	} else {
+	spaceCore, err := g.spaceIDCache.Get(ctx, in.SpaceID)
+	if err != nil {
 		return nil, fmt.Errorf("couldn't set space path to the gitspace instance in DB: %d", in.SpaceID)
 	}
+	res.SpacePath = spaceCore.Path
 	return res, nil
 }
 

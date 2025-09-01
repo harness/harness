@@ -280,12 +280,12 @@ func (i infraProviderConfigStore) mapToInfraProviderConfig(
 		IsDeleted:  in.IsDeleted,
 		Deleted:    in.Deleted.Ptr(),
 	}
-	if spaceCore, err := i.spaceIDCache.Get(ctx, infraProviderConfigEntity.SpaceID); err == nil {
-		infraProviderConfigEntity.SpacePath = spaceCore.Path
-	} else {
+	spaceCore, err := i.spaceIDCache.Get(ctx, infraProviderConfigEntity.SpaceID)
+	if err != nil {
 		return nil, fmt.Errorf("couldn't set space path to the infra config in DB: %d",
 			infraProviderConfigEntity.SpaceID)
 	}
+	infraProviderConfigEntity.SpacePath = spaceCore.Path
 	return infraProviderConfigEntity, nil
 }
 
