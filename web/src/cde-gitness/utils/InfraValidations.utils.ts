@@ -79,6 +79,8 @@ export const validateMachineForm = (getString: UseStringsReturn['getString']) =>
       .required(getString('cde.gitspaceInfraHome.diskSizeMessage'))
       .min(1, getString('cde.gitspaceInfraHome.minNumber', { field: 'Persistent Disk Size', count: '0' })),
     zone: yup.string().trim().required(getString('cde.gitspaceInfraHome.zoneMessage')),
+    os: yup.string().trim().required(getString('cde.gitspaceInfraHome.osRequired')),
+    arch: yup.string().trim().required(getString('cde.gitspaceInfraHome.architectureRequired')),
     image_name: yup
       .string()
       .trim()
@@ -106,6 +108,8 @@ export const validateAwsMachineForm = (getString: UseStringsReturn['getString'])
       .required(getString('cde.gitspaceInfraHome.diskSizeMessage'))
       .min(1, getString('cde.gitspaceInfraHome.minNumber', { field: 'Persistent Disk Size', count: '0' })),
     zone: yup.string().trim().required(getString('cde.gitspaceInfraHome.zoneMessage')),
+    os: yup.string().trim().required(getString('cde.gitspaceInfraHome.osRequired')),
+    arch: yup.string().trim().required(getString('cde.gitspaceInfraHome.architectureRequired')),
     vm_image_name: yup
       .string()
       .trim()

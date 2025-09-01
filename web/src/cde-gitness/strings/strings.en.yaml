@@ -210,6 +210,11 @@ gitspaceInfraHome:
   addMachineNote: You can add machines once the infrastructure is connected.
   noMachineAvailable: No machines available
   addMachineType: Add machine types to make the region available for use
+  operatingSystem: Operating System
+  architecture: Architecture
+  osRequired: Operating system is required
+  architectureRequired: Architecture is required
+  machineName: Machine Name
   nameMessage: Name is required
   domainMessage: Domain is required
   machineTypeMessage: Machine type is required
@@ -264,6 +269,7 @@ Aws:
   title: AWS
   VpcCidrBlock: VPC CIDR Block
   domainExample: e.g. gitspace.harness.io
+  instanceName: Instance Name
   instanceType: Instance Type
   privateSubnetCidr: Private Subnet CIDR
   publicSubnetCidr: Public Subnet CIDR

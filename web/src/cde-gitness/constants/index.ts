@@ -344,3 +344,6 @@ export const SortByTypes = (getString: any) => [
 export const getStringDropdownOptions = (value: string) => {
   return { value: value, label: value }
 }
+
+export const OS_OPTIONS = ['linux']
+export const ARCHITECTURE_OPTIONS = ['amd64', 'arm64']

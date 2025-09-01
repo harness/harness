@@ -14,7 +14,13 @@ import { cloneDeep, get } from 'lodash-es'
 import { TypesInfraProviderResource, useCreateInfraProviderResource } from 'services/cde'
 import { useAppContext } from 'AppContext'
 import { getErrorMessage } from 'utils/Utils'
-import { getStringDropdownOptions, HYBRID_VM_GCP, regionType } from 'cde-gitness/constants'
+import {
+  getStringDropdownOptions,
+  HYBRID_VM_GCP,
+  regionType,
+  OS_OPTIONS,
+  ARCHITECTURE_OPTIONS
+} from 'cde-gitness/constants'
 import { validateMachineForm } from 'cde-gitness/utils/InfraValidations.utils'
 import { useStrings } from 'framework/strings'
 import { getZoneByRegion, machineTypes, persistentDiskTypes } from 'cde-gitness/utils/dropdownData.utils'
@@ -42,6 +48,8 @@ interface MachineModalForm {
   boot_type: string
   zone: string
   image_name: string
+  os: string
+  arch: string
 }
 
 function MachineModal({
@@ -64,7 +72,7 @@ function MachineModal({
 
   const onSubmitHandler = async (values: MachineModalForm) => {
     try {
-      const { name, disk_type, boot_size, machine_type, disk_size, boot_type, zone, image_name } = values
+      const { name, disk_type, boot_size, machine_type, disk_size, boot_type, zone, image_name, os, arch } = values
       const payload: any = [
         {
           name,
@@ -79,7 +87,9 @@ function MachineModal({
             region_name: regionIdentifier,
             machine_type,
             zone,
-            vm_image_name: image_name
+            vm_image_name: image_name,
+            os,
+            arch
           }
         }
       ]
@@ -114,10 +124,10 @@ function MachineModal({
         onSubmit={values => {
           onSubmitHandler(values)
         }}
-        initialValues={{} as MachineModalForm}
+        initialValues={{ os: 'linux', arch: 'amd64' } as MachineModalForm}
         validationSchema={validateMachineForm(getString)}>
         {formik => {
-          const { zone, disk_type, machine_type, disk_size, boot_size, boot_type } = formik?.values
+          const { zone, disk_type, machine_type, disk_size, boot_size, boot_type, os, arch } = formik?.values
           return (
             <FormikForm>
               <Layout.Vertical spacing="normal" className={css.formContainer}>
@@ -137,6 +147,20 @@ function MachineModal({
                   placeholder={getString('cde.gitspaceInfraHome.machineImageNamePlaceholder')}
                 />
                 <Text className={css.noteText}>{getString('cde.configureInfra.defaultImageNoteText')}</Text>
+                <CustomSelectDropdown
+                  options={OS_OPTIONS?.map(options => getStringDropdownOptions(options))}
+                  value={{ value: os, label: os }}
+                  label={getString('cde.gitspaceInfraHome.operatingSystem')}
+                  onChange={(value: { label: string; value: string }) => formik.setFieldValue('os', value?.value)}
+                  error={formik?.submitCount ? get(formik?.errors, 'os') : ''}
+                />
+                <CustomSelectDropdown
+                  options={ARCHITECTURE_OPTIONS?.map(options => getStringDropdownOptions(options))}
+                  value={{ value: arch, label: arch }}
+                  label={getString('cde.gitspaceInfraHome.architecture')}
+                  onChange={(value: { label: string; value: string }) => formik.setFieldValue('arch', value?.value)}
+                  error={formik?.submitCount ? get(formik?.errors, 'arch') : ''}
+                />
                 <CustomSelectDropdown
                   options={persistentDiskTypes?.map((options: string) => getStringDropdownOptions(options))}
                   value={{ value: disk_type, label: disk_type }}

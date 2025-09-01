@@ -13,7 +13,13 @@ import { cloneDeep, get } from 'lodash-es'
 import { TypesInfraProviderResource, useCreateInfraProviderResource } from 'services/cde'
 import { useAppContext } from 'AppContext'
 import { getErrorMessage } from 'utils/Utils'
-import { getStringDropdownOptions, HYBRID_VM_AWS, regionType } from 'cde-gitness/constants'
+import {
+  getStringDropdownOptions,
+  HYBRID_VM_AWS,
+  regionType,
+  OS_OPTIONS,
+  ARCHITECTURE_OPTIONS
+} from 'cde-gitness/constants'
 import { validateAwsMachineForm } from 'cde-gitness/utils/InfraValidations.utils'
 import { InfraDetails } from 'cde-gitness/pages/InfraConfigure/AWS/InfraDetails/InfraDetails.constants'
 import { useStrings } from 'framework/strings'
@@ -40,6 +46,8 @@ interface AwsMachineModalForm {
   boot_type: string
   zone: string
   vm_image_name: string
+  os: string
+  arch: string
 }
 
 function AwsMachineModal({
@@ -77,7 +85,7 @@ function AwsMachineModal({
 
   const onSubmitHandler = async (values: AwsMachineModalForm) => {
     try {
-      const { name, disk_type, boot_size, machine_type, disk_size, boot_type, zone, vm_image_name } = values
+      const { name, disk_type, boot_size, machine_type, disk_size, boot_type, zone, vm_image_name, os, arch } = values
       const payload: any = [
         {
           name,
@@ -92,7 +100,9 @@ function AwsMachineModal({
             region_name: regionIdentifier,
             machine_type,
             zone,
-            vm_image_name
+            vm_image_name,
+            os,
+            arch
           }
         }
       ]
@@ -127,10 +137,10 @@ function AwsMachineModal({
         onSubmit={values => {
           onSubmitHandler(values)
         }}
-        initialValues={{} as AwsMachineModalForm}
+        initialValues={{ os: 'linux', arch: 'amd64' } as AwsMachineModalForm}
         validationSchema={validateAwsMachineForm(getString)}>
         {formik => {
-          const { zone, disk_type, machine_type, disk_size, boot_size, boot_type } = formik?.values
+          const { zone, disk_type, machine_type, disk_size, boot_size, boot_type, os, arch } = formik?.values
           return (
             <FormikForm>
               <Layout.Vertical spacing="normal" className={css.formContainer}>
@@ -147,6 +157,20 @@ function AwsMachineModal({
                   name="vm_image_name"
                   label={getString('cde.Aws.machineAmiId')}
                   placeholder={getString('cde.Aws.machineAmiIdPlaceholder')}
+                />
+                <CustomSelectDropdown
+                  options={OS_OPTIONS?.map(options => getStringDropdownOptions(options))}
+                  value={{ value: os, label: os }}
+                  label={getString('cde.gitspaceInfraHome.operatingSystem')}
+                  onChange={(value: { label: string; value: string }) => formik.setFieldValue('os', value?.value)}
+                  error={formik?.submitCount ? get(formik?.errors, 'os') : ''}
+                />
+                <CustomSelectDropdown
+                  options={ARCHITECTURE_OPTIONS?.map(options => getStringDropdownOptions(options))}
+                  value={{ value: arch, label: arch }}
+                  label={getString('cde.gitspaceInfraHome.architecture')}
+                  onChange={(value: { label: string; value: string }) => formik.setFieldValue('arch', value?.value)}
+                  error={formik?.submitCount ? get(formik?.errors, 'arch') : ''}
                 />
                 <CustomSelectDropdown
                   options={volumeTypeOptions?.map((options: string) => getStringDropdownOptions(options))}

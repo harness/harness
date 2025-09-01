@@ -112,52 +112,64 @@ function MachineLocationContent({
   function CustomPersistentDiskColumn(row: Unknown) {
     const { persistent_disk_size, persistent_disk_type } = row?.row?.original?.metadata
     return (
-      <Text color={Color.GREY_1000}>
-        {persistent_disk_size}GB ({persistent_disk_type})
-      </Text>
+      <Layout.Vertical spacing={'xsmall'}>
+        <Text color={Color.GREY_1000}>{persistent_disk_size} GB</Text>
+        <Text color={Color.GREY_500}>{persistent_disk_type}</Text>
+      </Layout.Vertical>
     )
   }
 
   function CustomDiskColumn(row: Unknown) {
     const { boot_disk_type, boot_disk_size } = row?.row?.original?.metadata
     return (
-      <Text color={Color.GREY_1000}>
-        {boot_disk_size}GB ({boot_disk_type})
-      </Text>
+      <Layout.Vertical spacing={'xsmall'}>
+        <Text color={Color.GREY_1000}>{boot_disk_size} GB</Text>
+        <Text color={Color.GREY_500}>{boot_disk_type}</Text>
+      </Layout.Vertical>
     )
   }
 
-  function CustomMemoryColumn(row: Unknown) {
-    const { memory } = row?.row?.original?.metadata
-    return <Text color={Color.GREY_1000}>{memory}GB</Text>
-  }
-
   function CustomImageColumn(row: Unknown) {
-    const { vm_image_name, image_name } = row?.row?.original?.metadata
+    const { vm_image_name, image_name, os = 'linux', arch = 'amd64' } = row?.row?.original?.metadata
     const displayValue = vm_image_name || image_name || ''
 
     const displayParts = displayValue.split('/')
     const firstLineDisplay = displayParts.length > 0 ? displayParts[displayParts.length - 1] : displayValue
 
     return (
-      <Text color={Color.GREY_1000} tooltip={displayValue} className={css.truncateText}>
-        {firstLineDisplay}
-      </Text>
+      <Layout.Vertical spacing={'xsmall'}>
+        <Text color={Color.GREY_1000} tooltip={displayValue} className={css.truncateText}>
+          {firstLineDisplay}
+        </Text>
+        <Text color={Color.GREY_500}>{`${os}/${arch}`}</Text>
+      </Layout.Vertical>
     )
   }
 
   function CustomMachineColumn(row: Unknown) {
-    const { resource_name, machine_type } = row?.row?.original?.metadata
+    const { name } = row?.row?.original
+    const { resource_name } = row?.row?.original?.metadata
+    return <Text color={Color.GREY_1000}>{resource_name || name}</Text>
+  }
+
+  function CustomMachineTypeColumn(row: Unknown) {
+    const { machine_type, cpu, memory } = row?.row?.original?.metadata
     return (
-      <Text color={Color.GREY_1000}>
-        {resource_name} ({machine_type})
-      </Text>
+      <Layout.Vertical spacing={'xsmall'}>
+        <Text color={Color.GREY_1000}>
+          {' '}
+          {cpu ? `${cpu} CPU cores` : ''}
+          {memory ? `, ${memory} GB Memory` : ''}
+        </Text>
+        <Text color={Color.GREY_500}>{machine_type}</Text>
+      </Layout.Vertical>
     )
   }
 
   const createMachineColumns = (providerType: string): any[] => {
     const isAws = providerType === HYBRID_VM_AWS
-    const machineTypeKey = isAws ? 'cde.Aws.instanceType' : 'cde.gitspaceInfraHome.machine'
+    const machineNameKey = isAws ? 'cde.Aws.instanceName' : 'cde.gitspaceInfraHome.machineName'
+    const machineTypeKey = isAws ? 'cde.Aws.instanceType' : 'cde.gitspaceInfraHome.machineType'
     const zoneKey = isAws ? 'cde.Aws.availabilityZone' : 'cde.gitspaceInfraHome.zone'
     const imageKey = isAws ? 'cde.Aws.machineAmiId' : 'cde.gitspaceInfraHome.machineImageName'
 
@@ -166,14 +178,14 @@ function MachineLocationContent({
         Header: (
           <Layout.Horizontal>
             <Text font={{ variation: FontVariation.TABLE_HEADERS }} className={css.headingText}>
-              {getString(machineTypeKey)}
+              {getString(machineNameKey)}
             </Text>
             <HarnessDocTooltip tooltipId="InfraProviderResourceMachine" useStandAlone={true} />
           </Layout.Horizontal>
         ),
         Cell: CustomMachineColumn,
         accessor: 'name',
-        width: '22%'
+        width: '15%'
       },
       {
         Header: (
@@ -186,7 +198,19 @@ function MachineLocationContent({
         ),
         accessor: 'image',
         Cell: CustomImageColumn,
-        width: '20%'
+        width: '18%'
+      },
+      {
+        Header: (
+          <Layout.Horizontal>
+            <Text font={{ variation: FontVariation.TABLE_HEADERS }} className={css.headingText}>
+              {getString(zoneKey)}
+            </Text>
+            <HarnessDocTooltip tooltipId="InfraProviderResourceZone" useStandAlone={true} />
+          </Layout.Horizontal>
+        ),
+        accessor: 'metadata.zone',
+        width: '13%'
       },
       {
         Header: (
@@ -199,19 +223,7 @@ function MachineLocationContent({
         ),
         accessor: 'disk',
         Cell: CustomPersistentDiskColumn,
-        width: '17%'
-      },
-      {
-        Header: (
-          <Layout.Horizontal>
-            <Text font={{ variation: FontVariation.TABLE_HEADERS }} className={css.headingText}>
-              {getString(zoneKey)}
-            </Text>
-            <HarnessDocTooltip tooltipId="InfraProviderResourceZone" useStandAlone={true} />
-          </Layout.Horizontal>
-        ),
-        accessor: 'metadata.zone',
-        width: '12%'
+        width: '16%'
       },
       {
         Header: (
@@ -224,38 +236,26 @@ function MachineLocationContent({
         ),
         accessor: 'metadata.boot_disk_size',
         Cell: CustomDiskColumn,
-        width: '19%'
+        width: '16%'
       },
       {
         Header: (
           <Layout.Horizontal>
             <Text font={{ variation: FontVariation.TABLE_HEADERS }} className={css.headingText}>
-              {getString('cde.gitspaceInfraHome.cpu')}
+              {getString(machineTypeKey)}
             </Text>
-            <HarnessDocTooltip tooltipId="InfraProviderResourceCPU" useStandAlone={true} />
+            <HarnessDocTooltip tooltipId="InfraProviderResourceMachine" useStandAlone={true} />
           </Layout.Horizontal>
         ),
-        accessor: 'cpu',
-        width: '13%'
-      },
-      {
-        Header: (
-          <Layout.Horizontal>
-            <Text font={{ variation: FontVariation.TABLE_HEADERS }} className={css.headingText}>
-              {getString('cde.gitspaceInfraHome.memoryInGb')}
-            </Text>
-            <HarnessDocTooltip tooltipId="InfraProviderResourceMemory" useStandAlone={true} />
-          </Layout.Horizontal>
-        ),
-        accessor: 'memory',
-        Cell: CustomMemoryColumn,
-        width: '11%'
+        Cell: CustomMachineTypeColumn,
+        accessor: 'type',
+        width: '28%'
       },
       {
         Header: '',
         accessor: 'identifier',
         Cell: ActionCell,
-        width: '5%'
+        width: '3%'
       }
     ]
   }

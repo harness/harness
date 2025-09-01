@@ -1314,6 +1314,7 @@ export interface StringsMap {
   'cde.Aws.gatewayAmiId': string
   'cde.Aws.gatewayAmiImage': string
   'cde.Aws.gatewayInstanceType': string
+  'cde.Aws.instanceName': string
   'cde.Aws.instanceType': string
   'cde.Aws.invalidAmiIdFormat': string
   'cde.Aws.machineAmiId': string
@@ -1488,6 +1489,8 @@ export interface StringsMap {
   'cde.gitspaceInfraHome.addMachineNote': string
   'cde.gitspaceInfraHome.addMachineType': string
   'cde.gitspaceInfraHome.addnewRegion': string
+  'cde.gitspaceInfraHome.architecture': string
+  'cde.gitspaceInfraHome.architectureRequired': string
   'cde.gitspaceInfraHome.bootDisk': string
   'cde.gitspaceInfraHome.bootDiskSize': string
   'cde.gitspaceInfraHome.bootDiskType': string
@@ -1538,6 +1541,7 @@ export interface StringsMap {
   'cde.gitspaceInfraHome.machineImageName': string
   'cde.gitspaceInfraHome.machineImageNamePlaceholder': string
   'cde.gitspaceInfraHome.machineImageNameRequired': string
+  'cde.gitspaceInfraHome.machineName': string
   'cde.gitspaceInfraHome.machineType': string
   'cde.gitspaceInfraHome.machineTypeMessage': string
   'cde.gitspaceInfraHome.machines': string
@@ -1553,6 +1557,8 @@ export interface StringsMap {
   'cde.gitspaceInfraHome.noRegionConfigured': string
   'cde.gitspaceInfraHome.noRegionConfiguredText': string
   'cde.gitspaceInfraHome.noZonesAvailable': string
+  'cde.gitspaceInfraHome.operatingSystem': string
+  'cde.gitspaceInfraHome.osRequired': string
   'cde.gitspaceInfraHome.persistentDisk': string
   'cde.gitspaceInfraHome.proxySubnet': string
   'cde.gitspaceInfraHome.region': string
