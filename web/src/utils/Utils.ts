@@ -485,7 +485,8 @@ const EXTENSION_TO_LANG: Record<string, string> = {
   workspace: 'python',
   tfstate: 'hcl',
   ipynb: 'json',
-  mjs: 'javascript'
+  mjs: 'javascript',
+  kt: 'kotlin'
 }
 
 export const PLAIN_TEXT = 'plaintext'
