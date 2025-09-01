@@ -52,8 +52,8 @@ type CreateInput struct {
 	SourceBranch  string `json:"source_branch"`
 	TargetBranch  string `json:"target_branch"`
 
-	ReviewerIDs                  []int64  `json:"reviewer_ids"`
-	UserGroupReviewerIdentifiers []string `json:"user_group_reviewer_identifiers"`
+	ReviewerIDs          []int64 `json:"reviewer_ids"`
+	UserGroupReviewerIDs []int64 `json:"user_group_reviewer_ids"`
 
 	Labels []*types.PullReqLabelAssignInput `json:"labels"`
 
@@ -156,18 +156,16 @@ func (c *Controller) Create(
 
 	// Payload based reviewers
 
-	userReviewerMap, userGroupReviewerMap, err := c.preparePayloadReviewers(
-		ctx, session, in.ReviewerIDs, in.UserGroupReviewerIdentifiers, targetRepo,
+	userReviewerMap, userGroupReviewerMap, err := c.prepareRequestedReviewers(
+		ctx, session, in.ReviewerIDs, in.UserGroupReviewerIDs, targetRepo,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to prepare reviewers: %w", err)
+		return nil, fmt.Errorf("failed to prepare requested reviewers: %w", err)
 	}
 
-	payloadReviewerIDs := maps.Keys(userReviewerMap)
-	payloadUserGroupIDs := make([]int64, 0, len(userGroupReviewerMap))
-	for _, userGroup := range userGroupReviewerMap {
-		payloadUserGroupIDs = append(payloadUserGroupIDs, userGroup.ID)
-	}
+	// save user and user group IDs for activity creation later
+	requestedUserReviewerIDs := maps.Keys(userReviewerMap)
+	requestedUserGroupReviewerIDs := maps.Keys(userGroupReviewerMap)
 
 	if len(userReviewerMap) > 0 {
 		activitySeq++
@@ -184,7 +182,7 @@ func (c *Controller) Create(
 		return nil, fmt.Errorf("failed to get create pull request protection: %w", err)
 	}
 
-	ownerUserReviewers, ownerUserGroupReviewerMap, err := c.getCodeownerReviewers(
+	ownerUserReviewerMap, ownerUserGroupReviewerMap, err := c.getCodeOwnerReviewers(
 		ctx,
 		out.RequestCodeOwners,
 		session.Principal.ID,
@@ -194,12 +192,8 @@ func (c *Controller) Create(
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare code owner reviewers: %w", err)
 	}
-	ownerUserGroupIDs := make([]int64, 0, len(ownerUserGroupReviewerMap))
-	for _, userGroup := range ownerUserGroupReviewerMap {
-		ownerUserGroupIDs = append(ownerUserGroupIDs, userGroup.ID)
-	}
 
-	if len(ownerUserReviewers) > 0 {
+	if len(ownerUserReviewerMap) > 0 {
 		activitySeq++
 	}
 
@@ -207,22 +201,28 @@ func (c *Controller) Create(
 		activitySeq++
 	}
 
-	defaultUserReviewers, err := c.getDefaultReviewers(ctx, session.Principal.ID, out.DefaultReviewerIDs)
+	defaultUserReviewerMap, defaultUserGroupReviewerMap, err := c.getDefaultReviewers(
+		ctx, session.Principal.ID, out.DefaultReviewerIDs, out.DefaultGroupReviewerIDs,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare default reviewers: %w", err)
 	}
 
-	if len(defaultUserReviewers) > 0 {
+	if len(defaultUserReviewerMap) > 0 {
 		activitySeq++
 	}
 
-	for _, reviewer := range ownerUserReviewers {
+	if len(defaultUserGroupReviewerMap) > 0 {
+		activitySeq++
+	}
+
+	for _, reviewer := range ownerUserReviewerMap {
 		if _, ok := userReviewerMap[reviewer.ID]; !ok {
 			userReviewerMap[reviewer.ID] = reviewer
 		}
 	}
 
-	for _, reviewer := range defaultUserReviewers {
+	for _, reviewer := range defaultUserReviewerMap {
 		if _, ok := userReviewerMap[reviewer.ID]; !ok {
 			userReviewerMap[reviewer.ID] = reviewer
 		}
@@ -231,6 +231,12 @@ func (c *Controller) Create(
 	for identifier, userGroup := range ownerUserGroupReviewerMap {
 		if _, ok := userGroupReviewerMap[identifier]; !ok {
 			userGroupReviewerMap[identifier] = userGroup
+		}
+	}
+
+	for _, reviewer := range defaultUserGroupReviewerMap {
+		if _, ok := userGroupReviewerMap[reviewer.ID]; !ok {
+			userGroupReviewerMap[reviewer.ID] = reviewer
 		}
 	}
 
@@ -320,21 +326,24 @@ func (c *Controller) Create(
 	}
 
 	c.storeCreateReviewerActivity(
-		ctx, pr, session.Principal.ID, payloadReviewerIDs, enum.PullReqReviewerTypeRequested,
+		ctx, pr, session.Principal.ID, requestedUserReviewerIDs, enum.PullReqReviewerTypeRequested,
 	)
 	c.storeCreateUserGroupReviewerActivity(
-		ctx, pr, session.Principal.ID, payloadUserGroupIDs, enum.PullReqReviewerTypeRequested,
+		ctx, pr, session.Principal.ID, requestedUserGroupReviewerIDs, enum.PullReqReviewerTypeRequested,
 	)
 
 	c.storeCreateReviewerActivity(
-		ctx, pr, session.Principal.ID, maps.Keys(ownerUserReviewers), enum.PullReqReviewerTypeCodeOwners,
+		ctx, pr, session.Principal.ID, maps.Keys(ownerUserReviewerMap), enum.PullReqReviewerTypeCodeOwners,
 	)
 	c.storeCreateUserGroupReviewerActivity(
-		ctx, pr, session.Principal.ID, ownerUserGroupIDs, enum.PullReqReviewerTypeCodeOwners,
+		ctx, pr, session.Principal.ID, maps.Keys(ownerUserGroupReviewerMap), enum.PullReqReviewerTypeCodeOwners,
 	)
 
 	c.storeCreateReviewerActivity(
-		ctx, pr, session.Principal.ID, maps.Keys(defaultUserReviewers), enum.PullReqReviewerTypeDefault,
+		ctx, pr, session.Principal.ID, maps.Keys(defaultUserReviewerMap), enum.PullReqReviewerTypeDefault,
+	)
+	c.storeCreateUserGroupReviewerActivity(
+		ctx, pr, session.Principal.ID, maps.Keys(defaultUserGroupReviewerMap), enum.PullReqReviewerTypeDefault,
 	)
 
 	backfillWithLabelAssignInfo(pr, labelAssignOuts)
@@ -367,23 +376,19 @@ func (c *Controller) Create(
 	return pr, nil
 }
 
-// preparePayloadReviewers fetches principal data and checks principal repo access and permissions.
+// prepareRequestedReviewers fetches principal data and checks principal repo access and permissions.
 // The data recency is not critical: principals might change and the op will either be valid or fail.
 // Because it makes db calls, we use it before, i.e. outside of the PR creation tx.
-func (c *Controller) preparePayloadReviewers(
+func (c *Controller) prepareRequestedReviewers(
 	ctx context.Context,
 	session *auth.Session,
 	reviewers []int64,
-	userGroupReviewers []string,
+	userGroupReviewers []int64,
 	repo *types.RepositoryCore,
-) (map[int64]*types.PrincipalInfo, map[string]*types.UserGroupInfo, error) {
-	if len(reviewers) == 0 && len(userGroupReviewers) == 0 {
-		return map[int64]*types.PrincipalInfo{}, map[string]*types.UserGroupInfo{}, nil
-	}
-
+) (map[int64]*types.PrincipalInfo, map[int64]*types.UserGroup, error) {
 	// Process individual user reviewers
 
-	principalEmailMap := make(map[int64]*types.PrincipalInfo, len(reviewers))
+	principalMap := make(map[int64]*types.PrincipalInfo, len(reviewers))
 	for _, id := range reviewers {
 		if id == session.Principal.ID {
 			return nil, nil, usererror.BadRequest("PR creator cannot be added as a reviewer.")
@@ -413,22 +418,21 @@ func (c *Controller) preparePayloadReviewers(
 			return nil, nil, fmt.Errorf("reviewer principal %s check repo access error: %w", reviewerPrincipal.UID, err)
 		}
 
-		principalEmailMap[reviewerPrincipal.ID] = reviewerPrincipal.ToPrincipalInfo()
+		principalMap[reviewerPrincipal.ID] = reviewerPrincipal.ToPrincipalInfo()
 	}
 
 	// Process user group reviewers
 
-	userGroupMap := make(map[string]*types.UserGroupInfo, len(userGroupReviewers))
-	for _, identifier := range userGroupReviewers {
-		userGroup, err := c.userGroupResolver.Resolve(ctx, identifier)
+	userGroupMap := make(map[int64]*types.UserGroup, len(userGroupReviewers))
+	var err error
+	if len(userGroupReviewers) > 0 { // skip trip to db if no user group reviewers
+		userGroupMap, err = c.userGroupStore.FindManyByIDs(ctx, userGroupReviewers)
 		if err != nil {
-			return nil, nil, fmt.Errorf("failed to resolve user group %q: %w", identifier, err)
+			return nil, nil, fmt.Errorf("failed to find many user groups by IDs: %w", err)
 		}
-
-		userGroupMap[identifier] = userGroup.ToUserGroupInfo()
 	}
 
-	return principalEmailMap, userGroupMap, nil
+	return principalMap, userGroupMap, nil
 }
 
 func (c *Controller) createPullReqVerify(
@@ -459,7 +463,7 @@ func (c *Controller) createPullReqVerify(
 	return &out, nil
 }
 
-func (c *Controller) getCodeownerReviewers(
+func (c *Controller) getCodeOwnerReviewers(
 	ctx context.Context,
 	requestCodeOwners bool,
 	sessionPrincipalID int64,
@@ -467,16 +471,16 @@ func (c *Controller) getCodeownerReviewers(
 	targetBranch string,
 	mergeBaseSHA string,
 	sourceSHA string,
-) (map[int64]*types.PrincipalInfo, map[string]*types.UserGroupInfo, error) {
+) (map[int64]*types.PrincipalInfo, map[int64]*types.UserGroup, error) {
 	if !requestCodeOwners {
-		return map[int64]*types.PrincipalInfo{}, map[string]*types.UserGroupInfo{}, nil
+		return map[int64]*types.PrincipalInfo{}, map[int64]*types.UserGroup{}, nil
 	}
 
 	applicableOwners, err := c.codeOwners.GetApplicableCodeOwners(
 		ctx, targetRepo, targetBranch, mergeBaseSHA, sourceSHA,
 	)
 	if errors.Is(err, codeowners.ErrNotFound) {
-		return map[int64]*types.PrincipalInfo{}, map[string]*types.UserGroupInfo{}, nil
+		return map[int64]*types.PrincipalInfo{}, map[int64]*types.UserGroup{}, nil
 	}
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get applicable code owners: %w", err)
@@ -484,7 +488,6 @@ func (c *Controller) getCodeownerReviewers(
 
 	var userEmails []string
 	var userGroupIdentifiers []string
-
 	for _, entry := range applicableOwners.Entries {
 		for _, owner := range entry.Owners {
 			if identifier, ok := codeowners.ParseUserGroupOwner(owner); ok {
@@ -495,37 +498,50 @@ func (c *Controller) getCodeownerReviewers(
 		}
 	}
 
-	// fetch user code owners
-	users, err := c.principalStore.FindManyByEmail(ctx, userEmails)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to find many principals by email: %w", err)
-	}
+	// Process individual user reviewers
 
-	userMap := make(map[int64]*types.PrincipalInfo, len(users))
-	for _, users := range users {
-		userMap[users.ID] = users.ToPrincipalInfo()
-	}
-
-	// ensure we remove author from list
-	delete(userMap, sessionPrincipalID)
-
-	// fetch user group code owners
-	userGroupMap := make(map[string]*types.UserGroupInfo, len(userGroupIdentifiers))
-	for _, identifier := range userGroupIdentifiers {
-		if _, ok := userGroupMap[identifier]; ok {
-			continue
-		}
-
-		userGroup, err := c.userGroupResolver.Resolve(ctx, identifier)
-		if errors.Is(err, usergroup.ErrNotFound) {
-			log.Ctx(ctx).Warn().Msgf("user group %q not found, skipping", identifier)
-			continue
-		}
+	var userMap map[int64]*types.PrincipalInfo
+	if len(userEmails) > 0 {
+		users, err := c.principalStore.FindManyByEmail(ctx, userEmails)
 		if err != nil {
-			return nil, nil, fmt.Errorf("failed to resolve user group %q: %w", identifier, err)
+			return nil, nil, fmt.Errorf("failed to find many principals by email: %w", err)
+		}
+		userMap = make(map[int64]*types.PrincipalInfo, len(users))
+		for _, users := range users {
+			userMap[users.ID] = users.ToPrincipalInfo()
 		}
 
-		userGroupMap[identifier] = userGroup.ToUserGroupInfo()
+		// ensure we remove author from list
+		delete(userMap, sessionPrincipalID)
+	}
+
+	// Process user group reviewers
+
+	var userGroupMap map[int64]*types.UserGroup
+	if len(userGroupIdentifiers) > 0 { // skip resolution if no user group identifiers
+		identifierUserGroupMap := make(map[string]*types.UserGroup, len(userGroupIdentifiers))
+		for _, identifier := range userGroupIdentifiers {
+			// do not resolve user groups if already resolved
+			if _, ok := identifierUserGroupMap[identifier]; ok {
+				continue
+			}
+
+			userGroup, err := c.userGroupResolver.Resolve(ctx, identifier)
+			if errors.Is(err, usergroup.ErrNotFound) {
+				log.Ctx(ctx).Warn().Msgf("user group %q not found, skipping", identifier)
+				continue
+			}
+			if err != nil {
+				return nil, nil, fmt.Errorf("failed to resolve user group %q: %w", identifier, err)
+			}
+
+			identifierUserGroupMap[identifier] = userGroup
+		}
+
+		userGroupMap = make(map[int64]*types.UserGroup, len(identifierUserGroupMap))
+		for _, userGroup := range identifierUserGroupMap {
+			userGroupMap[userGroup.ID] = userGroup
+		}
 	}
 
 	return userMap, userGroupMap, nil
@@ -535,20 +551,30 @@ func (c *Controller) getDefaultReviewers(
 	ctx context.Context,
 	sessionPrincipalID int64,
 	reviewerIDs []int64,
-) (map[int64]*types.PrincipalInfo, error) {
-	if len(reviewerIDs) == 0 {
-		return map[int64]*types.PrincipalInfo{}, nil
+	defaultGroupReviewerIDs []int64,
+) (map[int64]*types.PrincipalInfo, map[int64]*types.UserGroup, error) {
+	var err error
+
+	var principals map[int64]*types.PrincipalInfo
+	if len(reviewerIDs) > 0 { // skip cache query if no reviewer IDs
+		principals, err = c.principalInfoCache.Map(ctx, reviewerIDs)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to find principal infos by ids: %w", err)
+		}
 	}
 
-	principals, err := c.principalInfoCache.Map(ctx, reviewerIDs)
-	if err != nil {
-		return nil, fmt.Errorf("failed to find principal infos by ids: %w", err)
+	var userGroupMap map[int64]*types.UserGroup
+	if len(defaultGroupReviewerIDs) > 0 { // skip trip to user group store if no group reviewer IDs
+		userGroupMap, err = c.userGroupStore.FindManyByIDs(ctx, defaultGroupReviewerIDs)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to find user group reviewers by ids: %w", err)
+		}
 	}
 
 	// ensure we remove author from list
 	delete(principals, sessionPrincipalID)
 
-	return principals, nil
+	return principals, userGroupMap, nil
 }
 
 func (c *Controller) createUserReviewers(
@@ -581,30 +607,30 @@ func (c *Controller) createUserReviewers(
 func (c *Controller) createUserGroupReviewers(
 	ctx context.Context,
 	session *auth.Session,
-	userGroupInfos map[string]*types.UserGroupInfo,
+	userGroups map[int64]*types.UserGroup,
 	repo *types.RepositoryCore,
 	pr *types.PullReq,
 ) error {
-	if len(userGroupInfos) == 0 {
+	if len(userGroups) == 0 {
 		return nil
 	}
 
 	now := time.Now().UnixMilli()
 	addedBy := session.Principal.ToPrincipalInfo()
 
-	for _, userGroupInfo := range userGroupInfos {
-		userGroup := &types.UserGroupReviewer{
+	for _, userGroup := range userGroups {
+		reviewer := &types.UserGroupReviewer{
 			PullReqID:   pr.ID,
-			UserGroupID: userGroupInfo.ID,
+			UserGroupID: userGroup.ID,
 			CreatedBy:   addedBy.ID,
 			Created:     now,
 			Updated:     now,
 			RepoID:      repo.ID,
-			UserGroup:   *userGroupInfo,
+			UserGroup:   *userGroup.ToUserGroupInfo(),
 			AddedBy:     *addedBy,
 			Decision:    enum.PullReqReviewDecisionPending,
 		}
-		if err := c.userGroupReviewerStore.Create(ctx, userGroup); err != nil {
+		if err := c.userGroupReviewerStore.Create(ctx, reviewer); err != nil {
 			return fmt.Errorf("failed to create user group pull request reviewer: %w", err)
 		}
 	}

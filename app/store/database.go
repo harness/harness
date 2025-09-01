@@ -1128,7 +1128,10 @@ type (
 		) ([]*types.UserGroup, error)
 
 		// FindManyByIDs returns a list of usergroups searching them via ids
-		FindManyByIDs(ctx context.Context, ids []int64) ([]*types.UserGroup, error)
+		FindManyByIDs(
+			ctx context.Context,
+			ids []int64,
+		) (map[int64]*types.UserGroup, error)
 
 		// FindByIdentifier returns a types.UserGroup given a space ID and identifier.
 		FindByIdentifier(ctx context.Context, spaceID int64, identifier string) (*types.UserGroup, error)

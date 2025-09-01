@@ -92,8 +92,9 @@ type (
 	}
 
 	CreatePullReqVerifyOutput struct {
-		RequestCodeOwners  bool
-		DefaultReviewerIDs []int64
+		RequestCodeOwners       bool
+		DefaultReviewerIDs      []int64
+		DefaultGroupReviewerIDs []int64
 	}
 )
 
@@ -353,6 +354,7 @@ func (v *DefPullReq) CreatePullReqVerify(
 
 	out.RequestCodeOwners = v.Reviewers.RequestCodeOwners
 	out.DefaultReviewerIDs = v.Reviewers.DefaultReviewerIDs
+	out.DefaultGroupReviewerIDs = v.Reviewers.DefaultUserGroupReviewerIDs
 
 	return out, nil, nil
 }
@@ -460,8 +462,9 @@ func (v *DefMerge) Sanitize() error {
 }
 
 type DefReviewers struct {
-	RequestCodeOwners  bool    `json:"request_code_owners,omitempty"`
-	DefaultReviewerIDs []int64 `json:"default_reviewer_ids,omitempty"`
+	RequestCodeOwners           bool    `json:"request_code_owners,omitempty"`
+	DefaultReviewerIDs          []int64 `json:"default_reviewer_ids,omitempty"`
+	DefaultUserGroupReviewerIDs []int64 `json:"default_user_group_reviewer_ids,omitempty"`
 }
 
 type DefPullReq struct {

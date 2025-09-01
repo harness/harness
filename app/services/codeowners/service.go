@@ -687,6 +687,7 @@ func match(pattern string, path string) (bool, error) {
 	return match, nil
 }
 
+// ParseUserGroupOwner parses a user group owner scoped identifier.
 func ParseUserGroupOwner(owner string) (string, bool) {
 	isOwner := strings.HasPrefix(owner, userGroupPrefixMarker)
 	if isOwner {

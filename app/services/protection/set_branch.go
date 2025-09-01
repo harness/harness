@@ -139,6 +139,7 @@ func (s branchRuleSet) CreatePullReqVerify(
 			violations = append(violations, backFillRule(rVs, r.RuleInfo)...)
 			out.RequestCodeOwners = out.RequestCodeOwners || rOut.RequestCodeOwners
 			out.DefaultReviewerIDs = append(out.DefaultReviewerIDs, rOut.DefaultReviewerIDs...)
+			out.DefaultGroupReviewerIDs = append(out.DefaultGroupReviewerIDs, rOut.DefaultGroupReviewerIDs...)
 
 			return nil
 		})
@@ -147,6 +148,7 @@ func (s branchRuleSet) CreatePullReqVerify(
 	}
 
 	out.DefaultReviewerIDs = deduplicateInt64Slice(out.DefaultReviewerIDs)
+	out.DefaultGroupReviewerIDs = deduplicateInt64Slice(out.DefaultGroupReviewerIDs)
 
 	return out, violations, nil
 }

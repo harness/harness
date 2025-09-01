@@ -105,7 +105,10 @@ func (s *UserGroupStore) Map(ctx context.Context, ids []int64) (map[int64]*types
 	return mapResult, nil
 }
 
-func (s *UserGroupStore) FindManyByIDs(ctx context.Context, ids []int64) ([]*types.UserGroup, error) {
+func (s *UserGroupStore) FindManyByIDs(
+	ctx context.Context,
+	ids []int64,
+) (map[int64]*types.UserGroup, error) {
 	stmt := database.Builder.
 		Select(userGroupColumns).
 		From("usergroups").
@@ -122,10 +125,9 @@ func (s *UserGroupStore) FindManyByIDs(ctx context.Context, ids []int64) ([]*typ
 		return nil, database.ProcessSQLErrorf(ctx, err, "find many by ids for usergroups query failed")
 	}
 
-	var result = make([]*types.UserGroup, len(dst))
-
-	for i, u := range dst {
-		result[i] = mapUserGroup(u)
+	result := make(map[int64]*types.UserGroup, len(dst))
+	for _, ug := range dst {
+		result[ug.ID] = mapUserGroup(ug)
 	}
 
 	return result, nil
