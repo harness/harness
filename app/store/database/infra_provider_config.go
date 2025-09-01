@@ -17,6 +17,7 @@ package database
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/harness/gitness/app/store"
@@ -63,14 +64,19 @@ type infraProviderConfig struct {
 
 var _ store.InfraProviderConfigStore = (*infraProviderConfigStore)(nil)
 
-func NewInfraProviderConfigStore(db *sqlx.DB) store.InfraProviderConfigStore {
+func NewInfraProviderConfigStore(
+	db *sqlx.DB,
+	spaceIDCache store.SpaceIDCache,
+) store.InfraProviderConfigStore {
 	return &infraProviderConfigStore{
-		db: db,
+		db:           db,
+		spaceIDCache: spaceIDCache,
 	}
 }
 
 type infraProviderConfigStore struct {
-	db *sqlx.DB
+	db           *sqlx.DB
+	spaceIDCache store.SpaceIDCache
 }
 
 func (i infraProviderConfigStore) FindByType(
@@ -94,7 +100,7 @@ func (i infraProviderConfigStore) FindByType(
 	if err := db.GetContext(ctx, dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraprovider config %v", infraType)
 	}
-	return i.mapToInfraProviderConfig(dst)
+	return i.mapToInfraProviderConfig(ctx, dst)
 }
 
 func (i infraProviderConfigStore) Update(ctx context.Context, infraProviderConfig *types.InfraProviderConfig) error {
@@ -143,7 +149,7 @@ func (i infraProviderConfigStore) Find(
 	if err := db.GetContext(ctx, dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraprovider config %d", id)
 	}
-	return i.mapToInfraProviderConfig(dst)
+	return i.mapToInfraProviderConfig(ctx, dst)
 }
 
 func (i infraProviderConfigStore) List(
@@ -173,7 +179,7 @@ func (i infraProviderConfigStore) List(
 	if err := db.SelectContext(ctx, dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to list infraprovider configs")
 	}
-	return i.mapToInfraProviderConfigs(*dst)
+	return i.mapToInfraProviderConfigs(ctx, *dst)
 }
 
 func (i infraProviderConfigStore) FindByIdentifier(
@@ -196,7 +202,7 @@ func (i infraProviderConfigStore) FindByIdentifier(
 	if err := db.GetContext(ctx, dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraprovider config %s", identifier)
 	}
-	return i.mapToInfraProviderConfig(dst)
+	return i.mapToInfraProviderConfig(ctx, dst)
 }
 
 func (i infraProviderConfigStore) Create(ctx context.Context, infraProviderConfig *types.InfraProviderConfig) error {
@@ -252,6 +258,7 @@ func (i infraProviderConfigStore) Delete(ctx context.Context, id int64) error {
 }
 
 func (i infraProviderConfigStore) mapToInfraProviderConfig(
+	ctx context.Context,
 	in *infraProviderConfig,
 ) (*types.InfraProviderConfig, error) {
 	metadataMap := make(map[string]any)
@@ -273,16 +280,23 @@ func (i infraProviderConfigStore) mapToInfraProviderConfig(
 		IsDeleted:  in.IsDeleted,
 		Deleted:    in.Deleted.Ptr(),
 	}
+	if spaceCore, err := i.spaceIDCache.Get(ctx, infraProviderConfigEntity.SpaceID); err == nil {
+		infraProviderConfigEntity.SpacePath = spaceCore.Path
+	} else {
+		return nil, fmt.Errorf("couldn't set space path to the infra config in DB: %d",
+			infraProviderConfigEntity.SpaceID)
+	}
 	return infraProviderConfigEntity, nil
 }
 
 func (i infraProviderConfigStore) mapToInfraProviderConfigs(
+	ctx context.Context,
 	in []*infraProviderConfig,
 ) ([]*types.InfraProviderConfig, error) {
 	var err error
 	res := make([]*types.InfraProviderConfig, len(in))
 	for index := range in {
-		res[index], err = i.mapToInfraProviderConfig(in[index])
+		res[index], err = i.mapToInfraProviderConfig(ctx, in[index])
 		if err != nil {
 			return nil, err
 		}

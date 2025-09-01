@@ -29,17 +29,11 @@ func (c *Service) List(
 	if err != nil {
 		return nil, fmt.Errorf("failed to list infraprovider configs: %w", err)
 	}
-
 	for _, infraProviderConfig := range infraProviderConfigs {
-		space, err := c.spaceFinder.FindByID(ctx, infraProviderConfig.SpaceID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to list infraprovider configs: %w", err)
-		}
-		err = c.populateDetails(ctx, space.Path, infraProviderConfig)
+		err = c.populateDetails(ctx, infraProviderConfig)
 		if err != nil {
 			return nil, err
 		}
 	}
-
 	return infraProviderConfigs, nil
 }

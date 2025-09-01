@@ -72,7 +72,6 @@ func (c *Service) StartGitspaceAction(
 	if err != nil {
 		return fmt.Errorf("failed to find gitspace with config ID : %s %w", config.Identifier, err)
 	}
-	newGitspaceInstance.SpacePath = config.SpacePath
 	config.GitspaceInstance = newGitspaceInstance
 	c.submitAsyncOps(ctx, config, enum.GitspaceActionTypeStart)
 	return nil

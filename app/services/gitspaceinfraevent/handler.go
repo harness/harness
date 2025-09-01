@@ -53,19 +53,20 @@ func (s *Service) handleGitspaceInfraResumeEvent(
 		if err != nil {
 			return fmt.Errorf("failed to fetch gitspace instance: %w", err)
 		}
-
 		instance = gitspaceInstance
 		config.GitspaceInstance = instance
 	}
 
 	defer func() {
 		// TODO: Update would not be needed for provision, stop and deprovision. Needs to be removed later.
-		updateErr := s.gitspaceSvc.UpdateInstance(ctxWithTimedOut, instance)
+		updateErr := s.gitspaceSvc.UpdateInstance(ctx, instance)
 		if updateErr != nil {
 			log.Err(updateErr).Msgf("failed to update gitspace instance")
 		}
 	}()
 
+	log.Debug().Msgf("gitspace config found, ID: %s, instance identifier: %s",
+		payload.Infra.GitspaceConfigIdentifier, instance.Identifier)
 	var err error
 	if payload.Infra.Status == enum.InfraStatusError {
 		log.Error().Msgf(
@@ -144,7 +145,7 @@ func (s *Service) getConfig(
 	spaceID int64,
 	identifier string,
 ) (*types.GitspaceConfig, error) {
-	config, err := s.gitspaceSvc.FindWithLatestInstance(ctx, spaceID, "", identifier)
+	config, err := s.gitspaceSvc.FindWithLatestInstance(ctx, spaceID, identifier)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"failed to find gitspace config during infra event handling, identifier %s: %w", identifier, err)

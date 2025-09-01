@@ -17,6 +17,7 @@ package database
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/harness/gitness/app/store"
@@ -76,14 +77,19 @@ type infraProviderResource struct {
 var _ store.InfraProviderResourceStore = (*infraProviderResourceStore)(nil)
 
 // NewInfraProviderResourceStore returns a new InfraProviderResourceStore.
-func NewInfraProviderResourceStore(db *sqlx.DB) store.InfraProviderResourceStore {
+func NewInfraProviderResourceStore(
+	db *sqlx.DB,
+	spaceIDCache store.SpaceIDCache,
+) store.InfraProviderResourceStore {
 	return &infraProviderResourceStore{
-		db: db,
+		db:           db,
+		spaceIDCache: spaceIDCache,
 	}
 }
 
 type infraProviderResourceStore struct {
-	db *sqlx.DB
+	db           *sqlx.DB
+	spaceIDCache store.SpaceIDCache
 }
 
 func (s infraProviderResourceStore) List(
@@ -114,7 +120,7 @@ func (s infraProviderResourceStore) List(
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to list infraprovider resources for config %d",
 			infraProviderConfigID)
 	}
-	return mapToInfraProviderResources(*dst)
+	return s.mapToInfraProviderResources(ctx, *dst)
 }
 
 func (s infraProviderResourceStore) Find(ctx context.Context, id int64) (*types.InfraProviderResource, error) {
@@ -133,7 +139,7 @@ func (s infraProviderResourceStore) Find(ctx context.Context, id int64) (*types.
 	if err := db.GetContext(ctx, dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraprovider resource %d", id)
 	}
-	return mapToInfraProviderResource(dst)
+	return s.mapToInfraProviderResource(ctx, dst)
 }
 
 func (s infraProviderResourceStore) FindByConfigAndIdentifier(
@@ -162,7 +168,7 @@ func (s infraProviderResourceStore) FindByConfigAndIdentifier(
 	if err := db.GetContext(ctx, dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraprovider resource %s", identifier)
 	}
-	return mapToInfraProviderResource(dst)
+	return s.mapToInfraProviderResource(ctx, dst)
 }
 
 func (s infraProviderResourceStore) Create(
@@ -206,7 +212,25 @@ func (s infraProviderResourceStore) Create(
 	return nil
 }
 
-func mapToInfraProviderResource(in *infraProviderResource) (*types.InfraProviderResource, error) {
+func (s infraProviderResourceStore) mapToInfraProviderResource(
+	ctx context.Context,
+	in *infraProviderResource,
+) (*types.InfraProviderResource, error) {
+	res, err := toInfraProviderResource(in)
+	if err != nil {
+		return nil, err
+	}
+	if spaceCore, err := s.spaceIDCache.Get(ctx, res.SpaceID); err == nil {
+		res.SpacePath = spaceCore.Path
+	} else {
+		return nil, fmt.Errorf("couldn't set space path to the infra resource in DB: %d", res.SpaceID)
+	}
+	return res, nil
+}
+
+func toInfraProviderResource(
+	in *infraProviderResource,
+) (*types.InfraProviderResource, error) {
 	metadataParamsMap := make(map[string]string)
 	if len(in.Metadata) > 0 {
 		marshalErr := json.Unmarshal(in.Metadata, &metadataParamsMap)
@@ -214,7 +238,7 @@ func mapToInfraProviderResource(in *infraProviderResource) (*types.InfraProvider
 			return nil, marshalErr
 		}
 	}
-	return &types.InfraProviderResource{
+	res := &types.InfraProviderResource{
 		UID:                   in.Identifier,
 		InfraProviderConfigID: in.InfraProviderConfigID,
 		ID:                    in.ID,
@@ -231,14 +255,18 @@ func mapToInfraProviderResource(in *infraProviderResource) (*types.InfraProvider
 		Updated:               in.Updated,
 		IsDeleted:             in.IsDeleted,
 		Deleted:               in.Deleted.Ptr(),
-	}, nil
+	}
+	return res, nil
 }
 
-func mapToInfraProviderResources(resources []infraProviderResource) ([]*types.InfraProviderResource, error) {
+func (s infraProviderResourceStore) mapToInfraProviderResources(
+	ctx context.Context,
+	resources []infraProviderResource,
+) ([]*types.InfraProviderResource, error) {
 	var err error
 	res := make([]*types.InfraProviderResource, len(resources))
 	for i := range resources {
-		res[i], err = mapToInfraProviderResource(&resources[i])
+		res[i], err = s.mapToInfraProviderResource(ctx, &resources[i])
 		if err != nil {
 			return nil, err
 		}
@@ -279,7 +307,7 @@ func (i InfraProviderResourceView) Find(ctx context.Context, id int64) (*types.I
 	if err := db.GetContext(ctx, dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraprovider providerResource %d", id)
 	}
-	providerResource, err := mapToInfraProviderResource(dst)
+	providerResource, err := toInfraProviderResource(dst)
 	if err != nil {
 		return nil, err
 	}
@@ -330,7 +358,22 @@ func (i InfraProviderResourceView) FindMany(ctx context.Context, ids []int64) ([
 	if err := db.GetContext(ctx, dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraprovider resources")
 	}
-	return mapToInfraProviderResources(*dst)
+	return i.mapToInfraProviderResources(ctx, *dst)
+}
+
+func (i InfraProviderResourceView) mapToInfraProviderResources(
+	_ context.Context,
+	resources []infraProviderResource,
+) ([]*types.InfraProviderResource, error) {
+	var err error
+	res := make([]*types.InfraProviderResource, len(resources))
+	for idx := range resources {
+		res[idx], err = toInfraProviderResource(&resources[idx])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
 func (s infraProviderResourceStore) Delete(ctx context.Context, id int64) error {

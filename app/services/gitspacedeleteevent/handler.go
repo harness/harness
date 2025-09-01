@@ -31,7 +31,7 @@ func (s *Service) handleGitspaceDeleteEvent(
 	log.Debug().Msgf("handling gitspace delete event with payload: %+v", event.Payload)
 	gitspaceConfigIdentifier := event.Payload.GitspaceConfigIdentifier
 	spaceID := event.Payload.SpaceID
-	gitspaceConfig, err := s.gitspaceSvc.FindWithLatestInstance(ctx, spaceID, "", gitspaceConfigIdentifier)
+	gitspaceConfig, err := s.gitspaceSvc.FindWithLatestInstance(ctx, spaceID, gitspaceConfigIdentifier)
 	if err != nil {
 		return fmt.Errorf("failed to find gitspace config %s for space %d while handling delete event: %w",
 			gitspaceConfigIdentifier, spaceID, err)

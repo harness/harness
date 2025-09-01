@@ -350,15 +350,15 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	infraProviderResourceView := database.ProvideInfraProviderResourceView(db, spaceStore)
 	infraProviderResourceCache := cache.ProvideInfraProviderResourceCache(infraProviderResourceView)
-	gitspaceConfigStore := database.ProvideGitspaceConfigStore(db, principalInfoCache, infraProviderResourceCache)
-	gitspaceInstanceStore := database.ProvideGitspaceInstanceStore(db)
+	gitspaceConfigStore := database.ProvideGitspaceConfigStore(db, principalInfoCache, infraProviderResourceCache, spaceIDCache)
+	gitspaceInstanceStore := database.ProvideGitspaceInstanceStore(db, spaceIDCache)
 	reporter3, err := events5.ProvideReporter(eventsSystem)
 	if err != nil {
 		return nil, err
 	}
 	gitspaceEventStore := database.ProvideGitspaceEventStore(db)
-	infraProviderResourceStore := database.ProvideInfraProviderResourceStore(db)
-	infraProviderConfigStore := database.ProvideInfraProviderConfigStore(db)
+	infraProviderResourceStore := database.ProvideInfraProviderResourceStore(db, spaceIDCache)
+	infraProviderConfigStore := database.ProvideInfraProviderConfigStore(db, spaceIDCache)
 	infraProviderTemplateStore := database.ProvideInfraProviderTemplateStore(db)
 	dockerConfig, err := server.ProvideDockerConfig(config)
 	if err != nil {

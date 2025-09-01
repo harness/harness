@@ -175,13 +175,19 @@ func ProvidePipelineStore(db *sqlx.DB) store.PipelineStore {
 }
 
 // ProvideInfraProviderConfigStore provides a infraprovider config store.
-func ProvideInfraProviderConfigStore(db *sqlx.DB) store.InfraProviderConfigStore {
-	return NewInfraProviderConfigStore(db)
+func ProvideInfraProviderConfigStore(
+	db *sqlx.DB,
+	spaceIDCache store.SpaceIDCache,
+) store.InfraProviderConfigStore {
+	return NewInfraProviderConfigStore(db, spaceIDCache)
 }
 
 // ProvideGitspaceInstanceStore provides a infraprovider resource store.
-func ProvideInfraProviderResourceStore(db *sqlx.DB) store.InfraProviderResourceStore {
-	return NewInfraProviderResourceStore(db)
+func ProvideInfraProviderResourceStore(
+	db *sqlx.DB,
+	spaceIDCache store.SpaceIDCache,
+) store.InfraProviderResourceStore {
+	return NewInfraProviderResourceStore(db, spaceIDCache)
 }
 
 // ProvideGitspaceConfigStore provides a gitspace config store.
@@ -189,8 +195,9 @@ func ProvideGitspaceConfigStore(
 	db *sqlx.DB,
 	pCache store.PrincipalInfoCache,
 	rCache store.InfraProviderResourceCache,
+	spaceIDCache store.SpaceIDCache,
 ) store.GitspaceConfigStore {
-	return NewGitspaceConfigStore(db, pCache, rCache)
+	return NewGitspaceConfigStore(db, pCache, rCache, spaceIDCache)
 }
 
 // ProvideGitspaceSettingsStore provides a gitspace settings store.
@@ -199,8 +206,11 @@ func ProvideGitspaceSettingsStore(db *sqlx.DB) store.GitspaceSettingsStore {
 }
 
 // ProvideGitspaceInstanceStore provides a gitspace instance store.
-func ProvideGitspaceInstanceStore(db *sqlx.DB) store.GitspaceInstanceStore {
-	return NewGitspaceInstanceStore(db)
+func ProvideGitspaceInstanceStore(
+	db *sqlx.DB,
+	spaceIDCache store.SpaceIDCache,
+) store.GitspaceInstanceStore {
+	return NewGitspaceInstanceStore(db, spaceIDCache)
 }
 
 // ProvideStageStore provides a stage store.

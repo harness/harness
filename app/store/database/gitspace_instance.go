@@ -89,14 +89,19 @@ type gitspaceInstance struct {
 }
 
 // NewGitspaceInstanceStore returns a new GitspaceInstanceStore.
-func NewGitspaceInstanceStore(db *sqlx.DB) store.GitspaceInstanceStore {
+func NewGitspaceInstanceStore(
+	db *sqlx.DB,
+	spaceIDCache store.SpaceIDCache,
+) store.GitspaceInstanceStore {
 	return &gitspaceInstanceStore{
-		db: db,
+		db:           db,
+		spaceIDCache: spaceIDCache,
 	}
 }
 
 type gitspaceInstanceStore struct {
-	db *sqlx.DB
+	db           *sqlx.DB
+	spaceIDCache store.SpaceIDCache
 }
 
 func (g gitspaceInstanceStore) FindTotalUsage(
@@ -172,7 +177,7 @@ func (g gitspaceInstanceStore) Find(ctx context.Context, id int64) (*types.Gitsp
 	if err := db.GetContext(ctx, gitspace, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find gitspace %d", id)
 	}
-	return mapDBToGitspaceInstance(ctx, gitspace)
+	return g.mapDBToGitspaceInstance(ctx, gitspace)
 }
 
 func (g gitspaceInstanceStore) FindByIdentifier(
@@ -193,7 +198,7 @@ func (g gitspaceInstanceStore) FindByIdentifier(
 	if err := db.GetContext(ctx, gitspace, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find gitspace %s", identifier)
 	}
-	return mapDBToGitspaceInstance(ctx, gitspace)
+	return g.mapDBToGitspaceInstance(ctx, gitspace)
 }
 
 func (g gitspaceInstanceStore) Create(ctx context.Context, gitspaceInstance *types.GitspaceInstance) error {
@@ -311,7 +316,7 @@ func (g gitspaceInstanceStore) FindLatestByGitspaceConfigID(
 		return nil, database.ProcessSQLErrorf(
 			ctx, err, "Failed to find latest gitspace instance for %d", gitspaceConfigID)
 	}
-	return mapDBToGitspaceInstance(ctx, gitspace)
+	return g.mapDBToGitspaceInstance(ctx, gitspace)
 }
 
 func (g gitspaceInstanceStore) List(
@@ -423,33 +428,15 @@ func addGitspaceInstanceFilter(
 	return stmt
 }
 
-func mapDBToGitspaceInstance(
-	_ context.Context,
+func (g gitspaceInstanceStore) mapDBToGitspaceInstance(
+	ctx context.Context,
 	in *gitspaceInstance,
 ) (*types.GitspaceInstance, error) {
-	var res = &types.GitspaceInstance{
-		ID:                in.ID,
-		Identifier:        in.Identifier,
-		GitSpaceConfigID:  in.GitSpaceConfigID,
-		URL:               in.URL.Ptr(),
-		SSHCommand:        in.SSHCommand.Ptr(),
-		PluginURL:         in.PluginURL.Ptr(),
-		State:             in.State,
-		UserID:            in.UserUID,
-		ResourceUsage:     in.ResourceUsage.Ptr(),
-		LastUsed:          in.LastUsed.Ptr(),
-		TotalTimeUsed:     in.TotalTimeUsed,
-		AccessType:        in.AccessType,
-		AccessKeyRef:      in.AccessKeyRef.Ptr(),
-		MachineUser:       in.MachineUser.Ptr(),
-		SpaceID:           in.SpaceID,
-		Created:           in.Created,
-		Updated:           in.Updated,
-		LastHeartbeat:     in.LastHeartbeat.Ptr(),
-		ActiveTimeEnded:   in.ActiveTimeEnded.Ptr(),
-		ActiveTimeStarted: in.ActiveTimeStarted.Ptr(),
-		HasGitChanges:     in.HasGitChanges.Ptr(),
-		ErrorMessage:      in.ErrorMessage.Ptr(),
+	res := toGitspaceInstance(in)
+	if spaceCore, err := g.spaceIDCache.Get(ctx, in.SpaceID); err == nil {
+		res.SpacePath = spaceCore.Path
+	} else {
+		return nil, fmt.Errorf("couldn't set space path to the gitspace instance in DB: %d", in.SpaceID)
 	}
 	return res, nil
 }
@@ -461,7 +448,7 @@ func (g gitspaceInstanceStore) mapToGitspaceInstances(
 	var err error
 	res := make([]*types.GitspaceInstance, len(instances))
 	for i := range instances {
-		res[i], err = mapDBToGitspaceInstance(ctx, instances[i])
+		res[i], err = g.mapDBToGitspaceInstance(ctx, instances[i])
 		if err != nil {
 			return nil, err
 		}

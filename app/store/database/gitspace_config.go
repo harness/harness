@@ -101,18 +101,21 @@ func NewGitspaceConfigStore(
 	db *sqlx.DB,
 	pCache store.PrincipalInfoCache,
 	rCache store.InfraProviderResourceCache,
+	spaceIDCache store.SpaceIDCache,
 ) store.GitspaceConfigStore {
 	return &gitspaceConfigStore{
-		db:     db,
-		pCache: pCache,
-		rCache: rCache,
+		db:           db,
+		pCache:       pCache,
+		rCache:       rCache,
+		spaceIDCache: spaceIDCache,
 	}
 }
 
 type gitspaceConfigStore struct {
-	db     *sqlx.DB
-	pCache store.PrincipalInfoCache
-	rCache store.InfraProviderResourceCache
+	db           *sqlx.DB
+	pCache       store.PrincipalInfoCache
+	rCache       store.InfraProviderResourceCache
+	spaceIDCache store.SpaceIDCache
 }
 
 func (s gitspaceConfigStore) Count(ctx context.Context, filter *types.GitspaceFilter) (int64, error) {
@@ -518,7 +521,12 @@ func (s gitspaceConfigStore) mapDBToGitspaceConfig(
 	if resource, err := s.rCache.Get(ctx, in.InfraProviderResourceID); err == nil {
 		result.InfraProviderResource = *resource
 	} else {
-		return nil, fmt.Errorf("couldn't set resource to the config in DB: %s", in.Identifier)
+		return nil, fmt.Errorf("couldn't set resource to the gitspace config in DB: %s", in.Identifier)
+	}
+	if spaceCore, err := s.spaceIDCache.Get(ctx, in.SpaceID); err == nil {
+		result.SpacePath = spaceCore.Path
+	} else {
+		return nil, fmt.Errorf("couldn't set space path to the gitspace config in DB: %d", in.SpaceID)
 	}
 	return result, nil
 }
@@ -531,7 +539,7 @@ func (s gitspaceConfigStore) ToGitspaceConfig(
 	if err != nil {
 		return nil, err
 	}
-	instance, err := mapDBToGitspaceInstance(ctx, &in.gitspaceInstance)
+	instance, err := s.mapDBToGitspaceInstance(ctx, &in.gitspaceInstance)
 	if err != nil {
 		log.Ctx(ctx).Error().Err(err).Msgf("Failed to convert to gitspace instance, gitspace configID: %d",
 			in.gitspaceInstance.ID,
@@ -551,6 +559,47 @@ func (s gitspaceConfigStore) ToGitspaceConfig(
 	result.GitspaceInstance = instance
 
 	return result, nil
+}
+
+func (s gitspaceConfigStore) mapDBToGitspaceInstance(
+	ctx context.Context,
+	in *gitspaceInstance,
+) (*types.GitspaceInstance, error) {
+	res := toGitspaceInstance(in)
+	if spaceCore, err := s.spaceIDCache.Get(ctx, in.SpaceID); err == nil {
+		res.SpacePath = spaceCore.Path
+	} else {
+		return nil, fmt.Errorf("couldn't set space path to the config in DB: %d", in.SpaceID)
+	}
+	return res, nil
+}
+
+func toGitspaceInstance(in *gitspaceInstance) *types.GitspaceInstance {
+	var res = &types.GitspaceInstance{
+		ID:                in.ID,
+		Identifier:        in.Identifier,
+		GitSpaceConfigID:  in.GitSpaceConfigID,
+		URL:               in.URL.Ptr(),
+		SSHCommand:        in.SSHCommand.Ptr(),
+		PluginURL:         in.PluginURL.Ptr(),
+		State:             in.State,
+		UserID:            in.UserUID,
+		ResourceUsage:     in.ResourceUsage.Ptr(),
+		LastUsed:          in.LastUsed.Ptr(),
+		TotalTimeUsed:     in.TotalTimeUsed,
+		AccessType:        in.AccessType,
+		AccessKeyRef:      in.AccessKeyRef.Ptr(),
+		MachineUser:       in.MachineUser.Ptr(),
+		SpaceID:           in.SpaceID,
+		Created:           in.Created,
+		Updated:           in.Updated,
+		LastHeartbeat:     in.LastHeartbeat.Ptr(),
+		ActiveTimeEnded:   in.ActiveTimeEnded.Ptr(),
+		ActiveTimeStarted: in.ActiveTimeStarted.Ptr(),
+		HasGitChanges:     in.HasGitChanges.Ptr(),
+		ErrorMessage:      in.ErrorMessage.Ptr(),
+	}
+	return res
 }
 
 func (s gitspaceConfigStore) mapToGitspaceConfigs(

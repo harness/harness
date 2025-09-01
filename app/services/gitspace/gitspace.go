@@ -17,7 +17,6 @@ package gitspace
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	gitspaceevents "github.com/harness/gitness/app/events/gitspace"
 	gitspacedeleteevents "github.com/harness/gitness/app/events/gitspacedelete"
@@ -132,11 +131,6 @@ func (c *Service) ListGitspacesWithInstance(
 	}
 
 	for _, gitspaceConfig := range gitspaceConfigs {
-		space, err := c.spaceFinder.FindByRef(ctx, strconv.FormatInt(gitspaceConfig.SpaceID, 10))
-		if err != nil {
-			return nil, 0, 0, err
-		}
-		gitspaceConfig.SpacePath = space.Path
 		updatedInstance, err := c.addOrUpdateInstanceParameters(ctx, gitspaceConfig.GitspaceInstance, gitspaceConfig)
 		if err != nil {
 			return nil, 0, 0, err

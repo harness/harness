@@ -32,7 +32,7 @@ func (c *Service) Find(
 		return nil, fmt.Errorf("failed to find infraprovider config: %q %w", identifier, err)
 	}
 
-	err = c.populateDetails(ctx, space.Path, infraProviderConfig)
+	err = c.populateDetails(ctx, infraProviderConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -42,12 +42,9 @@ func (c *Service) Find(
 
 func (c *Service) populateDetails(
 	ctx context.Context,
-	spacePath string,
 	infraProviderConfig *types.InfraProviderConfig,
 ) error {
-	infraProviderConfig.SpacePath = spacePath
-
-	resources, err := c.getResources(ctx, spacePath, infraProviderConfig)
+	resources, err := c.getResources(ctx, infraProviderConfig)
 	if err != nil {
 		return err
 	}
@@ -58,13 +55,11 @@ func (c *Service) populateDetails(
 		return err
 	}
 	infraProviderConfig.SetupYAML = setupYAML
-
 	return nil
 }
 
 func (c *Service) getResources(
 	ctx context.Context,
-	spacePath string,
 	infraProviderConfig *types.InfraProviderConfig,
 ) ([]types.InfraProviderResource, error) {
 	resources, err := c.ListResources(ctx, infraProviderConfig.ID, types.ListQueryFilter{})
@@ -79,7 +74,6 @@ func (c *Service) getResources(
 		for i, resource := range resources {
 			if resource != nil {
 				providerResources[i] = *resource
-				providerResources[i].SpacePath = spacePath
 			}
 		}
 		slices.SortFunc(providerResources, types.CompareInfraProviderResource)

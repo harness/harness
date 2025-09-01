@@ -18,7 +18,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/store"
@@ -38,31 +37,20 @@ func (c *Service) FindWithLatestInstanceWithSpacePath(
 	if err != nil {
 		return nil, fmt.Errorf("failed to find space: %w", err)
 	}
-	return c.FindWithLatestInstance(ctx, space.ID, spacePath, identifier)
+	return c.FindWithLatestInstance(ctx, space.ID, identifier)
 }
 
 func (c *Service) FindWithLatestInstance(
 	ctx context.Context,
 	spaceID int64,
-	spacePath string,
 	identifier string,
 ) (*types.GitspaceConfig, error) {
-	if spacePath == "" {
-		space, err := c.spaceFinder.FindByID(ctx, spaceID)
-		if err != nil {
-			log.Warn().Err(err).Msgf("failed to find space path for id %d", spaceID)
-		} else {
-			spacePath = space.Path
-		}
-	}
-
 	var gitspaceConfigResult *types.GitspaceConfig
 	txErr := c.tx.WithTx(ctx, func(ctx context.Context) error {
 		gitspaceConfig, err := c.gitspaceConfigStore.FindByIdentifier(ctx, spaceID, identifier)
 		if err != nil {
 			return fmt.Errorf("failed to find gitspace config: %w", err)
 		}
-		gitspaceConfig.SpacePath = spacePath
 		latestInstance, err := c.findLatestInstance(ctx, gitspaceConfig)
 		if err != nil {
 			return err
@@ -114,7 +102,6 @@ func (c *Service) getToken(
 	if gitspaceConfig.IDE != enum.IDETypeVSCodeWeb {
 		return "", nil
 	}
-
 	resourceSpace, err := c.spaceStore.FindByRef(ctx, gitspaceConfig.InfraProviderResource.SpacePath)
 	if err != nil || resourceSpace == nil {
 		return "", fmt.Errorf("failed to find space ref: %w", err)
@@ -163,8 +150,6 @@ func (c *Service) addOrUpdateInstanceParameters(
 		// nolint:nilnil // return value is based on nil pointers
 		return nil, nil
 	}
-	// add or update various parameters of gitspace instance.
-	instance.SpacePath = gitspaceConfig.SpacePath
 
 	ideSvc, err := c.ideFactory.GetIDE(gitspaceConfig.IDE)
 	if err != nil {
@@ -205,13 +190,6 @@ func (c *Service) FindWithLatestInstanceByID(
 		if err != nil {
 			return fmt.Errorf("failed to find gitspace config: %w", err)
 		}
-
-		space, err := c.spaceFinder.FindByID(ctx, gitspaceConfig.SpaceID)
-		if err != nil {
-			return fmt.Errorf("failed to find space: %w", err)
-		}
-		gitspaceConfig.SpacePath = space.Path
-
 		latestInstance, err := c.findLatestInstance(ctx, gitspaceConfig)
 		if err != nil {
 			return err
@@ -241,20 +219,11 @@ func (c *Service) FindAll(
 ) ([]*types.GitspaceConfig, error) {
 	var gitspaceConfigResult []*types.GitspaceConfig
 	txErr := c.tx.WithTx(ctx, func(ctx context.Context) error {
-		// TODO join and set gitspace instance, space from cache
 		gitspaceConfigs, err := c.gitspaceConfigStore.FindAll(ctx, ids)
 		if err != nil {
 			return fmt.Errorf("failed to find gitspace config: %w", err)
 		}
-		for _, gitspaceConfig := range gitspaceConfigs {
-			// FindByRef method is backed by cache as opposed to Find
-			space, err := c.spaceFinder.FindByRef(ctx, strconv.FormatInt(gitspaceConfig.SpaceID, 10))
-			if err != nil {
-				return fmt.Errorf("failed to find space: %w", err)
-			}
-			gitspaceConfig.SpacePath = space.Path
-			gitspaceConfigResult = append(gitspaceConfigResult, gitspaceConfig)
-		}
+		gitspaceConfigResult = append(gitspaceConfigResult, gitspaceConfigs...)
 		return nil
 	}, dbtx.TxDefaultReadOnly)
 	if txErr != nil {
