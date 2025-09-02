@@ -565,12 +565,14 @@ const GitspaceDetails = () => {
         className={css.pageMain}>
         <Container>
           {data?.instance?.error_message ? (
-            <ErrorCard
-              message={data?.instance?.error_message}
-              triggerGitspace={triggerGitspace}
-              loading={mutateLoading}
-              viewLogs={viewLogs}
-            />
+            data?.state === GitspaceStatus.ERROR && (
+              <ErrorCard
+                message={data?.instance?.error_message}
+                triggerGitspace={triggerGitspace}
+                loading={mutateLoading}
+                viewLogs={viewLogs}
+              />
+            )
           ) : (
             <></>
           )}
