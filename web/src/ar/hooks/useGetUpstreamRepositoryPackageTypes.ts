@@ -16,7 +16,7 @@
 
 import type { IconName } from '@harnessio/icons'
 
-import { FeatureFlags } from '@ar/MFEAppTypes'
+import type { FeatureFlags } from '@ar/MFEAppTypes'
 import type { StringsMap } from '@ar/frameworks/strings'
 import { ThumbnailTagEnum } from '@ar/components/Tag/ThumbnailTags'
 import { UpstreamProxyPackageType } from '@ar/pages/upstream-proxy-details/types'
@@ -83,8 +83,7 @@ export const UpstreamProxyPackageTypeList: UpstreamRepositoryPackageTypeListItem
   {
     label: 'repositoryTypes.rpm',
     value: UpstreamProxyPackageType.RPM,
-    icon: 'red-hat-logo',
-    tag: ThumbnailTagEnum.Beta
+    icon: 'red-hat-logo'
   },
   {
     label: 'repositoryTypes.cargo',
@@ -96,19 +95,13 @@ export const UpstreamProxyPackageTypeList: UpstreamRepositoryPackageTypeListItem
     label: 'repositoryTypes.go',
     value: UpstreamProxyPackageType.GO,
     icon: 'go-logo',
-    tooltip: 'Coming Soon!',
-    disabled: true,
-    tag: ThumbnailTagEnum.ComingSoon,
-    featureFlag: FeatureFlags.HAR_GO_PACKAGE_TYPE_ENABLED
+    tag: ThumbnailTagEnum.Beta
   },
   {
     label: 'repositoryTypes.huggingface',
     value: UpstreamProxyPackageType.HUGGINGFACE,
     icon: 'huggingface',
-    tooltip: 'Coming Soon!',
-    disabled: true,
-    tag: ThumbnailTagEnum.ComingSoon,
-    featureFlag: FeatureFlags.HAR_HUGGINGFACE_PACKAGE_TYPE_ENABLED
+    tag: ThumbnailTagEnum.Beta
   },
   {
     label: 'repositoryTypes.debian',

@@ -15,7 +15,7 @@
  */
 
 import type { IconName } from '@harnessio/icons'
-import { FeatureFlags } from '@ar/MFEAppTypes'
+import type { FeatureFlags } from '@ar/MFEAppTypes'
 import type { StringsMap } from '@ar/frameworks/strings'
 import { RepositoryPackageType } from '@ar/common/types'
 import { ThumbnailTagEnum } from '@ar/components/Tag/ThumbnailTags'
@@ -86,8 +86,7 @@ const RepositoryTypes: RepositoryTypeListItem[] = [
   {
     label: 'repositoryTypes.rpm',
     value: RepositoryPackageType.RPM,
-    icon: 'red-hat-logo',
-    tag: ThumbnailTagEnum.Beta
+    icon: 'red-hat-logo'
   },
   {
     label: 'repositoryTypes.cargo',
@@ -99,19 +98,13 @@ const RepositoryTypes: RepositoryTypeListItem[] = [
     label: 'repositoryTypes.go',
     value: RepositoryPackageType.GO,
     icon: 'go-logo',
-    tooltip: 'Coming Soon!',
-    disabled: true,
-    tag: ThumbnailTagEnum.ComingSoon,
-    featureFlag: FeatureFlags.HAR_GO_PACKAGE_TYPE_ENABLED
+    tag: ThumbnailTagEnum.Beta
   },
   {
     label: 'repositoryTypes.huggingface',
     value: RepositoryPackageType.HUGGINGFACE,
     icon: 'huggingface',
-    tooltip: 'Coming Soon!',
-    disabled: true,
-    tag: ThumbnailTagEnum.ComingSoon,
-    featureFlag: FeatureFlags.HAR_HUGGINGFACE_PACKAGE_TYPE_ENABLED
+    tag: ThumbnailTagEnum.Beta
   },
   {
     label: 'repositoryTypes.debian',

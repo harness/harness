@@ -58,7 +58,7 @@ function RepositoryListPage(): JSX.Element {
   const { getString } = useStrings()
   const { NGBreadcrumbs } = useParentComponents()
   const { useQueryParams, useUpdateQueryParams, usePreferenceStore } = useParentHooks()
-  const { HAR_TREE_VIEW_ENABLED, HAR_REGISTRY_SCOPE_FILTER } = useFeatureFlags()
+  const { HAR_REGISTRY_SCOPE_FILTER } = useFeatureFlags()
   const { updateQueryParams } = useUpdateQueryParams<Partial<ArtifactRepositoryListPageQueryParams>>()
   const { setRepositoryListViewType, parent } = useAppStore()
   const repositoryListViewType = useGetRepositoryListViewType()
@@ -168,16 +168,14 @@ function RepositoryListPage(): JSX.Element {
             defaultValue={searchTerm}
             ref={searchRef}
           />
-          {HAR_TREE_VIEW_ENABLED && (
-            <GridListToggle
-              initialSelectedView={repositoryListViewType === RepositoryListViewTypeEnum.LIST ? Views.LIST : Views.GRID}
-              icons={{ left: 'SplitView' }}
-              onViewToggle={newView => {
-                if (newView === Views.LIST) return
-                setRepositoryListViewType(RepositoryListViewTypeEnum.DIRECTORY)
-              }}
-            />
-          )}
+          <GridListToggle
+            initialSelectedView={repositoryListViewType === RepositoryListViewTypeEnum.LIST ? Views.LIST : Views.GRID}
+            icons={{ left: 'SplitView' }}
+            onViewToggle={newView => {
+              if (newView === Views.LIST) return
+              setRepositoryListViewType(RepositoryListViewTypeEnum.DIRECTORY)
+            }}
+          />
         </div>
       </Page.SubHeader>
       <Page.Body

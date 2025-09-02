@@ -17,13 +17,8 @@
 import { RepositoryListViewTypeEnum } from '@ar/contexts/AppStoreContext'
 
 import { useAppStore } from './useAppStore'
-import { useFeatureFlags } from './useFeatureFlag'
 
 export function useGetRepositoryListViewType() {
   const { repositoryListViewType } = useAppStore()
-  const { HAR_TREE_VIEW_ENABLED } = useFeatureFlags()
-  if (!HAR_TREE_VIEW_ENABLED) {
-    return RepositoryListViewTypeEnum.LIST
-  }
   return repositoryListViewType || RepositoryListViewTypeEnum.LIST
 }
