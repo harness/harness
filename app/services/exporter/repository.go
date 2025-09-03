@@ -197,9 +197,6 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		DefaultBranch: repository.DefaultBranch,
 		Description:   repository.Description,
 		IsPublic:      false, // TODO: replace with publicaccess service response once deployed on HC.
-		Readme:        false,
-		License:       "",
-		GitIgnore:     "",
 	})
 	if err != nil {
 		r.sseStreamer.Publish(ctx, repository.ParentID, enum.SSETypeRepositoryExportCompleted, repository)

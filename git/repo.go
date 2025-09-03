@@ -22,6 +22,7 @@ import (
 	"os"
 	"path"
 	"runtime/debug"
+	"strings"
 	"time"
 
 	"github.com/harness/gitness/errors"
@@ -257,7 +258,13 @@ func (s *Service) SyncRepository(
 		return nil, err
 	}
 
+	source := params.Source
+
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
+
+	if strings.IndexByte(source, '/') < 0 {
+		source = getFullPathForRepo(s.reposRoot, source)
+	}
 
 	// create repo if requested
 	_, err := os.Stat(repoPath)
@@ -288,7 +295,7 @@ func (s *Service) SyncRepository(
 	}
 
 	// sync repo content
-	err = s.git.Sync(ctx, repoPath, params.Source, params.RefSpecs)
+	err = s.git.Sync(ctx, repoPath, source, params.RefSpecs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to sync from source repo: %w", err)
 	}
@@ -296,7 +303,7 @@ func (s *Service) SyncRepository(
 	defaultBranch := params.DefaultBranch
 	if defaultBranch == "" {
 		// get default branch from remote repo (returns api.ErrNoDefaultBranch if repo is empty!)
-		defaultBranch, err = s.git.GetRemoteDefaultBranch(ctx, params.Source)
+		defaultBranch, err = s.git.GetRemoteDefaultBranch(ctx, source)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get default branch from source repo: %w", err)
 		}

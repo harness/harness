@@ -30,10 +30,10 @@ func NewNoOpRepoChecks() *NoOpRepoChecks {
 	return &NoOpRepoChecks{}
 }
 
-func (c *NoOpRepoChecks) Create(_ context.Context, _ *auth.Session, _ *CreateInput) error {
+func (c *NoOpRepoChecks) Create(context.Context, *auth.Session, *CheckInput) error {
 	return nil
 }
 
-func (c *NoOpRepoChecks) LifecycleRestriction(_ context.Context, _ *auth.Session, _ *types.RepositoryCore) error {
+func (c *NoOpRepoChecks) LifecycleRestriction(context.Context, *auth.Session, *types.RepositoryCore) error {
 	return nil
 }

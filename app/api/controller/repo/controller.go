@@ -99,6 +99,7 @@ type Controller struct {
 	spaceFinder            refcache.SpaceFinder
 	repoFinder             refcache.RepoFinder
 	importer               *importer.Repository
+	referenceSync          *importer.ReferenceSync
 	codeOwners             *codeowners.Service
 	eventReporter          *repoevents.Reporter
 	indexer                keywordsearch.Indexer
@@ -138,6 +139,7 @@ func NewController(
 	spaceFinder refcache.SpaceFinder,
 	repoFinder refcache.RepoFinder,
 	importer *importer.Repository,
+	referenceSync *importer.ReferenceSync,
 	codeOwners *codeowners.Service,
 	eventReporter *repoevents.Reporter,
 	indexer keywordsearch.Indexer,
@@ -178,6 +180,7 @@ func NewController(
 		spaceFinder:            spaceFinder,
 		repoFinder:             repoFinder,
 		importer:               importer,
+		referenceSync:          referenceSync,
 		codeOwners:             codeOwners,
 		eventReporter:          eventReporter,
 		indexer:                indexer,

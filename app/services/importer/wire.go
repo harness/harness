@@ -35,6 +35,7 @@ import (
 
 var WireSet = wire.NewSet(
 	ProvideRepoImporter,
+	ProvideReferenceSync,
 )
 
 func ProvideRepoImporter(
@@ -76,6 +77,36 @@ func ProvideRepoImporter(
 	}
 
 	err := executor.Register(jobType, importer)
+	if err != nil {
+		return nil, err
+	}
+
+	return importer, nil
+}
+
+func ProvideReferenceSync(
+	config *types.Config,
+	urlProvider url.Provider,
+	git git.Interface,
+	repoStore store.RepoStore,
+	repoFinder refcache.RepoFinder,
+	scheduler *job.Scheduler,
+	executor *job.Executor,
+	indexer keywordsearch.Indexer,
+	eventReporter *repoevents.Reporter,
+) (*ReferenceSync, error) {
+	importer := &ReferenceSync{
+		defaultBranch: config.Git.DefaultBranch,
+		urlProvider:   urlProvider,
+		git:           git,
+		repoStore:     repoStore,
+		repoFinder:    repoFinder,
+		scheduler:     scheduler,
+		indexer:       indexer,
+		eventReporter: eventReporter,
+	}
+
+	err := executor.Register(refSyncJobType, importer)
 	if err != nil {
 		return nil, err
 	}

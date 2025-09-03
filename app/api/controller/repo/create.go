@@ -55,9 +55,13 @@ type CreateInput struct {
 	Description   string `json:"description"`
 	IsPublic      bool   `json:"is_public"`
 	ForkID        int64  `json:"fork_id"`
-	Readme        bool   `json:"readme"`
-	License       string `json:"license"`
-	GitIgnore     string `json:"git_ignore"`
+	CreateFileOptions
+}
+
+type CreateFileOptions struct {
+	Readme    bool   `json:"readme"`
+	License   string `json:"license"`
+	GitIgnore string `json:"git_ignore"`
 }
 
 // Create creates a new repository.
@@ -85,12 +89,26 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		return nil, errPublicRepoCreationDisabled
 	}
 
-	err = c.repoCheck.Create(ctx, session, in)
+	err = c.repoCheck.Create(ctx, session, &CheckInput{
+		ParentRef:         parentSpace.Path,
+		Identifier:        in.Identifier,
+		DefaultBranch:     in.DefaultBranch,
+		Description:       in.Description,
+		IsPublic:          in.IsPublic,
+		IsFork:            false,
+		CreateFileOptions: in.CreateFileOptions,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	gitResp, isEmpty, err := c.createGitRepository(ctx, session, in)
+	gitResp, isEmpty, err := c.createGitRepository(
+		ctx,
+		session,
+		in.Identifier,
+		in.Description,
+		in.DefaultBranch,
+		in.CreateFileOptions)
 	if err != nil {
 		return nil, fmt.Errorf("error creating repository on git: %w", err)
 	}
@@ -223,34 +241,40 @@ func (c *Controller) sanitizeCreateInput(in *CreateInput, session *auth.Session)
 	return nil
 }
 
-func (c *Controller) createGitRepository(ctx context.Context, session *auth.Session,
-	in *CreateInput) (*git.CreateRepositoryOutput, bool, error) {
+func (c *Controller) createGitRepository(
+	ctx context.Context,
+	session *auth.Session,
+	identifier string,
+	description string,
+	defaultBranch string,
+	options CreateFileOptions,
+) (*git.CreateRepositoryOutput, bool, error) {
 	var (
 		err     error
 		content []byte
 	)
 	files := make([]git.File, 0, 3) // readme, gitignore, licence
-	if in.Readme {
-		content = createReadme(in.Identifier, in.Description)
+	if options.Readme {
+		content = createReadme(identifier, description)
 		files = append(files, git.File{
 			Path:    "README.md",
 			Content: content,
 		})
 	}
-	if in.License != "" && in.License != "none" {
-		content, err = resources.ReadLicense(in.License)
+	if options.License != "" && options.License != "none" {
+		content, err = resources.ReadLicense(options.License)
 		if err != nil {
-			return nil, false, fmt.Errorf("failed to read license '%s': %w", in.License, err)
+			return nil, false, fmt.Errorf("failed to read license '%s': %w", options.License, err)
 		}
 		files = append(files, git.File{
 			Path:    "LICENSE",
 			Content: content,
 		})
 	}
-	if in.GitIgnore != "" {
-		content, err = resources.ReadGitIgnore(in.GitIgnore)
+	if options.GitIgnore != "" {
+		content, err = resources.ReadGitIgnore(options.GitIgnore)
 		if err != nil {
-			return nil, false, fmt.Errorf("failed to read git ignore '%s': %w", in.GitIgnore, err)
+			return nil, false, fmt.Errorf("failed to read git ignore '%s': %w", options.GitIgnore, err)
 		}
 		files = append(files, git.File{
 			Path:    ".gitignore",
@@ -277,7 +301,7 @@ func (c *Controller) createGitRepository(ctx context.Context, session *auth.Sess
 	resp, err := c.git.CreateRepository(ctx, &git.CreateRepositoryParams{
 		Actor:         *actor,
 		EnvVars:       envVars,
-		DefaultBranch: in.DefaultBranch,
+		DefaultBranch: defaultBranch,
 		Files:         files,
 		Author:        actor,
 		AuthorDate:    &now,

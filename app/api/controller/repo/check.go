@@ -21,9 +21,22 @@ import (
 	"github.com/harness/gitness/types"
 )
 
+type CheckInput struct {
+	ParentRef     string `json:"parent_ref"`
+	Identifier    string `json:"identifier"`
+	DefaultBranch string `json:"default_branch"`
+	Description   string `json:"description"`
+	IsPublic      bool   `json:"is_public"`
+
+	IsFork       bool   `json:"is_fork,omitempty"`
+	UpstreamPath string `json:"upstream_path,omitempty"`
+
+	CreateFileOptions
+}
+
 // Check defines the interface for adding extra checks during repository operations.
 type Check interface {
 	// Create allows adding extra check during create repo operations
-	Create(ctx context.Context, session *auth.Session, in *CreateInput) error
+	Create(ctx context.Context, session *auth.Session, in *CheckInput) error
 	LifecycleRestriction(ctx context.Context, session *auth.Session, repo *types.RepositoryCore) error
 }
