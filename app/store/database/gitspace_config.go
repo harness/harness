@@ -581,7 +581,6 @@ func toGitspaceInstance(in *gitspaceInstance) *types.GitspaceInstance {
 		GitSpaceConfigID:  in.GitSpaceConfigID,
 		URL:               in.URL.Ptr(),
 		SSHCommand:        in.SSHCommand.Ptr(),
-		PluginURL:         in.PluginURL.Ptr(),
 		State:             in.State,
 		UserID:            in.UserUID,
 		ResourceUsage:     in.ResourceUsage.Ptr(),

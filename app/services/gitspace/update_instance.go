@@ -17,6 +17,7 @@ package gitspace
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"time"
 
 	"github.com/harness/gitness/types"
@@ -27,9 +28,35 @@ func (c *Service) UpdateInstance(
 	gitspaceInstance *types.GitspaceInstance,
 ) error {
 	gitspaceInstance.Updated = time.Now().UnixMilli()
+
+	if gitspaceInstance.URL != nil {
+		formatURLStr, err := formatURL(*gitspaceInstance.URL)
+		if err != nil {
+			return fmt.Errorf("cannot parse ide url: %w", err)
+		}
+		gitspaceInstance.URL = &formatURLStr
+	}
 	err := c.gitspaceInstanceStore.Update(ctx, gitspaceInstance)
 	if err != nil {
 		return fmt.Errorf("failed to update gitspace instance: %w", err)
 	}
 	return nil
+}
+
+func formatURL(rawURL string) (string, error) {
+	parsedURL, err := url.Parse(rawURL)
+	if err != nil {
+		return "", err
+	}
+
+	// Parse query parameters
+	q := parsedURL.Query()
+
+	// Remove token parameter
+	q.Del("token")
+
+	// Set updated query back
+	parsedURL.RawQuery = q.Encode()
+
+	return parsedURL.String(), nil
 }

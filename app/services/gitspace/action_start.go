@@ -37,7 +37,7 @@ func (c *Service) StartGitspaceAction(
 
 	if config.IsMarkedForInfraReset && savedGitspaceInstance != nil && !savedGitspaceInstance.State.IsFinalStatus() {
 		savedGitspaceInstance.State = enum.GitspaceInstanceStatePendingCleanup
-		err = c.gitspaceInstanceStore.Update(ctx, savedGitspaceInstance)
+		err = c.UpdateInstance(ctx, savedGitspaceInstance)
 		if err != nil {
 			log.Ctx(ctx).Warn().Err(err).Msgf(
 				"failed to mark old gitspace instance as pending cleanup for config ID: %s",
