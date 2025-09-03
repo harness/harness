@@ -94,6 +94,7 @@ func (c GitspaceSettingsCriteria) ToKey() (CriteriaKey, error) {
 
 type IDESettings struct {
 	AccessList *AccessList[enum.IDEType] `json:"access_list,omitempty"` // Access control for IDEs
+	DisableSSH bool                      `json:"disable_ssh,omitempty"`
 }
 
 type AccessList[T comparable] struct {
