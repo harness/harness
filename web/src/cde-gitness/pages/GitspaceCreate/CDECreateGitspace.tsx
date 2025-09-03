@@ -307,7 +307,11 @@ export const CDECreateGitspace = () => {
                     <Layout.Vertical spacing="large">
                       <Container padding="medium" background={Color.YELLOW_100} border={{ color: Color.YELLOW_400 }}>
                         <Layout.Vertical spacing="large">
-                          <Text>{getString('cde.create.githubOauthhelpertext1')}</Text>
+                          <Text>
+                            {`Please Configure ${
+                              scmOption?.name || 'your Git provider'
+                            } OAuth to connect to the repositories you have access`}
+                          </Text>
                           <Button
                             width="250px"
                             variation={ButtonVariation.PRIMARY}
@@ -322,7 +326,9 @@ export const CDECreateGitspace = () => {
                                 <Text>{getString('cde.create.githubOauthhelpertext3')}</Text>
                               </li>
                               <li>
-                                <Text>{getString('cde.create.githubOauthhelpertext4')}</Text>
+                                <Text>{`Under OAuth section, select ${
+                                  scmOption?.name || 'your Git provider'
+                                } and connect`}</Text>
                               </li>
                               <li>
                                 <Text>{getString('cde.create.githubOauthhelpertext5')}</Text>

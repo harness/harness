@@ -31,7 +31,7 @@ import {
   SCMType
 } from 'cde-gitness/pages/GitspaceCreate/CDECreateGitspace'
 import { useQueryParams } from 'hooks/useQueryParams'
-import { isValidUrl, getRepoIdFromURL } from 'cde-gitness/utils/SelectRepository.utils'
+import { isValidUrl, getRepoIdFromURL, getRepoFromURL } from 'cde-gitness/utils/SelectRepository.utils'
 import { useAppContext } from 'AppContext'
 import { GitspaceSelect } from '../GitspaceSelect/GitspaceSelect'
 import css from './CDEAnyGitImport.module.scss'
@@ -94,11 +94,12 @@ export const CDEAnyGitImport = () => {
       accountIdentifier,
       orgIdentifier,
       projectIdentifier,
-      repoName: values.name || '',
+      repoName: getRepoFromURL(values?.code_repo_url) || getRepoFromURL(searchTerm),
       useSCMProviderForConnector: true,
       scmProviderForConnectorType: values?.code_repo_type,
       branchNameSearchTerm: defaultTo(searchBranch, '')
     },
+    debounce: 1000,
     lazy: true
   })
 
@@ -122,8 +123,19 @@ export const CDEAnyGitImport = () => {
   const branchOptions: { name: string }[] = !values.code_repo_url
     ? []
     : isOnPremSCM
-    ? scmreposbranches?.data?.gitBranchesResponse?.branches
+    ? scmreposbranches?.data?.gitBranchesResponse?.branches || []
     : branchData?.branches || []
+
+  useEffect(() => {
+    if (isOnPremSCM && scmreposbranches?.data?.gitBranchesResponse?.defaultBranch?.name) {
+      const newDefaultBranch = scmreposbranches.data.gitBranchesResponse.defaultBranch.name || ''
+
+      if (values.code_repo_url && !values.branch) {
+        setValues(prevValues => ({ ...prevValues, branch: newDefaultBranch }))
+        setSearchBranch(newDefaultBranch)
+      }
+    }
+  }, [scmreposbranches, values.code_repo_url, isOnPremSCM, setValues])
 
   const [repoCheckState, setRepoCheckState] = useState<RepoCheckStatus | undefined>()
   const [repoOptions, setRepoOptions] = useState<TypesRepoResponse[] | null | undefined>(
@@ -155,26 +167,22 @@ export const CDEAnyGitImport = () => {
   }, [values.code_repo_url, repoQueryParams.codeRepoURL])
 
   useEffect(() => {
-    if (searchBranch && !isOnPremSCM) {
-      refetchBranch()
-    }
-  }, [searchBranch])
+    const hasRepo = Boolean(values?.code_repo_url)
 
-  useEffect(() => {
-    if (searchBranch === '' && values.code_repo_url) {
+    if (!searchBranch) {
+      // searchBranch is empty
+      if (hasRepo) {
+        isOnPremSCM ? scmrefetchBranch() : refetchBranch()
+      }
+    } else {
+      // searchBranch has a value
       if (isOnPremSCM) {
-        scmrefetchBranch()
+        if (hasRepo) scmrefetchBranch()
       } else {
         refetchBranch()
       }
     }
-  }, [searchBranch, values.code_repo_url])
-
-  useEffect(() => {
-    if (isOnPremSCM) {
-      scmrefetchBranch()
-    }
-  }, [values?.code_repo_url])
+  }, [searchBranch, values?.code_repo_url, isOnPremSCM])
 
   const onChange = useCallback(
     debounce(async (url: string, skipBranchUpdate?: boolean) => {
@@ -209,7 +217,7 @@ export const CDEAnyGitImport = () => {
                 orgIdentifier,
                 projectIdentifier,
                 useSCMProviderForConnector: true,
-                repoName: url || '',
+                repoName: getRepoFromURL(url) || '',
                 scmProviderForConnectorType: values?.code_repo_type
               }
             })
@@ -315,6 +323,7 @@ export const CDEAnyGitImport = () => {
                         }
                         onClick={async () => {
                           setSearchTerm(item.name as string)
+                          setSearchBranch('')
                           if (isOnPremSCM) {
                             const { data } = await getRepoURLPromise({
                               queryParams: {
@@ -330,14 +339,12 @@ export const CDEAnyGitImport = () => {
                               return {
                                 ...prvValues,
                                 code_repo_url: data,
-                                branch: item.default_branch,
+                                branch: '',
                                 identifier: getRepoIdFromURL(item.name),
                                 name: prvValues.name,
                                 code_repo_type: values?.code_repo_type
                               }
                             })
-                            // scmrefetchBranch()
-                            setSearchBranch(undefined)
                           } else {
                             setValues((prvValues: any) => {
                               return {

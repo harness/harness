@@ -356,10 +356,8 @@ create:
   scmEmpty : All SCM options are disabled
   ideEmpty : All IDEs disabled
   selectGitProvider : Select a Git Provider
-  githubOauthhelpertext1 : Please Configure the GitHub OAuth to connect to the repositories you have access
   githubOauthhelpertext2 : Configure the OAuth in Profile
   githubOauthhelpertext3 : Visit the User Profile Settings.
-  githubOauthhelpertext4 : Under OAuth section, select Github and connect
   githubOauthhelpertext5 : After configuring return back to this page to connect the private repositories
   ideNote : Your Gitspace will open in the selected IDE to code
   selectIde : Select an IDE

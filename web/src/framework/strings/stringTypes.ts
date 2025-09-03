@@ -1388,10 +1388,8 @@ export interface StringsMap {
   'cde.copied': string
   'cde.cpu': string
   'cde.create.branchPlaceholder': string
-  'cde.create.githubOauthhelpertext1': string
   'cde.create.githubOauthhelpertext2': string
   'cde.create.githubOauthhelpertext3': string
-  'cde.create.githubOauthhelpertext4': string
   'cde.create.githubOauthhelpertext5': string
   'cde.create.gitnessRepositories': string
   'cde.create.gitprovider': string

@@ -45,6 +45,16 @@ export const getRepoNameFromURL = (repoURL?: string) => {
   return filtered?.[filtered?.length - 1]
 }
 
+export const getRepoFromURL = (repoURL?: string) => {
+  const repoURLSplit = repoURL?.split('/')
+  const filtered = repoURLSplit?.filter(i => !!i)
+
+  if (filtered && filtered.length >= 2) {
+    return `${filtered[filtered.length - 2]}/${filtered[filtered.length - 1]}`
+  }
+  return filtered?.[filtered?.length - 1] || ''
+}
+
 export enum CodeRepoType {
   Github = 'github',
   Gitlab = 'gitlab',
