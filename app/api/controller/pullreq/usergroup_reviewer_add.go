@@ -66,12 +66,12 @@ func (c *Controller) UserGroupReviewerAdd(
 	}
 
 	reviewersMap := reviewersMap(reviewers)
-	decision := enum.PullReqReviewDecisionPending
-	for _, userGroupID := range userIDs {
-		if reviewer, ok := reviewersMap[userGroupID]; ok {
-			decision = getHighestOrderDecision(decision, reviewer.ReviewDecision)
-		}
-	}
+
+	// Build user group reviewer decisions for SHA-aware logic
+	userGroupReviewerDecisions := userGroupReviewerDecisions(userIDs, reviewersMap)
+
+	// Use our established SHA-aware decision logic
+	decision, userGroupSHA := determineUserGroupCompoundDecision(userGroupReviewerDecisions, pr.SourceSHA)
 
 	userGroupReviewer, err := c.userGroupReviewerStore.Find(ctx, pr.ID, in.UserGroupID)
 	if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
@@ -88,21 +88,25 @@ func (c *Controller) UserGroupReviewerAdd(
 		userGroupReviewer.UserGroup = *userGroup.ToUserGroupInfo()
 
 		userGroupReviewer.Decision = decision
+		userGroupReviewer.SHA = userGroupSHA
+		userGroupReviewer.UserDecisions = userGroupReviewerDecisions
 
 		return userGroupReviewer, nil
 	}
 
 	now := time.Now().UnixMilli()
 	userGroupReviewer = &types.UserGroupReviewer{
-		PullReqID:   pr.ID,
-		UserGroupID: in.UserGroupID,
-		CreatedBy:   session.Principal.ID,
-		Created:     now,
-		Updated:     now,
-		RepoID:      repo.ID,
-		UserGroup:   *userGroup.ToUserGroupInfo(),
-		AddedBy:     *session.Principal.ToPrincipalInfo(),
-		Decision:    decision,
+		PullReqID:     pr.ID,
+		UserGroupID:   in.UserGroupID,
+		CreatedBy:     session.Principal.ID,
+		Created:       now,
+		Updated:       now,
+		RepoID:        repo.ID,
+		UserGroup:     *userGroup.ToUserGroupInfo(),
+		AddedBy:       *session.Principal.ToPrincipalInfo(),
+		UserDecisions: userGroupReviewerDecisions,
+		Decision:      decision,
+		SHA:           userGroupSHA,
 	}
 
 	err = c.userGroupReviewerStore.Create(ctx, userGroupReviewer)

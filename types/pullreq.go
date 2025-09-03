@@ -232,6 +232,7 @@ type UserGroupReviewer struct {
 	UserDecisions []UserGroupReviewerDecision `json:"user_decisions,omitempty"`
 	// derived user group decision: change_req > approved > reviewed > pending
 	Decision enum.PullReqReviewDecision `json:"decision,omitempty"`
+	SHA      string                     `json:"sha,omitempty"`
 }
 
 type UserGroupReviewerDecision struct {

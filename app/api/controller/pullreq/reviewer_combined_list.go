@@ -102,34 +102,93 @@ func (c *Controller) ReviewersListCombined(
 
 		// compound user group decision
 		userGroupReviewer.Decision = enum.PullReqReviewDecisionPending
+		userGroupReviewer.SHA = ""
+
 		// individual decisions of the principals in the group
-		var userGroupReviewerDecisions []types.UserGroupReviewerDecision
+		var principalIDs []int64
 		for _, principal := range principals {
-			reviewer, ok := reviewersMap[principal.ID]
-			if !ok {
-				continue
-			}
-
-			userGroupReviewerDecisions = append(
-				userGroupReviewerDecisions,
-				types.UserGroupReviewerDecision{
-					Decision: reviewer.ReviewDecision,
-					SHA:      reviewer.SHA,
-					Reviewer: reviewer.Reviewer,
-				},
-			)
-
-			userGroupReviewer.Decision = getHighestOrderDecision(
-				userGroupReviewer.Decision, reviewer.ReviewDecision,
-			)
+			principalIDs = append(principalIDs, principal.ID)
 		}
+		userGroupReviewerDecisions := userGroupReviewerDecisions(principalIDs, reviewersMap)
+
 		userGroupReviewer.UserDecisions = userGroupReviewerDecisions
+
+		userGroupReviewer.Decision, userGroupReviewer.SHA = determineUserGroupCompoundDecision(
+			userGroupReviewerDecisions, pr.SourceSHA,
+		)
 	}
 
 	return &CombinedListResponse{
 		Reviewers:          reviewers,
 		UserGroupReviewers: userGroupReviewers,
 	}, nil
+}
+
+// userGroupReviewerDecisions builds a slice of UserGroupReviewerDecision from user IDs and reviewers map.
+func userGroupReviewerDecisions(
+	userIDs []int64,
+	reviewersMap map[int64]*types.PullReqReviewer,
+) []types.UserGroupReviewerDecision {
+	var userGroupReviewerDecisions []types.UserGroupReviewerDecision
+
+	for _, userID := range userIDs {
+		reviewer, ok := reviewersMap[userID]
+		if !ok {
+			continue
+		}
+
+		decision := types.UserGroupReviewerDecision{
+			Decision: reviewer.ReviewDecision,
+			SHA:      reviewer.SHA,
+			Reviewer: reviewer.Reviewer,
+		}
+		userGroupReviewerDecisions = append(userGroupReviewerDecisions, decision)
+	}
+
+	return userGroupReviewerDecisions
+}
+
+// determineUserGroupCompoundDecision determines the compound decision and SHA for a user group reviewer
+// based on individual reviewer decisions, prioritizing reviews on the source SHA.
+func determineUserGroupCompoundDecision(
+	userGroupReviewerDecisions []types.UserGroupReviewerDecision,
+	prSourceSHA string,
+) (enum.PullReqReviewDecision, string) {
+	// Separate reviews on source SHA vs other SHAs
+	var latestSHAReviews []types.UserGroupReviewerDecision
+	var otherSHAReviews []types.UserGroupReviewerDecision
+	var userGroupSHA string
+
+	for _, decision := range userGroupReviewerDecisions {
+		// prioritize source SHA if available
+		if userGroupSHA == "" || decision.SHA == prSourceSHA {
+			userGroupSHA = decision.SHA
+		}
+
+		if decision.SHA == prSourceSHA {
+			latestSHAReviews = append(latestSHAReviews, decision)
+		} else {
+			otherSHAReviews = append(otherSHAReviews, decision)
+		}
+	}
+
+	// Determine the compound decision:
+	// 1. Prioritize reviews on the source SHA
+	// 2. Apply highest decision order among those reviews
+	// 3. If no reviews on source SHA, use highest order from other SHAs
+	var decisionsToConsider []types.UserGroupReviewerDecision
+	if len(latestSHAReviews) > 0 {
+		decisionsToConsider = latestSHAReviews
+	} else {
+		decisionsToConsider = otherSHAReviews
+	}
+
+	decision := enum.PullReqReviewDecisionPending
+	for _, reviewDecision := range decisionsToConsider {
+		decision = getHighestOrderDecision(decision, reviewDecision.Decision)
+	}
+
+	return decision, userGroupSHA
 }
 
 func getHighestOrderDecision(
