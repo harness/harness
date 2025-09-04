@@ -6,6 +6,7 @@ import { useStrings } from 'framework/strings'
 import type { StringsMap } from 'framework/strings/stringTypes'
 import type { EnumIDEType } from 'services/cde'
 import { getIDETypeOptions, groupEnums } from 'cde-gitness/constants'
+import { SSH_ACCESS_KEY } from '../utils/adminSettingsUtils'
 import type { AdminSettingsFormValues } from '../utils/adminSettingsUtils'
 import css from './CodeEditors.module.scss'
 
@@ -54,7 +55,8 @@ const CodeEditors: React.FC = () => {
   useEffect(() => {
     if (values.codeEditors) {
       const allEditors = availableEditors.map(e => e.value)
-      const allSelected = allEditors.every(editor => values.codeEditors[editor])
+      const allSelected =
+        allEditors.every(editor => values.codeEditors[editor]) && values.codeEditors[SSH_ACCESS_KEY] !== false
       setSelectAllChecked(allSelected)
     }
   }, [values.codeEditors, availableEditors])
@@ -65,6 +67,8 @@ const CodeEditors: React.FC = () => {
     availableEditors.forEach(editor => {
       newCodeEditorValues[editor.value] = checked
     })
+
+    newCodeEditorValues[SSH_ACCESS_KEY] = checked
     setFieldValue('codeEditors', newCodeEditorValues)
   }
 
@@ -121,6 +125,33 @@ const CodeEditors: React.FC = () => {
                 </Layout.Vertical>
               )
             })}
+
+            {/* Add Other section for SSH access */}
+            <Layout.Vertical spacing="medium">
+              <Text font={{ variation: FontVariation.BODY }} color={Color.GREY_500}>
+                {getString('cde.settings.other')}
+              </Text>
+              <div className={css.editorsGrid}>
+                <Container className={css.editorCheckbox}>
+                  <Checkbox
+                    className={css.checkbox}
+                    checked={getIn(values, `codeEditors.${SSH_ACCESS_KEY}`) !== false}
+                    labelElement={
+                      <Layout.Horizontal spacing="medium">
+                        <Text
+                          icon={'run-step'}
+                          iconProps={{ size: 18 }}
+                          font={{ variation: FontVariation.BODY2 }}
+                          color={Color.GREY_700}>
+                          {getString('cde.sshDetails.connectViaSSH')}
+                        </Text>
+                      </Layout.Horizontal>
+                    }
+                    onChange={event => setFieldValue(`codeEditors.${SSH_ACCESS_KEY}`, event.currentTarget.checked)}
+                  />
+                </Container>
+              </div>
+            </Layout.Vertical>
           </Layout.Vertical>
         </Layout.Vertical>
       </Card>

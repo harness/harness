@@ -33,7 +33,7 @@ export const useAdminSettings = () => {
   const tabs = useMemo(
     () => [
       { id: AdminSettingsTabs.GIT_PROVIDERS, title: getString('cde.settings.gitProviders') },
-      { id: AdminSettingsTabs.CODE_EDITORS, title: getString('cde.settings.codeEditors') },
+      { id: AdminSettingsTabs.CODE_EDITORS, title: getString('cde.settings.accessMethods') },
       { id: AdminSettingsTabs.CLOUD_REGIONS, title: getString('cde.settings.cloudRegionsAndMachineTypes') },
       { id: AdminSettingsTabs.GITSPACE_IMAGES, title: getString('cde.settings.gitspaceImages') }
     ],

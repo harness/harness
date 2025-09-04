@@ -4,7 +4,8 @@ import type {
   TypesGitspaceSettingsResponse,
   TypesGitspaceRegionMachines,
   TypesInfraProviderSettings,
-  TypesDevcontainerImage
+  TypesDevcontainerImage,
+  EnumIDEType
 } from 'services/cde'
 import { scmOptionsCDE } from 'cde-gitness/pages/GitspaceCreate/CDECreateGitspace'
 import { getIDETypeOptions, type IDEOption } from 'cde-gitness/constants'
@@ -34,7 +35,7 @@ export interface AdminSettingsFormValues {
   }
   gitspaceImages?: { default_image_added: boolean } & TypesDevcontainerImage
 }
-
+export const SSH_ACCESS_KEY = 'ssh_access'
 /**
  * Creates initial form values for all admin settings tabs
  */
@@ -55,6 +56,7 @@ export const createInitialValues = (
     codeEditors: availableEditors.reduce((acc, editor) => {
       const isDenied = gitspace_config.ide?.access_list?.list?.includes(editor.value) ?? false
       acc[editor.value] = !isDenied
+      acc[SSH_ACCESS_KEY] = !(gitspace_config.ide?.disable_ssh === true)
       return acc
     }, {} as { [key: string]: boolean }),
     cloudRegions: {},
@@ -87,13 +89,13 @@ export const transformGitProvidersToPayload = (formValues: AdminSettingsFormValu
  */
 export const transformCodeEditorsToPayload = (formValues: AdminSettingsFormValues, availableEditors: IDEOption[]) => {
   const allEditors = availableEditors.map(editor => editor.value)
-  const deniedEditors = allEditors.filter(editor => !formValues.codeEditors[editor])
-
+  const deniedEditors: EnumIDEType[] = allEditors.filter(editor => !formValues.codeEditors[editor])
   return {
     access_list: {
       mode: 'deny' as const,
       list: deniedEditors
-    }
+    },
+    disable_ssh: formValues.codeEditors[SSH_ACCESS_KEY] === false
   }
 }
 

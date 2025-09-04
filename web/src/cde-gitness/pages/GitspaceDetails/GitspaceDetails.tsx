@@ -39,6 +39,7 @@ import { Menu, MenuItem, PopoverInteractionKind, PopoverPosition } from '@bluepr
 import { defaultTo } from 'lodash-es'
 import { Icon } from '@harnessio/icons'
 import { EditGitspace } from 'cde-gitness/components/EditGitspace/EditGitspace'
+import { ConnectWithSSHDialog } from 'cde-gitness/components/ConnectWithSSHDialog/ConnectWithSSHDialog'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
@@ -127,6 +128,7 @@ const GitspaceDetails = () => {
 
   const [startPolling, setStartPolling] = useState<GitspaceActionType | undefined>(undefined)
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false)
+  const [isSSHDialogOpen, setIsSSHDialogOpen] = useState<boolean>(false)
 
   const { loading, data, refetch, error } = useGitspaceDetails({ gitspaceId })
 
@@ -281,6 +283,8 @@ const GitspaceDetails = () => {
   const accordionRef = useRef<AccordionHandle | null>(null)
   const myRef = useRef<any | null>(null)
   const selectedIde = getIDEOption(data?.ide, getString)
+  const isVSCodeWeb = selectedIde?.value === 'vs_code_web'
+  const sshDisabled = gitspaceSettings?.settings?.gitspace_config?.ide?.disable_ssh === true
 
   useEffect(() => {
     if (standalone) {
@@ -495,34 +499,82 @@ const GitspaceDetails = () => {
                     data?.state === GitspaceStatus.STARTING ||
                     data?.state === GitspaceStatus.STOPPING) &&
                   data?.ide ? (
-                    <Button
-                      disabled={disabledActionButtons}
-                      variation={ButtonVariation.PRIMARY}
-                      tooltip={
-                        disabledActionButtons ? (
-                          <Container width={300} padding="medium">
-                            <Layout.Vertical spacing="small">
-                              <Text color={Color.WHITE} font="small">
-                                We are provisioning the Gitspace
-                              </Text>
-                              <Text color={Color.WHITE} font="small">
-                                Please wait for a few minutes before the {selectedIde?.label} can be launched
-                              </Text>
-                            </Layout.Vertical>
-                          </Container>
-                        ) : undefined
-                      }
-                      tooltipProps={{ isDark: true, position: PopoverPosition.BOTTOM_LEFT }}
-                      onClick={e => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        const url = data?.instance?.plugin_url ? data?.instance?.plugin_url : data?.instance?.url
-                        {
-                          !url ? showError(getString('cde.ide.errorEmptyURL')) : window.open(`${url}`, '_blank')
+                    <Layout.Horizontal spacing="large">
+                      <Button
+                        disabled={disabledActionButtons || isVSCodeWeb || sshDisabled}
+                        variation={ButtonVariation.SECONDARY}
+                        icon="run-step"
+                        onClick={() => setIsSSHDialogOpen(true)}
+                        tooltip={
+                          disabledActionButtons && !isVSCodeWeb ? (
+                            <Container width={300} padding="medium">
+                              <Layout.Vertical spacing="small">
+                                <Text color={Color.WHITE} font="small">
+                                  We are provisioning the Gitspace
+                                </Text>
+                                <Text color={Color.WHITE} font="small">
+                                  Please wait for a few minutes before the {selectedIde?.label} can be launched
+                                </Text>
+                              </Layout.Vertical>
+                            </Container>
+                          ) : isVSCodeWeb ? (
+                            <Container width={320} padding="medium">
+                              <Layout.Vertical spacing="small">
+                                <Text color={Color.WHITE} font="small">
+                                  {getString('cde.sshDetails.sshDisabledVSCodeWeb1')}
+                                </Text>
+                                <Layout.Vertical spacing="xsmall">
+                                  <Text color={Color.WHITE} font="small">
+                                    {getString('cde.sshDetails.sshDisabledVSCodeWeb2')}
+                                  </Text>
+                                  <Text color={Color.WHITE} font="small">
+                                    {getString('cde.sshDetails.sshDisabledVSCodeWeb3')}
+                                  </Text>
+                                </Layout.Vertical>
+                              </Layout.Vertical>
+                            </Container>
+                          ) : sshDisabled ? (
+                            <Container width={320} padding="medium">
+                              <Layout.Vertical spacing="small">
+                                <Text color={Color.WHITE} font="small">
+                                  {getString('cde.sshDetails.sshDisabledText')}
+                                </Text>
+                              </Layout.Vertical>
+                            </Container>
+                          ) : undefined
                         }
-                      }}>
-                      {selectedIde?.buttonText}
-                    </Button>
+                        tooltipProps={{ isDark: true, position: PopoverPosition.BOTTOM_LEFT }}>
+                        {getString('cde.sshDetails.connectWithSSH')}
+                      </Button>
+                      <Button
+                        disabled={disabledActionButtons}
+                        variation={ButtonVariation.PRIMARY}
+                        tooltip={
+                          disabledActionButtons ? (
+                            <Container width={300} padding="medium">
+                              <Layout.Vertical spacing="small">
+                                <Text color={Color.WHITE} font="small">
+                                  We are provisioning the Gitspace
+                                </Text>
+                                <Text color={Color.WHITE} font="small">
+                                  Please wait for a few minutes before the {selectedIde?.label} can be launched
+                                </Text>
+                              </Layout.Vertical>
+                            </Container>
+                          ) : undefined
+                        }
+                        tooltipProps={{ isDark: true, position: PopoverPosition.BOTTOM_LEFT }}
+                        onClick={e => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          const url = data?.instance?.plugin_url ? data?.instance?.plugin_url : data?.instance?.url
+                          {
+                            !url ? showError(getString('cde.ide.errorEmptyURL')) : window.open(`${url}`, '_blank')
+                          }
+                        }}>
+                        {selectedIde?.buttonText}
+                      </Button>
+                    </Layout.Horizontal>
                   ) : (
                     <Button
                       loading={mutateLoading}
@@ -695,6 +747,18 @@ const GitspaceDetails = () => {
                     }
                   : undefined
             }}
+          />
+        </Container>
+      )}
+      {!standalone && isSSHDialogOpen && data && (
+        <Container
+          onClick={e => {
+            e.stopPropagation()
+          }}>
+          <ConnectWithSSHDialog
+            isOpen={isSSHDialogOpen}
+            onClose={() => setIsSSHDialogOpen(false)}
+            connectionCommand={data?.instance?.ssh_command || 'SSH command not available'}
           />
         </Container>
       )}

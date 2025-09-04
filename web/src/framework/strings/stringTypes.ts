@@ -1399,6 +1399,7 @@ export interface StringsMap {
   'cde.create.gitspaceNameHelpertext2': string
   'cde.create.gitspaceNameLabel': string
   'cde.create.gitspaceNamePlaceholder': string
+  'cde.create.gitspaceSSHAddNote': string
   'cde.create.gitspaceSSHhelpertext1': string
   'cde.create.gitspaceSSHhelpertext2': string
   'cde.create.ideEmpty': string
@@ -1673,10 +1674,10 @@ export interface StringsMap {
   'cde.resetGitspaceTitle': string
   'cde.retry': string
   'cde.sessionDuration': string
+  'cde.settings.accessMethods': string
   'cde.settings.availableCodeEditors': string
   'cde.settings.availableGitProviders': string
   'cde.settings.cloudRegionsAndMachineTypes': string
-  'cde.settings.codeEditors': string
   'cde.settings.codeEditorsDescription': string
   'cde.settings.editors.aiNative': string
   'cde.settings.editors.jetbrains': string
@@ -1725,6 +1726,16 @@ export interface StringsMap {
   'cde.settings.selectAllCodeEditors': string
   'cde.settings.selectAllGitProviders': string
   'cde.sortBy': string
+  'cde.sshDetails.congratsText': string
+  'cde.sshDetails.connectViaSSH': string
+  'cde.sshDetails.connectWithSSH': string
+  'cde.sshDetails.sshDisabledText': string
+  'cde.sshDetails.sshDisabledVSCodeWeb1': string
+  'cde.sshDetails.sshDisabledVSCodeWeb2': string
+  'cde.sshDetails.sshDisabledVSCodeWeb3': string
+  'cde.sshDetails.step1': string
+  'cde.sshDetails.step2': string
+  'cde.sshDetails.step3': string
   'cde.sshSelect.180days': string
   'cde.sshSelect.30days': string
   'cde.sshSelect.90days': string

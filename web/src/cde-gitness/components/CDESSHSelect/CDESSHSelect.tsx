@@ -254,9 +254,7 @@ export const CDESSHSelect = ({ isEditMode = false }: { isEditMode?: boolean }) =
                   })}
                 </>
               ) : (
-                <Text padding="small">
-                  There are no keys configured. By default we will create a SSH key to login into Gitspace.
-                </Text>
+                <Text padding="small">{getString('cde.create.gitspaceSSHAddNote')}</Text>
               )}
             </Container>
             <Button

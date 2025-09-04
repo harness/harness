@@ -308,6 +308,7 @@ export type TypesGitspaceInstance = {
   updated?: number
   url?: string | null
   plugin_url?: string | null
+  ssh_command?: string | null
 } | null
 
 export interface TypesGitspaceRegionMachines {
@@ -333,6 +334,7 @@ export interface TypesGitspaceSettingsResponse {
 
 export interface TypesIDESettings {
   access_list?: TypesAccessListGithubComHarnessGitnessTypesEnumIDEType
+  disable_ssh?: boolean
 }
 
 export interface TypesInfraProviderConfig {

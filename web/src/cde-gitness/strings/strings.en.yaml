@@ -80,15 +80,15 @@ configureGitspaceInfra: Configure Gitspace Infrastructure
 settings:
   saveSuccess: Settings saved successfully
   gitProviders: Git Providers
-  codeEditors: Code Editors
+  accessMethods: Access Methods
   cloudRegionsAndMachineTypes: Cloud Regions and Machine types
   gitspaceImages: Gitspace Images
   availableGitProviders: Available Git Providers
   gitProvidersDescription: Customize which git provider you want to use
   selectAllGitProviders: Select all git providers
-  availableCodeEditors: Available Code Editors
-  codeEditorsDescription: Limit the available Code Editors
-  selectAllCodeEditors: Select All Code Editors
+  availableCodeEditors: Available Access Methods
+  codeEditorsDescription: Limit the editors and access methods available for Gitspace creation
+  selectAllCodeEditors: Select All Access Methods
   images:
     manageGitspaceImages: Manage Gitspace Images
     manageGitspaceImagesDescription: Customize which images will be available while creating Gitspaces
@@ -338,6 +338,7 @@ create:
   gitspaceNameHelpertext1: Great Gitspace names are short and memorable. Need some inspiration?
   gitspaceNameHelpertext2: 'Try this:'
   sshKey: SSH Key
+  gitspaceSSHAddNote : There are no keys configured. Please add an SSH key.
   gitspaceSSHhelpertext1: By default we will create the SSH key used to login to the Gitspace.
   gitspaceSSHhelpertext2: You can add keys under Preferences in User Settings.
   gitspaceCreateSuccess: Gitspace created successfully
@@ -405,6 +406,18 @@ details:
   fetchingDetails: Fetching Gitspace Events ....
   containerLogs: Container Logs
   containerLogsSubText: Logs showing activity inside container
+
+sshDetails:
+  connectWithSSH: Connect with SSH
+  connectViaSSH : Connect via SSH
+  congratsText: 🎉 Congratulations — your Gitspace is now active! To start using it, connect it with your SSH
+  step1 : Open Terminal
+  step2 : Copy and execute the command
+  step3 : Wait for few minutes while the IDE gets connected to the Gitspace
+  sshDisabledText: Connect with SSH has been disabled by your administrator
+  sshDisabledVSCodeWeb1 : Connect With SSH is unavailable for VSCode Web
+  sshDisabledVSCodeWeb2 : To enable SSH, edit your Gitspace and
+  sshDisabledVSCodeWeb3 : Select a different IDE.
 repository:
   repo: Repository
   selectRepository: Select Repository
