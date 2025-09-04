@@ -20,6 +20,12 @@ import type { IconName } from '@harnessio/icons'
 import type { StringKeys } from '@ar/frameworks/strings'
 import { RepositoryConfigType, RepositoryPackageType } from '@ar/common/types'
 import {
+  UpstreamProxyAuthenticationMode,
+  UpstreamRegistryRequest,
+  UpstreamRepositoryURLInputSource
+} from '@ar/pages/upstream-proxy-details/types'
+import {
+  CreateRepositoryFormProps,
   RepositoryActionsProps,
   RepositoryConfigurationFormProps,
   RepositoryDetailsHeaderProps,
@@ -27,6 +33,10 @@ import {
   RepositoryTreeNodeProps,
   RepositoySetupClientProps
 } from '@ar/frameworks/RepositoryStep/Repository'
+import UpstreamProxyActions from '@ar/pages/upstream-proxy-details/components/UpstreamProxyActions/UpstreamProxyActions'
+import UpstreamProxyConfigurationForm from '@ar/pages/upstream-proxy-details/components/Forms/UpstreamProxyConfigurationForm'
+import UpstreamProxyCreateFormContent from '@ar/pages/upstream-proxy-details/components/FormContent/UpstreamProxyCreateFormContent'
+import UpstreamProxyDetailsHeader from '@ar/pages/upstream-proxy-details/components/UpstreamProxyDetailsHeader/UpstreamProxyDetailsHeader'
 
 import RepositoryDetails from '../RepositoryDetails'
 import type { Repository, VirtualRegistryRequest } from '../types'
@@ -43,7 +53,8 @@ export class GenericRepositoryType extends RepositoryStep<VirtualRegistryRequest
   protected repositoryName = 'Generic Repository'
   protected repositoryIcon: IconName = 'generic-repository-type'
   protected supportedScanners = []
-  protected supportsUpstreamProxy = false
+  protected supportsUpstreamProxy = true
+  protected supportedUpstreamURLSources = [UpstreamRepositoryURLInputSource.Custom]
   enterpriseAdvancedOptionSubTitle: StringKeys =
     'repositoryDetails.repositoryForm.enterpriseAdvancedWithoutUpstreamOptionsSubTitle'
 
@@ -56,20 +67,42 @@ export class GenericRepositoryType extends RepositoryStep<VirtualRegistryRequest
     scanners: []
   }
 
-  protected defaultUpstreamProxyValues = null
+  protected defaultUpstreamProxyValues: UpstreamRegistryRequest = {
+    packageType: RepositoryPackageType.GENERIC,
+    identifier: '',
+    config: {
+      type: RepositoryConfigType.UPSTREAM,
+      source: UpstreamRepositoryURLInputSource.Custom,
+      authType: UpstreamProxyAuthenticationMode.ANONYMOUS,
+      url: ''
+    },
+    cleanupPolicy: [],
+    scanners: []
+  }
 
-  renderCreateForm(): JSX.Element {
-    return <RepositoryCreateFormContent isEdit={false} />
+  renderCreateForm(props: CreateRepositoryFormProps): JSX.Element {
+    const { type } = props
+    if (type === RepositoryConfigType.VIRTUAL) {
+      return <RepositoryCreateFormContent isEdit={false} />
+    } else {
+      return <UpstreamProxyCreateFormContent isEdit={false} readonly={false} />
+    }
   }
 
   renderCofigurationForm(props: RepositoryConfigurationFormProps<Repository>): JSX.Element {
-    const { formikRef, readonly } = props
-    return <RepositoryConfigurationForm ref={formikRef} readonly={readonly} />
+    const { type } = props
+    if (type === RepositoryConfigType.VIRTUAL) {
+      return <RepositoryConfigurationForm ref={props.formikRef} readonly={props.readonly} />
+    } else {
+      return <UpstreamProxyConfigurationForm ref={props.formikRef} readonly={props.readonly} />
+    }
   }
 
   renderActions(props: RepositoryActionsProps<Repository>): JSX.Element {
-    const { data, readonly } = props
-    return <RepositoryActions data={data} readonly={readonly} pageType={props.pageType} />
+    if (props.type === RepositoryConfigType.VIRTUAL) {
+      return <RepositoryActions data={props.data} readonly={props.readonly} pageType={props.pageType} />
+    }
+    return <UpstreamProxyActions data={props.data} readonly={props.readonly} pageType={props.pageType} />
   }
 
   renderSetupClient(props: RepositoySetupClientProps): JSX.Element {
@@ -86,8 +119,12 @@ export class GenericRepositoryType extends RepositoryStep<VirtualRegistryRequest
   }
 
   renderRepositoryDetailsHeader(props: RepositoryDetailsHeaderProps<Repository>): JSX.Element {
-    const { data } = props
-    return <RepositoryDetailsHeader data={data} />
+    const { type } = props
+    if (type === RepositoryConfigType.VIRTUAL) {
+      return <RepositoryDetailsHeader data={props.data} />
+    } else {
+      return <UpstreamProxyDetailsHeader data={props.data} />
+    }
   }
 
   renderRedirectPage(): JSX.Element {

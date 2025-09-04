@@ -61,6 +61,12 @@ export const UpstreamProxyPackageTypeList: UpstreamRepositoryPackageTypeListItem
     icon: 'service-helm'
   },
   {
+    label: 'repositoryTypes.generic',
+    value: UpstreamProxyPackageType.GENERIC,
+    icon: 'generic-repository-type',
+    tag: ThumbnailTagEnum.Beta
+  },
+  {
     label: 'repositoryTypes.maven',
     value: UpstreamProxyPackageType.MAVEN,
     icon: 'maven-repository-type'
