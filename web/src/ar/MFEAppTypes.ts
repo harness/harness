@@ -37,6 +37,7 @@ import type { usePreferenceStore } from '@ar/__mocks__/contexts/PreferenceStoreC
 import type { ARRouteDefinitionsReturn } from '@ar/routes/RouteDefinitions'
 import type { Parent } from '@ar/common/types'
 import type { LicenseStoreContextProps } from '@ar/common/LicenseTypes'
+import type { GovernanceMetadata, useGovernanceMetaDataModal } from './__mocks__/hooks/useGovernanceMetaDataModal'
 
 export interface Scope {
   accountId?: string
@@ -96,6 +97,7 @@ export interface CustomHooks {
   usePreferenceStore: typeof usePreferenceStore
   useModalHook: typeof useModalHook
   useConfirmationDialog: typeof useConfirmationDialog
+  useGovernanceMetaDataModal: typeof useGovernanceMetaDataModal
 }
 
 export interface CustomComponents {
@@ -106,8 +108,15 @@ export interface CustomComponents {
   PolicySetFixedTypeSelector: typeof PolicySetFixedTypeSelector
 }
 
+export interface GenerateTokenResponse {
+  data: string
+  metaData?: {
+    governanceMetadata?: GovernanceMetadata
+  }
+}
+
 export interface CustomUtils {
-  generateToken: () => Promise<string>
+  generateToken: () => Promise<string | GenerateTokenResponse>
   getCustomHeaders: () => Record<string, string>
   getApiBaseUrl: (url: string) => string
   getRouteDefinitions?: (routeParams: Record<string, string>) => ARRouteDefinitionsReturn

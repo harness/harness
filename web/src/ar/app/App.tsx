@@ -30,6 +30,7 @@ import { PreferenceScope } from '@ar/constants'
 import type { MFEAppProps } from '@ar/MFEAppTypes'
 import DefaultNavComponent from '@ar/__mocks__/components/DefaultNavComponent'
 import AppErrorBoundary from '@ar/components/AppErrorBoundary/AppErrorBoundary'
+import { useGovernanceMetaDataModal } from '@ar/__mocks__/hooks/useGovernanceMetaDataModal'
 
 import useOpenApiClient from './useOpenApiClient'
 import '@ar/utils/customYupValidators'
@@ -93,7 +94,13 @@ export default function ChildApp(props: PropsWithChildren<MFEAppProps>): React.R
           }}>
           <StringsContextProvider initialStrings={strings}>
             <ParentProvider
-              hooks={{ ...hooks, ...customHooks } as ParentProviderProps['hooks']}
+              hooks={
+                {
+                  ...hooks,
+                  ...customHooks,
+                  useGovernanceMetaDataModal: customHooks.useGovernanceMetaDataModal ?? useGovernanceMetaDataModal // backward compatibility
+                } as ParentProviderProps['hooks']
+              }
               components={{ ...components, ...customComponents } as ParentProviderProps['components']}
               utils={{ ...customUtils }}
               contextObj={{ ...parentContextObj }}>

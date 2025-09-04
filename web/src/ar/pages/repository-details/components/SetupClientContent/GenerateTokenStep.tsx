@@ -20,6 +20,7 @@ import { Button, ButtonVariation, Container, getErrorInfoFromErrorObject, Text, 
 import { FontVariation } from '@harnessio/design-system'
 import type { ClientSetupStep } from '@harnessio/react-har-service-client'
 
+import { useParentHooks } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import { useParentUtils } from '@ar/hooks/useParentUtils'
 import CommandBlock from '@ar/components/CommandBlock/CommandBlock'
@@ -34,12 +35,27 @@ export default function GenerateTokenStep({ stepIndex, step }: GenerateTokenStep
   const [token, setToken] = useState<string>()
   const { getString } = useStrings()
   const { generateToken } = useParentUtils()
+  const { useGovernanceMetaDataModal } = useParentHooks()
   const { showError, clear } = useToaster()
+
+  const { conditionallyOpenGovernanceErrorModal } = useGovernanceMetaDataModal({
+    considerWarningAsError: false,
+    errorHeaderMsg: 'platform.secrets.policyEvaluations.failedToSave',
+    warningHeaderMsg: 'platform.secrets.policyEvaluations.warning'
+  })
 
   const handleGenerateToken = async () => {
     return generateToken()
       .then(res => {
-        setToken(res)
+        if (typeof res === 'string') {
+          // For Gitness
+          setToken(res)
+        } else {
+          // For harness enterprise
+          conditionallyOpenGovernanceErrorModal(res?.metaData?.governanceMetadata, () => {
+            setToken(res?.data)
+          })
+        }
       })
       .catch(err => {
         clear()

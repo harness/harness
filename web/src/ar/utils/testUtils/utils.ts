@@ -41,6 +41,7 @@ import { LICENSE_STATE_VALUES } from '@ar/common/LicenseTypes'
 import type { ParentProviderProps } from '@ar/contexts/ParentProvider'
 import { getApiBaseUrl } from '@ar/__mocks__/utils/getApiBaseUrl'
 import getCustomHeaders from '@ar/__mocks__/utils/getCustomHeaders'
+import { useGovernanceMetaDataModal } from '@ar/__mocks__/hooks/useGovernanceMetaDataModal'
 
 export const MockTestUtils: {
   hooks?: ParentProviderProps['hooks']
@@ -58,7 +59,8 @@ MockTestUtils.hooks = {
   useDefaultPaginationProps,
   usePreferenceStore,
   useModalHook,
-  useConfirmationDialog
+  useConfirmationDialog,
+  useGovernanceMetaDataModal
 }
 
 MockTestUtils.components = {
