@@ -18,6 +18,8 @@ import migratetypes "github.com/harness/harness-migrate/types"
 
 type ExternalPullRequest = migratetypes.PullRequestData
 type ExternalComment = migratetypes.Comment
+type ExternalReview = migratetypes.Review
+type ExternalReviewer = migratetypes.Reviewer
 
 type externalCommentThread struct {
 	TopLevel ExternalComment

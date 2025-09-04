@@ -49,6 +49,8 @@ type PullReq struct {
 	labelStore                  store.LabelStore
 	labelValueStore             store.LabelValueStore
 	pullReqLabelAssignmentStore store.PullReqLabelAssignmentStore
+	pullReqReviewerStore        store.PullReqReviewerStore
+	pullReqReviewStore          store.PullReqReviewStore
 	repoFinder                  refcache.RepoFinder
 	tx                          dbtx.Transactor
 	mtxManager                  lock.MutexManager
@@ -65,6 +67,8 @@ func NewPullReq(
 	labelStore store.LabelStore,
 	labelValueStore store.LabelValueStore,
 	pullReqLabelAssignmentStore store.PullReqLabelAssignmentStore,
+	pullReqReviewerStore store.PullReqReviewerStore,
+	pullReqReviewStore store.PullReqReviewStore,
 	repoFinder refcache.RepoFinder,
 	tx dbtx.Transactor,
 	mtxManager lock.MutexManager,
@@ -80,6 +84,8 @@ func NewPullReq(
 		labelStore:                  labelStore,
 		labelValueStore:             labelValueStore,
 		pullReqLabelAssignmentStore: pullReqLabelAssignmentStore,
+		pullReqReviewerStore:        pullReqReviewerStore,
+		pullReqReviewStore:          pullReqReviewStore,
 		repoFinder:                  repoFinder,
 		tx:                          tx,
 		mtxManager:                  mtxManager,
@@ -91,10 +97,13 @@ type repoImportState struct {
 	readParams                  git.ReadParams
 	principalStore              store.PrincipalStore
 	spaceStore                  store.SpaceStore
+	pullReqStore                store.PullReqStore
 	pullReqActivityStore        store.PullReqActivityStore
 	labelStore                  store.LabelStore
 	labelValueStore             store.LabelValueStore
 	pullReqLabelAssignmentStore store.PullReqLabelAssignmentStore
+	pullReqReviewerStore        store.PullReqReviewerStore
+	pullReqReviewStore          store.PullReqReviewStore
 	branchCheck                 map[string]*git.Branch
 	principals                  map[string]*types.Principal
 	unknownEmails               map[int]map[string]bool
@@ -120,10 +129,13 @@ func (migrate PullReq) Import(
 		readParams:                  readParams,
 		principalStore:              migrate.principalStore,
 		spaceStore:                  migrate.spaceStore,
+		pullReqStore:                migrate.pullReqStore,
 		pullReqActivityStore:        migrate.pullReqActStore,
 		labelStore:                  migrate.labelStore,
 		labelValueStore:             migrate.labelValueStore,
 		pullReqLabelAssignmentStore: migrate.pullReqLabelAssignmentStore,
+		pullReqReviewerStore:        migrate.pullReqReviewerStore,
+		pullReqReviewStore:          migrate.pullReqReviewStore,
 		branchCheck:                 map[string]*git.Branch{},
 		principals:                  map[string]*types.Principal{},
 		unknownEmails:               map[int]map[string]bool{},
@@ -163,12 +175,27 @@ func (migrate PullReq) Import(
 		var deltaOpen, deltaClosed, deltaMerged int
 		var maxNumber int64
 
-		// Store the pull request objects and the comments.
 		for _, pullReq := range pullReqs {
 			if err := migrate.pullReqStore.Create(ctx, pullReq); err != nil {
 				return fmt.Errorf("failed to import the pull request %d: %w", pullReq.Number, err)
 			}
+		}
 
+		for _, pr := range pullReqs {
+			extPullReqData := pullReqUnique[int(pr.Number)]
+
+			_, err := repoState.createReviewers(ctx, repo, pr, extPullReqData.Reviewers)
+			if err != nil {
+				return fmt.Errorf("failed to create reviewers for PR %d: %w", pr.Number, err)
+			}
+
+			_, err = repoState.createReviews(ctx, repo, pr, extPullReqData.Reviews)
+			if err != nil {
+				return fmt.Errorf("failed to create reviews for PR %d: %w", pr.Number, err)
+			}
+		}
+
+		for _, pullReq := range pullReqs {
 			switch pullReq.State {
 			case enum.PullReqStateOpen:
 				deltaOpen++
@@ -398,7 +425,7 @@ func (r *repoImportState) createComments(
 
 	comments := make([]*types.PullReqActivity, 0, len(extComments))
 	for idxTopLevel, extThread := range extThreads {
-		order := idxTopLevel + 1
+		order := int(pullReq.ActivitySeq) + idxTopLevel + 1
 
 		// Create the top level comment with the correct value of Order, SubOrder and ReplySeq.
 		commentTopLevel, err := r.createComment(ctx, repo, pullReq, nil,
@@ -575,6 +602,7 @@ func (r *repoImportState) createInfoComment(
 	return comment, nil
 }
 
+//nolint:unparam
 func (r *repoImportState) getPrincipalByEmail(
 	ctx context.Context,
 	emailAddress string,
@@ -846,4 +874,222 @@ func getTopLevelParentID(id int, tree map[int]int) int {
 	}
 
 	return -1
+}
+
+// createReviewers processes external reviewer objects.
+func (r *repoImportState) createReviewers(
+	ctx context.Context,
+	repo *types.RepositoryCore,
+	pullReq *types.PullReq,
+	extReviewers []ExternalReviewer,
+) ([]*types.PullReqReviewer, error) {
+	log := log.Ctx(ctx).With().
+		Str("repo.id", repo.Identifier).
+		Int("pullreq.number", int(pullReq.Number)).
+		Logger()
+
+	reviewers := make([]*types.PullReqReviewer, 0, len(extReviewers))
+	for _, extReviewer := range extReviewers {
+		reviewer, err := r.getPrincipalByEmail(ctx, extReviewer.User.Email, int(pullReq.Number), false)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get reviewer principal: %w", err)
+		}
+
+		if reviewer.ID == pullReq.CreatedBy {
+			continue
+		}
+
+		// Use PR created timestamp for reviewer assignment
+		assignedAt := pullReq.Created
+
+		prReviewer := &types.PullReqReviewer{
+			PullReqID:      pullReq.ID,
+			PrincipalID:    reviewer.ID,
+			CreatedBy:      r.migrator.ID,
+			Created:        assignedAt,
+			Updated:        assignedAt,
+			RepoID:         repo.ID,
+			Type:           enum.PullReqReviewerTypeRequested,
+			LatestReviewID: nil,                               // Will be set when reviews are processed
+			ReviewDecision: enum.PullReqReviewDecisionPending, // Will be updated when reviews are processed
+			SHA:            pullReq.SourceSHA,
+			Reviewer:       *reviewer.ToPrincipalInfo(),
+			AddedBy:        *r.migrator.ToPrincipalInfo(),
+		}
+
+		if err := r.pullReqReviewerStore.Create(ctx, prReviewer); err != nil {
+			return nil, fmt.Errorf("failed to store pull request reviewer: %w", err)
+		}
+
+		reviewers = append(reviewers, prReviewer)
+	}
+
+	log.Debug().Int("count", len(reviewers)).Msg("imported pull request reviewers")
+
+	if len(reviewers) > 0 {
+		reviewerIDs := make([]int64, 0, len(reviewers))
+		for _, reviewer := range reviewers {
+			reviewerIDs = append(reviewerIDs, reviewer.PrincipalID)
+		}
+		r.createReviewerActivity(ctx, pullReq, reviewerIDs, enum.PullReqReviewerTypeRequested)
+	}
+
+	return reviewers, nil
+}
+
+// createReviews processes external review objects.
+func (r *repoImportState) createReviews(
+	ctx context.Context,
+	repo *types.RepositoryCore,
+	pullReq *types.PullReq,
+	extReviews []ExternalReview,
+) ([]*types.PullReqReview, error) {
+	log := log.Ctx(ctx).With().
+		Str("repo.id", repo.Identifier).
+		Int("pullreq.number", int(pullReq.Number)).
+		Logger()
+
+	reviews := make([]*types.PullReqReview, 0, len(extReviews))
+	for _, extReview := range extReviews {
+		reviewer, err := r.getPrincipalByEmail(ctx, extReview.Author.Email, int(pullReq.Number), false)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get reviewer principal: %w", err)
+		}
+
+		if reviewer.ID == pullReq.CreatedBy {
+			continue
+		}
+
+		decision := enum.PullReqReviewDecision(extReview.Decision)
+
+		submittedAt := time.Now().UnixMilli()
+		if !extReview.Updated.IsZero() {
+			submittedAt = extReview.Updated.UnixMilli()
+		} else if !extReview.Created.IsZero() {
+			submittedAt = extReview.Created.UnixMilli()
+		}
+
+		prReview := &types.PullReqReview{
+			CreatedBy: reviewer.ID,
+			Created:   submittedAt,
+			Updated:   submittedAt,
+			PullReqID: pullReq.ID,
+			Decision:  decision,
+			SHA:       extReview.SHA,
+		}
+
+		if err := r.pullReqReviewStore.Create(ctx, prReview); err != nil {
+			return nil, fmt.Errorf("failed to store pull request review: %w", err)
+		}
+
+		existingReviewer, err := r.pullReqReviewerStore.Find(ctx, pullReq.ID, reviewer.ID)
+		if err != nil && !errors.Is(err, gitness_store.ErrResourceNotFound) {
+			return nil, fmt.Errorf("failed to find reviewer from review author: %w", err)
+		}
+		if errors.Is(err, gitness_store.ErrResourceNotFound) {
+			reviewerFromReview := &types.PullReqReviewer{
+				PullReqID:      pullReq.ID,
+				PrincipalID:    reviewer.ID,
+				CreatedBy:      r.migrator.ID,
+				Created:        submittedAt, // Use review submission time
+				Updated:        submittedAt,
+				RepoID:         repo.ID,
+				Type:           enum.PullReqReviewerTypeSelfAssigned,
+				LatestReviewID: &prReview.ID,
+				ReviewDecision: decision,
+				SHA:            pullReq.SourceSHA,
+				Reviewer:       *reviewer.ToPrincipalInfo(),
+				AddedBy:        *reviewer.ToPrincipalInfo(),
+			}
+
+			if err := r.pullReqReviewerStore.Create(ctx, reviewerFromReview); err != nil {
+				return nil, fmt.Errorf("failed to create reviewer from review author: %w", err)
+			}
+		}
+
+		if existingReviewer != nil {
+			// Update existing reviewer with latest review
+			existingReviewer.LatestReviewID = &prReview.ID
+			existingReviewer.ReviewDecision = decision
+			existingReviewer.Updated = submittedAt
+			if err := r.pullReqReviewerStore.Update(ctx, existingReviewer); err != nil {
+				log.Warn().Err(err).Msg("failed to update reviewer with latest review")
+			}
+		}
+
+		reviews = append(reviews, prReview)
+	}
+
+	log.Debug().Int("count", len(reviews)).Msg("imported pull request reviews")
+
+	// Create activity entries for review submissions
+	for _, review := range reviews {
+		r.createReviewSubmitActivity(ctx, pullReq, review)
+	}
+
+	return reviews, nil
+}
+
+// createReviewerActivity creates an activity entry for reviewer addition.
+func (r *repoImportState) createReviewerActivity(
+	ctx context.Context,
+	pullReq *types.PullReq,
+	reviewerIDs []int64,
+	reviewerType enum.PullReqReviewerType,
+) {
+	if len(reviewerIDs) == 0 {
+		return
+	}
+
+	// Increment ActivitySeq in database and update pullReq object
+	updatedPR, err := r.pullReqStore.UpdateActivitySeq(ctx, pullReq)
+	if err != nil {
+		log.Ctx(ctx).Err(err).Msg("failed to increment pull request activity sequence for reviewer activity")
+		return
+	}
+	*pullReq = *updatedPR // Update the in-memory object
+
+	payload := &types.PullRequestActivityPayloadReviewerAdd{
+		ReviewerType: reviewerType,
+		PrincipalIDs: reviewerIDs,
+	}
+
+	metadata := &types.PullReqActivityMetadata{
+		Mentions: &types.PullReqActivityMentionsMetadata{IDs: reviewerIDs},
+	}
+
+	if _, err := r.pullReqActivityStore.CreateWithPayload(
+		ctx, pullReq, r.migrator.ID, payload, metadata,
+	); err != nil {
+		log.Ctx(ctx).Err(err).Msgf(
+			"failed to write create %s reviewer pull req activity", reviewerType,
+		)
+	}
+}
+
+// createReviewSubmitActivity creates an activity entry for review submission.
+func (r *repoImportState) createReviewSubmitActivity(
+	ctx context.Context,
+	pullReq *types.PullReq,
+	review *types.PullReqReview,
+) {
+	updatedPR, err := r.pullReqStore.UpdateActivitySeq(ctx, pullReq)
+	if err != nil {
+		log.Ctx(ctx).Err(err).Msg("failed to increment pull request activity sequence for review activity")
+		return
+	}
+	*pullReq = *updatedPR
+
+	payload := &types.PullRequestActivityPayloadReviewSubmit{
+		CommitSHA: review.SHA,
+		Decision:  review.Decision,
+	}
+
+	if _, err := r.pullReqActivityStore.CreateWithPayload(
+		ctx, pullReq, review.CreatedBy, payload, nil,
+	); err != nil {
+		log.Ctx(ctx).Err(err).Msgf(
+			"failed to write review submit pull req activity for review ID %d", review.ID,
+		)
+	}
 }

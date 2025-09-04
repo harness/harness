@@ -44,13 +44,16 @@ func ProvidePullReqImporter(
 	labelStore store.LabelStore,
 	labelValueStore store.LabelValueStore,
 	pullReqLabelAssignmentStore store.PullReqLabelAssignmentStore,
+	pullReqReviewerStore store.PullReqReviewerStore,
+	pullReqReviewStore store.PullReqReviewStore,
 	repoFinder refcache.RepoFinder,
 	tx dbtx.Transactor,
 	mtxManager lock.MutexManager,
 ) *PullReq {
 	return NewPullReq(
 		urlProvider, git, principalStore, spaceStore, repoStore, pullReqStore, pullReqActStore,
-		labelStore, labelValueStore, pullReqLabelAssignmentStore, repoFinder, tx, mtxManager)
+		labelStore, labelValueStore, pullReqLabelAssignmentStore, pullReqReviewerStore, pullReqReviewStore,
+		repoFinder, tx, mtxManager)
 }
 
 func ProvideRuleImporter(

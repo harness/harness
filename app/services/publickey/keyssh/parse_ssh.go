@@ -69,6 +69,7 @@ var AllowedTypes = []string{
 	gossh.KeyAlgoSKED25519,
 }
 
+//nolint:staticcheck
 var DisallowedTypes = []string{
 	gossh.KeyAlgoDSA,
 }

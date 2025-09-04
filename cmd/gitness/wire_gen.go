@@ -463,7 +463,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	pullReq := migrate.ProvidePullReqImporter(provider, gitInterface, principalStore, spaceStore, repoStore, pullReqStore, pullReqActivityStore, labelStore, labelValueStore, pullReqLabelAssignmentStore, repoFinder, transactor, mutexManager)
+	pullReq := migrate.ProvidePullReqImporter(provider, gitInterface, principalStore, spaceStore, repoStore, pullReqStore, pullReqActivityStore, labelStore, labelValueStore, pullReqLabelAssignmentStore, pullReqReviewerStore, pullReqReviewStore, repoFinder, transactor, mutexManager)
 	branchStore := database.ProvideBranchStore(db)
 	pullreqController := pullreq2.ProvideController(transactor, provider, authorizer, auditService, pullReqStore, pullReqActivityStore, codeCommentView, pullReqReviewStore, pullReqReviewerStore, repoStore, principalStore, userGroupStore, userGroupReviewerStore, principalInfoCache, pullReqFileViewStore, membershipStore, checkStore, gitInterface, repoFinder, reporter8, migrator, pullreqService, listService, protectionManager, streamer, codeownersService, lockerLocker, pullReq, labelService, instrumentService, usergroupService, branchStore, usergroupResolver)
 	webhookConfig := server.ProvideWebhookConfig(config)

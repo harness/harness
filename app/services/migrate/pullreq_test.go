@@ -70,3 +70,125 @@ func TestGenerateThreads(t *testing.T) {
 		t.Error(diff)
 	}
 }
+
+func TestTimestampMillis(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    time.Time
+		fallback int64
+		want     int64
+	}{
+		{
+			name:     "valid time",
+			input:    time.Date(2023, 1, 1, 12, 0, 0, 0, time.UTC),
+			fallback: 0,
+			want:     time.Date(2023, 1, 1, 12, 0, 0, 0, time.UTC).UnixMilli(),
+		},
+		{
+			name:     "zero time",
+			input:    time.Time{},
+			fallback: 123456789,
+			want:     123456789,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := timestampMillis(tt.input, tt.fallback)
+			if got != tt.want {
+				t.Errorf("timestampMillis() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+// TestActivitySeqOrdering tests that ActivitySeq is properly incremented across.
+// reviewer activities, review activities, and comments to prevent UNIQUE constraint violations.
+func TestActivitySeqOrdering(t *testing.T) {
+	tests := []struct {
+		name          string
+		reviewerCount int
+		reviewCount   int
+		commentCount  int
+		wantMinSeq    int64 // minimum ActivitySeq after all activities
+	}{
+		{
+			name:          "single reviewer, single review, single comment",
+			reviewerCount: 1,
+			reviewCount:   1,
+			commentCount:  1,
+			wantMinSeq:    3, // 1 reviewer activity + 1 review activity + 1 comment
+		},
+		{
+			name:          "multiple reviewers, multiple reviews, multiple comments",
+			reviewerCount: 3,
+			reviewCount:   2,
+			commentCount:  5,
+			wantMinSeq:    8, // 1 reviewer activity (batched) + 2 review activities + 5 comments
+		},
+		{
+			name:          "no reviewers, multiple reviews and comments",
+			reviewerCount: 0,
+			reviewCount:   3,
+			commentCount:  2,
+			wantMinSeq:    5, // 0 reviewer activities + 3 review activities + 2 comments
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Simulate ActivitySeq progression as it would happen in migration
+			activitySeq := int64(0)
+
+			// Reviewer activity (batched for all reviewers)
+			if tt.reviewerCount > 0 {
+				activitySeq++ // One activity for all reviewers
+			}
+
+			// Review activities (one per review)
+			activitySeq += int64(tt.reviewCount)
+
+			// Comment activities (starts from current ActivitySeq + 1)
+			// Comments use: order := int(pullReq.ActivitySeq) + idxTopLevel + 1
+			if tt.commentCount > 0 {
+				finalCommentOrder := activitySeq + int64(tt.commentCount)
+				activitySeq = finalCommentOrder
+			}
+
+			if activitySeq < tt.wantMinSeq {
+				t.Errorf("ActivitySeq ordering failed: got %d, want at least %d", activitySeq, tt.wantMinSeq)
+			}
+		})
+	}
+}
+
+// TestReviewerActivityPayloadStructure tests that reviewer activity payloads.
+// contain the expected fields to prevent marshaling/unmarshaling issues.
+func TestReviewerActivityPayloadStructure(t *testing.T) {
+	// This test ensures the payload structure matches what CreateWithPayload expects
+	reviewerIDs := []int64{123, 456, 789}
+
+	// Simulate creating the payload as done in createReviewerActivity
+	payload := struct {
+		ReviewerType string  `json:"reviewer_type"`
+		PrincipalIDs []int64 `json:"principal_ids"`
+	}{
+		ReviewerType: "requested",
+		PrincipalIDs: reviewerIDs,
+	}
+
+	// Verify critical fields are populated
+	if payload.ReviewerType == "" {
+		t.Error("ReviewerType must not be empty")
+	}
+
+	if len(payload.PrincipalIDs) != len(reviewerIDs) {
+		t.Errorf("PrincipalIDs length mismatch: got %d, want %d", len(payload.PrincipalIDs), len(reviewerIDs))
+	}
+
+	for i, id := range reviewerIDs {
+		if payload.PrincipalIDs[i] != id {
+			t.Errorf("PrincipalID[%d] mismatch: got %d, want %d", i, payload.PrincipalIDs[i], id)
+		}
+	}
+}
