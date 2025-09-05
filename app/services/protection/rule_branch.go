@@ -149,7 +149,23 @@ func (v *Branch) UserIDs() ([]int64, error) {
 }
 
 func (v *Branch) UserGroupIDs() ([]int64, error) {
-	return v.Bypass.UserGroupIDs, nil
+	uniqueGroupsMap := make(
+		map[int64]struct{},
+		len(v.Bypass.UserGroupIDs)+len(v.PullReq.Reviewers.DefaultUserGroupReviewerIDs),
+	)
+	for _, id := range v.Bypass.UserGroupIDs {
+		uniqueGroupsMap[id] = struct{}{}
+	}
+	for _, id := range v.PullReq.Reviewers.DefaultUserGroupReviewerIDs {
+		uniqueGroupsMap[id] = struct{}{}
+	}
+
+	ids := make([]int64, 0, len(uniqueGroupsMap))
+	for id := range uniqueGroupsMap {
+		ids = append(ids, id)
+	}
+
+	return ids, nil
 }
 
 func (v *Branch) Sanitize() error {
