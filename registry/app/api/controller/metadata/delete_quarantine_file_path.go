@@ -23,7 +23,11 @@ import (
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/api/utils"
+	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/opencontainers/go-digest"
+	"github.com/rs/zerolog/log"
 )
 
 func (c *APIController) DeleteQuarantineFilePath(
@@ -81,8 +85,31 @@ func (c *APIController) DeleteQuarantineFilePath(
 
 	var versionID *int64
 	var rootPath string
-	if version != nil {
-		art, err := c.ArtifactStore.GetByName(ctx, img.ID, string(*version))
+	if version != nil { //nolint:nestif
+		var parsedVersion = string(*version)
+		if regInfo.PackageType == artifact.PackageTypeDOCKER || regInfo.PackageType == artifact.PackageTypeHELM {
+			parsedDigest, err := digest.Parse(parsedVersion)
+			if err != nil {
+				log.Ctx(ctx).Err(err).Msg("failed to parse digest for create quarantine file path")
+				return artifact.DeleteQuarantineFilePath500JSONResponse{
+					InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
+						*GetErrorResponse(http.StatusInternalServerError, err.Error()),
+					),
+				}, nil
+			}
+			typesDigest, err := types.NewDigest(parsedDigest)
+			if err != nil {
+				log.Ctx(ctx).Err(err).Msg("failed to create types digest for create quarantine file path")
+				return artifact.DeleteQuarantineFilePath500JSONResponse{
+					InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
+						*GetErrorResponse(http.StatusInternalServerError, err.Error()),
+					),
+				}, nil
+			}
+			digestVal := typesDigest.String()
+			parsedVersion = digestVal
+		}
+		art, err := c.ArtifactStore.GetByName(ctx, img.ID, parsedVersion)
 		if err != nil {
 			return artifact.DeleteQuarantineFilePath500JSONResponse{
 				InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
@@ -91,6 +118,11 @@ func (c *APIController) DeleteQuarantineFilePath(
 			}, nil
 		}
 		versionID = &art.ID
+	}
+
+	var nodeID *string
+
+	if filePath != nil {
 		rootPath, err = utils.GetFilePath(regInfo.PackageType, string(*artifactName), string(*version))
 		if err != nil {
 			return artifact.DeleteQuarantineFilePath500JSONResponse{
@@ -99,11 +131,6 @@ func (c *APIController) DeleteQuarantineFilePath(
 				),
 			}, nil
 		}
-	}
-
-	var nodeID *string
-
-	if filePath != nil {
 		completePath := path.Join(rootPath, string(*filePath))
 		node, err := c.fileManager.GetNode(ctx, regInfo.RegistryID, completePath)
 		if err != nil {

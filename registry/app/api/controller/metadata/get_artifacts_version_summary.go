@@ -81,12 +81,15 @@ func (c *APIController) FetchArtifactSummary(
 	version := string(r.Version)
 	artifactVersion := version
 
-	if r.Params.Digest != nil && strings.TrimSpace(string(*r.Params.Digest)) != "" {
-		parsedDigest, err := types.NewDigest(digest.Digest(*r.Params.Digest))
-		if err != nil {
-			log.Ctx(ctx).Err(err).Msg("Failed to parse digest")
+	if regInfo.PackageType == artifact.PackageTypeDOCKER || regInfo.PackageType == artifact.PackageTypeHELM {
+		if artifactVersion != "" && strings.TrimSpace(artifactVersion) != "" {
+			parsedDigest, err := types.NewDigest(digest.Digest(artifactVersion))
+			if err != nil {
+				log.Ctx(ctx).Err(err).Msg("Failed to parse digest")
+				return "", "", "", false, "", nil, err
+			}
+			artifactVersion = parsedDigest.String()
 		}
-		artifactVersion = parsedDigest.String()
 	}
 
 	registry, err := c.RegistryRepository.Get(ctx, regInfo.RegistryID)
