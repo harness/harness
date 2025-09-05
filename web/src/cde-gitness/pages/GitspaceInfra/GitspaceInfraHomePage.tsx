@@ -16,7 +16,11 @@ const GitspaceInfraHomePage = () => {
   const { accountInfo } = useAppContext()
   const history = useHistory()
   const location = useLocation()
-  const [selectedInfraTab, setSelectedInfraTab] = useState(HYBRID_VM_GCP)
+  const searchParam = new URLSearchParams(location.search)
+  const initialInfraType = searchParam.get('type')
+  const [selectedInfraTab, setSelectedInfraTab] = useState(
+    initialInfraType === HYBRID_VM_AWS ? HYBRID_VM_AWS : HYBRID_VM_GCP
+  )
 
   const {
     data: listResponse,

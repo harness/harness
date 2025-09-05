@@ -21,6 +21,9 @@
     .bp3-tab-panel {
       margin-top: 0;
     }
+    .bp3-tab-indicator-wrapper {
+      transition-property: none !important;
+    }
   }
 }
 

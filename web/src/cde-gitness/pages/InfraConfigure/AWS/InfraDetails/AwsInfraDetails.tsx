@@ -230,7 +230,11 @@ const AwsInfraDetails = () => {
                     <Button
                       text={getString('cde.configureInfra.cancel')}
                       variation={ButtonVariation.TERTIARY}
-                      onClick={() => history.push(routes.toCDEGitspaceInfra({ accountId: accountInfo?.identifier }))}
+                      onClick={() =>
+                        history.push(
+                          `${routes.toCDEGitspaceInfra({ accountId: accountInfo?.identifier })}?type=${HYBRID_VM_AWS}`
+                        )
+                      }
                     />
                     <Button
                       text={getString('cde.configureInfra.downloadAndApply')}
