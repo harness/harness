@@ -44,6 +44,9 @@ func (c *Controller) PreReceive(
 	in types.GithookPreReceiveInput,
 ) (hook.Output, error) {
 	output := hook.Output{}
+	defer func() {
+		logOutputFor(ctx, "pre-receive", output)
+	}()
 
 	repo, err := c.getRepoCheckAccess(ctx, session, in.RepoID, enum.PermissionRepoPush)
 	if err != nil {

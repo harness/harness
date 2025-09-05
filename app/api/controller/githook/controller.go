@@ -39,6 +39,8 @@ import (
 	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 type Controller struct {
@@ -206,4 +208,30 @@ func isForcePush(
 	}
 
 	return !result.Ancestor, nil
+}
+
+func logOutputFor(ctx context.Context, hookName string, output hook.Output) {
+	event := log.Ctx(ctx).Info()
+
+	if output.Error != nil {
+		event = event.Str("output.error", *output.Error)
+	}
+
+	if len(output.Messages) > 0 {
+		filteredMsgs := make([]string, 0, len(output.Messages)/2+1)
+		for _, msg := range output.Messages {
+			if msg == "" {
+				continue
+			}
+			filteredMsgs = append(filteredMsgs, msg)
+		}
+
+		const maxMessageLines = 16
+		if len(filteredMsgs) > maxMessageLines {
+			filteredMsgs = append(filteredMsgs[:maxMessageLines], fmt.Sprintf("... %d more", len(filteredMsgs)-maxMessageLines))
+		}
+		event = event.Strs("output.messages", filteredMsgs)
+	}
+
+	event.Msgf("%s hook output", hookName)
 }

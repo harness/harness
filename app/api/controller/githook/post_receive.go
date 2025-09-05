@@ -68,6 +68,9 @@ func (c *Controller) PostReceive(
 
 	// create output object and have following messages fill its messages
 	out := hook.Output{}
+	defer func() {
+		logOutputFor(ctx, "post-receive", out)
+	}()
 
 	// update default branch based on ref update info on empty repos.
 	// as the branch could be different than the configured default value.
