@@ -17,4 +17,6 @@
 /* eslint-disable */
 // This is an auto-generated file
 export declare const badge: string
+export declare const dockerTag: string
+export declare const hover: string
 export declare const quarantineBadge: string

@@ -17,8 +17,5 @@
 /* eslint-disable */
 // This is an auto-generated file
 export declare const activeRow: string
-export declare const enterpriseTable: string
-export declare const nameCellContainer: string
-export declare const ossTable: string
 export declare const rowSubComponent: string
 export declare const table: string

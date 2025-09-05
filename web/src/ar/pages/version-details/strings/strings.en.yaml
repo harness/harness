@@ -1,6 +1,9 @@
 page: Version Details Page
 selectDigestPlaceholder: All Digest
 noDependencies: No Dependencies
+OCIVersionSelectorTab:
+  tag: Tag
+  digest: Digest
 tabs:
   overview: Overview
   artifactDetails: Artifact Details
@@ -56,6 +59,7 @@ overview:
     modifiedAt: Modified At
     description: Description
     pullCommand: Pull command
+    pullCommandByDigest: Pull command by digest
     repository: Repository
     documentation: Documentation
     homepage: Homepage

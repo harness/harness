@@ -11,6 +11,7 @@ table:
     downloads: '{{ $.repositoryList.table.columns.downloads }}'
     publishedByAt: '{{ $.versionDetails.artifactDetails.layers.lastPush }}'
     deployments: '{{ $.versionDetails.tabs.deployments }}'
+    tags: Tags
 actions:
   deleteVersion: Delete Version
   quarantine: Quarantine

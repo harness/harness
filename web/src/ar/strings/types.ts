@@ -43,6 +43,7 @@ export interface StringsMap {
   'artifactList.table.columns.sto': string
   'artifactList.table.columns.tags': string
   'artifactList.table.columns.type': string
+  'artifactList.table.columns.version': string
   'artifactList.table.latestVersions': string
   'artifactList.table.noArtifactsTitle': string
   'artifactList.viewArtifactDetails': string
@@ -210,6 +211,8 @@ export interface StringsMap {
   'upstreamProxyDetails.editForm.update': string
   'upstreamProxyDetails.form.title': string
   'upstreamProxyDetails.page': string
+  'versionDetails.OCIVersionSelectorTab.digest': string
+  'versionDetails.OCIVersionSelectorTab.tag': string
   'versionDetails.artifactDetails.layers.archSelectLabel': string
   'versionDetails.artifactDetails.layers.archSelectPlaceholder': string
   'versionDetails.artifactDetails.layers.digest': string
@@ -284,6 +287,7 @@ export interface StringsMap {
   'versionDetails.overview.generalInformation.platform': string
   'versionDetails.overview.generalInformation.projectUrl': string
   'versionDetails.overview.generalInformation.pullCommand': string
+  'versionDetails.overview.generalInformation.pullCommandByDigest': string
   'versionDetails.overview.generalInformation.ref': string
   'versionDetails.overview.generalInformation.repository': string
   'versionDetails.overview.generalInformation.repositoryPath': string
@@ -328,6 +332,7 @@ export interface StringsMap {
   'versionList.table.columns.publishedByAt': string
   'versionList.table.columns.pullCommand': string
   'versionList.table.columns.size': string
+  'versionList.table.columns.tags': string
   'versionList.table.columns.version': string
   'versionList.table.noVersionsTitle': string
   'webhookDetails.tabs.configuration': string

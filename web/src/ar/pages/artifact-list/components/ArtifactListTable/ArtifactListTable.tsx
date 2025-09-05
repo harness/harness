@@ -34,6 +34,7 @@ import {
   ArtifactNameCell,
   ArtifactPackageTypeCell,
   ArtifactVersionActions,
+  ArtifactVersionCell,
   LatestArtifactCell,
   ToggleAccordionCell
 } from './ArtifactListTableCell'
@@ -101,49 +102,64 @@ export default function ArtifactListTable(props: ArtifactListTableProps): JSX.El
         disableSortBy: true,
         expandedRows,
         setExpandedRows,
-        getRowId
+        getRowId,
+        width: '30%'
       },
       {
         Header: getString('artifactList.table.columns.artifactName'),
         accessor: 'name',
         Cell: ArtifactNameCell,
-        serverSortProps: getServerSortProps('name')
+        serverSortProps: getServerSortProps('name'),
+        width: '200%'
+      },
+      {
+        Header: getString('artifactList.table.columns.version'),
+        accessor: 'version',
+        Cell: ArtifactVersionCell,
+        disableSortBy: true,
+        width: '100%'
       },
       {
         Header: getString('artifactList.table.columns.repository'),
         accessor: 'registryIdentifier',
         Cell: RepositoryNameCell,
-        serverSortProps: getServerSortProps('registryIdentifier')
+        serverSortProps: getServerSortProps('registryIdentifier'),
+        width: '100%'
       },
       {
         Header: getString('artifactList.table.columns.type'),
         accessor: 'packageType',
         Cell: ArtifactPackageTypeCell,
-        serverSortProps: getServerSortProps('packageType')
+        serverSortProps: getServerSortProps('packageType'),
+        width: '100%'
       },
       {
         Header: getString('artifactList.table.columns.downloads'),
         accessor: 'downloadsCount',
         Cell: ArtifactDownloadsCell,
-        serverSortProps: getServerSortProps('downloadsCount')
+        serverSortProps: getServerSortProps('downloadsCount'),
+        width: '100%'
       },
       {
         Header: getString('artifactList.table.columns.environments'),
         accessor: 'environments',
         Cell: ArtifactDeploymentsCell,
-        disableSortBy: true
+        disableSortBy: true,
+        width: '100%'
       },
       {
         Header: getString('artifactList.table.columns.lastUpdated'),
         accessor: 'lastUpdated',
         Cell: LatestArtifactCell,
-        serverSortProps: getServerSortProps('lastUpdated')
+        serverSortProps: getServerSortProps('lastUpdated'),
+        width: '100%'
       },
       {
         Header: '',
         accessor: 'action',
         Cell: ArtifactVersionActions,
-        disableSortBy: true
+        disableSortBy: true,
+        width: '30%'
       }
     ].filter(Boolean) as unknown as Column<ArtifactMetadata>[]
   }, [currentOrder, currentSort, getString, expandedRows, setExpandedRows])

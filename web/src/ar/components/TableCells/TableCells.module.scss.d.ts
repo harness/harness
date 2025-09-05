@@ -19,6 +19,7 @@
 export declare const copyButton: string
 export declare const copyUrlBtn: string
 export declare const copyUrlIcon: string
+export declare const deploymentsCell: string
 export declare const deploymentsRow: string
 export declare const linkCellContent: string
 export declare const nameCellContainer: string

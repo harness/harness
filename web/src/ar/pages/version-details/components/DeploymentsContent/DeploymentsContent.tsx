@@ -35,6 +35,7 @@ import type { VersionDetailsPathParams } from '@ar/routes/types'
 import EnvironmentTypeSelector from '@ar/components/EnvironmentTypeSelector/EnvironmentTypeSelector'
 
 import DeploymentsTable from './DeploymentsTable/DeploymentsTable'
+import useGetOCIVersionParams from '../../hooks/useGetOCIVersionParams'
 import DeploymentOverviewCards from './DeploymentOverviewCards/DeploymentOverviewCards'
 import {
   ArtifactVersionDeploymentsTableQueryParams,
@@ -57,6 +58,7 @@ export default function DeploymentsContent(props: DeploymentsContentProps) {
   const { getString } = useStrings()
   const registryRef = useGetSpaceRef()
   const params = useDecodedParams<VersionDetailsPathParams>()
+  const { versionIdentifier, versionType } = useGetOCIVersionParams()
 
   const { preference: sortingPreference, setPreference: setSortingPreference } = usePreferenceStore<string | undefined>(
     PreferenceScope.USER,
@@ -72,9 +74,10 @@ export default function DeploymentsContent(props: DeploymentsContentProps) {
   const { data, isFetching, error, refetch } = useGetArtifactDeploymentsQuery({
     registry_ref: registryRef,
     artifact: encodeRef(params.artifactIdentifier),
-    version: params.versionIdentifier,
+    version: versionIdentifier,
     queryParams: {
       search_term: searchTerm,
+      version_type: versionType,
       env_type: environmentTypes.length === 1 ? environmentTypes[0] : undefined,
       page: queryParams.page,
       size: queryParams.size,

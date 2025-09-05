@@ -29,7 +29,9 @@ export enum VersionListColumnEnum {
   FileCount = 'FileCount',
   LastModified = 'LastModified',
   PullCommand = 'PullCommand',
-  Actions = 'Actions'
+  Actions = 'Actions',
+  Digest = 'Digest',
+  Tags = 'Tags'
 }
 
 export interface IVersionListTableColumnConfigType<T = unknown> {

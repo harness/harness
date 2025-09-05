@@ -22,3 +22,4 @@ export declare const nonProd: string
 export declare const prod: string
 export declare const table: string
 export declare const tableRow: string
+export declare const tagsContainer: string

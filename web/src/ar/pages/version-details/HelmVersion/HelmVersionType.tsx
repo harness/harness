@@ -19,10 +19,6 @@ import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client
 
 import { String } from '@ar/frameworks/strings'
 import { PageType, RepositoryPackageType } from '@ar/common/types'
-import { VersionListColumnEnum } from '@ar/pages/version-list/components/VersionListTable/types'
-import VersionListTable, {
-  CommonVersionListTableProps
-} from '@ar/pages/version-list/components/VersionListTable/VersionListTable'
 import ArtifactActions from '@ar/pages/artifact-details/components/ArtifactActions/ArtifactActions'
 import ArtifactTreeNode from '@ar/pages/artifact-details/components/ArtifactTreeNode/ArtifactTreeNode'
 import ArtifactTreeNodeDetailsContent from '@ar/pages/artifact-details/components/ArtifactTreeNode/ArtifactTreeNodeDetailsContent'
@@ -44,8 +40,9 @@ import VersionTreeNode from '../components/VersionTreeNode/VersionTreeNode'
 import { VersionDetailsTab } from '../components/VersionDetailsTabs/constants'
 import HelmVersionOSSContent from './HelmVersionOSSContent/HelmVersionOSSContent'
 import VersionDetailsTabs from '../components/VersionDetailsTabs/VersionDetailsTabs'
-import VersionDetailsHeaderContent from '../components/VersionDetailsHeaderContent/VersionDetailsHeaderContent'
 import { VersionAction } from '../components/VersionActions/types'
+import HelmVersionListTable from './components/HelmVersionListTable/HelmVersionListTable'
+import HelmVersionDetailsHeaderContent from './components/HelmVersionDetailsHeaderContent/HelmVersionDetailsHeaderContent'
 
 export class HelmVersionType extends VersionStep<ArtifactVersionSummary> {
   protected packageType = RepositoryPackageType.HELM
@@ -55,14 +52,6 @@ export class HelmVersionType extends VersionStep<ArtifactVersionSummary> {
     VersionDetailsTab.ARTIFACT_DETAILS,
     VersionDetailsTab.CODE
   ]
-  versionListTableColumnConfig: CommonVersionListTableProps['columnConfigs'] = {
-    [VersionListColumnEnum.Name]: { width: '100%' },
-    [VersionListColumnEnum.Size]: { width: '100%' },
-    [VersionListColumnEnum.DownloadCount]: { width: '100%' },
-    [VersionListColumnEnum.LastModified]: { width: '100%' },
-    [VersionListColumnEnum.PullCommand]: { width: '100%' },
-    [VersionListColumnEnum.Actions]: { width: '10%' }
-  }
 
   protected allowedActionsOnVersion = [
     VersionAction.Delete,
@@ -75,11 +64,11 @@ export class HelmVersionType extends VersionStep<ArtifactVersionSummary> {
   protected allowedActionsOnVersionDetailsPage = [VersionAction.Delete, VersionAction.Quarantine]
 
   renderVersionListTable(props: VersionListTableProps): JSX.Element {
-    return <VersionListTable {...props} columnConfigs={this.versionListTableColumnConfig} />
+    return <HelmVersionListTable {...props} />
   }
 
   renderVersionDetailsHeader(props: VersionDetailsHeaderProps<ArtifactVersionSummary>): JSX.Element {
-    return <VersionDetailsHeaderContent data={props.data} />
+    return <HelmVersionDetailsHeaderContent data={props.data} />
   }
 
   renderVersionDetailsTab(props: VersionDetailsTabProps): JSX.Element {

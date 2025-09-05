@@ -55,7 +55,8 @@ export const routeDefinitions: ARRouteDefinitionsReturn = {
         artifactId: defaultTo(params?.artifactId, ''),
         versionId: defaultTo(params?.versionId, ''),
         versionDetailsTab: defaultTo(params?.versionDetailsTab, ''),
-        artifactType: defaultTo(params?.artifactType, '')
+        artifactType: defaultTo(params?.artifactType, ''),
+        tag: defaultTo(params?.tag, '')
       })
       return `/redirect?${queryParams.toString()}`
     }
@@ -72,11 +73,18 @@ export const routeDefinitions: ARRouteDefinitionsReturn = {
   toARArtifactDetails: routeDefinitionWithMode(
     params => `/registries/${params?.repositoryIdentifier}/${params?.artifactType}/${params?.artifactIdentifier}`
   ),
-  toARVersionDetails: routeDefinitionWithMode(
-    params =>
-      `/registries/${params?.repositoryIdentifier}/${params?.artifactType}/${params?.artifactIdentifier}/versions/${params?.versionIdentifier}`
-  ),
+  toARVersionDetails: routeDefinitionWithMode(params => {
+    const queryParams = new URLSearchParams()
+    if (params.tag) queryParams.append('tag', params.tag)
+    if (params.digest) queryParams.append('digest', params.digest)
+    const route = `/registries/${params?.repositoryIdentifier}/${params?.artifactType}/${params?.artifactIdentifier}/versions/${params?.versionIdentifier}`
+    if (queryParams.toString().length === 0) return route
+    return `${route}?${queryParams.toString()}`
+  }),
   toARVersionDetailsTab: routeDefinitionWithMode(params => {
+    const queryParams = new URLSearchParams()
+    if (params.tag) queryParams.append('tag', params.tag)
+    if (params.digest) queryParams.append('digest', params.digest)
     let route = `/registries/${params?.repositoryIdentifier}/${params?.artifactType}/${params?.artifactIdentifier}/versions/${params?.versionIdentifier}`
     if (params.orgIdentifier) route += `/orgs/${params.orgIdentifier}`
     if (params.projectIdentifier) route += `/projects/${params.projectIdentifier}`
@@ -87,7 +95,8 @@ export const routeDefinitions: ARRouteDefinitionsReturn = {
       route += `/pipelines/${params.pipelineIdentifier}/executions/${params.executionIdentifier}`
     }
     route += `/${params.versionTab}`
-    return route
+    if (queryParams.toString().length === 0) return route
+    return `${route}?${queryParams.toString()}`
   }),
   toARRepositoryWebhookDetails: routeDefinitionWithMode(
     params => `/registries/${params?.repositoryIdentifier}/webhooks/${params?.webhookIdentifier}`

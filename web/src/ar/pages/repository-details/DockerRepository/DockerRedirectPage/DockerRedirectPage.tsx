@@ -19,7 +19,7 @@ import { useHistory } from 'react-router-dom'
 import { getErrorInfoFromErrorObject, useToaster } from '@harnessio/uicore'
 import { getDockerArtifactManifests } from '@harnessio/react-har-service-client'
 
-import { useGetSpaceRef, useRoutes } from '@ar/hooks'
+import { useGetOCIVersionType, useGetSpaceRef, useRoutes } from '@ar/hooks'
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import { useQueryParams } from 'hooks/useQueryParams'
 
@@ -27,7 +27,7 @@ import type { DockerRedirectPageQueryParams } from './types'
 import { LocalArtifactType } from '../../constants'
 
 export default function DockerRedirectPage() {
-  const { registryId, artifactId, versionId, digest, versionDetailsTab } =
+  const { registryId, artifactId, versionId, digest, versionDetailsTab, tag } =
     useQueryParams<DockerRedirectPageQueryParams>()
 
   const history = useHistory()
@@ -35,13 +35,17 @@ export default function DockerRedirectPage() {
   const routes = useRoutes()
   const { clear, showError } = useToaster()
   const registryRef = useGetSpaceRef(registryId)
+  const versionType = useGetOCIVersionType()
 
   const getDefaultDigest = () => {
     if (digest) return digest
     return getDockerArtifactManifests({
       registry_ref: registryRef,
-      artifact: encodeRef(artifactId as string),
-      version: versionId as string
+      artifact: artifactId ? encodeRef(artifactId) : '',
+      version: versionId ? decodeURIComponent(versionId) : '',
+      queryParams: {
+        version_type: versionType
+      }
     })
       .then(res => {
         const manifests = res.content.data.manifests || []
@@ -65,7 +69,10 @@ export default function DockerRedirectPage() {
         versionTab: versionDetailsTab,
         artifactType: LocalArtifactType.ARTIFACTS
       })
-      return `${url}?digest=${defaultDigest}`
+      const searchParams = new URLSearchParams()
+      if (defaultDigest) searchParams.set('digest', defaultDigest)
+      if (tag) searchParams.set('tag', tag)
+      return `${url}?${searchParams.toString()}`
     }
     if (registryId && artifactId && versionId) {
       const defaultDigest = await getDefaultDigest()
@@ -75,7 +82,10 @@ export default function DockerRedirectPage() {
         versionIdentifier: versionId,
         artifactType: LocalArtifactType.ARTIFACTS
       })
-      return `${url}?digest=${defaultDigest}`
+      const searchParams = new URLSearchParams()
+      if (defaultDigest) searchParams.set('digest', defaultDigest)
+      if (tag) searchParams.set('tag', tag)
+      return `${url}?${searchParams.toString()}`
     }
     if (registryId && artifactId) {
       return routes.toARArtifactDetails({

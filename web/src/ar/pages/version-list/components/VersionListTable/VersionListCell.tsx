@@ -16,15 +16,18 @@
 
 import React from 'react'
 import { defaultTo } from 'lodash-es'
-import { Link } from 'react-router-dom'
+import { Link, useHistory } from 'react-router-dom'
 import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance, UseExpandedRowProps } from 'react-table'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Icon } from '@harnessio/icons'
 import { Layout, Text } from '@harnessio/uicore'
 import type { ArtifactVersionMetadata } from '@harnessio/react-har-service-client'
 
+import { killEvent } from '@ar/common/utils'
 import { useStrings } from '@ar/frameworks/strings'
+import OCITag from '@ar/components/Badge/OCITag'
 import { useDecodedParams, useRoutes } from '@ar/hooks'
+import { getShortDigest } from '@ar/pages/digest-list/utils'
 import TableCells from '@ar/components/TableCells/TableCells'
 import type { ArtifactDetailsPathParams } from '@ar/routes/types'
 import { PageType, type RepositoryPackageType } from '@ar/common/types'
@@ -139,4 +142,77 @@ export const VersionActionsCell: CellType = ({ row }) => {
       versionKey={original.name}
     />
   )
+}
+
+export const DigestNameCell: CellType = ({ value, row }) => {
+  const label = getShortDigest(value)
+  const routes = useRoutes()
+  const { original } = row
+  const { packageType, artifactType, name } = original
+  const params = useDecodedParams<ArtifactDetailsPathParams>()
+  return (
+    <Layout.Horizontal spacing="small">
+      <TableCells.LinkCell
+        prefix={<Icon name="store-artifact-bundle" size={24} />}
+        label={label}
+        linkTo={routes.toARRedirect({
+          packageType: packageType as RepositoryPackageType,
+          registryId: params.repositoryIdentifier,
+          artifactId: params.artifactIdentifier,
+          versionId: name,
+          versionDetailsTab: VersionDetailsTab.OVERVIEW,
+          artifactType
+        })}
+      />
+    </Layout.Horizontal>
+  )
+}
+
+interface OCITagsProps {
+  tags: string[]
+  onClick: (tag: string) => void
+}
+
+export const OCITags = ({ tags, onClick }: OCITagsProps) => {
+  const tagsList = Array.isArray(tags) ? tags : []
+  return (
+    <Layout.Horizontal className={css.tagsContainer}>
+      {tagsList.map((tag: string) => (
+        <OCITag
+          key={tag}
+          tag={tag}
+          onClick={evt => {
+            killEvent(evt)
+            onClick(tag)
+          }}
+        />
+      ))}
+      {!tagsList.length && <TableCells.TextCell />}
+    </Layout.Horizontal>
+  )
+}
+
+export const OCITagsCell: CellType = ({ row }) => {
+  const data = row.original
+  const { metadata, name, packageType, artifactType } = data
+  const { tags } = metadata || {}
+  const params = useDecodedParams<ArtifactDetailsPathParams>()
+  const routes = useRoutes()
+  const history = useHistory()
+
+  const handleTagClick = (tag: string) => {
+    history.push(
+      routes.toARRedirect({
+        packageType: packageType as RepositoryPackageType,
+        registryId: params.repositoryIdentifier,
+        artifactId: params.artifactIdentifier,
+        versionId: name,
+        versionDetailsTab: VersionDetailsTab.OVERVIEW,
+        artifactType,
+        tag
+      })
+    )
+  }
+
+  return <OCITags tags={tags} onClick={handleTagClick} />
 }

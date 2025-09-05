@@ -25,9 +25,9 @@ import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import { DEFAULT_DATE_TIME_FORMAT } from '@ar/constants'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 import { getReadableDateTime } from '@ar/common/dateUtils'
-import { useAppStore, useDecodedParams, useGetSpaceRef, useParentHooks } from '@ar/hooks'
+import { useAppStore, useDecodedParams, useGetSpaceRef } from '@ar/hooks'
 
-import type { DockerVersionDetailsQueryParams } from './types'
+import useGetOCIVersionParams from '../hooks/useGetOCIVersionParams'
 import { VersionOverviewCard } from '../components/OverviewCards/types'
 import { LabelValueTypeEnum } from '../components/LabelValueContent/type'
 import VersionOverviewCards from '../components/OverviewCards/OverviewCards'
@@ -38,10 +38,10 @@ import css from './DockerVersion.module.scss'
 export default function DockerVersionOverviewContent(): JSX.Element {
   const { getString } = useStrings()
   const pathParams = useDecodedParams<VersionDetailsPathParams>()
-  const { useQueryParams } = useParentHooks()
-  const { digest } = useQueryParams<DockerVersionDetailsQueryParams>()
   const spaceRef = useGetSpaceRef()
   const { parent } = useAppStore()
+
+  const { versionIdentifier, versionType, digest } = useGetOCIVersionParams()
 
   const {
     data,
@@ -52,9 +52,10 @@ export default function DockerVersionOverviewContent(): JSX.Element {
     {
       registry_ref: spaceRef,
       artifact: encodeRef(pathParams.artifactIdentifier),
-      version: pathParams.versionIdentifier,
+      version: versionIdentifier,
       queryParams: {
-        digest
+        digest,
+        version_type: versionType
       }
     },
     {
@@ -81,6 +82,8 @@ export default function DockerVersionOverviewContent(): JSX.Element {
                 VersionOverviewCard.SUPPLY_CHAIN
               ]}
               digest={digest}
+              version={versionIdentifier}
+              versionType={versionType}
             />
           )}
           <Card
@@ -128,11 +131,20 @@ export default function DockerVersionOverviewContent(): JSX.Element {
                   value={getReadableDateTime(Number(response.modifiedAt), DEFAULT_DATE_TIME_FORMAT)}
                   type={LabelValueTypeEnum.Text}
                 />
-                <LabelValueContent
-                  label={getString('versionDetails.overview.generalInformation.pullCommand')}
-                  value={response.pullCommand}
-                  type={LabelValueTypeEnum.CommandBlock}
-                />
+                {response.pullCommand && (
+                  <LabelValueContent
+                    label={getString('versionDetails.overview.generalInformation.pullCommand')}
+                    value={response.pullCommand}
+                    type={LabelValueTypeEnum.CommandBlock}
+                  />
+                )}
+                {response.pullCommandByDigest && (
+                  <LabelValueContent
+                    label={getString('versionDetails.overview.generalInformation.pullCommandByDigest')}
+                    value={response.pullCommandByDigest}
+                    type={LabelValueTypeEnum.CommandBlock}
+                  />
+                )}
               </Container>
             </Layout.Vertical>
           </Card>

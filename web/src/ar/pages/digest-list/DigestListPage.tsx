@@ -16,9 +16,12 @@
 
 import React from 'react'
 import { Page } from '@harnessio/uicore'
-import { useGetDockerArtifactManifestsQuery } from '@harnessio/react-har-service-client'
+import {
+  GetDockerArtifactManifestsQueryQueryParams,
+  useGetDockerArtifactManifestsQuery
+} from '@harnessio/react-har-service-client'
 
-import { useGetSpaceRef } from '@ar/hooks'
+import { useGetOCIVersionType, useGetSpaceRef } from '@ar/hooks'
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import { useStrings } from '@ar/frameworks/strings/String'
 import DigestListTable from './components/DigestListTable/DigestListTable'
@@ -29,13 +32,14 @@ interface DigestListPageProps {
   repoKey: string
   artifact: string
   version: string
+  versionType?: GetDockerArtifactManifestsQueryQueryParams['version_type']
 }
 
 export default function DigestListPage(props: DigestListPageProps): JSX.Element {
-  const { repoKey, artifact, version } = props
+  const { repoKey, artifact, version, versionType } = props
   const { getString } = useStrings()
   const spaceRef = useGetSpaceRef(repoKey)
-
+  const ociVersionType = useGetOCIVersionType()
   const {
     data,
     isFetching: loading,
@@ -44,7 +48,10 @@ export default function DigestListPage(props: DigestListPageProps): JSX.Element 
   } = useGetDockerArtifactManifestsQuery({
     registry_ref: spaceRef,
     artifact: encodeRef(artifact),
-    version
+    version,
+    queryParams: {
+      version_type: versionType ?? ociVersionType
+    }
   })
 
   const responseData = data?.content.data.manifests

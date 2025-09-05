@@ -27,6 +27,7 @@ import { getReadableDateTime } from '@ar/common/dateUtils'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 import { useDecodedParams, useGetSpaceRef } from '@ar/hooks'
 
+import useGetOCIVersionParams from '../hooks/useGetOCIVersionParams'
 import { LabelValueTypeEnum } from '../components/LabelValueContent/type'
 import { LabelValueContent } from '../components/LabelValueContent/LabelValueContent'
 
@@ -35,7 +36,9 @@ import css from './HelmVersion.module.scss'
 export default function HelmVersionOverviewContent(): JSX.Element {
   const { getString } = useStrings()
   const pathParams = useDecodedParams<VersionDetailsPathParams>()
+
   const spaceRef = useGetSpaceRef()
+  const { versionIdentifier, versionType } = useGetOCIVersionParams()
 
   const {
     data,
@@ -45,7 +48,10 @@ export default function HelmVersionOverviewContent(): JSX.Element {
   } = useGetHelmArtifactDetailsQuery({
     registry_ref: spaceRef,
     artifact: encodeRef(pathParams.artifactIdentifier),
-    version: pathParams.versionIdentifier
+    version: versionIdentifier,
+    queryParams: {
+      version_type: versionType
+    }
   })
 
   const response = data?.content?.data
@@ -91,11 +97,20 @@ export default function HelmVersionOverviewContent(): JSX.Element {
                   value={getReadableDateTime(Number(response.modifiedAt), DEFAULT_DATE_TIME_FORMAT)}
                   type={LabelValueTypeEnum.Text}
                 />
-                <LabelValueContent
-                  label={getString('versionDetails.overview.generalInformation.pullCommand')}
-                  value={response.pullCommand}
-                  type={LabelValueTypeEnum.CommandBlock}
-                />
+                {response.pullCommand && (
+                  <LabelValueContent
+                    label={getString('versionDetails.overview.generalInformation.pullCommand')}
+                    value={response.pullCommand}
+                    type={LabelValueTypeEnum.CommandBlock}
+                  />
+                )}
+                {response.pullCommandByDigest && (
+                  <LabelValueContent
+                    label={getString('versionDetails.overview.generalInformation.pullCommandByDigest')}
+                    value={response.pullCommandByDigest}
+                    type={LabelValueTypeEnum.CommandBlock}
+                  />
+                )}
               </Container>
             </Layout.Vertical>
           </Card>

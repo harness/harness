@@ -29,3 +29,5 @@ export { useGetUpstreamRepositoryPackageTypes } from './useGetUpstreamRepository
 export { useGetRepositoryListViewType } from './useGetRepositoryListViewType'
 export { useDebouncedValue } from './useDebouncedValue'
 export { useConfirmationDialog } from './useConfirmationDialog'
+export { useGetOCIVersionType } from './useGetOCIVersionType'
+export { useGetVersionDisplayName } from './useGetVersionDisplayName'

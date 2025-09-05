@@ -45,10 +45,14 @@ export default function getARRouteDefinitions(routeParams: Record<string, string
     toARArtifactDetails: routeDefinitionWithMode(
       params => `/${params?.repositoryIdentifier}/${params?.artifactType}/${params?.artifactIdentifier}`
     ),
-    toARVersionDetails: routeDefinitionWithMode(
-      params =>
-        `/${params?.repositoryIdentifier}/${params?.artifactType}/${params?.artifactIdentifier}/versions/${params?.versionIdentifier}`
-    ),
+    toARVersionDetails: routeDefinitionWithMode(params => {
+      const queryParams = new URLSearchParams()
+      if (params.tag) queryParams.append('tag', params.tag)
+      if (params.digest) queryParams.append('digest', params.digest)
+      const route = `/${params?.repositoryIdentifier}/${params?.artifactType}/${params?.artifactIdentifier}/versions/${params?.versionIdentifier}`
+      if (queryParams.toString().length === 0) return route
+      return `${route}?${queryParams.toString()}`
+    }),
     // anything random, as this route will not be used in gitness
     toARVersionDetailsTab: routeDefinitionWithMode(params => {
       let route = `/${params.repositoryIdentifier}/${params?.artifactType}/${params?.artifactIdentifier}/versions/${params.versionIdentifier}`

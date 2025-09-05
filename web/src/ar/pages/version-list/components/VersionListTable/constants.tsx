@@ -15,6 +15,8 @@
  */
 
 import {
+  DigestNameCell,
+  OCITagsCell,
   PullCommandCell,
   VersionActionsCell,
   VersionDownloadsCell,
@@ -30,6 +32,18 @@ export const VERSION_LIST_TABLE_CELL_CONFIG: Record<VersionListColumnEnum, IVers
     Header: 'versionList.table.columns.version',
     accessor: 'name',
     Cell: VersionNameCell
+  },
+  [VersionListColumnEnum.Digest]: {
+    Header: 'versionList.table.columns.version',
+    accessor: 'name',
+    Cell: DigestNameCell,
+    disableSortBy: true
+  },
+  [VersionListColumnEnum.Tags]: {
+    Header: 'versionList.table.columns.tags',
+    accessor: 'metadata',
+    Cell: OCITagsCell,
+    disableSortBy: true
   },
   [VersionListColumnEnum.Size]: {
     Header: 'versionList.table.columns.size',
@@ -54,7 +68,8 @@ export const VERSION_LIST_TABLE_CELL_CONFIG: Record<VersionListColumnEnum, IVers
   [VersionListColumnEnum.PullCommand]: {
     Header: 'versionList.table.columns.pullCommand',
     accessor: 'pullCommand',
-    Cell: PullCommandCell
+    Cell: PullCommandCell,
+    disableSortBy: true
   },
   [VersionListColumnEnum.Actions]: {
     accessor: 'actions',

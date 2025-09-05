@@ -40,6 +40,8 @@ export interface ArtifactDetailsPathParams extends RepositoryDetailsPathParams {
 
 export interface VersionDetailsPathParams extends ArtifactDetailsPathParams {
   versionIdentifier: string
+  tag?: string
+  digest?: string
 }
 
 export interface VersionDetailsTabPathParams extends VersionDetailsPathParams {
@@ -62,6 +64,7 @@ export interface RedirectPageQueryParams {
   versionId?: string
   versionDetailsTab?: VersionDetailsTab
   artifactType?: ArtifactType
+  tag?: string
 }
 
 export interface RepositoryWebhookDetailsPathParams extends RepositoryDetailsPathParams {

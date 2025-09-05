@@ -22,7 +22,7 @@ import { useGetHelmArtifactDetailsQuery } from '@harnessio/react-har-service-cli
 import { useStrings } from '@ar/frameworks/strings'
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
-import { useDecodedParams, useGetSpaceRef } from '@ar/hooks'
+import { useDecodedParams, useGetOCIVersionType, useGetSpaceRef } from '@ar/hooks'
 
 import { LabelValueTypeEnum } from '../../components/LabelValueContent/type'
 import { LabelValueContent } from '../../components/LabelValueContent/LabelValueContent'
@@ -38,6 +38,7 @@ export default function HelmVersionOSSGeneralInfo(props: HelmVersionOSSGeneralIn
   const { getString } = useStrings()
   const pathParams = useDecodedParams<VersionDetailsPathParams>()
   const spaceRef = useGetSpaceRef()
+  const versionType = useGetOCIVersionType()
 
   const {
     data,
@@ -47,7 +48,10 @@ export default function HelmVersionOSSGeneralInfo(props: HelmVersionOSSGeneralIn
   } = useGetHelmArtifactDetailsQuery({
     registry_ref: spaceRef,
     artifact: encodeRef(pathParams.artifactIdentifier),
-    version: pathParams.versionIdentifier
+    version: pathParams.versionIdentifier,
+    queryParams: {
+      version_type: versionType
+    }
   })
 
   const response = data?.content?.data

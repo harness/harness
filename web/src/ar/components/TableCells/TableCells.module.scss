@@ -46,6 +46,10 @@
   --padding: 0px !important;
 }
 
+.deploymentsCell {
+  flex-wrap: wrap;
+}
+
 .deploymentsRow {
   --typography-size: 11px;
   --typography-weight: 700;

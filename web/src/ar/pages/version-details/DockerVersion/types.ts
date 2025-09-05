@@ -20,4 +20,5 @@ import type { DockerArtifactDetailsTab } from './constants'
 export interface DockerVersionDetailsQueryParams extends VersionDetailsQueryParams {
   detailsTab: DockerArtifactDetailsTab
   digest: string
+  tag?: string
 }

@@ -39,3 +39,9 @@
     --intent-color: #07a0ab;
   }
 }
+
+.tagsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-small);
+}

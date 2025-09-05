@@ -16,14 +16,14 @@
 
 import React from 'react'
 import { defaultTo } from 'lodash-es'
-import { Link } from 'react-router-dom'
+import { Link, useHistory } from 'react-router-dom'
 import { Position } from '@blueprintjs/core'
 import { Color } from '@harnessio/design-system'
 import { Layout, Text } from '@harnessio/uicore'
 import type { ArtifactMetadata } from '@harnessio/react-har-service-client'
 import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance, UseExpandedRowProps } from 'react-table'
 
-import { useRoutes } from '@ar/hooks'
+import { useGetVersionDisplayName, useRoutes } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import TableCells from '@ar/components/TableCells/TableCells'
 import versionFactory from '@ar/frameworks/Version/VersionFactory'
@@ -34,6 +34,7 @@ import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import VersionActionsWidget from '@ar/frameworks/Version/VersionActionsWidget'
 import { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
 import { LocalArtifactType } from '@ar/pages/repository-details/constants'
+import { OCITags } from '@ar/pages/version-list/components/VersionListTable/VersionListCell'
 
 type CellTypeWithActions<D extends Record<string, any>, V = any> = TableInstance<D> & {
   column: ColumnInstance<D>
@@ -90,6 +91,11 @@ export const ArtifactNameCell: Renderer<{
     isQuarantined,
     quarantineReason
   } = original
+  const versionDisplayName = useGetVersionDisplayName(packageType as RepositoryPackageType, version)
+  // TODO: move this to factory in future
+  const isOCIPackageType = [RepositoryPackageType.HELM, RepositoryPackageType.DOCKER].includes(
+    packageType as RepositoryPackageType
+  )
   return (
     <Layout.Vertical>
       <TableCells.LinkCell
@@ -109,7 +115,7 @@ export const ArtifactNameCell: Renderer<{
           artifactType
         })}
         label={value}
-        subLabel={version}
+        subLabel={isOCIPackageType ? versionDisplayName : undefined}
         postfix={
           <LabelsPopover
             popoverProps={{
@@ -129,6 +135,51 @@ export const ArtifactNameCell: Renderer<{
       />
     </Layout.Vertical>
   )
+}
+
+export const ArtifactVersionCell: CellType = props => {
+  const { original } = props.row
+  const { name: value, version, packageType, registryIdentifier, artifactType, metadata } = original
+  const routes = useRoutes()
+  const history = useHistory()
+
+  // TODO: move this package type specific logic to factory in future
+  switch (packageType) {
+    case RepositoryPackageType.DOCKER:
+    case RepositoryPackageType.HELM:
+      return (
+        <OCITags
+          tags={metadata?.tags || []}
+          onClick={tag => {
+            history.push(
+              routes.toARRedirect({
+                packageType: packageType as RepositoryPackageType,
+                registryId: registryIdentifier,
+                artifactId: value,
+                versionId: version,
+                versionDetailsTab: VersionDetailsTab.OVERVIEW,
+                artifactType,
+                tag
+              })
+            )
+          }}
+        />
+      )
+    default:
+      return (
+        <TableCells.LinkCell
+          linkTo={routes.toARRedirect({
+            packageType: packageType as RepositoryPackageType,
+            registryId: registryIdentifier,
+            artifactId: value,
+            versionId: version,
+            versionDetailsTab: VersionDetailsTab.OVERVIEW,
+            artifactType
+          })}
+          label={version}
+        />
+      )
+  }
 }
 
 export const ArtifactDownloadsCell: CellType = ({ value }) => {

@@ -35,3 +35,17 @@
   border-color: var(--orange-200) !important;
   --intent-color: var(--orange-900) !important;
 }
+
+.dockerTag {
+  --intent-color: var(--blue-900) !important;
+  background-color: var(--blue-100) !important;
+  border-color: var(--blue-200) !important;
+  display: inline-block;
+  max-width: 120px;
+  min-width: unset;
+  text-transform: none;
+
+  &.hover {
+    cursor: pointer;
+  }
+}

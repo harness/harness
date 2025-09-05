@@ -21,7 +21,7 @@ import { DropDown, SelectOption, Text } from '@harnessio/uicore'
 import { useGetDockerArtifactManifestsQuery } from '@harnessio/react-har-service-client'
 
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
-import { useDecodedParams, useGetSpaceRef } from '@ar/hooks'
+import { useDecodedParams, useGetOCIVersionType, useGetSpaceRef } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 
@@ -39,6 +39,7 @@ export default function ArchitectureSelector(props: ArchitectureSelectorProps): 
   const { artifactIdentifier } = useDecodedParams<VersionDetailsPathParams>()
   const { getString } = useStrings()
   const spaceRef = useGetSpaceRef()
+  const versionType = useGetOCIVersionType()
 
   const {
     data,
@@ -47,7 +48,10 @@ export default function ArchitectureSelector(props: ArchitectureSelectorProps): 
   } = useGetDockerArtifactManifestsQuery({
     registry_ref: spaceRef,
     artifact: encodeRef(artifactIdentifier),
-    version: version
+    version: version,
+    queryParams: {
+      version_type: versionType
+    }
   })
 
   const deboucedOnChange = debounce(props.onChange, 100)

@@ -209,7 +209,8 @@ describe('Verify docker deployments tab', () => {
         search_term: undefined,
         size: 50,
         sort_field: 'updatedAt',
-        sort_order: 'DESC'
+        sort_order: 'DESC',
+        version_type: 'TAG'
       },
       registry_ref: 'undefined/1/+',
       version: '1.0.0'
@@ -228,7 +229,8 @@ describe('Verify docker deployments tab', () => {
         search_term: undefined,
         size: 20,
         sort_field: 'updatedAt',
-        sort_order: 'DESC'
+        sort_order: 'DESC',
+        version_type: 'TAG'
       },
       registry_ref: 'undefined/1/+',
       version: '1.0.0'
@@ -260,7 +262,8 @@ describe('Verify docker deployments tab', () => {
         search_term: undefined,
         size: 50,
         sort_field: 'updatedAt',
-        sort_order: 'DESC'
+        sort_order: 'DESC',
+        version_type: 'TAG'
       },
       registry_ref: 'undefined/1/+',
       version: '1.0.0'
@@ -287,7 +290,8 @@ describe('Verify docker deployments tab', () => {
           search_term: '1234',
           size: 50,
           sort_field: 'updatedAt',
-          sort_order: 'DESC'
+          sort_order: 'DESC',
+          version_type: 'TAG'
         },
         registry_ref: 'undefined/1/+',
         version: '1.0.0'
@@ -305,7 +309,8 @@ describe('Verify docker deployments tab', () => {
         page: 0,
         size: 50,
         sort_field: 'updatedAt',
-        sort_order: 'DESC'
+        sort_order: 'DESC',
+        version_type: 'TAG'
       },
       registry_ref: 'undefined/1/+',
       version: '1.0.0'
@@ -340,7 +345,8 @@ describe('Verify docker deployments tab', () => {
         search_term: undefined,
         size: 50,
         sort_field: 'envName',
-        sort_order: 'ASC'
+        sort_order: 'ASC',
+        version_type: 'TAG'
       },
       registry_ref: 'undefined/1/+',
       version: '1.0.0'
@@ -356,7 +362,8 @@ describe('Verify docker deployments tab', () => {
         search_term: undefined,
         size: 50,
         sort_field: 'envName',
-        sort_order: 'DESC'
+        sort_order: 'DESC',
+        version_type: 'TAG'
       },
       registry_ref: 'undefined/1/+',
       version: '1.0.0'

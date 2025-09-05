@@ -17,6 +17,8 @@
 import React, { PropsWithChildren, useContext } from 'react'
 import type { IconName } from '@harnessio/icons'
 
+import { useGetVersionDisplayName } from '@ar/hooks'
+import type { RepositoryPackageType } from '@ar/common/types'
 import TreeNodeContent from '@ar/components/TreeView/TreeNodeContent'
 import { TreeViewContext } from '@ar/components/TreeView/TreeViewContext'
 import type { VersionTreeNodeViewProps } from '@ar/frameworks/Version/Version'
@@ -29,11 +31,12 @@ interface IVersionTreeNode extends VersionTreeNodeViewProps {
 export default function VersionTreeNode(props: PropsWithChildren<IVersionTreeNode>) {
   const { data, icon, iconSize = 24 } = props
   const { compact } = useContext(TreeViewContext)
+  const displayName = useGetVersionDisplayName(data.packageType as RepositoryPackageType, data.name)
   return (
     <TreeNodeContent
       icon={icon}
       iconSize={iconSize}
-      label={data.name}
+      label={displayName}
       size={data.size}
       downloads={data.downloadsCount}
       compact={compact}

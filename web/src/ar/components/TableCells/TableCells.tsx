@@ -153,7 +153,7 @@ export const CountCell = ({ value, icon, iconProps }: CountCellProps): JSX.Eleme
 }
 
 interface TextCellProps extends TextProps {
-  value: string | undefined
+  value?: string
 }
 
 export const TextCell = ({ value, ...rest }: TextCellProps): JSX.Element => {
@@ -241,7 +241,7 @@ interface DeploymentsCellProps {
 
 export const DeploymentsCell = ({ prodCount, nonProdCount }: DeploymentsCellProps) => {
   return (
-    <Layout.Horizontal spacing="xsmall">
+    <Layout.Vertical className={css.deploymentsCell} spacing="xsmall">
       <Layout.Horizontal data-testid="prodDeployments" spacing="small">
         <Text font={{ variation: FontVariation.BODY }}>{defaultTo(prodCount, 0)}</Text>
         <ProdTag />
@@ -250,7 +250,7 @@ export const DeploymentsCell = ({ prodCount, nonProdCount }: DeploymentsCellProp
         <Text font={{ variation: FontVariation.BODY }}>{defaultTo(nonProdCount, 0)}</Text>
         <NonProdTag />
       </Layout.Horizontal>
-    </Layout.Horizontal>
+    </Layout.Vertical>
   )
 }
 

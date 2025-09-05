@@ -22,8 +22,10 @@ import { useGetDockerArtifactManifestsQuery } from '@harnessio/react-har-service
 
 import { useStrings } from '@ar/frameworks/strings'
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
-import { useDecodedParams, useGetSpaceRef } from '@ar/hooks'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
+import { useDecodedParams, useGetSpaceRef } from '@ar/hooks'
+
+import useGetOCIVersionParams from '../../hooks/useGetOCIVersionParams'
 
 import css from '../DockerVersion.module.scss'
 
@@ -32,11 +34,17 @@ export default function DockerDeploymentsCard() {
   const registryRef = useGetSpaceRef()
   const params = useDecodedParams<VersionDetailsPathParams>()
 
+  const { versionIdentifier, versionType } = useGetOCIVersionParams()
+
   const { data: manifestsData } = useGetDockerArtifactManifestsQuery({
     registry_ref: registryRef,
     artifact: encodeRef(params.artifactIdentifier),
-    version: params.versionIdentifier
+    version: versionIdentifier,
+    queryParams: {
+      version_type: versionType
+    }
   })
+
   return (
     <Card className={css.containerDetailsCard} data-testid="docker-deployments-card">
       <Layout.Vertical spacing="large">
@@ -47,7 +55,7 @@ export default function DockerDeploymentsCard() {
           </Text>
           <Text lineClamp={1} color={Color.GREY_500} font={{ variation: FontVariation.SMALL }}>
             {getString('versionDetails.cards.container.versionDigest', {
-              version: defaultTo(params.versionIdentifier, getString('na')),
+              version: defaultTo(versionIdentifier, getString('na')),
               digest: defaultTo(manifestsData?.content.data.manifests?.length, 0)
             })}
           </Text>

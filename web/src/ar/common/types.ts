@@ -32,6 +32,11 @@ export enum Parent {
   Enterprise = 'Enterprise'
 }
 
+export enum OCIVersionType {
+  TAG = 'TAG',
+  DIGEST = 'DIGEST'
+}
+
 export type FormikRef<T> = Pick<FormikProps<T>, 'submitForm' | 'errors'>
 
 export type FormikFowardRef<T = unknown> =

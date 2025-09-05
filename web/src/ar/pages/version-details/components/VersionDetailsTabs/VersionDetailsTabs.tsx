@@ -131,13 +131,16 @@ export default function VersionDetailsTabs(): JSX.Element {
       <Switch>
         <RouteProvider exact path={routeDefinitions.toARVersionDetails({ ...versionDetailsPathParams })}>
           <Redirect
-            to={routes.toARVersionDetailsTab({
-              versionIdentifier: pathParams.versionIdentifier,
-              artifactIdentifier: pathParams.artifactIdentifier,
-              repositoryIdentifier: pathParams.repositoryIdentifier,
-              artifactType: pathParams.artifactType,
-              versionTab: VersionDetailsTab.OVERVIEW
-            })}
+            to={routes.toARVersionDetailsTab(
+              {
+                versionIdentifier: pathParams.versionIdentifier,
+                artifactIdentifier: pathParams.artifactIdentifier,
+                repositoryIdentifier: pathParams.repositoryIdentifier,
+                artifactType: pathParams.artifactType,
+                versionTab: VersionDetailsTab.OVERVIEW
+              },
+              { queryParams }
+            )}
           />
         </RouteProvider>
         <RouteProvider

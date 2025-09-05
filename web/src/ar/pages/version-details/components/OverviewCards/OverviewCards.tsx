@@ -21,6 +21,7 @@ import { useHistory } from 'react-router-dom'
 import { Container, Page } from '@harnessio/uicore'
 import { useGetDockerArtifactIntegrationDetailsQuery } from '@harnessio/react-har-service-client'
 
+import type { OCIVersionType } from '@ar/common/types'
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import { useStrings } from '@ar/frameworks/strings'
 import { DEFAULT_ORG, DEFAULT_PROJECT } from '@ar/constants'
@@ -47,11 +48,13 @@ interface RedirectToTabOptions {
 
 interface VersionOverviewCardsProps {
   digest?: string
+  version: string
+  versionType: OCIVersionType
   cards?: Array<VersionOverviewCard>
 }
 
 export default function VersionOverviewCards(props: VersionOverviewCardsProps) {
-  const { digest = '', cards = [] } = props
+  const { digest = '', cards = [], version, versionType } = props
   const { getString } = useStrings()
   const routes = useRoutes()
   const { scope } = useAppStore()
@@ -64,9 +67,10 @@ export default function VersionOverviewCards(props: VersionOverviewCardsProps) {
     {
       registry_ref: spaceRef,
       artifact: encodeRef(pathParams.artifactIdentifier),
-      version: pathParams.versionIdentifier,
+      version,
       queryParams: {
-        digest
+        digest,
+        version_type: versionType
       }
     },
     {

@@ -26,7 +26,7 @@ import { useQueryParams } from 'hooks/useQueryParams'
 import { LocalArtifactType } from '../../constants'
 
 export default function RedirectPageView() {
-  const { registryId, artifactId, versionId, versionDetailsTab, artifactType } =
+  const { registryId, artifactId, versionId, versionDetailsTab, artifactType, tag } =
     useQueryParams<RedirectPageQueryParams>()
 
   const history = useHistory()
@@ -41,7 +41,8 @@ export default function RedirectPageView() {
         artifactIdentifier: artifactId,
         versionIdentifier: versionId,
         versionTab: versionDetailsTab,
-        artifactType: type || LocalArtifactType.ARTIFACTS
+        artifactType: type || LocalArtifactType.ARTIFACTS,
+        tag
       })
     }
     if (registryId && artifactId && versionId) {
@@ -49,7 +50,8 @@ export default function RedirectPageView() {
         repositoryIdentifier: registryId,
         artifactIdentifier: artifactId,
         versionIdentifier: versionId,
-        artifactType: type || LocalArtifactType.ARTIFACTS
+        artifactType: type || LocalArtifactType.ARTIFACTS,
+        tag
       })
     }
     if (registryId && artifactId) {

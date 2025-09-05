@@ -28,7 +28,7 @@ import { useStrings } from '@ar/frameworks/strings'
 import { RepositoryPackageType } from '@ar/common/types'
 import { getShortDigest } from '@ar/pages/digest-list/utils'
 import { encodeRef, getSpaceRef } from '@ar/hooks/useGetSpaceRef'
-import { useAppStore, useRoutes } from '@ar/hooks'
+import { useAppStore, useGetOCIVersionType, useRoutes } from '@ar/hooks'
 import { LocalArtifactType, RepositoryDetailsTab, RepositoryDetailsTabs } from '@ar/pages/repository-details/constants'
 import { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
 import { ITreeNode, NodeTypeEnum, INode } from '@ar/components/TreeView/types'
@@ -52,6 +52,7 @@ const getLoadMoreNodeConfig = (parentNode: ITreeNode, metadata: APIQueryParams):
 export function useRepositoryTreeViewUtils(queryParams: TreeViewRepositoryQueryParams) {
   const routes = useRoutes()
   const history = useHistory()
+  const versionType = useGetOCIVersionType()
   const { getString } = useStrings()
   const { scope } = useAppStore()
   const { space } = scope
@@ -89,7 +90,10 @@ export function useRepositoryTreeViewUtils(queryParams: TreeViewRepositoryQueryP
       const response = await getDockerArtifactManifests({
         registry_ref: registryRef,
         artifact: encodeRef(artifactIdentifier),
-        version: filters?.versionIdentifier ?? value
+        version: filters?.versionIdentifier ?? value,
+        queryParams: {
+          version_type: versionType
+        }
       })
       const digestList = response.content.data.manifests || []
       const data = digestList.map(each => ({
