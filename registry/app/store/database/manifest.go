@@ -542,7 +542,9 @@ func (dao manifestDao) FindManifestDigestByTagName(
 ) (types.Digest, error) {
 	stmt := database.Builder.Select("manifest_digest").
 		From("manifests m").
-		Join("tags t ON t.tag_manifest_id = m.manifest_id").
+		Join("tags t ON t.tag_manifest_id = m.manifest_id AND "+
+			"t.tag_registry_id = m.manifest_registry_id AND "+
+			"t.tag_image_name = m.manifest_image_name").
 		Where(
 			"manifest_registry_id = ? AND manifest_image_name = ? AND t.tag_name = ?",
 			regID, imageName, tag,

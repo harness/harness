@@ -126,7 +126,7 @@ func (i ImageDao) DeleteByImageNameIfNoLinkedArtifacts(
 func (i ImageDao) GetByName(ctx context.Context, registryID int64, name string) (*types.Image, error) {
 	q := databaseg.Builder.Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(imageDB{}), ",")).
 		From("images").
-		Where("image_registry_id = ? AND image_name = ?", registryID, name)
+		Where("image_registry_id = ? AND image_name = ? AND image_type IS NULL", registryID, name)
 
 	sql, args, err := q.ToSql()
 	if err != nil {
@@ -141,15 +141,19 @@ func (i ImageDao) GetByName(ctx context.Context, registryID int64, name string) 
 	}
 	return i.mapToImage(ctx, dst)
 }
-func (i ImageDao) GetByNameAndType(ctx context.Context, registryID int64, name string,
-	artifactType *artifact.ArtifactType) (*types.Image, error) {
+
+func (i ImageDao) GetByNameAndType(
+	ctx context.Context, registryID int64, name string,
+	artifactType *artifact.ArtifactType,
+) (*types.Image, error) {
+	if artifactType == nil || *artifactType == "" {
+		return i.GetByName(ctx, registryID, name)
+	}
+
 	q := databaseg.Builder.Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(imageDB{}), ",")).
 		From("images").
-		Where("image_registry_id = ? AND image_name = ?", registryID, name)
-
-	if artifactType != nil && *artifactType != "" {
-		q = q.Where("image_type = ?", *artifactType)
-	}
+		Where("image_registry_id = ? AND image_name = ?", registryID, name).
+		Where("image_type = ?", *artifactType)
 
 	sql, args, err := q.ToSql()
 	if err != nil {
