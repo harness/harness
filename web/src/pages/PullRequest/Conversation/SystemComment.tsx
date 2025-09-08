@@ -605,10 +605,20 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
                 </Case>
                 <Case val={ReviewerAddActivity.CODEOWNERS}>
                   <StringSubstitute
-                    str={getString('prReview.codeowners')}
+                    str={getString('prReview.ugCodeowners')}
                     vars={{
                       author: <strong>{payload?.author?.display_name}</strong>,
                       codeowners: userGroupReviewers,
+                      count: userGroupsDisplayNameList.length
+                    }}
+                  />
+                </Case>
+                <Case val={ReviewerAddActivity.DEFAULT}>
+                  <StringSubstitute
+                    str={getString('prReview.ugDefaultReviewers')}
+                    vars={{
+                      author: <strong>{payload?.author?.display_name}</strong>,
+                      reviewers: userGroupReviewers,
                       count: userGroupsDisplayNameList.length
                     }}
                   />

@@ -137,12 +137,13 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
           <Container padding={{ top: 'medium', bottom: 'large' }}>
             {!isEmpty(user_group_reviewers) &&
               user_group_reviewers?.map(reviewer => {
-                const { decision = PullReqReviewDecision.PENDING, user_group } = reviewer
+                const { decision = PullReqReviewDecision.PENDING, user_group, sha } = reviewer
+                const updatedReviewDecision = processReviewDecision(decision, sha, pullRequestMetadata?.source_sha)
                 const areChangesRequested = decision === PullReqReviewDecision.CHANGEREQ
-                const reviewDecisionInfo = generateReviewDecisionInfo(decision)
+                const reviewDecisionInfo = generateReviewDecisionInfo(updatedReviewDecision)
 
                 return (
-                  <Container key={user_group?.id} className={css.alignLayout}>
+                  <Container key={`user_group-${user_group?.id}`} className={css.alignLayout}>
                     <Utils.WrapOptionalTooltip
                       tooltip={
                         <Text color={Color.GREY_100} padding="small">
@@ -150,10 +151,14 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
                         </Text>
                       }
                       tooltipProps={{ isDark: true, interactionKind: PopoverInteractionKind.HOVER }}>
-                      <Icon
-                        className={areChangesRequested ? css.redIcon : undefined}
-                        {...omit(reviewDecisionInfo, 'iconProps')}
-                      />
+                      {updatedReviewDecision === PullReqReviewDecision.OUTDATED ? (
+                        <img className={css.svgOutdated} src={ignoreFailed} width={20} height={20} />
+                      ) : (
+                        <Icon
+                          className={areChangesRequested ? css.redIcon : undefined}
+                          {...omit(reviewDecisionInfo, 'iconProps')}
+                        />
+                      )}
                     </Utils.WrapOptionalTooltip>
                     <Icon
                       margin={'xsmall'}
@@ -204,7 +209,7 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
                 const reviewDecisionInfo = generateReviewDecisionInfo(updatedReviewDecision)
 
                 return (
-                  <Layout.Horizontal key={principal?.id} className={css.alignLayout}>
+                  <Layout.Horizontal key={`principal-${principal?.id}`} className={css.alignLayout}>
                     <Utils.WrapOptionalTooltip
                       tooltip={
                         <Text color={Color.GREY_100} padding="small">

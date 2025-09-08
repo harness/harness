@@ -858,6 +858,8 @@ export interface StringsMap {
   'prReview.selfAssigned': string
   'prReview.selfRemoved': string
   'prReview.targetBranchChange': string
+  'prReview.ugCodeowners': string
+  'prReview.ugDefaultReviewers': string
   prSourceAndTargetMustBeDifferent: string
   'prState.draftDesc': string
   'prState.draftHeading': string

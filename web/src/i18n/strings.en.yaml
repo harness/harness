@@ -419,6 +419,8 @@ prReview:
   filterByReviews: Filter by Reviews
   codeowners: '{author} requested review from {codeowners} as {count|1:code owner,code owners}'
   defaultReviewers: '{author} requested review from {reviewers} as {count|1:default reviewer,default reviewers}'
+  ugCodeowners: '{author} requested review from {count|1:user group,user groups} {codeowners} as {count|1:code owner,code owners}'
+  ugDefaultReviewers: '{author} requested review from {count|1:user group,user groups} {reviewers} as {count|1:default reviewer,default reviewers}'
   labelsAssigned: '{count|0:label,labels}'
   targetBranchChange: '{user} changed the target branch from {old} to {new}'
 webhookListingContent: 'create,delete,deployment ...'

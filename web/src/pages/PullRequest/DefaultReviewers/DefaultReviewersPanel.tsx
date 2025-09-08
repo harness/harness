@@ -40,7 +40,7 @@ export const DefaultReviewersPanel: React.FC<DefaultReviewersPanelProps> = ({
       [
         {
           id: 'REQUIRED',
-          width: '40%',
+          width: '36%',
           sort: true,
           Header: getString('required'),
           accessor: 'REQUIRED',
@@ -73,7 +73,7 @@ export const DefaultReviewersPanel: React.FC<DefaultReviewersPanelProps> = ({
         },
         {
           id: 'DefaultReviewers',
-          width: '18%',
+          width: '20%',
           sort: true,
           Header: getString('defaultReviewers'),
           accessor: 'DefaultReviewers',
@@ -180,7 +180,7 @@ export const DefaultReviewersPanel: React.FC<DefaultReviewersPanelProps> = ({
           id: 'approvedBy',
           Header: getString('approvedBy'),
           sort: true,
-          width: '15%',
+          width: '20%',
           accessor: 'APPROVED BY',
           Cell: ({ row }: CellProps<TypesDefaultReviewerApprovalsResponseWithRevDecision>) => {
             const approvedEvaluations = row?.original?.principals?.filter(
