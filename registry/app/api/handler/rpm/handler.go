@@ -52,8 +52,13 @@ func (h *handler) GetPackageArtifactInfo(r *http.Request) (pkg.PackageArtifactIn
 	if err != nil {
 		return nil, err
 	}
-
+	info.Image = r.PathValue("name")
+	var version string
+	if r.PathValue("version") != "" && r.PathValue("architecture") != "" {
+		version = r.PathValue("version") + "." + r.PathValue("architecture")
+	}
 	return &rpmtype.ArtifactInfo{
 		ArtifactInfo: info,
+		Version:      version,
 	}, nil
 }
