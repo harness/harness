@@ -19,9 +19,24 @@ import cx from 'classnames'
 import { Container, Select, SelectOption } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
 import { Color } from '@harnessio/design-system'
+import { Avatar } from '@harnessio/uicore'
 import { useStrings } from 'framework/strings'
 import { CodeIcon } from 'utils/GitUtils'
+import { PrincipalType } from 'utils/Utils'
+import { useAppContext } from 'AppContext'
 import css from './SearchDropDown.module.scss'
+
+export const renderPrincipalIcon = (type: PrincipalType, displayName: string) => {
+  switch (type) {
+    case PrincipalType.USER_GROUP:
+      return <Icon name="user-groups" className={cx(css.avatar, css.icon, css.ugicon)} size={24} />
+    case PrincipalType.SERVICE_ACCOUNT:
+      return <Icon name="service-accounts" className={cx(css.avatar, css.icon, css.saicon)} size={24} />
+    case PrincipalType.USER:
+    default:
+      return <Avatar className={css.avatar} name={displayName} size="normal" hoverCard={false} />
+  }
+}
 
 interface SearchDropDownProps {
   searchTerm: string
@@ -46,6 +61,7 @@ export default function SearchDropDown({
   itemRenderer,
   loading
 }: SearchDropDownProps) {
+  const { standalone } = useAppContext()
   const { getString } = useStrings()
   const [query, setQuery] = useState(searchTerm || '')
 
@@ -92,7 +108,7 @@ export default function SearchDropDown({
         itemRenderer={wrapItemRenderer}
         value={{ label: '', value: '' }}
         inputProps={{
-          placeholder: placeholder || getString('search'),
+          placeholder: standalone ? getString('selectUsers') : placeholder,
           value: query,
           leftElement: (
             <Icon name={loading ? CodeIcon.InputSpinner : CodeIcon.InputSearch} color={Color.GREY_500} size={12} />

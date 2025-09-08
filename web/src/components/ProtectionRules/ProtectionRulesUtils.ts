@@ -1,3 +1,4 @@
+import type { SelectOption } from '@harnessio/uicore'
 import type { UseStringsReturn } from 'framework/strings'
 import type { EnumMergeMethod, OpenapiRule, OpenapiRuleType, ProtectionBranch } from 'services/code'
 import { MergeStrategy, ProtectionRulesType, RulesTargetType } from 'utils/GitUtils'
@@ -52,7 +53,7 @@ export type RulesFormPayload = {
   repoList: string[][]
   allRepoOwners?: boolean
   bypassList?: NormalizedPrincipal[]
-  defaultReviewersList?: string[]
+  defaultReviewersList?: NormalizedPrincipal[]
   requireMinReviewers?: boolean
   requireMinDefaultReviewers?: boolean
   minReviewers?: string | number
@@ -305,7 +306,7 @@ export const rulesFormInitialPayload: RulesFormPayload = {
   repoList: [] as string[][],
   allRepoOwners: false,
   bypassList: [] as NormalizedPrincipal[],
-  defaultReviewersList: [] as string[],
+  defaultReviewersList: [] as NormalizedPrincipal[],
   requireMinReviewers: false,
   requireMinDefaultReviewers: false,
   minReviewers: '',
@@ -329,9 +330,33 @@ export const rulesFormInitialPayload: RulesFormPayload = {
   defaultReviewersEnabled: false
 }
 
+const separateUsersAndUserGroups = (normalizedPrincipals?: NormalizedPrincipal[]) => {
+  const { userIds, userGroupIds } = normalizedPrincipals?.reduce(
+    (acc, item: NormalizedPrincipal) => {
+      if (item.type === PrincipalType.USER_GROUP) {
+        acc.userGroupIds.push(item.id)
+      } else {
+        acc.userIds.push(item.id)
+      }
+      return acc
+    },
+    { userIds: [] as number[], userGroupIds: [] as number[] }
+  ) || { userIds: [], userGroupIds: [] }
+  return { userIds, userGroupIds }
+}
+
 export const getPayload = (formData: RulesFormPayload, ruleType: OpenapiRuleType): OpenapiRule => {
-  const { bypassList, fastForwardMerge, mergeCommit, rebaseMerge, repoList, repoTargetList, squashMerge, targetList } =
-    formData
+  const {
+    bypassList,
+    defaultReviewersList,
+    fastForwardMerge,
+    mergeCommit,
+    rebaseMerge,
+    repoList,
+    repoTargetList,
+    squashMerge,
+    targetList
+  } = formData
   const stratArray = [
     squashMerge && MergeStrategy.SQUASH,
     rebaseMerge && MergeStrategy.REBASE,
@@ -346,17 +371,9 @@ export const getPayload = (formData: RulesFormPayload, ruleType: OpenapiRuleType
   const repoPatternsIncludeArray = extractValuesByType(repoTargetList, true) as string[]
   const repoPatternsExcludeArray = extractValuesByType(repoTargetList, false) as string[]
 
-  const { userIds, userGroupIds } = bypassList?.reduce(
-    (acc, item: NormalizedPrincipal) => {
-      if (item.type === PrincipalType.USER_GROUP) {
-        acc.userGroupIds.push(item.id)
-      } else {
-        acc.userIds.push(item.id)
-      }
-      return acc
-    },
-    { userIds: [] as number[], userGroupIds: [] as number[] }
-  ) || { userIds: [], userGroupIds: [] }
+  const bypassedNormalizedPrincipals = separateUsersAndUserGroups(bypassList)
+
+  const defaultReviewers = separateUsersAndUserGroups(defaultReviewersList)
 
   const isBranchRuleType = ruleType === ProtectionRulesType.BRANCH
 
@@ -382,8 +399,8 @@ export const getPayload = (formData: RulesFormPayload, ruleType: OpenapiRuleType
     },
     definition: {
       bypass: {
-        user_ids: userIds,
-        user_group_ids: userGroupIds,
+        user_ids: bypassedNormalizedPrincipals.userIds,
+        user_group_ids: bypassedNormalizedPrincipals.userGroupIds,
         repo_owners: formData.allRepoOwners
       },
       ...(isBranchRuleType
@@ -398,7 +415,8 @@ export const getPayload = (formData: RulesFormPayload, ruleType: OpenapiRuleType
               },
               reviewers: {
                 request_code_owners: formData.autoAddCodeOwner,
-                default_reviewer_ids: formData?.defaultReviewersList?.map(item => parseInt(item.split(' ')[0]))
+                default_reviewer_ids: defaultReviewers.userIds,
+                default_user_group_reviewer_ids: defaultReviewers.userGroupIds
               },
               comments: {
                 require_resolve_all: formData.requireCommentResolution
@@ -440,4 +458,18 @@ export const getPayload = (formData: RulesFormPayload, ruleType: OpenapiRuleType
   }
 
   return payload
+}
+
+export const getFilteredNormalizedPrincipalOptions = (
+  combinedOptions: NormalizedPrincipal[],
+  selected?: NormalizedPrincipal[]
+): SelectOption[] => {
+  return (
+    combinedOptions
+      ?.filter(item => !selected?.some(principal => principal.id === item.id))
+      .map(principal => ({
+        value: JSON.stringify(principal),
+        label: `${principal.display_name} (${principal.email_or_identifier})`
+      })) || []
+  )
 }

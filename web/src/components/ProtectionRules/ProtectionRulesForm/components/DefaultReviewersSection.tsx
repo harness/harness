@@ -14,65 +14,41 @@
  * limitations under the License.
  */
 
-import React, { useMemo } from 'react'
+import React from 'react'
 import cx from 'classnames'
-import { Container, FormInput, SelectOption, Text } from '@harnessio/uicore'
+import { Container, FormInput, Layout, Text } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
 import type { FormikProps } from 'formik'
 import { Render } from 'react-jsx-match'
 import { useStrings } from 'framework/strings'
-import type { RulesFormPayload } from 'components/ProtectionRules/ProtectionRulesUtils'
-import DefaultReviewersList from './DefaultReviewersList'
+import {
+  getFilteredNormalizedPrincipalOptions,
+  type RulesFormPayload
+} from 'components/ProtectionRules/ProtectionRulesUtils'
+import { NormalizedPrincipal, PrincipalType } from 'utils/Utils'
+import SearchDropDown, { renderPrincipalIcon } from 'components/SearchDropDown/SearchDropDown'
+import NormalizedPrincipalsList from './NormalizedPrincipalsList'
 import css from '../ProtectionRulesForm.module.scss'
 
-const DefaultReviewersSection = (props: {
+export interface DefaultReviewerProps {
+  loading: boolean
+  searchTerm: string
+  setSearchTerm: React.Dispatch<React.SetStateAction<string>>
+  normalizedPrincipalOptions: NormalizedPrincipal[]
+}
+
+const DefaultReviewersSection = ({
+  formik,
+  defaultReviewerProps
+}: {
   formik: FormikProps<RulesFormPayload>
-  defaultReviewerProps: {
-    setSearchTerm: React.Dispatch<React.SetStateAction<string>>
-    userPrincipalOptions: SelectOption[]
-  }
+  defaultReviewerProps: DefaultReviewerProps
 }) => {
-  const { formik, defaultReviewerProps } = props
-  const { userPrincipalOptions, setSearchTerm } = defaultReviewerProps
+  const { loading, normalizedPrincipalOptions, searchTerm, setSearchTerm } = defaultReviewerProps
   const { getString } = useStrings()
   const setFieldValue = formik.setFieldValue
-  const { defaultReviewersEnabled, defaultReviewersList, minDefaultReviewers, requireMinDefaultReviewers } =
-    formik.values
+  const { defaultReviewersEnabled, defaultReviewersList, requireMinDefaultReviewers } = formik.values
   const { defaultReviewersList: formikDefaultReviewersListError } = formik.errors
-
-  const defaultReviewerIds = useMemo(
-    () => new Set((defaultReviewersList || []).map((user: string) => user.split(' ')[0])),
-    [defaultReviewersList]
-  )
-
-  const filteredPrincipalOptions = useMemo(() => {
-    return userPrincipalOptions.filter((user: SelectOption) => {
-      const id = user.value.toString().split(' ')[0]
-      return !defaultReviewerIds.has(id)
-    })
-  }, [userPrincipalOptions, defaultReviewerIds])
-
-  const defReviewerWarning = useMemo(() => {
-    const minReviewers = Number(minDefaultReviewers)
-    const reviewerCount = defaultReviewersList?.length || 0
-
-    if (defaultReviewersEnabled && minReviewers === reviewerCount) {
-      let message = ''
-      let showWarning = false
-
-      if (reviewerCount === 1) {
-        message = getString('protectionRules.defaultReviewerWarning')
-        showWarning = true
-      } else if (reviewerCount > 1) {
-        message = getString('protectionRules.defaultReviewersWarning')
-        showWarning = true
-      }
-
-      return { message, showWarning }
-    }
-
-    return { message: '', showWarning: false }
-  }, [getString, defaultReviewersEnabled, minDefaultReviewers, defaultReviewersList])
 
   return (
     <>
@@ -93,47 +69,68 @@ const DefaultReviewersSection = (props: {
 
       <Render when={defaultReviewersEnabled}>
         <Container padding={{ top: 'xlarge', left: 'xlarge' }}>
-          <FormInput.Select
-            items={filteredPrincipalOptions}
-            onQueryChange={setSearchTerm}
+          <SearchDropDown
+            searchTerm={searchTerm}
+            placeholder={getString('selectUsersAndUserGroups')}
             className={css.widthContainer}
-            value={{ label: '', value: '' }}
-            placeholder={getString('selectReviewers')}
-            onChange={item => {
-              const id = item.value?.toString().split(' ')[0]
-              const displayName = item.label
-              const defaultReviewerEntry = `${id} ${displayName}`
-              const newList = [...(defaultReviewersList || []), defaultReviewerEntry]
-              setFieldValue('defaultReviewersList', newList)
+            onChange={setSearchTerm}
+            options={getFilteredNormalizedPrincipalOptions(
+              normalizedPrincipalOptions.filter(user => user.type !== PrincipalType.SERVICE_ACCOUNT),
+              defaultReviewersList || []
+            )}
+            loading={loading}
+            itemRenderer={(item, { handleClick, isActive }) => {
+              const { id, type, display_name, email_or_identifier } = JSON.parse(item.value.toString())
+              return (
+                <Layout.Horizontal
+                  key={`${id}-${email_or_identifier}`}
+                  onClick={handleClick}
+                  padding={{ top: 'xsmall', bottom: 'xsmall' }}
+                  flex={{ align: 'center-center' }}
+                  className={cx({ [css.activeMenuItem]: isActive })}>
+                  {renderPrincipalIcon(type as PrincipalType, display_name)}
+                  <Layout.Vertical padding={{ left: 'small' }} width={400}>
+                    <Text className={css.truncateText}>
+                      <strong>{display_name}</strong>
+                    </Text>
+                    <Text className={css.truncateText} lineClamp={1}>
+                      {email_or_identifier}
+                    </Text>
+                  </Layout.Vertical>
+                </Layout.Horizontal>
+              )
             }}
-            name={'defaultReviewerSelect'}
+            onClick={menuItem => {
+              const value = JSON.parse(menuItem.value.toString()) as NormalizedPrincipal
+              const updatedList = [value, ...(defaultReviewersList || [])]
+              const uniqueArr = Array.from(new Map(updatedList.map(item => [item.id, item])).values())
+              formik.setFieldValue('defaultReviewersList', uniqueArr)
+            }}
           />
-          {formikDefaultReviewersListError && (
-            <Text color={Color.RED_350} padding={{ bottom: 'medium' }}>
-              {formikDefaultReviewersListError}
-            </Text>
-          )}
-          <Render when={defReviewerWarning.showWarning}>
-            <Text color={Color.WARNING} padding={{ bottom: 'medium' }} style={{ width: '35%' }}>
-              {defReviewerWarning.message}
-            </Text>
-          </Render>
-          <DefaultReviewersList defaultReviewersList={defaultReviewersList} setFieldValue={setFieldValue} />
+          {formikDefaultReviewersListError && <Text color={Color.RED_350}>{formikDefaultReviewersListError}</Text>}
 
-          <FormInput.CheckBox
-            className={css.checkboxLabel}
-            label={getString('protectionRules.requireMinDefaultReviewersTitle')}
-            name={'requireMinDefaultReviewers'}
-            onChange={e => {
-              if ((e.target as HTMLInputElement).checked) {
-                setFieldValue('minDefaultReviewers', 1)
-                setFieldValue('defaultReviewersEnabled', true)
-              }
-            }}
+          <NormalizedPrincipalsList
+            fieldName={'defaultReviewersList'}
+            list={defaultReviewersList}
+            setFieldValue={formik.setFieldValue}
           />
-          <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
-            {getString('protectionRules.requireMinDefaultReviewersContent')}
-          </Text>
+
+          <Container padding={{ top: 'large' }}>
+            <FormInput.CheckBox
+              className={css.checkboxLabel}
+              label={getString('protectionRules.requireMinDefaultReviewersTitle')}
+              name={'requireMinDefaultReviewers'}
+              onChange={e => {
+                if ((e.target as HTMLInputElement).checked) {
+                  setFieldValue('minDefaultReviewers', 1)
+                  setFieldValue('defaultReviewersEnabled', true)
+                }
+              }}
+            />
+            <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
+              {getString('protectionRules.requireMinDefaultReviewersContent')}
+            </Text>
+          </Container>
 
           {requireMinDefaultReviewers && (
             <Container padding={{ left: 'xlarge', top: 'medium' }}>

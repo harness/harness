@@ -14,29 +14,38 @@
  * limitations under the License.
  */
 
-import React from 'react'
+import React, { useMemo, useState } from 'react'
 import cx from 'classnames'
 import { Container, FlexExpander, FormInput, Layout, SelectOption, Text } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
 import type { FormikProps } from 'formik'
 import { Classes, Popover, PopoverInteractionKind, PopoverPosition } from '@blueprintjs/core'
+import { useGet } from 'restful-react'
 import { useStrings } from 'framework/strings'
 import { ProtectionRulesType } from 'utils/GitUtils'
 import type { RulesFormPayload } from 'components/ProtectionRules/ProtectionRulesUtils'
-import DefaultReviewersSection from './DefaultReviewersSection'
+import { getConfig } from 'services/config'
+import { ScopeEnum } from 'utils/Utils'
+import type { RepoRepositoryOutput } from 'services/code'
+import DefaultReviewersSection, { type DefaultReviewerProps } from './DefaultReviewersSection'
 import css from '../ProtectionRulesForm.module.scss'
 
-const BranchRulesForm = (props: {
-  statusOptions: SelectOption[]
-  setSearchStatusTerm: React.Dispatch<React.SetStateAction<string>>
+const BranchRulesForm = ({
+  defaultReviewerProps,
+  formik,
+  currentRuleScope,
+  repoMetadata,
+  ruleType,
+  scopeRef
+}: {
+  currentRuleScope: ScopeEnum
+  defaultReviewerProps: DefaultReviewerProps
   formik: FormikProps<RulesFormPayload>
-  defaultReviewerProps: {
-    setSearchTerm: React.Dispatch<React.SetStateAction<string>>
-    userPrincipalOptions: SelectOption[]
-  }
+  repoMetadata?: RepoRepositoryOutput
+  ruleType: ProtectionRulesType
+  scopeRef: string
 }) => {
-  const { formik, defaultReviewerProps, setSearchStatusTerm, statusOptions } = props
   const { getString } = useStrings()
   const { setFieldValue } = formik
   const {
@@ -48,6 +57,33 @@ const BranchRulesForm = (props: {
     requireStatusChecks,
     statusChecks
   } = formik.values
+  const [searchStatusTerm, setSearchStatusTerm] = useState('')
+
+  const getRecentChecksPath = () =>
+    currentRuleScope === ScopeEnum.REPO_SCOPE && repoMetadata
+      ? `/repos/${repoMetadata?.path}/+/checks/recent`
+      : `/spaces/${scopeRef}/+/checks/recent`
+  const { data: statuses } = useGet<string[]>({
+    base: getConfig('code/api/v1'),
+    path: getRecentChecksPath(),
+    queryParams: {
+      query: searchStatusTerm,
+      ...(!repoMetadata && {
+        recursive: true
+      })
+    },
+    debounce: 500,
+    lazy: ruleType !== ProtectionRulesType.BRANCH
+  })
+
+  const statusOptions: SelectOption[] = useMemo(
+    () =>
+      statuses?.map(status => ({
+        value: status,
+        label: status
+      })) || [],
+    [statuses]
+  )
 
   const filteredStatusOptions = statusOptions.filter(
     (item: SelectOption) => !statusChecks?.includes(item.value as string)

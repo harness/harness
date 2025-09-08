@@ -13798,9 +13798,9 @@ components:
           type: string
         title:
           type: string
-        user_group_reviewer_identifiers:
+        user_group_reviewer_ids:
           items:
-            type: string
+            type: integer
           nullable: true
           type: array
       type: object
@@ -14050,6 +14050,9 @@ components:
     OpenapiMoveRepoRequest:
       properties:
         identifier:
+          nullable: true
+          type: string
+        parent_ref:
           nullable: true
           type: string
         uid:
@@ -14527,6 +14530,10 @@ components:
     ProtectionDefReviewers:
       properties:
         default_reviewer_ids:
+          items:
+            type: integer
+          type: array
+        default_user_group_reviewer_ids:
           items:
             type: integer
           type: array
@@ -15580,6 +15587,8 @@ components:
     TypesInfraProviderResource:
       properties:
         config_identifier:
+          type: string
+        config_name:
           type: string
         cpu:
           nullable: true
@@ -16667,6 +16676,8 @@ components:
           type: integer
         decision:
           $ref: '#/components/schemas/EnumPullReqReviewDecision'
+        sha:
+          type: string
         updated:
           type: integer
         user_decisions:

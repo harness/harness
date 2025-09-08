@@ -480,7 +480,7 @@ export interface OpenapiCreatePullReqRequest {
   source_repo_ref?: string
   target_branch?: string
   title?: string
-  user_group_reviewer_identifiers?: string[] | null
+  user_group_reviewer_ids?: number[] | null
 }
 
 export interface OpenapiCreateRepoWebhookRequest {
@@ -624,6 +624,7 @@ export interface OpenapiMergePullReq {
 
 export interface OpenapiMoveRepoRequest {
   identifier?: string | null
+  parent_ref?: string | null
   uid?: string | null
 }
 
@@ -876,6 +877,7 @@ export interface ProtectionDefPush {
 
 export interface ProtectionDefReviewers {
   default_reviewer_ids?: number[]
+  default_user_group_reviewer_ids?: number[]
   request_code_owners?: boolean
 }
 
@@ -1470,6 +1472,7 @@ export interface TypesInfraProviderConfig {
 
 export interface TypesInfraProviderResource {
   config_identifier?: string
+  config_name?: string
   cpu?: string | null
   created?: number
   deleted?: number | null
@@ -2055,6 +2058,7 @@ export interface TypesUserGroupReviewer {
   added_by?: TypesPrincipalInfo
   created?: number
   decision?: EnumPullReqReviewDecision
+  sha?: string
   updated?: number
   user_decisions?: TypesUserGroupReviewerDecision[]
   user_group?: TypesUserGroupInfo

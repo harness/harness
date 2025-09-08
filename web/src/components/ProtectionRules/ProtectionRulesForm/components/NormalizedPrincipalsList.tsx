@@ -20,32 +20,38 @@ import { Container, FlexExpander, Layout, Text } from '@harnessio/uicore'
 import { PopoverPosition } from '@blueprintjs/core'
 import { isEmpty } from 'lodash-es'
 import { Color } from '@harnessio/design-system'
-import type { NormalizedPrincipal, PrincipalType } from 'utils/Utils'
+import type { NormalizedPrincipal } from 'utils/Utils'
+import { renderPrincipalIcon } from 'components/SearchDropDown/SearchDropDown'
+import { StringKeys, useStrings } from 'framework/strings'
 import css from '../ProtectionRulesForm.module.scss'
 
-const BypassList = (props: {
-  renderPrincipalIcon: (type: PrincipalType, displayName: string) => JSX.Element
-  bypassList?: NormalizedPrincipal[]
+const NormalizedPrincipalsList = ({
+  fieldName,
+  list,
+  setFieldValue
+}: {
+  fieldName: string
+  list?: NormalizedPrincipal[]
   setFieldValue: (field: string, value: any, shouldValidate?: boolean) => void
 }) => {
-  const { bypassList, setFieldValue, renderPrincipalIcon } = props
+  const { getString } = useStrings()
 
   return (
-    <Container>
-      {!isEmpty(bypassList) && (
+    <>
+      {!isEmpty(list) && (
         <Text color={Color.GREY_500} padding={{ top: 'medium', bottom: 'small' }} font={{ weight: 'semi-bold' }}>
-          Bypass List ({bypassList?.length})
+          {getString(`protectionRules.${fieldName}` as StringKeys)} ({list?.length})
         </Text>
       )}
       <Container className={css.bypassContainer}>
-        {bypassList?.map((userObj, idx: number) => {
+        {list?.map((userObj, idx: number) => {
           const { id, display_name, email_or_identifier, type } = userObj
           return (
             <Layout.Horizontal
               key={`${display_name}-${idx}-${id}-${email_or_identifier}`}
               flex={{ align: 'center-center' }}
               padding={{ right: 'small', left: 'small' }}>
-              {renderPrincipalIcon(type as PrincipalType, display_name)}
+              {renderPrincipalIcon(type, display_name)}
               <Text
                 style={{ cursor: 'pointer' }}
                 tooltip={email_or_identifier}
@@ -59,8 +65,8 @@ const BypassList = (props: {
               <Icon
                 name="code-close"
                 onClick={() => {
-                  const filteredData = bypassList.filter(item => !(item.id === id))
-                  setFieldValue('bypassList', filteredData)
+                  const filteredData = list.filter(item => !(item.id === id))
+                  setFieldValue(fieldName, filteredData)
                 }}
                 className={css.codeClose}
               />
@@ -68,8 +74,8 @@ const BypassList = (props: {
           )
         })}
       </Container>
-    </Container>
+    </>
   )
 }
 
-export default BypassList
+export default NormalizedPrincipalsList

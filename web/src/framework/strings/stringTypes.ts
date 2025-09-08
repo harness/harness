@@ -896,8 +896,7 @@ export interface StringsMap {
   'protectionRules.createRefBlockText': string
   'protectionRules.createRule': string
   'protectionRules.defaultBranch': string
-  'protectionRules.defaultReviewerWarning': string
-  'protectionRules.defaultReviewersWarning': string
+  'protectionRules.defaultReviewersList': string
   'protectionRules.deleteProtectionRule': string
   'protectionRules.deleteRefAlertBtn': string
   'protectionRules.deleteRefAlertText': string
@@ -1103,6 +1102,7 @@ export interface StringsMap {
   selectToViewMore: string
   selectUsers: string
   selectUsersAndServiceAcc: string
+  selectUsersAndUserGroups: string
   selectUsersUserGroupsAndServiceAcc: string
   'semanticSearch.sampleQueries': string
   serverResponse: string

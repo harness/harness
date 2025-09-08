@@ -1057,6 +1057,7 @@ protectionRules:
   repoSelectionHint: If no repositories are selected, the rule applies to all
   defaultBranch: Default branch
   bypassList: Bypass List
+  defaultReviewersList: Default Reviewers List
   newRule: New {{ruleType}} rule
   allRepoOwners: Allow users with edit permission on the repository to bypass
   protectionSelectAll: 'Rules: Select all that apply'
@@ -1127,8 +1128,6 @@ protectionRules:
   requireMinDefaultReviewersContent: Require approval on pull requests from a minimum number of default reviewers
   atLeastMinReviewers: 'Select at least {{count}} default reviewers'
   atLeastMinReviewer: 'Select at least {{count}} default reviewer'
-  defaultReviewerWarning: Pull requests authored by the selected default reviewer will skip the required default reviewer check as there aren't enough default reviewers to satisfy the condition - consider adding additional default reviewers.
-  defaultReviewersWarning: Pull requests authored by the selected default reviewers will have the required default reviewer check reduced by one as there aren't enough default reviewers to satisfy the condition - consider adding additional default reviewers.
 codeOwner:
   title: Code Owner
   changesRequested: '{count} {count|1:change,changes} requested'
@@ -1140,6 +1139,7 @@ comingSoon: Coming soon...
 enterANumber: Enter a number
 selectUsers: Select Users
 selectReviewers: Select Reviewers
+selectUsersAndUserGroups: Select Users and User Groups
 selectUsersAndServiceAcc: Select Users and Service Accounts
 selectUsersUserGroupsAndServiceAcc: Select Users, User Groups and Service Accounts
 selectStatuses: Select Statuses

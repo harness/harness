@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import cx from 'classnames'
 import * as yup from 'yup'
 import {
-  Avatar,
   Button,
   ButtonVariation,
   Container,
@@ -26,15 +25,13 @@ import {
   Formik,
   FormikForm,
   Layout,
-  SelectOption,
   Text,
   useToaster
 } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'
-import { Icon } from '@harnessio/icons'
 import { useHistory, useParams } from 'react-router-dom'
 import { useGet, useMutate } from 'restful-react'
-import { capitalize } from 'lodash-es'
+import { capitalize, isEmpty } from 'lodash-es'
 import { useStrings } from 'framework/strings'
 import { MergeStrategy, ProtectionRulesType, RulesTargetType, SettingsTab } from 'utils/GitUtils'
 import {
@@ -62,13 +59,13 @@ import { useAppContext } from 'AppContext'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { getConfig } from 'services/config'
 import type { Identifier } from 'utils/types'
-import SearchDropDown from 'components/SearchDropDown/SearchDropDown'
+import SearchDropDown, { renderPrincipalIcon } from 'components/SearchDropDown/SearchDropDown'
 import { useQueryParams } from 'hooks/useQueryParams'
 import BranchRulesForm from './components/BranchRulesForm'
-import BypassList from './components/BypassList'
 import TagRulesForm from './components/TagRulesForm'
 import {
   convertToTargetList,
+  getFilteredNormalizedPrincipalOptions,
   getPayload,
   rulesFormInitialPayload,
   RulesFormPayload,
@@ -77,6 +74,7 @@ import {
 } from '../ProtectionRulesUtils'
 import TargetPatternsSection from './components/TargetPatternsSection'
 import TargetRepositoriesSection from './components/TargetRepositoriesSection'
+import NormalizedPrincipalsList from './components/NormalizedPrincipalsList'
 import css from './ProtectionRulesForm.module.scss'
 
 const ProtectionRulesForm = (props: {
@@ -94,7 +92,6 @@ const ProtectionRulesForm = (props: {
   const { currentPageScope, editMode = false, repoMetadata } = props
   const { getString } = useStrings()
   const [searchTerm, setSearchTerm] = useState('')
-  const [searchStatusTerm, setSearchStatusTerm] = useState('')
   const currentRuleScope = getScopeFromParams(params, standalone, repoMetadata)
   const { scopeRef } =
     typeof currentRuleScope === 'number' ? getScopeData(space, currentRuleScope, standalone) : { scopeRef: space }
@@ -161,59 +158,6 @@ const ProtectionRulesForm = (props: {
     [principals, userGroups]
   )
 
-  const getRecentChecksPath = () =>
-    currentRuleScope === ScopeEnum.REPO_SCOPE && repoMetadata
-      ? `/repos/${repoMetadata?.path}/+/checks/recent`
-      : `/spaces/${scopeRef}/+/checks/recent`
-  const { data: statuses } = useGet<string[]>({
-    base: getConfig('code/api/v1'),
-    path: getRecentChecksPath(),
-    queryParams: {
-      query: searchStatusTerm,
-      ...(!repoMetadata && {
-        recursive: true
-      })
-    },
-    debounce: 500,
-    lazy: ruleType !== ProtectionRulesType.BRANCH
-  })
-
-  const statusOptions: SelectOption[] = useMemo(
-    () =>
-      statuses?.map(status => ({
-        value: status,
-        label: status
-      })) || [],
-    [statuses]
-  )
-
-  // userPrincipalOptions used in default reviewers
-  const userPrincipalOptions: SelectOption[] = useMemo(
-    () =>
-      principals?.reduce<SelectOption[]>((acc, principal) => {
-        if (principal?.type === PrincipalType.USER) {
-          const { id, uid, display_name, email } = principal
-          acc.push({
-            value: `${id?.toString()} ${uid}`,
-            label: `${display_name} (${email})`
-          })
-        }
-        return acc
-      }, []) || [],
-    [principals]
-  )
-
-  const getBypassListOptions = useCallback(
-    (currentBypassList?: NormalizedPrincipal[]): SelectOption[] =>
-      combinedOptions
-        ?.filter(item => !currentBypassList?.some(principal => principal.id === item.id))
-        .map(principal => ({
-          value: JSON.stringify(principal),
-          label: `${principal.display_name} (${principal.email_or_identifier})`
-        })) || [],
-    [combinedOptions]
-  )
-
   const handleSubmit = async (operation: Promise<OpenapiRule>, successMessage: string, resetForm: () => void) => {
     try {
       await operation
@@ -256,9 +200,9 @@ const ProtectionRulesForm = (props: {
       const { bypass } = definition || {}
 
       const bypassListUsers = bypass?.user_ids?.map((id: number) => usersMap?.[id])
-      const bypassUserGroups = bypass?.user_group_ids?.map(id => userGroupsMap?.[id])
+      const bypassListUserGroups = bypass?.user_group_ids?.map(id => userGroupsMap?.[id])
       const transformedBypassList = transformDataToArray(bypassListUsers || [])
-      const transformedUserGroupsBypassList = transformDataToArray(bypassUserGroups || [])
+      const transformedUserGroupsBypassList = transformDataToArray(bypassListUserGroups || [])
       const bypassList = combineAndNormalizePrincipalsAndGroups(transformedBypassList, transformedUserGroupsBypassList)
 
       // Create a new array based on the "include" key from the JSON object and the strings array
@@ -294,10 +238,15 @@ const ProtectionRulesForm = (props: {
         case ProtectionRulesType.BRANCH: {
           const { lifecycle, pullreq } = (definition as ProtectionBranch) || {}
 
-          const defaultReviewersUsers = pullreq?.reviewers?.default_reviewer_ids?.map((id: number) => usersMap?.[id])
-          const transformedDefaultReviewersArray = transformDataToArray(defaultReviewersUsers || [])
-          const defaultReviewersList = transformedDefaultReviewersArray?.map(
-            user => `${user.id} ${user.display_name} (${user.email})`
+          const defaultReviewerUsers = pullreq?.reviewers?.default_reviewer_ids?.map((id: number) => usersMap?.[id])
+          const defaultReviewerUserGroups = pullreq?.reviewers?.default_user_group_reviewer_ids?.map(
+            (id: number) => userGroupsMap?.[id]
+          )
+          const transformedDefaultReviewers = transformDataToArray(defaultReviewerUsers || [])
+          const transformedDefaultUserGroupReviewers = transformDataToArray(defaultReviewerUserGroups || [])
+          const defaultReviewersList = combineAndNormalizePrincipalsAndGroups(
+            transformedDefaultReviewers,
+            transformedDefaultUserGroupReviewers
           )
 
           const minReviewerCheck = (pullreq?.approvals?.require_minimum_count as number) > 0
@@ -310,7 +259,7 @@ const ProtectionRulesForm = (props: {
           return {
             ...commonRulesForm,
             targetDefaultBranch: pattern?.default,
-            defaultReviewersEnabled: (pullreq?.reviewers?.default_reviewer_ids?.length || 0) > 0,
+            defaultReviewersEnabled: !isEmpty(defaultReviewersList),
             defaultReviewersList: defaultReviewersList,
             requireMinReviewers: minReviewerCheck,
             requireMinDefaultReviewers: minDefaultReviewerCheck,
@@ -414,19 +363,7 @@ const ProtectionRulesForm = (props: {
       {formik => {
         const { bypassList = [] } = formik.values
 
-        const bypassListOptions = getBypassListOptions(bypassList)
-
-        const renderPrincipalIcon = (type: PrincipalType, displayName: string) => {
-          switch (type) {
-            case PrincipalType.USER_GROUP:
-              return <Icon name="user-groups" className={cx(css.avatar, css.icon, css.ugicon)} size={24} />
-            case PrincipalType.SERVICE_ACCOUNT:
-              return <Icon name="service-accounts" className={cx(css.avatar, css.icon, css.saicon)} size={24} />
-            case PrincipalType.USER:
-            default:
-              return <Avatar className={css.avatar} name={displayName} size="normal" hoverCard={false} />
-          }
-        }
+        const bypassListOptions = getFilteredNormalizedPrincipalOptions(combinedOptions, bypassList)
 
         return (
           <FormikForm>
@@ -530,7 +467,7 @@ const ProtectionRulesForm = (props: {
                 <FormInput.CheckBox label={getString('protectionRules.allRepoOwners')} name={'allRepoOwners'} />
                 <SearchDropDown
                   searchTerm={searchTerm}
-                  placeholder={standalone ? getString('selectUsers') : getString('selectUsersUserGroupsAndServiceAcc')}
+                  placeholder={getString('selectUsersUserGroupsAndServiceAcc')}
                   className={css.widthContainer}
                   onChange={setSearchTerm}
                   options={bypassListOptions}
@@ -539,7 +476,7 @@ const ProtectionRulesForm = (props: {
                     const { id, type, display_name, email_or_identifier } = JSON.parse(item.value.toString())
                     return (
                       <Layout.Horizontal
-                        key={id}
+                        key={`${id}-${email_or_identifier}`}
                         onClick={handleClick}
                         padding={{ top: 'xsmall', bottom: 'xsmall' }}
                         flex={{ align: 'center-center' }}
@@ -563,9 +500,9 @@ const ProtectionRulesForm = (props: {
                     formik.setFieldValue('bypassList', uniqueArr)
                   }}
                 />
-                <BypassList
-                  renderPrincipalIcon={renderPrincipalIcon}
-                  bypassList={bypassList}
+                <NormalizedPrincipalsList
+                  fieldName={'bypassList'}
+                  list={bypassList}
                   setFieldValue={formik.setFieldValue}
                 />
               </Container>
@@ -577,11 +514,15 @@ const ProtectionRulesForm = (props: {
                 {ruleType === ProtectionRulesType.BRANCH ? (
                   <BranchRulesForm
                     formik={formik}
-                    statusOptions={statusOptions}
-                    setSearchStatusTerm={setSearchStatusTerm}
+                    currentRuleScope={currentRuleScope}
+                    repoMetadata={repoMetadata}
+                    ruleType={ruleType}
+                    scopeRef={scopeRef}
                     defaultReviewerProps={{
+                      loading: loadingPrincipals || loadingUsersGroups,
+                      searchTerm,
                       setSearchTerm,
-                      userPrincipalOptions
+                      normalizedPrincipalOptions: combinedOptions
                     }}
                   />
                 ) : (

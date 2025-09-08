@@ -16,9 +16,13 @@
 
 /* eslint-disable */
 // This is an auto-generated file
+export declare const avatar: string
 export declare const dropDownContainer: string
+export declare const icon: string
 export declare const iconClass: string
 export declare const popover: string
 export declare const popoverHeight: string
 export declare const rightIconClass: string
+export declare const saicon: string
 export declare const textInputWrapper: string
+export declare const ugicon: string
