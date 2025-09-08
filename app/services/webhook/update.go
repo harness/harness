@@ -124,17 +124,19 @@ func (s *Service) Update(
 		return nil, err
 	}
 
-	resourceType, nameKey := getWebhookAuditInfo(parentResource.Type)
-	err = s.auditService.Log(ctx,
-		*principal,
-		audit.NewResource(resourceType, hook.Identifier, nameKey, parentResource.Identifier),
-		audit.ActionUpdated,
-		parentResource.Path,
-		audit.WithOldObject(oldHook),
-		audit.WithNewObject(hook),
-	)
-	if err != nil {
-		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for update webhook operation: %s", err)
+	if shouldAuditWebhook(typ) {
+		resourceType, nameKey := getWebhookAuditInfo(parentResource.Type)
+		err = s.auditService.Log(ctx,
+			*principal,
+			audit.NewResource(resourceType, hook.Identifier, nameKey, parentResource.Identifier),
+			audit.ActionUpdated,
+			parentResource.Path,
+			audit.WithOldObject(oldHook),
+			audit.WithNewObject(hook),
+		)
+		if err != nil {
+			log.Ctx(ctx).Warn().Msgf("failed to insert audit log for update webhook operation: %s", err)
+		}
 	}
 
 	s.sendSSE(ctx, parentResource, enum.SSETypeWebhookUpdated, hook)

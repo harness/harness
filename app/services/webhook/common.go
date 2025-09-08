@@ -133,6 +133,10 @@ func ConvertTriggers(vals []string) []enum.WebhookTrigger {
 	return res
 }
 
+func shouldAuditWebhook(webhookType enum.WebhookType) bool {
+	return webhookType == enum.WebhookTypeExternal
+}
+
 func getWebhookAuditInfo(parentType enum.WebhookParent) (audit.ResourceType, string) {
 	switch parentType {
 	case enum.WebhookParentSpace:

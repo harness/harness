@@ -45,16 +45,18 @@ func (s *Service) Delete(
 		return err
 	}
 
-	resourceType, nameKey := getWebhookAuditInfo(parentResource.Type)
-	err = s.auditService.Log(ctx,
-		*principal,
-		audit.NewResource(resourceType, hook.Identifier, nameKey, parentResource.Identifier),
-		audit.ActionDeleted,
-		parentResource.Path,
-		audit.WithOldObject(hook),
-	)
-	if err != nil {
-		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for delete webhook operation: %s", err)
+	if shouldAuditWebhook(hook.Type) {
+		resourceType, nameKey := getWebhookAuditInfo(parentResource.Type)
+		err = s.auditService.Log(ctx,
+			*principal,
+			audit.NewResource(resourceType, hook.Identifier, nameKey, parentResource.Identifier),
+			audit.ActionDeleted,
+			parentResource.Path,
+			audit.WithOldObject(hook),
+		)
+		if err != nil {
+			log.Ctx(ctx).Warn().Msgf("failed to insert audit log for delete webhook operation: %s", err)
+		}
 	}
 
 	s.sendSSE(ctx, parentResource, enum.SSETypeWebhookDeleted, hook)

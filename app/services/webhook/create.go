@@ -144,16 +144,18 @@ func (s *Service) Create(
 		return nil, fmt.Errorf("failed to store webhook: %w", err)
 	}
 
-	resourceType, nameKey := getWebhookAuditInfo(parentResource.Type)
-	err = s.auditService.Log(ctx,
-		*principal,
-		audit.NewResource(resourceType, hook.Identifier, nameKey, parentResource.Identifier),
-		audit.ActionCreated,
-		parentResource.Path,
-		audit.WithNewObject(hook),
-	)
-	if err != nil {
-		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for create webhook operation: %s", err)
+	if shouldAuditWebhook(typ) {
+		resourceType, nameKey := getWebhookAuditInfo(parentResource.Type)
+		err = s.auditService.Log(ctx,
+			*principal,
+			audit.NewResource(resourceType, hook.Identifier, nameKey, parentResource.Identifier),
+			audit.ActionCreated,
+			parentResource.Path,
+			audit.WithNewObject(hook),
+		)
+		if err != nil {
+			log.Ctx(ctx).Warn().Msgf("failed to insert audit log for create webhook operation: %s", err)
+		}
 	}
 
 	s.sendSSE(ctx, parentResource, enum.SSETypeWebhookCreated, hook)
