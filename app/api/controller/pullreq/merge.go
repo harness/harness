@@ -316,7 +316,7 @@ func (c *Controller) Merge(
 				return nil, nil, fmt.Errorf("failed merge check with method=%s: %w", in.Method, err)
 			}
 
-			pr, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
+			pr, err = c.pullreqStore.UpdateMergeCheckMetadataOptLock(ctx, pr, func(pr *types.PullReq) error {
 				if pr.SourceSHA != mergeOutput.HeadSHA.String() {
 					return errors.New("source SHA has changed")
 				}
@@ -515,7 +515,7 @@ func (c *Controller) Merge(
 	}
 	//nolint:nestif
 	if mergeOutput.MergeSHA.String() == "" || len(mergeOutput.ConflictFiles) > 0 {
-		_, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
+		_, err = c.pullreqStore.UpdateMergeCheckMetadataOptLock(ctx, pr, func(pr *types.PullReq) error {
 			if pr.SourceSHA != mergeOutput.HeadSHA.String() {
 				return errors.New("source SHA has changed")
 			}

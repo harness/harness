@@ -357,6 +357,54 @@ func (s *PullReqStore) Update(ctx context.Context, pr *types.PullReq) error {
 	return nil
 }
 
+// updateMergeCheckMetadata updates the pull request merge check metadata only without updating updated time stamp.
+func (s *PullReqStore) updateMergeCheckMetadata(ctx context.Context, pr *types.PullReq) error {
+	const sqlQuery = `
+	UPDATE pullreqs
+	SET
+	     pullreq_version = :pullreq_version
+		,pullreq_merge_target_sha = :pullreq_merge_target_sha
+		,pullreq_merge_base_sha = :pullreq_merge_base_sha
+		,pullreq_merge_sha = :pullreq_merge_sha
+		,pullreq_merge_check_status = :pullreq_merge_check_status
+		,pullreq_merge_conflicts = :pullreq_merge_conflicts
+		,pullreq_rebase_check_status = :pullreq_rebase_check_status
+		,pullreq_rebase_conflicts = :pullreq_rebase_conflicts
+		,pullreq_commit_count = :pullreq_commit_count
+		,pullreq_file_count = :pullreq_file_count
+		,pullreq_additions = :pullreq_additions
+		,pullreq_deletions = :pullreq_deletions
+	WHERE pullreq_id = :pullreq_id AND pullreq_version = :pullreq_version - 1`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dbPR := mapInternalPullReq(pr)
+	dbPR.Version++
+
+	query, arg, err := db.BindNamed(sqlQuery, dbPR)
+	if err != nil {
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind pull request object")
+	}
+
+	result, err := db.ExecContext(ctx, query, arg...)
+	if err != nil {
+		return database.ProcessSQLErrorf(ctx, err, "Failed to update pull request")
+	}
+
+	count, err := result.RowsAffected()
+	if err != nil {
+		return database.ProcessSQLErrorf(ctx, err, "Failed to get number of updated rows")
+	}
+
+	if count == 0 {
+		return gitness_store.ErrVersionConflict
+	}
+
+	*pr = *s.mapPullReq(ctx, dbPR)
+
+	return nil
+}
+
 // UpdateOptLock the pull request details using the optimistic locking mechanism.
 func (s *PullReqStore) UpdateOptLock(ctx context.Context, pr *types.PullReq,
 	mutateFn func(pr *types.PullReq) error,
@@ -370,6 +418,33 @@ func (s *PullReqStore) UpdateOptLock(ctx context.Context, pr *types.PullReq,
 		}
 
 		err = s.Update(ctx, &dup)
+		if err == nil {
+			return &dup, nil
+		}
+		if !errors.Is(err, gitness_store.ErrVersionConflict) {
+			return nil, err
+		}
+
+		pr, err = s.Find(ctx, pr.ID)
+		if err != nil {
+			return nil, err
+		}
+	}
+}
+
+// UpdateMergeCheckMetadataOptLock updates the pull request merge check metadata using the optimistic locking mechanism.
+func (s *PullReqStore) UpdateMergeCheckMetadataOptLock(ctx context.Context, pr *types.PullReq,
+	mutateFn func(pr *types.PullReq) error,
+) (*types.PullReq, error) {
+	for {
+		dup := *pr
+
+		err := mutateFn(&dup)
+		if err != nil {
+			return nil, err
+		}
+
+		err = s.updateMergeCheckMetadata(ctx, &dup)
 		if err == nil {
 			return &dup, nil
 		}

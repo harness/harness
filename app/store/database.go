@@ -419,6 +419,13 @@ type (
 			mutateFn func(pr *types.PullReq) error,
 		) (*types.PullReq, error)
 
+		// UpdateMergeCheckMetadataOptLock updates only the pull request's merge check metadata
+		// using the optimistic locking mechanism without updating the updated field.
+		UpdateMergeCheckMetadataOptLock(
+			ctx context.Context, pr *types.PullReq,
+			mutateFn func(pr *types.PullReq) error,
+		) (*types.PullReq, error)
+
 		// UpdateActivitySeq the pull request's activity sequence number.
 		// It will set new values to the ActivitySeq, Version and Updated fields.
 		UpdateActivitySeq(ctx context.Context, pr *types.PullReq) (*types.PullReq, error)
