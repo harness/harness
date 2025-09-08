@@ -148,12 +148,18 @@ export const DigestNameCell: CellType = ({ value, row }) => {
   const label = getShortDigest(value)
   const routes = useRoutes()
   const { original } = row
-  const { packageType, artifactType, name } = original
+  const { packageType, artifactType, name, isQuarantined, quarantineReason } = original
   const params = useDecodedParams<ArtifactDetailsPathParams>()
   return (
     <Layout.Horizontal spacing="small">
       <TableCells.LinkCell
-        prefix={<Icon name="store-artifact-bundle" size={24} />}
+        prefix={
+          isQuarantined ? (
+            <TableCells.QuarantineIcon reason={quarantineReason} />
+          ) : (
+            <Icon name="store-artifact-bundle" size={24} />
+          )
+        }
         label={label}
         linkTo={routes.toARRedirect({
           packageType: packageType as RepositoryPackageType,
