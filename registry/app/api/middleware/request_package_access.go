@@ -31,6 +31,7 @@ func RequestPackageAccess(
 			err := packageHandler.GetRegistryCheckAccess(r.Context(), r, reqPermissions...)
 			if err != nil {
 				render.TranslatedUserError(r.Context(), w, err)
+				return
 			}
 
 			next.ServeHTTP(w, r.WithContext(r.Context()))

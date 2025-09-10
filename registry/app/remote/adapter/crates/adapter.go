@@ -20,8 +20,10 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/registry/app/common/lib/errors"
 	"github.com/harness/gitness/registry/app/metadata/cargo"
 	adp "github.com/harness/gitness/registry/app/remote/adapter"
 	"github.com/harness/gitness/registry/app/remote/adapter/native"
@@ -94,6 +96,13 @@ func (a *adapter) GetRegistryConfig(ctx context.Context) (*cargo.RegistryConfig,
 func (a *adapter) GetPackageFile(ctx context.Context, filepath string) (io.ReadCloser, error) {
 	_, readCloser, err := a.GetFile(ctx, filepath)
 	if err != nil {
+		code := errors.ErrCode(err)
+		if code == errors.NotFoundCode {
+			return nil, usererror.NotFoundf("failed to get package file %s", filepath)
+		}
+		if code == errors.ForbiddenCode {
+			return nil, usererror.Forbidden(fmt.Sprintf("failed to get package file %s", filepath))
+		}
 		return nil, err
 	}
 	return readCloser, nil

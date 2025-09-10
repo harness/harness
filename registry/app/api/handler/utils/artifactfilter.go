@@ -23,24 +23,21 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func IsPatternAllowed(
-	allowedPattern pq.StringArray,
-	blockedPattern pq.StringArray, artifact string,
-) (bool, error) {
+func PatternAllowed(allowedPattern pq.StringArray, blockedPattern pq.StringArray, artifact string) error {
 	allowedPatterns := []string(allowedPattern)
 	blockedPatterns := []string(blockedPattern)
 
 	if len(blockedPatterns) > 0 {
 		flag, err := matchPatterns(blockedPatterns, artifact)
 		if err != nil {
-			return false, fmt.Errorf(
+			return fmt.Errorf(
 				"failed to match blocked patterns for artifact %s: %w",
 				artifact, err,
 			)
 		}
 		if flag {
-			return false, errors.New(
-				"failed because artifact seems to be matching blocked patterns configured on repository",
+			return errors.New(
+				"failed because artifact matches blocked patterns configured on repository",
 			)
 		}
 	}
@@ -48,19 +45,19 @@ func IsPatternAllowed(
 	if len(allowedPatterns) > 0 {
 		flag, err := matchPatterns(allowedPatterns, artifact)
 		if err != nil {
-			return false, fmt.Errorf(
+			return fmt.Errorf(
 				"failed to match allowed patterns for artifact %s: %w",
 				artifact, err,
 			)
 		}
 
 		if !flag {
-			return false, errors.New(
-				"failed because artifact doesn't seems to be matching allowed patterns configured on repository",
+			return errors.New(
+				"failed because artifact doesn't match with allowed patterns configured on repository",
 			)
 		}
 	}
-	return true, nil
+	return nil
 }
 
 func matchPatterns(

@@ -59,7 +59,7 @@ func GetRegistryCheckAccess(
 	}
 
 	if err = apiauth.CheckRegistry(ctx, authorizer, session, permissionChecks...); err != nil {
-		err = fmt.Errorf("registgry access check failed: %w", err)
+		err = fmt.Errorf("registry access check failed: %w", err)
 		log.Ctx(ctx).Error().Msgf("Error: %v", err)
 		return err
 	}

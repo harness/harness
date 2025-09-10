@@ -62,7 +62,7 @@ func CheckAll(
 	ctx context.Context, authorizer authz.Authorizer, session *auth.Session,
 	permissionChecks ...types.PermissionCheck,
 ) error {
-	authenticated, err := authorizer.CheckAll(
+	hasPermission, err := authorizer.CheckAll(
 		ctx,
 		session,
 		permissionChecks...,
@@ -70,8 +70,11 @@ func CheckAll(
 	if err != nil {
 		return err
 	}
+	if !hasPermission {
+		return ErrForbidden
+	}
 
-	return CheckSessionAuth(session, authenticated)
+	return CheckSessionAuth(session, hasPermission)
 }
 
 // CheckSessionAuth returns nil if the user is authenticated.

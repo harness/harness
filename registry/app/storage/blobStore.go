@@ -32,14 +32,20 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+const (
+	HeaderContentDigest = "Content-Digest"
+)
+
 type genericBlobStore struct {
 	driver        driver.StorageDriver
 	rootParentRef string
 	redirect      bool
 }
 
-func (bs *genericBlobStore) Get(ctx context.Context,
-	filePath string, size int64, filename string) (*FileReader, string, error) {
+func (bs *genericBlobStore) Get(
+	ctx context.Context,
+	filePath string, size int64, filename string,
+) (*FileReader, string, error) {
 	dcontext.GetLogger(ctx, log.Ctx(ctx).Debug()).Msg("(*genericBlobStore).Get")
 
 	if bs.redirect {

@@ -86,7 +86,7 @@ type ArtifactRegistry interface {
 	// Download the file
 	GetFile(ctx context.Context, filePath string) (*commons.ResponseHeaders, io.ReadCloser, error)
 	// Check existence of file
-	HeadFile(ctx context.Context, filePath string) (*commons.ResponseHeaders, bool, error)
+	HeadFile(ctx context.Context, filePath string) (*commons.ResponseHeaders, error)
 }
 
 // RegisterFactory registers one adapter factory to the registry.

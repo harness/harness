@@ -163,7 +163,7 @@ func (n NodeDao) CountByPathAndRegistryID(
 	var count int64
 	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
 	if err != nil {
-		return 0, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing count query")
+		return 0, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing node count query")
 	}
 	return count, nil
 }
@@ -205,7 +205,7 @@ func (n NodeDao) Create(ctx context.Context, node *types.Node) error {
 		if errors.Is(err, sql.ErrNoRows) || errors.Is(err, store2.ErrDuplicate) {
 			return nil
 		}
-		return databaseg.ProcessSQLErrorf(ctx, err, "Insert query failed")
+		return databaseg.ProcessSQLErrorf(ctx, err, "Insert node query failed")
 	}
 	return nil
 }
@@ -228,7 +228,30 @@ func (n NodeDao) DeleteByNodePathAndRegistryID(ctx context.Context, nodePath str
 
 	_, err = db.ExecContext(ctx, delQuery, delArgs...)
 	if err != nil {
-		return databaseg.ProcessSQLErrorf(ctx, err, "the delete query failed")
+		return databaseg.ProcessSQLErrorf(ctx, err, "delete node query failed")
+	}
+
+	return nil
+}
+
+func (n NodeDao) DeleteByLeafNodePathAndRegistryID(ctx context.Context, nodePath string, regID int64) (err error) {
+	db := dbtx.GetAccessor(ctx, n.sqlDB)
+	delStmt := databaseg.Builder.Delete("nodes").
+		Where("node_path = ?", nodePath).
+		Where("node_registry_id = ?", regID).
+		Where("node_is_file = true")
+
+	delQuery, delArgs, err := delStmt.ToSql()
+	if err != nil {
+		return fmt.Errorf("failed to convert purge query to sql: %w", err)
+	}
+
+	_, err = db.ExecContext(ctx, delQuery, delArgs...)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil
+		}
+		return databaseg.ProcessSQLErrorf(ctx, err, "delete node query failed")
 	}
 
 	return nil

@@ -24,9 +24,9 @@ import (
 type PackageArtifactInfo interface {
 	BaseArtifactInfo() ArtifactInfo
 	GetImageVersion() (bool, string)
-
 	GetVersion() string
-
+	GetRegistryID() int64
+	GetImage() string
 	GetFileName() string
 }
 

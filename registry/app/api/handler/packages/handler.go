@@ -49,6 +49,7 @@ import (
 func NewHandler(
 	registryDao store.RegistryRepository,
 	downloadStatDao store.DownloadStatRepository,
+	bandwidthStatDao store.BandwidthStatRepository,
 	spaceStore corestore.SpaceStore, tokenStore corestore.TokenStore,
 	userCtrl *usercontroller.Controller, authenticator authn.Authenticator,
 	urlProvider urlprovider.Provider, authorizer authz.Authorizer, spaceFinder refcache.SpaceFinder,
@@ -58,6 +59,7 @@ func NewHandler(
 	return &handler{
 		RegistryDao:           registryDao,
 		DownloadStatDao:       downloadStatDao,
+		BandwidthStatDao:      bandwidthStatDao,
 		SpaceStore:            spaceStore,
 		TokenStore:            tokenStore,
 		UserCtrl:              userCtrl,
@@ -74,6 +76,7 @@ func NewHandler(
 type handler struct {
 	RegistryDao           store.RegistryRepository
 	DownloadStatDao       store.DownloadStatRepository
+	BandwidthStatDao      store.BandwidthStatRepository
 	SpaceStore            corestore.SpaceStore
 	TokenStore            corestore.TokenStore
 	UserCtrl              *usercontroller.Controller

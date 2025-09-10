@@ -17,7 +17,6 @@ package packages
 import (
 	"fmt"
 	"net/http"
-	path2 "path"
 	"strings"
 
 	commons2 "github.com/harness/gitness/registry/app/pkg/types/commons"
@@ -39,27 +38,9 @@ func (h *handler) DownloadFile(w http.ResponseWriter, r *http.Request) {
 		h.HandleErrors(r.Context(), []error{fmt.Errorf("path parameter is required")}, w)
 		return
 	}
-	fileReader, _, redirectURL, err := h.fileManager.DownloadFile(ctx, path,
-		info.RegistryID, info.RegIdentifier, info.RootIdentifier, true)
 
-	if err != nil {
-		h.HandleError(r.Context(), w, err)
-		return
-	}
-	filename := path2.Base(path)
-	defer func() {
-		if fileReader != nil {
-			err := fileReader.Close()
-			if err != nil {
-				log.Ctx(ctx).Error().Msgf("Failed to close body: %v", err)
-			}
-		}
-	}()
+	registryURL := h.URLProvider.PackageURL(ctx, strings.Join([]string{info.RootIdentifier, info.RegIdentifier}, "/"),
+		"", "files", path)
 
-	w.Header().Set("Content-Disposition", "attachment; filename=\""+strings.ReplaceAll(filename, "\"", "\\\"")+"\"")
-	if redirectURL != "" {
-		http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
-		return
-	}
-	h.ServeContent(w, r, fileReader, filename)
+	http.Redirect(w, r, registryURL, http.StatusPermanentRedirect)
 }

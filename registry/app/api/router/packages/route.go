@@ -80,13 +80,39 @@ func NewRouter(
 				r.Use(middleware.StoreArtifactInfo(genericHandler))
 				r.Use(middleware.TrackDownloadStatForGenericArtifact(genericHandler))
 				r.Use(middleware.TrackBandwidthStatForGenericArtifacts(genericHandler))
-
 				r.With(middleware.CheckQuarantineStatus(packageHandler)).
 					With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 					Get("/", genericHandler.PullArtifact)
 
 				r.With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
 					Put("/", genericHandler.PushArtifact)
+			})
+		})
+
+		// Files uses Generic Engine to serve and manage files
+		r.Route("/files", func(r chi.Router) {
+			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
+			r.Use(middleware.CheckAuth())
+			// We currently support managing files for a given package and a version. If requirements change in the future,
+			// this line will need to be removed
+			r.Route("/{package}/{version}", func(r chi.Router) {
+				r.Use(middleware.StoreArtifactInfo(genericHandler))
+
+				r.Route("/", func(r chi.Router) {
+					r.Group(func(r chi.Router) {
+						r.With(middleware.CheckQuarantineStatus(packageHandler)).
+							With(middleware.TrackDownloadStats(packageHandler)).
+							With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+							Get("/*", genericHandler.GetFile)
+						r.With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDelete)).
+							Delete("/*", genericHandler.DeleteFile)
+						r.With(middleware.CheckQuarantineStatus(packageHandler)).
+							With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+							Head("/*", genericHandler.HeadFile)
+						r.With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
+							Put("/*", genericHandler.PutFile)
+					})
+				})
 			})
 		})
 

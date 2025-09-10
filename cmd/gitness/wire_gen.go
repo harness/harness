@@ -132,6 +132,7 @@ import (
 	"github.com/harness/gitness/pubsub"
 	api2 "github.com/harness/gitness/registry/app/api"
 	cargo3 "github.com/harness/gitness/registry/app/api/controller/pkg/cargo"
+	"github.com/harness/gitness/registry/app/api/controller/pkg/generic"
 	gopackage2 "github.com/harness/gitness/registry/app/api/controller/pkg/gopackage"
 	huggingface2 "github.com/harness/gitness/registry/app/api/controller/pkg/huggingface"
 	npm2 "github.com/harness/gitness/registry/app/api/controller/pkg/npm"
@@ -147,7 +148,7 @@ import (
 	cargo2 "github.com/harness/gitness/registry/app/pkg/cargo"
 	"github.com/harness/gitness/registry/app/pkg/docker"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
-	"github.com/harness/gitness/registry/app/pkg/generic"
+	generic2 "github.com/harness/gitness/registry/app/pkg/generic"
 	"github.com/harness/gitness/registry/app/pkg/gopackage"
 	"github.com/harness/gitness/registry/app/pkg/huggingface"
 	"github.com/harness/gitness/registry/app/pkg/maven"
@@ -580,7 +581,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	registryHelper := cargo.LocalRegistryHelperProvider(fileManager, artifactRepository, spaceFinder)
 	apiHandler := router.APIHandlerProvider(registryRepository, upstreamProxyConfigRepository, fileManager, tagRepository, manifestRepository, cleanupPolicyRepository, imageRepository, storageDriver, spaceFinder, transactor, authenticator, provider, authorizer, auditService, artifactRepository, webhooksRepository, webhooksExecutionRepository, service2, spacePathStore, artifactReporter, downloadStatRepository, config, registryBlobRepository, registryFinder, asyncprocessingReporter, registryHelper, spaceController, quarantineArtifactRepository, spaceStore)
 	packageTagRepository := database2.ProvidePackageTagDao(db)
-	localBase := base.LocalBaseProvider(registryRepository, fileManager, transactor, imageRepository, artifactRepository, nodesRepository, packageTagRepository)
+	localBase := base.LocalBaseProvider(registryRepository, fileManager, transactor, imageRepository, artifactRepository, nodesRepository, packageTagRepository, authorizer, spaceFinder)
 	mavenDBStore := maven.DBStoreProvider(registryRepository, imageRepository, artifactRepository, spaceStore, bandwidthStatRepository, downloadStatRepository, nodesRepository, upstreamProxyConfigRepository)
 	mavenLocalRegistry := maven.LocalRegistryProvider(localBase, mavenDBStore, transactor, fileManager)
 	mavenController := maven.ProvideProxyController(mavenLocalRegistry, secretService, spaceFinder)
@@ -589,14 +590,17 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	mavenHandler := api2.NewMavenHandlerProvider(controller2, spaceStore, tokenStore, controller, authenticator, authorizer, spaceFinder)
 	handler2 := router.MavenHandlerProvider(mavenHandler)
 	genericDBStore := generic.DBStoreProvider(imageRepository, artifactRepository, bandwidthStatRepository, downloadStatRepository, registryRepository)
-	genericController := generic.ControllerProvider(spaceStore, authorizer, fileManager, genericDBStore, transactor, spaceFinder)
-	packagesHandler := api2.NewPackageHandlerProvider(registryRepository, downloadStatRepository, spaceStore, tokenStore, controller, authenticator, provider, authorizer, spaceFinder, registryFinder, fileManager, quarantineArtifactRepository)
-	genericHandler := api2.NewGenericHandlerProvider(spaceStore, genericController, tokenStore, controller, authenticator, provider, authorizer, packagesHandler, spaceFinder)
+	genericLocalRegistry := generic2.LocalRegistryProvider(localBase, fileManager, upstreamProxyConfigRepository, transactor, registryRepository, imageRepository, artifactRepository, provider)
+	localRegistryHelper := generic2.LocalRegistryHelperProvider(genericLocalRegistry, localBase)
+	proxy := generic2.ProxyProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, spaceFinder, secretService, localRegistryHelper)
+	genericController := generic.ControllerProvider(spaceStore, authorizer, fileManager, genericDBStore, transactor, spaceFinder, genericLocalRegistry, proxy)
+	packagesHandler := api2.NewPackageHandlerProvider(registryRepository, downloadStatRepository, bandwidthStatRepository, spaceStore, tokenStore, controller, authenticator, provider, authorizer, spaceFinder, registryFinder, fileManager, quarantineArtifactRepository)
+	genericHandler := api2.NewGenericHandlerProvider(spaceStore, genericController, tokenStore, controller, authenticator, provider, authorizer, packagesHandler, spaceFinder, registryFinder)
 	handler3 := router.GenericHandlerProvider(genericHandler)
 	pythonLocalRegistry := python.LocalRegistryProvider(localBase, fileManager, upstreamProxyConfigRepository, transactor, registryRepository, imageRepository, artifactRepository, provider)
-	localRegistryHelper := python.LocalRegistryHelperProvider(pythonLocalRegistry, localBase)
-	proxy := python.ProxyProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, spaceFinder, secretService, localRegistryHelper)
-	pythonController := python2.ControllerProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, pythonLocalRegistry, proxy)
+	pythonLocalRegistryHelper := python.LocalRegistryHelperProvider(pythonLocalRegistry, localBase)
+	pythonProxy := python.ProxyProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, spaceFinder, secretService, pythonLocalRegistryHelper)
+	pythonController := python2.ControllerProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, pythonLocalRegistry, pythonProxy)
 	pythonHandler := api2.NewPythonHandlerProvider(pythonController, packagesHandler)
 	nugetLocalRegistry := nuget.LocalRegistryProvider(localBase, fileManager, upstreamProxyConfigRepository, transactor, registryRepository, imageRepository, artifactRepository, provider)
 	nugetLocalRegistryHelper := nuget.LocalRegistryHelperProvider(nugetLocalRegistry, localBase)

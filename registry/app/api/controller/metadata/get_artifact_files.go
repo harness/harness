@@ -113,7 +113,7 @@ func (c *APIController) GetArtifactFiles(
 	var registryURL string
 	switch registry.PackageType { //nolint:exhaustive
 	case artifact.PackageTypeGENERIC:
-		registryURL = c.URLProvider.PackageURL(ctx, reqInfo.RootIdentifier+"/"+reqInfo.RegistryIdentifier, "generic")
+		registryURL = c.URLProvider.PackageURL(ctx, reqInfo.RootIdentifier+"/"+reqInfo.RegistryIdentifier, "files")
 	case artifact.PackageTypeNPM:
 		registryURL = c.URLProvider.PackageURL(ctx, reqInfo.RootIdentifier+"/"+reqInfo.RegistryIdentifier, "npm")
 	case artifact.PackageTypeRPM:
@@ -123,7 +123,8 @@ func (c *APIController) GetArtifactFiles(
 	case artifact.PackageTypeGO:
 		registryURL = c.URLProvider.PackageURL(ctx, reqInfo.RootIdentifier+"/"+reqInfo.RegistryIdentifier, "go")
 	case artifact.PackageTypeHUGGINGFACE:
-		registryURL = c.URLProvider.PackageURL(ctx, reqInfo.RootIdentifier+"/"+reqInfo.RegistryIdentifier, "huggingface")
+		registryURL = c.URLProvider.PackageURL(ctx, reqInfo.RootIdentifier+"/"+reqInfo.RegistryIdentifier,
+			"huggingface")
 	default:
 		registryURL = c.URLProvider.RegistryURL(ctx,
 			reqInfo.RootIdentifier, strings.ToLower(string(registry.PackageType)), reqInfo.RegistryIdentifier)

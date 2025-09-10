@@ -479,21 +479,31 @@ type ArtifactRepository interface {
 		ctx context.Context, parentID int64,
 		registryIDs *[]string, search string, latestVersion bool, packageTypes []string,
 	) (int64, error)
-	GetArtifactsByRepo(ctx context.Context, parentID int64, repoKey string, sortByField string, sortByOrder string,
+	GetArtifactsByRepo(
+		ctx context.Context, parentID int64, repoKey string, sortByField string, sortByOrder string,
 		limit int, offset int, search string, labels []string,
-		artifactType *artifact.ArtifactType) (*[]types.ArtifactMetadata, error)
-	CountArtifactsByRepo(ctx context.Context, parentID int64, repoKey, search string, labels []string,
-		artifactType *artifact.ArtifactType) (int64, error)
+		artifactType *artifact.ArtifactType,
+	) (*[]types.ArtifactMetadata, error)
+	CountArtifactsByRepo(
+		ctx context.Context, parentID int64, repoKey, search string, labels []string,
+		artifactType *artifact.ArtifactType,
+	) (int64, error)
 	GetLatestArtifactMetadata(
 		ctx context.Context, id int64, identifier string,
 		image string,
 	) (*types.ArtifactMetadata, error)
-	GetAllVersionsByRepoAndImage(ctx context.Context, id int64, image string, field string, order string, limit int,
-		offset int, term string, artifactType *artifact.ArtifactType) (*[]types.NonOCIArtifactMetadata, error)
-	CountAllVersionsByRepoAndImage(ctx context.Context, parentID int64, repoKey string, image string,
-		search string, artifactType *artifact.ArtifactType) (int64, error)
-	GetArtifactMetadata(ctx context.Context, id int64, identifier string, image string, version string,
-		artifactType *artifact.ArtifactType) (*types.ArtifactMetadata, error)
+	GetAllVersionsByRepoAndImage(
+		ctx context.Context, id int64, image string, field string, order string, limit int,
+		offset int, term string, artifactType *artifact.ArtifactType,
+	) (*[]types.NonOCIArtifactMetadata, error)
+	CountAllVersionsByRepoAndImage(
+		ctx context.Context, parentID int64, repoKey string, image string,
+		search string, artifactType *artifact.ArtifactType,
+	) (int64, error)
+	GetArtifactMetadata(
+		ctx context.Context, id int64, identifier string, image string, version string,
+		artifactType *artifact.ArtifactType,
+	) (*types.ArtifactMetadata, error)
 	UpdateArtifactMetadata(
 		ctx context.Context, metadata json.RawMessage,
 		artifactID int64,
@@ -630,6 +640,7 @@ type NodesRepository interface {
 	) (*types.FileNodeMetadata, error)
 
 	DeleteByNodePathAndRegistryID(ctx context.Context, nodePath string, regID int64) (err error)
+	DeleteByLeafNodePathAndRegistryID(ctx context.Context, nodePath string, regID int64) (err error)
 }
 
 type GenericBlobRepository interface {

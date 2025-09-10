@@ -285,9 +285,9 @@ func (c *APIController) generateGenericClientSetupDetail(
 	})
 
 	header2 := "Upload Artifact"
-	section2step1Header := "Run this curl command in your terminal to push the artifact."
+	section2step1Header := "Run this curl command in your terminal to push the artifact at package level. This command works for non-nested paths."
 	//nolint:lll
-	pushValue := "curl --location --request PUT '<HOSTNAME>/<ARTIFACT_NAME>/<VERSION>' \\\n--form 'filename=\"<FILENAME>\"' \\\n--form 'file=@\"<FILE_PATH>\"' \\\n--form 'description=\"<DESC>\"' \\\n--header '<AUTH_HEADER_PREFIX> <API_KEY>'"
+	pushValue := "curl --location --request PUT '<HOSTNAME>/generic/<ARTIFACT_NAME>/<VERSION>' \\\n--form 'filename=\"<FILENAME>\"' \\\n--form 'file=@\"<FILE_PATH>\"' \\\n--form 'description=\"<DESC>\"' \\\n--header '<AUTH_HEADER_PREFIX> <API_KEY>'"
 	section2step1Commands := []artifact.ClientSetupStepCommand{
 		{Label: &blankString, Value: &pushValue},
 	}
@@ -305,10 +305,11 @@ func (c *APIController) generateGenericClientSetupDetail(
 	_ = section2.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
 		Steps: &section2steps,
 	})
+
 	header3 := "Download Artifact"
-	section3step1Header := "Run this command in your terminal to download the artifact."
+	section3step1Header := "Run this command in your terminal to download the artifact at package level. This command works for non-nested paths."
 	//nolint:lll
-	pullValue := "curl --location '<HOSTNAME>/<ARTIFACT_NAME>/<VERSION>?filename=<FILENAME>' \\\n --header '<AUTH_HEADER_PREFIX> <API_KEY>' " +
+	pullValue := "curl --location '<HOSTNAME>/generic/<ARTIFACT_NAME>/<VERSION>?filename=<FILENAME>' \\\n --header '<AUTH_HEADER_PREFIX> <API_KEY>' " +
 		"-J -O"
 	section3step1Commands := []artifact.ClientSetupStepCommand{
 		{Label: &blankString, Value: &pullValue},
@@ -328,16 +329,99 @@ func (c *APIController) generateGenericClientSetupDetail(
 		Steps: &section3steps,
 	})
 
+	header4 := "File Operations (Supports both nested and flat paths)"
+	section4step1Header := "Upload a file to a specific path within the package."
+	//nolint:lll
+	fileUploadValue := "curl -XPUT '<HOSTNAME>/files/<ARTIFACT_NAME>/<VERSION>/<NESTED_FILE_PATH>' \\\n--header '<AUTH_HEADER_PREFIX> <API_KEY>' -T '<FILE_PATH>'"
+	section4step1Commands := []artifact.ClientSetupStepCommand{
+		{Label: &blankString, Value: &fileUploadValue},
+	}
+
+	section4step2Header := "Download a file from a specific path within the package."
+	//nolint:lll
+	fileDownloadValue := "curl --location '<HOSTNAME>/files/<ARTIFACT_NAME>/<VERSION>/<NESTED_FILE_PATH>' --header '<AUTH_HEADER_PREFIX> <API_KEY>' -J -O"
+	section4step2Commands := []artifact.ClientSetupStepCommand{
+		{Label: &blankString, Value: &fileDownloadValue},
+	}
+
+	section4step3Header := "Get file metadata from a specific path (HEAD request)."
+	//nolint:lll
+	fileHeadValue := "curl --location --head '<HOSTNAME>/files/<ARTIFACT_NAME>/<VERSION>/<NESTED_FILE_PATH>' --header '<AUTH_HEADER_PREFIX> <API_KEY>'"
+	section4step3Commands := []artifact.ClientSetupStepCommand{
+		{Label: &blankString, Value: &fileHeadValue},
+	}
+
+	section4step4Header := "Delete a file from a specific path within the package."
+	//nolint:lll
+	fileDeleteValue := "curl --location --request DELETE '<HOSTNAME>/files/<ARTIFACT_NAME>/<VERSION>/<NESTED_FILE_PATH>' --header '<AUTH_HEADER_PREFIX> <API_KEY>'"
+	section4step4Commands := []artifact.ClientSetupStepCommand{
+		{Label: &blankString, Value: &fileDeleteValue},
+	}
+
+	section4step4UpstreamHeader := "Delete a file from a specific path within the package (only deletes cached file)."
+
+	section4step1Type := artifact.ClientSetupStepTypeStatic
+	section4steps := []artifact.ClientSetupStep{
+		{
+			Header:   &section4step1Header,
+			Commands: &section4step1Commands,
+			Type:     &section4step1Type,
+		},
+		{
+			Header:   &section4step2Header,
+			Commands: &section4step2Commands,
+			Type:     &section4step1Type,
+		},
+		{
+			Header:   &section4step3Header,
+			Commands: &section4step3Commands,
+			Type:     &section4step1Type,
+		},
+		{
+			Header:   &section4step4Header,
+			Commands: &section4step4Commands,
+			Type:     &section4step1Type,
+		},
+	}
+
+	if registryType == artifact.RegistryTypeUPSTREAM {
+		section4steps = []artifact.ClientSetupStep{
+			{
+				Header:   &section4step2Header,
+				Commands: &section4step2Commands,
+				Type:     &section4step1Type,
+			},
+			{
+				Header:   &section4step3Header,
+				Commands: &section4step3Commands,
+				Type:     &section4step1Type,
+			},
+			{
+				Header:   &section4step4UpstreamHeader,
+				Commands: &section4step4Commands,
+				Type:     &section4step1Type,
+			},
+		}
+	}
+	section4 := artifact.ClientSetupSection{
+		Header: &header4,
+	}
+	_ = section4.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &section4steps,
+	})
+
 	sections := []artifact.ClientSetupSection{
 		section1,
 		section2,
 		section3,
+		section4,
 	}
 
 	if registryType == artifact.RegistryTypeUPSTREAM {
 		sections = []artifact.ClientSetupSection{
 			section1,
 			section3,
+			section4,
 		}
 	}
 
@@ -347,8 +431,8 @@ func (c *APIController) generateGenericClientSetupDetail(
 		Sections:   sections,
 	}
 	//nolint:lll
-	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, "", registryRef, image, tag, "", "",
-		string(artifact.PackageTypeGENERIC))
+	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, "", registryRef, image, tag, "",
+		"", string(artifact.PackageTypeGENERIC))
 	return &artifact.ClientSetupDetailsResponseJSONResponse{
 		Data:   clientSetupDetails,
 		Status: artifact.StatusSUCCESS,
@@ -1673,7 +1757,8 @@ func (c *APIController) replacePlaceholders(
 		regURL, _ := url.Parse(registryURL)
 		// append username:password to the host
 		regURL.User = url.UserPassword(username, "<TOKEN>")
-		uploadURL = fmt.Sprintf("%s://%s:%s@%s%s", regURL.Scheme, regURL.User.Username(), "<TOKEN>", regURL.Host, regURL.Path)
+		uploadURL = fmt.Sprintf("%s://%s:%s@%s%s", regURL.Scheme, regURL.User.Username(), "<TOKEN>", regURL.Host,
+			regURL.Path)
 	}
 
 	for i := range *clientSetupSections {
@@ -1708,7 +1793,7 @@ func (c *APIController) replacePlaceholdersInSection(
 	_, registryName, _ := paths.DisectLeaf(regRef)
 	var hostname string
 	if pkgType == string(artifact.PackageTypeGENERIC) {
-		hostname = c.URLProvider.PackageURL(ctx, regRef, "generic")
+		hostname = c.URLProvider.PackageURL(ctx, regRef, "")
 	} else {
 		hostname = common.TrimURLScheme(c.URLProvider.RegistryURL(ctx, rootSpace))
 	}

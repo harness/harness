@@ -57,6 +57,8 @@ func Connect(ctx context.Context, driver string, datasource string) (*sqlx.DB, e
 		return nil, fmt.Errorf("failed to ping the db: %w", err)
 	}
 
+	log.Ctx(ctx).Info().Str("driver", driver).Msg("Database connected")
+
 	return dbx, nil
 }
 

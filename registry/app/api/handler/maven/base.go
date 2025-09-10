@@ -141,9 +141,9 @@ func (h *Handler) GetArtifactInfo(r *http.Request, remoteSupport bool) (pkg.Mave
 	}
 
 	if !commons.IsEmpty(info.GroupID) && !commons.IsEmpty(info.ArtifactID) && !commons.IsEmpty(info.Version) {
-		flag, err2 := utils.IsPatternAllowed(registry.AllowedPattern, registry.BlockedPattern,
+		err2 := utils.PatternAllowed(registry.AllowedPattern, registry.BlockedPattern,
 			info.GroupID+":"+info.ArtifactID+":"+info.Version)
-		if !flag || err2 != nil {
+		if err2 != nil {
 			return pkg.MavenArtifactInfo{}, errcode.ErrCodeDenied
 		}
 	}

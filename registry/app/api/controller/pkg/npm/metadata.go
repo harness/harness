@@ -29,7 +29,7 @@ import (
 
 // GetPackageMetadata fetches the metadata of a package with the given artifact info.
 //
-// This is a proxy function to Registry.UploadPackageFile, which is used to fetch the metadata
+// This is a proxy function to Registry.PutFile, which is used to fetch the metadata
 // of a package. The function is used by the API handler.
 //
 // The function takes a context and an artifact info as parameters and returns a GetPackageMetadata
@@ -63,7 +63,9 @@ func (c *controller) GetPackageMetadata(
 	metadataResponse, ok := result.(*GetMetadataResponse)
 	if !ok {
 		return &GetMetadataResponse{
-			BaseResponse: BaseResponse{Error: fmt.Errorf("invalid response type: expected GetMetadataResponse, got %T", result)},
+			BaseResponse: BaseResponse{
+				Error: fmt.Errorf("invalid response type: expected GetMetadataResponse, got %T", result),
+			},
 		}
 	}
 	return metadataResponse

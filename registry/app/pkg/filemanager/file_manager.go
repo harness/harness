@@ -22,6 +22,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/registry/app/event"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
@@ -287,13 +288,13 @@ func (f *FileManager) DownloadFile(
 ) (fileReader *storage.FileReader, size int64, redirectURL string, err error) {
 	node, err := f.nodesDao.GetByPathAndRegistryID(ctx, registryID, filePath)
 	if err != nil {
-		return nil, 0, "", fmt.Errorf("failed to get the file for path: %s, "+
-			"with registry: %s", filePath, registryIdentifier)
+		return nil, 0, "", usererror.NotFoundf("file not found for registry [%s], path: [%s]", registryIdentifier,
+			filePath)
 	}
 	blob, err := f.genericBlobDao.FindByID(ctx, node.BlobID)
 
 	if err != nil {
-		return nil, 0, "", fmt.Errorf("failed to get the blob for path: %s, "+
+		return nil, 0, "", usererror.NotFoundf("failed to get the blob for path: %s, "+
 			"with blob id: %s, with error %s", filePath, node.BlobID, err)
 	}
 
@@ -325,6 +326,21 @@ func (f *FileManager) DeleteNode(
 	return nil
 }
 
+func (f *FileManager) DeleteLeafNode(
+	ctx context.Context,
+	regID int64,
+	filePath string,
+) error {
+	if len(filePath) > 0 && !strings.HasPrefix(filePath, rootPathString) {
+		filePath = rootPathString + filePath
+	}
+	err := f.nodesDao.DeleteByLeafNodePathAndRegistryID(ctx, filePath, regID)
+	if err != nil {
+		return fmt.Errorf("failed to delete file for path: %s, with error: %w", filePath, err)
+	}
+	return nil
+}
+
 func (f *FileManager) GetNode(
 	ctx context.Context,
 	regID int64,
@@ -341,7 +357,7 @@ func (f *FileManager) HeadFile(
 	ctx context.Context,
 	filePath string,
 	regID int64,
-) (string, int64, error) {
+) (sha256 string, size int64, err error) {
 	node, err := f.nodesDao.GetByPathAndRegistryID(ctx, regID, filePath)
 
 	if err != nil {

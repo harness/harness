@@ -15,38 +15,53 @@
 package generic
 
 import (
-	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/refcache"
-	gitnessstore "github.com/harness/gitness/app/store"
+	urlprovider "github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/registry/app/pkg/base"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
+	"github.com/harness/gitness/secret"
 	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/google/wire"
 )
 
-func DBStoreProvider(
+func LocalRegistryProvider(
+	localBase base.LocalBase,
+	fileManager filemanager.FileManager,
+	proxyStore store.UpstreamProxyConfigRepository,
+	tx dbtx.Transactor,
+	registryDao store.RegistryRepository,
 	imageDao store.ImageRepository,
 	artifactDao store.ArtifactRepository,
-	bandwidthStatDao store.BandwidthStatRepository,
-	downloadStatDao store.DownloadStatRepository,
+	urlProvider urlprovider.Provider,
+) LocalRegistry {
+	registry := NewLocalRegistry(localBase, fileManager, proxyStore, tx, registryDao, imageDao, artifactDao,
+		urlProvider)
+	base.Register(registry)
+	return registry
+}
+
+func ProxyProvider(
+	proxyStore store.UpstreamProxyConfigRepository,
 	registryDao store.RegistryRepository,
-) *DBStore {
-	return NewDBStore(registryDao, imageDao, artifactDao, bandwidthStatDao, downloadStatDao)
-}
-
-func ControllerProvider(
-	spaceStore gitnessstore.SpaceStore,
-	authorizer authz.Authorizer,
+	imageDao store.ImageRepository,
+	artifactDao store.ArtifactRepository,
 	fileManager filemanager.FileManager,
-	dBStore *DBStore,
 	tx dbtx.Transactor,
+	urlProvider urlprovider.Provider,
 	spaceFinder refcache.SpaceFinder,
-) *Controller {
-	return NewController(spaceStore, authorizer, fileManager, dBStore, tx, spaceFinder)
+	service secret.Service,
+	localRegistryHelper LocalRegistryHelper,
+) Proxy {
+	proxy := NewProxy(fileManager, proxyStore, tx, registryDao, imageDao, artifactDao, urlProvider,
+		spaceFinder, service, localRegistryHelper)
+	base.Register(proxy)
+	return proxy
 }
 
-var DBStoreSet = wire.NewSet(DBStoreProvider)
-var ControllerSet = wire.NewSet(ControllerProvider)
+func LocalRegistryHelperProvider(localRegistry LocalRegistry, localBase base.LocalBase) LocalRegistryHelper {
+	return NewLocalRegistryHelper(localRegistry, localBase)
+}
 
-var WireSet = wire.NewSet(ControllerSet, DBStoreSet)
+var WireSet = wire.NewSet(LocalRegistryProvider, ProxyProvider, LocalRegistryHelperProvider)

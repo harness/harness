@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"net/http"
 
-	errors2 "github.com/harness/gitness/errors"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	npm2 "github.com/harness/gitness/registry/app/pkg/types/npm"
 	"github.com/harness/gitness/registry/request"
@@ -39,11 +38,7 @@ func (h *handler) GetPackageMetadata(w http.ResponseWriter, r *http.Request) {
 	response := h.controller.GetPackageMetadata(ctx, info)
 
 	if !commons.IsEmpty(response.GetError()) {
-		if errors2.IsNotFound(response.GetError()) {
-			http.Error(w, response.GetError().Error(), http.StatusNotFound)
-			return
-		}
-		http.Error(w, response.GetError().Error(), http.StatusInternalServerError)
+		h.HandleError(ctx, w, response.GetError())
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")

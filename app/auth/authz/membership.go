@@ -167,7 +167,8 @@ func (a *MembershipAuthorizer) CheckAll(
 ) (bool, error) {
 	for i := range permissionChecks {
 		p := permissionChecks[i]
-		if _, err := a.Check(ctx, session, &p.Scope, &p.Resource, p.Permission); err != nil {
+		check, err := a.Check(ctx, session, &p.Scope, &p.Resource, p.Permission)
+		if err != nil || !check {
 			return false, err
 		}
 	}

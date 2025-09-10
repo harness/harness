@@ -3,6 +3,10 @@
 # This file contains only configs which differ from defaults.
 # All possible options can be found here https://github.com/golangci/golangci-lint/blob/master/.golangci.reference.yml
 linters-settings:
+  staticcheck:
+    checks:
+      - all
+      - -SA1019 # ignore SA1019: deprecated usage
 
   errcheck:
     # Report about not checking of errors in type assertions: `a := b.(MyStruct)`.

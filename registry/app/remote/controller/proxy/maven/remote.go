@@ -38,7 +38,7 @@ type RemoteInterface interface {
 	GetFile(ctx context.Context, filePath string) (*commons.ResponseHeaders, io.ReadCloser, error)
 
 	// Check existence of file
-	HeadFile(ctx context.Context, filePath string) (*commons.ResponseHeaders, bool, error)
+	HeadFile(ctx context.Context, filePath string) (*commons.ResponseHeaders, error)
 }
 
 type remoteHelper struct {
@@ -91,6 +91,6 @@ func (r *remoteHelper) GetFile(ctx context.Context, filePath string) (*commons.R
 	return r.registry.GetFile(ctx, filePath)
 }
 
-func (r *remoteHelper) HeadFile(ctx context.Context, filePath string) (*commons.ResponseHeaders, bool, error) {
+func (r *remoteHelper) HeadFile(ctx context.Context, filePath string) (*commons.ResponseHeaders, error) {
 	return r.registry.HeadFile(ctx, filePath)
 }

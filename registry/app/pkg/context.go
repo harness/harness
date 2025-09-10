@@ -36,8 +36,16 @@ type ArtifactInfo struct {
 	// Currently used only for Python packages
 	// TODO: extend to all package types
 	Registry     types.Registry
-	Image        string
 	ArtifactType *artifact.ArtifactType
+	Image        string
+}
+
+func (a ArtifactInfo) GetImage() string {
+	return a.Image
+}
+
+func (a ArtifactInfo) GetRegistryID() int64 {
+	return a.RegistryID
 }
 
 func (a *ArtifactInfo) UpdateRegistryInfo(r types.Registry) {
@@ -74,11 +82,13 @@ type MavenArtifactInfo struct {
 	Path       string
 }
 
+// Deprecated: use generic.ArtifactInfo instead.
 type GenericArtifactInfo struct {
 	*ArtifactInfo
-	FileName    string
-	Version     string
-	RegistryID  int64
+	FileName   string
+	RegistryID int64
+	Version    string
+
 	Description string
 }
 

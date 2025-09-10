@@ -114,7 +114,7 @@ func (r *remoteRegistryHelper) GetPackageIndex(ctx context.Context, pkg string, 
 ) {
 	data, err := r.adapter.GetPackageFile(ctx, filePath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get package index: %s", pkg)
+		return nil, fmt.Errorf("failed to get package index %s: %w", pkg, err)
 	}
 	if data == nil {
 		return nil, fmt.Errorf("index metadata not found for package: %s", pkg)
@@ -130,7 +130,7 @@ func (r *remoteRegistryHelper) GetPackageFile(
 	data, err := r.adapter.GetPackageFile(ctx, filePath)
 	if err != nil {
 		log.Ctx(ctx).Error().Err(err).Msgf("failed to get package file: %s, %s", pkg, filePath)
-		return nil, fmt.Errorf("failed to get package file: %s, %s", pkg, filePath)
+		return nil, fmt.Errorf("failed to get package file: %s, %s, %w", pkg, filePath, err)
 	}
 	if data == nil {
 		log.Ctx(ctx).Error().Msgf("file not found for package: %s, %s", pkg, filePath)

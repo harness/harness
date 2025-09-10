@@ -72,6 +72,8 @@ func proxyInternal(
 		return r, err
 	}
 
+	var lastError error
+
 	for _, registry := range registries {
 		log.Ctx(ctx).Info().Msgf("Using Registry: %s, Type: %s", registry.Name, registry.Type)
 		art := GetArtifactRegistry(registry)
@@ -80,6 +82,7 @@ func proxyInternal(
 			if r.GetError() == nil {
 				return r, nil
 			}
+			lastError = r.GetError()
 			log.Ctx(ctx).Warn().Msgf("Repository: %s, Type: %s, error: %v", registry.Name, registry.Type,
 				r.GetError())
 		}
@@ -95,7 +98,10 @@ func proxyInternal(
 			requestRepoKey, pkg.JoinWithSeparator(", ", skippedRegNames...))
 	}
 
-	//todo: fix error message
+	if lastError != nil {
+		return r, lastError
+	}
+
 	return r, errors.NotFound("no matching artifacts found in registry %s", requestRepoKey)
 }
 
@@ -133,8 +139,8 @@ func filterRegs(
 	for _, repo := range registries {
 		allowedPatterns := repo.AllowedPattern
 		blockedPatterns := repo.BlockedPattern
-		isAllowed, err := utils.IsPatternAllowed(allowedPatterns, blockedPatterns, imageVersion)
-		if !isAllowed || err != nil {
+		err2 := utils.PatternAllowed(allowedPatterns, blockedPatterns, imageVersion)
+		if err2 != nil {
 			log.Ctx(ctx).Debug().Msgf("Skipping repository %s", repo.Name)
 			skipped = append(skipped, repo)
 			continue

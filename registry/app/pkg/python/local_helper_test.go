@@ -88,6 +88,26 @@ type MockLocalBase struct {
 	mock.Mock
 }
 
+func (m *MockLocalBase) ExistsE(
+	ctx context.Context,
+	info pkg.PackageArtifactInfo,
+	path string,
+) (headers *commons.ResponseHeaders, err error) {
+	args := m.Called(ctx, info, path)
+	//nolint:errcheck
+	return args.Get(0).(*commons.ResponseHeaders), args.Error(1)
+}
+
+func (m *MockLocalBase) DeleteFile(
+	ctx context.Context,
+	info pkg.PackageArtifactInfo,
+	filePath string,
+) (headers *commons.ResponseHeaders, err error) {
+	args := m.Called(ctx, info, filePath)
+	//nolint:errcheck
+	return args.Get(0).(*commons.ResponseHeaders), args.Error(1)
+}
+
 func (m *MockLocalBase) MoveTempFileAndCreateArtifact(
 	_ context.Context,
 	_ pkg.ArtifactInfo,
@@ -305,7 +325,7 @@ func TestLocalRegistryHelper_DownloadFile_Error(t *testing.T) {
 	mockLocalBase.AssertExpectations(t)
 }
 
-// Test for UploadPackageFile method.
+// Test for PutFile method.
 func TestLocalRegistryHelper_UploadPackageFile(t *testing.T) {
 	mockLocalRegistry := new(MockLocalRegistry)
 	mockLocalBase := new(MockLocalBase)
@@ -346,7 +366,7 @@ func TestLocalRegistryHelper_UploadPackageFile(t *testing.T) {
 	mockLocalRegistry.AssertExpectations(t)
 }
 
-// Test for UploadPackageFile method with error.
+// Test for PutFile method with error.
 func TestLocalRegistryHelper_UploadPackageFile_Error(t *testing.T) {
 	mockLocalRegistry := new(MockLocalRegistry)
 	mockLocalBase := new(MockLocalBase)

@@ -29,6 +29,9 @@ type Handler interface {
 	http.Handler
 }
 
+// NewGenericArtifactHandler
+// Deprecated: This function is deprecated and will be removed in a future release.
+// Use router.NewRouter instead.
 func NewGenericArtifactHandler(handler *generic.Handler) Handler {
 	r := chi.NewRouter()
 

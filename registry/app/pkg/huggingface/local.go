@@ -68,7 +68,8 @@ type localRegistry struct {
 }
 
 func (c *localRegistry) ValidateYaml(_ context.Context, _ huggingfacetype.ArtifactInfo, body io.ReadCloser) (
-	headers *commons.ResponseHeaders, response *huggingfacetype.ValidateYamlResponse, err error) {
+	headers *commons.ResponseHeaders, response *huggingfacetype.ValidateYamlResponse, err error,
+) {
 	headers = &commons.ResponseHeaders{
 		Headers: map[string]string{"Content-Type": contentTypeJSON},
 	}
@@ -134,7 +135,8 @@ func (c *localRegistry) ValidateYaml(_ context.Context, _ huggingfacetype.Artifa
 }
 
 func (c *localRegistry) PreUpload(_ context.Context, _ huggingfacetype.ArtifactInfo, body io.ReadCloser) (
-	headers *commons.ResponseHeaders, response *huggingfacetype.PreUploadResponse, err error) {
+	headers *commons.ResponseHeaders, response *huggingfacetype.PreUploadResponse, err error,
+) {
 	headers = &commons.ResponseHeaders{
 		Headers: map[string]string{"Content-Type": contentTypeJSON},
 	}
@@ -163,9 +165,12 @@ func (c *localRegistry) PreUpload(_ context.Context, _ huggingfacetype.ArtifactI
 	return headers, resp, nil
 }
 
-func (c *localRegistry) RevisionInfo(ctx context.Context, info huggingfacetype.ArtifactInfo,
-	queryParams map[string][]string) (
-	headers *commons.ResponseHeaders, response *huggingfacetype.RevisionInfoResponse, err error) {
+func (c *localRegistry) RevisionInfo(
+	ctx context.Context, info huggingfacetype.ArtifactInfo,
+	queryParams map[string][]string,
+) (
+	headers *commons.ResponseHeaders, response *huggingfacetype.RevisionInfoResponse, err error,
+) {
 	headers = &commons.ResponseHeaders{
 		Headers: map[string]string{"Content-Type": contentTypeJSON},
 	}
@@ -211,8 +216,10 @@ func (c *localRegistry) RevisionInfo(ctx context.Context, info huggingfacetype.A
 	}, nil
 }
 
-func (c *localRegistry) LfsInfo(ctx context.Context, info huggingfacetype.ArtifactInfo, body io.ReadCloser,
-	token string) (headers *commons.ResponseHeaders, response *huggingfacetype.LfsInfoResponse, err error) {
+func (c *localRegistry) LfsInfo(
+	ctx context.Context, info huggingfacetype.ArtifactInfo, body io.ReadCloser,
+	token string,
+) (headers *commons.ResponseHeaders, response *huggingfacetype.LfsInfoResponse, err error) {
 	headers = &commons.ResponseHeaders{
 		Headers: map[string]string{"Content-Type": "application/vnd.git-lfs+json"},
 	}
@@ -279,8 +286,10 @@ func (c *localRegistry) LfsInfo(ctx context.Context, info huggingfacetype.Artifa
 	return headers, resp, nil
 }
 
-func (c *localRegistry) LfsUpload(ctx context.Context, info huggingfacetype.ArtifactInfo,
-	body io.ReadCloser) (headers *commons.ResponseHeaders, response *huggingfacetype.LfsUploadResponse, err error) {
+func (c *localRegistry) LfsUpload(
+	ctx context.Context, info huggingfacetype.ArtifactInfo,
+	body io.ReadCloser,
+) (headers *commons.ResponseHeaders, response *huggingfacetype.LfsUploadResponse, err error) {
 	headers = &commons.ResponseHeaders{
 		Headers: map[string]string{"Content-Type": contentTypeJSON},
 	}
@@ -302,8 +311,10 @@ func (c *localRegistry) LfsUpload(ctx context.Context, info huggingfacetype.Arti
 	return headers, resp, nil
 }
 
-func (c *localRegistry) LfsVerify(ctx context.Context, info huggingfacetype.ArtifactInfo,
-	_ io.ReadCloser) (headers *commons.ResponseHeaders, response *huggingfacetype.LfsVerifyResponse, err error) {
+func (c *localRegistry) LfsVerify(
+	ctx context.Context, info huggingfacetype.ArtifactInfo,
+	_ io.ReadCloser,
+) (headers *commons.ResponseHeaders, response *huggingfacetype.LfsVerifyResponse, err error) {
 	headers = &commons.ResponseHeaders{
 		Headers: map[string]string{"Content-Type": contentTypeJSON},
 	}
@@ -322,7 +333,8 @@ func (c *localRegistry) LfsVerify(ctx context.Context, info huggingfacetype.Arti
 }
 
 func (c *localRegistry) CommitRevision(ctx context.Context, info huggingfacetype.ArtifactInfo, body io.ReadCloser) (
-	headers *commons.ResponseHeaders, response *huggingfacetype.CommitRevisionResponse, err error) {
+	headers *commons.ResponseHeaders, response *huggingfacetype.CommitRevisionResponse, err error,
+) {
 	headers = &commons.ResponseHeaders{
 		Headers: map[string]string{"Content-Type": contentTypeJSON},
 	}
@@ -425,7 +437,8 @@ func (c *localRegistry) CommitRevision(ctx context.Context, info huggingfacetype
 }
 
 func (c *localRegistry) HeadFile(ctx context.Context, info huggingfacetype.ArtifactInfo, fileName string) (
-	headers *commons.ResponseHeaders, err error) {
+	headers *commons.ResponseHeaders, err error,
+) {
 	headers = &commons.ResponseHeaders{
 		Headers: map[string]string{},
 	}
@@ -463,7 +476,8 @@ func (c *localRegistry) HeadFile(ctx context.Context, info huggingfacetype.Artif
 }
 
 func (c *localRegistry) DownloadFile(ctx context.Context, info huggingfacetype.ArtifactInfo, fileName string) (
-	headers *commons.ResponseHeaders, body *storage.FileReader, redirectURL string, err error) {
+	headers *commons.ResponseHeaders, body *storage.FileReader, redirectURL string, err error,
+) {
 	headers, err = c.HeadFile(ctx, info, fileName)
 	if err != nil {
 		return headers, nil, "", err
@@ -492,8 +506,10 @@ func getBlobURL(pkgURL, operation, sha256, token string, info huggingfacetype.Ar
 		info.RepoType, info.Repo, info.Revision, operation, sha256, strings.TrimPrefix(token, "Bearer "))
 }
 
-func (c *localRegistry) readme(ctx context.Context, info huggingfacetype.ArtifactInfo,
-	lfsFiles *[]huggingfacetype.LfsFileInfo) string {
+func (c *localRegistry) readme(
+	ctx context.Context, info huggingfacetype.ArtifactInfo,
+	lfsFiles *[]huggingfacetype.LfsFileInfo,
+) string {
 	for _, lfsFile := range *lfsFiles {
 		file := types.FileInfo{Sha256: lfsFile.Oid}
 		tmpFileName := getTmpFilePath(&info.ArtifactInfo, &file)

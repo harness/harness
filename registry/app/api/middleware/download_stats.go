@@ -19,6 +19,7 @@ import (
 	"errors"
 	"net/http"
 
+	generic2 "github.com/harness/gitness/registry/app/api/controller/pkg/generic"
 	"github.com/harness/gitness/registry/app/api/handler/generic"
 	"github.com/harness/gitness/registry/app/api/handler/maven"
 	"github.com/harness/gitness/registry/app/api/handler/oci"
@@ -28,7 +29,6 @@ import (
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/docker"
-	generic2 "github.com/harness/gitness/registry/app/pkg/generic"
 	gopackageutils "github.com/harness/gitness/registry/app/pkg/gopackage/utils"
 	maven2 "github.com/harness/gitness/registry/app/pkg/maven"
 	mavenutils "github.com/harness/gitness/registry/app/pkg/maven/utils"

@@ -22,6 +22,7 @@ import (
 	corestore "github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
 	cargo2 "github.com/harness/gitness/registry/app/api/controller/pkg/cargo"
+	generic3 "github.com/harness/gitness/registry/app/api/controller/pkg/generic"
 	gopackage2 "github.com/harness/gitness/registry/app/api/controller/pkg/gopackage"
 	"github.com/harness/gitness/registry/app/api/controller/pkg/huggingface"
 	"github.com/harness/gitness/registry/app/api/controller/pkg/npm"
@@ -141,6 +142,7 @@ func NewMavenHandlerProvider(
 
 func NewPackageHandlerProvider(
 	registryDao store.RegistryRepository, downloadStatDao store.DownloadStatRepository,
+	bandwidthStatDao store.BandwidthStatRepository,
 	spaceStore corestore.SpaceStore, tokenStore corestore.TokenStore,
 	userCtrl *usercontroller.Controller, authenticator authn.Authenticator,
 	urlProvider urlprovider.Provider, authorizer authz.Authorizer, spaceFinder refcache.SpaceFinder,
@@ -150,6 +152,7 @@ func NewPackageHandlerProvider(
 	return packages.NewHandler(
 		registryDao,
 		downloadStatDao,
+		bandwidthStatDao,
 		spaceStore,
 		tokenStore,
 		userCtrl,
@@ -192,9 +195,10 @@ func NewRpmHandlerProvider(
 }
 
 func NewGenericHandlerProvider(
-	spaceStore corestore.SpaceStore, controller *generic2.Controller, tokenStore corestore.TokenStore,
+	spaceStore corestore.SpaceStore, controller *generic3.Controller, tokenStore corestore.TokenStore,
 	userCtrl *usercontroller.Controller, authenticator authn.Authenticator, urlProvider urlprovider.Provider,
 	authorizer authz.Authorizer, packageHandler packages.Handler, spaceFinder refcache.SpaceFinder,
+	registryFinder refcache2.RegistryFinder,
 ) *generic.Handler {
 	return generic.NewGenericArtifactHandler(
 		spaceStore,
@@ -206,6 +210,7 @@ func NewGenericHandlerProvider(
 		authorizer,
 		packageHandler,
 		spaceFinder,
+		registryFinder,
 	)
 }
 
@@ -244,10 +249,11 @@ var WireSet = wire.NewSet(
 	maven.WireSet,
 	nuget.WireSet,
 	python.WireSet,
+	generic2.WireSet,
 	npm22.WireSet,
 	router.WireSet,
 	gc.WireSet,
-	generic2.WireSet,
+	generic3.WireSet,
 	python2.ControllerSet,
 	nuget2.ControllerSet,
 	npm.ControllerSet,

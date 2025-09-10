@@ -23,7 +23,6 @@ import (
 	"mime/multipart"
 	"net/http"
 	"path"
-	"regexp"
 	"strings"
 	"time"
 
@@ -36,20 +35,13 @@ import (
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
+	"github.com/harness/gitness/registry/app/pkg/generic"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types/enum"
 )
-
-const (
-	duplicateFileError = "file: [%s] with Artifact: [%s], Version: [%s] and registry: [%s] already exist"
-	filenameRegex      = `^[a-zA-Z0-9][a-zA-Z0-9._~@,/-]*[a-zA-Z0-9]$`
-)
-
-// ErrDuplicateFile is returned when a file already exists in the registry.
-var ErrDuplicateFile = errors.New("duplicate file error")
 
 type Controller struct {
 	SpaceStore  corestore.SpaceStore
@@ -58,6 +50,8 @@ type Controller struct {
 	fileManager filemanager.FileManager
 	tx          dbtx.Transactor
 	spaceFinder refcache.SpaceFinder
+	local       generic.LocalRegistry
+	proxy       generic.Proxy
 }
 
 type DBStore struct {
@@ -76,6 +70,8 @@ func NewController(
 	dBStore *DBStore,
 	tx dbtx.Transactor,
 	spaceFinder refcache.SpaceFinder,
+	local generic.LocalRegistry,
+	proxy generic.Proxy,
 ) *Controller {
 	return &Controller{
 		SpaceStore:  spaceStore,
@@ -84,6 +80,8 @@ func NewController(
 		DBStore:     dBStore,
 		tx:          tx,
 		spaceFinder: spaceFinder,
+		local:       local,
+		proxy:       proxy,
 	}
 }
 
@@ -102,8 +100,6 @@ func NewDBStore(
 		DownloadStatDao:  downloadStatDao,
 	}
 }
-
-const regNameFormat = "registry : [%s]"
 
 func (c Controller) UploadArtifact(
 	ctx context.Context, info pkg.GenericArtifactInfo,
@@ -402,13 +398,4 @@ func (c Controller) UploadFile(
 		return types.FileInfo{}, err
 	}
 	return fileInfo, err
-}
-
-func validateFileName(filename string) error {
-	filenameRe := regexp.MustCompile(filenameRegex)
-
-	if !filenameRe.MatchString(filename) {
-		return fmt.Errorf("invalid filename: %s", filename)
-	}
-	return nil
 }

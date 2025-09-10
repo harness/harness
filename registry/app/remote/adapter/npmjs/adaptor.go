@@ -20,8 +20,10 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/registry/app/common/lib/errors"
 	"github.com/harness/gitness/registry/app/metadata/npm"
 	adp "github.com/harness/gitness/registry/app/remote/adapter"
 	"github.com/harness/gitness/registry/app/remote/adapter/native"
@@ -84,7 +86,13 @@ func init() {
 func (a *adapter) GetPackageMetadata(ctx context.Context, pkg string) (*npm.PackageMetadata, error) {
 	_, readCloser, err := a.GetFile(ctx, pkg)
 	if err != nil {
-		return nil, err
+		code := errors.ErrCode(err)
+		if code == errors.NotFoundCode {
+			return nil, usererror.NotFoundf("failed to get package metadata %s", pkg)
+		}
+		if code == errors.ForbiddenCode {
+			return nil, usererror.Forbidden(fmt.Sprintf("failed to get package metadata %s", pkg))
+		}
 	}
 	defer readCloser.Close()
 	response, err := ParseNPMMetadata(readCloser)
@@ -116,8 +124,13 @@ func (a *adapter) GetPackage(ctx context.Context, pkg string, version string) (i
 	log.Ctx(ctx).Info().Msgf("Download URL: %s", downloadURL)
 	_, closer, err := a.GetFileFromURL(ctx, downloadURL)
 	if err != nil {
-		log.Ctx(ctx).Error().Err(err).Msgf("Failed to get file from URL: %s", downloadURL)
-		return nil, err
+		code := errors.ErrCode(err)
+		if code == errors.NotFoundCode {
+			return nil, usererror.NotFoundf("failed to get package file %s", pkg+version)
+		}
+		if code == errors.ForbiddenCode {
+			return nil, usererror.Forbidden(fmt.Sprintf("failed to get package file %s", pkg+version))
+		}
 	}
 	return closer, nil
 }

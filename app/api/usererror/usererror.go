@@ -57,7 +57,8 @@ var (
 	ErrPathTooLong = New(http.StatusBadRequest, "The resource path is too long")
 
 	// ErrCyclicHierarchy is returned if the action would create a cyclic dependency between spaces.
-	ErrCyclicHierarchy = New(http.StatusBadRequest, "Unable to perform the action as it would lead to a cyclic dependency")
+	ErrCyclicHierarchy = New(http.StatusBadRequest,
+		"Unable to perform the action as it would lead to a cyclic dependency")
 
 	// ErrSpaceWithChildsCantBeDeleted is returned if the principal is trying to delete a space that
 	// still has child resources.
@@ -168,6 +169,10 @@ func BadRequestWithPayload(message string, values ...map[string]any) *Error {
 // Forbidden returns a new user facing forbidden error.
 func Forbidden(message string) *Error {
 	return New(http.StatusForbidden, message)
+}
+
+func MethodNotAllowed(message string) *Error {
+	return New(http.StatusMethodNotAllowed, message)
 }
 
 // NotFound returns a new user facing not found error.

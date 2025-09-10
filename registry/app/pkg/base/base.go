@@ -22,10 +22,14 @@ import (
 	"mime/multipart"
 	"net/http"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/harness/gitness/app/api/request"
+	"github.com/harness/gitness/app/api/usererror"
+	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/metadata"
@@ -36,6 +40,7 @@ import (
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/store/database/dbtx"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
 )
@@ -81,6 +86,14 @@ type LocalBase interface {
 	)
 
 	Exists(ctx context.Context, info pkg.ArtifactInfo, path string) bool
+	ExistsE(ctx context.Context, info pkg.PackageArtifactInfo, path string) (
+		headers *commons.ResponseHeaders,
+		err error,
+	)
+	DeleteFile(ctx context.Context, info pkg.PackageArtifactInfo, filePath string) (
+		headers *commons.ResponseHeaders,
+		err error,
+	)
 
 	ExistsByFilePath(ctx context.Context, registryID int64, filePath string) (bool, error)
 
@@ -90,9 +103,11 @@ type LocalBase interface {
 
 	DeleteVersion(ctx context.Context, info pkg.PackageArtifactInfo) error
 
-	MoveMultipleTempFilesAndCreateArtifact(ctx context.Context, info *pkg.ArtifactInfo, pathPrefix string,
+	MoveMultipleTempFilesAndCreateArtifact(
+		ctx context.Context, info *pkg.ArtifactInfo, pathPrefix string,
 		metadata metadata.Metadata, filesInfo *[]types.FileInfo,
-		getTempFilePath func(info *pkg.ArtifactInfo, fileInfo *types.FileInfo) string, version string) error
+		getTempFilePath func(info *pkg.ArtifactInfo, fileInfo *types.FileInfo) string, version string,
+	) error
 }
 
 type localBase struct {
@@ -103,6 +118,8 @@ type localBase struct {
 	artifactDao store.ArtifactRepository
 	nodesDao    store.NodesRepository
 	tagsDao     store.PackageTagRepository
+	authorizer  authz.Authorizer
+	spaceFinder refcache.SpaceFinder
 }
 
 func NewLocalBase(
@@ -113,6 +130,8 @@ func NewLocalBase(
 	artifactDao store.ArtifactRepository,
 	nodesDao store.NodesRepository,
 	tagsDao store.PackageTagRepository,
+	authorizer authz.Authorizer,
+	spaceFinder refcache.SpaceFinder,
 ) LocalBase {
 	return &localBase{
 		registryDao: registryDao,
@@ -122,6 +141,8 @@ func NewLocalBase(
 		artifactDao: artifactDao,
 		nodesDao:    nodesDao,
 		tagsDao:     tagsDao,
+		authorizer:  authorizer,
+		spaceFinder: spaceFinder,
 	}
 }
 
@@ -196,19 +217,23 @@ func (l *localBase) MoveTempFileAndCreateArtifact(
 	return responseHeaders, fileInfo.Sha256, artifactID, false, nil
 }
 
-func (l *localBase) MoveMultipleTempFilesAndCreateArtifact(ctx context.Context, info *pkg.ArtifactInfo,
+func (l *localBase) MoveMultipleTempFilesAndCreateArtifact(
+	ctx context.Context, info *pkg.ArtifactInfo,
 	pathPrefix string, metadata metadata.Metadata, filesInfo *[]types.FileInfo,
-	getTempFilePath func(info *pkg.ArtifactInfo, fileInfo *types.FileInfo) string, version string) error {
+	getTempFilePath func(info *pkg.ArtifactInfo, fileInfo *types.FileInfo) string, version string,
+) error {
 	session, _ := request.AuthSessionFrom(ctx)
 	for _, fileInfo := range *filesInfo {
 		filePath := path.Join(pathPrefix, fileInfo.Filename)
 		_, err := l.fileManager.HeadSHA256(ctx, fileInfo.Sha256, info.RegistryID, info.RootParentID)
 		if err == nil {
 			// It means file already exist, or it was moved in some iteration, no need to move it, just save nodes
-			err = l.fileManager.SaveNodes(ctx, fileInfo.Sha256, info.RegistryID, info.RootParentID, session.Principal.ID,
+			err = l.fileManager.SaveNodes(ctx, fileInfo.Sha256, info.RegistryID, info.RootParentID,
+				session.Principal.ID,
 				fileInfo.Sha256)
 			if err != nil {
-				log.Ctx(ctx).Info().Msgf("Failed to move filesInfo with sha %s to %s", fileInfo.Sha256, fileInfo.Filename)
+				log.Ctx(ctx).Info().Msgf("Failed to move filesInfo with sha %s to %s", fileInfo.Sha256,
+					fileInfo.Filename)
 				return err
 			}
 			continue
@@ -337,13 +362,13 @@ func (l *localBase) uploadInternal(
 		if !errors.IsConflict(err) {
 			return nil, "", err
 		}
-		_, sha256, err2 := l.GetSHA256(ctx, info, path)
-		if err2 != nil {
-			return responseHeaders, "", err2
+		err = pkg.GetRegistryCheckAccess(ctx, l.authorizer, l.spaceFinder,
+			info.ParentID, info, enum.PermissionArtifactsDelete)
+		if err != nil {
+			return nil, "", usererror.Forbidden(fmt.Sprintf("Not enough permissions to overwrite file %s "+
+				"(needs DELETE permission).",
+				fileName))
 		}
-
-		responseHeaders.Code = http.StatusCreated
-		return responseHeaders, sha256, nil
 	}
 
 	registry, err := l.registryDao.GetByRootParentIDAndName(ctx, info.RootParentID, info.RegIdentifier)
@@ -391,15 +416,18 @@ func (l *localBase) postUploadArtifact(
 				return fmt.Errorf("failed to fetch artifact : [%s] with error: %w", info.Image, err)
 			}
 
-			err2 := l.updateMetadata(dbArtifact, metadata, info, fileInfo)
-			if err2 != nil {
-				return fmt.Errorf("failed to update metadata for artifact: [%s] with error: %w", info.Image, err2)
-			}
+			metadataJSON := []byte("{}")
+			if metadata != nil {
+				err2 := l.updateMetadata(dbArtifact, metadata, info, fileInfo)
+				if err2 != nil {
+					return fmt.Errorf("failed to update metadata for artifact: [%s] with error: %w", info.Image, err2)
+				}
 
-			metadataJSON, err := json.Marshal(metadata)
+				metadataJSON, err = json.Marshal(metadata)
 
-			if err != nil {
-				return fmt.Errorf("failed to parse metadata for artifact: [%s] with error: %w", info.Image, err)
+				if err != nil {
+					return fmt.Errorf("failed to parse metadata for artifact: [%s] with error: %w", info.Image, err)
+				}
 			}
 
 			artifactID, err = l.artifactDao.CreateOrUpdate(ctx, &types.Artifact{
@@ -439,11 +467,57 @@ func (l *localBase) Download(
 }
 
 func (l *localBase) Exists(ctx context.Context, info pkg.ArtifactInfo, path string) bool {
-	exists, _, err := l.GetSHA256(ctx, info, path)
+	exists, _, _, err := l.getSHA256(ctx, info.RegistryID, path)
 	if err != nil {
 		log.Ctx(ctx).Err(err).Msgf("Failed to check if file: [%s] exists", path)
 	}
 	return exists
+}
+
+func (l *localBase) ExistsE(
+	ctx context.Context,
+	info pkg.PackageArtifactInfo,
+	filePath string,
+) (headers *commons.ResponseHeaders, err error) {
+	exists, sha256, size, err := l.getSHA256(ctx, info.GetRegistryID(), GetCompletePath(info, filePath))
+	headers = &commons.ResponseHeaders{
+		Headers: make(map[string]string),
+		Code:    0,
+	}
+	// TODO: Need better error handling
+	if exists {
+		headers.Code = http.StatusOK
+		headers.Headers[storage.HeaderContentDigest] = sha256
+		headers.Headers[storage.HeaderContentLength] = strconv.FormatInt(size, 10)
+		headers.Headers[storage.HeaderEtag] = "sha256:" + sha256
+	} else {
+		headers.Code = http.StatusNotFound
+	}
+	return headers, err
+}
+
+func (l *localBase) DeleteFile(ctx context.Context, info pkg.PackageArtifactInfo, filePath string) (
+	headers *commons.ResponseHeaders,
+	err error,
+) {
+	completePath := GetCompletePath(info, filePath)
+	exists, _, _, _ := l.getSHA256(ctx, info.GetRegistryID(), completePath)
+	if exists {
+		err = l.fileManager.DeleteLeafNode(ctx, info.GetRegistryID(), completePath)
+		if err != nil {
+			log.Ctx(ctx).Error().Stack().Err(err).Msgf("Failed to delete file: %q, registry: %d", completePath,
+				info.GetRegistryID())
+			return nil, err
+		}
+		return &commons.ResponseHeaders{
+			Code:    204,
+			Headers: map[string]string{},
+		}, nil
+	}
+	return &commons.ResponseHeaders{
+		Code:    http.StatusNotFound,
+		Headers: map[string]string{},
+	}, nil
 }
 
 func (l *localBase) ExistsByFilePath(ctx context.Context, registryID int64, filePath string) (bool, error) {
@@ -463,19 +537,20 @@ func (l *localBase) CheckIfVersionExists(ctx context.Context, info pkg.PackageAr
 	return true, nil
 }
 
-func (l *localBase) GetSHA256(ctx context.Context, info pkg.ArtifactInfo, path string) (
+func (l *localBase) getSHA256(ctx context.Context, registryID int64, path string) (
 	exists bool,
 	sha256 string,
+	size int64,
 	err error,
 ) {
 	filePath := "/" + path
-	sha256, _, err = l.fileManager.HeadFile(ctx, filePath, info.RegistryID)
+	sha256, size, err = l.fileManager.HeadFile(ctx, filePath, registryID)
 	if err != nil {
-		return false, "", err
+		return false, "", 0, err
 	}
 
 	//FIXME: err should be checked on if the record doesn't exist or there was DB call issue
-	return true, sha256, err
+	return true, sha256, size, nil
 }
 
 func (l *localBase) GetSHA256ByPath(ctx context.Context, registryID int64, filePath string) (

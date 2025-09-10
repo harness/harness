@@ -161,7 +161,7 @@ type Client interface {
 	GetFile(ctx context.Context, filePath string) (*commons.ResponseHeaders, io.ReadCloser, error)
 
 	// HeadFile Check existence of file
-	HeadFile(ctx context.Context, filePath string) (*commons.ResponseHeaders, bool, error)
+	HeadFile(ctx context.Context, filePath string) (*commons.ResponseHeaders, error)
 
 	// GetFileFromURL Download the file from URL instead of provided endpoint. Authorizer still remains the same.
 	GetFileFromURL(ctx context.Context, url string) (*commons.ResponseHeaders, io.ReadCloser, error)
@@ -866,20 +866,20 @@ func (c *client) GetFileFromURL(ctx context.Context, url string) (*commons.Respo
 	return responseHeaders, resp.Body, nil
 }
 
-func (c *client) HeadFile(ctx context.Context, filePath string) (*commons.ResponseHeaders, bool, error) {
+func (c *client) HeadFile(ctx context.Context, filePath string) (*commons.ResponseHeaders, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodHead,
 		buildFileURL(c.url, filePath), nil)
 	if err != nil {
-		return nil, false, err
+		return nil, err
 	}
 
 	resp, err := c.Do(req)
 	if err != nil {
-		return nil, false, err
+		return nil, err
 	}
 	defer resp.Body.Close()
 	responseHeaders := utils.ParseResponseHeaders(resp)
-	return responseHeaders, true, err
+	return responseHeaders, nil
 }
 
 func buildFileURL(endpoint, filePath string) string {
