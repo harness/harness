@@ -32,7 +32,6 @@ import (
 	corestore "github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
 	artifact2 "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
-	"github.com/harness/gitness/registry/app/api/utils"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
@@ -180,16 +179,7 @@ func (h *handler) CheckQuarantineStatus(
 	ctx context.Context,
 ) error {
 	info := request.ArtifactInfoFrom(ctx)
-	filePath, err := utils.GetFilePath(info.BaseArtifactInfo().PathPackageType, info.BaseArtifactInfo().Image,
-		info.GetVersion())
-	if err != nil {
-		log.Ctx(ctx).Error().Msgf("failed to find the file paths for artifact: [%s], "+
-			"version: [%s] with registryID: [%d] with error: %v",
-			info.BaseArtifactInfo().Image, info.GetVersion(), info.BaseArtifactInfo().RegistryID, err.Error())
-		return usererror.ErrInternal
-	}
-	filePath = filePath + "/" + info.GetFileName()
-	paths, err := h.QuarantineArtifactDao.GetByFilePath(ctx, filePath,
+	paths, err := h.QuarantineArtifactDao.GetByFilePath(ctx, "",
 		info.BaseArtifactInfo().RegistryID, info.BaseArtifactInfo().Image, info.GetVersion())
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("failed to find the qurantine paths for artifact: [%s], "+
