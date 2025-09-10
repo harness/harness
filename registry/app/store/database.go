@@ -274,6 +274,10 @@ type TagRepository interface {
 		ctx context.Context, registryID int64,
 		imageName string,
 	) (err error)
+
+	GetQuarantineStatusForImages(
+		ctx context.Context, imageNames []string, registryID int64,
+	) ([]bool, error)
 }
 
 // UpstreamProxyConfig holds the record of a config of upstream proxy in DB.

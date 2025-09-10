@@ -877,8 +877,7 @@ func (t tagDao) GetAllArtifactsByRepo(
 		`r.registry_name as repo_name, t.tag_image_name as name, 
 		r.registry_package_type as package_type, t.tag_name as latest_version, 
 		t.tag_updated_at as modified_at, ar.image_labels as labels, 
-		COALESCE(t2.download_count, 0) as download_count,
-        (qp.quarantined_path_id IS NOT NULL) AS is_quarantined`,
+		COALESCE(t2.download_count, 0) as download_count`,
 	).
 		From("tags t").
 		Join(
@@ -893,8 +892,6 @@ func (t tagDao) GetAllArtifactsByRepo(
 			"images ar ON ar.image_registry_id = t.tag_registry_id"+
 				" AND ar.image_name = t.tag_image_name",
 		).
-		LeftJoin("quarantined_paths qp ON (qp.quarantined_path_image_id = ar.image_id "+
-			"AND qp.quarantined_path_registry_id = r.registry_id)").
 		LeftJoin(
 			`( SELECT i.image_name, SUM(COALESCE(t1.download_count, 0)) as download_count FROM 
 			( SELECT a.artifact_image_id, COUNT(d.download_stat_id) as download_count 
@@ -1021,6 +1018,53 @@ func (t tagDao) GetAllTagsByRepoAndImage(
 		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
 	}
 	return t.mapToTagMetadataList(ctx, dst)
+}
+
+// GetQuarantineStatusForImages gets quarantine status for a list of image names
+// Returns a boolean slice in the same order as the input image names.
+func (t tagDao) GetQuarantineStatusForImages(
+	ctx context.Context, imageNames []string, registryID int64,
+) ([]bool, error) {
+	if len(imageNames) == 0 {
+		return []bool{}, nil
+	}
+
+	q := databaseg.Builder.Select(
+		"DISTINCT i.image_name",
+	).From("quarantined_paths qp").
+		Join("images i ON qp.quarantined_path_image_id = i.image_id").
+		Where("qp.quarantined_path_registry_id = ?", registryID).
+		Where(sq.Eq{"i.image_name": imageNames})
+
+	sql, args, err := q.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert quarantine status query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, t.db)
+
+	type quarantineResult struct {
+		ImageName string `db:"image_name"`
+	}
+
+	var results []quarantineResult
+	if err = db.SelectContext(ctx, &results, sql, args...); err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to get quarantine status")
+	}
+
+	// Create a set of quarantined image names for quick lookup
+	quarantinedImages := make(map[string]bool)
+	for _, result := range results {
+		quarantinedImages[result.ImageName] = true
+	}
+
+	// Build result slice in the same order as input
+	resultSlice := make([]bool, len(imageNames))
+	for i, imageName := range imageNames {
+		resultSlice[i] = quarantinedImages[imageName]
+	}
+
+	return resultSlice, nil
 }
 
 func (t tagDao) CountAllTagsByRepoAndImage(

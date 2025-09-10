@@ -599,8 +599,7 @@ func (a ArtifactDao) GetArtifactsByRepo(ctx context.Context, parentID int64, rep
 		`r.registry_name as repo_name, i.image_name as name, 
 		r.registry_package_type as package_type, a.artifact_version as latest_version, 
 		a.artifact_updated_at as modified_at, i.image_labels as labels, i.image_type as artifact_type,
-		COALESCE(t2.download_count, 0) as download_count,
-        (qp.quarantined_path_id IS NOT NULL) AS is_quarantined`,
+		COALESCE(t2.download_count, 0) as download_count`,
 	).
 		From("artifacts a").
 		Join(
@@ -613,8 +612,6 @@ func (a ArtifactDao) GetArtifactsByRepo(ctx context.Context, parentID int64, rep
 		).
 		Join("images i ON i.image_id = a.artifact_image_id").
 		Join("registries r ON i.image_registry_id = r.registry_id").
-		LeftJoin("quarantined_paths qp ON qp.quarantined_path_image_id = i.image_id "+
-			"AND qp.quarantined_path_registry_id = i.image_registry_id").
 		LeftJoin(
 			`( SELECT i.image_name, SUM(COALESCE(t1.download_count, 0)) as download_count FROM 
 			( SELECT a.artifact_image_id, COUNT(d.download_stat_id) as download_count 

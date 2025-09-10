@@ -23,6 +23,8 @@ import (
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 func (c *APIController) GetAllArtifactsByRegistry(
@@ -126,11 +128,67 @@ func (c *APIController) GetAllArtifactsByRegistry(
 			}, nil
 		}
 	}
+	artifacts, err = c.enrichArtifactWithQuarantineInfo(ctx, artifacts, registry.ID)
+	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Msg("failed to fetch the quarantine info for artifacts")
+		return artifact.GetAllArtifactsByRegistry500JSONResponse{
+			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
+				*GetErrorResponse(http.StatusInternalServerError, err.Error()),
+			),
+		}, nil
+	}
 	return artifact.GetAllArtifactsByRegistry200JSONResponse{
 		ListRegistryArtifactResponseJSONResponse: *GetAllArtifactByRegistryResponse(
 			artifacts, count, regInfo.pageNumber, regInfo.limit,
 		),
 	}, nil
+}
+
+func (c *APIController) enrichArtifactWithQuarantineInfo(
+	ctx context.Context,
+	artifacts *[]types.ArtifactMetadata,
+	registryID int64,
+) (*[]types.ArtifactMetadata, error) {
+	if artifacts == nil || len(*artifacts) == 0 {
+		return artifacts, nil
+	}
+
+	// Collect unique image names
+	imageNameMap := make(map[string]bool)
+	var imageNames []string
+
+	for _, artifact := range *artifacts {
+		if !imageNameMap[artifact.Name] {
+			imageNameMap[artifact.Name] = true
+			imageNames = append(imageNames, artifact.Name)
+		}
+	}
+
+	// Get quarantine status for all images
+	quarantineStatuses, err := c.TagStore.GetQuarantineStatusForImages(ctx, imageNames, registryID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a map of image name to quarantine status
+	quarantineStatusMap := make(map[string]bool)
+	for i, imageName := range imageNames {
+		if i < len(quarantineStatuses) {
+			quarantineStatusMap[imageName] = quarantineStatuses[i]
+		}
+	}
+
+	// Enrich artifacts with quarantine information
+	for i := range *artifacts {
+		artifact := &(*artifacts)[i]
+		if isQuarantined, exists := quarantineStatusMap[artifact.Name]; exists {
+			artifact.IsQuarantined = isQuarantined
+		} else {
+			artifact.IsQuarantined = false
+		}
+	}
+
+	return artifacts, nil
 }
 
 func (c *APIController) getAllArtifactsByRegistry400JsonResponse(err error) (
