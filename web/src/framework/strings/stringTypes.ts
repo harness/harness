@@ -860,6 +860,7 @@ export interface StringsMap {
   'prReview.targetBranchChange': string
   'prReview.ugCodeowners': string
   'prReview.ugDefaultReviewers': string
+  'prReview.ugRemoved': string
   prSourceAndTargetMustBeDifferent: string
   'prState.draftDesc': string
   'prState.draftHeading': string

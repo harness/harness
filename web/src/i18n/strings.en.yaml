@@ -415,6 +415,7 @@ prReview:
   requested: '{author} requested a review from {reviewer}'
   selfAssigned: '{reviewer} self-requested a review'
   removed: '{author} removed the request for review from {reviewer}'
+  ugRemoved: '{author} removed the request for review from user group {reviewer}'
   selfRemoved: '{author} removed their request for review'
   filterByReviews: Filter by Reviews
   codeowners: '{author} requested review from {codeowners} as {count|1:code owner,code owners}'

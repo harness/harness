@@ -149,9 +149,6 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
     verb: 'POST',
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullReqMetadata.number}/merge`
   })
-  const { data } = useGet({
-    path: `/api/v1/repos/${repoMetadata.path}/+/rules`
-  })
 
   // Flags to optimize rendering
   const internalFlags = useRef({ dryRun: false })
@@ -215,7 +212,7 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
     } else {
       setMergeBlockedRule(false)
     }
-  }, [ruleViolationArr, pullReqMetadata, repoMetadata, data, ruleViolation])
+  }, [ruleViolationArr, pullReqMetadata, repoMetadata, ruleViolation])
 
   useEffect(() => {
     // recheck PR in case source SHA changed or PR was marked as unchecked

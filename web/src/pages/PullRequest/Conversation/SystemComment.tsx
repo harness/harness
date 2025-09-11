@@ -690,7 +690,7 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
             <Avatar name={payload?.author?.display_name} size="small" hoverCard={false} />
             <Text tag="div">
               <StringSubstitute
-                str={getString('prReview.removed')}
+                str={getString('prReview.ugRemoved')}
                 vars={{
                   author: <strong>{payload?.author?.display_name}</strong>,
                   reviewer: <strong>{userGroupReviewers}</strong>

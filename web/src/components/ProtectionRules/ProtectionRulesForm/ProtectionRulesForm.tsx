@@ -318,7 +318,7 @@ const ProtectionRulesForm = (props: {
         minDefaultReviewers: yup.number().typeError(getString('enterANumber')),
         defaultReviewersList: yup
           .array()
-          .of(yup.string())
+          .of(yup.object())
           .test(
             'min-reviewers', // Name of the test
             getString('protectionRules.atLeastMinReviewer', { count: 1 }),
@@ -326,9 +326,13 @@ const ProtectionRulesForm = (props: {
               const { minDefaultReviewers, requireMinDefaultReviewers, defaultReviewersEnabled } = this.parent
               const minReviewers = Number(minDefaultReviewers) || 0
               if (defaultReviewersEnabled && requireMinDefaultReviewers) {
+                const isUGPresent = (defaultReviewersList as NormalizedPrincipal[])?.some(
+                  (reviewer: NormalizedPrincipal) => reviewer?.type === PrincipalType.USER_GROUP
+                )
                 const isValid = defaultReviewersList && defaultReviewersList.length >= minReviewers
 
                 return (
+                  isUGPresent ||
                   isValid ||
                   this.createError({
                     message:

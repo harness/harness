@@ -1,4 +1,5 @@
 import type { SelectOption } from '@harnessio/uicore'
+import { isEmpty } from 'lodash-es'
 import type { UseStringsReturn } from 'framework/strings'
 import type { EnumMergeMethod, OpenapiRule, OpenapiRuleType, ProtectionBranch } from 'services/code'
 import { MergeStrategy, ProtectionRulesType, RulesTargetType } from 'utils/GitUtils'
@@ -155,8 +156,8 @@ export function createRuleFieldsMap(ruleDefinition: Rule): RuleFieldsMap {
     if (ruleDefinition.pullreq.reviewers) {
       ruleFieldsMap[RuleFields.AUTO_ADD_CODE_OWNERS] = !!ruleDefinition.pullreq.reviewers.request_code_owners
       ruleFieldsMap[RuleFields.DEFAULT_REVIEWERS_ADDED] =
-        Array.isArray(ruleDefinition.pullreq.reviewers.default_reviewer_ids) &&
-        ruleDefinition.pullreq.reviewers.default_reviewer_ids.length > 0
+        !isEmpty(ruleDefinition.pullreq.reviewers.default_reviewer_ids) ||
+        !isEmpty(ruleDefinition.pullreq.reviewers.default_user_group_reviewer_ids)
     }
   }
 
