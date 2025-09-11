@@ -22,6 +22,8 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 var validTransitions = map[enum.RepoState][]enum.RepoState{
@@ -32,6 +34,7 @@ var validTransitions = map[enum.RepoState][]enum.RepoState{
 
 type UpdateStateInput struct {
 	State enum.RepoState `json:"state"`
+	Force bool           `json:"force,omitempty"`
 }
 
 func (c *Controller) UpdateRepoState(
@@ -51,7 +54,7 @@ func (c *Controller) UpdateRepoState(
 	}
 
 	repoFull, err = c.repoStore.UpdateOptLock(ctx, repoFull, func(r *types.Repository) error {
-		if !stateTransitionValid(r.State, in.State) {
+		if !stateTransitionValid(ctx, repo.Identifier, r.State, in.State, in.Force) {
 			return usererror.BadRequestf("Changing repo state from %s to %s is not allowed.", r.State, in.State)
 		}
 
@@ -68,11 +71,23 @@ func (c *Controller) UpdateRepoState(
 	return repoFull, nil
 }
 
-func stateTransitionValid(currentState enum.RepoState, newState enum.RepoState) bool {
+func stateTransitionValid(
+	ctx context.Context,
+	repoIdentifier string,
+	currentState enum.RepoState,
+	newState enum.RepoState,
+	force bool,
+) bool {
 	for _, validState := range validTransitions[currentState] {
 		if validState == newState {
 			return true
 		}
+	}
+
+	if force {
+		log.Ctx(ctx).Warn().Msgf("Forcing state transition for repo %s from %s to %s",
+			repoIdentifier, currentState, newState)
+		return true
 	}
 
 	return false
