@@ -423,7 +423,7 @@ export const Conversation: React.FC<ConversationProps> = ({
       <Container>
         <Layout.Vertical spacing="xlarge">
           <Container>
-            <Layout.Horizontal width="calc(var(--page-container-width) - 48px)">
+            <Layout.Horizontal>
               <Container width={`70%`}>
                 <Layout.Vertical spacing="xlarge">
                   {prChecksDecisionResult && (
