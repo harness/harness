@@ -39,6 +39,8 @@ export default function VersionActions({
   pageType,
   readonly,
   onClose,
+  digest,
+  digestCount = 0,
   allowedActions
 }: VersionActionProps): JSX.Element {
   const [open, setOpen] = useState(false)
@@ -95,34 +97,40 @@ export default function VersionActions({
           {getString('view')}
         </LinkMenuItem>
       )}
-      {isAllowed(VersionAction.Quarantine) && HAR_ARTIFACT_QUARANTINE_ENABLED && !data.isQuarantined && (
-        <QuarantineMenuItem
-          artifactKey={artifactKey}
-          repoKey={repoKey}
-          versionKey={versionKey}
-          data={data}
-          pageType={pageType}
-          readonly={readonly}
-          onClose={() => {
-            setOpen(false)
-            onClose?.()
-          }}
-        />
-      )}
-      {isAllowed(VersionAction.Quarantine) && HAR_ARTIFACT_QUARANTINE_ENABLED && data.isQuarantined && (
-        <RemoveQurantineMenuItem
-          artifactKey={artifactKey}
-          repoKey={repoKey}
-          versionKey={versionKey}
-          data={data}
-          pageType={pageType}
-          readonly={readonly}
-          onClose={() => {
-            setOpen(false)
-            onClose?.()
-          }}
-        />
-      )}
+      {isAllowed(VersionAction.Quarantine) &&
+        HAR_ARTIFACT_QUARANTINE_ENABLED &&
+        !data.isQuarantined &&
+        digestCount < 2 && (
+          <QuarantineMenuItem
+            artifactKey={artifactKey}
+            repoKey={repoKey}
+            versionKey={digest ?? versionKey}
+            data={data}
+            pageType={pageType}
+            readonly={readonly}
+            onClose={() => {
+              setOpen(false)
+              onClose?.()
+            }}
+          />
+        )}
+      {isAllowed(VersionAction.Quarantine) &&
+        HAR_ARTIFACT_QUARANTINE_ENABLED &&
+        data.isQuarantined &&
+        digestCount < 2 && (
+          <RemoveQurantineMenuItem
+            artifactKey={artifactKey}
+            repoKey={repoKey}
+            versionKey={digest ?? versionKey}
+            data={data}
+            pageType={pageType}
+            readonly={readonly}
+            onClose={() => {
+              setOpen(false)
+              onClose?.()
+            }}
+          />
+        )}
     </ActionButton>
   )
 }

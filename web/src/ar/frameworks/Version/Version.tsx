@@ -61,6 +61,8 @@ export interface VersionActionProps {
   repoKey: string
   artifactKey: string
   versionKey: string
+  digest?: string
+  digestCount?: number
   readonly?: boolean
   onClose?: () => void
 }

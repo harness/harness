@@ -14,26 +14,15 @@
  * limitations under the License.
  */
 
-import type { ArtifactVersionMetadata, ArtifactVersionSummary } from '@harnessio/react-har-service-client'
+import type { DockerManifestDetails } from '@harnessio/react-har-service-client'
 import type { PageType } from '@ar/common/types'
 
-export interface VersionActionProps {
-  data: ArtifactVersionSummary | ArtifactVersionMetadata
-  versionKey: string
+export interface DigestActionProps {
+  data: DockerManifestDetails
   artifactKey: string
   repoKey: string
+  versionKey: string
   pageType: PageType
-  digest?: string
-  digestCount?: number
   readonly?: boolean
   onClose?: () => void
-  allowedActions?: VersionAction[]
-}
-
-export enum VersionAction {
-  Delete = 'delete',
-  SetupClient = 'setupClient',
-  DownloadCommand = 'downloadCommand',
-  ViewVersionDetails = 'viewVersionDetails',
-  Quarantine = 'quarantine'
 }

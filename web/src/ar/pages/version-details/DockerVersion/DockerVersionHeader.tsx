@@ -89,6 +89,7 @@ export default function DockerVersionHeader(props: DockerVersionHeaderProps): JS
         repoKey={pathParams.repositoryIdentifier}
         artifactKey={pathParams.artifactIdentifier}
         versionKey={pathParams.versionIdentifier}
+        digest={digest}
         pageType={PageType.Details}
         data={data}
       />

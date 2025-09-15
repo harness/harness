@@ -21,10 +21,12 @@ import type { DockerManifestDetails } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
 import { useRoutes } from '@ar/hooks'
+import { PageType } from '@ar/common/types'
 import { getShortDigest } from '@ar/pages/digest-list/utils'
 import TableCells from '@ar/components/TableCells/TableCells'
 import { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
 import { LocalArtifactType } from '@ar/pages/repository-details/constants'
+import DigestActions from '../DigestActions/DigestActions'
 
 type CellTypeWithActions<D extends Record<string, any>, V = any> = TableInstance<D> & {
   column: ColumnInstance<D>
@@ -99,6 +101,19 @@ export const DigestVulnerabilityCell: CellType = ({ row }) => {
   )
 }
 
-export const DigestActionsCell: CellType = () => {
-  return <></>
+export const DigestActionsCell: Renderer<{
+  row: Row<DockerManifestDetails>
+  column: ColumnInstance<DockerManifestDetails> & DigestNameColumnProps
+}> = ({ row, column }) => {
+  const { repositoryIdentifier, artifactIdentifier } = column
+  const { original } = row
+  return (
+    <DigestActions
+      data={original}
+      artifactKey={artifactIdentifier}
+      repoKey={repositoryIdentifier}
+      versionKey={original.digest}
+      pageType={PageType.Table}
+    />
+  )
 }

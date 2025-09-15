@@ -74,6 +74,7 @@ export default function HelmVersionDetailsHeaderContent(props: HelmVersionDetail
         repoKey={pathParams.repositoryIdentifier}
         artifactKey={pathParams.artifactIdentifier}
         versionKey={pathParams.versionIdentifier}
+        digest={pathParams.versionIdentifier}
         pageType={PageType.Details}
         data={data}
       />

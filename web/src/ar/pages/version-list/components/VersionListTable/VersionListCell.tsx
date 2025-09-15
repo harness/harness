@@ -140,6 +140,7 @@ export const VersionActionsCell: CellType = ({ row }) => {
       repoKey={repositoryIdentifier}
       artifactKey={artifactIdentifier}
       versionKey={original.name}
+      digestCount={original.digestCount}
     />
   )
 }

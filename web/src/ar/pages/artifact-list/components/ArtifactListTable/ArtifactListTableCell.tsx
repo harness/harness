@@ -257,6 +257,9 @@ export const LatestArtifactCell: CellType = ({ row }) => {
 
 export const ArtifactVersionActions: CellType = ({ row }) => {
   const { original } = row
+  const { packageType } = original
+  // TODO: update once BE support this in response
+  const digestCount = packageType === RepositoryPackageType.DOCKER ? 2 : 0
   return (
     <VersionActionsWidget
       pageType={PageType.GlobalList}
@@ -265,6 +268,7 @@ export const ArtifactVersionActions: CellType = ({ row }) => {
       artifactKey={original.name}
       versionKey={original.version}
       packageType={original.packageType as RepositoryPackageType}
+      digestCount={digestCount}
     />
   )
 }

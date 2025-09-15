@@ -81,7 +81,10 @@ export default function DigestListTable(props: DigestListTableProps): JSX.Elemen
         Header: '',
         accessor: 'menu',
         Cell: DigestActionsCell,
-        disableSortBy: true
+        disableSortBy: true,
+        repositoryIdentifier,
+        artifactIdentifier,
+        versionIdentifier
       }
     ].filter(Boolean) as unknown as Column<DockerManifestDetails>[]
   }, [getString, repositoryIdentifier, artifactIdentifier, versionIdentifier])
