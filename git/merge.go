@@ -33,15 +33,26 @@ import (
 type MergeParams struct {
 	WriteParams
 
-	BaseSHA    sha.SHA
+	// BaseSHA is the target SHA when we want to merge. Either BaseSHA or BaseBranch must be provided.
+	BaseSHA sha.SHA
+	// BaseBranch is the target branch where we want to merge. Either BaseSHA or BaseBranch must be provided.
 	BaseBranch string
 
-	// HeadRepoUID specifies the UID of the repo that contains the head branch (required for forking).
-	// WARNING: This field is currently not supported yet!
-	HeadRepoUID string
-	HeadBranch  string
+	// HeadRepoUID is deprecated. TODO: Remove HeadRepoUID.
+	HeadRepoUID string // Deprecated
 
-	Title   string // Deprecated
+	// HeadSHA is the source commit we want to merge onto the base. Either HeadSHA or HeadBranch must be provided.
+	HeadSHA sha.SHA
+	// HeadBranch is the source branch we want to merge. Either HeadSHA or HeadBranch must be provided.
+	HeadBranch string
+
+	// HeadExpectedSHA is commit SHA on the HeadBranch. Ignored if HeadSHA is provided instead.
+	// If HeadExpectedSHA is older than the HeadBranch latest SHA then merge will fail.
+	HeadExpectedSHA sha.SHA
+
+	// Title of the commit. TODO: Remove Title.
+	Title string // Deprecated: Use Message instead.
+	// Merge is the message of the commit that would be created. Ignored for Rebase and FastForward.
 	Message string
 
 	// Committer overwrites the git committer used for committing the files
@@ -58,10 +69,6 @@ type MergeParams struct {
 	AuthorDate *time.Time
 
 	Refs []RefUpdate
-
-	// HeadExpectedSHA is commit sha on the head branch, if HeadExpectedSHA is older
-	// than the HeadBranch latest sha then merge will fail.
-	HeadExpectedSHA sha.SHA
 
 	Force            bool
 	DeleteHeadBranch bool
@@ -91,8 +98,8 @@ func (p *MergeParams) Validate() error {
 		return errors.InvalidArgument("either base branch or commit SHA is mandatory")
 	}
 
-	if p.HeadBranch == "" {
-		return errors.InvalidArgument("head branch is mandatory")
+	if p.HeadBranch == "" && p.HeadSHA.IsEmpty() {
+		return errors.InvalidArgument("either head branch or head SHA is mandatory")
 	}
 
 	for _, ref := range p.Refs {
@@ -179,17 +186,20 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 		}
 	}
 
-	headCommitSHA, err := s.git.ResolveRev(ctx, repoPath, api.EnsureBranchPrefix(params.HeadBranch))
-	if err != nil {
-		return MergeOutput{}, fmt.Errorf("failed to get head branch commit SHA: %w", err)
-	}
+	headCommitSHA := params.HeadSHA
+	if headCommitSHA.IsEmpty() {
+		headCommitSHA, err = s.git.ResolveRev(ctx, repoPath, api.EnsureBranchPrefix(params.HeadBranch))
+		if err != nil {
+			return MergeOutput{}, fmt.Errorf("failed to get head branch commit SHA: %w", err)
+		}
 
-	if !params.HeadExpectedSHA.IsEmpty() && !params.HeadExpectedSHA.Equal(headCommitSHA) {
-		return MergeOutput{}, errors.PreconditionFailed(
-			"head branch '%s' is on SHA '%s' which doesn't match expected SHA '%s'.",
-			params.HeadBranch,
-			headCommitSHA,
-			params.HeadExpectedSHA)
+		if !params.HeadExpectedSHA.IsEmpty() && !params.HeadExpectedSHA.Equal(headCommitSHA) {
+			return MergeOutput{}, errors.PreconditionFailed(
+				"head branch '%s' is on SHA '%s' which doesn't match expected SHA '%s'.",
+				params.HeadBranch,
+				headCommitSHA,
+				params.HeadExpectedSHA)
+		}
 	}
 
 	mergeBaseCommitSHA, _, err := s.git.GetMergeBase(ctx, repoPath, "origin",

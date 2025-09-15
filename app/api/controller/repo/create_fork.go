@@ -237,7 +237,8 @@ func (c *Controller) CreateFork(
 		}),
 	)
 	if err != nil {
-		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for create repository operation: %s", err)
+		log.Ctx(ctx).Warn().Err(err).
+			Msg("failed to insert audit log for create fork repository operation")
 	}
 
 	err = c.instrumentation.Track(ctx, instrument.Event{
@@ -251,7 +252,8 @@ func (c *Controller) CreateFork(
 		},
 	})
 	if err != nil {
-		log.Ctx(ctx).Warn().Msgf("failed to insert instrumentation record for create repository operation: %s", err)
+		log.Ctx(ctx).Warn().Err(err).
+			Msg("failed to insert instrumentation record for create fork repository operation")
 	}
 
 	c.eventReporter.Created(ctx, &repoevents.CreatedPayload{

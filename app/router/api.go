@@ -384,6 +384,7 @@ func setupRepos(r chi.Router,
 			r.Post("/restore", handlerrepo.HandleRestore(repoCtrl))
 			r.Post("/public-access", handlerrepo.HandleUpdatePublicAccess(repoCtrl))
 			r.Post("/fork", handlerrepo.HandleCreateFork(repoCtrl))
+			r.Post("/fork-sync", handlerrepo.HandleForkSync(repoCtrl))
 
 			r.Route("/settings", func(r chi.Router) {
 				r.Get("/security", handlerreposettings.HandleSecurityFind(repoSettingsCtrl))

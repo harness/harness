@@ -26,6 +26,7 @@ import (
 
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/command"
+	"github.com/harness/gitness/git/sha"
 
 	"github.com/rs/zerolog/log"
 )
@@ -280,6 +281,42 @@ func (g *Git) Sync(
 	err := cmd.Run(ctx, command.WithDir(repoPath))
 	if err != nil {
 		return processGitErrorf(err, "failed to sync repo")
+	}
+
+	return nil
+}
+
+// FetchObjects pull git objects from a different repository.
+// It doesn't update any references.
+func (g *Git) FetchObjects(
+	ctx context.Context,
+	repoPath string,
+	source string,
+	objectSHAs []sha.SHA,
+) error {
+	if repoPath == "" {
+		return ErrRepositoryPathEmpty
+	}
+	cmd := command.New("fetch",
+		command.WithConfig("advice.fetchShowForcedUpdates", "false"),
+		command.WithConfig("credential.helper", ""),
+		command.WithFlag(
+			"--quiet",
+			"--no-auto-gc", // because we're fetching objects that are not referenced
+			"--no-tags",
+			"--no-write-fetch-head",
+			"--no-show-forced-updates",
+		),
+		command.WithArg(source),
+	)
+
+	for _, objectSHA := range objectSHAs {
+		cmd.Add(command.WithArg(objectSHA.String()))
+	}
+
+	err := cmd.Run(ctx, command.WithDir(repoPath))
+	if err != nil {
+		return processGitErrorf(err, "failed to fetch objects")
 	}
 
 	return nil

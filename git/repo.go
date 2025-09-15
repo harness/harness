@@ -29,6 +29,7 @@ import (
 	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/check"
 	"github.com/harness/gitness/git/hash"
+	"github.com/harness/gitness/git/sha"
 
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"github.com/rs/zerolog/log"
@@ -258,13 +259,8 @@ func (s *Service) SyncRepository(
 		return nil, err
 	}
 
-	source := params.Source
-
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
-
-	if strings.IndexByte(source, '/') < 0 {
-		source = getFullPathForRepo(s.reposRoot, source)
-	}
+	source := s.convertRepoSource(params.Source)
 
 	// create repo if requested
 	_, err := os.Stat(repoPath)
@@ -602,4 +598,43 @@ func (s *Service) Archive(ctx context.Context, params ArchiveParams, w io.Writer
 	}
 
 	return nil
+}
+
+type FetchObjectsParams struct {
+	WriteParams
+	Source     string
+	ObjectSHAs []sha.SHA
+}
+
+type FetchObjectsOutput struct{}
+
+func (s *Service) FetchObjects(
+	ctx context.Context,
+	params *FetchObjectsParams,
+) (FetchObjectsOutput, error) {
+	if err := params.Validate(); err != nil {
+		return FetchObjectsOutput{}, err
+	}
+
+	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
+	source := s.convertRepoSource(params.Source)
+
+	// sync repo content
+	err := s.git.FetchObjects(ctx, repoPath, source, params.ObjectSHAs)
+	if err != nil {
+		return FetchObjectsOutput{}, fmt.Errorf("failed to fetch git objects from source repo: %w", err)
+	}
+
+	return FetchObjectsOutput{}, nil
+}
+
+// convertRepoSource converts the source in Git operations like SyncRepository or FetchObjects.
+// If the source string contains no slash, we assume it's a GitUID and create a full path out of it.
+// If it does contain a slash, we assume it's a URL and leave it intact.
+func (s *Service) convertRepoSource(source string) string {
+	if strings.IndexByte(source, '/') >= 0 {
+		return source
+	}
+
+	return getFullPathForRepo(s.reposRoot, source)
 }
