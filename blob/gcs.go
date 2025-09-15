@@ -40,8 +40,9 @@ type GCSStore struct {
 }
 
 func NewGCSStore(ctx context.Context, cfg Config) (Store, error) {
-	// Use service account [Development and Non-GCP environments]
-	if cfg.KeyPath != "" {
+	switch {
+	case cfg.KeyPath != "":
+		// Use service account key file [Development and Non-GCP environments]
 		client, err := storage.NewClient(ctx, option.WithCredentialsFile(cfg.KeyPath))
 		if err != nil {
 			return nil, fmt.Errorf("failed to create GCS client with service account key: %w", err)
@@ -51,18 +52,30 @@ func NewGCSStore(ctx context.Context, cfg Config) (Store, error) {
 			cachedClient:        client,
 			tokenExpirationTime: time.Now().Add(cfg.ImpersonationLifetime),
 		}, nil
+	case cfg.TargetPrincipal == "":
+		// Use direct Workload Identity [GKE environments with direct SA access]
+		client, err := storage.NewClient(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create GCS client with default credentials: %w", err)
+		}
+		return &GCSStore{
+			config:       cfg,
+			cachedClient: client,
+			// No token expiration for default credentials - managed by GCP
+			tokenExpirationTime: time.Time{}, // Zero time - never expires
+		}, nil
+	default:
+		// Use Workload Identity with impersonation [GKE environments with SA impersonation]
+		client, err := createNewImpersonatedClient(ctx, cfg)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create GCS client with workload identity impersonation: %w", err)
+		}
+		return &GCSStore{
+			config:              cfg,
+			cachedClient:        client,
+			tokenExpirationTime: time.Now().Add(cfg.ImpersonationLifetime),
+		}, nil
 	}
-
-	client, err := createNewImpersonatedClient(ctx, cfg)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create GCS client with workload identity impersonation: %w", err)
-	}
-
-	return &GCSStore{
-		config:              cfg,
-		cachedClient:        client,
-		tokenExpirationTime: time.Now().Add(cfg.ImpersonationLifetime),
-	}, nil
 }
 
 func (c *GCSStore) Upload(ctx context.Context, file io.Reader, filePath string) error {
@@ -170,6 +183,11 @@ func createNewImpersonatedClient(ctx context.Context, cfg Config) (*storage.Clie
 }
 
 func (c *GCSStore) getClient(ctx context.Context) (*storage.Client, error) {
+	// Skip token refresh for direct Workload Identity (no impersonation)
+	if c.config.KeyPath == "" && c.config.TargetPrincipal == "" {
+		return c.cachedClient, nil
+	}
+
 	err := c.checkAndRefreshToken(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to refresh token: %w", err)
