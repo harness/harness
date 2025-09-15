@@ -43,7 +43,14 @@ func HandleListAllGitspaces(gitspaceCtrl *gitspace.Controller) http.HandlerFunc 
 		filter.QueryFilter = types.ListQueryFilter{
 			Pagination: maxListing,
 		}
-		gitspaces, err := gitspaceCtrl.ListAllGitspaces(ctx, session, filter)
+
+		// For List all gitspaces api in gitness, we will send allSpaceIDs as true
+		// This is fetch all the root spaces IDs and list all gitspaces within these root space IDs.
+		// For gitness we can show gitspaces from all root IDs(ideally there will be 1 root space).
+		// This could not be done for cde-manager that different root space IDs map to different accounts.
+		const allSpaceIDs = true
+
+		gitspaces, err := gitspaceCtrl.ListAllGitspaces(ctx, session, filter, allSpaceIDs)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return

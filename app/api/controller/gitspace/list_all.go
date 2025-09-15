@@ -27,11 +27,22 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
+// ListAllGitspaces all the gitspace with given filter.
+// DO NOT USE allSpaceIDs = true for cde-manager. This arg is used only in gitness to list all the gitspaces in gitness
+// for all. This is useful to list all the gitspaces in OSS for IDE plugins.
 func (c *Controller) ListAllGitspaces( // nolint:gocognit
 	ctx context.Context,
 	session *auth.Session,
 	filter types.GitspaceFilter,
+	allSpaceIDs bool,
 ) ([]*types.GitspaceConfig, error) {
+	if allSpaceIDs {
+		leafSpaceIDs, err := c.fetchAllLeafSpaceIDs(ctx)
+		if err != nil {
+			return nil, err
+		}
+		filter.SpaceIDs = leafSpaceIDs
+	}
 	var result []*types.GitspaceConfig
 	err := c.tx.WithTx(ctx, func(ctx context.Context) (err error) {
 		allGitspaceConfigs, _, _, err := c.gitspaceSvc.ListGitspacesWithInstance(ctx, filter, false)
@@ -71,6 +82,26 @@ func (c *Controller) ListAllGitspaces( // nolint:gocognit
 	}
 
 	return result, nil
+}
+
+func (c *Controller) fetchAllLeafSpaceIDs(ctx context.Context) ([]int64, error) {
+	opts := &types.SpaceFilter{}
+	rootSpaces, err := c.spaceStore.GetAllRootSpaces(ctx, opts)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get root spaces: %w", err)
+	}
+	var leafSpaceIDs []int64
+	for _, rootSpace := range rootSpaces {
+		spaceIDs, err := c.spaceStore.GetDescendantsIDs(ctx, rootSpace.ID)
+		if err != nil {
+			if !errors.Is(err, store.ErrResourceNotFound) {
+				return nil, fmt.Errorf("failed to get descendants ids: %w", err)
+			}
+		}
+		leafSpaceIDs = append(leafSpaceIDs, spaceIDs...)
+	}
+
+	return leafSpaceIDs, nil
 }
 
 func (c *Controller) filter(

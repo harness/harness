@@ -391,9 +391,9 @@ func addGitspaceInstanceFilter(
 	stmt squirrel.SelectBuilder,
 	filter *types.GitspaceInstanceFilter,
 ) squirrel.SelectBuilder {
-	if len(filter.SpaceIDs) > 0 {
-		stmt = stmt.Where(squirrel.Eq{"gits_space_id": filter.SpaceIDs})
-	}
+	// do not add check for adding filter only when len(filter.SpaceIDs) == 0.
+	// Otherwise when len(filter.SpaceIDs) == 0 user will be able to see all gitspaces from all accounts
+	stmt = stmt.Where(squirrel.Eq{"gits_space_id": filter.SpaceIDs})
 
 	if filter.UserIdentifier != "" {
 		stmt = stmt.Where(squirrel.Eq{"gits_user_id": filter.UserIdentifier})
