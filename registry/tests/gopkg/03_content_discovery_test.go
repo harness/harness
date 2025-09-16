@@ -82,7 +82,7 @@ var test03ContentDiscovery = func() {
 				nonExistentArtifact := GetUniqueArtifactName("nonexistent", 99)
 				nonExistentVersion := GetUniqueVersion(99)
 				// verify package index
-				path := fmt.Sprintf("/pkg/%s/%s/go/%s/%s.mod",
+				path := fmt.Sprintf("/pkg/%s/%s/go/%s/@v/%s.mod",
 					TestConfig.Namespace, TestConfig.RegistryName,
 					nonExistentArtifact, nonExistentVersion,
 				)

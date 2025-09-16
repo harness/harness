@@ -19,7 +19,6 @@ import (
 	"net/http"
 
 	"github.com/harness/gitness/registry/app/pkg/commons"
-	"github.com/harness/gitness/registry/app/pkg/gopackage/utils"
 	gopackagetype "github.com/harness/gitness/registry/app/pkg/types/gopackage"
 	"github.com/harness/gitness/registry/request"
 
@@ -35,20 +34,6 @@ func (h *handler) DownloadPackageFile(
 		h.handleGoPackageAPIError(w, r, fmt.Errorf("failed to fetch info from context"))
 		return
 	}
-
-	path := r.PathValue("*")
-	image, version, filename, err := utils.GetArtifactInfoFromURL(path)
-	if err != nil {
-		http.Error(w,
-			fmt.Sprintf("image and version not found in path %s: %s", path, err.Error()),
-			http.StatusNotFound, // go client need 404 for incorrect path
-		)
-		return
-	}
-
-	info.Image = image
-	info.Version = version
-	info.FileName = filename
 
 	response := h.controller.DownloadPackageFile(ctx, info)
 	if response == nil {
@@ -81,7 +66,7 @@ func (h *handler) DownloadPackageFile(
 		return
 	}
 
-	err = commons.ServeContent(w, r, response.Body, info.FileName, response.ReadCloser)
+	err := commons.ServeContent(w, r, response.Body, info.FileName, response.ReadCloser)
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("Failed to serve content: %v", err)
 		h.handleGoPackageAPIError(w, r, fmt.Errorf("failed to serve content: %w", err))

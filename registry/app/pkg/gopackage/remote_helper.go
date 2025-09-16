@@ -96,7 +96,7 @@ func (r *remoteRegistryHelper) GetPackageFile(
 	data, err := r.adapter.GetPackageFile(ctx, filePath)
 	if err != nil {
 		log.Ctx(ctx).Error().Err(err).Msgf("failed to get package file: %s, %s", pkg, filePath)
-		return nil, fmt.Errorf("failed to get package file: %s, %s", pkg, filePath)
+		return nil, fmt.Errorf("failed to get package file: %s, %s, %w", pkg, filePath, err)
 	}
 	if data == nil {
 		log.Ctx(ctx).Error().Msgf("file not found for package: %s, %s", pkg, filePath)

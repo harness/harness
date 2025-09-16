@@ -21,9 +21,11 @@ import (
 	"mime/multipart"
 	"net/http"
 
+	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/registry/app/api/controller/pkg/gopackage"
 	"github.com/harness/gitness/registry/app/api/handler/packages"
 	"github.com/harness/gitness/registry/app/pkg"
+	"github.com/harness/gitness/registry/app/pkg/gopackage/utils"
 	gopackagetype "github.com/harness/gitness/registry/app/pkg/types/gopackage"
 )
 
@@ -57,15 +59,25 @@ func (h *handler) GetPackageArtifactInfo(r *http.Request) (pkg.PackageArtifactIn
 	if err != nil {
 		return nil, err
 	}
-	info.Image = r.PathValue("name")
+	var version, filename string
+	image := r.PathValue("name")
+	path := r.PathValue("*")
+	if path != "" {
+		image, version, filename, err = utils.GetArtifactInfoFromURL(path)
+		if err != nil {
+			return nil, usererror.BadRequest(fmt.Sprintf("image and version not found in path %s: %s", path, err.Error()))
+		}
+	}
+	info.Image = image
 	return &gopackagetype.ArtifactInfo{
 		ArtifactInfo: info,
-		Version:      r.PathValue("version"),
+		Version:      version,
+		FileName:     filename,
 	}, nil
 }
 
 func (h *handler) handleGoPackageAPIError(writer http.ResponseWriter, request *http.Request, err error) {
-	h.HandleErrors(request.Context(), []error{err}, writer)
+	h.HandleError(request.Context(), writer, err)
 }
 
 func (h *handler) parseDataFromPayload(r *http.Request) (*bytes.Buffer, *bytes.Buffer, io.ReadCloser, error) {
