@@ -23,6 +23,7 @@ import { useDecodedParams, useGetSpaceRef } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
+import { LocalArtifactType } from '@ar/pages/repository-details/constants'
 
 import css from './VersionSelector.module.scss'
 
@@ -33,7 +34,7 @@ export interface VersionSelectorProps {
 
 export default function VersionSelector(props: VersionSelectorProps): JSX.Element {
   const { value } = props
-  const { artifactIdentifier } = useDecodedParams<VersionDetailsPathParams>()
+  const { artifactIdentifier, artifactType } = useDecodedParams<VersionDetailsPathParams>()
   const [query, setQuery] = useState('')
   const { getString } = useStrings()
   const spaceRef = useGetSpaceRef()
@@ -45,7 +46,8 @@ export default function VersionSelector(props: VersionSelectorProps): JSX.Elemen
       queryParams: {
         size: 100,
         page: 0,
-        search_term: query
+        search_term: query,
+        artifact_type: artifactType === LocalArtifactType.ARTIFACTS ? undefined : artifactType
       }
     })
   }

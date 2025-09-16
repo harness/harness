@@ -92,18 +92,6 @@ func (c *APIController) GetAllArtifactVersions(
 		}
 		return throw500Error(err)
 	}
-	img, err := c.ImageStore.GetByName(ctx, registry.ID, image)
-	if err != nil {
-		if errors.Is(err, store.ErrResourceNotFound) {
-			return artifact.GetAllArtifactVersions404JSONResponse{
-				NotFoundJSONResponse: artifact.NotFoundJSONResponse(
-					*GetErrorResponse(http.StatusNotFound, err.Error()),
-				),
-			}, nil
-		}
-		return throw500Error(err)
-	}
-
 	var artifactType *artifact.ArtifactType
 	if r.Params.ArtifactType != nil {
 		artifactType, err = ValidateAndGetArtifactType(registry.PackageType, string(*r.Params.ArtifactType))
@@ -115,6 +103,19 @@ func (c *APIController) GetAllArtifactVersions(
 			}, nil
 		}
 	}
+
+	img, err := c.ImageStore.GetByNameAndType(ctx, registry.ID, image, artifactType)
+	if err != nil {
+		if errors.Is(err, store.ErrResourceNotFound) {
+			return artifact.GetAllArtifactVersions404JSONResponse{
+				NotFoundJSONResponse: artifact.NotFoundJSONResponse(
+					*GetErrorResponse(http.StatusNotFound, err.Error()),
+				),
+			}, nil
+		}
+		return throw500Error(err)
+	}
+
 	//nolint:nestif
 	if registry.PackageType == artifact.PackageTypeDOCKER || registry.PackageType == artifact.PackageTypeHELM {
 		tags, err := c.TagStore.GetAllTagsByRepoAndImage(

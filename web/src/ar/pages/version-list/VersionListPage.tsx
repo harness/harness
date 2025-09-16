@@ -28,6 +28,7 @@ import type { ArtifactDetailsPathParams } from '@ar/routes/types'
 import { DEFAULT_PAGE_INDEX, PreferenceScope } from '@ar/constants'
 import VersionListTableWidget from '@ar/frameworks/Version/VersionListTableWidget'
 
+import { LocalArtifactType } from '../repository-details/constants'
 import { VersionListPageQueryParams, useVersionListQueryParamOptions } from './utils'
 
 import css from './VersionListPage.module.scss'
@@ -72,7 +73,8 @@ function VersionListPage(props: VersionListPageProps): JSX.Element {
       size,
       sort_field: sortField,
       sort_order: sortOrder,
-      search_term: searchTerm
+      search_term: searchTerm,
+      artifact_type: pathParams.artifactType === LocalArtifactType.ARTIFACTS ? undefined : pathParams.artifactType
     },
     stringifyQueryParamsOptions: {
       arrayFormat: 'repeat'
