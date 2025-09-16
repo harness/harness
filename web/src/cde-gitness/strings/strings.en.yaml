@@ -69,6 +69,7 @@ createImport: creating or importing repositories
 regionAndMachineSize: Region & Machine Size
 copied: Copied
 id: ID
+project: Project
 gitspaceInfra: Gitspace Infrastructure
 configureGCPInfra: Configure GCP Infrastructure
 gcpInfrastructure: GCP Infrastructure
@@ -382,6 +383,15 @@ update:
   errorAllIDE : All IDEs have been disabled by the admin. Cannot update the gitspace.
   errorAllResources: Admin has disabled all available machine resources for this gitspace. Cannot update the gitspace.
   gitspaceUpdateNote : Your changes won't be lost by updating the IDE or machine type. Your Gitspace has to be restarted after the update.
+usageDashboard:
+  title: "Usage Dashboard"
+  usageTab: "Usage"
+  gitspacesTab: "Gitspaces"
+  comingSoon: "Coming Soon"
+  searchPlaceholder: "Search Gitspaces..."
+  projects: "Projects"
+  organizations: "Organizations"
+  loadMore: "Load More"
 details:
   actions: More Actions
   openCursor: Open Cursor

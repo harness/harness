@@ -1,0 +1,13 @@
+.customPopover {
+  :global(.bp3-popover) {
+    max-width: 250px !important;
+  }
+  :global(.bp3-menu) {
+    max-height: 400px !important;
+    overflow: auto !important;
+  }
+
+  :global(.bp3-control-indicator) {
+    flex-shrink: 0;
+  }
+}

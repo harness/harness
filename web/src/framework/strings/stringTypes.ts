@@ -1649,6 +1649,7 @@ export interface StringsMap {
   'cde.noRepo': string
   'cde.or': string
   'cde.owners': string
+  'cde.project': string
   'cde.region': string
   'cde.regionAndMachineSize': string
   'cde.regionMachineType': string
@@ -1761,6 +1762,14 @@ export interface StringsMap {
   'cde.update.infraProviderSuccess': string
   'cde.update.updateGitspace': string
   'cde.updateGitspace': string
+  'cde.usageDashboard.comingSoon': string
+  'cde.usageDashboard.gitspacesTab': string
+  'cde.usageDashboard.loadMore': string
+  'cde.usageDashboard.organizations': string
+  'cde.usageDashboard.projects': string
+  'cde.usageDashboard.searchPlaceholder': string
+  'cde.usageDashboard.title': string
+  'cde.usageDashboard.usageTab': string
   'cde.used': string
   'cde.viewGitspace': string
 }

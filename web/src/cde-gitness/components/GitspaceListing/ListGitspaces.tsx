@@ -122,31 +122,27 @@ const getUsageTemplate = (
   )
 }
 
-export const RenderGitspaceName: Renderer<
-  CellProps<TypesGitspaceConfig & { resource?: TypesInfraProviderResource }>
-> = ({ row }) => {
-  const { getString } = useStrings()
-  const details = row.original
-  const { name, ide, identifier } = details
-  const { standalone } = useAppContext()
-  const ideItem = getIDEOption(ide, getString)
-  return standalone ? (
-    <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'start' }}>
-      <img src={ideItem?.icon} height={20} width={20} style={{ marginRight: '2px' }} />
-      <Text
-        lineClamp={1}
-        color={Color.BLACK}
-        title={name}
-        font={{ align: 'left', size: 'normal', weight: 'semi-bold' }}>
-        {name}
-      </Text>
-    </Layout.Horizontal>
-  ) : (
-    <Layout.Vertical spacing={'medium'} className={css.gitspaceIdContainer}>
+export const getRenderGitspaceName = (isFromDashboard = false) => {
+  return ({ row }: CellProps<TypesGitspaceConfig & { resource?: TypesInfraProviderResource }>) => {
+    const { getString } = useStrings()
+    const details = row.original
+    const { name, ide, identifier, space_path } = details
+    const { standalone } = useAppContext()
+    const ideItem = getIDEOption(ide, getString)
+
+    const pathParts = space_path?.split('/') || []
+    const orgIdentifier = pathParts.length >= 2 ? pathParts[1] : ''
+    const projectIdentifier = pathParts.length >= 3 ? pathParts[2] : ''
+
+    const identifierText =
+      orgIdentifier && projectIdentifier ? `${orgIdentifier}/${projectIdentifier}` : projectIdentifier || orgIdentifier
+
+    const shouldShowProjectId = isFromDashboard && Boolean(identifierText)
+
+    return standalone ? (
       <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'start' }}>
         <img src={ideItem?.icon} height={20} width={20} style={{ marginRight: '2px' }} />
         <Text
-          width="90%"
           lineClamp={1}
           color={Color.BLACK}
           title={name}
@@ -154,14 +150,37 @@ export const RenderGitspaceName: Renderer<
           {name}
         </Text>
       </Layout.Horizontal>
-      <Layout.Horizontal spacing={'xsmall'} flex={{ alignItems: 'center', justifyContent: 'start' }}>
-        <Text font={{ size: 'small' }} lineClamp={1}>
-          {getString('cde.id')}: {identifier}
-        </Text>
-        <CopyButton value={identifier} className={css.copyBtn} />
-      </Layout.Horizontal>
-    </Layout.Vertical>
-  )
+    ) : (
+      <Layout.Vertical spacing={'medium'} className={css.gitspaceIdContainer}>
+        <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'start' }}>
+          <img src={ideItem?.icon} height={20} width={20} style={{ marginRight: '2px' }} />
+          <Text
+            width="90%"
+            lineClamp={1}
+            color={Color.BLACK}
+            title={name}
+            font={{ align: 'left', size: 'normal', weight: 'semi-bold' }}>
+            {name}
+          </Text>
+        </Layout.Horizontal>
+        <Layout.Vertical spacing="xsmall">
+          <Layout.Horizontal spacing={'xsmall'} flex={{ alignItems: 'center', justifyContent: 'start' }}>
+            <Text font={{ size: 'small' }} lineClamp={1}>
+              {getString('cde.id')}: {identifier}
+            </Text>
+            <CopyButton value={identifier} className={css.copyBtn} />
+          </Layout.Horizontal>
+          {shouldShowProjectId && (
+            <Layout.Horizontal spacing={'xsmall'} flex={{ alignItems: 'center', justifyContent: 'start' }}>
+              <Text font={{ size: 'small' }} lineClamp={1} color={Color.GREY_500}>
+                {getString('cde.project')}: {identifierText}
+              </Text>
+            </Layout.Horizontal>
+          )}
+        </Layout.Vertical>
+      </Layout.Vertical>
+    )
+  }
 }
 
 export const RenderInfraProvider: Renderer<
@@ -752,7 +771,8 @@ export const ListGitspaces = ({
   gotoPage,
   onPageSizeChange,
   pageConfig,
-  gitspaceSettings
+  gitspaceSettings,
+  isFromDashboard = false
 }: {
   data: TypesGitspaceConfig[]
   refreshList: () => void
@@ -761,6 +781,7 @@ export const ListGitspaces = ({
   onPageSizeChange?: (newSize: number) => void
   pageConfig: pageConfigProps
   gitspaceSettings: TypesGitspaceSettingsResponse | null
+  isFromDashboard?: boolean
 }) => {
   const history = useHistory()
   const { getString } = useStrings()
@@ -895,7 +916,7 @@ export const ListGitspaces = ({
             {
               id: 'gitspaces',
               Header: getString('cde.gitspaces'),
-              Cell: RenderGitspaceName
+              Cell: getRenderGitspaceName(isFromDashboard)
             },
             ...infraProviderColumn,
             {

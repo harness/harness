@@ -36,6 +36,7 @@ export interface CDERoutes {
   toCDEGitspacesCreate: (args: Required<Pick<CDEProps, 'space'>>) => string
   toCDEGitspacesEdit: (args: Required<Pick<CDEProps, 'space' | 'gitspaceId'>>) => string
   toCDEGitspaceInfra: (args: Required<Pick<CDEProps, 'accountId'>>) => string
+  toCDEUsageDashboard: (args: Required<Pick<CDEProps, 'accountId'>>) => string
   toCDEInfraConfigure: (args: Required<Pick<CDEProps, 'accountId' | 'provider'>>) => string
   toModuleRoute: (args: Required<Pick<CDEProps, 'accountId'>>) => string
   toCDEInfraConfigureDetail: (
@@ -52,6 +53,7 @@ export const routes: CDERoutes = {
   toCDEGitspacesCreate: ({ space }) => `/${space}/gitspaces/create`,
   toCDEGitspacesEdit: ({ space, gitspaceId }) => `/${space}/gitspaces/edit/${gitspaceId}`,
   toCDEGitspaceInfra: ({ accountId }) => `/account/${accountId}/module/cde/gitspace-infrastructure`,
+  toCDEUsageDashboard: ({ accountId }) => `/account/${accountId}/module/cde/usage-dashboard`,
   toCDEInfraConfigure: ({ accountId, provider }) =>
     `/account/${accountId}/module/cde/gitspace-infrastructure/configure/${provider}`,
   toModuleRoute: ({ accountId }) => `/account/${accountId}/module/cde`,
