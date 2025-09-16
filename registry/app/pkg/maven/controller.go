@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/http"
 
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/refcache"
@@ -25,6 +26,7 @@ import (
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/pkg"
+	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/store"
 	registrytypes "github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -197,8 +199,12 @@ func (c *Controller) PutArtifact(
 	err := pkg.GetRegistryCheckAccess(ctx, c.authorizer, c.SpaceFinder, info.ParentID, *info.ArtifactInfo,
 		enum.PermissionArtifactsUpload)
 	if err != nil {
+		responseHeaders := &commons.ResponseHeaders{
+			Code: http.StatusForbidden,
+		}
 		return &PutArtifactResponse{
-			Errors: []error{errcode.ErrCodeDenied},
+			ResponseHeaders: responseHeaders,
+			Errors:          []error{errcode.ErrCodeDenied},
 		}
 	}
 
