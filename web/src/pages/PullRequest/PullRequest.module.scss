@@ -101,3 +101,29 @@
     }
   }
 }
+
+.reviewerTable {
+  .row {
+    box-shadow: unset !important;
+    border-bottom: 1px solid var(--grey-100) !important;
+    padding: var(--spacing-small) !important;
+    margin-bottom: unset !important;
+    &:last-child {
+      border-bottom: none !important;
+    }
+  }
+
+  :global {
+    [class*='TableV2--header'] {
+      border-bottom: 1px solid var(--grey-100) !important;
+      padding-top: var(--spacing-small) !important;
+      padding-left: var(--spacing-medium) !important;
+      padding-right: var(--spacing-medium) !important;
+      padding-bottom: var(--spacing-xsmall) !important;
+    }
+
+    .bp3-icon-double-caret-vertical {
+      fill: var(--grey-200) !important;
+    }
+  }
+}

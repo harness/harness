@@ -16,17 +16,18 @@
 
 import React, { useMemo } from 'react'
 import { Render } from 'react-jsx-match'
-import { Container, Text, TableV2, Layout, Avatar } from '@harnessio/uicore'
+import { Container, Text, TableV2, Layout } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
 import type { CellProps, Column } from 'react-table'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
-import type { TypesDefaultReviewerApprovalsResponseWithRevDecision } from 'utils/Utils'
+import type { TypesDefaultReviewerApprovalsResponse } from 'services/code'
 import { PullReqReviewDecision } from '../PullRequestUtils'
-import css from '../CodeOwners/CodeOwnersOverview.module.scss'
+import ReviewersPanel from '../Conversation/PullRequestOverviewPanel/sections/ReviewersPanel'
+import css from '../PullRequest.module.scss'
 
 interface DefaultReviewersPanelProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'> {
-  defaultRevApprovalResponse: TypesDefaultReviewerApprovalsResponseWithRevDecision[]
+  defaultRevApprovalResponse: TypesDefaultReviewerApprovalsResponse[]
 }
 
 export const DefaultReviewersPanel: React.FC<DefaultReviewersPanelProps> = ({
@@ -44,7 +45,7 @@ export const DefaultReviewersPanel: React.FC<DefaultReviewersPanelProps> = ({
           sort: true,
           Header: getString('required'),
           accessor: 'REQUIRED',
-          Cell: ({ row }: CellProps<TypesDefaultReviewerApprovalsResponseWithRevDecision>) => {
+          Cell: ({ row }: CellProps<TypesDefaultReviewerApprovalsResponse>) => {
             if (row.original?.minimum_required_count && row.original?.minimum_required_count > 0)
               return (
                 <Text
@@ -77,50 +78,12 @@ export const DefaultReviewersPanel: React.FC<DefaultReviewersPanelProps> = ({
           sort: true,
           Header: getString('defaultReviewers'),
           accessor: 'DefaultReviewers',
-          Cell: ({ row }: CellProps<TypesDefaultReviewerApprovalsResponseWithRevDecision>) => {
+          Cell: ({ row }: CellProps<TypesDefaultReviewerApprovalsResponse>) => {
             return (
-              <Layout.Horizontal key={`keyContainer-${row.index}`} className={css.ownerContainer} spacing="tiny">
-                {row.original.principals?.map((principal, idx) => {
-                  if (idx < 2) {
-                    return (
-                      <Avatar
-                        key={`text-${principal?.display_name}-${idx}-avatar`}
-                        hoverCard={true}
-                        email={principal?.email || ' '}
-                        size="small"
-                        name={principal?.display_name || ''}
-                      />
-                    )
-                  }
-                  if (idx === 2 && row.original.principals?.length && row.original.principals?.length > 2) {
-                    return (
-                      <Text
-                        key={`text-${principal?.display_name}-${idx}-top`}
-                        padding={{ top: 'xsmall' }}
-                        tooltipProps={{ isDark: true }}
-                        tooltip={
-                          <Container width={215} padding={'small'}>
-                            <Layout.Horizontal key={`tooltip-${idx}`} className={css.ownerTooltip}>
-                              {row.original.principals?.map((entry, entryidx) => (
-                                <Text
-                                  key={`text-${entry?.display_name}-${entryidx}`}
-                                  lineClamp={1}
-                                  color={Color.GREY_0}
-                                  padding={{ right: 'small' }}>
-                                  {row.original.principals?.length === entryidx + 1
-                                    ? `${entry?.display_name}`
-                                    : `${entry?.display_name}, `}
-                                </Text>
-                              ))}
-                            </Layout.Horizontal>
-                          </Container>
-                        }
-                        flex={{ alignItems: 'center' }}>{`+${row.original.principals?.length - 2}`}</Text>
-                    )
-                  }
-                  return null
-                })}
-              </Layout.Horizontal>
+              <ReviewersPanel
+                principals={row.original?.principals || []}
+                userGroups={row.original?.user_groups || []}
+              />
             )
           }
         },
@@ -130,50 +93,12 @@ export const DefaultReviewersPanel: React.FC<DefaultReviewersPanelProps> = ({
           width: '24%',
           sort: true,
           accessor: 'ChangesRequested',
-          Cell: ({ row }: CellProps<TypesDefaultReviewerApprovalsResponseWithRevDecision>) => {
-            const changeReqEvaluations = row?.original?.principals?.filter(
-              principal => principal?.review_decision === PullReqReviewDecision.CHANGEREQ
-            )
-            return (
-              <Layout.Horizontal className={css.ownerContainer} spacing="tiny">
-                {changeReqEvaluations?.map((principal, idx: number) => {
-                  if (idx < 2) {
-                    return (
-                      <Avatar
-                        key={`approved-${principal?.display_name}-avatar`}
-                        hoverCard={true}
-                        email={principal?.email || ' '}
-                        size="small"
-                        name={principal?.display_name || ''}
-                      />
-                    )
-                  }
-                  if (idx === 2 && changeReqEvaluations.length && changeReqEvaluations.length > 2) {
-                    return (
-                      <Text
-                        key={`approved-${principal?.display_name}-text`}
-                        padding={{ top: 'xsmall' }}
-                        tooltipProps={{ isDark: true }}
-                        tooltip={
-                          <Container width={215} padding={'small'}>
-                            <Layout.Horizontal className={css.ownerTooltip}>
-                              {changeReqEvaluations?.map(evalPrincipal => (
-                                <Text
-                                  key={`approved-${evalPrincipal?.display_name}`}
-                                  lineClamp={1}
-                                  color={Color.GREY_0}
-                                  padding={{ right: 'small' }}>{`${evalPrincipal?.display_name}, `}</Text>
-                              ))}
-                            </Layout.Horizontal>
-                          </Container>
-                        }
-                        flex={{ alignItems: 'center' }}>{`+${changeReqEvaluations.length - 2}`}</Text>
-                    )
-                  }
-                  return null
-                })}
-              </Layout.Horizontal>
-            )
+          Cell: ({ row }: CellProps<TypesDefaultReviewerApprovalsResponse>) => {
+            const changeReqEvaluations = row.original?.evaluations
+              ?.filter(evaluation => evaluation.decision === PullReqReviewDecision.CHANGEREQ)
+              .map(evaluation => evaluation?.reviewer ?? {})
+
+            return <ReviewersPanel principals={changeReqEvaluations || []} />
           }
         },
         {
@@ -182,58 +107,19 @@ export const DefaultReviewersPanel: React.FC<DefaultReviewersPanelProps> = ({
           sort: true,
           width: '20%',
           accessor: 'APPROVED BY',
-          Cell: ({ row }: CellProps<TypesDefaultReviewerApprovalsResponseWithRevDecision>) => {
-            const approvedEvaluations = row?.original?.principals?.filter(
-              principal =>
-                principal.review_decision === PullReqReviewDecision.APPROVED &&
-                (row.original.minimum_required_count_latest
-                  ? principal.review_sha === pullReqMetadata?.source_sha
-                  : true)
-            )
+          Cell: ({ row }: CellProps<TypesDefaultReviewerApprovalsResponse>) => {
+            const approvedEvaluations = row.original?.evaluations
+              ?.filter(
+                evaluation =>
+                  evaluation.decision === PullReqReviewDecision.APPROVED &&
+                  (row.original.minimum_required_count_latest ? evaluation.sha === pullReqMetadata?.source_sha : true)
+              )
+              .map(evaluation => evaluation?.reviewer || {})
 
-            return (
-              <Layout.Horizontal className={css.ownerContainer} spacing="tiny">
-                {approvedEvaluations?.map((principal, idx: number) => {
-                  if (idx < 2) {
-                    return (
-                      <Avatar
-                        key={`approved-${principal?.display_name}-avatar`}
-                        hoverCard={true}
-                        email={principal?.email || ' '}
-                        size="small"
-                        name={principal?.display_name || ''}
-                      />
-                    )
-                  }
-                  if (idx === 2 && approvedEvaluations.length && approvedEvaluations.length > 2) {
-                    return (
-                      <Text
-                        key={`approved-${principal?.display_name}-text`}
-                        padding={{ top: 'xsmall' }}
-                        tooltipProps={{ isDark: true }}
-                        tooltip={
-                          <Container width={215} padding={'small'}>
-                            <Layout.Horizontal className={css.ownerTooltip}>
-                              {approvedEvaluations?.map(appPrincipalObj => (
-                                <Text
-                                  key={`approved-${appPrincipalObj?.display_name}`}
-                                  lineClamp={1}
-                                  color={Color.GREY_0}
-                                  padding={{ right: 'small' }}>{`${appPrincipalObj?.display_name}, `}</Text>
-                              ))}
-                            </Layout.Horizontal>
-                          </Container>
-                        }
-                        flex={{ alignItems: 'center' }}>{`+${approvedEvaluations.length - 2}`}</Text>
-                    )
-                  }
-                  return null
-                })}
-              </Layout.Horizontal>
-            )
+            return <ReviewersPanel principals={approvedEvaluations || []} />
           }
         }
-      ] as unknown as Column<TypesDefaultReviewerApprovalsResponseWithRevDecision>[], // eslint-disable-next-line react-hooks/exhaustive-deps
+      ] as unknown as Column<TypesDefaultReviewerApprovalsResponse>[], // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   )
   return (
@@ -241,10 +127,10 @@ export const DefaultReviewersPanel: React.FC<DefaultReviewersPanelProps> = ({
       <Container>
         <Layout.Vertical spacing="small">
           <TableV2
-            className={css.codeOwnerTable}
+            className={css.reviewerTable}
             sortable
             columns={columns}
-            data={defaultRevApprovalResponse as TypesDefaultReviewerApprovalsResponseWithRevDecision[]}
+            data={defaultRevApprovalResponse as TypesDefaultReviewerApprovalsResponse[]}
             getRowClassName={() => css.row}
           />
         </Layout.Vertical>

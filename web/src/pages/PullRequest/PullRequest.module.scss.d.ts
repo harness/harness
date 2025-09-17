@@ -26,4 +26,6 @@ export declare const main: string
 export declare const popover: string
 export declare const prNumber: string
 export declare const prTitle: string
+export declare const reviewerTable: string
+export declare const row: string
 export declare const titleText: string

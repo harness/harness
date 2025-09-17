@@ -215,7 +215,6 @@ export const findWaitingDecisions = (
 }
 
 // find code owner request decision from given entries
-// Utility: Deduplicate evaluations by owner.id
 export function getCombinedEvaluations(entry: TypesCodeOwnerEvaluationEntry): TypesOwnerEvaluation[] {
   const ugUserEvaluations = (entry?.user_group_owner_evaluations || []).flatMap(ug => ug.evaluations || [])
   const evaluations = [...(entry?.owner_evaluations || []), ...ugUserEvaluations]
@@ -258,6 +257,32 @@ export const processReviewDecision = (
   reviewDecision === PullReqReviewDecision.APPROVED && reviewedSHA !== sourceSHA
     ? PullReqReviewDecision.OUTDATED
     : reviewDecision
+
+export const getUnifiedDefaultReviewersState = (info: TypesDefaultReviewerApprovalsResponse[]) => {
+  const defaultReviewState = {
+    defReviewerApprovalRequiredByRule: false,
+    defReviewerLatestApprovalRequiredByRule: false,
+    defReviewerApprovedLatestChanges: true,
+    defReviewerApprovedChanges: true
+  }
+
+  info?.forEach(item => {
+    if (item?.minimum_required_count !== undefined && item.minimum_required_count > 0) {
+      defaultReviewState.defReviewerApprovalRequiredByRule = true
+      if (item.current_count !== undefined && item.current_count < item.minimum_required_count) {
+        defaultReviewState.defReviewerApprovedChanges = false
+      }
+    }
+    if (item?.minimum_required_count_latest !== undefined && item.minimum_required_count_latest > 0) {
+      defaultReviewState.defReviewerLatestApprovalRequiredByRule = true
+      if (item.current_count !== undefined && item.current_count < item.minimum_required_count_latest) {
+        defaultReviewState.defReviewerApprovedLatestChanges = false
+      }
+    }
+  })
+
+  return defaultReviewState
+}
 
 export function getActivePullReqPageSection(): PullRequestSection | undefined {
   return (document.querySelector('[data-page-section]') as HTMLElement)?.dataset?.pageSection as PullRequestSection

@@ -100,50 +100,6 @@
   }
 }
 
-.codeOwnerTable {
-  .row {
-    box-shadow: unset !important;
-    border-bottom: 1px solid var(--grey-100) !important;
-    padding: var(--spacing-small) !important;
-    margin-bottom: unset !important;
-    &:last-child {
-      border-bottom: none !important;
-    }
-  }
-
-  :global {
-    [class*='TableV2--header'] {
-      border-bottom: 1px solid var(--grey-100) !important;
-      padding-top: var(--spacing-small) !important;
-      padding-left: var(--spacing-medium) !important;
-      padding-right: var(--spacing-medium) !important;
-      padding-bottom: var(--spacing-xsmall) !important;
-    }
-
-    .bp3-icon-double-caret-vertical {
-      fill: var(--grey-200) !important;
-    }
-  }
-}
-
-.ownerContainer {
-  align-items: center !important;
-
-  :global {
-    [class*='Avatar--Avatar'] {
-      cursor: unset !important;
-      &:first-child {
-        margin-left: unset !important;
-      }
-    }
-  }
-}
-
-.ownerTooltip {
-  display: flex;
-  flex-wrap: wrap;
-}
-
 .approvalText {
   font-size: 12px !important;
 }
@@ -173,11 +129,4 @@
       fill: var(--red-700) !important;
     }
   }
-}
-
-.ugicon {
-  background-color: var(--yellow-700) !important;
-  color: var(--grey-0) !important;
-  border-radius: var(--spacing-xsmall);
-  padding: 3px !important;
 }

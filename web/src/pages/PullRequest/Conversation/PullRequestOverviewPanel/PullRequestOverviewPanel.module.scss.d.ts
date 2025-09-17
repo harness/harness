@@ -52,6 +52,8 @@ export declare const redIcon: string
 export declare const required: string
 export declare const requiredContainer: string
 export declare const requiredText: string
+export declare const reviewerContainer: string
+export declare const reviewerTooltip: string
 export declare const row: string
 export declare const sectionContainer: string
 export declare const sectionPadding: string
@@ -65,4 +67,5 @@ export declare const stepText: string
 export declare const successIcon: string
 export declare const textSize: string
 export declare const timeoutIcon: string
+export declare const ugicon: string
 export declare const widthContainer: string

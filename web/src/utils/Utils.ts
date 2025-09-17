@@ -29,11 +29,9 @@ import type {
   TypesLabelValue,
   TypesPrincipalInfo,
   EnumMembershipRole,
-  TypesDefaultReviewerApprovalsResponse,
   TypesUserGroupInfo
 } from 'services/code'
 import type { StringKeys } from 'framework/strings'
-import { PullReqReviewDecision } from 'pages/PullRequest/PullRequestUtils'
 import type { Identifier } from './types'
 import { CodeIcon } from './GitUtils'
 
@@ -115,6 +113,7 @@ export const SUGGESTED_BRANCH_NAMES = [DEFAULT_BRANCH_NAME, 'master']
 export const FILE_SEPARATOR = '/'
 export const INITIAL_ZOOM_LEVEL = 1
 export const ZOOM_INC_DEC_LEVEL = 0.1
+export const UNKNOWN_GROUP = 'Unknown Group'
 
 /** This utility shows a toaster without being bound to any component.
  * It's useful to show cross-page/component messages */
@@ -1068,7 +1067,7 @@ export function combineAndNormalizePrincipalsAndGroups(
         id: group.id || -1,
         email_or_identifier: group.identifier || '',
         type: PrincipalType.USER_GROUP,
-        display_name: group.name || group.identifier || 'Unknown Group'
+        display_name: group.name || group.identifier || UNKNOWN_GROUP
       })
     })
   }
@@ -1088,44 +1087,4 @@ export function combineAndNormalizePrincipalsAndGroups(
   if (notSorted) return normalizedData
 
   return normalizedData.sort((a, b) => a.display_name.localeCompare(b.display_name))
-}
-
-export interface TypesPrincipalInfoWithReviewDecision extends TypesPrincipalInfo {
-  review_decision?: PullReqReviewDecision
-  review_sha?: string
-}
-
-export interface TypesDefaultReviewerApprovalsResponseWithRevDecision extends TypesDefaultReviewerApprovalsResponse {
-  principals?: TypesPrincipalInfoWithReviewDecision[] | null // Override the 'principals' field
-}
-export const getUnifiedDefaultReviewersState = (info: TypesDefaultReviewerApprovalsResponseWithRevDecision[]) => {
-  const defaultReviewState = {
-    defReviewerApprovalRequiredByRule: false,
-    defReviewerLatestApprovalRequiredByRule: false,
-    defReviewerApprovedLatestChanges: true,
-    defReviewerApprovedChanges: true,
-    changesRequestedByDefReviewersArr: [] as TypesPrincipalInfoWithReviewDecision[]
-  }
-
-  info?.forEach(item => {
-    if (item?.minimum_required_count !== undefined && item.minimum_required_count > 0) {
-      defaultReviewState.defReviewerApprovalRequiredByRule = true
-      if (item.current_count !== undefined && item.current_count < item.minimum_required_count) {
-        defaultReviewState.defReviewerApprovedChanges = false
-      }
-    }
-    if (item?.minimum_required_count_latest !== undefined && item.minimum_required_count_latest > 0) {
-      defaultReviewState.defReviewerLatestApprovalRequiredByRule = true
-      if (item.current_count !== undefined && item.current_count < item.minimum_required_count_latest) {
-        defaultReviewState.defReviewerApprovedLatestChanges = false
-      }
-    }
-
-    item?.principals?.forEach(principal => {
-      if (principal?.review_decision === PullReqReviewDecision.CHANGEREQ)
-        defaultReviewState.changesRequestedByDefReviewersArr.push(principal)
-    })
-  })
-
-  return defaultReviewState
 }

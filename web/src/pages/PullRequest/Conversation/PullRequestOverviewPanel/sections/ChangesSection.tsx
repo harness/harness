@@ -30,7 +30,7 @@ import { Render } from 'react-jsx-match'
 import { capitalize, isEmpty } from 'lodash-es'
 import type { IconName } from '@blueprintjs/core'
 import { Icon } from '@harnessio/icons'
-import { CodeOwnerReqDecision, getUnifiedDefaultReviewersState } from 'utils/Utils'
+import { CodeOwnerReqDecision } from 'utils/Utils'
 import { CodeOwnerSection } from 'pages/PullRequest/CodeOwners/CodeOwnersOverview'
 import { useStrings } from 'framework/strings'
 import type {
@@ -45,6 +45,7 @@ import {
   defaultReviewerResponseWithDecision,
   findReviewDecisions,
   findWaitingDecisions,
+  getUnifiedDefaultReviewersState,
   PullReqReviewDecision
 } from 'pages/PullRequest/PullRequestUtils'
 import { DefaultReviewersPanel } from 'pages/PullRequest/DefaultReviewers/DefaultReviewersPanel'

@@ -15237,6 +15237,11 @@ components:
       properties:
         current_count:
           type: integer
+        evaluations:
+          items:
+            $ref: '#/components/schemas/TypesReviewerEvaluation'
+          nullable: true
+          type: array
         minimum_required_count:
           type: integer
         minimum_required_count_latest:
@@ -15244,6 +15249,11 @@ components:
         principals:
           items:
             $ref: '#/components/schemas/TypesPrincipalInfo'
+          nullable: true
+          type: array
+        user_groups:
+          items:
+            $ref: '#/components/schemas/TypesUserGroupInfo'
           nullable: true
           type: array
       type: object
@@ -16275,6 +16285,15 @@ components:
         commit:
           $ref: '#/components/schemas/TypesCommit'
       type: object
+    TypesReviewerEvaluation:
+      properties:
+        decision:
+          $ref: '#/components/schemas/EnumPullReqReviewDecision'
+        reviewer:
+          $ref: '#/components/schemas/TypesPrincipalInfo'
+        sha:
+          type: string
+      type: object
     TypesRuleInfo:
       properties:
         identifier:
@@ -16682,19 +16701,10 @@ components:
           type: integer
         user_decisions:
           items:
-            $ref: '#/components/schemas/TypesUserGroupReviewerDecision'
+            $ref: '#/components/schemas/TypesReviewerEvaluation'
           type: array
         user_group:
           $ref: '#/components/schemas/TypesUserGroupInfo'
-      type: object
-    TypesUserGroupReviewerDecision:
-      properties:
-        decision:
-          $ref: '#/components/schemas/EnumPullReqReviewDecision'
-        reviewer:
-          $ref: '#/components/schemas/TypesPrincipalInfo'
-        sha:
-          type: string
       type: object
     TypesViolation:
       properties:

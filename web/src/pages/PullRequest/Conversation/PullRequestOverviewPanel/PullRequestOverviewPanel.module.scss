@@ -392,3 +392,28 @@
   max-width: 220px !important;
   min-width: min-content !important;
 }
+
+.reviewerContainer {
+  align-items: center !important;
+
+  :global {
+    [class*='Avatar--Avatar'] {
+      cursor: unset !important;
+      &:first-child {
+        margin-left: unset !important;
+      }
+    }
+  }
+}
+
+.reviewerTooltip {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.ugicon {
+  background-color: var(--yellow-700) !important;
+  color: var(--grey-0) !important;
+  border-radius: var(--spacing-xsmall);
+  padding: 3px !important;
+}

@@ -1291,9 +1291,11 @@ export interface TypesCreateCommitTagOutput {
 
 export interface TypesDefaultReviewerApprovalsResponse {
   current_count?: number
+  evaluations?: TypesReviewerEvaluation[] | null
   minimum_required_count?: number
   minimum_required_count_latest?: number
   principals?: TypesPrincipalInfo[] | null
+  user_groups?: TypesUserGroupInfo[] | null
 }
 
 export interface TypesDeleteBranchOutput {
@@ -1836,6 +1838,12 @@ export interface TypesRevertResponse {
   commit?: TypesCommit
 }
 
+export interface TypesReviewerEvaluation {
+  decision?: EnumPullReqReviewDecision
+  reviewer?: TypesPrincipalInfo
+  sha?: string
+}
+
 export interface TypesRuleInfo {
   identifier?: string
   repo_path?: string
@@ -2060,14 +2068,8 @@ export interface TypesUserGroupReviewer {
   decision?: EnumPullReqReviewDecision
   sha?: string
   updated?: number
-  user_decisions?: TypesUserGroupReviewerDecision[]
+  user_decisions?: TypesReviewerEvaluation[]
   user_group?: TypesUserGroupInfo
-}
-
-export interface TypesUserGroupReviewerDecision {
-  decision?: EnumPullReqReviewDecision
-  reviewer?: TypesPrincipalInfo
-  sha?: string
 }
 
 export interface TypesViolation {

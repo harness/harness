@@ -25,29 +25,18 @@ import {
   ButtonSize,
   Utils,
   TableV2,
-  Layout,
-  Avatar,
-  Popover
+  Layout
 } from '@harnessio/uicore'
 import cx from 'classnames'
 import { Color, FontVariation } from '@harnessio/design-system'
 import type { CellProps, Column } from 'react-table'
-import { Icon } from '@harnessio/icons'
-import { isEmpty } from 'lodash-es'
-import { PopoverInteractionKind, Position } from '@blueprintjs/core'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import { ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
 import { useShowRequestError } from 'hooks/useShowRequestError'
-import type {
-  TypesCodeOwnerEvaluation,
-  TypesCodeOwnerEvaluationEntry,
-  TypesOwnerEvaluation,
-  TypesUserGroupInfo,
-  TypesUserGroupOwnerEvaluation
-} from 'services/code'
+import type { TypesCodeOwnerEvaluation, TypesCodeOwnerEvaluationEntry, TypesUserGroupInfo } from 'services/code'
 import type { PRChecksDecisionResult } from 'hooks/usePRChecksDecision'
-import { CodeOwnerReqDecision, combineAndNormalizePrincipalsAndGroups, PrincipalType } from 'utils/Utils'
+import { CodeOwnerReqDecision, UNKNOWN_GROUP } from 'utils/Utils'
 import {
   PullReqReviewDecision,
   checkEntries,
@@ -55,7 +44,9 @@ import {
   findReviewDecisions,
   findWaitingDecisions
 } from '../PullRequestUtils'
+import ReviewersPanel from '../Conversation/PullRequestOverviewPanel/sections/ReviewersPanel'
 import css from './CodeOwnersOverview.module.scss'
+import prCss from '../PullRequest.module.scss'
 
 interface ChecksOverviewProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'> {
   prChecksDecisionResult: PRChecksDecisionResult
@@ -130,77 +121,6 @@ export function CodeOwnersOverview({
   ) : null
 }
 
-const RenderCodeOwners = ({
-  codeOwners,
-  userGroupOwners
-}: {
-  codeOwners: TypesOwnerEvaluation[]
-  userGroupOwners?: TypesUserGroupOwnerEvaluation[]
-}) => {
-  const owners = useMemo(
-    () =>
-      combineAndNormalizePrincipalsAndGroups(
-        codeOwners?.map(({ owner }) => owner || {}),
-        userGroupOwners?.map(
-          group =>
-            ({
-              identifier: group?.id || '',
-              name: group?.name || group?.id || 'Unknown Group'
-            } as TypesUserGroupInfo)
-        ) || [],
-        true
-      ),
-    [codeOwners, userGroupOwners]
-  )
-
-  if (isEmpty(owners)) {
-    return null
-  }
-
-  return (
-    <Layout.Horizontal className={css.ownerContainer} spacing="tiny">
-      {owners?.slice(0, 3).map(({ display_name, email_or_identifier, type }) => {
-        if (type === PrincipalType.USER_GROUP) {
-          return (
-            <Popover
-              key={email_or_identifier}
-              interactionKind={PopoverInteractionKind.HOVER}
-              position={Position.TOP}
-              content={<Container padding={'small'}>{display_name}</Container>}>
-              <Icon margin={'xsmall'} className={css.ugicon} name="user-groups" size={18} />
-            </Popover>
-          )
-        }
-        return (
-          <Avatar
-            key={email_or_identifier}
-            hoverCard
-            email={email_or_identifier || ''}
-            size="small"
-            name={display_name || ''}
-          />
-        )
-      })}
-      {owners?.length > 3 && (
-        <Text
-          tooltipProps={{ isDark: true }}
-          tooltip={
-            <Container width={215} padding={'small'}>
-              <Layout.Horizontal className={css.ownerTooltip}>
-                {owners?.map(({ display_name }, idx) => (
-                  <Text key={`text-${display_name}`} lineClamp={1} color={Color.GREY_0} padding={{ right: 'small' }}>
-                    {`${display_name}${owners?.length === idx + 1 ? '' : ', '}`}
-                  </Text>
-                ))}
-              </Layout.Horizontal>
-            </Container>
-          }
-          flex={{ alignItems: 'center' }}>{`+${owners?.length - 3}`}</Text>
-      )}
-    </Layout.Horizontal>
-  )
-}
-
 interface CodeOwnerSectionsProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'> {
   data: TypesCodeOwnerEvaluation
   reqCodeOwnerLatestApproval?: boolean
@@ -250,9 +170,17 @@ export const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({
           Header: getString('ownersHeading'),
           accessor: 'OWNERS',
           Cell: ({ row }: CellProps<TypesCodeOwnerEvaluationEntry>) => (
-            <RenderCodeOwners
-              codeOwners={row.original.owner_evaluations || []}
-              userGroupOwners={row.original.user_group_owner_evaluations || []}
+            <ReviewersPanel
+              principals={(row.original.owner_evaluations || []).map(evaluation => evaluation?.owner || {})}
+              userGroups={
+                row.original.user_group_owner_evaluations?.map(
+                  group =>
+                    ({
+                      identifier: group?.id || '',
+                      name: group?.name || group?.id || UNKNOWN_GROUP
+                    } as TypesUserGroupInfo)
+                ) || []
+              }
             />
           )
         },
@@ -262,11 +190,11 @@ export const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({
           width: '24%',
           accessor: 'ChangesRequested',
           Cell: ({ row }: CellProps<TypesCodeOwnerEvaluationEntry>) => {
-            const changeReqEvaluations = getCombinedEvaluations(row?.original)?.filter(
-              evaluation => evaluation.review_decision === PullReqReviewDecision.CHANGEREQ
-            )
+            const changeReqEvaluations = getCombinedEvaluations(row?.original)
+              ?.filter(evaluation => evaluation.review_decision === PullReqReviewDecision.CHANGEREQ)
+              .map(evaluation => evaluation?.owner || {})
 
-            return <RenderCodeOwners codeOwners={changeReqEvaluations || []} />
+            return <ReviewersPanel principals={changeReqEvaluations || []} />
           }
         },
         {
@@ -275,13 +203,15 @@ export const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({
           width: '20%',
           accessor: 'APPROVED BY',
           Cell: ({ row }: CellProps<TypesCodeOwnerEvaluationEntry>) => {
-            const approvedEvaluations = getCombinedEvaluations(row?.original)?.filter(
-              evaluation =>
-                evaluation.review_decision === PullReqReviewDecision.APPROVED &&
-                (reqCodeOwnerLatestApproval ? evaluation.review_sha === pullReqMetadata?.source_sha : true)
-            )
+            const approvedEvaluations = getCombinedEvaluations(row?.original)
+              ?.filter(
+                evaluation =>
+                  evaluation.review_decision === PullReqReviewDecision.APPROVED &&
+                  (reqCodeOwnerLatestApproval ? evaluation.review_sha === pullReqMetadata?.source_sha : true)
+              )
+              .map(evaluation => evaluation?.owner || {})
 
-            return <RenderCodeOwners codeOwners={approvedEvaluations || []} />
+            return <ReviewersPanel principals={approvedEvaluations || []} />
           }
         }
       ] as Column<TypesCodeOwnerEvaluationEntry>[],
@@ -293,11 +223,11 @@ export const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({
       <Container>
         <Layout.Vertical spacing="small">
           <TableV2
-            className={css.codeOwnerTable}
+            className={prCss.reviewerTable}
             sortable
             columns={columns}
             data={data?.evaluation_entries as TypesCodeOwnerEvaluationEntry[]}
-            getRowClassName={() => css.row}
+            getRowClassName={() => prCss.row}
           />
         </Layout.Vertical>
       </Container>
