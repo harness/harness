@@ -86,6 +86,32 @@ func (in *MergeInput) sanitize() error {
 	return nil
 }
 
+// backfillApprovalInfo populates principal and user group information for default reviewer approvals.
+func (c *Controller) backfillApprovalInfo(
+	ctx context.Context,
+	approvals []*types.DefaultReviewerApprovalsResponse,
+) error {
+	for _, approval := range approvals {
+		principalInfos, err := c.principalInfoCache.Map(ctx, approval.PrincipalIDs)
+		if err != nil {
+			return fmt.Errorf("failed to fetch principal infos from info cache: %w", err)
+		}
+		approval.PrincipalInfos = maps.Values(principalInfos)
+
+		userGroups, err := c.userGroupStore.FindManyByIDs(ctx, approval.UserGroupIDs)
+		if err != nil {
+			return fmt.Errorf("failed to fetch user groups info from user group store: %w", err)
+		}
+		userGroupInfos := make([]*types.UserGroupInfo, 0, len(userGroups))
+		for _, ug := range userGroups {
+			userGroupInfos = append(userGroupInfos, ug.ToUserGroupInfo())
+		}
+		approval.UserGroupInfos = userGroupInfos
+	}
+
+	return nil
+}
+
 // Merge merges a pull request.
 //
 // It supports dry running by providing the DryRun=true. Dry running can be used to find any rule violations that
@@ -209,17 +235,18 @@ func (c *Controller) Merge(
 	}
 
 	ruleOut, violations, err := protectionRules.MergeVerify(ctx, protection.MergeVerifyInput{
-		ResolveUserGroupID: c.userGroupService.ListUserIDsByGroupIDs,
-		Actor:              &session.Principal,
-		AllowBypass:        in.BypassRules,
-		IsRepoOwner:        isRepoOwner,
-		TargetRepo:         targetRepo,
-		SourceRepo:         sourceRepo,
-		PullReq:            pr,
-		Reviewers:          reviewers,
-		Method:             in.Method, // the method can be empty for dry run or dry run rules
-		CheckResults:       checkResults,
-		CodeOwners:         codeOwnerWithApproval,
+		ResolveUserGroupIDs: c.userGroupService.ListUserIDsByGroupIDs,
+		MapUserGroupIDs:     c.userGroupService.MapGroupIDsToPrincipals,
+		Actor:               &session.Principal,
+		AllowBypass:         in.BypassRules,
+		IsRepoOwner:         isRepoOwner,
+		TargetRepo:          targetRepo,
+		SourceRepo:          sourceRepo,
+		PullReq:             pr,
+		Reviewers:           reviewers,
+		Method:              in.Method,
+		CheckResults:        checkResults,
+		CodeOwners:          codeOwnerWithApproval,
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to verify protection rules: %w", err)
@@ -228,12 +255,9 @@ func (c *Controller) Merge(
 	deleteSourceBranch := in.DeleteSourceBranch || ruleOut.DeleteSourceBranch
 
 	if in.DryRunRules {
-		for _, approvals := range ruleOut.DefaultReviewerApprovals {
-			principalInfos, err := c.principalInfoCache.Map(ctx, approvals.PrincipalIDs)
-			if err != nil {
-				return nil, nil, fmt.Errorf("failed to fetch principal infos from info cache: %w", err)
-			}
-			approvals.PrincipalInfos = maps.Values(principalInfos)
+		err := c.backfillApprovalInfo(ctx, ruleOut.DefaultReviewerApprovals)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to populate approval info for default reviewers: %w", err)
 		}
 
 		return &types.MergeResponse{
@@ -355,12 +379,9 @@ func (c *Controller) Merge(
 			conflicts = pr.MergeConflicts
 		}
 
-		for _, approvals := range ruleOut.DefaultReviewerApprovals {
-			principalInfos, err := c.principalInfoCache.Map(ctx, approvals.PrincipalIDs)
-			if err != nil {
-				return nil, nil, fmt.Errorf("failed to fetch principal infos from info cache: %w", err)
-			}
-			approvals.PrincipalInfos = maps.Values(principalInfos)
+		err := c.backfillApprovalInfo(ctx, ruleOut.DefaultReviewerApprovals)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to populate approval info for default reviewers: %w", err)
 		}
 
 		// With in.DryRun=true this function never returns types.MergeViolations

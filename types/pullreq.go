@@ -229,13 +229,13 @@ type UserGroupReviewer struct {
 	AddedBy   PrincipalInfo `json:"added_by"`
 
 	// invdividual decisions by group users
-	UserDecisions []UserGroupReviewerDecision `json:"user_decisions,omitempty"`
+	UserDecisions []ReviewerEvaluation `json:"user_decisions,omitempty"`
 	// derived user group decision: change_req > approved > reviewed > pending
 	Decision enum.PullReqReviewDecision `json:"decision,omitempty"`
 	SHA      string                     `json:"sha,omitempty"`
 }
 
-type UserGroupReviewerDecision struct {
+type ReviewerEvaluation struct {
 	Decision enum.PullReqReviewDecision `json:"decision"`
 	SHA      string                     `json:"sha,omitempty"`
 	Reviewer PrincipalInfo              `json:"reviewer"`
@@ -256,11 +256,14 @@ type PullReqFileView struct {
 }
 
 type DefaultReviewerApprovalsResponse struct {
-	MinimumRequiredCount       int              `json:"minimum_required_count"`
-	MinimumRequiredCountLatest int              `json:"minimum_required_count_latest"`
-	CurrentCount               int              `json:"current_count"`
-	PrincipalIDs               []int64          `json:"-"`
-	PrincipalInfos             []*PrincipalInfo `json:"principals"`
+	MinimumRequiredCount       int                   `json:"minimum_required_count"`
+	MinimumRequiredCountLatest int                   `json:"minimum_required_count_latest"`
+	CurrentCount               int                   `json:"current_count"`
+	PrincipalIDs               []int64               `json:"-"`
+	PrincipalInfos             []*PrincipalInfo      `json:"principals"`
+	UserGroupIDs               []int64               `json:"-"`
+	UserGroupInfos             []*UserGroupInfo      `json:"user_groups"`
+	Evaluations                []*ReviewerEvaluation `json:"evaluations"`
 }
 
 type MergeResponse struct {

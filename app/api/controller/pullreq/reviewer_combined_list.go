@@ -124,12 +124,12 @@ func (c *Controller) ReviewersListCombined(
 	}, nil
 }
 
-// userGroupReviewerDecisions builds a slice of UserGroupReviewerDecision from user IDs and reviewers map.
+// userGroupReviewerDecisions builds a slice of ReviewerEvaluation from user IDs and reviewers map.
 func userGroupReviewerDecisions(
 	userIDs []int64,
 	reviewersMap map[int64]*types.PullReqReviewer,
-) []types.UserGroupReviewerDecision {
-	var userGroupReviewerDecisions []types.UserGroupReviewerDecision
+) []types.ReviewerEvaluation {
+	var userGroupReviewerDecisions []types.ReviewerEvaluation
 
 	for _, userID := range userIDs {
 		reviewer, ok := reviewersMap[userID]
@@ -137,7 +137,7 @@ func userGroupReviewerDecisions(
 			continue
 		}
 
-		decision := types.UserGroupReviewerDecision{
+		decision := types.ReviewerEvaluation{
 			Decision: reviewer.ReviewDecision,
 			SHA:      reviewer.SHA,
 			Reviewer: reviewer.Reviewer,
@@ -151,12 +151,12 @@ func userGroupReviewerDecisions(
 // determineUserGroupCompoundDecision determines the compound decision and SHA for a user group reviewer
 // based on individual reviewer decisions, prioritizing reviews on the source SHA.
 func determineUserGroupCompoundDecision(
-	userGroupReviewerDecisions []types.UserGroupReviewerDecision,
+	userGroupReviewerDecisions []types.ReviewerEvaluation,
 	prSourceSHA string,
 ) (enum.PullReqReviewDecision, string) {
 	// Separate reviews on source SHA vs other SHAs
-	var latestSHAReviews []types.UserGroupReviewerDecision
-	var otherSHAReviews []types.UserGroupReviewerDecision
+	var latestSHAReviews []types.ReviewerEvaluation
+	var otherSHAReviews []types.ReviewerEvaluation
 	var userGroupSHA string
 
 	for _, decision := range userGroupReviewerDecisions {
@@ -174,9 +174,9 @@ func determineUserGroupCompoundDecision(
 
 	// Determine the compound decision:
 	// 1. Prioritize reviews on the source SHA
-	// 2. Apply highest decision order among those reviews
-	// 3. If no reviews on source SHA, use highest order from other SHAs
-	var decisionsToConsider []types.UserGroupReviewerDecision
+	// 2. Apply the highest decision order among those reviews
+	// 3. If no reviews on source SHA, use the highest order from other SHAs
+	var decisionsToConsider []types.ReviewerEvaluation
 	if len(latestSHAReviews) > 0 {
 		decisionsToConsider = latestSHAReviews
 	} else {

@@ -46,7 +46,7 @@ func (v *Branch) MergeVerify(
 		return out, violations, fmt.Errorf("merge verify error: %w", err)
 	}
 
-	bypassable := v.Bypass.matches(ctx, in.Actor, in.IsRepoOwner, in.ResolveUserGroupID)
+	bypassable := v.Bypass.matches(ctx, in.Actor, in.IsRepoOwner, in.ResolveUserGroupIDs)
 	bypassed := in.AllowBypass && bypassable
 	for i := range violations {
 		violations[i].Bypassable = bypassable

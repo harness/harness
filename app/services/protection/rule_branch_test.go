@@ -39,7 +39,9 @@ func TestBranch_MergeVerify(t *testing.T) {
 		{
 			name:   "empty",
 			branch: Branch{},
-			in:     MergeVerifyInput{Actor: user},
+			in: MergeVerifyInput{
+				Actor: user,
+			},
 			expOut: MergeVerifyOutput{
 				DeleteSourceBranch: false,
 				AllowedMethods:     enum.MergeMethods,
@@ -182,11 +184,11 @@ func TestBranch_MergeVerify(t *testing.T) {
 				},
 			},
 			in: MergeVerifyInput{
-				Actor:              user,
-				ResolveUserGroupID: mockUserGroupResolver,
-				CodeOwners:         &codeowners.Evaluation{},
-				PullReq:            &types.PullReq{},
-				Reviewers:          []*types.PullReqReviewer{},
+				Actor:               user,
+				ResolveUserGroupIDs: mockUserGroupResolver,
+				CodeOwners:          &codeowners.Evaluation{},
+				PullReq:             &types.PullReq{},
+				Reviewers:           []*types.PullReqReviewer{},
 			},
 			expOut: MergeVerifyOutput{
 				DeleteSourceBranch:            true,

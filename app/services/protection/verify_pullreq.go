@@ -25,6 +25,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 )
 
@@ -35,17 +36,18 @@ type (
 	}
 
 	MergeVerifyInput struct {
-		ResolveUserGroupID func(ctx context.Context, userGroupIDs []int64) ([]int64, error)
-		Actor              *types.Principal
-		AllowBypass        bool
-		IsRepoOwner        bool
-		TargetRepo         *types.RepositoryCore
-		SourceRepo         *types.RepositoryCore
-		PullReq            *types.PullReq
-		Reviewers          []*types.PullReqReviewer
-		Method             enum.MergeMethod
-		CheckResults       []types.CheckResult
-		CodeOwners         *codeowners.Evaluation
+		ResolveUserGroupIDs func(ctx context.Context, userGroupIDs []int64) ([]int64, error)
+		MapUserGroupIDs     func(ctx context.Context, userGroupIDs []int64) (map[int64][]*types.Principal, error)
+		Actor               *types.Principal
+		AllowBypass         bool
+		IsRepoOwner         bool
+		TargetRepo          *types.RepositoryCore
+		SourceRepo          *types.RepositoryCore
+		PullReq             *types.PullReq
+		Reviewers           []*types.PullReqReviewer
+		Method              enum.MergeMethod // the method can be empty for dry run or dry run rules
+		CheckResults        []types.CheckResult
+		CodeOwners          *codeowners.Evaluation
 	}
 
 	MergeVerifyOutput struct {
@@ -129,7 +131,7 @@ const (
 
 //nolint:gocognit,gocyclo,cyclop // well aware of this
 func (v *DefPullReq) MergeVerify(
-	_ context.Context,
+	ctx context.Context,
 	in MergeVerifyInput,
 ) (MergeVerifyOutput, []types.RuleViolations, error) {
 	var out MergeVerifyOutput
@@ -151,8 +153,10 @@ func (v *DefPullReq) MergeVerify(
 
 	// pullreq.approvals
 
+	reviewerMap := make(map[int64]*types.PullReqReviewer)
 	approvedBy := make(map[int64]struct{})
 	for _, reviewer := range in.Reviewers {
+		reviewerMap[reviewer.Reviewer.ID] = reviewer
 		switch reviewer.ReviewDecision {
 		case enum.PullReqReviewDecisionApproved:
 			if v.Approvals.RequireLatestCommit && reviewer.SHA != in.PullReq.SourceSHA {
@@ -192,12 +196,39 @@ func (v *DefPullReq) MergeVerify(
 		}
 	}
 
-	effectiveDefaultReviewerIDs := make([]int64, 0, len(v.Reviewers.DefaultReviewerIDs))
+	defaultReviewerIDs := make([]int64, 0, len(v.Reviewers.DefaultReviewerIDs))
+	uniqueDefaultReviewerIDs := make(map[int64]struct{})
 	for _, id := range v.Reviewers.DefaultReviewerIDs {
-		if id == in.PullReq.Author.ID {
-			continue
+		if id != in.PullReq.Author.ID {
+			defaultReviewerIDs = append(defaultReviewerIDs, id)
+			uniqueDefaultReviewerIDs[id] = struct{}{}
 		}
-		effectiveDefaultReviewerIDs = append(effectiveDefaultReviewerIDs, id)
+	}
+
+	if in.MapUserGroupIDs != nil {
+		userGroupsMap, err := in.MapUserGroupIDs(ctx, v.Reviewers.DefaultUserGroupReviewerIDs)
+		if err != nil {
+			return MergeVerifyOutput{}, []types.RuleViolations{},
+				fmt.Errorf("failed to map principals to user group ids: %w", err)
+		}
+
+		for _, principals := range userGroupsMap {
+			for _, principal := range principals {
+				uniqueDefaultReviewerIDs[principal.ID] = struct{}{}
+			}
+		}
+	}
+
+	effectiveDefaultReviewerIDs := maps.Keys(uniqueDefaultReviewerIDs)
+	var evaluations []*types.ReviewerEvaluation
+	for id := range uniqueDefaultReviewerIDs {
+		if reviewer, ok := reviewerMap[id]; ok {
+			evaluations = append(evaluations, &types.ReviewerEvaluation{
+				Reviewer: reviewer.Reviewer,
+				SHA:      reviewer.SHA,
+				Decision: reviewer.ReviewDecision,
+			})
+		}
 	}
 
 	// if author is default reviewer and required minimum == number of default reviewers, reduce minimum by one.
@@ -228,8 +259,10 @@ func (v *DefPullReq) MergeVerify(
 		}
 
 		out.DefaultReviewerApprovals = []*types.DefaultReviewerApprovalsResponse{{
-			PrincipalIDs: effectiveDefaultReviewerIDs,
+			PrincipalIDs: defaultReviewerIDs,
+			UserGroupIDs: v.Reviewers.DefaultUserGroupReviewerIDs,
 			CurrentCount: defaultReviewerApprovalCount,
+			Evaluations:  evaluations,
 		}}
 		if v.Approvals.RequireLatestCommit {
 			out.DefaultReviewerApprovals[0].MinimumRequiredCountLatest = effectiveMinimumRequiredDefaultReviewerCount

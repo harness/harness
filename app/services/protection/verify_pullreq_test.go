@@ -22,6 +22,8 @@ import (
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"golang.org/x/exp/slices"
 )
 
 var (
@@ -148,6 +150,11 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 					PrincipalIDs:         []int64{reviewer1.ID},
 					CurrentCount:         0,
 					MinimumRequiredCount: 1,
+					Evaluations: []*types.ReviewerEvaluation{{
+						Reviewer: reviewer1,
+						SHA:      "abc",
+						Decision: enum.PullReqReviewDecisionChangeReq,
+					}},
 				}},
 			},
 		},
@@ -171,6 +178,11 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 					PrincipalIDs:         []int64{reviewer1.ID},
 					CurrentCount:         1,
 					MinimumRequiredCount: 1,
+					Evaluations: []*types.ReviewerEvaluation{{
+						Reviewer: reviewer1,
+						SHA:      "abc",
+						Decision: enum.PullReqReviewDecisionApproved,
+					}},
 				}},
 			},
 		},
@@ -231,6 +243,11 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 					PrincipalIDs:         []int64{reviewer2.ID},
 					CurrentCount:         1,
 					MinimumRequiredCount: 1,
+					Evaluations: []*types.ReviewerEvaluation{{
+						Reviewer: reviewer2,
+						SHA:      "abc",
+						Decision: enum.PullReqReviewDecisionApproved,
+					}},
 				}},
 			},
 		},
@@ -275,6 +292,11 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 					PrincipalIDs:         []int64{reviewer2.ID},
 					CurrentCount:         1,
 					MinimumRequiredCount: 1,
+					Evaluations: []*types.ReviewerEvaluation{{
+						Reviewer: reviewer2,
+						SHA:      "abc",
+						Decision: enum.PullReqReviewDecisionApproved,
+					}},
 				}},
 			},
 		},
@@ -300,6 +322,15 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 					PrincipalIDs:         []int64{reviewer2.ID, reviewer3.ID},
 					CurrentCount:         1,
 					MinimumRequiredCount: 2,
+					Evaluations: []*types.ReviewerEvaluation{{
+						Reviewer: reviewer2,
+						SHA:      "abc",
+						Decision: enum.PullReqReviewDecisionApproved,
+					}, {
+						Reviewer: reviewer3,
+						SHA:      "abc",
+						Decision: enum.PullReqReviewDecisionChangeReq,
+					}},
 				}},
 			},
 		},
@@ -323,6 +354,15 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 					PrincipalIDs:         []int64{reviewer2.ID, reviewer3.ID},
 					CurrentCount:         2,
 					MinimumRequiredCount: 2,
+					Evaluations: []*types.ReviewerEvaluation{{
+						Reviewer: reviewer2,
+						SHA:      "abc",
+						Decision: enum.PullReqReviewDecisionApproved,
+					}, {
+						Reviewer: reviewer3,
+						SHA:      "abc",
+						Decision: enum.PullReqReviewDecisionApproved,
+					}},
 				}},
 			},
 		},
@@ -347,6 +387,11 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 					PrincipalIDs:               []int64{reviewer1.ID},
 					CurrentCount:               0,
 					MinimumRequiredCountLatest: 1,
+					Evaluations: []*types.ReviewerEvaluation{{
+						Reviewer: reviewer1,
+						SHA:      "def",
+						Decision: enum.PullReqReviewDecisionApproved,
+					}},
 				}},
 			},
 		},
@@ -369,6 +414,11 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 					PrincipalIDs:               []int64{reviewer1.ID},
 					CurrentCount:               1,
 					MinimumRequiredCountLatest: 1,
+					Evaluations: []*types.ReviewerEvaluation{{
+						Reviewer: reviewer1,
+						SHA:      "abc",
+						Decision: enum.PullReqReviewDecisionApproved,
+					}},
 				}},
 			},
 		},
@@ -730,11 +780,30 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 				return
 			}
 
+			sortEvaluations(out.DefaultReviewerApprovals)
+
 			if want, got := test.expOut, out; !reflect.DeepEqual(want, got) {
 				t.Errorf("output mismatch: want=%+v got=%+v", want, got)
 			}
 
 			inspectBranchViolations(t, test.expCodes, test.expParams, violations)
+		})
+	}
+}
+
+// sortEvaluations sorts the evaluations in DefaultReviewerApprovals by reviewer ID for consistent comparison.
+func sortEvaluations(approvals []*types.DefaultReviewerApprovalsResponse) {
+	if approvals == nil {
+		return
+	}
+
+	for _, approval := range approvals {
+		if approval == nil || approval.Evaluations == nil {
+			continue
+		}
+
+		slices.SortFunc(approval.Evaluations, func(a, b *types.ReviewerEvaluation) int {
+			return int(a.Reviewer.ID - b.Reviewer.ID)
 		})
 	}
 }
