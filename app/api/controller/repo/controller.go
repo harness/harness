@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
+	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/api/controller/lfs"
 	"github.com/harness/gitness/app/api/controller/limiter"
 	"github.com/harness/gitness/app/api/usererror"
@@ -45,7 +46,10 @@ import (
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/audit"
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
+	gitenum "github.com/harness/gitness/git/enum"
+	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -303,4 +307,107 @@ func (c *Controller) fetchTagRules(
 	}
 
 	return protectionRules, isRepoOwner, nil
+}
+
+func (c *Controller) fetchUpstreamBranch(
+	ctx context.Context,
+	session *auth.Session,
+	repoForkCore *types.RepositoryCore,
+	branchName string,
+) (sha.SHA, *types.RepositoryCore, error) {
+	return c.fetchUpstreamObjects(
+		ctx,
+		session,
+		repoForkCore,
+		func(readParams git.ReadParams) (sha.SHA, error) {
+			result, err := c.git.GetRef(ctx, git.GetRefParams{
+				ReadParams: readParams,
+				Name:       branchName,
+				Type:       gitenum.RefTypeBranch,
+			})
+			if err != nil {
+				return sha.SHA{}, fmt.Errorf("failed to fetch branch %s: %w", branchName, err)
+			}
+
+			return result.SHA, nil
+		})
+}
+
+func (c *Controller) fetchUpstreamRevision(
+	ctx context.Context,
+	session *auth.Session,
+	repoForkCore *types.RepositoryCore,
+	revision string,
+) (sha.SHA, *types.RepositoryCore, error) {
+	return c.fetchUpstreamObjects(
+		ctx,
+		session,
+		repoForkCore,
+		func(readParams git.ReadParams) (sha.SHA, error) {
+			result, err := c.git.ResolveRevision(ctx, git.ResolveRevisionParams{
+				ReadParams: readParams,
+				Revision:   revision,
+			})
+			if err != nil {
+				return sha.SHA{}, fmt.Errorf("failed to resolve revision %s: %w", revision, err)
+			}
+
+			return result.SHA, nil
+		})
+}
+
+func (c *Controller) fetchUpstreamObjects(
+	ctx context.Context,
+	session *auth.Session,
+	repoForkCore *types.RepositoryCore,
+	getSHA func(params git.ReadParams) (sha.SHA, error),
+) (sha.SHA, *types.RepositoryCore, error) {
+	repoFork, err := c.repoStore.Find(ctx, repoForkCore.ID)
+	if err != nil {
+		return sha.None, nil, fmt.Errorf("failed to find fork repo: %w", err)
+	}
+
+	if repoFork.ForkID == 0 {
+		return sha.None, nil, errors.InvalidArgument("Repository is not a fork.")
+	}
+
+	repoUpstreamCore, err := c.repoFinder.FindByID(ctx, repoFork.ForkID)
+	if err != nil {
+		return sha.None, nil, fmt.Errorf("failed to find upstream repo: %w", err)
+	}
+
+	if err = apiauth.CheckRepo(
+		ctx,
+		c.authorizer,
+		session,
+		repoUpstreamCore,
+		enum.PermissionRepoView,
+	); errors.Is(err, apiauth.ErrForbidden) {
+		return sha.None, nil, usererror.BadRequest(
+			"Not enough permissions to view the upstream repository.",
+		)
+	} else if err != nil {
+		return sha.None, nil, fmt.Errorf("failed to check access to upstream repo: %w", err)
+	}
+
+	upstreamSHA, err := getSHA(git.CreateReadParams(repoUpstreamCore))
+	if err != nil {
+		return sha.None, nil, fmt.Errorf("failed to get upstream repo SHA: %w", err)
+	}
+
+	writeParams, err := controller.CreateRPCSystemReferencesWriteParams(ctx, c.urlProvider, session, repoForkCore)
+	if err != nil {
+		return sha.None, nil, fmt.Errorf("failed to create RPC write params: %w", err)
+	}
+
+	_, err = c.git.FetchObjects(ctx, &git.FetchObjectsParams{
+		WriteParams: writeParams,
+		Source:      repoUpstreamCore.GitUID,
+		ObjectSHAs:  []sha.SHA{upstreamSHA},
+	})
+	if err != nil {
+		return sha.None, nil, fmt.Errorf("failed to fetch commit from upstream repo: %w", err)
+	}
+
+	return upstreamSHA, repoUpstreamCore, nil
 }

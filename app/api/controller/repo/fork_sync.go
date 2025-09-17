@@ -19,9 +19,7 @@ import (
 	"fmt"
 	"time"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/controller"
-	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/errors"
@@ -76,34 +74,6 @@ func (c *Controller) ForkSync(
 		branchUpstreamName = in.Branch
 	}
 
-	repoFork, err := c.repoStore.Find(ctx, repoForkCore.ID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to find fork repo: %w", err)
-	}
-
-	if repoFork.ForkID == 0 {
-		return nil, nil, errors.InvalidArgument("Repository is not a fork.")
-	}
-
-	repoUpstreamCore, err := c.repoFinder.FindByID(ctx, repoFork.ForkID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to find upstream repo: %w", err)
-	}
-
-	if err = apiauth.CheckRepo(
-		ctx,
-		c.authorizer,
-		session,
-		repoUpstreamCore,
-		enum.PermissionRepoView,
-	); errors.Is(err, apiauth.ErrForbidden) {
-		return nil, nil, usererror.BadRequest(
-			"Not enough permissions to view the upstream repository.",
-		)
-	} else if err != nil {
-		return nil, nil, fmt.Errorf("failed to check access to upstream repo: %w", err)
-	}
-
 	branchForkInfo, err := c.git.GetRef(ctx, git.GetRefParams{
 		ReadParams: git.CreateReadParams(repoForkCore),
 		Name:       in.Branch,
@@ -118,32 +88,19 @@ func (c *Controller) ForkSync(
 			in.BranchCommitSHA, in.Branch)
 	}
 
-	branchUpstreamInfo, err := c.git.GetRef(ctx, git.GetRefParams{
-		ReadParams: git.CreateReadParams(repoUpstreamCore),
-		Name:       branchUpstreamName,
-		Type:       gitenum.RefTypeBranch,
-	})
+	branchUpstreamSHA, repoUpstreamCore, err := c.fetchUpstreamBranch(
+		ctx,
+		session,
+		repoForkCore,
+		branchUpstreamName,
+	)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get upstream branch: %w", err)
-	}
-
-	writeParams, err := controller.CreateRPCSystemReferencesWriteParams(ctx, c.urlProvider, session, repoForkCore)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create RPC write params: %w", err)
-	}
-
-	_, err = c.git.FetchObjects(ctx, &git.FetchObjectsParams{
-		WriteParams: writeParams,
-		Source:      repoUpstreamCore.GitUID,
-		ObjectSHAs:  []sha.SHA{branchUpstreamInfo.SHA},
-	})
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to fetch commit from upstream repo: %w", err)
+		return nil, nil, fmt.Errorf("failed to fetch upstream branch: %w", err)
 	}
 
 	ancestorResult, err := c.git.IsAncestor(ctx, git.IsAncestorParams{
 		ReadParams:          git.CreateReadParams(repoForkCore),
-		AncestorCommitSHA:   branchUpstreamInfo.SHA,
+		AncestorCommitSHA:   branchUpstreamSHA,
 		DescendantCommitSHA: branchForkInfo.SHA,
 	})
 	if err != nil {
@@ -159,7 +116,7 @@ func (c *Controller) ForkSync(
 
 	mergeBase, err := c.git.MergeBase(ctx, git.MergeBaseParams{
 		ReadParams: git.CreateReadParams(repoForkCore),
-		Ref1:       branchUpstreamInfo.SHA.String(),
+		Ref1:       branchUpstreamSHA.String(),
 		Ref2:       branchForkInfo.SHA.String(),
 	})
 	if err != nil {
@@ -232,11 +189,16 @@ func (c *Controller) ForkSync(
 
 	now := time.Now()
 
+	writeParams, err := controller.CreateRPCSystemReferencesWriteParams(ctx, c.urlProvider, session, repoForkCore)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create RPC write params: %w", err)
+	}
+
 	mergeOutput, err := c.git.Merge(ctx, &git.MergeParams{
 		WriteParams: writeParams,
 		//HeadRepoUID:     repoUpstreamCore.GitUID, // TODO: Remove HeadRepoUID!
 		BaseSHA:       branchForkInfo.SHA,
-		HeadSHA:       branchUpstreamInfo.SHA,
+		HeadSHA:       branchUpstreamSHA,
 		Message:       message,
 		Committer:     committer,
 		CommitterDate: &now,

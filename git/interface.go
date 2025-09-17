@@ -98,6 +98,8 @@ type Interface interface {
 	GetDiffHunkHeaders(ctx context.Context, params GetDiffHunkHeadersParams) (GetDiffHunkHeadersOutput, error)
 	DiffCut(ctx context.Context, params *DiffCutParams) (DiffCutOutput, error)
 
+	ResolveRevision(ctx context.Context, params ResolveRevisionParams) (ResolveRevisionOutput, error)
+
 	/*
 	 * Merge services
 	 */

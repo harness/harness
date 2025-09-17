@@ -16,6 +16,7 @@ package repo
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"strings"
 
@@ -45,6 +46,11 @@ func (c *Controller) RawDiff(
 	info, err := parseDiffPath(path)
 	if err != nil {
 		return err
+	}
+
+	err = c.fetchDiffUpstreamRef(ctx, session, repo, &info)
+	if err != nil {
+		return fmt.Errorf("failed to fetch diff upstream ref: %w", err)
 	}
 
 	return c.git.RawDiff(ctx, w, &git.DiffParams{
@@ -77,24 +83,40 @@ func (c *Controller) CommitDiff(
 }
 
 type CompareInfo struct {
-	BaseRef   string
-	HeadRef   string
-	MergeBase bool
+	BaseRef      string
+	BaseUpstream bool
+	HeadRef      string
+	HeadUpstream bool
+	MergeBase    bool
 }
 
 func parseDiffPath(path string) (CompareInfo, error) {
+	mergeBase := true
 	infos := strings.SplitN(path, "...", 2)
 	if len(infos) != 2 {
+		mergeBase = false
 		infos = strings.SplitN(path, "..", 2)
+		if len(infos) != 2 {
+			return CompareInfo{}, usererror.BadRequestf("Invalid format %q", path)
+		}
 	}
-	if len(infos) != 2 {
-		return CompareInfo{}, usererror.BadRequestf("Invalid format %q", path)
-	}
-	return CompareInfo{
+
+	info := CompareInfo{
 		BaseRef:   infos[0],
 		HeadRef:   infos[1],
-		MergeBase: strings.Contains(path, "..."),
-	}, nil
+		MergeBase: mergeBase,
+	}
+
+	const upstreamMarker = "upstream:"
+
+	info.BaseRef, info.BaseUpstream = strings.CutPrefix(info.BaseRef, upstreamMarker)
+	info.HeadRef, info.HeadUpstream = strings.CutPrefix(info.HeadRef, upstreamMarker)
+
+	if info.BaseUpstream && info.HeadUpstream {
+		return CompareInfo{}, usererror.BadRequestf("Only one upstream reference is allowed: %q", path)
+	}
+
+	return info, nil
 }
 
 func (c *Controller) DiffStats(
@@ -116,6 +138,11 @@ func (c *Controller) DiffStats(
 	info, err := parseDiffPath(path)
 	if err != nil {
 		return types.DiffStats{}, err
+	}
+
+	err = c.fetchDiffUpstreamRef(ctx, session, repo, &info)
+	if err != nil {
+		return types.DiffStats{}, fmt.Errorf("failed to fetch diff upstream ref: %w", err)
 	}
 
 	output, err := c.git.DiffStats(ctx, &git.DiffParams{
@@ -155,6 +182,11 @@ func (c *Controller) Diff(
 		return nil, err
 	}
 
+	err = c.fetchDiffUpstreamRef(ctx, session, repo, &info)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch diff upstream ref: %w", err)
+	}
+
 	reader := git.NewStreamReader(c.git.Diff(ctx, &git.DiffParams{
 		ReadParams:       git.CreateReadParams(repo),
 		BaseRef:          info.BaseRef,
@@ -165,4 +197,33 @@ func (c *Controller) Diff(
 	}, files...))
 
 	return reader, nil
+}
+
+func (c *Controller) fetchDiffUpstreamRef(
+	ctx context.Context,
+	session *auth.Session,
+	repoForkCore *types.RepositoryCore,
+	compareInfo *CompareInfo,
+) error {
+	if compareInfo.BaseUpstream {
+		refSHA, _, err := c.fetchUpstreamRevision(ctx, session, repoForkCore, compareInfo.BaseRef)
+		if err != nil {
+			return fmt.Errorf("failed to fetch upstream objects: %w", err)
+		}
+
+		compareInfo.BaseUpstream = false
+		compareInfo.BaseRef = refSHA.String()
+	}
+
+	if compareInfo.HeadUpstream {
+		refSHA, _, err := c.fetchUpstreamRevision(ctx, session, repoForkCore, compareInfo.HeadRef)
+		if err != nil {
+			return fmt.Errorf("failed to fetch upstream objects: %w", err)
+		}
+
+		compareInfo.HeadUpstream = false
+		compareInfo.HeadRef = refSHA.String()
+	}
+
+	return nil
 }
