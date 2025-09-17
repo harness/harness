@@ -57,7 +57,15 @@ export default function OrganizationDropdown(props: OrganizationDropdownProps): 
   ]
 
   const safeValue = Array.isArray(value) ? value : []
-  const selectedOptions = allOptions.filter(option => safeValue.includes(option.value))
+  const selectedOptions = safeValue.map(selectedId => {
+    const existingOption = allOptions.find(option => option.value === selectedId)
+    if (existingOption) return existingOption
+
+    return {
+      value: selectedId,
+      label: selectedId
+    }
+  })
 
   const handleChange = useCallback(
     (options: MultiSelectOption[]) => {

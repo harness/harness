@@ -72,28 +72,41 @@ export const useUsageDashboardGitspaces = ({
   const { accountInfo } = useAppContext()
   const accountId = accountInfo?.identifier || ''
 
-  const getFilteredParams = () => {
-    if (filter.project_identifiers && filter.project_identifiers.length > 0) {
-      return {
-        project_identifiers: filter.project_identifiers,
-        org_identifiers: undefined
+  const getFilteredParams = (currentFilter: GitspaceFilter) => {
+    const result: {
+      project_identifiers?: string[]
+      org_identifiers?: string[]
+      gitspace_owner?: string
+      gitspace_states?: string[]
+      query?: string
+    } = {
+      ...currentFilter
+    }
+
+    if (currentFilter.project_identifiers && currentFilter.project_identifiers.length > 0) {
+      const selectedOrgIds = currentFilter.project_identifiers
+        .map(projectId => {
+          const parts = projectId.split('/')
+          return parts.length > 0 ? parts[0] : null
+        })
+        .filter(Boolean) as string[]
+
+      if (currentFilter.org_identifiers && currentFilter.org_identifiers.length > 0) {
+        const remainingOrgIds = currentFilter.org_identifiers.filter(orgId => !selectedOrgIds.includes(orgId))
+
+        result.org_identifiers = remainingOrgIds.length > 0 ? remainingOrgIds : undefined
+      } else {
+        result.org_identifiers = undefined
       }
     }
 
-    if (filter.org_identifiers && filter.org_identifiers.length > 0) {
-      return {
-        org_identifiers: filter.org_identifiers,
-        project_identifiers: undefined
-      }
-    }
-
-    return {
-      org_identifiers: undefined,
-      project_identifiers: undefined
-    }
+    return result
   }
 
-  const filteredParams = getFilteredParams()
+  const filteredParams = useMemo(
+    () => getFilteredParams(filter),
+    [filter.gitspace_owner, filter.query, filter.gitspace_states, filter.org_identifiers, filter.project_identifiers]
+  )
 
   const gitspaceStatesKey = filter.gitspace_states?.join(',')
   const orgIdentifiersKey = filter.org_identifiers?.join(',')
@@ -123,7 +136,7 @@ export const useUsageDashboardGitspaces = ({
     pathParams: { accountId },
     queryParams: {
       routingId: accountId,
-      page,
+      page, // Ensure page is correctly passed
       limit,
       gitspace_owner: filter.gitspace_owner || 'all',
       gitspace_states: filter.gitspace_states?.length ? filter.gitspace_states : undefined,
@@ -136,7 +149,7 @@ export const useUsageDashboardGitspaces = ({
     queryParamStringifyOptions: {
       arrayFormat: 'repeat'
     },
-    debounce: 500,
+    debounce: 250,
     lazy: !accountId
   })
 
@@ -156,19 +169,21 @@ export const useUsageDashboardGitspaces = ({
         !isEqual(currentParams.sortConfig, prevParamsRef.current.sortConfig)
 
       if (paramsChanged) {
+        const currentFilteredParams = getFilteredParams(memoizedFilter)
+
         refetch({
           pathParams: { accountId },
           queryParams: {
             routingId: accountId,
             page,
             limit,
-            gitspace_owner: filter.gitspace_owner || 'all',
-            gitspace_states: filter.gitspace_states?.length ? filter.gitspace_states : undefined,
-            order: sortConfig.order || 'desc',
-            sort: sortConfig.sort || 'last_activated',
-            query: filter.query || undefined,
-            org_identifiers: filteredParams.org_identifiers,
-            project_identifiers: filteredParams.project_identifiers
+            gitspace_owner: memoizedFilter.gitspace_owner || 'all',
+            gitspace_states: memoizedFilter.gitspace_states?.length ? memoizedFilter.gitspace_states : undefined,
+            order: memoizedSortConfig.order || 'desc',
+            sort: memoizedSortConfig.sort || 'last_activated',
+            query: memoizedFilter.query || undefined,
+            org_identifiers: currentFilteredParams.org_identifiers,
+            project_identifiers: currentFilteredParams.project_identifiers
           },
           queryParamStringifyOptions: {
             arrayFormat: 'repeat'
@@ -194,7 +209,7 @@ export const useUsageDashboardGitspaces = ({
   }
 
   const paginationProps = usePaginationProps({
-    pageIndex: page,
+    pageIndex: page - 1,
     pageSize: limit,
     itemCount: parsePaginationInfo()?.totalItems || 0,
     pageCount: parsePaginationInfo()?.totalPages || 0

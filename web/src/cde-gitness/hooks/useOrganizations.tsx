@@ -60,7 +60,7 @@ export const useOrganizations = (options?: UseOrganizationsOptions) => {
   const [hasMore, setHasMore] = useState<boolean>(true)
   const [searchTerm, setSearchTerm] = useState<string | undefined>(options?.searchTerm)
 
-  const PAGE_SIZE = options?.pageSize || 500
+  const PAGE_SIZE = options?.pageSize || 200
 
   const { data, loading, error, refetch } = useGet<OrganizationsApiResponse>({
     path: '/api/aggregate/organizations',

@@ -15,13 +15,15 @@ export interface ProjectDropdownProps {
 }
 
 export default function ProjectDropdown(props: ProjectDropdownProps): JSX.Element {
-  const { value = [], onChange, disabled, orgIdentifiers } = props
+  const { value = [], onChange, disabled } = props
   const { getString } = useStrings()
   const [searchQuery, setSearchQuery] = useState<string>('')
 
+  const effectivePageSize = props.pageSize || 200
+
   const { projects, loading, hasMore, loadMore, search } = useProjects({
     searchTerm: searchQuery,
-    orgIdentifiers
+    pageSize: effectivePageSize
   })
 
   const handleSearch = useCallback(
@@ -32,47 +34,56 @@ export default function ProjectDropdown(props: ProjectDropdownProps): JSX.Elemen
     [search]
   )
 
-  const filteredProjects = useMemo(() => {
-    return projects
-  }, [projects])
-
   useEffect(() => {
-    if (orgIdentifiers?.length && value.length) {
-      const validProjectIds = filteredProjects.map(project => project.identifier)
+    if (value.length && projects.length > 0) {
+      const validProjectIds = projects.map(project => project.fullIdentifier)
       const validValues = value.filter(id => validProjectIds.includes(id))
 
       if (validValues.length !== value.length) {
         onChange(validValues)
       }
     }
-  }, [filteredProjects, value, onChange, orgIdentifiers])
+  }, [projects, value, onChange])
 
-  const allOptions = filteredProjects.map(project => ({
-    value: project.identifier,
+  const allOptions = projects.map(project => ({
+    value: project.fullIdentifier,
     label: project.name || project.identifier
   }))
 
-  const items = [
-    ...(value.length > 0
-      ? [
-          {
-            value: DROPDOWN_ACTIONS.CLEAR_ALL,
-            label: 'Clear All'
-          }
-        ]
-      : []),
-    ...allOptions,
-    ...(hasMore
+  const selectedOptions = value.map(selectedId => {
+    const existingOption = allOptions.find(option => option.value === selectedId)
+    if (existingOption) return existingOption
+
+    return {
+      value: selectedId,
+      label: selectedId
+    }
+  })
+
+  const showLoadMore = hasMore
+
+  const items = useMemo(() => {
+    const clearAllItem =
+      value.length > 0
+        ? [
+            {
+              value: DROPDOWN_ACTIONS.CLEAR_ALL,
+              label: 'Clear All'
+            }
+          ]
+        : []
+
+    const loadMoreItem = showLoadMore
       ? [
           {
             value: DROPDOWN_ACTIONS.LOAD_MORE,
             label: loading ? 'Loading' + '...' : 'Load More'
           }
         ]
-      : [])
-  ]
+      : []
 
-  const selectedOptions = allOptions.filter(option => value.includes(option.value))
+    return [...clearAllItem, ...allOptions, ...loadMoreItem]
+  }, [value, allOptions, showLoadMore, loading])
 
   const handleChange = useCallback(
     (options: MultiSelectOption[]) => {
@@ -91,7 +102,8 @@ export default function ProjectDropdown(props: ProjectDropdownProps): JSX.Elemen
         return
       }
 
-      onChange(options.map(option => option.value as string))
+      const newValues = options.map(option => option.value as string)
+      onChange(newValues)
     },
     [onChange, loadMore]
   )

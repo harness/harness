@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useGet } from 'restful-react'
 import { useAppContext } from 'AppContext'
 import { getConfig } from 'services/config'
@@ -53,24 +53,27 @@ interface TransformedProject {
   color: string
   description: string
   modules: string[]
+  fullIdentifier: string
 }
 
 interface UseProjectsOptions {
   searchTerm?: string
   pageSize?: number
-  orgIdentifiers?: string[]
 }
 
 export const useProjects = (options?: UseProjectsOptions) => {
   const { accountInfo } = useAppContext()
   const accountId = accountInfo?.identifier || ''
-  const [projects, setProjects] = useState<TransformedProject[]>([])
   const [pageIndex, setPageIndex] = useState<number>(0)
   const [hasMore, setHasMore] = useState<boolean>(true)
   const [searchTerm, setSearchTerm] = useState<string | undefined>(options?.searchTerm)
-  const orgIdentifiers = options?.orgIdentifiers || []
 
-  const PAGE_SIZE = options?.pageSize || 500
+  const [currentParams, setCurrentParams] = useState({
+    pageIndex: 0,
+    searchTerm: searchTerm
+  })
+
+  const PAGE_SIZE = options?.pageSize || 200
 
   const { data, loading, error, refetch } = useGet<ApiResponse>({
     path: '/api/aggregate/projects',
@@ -78,12 +81,11 @@ export const useProjects = (options?: UseProjectsOptions) => {
     queryParams: {
       routingId: accountId,
       accountIdentifier: accountId,
-      pageIndex,
+      pageIndex: currentParams.pageIndex,
       pageSize: PAGE_SIZE,
-      searchTerm,
+      searchTerm: currentParams.searchTerm,
       sortOrders: 'lastModifiedAt,DESC',
-      onlyFavorites: false,
-      ...(orgIdentifiers.length > 0 ? { orgIdentifier: orgIdentifiers } : {})
+      onlyFavorites: false
     },
     queryParamStringifyOptions: { arrayFormat: 'repeat' },
     lazy: !accountId
@@ -97,45 +99,42 @@ export const useProjects = (options?: UseProjectsOptions) => {
       return {
         ...project,
         identifier: project.identifier,
-        name: project.name || project.identifier
+        name: project.name || project.identifier,
+        fullIdentifier: `${project.orgIdentifier}/${project.identifier}`
       }
     })
   }, [])
 
+  const projects = useMemo(() => {
+    if (!data) return []
+    return transformProjects(data)
+  }, [data, transformProjects])
+
   useEffect(() => {
-    if (data) {
-      const transformedProjects = transformProjects(data)
-
-      if (pageIndex === 0) {
-        setProjects(transformedProjects)
-      } else {
-        setProjects(prevProjects => [...prevProjects, ...transformedProjects])
-      }
-
-      // Check if we have more pages to load
-      setHasMore(pageIndex < data.data.totalPages - 1)
-    }
-  }, [data, transformProjects, pageIndex])
-
-  // Reset pagination when search term changes
-  useEffect(() => {
-    setPageIndex(0)
-    setHasMore(true)
-    setProjects([])
-  }, [searchTerm])
-
-  // Update search term when options change
-  useEffect(() => {
-    if (options?.searchTerm !== undefined && options.searchTerm !== searchTerm) {
+    if (options?.searchTerm !== undefined && options.searchTerm !== currentParams.searchTerm) {
       setSearchTerm(options.searchTerm)
+      setCurrentParams(prev => ({
+        ...prev,
+        searchTerm: options.searchTerm,
+        pageIndex: 0
+      }))
     }
   }, [options?.searchTerm])
 
   useEffect(() => {
-    setPageIndex(0)
-    setHasMore(true)
-    setProjects([])
-  }, [options?.orgIdentifiers])
+    if (pageIndex !== currentParams.pageIndex) {
+      setCurrentParams(prev => ({
+        ...prev,
+        pageIndex
+      }))
+    }
+  }, [pageIndex])
+
+  useEffect(() => {
+    if (data) {
+      setHasMore(currentParams.pageIndex < data.data.totalPages - 1)
+    }
+  }, [data, currentParams.pageIndex])
 
   const loadMore = useCallback(() => {
     if (!loading && hasMore) {
@@ -146,8 +145,13 @@ export const useProjects = (options?: UseProjectsOptions) => {
   const search = useCallback((term: string | undefined) => {
     setSearchTerm(term)
     setPageIndex(0)
-    setProjects([])
     setHasMore(true)
+
+    setCurrentParams(prev => ({
+      ...prev,
+      searchTerm: term,
+      pageIndex: 0
+    }))
   }, [])
 
   return {

@@ -129,25 +129,10 @@ const GitspacesTabPanel: React.FC = () => {
     }
   }, [filter, debouncedFilterUpdate])
 
-  const getApiFilterParams = () => {
-    if (apiFilter.project_identifiers && apiFilter.project_identifiers.length > 0) {
-      const apiFilterCopy = { ...apiFilter }
-      delete apiFilterCopy.org_identifiers
-      return apiFilterCopy
-    }
-    if (apiFilter.org_identifiers && apiFilter.org_identifiers.length > 0) {
-      return apiFilter
-    }
-    const apiFilterCopy = { ...apiFilter }
-    delete apiFilterCopy.org_identifiers
-    delete apiFilterCopy.project_identifiers
-    return apiFilterCopy
-  }
-
   const { data, loading, error, refetch, pagination } = useUsageDashboardGitspaces({
     page: pageConfig.page,
     limit: pageConfig.limit,
-    filter: getApiFilterParams(),
+    filter: apiFilter,
     sortConfig
   })
 
@@ -159,7 +144,6 @@ const GitspacesTabPanel: React.FC = () => {
   const handleFilterChange = (key: string, value: any) => {
     const updatedFilter = { ...filter, [key]: value }
     setFilter(updatedFilter)
-
     setPageConfig(prev => ({ ...prev, page: 1 }))
 
     const queryParamsToUpdate: Partial<DashboardQueryParams> = { page: '1' }
@@ -264,7 +248,7 @@ const GitspacesTabPanel: React.FC = () => {
                   data={data || []}
                   refreshList={refetch}
                   hasFilter={!!filter.query || filter.gitspace_states.length > 0}
-                  gotoPage={page => handlePagination('page', page)}
+                  gotoPage={page => handlePagination('page', page + 1)}
                   onPageSizeChange={size => handlePagination('limit', size)}
                   pageConfig={{
                     page: pageConfig.page,
