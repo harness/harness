@@ -239,6 +239,7 @@ type ReviewerEvaluation struct {
 	Decision enum.PullReqReviewDecision `json:"decision"`
 	SHA      string                     `json:"sha,omitempty"`
 	Reviewer PrincipalInfo              `json:"reviewer"`
+	Updated  int64                      `json:"updated"`
 }
 
 // PullReqFileView represents a file reviewed entry for a given pr and principal.

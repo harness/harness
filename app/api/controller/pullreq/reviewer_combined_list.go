@@ -141,6 +141,7 @@ func userGroupReviewerDecisions(
 			Decision: reviewer.ReviewDecision,
 			SHA:      reviewer.SHA,
 			Reviewer: reviewer.Reviewer,
+			Updated:  reviewer.Updated,
 		}
 		userGroupReviewerDecisions = append(userGroupReviewerDecisions, decision)
 	}
@@ -158,18 +159,24 @@ func determineUserGroupCompoundDecision(
 	var latestSHAReviews []types.ReviewerEvaluation
 	var otherSHAReviews []types.ReviewerEvaluation
 	var userGroupSHA string
+	var latestUpdated int64
 
 	for _, decision := range userGroupReviewerDecisions {
-		// prioritize source SHA if available
-		if userGroupSHA == "" || decision.SHA == prSourceSHA {
-			userGroupSHA = decision.SHA
-		}
-
 		if decision.SHA == prSourceSHA {
 			latestSHAReviews = append(latestSHAReviews, decision)
 		} else {
 			otherSHAReviews = append(otherSHAReviews, decision)
+			// Track the most recently updated reviewer for fallback SHA
+			if decision.Updated > latestUpdated {
+				latestUpdated = decision.Updated
+				userGroupSHA = decision.SHA
+			}
 		}
+	}
+
+	// If we have source SHA reviews, override userGroupSHA to source SHA
+	if len(latestSHAReviews) > 0 {
+		userGroupSHA = prSourceSHA
 	}
 
 	// Determine the compound decision:
