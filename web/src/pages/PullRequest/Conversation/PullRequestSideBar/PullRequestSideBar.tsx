@@ -22,6 +22,7 @@ import cx from 'classnames'
 import { Container, Layout, Text, Avatar, FlexExpander, useToaster, Utils, stringSubstitute } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
+import { useAppContext } from 'AppContext'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { useStrings } from 'framework/strings'
 import type {
@@ -56,6 +57,7 @@ interface PullRequestSideBarProps {
 
 const PullRequestSideBar = (props: PullRequestSideBarProps) => {
   const [labelQuery, setLabelQuery] = useState<string>('')
+  const { standalone } = useAppContext()
   const {
     combinedReviewers,
     repoMetadata,
@@ -118,6 +120,7 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
             <FlexExpander />
             <ReviewerSelect
               pullRequestMetadata={pullRequestMetadata}
+              standalone={standalone}
               onSelect={async normalizedPrincipal => {
                 try {
                   const { id, type } = normalizedPrincipal
