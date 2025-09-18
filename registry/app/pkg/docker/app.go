@@ -47,6 +47,7 @@ type App struct {
 
 	Config         *types.Config
 	storageService *registrystorage.Service
+	bucketService  BucketService
 }
 
 // NewApp takes a configuration and returns a configured app.
@@ -55,15 +56,22 @@ func NewApp(
 	blobRepo store.BlobRepository, spaceStore corestore.SpaceStore,
 	cfg *types.Config, storageService *registrystorage.Service,
 	gcService gc.Service,
+	bucketService BucketService,
 ) *App {
 	app := &App{
 		Context:        ctx,
 		Config:         cfg,
 		storageService: storageService,
+		bucketService:  bucketService,
 	}
 	app.configureSecret(cfg) //nolint:contextcheck
 	gcService.Start(ctx, spaceStore, blobRepo, storageDeleter, cfg)
 	return app
+}
+
+// StorageService returns the storage service for this app.
+func (app *App) StorageService() *registrystorage.Service {
+	return app.storageService
 }
 
 func GetStorageService(cfg *types.Config, driver storagedriver.StorageDriver) *registrystorage.Service {
@@ -111,16 +119,22 @@ func (app *App) configureSecret(configuration *types.Config) {
 
 // context constructs the context object for the application. This only be
 // called once per request.
-func (app *App) GetBlobsContext(c context.Context, info pkg.RegistryInfo) *Context {
-	context := &Context{
-		App:     app,
-		Context: c,
-		UUID:    info.Reference,
-		Digest:  digest.Digest(info.Digest),
+func (app *App) GetBlobsContext(c context.Context, info pkg.RegistryInfo, blobID interface{}) *Context {
+	ctx := &Context{
+		App:          app,
+		Context:      c,
+		UUID:         info.Reference,
+		Digest:       digest.Digest(info.Digest),
+		URLBuilder:   info.URLBuilder,
+		OciBlobStore: nil,
 	}
-	context.URLBuilder = info.URLBuilder
-	blobStore := app.storageService.OciBlobsStore(c, info.RegIdentifier, info.RootIdentifier)
-	context.OciBlobStore = blobStore
 
-	return context
+	if result := app.bucketService.GetBlobStore(c, info.RegIdentifier, info.RootIdentifier, blobID,
+		digest.Digest(info.Digest).String()); result != nil {
+		ctx.OciBlobStore = result.OciStore
+	}
+	if ctx.OciBlobStore == nil {
+		ctx.OciBlobStore = app.storageService.OciBlobsStore(c, info.RegIdentifier, info.RootIdentifier)
+	}
+	return ctx
 }

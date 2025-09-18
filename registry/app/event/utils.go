@@ -35,6 +35,7 @@ func ReportEventAsync(
 	genericBlobID string,
 	sha256 string,
 	conf *types.Config,
+	destinationBuckets []CloudLocation,
 ) {
 	var path string
 	var err error
@@ -48,7 +49,7 @@ func ReportEventAsync(
 	}
 
 	if err != nil {
-		log.Error().
+		log.Ctx(ctx).Error().
 			Err(err).
 			Int64("blobID", blobID).
 			Str("genericBlobID", genericBlobID).
@@ -64,7 +65,10 @@ func ReportEventAsync(
 		Bucket:   conf.Registry.Storage.S3Storage.Bucket,
 	}
 
-	destinations := []CloudLocation{source} // TODO: Use the correct destination
+	destinations := destinationBuckets
+	if len(destinations) == 0 {
+		return
+	}
 
 	go reporter.ReportEvent(ctx, &ReplicationDetails{
 		AccountID:     accountID,

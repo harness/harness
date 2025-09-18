@@ -244,7 +244,7 @@ var WireSet = wire.NewSet(
 	cache.WireSet,
 	refcache2.WireSet,
 	pkg.WireSet,
-	docker.WireSet,
+	docker.OpenSourceWireSet,
 	filemanager.WireSet,
 	maven.WireSet,
 	nuget.WireSet,

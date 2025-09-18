@@ -114,7 +114,7 @@ func NewLocalRegistry(
 	tagDao store.TagRepository, imageDao store.ImageRepository, artifactDao store.ArtifactRepository,
 	bandwidthStatDao store.BandwidthStatRepository, downloadStatDao store.DownloadStatRepository,
 	gcService gc.Service, tx dbtx.Transactor, reporter event.Reporter,
-	quarantineArtifactDao store.QuarantineArtifactRepository,
+	quarantineArtifactDao store.QuarantineArtifactRepository, bucketService BucketService,
 ) Registry {
 	return &LocalRegistry{
 		App:                   app,
@@ -133,6 +133,7 @@ func NewLocalRegistry(
 		tx:                    tx,
 		reporter:              reporter,
 		quarantineArtifactDao: quarantineArtifactDao,
+		bucketService:         bucketService,
 	}
 }
 
@@ -153,6 +154,7 @@ type LocalRegistry struct {
 	tx                    dbtx.Transactor
 	reporter              event.Reporter
 	quarantineArtifactDao store.QuarantineArtifactRepository
+	bucketService         BucketService
 }
 
 func (r *LocalRegistry) Base() error {
@@ -361,26 +363,35 @@ func (r *LocalRegistry) GetBlob(
 }
 
 func (r *LocalRegistry) fetchBlobInternal(
-	ctx2 context.Context, method string, info pkg.RegistryInfo,
+	ctx2 context.Context,
+	method string,
+	info pkg.RegistryInfo,
 ) (*commons.ResponseHeaders, *storage.FileReader, int64, io.ReadCloser, string, []error) {
-	ctx := r.App.GetBlobsContext(ctx2, info)
-
 	responseHeaders := &commons.ResponseHeaders{
 		Code:    0,
 		Headers: make(map[string]string),
 	}
 	errs := make([]error, 0)
 	var dgst digest.Digest
-	blobs := ctx.OciBlobStore
 
-	if err := r.dbBlobLinkExists(ctx, ctx.Digest, info); err != nil { //nolint:contextcheck
+	blobID, err := r.dbBlobLinkExists(ctx2, digest.Digest(info.Digest), info)
+	if err != nil { //nolint:contextcheck
 		errs = append(errs, errcode.FromUnknownError(err))
 		return responseHeaders, nil, -1, nil, "", errs
 	}
+	ctx := r.App.GetBlobsContext(ctx2, info, blobID)
+	blobs := ctx.OciBlobStore
+
 	dgst = ctx.Digest
 	headers := make(map[string]string)
+
+	// Use the blob store to serve the blob
+	var fileReader *storage.FileReader
+	var redirectURL string
+	var size int64
+
 	//nolint:contextcheck
-	fileReader, redirectURL, size, err := blobs.ServeBlobInternal(
+	fileReader, redirectURL, size, err = blobs.ServeBlobInternal(
 		ctx.Context,
 		info.RootIdentifier,
 		dgst,
@@ -855,7 +866,7 @@ func (r *LocalRegistry) InitBlobUpload(
 	artInfo pkg.RegistryInfo,
 	fromRepo, mountDigest string,
 ) (*commons.ResponseHeaders, []error) {
-	blobCtx := r.App.GetBlobsContext(ctx2, artInfo)
+	blobCtx := r.App.GetBlobsContext(ctx2, artInfo, nil)
 	var errList []error
 	responseHeaders := &commons.ResponseHeaders{
 		Headers: make(map[string]string),
@@ -996,7 +1007,7 @@ func (r *LocalRegistry) PushBlob(
 		Code:    0,
 		Headers: make(map[string]string),
 	}
-	ctx := r.App.GetBlobsContext(ctx2, artInfo)
+	ctx := r.App.GetBlobsContext(ctx2, artInfo, nil)
 	if ctx.UUID != "" {
 		resumeErrs := ResumeBlobUpload(ctx, stateToken) //nolint:contextcheck
 		errs = append(errs, resumeErrs...)
@@ -1489,14 +1500,16 @@ func parseContentRange(cr string) (start int64, end int64, err error) {
 	return start, end, nil
 }
 
-func (r *LocalRegistry) dbBlobLinkExists(ctx context.Context, dgst digest.Digest, info pkg.RegistryInfo) error {
+func (r *LocalRegistry) dbBlobLinkExists(
+	ctx context.Context, dgst digest.Digest, info pkg.RegistryInfo,
+) (int64, error) {
 	reg := info.Registry
 	blob, err := r.blobRepo.FindByDigestAndRootParentID(ctx, dgst, info.RootParentID)
 	if err != nil {
 		if errors.Is(err, store2.ErrResourceNotFound) {
 			err = errcode.ErrCodeBlobUnknown.WithDetail(dgst)
 		}
-		return err
+		return 0, err
 	}
 
 	err = r.tx.WithTx(
@@ -1534,10 +1547,10 @@ func (r *LocalRegistry) dbBlobLinkExists(ctx context.Context, dgst digest.Digest
 	)
 
 	if err != nil {
-		return fmt.Errorf("committing database transaction: %w", err)
+		return 0, fmt.Errorf("committing database transaction: %w", err)
 	}
 
-	return nil
+	return blob.ID, nil
 }
 
 func (r *LocalRegistry) dbPutBlobUploadComplete(
@@ -1585,9 +1598,10 @@ func (r *LocalRegistry) dbPutBlobUploadComplete(
 
 	// Emit blob create event
 	if created {
+		destinations := []event.CloudLocation{}
 		event.ReportEventAsync(ctx.Context, ctx.OciBlobStore.Path(),
 			r.reporter, event.BlobCreate, storedBlob.ID,
-			"", digestVal, r.App.Config)
+			"", digestVal, r.App.Config, destinations)
 	}
 	return nil
 }

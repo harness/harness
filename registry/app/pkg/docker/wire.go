@@ -15,6 +15,8 @@
 package docker
 
 import (
+	"context"
+
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/refcache"
 	gitnessstore "github.com/harness/gitness/app/store"
@@ -46,11 +48,12 @@ func LocalRegistryProvider(
 	bandwidthStatDao store.BandwidthStatRepository, downloadStatDao store.DownloadStatRepository,
 	gcService gc.Service, tx dbtx.Transactor, reporter event.Reporter,
 	quarantineArtifactDao store.QuarantineArtifactRepository,
+	bucketService BucketService,
 ) *LocalRegistry {
 	registry, ok := NewLocalRegistry(
 		app, ms, manifestDao, registryDao, registryBlobDao, blobRepo,
 		mtRepository, tagDao, imageDao, artifactDao, bandwidthStatDao, downloadStatDao,
-		gcService, tx, reporter, quarantineArtifactDao,
+		gcService, tx, reporter, quarantineArtifactDao, bucketService,
 	).(*LocalRegistry)
 	if !ok {
 		return nil
@@ -147,4 +150,43 @@ var RegistrySet = wire.NewSet(LocalRegistryProvider, ManifestServiceProvider, Re
 var ProxySet = wire.NewSet(ProvideProxyController)
 var StorageServiceSet = wire.NewSet(StorageServiceProvider)
 var AppSet = wire.NewSet(NewApp)
-var WireSet = wire.NewSet(ControllerSet, DBStoreSet, RegistrySet, StorageServiceSet, AppSet, ProxySet)
+
+// OciBlobStoreFactory is a function that creates an OciBlobStore with the provided context and identifiers.
+type OciBlobStoreFactory func(ctx context.Context, repoKey string, rootParentRef string) storage.OciBlobStore
+
+// ProvideOciBlobStore returns a factory function that creates an OciBlobStore with the provided context.
+func ProvideOciBlobStore(storageService *storage.Service) OciBlobStoreFactory {
+	return storageService.OciBlobsStore
+}
+
+func ProvideBucketService(_ OciBlobStoreFactory) BucketService {
+	return &noOpBucketService{}
+}
+
+// noOpBucketService is a no-op implementation for open-source version.
+type noOpBucketService struct{}
+
+func (n *noOpBucketService) GetBlobStore(_ context.Context, _ string, _ string,
+	_ interface{}, _ string) *BlobStore {
+	return nil
+}
+
+var OciBlobStoreSet = wire.NewSet(ProvideOciBlobStore)
+var BucketServiceSet = wire.NewSet(ProvideBucketService)
+
+// WireSet is used without the OciBlobStore and BucketService.
+var WireSet = wire.NewSet(
+	ControllerSet,
+	DBStoreSet,
+	RegistrySet,
+	StorageServiceSet,
+	AppSet,
+	ProxySet,
+)
+
+// OpenSourceWireSet is used by the open-source version.
+var OpenSourceWireSet = wire.NewSet(
+	WireSet,
+	OciBlobStoreSet,
+	BucketServiceSet,
+)

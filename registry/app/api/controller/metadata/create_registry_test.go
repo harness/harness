@@ -205,8 +205,9 @@ func TestCreateRegistry(t *testing.T) {
 					nil, // nodesRepo - not needed for this test.
 					mockTransactor,
 					nil, // reporter - not needed for this test.
-					nil,
-					nil,
+					nil, // config - not needed for this test.
+					nil, // storageService - not needed for this test.
+					nil, // bucketService - not needed for this test.
 				)
 
 				// Setup audit service mock.
@@ -313,8 +314,9 @@ func TestCreateRegistry(t *testing.T) {
 					nil, // nodesRepo - not needed for this test.
 					mockTransactor,
 					nil, // reporter - not needed for this test.
-					nil,
-					nil,
+					nil, // config - not needed for this test.
+					nil, // storageService - not needed for this test.
+					nil, // bucketService - not needed for this test.
 				)
 
 				return metadata.NewAPIController(

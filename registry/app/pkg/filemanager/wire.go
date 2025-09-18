@@ -16,6 +16,7 @@ package filemanager
 
 import (
 	"github.com/harness/gitness/registry/app/event"
+	"github.com/harness/gitness/registry/app/pkg/docker"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -31,8 +32,10 @@ func Provider(
 	reporter event.Reporter,
 	config *gitnesstypes.Config,
 	storageService *storage.Service,
+	bucketService docker.BucketService,
 ) FileManager {
-	return NewFileManager(registryDao, genericBlobDao, nodesDao, tx, reporter, config, storageService)
+	// Pass the BucketService to use the unified implementation
+	return NewFileManager(registryDao, genericBlobDao, nodesDao, tx, reporter, config, storageService, bucketService)
 }
 
 var Set = wire.NewSet(Provider)
