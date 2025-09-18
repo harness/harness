@@ -41,13 +41,9 @@ func HandleForkSync(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		result, violation, err := repoCtrl.ForkSync(ctx, session, repoRef, in)
+		result, err := repoCtrl.ForkSync(ctx, session, repoRef, in)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
-			return
-		}
-		if violation != nil {
-			render.Unprocessable(w, violation)
 			return
 		}
 

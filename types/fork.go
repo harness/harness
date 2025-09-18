@@ -17,12 +17,8 @@ package types
 import "github.com/harness/gitness/git/sha"
 
 type ForkSyncOutput struct {
-	AlreadyAncestor bool `json:"already_ancestor,omitempty"`
-
-	NewCommitSHA   sha.SHA          `json:"new_commit_sha,omitzero"`
-	RuleViolations []RuleViolations `json:"rule_violations,omitempty"`
-
-	DryRunRules   bool     `json:"dry_run_rules,omitempty"`
-	DryRun        bool     `json:"dry_run,omitempty"`
-	ConflictFiles []string `json:"conflict_files,omitempty"`
+	AlreadyAncestor bool     `json:"already_ancestor,omitempty"`
+	NewCommitSHA    sha.SHA  `json:"new_commit_sha,omitzero"`
+	ConflictFiles   []string `json:"conflict_files,omitempty"`
+	Message         string   `json:"message,omitempty"`
 }

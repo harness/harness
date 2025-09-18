@@ -21,7 +21,6 @@ import (
 
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
 	gitenum "github.com/harness/gitness/git/enum"
@@ -35,10 +34,6 @@ type ForkSyncInput struct {
 	BranchCommitSHA sha.SHA `json:"branch_commit_sha"`
 
 	BranchUpstream string `json:"branch_upstream"` // Can be omitted, defaults to the value of Branch
-
-	DryRun      bool `json:"dry_run"`
-	DryRunRules bool `json:"dry_run_rules"`
-	BypassRules bool `json:"bypass_rules"`
 }
 
 func (in *ForkSyncInput) validate() error {
@@ -59,14 +54,14 @@ func (c *Controller) ForkSync(
 	session *auth.Session,
 	repoRef string,
 	in *ForkSyncInput,
-) (*types.ForkSyncOutput, *types.MergeViolations, error) {
+) (*types.ForkSyncOutput, error) {
 	if err := in.validate(); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	repoForkCore, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	branchUpstreamName := in.BranchUpstream
@@ -80,11 +75,11 @@ func (c *Controller) ForkSync(
 		Type:       gitenum.RefTypeBranch,
 	})
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get repo branch: %w", err)
+		return nil, fmt.Errorf("failed to get repo branch: %w", err)
 	}
 
 	if !branchForkInfo.SHA.Equal(in.BranchCommitSHA) {
-		return nil, nil, errors.InvalidArgument("The commit %s isn't the latest commit on the branch %s",
+		return nil, errors.InvalidArgument("The commit %s isn't the latest commit on the branch %s",
 			in.BranchCommitSHA, in.Branch)
 	}
 
@@ -95,7 +90,7 @@ func (c *Controller) ForkSync(
 		branchUpstreamName,
 	)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to fetch upstream branch: %w", err)
+		return nil, fmt.Errorf("failed to fetch upstream branch: %w", err)
 	}
 
 	ancestorResult, err := c.git.IsAncestor(ctx, git.IsAncestorParams{
@@ -104,14 +99,14 @@ func (c *Controller) ForkSync(
 		DescendantCommitSHA: branchForkInfo.SHA,
 	})
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to check if the upstream commit is ancestor: %w", err)
+		return nil, fmt.Errorf("failed to check if the upstream commit is ancestor: %w", err)
 	}
 
 	if ancestorResult.Ancestor {
 		// The branch already contains the latest commit from the upstream repository branch - nothing to do.
 		return &types.ForkSyncOutput{
 			AlreadyAncestor: true,
-		}, nil, nil
+		}, nil
 	}
 
 	mergeBase, err := c.git.MergeBase(ctx, git.MergeBaseParams{
@@ -120,7 +115,7 @@ func (c *Controller) ForkSync(
 		Ref2:       branchForkInfo.SHA.String(),
 	})
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to find merge base: %w", err)
+		return nil, fmt.Errorf("failed to find merge base: %w", err)
 	}
 
 	var (
@@ -139,59 +134,24 @@ func (c *Controller) ForkSync(
 		author = controller.IdentityFromPrincipalInfo(*session.Principal.ToPrincipalInfo())
 	}
 
-	protectionRules, isRepoOwner, err := c.fetchBranchRules(ctx, session, repoForkCore)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to fetch rules: %w", err)
-	}
-
-	violations, err := protectionRules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
-		ResolveUserGroupID: c.userGroupService.ListUserIDsByGroupIDs,
-		Actor:              &session.Principal,
-		AllowBypass:        in.BypassRules,
-		IsRepoOwner:        isRepoOwner,
-		Repo:               repoForkCore,
-		RefAction:          protection.RefActionUpdate,
-		RefType:            protection.RefTypeBranch,
-		RefNames:           []string{in.Branch},
-	})
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to verify protection rules: %w", err)
-	}
-
-	if in.DryRunRules {
-		// DryRunRules is true: Just return rule violations and don't attempt to rebase.
-		return &types.ForkSyncOutput{
-			RuleViolations: violations,
-			DryRunRules:    true,
-		}, nil, nil
-	}
-
-	if protection.IsCritical(violations) {
-		return nil, &types.MergeViolations{
-			RuleViolations: violations,
-			Message:        protection.GenerateErrorMessageForBlockingViolations(violations),
-		}, nil
-	}
-
 	var refs []git.RefUpdate
-	if !in.DryRun {
-		headBranchRef, err := git.GetRefPath(in.Branch, gitenum.RefTypeBranch)
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to generate ref name: %w", err)
-		}
 
-		refs = append(refs, git.RefUpdate{
-			Name: headBranchRef,
-			Old:  branchForkInfo.SHA,
-			New:  sha.SHA{}, // update to the result of the merge
-		})
+	headBranchRef, err := git.GetRefPath(in.Branch, gitenum.RefTypeBranch)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate ref name: %w", err)
 	}
+
+	refs = append(refs, git.RefUpdate{
+		Name: headBranchRef,
+		Old:  branchForkInfo.SHA,
+		New:  sha.SHA{}, // update to the result of the merge
+	})
 
 	now := time.Now()
 
 	writeParams, err := controller.CreateRPCSystemReferencesWriteParams(ctx, c.urlProvider, session, repoForkCore)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create RPC write params: %w", err)
+		return nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}
 
 	mergeOutput, err := c.git.Merge(ctx, &git.MergeParams{
@@ -208,29 +168,18 @@ func (c *Controller) ForkSync(
 		Method:        mergeMethod,
 	})
 	if err != nil {
-		return nil, nil, fmt.Errorf("fork branch sync merge failed: %w", err)
-	}
-
-	if in.DryRun {
-		// DryRun is true: Just return rule violations and list of conflicted files.
-		// No reference is updated, so don't return the resulting commit SHA.
-		return &types.ForkSyncOutput{
-			RuleViolations: violations,
-			DryRun:         true,
-			ConflictFiles:  mergeOutput.ConflictFiles,
-		}, nil, nil
+		return nil, fmt.Errorf("fork branch sync merge failed: %w", err)
 	}
 
 	if mergeOutput.MergeSHA.IsEmpty() || len(mergeOutput.ConflictFiles) > 0 {
-		return nil, &types.MergeViolations{
-			ConflictFiles:  mergeOutput.ConflictFiles,
-			RuleViolations: violations,
-			Message:        fmt.Sprintf("Fork sync blocked by conflicting files: %v", mergeOutput.ConflictFiles),
+		return &types.ForkSyncOutput{
+			ConflictFiles: mergeOutput.ConflictFiles,
+			Message: fmt.Sprintf("Branch synchronization blocked by conflicting files: %v",
+				mergeOutput.ConflictFiles),
 		}, nil
 	}
 
 	return &types.ForkSyncOutput{
-		NewCommitSHA:   mergeOutput.MergeSHA,
-		RuleViolations: violations,
-	}, nil, nil
+		NewCommitSHA: mergeOutput.MergeSHA,
+	}, nil
 }
