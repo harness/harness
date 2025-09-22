@@ -328,13 +328,12 @@ func (c *Controller) Merge(
 			}
 
 			mergeOutput, err = c.git.Merge(ctx, &git.MergeParams{
-				WriteParams:     writeParams,
-				BaseBranch:      pr.TargetBranch,
-				HeadRepoUID:     sourceRepo.GitUID,
-				HeadBranch:      pr.SourceBranch,
-				Refs:            nil, // update no refs -> no commit will be created
-				HeadExpectedSHA: sha.Must(in.SourceSHA),
-				Method:          gitenum.MergeMethod(in.Method),
+				WriteParams:           writeParams,
+				BaseBranch:            pr.TargetBranch,
+				HeadBranch:            pr.SourceBranch,
+				Refs:                  nil, // update no refs -> no commit will be created
+				HeadBranchExpectedSHA: sha.Must(in.SourceSHA),
+				Method:                gitenum.MergeMethod(in.Method),
 			})
 			if err != nil {
 				return nil, nil, fmt.Errorf("failed merge check with method=%s: %w", in.Method, err)
@@ -518,18 +517,17 @@ func (c *Controller) Merge(
 
 	now := time.Now()
 	mergeOutput, err := c.git.Merge(ctx, &git.MergeParams{
-		WriteParams:     targetWriteParams,
-		BaseBranch:      pr.TargetBranch,
-		HeadRepoUID:     sourceRepo.GitUID,
-		HeadBranch:      pr.SourceBranch,
-		Message:         git.CommitMessage(in.Title, in.Message),
-		Committer:       committer,
-		CommitterDate:   &now,
-		Author:          author,
-		AuthorDate:      &now,
-		Refs:            refUpdates,
-		HeadExpectedSHA: sha.Must(in.SourceSHA),
-		Method:          gitenum.MergeMethod(in.Method),
+		WriteParams:           targetWriteParams,
+		BaseBranch:            pr.TargetBranch,
+		HeadBranch:            pr.SourceBranch,
+		Message:               git.CommitMessage(in.Title, in.Message),
+		Committer:             committer,
+		CommitterDate:         &now,
+		Author:                author,
+		AuthorDate:            &now,
+		Refs:                  refUpdates,
+		HeadBranchExpectedSHA: sha.Must(in.SourceSHA),
+		Method:                gitenum.MergeMethod(in.Method),
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("merge execution failed: %w", err)

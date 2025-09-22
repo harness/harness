@@ -172,13 +172,12 @@ func (c *Controller) Rebase(
 	}
 
 	mergeOutput, err := c.git.Merge(ctx, &git.MergeParams{
-		WriteParams:     writeParams,
-		BaseSHA:         baseCommitSHA,
-		HeadRepoUID:     repo.GitUID,
-		HeadBranch:      in.HeadBranch,
-		Refs:            refs,
-		HeadExpectedSHA: in.HeadCommitSHA,
-		Method:          gitenum.MergeMethodRebase,
+		WriteParams:           writeParams,
+		BaseSHA:               baseCommitSHA,
+		HeadBranch:            in.HeadBranch,
+		Refs:                  refs,
+		HeadBranchExpectedSHA: in.HeadCommitSHA,
+		Method:                gitenum.MergeMethodRebase,
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("rebase execution failed: %w", err)

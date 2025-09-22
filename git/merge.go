@@ -38,20 +38,15 @@ type MergeParams struct {
 	// BaseBranch is the target branch where we want to merge. Either BaseSHA or BaseBranch must be provided.
 	BaseBranch string
 
-	// HeadRepoUID is deprecated. TODO: Remove HeadRepoUID.
-	HeadRepoUID string // Deprecated
-
 	// HeadSHA is the source commit we want to merge onto the base. Either HeadSHA or HeadBranch must be provided.
 	HeadSHA sha.SHA
 	// HeadBranch is the source branch we want to merge. Either HeadSHA or HeadBranch must be provided.
 	HeadBranch string
 
-	// HeadExpectedSHA is commit SHA on the HeadBranch. Ignored if HeadSHA is provided instead.
-	// If HeadExpectedSHA is older than the HeadBranch latest SHA then merge will fail.
-	HeadExpectedSHA sha.SHA
+	// HeadBranchExpectedSHA is commit SHA on the HeadBranch. Ignored if HeadSHA is provided instead.
+	// If HeadBranchExpectedSHA is older than the HeadBranch latest SHA then merge will fail.
+	HeadBranchExpectedSHA sha.SHA
 
-	// Title of the commit. TODO: Remove Title.
-	Title string // Deprecated: Use Message instead.
 	// Merge is the message of the commit that would be created. Ignored for Rebase and FastForward.
 	Message string
 
@@ -141,7 +136,7 @@ type MergeOutput struct {
 //	params.RefType = RefTypePullReqMerge and params.RefName = "1" -> merge and push to refs/pullreq/1/merge
 //
 // There are cases when you want to block merging and for that you will need to provide
-// params.HeadExpectedSHA which will be compared with the latest sha from head branch
+// params.HeadBranchExpectedSHA which will be compared with the latest sha from head branch
 // if they are not the same error will be returned.
 //
 //nolint:gocognit,gocyclo,cyclop
@@ -193,12 +188,12 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 			return MergeOutput{}, fmt.Errorf("failed to get head branch commit SHA: %w", err)
 		}
 
-		if !params.HeadExpectedSHA.IsEmpty() && !params.HeadExpectedSHA.Equal(headCommitSHA) {
+		if !params.HeadBranchExpectedSHA.IsEmpty() && !params.HeadBranchExpectedSHA.Equal(headCommitSHA) {
 			return MergeOutput{}, errors.PreconditionFailed(
 				"head branch '%s' is on SHA '%s' which doesn't match expected SHA '%s'.",
 				params.HeadBranch,
 				headCommitSHA,
-				params.HeadExpectedSHA)
+				params.HeadBranchExpectedSHA)
 		}
 	}
 
@@ -254,16 +249,6 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 		author.When = *params.AuthorDate
 	}
 
-	// merge message
-
-	var message string
-	if params.Title != "" {
-		// Title is deprecated and should not be sent, but if it's sent assume we need to generate the full message.
-		message = parser.CleanUpWhitespace(CommitMessage(params.Title, params.Message))
-	} else {
-		message = parser.CleanUpWhitespace(params.Message)
-	}
-
 	// create merge commit and update the references
 
 	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath)
@@ -275,6 +260,8 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 	var conflicts []string
 
 	err = sharedrepo.Run(ctx, refUpdater, s.sharedRepoRoot, repoPath, func(s *sharedrepo.SharedRepo) error {
+		message := parser.CleanUpWhitespace(params.Message)
+
 		mergeCommitSHA, conflicts, err = mergeFunc(
 			ctx,
 			s,

@@ -147,14 +147,6 @@ func (s *Service) updateMergeData(
 		return err
 	}
 
-	sourceRepo := targetRepo
-	if pr.TargetRepoID != pr.SourceRepoID {
-		sourceRepo, err = s.repoFinder.FindByID(ctx, pr.SourceRepoID)
-		if err != nil {
-			return err
-		}
-	}
-
 	writeParams, err := createRPCSystemReferencesWriteParams(ctx, s.urlProvider, targetRepo.ID, targetRepo.GitUID)
 	if err != nil {
 		return fmt.Errorf("failed to generate rpc write params: %w", err)
@@ -176,13 +168,12 @@ func (s *Service) updateMergeData(
 	// call merge and store output in pr merge reference.
 	now := time.Now()
 	mergeOutput, err := s.git.Merge(ctx, &git.MergeParams{
-		WriteParams:     writeParams,
-		BaseBranch:      pr.TargetBranch,
-		HeadRepoUID:     sourceRepo.GitUID,
-		HeadBranch:      pr.SourceBranch,
-		Refs:            refs,
-		HeadExpectedSHA: sha.Must(newSHA),
-		Force:           true,
+		WriteParams:           writeParams,
+		BaseBranch:            pr.TargetBranch,
+		HeadBranch:            pr.SourceBranch,
+		Refs:                  refs,
+		HeadBranchExpectedSHA: sha.Must(newSHA),
+		Force:                 true,
 
 		// set committer date to ensure repeatability of merge commit across replicas
 		CommitterDate: &now,

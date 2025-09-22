@@ -225,18 +225,17 @@ func (c *Controller) Squash(
 	now := time.Now()
 
 	mergeOutput, err := c.git.Merge(ctx, &git.MergeParams{
-		WriteParams:     writeParams,
-		BaseSHA:         mergeBase.MergeBaseSHA,
-		HeadRepoUID:     repo.GitUID,
-		HeadBranch:      in.HeadBranch,
-		Message:         git.CommitMessage(in.Title, in.Message),
-		Refs:            refs,
-		Committer:       committer,
-		CommitterDate:   &now,
-		Author:          author,
-		AuthorDate:      &now,
-		HeadExpectedSHA: in.HeadCommitSHA,
-		Method:          gitenum.MergeMethodSquash,
+		WriteParams:           writeParams,
+		BaseSHA:               mergeBase.MergeBaseSHA,
+		HeadBranch:            in.HeadBranch,
+		Message:               git.CommitMessage(in.Title, in.Message),
+		Refs:                  refs,
+		Committer:             committer,
+		CommitterDate:         &now,
+		Author:                author,
+		AuthorDate:            &now,
+		HeadBranchExpectedSHA: in.HeadCommitSHA,
+		Method:                gitenum.MergeMethodSquash,
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("squash execution failed: %w", err)

@@ -54,7 +54,6 @@ func (c *Controller) MergeCheck(
 	mergeOutput, err := c.git.Merge(ctx, &git.MergeParams{
 		WriteParams: writeParams,
 		BaseBranch:  info.BaseRef,
-		HeadRepoUID: writeParams.RepoUID, // forks are not supported for now
 		HeadBranch:  info.HeadRef,
 	})
 	if err != nil {
