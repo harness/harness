@@ -64,7 +64,7 @@ type Repository struct {
 	NumOpenPulls   int `json:"num_open_pulls" yaml:"num_open_pulls"`
 	NumMergedPulls int `json:"num_merged_pulls" yaml:"num_merged_pulls"`
 
-	State   enum.RepoState `json:"state" yaml:"-"`
+	State   enum.RepoState `json:"state" yaml:"state"`
 	IsEmpty bool           `json:"is_empty,omitempty" yaml:"is_empty"`
 
 	// git urls
