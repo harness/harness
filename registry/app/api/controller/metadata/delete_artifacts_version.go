@@ -16,6 +16,7 @@ package metadata
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -26,6 +27,7 @@ import (
 	"github.com/harness/gitness/registry/app/api/utils"
 	"github.com/harness/gitness/registry/services/webhook"
 	registryTypes "github.com/harness/gitness/registry/types"
+	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -131,6 +133,16 @@ func (c *APIController) DeleteArtifactVersion(ctx context.Context, r artifact.De
 	}
 
 	if err != nil {
+		if errors.Is(err, store.ErrResourceNotFound) {
+			return artifact.DeleteArtifactVersion404JSONResponse{
+				NotFoundJSONResponse: artifact.NotFoundJSONResponse(
+					*GetErrorResponse(
+						http.StatusNotFound,
+						fmt.Sprintf("artifact version '%s' not found for artifact '%s'", versionName, artifactName),
+					),
+				),
+			}, nil
+		}
 		return throwDeleteArtifactVersion500Error(err), err
 	}
 
@@ -183,7 +195,7 @@ func (c *APIController) deleteVersion(
 ) error {
 	_, err := c.ArtifactStore.GetByName(ctx, imageInfo.ID, versionName)
 	if err != nil {
-		return fmt.Errorf("version doesn't exist with for image %v", imageInfo.Name)
+		return fmt.Errorf("version doesn't exist with for image %v: %w", imageInfo.Name, err)
 	}
 
 	// get the file path based on package type
