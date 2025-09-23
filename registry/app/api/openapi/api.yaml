@@ -643,6 +643,32 @@ paths:
           $ref: "#/components/responses/NotFound"
         500:
           $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/{artifact}/tags:
+    get:
+      summary: List OCI Artifact tags
+      description: Lists OCI Artifact Tags.
+      operationId: GetOciArtifactTags
+      tags:
+        - Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/pageNumber"
+        - $ref: "#/components/parameters/pageSize"
+        - $ref: "#/components/parameters/searchTerm"
+      responses:
+        200:
+          $ref: "#/components/responses/ListOciArtifactTagsResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
   /registry/{registry_ref}/artifact/{artifact}/labels:
     put:
       summary: Update Artifact Labels
@@ -816,6 +842,7 @@ paths:
         - $ref: "#/components/parameters/artifactPathParam"
         - $ref: "#/components/parameters/versionPathParam"
         - $ref: "#/components/parameters/digestParam"
+        - $ref: "#/components/parameters/versionTypeParam"
       responses:
         200:
           $ref: "#/components/responses/DockerArtifactDetailResponse"
@@ -865,6 +892,7 @@ paths:
         - $ref: "#/components/parameters/registryRefPathParam"
         - $ref: "#/components/parameters/artifactPathParam"
         - $ref: "#/components/parameters/versionPathParam"
+        - $ref: "#/components/parameters/versionTypeParam"
       responses:
         200:
           $ref: "#/components/responses/DockerManifestsResponse"
@@ -916,6 +944,7 @@ paths:
         - $ref: "#/components/parameters/registryRefPathParam"
         - $ref: "#/components/parameters/artifactPathParam"
         - $ref: "#/components/parameters/versionPathParam"
+        - $ref: "#/components/parameters/versionTypeParam"
       responses:
         200:
           $ref: "#/components/responses/HelmArtifactDetailResponse"
@@ -1637,6 +1666,20 @@ components:
             required:
               - status
               - data
+    ListOciArtifactTagsResponse:
+      description: response for list tags info of an OCI artifact
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/ListOciArtifactTags"
+            required:
+              - status
+              - data
     Unauthenticated:
       description: Unauthenticated
       content:
@@ -2076,6 +2119,36 @@ components:
             $ref: "#/components/schemas/ArtifactVersionMetadata"
       required:
         - artifacts
+    ListOciArtifactTags:
+      type: object
+      description: A list of Artifact versions
+      properties:
+        pageCount:
+          type: integer
+          format: int64
+          description: The total number of pages
+          example: 100
+        itemCount:
+          type: integer
+          format: int64
+          description: The total number of items
+          example: 1
+        pageSize:
+          type: integer
+          description: The number of items per page
+          example: 1
+        pageIndex:
+          type: integer
+          description: The current page
+          format: int64
+          example: 0
+        ociArtifactTags:
+          type: array
+          description: A list of OCI Artifact tags
+          items:
+            $ref: "#/components/schemas/OciArtifactTag"
+      required:
+        - ociArtifactTags
     ListArtifactLabel:
       type: object
       description: A list of Harness Artifact Labels
@@ -2245,11 +2318,14 @@ components:
           $ref: "#/components/schemas/PackageType"
         artifactType:
           $ref: "#/components/schemas/ArtifactType"
+        metadata:
+          $ref: "#/components/schemas/ArtifactEntityMetadata"
       required:
         - name
         - registryIdentifier
         - latestVersion
         - registryPath
+        - packageType
     RegistryArtifactMetadata:
       type: object
       description: Artifact Metadata
@@ -2282,6 +2358,7 @@ components:
         - registryIdentifier
         - latestVersion
         - registryPath
+        - packageType
     ArtifactVersionMetadata:
       type: object
       description: Artifact Version Metadata
@@ -2314,11 +2391,29 @@ components:
           $ref: "#/components/schemas/PackageType"
         artifactType:
           $ref: "#/components/schemas/ArtifactType"
+        metadata:
+          $ref: "#/components/schemas/ArtifactEntityMetadata"
       required:
         - name
         - registryIdentifier
         - latestVersion
         - registryPath
+        - packageType
+    OciArtifactTag:
+      type: object
+      description: OCI Artifact Tag info
+      properties:
+        name:
+          type: string
+        digest:
+          type: string
+      required:
+        - name
+        - digest
+    ArtifactEntityMetadata:
+      type: object
+      description: Artifact Entity Metadata
+      additionalProperties: true
     Registry:
       type: object
       description: Harness Artifact Registry
@@ -2650,6 +2745,10 @@ components:
           type: boolean
         quarantineReason:
           type: string
+        metadata:
+          $ref: "#/components/schemas/ArtifactEntityMetadata"
+        pullCommandByDigest:
+          type: string
       required:
         - imageName
         - version
@@ -2702,6 +2801,10 @@ components:
         createdAt:
           type: string
         modifiedAt:
+          type: string
+        metadata:
+          $ref: "#/components/schemas/ArtifactEntityMetadata"
+        pullCommandByDigest:
           type: string
       required:
         - imageName
@@ -3301,6 +3404,16 @@ components:
       description: Digest.
       schema:
         type: string
+    versionTypeParam:
+      name: version_type
+      in: query
+      required: false
+      description: Version Type.
+      schema:
+        type: string
+        enum:
+          - DIGEST
+          - TAG
     childVersionParam:
       name: childVersion
       in: query

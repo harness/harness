@@ -303,23 +303,23 @@ func (_m *TagRepository) GetAllArtifactsByRepo(ctx context.Context, parentID int
 }
 
 // GetAllTagsByRepoAndImage provides a mock function with given fields: ctx, parentID, repoKey, image, sortByField, sortByOrder, limit, offset, search
-func (_m *TagRepository) GetAllTagsByRepoAndImage(ctx context.Context, parentID int64, repoKey string, image string, sortByField string, sortByOrder string, limit int, offset int, search string) (*[]types.TagMetadata, error) {
+func (_m *TagRepository) GetAllTagsByRepoAndImage(ctx context.Context, parentID int64, repoKey string, image string, sortByField string, sortByOrder string, limit int, offset int, search string) (*[]types.OciVersionMetadata, error) {
 	ret := _m.Called(ctx, parentID, repoKey, image, sortByField, sortByOrder, limit, offset, search)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetAllTagsByRepoAndImage")
 	}
 
-	var r0 *[]types.TagMetadata
+	var r0 *[]types.OciVersionMetadata
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int64, string, string, string, string, int, int, string) (*[]types.TagMetadata, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, int64, string, string, string, string, int, int, string) (*[]types.OciVersionMetadata, error)); ok {
 		return rf(ctx, parentID, repoKey, image, sortByField, sortByOrder, limit, offset, search)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int64, string, string, string, string, int, int, string) *[]types.TagMetadata); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, int64, string, string, string, string, int, int, string) *[]types.OciVersionMetadata); ok {
 		r0 = rf(ctx, parentID, repoKey, image, sortByField, sortByOrder, limit, offset, search)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*[]types.TagMetadata)
+			r0 = ret.Get(0).(*[]types.OciVersionMetadata)
 		}
 	}
 
@@ -451,23 +451,23 @@ func (_m *TagRepository) GetTagDetail(ctx context.Context, repoID int64, imageNa
 }
 
 // GetTagMetadata provides a mock function with given fields: ctx, parentID, repoKey, imageName, name
-func (_m *TagRepository) GetTagMetadata(ctx context.Context, parentID int64, repoKey string, imageName string, name string) (*types.TagMetadata, error) {
+func (_m *TagRepository) GetTagMetadata(ctx context.Context, parentID int64, repoKey string, imageName string, name string) (*types.OciVersionMetadata, error) {
 	ret := _m.Called(ctx, parentID, repoKey, imageName, name)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetTagMetadata")
 	}
 
-	var r0 *types.TagMetadata
+	var r0 *types.OciVersionMetadata
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int64, string, string, string) (*types.TagMetadata, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, int64, string, string, string) (*types.OciVersionMetadata, error)); ok {
 		return rf(ctx, parentID, repoKey, imageName, name)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int64, string, string, string) *types.TagMetadata); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, int64, string, string, string) *types.OciVersionMetadata); ok {
 		r0 = rf(ctx, parentID, repoKey, imageName, name)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*types.TagMetadata)
+			r0 = ret.Get(0).(*types.OciVersionMetadata)
 		}
 	}
 

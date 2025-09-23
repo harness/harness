@@ -118,18 +118,26 @@ func (c *APIController) GetAllArtifactVersions(
 
 	//nolint:nestif
 	if registry.PackageType == artifact.PackageTypeDOCKER || registry.PackageType == artifact.PackageTypeHELM {
-		tags, err := c.TagStore.GetAllTagsByRepoAndImage(
-			ctx, regInfo.ParentID, regInfo.RegistryIdentifier,
-			image, regInfo.sortByField, regInfo.sortByOrder, regInfo.limit, regInfo.offset, regInfo.searchTerm,
-		)
+		var ociVersions *[]types.OciVersionMetadata
+		if c.UntaggedImagesEnabled(ctx) {
+			ociVersions, err = c.TagStore.GetAllOciVersionsByRepoAndImage(
+				ctx, regInfo.ParentID, regInfo.RegistryIdentifier,
+				image, regInfo.sortByField, regInfo.sortByOrder, regInfo.limit, regInfo.offset, regInfo.searchTerm,
+			)
+		} else {
+			ociVersions, err = c.TagStore.GetAllTagsByRepoAndImage(
+				ctx, regInfo.ParentID, regInfo.RegistryIdentifier,
+				image, regInfo.sortByField, regInfo.sortByOrder, regInfo.limit, regInfo.offset, regInfo.searchTerm,
+			)
+		}
 		if err != nil {
 			return throw500Error(err)
 		}
 
 		var digests []string
-		for _, tag := range *tags {
-			if tag.Digest != "" {
-				digests = append(digests, tag.Digest)
+		for _, ociVersion := range *ociVersions {
+			if ociVersion.Digest != "" {
+				digests = append(digests, ociVersion.Digest)
 			}
 		}
 
@@ -138,29 +146,45 @@ func (c *APIController) GetAllArtifactVersions(
 			return throw500Error(err)
 		}
 
-		for i, tag := range *tags {
-			if tag.Digest != "" {
-				(*tags)[i].DownloadCount = counts[tag.Digest]
-			}
-		}
-		count, err := c.TagStore.CountAllTagsByRepoAndImage(
-			ctx, regInfo.ParentID, regInfo.RegistryIdentifier,
-			image, regInfo.searchTerm,
-		)
-
+		err = c.updateQuarantineInfo(ctx, ociVersions, image, registry.Name, registry.ParentID)
 		if err != nil {
 			return throw500Error(err)
 		}
-		err = setDigestCount(ctx, *tags)
+
+		for i, ociVersion := range *ociVersions {
+			if ociVersion.Digest != "" {
+				(*ociVersions)[i].DownloadCount = counts[ociVersion.Digest]
+			}
+		}
+		var count int64
+		if c.UntaggedImagesEnabled(ctx) {
+			count, err = c.TagStore.CountOciVersionByRepoAndImage(
+				ctx, regInfo.ParentID, regInfo.RegistryIdentifier,
+				image, regInfo.searchTerm,
+			)
+			if err != nil {
+				return throw500Error(err)
+			}
+		} else {
+			count, err = c.TagStore.CountAllTagsByRepoAndImage(
+				ctx, regInfo.ParentID, regInfo.RegistryIdentifier,
+				image, regInfo.searchTerm,
+			)
+			if err != nil {
+				return throw500Error(err)
+			}
+		}
+
+		err = setDigestCount(ctx, *ociVersions)
 		if err != nil {
 			return throw500Error(err)
 		}
 
 		return artifact.GetAllArtifactVersions200JSONResponse{
 			ListArtifactVersionResponseJSONResponse: *GetAllArtifactVersionResponse(
-				ctx, tags, image, count, regInfo.pageNumber, regInfo.limit,
+				ctx, ociVersions, image, count, regInfo.pageNumber, regInfo.limit,
 				c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, regInfo.RegistryIdentifier),
-				c.SetupDetailsAuthHeaderPrefix,
+				c.SetupDetailsAuthHeaderPrefix, c.UntaggedImagesEnabled(ctx),
 			),
 		}, nil
 	}
@@ -188,7 +212,51 @@ func (c *APIController) GetAllArtifactVersions(
 	}, nil
 }
 
-func setDigestCount(ctx context.Context, tags []types.TagMetadata) error {
+func (c *APIController) updateQuarantineInfo(
+	ctx context.Context,
+	versions *[]types.OciVersionMetadata,
+	image string,
+	regName string,
+	parentID int64,
+) error {
+	if versions == nil || len(*versions) == 0 {
+		return nil
+	}
+
+	// Collect all artifact identifiers for quarantine lookup
+	artifactIdentifiers := make([]types.ArtifactIdentifier, 0, len(*versions))
+	artifactIndexMap := make(map[types.ArtifactIdentifier]int)
+
+	for i, version := range *versions {
+		// Only process versions that have a digest
+		if version.Digest != "" {
+			artifactID := types.ArtifactIdentifier{
+				Name:         image,
+				Version:      version.Digest,
+				RegistryName: regName,
+			}
+			artifactIdentifiers = append(artifactIdentifiers, artifactID)
+			artifactIndexMap[artifactID] = i
+		}
+	}
+
+	// Get quarantine information for all versions using the existing tag store method
+	quarantineMap, err := c.TagStore.GetQuarantineInfoForArtifacts(ctx, artifactIdentifiers, parentID)
+	if err != nil {
+		return err
+	}
+
+	// Update versions with quarantine information
+	for artifactID, quarantineInfo := range quarantineMap {
+		if index, exists := artifactIndexMap[artifactID]; exists {
+			(*versions)[index].IsQuarantined = true
+			(*versions)[index].QuarantineReason = quarantineInfo.Reason
+		}
+	}
+	return nil
+}
+
+func setDigestCount(ctx context.Context, tags []types.OciVersionMetadata) error {
 	for i := range tags {
 		err := setDigestCountInTagMetadata(ctx, &tags[i])
 		if err != nil {
@@ -199,12 +267,12 @@ func setDigestCount(ctx context.Context, tags []types.TagMetadata) error {
 }
 
 //nolint:unused // kept for potential future use
-func setDigestCountInTagMetadata(ctx context.Context, t *types.TagMetadata) error {
+func setDigestCountInTagMetadata(ctx context.Context, v *types.OciVersionMetadata) error {
 	m := types.Manifest{
-		SchemaVersion: t.SchemaVersion,
-		MediaType:     t.MediaType,
-		NonConformant: t.NonConformant,
-		Payload:       t.Payload,
+		SchemaVersion: v.SchemaVersion,
+		MediaType:     v.MediaType,
+		NonConformant: v.NonConformant,
+		Payload:       v.Payload,
 	}
 	manifest, err := docker.DBManifestToManifest(&m)
 	if err != nil {
@@ -213,9 +281,9 @@ func setDigestCountInTagMetadata(ctx context.Context, t *types.TagMetadata) erro
 	}
 	switch reqManifest := manifest.(type) {
 	case *s2.DeserializedManifest, *os.DeserializedManifest:
-		t.DigestCount = 1
+		v.DigestCount = 1
 	case *ml.DeserializedManifestList:
-		t.DigestCount = len(reqManifest.Manifests)
+		v.DigestCount = len(reqManifest.Manifests)
 	default:
 		err = fmt.Errorf("unknown manifest type: %T", manifest)
 		log.Ctx(ctx).Error().Stack().Err(err).Msg("Failed to set digest count")

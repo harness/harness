@@ -21,7 +21,11 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/registry/types"
+	"github.com/harness/gitness/registry/utils"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 func (c *APIController) GetAllArtifacts(
@@ -75,13 +79,21 @@ func (c *APIController) GetAllArtifacts(
 	if r.Params.LatestVersion != nil {
 		latestVersion = bool(*r.Params.LatestVersion)
 	}
-	artifacts, err := c.TagStore.GetAllArtifactsByParentID(
-		ctx, regInfo.ParentID, &regInfo.registryIDs,
-		regInfo.sortByField, regInfo.sortByOrder, regInfo.limit, regInfo.offset, regInfo.searchTerm,
-		latestVersion, regInfo.packageTypes)
+	var artifacts *[]types.ArtifactMetadata
+	if c.UntaggedImagesEnabled(ctx) {
+		artifacts, err = c.TagStore.GetAllArtifactsByParentIDUntagged(
+			ctx, regInfo.ParentID, &regInfo.registryIDs,
+			regInfo.sortByField, regInfo.sortByOrder, regInfo.limit, regInfo.offset, regInfo.searchTerm,
+			regInfo.packageTypes)
+	} else {
+		artifacts, err = c.TagStore.GetAllArtifactsByParentID(
+			ctx, regInfo.ParentID, &regInfo.registryIDs,
+			regInfo.sortByField, regInfo.sortByOrder, regInfo.limit, regInfo.offset, regInfo.searchTerm,
+			latestVersion, regInfo.packageTypes)
+	}
 	count, _ := c.TagStore.CountAllArtifactsByParentID(
 		ctx, regInfo.ParentID, &regInfo.registryIDs,
-		regInfo.searchTerm, latestVersion, regInfo.packageTypes)
+		regInfo.searchTerm, latestVersion, regInfo.packageTypes, c.UntaggedImagesEnabled(ctx))
 	if err != nil {
 		return artifact.GetAllArtifacts500JSONResponse{
 			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
@@ -89,10 +101,82 @@ func (c *APIController) GetAllArtifacts(
 			),
 		}, nil
 	}
+
+	// Enrich artifacts with quarantine information
+	if artifacts != nil && len(*artifacts) > 0 {
+		enrichedArtifacts, err := c.enrichArtifactsWithQuarantineInfo(ctx, artifacts, regInfo.ParentID)
+		if err != nil {
+			return artifact.GetAllArtifacts500JSONResponse{
+				InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
+					*GetErrorResponse(http.StatusInternalServerError, err.Error()),
+				),
+			}, nil
+		}
+		artifacts = enrichedArtifacts
+	}
+
 	return artifact.GetAllArtifacts200JSONResponse{
 		ListArtifactResponseJSONResponse: *GetAllArtifactResponse(ctx, artifacts, count, regInfo.pageNumber, regInfo.limit,
-			regInfo.RootIdentifier, c.URLProvider, c.SetupDetailsAuthHeaderPrefix),
+			regInfo.RootIdentifier, c.URLProvider, c.SetupDetailsAuthHeaderPrefix, c.UntaggedImagesEnabled(ctx)),
 	}, nil
+}
+
+// enrichArtifactsWithQuarantineInfo enriches artifacts with quarantine information.
+func (c *APIController) enrichArtifactsWithQuarantineInfo(
+	ctx context.Context,
+	artifacts *[]types.ArtifactMetadata,
+	parentID int64,
+) (*[]types.ArtifactMetadata, error) {
+	if artifacts == nil || len(*artifacts) == 0 {
+		return artifacts, nil
+	}
+
+	// Collect all artifact identifiers and map them to their indices
+	artifactIdentifiers := make([]types.ArtifactIdentifier, 0, len(*artifacts))
+	artifactIndexMap := make(map[types.ArtifactIdentifier]int) // artifactIdentifier -> index in artifacts slice
+
+	for i, art := range *artifacts {
+		// Only process artifacts that have a version
+		if art.Version != "" {
+			var version = art.Version
+			var err error
+
+			// For Docker and Helm packages, convert version to parsed digest string
+			if c.UntaggedImagesEnabled(ctx) &&
+				(art.PackageType == artifact.PackageTypeDOCKER || art.PackageType == artifact.PackageTypeHELM) {
+				version, err = utils.GetParsedDigest(version)
+				if err != nil {
+					log.Ctx(ctx).Warn().Err(err).
+						Msgf("Failed to parse digest info while fetching global artifacts")
+					return nil, err
+				}
+			}
+
+			artifactID := types.ArtifactIdentifier{
+				Name:         art.Name,
+				Version:      version,
+				RegistryName: art.RepoName,
+			}
+			artifactIdentifiers = append(artifactIdentifiers, artifactID)
+			artifactIndexMap[artifactID] = i
+		}
+	}
+
+	// Get quarantine information for all artifacts using regID
+	quarantineMap, err := c.TagStore.GetQuarantineInfoForArtifacts(ctx, artifactIdentifiers, parentID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Update artifacts with quarantine information
+	for artifactID, quarantineInfo := range quarantineMap {
+		if index, exists := artifactIndexMap[artifactID]; exists {
+			(*artifacts)[index].IsQuarantined = true
+			(*artifacts)[index].QuarantineReason = &quarantineInfo.Reason
+		}
+	}
+
+	return artifacts, nil
 }
 
 func (c *APIController) getAllArtifacts400JsonResponse(err error) (artifact.GetAllArtifactsResponseObject, error) {

@@ -692,6 +692,28 @@ func (dao manifestDao) ListManifestsBySubject(
 	return *result, nil
 }
 
+func (dao manifestDao) GetLatestManifest(ctx context.Context, repoID int64, imageName string) (*types.Manifest, error) {
+	stmt := database.Builder.
+		Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(manifestDB{}), ",")).
+		From("manifests").
+		Where("manifest_registry_id = ? AND manifest_image_name = ?", repoID, imageName).
+		OrderBy("manifest_created_at DESC").Limit(1)
+
+	db := dbtx.GetAccessor(ctx, dao.sqlDB)
+
+	dst := new(manifestMetadataDB)
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors2.Wrap(err, "Failed to convert query to sql")
+	}
+
+	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find manifest")
+	}
+
+	return dao.mapToManifest(dst)
+}
+
 func mapToInternalManifest(ctx context.Context, in *types.Manifest) (*manifestDB, error) {
 	if in.CreatedAt.IsZero() {
 		in.CreatedAt = time.Now()

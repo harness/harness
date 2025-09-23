@@ -32,6 +32,7 @@ import (
 	store2 "github.com/harness/gitness/store"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/opencontainers/go-digest"
 	"github.com/rs/zerolog/log"
 )
 
@@ -46,6 +47,11 @@ func (c *APIController) GetDockerArtifactManifests(
 				*GetErrorResponse(http.StatusBadRequest, err.Error()),
 			),
 		}, nil
+	}
+
+	var byTag bool
+	if r.Params.VersionType != nil && *r.Params.VersionType == artifact.GetDockerArtifactManifestsParamsVersionTypeTAG {
+		byTag = true
 	}
 
 	space, err := c.SpaceFinder.FindByRef(ctx, regInfo.ParentRef)
@@ -75,7 +81,7 @@ func (c *APIController) GetDockerArtifactManifests(
 
 	image := string(r.Artifact)
 	version := string(r.Version)
-	manifestDetailsList, err := c.ProcessManifest(ctx, regInfo, image, version)
+	manifestDetailsList, err := c.ProcessManifest(ctx, regInfo, image, version, byTag)
 	if err != nil {
 		return artifactManifestsErrorRs(err), nil
 	}
@@ -92,8 +98,10 @@ func (c *APIController) GetDockerArtifactManifests(
 	}, nil
 }
 
-func (c *APIController) getManifestList(ctx context.Context, reqManifest *ml.DeserializedManifestList,
-	registry *types.Registry, image string, regInfo *types.RegistryRequestBaseInfo) (
+func (c *APIController) getManifestList(
+	ctx context.Context, reqManifest *ml.DeserializedManifestList,
+	registry *types.Registry, image string, regInfo *types.RegistryRequestBaseInfo,
+) (
 	[]artifact.DockerManifestDetails, error) {
 	manifestDetailsList := []artifact.DockerManifestDetails{}
 	for _, manifestEntry := range reqManifest.Manifests {
@@ -183,20 +191,34 @@ func (c *APIController) getManifestDetails(
 func (c *APIController) ProcessManifest(
 	ctx context.Context,
 	regInfo *types.RegistryRequestBaseInfo,
-	image, version string,
+	image, version string, byTag bool,
 ) ([]artifact.DockerManifestDetails, error) {
 	registry, err := c.RegistryRepository.GetByParentIDAndName(ctx, regInfo.ParentID, regInfo.RegistryIdentifier)
 	if err != nil {
 		return nil, err
 	}
-	t, err := c.TagStore.FindTag(ctx, registry.ID, image, version)
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		return nil, err
+	var m *types.Manifest
+	//nolint:nestif
+	if c.UntaggedImagesEnabled(ctx) && !byTag {
+		dgst, err := types.NewDigest(digest.Digest(version))
+		if err != nil {
+			return nil, err
+		}
+		m, err = c.ManifestStore.FindManifestByDigest(ctx, registry.ID, image, dgst)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		t, err := c.TagStore.FindTag(ctx, registry.ID, image, version)
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return nil, err
+		}
+		m, err = c.ManifestStore.Get(ctx, t.ManifestID)
+		if err != nil {
+			return nil, err
+		}
 	}
-	m, err := c.ManifestStore.Get(ctx, t.ManifestID)
-	if err != nil {
-		return nil, err
-	}
+
 	manifest, err := docker.DBManifestToManifest(m)
 	if err != nil {
 		return nil, err

@@ -26,6 +26,8 @@ import (
 	"github.com/harness/gitness/registry/types"
 	store2 "github.com/harness/gitness/store"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/opencontainers/go-digest"
 )
 
 func (c *APIController) GetHelmArtifactDetails(
@@ -77,18 +79,56 @@ func (c *APIController) GetHelmArtifactDetails(
 			),
 		}, nil
 	}
-
-	tag, err := c.TagStore.GetTagDetail(ctx, registry.ID, image, version)
-	if err != nil {
-		return getHelmArtifactDetailsErrResponse(err)
-	}
-	m, err := c.ManifestStore.FindManifestByTagName(ctx, registry.ID, image, version)
-
-	if err != nil {
-		if errors.Is(err, store2.ErrResourceNotFound) {
-			return getHelmArtifactDetailsErrResponse(fmt.Errorf("manifest not found"))
+	var m *types.Manifest
+	var artifactDetails *artifact.HelmArtifactDetailResponseJSONResponse
+	//nolint:nestif
+	if c.UntaggedImagesEnabled(ctx) && !isHelmVersionTag(r) {
+		dgst, err := types.NewDigest(digest.Digest(version))
+		if err != nil {
+			return getHelmArtifactDetailsErrResponse(err)
 		}
-		return getHelmArtifactDetailsErrResponse(err)
+		m, err = c.ManifestStore.FindManifestByDigest(ctx, registry.ID, image, dgst)
+		if err != nil {
+			if errors.Is(err, store2.ErrResourceNotFound) {
+				return getHelmArtifactDetailsErrResponse(fmt.Errorf("manifest not found"))
+			}
+			return getHelmArtifactDetailsErrResponse(err)
+		}
+		registryURL := c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, regInfo.RegistryIdentifier)
+		artifactDetails = GetHelmArtifactDetails(
+			registry, m.ImageName, m.Digest.String(), m.CreatedAt, m.CreatedAt, m, registryURL)
+		pullCommandByDigest := GetHelmPullCommand(m.ImageName, m.Digest.String(), registryURL, false)
+		artifactDetails.Data.PullCommandByDigest = &pullCommandByDigest
+		tags, err := c.TagStore.GetTagsByManifestID(ctx, m.ID)
+		if err != nil {
+			return getHelmArtifactDetailsErrResponse(err)
+		}
+		if tags != nil {
+			artifactDetails.Data.Metadata = &artifact.ArtifactEntityMetadata{
+				"tags": tags,
+			}
+		}
+	} else {
+		tag, err := c.TagStore.GetTagDetail(ctx, registry.ID, image, version)
+		if err != nil {
+			return getHelmArtifactDetailsErrResponse(err)
+		}
+		m, err = c.ManifestStore.FindManifestByTagName(ctx, registry.ID, image, version)
+		if err != nil {
+			if errors.Is(err, store2.ErrResourceNotFound) {
+				return getHelmArtifactDetailsErrResponse(fmt.Errorf("manifest not found"))
+			}
+			return getHelmArtifactDetailsErrResponse(err)
+		}
+		registryURL := c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, regInfo.RegistryIdentifier)
+		artifactDetails = GetHelmArtifactDetails(
+			registry, m.ImageName, m.Digest.String(), m.CreatedAt, m.CreatedAt, m, registryURL)
+		pullCommand := GetHelmPullCommand(m.ImageName, tag.Name, registryURL, true)
+		artifactDetails.Data.PullCommand = &pullCommand
+		if c.UntaggedImagesEnabled(ctx) {
+			pullCommandByDigest := GetHelmPullCommand(m.ImageName, m.Digest.String(), registryURL, false)
+			artifactDetails.Data.PullCommandByDigest = &pullCommandByDigest
+		}
 	}
 
 	parsedDigest, err := types.NewDigest(m.Digest)
@@ -101,12 +141,10 @@ func (c *APIController) GetHelmArtifactDetails(
 	if err != nil {
 		return getHelmArtifactDetailsErrResponse(err)
 	}
+	artifactDetails.Data.DownloadsCount = &art.DownloadCount
 
 	return artifact.GetHelmArtifactDetails200JSONResponse{
-		HelmArtifactDetailResponseJSONResponse: *GetHelmArtifactDetails(
-			registry, tag, m, c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, regInfo.RegistryIdentifier),
-			art.DownloadCount,
-		),
+		HelmArtifactDetailResponseJSONResponse: *artifactDetails,
 	}, nil
 }
 
@@ -116,4 +154,8 @@ func getHelmArtifactDetailsErrResponse(err error) (artifact.GetHelmArtifactDetai
 			*GetErrorResponse(http.StatusInternalServerError, err.Error()),
 		),
 	}, nil
+}
+
+func isHelmVersionTag(r artifact.GetHelmArtifactDetailsRequestObject) bool {
+	return r.Params.VersionType != nil && *r.Params.VersionType == artifact.GetHelmArtifactDetailsParamsVersionTypeTAG
 }

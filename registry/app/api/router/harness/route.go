@@ -15,6 +15,7 @@
 package harness
 
 import (
+	"context"
 	"net/http"
 
 	spacecontroller "github.com/harness/gitness/app/api/controller/space"
@@ -127,6 +128,9 @@ func NewAPIHandler(
 		spaceController,
 		quarantineArtifactRepository,
 		spaceStore,
+		func(_ context.Context) bool {
+			return true
+		},
 	)
 
 	handler := artifact.NewStrictHandler(apiController, []artifact.StrictMiddlewareFunc{})

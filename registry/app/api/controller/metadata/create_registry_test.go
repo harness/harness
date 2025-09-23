@@ -273,6 +273,9 @@ func TestCreateRegistry(t *testing.T) {
 					nil,
 					nil,
 					nil,
+					func(_ context.Context) bool {
+						return true
+					},
 				)
 			},
 		},
@@ -350,6 +353,9 @@ func TestCreateRegistry(t *testing.T) {
 					nil,
 					nil,
 					nil,
+					func(_ context.Context) bool {
+						return true
+					},
 				)
 			},
 		},

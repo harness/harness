@@ -74,8 +74,9 @@ func ManifestServiceProvider(
 	return NewManifestService(
 		registryDao, manifestDao, blobRepo, mtRepository, tagDao, imageDao,
 		artifactDao, layerDao, manifestRefDao, tx, gcService, reporter, spaceFinder,
-		ociImageIndexMappingDao, *artifactEventReporter, urlProvider,
-	)
+		ociImageIndexMappingDao, *artifactEventReporter, urlProvider, func(_ context.Context) bool {
+			return true
+		})
 }
 
 func RemoteRegistryProvider(

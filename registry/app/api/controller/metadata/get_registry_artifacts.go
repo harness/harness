@@ -96,6 +96,7 @@ func (c *APIController) GetAllArtifactsByRegistry(
 			}, nil
 		}
 	}
+	//nolint:nestif
 	if registry.PackageType == artifact.PackageTypeDOCKER || registry.PackageType == artifact.PackageTypeHELM {
 		artifacts, err = c.TagStore.GetAllArtifactsByRepo(
 			ctx, regInfo.ParentID, regInfo.RegistryIdentifier,

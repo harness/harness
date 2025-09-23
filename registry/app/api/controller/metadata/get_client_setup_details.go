@@ -38,7 +38,7 @@ func (c *APIController) GetClientSetupDetails(
 ) (artifact.GetClientSetupDetailsResponseObject, error) {
 	regRefParam := r.RegistryRef
 	imageParam := r.Params.Artifact
-	tagParam := r.Params.Version
+	versionParam := r.Params.Version
 
 	regInfo, _ := c.RegistryMetadataHelper.GetRegistryRequestBaseInfo(ctx, "", string(regRefParam))
 
@@ -79,7 +79,7 @@ func (c *APIController) GetClientSetupDetails(
 	packageType := string(reg.PackageType)
 
 	response := c.GenerateClientSetupDetails(
-		ctx, packageType, imageParam, tagParam, regInfo.RegistryRef,
+		ctx, packageType, imageParam, versionParam, regInfo.RegistryRef,
 		regInfo.RegistryType,
 	)
 
@@ -99,7 +99,7 @@ func (c *APIController) GenerateClientSetupDetails(
 	ctx context.Context,
 	packageType string,
 	image *artifact.ArtifactParam,
-	tag *artifact.VersionParam,
+	version *artifact.VersionParam,
 	registryRef string,
 	registryType artifact.RegistryType,
 ) *artifact.ClientSetupDetailsResponseJSONResponse {
@@ -111,30 +111,30 @@ func (c *APIController) GenerateClientSetupDetails(
 	blankString := ""
 	switch packageType {
 	case string(artifact.PackageTypeRPM):
-		return c.generateRpmClientSetupDetail(ctx, image, tag, registryRef, username)
+		return c.generateRpmClientSetupDetail(ctx, image, version, registryRef, username)
 	case string(artifact.PackageTypeMAVEN):
-		return c.generateMavenClientSetupDetail(ctx, image, tag, registryRef, username, registryType)
+		return c.generateMavenClientSetupDetail(ctx, image, version, registryRef, username, registryType)
 	case string(artifact.PackageTypeHELM):
 		return c.generateHelmClientSetupDetail(ctx, blankString, loginUsernameLabel, loginUsernameValue,
-			loginPasswordLabel, username, registryRef, image, tag, registryType)
+			loginPasswordLabel, username, registryRef, image, version, registryType)
 	case string(artifact.PackageTypeGENERIC):
-		return c.generateGenericClientSetupDetail(ctx, blankString, registryRef, image, tag, registryType)
+		return c.generateGenericClientSetupDetail(ctx, blankString, registryRef, image, version, registryType)
 	case string(artifact.PackageTypePYTHON):
-		return c.generatePythonClientSetupDetail(ctx, registryRef, username, image, tag, registryType)
+		return c.generatePythonClientSetupDetail(ctx, registryRef, username, image, version, registryType)
 	case string(artifact.PackageTypeNPM):
-		return c.generateNpmClientSetupDetail(ctx, registryRef, username, image, tag, registryType)
+		return c.generateNpmClientSetupDetail(ctx, registryRef, username, image, version, registryType)
 	case string(artifact.PackageTypeDOCKER):
 		return c.generateDockerClientSetupDetail(ctx, blankString, loginUsernameLabel, loginUsernameValue,
 			loginPasswordLabel, registryType,
-			username, registryRef, image, tag)
+			username, registryRef, image, version)
 	case string(artifact.PackageTypeNUGET):
-		return c.generateNugetClientSetupDetail(ctx, registryRef, username, image, tag, registryType)
+		return c.generateNugetClientSetupDetail(ctx, registryRef, username, image, version, registryType)
 	case string(artifact.PackageTypeCARGO):
-		return c.generateCargoClientSetupDetail(ctx, registryRef, username, image, tag, registryType)
+		return c.generateCargoClientSetupDetail(ctx, registryRef, username, image, version, registryType)
 	case string(artifact.PackageTypeGO):
-		return c.generateGoClientSetupDetail(ctx, registryRef, username, image, tag, registryType)
+		return c.generateGoClientSetupDetail(ctx, registryRef, username, image, version, registryType)
 	case string(artifact.PackageTypeHUGGINGFACE):
-		return c.generateHuggingFaceClientSetupDetail(ctx, registryRef, username, image, tag, registryType)
+		return c.generateHuggingFaceClientSetupDetail(ctx, registryRef, username, image, version, registryType)
 	default:
 		log.Debug().Ctx(ctx).Msgf("Unknown package type for client details: %s", packageType)
 		return nil
@@ -151,7 +151,7 @@ func (c *APIController) generateDockerClientSetupDetail(
 	username string,
 	registryRef string,
 	image *artifact.ArtifactParam,
-	tag *artifact.VersionParam,
+	version *artifact.VersionParam,
 ) *artifact.ClientSetupDetailsResponseJSONResponse {
 	header1 := "Login to Docker"
 	section1step1Header := "Run this Docker command in your terminal to authenticate the client."
@@ -183,7 +183,12 @@ func (c *APIController) generateDockerClientSetupDetail(
 	})
 	header2 := "Pull an image"
 	section2step1Header := "Run this Docker command in your terminal to pull image."
-	dockerPullValue := "docker pull <HOSTNAME>/<REGISTRY_NAME>/<IMAGE_NAME>:<TAG>"
+	var dockerPullValue string
+	if c.UntaggedImagesEnabled(ctx) {
+		dockerPullValue = "docker pull <HOSTNAME>/<REGISTRY_NAME>/<IMAGE_NAME>@<DIGEST>"
+	} else {
+		dockerPullValue = "docker pull <HOSTNAME>/<REGISTRY_NAME>/<IMAGE_NAME>:<TAG>"
+	}
 	section2step1Commands := []artifact.ClientSetupStepCommand{
 		{Label: &blankString, Value: &dockerPullValue},
 	}
@@ -203,13 +208,19 @@ func (c *APIController) generateDockerClientSetupDetail(
 	})
 	header3 := "Retag and Push the image"
 	section3step1Header := "Run this Docker command in your terminal to tag the image."
-	dockerTagValue := "docker tag <IMAGE_NAME>:<TAG> <HOSTNAME>/<REGISTRY_NAME>/<IMAGE_NAME>:<TAG>"
+	var dockerTagValue string
+	if c.UntaggedImagesEnabled(ctx) {
+		dockerTagValue = "docker tag <HOSTNAME>/<REGISTRY_NAME>/<IMAGE_NAME>@<DIGEST> " +
+			"<HOSTNAME>/<REGISTRY_NAME>/<IMAGE_NAME>:<NEW_TAG>"
+	} else {
+		dockerTagValue = "docker tag <IMAGE_NAME>:<TAG> <HOSTNAME>/<REGISTRY_NAME>/<IMAGE_NAME>:<TAG>"
+	}
 	section3step1Commands := []artifact.ClientSetupStepCommand{
 		{Label: &blankString, Value: &dockerTagValue},
 	}
 	section3step1Type := artifact.ClientSetupStepTypeStatic
 	section3step2Header := "Run this Docker command in your terminal to push the image."
-	dockerPushValue := "docker push <HOSTNAME>/<REGISTRY_NAME>/<IMAGE_NAME>:<TAG>"
+	dockerPushValue := "docker push <HOSTNAME>/<REGISTRY_NAME>/<IMAGE_NAME>:<NEW_TAG>"
 	section3step2Commands := []artifact.ClientSetupStepCommand{
 		{Label: &blankString, Value: &dockerPushValue},
 	}
@@ -251,7 +262,7 @@ func (c *APIController) generateDockerClientSetupDetail(
 		Sections:   sections,
 	}
 
-	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, image, tag, "", "", "")
+	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, image, version, "", "", "")
 
 	return &artifact.ClientSetupDetailsResponseJSONResponse{
 		Data:   clientSetupDetails,
@@ -505,7 +516,13 @@ func (c *APIController) generateHelmClientSetupDetail(
 
 	header3 := "Pull a version"
 	section3step1Header := "Run this Helm command in your terminal to pull a specific chart version."
-	helmPullValue := "helm pull oci://<HOSTNAME>/<REGISTRY_NAME>/<IMAGE_NAME> --version <TAG>"
+	var helmPullValue string
+	if c.UntaggedImagesEnabled(ctx) {
+		helmPullValue = "helm pull oci://<HOSTNAME>/<REGISTRY_NAME>/<IMAGE_NAME>@<DIGEST>"
+	} else {
+		helmPullValue = "helm pull oci://<HOSTNAME>/<REGISTRY_NAME>/<IMAGE_NAME> --version <TAG>"
+	}
+
 	section3step1Commands := []artifact.ClientSetupStepCommand{
 		{Label: &blankString, Value: &helmPullValue},
 	}
@@ -1747,7 +1764,7 @@ func (c *APIController) replacePlaceholders(
 	username string,
 	regRef string,
 	image *artifact.ArtifactParam,
-	tag *artifact.VersionParam,
+	version *artifact.VersionParam,
 	registryURL string,
 	groupID string,
 	pkgType string,
@@ -1765,11 +1782,11 @@ func (c *APIController) replacePlaceholders(
 		tab, err := (*clientSetupSections)[i].AsTabSetupStepConfig()
 		if err != nil || tab.Tabs == nil {
 			//nolint:lll
-			c.replacePlaceholdersInSection(ctx, &(*clientSetupSections)[i], username, regRef, image, tag, pkgType,
+			c.replacePlaceholdersInSection(ctx, &(*clientSetupSections)[i], username, regRef, image, version, pkgType,
 				registryURL, groupID, uploadURL)
 		} else {
 			for j := range *tab.Tabs {
-				c.replacePlaceholders(ctx, (*tab.Tabs)[j].Sections, username, regRef, image, tag, registryURL, groupID,
+				c.replacePlaceholders(ctx, (*tab.Tabs)[j].Sections, username, regRef, image, version, registryURL, groupID,
 					pkgType)
 			}
 			_ = (*clientSetupSections)[i].FromTabSetupStepConfig(tab)
@@ -1783,7 +1800,7 @@ func (c *APIController) replacePlaceholdersInSection(
 	username string,
 	regRef string,
 	image *artifact.ArtifactParam,
-	tag *artifact.VersionParam,
+	version *artifact.VersionParam,
 	pkgType string,
 	registryURL string,
 	groupID string,
@@ -1807,7 +1824,7 @@ func (c *APIController) replacePlaceholdersInSection(
 			continue
 		}
 		for j := range *st.Commands {
-			c.replaceText(ctx, username, st, j, hostname, registryName, image, tag, registryURL, groupID, uploadURL)
+			c.replaceText(ctx, username, st, j, hostname, registryName, image, version, registryURL, groupID, uploadURL)
 		}
 	}
 	_ = clientSetupSection.FromClientSetupStepConfig(sec)
@@ -1821,7 +1838,7 @@ func (c *APIController) replaceText(
 	hostname string,
 	repoName string,
 	image *artifact.ArtifactParam,
-	tag *artifact.VersionParam,
+	version *artifact.VersionParam,
 	registryURL string,
 	groupID string,
 	uploadURL string,
@@ -1871,10 +1888,10 @@ func (c *APIController) replaceText(
 		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<ARTIFACT_NAME>",
 			string(*image)))
 	}
-	if tag != nil {
-		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<TAG>", string(*tag)))
-		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<VERSION>",
-			string(*tag)))
+	if version != nil {
+		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<TAG>", string(*version)))
+		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<VERSION>", string(*version)))
+		(*st.Commands)[i].Value = utils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<DIGEST>", string(*version)))
 	}
 }
 
@@ -2004,8 +2021,9 @@ func (c *APIController) generateHuggingFaceClientSetupDetail(
 	_ = section6.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
 		Steps: &[]artifact.ClientSetupStep{
 			{
-				Header: utils.StringPtr("Artifact Registry supports resolving datasets using Hugging Face dataset libraries:"),
-				Type:   &staticStepType,
+				Header: utils.StringPtr("Artifact Registry supports resolving datasets" +
+					" using Hugging Face dataset libraries:"),
+				Type: &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
 						//nolint:lll

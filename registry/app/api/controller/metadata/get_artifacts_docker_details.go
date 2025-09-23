@@ -28,6 +28,7 @@ import (
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/opencontainers/go-digest"
+	"github.com/rs/zerolog/log"
 )
 
 func (c *APIController) GetDockerArtifactDetails(
@@ -82,33 +83,29 @@ func (c *APIController) GetDockerArtifactDetails(
 		}, nil
 	}
 
-	tag, err := c.TagStore.GetTagDetail(ctx, registry.ID, image, version)
-	if err != nil {
-		return getArtifactDetailsErrResponse(err)
-	}
 	dgst, err := types.NewDigest(digest.Digest(manifestDigest))
 	if err != nil {
-		return getArtifactDetailsErrResponse(err)
+		return getArtifactDetailsErrResponse(ctx, err)
 	}
 	art, err := c.ArtifactStore.GetArtifactMetadata(ctx, registry.ParentID, registry.Name, image, dgst.String(),
 		nil)
 	if err != nil {
-		return getArtifactDetailsErrResponse(err)
+		return getArtifactDetailsErrResponse(ctx, err)
 	}
 
 	m, err := c.ManifestStore.FindManifestByDigest(ctx, registry.ID, image, dgst)
 
 	if err != nil {
 		if errors.Is(err, store2.ErrResourceNotFound) {
-			return getArtifactDetailsErrResponse(fmt.Errorf("manifest not found"))
+			return getArtifactDetailsErrResponse(ctx, fmt.Errorf("manifest not found"))
 		}
-		return getArtifactDetailsErrResponse(err)
+		return getArtifactDetailsErrResponse(ctx, err)
 	}
 
 	quarantineArtifacts, err := c.QuarantineArtifactRepository.GetByFilePath(ctx, "",
 		regInfo.RegistryID, image, dgst.String())
 	if err != nil {
-		return getArtifactDetailsErrResponse(err)
+		return getArtifactDetailsErrResponse(ctx, err)
 	}
 	var isQuarantined bool
 	var quarantineReason *string
@@ -117,18 +114,68 @@ func (c *APIController) GetDockerArtifactDetails(
 		quarantineReason = &quarantineArtifacts[0].Reason
 	}
 
-	return artifact.GetDockerArtifactDetails200JSONResponse{
-		DockerArtifactDetailResponseJSONResponse: *GetDockerArtifactDetails(
-			registry, tag, m, c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, registry.Name),
+	//nolint:nestif
+	if c.UntaggedImagesEnabled(ctx) && !isDockerVersionTag(r) {
+		dockerArtifactDetails := GetDockerArtifactDetails(
+			registry, m.ImageName, m.Digest.String(), m.CreatedAt, m.CreatedAt, m.Digest.String(), m.TotalSize,
+			c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, registry.Name),
 			art.DownloadCount, isQuarantined, quarantineReason,
-		),
+		)
+		pullCommandByDigest := GetDockerPullCommand(m.ImageName, m.Digest.String(),
+			c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, registry.Name), false,
+		)
+		dockerArtifactDetails.Data.PullCommandByDigest = &pullCommandByDigest
+		tags, err := c.TagStore.GetTagsByManifestID(ctx, m.ID)
+		if err != nil {
+			return getArtifactDetailsErrResponse(ctx, err)
+		}
+		if tags != nil {
+			dockerArtifactDetails.Data.Metadata = &artifact.ArtifactEntityMetadata{
+				"tags": tags,
+			}
+		}
+		return artifact.GetDockerArtifactDetails200JSONResponse{
+			DockerArtifactDetailResponseJSONResponse: *dockerArtifactDetails,
+		}, nil
+	}
+	tag, err := c.TagStore.GetTagDetail(ctx, registry.ID, image, version)
+	if err != nil {
+		return getArtifactDetailsErrResponse(ctx, err)
+	}
+	dockerArtifactDetails := GetDockerArtifactDetails(
+		registry, tag.ImageName, tag.Name, tag.CreatedAt, tag.UpdatedAt, m.Digest.String(), m.TotalSize,
+		c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, registry.Name),
+		art.DownloadCount, isQuarantined, quarantineReason,
+	)
+	pullCommandByTag := GetDockerPullCommand(tag.ImageName, tag.Name, c.URLProvider.RegistryURL(
+		ctx, regInfo.RootIdentifier, registry.Name), true,
+	)
+	dockerArtifactDetails.Data.PullCommand = &pullCommandByTag
+
+	if c.UntaggedImagesEnabled(ctx) {
+		pullCommandByDigest := GetDockerPullCommand(m.ImageName, m.Digest.String(),
+			c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, registry.Name),
+			false,
+		)
+		dockerArtifactDetails.Data.PullCommandByDigest = &pullCommandByDigest
+	}
+	return artifact.GetDockerArtifactDetails200JSONResponse{
+		DockerArtifactDetailResponseJSONResponse: *dockerArtifactDetails,
 	}, nil
 }
 
-func getArtifactDetailsErrResponse(err error) (artifact.GetDockerArtifactDetailsResponseObject, error) {
+func getArtifactDetailsErrResponse(
+	ctx context.Context,
+	err error,
+) (artifact.GetDockerArtifactDetailsResponseObject, error) {
+	log.Error().Ctx(ctx).Msgf("error while getting artifact details: %v", err)
 	return artifact.GetDockerArtifactDetails500JSONResponse{
 		InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
 			*GetErrorResponse(http.StatusInternalServerError, err.Error()),
 		),
 	}, nil
+}
+
+func isDockerVersionTag(r artifact.GetDockerArtifactDetailsRequestObject) bool {
+	return r.Params.VersionType != nil && *r.Params.VersionType == artifact.GetDockerArtifactDetailsParamsVersionTypeTAG
 }

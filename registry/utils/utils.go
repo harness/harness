@@ -17,6 +17,10 @@ package utils
 import (
 	"reflect"
 	"strings"
+
+	"github.com/harness/gitness/registry/types"
+
+	goDigest "github.com/opencontainers/go-digest"
 )
 
 func HasAnyPrefix(s string, prefixes []string) bool {
@@ -62,4 +66,16 @@ func IsEmpty(slice interface{}) bool {
 	}
 
 	return val.Len() == 0
+}
+
+func GetParsedDigest(digest string) (string, error) {
+	parsedDigest, err := goDigest.Parse(digest)
+	if err != nil {
+		return "", err
+	}
+	typesDigest, err := types.NewDigest(parsedDigest)
+	if err != nil {
+		return "", err
+	}
+	return typesDigest.String(), err
 }

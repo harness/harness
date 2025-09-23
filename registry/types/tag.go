@@ -49,6 +49,7 @@ type ArtifactMetadata struct {
 	IsQuarantined    bool
 	QuarantineReason *string
 	ArtifactType     *artifact.ArtifactType
+	Tags             []string
 }
 
 type ImageMetadata struct {
@@ -62,18 +63,21 @@ type ImageMetadata struct {
 	ModifiedAt    time.Time
 }
 
-type TagMetadata struct {
-	Name          string
-	Size          string
-	PackageType   artifact.PackageType
-	DigestCount   int
-	ModifiedAt    time.Time
-	SchemaVersion int
-	NonConformant bool
-	Payload       Payload
-	MediaType     string
-	Digest        string
-	DownloadCount int64
+type OciVersionMetadata struct {
+	Name             string
+	Size             string
+	PackageType      artifact.PackageType
+	DigestCount      int
+	ModifiedAt       time.Time
+	SchemaVersion    int
+	NonConformant    bool
+	Payload          Payload
+	MediaType        string
+	Digest           string
+	DownloadCount    int64
+	Tags             []string
+	IsQuarantined    bool
+	QuarantineReason string
 }
 
 type TagDetail struct {
@@ -84,4 +88,21 @@ type TagDetail struct {
 	UpdatedAt     time.Time
 	Size          string
 	DownloadCount int64
+}
+
+type TagInfo struct {
+	Name   string
+	Digest string
+}
+
+type QuarantineInfo struct {
+	Reason    string
+	CreatedAt int64
+}
+
+// ArtifactIdentifier represents an artifact by name, version, and registry ID.
+type ArtifactIdentifier struct {
+	Name         string
+	Version      string
+	RegistryName string
 }

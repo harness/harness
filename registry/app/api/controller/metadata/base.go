@@ -33,8 +33,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const MediaTypeImageConfig = "application/vnd.docker.container.image.v1+json"
-
 var _ api.StrictServerInterface = (*APIController)(nil)
 
 type RegistryRequestInfo struct {

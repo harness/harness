@@ -15,6 +15,8 @@
 package metadata
 
 import (
+	"context"
+
 	spacecontroller "github.com/harness/gitness/app/api/controller/space"
 	"github.com/harness/gitness/app/auth/authz"
 	gstore "github.com/harness/gitness/app/store"
@@ -64,6 +66,7 @@ type APIController struct {
 	SpaceController              *spacecontroller.Controller
 	QuarantineArtifactRepository store.QuarantineArtifactRepository
 	SpaceStore                   gstore.SpaceStore
+	UntaggedImagesEnabled        func(ctx context.Context) bool
 }
 
 func NewAPIController(
@@ -97,6 +100,7 @@ func NewAPIController(
 	spaceController *spacecontroller.Controller,
 	quarantineArtifactRepository store.QuarantineArtifactRepository,
 	spaceStore gstore.SpaceStore,
+	untaggedImagesEnabled func(ctx context.Context) bool,
 ) *APIController {
 	return &APIController{
 		fileManager:                  fileManager,
@@ -129,5 +133,6 @@ func NewAPIController(
 		SpaceController:              spaceController,
 		QuarantineArtifactRepository: quarantineArtifactRepository,
 		SpaceStore:                   spaceStore,
+		UntaggedImagesEnabled:        untaggedImagesEnabled,
 	}
 }

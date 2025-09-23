@@ -144,6 +144,7 @@ type ManifestRepository interface {
 		ctx context.Context, repoID int64,
 		digest types.Digest,
 	) (types.Manifests, error)
+	GetLatestManifest(ctx context.Context, repoID int64, imageName string) (*types.Manifest, error)
 }
 
 type ManifestReferenceRepository interface {
@@ -204,10 +205,17 @@ type TagRepository interface {
 		latestVersion bool, packageTypes []string,
 	) (*[]types.ArtifactMetadata, error)
 
+	GetAllArtifactsByParentIDUntagged(
+		ctx context.Context, parentID int64,
+		registryIDs *[]string, sortByField string,
+		sortByOrder string, limit int, offset int, search string,
+		packageTypes []string,
+	) (*[]types.ArtifactMetadata, error)
+
 	CountAllArtifactsByParentID(
 		ctx context.Context, parentID int64,
 		registryIDs *[]string, search string,
-		latestVersion bool, packageTypes []string,
+		latestVersion bool, packageTypes []string, untaggedImagesEnabled bool,
 	) (int64, error)
 
 	GetAllArtifactsByRepo(
@@ -234,7 +242,15 @@ type TagRepository interface {
 		repoKey string,
 		imageName string,
 		name string,
-	) (*types.TagMetadata, error)
+	) (*types.OciVersionMetadata, error)
+
+	GetOCIVersionMetadata(
+		ctx context.Context,
+		parentID int64,
+		repoKey string,
+		imageName string,
+		dgst string,
+	) (*types.OciVersionMetadata, error)
 
 	CountAllArtifactsByRepo(
 		ctx context.Context, parentID int64, repoKey string,
@@ -258,7 +274,25 @@ type TagRepository interface {
 		limit int,
 		offset int,
 		search string,
-	) (*[]types.TagMetadata, error)
+	) (*[]types.OciVersionMetadata, error)
+
+	GetAllOciVersionsByRepoAndImage(
+		ctx context.Context,
+		parentID int64,
+		repoKey string,
+		image string,
+		sortByField string,
+		sortByOrder string,
+		limit int,
+		offset int,
+		search string,
+	) (*[]types.OciVersionMetadata, error)
+
+	GetOciTagsInfo(
+		ctx context.Context, registryID int64,
+		image string, limit int, offset int,
+		search string,
+	) (*[]types.TagInfo, error)
 
 	DeleteTag(ctx context.Context, registryID int64, imageName string, name string) (err error)
 
@@ -266,18 +300,27 @@ type TagRepository interface {
 		ctx context.Context, parentID int64, repoKey string,
 		image string, search string,
 	) (int64, error)
+	CountOciVersionByRepoAndImage(
+		ctx context.Context, parentID int64, repoKey string,
+		image string, search string,
+	) (int64, error)
 	FindTag(
 		ctx context.Context, repoID int64, imageName string,
 		name string,
 	) (*types.Tag, error)
+	GetTagsByManifestID(
+		ctx context.Context, manifestID int64,
+	) (*[]string, error)
 	DeleteTagsByImageName(
 		ctx context.Context, registryID int64,
 		imageName string,
 	) (err error)
-
 	GetQuarantineStatusForImages(
 		ctx context.Context, imageNames []string, registryID int64,
 	) ([]bool, error)
+	GetQuarantineInfoForArtifacts(
+		ctx context.Context, artifacts []types.ArtifactIdentifier, parentID int64,
+	) (map[types.ArtifactIdentifier]*types.QuarantineInfo, error)
 }
 
 // UpstreamProxyConfig holds the record of a config of upstream proxy in DB.

@@ -209,7 +209,7 @@ func TestGetPullCommand(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := metadata.GetPullCommand(tt.image, tt.tag, tt.pkgType, tt.baseURL,
-				"Authorization: Bearer", nil)
+				"Authorization: Bearer", nil, true)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
@@ -234,7 +234,7 @@ func TestGetDockerPullCommand(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := metadata.GetDockerPullCommand(tt.image, tt.tag, tt.baseURL)
+			result := metadata.GetDockerPullCommand(tt.image, tt.tag, tt.baseURL, true)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
@@ -259,7 +259,7 @@ func TestGetHelmPullCommand(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := metadata.GetHelmPullCommand(tt.image, tt.tag, tt.baseURL)
+			result := metadata.GetHelmPullCommand(tt.image, tt.tag, tt.baseURL, true)
 			assert.Equal(t, tt.expected, result)
 		})
 	}

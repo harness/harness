@@ -34,6 +34,7 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
+	"github.com/opencontainers/go-digest"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
@@ -48,6 +49,8 @@ const (
 	downloadCount       string          = "download_count"
 	imageName           string          = "image_name"
 	name                string          = "name"
+	postgresStringAgg   string          = "string_agg"
+	sqliteGroupConcat   string          = "group_concat"
 )
 
 type tagDao struct {
@@ -89,6 +92,7 @@ type artifactMetadataDB struct {
 	IsQuarantined    bool                   `db:"is_quarantined"`
 	QuarantineReason *string                `db:"quarantine_reason"`
 	ArtifactType     *artifact.ArtifactType `db:"artifact_type"`
+	Tags             *string                `db:"tags"`
 }
 
 type tagMetadataDB struct {
@@ -105,6 +109,20 @@ type tagMetadataDB struct {
 	DownloadCount int64                `db:"download_count"`
 }
 
+type ociVersionMetadataDB struct {
+	Size          string               `db:"size"`
+	PackageType   artifact.PackageType `db:"package_type"`
+	DigestCount   int                  `db:"digest_count"`
+	ModifiedAt    int64                `db:"modified_at"`
+	SchemaVersion int                  `db:"manifest_schema_version"`
+	NonConformant bool                 `db:"manifest_non_conformant"`
+	Payload       []byte               `db:"manifest_payload"`
+	MediaType     string               `db:"mt_media_type"`
+	Digest        []byte               `db:"manifest_digest"`
+	DownloadCount int64                `db:"download_count"`
+	Tags          *string              `db:"tags"`
+}
+
 type tagDetailDB struct {
 	ID            int64  `db:"id"`
 	Name          string `db:"name"`
@@ -113,6 +131,11 @@ type tagDetailDB struct {
 	UpdatedAt     int64  `db:"updated_at"`
 	Size          string `db:"size"`
 	DownloadCount int64  `db:"download_count"`
+}
+
+type tagInfoDB struct {
+	Name   string `db:"name"`
+	Digest []byte `db:"manifest_digest"`
 }
 
 func (t tagDao) CreateOrUpdate(ctx context.Context, tag *types.Tag) error {
@@ -360,7 +383,7 @@ func (t tagDao) GetAllArtifactsByParentID(
 	latestVersion bool,
 	packageTypes []string,
 ) (*[]types.ArtifactMetadata, error) {
-	q1 := t.GetAllArtifactOnParentIDQueryForNonOCI(parentID, latestVersion, registryIDs, packageTypes, search)
+	q1 := t.GetAllArtifactOnParentIDQueryForNonOCI(parentID, latestVersion, registryIDs, packageTypes, search, false)
 
 	q2 := t.GetAllArtifactsQueryByParentIDForOCI(parentID, latestVersion, registryIDs, packageTypes, search)
 
@@ -403,7 +426,7 @@ func (t tagDao) GetAllArtifactsByParentID(
 	if err = db.SelectContext(ctx, &dst, finalQuery, finalArgs...); err != nil {
 		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
 	}
-	return t.mapToArtifactMetadataList(ctx, dst)
+	return t.mapToArtifactMetadataList(dst)
 }
 
 func (t tagDao) GetAllArtifactsQueryByParentIDForOCI(
@@ -418,7 +441,7 @@ func (t tagDao) GetAllArtifactsQueryByParentIDForOCI(
 		t.tag_updated_at as modified_at, 
 		i.image_labels as labels, 
 		COALESCE(t2.download_count,0) as download_count,
-		false as is_quarantined,
+        false as is_quarantined,
 		'' as quarantine_reason,
         i.image_type as artifact_type `,
 	).
@@ -465,10 +488,262 @@ func (t tagDao) GetAllArtifactsQueryByParentIDForOCI(
 	return q2
 }
 
+func (t tagDao) GetAllArtifactsByParentIDUntagged(
+	ctx context.Context,
+	parentID int64,
+	registryIDs *[]string,
+	sortByField string,
+	sortByOrder string,
+	limit int,
+	offset int,
+	search string,
+	packageTypes []string,
+) (*[]types.ArtifactMetadata, error) {
+	// Query 1: Get core artifact data with pagination
+	coreQuery := t.getCoreArtifactsQuery(
+		parentID, registryIDs, packageTypes, search, sortByField, sortByOrder, limit, offset)
+
+	coreSQL, coreArgs, err := coreQuery.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert core query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, t.db)
+	coreResults := []*artifactMetadataDB{}
+	if err = db.SelectContext(ctx, &coreResults, coreSQL, coreArgs...); err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing core artifacts query")
+	}
+
+	if len(coreResults) == 0 {
+		return &[]types.ArtifactMetadata{}, nil
+	}
+
+	// Extract artifact IDs for enrichment query
+	artifactIDs := make([]int64, len(coreResults))
+	for i, result := range coreResults {
+		artifactIDs[i] = result.ID
+	}
+
+	// Query 2: Get download counts and tags only for returned artifacts
+	enrichmentData, err := t.getArtifactEnrichmentData(ctx, artifactIDs)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to get enrichment data")
+	}
+
+	// Merge the data
+	for _, result := range coreResults {
+		if enrichment, exists := enrichmentData[result.ID]; exists {
+			result.DownloadCount = enrichment.DownloadCount
+			if enrichment.Tags != "" {
+				result.Tags = &enrichment.Tags
+			}
+		}
+	}
+
+	return t.mapToArtifactMetadataList(coreResults)
+}
+
+// getCoreArtifactsQuery returns core artifact data with pagination (no download counts or tags).
+func (t tagDao) getCoreArtifactsQuery(
+	parentID int64,
+	registryIDs *[]string,
+	packageTypes []string,
+	search string,
+	sortByField string,
+	sortByOrder string,
+	limit int,
+	offset int,
+) sq.SelectBuilder {
+	query := databaseg.Builder.Select(
+		`ar.artifact_id,
+		r.registry_name as repo_name, 
+		i.image_name as name, 
+		r.registry_package_type as package_type,
+		ar.artifact_version as version, 
+		ar.artifact_updated_at as modified_at, 
+		i.image_type as artifact_type,
+		(qp.quarantined_path_id IS NOT NULL) AS is_quarantined,
+		qp.quarantined_path_reason as quarantine_reason`,
+	).
+		From("artifacts ar").
+		Join("images i ON i.image_id = ar.artifact_image_id").
+		Join("registries r ON i.image_registry_id = r.registry_id").
+		Where("r.registry_parent_id = ?", parentID).
+		LeftJoin("quarantined_paths qp ON ( " +
+			"( qp.quarantined_path_artifact_id = ar.artifact_id OR qp.quarantined_path_artifact_id IS NULL) " +
+			"AND qp.quarantined_path_image_id = i.image_id) " +
+			" AND qp.quarantined_path_registry_id = r.registry_id ")
+
+	// Apply filters
+	if len(*registryIDs) > 0 {
+		query = query.Where(sq.Eq{"r.registry_name": registryIDs})
+	}
+
+	if len(packageTypes) > 0 {
+		query = query.Where(sq.Eq{"r.registry_package_type": packageTypes})
+	}
+
+	if search != "" {
+		query = query.Where("i.image_name LIKE ?", sqlPartialMatch(search))
+	}
+
+	// Apply sorting and pagination
+	sortField := "ar.artifact_updated_at"
+	if sortByField == imageName {
+		sortField = "i.image_name"
+	}
+
+	return query.OrderBy(fmt.Sprintf("%s %s", sortField, sortByOrder)).
+		Limit(uint64(limit)).  // nolint:gosec
+		Offset(uint64(offset)) // nolint:gosec
+}
+
+type enrichmentData struct {
+	DownloadCount int64
+	Tags          string
+}
+
+func (t tagDao) getArtifactEnrichmentData(ctx context.Context, artifactIDs []int64) (map[int64]enrichmentData, error) {
+	if len(artifactIDs) == 0 {
+		return make(map[int64]enrichmentData), nil
+	}
+
+	db := dbtx.GetAccessor(ctx, t.db)
+	driver := db.DriverName()
+
+	// Pick aggregation function and decode function depending on database
+	var tagAggExpr, decodeFunction string
+	if driver == "postgres" {
+		tagAggExpr = "STRING_AGG(t.tag_name, ',')"
+		decodeFunction = "decode(ar.artifact_version, 'hex')"
+	} else {
+		tagAggExpr = "GROUP_CONCAT(t.tag_name, ',')"
+		decodeFunction = "unhex(ar.artifact_version)"
+	}
+
+	// Build placeholders for the 3 IN clauses
+	var placeholders1, placeholders2, placeholders3 string
+	args := make([]interface{}, 0, len(artifactIDs)*3)
+	const placeholderSeparator = ", ?"
+
+	// nolint:nestif
+	if driver == "postgres" {
+		// PostgreSQL: sequential parameter numbering across entire query
+		paramIndex := 1
+
+		// First IN clause (download_counts)
+		for i := range artifactIDs {
+			if i > 0 {
+				placeholders1 += fmt.Sprintf(", $%d", paramIndex)
+			} else {
+				placeholders1 += fmt.Sprintf("$%d", paramIndex)
+			}
+			paramIndex++
+		}
+
+		// Second IN clause (tag_lists)
+		for i := range artifactIDs {
+			if i > 0 {
+				placeholders2 += fmt.Sprintf(", $%d", paramIndex)
+			} else {
+				placeholders2 += fmt.Sprintf("$%d", paramIndex)
+			}
+			paramIndex++
+		}
+
+		// Third IN clause (main WHERE)
+		for i := range artifactIDs {
+			if i > 0 {
+				placeholders3 += fmt.Sprintf(", $%d", paramIndex)
+			} else {
+				placeholders3 += fmt.Sprintf("$%d", paramIndex)
+			}
+			paramIndex++
+		}
+	} else {
+		// SQLite: ? placeholders can be reused
+		for i := range artifactIDs {
+			if i > 0 {
+				placeholders1 += placeholderSeparator
+				placeholders2 += placeholderSeparator
+				placeholders3 += placeholderSeparator
+			} else {
+				placeholders1 += "?"
+				placeholders2 += "?"
+				placeholders3 += "?"
+			}
+		}
+	}
+
+	// Arguments: artifactIDs repeated 3 times for the 3 IN clauses
+	for i := 0; i < 3; i++ {
+		for _, id := range artifactIDs {
+			args = append(args, id)
+		}
+	}
+
+	query := fmt.Sprintf(`
+    WITH download_counts AS (
+        SELECT 
+            ds.download_stat_artifact_id AS artifact_id,
+            COUNT(ds.download_stat_id) AS download_count
+        FROM download_stats ds
+        WHERE ds.download_stat_artifact_id IN (%s)
+        GROUP BY ds.download_stat_artifact_id
+    ),
+    tag_lists AS (
+        SELECT 
+            ar.artifact_id,
+            %s AS tags
+        FROM artifacts ar
+        JOIN images i ON i.image_id = ar.artifact_image_id
+        JOIN manifests m ON m.manifest_registry_id = i.image_registry_id 
+                         AND m.manifest_image_name = i.image_name
+                         AND m.manifest_digest = %s
+        JOIN tags t ON t.tag_manifest_id = m.manifest_id
+        WHERE ar.artifact_id IN (%s)
+        GROUP BY ar.artifact_id
+    )
+    SELECT 
+        ar.artifact_id,
+        COALESCE(dc.download_count, 0) AS download_count,
+        COALESCE(tl.tags, '') AS tags
+    FROM artifacts ar
+    LEFT JOIN download_counts dc ON dc.artifact_id = ar.artifact_id
+    LEFT JOIN tag_lists tl ON tl.artifact_id = ar.artifact_id
+    WHERE ar.artifact_id IN (%s);
+    `, placeholders1, tagAggExpr, decodeFunction, placeholders2, placeholders3)
+
+	type enrichmentRow struct {
+		ArtifactID    int64  `db:"artifact_id"`
+		DownloadCount int64  `db:"download_count"`
+		Tags          string `db:"tags"`
+	}
+
+	var rows []enrichmentRow
+	if err := db.SelectContext(ctx, &rows, query, args...); err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing enrichment query")
+	}
+
+	result := make(map[int64]enrichmentData, len(rows))
+	for _, row := range rows {
+		result[row.ArtifactID] = enrichmentData{
+			DownloadCount: row.DownloadCount,
+			Tags:          row.Tags,
+		}
+	}
+
+	return result, nil
+}
+
 func (t tagDao) GetAllArtifactOnParentIDQueryForNonOCI(
 	parentID int64, latestVersion bool, registryIDs *[]string,
-	packageTypes []string, search string,
+	packageTypes []string, search string, queryTags bool,
 ) sq.SelectBuilder {
+	suffix := " "
+	if queryTags {
+		suffix = ", NULL AS tags "
+	}
 	q1 := databaseg.Builder.Select(
 		`r.registry_name as repo_name, 
 		i.image_name as name, 
@@ -477,9 +752,9 @@ func (t tagDao) GetAllArtifactOnParentIDQueryForNonOCI(
 		ar.artifact_updated_at as modified_at, 
 		i.image_labels as labels, 
 		COALESCE(t2.download_count, 0) as download_count,
-		(qp.quarantined_path_id IS NOT NULL) AS is_quarantined,
-	     qp.quarantined_path_reason as quarantine_reason,
-        i.image_type as artifact_type `,
+        (qp.quarantined_path_id IS NOT NULL) AS is_quarantined,
+        qp.quarantined_path_reason as quarantine_reason,
+        i.image_type as artifact_type`+suffix,
 	).
 		From("artifacts ar").
 		Join("images i ON i.image_id = ar.artifact_image_id").
@@ -577,9 +852,13 @@ func (t tagDao) CountAllOCIArtifactsByParentID(
 
 func (t tagDao) CountAllArtifactsByParentID(
 	ctx context.Context, parentID int64,
-	registryIDs *[]string, search string, latestVersion bool, packageTypes []string,
+	registryIDs *[]string, search string, latestVersion bool, packageTypes []string, untaggedImagesEnabled bool,
 ) (int64, error) {
-	// nolint:goconst
+	if untaggedImagesEnabled {
+		// Use the new unified count function for all artifacts
+		return t.CountAllArtifactsByParentIDUntagged(ctx, parentID, registryIDs, search, latestVersion, packageTypes)
+	}
+
 	q := databaseg.Builder.Select("COUNT(*)").
 		From("artifacts ar").
 		Join("images i ON i.image_id = ar.artifact_image_id").
@@ -593,10 +872,10 @@ func (t tagDao) CountAllArtifactsByParentID(
             JOIN images i ON i.image_id = ar.artifact_image_id 
 			JOIN registries r ON i.image_registry_id = r.registry_id 
 			WHERE r.registry_parent_id = ? ) AS a 
-			ON ar.artifact_id = a.id`, parentID, // nolint:goconst
-		).
-			Where("a.rank = 1")
+			ON ar.artifact_id = a.id`, parentID,
+		).Where("a.rank = 1")
 	}
+
 	if len(*registryIDs) > 0 {
 		q = q.Where(sq.Eq{"r.registry_name": registryIDs})
 	}
@@ -620,11 +899,52 @@ func (t tagDao) CountAllArtifactsByParentID(
 	if err != nil {
 		return 0, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing count query")
 	}
-	ociCount, err := t.CountAllOCIArtifactsByParentID(ctx, parentID, registryIDs, search, latestVersion, packageTypes)
+
+	var ociCount int64
+	ociCount, err = t.CountAllOCIArtifactsByParentID(ctx, parentID, registryIDs, search,
+		latestVersion, packageTypes)
 	if err != nil {
 		return 0, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing count query")
 	}
+
 	return count + ociCount, nil
+}
+
+func (t tagDao) CountAllArtifactsByParentIDUntagged(
+	ctx context.Context, parentID int64,
+	registryIDs *[]string, search string, _ bool, packageTypes []string,
+) (int64, error) {
+	query := databaseg.Builder.Select("COUNT(*)").
+		From("artifacts ar").
+		Join("images i ON i.image_id = ar.artifact_image_id").
+		Join("registries r ON i.image_registry_id = r.registry_id").
+		Where("r.registry_parent_id = ?", parentID)
+
+	// Apply filters
+	if len(*registryIDs) > 0 {
+		query = query.Where(sq.Eq{"r.registry_name": registryIDs})
+	}
+
+	if len(packageTypes) > 0 {
+		query = query.Where(sq.Eq{"r.registry_package_type": packageTypes})
+	}
+
+	if search != "" {
+		query = query.Where("i.image_name LIKE ?", sqlPartialMatch(search))
+	}
+
+	querySQL, queryArgs, err := query.ToSql()
+	if err != nil {
+		return 0, errors.Wrap(err, "Failed to convert count query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, t.db)
+	var count int64
+	if err := db.GetContext(ctx, &count, querySQL, queryArgs...); err != nil {
+		return 0, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing count query")
+	}
+
+	return count, nil
 }
 
 func (t tagDao) GetTagDetail(
@@ -779,7 +1099,7 @@ func (t tagDao) GetLatestTagMetadata(
 		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to get tag detail")
 	}
 
-	return t.mapToArtifactMetadata(ctx, dst)
+	return t.mapToArtifactMetadata(dst)
 }
 
 func (t tagDao) GetLatestTagName(
@@ -818,7 +1138,7 @@ func (t tagDao) GetTagMetadata(
 	repoKey string,
 	imageName string,
 	name string,
-) (*types.TagMetadata, error) {
+) (*types.OciVersionMetadata, error) {
 	q := databaseg.Builder.Select(
 		"registry_package_type as package_type, tag_name as name,"+
 			"tag_updated_at as modified_at, manifest_total_size as size",
@@ -844,6 +1164,43 @@ func (t tagDao) GetTagMetadata(
 	}
 
 	return t.mapToTagMetadata(ctx, dst)
+}
+
+func (t tagDao) GetOCIVersionMetadata(
+	ctx context.Context,
+	parentID int64,
+	repoKey string,
+	imageName string,
+	dgst string,
+) (*types.OciVersionMetadata, error) {
+	digestBytes, err := types.GetDigestBytes(digest.Digest(dgst))
+	if err != nil {
+		return nil, err
+	}
+	q := databaseg.Builder.Select(
+		"registry_package_type as package_type, manifest_digest, "+
+			"manifest_created_at as modified_at, manifest_total_size as size",
+	).
+		From("manifests").
+		Join("registries ON manifest_registry_id = registry_id").
+		Where(
+			"registry_parent_id = ? AND registry_name = ?"+
+				" AND manifest_image_name = ? AND manifest_digest = ?", parentID, repoKey, imageName, digestBytes,
+		)
+
+	sql, args, err := q.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, t.db)
+
+	dst := new(ociVersionMetadataDB)
+	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to get tag metadata")
+	}
+
+	return t.mapToOciVersion(dst)
 }
 
 func (t tagDao) GetLatestTag(ctx context.Context, repoID int64, imageName string) (*types.Tag, error) {
@@ -933,7 +1290,7 @@ func (t tagDao) GetAllArtifactsByRepo(
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
 		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
 	}
-	return t.mapToArtifactMetadataList(ctx, dst)
+	return t.mapToArtifactMetadataList(dst)
 }
 
 // nolint:goconst
@@ -985,7 +1342,7 @@ func (t tagDao) GetAllTagsByRepoAndImage(
 	ctx context.Context, parentID int64, repoKey string,
 	image string, sortByField string, sortByOrder string, limit int, offset int,
 	search string,
-) (*[]types.TagMetadata, error) {
+) (*[]types.OciVersionMetadata, error) {
 	q := databaseg.Builder.Select(
 		`t.tag_name as name, m.manifest_total_size as size, 
 		r.registry_package_type as package_type, t.tag_updated_at as modified_at, 
@@ -1067,6 +1424,109 @@ func (t tagDao) GetQuarantineStatusForImages(
 	return resultSlice, nil
 }
 
+func (t tagDao) GetAllOciVersionsByRepoAndImage(
+	ctx context.Context, parentID int64, repoKey string,
+	image string, sortByField string, sortByOrder string, limit int, offset int,
+	search string,
+) (*[]types.OciVersionMetadata, error) {
+	// Choose aggregation function based on database driver
+	var tagAggExpr string
+	if t.db.DriverName() == SQLITE3 {
+		tagAggExpr = sqliteGroupConcat + "(t.tag_name, ',')"
+	} else {
+		tagAggExpr = postgresStringAgg + "(t.tag_name, ',')"
+	}
+
+	q := databaseg.Builder.Select(
+		"m.manifest_total_size as size",
+		"r.registry_package_type as package_type",
+		"m.manifest_created_at as modified_at",
+		"m.manifest_schema_version",
+		"m.manifest_non_conformant",
+		"m.manifest_payload",
+		"mt.mt_media_type",
+		"m.manifest_digest",
+		tagAggExpr+" AS tags",
+	).
+		From("manifests m").
+		LeftJoin("tags t ON m.manifest_id = t.tag_manifest_id"). //
+		Join("registries r ON m.manifest_registry_id = r.registry_id").
+		Join("media_types mt ON mt.mt_id = m.manifest_media_type_id").
+		Where(
+			"r.registry_parent_id = ? AND r.registry_name = ? AND m.manifest_image_name = ?",
+			parentID, repoKey, image,
+		)
+
+	if search != "" {
+		digestBytes, err := types.GetDigestBytes(digest.Digest(search))
+		if err != nil {
+			return nil, fmt.Errorf("invalid digest: %s, error: %w", search, err)
+		}
+		q = q.Where("m.manifest_digest = ?", digestBytes)
+	}
+
+	q = q.GroupBy("m.manifest_total_size, r.registry_package_type, m.manifest_created_at, " +
+		"m.manifest_schema_version, m.manifest_non_conformant," +
+		" m.manifest_payload, mt.mt_media_type, m.manifest_digest")
+
+	var sortField string
+	if sortByField == "size" {
+		sortField = "m.manifest_total_size"
+	} else if sortByField == "updated_at" {
+		sortField = "m.manifest_created_at"
+	}
+	if sortField != "" {
+		q = q.OrderBy(sortField + " " + sortByOrder).Limit(uint64(limit)).Offset(uint64(offset)) //nolint:gosec
+	}
+
+	sql, args, err := q.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, t.db)
+
+	dst := []*ociVersionMetadataDB{}
+	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
+	}
+	return t.mapToOciVersions(dst)
+}
+
+func (t tagDao) GetOciTagsInfo(
+	ctx context.Context, registryID int64,
+	image string, limit int, offset int,
+	search string,
+) (*[]types.TagInfo, error) {
+	q := databaseg.Builder.Select(
+		`t.tag_name as name, m.manifest_digest`,
+	).
+		From("tags t").
+		Join("manifests m ON t.tag_manifest_id = m.manifest_id").
+		Where(
+			"m.manifest_registry_id = ? AND m.manifest_image_name = ?",
+			registryID, image,
+		)
+
+	if search != "" {
+		q = q.Where("t.tag_name LIKE ?", sqlPartialMatch(search))
+	}
+	q = q.Limit(uint64(limit)).Offset(uint64(offset)) //nolint:gosec
+
+	sql, args, err := q.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, t.db)
+
+	var dst []*tagInfoDB
+	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing get gats info query")
+	}
+	return t.mapToTagInfoList(dst)
+}
+
 func (t tagDao) CountAllTagsByRepoAndImage(
 	ctx context.Context, parentID int64,
 	repoKey string, image string, search string,
@@ -1082,6 +1542,108 @@ func (t tagDao) CountAllTagsByRepoAndImage(
 
 	if search != "" {
 		stmt = stmt.Where("tag_name LIKE ?", sqlPartialMatch(search))
+	}
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return -1, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, t.db)
+
+	var count int64
+	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
+	if err != nil {
+		return 0, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing count query")
+	}
+	return count, nil
+}
+
+// GetQuarantineInfoForArtifacts gets quarantine information for artifacts by name and version.
+// Joins with images and artifacts tables to match by name, version, and registry_id.
+func (t tagDao) GetQuarantineInfoForArtifacts(
+	ctx context.Context, artifacts []types.ArtifactIdentifier, parentID int64,
+) (map[types.ArtifactIdentifier]*types.QuarantineInfo, error) {
+	if len(artifacts) == 0 {
+		return make(map[types.ArtifactIdentifier]*types.QuarantineInfo), nil
+	}
+
+	// Build OR conditions for each artifact (name, version) pair
+	orConditions := sq.Or{}
+	for _, art := range artifacts {
+		orConditions = append(orConditions, sq.And{
+			sq.Eq{"i.image_name": art.Name},
+			sq.Eq{"ar.artifact_version": art.Version},
+		})
+	}
+
+	q := databaseg.Builder.Select(
+		"i.image_name, ar.artifact_version, r.registry_name, qp.quarantined_path_reason, qp.quarantined_path_created_at",
+	).From("quarantined_paths qp").
+		Join("artifacts ar ON qp.quarantined_path_artifact_id = ar.artifact_id").
+		Join("images i ON qp.quarantined_path_image_id = i.image_id").
+		Join("registries r ON qp.quarantined_path_registry_id = r.registry_id AND r.registry_parent_id = ?", parentID).
+		Where(orConditions).
+		OrderBy("i.image_name, ar.artifact_version, qp.quarantined_path_created_at DESC")
+
+	sql, args, err := q.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert quarantine query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, t.db)
+
+	type quarantineResult struct {
+		ImageName    string `db:"image_name"`
+		Version      string `db:"artifact_version"`
+		Reason       string `db:"quarantined_path_reason"`
+		RegistryName string `db:"registry_name"`
+		CreatedAt    int64  `db:"quarantined_path_created_at"`
+	}
+
+	var results []quarantineResult
+	if err = db.SelectContext(ctx, &results, sql, args...); err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to get quarantine info")
+	}
+
+	// Build map with latest quarantine info for each artifact
+	quarantineMap := make(map[types.ArtifactIdentifier]*types.QuarantineInfo)
+	for _, result := range results {
+		artifactKey := types.ArtifactIdentifier{
+			Name:         result.ImageName,
+			Version:      result.Version,
+			RegistryName: result.RegistryName,
+		}
+		// Since we ordered by created_at DESC, the first entry for each artifact is the latest
+		if _, exists := quarantineMap[artifactKey]; !exists {
+			quarantineMap[artifactKey] = &types.QuarantineInfo{
+				Reason:    result.Reason,
+				CreatedAt: result.CreatedAt,
+			}
+		}
+	}
+
+	return quarantineMap, nil
+}
+
+func (t tagDao) CountOciVersionByRepoAndImage(
+	ctx context.Context, parentID int64,
+	repoKey string, image string, search string,
+) (int64, error) {
+	stmt := databaseg.Builder.Select("COUNT(*)").
+		From("manifests").
+		Join("registries ON manifest_registry_id = registry_id").
+		Where(
+			"registry_parent_id = ? AND registry_name = ?"+
+				" AND manifest_image_name = ?", parentID, repoKey, image,
+		)
+
+	if search != "" {
+		digestBytes, err := types.GetDigestBytes(digest.Digest(search))
+		if err != nil {
+			return 0, fmt.Errorf("invalid digest: %s, error: %w", search, err)
+		}
+		stmt = stmt.Where("manifest_digest = ?", digestBytes)
 	}
 
 	sql, args, err := stmt.ToSql()
@@ -1122,6 +1684,29 @@ func (t tagDao) FindTag(
 
 	//TODO: validate for empty row
 	return t.mapToTag(ctx, dst)
+}
+
+func (t tagDao) GetTagsByManifestID(
+	ctx context.Context, manifestID int64,
+) (*[]string, error) {
+	stmt := databaseg.Builder.
+		Select("tag_name").
+		From("tags").
+		Where("tag_manifest_id = ?", manifestID)
+
+	db := dbtx.GetAccessor(ctx, t.db)
+
+	dst := make([]string, 0)
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to find manifest tags")
+	}
+
+	return &dst, nil
 }
 
 func (t tagDao) DeleteTagsByImageName(
@@ -1206,34 +1791,43 @@ func (t tagDao) mapToTagList(ctx context.Context, dst []*tagDB) ([]*types.Tag, e
 }
 
 func (t tagDao) mapToArtifactMetadataList(
-	ctx context.Context,
 	dst []*artifactMetadataDB,
 ) (*[]types.ArtifactMetadata, error) {
 	artifacts := make([]types.ArtifactMetadata, 0, len(dst))
 	for _, d := range dst {
-		artifact, err := t.mapToArtifactMetadata(ctx, d)
+		a, err := t.mapToArtifactMetadata(d)
 		if err != nil {
 			return nil, err
 		}
-		artifacts = append(artifacts, *artifact)
+		artifacts = append(artifacts, *a)
 	}
 	return &artifacts, nil
 }
 
 func (t tagDao) mapToArtifactMetadata(
-	_ context.Context,
 	dst *artifactMetadataDB,
 ) (*types.ArtifactMetadata, error) {
 	version := dst.Version
+	latestVersion := dst.LatestVersion
 	if dst.Tag != nil {
 		version = *dst.Tag
+	} else if dst.PackageType == artifact.PackageTypeDOCKER || dst.PackageType == artifact.PackageTypeHELM {
+		parsedDigest, err := types.Digest(strings.ToLower(dst.Version)).Parse()
+		if err == nil {
+			version = parsedDigest.String()
+		}
+		parsedLatestVersion, err := types.Digest(strings.ToLower(dst.LatestVersion)).Parse()
+		if err == nil {
+			latestVersion = parsedLatestVersion.String()
+		}
 	}
-	return &types.ArtifactMetadata{
+
+	artifactMetadata := &types.ArtifactMetadata{
 		Name:             dst.Name,
 		RepoName:         dst.RepoName,
 		DownloadCount:    dst.DownloadCount,
 		PackageType:      dst.PackageType,
-		LatestVersion:    dst.LatestVersion,
+		LatestVersion:    latestVersion,
 		Labels:           util.StringToArr(dst.Labels.String),
 		CreatedAt:        time.UnixMilli(dst.CreatedAt),
 		ModifiedAt:       time.UnixMilli(dst.ModifiedAt),
@@ -1241,29 +1835,71 @@ func (t tagDao) mapToArtifactMetadata(
 		IsQuarantined:    dst.IsQuarantined,
 		QuarantineReason: dst.QuarantineReason,
 		ArtifactType:     dst.ArtifactType,
-	}, nil
+	}
+
+	if dst.Tags != nil {
+		artifactMetadata.Tags = strings.Split(*dst.Tags, ",")
+	} else {
+		artifactMetadata.Tags = []string{}
+	}
+
+	return artifactMetadata, nil
 }
 
 func (t tagDao) mapToTagMetadataList(
 	ctx context.Context,
 	dst []*tagMetadataDB,
-) (*[]types.TagMetadata, error) {
-	tags := make([]types.TagMetadata, 0, len(dst))
+) (*[]types.OciVersionMetadata, error) {
+	ociVersion := make([]types.OciVersionMetadata, 0, len(dst))
 	for _, d := range dst {
 		tag, err := t.mapToTagMetadata(ctx, d)
 		if err != nil {
 			return nil, err
 		}
-		tags = append(tags, *tag)
+		ociVersion = append(ociVersion, *tag)
 	}
-	return &tags, nil
+	return &ociVersion, nil
+}
+
+func (t tagDao) mapToTagInfoList(
+	tagInfoDB []*tagInfoDB,
+) (*[]types.TagInfo, error) {
+	tagInfos := []types.TagInfo{}
+	for _, d := range tagInfoDB {
+		tagInfo := &types.TagInfo{
+			Name: d.Name,
+		}
+		if d.Digest != nil {
+			dgst, err := types.Digest(util.GetHexEncodedString(d.Digest)).Parse()
+			if err != nil {
+				return nil, fmt.Errorf("invalid digest: %s, error: %w", util.GetHexEncodedString(d.Digest), err)
+			}
+			tagInfo.Digest = string(dgst)
+		}
+		tagInfos = append(tagInfos, *tagInfo)
+	}
+	return &tagInfos, nil
+}
+
+func (t tagDao) mapToOciVersions(
+	dst []*ociVersionMetadataDB,
+) (*[]types.OciVersionMetadata, error) {
+	ociVersions := make([]types.OciVersionMetadata, 0, len(dst))
+	for _, d := range dst {
+		tag, err := t.mapToOciVersion(d)
+		if err != nil {
+			return nil, err
+		}
+		ociVersions = append(ociVersions, *tag)
+	}
+	return &ociVersions, nil
 }
 
 func (t tagDao) mapToTagMetadata(
 	_ context.Context,
 	dst *tagMetadataDB,
-) (*types.TagMetadata, error) {
-	tagMetadata := &types.TagMetadata{
+) (*types.OciVersionMetadata, error) {
+	tagMetadata := &types.OciVersionMetadata{
 		Name:          dst.Name,
 		Size:          dst.Size,
 		PackageType:   dst.PackageType,
@@ -1281,6 +1917,36 @@ func (t tagDao) mapToTagMetadata(
 	}
 
 	return tagMetadata, nil
+}
+
+func (t tagDao) mapToOciVersion(
+	dst *ociVersionMetadataDB,
+) (*types.OciVersionMetadata, error) {
+	ociVersion := &types.OciVersionMetadata{
+		Size:          dst.Size,
+		PackageType:   dst.PackageType,
+		DigestCount:   dst.DigestCount,
+		ModifiedAt:    time.UnixMilli(dst.ModifiedAt),
+		SchemaVersion: dst.SchemaVersion,
+		NonConformant: dst.NonConformant,
+		MediaType:     dst.MediaType,
+		Payload:       dst.Payload,
+	}
+	if dst.Tags != nil {
+		ociVersion.Tags = strings.Split(*dst.Tags, ",")
+	} else {
+		ociVersion.Tags = []string{}
+	}
+
+	dgst := types.Digest(util.GetHexEncodedString(dst.Digest))
+	ociVersion.Digest = string(dgst)
+	versionName, err := dgst.Parse()
+	if err != nil {
+		return nil, fmt.Errorf("invalid digest: %s, error: %w", util.GetHexEncodedString(dst.Digest), err)
+	}
+	ociVersion.Name = string(versionName)
+
+	return ociVersion, nil
 }
 
 func (t tagDao) mapToTagDetail(

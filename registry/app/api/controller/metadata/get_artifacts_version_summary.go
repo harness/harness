@@ -34,7 +34,7 @@ func (c *APIController) GetArtifactVersionSummary(
 	ctx context.Context,
 	r artifact.GetArtifactVersionSummaryRequestObject,
 ) (artifact.GetArtifactVersionSummaryResponseObject, error) {
-	image, version, pkgType, isQuarantine, quarantineReason, artifactType, err := c.FetchArtifactSummary(ctx, r)
+	image, version, pkgType, isQuarantined, quarantineReason, artifactType, err := c.FetchArtifactSummary(ctx, r)
 	if err != nil {
 		return artifact.GetArtifactVersionSummary500JSONResponse{
 			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
@@ -45,7 +45,7 @@ func (c *APIController) GetArtifactVersionSummary(
 
 	return artifact.GetArtifactVersionSummary200JSONResponse{
 		ArtifactVersionSummaryResponseJSONResponse: *GetArtifactVersionSummary(image,
-			pkgType, version, isQuarantine, quarantineReason, artifactType),
+			pkgType, version, isQuarantined, quarantineReason, artifactType),
 	}, nil
 }
 
@@ -115,13 +115,22 @@ func (c *APIController) FetchArtifactSummary(
 		}
 	}
 
+	//nolint:nestif
 	if registry.PackageType == artifact.PackageTypeDOCKER || registry.PackageType == artifact.PackageTypeHELM {
-		tag, err := c.TagStore.GetTagMetadata(ctx, regInfo.ParentID, regInfo.RegistryIdentifier, image, version)
-		if err != nil {
-			return "", "", "", false, "", nil, err
+		var ociVersion *types.OciVersionMetadata
+		if c.UntaggedImagesEnabled(ctx) {
+			ociVersion, err = c.TagStore.GetOCIVersionMetadata(ctx, regInfo.ParentID, regInfo.RegistryIdentifier, image, version)
+			if err != nil {
+				return "", "", "", false, "", nil, err
+			}
+		} else {
+			ociVersion, err = c.TagStore.GetTagMetadata(ctx, regInfo.ParentID, regInfo.RegistryIdentifier, image, version)
+			if err != nil {
+				return "", "", "", false, "", nil, err
+			}
 		}
 
-		return image, tag.Name, tag.PackageType, isQuarantined, quarantineReason, nil, nil
+		return image, ociVersion.Name, ociVersion.PackageType, isQuarantined, quarantineReason, nil, nil
 	}
 	art, err := c.ArtifactStore.GetArtifactMetadata(ctx, regInfo.ParentID, regInfo.RegistryIdentifier, image,
 		version, artifactType)

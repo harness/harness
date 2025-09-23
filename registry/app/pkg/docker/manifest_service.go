@@ -68,6 +68,7 @@ type manifestService struct {
 	reporter                event.Reporter
 	artifactEventReporter   registryevents.Reporter
 	urlProvider             urlprovider.Provider
+	untaggedImagesEnabled   func(ctx context.Context) bool
 }
 
 func NewManifestService(
@@ -77,7 +78,7 @@ func NewManifestService(
 	layerDao store.LayerRepository, manifestRefDao store.ManifestReferenceRepository,
 	tx dbtx.Transactor, gcService gc.Service, reporter event.Reporter, spaceFinder refcache.SpaceFinder,
 	ociImageIndexMappingDao store.OCIImageIndexMappingRepository, artifactEventReporter registryevents.Reporter,
-	urlProvider urlprovider.Provider,
+	urlProvider urlprovider.Provider, untaggedImagesEnabled func(ctx context.Context) bool,
 ) ManifestService {
 	return &manifestService{
 		registryDao:             registryDao,
@@ -96,6 +97,7 @@ func NewManifestService(
 		ociImageIndexMappingDao: ociImageIndexMappingDao,
 		artifactEventReporter:   artifactEventReporter,
 		urlProvider:             urlProvider,
+		untaggedImagesEnabled:   untaggedImagesEnabled,
 	}
 }
 
@@ -223,10 +225,12 @@ func (l *manifestService) dbTagManifest(
 	spacePath, packageType, err := l.getSpacePathAndPackageType(ctx, &dbRegistry)
 	if err == nil {
 		reg := info.Registry
-		l.reportEventAsync(
-			ctx, reg.ID, info.RegIdentifier, imageName, tagName, packageType,
-			spacePath, dbManifest.ID,
-		)
+		if !l.untaggedImagesEnabled(ctx) {
+			l.reportEventAsync(
+				ctx, reg.ID, info.RegIdentifier, imageName, tagName, packageType,
+				spacePath, dbManifest.ID,
+			)
+		}
 		session, _ := request.AuthSessionFrom(ctx)
 		createPayload := webhook.GetArtifactCreatedPayload(ctx, info, session.Principal.ID,
 			reg.ID, reg.Name, tagName, dgst.String(), l.urlProvider)
@@ -303,18 +307,24 @@ func (l *manifestService) reportEventAsync(
 	regID int64,
 	regName,
 	imageName,
-	tagName string,
+	version string,
 	packageType event.PackageType,
 	spacePath string,
 	manifestID int64,
 ) {
-	go l.reporter.ReportEvent(ctx, &event.ArtifactDetails{
+	artifactDetails := &event.ArtifactDetails{
 		RegistryID:   regID,
 		RegistryName: regName,
-		ImagePath:    imageName + ":" + tagName,
 		PackageType:  packageType,
 		ManifestID:   manifestID,
-	}, spacePath)
+	}
+	if l.untaggedImagesEnabled(ctx) {
+		artifactDetails.ImagePath = imageName + "@" + version
+	} else {
+		artifactDetails.ImagePath = imageName + ":" + version
+	}
+
+	go l.reporter.ReportEvent(ctx, artifactDetails, spacePath)
 }
 
 func (l *manifestService) DBPut(
@@ -330,6 +340,24 @@ func (l *manifestService) DBPut(
 	}
 
 	err = l.dbPutManifest(ctx, mfst, payload, d, headers, info)
+	if err == nil && l.untaggedImagesEnabled(ctx) {
+		dgst, err := types.NewDigest(d)
+		if err != nil {
+			return err
+		}
+		dbManifest, err := l.manifestDao.FindManifestByDigest(ctx, info.Registry.ID, info.Image, dgst)
+		if err != nil {
+			return err
+		}
+		spacePath, packageType, err := l.getSpacePathAndPackageType(ctx, &info.Registry)
+		if err != nil {
+			return err
+		}
+		l.reportEventAsync(
+			ctx, info.Registry.ID, info.RegIdentifier, info.Image, d.String(), packageType,
+			spacePath, dbManifest.ID,
+		)
+	}
 	var mtErr util.UnknownMediaTypeError
 	if errors.As(err, &mtErr) {
 		return errcode.ErrorCodeManifestInvalid.WithDetail(mtErr.Error())

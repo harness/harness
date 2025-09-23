@@ -138,6 +138,12 @@ const (
 	None        ScopeParam = "none"
 )
 
+// Defines values for VersionTypeParam.
+const (
+	DIGEST VersionTypeParam = "DIGEST"
+	TAG    VersionTypeParam = "TAG"
+)
+
 // Defines values for DeleteArtifactParamsArtifactType.
 const (
 	DeleteArtifactParamsArtifactTypeDataset DeleteArtifactParamsArtifactType = "dataset"
@@ -168,6 +174,18 @@ const (
 	GetArtifactDetailsParamsArtifactTypeModel   GetArtifactDetailsParamsArtifactType = "model"
 )
 
+// Defines values for GetDockerArtifactDetailsParamsVersionType.
+const (
+	GetDockerArtifactDetailsParamsVersionTypeDIGEST GetDockerArtifactDetailsParamsVersionType = "DIGEST"
+	GetDockerArtifactDetailsParamsVersionTypeTAG    GetDockerArtifactDetailsParamsVersionType = "TAG"
+)
+
+// Defines values for GetDockerArtifactManifestsParamsVersionType.
+const (
+	GetDockerArtifactManifestsParamsVersionTypeDIGEST GetDockerArtifactManifestsParamsVersionType = "DIGEST"
+	GetDockerArtifactManifestsParamsVersionTypeTAG    GetDockerArtifactManifestsParamsVersionType = "TAG"
+)
+
 // Defines values for GetArtifactFileParamsArtifactType.
 const (
 	GetArtifactFileParamsArtifactTypeDataset GetArtifactFileParamsArtifactType = "dataset"
@@ -178,6 +196,12 @@ const (
 const (
 	GetArtifactFilesParamsArtifactTypeDataset GetArtifactFilesParamsArtifactType = "dataset"
 	GetArtifactFilesParamsArtifactTypeModel   GetArtifactFilesParamsArtifactType = "model"
+)
+
+// Defines values for GetHelmArtifactDetailsParamsVersionType.
+const (
+	GetHelmArtifactDetailsParamsVersionTypeDIGEST GetHelmArtifactDetailsParamsVersionType = "DIGEST"
+	GetHelmArtifactDetailsParamsVersionTypeTAG    GetHelmArtifactDetailsParamsVersionType = "TAG"
 )
 
 // Defines values for GetArtifactVersionSummaryParamsArtifactType.
@@ -244,6 +268,9 @@ type ArtifactDetail struct {
 	union            json.RawMessage
 }
 
+// ArtifactEntityMetadata Artifact Entity Metadata
+type ArtifactEntityMetadata map[string]interface{}
+
 // ArtifactLabelRequest defines model for ArtifactLabelRequest.
 type ArtifactLabelRequest struct {
 	Labels []string `json:"labels"`
@@ -257,15 +284,18 @@ type ArtifactMetadata struct {
 	IsQuarantined  *bool         `json:"isQuarantined,omitempty"`
 	Labels         *[]string     `json:"labels,omitempty"`
 	LastModified   *string       `json:"lastModified,omitempty"`
-	Name           string        `json:"name"`
+
+	// Metadata Artifact Entity Metadata
+	Metadata *ArtifactEntityMetadata `json:"metadata,omitempty"`
+	Name     string                  `json:"name"`
 
 	// PackageType refers to package
-	PackageType        *PackageType `json:"packageType,omitempty"`
-	PullCommand        *string      `json:"pullCommand,omitempty"`
-	QuarantineReason   *string      `json:"quarantineReason,omitempty"`
-	RegistryIdentifier string       `json:"registryIdentifier"`
-	RegistryPath       string       `json:"registryPath"`
-	Version            *string      `json:"version,omitempty"`
+	PackageType        PackageType `json:"packageType"`
+	PullCommand        *string     `json:"pullCommand,omitempty"`
+	QuarantineReason   *string     `json:"quarantineReason,omitempty"`
+	RegistryIdentifier string      `json:"registryIdentifier"`
+	RegistryPath       string      `json:"registryPath"`
+	Version            *string     `json:"version,omitempty"`
 }
 
 // ArtifactStats Harness Artifact Stats
@@ -302,15 +332,18 @@ type ArtifactVersionMetadata struct {
 	FileCount      *int64        `json:"fileCount,omitempty"`
 	IsQuarantined  *bool         `json:"isQuarantined,omitempty"`
 	LastModified   *string       `json:"lastModified,omitempty"`
-	Name           string        `json:"name"`
+
+	// Metadata Artifact Entity Metadata
+	Metadata *ArtifactEntityMetadata `json:"metadata,omitempty"`
+	Name     string                  `json:"name"`
 
 	// PackageType refers to package
-	PackageType        *PackageType `json:"packageType,omitempty"`
-	PullCommand        *string      `json:"pullCommand,omitempty"`
-	QuarantineReason   *string      `json:"quarantineReason,omitempty"`
-	RegistryIdentifier string       `json:"registryIdentifier"`
-	RegistryPath       string       `json:"registryPath"`
-	Size               *string      `json:"size,omitempty"`
+	PackageType        PackageType `json:"packageType"`
+	PullCommand        *string     `json:"pullCommand,omitempty"`
+	QuarantineReason   *string     `json:"quarantineReason,omitempty"`
+	RegistryIdentifier string      `json:"registryIdentifier"`
+	RegistryPath       string      `json:"registryPath"`
+	Size               *string     `json:"size,omitempty"`
 }
 
 // ArtifactVersionSummary Docker Artifact Version Summary
@@ -388,16 +421,20 @@ type DockerArtifactDetail struct {
 	DownloadsCount *int64  `json:"downloadsCount,omitempty"`
 	ImageName      string  `json:"imageName"`
 	IsQuarantined  *bool   `json:"isQuarantined,omitempty"`
-	ModifiedAt     *string `json:"modifiedAt,omitempty"`
+
+	// Metadata Artifact Entity Metadata
+	Metadata   *ArtifactEntityMetadata `json:"metadata,omitempty"`
+	ModifiedAt *string                 `json:"modifiedAt,omitempty"`
 
 	// PackageType refers to package
-	PackageType      PackageType `json:"packageType"`
-	PullCommand      *string     `json:"pullCommand,omitempty"`
-	QuarantineReason *string     `json:"quarantineReason,omitempty"`
-	RegistryPath     string      `json:"registryPath"`
-	Size             *string     `json:"size,omitempty"`
-	Url              string      `json:"url"`
-	Version          string      `json:"version"`
+	PackageType         PackageType `json:"packageType"`
+	PullCommand         *string     `json:"pullCommand,omitempty"`
+	PullCommandByDigest *string     `json:"pullCommandByDigest,omitempty"`
+	QuarantineReason    *string     `json:"quarantineReason,omitempty"`
+	RegistryPath        string      `json:"registryPath"`
+	Size                *string     `json:"size,omitempty"`
+	Url                 string      `json:"url"`
+	Version             string      `json:"version"`
 }
 
 // DockerArtifactDetailConfig Config for docker artifact details
@@ -483,15 +520,19 @@ type HelmArtifactDetail struct {
 	Artifact       *string `json:"artifact,omitempty"`
 	CreatedAt      *string `json:"createdAt,omitempty"`
 	DownloadsCount *int64  `json:"downloadsCount,omitempty"`
-	ModifiedAt     *string `json:"modifiedAt,omitempty"`
+
+	// Metadata Artifact Entity Metadata
+	Metadata   *ArtifactEntityMetadata `json:"metadata,omitempty"`
+	ModifiedAt *string                 `json:"modifiedAt,omitempty"`
 
 	// PackageType refers to package
-	PackageType  PackageType `json:"packageType"`
-	PullCommand  *string     `json:"pullCommand,omitempty"`
-	RegistryPath string      `json:"registryPath"`
-	Size         *string     `json:"size,omitempty"`
-	Url          string      `json:"url"`
-	Version      string      `json:"version"`
+	PackageType         PackageType `json:"packageType"`
+	PullCommand         *string     `json:"pullCommand,omitempty"`
+	PullCommandByDigest *string     `json:"pullCommandByDigest,omitempty"`
+	RegistryPath        string      `json:"registryPath"`
+	Size                *string     `json:"size,omitempty"`
+	Url                 string      `json:"url"`
+	Version             string      `json:"version"`
 }
 
 // HelmArtifactDetailConfig Config for helm artifact details
@@ -586,6 +627,24 @@ type ListMigrationImage struct {
 
 	// PageSize The number of items per page
 	PageSize int `json:"pageSize"`
+}
+
+// ListOciArtifactTags A list of Artifact versions
+type ListOciArtifactTags struct {
+	// ItemCount The total number of items
+	ItemCount *int64 `json:"itemCount,omitempty"`
+
+	// OciArtifactTags A list of OCI Artifact tags
+	OciArtifactTags []OciArtifactTag `json:"ociArtifactTags"`
+
+	// PageCount The total number of pages
+	PageCount *int64 `json:"pageCount,omitempty"`
+
+	// PageIndex The current page
+	PageIndex *int64 `json:"pageIndex,omitempty"`
+
+	// PageSize The number of items per page
+	PageSize *int `json:"pageSize,omitempty"`
 }
 
 // ListRegistry A list of Harness Artifact Registries
@@ -707,6 +766,12 @@ type NugetArtifactDetailConfig struct {
 	Metadata *map[string]interface{} `json:"metadata,omitempty"`
 }
 
+// OciArtifactTag OCI Artifact Tag info
+type OciArtifactTag struct {
+	Digest string `json:"digest"`
+	Name   string `json:"name"`
+}
+
 // PackageType refers to package
 type PackageType string
 
@@ -746,9 +811,9 @@ type RegistryArtifactMetadata struct {
 	Name           string        `json:"name"`
 
 	// PackageType refers to package
-	PackageType        *PackageType `json:"packageType,omitempty"`
-	RegistryIdentifier string       `json:"registryIdentifier"`
-	RegistryPath       string       `json:"registryPath"`
+	PackageType        PackageType `json:"packageType"`
+	RegistryIdentifier string      `json:"registryIdentifier"`
+	RegistryPath       string      `json:"registryPath"`
 }
 
 // RegistryConfig SubConfig specific for Virtual or Upstream Registry
@@ -1072,6 +1137,9 @@ type VersionParam string
 // VersionPathParam defines model for versionPathParam.
 type VersionPathParam string
 
+// VersionTypeParam defines model for versionTypeParam.
+type VersionTypeParam string
+
 // WebhookExecutionIdPathParam defines model for webhookExecutionIdPathParam.
 type WebhookExecutionIdPathParam string
 
@@ -1258,6 +1326,15 @@ type ListMigrationImageResponse struct {
 	Status Status `json:"status"`
 }
 
+// ListOciArtifactTagsResponse defines model for ListOciArtifactTagsResponse.
+type ListOciArtifactTagsResponse struct {
+	// Data A list of Artifact versions
+	Data ListOciArtifactTags `json:"data"`
+
+	// Status Indicates if the request was successful or not
+	Status Status `json:"status"`
+}
+
 // ListRegistryArtifactResponse defines model for ListRegistryArtifactResponse.
 type ListRegistryArtifactResponse struct {
 	// Data A list of Artifacts
@@ -1425,6 +1502,18 @@ type GetArtifactSummaryParams struct {
 // GetArtifactSummaryParamsArtifactType defines parameters for GetArtifactSummary.
 type GetArtifactSummaryParamsArtifactType string
 
+// GetOciArtifactTagsParams defines parameters for GetOciArtifactTags.
+type GetOciArtifactTagsParams struct {
+	// Page Current page number
+	Page *PageNumber `form:"page,omitempty" json:"page,omitempty"`
+
+	// Size Number of items per page
+	Size *PageSize `form:"size,omitempty" json:"size,omitempty"`
+
+	// SearchTerm search Term.
+	SearchTerm *SearchTerm `form:"search_term,omitempty" json:"search_term,omitempty"`
+}
+
 // DeleteArtifactVersionParams defines parameters for DeleteArtifactVersion.
 type DeleteArtifactVersionParams struct {
 	// ArtifactType artifact type.
@@ -1450,7 +1539,13 @@ type GetArtifactDetailsParamsArtifactType string
 type GetDockerArtifactDetailsParams struct {
 	// Digest Digest.
 	Digest DigestParam `form:"digest" json:"digest"`
+
+	// VersionType Version Type.
+	VersionType *GetDockerArtifactDetailsParamsVersionType `form:"version_type,omitempty" json:"version_type,omitempty"`
 }
+
+// GetDockerArtifactDetailsParamsVersionType defines parameters for GetDockerArtifactDetails.
+type GetDockerArtifactDetailsParamsVersionType string
 
 // GetDockerArtifactLayersParams defines parameters for GetDockerArtifactLayers.
 type GetDockerArtifactLayersParams struct {
@@ -1463,6 +1558,15 @@ type GetDockerArtifactManifestParams struct {
 	// Digest Digest.
 	Digest DigestParam `form:"digest" json:"digest"`
 }
+
+// GetDockerArtifactManifestsParams defines parameters for GetDockerArtifactManifests.
+type GetDockerArtifactManifestsParams struct {
+	// VersionType Version Type.
+	VersionType *GetDockerArtifactManifestsParamsVersionType `form:"version_type,omitempty" json:"version_type,omitempty"`
+}
+
+// GetDockerArtifactManifestsParamsVersionType defines parameters for GetDockerArtifactManifests.
+type GetDockerArtifactManifestsParamsVersionType string
 
 // GetArtifactFileParams defines parameters for GetArtifactFile.
 type GetArtifactFileParams struct {
@@ -1496,6 +1600,15 @@ type GetArtifactFilesParams struct {
 
 // GetArtifactFilesParamsArtifactType defines parameters for GetArtifactFiles.
 type GetArtifactFilesParamsArtifactType string
+
+// GetHelmArtifactDetailsParams defines parameters for GetHelmArtifactDetails.
+type GetHelmArtifactDetailsParams struct {
+	// VersionType Version Type.
+	VersionType *GetHelmArtifactDetailsParamsVersionType `form:"version_type,omitempty" json:"version_type,omitempty"`
+}
+
+// GetHelmArtifactDetailsParamsVersionType defines parameters for GetHelmArtifactDetails.
+type GetHelmArtifactDetailsParamsVersionType string
 
 // GetArtifactVersionSummaryParams defines parameters for GetArtifactVersionSummary.
 type GetArtifactVersionSummaryParams struct {

@@ -22,8 +22,11 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/registry/types"
 	store2 "github.com/harness/gitness/store"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/opencontainers/go-digest"
 )
 
 func (c *APIController) GetHelmArtifactManifest(
@@ -59,17 +62,35 @@ func (c *APIController) GetHelmArtifactManifest(
 			),
 		}, nil
 	}
-
 	imageName := string(r.Artifact)
 	version := string(r.Version)
 
-	manifestPayload, err := c.ManifestStore.FindManifestPayloadByTagName(
-		ctx,
-		regInfo.ParentID,
-		regInfo.RegistryIdentifier,
-		imageName,
-		version,
-	)
+	var manifestPayload *types.Payload
+	if c.UntaggedImagesEnabled(ctx) {
+		manifestDigest, err2 := types.NewDigest(digest.Digest(version))
+		if err2 != nil {
+			return artifact.GetHelmArtifactManifest400JSONResponse{
+				BadRequestJSONResponse: artifact.BadRequestJSONResponse(
+					*GetErrorResponse(http.StatusBadRequest, err2.Error()),
+				),
+			}, nil
+		}
+		manifestPayload, err = c.ManifestStore.GetManifestPayload(
+			ctx,
+			regInfo.ParentID,
+			regInfo.RegistryIdentifier,
+			imageName,
+			manifestDigest,
+		)
+	} else {
+		manifestPayload, err = c.ManifestStore.FindManifestPayloadByTagName(
+			ctx,
+			regInfo.ParentID,
+			regInfo.RegistryIdentifier,
+			imageName,
+			version,
+		)
+	}
 
 	if err != nil {
 		if errors.Is(err, store2.ErrResourceNotFound) {

@@ -98,8 +98,10 @@ func (c *APIController) GetArtifactSummary(
 	}, nil
 }
 
-func (c *APIController) getImageMetadata(ctx context.Context, registry *types.Registry, image string,
-	artifactType *artifact.ArtifactType) (*types.ImageMetadata, error) {
+func (c *APIController) getImageMetadata(
+	ctx context.Context, registry *types.Registry, image string,
+	artifactType *artifact.ArtifactType,
+) (*types.ImageMetadata, error) {
 	img, err := c.ImageStore.GetByNameAndType(ctx, registry.ID, image, artifactType)
 	if err != nil {
 		return nil, err
@@ -116,14 +118,23 @@ func (c *APIController) getImageMetadata(ctx context.Context, registry *types.Re
 		CreatedAt:     img.CreatedAt,
 		ArtifactType:  img.ArtifactType,
 	}
-
+	//nolint:nestif
 	if registry.PackageType == artifact.PackageTypeDOCKER || registry.PackageType == artifact.PackageTypeHELM {
-		latestTag, err := c.TagStore.GetLatestTag(ctx, registry.ID, image)
-		if err != nil {
-			return nil, err
+		if c.UntaggedImagesEnabled(ctx) {
+			latestManifest, err := c.ManifestStore.GetLatestManifest(ctx, registry.ID, image)
+			if err != nil {
+				return nil, err
+			}
+			imgMetadata.LatestVersion = latestManifest.Digest.String()
+			imgMetadata.ModifiedAt = latestManifest.CreatedAt
+		} else {
+			latestTag, err := c.TagStore.GetLatestTag(ctx, registry.ID, image)
+			if err != nil {
+				return nil, err
+			}
+			imgMetadata.LatestVersion = latestTag.Name
+			imgMetadata.ModifiedAt = latestTag.UpdatedAt
 		}
-		imgMetadata.LatestVersion = latestTag.Name
-		imgMetadata.ModifiedAt = latestTag.UpdatedAt
 	} else {
 		latestArtifact, err := c.ArtifactStore.GetLatestByImageID(ctx, img.ID)
 		if err != nil {

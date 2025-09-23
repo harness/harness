@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/url"
@@ -40,6 +41,7 @@ func GetArtifactMetadata(
 	rootIdentifier string,
 	urlProvider url.Provider,
 	setupDetailsAuthHeaderPrefix string,
+	untaggedImagesEnabled bool,
 ) []artifactapi.ArtifactMetadata {
 	artifactMetadataList := make([]artifactapi.ArtifactMetadata, 0, len(artifacts))
 	for _, artifact := range artifacts {
@@ -47,7 +49,12 @@ func GetArtifactMetadata(
 		if artifact.PackageType == artifactapi.PackageTypeGENERIC {
 			registryURL = urlProvider.RegistryURL(ctx, rootIdentifier, "generic", artifact.RepoName)
 		}
-		artifactMetadata := mapToArtifactMetadata(artifact, registryURL, setupDetailsAuthHeaderPrefix)
+		artifactMetadata := mapToArtifactMetadata(artifact, registryURL, setupDetailsAuthHeaderPrefix, untaggedImagesEnabled)
+		if len(artifact.Tags) > 0 {
+			artifactMetadata.Metadata = &artifactapi.ArtifactEntityMetadata{
+				"tags": artifact.Tags,
+			}
+		}
 		artifactMetadataList = append(artifactMetadataList, *artifactMetadata)
 	}
 	return artifactMetadataList
@@ -87,18 +94,19 @@ func mapToArtifactMetadata(
 	artifact types.ArtifactMetadata,
 	registryURL string,
 	setupDetailsAuthHeaderPrefix string,
+	untaggedImagesEnabled bool,
 ) *artifactapi.ArtifactMetadata {
 	lastModified := GetTimeInMs(artifact.ModifiedAt)
 	packageType := artifact.PackageType
-	pullCommand := GetPullCommand(artifact.Name, artifact.Version, string(packageType), registryURL,
-		setupDetailsAuthHeaderPrefix, artifact.ArtifactType)
+	pullCommand := GetPullCommand(artifact.Name, artifact.Version,
+		string(packageType), registryURL, setupDetailsAuthHeaderPrefix, artifact.ArtifactType, !untaggedImagesEnabled)
 	return &artifactapi.ArtifactMetadata{
 		RegistryIdentifier: artifact.RepoName,
 		Name:               artifact.Name,
 		Version:            &artifact.Version,
 		Labels:             &artifact.Labels,
 		LastModified:       &lastModified,
-		PackageType:        &packageType,
+		PackageType:        packageType,
 		DownloadsCount:     &artifact.DownloadCount,
 		PullCommand:        &pullCommand,
 		IsQuarantined:      &artifact.IsQuarantined,
@@ -116,7 +124,7 @@ func mapToRegistryArtifactMetadata(artifact types.ArtifactMetadata) *artifactapi
 		LatestVersion:      artifact.LatestVersion,
 		Labels:             &artifact.Labels,
 		LastModified:       &lastModified,
-		PackageType:        &packageType,
+		PackageType:        packageType,
 		DownloadsCount:     &artifact.DownloadCount,
 		IsQuarantined:      &artifact.IsQuarantined,
 		ArtifactType:       artifact.ArtifactType,
@@ -154,18 +162,19 @@ func toPackageType(packageTypeStr string) (artifactapi.PackageType, error) {
 
 func GetTagMetadata(
 	ctx context.Context,
-	tags *[]types.TagMetadata,
+	ociVersions *[]types.OciVersionMetadata,
 	image string,
 	registryURL string,
 	setupDetailsAuthHeaderPrefix string,
+	untaggedImagesEnabled bool,
 ) []artifactapi.ArtifactVersionMetadata {
 	artifactVersionMetadataList := []artifactapi.ArtifactVersionMetadata{}
-	for _, tag := range *tags {
+	for _, tag := range *ociVersions {
 		modifiedAt := GetTimeInMs(tag.ModifiedAt)
 		size := GetImageSize(tag.Size)
 		digestCount := tag.DigestCount
-		command := GetPullCommand(image, tag.Name, string(tag.PackageType), registryURL, setupDetailsAuthHeaderPrefix,
-			nil)
+		command := GetPullCommand(image, tag.Name, string(tag.PackageType), registryURL,
+			setupDetailsAuthHeaderPrefix, nil, !untaggedImagesEnabled)
 		packageType, err := toPackageType(string(tag.PackageType))
 		downloadCount := tag.DownloadCount
 		if err != nil {
@@ -173,14 +182,20 @@ func GetTagMetadata(
 			continue
 		}
 		artifactVersionMetadata := &artifactapi.ArtifactVersionMetadata{
-			PackageType:    &packageType,
+			PackageType:    packageType,
 			Name:           tag.Name,
 			Size:           &size,
 			LastModified:   &modifiedAt,
 			DigestCount:    &digestCount,
 			PullCommand:    &command,
 			DownloadsCount: &downloadCount,
+			Metadata: &artifactapi.ArtifactEntityMetadata{
+				"tags": tag.Tags,
+			},
+			IsQuarantined:    &tag.IsQuarantined,
+			QuarantineReason: &tag.QuarantineReason,
 		}
+
 		artifactVersionMetadataList = append(artifactVersionMetadataList, *artifactVersionMetadata)
 	}
 	return artifactVersionMetadataList
@@ -195,13 +210,14 @@ func GetAllArtifactResponse(
 	rootIdentifier string,
 	urlProvider url.Provider,
 	setupDetailsAuthHeaderPrefix string,
+	untaggedImagesEnabled bool,
 ) *artifactapi.ListArtifactResponseJSONResponse {
 	var artifactMetadataList []artifactapi.ArtifactMetadata
 	if artifacts == nil {
 		artifactMetadataList = make([]artifactapi.ArtifactMetadata, 0)
 	} else {
 		artifactMetadataList = GetArtifactMetadata(ctx, *artifacts, rootIdentifier, urlProvider,
-			setupDetailsAuthHeaderPrefix)
+			setupDetailsAuthHeaderPrefix, untaggedImagesEnabled)
 	}
 	pageCount := GetPageCount(count, pageSize)
 	listArtifact := &artifactapi.ListArtifact{
@@ -218,10 +234,12 @@ func GetAllArtifactResponse(
 	return response
 }
 
-func GetAllArtifactFilesResponse(files *[]types.FileNodeMetadata, count int64, pageNumber int64, pageSize int,
+func GetAllArtifactFilesResponse(
+	files *[]types.FileNodeMetadata, count int64, pageNumber int64, pageSize int,
 	registryURL string, artifactName string, version string,
 	packageType artifactapi.PackageType, setupDetailsAuthHeaderPrefix string,
-	artifactType *artifactapi.ArtifactType) *artifactapi.FileDetailResponseJSONResponse {
+	artifactType *artifactapi.ArtifactType,
+) *artifactapi.FileDetailResponseJSONResponse {
 	var fileMetadataList []artifactapi.FileDetail
 	if files == nil || len(*files) == 0 {
 		fileMetadataList = make([]artifactapi.FileDetail, 0)
@@ -252,9 +270,11 @@ func GetArtifactFileResponseJSONResponse(
 		DownloadUrl: getDownloadURL(registryURL, packageType, artifactName, version, fileName),
 	}
 }
-func GetArtifactFilesMetadata(metadata *[]types.FileNodeMetadata, registryURL string, artifactName string,
+func GetArtifactFilesMetadata(
+	metadata *[]types.FileNodeMetadata, registryURL string, artifactName string,
 	version string, packageType artifactapi.PackageType, setupDetailsAuthHeaderPrefix string,
-	artifactType *artifactapi.ArtifactType) []artifactapi.FileDetail {
+	artifactType *artifactapi.ArtifactType,
+) []artifactapi.FileDetail {
 	var files []artifactapi.FileDetail
 	for _, file := range *metadata {
 		filePathPrefix := "/" + artifactName + "/" + version + "/"
@@ -388,16 +408,17 @@ func GetAllArtifactLabelsResponse(
 
 func GetAllArtifactVersionResponse(
 	ctx context.Context,
-	tags *[]types.TagMetadata,
+	ociVersions *[]types.OciVersionMetadata,
 	image string,
 	count int64,
 	pageNumber int64,
 	pageSize int,
 	registryURL string,
 	setupDetailsAuthHeaderPrefix string,
+	untaggedImagesEnabled bool,
 ) *artifactapi.ListArtifactVersionResponseJSONResponse {
 	artifactVersionMetadataList := GetTagMetadata(
-		ctx, tags, image, registryURL, setupDetailsAuthHeaderPrefix,
+		ctx, ociVersions, image, registryURL, setupDetailsAuthHeaderPrefix, untaggedImagesEnabled,
 	)
 	pageCount := GetPageCount(count, pageSize)
 	listArtifactVersions := &artifactapi.ListArtifactVersion{
@@ -455,7 +476,7 @@ func GetNonOCIArtifactMetadata(
 		modifiedAt := GetTimeInMs(tag.ModifiedAt)
 		size := GetImageSize(tag.Size)
 		command := GetPullCommand(image, tag.Name, pkgType, registryURL, setupDetailsAuthHeaderPrefix,
-			tag.ArtifactType)
+			tag.ArtifactType, true)
 		packageType, err := toPackageType(pkgType)
 		downloadCount := tag.DownloadCount
 		if err != nil {
@@ -464,7 +485,7 @@ func GetNonOCIArtifactMetadata(
 		}
 		fileCount := tag.FileCount
 		artifactVersionMetadata := &artifactapi.ArtifactVersionMetadata{
-			PackageType:      &packageType,
+			PackageType:      packageType,
 			FileCount:        &fileCount,
 			Name:             tag.Name,
 			Size:             &size,
@@ -482,28 +503,30 @@ func GetNonOCIArtifactMetadata(
 
 func GetDockerArtifactDetails(
 	registry *types.Registry,
-	tag *types.TagDetail,
-	manifest *types.Manifest,
+	imageName string,
+	version string,
+	created time.Time,
+	modified time.Time,
+	digest string,
+	size int64,
 	registryURL string,
 	downloadCount int64,
 	isQuarantined bool,
 	quarantineReason *string,
 ) *artifactapi.DockerArtifactDetailResponseJSONResponse {
-	repoPath := getRepoPath(registry.Name, tag.ImageName, manifest.Digest.String())
-	pullCommand := GetDockerPullCommand(tag.ImageName, tag.Name, registryURL)
-	createdAt := GetTimeInMs(tag.CreatedAt)
-	modifiedAt := GetTimeInMs(tag.UpdatedAt)
-	size := GetSize(manifest.TotalSize)
+	repoPath := getRepoPath(registry.Name, imageName, digest)
+	createdAt := GetTimeInMs(created)
+	modifiedAt := GetTimeInMs(modified)
+	s := GetSize(size)
 	artifactDetail := &artifactapi.DockerArtifactDetail{
-		ImageName:        tag.ImageName,
-		Version:          tag.Name,
+		ImageName:        imageName,
+		Version:          version,
 		PackageType:      registry.PackageType,
 		CreatedAt:        &createdAt,
 		ModifiedAt:       &modifiedAt,
 		RegistryPath:     repoPath,
-		PullCommand:      &pullCommand,
-		Url:              GetTagURL(tag.ImageName, tag.Name, registryURL),
-		Size:             &size,
+		Url:              GetTagURL(imageName, version, registryURL),
+		Size:             &s,
 		DownloadsCount:   &downloadCount,
 		IsQuarantined:    &isQuarantined,
 		QuarantineReason: quarantineReason,
@@ -518,27 +541,26 @@ func GetDockerArtifactDetails(
 
 func GetHelmArtifactDetails(
 	registry *types.Registry,
-	tag *types.TagDetail,
+	imageName string,
+	version string,
+	created time.Time,
+	updated time.Time,
 	manifest *types.Manifest,
 	registryURL string,
-	downloadCount int64,
 ) *artifactapi.HelmArtifactDetailResponseJSONResponse {
-	repoPath := getRepoPath(registry.Name, tag.ImageName, manifest.Digest.String())
-	pullCommand := GetHelmPullCommand(tag.ImageName, tag.Name, registryURL)
-	createdAt := GetTimeInMs(tag.CreatedAt)
-	modifiedAt := GetTimeInMs(tag.UpdatedAt)
+	repoPath := getRepoPath(registry.Name, imageName, manifest.Digest.String())
+	createdAt := GetTimeInMs(created)
+	modifiedAt := GetTimeInMs(updated)
 	size := GetSize(manifest.TotalSize)
 	artifactDetail := &artifactapi.HelmArtifactDetail{
-		Artifact:       &tag.ImageName,
-		Version:        tag.Name,
-		PackageType:    registry.PackageType,
-		CreatedAt:      &createdAt,
-		ModifiedAt:     &modifiedAt,
-		RegistryPath:   repoPath,
-		PullCommand:    &pullCommand,
-		Url:            GetTagURL(tag.ImageName, tag.Name, registryURL),
-		Size:           &size,
-		DownloadsCount: &downloadCount,
+		Artifact:     &imageName,
+		Version:      version,
+		PackageType:  registry.PackageType,
+		CreatedAt:    &createdAt,
+		ModifiedAt:   &modifiedAt,
+		RegistryPath: repoPath,
+		Url:          GetTagURL(imageName, version, registryURL),
+		Size:         &size,
 	}
 
 	response := &artifactapi.HelmArtifactDetailResponseJSONResponse{

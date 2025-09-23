@@ -414,31 +414,31 @@ func GetTagURL(artifact string, version string, registryURL string) string {
 }
 
 func GetPullCommand(
-	image string, tag string, packageType string, registryURL string,
-	setupDetailsAuthHeaderPrefix string, artifactType *a.ArtifactType,
+	image string, version string,
+	packageType string, registryURL string, setupDetailsAuthHeaderPrefix string, artifactType *a.ArtifactType,
+	byTag bool,
 ) string {
 	switch packageType {
 	case string(a.PackageTypeDOCKER):
-		return GetDockerPullCommand(image, tag, registryURL)
+		return GetDockerPullCommand(image, version, registryURL, byTag)
 	case string(a.PackageTypeHELM):
-		return GetHelmPullCommand(image, tag, registryURL)
+		return GetHelmPullCommand(image, version, registryURL, byTag)
 	case string(a.PackageTypeGENERIC):
-		return GetGenericArtifactFileDownloadCommand(registryURL, image, tag, "<FILENAME>",
-			setupDetailsAuthHeaderPrefix)
+		return GetGenericArtifactFileDownloadCommand(registryURL, image, version, "<FILENAME>", setupDetailsAuthHeaderPrefix)
 	case string(a.PackageTypePYTHON):
-		return GetPythonDownloadCommand(image, tag)
+		return GetPythonDownloadCommand(image, version)
 	case string(a.PackageTypeNPM):
-		return GetNPMDownloadCommand(image, tag)
+		return GetNPMDownloadCommand(image, version)
 	case string(a.PackageTypeRPM):
-		return GetRPMDownloadCommand(image, tag)
+		return GetRPMDownloadCommand(image, version)
 	case string(a.PackageTypeNUGET):
-		return GetNugetDownloadCommand(image, tag)
+		return GetNugetDownloadCommand(image, version)
 	case string(a.PackageTypeCARGO):
-		return GetCargoDownloadCommand(image, tag)
+		return GetCargoDownloadCommand(image, version)
 	case string(a.PackageTypeGO):
-		return GetGoDownloadCommand(image, tag)
+		return GetGoDownloadCommand(image, version)
 	case string(a.PackageTypeHUGGINGFACE):
-		return GetHuggingFaceArtifactFileDownloadCommand(registryURL, image, tag, "<FILENAME>",
+		return GetHuggingFaceArtifactFileDownloadCommand(registryURL, image, version, "<FILENAME>",
 			setupDetailsAuthHeaderPrefix, artifactType)
 	default:
 		return ""
@@ -446,14 +446,25 @@ func GetPullCommand(
 }
 
 func GetDockerPullCommand(
-	image string,
-	tag string, registryURL string,
+	image string, version string, registryURL string, byTag bool,
 ) string {
-	return "docker pull " + GetRepoURLWithoutProtocol(registryURL) + "/" + image + ":" + tag
+	var versionDelimiter string
+	if byTag {
+		versionDelimiter = ":"
+	} else {
+		versionDelimiter = "@"
+	}
+	return "docker pull " + GetRepoURLWithoutProtocol(registryURL) + "/" + image + versionDelimiter + version
 }
 
-func GetHelmPullCommand(image string, tag string, registryURL string) string {
-	return "helm pull oci://" + GetRepoURLWithoutProtocol(registryURL) + "/" + image + " --version " + tag
+func GetHelmPullCommand(image string, version string, registryURL string, byTag bool) string {
+	var versionDelimiter string
+	if byTag {
+		versionDelimiter = " --version "
+	} else {
+		versionDelimiter = "@"
+	}
+	return "helm pull oci://" + GetRepoURLWithoutProtocol(registryURL) + "/" + image + versionDelimiter + version
 }
 
 func GetRPMDownloadCommand(artifact, version string) string {
