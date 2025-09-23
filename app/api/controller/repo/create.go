@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -55,6 +56,7 @@ type CreateInput struct {
 	Description   string `json:"description"`
 	IsPublic      bool   `json:"is_public"`
 	ForkID        int64  `json:"fork_id"`
+	Topics        []string
 	CreateFileOptions
 }
 
@@ -126,6 +128,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		}
 
 		now := time.Now().UnixMilli()
+		topics, _ := json.Marshal(in.Topics) // should never fail as we sanitize the input type
 		repo = &types.Repository{
 			Version:       0,
 			ParentID:      parentSpace.ID,
@@ -139,6 +142,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 			ForkID:        in.ForkID,
 			DefaultBranch: in.DefaultBranch,
 			IsEmpty:       isEmpty,
+			Topics:        topics,
 		}
 
 		return c.repoStore.Create(ctx, repo)
@@ -238,6 +242,13 @@ func (c *Controller) sanitizeCreateInput(in *CreateInput, session *auth.Session)
 		in.DefaultBranch = c.defaultBranch
 	}
 
+	if len(in.Topics) > 0 {
+		err := sanitizeTopics(&in.Topics)
+		if err != nil {
+			return fmt.Errorf("failed to sanitize topics: %w", err)
+		}
+	}
+
 	return nil
 }
 
@@ -329,4 +340,26 @@ func identityFromPrincipal(p types.Principal) *git.Identity {
 		Name:  p.DisplayName,
 		Email: p.Email,
 	}
+}
+
+func sanitizeTopics(topics *[]string) error {
+	if topics == nil || len(*topics) == 0 {
+		return nil
+	}
+
+	topicSet := make(map[string]struct{}, len(*topics))
+	var sanitizedTopics []string
+	for _, t := range *topics {
+		err := types.SanitizeTagText(&t, "topic")
+		if err != nil {
+			return err
+		}
+		if _, exists := topicSet[t]; !exists {
+			topicSet[t] = struct{}{}
+			sanitizedTopics = append(sanitizedTopics, t)
+		}
+	}
+	*topics = sanitizedTopics
+
+	return nil
 }

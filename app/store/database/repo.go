@@ -16,6 +16,7 @@ package database
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -88,6 +89,9 @@ type repository struct {
 
 	State   enum.RepoState `db:"repo_state"`
 	IsEmpty bool           `db:"repo_is_empty"`
+
+	// default sqlite '[]' requires []byte, fails with json.RawMessage
+	Topics []byte `db:"repo_topics"`
 }
 
 const (
@@ -115,7 +119,8 @@ const (
 		,repo_num_open_pulls
 		,repo_num_merged_pulls
 		,repo_state
-		,repo_is_empty`
+		,repo_is_empty
+		,repo_topics`
 )
 
 // Find finds the repo by id.
@@ -235,6 +240,7 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 			,repo_num_merged_pulls
 			,repo_state
 			,repo_is_empty
+			,repo_topics
 		) values (
 			:repo_version
 			,:repo_parent_id
@@ -259,6 +265,7 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 			,:repo_num_merged_pulls
 			,:repo_state
 			,:repo_is_empty
+			,:repo_topics
 		) RETURNING repo_id`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -303,15 +310,15 @@ func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 			,repo_num_merged_pulls = :repo_num_merged_pulls
 			,repo_state = :repo_state
 			,repo_is_empty = :repo_is_empty
+			,repo_topics = :repo_topics
 		WHERE repo_id = :repo_id AND repo_version = :repo_version - 1`
 
-	dbRepo := mapToInternalRepo(repo)
+	db := dbtx.GetAccessor(ctx, s.db)
 
+	dbRepo := mapToInternalRepo(repo)
 	// update Version (used for optimistic locking) and Updated time
 	dbRepo.Version++
 	dbRepo.Updated = time.Now().UnixMilli()
-
-	db := dbtx.GetAccessor(ctx, s.db)
 
 	query, arg, err := db.BindNamed(sqlQuery, dbRepo)
 	if err != nil {
@@ -565,7 +572,7 @@ func (s *RepoStore) count(
 		stmt = stmt.Where("repo_parent_id = ?", parentID)
 	}
 
-	stmt = applyQueryFilter(stmt, filter)
+	stmt = applyQueryFilter(stmt, filter, s.db.DriverName())
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -602,7 +609,7 @@ func (s *RepoStore) countAll(
 		From("repositories").
 		Where(squirrel.Eq{"repo_parent_id": spaceIDs})
 
-	stmt = applyQueryFilter(stmt, filter)
+	stmt = applyQueryFilter(stmt, filter, s.db.DriverName())
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -692,7 +699,7 @@ func (s *RepoStore) list(
 		From("repositories").
 		Where("repo_parent_id = ?", fmt.Sprint(parentID))
 
-	stmt = applyQueryFilter(stmt, filter)
+	stmt = applyQueryFilter(stmt, filter, s.db.DriverName())
 	stmt = applySortFilter(stmt, filter)
 
 	sql, args, err := stmt.ToSql()
@@ -730,7 +737,7 @@ func (s *RepoStore) listRecursive(
 		From("repositories").
 		Where(squirrel.Eq{"repo_parent_id": spaceIDs})
 
-	stmt = applyQueryFilter(stmt, filter)
+	stmt = applyQueryFilter(stmt, filter, s.db.DriverName())
 	stmt = applySortFilter(stmt, filter)
 
 	sql, args, err := stmt.ToSql()
@@ -788,7 +795,7 @@ func (s *RepoStore) ListAll(
 		Select(repoColumnsForJoin).
 		From("repositories")
 
-	stmt = applyQueryFilter(stmt, filter)
+	stmt = applyQueryFilter(stmt, filter, s.db.DriverName())
 	stmt = applySortFilter(stmt, filter)
 
 	sql, args, err := stmt.ToSql()
@@ -811,6 +818,7 @@ func (s *RepoStore) mapToRepo(
 	in *repository,
 ) (*types.Repository, error) {
 	var err error
+
 	res := &types.Repository{
 		ID:             in.ID,
 		Version:        in.Version,
@@ -836,6 +844,7 @@ func (s *RepoStore) mapToRepo(
 		NumMergedPulls: in.NumMergedPulls,
 		State:          in.State,
 		IsEmpty:        in.IsEmpty,
+		Topics:         in.Topics,
 		// Path: is set below
 	}
 
@@ -924,10 +933,15 @@ func mapToInternalRepo(in *types.Repository) *repository {
 		NumMergedPulls: in.NumMergedPulls,
 		State:          in.State,
 		IsEmpty:        in.IsEmpty,
+		Topics:         in.Topics,
 	}
 }
 
-func applyQueryFilter(stmt squirrel.SelectBuilder, filter *types.RepoFilter) squirrel.SelectBuilder {
+func applyQueryFilter(
+	stmt squirrel.SelectBuilder,
+	filter *types.RepoFilter,
+	driverName string,
+) squirrel.SelectBuilder {
 	if filter.Query != "" {
 		stmt = stmt.Where(PartialMatch("repo_uid", filter.Query))
 	}
@@ -946,7 +960,34 @@ func applyQueryFilter(stmt squirrel.SelectBuilder, filter *types.RepoFilter) squ
 			Where("favorite_repos.favorite_principal_id = ?", *filter.OnlyFavoritesFor)
 	}
 
-	return stmt
+	return applyTopicsFilter(stmt, filter, driverName)
+}
+
+func applyTopicsFilter(
+	stmt squirrel.SelectBuilder,
+	filter *types.RepoFilter,
+	driverName string,
+) squirrel.SelectBuilder {
+	if len(filter.Topics) == 0 {
+		return stmt
+	}
+
+	if driverName == PostgresDriverName {
+		data, _ := json.Marshal(filter.Topics)
+		stmt = stmt.Where("repo_topics @> ?", string(data))
+
+		return stmt
+	}
+
+	inExpr := squirrel.Eq{"value": filter.Topics}
+	sqlFragment, args, _ := inExpr.ToSql()
+	condition := fmt.Sprintf(`(
+            SELECT COUNT(DISTINCT value)
+            FROM json_each(repo_topics)
+            WHERE %s
+        ) = %d`, sqlFragment, len(filter.Topics))
+
+	return stmt.Where(condition, args...)
 }
 
 func applySortFilter(stmt squirrel.SelectBuilder, filter *types.RepoFilter) squirrel.SelectBuilder {

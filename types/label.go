@@ -16,15 +16,9 @@ package types
 
 import (
 	"strings"
-	"unicode"
-	"unicode/utf8"
 
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/types/enum"
-)
-
-const (
-	maxLabelLength = 50
 )
 
 type Label struct {
@@ -139,7 +133,7 @@ type DefineLabelInput struct {
 }
 
 func (in *DefineLabelInput) Sanitize() error {
-	if err := sanitizeLabelText(&in.Key, "key"); err != nil {
+	if err := SanitizeTagText(&in.Key, "key"); err != nil {
 		return err
 	}
 
@@ -164,7 +158,7 @@ type UpdateLabelInput struct {
 }
 
 func (in *UpdateLabelInput) Sanitize() error {
-	if err := sanitizeLabelText(in.Key, "key"); err != nil {
+	if err := SanitizeTagText(in.Key, "key"); err != nil {
 		return err
 	}
 
@@ -187,7 +181,7 @@ type DefineValueInput struct {
 }
 
 func (in *DefineValueInput) Sanitize() error {
-	if err := sanitizeLabelText(&in.Value, "value"); err != nil {
+	if err := SanitizeTagText(&in.Value, "value"); err != nil {
 		return err
 	}
 
@@ -205,7 +199,7 @@ type UpdateValueInput struct {
 
 func (in *UpdateValueInput) Sanitize() error {
 	if in.Value != nil {
-		if err := sanitizeLabelText(in.Value, "value"); err != nil {
+		if err := SanitizeTagText(in.Value, "value"); err != nil {
 			return err
 		}
 	}
@@ -256,30 +250,6 @@ func (in *SaveInput) Sanitize() error {
 	for _, value := range in.Values {
 		if err := value.Sanitize(); err != nil {
 			return err
-		}
-	}
-
-	return nil
-}
-
-func sanitizeLabelText(text *string, typ string) error {
-	if text == nil {
-		return nil
-	}
-
-	*text = strings.TrimSpace(*text)
-
-	if len(*text) == 0 {
-		return errors.InvalidArgument("%s must be a non-empty string", typ)
-	}
-
-	if utf8.RuneCountInString(*text) > maxLabelLength {
-		return errors.InvalidArgument("%s can have at most %d characters", typ, maxLabelLength)
-	}
-
-	for _, ch := range *text {
-		if unicode.IsControl(ch) {
-			return errors.InvalidArgument("%s cannot contain control characters", typ)
 		}
 	}
 

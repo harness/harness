@@ -16,6 +16,7 @@ package database_test
 
 import (
 	"context"
+	"encoding/json"
 	"strconv"
 	"testing"
 
@@ -188,7 +189,12 @@ func createRepo(
 	t.Helper()
 
 	identifier := "repo_" + strconv.FormatInt(id, 10)
-	repo := types.Repository{Identifier: identifier, ID: id, ParentID: spaceID, GitUID: identifier, Size: size}
+	repo := types.Repository{
+		Identifier: identifier, ID: id, GitUID: identifier,
+		ParentID: spaceID,
+		Size:     size,
+		Topics:   json.RawMessage{},
+	}
 	if err := repoStore.Create(ctx, &repo); err != nil {
 		t.Fatalf("failed to create repo %v", err)
 	}

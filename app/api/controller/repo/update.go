@@ -16,6 +16,7 @@ package repo
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -37,6 +38,7 @@ import (
 type UpdateInput struct {
 	Description *string         `json:"description"`
 	State       *enum.RepoState `json:"state"`
+	Topics      *[]string       `json:"topics"`
 }
 
 var allowedRepoStateTransitions = map[enum.RepoState][]enum.RepoState{
@@ -44,17 +46,6 @@ var allowedRepoStateTransitions = map[enum.RepoState][]enum.RepoState{
 	enum.RepoStateArchived:          {enum.RepoStateActive},
 	enum.RepoStateMigrateDataImport: {enum.RepoStateActive},
 	enum.RepoStateMigrateGitPush:    {enum.RepoStateActive, enum.RepoStateMigrateDataImport},
-}
-
-func (in *UpdateInput) hasChanges(repo *types.Repository) bool {
-	if in.Description != nil && *in.Description != repo.Description {
-		return true
-	}
-	if in.State != nil && *in.State != repo.State {
-		return true
-	}
-
-	return false
 }
 
 // Update updates a repository.
@@ -89,12 +80,12 @@ func (c *Controller) Update(ctx context.Context,
 		return nil, fmt.Errorf("failed to find repository by ID: %w", err)
 	}
 
-	if !in.hasChanges(repo) {
-		return GetRepoOutput(ctx, c.publicAccess, repo)
-	}
-
 	if err = c.sanitizeUpdateInput(in); err != nil {
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
+	}
+
+	if !in.hasChanges(repo) {
+		return GetRepoOutput(ctx, c.publicAccess, repo)
 	}
 
 	if err = c.repoCheck.LifecycleRestriction(ctx, session, repoCore); err != nil {
@@ -118,6 +109,10 @@ func (c *Controller) Update(ctx context.Context,
 		}
 		if in.State != nil {
 			repo.State = *in.State
+		}
+		if in.Topics != nil {
+			topics, _ := json.Marshal(in.Topics)
+			repo.Topics = topics
 		}
 
 		return nil
@@ -155,12 +150,55 @@ func (c *Controller) Update(ctx context.Context,
 	return GetRepoOutput(ctx, c.publicAccess, repo)
 }
 
+func (in *UpdateInput) hasChanges(repo *types.Repository) bool {
+	if in.Description != nil && *in.Description != repo.Description {
+		return true
+	}
+	if in.State != nil && *in.State != repo.State {
+		return true
+	}
+	if hasTopicChanges(in, repo) {
+		return true
+	}
+
+	return false
+}
+
+func hasTopicChanges(in *UpdateInput, repo *types.Repository) bool {
+	if in.Topics == nil {
+		return false
+	}
+
+	var repoTopics []string
+	_ = json.Unmarshal(repo.Topics, &repoTopics)
+	if len(*in.Topics) != len(repoTopics) {
+		return true
+	}
+
+	topicSet := make(map[string]struct{}, len(repoTopics))
+	for _, t := range repoTopics {
+		topicSet[t] = struct{}{}
+	}
+	for _, t := range *in.Topics {
+		if _, ok := topicSet[t]; !ok {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (c *Controller) sanitizeUpdateInput(in *UpdateInput) error {
 	if in.Description != nil {
 		*in.Description = strings.TrimSpace(*in.Description)
 		if err := check.Description(*in.Description); err != nil {
 			return err
 		}
+	}
+
+	err := sanitizeTopics(in.Topics)
+	if err != nil {
+		return fmt.Errorf("failed to sanitize topics: %w", err)
 	}
 
 	return nil

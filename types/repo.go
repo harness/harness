@@ -15,6 +15,8 @@
 package types
 
 import (
+	"encoding/json"
+
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -70,6 +72,8 @@ type Repository struct {
 	// git urls
 	GitURL    string `json:"git_url" yaml:"-"`
 	GitSSHURL string `json:"git_ssh_url,omitempty" yaml:"-"`
+
+	Topics json.RawMessage `json:"topics,omitempty" yaml:"topics"`
 }
 
 func (r *Repository) Core() *RepositoryCore {
@@ -120,6 +124,7 @@ type RepoFilter struct {
 	Order             enum.Order    `json:"order"`
 	DeletedAt         *int64        `json:"deleted_at,omitempty"`
 	DeletedBeforeOrAt *int64        `json:"deleted_before_or_at,omitempty"`
+	Topics            []string      `json:"topic,omitempty"`
 	Recursive         bool
 	OnlyFavoritesFor  *int64
 }
