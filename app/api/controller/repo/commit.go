@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/api/controller"
+	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/bootstrap"
 	"github.com/harness/gitness/app/paths"
@@ -67,8 +68,21 @@ type CommitFilesOptions struct {
 func (in *CommitFilesOptions) Sanitize() error {
 	in.Title = strings.TrimSpace(in.Title)
 	in.Message = strings.TrimSpace(in.Message)
+	in.Branch = strings.TrimSpace(in.Branch)
+	in.NewBranch = strings.TrimSpace(in.NewBranch)
 
-	// TODO: Validate title and message length.
+	if in.Author != nil {
+		in.Author.Name = strings.TrimSpace(in.Author.Name)
+		in.Author.Email = strings.TrimSpace(in.Author.Email)
+	}
+
+	if len(in.Title) > 1024 { // TODO: Check if the title length limit is acceptable.
+		return usererror.BadRequest("Commit title is too long.")
+	}
+
+	if len(in.Message) > 65536 { // TODO: Check if the message length limit is acceptable.
+		return usererror.BadRequest("Commit message is too long.")
+	}
 
 	return nil
 }
