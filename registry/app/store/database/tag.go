@@ -561,18 +561,12 @@ func (t tagDao) getCoreArtifactsQuery(
 		r.registry_package_type as package_type,
 		ar.artifact_version as version, 
 		ar.artifact_updated_at as modified_at, 
-		i.image_type as artifact_type,
-		(qp.quarantined_path_id IS NOT NULL) AS is_quarantined,
-		qp.quarantined_path_reason as quarantine_reason`,
+		i.image_type as artifact_type`,
 	).
 		From("artifacts ar").
 		Join("images i ON i.image_id = ar.artifact_image_id").
 		Join("registries r ON i.image_registry_id = r.registry_id").
-		Where("r.registry_parent_id = ?", parentID).
-		LeftJoin("quarantined_paths qp ON ( " +
-			"( qp.quarantined_path_artifact_id = ar.artifact_id OR qp.quarantined_path_artifact_id IS NULL) " +
-			"AND qp.quarantined_path_image_id = i.image_id) " +
-			" AND qp.quarantined_path_registry_id = r.registry_id ")
+		Where("r.registry_parent_id = ?", parentID)
 
 	// Apply filters
 	if len(*registryIDs) > 0 {
