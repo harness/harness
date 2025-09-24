@@ -150,7 +150,7 @@ func createRepositoriesForSpaces(
 			ParentID:   space.ID,
 			GitUID:     fmt.Sprintf("repo-%d", i),
 			Identifier: fmt.Sprintf("repo-%d", i),
-			Topics:     json.RawMessage{},
+			Tags:       json.RawMessage{},
 		}
 		err := repoStore.Create(ctx, repo) // Assuming CreateRepository is defined
 		require.NoError(t, err)
@@ -166,7 +166,7 @@ func createRepositoriesForSpaces(
 		ParentID:   spaces[0].ID,
 		GitUID:     "repo-deleted",
 		Identifier: "repo-deleted",
-		Topics:     json.RawMessage{},
+		Tags:       json.RawMessage{},
 	}
 	err = repoStore.Create(ctx, repo) // Assuming CreateRepository is defined
 	require.NoError(t, err)

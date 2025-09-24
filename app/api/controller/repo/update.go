@@ -38,7 +38,7 @@ import (
 type UpdateInput struct {
 	Description *string         `json:"description"`
 	State       *enum.RepoState `json:"state"`
-	Topics      *[]string       `json:"topics"`
+	Tags        *[]string       `json:"tags"`
 }
 
 var allowedRepoStateTransitions = map[enum.RepoState][]enum.RepoState{
@@ -110,9 +110,9 @@ func (c *Controller) Update(ctx context.Context,
 		if in.State != nil {
 			repo.State = *in.State
 		}
-		if in.Topics != nil {
-			topics, _ := json.Marshal(in.Topics)
-			repo.Topics = topics
+		if in.Tags != nil {
+			tags, _ := json.Marshal(in.Tags)
+			repo.Tags = tags
 		}
 
 		return nil
@@ -157,30 +157,30 @@ func (in *UpdateInput) hasChanges(repo *types.Repository) bool {
 	if in.State != nil && *in.State != repo.State {
 		return true
 	}
-	if hasTopicChanges(in, repo) {
+	if hasTagChanges(in, repo) {
 		return true
 	}
 
 	return false
 }
 
-func hasTopicChanges(in *UpdateInput, repo *types.Repository) bool {
-	if in.Topics == nil {
+func hasTagChanges(in *UpdateInput, repo *types.Repository) bool {
+	if in.Tags == nil {
 		return false
 	}
 
-	var repoTopics []string
-	_ = json.Unmarshal(repo.Topics, &repoTopics)
-	if len(*in.Topics) != len(repoTopics) {
+	var repoTags []string
+	_ = json.Unmarshal(repo.Tags, &repoTags)
+	if len(*in.Tags) != len(repoTags) {
 		return true
 	}
 
-	topicSet := make(map[string]struct{}, len(repoTopics))
-	for _, t := range repoTopics {
-		topicSet[t] = struct{}{}
+	tagSet := make(map[string]struct{}, len(repoTags))
+	for _, t := range repoTags {
+		tagSet[t] = struct{}{}
 	}
-	for _, t := range *in.Topics {
-		if _, ok := topicSet[t]; !ok {
+	for _, t := range *in.Tags {
+		if _, ok := tagSet[t]; !ok {
 			return true
 		}
 	}
@@ -196,9 +196,9 @@ func (c *Controller) sanitizeUpdateInput(in *UpdateInput) error {
 		}
 	}
 
-	err := sanitizeTopics(in.Topics)
+	err := sanitizeTags(in.Tags)
 	if err != nil {
-		return fmt.Errorf("failed to sanitize topics: %w", err)
+		return fmt.Errorf("failed to sanitize tags: %w", err)
 	}
 
 	return nil

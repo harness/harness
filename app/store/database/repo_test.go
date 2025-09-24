@@ -193,7 +193,7 @@ func createRepo(
 		Identifier: identifier, ID: id, GitUID: identifier,
 		ParentID: spaceID,
 		Size:     size,
-		Topics:   json.RawMessage{},
+		Tags:     json.RawMessage{},
 	}
 	if err := repoStore.Create(ctx, &repo); err != nil {
 		t.Fatalf("failed to create repo %v", err)

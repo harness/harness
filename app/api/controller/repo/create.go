@@ -50,13 +50,13 @@ var (
 type CreateInput struct {
 	ParentRef string `json:"parent_ref"`
 	// TODO [CODE-1363]: remove after identifier migration.
-	UID           string `json:"uid" deprecated:"true"`
-	Identifier    string `json:"identifier"`
-	DefaultBranch string `json:"default_branch"`
-	Description   string `json:"description"`
-	IsPublic      bool   `json:"is_public"`
-	ForkID        int64  `json:"fork_id"`
-	Topics        []string
+	UID           string   `json:"uid" deprecated:"true"`
+	Identifier    string   `json:"identifier"`
+	DefaultBranch string   `json:"default_branch"`
+	Description   string   `json:"description"`
+	IsPublic      bool     `json:"is_public"`
+	ForkID        int64    `json:"fork_id"`
+	Tags          []string `json:"tags"`
 	CreateFileOptions
 }
 
@@ -128,7 +128,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		}
 
 		now := time.Now().UnixMilli()
-		topics, _ := json.Marshal(in.Topics) // should never fail as we sanitize the input type
+		tags, _ := json.Marshal(in.Tags) // should never fail as we sanitize the input type
 		repo = &types.Repository{
 			Version:       0,
 			ParentID:      parentSpace.ID,
@@ -142,7 +142,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 			ForkID:        in.ForkID,
 			DefaultBranch: in.DefaultBranch,
 			IsEmpty:       isEmpty,
-			Topics:        topics,
+			Tags:          tags,
 		}
 
 		return c.repoStore.Create(ctx, repo)
@@ -242,10 +242,10 @@ func (c *Controller) sanitizeCreateInput(in *CreateInput, session *auth.Session)
 		in.DefaultBranch = c.defaultBranch
 	}
 
-	if len(in.Topics) > 0 {
-		err := sanitizeTopics(&in.Topics)
+	if len(in.Tags) > 0 {
+		err := sanitizeTags(&in.Tags)
 		if err != nil {
-			return fmt.Errorf("failed to sanitize topics: %w", err)
+			return fmt.Errorf("failed to sanitize tags: %w", err)
 		}
 	}
 
@@ -342,24 +342,24 @@ func identityFromPrincipal(p types.Principal) *git.Identity {
 	}
 }
 
-func sanitizeTopics(topics *[]string) error {
-	if topics == nil || len(*topics) == 0 {
+func sanitizeTags(tags *[]string) error {
+	if tags == nil || len(*tags) == 0 {
 		return nil
 	}
 
-	topicSet := make(map[string]struct{}, len(*topics))
-	var sanitizedTopics []string
-	for _, t := range *topics {
-		err := types.SanitizeTagText(&t, "topic")
+	tagSet := make(map[string]struct{}, len(*tags))
+	var sanitizedTags []string
+	for _, t := range *tags {
+		err := types.SanitizeTagText(&t, "tag")
 		if err != nil {
 			return err
 		}
-		if _, exists := topicSet[t]; !exists {
-			topicSet[t] = struct{}{}
-			sanitizedTopics = append(sanitizedTopics, t)
+		if _, exists := tagSet[t]; !exists {
+			tagSet[t] = struct{}{}
+			sanitizedTags = append(sanitizedTags, t)
 		}
 	}
-	*topics = sanitizedTopics
+	*tags = sanitizedTags
 
 	return nil
 }

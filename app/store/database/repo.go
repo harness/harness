@@ -91,7 +91,7 @@ type repository struct {
 	IsEmpty bool           `db:"repo_is_empty"`
 
 	// default sqlite '[]' requires []byte, fails with json.RawMessage
-	Topics []byte `db:"repo_topics"`
+	Tags []byte `db:"repo_tags"`
 }
 
 const (
@@ -120,7 +120,7 @@ const (
 		,repo_num_merged_pulls
 		,repo_state
 		,repo_is_empty
-		,repo_topics`
+		,repo_tags`
 )
 
 // Find finds the repo by id.
@@ -240,7 +240,7 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 			,repo_num_merged_pulls
 			,repo_state
 			,repo_is_empty
-			,repo_topics
+			,repo_tags
 		) values (
 			:repo_version
 			,:repo_parent_id
@@ -265,7 +265,7 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 			,:repo_num_merged_pulls
 			,:repo_state
 			,:repo_is_empty
-			,:repo_topics
+			,:repo_tags
 		) RETURNING repo_id`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -310,7 +310,7 @@ func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 			,repo_num_merged_pulls = :repo_num_merged_pulls
 			,repo_state = :repo_state
 			,repo_is_empty = :repo_is_empty
-			,repo_topics = :repo_topics
+			,repo_tags = :repo_tags
 		WHERE repo_id = :repo_id AND repo_version = :repo_version - 1`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -844,7 +844,7 @@ func (s *RepoStore) mapToRepo(
 		NumMergedPulls: in.NumMergedPulls,
 		State:          in.State,
 		IsEmpty:        in.IsEmpty,
-		Topics:         in.Topics,
+		Tags:           in.Tags,
 		// Path: is set below
 	}
 
@@ -933,7 +933,7 @@ func mapToInternalRepo(in *types.Repository) *repository {
 		NumMergedPulls: in.NumMergedPulls,
 		State:          in.State,
 		IsEmpty:        in.IsEmpty,
-		Topics:         in.Topics,
+		Tags:           in.Tags,
 	}
 }
 
@@ -960,32 +960,32 @@ func applyQueryFilter(
 			Where("favorite_repos.favorite_principal_id = ?", *filter.OnlyFavoritesFor)
 	}
 
-	return applyTopicsFilter(stmt, filter, driverName)
+	return applyTagsFilter(stmt, filter, driverName)
 }
 
-func applyTopicsFilter(
+func applyTagsFilter(
 	stmt squirrel.SelectBuilder,
 	filter *types.RepoFilter,
 	driverName string,
 ) squirrel.SelectBuilder {
-	if len(filter.Topics) == 0 {
+	if len(filter.Tags) == 0 {
 		return stmt
 	}
 
 	if driverName == PostgresDriverName {
-		data, _ := json.Marshal(filter.Topics)
-		stmt = stmt.Where("repo_topics @> ?", string(data))
+		data, _ := json.Marshal(filter.Tags)
+		stmt = stmt.Where("repo_tags @> ?", string(data))
 
 		return stmt
 	}
 
-	inExpr := squirrel.Eq{"value": filter.Topics}
+	inExpr := squirrel.Eq{"value": filter.Tags}
 	sqlFragment, args, _ := inExpr.ToSql()
 	condition := fmt.Sprintf(`(
             SELECT COUNT(DISTINCT value)
-            FROM json_each(repo_topics)
+            FROM json_each(repo_tags)
             WHERE %s
-        ) = %d`, sqlFragment, len(filter.Topics))
+        ) = %d`, sqlFragment, len(filter.Tags))
 
 	return stmt.Where(condition, args...)
 }

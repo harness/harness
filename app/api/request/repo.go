@@ -25,7 +25,7 @@ import (
 const (
 	PathParamRepoRef        = "repo_ref"
 	QueryParamOnlyFavorites = "only_favorites"
-	QueryParamTopic         = "topic"
+	QueryParamTag           = "tag"
 )
 
 func GetRepoRefFromPath(r *http.Request) (string, error) {
@@ -44,9 +44,9 @@ func ParseOnlyFavoritesFromQuery(r *http.Request) (bool, error) {
 	return QueryParamAsBoolOrDefault(r, QueryParamOnlyFavorites, false)
 }
 
-func ParseTopicsFromQuery(r *http.Request) []string {
-	if topics, ok := QueryParamList(r, QueryParamTopic); ok {
-		return topics
+func ParseTagFromQuery(r *http.Request) []string {
+	if tags, ok := QueryParamList(r, QueryParamTag); ok {
+		return tags
 	}
 
 	return []string{}
@@ -104,6 +104,6 @@ func ParseRepoFilter(r *http.Request, session *auth.Session) (*types.RepoFilter,
 		DeletedAt:         deletedAt,
 		DeletedBeforeOrAt: deletedBeforeOrAt,
 		OnlyFavoritesFor:  onlyFavoritesFor,
-		Topics:            ParseTopicsFromQuery(r),
+		Tags:              ParseTagFromQuery(r),
 	}, nil
 }
