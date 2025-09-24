@@ -317,12 +317,14 @@ func (l *manifestService) reportEventAsync(
 		RegistryName: regName,
 		PackageType:  packageType,
 		ManifestID:   manifestID,
+		ImagePath:    imageName + ":" + version,
 	}
-	if l.untaggedImagesEnabled(ctx) {
-		artifactDetails.ImagePath = imageName + "@" + version
-	} else {
-		artifactDetails.ImagePath = imageName + ":" + version
-	}
+	//Todo: update this to include digest instead of tag after STO step fix
+	// if l.untaggedImagesEnabled(ctx) {
+	//	artifactDetails.ImagePath = imageName + "@" + version
+	// } else {
+	//	artifactDetails.ImagePath = imageName + ":" + version
+	// }
 
 	go l.reporter.ReportEvent(ctx, artifactDetails, spacePath)
 }
@@ -354,7 +356,7 @@ func (l *manifestService) DBPut(
 			return err
 		}
 		l.reportEventAsync(
-			ctx, info.Registry.ID, info.RegIdentifier, info.Image, d.String(), packageType,
+			ctx, info.Registry.ID, info.RegIdentifier, info.Image, info.Tag, packageType,
 			spacePath, dbManifest.ID,
 		)
 	}
