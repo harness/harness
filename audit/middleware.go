@@ -32,7 +32,7 @@ func Middleware() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
-			if rip := realIP(r); rip != "" {
+			if rip := RealIP(r); rip != "" {
 				ctx = context.WithValue(ctx, realIPKey, rip)
 			}
 
@@ -46,7 +46,8 @@ func Middleware() func(next http.Handler) http.Handler {
 	}
 }
 
-func realIP(r *http.Request) string {
+// RealIP extracts the real client IP from the HTTP request.
+func RealIP(r *http.Request) string {
 	var ip string
 
 	if tcip := r.Header.Get(trueClientIP); tcip != "" {
