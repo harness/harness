@@ -66,6 +66,8 @@ interface EditGitspaceProps {
   }
   gitspaceSettings: TypesGitspaceSettingsResponse | null
   onGitspaceUpdated?: () => void
+  isFromUsageDashboard?: boolean
+  gitspacePath?: string
 }
 
 export const EditGitspace: React.FC<EditGitspaceProps> = ({
@@ -74,13 +76,23 @@ export const EditGitspace: React.FC<EditGitspaceProps> = ({
   gitspaceId,
   gitspaceData,
   gitspaceSettings,
-  onGitspaceUpdated
+  onGitspaceUpdated,
+  isFromUsageDashboard = false,
+  gitspacePath
 }) => {
   const { getString } = useStrings()
   const { routes } = useAppContext()
   const history = useHistory()
   const space = useGetSpaceParam()
-  const { accountIdentifier = '', orgIdentifier = '', projectIdentifier = '' } = useGetCDEAPIParams()
+  const {
+    accountIdentifier = '',
+    orgIdentifier = '',
+    projectIdentifier = ''
+  } = useGetCDEAPIParams({
+    gitspacePath,
+    fromUsageDashboard: isFromUsageDashboard
+  })
+
   const { showSuccess, showError } = useToaster()
   const [isLoading, setIsLoading] = useState(false)
   const ideOptions = getIDETypeOptions(getString) ?? []
@@ -95,9 +107,9 @@ export const EditGitspace: React.FC<EditGitspaceProps> = ({
   })
 
   const { mutate: updateGitspace } = useUpdateGitspace({
-    accountIdentifier,
-    orgIdentifier,
-    projectIdentifier,
+    accountIdentifier: accountIdentifier,
+    orgIdentifier: orgIdentifier,
+    projectIdentifier: projectIdentifier,
     gitspace_identifier: gitspaceId
   })
   const isResourceInDenyList = (resource: any): boolean => {
@@ -229,11 +241,14 @@ export const EditGitspace: React.FC<EditGitspaceProps> = ({
       if (onGitspaceUpdated) {
         onGitspaceUpdated()
       }
+
       const newGitspaceId = updatedGitspace?.identifier || gitspaceId
+
+      const spacePath = isFromUsageDashboard && gitspacePath ? gitspacePath : space
 
       history.push(
         `${routes.toCDEGitspaceDetail({
-          space,
+          space: spacePath,
           gitspaceId: newGitspaceId
         })}`
       )
@@ -267,7 +282,15 @@ export const EditGitspace: React.FC<EditGitspaceProps> = ({
                   filteredIdeOptions={filteredIdeOptions}
                   isEditMode={true}
                 />
-                {selectedIDE?.allowSSH ? <CDESSHSelect isEditMode={true} /> : <></>}
+                {selectedIDE?.allowSSH ? (
+                  <CDESSHSelect
+                    isEditMode={true}
+                    isFromUsageDashboard={isFromUsageDashboard}
+                    gitspacePath={gitspacePath}
+                  />
+                ) : (
+                  <></>
+                )}
 
                 <SelectEditMachine
                   options={machineTypes}

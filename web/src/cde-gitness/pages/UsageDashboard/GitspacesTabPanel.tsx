@@ -257,7 +257,7 @@ const GitspacesTabPanel: React.FC = () => {
                     totalPages: pagination?.totalPages || 0
                   }}
                   gitspaceSettings={gitspaceSettings}
-                  isFromDashboard={true}
+                  isFromUsageDashboard={true}
                 />
               </>
             )}

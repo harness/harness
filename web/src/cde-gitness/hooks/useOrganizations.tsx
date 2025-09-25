@@ -50,6 +50,7 @@ interface OrganizationsApiResponse {
 interface UseOrganizationsOptions {
   searchTerm?: string
   pageSize?: number
+  sortOrder?: string
 }
 
 export const useOrganizations = (options?: UseOrganizationsOptions) => {
@@ -59,6 +60,7 @@ export const useOrganizations = (options?: UseOrganizationsOptions) => {
   const [pageIndex, setPageIndex] = useState<number>(0)
   const [hasMore, setHasMore] = useState<boolean>(true)
   const [searchTerm, setSearchTerm] = useState<string | undefined>(options?.searchTerm)
+  const [sortOrder, setSortOrder] = useState<string | undefined>(options?.sortOrder)
 
   const PAGE_SIZE = options?.pageSize || 200
 
@@ -71,7 +73,7 @@ export const useOrganizations = (options?: UseOrganizationsOptions) => {
       pageIndex,
       pageSize: PAGE_SIZE,
       searchTerm,
-      sortOrders: 'lastModifiedAt,DESC'
+      sortOrders: sortOrder || 'lastModifiedAt,DESC'
     },
     lazy: !accountId
   })
@@ -109,13 +111,19 @@ export const useOrganizations = (options?: UseOrganizationsOptions) => {
     setPageIndex(0)
     setHasMore(true)
     setOrganizations([])
-  }, [searchTerm])
+  }, [searchTerm, sortOrder])
 
   useEffect(() => {
     if (options?.searchTerm !== undefined && options.searchTerm !== searchTerm) {
       setSearchTerm(options.searchTerm)
     }
-  }, [options?.searchTerm])
+  }, [options?.searchTerm, searchTerm])
+
+  useEffect(() => {
+    if (options?.sortOrder !== undefined && options.sortOrder !== sortOrder) {
+      setSortOrder(options.sortOrder)
+    }
+  }, [options?.sortOrder, sortOrder])
 
   const loadMore = useCallback(() => {
     if (!loading && hasMore) {
@@ -140,6 +148,7 @@ export const useOrganizations = (options?: UseOrganizationsOptions) => {
     hasMore,
     loadMore,
     searchTerm,
-    search
+    search,
+    sortOrder
   }
 }

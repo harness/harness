@@ -523,9 +523,15 @@ const ActionMenu = ({
 interface RenderActionsProps extends CellProps<TypesGitspaceConfig> {
   refreshList: () => void
   gitspaceSettings: TypesGitspaceSettingsResponse | null
+  isFromUsageDashboard: boolean
 }
 
-export const RenderActions = ({ row, refreshList, gitspaceSettings }: RenderActionsProps) => {
+export const RenderActions = ({
+  row,
+  refreshList,
+  gitspaceSettings,
+  isFromUsageDashboard = false
+}: RenderActionsProps) => {
   const { getString } = useStrings()
   const history = useHistory()
   const { routes, standalone } = useAppContext()
@@ -533,9 +539,19 @@ export const RenderActions = ({ row, refreshList, gitspaceSettings }: RenderActi
   const details = row.original
   const { identifier, name, space_path } = details
 
-  const { mutate: deleteGitspace, loading: deleteLoading } = useDeleteGitspaces({ gitspaceId: identifier || '' })
+  // Determine if this component is being used from the dashboard
 
-  const { mutate: actionGitspace, loading: actionLoading } = useGitspaceActions({ gitspaceId: identifier || '' })
+  const { mutate: deleteGitspace, loading: deleteLoading } = useDeleteGitspaces({
+    gitspaceId: identifier || '',
+    gitspacePath: space_path,
+    fromUsageDashboard: isFromUsageDashboard
+  })
+
+  const { mutate: actionGitspace, loading: actionLoading } = useGitspaceActions({
+    gitspaceId: identifier || '',
+    gitspacePath: space_path,
+    fromUsageDashboard: isFromUsageDashboard
+  })
 
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false)
   const handleEditGitspace = () => {
@@ -733,6 +749,8 @@ export const RenderActions = ({ row, refreshList, gitspaceSettings }: RenderActi
             gitspaceSettings={gitspaceSettings}
             onClose={() => setIsEditModalOpen(false)}
             gitspaceId={identifier || ''}
+            isFromUsageDashboard={isFromUsageDashboard}
+            gitspacePath={space_path || ''}
             gitspaceData={{
               name: details.name || '',
               ide: details.ide || IDEType.VSCODE,
@@ -772,7 +790,7 @@ export const ListGitspaces = ({
   onPageSizeChange,
   pageConfig,
   gitspaceSettings,
-  isFromDashboard = false
+  isFromUsageDashboard = false
 }: {
   data: TypesGitspaceConfig[]
   refreshList: () => void
@@ -781,7 +799,7 @@ export const ListGitspaces = ({
   onPageSizeChange?: (newSize: number) => void
   pageConfig: pageConfigProps
   gitspaceSettings: TypesGitspaceSettingsResponse | null
-  isFromDashboard?: boolean
+  isFromUsageDashboard?: boolean
 }) => {
   const history = useHistory()
   const { getString } = useStrings()
@@ -916,7 +934,7 @@ export const ListGitspaces = ({
             {
               id: 'gitspaces',
               Header: getString('cde.gitspaces'),
-              Cell: getRenderGitspaceName(isFromDashboard)
+              Cell: getRenderGitspaceName(isFromUsageDashboard)
             },
             ...infraProviderColumn,
             {
@@ -938,7 +956,12 @@ export const ListGitspaces = ({
             {
               id: 'action',
               Cell: (props: RenderActionsProps) => (
-                <RenderActions {...props} gitspaceSettings={gitspaceSettings} refreshList={refreshList} />
+                <RenderActions
+                  {...props}
+                  gitspaceSettings={gitspaceSettings}
+                  refreshList={refreshList}
+                  isFromUsageDashboard={isFromUsageDashboard}
+                />
               )
             }
           ]}

@@ -19,10 +19,27 @@ import { useGetCDEAPIParams } from 'cde-gitness/hooks/useGetCDEAPIParams'
 import { useAppContext } from 'AppContext'
 import { useGitspaceAction } from 'services/cde'
 
-export const useGitspaceActions = ({ gitspaceId }: { gitspaceId: string }) => {
-  const { standalone } = useAppContext()
+interface UseGitspaceActionsProps {
+  gitspaceId: string
+  gitspacePath?: string
+  fromUsageDashboard?: boolean
+}
 
-  const { accountIdentifier = '', orgIdentifier = '', projectIdentifier = '', space } = useGetCDEAPIParams()
+export const useGitspaceActions = ({
+  gitspaceId,
+  gitspacePath,
+  fromUsageDashboard = false
+}: UseGitspaceActionsProps) => {
+  const { standalone } = useAppContext()
+  const {
+    accountIdentifier = '',
+    orgIdentifier = '',
+    projectIdentifier = '',
+    space
+  } = useGetCDEAPIParams({
+    gitspacePath,
+    fromUsageDashboard
+  })
 
   const gitness = useMutate({
     verb: 'POST',

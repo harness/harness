@@ -25,9 +25,15 @@ export interface CDEPathParams {
   space?: string
 }
 
-export const useGetCDEAPIParams = (): CDEPathParams => {
+interface UseGetCDEAPIParamsProps {
+  gitspacePath?: string
+  fromUsageDashboard?: boolean
+}
+
+export const useGetCDEAPIParams = (props?: UseGetCDEAPIParamsProps): CDEPathParams => {
+  const { gitspacePath, fromUsageDashboard = false } = props || {}
   const space = useGetSpaceParam()
-  const { standalone } = useAppContext()
+  const { standalone, accountInfo } = useAppContext()
   const {
     accountId: accountIdentifier,
     orgIdentifier,
@@ -38,11 +44,27 @@ export const useGetCDEAPIParams = (): CDEPathParams => {
     projectIdentifier: string
   }>()
 
+  // When fromUsageDashboard=true and gitspacePath is provided, extract identifiers from gitspacePath
+  if (fromUsageDashboard && gitspacePath) {
+    const pathParts = gitspacePath.split('/') || []
+    const gitspaceAccountIdentifier = pathParts.length >= 1 ? pathParts[0] : ''
+    const gitspaceOrgIdentifier = pathParts.length >= 2 ? pathParts[1] : ''
+    const gitspaceProjectIdentifier = pathParts.length >= 3 ? pathParts[2] : ''
+
+    return {
+      accountIdentifier: gitspaceAccountIdentifier || accountInfo?.identifier || accountIdentifier,
+      orgIdentifier: gitspaceOrgIdentifier || orgIdentifier,
+      projectIdentifier: gitspaceProjectIdentifier || projectIdentifier,
+      space: gitspacePath
+    }
+  }
+
   return standalone
     ? { space }
     : {
-        accountIdentifier,
+        accountIdentifier: accountIdentifier || accountInfo?.identifier,
         orgIdentifier,
-        projectIdentifier
+        projectIdentifier,
+        space
       }
 }

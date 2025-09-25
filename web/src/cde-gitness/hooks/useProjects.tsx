@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useGet } from 'restful-react'
 import { useAppContext } from 'AppContext'
 import { getConfig } from 'services/config'
@@ -54,41 +54,54 @@ interface TransformedProject {
   description: string
   modules: string[]
   fullIdentifier: string
+  organization?: {
+    identifier: string
+    name: string
+    description: string
+    tags: Record<string, string>
+  }
 }
 
 interface UseProjectsOptions {
   searchTerm?: string
   pageSize?: number
+  orgIdentifier?: string
+  sortOrder?: string
 }
 
 export const useProjects = (options?: UseProjectsOptions) => {
   const { accountInfo } = useAppContext()
   const accountId = accountInfo?.identifier || ''
-  const [pageIndex, setPageIndex] = useState<number>(0)
-  const [hasMore, setHasMore] = useState<boolean>(true)
-  const [searchTerm, setSearchTerm] = useState<string | undefined>(options?.searchTerm)
-
-  const [currentParams, setCurrentParams] = useState({
-    pageIndex: 0,
-    searchTerm: searchTerm
-  })
+  const [projects, setProjects] = useState<TransformedProject[]>([])
+  const [pageIndex, setPageIndex] = useState(0)
+  const [hasMore, setHasMore] = useState(true)
+  const [searchTerm, setSearchTerm] = useState(options?.searchTerm)
+  const [orgIdentifier, setOrgIdentifier] = useState(options?.orgIdentifier)
+  const [sortOrder, setSortOrder] = useState(options?.sortOrder)
+  const [totalPages, setTotalPages] = useState(0)
+  const [totalItems, setTotalItems] = useState(0)
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const isInitialLoadRef = useRef(true)
+  const [shouldFetch, setShouldFetch] = useState(false)
+  const [isLoadMore, setIsLoadMore] = useState(false)
 
   const PAGE_SIZE = options?.pageSize || 200
 
-  const { data, loading, error, refetch } = useGet<ApiResponse>({
+  const { data, loading, error } = useGet<ApiResponse>({
     path: '/api/aggregate/projects',
     base: getConfig('ng'),
+    queryParamStringifyOptions: { arrayFormat: 'repeat' },
     queryParams: {
       routingId: accountId,
       accountIdentifier: accountId,
-      pageIndex: currentParams.pageIndex,
+      pageIndex,
       pageSize: PAGE_SIZE,
-      searchTerm: currentParams.searchTerm,
-      sortOrders: 'lastModifiedAt,DESC',
+      searchTerm,
+      orgIdentifier,
+      sortOrders: sortOrder || 'lastModifiedAt,DESC',
       onlyFavorites: false
     },
-    queryParamStringifyOptions: { arrayFormat: 'repeat' },
-    lazy: !accountId
+    lazy: !accountId || !shouldFetch
   })
 
   const transformProjects = useCallback((apiData: ApiResponse | undefined): TransformedProject[] => {
@@ -100,70 +113,184 @@ export const useProjects = (options?: UseProjectsOptions) => {
         ...project,
         identifier: project.identifier,
         name: project.name || project.identifier,
-        fullIdentifier: `${project.orgIdentifier}/${project.identifier}`
+        fullIdentifier: `${project.orgIdentifier}/${project.identifier}`,
+        organization: item.organization
       }
     })
   }, [])
 
-  const projects = useMemo(() => {
-    if (!data) return []
-    return transformProjects(data)
-  }, [data, transformProjects])
-
-  useEffect(() => {
-    if (options?.searchTerm !== undefined && options.searchTerm !== currentParams.searchTerm) {
-      setSearchTerm(options.searchTerm)
-      setCurrentParams(prev => ({
-        ...prev,
-        searchTerm: options.searchTerm,
-        pageIndex: 0
-      }))
-    }
-  }, [options?.searchTerm])
-
-  useEffect(() => {
-    if (pageIndex !== currentParams.pageIndex) {
-      setCurrentParams(prev => ({
-        ...prev,
-        pageIndex
-      }))
-    }
-  }, [pageIndex])
-
   useEffect(() => {
     if (data) {
-      setHasMore(currentParams.pageIndex < data.data.totalPages - 1)
+      const transformedProjects = transformProjects(data)
+
+      if (isLoadMore) {
+        setProjects(prevProjects => [...prevProjects, ...transformedProjects])
+        setIsLoadMore(false)
+      } else {
+        setProjects(transformedProjects)
+      }
+
+      setTotalPages(data.data.totalPages)
+      setTotalItems(data.data.totalItems)
+      setHasMore(pageIndex < data.data.totalPages - 1)
     }
-  }, [data, currentParams.pageIndex])
+  }, [data, transformProjects, pageIndex, isLoadMore])
+
+  const makeApiCall = useCallback(
+    (params: {
+      pageIndex: number
+      searchTerm?: string
+      orgIdentifier?: string
+      sortOrder?: string
+      isLoadMore?: boolean
+    }) => {
+      if (!accountId) return
+
+      setIsLoadMore(params.isLoadMore || false)
+
+      setPageIndex(prevPageIndex => (params.pageIndex !== prevPageIndex ? params.pageIndex : prevPageIndex))
+
+      setSearchTerm(prevSearchTerm => (params.searchTerm !== prevSearchTerm ? params.searchTerm : prevSearchTerm))
+
+      setOrgIdentifier(prevOrgIdentifier =>
+        params.orgIdentifier !== prevOrgIdentifier ? params.orgIdentifier : prevOrgIdentifier
+      )
+
+      setSortOrder(prevSortOrder => (params.sortOrder !== prevSortOrder ? params.sortOrder : prevSortOrder))
+
+      setShouldFetch(true)
+    },
+    [accountId]
+  )
+
+  const debouncedApiCall = useCallback(
+    (
+      params: {
+        pageIndex: number
+        searchTerm?: string
+        orgIdentifier?: string
+        sortOrder?: string
+        isLoadMore?: boolean
+      },
+      delay = 300
+    ) => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current)
+      }
+
+      debounceTimeoutRef.current = setTimeout(() => {
+        makeApiCall(params)
+      }, delay)
+    },
+    [makeApiCall]
+  )
+
+  useEffect(() => {
+    if (accountId && isInitialLoadRef.current) {
+      isInitialLoadRef.current = false
+
+      setSearchTerm(options?.searchTerm)
+      setOrgIdentifier(options?.orgIdentifier)
+      setSortOrder(options?.sortOrder)
+      setPageIndex(0)
+      setShouldFetch(true)
+    }
+  }, [accountId, options?.searchTerm, options?.orgIdentifier, options?.sortOrder])
+
+  useEffect(() => {
+    if (isInitialLoadRef.current) return
+
+    const searchChanged = options?.searchTerm !== searchTerm
+    const orgChanged = options?.orgIdentifier !== orgIdentifier
+    const sortChanged = options?.sortOrder !== sortOrder
+
+    if (searchChanged || orgChanged || sortChanged) {
+      setPageIndex(0)
+      setHasMore(true)
+
+      const delay = searchChanged ? 500 : 100
+
+      debouncedApiCall(
+        {
+          pageIndex: 0,
+          searchTerm: options?.searchTerm,
+          orgIdentifier: options?.orgIdentifier,
+          sortOrder: options?.sortOrder
+        },
+        delay
+      )
+    }
+  }, [
+    options?.searchTerm,
+    options?.orgIdentifier,
+    options?.sortOrder,
+    searchTerm,
+    orgIdentifier,
+    sortOrder,
+    debouncedApiCall
+  ])
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current)
+      }
+    }
+  }, [])
 
   const loadMore = useCallback(() => {
     if (!loading && hasMore) {
-      setPageIndex(prev => prev + 1)
+      const nextPageIndex = pageIndex + 1
+
+      makeApiCall({
+        pageIndex: nextPageIndex,
+        searchTerm: searchTerm,
+        orgIdentifier: orgIdentifier,
+        sortOrder: sortOrder,
+        isLoadMore: true
+      })
     }
-  }, [loading, hasMore])
+  }, [loading, hasMore, pageIndex, searchTerm, orgIdentifier, sortOrder, makeApiCall])
 
-  const search = useCallback((term: string | undefined) => {
-    setSearchTerm(term)
-    setPageIndex(0)
-    setHasMore(true)
+  const search = useCallback(
+    (term: string | undefined) => {
+      setPageIndex(0)
+      setHasMore(true)
 
-    setCurrentParams(prev => ({
-      ...prev,
-      searchTerm: term,
-      pageIndex: 0
-    }))
-  }, [])
+      debouncedApiCall(
+        {
+          pageIndex: 0,
+          searchTerm: term,
+          orgIdentifier: orgIdentifier,
+          sortOrder: sortOrder
+        },
+        500
+      )
+    },
+    [orgIdentifier, sortOrder, debouncedApiCall]
+  )
+
+  const handleRefetch = useCallback(() => {
+    makeApiCall({
+      pageIndex: pageIndex,
+      searchTerm: searchTerm,
+      orgIdentifier: orgIdentifier,
+      sortOrder: sortOrder
+    })
+  }, [pageIndex, searchTerm, orgIdentifier, sortOrder, makeApiCall])
 
   return {
     projects,
-    totalPages: data?.data?.totalPages || 0,
-    totalItems: data?.data?.totalItems || 0,
+    totalPages,
+    totalItems,
     loading,
     error,
-    refetch,
+    refetch: handleRefetch,
     hasMore,
     loadMore,
     searchTerm,
-    search
+    search,
+    sortOrder
   }
 }

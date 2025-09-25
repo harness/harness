@@ -1762,13 +1762,22 @@ export interface StringsMap {
   'cde.update.infraProviderSuccess': string
   'cde.update.updateGitspace': string
   'cde.updateGitspace': string
+  'cde.usageDashboard.allProjects': string
+  'cde.usageDashboard.clearAll': string
   'cde.usageDashboard.comingSoon': string
   'cde.usageDashboard.gitspacesTab': string
   'cde.usageDashboard.loadMore': string
+  'cde.usageDashboard.loading': string
+  'cde.usageDashboard.noResultsFound': string
   'cde.usageDashboard.organizations': string
   'cde.usageDashboard.projects': string
+  'cde.usageDashboard.searchOrgPlaceholder': string
   'cde.usageDashboard.searchPlaceholder': string
+  'cde.usageDashboard.searchProjectPlaceholder': string
+  'cde.usageDashboard.sortBy': string
   'cde.usageDashboard.title': string
+  'cde.usageDashboard.total': string
+  'cde.usageDashboard.tryDifferentKeywords': string
   'cde.usageDashboard.usageTab': string
   'cde.used': string
   'cde.viewGitspace': string

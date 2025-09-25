@@ -19,10 +19,28 @@ import { useGetCDEAPIParams } from 'cde-gitness/hooks/useGetCDEAPIParams'
 import { useAppContext } from 'AppContext'
 import { useDeleteGitspace } from 'services/cde'
 
-export const useDeleteGitspaces = ({ gitspaceId }: { gitspaceId: string }) => {
+interface UseDeleteGitspacesProps {
+  gitspaceId: string
+  gitspacePath?: string
+  fromUsageDashboard?: boolean
+}
+
+export const useDeleteGitspaces = ({
+  gitspaceId,
+  gitspacePath,
+  fromUsageDashboard = false
+}: UseDeleteGitspacesProps) => {
   const { standalone } = useAppContext()
 
-  const { accountIdentifier = '', orgIdentifier = '', projectIdentifier = '', space } = useGetCDEAPIParams()
+  const {
+    accountIdentifier = '',
+    orgIdentifier = '',
+    projectIdentifier = '',
+    space
+  } = useGetCDEAPIParams({
+    gitspacePath,
+    fromUsageDashboard
+  })
 
   const gitness = useMutate<any>({
     verb: 'DELETE',

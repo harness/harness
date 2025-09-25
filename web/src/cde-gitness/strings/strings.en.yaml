@@ -388,10 +388,19 @@ usageDashboard:
   usageTab: "Usage"
   gitspacesTab: "Gitspaces"
   comingSoon: "Coming Soon"
+  searchOrgPlaceholder: "Search Organizations..."
+  searchProjectPlaceholder: "Search Projects..."
   searchPlaceholder: "Search Gitspaces..."
   projects: "Projects"
   organizations: "Organizations"
   loadMore: "Load More"
+  clearAll: "Clear All"
+  allProjects: "All Projects"
+  noResultsFound: "No Results Found"
+  tryDifferentKeywords: "Try different keywords"
+  loading: "Loading..."
+  sortBy: Sort By
+  total: Total
 details:
   actions: More Actions
   openCursor: Open Cursor

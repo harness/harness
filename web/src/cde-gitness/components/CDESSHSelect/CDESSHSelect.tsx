@@ -43,11 +43,20 @@ import { CDECustomDropdown } from '../CDECustomDropdown/CDECustomDropdown'
 import { getSelectedExpirationDate } from './CDESSHSelect.utils'
 import css from './CDESSHSelect.module.scss'
 
-export const CDESSHSelect = ({ isEditMode = false }: { isEditMode?: boolean }) => {
+interface CDESSHSelectProps {
+  isEditMode?: boolean
+  isFromUsageDashboard?: boolean
+  gitspacePath?: string
+}
+
+export const CDESSHSelect = ({ isEditMode = false, isFromUsageDashboard = false, gitspacePath }: CDESSHSelectProps) => {
   const { getString } = useStrings()
   const { showError } = useToaster()
   const { values, setFieldValue } = useFormikContext<OpenapiCreateGitspaceRequest>()
-  const { accountIdentifier } = useGetCDEAPIParams()
+  const { accountIdentifier } = useGetCDEAPIParams({
+    gitspacePath,
+    fromUsageDashboard: isFromUsageDashboard
+  })
   const { hooks, currentUser } = useAppContext()
   const { useListAggregatedTokens, useDeleteToken, useCreateToken } = hooks
   const { data, loading, refetch } = useListAggregatedTokens({
