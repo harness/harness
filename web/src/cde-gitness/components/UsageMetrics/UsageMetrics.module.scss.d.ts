@@ -20,3 +20,4 @@ export declare const chartContainer: string
 export declare const errorAndNoDataContainer: string
 export declare const innerContainer: string
 export declare const main: string
+export declare const planIcon: string

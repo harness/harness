@@ -24,7 +24,7 @@ const PlanAndRenewSection = () => {
   const { getString } = useStrings()
   return (
     <Layout.Horizontal spacing="medium" flex={{ alignItems: 'center' }}>
-      <img src={BeatPlanIcon} height="20px" />
+      <img src={BeatPlanIcon} className={css.planIcon} />
       <Text font={{ size: 'normal' }}>{getString('cde.renewsEveryMonth', { days: 30 })}</Text>
       <Button
         variation={ButtonVariation.ICON}
