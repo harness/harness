@@ -1,1 +1,1 @@
-ALTER TABLE repositories ADD COLUMN repo_tags JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE repositories ADD COLUMN repo_tags JSONB NOT NULL DEFAULT '{}'::jsonb;
