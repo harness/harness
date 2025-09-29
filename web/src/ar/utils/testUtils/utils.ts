@@ -42,6 +42,7 @@ import type { ParentProviderProps } from '@ar/contexts/ParentProvider'
 import { getApiBaseUrl } from '@ar/__mocks__/utils/getApiBaseUrl'
 import getCustomHeaders from '@ar/__mocks__/utils/getCustomHeaders'
 import { useGovernanceMetaDataModal } from '@ar/__mocks__/hooks/useGovernanceMetaDataModal'
+import { routeToRegistryDetails } from '@ar/__mocks__/utils/routeToRegistryDetails'
 
 export const MockTestUtils: {
   hooks?: ParentProviderProps['hooks']
@@ -79,7 +80,7 @@ MockTestUtils.utils = {
   getApiBaseUrl,
   generateToken: jest.fn(),
   getRouteToPipelineExecutionView: jest.fn(),
-  routeToRegistryDetails: jest.fn()
+  routeToRegistryDetails
 }
 
 export const MockLicenseContext = createContext({

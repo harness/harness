@@ -22,7 +22,7 @@ import { TableV2, type PaginationProps } from '@harnessio/uicore'
 import type { ListRegistry, RegistryMetadata } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
-import { useFeatureFlags, useParentHooks, useRoutes } from '@ar/hooks'
+import { useParentHooks } from '@ar/hooks'
 import { useParentUtils } from '@ar/hooks/useParentUtils'
 import useGetScopeFromRegistryPath from '@ar/pages/repository-details/hooks/useGetScopeFromRegistryPath/useGetScopeFromRegistryPath'
 
@@ -55,10 +55,8 @@ export interface RepositoryListTableProps extends RepositoryListColumnActions {
 
 export function RepositoryListTable(props: RepositoryListTableProps): JSX.Element {
   const { data, gotoPage, onPageSizeChange, sortBy, setSortBy, showScope } = props
-  const { HAR_REGISTRY_SCOPE_FILTER } = useFeatureFlags()
   const { useDefaultPaginationProps } = useParentHooks()
   const { routeToRegistryDetails } = useParentUtils()
-  const routes = useRoutes()
   const { getString } = useStrings()
   const history = useHistory()
 
@@ -76,21 +74,13 @@ export function RepositoryListTable(props: RepositoryListTableProps): JSX.Elemen
   const { getScopeFromRegistryPath } = useGetScopeFromRegistryPath()
 
   const handleNavigateToRegistryDetails = (rowDetails: RegistryMetadata) => {
-    if (HAR_REGISTRY_SCOPE_FILTER) {
-      history.push(
-        routeToRegistryDetails({
-          ...getScopeFromRegistryPath(rowDetails.path),
-          module: 'har',
-          repositoryIdentifier: rowDetails.identifier
-        })
-      )
-    } else {
-      history.push(
-        routes.toARRepositoryDetails({
-          repositoryIdentifier: rowDetails.identifier
-        })
-      )
-    }
+    history.push(
+      routeToRegistryDetails({
+        ...getScopeFromRegistryPath(rowDetails.path),
+        module: 'har',
+        repositoryIdentifier: rowDetails.identifier
+      })
+    )
   }
 
   const columns: Column<RegistryMetadata>[] = React.useMemo(() => {
@@ -111,13 +101,12 @@ export function RepositoryListTable(props: RepositoryListTableProps): JSX.Elemen
         Cell: RepositoryNameCell,
         serverSortProps: getServerSortProps('identifier')
       },
-      showScope &&
-        HAR_REGISTRY_SCOPE_FILTER && {
-          Header: '',
-          accessor: 'path',
-          Cell: RepositoryScopeCell,
-          disableSortBy: true
-        },
+      showScope && {
+        Header: '',
+        accessor: 'path',
+        Cell: RepositoryScopeCell,
+        disableSortBy: true
+      },
       {
         Header: getString('repositoryList.table.columns.type'),
         accessor: 'type',
@@ -161,7 +150,7 @@ export function RepositoryListTable(props: RepositoryListTableProps): JSX.Elemen
         disableSortBy: true
       }
     ].filter(Boolean) as unknown as Column<RegistryMetadata>[]
-  }, [currentOrder, currentSort, getString, showScope, HAR_REGISTRY_SCOPE_FILTER])
+  }, [currentOrder, currentSort, getString, showScope])
 
   return (
     <TableV2

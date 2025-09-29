@@ -38,7 +38,6 @@ import {
   useParentComponents,
   useParentHooks,
   useGetSpaceRef,
-  useFeatureFlags,
   useAppStore,
   useGetRepositoryListViewType
 } from '@ar/hooks'
@@ -58,7 +57,6 @@ function RepositoryListPage(): JSX.Element {
   const { getString } = useStrings()
   const { NGBreadcrumbs } = useParentComponents()
   const { useQueryParams, useUpdateQueryParams, usePreferenceStore } = useParentHooks()
-  const { HAR_REGISTRY_SCOPE_FILTER } = useFeatureFlags()
   const { updateQueryParams } = useUpdateQueryParams<Partial<ArtifactRepositoryListPageQueryParams>>()
   const { setRepositoryListViewType, parent } = useAppStore()
   const repositoryListViewType = useGetRepositoryListViewType()
@@ -145,7 +143,7 @@ function RepositoryListPage(): JSX.Element {
               updateQueryParams({ repositoryTypes: val, page: DEFAULT_PAGE_INDEX })
             }}
           />
-          {parent === Parent.Enterprise && HAR_REGISTRY_SCOPE_FILTER && pageScope !== EntityScope.PROJECT && (
+          {parent === Parent.Enterprise && pageScope !== EntityScope.PROJECT && (
             <RepositoryScopeSelector
               scope={pageScope}
               value={scope}
