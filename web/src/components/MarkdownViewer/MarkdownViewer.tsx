@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { useHistory } from 'react-router-dom'
+import { useHistory, useParams } from 'react-router-dom'
 import { Container, Utils } from '@harnessio/uicore'
 import rehypeSanitize from 'rehype-sanitize'
 import React, { useCallback, useMemo, useRef, useState } from 'react'
@@ -31,8 +31,11 @@ import { INITIAL_ZOOM_LEVEL } from 'utils/Utils'
 import ImageCarousel from 'components/ImageCarousel/ImageCarousel'
 import type { SuggestionBlock } from 'components/SuggestionBlock/SuggestionBlock'
 import { getConfig } from 'services/config'
+import type { CODEProps } from 'RouteDefinitions'
+import { TextExtensions } from 'utils/FileUtils'
 import { CodeSuggestionBlock } from './CodeSuggestionBlock'
 import css from './MarkdownViewer.module.scss'
+
 interface MarkdownViewerProps {
   source: string
   className?: string
@@ -184,6 +187,35 @@ export function MarkdownViewer({
     [history]
   )
 
+  const params = useParams<CODEProps>()
+
+  const currentDirectoryPath = useMemo(() => {
+    const { resourcePath } = params
+    if (!resourcePath) return ''
+
+    const pathSegments = resourcePath.split('/')
+
+    const lastSegment = pathSegments[pathSegments.length - 1]
+    const extension = lastSegment.split('.').pop()?.toLowerCase() || ''
+
+    const hasFileExtension =
+      extension && TextExtensions.includes(extension) && extension !== lastSegment && '.' + extension !== lastSegment
+
+    if (hasFileExtension) {
+      // If it's a file, remove filename and return directory path
+      if (pathSegments.length > 1) {
+        pathSegments.pop()
+        return pathSegments.join('/')
+      } else {
+        // File at root level, no directory
+        return ''
+      }
+    } else {
+      // It's already a directory path, return as-is
+      return resourcePath
+    }
+  }, [params])
+
   return (
     <Container
       className={cx(css.main, className, { [css.withMaxHeight]: maxHeight && maxHeight > 0 })}
@@ -283,11 +315,12 @@ export function MarkdownViewer({
                 if (src.startsWith('./')) {
                   src = src.replace('./', '')
                 }
-
                 if (repoMetadata?.path) {
                   const apiBaseUrl = getConfig('code/api/v1') //apiBaseUrl includes gateway
                   const baseUrl = window.location.origin
-                  src = `${baseUrl}${apiBaseUrl}/repos/${repoMetadata?.path}/+/raw/${src}`
+                  const dir = currentDirectoryPath
+                  const rawPath = dir ? `${dir}/${src}` : src
+                  src = `${baseUrl}${apiBaseUrl}/repos/${repoMetadata?.path}/+/raw/${rawPath}`
                 }
               } catch (e) {
                 // eslint-disable-next-line no-console

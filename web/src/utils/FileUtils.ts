@@ -149,7 +149,7 @@ export enum FileCategory {
 // Parts are copied from https://github.com/sindresorhus/text-extensions
 // MIT License
 // Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
-const TextExtensions = [
+export const TextExtensions = [
   'ada',
   'adb',
   'ads',
