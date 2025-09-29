@@ -71,5 +71,5 @@ func (h *localRegistryHelper) UploadPackageFile(
 	info npm.ArtifactInfo,
 	file io.ReadCloser,
 ) (*commons.ResponseHeaders, string, error) {
-	return h.localRegistry.UploadPackageFile(ctx, info, file)
+	return h.localRegistry.UploadPackageFileWithoutParsing(ctx, info, file)
 }

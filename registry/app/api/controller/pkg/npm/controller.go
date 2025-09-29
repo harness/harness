@@ -43,47 +43,47 @@ type controller struct {
 type Controller interface {
 	UploadPackageFile(
 		ctx context.Context,
-		info npm.ArtifactInfo,
+		info *npm.ArtifactInfo,
 		file io.ReadCloser,
 	) *PutArtifactResponse
 
 	DownloadPackageFile(
 		ctx context.Context,
-		info npm.ArtifactInfo,
+		info *npm.ArtifactInfo,
 	) *GetArtifactResponse
 
-	GetPackageMetadata(ctx context.Context, info npm.ArtifactInfo) *GetMetadataResponse
+	GetPackageMetadata(ctx context.Context, info *npm.ArtifactInfo) *GetMetadataResponse
 
-	HeadPackageFileByName(ctx context.Context, info npm.ArtifactInfo) *HeadMetadataResponse
+	HeadPackageFileByName(ctx context.Context, info *npm.ArtifactInfo) *HeadMetadataResponse
 
 	ListTags(
 		ctx context.Context,
-		info npm.ArtifactInfo,
+		info *npm.ArtifactInfo,
 	) *ListTagResponse
 
 	AddTag(
 		ctx context.Context,
-		info npm.ArtifactInfo,
+		info *npm.ArtifactInfo,
 	) *ListTagResponse
 
 	DeleteTag(
 		ctx context.Context,
-		info npm.ArtifactInfo,
+		info *npm.ArtifactInfo,
 	) *ListTagResponse
 
 	DeleteVersion(
 		ctx context.Context,
-		info npm.ArtifactInfo,
+		info *npm.ArtifactInfo,
 	) *DeleteEntityResponse
 
 	DeletePackage(
 		ctx context.Context,
-		info npm.ArtifactInfo,
+		info *npm.ArtifactInfo,
 	) *DeleteEntityResponse
 
 	SearchPackage(
 		ctx context.Context,
-		info npm.ArtifactInfo,
+		info *npm.ArtifactInfo,
 		limit int, offset int,
 	) *SearchArtifactResponse
 }

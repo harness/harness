@@ -89,7 +89,7 @@ func (h *handler) GetPackageArtifactInfo(r *http.Request) (pkg.PackageArtifactIn
 	}
 	distTags := r.PathValue("tag")
 
-	npmInfo := npm.ArtifactInfo{
+	npmInfo := &npm.ArtifactInfo{
 		ArtifactInfo:        info,
 		Filename:            fileName,
 		Version:             version,
@@ -120,7 +120,7 @@ func (h *handler) GetPackageArtifactInfo(r *http.Request) (pkg.PackageArtifactIn
 		return npmInfo, err
 	}
 
-	return npm.ArtifactInfo{
+	return &npm.ArtifactInfo{
 		ArtifactInfo: info,
 	}, nil
 }

@@ -28,7 +28,7 @@ import (
 
 func (c *controller) DeletePackage(
 	ctx context.Context,
-	info npm.ArtifactInfo,
+	info *npm.ArtifactInfo,
 ) *DeleteEntityResponse {
 	f := func(registry types.Registry, a pkg.Artifact) response.Response {
 		info.RegIdentifier = registry.Name
@@ -39,7 +39,7 @@ func (c *controller) DeletePackage(
 				Error: fmt.Errorf("invalid registry type: expected npm.Registry"),
 			}
 		}
-		err := npmRegistry.DeletePackage(ctx, info)
+		err := npmRegistry.DeletePackage(ctx, *info)
 		if err != nil {
 			return &DeleteEntityResponse{Error: err}
 		}

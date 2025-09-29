@@ -32,7 +32,7 @@ import (
 // uploads the package file to the storage.
 func (c *controller) UploadPackageFile(
 	ctx context.Context,
-	info npm.ArtifactInfo,
+	info *npm.ArtifactInfo,
 	file io.ReadCloser,
 ) *PutArtifactResponse {
 	f := func(registry types.Registry, a pkg.Artifact) response.Response {
@@ -44,7 +44,7 @@ func (c *controller) UploadPackageFile(
 				BaseResponse: BaseResponse{Error: fmt.Errorf("invalid registry type: expected npm.Registry")},
 			}
 		}
-		headers, sha256, err := npmRegistry.UploadPackageFile(ctx, info, file)
+		headers, sha256, err := npmRegistry.UploadPackageFile(ctx, *info, file)
 		if !commons.IsEmpty(err) {
 			return &PutArtifactResponse{
 				BaseResponse: BaseResponse{Error: err},

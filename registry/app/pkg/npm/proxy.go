@@ -227,3 +227,12 @@ func (r *proxy) putFileToLocal(ctx context.Context, info npm2.ArtifactInfo, remo
 	log.Ctx(ctx).Info().Msgf("Successfully uploaded %s with SHA256: %s", info.Filename, sha256)
 	return nil
 }
+
+func (r *proxy) UploadPackageFileWithoutParsing(
+	ctx context.Context,
+	_ npm2.ArtifactInfo,
+	_ io.ReadCloser,
+) (headers *commons.ResponseHeaders, sha256 string, err error) {
+	log.Error().Ctx(ctx).Msg("Not implemented")
+	return nil, "", errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
+}

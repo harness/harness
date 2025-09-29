@@ -37,7 +37,7 @@ import (
 // function returns an error as well.
 func (c *controller) GetPackageMetadata(
 	ctx context.Context,
-	info npm.ArtifactInfo,
+	info *npm.ArtifactInfo,
 ) *GetMetadataResponse {
 	f := func(registry types.Registry, a pkg.Artifact) response.Response {
 		info.UpdateRegistryInfo(registry)
@@ -47,7 +47,7 @@ func (c *controller) GetPackageMetadata(
 				BaseResponse: BaseResponse{Error: fmt.Errorf("invalid registry type: expected npm.Registry")},
 			}
 		}
-		metadata, err := npmRegistry.GetPackageMetadata(ctx, info)
+		metadata, err := npmRegistry.GetPackageMetadata(ctx, *info)
 		return &GetMetadataResponse{
 			BaseResponse:    BaseResponse{Error: err},
 			PackageMetadata: metadata,

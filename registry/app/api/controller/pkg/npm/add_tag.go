@@ -28,7 +28,7 @@ import (
 
 func (c *controller) AddTag(
 	ctx context.Context,
-	info npm.ArtifactInfo,
+	info *npm.ArtifactInfo,
 ) *ListTagResponse {
 	f := func(registry types.Registry, a pkg.Artifact) response.Response {
 		info.RegIdentifier = registry.Name
@@ -39,7 +39,7 @@ func (c *controller) AddTag(
 				BaseResponse: BaseResponse{Error: fmt.Errorf("invalid registry type: expected npm.Registry")},
 			}
 		}
-		tags, err := npmRegistry.AddTag(ctx, info)
+		tags, err := npmRegistry.AddTag(ctx, *info)
 		if err != nil {
 			return &ListTagResponse{
 				BaseResponse: BaseResponse{Error: err},

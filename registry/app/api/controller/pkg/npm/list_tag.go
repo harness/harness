@@ -29,7 +29,7 @@ import (
 
 func (c *controller) ListTags(
 	ctx context.Context,
-	info npm.ArtifactInfo,
+	info *npm.ArtifactInfo,
 ) *ListTagResponse {
 	f := func(registry types.Registry, a pkg.Artifact) response.Response {
 		info.RegIdentifier = registry.Name
@@ -42,7 +42,7 @@ func (c *controller) ListTags(
 				BaseResponse: BaseResponse{Error: fmt.Errorf("invalid registry type: expected npm.Registry")},
 			}
 		}
-		tags, err := npmRegistry.ListTags(ctx, info)
+		tags, err := npmRegistry.ListTags(ctx, *info)
 		if !commons2.IsEmpty(err) {
 			return &ListTagResponse{
 				BaseResponse: BaseResponse{Error: err},

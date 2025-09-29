@@ -28,7 +28,7 @@ import (
 
 func (c *controller) DeleteTag(
 	ctx context.Context,
-	info npm.ArtifactInfo,
+	info *npm.ArtifactInfo,
 ) *ListTagResponse {
 	f := func(registry types.Registry, a pkg.Artifact) response.Response {
 		info.RegIdentifier = registry.Name
@@ -39,7 +39,7 @@ func (c *controller) DeleteTag(
 				BaseResponse: BaseResponse{Error: fmt.Errorf("invalid registry type: expected npm.Registry")},
 			}
 		}
-		tags, err := npmRegistry.DeleteTag(ctx, info)
+		tags, err := npmRegistry.DeleteTag(ctx, *info)
 		if err != nil {
 			return &ListTagResponse{
 				BaseResponse: BaseResponse{Error: err},

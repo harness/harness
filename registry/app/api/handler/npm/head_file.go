@@ -27,7 +27,7 @@ import (
 
 func (h *handler) HeadPackageFileByName(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	info, ok := request.ArtifactInfoFrom(ctx).(npm2.ArtifactInfo)
+	info, ok := request.ArtifactInfoFrom(ctx).(*npm2.ArtifactInfo)
 	if !ok {
 		log.Ctx(ctx).Error().Msg("Failed to get npm artifact info from context")
 		h.HandleErrors(r.Context(), []error{fmt.Errorf("failed to fetch npm artifact info from context")}, w)

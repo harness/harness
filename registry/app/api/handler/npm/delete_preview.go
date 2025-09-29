@@ -24,7 +24,7 @@ import (
 
 func (h *handler) DeletePreview(w http.ResponseWriter, r *http.Request) {
 	contextInfo := request.ArtifactInfoFrom(r.Context())
-	_, ok := contextInfo.(npm.ArtifactInfo)
+	_, ok := contextInfo.(*npm.ArtifactInfo)
 	if !ok {
 		h.HandleErrors2(r.Context(), errcode.ErrCodeInvalidRequest.WithMessage("failed to fetch info from context"), w)
 		return

@@ -29,7 +29,7 @@ import (
 
 func (c *controller) DownloadPackageFileByName(
 	ctx context.Context,
-	info npm.ArtifactInfo,
+	info *npm.ArtifactInfo,
 ) *GetArtifactResponse {
 	f := func(registry registrytypes.Registry, a pkg.Artifact) response.Response {
 		info.UpdateRegistryInfo(registry)
@@ -39,7 +39,7 @@ func (c *controller) DownloadPackageFileByName(
 				BaseResponse: BaseResponse{Error: fmt.Errorf("invalid registry type: expected npm.Registry")},
 			}
 		}
-		headers, fileReader, readCloser, redirectURL, errs := npmRegistry.DownloadPackageFile(ctx, info)
+		headers, fileReader, readCloser, redirectURL, errs := npmRegistry.DownloadPackageFile(ctx, *info)
 		return &GetArtifactResponse{
 			BaseResponse: BaseResponse{Error: errs, ResponseHeaders: headers},
 			RedirectURL:  redirectURL,

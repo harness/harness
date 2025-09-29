@@ -629,3 +629,24 @@ func NewJSONStringStreamReader(r *bufio.Reader) io.Reader {
 
 	return pr
 }
+
+func (c *localRegistry) UploadPackageFileWithoutParsing(
+	ctx context.Context,
+	info npm.ArtifactInfo,
+	file io.ReadCloser,
+) (headers *commons.ResponseHeaders, sha256 string, err error) {
+	defer file.Close()
+	path := pkg.JoinWithSeparator("/", info.Image, info.Version, info.Filename)
+	response, sha, err := c.localBase.Upload(ctx, info.ArtifactInfo, info.Filename, info.Version, path, file,
+		&npm2.NpmMetadata{
+			PackageMetadata: info.Metadata,
+		})
+	if !commons.IsEmpty(err) {
+		return nil, "", err
+	}
+	_, err = c.AddTag(ctx, info)
+	if err != nil {
+		return nil, "", err
+	}
+	return response, sha, nil
+}

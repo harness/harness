@@ -29,7 +29,7 @@ import (
 
 func (c *controller) SearchPackage(
 	ctx context.Context,
-	info npm.ArtifactInfo,
+	info *npm.ArtifactInfo,
 	limit int, offset int,
 ) *SearchArtifactResponse {
 	f := func(registry types.Registry, a pkg.Artifact) response.Response {
@@ -43,7 +43,7 @@ func (c *controller) SearchPackage(
 				BaseResponse: BaseResponse{Error: fmt.Errorf("invalid registry type: expected npm.Registry")},
 			}
 		}
-		artifacts, err := npmRegistry.SearchPackage(ctx, info, limit, offset)
+		artifacts, err := npmRegistry.SearchPackage(ctx, *info, limit, offset)
 		return &SearchArtifactResponse{
 			BaseResponse: BaseResponse{Error: err},
 			Artifacts:    artifacts,

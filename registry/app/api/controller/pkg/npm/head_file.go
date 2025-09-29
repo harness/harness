@@ -29,7 +29,7 @@ import (
 
 func (c *controller) HeadPackageFileByName(
 	ctx context.Context,
-	info npm.ArtifactInfo,
+	info *npm.ArtifactInfo,
 ) *HeadMetadataResponse {
 	f := func(registry registrytypes.Registry, a pkg.Artifact) response.Response {
 		info.UpdateRegistryInfo(registry)
@@ -39,7 +39,7 @@ func (c *controller) HeadPackageFileByName(
 				BaseResponse: BaseResponse{Error: fmt.Errorf("invalid Registry type: expected npm.Registry")},
 			}
 		}
-		exist, err := npmRegistry.HeadPackageMetadata(ctx, info)
+		exist, err := npmRegistry.HeadPackageMetadata(ctx, *info)
 
 		if !commons2.IsEmpty(err) {
 			return &HeadMetadataResponse{

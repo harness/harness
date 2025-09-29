@@ -54,5 +54,10 @@ type Registry interface {
 	DeletePackage(ctx context.Context, info npm.ArtifactInfo) error
 	DeleteVersion(ctx context.Context, info npm.ArtifactInfo) error
 
+	UploadPackageFileWithoutParsing(
+		ctx context.Context,
+		info npm.ArtifactInfo,
+		file io.ReadCloser,
+	) (headers *commons.ResponseHeaders, sha256 string, err error)
 	SearchPackage(ctx context.Context, info npm.ArtifactInfo, limit int, offset int) (*npm3.PackageSearch, error)
 }

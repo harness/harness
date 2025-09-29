@@ -25,7 +25,7 @@ import (
 
 func (h *handler) ListPackageTag(w http.ResponseWriter, r *http.Request) {
 	contextInfo := request.ArtifactInfoFrom(r.Context())
-	info, ok := contextInfo.(npm2.ArtifactInfo)
+	info, ok := contextInfo.(*npm2.ArtifactInfo)
 	if !ok {
 		h.HandleErrors2(r.Context(), errcode.ErrCodeInvalidRequest.WithMessage("failed to fetch info from context"), w)
 		return
