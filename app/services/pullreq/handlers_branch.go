@@ -18,12 +18,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	gitevents "github.com/harness/gitness/app/events/git"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/git"
+	gitenum "github.com/harness/gitness/git/enum"
+	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -80,16 +83,65 @@ func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
 		log.Ctx(ctx).Warn().Err(err).Msgf("failed to get commit info from git")
 	}
 
-	// TODO: This function is currently executed directly on branch update event.
-	// TODO: But it should be executed after the PR's head ref has been updated.
-	// TODO: This is to make sure the commit exists on the target repository for forked repositories.
 	s.forEveryOpenPR(ctx, event.Payload.RepoID, event.Payload.Ref, func(pr *types.PullReq) error {
-		// First check if the merge base has changed
-
 		targetRepo, err := s.repoFinder.FindByID(ctx, pr.TargetRepoID)
 		if err != nil {
 			return fmt.Errorf("failed to get target repo git info: %w", err)
 		}
+
+		writeParams, err := createRPCSystemReferencesWriteParams(ctx, s.urlProvider, targetRepo.ID, targetRepo.GitUID)
+		if err != nil {
+			return fmt.Errorf("failed to generate target repo write params: %w", err)
+		}
+
+		oldSHA, err := sha.New(event.Payload.OldSHA)
+		if err != nil {
+			return fmt.Errorf("failed to convert old commit SHA %q: %w",
+				event.Payload.OldSHA,
+				events.NewDiscardEventError(err),
+			)
+		}
+
+		newSHA, err := sha.New(event.Payload.NewSHA)
+		if err != nil {
+			return fmt.Errorf("failed to convert new commit SHA %s: %w",
+				event.Payload.NewSHA,
+				events.NewDiscardEventError(err),
+			)
+		}
+
+		// Pull git objects from the source repo into the target repo if this is a cross repo pull request.
+
+		if pr.SourceRepoID != pr.TargetRepoID {
+			sourceRepo, err := s.repoFinder.FindByID(ctx, pr.SourceRepoID)
+			if err != nil {
+				return fmt.Errorf("failed to get source repo git info: %w", err)
+			}
+
+			_, err = s.git.FetchObjects(ctx, &git.FetchObjectsParams{
+				WriteParams: writeParams,
+				Source:      sourceRepo.GitUID,
+				ObjectSHAs:  []sha.SHA{newSHA},
+			})
+			if err != nil {
+				return fmt.Errorf("failed to fetch git objects from the source repository: %w", err)
+			}
+		}
+
+		// Update pull request's head reference.
+
+		err = s.git.UpdateRef(ctx, git.UpdateRefParams{
+			WriteParams: writeParams,
+			Name:        strconv.Itoa(int(pr.Number)),
+			Type:        gitenum.RefTypePullReqHead,
+			NewValue:    newSHA,
+			OldValue:    oldSHA,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to update PR head ref after new commit: %w", err)
+		}
+
+		// Check if the merge base has changed
 
 		mergeBaseInfo, err := s.git.MergeBase(ctx, git.MergeBaseParams{
 			ReadParams: git.ReadParams{RepoUID: targetRepo.GitUID},

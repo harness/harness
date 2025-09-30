@@ -116,27 +116,6 @@ func New(ctx context.Context,
 		return nil, err
 	}
 
-	// pull request ref maintenance
-
-	const groupPullReqHeadRef = "gitness:pullreq:headref"
-	_, err = pullreqEvReaderFactory.Launch(ctx, groupPullReqHeadRef, config.InstanceID,
-		func(r *pullreqevents.Reader) error {
-			const idleTimeout = 10 * time.Second
-			r.Configure(
-				stream.WithConcurrency(1),
-				stream.WithHandlerOptions(
-					stream.WithIdleTimeout(idleTimeout),
-					stream.WithMaxRetries(3),
-				))
-
-			_ = r.RegisterBranchUpdated(service.updateHeadRefOnBranchUpdate)
-
-			return nil
-		})
-	if err != nil {
-		return nil, err
-	}
-
 	// pull request file viewed maintenance
 
 	const groupPullReqFileViewed = "gitness:pullreq:fileviewed"

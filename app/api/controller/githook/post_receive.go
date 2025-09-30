@@ -17,6 +17,7 @@ package githook
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -276,21 +277,15 @@ func (c *Controller) suggestPullRequest(
 	branchName string,
 	out *hook.Output,
 ) {
-	if branchName == repo.DefaultBranch {
-		// Don't suggest a pull request if this is a push to the default branch.
-		return
-	}
-
-	// do we have a PR related to it?
+	// Find the most recent few open PRs created from this branch.
 	prs, err := c.pullreqStore.List(ctx, &types.PullReqFilter{
-		Page: 1,
-		// without forks we expect at most one PR (keep 2 to not break when forks are introduced)
-		Size:         2,
+		Page:         1,
+		Size:         10,
 		SourceRepoID: repo.ID,
 		SourceBranch: branchName,
 		// we only care about open PRs - merged/closed will lead to "create new PR" message
 		States: []enum.PullReqState{enum.PullReqStateOpen},
-		Order:  enum.OrderAsc,
+		Order:  enum.OrderDesc,
 		Sort:   enum.PullReqSortCreated,
 		// don't care about the PR description, omit it from the response
 		ExcludeDescription: true,
@@ -304,23 +299,65 @@ func (c *Controller) suggestPullRequest(
 		return
 	}
 
-	// for already existing PRs, print them to users terminal for easier access.
-	if len(prs) > 0 {
-		msgs := make([]string, 2*len(prs)+1)
-		msgs[0] = fmt.Sprintf("Branch %q has open PRs:", branchName)
-		for i, pr := range prs {
-			msgs[2*i+1] = fmt.Sprintf("  (#%d) %s", pr.Number, pr.Title)
-			msgs[2*i+2] = "    " + c.urlProvider.GenerateUIPRURL(ctx, repo.Path, pr.Number)
-		}
+	slices.Reverse(prs) // Use ascending order for message output.
+
+	// For already existing PRs, print them to users terminal for easier access.
+	msgs, err := c.getOpenPRsMessages(ctx, repo, branchName, prs)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("failed to get messages for open pull request")
+		return
+	}
+	if len(msgs) > 0 {
 		out.Messages = append(out.Messages, msgs...)
 		return
 	}
 
-	// this is a new PR!
+	if branchName == repo.DefaultBranch {
+		// Don't suggest a pull request if this is a push to the default branch.
+		return
+	}
+
+	// This is a new PR!
 	out.Messages = append(out.Messages,
 		fmt.Sprintf("Create a pull request for %q by visiting:", branchName),
 		"  "+c.urlProvider.GenerateUICompareURL(ctx, repo.Path, repo.DefaultBranch, branchName),
 	)
+}
+
+func (c *Controller) getOpenPRsMessages(
+	ctx context.Context,
+	repo *types.Repository,
+	branchName string,
+	prs []*types.PullReq,
+) ([]string, error) {
+	if len(prs) == 0 {
+		return nil, nil
+	}
+
+	msgs := make([]string, 2*len(prs)+1)
+
+	if len(prs) == 1 {
+		msgs[0] = fmt.Sprintf("Branch %q has an open PR:", branchName)
+	} else {
+		msgs[0] = fmt.Sprintf("Branch %q has open PRs:", branchName)
+	}
+
+	for i, pr := range prs {
+		path := repo.Path
+		if pr.TargetRepoID != pr.SourceRepoID {
+			targetRepo, err := c.repoFinder.FindByID(ctx, pr.TargetRepoID)
+			if err != nil {
+				return nil, fmt.Errorf("failed to find target repo by ID: %w", err)
+			}
+
+			path = targetRepo.Path
+		}
+
+		msgs[2*i+1] = fmt.Sprintf("  (#%d) %s", pr.Number, pr.Title)
+		msgs[2*i+2] = "    " + c.urlProvider.GenerateUIPRURL(ctx, path, pr.Number)
+	}
+
+	return msgs, nil
 }
 
 // handleEmptyRepoPush updates repo default branch on empty repos if push contains branches.

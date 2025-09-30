@@ -86,7 +86,12 @@ func (c *Controller) Create(
 		return nil, err
 	}
 
-	targetRepo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush)
+	permissionRequired := enum.PermissionRepoPush
+	if in.SourceRepoRef != "" {
+		permissionRequired = enum.PermissionRepoView
+	}
+
+	targetRepo, err := c.getRepoCheckAccess(ctx, session, repoRef, permissionRequired)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to target repo: %w", err)
 	}
@@ -124,9 +129,20 @@ func (c *Controller) Create(
 		return nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}
 
+	if targetRepo.ID != sourceRepo.ID {
+		_, err = c.git.FetchObjects(ctx, &git.FetchObjectsParams{
+			WriteParams: targetWriteParams,
+			Source:      sourceRepo.GitUID,
+			ObjectSHAs:  []sha.SHA{sourceSHA},
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch git objects from the source repository: %w", err)
+		}
+	}
+
 	mergeBaseResult, err := c.git.MergeBase(ctx, git.MergeBaseParams{
 		ReadParams: git.ReadParams{RepoUID: sourceRepo.GitUID},
-		Ref1:       in.SourceBranch,
+		Ref1:       sourceSHA.String(),
 		Ref2:       in.TargetBranch,
 	})
 	if err != nil {

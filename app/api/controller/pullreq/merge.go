@@ -218,6 +218,21 @@ func (c *Controller) Merge(
 		}
 	}
 
+	getHeadRef, err := c.git.GetRef(ctx, git.GetRefParams{
+		ReadParams: git.ReadParams{RepoUID: targetRepo.GitUID},
+		Name:       strconv.FormatInt(pr.Number, 10),
+		Type:       gitenum.RefTypePullReqHead,
+	})
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get pull request head ref: %w", err)
+	}
+
+	if getHeadRef.SHA != sha.Must(pr.SourceSHA) {
+		return nil, nil, usererror.BadRequest("The pull request head ref doesn't match the source SHA.")
+	}
+
+	sourceSHA := getHeadRef.SHA
+
 	protectionRules, isRepoOwner, err := c.fetchRules(ctx, session, targetRepo)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to fetch rules: %w", err)
@@ -252,7 +267,7 @@ func (c *Controller) Merge(
 		return nil, nil, fmt.Errorf("failed to verify protection rules: %w", err)
 	}
 
-	deleteSourceBranch := in.DeleteSourceBranch || ruleOut.DeleteSourceBranch
+	deleteSourceBranch := pr.TargetRepoID == pr.SourceRepoID && (in.DeleteSourceBranch || ruleOut.DeleteSourceBranch)
 
 	if in.DryRunRules {
 		err := c.backfillApprovalInfo(ctx, ruleOut.DefaultReviewerApprovals)
@@ -328,12 +343,11 @@ func (c *Controller) Merge(
 			}
 
 			mergeOutput, err = c.git.Merge(ctx, &git.MergeParams{
-				WriteParams:           writeParams,
-				BaseBranch:            pr.TargetBranch,
-				HeadBranch:            pr.SourceBranch,
-				Refs:                  nil, // update no refs -> no commit will be created
-				HeadBranchExpectedSHA: sha.Must(in.SourceSHA),
-				Method:                gitenum.MergeMethod(in.Method),
+				WriteParams: writeParams,
+				BaseBranch:  pr.TargetBranch,
+				HeadSHA:     sourceSHA,
+				Refs:        nil, // update no refs -> no commit will be created
+				Method:      gitenum.MergeMethod(in.Method),
 			})
 			if err != nil {
 				return nil, nil, fmt.Errorf("failed merge check with method=%s: %w", in.Method, err)
@@ -517,17 +531,16 @@ func (c *Controller) Merge(
 
 	now := time.Now()
 	mergeOutput, err := c.git.Merge(ctx, &git.MergeParams{
-		WriteParams:           targetWriteParams,
-		BaseBranch:            pr.TargetBranch,
-		HeadBranch:            pr.SourceBranch,
-		Message:               git.CommitMessage(in.Title, in.Message),
-		Committer:             committer,
-		CommitterDate:         &now,
-		Author:                author,
-		AuthorDate:            &now,
-		Refs:                  refUpdates,
-		HeadBranchExpectedSHA: sha.Must(in.SourceSHA),
-		Method:                gitenum.MergeMethod(in.Method),
+		WriteParams:   targetWriteParams,
+		BaseBranch:    pr.TargetBranch,
+		HeadSHA:       sourceSHA,
+		Message:       git.CommitMessage(in.Title, in.Message),
+		Committer:     committer,
+		CommitterDate: &now,
+		Author:        author,
+		AuthorDate:    &now,
+		Refs:          refUpdates,
+		Method:        gitenum.MergeMethod(in.Method),
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("merge execution failed: %w", err)

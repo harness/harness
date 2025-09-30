@@ -56,7 +56,7 @@ func (c *Controller) Update(ctx context.Context,
 		return nil, err
 	}
 
-	targetRepo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush)
+	targetRepo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to target repo: %w", err)
 	}
@@ -74,10 +74,11 @@ func (c *Controller) Update(ctx context.Context,
 			return nil, fmt.Errorf("failed to get source repo by id: %w", err)
 		}
 
-		if err = apiauth.CheckRepo(ctx, c.authorizer, session, sourceRepo,
-			enum.PermissionRepoView); err != nil {
+		if err = apiauth.CheckRepo(ctx, c.authorizer, session, sourceRepo, enum.PermissionRepoView); err != nil {
 			return nil, fmt.Errorf("failed to acquire access to source repo: %w", err)
 		}
+	} else if err = apiauth.CheckRepo(ctx, c.authorizer, session, targetRepo, enum.PermissionRepoPush); err != nil {
+		return nil, fmt.Errorf("failed to acquire access to target repo: %w", err)
 	}
 
 	titleOld := pr.Title

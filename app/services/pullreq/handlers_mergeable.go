@@ -168,12 +168,11 @@ func (s *Service) updateMergeData(
 	// call merge and store output in pr merge reference.
 	now := time.Now()
 	mergeOutput, err := s.git.Merge(ctx, &git.MergeParams{
-		WriteParams:           writeParams,
-		BaseBranch:            pr.TargetBranch,
-		HeadBranch:            pr.SourceBranch,
-		Refs:                  refs,
-		HeadBranchExpectedSHA: sha.Must(newSHA),
-		Force:                 true,
+		WriteParams: writeParams,
+		BaseBranch:  pr.TargetBranch,
+		HeadSHA:     sha.Must(newSHA),
+		Refs:        refs,
+		Force:       true,
 
 		// set committer date to ensure repeatability of merge commit across replicas
 		CommitterDate: &now,

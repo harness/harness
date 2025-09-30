@@ -65,7 +65,7 @@ func (c *Controller) State(ctx context.Context,
 		return nil, err
 	}
 
-	targetRepo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush)
+	targetRepo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to target repo: %w", err)
 	}
@@ -84,10 +84,11 @@ func (c *Controller) State(ctx context.Context,
 			return nil, fmt.Errorf("failed to get source repo by id: %w", err)
 		}
 
-		if err = apiauth.CheckRepo(ctx, c.authorizer, session, sourceRepo,
-			enum.PermissionRepoView); err != nil {
+		if err = apiauth.CheckRepo(ctx, c.authorizer, session, sourceRepo, enum.PermissionRepoView); err != nil {
 			return nil, fmt.Errorf("failed to acquire access to source repo: %w", err)
 		}
+	} else if err = apiauth.CheckRepo(ctx, c.authorizer, session, targetRepo, enum.PermissionRepoPush); err != nil {
+		return nil, fmt.Errorf("failed to acquire access to target repo: %w", err)
 	}
 
 	if pr.State == enum.PullReqStateMerged {
@@ -96,6 +97,11 @@ func (c *Controller) State(ctx context.Context,
 
 	if pr.State == in.State && in.IsDraft == pr.IsDraft {
 		return pr, nil // no changes are necessary: state is the same and is_draft hasn't change
+	}
+
+	targetWriteParams, err := controller.CreateRPCSystemReferencesWriteParams(ctx, c.urlProvider, session, targetRepo)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}
 
 	oldState := pr.State
@@ -126,9 +132,20 @@ func (c *Controller) State(ctx context.Context,
 			return nil, err
 		}
 
+		if targetRepo.ID != sourceRepo.ID {
+			_, err = c.git.FetchObjects(ctx, &git.FetchObjectsParams{
+				WriteParams: targetWriteParams,
+				Source:      sourceRepo.GitUID,
+				ObjectSHAs:  []sha.SHA{sourceSHA},
+			})
+			if err != nil {
+				return nil, fmt.Errorf("failed to fetch git objects from the source repository: %w", err)
+			}
+		}
+
 		mergeBaseResult, err := c.git.MergeBase(ctx, git.MergeBaseParams{
 			ReadParams: git.ReadParams{RepoUID: sourceRepo.GitUID},
-			Ref1:       pr.SourceBranch,
+			Ref1:       sourceSHA.String(),
 			Ref2:       pr.TargetBranch,
 		})
 		if err != nil {
@@ -137,14 +154,13 @@ func (c *Controller) State(ctx context.Context,
 
 		mergeBaseSHA = mergeBaseResult.MergeBaseSHA
 
+		if mergeBaseSHA == sourceSHA {
+			return nil, usererror.BadRequest("The source branch doesn't contain any new commits")
+		}
+
 		stateChange = changeReopen
 	} else if pr.State == enum.PullReqStateOpen && in.State != enum.PullReqStateOpen {
 		stateChange = changeClose
-	}
-
-	targetWriteParams, err := controller.CreateRPCSystemReferencesWriteParams(ctx, c.urlProvider, session, targetRepo)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}
 
 	err = controller.TxOptLock(ctx, c.tx, func(ctx context.Context) error {
