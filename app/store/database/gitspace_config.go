@@ -369,9 +369,9 @@ func addGitspaceFilter(stmt squirrel.SelectBuilder, filter *types.GitspaceFilter
 		stmt = stmt.Where(squirrel.Eq{"gconf_is_marked_for_deletion": filter.MarkedForDeletion})
 	}
 
-	// do not add check for adding filter only when len(filter.SpaceIDs) == 0.
-	// Otherwise when len(filter.SpaceIDs) == 0 user will be able to see all gitspaces from all accounts.
-	stmt = stmt.Where(squirrel.Eq{"gconf_space_id": filter.SpaceIDs})
+	if !filter.AllowAllSpaces {
+		stmt = stmt.Where(squirrel.Eq{"gconf_space_id": filter.SpaceIDs})
+	}
 
 	if len(filter.CodeRepoTypes) > 0 {
 		stmt = stmt.Where(squirrel.Eq{"gconf_code_repo_type": filter.CodeRepoTypes})

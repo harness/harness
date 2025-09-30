@@ -119,7 +119,9 @@ type GitspaceInstanceFilter struct {
 	LastUpdatedBefore   int64
 	States              []enum.GitspaceInstanceStateType
 	SpaceIDs            []int64
-	Limit               int
+	// AllowAllSpaces is enabled for cde-manager jobs to list all gitspaces
+	AllowAllSpaces bool
+	Limit          int
 }
 
 func (g *GitspaceInstance) GetGitspaceState() (enum.GitspaceStateType, error) {
