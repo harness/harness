@@ -91,12 +91,16 @@ func NewAPIHandler(
 	spaceController *spacecontroller.Controller,
 	quarantineArtifactRepository store.QuarantineArtifactRepository,
 	spaceStore corestore.SpaceStore,
+	packageWrapper interfaces.PackageWrapper,
 ) APIHandler {
 	r := chi.NewRouter()
 	r.Use(audit.Middleware())
 	r.Use(middlewareauthn.Attempt(authenticator))
 	r.Use(middleware.CheckAuth())
+
+	// registry metadata helper
 	registryMetadataHelper := metadata.NewRegistryMetadataHelper(spacePathStore, spaceFinder, repoDao)
+
 	apiController := metadata.NewAPIController(
 		repoDao,
 		fileManager,
@@ -131,6 +135,7 @@ func NewAPIHandler(
 		func(_ context.Context) bool {
 			return true
 		},
+		packageWrapper,
 	)
 
 	handler := artifact.NewStrictHandler(apiController, []artifact.StrictMiddlewareFunc{})

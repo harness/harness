@@ -22,6 +22,7 @@ import (
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
+	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
@@ -133,7 +134,7 @@ func (c *APIController) createVirtualRegistry(
 	ctx context.Context, registryRequest artifact.RegistryRequest, regInfo *registrytypes.RegistryRequestBaseInfo,
 	session *auth.Session, parentRef artifact.SpaceRefPathParam,
 ) (artifact.CreateRegistryResponseObject, error) {
-	registry, err := CreateRegistryEntity(registryRequest, regInfo.ParentID, regInfo.RootIdentifierID)
+	registry, err := c.CreateRegistryEntity(registryRequest, regInfo.ParentID, regInfo.RootIdentifierID)
 	if err != nil {
 		return throwCreateRegistry400Error(err), nil
 	}
@@ -242,20 +243,20 @@ func throwCreateRegistry400Error(err error) artifact.CreateRegistry400JSONRespon
 	}
 }
 
-func CreateRegistryEntity(
+func (c *APIController) CreateRegistryEntity(
 	dto artifact.RegistryRequest, parentID int64,
 	rootParentID int64,
 ) (*registrytypes.Registry, error) {
 	allowedPattern, blockedPattern, description, labels := getRepoEntityFields(dto)
-	e := ValidatePackageType(string(dto.PackageType))
-	if e != nil {
-		return nil, e
+	ok := c.PackageWrapper.IsValidPackageType(string(dto.PackageType))
+	if !ok {
+		return nil, usererror.BadRequest(fmt.Sprintf("invalid package type: %s", dto.PackageType))
 	}
-	e = ValidateRepoType(string(dto.Config.Type))
-	if e != nil {
-		return nil, e
+	ok = c.PackageWrapper.ValidateRepoType(string(dto.PackageType), string(dto.Config.Type))
+	if !ok {
+		return nil, usererror.BadRequest(fmt.Sprintf("invalid repo type: %s", dto.Config.Type))
 	}
-	e = ValidateIdentifier(dto.Identifier)
+	e := ValidateIdentifier(dto.Identifier)
 	if e != nil {
 		return nil, e
 	}
@@ -285,11 +286,11 @@ func (c *APIController) CreateUpstreamProxyEntity(
 	if dto.BlockedPattern != nil {
 		blockedPattern = *dto.BlockedPattern
 	}
-	e := ValidatePackageType(string(dto.PackageType))
-	if e != nil {
-		return nil, nil, e
+	ok := c.PackageWrapper.IsValidPackageType(string(dto.PackageType))
+	if !ok {
+		return nil, nil, usererror.BadRequest(fmt.Sprintf("invalid package type: %s", dto.PackageType))
 	}
-	e = ValidateUpstream(dto.Config)
+	e := ValidateUpstream(c.PackageWrapper, dto.PackageType, dto.Config)
 	if e != nil {
 		return nil, nil, e
 	}
@@ -317,9 +318,9 @@ func (c *APIController) CreateUpstreamProxyEntity(
 		AuthType: string(config.AuthType),
 	}
 	if config.Source != nil && len(string(*config.Source)) > 0 {
-		err := ValidateUpstreamSource(string(*config.Source))
-		if err != nil {
-			return nil, nil, err
+		ok := c.PackageWrapper.ValidateUpstreamSource(string(dto.PackageType), string(*config.Source))
+		if !ok {
+			return nil, nil, usererror.BadRequest(fmt.Sprintf("invalid upstream source: %s", *config.Source))
 		}
 		upstreamProxyConfigEntity.Source = string(*config.Source)
 	}

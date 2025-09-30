@@ -67,6 +67,7 @@ type APIController struct {
 	QuarantineArtifactRepository store.QuarantineArtifactRepository
 	SpaceStore                   gstore.SpaceStore
 	UntaggedImagesEnabled        func(ctx context.Context) bool
+	PackageWrapper               interfaces.PackageWrapper
 }
 
 func NewAPIController(
@@ -101,6 +102,7 @@ func NewAPIController(
 	quarantineArtifactRepository store.QuarantineArtifactRepository,
 	spaceStore gstore.SpaceStore,
 	untaggedImagesEnabled func(ctx context.Context) bool,
+	packageWrapper interfaces.PackageWrapper,
 ) *APIController {
 	return &APIController{
 		fileManager:                  fileManager,
@@ -134,5 +136,6 @@ func NewAPIController(
 		QuarantineArtifactRepository: quarantineArtifactRepository,
 		SpaceStore:                   spaceStore,
 		UntaggedImagesEnabled:        untaggedImagesEnabled,
+		PackageWrapper:               packageWrapper,
 	}
 }

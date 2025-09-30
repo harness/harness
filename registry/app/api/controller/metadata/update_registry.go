@@ -21,6 +21,7 @@ import (
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
+	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
@@ -375,9 +376,9 @@ func (c *APIController) UpdateUpstreamProxyEntity(
 		CreatedAt:  u.CreatedAt,
 	}
 	if config.Source != nil && len(string(*config.Source)) > 0 {
-		err := ValidateUpstreamSource(string(*config.Source))
-		if err != nil {
-			return nil, nil, err
+		ok := c.PackageWrapper.ValidateUpstreamSource(string(*config.Source), string(u.PackageType))
+		if !ok {
+			return nil, nil, usererror.BadRequest(fmt.Sprintf("invalid upstream source: %s", *config.Source))
 		}
 		upstreamProxyConfigEntity.Source = string(*config.Source)
 	}

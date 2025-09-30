@@ -34,6 +34,7 @@ import (
 	"github.com/harness/gitness/registry/app/api/handler/packages"
 	"github.com/harness/gitness/registry/app/api/handler/python"
 	"github.com/harness/gitness/registry/app/api/handler/rpm"
+	"github.com/harness/gitness/registry/app/api/interfaces"
 	generic2 "github.com/harness/gitness/registry/app/api/router/generic"
 	"github.com/harness/gitness/registry/app/api/router/harness"
 	mavenRouter "github.com/harness/gitness/registry/app/api/router/maven"
@@ -93,6 +94,7 @@ func APIHandlerProvider(
 	spaceController *spacecontroller.Controller,
 	quarantineArtifactRepository store.QuarantineArtifactRepository,
 	spaceStore corestore.SpaceStore,
+	packageWrapper interfaces.PackageWrapper,
 ) harness.APIHandler {
 	return harness.NewAPIHandler(
 		repoDao,
@@ -125,6 +127,7 @@ func APIHandlerProvider(
 		spaceController,
 		quarantineArtifactRepository,
 		spaceStore,
+		packageWrapper,
 	)
 }
 

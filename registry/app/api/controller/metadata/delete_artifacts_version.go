@@ -118,7 +118,7 @@ func (c *APIController) DeleteArtifactVersion(ctx context.Context, r artifact.De
 			break
 		}
 		c.PostProcessingReporter.BuildRegistryIndex(ctx, regInfo.RegistryID, make([]registryTypes.SourceRef, 0))
-	case artifact.PackageTypeCARGO, artifact.PackageTypeGO:
+	case artifact.PackageTypeGO:
 		err = c.deleteVersion(ctx, regInfo, imageInfo, artifactName, versionName)
 		if err != nil {
 			break
@@ -129,7 +129,7 @@ func (c *APIController) DeleteArtifactVersion(ctx context.Context, r artifact.De
 		)
 		c.PostProcessingReporter.BuildPackageIndex(ctx, regInfo.RegistryID, artifactName)
 	default:
-		err = fmt.Errorf("unsupported package type: %s", regInfo.PackageType)
+		err = c.PackageWrapper.DeleteArtifactVersion(ctx, regInfo, imageInfo, artifactName, versionName)
 	}
 
 	if err != nil {

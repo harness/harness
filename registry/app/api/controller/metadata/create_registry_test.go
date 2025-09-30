@@ -30,6 +30,9 @@ import (
 	"github.com/harness/gitness/registry/app/api/controller/mocks"
 	api "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	registryevents "github.com/harness/gitness/registry/app/events/artifact"
+	"github.com/harness/gitness/registry/app/factory"
+	"github.com/harness/gitness/registry/app/helpers"
+	"github.com/harness/gitness/registry/app/helpers/pkg"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/registry/utils"
@@ -227,21 +230,11 @@ func TestCreateRegistry(t *testing.T) {
 				mockCleanupPolicyRepo.On("GetByRegistryID", mock.Anything,
 					baseInfo.RegistryID).Return(&[]types.CleanupPolicy{}, nil).Once()
 
-				// Authorizer mock already setup above.
+				packageFactory := factory.NewPackageFactory()
+				packageFactory.Register(pkg.NewDockerPackageType(nil))
+				packageWrapper := helpers.NewPackageWrapper(packageFactory)
 
-				// Create controller.
-				// Setup transactor mock.
-				mockTransactor.On("WithTx", mock.Anything,
-					mock.AnythingOfType("func(context.Context) error"), mock.Anything).Run(func(args mock.Arguments) {
-					// Execute the transaction function.
-					txFn, ok := args.Get(1).(func(context.Context) error)
-					assert.True(t, ok, "Transaction function conversion failed")
-					err := txFn(context.Background())
-					// Check if an error occurs during transaction execution.
-					assert.NoError(t, err, "Transaction function should not return an error")
-				}).Return(nil)
-
-				// Create controller.
+				// Create controller with updated signature.
 				return metadata.NewAPIController(
 					mockRegistryRepo,
 					fileManager,
@@ -264,9 +257,9 @@ func TestCreateRegistry(t *testing.T) {
 					mockRegistryMetadataHelper,
 					nil, // webhookService.
 					eventReporter,
-					nil, // downloadStatRepository.
-					"",
-					nil, // registryBlobStore - not needed for this test.
+					nil, //
+					"",  // downloadStatRepository.
+					nil,
 					mockRegFinder,
 					nil, // PostProcessingReporter - not needed for this test.
 					nil,
@@ -276,6 +269,7 @@ func TestCreateRegistry(t *testing.T) {
 					func(_ context.Context) bool {
 						return true
 					},
+					packageWrapper,
 				)
 			},
 		},
@@ -356,6 +350,7 @@ func TestCreateRegistry(t *testing.T) {
 					func(_ context.Context) bool {
 						return true
 					},
+					nil,
 				)
 			},
 		},

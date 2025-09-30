@@ -24,6 +24,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/app/api/usererror"
+	"github.com/harness/gitness/registry/app/api/interfaces"
 	a "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 
@@ -105,53 +107,14 @@ var artifactFilesSortMap = map[string]string{
 	"createdAt": "created_at",
 }
 
-var validRepositoryTypes = []string{
-	string(a.RegistryTypeUPSTREAM),
-	string(a.RegistryTypeVIRTUAL),
-}
-
 var validScopes = []string{
 	string(a.Ancestors),
 	string(a.Descendants),
 	string(a.None),
 }
 
-var validPackageTypes = []string{
-	string(a.PackageTypeDOCKER),
-	string(a.PackageTypeHELM),
-	string(a.PackageTypeGENERIC),
-	string(a.PackageTypeMAVEN),
-	string(a.PackageTypePYTHON),
-	string(a.PackageTypeNPM),
-	string(a.PackageTypeRPM),
-	string(a.PackageTypeNUGET),
-	string(a.PackageTypeCARGO),
-	string(a.PackageTypeGO),
-	string(a.PackageTypeHUGGINGFACE),
-}
-
-var validUpstreamSources = []string{
-	string(a.UpstreamConfigSourceCustom),
-	string(a.UpstreamConfigSourceDockerhub),
-	string(a.UpstreamConfigSourceAwsEcr),
-	string(a.UpstreamConfigSourceMavenCentral),
-	string(a.UpstreamConfigSourcePyPi),
-	string(a.UpstreamConfigSourceNpmJs),
-	string(a.UpstreamConfigSourceNugetOrg),
-	string(a.UpstreamConfigSourceCrates),
-	string(a.UpstreamConfigSourceGoProxy),
-	string(a.UpstreamConfigSourceHuggingFace),
-}
-
 var validArtifactTypesMapping = map[string][]string{
 	string(a.PackageTypeHUGGINGFACE): {string(a.ArtifactTypeModel), string(a.ArtifactTypeDataset)},
-}
-
-func ValidatePackageTypes(packageTypes []string) error {
-	if commons.IsEmpty(packageTypes) || IsPackageTypesValid(packageTypes) {
-		return nil
-	}
-	return errors.New("invalid package type")
 }
 
 func ValidateScope(scope string) error {
@@ -173,13 +136,6 @@ func ValidateAndGetArtifactType(packageType a.PackageType, artifactTypeParam str
 		}
 	}
 	return nil, errors.New("invalid artifact type for package type")
-}
-
-func ValidatePackageType(packageType string) error {
-	if len(packageType) == 0 || IsPackageTypeValid(packageType) {
-		return nil
-	}
-	return errors.New("invalid package type")
 }
 
 func ValidatePackageTypeChange(fromDB, newPackage string) error {
@@ -215,74 +171,22 @@ func ValidateIdentifier(identifier string) error {
 	return nil
 }
 
-func ValidateUpstream(config *a.RegistryConfig) error {
+func ValidateUpstream(
+	packageWrapper interfaces.PackageWrapper,
+	packageType a.PackageType,
+	config *a.RegistryConfig,
+) error {
 	upstreamConfig, err := config.AsUpstreamConfig()
 	if err != nil {
 		return err
 	}
 	if !commons.IsEmpty(config.Type) && config.Type == a.RegistryTypeUPSTREAM &&
-		*upstreamConfig.Source != a.UpstreamConfigSourceDockerhub &&
-		*upstreamConfig.Source != a.UpstreamConfigSourceMavenCentral &&
-		*upstreamConfig.Source != a.UpstreamConfigSourcePyPi &&
-		*upstreamConfig.Source != a.UpstreamConfigSourceNpmJs &&
-		*upstreamConfig.Source != a.UpstreamConfigSourceNugetOrg &&
-		*upstreamConfig.Source != a.UpstreamConfigSourceCrates &&
-		*upstreamConfig.Source != a.UpstreamConfigSourceGoProxy {
+		packageWrapper.IsURLRequiredForUpstreamSource(string(packageType), string(*upstreamConfig.Source)) {
 		if commons.IsEmpty(upstreamConfig.Url) {
-			return errors.New("URL is required for upstream repository")
+			return usererror.BadRequest("URL is required for upstream repository")
 		}
 	}
 	return nil
-}
-
-func ValidateRepoType(repoType string) error {
-	if len(repoType) == 0 || IsRepoTypeValid(repoType) {
-		return nil
-	}
-	return errors.New("invalid repository type")
-}
-
-func ValidateUpstreamSource(source string) error {
-	if len(source) == 0 || IsUpstreamSourceValid(source) {
-		return nil
-	}
-	return errors.New("invalid upstream proxy source")
-}
-
-func IsRepoTypeValid(repoType string) bool {
-	for _, item := range validRepositoryTypes {
-		if item == repoType {
-			return true
-		}
-	}
-	return false
-}
-
-func IsUpstreamSourceValid(source string) bool {
-	for _, item := range validUpstreamSources {
-		if item == source {
-			return true
-		}
-	}
-	return false
-}
-
-func IsPackageTypeValid(packageType string) bool {
-	for _, item := range validPackageTypes {
-		if item == packageType {
-			return true
-		}
-	}
-	return false
-}
-
-func IsPackageTypesValid(packageTypes []string) bool {
-	for _, item := range packageTypes {
-		if !IsPackageTypeValid(item) {
-			return false
-		}
-	}
-	return true
 }
 
 func IsScopeValid(scope string) bool {

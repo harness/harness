@@ -88,11 +88,15 @@ func (c *APIController) GetAllRegistries(
 	if r.Params.Type != nil {
 		repoType = string(*r.Params.Type)
 	}
-	e := ValidatePackageTypes(regInfo.packageTypes)
-	if e != nil {
-		return nil, e
+	ok := c.PackageWrapper.IsValidPackageTypes(regInfo.packageTypes)
+	if !ok {
+		return artifact.GetAllRegistries400JSONResponse{
+			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
+				*GetErrorResponse(http.StatusBadRequest, "invalid package type"),
+			),
+		}, nil
 	}
-	e = ValidateScope(regInfo.scope)
+	e := ValidateScope(regInfo.scope)
 	if e != nil {
 		return artifact.GetAllRegistries400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
@@ -100,9 +104,13 @@ func (c *APIController) GetAllRegistries(
 			),
 		}, nil
 	}
-	e = ValidateRepoType(repoType)
-	if e != nil {
-		return nil, e
+	ok = c.PackageWrapper.IsValidRepoType(repoType)
+	if !ok {
+		return artifact.GetAllRegistries400JSONResponse{
+			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
+				*GetErrorResponse(http.StatusBadRequest, "invalid repository type"),
+			),
+		}, nil
 	}
 
 	parentIDs := []int64{regInfo.ParentID}
