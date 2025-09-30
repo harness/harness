@@ -277,19 +277,38 @@ func (m *Mount) UnmarshalJSON(data []byte) error {
 
 func ParseMountsFromRawSlice(values []any) ([]*Mount, error) {
 	var mounts []*Mount
+
 	for _, value := range values {
-		if mountValue, isObject := value.(*Mount); isObject {
-			mounts = append(mounts, mountValue)
-		} else if strVal, isString := value.(string); isString {
-			dst, err := stringToObject(strVal)
+		switch v := value.(type) {
+		case *Mount:
+			mounts = append(mounts, v)
+
+		case map[string]any:
+			// when coming from unmarshal
+			mount := &Mount{}
+			if src, ok := v["source"].(string); ok {
+				mount.Source = src
+			}
+			if tgt, ok := v["target"].(string); ok {
+				mount.Target = tgt
+			}
+			if typ, ok := v["type"].(string); ok {
+				mount.Type = typ
+			}
+			mounts = append(mounts, mount)
+
+		case string: // when it’s a raw "ap[...]" string
+			dst, err := stringToObject(v)
 			if err != nil {
 				return nil, err
 			}
 			mounts = append(mounts, dst)
-		} else {
-			return nil, fmt.Errorf("invalid mount value: %+v", value)
+
+		default:
+			return nil, fmt.Errorf("invalid mount value: %+v (type %T)", value, value)
 		}
 	}
+
 	return mounts, nil
 }
 
