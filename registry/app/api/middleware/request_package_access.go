@@ -17,7 +17,9 @@ package middleware
 import (
 	"net/http"
 
+	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/render"
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/registry/app/api/handler/packages"
 	"github.com/harness/gitness/types/enum"
 )
@@ -34,6 +36,27 @@ func RequestPackageAccess(
 				return
 			}
 
+			next.ServeHTTP(w, r.WithContext(r.Context()))
+		})
+	}
+}
+
+func RequestNugetPackageAccess(
+	packageHandler packages.Handler,
+	reqPermissions ...enum.Permission,
+) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			err := packageHandler.GetRegistryCheckAccess(r.Context(), r, reqPermissions...)
+			if err != nil {
+				if errors.Is(err, apiauth.ErrUnauthorized) {
+					setNugetAuthChallenge(r.Method, w)
+					render.Unauthorized(r.Context(), w)
+					return
+				}
+				render.TranslatedUserError(r.Context(), w, err)
+				return
+			}
 			next.ServeHTTP(w, r.WithContext(r.Context()))
 		})
 	}

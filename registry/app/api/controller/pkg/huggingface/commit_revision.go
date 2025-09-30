@@ -34,7 +34,8 @@ import (
 func (c *controller) CommitRevision(
 	ctx context.Context,
 	info hftype.ArtifactInfo,
-	body io.ReadCloser) *CommitRevisionResponse {
+	body io.ReadCloser,
+) *CommitRevisionResponse {
 	f := func(registry registrytypes.Registry, a pkg.Artifact) response.Response {
 		info.RegIdentifier = registry.Name
 		info.RegistryID = registry.ID

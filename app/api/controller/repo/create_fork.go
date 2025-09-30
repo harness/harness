@@ -88,7 +88,8 @@ func (c *Controller) CreateFork(
 			return nil, errors.InvalidArgument("Can not create a public fork from a private repository.")
 		}
 
-		isPublicAccessSupported, err := c.publicAccess.IsPublicAccessSupported(ctx, parentSpace.Path)
+		isPublicAccessSupported, err := c.publicAccess.
+			IsPublicAccessSupported(ctx, enum.PublicResourceTypeRepo, parentSpace.Path)
 		if err != nil {
 			return nil, fmt.Errorf(
 				"failed to check if public access is supported for parent space %q: %w",

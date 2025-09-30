@@ -16,6 +16,7 @@ package cargo
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 	"path"
@@ -25,6 +26,9 @@ import (
 	"github.com/harness/gitness/registry/app/metadata/cargo"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	cargotype "github.com/harness/gitness/registry/app/pkg/types/cargo"
+	gitnessenum "github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 func (c *controller) GetRegistryConfig(
@@ -38,6 +42,30 @@ func (c *controller) GetRegistryConfig(
 	registryRef := metadata.GetRegistryRef(info.RootIdentifier, info.RegIdentifier)
 	apiURL := c.urlProvider.PackageURL(ctx, registryRef, "cargo")
 	downloadURL := c.getDownloadURL(apiURL)
+	space, err := c.spaceFinder.FindByID(ctx, info.ParentID)
+	if err != nil {
+		log.Ctx(ctx).Error().Stack().Str("middleware",
+			"OciCheckAuth").Err(err).Msgf("error while fetching the space with ID: %d err: %v", info.ParentID,
+			err)
+		responseHeaders.Code = http.StatusInternalServerError
+		return &GetRegistryConfigResponse{
+			BaseResponse: BaseResponse{
+				ResponseHeaders: responseHeaders,
+			},
+		}, fmt.Errorf("failed to get space: %w", err)
+	}
+
+	publicAccessSupported, err := c.publicAccessService.
+		Get(ctx, gitnessenum.PublicResourceTypeRegistry, space.Path+"/"+info.RegIdentifier)
+	if err != nil {
+		responseHeaders.Code = http.StatusInternalServerError
+		return &GetRegistryConfigResponse{
+			BaseResponse: BaseResponse{
+				ResponseHeaders: responseHeaders,
+			},
+		}, fmt.Errorf("failed to check public access: %w", err)
+	}
+
 	responseHeaders.Code = http.StatusOK
 	return &GetRegistryConfigResponse{
 		BaseResponse: BaseResponse{
@@ -46,7 +74,7 @@ func (c *controller) GetRegistryConfig(
 		Config: &cargo.RegistryConfig{
 			DownloadURL:  downloadURL,
 			APIURL:       apiURL,
-			AuthRequired: true,
+			AuthRequired: !publicAccessSupported,
 		},
 	}, nil
 }

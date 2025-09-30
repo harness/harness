@@ -58,6 +58,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/nuget"
 	"github.com/harness/gitness/registry/app/pkg/python"
 	rpmregistry "github.com/harness/gitness/registry/app/pkg/rpm"
+	publicaccess2 "github.com/harness/gitness/registry/app/services/publicaccess"
 	refcache2 "github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/app/store/cache"
@@ -109,6 +110,7 @@ func NewHandlerProvider(
 	authorizer authz.Authorizer,
 	config *types.Config,
 	registryFinder refcache2.RegistryFinder,
+	publicAccessService publicaccess2.CacheService,
 ) *ocihandler.Handler {
 	return ocihandler.NewHandler(
 		controller,
@@ -121,13 +123,15 @@ func NewHandlerProvider(
 		authorizer,
 		config.Registry.HTTP.RelativeURL,
 		registryFinder,
+		publicAccessService,
+		config.Auth.AnonymousUserSecret,
 	)
 }
 
 func NewMavenHandlerProvider(
 	controller *maven.Controller, spaceStore corestore.SpaceStore,
 	tokenStore corestore.TokenStore, userCtrl *usercontroller.Controller, authenticator authn.Authenticator,
-	authorizer authz.Authorizer, spaceFinder refcache.SpaceFinder,
+	authorizer authz.Authorizer, spaceFinder refcache.SpaceFinder, publicAccessService publicaccess2.CacheService,
 ) *mavenhandler.Handler {
 	return mavenhandler.NewHandler(
 		controller,
@@ -137,6 +141,7 @@ func NewMavenHandlerProvider(
 		authenticator,
 		authorizer,
 		spaceFinder,
+		publicAccessService,
 	)
 }
 
@@ -267,6 +272,7 @@ var WireSet = wire.NewSet(
 	huggingface.WireSet,
 	hf2.WireSet,
 	hf3.WireSet,
+	publicaccess2.WireSet,
 )
 
 func Wire(_ *types.Config) (RegistryApp, error) {

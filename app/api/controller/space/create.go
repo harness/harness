@@ -61,7 +61,8 @@ func (c *Controller) Create(
 		return nil, err
 	}
 
-	isPublicAccessSupported, err := c.publicAccess.IsPublicAccessSupported(ctx, parentSpace.Path)
+	isPublicAccessSupported, err := c.publicAccess.
+		IsPublicAccessSupported(ctx, enum.PublicResourceTypeRepo, parentSpace.Path)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"failed to check if public access is supported for parent space %q: %w",

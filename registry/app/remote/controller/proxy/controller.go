@@ -333,6 +333,7 @@ func (c *controller) ProxyBlob(
 		}
 		log.Ctx(ctx2).Info().Msgf("Successfully updated the cache for digest %s", art.Digest)
 	}(art)
+
 	return size, bReader, nil
 }
 

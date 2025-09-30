@@ -27,8 +27,10 @@ import (
 	registrytypes "github.com/harness/gitness/registry/types"
 )
 
-func (c *controller) UploadPackage(ctx context.Context, info nugettype.ArtifactInfo, fileReader io.ReadCloser,
-	fileBundleType nuget.FileBundleType) *PutArtifactResponse {
+func (c *controller) UploadPackage(
+	ctx context.Context, info nugettype.ArtifactInfo, fileReader io.ReadCloser,
+	fileBundleType nuget.FileBundleType,
+) *PutArtifactResponse {
 	f := func(registry registrytypes.Registry, a pkg.Artifact) response.Response {
 		info.RegIdentifier = registry.Name
 		info.RegistryID = registry.ID

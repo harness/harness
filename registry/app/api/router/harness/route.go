@@ -23,12 +23,12 @@ import (
 	"github.com/harness/gitness/app/api/middleware/encode"
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/publicaccess"
 	corestore "github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/registry/app/api/controller/metadata"
 	"github.com/harness/gitness/registry/app/api/interfaces"
-	"github.com/harness/gitness/registry/app/api/middleware"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	storagedriver "github.com/harness/gitness/registry/app/driver"
 	registryevents "github.com/harness/gitness/registry/app/events/artifact"
@@ -92,13 +92,11 @@ func NewAPIHandler(
 	quarantineArtifactRepository store.QuarantineArtifactRepository,
 	spaceStore corestore.SpaceStore,
 	packageWrapper interfaces.PackageWrapper,
+	publicAccess publicaccess.Service,
 ) APIHandler {
 	r := chi.NewRouter()
 	r.Use(audit.Middleware())
 	r.Use(middlewareauthn.Attempt(authenticator))
-	r.Use(middleware.CheckAuth())
-
-	// registry metadata helper
 	registryMetadataHelper := metadata.NewRegistryMetadataHelper(spacePathStore, spaceFinder, repoDao)
 
 	apiController := metadata.NewAPIController(
@@ -136,6 +134,7 @@ func NewAPIHandler(
 			return true
 		},
 		packageWrapper,
+		publicAccess,
 	)
 
 	handler := artifact.NewStrictHandler(apiController, []artifact.StrictMiddlewareFunc{})

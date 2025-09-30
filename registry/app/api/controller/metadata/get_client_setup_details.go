@@ -23,6 +23,7 @@ import (
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
+	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/common"
@@ -103,38 +104,30 @@ func (c *APIController) GenerateClientSetupDetails(
 	registryRef string,
 	registryType artifact.RegistryType,
 ) *artifact.ClientSetupDetailsResponseJSONResponse {
-	session, _ := request.AuthSessionFrom(ctx)
-	username := session.Principal.Email
-	loginUsernameLabel := "Username: <USERNAME>"
-	loginUsernameValue := "<USERNAME>"
-	loginPasswordLabel := "Password: *see step 2*"
 	blankString := ""
 	switch packageType {
 	case string(artifact.PackageTypeRPM):
-		return c.generateRpmClientSetupDetail(ctx, image, version, registryRef, username)
+		return c.generateRpmClientSetupDetail(ctx, image, version, registryRef)
 	case string(artifact.PackageTypeMAVEN):
-		return c.generateMavenClientSetupDetail(ctx, image, version, registryRef, username, registryType)
+		return c.generateMavenClientSetupDetail(ctx, image, version, registryRef, registryType)
 	case string(artifact.PackageTypeHELM):
-		return c.generateHelmClientSetupDetail(ctx, blankString, loginUsernameLabel, loginUsernameValue,
-			loginPasswordLabel, username, registryRef, image, version, registryType)
+		return c.generateHelmClientSetupDetail(ctx, blankString, registryRef, image, version, registryType)
 	case string(artifact.PackageTypeGENERIC):
 		return c.generateGenericClientSetupDetail(ctx, blankString, registryRef, image, version, registryType)
 	case string(artifact.PackageTypePYTHON):
-		return c.generatePythonClientSetupDetail(ctx, registryRef, username, image, version, registryType)
+		return c.generatePythonClientSetupDetail(ctx, registryRef, image, version, registryType)
 	case string(artifact.PackageTypeNPM):
-		return c.generateNpmClientSetupDetail(ctx, registryRef, username, image, version, registryType)
+		return c.generateNpmClientSetupDetail(ctx, registryRef, image, version, registryType)
 	case string(artifact.PackageTypeDOCKER):
-		return c.generateDockerClientSetupDetail(ctx, blankString, loginUsernameLabel, loginUsernameValue,
-			loginPasswordLabel, registryType,
-			username, registryRef, image, version)
+		return c.generateDockerClientSetupDetail(ctx, blankString, registryType, registryRef, image, version)
 	case string(artifact.PackageTypeNUGET):
-		return c.generateNugetClientSetupDetail(ctx, registryRef, username, image, version, registryType)
+		return c.generateNugetClientSetupDetail(ctx, registryRef, image, version, registryType)
 	case string(artifact.PackageTypeCARGO):
-		return c.generateCargoClientSetupDetail(ctx, registryRef, username, image, version, registryType)
+		return c.generateCargoClientSetupDetail(ctx, registryRef, image, version, registryType)
 	case string(artifact.PackageTypeGO):
-		return c.generateGoClientSetupDetail(ctx, registryRef, username, image, version, registryType)
+		return c.generateGoClientSetupDetail(ctx, registryRef, image, version, registryType)
 	case string(artifact.PackageTypeHUGGINGFACE):
-		return c.generateHuggingFaceClientSetupDetail(ctx, registryRef, username, image, version, registryType)
+		return c.generateHuggingFaceClientSetupDetail(ctx, registryRef, image, version, registryType)
 	default:
 		log.Debug().Ctx(ctx).Msgf("Unknown package type for client details: %s", packageType)
 		return nil
@@ -144,15 +137,85 @@ func (c *APIController) GenerateClientSetupDetails(
 func (c *APIController) generateDockerClientSetupDetail(
 	ctx context.Context,
 	blankString string,
-	loginUsernameLabel string,
-	loginUsernameValue string,
-	loginPasswordLabel string,
 	registryType artifact.RegistryType,
-	username string,
 	registryRef string,
 	image *artifact.ArtifactParam,
 	version *artifact.VersionParam,
 ) *artifact.ClientSetupDetailsResponseJSONResponse {
+	session, _ := request.AuthSessionFrom(ctx)
+	username := session.Principal.Email
+	var clientSetupDetails artifact.ClientSetupDetails
+	if auth.IsAnonymousSession(session) {
+		clientSetupDetails = c.getAnonymousDockerClientSetupDetails(ctx, blankString, registryType)
+	} else {
+		clientSetupDetails = c.getDockerClientSetupDetails(ctx, blankString, registryType)
+	}
+
+	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, image, version, "", "", "")
+
+	return &artifact.ClientSetupDetailsResponseJSONResponse{
+		Data:   clientSetupDetails,
+		Status: artifact.StatusSUCCESS,
+	}
+}
+
+func (c *APIController) getAnonymousDockerClientSetupDetails(
+	ctx context.Context,
+	blankString string,
+	registryType artifact.RegistryType,
+) artifact.ClientSetupDetails {
+	header2 := "Pull an image"
+	section2step1Header := "Run this Docker command in your terminal to pull image."
+	var dockerPullValue string
+	if c.UntaggedImagesEnabled(ctx) {
+		dockerPullValue = "docker pull <HOSTNAME>/<REGISTRY_NAME>/<IMAGE_NAME>@<DIGEST>"
+	} else {
+		dockerPullValue = "docker pull <HOSTNAME>/<REGISTRY_NAME>/<IMAGE_NAME>:<TAG>"
+	}
+	section2step1Commands := []artifact.ClientSetupStepCommand{
+		{Label: &blankString, Value: &dockerPullValue},
+	}
+	section2step1Type := artifact.ClientSetupStepTypeStatic
+	section2Steps := []artifact.ClientSetupStep{
+		{
+			Header:   &section2step1Header,
+			Commands: &section2step1Commands,
+			Type:     &section2step1Type,
+		},
+	}
+	section2 := artifact.ClientSetupSection{
+		Header: &header2,
+	}
+	_ = section2.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &section2Steps,
+	})
+	sections := []artifact.ClientSetupSection{
+		section2,
+	}
+
+	if registryType == artifact.RegistryTypeUPSTREAM {
+		sections = []artifact.ClientSetupSection{
+			section2,
+		}
+	}
+
+	clientSetupDetails := artifact.ClientSetupDetails{
+		MainHeader: "Docker Client Setup",
+		SecHeader:  "Follow these instructions to install/use Docker artifacts or compatible packages.",
+		Sections:   sections,
+	}
+	return clientSetupDetails
+}
+
+func (c *APIController) getDockerClientSetupDetails(
+	ctx context.Context,
+	blankString string,
+	registryType artifact.RegistryType,
+) artifact.ClientSetupDetails {
+	loginUsernameLabel := "Username: <USERNAME>"
+	loginUsernameValue := "<USERNAME>"
+	loginPasswordLabel := "Password: *see step 2*"
+
 	header1 := "Login to Docker"
 	section1step1Header := "Run this Docker command in your terminal to authenticate the client."
 	dockerLoginValue := "docker login <LOGIN_HOSTNAME>"
@@ -261,13 +324,7 @@ func (c *APIController) generateDockerClientSetupDetail(
 		SecHeader:  "Follow these instructions to install/use Docker artifacts or compatible packages.",
 		Sections:   sections,
 	}
-
-	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, image, version, "", "", "")
-
-	return &artifact.ClientSetupDetailsResponseJSONResponse{
-		Data:   clientSetupDetails,
-		Status: artifact.StatusSUCCESS,
-	}
+	return clientSetupDetails
 }
 
 //nolint:lll
@@ -279,6 +336,125 @@ func (c *APIController) generateGenericClientSetupDetail(
 	tag *artifact.VersionParam,
 	registryType artifact.RegistryType,
 ) *artifact.ClientSetupDetailsResponseJSONResponse {
+	session, _ := request.AuthSessionFrom(ctx)
+	var clientSetupDetails artifact.ClientSetupDetails
+	if auth.IsAnonymousSession(session) {
+		clientSetupDetails = c.getAnonymousGenericClientSetupDetails(blankString, registryType)
+	} else {
+		clientSetupDetails = c.getGenericClientSetupDetails(blankString, registryType)
+	}
+	//nolint:lll
+	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, "", registryRef, image, tag, "", "",
+		string(artifact.PackageTypeGENERIC))
+	return &artifact.ClientSetupDetailsResponseJSONResponse{
+		Data:   clientSetupDetails,
+		Status: artifact.StatusSUCCESS,
+	}
+}
+
+func (c *APIController) getAnonymousGenericClientSetupDetails(
+	blankString string,
+	registryType artifact.RegistryType,
+) artifact.ClientSetupDetails {
+	header3 := "Download Artifact"
+	//nolint:lll
+	section3step1Header := "Run this command in your terminal to download the artifact at package level. This command works for non-nested paths."
+	//nolint:lll
+	pullValue := "curl --location '<HOSTNAME>/generic/<ARTIFACT_NAME>/<VERSION>?filename=<FILENAME>' " +
+		"-J -O"
+	section3step1Commands := []artifact.ClientSetupStepCommand{
+		{Label: &blankString, Value: &pullValue},
+	}
+	section3step1Type := artifact.ClientSetupStepTypeStatic
+	section3steps := []artifact.ClientSetupStep{
+		{
+			Header:   &section3step1Header,
+			Commands: &section3step1Commands,
+			Type:     &section3step1Type,
+		},
+	}
+	section3 := artifact.ClientSetupSection{
+		Header: &header3,
+	}
+	_ = section3.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &section3steps,
+	})
+
+	header4 := "File Operations (Supports both nested and flat paths)"
+
+	section4step2Header := "Download a file from a specific path within the package."
+	//nolint:lll
+	fileDownloadValue := "curl --location '<HOSTNAME>/files/<ARTIFACT_NAME>/<VERSION>/<NESTED_FILE_PATH>' -J -O"
+	section4step2Commands := []artifact.ClientSetupStepCommand{
+		{Label: &blankString, Value: &fileDownloadValue},
+	}
+
+	section4step3Header := "Get file metadata from a specific path (HEAD request)."
+	//nolint:lll
+	fileHeadValue := "curl --location --head '<HOSTNAME>/files/<ARTIFACT_NAME>/<VERSION>/<NESTED_FILE_PATH>'"
+	section4step3Commands := []artifact.ClientSetupStepCommand{
+		{Label: &blankString, Value: &fileHeadValue},
+	}
+
+	section4step1Type := artifact.ClientSetupStepTypeStatic
+	section4steps := []artifact.ClientSetupStep{
+		{
+			Header:   &section4step2Header,
+			Commands: &section4step2Commands,
+			Type:     &section4step1Type,
+		},
+		{
+			Header:   &section4step3Header,
+			Commands: &section4step3Commands,
+			Type:     &section4step1Type,
+		},
+	}
+
+	if registryType == artifact.RegistryTypeUPSTREAM {
+		section4steps = []artifact.ClientSetupStep{
+			{
+				Header:   &section4step2Header,
+				Commands: &section4step2Commands,
+				Type:     &section4step1Type,
+			},
+			{
+				Header:   &section4step3Header,
+				Commands: &section4step3Commands,
+				Type:     &section4step1Type,
+			},
+		}
+	}
+	section4 := artifact.ClientSetupSection{
+		Header: &header4,
+	}
+	_ = section4.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &section4steps,
+	})
+
+	sections := []artifact.ClientSetupSection{
+		section3,
+		section4,
+	}
+
+	if registryType == artifact.RegistryTypeUPSTREAM {
+		sections = []artifact.ClientSetupSection{
+			section3,
+			section4,
+		}
+	}
+
+	clientSetupDetails := artifact.ClientSetupDetails{
+		MainHeader: "Generic Client Setup",
+		SecHeader:  "Follow these instructions to install/use Generic artifacts or compatible packages.",
+		Sections:   sections,
+	}
+	return clientSetupDetails
+}
+
+func (c *APIController) getGenericClientSetupDetails(
+	blankString string,
+	registryType artifact.RegistryType,
+) artifact.ClientSetupDetails {
 	header1 := "Generate identity token"
 	section1Header := "An identity token will serve as the password for uploading and downloading artifact."
 	section1Type := artifact.ClientSetupStepTypeGenerateToken
@@ -296,6 +472,7 @@ func (c *APIController) generateGenericClientSetupDetail(
 	})
 
 	header2 := "Upload Artifact"
+	//nolint:lll
 	section2step1Header := "Run this curl command in your terminal to push the artifact at package level. This command works for non-nested paths."
 	//nolint:lll
 	pushValue := "curl --location --request PUT '<HOSTNAME>/generic/<ARTIFACT_NAME>/<VERSION>' \\\n--form 'filename=\"<FILENAME>\"' \\\n--form 'file=@\"<FILE_PATH>\"' \\\n--form 'description=\"<DESC>\"' \\\n--header '<AUTH_HEADER_PREFIX> <API_KEY>'"
@@ -318,6 +495,7 @@ func (c *APIController) generateGenericClientSetupDetail(
 	})
 
 	header3 := "Download Artifact"
+	//nolint:lll
 	section3step1Header := "Run this command in your terminal to download the artifact at package level. This command works for non-nested paths."
 	//nolint:lll
 	pullValue := "curl --location '<HOSTNAME>/generic/<ARTIFACT_NAME>/<VERSION>?filename=<FILENAME>' \\\n --header '<AUTH_HEADER_PREFIX> <API_KEY>' " +
@@ -441,28 +619,95 @@ func (c *APIController) generateGenericClientSetupDetail(
 		SecHeader:  "Follow these instructions to install/use Generic artifacts or compatible packages.",
 		Sections:   sections,
 	}
-	//nolint:lll
-	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, "", registryRef, image, tag, "",
-		"", string(artifact.PackageTypeGENERIC))
-	return &artifact.ClientSetupDetailsResponseJSONResponse{
-		Data:   clientSetupDetails,
-		Status: artifact.StatusSUCCESS,
-	}
+	return clientSetupDetails
 }
 
 //nolint:lll
 func (c *APIController) generateHelmClientSetupDetail(
 	ctx context.Context,
 	blankString string,
-	loginUsernameLabel string,
-	loginUsernameValue string,
-	loginPasswordLabel string,
-	username string,
 	registryRef string,
 	image *artifact.ArtifactParam,
 	tag *artifact.VersionParam,
 	registryType artifact.RegistryType,
 ) *artifact.ClientSetupDetailsResponseJSONResponse {
+	session, _ := request.AuthSessionFrom(ctx)
+	username := session.Principal.Email
+	loginUsernameLabel := "Username: <USERNAME>"
+	loginUsernameValue := "<USERNAME>"
+	loginPasswordLabel := "Password: *see step 2*"
+	var clientSetupDetails artifact.ClientSetupDetails
+	if auth.IsAnonymousSession(session) {
+		clientSetupDetails = c.getAnonymousHelmClientSetupDetails(ctx, blankString, registryType)
+	} else {
+		clientSetupDetails = c.getHelmClientSetupDetails(ctx, blankString,
+			loginUsernameLabel, loginUsernameValue, loginPasswordLabel, registryType)
+	}
+
+	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username,
+		registryRef, image, tag, "", "", "")
+	return &artifact.ClientSetupDetailsResponseJSONResponse{
+		Data:   clientSetupDetails,
+		Status: artifact.StatusSUCCESS,
+	}
+}
+
+func (c *APIController) getAnonymousHelmClientSetupDetails(
+	ctx context.Context,
+	blankString string,
+	registryType artifact.RegistryType,
+) artifact.ClientSetupDetails {
+	header3 := "Pull a version"
+	section3step1Header := "Run this Helm command in your terminal to pull a specific chart version."
+	var helmPullValue string
+	if c.UntaggedImagesEnabled(ctx) {
+		helmPullValue = "helm pull oci://<HOSTNAME>/<REGISTRY_NAME>/<IMAGE_NAME>@<DIGEST>"
+	} else {
+		helmPullValue = "helm pull oci://<HOSTNAME>/<REGISTRY_NAME>/<IMAGE_NAME> --version <TAG>"
+	}
+	section3step1Commands := []artifact.ClientSetupStepCommand{
+		{Label: &blankString, Value: &helmPullValue},
+	}
+	section3step1Type := artifact.ClientSetupStepTypeStatic
+	section3Steps := []artifact.ClientSetupStep{
+		{
+			Header:   &section3step1Header,
+			Commands: &section3step1Commands,
+			Type:     &section3step1Type,
+		},
+	}
+	section3 := artifact.ClientSetupSection{
+		Header: &header3,
+	}
+	_ = section3.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &section3Steps,
+	})
+
+	sections := []artifact.ClientSetupSection{
+		section3,
+	}
+	if registryType == artifact.RegistryTypeUPSTREAM {
+		sections = []artifact.ClientSetupSection{
+			section3,
+		}
+	}
+
+	clientSetupDetails := artifact.ClientSetupDetails{
+		MainHeader: "Helm Client Setup",
+		SecHeader:  "Follow these instructions to install/use Helm artifacts or compatible packages.",
+		Sections:   sections,
+	}
+	return clientSetupDetails
+}
+
+func (c *APIController) getHelmClientSetupDetails(
+	ctx context.Context,
+	blankString string,
+	loginUsernameLabel string,
+	loginUsernameValue string,
+	loginPasswordLabel string,
+	registryType artifact.RegistryType,
+) artifact.ClientSetupDetails {
 	header1 := "Login to Helm"
 	section1step1Header := "Run this Helm command in your terminal to authenticate the client."
 	helmLoginValue := "helm registry login <LOGIN_HOSTNAME>"
@@ -558,13 +803,7 @@ func (c *APIController) generateHelmClientSetupDetail(
 		SecHeader:  "Follow these instructions to install/use Helm artifacts or compatible packages.",
 		Sections:   sections,
 	}
-
-	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, image, tag, "", "", "")
-
-	return &artifact.ClientSetupDetailsResponseJSONResponse{
-		Data:   clientSetupDetails,
-		Status: artifact.StatusSUCCESS,
-	}
+	return clientSetupDetails
 }
 
 // TODO: Remove StringPtr / see why it is used.
@@ -573,14 +812,202 @@ func (c *APIController) generateMavenClientSetupDetail(
 	artifactName *artifact.ArtifactParam,
 	version *artifact.VersionParam,
 	registryRef string,
-	username string,
 	registryType artifact.RegistryType,
 ) *artifact.ClientSetupDetailsResponseJSONResponse {
 	staticStepType := artifact.ClientSetupStepTypeStatic
 	generateTokenStepType := artifact.ClientSetupStepTypeGenerateToken
+	session, _ := request.AuthSessionFrom(ctx)
+	username := session.Principal.Email
+	var clientSetupDetails artifact.ClientSetupDetails
+	if auth.IsAnonymousSession(session) {
+		clientSetupDetails = c.getAnonymousMavenClientSetupDetails(generateTokenStepType)
+	} else {
+		clientSetupDetails = c.getMavenClientSetupDetails(generateTokenStepType, staticStepType, registryType)
+	}
 
+	groupID := ""
+	if artifactName != nil {
+		parts := strings.Split(string(*artifactName), ":")
+		if len(parts) == 2 {
+			groupID = parts[0]
+			*artifactName = artifact.ArtifactParam(parts[1])
+		}
+	}
+	registryURL := c.URLProvider.PackageURL(ctx, registryRef, "maven")
+
+	//nolint:lll
+	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, artifactName, version, registryURL,
+		groupID, "")
+
+	return &artifact.ClientSetupDetailsResponseJSONResponse{
+		Data:   clientSetupDetails,
+		Status: artifact.StatusSUCCESS,
+	}
+}
+
+func (c *APIController) getAnonymousMavenClientSetupDetails(
+	staticStepType artifact.ClientSetupStepType,
+) artifact.ClientSetupDetails {
+	mavenSection1 := artifact.ClientSetupSection{
+		Header:    utils.StringPtr("1. Pull a Maven Package"),
+		SecHeader: utils.StringPtr("Set default repository in your pom.xml file."),
+	}
+	_ = mavenSection1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("To set default registry in your pom.xml file by adding the following:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						//nolint:lll
+						Value: utils.StringPtr("<repositories>\n  <repository>\n    <id>maven-dev</id>\n    <url><REGISTRY_URL></url>\n    <releases>\n      <enabled>true</enabled>\n      <updatePolicy>always</updatePolicy>\n    </releases>\n    <snapshots>\n      <enabled>true</enabled>\n      <updatePolicy>always</updatePolicy>\n    </snapshots>\n  </repository>\n</repositories>"),
+					},
+				},
+			},
+			{
+				//nolint:lll
+				Header: utils.StringPtr("Add a dependency to the project's pom.xml (replace <GROUP_ID>, <ARTIFACT_ID> & <VERSION> with your own):"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						//nolint:lll
+						Value: utils.StringPtr("<dependency>\n  <groupId><GROUP_ID></groupId>\n  <artifactId><ARTIFACT_ID></artifactId>\n  <version><VERSION></version>\n</dependency>"),
+					},
+				},
+			},
+			{
+				Header: utils.StringPtr("Install dependencies in pom.xml file"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("mvn install"),
+					},
+				},
+			},
+		},
+	})
+
+	gradleSection1 := artifact.ClientSetupSection{
+		Header:    utils.StringPtr("1. Pull a Gradle Package"),
+		SecHeader: utils.StringPtr("Set default repository in your build.gradle file."),
+	}
+	_ = gradleSection1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				//nolint:lll
+				Header: utils.StringPtr("Set the default registry in your project’s build.gradle by adding the following:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						//nolint:lll
+						Value: utils.StringPtr("repositories{\n    maven{\n      url \"<REGISTRY_URL>\"\n\n      credentials {\n         username \"<USERNAME>\"\n         password \"identity-token\"\n      }\n   }\n}"),
+					},
+				},
+			},
+			{
+				Header: utils.StringPtr("Add a dependency to the project’s build.gradle"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("dependencies {\n  implementation '<GROUP_ID>:<ARTIFACT_ID>:<VERSION>'\n}"),
+					},
+				},
+			},
+			{
+				Header: utils.StringPtr("Install dependencies in build.gradle file"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("gradlew build     // Linux or OSX\n gradlew.bat build  // Windows"),
+					},
+				},
+			},
+		},
+	})
+
+	sbtSection1 := artifact.ClientSetupSection{
+		Header:    utils.StringPtr("1. Pull a Sbt/Scala Package"),
+		SecHeader: utils.StringPtr("Set default repository in your build.sbt file."),
+	}
+	_ = sbtSection1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				//nolint:lll
+				Header: utils.StringPtr("Set the default registry in your project’s build.sbt by adding the following:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						//nolint:lll
+						Value: utils.StringPtr("resolver += \"Harness Registry\" at \"<REGISTRY_URL>\"\ncredentials += Credentials(Path.userHome / \".sbt\" / \".Credentials\")"),
+					},
+				},
+			},
+			{
+				Header: utils.StringPtr("Add a dependency to the project’s build.sbt"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						//nolint:lll
+						Value: utils.StringPtr("libraryDependencies += \"<GROUP_ID>\" % \"<ARTIFACT_ID>\" % \"<VERSION>\""),
+					},
+				},
+			},
+			{
+				Header: utils.StringPtr("Install dependencies in build.sbt file"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("sbt update"),
+					},
+				},
+			},
+		},
+	})
+
+	section2 := artifact.ClientSetupSection{}
+	config := artifact.TabSetupStepConfig{
+		Tabs: &[]artifact.TabSetupStep{
+			{
+				Header: utils.StringPtr("Maven"),
+				Sections: &[]artifact.ClientSetupSection{
+					mavenSection1,
+				},
+			},
+			{
+				Header: utils.StringPtr("Gradle"),
+				Sections: &[]artifact.ClientSetupSection{
+					gradleSection1,
+				},
+			},
+			{
+				Header: utils.StringPtr("Sbt/Scala"),
+				Sections: &[]artifact.ClientSetupSection{
+					sbtSection1,
+				},
+			},
+		},
+	}
+
+	_ = section2.FromTabSetupStepConfig(config)
+
+	clientSetupDetails := artifact.ClientSetupDetails{
+		MainHeader: "Maven Client Setup",
+		SecHeader:  "Follow these instructions use Maven artifacts or compatible packages.",
+		Sections: []artifact.ClientSetupSection{
+			section2,
+		},
+	}
+	return clientSetupDetails
+}
+
+func (c *APIController) getMavenClientSetupDetails(
+	generateTokenStepType artifact.ClientSetupStepType,
+	staticStepType artifact.ClientSetupStepType,
+	registryType artifact.RegistryType,
+) artifact.ClientSetupDetails {
 	section1 := artifact.ClientSetupSection{
-		Header:    utils.StringPtr("1. Generate Identity Token"),
+		Header: utils.StringPtr("1. Generate Identity Token"),
+		//nolint:lll
 		SecHeader: utils.StringPtr("An identity token will serve as the password for uploading and downloading artifacts."),
 	}
 	_ = section1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
@@ -689,6 +1116,7 @@ func (c *APIController) generateMavenClientSetupDetail(
 	_ = gradleSection1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
 		Steps: &[]artifact.ClientSetupStep{
 			{
+				//nolint:lll
 				Header: utils.StringPtr("Set the default registry in your project’s build.gradle by adding the following:"),
 				Type:   &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
@@ -873,25 +1301,7 @@ func (c *APIController) generateMavenClientSetupDetail(
 			section2,
 		},
 	}
-	groupID := ""
-	if artifactName != nil {
-		parts := strings.Split(string(*artifactName), ":")
-		if len(parts) == 2 {
-			groupID = parts[0]
-			*artifactName = artifact.ArtifactParam(parts[1])
-		}
-	}
-
-	registryURL := c.URLProvider.PackageURL(ctx, registryRef, "maven")
-
-	//nolint:lll
-	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, artifactName, version, registryURL,
-		groupID, "")
-
-	return &artifact.ClientSetupDetailsResponseJSONResponse{
-		Data:   clientSetupDetails,
-		Status: artifact.StatusSUCCESS,
-	}
+	return clientSetupDetails
 }
 
 func (c *APIController) generateRpmClientSetupDetail(
@@ -899,11 +1309,35 @@ func (c *APIController) generateRpmClientSetupDetail(
 	artifactName *artifact.ArtifactParam,
 	version *artifact.VersionParam,
 	registryRef string,
-	username string,
 ) *artifact.ClientSetupDetailsResponseJSONResponse {
 	staticStepType := artifact.ClientSetupStepTypeStatic
 	generateTokenStepType := artifact.ClientSetupStepTypeGenerateToken
+	var clientSetupDetails artifact.ClientSetupDetails
+	session, _ := request.AuthSessionFrom(ctx)
+	username := session.Principal.Email
 
+	if auth.IsAnonymousSession(session) {
+		clientSetupDetails = c.getAnonymousRpmClientSetupDetails(staticStepType)
+	} else {
+		clientSetupDetails = c.getRpmClientSetupDetails(generateTokenStepType, staticStepType)
+	}
+
+	registryURL := c.URLProvider.PackageURL(ctx, registryRef, "rpm")
+
+	//nolint:lll
+	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, artifactName, version, registryURL,
+		"", "")
+
+	return &artifact.ClientSetupDetailsResponseJSONResponse{
+		Data:   clientSetupDetails,
+		Status: artifact.StatusSUCCESS,
+	}
+}
+
+func (c *APIController) getRpmClientSetupDetails(
+	generateTokenStepType artifact.ClientSetupStepType,
+	staticStepType artifact.ClientSetupStepType,
+) artifact.ClientSetupDetails {
 	// Authentication section
 	section1 := artifact.ClientSetupSection{
 		Header: utils.StringPtr("1. Configure Authentication"),
@@ -1077,7 +1511,7 @@ func (c *APIController) generateRpmClientSetupDetail(
 
 	_ = section2.FromTabSetupStepConfig(config)
 
-	clientSetupDetails := artifact.ClientSetupDetails{
+	return artifact.ClientSetupDetails{
 		MainHeader: "RPM Client Setup",
 		SecHeader:  "Follow these instructions to install/upload RPM packages.",
 		Sections: []artifact.ClientSetupSection{
@@ -1085,12 +1519,159 @@ func (c *APIController) generateRpmClientSetupDetail(
 			section2,
 		},
 	}
+}
 
-	registryURL := c.URLProvider.PackageURL(ctx, registryRef, "rpm")
+func (c *APIController) getAnonymousRpmClientSetupDetails(
+	staticStepType artifact.ClientSetupStepType,
+) artifact.ClientSetupDetails {
+	yumSection1 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("1. Install a RPM Package"),
+	}
+	_ = yumSection1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Create or edit the .repo file."),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("sudo vi /etc/yum.repos.d/harness-<REGISTRY_NAME>.repo"),
+					},
+				},
+			},
+			{
+				Header: utils.StringPtr("Add the following content:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("[harness-<REGISTRY_NAME>]\n" +
+							"name=harness-<REGISTRY_NAME>\n" +
+							"baseurl=<REGISTRY_URL>\n" +
+							"enabled=1\n" +
+							"gpgcheck=0\n",
+						),
+					},
+				},
+			},
+			{
+				Header: utils.StringPtr("Clear the YUM cache."),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("sudo yum clean all"),
+					},
+				},
+			},
+			{
+				Header: utils.StringPtr("Install package."),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("sudo yum install <ARTIFACT_NAME>"),
+					},
+				},
+			},
+		},
+	})
 
-	//nolint:lll
-	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, artifactName, version, registryURL,
-		"", "")
+	dnfSection1 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("1. Install a RPM Package"),
+	}
+	_ = dnfSection1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Create or edit the .repo file."),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("sudo vi /etc/yum.repos.d/harness-<REGISTRY_NAME>.repo"),
+					},
+				},
+			},
+			{
+				Header: utils.StringPtr("Add the following content:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("[harness-<REGISTRY_NAME>]\n" +
+							"name=harness-<REGISTRY_NAME>\n" +
+							"baseurl=<REGISTRY_URL>\n" +
+							"enabled=1\n" +
+							"gpgcheck=0\n",
+						),
+					},
+				},
+			},
+			{
+				Header: utils.StringPtr("Clear the DNF cache."),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("sudo dnf clean all"),
+					},
+				},
+			},
+			{
+				Header: utils.StringPtr("Install package."),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("sudo dnf install <ARTIFACT_NAME>"),
+					},
+				},
+			},
+		},
+	})
+
+	section2 := artifact.ClientSetupSection{}
+	config := artifact.TabSetupStepConfig{
+		Tabs: &[]artifact.TabSetupStep{
+			{
+				Header: utils.StringPtr("YUM"),
+				Sections: &[]artifact.ClientSetupSection{
+					yumSection1,
+				},
+			},
+			{
+				Header: utils.StringPtr("DNF"),
+				Sections: &[]artifact.ClientSetupSection{
+					dnfSection1,
+				},
+			},
+		},
+	}
+
+	_ = section2.FromTabSetupStepConfig(config)
+
+	return artifact.ClientSetupDetails{
+		MainHeader: "RPM Client Setup",
+		SecHeader:  "Follow these instructions to install RPM packages.",
+		Sections: []artifact.ClientSetupSection{
+			section2,
+		},
+	}
+}
+
+func (c *APIController) generatePythonClientSetupDetail(
+	ctx context.Context,
+	registryRef string,
+	image *artifact.ArtifactParam,
+	tag *artifact.VersionParam,
+	registryType artifact.RegistryType,
+) *artifact.ClientSetupDetailsResponseJSONResponse {
+	staticStepType := artifact.ClientSetupStepTypeStatic
+	generateTokenType := artifact.ClientSetupStepTypeGenerateToken
+	session, _ := request.AuthSessionFrom(ctx)
+	username := session.Principal.Email
+	var clientSetupDetails artifact.ClientSetupDetails
+	if auth.IsAnonymousSession(session) {
+		clientSetupDetails = c.getAnonymousPythonClientSetupDetails(staticStepType, registryType)
+	} else {
+		clientSetupDetails = c.getPythonClientSetupDetails(staticStepType, generateTokenType, registryType)
+	}
+
+	registryURL := c.URLProvider.PackageURL(ctx, registryRef, "python")
+	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, image, tag, registryURL, "",
+		string(artifact.PackageTypePYTHON))
 
 	return &artifact.ClientSetupDetailsResponseJSONResponse{
 		Data:   clientSetupDetails,
@@ -1098,17 +1679,74 @@ func (c *APIController) generateRpmClientSetupDetail(
 	}
 }
 
-func (c *APIController) generatePythonClientSetupDetail(
-	ctx context.Context,
-	registryRef string,
-	username string,
-	image *artifact.ArtifactParam,
-	tag *artifact.VersionParam,
+func (c *APIController) getAnonymousPythonClientSetupDetails(
+	staticStepType artifact.ClientSetupStepType,
 	registryType artifact.RegistryType,
-) *artifact.ClientSetupDetailsResponseJSONResponse {
-	staticStepType := artifact.ClientSetupStepTypeStatic
-	generateTokenType := artifact.ClientSetupStepTypeGenerateToken
+) artifact.ClientSetupDetails {
+	// Authentication section
+	section1 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Configure Authentication"),
+	}
+	_ = section1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Create or update your ~/.pypirc file with the following content:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("[distutils]\n" +
+							"index-servers = harness\n\n" +
+							"[harness]\n" +
+							"repository = <REGISTRY_URL>"),
+					},
+				},
+			},
+		},
+	})
 
+	// Install section
+	section3 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Install Package"),
+	}
+	_ = section3.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Install a package using pip:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("pip install --index-url <UPLOAD_URL>/simple --no-deps <ARTIFACT_NAME>==<VERSION>"),
+					},
+				},
+			},
+		},
+	})
+
+	sections := []artifact.ClientSetupSection{
+		section1,
+		section3,
+	}
+
+	if registryType == artifact.RegistryTypeUPSTREAM {
+		sections = []artifact.ClientSetupSection{
+			section1,
+			section3,
+		}
+	}
+
+	clientSetupDetails := artifact.ClientSetupDetails{
+		MainHeader: "Python Client Setup",
+		SecHeader:  "Follow these instructions to install/use Python packages from this registry.",
+		Sections:   sections,
+	}
+	return clientSetupDetails
+}
+
+func (c *APIController) getPythonClientSetupDetails(
+	staticStepType artifact.ClientSetupStepType,
+	generateTokenType artifact.ClientSetupStepType,
+	registryType artifact.RegistryType,
+) artifact.ClientSetupDetails {
 	// Authentication section
 	section1 := artifact.ClientSetupSection{
 		Header: utils.StringPtr("Configure Authentication"),
@@ -1193,11 +1831,31 @@ func (c *APIController) generatePythonClientSetupDetail(
 		SecHeader:  "Follow these instructions to install/use Python packages from this registry.",
 		Sections:   sections,
 	}
+	return clientSetupDetails
+}
 
-	registryURL := c.URLProvider.PackageURL(ctx, registryRef, "python")
+func (c *APIController) generateNugetClientSetupDetail(
+	ctx context.Context,
+	registryRef string,
+	image *artifact.ArtifactParam,
+	tag *artifact.VersionParam,
+	registryType artifact.RegistryType,
+) *artifact.ClientSetupDetailsResponseJSONResponse {
+	staticStepType := artifact.ClientSetupStepTypeStatic
+	generateTokenType := artifact.ClientSetupStepTypeGenerateToken
+	session, _ := request.AuthSessionFrom(ctx)
+	username := session.Principal.Email
+	var clientSetupDetails artifact.ClientSetupDetails
+	if auth.IsAnonymousSession(session) {
+		clientSetupDetails = c.getAnonymousNugetClientSetupDetails(staticStepType)
+	} else {
+		clientSetupDetails = c.getNugetClientSetupDetails(staticStepType, generateTokenType, registryType)
+	}
+
+	registryURL := c.URLProvider.PackageURL(ctx, registryRef, "nuget")
 
 	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, image, tag, registryURL, "",
-		string(artifact.PackageTypePYTHON))
+		string(artifact.PackageTypeNUGET))
 
 	return &artifact.ClientSetupDetailsResponseJSONResponse{
 		Data:   clientSetupDetails,
@@ -1205,17 +1863,152 @@ func (c *APIController) generatePythonClientSetupDetail(
 	}
 }
 
-func (c *APIController) generateNugetClientSetupDetail(
-	ctx context.Context,
-	registryRef string,
-	username string,
-	image *artifact.ArtifactParam,
-	tag *artifact.VersionParam,
-	registryType artifact.RegistryType,
-) *artifact.ClientSetupDetailsResponseJSONResponse {
-	staticStepType := artifact.ClientSetupStepTypeStatic
-	generateTokenType := artifact.ClientSetupStepTypeGenerateToken
+func (c *APIController) getAnonymousNugetClientSetupDetails(
+	staticStepType artifact.ClientSetupStepType,
+) artifact.ClientSetupDetails {
+	nugetSection1 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Configure registry"),
+	}
+	_ = nugetSection1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Add the Harness Registry as a package source:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("nuget sources add -Name harness -Source " +
+							"<REGISTRY_URL>/index.json \n\n"),
+					},
+					{
+						Label: utils.StringPtr("Note: For Nuget V2 Client, use this url: <REGISTRY_URL>/"),
+						Value: utils.StringPtr("<REGISTRY_URL>/"),
+					},
+				},
+			},
+		},
+	})
 
+	dotnetSection1 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Configure registry"),
+	}
+	_ = dotnetSection1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Add the Harness Registry as a package source:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("dotnet nuget add source  " +
+							"<REGISTRY_URL>/index.json " +
+							"--name harness \n\n"),
+					},
+					{
+						Label: utils.StringPtr("Note: For Nuget V2 Client, use this url: <REGISTRY_URL>/"),
+						Value: utils.StringPtr("<REGISTRY_URL>/"),
+					},
+				},
+			},
+		},
+	})
+
+	visualStudioSection1 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Configure Nuget Package Source"),
+	}
+	_ = visualStudioSection1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Add below config in Nuget.Config file to add Harness Registry as package source:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						//nolint:lll
+						Value: utils.StringPtr("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<configuration>\n <packageSources>\n     <clear />\n     <add key=\"harness\" value=\"<REGISTRY_URL>/index.json\" />\n </packageSources>\n</configuration>"),
+					},
+				},
+			},
+		},
+	})
+
+	nugetSection3 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Install Package"),
+	}
+
+	_ = nugetSection3.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Install a package using nuget:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("nuget install <ARTIFACT_NAME> -Version <VERSION> -Source harness"),
+					},
+				},
+			},
+		},
+	})
+
+	dotnetSection3 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Install Package"),
+	}
+
+	_ = dotnetSection3.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Add a package using dotnet:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("dotnet package add <ARTIFACT_NAME> --version <VERSION> --source harness"),
+					},
+				},
+			},
+		},
+	})
+	section := artifact.ClientSetupSection{}
+	config := artifact.TabSetupStepConfig{
+		Tabs: &[]artifact.TabSetupStep{
+			{
+				Header: utils.StringPtr("Nuget"),
+				Sections: &[]artifact.ClientSetupSection{
+					nugetSection1,
+					nugetSection3,
+				},
+			},
+			{
+				Header: utils.StringPtr("Dotnet"),
+				Sections: &[]artifact.ClientSetupSection{
+					dotnetSection1,
+					dotnetSection3,
+				},
+			},
+			{
+				Header: utils.StringPtr("Visual Studio"),
+				Sections: &[]artifact.ClientSetupSection{
+					visualStudioSection1,
+				},
+			},
+		},
+	}
+
+	_ = section.FromTabSetupStepConfig(config)
+
+	sections := []artifact.ClientSetupSection{
+		section,
+	}
+
+	clientSetupDetails := artifact.ClientSetupDetails{
+		MainHeader: "Nuget Client Setup",
+		SecHeader:  "Follow these instructions to install/use Nuget packages from this registry.",
+		Sections:   sections,
+	}
+	return clientSetupDetails
+}
+
+func (c *APIController) getNugetClientSetupDetails(
+	staticStepType artifact.ClientSetupStepType,
+	generateTokenType artifact.ClientSetupStepType,
+	registryType artifact.RegistryType,
+) artifact.ClientSetupDetails {
 	nugetSection1 := artifact.ClientSetupSection{
 		Header: utils.StringPtr("Configure Authentication"),
 	}
@@ -1430,28 +2223,105 @@ func (c *APIController) generateNugetClientSetupDetail(
 		SecHeader:  "Follow these instructions to install/use Nuget packages from this registry.",
 		Sections:   sections,
 	}
-
-	registryURL := c.URLProvider.PackageURL(ctx, registryRef, "nuget")
-
-	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, image, tag, registryURL, "",
-		string(artifact.PackageTypeNUGET))
-
-	return &artifact.ClientSetupDetailsResponseJSONResponse{
-		Data:   clientSetupDetails,
-		Status: artifact.StatusSUCCESS,
-	}
+	return clientSetupDetails
 }
+
 func (c *APIController) generateCargoClientSetupDetail(
 	ctx context.Context,
 	registryRef string,
-	username string,
 	image *artifact.ArtifactParam,
 	tag *artifact.VersionParam,
 	registryType artifact.RegistryType,
 ) *artifact.ClientSetupDetailsResponseJSONResponse {
 	staticStepType := artifact.ClientSetupStepTypeStatic
 	generateTokenType := artifact.ClientSetupStepTypeGenerateToken
+	session, _ := request.AuthSessionFrom(ctx)
+	username := session.Principal.Email
+	var clientSetupDetails artifact.ClientSetupDetails
+	if auth.IsAnonymousSession(session) {
+		clientSetupDetails = c.getAnonymousCargoClientSetupDetails(staticStepType, registryType)
+	} else {
+		clientSetupDetails = c.getCargoClientSetupDetails(staticStepType, generateTokenType, registryType)
+	}
 
+	registryURL := c.URLProvider.PackageURL(ctx, registryRef, "cargo")
+	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, image, tag, registryURL, "",
+		string(artifact.PackageTypeCARGO))
+
+	return &artifact.ClientSetupDetailsResponseJSONResponse{
+		Data:   clientSetupDetails,
+		Status: artifact.StatusSUCCESS,
+	}
+}
+
+func (c *APIController) getAnonymousCargoClientSetupDetails(
+	staticStepType artifact.ClientSetupStepType,
+	registryType artifact.RegistryType,
+) artifact.ClientSetupDetails {
+	section1 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Configure registry"),
+	}
+	_ = section1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Create or update ~/.cargo/config.toml with the following content:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("[registry]\n" +
+							`global-credential-providers = ["cargo:token", "cargo:libsecret", "cargo:macos-keychain", "cargo:wincred"]` +
+							"\n\n" +
+							"[registries.harness-<REGISTRY_NAME>]\n" +
+							`index = "sparse+<REGISTRY_URL>/index/"`),
+					},
+				},
+			},
+		},
+	})
+
+	// Install section
+	section3 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Install Package"),
+	}
+	_ = section3.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Install a package using cargo"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("cargo add <ARTIFACT_NAME>@<VERSION> --registry harness-<REGISTRY_NAME>"),
+					},
+				},
+			},
+		},
+	})
+
+	sections := []artifact.ClientSetupSection{
+		section1,
+		section3,
+	}
+
+	if registryType == artifact.RegistryTypeUPSTREAM {
+		sections = []artifact.ClientSetupSection{
+			section1,
+			section3,
+		}
+	}
+
+	clientSetupDetails := artifact.ClientSetupDetails{
+		MainHeader: "Cargo Client Setup",
+		SecHeader:  "Follow these instructions to install/use cargo packages from this registry.",
+		Sections:   sections,
+	}
+	return clientSetupDetails
+}
+
+func (c *APIController) getCargoClientSetupDetails(
+	staticStepType artifact.ClientSetupStepType,
+	generateTokenType artifact.ClientSetupStepType,
+	registryType artifact.RegistryType,
+) artifact.ClientSetupDetails {
 	// Authentication section
 	section1 := artifact.ClientSetupSection{
 		Header: utils.StringPtr("Configure Authentication"),
@@ -1541,10 +2411,30 @@ func (c *APIController) generateCargoClientSetupDetail(
 		SecHeader:  "Follow these instructions to install/use cargo packages from this registry.",
 		Sections:   sections,
 	}
+	return clientSetupDetails
+}
 
-	registryURL := c.URLProvider.PackageURL(ctx, registryRef, "cargo")
+func (c *APIController) generateGoClientSetupDetail(
+	ctx context.Context,
+	registryRef string,
+	image *artifact.ArtifactParam,
+	tag *artifact.VersionParam,
+	registryType artifact.RegistryType,
+) *artifact.ClientSetupDetailsResponseJSONResponse {
+	staticStepType := artifact.ClientSetupStepTypeStatic
+	generateTokenType := artifact.ClientSetupStepTypeGenerateToken
+	session, _ := request.AuthSessionFrom(ctx)
+	username := session.Principal.Email
+	var clientSetupDetails artifact.ClientSetupDetails
+	if auth.IsAnonymousSession(session) {
+		clientSetupDetails = c.getAnonymousGoClientSetupDetails(staticStepType, registryType)
+	} else {
+		clientSetupDetails = c.getGoClientSetupDetails(staticStepType, generateTokenType, registryType)
+	}
+
+	registryURL := c.URLProvider.PackageURL(ctx, registryRef, "go")
 	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, image, tag, registryURL, "",
-		string(artifact.PackageTypeCARGO))
+		string(artifact.PackageTypeGO))
 
 	return &artifact.ClientSetupDetailsResponseJSONResponse{
 		Data:   clientSetupDetails,
@@ -1552,17 +2442,71 @@ func (c *APIController) generateCargoClientSetupDetail(
 	}
 }
 
-func (c *APIController) generateGoClientSetupDetail(
-	ctx context.Context,
-	registryRef string,
-	username string,
-	image *artifact.ArtifactParam,
-	tag *artifact.VersionParam,
+func (c *APIController) getAnonymousGoClientSetupDetails(
+	staticStepType artifact.ClientSetupStepType,
 	registryType artifact.RegistryType,
-) *artifact.ClientSetupDetailsResponseJSONResponse {
-	staticStepType := artifact.ClientSetupStepTypeStatic
-	generateTokenType := artifact.ClientSetupStepTypeGenerateToken
+) artifact.ClientSetupDetails {
+	section1 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Configure registry"),
+	}
+	_ = section1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr(`To resolve a Go package from this registry using Go, 
+				first set your default Harness Go registry by running the following command:`),
+				Type: &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr(`export GOPROXY="<UPLOAD_URL>"`),
+					},
+				},
+			},
+		},
+	})
 
+	// Install section
+	section3 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Install Package"),
+	}
+	_ = section3.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Install a package using go client"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("go get <ARTIFACT_NAME>@<VERSION>"),
+					},
+				},
+			},
+		},
+	})
+
+	sections := []artifact.ClientSetupSection{
+		section1,
+		section3,
+	}
+
+	if registryType == artifact.RegistryTypeUPSTREAM {
+		sections = []artifact.ClientSetupSection{
+			section1,
+			section3,
+		}
+	}
+
+	clientSetupDetails := artifact.ClientSetupDetails{
+		MainHeader: "Go Client Setup",
+		SecHeader:  "Follow these instructions to install/use go packages from this registry.",
+		Sections:   sections,
+	}
+	return clientSetupDetails
+}
+
+func (c *APIController) getGoClientSetupDetails(
+	staticStepType artifact.ClientSetupStepType,
+	generateTokenType artifact.ClientSetupStepType,
+	registryType artifact.RegistryType,
+) artifact.ClientSetupDetails {
 	// Authentication section
 	section1 := artifact.ClientSetupSection{
 		Header: utils.StringPtr("Configure Authentication"),
@@ -1641,10 +2585,32 @@ func (c *APIController) generateGoClientSetupDetail(
 		SecHeader:  "Follow these instructions to install/use go packages from this registry.",
 		Sections:   sections,
 	}
+	return clientSetupDetails
+}
 
-	registryURL := c.URLProvider.PackageURL(ctx, registryRef, "go")
+func (c *APIController) generateNpmClientSetupDetail(
+	ctx context.Context,
+	registryRef string,
+	image *artifact.ArtifactParam,
+	tag *artifact.VersionParam,
+	registryType artifact.RegistryType,
+) *artifact.ClientSetupDetailsResponseJSONResponse {
+	staticStepType := artifact.ClientSetupStepTypeStatic
+	generateTokenType := artifact.ClientSetupStepTypeGenerateToken
+	session, _ := request.AuthSessionFrom(ctx)
+	username := session.Principal.Email
+	var clientSetupDetails artifact.ClientSetupDetails
+	if auth.IsAnonymousSession(session) {
+		clientSetupDetails = c.getAnonymousNpmClientSetupDetails(staticStepType, registryType)
+	} else {
+		clientSetupDetails = c.getNpmClientSetupDetails(staticStepType, generateTokenType, registryType)
+	}
+
+	registryURL := c.URLProvider.PackageURL(ctx, registryRef, "npm")
+	registryURL = strings.TrimPrefix(registryURL, "http:")
+	registryURL = strings.TrimPrefix(registryURL, "https:")
 	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, image, tag, registryURL, "",
-		string(artifact.PackageTypeGO))
+		string(artifact.PackageTypeNPM))
 
 	return &artifact.ClientSetupDetailsResponseJSONResponse{
 		Data:   clientSetupDetails,
@@ -1652,17 +2618,70 @@ func (c *APIController) generateGoClientSetupDetail(
 	}
 }
 
-func (c *APIController) generateNpmClientSetupDetail(
-	ctx context.Context,
-	registryRef string,
-	username string,
-	image *artifact.ArtifactParam,
-	tag *artifact.VersionParam,
+func (c *APIController) getAnonymousNpmClientSetupDetails(
+	staticStepType artifact.ClientSetupStepType,
 	registryType artifact.RegistryType,
-) *artifact.ClientSetupDetailsResponseJSONResponse {
-	staticStepType := artifact.ClientSetupStepTypeStatic
-	generateTokenType := artifact.ClientSetupStepTypeGenerateToken
+) artifact.ClientSetupDetails {
+	section1 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Configure registry"),
+	}
+	_ = section1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Create or update your ~/.npmrc file with the following content:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("registry=https:<REGISTRY_URL>/"),
+					},
+				},
+			},
+		},
+	})
 
+	// Install section
+	section3 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Install Package"),
+	}
+	_ = section3.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Install a package using npm"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("npm install <ARTIFACT_NAME>@<VERSION>"),
+					},
+				},
+			},
+		},
+	})
+
+	sections := []artifact.ClientSetupSection{
+		section1,
+		section3,
+	}
+
+	if registryType == artifact.RegistryTypeUPSTREAM {
+		sections = []artifact.ClientSetupSection{
+			section1,
+			section3,
+		}
+	}
+
+	clientSetupDetails := artifact.ClientSetupDetails{
+		MainHeader: "NPM Client Setup",
+		SecHeader:  "Follow these instructions to install/use NPM packages from this registry.",
+		Sections:   sections,
+	}
+	return clientSetupDetails
+}
+
+func (c *APIController) getNpmClientSetupDetails(
+	staticStepType artifact.ClientSetupStepType,
+	generateTokenType artifact.ClientSetupStepType,
+	registryType artifact.RegistryType,
+) artifact.ClientSetupDetails {
 	// Authentication section
 	section1 := artifact.ClientSetupSection{
 		Header: utils.StringPtr("Configure Authentication"),
@@ -1745,17 +2764,7 @@ func (c *APIController) generateNpmClientSetupDetail(
 		SecHeader:  "Follow these instructions to install/use NPM packages from this registry.",
 		Sections:   sections,
 	}
-
-	registryURL := c.URLProvider.PackageURL(ctx, registryRef, "npm")
-	registryURL = strings.TrimPrefix(registryURL, "http:")
-	registryURL = strings.TrimPrefix(registryURL, "https:")
-	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, image, tag, registryURL, "",
-		string(artifact.PackageTypeNPM))
-
-	return &artifact.ClientSetupDetailsResponseJSONResponse{
-		Data:   clientSetupDetails,
-		Status: artifact.StatusSUCCESS,
-	}
+	return clientSetupDetails
 }
 
 func (c *APIController) replacePlaceholders(
@@ -1771,11 +2780,16 @@ func (c *APIController) replacePlaceholders(
 ) {
 	uploadURL := ""
 	if pkgType == string(artifact.PackageTypePYTHON) || pkgType == string(artifact.PackageTypeGO) {
+		session, _ := request.AuthSessionFrom(ctx)
 		regURL, _ := url.Parse(registryURL)
-		// append username:password to the host
-		regURL.User = url.UserPassword(username, "<TOKEN>")
-		uploadURL = fmt.Sprintf("%s://%s:%s@%s%s", regURL.Scheme, regURL.User.Username(), "<TOKEN>", regURL.Host,
-			regURL.Path)
+		if auth.IsAnonymousSession(session) {
+			uploadURL = fmt.Sprintf("%s://%s%s", regURL.Scheme, regURL.Host, regURL.Path)
+		} else {
+			// append username:password to the host
+			regURL.User = url.UserPassword(username, "<TOKEN>")
+			uploadURL = fmt.Sprintf("%s://%s:%s@%s%s", regURL.Scheme, regURL.User.Username(), "<TOKEN>", regURL.Host,
+				regURL.Path)
+		}
 	}
 
 	for i := range *clientSetupSections {
@@ -1898,14 +2912,14 @@ func (c *APIController) replaceText(
 func (c *APIController) generateHuggingFaceClientSetupDetail(
 	ctx context.Context,
 	registryRef string,
-	username string,
 	image *artifact.ArtifactParam,
 	tag *artifact.VersionParam,
 	registryType artifact.RegistryType,
 ) *artifact.ClientSetupDetailsResponseJSONResponse {
 	staticStepType := artifact.ClientSetupStepTypeStatic
 	generateTokenType := artifact.ClientSetupStepTypeGenerateToken
-
+	session, _ := request.AuthSessionFrom(ctx)
+	username := session.Principal.Email
 	// Configuration section
 	section1 := artifact.ClientSetupSection{
 		Header: utils.StringPtr("Configure Hugging Face Client"),
@@ -2049,23 +3063,19 @@ func (c *APIController) generateHuggingFaceClientSetupDetail(
 		},
 	})
 
-	sections := []artifact.ClientSetupSection{
-		section1,
-		section2,
-		section3,
-		section4,
-		section5,
-		section6,
+	sections := []artifact.ClientSetupSection{section1}
+	if !auth.IsAnonymousSession(session) {
+		sections = append(sections, section2, section3, section4)
 	}
+	sections = append(sections, section5, section6)
 
 	if registryType == artifact.RegistryTypeUPSTREAM {
 		// For upstream registry, only include configuration, authentication, and resolve sections
-		sections = []artifact.ClientSetupSection{
-			section1,
-			section2,
-			section5,
-			section6,
+		sections = []artifact.ClientSetupSection{section1}
+		if !auth.IsAnonymousSession(session) {
+			sections = append(sections, section2)
 		}
+		sections = append(sections, section5, section6)
 	}
 
 	clientSetupDetails := artifact.ClientSetupDetails{

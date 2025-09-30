@@ -64,8 +64,10 @@ type proxy struct {
 	localRegistryHelper LocalRegistryHelper
 }
 
-func (r *proxy) UploadPackage(ctx context.Context, _ nugettype.ArtifactInfo,
-	_ io.ReadCloser, _ FileBundleType) (*commons.ResponseHeaders, string, error) {
+func (r *proxy) UploadPackage(
+	ctx context.Context, _ nugettype.ArtifactInfo,
+	_ io.ReadCloser, _ FileBundleType,
+) (*commons.ResponseHeaders, string, error) {
 	log.Error().Ctx(ctx).Msg("Not implemented")
 	return nil, "", errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
 }
@@ -95,7 +97,6 @@ func (r *proxy) DownloadPackage(ctx context.Context, info nugettype.ArtifactInfo
 	if err != nil {
 		return nil, nil, "", nil, err
 	}
-
 	go func(info nugettype.ArtifactInfo) {
 		ctx2 := context.WithoutCancel(ctx)
 		ctx2 = context.WithValue(ctx2, cfg.GoRoutineKey, "goRoutine")
@@ -106,11 +107,14 @@ func (r *proxy) DownloadPackage(ctx context.Context, info nugettype.ArtifactInfo
 		}
 		log.Ctx(ctx2).Info().Msgf("Successfully updated file: %s, registry: %s", info.Filename, info.RegIdentifier)
 	}(info)
+
 	return nil, nil, "", file, nil
 }
 
-func (r *proxy) DeletePackage(ctx context.Context,
-	_ nugettype.ArtifactInfo) (*commons.ResponseHeaders, error) {
+func (r *proxy) DeletePackage(
+	ctx context.Context,
+	_ nugettype.ArtifactInfo,
+) (*commons.ResponseHeaders, error) {
 	log.Error().Ctx(ctx).Msg("Not implemented")
 	return nil, errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
 }
@@ -138,8 +142,10 @@ func (r *proxy) CountPackageVersionV2(
 	return count, nil
 }
 
-func (r *proxy) CountPackageV2(ctx context.Context, info nugettype.ArtifactInfo,
-	searchTerm string) (count int64, err error) {
+func (r *proxy) CountPackageV2(
+	ctx context.Context, info nugettype.ArtifactInfo,
+	searchTerm string,
+) (count int64, err error) {
 	upstreamProxy, err := r.proxyStore.GetByRegistryIdentifier(ctx, info.ParentID, info.RegIdentifier)
 	if err != nil {
 		return 0, err
@@ -159,8 +165,10 @@ func (r *proxy) CountPackageV2(ctx context.Context, info nugettype.ArtifactInfo,
 	return count, nil
 }
 
-func (r *proxy) SearchPackageV2(ctx context.Context, info nugettype.ArtifactInfo,
-	searchTerm string, limit int, offset int) (*nugettype.FeedResponse, error) {
+func (r *proxy) SearchPackageV2(
+	ctx context.Context, info nugettype.ArtifactInfo,
+	searchTerm string, limit int, offset int,
+) (*nugettype.FeedResponse, error) {
 	upstreamProxy, err := r.proxyStore.GetByRegistryIdentifier(ctx, info.ParentID, info.RegIdentifier)
 	if err != nil {
 		return &nugettype.FeedResponse{}, err
@@ -212,8 +220,10 @@ func (r *proxy) SearchPackageV2(ctx context.Context, info nugettype.ArtifactInfo
 	return &result, nil
 }
 
-func (r *proxy) SearchPackage(ctx context.Context, info nugettype.ArtifactInfo,
-	searchTerm string, limit int, offset int) (*nugettype.SearchResultResponse, error) {
+func (r *proxy) SearchPackage(
+	ctx context.Context, info nugettype.ArtifactInfo,
+	searchTerm string, limit int, offset int,
+) (*nugettype.SearchResultResponse, error) {
 	upstreamProxy, err := r.proxyStore.GetByRegistryIdentifier(ctx, info.ParentID, info.RegIdentifier)
 	if err != nil {
 		return nil, err
@@ -261,8 +271,10 @@ func (r *proxy) SearchPackage(ctx context.Context, info nugettype.ArtifactInfo,
 	return &result, nil
 }
 
-func (r *proxy) ListPackageVersion(ctx context.Context,
-	info nugettype.ArtifactInfo) (*nugettype.PackageVersion, error) {
+func (r *proxy) ListPackageVersion(
+	ctx context.Context,
+	info nugettype.ArtifactInfo,
+) (*nugettype.PackageVersion, error) {
 	upstreamProxy, err := r.proxyStore.GetByRegistryIdentifier(ctx, info.ParentID, info.RegIdentifier)
 	if err != nil {
 		return &nugettype.PackageVersion{}, err
@@ -283,8 +295,10 @@ func (r *proxy) ListPackageVersion(ctx context.Context,
 	return &result, nil
 }
 
-func (r *proxy) GetPackageMetadata(ctx context.Context,
-	info nugettype.ArtifactInfo) (nugettype.RegistrationResponse, error) {
+func (r *proxy) GetPackageMetadata(
+	ctx context.Context,
+	info nugettype.ArtifactInfo,
+) (nugettype.RegistrationResponse, error) {
 	upstreamProxy, err := r.proxyStore.GetByRegistryIdentifier(ctx, info.ParentID, info.RegIdentifier)
 	if err != nil {
 		return &nugettype.RegistrationIndexResponse{}, err
@@ -318,8 +332,10 @@ func (r *proxy) GetPackageMetadata(ctx context.Context,
 	return metadata, nil
 }
 
-func (r *proxy) ListPackageVersionV2(ctx context.Context,
-	info nugettype.ArtifactInfo) (*nugettype.FeedResponse, error) {
+func (r *proxy) ListPackageVersionV2(
+	ctx context.Context,
+	info nugettype.ArtifactInfo,
+) (*nugettype.FeedResponse, error) {
 	upstreamProxy, err := r.proxyStore.GetByRegistryIdentifier(ctx, info.ParentID, info.RegIdentifier)
 	if err != nil {
 		return &nugettype.FeedResponse{}, err
@@ -363,8 +379,10 @@ func (r *proxy) ListPackageVersionV2(ctx context.Context,
 	return &result, nil
 }
 
-func (r *proxy) GetPackageVersionMetadataV2(ctx context.Context,
-	info nugettype.ArtifactInfo) (*nugettype.FeedEntryResponse, error) {
+func (r *proxy) GetPackageVersionMetadataV2(
+	ctx context.Context,
+	info nugettype.ArtifactInfo,
+) (*nugettype.FeedEntryResponse, error) {
 	packageURL := r.urlProvider.PackageURL(ctx, info.RootIdentifier+"/"+info.RegIdentifier, "nuget")
 	upstreamProxy, err := r.proxyStore.GetByRegistryIdentifier(ctx, info.ParentID, info.RegIdentifier)
 	if err != nil {
@@ -434,8 +452,10 @@ func updateRegistrationIndexResponse(r *nugettype.RegistrationIndexResponse, pac
 	}
 }
 
-func (r *proxy) GetPackageVersionMetadata(ctx context.Context,
-	_ nugettype.ArtifactInfo) (*nugettype.RegistrationLeafResponse, error) {
+func (r *proxy) GetPackageVersionMetadata(
+	ctx context.Context,
+	_ nugettype.ArtifactInfo,
+) (*nugettype.RegistrationLeafResponse, error) {
 	log.Error().Ctx(ctx).Msg("Not implemented")
 	return nil, errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
 }
@@ -446,8 +466,10 @@ func (r *proxy) GetServiceEndpoint(ctx context.Context, info nugettype.ArtifactI
 	return serviceEndpoints
 }
 
-func (r *proxy) GetServiceEndpointV2(ctx context.Context,
-	info nugettype.ArtifactInfo) *nugettype.ServiceEndpointV2 {
+func (r *proxy) GetServiceEndpointV2(
+	ctx context.Context,
+	info nugettype.ArtifactInfo,
+) *nugettype.ServiceEndpointV2 {
 	packageURL := r.urlProvider.PackageURL(ctx, info.RootIdentifier+"/"+info.RegIdentifier, "nuget")
 	serviceEndpoints := buildServiceV2Endpoint(packageURL)
 	return serviceEndpoints
@@ -495,8 +517,10 @@ func (r *proxy) GetPackageTypes() []artifact.PackageType {
 	return []artifact.PackageType{artifact.PackageTypeNUGET}
 }
 
-func (r *proxy) putFileToLocal(ctx context.Context, info *nugettype.ArtifactInfo,
-	remote RemoteRegistryHelper) error {
+func (r *proxy) putFileToLocal(
+	ctx context.Context, info *nugettype.ArtifactInfo,
+	remote RemoteRegistryHelper,
+) error {
 	file, err := remote.GetFile(ctx, info.Image, info.Version, info.ProxyEndpoint, info.Filename)
 	if err != nil {
 		log.Ctx(ctx).Error().Stack().Err(err).Msgf("fetching file for pkg: %s failed, %v", info.Image, err)

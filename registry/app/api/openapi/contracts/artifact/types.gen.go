@@ -791,6 +791,7 @@ type Registry struct {
 	CreatedAt   *string         `json:"createdAt,omitempty"`
 	Description *string         `json:"description,omitempty"`
 	Identifier  string          `json:"identifier"`
+	IsPublic    bool            `json:"isPublic"`
 	Labels      *[]string       `json:"labels,omitempty"`
 	ModifiedAt  *string         `json:"modifiedAt,omitempty"`
 
@@ -804,6 +805,7 @@ type RegistryArtifactMetadata struct {
 	// ArtifactType refers to artifact type
 	ArtifactType   *ArtifactType `json:"artifactType,omitempty"`
 	DownloadsCount *int64        `json:"downloadsCount,omitempty"`
+	IsPublic       bool          `json:"isPublic"`
 	IsQuarantined  *bool         `json:"isQuarantined,omitempty"`
 	Labels         *[]string     `json:"labels,omitempty"`
 	LastModified   *string       `json:"lastModified,omitempty"`
@@ -829,6 +831,7 @@ type RegistryMetadata struct {
 	Description    *string   `json:"description,omitempty"`
 	DownloadsCount *int64    `json:"downloadsCount,omitempty"`
 	Identifier     string    `json:"identifier"`
+	IsPublic       bool      `json:"isPublic"`
 	Labels         *[]string `json:"labels,omitempty"`
 	LastModified   *string   `json:"lastModified,omitempty"`
 
@@ -852,6 +855,7 @@ type RegistryRequest struct {
 	Config      *RegistryConfig `json:"config,omitempty"`
 	Description *string         `json:"description,omitempty"`
 	Identifier  string          `json:"identifier"`
+	IsPublic    bool            `json:"isPublic"`
 	Labels      *[]string       `json:"labels,omitempty"`
 
 	// PackageType refers to package

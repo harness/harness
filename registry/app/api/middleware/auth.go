@@ -25,24 +25,65 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/jwt"
 	"github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/registry/app/api/handler/maven"
 	"github.com/harness/gitness/registry/app/api/handler/oci"
 	registryauth "github.com/harness/gitness/registry/app/auth"
 	"github.com/harness/gitness/registry/app/common"
+	gitnessenum "github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
 )
 
-func OciCheckAuth(urlProvider url.Provider) func(http.Handler) http.Handler {
+func OciCheckAuth(h *oci.Handler) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(
 			func(w http.ResponseWriter, r *http.Request) {
 				ctx := r.Context()
 				session, _ := request.AuthSessionFrom(ctx)
-				url := common.GenerateOciTokenURL(urlProvider.RegistryURL(ctx))
-				if session.Principal == auth.AnonymousPrincipal {
+				//nolint:nestif
+				if auth.IsAnonymousSession(session) {
+					url := common.GenerateOciTokenURL(h.URLProvider.RegistryURL(ctx))
+					info, err := h.GetRegistryInfo(r, true)
 					scope := getScope(r)
-					returnUnauthorised(ctx, w, url, scope)
-					return
+
+					if strings.Contains(scope, ":push,") ||
+						strings.HasSuffix(scope, ",push") ||
+						strings.HasSuffix(r.RequestURI, "/v2/") ||
+						r.Header.Get("Authorization") == "" {
+						returnUnauthorised(ctx, w, url, scope)
+						return
+					}
+
+					if err != nil {
+						log.Ctx(ctx).Error().Stack().Str("middleware",
+							"OciCheckAuth").Err(err).Msgf("error while fetching the artifact info: %v",
+							err)
+						returnUnauthorised(ctx, w, url, scope)
+						return
+					}
+
+					space, err := h.SpaceFinder.FindByID(ctx, info.ParentID)
+					if err != nil {
+						log.Ctx(ctx).Error().Stack().Str("middleware",
+							"OciCheckAuth").Err(err).Msgf("error while fetching the space with ID: %d err: %v", info.ParentID,
+							err)
+						returnUnauthorised(ctx, w, url, scope)
+						return
+					}
+
+					isPublic, err := h.PublicAccessService.Get(ctx,
+						gitnessenum.PublicResourceTypeRegistry, space.Path+"/"+info.RegIdentifier)
+					if err != nil {
+						log.Ctx(ctx).Error().Stack().Str("middleware",
+							"OciCheckAuth").Err(err).Msgf("failed to check if public access is supported err: %v",
+							err)
+						returnUnauthorised(ctx, w, url, scope)
+						return
+					}
+					if !isPublic {
+						returnUnauthorised(ctx, w, url, scope)
+						return
+					}
 				}
 				next.ServeHTTP(w, r)
 			},
@@ -56,7 +97,7 @@ func BlockNonOciSourceToken(urlProvider url.Provider) func(http.Handler) http.Ha
 		return http.HandlerFunc(
 			func(w http.ResponseWriter, r *http.Request) {
 				ctx := r.Context()
-				if session, oks := request.AuthSessionFrom(ctx); oks {
+				if session, oks := request.AuthSessionFrom(ctx); oks && !auth.IsAnonymousSession(session) {
 					if metadata, okt := session.Metadata.(*auth.AccessPermissionMetadata); !okt ||
 						metadata.AccessPermissions.Source != jwt.OciSource {
 						log.Ctx(ctx).Warn().
@@ -90,32 +131,40 @@ func CheckSig() func(http.Handler) http.Handler {
 	}
 }
 
-func CheckAuth() func(http.Handler) http.Handler {
+func CheckAuthWithChallenge(h *maven.Handler) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(
 			func(w http.ResponseWriter, r *http.Request) {
 				ctx := r.Context()
 				session, _ := request.AuthSessionFrom(ctx)
-				if session.Principal == auth.AnonymousPrincipal {
-					render.Unauthorized(ctx, w)
-					return
-				}
-				next.ServeHTTP(w, r)
-			},
-		)
-	}
-}
+				if auth.IsAnonymousSession(session) {
+					info, err := h.GetArtifactInfo(r, true)
+					if err != nil {
+						log.Ctx(ctx).Error().Stack().Str("middleware",
+							"CheckAuthWithChallenge").Err(err).Msgf("error while fetching the artifact info: %v",
+							err)
+						setAuthenticateHeader(w)
+						render.Unauthorized(ctx, w)
+						return
+					}
+					space, err := h.SpaceFinder.FindByID(ctx, info.ParentID)
+					if err != nil {
+						log.Ctx(ctx).Error().Stack().Str("middleware",
+							"CheckAuthWithChallenge").Err(err).
+							Msgf("error while fetching the space with ID: %d err: %v", info.ParentID,
+								err)
+						setAuthenticateHeader(w)
+						render.Unauthorized(ctx, w)
+						return
+					}
 
-func CheckAuthWithChallenge() func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(
-			func(w http.ResponseWriter, r *http.Request) {
-				ctx := r.Context()
-				session, _ := request.AuthSessionFrom(ctx)
-				if session.Principal == auth.AnonymousPrincipal {
-					setAuthenticateHeader(w)
-					render.Unauthorized(ctx, w)
-					return
+					isPublic, err := h.PublicAccessService.Get(ctx,
+						gitnessenum.PublicResourceTypeRegistry, space.Path+"/"+info.RegIdentifier)
+					if !isPublic || err != nil {
+						setAuthenticateHeader(w)
+						render.Unauthorized(ctx, w)
+						return
+					}
 				}
 				next.ServeHTTP(w, r)
 			},
@@ -127,14 +176,8 @@ func CheckAuthHeader() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(
 			func(w http.ResponseWriter, r *http.Request) {
-				ctx := r.Context()
-				authHeader := r.Header.Get("Authorization")
 				apiKeyHeader := r.Header.Get("x-api-key")
-				if authHeader == "" && apiKeyHeader == "" {
-					setAuthenticateHeader(w)
-					render.Unauthorized(ctx, w)
-					return
-				} else if apiKeyHeader != "" {
+				if apiKeyHeader != "" {
 					r.Header.Set("Authorization", apiKeyHeader)
 				}
 				next.ServeHTTP(w, r)
@@ -147,32 +190,9 @@ func CheckNugetAPIKey() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(
 			func(w http.ResponseWriter, r *http.Request) {
-				ctx := r.Context()
 				apiKeyHeader := r.Header.Get("x-nuget-apikey")
-				authHeader := r.Header.Get("Authorization")
-				if authHeader == "" && apiKeyHeader == "" {
-					setNugetAuthChallenge(r.Method, w)
-					render.Unauthorized(ctx, w)
-					return
-				} else if apiKeyHeader != "" {
+				if apiKeyHeader != "" {
 					r.Header.Set("Authorization", apiKeyHeader)
-				}
-				next.ServeHTTP(w, r)
-			},
-		)
-	}
-}
-
-func CheckNugetAuthWithChallenge() func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(
-			func(w http.ResponseWriter, r *http.Request) {
-				ctx := r.Context()
-				session, _ := request.AuthSessionFrom(ctx)
-				if session.Principal == auth.AnonymousPrincipal {
-					setNugetAuthChallenge(r.Method, w)
-					render.Unauthorized(ctx, w)
-					return
 				}
 				next.ServeHTTP(w, r)
 			},

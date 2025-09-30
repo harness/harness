@@ -38,6 +38,7 @@ type Registry struct {
 	UpdatedAt       time.Time
 	CreatedBy       int64
 	UpdatedBy       int64
+	IsPublic        bool
 }
 
 func (r Registry) Identifier() int64 { return r.ID }

@@ -130,7 +130,8 @@ func (r *Repository) Run(
 }
 
 // RunMany starts background jobs that import the provided repositories from the provided clone URLs.
-func (r *Repository) RunMany(ctx context.Context,
+func (r *Repository) RunMany(
+	ctx context.Context,
 	groupID string,
 	provider Provider,
 	repoIDs []int64,
@@ -259,7 +260,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 	if err != nil {
 		return "", fmt.Errorf("failed to disect path %q: %w", repo.Path, err)
 	}
-	isPublicAccessSupported, err := r.publicAccess.IsPublicAccessSupported(ctx, parentPath)
+	isPublicAccessSupported, err := r.publicAccess.IsPublicAccessSupported(ctx, enum.PublicResourceTypeRepo, parentPath)
 	if err != nil {
 		return "", fmt.Errorf(
 			"failed to check if public access is supported for parent space %q: %w",
@@ -438,7 +439,8 @@ func (r *Repository) Cancel(ctx context.Context, repo *types.Repository) error {
 	return nil
 }
 
-func (r *Repository) createGitRepository(ctx context.Context,
+func (r *Repository) createGitRepository(
+	ctx context.Context,
 	principal *types.Principal,
 	repoID int64,
 ) (string, error) {
@@ -475,7 +477,8 @@ func (r *Repository) createGitRepository(ctx context.Context,
 	return resp.UID, nil
 }
 
-func (r *Repository) syncGitRepository(ctx context.Context,
+func (r *Repository) syncGitRepository(
+	ctx context.Context,
 	principal *types.Principal,
 	repo *types.Repository,
 	sourceCloneURL string,
@@ -499,7 +502,8 @@ func (r *Repository) syncGitRepository(ctx context.Context,
 	return nil
 }
 
-func (r *Repository) deleteGitRepository(ctx context.Context,
+func (r *Repository) deleteGitRepository(
+	ctx context.Context,
 	principal *types.Principal,
 	repo *types.Repository,
 ) error {
@@ -518,7 +522,8 @@ func (r *Repository) deleteGitRepository(ctx context.Context,
 	return nil
 }
 
-func (r *Repository) matchFiles(ctx context.Context,
+func (r *Repository) matchFiles(
+	ctx context.Context,
 	repo *types.Repository,
 	ref string,
 	dirPath string,
@@ -549,7 +554,8 @@ func (r *Repository) matchFiles(ctx context.Context,
 	return pipelines, nil
 }
 
-func (r *Repository) createRPCWriteParams(ctx context.Context,
+func (r *Repository) createRPCWriteParams(
+	ctx context.Context,
 	principal *types.Principal,
 	repo *types.Repository,
 ) (git.WriteParams, error) {
@@ -568,7 +574,8 @@ func (r *Repository) createRPCWriteParams(ctx context.Context,
 	}, nil
 }
 
-func (r *Repository) createEnvVars(ctx context.Context,
+func (r *Repository) createEnvVars(
+	ctx context.Context,
 	principal *types.Principal,
 	repoID int64,
 ) (map[string]string, error) {

@@ -31,7 +31,8 @@ type UpdatePublicAccessInput struct {
 	IsPublic bool `json:"is_public"`
 }
 
-func (c *Controller) UpdatePublicAccess(ctx context.Context,
+func (c *Controller) UpdatePublicAccess(
+	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 	in *UpdatePublicAccessInput,
@@ -46,7 +47,7 @@ func (c *Controller) UpdatePublicAccess(ctx context.Context,
 		return nil, fmt.Errorf("failed to disect path %q: %w", repoCore.Path, err)
 	}
 
-	isPublicAccessSupported, err := c.publicAccess.IsPublicAccessSupported(ctx, parentPath)
+	isPublicAccessSupported, err := c.publicAccess.IsPublicAccessSupported(ctx, enum.PublicResourceTypeRepo, parentPath)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"failed to check if public access is supported for parent space %q: %w",

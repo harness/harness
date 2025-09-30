@@ -79,13 +79,13 @@ func NewOCIHandler(handlerV2 *oci.Handler) RegistryOCIHandler {
 			handlerV2.GetToken(w, req)
 		})
 
-		r.With(middleware.OciCheckAuth(handlerV2.URLProvider)).
+		r.With(middleware.OciCheckAuth(handlerV2)).
 			Get("/", func(w http.ResponseWriter, req *http.Request) {
 				handlerV2.APIBase(w, req)
 			})
 
 		r.Route("/{registryIdentifier}", func(r chi.Router) {
-			r.Use(middleware.OciCheckAuth(handlerV2.URLProvider))
+			r.Use(middleware.OciCheckAuth(handlerV2))
 			r.Use(middleware.BlockNonOciSourceToken(handlerV2.URLProvider))
 			r.Use(middleware.TrackDownloadStat(handlerV2))
 			r.Use(middleware.TrackBandwidthStat(handlerV2))

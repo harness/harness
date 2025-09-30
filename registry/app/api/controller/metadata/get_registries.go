@@ -163,11 +163,20 @@ func (c *APIController) GetAllRegistries(
 			),
 		}, nil
 	}
+
+	listRegistriesResponse, err := c.GetAllRegistryResponse(ctx,
+		repos, count, regInfo.pageNumber,
+		regInfo.limit, regInfo.RootIdentifier, c.URLProvider,
+	)
+	if err != nil {
+		return artifact.GetAllRegistries500JSONResponse{
+			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
+				*GetErrorResponse(http.StatusInternalServerError, err.Error()),
+			),
+		}, nil
+	}
 	return artifact.GetAllRegistries200JSONResponse{
-		ListRegistryResponseJSONResponse: *c.GetAllRegistryResponse(ctx,
-			repos, count, regInfo.pageNumber,
-			regInfo.limit, regInfo.RootIdentifier, c.URLProvider,
-		),
+		ListRegistryResponseJSONResponse: *listRegistriesResponse,
 	}, nil
 }
 
@@ -179,8 +188,11 @@ func (c *APIController) GetAllRegistryResponse(
 	pageSize int,
 	rootIdentifier string,
 	urlProvider url.Provider,
-) *artifact.ListRegistryResponseJSONResponse {
-	repoMetadataList := c.GetRegistryMetadata(ctx, repos, rootIdentifier, urlProvider)
+) (*artifact.ListRegistryResponseJSONResponse, error) {
+	repoMetadataList, err := c.GetRegistryMetadata(ctx, repos, rootIdentifier, urlProvider)
+	if err != nil {
+		return nil, err
+	}
 	pageCount := GetPageCount(count, pageSize)
 	listRepository := &artifact.ListRegistry{
 		ItemCount:  &count,
@@ -193,7 +205,7 @@ func (c *APIController) GetAllRegistryResponse(
 		Data:   *listRepository,
 		Status: artifact.StatusSUCCESS,
 	}
-	return response
+	return response, nil
 }
 
 func (c *APIController) GetRegistryMetadata(
@@ -201,7 +213,7 @@ func (c *APIController) GetRegistryMetadata(
 	registryMetadatas *[]store.RegistryMetadata,
 	rootIdentifier string,
 	urlProvider url.Provider,
-) []artifact.RegistryMetadata {
+) ([]artifact.RegistryMetadata, error) {
 	repoMetadataList := []artifact.RegistryMetadata{}
 	for _, reg := range *registryMetadatas {
 		modifiedAt := GetTimeInMs(reg.LastModified)
@@ -231,6 +243,10 @@ func (c *APIController) GetRegistryMetadata(
 		path := c.GetRegistryPath(ctx, reg.ParentID, reg.RegIdentifier)
 		// fix: refactor it
 		size := GetSize(reg.Size)
+		isPublic, err := c.PublicAccess.Get(ctx, enum.PublicResourceTypeRegistry, path)
+		if err != nil {
+			log.Ctx(ctx).Error().Msgf("error in fetching public access for registry %s: %v", path, err)
+		}
 		repoMetadata := artifact.RegistryMetadata{
 			Identifier:     reg.RegIdentifier,
 			Description:    &description,
@@ -243,10 +259,11 @@ func (c *APIController) GetRegistryMetadata(
 			RegistrySize:   &size,
 			Labels:         labels,
 			Path:           &path,
+			IsPublic:       isPublic,
 		}
 		repoMetadataList = append(repoMetadataList, repoMetadata)
 	}
-	return repoMetadataList
+	return repoMetadataList, nil
 }
 
 func (c *APIController) GetRegistryPath(ctx context.Context, parentID int64, regIdentifier string) string {

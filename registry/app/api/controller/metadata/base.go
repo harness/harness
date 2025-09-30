@@ -275,12 +275,18 @@ func getRepoEntityFields(dto api.RegistryRequest) ([]string, []string, string, [
 	return allowedPattern, blockedPattern, description, labels
 }
 
-func CreateVirtualRepositoryResponse(
+func (c *APIController) CreateVirtualRepositoryResponse(
+	ctx context.Context,
 	registry *types.Registry,
 	upstreamProxyKeys []string,
 	cleanupPolicies *[]types.CleanupPolicy,
 	registryURL string,
-) *api.RegistryResponseJSONResponse {
+	registryRef string,
+) (*api.RegistryResponseJSONResponse, error) {
+	isPublic, err := c.PublicAccess.Get(ctx, gitnessenum.PublicResourceTypeRegistry, registryRef)
+	if err != nil {
+		return nil, fmt.Errorf("error in fetching public access for registry %s: %w", registryRef, err)
+	}
 	createdAt := GetTimeInMs(registry.CreatedAt)
 	modifiedAt := GetTimeInMs(registry.UpdatedAt)
 	allowedPattern := registry.AllowedPattern
@@ -302,13 +308,22 @@ func CreateVirtualRepositoryResponse(
 			CleanupPolicy:  CreateCleanupPolicyResponse(cleanupPolicies),
 			Config:         &config,
 			Labels:         &labels,
+			IsPublic:       isPublic,
 		},
 		Status: api.StatusSUCCESS,
 	}
-	return response
+	return response, nil
 }
 
-func CreateUpstreamProxyResponseJSONResponse(upstreamproxy *types.UpstreamProxy) *api.RegistryResponseJSONResponse {
+func (c *APIController) CreateUpstreamProxyResponseJSONResponse(
+	ctx context.Context,
+	upstreamproxy *types.UpstreamProxy,
+	registryRef string,
+) (*api.RegistryResponseJSONResponse, error) {
+	isPublic, err := c.PublicAccess.Get(ctx, gitnessenum.PublicResourceTypeRegistry, registryRef)
+	if err != nil {
+		return nil, fmt.Errorf("error in fetching public access for registry %s: %w", registryRef, err)
+	}
 	createdAt := GetTimeInMs(upstreamproxy.CreatedAt)
 	modifiedAt := GetTimeInMs(upstreamproxy.UpdatedAt)
 	allowedPattern := upstreamproxy.AllowedPattern
@@ -330,8 +345,7 @@ func CreateUpstreamProxyResponseJSONResponse(upstreamproxy *types.UpstreamProxy)
 		auth.SecretKeySpacePath = &upstreamproxy.SecretSpacePath
 		err := configAuth.FromAccessKeySecretKey(auth)
 		if err != nil {
-			log.Warn().Msgf("error in converting auth config to access and secret key: %v", err)
-			return &api.RegistryResponseJSONResponse{}
+			return nil, fmt.Errorf("error in converting auth config to access and secret key: %w", err)
 		}
 	}
 
@@ -356,10 +370,11 @@ func CreateUpstreamProxyResponseJSONResponse(upstreamproxy *types.UpstreamProxy)
 			CreatedAt:      &createdAt,
 			ModifiedAt:     &modifiedAt,
 			Config:         registryConfig,
+			IsPublic:       isPublic,
 		},
 		Status: api.StatusSUCCESS,
 	}
-	return response
+	return response, nil
 }
 
 // deduplicateTriggers de-duplicates the triggers provided by the user.

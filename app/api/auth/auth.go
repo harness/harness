@@ -70,10 +70,6 @@ func CheckAll(
 	if err != nil {
 		return err
 	}
-	if !hasPermission {
-		return ErrForbidden
-	}
-
 	return CheckSessionAuth(session, hasPermission)
 }
 

@@ -42,7 +42,7 @@ func WithOriginalURL(parent context.Context, originalURL string) context.Context
 func ArtifactInfoFrom(ctx context.Context) pkg.PackageArtifactInfo {
 	baseInfo, ok := ctx.Value(ArtifactInfoKey).(pkg.PackageArtifactInfo)
 	if !ok {
-		log.Ctx(ctx).Warn().Msg("Failed to create artifact info")
+		log.Ctx(ctx).Warn().Msg("Failed to get artifact info")
 	}
 	return baseInfo
 }

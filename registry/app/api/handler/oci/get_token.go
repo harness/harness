@@ -41,11 +41,7 @@ type TokenResponseOCI struct {
 
 func (h *Handler) GetToken(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	session, ok := request.AuthSessionFrom(ctx)
-	if !ok || session.Principal == auth.AnonymousPrincipal {
-		returnForbiddenResponse(ctx, w, fmt.Errorf("no auth session found"))
-		return
-	}
+	session, _ := request.AuthSessionFrom(ctx)
 
 	if tokenMetadata, okt := session.Metadata.(*auth.TokenMetadata); okt &&
 		tokenMetadata.TokenType != enum.TokenTypePAT {
@@ -53,10 +49,20 @@ func (h *Handler) GetToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.UserCtrl.FindNoAuth(ctx, session.Principal.UID)
-	if err != nil {
-		returnForbiddenResponse(ctx, w, err)
-		return
+	var user *types.User
+	if auth.IsAnonymousSession(session) {
+		user = &types.User{
+			ID:   session.Principal.ID,
+			UID:  session.Principal.UID,
+			Salt: h.AnonymousUserSecret,
+		}
+	} else {
+		var err error
+		user, err = h.UserCtrl.FindNoAuth(ctx, session.Principal.UID)
+		if err != nil {
+			returnForbiddenResponse(ctx, w, err)
+			return
+		}
 	}
 
 	requestedOciAccess := GetRequestedResourceActions(getScopes(r.URL))

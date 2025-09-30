@@ -65,7 +65,7 @@ func NewRouter(
 		r.Route("/maven", func(r chi.Router) {
 			r.Use(middleware.CheckAuthHeader())
 			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
-			r.Use(middleware.CheckAuthWithChallenge())
+			r.Use(middleware.CheckAuthWithChallenge(mavenHandler))
 			r.Use(middleware.TrackDownloadStatForMavenArtifact(mavenHandler))
 			r.Use(middleware.TrackBandwidthStatForMavenArtifacts(mavenHandler))
 			r.Get("/*", mavenHandler.GetArtifact)
@@ -75,7 +75,6 @@ func NewRouter(
 
 		r.Route("/generic", func(r chi.Router) {
 			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
-			r.Use(middleware.CheckAuth())
 			r.Route("/{package}/{version}", func(r chi.Router) {
 				r.Use(middleware.StoreArtifactInfo(genericHandler))
 				r.Use(middleware.TrackDownloadStatForGenericArtifact(genericHandler))
@@ -92,7 +91,6 @@ func NewRouter(
 		// Files uses Generic Engine to serve and manage files
 		r.Route("/files", func(r chi.Router) {
 			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
-			r.Use(middleware.CheckAuth())
 			// We currently support managing files for a given package and a version. If requirements change in the future,
 			// this line will need to be removed
 			r.Route("/{package}/{version}", func(r chi.Router) {
@@ -118,7 +116,6 @@ func NewRouter(
 
 		r.Route("/python", func(r chi.Router) {
 			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
-			r.Use(middleware.CheckAuth())
 
 			// TODO (Arvind): Move this to top layer with total abstraction
 			r.With(middleware.StoreArtifactInfo(pythonHandler)).
@@ -137,7 +134,6 @@ func NewRouter(
 
 		r.Route("/{packageType}", func(r chi.Router) {
 			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
-			r.Use(middleware.CheckAuth())
 			r.HandleFunc("/*", func(w http.ResponseWriter, r *http.Request) {
 				packageType := chi.URLParam(r, "packageType")
 				http.Error(w, fmt.Sprintf("Package type '%s' is not supported", packageType), http.StatusNotFound)
@@ -146,7 +142,6 @@ func NewRouter(
 
 		r.Route("/download", func(r chi.Router) {
 			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
-			r.Use(middleware.CheckAuth())
 			r.With(middleware.StoreArtifactInfo(packageHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/", packageHandler.DownloadFile)
@@ -155,71 +150,69 @@ func NewRouter(
 		r.Route("/nuget", func(r chi.Router) {
 			r.Use(middleware.CheckNugetAPIKey())
 			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
-			r.Use(middleware.CheckNugetAuthWithChallenge())
 
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
-				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
+				With(middleware.RequestNugetPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
 				Put("/*", nugetHandler.UploadPackage)
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
-				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
+				With(middleware.RequestNugetPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
 				Put("/symbolpackage/*", nugetHandler.UploadSymbolPackage)
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
 				With(middleware.TrackDownloadStats(packageHandler)).
-				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				With(middleware.RequestNugetPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/package/{id}/{version}/{filename}", nugetHandler.DownloadPackage)
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
-				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDelete)).
+				With(middleware.RequestNugetPackageAccess(packageHandler, enum.PermissionArtifactsDelete)).
 				Delete("/{id}/{version}", nugetHandler.DeletePackage)
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
-				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				With(middleware.RequestNugetPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/index.json", nugetHandler.GetServiceEndpoint)
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
-				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				With(middleware.RequestNugetPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/", nugetHandler.GetServiceEndpointV2)
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
-				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				With(middleware.RequestNugetPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/$metadata", nugetHandler.GetServiceMetadataV2)
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
-				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				With(middleware.RequestNugetPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/package/{id}/index.json", nugetHandler.ListPackageVersion)
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
-				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				With(middleware.RequestNugetPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/FindPackagesById()", nugetHandler.ListPackageVersionV2)
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
-				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				With(middleware.RequestNugetPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/query", nugetHandler.SearchPackage)
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
-				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				With(middleware.RequestNugetPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/Packages()", nugetHandler.SearchPackageV2)
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
-				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				With(middleware.RequestNugetPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/Packages()/$count", nugetHandler.CountPackageV2)
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
-				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				With(middleware.RequestNugetPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/Search()", nugetHandler.SearchPackageV2)
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
-				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				With(middleware.RequestNugetPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/Search()/$count", nugetHandler.CountPackageV2)
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
-				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				With(middleware.RequestNugetPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/FindPackagesById()", nugetHandler.ListPackageVersionV2)
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
-				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				With(middleware.RequestNugetPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/FindPackagesById()/$count", nugetHandler.GetPackageVersionCountV2)
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
-				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				With(middleware.RequestNugetPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/registration/{id}/index.json", nugetHandler.GetPackageMetadata)
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
-				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				With(middleware.RequestNugetPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/Packages(Id='{id:[^']+}',Version='{version:[^']+}')", nugetHandler.GetPackageVersionMetadataV2)
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
-				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				With(middleware.RequestNugetPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/registration/{id}/{version}", nugetHandler.GetPackageVersionMetadata)
 		})
 
 		r.Route("/npm", func(r chi.Router) {
 			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
-			r.Use(middleware.CheckAuth())
 			r.Route("/@{scope}/{id}", func(r chi.Router) {
 				r.With(middleware.StoreArtifactInfo(npmHandler)).
 					With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
@@ -298,7 +291,6 @@ func NewRouter(
 		})
 		r.Route("/rpm", func(r chi.Router) {
 			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
-			r.Use(middleware.CheckAuth())
 			r.With(middleware.StoreArtifactInfo(rpmHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
 				Put("/*", rpmHandler.UploadPackageFile)
@@ -316,7 +308,6 @@ func NewRouter(
 		})
 		r.Route("/cargo", func(r chi.Router) {
 			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
-			r.Use(middleware.CheckAuth())
 			r.With(middleware.StoreArtifactInfo(cargoHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionRegistryView)).
 				Get("/index/config.json", cargoHandler.GetRegistryConfig)
@@ -347,7 +338,6 @@ func NewRouter(
 		r.Route("/go", func(r chi.Router) {
 			r.Use(middleware.CheckAuthHeader())
 			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
-			r.Use(middleware.CheckAuth())
 			r.With(middleware.StoreArtifactInfo(gopackageHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
 				Put("/upload", gopackageHandler.UploadPackage)
@@ -368,7 +358,6 @@ func NewRouter(
 		r.Route("/huggingface", func(r chi.Router) {
 			r.Use(middleware.CheckSig())
 			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
-			r.Use(middleware.CheckAuth())
 
 			r.With(middleware.StoreArtifactInfo(huggingfaceHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).

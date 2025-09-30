@@ -54,6 +54,15 @@ func CheckPublicAccess(
 		pubResType = enum.PublicResourceTypeRepo
 		pubResPath = paths.Concatenate(scope.SpacePath, scope.Repo)
 
+	case enum.ResourceTypeRegistry:
+		if resource.Identifier != "" {
+			pubResType = enum.PublicResourceTypeRegistry
+			pubResPath = paths.Concatenate(scope.SpacePath, resource.Identifier)
+		} else { // for spaceScope checks
+			pubResType = enum.PublicResourceTypeSpace
+			pubResPath = scope.SpacePath
+		}
+
 	default:
 		return false, nil
 	}
@@ -67,6 +76,12 @@ func CheckPublicAccess(
 
 	if pubResType == enum.PublicResourceTypeSpace &&
 		permission != enum.PermissionSpaceView {
+		return false, nil
+	}
+
+	if pubResType == enum.PublicResourceTypeRegistry &&
+		permission != enum.PermissionRegistryView &&
+		permission != enum.PermissionArtifactsDownload {
 		return false, nil
 	}
 

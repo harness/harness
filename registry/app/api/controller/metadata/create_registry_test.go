@@ -137,6 +137,7 @@ func TestCreateRegistry(t *testing.T) {
 				mockGenericBlobRepo := new(mocks.GenericBlobRepository)
 				// Create a mock URL provider.
 				mockURLProvider := new(mocks.Provider)
+				mockPublicAccessService := new(mocks.Service)
 				// Set up common URL provider expectations
 				mockURLProvider.On("PackageURL", mock.Anything, mock.Anything, mock.Anything,
 					mock.Anything).Return("http://example.com/registry/test-registry/docker")
@@ -191,6 +192,9 @@ func TestCreateRegistry(t *testing.T) {
 				// 5. Mock registry retrieval.
 				mockRegistryRepo.On("Get", mock.Anything, baseInfo.RegistryID).Return(registry, nil).Once()
 				mockRegFinder.On("Get", mock.Anything, baseInfo.RegistryID).Return(registry, nil).Once()
+				mockSpaceFinder.On("FindByID", mock.Anything, mock.Anything).Return(space, nil).Once()
+				mockPublicAccessService.On("Set", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+				mockPublicAccessService.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(false, nil).Once()
 
 				// 6. Mock cleanup policy retrieval.
 				mockCleanupPolicyRepo.On("GetByRegistryID", mock.Anything,
@@ -270,6 +274,7 @@ func TestCreateRegistry(t *testing.T) {
 						return true
 					},
 					packageWrapper,
+					mockPublicAccessService,
 				)
 			},
 		},
@@ -300,10 +305,12 @@ func TestCreateRegistry(t *testing.T) {
 				mockRegFinder := new(mocks.RegistryFinder)
 				mockTransactor := new(mocks.Transactor)
 				mockGenericBlobRepo := new(mocks.GenericBlobRepository)
+				mockPublicAccessService := new(mocks.Service)
 
 				// Setup error case mock.
 				mockRegistryMetadataHelper.On("GetRegistryRequestBaseInfo", mock.Anything, "invalid", "").
 					Return(nil, fmt.Errorf("space not found")).Once()
+				mockPublicAccessService.On("Set", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
 				fileManager := filemanager.NewFileManager(
 					mockRegistryRepo,
@@ -351,6 +358,7 @@ func TestCreateRegistry(t *testing.T) {
 						return true
 					},
 					nil,
+					mockPublicAccessService,
 				)
 			},
 		},

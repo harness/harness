@@ -22,6 +22,7 @@ import (
 	usercontroller "github.com/harness/gitness/app/api/controller/user"
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/refcache"
 	corestore "github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
@@ -42,36 +43,48 @@ import (
 )
 
 func NewHandler(
-	controller *docker.Controller, spaceFinder refcache.SpaceFinder, spaceStore corestore.SpaceStore,
+	controller *docker.Controller,
+	spaceFinder refcache.SpaceFinder,
+	spaceStore corestore.SpaceStore,
 	tokenStore corestore.TokenStore,
-	userCtrl *usercontroller.Controller, authenticator authn.Authenticator, urlProvider urlprovider.Provider,
-	authorizer authz.Authorizer, ociRelativeURL bool, registryFinder refcache2.RegistryFinder,
+	userCtrl *usercontroller.Controller,
+	authenticator authn.Authenticator,
+	urlProvider urlprovider.Provider,
+	authorizer authz.Authorizer,
+	ociRelativeURL bool,
+	registryFinder refcache2.RegistryFinder,
+	publicAccessService publicaccess.Service,
+	anonymousUserSecret string,
 ) *Handler {
 	return &Handler{
-		Controller:     controller,
-		SpaceFinder:    spaceFinder,
-		SpaceStore:     spaceStore,
-		TokenStore:     tokenStore,
-		UserCtrl:       userCtrl,
-		Authenticator:  authenticator,
-		URLProvider:    urlProvider,
-		Authorizer:     authorizer,
-		registryFinder: registryFinder,
-		OCIRelativeURL: ociRelativeURL,
+		Controller:          controller,
+		SpaceFinder:         spaceFinder,
+		SpaceStore:          spaceStore,
+		TokenStore:          tokenStore,
+		UserCtrl:            userCtrl,
+		Authenticator:       authenticator,
+		URLProvider:         urlProvider,
+		Authorizer:          authorizer,
+		registryFinder:      registryFinder,
+		OCIRelativeURL:      ociRelativeURL,
+		PublicAccessService: publicAccessService,
+		AnonymousUserSecret: anonymousUserSecret,
 	}
 }
 
 type Handler struct {
-	Controller     *docker.Controller
-	SpaceFinder    refcache.SpaceFinder
-	SpaceStore     corestore.SpaceStore
-	TokenStore     corestore.TokenStore
-	UserCtrl       *usercontroller.Controller
-	Authenticator  authn.Authenticator
-	URLProvider    urlprovider.Provider
-	Authorizer     authz.Authorizer
-	registryFinder refcache2.RegistryFinder
-	OCIRelativeURL bool
+	Controller          *docker.Controller
+	SpaceFinder         refcache.SpaceFinder
+	SpaceStore          corestore.SpaceStore
+	TokenStore          corestore.TokenStore
+	UserCtrl            *usercontroller.Controller
+	Authenticator       authn.Authenticator
+	URLProvider         urlprovider.Provider
+	Authorizer          authz.Authorizer
+	registryFinder      refcache2.RegistryFinder
+	OCIRelativeURL      bool
+	PublicAccessService publicaccess.Service
+	AnonymousUserSecret string
 }
 
 type routeType string

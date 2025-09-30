@@ -58,6 +58,21 @@ func (c *APIController) CreateRegistry(
 		}, err
 	}
 
+	if registryRequest.IsPublic {
+		isPublicAccessSupported, err := c.PublicAccess.
+			IsPublicAccessSupported(ctx, gitnessenum.PublicResourceTypeRegistry, space.Path)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"failed to check if public access is supported for parent space %q: %w",
+				space.Path,
+				err,
+			)
+		}
+		if !isPublicAccessSupported {
+			return nil, errPublicArtifactRegistryCreationDisabled
+		}
+	}
+
 	session, _ := request.AuthSessionFrom(ctx)
 	if err = apiauth.CheckSpaceScope(
 		ctx,
@@ -125,8 +140,19 @@ func (c *APIController) CreateRegistry(
 	if registry.PackageType == artifact.PackageTypeRPM {
 		c.PostProcessingReporter.BuildRegistryIndex(ctx, registry.ID, make([]registrytypes.SourceRef, 0))
 	}
+
+	ref := space.Path + "/" + upstreamproxyEntity.RepoKey
+	jsonResponse, err := c.CreateUpstreamProxyResponseJSONResponse(ctx, upstreamproxyEntity, ref)
+	if err != nil {
+		//nolint:nilerr
+		return artifact.CreateRegistry500JSONResponse{
+			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
+				*GetErrorResponse(http.StatusInternalServerError, err.Error()),
+			),
+		}, nil
+	}
 	return artifact.CreateRegistry201JSONResponse{
-		RegistryResponseJSONResponse: *CreateUpstreamProxyResponseJSONResponse(upstreamproxyEntity),
+		RegistryResponseJSONResponse: *jsonResponse,
 	}, nil
 }
 
@@ -163,11 +189,24 @@ func (c *APIController) createVirtualRegistry(
 		return throwCreateRegistry400Error(err), nil
 	}
 	repoURL := c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, repoEntity.Name)
+
+	space, err := c.SpaceFinder.FindByID(ctx, repoEntity.ParentID)
+	if err != nil {
+		return throwCreateRegistry400Error(err), nil
+	}
+	ref := space.Path + "/" + repoEntity.Name
+	jsonResponse, err := c.CreateVirtualRepositoryResponse(ctx,
+		repoEntity, c.getUpstreamProxyKeys(ctx, repoEntity.UpstreamProxies),
+		cleanupPolicies, repoURL, ref)
+	if err != nil {
+		return artifact.CreateRegistry500JSONResponse{
+			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
+				*GetErrorResponse(http.StatusInternalServerError, err.Error()),
+			),
+		}, nil
+	}
 	return artifact.CreateRegistry201JSONResponse{
-		RegistryResponseJSONResponse: *CreateVirtualRepositoryResponse(
-			repoEntity, c.getUpstreamProxyKeys(ctx, repoEntity.UpstreamProxies),
-			cleanupPolicies, repoURL,
-		),
+		RegistryResponseJSONResponse: *jsonResponse,
 	}, nil
 }
 
@@ -214,9 +253,24 @@ func (c *APIController) createRegistryWithAudit(
 	principal types.Principal, parentRef string,
 ) (int64, error) {
 	id, err := c.RegistryRepository.Create(ctx, registry)
+
 	if err != nil {
 		return id, err
 	}
+	registryRef := parentRef + "/" + registry.Name
+	err = c.PublicAccess.Set(ctx, gitnessenum.PublicResourceTypeRegistry, registryRef, registry.IsPublic)
+	if err != nil {
+		if dErr := c.PublicAccess.Delete(ctx, gitnessenum.PublicResourceTypeRegistry, registryRef); dErr != nil {
+			return 0, fmt.Errorf("failed to set registry public access (and public access cleanup: %w): %w", dErr, err)
+		}
+
+		if dErr := c.RegistryRepository.Delete(ctx, registry.ParentID, registry.Name); dErr != nil {
+			return 0, fmt.Errorf("failed to set repo public access (and registry delete: %w): %w", dErr, err)
+		}
+
+		return 0, fmt.Errorf("failed to set repo public access (successful cleanup): %w", err)
+	}
+
 	auditErr := c.AuditService.Log(
 		ctx,
 		principal,
@@ -270,6 +324,7 @@ func (c *APIController) CreateRegistryEntity(
 		PackageType:    dto.PackageType,
 		Labels:         labels,
 		Type:           dto.Config.Type,
+		IsPublic:       dto.IsPublic,
 	}
 	return entity, nil
 }
@@ -306,6 +361,7 @@ func (c *APIController) CreateUpstreamProxyEntity(
 		BlockedPattern: blockedPattern,
 		PackageType:    dto.PackageType,
 		Type:           artifact.RegistryTypeUPSTREAM,
+		IsPublic:       dto.IsPublic,
 	}
 
 	config, e := dto.Config.AsUpstreamConfig()

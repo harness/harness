@@ -115,6 +115,7 @@ func (c *controller) ProxyFile(
 			"to registry:  %s with file path: %s",
 			info.RegIdentifier, filePath)
 	}(info)
+
 	return responseHeaders, body, nil
 }
 

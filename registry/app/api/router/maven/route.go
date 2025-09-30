@@ -42,7 +42,7 @@ func NewMavenHandler(handler *maven.Handler) Handler {
 		r.Use(middleware.StoreOriginalURL)
 		r.Use(middleware.CheckAuthHeader())
 		r.Use(middlewareauthn.Attempt(handler.Authenticator))
-		r.Use(middleware.CheckAuthWithChallenge())
+		r.Use(middleware.CheckAuthWithChallenge(handler))
 		r.Use(middleware.TrackDownloadStatForMavenArtifact(handler))
 		r.Use(middleware.TrackBandwidthStatForMavenArtifacts(handler))
 

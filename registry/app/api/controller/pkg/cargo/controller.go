@@ -18,6 +18,8 @@ import (
 	"context"
 	"io"
 
+	"github.com/harness/gitness/app/services/publicaccess"
+	refcache2 "github.com/harness/gitness/app/services/refcache"
 	urlprovider "github.com/harness/gitness/app/url"
 	cargometadata "github.com/harness/gitness/registry/app/metadata/cargo"
 	"github.com/harness/gitness/registry/app/pkg/cargo"
@@ -45,23 +47,28 @@ type Controller interface {
 		ctx context.Context, info *cargotype.ArtifactInfo,
 	) *GetPackageResponse
 	UploadPackage(
-		ctx context.Context, info *cargotype.ArtifactInfo, metadata *cargometadata.VersionMetadata, fileReader io.ReadCloser,
+		ctx context.Context,
+		info *cargotype.ArtifactInfo,
+		metadata *cargometadata.VersionMetadata,
+		fileReader io.ReadCloser,
 	) (*UploadArtifactResponse, error)
 	UpdateYank(ctx context.Context, info *cargotype.ArtifactInfo, yank bool) (*UpdateYankResponse, error)
 }
 
 // Controller handles Cargo package operations.
 type controller struct {
-	fileManager    filemanager.FileManager
-	proxyStore     store.UpstreamProxyConfigRepository
-	tx             dbtx.Transactor
-	registryDao    store.RegistryRepository
-	registryFinder refcache.RegistryFinder
-	imageDao       store.ImageRepository
-	artifactDao    store.ArtifactRepository
-	urlProvider    urlprovider.Provider
-	local          cargo.LocalRegistry
-	proxy          cargo.Proxy
+	fileManager         filemanager.FileManager
+	proxyStore          store.UpstreamProxyConfigRepository
+	tx                  dbtx.Transactor
+	registryDao         store.RegistryRepository
+	registryFinder      refcache.RegistryFinder
+	imageDao            store.ImageRepository
+	artifactDao         store.ArtifactRepository
+	urlProvider         urlprovider.Provider
+	local               cargo.LocalRegistry
+	proxy               cargo.Proxy
+	publicAccessService publicaccess.Service
+	spaceFinder         refcache2.SpaceFinder
 }
 
 // NewController creates a new Cargo controller.
@@ -76,17 +83,21 @@ func NewController(
 	urlProvider urlprovider.Provider,
 	local cargo.LocalRegistry,
 	proxy cargo.Proxy,
+	publicAccessService publicaccess.Service,
+	spaceFinder refcache2.SpaceFinder,
 ) Controller {
 	return &controller{
-		proxyStore:     proxyStore,
-		registryDao:    registryDao,
-		registryFinder: registryFinder,
-		imageDao:       imageDao,
-		artifactDao:    artifactDao,
-		fileManager:    fileManager,
-		tx:             tx,
-		urlProvider:    urlProvider,
-		local:          local,
-		proxy:          proxy,
+		proxyStore:          proxyStore,
+		registryDao:         registryDao,
+		registryFinder:      registryFinder,
+		imageDao:            imageDao,
+		artifactDao:         artifactDao,
+		fileManager:         fileManager,
+		tx:                  tx,
+		urlProvider:         urlProvider,
+		local:               local,
+		proxy:               proxy,
+		publicAccessService: publicAccessService,
+		spaceFinder:         spaceFinder,
 	}
 }

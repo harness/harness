@@ -25,6 +25,7 @@ import (
 	usercontroller "github.com/harness/gitness/app/api/controller/user"
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/refcache"
 	corestore "github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/errors"
@@ -42,28 +43,30 @@ import (
 )
 
 type Handler struct {
-	Controller    *maven.Controller
-	SpaceStore    corestore.SpaceStore
-	TokenStore    corestore.TokenStore
-	UserCtrl      *usercontroller.Controller
-	Authenticator authn.Authenticator
-	Authorizer    authz.Authorizer
-	SpaceFinder   refcache.SpaceFinder
+	Controller          *maven.Controller
+	SpaceStore          corestore.SpaceStore
+	TokenStore          corestore.TokenStore
+	UserCtrl            *usercontroller.Controller
+	Authenticator       authn.Authenticator
+	Authorizer          authz.Authorizer
+	SpaceFinder         refcache.SpaceFinder
+	PublicAccessService publicaccess.Service
 }
 
 func NewHandler(
 	controller *maven.Controller, spaceStore corestore.SpaceStore, tokenStore corestore.TokenStore,
 	userCtrl *usercontroller.Controller, authenticator authn.Authenticator, authorizer authz.Authorizer,
-	spaceFinder refcache.SpaceFinder,
+	spaceFinder refcache.SpaceFinder, publicAccessService publicaccess.Service,
 ) *Handler {
 	return &Handler{
-		Controller:    controller,
-		SpaceStore:    spaceStore,
-		TokenStore:    tokenStore,
-		UserCtrl:      userCtrl,
-		Authenticator: authenticator,
-		Authorizer:    authorizer,
-		SpaceFinder:   spaceFinder,
+		Controller:          controller,
+		SpaceStore:          spaceStore,
+		TokenStore:          tokenStore,
+		UserCtrl:            userCtrl,
+		Authenticator:       authenticator,
+		Authorizer:          authorizer,
+		SpaceFinder:         spaceFinder,
+		PublicAccessService: publicAccessService,
 	}
 }
 

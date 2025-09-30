@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -33,6 +34,8 @@ func (s *service) getResourceID(
 		id, err = s.getResourceRepo(ctx, resourcePath)
 	case enum.PublicResourceTypeSpace:
 		id, err = s.getResourceSpace(ctx, resourcePath)
+	case enum.PublicResourceTypeRegistry:
+		id, err = s.getResourceRegistry(ctx, resourcePath)
 	default:
 		return 0, fmt.Errorf("invalid public resource type")
 	}
@@ -66,4 +69,24 @@ func (s *service) getResourceSpace(
 	}
 
 	return space.ID, nil
+}
+
+func (s *service) getResourceRegistry(
+	ctx context.Context,
+	path string,
+) (int64, error) {
+	rootRef, _, err := paths.DisectRoot(path)
+	if err != nil {
+		return 0, fmt.Errorf("failed to disect root from path: %w", err)
+	}
+	_, registryIdentifier, err := paths.DisectLeaf(path)
+	if err != nil {
+		return 0, fmt.Errorf("failed to disect leaf from path: %w", err)
+	}
+	repo, err := s.registryFinder.FindByRootRef(ctx, rootRef, registryIdentifier)
+	if err != nil {
+		return 0, fmt.Errorf("failed to find repo: %w", err)
+	}
+
+	return repo.ID, nil
 }

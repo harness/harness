@@ -18,7 +18,9 @@ import (
 	"context"
 
 	spacecontroller "github.com/harness/gitness/app/api/controller/space"
+	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/publicaccess"
 	gstore "github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/audit"
@@ -33,6 +35,8 @@ import (
 	"github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/store/database/dbtx"
 )
+
+var errPublicArtifactRegistryCreationDisabled = usererror.BadRequest("Public artifact registry creation is disabled.")
 
 // APIController simple struct.
 type APIController struct {
@@ -68,6 +72,7 @@ type APIController struct {
 	SpaceStore                   gstore.SpaceStore
 	UntaggedImagesEnabled        func(ctx context.Context) bool
 	PackageWrapper               interfaces.PackageWrapper
+	PublicAccess                 publicaccess.Service
 }
 
 func NewAPIController(
@@ -103,6 +108,7 @@ func NewAPIController(
 	spaceStore gstore.SpaceStore,
 	untaggedImagesEnabled func(ctx context.Context) bool,
 	packageWrapper interfaces.PackageWrapper,
+	publicAccess publicaccess.Service,
 ) *APIController {
 	return &APIController{
 		fileManager:                  fileManager,
@@ -137,5 +143,6 @@ func NewAPIController(
 		SpaceStore:                   spaceStore,
 		UntaggedImagesEnabled:        untaggedImagesEnabled,
 		PackageWrapper:               packageWrapper,
+		PublicAccess:                 publicAccess,
 	}
 }

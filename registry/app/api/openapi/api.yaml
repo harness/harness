@@ -2208,11 +2208,14 @@ components:
           type: string
         path:
           type: string
+        isPublic:
+          type: boolean
       required:
         - type
         - packageType
         - identifier
         - url
+        - isPublic
     ClientSetupDetails:
       type: object
       description: Client Setup Details
@@ -2349,6 +2352,8 @@ components:
           type: string
         isQuarantined:
           type: boolean
+        isPublic:
+          type: boolean
         packageType:
           $ref: "#/components/schemas/PackageType"
         artifactType:
@@ -2359,6 +2364,7 @@ components:
         - latestVersion
         - registryPath
         - packageType
+        - isPublic
     ArtifactVersionMetadata:
       type: object
       description: Artifact Version Metadata
@@ -2448,12 +2454,15 @@ components:
           type: string
         modifiedAt:
           type: string
+        isPublic:
+          type: boolean
       required:
         - name
         - identifier
         - type
         - url
         - packageType
+        - isPublic
     ArtifactDetail:
       type: object
       description: Artifact Detail
@@ -3137,10 +3146,13 @@ components:
           $ref: "#/components/schemas/RegistryConfig"
         parentRef:
           type: string
+        isPublic:
+          type: boolean
       required:
         - identifier
         - type
         - packageType
+        - isPublic
     WebhookRequest:
       type: object
       properties:

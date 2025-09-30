@@ -135,7 +135,6 @@ func filterRegs(
 		log.Ctx(ctx).Debug().Msgf("image version not ready for %s, skipping filter", repoKey)
 		return registries, nil, nil
 	}
-
 	for _, repo := range registries {
 		allowedPatterns := repo.AllowedPattern
 		blockedPatterns := repo.BlockedPattern

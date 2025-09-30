@@ -40,20 +40,23 @@ var _ Authenticator = (*JWTAuthenticator)(nil)
 
 // JWTAuthenticator uses the provided JWT to authenticate the caller.
 type JWTAuthenticator struct {
-	cookieName     string
-	principalStore store.PrincipalStore
-	tokenStore     store.TokenStore
+	cookieName          string
+	principalStore      store.PrincipalStore
+	tokenStore          store.TokenStore
+	anonymousUserSecret string
 }
 
 func NewTokenAuthenticator(
 	principalStore store.PrincipalStore,
 	tokenStore store.TokenStore,
 	cookieName string,
+	anonymousUserSecret string,
 ) *JWTAuthenticator {
 	return &JWTAuthenticator{
-		cookieName:     cookieName,
-		principalStore: principalStore,
-		tokenStore:     tokenStore,
+		cookieName:          cookieName,
+		principalStore:      principalStore,
+		tokenStore:          tokenStore,
+		anonymousUserSecret: anonymousUserSecret,
 	}
 }
 
@@ -78,9 +81,18 @@ func (a *JWTAuthenticator) Authenticate(r *http.Request) (*auth.Session, error) 
 	}
 
 	// Fetch the principal
-	principal, err := a.principalStore.Find(ctx, claims.PrincipalID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get principal for token: %w", err)
+	var principal *types.Principal
+	if claims.PrincipalID == -1 {
+		principal = &types.Principal{
+			ID:   auth.AnonymousPrincipal.ID,
+			UID:  auth.AnonymousPrincipal.UID,
+			Salt: a.anonymousUserSecret,
+		}
+	} else {
+		principal, err = a.principalStore.Find(ctx, claims.PrincipalID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get principal for token: %w", err)
+		}
 	}
 
 	// Support for multiple secrets (comma-separated)

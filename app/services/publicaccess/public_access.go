@@ -50,5 +50,9 @@ type Service interface {
 	) error
 
 	// IsPublicAccessSupported return true iff public access is supported under the provided space.
-	IsPublicAccessSupported(ctx context.Context, parentSpacePath string) (bool, error)
+	IsPublicAccessSupported(
+		ctx context.Context,
+		resourceType enum.PublicResourceType,
+		parentSpacePath string,
+	) (bool, error)
 }

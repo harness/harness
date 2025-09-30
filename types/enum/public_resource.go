@@ -22,13 +22,15 @@ func (PublicResourceType) Enum() []interface{} {
 }
 
 const (
-	PublicResourceTypeRepo  PublicResourceType = "repository"
-	PublicResourceTypeSpace PublicResourceType = "space"
+	PublicResourceTypeRepo     PublicResourceType = "repository"
+	PublicResourceTypeSpace    PublicResourceType = "space"
+	PublicResourceTypeRegistry PublicResourceType = "registry"
 )
 
 func GetAllPublicResourceTypes() []PublicResourceType {
 	return []PublicResourceType{
 		PublicResourceTypeRepo,
 		PublicResourceTypeSpace,
+		PublicResourceTypeRegistry,
 	}
 }

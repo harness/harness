@@ -15,10 +15,14 @@
 package authn
 
 import (
+	"crypto/rand"
+	"fmt"
+
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
+	"github.com/rs/zerolog/log"
 )
 
 // WireSet provides a wire set for this package.
@@ -31,5 +35,13 @@ func ProvideAuthenticator(
 	principalStore store.PrincipalStore,
 	tokenStore store.TokenStore,
 ) Authenticator {
-	return NewTokenAuthenticator(principalStore, tokenStore, config.Token.CookieName)
+	if config.Auth.AnonymousUserSecret == "" {
+		var secretBytes [32]byte
+		if _, err := rand.Read(secretBytes[:]); err != nil {
+			panic(fmt.Sprintf("could not generate random bytes for anonymous user secret: %v", err))
+		}
+		config.Auth.AnonymousUserSecret = string(secretBytes[:])
+		log.Warn().Msg("No anonymous secret provided - generated random secret.")
+	}
+	return NewTokenAuthenticator(principalStore, tokenStore, config.Token.CookieName, config.Auth.AnonymousUserSecret)
 }

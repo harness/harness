@@ -15,9 +15,11 @@
 package cargo
 
 import (
+	refcache2 "github.com/harness/gitness/app/services/refcache"
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/pkg/cargo"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
+	"github.com/harness/gitness/registry/app/services/publicaccess"
 	"github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -36,10 +38,12 @@ func ControllerProvider(
 	urlProvider urlprovider.Provider,
 	local cargo.LocalRegistry,
 	proxy cargo.Proxy,
+	publicAccessService publicaccess.CacheService,
+	spaceFinder refcache2.SpaceFinder,
 ) Controller {
 	return NewController(
 		proxyStore, registryDao, registryFinder, imageDao, artifactDao,
-		fileManager, tx, urlProvider, local, proxy,
+		fileManager, tx, urlProvider, local, proxy, publicAccessService, spaceFinder,
 	)
 }
 

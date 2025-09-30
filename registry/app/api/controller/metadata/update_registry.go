@@ -18,6 +18,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
@@ -75,7 +77,7 @@ func (c *APIController) ModifyRegistry(
 	}
 
 	if string(repoEntity.Type) == string(artifact.RegistryTypeVIRTUAL) {
-		return c.updateVirtualRegistry(ctx, r, repoEntity, err, regInfo, session)
+		return c.updateVirtualRegistry(ctx, r, repoEntity, err, regInfo, session, space)
 	}
 	upstreamproxyEntity, err := c.UpstreamProxyStore.GetByRegistryIdentifier(
 		ctx, regInfo.ParentID,
@@ -130,14 +132,24 @@ func (c *APIController) ModifyRegistry(
 	if registry.PackageType == artifact.PackageTypeRPM {
 		c.PostProcessingReporter.BuildRegistryIndex(ctx, registry.ID, make([]types.SourceRef, 0))
 	}
+	ref := space.Path + "/" + upstreamproxyEntity.RepoKey
+	jsonResponse, err := c.CreateUpstreamProxyResponseJSONResponse(ctx, modifiedRepoEntity, ref)
+	if err != nil {
+		//nolint:nilerr
+		return artifact.ModifyRegistry500JSONResponse{
+			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
+				*GetErrorResponse(http.StatusInternalServerError, err.Error()),
+			),
+		}, nil
+	}
 	return artifact.ModifyRegistry200JSONResponse{
-		RegistryResponseJSONResponse: *CreateUpstreamProxyResponseJSONResponse(modifiedRepoEntity),
+		RegistryResponseJSONResponse: *jsonResponse,
 	}, nil
 }
 
 func (c *APIController) updateVirtualRegistry(
 	ctx context.Context, r artifact.ModifyRegistryRequestObject, repoEntity *types.Registry, err error,
-	regInfo *types.RegistryRequestBaseInfo, session *auth.Session,
+	regInfo *types.RegistryRequestBaseInfo, session *auth.Session, space *types2.SpaceCore,
 ) (artifact.ModifyRegistryResponseObject, error) {
 	if len(repoEntity.Name) == 0 {
 		return artifact.ModifyRegistry404JSONResponse{
@@ -149,6 +161,7 @@ func (c *APIController) updateVirtualRegistry(
 	if err != nil {
 		return throwModifyRegistry500Error(err), err
 	}
+
 	registry, err := UpdateRepoEntity(
 		artifact.RegistryRequest(*r.Body),
 		repoEntity.ParentID,
@@ -186,12 +199,15 @@ func (c *APIController) updateVirtualRegistry(
 	if err != nil {
 		return throwModifyRegistry500Error(err), nil
 	}
+	ref := space.Path + "/" + repoEntity.Name
+	jsonResponse, err := c.CreateVirtualRepositoryResponse(ctx,
+		modifiedRepoEntity, c.getUpstreamProxyKeys(ctx, modifiedRepoEntity.UpstreamProxies), cleanupPolicies,
+		c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, regInfo.RegistryIdentifier), ref)
+	if err != nil {
+		return throwModifyRegistry500Error(err), nil
+	}
 	return artifact.ModifyRegistry200JSONResponse{
-		RegistryResponseJSONResponse: *CreateVirtualRepositoryResponse(
-			modifiedRepoEntity,
-			c.getUpstreamProxyKeys(ctx, modifiedRepoEntity.UpstreamProxies), cleanupPolicies,
-			c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, regInfo.RegistryIdentifier),
-		),
+		RegistryResponseJSONResponse: *jsonResponse,
 	}, nil
 }
 
@@ -259,7 +275,12 @@ func (c *APIController) updateRegistryWithAudit(
 	ctx context.Context, oldRegistry *types.Registry,
 	newRegistry *types.Registry, principal types2.Principal, parentRef string,
 ) error {
-	err := c.RegFinder.Update(ctx, newRegistry)
+	err := c.updatePublicAccess(ctx, parentRef, newRegistry)
+	if err != nil {
+		return err
+	}
+
+	err = c.RegFinder.Update(ctx, newRegistry)
 	if err != nil {
 		return err
 	}
@@ -277,6 +298,59 @@ func (c *APIController) updateRegistryWithAudit(
 	}
 
 	return err
+}
+
+func (c *APIController) updatePublicAccess(
+	ctx context.Context,
+	parentRef string,
+	newRegistry *types.Registry,
+) error {
+	space, err := c.SpaceFinder.FindByRef(ctx, parentRef)
+	if err != nil {
+		return err
+	}
+	ref := space.Path + "/" + newRegistry.Name
+	isPublicAccessSupported, err := c.PublicAccess.IsPublicAccessSupported(ctx,
+		gitnessenum.PublicResourceTypeRegistry, ref)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to check if public access is supported for registry %s: %w",
+			newRegistry.Name,
+			err,
+		)
+	}
+	if !isPublicAccessSupported {
+		return errPublicArtifactRegistryCreationDisabled
+	}
+	isPublic, err := c.PublicAccess.Get(ctx, gitnessenum.PublicResourceTypeRegistry, ref)
+	if err != nil {
+		return fmt.Errorf("failed to check current public access status: %w", err)
+	}
+	//nolint:nestif
+	if isPublic != newRegistry.IsPublic {
+		if newRegistry.Type == artifact.RegistryTypeUPSTREAM && !newRegistry.IsPublic {
+			err := c.checkIfUpstreamIsUsedInPublicRegistries(ctx, newRegistry.RootParentID,
+				newRegistry.Name, newRegistry.ID)
+			if err != nil {
+				return err
+			}
+		}
+		if newRegistry.Type == artifact.RegistryTypeVIRTUAL &&
+			newRegistry.IsPublic &&
+			len(newRegistry.UpstreamProxies) > 0 {
+			err := c.checkIfVirtualHasPrivateUpstreams(ctx, newRegistry.Name, newRegistry.UpstreamProxies)
+			if err != nil {
+				return err
+			}
+		}
+
+		if err = c.PublicAccess.Set(ctx,
+			gitnessenum.PublicResourceTypeRegistry, ref, newRegistry.IsPublic); err != nil {
+			return fmt.Errorf("failed to update artiafct registry public access: %w", err)
+		}
+	}
+
+	return nil
 }
 
 func throwModifyRegistry500Error(err error) artifact.ModifyRegistry500JSONResponse {
@@ -332,6 +406,7 @@ func UpdateRepoEntity(
 		Type:           existingRepo.Type,
 		Labels:         labels,
 		CreatedAt:      existingRepo.CreatedAt,
+		IsPublic:       dto.IsPublic,
 	}
 	return entity, nil
 }
@@ -366,6 +441,7 @@ func (c *APIController) UpdateUpstreamProxyEntity(
 		PackageType:    dto.PackageType,
 		Type:           artifact.RegistryTypeUPSTREAM,
 		CreatedAt:      u.CreatedAt,
+		IsPublic:       dto.IsPublic,
 	}
 	config, _ := dto.Config.AsUpstreamConfig()
 	CleanURLPath(config.Url)
@@ -448,4 +524,95 @@ func (c *APIController) UpdateUpstreamProxyEntity(
 		upstreamProxyConfigEntity.SecretSpaceID = 0
 	}
 	return repoEntity, upstreamProxyConfigEntity, nil
+}
+
+func (c *APIController) checkIfUpstreamIsUsedInPublicRegistries(
+	ctx context.Context,
+	rootIdentifierID int64,
+	registryName string,
+	registryID int64,
+) error {
+	registryIDs, err := c.RegistryRepository.FetchRegistriesIDByUpstreamProxyID(
+		ctx, strconv.FormatInt(registryID, 10), rootIdentifierID)
+	if err != nil {
+		log.Ctx(ctx).Error().Msgf("failed to fetch registryIDs: %s", err)
+		return fmt.Errorf("failed to fetch registryIDs IDs: %w", err)
+	}
+	//nolint:nestif
+	if len(registryIDs) > 0 {
+		registries, err := c.RegistryRepository.GetByIDIn(ctx, registryIDs)
+		if err != nil {
+			log.Ctx(ctx).Error().Msgf("failed to fetch registries: %s", err)
+			return fmt.Errorf("failed to fetch registries: %w", err)
+		}
+		var registryScopeMappings []string
+		for _, registry := range *registries {
+			name := registry.Name
+			space, err := c.SpaceFinder.FindByID(ctx, registry.ParentID)
+			if err != nil {
+				err2 := fmt.Errorf("failed to fetch space details: %w", err)
+				log.Ctx(ctx).Error().Msgf("error: %v", err2)
+				return err2
+			}
+			ref := space.Path + "/" + registry.Name
+			isPublic, err := c.PublicAccess.Get(ctx, gitnessenum.PublicResourceTypeRegistry, ref)
+			if err != nil {
+				err2 := fmt.Errorf("failed to get public access for registry: %w", err)
+				log.Ctx(ctx).Error().Msgf("error: %v", err2)
+				return err2
+			}
+			if isPublic {
+				registryScopeMappings = append(registryScopeMappings, name+" ("+space.Path+")")
+			}
+		}
+		if len(registryScopeMappings) > 0 {
+			return fmt.Errorf(
+				"upstream Proxy: [%s] is being used inside public registry registries: [%s]",
+				registryName, strings.Join(registryScopeMappings, ", "),
+			)
+		}
+	}
+	return nil
+}
+
+func (c *APIController) checkIfVirtualHasPrivateUpstreams(
+	ctx context.Context,
+	registryName string,
+	registryIDs []int64,
+) error {
+	//nolint:nestif
+	if len(registryIDs) > 0 {
+		registries, err := c.RegistryRepository.GetByIDIn(ctx, registryIDs)
+		if err != nil {
+			log.Ctx(ctx).Error().Msgf("failed to fetch registries: %s", err)
+			return fmt.Errorf("failed to fetch registries: %w", err)
+		}
+		var registryScopeMappings []string
+		for _, registry := range *registries {
+			name := registry.Name
+			space, err := c.SpaceFinder.FindByID(ctx, registry.ParentID)
+			if err != nil {
+				err2 := fmt.Errorf("failed to fetch space details: %w", err)
+				log.Ctx(ctx).Error().Msgf("error: %v", err2)
+				return err2
+			}
+			ref := space.Path + "/" + registry.Name
+			isPublic, err := c.PublicAccess.Get(ctx, gitnessenum.PublicResourceTypeRegistry, ref)
+			if err != nil {
+				err2 := fmt.Errorf("failed to get public access for registry: %w", err)
+				log.Ctx(ctx).Error().Msgf("error: %v", err2)
+				return err2
+			}
+			if !isPublic {
+				registryScopeMappings = append(registryScopeMappings, name+" ("+space.Path+")")
+			}
+		}
+		if len(registryScopeMappings) > 0 {
+			return fmt.Errorf(
+				"registry: [%s] has the following private registries upstreams: [%s]",
+				registryName, strings.Join(registryScopeMappings, ", "),
+			)
+		}
+	}
+	return nil
 }

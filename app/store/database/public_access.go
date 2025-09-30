@@ -52,6 +52,8 @@ func (p *PublicAccessStore) Find(
 		sqlQuery = `SELECT EXISTS(SELECT * FROM public_access_repo WHERE public_access_repo_id = $1)`
 	case enum.PublicResourceTypeSpace:
 		sqlQuery = `SELECT EXISTS(SELECT * FROM public_access_space WHERE public_access_space_id = $1)`
+	case enum.PublicResourceTypeRegistry:
+		sqlQuery = `SELECT EXISTS(SELECT * FROM public_access_registry WHERE public_access_registry_id = $1)`
 	default:
 		return false, fmt.Errorf("public resource type %q is not supported", typ)
 	}
@@ -77,6 +79,8 @@ func (p *PublicAccessStore) Create(
 		sqlQuery = `INSERT INTO public_access_repo(public_access_repo_id) VALUES($1)`
 	case enum.PublicResourceTypeSpace:
 		sqlQuery = `INSERT INTO public_access_space(public_access_space_id) VALUES($1)`
+	case enum.PublicResourceTypeRegistry:
+		sqlQuery = `INSERT INTO public_access_registry(public_access_registry_id) VALUES($1)`
 	default:
 		return fmt.Errorf("public resource type %q is not supported", typ)
 	}
@@ -101,6 +105,8 @@ func (p *PublicAccessStore) Delete(
 		sqlQuery = `DELETE FROM public_access_repo WHERE public_access_repo_id = $1`
 	case enum.PublicResourceTypeSpace:
 		sqlQuery = `DELETE FROM public_access_space WHERE public_access_space_id = $1`
+	case enum.PublicResourceTypeRegistry:
+		sqlQuery = `DELETE FROM public_access_registry WHERE public_access_registry_id = $1`
 	default:
 		return fmt.Errorf("public resource type %q is not supported", typ)
 	}

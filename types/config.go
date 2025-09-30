@@ -569,6 +569,10 @@ type Config struct {
 		}
 	}
 
+	Auth struct {
+		AnonymousUserSecret string `envconfig:"GITNESS_ANONYMOUS_USER_SECRET"`
+	}
+
 	Instrumentation struct {
 		Enable bool   `envconfig:"GITNESS_INSTRUMENTATION_ENABLE" default:"false"`
 		Cron   string `envconfig:"GITNESS_INSTRUMENTATION_CRON" default:"0 0 * * *"`

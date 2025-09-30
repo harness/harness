@@ -27,18 +27,24 @@ import (
 )
 
 type Controller interface {
-	UploadPackage(ctx context.Context, info nugettype.ArtifactInfo, fileReader io.ReadCloser,
-		fileBundleType nuget.FileBundleType) *PutArtifactResponse
+	UploadPackage(
+		ctx context.Context, info nugettype.ArtifactInfo, fileReader io.ReadCloser,
+		fileBundleType nuget.FileBundleType,
+	) *PutArtifactResponse
 
 	DownloadPackage(ctx context.Context, info nugettype.ArtifactInfo) *GetArtifactResponse
 
 	DeletePackage(ctx context.Context, info nugettype.ArtifactInfo) *DeleteArtifactResponse
 
-	GetServiceEndpoint(ctx context.Context,
-		info nugettype.ArtifactInfo) *GetServiceEndpointResponse
+	GetServiceEndpoint(
+		ctx context.Context,
+		info nugettype.ArtifactInfo,
+	) *GetServiceEndpointResponse
 
-	GetServiceEndpointV2(ctx context.Context,
-		info nugettype.ArtifactInfo) *GetServiceEndpointV2Response
+	GetServiceEndpointV2(
+		ctx context.Context,
+		info nugettype.ArtifactInfo,
+	) *GetServiceEndpointV2Response
 
 	ListPackageVersion(ctx context.Context, info nugettype.ArtifactInfo) *ListPackageVersionResponse
 
@@ -52,11 +58,15 @@ type Controller interface {
 
 	CountPackageVersionV2(ctx context.Context, info nugettype.ArtifactInfo) *EntityCountResponse
 
-	SearchPackage(ctx context.Context, info nugettype.ArtifactInfo, searchTerm string,
-		limit, offset int) *SearchPackageResponse
+	SearchPackage(
+		ctx context.Context, info nugettype.ArtifactInfo, searchTerm string,
+		limit, offset int,
+	) *SearchPackageResponse
 
-	SearchPackageV2(ctx context.Context, info nugettype.ArtifactInfo, searchTerm string,
-		limit, offset int) *SearchPackageV2Response
+	SearchPackageV2(
+		ctx context.Context, info nugettype.ArtifactInfo, searchTerm string,
+		limit, offset int,
+	) *SearchPackageV2Response
 
 	CountPackageV2(ctx context.Context, info nugettype.ArtifactInfo, searchTerm string) *EntityCountResponse
 

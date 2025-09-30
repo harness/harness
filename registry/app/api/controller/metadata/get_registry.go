@@ -73,13 +73,19 @@ func (c *APIController) GetRegistry(
 				),
 			}, nil
 		}
+		ref := space.Path + "/" + repoEntity.Name
+		jsonResponse, err := c.CreateVirtualRepositoryResponse(ctx,
+			repoEntity, c.getUpstreamProxyKeys(ctx, repoEntity.UpstreamProxies), cleanupPolicies,
+			c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, regInfo.RegistryIdentifier), ref)
+		if err != nil {
+			return artifact.GetRegistry500JSONResponse{
+				InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
+					*GetErrorResponse(http.StatusInternalServerError, err.Error()),
+				),
+			}, nil
+		}
 		return artifact.GetRegistry200JSONResponse{
-			RegistryResponseJSONResponse: *CreateVirtualRepositoryResponse(
-				repoEntity, c.getUpstreamProxyKeys(
-					ctx,
-					repoEntity.UpstreamProxies,
-				), cleanupPolicies, c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, regInfo.RegistryIdentifier),
-			),
+			RegistryResponseJSONResponse: *jsonResponse,
 		}, nil
 	}
 	upstreamproxyEntity, err := c.UpstreamProxyStore.GetByRegistryIdentifier(
@@ -96,8 +102,13 @@ func (c *APIController) GetRegistry(
 	if err != nil {
 		return throwGetRegistry500Error(err), nil
 	}
+	ref := space.Path + "/" + upstreamproxyEntity.RepoKey
+	jsonResponse, err := c.CreateUpstreamProxyResponseJSONResponse(ctx, upstreamproxyEntity, ref)
+	if err != nil {
+		return throwGetRegistry500Error(err), nil
+	}
 	return artifact.GetRegistry200JSONResponse{
-		RegistryResponseJSONResponse: *CreateUpstreamProxyResponseJSONResponse(upstreamproxyEntity),
+		RegistryResponseJSONResponse: *jsonResponse,
 	}, nil
 }
 

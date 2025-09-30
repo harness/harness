@@ -164,7 +164,11 @@ func (c *APIController) deleteRegistryWithAudit(
 	ctx context.Context, regInfo *registrytypes.RegistryRequestBaseInfo,
 	registry *registrytypes.Registry, principal types.Principal, parentRef string,
 ) error {
-	err := c.RegFinder.Delete(ctx, regInfo.ParentID, regInfo.RegistryIdentifier)
+	err := c.PublicAccess.Delete(ctx, enum.PublicResourceTypeRepo, parentRef+"/"+registry.Name)
+	if err != nil {
+		return fmt.Errorf("failed to delete public access for repo: %w", err)
+	}
+	err = c.RegFinder.Delete(ctx, regInfo.ParentID, regInfo.RegistryIdentifier)
 	if err != nil {
 		return err
 	}

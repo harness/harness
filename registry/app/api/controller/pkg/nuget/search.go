@@ -50,8 +50,8 @@ func (c *controller) SearchPackage(
 		}
 	}
 
-	aggregatedResults, totalCount, err := base.SearchPackagesProxyWrapper(ctx, c.registryDao,
-		f, extractResponseData, info, limit, offset)
+	aggregatedResults, totalCount, err := base.SearchPackagesProxyWrapper(ctx,
+		c.registryDao, f, extractResponseData, info, limit, offset)
 
 	if err != nil {
 		return &SearchPackageResponse{
