@@ -166,7 +166,8 @@ describe('Verify create npm registry flow', () => {
           identifier: 'npm-repo',
           packageType: 'NPM',
           parentRef: 'undefined',
-          scanners: []
+          scanners: [],
+          isPublic: false
         },
         queryParams: { space_ref: 'undefined' }
       })
@@ -222,7 +223,8 @@ describe('Verify create npm registry flow', () => {
           identifier: 'npm-repo',
           packageType: 'NPM',
           parentRef: 'undefined',
-          scanners: []
+          scanners: [],
+          isPublic: false
         },
         queryParams: { space_ref: 'undefined' }
       })

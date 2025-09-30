@@ -20,7 +20,7 @@ import { useHistory } from 'react-router-dom'
 import { Layout } from '@harnessio/uicore'
 import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client'
 
-import { useDecodedParams, useRoutes } from '@ar/hooks'
+import { useAppStore, useDecodedParams, useRoutes } from '@ar/hooks'
 import { PageType, type RepositoryPackageType } from '@ar/common/types'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 import QuarantineBadge from '@ar/components/Badge/QuarantineBadge'
@@ -38,6 +38,7 @@ interface VersionDetailsHeaderContentProps {
 export default function VersionDetailsHeaderContent(props: VersionDetailsHeaderContentProps): JSX.Element {
   const { iconSize = 40, data } = props
   const { imageName, version, packageType } = data
+  const { isCurrentSessionPublic } = useAppStore()
   const pathParams = useDecodedParams<VersionDetailsPathParams>()
   const history = useHistory()
   const routes = useRoutes()
@@ -70,14 +71,16 @@ export default function VersionDetailsHeaderContent(props: VersionDetailsHeaderC
         versionIdentifier={pathParams.versionIdentifier}
         packageType={packageType as RepositoryPackageType}
       />
-      <VersionActionsWidget
-        packageType={data.packageType as RepositoryPackageType}
-        repoKey={pathParams.repositoryIdentifier}
-        artifactKey={pathParams.artifactIdentifier}
-        versionKey={pathParams.versionIdentifier}
-        pageType={PageType.Details}
-        data={data}
-      />
+      {!isCurrentSessionPublic && (
+        <VersionActionsWidget
+          packageType={data.packageType as RepositoryPackageType}
+          repoKey={pathParams.repositoryIdentifier}
+          artifactKey={pathParams.artifactIdentifier}
+          versionKey={pathParams.versionIdentifier}
+          pageType={PageType.Details}
+          data={data}
+        />
+      )}
     </Layout.Horizontal>
   )
 }

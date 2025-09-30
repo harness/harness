@@ -34,13 +34,8 @@ import { DEFAULT_PAGE_INDEX, PreferenceScope } from '@ar/constants'
 import { RepositoryListViewTypeEnum } from '@ar/contexts/AppStoreContext'
 import { EntityScope, Parent, RepositoryScopeType } from '@ar/common/types'
 import useGetPageScope from '@ar/hooks/useGetPageScope'
-import {
-  useParentComponents,
-  useParentHooks,
-  useGetSpaceRef,
-  useAppStore,
-  useGetRepositoryListViewType
-} from '@ar/hooks'
+import { useParentHooks, useGetSpaceRef, useAppStore, useGetRepositoryListViewType } from '@ar/hooks'
+import Breadcrumbs from '@ar/components/Breadcrumbs/Breadcrumbs'
 import PackageTypeSelector from '@ar/components/PackageTypeSelector/PackageTypeSelector'
 
 import { CreateRepository } from './components/CreateRepository/CreateRepository'
@@ -55,7 +50,6 @@ import css from './RepositoryListPage.module.scss'
 function RepositoryListPage(): JSX.Element {
   const searchRef = useRef({} as ExpandingSearchInputHandle)
   const { getString } = useStrings()
-  const { NGBreadcrumbs } = useParentComponents()
   const { useQueryParams, useUpdateQueryParams, usePreferenceStore } = useParentHooks()
   const { updateQueryParams } = useUpdateQueryParams<Partial<ArtifactRepositoryListPageQueryParams>>()
   const { setRepositoryListViewType, parent } = useAppStore()
@@ -126,7 +120,7 @@ function RepositoryListPage(): JSX.Element {
             <HarnessDocTooltip tooltipId="artifactRepositoriesPageHeading" useStandAlone={true} />
           </div>
         }
-        breadcrumbs={<NGBreadcrumbs links={[]} />}
+        breadcrumbs={<Breadcrumbs links={[]} />}
       />
       <Page.SubHeader className={css.subHeader}>
         <div className={css.subHeaderItems}>

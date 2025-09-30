@@ -17,7 +17,7 @@
 import React, { useState } from 'react'
 import { get } from 'lodash-es'
 
-import { useFeatureFlags, useRoutes } from '@ar/hooks'
+import { useAppStore, useFeatureFlags, useRoutes } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import ActionButton from '@ar/components/ActionButton/ActionButton'
 import CopyMenuItem from '@ar/components/MenuItemTypes/CopyMenuItem'
@@ -45,6 +45,7 @@ export default function VersionActions({
 }: VersionActionProps): JSX.Element {
   const [open, setOpen] = useState(false)
   const routes = useRoutes()
+  const { isCurrentSessionPublic } = useAppStore()
   const { getString } = useStrings()
   const { HAR_ARTIFACT_QUARANTINE_ENABLED } = useFeatureFlags()
 
@@ -57,7 +58,7 @@ export default function VersionActions({
 
   return (
     <ActionButton isOpen={open} setOpen={setOpen}>
-      {isAllowed(VersionAction.Delete) && (
+      {!isCurrentSessionPublic && isAllowed(VersionAction.Delete) && (
         <DeleteVersionMenuItem
           artifactKey={artifactKey}
           repoKey={repoKey}
@@ -97,7 +98,8 @@ export default function VersionActions({
           {getString('view')}
         </LinkMenuItem>
       )}
-      {isAllowed(VersionAction.Quarantine) &&
+      {!isCurrentSessionPublic &&
+        isAllowed(VersionAction.Quarantine) &&
         HAR_ARTIFACT_QUARANTINE_ENABLED &&
         !data.isQuarantined &&
         digestCount < 2 && (
@@ -114,7 +116,8 @@ export default function VersionActions({
             }}
           />
         )}
-      {isAllowed(VersionAction.Quarantine) &&
+      {!isCurrentSessionPublic &&
+        isAllowed(VersionAction.Quarantine) &&
         HAR_ARTIFACT_QUARANTINE_ENABLED &&
         data.isQuarantined &&
         digestCount < 2 && (

@@ -21,8 +21,9 @@ import { HarnessDocTooltip, Page, GridListToggle, Views } from '@harnessio/uicor
 import { useStrings } from '@ar/frameworks/strings'
 import { DEFAULT_PAGE_INDEX } from '@ar/constants'
 import type { RepositoryPackageType } from '@ar/common/types'
+import Breadcrumbs from '@ar/components/Breadcrumbs/Breadcrumbs'
 import { RepositoryListViewTypeEnum } from '@ar/contexts/AppStoreContext'
-import { useAppStore, useGetRepositoryListViewType, useParentComponents, useParentHooks } from '@ar/hooks'
+import { useAppStore, useGetRepositoryListViewType, useParentHooks } from '@ar/hooks'
 import PackageTypeSelector from '@ar/components/PackageTypeSelector/PackageTypeSelector'
 import TableFilterCheckbox from '@ar/components/TableFilterCheckbox/TableFilterCheckbox'
 
@@ -36,7 +37,6 @@ import css from './RepositoryListPage.module.scss'
 
 function RepositoryListTreeViewPage(): JSX.Element {
   const { getString } = useStrings()
-  const { NGBreadcrumbs } = useParentComponents()
   const { useQueryParams, useUpdateQueryParams } = useParentHooks()
   const { updateQueryParams } = useUpdateQueryParams<Partial<TreeViewRepositoryQueryParams>>()
   const { setRepositoryListViewType } = useAppStore()
@@ -56,7 +56,7 @@ function RepositoryListTreeViewPage(): JSX.Element {
             <HarnessDocTooltip tooltipId="artifactRepositoriesPageHeading" useStandAlone={true} />
           </div>
         }
-        breadcrumbs={<NGBreadcrumbs links={[]} />}
+        breadcrumbs={<Breadcrumbs links={[]} />}
       />
       <Page.SubHeader className={css.subHeader}>
         <div className={css.subHeaderItems}>

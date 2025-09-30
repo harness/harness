@@ -24,3 +24,5 @@ export declare const marginTopLarge: string
 export declare const scannersContainer: string
 export declare const upstreamProxiesContainer: string
 export declare const upstreamProxiesWrapper: string
+export declare const visibilityCardSelect: string
+export declare const visibilityTitle: string

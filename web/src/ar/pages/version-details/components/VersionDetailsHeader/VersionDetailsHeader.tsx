@@ -19,9 +19,10 @@ import classNames from 'classnames'
 import { Page } from '@harnessio/uicore'
 
 import { useStrings } from '@ar/frameworks/strings'
+import { useDecodedParams, useRoutes } from '@ar/hooks'
 import type { RepositoryPackageType } from '@ar/common/types'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
-import { useParentComponents, useDecodedParams, useRoutes } from '@ar/hooks'
+import Breadcrumbs from '@ar/components/Breadcrumbs/Breadcrumbs'
 import { getIdentifierStringForBreadcrumb } from '@ar/common/utils'
 import { VersionProviderContext } from '@ar/pages/version-details/context/VersionProvider'
 
@@ -35,7 +36,6 @@ interface VersionDetailsHeaderProps {
 
 export function VersionDetailsHeader(props: VersionDetailsHeaderProps): JSX.Element | null {
   const { repositoryIdentifier, artifactIdentifier } = useDecodedParams<VersionDetailsPathParams>()
-  const { NGBreadcrumbs } = useParentComponents()
   const { data } = useContext(VersionProviderContext)
   const { getString } = useStrings()
   const routes = useRoutes()
@@ -46,7 +46,7 @@ export function VersionDetailsHeader(props: VersionDetailsHeaderProps): JSX.Elem
       className={classNames(css.header, props.className)}
       size="large"
       breadcrumbs={
-        <NGBreadcrumbs
+        <Breadcrumbs
           links={[
             {
               url: routes.toARRepositoryDetails({

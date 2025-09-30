@@ -49,3 +49,9 @@
     cursor: pointer;
   }
 }
+
+.visibilityBadge {
+  background-color: var(--white) !important;
+  border-color: var(--grey-200) !important;
+  --intent-color: var(--grey-600) !important;
+}

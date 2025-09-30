@@ -16,6 +16,7 @@
 
 import type { DataTooltipInterface } from '@harnessio/uicore'
 import type { FormikContextType, FormikProps } from 'formik'
+import type { StringKeys } from '@ar/frameworks/strings'
 
 export interface FormikExtended<T> extends FormikContextType<T> {
   disabled?: boolean
@@ -92,4 +93,15 @@ export enum RepositoryScopeType {
   NONE = 'none',
   ANCESTORS = 'ancestors',
   DESCENDANTS = 'descendants'
+}
+
+export enum RepositoryVisibility {
+  PUBLIC = 'PUBLIC',
+  PRIVATE = 'PRIVATE'
+}
+
+export interface CardSelectOption<T> {
+  label: StringKeys
+  description: StringKeys
+  value: T
 }

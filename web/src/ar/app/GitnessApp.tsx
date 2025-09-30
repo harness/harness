@@ -42,6 +42,7 @@ import App from '@ar/app/App'
 import '@ar/styles/App.scss'
 import getCustomHeaders from '@ar/__mocks__/utils/getCustomHeaders'
 import { getApiBaseUrl } from '@ar/__mocks__/utils/getApiBaseUrl'
+import PageNotPublic from '@ar/__mocks__/components/PageNotPublic'
 
 const GitnessApp = (props: Partial<MFEAppProps>): JSX.Element => {
   const {
@@ -103,7 +104,8 @@ const GitnessApp = (props: Partial<MFEAppProps>): JSX.Element => {
           )}
           customComponents={Object.assign(
             {
-              ModalProvider
+              ModalProvider,
+              PageNotPublic
             },
             customComponents
           )}
@@ -115,6 +117,8 @@ const GitnessApp = (props: Partial<MFEAppProps>): JSX.Element => {
             customUtils
           )}
           on401={defaultTo(on401, noop)}
+          isPublicAccessEnabledOnResources
+          isCurrentSessionPublic={!!window.publicAccessOnGitness}
         />
       </PreferenceStoreProvider>
     </Container>

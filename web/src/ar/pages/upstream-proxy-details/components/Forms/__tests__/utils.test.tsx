@@ -32,6 +32,7 @@ import {
 const mockUpstreamProxyFormData = {
   packageType: 'DOCKER',
   identifier: 'test1',
+  isPublic: false,
   config: {
     type: 'UPSTREAM',
     source: 'Dockerhub',
@@ -55,6 +56,7 @@ const mockUpstreamProxyFormData = {
 
 const mockUpstreamProxyFormDataForAwsEcr = {
   blockedPattern: ['test3', 'test4'],
+  isPublic: false,
   config: {
     auth: {
       accessKey: 'accessKey',
@@ -86,6 +88,7 @@ const mockUpstreamProxyFormDataForAwsEcr = {
 
 const mockUpstreamProxyData = {
   cleanupPolicy: [],
+  isPublic: false,
   config: {
     auth: {
       authType: 'UserPassword',
@@ -105,6 +108,7 @@ const mockUpstreamProxyData = {
 
 const mockUpstreamProxyDataForAwsEcr = {
   blockedPattern: ['test3', 'test4'],
+  isPublic: false,
   config: {
     auth: {
       accessKey: 'accessKey',
@@ -152,7 +156,8 @@ describe('Verify Upstream Proxy Form utils', () => {
       },
       identifier: 'test1',
       packageType: 'DOCKER',
-      scanners: []
+      scanners: [],
+      isPublic: false
     })
   })
 
@@ -181,7 +186,8 @@ describe('Verify Upstream Proxy Form utils', () => {
       labels: ['label1', 'label2', 'label3', 'label4'],
       modifiedAt: '1738516362995',
       packageType: 'DOCKER',
-      url: ''
+      url: '',
+      isPublic: false
     })
   })
 
@@ -238,7 +244,8 @@ describe('Verify Upstream Proxy Form utils', () => {
       labels: ['label1', 'label2', 'label3', 'label4'],
       modifiedAt: '1738516362995',
       packageType: 'DOCKER',
-      url: ''
+      url: '',
+      isPublic: false
     })
   })
 
@@ -265,7 +272,8 @@ describe('Verify Upstream Proxy Form utils', () => {
       },
       identifier: 'test1',
       packageType: 'DOCKER',
-      scanners: []
+      scanners: [],
+      isPublic: false
     })
   })
 
@@ -293,7 +301,8 @@ describe('Verify Upstream Proxy Form utils', () => {
       },
       identifier: 'test1',
       packageType: 'DOCKER',
-      scanners: []
+      scanners: [],
+      isPublic: false
     })
   })
 
@@ -327,7 +336,8 @@ describe('Verify Upstream Proxy Form utils', () => {
       labels: ['label1', 'label2', 'label3', 'label4'],
       modifiedAt: '1738516362995',
       packageType: 'DOCKER',
-      url: ''
+      url: '',
+      isPublic: false
     })
   })
 
@@ -380,7 +390,8 @@ describe('Verify Upstream Proxy Form utils', () => {
       labels: ['label1', 'label2', 'label3', 'label4'],
       modifiedAt: '1738516362995',
       packageType: 'DOCKER',
-      url: ''
+      url: '',
+      isPublic: false
     })
   })
 
@@ -402,7 +413,8 @@ describe('Verify Upstream Proxy Form utils', () => {
       },
       identifier: 'test1',
       packageType: 'DOCKER',
-      scanners: []
+      scanners: [],
+      isPublic: false
     })
   })
 

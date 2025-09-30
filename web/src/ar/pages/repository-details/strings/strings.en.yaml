@@ -41,6 +41,12 @@ repositoryForm:
     title: Policy Sets
     subTitle: Assign Policy Set to be evaluated against the artifact
     addTitle: Add Policy Set
+  visibility:
+    title: Visibility
+    public: Public
+    publicDescription: Make this repository visible to all users
+    private: Private
+    privateDescription: You can manage who can access this repository
 tabs:
   configuration: Configuration
   packages: '{{ $.artifactList.pageHeading }}'

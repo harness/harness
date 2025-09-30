@@ -22,14 +22,14 @@ import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client
 
 import { PageType, RepositoryPackageType } from '@ar/common/types'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
-import { useDecodedParams, useParentHooks, useRoutes } from '@ar/hooks'
+import { useAppStore, useDecodedParams, useParentHooks, useRoutes } from '@ar/hooks'
 import QuarantineBadge from '@ar/components/Badge/QuarantineBadge'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import VersionActionsWidget from '@ar/frameworks/Version/VersionActionsWidget'
 import SetupClientButton from '@ar/components/SetupClientButton/SetupClientButton'
 
-import type { DockerVersionDetailsQueryParams } from './types'
 import DockerVersionName from './components/DockerVersionName/DockerVersionName'
+import type { DockerVersionDetailsQueryParams } from './types'
 
 interface DockerVersionHeaderProps {
   data: ArtifactVersionSummary
@@ -39,21 +39,21 @@ interface DockerVersionHeaderProps {
 export default function DockerVersionHeader(props: DockerVersionHeaderProps): JSX.Element {
   const { iconSize = 40, data } = props
   const { imageName: name, version, packageType, isQuarantined, quarantineReason } = data
+  const { isCurrentSessionPublic } = useAppStore()
   const pathParams = useDecodedParams<VersionDetailsPathParams>()
   const { useUpdateQueryParams, useQueryParams } = useParentHooks()
   const { updateQueryParams } = useUpdateQueryParams()
-  const { digest, tag } = useQueryParams<DockerVersionDetailsQueryParams>()
+  const { digest } = useQueryParams<DockerVersionDetailsQueryParams>()
   const history = useHistory()
   const routes = useRoutes()
 
-  const handleChangeVersion = (newVersion: string, newTag?: string) => {
+  const handleChangeVersion = (newVersion: string) => {
     history.push(
       routes.toARVersionDetails({
         repositoryIdentifier: pathParams.repositoryIdentifier,
         artifactIdentifier: pathParams.artifactIdentifier,
         versionIdentifier: newVersion,
-        artifactType: pathParams.artifactType,
-        tag: newTag
+        artifactType: pathParams.artifactType
       })
     )
   }
@@ -71,7 +71,6 @@ export default function DockerVersionHeader(props: DockerVersionHeaderProps): JS
         name={name}
         version={version}
         digest={digest}
-        tag={tag}
         onChangeVersion={handleChangeVersion}
         onChangeDigest={handleChangeDigest}
         isLatestVersion={false}
@@ -84,15 +83,17 @@ export default function DockerVersionHeader(props: DockerVersionHeaderProps): JS
         versionIdentifier={pathParams.versionIdentifier}
         packageType={packageType as RepositoryPackageType}
       />
-      <VersionActionsWidget
-        packageType={RepositoryPackageType.DOCKER}
-        repoKey={pathParams.repositoryIdentifier}
-        artifactKey={pathParams.artifactIdentifier}
-        versionKey={pathParams.versionIdentifier}
-        digest={digest}
-        pageType={PageType.Details}
-        data={data}
-      />
+      {!isCurrentSessionPublic && (
+        <VersionActionsWidget
+          packageType={RepositoryPackageType.DOCKER}
+          repoKey={pathParams.repositoryIdentifier}
+          artifactKey={pathParams.artifactIdentifier}
+          versionKey={pathParams.versionIdentifier}
+          digest={digest}
+          pageType={PageType.Details}
+          data={data}
+        />
+      )}
     </Layout.Horizontal>
   )
 }

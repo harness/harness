@@ -19,9 +19,12 @@ import { isEmpty } from 'lodash-es'
 import { FormikContextType, connect } from 'formik'
 import { Container, FormInput } from '@harnessio/uicore'
 
-import { Description, Tags } from '@ar/components/NameDescriptionTags'
 import { useStrings } from '@ar/frameworks/strings'
+import { Separator } from '@ar/components/Separator/Separator'
+import { Description, Tags } from '@ar/components/NameDescriptionTags'
 import type { VirtualRegistryRequest } from '@ar/pages/repository-details/types'
+
+import RepositoryVisibilityContent from './RepositoryVisibilityContent'
 
 interface RepositoryDetailsFormContentProps {
   isEdit: boolean
@@ -49,6 +52,8 @@ function RepositoryDetailsFormContent(
       {/* <EnvironmentSelect name="environment" /> */}
       <Description hasValue={!!description} disabled={readonly} />
       <Tags name="labels" hasValue={!isEmpty(labels)} disabled={readonly} />
+      <Separator />
+      <RepositoryVisibilityContent disabled={readonly} />
     </Container>
   )
 }

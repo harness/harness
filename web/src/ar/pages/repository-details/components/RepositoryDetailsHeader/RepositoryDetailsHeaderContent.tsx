@@ -20,8 +20,9 @@ import { Color } from '@harnessio/design-system'
 import { Container, Layout, Text } from '@harnessio/uicore'
 import { Expander, Position } from '@blueprintjs/core'
 
+import { useAppStore } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
-import { PageType, RepositoryConfigType, type RepositoryPackageType } from '@ar/common/types'
+import { PageType, RepositoryConfigType, RepositoryVisibility, type RepositoryPackageType } from '@ar/common/types'
 import HeaderTitle from '@ar/components/Header/Title'
 import { DEFAULT_DATE_TIME_FORMAT } from '@ar/constants'
 import { getReadableDateTime } from '@ar/common/dateUtils'
@@ -31,6 +32,7 @@ import RepositoryLocationBadge from '@ar/components/Badge/RepositoryLocationBadg
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import RepositoryActionsWidget from '@ar/frameworks/RepositoryStep/RepositoryActionsWidget'
 import type { Repository } from '@ar/pages/repository-details/types'
+import RepositoryVisibilityBadge from '@ar/components/Badge/RepositoryVisibilityBadge'
 
 import css from './RepositoryDetailsHeader.module.scss'
 
@@ -41,7 +43,8 @@ interface RepositoryDetailsHeaderContentProps {
 
 export default function RepositoryDetailsHeaderContent(props: RepositoryDetailsHeaderContentProps): JSX.Element {
   const { data, iconSize = 40 } = props
-  const { identifier, labels, description, modifiedAt, packageType } = data || {}
+  const { identifier, labels, description, modifiedAt, packageType, isPublic } = data || {}
+  const { isCurrentSessionPublic } = useAppStore()
   const { getString } = useStrings()
   return (
     <Container>
@@ -62,6 +65,7 @@ export default function RepositoryDetailsHeaderContent(props: RepositoryDetailsH
                 tagsTitle={getString('tagsLabel')}
               />
             )}
+            <RepositoryVisibilityBadge type={isPublic ? RepositoryVisibility.PUBLIC : RepositoryVisibility.PRIVATE} />
           </Layout.Horizontal>
           <Text
             data-testid="registry-description"
@@ -83,13 +87,15 @@ export default function RepositoryDetailsHeaderContent(props: RepositoryDetailsH
         <Expander />
         <Layout.Horizontal>
           <SetupClientButton repositoryIdentifier={identifier} packageType={packageType as RepositoryPackageType} />
-          <RepositoryActionsWidget
-            type={RepositoryConfigType.VIRTUAL}
-            packageType={data.packageType as RepositoryPackageType}
-            data={data}
-            readonly={false}
-            pageType={PageType.Details}
-          />
+          {!isCurrentSessionPublic && (
+            <RepositoryActionsWidget
+              type={RepositoryConfigType.VIRTUAL}
+              packageType={data.packageType as RepositoryPackageType}
+              data={data}
+              readonly={false}
+              pageType={PageType.Details}
+            />
+          )}
         </Layout.Horizontal>
       </Layout.Horizontal>
     </Container>

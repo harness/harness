@@ -15,7 +15,6 @@
  */
 
 import React from 'react'
-import { get } from 'lodash-es'
 import { Container, Layout, Text } from '@harnessio/uicore'
 import { connect, type FormikContextType } from 'formik'
 import { Color, FontVariation } from '@harnessio/design-system'
@@ -37,7 +36,7 @@ function RepositoryOpaPolicySelectorContent(
   const { getString } = useStrings()
   const { PolicySetFixedTypeSelector } = useParentComponents()
   const { values } = formik
-  const policies = get(values, 'policyRefs', []) || []
+  const policies = values.policyRefs || []
   return (
     <Layout.Vertical spacing="xsmall">
       <Text font={{ variation: FontVariation.H6 }}>

@@ -22,6 +22,7 @@ import { getByText, waitFor } from '@testing-library/react'
 import RbacButton from '@ar/__mocks__/components/RbacButton'
 import RbacMenuItem from '@ar/__mocks__/components/RbacMenuItem'
 import NGBreadcrumbs from '@ar/__mocks__/components/NGBreadcrumbs'
+import PageNotPublic from '@ar/__mocks__/components/PageNotPublic'
 import DependencyView from '@ar/__mocks__/components/DependencyView'
 import SecretFormInput from '@ar/__mocks__/components/SecretFormInput'
 import VulnerabilityView from '@ar/__mocks__/components/VulnerabilityView'
@@ -72,7 +73,8 @@ MockTestUtils.components = {
   VulnerabilityView,
   DependencyView,
   ModalProvider,
-  PolicySetFixedTypeSelector
+  PolicySetFixedTypeSelector,
+  PageNotPublic
 }
 
 MockTestUtils.utils = {

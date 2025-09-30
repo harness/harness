@@ -130,7 +130,8 @@ describe('Verify create docker upstream registry flow', () => {
           identifier: 'docker-up-repo',
           packageType: 'DOCKER',
           parentRef: 'undefined',
-          scanners: []
+          scanners: [],
+          isPublic: false
         },
         queryParams: { space_ref: 'undefined' }
       })
@@ -179,7 +180,8 @@ describe('Verify create docker upstream registry flow', () => {
           identifier: 'docker-up-repo',
           packageType: 'DOCKER',
           parentRef: 'undefined',
-          scanners: []
+          scanners: [],
+          isPublic: false
         },
         queryParams: { space_ref: 'undefined' }
       })
@@ -222,7 +224,8 @@ describe('Verify create docker upstream registry flow', () => {
           identifier: 'docker-up-repo',
           packageType: 'DOCKER',
           parentRef: 'undefined',
-          scanners: []
+          scanners: [],
+          isPublic: false
         },
         queryParams: { space_ref: 'undefined' }
       })
@@ -276,7 +279,8 @@ describe('Verify create docker upstream registry flow', () => {
           identifier: 'docker-up-repo',
           packageType: 'DOCKER',
           parentRef: 'undefined',
-          scanners: []
+          scanners: [],
+          isPublic: false
         },
         queryParams: { space_ref: 'undefined' }
       })
@@ -325,7 +329,8 @@ describe('Verify create docker upstream registry flow', () => {
           identifier: 'docker-up-repo',
           packageType: 'DOCKER',
           parentRef: 'undefined',
-          scanners: []
+          scanners: [],
+          isPublic: false
         },
         queryParams: { space_ref: 'undefined' }
       })
@@ -374,7 +379,8 @@ describe('Verify create docker upstream registry flow', () => {
           identifier: 'docker-up-repo',
           packageType: 'DOCKER',
           parentRef: 'undefined',
-          scanners: []
+          scanners: [],
+          isPublic: false
         },
         queryParams: { space_ref: 'undefined' }
       })

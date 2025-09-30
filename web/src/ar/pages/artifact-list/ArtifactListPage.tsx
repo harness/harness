@@ -32,9 +32,10 @@ import {
 } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
+import Breadcrumbs from '@ar/components/Breadcrumbs/Breadcrumbs'
 import { DEFAULT_PAGE_INDEX, PreferenceScope } from '@ar/constants'
 import { ButtonTab, ButtonTabs } from '@ar/components/ButtonTabs/ButtonTabs'
-import { useGetSpaceRef, useParentComponents, useParentHooks } from '@ar/hooks'
+import { useGetSpaceRef, useParentHooks } from '@ar/hooks'
 import PackageTypeSelector from '@ar/components/PackageTypeSelector/PackageTypeSelector'
 
 import { ArtifactListVersionFilter } from './constants'
@@ -46,7 +47,6 @@ import css from './ArtifactListPage.module.scss'
 
 function ArtifactListPage(): JSX.Element {
   const { getString } = useStrings()
-  const { NGBreadcrumbs } = useParentComponents()
   const { useQueryParams, useUpdateQueryParams, usePreferenceStore } = useParentHooks()
   const { updateQueryParams } = useUpdateQueryParams<Partial<ArtifactListPageQueryParams>>()
   const queryParams = useQueryParams<ArtifactListPageQueryParams>(useArtifactListQueryParamOptions())
@@ -116,7 +116,7 @@ function ArtifactListPage(): JSX.Element {
             <HarnessDocTooltip tooltipId="artifactsPageHeading" useStandAlone={true} />
           </div>
         }
-        breadcrumbs={<NGBreadcrumbs links={[]} />}
+        breadcrumbs={<Breadcrumbs links={[]} />}
       />
       <Page.SubHeader className={css.subHeader}>
         <div className={css.subHeaderItems}>

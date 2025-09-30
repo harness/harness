@@ -20,9 +20,12 @@ import { FontVariation } from '@harnessio/design-system'
 import { FormikForm, Layout, Text } from '@harnessio/uicore'
 
 import { useStrings } from '@ar/frameworks/strings/String'
+import { Separator } from '@ar/components/Separator/Separator'
+import RepositoryVisibilityContent from '@ar/pages/repository-details/components/FormContent/RepositoryVisibilityContent'
+
+import type { UpstreamRegistryRequest } from '../../types'
 import UpstreamProxyDetailsFormContent from './UpstreamProxyDetailsFormContent'
 import UpstreamProxyAuthenticationFormContent from './UpstreamProxyAuthenticationFormContent'
-import type { UpstreamRegistryRequest } from '../../types'
 
 interface UpstreamProxyFormContentProps {
   readonly: boolean
@@ -42,6 +45,8 @@ function UpstreamProxyCreateFormContent(
         </Text>
         <UpstreamProxyDetailsFormContent isEdit={isEdit} formikProps={formik} readonly={readonly} />
         <UpstreamProxyAuthenticationFormContent readonly={readonly} />
+        <Separator />
+        <RepositoryVisibilityContent disabled={readonly} />
       </Layout.Vertical>
     </FormikForm>
   )

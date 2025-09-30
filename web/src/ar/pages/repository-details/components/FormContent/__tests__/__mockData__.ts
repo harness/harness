@@ -24,7 +24,8 @@ export const MockGetDockerRegistryResponseWithMinimumData = {
       identifier: 'docker-repo',
       packageType: 'DOCKER',
       url: 'https://pkg.qa.harness.io/iwnhltqot7gft7r-f_zp7q/docker-repo',
-      cleanupPolicy: []
+      cleanupPolicy: [],
+      isPublic: false
     },
     status: 'SUCCESS'
   }
@@ -42,7 +43,8 @@ export const MockGetDockerRegistryResponseWithMinimumDataForOSS = {
       modifiedAt: '1730978957105',
       packageType: 'DOCKER',
       url: 'https://pkg.qa.harness.io/iwnhltqot7gft7r-f_zp7q/docker-repo',
-      cleanupPolicy: []
+      cleanupPolicy: [],
+      isPublic: false
     },
     status: 'SUCCESS'
   }

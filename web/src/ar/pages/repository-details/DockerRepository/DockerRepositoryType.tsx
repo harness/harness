@@ -68,7 +68,8 @@ export class DockerRepositoryType extends RepositoryStep<VirtualRegistryRequest>
       upstreamProxies: []
     },
     cleanupPolicy: [],
-    scanners: []
+    scanners: [],
+    isPublic: false
   }
 
   protected defaultUpstreamProxyValues: UpstreamRegistryRequest = {
@@ -81,7 +82,8 @@ export class DockerRepositoryType extends RepositoryStep<VirtualRegistryRequest>
       authType: UpstreamProxyAuthenticationMode.ANONYMOUS
     },
     cleanupPolicy: [],
-    scanners: []
+    scanners: [],
+    isPublic: false
   }
 
   renderCreateForm(props: CreateRepositoryFormProps): JSX.Element {

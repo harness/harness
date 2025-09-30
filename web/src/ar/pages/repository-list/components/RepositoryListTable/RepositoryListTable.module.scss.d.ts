@@ -19,5 +19,6 @@
 export declare const alignColumns: string
 export declare const nameCellContainer: string
 export declare const scopeColumn: string
+export declare const subText: string
 export declare const table: string
 export declare const tableRow: string

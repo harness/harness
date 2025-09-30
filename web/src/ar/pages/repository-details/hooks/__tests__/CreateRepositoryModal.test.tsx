@@ -109,7 +109,8 @@ describe('Verify CreateRepositoryModal', () => {
           identifier: 'repo1',
           packageType: 'DOCKER',
           parentRef: 'undefined',
-          scanners: []
+          scanners: [],
+          isPublic: false
         },
         queryParams: { space_ref: 'undefined' }
       })

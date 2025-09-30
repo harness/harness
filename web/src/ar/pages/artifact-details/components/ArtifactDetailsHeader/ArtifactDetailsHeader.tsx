@@ -21,7 +21,8 @@ import { Page } from '@harnessio/uicore'
 import { useStrings } from '@ar/frameworks/strings'
 import type { ArtifactDetailsPathParams } from '@ar/routes/types'
 import { getIdentifierStringForBreadcrumb } from '@ar/common/utils'
-import { useDecodedParams, useParentComponents, useRoutes } from '@ar/hooks'
+import { useDecodedParams, useRoutes } from '@ar/hooks'
+import Breadcrumbs from '@ar/components/Breadcrumbs/Breadcrumbs'
 
 import ArtifactDetailsHeaderContent from './ArtifactDetailsHeaderContent'
 
@@ -29,7 +30,6 @@ import css from './ArtifactDetailsHeader.module.scss'
 
 function ArtifactDetailsHeader(): JSX.Element {
   const { repositoryIdentifier } = useDecodedParams<ArtifactDetailsPathParams>()
-  const { NGBreadcrumbs } = useParentComponents()
   const { getString } = useStrings()
   const routes = useRoutes()
 
@@ -39,7 +39,7 @@ function ArtifactDetailsHeader(): JSX.Element {
       className={classNames(css.header)}
       size="xlarge"
       breadcrumbs={
-        <NGBreadcrumbs
+        <Breadcrumbs
           links={[
             {
               url: routes.toARRepositoryDetails({

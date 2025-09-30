@@ -132,6 +132,11 @@ export interface StringsMap {
   'repositoryDetails.repositoryForm.title': string
   'repositoryDetails.repositoryForm.upstreamProxiesSubTitle': string
   'repositoryDetails.repositoryForm.upstreamProxiesTitle': string
+  'repositoryDetails.repositoryForm.visibility.private': string
+  'repositoryDetails.repositoryForm.visibility.privateDescription': string
+  'repositoryDetails.repositoryForm.visibility.public': string
+  'repositoryDetails.repositoryForm.visibility.publicDescription': string
+  'repositoryDetails.repositoryForm.visibility.title': string
   'repositoryDetails.tabs.configuration': string
   'repositoryDetails.tabs.datasets': string
   'repositoryDetails.tabs.models': string
@@ -468,6 +473,8 @@ export interface StringsMap {
   plusNewName: string
   prod: string
   prodCount: string
+  'publicAccess.oopsPageNotPublic': string
+  'publicAccess.tryOtherOptions': string
   'repositoryTypes.alpine': string
   'repositoryTypes.cargo': string
   'repositoryTypes.debian': string

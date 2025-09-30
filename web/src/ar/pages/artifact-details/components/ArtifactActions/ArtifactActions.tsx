@@ -16,6 +16,7 @@
 
 import React, { useState } from 'react'
 
+import { useAppStore } from '@ar/hooks'
 import { PageType } from '@ar/common/types'
 import ActionButton from '@ar/components/ActionButton/ActionButton'
 
@@ -32,19 +33,22 @@ export default function ArtifactActions({
   onClose
 }: ArtifactActionProps): JSX.Element {
   const [open, setOpen] = useState(false)
+  const { isCurrentSessionPublic } = useAppStore()
   return (
     <ActionButton isOpen={open} setOpen={setOpen}>
-      <DeleteArtifactMenuItem
-        artifactKey={artifactKey}
-        repoKey={repoKey}
-        data={data}
-        pageType={pageType}
-        readonly={readonly}
-        onClose={() => {
-          setOpen(false)
-          onClose?.()
-        }}
-      />
+      {!isCurrentSessionPublic && (
+        <DeleteArtifactMenuItem
+          artifactKey={artifactKey}
+          repoKey={repoKey}
+          data={data}
+          pageType={pageType}
+          readonly={readonly}
+          onClose={() => {
+            setOpen(false)
+            onClose?.()
+          }}
+        />
+      )}
       {pageType === PageType.Table && (
         <SetupClientMenuItem
           data={data}

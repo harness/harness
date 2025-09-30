@@ -18,14 +18,13 @@ import React from 'react'
 import { FontVariation } from '@harnessio/design-system'
 import { HarnessDocTooltip, Page, Text } from '@harnessio/uicore'
 
-import { useParentComponents } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
+import Breadcrumbs from '@ar/components/Breadcrumbs/Breadcrumbs'
 
 import css from './ManageRegistriesPage.module.scss'
 
 function ManageRegistriesHeader() {
   const { getString } = useStrings()
-  const { NGBreadcrumbs } = useParentComponents()
   return (
     <Page.Header
       className={css.pageHeader}
@@ -35,7 +34,7 @@ function ManageRegistriesHeader() {
           <HarnessDocTooltip tooltipId="manageRegistriesPageHeading" useStandAlone={true} />
         </div>
       }
-      breadcrumbs={<NGBreadcrumbs links={[]} />}
+      breadcrumbs={<Breadcrumbs links={[]} />}
     />
   )
 }

@@ -431,7 +431,8 @@ describe('Verify configuration form', () => {
             identifier: 'maven-up-repo',
             labels: ['label1', 'label2', 'label3', 'label4'],
             packageType: 'MAVEN',
-            url: ''
+            url: '',
+            isPublic: false
           },
           registry_ref: 'undefined/abcd/+'
         })
@@ -466,7 +467,8 @@ describe('Verify configuration form', () => {
             identifier: 'maven-up-repo',
             labels: ['label1', 'label2', 'label3', 'label4'],
             packageType: 'MAVEN',
-            url: ''
+            url: '',
+            isPublic: false
           },
           registry_ref: 'undefined/abcd/+'
         })
@@ -501,7 +503,8 @@ describe('Verify configuration form', () => {
             identifier: 'maven-up-repo',
             labels: ['label1', 'label2', 'label3', 'label4'],
             packageType: 'MAVEN',
-            url: ''
+            url: '',
+            isPublic: false
           },
           registry_ref: 'undefined/abcd/+'
         })

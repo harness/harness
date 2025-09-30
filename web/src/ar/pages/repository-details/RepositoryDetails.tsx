@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useContext, useMemo, useState } from 'react'
+import React, { useContext, useEffect, useMemo, useState } from 'react'
 import type { FormikProps } from 'formik'
 import { Expander } from '@blueprintjs/core'
 import { Redirect, Switch, useHistory } from 'react-router-dom'
@@ -25,6 +25,7 @@ import type { RepositoryDetailsPathParams } from '@ar/routes/types'
 import RouteProvider from '@ar/components/RouteProvider/RouteProvider'
 import TabsContainer from '@ar/components/TabsContainer/TabsContainer'
 import {
+  useAppStore,
   useDecodedParams,
   useFeatureFlags,
   useGetRepositoryListViewType,
@@ -50,6 +51,7 @@ export default function RepositoryDetails(): JSX.Element | null {
   const stepRef = React.useRef<FormikProps<unknown> | null>(null)
 
   const routeDefinitions = useRoutes(true)
+  const { isCurrentSessionPublic } = useAppStore()
   const history = useHistory()
   const routes = useRoutes()
   const repositoryListViewType = useGetRepositoryListViewType()
@@ -64,7 +66,8 @@ export default function RepositoryDetails(): JSX.Element | null {
       .filter(each => !each.featureFlag || featureFlags[each.featureFlag])
       .filter(each => !each.type || each.type === data?.config.type)
       .filter(each => !each.mode || each.mode === repositoryListViewType)
-  }, [data, featureFlags, repositoryListViewType])
+      .filter(each => (isCurrentSessionPublic ? each.isSupportedInPublicView : true))
+  }, [data, featureFlags, repositoryListViewType, isCurrentSessionPublic])
 
   const handleTabChange = (nextTab: RepositoryDetailsTab): void => {
     setActiveTab(nextTab)
@@ -78,6 +81,13 @@ export default function RepositoryDetails(): JSX.Element | null {
   const handleResetForm = (): void => {
     stepRef.current?.resetForm()
   }
+
+  useEffect(() => {
+    if (!isCurrentSessionPublic) return
+    if (repositoryTabs.length === 0) return
+    if (repositoryTabs.find(each => each.value === activeTab)) return
+    handleTabChange(repositoryTabs[0].value)
+  }, [activeTab, repositoryTabs, isCurrentSessionPublic])
 
   const renderActionBtns = (): JSX.Element => (
     <Layout.Horizontal className={css.btnContainer}>
@@ -119,10 +129,13 @@ export default function RepositoryDetails(): JSX.Element | null {
         </Tabs>
       </TabsContainer>
       <Switch>
-        <RouteProvider exact path={routeDefinitions.toARRepositoryDetails({ ...repositoryDetailsPathProps })}>
+        <RouteProvider isPublic exact path={routeDefinitions.toARRepositoryDetails({ ...repositoryDetailsPathProps })}>
           <Redirect to={routes.toARRepositoryDetailsTab({ ...pathParams, tab: repositoryTabs[0].value })} />
         </RouteProvider>
-        <RouteProvider exact path={[routeDefinitions.toARRepositoryDetailsTab({ ...repositoryDetailsTabPathProps })]}>
+        <RouteProvider
+          isPublic
+          exact
+          path={[routeDefinitions.toARRepositoryDetailsTab({ ...repositoryDetailsTabPathProps })]}>
           <RepositoryDetailsTabPage
             onInit={nextTab => {
               setActiveTab(nextTab)

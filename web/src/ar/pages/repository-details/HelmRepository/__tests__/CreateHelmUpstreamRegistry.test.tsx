@@ -143,7 +143,8 @@ describe('Verify create helm upstream registry flow', () => {
           identifier: 'helm-up-repo',
           packageType: 'HELM',
           parentRef: 'undefined',
-          scanners: []
+          scanners: [],
+          isPublic: false
         },
         queryParams: { space_ref: 'undefined' }
       })
@@ -199,7 +200,8 @@ describe('Verify create helm upstream registry flow', () => {
           identifier: 'helm-up-repo',
           packageType: 'HELM',
           parentRef: 'undefined',
-          scanners: []
+          scanners: [],
+          isPublic: false
         },
         queryParams: { space_ref: 'undefined' }
       })
@@ -249,7 +251,8 @@ describe('Verify create helm upstream registry flow', () => {
           identifier: 'helm-up-repo',
           packageType: 'HELM',
           parentRef: 'undefined',
-          scanners: []
+          scanners: [],
+          isPublic: false
         },
         queryParams: { space_ref: 'undefined' }
       })
@@ -310,7 +313,8 @@ describe('Verify create helm upstream registry flow', () => {
           identifier: 'helm-up-repo',
           packageType: 'HELM',
           parentRef: 'undefined',
-          scanners: []
+          scanners: [],
+          isPublic: false
         },
         queryParams: { space_ref: 'undefined' }
       })

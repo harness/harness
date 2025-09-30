@@ -26,6 +26,7 @@ import { useStrings } from '@ar/frameworks/strings'
 import { Separator } from '@ar/components/Separator/Separator'
 import CollapseContainer from '@ar/components/CollapseContainer/CollapseContainer'
 import { RepositoryProviderContext } from '@ar/pages/repository-details/context/RepositoryProvider'
+import RepositoryVisibilityContent from '@ar/pages/repository-details/components/FormContent/RepositoryVisibilityContent'
 import SelectContainerScannersFormSection from '@ar/pages/repository-details/components/FormContent/SelectContainerScannersFormSection'
 import RepositoryOpaPolicySelectorContent from '@ar/pages/repository-details/components/FormContent/RepositoryOpaPolicySelectorContent'
 
@@ -78,6 +79,8 @@ export default function UpstreamProxyConfigurationFormContent(
         <Layout.Vertical>
           <UpstreamProxyDetailsFormContent isEdit formikProps={formikProps} readonly={readonly} />
           <UpstreamProxyAuthenticationFormContent readonly={readonly} />
+          <Separator />
+          <RepositoryVisibilityContent disabled={readonly} />
         </Layout.Vertical>
       </Card>
       {parent === Parent.Enterprise && (

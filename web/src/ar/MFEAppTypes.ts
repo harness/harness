@@ -20,6 +20,7 @@ import type { PermissionIdentifier, ResourceType } from '@ar/common/permissionTy
 import type RbacButton from '@ar/__mocks__/components/RbacButton'
 import type RbacMenuItem from '@ar/__mocks__/components/RbacMenuItem'
 import type NGBreadcrumbs from '@ar/__mocks__/components/NGBreadcrumbs'
+import type PageNotPublic from '@ar/__mocks__/components/PageNotPublic'
 import type DependencyView from '@ar/__mocks__/components/DependencyView'
 import type SecretFormInput from '@ar/__mocks__/components/SecretFormInput'
 import type VulnerabilityView from '@ar/__mocks__/components/VulnerabilityView'
@@ -106,6 +107,7 @@ export interface CustomComponents {
   VulnerabilityView: typeof VulnerabilityView
   DependencyView: typeof DependencyView
   PolicySetFixedTypeSelector: typeof PolicySetFixedTypeSelector
+  PageNotPublic: typeof PageNotPublic
 }
 
 export interface GenerateTokenResponse {
@@ -142,6 +144,8 @@ export interface MFEAppProps {
   hooks: Hooks
   parent: Parent
   routingId?: string
+  isPublicAccessEnabledOnResources: boolean
+  isCurrentSessionPublic: boolean
 }
 
 export enum FeatureFlags {

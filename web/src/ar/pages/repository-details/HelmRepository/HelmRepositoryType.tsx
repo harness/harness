@@ -65,7 +65,8 @@ export class HelmRepositoryType extends RepositoryStep<VirtualRegistryRequest> {
     config: {
       type: RepositoryConfigType.VIRTUAL
     },
-    scanners: []
+    scanners: [],
+    isPublic: false
   }
 
   protected defaultUpstreamProxyValues: UpstreamRegistryRequest = {
@@ -78,7 +79,8 @@ export class HelmRepositoryType extends RepositoryStep<VirtualRegistryRequest> {
       url: ''
     },
     cleanupPolicy: [],
-    scanners: []
+    scanners: [],
+    isPublic: false
   }
 
   renderCreateForm(props: CreateRepositoryFormProps): JSX.Element {

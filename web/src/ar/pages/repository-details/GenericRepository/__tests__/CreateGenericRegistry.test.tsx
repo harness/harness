@@ -170,7 +170,8 @@ describe('Verify create generic registry flow', () => {
           identifier: 'generic-repo',
           packageType: 'GENERIC',
           parentRef: 'undefined',
-          scanners: []
+          scanners: [],
+          isPublic: false
         },
         queryParams: { space_ref: 'undefined' }
       })
@@ -228,7 +229,8 @@ describe('Verify create generic registry flow', () => {
           identifier: 'generic-repo',
           packageType: 'GENERIC',
           parentRef: 'undefined',
-          scanners: []
+          scanners: [],
+          isPublic: false
         },
         queryParams: { space_ref: 'undefined' }
       })

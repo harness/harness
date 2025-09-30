@@ -84,7 +84,9 @@ export default function ArTestWrapper(props: PropsWithChildren<TestWrapperProps>
             parent,
             updateAppStore: noop,
             repositoryListViewType: RepositoryListViewTypeEnum.LIST,
-            setRepositoryListViewType: noop
+            setRepositoryListViewType: noop,
+            isPublicAccessEnabledOnResources: false,
+            isCurrentSessionPublic: false
           }}>
           <StringsContextProvider initialStrings={stringsData} getString={getString}>
             <ParentProvider

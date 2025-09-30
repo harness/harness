@@ -48,7 +48,8 @@ export const MockGetGenericArtifactsByRegistryResponse: GetAllArtifactsByRegistr
           name: 'artifact',
           packageType: 'GENERIC',
           registryIdentifier: 'generic-repo',
-          registryPath: ''
+          registryPath: '',
+          isPublic: false
         }
       ],
       itemCount: 0,

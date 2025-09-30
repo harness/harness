@@ -166,7 +166,8 @@ describe('Verify create helm registry flow', () => {
           identifier: 'helm-repo',
           packageType: 'HELM',
           parentRef: 'undefined',
-          scanners: []
+          scanners: [],
+          isPublic: false
         },
         queryParams: { space_ref: 'undefined' }
       })
@@ -222,7 +223,8 @@ describe('Verify create helm registry flow', () => {
           identifier: 'helm-repo',
           packageType: 'HELM',
           parentRef: 'undefined',
-          scanners: []
+          scanners: [],
+          isPublic: false
         },
         queryParams: { space_ref: 'undefined' }
       })

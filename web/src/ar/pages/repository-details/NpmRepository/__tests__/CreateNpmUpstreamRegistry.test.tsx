@@ -137,7 +137,8 @@ describe('Verify create npm upstream registry flow', () => {
           identifier: 'npm-up-repo',
           packageType: 'NPM',
           parentRef: 'undefined',
-          scanners: []
+          scanners: [],
+          isPublic: false
         },
         queryParams: { space_ref: 'undefined' }
       })
@@ -193,7 +194,8 @@ describe('Verify create npm upstream registry flow', () => {
           identifier: 'npm-up-repo',
           packageType: 'NPM',
           parentRef: 'undefined',
-          scanners: []
+          scanners: [],
+          isPublic: false
         },
         queryParams: { space_ref: 'undefined' }
       })
@@ -249,7 +251,8 @@ describe('Verify create npm upstream registry flow', () => {
           identifier: 'npm-up-repo',
           packageType: 'NPM',
           parentRef: 'undefined',
-          scanners: []
+          scanners: [],
+          isPublic: false
         },
         queryParams: { space_ref: 'undefined' }
       })
@@ -305,7 +308,8 @@ describe('Verify create npm upstream registry flow', () => {
           identifier: 'npm-up-repo',
           packageType: 'NPM',
           parentRef: 'undefined',
-          scanners: []
+          scanners: [],
+          isPublic: false
         },
         queryParams: { space_ref: 'undefined' }
       })

@@ -169,7 +169,8 @@ describe('Verify create docker registry flow', () => {
           identifier: 'docker-repo',
           packageType: 'DOCKER',
           parentRef: 'undefined',
-          scanners: []
+          scanners: [],
+          isPublic: false
         },
         queryParams: { space_ref: 'undefined' }
       })
@@ -226,7 +227,8 @@ describe('Verify create docker registry flow', () => {
           identifier: 'docker-repo',
           packageType: 'DOCKER',
           parentRef: 'undefined',
-          scanners: []
+          scanners: [],
+          isPublic: false
         },
         queryParams: { space_ref: 'undefined' }
       })

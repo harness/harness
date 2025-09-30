@@ -149,3 +149,6 @@ labels:
   findALabel: Find a Label
   findAValue: Find a Value
   findOrAddValue: Find or Add Value
+publicAccess:
+  oopsPageNotPublic: Oops! The page you are trying to access is not public.
+  tryOtherOptions: You can try the following option instead to get back on track.

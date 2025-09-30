@@ -137,7 +137,8 @@ describe('Verify create maven upstream registry flow', () => {
           identifier: 'maven-up-repo',
           packageType: 'MAVEN',
           parentRef: 'undefined',
-          scanners: []
+          scanners: [],
+          isPublic: false
         },
         queryParams: { space_ref: 'undefined' }
       })
@@ -193,7 +194,8 @@ describe('Verify create maven upstream registry flow', () => {
           identifier: 'maven-up-repo',
           packageType: 'MAVEN',
           parentRef: 'undefined',
-          scanners: []
+          scanners: [],
+          isPublic: false
         },
         queryParams: { space_ref: 'undefined' }
       })
@@ -249,7 +251,8 @@ describe('Verify create maven upstream registry flow', () => {
           identifier: 'maven-up-repo',
           packageType: 'MAVEN',
           parentRef: 'undefined',
-          scanners: []
+          scanners: [],
+          isPublic: false
         },
         queryParams: { space_ref: 'undefined' }
       })
@@ -305,7 +308,8 @@ describe('Verify create maven upstream registry flow', () => {
           identifier: 'maven-up-repo',
           packageType: 'MAVEN',
           parentRef: 'undefined',
-          scanners: []
+          scanners: [],
+          isPublic: false
         },
         queryParams: { space_ref: 'undefined' }
       })

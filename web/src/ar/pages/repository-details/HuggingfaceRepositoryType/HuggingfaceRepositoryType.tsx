@@ -72,7 +72,8 @@ export class HuggingfaceRepositoryType extends RepositoryStep<VirtualRegistryReq
     config: {
       type: RepositoryConfigType.VIRTUAL
     },
-    scanners: []
+    scanners: [],
+    isPublic: false
   }
 
   protected defaultUpstreamProxyValues: UpstreamRegistryRequest = {
@@ -85,7 +86,8 @@ export class HuggingfaceRepositoryType extends RepositoryStep<VirtualRegistryReq
       url: ''
     },
     cleanupPolicy: [],
-    scanners: []
+    scanners: [],
+    isPublic: false
   }
 
   renderCreateForm(props: CreateRepositoryFormProps): JSX.Element {

@@ -18,8 +18,9 @@ import React from 'react'
 import { Page } from '@harnessio/uicore'
 import cx from 'classnames'
 
-import { useParentComponents, useRoutes } from '@ar/hooks'
+import { useRoutes } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
+import Breadcrumbs from '@ar/components/Breadcrumbs/Breadcrumbs'
 import type { Repository } from '@ar/pages/repository-details/types'
 import RepositoryDetailsHeaderContent from './RepositoryDetailsHeaderContent'
 
@@ -31,7 +32,6 @@ interface RepositoryDetailsHeaderProps {
 
 export default function RepositoryDetailsHeader(props: RepositoryDetailsHeaderProps): JSX.Element {
   const { data } = props
-  const { NGBreadcrumbs } = useParentComponents()
 
   const { getString } = useStrings()
   const routes = useRoutes()
@@ -42,7 +42,7 @@ export default function RepositoryDetailsHeader(props: RepositoryDetailsHeaderPr
       className={cx(css.header)}
       size="xlarge"
       breadcrumbs={
-        <NGBreadcrumbs
+        <Breadcrumbs
           links={[
             {
               url: routes.toARRepositories(),

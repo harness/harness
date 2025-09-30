@@ -19,17 +19,22 @@ import { Route } from 'react-router-dom'
 import type { PropsWithChildren } from 'react'
 import type { RouteProps } from 'react-router-dom'
 
-import { useParentComponents } from '@ar/hooks'
+import { useAppStore, useParentComponents } from '@ar/hooks'
 import ParentSyncProvider from './ParentSyncProvider'
 
 interface RouteProviderProps extends RouteProps {
   enabled?: boolean
+  isPublic?: boolean
   onLoad?: (pathParams: Record<string, string>) => void
 }
 
 function RouteProvider(props: PropsWithChildren<RouteProviderProps>) {
-  const { children, enabled = true, onLoad, ...rest } = props
-  const { ModalProvider } = useParentComponents()
+  const { children, enabled = true, onLoad, isPublic, ...rest } = props
+  const { ModalProvider, PageNotPublic } = useParentComponents()
+  const { isCurrentSessionPublic } = useAppStore()
+  if (isCurrentSessionPublic && !isPublic) {
+    return <PageNotPublic />
+  }
   if (!enabled) return <></>
   return (
     <Route {...rest}>

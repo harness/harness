@@ -133,7 +133,8 @@ export const mockGetAllRegistriesResponse: GetAllRegistriesOkResponse = {
           identifier: 'repo1',
           packageType: 'DOCKER',
           type: 'VIRTUAL',
-          url: 'space/repo1'
+          url: 'space/repo1',
+          isPublic: false
         },
         {
           identifier: 'repo2',
@@ -144,13 +145,15 @@ export const mockGetAllRegistriesResponse: GetAllRegistriesOkResponse = {
           url: 'space/repo1',
           downloadsCount: 100,
           registrySize: '100 MB',
-          artifactsCount: 100
+          artifactsCount: 100,
+          isPublic: false
         },
         {
           identifier: 'upstream_1',
           packageType: 'DOCKER',
           type: 'UPSTREAM',
-          url: 'space/upstream_1'
+          url: 'space/upstream_1',
+          isPublic: false
         }
       ],
       itemCount: 3,

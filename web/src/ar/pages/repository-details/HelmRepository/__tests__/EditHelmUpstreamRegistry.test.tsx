@@ -341,7 +341,8 @@ describe('Verify configuration form', () => {
             modifiedAt: '1738516362995',
             packageType: 'HELM',
             cleanupPolicy: [],
-            url: ''
+            url: '',
+            isPublic: false
           },
           registry_ref: 'undefined/abcd/+'
         })
@@ -377,7 +378,8 @@ describe('Verify configuration form', () => {
             modifiedAt: '1738516362995',
             packageType: 'HELM',
             cleanupPolicy: [],
-            url: ''
+            url: '',
+            isPublic: false
           },
           registry_ref: 'undefined/abcd/+'
         })
@@ -418,7 +420,8 @@ describe('Verify configuration form', () => {
             modifiedAt: '1738516362995',
             packageType: 'HELM',
             cleanupPolicy: [],
-            url: ''
+            url: '',
+            isPublic: false
           },
           registry_ref: 'undefined/abcd/+'
         })

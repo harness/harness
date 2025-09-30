@@ -32,7 +32,8 @@ export const MockGetDockerRegistryResponseWithAllData = {
       url: 'https://pkg.qa.harness.io/iwnhltqot7gft7r-f_zp7q/docker-repo',
       allowedPattern: ['test1', 'test2'],
       blockedPattern: ['test3', 'test4'],
-      scanners: [{ name: 'AQUA_TRIVY' }]
+      scanners: [{ name: 'AQUA_TRIVY' }],
+      isPublic: false
     },
     status: 'SUCCESS'
   }
@@ -49,7 +50,8 @@ export const MockGetArtifactsByRegistryResponse: GetAllArtifactsByRegistryOkResp
           name: 'podinfo-artifact',
           packageType: 'DOCKER',
           registryIdentifier: 'docker-repo',
-          registryPath: ''
+          registryPath: '',
+          isPublic: false
         }
       ],
       itemCount: 1,
@@ -140,7 +142,8 @@ export const MockGetDockerUpstreamRegistryResponseWithDockerhubSourceAllData = {
       packageType: 'DOCKER',
       labels: ['label1', 'label2', 'label3', 'label4'],
       url: '',
-      scanners: [{ name: 'AQUA_TRIVY' }]
+      scanners: [{ name: 'AQUA_TRIVY' }],
+      isPublic: false
     },
     status: 'SUCCESS'
   }

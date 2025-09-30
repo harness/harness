@@ -15,6 +15,7 @@
  */
 
 import React, { PropsWithChildren, ReactNode } from 'react'
+import classNames from 'classnames'
 import { defaultTo } from 'lodash-es'
 import { Collapse, Container, Layout, Text, useToggleOpen } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
@@ -25,6 +26,7 @@ interface CollapseContainerProps {
   title: string | ReactNode
   subTitle?: string | ReactNode
   className?: string
+  titleClassName?: string
   initialState?: boolean
 }
 export default function CollapseContainer({
@@ -32,6 +34,7 @@ export default function CollapseContainer({
   children,
   className,
   subTitle,
+  titleClassName,
   initialState
 }: PropsWithChildren<CollapseContainerProps>): JSX.Element {
   const { isOpen, toggle } = useToggleOpen(defaultTo(initialState, false))
@@ -40,7 +43,7 @@ export default function CollapseContainer({
     <Container className={className}>
       <Layout.Vertical spacing="small" className={css.toggleHandler} onClick={toggle}>
         <Text
-          className={css.cardHeading}
+          className={classNames(css.cardHeading, titleClassName)}
           font={{ variation: FontVariation.CARD_TITLE }}
           rightIcon={isOpen ? 'chevron-up' : 'chevron-down'}
           rightIconProps={{ size: 17, color: Color.PRIMARY_7 }}>

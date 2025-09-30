@@ -48,7 +48,8 @@ export const MockGetHelmArtifactsByRegistryResponse: GetAllArtifactsByRegistryOk
           name: 'podinfo-artifact',
           packageType: 'HELM',
           registryIdentifier: 'helm-repo',
-          registryPath: ''
+          registryPath: '',
+          isPublic: false
         }
       ],
       itemCount: 1,
@@ -129,7 +130,8 @@ export const MockGetHelmUpstreamRegistryResponseWithCustomSourceAllData = {
       modifiedAt: '1738516362995',
       packageType: 'HELM',
       labels: ['label1', 'label2', 'label3', 'label4'],
-      url: ''
+      url: '',
+      isPublic: false
     },
     status: 'SUCCESS'
   }

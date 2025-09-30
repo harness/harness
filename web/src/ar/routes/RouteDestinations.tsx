@@ -144,6 +144,7 @@ const RouteDestinations = (): JSX.Element => {
       </RouteProvider>
       <RouteProvider
         exact
+        isPublic
         path={[
           routes.toARRepositoryDetails({ ...repositoryDetailsPathProps }),
           routes.toARRepositoryDetailsTab({ ...repositoryDetailsTabPathProps })
@@ -153,6 +154,7 @@ const RouteDestinations = (): JSX.Element => {
       {shouldUseSeperateVersionDetailsRoute && (
         <RouteProvider
           exact
+          isPublic
           path={[
             routes.toARVersionDetails({ ...versionDetailsPathParams }),
             routes.toARVersionDetailsTab({ ...versionDetailsTabPathParams }),
@@ -197,13 +199,14 @@ const RouteDestinations = (): JSX.Element => {
        * IF OSS then will use version details as sub route for artifact details page
        */}
       <RouteProvider
+        isPublic
         exact={shouldUseSeperateVersionDetailsRoute}
         path={routes.toARArtifactDetails({ ...artifactDetailsPathProps })}>
         <>
           <ArtifactDetailsPage />
           {parent === Parent.OSS && (
             <Switch>
-              <RouteProvider path={routes.toARVersionDetails({ ...versionDetailsPathParams })}>
+              <RouteProvider isPublic path={routes.toARVersionDetails({ ...versionDetailsPathParams })}>
                 <OSSVersionDetailsPage />
               </RouteProvider>
             </Switch>

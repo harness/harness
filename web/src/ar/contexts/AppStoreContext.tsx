@@ -31,6 +31,8 @@ export interface ModuleAppStoreContextProps extends AppstoreContext, Record<stri
   parent: Parent
   repositoryListViewType: RepositoryListViewTypeEnum
   setRepositoryListViewType: (type: RepositoryListViewTypeEnum) => void
+  isPublicAccessEnabledOnResources: boolean
+  isCurrentSessionPublic: boolean
 }
 
 export const AppStoreContext = createContext<ModuleAppStoreContextProps>({
@@ -43,5 +45,7 @@ export const AppStoreContext = createContext<ModuleAppStoreContextProps>({
   accountInfo: {},
   parent: Parent.OSS,
   repositoryListViewType: RepositoryListViewTypeEnum.LIST,
-  setRepositoryListViewType: noop
+  setRepositoryListViewType: noop,
+  isPublicAccessEnabledOnResources: false,
+  isCurrentSessionPublic: false
 })

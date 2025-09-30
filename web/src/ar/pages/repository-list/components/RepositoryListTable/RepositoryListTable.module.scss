@@ -85,3 +85,7 @@
 .nameCellContainer {
   align-items: center;
 }
+
+.subText {
+  margin-left: calc(24px + var(--spacing-small)) !important;
+}

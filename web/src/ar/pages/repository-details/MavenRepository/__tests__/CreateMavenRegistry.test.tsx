@@ -166,7 +166,8 @@ describe('Verify create maven registry flow', () => {
           identifier: 'maven-repo',
           packageType: 'MAVEN',
           parentRef: 'undefined',
-          scanners: []
+          scanners: [],
+          isPublic: false
         },
         queryParams: { space_ref: 'undefined' }
       })
@@ -222,7 +223,8 @@ describe('Verify create maven registry flow', () => {
           identifier: 'maven-repo',
           packageType: 'MAVEN',
           parentRef: 'undefined',
-          scanners: []
+          scanners: [],
+          isPublic: false
         },
         queryParams: { space_ref: 'undefined' }
       })

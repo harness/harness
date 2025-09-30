@@ -49,7 +49,7 @@ export default function VersionDetailsTabs(): JSX.Element {
   const history = useHistory()
   const { getString } = useStrings()
   const routeDefinitions = useRoutes(true)
-  const { parent } = useAppStore()
+  const { parent, isCurrentSessionPublic } = useAppStore()
   const { data } = useContext(VersionProviderContext)
   const pathParams = useDecodedParams<VersionDetailsPathParams>()
   const queryParams = useQueryParams<Record<string, string>>()
@@ -58,10 +58,10 @@ export default function VersionDetailsTabs(): JSX.Element {
   const tabList = useMemo(() => {
     const versionType = versionFactory?.getVersionType(data?.packageType)
     if (!versionType) return []
-    return VersionDetailsTabList.filter(each => !each.parent || each.parent === parent).filter(each =>
-      versionType.getAllowedVersionDetailsTab().includes(each.value)
-    )
-  }, [data])
+    return VersionDetailsTabList.filter(each => !each.parent || each.parent === parent)
+      .filter(each => (isCurrentSessionPublic ? each.isSupportedInPublicView : true))
+      .filter(each => versionType.getAllowedVersionDetailsTab().includes(each.value))
+  }, [data, isCurrentSessionPublic, parent])
 
   const handleTabChange = useCallback(
     (nextTab: VersionDetailsTab): void => {
@@ -129,7 +129,7 @@ export default function VersionDetailsTabs(): JSX.Element {
         </Tabs>
       </TabsContainer>
       <Switch>
-        <RouteProvider exact path={routeDefinitions.toARVersionDetails({ ...versionDetailsPathParams })}>
+        <RouteProvider isPublic exact path={routeDefinitions.toARVersionDetails({ ...versionDetailsPathParams })}>
           <Redirect
             to={routes.toARVersionDetailsTab(
               {
@@ -144,6 +144,7 @@ export default function VersionDetailsTabs(): JSX.Element {
           />
         </RouteProvider>
         <RouteProvider
+          isPublic
           exact
           path={[
             routeDefinitions.toARVersionDetailsTab({ ...versionDetailsTabPathParams }),

@@ -19,7 +19,7 @@ import { Expander } from '@blueprintjs/core'
 import { Layout } from '@harnessio/uicore'
 import type { ArtifactSummary } from '@harnessio/react-har-service-client'
 
-import { useDecodedParams } from '@ar/hooks'
+import { useAppStore, useDecodedParams } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings/String'
 import { PageType, type RepositoryPackageType } from '@ar/common/types'
 import type { ArtifactDetailsPathParams } from '@ar/routes/types'
@@ -42,6 +42,7 @@ function ArtifactDetailsHeaderContent(props: ArtifactDetailsHeaderContentProps):
   const { iconSize = 40 } = props
   const { data } = useContext(ArtifactProviderContext)
   const { getString } = useStrings()
+  const { isCurrentSessionPublic } = useAppStore()
   const pathParams = useDecodedParams<ArtifactDetailsPathParams>()
 
   const { repositoryIdentifier, artifactIdentifier } = pathParams
@@ -70,13 +71,15 @@ function ArtifactDetailsHeaderContent(props: ArtifactDetailsHeaderContentProps):
               artifactIdentifier={artifactIdentifier}
               packageType={packageType as RepositoryPackageType}
             />
-            <ArtifactActionsWidget
-              packageType={packageType as RepositoryPackageType}
-              data={data as ArtifactSummary}
-              repoKey={repositoryIdentifier}
-              artifactKey={artifactIdentifier}
-              pageType={PageType.Details}
-            />
+            {!isCurrentSessionPublic && (
+              <ArtifactActionsWidget
+                packageType={packageType as RepositoryPackageType}
+                data={data as ArtifactSummary}
+                repoKey={repositoryIdentifier}
+                artifactKey={artifactIdentifier}
+                pageType={PageType.Details}
+              />
+            )}
           </Layout.Horizontal>
         </Layout.Vertical>
       </Layout.Horizontal>

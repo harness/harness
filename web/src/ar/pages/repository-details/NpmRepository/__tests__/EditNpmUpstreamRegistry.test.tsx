@@ -433,7 +433,8 @@ describe('Verify configuration form', () => {
             identifier: 'npm-up-repo',
             labels: ['label1', 'label2', 'label3', 'label4'],
             packageType: 'NPM',
-            url: ''
+            url: '',
+            isPublic: false
           },
           registry_ref: 'undefined/abcd/+'
         })
@@ -468,7 +469,8 @@ describe('Verify configuration form', () => {
             identifier: 'npm-up-repo',
             labels: ['label1', 'label2', 'label3', 'label4'],
             packageType: 'NPM',
-            url: ''
+            url: '',
+            isPublic: false
           },
           registry_ref: 'undefined/abcd/+'
         })
@@ -503,7 +505,8 @@ describe('Verify configuration form', () => {
             identifier: 'npm-up-repo',
             labels: ['label1', 'label2', 'label3', 'label4'],
             packageType: 'NPM',
-            url: ''
+            url: '',
+            isPublic: false
           },
           registry_ref: 'undefined/abcd/+'
         })

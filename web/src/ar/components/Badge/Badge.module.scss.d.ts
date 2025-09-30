@@ -20,3 +20,4 @@ export declare const badge: string
 export declare const dockerTag: string
 export declare const hover: string
 export declare const quarantineBadge: string
+export declare const visibilityBadge: string

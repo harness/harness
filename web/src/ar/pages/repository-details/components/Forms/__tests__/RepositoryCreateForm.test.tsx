@@ -123,7 +123,8 @@ describe('Verify RepositoryCreateForm', () => {
           identifier: 'helm-repo-1',
           packageType: 'HELM',
           parentRef: 'undefined',
-          scanners: []
+          scanners: [],
+          isPublic: false
         },
         queryParams: { space_ref: 'undefined' }
       })
@@ -249,7 +250,8 @@ describe('Verify RepositoryCreateForm', () => {
           identifier: 'docker-repo-1',
           packageType: 'DOCKER',
           parentRef: 'undefined',
-          scanners: []
+          scanners: [],
+          isPublic: false
         },
         queryParams: { space_ref: 'undefined' }
       })

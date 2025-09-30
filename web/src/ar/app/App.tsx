@@ -28,6 +28,7 @@ import { Parent } from '@ar/common/types'
 import strings from '@ar/strings/strings.en.yaml'
 import { PreferenceScope } from '@ar/constants'
 import type { MFEAppProps } from '@ar/MFEAppTypes'
+import PageNotPublic from '@ar/__mocks__/components/PageNotPublic'
 import DefaultNavComponent from '@ar/__mocks__/components/DefaultNavComponent'
 import AppErrorBoundary from '@ar/components/AppErrorBoundary/AppErrorBoundary'
 import { useGovernanceMetaDataModal } from '@ar/__mocks__/hooks/useGovernanceMetaDataModal'
@@ -58,7 +59,9 @@ export default function ChildApp(props: PropsWithChildren<MFEAppProps>): React.R
     parent,
     customUtils,
     matchPath,
-    on401
+    on401,
+    isPublicAccessEnabledOnResources,
+    isCurrentSessionPublic
   } = props
 
   const { ModalProvider } = customComponents
@@ -90,7 +93,9 @@ export default function ChildApp(props: PropsWithChildren<MFEAppProps>): React.R
             scope: { ...scope, ...customScope },
             repositoryListViewType: repositoryListViewType || RepositoryListViewTypeEnum.LIST,
             setRepositoryListViewType,
-            parent
+            parent,
+            isPublicAccessEnabledOnResources,
+            isCurrentSessionPublic
           }}>
           <StringsContextProvider initialStrings={strings}>
             <ParentProvider
@@ -101,7 +106,13 @@ export default function ChildApp(props: PropsWithChildren<MFEAppProps>): React.R
                   useGovernanceMetaDataModal: customHooks.useGovernanceMetaDataModal ?? useGovernanceMetaDataModal // backward compatibility
                 } as ParentProviderProps['hooks']
               }
-              components={{ ...components, ...customComponents } as ParentProviderProps['components']}
+              components={
+                {
+                  ...components,
+                  ...customComponents,
+                  PageNotPublic: customComponents.PageNotPublic ?? PageNotPublic // backward compatibility
+                } as ParentProviderProps['components']
+              }
               utils={{ ...customUtils }}
               contextObj={{ ...parentContextObj }}>
               <ModalProvider>

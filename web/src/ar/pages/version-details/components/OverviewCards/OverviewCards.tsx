@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React from 'react'
+import React, { useMemo } from 'react'
 import classNames from 'classnames'
 import { defaultTo } from 'lodash-es'
 import { useHistory } from 'react-router-dom'
@@ -34,6 +34,7 @@ import { SecurityTestSatus } from '@ar/pages/version-details/components/Security
 import { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
 
 import { VersionOverviewCard } from './types'
+import { OverviewCardConfigs } from './constants'
 
 import css from './OverviewCards.module.scss'
 
@@ -57,7 +58,7 @@ export default function VersionOverviewCards(props: VersionOverviewCardsProps) {
   const { digest = '', cards = [], version, versionType } = props
   const { getString } = useStrings()
   const routes = useRoutes()
-  const { scope } = useAppStore()
+  const { scope, isCurrentSessionPublic } = useAppStore()
   const { orgIdentifier, projectIdentifier } = scope
   const pathParams = useDecodedParams<VersionDetailsPathParams>()
   const history = useHistory()
@@ -95,7 +96,13 @@ export default function VersionOverviewCards(props: VersionOverviewCardsProps) {
     history.push(url)
   }
 
-  if (!cards.length) return <></>
+  const filteredCards = useMemo(() => {
+    return OverviewCardConfigs.filter(card => cards.includes(card.value))
+      .filter(each => (isCurrentSessionPublic ? each.isSupportedInPublicView : true))
+      .map(each => each.value)
+  }, [cards, isCurrentSessionPublic])
+
+  if (!filteredCards.length) return <></>
 
   return (
     <Page.Body
@@ -105,7 +112,7 @@ export default function VersionOverviewCards(props: VersionOverviewCardsProps) {
       error={typeof error === 'string' ? error : error?.message}>
       {responseData && (
         <Container data-testid="integration-cards" className={css.cardsContainer} width="100%">
-          {cards.includes(VersionOverviewCard.DEPLOYMENT) && (
+          {filteredCards.includes(VersionOverviewCard.DEPLOYMENT) && (
             <DeploymentsCard
               className={classNames(css.card)}
               onClick={() => {
@@ -116,10 +123,10 @@ export default function VersionOverviewCards(props: VersionOverviewCardsProps) {
               pipelineName={responseData.buildDetails?.pipelineDisplayName}
               pipelineId={responseData.buildDetails?.pipelineIdentifier}
               executionId={responseData.buildDetails?.pipelineExecutionId}
-              hideBuildDetails={!cards.includes(VersionOverviewCard.BUILD)}
+              hideBuildDetails={!filteredCards.includes(VersionOverviewCard.BUILD)}
             />
           )}
-          {cards.includes(VersionOverviewCard.SUPPLY_CHAIN) && (
+          {filteredCards.includes(VersionOverviewCard.SUPPLY_CHAIN) && (
             <SupplyChainCard
               onClick={() => {
                 handleRedirectToTab(VersionDetailsTab.SUPPLY_CHAIN, {
@@ -137,7 +144,7 @@ export default function VersionOverviewCards(props: VersionOverviewCardsProps) {
               sbomScore={defaultTo(responseData.sbomDetails?.avgScore, 0)}
             />
           )}
-          {cards.includes(VersionOverviewCard.SECURITY_TESTS) && (
+          {filteredCards.includes(VersionOverviewCard.SECURITY_TESTS) && (
             <SecurityTestsCard
               className={classNames(css.card)}
               onClick={() => {

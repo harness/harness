@@ -356,7 +356,8 @@ describe('Verify configuration form', () => {
             modifiedAt: '1738516362995',
             packageType: 'DOCKER',
             scanners: [{ name: 'AQUA_TRIVY' }],
-            url: ''
+            url: '',
+            isPublic: false
           },
           registry_ref: 'undefined/abcd/+'
         })
@@ -392,7 +393,8 @@ describe('Verify configuration form', () => {
             modifiedAt: '1738516362995',
             packageType: 'DOCKER',
             scanners: [{ name: 'AQUA_TRIVY' }],
-            url: ''
+            url: '',
+            isPublic: false
           },
           registry_ref: 'undefined/abcd/+'
         })
@@ -433,7 +435,8 @@ describe('Verify configuration form', () => {
             modifiedAt: '1738516362995',
             packageType: 'DOCKER',
             scanners: [{ name: 'AQUA_TRIVY' }],
-            url: ''
+            url: '',
+            isPublic: false
           },
           registry_ref: 'undefined/abcd/+'
         })
@@ -469,7 +472,8 @@ describe('Verify configuration form', () => {
             modifiedAt: '1738516362995',
             packageType: 'DOCKER',
             scanners: [{ name: 'AQUA_TRIVY' }],
-            url: ''
+            url: '',
+            isPublic: false
           },
           registry_ref: 'undefined/abcd/+'
         })
@@ -505,7 +509,8 @@ describe('Verify configuration form', () => {
             modifiedAt: '1738516362995',
             packageType: 'DOCKER',
             scanners: [{ name: 'AQUA_TRIVY' }],
-            url: ''
+            url: '',
+            isPublic: false
           },
           registry_ref: 'undefined/abcd/+'
         })

@@ -48,7 +48,8 @@ export const MockGetNpmArtifactsByRegistryResponse: GetAllArtifactsByRegistryOkR
           name: 'artifact',
           packageType: 'NPM',
           registryIdentifier: 'npm-repo',
-          registryPath: ''
+          registryPath: '',
+          isPublic: false
         }
       ],
       itemCount: 0,
@@ -345,6 +346,7 @@ export const MockGetNpmUpstreamRegistryResponseWithNpmJsSourceAllData = {
         type: 'UPSTREAM',
         url: ''
       },
+      isPublic: false,
       createdAt: '1738516362995',
       identifier: 'npm-up-repo',
       description: 'test description',

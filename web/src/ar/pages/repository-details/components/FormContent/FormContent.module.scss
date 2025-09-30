@@ -56,3 +56,12 @@
   font-weight: 400;
   color: var(--gray-900);
 }
+
+.visibilityTitle {
+  --typography-size: var(--font-size-normal) !important;
+}
+
+.visibilityCardSelect {
+  display: flex;
+  gap: var(--spacing-medium);
+}

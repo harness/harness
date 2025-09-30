@@ -16,7 +16,7 @@
 
 import React from 'react'
 import { defaultTo } from 'lodash-es'
-import { Color } from '@harnessio/design-system'
+import { Color, FontVariation } from '@harnessio/design-system'
 import { Layout, Text } from '@harnessio/uicore'
 import type { RegistryMetadata } from '@harnessio/react-har-service-client'
 import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance } from 'react-table'
@@ -27,9 +27,10 @@ import TableCells from '@ar/components/TableCells/TableCells'
 import { getEntityScopeType } from '@ar/hooks/useGetPageScope'
 import LabelsPopover from '@ar/components/LabelsPopover/LabelsPopover'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
+import { RepositoryVisibilityOptions } from '@ar/pages/repository-details/constants'
 import DescriptionPopover from '@ar/components/DescriptionPopover/DescriptionPopover'
 import RepositoryActionsWidget from '@ar/frameworks/RepositoryStep/RepositoryActionsWidget'
-import { PageType, type RepositoryConfigType, type RepositoryPackageType } from '@ar/common/types'
+import { PageType, RepositoryVisibility, type RepositoryConfigType, type RepositoryPackageType } from '@ar/common/types'
 import useGetScopeFromRegistryPath from '@ar/pages/repository-details/hooks/useGetScopeFromRegistryPath/useGetScopeFromRegistryPath'
 
 import css from './RepositoryListTable.module.scss'
@@ -45,16 +46,25 @@ type CellType = Renderer<CellTypeWithActions<RegistryMetadata>>
 
 export const RepositoryNameCell: CellType = ({ value, row }) => {
   const { original } = row
-  const { labels, description, packageType } = original
+  const { labels, description, packageType, isPublic } = original
+  const { getString } = useStrings()
+  const subText = isPublic
+    ? RepositoryVisibilityOptions[RepositoryVisibility.PUBLIC].label
+    : RepositoryVisibilityOptions[RepositoryVisibility.PRIVATE].label
   return (
-    <Layout.Horizontal className={css.nameCellContainer} spacing="small">
-      <RepositoryIcon packageType={packageType as RepositoryPackageType} />
-      <Text lineClamp={1} color={Color.GREY_900} font={{ size: 'small' }}>
-        {value}
+    <Layout.Vertical spacing="xsmall">
+      <Layout.Horizontal className={css.nameCellContainer} spacing="small">
+        <RepositoryIcon packageType={packageType as RepositoryPackageType} />
+        <Text lineClamp={1} color={Color.GREY_900} font={{ size: 'small' }}>
+          {value}
+        </Text>
+        <LabelsPopover labels={defaultTo(labels, [])} />
+        {description && <DescriptionPopover text={description} />}
+      </Layout.Horizontal>
+      <Text className={css.subText} lineClamp={1} color={Color.GREY_500} font={{ variation: FontVariation.SMALL }}>
+        {getString(subText)}
       </Text>
-      <LabelsPopover labels={defaultTo(labels, [])} />
-      {description && <DescriptionPopover text={description} />}
-    </Layout.Horizontal>
+    </Layout.Vertical>
   )
 }
 

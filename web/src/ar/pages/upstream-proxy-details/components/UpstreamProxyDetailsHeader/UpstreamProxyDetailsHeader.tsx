@@ -18,8 +18,9 @@ import React from 'react'
 import classNames from 'classnames'
 import { Page } from '@harnessio/uicore'
 
+import { useRoutes } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
-import { useParentComponents, useRoutes } from '@ar/hooks'
+import Breadcrumbs from '@ar/components/Breadcrumbs/Breadcrumbs'
 import type { Repository } from '@ar/pages/repository-details/types'
 import UpstreamProxyDetailsHeaderContent from './UpstreamProxyDetailsHeaderContent'
 import css from './UpstreamProxyDetailsHeader.module.scss'
@@ -30,7 +31,6 @@ interface UpstreamProxyDetailsHeaderProps {
 export default function UpstreamProxyDetailsHeader(props: UpstreamProxyDetailsHeaderProps): JSX.Element {
   const { data } = props
   const { getString } = useStrings()
-  const { NGBreadcrumbs } = useParentComponents()
   const routes = useRoutes()
 
   return (
@@ -39,7 +39,7 @@ export default function UpstreamProxyDetailsHeader(props: UpstreamProxyDetailsHe
       className={classNames(css.header)}
       size="xlarge"
       breadcrumbs={
-        <NGBreadcrumbs
+        <Breadcrumbs
           links={[
             {
               url: routes.toARRepositories(),

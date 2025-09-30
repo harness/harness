@@ -28,8 +28,9 @@ import type { Repository } from '@ar/pages/repository-details/types'
 import LabelsPopover from '@ar/components/LabelsPopover/LabelsPopover'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import RepositoryLocationBadge from '@ar/components/Badge/RepositoryLocationBadge'
-import { PageType, RepositoryConfigType, RepositoryPackageType } from '@ar/common/types'
+import RepositoryVisibilityBadge from '@ar/components/Badge/RepositoryVisibilityBadge'
 import RepositoryActionsWidget from '@ar/frameworks/RepositoryStep/RepositoryActionsWidget'
+import { PageType, RepositoryConfigType, RepositoryPackageType, RepositoryVisibility } from '@ar/common/types'
 
 import css from './UpstreamProxyDetailsHeader.module.scss'
 
@@ -40,7 +41,7 @@ interface UpstreamProxyDetailsHeaderContentProps {
 
 export default function UpstreamProxyDetailsHeaderContent(props: UpstreamProxyDetailsHeaderContentProps): JSX.Element {
   const { data, iconSize = 40 } = props
-  const { identifier, modifiedAt, packageType, labels, description } = data
+  const { identifier, modifiedAt, packageType, labels, description, isPublic } = data
   const { getString } = useStrings()
   return (
     <Container>
@@ -64,6 +65,7 @@ export default function UpstreamProxyDetailsHeaderContent(props: UpstreamProxyDe
                 tagsTitle={getString('tagsLabel')}
               />
             )}
+            <RepositoryVisibilityBadge type={isPublic ? RepositoryVisibility.PUBLIC : RepositoryVisibility.PRIVATE} />
           </Layout.Horizontal>
           <Text
             data-testid="registry-description"

@@ -20,7 +20,13 @@ import type { Scanner } from '@harnessio/react-har-service-client'
 import { FeatureFlags } from '@ar/MFEAppTypes'
 import type { StringKeys } from '@ar/frameworks/strings'
 import { RepositoryListViewTypeEnum } from '@ar/contexts/AppStoreContext'
-import { RepositoryConfigType, RepositoryPackageType, Scanners } from '@ar/common/types'
+import {
+  CardSelectOption,
+  RepositoryConfigType,
+  RepositoryPackageType,
+  RepositoryVisibility,
+  Scanners
+} from '@ar/common/types'
 
 export const POLICY_TYPE = 'securityTests'
 export const POLICY_ACTION = 'onstep'
@@ -67,6 +73,7 @@ interface RepositoryDetailsTabSpec {
   type?: RepositoryConfigType
   mode?: RepositoryListViewTypeEnum
   featureFlag?: FeatureFlags
+  isSupportedInPublicView?: boolean
 }
 
 export const RepositoryDetailsTabs: RepositoryDetailsTabSpec[] = [
@@ -74,28 +81,48 @@ export const RepositoryDetailsTabs: RepositoryDetailsTabSpec[] = [
     label: 'repositoryDetails.tabs.packages',
     value: RepositoryDetailsTab.PACKAGES,
     mode: RepositoryListViewTypeEnum.LIST,
-    artifactType: LocalArtifactType.ARTIFACTS
+    artifactType: LocalArtifactType.ARTIFACTS,
+    isSupportedInPublicView: true
   },
   {
     label: 'repositoryDetails.tabs.datasets',
     value: RepositoryDetailsTab.DATASETS,
     mode: RepositoryListViewTypeEnum.LIST,
-    artifactType: LocalArtifactType.DATASET
+    artifactType: LocalArtifactType.DATASET,
+    isSupportedInPublicView: true
   },
   {
     label: 'repositoryDetails.tabs.models',
     value: RepositoryDetailsTab.MODELS,
     mode: RepositoryListViewTypeEnum.LIST,
-    artifactType: LocalArtifactType.MODEL
+    artifactType: LocalArtifactType.MODEL,
+    isSupportedInPublicView: true
   },
   {
     label: 'repositoryDetails.tabs.configuration',
-    value: RepositoryDetailsTab.CONFIGURATION
+    value: RepositoryDetailsTab.CONFIGURATION,
+    isSupportedInPublicView: false
   },
   {
     label: 'repositoryDetails.tabs.webhooks',
     value: RepositoryDetailsTab.WEBHOOKS,
     featureFlag: FeatureFlags.HAR_TRIGGERS,
-    type: RepositoryConfigType.VIRTUAL
+    type: RepositoryConfigType.VIRTUAL,
+    isSupportedInPublicView: false
   }
 ]
+
+export type RepositoryVisibilityOptionType = CardSelectOption<RepositoryVisibility>
+
+export const RepositoryVisibilityOptions: Record<RepositoryVisibility, RepositoryVisibilityOptionType> = {
+  [RepositoryVisibility.PUBLIC]: {
+    label: 'repositoryDetails.repositoryForm.visibility.public',
+    description: 'repositoryDetails.repositoryForm.visibility.publicDescription',
+    value: RepositoryVisibility.PUBLIC
+  },
+  [RepositoryVisibility.PRIVATE]: {
+    label: 'repositoryDetails.repositoryForm.visibility.private',
+    description: 'repositoryDetails.repositoryForm.visibility.privateDescription',
+    value: RepositoryVisibility.PRIVATE
+  }
+}

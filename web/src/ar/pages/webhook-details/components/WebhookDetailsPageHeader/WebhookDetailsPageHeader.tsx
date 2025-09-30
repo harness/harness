@@ -19,8 +19,9 @@ import { Page, Text } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'
 import type { Webhook } from '@harnessio/react-har-service-client'
 
+import { useRoutes } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
-import { useParentComponents, useRoutes } from '@ar/hooks'
+import Breadcrumbs from '@ar/components/Breadcrumbs/Breadcrumbs'
 import { getIdentifierStringForBreadcrumb } from '@ar/common/utils'
 import { RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
 
@@ -31,7 +32,6 @@ interface WebhookDetailsPageHeaderProps {
 
 export function WebhookDetailsPageHeader(props: WebhookDetailsPageHeaderProps) {
   const { data, repositoryIdentifier } = props
-  const { NGBreadcrumbs } = useParentComponents()
   const routes = useRoutes()
   const { getString } = useStrings()
   return (
@@ -43,7 +43,7 @@ export function WebhookDetailsPageHeader(props: WebhookDetailsPageHeaderProps) {
       }
       size="large"
       breadcrumbs={
-        <NGBreadcrumbs
+        <Breadcrumbs
           links={[
             {
               url: routes.toARRepositories(),
