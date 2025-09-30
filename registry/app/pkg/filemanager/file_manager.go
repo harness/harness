@@ -87,7 +87,7 @@ func (f *FileManager) UploadFile(
 	principalID int64,
 ) (types.FileInfo, error) {
 	// uploading the file to temporary path in file storage
-	blobContext := f.GetBlobsContext(ctx, rootIdentifier, "", "")
+	blobContext := f.GetBlobsContext(ctx, rootIdentifier, "", "", "")
 	tmpFileName := uuid.NewString()
 	fileInfo, tmpPath, err := f.uploadTempFileInternal(ctx, blobContext, rootIdentifier,
 		file, fileName, fileReader, tmpFileName)
@@ -117,11 +117,12 @@ func (f *FileManager) UploadFile(
 
 // GetBlobsContext context constructs the context object for the application. This only be
 // called once per request.
-func (f *FileManager) GetBlobsContext(c context.Context, rootIdentifier, blobID, sha256 string) *Context {
+func (f *FileManager) GetBlobsContext(c context.Context, registryIdentifier,
+	rootIdentifier, blobID, sha256 string) *Context {
 	ctx := &Context{Context: c}
 
 	if f.bucketService != nil && blobID != "" {
-		if result := f.bucketService.GetBlobStore(c, "", rootIdentifier, blobID, sha256); result != nil {
+		if result := f.bucketService.GetBlobStore(c, registryIdentifier, rootIdentifier, blobID, sha256); result != nil {
 			ctx.genericBlobStore = result.GenericStore
 			return ctx
 		}
@@ -307,7 +308,7 @@ func (f *FileManager) DownloadFile(
 			"with blob id: %s, with error %s", filePath, node.BlobID, err)
 	}
 	completeFilaPath := path.Join(rootPathString + rootIdentifier + rootPathString + files + rootPathString + blob.Sha256)
-	blobContext := f.GetBlobsContext(ctx, rootIdentifier, blob.ID, blob.Sha256)
+	blobContext := f.GetBlobsContext(ctx, registryIdentifier, rootIdentifier, blob.ID, blob.Sha256)
 
 	if allowRedirect {
 		fileReader, redirectURL, err = blobContext.genericBlobStore.Get(ctx, completeFilaPath, blob.Size, node.Name)
@@ -507,7 +508,7 @@ func (f *FileManager) UploadTempFile(
 	fileName string,
 	fileReader io.Reader,
 ) (types.FileInfo, string, error) {
-	blobContext := f.GetBlobsContext(ctx, rootIdentifier, "", "")
+	blobContext := f.GetBlobsContext(ctx, rootIdentifier, "", "", "")
 	tempFileName := uuid.NewString()
 	fileInfo, _, err := f.uploadTempFileInternal(ctx, blobContext, rootIdentifier,
 		file, fileName, fileReader, tempFileName)
@@ -525,7 +526,7 @@ func (f *FileManager) UploadTempFileToPath(
 	tempFileName string,
 	fileReader io.Reader,
 ) (types.FileInfo, string, error) {
-	blobContext := f.GetBlobsContext(ctx, rootIdentifier, "", "")
+	blobContext := f.GetBlobsContext(ctx, rootIdentifier, "", "", "")
 	fileInfo, _, err := f.uploadTempFileInternal(ctx, blobContext, rootIdentifier,
 		file, fileName, fileReader, tempFileName)
 	if err != nil {
@@ -539,7 +540,7 @@ func (f *FileManager) FileExists(
 	rootIdentifier string,
 	filePath string,
 ) (bool, int64, error) {
-	blobContext := f.GetBlobsContext(ctx, rootIdentifier, "", "")
+	blobContext := f.GetBlobsContext(ctx, rootIdentifier, "", "", "")
 	size, err := blobContext.genericBlobStore.Stat(ctx, filePath)
 	if err != nil {
 		return false, -1, err
@@ -584,7 +585,7 @@ func (f *FileManager) DownloadTempFile(
 	rootIdentifier string,
 ) (fileReader *storage.FileReader, size int64, err error) {
 	tmpPath := path.Join(rootPathString, rootIdentifier, tmp, fileName)
-	blobContext := f.GetBlobsContext(ctx, rootIdentifier, "", "")
+	blobContext := f.GetBlobsContext(ctx, rootIdentifier, "", "", "")
 	reader, err := blobContext.genericBlobStore.GetWithNoRedirect(ctx, tmpPath, fileSize)
 	if err != nil {
 		return nil, 0, fmt.Errorf(failedToGetFile, tmpPath, err)
@@ -604,7 +605,7 @@ func (f *FileManager) MoveTempFile(
 	principalID int64,
 ) error {
 	// uploading the file to temporary path in file storage
-	blobContext := f.GetBlobsContext(ctx, rootIdentifier, "", "")
+	blobContext := f.GetBlobsContext(ctx, rootIdentifier, "", "", "")
 	tmpPath := path.Join(rootPathString, rootIdentifier, tmp, tempFileName)
 	err := f.moveFile(ctx, rootIdentifier, fileInfo, blobContext, tmpPath)
 	if err != nil {
