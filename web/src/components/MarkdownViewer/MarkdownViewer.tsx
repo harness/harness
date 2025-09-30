@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { useHistory, useParams } from 'react-router-dom'
+import { useHistory } from 'react-router-dom'
 import { Container, Utils } from '@harnessio/uicore'
 import rehypeSanitize from 'rehype-sanitize'
 import React, { useCallback, useMemo, useRef, useState } from 'react'
@@ -26,13 +26,14 @@ import rehypeVideo from 'rehype-video'
 import rehypeExternalLinks from 'rehype-external-links'
 import type { Plugin } from 'unified'
 import { visit } from 'unist-util-visit'
+import { useAppContext } from 'AppContext'
 import type { RepoRepositoryOutput, TypesPrincipalInfo } from 'services/code'
 import { INITIAL_ZOOM_LEVEL } from 'utils/Utils'
 import ImageCarousel from 'components/ImageCarousel/ImageCarousel'
 import type { SuggestionBlock } from 'components/SuggestionBlock/SuggestionBlock'
 import { getConfig } from 'services/config'
-import type { CODEProps } from 'RouteDefinitions'
 import { TextExtensions } from 'utils/FileUtils'
+import { useResourcePath } from 'hooks/useResourcePath'
 import { CodeSuggestionBlock } from './CodeSuggestionBlock'
 import css from './MarkdownViewer.module.scss'
 
@@ -62,6 +63,7 @@ export function MarkdownViewer({
   const [isOpen, setIsOpen] = useState<boolean>(false)
   const history = useHistory()
   const [zoomLevel, setZoomLevel] = useState(INITIAL_ZOOM_LEVEL)
+  const { routingId } = useAppContext()
   const [imgEvent, setImageEvent] = useState<string[]>([])
   const refRootHref = useMemo(() => document.getElementById('repository-ref-root')?.getAttribute('href'), [])
   const ref = useRef<HTMLDivElement>()
@@ -187,10 +189,9 @@ export function MarkdownViewer({
     [history]
   )
 
-  const params = useParams<CODEProps>()
+  const resourcePath = useResourcePath()
 
   const currentDirectoryPath = useMemo(() => {
-    const { resourcePath } = params
     if (!resourcePath) return ''
 
     const pathSegments = resourcePath.split('/')
@@ -214,7 +215,7 @@ export function MarkdownViewer({
       // It's already a directory path, return as-is
       return resourcePath
     }
-  }, [params])
+  }, [resourcePath])
 
   return (
     <Container
@@ -320,7 +321,7 @@ export function MarkdownViewer({
                   const baseUrl = window.location.origin
                   const dir = currentDirectoryPath
                   const rawPath = dir ? `${dir}/${src}` : src
-                  src = `${baseUrl}${apiBaseUrl}/repos/${repoMetadata?.path}/+/raw/${rawPath}`
+                  src = `${baseUrl}${apiBaseUrl}/repos/${repoMetadata?.path}/+/raw/${rawPath}?routingId=${routingId}`
                 }
               } catch (e) {
                 // eslint-disable-next-line no-console
