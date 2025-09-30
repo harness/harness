@@ -17,6 +17,7 @@ package repo
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -178,6 +179,7 @@ func (c *Controller) CreateFork(
 			DefaultBranch: defaultBranch,
 			IsEmpty:       true,
 			State:         enum.RepoStateGitImport,
+			Tags:          json.RawMessage(`{}`),
 		}
 
 		err = c.repoStore.Create(ctx, repoFork)

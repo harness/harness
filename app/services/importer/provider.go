@@ -18,6 +18,7 @@ import (
 	"context"
 	"crypto/sha512"
 	"encoding/base32"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -104,6 +105,7 @@ func (r *RepositoryInfo) ToRepo(
 		DefaultBranch: r.DefaultBranch,
 		State:         enum.RepoStateGitImport,
 		Path:          paths.Concatenate(spacePath, identifier),
+		Tags:          json.RawMessage(`{}`),
 	}, r.IsPublic
 }
 

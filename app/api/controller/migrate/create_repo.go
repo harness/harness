@@ -17,6 +17,7 @@ package migrate
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -123,6 +124,7 @@ func (c *Controller) CreateRepo(
 			DefaultBranch: in.DefaultBranch,
 			IsEmpty:       true,
 			State:         enum.RepoStateMigrateGitPush,
+			Tags:          json.RawMessage(`{}`),
 		}
 
 		return c.repoStore.Create(ctx, repo)
