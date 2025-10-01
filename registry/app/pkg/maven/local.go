@@ -18,6 +18,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -34,6 +35,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/maven/utils"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/types"
+	gitnessstore "github.com/harness/gitness/store"
 	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/rs/zerolog/log"
@@ -128,22 +130,21 @@ func (r *LocalRegistry) PutArtifact(ctx context.Context, info pkg.MavenArtifactI
 
 	// if package file belongs to maven-metadata file, then file override is expected.
 	if !utils.IsMetadataFile(info.FileName) {
+		artifactExists, err := r.localBase.CheckIfVersionExists(ctx, info)
+		if err != nil && !errors.Is(err, gitnessstore.ErrResourceNotFound) {
+			return responseHeaders, []error{fmt.Errorf("failed to check if version: %s with artifact: %s "+
+				"exists: %w", info.Version, info.Image, err)}
+		}
 		fileExists, err := r.localBase.ExistsByFilePath(ctx, info.RegistryID, strings.TrimPrefix(filePath, "/"))
 		if err != nil {
-			return responseHeaders, []error{
-				fmt.Errorf("error occurred while checking file existence for GroupID: %s, "+
-					"ArtifactID: %s and Version: %s with file name: %s in registry: %s with error: %w",
-					info.GroupID, info.ArtifactID, info.Version, info.FileName, info.RegIdentifier, err)}
+			return responseHeaders, []error{fmt.Errorf("failed to check if file with path: %s exists: %w",
+				filePath, err)}
 		}
-		if fileExists {
-			responseHeaders = &commons.ResponseHeaders{
-				Code: http.StatusConflict,
-			}
-			return responseHeaders, []error{
-				fmt.Errorf("file already exists for GroupID: %s, "+
-					"ArtifactID: %s and Version: %s with file name: %s in registry: %s. "+
-					"Try deleting this version and push it again", info.GroupID, info.ArtifactID,
-					info.Version, info.FileName, info.RegIdentifier)}
+		if artifactExists && fileExists {
+			log.Ctx(ctx).Info().Msgf("file with path: %s already exists for artifact: %s with version: %s",
+				filePath, info.Image, info.Version)
+			responseHeaders = &commons.ResponseHeaders{Code: http.StatusOK}
+			return responseHeaders, nil
 		}
 	}
 	session, _ := request.AuthSessionFrom(ctx)
