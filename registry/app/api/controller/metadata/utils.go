@@ -473,7 +473,7 @@ func GetGenericFileDownloadCommand(
 ) string {
 	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>:<VERSION>:<FILENAME>'" +
 		" --header '<AUTH_HEADER_PREFIX> <API_KEY>'" +
-		" -J -O"
+		" -J -o '<OUTPUT_FILE_NAME>'"
 
 	// Replace the placeholders with the actual values
 	replacements := map[string]string{
@@ -497,7 +497,7 @@ func GetGenericArtifactFileDownloadCommand(
 ) string {
 	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>/<VERSION>/<FILENAME>'" +
 		" --header '<AUTH_HEADER_PREFIX> <API_KEY>'" +
-		" -J -O"
+		" -J -o '<OUTPUT_FILE_NAME>'"
 
 	// Replace the placeholders with the actual values
 	replacements := map[string]string{
@@ -519,9 +519,8 @@ func GetHuggingFaceArtifactFileDownloadCommand(
 	regURL, artifact, version, filename string,
 	setupDetailsAuthHeaderPrefix string, artifactType *a.ArtifactType,
 ) string {
-	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT_TYPE>/<ARTIFACT>/resolve/<VERSION>/<FILENAME>'" +
-		" --header '<AUTH_HEADER_PREFIX> <API_KEY>'" +
-		" -J -O"
+	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT_TYPE>/<ARTIFACT>/resolve/<VERSION>/<FILENAME>' " +
+		"--header '<AUTH_HEADER_PREFIX> <API_KEY>' -J -o '<OUTPUT_FILE_NAME>'"
 
 	// Replace the placeholders with the actual values
 	replacements := map[string]string{
@@ -561,7 +560,7 @@ func GetNPMArtifactFileDownloadCommand(
 ) string {
 	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>/-/<FILENAME>'" +
 		" --header 'Authorization: Bearer <API_KEY>'" +
-		" -J -O"
+		" -J -o '<OUTPUT_FILE_NAME>'"
 	// Replace the placeholders with the actual values
 	replacements := map[string]string{
 		"<HOSTNAME>": regURL,
@@ -579,7 +578,7 @@ func GetNPMArtifactFileDownloadCommand(
 
 func GetRPMArtifactFileDownloadCommand(regURL, filename string, setupDetailsAuthHeaderPrefix string) string {
 	downloadCommand := "curl --location '<HOSTNAME>/package<FILENAME>' --header '<AUTH_HEADER_PREFIX> <API_KEY>'" +
-		" -J -O"
+		" -J -o '<OUTPUT_FILE_NAME>'"
 	replacements := map[string]string{
 		"<HOSTNAME>":           regURL,
 		"<FILENAME>":           filename,
@@ -599,7 +598,7 @@ func GetNugetArtifactFileDownloadCommand(
 ) string {
 	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>/<VERSION>/<FILENAME>'" +
 		" --header '<AUTH_HEADER_PREFIX> <API_KEY>'" +
-		" -J -O"
+		" -J -o '<OUTPUT_FILE_NAME>'"
 
 	// Replace the placeholders with the actual values
 	replacements := map[string]string{
@@ -621,9 +620,8 @@ func GetCargoArtifactFileDownloadCommand(
 	regURL, artifact, version,
 	setupDetailsAuthHeaderPrefix string,
 ) string {
-	downloadCommand := "curl --location '<HOSTNAME>/api/v1/crates/<ARTIFACT>/<VERSION>/download'" +
-		" --header '<AUTH_HEADER_PREFIX> <API_KEY>'" +
-		" -J -O"
+	downloadCommand := "curl --location '<HOSTNAME>/api/v1/crates/<ARTIFACT>/<VERSION>/download' " +
+		"--header '<AUTH_HEADER_PREFIX> <API_KEY>' -J -o '<OUTPUT_FILE_NAME>'"
 
 	// Replace the placeholders with the actual values
 	replacements := map[string]string{
@@ -644,9 +642,8 @@ func GetGoArtifactFileDownloadCommand(
 	regURL, artifact, filename,
 	setupDetailsAuthHeaderPrefix string,
 ) string {
-	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>/@v/<FILENAME>'" +
-		" --header '<AUTH_HEADER_PREFIX> <API_KEY>'" +
-		" -J -O"
+	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>/@v/<FILENAME>' " +
+		"--header '<AUTH_HEADER_PREFIX> <API_KEY>' -J -o '<OUTPUT_FILE_NAME>'"
 
 	// Replace the placeholders with the actual values
 	replacements := map[string]string{
@@ -667,8 +664,8 @@ func GetMavenArtifactFileDownloadCommand(
 	regURL, artifact, version, filename string,
 	setupDetailsAuthHeaderPrefix string,
 ) string {
-	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>/<VERSION>/<FILENAME>'" +
-		" --header '<AUTH_HEADER_PREFIX> <IDENTITY_TOKEN>' -O"
+	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>/<VERSION>/<FILENAME>' " +
+		"--header '<AUTH_HEADER_PREFIX> <IDENTITY_TOKEN>' -o '<OUTPUT_FILE_NAME>'"
 
 	// Replace the placeholders with the actual values
 	replacements := map[string]string{
