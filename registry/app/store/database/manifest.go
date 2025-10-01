@@ -419,9 +419,7 @@ func (dao manifestDao) FindManifestByID(
 	registryID,
 	id int64,
 ) (*types.Manifest, error) {
-	stmt := database.Builder.Select("manifest_digest").From("manifests").
-		Where("manifest_id = ?", id).Where("manifest_registry_id = ?", registryID)
-
+	stmt := ReadQuery.Where("manifest_id = ?", id).Where("manifest_registry_id = ?", registryID)
 	toSQL, args, err := stmt.ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert find manifest query to sql: %w", err)
@@ -712,6 +710,25 @@ func (dao manifestDao) GetLatestManifest(ctx context.Context, repoID int64, imag
 	}
 
 	return dao.mapToManifest(dst)
+}
+
+func (dao manifestDao) CountByImageName(ctx context.Context, repoID int64, imageName string) (int64, error) {
+	q := database.Builder.Select("COUNT(*)").
+		From("manifests").
+		Where("manifest_registry_id = ? AND manifest_image_name = ?", repoID, imageName)
+	sql, args, err := q.ToSql()
+	if err != nil {
+		return -1, errors2.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, dao.sqlDB)
+
+	var count int64
+	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "Failed executing count query")
+	}
+	return count, nil
 }
 
 func mapToInternalManifest(ctx context.Context, in *types.Manifest) (*manifestDB, error) {

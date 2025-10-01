@@ -25,6 +25,7 @@ import (
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/api/utils"
+	"github.com/harness/gitness/registry/app/manifest/manifestlist"
 	"github.com/harness/gitness/registry/services/webhook"
 	registryTypes "github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/store"
@@ -32,6 +33,7 @@ import (
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/opencontainers/go-digest"
+	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/rs/zerolog/log"
 )
 
@@ -97,10 +99,10 @@ func (c *APIController) DeleteArtifactVersion(ctx context.Context, r artifact.De
 	//nolint: exhaustive
 	switch regInfo.PackageType {
 	case artifact.PackageTypeDOCKER:
-		err = c.deleteTagWithAudit(ctx, regInfo, registryName, session.Principal, artifactName,
+		err = c.deleteOciVersionWithAudit(ctx, regInfo, registryName, session.Principal, artifactName,
 			versionName)
 	case artifact.PackageTypeHELM:
-		err = c.deleteTagWithAudit(ctx, regInfo, registryName, session.Principal, artifactName,
+		err = c.deleteOciVersionWithAudit(ctx, regInfo, registryName, session.Principal, artifactName,
 			versionName)
 	case artifact.PackageTypeNPM:
 		err = c.deleteVersion(ctx, regInfo, imageInfo, artifactName, versionName)
@@ -143,7 +145,7 @@ func (c *APIController) DeleteArtifactVersion(ctx context.Context, r artifact.De
 				),
 			}, nil
 		}
-		return throwDeleteArtifactVersion500Error(err), err
+		return throwDeleteArtifactVersion500Error(err), nil
 	}
 
 	auditErr := c.AuditService.Log(
@@ -165,25 +167,81 @@ func (c *APIController) DeleteArtifactVersion(ctx context.Context, r artifact.De
 	}, nil
 }
 
-func (c *APIController) deleteTagWithAudit(
+func (c *APIController) deleteOciVersionWithAudit(
 	ctx context.Context, regInfo *registryTypes.RegistryRequestBaseInfo,
 	registryName string, principal types.Principal, artifactName string, versionName string,
 ) error {
-	existingDigest := c.getTagDigest(ctx, regInfo.RegistryID, artifactName, versionName)
+	var existingDigest digest.Digest
+	//nolint:nestif
+	if c.UntaggedImagesEnabled(ctx) {
+		err := c.tx.WithTx(
+			ctx, func(ctx context.Context) error {
+				d := digest.Digest(versionName)
+				dgst, _ := registryTypes.NewDigest(d)
+				existingManifest, err := c.ManifestStore.FindManifestByDigest(
+					ctx, regInfo.RegistryID, artifactName, dgst,
+				)
+				if err != nil {
+					return fmt.Errorf("failed to fing existing manifest for: %s, err: %w", versionName, err)
+				}
+				if existingManifest.MediaType == v1.MediaTypeImageIndex ||
+					existingManifest.MediaType == manifestlist.MediaTypeManifestList {
+					manifests, err := c.ManifestStore.References(ctx, existingManifest)
+					if err != nil {
+						return fmt.Errorf("failed to fing existing manifests referenced by: %s, err: %w",
+							versionName, err)
+					}
+					if len(manifests) > 0 {
+						return fmt.Errorf("cannot delete manifest: %s, as it references other manifests",
+							versionName)
+					}
+				}
+				err = c.ManifestStore.Delete(ctx, regInfo.RegistryID, existingManifest.ID)
+				if err != nil {
+					return err
+				}
+				existingDigest = d
+				_, err = c.TagStore.DeleteTagByManifestID(ctx, regInfo.RegistryID, existingManifest.ID)
+				if err != nil {
+					return fmt.Errorf("failed to delete tags for: %s, err: %w", versionName, err)
+				}
+				err = c.ArtifactStore.DeleteByVersionAndImageName(ctx, artifactName, versionName, regInfo.RegistryID)
+				if err != nil {
+					return err
+				}
 
-	err := c.TagStore.DeleteTag(ctx, regInfo.RegistryID, artifactName, versionName)
-	if err != nil {
-		return err
+				count, err := c.ManifestStore.CountByImageName(ctx, regInfo.RegistryID, artifactName)
+				if err != nil {
+					return err
+				}
+				if count < 1 {
+					err = c.ImageStore.DeleteByImageNameAndRegID(
+						ctx, regInfo.RegistryID, artifactName,
+					)
+					if err != nil {
+						return err
+					}
+				}
+				return nil
+			})
+		if err != nil {
+			return fmt.Errorf("failed to delete artifact version: %w", err)
+		}
+	} else {
+		existingDigest = c.getTagDigest(ctx, regInfo.RegistryID, artifactName, versionName)
+		err := c.TagStore.DeleteTag(ctx, regInfo.RegistryID, artifactName, versionName)
+		if err != nil {
+			return err
+		}
 	}
-
 	if existingDigest != "" {
 		payload := webhook.GetArtifactDeletedPayload(ctx, principal.ID, regInfo.RegistryID,
 			registryName, versionName, existingDigest.String(), regInfo.RootIdentifier,
-			regInfo.PackageType, artifactName, c.URLProvider)
+			regInfo.PackageType, artifactName, c.URLProvider, c.UntaggedImagesEnabled(ctx))
 		c.ArtifactEventReporter.ArtifactDeleted(ctx, &payload)
 	}
 
-	return err
+	return nil
 }
 
 func (c *APIController) deleteVersion(

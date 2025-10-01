@@ -1092,7 +1092,7 @@ func (l *manifestService) DeleteTag(
 		session, _ := request.AuthSessionFrom(ctx)
 		payload := webhook.GetArtifactDeletedPayload(ctx, session.Principal.ID, registry.ID,
 			registry.Name, tag, existingDigest.String(), info.RootIdentifier, info.PackageType, info.Image,
-			l.urlProvider)
+			l.urlProvider, l.untaggedImagesEnabled(ctx))
 		l.artifactEventReporter.ArtifactDeleted(ctx, &payload)
 	}
 

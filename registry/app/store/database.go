@@ -145,6 +145,7 @@ type ManifestRepository interface {
 		digest types.Digest,
 	) (types.Manifests, error)
 	GetLatestManifest(ctx context.Context, repoID int64, imageName string) (*types.Manifest, error)
+	CountByImageName(ctx context.Context, repoID int64, imageName string) (int64, error)
 }
 
 type ManifestReferenceRepository interface {

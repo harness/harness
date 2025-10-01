@@ -73,24 +73,34 @@ func GetArtifactDeletedPayload(
 	principalID int64,
 	registryID int64,
 	regIdentifier string,
-	tag string,
+	version string,
 	digest string,
 	rootIdentifier string,
 	packageType artifact.PackageType,
 	image string,
 	urlProvider urlprovider.Provider,
+	isUntaggedImagesEnabled bool,
 ) registryevents.ArtifactDeletedPayload {
 	payload := registryevents.ArtifactDeletedPayload{
 		RegistryID:   registryID,
 		PrincipalID:  principalID,
 		ArtifactType: packageType,
 	}
-	artifactURL := urlProvider.RegistryURL(ctx, rootIdentifier, regIdentifier) + "/" + image + ":" + tag
+	var versionSeparator string
+	var tag string
+	if isUntaggedImagesEnabled {
+		versionSeparator = "@"
+	} else {
+		versionSeparator = ":"
+		tag = version
+	}
+	artifactURL := urlProvider.RegistryURL(ctx, rootIdentifier, regIdentifier) +
+		"/" + image + versionSeparator + version
 	urlWithoutProtocol := GetRepoURLWithoutProtocol(ctx, artifactURL)
 
 	baseArtifact := registryevents.BaseArtifact{
 		Name: image,
-		Ref:  fmt.Sprintf("%s:%s", image, tag),
+		Ref:  fmt.Sprintf("%s%s%s", image, versionSeparator, version),
 	}
 	if packageType == artifact.PackageTypeDOCKER {
 		payload.Artifact = &registryevents.DockerArtifact{
