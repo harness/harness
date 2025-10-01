@@ -41,7 +41,7 @@ var (
 // it writes an activity entry and triggers the pull request Branch Updated event.
 //
 //nolint:gocognit // refactor if needed
-func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
+func (s *Service) updatePullReqOnBranchUpdate(ctx context.Context,
 	event *events.Event[*gitevents.BranchUpdatedPayload],
 ) error {
 	// we should always update PR mergeable status check when target branch is updated.

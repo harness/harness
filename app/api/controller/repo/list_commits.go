@@ -56,10 +56,20 @@ func (c *Controller) ListCommits(ctx context.Context,
 		return types.ListCommitResponse{}, fmt.Errorf("failed create author regex: %w", err)
 	}
 
+	dotRange, err := makeDotRange(filter.After, gitRef, true)
+	if err != nil {
+		return types.ListCommitResponse{}, fmt.Errorf("failed to parse dot range: %w", err)
+	}
+
+	err = c.fetchDotRangeObjectsFromUpstream(ctx, session, repo, &dotRange)
+	if err != nil {
+		return types.ListCommitResponse{}, fmt.Errorf("failed to parse dot range: %w", err)
+	}
+
 	result, err := c.git.ListCommits(ctx, &git.ListCommitsParams{
 		ReadParams:   git.CreateReadParams(repo),
-		GitREF:       gitRef,
-		After:        filter.After,
+		GitREF:       dotRange.HeadRef,
+		After:        dotRange.BaseRef,
 		Page:         int32(filter.Page),  //nolint:gosec
 		Limit:        int32(filter.Limit), //nolint:gosec
 		Path:         filter.Path,

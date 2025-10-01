@@ -411,3 +411,70 @@ func (c *Controller) fetchUpstreamObjects(
 
 	return upstreamSHA, repoUpstreamCore, nil
 }
+
+const dotRangeUpstreamMarker = "upstream:"
+
+type DotRange struct {
+	BaseRef      string
+	BaseUpstream bool
+	HeadRef      string
+	HeadUpstream bool
+	MergeBase    bool
+}
+
+func (r DotRange) String() string {
+	sb := strings.Builder{}
+
+	if r.BaseUpstream {
+		sb.WriteString(dotRangeUpstreamMarker)
+	}
+	sb.WriteString(r.BaseRef)
+
+	sb.WriteString("..")
+	if r.MergeBase {
+		sb.WriteByte('.')
+	}
+
+	if r.HeadUpstream {
+		sb.WriteString(dotRangeUpstreamMarker)
+	}
+	sb.WriteString(r.HeadRef)
+
+	return sb.String()
+}
+
+func parseDotRangePath(path string) (DotRange, error) {
+	mergeBase := true
+	parts := strings.SplitN(path, "...", 2)
+	if len(parts) != 2 {
+		mergeBase = false
+		parts = strings.SplitN(path, "..", 2)
+		if len(parts) != 2 {
+			return DotRange{}, usererror.BadRequestf("Invalid format %q", path)
+		}
+	}
+
+	dotRange, err := makeDotRange(parts[0], parts[1], mergeBase)
+	if err != nil {
+		return DotRange{}, err
+	}
+
+	return dotRange, nil
+}
+
+func makeDotRange(base, head string, mergeBase bool) (DotRange, error) {
+	dotRange := DotRange{
+		BaseRef:   base,
+		HeadRef:   head,
+		MergeBase: mergeBase,
+	}
+
+	dotRange.BaseRef, dotRange.BaseUpstream = strings.CutPrefix(dotRange.BaseRef, dotRangeUpstreamMarker)
+	dotRange.HeadRef, dotRange.HeadUpstream = strings.CutPrefix(dotRange.HeadRef, dotRangeUpstreamMarker)
+
+	if dotRange.BaseUpstream && dotRange.HeadUpstream {
+		return DotRange{}, usererror.BadRequestf("Only one upstream reference is allowed: %q", dotRange.String())
+	}
+
+	return dotRange, nil
+}

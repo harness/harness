@@ -107,7 +107,7 @@ func New(ctx context.Context,
 					stream.WithMaxRetries(3),
 				))
 
-			_ = r.RegisterBranchUpdated(service.triggerPREventOnBranchUpdate)
+			_ = r.RegisterBranchUpdated(service.updatePullReqOnBranchUpdate)
 			_ = r.RegisterBranchDeleted(service.closePullReqOnBranchDelete)
 
 			return nil

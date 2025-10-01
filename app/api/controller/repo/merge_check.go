@@ -41,12 +41,12 @@ func (c *Controller) MergeCheck(
 		return MergeCheck{}, err
 	}
 
-	info, err := parseDiffPath(diffPath)
+	dotRange, err := parseDotRangePath(diffPath)
 	if err != nil {
 		return MergeCheck{}, err
 	}
 
-	err = c.fetchDiffUpstreamRef(ctx, session, repo, &info)
+	err = c.fetchDotRangeObjectsFromUpstream(ctx, session, repo, &dotRange)
 	if err != nil {
 		return MergeCheck{}, fmt.Errorf("failed to fetch diff upstream ref: %w", err)
 	}
@@ -58,16 +58,16 @@ func (c *Controller) MergeCheck(
 
 	mergeOutput, err := c.git.Merge(ctx, &git.MergeParams{
 		WriteParams: writeParams,
-		BaseBranch:  info.BaseRef,
-		HeadBranch:  info.HeadRef,
+		BaseBranch:  dotRange.BaseRef,
+		HeadBranch:  dotRange.HeadRef,
 	})
 	if err != nil {
 		// git.Merge works with commits and error is not user-friendly
 		// and here we are modify base-ref and head-ref with user input
 		// values.
 		if uErr := api.AsUnrelatedHistoriesError(err); uErr != nil {
-			uErr.BaseRef = info.BaseRef
-			uErr.HeadRef = info.HeadRef
+			uErr.BaseRef = dotRange.BaseRef
+			uErr.HeadRef = dotRange.HeadRef
 			return MergeCheck{}, uErr
 		}
 		return MergeCheck{}, fmt.Errorf("merge check execution failed: %w", err)

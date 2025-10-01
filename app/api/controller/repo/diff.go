@@ -18,10 +18,8 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"strings"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
-	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/git"
 	gittypes "github.com/harness/gitness/git/api"
@@ -43,21 +41,21 @@ func (c *Controller) RawDiff(
 		return err
 	}
 
-	info, err := parseDiffPath(path)
+	dotRange, err := parseDotRangePath(path)
 	if err != nil {
 		return err
 	}
 
-	err = c.fetchDiffUpstreamRef(ctx, session, repo, &info)
+	err = c.fetchDotRangeObjectsFromUpstream(ctx, session, repo, &dotRange)
 	if err != nil {
 		return fmt.Errorf("failed to fetch diff upstream ref: %w", err)
 	}
 
 	return c.git.RawDiff(ctx, w, &git.DiffParams{
 		ReadParams:       git.CreateReadParams(repo),
-		BaseRef:          info.BaseRef,
-		HeadRef:          info.HeadRef,
-		MergeBase:        info.MergeBase,
+		BaseRef:          dotRange.BaseRef,
+		HeadRef:          dotRange.HeadRef,
+		MergeBase:        dotRange.MergeBase,
 		IgnoreWhitespace: ignoreWhitespace,
 	}, files...)
 }
@@ -82,43 +80,6 @@ func (c *Controller) CommitDiff(
 	}, w)
 }
 
-type CompareInfo struct {
-	BaseRef      string
-	BaseUpstream bool
-	HeadRef      string
-	HeadUpstream bool
-	MergeBase    bool
-}
-
-func parseDiffPath(path string) (CompareInfo, error) {
-	mergeBase := true
-	infos := strings.SplitN(path, "...", 2)
-	if len(infos) != 2 {
-		mergeBase = false
-		infos = strings.SplitN(path, "..", 2)
-		if len(infos) != 2 {
-			return CompareInfo{}, usererror.BadRequestf("Invalid format %q", path)
-		}
-	}
-
-	info := CompareInfo{
-		BaseRef:   infos[0],
-		HeadRef:   infos[1],
-		MergeBase: mergeBase,
-	}
-
-	const upstreamMarker = "upstream:"
-
-	info.BaseRef, info.BaseUpstream = strings.CutPrefix(info.BaseRef, upstreamMarker)
-	info.HeadRef, info.HeadUpstream = strings.CutPrefix(info.HeadRef, upstreamMarker)
-
-	if info.BaseUpstream && info.HeadUpstream {
-		return CompareInfo{}, usererror.BadRequestf("Only one upstream reference is allowed: %q", path)
-	}
-
-	return info, nil
-}
-
 func (c *Controller) DiffStats(
 	ctx context.Context,
 	session *auth.Session,
@@ -135,21 +96,21 @@ func (c *Controller) DiffStats(
 		return types.DiffStats{}, err
 	}
 
-	info, err := parseDiffPath(path)
+	dotRange, err := parseDotRangePath(path)
 	if err != nil {
 		return types.DiffStats{}, err
 	}
 
-	err = c.fetchDiffUpstreamRef(ctx, session, repo, &info)
+	err = c.fetchDotRangeObjectsFromUpstream(ctx, session, repo, &dotRange)
 	if err != nil {
 		return types.DiffStats{}, fmt.Errorf("failed to fetch diff upstream ref: %w", err)
 	}
 
 	output, err := c.git.DiffStats(ctx, &git.DiffParams{
 		ReadParams:       git.CreateReadParams(repo),
-		BaseRef:          info.BaseRef,
-		HeadRef:          info.HeadRef,
-		MergeBase:        info.MergeBase,
+		BaseRef:          dotRange.BaseRef,
+		HeadRef:          dotRange.HeadRef,
+		MergeBase:        dotRange.MergeBase,
 		IgnoreWhitespace: ignoreWhitespace,
 	})
 	if err != nil {
@@ -177,21 +138,21 @@ func (c *Controller) Diff(
 		return nil, err
 	}
 
-	info, err := parseDiffPath(path)
+	dotRange, err := parseDotRangePath(path)
 	if err != nil {
 		return nil, err
 	}
 
-	err = c.fetchDiffUpstreamRef(ctx, session, repo, &info)
+	err = c.fetchDotRangeObjectsFromUpstream(ctx, session, repo, &dotRange)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch diff upstream ref: %w", err)
 	}
 
 	reader := git.NewStreamReader(c.git.Diff(ctx, &git.DiffParams{
 		ReadParams:       git.CreateReadParams(repo),
-		BaseRef:          info.BaseRef,
-		HeadRef:          info.HeadRef,
-		MergeBase:        info.MergeBase,
+		BaseRef:          dotRange.BaseRef,
+		HeadRef:          dotRange.HeadRef,
+		MergeBase:        dotRange.MergeBase,
 		IncludePatch:     includePatch,
 		IgnoreWhitespace: ignoreWhitespace,
 	}, files...))
@@ -199,30 +160,30 @@ func (c *Controller) Diff(
 	return reader, nil
 }
 
-func (c *Controller) fetchDiffUpstreamRef(
+func (c *Controller) fetchDotRangeObjectsFromUpstream(
 	ctx context.Context,
 	session *auth.Session,
 	repoForkCore *types.RepositoryCore,
-	compareInfo *CompareInfo,
+	dotRange *DotRange,
 ) error {
-	if compareInfo.BaseUpstream {
-		refSHA, _, err := c.fetchUpstreamRevision(ctx, session, repoForkCore, compareInfo.BaseRef)
+	if dotRange.BaseUpstream {
+		refSHA, _, err := c.fetchUpstreamRevision(ctx, session, repoForkCore, dotRange.BaseRef)
 		if err != nil {
 			return fmt.Errorf("failed to fetch upstream objects: %w", err)
 		}
 
-		compareInfo.BaseUpstream = false
-		compareInfo.BaseRef = refSHA.String()
+		dotRange.BaseUpstream = false
+		dotRange.BaseRef = refSHA.String()
 	}
 
-	if compareInfo.HeadUpstream {
-		refSHA, _, err := c.fetchUpstreamRevision(ctx, session, repoForkCore, compareInfo.HeadRef)
+	if dotRange.HeadUpstream {
+		refSHA, _, err := c.fetchUpstreamRevision(ctx, session, repoForkCore, dotRange.HeadRef)
 		if err != nil {
 			return fmt.Errorf("failed to fetch upstream objects: %w", err)
 		}
 
-		compareInfo.HeadUpstream = false
-		compareInfo.HeadRef = refSHA.String()
+		dotRange.HeadUpstream = false
+		dotRange.HeadRef = refSHA.String()
 	}
 
 	return nil
