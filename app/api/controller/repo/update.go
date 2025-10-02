@@ -38,7 +38,7 @@ import (
 type UpdateInput struct {
 	Description *string         `json:"description"`
 	State       *enum.RepoState `json:"state"`
-	Tags        *[]string       `json:"tags"`
+	Tags        *types.RepoTags `json:"tags"`
 }
 
 var allowedRepoStateTransitions = map[enum.RepoState][]enum.RepoState{
@@ -169,18 +169,15 @@ func hasTagChanges(in *UpdateInput, repo *types.Repository) bool {
 		return false
 	}
 
-	var repoTags []string
+	var repoTags map[string]string
 	_ = json.Unmarshal(repo.Tags, &repoTags)
+
 	if len(*in.Tags) != len(repoTags) {
 		return true
 	}
 
-	tagSet := make(map[string]struct{}, len(repoTags))
-	for _, t := range repoTags {
-		tagSet[t] = struct{}{}
-	}
-	for _, t := range *in.Tags {
-		if _, ok := tagSet[t]; !ok {
+	for key, value := range *in.Tags {
+		if repoValue, exists := repoTags[key]; !exists || repoValue != value {
 			return true
 		}
 	}
@@ -196,7 +193,11 @@ func (c *Controller) sanitizeUpdateInput(in *UpdateInput) error {
 		}
 	}
 
-	err := sanitizeTags(in.Tags)
+	if in.Tags == nil {
+		return nil
+	}
+
+	err := in.Tags.Sanitize()
 	if err != nil {
 		return fmt.Errorf("failed to sanitize tags: %w", err)
 	}

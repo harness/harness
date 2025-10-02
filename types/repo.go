@@ -16,7 +16,9 @@ package types
 
 import (
 	"encoding/json"
+	"strings"
 
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -124,9 +126,10 @@ type RepoFilter struct {
 	Order             enum.Order    `json:"order"`
 	DeletedAt         *int64        `json:"deleted_at,omitempty"`
 	DeletedBeforeOrAt *int64        `json:"deleted_before_or_at,omitempty"`
-	Tags              []string
-	Recursive         bool
-	OnlyFavoritesFor  *int64
+	// Same tag key can be associated with multiple values
+	Tags             map[string][]string
+	Recursive        bool
+	OnlyFavoritesFor *int64
 }
 
 type RepoCacheKey struct {
@@ -151,4 +154,42 @@ type RepositoryCount struct {
 	SpaceID  int64  `json:"space_id"`
 	SpaceUID string `json:"space_uid"`
 	Total    int    `json:"total"`
+}
+
+type RepoTags map[string]string
+
+func (t RepoTags) Sanitize() error {
+	if len(t) == 0 {
+		return nil
+	}
+
+	for k, v := range t {
+		sk, sv := k, v
+
+		if err := sanitizeRepoTag(&sk, TagPartTypeKey); err != nil {
+			return err
+		}
+		if err := sanitizeRepoTag(&sv, TagPartTypeValue); err != nil {
+			return err
+		}
+
+		if sk != k || sv != v {
+			delete(t, k) // remove old
+			t[sk] = sv   // insert sanitized
+		}
+	}
+
+	return nil
+}
+
+func sanitizeRepoTag(tag *string, typ TagPartType) error {
+	if tag == nil {
+		return nil
+	}
+
+	if strings.Contains(*tag, ":") {
+		return errors.InvalidArgument("tag %s cannot contain colon [:]", typ)
+	}
+
+	return SanitizeTag(tag, typ, false)
 }

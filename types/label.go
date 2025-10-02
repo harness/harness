@@ -133,7 +133,7 @@ type DefineLabelInput struct {
 }
 
 func (in *DefineLabelInput) Sanitize() error {
-	if err := SanitizeTagText(&in.Key, "key"); err != nil {
+	if err := SanitizeTag(&in.Key, TagPartTypeKey, true); err != nil {
 		return err
 	}
 
@@ -158,7 +158,7 @@ type UpdateLabelInput struct {
 }
 
 func (in *UpdateLabelInput) Sanitize() error {
-	if err := SanitizeTagText(in.Key, "key"); err != nil {
+	if err := SanitizeTag(in.Key, TagPartTypeKey, true); err != nil {
 		return err
 	}
 
@@ -181,7 +181,7 @@ type DefineValueInput struct {
 }
 
 func (in *DefineValueInput) Sanitize() error {
-	if err := SanitizeTagText(&in.Value, "value"); err != nil {
+	if err := SanitizeTag(&in.Value, TagPartTypeValue, true); err != nil {
 		return err
 	}
 
@@ -199,7 +199,7 @@ type UpdateValueInput struct {
 
 func (in *UpdateValueInput) Sanitize() error {
 	if in.Value != nil {
-		if err := SanitizeTagText(in.Value, "value"); err != nil {
+		if err := SanitizeTag(in.Value, TagPartTypeValue, true); err != nil {
 			return err
 		}
 	}

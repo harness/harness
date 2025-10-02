@@ -16,6 +16,8 @@ package request
 
 import (
 	"net/http"
+	"slices"
+	"strings"
 
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
@@ -44,12 +46,37 @@ func ParseOnlyFavoritesFromQuery(r *http.Request) (bool, error) {
 	return QueryParamAsBoolOrDefault(r, QueryParamOnlyFavorites, false)
 }
 
-func ParseTagFromQuery(r *http.Request) []string {
-	if tags, ok := QueryParamList(r, QueryParamTag); ok {
-		return tags
+func ParseTagsFromQuery(r *http.Request) map[string][]string {
+	tags, ok := QueryParamList(r, QueryParamTag)
+	if !ok {
+		return nil
 	}
 
-	return []string{}
+	result := make(map[string][]string)
+	for _, t := range tags {
+		before, after, found := strings.Cut(t, ":")
+		key := strings.TrimSpace(before)
+
+		// key without value
+		if !found {
+			// dominates everything else → just set to nil
+			result[key] = nil
+			continue
+		}
+
+		// key with value
+		if _, ok := result[key]; !ok || result[key] != nil {
+			val := strings.TrimSpace(after)
+			result[key] = append(result[key], val)
+		}
+	}
+
+	for key, values := range result {
+		slices.Sort(values)
+		result[key] = slices.Compact(values)
+	}
+
+	return result
 }
 
 // ParseRepoFilter extracts the repository filter from the url.
@@ -104,6 +131,6 @@ func ParseRepoFilter(r *http.Request, session *auth.Session) (*types.RepoFilter,
 		DeletedAt:         deletedAt,
 		DeletedBeforeOrAt: deletedBeforeOrAt,
 		OnlyFavoritesFor:  onlyFavoritesFor,
-		Tags:              ParseTagFromQuery(r),
+		Tags:              ParseTagsFromQuery(r),
 	}, nil
 }

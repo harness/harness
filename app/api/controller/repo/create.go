@@ -50,13 +50,13 @@ var (
 type CreateInput struct {
 	ParentRef string `json:"parent_ref"`
 	// TODO [CODE-1363]: remove after identifier migration.
-	UID           string   `json:"uid" deprecated:"true"`
-	Identifier    string   `json:"identifier"`
-	DefaultBranch string   `json:"default_branch"`
-	Description   string   `json:"description"`
-	IsPublic      bool     `json:"is_public"`
-	ForkID        int64    `json:"fork_id"`
-	Tags          []string `json:"tags"`
+	UID           string         `json:"uid" deprecated:"true"`
+	Identifier    string         `json:"identifier"`
+	DefaultBranch string         `json:"default_branch"`
+	Description   string         `json:"description"`
+	IsPublic      bool           `json:"is_public"`
+	ForkID        int64          `json:"fork_id"`
+	Tags          types.RepoTags `json:"tags"`
 	CreateFileOptions
 }
 
@@ -243,11 +243,9 @@ func (c *Controller) sanitizeCreateInput(in *CreateInput, session *auth.Session)
 		in.DefaultBranch = c.defaultBranch
 	}
 
-	if len(in.Tags) > 0 {
-		err := sanitizeTags(&in.Tags)
-		if err != nil {
-			return fmt.Errorf("failed to sanitize tags: %w", err)
-		}
+	err := in.Tags.Sanitize()
+	if err != nil {
+		return fmt.Errorf("failed to sanitize tags: %w", err)
 	}
 
 	return nil
@@ -341,26 +339,4 @@ func identityFromPrincipal(p types.Principal) *git.Identity {
 		Name:  p.DisplayName,
 		Email: p.Email,
 	}
-}
-
-func sanitizeTags(tags *[]string) error {
-	if tags == nil || len(*tags) == 0 {
-		return nil
-	}
-
-	tagSet := make(map[string]struct{}, len(*tags))
-	var sanitizedTags []string
-	for _, t := range *tags {
-		err := types.SanitizeTagText(&t, "tag")
-		if err != nil {
-			return err
-		}
-		if _, exists := tagSet[t]; !exists {
-			tagSet[t] = struct{}{}
-			sanitizedTags = append(sanitizedTags, t)
-		}
-	}
-	*tags = sanitizedTags
-
-	return nil
 }

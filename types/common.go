@@ -22,19 +22,25 @@ import (
 	"github.com/harness/gitness/errors"
 )
 
-func SanitizeTagText(text *string, typ string) error {
+type TagPartType string
+
+const (
+	TagPartTypeKey   TagPartType = "key"
+	TagPartTypeValue TagPartType = "value"
+)
+
+func SanitizeTag(text *string, typ TagPartType, requireNonEmpty bool) error {
 	if text == nil {
 		return nil
 	}
 
 	*text = strings.TrimSpace(*text)
 
-	if len(*text) == 0 {
+	if requireNonEmpty && len(*text) == 0 {
 		return errors.InvalidArgument("%s must be a non-empty string", typ)
 	}
 
 	const maxTagLength = 50
-
 	if utf8.RuneCountInString(*text) > maxTagLength {
 		return errors.InvalidArgument("%s can have at most %d characters", typ, maxTagLength)
 	}

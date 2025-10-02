@@ -972,22 +972,64 @@ func applyTagsFilter(
 		return stmt
 	}
 
-	if driverName == PostgresDriverName {
-		data, _ := json.Marshal(filter.Tags)
-		stmt = stmt.Where("repo_tags @> ?", string(data))
+	ors := squirrel.Or{}
 
+	if driverName == PostgresDriverName {
+		for k, vs := range filter.Tags {
+			// key-only filter
+			if len(vs) == 0 {
+				ors = append(ors, squirrel.Expr("repo_tags ?? ?", k))
+				continue
+			}
+
+			// key-value filter
+			for _, v := range vs {
+				data, _ := json.Marshal(map[string]string{k: v})
+				ors = append(
+					ors,
+					squirrel.Expr("repo_tags @> ?::jsonb", string(data)),
+				)
+			}
+		}
+
+		if len(ors) > 0 {
+			stmt = stmt.Where(ors)
+		}
 		return stmt
 	}
 
-	inExpr := squirrel.Eq{"value": filter.Tags}
-	sqlFragment, args, _ := inExpr.ToSql()
-	condition := fmt.Sprintf(`(
-            SELECT COUNT(DISTINCT value)
-            FROM json_each(repo_tags)
-            WHERE %s
-        ) = %d`, sqlFragment, len(filter.Tags))
+	for k, vs := range filter.Tags {
+		// key-only filter
+		if len(vs) == 0 {
+			ors = append(ors,
+				squirrel.Expr("EXISTS (SELECT 1 FROM json_each(repo_tags) WHERE json_each.key = ?)", k),
+			)
+			continue
+		}
 
-	return stmt.Where(condition, args...)
+		// key-value filters
+		for _, v := range vs {
+			if k == "" {
+				// special case: empty key
+				ors = append(ors,
+					squirrel.Expr(
+						"EXISTS (SELECT 1 FROM json_each(repo_tags) WHERE json_each.key = '' AND json_each.value = ?)",
+						v,
+					),
+				)
+			} else {
+				ors = append(ors,
+					squirrel.Expr("json_extract(repo_tags, '$.' || ?) = ?", k, v),
+				)
+			}
+		}
+	}
+
+	if len(ors) > 0 {
+		stmt = stmt.Where(ors)
+	}
+
+	return stmt
 }
 
 func applySortFilter(stmt squirrel.SelectBuilder, filter *types.RepoFilter) squirrel.SelectBuilder {
