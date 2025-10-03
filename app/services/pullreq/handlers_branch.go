@@ -30,6 +30,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/gotidy/ptr"
 	"github.com/rs/zerolog/log"
 )
 
@@ -89,6 +90,8 @@ func (s *Service) updatePullReqOnBranchUpdate(ctx context.Context,
 			return fmt.Errorf("failed to get target repo git info: %w", err)
 		}
 
+		readParams := git.CreateReadParams(targetRepo)
+
 		writeParams, err := createRPCSystemReferencesWriteParams(ctx, s.urlProvider, targetRepo.ID, targetRepo.GitUID)
 		if err != nil {
 			return fmt.Errorf("failed to generate target repo write params: %w", err)
@@ -143,10 +146,21 @@ func (s *Service) updatePullReqOnBranchUpdate(ctx context.Context,
 
 		// Check if the merge base has changed
 
+		targetRef, err := s.git.GetRef(ctx, git.GetRefParams{
+			ReadParams: readParams,
+			Name:       pr.TargetBranch,
+			Type:       gitenum.RefTypeBranch,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to resolve target branch reference: %w", err)
+		}
+
+		targetSHA := targetRef.SHA
+
 		mergeBaseInfo, err := s.git.MergeBase(ctx, git.MergeBaseParams{
 			ReadParams: git.ReadParams{RepoUID: targetRepo.GitUID},
 			Ref1:       event.Payload.NewSHA,
-			Ref2:       pr.TargetBranch,
+			Ref2:       targetSHA.String(),
 		})
 		if err != nil {
 			return fmt.Errorf("failed to get merge base after branch update to=%s for PR=%d: %w",
@@ -171,6 +185,7 @@ func (s *Service) updatePullReqOnBranchUpdate(ctx context.Context,
 			}
 
 			pr.SourceSHA = event.Payload.NewSHA
+			pr.MergeTargetSHA = ptr.String(targetSHA.String())
 			pr.MergeBaseSHA = newMergeBase.String()
 
 			// reset merge-check fields for new run

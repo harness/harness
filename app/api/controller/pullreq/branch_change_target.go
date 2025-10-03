@@ -28,6 +28,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/gotidy/ptr"
 	"github.com/rs/zerolog/log"
 )
 
@@ -51,6 +52,10 @@ func (c *Controller) ChangeTargetBranch(ctx context.Context,
 		return nil, fmt.Errorf("failed to get pull request by number: %w", err)
 	}
 
+	if pr.State == enum.PullReqSortMerged {
+		return nil, errors.InvalidArgument("Pull request is already merged.")
+	}
+
 	if _, err = c.verifyBranchExistence(ctx, repo, in.BranchName); err != nil {
 		return nil,
 			fmt.Errorf("failed to verify branch existence: %w", err)
@@ -59,46 +64,62 @@ func (c *Controller) ChangeTargetBranch(ctx context.Context,
 	if pr.TargetBranch == in.BranchName {
 		return pr, nil
 	}
-	if pr.SourceBranch == in.BranchName {
+	if pr.TargetRepoID == pr.SourceRepoID && pr.SourceBranch == in.BranchName {
 		return nil,
 			errors.InvalidArgument("source branch %q is same as new target branch", pr.SourceBranch)
 	}
 
-	ref1, err := git.GetRefPath(pr.SourceBranch, gitenum.RefTypeBranch)
+	readParams := git.CreateReadParams(repo)
+
+	targetRef, err := c.git.GetRef(ctx, git.GetRefParams{
+		ReadParams: readParams,
+		Name:       in.BranchName,
+		Type:       gitenum.RefTypeBranch,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to get ref path: %w", err)
+		return nil, fmt.Errorf("failed to resolve target branch reference: %w", err)
 	}
-	ref2, err := git.GetRefPath(in.BranchName, gitenum.RefTypeBranch)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get ref path: %w", err)
-	}
+
+	targetSHA := targetRef.SHA
+
 	mergeBase, err := c.git.MergeBase(ctx, git.MergeBaseParams{
-		ReadParams: git.ReadParams{RepoUID: repo.GitUID},
-		Ref1:       ref1,
-		Ref2:       ref2,
+		ReadParams: readParams,
+		Ref1:       pr.SourceSHA,
+		Ref2:       targetSHA.String(),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to find merge base: %w", err)
 	}
 
 	if mergeBase.MergeBaseSHA.String() == pr.SourceSHA {
-		return nil,
-			usererror.BadRequest("The source branch doesn't contain any new commits")
+		return nil, usererror.BadRequest("The source branch doesn't contain any new commits")
+	}
+
+	diffStats, err := c.git.DiffStats(ctx, &git.DiffParams{
+		ReadParams: readParams,
+		BaseRef:    pr.MergeBaseSHA,
+		HeadRef:    pr.SourceSHA,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed get diff stats: %w", err)
 	}
 
 	oldTargetBranch := pr.TargetBranch
 	oldMergeBaseSHA := pr.MergeBaseSHA
 
 	pr, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
-		// clear merge and stats related fields
 		pr.MergeSHA = nil
-		pr.MergeTargetSHA = nil
-		pr.Stats.DiffStats = types.DiffStats{}
+		pr.MarkAsMergeUnchecked()
 
 		pr.MergeBaseSHA = mergeBase.MergeBaseSHA.String()
+		pr.MergeTargetSHA = ptr.String(targetSHA.String())
 		pr.TargetBranch = in.BranchName
-
-		pr.MarkAsMergeUnchecked()
+		pr.Stats.DiffStats = types.NewDiffStats(
+			diffStats.Commits,
+			diffStats.FilesChanged,
+			diffStats.Additions,
+			diffStats.Deletions,
+		)
 
 		pr.ActivitySeq++
 

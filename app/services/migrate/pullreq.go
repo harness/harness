@@ -348,7 +348,7 @@ func (r *repoImportState) convertPullReq(
 		pr.MergeMethod = &mergeMethod
 
 		pr.SourceSHA = extPullReq.Head.SHA
-		pr.MergeTargetSHA = &extPullReq.Base.SHA
+		pr.MergeTargetSHA = &extPullReq.Base.SHA // TODO: Check why target == base. Can it be nil?
 		pr.MergeBaseSHA = extPullReq.Base.SHA
 		pr.MergeSHA = nil // Don't have this.
 		pr.MarkAsMerged()
@@ -357,11 +357,10 @@ func (r *repoImportState) convertPullReq(
 		// For closed PR's it's not important to verify existence of branches and commits.
 		// If these don't exist the PR will be impossible to open.
 		pr.SourceSHA = extPullReq.Head.SHA
-		pr.MergeTargetSHA = &extPullReq.Base.SHA
+		pr.MergeTargetSHA = nil
 		pr.MergeBaseSHA = extPullReq.Base.SHA
 		pr.MergeSHA = nil
 		pr.MergeConflicts = nil
-		pr.MergeTargetSHA = nil
 		pr.MarkAsMergeUnchecked()
 
 		pr.Closed = &pr.Updated

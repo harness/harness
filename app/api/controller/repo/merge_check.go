@@ -51,6 +51,24 @@ func (c *Controller) MergeCheck(
 		return MergeCheck{}, fmt.Errorf("failed to fetch diff upstream ref: %w", err)
 	}
 
+	readParams := git.CreateReadParams(repo)
+
+	baseResult, err := c.git.ResolveRevision(ctx, git.ResolveRevisionParams{
+		ReadParams: readParams,
+		Revision:   dotRange.BaseRef,
+	})
+	if err != nil {
+		return MergeCheck{}, fmt.Errorf("failed to resolve base revision %s: %w", dotRange.BaseRef, err)
+	}
+
+	headResult, err := c.git.ResolveRevision(ctx, git.ResolveRevisionParams{
+		ReadParams: readParams,
+		Revision:   dotRange.HeadRef,
+	})
+	if err != nil {
+		return MergeCheck{}, fmt.Errorf("failed to resolve head revision %s: %w", dotRange.HeadRef, err)
+	}
+
 	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
 		return MergeCheck{}, fmt.Errorf("failed to create rpc write params: %w", err)
@@ -58,8 +76,8 @@ func (c *Controller) MergeCheck(
 
 	mergeOutput, err := c.git.Merge(ctx, &git.MergeParams{
 		WriteParams: writeParams,
-		BaseBranch:  dotRange.BaseRef,
-		HeadBranch:  dotRange.HeadRef,
+		BaseSHA:     baseResult.SHA,
+		HeadSHA:     headResult.SHA,
 	})
 	if err != nil {
 		// git.Merge works with commits and error is not user-friendly

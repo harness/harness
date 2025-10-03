@@ -31,6 +31,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/gotidy/ptr"
 	"github.com/rs/zerolog/log"
 )
 
@@ -115,6 +116,7 @@ func (c *Controller) State(ctx context.Context,
 
 	var sourceSHA sha.SHA
 	var mergeBaseSHA sha.SHA
+	var targetSHA sha.SHA
 	var stateChange change
 
 	//nolint:nestif // refactor if needed
@@ -143,10 +145,23 @@ func (c *Controller) State(ctx context.Context,
 			}
 		}
 
+		targetReadParams := git.CreateReadParams(targetRepo)
+
+		targetRef, err := c.git.GetRef(ctx, git.GetRefParams{
+			ReadParams: targetReadParams,
+			Name:       pr.TargetBranch,
+			Type:       gitenum.RefTypeBranch,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to resolve target branch reference: %w", err)
+		}
+
+		targetSHA = targetRef.SHA
+
 		mergeBaseResult, err := c.git.MergeBase(ctx, git.MergeBaseParams{
-			ReadParams: git.ReadParams{RepoUID: sourceRepo.GitUID},
+			ReadParams: targetReadParams,
 			Ref1:       sourceSHA.String(),
-			Ref2:       pr.TargetBranch,
+			Ref2:       targetSHA.String(),
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to find merge base: %w", err)
@@ -180,7 +195,6 @@ func (c *Controller) State(ctx context.Context,
 
 			// clear all merge (check) related fields
 			pr.MergeSHA = nil
-			pr.MergeTargetSHA = nil
 			pr.Closed = &nowMilli
 			pr.MarkAsMergeUnchecked()
 
@@ -195,6 +209,7 @@ func (c *Controller) State(ctx context.Context,
 
 		case changeReopen:
 			pr.SourceSHA = sourceSHA.String()
+			pr.MergeTargetSHA = ptr.String(targetSHA.String())
 			pr.MergeBaseSHA = mergeBaseSHA.String()
 			pr.Closed = nil
 

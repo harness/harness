@@ -38,6 +38,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/gotidy/ptr"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/exp/maps"
 )
@@ -140,10 +141,23 @@ func (c *Controller) Create(
 		}
 	}
 
+	targetReadParams := git.CreateReadParams(targetRepo)
+
+	targetRef, err := c.git.GetRef(ctx, git.GetRefParams{
+		ReadParams: targetReadParams,
+		Name:       in.TargetBranch,
+		Type:       gitenum.RefTypeBranch,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve target branch reference: %w", err)
+	}
+
+	targetSHA := targetRef.SHA
+
 	mergeBaseResult, err := c.git.MergeBase(ctx, git.MergeBaseParams{
-		ReadParams: git.ReadParams{RepoUID: sourceRepo.GitUID},
+		ReadParams: targetReadParams,
 		Ref1:       sourceSHA.String(),
-		Ref2:       in.TargetBranch,
+		Ref2:       targetSHA.String(),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to find merge base: %w", err)
@@ -156,7 +170,7 @@ func (c *Controller) Create(
 	}
 
 	prStats, err := c.git.DiffStats(ctx, &git.DiffParams{
-		ReadParams: git.ReadParams{RepoUID: targetRepo.GitUID},
+		ReadParams: targetReadParams,
 		BaseRef:    mergeBaseSHA.String(),
 		HeadRef:    sourceSHA.String(),
 	})
@@ -165,9 +179,6 @@ func (c *Controller) Create(
 	}
 
 	var pr *types.PullReq
-
-	targetRepoID := targetRepo.ID
-
 	var activitySeq int64
 
 	// Payload based reviewers
@@ -274,7 +285,7 @@ func (c *Controller) Create(
 	err = controller.TxOptLock(ctx, c.tx, func(ctx context.Context) error {
 		// Always re-fetch at the start of the transaction because the repo we have is from a cache.
 
-		targetRepoFull, err := c.repoStore.Find(ctx, targetRepoID)
+		targetRepoFull, err := c.repoStore.Find(ctx, targetRepo.ID)
 		if err != nil {
 			return fmt.Errorf("failed to find repository: %w", err)
 		}
@@ -289,11 +300,41 @@ func (c *Controller) Create(
 
 		// Create pull request in the DB
 
-		pr = newPullReq(session, targetRepoFull.PullReqSeq, sourceRepo.ID, targetRepo.ID, in, sourceSHA, mergeBaseSHA)
-		pr.Stats = types.PullReqStats{
-			DiffStats:       types.NewDiffStats(prStats.Commits, prStats.FilesChanged, prStats.Additions, prStats.Deletions),
-			Conversations:   0,
-			UnresolvedCount: 0,
+		number := targetRepoFull.PullReqSeq
+		now := time.Now().UnixMilli()
+
+		pr = &types.PullReq{
+			ID:                0, // the ID will be populated in the data layer
+			Version:           0,
+			Number:            number,
+			CreatedBy:         session.Principal.ID,
+			Created:           now,
+			Updated:           now,
+			Edited:            now,
+			State:             enum.PullReqStateOpen,
+			IsDraft:           in.IsDraft,
+			Title:             in.Title,
+			Description:       in.Description,
+			SourceRepoID:      sourceRepo.ID,
+			SourceBranch:      in.SourceBranch,
+			SourceSHA:         sourceSHA.String(),
+			TargetRepoID:      targetRepo.ID,
+			TargetBranch:      in.TargetBranch,
+			ActivitySeq:       0,
+			MergedBy:          nil,
+			Merged:            nil,
+			MergeMethod:       nil,
+			MergeTargetSHA:    ptr.String(targetSHA.String()),
+			MergeBaseSHA:      mergeBaseSHA.String(),
+			MergeCheckStatus:  enum.MergeCheckStatusUnchecked,
+			RebaseCheckStatus: enum.MergeCheckStatusUnchecked,
+			Author:            *session.Principal.ToPrincipalInfo(),
+			Merger:            nil,
+			Stats: types.PullReqStats{
+				DiffStats:       types.NewDiffStats(prStats.Commits, prStats.FilesChanged, prStats.Additions, prStats.Deletions),
+				Conversations:   0,
+				UnresolvedCount: 0,
+			},
 		}
 
 		targetRepo = targetRepoFull.Core()
@@ -825,44 +866,5 @@ func (c *Controller) storeLabelAssignActivity(
 		ctx, pr, principalID, payload, nil,
 	); err != nil {
 		log.Ctx(ctx).Err(err).Msg("failed to write label assign pull req activity")
-	}
-}
-
-// newPullReq creates new pull request object.
-func newPullReq(
-	session *auth.Session,
-	number int64,
-	sourceRepoID int64,
-	targetRepoID int64,
-	in *CreateInput,
-	sourceSHA, mergeBaseSHA sha.SHA,
-) *types.PullReq {
-	now := time.Now().UnixMilli()
-	return &types.PullReq{
-		ID:                0, // the ID will be populated in the data layer
-		Version:           0,
-		Number:            number,
-		CreatedBy:         session.Principal.ID,
-		Created:           now,
-		Updated:           now,
-		Edited:            now,
-		State:             enum.PullReqStateOpen,
-		IsDraft:           in.IsDraft,
-		Title:             in.Title,
-		Description:       in.Description,
-		SourceRepoID:      sourceRepoID,
-		SourceBranch:      in.SourceBranch,
-		SourceSHA:         sourceSHA.String(),
-		TargetRepoID:      targetRepoID,
-		TargetBranch:      in.TargetBranch,
-		ActivitySeq:       0,
-		MergedBy:          nil,
-		Merged:            nil,
-		MergeMethod:       nil,
-		MergeBaseSHA:      mergeBaseSHA.String(),
-		MergeCheckStatus:  enum.MergeCheckStatusUnchecked,
-		RebaseCheckStatus: enum.MergeCheckStatusUnchecked,
-		Author:            *session.Principal.ToPrincipalInfo(),
-		Merger:            nil,
 	}
 }
