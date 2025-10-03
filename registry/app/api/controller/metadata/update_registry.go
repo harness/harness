@@ -98,6 +98,9 @@ func (c *APIController) ModifyRegistry(
 		artifact.RegistryRequest(*r.Body),
 		regInfo.ParentID, regInfo.RootIdentifierID, upstreamproxyEntity,
 	)
+	if err != nil {
+		return throwModifyRegistry500Error(err), err
+	}
 	registry.ID = repoEntity.ID
 	upstreamproxy.ID = upstreamproxyEntity.ID
 	upstreamproxy.RegistryID = repoEntity.ID
@@ -452,7 +455,7 @@ func (c *APIController) UpdateUpstreamProxyEntity(
 		CreatedAt:  u.CreatedAt,
 	}
 	if config.Source != nil && len(string(*config.Source)) > 0 {
-		ok := c.PackageWrapper.ValidateUpstreamSource(string(*config.Source), string(u.PackageType))
+		ok := c.PackageWrapper.ValidateUpstreamSource(string(u.PackageType), string(*config.Source))
 		if !ok {
 			return nil, nil, usererror.BadRequest(fmt.Sprintf("invalid upstream source: %s", *config.Source))
 		}
