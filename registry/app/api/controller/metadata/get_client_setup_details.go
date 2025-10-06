@@ -820,7 +820,7 @@ func (c *APIController) generateMavenClientSetupDetail(
 	username := session.Principal.Email
 	var clientSetupDetails artifact.ClientSetupDetails
 	if auth.IsAnonymousSession(session) {
-		clientSetupDetails = c.getAnonymousMavenClientSetupDetails(generateTokenStepType)
+		clientSetupDetails = c.getAnonymousMavenClientSetupDetails(staticStepType)
 	} else {
 		clientSetupDetails = c.getMavenClientSetupDetails(generateTokenStepType, staticStepType, registryType)
 	}
@@ -900,7 +900,7 @@ func (c *APIController) getAnonymousMavenClientSetupDetails(
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
 						//nolint:lll
-						Value: utils.StringPtr("repositories{\n    maven{\n      url \"<REGISTRY_URL>\"\n\n      credentials {\n         username \"<USERNAME>\"\n         password \"identity-token\"\n      }\n   }\n}"),
+						Value: utils.StringPtr("repositories{\n    maven{\n      url \"<REGISTRY_URL>\"\n\n   }\n}"),
 					},
 				},
 			},
@@ -938,7 +938,7 @@ func (c *APIController) getAnonymousMavenClientSetupDetails(
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
 						//nolint:lll
-						Value: utils.StringPtr("resolver += \"Harness Registry\" at \"<REGISTRY_URL>\"\ncredentials += Credentials(Path.userHome / \".sbt\" / \".Credentials\")"),
+						Value: utils.StringPtr("resolver += \"Harness Registry\" at \"<REGISTRY_URL>\"\n"),
 					},
 				},
 			},
