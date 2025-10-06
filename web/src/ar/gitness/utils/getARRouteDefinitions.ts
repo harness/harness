@@ -30,7 +30,9 @@ export default function getARRouteDefinitions(routeParams: Record<string, string
           registryId: defaultTo(params?.registryId, ''),
           artifactId: defaultTo(params?.artifactId, ''),
           versionId: defaultTo(params?.versionId, ''),
-          versionDetailsTab: defaultTo(params?.versionDetailsTab, '')
+          versionDetailsTab: defaultTo(params?.versionDetailsTab, ''),
+          artifactType: defaultTo(params?.artifactType, ''),
+          tag: defaultTo(params?.tag, '')
         })
         return `/redirect?${queryParams.toString()}`
       }

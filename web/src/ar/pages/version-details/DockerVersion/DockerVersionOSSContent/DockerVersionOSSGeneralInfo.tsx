@@ -22,9 +22,9 @@ import { useGetDockerArtifactDetailsQuery } from '@harnessio/react-har-service-c
 import { useStrings } from '@ar/frameworks/strings'
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
-import { useDecodedParams, useGetSpaceRef, useParentHooks } from '@ar/hooks'
+import { useDecodedParams, useGetSpaceRef } from '@ar/hooks'
 
-import type { DockerVersionDetailsQueryParams } from '../types'
+import useGetOCIVersionParams from '../../hooks/useGetOCIVersionParams'
 import { LabelValueTypeEnum } from '../../components/LabelValueContent/type'
 import { LabelValueContent } from '../../components/LabelValueContent/LabelValueContent'
 
@@ -37,9 +37,8 @@ interface DockerVersionOSSGeneralInfoProps {
 export default function DockerVersionOSSGeneralInfo({ className }: DockerVersionOSSGeneralInfoProps): JSX.Element {
   const { getString } = useStrings()
   const pathParams = useDecodedParams<VersionDetailsPathParams>()
-  const { useQueryParams } = useParentHooks()
-  const { digest } = useQueryParams<DockerVersionDetailsQueryParams>()
   const spaceRef = useGetSpaceRef()
+  const { versionIdentifier, versionType, digest } = useGetOCIVersionParams()
 
   const {
     data,
@@ -50,9 +49,10 @@ export default function DockerVersionOSSGeneralInfo({ className }: DockerVersion
     {
       registry_ref: spaceRef,
       artifact: encodeRef(pathParams.artifactIdentifier),
-      version: pathParams.versionIdentifier,
+      version: versionIdentifier,
       queryParams: {
-        digest
+        digest,
+        version_type: versionType
       }
     },
     {

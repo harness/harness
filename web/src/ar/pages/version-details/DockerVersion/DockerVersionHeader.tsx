@@ -43,17 +43,18 @@ export default function DockerVersionHeader(props: DockerVersionHeaderProps): JS
   const pathParams = useDecodedParams<VersionDetailsPathParams>()
   const { useUpdateQueryParams, useQueryParams } = useParentHooks()
   const { updateQueryParams } = useUpdateQueryParams()
-  const { digest } = useQueryParams<DockerVersionDetailsQueryParams>()
+  const { digest, tag } = useQueryParams<DockerVersionDetailsQueryParams>()
   const history = useHistory()
   const routes = useRoutes()
 
-  const handleChangeVersion = (newVersion: string) => {
+  const handleChangeVersion = (newVersion: string, newTag?: string) => {
     history.push(
       routes.toARVersionDetails({
         repositoryIdentifier: pathParams.repositoryIdentifier,
         artifactIdentifier: pathParams.artifactIdentifier,
         versionIdentifier: newVersion,
-        artifactType: pathParams.artifactType
+        artifactType: pathParams.artifactType,
+        tag: newTag
       })
     )
   }
@@ -74,6 +75,7 @@ export default function DockerVersionHeader(props: DockerVersionHeaderProps): JS
         onChangeVersion={handleChangeVersion}
         onChangeDigest={handleChangeDigest}
         isLatestVersion={false}
+        tag={tag}
       />
       {isQuarantined && <QuarantineBadge reason={quarantineReason} />}
       <Expander />

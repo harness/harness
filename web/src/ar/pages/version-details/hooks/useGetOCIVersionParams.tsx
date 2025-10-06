@@ -14,25 +14,22 @@
  * limitations under the License.
  */
 
-import { OCIVersionType } from '@ar/common/types'
+import { OCIVersionType, Parent } from '@ar/common/types'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
-import { useDecodedParams, useFeatureFlags, useParentHooks } from '@ar/hooks'
+import { useAppStore, useDecodedParams, useFeatureFlags, useParentHooks } from '@ar/hooks'
 import type { DockerVersionDetailsQueryParams } from '../DockerVersion/types'
 
 export default function useGetOCIVersionParams() {
   const { useQueryParams } = useParentHooks()
+  const { parent } = useAppStore()
   const { tag, digest } = useQueryParams<DockerVersionDetailsQueryParams>()
   const pathParams = useDecodedParams<VersionDetailsPathParams>()
   const { HAR_ENABLE_UNTAGGED_IMAGES_SUPPORT } = useFeatureFlags()
 
-  const versionIdentifier = HAR_ENABLE_UNTAGGED_IMAGES_SUPPORT
-    ? tag ?? pathParams.versionIdentifier
-    : pathParams.versionIdentifier
-  const versionType = HAR_ENABLE_UNTAGGED_IMAGES_SUPPORT
-    ? tag
-      ? OCIVersionType.TAG
-      : OCIVersionType.DIGEST
-    : OCIVersionType.TAG
+  const isUntaggedEnabled = parent === Parent.OSS || HAR_ENABLE_UNTAGGED_IMAGES_SUPPORT
+
+  const versionIdentifier = isUntaggedEnabled ? tag ?? pathParams.versionIdentifier : pathParams.versionIdentifier
+  const versionType = isUntaggedEnabled ? (tag ? OCIVersionType.TAG : OCIVersionType.DIGEST) : OCIVersionType.TAG
 
   return { versionIdentifier, versionType, digest }
 }
