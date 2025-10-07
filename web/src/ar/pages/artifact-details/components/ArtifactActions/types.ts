@@ -17,6 +17,11 @@
 import type { ArtifactSummary, RegistryArtifactMetadata } from '@harnessio/react-har-service-client'
 import type { PageType } from '@ar/common/types'
 
+export enum ArtifactActionsEnum {
+  Delete = 'delete',
+  SetupClient = 'setupClient'
+}
+
 export interface ArtifactActionProps {
   data: ArtifactSummary | RegistryArtifactMetadata
   artifactKey: string
@@ -24,4 +29,5 @@ export interface ArtifactActionProps {
   pageType: PageType
   readonly?: boolean
   onClose?: () => void
+  allowedActions?: ArtifactActionsEnum[]
 }

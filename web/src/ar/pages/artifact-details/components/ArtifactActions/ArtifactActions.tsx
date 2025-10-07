@@ -21,7 +21,7 @@ import { PageType } from '@ar/common/types'
 import ActionButton from '@ar/components/ActionButton/ActionButton'
 
 import SetupClientMenuItem from './SetupClientMenuItem'
-import type { ArtifactActionProps } from './types'
+import { ArtifactActionProps, ArtifactActionsEnum } from './types'
 import DeleteArtifactMenuItem from './DeleteArtifactMenuItem'
 
 export default function ArtifactActions({
@@ -30,13 +30,21 @@ export default function ArtifactActions({
   artifactKey,
   pageType,
   readonly,
-  onClose
+  onClose,
+  allowedActions
 }: ArtifactActionProps): JSX.Element {
   const [open, setOpen] = useState(false)
   const { isCurrentSessionPublic } = useAppStore()
+
+  const isSupportedAction = (action: ArtifactActionsEnum) => {
+    if (!allowedActions) {
+      return true
+    }
+    return allowedActions.includes(action)
+  }
   return (
     <ActionButton isOpen={open} setOpen={setOpen}>
-      {!isCurrentSessionPublic && (
+      {!isCurrentSessionPublic && isSupportedAction(ArtifactActionsEnum.Delete) && (
         <DeleteArtifactMenuItem
           artifactKey={artifactKey}
           repoKey={repoKey}
@@ -49,7 +57,7 @@ export default function ArtifactActions({
           }}
         />
       )}
-      {pageType === PageType.Table && (
+      {pageType === PageType.Table && isSupportedAction(ArtifactActionsEnum.SetupClient) && (
         <SetupClientMenuItem
           data={data}
           pageType={pageType}

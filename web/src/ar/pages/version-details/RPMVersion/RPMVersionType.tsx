@@ -38,6 +38,7 @@ import {
   VersionStep,
   VersionTreeNodeViewProps
 } from '@ar/frameworks/Version/Version'
+import { ArtifactActionsEnum } from '@ar/pages/artifact-details/components/ArtifactActions/types'
 
 import VersionFilesProvider from '../context/VersionFilesProvider'
 import { VersionAction } from '../components/VersionActions/types'
@@ -115,7 +116,8 @@ export class RPMVersionType extends VersionStep<ArtifactVersionSummary> {
   }
 
   renderArtifactActions(props: ArtifactActionProps): JSX.Element {
-    return <ArtifactActions {...props} />
+    if (props.pageType === PageType.Details) return <></>
+    return <ArtifactActions {...props} allowedActions={[ArtifactActionsEnum.SetupClient]} />
   }
 
   renderVersionActions(props: VersionActionProps): JSX.Element {
