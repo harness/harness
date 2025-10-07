@@ -80,7 +80,7 @@ describe('Verify Maven Artifact Version Artifact Details Tab', () => {
 
     const getTableRowColumn = (row: number, col: number) => getTableColumn(row, col) as HTMLElement
 
-    const data = mockMavenArtifactFiles.files[0]
+    const data = mockMavenArtifactFiles.data.files[0]
     const row = 1
     expect(getTableRowColumn(row, 1)).toHaveTextContent(data.name)
     expect(getTableRowColumn(row, 2)).toHaveTextContent(data?.size as string)

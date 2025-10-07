@@ -1397,36 +1397,13 @@ components:
           schema:
             type: object
             properties:
-              pageCount:
-                type: integer
-                format: int64
-                description: The total number of pages
-                example: 100
-              itemCount:
-                type: integer
-                format: int64
-                description: The total number of items
-                example: 1
-              pageSize:
-                type: integer
-                description: The number of items per page
-                example: 1
-              pageIndex:
-                type: integer
-                format: int64
-                description: The current page
-                example: 0
               status:
                 $ref: "#/components/schemas/Status"
-              files:
-                type: array
-                description: A list of Harness Artifact Files
-                items:
-                  $ref: "#/components/schemas/FileDetail"
+              data:
+                $ref: "#/components/schemas/ListFileDetail"
             required:
               - status
               - data
-              - files
     ArtifactFileResponse:
       description: response to head artifact file
       content:
@@ -2178,6 +2155,36 @@ components:
             type: string
       required:
         - labels
+    ListFileDetail:
+      type: object
+      description: A list of Harness Artifact Files
+      properties:
+        pageCount:
+          type: integer
+          format: int64
+          description: The total number of pages
+          example: 100
+        itemCount:
+          type: integer
+          format: int64
+          description: The total number of items
+          example: 1
+        pageSize:
+          type: integer
+          description: The number of items per page
+          example: 1
+        pageIndex:
+          type: integer
+          format: int64
+          description: The current page
+          example: 0
+        files:
+          type: array
+          description: A list of Harness Artifact Files
+          items:
+            $ref: "#/components/schemas/FileDetail"
+      required:
+        - files
     RegistryMetadata:
       type: object
       description: Harness Artifact Registry Metadata

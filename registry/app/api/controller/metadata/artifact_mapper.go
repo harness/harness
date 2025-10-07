@@ -248,14 +248,18 @@ func GetAllArtifactFilesResponse(
 			setupDetailsAuthHeaderPrefix, artifactType)
 	}
 	pageCount := GetPageCount(count, pageSize)
-	return &artifactapi.FileDetailResponseJSONResponse{
+	listFileDetail := &artifactapi.ListFileDetail{
 		ItemCount: &count,
 		PageCount: &pageCount,
 		PageIndex: &pageNumber,
 		PageSize:  &pageSize,
 		Files:     fileMetadataList,
-		Status:    "SUCCESS",
 	}
+	response := &artifactapi.FileDetailResponseJSONResponse{
+		Data:   *listFileDetail,
+		Status: artifactapi.StatusSUCCESS,
+	}
+	return response
 }
 
 func GetArtifactFileResponseJSONResponse(

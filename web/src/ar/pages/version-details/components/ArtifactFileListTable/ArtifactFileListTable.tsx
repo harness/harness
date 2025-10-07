@@ -18,7 +18,7 @@ import React from 'react'
 import classNames from 'classnames'
 import type { Column } from 'react-table'
 import { type PaginationProps, TableV2 } from '@harnessio/uicore'
-import type { FileDetail, FileDetailResponseResponse } from '@harnessio/react-har-service-client'
+import type { FileDetail, ListFileDetail } from '@harnessio/react-har-service-client'
 
 import { useParentHooks } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
@@ -37,7 +37,7 @@ export interface FileListSortBy {
 }
 
 interface ArtifactFileListTableProps {
-  data: FileDetailResponseResponse
+  data: ListFileDetail
   gotoPage: (pageNumber: number) => void
   onPageSizeChange?: PaginationProps['onPageSizeChange']
   setSortBy: (sortBy: string[]) => void

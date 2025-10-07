@@ -16,7 +16,7 @@
 
 import React, { createContext, useState, type PropsWithChildren } from 'react'
 import { PageError, PageSpinner } from '@harnessio/uicore'
-import { type FileDetailResponseResponse, useGetArtifactFilesQuery } from '@harnessio/react-har-service-client'
+import { type ListFileDetail, useGetArtifactFilesQuery } from '@harnessio/react-har-service-client'
 
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
@@ -31,7 +31,7 @@ import {
 } from '../components/ArtifactFileListTable/utils'
 
 interface VersionFilesProviderProps {
-  data: FileDetailResponseResponse
+  data: ListFileDetail
   updateQueryParams: UseUpdateQueryParamsReturn<Partial<ArtifactFileListPageQueryParams>>['updateQueryParams']
   queryParams: Partial<ArtifactFileListPageQueryParams>
   refetch: () => void
@@ -86,7 +86,7 @@ const VersionFilesProvider = (props: PropsWithChildren<IVersionFilesProviderProp
       artifact_type: transformedArtifactType === LocalArtifactType.ARTIFACTS ? undefined : transformedArtifactType
     }
   })
-  const responseData = data?.content
+  const responseData = data?.content?.data
 
   return (
     <>

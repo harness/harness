@@ -80,7 +80,7 @@ describe('Verify Generic Artifact Version Artifact Details Tab', () => {
 
     const getTableRowColumn = (row: number, col: number) => getTableColumn(row, col) as HTMLElement
 
-    const data = mockGenericArtifactFiles.files[0]
+    const data = mockGenericArtifactFiles.data.files[0]
     const row = 1
     expect(getTableRowColumn(row, 1)).toHaveTextContent(data.name)
     expect(getTableRowColumn(row, 2)).toHaveTextContent(data?.size as string)
@@ -176,7 +176,7 @@ describe('Verify Generic Artifact Version Artifact Details Tab', () => {
     const mockRefetchFn = jest.fn().mockImplementation(() => undefined)
     ;(useGetArtifactFilesQuery as jest.Mock).mockImplementationOnce(() => {
       return {
-        data: { content: { files: mockGenericArtifactFiles.files } },
+        data: { content: { files: mockGenericArtifactFiles.data.files } },
         loading: false,
         error: null,
         refetch: mockRefetchFn

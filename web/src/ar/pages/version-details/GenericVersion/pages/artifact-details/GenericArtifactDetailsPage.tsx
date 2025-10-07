@@ -59,7 +59,7 @@ export default function GenericArtifactDetailsPage() {
       artifact_type: pathParams.artifactType === LocalArtifactType.ARTIFACTS ? undefined : pathParams.artifactType
     }
   })
-  const response = data?.content
+  const response = data?.content?.data
 
   return (
     <Page.Body
