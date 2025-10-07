@@ -125,6 +125,9 @@ func (c *APIController) GetArtifactFiles(
 	case artifact.PackageTypeHUGGINGFACE:
 		registryURL = c.URLProvider.PackageURL(ctx, reqInfo.RootIdentifier+"/"+reqInfo.RegistryIdentifier,
 			"huggingface")
+	case artifact.PackageTypeMAVEN:
+		registryURL = c.URLProvider.PackageURL(ctx, reqInfo.RootIdentifier+"/"+reqInfo.RegistryIdentifier,
+			"maven")
 	default:
 		registryURL = c.URLProvider.RegistryURL(ctx,
 			reqInfo.RootIdentifier, strings.ToLower(string(registry.PackageType)), reqInfo.RegistryIdentifier)
