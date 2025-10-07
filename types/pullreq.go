@@ -70,6 +70,8 @@ type PullReq struct {
 	Labels       []*LabelPullReqAssignmentInfo `json:"labels,omitempty"`
 	CheckSummary *CheckCountSummary            `json:"check_summary,omitempty"`
 	Rules        []RuleInfo                    `json:"rules,omitempty"`
+
+	SourceRepo *RepositoryCore `json:"source_repo,omitempty"`
 }
 
 func (pr *PullReq) UpdateMergeOutcome(method enum.MergeMethod, conflictFiles []string) {

@@ -383,6 +383,17 @@ func (c *ListService) BackfillMetadata(
 	list []types.PullReqRepo,
 	options types.PullReqMetadataOptions,
 ) error {
+	for _, entry := range list {
+		if entry.PullRequest.SourceRepoID != entry.PullRequest.TargetRepoID {
+			sourceRepo, err := c.repoFinder.FindByID(ctx, entry.PullRequest.SourceRepoID)
+			if err != nil {
+				return fmt.Errorf("failed to fetch source repository: %w", err)
+			}
+
+			entry.PullRequest.SourceRepo = sourceRepo
+		}
+	}
+
 	if options.IncludeChecks {
 		if err := c.backfillChecks(ctx, list); err != nil {
 			return fmt.Errorf("failed to backfill checks")
