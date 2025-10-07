@@ -20,6 +20,7 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"strings"
 
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/registry/app/api/controller/pkg/gopackage"
@@ -28,6 +29,11 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/gopackage/utils"
 	gopackagetype "github.com/harness/gitness/registry/app/pkg/types/gopackage"
 )
+
+var ValidDownloadPaths = []string{
+	"/@latest",
+	"/@v/",
+}
 
 type Handler interface {
 	pkg.ArtifactInfoProvider
@@ -63,6 +69,10 @@ func (h *handler) GetPackageArtifactInfo(r *http.Request) (pkg.PackageArtifactIn
 	image := r.PathValue("name")
 	path := r.PathValue("*")
 	if path != "" {
+		isValidPath := h.validatePathForDownload(path)
+		if !isValidPath {
+			return nil, usererror.NotFoundf("path not found: %s", path)
+		}
 		image, version, filename, err = utils.GetArtifactInfoFromURL(path)
 		if err != nil {
 			return nil, usererror.BadRequest(fmt.Sprintf("image and version not found in path %s: %s", path, err.Error()))
@@ -74,6 +84,15 @@ func (h *handler) GetPackageArtifactInfo(r *http.Request) (pkg.PackageArtifactIn
 		Version:      version,
 		FileName:     filename,
 	}, nil
+}
+
+func (h *handler) validatePathForDownload(path string) bool {
+	for _, validPath := range ValidDownloadPaths {
+		if strings.Contains(path, validPath) {
+			return true
+		}
+	}
+	return false
 }
 
 func (h *handler) handleGoPackageAPIError(writer http.ResponseWriter, request *http.Request, err error) {

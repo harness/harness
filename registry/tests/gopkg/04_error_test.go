@@ -37,7 +37,7 @@ var test04ErrorHandling = func() {
 				log.Printf("Response for invalid path: %d %s\n",
 					resp.StatusCode, string(resp.Body))
 				log.Printf("Response Headers: %v\n", resp.Headers)
-				gomega.Expect(resp.StatusCode).To(gomega.Equal(400)) // bad request for invalid path
+				gomega.Expect(resp.StatusCode).To(gomega.Equal(404)) // bad request for invalid path
 			})
 		})
 
