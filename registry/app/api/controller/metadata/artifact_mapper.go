@@ -49,7 +49,8 @@ func GetArtifactMetadata(
 		if artifact.PackageType == artifactapi.PackageTypeGENERIC {
 			registryURL = urlProvider.RegistryURL(ctx, rootIdentifier, "generic", artifact.RepoName)
 		}
-		artifactMetadata := mapToArtifactMetadata(artifact, registryURL, setupDetailsAuthHeaderPrefix, untaggedImagesEnabled)
+		artifactMetadata := mapToArtifactMetadata(ctx, artifact, registryURL,
+			setupDetailsAuthHeaderPrefix, untaggedImagesEnabled)
 		if len(artifact.Tags) > 0 {
 			artifactMetadata.Metadata = &artifactapi.ArtifactEntityMetadata{
 				"tags": artifact.Tags,
@@ -91,6 +92,7 @@ func GetMavenArtifactDetail(
 }
 
 func mapToArtifactMetadata(
+	ctx context.Context,
 	artifact types.ArtifactMetadata,
 	registryURL string,
 	setupDetailsAuthHeaderPrefix string,
@@ -98,7 +100,7 @@ func mapToArtifactMetadata(
 ) *artifactapi.ArtifactMetadata {
 	lastModified := GetTimeInMs(artifact.ModifiedAt)
 	packageType := artifact.PackageType
-	pullCommand := GetPullCommand(artifact.Name, artifact.Version,
+	pullCommand := GetPullCommand(ctx, artifact.Name, artifact.Version,
 		string(packageType), registryURL, setupDetailsAuthHeaderPrefix, artifact.ArtifactType, !untaggedImagesEnabled)
 	return &artifactapi.ArtifactMetadata{
 		RegistryIdentifier: artifact.RepoName,
@@ -173,7 +175,7 @@ func GetTagMetadata(
 		modifiedAt := GetTimeInMs(tag.ModifiedAt)
 		size := GetImageSize(tag.Size)
 		digestCount := tag.DigestCount
-		command := GetPullCommand(image, tag.Name, string(tag.PackageType), registryURL,
+		command := GetPullCommand(ctx, image, tag.Name, string(tag.PackageType), registryURL,
 			setupDetailsAuthHeaderPrefix, nil, !untaggedImagesEnabled)
 		packageType, err := toPackageType(string(tag.PackageType))
 		downloadCount := tag.DownloadCount
@@ -238,14 +240,14 @@ func GetAllArtifactFilesResponse(
 	files *[]types.FileNodeMetadata, count int64, pageNumber int64, pageSize int,
 	registryURL string, artifactName string, version string,
 	packageType artifactapi.PackageType, setupDetailsAuthHeaderPrefix string,
-	artifactType *artifactapi.ArtifactType,
+	artifactType *artifactapi.ArtifactType, isAnonymous bool,
 ) *artifactapi.FileDetailResponseJSONResponse {
 	var fileMetadataList []artifactapi.FileDetail
 	if files == nil || len(*files) == 0 {
 		fileMetadataList = make([]artifactapi.FileDetail, 0)
 	} else {
 		fileMetadataList = GetArtifactFilesMetadata(files, registryURL, artifactName, version, packageType,
-			setupDetailsAuthHeaderPrefix, artifactType)
+			setupDetailsAuthHeaderPrefix, artifactType, isAnonymous)
 	}
 	pageCount := GetPageCount(count, pageSize)
 	listFileDetail := &artifactapi.ListFileDetail{
@@ -277,7 +279,7 @@ func GetArtifactFileResponseJSONResponse(
 func GetArtifactFilesMetadata(
 	metadata *[]types.FileNodeMetadata, registryURL string, artifactName string,
 	version string, packageType artifactapi.PackageType, setupDetailsAuthHeaderPrefix string,
-	artifactType *artifactapi.ArtifactType,
+	artifactType *artifactapi.ArtifactType, isAnonymous bool,
 ) []artifactapi.FileDetail {
 	var files []artifactapi.FileDetail
 	for _, file := range *metadata {
@@ -288,38 +290,39 @@ func GetArtifactFilesMetadata(
 		switch packageType {
 		case artifactapi.PackageTypeGENERIC:
 			downloadCommand = GetGenericArtifactFileDownloadCommand(registryURL, artifactName,
-				version, filename, setupDetailsAuthHeaderPrefix)
+				version, filename, setupDetailsAuthHeaderPrefix, isAnonymous)
 		case artifactapi.PackageTypePYTHON:
 			downloadCommand = GetGenericFileDownloadCommand(registryURL, artifactName,
-				version, filename, setupDetailsAuthHeaderPrefix)
+				version, filename, setupDetailsAuthHeaderPrefix, isAnonymous)
 		case artifactapi.PackageTypeNPM:
 			downloadCommand = GetNPMArtifactFileDownloadCommand(registryURL, artifactName,
-				version, filename)
+				version, filename, isAnonymous)
 		case artifactapi.PackageTypeMAVEN:
 			artifactName = strings.ReplaceAll(artifactName, ".", "/")
 			artifactName = strings.ReplaceAll(artifactName, ":", "/")
 			filePathPrefix = "/" + artifactName + "/" + version + "/"
 			filename = strings.Replace(file.Path, filePathPrefix, "", 1)
 			downloadCommand = GetMavenArtifactFileDownloadCommand(registryURL, artifactName,
-				version, filename, setupDetailsAuthHeaderPrefix)
+				version, filename, setupDetailsAuthHeaderPrefix, isAnonymous)
 		case artifactapi.PackageTypeRPM:
-			downloadCommand = GetRPMArtifactFileDownloadCommand(registryURL, filename, setupDetailsAuthHeaderPrefix)
+			downloadCommand = GetRPMArtifactFileDownloadCommand(registryURL, filename,
+				setupDetailsAuthHeaderPrefix, isAnonymous)
 			_, filename, _ = paths.DisectLeaf(filename)
 		case artifactapi.PackageTypeNUGET:
 			downloadCommand = GetNugetArtifactFileDownloadCommand(registryURL, artifactName,
-				version, filename, setupDetailsAuthHeaderPrefix)
+				version, filename, setupDetailsAuthHeaderPrefix, isAnonymous)
 		case artifactapi.PackageTypeCARGO:
 			downloadCommand = GetCargoArtifactFileDownloadCommand(registryURL, artifactName,
-				version, setupDetailsAuthHeaderPrefix)
+				version, setupDetailsAuthHeaderPrefix, isAnonymous)
 		case artifactapi.PackageTypeGO:
 			goFilePath := utils.GetGoFilePath(artifactName, version)
 			filename = strings.Replace(file.Path, goFilePath+"/", "", 1)
 			downloadCommand = GetGoArtifactFileDownloadCommand(registryURL, artifactName,
-				filename, setupDetailsAuthHeaderPrefix)
+				filename, setupDetailsAuthHeaderPrefix, isAnonymous)
 		case artifactapi.PackageTypeHUGGINGFACE:
 			filename = strings.Replace(filename, "/"+string(*artifactType), "", 1)
 			downloadCommand = GetHuggingFaceArtifactFileDownloadCommand(registryURL, artifactName,
-				version, filename, setupDetailsAuthHeaderPrefix, artifactType)
+				version, filename, setupDetailsAuthHeaderPrefix, artifactType, isAnonymous)
 		}
 		files = append(files, artifactapi.FileDetail{
 			Checksums:       getCheckSums(file),
@@ -479,7 +482,7 @@ func GetNonOCIArtifactMetadata(
 	for _, tag := range *tags {
 		modifiedAt := GetTimeInMs(tag.ModifiedAt)
 		size := GetImageSize(tag.Size)
-		command := GetPullCommand(image, tag.Name, pkgType, registryURL, setupDetailsAuthHeaderPrefix,
+		command := GetPullCommand(ctx, image, tag.Name, pkgType, registryURL, setupDetailsAuthHeaderPrefix,
 			tag.ArtifactType, true)
 		packageType, err := toPackageType(pkgType)
 		downloadCount := tag.DownloadCount

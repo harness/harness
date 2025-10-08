@@ -15,6 +15,7 @@
 package metadata_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -142,7 +143,7 @@ func TestGetPullCommand(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := metadata.GetPullCommand(tt.image, tt.tag, tt.pkgType, tt.baseURL,
+			result := metadata.GetPullCommand(context.Background(), tt.image, tt.tag, tt.pkgType, tt.baseURL,
 				"Authorization: Bearer", nil, true)
 			assert.Equal(t, tt.expected, result)
 		})

@@ -22,6 +22,7 @@ import (
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
+	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/api/utils"
 	"github.com/harness/gitness/registry/types"
@@ -173,7 +174,7 @@ func (c *APIController) GetArtifactFiles(
 		return artifact.GetArtifactFiles200JSONResponse{
 			FileDetailResponseJSONResponse: *GetAllArtifactFilesResponse(fileMetadataList, count, reqInfo.pageNumber,
 				reqInfo.limit, registryURL, img.Name, art.Version, registry.PackageType,
-				c.SetupDetailsAuthHeaderPrefix, artifactType),
+				c.SetupDetailsAuthHeaderPrefix, artifactType, auth.IsAnonymousSession(session)),
 		}, nil
 	default:
 		return artifact.GetArtifactFiles400JSONResponse{

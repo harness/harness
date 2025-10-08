@@ -15,6 +15,7 @@
 package metadata
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math"
@@ -24,7 +25,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/api/usererror"
+	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/registry/app/api/interfaces"
 	a "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/pkg/commons"
@@ -51,6 +54,7 @@ const (
 		"and ._- and must be start with numbers or characters"
 	RegexIdentifierPattern    = "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"
 	internalWebhookIdentifier = "harnesstriggerwebhok"
+	commonAuthHeader          = " --header '<AUTH_HEADER_PREFIX> <API_KEY>'"
 )
 
 var RegistrySortMap = map[string]string{
@@ -318,17 +322,20 @@ func GetTagURL(artifact string, version string, registryURL string) string {
 }
 
 func GetPullCommand(
+	ctx context.Context,
 	image string, version string,
 	packageType string, registryURL string, setupDetailsAuthHeaderPrefix string, artifactType *a.ArtifactType,
 	byTag bool,
 ) string {
+	session, _ := request.AuthSessionFrom(ctx)
 	switch packageType {
 	case string(a.PackageTypeDOCKER):
 		return GetDockerPullCommand(image, version, registryURL, byTag)
 	case string(a.PackageTypeHELM):
 		return GetHelmPullCommand(image, version, registryURL, byTag)
 	case string(a.PackageTypeGENERIC):
-		return GetGenericArtifactFileDownloadCommand(registryURL, image, version, "<FILENAME>", setupDetailsAuthHeaderPrefix)
+		return GetGenericArtifactFileDownloadCommand(registryURL, image, version, "<FILENAME>",
+			setupDetailsAuthHeaderPrefix, auth.IsAnonymousSession(session))
 	case string(a.PackageTypePYTHON):
 		return GetPythonDownloadCommand(image, version)
 	case string(a.PackageTypeNPM):
@@ -343,7 +350,7 @@ func GetPullCommand(
 		return GetGoDownloadCommand(image, version)
 	case string(a.PackageTypeHUGGINGFACE):
 		return GetHuggingFaceArtifactFileDownloadCommand(registryURL, image, version, "<FILENAME>",
-			setupDetailsAuthHeaderPrefix, artifactType)
+			setupDetailsAuthHeaderPrefix, artifactType, auth.IsAnonymousSession(session))
 	default:
 		return ""
 	}
@@ -469,10 +476,13 @@ func GetPythonDownloadCommand(artifact, version string) string {
 
 func GetGenericFileDownloadCommand(
 	regURL, artifact, version, filename string,
-	setupDetailsAuthHeaderPrefix string,
+	setupDetailsAuthHeaderPrefix string, isAnonymous bool,
 ) string {
-	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>:<VERSION>:<FILENAME>'" +
-		" --header '<AUTH_HEADER_PREFIX> <API_KEY>'" +
+	var authHeader string
+	if !isAnonymous {
+		authHeader = commonAuthHeader
+	}
+	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>:<VERSION>:<FILENAME>'" + authHeader +
 		" -J -o '<OUTPUT_FILE_NAME>'"
 
 	// Replace the placeholders with the actual values
@@ -493,10 +503,13 @@ func GetGenericFileDownloadCommand(
 
 func GetGenericArtifactFileDownloadCommand(
 	regURL, artifact, version, filePath string,
-	setupDetailsAuthHeaderPrefix string,
+	setupDetailsAuthHeaderPrefix string, isAnonymous bool,
 ) string {
-	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>/<VERSION>/<FILENAME>'" +
-		" --header '<AUTH_HEADER_PREFIX> <API_KEY>'" +
+	var authHeader string
+	if !isAnonymous {
+		authHeader = commonAuthHeader
+	}
+	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>/<VERSION>/<FILENAME>'" + authHeader +
 		" -J -o '<OUTPUT_FILE_NAME>'"
 
 	// Replace the placeholders with the actual values
@@ -517,10 +530,15 @@ func GetGenericArtifactFileDownloadCommand(
 
 func GetHuggingFaceArtifactFileDownloadCommand(
 	regURL, artifact, version, filename string,
-	setupDetailsAuthHeaderPrefix string, artifactType *a.ArtifactType,
+	setupDetailsAuthHeaderPrefix string, artifactType *a.ArtifactType, isAnonymous bool,
 ) string {
-	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT_TYPE>/<ARTIFACT>/resolve/<VERSION>/<FILENAME>' " +
-		"--header '<AUTH_HEADER_PREFIX> <API_KEY>' -J -o '<OUTPUT_FILE_NAME>'"
+	var authHeader string
+	if !isAnonymous {
+		authHeader = commonAuthHeader
+	}
+	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT_TYPE>/<ARTIFACT>/resolve/<VERSION>/<FILENAME>'" +
+		authHeader +
+		" -J -o '<OUTPUT_FILE_NAME>'"
 
 	// Replace the placeholders with the actual values
 	replacements := map[string]string{
@@ -556,10 +574,13 @@ func getDownloadURL(
 }
 
 func GetNPMArtifactFileDownloadCommand(
-	regURL, artifact, version, filename string,
+	regURL, artifact, version, filename string, isAnonymous bool,
 ) string {
-	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>/-/<FILENAME>'" +
-		" --header 'Authorization: Bearer <API_KEY>'" +
+	var authHeader string
+	if !isAnonymous {
+		authHeader = " --header 'Authorization: Bearer <API_KEY>'"
+	}
+	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>/-/<FILENAME>'" + authHeader +
 		" -J -o '<OUTPUT_FILE_NAME>'"
 	// Replace the placeholders with the actual values
 	replacements := map[string]string{
@@ -576,8 +597,14 @@ func GetNPMArtifactFileDownloadCommand(
 	return downloadCommand
 }
 
-func GetRPMArtifactFileDownloadCommand(regURL, filename string, setupDetailsAuthHeaderPrefix string) string {
-	downloadCommand := "curl --location '<HOSTNAME>/package<FILENAME>' --header '<AUTH_HEADER_PREFIX> <API_KEY>'" +
+func GetRPMArtifactFileDownloadCommand(
+	regURL, filename string, setupDetailsAuthHeaderPrefix string, isAnonymous bool,
+) string {
+	var authHeader string
+	if !isAnonymous {
+		authHeader = commonAuthHeader
+	}
+	downloadCommand := "curl --location '<HOSTNAME>/package<FILENAME>'" + authHeader +
 		" -J -o '<OUTPUT_FILE_NAME>'"
 	replacements := map[string]string{
 		"<HOSTNAME>":           regURL,
@@ -594,10 +621,13 @@ func GetRPMArtifactFileDownloadCommand(regURL, filename string, setupDetailsAuth
 
 func GetNugetArtifactFileDownloadCommand(
 	regURL, artifact, version, filename,
-	setupDetailsAuthHeaderPrefix string,
+	setupDetailsAuthHeaderPrefix string, isAnonymous bool,
 ) string {
-	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>/<VERSION>/<FILENAME>'" +
-		" --header '<AUTH_HEADER_PREFIX> <API_KEY>'" +
+	var authHeader string
+	if !isAnonymous {
+		authHeader = commonAuthHeader
+	}
+	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>/<VERSION>/<FILENAME>'" + authHeader +
 		" -J -o '<OUTPUT_FILE_NAME>'"
 
 	// Replace the placeholders with the actual values
@@ -618,10 +648,14 @@ func GetNugetArtifactFileDownloadCommand(
 
 func GetCargoArtifactFileDownloadCommand(
 	regURL, artifact, version,
-	setupDetailsAuthHeaderPrefix string,
+	setupDetailsAuthHeaderPrefix string, isAnonymous bool,
 ) string {
-	downloadCommand := "curl --location '<HOSTNAME>/api/v1/crates/<ARTIFACT>/<VERSION>/download' " +
-		"--header '<AUTH_HEADER_PREFIX> <API_KEY>' -J -o '<OUTPUT_FILE_NAME>'"
+	var authHeader string
+	if !isAnonymous {
+		authHeader = commonAuthHeader
+	}
+	downloadCommand := "curl --location '<HOSTNAME>/api/v1/crates/<ARTIFACT>/<VERSION>/download'" + authHeader +
+		" -J -o '<OUTPUT_FILE_NAME>'"
 
 	// Replace the placeholders with the actual values
 	replacements := map[string]string{
@@ -640,10 +674,14 @@ func GetCargoArtifactFileDownloadCommand(
 
 func GetGoArtifactFileDownloadCommand(
 	regURL, artifact, filename,
-	setupDetailsAuthHeaderPrefix string,
+	setupDetailsAuthHeaderPrefix string, isAnonymous bool,
 ) string {
-	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>/@v/<FILENAME>' " +
-		"--header '<AUTH_HEADER_PREFIX> <API_KEY>' -J -o '<OUTPUT_FILE_NAME>'"
+	var authHeader string
+	if !isAnonymous {
+		authHeader = commonAuthHeader
+	}
+	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>/@v/<FILENAME>'" + authHeader +
+		" -J -o '<OUTPUT_FILE_NAME>'"
 
 	// Replace the placeholders with the actual values
 	replacements := map[string]string{
@@ -662,10 +700,14 @@ func GetGoArtifactFileDownloadCommand(
 
 func GetMavenArtifactFileDownloadCommand(
 	regURL, artifact, version, filename string,
-	setupDetailsAuthHeaderPrefix string,
+	setupDetailsAuthHeaderPrefix string, isAnonymous bool,
 ) string {
-	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>/<VERSION>/<FILENAME>' " +
-		"--header '<AUTH_HEADER_PREFIX> <IDENTITY_TOKEN>' -o '<OUTPUT_FILE_NAME>'"
+	var authHeader string
+	if !isAnonymous {
+		authHeader = commonAuthHeader
+	}
+	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>/<VERSION>/<FILENAME>'" + authHeader +
+		" -o '<OUTPUT_FILE_NAME>'"
 
 	// Replace the placeholders with the actual values
 	replacements := map[string]string{
