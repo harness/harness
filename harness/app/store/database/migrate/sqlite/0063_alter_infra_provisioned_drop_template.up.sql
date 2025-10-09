@@ -1,0 +1,1 @@
+ALTER TABLE infra_provisioned DROP COLUMN iprov_opentofu_template;

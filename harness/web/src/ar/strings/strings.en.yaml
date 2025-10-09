@@ -1,0 +1,154 @@
+moduleName: '{{ $.repositoryList.artifactRegistry.label }}'
+add: Add
+clearFilters: Clear Filters
+save: Save
+discard: Discard
+delete: Delete
+prod: Prod
+nonProd: Non-Prod
+id: 'ID: {{ id }}'
+prodCount: '{{count}} Prod'
+nonProdCount: '{{count}} Non-Prod'
+copy: Copy
+view: View
+loadMore: Load More
+noMatchingFilterData: No results found matching the filter criteria
+stepNotFound: Step not found
+tabNotFound: Tab not found
+search: Search
+copied: Copied
+download: download
+loading: Loading...
+dateLabel: Date
+timeLabel: Time
+harnessAI: Harness AI
+new: NEW
+beta: BETA
+harLabel: '{{ $.repositoryList.artifactRegistry.label }}'
+na: N/A
+success: Success
+failed: Failed
+retriableError: Retriable Error
+unknown: Unknown
+cancel: Cancel
+comingSoon: Coming Soon.
+soon: SOON
+failedToLoadData: Failed to load data. Please try again!
+all: All
+noResultsFound: No results found
+optionalField: '{{name}} (Optional)'
+description: '{{ $.versionDetails.overview.generalInformation.description }}'
+tagsLabel: '{{ $.artifactList.table.columns.tags }}'
+plusNewName: + New {{name}}
+enterPlaceholder: Enter {{name}}
+descriptionPlaceholder: Enter Description
+noDescription: No Description
+noReadme: No Readme
+lastUpdated: Last Updated
+createdAt: Created At
+modifiedAt: Modified At
+plaintext: Plain Text
+encrypted: Encrypted
+details: Details
+tags:
+  latest: LATEST
+  latestVersion: LATEST VERSION
+breadcrumbs:
+  repositories: '{{ $.repositoryList.pageHeading }}'
+  artifacts: '{{ $.artifactList.pageHeading }}'
+  upstreamProxies: '{{ $.repositoryDetails.repositoryForm.upstreamProxiesTitle }}'
+actions:
+  edit: Edit
+  delete: '{{ $.delete }}'
+  quarantine: Quarantine
+  restore: Restore
+  scan: Scan
+  setupClient: Set Up Client
+  executions: Executions
+  copyCommand: Copy Command
+cleanupPolicy:
+  name: Cleanup Policy Name
+  addBtn: Add Cleanup Policy
+  cleanUpByTagPrefixes: 'Cleanup by <b>Tag Prefixes</b>'
+  cleanUpByVersionPrefixes: 'Cleanup by <b>Version Prefixes</b>'
+  cleanUpByPackagePrefixes: 'Cleanup by <b>Package Prefixes</b>'
+  cleanUpByArtifactsOlderThan: 'Cleanup by <b>Artifacts older than</b>'
+  cleanUpByArtifactsOlderThanPlaceholder: Specify days
+  placeholder: 'specify $type prefix and press enter'
+  addPattern: Add Pattern
+  infoMessage: Define the cleanup policy using the options below. Cleanup will occur when all the enabled options are met.
+packageTypes:
+  dockerPackage: Docker Package
+  helmPackage: Helm Package
+  genericPackage: Generic
+  mavenPackage: Maven Package
+  npmPackage: npm
+  pythonPackage: Python Package
+  nugetPackage: NuGet Package
+  rpmPackage: RPM Package
+  cargoPackage: Cargo Package
+  goPackage: Go Package
+  huggingfacePackage: Huggingface Package
+repositoryTypes:
+  docker: Docker
+  helm: Helm
+  generic: Generic
+  maven: Maven
+  npm: NPM
+  gradle: Gradle
+  pypi: Python
+  nuget: NuGet
+  rpm: RPM
+  go: Go
+  debian: Debian
+  cargo: Cargo
+  alpine: Alpine
+  huggingface: Huggingface
+sideNav:
+  repositories: '{{ $.repositoryList.pageHeading }}'
+  artifacts: '{{ $.artifactList.pageHeading }}'
+  upstreamProxies: '{{ $.repositoryDetails.repositoryForm.upstreamProxiesTitle }}'
+badges:
+  artifactRegistry: '{{ $.repositoryList.artifactRegistry.label }}'
+  upstreamProxy: '{{ $.repositoryList.upstreamProxy.label }}'
+  projectScope: Project
+  orgScope: Organization
+  accountScope: Account
+  quarantined: Quarantined
+validationMessages:
+  required: Required
+  repokeyRegExMessage: Registry name must start with letter and can only contain lowercase alphanumerics, _, . and -
+  nameRequired: Name is required
+  identifierRequired: Identifier is required
+  cleanupPolicy:
+    nameRequired: Cleanup policy name is required
+    expireDaysRequired: Expire days is required
+    positiveExpireDays: Expire days must be greater than 0
+  urlRequired: URL is required
+  urlPattern: URL must be valid and start with https://
+  genericURLPattern: URL must be valid and start with http:// or https://
+  userNameRequired: Username is required
+  passwordRequired: Password is required
+  accessKeyRequired: Access key is required
+  secretKeyRequired: Secret key is required
+  headerAlreadyExists: Header already exists
+  entityRequired: '{{entity}} is required'
+  stringMax: '{{entity}} must be 50 characters or less'
+  noNewLine: '{{entity}} cannot contain new lines'
+  uniqueValues: '{{entity}} must be unique'
+vulnerabilityStatus:
+  critical: 'C {{count}}'
+  high: 'H {{count}}'
+  medium: 'M {{count}}'
+  low: 'L {{count}}'
+labels:
+  title: Labels
+  addLabel: Add Label
+  addNewValue: Add New Value
+  addNewValueDynamic: 'Add New Value {{value}}'
+  findALabel: Find a Label
+  findAValue: Find a Value
+  findOrAddValue: Find or Add Value
+publicAccess:
+  oopsPageNotPublic: Oops! The page you are trying to access is not public.
+  tryOtherOptions: You can try the following option instead to get back on track.

@@ -1,0 +1,170 @@
+/*
+ * Copyright 2024 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.labelDropdownPopover {
+  max-width: 250px !important ;
+
+  :global {
+    .bp3-popover-wrapper {
+      width: 100% !important;
+
+      .bp3-popover-target {
+        width: 100% !important;
+      }
+    }
+  }
+}
+
+.labelCtn {
+  width: 100% !important;
+  padding-left: 2px !important;
+  padding-right: 5px !important;
+  :global {
+    .bp3-button {
+      justify-content: space-between !important;
+    }
+    .bp3-icon-chevron-down {
+      margin-left: auto !important;
+    }
+  }
+}
+
+.labelCtn:hover {
+  background-color: var(--primary-1);
+  cursor: pointer;
+}
+
+.labelBtn,
+.maxWidth {
+  width: 100% !important;
+}
+
+.labelBtn {
+  padding-left: 10px !important;
+
+  .inputBox {
+    border: none !important;
+    outline: none !important;
+  }
+}
+
+.offsetcheck {
+  color: var(--primary-7) !important;
+}
+.parentBox {
+  position: relative;
+  :global {
+    .bp3-button {
+      transition: none !important;
+    }
+  }
+}
+
+.childBox {
+  width: fit-content !important;
+  max-width: 250px !important;
+  position: absolute;
+  box-shadow: 0px 0px 1px rgb(40 41 61 / 4%), 0px 2px 4px rgb(96 97 112 / 16%);
+  border: 0.5px solid rgba(0, 0, 0, 0.1);
+  border-radius: var(--spacing-2);
+  top: -17px !important;
+  left: 3px !important;
+  padding: 0px !important;
+  max-height: 400px;
+  overflow: scroll;
+  padding: var(--spacing-xsmall) !important;
+}
+
+.childBox > :first-child {
+  margin-bottom: 0 !important;
+}
+
+.hide {
+  display: none;
+}
+
+.menuItem {
+  width: 207px;
+  padding-left: 9px;
+  padding-right: 9px;
+  margin-top: 1px;
+  margin-bottom: 1px;
+  &.selected {
+    background-color: var(--grey-100) !important;
+  }
+}
+
+.highlight {
+  background-color: var(--primary-1) !important;
+}
+
+.menuItem:hover {
+  background-color: var(--primary-1) !important;
+  color: var(--grey-800);
+}
+
+.popover {
+  box-shadow: var(--elevation-4) !important;
+  > div[class*='popover-arrow'] {
+    display: none;
+  }
+}
+
+.counter {
+  font-size: var(--font-size-small) !important;
+  font-weight: 500 !important;
+  background-color: var(--primary-7) !important;
+  color: var(--white) !important;
+  padding: 0 var(--spacing-small) !important;
+  border-radius: 10px !important;
+  display: inline-flex !important;
+  height: 17px !important;
+  align-items: center !important;
+}
+
+.closeBtn {
+  cursor: pointer;
+  position: absolute;
+  right: 5px;
+  top: 20px;
+}
+
+.input {
+  padding: var(--spacing-xsmall) !important;
+  :global {
+    .bp3-icon {
+      width: 35px;
+      padding-left: 2px;
+      height: 100%;
+      display: flex !important;
+      justify-content: center;
+      align-items: center;
+      margin: 0 !important;
+    }
+
+    .bp3-input {
+      background-color: var(--grey-100);
+      border: 1px solid var(--grey-100);
+      box-shadow: none !important;
+    }
+
+    .bp3-input:focus,
+    .bp3-input:active,
+    .bp3-input:hover {
+      border: 1px solid var(--grey-100) !important;
+    }
+  }
+}

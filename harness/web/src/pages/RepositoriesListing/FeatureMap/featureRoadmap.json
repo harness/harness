@@ -1,0 +1,43 @@
+[
+  {
+    "type": "comingSoon",
+    "typeText": "coming soon",
+    "color": "purple",
+    "title": "Harness Git Experience",
+    "content": "Code Repository support in Harness Git Experience",
+    "link": "https://ideas.harness.io/gitness/p/harness-git-experience-with-code-repository"
+  },
+  {
+    "type": "comingSoon",
+    "typeText": "coming soon",
+    "color": "purple",
+    "title": "Code search",
+    "content": "Keyword search of source code across repositories",
+    "link": "https://ideas.harness.io/gitness/p/search-across-repositories"
+  },
+  {
+    "type": "comingSoon",
+    "typeText": "coming soon",
+    "color": "purple",
+    "title": "Pipeline view in Pull request",
+    "content": "Full status check pipeline details and logs in Pull Requests",
+    "link": "https://ideas.harness.io/gitness/p/add-pipeline-details-to-status-checks"
+  },
+  {
+    "type": "released",
+    "typeText": "released",
+    "color": "green",
+    "title": "Image support in Pull Requests",
+    "content": "Support to upload images in pull request descriptions",
+    "link": "https://ideas.harness.io/gitness/p/image-support-in-pr-description"
+  },
+
+  {
+    "type": "released",
+    "typeText": "released",
+    "color": "green",
+    "title": "Notifications",
+    "content": "Email notifications for pull request changes",
+    "link": "https://ideas.harness.io/gitness/p/email-notifications"
+  }
+]

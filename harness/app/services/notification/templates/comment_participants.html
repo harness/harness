@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<p>
+    <b>@{{.Commenter.DisplayName}}</b>
+    replied to your comment on pull request
+    <b>#{{.Base.PullReq.Number}}:{{.Base.PullReq.Title}}</b>
+</p>
+<p>
+    {{.Text}}
+</p>
+<p>
+    <a href="{{.Base.PullReqURL}}">View pull request #{{.Base.PullReq.Number}}</a>
+</p>
+</body>
+</html>

@@ -1,0 +1,78 @@
+/*
+ * Copyright 2024 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.summaryContainer {
+  height: fit-content;
+  width: 25% !important;
+  box-shadow: 0px 0px 1px rgba(40, 41, 61, 0.08), 0px 0.5px 2px rgba(96, 97, 112, 0.16);
+  border-radius: 4px;
+  margin-right: var(--spacing-xlarge) !important;
+
+  .heading {
+    border-bottom: 1px solid var(--grey-100);
+  }
+
+  .content {
+    margin: var(--spacing-small) 0;
+    gap: var(--spacing-xlarge);
+    font-size: 13px !important;
+    .summaryDesc {
+      font-size: 13px !important;
+      word-wrap: break-word;
+      word-break: break-all;
+      white-space: normal;
+      margin: 0 auto;
+    }
+    .tags {
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: var(--spacing-xsmall) !important;
+      max-width: calc(100% - 10px) !important;
+    }
+
+    .tag {
+      padding: 3px 6px !important;
+      font-weight: 400 !important;
+      font-size: 12px !important;
+      font-family: var(--font-family-inter) !important;
+      background-color: #edf6ff !important;
+      color: var(--primary-7) !important;
+    }
+
+    .link {
+      color: var(--primary-7);
+      font-size: 13px !important;
+    }
+
+    .metaData {
+      padding: 1.5px 0;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--grey-100);
+
+      .align {
+        font-size: 13px;
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        align-items: center;
+      }
+    }
+    .metaData:last-child {
+      border-bottom: none;
+    }
+  }
+}

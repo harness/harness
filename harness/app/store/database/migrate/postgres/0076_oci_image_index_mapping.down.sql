@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS oci_image_index_mappings;

@@ -1,0 +1,1 @@
+CREATE INDEX download_stat_artifact_id ON download_stats(download_stat_artifact_id);
