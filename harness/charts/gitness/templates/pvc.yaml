@@ -1,0 +1,23 @@
+{{- if .Values.storage.persistentVolume.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: datadir
+  {{- with .Values.storage.persistentVolume.annotations }}
+    annotations: {{- toYaml . | nindent 10 }}
+  {{- end }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+{{- if .Values.storage.persistentVolume.storageClass }}
+{{- if (eq "-" .Values.storage.persistentVolume.storageClass) }}
+  storageClassName: ""
+{{- else }}
+  storageClassName: {{ .Values.storage.persistentVolume.storageClass | quote}}
+{{- end }}
+{{- end }}
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: {{ .Values.storage.persistentVolume.size | quote }}
+{{- end }}

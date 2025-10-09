@@ -1,0 +1,105 @@
+{
+  "mainHeader": "RPM Client Setup",
+  "secHeader": "Follow these instructions to install RPM packages.",
+  "sections": [
+    {
+      "tabs": [
+        {
+          "header": "YUM",
+          "sections": [
+            {
+              "header": "1. Install a RPM Package",
+              "steps": [
+                {
+                  "commands": [
+                    {
+                      "value": "sudo vi /etc/yum.repos.d/harness-test-registry.repo"
+                    }
+                  ],
+                  "header": "Create or edit the .repo file.",
+                  "type": "Static"
+                },
+                {
+                  "commands": [
+                    {
+                      "value": "[harness-test-registry]\nname=harness-test-registry\nbaseurl=http://example.com/registry/test-registry/RPM\nenabled=1\ngpgcheck=0\n"
+                    }
+                  ],
+                  "header": "Add the following content:",
+                  "type": "Static"
+                },
+                {
+                  "commands": [
+                    {
+                      "value": "sudo yum clean all"
+                    }
+                  ],
+                  "header": "Clear the YUM cache.",
+                  "type": "Static"
+                },
+                {
+                  "commands": [
+                    {
+                      "value": "sudo yum install test-artifact"
+                    }
+                  ],
+                  "header": "Install package.",
+                  "type": "Static"
+                }
+              ],
+              "type": "INLINE"
+            }
+          ]
+        },
+        {
+          "header": "DNF",
+          "sections": [
+            {
+              "header": "1. Install a RPM Package",
+              "steps": [
+                {
+                  "commands": [
+                    {
+                      "value": "sudo vi /etc/yum.repos.d/harness-test-registry.repo"
+                    }
+                  ],
+                  "header": "Create or edit the .repo file.",
+                  "type": "Static"
+                },
+                {
+                  "commands": [
+                    {
+                      "value": "[harness-test-registry]\nname=harness-test-registry\nbaseurl=http://example.com/registry/test-registry/RPM\nenabled=1\ngpgcheck=0\n"
+                    }
+                  ],
+                  "header": "Add the following content:",
+                  "type": "Static"
+                },
+                {
+                  "commands": [
+                    {
+                      "value": "sudo dnf clean all"
+                    }
+                  ],
+                  "header": "Clear the DNF cache.",
+                  "type": "Static"
+                },
+                {
+                  "commands": [
+                    {
+                      "value": "sudo dnf install test-artifact"
+                    }
+                  ],
+                  "header": "Install package.",
+                  "type": "Static"
+                }
+              ],
+              "type": "INLINE"
+            }
+          ]
+        }
+      ],
+      "type": "TABS"
+    }
+  ]
+}

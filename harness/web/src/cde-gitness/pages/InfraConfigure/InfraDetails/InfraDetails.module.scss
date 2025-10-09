@@ -1,0 +1,163 @@
+.main {
+  padding: var(--spacing-xxxlarge) 160px !important;
+}
+
+.basicDetailsContainer {
+  width: 100% !important;
+}
+
+.basicDetailsHeading {
+  font-size: var(--font-size-normal) !important;
+  font-weight: 600 !important;
+  color: var(--grey-800) !important;
+}
+
+.basicDetailsBody {
+  background-color: var(--grey-0) !important;
+  border-radius: var(--spacing-small) !important;
+  padding: var(--spacing-xlarge) !important;
+  border: 1px solid var(--grey-100) !important;
+
+  [class*='TextInput--main'] {
+    margin-bottom: 0 !important;
+  }
+}
+
+.regionContainer {
+  background-color: var(--grey-0) !important;
+  border-radius: var(--spacing-small) !important;
+  padding: var(--spacing-xlarge) !important;
+  border-top: 1px solid var(--grey-100) !important;
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+
+  [class*='TextInput--main'] {
+    margin-bottom: 0 !important;
+  }
+}
+
+.runnerregion {
+  color: var(--grey-600);
+  font-size: var(--form-input-font-size);
+  font-weight: 500;
+  margin-bottom: var(--spacing-small);
+}
+
+.inputLabel {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+}
+
+.inlineContainer {
+  width: 100% !important;
+  display: flex !important;
+  justify-content: space-between;
+}
+
+.valueText {
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  padding-left: var(--spacing-xsmall) !important;
+}
+
+.inputWithNote {
+  margin-bottom: var(--spacing-xsmall) !important;
+}
+
+.containerSpacing {
+  margin-bottom: var(--spacing-large) !important;
+
+  .bottomSpacing {
+    padding-bottom: var(--spacing-main) !important;
+  }
+}
+
+.inputWithMargin {
+  margin-top: var(--spacing-medium) !important;
+}
+
+.headerLinkText {
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  cursor: pointer !important;
+}
+
+.formFooter {
+  padding: var(--spacing-medium) 0 !important;
+  width: 100% !important;
+  display: flex;
+  justify-content: space-between !important;
+}
+
+.tableContainer {
+  width: 100% !important;
+
+  th {
+    padding: 14px var(--spacing-main) !important;
+  }
+
+  thead {
+    border: 1px solid var(--grey-100) !important;
+  }
+
+  .dnone {
+    display: none !important;
+  }
+
+  tbody {
+    tr {
+      border: 1px solid var(--grey-100) !important;
+      background-color: var(--grey-0) !important;
+
+      td {
+        padding: var(--padding-button) var(--padding-button) var(--padding-button) 14px !important;
+        background-color: var(--grey-0) !important;
+      }
+    }
+  }
+
+  .inputContainer {
+    margin: 0 !important;
+
+    [class*='TextInput--main'] {
+      margin: 0 !important;
+    }
+  }
+}
+
+.deleteContainer {
+  display: flex;
+  justify-content: space-between;
+}
+
+.marginTopSmall {
+  margin-top: var(--spacing-small) !important;
+}
+
+.headingText {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  line-height: var(--spacing-main) !important;
+  text-transform: uppercase !important;
+}
+
+.delegateContainer {
+  margin: var(--padding-button) 0 !important;
+
+  [class*='DelegateSelectors-module_delegateInput'] {
+    border: 1px solid var(--grey-200) !important;
+  }
+}
+
+.delegateSelector {
+  padding-bottom: var(--spacing-xsmall) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+}
+
+.errorContainer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-top: var(--spacing-small) !important;
+}

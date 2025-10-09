@@ -1,0 +1,1 @@
+drop index if exists index_manifest_registry_id_manifest_image_name_manifest_created_at_idx;

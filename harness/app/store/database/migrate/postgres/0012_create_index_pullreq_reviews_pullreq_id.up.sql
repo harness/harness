@@ -1,0 +1,2 @@
+CREATE INDEX index_pullreq_review_pullreq_id
+ON pullreq_reviews(pullreq_review_pullreq_id);

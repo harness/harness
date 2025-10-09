@@ -1,0 +1,1 @@
+ALTER TABLE webhooks ADD COLUMN webhook_scope INTEGER DEFAULT 0;

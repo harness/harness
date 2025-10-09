@@ -1,0 +1,67 @@
+/*
+ * Copyright 2024 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.cardHeading {
+  --typography-size: 16px !important;
+}
+
+.cardContainer {
+  width: 80%;
+  min-width: 900px;
+  max-width: 1024px;
+  padding: var(--spacing-7) !important;
+  background-color: var(--white);
+}
+
+.marginTopLarge {
+  margin-top: var(--spacing-large) !important;
+}
+
+.upstreamProxiesContainer {
+  width: 95%;
+  max-width: 1024px;
+}
+
+.upstreamProxiesWrapper {
+  margin-top: var(--spacing-medium) !important;
+}
+
+.includeExcludeWrapper {
+  --typography-size: 13px !important;
+}
+
+.scannersContainer {
+  --layout-spacing: var(--spacing-medium) !important;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  column-gap: var(--spacing-medium);
+  row-gap: var(--spacing-medium);
+}
+
+.helperText {
+  font-size: var(--font-size-small);
+  font-weight: 400;
+  color: var(--gray-900);
+}
+
+.visibilityTitle {
+  --typography-size: var(--font-size-normal) !important;
+}
+
+.visibilityCardSelect {
+  display: flex;
+  gap: var(--spacing-medium);
+}

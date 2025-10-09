@@ -1,0 +1,2 @@
+ALTER TABLE upstream_proxy_configs DROP COLUMN upstream_proxy_config_user_name_secret_space_id;
+ALTER TABLE upstream_proxy_configs DROP COLUMN upstream_proxy_config_user_name_secret_identifier;

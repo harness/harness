@@ -1,0 +1,86 @@
+/*
+ * Copyright 2023 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.separator {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 1px solid rgba(217, 218, 229, 0.2) !important;
+}
+
+.generalContainer {
+  background: var(--grey-0) !important;
+  box-shadow: 0px 0.5px 2px 0px rgba(96, 97, 112, 0.16), 0px 0px 1px 0px rgba(40, 41, 61, 0.08) !important;
+  border-radius: 4px !important;
+  margin: 1px 1px !important;
+}
+
+.TriggerMenuItem {
+  width: 500px !important;
+  cursor: pointer !important;
+}
+
+.editTriggerContainer {
+  width: 800px !important;
+  margin-top: 53px !important;
+}
+
+.selected {
+  border: 1px solid var(--primary-7) !important;
+}
+
+.pillContainer {
+  background-color: var(--grey-100) !important;
+  color: var(--grey-400) !important;
+  padding: 4px !important;
+  height: 24px !important;
+}
+
+.pillText {
+  font-weight: 600 !important;
+}
+
+.triggerName {
+  color: var(--gray-scale-700) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+
+.triggerDate {
+  color: var(--gray-scale-500) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+
+.triggerList {
+  overflow-y: auto !important;
+}
+
+.editTriggerTitle {
+  color: var(--gray-scale-700);
+  font-weight: 600;
+}
+
+.actionsContainer {
+  width: 100% !important;
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 10px !important;
+}
+
+.textContainer {
+  width: 300px !important;
+  margin: 0 !important;
+}

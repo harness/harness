@@ -1,0 +1,8 @@
+package: artifact
+generate:
+  models: true
+output: ./registry/app/api/openapi/contracts/artifact/types.gen.go
+compatibility:
+  old-aliasing: true
+  old-enum-conflicts: true
+  old-merge-schemas: true

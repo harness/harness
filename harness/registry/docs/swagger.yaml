@@ -1,0 +1,31 @@
+basePath: /
+host: localhost:9091
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: Client to connect to artifact-registry APIs.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Swagger Doc- Artifact-Registry
+  version: "1.0"
+paths:
+  /v1/healthz:
+    get:
+      consumes:
+      - application/json
+      description: Health API for Artifact-Registry Service
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Health API for Artifact-Registry Service
+schemes:
+- http
+swagger: "2.0"

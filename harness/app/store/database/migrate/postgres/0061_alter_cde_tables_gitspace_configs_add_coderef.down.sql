@@ -1,0 +1,8 @@
+TRUNCATE gitspace_events RESTART IDENTITY CASCADE;
+TRUNCATE gitspaces RESTART IDENTITY CASCADE;
+TRUNCATE gitspace_configs RESTART IDENTITY CASCADE;
+TRUNCATE infra_provider_resources RESTART IDENTITY CASCADE;
+TRUNCATE infra_provider_configs RESTART IDENTITY CASCADE;
+
+ALTER TABLE gitspace_configs
+    DROP COLUMN gconf_code_repo_ref;

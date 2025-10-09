@@ -1,0 +1,1 @@
+CREATE INDEX tokens_type_expires_at ON tokens(token_type, token_expires_at);

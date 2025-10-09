@@ -1,0 +1,1 @@
+ALTER TABLE rules ADD COLUMN rule_repo_target TEXT NOT NULL DEFAULT '{}';

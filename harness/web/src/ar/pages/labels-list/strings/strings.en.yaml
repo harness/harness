@@ -1,0 +1,37 @@
+table:
+  newLabel: New Label
+  noData: There are no labels available.
+  columns:
+    name: Name
+    scope: Created In
+    description: Description
+    associations: Associations
+  actions:
+    delete: Delete
+    edit: Edit
+deleteLabelModal:
+  title: Delete Label
+  contentText: Are you sure you want to delete the label?
+  labelDeleted: Label deleted successfully!
+createLabelModal:
+  title: Create Label
+  actions:
+    create: Create
+    cancel: Cancel
+  labelCreated: Label created successfully!
+updateLabelModal:
+  title: Update Label
+  actions:
+    update: Update
+    cancel: Cancel
+  labelUpdated: Label updated successfully!
+labelForm:
+  name: Label Name
+  description: Description
+  values: Label Value/s (Optional)
+  dynamic: Allow users to add values
+  preview: Label Preview
+  value: Value
+  newValue: Add Value
+defaultLabelName: Label Name
+canbeAddedByUsers: '*can be added by users*'

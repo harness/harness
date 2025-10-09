@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Check for changes in specific folders
+CHANGED_FILES=$(git diff --cached --name-only)
+
+if echo "$CHANGED_FILES" | grep -E '^(web/src/ar/)' > /dev/null; then
+  echo "Running checks for changes in src/ar"
+  cd web
+  npx lint-staged
+else
+  echo "No changes in src/ar, skipping checks"
+fi

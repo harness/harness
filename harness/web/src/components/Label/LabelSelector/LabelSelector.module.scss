@@ -1,0 +1,151 @@
+/*
+ * Copyright 2024 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.addLabelBtn {
+  --background-color-active: var(--white) !important;
+  --box-shadow: none !important;
+
+  &:active,
+  &:hover,
+  &[class*='bp3-active'] {
+    --box-shadow: 0px 0px 1px rgba(40, 41, 61, 0.04), 0px 2px 4px rgba(96, 97, 112, 0.16) !important;
+  }
+
+  .prefix {
+    color: var(--grey-450) !important;
+    font-weight: normal;
+  }
+}
+
+.main {
+  min-width: 241px;
+  max-width: 376px;
+
+  .layout {
+    > [class*='TextInput--main'] {
+      margin-bottom: 0 !important;
+    }
+
+    .menuContainer {
+      margin-top: 0 !important;
+    }
+  }
+}
+
+.popover {
+  box-shadow: var(--elevation-4) !important;
+  > div[class*='popover-arrow'] {
+    display: none;
+  }
+}
+
+.noWrapText {
+  white-space: nowrap !important;
+  .valueNotFound {
+    color: var(--primary-7) !important;
+    cursor: pointer;
+  }
+}
+
+.labelMenu {
+  max-height: 376px !important;
+  overflow: scroll;
+  padding-left: 0px !important ;
+  padding-right: 0px !important ;
+  :global {
+    .bp3-menu-item:hover {
+      background: var(--grey-50) !important;
+      color: var(--grey-1000) !important;
+    }
+
+    .bp3-menu-item.bp3-active {
+      background: var(--grey-100) !important;
+      color: var(--grey-1000) !important;
+    }
+  }
+  .menuItem {
+    padding-left: 9px !important;
+    padding-right: 0 !important;
+    margin-top: 1px;
+    margin-bottom: 1px;
+    &.selected {
+      background-color: var(--grey-100) !important;
+    }
+  }
+}
+
+.labelSearch {
+  display: block;
+  box-sizing: border-box;
+  border: 1px solid var(--grey-200);
+  border-radius: var(--spacing-2);
+  font-size: var(--form-input-font-size);
+  padding-left: var(--spacing-small) !important;
+  color: var(--black);
+  box-shadow: none;
+  :global {
+    [class*='TextInput--main'] {
+      margin-bottom: 0 !important;
+      height: inherit !important;
+      width: fit-content !important;
+      flex-grow: 1 !important;
+      border: none !important;
+      outline: none !important;
+    }
+
+    .bp3-input {
+      border: none !important;
+      outline: none !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+
+    .bp3-input:hover {
+      box-shadow: none !important;
+    }
+  }
+  .labelCtn {
+    max-width: 50% !important;
+  }
+  .labelKey {
+    border: none !important;
+    padding: 0 !important;
+    .labelInput {
+      padding: 0px 0px 0px 11px !important;
+      border-radius: 4px 0 0 4px !important;
+      background-color: var(--grey-0) !important;
+      height: 32px !important;
+    }
+  }
+  .input {
+    margin-bottom: 0px !important;
+  }
+  .inputBox {
+    border: none !important;
+    outline: none !important;
+  }
+}
+
+.labelSearch:focus {
+  color: var(--black);
+  border-color: var(--primary-7);
+  box-shadow: none;
+}
+
+.closeBtn {
+  cursor: pointer;
+  margin: 5px 2.5px !important;
+}

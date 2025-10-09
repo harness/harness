@@ -1,0 +1,1 @@
+ALTER TABLE gitspaces DROP COLUMN gits_error_message;

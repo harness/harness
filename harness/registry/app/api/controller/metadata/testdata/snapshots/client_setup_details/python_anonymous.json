@@ -1,0 +1,36 @@
+{
+  "mainHeader": "Python Client Setup",
+  "secHeader": "Follow these instructions to install/use Python packages from this registry.",
+  "sections": [
+    {
+      "header": "Configure Authentication",
+      "steps": [
+        {
+          "commands": [
+            {
+              "value": "[distutils]\nindex-servers = harness\n\n[harness]\nrepository = http://example.com/registry/test-registry/PYTHON"
+            }
+          ],
+          "header": "Create or update your ~/.pypirc file with the following content:",
+          "type": "Static"
+        }
+      ],
+      "type": "INLINE"
+    },
+    {
+      "header": "Install Package",
+      "steps": [
+        {
+          "commands": [
+            {
+              "value": "pip install --index-url http://example.com/registry/test-registry/PYTHON/simple --no-deps test-artifact==v1.0.0"
+            }
+          ],
+          "header": "Install a package using pip:",
+          "type": "Static"
+        }
+      ],
+      "type": "INLINE"
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "mainHeader": "Python Client Setup",
+  "secHeader": "Follow these instructions to install/use Python packages from this registry.",
+  "sections": [
+    {
+      "header": "Configure Authentication",
+      "steps": [
+        {
+          "commands": [
+            {
+              "value": "[distutils]\nindex-servers = harness\n\n[harness]\nrepository = http://example.com/registry/test-registry/PYTHON\nusername = test@example.com\npassword = *see step 2*"
+            }
+          ],
+          "header": "Create or update your ~/.pypirc file with the following content:",
+          "type": "Static"
+        },
+        {
+          "header": "Generate an identity token for authentication",
+          "type": "GenerateToken"
+        }
+      ],
+      "type": "INLINE"
+    },
+    {
+      "header": "Publish Package",
+      "steps": [
+        {
+          "commands": [
+            {
+              "value": "python -m build"
+            },
+            {
+              "value": "python -m twine upload --repository harness /path/to/files/*"
+            }
+          ],
+          "header": "Build and publish your package:",
+          "type": "Static"
+        }
+      ],
+      "type": "INLINE"
+    },
+    {
+      "header": "Install Package",
+      "steps": [
+        {
+          "commands": [
+            {
+              "value": "pip install --index-url http://test@example.com:\u003cTOKEN\u003e@example.com/registry/test-registry/PYTHON/simple --no-deps test-artifact==v1.0.0"
+            }
+          ],
+          "header": "Install a package using pip:",
+          "type": "Static"
+        }
+      ],
+      "type": "INLINE"
+    }
+  ]
+}

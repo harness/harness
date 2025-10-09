@@ -1,0 +1,1 @@
+CREATE INDEX webhook_executions_created ON webhook_executions(webhook_execution_created);

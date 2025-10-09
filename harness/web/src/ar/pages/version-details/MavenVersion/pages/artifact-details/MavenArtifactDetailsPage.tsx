@@ -1,0 +1,82 @@
+/*
+ * Copyright 2024 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import React from 'react'
+import { Page } from '@harnessio/uicore'
+import { useGetArtifactFilesQuery } from '@harnessio/react-har-service-client'
+
+import { DEFAULT_PAGE_INDEX } from '@ar/constants'
+import { encodeRef } from '@ar/hooks/useGetSpaceRef'
+import type { VersionDetailsPathParams } from '@ar/routes/types'
+import { useDecodedParams, useGetSpaceRef, useParentHooks } from '@ar/hooks'
+import {
+  type ArtifactFileListPageQueryParams,
+  useArtifactFileListQueryParamOptions
+} from '@ar/pages/version-details/components/ArtifactFileListTable/utils'
+import { LocalArtifactType } from '@ar/pages/repository-details/constants'
+import ArtifactFileListTable from '@ar/pages/version-details/components/ArtifactFileListTable/ArtifactFileListTable'
+import versionDetailsPageCss from '../../MavenVersion.module.scss'
+
+export default function MavenArtifactDetailsPage() {
+  const registryRef = useGetSpaceRef()
+  const { useQueryParams, useUpdateQueryParams } = useParentHooks()
+  const { updateQueryParams } = useUpdateQueryParams<Partial<ArtifactFileListPageQueryParams>>()
+
+  const pathParams = useDecodedParams<VersionDetailsPathParams>()
+  const queryParamOptions = useArtifactFileListQueryParamOptions()
+  const queryParams = useQueryParams<ArtifactFileListPageQueryParams>(queryParamOptions)
+  const { page, size, sort } = queryParams
+
+  const [sortField, sortOrder] = sort || []
+
+  const {
+    isFetching: loading,
+    error,
+    data,
+    refetch
+  } = useGetArtifactFilesQuery({
+    registry_ref: registryRef,
+    artifact: encodeRef(pathParams.artifactIdentifier),
+    version: pathParams.versionIdentifier,
+    queryParams: {
+      page,
+      size,
+      sort_field: sortField,
+      sort_order: sortOrder,
+      artifact_type: pathParams.artifactType === LocalArtifactType.ARTIFACTS ? undefined : pathParams.artifactType
+    }
+  })
+  const response = data?.content?.data
+
+  return (
+    <Page.Body
+      className={versionDetailsPageCss.pageBody}
+      loading={loading}
+      error={error?.message || error}
+      retryOnError={() => refetch()}>
+      {response && (
+        <ArtifactFileListTable
+          data={response}
+          gotoPage={pageNumber => updateQueryParams({ page: pageNumber })}
+          setSortBy={sortArr => {
+            updateQueryParams({ sort: sortArr, page: DEFAULT_PAGE_INDEX })
+          }}
+          sortBy={sort}
+        />
+      )}
+    </Page.Body>
+  )
+}

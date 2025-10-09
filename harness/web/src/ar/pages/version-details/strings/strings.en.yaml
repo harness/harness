@@ -1,0 +1,133 @@
+page: Version Details Page
+selectDigestPlaceholder: All Digest
+noDependencies: No Dependencies
+OCIVersionSelectorTab:
+  tag: Tag
+  digest: Digest
+tabs:
+  overview: Overview
+  artifactDetails: Artifact Details
+  supplyChain: SBOM
+  securityTests: Vulnerabilities
+  deployments: Deployments
+  code: Code
+cards:
+  deploymentsCard:
+    title: Deployments
+    buildTitle: Build Pipeline
+    executionId: Execution ID
+  securityTests:
+    title: Vulnerabilities
+    totalIssues: Total Issues
+    critical: Critical
+    high: High
+    medium: Medium
+    low: Low
+    info: Info
+    ignored: Ignored
+  slsaCard:
+    title: SLSA
+    slsaVerificationStatus: SLSA Verification
+    slsaProvenance: SLSA Provenance
+    provenanceDataNotAvailable: Provenance data is not available
+  supplyChain:
+    title: SBOM
+    totalComponents: Total Dependencies
+    sbomScore: SBOM Quality Score
+    downloadSbom: Download SBOM
+    SBOMDataNotAvailable: SBOM data is not available
+    allowList: Allow List
+    denyListViolation: Deny List Violation
+  container:
+    title: Container
+    versionDigest: '{{ version}} ({{ digest }} digests)'
+overview:
+  generalInformation:
+    title: General Information
+    name: '{{ $.artifactList.table.columns.name }}'
+    version: Version
+    packageType: Package type
+    repositoryPath: Registry path
+    digest: Digest
+    url: URL to file
+    projectUrl: Project URL
+    size: '{{ $.digestList.table.columns.size }}'
+    downloads: '{{ $.repositoryList.table.columns.downloads }}'
+    uploadedBy: Uploaded At
+    createdAndLastModifiedAt: Created | Last modified
+    createdAt: Created At
+    modifiedAt: Modified At
+    description: Description
+    pullCommand: Pull command
+    pullCommandByDigest: Pull command by digest
+    repository: Repository
+    documentation: Documentation
+    homepage: Homepage
+    license: License
+    buildHost: Build Host
+    buildTime: Build Time
+    packager: Packager
+    platform: Platform
+    sourceRpm: Source RPM
+    vendor: Vendor
+    vcs: VCS
+    ref: Ref
+    hash: Hash
+    language: Language
+    tags: Tags
+    artifactType: Artifact Type
+artifactDetails:
+  tabs:
+    layers: Layers
+    manifest: Manifest
+    readme: Readme
+    files: Files
+    dependencies: Dependencies
+  layers:
+    digest: '{{ $.digestList.table.columns.digest }}'
+    imageLayers: Image Layers
+    lastPush: Last Push
+    size: '{{ $.digestList.table.columns.size }}'
+    archSelectLabel: OS/ARCH
+    archSelectPlaceholder: Select OS/ARCH
+deploymentsTable:
+  noDeploymentsTitle: There are no deployments available.
+  columns:
+    environment: Environment
+    type: Type
+    services: Service/s
+    deploymentPipeline: Deployment Pipeline
+    triggeredBy: Triggered At
+    infra: Infrastructure
+    instanceCount: Instance Count
+artifactFiles:
+  table:
+    columns:
+      name: Name
+      size: Size
+      checksum: Checksum
+      downloadCommand: Download Command
+      created: Created
+dependencyList:
+  dependencyNameWithRelease: '{{ name }} (release: {{ release }})'
+  table:
+    columns:
+      name: Dependency Name
+      version: Dependency Version
+versionDeleted: Artifact version deleted successfully!
+deleteVersionModal:
+  title: Delete Artifact Version
+  contentText: Are you sure you want to delete the artifact version?
+quarantineVersionModal:
+  title: Add to Quarantine
+  contentText: Proceeding will put this artifact to quarantine, making it not generally accessible. Please provide a reason for this action.
+  reasonField: Reason
+  versionQuarantined: Artifact version quarantined successfully!
+  confirmButtonText: Quarantine
+  cancelButtonText: Cancel
+removeFromQuarantineModal:
+  title: Remove from Quarantine
+  contentText: Proceeding will remove this artifact from quarantine, making it generally accessible. Please provide a reason for this action.
+  confirmButtonText: Remove from Quarantine
+  cancelButtonText: Cancel
+  versionRemovedFromQuarantine: Artifact version removed from quarantine successfully!
