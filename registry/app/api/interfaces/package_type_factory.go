@@ -17,13 +17,29 @@ package interfaces
 import (
 	"context"
 
+	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/types"
 )
 
 type PackageHelper interface {
 	GetPackageType() string
-	GetPullCommand(registryURL string, packageType string, image string, version string,
-		artifactType string, setupDetailsAuthHeaderPrefix string, byTag bool) string
+	GetDownloadFileCommand(
+		regURL string,
+		artifactName string,
+		version string,
+		isAnonymous bool,
+	) string
+	GetPullCommand(registryURL string, image string, version string) string
+	GetPackageURL(ctx context.Context,
+		rootIdentifier string,
+		registryIdentifier string,
+	) string
+	GetFilePath(artifactName string, versionName string) string
+	DeleteArtifact(
+		ctx context.Context,
+		regInfo *types.RegistryRequestBaseInfo,
+		artifactName string,
+	) error
 	DeleteVersion(ctx context.Context,
 		regInfo *types.RegistryRequestBaseInfo,
 		imageInfo *types.Image,
@@ -41,4 +57,31 @@ type PackageHelper interface {
 	IsValidRepoType(repoType string) bool
 	IsValidUpstreamSource(upstreamSource string) bool
 	IsURLRequiredForUpstreamSource(upstreamSource string) bool
+	GetArtifactMetadata(
+		artifact types.ArtifactMetadata,
+	) *artifact.ArtifactMetadata
+	GetArtifactVersionMetadata(
+		image string,
+		tag types.NonOCIArtifactMetadata,
+	) *artifact.ArtifactVersionMetadata
+	GetFileMetadata(
+		ctx context.Context,
+		rootIdentifier string,
+		registryIdentifier string,
+		artifactName string,
+		version string,
+		file types.FileNodeMetadata,
+	) *artifact.FileDetail
+	GetArtifactDetail(
+		img *types.Image,
+		art *types.Artifact,
+		downloadCount int64,
+	) (*artifact.ArtifactDetail, error)
+	GetClientSetupDetails(
+		ctx context.Context,
+		regRef string,
+		image *artifact.ArtifactParam,
+		tag *artifact.VersionParam,
+		registryType artifact.RegistryType,
+	) (*artifact.ClientSetupDetails, error)
 }

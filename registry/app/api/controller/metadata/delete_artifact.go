@@ -86,6 +86,7 @@ func (c *APIController) DeleteArtifact(ctx context.Context, r artifact.DeleteArt
 		}, nil
 	}
 
+	//nolint:exhaustive
 	switch regInfo.PackageType {
 	case artifact.PackageTypeDOCKER:
 		err = c.deleteOCIImage(ctx, regInfo, artifactName)
@@ -103,14 +104,12 @@ func (c *APIController) DeleteArtifact(ctx context.Context, r artifact.DeleteArt
 		err = c.deleteGenericImage(ctx, regInfo, artifactName)
 	case artifact.PackageTypeRPM:
 		err = fmt.Errorf("delete artifact not supported for rpm")
-	case artifact.PackageTypeCARGO:
-		err = c.deleteGenericImage(ctx, regInfo, artifactName)
 	case artifact.PackageTypeGO:
 		err = c.deleteGenericImage(ctx, regInfo, artifactName)
 	case artifact.PackageTypeHUGGINGFACE:
 		err = fmt.Errorf("unsupported package type: %s", regInfo.PackageType)
 	default:
-		err = fmt.Errorf("unsupported package type: %s", regInfo.PackageType)
+		err = c.PackageWrapper.DeleteArtifact(ctx, regInfo, artifactName)
 	}
 
 	if err != nil {

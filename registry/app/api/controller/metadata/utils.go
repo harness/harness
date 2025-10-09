@@ -344,8 +344,6 @@ func GetPullCommand(
 		return GetRPMDownloadCommand(image, version)
 	case string(a.PackageTypeNUGET):
 		return GetNugetDownloadCommand(image, version)
-	case string(a.PackageTypeCARGO):
-		return GetCargoDownloadCommand(image, version)
 	case string(a.PackageTypeGO):
 		return GetGoDownloadCommand(image, version)
 	case string(a.PackageTypeHUGGINGFACE):

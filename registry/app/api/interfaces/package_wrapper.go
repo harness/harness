@@ -17,6 +17,7 @@ package interfaces
 import (
 	"context"
 
+	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/types"
 )
 
@@ -37,4 +38,51 @@ type PackageWrapper interface {
 		artifactName string,
 		versionName string,
 	) error
+	DeleteArtifact(
+		ctx context.Context,
+		regInfo *types.RegistryRequestBaseInfo,
+		artifactName string,
+	) error
+	GetFilePath(
+		packageType string,
+		artifactName string,
+		versionName string,
+	) (string, error)
+	GetPackageURL(
+		ctx context.Context,
+		rootIdentifier string,
+		registryIdentifier string,
+		packageType string,
+	) (string, error)
+	GetArtifactMetadata(
+		artifact types.ArtifactMetadata,
+	) *artifact.ArtifactMetadata
+	GetArtifactVersionMetadata(
+		packageType string,
+		image string,
+		tag types.NonOCIArtifactMetadata,
+	) *artifact.ArtifactVersionMetadata
+	GetFileMetadata(
+		ctx context.Context,
+		rootIdentifier string,
+		registryIdentifier string,
+		packageType string,
+		artifactName string,
+		version string,
+		file types.FileNodeMetadata,
+	) *artifact.FileDetail
+	GetArtifactDetail(
+		packageType string,
+		img *types.Image,
+		art *types.Artifact,
+		downloadCount int64,
+	) (*artifact.ArtifactDetail, error)
+	GetClientSetupDetails(
+		ctx context.Context,
+		regRef string,
+		image *artifact.ArtifactParam,
+		tag *artifact.VersionParam,
+		registryType artifact.RegistryType,
+		packageType string,
+	) (*artifact.ClientSetupDetails, error)
 }

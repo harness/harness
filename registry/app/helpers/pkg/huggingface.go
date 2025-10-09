@@ -85,8 +85,7 @@ func (c *huggingFacePackageType) IsURLRequiredForUpstreamSource(upstreamSource s
 	return config.urlRequired
 }
 
-func (c *huggingFacePackageType) GetPullCommand(_ string, _ string, _ string, _ string,
-	_ string, _ string, _ bool) string {
+func (c *huggingFacePackageType) GetPullCommand(_ string, _ string, _ string) string {
 	return ""
 }
 
@@ -119,4 +118,77 @@ func (c *huggingFacePackageType) ReportBuildPackageIndexEvent(ctx context.Contex
 
 func (c *huggingFacePackageType) ReportBuildRegistryIndexEvent(ctx context.Context, _ int64, _ []types.SourceRef) {
 	log.Error().Ctx(ctx).Msg("Not implemented")
+}
+
+func (c *huggingFacePackageType) GetFilePath(
+	_ string,
+	_ string,
+) string {
+	return ""
+}
+
+func (c *huggingFacePackageType) DeleteArtifact(
+	_ context.Context,
+	_ *types.RegistryRequestBaseInfo,
+	_ string,
+) error {
+	return nil
+}
+
+func (c *huggingFacePackageType) GetPackageURL(_ context.Context,
+	_ string,
+	_ string,
+) string {
+	return ""
+}
+
+func (c *huggingFacePackageType) GetArtifactMetadata(
+	_ types.ArtifactMetadata,
+) *artifact.ArtifactMetadata {
+	return nil
+}
+
+func (c *huggingFacePackageType) GetArtifactVersionMetadata(
+	_ string,
+	_ types.NonOCIArtifactMetadata,
+) *artifact.ArtifactVersionMetadata {
+	return nil
+}
+
+func (c *huggingFacePackageType) GetDownloadFileCommand(
+	_ string,
+	_ string,
+	_ string,
+	_ bool,
+) string {
+	return ""
+}
+
+func (c *huggingFacePackageType) GetFileMetadata(
+	_ context.Context,
+	_ string,
+	_ string,
+	_ string,
+	_ string,
+	_ types.FileNodeMetadata,
+) *artifact.FileDetail {
+	return nil
+}
+
+func (c *huggingFacePackageType) GetArtifactDetail(
+	_ *types.Image,
+	_ *types.Artifact,
+	_ int64,
+) (*artifact.ArtifactDetail, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (c *huggingFacePackageType) GetClientSetupDetails(
+	_ context.Context,
+	_ string,
+	_ *artifact.ArtifactParam,
+	_ *artifact.VersionParam,
+	_ artifact.RegistryType,
+) (*artifact.ClientSetupDetails, error) {
+	return nil, fmt.Errorf("not implemented")
 }

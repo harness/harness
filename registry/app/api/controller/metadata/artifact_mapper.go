@@ -26,6 +26,7 @@ import (
 
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/registry/app/api/interfaces"
 	artifactapi "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/api/utils"
 	"github.com/harness/gitness/registry/app/metadata"
@@ -42,9 +43,15 @@ func GetArtifactMetadata(
 	urlProvider url.Provider,
 	setupDetailsAuthHeaderPrefix string,
 	untaggedImagesEnabled bool,
+	packageWrapper interfaces.PackageWrapper,
 ) []artifactapi.ArtifactMetadata {
 	artifactMetadataList := make([]artifactapi.ArtifactMetadata, 0, len(artifacts))
 	for _, artifact := range artifacts {
+		metadata := packageWrapper.GetArtifactMetadata(artifact)
+		if metadata != nil {
+			artifactMetadataList = append(artifactMetadataList, *metadata)
+			continue
+		}
 		registryURL := urlProvider.RegistryURL(ctx, rootIdentifier, artifact.RepoName)
 		if artifact.PackageType == artifactapi.PackageTypeGENERIC {
 			registryURL = urlProvider.RegistryURL(ctx, rootIdentifier, "generic", artifact.RepoName)
@@ -151,8 +158,6 @@ func toPackageType(packageTypeStr string) (artifactapi.PackageType, error) {
 		return artifactapi.PackageTypeRPM, nil
 	case string(artifactapi.PackageTypeNUGET):
 		return artifactapi.PackageTypeNUGET, nil
-	case string(artifactapi.PackageTypeCARGO):
-		return artifactapi.PackageTypeCARGO, nil
 	case string(artifactapi.PackageTypeGO):
 		return artifactapi.PackageTypeGO, nil
 	case string(artifactapi.PackageTypeHUGGINGFACE):
@@ -213,13 +218,14 @@ func GetAllArtifactResponse(
 	urlProvider url.Provider,
 	setupDetailsAuthHeaderPrefix string,
 	untaggedImagesEnabled bool,
+	packageWrapper interfaces.PackageWrapper,
 ) *artifactapi.ListArtifactResponseJSONResponse {
 	var artifactMetadataList []artifactapi.ArtifactMetadata
 	if artifacts == nil {
 		artifactMetadataList = make([]artifactapi.ArtifactMetadata, 0)
 	} else {
 		artifactMetadataList = GetArtifactMetadata(ctx, *artifacts, rootIdentifier, urlProvider,
-			setupDetailsAuthHeaderPrefix, untaggedImagesEnabled)
+			setupDetailsAuthHeaderPrefix, untaggedImagesEnabled, packageWrapper)
 	}
 	pageCount := GetPageCount(count, pageSize)
 	listArtifact := &artifactapi.ListArtifact{
@@ -237,17 +243,19 @@ func GetAllArtifactResponse(
 }
 
 func GetAllArtifactFilesResponse(
+	ctx context.Context,
 	files *[]types.FileNodeMetadata, count int64, pageNumber int64, pageSize int,
 	registryURL string, artifactName string, version string,
 	packageType artifactapi.PackageType, setupDetailsAuthHeaderPrefix string,
-	artifactType *artifactapi.ArtifactType, isAnonymous bool,
+	artifactType *artifactapi.ArtifactType, isAnonymous bool, rootIdentifier string,
+	registryIdentifier string, packageWrapper interfaces.PackageWrapper,
 ) *artifactapi.FileDetailResponseJSONResponse {
 	var fileMetadataList []artifactapi.FileDetail
 	if files == nil || len(*files) == 0 {
 		fileMetadataList = make([]artifactapi.FileDetail, 0)
 	} else {
-		fileMetadataList = GetArtifactFilesMetadata(files, registryURL, artifactName, version, packageType,
-			setupDetailsAuthHeaderPrefix, artifactType, isAnonymous)
+		fileMetadataList = GetArtifactFilesMetadata(ctx, files, registryURL, artifactName, version, packageType,
+			setupDetailsAuthHeaderPrefix, artifactType, isAnonymous, rootIdentifier, registryIdentifier, packageWrapper)
 	}
 	pageCount := GetPageCount(count, pageSize)
 	listFileDetail := &artifactapi.ListFileDetail{
@@ -277,9 +285,11 @@ func GetArtifactFileResponseJSONResponse(
 	}
 }
 func GetArtifactFilesMetadata(
+	ctx context.Context,
 	metadata *[]types.FileNodeMetadata, registryURL string, artifactName string,
 	version string, packageType artifactapi.PackageType, setupDetailsAuthHeaderPrefix string,
-	artifactType *artifactapi.ArtifactType, isAnonymous bool,
+	artifactType *artifactapi.ArtifactType, isAnonymous bool, rootIdentifier string,
+	registryIdentifier string, packageWrapper interfaces.PackageWrapper,
 ) []artifactapi.FileDetail {
 	var files []artifactapi.FileDetail
 	for _, file := range *metadata {
@@ -311,9 +321,6 @@ func GetArtifactFilesMetadata(
 		case artifactapi.PackageTypeNUGET:
 			downloadCommand = GetNugetArtifactFileDownloadCommand(registryURL, artifactName,
 				version, filename, setupDetailsAuthHeaderPrefix, isAnonymous)
-		case artifactapi.PackageTypeCARGO:
-			downloadCommand = GetCargoArtifactFileDownloadCommand(registryURL, artifactName,
-				version, setupDetailsAuthHeaderPrefix, isAnonymous)
 		case artifactapi.PackageTypeGO:
 			goFilePath := utils.GetGoFilePath(artifactName, version)
 			filename = strings.Replace(file.Path, goFilePath+"/", "", 1)
@@ -323,6 +330,13 @@ func GetArtifactFilesMetadata(
 			filename = strings.Replace(filename, "/"+string(*artifactType), "", 1)
 			downloadCommand = GetHuggingFaceArtifactFileDownloadCommand(registryURL, artifactName,
 				version, filename, setupDetailsAuthHeaderPrefix, artifactType, isAnonymous)
+		default:
+			metadata := packageWrapper.GetFileMetadata(
+				ctx, rootIdentifier, registryIdentifier, string(packageType), artifactName, version, file)
+			if metadata != nil {
+				files = append(files, *metadata)
+				continue
+			}
 		}
 		files = append(files, artifactapi.FileDetail{
 			Checksums:       getCheckSums(file),
@@ -452,9 +466,10 @@ func GetNonOCIAllArtifactVersionResponse(
 	registryURL string,
 	setupDetailsAuthHeaderPrefix string,
 	pkgType string,
+	packageWrapper interfaces.PackageWrapper,
 ) *artifactapi.ListArtifactVersionResponseJSONResponse {
 	artifactVersionMetadataList := GetNonOCIArtifactMetadata(
-		ctx, artifacts, image, registryURL, setupDetailsAuthHeaderPrefix, pkgType)
+		ctx, artifacts, image, registryURL, setupDetailsAuthHeaderPrefix, pkgType, packageWrapper)
 	pageCount := GetPageCount(count, pageSize)
 	listArtifactVersions := &artifactapi.ListArtifactVersion{
 		ItemCount:        &count,
@@ -477,9 +492,15 @@ func GetNonOCIArtifactMetadata(
 	registryURL string,
 	setupDetailsAuthHeaderPrefix string,
 	pkgType string,
+	packageWrapper interfaces.PackageWrapper,
 ) []artifactapi.ArtifactVersionMetadata {
 	artifactVersionMetadataList := []artifactapi.ArtifactVersionMetadata{}
 	for _, tag := range *tags {
+		metadata := packageWrapper.GetArtifactVersionMetadata(pkgType, image, tag)
+		if metadata != nil {
+			artifactVersionMetadataList = append(artifactVersionMetadataList, *metadata)
+			continue
+		}
 		modifiedAt := GetTimeInMs(tag.ModifiedAt)
 		size := GetImageSize(tag.Size)
 		command := GetPullCommand(ctx, image, tag.Name, pkgType, registryURL, setupDetailsAuthHeaderPrefix,
@@ -675,36 +696,6 @@ func GetHFArtifactDetail(
 	})
 	if err != nil {
 		log.Error().Err(err).Msgf("Error setting the artifact details for hugging face package: [%s]", image.Name)
-		return artifactapi.ArtifactDetail{}
-	}
-	return *artifactDetail
-}
-
-func GetCargoArtifactDetail(
-	image *types.Image, artifact *types.Artifact,
-	metadata map[string]interface{},
-	downloadCount int64,
-) artifactapi.ArtifactDetail {
-	createdAt := GetTimeInMs(artifact.CreatedAt)
-	modifiedAt := GetTimeInMs(artifact.UpdatedAt)
-	size, ok := metadata["size"].(float64)
-	if !ok {
-		log.Error().Msg("failed to get size from Cargo metadata")
-	}
-	totalSize := GetSize(int64(size))
-	artifactDetail := &artifactapi.ArtifactDetail{
-		CreatedAt:     &createdAt,
-		ModifiedAt:    &modifiedAt,
-		Name:          &image.Name,
-		Version:       artifact.Version,
-		DownloadCount: &downloadCount,
-		Size:          &totalSize,
-	}
-	err := artifactDetail.FromCargoArtifactDetailConfig(artifactapi.CargoArtifactDetailConfig{
-		Metadata: &metadata,
-	})
-	if err != nil {
-		log.Error().Err(err).Msgf("Error setting the artifact details for cargo package: [%s]", image.Name)
 		return artifactapi.ArtifactDetail{}
 	}
 	return *artifactDetail

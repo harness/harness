@@ -90,8 +90,7 @@ func (c *goPackageType) IsURLRequiredForUpstreamSource(upstreamSource string) bo
 	return config.urlRequired
 }
 
-func (c *goPackageType) GetPullCommand(_ string, _ string, _ string, _ string,
-	_ string, _ string, _ bool) string {
+func (c *goPackageType) GetPullCommand(_ string, _ string, _ string) string {
 	return ""
 }
 
@@ -124,4 +123,77 @@ func (c *goPackageType) ReportBuildPackageIndexEvent(ctx context.Context, _ int6
 
 func (c *goPackageType) ReportBuildRegistryIndexEvent(ctx context.Context, _ int64, _ []types.SourceRef) {
 	log.Error().Ctx(ctx).Msg("Not implemented")
+}
+
+func (c *goPackageType) GetFilePath(
+	_ string,
+	_ string,
+) string {
+	return ""
+}
+
+func (c *goPackageType) DeleteArtifact(
+	_ context.Context,
+	_ *types.RegistryRequestBaseInfo,
+	_ string,
+) error {
+	return nil
+}
+
+func (c *goPackageType) GetPackageURL(_ context.Context,
+	_ string,
+	_ string,
+) string {
+	return ""
+}
+
+func (c *goPackageType) GetArtifactMetadata(
+	_ types.ArtifactMetadata,
+) *artifact.ArtifactMetadata {
+	return nil
+}
+
+func (c *goPackageType) GetArtifactVersionMetadata(
+	_ string,
+	_ types.NonOCIArtifactMetadata,
+) *artifact.ArtifactVersionMetadata {
+	return nil
+}
+
+func (c *goPackageType) GetDownloadFileCommand(
+	_ string,
+	_ string,
+	_ string,
+	_ bool,
+) string {
+	return ""
+}
+
+func (c *goPackageType) GetFileMetadata(
+	_ context.Context,
+	_ string,
+	_ string,
+	_ string,
+	_ string,
+	_ types.FileNodeMetadata,
+) *artifact.FileDetail {
+	return nil
+}
+
+func (c *goPackageType) GetArtifactDetail(
+	_ *types.Image,
+	_ *types.Artifact,
+	_ int64,
+) (*artifact.ArtifactDetail, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (c *goPackageType) GetClientSetupDetails(
+	_ context.Context,
+	_ string,
+	_ *artifact.ArtifactParam,
+	_ *artifact.VersionParam,
+	_ artifact.RegistryType,
+) (*artifact.ClientSetupDetails, error) {
+	return nil, fmt.Errorf("not implemented")
 }

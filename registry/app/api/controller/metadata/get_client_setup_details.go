@@ -122,15 +122,22 @@ func (c *APIController) GenerateClientSetupDetails(
 		return c.generateDockerClientSetupDetail(ctx, blankString, registryType, registryRef, image, version)
 	case string(artifact.PackageTypeNUGET):
 		return c.generateNugetClientSetupDetail(ctx, registryRef, image, version, registryType)
-	case string(artifact.PackageTypeCARGO):
-		return c.generateCargoClientSetupDetail(ctx, registryRef, image, version, registryType)
 	case string(artifact.PackageTypeGO):
 		return c.generateGoClientSetupDetail(ctx, registryRef, image, version, registryType)
 	case string(artifact.PackageTypeHUGGINGFACE):
 		return c.generateHuggingFaceClientSetupDetail(ctx, registryRef, image, version, registryType)
 	default:
-		log.Debug().Ctx(ctx).Msgf("Unknown package type for client details: %s", packageType)
-		return nil
+		clientSetupDetails, err := c.PackageWrapper.GetClientSetupDetails(
+			ctx, registryRef, image, version, registryType, packageType,
+		)
+		if err != nil {
+			log.Error().Ctx(ctx).Err(err).Msg("Failed to get client setup details")
+			return nil
+		}
+		return &artifact.ClientSetupDetailsResponseJSONResponse{
+			Data:   *clientSetupDetails,
+			Status: artifact.StatusSUCCESS,
+		}
 	}
 }
 
@@ -2221,194 +2228,6 @@ func (c *APIController) getNugetClientSetupDetails(
 	clientSetupDetails := artifact.ClientSetupDetails{
 		MainHeader: "Nuget Client Setup",
 		SecHeader:  "Follow these instructions to install/use Nuget packages from this registry.",
-		Sections:   sections,
-	}
-	return clientSetupDetails
-}
-
-func (c *APIController) generateCargoClientSetupDetail(
-	ctx context.Context,
-	registryRef string,
-	image *artifact.ArtifactParam,
-	tag *artifact.VersionParam,
-	registryType artifact.RegistryType,
-) *artifact.ClientSetupDetailsResponseJSONResponse {
-	staticStepType := artifact.ClientSetupStepTypeStatic
-	generateTokenType := artifact.ClientSetupStepTypeGenerateToken
-	session, _ := request.AuthSessionFrom(ctx)
-	username := session.Principal.Email
-	var clientSetupDetails artifact.ClientSetupDetails
-	if auth.IsAnonymousSession(session) {
-		clientSetupDetails = c.getAnonymousCargoClientSetupDetails(staticStepType, registryType)
-	} else {
-		clientSetupDetails = c.getCargoClientSetupDetails(staticStepType, generateTokenType, registryType)
-	}
-
-	registryURL := c.URLProvider.PackageURL(ctx, registryRef, "cargo")
-	c.replacePlaceholders(ctx, &clientSetupDetails.Sections, username, registryRef, image, tag, registryURL, "",
-		string(artifact.PackageTypeCARGO))
-
-	return &artifact.ClientSetupDetailsResponseJSONResponse{
-		Data:   clientSetupDetails,
-		Status: artifact.StatusSUCCESS,
-	}
-}
-
-func (c *APIController) getAnonymousCargoClientSetupDetails(
-	staticStepType artifact.ClientSetupStepType,
-	registryType artifact.RegistryType,
-) artifact.ClientSetupDetails {
-	section1 := artifact.ClientSetupSection{
-		Header: utils.StringPtr("Configure registry"),
-	}
-	_ = section1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
-		Steps: &[]artifact.ClientSetupStep{
-			{
-				Header: utils.StringPtr("Create or update ~/.cargo/config.toml with the following content:"),
-				Type:   &staticStepType,
-				Commands: &[]artifact.ClientSetupStepCommand{
-					{
-						Value: utils.StringPtr("[registry]\n" +
-							`global-credential-providers = ["cargo:token", "cargo:libsecret", "cargo:macos-keychain", "cargo:wincred"]` +
-							"\n\n" +
-							"[registries.harness-<REGISTRY_NAME>]\n" +
-							`index = "sparse+<REGISTRY_URL>/index/"`),
-					},
-				},
-			},
-		},
-	})
-
-	// Install section
-	section3 := artifact.ClientSetupSection{
-		Header: utils.StringPtr("Install Package"),
-	}
-	_ = section3.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
-		Steps: &[]artifact.ClientSetupStep{
-			{
-				Header: utils.StringPtr("Install a package using cargo"),
-				Type:   &staticStepType,
-				Commands: &[]artifact.ClientSetupStepCommand{
-					{
-						Value: utils.StringPtr("cargo add <ARTIFACT_NAME>@<VERSION> --registry harness-<REGISTRY_NAME>"),
-					},
-				},
-			},
-		},
-	})
-
-	sections := []artifact.ClientSetupSection{
-		section1,
-		section3,
-	}
-
-	if registryType == artifact.RegistryTypeUPSTREAM {
-		sections = []artifact.ClientSetupSection{
-			section1,
-			section3,
-		}
-	}
-
-	clientSetupDetails := artifact.ClientSetupDetails{
-		MainHeader: "Cargo Client Setup",
-		SecHeader:  "Follow these instructions to install/use cargo packages from this registry.",
-		Sections:   sections,
-	}
-	return clientSetupDetails
-}
-
-func (c *APIController) getCargoClientSetupDetails(
-	staticStepType artifact.ClientSetupStepType,
-	generateTokenType artifact.ClientSetupStepType,
-	registryType artifact.RegistryType,
-) artifact.ClientSetupDetails {
-	// Authentication section
-	section1 := artifact.ClientSetupSection{
-		Header: utils.StringPtr("Configure Authentication"),
-	}
-	_ = section1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
-		Steps: &[]artifact.ClientSetupStep{
-			{
-				Header: utils.StringPtr("Create or update ~/.cargo/config.toml with the following content:"),
-				Type:   &staticStepType,
-				Commands: &[]artifact.ClientSetupStepCommand{
-					{
-						Value: utils.StringPtr("[registry]\n" +
-							`global-credential-providers = ["cargo:token", "cargo:libsecret", "cargo:macos-keychain", "cargo:wincred"]` +
-							"\n\n" +
-							"[registries.harness-<REGISTRY_NAME>]\n" +
-							`index = "sparse+<REGISTRY_URL>/index/"`),
-					},
-				},
-			},
-			{
-				Header: utils.StringPtr("Generate an identity token for authentication"),
-				Type:   &generateTokenType,
-			},
-			{
-				Header: utils.StringPtr("Create or update ~/.cargo/credentials.toml with the following content:"),
-				Type:   &staticStepType,
-				Commands: &[]artifact.ClientSetupStepCommand{
-					{
-						Value: utils.StringPtr("[registries.harness-<REGISTRY_NAME>]" + "\n" + `token = "Bearer <token from step 2>"`),
-					},
-				},
-			},
-		},
-	})
-
-	// Publish section
-	section2 := artifact.ClientSetupSection{
-		Header: utils.StringPtr("Publish Package"),
-	}
-	_ = section2.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
-		Steps: &[]artifact.ClientSetupStep{
-			{
-				Header: utils.StringPtr("Publish your package:"),
-				Type:   &staticStepType,
-				Commands: &[]artifact.ClientSetupStepCommand{
-					{
-						Value: utils.StringPtr("cargo publish --registry harness-<REGISTRY_NAME>"),
-					},
-				},
-			},
-		},
-	})
-
-	// Install section
-	section3 := artifact.ClientSetupSection{
-		Header: utils.StringPtr("Install Package"),
-	}
-	_ = section3.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
-		Steps: &[]artifact.ClientSetupStep{
-			{
-				Header: utils.StringPtr("Install a package using cargo"),
-				Type:   &staticStepType,
-				Commands: &[]artifact.ClientSetupStepCommand{
-					{
-						Value: utils.StringPtr("cargo add <ARTIFACT_NAME>@<VERSION> --registry harness-<REGISTRY_NAME>"),
-					},
-				},
-			},
-		},
-	})
-
-	sections := []artifact.ClientSetupSection{
-		section1,
-		section2,
-		section3,
-	}
-
-	if registryType == artifact.RegistryTypeUPSTREAM {
-		sections = []artifact.ClientSetupSection{
-			section1,
-			section3,
-		}
-	}
-
-	clientSetupDetails := artifact.ClientSetupDetails{
-		MainHeader: "Cargo Client Setup",
-		SecHeader:  "Follow these instructions to install/use cargo packages from this registry.",
 		Sections:   sections,
 	}
 	return clientSetupDetails

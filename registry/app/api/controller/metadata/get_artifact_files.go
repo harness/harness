@@ -119,8 +119,6 @@ func (c *APIController) GetArtifactFiles(
 		registryURL = c.URLProvider.PackageURL(ctx, reqInfo.RootIdentifier+"/"+reqInfo.RegistryIdentifier, "npm")
 	case artifact.PackageTypeRPM:
 		registryURL = c.URLProvider.PackageURL(ctx, reqInfo.RootIdentifier+"/"+reqInfo.RegistryIdentifier, "rpm")
-	case artifact.PackageTypeCARGO:
-		registryURL = c.URLProvider.PackageURL(ctx, reqInfo.RootIdentifier+"/"+reqInfo.RegistryIdentifier, "cargo")
 	case artifact.PackageTypeGO:
 		registryURL = c.URLProvider.PackageURL(ctx, reqInfo.RootIdentifier+"/"+reqInfo.RegistryIdentifier, "go")
 	case artifact.PackageTypeHUGGINGFACE:
@@ -130,8 +128,12 @@ func (c *APIController) GetArtifactFiles(
 		registryURL = c.URLProvider.PackageURL(ctx, reqInfo.RootIdentifier+"/"+reqInfo.RegistryIdentifier,
 			"maven")
 	default:
-		registryURL = c.URLProvider.RegistryURL(ctx,
-			reqInfo.RootIdentifier, strings.ToLower(string(registry.PackageType)), reqInfo.RegistryIdentifier)
+		registryURL, err = c.PackageWrapper.GetPackageURL(ctx, reqInfo.RootIdentifier, reqInfo.RegistryIdentifier,
+			string(registry.PackageType))
+		if registryURL == "" || err != nil {
+			registryURL = c.URLProvider.RegistryURL(ctx,
+				reqInfo.RootIdentifier, strings.ToLower(string(registry.PackageType)), reqInfo.RegistryIdentifier)
+		}
 	}
 
 	var filePathPrefix string
@@ -141,7 +143,10 @@ func (c *APIController) GetArtifactFiles(
 		filePathPrefix, err2 = utils.GetFilePathWithArtifactType(registry.PackageType,
 			img.Name, art.Version, artifactType)
 	default:
-		filePathPrefix, err2 = utils.GetFilePath(registry.PackageType, img.Name, art.Version)
+		filePathPrefix, err = c.PackageWrapper.GetFilePath(string(registry.PackageType), img.Name, art.Version)
+		if filePathPrefix == "" || err != nil {
+			filePathPrefix, err2 = utils.GetFilePath(registry.PackageType, img.Name, art.Version)
+		}
 	}
 	if err2 != nil {
 		return failedToFetchFilesResponse(ctx, err2, art)
@@ -170,17 +175,27 @@ func (c *APIController) GetArtifactFiles(
 	switch registry.PackageType {
 	case artifact.PackageTypeGENERIC, artifact.PackageTypeMAVEN, artifact.PackageTypePYTHON,
 		artifact.PackageTypeNPM, artifact.PackageTypeRPM, artifact.PackageTypeNUGET,
-		artifact.PackageTypeCARGO, artifact.PackageTypeGO, artifact.PackageTypeHUGGINGFACE:
+		artifact.PackageTypeGO, artifact.PackageTypeHUGGINGFACE:
 		return artifact.GetArtifactFiles200JSONResponse{
-			FileDetailResponseJSONResponse: *GetAllArtifactFilesResponse(fileMetadataList, count, reqInfo.pageNumber,
+			FileDetailResponseJSONResponse: *GetAllArtifactFilesResponse(ctx, fileMetadataList, count, reqInfo.pageNumber,
 				reqInfo.limit, registryURL, img.Name, art.Version, registry.PackageType,
-				c.SetupDetailsAuthHeaderPrefix, artifactType, auth.IsAnonymousSession(session)),
+				c.SetupDetailsAuthHeaderPrefix, artifactType, auth.IsAnonymousSession(session),
+				reqInfo.RootIdentifier, reqInfo.RegistryIdentifier, c.PackageWrapper),
 		}, nil
 	default:
-		return artifact.GetArtifactFiles400JSONResponse{
-			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
-				*GetErrorResponse(http.StatusBadRequest, "Invalid package type"),
-			),
+		isValidPackageType := c.PackageWrapper.IsValidPackageType(string(registry.PackageType))
+		if !isValidPackageType {
+			return artifact.GetArtifactFiles400JSONResponse{
+				BadRequestJSONResponse: artifact.BadRequestJSONResponse(
+					*GetErrorResponse(http.StatusBadRequest, "Invalid package type"),
+				),
+			}, nil
+		}
+		return artifact.GetArtifactFiles200JSONResponse{
+			FileDetailResponseJSONResponse: *GetAllArtifactFilesResponse(ctx, fileMetadataList, count, reqInfo.pageNumber,
+				reqInfo.limit, registryURL, img.Name, art.Version, registry.PackageType,
+				c.SetupDetailsAuthHeaderPrefix, artifactType, auth.IsAnonymousSession(session),
+				reqInfo.RootIdentifier, reqInfo.RegistryIdentifier, c.PackageWrapper),
 		}, nil
 	}
 }

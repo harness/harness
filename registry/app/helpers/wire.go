@@ -15,6 +15,7 @@
 package helpers
 
 import (
+	localurlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/api/interfaces"
 	registryevents "github.com/harness/gitness/registry/app/events/artifact"
 	registrypostprocessingevents "github.com/harness/gitness/registry/app/events/asyncprocessing"
@@ -23,6 +24,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
+	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
 )
@@ -52,6 +54,8 @@ func ProvideRegistryHelper(
 	artifactEventReporter *registryevents.Reporter,
 	postProcessingReporter *registrypostprocessingevents.Reporter,
 	tx dbtx.Transactor,
+	urlProvider localurlprovider.Provider,
+	gitnessConfig *types.Config,
 ) interfaces.RegistryHelper {
 	return NewRegistryHelper(
 		artifactStore,
@@ -60,6 +64,8 @@ func ProvideRegistryHelper(
 		artifactEventReporter,
 		postProcessingReporter,
 		tx,
+		urlProvider,
+		gitnessConfig.Registry.SetupDetailsAuthHeaderPrefix,
 	)
 }
 

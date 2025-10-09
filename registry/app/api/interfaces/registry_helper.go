@@ -17,17 +17,25 @@ package interfaces
 import (
 	"context"
 
+	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	registryevents "github.com/harness/gitness/registry/app/events/artifact"
 	"github.com/harness/gitness/registry/types"
 )
 
 type RegistryHelper interface {
+	GetAuthHeaderPrefix() string
 	// DeleteVersion deletes the version
 	DeleteVersion(ctx context.Context,
 		regInfo *types.RegistryRequestBaseInfo,
 		imageInfo *types.Image,
 		artifactName string,
 		versionName string) error
+
+	// DeleteArtifact deletes the artifact
+	DeleteGenericImage(ctx context.Context,
+		regInfo *types.RegistryRequestBaseInfo,
+		artifactName string, filePath string,
+	) error
 
 	// ReportDeleteVersionEvent reports the delete version event
 	ReportDeleteVersionEvent(
@@ -40,4 +48,49 @@ type RegistryHelper interface {
 
 	// ReportBuildRegistryIndexEvent reports the build registry index event
 	ReportBuildRegistryIndexEvent(ctx context.Context, registryID int64, sources []types.SourceRef)
+
+	// GetPackageURL returns the package URL
+	GetPackageURL(
+		ctx context.Context,
+		rootIdentifier string,
+		registryIdentifier string,
+		packageTypePathParam string,
+	) string
+
+	GetArtifactMetadata(
+		artifact types.ArtifactMetadata,
+		pullCommand string,
+	) *artifact.ArtifactMetadata
+
+	GetArtifactVersionMetadata(
+		tag types.NonOCIArtifactMetadata,
+		pullCommand string,
+		packageType string,
+	) *artifact.ArtifactVersionMetadata
+
+	GetFileMetadata(
+		file types.FileNodeMetadata,
+		filename string,
+		downloadCommand string,
+	) *artifact.FileDetail
+
+	GetArtifactDetail(
+		img *types.Image,
+		art *types.Artifact,
+		metadata map[string]interface{},
+		downloadCount int64,
+	) *artifact.ArtifactDetail
+
+	ReplacePlaceholders(
+		ctx context.Context,
+		clientSetupSections *[]artifact.ClientSetupSection,
+		username string,
+		regRef string,
+		image *artifact.ArtifactParam,
+		version *artifact.VersionParam,
+		registryURL string,
+		groupID string,
+		uploadURL string,
+		hostname string,
+	)
 }

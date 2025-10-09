@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/registry/app/api/interfaces"
+	artifactapi "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/factory"
 	"github.com/harness/gitness/registry/types"
 )
@@ -142,4 +143,119 @@ func (p *packageWrapper) DeleteArtifactVersion(
 	pkg.ReportBuildPackageIndexEvent(ctx, regInfo.RegistryID, artifactName)
 	pkg.ReportBuildRegistryIndexEvent(ctx, regInfo.RegistryID, make([]types.SourceRef, 0))
 	return nil
+}
+
+func (p *packageWrapper) DeleteArtifact(
+	ctx context.Context,
+	regInfo *types.RegistryRequestBaseInfo,
+	artifactName string,
+) error {
+	pkg := p.GetPackage(string(regInfo.PackageType))
+	if pkg == nil {
+		return fmt.Errorf("unsupported package type: %s", regInfo.PackageType)
+	}
+	err := pkg.DeleteArtifact(ctx, regInfo, artifactName)
+	if err != nil {
+		return fmt.Errorf("failed to delete artifact: %w", err)
+	}
+	pkg.ReportBuildRegistryIndexEvent(ctx, regInfo.RegistryID, make([]types.SourceRef, 0))
+	return nil
+}
+
+func (p *packageWrapper) GetFilePath(
+	packageType string,
+	artifactName string,
+	versionName string,
+) (string, error) {
+	pkg := p.GetPackage(packageType)
+	if pkg == nil {
+		return "", fmt.Errorf("unsupported package type: %s", packageType)
+	}
+	return pkg.GetFilePath(artifactName, versionName), nil
+}
+
+func (p *packageWrapper) GetPackageURL(
+	ctx context.Context,
+	rootIdentifier string,
+	registryIdentifier string,
+	packageType string,
+) (string, error) {
+	pkg := p.GetPackage(packageType)
+	if pkg == nil {
+		return "", fmt.Errorf("unsupported package type: %s", packageType)
+	}
+	return pkg.GetPackageURL(ctx, rootIdentifier, registryIdentifier), nil
+}
+
+func (p *packageWrapper) GetArtifactMetadata(
+	artifact types.ArtifactMetadata,
+) *artifactapi.ArtifactMetadata {
+	pkg := p.GetPackage(string(artifact.PackageType))
+	if pkg == nil {
+		return nil
+	}
+	return pkg.GetArtifactMetadata(artifact)
+}
+
+func (p *packageWrapper) GetArtifactVersionMetadata(
+	packageType string,
+	image string,
+	tag types.NonOCIArtifactMetadata,
+) *artifactapi.ArtifactVersionMetadata {
+	pkg := p.GetPackage(packageType)
+	if pkg == nil {
+		return nil
+	}
+	return pkg.GetArtifactVersionMetadata(image, tag)
+}
+
+func (p *packageWrapper) GetFileMetadata(
+	ctx context.Context,
+	rootIdentifier string,
+	registryIdentifier string,
+	packageType string,
+	artifactName string,
+	version string,
+	file types.FileNodeMetadata,
+) *artifactapi.FileDetail {
+	pkg := p.GetPackage(packageType)
+	if pkg == nil {
+		return nil
+	}
+	return pkg.GetFileMetadata(
+		ctx,
+		rootIdentifier,
+		registryIdentifier,
+		artifactName,
+		version,
+		file,
+	)
+}
+
+func (p *packageWrapper) GetArtifactDetail(
+	packageType string,
+	img *types.Image,
+	art *types.Artifact,
+	downloadCount int64,
+) (*artifactapi.ArtifactDetail, error) {
+	pkg := p.GetPackage(packageType)
+	if pkg == nil {
+		return nil, fmt.Errorf("unsupported package type: %s", packageType)
+	}
+	return pkg.GetArtifactDetail(img, art, downloadCount)
+}
+
+func (p *packageWrapper) GetClientSetupDetails(
+	ctx context.Context,
+	regRef string,
+	image *artifactapi.ArtifactParam,
+	tag *artifactapi.VersionParam,
+	registryType artifactapi.RegistryType,
+	packageType string,
+) (*artifactapi.ClientSetupDetails, error) {
+	pkg := p.GetPackage(packageType)
+	if pkg == nil {
+		return nil, fmt.Errorf("unsupported package type: %s", packageType)
+	}
+	return pkg.GetClientSetupDetails(ctx, regRef, image, tag, registryType)
 }

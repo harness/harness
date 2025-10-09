@@ -207,7 +207,7 @@ func (c *APIController) GetAllArtifactVersions(
 	return artifact.GetAllArtifactVersions200JSONResponse{
 		ListArtifactVersionResponseJSONResponse: *GetNonOCIAllArtifactVersionResponse(
 			ctx, metadata, image, cnt, regInfo.pageNumber, regInfo.limit, registryURL,
-			c.SetupDetailsAuthHeaderPrefix, string(registry.PackageType),
+			c.SetupDetailsAuthHeaderPrefix, string(registry.PackageType), c.PackageWrapper,
 		),
 	}, nil
 }

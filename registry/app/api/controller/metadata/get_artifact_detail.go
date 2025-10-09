@@ -199,17 +199,6 @@ func (c *APIController) GetArtifactDetails(
 			}, nil
 		}
 		artifactDetails = GetHFArtifactDetail(img, art, result, downloadCount)
-	case artifact.PackageTypeCARGO:
-		var result map[string]interface{}
-		err := json.Unmarshal(art.Metadata, &result)
-		if err != nil {
-			return artifact.GetArtifactDetails500JSONResponse{
-				InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
-					*GetErrorResponse(http.StatusInternalServerError, err.Error()),
-				),
-			}, nil
-		}
-		artifactDetails = GetCargoArtifactDetail(img, art, result, downloadCount)
 	case artifact.PackageTypeGO:
 		var result map[string]interface{}
 		err := json.Unmarshal(art.Metadata, &result)
@@ -224,11 +213,17 @@ func (c *APIController) GetArtifactDetails(
 	case artifact.PackageTypeDOCKER:
 	case artifact.PackageTypeHELM:
 	default:
-		return artifact.GetArtifactDetails400JSONResponse{
-			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
-				*GetErrorResponse(http.StatusBadRequest, "unsupported package type"),
-			),
-		}, nil
+		details, err := c.PackageWrapper.GetArtifactDetail(string(registry.PackageType), img, art, downloadCount)
+		if err != nil {
+			return artifact.GetArtifactDetails400JSONResponse{
+				BadRequestJSONResponse: artifact.BadRequestJSONResponse(
+					*GetErrorResponse(http.StatusBadRequest, err.Error()),
+				),
+			}, nil
+		}
+		if details != nil {
+			artifactDetails = *details
+		}
 	}
 
 	quarantinedArtifacts, err := c.QuarantineArtifactRepository.GetByFilePath(ctx, "", regInfo.RegistryID, image, version)

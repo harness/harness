@@ -86,8 +86,7 @@ func (c *rpmPackageType) IsURLRequiredForUpstreamSource(upstreamSource string) b
 	return config.urlRequired
 }
 
-func (c *rpmPackageType) GetPullCommand(_ string, _ string, _ string, _ string,
-	_ string, _ string, _ bool) string {
+func (c *rpmPackageType) GetPullCommand(_ string, _ string, _ string) string {
 	return ""
 }
 
@@ -120,4 +119,77 @@ func (c *rpmPackageType) ReportBuildPackageIndexEvent(ctx context.Context, _ int
 
 func (c *rpmPackageType) ReportBuildRegistryIndexEvent(ctx context.Context, _ int64, _ []types.SourceRef) {
 	log.Error().Ctx(ctx).Msg("Not implemented")
+}
+
+func (c *rpmPackageType) GetFilePath(
+	_ string,
+	_ string,
+) string {
+	return ""
+}
+
+func (c *rpmPackageType) DeleteArtifact(
+	_ context.Context,
+	_ *types.RegistryRequestBaseInfo,
+	_ string,
+) error {
+	return nil
+}
+
+func (c *rpmPackageType) GetPackageURL(_ context.Context,
+	_ string,
+	_ string,
+) string {
+	return ""
+}
+
+func (c *rpmPackageType) GetArtifactMetadata(
+	_ types.ArtifactMetadata,
+) *artifact.ArtifactMetadata {
+	return nil
+}
+
+func (c *rpmPackageType) GetArtifactVersionMetadata(
+	_ string,
+	_ types.NonOCIArtifactMetadata,
+) *artifact.ArtifactVersionMetadata {
+	return nil
+}
+
+func (c *rpmPackageType) GetDownloadFileCommand(
+	_ string,
+	_ string,
+	_ string,
+	_ bool,
+) string {
+	return ""
+}
+
+func (c *rpmPackageType) GetFileMetadata(
+	_ context.Context,
+	_ string,
+	_ string,
+	_ string,
+	_ string,
+	_ types.FileNodeMetadata,
+) *artifact.FileDetail {
+	return nil
+}
+
+func (c *rpmPackageType) GetArtifactDetail(
+	_ *types.Image,
+	_ *types.Artifact,
+	_ int64,
+) (*artifact.ArtifactDetail, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (c *rpmPackageType) GetClientSetupDetails(
+	_ context.Context,
+	_ string,
+	_ *artifact.ArtifactParam,
+	_ *artifact.VersionParam,
+	_ artifact.RegistryType,
+) (*artifact.ClientSetupDetails, error) {
+	return nil, fmt.Errorf("not implemented")
 }

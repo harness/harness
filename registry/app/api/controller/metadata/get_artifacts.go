@@ -117,7 +117,8 @@ func (c *APIController) GetAllArtifacts(
 
 	return artifact.GetAllArtifacts200JSONResponse{
 		ListArtifactResponseJSONResponse: *GetAllArtifactResponse(ctx, artifacts, count, regInfo.pageNumber, regInfo.limit,
-			regInfo.RootIdentifier, c.URLProvider, c.SetupDetailsAuthHeaderPrefix, c.UntaggedImagesEnabled(ctx)),
+			regInfo.RootIdentifier, c.URLProvider, c.SetupDetailsAuthHeaderPrefix, c.UntaggedImagesEnabled(ctx),
+			c.PackageWrapper),
 	}, nil
 }
 
