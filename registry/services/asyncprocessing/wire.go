@@ -20,6 +20,7 @@ import (
 	"github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/events"
+	"github.com/harness/gitness/registry/app/api/interfaces"
 	"github.com/harness/gitness/registry/app/events/asyncprocessing"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
@@ -54,6 +55,7 @@ func ProvideService(
 	taskEventRepository store.TaskEventRepository,
 	eventsSystem *events.System,
 	postProcessingReporter *asyncprocessing.Reporter,
+	packageWrapper interfaces.PackageWrapper,
 ) (*Service, error) {
 	return NewService(
 		ctx,
@@ -70,6 +72,7 @@ func ProvideService(
 		taskEventRepository,
 		eventsSystem,
 		postProcessingReporter,
+		packageWrapper,
 	)
 }
 

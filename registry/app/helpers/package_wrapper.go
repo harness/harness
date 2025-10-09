@@ -21,18 +21,22 @@ import (
 	"github.com/harness/gitness/registry/app/api/interfaces"
 	artifactapi "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/factory"
+	"github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/types"
 )
 
 type packageWrapper struct {
 	packageFactory factory.PackageFactory
+	regFinder      refcache.RegistryFinder
 }
 
 func NewPackageWrapper(
 	packageFactory factory.PackageFactory,
+	regFinder refcache.RegistryFinder,
 ) interfaces.PackageWrapper {
 	return &packageWrapper{
 		packageFactory: packageFactory,
+		regFinder:      regFinder,
 	}
 }
 
@@ -122,6 +126,16 @@ func (p *packageWrapper) IsURLRequiredForUpstreamSource(packageType string, upst
 		return false
 	}
 	return pkg.IsURLRequiredForUpstreamSource(upstreamSource)
+}
+
+func (p *packageWrapper) GetPackageTypeFromPathPackageType(pathPackageType string) (string, error) {
+	for _, pkgType := range p.packageFactory.GetAllPackageTypes() {
+		pkg := p.packageFactory.Get(pkgType)
+		if pkg.GetPathPackageType() == pathPackageType {
+			return pkgType, nil
+		}
+	}
+	return "", fmt.Errorf("unsupported path package type: %s", pathPackageType)
 }
 
 func (p *packageWrapper) DeleteArtifactVersion(
@@ -258,4 +272,49 @@ func (p *packageWrapper) GetClientSetupDetails(
 		return nil, fmt.Errorf("unsupported package type: %s", packageType)
 	}
 	return pkg.GetClientSetupDetails(ctx, regRef, image, tag, registryType)
+}
+
+func (p *packageWrapper) BuildRegistryIndexAsync(
+	ctx context.Context,
+	payload types.BuildRegistryIndexTaskPayload,
+) error {
+	registry, err := p.regFinder.FindByID(ctx, payload.RegistryID)
+	if err != nil {
+		return fmt.Errorf("failed to find registry: %w", err)
+	}
+	pkg := p.GetPackage(string(registry.PackageType))
+	if pkg == nil {
+		return fmt.Errorf("unsupported package type: %s", registry.PackageType)
+	}
+	return pkg.BuildRegistryIndexAsync(ctx, registry, payload)
+}
+
+func (p *packageWrapper) BuildPackageIndexAsync(
+	ctx context.Context,
+	payload types.BuildPackageIndexTaskPayload,
+) error {
+	registry, err := p.regFinder.FindByID(ctx, payload.RegistryID)
+	if err != nil {
+		return fmt.Errorf("failed to find registry: %w", err)
+	}
+	pkg := p.GetPackage(string(registry.PackageType))
+	if pkg == nil {
+		return fmt.Errorf("unsupported package type: %s", registry.PackageType)
+	}
+	return pkg.BuildPackageIndexAsync(ctx, registry, payload)
+}
+
+func (p *packageWrapper) BuildPackageMetadataAsync(
+	ctx context.Context,
+	payload types.BuildPackageMetadataTaskPayload,
+) error {
+	registry, err := p.regFinder.FindByID(ctx, payload.RegistryID)
+	if err != nil {
+		return fmt.Errorf("failed to find registry: %w", err)
+	}
+	pkg := p.GetPackage(string(registry.PackageType))
+	if pkg == nil {
+		return fmt.Errorf("unsupported package type: %s", registry.PackageType)
+	}
+	return pkg.BuildPackageMetadataAsync(ctx, registry, payload)
 }

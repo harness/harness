@@ -26,6 +26,7 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/events"
+	"github.com/harness/gitness/registry/app/api/interfaces"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/events/asyncprocessing"
 	"github.com/harness/gitness/registry/app/store"
@@ -56,6 +57,7 @@ type Service struct {
 	taskEventRepository     store.TaskEventRepository
 	innerReporter           *events.GenericReporter
 	postProcessingReporter  *asyncprocessing.Reporter
+	packageWrapper          interfaces.PackageWrapper
 }
 
 func NewService(
@@ -73,6 +75,7 @@ func NewService(
 	taskEventRepository store.TaskEventRepository,
 	eventsSystem *events.System,
 	postProcessingReporter *asyncprocessing.Reporter,
+	packageWrapper interfaces.PackageWrapper,
 ) (*Service, error) {
 	if err := config.Prepare(); err != nil {
 		return nil, fmt.Errorf("provided postprocessing service config is invalid: %w", err)
@@ -93,6 +96,7 @@ func NewService(
 		taskEventRepository:     taskEventRepository,
 		innerReporter:           innerReporter,
 		postProcessingReporter:  postProcessingReporter,
+		packageWrapper:          packageWrapper,
 	}
 	_, err = artifactsReaderFactory.Launch(ctx, eventsReaderGroupName, config.EventReaderName,
 		func(r *asyncprocessing.Reader) error {
@@ -245,10 +249,9 @@ func (s *Service) handleBuildRegistryIndex(ctx context.Context, task *types.Task
 				}
 			}
 		}
-
 	default:
-		log.Ctx(ctx).Error().Msgf("unsupported package type [%s] for registry [%d] in task [%s]",
-			registry.PackageType, payload.RegistryID, task.Key)
+		err := s.packageWrapper.BuildRegistryIndexAsync(ctx, payload)
+		processingErr = fmt.Errorf("failed to build registry index for registry [%d]: %w", payload.RegistryID, err)
 	}
 	return processingErr
 }
@@ -273,14 +276,6 @@ func (s *Service) handleBuildPackageIndex(
 	}
 	//nolint:exhaustive
 	switch registry.PackageType {
-	case artifact.PackageTypeCARGO:
-		err := s.cargoRegistryHelper.UpdatePackageIndex(
-			ctx, payload.PrincipalID, registry.RootParentID, registry.ID, payload.Image,
-		)
-		if err != nil {
-			processingErr = fmt.Errorf("failed to build CARGO package index for registry [%d] package [%s]: %w",
-				payload.RegistryID, payload.Image, err)
-		}
 	case artifact.PackageTypeGO:
 		err := s.gopackageRegistryHelper.UpdatePackageIndex(
 			ctx, payload.PrincipalID, registry.RootParentID, registry.ID, payload.Image,
@@ -290,8 +285,8 @@ func (s *Service) handleBuildPackageIndex(
 				payload.RegistryID, payload.Image, err)
 		}
 	default:
-		log.Ctx(ctx).Error().Msgf("unsupported package type [%s] for registry [%d] and image [%s] in task [%s]",
-			registry.PackageType, payload.RegistryID, payload.Image, task.Key)
+		err := s.packageWrapper.BuildPackageIndexAsync(ctx, payload)
+		processingErr = fmt.Errorf("failed to build registry index for registry [%d]: %w", payload.RegistryID, err)
 	}
 	return processingErr
 }
@@ -332,8 +327,8 @@ func (s *Service) handleBuildPackageMetadata(
 				payload.RegistryID, payload.Image, err)
 		}
 	default:
-		log.Ctx(ctx2).Error().Msgf("unsupported package type [%s] for registry [%d] and image [%s] in task [%s]",
-			registry.PackageType, payload.RegistryID, payload.Image, task.Key)
+		err := s.packageWrapper.BuildPackageMetadataAsync(ctx, payload)
+		processingErr = fmt.Errorf("failed to build registry index for registry [%d]: %w", payload.RegistryID, err)
 	}
 	return processingErr
 }

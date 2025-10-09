@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/registry/app/api/interfaces"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/registry/app/utils/cargo"
 	"github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/registry/types"
 	registryutils "github.com/harness/gitness/registry/utils"
@@ -40,15 +41,21 @@ type UpstreamSourceConfig struct {
 type cargoPackageType struct {
 	packageType          string
 	registryHelper       interfaces.RegistryHelper
+	pathPackageType      string
 	validRepoTypes       []string
 	validUpstreamSources []string
 	upstreamSourceConfig map[string]UpstreamSourceConfig
+	cargoRegistryHelper  cargo.RegistryHelper
 }
 
-func NewCargoPackageType(registryHelper interfaces.RegistryHelper) CargoPackageType {
+func NewCargoPackageType(
+	registryHelper interfaces.RegistryHelper,
+	cargoRegistryHelper cargo.RegistryHelper,
+) CargoPackageType {
 	return &cargoPackageType{
-		packageType:    string(artifact.PackageTypeCARGO),
-		registryHelper: registryHelper,
+		packageType:     string(artifact.PackageTypeCARGO),
+		pathPackageType: string(types.PathPackageTypeCargo),
+		registryHelper:  registryHelper,
 		validRepoTypes: []string{
 			string(artifact.RegistryTypeUPSTREAM),
 			string(artifact.RegistryTypeVIRTUAL),
@@ -65,11 +72,16 @@ func NewCargoPackageType(registryHelper interfaces.RegistryHelper) CargoPackageT
 				urlRequired: false,
 			},
 		},
+		cargoRegistryHelper: cargoRegistryHelper,
 	}
 }
 
 func (c *cargoPackageType) GetPackageType() string {
 	return c.packageType
+}
+
+func (c *cargoPackageType) GetPathPackageType() string {
+	return c.pathPackageType
 }
 
 func (c *cargoPackageType) IsValidRepoType(repoType string) bool {
@@ -446,4 +458,35 @@ func getInstallPackageClientSetupSection(
 		},
 	})
 	return section3
+}
+
+func (c *cargoPackageType) BuildRegistryIndexAsync(
+	_ context.Context,
+	_ *types.Registry,
+	_ types.BuildRegistryIndexTaskPayload,
+) error {
+	return fmt.Errorf("not implemented")
+}
+
+func (c *cargoPackageType) BuildPackageIndexAsync(
+	ctx context.Context,
+	registry *types.Registry,
+	payload types.BuildPackageIndexTaskPayload,
+) error {
+	err := c.cargoRegistryHelper.UpdatePackageIndex(
+		ctx, payload.PrincipalID, registry.RootParentID, registry.ID, payload.Image,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to build CARGO package index for registry [%d] package [%s]: %w",
+			payload.RegistryID, payload.Image, err)
+	}
+	return nil
+}
+
+func (c *cargoPackageType) BuildPackageMetadataAsync(
+	_ context.Context,
+	_ *types.Registry,
+	_ types.BuildPackageMetadataTaskPayload,
+) error {
+	return fmt.Errorf("not implemented")
 }

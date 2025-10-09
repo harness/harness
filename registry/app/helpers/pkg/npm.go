@@ -35,12 +35,14 @@ type npmPackageType struct {
 	validRepoTypes       []string
 	validUpstreamSources []string
 	upstreamSourceConfig map[string]UpstreamSourceConfig
+	pathPackageType      string
 }
 
 func NewNPMPackageType(registryHelper interfaces.RegistryHelper) NPMPackageType {
 	return &npmPackageType{
-		packageType:    string(artifact.PackageTypeNPM),
-		registryHelper: registryHelper,
+		packageType:     string(artifact.PackageTypeNPM),
+		registryHelper:  registryHelper,
+		pathPackageType: string(types.PathPackageTypeNpm),
 		validRepoTypes: []string{
 			string(artifact.RegistryTypeUPSTREAM),
 			string(artifact.RegistryTypeVIRTUAL),
@@ -62,6 +64,10 @@ func NewNPMPackageType(registryHelper interfaces.RegistryHelper) NPMPackageType 
 
 func (c *npmPackageType) GetPackageType() string {
 	return c.packageType
+}
+
+func (c *npmPackageType) GetPathPackageType() string {
+	return c.pathPackageType
 }
 
 func (c *npmPackageType) IsValidRepoType(repoType string) bool {
@@ -196,4 +202,28 @@ func (c *npmPackageType) GetClientSetupDetails(
 	_ artifact.RegistryType,
 ) (*artifact.ClientSetupDetails, error) {
 	return nil, fmt.Errorf("not implemented")
+}
+
+func (c *npmPackageType) BuildRegistryIndexAsync(
+	_ context.Context,
+	_ *types.Registry,
+	_ types.BuildRegistryIndexTaskPayload,
+) error {
+	return fmt.Errorf("not implemented")
+}
+
+func (c *npmPackageType) BuildPackageIndexAsync(
+	_ context.Context,
+	_ *types.Registry,
+	_ types.BuildPackageIndexTaskPayload,
+) error {
+	return fmt.Errorf("not implemented")
+}
+
+func (c *npmPackageType) BuildPackageMetadataAsync(
+	_ context.Context,
+	_ *types.Registry,
+	_ types.BuildPackageMetadataTaskPayload,
+) error {
+	return fmt.Errorf("not implemented")
 }

@@ -1182,3 +1182,85 @@ func (_c *MockPackageWrapper_ValidateUpstreamSource_Call) RunAndReturn(run func(
 	_c.Call.Return(run)
 	return _c
 }
+
+// BuildRegistryIndexAsync provides a mock function
+func (_mock *MockPackageWrapper) BuildRegistryIndexAsync(ctx context.Context, payload types.BuildRegistryIndexTaskPayload) error {
+	ret := _mock.Called(ctx, payload)
+
+	if len(ret) == 0 {
+		panic("no return value specified for BuildRegistryIndexAsync")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, types.BuildRegistryIndexTaskPayload) error); ok {
+		r0 = rf(ctx, payload)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// BuildPackageIndexAsync provides a mock function
+func (_mock *MockPackageWrapper) BuildPackageIndexAsync(ctx context.Context, payload types.BuildPackageIndexTaskPayload) error {
+	ret := _mock.Called(ctx, payload)
+
+	if len(ret) == 0 {
+		panic("no return value specified for BuildPackageIndexAsync")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, types.BuildPackageIndexTaskPayload) error); ok {
+		r0 = rf(ctx, payload)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// BuildPackageMetadataAsync provides a mock function
+func (_mock *MockPackageWrapper) BuildPackageMetadataAsync(ctx context.Context, payload types.BuildPackageMetadataTaskPayload) error {
+	ret := _mock.Called(ctx, payload)
+
+	if len(ret) == 0 {
+		panic("no return value specified for BuildPackageMetadataAsync")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, types.BuildPackageMetadataTaskPayload) error); ok {
+		r0 = rf(ctx, payload)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// GetPackageTypeFromPathPackageType provides a mock function
+func (_mock *MockPackageWrapper) GetPackageTypeFromPathPackageType(pathPackageType string) (string, error) {
+	ret := _mock.Called(pathPackageType)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetPackageTypeFromPathPackageType")
+	}
+
+	var r0 string
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (string, error)); ok {
+		return rf(pathPackageType)
+	}
+	if rf, ok := ret.Get(0).(func(string) string); ok {
+		r0 = rf(pathPackageType)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(pathPackageType)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}

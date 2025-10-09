@@ -23,6 +23,7 @@ import (
 
 type PackageHelper interface {
 	GetPackageType() string
+	GetPathPackageType() string
 	GetDownloadFileCommand(
 		regURL string,
 		artifactName string,
@@ -84,4 +85,19 @@ type PackageHelper interface {
 		tag *artifact.VersionParam,
 		registryType artifact.RegistryType,
 	) (*artifact.ClientSetupDetails, error)
+	BuildRegistryIndexAsync(
+		ctx context.Context,
+		registry *types.Registry,
+		payload types.BuildRegistryIndexTaskPayload,
+	) error
+	BuildPackageIndexAsync(
+		ctx context.Context,
+		registry *types.Registry,
+		payload types.BuildPackageIndexTaskPayload,
+	) error
+	BuildPackageMetadataAsync(
+		ctx context.Context,
+		registry *types.Registry,
+		payload types.BuildPackageMetadataTaskPayload,
+	) error
 }

@@ -35,12 +35,14 @@ type rpmPackageType struct {
 	validRepoTypes       []string
 	validUpstreamSources []string
 	upstreamSourceConfig map[string]UpstreamSourceConfig
+	pathPackageType      string
 }
 
 func NewRPMPackageType(registryHelper interfaces.RegistryHelper) RPMPackageType {
 	return &rpmPackageType{
-		packageType:    string(artifact.PackageTypeRPM),
-		registryHelper: registryHelper,
+		packageType:     string(artifact.PackageTypeRPM),
+		registryHelper:  registryHelper,
+		pathPackageType: string(types.PathPackageTypeRPM),
 		validRepoTypes: []string{
 			string(artifact.RegistryTypeUPSTREAM),
 			string(artifact.RegistryTypeVIRTUAL),
@@ -58,6 +60,10 @@ func NewRPMPackageType(registryHelper interfaces.RegistryHelper) RPMPackageType 
 
 func (c *rpmPackageType) GetPackageType() string {
 	return c.packageType
+}
+
+func (c *rpmPackageType) GetPathPackageType() string {
+	return c.pathPackageType
 }
 
 func (c *rpmPackageType) IsValidRepoType(repoType string) bool {
@@ -192,4 +198,28 @@ func (c *rpmPackageType) GetClientSetupDetails(
 	_ artifact.RegistryType,
 ) (*artifact.ClientSetupDetails, error) {
 	return nil, fmt.Errorf("not implemented")
+}
+
+func (c *rpmPackageType) BuildRegistryIndexAsync(
+	_ context.Context,
+	_ *types.Registry,
+	_ types.BuildRegistryIndexTaskPayload,
+) error {
+	return fmt.Errorf("not implemented")
+}
+
+func (c *rpmPackageType) BuildPackageIndexAsync(
+	_ context.Context,
+	_ *types.Registry,
+	_ types.BuildPackageIndexTaskPayload,
+) error {
+	return fmt.Errorf("not implemented")
+}
+
+func (c *rpmPackageType) BuildPackageMetadataAsync(
+	_ context.Context,
+	_ *types.Registry,
+	_ types.BuildPackageMetadataTaskPayload,
+) error {
+	return fmt.Errorf("not implemented")
 }

@@ -35,12 +35,14 @@ type mavenPackageType struct {
 	validRepoTypes       []string
 	validUpstreamSources []string
 	upstreamSourceConfig map[string]UpstreamSourceConfig
+	pathPackageType      string
 }
 
 func NewMavenPackageType(registryHelper interfaces.RegistryHelper) MavenPackageType {
 	return &mavenPackageType{
-		packageType:    string(artifact.PackageTypeMAVEN),
-		registryHelper: registryHelper,
+		packageType:     string(artifact.PackageTypeMAVEN),
+		pathPackageType: string(types.PathPackageTypeMaven),
+		registryHelper:  registryHelper,
 		validRepoTypes: []string{
 			string(artifact.RegistryTypeUPSTREAM),
 			string(artifact.RegistryTypeVIRTUAL),
@@ -62,6 +64,10 @@ func NewMavenPackageType(registryHelper interfaces.RegistryHelper) MavenPackageT
 
 func (c *mavenPackageType) GetPackageType() string {
 	return c.packageType
+}
+
+func (c *mavenPackageType) GetPathPackageType() string {
+	return c.pathPackageType
 }
 
 func (c *mavenPackageType) IsValidRepoType(repoType string) bool {
@@ -196,4 +202,28 @@ func (c *mavenPackageType) GetClientSetupDetails(
 	_ artifact.RegistryType,
 ) (*artifact.ClientSetupDetails, error) {
 	return nil, fmt.Errorf("not implemented")
+}
+
+func (c *mavenPackageType) BuildRegistryIndexAsync(
+	_ context.Context,
+	_ *types.Registry,
+	_ types.BuildRegistryIndexTaskPayload,
+) error {
+	return fmt.Errorf("not implemented")
+}
+
+func (c *mavenPackageType) BuildPackageIndexAsync(
+	_ context.Context,
+	_ *types.Registry,
+	_ types.BuildPackageIndexTaskPayload,
+) error {
+	return fmt.Errorf("not implemented")
+}
+
+func (c *mavenPackageType) BuildPackageMetadataAsync(
+	_ context.Context,
+	_ *types.Registry,
+	_ types.BuildPackageMetadataTaskPayload,
+) error {
+	return fmt.Errorf("not implemented")
 }

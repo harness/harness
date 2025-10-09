@@ -31,7 +31,8 @@ import (
 	"github.com/harness/gitness/app/services/refcache"
 	corestore "github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
-	artifact2 "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/registry/app/api/interfaces"
+	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
@@ -55,6 +56,7 @@ func NewHandler(
 	urlProvider urlprovider.Provider, authorizer authz.Authorizer, spaceFinder refcache.SpaceFinder,
 	regFinder refcache2.RegistryFinder,
 	fileManager filemanager.FileManager, quarantineArtifactDao store.QuarantineArtifactRepository,
+	packageWrapper interfaces.PackageWrapper,
 ) Handler {
 	return &handler{
 		RegistryDao:           registryDao,
@@ -70,6 +72,7 @@ func NewHandler(
 		RegFinder:             regFinder,
 		fileManager:           fileManager,
 		QuarantineArtifactDao: quarantineArtifactDao,
+		PackageWrapper:        packageWrapper,
 	}
 }
 
@@ -87,6 +90,7 @@ type handler struct {
 	RegFinder             refcache2.RegistryFinder
 	fileManager           filemanager.FileManager
 	QuarantineArtifactDao store.QuarantineArtifactRepository
+	PackageWrapper        interfaces.PackageWrapper
 }
 
 type Handler interface {
@@ -117,30 +121,6 @@ type Handler interface {
 }
 
 type PathPackageType string
-
-const (
-	PathPackageTypeGeneric     PathPackageType = "generic"
-	PathPackageTypeMaven       PathPackageType = "maven"
-	PathPackageTypePython      PathPackageType = "python"
-	PathPackageTypeNuget       PathPackageType = "nuget"
-	PathPackageTypeNpm         PathPackageType = "npm"
-	PathPackageTypeRPM         PathPackageType = "rpm"
-	PathPackageTypeCargo       PathPackageType = "cargo"
-	PathPackageTypeGo          PathPackageType = "go"
-	PathPackageTypeHuggingFace PathPackageType = "huggingface"
-)
-
-var packageTypeMap = map[PathPackageType]artifact2.PackageType{
-	PathPackageTypeGeneric:     artifact2.PackageTypeGENERIC,
-	PathPackageTypeMaven:       artifact2.PackageTypeMAVEN,
-	PathPackageTypePython:      artifact2.PackageTypePYTHON,
-	PathPackageTypeNuget:       artifact2.PackageTypeNUGET,
-	PathPackageTypeNpm:         artifact2.PackageTypeNPM,
-	PathPackageTypeRPM:         artifact2.PackageTypeRPM,
-	PathPackageTypeCargo:       artifact2.PackageTypeCARGO,
-	PathPackageTypeGo:          artifact2.PackageTypeGO,
-	PathPackageTypeHuggingFace: artifact2.PackageTypeHUGGINGFACE,
-}
 
 func (h *handler) GetAuthenticator() authn.Authenticator {
 	return h.Authenticator
@@ -202,7 +182,12 @@ func (h *handler) CheckQuarantineStatus(
 func (h *handler) GetArtifactInfo(r *http.Request) (pkg.ArtifactInfo, error) {
 	ctx := r.Context()
 	rootIdentifier, registryIdentifier, pathPackageType, err := extractPathVars(r)
+	if err != nil {
+		return pkg.ArtifactInfo{}, errcode.ErrCodeInvalidRequest.WithDetail(err)
+	}
 
+	// Convert path package type to package type
+	packageType, err := h.PackageWrapper.GetPackageTypeFromPathPackageType(string(pathPackageType))
 	if err != nil {
 		return pkg.ArtifactInfo{}, errcode.ErrCodeInvalidRequest.WithDetail(err)
 	}
@@ -227,7 +212,7 @@ func (h *handler) GetArtifactInfo(r *http.Request) (pkg.ArtifactInfo, error) {
 		return pkg.ArtifactInfo{}, usererror.NotFoundf("Registry not found: %s", registryIdentifier)
 	}
 
-	if registry.PackageType != pathPackageType {
+	if registry.PackageType != artifact.PackageType(packageType) {
 		return pkg.ArtifactInfo{}, usererror.NotFoundf(
 			"Registry package type mismatch: %s != %s", registry.PackageType, pathPackageType,
 		)
@@ -244,7 +229,7 @@ func (h *handler) GetArtifactInfo(r *http.Request) (pkg.ArtifactInfo, error) {
 			RootIdentifier:  rootIdentifier,
 			RootParentID:    rootSpace.ID,
 			ParentID:        registry.ParentID,
-			PathPackageType: pathPackageType,
+			PathPackageType: artifact.PackageType(packageType),
 		},
 		RegIdentifier: registryIdentifier,
 		RegistryID:    registry.ID,
@@ -353,7 +338,7 @@ func LogError(errList errcode.Errors) {
 func extractPathVars(r *http.Request) (
 	rootIdentifier string,
 	registry string,
-	packageType artifact2.PackageType,
+	pathPackageType PathPackageType,
 	err error,
 ) {
 	path := r.URL.Path
@@ -363,11 +348,8 @@ func extractPathVars(r *http.Request) (
 	}
 	rootIdentifier = parts[2]
 	registry = parts[3]
-	pathPackageType := PathPackageType(parts[4])
-	if _, ok := packageTypeMap[pathPackageType]; !ok {
-		return "", "", "", fmt.Errorf("invalid package type: %s", packageType)
-	}
-	return rootIdentifier, registry, packageTypeMap[pathPackageType], nil
+	pathPackageType = PathPackageType(parts[4])
+	return rootIdentifier, registry, pathPackageType, nil
 }
 
 func (h *handler) ServeContent(

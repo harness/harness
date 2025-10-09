@@ -35,12 +35,14 @@ type nugetPackageType struct {
 	validRepoTypes       []string
 	validUpstreamSources []string
 	upstreamSourceConfig map[string]UpstreamSourceConfig
+	pathPackageType      string
 }
 
 func NewNugetPackageType(registryHelper interfaces.RegistryHelper) NugetPackageType {
 	return &nugetPackageType{
-		packageType:    string(artifact.PackageTypeNUGET),
-		registryHelper: registryHelper,
+		packageType:     string(artifact.PackageTypeNUGET),
+		registryHelper:  registryHelper,
+		pathPackageType: string(types.PathPackageTypeNuget),
 		validRepoTypes: []string{
 			string(artifact.RegistryTypeUPSTREAM),
 			string(artifact.RegistryTypeVIRTUAL),
@@ -62,6 +64,10 @@ func NewNugetPackageType(registryHelper interfaces.RegistryHelper) NugetPackageT
 
 func (c *nugetPackageType) GetPackageType() string {
 	return c.packageType
+}
+
+func (c *nugetPackageType) GetPathPackageType() string {
+	return c.pathPackageType
 }
 
 func (c *nugetPackageType) IsValidRepoType(repoType string) bool {
@@ -196,4 +202,28 @@ func (c *nugetPackageType) GetClientSetupDetails(
 	_ artifact.RegistryType,
 ) (*artifact.ClientSetupDetails, error) {
 	return nil, fmt.Errorf("not implemented")
+}
+
+func (c *nugetPackageType) BuildRegistryIndexAsync(
+	_ context.Context,
+	_ *types.Registry,
+	_ types.BuildRegistryIndexTaskPayload,
+) error {
+	return fmt.Errorf("not implemented")
+}
+
+func (c *nugetPackageType) BuildPackageIndexAsync(
+	_ context.Context,
+	_ *types.Registry,
+	_ types.BuildPackageIndexTaskPayload,
+) error {
+	return fmt.Errorf("not implemented")
+}
+
+func (c *nugetPackageType) BuildPackageMetadataAsync(
+	_ context.Context,
+	_ *types.Registry,
+	_ types.BuildPackageMetadataTaskPayload,
+) error {
+	return fmt.Errorf("not implemented")
 }

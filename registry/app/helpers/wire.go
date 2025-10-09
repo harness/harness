@@ -22,17 +22,23 @@ import (
 	"github.com/harness/gitness/registry/app/factory"
 	"github.com/harness/gitness/registry/app/helpers/pkg"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
+	"github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/store"
+	"github.com/harness/gitness/registry/app/utils/cargo"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
 )
 
-func ProvidePackageWrapperProvider(registryHelper interfaces.RegistryHelper) interfaces.PackageWrapper {
+func ProvidePackageWrapperProvider(
+	registryHelper interfaces.RegistryHelper,
+	regFinder refcache.RegistryFinder,
+	cargoRegistryHelper cargo.RegistryHelper,
+) interfaces.PackageWrapper {
 	// create package factory
 	packageFactory := factory.NewPackageFactory()
-	packageFactory.Register(pkg.NewCargoPackageType(registryHelper))
+	packageFactory.Register(pkg.NewCargoPackageType(registryHelper, cargoRegistryHelper))
 	packageFactory.Register(pkg.NewDockerPackageType(registryHelper))
 	packageFactory.Register(pkg.NewHelmPackageType(registryHelper))
 	packageFactory.Register(pkg.NewGenericPackageType(registryHelper))
@@ -44,7 +50,7 @@ func ProvidePackageWrapperProvider(registryHelper interfaces.RegistryHelper) int
 	packageFactory.Register(pkg.NewGoPackageType(registryHelper))
 	packageFactory.Register(pkg.NewHuggingFacePackageType(registryHelper))
 
-	return NewPackageWrapper(packageFactory)
+	return NewPackageWrapper(packageFactory, regFinder)
 }
 
 func ProvideRegistryHelper(

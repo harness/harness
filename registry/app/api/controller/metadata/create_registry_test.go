@@ -236,7 +236,7 @@ func TestCreateRegistry(t *testing.T) {
 
 				packageFactory := factory.NewPackageFactory()
 				packageFactory.Register(pkg.NewDockerPackageType(nil))
-				packageWrapper := helpers.NewPackageWrapper(packageFactory)
+				packageWrapper := helpers.NewPackageWrapper(packageFactory, mockRegFinder)
 
 				// Create controller with updated signature.
 				return metadata.NewAPIController(

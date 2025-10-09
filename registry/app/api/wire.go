@@ -40,6 +40,7 @@ import (
 	"github.com/harness/gitness/registry/app/api/handler/packages"
 	pypi2 "github.com/harness/gitness/registry/app/api/handler/python"
 	rpm "github.com/harness/gitness/registry/app/api/handler/rpm"
+	"github.com/harness/gitness/registry/app/api/interfaces"
 	"github.com/harness/gitness/registry/app/api/router"
 	storagedriver "github.com/harness/gitness/registry/app/driver"
 	"github.com/harness/gitness/registry/app/driver/factory"
@@ -153,6 +154,7 @@ func NewPackageHandlerProvider(
 	urlProvider urlprovider.Provider, authorizer authz.Authorizer, spaceFinder refcache.SpaceFinder,
 	regFinder refcache2.RegistryFinder,
 	fileManager filemanager.FileManager, quarantineArtifactDao store.QuarantineArtifactRepository,
+	packageWrapper interfaces.PackageWrapper,
 ) packages.Handler {
 	return packages.NewHandler(
 		registryDao,
@@ -168,6 +170,7 @@ func NewPackageHandlerProvider(
 		regFinder,
 		fileManager,
 		quarantineArtifactDao,
+		packageWrapper,
 	)
 }
 

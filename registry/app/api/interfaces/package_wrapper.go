@@ -31,6 +31,7 @@ type PackageWrapper interface {
 	IsValidUpstreamSources(upstreamSources []string) bool
 	ValidateUpstreamSource(packageType string, upstreamSource string) bool
 	IsURLRequiredForUpstreamSource(packageType string, upstreamSource string) bool
+	GetPackageTypeFromPathPackageType(pathPackageType string) (string, error)
 	DeleteArtifactVersion(
 		ctx context.Context,
 		regInfo *types.RegistryRequestBaseInfo,
@@ -85,4 +86,16 @@ type PackageWrapper interface {
 		registryType artifact.RegistryType,
 		packageType string,
 	) (*artifact.ClientSetupDetails, error)
+	BuildRegistryIndexAsync(
+		ctx context.Context,
+		payload types.BuildRegistryIndexTaskPayload,
+	) error
+	BuildPackageIndexAsync(
+		ctx context.Context,
+		payload types.BuildPackageIndexTaskPayload,
+	) error
+	BuildPackageMetadataAsync(
+		ctx context.Context,
+		payload types.BuildPackageMetadataTaskPayload,
+	) error
 }

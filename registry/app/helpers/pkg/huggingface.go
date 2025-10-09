@@ -35,12 +35,14 @@ type huggingFacePackageType struct {
 	validRepoTypes       []string
 	validUpstreamSources []string
 	upstreamSourceConfig map[string]UpstreamSourceConfig
+	pathPackageType      string
 }
 
 func NewHuggingFacePackageType(registryHelper interfaces.RegistryHelper) HuggingFacePackageType {
 	return &huggingFacePackageType{
-		packageType:    string(artifact.PackageTypeHUGGINGFACE),
-		registryHelper: registryHelper,
+		packageType:     string(artifact.PackageTypeHUGGINGFACE),
+		pathPackageType: string(types.PathPackageTypeHuggingFace),
+		registryHelper:  registryHelper,
 		validRepoTypes: []string{
 			string(artifact.RegistryTypeVIRTUAL),
 		},
@@ -57,6 +59,10 @@ func NewHuggingFacePackageType(registryHelper interfaces.RegistryHelper) Hugging
 
 func (c *huggingFacePackageType) GetPackageType() string {
 	return c.packageType
+}
+
+func (c *huggingFacePackageType) GetPathPackageType() string {
+	return c.pathPackageType
 }
 
 func (c *huggingFacePackageType) IsValidRepoType(repoType string) bool {
@@ -191,4 +197,28 @@ func (c *huggingFacePackageType) GetClientSetupDetails(
 	_ artifact.RegistryType,
 ) (*artifact.ClientSetupDetails, error) {
 	return nil, fmt.Errorf("not implemented")
+}
+
+func (c *huggingFacePackageType) BuildRegistryIndexAsync(
+	_ context.Context,
+	_ *types.Registry,
+	_ types.BuildRegistryIndexTaskPayload,
+) error {
+	return fmt.Errorf("not implemented")
+}
+
+func (c *huggingFacePackageType) BuildPackageIndexAsync(
+	_ context.Context,
+	_ *types.Registry,
+	_ types.BuildPackageIndexTaskPayload,
+) error {
+	return fmt.Errorf("not implemented")
+}
+
+func (c *huggingFacePackageType) BuildPackageMetadataAsync(
+	_ context.Context,
+	_ *types.Registry,
+	_ types.BuildPackageMetadataTaskPayload,
+) error {
+	return fmt.Errorf("not implemented")
 }
