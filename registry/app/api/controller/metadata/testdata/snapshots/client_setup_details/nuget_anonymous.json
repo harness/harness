@@ -1,0 +1,109 @@
+{
+  "mainHeader": "Nuget Client Setup",
+  "secHeader": "Follow these instructions to install/use Nuget packages from this registry.",
+  "sections": [
+    {
+      "tabs": [
+        {
+          "header": "Nuget",
+          "sections": [
+            {
+              "header": "Configure registry",
+              "steps": [
+                {
+                  "commands": [
+                    {
+                      "value": "nuget sources add -Name harness -Source http://example.com/registry/test-registry/NUGET/index.json \n\n"
+                    },
+                    {
+                      "label": "Note: For Nuget V2 Client, use this url: http://example.com/registry/test-registry/NUGET/",
+                      "value": "http://example.com/registry/test-registry/NUGET/"
+                    }
+                  ],
+                  "header": "Add the Harness Registry as a package source:",
+                  "type": "Static"
+                }
+              ],
+              "type": "INLINE"
+            },
+            {
+              "header": "Install Package",
+              "steps": [
+                {
+                  "commands": [
+                    {
+                      "value": "nuget install test-artifact -Version v1.0.0 -Source harness"
+                    }
+                  ],
+                  "header": "Install a package using nuget:",
+                  "type": "Static"
+                }
+              ],
+              "type": "INLINE"
+            }
+          ]
+        },
+        {
+          "header": "Dotnet",
+          "sections": [
+            {
+              "header": "Configure registry",
+              "steps": [
+                {
+                  "commands": [
+                    {
+                      "value": "dotnet nuget add source  http://example.com/registry/test-registry/NUGET/index.json --name harness \n\n"
+                    },
+                    {
+                      "label": "Note: For Nuget V2 Client, use this url: http://example.com/registry/test-registry/NUGET/",
+                      "value": "http://example.com/registry/test-registry/NUGET/"
+                    }
+                  ],
+                  "header": "Add the Harness Registry as a package source:",
+                  "type": "Static"
+                }
+              ],
+              "type": "INLINE"
+            },
+            {
+              "header": "Install Package",
+              "steps": [
+                {
+                  "commands": [
+                    {
+                      "value": "dotnet package add test-artifact --version v1.0.0 --source harness"
+                    }
+                  ],
+                  "header": "Add a package using dotnet:",
+                  "type": "Static"
+                }
+              ],
+              "type": "INLINE"
+            }
+          ]
+        },
+        {
+          "header": "Visual Studio",
+          "sections": [
+            {
+              "header": "Configure Nuget Package Source",
+              "steps": [
+                {
+                  "commands": [
+                    {
+                      "value": "\u003c?xml version=\"1.0\" encoding=\"utf-8\"?\u003e\n\u003cconfiguration\u003e\n \u003cpackageSources\u003e\n     \u003cclear /\u003e\n     \u003cadd key=\"harness\" value=\"http://example.com/registry/test-registry/NUGET/index.json\" /\u003e\n \u003c/packageSources\u003e\n\u003c/configuration\u003e"
+                    }
+                  ],
+                  "header": "Add below config in Nuget.Config file to add Harness Registry as package source:",
+                  "type": "Static"
+                }
+              ],
+              "type": "INLINE"
+            }
+          ]
+        }
+      ],
+      "type": "TABS"
+    }
+  ]
+}

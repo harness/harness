@@ -1,0 +1,76 @@
+{
+  "mainHeader": "Docker Client Setup",
+  "secHeader": "Follow these instructions to install/use Docker artifacts or compatible packages.",
+  "sections": [
+    {
+      "header": "Login to Docker",
+      "steps": [
+        {
+          "commands": [
+            {
+              "label": "",
+              "value": "docker login example.com"
+            },
+            {
+              "label": "Username: test@example.com",
+              "value": "test@example.com"
+            },
+            {
+              "label": "Password: *see step 2*",
+              "value": ""
+            }
+          ],
+          "header": "Run this Docker command in your terminal to authenticate the client.",
+          "type": "Static"
+        },
+        {
+          "header": "For the Password field above, generate an identity token",
+          "type": "GenerateToken"
+        }
+      ],
+      "type": "INLINE"
+    },
+    {
+      "header": "Pull an image",
+      "steps": [
+        {
+          "commands": [
+            {
+              "label": "",
+              "value": "docker pull example.com/test-registry/test-artifact:v1.0.0"
+            }
+          ],
+          "header": "Run this Docker command in your terminal to pull image.",
+          "type": "Static"
+        }
+      ],
+      "type": "INLINE"
+    },
+    {
+      "header": "Retag and Push the image",
+      "steps": [
+        {
+          "commands": [
+            {
+              "label": "",
+              "value": "docker tag test-artifact:v1.0.0 example.com/test-registry/test-artifact:v1.0.0"
+            }
+          ],
+          "header": "Run this Docker command in your terminal to tag the image.",
+          "type": "Static"
+        },
+        {
+          "commands": [
+            {
+              "label": "",
+              "value": "docker push example.com/test-registry/test-artifact:\u003cNEW_TAG\u003e"
+            }
+          ],
+          "header": "Run this Docker command in your terminal to push the image.",
+          "type": "Static"
+        }
+      ],
+      "type": "INLINE"
+    }
+  ]
+}
