@@ -152,9 +152,16 @@ func (c *RedisConsumer) Start(ctx context.Context) error {
 	go func() {
 		defer wg.Done()
 		c.removeStaleConsumers(ctx, time.Hour)
-		// launch redis reader, it will finish when the ctx is done
-		c.reader(ctx)
 	}()
+
+	// start one reader per stream to avoid CROSSSLOT errors in Redis Cluster
+	for streamID := range c.streams {
+		wg.Add(1)
+		go func(sid string) {
+			defer wg.Done()
+			c.readerSingle(ctx, sid)
+		}(streamID)
+	}
 
 	wg.Add(1)
 	go func() {
@@ -189,13 +196,14 @@ func (c *RedisConsumer) Start(ctx context.Context) error {
 	return nil
 }
 
-// reader method reads a Redis stream with XREADGROUP command to retrieve messages.
+// reader method reads multiple Redis streams with XREADGROUP command to retrieve messages.
+// Deprecated: This method is replaced by readerSingle to avoid CROSSSLOT errors in Redis Cluster.
 // The messages are then sent to a go channel passed as parameter for processing.
 // If the stream already contains unassigned messages, those we'll be returned.
 // Otherwise XREADGROUP blocks until either a new message arrives or block timeout happens.
 // The method terminates when the provided context finishes.
 //
-//nolint:funlen,gocognit // refactor if needed
+//nolint:funlen,gocognit,unused // refactor if needed, kept for reference
 func (c *RedisConsumer) reader(ctx context.Context) {
 	delays := []time.Duration{1 * time.Millisecond, 5 * time.Second, 15 * time.Second, 30 * time.Second, time.Minute}
 	consecutiveFailures := 0
@@ -319,6 +327,111 @@ func (c *RedisConsumer) reader(ctx context.Context) {
 			}
 
 			// retrieve all messages across all streams and put them into the message queue
+			for _, stream := range resReadStream {
+				for _, m := range stream.Messages {
+					c.messageQueue <- message{
+						streamID: stream.Stream,
+						id:       m.ID,
+						values:   m.Values,
+					}
+				}
+			}
+		}
+	}
+}
+
+// readerSingle reads a single Redis stream with XREADGROUP to avoid CROSSSLOT errors in Redis Cluster.
+// It mirrors the logic of reader() but operates on exactly one stream key per call.
+//
+//nolint:funlen,gocognit // mirrors existing reader logic
+func (c *RedisConsumer) readerSingle(ctx context.Context, streamID string) {
+	delays := []time.Duration{1 * time.Millisecond, 5 * time.Second, 15 * time.Second, 30 * time.Second, time.Minute}
+	consecutiveFailures := 0
+
+	// For the first call, scan the history of the consumer to allow seamless restarts.
+	scanHistory := true
+	// Streams arg for a single stream: [streamID, startID]
+	streamsArg := []string{streamID, "0"}
+
+	lastIndex := len(delays) - 1
+	readTimer := time.NewTimer(delays[lastIndex])
+	defer readTimer.Stop()
+
+	for {
+		delay := delays[min(consecutiveFailures, lastIndex)]
+		readTimer.Reset(delay)
+
+		select {
+		case <-ctx.Done():
+			return
+
+		case <-readTimer.C:
+			const count = 100
+
+			resReadStream, err := c.rdb.XReadGroup(ctx, &redis.XReadGroupArgs{
+				Group:    c.groupName,
+				Consumer: c.consumerName,
+				Streams:  streamsArg,
+				Count:    count,
+				Block:    5 * time.Minute,
+			}).Result()
+
+			switch {
+			case errors.Is(err, context.Canceled):
+				continue
+			case func() bool {
+				var errNet net.Error
+				return errors.As(err, &errNet) && errNet.Timeout()
+			}():
+				c.pushError(fmt.Errorf("encountered network failure: %w", err))
+				consecutiveFailures++
+				continue
+			case err != nil && strings.HasPrefix(err.Error(), "NOGROUP"):
+				// recreate group for this specific stream
+				cErr := createGroup(ctx, c.rdb, streamID, c.groupName)
+				if cErr != nil {
+					c.pushError(fmt.Errorf("failed to re-create group for stream '%s': %w", streamID, cErr))
+					consecutiveFailures++
+				} else {
+					c.pushInfo(fmt.Sprintf("re-created group for stream '%s', original error: %s", streamID, err))
+					consecutiveFailures = 0
+				}
+				continue
+			case err != nil && !errors.Is(err, redis.Nil):
+				consecutiveFailures++
+				c.pushError(fmt.Errorf("failed to read redis stream [%s] (consecutive fails: %d): %w",
+					streamID, consecutiveFailures, err))
+				continue
+			}
+
+			if scanHistory {
+				scanHistory = false
+				// Expect at most one stream in result
+				if len(resReadStream) > 0 && len(resReadStream[0].Messages) > 0 {
+					scanHistory = true
+					streamsArg[1] = resReadStream[0].Messages[len(resReadStream[0].Messages)-1].ID
+					c.pushInfo(fmt.Sprintf(
+						"stream %q had %d more messages in the history (delivered but not yet acked), continuing after %q",
+						resReadStream[0].Stream,
+						len(resReadStream[0].Messages),
+						streamsArg[1],
+					))
+				}
+
+				if !scanHistory {
+					c.pushInfo(fmt.Sprintf("completed scan of history for stream %q", streamID))
+					// Read only new messages now
+					streamsArg[1] = ">"
+					continue
+				}
+			}
+
+			consecutiveFailures = 0
+
+			if len(resReadStream) == 0 {
+				continue
+			}
+
 			for _, stream := range resReadStream {
 				for _, m := range stream.Messages {
 					c.messageQueue <- message{
