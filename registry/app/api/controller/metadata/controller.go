@@ -37,6 +37,9 @@ import (
 )
 
 var errPublicArtifactRegistryCreationDisabled = usererror.BadRequest("Public artifact registry creation is disabled.")
+var errPublicAccessToArtifactRegistriesDisabled = usererror.BadRequest(
+	"Public access to artifact registries is disabled.",
+)
 
 // APIController simple struct.
 type APIController struct {

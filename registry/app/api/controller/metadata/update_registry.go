@@ -322,8 +322,8 @@ func (c *APIController) updatePublicAccess(
 			err,
 		)
 	}
-	if !isPublicAccessSupported {
-		return errPublicArtifactRegistryCreationDisabled
+	if !isPublicAccessSupported && newRegistry.IsPublic {
+		return errPublicAccessToArtifactRegistriesDisabled
 	}
 	isPublic, err := c.PublicAccess.Get(ctx, gitnessenum.PublicResourceTypeRegistry, ref)
 	if err != nil {

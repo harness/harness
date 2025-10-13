@@ -38,6 +38,9 @@ import (
 	rpmtypes "github.com/harness/gitness/registry/app/utils/rpm/types"
 	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/secret"
+
+	"github.com/klauspost/compress/zstd"
+	"github.com/ulikunitz/xz"
 )
 
 const (
@@ -69,6 +72,7 @@ type rpmHelper struct {
 
 type registryData interface {
 	getReader(ctx context.Context) (io.ReadCloser, error)
+	getFileRef() string
 }
 
 func (l localRepoData) getReader(ctx context.Context) (io.ReadCloser, error) {
@@ -79,6 +83,10 @@ func (l localRepoData) getReader(ctx context.Context) (io.ReadCloser, error) {
 		return nil, fmt.Errorf("failed to get primary.xml.gz: %w", err)
 	}
 	return primaryReader, nil
+}
+
+func (l localRepoData) getFileRef() string {
+	return l.fileRef
 }
 
 type localRepoData struct {
@@ -100,6 +108,10 @@ func (r remoteRepoData) getReader(ctx context.Context) (io.ReadCloser, error) {
 		return nil, fmt.Errorf("failed to get primary.xml.gz: %w", err)
 	}
 	return readCloser, nil
+}
+
+func (r remoteRepoData) getFileRef() string {
+	return r.fileRef
 }
 
 func NewRpmHelper(
@@ -468,14 +480,15 @@ func (l *rpmHelper) buildPrimary(
 			}
 			defer readCloser.Close()
 
-			gzipReader, err := gzip.NewReader(readCloser)
+			reader, err := getReader(rd.getFileRef(), readCloser)
 			if err != nil {
-				pw.CloseWithError(fmt.Errorf("failed to create gzip reader: %w", err))
+				pw.CloseWithError(fmt.Errorf("failed to create reader: %w", err))
 				return
 			}
-			defer gzipReader.Close()
-
-			decoder := xml.NewDecoder(gzipReader)
+			if closer, ok := reader.(io.Closer); ok {
+				defer closer.Close()
+			}
+			decoder := xml.NewDecoder(reader)
 			err = l.validateRootElement(decoder, "metadata")
 			if err != nil {
 				pw.CloseWithError(fmt.Errorf("failed to validate primary.xml root element: %w", err))
@@ -562,6 +575,29 @@ func (l *rpmHelper) buildPrimary(
 	return getRepoData(info, filePath, "primary"), nil
 }
 
+func getReader(fileRef string, readCloser io.ReadCloser) (io.Reader, error) {
+	switch {
+	case strings.HasSuffix(strings.ToLower(fileRef), ".xz"):
+		xzReader, err := xz.NewReader(readCloser)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create xz reader: %w", err)
+		}
+		return xzReader, nil
+	case strings.HasSuffix(strings.ToLower(fileRef), ".zst"):
+		zstReader, err := zstd.NewReader(readCloser)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create zstd reader: %w", err)
+		}
+		return zstReader, nil
+	default:
+		gzipReader, err := gzip.NewReader(readCloser)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create gzip reader: %w", err)
+		}
+		return gzipReader, nil
+	}
+}
+
 func (l *rpmHelper) buildOther(
 	ctx context.Context,
 	pds []*rpmtypes.PackageInfo,
@@ -610,13 +646,15 @@ func (l *rpmHelper) buildOther(
 			}
 			defer readCloser.Close()
 
-			otherGzipReader, err := gzip.NewReader(readCloser)
+			reader, err := getReader(rd.getFileRef(), readCloser)
 			if err != nil {
-				pw.CloseWithError(fmt.Errorf("failed to create gzip reader for other: %w", err))
+				pw.CloseWithError(fmt.Errorf("failed to create reader: %w", err))
 				return
 			}
-			defer otherGzipReader.Close()
-			otherDecoder := xml.NewDecoder(otherGzipReader)
+			if closer, ok := reader.(io.Closer); ok {
+				defer closer.Close()
+			}
+			otherDecoder := xml.NewDecoder(reader)
 
 			err = l.validateRootElement(otherDecoder, "otherdata")
 			if err != nil {
@@ -724,13 +762,15 @@ func (l *rpmHelper) buildFileLists(
 			}
 			defer readCloser.Close()
 
-			filelistsGzipReader, err := gzip.NewReader(readCloser)
+			reader, err := getReader(rd.getFileRef(), readCloser)
 			if err != nil {
-				pw.CloseWithError(fmt.Errorf("failed to create gzip reader for filelists: %w", err))
+				pw.CloseWithError(fmt.Errorf("failed to create reader: %w", err))
 				return
 			}
-			defer filelistsGzipReader.Close()
-			fileListsDecoder := xml.NewDecoder(filelistsGzipReader)
+			if closer, ok := reader.(io.Closer); ok {
+				defer closer.Close()
+			}
+			fileListsDecoder := xml.NewDecoder(reader)
 
 			err = l.validateRootElement(fileListsDecoder, "filelists")
 			if err != nil {
