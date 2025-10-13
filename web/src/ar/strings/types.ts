@@ -93,6 +93,7 @@ export interface StringsMap {
   'repositoryDetails.clientSetup.generateNewToken': string
   'repositoryDetails.clientSetup.generateToken': string
   'repositoryDetails.clientSetup.step': string
+  'repositoryDetails.registries': string
   'repositoryDetails.repositoryForm.addPatterns': string
   'repositoryDetails.repositoryForm.advancedOptionsTitle': string
   'repositoryDetails.repositoryForm.cleanupPoliciesSubTitle': string
@@ -142,12 +143,14 @@ export interface StringsMap {
   'repositoryDetails.tabs.models': string
   'repositoryDetails.tabs.packages': string
   'repositoryDetails.tabs.webhooks': string
+  'repositoryDetails.upstream': string
   'repositoryDetails.upstreamProxiesSelectList.addUpstreamProxies': string
   'repositoryDetails.upstreamProxiesSelectList.newUpstreamProxyLabel': string
   'repositoryDetails.upstreamProxiesSelectList.selectList.Title': string
   'repositoryDetails.upstreamProxiesSelectList.selectedList.Title': string
   'repositoryDetails.upstreamProxiesSelectList.selectedList.note.label': string
   'repositoryDetails.upstreamProxiesSelectList.selectedList.note.message': string
+  'repositoryDetails.virtual': string
   'repositoryList.artifactRegistry.label': string
   'repositoryList.artifactRegistry.subLabel': string
   'repositoryList.compact': string

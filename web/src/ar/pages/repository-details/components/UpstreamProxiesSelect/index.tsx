@@ -23,7 +23,7 @@ import { FontVariation } from '@harnessio/design-system'
 import { Button, Container, Layout, Text } from '@harnessio/uicore'
 import { useGetAllRegistriesQuery } from '@harnessio/react-har-service-client'
 
-import { useGetSpaceRef } from '@ar/hooks'
+import { useFeatureFlags, useGetSpaceRef } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import { queryClient } from '@ar/utils/queryClient'
 import { RepositoryConfigType, RepositoryScopeType } from '@ar/common/types'
@@ -50,6 +50,7 @@ function UpstreamProxiesSelect(props: UpstreamProxiesSelectProps): JSX.Element {
   const [showList, setShowList] = useState(!!selectedProxies?.length)
   const spaceRef = useGetSpaceRef('')
   const [searchTerm, setSearchTerm] = useState('')
+  const { HAR_SUPPORT_LOCAL_REGISTRY_AS_UPSTREAM_PROXY } = useFeatureFlags()
 
   const {
     data,
@@ -60,9 +61,9 @@ function UpstreamProxiesSelect(props: UpstreamProxiesSelectProps): JSX.Element {
       space_ref: spaceRef,
       queryParams: {
         page: 0,
-        size: 100,
+        size: 500,
         package_type: [packageType],
-        type: RepositoryConfigType.UPSTREAM,
+        type: HAR_SUPPORT_LOCAL_REGISTRY_AS_UPSTREAM_PROXY ? undefined : RepositoryConfigType.UPSTREAM,
         search_term: searchTerm,
         scope: RepositoryScopeType.ANCESTORS
       },
@@ -96,13 +97,20 @@ function UpstreamProxiesSelect(props: UpstreamProxiesSelectProps): JSX.Element {
     if (loading) return [{ label: 'Loading...', value: '', disabled: true }]
     if (error) return [{ label: error.message, value: '', disabled: true }]
     if (data && Array.isArray(data?.content?.data?.registries)) {
-      return data?.content?.data?.registries.map(each => ({
-        label: each.identifier,
-        value: each.identifier
-      }))
+      return data?.content?.data?.registries.map(each => {
+        const tag =
+          each.type === RepositoryConfigType.UPSTREAM
+            ? getString('repositoryDetails.upstream')
+            : getString('repositoryDetails.virtual')
+        return {
+          label: each.identifier,
+          value: each.identifier,
+          tag: HAR_SUPPORT_LOCAL_REGISTRY_AS_UPSTREAM_PROXY ? tag : undefined
+        }
+      })
     }
     return []
-  }, [loading, error, data])
+  }, [loading, error, data, getString, HAR_SUPPORT_LOCAL_REGISTRY_AS_UPSTREAM_PROXY])
 
   const handleOnCreateUpstreamProxy = (): void => {
     queryClient.invalidateQueries(['GetAllRegistries'])
@@ -146,12 +154,18 @@ function UpstreamProxiesSelect(props: UpstreamProxiesSelectProps): JSX.Element {
         query={searchTerm}
         selectListProps={{
           title: getString('repositoryDetails.upstreamProxiesSelectList.selectList.Title', {
+            type: HAR_SUPPORT_LOCAL_REGISTRY_AS_UPSTREAM_PROXY
+              ? getString('repositoryDetails.registries')
+              : getString('repositoryDetails.upstream'),
             count: data?.content?.data?.registries?.length
           }),
           withSearch: true
         }}
         selectedListProps={{
           title: getString('repositoryDetails.upstreamProxiesSelectList.selectedList.Title', {
+            type: HAR_SUPPORT_LOCAL_REGISTRY_AS_UPSTREAM_PROXY
+              ? getString('repositoryDetails.registries')
+              : getString('repositoryDetails.upstream'),
             count: selectedProxies?.length
           }),
           note: renderSelectedListNote()

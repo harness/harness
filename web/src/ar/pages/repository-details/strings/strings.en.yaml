@@ -55,9 +55,9 @@ tabs:
   webhooks: Webhooks
 upstreamProxiesSelectList:
   selectList:
-    Title: Available upstream proxies ({{count}})
+    Title: Available {{type}} ({{count}})
   selectedList:
-    Title: Selected proxies ({{count}})
+    Title: Selected {{type}} ({{count}})
     note:
       label: Note
       message: Proxies are queried by the ordered list below.
@@ -69,3 +69,6 @@ clientSetup:
   generateToken: Generate Token
   generateNewToken: Generate New Token
   failedToGenerateToken: Failed to generate token!
+virtual: Local
+upstream: Upstream
+registries: Registries

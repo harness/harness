@@ -17,5 +17,6 @@
 export type RorderSelectOption = {
   label: string
   value: string
+  tag?: string
   disabled?: boolean
 }
