@@ -202,7 +202,7 @@ func (c *APIController) setUpstreamProxyIDs(
 		math.MaxInt,
 		0,
 		"",
-		string(api.RegistryTypeUPSTREAM),
+		"",
 	)
 
 	if repos == nil || err != nil {
@@ -219,6 +219,10 @@ func (c *APIController) setUpstreamProxyIDs(
 				if err != nil {
 					continue
 				}
+				// cycle detection: ensure adding regID as upstream to registry.ID doesn't create a cycle
+				if err := c.assertNoCycleOnAdd(ctx, registry.ID, regID, registry.Name); err != nil {
+					return err
+				}
 				upstreamProxies = append(upstreamProxies, regID)
 			}
 		}
@@ -226,6 +230,37 @@ func (c *APIController) setUpstreamProxyIDs(
 
 	registry.UpstreamProxies = upstreamProxies
 	return nil
+}
+
+func (c *APIController) assertNoCycleOnAdd(ctx context.Context,
+	registryID int64, newUpstreamID int64, registryName string) error {
+	return c.assertNoCycleOnAddHelper(ctx, registryID, newUpstreamID, registryName)
+}
+
+func (c *APIController) assertNoCycleOnAddHelper(ctx context.Context,
+	rootRegistryID int64, newUpstreamID int64, registryName string) error {
+	if newUpstreamID == rootRegistryID {
+		return fmt.Errorf("cycle detected while setting up the upstream proxy for registry: [%s]", registryName)
+	}
+	upstreamProxies, err := c.getUpstreamProxyIDs(ctx, newUpstreamID)
+	if err != nil {
+		return err
+	}
+
+	for _, upstreamProxyID := range upstreamProxies {
+		if err := c.assertNoCycleOnAddHelper(ctx, rootRegistryID, upstreamProxyID, registryName); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (c *APIController) getUpstreamProxyIDs(ctx context.Context, registryID int64) ([]int64, error) {
+	registry, err := c.RegistryRepository.Get(ctx, registryID)
+	if err != nil {
+		return nil, err
+	}
+	return registry.UpstreamProxies, nil
 }
 
 func (c *APIController) getUpstreamProxyKeys(ctx context.Context, ids []int64) []string {

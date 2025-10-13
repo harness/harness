@@ -233,20 +233,18 @@ func (s *Service) handleBuildRegistryIndex(ctx context.Context, task *types.Task
 			processingErr = fmt.Errorf("failed to build RPM registry files for registry [%d]: %w",
 				payload.RegistryID, err)
 		}
-		if registry.Type != artifact.RegistryTypeVIRTUAL {
-			registryIDs, err2 := s.registryDao.FetchRegistriesIDByUpstreamProxyID(
-				ctx, strconv.FormatInt(registry.ID, 10), registry.RootParentID,
-			)
-			if err2 != nil {
-				log.Ctx(ctx).Error().Msgf("failed to fetch registries whyle building registry "+
-					"files by upstream proxy ID for registry [%d]: %v", payload.RegistryID, err2)
-			}
-			if len(registryIDs) > 0 {
-				for _, id := range registryIDs {
-					s.postProcessingReporter.BuildRegistryIndexWithPrincipal(
-						ctx, id, make([]types.SourceRef, 0), payload.PrincipalID,
-					)
-				}
+		registryIDs, err2 := s.registryDao.FetchRegistriesIDByUpstreamProxyID(
+			ctx, strconv.FormatInt(registry.ID, 10), registry.RootParentID,
+		)
+		if err2 != nil {
+			log.Ctx(ctx).Error().Msgf("failed to fetch registries whyle building registry "+
+				"files by upstream proxy ID for registry [%d]: %v", payload.RegistryID, err2)
+		}
+		if len(registryIDs) > 0 {
+			for _, id := range registryIDs {
+				s.postProcessingReporter.BuildRegistryIndexWithPrincipal(
+					ctx, id, make([]types.SourceRef, 0), payload.PrincipalID,
+				)
 			}
 		}
 	default:

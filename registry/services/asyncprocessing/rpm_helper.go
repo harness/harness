@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"io"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/harness/gitness/app/services/refcache"
@@ -162,7 +163,7 @@ func (l *rpmHelper) buildForVirtual(
 		return err
 	}
 	primary, err = l.buildPrimary(ctx, existingPackageInfos, registryID, rootParentID, rootIdentifier,
-		"", false, primaryRegistryData, principalID)
+		registryIdentifier, false, primaryRegistryData, principalID)
 	if err != nil {
 		return err
 	}
@@ -449,12 +450,7 @@ func (l *rpmHelper) buildPrimary(
 		}
 
 		for _, pi := range existingPis {
-			var rootPackagePath string
-			if overridePath {
-				rootPackagePath = fmt.Sprintf("../../%s/rpm/package", repoKey)
-			} else {
-				rootPackagePath = "package"
-			}
+			rootPackagePath := fmt.Sprintf("../../%s/rpm/package", repoKey)
 			_, pp := getPrimaryPackage(pi, rootPackagePath)
 			if err := encoder.Encode(pp); err != nil {
 				pw.CloseWithError(fmt.Errorf("failed to encode package: %w", err))
@@ -515,6 +511,16 @@ func (l *rpmHelper) buildPrimary(
 						url.PathEscape(pkg.Architecture),
 						url.PathEscape(fmt.Sprintf("%s-%s.%s.rpm", pkg.Name, packageVersion, pkg.Architecture)),
 						pkg.Location.Href)
+				}
+
+				// If the source is a local registry (in a virtual aggregate), ensure hrefs point via that registry.
+				// For local upstreams in a virtual registry, if href doesn't already start with ../../<registryIdentifier>/rpm/
+				// then prefix it so downloads route through the child registry endpoint.
+				if lrd, ok := rd.(*localRepoData); ok {
+					prefix := "../../" + lrd.registryIdentifier + "/rpm/"
+					if !strings.HasPrefix(pkg.Location.Href, prefix) {
+						pkg.Location.Href = prefix + pkg.Location.Href
+					}
 				}
 
 				pkgref := fmt.Sprintf("%s:%s-%s:%s", pkg.Name, pkg.Version.Version,

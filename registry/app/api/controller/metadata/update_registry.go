@@ -331,7 +331,7 @@ func (c *APIController) updatePublicAccess(
 	}
 	//nolint:nestif
 	if isPublic != newRegistry.IsPublic {
-		if newRegistry.Type == artifact.RegistryTypeUPSTREAM && !newRegistry.IsPublic {
+		if !newRegistry.IsPublic {
 			err := c.checkIfUpstreamIsUsedInPublicRegistries(ctx, newRegistry.RootParentID,
 				newRegistry.Name, newRegistry.ID)
 			if err != nil {

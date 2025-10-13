@@ -182,8 +182,7 @@ func (r registryDao) FetchUpstreamProxyKeys(
 	stmt := databaseg.Builder.
 		Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(registryNameID{}), ",")).
 		From("registries").
-		Where(sq.Eq{"registry_id": ids}).
-		Where("registry_type = ?", artifact.RegistryTypeUPSTREAM)
+		Where(sq.Eq{"registry_id": ids})
 
 	db := dbtx.GetAccessor(ctx, r.db)
 
