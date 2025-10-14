@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
+import type { IconName } from '@harnessio/icons'
+
 export type RorderSelectOption = {
   label: string
   value: string
-  tag?: string
+  icon?: IconName
   disabled?: boolean
 }

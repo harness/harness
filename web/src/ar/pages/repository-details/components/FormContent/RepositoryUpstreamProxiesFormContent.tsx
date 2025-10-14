@@ -19,6 +19,7 @@ import { connect, type FormikContextType } from 'formik'
 import { Layout, Text } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
 
+import { useFeatureFlags } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings/String'
 import type { VirtualRegistryRequest } from '@ar/pages/repository-details/types'
 import type { UpstreamProxyPackageType } from '@ar/pages/upstream-proxy-details/types'
@@ -38,15 +39,28 @@ function RepositoryUpstreamProxiesFormContent(
   const { getString } = useStrings()
   const { values } = formik
   const { packageType } = values
+  const { HAR_SUPPORT_LOCAL_REGISTRY_AS_UPSTREAM_PROXY } = useFeatureFlags()
 
   return (
     <Layout.Vertical data-testid="upstream-proxy-section" flex={{ alignItems: 'flex-start' }} spacing="xsmall">
       <Text font={{ variation: FontVariation.CARD_TITLE }}>
         {getString('repositoryDetails.repositoryForm.upstreamProxiesTitle')}
       </Text>
-      <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_500}>
-        {getString('repositoryDetails.repositoryForm.upstreamProxiesSubTitle')}
-      </Text>
+      {!HAR_SUPPORT_LOCAL_REGISTRY_AS_UPSTREAM_PROXY && (
+        <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_500}>
+          {getString('repositoryDetails.repositoryForm.upstreamProxiesSubTitle')}
+        </Text>
+      )}
+      {HAR_SUPPORT_LOCAL_REGISTRY_AS_UPSTREAM_PROXY && (
+        <>
+          <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_500}>
+            {getString('repositoryDetails.repositoryForm.upstreamProxiesSubTitleWithLocalSupport')}
+          </Text>
+          <Text font={{ variation: FontVariation.SMALL, weight: 'bold' }} color={Color.GREY_500}>
+            {getString('repositoryDetails.repositoryForm.upstreamProxiesSubTitleWithLocalSupportNote')}
+          </Text>
+        </>
+      )}
       <UpstreamProxiesSelect
         className={css.upstreamProxiesWrapper}
         name="config.upstreamProxies"

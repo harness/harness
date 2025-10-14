@@ -16,7 +16,8 @@
 
 import React from 'react'
 import { Menu } from '@blueprintjs/core'
-import { Layout, Tag, Text } from '@harnessio/uicore'
+import { Icon } from '@harnessio/icons'
+import { Layout, Text } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
 
 import { useStrings } from '@ar/frameworks/strings'
@@ -33,7 +34,7 @@ interface SelectListMenuItemProps {
 
 function SelectListMenuItem(props: SelectListMenuItemProps): JSX.Element {
   const { option, onClick, disabled: gDisabled } = props
-  const { label, disabled: lDisabled, tag } = option
+  const { label, disabled: lDisabled, icon } = option
   const { getString } = useStrings()
   const disabled = lDisabled || gDisabled
   return (
@@ -43,10 +44,10 @@ function SelectListMenuItem(props: SelectListMenuItemProps): JSX.Element {
       text={
         <Layout.Horizontal flex={{ justifyContent: 'space-between', alignItems: 'center' }}>
           <Layout.Horizontal spacing="small" flex={{ justifyContent: 'flex-start', alignItems: 'center' }}>
+            {icon && <Icon name={icon} />}
             <Text color={Color.GREY_900} lineClamp={1}>
               {label ? label : getString('na')}
             </Text>
-            {tag && <Tag>{tag}</Tag>}
           </Layout.Horizontal>
           {!disabled && <MenuItemAction rightIcon="main-chevron-right" text={getString('add')} />}
         </Layout.Horizontal>

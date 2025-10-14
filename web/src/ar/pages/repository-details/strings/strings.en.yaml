@@ -23,6 +23,8 @@ repositoryForm:
   newExcludePattern: New Exclude Pattern
   upstreamProxiesTitle: Upstream Proxies
   upstreamProxiesSubTitle: Connect to upstream package sources to automatically download and cache external dependencies for your builds.
+  upstreamProxiesSubTitleWithLocalSupport: Connect to other artifact registry or upstream package sources to automatically download and cache external dependencies for your builds.
+  upstreamProxiesSubTitleWithLocalSupportNote: 'Note: Upstream proxies within the other artifact registries are not included.'
   newUpstreamProxy: New Upstream Proxy
   cleanupPoliciesTitle: Cleanup Policies
   cleanupPoliciesSubTitle: Setup periodic cleanup of registries limiting them by days and character patterns
@@ -44,9 +46,9 @@ repositoryForm:
   visibility:
     title: Visibility
     public: Public
-    publicDescription: Make this repository visible to all users
+    publicDescription: Make this registry visible to all users
     private: Private
-    privateDescription: You can manage who can access this repository
+    privateDescription: You can manage who can access this registry
 tabs:
   configuration: Configuration
   packages: '{{ $.artifactList.pageHeading }}'

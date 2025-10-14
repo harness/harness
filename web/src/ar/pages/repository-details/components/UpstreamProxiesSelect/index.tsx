@@ -15,7 +15,7 @@
  */
 
 import React, { useMemo, useState } from 'react'
-import { Icon } from '@harnessio/icons'
+import { Icon, type IconName } from '@harnessio/icons'
 import classNames from 'classnames'
 import type { FormikProps } from 'formik'
 import { get } from 'lodash-es'
@@ -98,19 +98,16 @@ function UpstreamProxiesSelect(props: UpstreamProxiesSelectProps): JSX.Element {
     if (error) return [{ label: error.message, value: '', disabled: true }]
     if (data && Array.isArray(data?.content?.data?.registries)) {
       return data?.content?.data?.registries.map(each => {
-        const tag =
-          each.type === RepositoryConfigType.UPSTREAM
-            ? getString('repositoryDetails.upstream')
-            : getString('repositoryDetails.virtual')
+        const icon: IconName = each.type === RepositoryConfigType.UPSTREAM ? 'upstream-registry' : 'virtual-registry'
         return {
           label: each.identifier,
           value: each.identifier,
-          tag: HAR_SUPPORT_LOCAL_REGISTRY_AS_UPSTREAM_PROXY ? tag : undefined
+          icon: HAR_SUPPORT_LOCAL_REGISTRY_AS_UPSTREAM_PROXY ? icon : undefined
         }
       })
     }
     return []
-  }, [loading, error, data, getString, HAR_SUPPORT_LOCAL_REGISTRY_AS_UPSTREAM_PROXY])
+  }, [loading, error, data, HAR_SUPPORT_LOCAL_REGISTRY_AS_UPSTREAM_PROXY])
 
   const handleOnCreateUpstreamProxy = (): void => {
     queryClient.invalidateQueries(['GetAllRegistries'])

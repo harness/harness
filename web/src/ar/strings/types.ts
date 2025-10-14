@@ -132,6 +132,8 @@ export interface StringsMap {
   'repositoryDetails.repositoryForm.selectRepoType': string
   'repositoryDetails.repositoryForm.title': string
   'repositoryDetails.repositoryForm.upstreamProxiesSubTitle': string
+  'repositoryDetails.repositoryForm.upstreamProxiesSubTitleWithLocalSupport': string
+  'repositoryDetails.repositoryForm.upstreamProxiesSubTitleWithLocalSupportNote': string
   'repositoryDetails.repositoryForm.upstreamProxiesTitle': string
   'repositoryDetails.repositoryForm.visibility.private': string
   'repositoryDetails.repositoryForm.visibility.privateDescription': string
