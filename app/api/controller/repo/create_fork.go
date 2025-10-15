@@ -178,7 +178,7 @@ func (c *Controller) CreateFork(
 			LastGITPush:   now,
 			ForkID:        repoUpstream.ID,
 			DefaultBranch: defaultBranch,
-			IsEmpty:       true,
+			IsEmpty:       false,
 			State:         enum.RepoStateGitImport,
 			Tags:          json.RawMessage(`{}`),
 		}
