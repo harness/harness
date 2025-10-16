@@ -56,7 +56,8 @@ const (
         gconf_created_by,
 		gconf_is_marked_for_deletion,
 		gconf_is_marked_for_reset,
-        gconf_is_marked_for_infra_reset`
+        gconf_is_marked_for_infra_reset,
+		gconf_ai_agents`
 	ReturningClause             = "RETURNING "
 	gitspaceConfigSelectColumns = "gconf_id," + gitspaceConfigInsertColumns
 )
@@ -76,16 +77,17 @@ type gitspaceConfig struct {
 	DevcontainerPath        null.String               `db:"gconf_devcontainer_path"`
 	Branch                  string                    `db:"gconf_branch"`
 	// TODO: migrate to principal int64 id to use principal cache and consistent with Harness code.
-	UserUID               string   `db:"gconf_user_uid"`
-	SpaceID               int64    `db:"gconf_space_id"`
-	Created               int64    `db:"gconf_created"`
-	Updated               int64    `db:"gconf_updated"`
-	IsDeleted             bool     `db:"gconf_is_deleted"`
-	SSHTokenIdentifier    string   `db:"gconf_ssh_token_identifier"`
-	CreatedBy             null.Int `db:"gconf_created_by"`
-	IsMarkedForDeletion   bool     `db:"gconf_is_marked_for_deletion"`
-	IsMarkedForReset      bool     `db:"gconf_is_marked_for_reset"`
-	IsMarkedForInfraReset bool     `db:"gconf_is_marked_for_infra_reset"`
+	UserUID               string      `db:"gconf_user_uid"`
+	SpaceID               int64       `db:"gconf_space_id"`
+	Created               int64       `db:"gconf_created"`
+	Updated               int64       `db:"gconf_updated"`
+	IsDeleted             bool        `db:"gconf_is_deleted"`
+	SSHTokenIdentifier    string      `db:"gconf_ssh_token_identifier"`
+	CreatedBy             null.Int    `db:"gconf_created_by"`
+	IsMarkedForDeletion   bool        `db:"gconf_is_marked_for_deletion"`
+	IsMarkedForReset      bool        `db:"gconf_is_marked_for_reset"`
+	IsMarkedForInfraReset bool        `db:"gconf_is_marked_for_infra_reset"`
+	AIAgents              null.String `db:"gconf_ai_agents"`
 }
 
 type gitspaceConfigWithLatestInstance struct {
@@ -218,6 +220,8 @@ func (s gitspaceConfigStore) FindAllByIdentifier(
 }
 
 func (s gitspaceConfigStore) Create(ctx context.Context, gitspaceConfig *types.GitspaceConfig) error {
+	aiAgentsStr := aiAgentsToStringPtr(gitspaceConfig.AIAgents)
+
 	stmt := database.Builder.
 		Insert(gitspaceConfigsTable).
 		Columns(gitspaceConfigInsertColumns).
@@ -244,6 +248,7 @@ func (s gitspaceConfigStore) Create(ctx context.Context, gitspaceConfig *types.G
 			gitspaceConfig.IsMarkedForDeletion,
 			gitspaceConfig.IsMarkedForReset,
 			gitspaceConfig.IsMarkedForInfraReset,
+			aiAgentsStr,
 		).
 		Suffix(ReturningClause + "gconf_id")
 	sql, args, err := stmt.ToSql()
@@ -272,6 +277,7 @@ func (s gitspaceConfigStore) Update(ctx context.Context,
 		Set("gconf_is_marked_for_reset", dbGitspaceConfig.IsMarkedForReset).
 		Set("gconf_is_marked_for_infra_reset", dbGitspaceConfig.IsMarkedForInfraReset).
 		Set("gconf_ssh_token_identifier", dbGitspaceConfig.SSHTokenIdentifier).
+		Set("gconf_ai_agents", dbGitspaceConfig.AIAgents.Ptr()).
 		Where("gconf_id = ?", gitspaceConfig.ID)
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -286,6 +292,8 @@ func (s gitspaceConfigStore) Update(ctx context.Context,
 }
 
 func mapToInternalGitspaceConfig(config *types.GitspaceConfig) *gitspaceConfig {
+	aiAgentsStr := aiAgentsToStringPtr(config.AIAgents)
+
 	return &gitspaceConfig{
 		ID:                      config.ID,
 		Identifier:              config.Identifier,
@@ -310,6 +318,7 @@ func mapToInternalGitspaceConfig(config *types.GitspaceConfig) *gitspaceConfig {
 		Updated:                 config.Updated,
 		SSHTokenIdentifier:      config.SSHTokenIdentifier,
 		CreatedBy:               null.IntFromPtr(config.GitspaceUser.ID),
+		AIAgents:                null.StringFromPtr(aiAgentsStr),
 	}
 }
 
@@ -493,6 +502,8 @@ func (s gitspaceConfigStore) mapDBToGitspaceConfig(
 		AuthType:         in.CodeAuthType,
 		AuthID:           in.CodeAuthID,
 	}
+	aiAgentTypes := stringToAIAgents(in.AIAgents.Ptr())
+
 	var result = &types.GitspaceConfig{
 		ID:                    in.ID,
 		Identifier:            in.Identifier,
@@ -506,6 +517,7 @@ func (s gitspaceConfigStore) mapDBToGitspaceConfig(
 		IsMarkedForReset:      in.IsMarkedForReset,
 		IsMarkedForInfraReset: in.IsMarkedForInfraReset,
 		IsDeleted:             in.IsDeleted,
+		AIAgents:              aiAgentTypes,
 		CodeRepo:              codeRepo,
 		GitspaceUser: types.GitspaceUser{
 			ID:         in.CreatedBy.Ptr(),
@@ -654,4 +666,39 @@ func sortBy(configs []*types.GitspaceConfig, idsInOrder []string) []types.Gitspa
 	}
 
 	return orderedConfigs
+}
+
+// aiAgentsToStringPtr converts a slice of AIAgent to a comma-delimited string.
+func aiAgentsToStringPtr(aiAgents []enum.AIAgent) *string {
+	if len(aiAgents) == 0 {
+		return nil
+	}
+
+	aiAgentsStrList := make([]string, len(aiAgents))
+	for i, agentType := range aiAgents {
+		aiAgentsStrList[i] = string(agentType)
+	}
+
+	aiAgentsStr := strings.Join(aiAgentsStrList, ",")
+
+	return &aiAgentsStr
+}
+
+// stringToAIAgents converts a comma-delimited string to a slice of AIAgent.
+func stringToAIAgents(aiAgentsStrPtr *string) []enum.AIAgent {
+	if aiAgentsStrPtr == nil {
+		return nil
+	}
+
+	strTypes := strings.Split(*aiAgentsStrPtr, ",")
+	aiAgents := make([]enum.AIAgent, 0, len(strTypes))
+
+	for _, strType := range strTypes {
+		strType = strings.TrimSpace(strType)
+		if strType != "" {
+			aiAgents = append(aiAgents, enum.AIAgent(strType))
+		}
+	}
+
+	return aiAgents
 }

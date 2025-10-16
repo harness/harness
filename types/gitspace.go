@@ -41,6 +41,7 @@ type GitspaceConfig struct {
 	InfraProviderResource InfraProviderResource  `json:"resource"`
 	LogKey                string                 `json:"log_key"`
 	InitializeLogKey      string                 `json:"initialize_log_key"`
+	AIAgents              []enum.AIAgent         `json:"ai_agents,omitempty"`
 	CodeRepo
 	GitspaceUser
 	Connectors []PlatformConnector `json:"-"`

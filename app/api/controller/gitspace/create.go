@@ -64,6 +64,7 @@ type CreateInput struct {
 	DevcontainerPath              *string                   `json:"devcontainer_path"`
 	Metadata                      map[string]string         `json:"metadata"`
 	SSHTokenIdentifier            string                    `json:"ssh_token_identifier"`
+	AIAgents                      []enum.AIAgent            `json:"ai_agents"`
 }
 
 // Create creates a new gitspace.
@@ -176,6 +177,7 @@ func (c *Controller) Create(
 			Created:            now,
 			Updated:            now,
 			SSHTokenIdentifier: in.SSHTokenIdentifier,
+			AIAgents:           in.AIAgents,
 			CodeRepo:           codeRepo,
 			GitspaceUser:       user,
 		}
