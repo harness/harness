@@ -31,11 +31,6 @@ var (
 )
 
 func newHTTPClient(allowLoopback bool, allowPrivateNetwork bool, disableSSLVerification bool) *http.Client {
-	// no customizations? use default client
-	if allowLoopback && allowPrivateNetwork && !disableSSLVerification {
-		return http.DefaultClient
-	}
-
 	// Clone http.DefaultTransport (used by http.DefaultClient)
 	tr := http.DefaultTransport.(*http.Transport).Clone() //nolint:errcheck
 
@@ -97,5 +92,10 @@ func newHTTPClient(allowLoopback bool, allowPrivateNetwork bool, disableSSLVerif
 	}
 
 	// httpClient is similar to http.DefaultClient, just with custom http.Transport
-	return &http.Client{Transport: tr}
+	return &http.Client{
+		Transport: tr,
+		CheckRedirect: func(*http.Request, []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
 }
