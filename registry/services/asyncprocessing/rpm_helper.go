@@ -40,6 +40,7 @@ import (
 	"github.com/harness/gitness/secret"
 
 	"github.com/klauspost/compress/zstd"
+	"github.com/rs/zerolog/log"
 	"github.com/ulikunitz/xz"
 )
 
@@ -282,7 +283,7 @@ func (l *rpmHelper) getRegistryData(
 	var rd = make([]registryData, 0)
 	for i := 1; i < len(registries); i++ {
 		r := registries[i]
-		fileRef, err := l.getRefsForHarnessRepos(ctx, r.ID, r.Name, rootIdentifier, refType)
+		fileRef, err := l.getRefsForHarnessRepos(ctx, r.ID, r.Name, rootIdentifier, refType, r.Type)
 		if err != nil {
 			return nil, err
 		}
@@ -360,11 +361,16 @@ func (l *rpmHelper) getRefsForHarnessRepos(
 	registryIdentifier string,
 	rootIdentifier string,
 	refType string,
+	regType artifact.RegistryType,
 ) (string, error) {
 	fileReader, _, _, err := l.fileManager.DownloadFile(
 		ctx, "/repodata/repomd.xml", registryID, registryIdentifier, rootIdentifier, false,
 	)
 	if err != nil {
+		if regType == artifact.RegistryTypeVIRTUAL && strings.Contains(err.Error(), "file not found") {
+			log.Ctx(ctx).Warn().Err(err).Msgf("unable to find repomd files for registry: [%s]", registryIdentifier)
+			return "", nil
+		}
 		return "", err
 	}
 	defer fileReader.Close()
