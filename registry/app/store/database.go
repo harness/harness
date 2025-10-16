@@ -567,6 +567,12 @@ type ArtifactRepository interface {
 	DeleteByVersionAndImageName(ctx context.Context, image string, version string, regID int64) (err error)
 	GetLatestByImageID(ctx context.Context, imageID int64) (*types.Artifact, error)
 
+	// get latest artifacts from all images under repo
+	GetLatestArtifactsByRepo(
+		ctx context.Context, registryID int64, batchSize int, artifactID int64,
+	) (*[]types.ArtifactMetadata, error)
+
+	// get all artifacts from all images under repo
 	GetAllArtifactsByRepo(
 		ctx context.Context, registryID int64, batchSize int, artifactID int64,
 	) (*[]types.ArtifactMetadata, error)

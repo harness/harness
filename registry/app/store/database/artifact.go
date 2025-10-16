@@ -1044,6 +1044,44 @@ func (a ArtifactDao) UpdateArtifactMetadata(
 	return nil
 }
 
+func (a ArtifactDao) GetLatestArtifactsByRepo(
+	ctx context.Context, registryID int64, batchSize int, artifactID int64,
+) (*[]types.ArtifactMetadata, error) {
+	q := databaseg.Builder.Select(
+		`r.registry_name as repo_name, i.image_name as name,
+		a.artifact_id as artifact_id, a.artifact_version as version, a.artifact_metadata as metadata`,
+	).
+		From("artifacts a").
+		Join("images i ON i.image_id = a.artifact_image_id").
+		Join("registries r ON i.image_registry_id = r.registry_id").
+		Join(
+			`(SELECT t.artifact_id as id, ROW_NUMBER() OVER (PARTITION BY t.artifact_image_id
+			ORDER BY t.artifact_updated_at DESC) AS rank FROM artifacts t 
+			JOIN images i ON t.artifact_image_id = i.image_id
+			JOIN registries r ON i.image_registry_id = r.registry_id
+			WHERE r.registry_id = ? ) AS a1 
+			ON a.artifact_id = a1.id`, registryID,
+		).
+		Where("a.artifact_id > ? AND r.registry_id = ?", artifactID, registryID).
+		Where("a1.rank = 1").
+		OrderBy("a.artifact_id ASC").
+		Limit(util.SafeIntToUInt64(batchSize))
+
+	sql, args, err := q.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, a.db)
+
+	var dst []*artifactMetadataDB
+	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing GetLatestArtifactsByRepo query")
+	}
+
+	return a.mapToArtifactMetadataList(dst)
+}
+
 func (a ArtifactDao) GetAllArtifactsByRepo(
 	ctx context.Context, registryID int64, batchSize int, artifactID int64,
 ) (*[]types.ArtifactMetadata, error) {

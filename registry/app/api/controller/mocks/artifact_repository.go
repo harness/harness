@@ -1620,6 +1620,86 @@ func (_c *MockArtifactRepository_GetLatestArtifactMetadata_Call) RunAndReturn(ru
 	return _c
 }
 
+// GetLatestArtifactsByRepo provides a mock function for the type MockArtifactRepository
+func (_mock *MockArtifactRepository) GetLatestArtifactsByRepo(ctx context.Context, registryID int64, batchSize int, artifactID int64) (*[]types.ArtifactMetadata, error) {
+	ret := _mock.Called(ctx, registryID, batchSize, artifactID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetLatestArtifactsByRepo")
+	}
+
+	var r0 *[]types.ArtifactMetadata
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, int, int64) (*[]types.ArtifactMetadata, error)); ok {
+		return returnFunc(ctx, registryID, batchSize, artifactID)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, int, int64) *[]types.ArtifactMetadata); ok {
+		r0 = returnFunc(ctx, registryID, batchSize, artifactID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*[]types.ArtifactMetadata)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int64, int, int64) error); ok {
+		r1 = returnFunc(ctx, registryID, batchSize, artifactID)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockArtifactRepository_GetLatestArtifactsByRepo_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetLatestArtifactsByRepo'
+type MockArtifactRepository_GetLatestArtifactsByRepo_Call struct {
+	*mock.Call
+}
+
+// GetLatestArtifactsByRepo is a helper method to define mock.On call
+//   - ctx context.Context
+//   - registryID int64
+//   - batchSize int
+//   - artifactID int64
+func (_e *MockArtifactRepository_Expecter) GetLatestArtifactsByRepo(ctx interface{}, registryID interface{}, batchSize interface{}, artifactID interface{}) *MockArtifactRepository_GetLatestArtifactsByRepo_Call {
+	return &MockArtifactRepository_GetLatestArtifactsByRepo_Call{Call: _e.mock.On("GetLatestArtifactsByRepo", ctx, registryID, batchSize, artifactID)}
+}
+
+func (_c *MockArtifactRepository_GetLatestArtifactsByRepo_Call) Run(run func(ctx context.Context, registryID int64, batchSize int, artifactID int64)) *MockArtifactRepository_GetLatestArtifactsByRepo_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int64
+		if args[1] != nil {
+			arg1 = args[1].(int64)
+		}
+		var arg2 int
+		if args[2] != nil {
+			arg2 = args[2].(int)
+		}
+		var arg3 int64
+		if args[3] != nil {
+			arg3 = args[3].(int64)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
+	})
+	return _c
+}
+
+func (_c *MockArtifactRepository_GetLatestArtifactsByRepo_Call) Return(artifactMetadatas *[]types.ArtifactMetadata, err error) *MockArtifactRepository_GetLatestArtifactsByRepo_Call {
+	_c.Call.Return(artifactMetadatas, err)
+	return _c
+}
+
+func (_c *MockArtifactRepository_GetLatestArtifactsByRepo_Call) RunAndReturn(run func(ctx context.Context, registryID int64, batchSize int, artifactID int64) (*[]types.ArtifactMetadata, error)) *MockArtifactRepository_GetLatestArtifactsByRepo_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetLatestByImageID provides a mock function for the type MockArtifactRepository
 func (_mock *MockArtifactRepository) GetLatestByImageID(ctx context.Context, imageID int64) (*types.Artifact, error) {
 	ret := _mock.Called(ctx, imageID)
