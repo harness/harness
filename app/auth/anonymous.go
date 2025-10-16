@@ -28,5 +28,5 @@ var AnonymousPrincipal = types.Principal{
 }
 
 func IsAnonymousSession(session *Session) bool {
-	return session != nil && session.Principal.UID == types.AnonymousPrincipalUID
+	return session != nil && session.Principal.IsAnonymous()
 }

@@ -41,6 +41,10 @@ type Principal struct {
 	Updated int64 `db:"principal_updated"                json:"updated"`
 }
 
+func (p *Principal) IsAnonymous() bool {
+	return p.UID == AnonymousPrincipalUID
+}
+
 func (p *Principal) ToPrincipalInfo() *PrincipalInfo {
 	return &PrincipalInfo{
 		ID:          p.ID,

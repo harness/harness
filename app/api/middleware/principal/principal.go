@@ -19,17 +19,16 @@ import (
 
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
-	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/gotidy/ptr"
 	"github.com/rs/zerolog/log"
 )
 
-/*
- * RestrictTo returns an http.HandlerFunc middleware that ensures the principal
- * is of the provided type. In case there is no authenticated principal,
- * or the principal type doesn't match, an error is rendered.
- */
+// RestrictTo returns an http.HandlerFunc middleware that ensures the principal
+// is of the provided type. In case there is no authenticated principal,
+// or the principal type doesn't match, an error is rendered.
 func RestrictTo(pType enum.PrincipalType) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -37,13 +36,13 @@ func RestrictTo(pType enum.PrincipalType) func(http.Handler) http.Handler {
 
 			p, ok := request.PrincipalFrom(ctx)
 			if !ok {
-				log.Ctx(ctx).Debug().Msgf("Failed to get principal from session")
+				log.Ctx(ctx).Debug().Msg("Failed to get principal from session")
 
 				render.Forbidden(ctx, w)
 				return
 			}
-			if p.UID == types.AnonymousPrincipalUID {
-				log.Ctx(ctx).Debug().Msgf("Valid principal is required, received an Anonymous.")
+			if p.IsAnonymous() {
+				log.Ctx(ctx).Debug().Msg("Valid principal is required, received an Anonymous.")
 
 				render.Unauthorized(ctx, w)
 				return
@@ -61,11 +60,9 @@ func RestrictTo(pType enum.PrincipalType) func(http.Handler) http.Handler {
 	}
 }
 
-/*
- * RestrictToAdmin returns an http.HandlerFunc middleware that ensures the principal
- * is an admin. In case there is no authenticated principal,
- * or the principal isn't an admin, an error is rendered.
- */
+// RestrictToAdmin returns an http.HandlerFunc middleware that ensures the principal
+// is an admin. In case there is no authenticated principal,
+// or the principal isn't an admin, an error is rendered.
 func RestrictToAdmin() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -76,6 +73,48 @@ func RestrictToAdmin() func(http.Handler) http.Handler {
 				log.Ctx(ctx).Debug().Msg("No principal found or the principal is no admin")
 
 				render.Forbidden(ctx, w)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func GitHookRestrict() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+
+			const userErrorMessage = "Internal error"
+
+			p, ok := request.PrincipalFrom(ctx)
+			if !ok {
+				log.Ctx(ctx).Error().Msg("Unauthenticated call to git hook")
+
+				render.JSON(w, http.StatusOK, &hook.Output{
+					Error: ptr.String(userErrorMessage),
+				})
+				return
+			}
+
+			if p.IsAnonymous() {
+				log.Ctx(ctx).Error().Msg("Valid principal is required for git hooks, received an Anonymous.")
+
+				render.JSON(w, http.StatusOK, &hook.Output{
+					Error: ptr.String(userErrorMessage),
+				})
+				return
+			}
+
+			if p.Type != enum.PrincipalTypeService {
+				log.Ctx(ctx).Error().
+					Str("principal.type", string(p.Type)).
+					Msgf("Principal of type %q required for git hooks.", enum.PrincipalTypeService)
+
+				render.JSON(w, http.StatusOK, &hook.Output{
+					Error: ptr.String(userErrorMessage),
+				})
 				return
 			}
 
