@@ -1,0 +1,69 @@
+/*
+ * Copyright 2024 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.modificationContainer {
+  display: grid;
+  grid-template-columns: max-content auto;
+  column-gap: var(--spacing-medium);
+  row-gap: var(--spacing-small);
+  align-items: center;
+}
+
+.weeklyDownloadContent {
+  margin-left: var(--spacing-small) !important;
+}
+
+.artifactTagContainer {
+  &.editMode {
+    background-color: var(--grey-0);
+    border: var(--artifact-tag-container-border);
+    border-radius: var(--artifact-tag-container-border-radius);
+    padding: var(--artifact-tag-container-padding);
+  }
+}
+
+.tagWrapper {
+  max-height: 85px;
+  overflow: auto;
+  & :global(.bp3-input) {
+    background-color: transparent;
+    box-shadow: none;
+  }
+  &.readonly {
+    :global(.bp3-multi-select-tag-input-input) {
+      width: 0px;
+      cursor: pointer;
+    }
+    :global(.bp3-tag-input-values) {
+      margin-right: 0px;
+    }
+  }
+  &.editMode {
+    :global(.bp3-input) {
+      min-height: 55px;
+      min-width: 300px;
+    }
+    :global(.bp3-tag-input-values) {
+      align-items: flex-start !important;
+    }
+  }
+}
+
+.iconBtn {
+  --button-height: auto !important;
+  min-width: auto !important;
+  margin-top: var(--spacing-xsmall) !important;
+}

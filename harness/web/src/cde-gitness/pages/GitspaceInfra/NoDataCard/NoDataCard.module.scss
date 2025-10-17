@@ -1,0 +1,60 @@
+.main {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  margin-top: 4% !important;
+
+  .titleContainer {
+    width: 50%;
+  }
+
+  .cardMain {
+    width: 50%;
+  }
+
+  .cardTitle {
+    font-size: 16px !important;
+  }
+}
+
+.infraLogo {
+  margin: 0 auto !important;
+  width: 318px !important;
+  height: 318px !important;
+}
+
+.containerHeading {
+  margin-bottom: var(--spacing-small) !important;
+  text-align: center;
+}
+
+.infraDescription {
+  margin-bottom: var(--spacing-xlarge) !important;
+  font-size: var(--font-size-normal) !important;
+  font-weight: 400 !important;
+  text-align: center;
+}
+
+.configureButton {
+  padding: var(--spacing-medium) var(--spacing-medium) !important;
+  width: fit-content !important;
+  font-size: var(--font-size-small) !important;
+  font-weight: 200 !important;
+  margin: 0 auto var(--spacing-xxlarge) auto !important;
+}
+
+.supportText {
+  font-weight: 400 !important;
+  font-size: var(--font-size-small) !important;
+  text-align: center !important;
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+}
+
+.learnMoreText {
+  font-weight: 400 !important;
+  font-size: var(--font-size-small) !important;
+  color: var(--primary-7) !important;
+  cursor: pointer;
+}

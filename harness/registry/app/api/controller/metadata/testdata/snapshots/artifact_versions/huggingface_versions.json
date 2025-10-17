@@ -1,0 +1,24 @@
+{
+  "data": {
+    "artifactVersions": [
+      {
+        "artifactType": "model",
+        "downloadsCount": 0,
+        "fileCount": 0,
+        "isQuarantined": false,
+        "lastModified": "1704067200000",
+        "name": "v1.0.0",
+        "packageType": "HUGGINGFACE",
+        "pullCommand": "curl --location 'https://registry.example.com/root/test-registry/model/test-artifact/resolve/v1.0.0/\u003cFILENAME\u003e' --header ' \u003cAPI_KEY\u003e' -J -o '\u003cOUTPUT_FILE_NAME\u003e'",
+        "registryIdentifier": "",
+        "registryPath": "",
+        "size": "0.00B"
+      }
+    ],
+    "itemCount": 1,
+    "pageCount": 1,
+    "pageIndex": 1,
+    "pageSize": 10
+  },
+  "status": "SUCCESS"
+}

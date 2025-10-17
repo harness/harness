@@ -1,0 +1,49 @@
+/*
+ * Copyright 2023 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.logLayout {
+  margin-top: var(--spacing-small);
+  margin-left: 23px !important;
+  display: flex !important;
+  word-break: break-all !important;
+}
+
+.lineNumber {
+  min-width: var(--spacing-xlarge);
+  color: #999;
+  margin-right: 16px;
+  font-family: 'Roboto Mono' !important;
+  user-select: none !important;
+  text-align: right !important;
+  font-size: 13px !important;
+}
+
+.flexExpand {
+  flex-grow: 1;
+}
+
+.log {
+  color: white !important;
+  font-family: 'Roboto Mono' !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+}
+
+.time {
+  user-select: none !important;
+  margin-left: var(--layout-spacing) !important;
+  word-break: keep-all !important;
+}

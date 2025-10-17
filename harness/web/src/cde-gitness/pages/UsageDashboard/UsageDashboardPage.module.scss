@@ -1,0 +1,92 @@
+.customBreadcumbStyles {
+  margin-bottom: var(--spacing-medium);
+  [class*='Layout--horizontal']:last-child > span[class*='bp3-icon'] {
+    display: none !important;
+  }
+}
+
+.container {
+  margin: var(--spacing-medium);
+  padding: 0;
+}
+
+.content {
+  margin: var(--spacing-medium);
+  padding: var(--spacing-medium);
+}
+
+.dashboardSection {
+  margin-bottom: var(--spacing-xlarge);
+}
+
+.dashboardCard {
+  background-color: var(--white);
+  border-radius: var(--spacing-xsmall);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: var(--spacing-large);
+  margin-top: var(--spacing-small);
+}
+
+.loaderContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+.main {
+  margin: var(--spacing-xlarge) !important;
+}
+
+.standaloneContainer {
+  margin: var(--spacing-medium) !important;
+  padding: var(--spacing-small);
+}
+
+.totalItems {
+  font-size: var(--font-size-normal) !important;
+  font-weight: bold !important;
+  color: black !important;
+}
+
+.gitspacesTab {
+  padding: var(--spacing-medium) var(--spacing-large);
+  background-color: var(--white);
+}
+
+.tabs {
+  :global {
+    .bp3-tab-list {
+      background-color: var(--white);
+      width: 100%;
+      border-bottom: 0;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.13);
+      align-items: center;
+      padding: 0 var(--spacing-xlarge);
+    }
+    .bp3-tab-panel {
+      margin-top: 0 !important;
+      margin-bottom: 0 !important;
+    }
+  }
+}
+
+.usageTab {
+  padding: var(--spacing-medium);
+  min-height: 300px;
+}
+
+.sortOrder {
+  margin-left: var(--spacing-small);
+}
+
+// Fix for tabs to ensure they take proper space
+:global {
+  .bp3-tabs {
+    width: 100%;
+
+    .bp3-tab-panel {
+      margin-top: var(--spacing-medium);
+    }
+  }
+}

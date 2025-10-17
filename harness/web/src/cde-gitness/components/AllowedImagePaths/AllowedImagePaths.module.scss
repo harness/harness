@@ -1,0 +1,38 @@
+.mainContentCard {
+  padding: var(--spacing-large);
+  margin: 0;
+  border-radius: var(--border-radius-medium);
+  box-shadow: 0 2px 8px rgba(96, 97, 112, 0.16);
+  width: 100%;
+  background: var(--white);
+}
+
+.imagePathCard {
+  width: 100%;
+  margin: 0;
+}
+
+.imagePathCellContainer {
+  min-height: 60px;
+}
+
+.defaultImageTable {
+  :global {
+    .bp3-table {
+      border: none;
+    }
+
+    .bp3-table-cell {
+      vertical-align: middle;
+
+      &:last-child {
+        border-right: none;
+      }
+    }
+  }
+}
+
+.defaultImageTableRow {
+  padding: 0 !important;
+  border-bottom: none !important;
+}

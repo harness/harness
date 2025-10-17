@@ -1,0 +1,2 @@
+ALTER TABLE upstream_proxy_configs ADD COLUMN upstream_proxy_config_user_name_secret_space_id INTEGER;
+ALTER TABLE upstream_proxy_configs ADD COLUMN upstream_proxy_config_user_name_secret_identifier TEXT;

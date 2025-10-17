@@ -1,0 +1,3750 @@
+{
+  "definitions": {
+      "Config": {
+          "title": "Config",
+          "description": "Config defines the a resource configuration.",
+          "type": "object",
+          "properties": {
+              "version": {
+                  "description": "Version defines the schema version.",
+                  "type": [
+                      "string",
+                      "number"
+                  ]
+              },
+              "kind": {
+                  "type": "string",
+                  "description": "Type defines the schema type.",
+                  "enum": [
+                      "pipeline",
+                      "plugin",
+                      "template"
+                  ]
+              },
+              "type": {
+                  "type": "string",
+                  "description": "Type defines the schema type.",
+                  "enum": [
+                      "pipeline",
+                      "stage",
+                      "step"
+                  ]
+              },
+              "name": {
+                  "type": "string",
+                  "description": "Name defines an optional resource name."
+              }
+          },
+          "required": [
+              "kind"
+          ],
+          "oneOf": [
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "kind": {
+                                  "const": "pipeline"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/Pipeline"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "kind": {
+                                  "const": "template"
+                              },
+                              "type": {
+                                  "const": "stage"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/TemplateStage"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "kind": {
+                                  "const": "template"
+                              },
+                              "type": {
+                                  "const": "step"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/TemplateStep"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "kind": {
+                                  "const": "plugin"
+                              },
+                              "type": {
+                                  "const": "step"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/PluginStep"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "kind": {
+                                  "const": "plugin"
+                              },
+                              "type": {
+                                  "const": "stage"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/PluginStage"
+                              }
+                          }
+                      }
+                  ]
+              }
+          ],
+          "x-go-skip": true,
+          "x-file": "config.yaml"
+      },
+      "Pipeline": {
+          "title": "Pipeline",
+          "description": "Pipeline defines the pipeline execution.",
+          "type": "object",
+          "properties": {
+              "stages": {
+                  "type": "array",
+                  "description": "Stages defines a list of pipeline stages.",
+                  "items": {
+                      "$ref": "#/definitions/Stage"
+                  }
+              },
+              "inputs": {
+                  "type": "object",
+                  "description": "Inputs defines the pipeline input parameters.",
+                  "additionalProperties": {
+                      "$ref": "#/definitions/Input"
+                  }
+              },
+              "options": {
+                  "$ref": "#/definitions/Default",
+                  "description": "Options defines global configuration options."
+              }
+          },
+          "required": [
+              "stages"
+          ],
+          "examples": [
+              {
+                  "version": 1,
+                  "stages": [
+                      {
+                          "name": "build",
+                          "type": "ci",
+                          "spec": {
+                              "steps": [
+                                  {
+                                      "name": "compile",
+                                      "type": "script",
+                                      "spec": {
+                                          "run": "go build\ngo test"
+                                      }
+                                  }
+                              ]
+                          }
+                      }
+                  ]
+              }
+          ],
+          "x-file": "pipeline.yaml"
+      },
+      "Stage": {
+          "title": "Stage",
+          "type": "object",
+          "properties": {
+              "desc": {
+                  "description": "The stage description.",
+                  "type": "string"
+              },
+              "id": {
+                  "description": "The unique stage identifier.",
+                  "pattern": "^[a-zA-Z0-9_-]+$",
+                  "type": "string"
+              },
+              "name": {
+                  "description": "The sage name.",
+                  "type": "string"
+              },
+              "strategy": {
+                  "$ref": "#/definitions/Strategy",
+                  "description": "The stage execution strategy."
+              },
+              "delegate": {
+                  "description": "Configures the delegate matching logic.",
+                  "anyOf": [
+                      {
+                          "items": {
+                              "type": "string"
+                          },
+                          "type": "array"
+                      },
+                      {
+                          "type": "string"
+                      }
+                  ]
+              },
+              "status": {
+                  "$ref": "#/definitions/StatusStage",
+                  "description": "Configures the scm status settings."
+              },
+              "type": {
+                  "description": "The stage type.",
+                  "enum": [
+                      "cd",
+                      "ci",
+                      "custom",
+                      "flag",
+                      "iacm",
+                      "template",
+                      "group",
+                      "parallel"
+                  ],
+                  "type": "string"
+              },
+              "when": {
+                  "description": "The stage conditional logic.",
+                  "$ref": "#/definitions/When"
+              },
+              "failure": {
+                  "$ref": "#/definitions/FailureList"
+              }
+          },
+          "x-properties": {
+              "inputs": {
+                  "type": "object",
+                  "additionalProperties": {
+                      "type": "object"
+                  },
+                  "x-go-type": "map[string]interface{}"
+              }
+          },
+          "oneOf": [
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "ci"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/StageCI"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "cd"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/StageCD"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "custom"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/StageCustom"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "iacm"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/StageInfra"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "flag"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/StageFlag"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "template"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/StageTemplate"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "group"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/StageGroup"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "parallel"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/StageParallel"
+                              }
+                          }
+                      }
+                  ]
+              }
+          ],
+          "anyOf": [
+              {
+                  "required": [
+                      "type"
+                  ]
+              }
+          ],
+          "x-docs-skip": false,
+          "x-docs-title": "stage",
+          "x-file": "stage.yaml"
+      },
+      "Strategy": {
+          "title": "Strategy",
+          "type": "object",
+          "description": "Strategy defines an optional execution strategy.",
+          "properties": {
+              "type": {
+                  "description": "Type defines the execution strategy type.",
+                  "type": "string",
+                  "enum": [
+                      "for",
+                      "matrix",
+                      "while"
+                  ]
+              }
+          },
+          "oneOf": [
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "for"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/For"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "matrix"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/Matrix"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "while"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/While"
+                              }
+                          }
+                      }
+                  ]
+              }
+          ],
+          "examples": [
+              {
+                  "strategy": {
+                      "matrix": {
+                          "axis": {
+                              "golang": [
+                                  1.19,
+                                  1.21
+                              ],
+                              "node": [
+                                  16,
+                                  18
+                              ]
+                          }
+                      }
+                  }
+              }
+          ],
+          "x-docs-title": "strategy",
+          "x-file": "strategy.yaml"
+      },
+      "For": {
+          "title": "For",
+          "description": "Defines a for loop execution strategy.",
+          "type": "object",
+          "properties": {
+              "concurrency": {
+                  "description": "Defines the for loop concurrency.",
+                  "type": "number"
+              },
+              "iterations": {
+                  "type": "number"
+              }
+          },
+          "x-docs-skip": true,
+          "x-file": "strategy_for.yaml"
+      },
+      "Matrix": {
+          "title": "Matrix",
+          "type": "object",
+          "description": "Defines a matrix execution strategy.",
+          "properties": {
+              "axis": {
+                  "type": "object",
+                  "additionalProperties": {
+                      "type": "array",
+                      "items": {
+                          "type": "string"
+                      }
+                  }
+              },
+              "concurrency": {
+                  "description": "Defines the matrix concurrency.",
+                  "type": "number"
+              },
+              "include": {
+                  "type": "array",
+                  "items": {
+                      "type": "object",
+                      "additionalProperties": {
+                          "type": "string"
+                      }
+                  }
+              },
+              "exclude": {
+                  "type": "array",
+                  "items": {
+                      "type": "object",
+                      "additionalProperties": {
+                          "type": "string"
+                      }
+                  }
+              }
+          },
+          "examples": [
+              {
+                  "matrix": {
+                      "axis": {
+                          "golang": [
+                              1.19,
+                              1.21
+                          ],
+                          "node": [
+                              16,
+                              18
+                          ]
+                      }
+                  }
+              }
+          ],
+          "x-docs-title": "matrix",
+          "x-file": "strategy_matrix.yaml"
+      },
+      "While": {
+          "title": "While",
+          "description": "Defines a while loop execution strategy.",
+          "type": "object",
+          "properties": {
+              "condition": {
+                  "type": "string",
+                  "description": "Defines the while condition."
+              },
+              "iterations": {
+                  "type": "number",
+                  "description": "Defines the maximum number of interations."
+              }
+          },
+          "x-docs-skip": true,
+          "x-file": "strategy_while.yaml"
+      },
+      "StatusStage": {
+          "title": "StatusStage",
+          "type": "object",
+          "properties": {
+              "disabled": {
+                  "type": "boolean"
+              },
+              "matrix": {
+                  "type": "string",
+                  "enum": [
+                      "itemize",
+                      "summarize"
+                  ]
+              },
+              "name": {
+                  "type": "string"
+              }
+          },
+          "x-docs-skip": true,
+          "x-file": "status_stage.yaml"
+      },
+      "When": {
+          "title": "When",
+          "description": "Expression used to evaluate whether or not a Stage or Step should execute.",
+          "oneOf": [
+              {
+                  "type": "string"
+              },
+              {
+                  "$ref": "#/definitions/WhenCond"
+              },
+              {
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/WhenCond"
+                  }
+              }
+          ],
+          "x-go-skip": true,
+          "x-docs-skip": true,
+          "x-docs-title": "when",
+          "x-file": "when.yaml"
+      },
+      "WhenCond": {
+          "title": "WhenCond",
+          "type": "object",
+          "additionalProperties": {
+              "$ref": "#/definitions/WhenExpr"
+          },
+          "x-go-skip": true,
+          "x-docs-skip": true,
+          "x-file": "when_cond.yaml"
+      },
+      "WhenExpr": {
+          "title": "WhenExpr",
+          "type": "object",
+          "properties": {
+              "eq": {
+                  "type": "string"
+              },
+              "in": {
+                  "type": "array"
+              },
+              "not": {
+                  "type": "object",
+                  "properties": {
+                      "eq": {
+                          "type": "string"
+                      },
+                      "in": {
+                          "type": "string"
+                      }
+                  }
+              }
+          },
+          "x-go-skip": true,
+          "x-docs-skip": true,
+          "x-file": "when_expr.yaml"
+      },
+      "FailureList": {
+          "title": "FailureList",
+          "oneOf": [
+              {
+                  "$ref": "#/definitions/Failure"
+              },
+              {
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/Failure"
+                  }
+              }
+          ],
+          "x-go-skip": true,
+          "x-file": "failure_list.yaml"
+      },
+      "Failure": {
+          "title": "Failure",
+          "type": "object",
+          "properties": {
+              "errors": {
+                  "description": "Errors specifies the types of errors.",
+                  "type": "array",
+                  "items": {
+                      "type": "string",
+                      "enum": [
+                          "all",
+                          "approval-rejection",
+                          "authentication",
+                          "authorization",
+                          "connectivity",
+                          "delegate-provisioning",
+                          "delegate-restart",
+                          "input-timeout",
+                          "policy-evaluation",
+                          "timeout",
+                          "unknown",
+                          "verification",
+                          "user-mark-fail"
+                      ]
+                  }
+              },
+              "action": {
+                  "$ref": "#/definitions/FailureAction"
+              }
+          },
+          "x-file": "failure.yaml"
+      },
+      "FailureAction": {
+          "title": "FailureAction",
+          "type": "object",
+          "description": "Failure defines a failure strategy.",
+          "properties": {
+              "type": {
+                  "description": "Type defines the failure strategy type.",
+                  "type": "string",
+                  "enum": [
+                      "abort",
+                      "fail",
+                      "ignore",
+                      "manual-intervention",
+                      "pipeline-rollback",
+                      "retry",
+                      "retry-step-group",
+                      "stage-rollback",
+                      "success"
+                  ]
+              }
+          },
+          "oneOf": [
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "success"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/EmptySpec"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "fail"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/EmptySpec"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "retry-step-group"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/EmptySpec"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "stage-rollback"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/EmptySpec"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "pipeline-rollback"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/EmptySpec"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "abort"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/Abort"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "ignore"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/Ignore"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "retry"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/Retry"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "manual-intervention"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/ManualIntervention"
+                              }
+                          }
+                      }
+                  ]
+              }
+          ],
+          "x-file": "failure_action.yaml"
+      },
+      "EmptySpec": {
+          "title": "EmptySpec",
+          "type": "object",
+          "properties": {},
+          "x-file": "empty_spec.yaml"
+      },
+      "Abort": {
+          "title": "Abort",
+          "type": "object",
+          "properties": {},
+          "x-file": "failure_abort.yaml"
+      },
+      "Ignore": {
+          "title": "Ignore",
+          "type": "object",
+          "properties": {},
+          "x-file": "failure_ignore.yaml"
+      },
+      "Retry": {
+          "title": "Retry",
+          "properties": {
+              "attempts": {
+                  "type": "number",
+                  "example": 3
+              },
+              "interval": {
+                  "anyOf": [
+                      {
+                          "items": {
+                              "type": "string",
+                              "format": "duration"
+                          },
+                          "type": "array",
+                          "example": [
+                              "5s",
+                              "10s",
+                              "20s"
+                          ]
+                      },
+                      {
+                          "type": "string",
+                          "example": "1m",
+                          "format": "duration"
+                      }
+                  ]
+              },
+              "failure": {
+                  "$ref": "#/definitions/RetryFailure"
+              }
+          },
+          "type": "object",
+          "x-file": "failure_retry.yaml"
+      },
+      "RetryFailure": {
+          "title": "RetryFailure",
+          "type": "object",
+          "properties": {
+              "action": {
+                  "$ref": "#/definitions/RetryFailureAction"
+              }
+          },
+          "x-file": "retry_failure.yaml"
+      },
+      "RetryFailureAction": {
+          "title": "RetryFailureAction",
+          "type": "object",
+          "description": "Failure action on failure for all retries",
+          "properties": {
+              "type": {
+                  "description": "Type defines the failure strategy type.",
+                  "type": "string",
+                  "enum": [
+                      "abort",
+                      "fail",
+                      "ignore",
+                      "manual-intervention",
+                      "pipeline-rollback",
+                      "stage-rollback",
+                      "success"
+                  ]
+              }
+          },
+          "oneOf": [
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "success"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/EmptySpec"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "fail"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/EmptySpec"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "stage-rollback"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/EmptySpec"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "pipeline-rollback"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/EmptySpec"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "abort"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/Abort"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "ignore"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/Ignore"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "manual-intervention"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/ManualIntervention"
+                              }
+                          }
+                      }
+                  ]
+              }
+          ],
+          "x-file": "retry_failure_action.yaml"
+      },
+      "ManualIntervention": {
+          "title": "ManualIntervention",
+          "properties": {
+              "timeout_action": {
+                  "$ref": "#/definitions/TimeoutAction"
+              },
+              "timeout": {
+                  "format": "duration",
+                  "type": "string",
+                  "example": "30m"
+              }
+          },
+          "type": "object",
+          "x-file": "failure_manual.yaml"
+      },
+      "TimeoutAction": {
+          "title": "TimeoutAction",
+          "type": "object",
+          "description": "Manual intervention for timeout failure action",
+          "properties": {
+              "type": {
+                  "description": "Type defines the failure strategy type.",
+                  "type": "string",
+                  "enum": [
+                      "abort",
+                      "ignore",
+                      "success",
+                      "stage-rollback",
+                      "pipeline-rollback",
+                      "fail"
+                  ]
+              }
+          },
+          "oneOf": [
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "success"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/EmptySpec"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "fail"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/EmptySpec"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "stage-rollback"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/EmptySpec"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "pipeline-rollback"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/EmptySpec"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "abort"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/Abort"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "ignore"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/Ignore"
+                              }
+                          }
+                      }
+                  ]
+              }
+          ],
+          "x-docs-skip": true,
+          "x-file": "timeout_action.yaml"
+      },
+      "StageCI": {
+          "properties": {
+              "cache": {
+                  "$ref": "#/definitions/Cache",
+                  "description": "Configures the cache behavior."
+              },
+              "clone": {
+                  "$ref": "#/definitions/CloneStage",
+                  "description": "Overrides the clone behavior."
+              },
+              "platform": {
+                  "$ref": "#/definitions/Platform",
+                  "description": "Configures the target execution platform."
+              },
+              "runtime": {
+                  "$ref": "#/definitions/Runtime",
+                  "description": "Configures the target runtime engine."
+              },
+              "steps": {
+                  "description": "Configures a series of steps to executes.",
+                  "items": {
+                      "$ref": "#/definitions/Step"
+                  },
+                  "type": "array"
+              },
+              "envs": {
+                  "type": "object",
+                  "additionalProperties": {
+                      "type": "string"
+                  },
+                  "description": "The stage environment variables."
+              },
+              "volumes": {
+                  "description": "Configures a container volumes.",
+                  "items": {
+                      "$ref": "#/definitions/Volume"
+                  },
+                  "type": "array"
+              }
+          },
+          "type": "object",
+          "title": "StageCI",
+          "examples": [
+              {
+                  "type": "ci",
+                  "spec": {
+                      "steps": [
+                          {
+                              "type": "run",
+                              "spec": {
+                                  "script": "go build",
+                                  "container": "golang"
+                              }
+                          },
+                          {
+                              "type": "run",
+                              "spec": {
+                                  "script": "go test",
+                                  "container": "golang"
+                              }
+                          }
+                      ]
+                  }
+              }
+          ],
+          "x-docs-skip": false,
+          "x-docs-title": "stage.type.ci",
+          "x-file": "stage_ci.yaml"
+      },
+      "Cache": {
+          "title": "Cache",
+          "type": "object",
+          "description": "Cache defines pipeline caching behavior.",
+          "properties": {
+              "enabled": {
+                  "description": "Enabled enables cache intelligence.",
+                  "type": "boolean"
+              },
+              "paths": {
+                  "description": "Paths provides a list of paths to cache.",
+                  "type": "array",
+                  "items": {
+                      "type": "string"
+                  }
+              },
+              "key": {
+                  "description": "Key provides a caching key.",
+                  "type": "string"
+              },
+              "policy": {
+                  "type": "string",
+                  "description": "Policy configures the pull and push behavior of the cache.\nBy default, the stage pulls the cache when the stage starts\nand pushes changes to the cache when the stage ends.\n",
+                  "default": "pull-push",
+                  "enum": [
+                      "pull",
+                      "pull-push",
+                      "push"
+                  ]
+              }
+          },
+          "examples": [
+              {
+                  "cache": {
+                      "enabled": true
+                  }
+              },
+              {
+                  "cache": {
+                      "enabled": true,
+                      "paths": [
+                          "node_modules"
+                      ]
+                  }
+              },
+              {
+                  "cache": {
+                      "enabled": true,
+                      "paths": [
+                          "node_modules"
+                      ],
+                      "policy": "pull"
+                  }
+              }
+          ],
+          "x-docs-skip": true,
+          "x-file": "cache.yaml"
+      },
+      "CloneStage": {
+          "title": "CloneStage",
+          "type": "object",
+          "description": "Clone defines the stage clone behavior.",
+          "properties": {
+              "depth": {
+                  "description": "Depth defines the clone depth.",
+                  "type": "number"
+              },
+              "disabled": {
+                  "description": "Disabled disables the default clone step.",
+                  "type": "boolean"
+              },
+              "insecure": {
+                  "description": "Insecure disables ssl verification.",
+                  "type": "boolean"
+              },
+              "strategy": {
+                  "description": "Strategy configures the clone strategy.",
+                  "type": "string",
+                  "enum": [
+                      "source-branch",
+                      "merge"
+                  ]
+              },
+              "trace": {
+                  "description": "Trace enables trace logging.",
+                  "type": "boolean"
+              }
+          },
+          "x-docs-skip": false,
+          "x-docs-title": "clone.stage",
+          "x-file": "clone_stage.yaml"
+      },
+      "Platform": {
+          "title": "Platform",
+          "description": "Platform defines the target execution environment.",
+          "type": "object",
+          "properties": {
+              "arch": {
+                  "description": "Arch defines the target cpu architecture.",
+                  "type": "string",
+                  "enum": [
+                      "amd64",
+                      "arm",
+                      "arm64",
+                      "386",
+                      "ppc",
+                      "ppc64",
+                      "ppc64le",
+                      "riscv",
+                      "riscv64",
+                      "s390",
+                      "s390x",
+                      "sparc",
+                      "sparc64"
+                  ]
+              },
+              "features": {
+                  "description": "Features defines the target platform features.",
+                  "type": "array",
+                  "items": {
+                      "type": "string"
+                  }
+              },
+              "os": {
+                  "description": "OS defines the target operating system.",
+                  "type": "string",
+                  "enum": [
+                      "linux",
+                      "windows",
+                      "macos",
+                      "darwin",
+                      "dragonfly",
+                      "freebsd",
+                      "netbsd",
+                      "openbsd",
+                      "plan9",
+                      "solaris"
+                  ]
+              },
+              "variant": {
+                  "description": "Variant defines the target cpu architecture variant.",
+                  "type": "string"
+              },
+              "version": {
+                  "description": "Version defines the target operating system version.",
+                  "type": "string"
+              }
+          },
+          "examples": [
+              {
+                  "platform": {
+                      "os": "linux"
+                  }
+              },
+              {
+                  "platform": {
+                      "os": "linux",
+                      "arch": "amd64"
+                  }
+              }
+          ],
+          "x-file": "platform.yaml"
+      },
+      "Runtime": {
+          "title": "Runtime",
+          "description": "Defines the runtime execution engine.",
+          "properties": {
+              "type": {
+                  "description": "The runtime type.",
+                  "enum": [
+                      "cloud",
+                      "machine",
+                      "kubernetes",
+                      "vm"
+                  ],
+                  "type": "string"
+              }
+          },
+          "type": "object",
+          "oneOf": [
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "cloud"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/RuntimeCloud"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "machine"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/RuntimeMachine"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "kubernetes"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/RuntimeKube"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "vm"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/RuntimeVM"
+                              }
+                          }
+                      }
+                  ]
+              }
+          ],
+          "x-file": "runtime.yaml"
+      },
+      "RuntimeCloud": {
+          "title": "RuntimeCloud",
+          "type": "object",
+          "properties": {
+              "size": {
+                  "type": "string"
+              }
+          },
+          "x-file": "runtime_cloud.yaml"
+      },
+      "RuntimeMachine": {
+          "title": "RuntimeMachine",
+          "type": "object",
+          "properties": {},
+          "x-file": "runtime_machine.yaml"
+      },
+      "RuntimeKube": {
+          "title": "RuntimeKube",
+          "type": "object",
+          "properties": {
+              "connector": {
+                  "type": "string"
+              },
+              "namespace": {
+                  "type": "string"
+              },
+              "annotations": {
+                  "type": "object",
+                  "additionalProperties": {
+                      "type": "string"
+                  }
+              },
+              "labels": {
+                  "type": "object",
+                  "additionalProperties": {
+                      "type": "string"
+                  }
+              },
+              "resources": {
+                  "$ref": "#/definitions/Resources"
+              },
+              "mount_service_token": {
+                  "type": "boolean"
+              },
+              "service_account": {
+                  "type": "string"
+              },
+              "security_context": {
+                  "type": "string"
+              },
+              "priority_class": {
+                  "type": "string"
+              },
+              "init_timeout": {
+                  "format": "duration",
+                  "type": "string"
+              },
+              "user": {
+                  "type": "string"
+              },
+              "image_pull_secrets": {
+                  "type": "array",
+                  "items": {
+                      "type": "string"
+                  }
+              },
+              "node": {
+                  "type": "string"
+              },
+              "node_selector": {
+                  "type": "object",
+                  "additionalProperties": {
+                      "type": "string"
+                  }
+              },
+              "tolerations": {
+                  "type": "object"
+              }
+          },
+          "x-file": "runtime_kubernetes.yaml"
+      },
+      "Resources": {
+          "title": "Resources",
+          "description": "Defines the container resource request and limits.",
+          "properties": {
+              "limits": {
+                  "$ref": "#/definitions/Resource"
+              },
+              "requests": {
+                  "$ref": "#/definitions/Resource"
+              }
+          },
+          "type": "object",
+          "x-file": "resources.yaml"
+      },
+      "Resource": {
+          "title": "Resource",
+          "type": "object",
+          "description": "Resource defines the system resources.",
+          "properties": {
+              "cpu": {
+                  "type": [
+                      "string",
+                      "number"
+                  ]
+              },
+              "memory": {
+                  "format": "bytes",
+                  "type": [
+                      "string",
+                      "number"
+                  ]
+              }
+          },
+          "x-file": "resource.yaml"
+      },
+      "RuntimeVM": {
+          "title": "RuntimeVM",
+          "type": "object",
+          "properties": {
+              "pool": {
+                  "type": "string"
+              }
+          },
+          "x-file": "runtime_vm.yaml"
+      },
+      "Step": {
+          "title": "Step",
+          "type": "object",
+          "properties": {
+              "id": {
+                  "description": "The unique step identifier.",
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9_-]+$"
+              },
+              "name": {
+                  "type": "string",
+                  "description": "The step name."
+              },
+              "desc": {
+                  "type": "string",
+                  "description": "The step description."
+              },
+              "type": {
+                  "type": "string",
+                  "description": "The step type.",
+                  "enum": [
+                      "action",
+                      "background",
+                      "barrier",
+                      "bitrise",
+                      "script",
+                      "run",
+                      "group",
+                      "parallel",
+                      "plugin",
+                      "jenkins",
+                      "template",
+                      "test"
+                  ]
+              },
+              "timeout": {
+                  "type": "string",
+                  "description": "The step timeout."
+              },
+              "strategy": {
+                  "$ref": "#/definitions/Strategy",
+                  "description": "The stage execution strategy."
+              },
+              "when": {
+                  "description": "The stage conditional logic.",
+                  "$ref": "#/definitions/When"
+              },
+              "failure": {
+                  "$ref": "#/definitions/FailureList"
+              }
+          },
+          "x-properties": {
+              "inputs": {
+                  "type": "object",
+                  "additionalProperties": {
+                      "type": "object"
+                  },
+                  "x-go-type": "map[string]interface{}"
+              }
+          },
+          "oneOf": [
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "action"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/StepAction"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "background"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/StepBackground"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "barrier"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/StepBarrier"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "bitrise"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/StepBitrise"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "script"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/StepExec"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "run"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/StepRun"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "test"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/StepTest"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "group"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/StepGroup"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "parallel"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/StepParallel"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "plugin"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/StepPlugin"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "template"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/StepTemplate"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "jenkins"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/StepJenkins"
+                              }
+                          }
+                      }
+                  ]
+              }
+          ],
+          "x-file": "step.yaml"
+      },
+      "StepAction": {
+          "title": "StepAction",
+          "type": "object",
+          "properties": {
+              "uses": {
+                  "type": "string"
+              },
+              "with": {
+                  "type": "object"
+              },
+              "envs": {
+                  "type": "object",
+                  "additionalProperties": {
+                      "type": "string"
+                  },
+                  "description": "The stage environment variables."
+              },
+              "outputs": {
+                  "type": "array",
+                  "items": {
+                      "type": "string"
+                  }
+              },
+              "mount": {
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/Mount"
+                  }
+              }
+          },
+          "x-docs-skip": true,
+          "x-file": "step_action.yaml"
+      },
+      "Mount": {
+          "title": "Mount",
+          "type": "object",
+          "description": "Mount defines a volume mount.",
+          "properties": {
+              "name": {
+                  "description": "Name defines the volume name.",
+                  "type": "string"
+              },
+              "path": {
+                  "description": "Path specifies the target mount path.",
+                  "type": "string"
+              }
+          },
+          "x-file": "mount.yaml"
+      },
+      "StepBackground": {
+          "title": "StepBackground",
+          "type": "object",
+          "properties": {
+              "shell": {
+                  "type": "string",
+                  "enum": [
+                      "sh",
+                      "bash",
+                      "powershell",
+                      "pwsh"
+                  ]
+              },
+              "envs": {
+                  "type": "object",
+                  "additionalProperties": {
+                      "type": "string"
+                  },
+                  "description": "The step environment variables."
+              },
+              "run": {
+                  "type": "string",
+                  "x-deprecate": true
+              },
+              "script": {
+                  "anyOf": [
+                      {
+                          "items": {
+                              "type": "string"
+                          },
+                          "type": "array"
+                      },
+                      {
+                          "type": "string"
+                      }
+                  ]
+              },
+              "container": {
+                  "$ref": "#/definitions/Container"
+              },
+              "mount": {
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/Mount"
+                  }
+              },
+              "image": {
+                  "type": "string",
+                  "x-deprecate": true
+              },
+              "user": {
+                  "type": "string",
+                  "x-deprecate": true
+              },
+              "pull": {
+                  "type": "string",
+                  "enum": [
+                      "always",
+                      "never",
+                      "if-not-exists"
+                  ],
+                  "x-deprecate": true
+              },
+              "entrypoint": {
+                  "type": "string",
+                  "x-deprecate": true
+              },
+              "args": {
+                  "type": "array",
+                  "items": {
+                      "type": "string"
+                  },
+                  "x-deprecate": true
+              },
+              "ports": {
+                  "type": "array",
+                  "items": {
+                      "type": "string"
+                  },
+                  "x-deprecate": true
+              },
+              "network": {
+                  "type": "string",
+                  "x-deprecate": true
+              },
+              "privileged": {
+                  "type": "boolean",
+                  "x-deprecate": true
+              },
+              "resources": {
+                  "$ref": "#/definitions/Resources",
+                  "x-deprecate": true
+              },
+              "workdir": {
+                  "type": "string",
+                  "x-deprecate": true
+              }
+          },
+          "x-file": "step_background.yaml"
+      },
+      "Container": {
+          "title": "Container",
+          "description": "Container configures step execution inside a container.",
+          "oneOf": [
+              {
+                  "type": "string"
+              },
+              {
+                  "type": "object",
+                  "properties": {
+                      "image": {
+                          "type": "string",
+                          "description": "Container image."
+                      },
+                      "connector": {
+                          "type": "string",
+                          "description": "Connect used to authenticate to the registry."
+                      },
+                      "credentials": {
+                          "$ref": "#/definitions/Credentials",
+                          "description": "Credentials used to authenticate to the registry."
+                      },
+                      "pull": {
+                          "type": "string",
+                          "enum": [
+                              "always",
+                              "never",
+                              "if-not-exists"
+                          ]
+                      },
+                      "entrypoint": {
+                          "type": "string"
+                      },
+                      "args": {
+                          "type": "array",
+                          "items": {
+                              "type": "string"
+                          }
+                      },
+                      "dns": {
+                          "anyOf": [
+                              {
+                                  "items": {
+                                      "type": "string"
+                                  },
+                                  "type": "array"
+                              },
+                              {
+                                  "type": "string"
+                              }
+                          ]
+                      },
+                      "dsn_search": {
+                          "anyOf": [
+                              {
+                                  "items": {
+                                      "type": "string"
+                                  },
+                                  "type": "array"
+                              },
+                              {
+                                  "type": "string"
+                              }
+                          ]
+                      },
+                      "extra_hosts": {
+                          "anyOf": [
+                              {
+                                  "items": {
+                                      "type": "string"
+                                  },
+                                  "type": "array"
+                              },
+                              {
+                                  "type": "string"
+                              }
+                          ]
+                      },
+                      "network": {
+                          "type": "string"
+                      },
+                      "network_mode": {
+                          "type": "string"
+                      },
+                      "privileged": {
+                          "type": "boolean"
+                      },
+                      "workdir": {
+                          "type": "string"
+                      },
+                      "ports": {
+                          "type": "array",
+                          "items": {
+                              "type": "string"
+                          }
+                      },
+                      "volumes": {
+                          "type": "array",
+                          "items": {
+                              "type": "string"
+                          }
+                      },
+                      "user": {
+                          "type": "string"
+                      },
+                      "group": {
+                          "type": "string"
+                      },
+                      "cpu": {
+                          "type": [
+                              "string",
+                              "number"
+                          ]
+                      },
+                      "memory": {
+                          "format": "bytes",
+                          "type": [
+                              "string",
+                              "number"
+                          ]
+                      },
+                      "shm_size": {
+                          "format": "bytes",
+                          "type": [
+                              "string",
+                              "number"
+                          ]
+                      }
+                  }
+              }
+          ],
+          "x-go-skip": true,
+          "x-docs-title": "container",
+          "x-file": "container.yaml"
+      },
+      "Credentials": {
+          "type": "object",
+          "title": "Credentials",
+          "description": "Configures registry credentials.",
+          "properties": {
+              "username": {
+                  "type": "string",
+                  "description": "Username defines registry username."
+              },
+              "password": {
+                  "type": "string",
+                  "description": "Username defines registry password."
+              },
+              "aws": {
+                  "$ref": "#/definitions/CredentialsAWS",
+                  "description": "Configures registry credentials for AWS / EC2."
+              }
+          },
+          "examples": [
+              {
+                  "credentials": {
+                      "username": "${{ secrets.get(\"username\") }}",
+                      "password": "${{ secrets.get(\"password\") }}"
+                  }
+              },
+              {
+                  "credentials": {
+                      "aws": {
+                          "access_key": "${{ secrets.get(\"access_key\") }}",
+                          "secret_key": "${{ secrets.get(\"secret_key\") }}"
+                      }
+                  }
+              }
+          ],
+          "x-docs-title": "credentials",
+          "x-file": "credentials.yaml"
+      },
+      "CredentialsAWS": {
+          "type": "object",
+          "title": "CredentialsAWS",
+          "description": "Configures AWS credentials.",
+          "properties": {
+              "access_key": {
+                  "type": "string",
+                  "description": "Provides the AWS access key"
+              },
+              "secret_key": {
+                  "type": "string",
+                  "description": "Provides the AWS secret key"
+              }
+          },
+          "x-docs-title": "credentials.aws",
+          "x-file": "credentials_aws.yaml"
+      },
+      "StepBarrier": {
+          "title": "StepBarrier",
+          "type": "object",
+          "properties": {
+              "ref": {
+                  "type": "string"
+              }
+          },
+          "x-docs-skip": true,
+          "x-file": "step_barrier.yaml"
+      },
+      "StepBitrise": {
+          "title": "StepBitrise",
+          "type": "object",
+          "properties": {
+              "uses": {
+                  "type": "string"
+              },
+              "with": {
+                  "type": "object"
+              },
+              "envs": {
+                  "type": "object",
+                  "additionalProperties": {
+                      "type": "string"
+                  },
+                  "description": "The stage environment variables."
+              },
+              "outputs": {
+                  "type": "array",
+                  "items": {
+                      "type": "string"
+                  }
+              },
+              "mount": {
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/Mount"
+                  }
+              }
+          },
+          "x-docs-skip": true,
+          "x-file": "step_bitrise.yaml"
+      },
+      "StepExec": {
+          "title": "StepExec",
+          "type": "object",
+          "properties": {
+              "image": {
+                  "type": "string"
+              },
+              "connector": {
+                  "type": "string"
+              },
+              "user": {
+                  "type": "string"
+              },
+              "group": {
+                  "type": "string"
+              },
+              "pull": {
+                  "type": "string",
+                  "enum": [
+                      "always",
+                      "never",
+                      "if-not-exists"
+                  ]
+              },
+              "shell": {
+                  "type": "string",
+                  "enum": [
+                      "sh",
+                      "bash",
+                      "powershell",
+                      "pwsh",
+                      "python"
+                  ]
+              },
+              "envs": {
+                  "type": "object",
+                  "additionalProperties": {
+                      "type": "string"
+                  },
+                  "description": "The step environment variables."
+              },
+              "run": {
+                  "type": "string"
+              },
+              "entrypoint": {
+                  "type": "string"
+              },
+              "args": {
+                  "type": "array",
+                  "items": {
+                      "type": "string"
+                  }
+              },
+              "privileged": {
+                  "type": "boolean"
+              },
+              "network": {
+                  "type": "string"
+              },
+              "reports": {
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/Report"
+                  }
+              },
+              "outputs": {
+                  "type": "array",
+                  "items": {
+                      "type": "string"
+                  }
+              },
+              "resources": {
+                  "$ref": "#/definitions/Resources"
+              },
+              "mount": {
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/Mount"
+                  }
+              }
+          },
+          "x-docs-skip": true,
+          "x-file": "step_exec.yaml"
+      },
+      "Report": {
+          "title": "Report",
+          "type": "object",
+          "description": "Report defines a report artifact.",
+          "properties": {
+              "path": {
+                  "description": "Path provides the report file path.",
+                  "anyOf": [
+                      {
+                          "items": {
+                              "type": "string"
+                          },
+                          "type": "array"
+                      },
+                      {
+                          "type": "string"
+                      }
+                  ]
+              },
+              "type": {
+                  "type": "string",
+                  "description": "Type provides the report type.",
+                  "enum": [
+                      "junit",
+                      "xunit",
+                      "nunit"
+                  ]
+              }
+          },
+          "required": [
+              "path",
+              "type"
+          ],
+          "x-file": "report.yaml"
+      },
+      "StepRun": {
+          "title": "StepRun",
+          "type": "object",
+          "properties": {
+              "shell": {
+                  "type": "string",
+                  "enum": [
+                      "sh",
+                      "bash",
+                      "powershell",
+                      "pwsh",
+                      "python"
+                  ]
+              },
+              "script": {
+                  "anyOf": [
+                      {
+                          "items": {
+                              "type": "string"
+                          },
+                          "type": "array"
+                      },
+                      {
+                          "type": "string"
+                      }
+                  ]
+              },
+              "container": {
+                  "$ref": "#/definitions/Container"
+              },
+              "envs": {
+                  "type": "object",
+                  "additionalProperties": {
+                      "type": "string"
+                  },
+                  "description": "The step environment variables."
+              },
+              "reports": {
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/Report"
+                  }
+              },
+              "outputs": {
+                  "type": "array",
+                  "items": {
+                      "type": "string"
+                  }
+              },
+              "mount": {
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/Mount"
+                  }
+              }
+          },
+          "x-file": "step_run.yaml"
+      },
+      "StepTest": {
+          "title": "StepTest",
+          "type": "object",
+          "properties": {
+              "envs": {
+                  "type": "object",
+                  "additionalProperties": {
+                      "type": "string"
+                  },
+                  "description": "The stage environment variables."
+              },
+              "uses": {
+                  "type": "string"
+              },
+              "with": {
+                  "type": "object"
+              },
+              "splitting": {
+                  "$ref": "#/definitions/Splitting"
+              },
+              "reports": {
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/Report"
+                  }
+              },
+              "mount": {
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/Mount"
+                  }
+              },
+              "image": {
+                  "type": "string"
+              },
+              "connector": {
+                  "type": "string"
+              },
+              "user": {
+                  "type": "string"
+              },
+              "pull": {
+                  "type": "string",
+                  "enum": [
+                      "always",
+                      "never",
+                      "if-not-exists"
+                  ]
+              },
+              "resources": {
+                  "$ref": "#/definitions/Resources"
+              }
+          },
+          "examples": [
+              {
+                  "type": "test",
+                  "spec": {
+                      "uses": "maven",
+                      "with": {
+                          "packages": [
+                              "foo",
+                              "bar"
+                          ]
+                      },
+                      "splitting": {
+                          "enabled": true,
+                          "concurrency": 3
+                      }
+                  }
+              }
+          ],
+          "x-docs-skip": true,
+          "x-file": "step_ti.yaml"
+      },
+      "Splitting": {
+          "title": "Splitting",
+          "type": "object",
+          "properties": {
+              "enabled": {
+                  "type": "boolean"
+              },
+              "concurrency": {
+                  "type": "number"
+              },
+              "strategy": {
+                  "type": "string"
+              }
+          },
+          "x-docs-skip": true,
+          "x-file": "splitting.yaml"
+      },
+      "StepGroup": {
+          "type": "object",
+          "title": "StepGroup",
+          "properties": {
+              "steps": {
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/Step"
+                  }
+              }
+          },
+          "x-file": "step_group.yaml"
+      },
+      "StepParallel": {
+          "type": "object",
+          "title": "StepParallel",
+          "properties": {
+              "steps": {
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/Step"
+                  }
+              }
+          },
+          "x-file": "step_parallel.yaml"
+      },
+      "StepPlugin": {
+          "title": "StepPlugin",
+          "type": "object",
+          "properties": {
+              "image": {
+                  "type": "string"
+              },
+              "name": {
+                  "type": "string"
+              },
+              "uses": {
+                  "type": "string"
+              },
+              "connector": {
+                  "type": "string"
+              },
+              "pull": {
+                  "type": "string",
+                  "enum": [
+                      "always",
+                      "never",
+                      "if-not-exists"
+                  ]
+              },
+              "envs": {
+                  "type": "object",
+                  "additionalProperties": {
+                      "type": "string"
+                  },
+                  "description": "The step environment variables."
+              },
+              "reports": {
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/Report"
+                  }
+              },
+              "privileged": {
+                  "type": "boolean"
+              },
+              "user": {
+                  "type": "string"
+              },
+              "group": {
+                  "type": "string"
+              },
+              "network": {
+                  "type": "string"
+              },
+              "with": {
+                  "type": "object"
+              },
+              "inputs": {
+                  "type": "object",
+                  "x-go-type": "map[string]interface{}"
+              },
+              "outputs": {
+                  "type": "array",
+                  "items": {
+                      "type": "string"
+                  }
+              },
+              "resources": {
+                  "$ref": "#/definitions/Resources"
+              },
+              "mount": {
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/Mount"
+                  }
+              }
+          },
+          "x-file": "step_plugin.yaml"
+      },
+      "StepTemplate": {
+          "type": "object",
+          "title": "StepTemplate",
+          "properties": {
+              "name": {
+                  "type": "string",
+                  "description": "Template name."
+              },
+              "inputs": {
+                  "type": "object",
+                  "x-go-type": "map[string]interface{}"
+              },
+              "overlays": {
+                  "type": "object"
+              }
+          },
+          "x-file": "step_template.yaml"
+      },
+      "StepJenkins": {
+          "title": "StepJenkins",
+          "type": "object",
+          "properties": {
+              "envs": {
+                  "type": "object",
+                  "additionalProperties": {
+                      "type": "string"
+                  },
+                  "description": "The stage environment variables."
+              },
+              "path": {
+                  "type": "string"
+              },
+              "mirror": {
+                  "type": "string"
+              },
+              "plugins": {
+                  "type": "array",
+                  "items": {
+                      "type": "string"
+                  }
+              },
+              "mount": {
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/Mount"
+                  }
+              }
+          },
+          "x-docs-skip": true,
+          "x-file": "step_jenkins.yaml"
+      },
+      "Volume": {
+          "title": "Volume",
+          "type": "object",
+          "properties": {
+              "name": {
+                  "type": "string"
+              },
+              "type": {
+                  "type": "string",
+                  "enum": [
+                      "claim",
+                      "config-map",
+                      "temp",
+                      "host"
+                  ]
+              }
+          },
+          "required": [
+              "name",
+              "type"
+          ],
+          "oneOf": [
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "host"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/VolumeHost"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "claim"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/VolumeClaim"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "temp"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/VolumeTemp"
+                              }
+                          }
+                      }
+                  ]
+              },
+              {
+                  "allOf": [
+                      {
+                          "properties": {
+                              "type": {
+                                  "const": "config-map"
+                              }
+                          }
+                      },
+                      {
+                          "properties": {
+                              "spec": {
+                                  "$ref": "#/definitions/VolumeConfigMap"
+                              }
+                          }
+                      }
+                  ]
+              }
+          ],
+          "x-docs-title": "volume",
+          "x-file": "volume.yaml"
+      },
+      "VolumeHost": {
+          "title": "VolumeHost",
+          "type": "object",
+          "properties": {
+              "path": {
+                  "type": "string"
+              }
+          },
+          "required": [
+              "path"
+          ],
+          "x-docs-title": "volume.type.host",
+          "x-file": "volume_host.yaml"
+      },
+      "VolumeClaim": {
+          "title": "VolumeClaim",
+          "type": "object",
+          "properties": {
+              "name": {
+                  "type": "string"
+              }
+          },
+          "required": [
+              "name"
+          ],
+          "x-docs-title": "volume.type.claim",
+          "x-file": "volume_claim.yaml"
+      },
+      "VolumeTemp": {
+          "title": "VolumeTemp",
+          "type": "object",
+          "properties": {
+              "medium": {
+                  "type": "string",
+                  "enum": [
+                      "memory"
+                  ]
+              },
+              "limit": {
+                  "type": [
+                      "string",
+                      "number"
+                  ]
+              }
+          },
+          "x-docs-title": "volume.type.temp",
+          "x-file": "volume_temp.yaml"
+      },
+      "VolumeConfigMap": {
+          "title": "VolumeConfigMap",
+          "type": "object",
+          "properties": {
+              "name": {
+                  "type": "string"
+              },
+              "mode": {
+                  "type": "string"
+              },
+              "optional": {
+                  "type": "boolean"
+              }
+          },
+          "required": [
+              "name"
+          ],
+          "x-docs-title": "volume.type.config",
+          "x-file": "volume_config.yaml"
+      },
+      "StageCD": {
+          "properties": {
+              "platform": {
+                  "$ref": "#/definitions/Platform",
+                  "description": "Configures the target execution platform."
+              },
+              "runtime": {
+                  "$ref": "#/definitions/Runtime",
+                  "description": "Configures the target runtime engine."
+              },
+              "steps": {
+                  "description": "Configures a series of steps to executes.",
+                  "items": {
+                      "$ref": "#/definitions/Step"
+                  },
+                  "type": "array"
+              },
+              "envs": {
+                  "type": "object",
+                  "additionalProperties": {
+                      "type": "string"
+                  },
+                  "description": "The stage environment variables."
+              }
+          },
+          "type": "object",
+          "title": "StageCD",
+          "x-docs-skip": true,
+          "x-file": "stage_cd.yaml"
+      },
+      "StageCustom": {
+          "properties": {
+              "platform": {
+                  "$ref": "#/definitions/Platform",
+                  "description": "Configures the target execution platform."
+              },
+              "runtime": {
+                  "$ref": "#/definitions/Runtime",
+                  "description": "Configures the target runtime engine."
+              },
+              "steps": {
+                  "description": "Configures a series of steps to executes.",
+                  "items": {
+                      "$ref": "#/definitions/Step"
+                  },
+                  "type": "array"
+              },
+              "envs": {
+                  "type": "object",
+                  "additionalProperties": {
+                      "type": "string"
+                  },
+                  "description": "The stage environment variables."
+              }
+          },
+          "type": "object",
+          "title": "StageCustom",
+          "x-docs-skip": true,
+          "x-file": "stage_custom.yaml"
+      },
+      "StageInfra": {
+          "properties": {
+              "stack": {
+                  "description": "Configures the stack id to be used in the pipeline execution.",
+                  "type": "string"
+              },
+              "workflow": {
+                  "description": "Configures the workflow to be used in the pipeline execution.",
+                  "type": "string",
+                  "enum": [
+                      "provision",
+                      "teardown"
+                  ]
+              },
+              "clone": {
+                  "$ref": "#/definitions/Clone",
+                  "description": "Configures the default clone behavior."
+              },
+              "platform": {
+                  "$ref": "#/definitions/Platform",
+                  "description": "Configures the target execution platform."
+              },
+              "runtime": {
+                  "$ref": "#/definitions/Runtime",
+                  "description": "Configures the target runtime engine."
+              },
+              "steps": {
+                  "description": "Configures a series of steps to executes.",
+                  "items": {
+                      "$ref": "#/definitions/Step"
+                  },
+                  "type": "array"
+              },
+              "envs": {
+                  "type": "object",
+                  "additionalProperties": {
+                      "type": "string"
+                  },
+                  "description": "The stage environment variables."
+              }
+          },
+          "type": "object",
+          "title": "StageInfra",
+          "x-docs-skip": true,
+          "x-docs-title": "stage.type.infra",
+          "x-file": "stage_infra.yaml"
+      },
+      "Clone": {
+          "title": "Clone",
+          "type": "object",
+          "description": "Clone defines the clone behavior.",
+          "properties": {
+              "depth": {
+                  "description": "Depth defines the clone depth.",
+                  "type": "number"
+              },
+              "disabled": {
+                  "description": "Disabled disables the default clone step.",
+                  "type": "boolean"
+              },
+              "insecure": {
+                  "description": "Insecure disables ssl verification.",
+                  "type": "boolean"
+              },
+              "strategy": {
+                  "description": "Strategy configures the clone strategy.",
+                  "type": "string",
+                  "enum": [
+                      "source-branch",
+                      "merge"
+                  ]
+              },
+              "trace": {
+                  "description": "Trace enables trace logging.",
+                  "type": "boolean"
+              },
+              "ref": {
+                  "$ref": "#/definitions/Reference",
+                  "description": "Reference defines the clone ref."
+              }
+          },
+          "x-docs-skip": false,
+          "x-docs-title": "clone",
+          "x-file": "clone.yaml"
+      },
+      "Reference": {
+          "title": "Reference",
+          "description": "Reference defines a git clone reference.",
+          "type": "object",
+          "properties": {
+              "name": {
+                  "description": "Name provides ref name.",
+                  "type": "string"
+              },
+              "type": {
+                  "description": "Type defines the ref type.",
+                  "type": "string",
+                  "enum": [
+                      "branch",
+                      "tag",
+                      "pr"
+                  ]
+              },
+              "sha": {
+                  "description": "Sha provides the ref sha.",
+                  "type": "string"
+              }
+          },
+          "x-file": "reference.yaml"
+      },
+      "StageFlag": {
+          "properties": {
+              "platform": {
+                  "$ref": "#/definitions/Platform",
+                  "description": "Configures the target execution platform."
+              },
+              "runtime": {
+                  "$ref": "#/definitions/Runtime",
+                  "description": "Configures the target runtime engine."
+              },
+              "steps": {
+                  "description": "Configures a series of steps to executes.",
+                  "items": {
+                      "$ref": "#/definitions/Step"
+                  },
+                  "type": "array"
+              },
+              "envs": {
+                  "type": "object",
+                  "additionalProperties": {
+                      "type": "string"
+                  },
+                  "description": "The stage environment variables."
+              }
+          },
+          "type": "object",
+          "title": "StageFlag",
+          "x-docs-skip": true,
+          "x-file": "stage_flag.yaml"
+      },
+      "StageTemplate": {
+          "properties": {
+              "name": {
+                  "type": "string",
+                  "description": "The template name."
+              },
+              "inputs": {
+                  "type": "object",
+                  "x-go-type": "map[string]interface{}"
+              }
+          },
+          "type": "object",
+          "title": "StageTemplate",
+          "description": "Configures a Stage Template step.",
+          "examples": [
+              {
+                  "type": "template",
+                  "spec": {
+                      "name": "deploy",
+                      "inputs": {
+                          "environment": "prod",
+                          "region": "us-east"
+                      }
+                  }
+              }
+          ],
+          "x-docs-skip": false,
+          "x-docs-title": "stage.type.template",
+          "x-file": "stage_template.yaml"
+      },
+      "StageGroup": {
+          "properties": {
+              "stages": {
+                  "description": "Configures a series of stages to execute.",
+                  "items": {
+                      "$ref": "#/definitions/Stage"
+                  },
+                  "type": "array"
+              }
+          },
+          "type": "object",
+          "title": "StageGroup",
+          "examples": [
+              {
+                  "type": "group",
+                  "spec": {
+                      "stages": [
+                          {
+                              "type": "ci",
+                              "spec": {
+                                  "steps": [
+                                      {
+                                          "type": "run",
+                                          "spec": {
+                                              "script": "go build",
+                                              "container": "golang"
+                                          }
+                                      },
+                                      {
+                                          "type": "run",
+                                          "spec": {
+                                              "script": "go test",
+                                              "container": "golang"
+                                          }
+                                      }
+                                  ]
+                              }
+                          },
+                          {
+                              "type": "ci",
+                              "spec": {
+                                  "steps": [
+                                      {
+                                          "type": "run",
+                                          "spec": {
+                                              "script": "npm install",
+                                              "container": "node"
+                                          }
+                                      },
+                                      {
+                                          "type": "run",
+                                          "spec": {
+                                              "script": "npm test",
+                                              "container": "node"
+                                          }
+                                      }
+                                  ]
+                              }
+                          }
+                      ]
+                  }
+              }
+          ],
+          "x-docs-skip": false,
+          "x-docs-title": "stage.type.group",
+          "x-file": "stage_group.yaml"
+      },
+      "StageParallel": {
+          "properties": {
+              "stages": {
+                  "description": "Configures a series of stages to execute in parallel.",
+                  "items": {
+                      "$ref": "#/definitions/Stage"
+                  },
+                  "type": "array"
+              }
+          },
+          "type": "object",
+          "title": "StageParallel",
+          "x-docs-skip": false,
+          "x-docs-title": "stage.type.parallel",
+          "examples": [
+              {
+                  "type": "parallel",
+                  "spec": {
+                      "stages": [
+                          {
+                              "type": "ci",
+                              "spec": {
+                                  "steps": [
+                                      {
+                                          "type": "run",
+                                          "spec": {
+                                              "script": "go build",
+                                              "container": "golang"
+                                          }
+                                      },
+                                      {
+                                          "type": "run",
+                                          "spec": {
+                                              "script": "go test",
+                                              "container": "golang"
+                                          }
+                                      }
+                                  ]
+                              }
+                          },
+                          {
+                              "type": "ci",
+                              "spec": {
+                                  "steps": [
+                                      {
+                                          "type": "run",
+                                          "spec": {
+                                              "script": "npm install",
+                                              "container": "node"
+                                          }
+                                      },
+                                      {
+                                          "type": "run",
+                                          "spec": {
+                                              "script": "npm test",
+                                              "container": "node"
+                                          }
+                                      }
+                                  ]
+                              }
+                          }
+                      ]
+                  }
+              }
+          ],
+          "x-file": "stage_parallel.yaml"
+      },
+      "Input": {
+          "title": "Input",
+          "type": "object",
+          "description": "Input defines an input parameter.",
+          "properties": {
+              "type": {
+                  "description": "Type defines the input type.",
+                  "type": "string",
+                  "enum": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "array",
+                      "map"
+                  ]
+              },
+              "description": {
+                  "type": "string",
+                  "description": "Desc defines the input description."
+              },
+              "default": {
+                  "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "array",
+                      "object"
+                  ],
+                  "x-go-type": "interface{}"
+              },
+              "required": {
+                  "type": "boolean",
+                  "description": "Required indicates the input is required."
+              },
+              "items": {
+                  "$ref": "#/definitions/InputItems",
+                  "description": "Items defines an arrat type."
+              },
+              "enum": {
+                  "type": "array",
+                  "items": {
+                      "type": [
+                          "string",
+                          "number",
+                          "boolean"
+                      ]
+                  },
+                  "description": "Enum defines a list of accepted input values.",
+                  "x-go-type": "[]string"
+              },
+              "mask": {
+                  "type": "boolean",
+                  "description": "Mask indicates the input should be masked."
+              }
+          },
+          "x-file": "input.yaml"
+      },
+      "InputItems": {
+          "title": "InputItems",
+          "type": "object",
+          "description": "InputItems defines an array input type",
+          "properties": {
+              "type": {
+                  "description": "Type defines the input type.",
+                  "type": "string",
+                  "enum": [
+                      "string",
+                      "number",
+                      "boolean"
+                  ]
+              }
+          },
+          "x-file": "input_items.yaml"
+      },
+      "Default": {
+          "type": "object",
+          "title": "Default",
+          "properties": {
+              "clone": {
+                  "$ref": "#/definitions/Clone",
+                  "description": "Configures the default clone behavior."
+              },
+              "repository": {
+                  "$ref": "#/definitions/Repository",
+                  "description": "Configures the default repository."
+              },
+              "registry": {
+                  "$ref": "#/definitions/Registry",
+                  "description": "Provides the default registry credentials."
+              },
+              "resources": {
+                  "$ref": "#/definitions/Resources",
+                  "description": "Configures the default stage and step resources."
+              },
+              "delegate": {
+                  "description": "Configures the default delegate matching logic.",
+                  "anyOf": [
+                      {
+                          "items": {
+                              "type": "string"
+                          },
+                          "type": "array"
+                      },
+                      {
+                          "type": "string"
+                      }
+                  ]
+              },
+              "barriers": {
+                  "items": {
+                      "$ref": "#/definitions/Barrier"
+                  },
+                  "type": "array"
+              },
+              "status": {
+                  "$ref": "#/definitions/Status",
+                  "description": "Configures the scm status checks."
+              },
+              "timeout": {
+                  "type": "string",
+                  "description": "Configures the pipeline timeout."
+              },
+              "envs": {
+                  "type": "object",
+                  "additionalProperties": {
+                      "type": "string"
+                  },
+                  "description": "Provides the default environment variables."
+              }
+          },
+          "x-docs-skip": false,
+          "x-docs-title": "pipeline.options",
+          "x-file": "default.yaml"
+      },
+      "Repository": {
+          "title": "Repository",
+          "description": "Repository defines a remote git repository.",
+          "type": "object",
+          "properties": {
+              "connector": {
+                  "description": "Connector provides the repository connector.",
+                  "type": "string"
+              },
+              "name": {
+                  "description": "Name provides the repository name.",
+                  "type": "string"
+              }
+          },
+          "x-file": "repository.yaml"
+      },
+      "Registry": {
+          "title": "Registry",
+          "description": "Registry provides container registry details.",
+          "type": "object",
+          "properties": {
+              "connector": {
+                  "oneOf": [
+                      {
+                          "type": "string"
+                      },
+                      {
+                          "type": "array",
+                          "items": {
+                              "oneOf": [
+                                  {
+                                      "type": "object",
+                                      "$ref": "#/definitions/RegistryConnector"
+                                  },
+                                  {
+                                      "type": "string"
+                                  }
+                              ]
+                          }
+                      },
+                      {
+                          "type": "object",
+                          "$ref": "#/definitions/RegistryConnector"
+                      }
+                  ]
+              },
+              "mirror": {
+                  "oneOf": [
+                      {
+                          "type": "string"
+                      },
+                      {
+                          "type": "array",
+                          "items": {
+                              "type": "string"
+                          }
+                      }
+                  ]
+              }
+          },
+          "x-go-skip": true,
+          "examples": [
+              {
+                  "registry": {
+                      "connector": "connector.dockerhub"
+                  }
+              },
+              {
+                  "registry": {
+                      "connector": [
+                          "connector.dockerhub",
+                          "connector.gcr"
+                      ]
+                  }
+              },
+              {
+                  "registry": {
+                      "connector": [
+                          {
+                              "name": "connector.dockerhub"
+                          },
+                          {
+                              "name": "connector.gcr",
+                              "match": "us.gcr.io"
+                          }
+                      ]
+                  }
+              },
+              {
+                  "registry": {
+                      "mirror": "mirror.gcr.io"
+                  }
+              },
+              {
+                  "registry": {
+                      "mirror": [
+                          "mirror.gcr.io",
+                          "mirror.harness.io"
+                      ]
+                  }
+              }
+          ],
+          "x-file": "registry.yaml"
+      },
+      "RegistryConnector": {
+          "title": "RegistryConnector",
+          "description": "RegistryConnector provides a registry connector.",
+          "type": "object",
+          "properties": {
+              "name": {
+                  "description": "Name provides the registry connector name.",
+                  "type": "string"
+              },
+              "match": {
+                  "description": "Match provides the regitry connector endpoint.",
+                  "type": "string"
+              }
+          },
+          "x-go-skip": true,
+          "x-file": "registry_conn.yaml"
+      },
+      "Barrier": {
+          "title": "Barrier",
+          "type": "object",
+          "description": "Barrier defines a pipeline barrier.",
+          "properties": {
+              "id": {
+                  "type": "string"
+              },
+              "name": {
+                  "type": "string"
+              }
+          },
+          "x-docs-skip": true,
+          "x-file": "barrier.yaml"
+      },
+      "Status": {
+          "title": "Status",
+          "type": "object",
+          "properties": {
+              "disabled": {
+                  "type": "boolean"
+              },
+              "level": {
+                  "type": "string",
+                  "enum": [
+                      "pipeline",
+                      "stage"
+                  ]
+              },
+              "matrix": {
+                  "type": "string",
+                  "enum": [
+                      "itemize",
+                      "summarize"
+                  ]
+              },
+              "name": {
+                  "type": "string"
+              }
+          },
+          "x-docs-skip": true,
+          "x-file": "status.yaml"
+      },
+      "TemplateStage": {
+          "title": "TemplateStage",
+          "description": "TemplateStage defines a stage-level template",
+          "type": "object",
+          "properties": {
+              "name": {
+                  "type": "string",
+                  "description": "The template name."
+              },
+              "description": {
+                  "type": "string",
+                  "description": "The template description."
+              },
+              "stage": {
+                  "$ref": "#/definitions/Stage"
+              },
+              "inputs": {
+                  "type": "object",
+                  "description": "Inputs defines the template input parameters.",
+                  "additionalProperties": {
+                      "$ref": "#/definitions/Input"
+                  }
+              }
+          },
+          "x-docs-skip": true,
+          "x-file": "template_stage.yaml"
+      },
+      "TemplateStep": {
+          "title": "TemplateStep",
+          "description": "TemplateStep defines a step-level template",
+          "type": "object",
+          "properties": {
+              "name": {
+                  "type": "string",
+                  "description": "The template name."
+              },
+              "description": {
+                  "type": "string",
+                  "description": "The template description."
+              },
+              "step": {
+                  "$ref": "#/definitions/Step"
+              },
+              "inputs": {
+                  "type": "object",
+                  "description": "Inputs defines the template input parameters.",
+                  "additionalProperties": {
+                      "$ref": "#/definitions/Input"
+                  }
+              }
+          },
+          "x-docs-skip": true,
+          "x-file": "template_step.yaml"
+      },
+      "PluginStep": {
+          "title": "PluginStep",
+          "description": "PluginStep defines a step-level plugin",
+          "type": "object",
+          "properties": {
+              "name": {
+                  "type": "string",
+                  "description": "The plugin name."
+              },
+              "description": {
+                  "type": "string",
+                  "description": "The plugin description."
+              },
+              "step": {
+                  "$ref": "#/definitions/Step"
+              },
+              "inputs": {
+                  "type": "object",
+                  "description": "Inputs defines the plugin input parameters.",
+                  "additionalProperties": {
+                      "$ref": "#/definitions/Input"
+                  }
+              }
+          },
+          "x-file": "plugin_step.yaml"
+      },
+      "PluginStage": {
+          "title": "PluginStage",
+          "description": "PluginStage defines a stage-level plugin",
+          "type": "object",
+          "properties": {
+              "name": {
+                  "type": "string",
+                  "description": "The plugin name."
+              },
+              "description": {
+                  "type": "string",
+                  "description": "The plugin description."
+              },
+              "stage": {
+                  "$ref": "#/definitions/Stage"
+              },
+              "inputs": {
+                  "type": "object",
+                  "description": "Inputs defines the plugin input parameters.",
+                  "additionalProperties": {
+                      "$ref": "#/definitions/Input"
+                  }
+              }
+          },
+          "x-file": "plugin_stage.yaml"
+      }
+  },
+  "oneOf": [
+      {
+          "$ref": "#/definitions/Config"
+      }
+  ]
+}

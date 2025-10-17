@@ -1,0 +1,108 @@
+/*
+ * Copyright 2023 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@import 'src/utils/utils';
+
+.editor {
+  :global {
+    .cm-editor {
+      outline: none;
+      border: 1px solid var(--grey-200);
+      border-radius: 4px;
+      min-height: var(--editor-min-height, 60px);
+      max-height: var(--editor-max-height, 600px);
+
+      &.cm-focused {
+        border-color: var(--primary-7);
+        outline: none;
+      }
+
+      .attachDiv {
+        padding-top: var(--spacing-xsmall);
+        padding-bottom: var(--spacing-xsmall);
+        padding-left: var(--spacing-medium);
+        color: var(--grey-400);
+        outline: none;
+        font-size: 13px;
+        font-weight: 400;
+        border-top: 1px dashed var(--grey-200);
+      }
+
+      .cm-scroller {
+        overflow: auto;
+        padding: var(--spacing-small);
+
+        .cm-line {
+          > .aidaGenText {
+            color: var(--ai-purple-800) !important;
+          }
+
+          > .aidaGenText::before {
+            padding-top: 4px;
+            padding-right: 3px;
+            content: url('../../icons/spinner.svg?url');
+          }
+          > .highlightText {
+            padding: 1px;
+            background: var(--ai-purple-100) !important;
+          }
+
+          &,
+          * {
+            @include markdown-font;
+          }
+        }
+      }
+    }
+  }
+}
+
+.editorTest {
+  :global {
+    .cm-editor {
+      &.cm-focused {
+        border-color: var(--primary-7);
+        outline: none;
+      }
+    }
+
+    .cm-tooltip-autocomplete {
+      background-color: var(--grey-0) !important;
+      border: 1px solid var(--grey-200);
+      border-radius: var(--spacing-3);
+      overflow: hidden;
+    }
+
+    .cm-tooltip-autocomplete ul li {
+      border-bottom: 1px solid var(--grey-200);
+      padding: 5px 0 !important;
+    }
+
+    .cm-tooltip.cm-tooltip-autocomplete > ul {
+      max-height: 7.5rem;
+    }
+
+    .cm-completionDetail {
+      font-size: var(--spacing-4);
+      font-style: normal;
+      color: var(--grey-500);
+    }
+
+    .cm-tooltip-autocomplete ul li[aria-selected] .cm-completionDetail {
+      color: var(--grey-0) !important;
+    }
+  }
+}

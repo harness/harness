@@ -1,0 +1,130 @@
+/*
+ * Copyright 2023 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.main {
+  min-height: calc(var(--page-height) - 160px);
+  width: 100%;
+  :global {
+    .bp3-tab {
+      width: fit-content !important;
+      height: 34px;
+    }
+
+    .bp3-tab-panel {
+      width: 100%;
+    }
+
+    .bp3-tab {
+      margin-top: 20px;
+      margin-bottom: unset !important;
+    }
+
+    .bp3-tab-list .bp3-tab[aria-selected='true'] {
+      background-color: var(--grey-0);
+      -webkit-box-shadow: none;
+      box-shadow: none;
+      border-bottom: 2px solid var(--primary-7);
+      border-bottom-left-radius: 0px !important;
+      border-bottom-right-radius: 0px !important;
+    }
+  }
+}
+
+.tabsContainer {
+  flex-grow: 1;
+  display: flex;
+
+  > div {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  > div > div[role='tablist'] {
+    background-color: var(--white) !important;
+    padding-left: var(--spacing-large) !important;
+    padding-right: var(--spacing-xlarge) !important;
+    border-bottom: 1px solid var(--grey-200) !important;
+  }
+
+  > div > div[role='tabpanel'] {
+    margin-top: 0;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  [aria-selected='true'] {
+    .tabTitle,
+    .tabTitle:hover {
+      color: var(--grey-900) !important;
+      font-weight: 600 !important;
+    }
+  }
+
+  .tabTitle {
+    font-weight: 500;
+    color: var(--grey-700);
+    display: flex;
+    align-items: center;
+    height: 24px;
+    margin-top: var(--spacing-8);
+
+    > svg {
+      display: inline-block;
+      margin-right: 5px;
+    }
+  }
+
+  .tabTitle:not:first-child {
+    margin-left: var(--spacing-8) !important;
+  }
+}
+
+.pageBody {
+  min-height: 100% !important;
+}
+
+.executionContext {
+  padding: 2rem 1.8rem 1rem 1.8rem !important;
+  gap: 0.5rem;
+}
+
+.errorMessage {
+  display: flex;
+  align-items: flex-end;
+}
+
+.editor {
+  height: 100% !important;
+  :global(.bp3-drawer-header) {
+    margin: 0 !important;
+    padding-top: var(--spacing-5) !important;
+    padding-bottom: var(--spacing-5) !important;
+  }
+}
+
+.logsContainer {
+  position: relative;
+}
+
+.copyButton {
+  position: absolute;
+  cursor: pointer;
+  top: 20px;
+  right: 20px;
+  z-index: 34;
+}

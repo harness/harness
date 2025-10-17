@@ -1,0 +1,128 @@
+{
+  "mainHeader": "Maven Client Setup",
+  "secHeader": "Follow these instructions use Maven artifacts or compatible packages.",
+  "sections": [
+    {
+      "tabs": [
+        {
+          "header": "Maven",
+          "sections": [
+            {
+              "header": "1. Pull a Maven Package",
+              "secHeader": "Set default repository in your pom.xml file.",
+              "steps": [
+                {
+                  "commands": [
+                    {
+                      "value": "\u003crepositories\u003e\n  \u003crepository\u003e\n    \u003cid\u003emaven-dev\u003c/id\u003e\n    \u003curl\u003ehttp://example.com/registry/test-registry/MAVEN\u003c/url\u003e\n    \u003creleases\u003e\n      \u003cenabled\u003etrue\u003c/enabled\u003e\n      \u003cupdatePolicy\u003ealways\u003c/updatePolicy\u003e\n    \u003c/releases\u003e\n    \u003csnapshots\u003e\n      \u003cenabled\u003etrue\u003c/enabled\u003e\n      \u003cupdatePolicy\u003ealways\u003c/updatePolicy\u003e\n    \u003c/snapshots\u003e\n  \u003c/repository\u003e\n\u003c/repositories\u003e"
+                    }
+                  ],
+                  "header": "To set default registry in your pom.xml file by adding the following:",
+                  "type": "Static"
+                },
+                {
+                  "commands": [
+                    {
+                      "value": "\u003cdependency\u003e\n  \u003cgroupId\u003e\u003cGROUP_ID\u003e\u003c/groupId\u003e\n  \u003cartifactId\u003etest-artifact\u003c/artifactId\u003e\n  \u003cversion\u003ev1.0.0\u003c/version\u003e\n\u003c/dependency\u003e"
+                    }
+                  ],
+                  "header": "Add a dependency to the project's pom.xml (replace \u003cGROUP_ID\u003e, \u003cARTIFACT_ID\u003e \u0026 \u003cVERSION\u003e with your own):",
+                  "type": "Static"
+                },
+                {
+                  "commands": [
+                    {
+                      "value": "mvn install"
+                    }
+                  ],
+                  "header": "Install dependencies in pom.xml file",
+                  "type": "Static"
+                }
+              ],
+              "type": "INLINE"
+            }
+          ]
+        },
+        {
+          "header": "Gradle",
+          "sections": [
+            {
+              "header": "1. Pull a Gradle Package",
+              "secHeader": "Set default repository in your build.gradle file.",
+              "steps": [
+                {
+                  "commands": [
+                    {
+                      "value": "repositories{\n    maven{\n      url \"http://example.com/registry/test-registry/MAVEN\"\n\n   }\n}"
+                    }
+                  ],
+                  "header": "Set the default registry in your project’s build.gradle by adding the following:",
+                  "type": "Static"
+                },
+                {
+                  "commands": [
+                    {
+                      "value": "dependencies {\n  implementation '\u003cGROUP_ID\u003e:test-artifact:v1.0.0'\n}"
+                    }
+                  ],
+                  "header": "Add a dependency to the project’s build.gradle",
+                  "type": "Static"
+                },
+                {
+                  "commands": [
+                    {
+                      "value": "gradlew build     // Linux or OSX\n gradlew.bat build  // Windows"
+                    }
+                  ],
+                  "header": "Install dependencies in build.gradle file",
+                  "type": "Static"
+                }
+              ],
+              "type": "INLINE"
+            }
+          ]
+        },
+        {
+          "header": "Sbt/Scala",
+          "sections": [
+            {
+              "header": "1. Pull a Sbt/Scala Package",
+              "secHeader": "Set default repository in your build.sbt file.",
+              "steps": [
+                {
+                  "commands": [
+                    {
+                      "value": "resolver += \"Harness Registry\" at \"http://example.com/registry/test-registry/MAVEN\"\n"
+                    }
+                  ],
+                  "header": "Set the default registry in your project’s build.sbt by adding the following:",
+                  "type": "Static"
+                },
+                {
+                  "commands": [
+                    {
+                      "value": "libraryDependencies += \"\u003cGROUP_ID\u003e\" % \"test-artifact\" % \"v1.0.0\""
+                    }
+                  ],
+                  "header": "Add a dependency to the project’s build.sbt",
+                  "type": "Static"
+                },
+                {
+                  "commands": [
+                    {
+                      "value": "sbt update"
+                    }
+                  ],
+                  "header": "Install dependencies in build.sbt file",
+                  "type": "Static"
+                }
+              ],
+              "type": "INLINE"
+            }
+          ]
+        }
+      ],
+      "type": "TABS"
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+// Error container
+.cardContainer {
+  background-color: white;
+  padding: var(--spacing-xsmall) !important;
+  width: 100% !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 8px !important;
+}
+
+.errorCard {
+  background-color: #ffecec !important;
+  border: 1px solid #ffecec;
+  border-radius: var(--spacing-small) !important;
+  padding: 1.25rem !important;
+  width: 100% !important;
+  color: #333;
+}
+
+.errorTitle {
+  color: black !important;
+  font-size: 0.875rem !important;
+  font-family: var(--font-family);
+  font-weight: 600 !important;
+  margin: auto 0 !important;
+  padding-left: 10px !important;
+}
+
+.preClass {
+  background-color: white !important;
+  border: 1px solid #f5c2c7 !important;
+  border-radius: 4px !important;
+  padding: 10px !important;
+  margin-bottom: var(--spacing-medium) !important;
+}
+
+.errorMessage {
+  font-size: 13px !important;
+  color: #6c757d !important;
+  overflow-x: auto;
+}
+
+.errorBody {
+  width: 100% !important;
+  padding-left: 3.125rem !important;
+}
+
+.logBtn {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  font-family: var(--font-family) !important;
+}
+
+.cardActions {
+  display: flex;
+  margin-top: var(--spacing-medium);
+}
+
+.resolveText {
+  font-size: var(--font-size-small);
+}
+
+.linkButton {
+  cursor: pointer;
+  padding-left: var(--spacing-medium) !important;
+  padding-right: var(--spacing-medium) !important;
+  font-size: var(--font-size-normal) !important;
+}
+
+.contactBtn {
+  cursor: pointer;
+  font-size: var(--font-size-normal) !important;
+}
+
+.warningSign {
+  width: var(--spacing-xxxlarge) !important;
+}
+
+.iconContainer {
+  background-color: white !important;
+  height: var(--spacing-xxxlarge) !important;
+  width: var(--spacing-xxxlarge) !important;
+  padding: 10px !important;
+  border-radius: 3.125rem !important;
+}

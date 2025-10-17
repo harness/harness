@@ -1,0 +1,9 @@
+page: Artifact Details Page
+downloadsThisWeek: Downloads This Week
+artifactLabelInputPlaceholder: Type input and hit enter
+labelsUpdated: Artifact labels updated successfully!
+totalDownloads: Total Downloads
+artifactDeleted: Artifact deleted successfully!
+deleteArtifactModal:
+  title: Delete Artifact
+  contentText: Are you sure you want to delete the artifact?
