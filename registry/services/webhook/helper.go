@@ -50,14 +50,16 @@ func GetArtifactCreatedPayload(
 		Name: info.Image,
 		Ref:  fmt.Sprintf("%s:%s", info.Image, tag),
 	}
-	if info.PackageType == artifact.PackageTypeDOCKER {
+	//nolint:exhaustive
+	switch info.PackageType {
+	case artifact.PackageTypeDOCKER:
 		payload.Artifact = &registryevents.DockerArtifact{
 			BaseArtifact: baseArtifact,
 			Tag:          tag,
 			URL:          urlWithoutProtocol,
 			Digest:       digest,
 		}
-	} else if info.PackageType == artifact.PackageTypeHELM {
+	case artifact.PackageTypeHELM:
 		payload.Artifact = &registryevents.HelmArtifact{
 			BaseArtifact: baseArtifact,
 			Tag:          tag,
@@ -102,14 +104,16 @@ func GetArtifactDeletedPayload(
 		Name: image,
 		Ref:  fmt.Sprintf("%s%s%s", image, versionSeparator, version),
 	}
-	if packageType == artifact.PackageTypeDOCKER {
+	//nolint: exhaustive
+	switch packageType {
+	case artifact.PackageTypeDOCKER:
 		payload.Artifact = &registryevents.DockerArtifact{
 			BaseArtifact: baseArtifact,
 			Tag:          tag,
 			Digest:       digest,
 			URL:          urlWithoutProtocol,
 		}
-	} else if packageType == artifact.PackageTypeHELM {
+	case artifact.PackageTypeHELM:
 		payload.Artifact = &registryevents.HelmArtifact{
 			BaseArtifact: baseArtifact,
 			Tag:          tag,

@@ -78,9 +78,10 @@ func GetSubModules(rd *BlobReader) (map[string]*Submodule, error) {
 		if isModule {
 			fields := strings.Split(scanner.Text(), "=")
 			k := strings.TrimSpace(fields[0])
-			if k == "path" {
+			switch k {
+			case "path":
 				path = strings.TrimSpace(fields[1])
-			} else if k == "url" {
+			case "url":
 				submodules[path] = &Submodule{path, strings.TrimSpace(fields[1])}
 				isModule = false
 			}

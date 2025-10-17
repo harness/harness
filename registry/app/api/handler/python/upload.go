@@ -53,7 +53,7 @@ func (h *handler) UploadPackageFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.ResponseHeaders.WriteToResponse(w)
-	_, err = w.Write([]byte(fmt.Sprintf("Pushed.\nSha256: %s", response.Sha256)))
+	_, err = fmt.Fprintf(w, "Pushed.\nSha256: %s", response.Sha256)
 	if err != nil {
 		h.HandleError(r.Context(), w, err)
 		return

@@ -46,8 +46,8 @@ func (c *Controller) LFSTransfer(ctx context.Context,
 
 	// TODO check if server supports client's transfer adapters
 	var objResponses []ObjectResponse
-	switch {
-	case in.Operation == enum.GitLFSOperationTypeDownload:
+	switch in.Operation {
+	case enum.GitLFSOperationTypeDownload:
 		for _, obj := range in.Objects {
 			var objResponse = ObjectResponse{
 				Pointer: Pointer{
@@ -85,7 +85,7 @@ func (c *Controller) LFSTransfer(ctx context.Context,
 			objResponses = append(objResponses, objResponse)
 		}
 
-	case in.Operation == enum.GitLFSOperationTypeUpload:
+	case enum.GitLFSOperationTypeUpload:
 		for _, obj := range in.Objects {
 			objResponse := ObjectResponse{
 				Pointer: Pointer{

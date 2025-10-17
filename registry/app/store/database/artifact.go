@@ -641,9 +641,10 @@ func (a ArtifactDao) GetArtifactsByRepo(ctx context.Context, parentID int64, rep
 
 	// nolint:goconst
 	sortField := "image_" + sortByField
-	if sortByField == downloadCount {
+	switch sortByField {
+	case downloadCount:
 		sortField = downloadCount
-	} else if sortByField == imageName {
+	case imageName:
 		sortField = name
 	}
 	q = q.OrderBy(sortField + " " + sortByOrder).Limit(util.SafeIntToUInt64(limit)).Offset(util.SafeIntToUInt64(offset))

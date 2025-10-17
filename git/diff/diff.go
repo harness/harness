@@ -152,14 +152,14 @@ type File struct {
 }
 
 func (f *File) Status() string {
-	switch {
-	case f.Type == FileAdd:
+	switch f.Type {
+	case FileAdd:
 		return "added"
-	case f.Type == FileDelete:
+	case FileDelete:
 		return "deleted"
-	case f.Type == FileRename:
+	case FileRename:
 		return "renamed"
-	case f.Type == FileChange:
+	case FileChange:
 		return "changed"
 	default:
 		return "unchanged"

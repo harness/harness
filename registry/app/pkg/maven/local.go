@@ -98,7 +98,7 @@ func (r *LocalRegistry) FetchArtifact(ctx context.Context, info pkg.MavenArtifac
 		return processError(err2)
 	}
 
-	if !(utils.IsMetadataFile(info.FileName) && info.Version == "") {
+	if !utils.IsMetadataFile(info.FileName) || info.Version != "" {
 		_, err2 = r.DBStore.ArtifactDao.GetByName(ctx, dbImage.ID, info.Version)
 		if err2 != nil {
 			log.Ctx(ctx).Error().Msgf("Failed to get artifact for image ID: %d, version: %s with error: %v",

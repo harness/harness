@@ -77,7 +77,7 @@ func WalkFallback(
 	base := startAfterHint
 	for strings.HasPrefix(base, from) {
 		_, err = doWalkFallback(ctx, driver, base, startAfterHint, f)
-		if !(errors.As(err, &PathNotFoundError{}) || err == nil) {
+		if (!errors.As(err, &PathNotFoundError{}) && err != nil) {
 			return err
 		}
 		if base == from {

@@ -467,8 +467,9 @@ func (c *APIController) UpdateUpstreamProxyEntity(
 	if u.ID != -1 {
 		upstreamProxyConfigEntity.ID = u.ID
 	}
-	switch {
-	case config.AuthType == artifact.AuthTypeUserPassword:
+	//nolint:exhaustive
+	switch config.AuthType {
+	case artifact.AuthTypeUserPassword:
 		res, err := config.Auth.AsUserPassword()
 		if err != nil {
 			return nil, nil, err
@@ -488,7 +489,7 @@ func (c *APIController) UpdateUpstreamProxyEntity(
 			upstreamProxyConfigEntity.SecretSpaceID = *res.SecretSpaceId
 		}
 		upstreamProxyConfigEntity.SecretIdentifier = *res.SecretIdentifier
-	case config.AuthType == artifact.AuthTypeAccessKeySecretKey:
+	case artifact.AuthTypeAccessKeySecretKey:
 		res, err := config.Auth.AsAccessKeySecretKey()
 		if err != nil {
 			return nil, nil, err

@@ -409,9 +409,10 @@ func (t tagDao) GetAllArtifactsByParentID(
 
 	// Apply sorting based on provided field
 	sortField := "modified_at"
-	if sortByField == downloadCount {
+	switch sortByField {
+	case downloadCount:
 		sortField = "download_count"
-	} else if sortByField == imageName {
+	case imageName:
 		sortField = "name"
 	}
 
@@ -1464,9 +1465,10 @@ func (t tagDao) GetAllOciVersionsByRepoAndImage(
 		" m.manifest_payload, mt.mt_media_type, m.manifest_digest")
 
 	var sortField string
-	if sortByField == "size" {
+	switch sortByField {
+	case "size":
 		sortField = "m.manifest_total_size"
-	} else if sortByField == "updated_at" {
+	case "updated_at":
 		sortField = "m.manifest_created_at"
 	}
 	if sortField != "" {

@@ -126,7 +126,7 @@ func (s *Service) Create(
 	err = s.webhookStore.Create(ctx, hook)
 	// internal hooks are hidden from non-internal read requests - properly communicate their existence on duplicate.
 	// This is the best effort, any error we just ignore and fallback to original duplicate error.
-	if errors.Is(err, store.ErrDuplicate) && !(typ == enum.WebhookTypeInternal) {
+	if errors.Is(err, store.ErrDuplicate) && (typ != enum.WebhookTypeInternal) {
 		existingHook, derr := s.webhookStore.FindByIdentifier(
 			ctx, enum.WebhookParentRepo, parentResource.ID, hook.Identifier)
 		if derr != nil {

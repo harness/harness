@@ -58,11 +58,7 @@ func Object(raw []byte) (ObjectRaw, error) {
 
 	state := stateHead
 
-	for {
-		if len(raw) == 0 {
-			break
-		}
-
+	for len(raw) != 0 {
 		if state == stateHead {
 			headerType, headerContent, advance, err := getHeader(raw)
 			if err != nil {

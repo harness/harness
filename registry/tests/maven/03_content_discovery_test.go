@@ -65,9 +65,10 @@ var test03ContentDiscovery = func() {
 					)
 
 					contentType := "application/octet-stream"
-					if artifact.fileType == "jar" {
+					switch artifact.fileType {
+					case "jar":
 						contentType = "application/java-archive"
-					} else if artifact.fileType == "pom" {
+					case "pom":
 						contentType = "application/xml"
 					}
 

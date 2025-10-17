@@ -380,8 +380,9 @@ func (c *APIController) CreateUpstreamProxyEntity(
 		}
 		upstreamProxyConfigEntity.Source = string(*config.Source)
 	}
-	//nolint:nestif
-	if config.AuthType == artifact.AuthTypeUserPassword {
+	//nolint:exhaustive
+	switch config.AuthType {
+	case artifact.AuthTypeUserPassword:
 		res, err := config.Auth.AsUserPassword()
 		if err != nil {
 			return nil, nil, err
@@ -402,7 +403,7 @@ func (c *APIController) CreateUpstreamProxyEntity(
 		}
 
 		upstreamProxyConfigEntity.SecretIdentifier = *res.SecretIdentifier
-	} else if config.AuthType == artifact.AuthTypeAccessKeySecretKey {
+	case artifact.AuthTypeAccessKeySecretKey:
 		res, err := config.Auth.AsAccessKeySecretKey()
 		if err != nil {
 			return nil, nil, err

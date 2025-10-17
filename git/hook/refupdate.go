@@ -224,11 +224,11 @@ func (u *RefUpdater) UpdateRef(ctx context.Context) error {
 	for _, ref := range u.refs {
 		switch {
 		case ref.New.IsNil():
-			_, _ = input.WriteString(fmt.Sprintf("delete %s\000%s\000", ref.Ref, ref.Old))
+			_, _ = fmt.Fprintf(input, "delete %s\000%s\000", ref.Ref, ref.Old)
 		case ref.Old.IsNil():
-			_, _ = input.WriteString(fmt.Sprintf("create %s\000%s\000", ref.Ref, ref.New))
+			_, _ = fmt.Fprintf(input, "create %s\000%s\000", ref.Ref, ref.New)
 		default:
-			_, _ = input.WriteString(fmt.Sprintf("update %s\000%s\000%s\000", ref.Ref, ref.New, ref.Old))
+			_, _ = fmt.Fprintf(input, "update %s\000%s\000%s\000", ref.Ref, ref.New, ref.Old)
 		}
 	}
 

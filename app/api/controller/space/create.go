@@ -191,10 +191,7 @@ func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
 		return errParentIDNegative
 	}
 
-	isRoot := false
-	if (err == nil && parentRefAsID == 0) || (len(strings.TrimSpace(in.ParentRef)) == 0) {
-		isRoot = true
-	}
+	isRoot := (err == nil && parentRefAsID == 0) || (len(strings.TrimSpace(in.ParentRef)) == 0)
 
 	if err := c.identifierCheck(in.Identifier, isRoot); err != nil {
 		return err

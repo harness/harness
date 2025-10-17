@@ -111,10 +111,7 @@ func (h *handler) parseDataFromPayload(r *http.Request) (*bytes.Buffer, *bytes.B
 		return nil, nil, nil, fmt.Errorf("error reading multipart: %w", err)
 	}
 
-	for {
-		if infoBytes.Len() > 0 && modBytes.Len() > 0 && zipRC != nil {
-			break
-		}
+	for infoBytes.Len() <= 0 || modBytes.Len() <= 0 || zipRC == nil {
 		part, err := reader.NextPart()
 		if err == io.EOF {
 			break

@@ -55,14 +55,14 @@ func NewRegistryHelper(
 
 func (h *registryHelper) GetIndexFilePathFromImageName(imageName string) string {
 	length := len(imageName)
-	switch {
-	case length == 0:
+	switch length {
+	case 0:
 		return imageName
-	case length == 1:
+	case 1:
 		return fmt.Sprintf("/index/1/%s", imageName)
-	case length == 2:
+	case 2:
 		return fmt.Sprintf("/index/2/%s", imageName)
-	case length == 3:
+	case 3:
 		return fmt.Sprintf("/index/3/%c/%s", imageName[0], imageName)
 	default:
 		return fmt.Sprintf("/index/%s/%s/%s", imageName[0:2], imageName[2:4], imageName)

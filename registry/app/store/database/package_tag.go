@@ -85,9 +85,9 @@ func (r PackageTagDao) FindByImageNameAndRegID(ctx context.Context,
 	return r.mapToPackageTagList(ctx, dst)
 }
 
-// DeleteByTagAndImageName Todo:postgres query can be optimised here
 func (r PackageTagDao) DeleteByTagAndImageName(ctx context.Context,
 	tag string, image string, regID int64) error {
+	// TODO: postgres query can be optimised here
 	stmt := databaseg.Builder.Delete("package_tags").
 		Where("package_tag_id IN (SELECT p.package_tag_id FROM package_tags p"+
 			" JOIN artifacts a ON p.package_tag_artifact_id = a.artifact_id "+

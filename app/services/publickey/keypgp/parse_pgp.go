@@ -100,12 +100,9 @@ func Parse(r io.Reader, principal *types.Principal) (KeyInfo, error) {
 	var identity *types.Identity
 	var comment string
 
-	foundPrincipal := false
-	if principal == nil {
-		// If principal is nil, it means that no particular principal is needed.
-		// By `foundPrincipal = true` we declare that we have "found" it.
-		foundPrincipal = true
-	}
+	// If principal is nil, it means that no particular principal is needed.
+	// By `foundPrincipal = true` we declare that we have "found" it.
+	foundPrincipal := principal == nil
 
 	// Process the primary identity (name and email address for the key) if it exists.
 	// The identity can also have revocations. We ignore the revocation reason, but honor

@@ -243,17 +243,17 @@ func commitInfoFrom(
 	modified := []string{}
 
 	for _, stat := range commit.FileStats {
-		switch {
-		case stat.Status == gitenum.FileDiffStatusModified:
+		switch stat.Status {
+		case gitenum.FileDiffStatusModified:
 			modified = append(modified, stat.Path)
-		case stat.Status == gitenum.FileDiffStatusRenamed:
+		case gitenum.FileDiffStatusRenamed:
 			added = append(added, stat.Path)
 			removed = append(removed, stat.OldPath)
-		case stat.Status == gitenum.FileDiffStatusDeleted:
+		case gitenum.FileDiffStatusDeleted:
 			removed = append(removed, stat.Path)
-		case stat.Status == gitenum.FileDiffStatusAdded || stat.Status == gitenum.FileDiffStatusCopied:
+		case gitenum.FileDiffStatusAdded, gitenum.FileDiffStatusCopied:
 			added = append(added, stat.Path)
-		case stat.Status == gitenum.FileDiffStatusUndefined:
+		case gitenum.FileDiffStatusUndefined:
 		default:
 			log.Warn().Msgf("unknown status %q for path %q", stat.Status, stat.Path)
 		}

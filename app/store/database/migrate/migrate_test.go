@@ -170,7 +170,7 @@ func TestMigrationFilesNumbering(t *testing.T) {
 				t.Errorf("Name mismatch for version %s in %s directory: %s != %s", version, dir, files[0], files[1])
 			}
 
-			if !((ext1 == "up.sql" && ext2 == "down.sql") || (ext2 == "up.sql" && ext1 == "down.sql")) {
+			if !((ext1 == "up.sql" && ext2 == "down.sql") || (ext2 == "up.sql" && ext1 == "down.sql")) { //nolint:staticcheck
 				t.Errorf("Extension mismatch for version %s in %s directory: %s != %s", version, dir, files[0],
 					files[1])
 			}

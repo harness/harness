@@ -155,7 +155,7 @@ func getPermissionFromAction(ctx context.Context, action string) (enum.Permissio
 
 func returnForbiddenResponse(ctx context.Context, w http.ResponseWriter, err error) {
 	w.WriteHeader(http.StatusForbidden)
-	_, err2 := w.Write([]byte(fmt.Sprintf("requested access to the resource is denied: %v", err)))
+	_, err2 := fmt.Fprintf(w, "requested access to the resource is denied: %v", err)
 	if err2 != nil {
 		log.Ctx(ctx).Error().Msgf("failed to write token response: %v", err2)
 	}

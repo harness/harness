@@ -33,7 +33,7 @@ func (h *Handler) PushArtifact(w http.ResponseWriter, r *http.Request) {
 	headers, sha256, err := h.Controller.UploadArtifact(ctx, info, r)
 	if commons.IsEmptyError(err) {
 		headers.WriteToResponse(w)
-		_, err := w.Write([]byte(fmt.Sprintf("Pushed.\nSha256: %s", sha256)))
+		_, err := fmt.Fprintf(w, "Pushed.\nSha256: %s", sha256)
 		if err != nil {
 			handleErrors(r.Context(), errcode.ErrCodeUnknown.WithDetail(err), w)
 			return

@@ -26,7 +26,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-//nolint:gocognit,stylecheck,revive // have naming match migration version
+//nolint:gocognit,stylecheck,revive,staticcheck // have naming match migration version
 func migrateAfter_0042_alter_table_rules(
 	ctx context.Context,
 	dbtx *sql.Tx,

@@ -78,10 +78,10 @@ func (r *Reporter) UserGroupReviewerAdded(
 	log.Ctx(ctx).Debug().Msgf("reported pull request reviewer added event with id '%s'", eventID)
 }
 
-// ToDo: Start using this for sending out notifications
 func (r *Reader) RegisterUserGroupReviewerAdded(
 	fn events.HandlerFunc[*UserGroupReviewerAddedPayload],
 	opts ...events.HandlerOption,
 ) error {
+	// TODO: Start using this for sending out notifications
 	return events.ReaderRegisterEvent(r.innerReader, UserGroupReviewerAdded, fn, opts...)
 }

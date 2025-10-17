@@ -129,10 +129,11 @@ func (s *Service) Create(ctx context.Context,
 
 	spacePath := path
 	nameKey := audit.RepoName
-	if parentType == enum.RuleParentRepo {
+	switch parentType {
+	case enum.RuleParentRepo:
 		spacePath = paths.Parent(path)
 		rule.RepoID = &parentID
-	} else if parentType == enum.RuleParentSpace {
+	case enum.RuleParentSpace:
 		nameKey = audit.SpaceName
 		rule.SpaceID = &parentID
 	}
@@ -171,11 +172,12 @@ func (s *Service) Create(ctx context.Context,
 	}
 
 	var event instrument.Event
-	if parentType == enum.RuleParentRepo {
+	switch parentType {
+	case enum.RuleParentRepo:
 		event = instrumentEventRepo(
 			rule.ID, principal.ToPrincipalInfo(), parentID, scopeIdentifier, path,
 		)
-	} else if parentType == enum.RuleParentSpace {
+	case enum.RuleParentSpace:
 		event = instrumentEventSpace(
 			rule.ID, principal.ToPrincipalInfo(), parentID, scopeIdentifier, path,
 		)

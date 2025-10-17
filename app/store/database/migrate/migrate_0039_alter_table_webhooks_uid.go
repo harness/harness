@@ -28,7 +28,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-//nolint:gocognit,stylecheck,revive // have naming match migration version
+//nolint:gocognit,stylecheck,revive,staticcheck // have naming match migration version
 func migrateAfter_0039_alter_table_webhooks_uid(ctx context.Context, dbtx *sql.Tx) error {
 	log := log.Ctx(ctx)
 
