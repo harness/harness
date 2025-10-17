@@ -217,7 +217,9 @@ func (c *Controller) Create(
 		mergeBaseSHA.String(), sourceSHA.String(),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to prepare code owner reviewers: %w", err)
+		// error on codeowners can happen due to multiple reasons like file not exist or incorrect file format
+		// logging the error is good enough
+		log.Ctx(ctx).Warn().Err(err).Msg("failed to prepare code owner reviewers")
 	}
 
 	if len(ownerUserReviewerMap) > 0 {
