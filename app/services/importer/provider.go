@@ -117,9 +117,10 @@ func hash(s string) string {
 
 func oauthTransport(token string, scheme string) http.RoundTripper {
 	if token == "" {
-		return nil
+		return baseTransport
 	}
 	return &oauth2.Transport{
+		Base:   baseTransport,
 		Scheme: scheme,
 		Source: oauth2.StaticTokenSource(&scm.Token{Token: token}),
 	}
@@ -127,9 +128,10 @@ func oauthTransport(token string, scheme string) http.RoundTripper {
 
 func authHeaderTransport(token string) http.RoundTripper {
 	if token == "" {
-		return nil
+		return baseTransport
 	}
 	return &transport.Authorization{
+		Base:        baseTransport,
 		Scheme:      "token",
 		Credentials: token,
 	}
@@ -137,9 +139,10 @@ func authHeaderTransport(token string) http.RoundTripper {
 
 func basicAuthTransport(username, password string) http.RoundTripper {
 	if username == "" && password == "" {
-		return nil
+		return baseTransport
 	}
 	return &transport.BasicAuth{
+		Base:     baseTransport,
 		Username: username,
 		Password: password,
 	}
@@ -243,9 +246,11 @@ func getScmClientWithTransport(provider Provider, slug string, authReq bool) (*s
 		return nil, fmt.Errorf("unsupported scm provider: %s", provider)
 	}
 
-	// override default transport if available
-	if transport != nil {
-		c.Client = &http.Client{Transport: transport}
+	c.Client = &http.Client{
+		Transport: transport,
+		CheckRedirect: func(*http.Request, []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
 	}
 
 	return c, nil
@@ -424,6 +429,9 @@ func convertSCMError(provider Provider, slug string, r *scm.Response, err error)
 	}
 
 	switch r.Status {
+	case http.StatusMovedPermanently, http.StatusFound, http.StatusSeeOther,
+		http.StatusTemporaryRedirect, http.StatusPermanentRedirect:
+		return usererror.BadRequestf("Redirects are not supported (HTTP status %d)", r.Status)
 	case http.StatusNotFound:
 		return usererror.BadRequestf("Couldn't find %s at %s: %s",
 			slug, provider.Type, err.Error())
