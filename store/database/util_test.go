@@ -15,7 +15,12 @@
 package database
 
 import (
+	"context"
+	"database/sql"
+	"errors"
 	"testing"
+
+	"github.com/harness/gitness/store"
 )
 
 func TestOffset(t *testing.T) {
@@ -85,4 +90,43 @@ func TestLimit(t *testing.T) {
 			t.Errorf("Got %d want %d for size %d", got, want, test.size)
 		}
 	}
+}
+
+func TestProcessSQLErrorf(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("sql.ErrNoRows returns ErrResourceNotFound", func(t *testing.T) {
+		err := ProcessSQLErrorf(ctx, sql.ErrNoRows, "test message")
+		if !errors.Is(err, store.ErrResourceNotFound) {
+			t.Errorf("expected ErrResourceNotFound, got %v", err)
+		}
+		if err.Error() != "test message: resource not found" {
+			t.Errorf("unexpected error message: %v", err.Error())
+		}
+	})
+
+	t.Run("formats message with args", func(t *testing.T) {
+		err := ProcessSQLErrorf(ctx, sql.ErrNoRows, "test %s %d", "message", 42)
+		if !errors.Is(err, store.ErrResourceNotFound) {
+			t.Errorf("expected ErrResourceNotFound, got %v", err)
+		}
+		if err.Error() != "test message 42: resource not found" {
+			t.Errorf("unexpected error message: %v", err.Error())
+		}
+	})
+
+	t.Run("unknown error is returned as-is", func(t *testing.T) {
+		originalErr := errors.New("some random error")
+		err := ProcessSQLErrorf(ctx, originalErr, "test message")
+		if !errors.Is(err, originalErr) {
+			t.Errorf("expected original error to be wrapped, got %v", err)
+		}
+	})
+
+	t.Run("empty format string", func(t *testing.T) {
+		err := ProcessSQLErrorf(ctx, sql.ErrNoRows, "")
+		if !errors.Is(err, store.ErrResourceNotFound) {
+			t.Errorf("expected ErrResourceNotFound, got %v", err)
+		}
+	})
 }

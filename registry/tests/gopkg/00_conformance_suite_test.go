@@ -46,7 +46,7 @@ var _ = ginkgo.BeforeSuite(func() {
 
 	// Ensure we have a valid token.
 	if TestConfig.Password == "" {
-		ginkgo.Fail("No authentication token provided in REGISTRY_PASSWORD environment variable")
+		ginkgo.Skip("Skipping integration tests: REGISTRY_PASSWORD environment variable not set")
 	}
 
 	// Initialize client with auth token.

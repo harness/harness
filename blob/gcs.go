@@ -40,6 +40,11 @@ type GCSStore struct {
 }
 
 func NewGCSStore(ctx context.Context, cfg Config) (Store, error) {
+	// Validate bucket name is provided
+	if cfg.Bucket == "" {
+		return nil, errors.New("bucket name is required")
+	}
+
 	switch {
 	case cfg.KeyPath != "":
 		// Use service account key file [Development and Non-GCP environments]
