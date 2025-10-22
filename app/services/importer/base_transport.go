@@ -43,22 +43,20 @@ func init() {
 			return nil, err
 		}
 
-		defer func() {
-			_ = con.Close()
-		}()
-
 		tcpAddr, ok := con.RemoteAddr().(*net.TCPAddr)
-		if !ok {
-			// not expected to happen, but to be sure
+		if !ok { // not expected to happen, but to be sure
+			_ = con.Close()
 			return nil, fmt.Errorf("address resolved to a non-TCP address (original: '%s', resolved: '%s')",
 				addr, con.RemoteAddr())
 		}
 
 		if tcpAddr.IP.IsLoopback() {
+			_ = con.Close()
 			return nil, usererror.BadRequestf("Loopback address is not allowed.")
 		}
 
 		if tcpAddr.IP.IsPrivate() {
+			_ = con.Close()
 			return nil, usererror.BadRequestf("Private network address is not allowed.")
 		}
 
