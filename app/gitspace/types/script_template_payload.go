@@ -98,3 +98,7 @@ type RunIntellijIDEPayload struct {
 	IdeDownloadURL string
 	IdeDirName     string
 }
+
+type SetupClaudeCodePayload struct {
+	OSInfoScript string
+}

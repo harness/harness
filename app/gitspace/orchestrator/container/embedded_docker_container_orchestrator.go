@@ -676,6 +676,17 @@ func (e *EmbeddedDockerOrchestrator) buildSetupSteps(
 			StopOnFailure: true,
 		},
 		{
+			Name: "Install AI agents",
+			Execute: func(
+				ctx context.Context,
+				exec *devcontainer.Exec,
+				gitspaceLogger gitspaceTypes.GitspaceLogger,
+			) error {
+				return utils.InstallAIAgents(ctx, exec, gitspaceLogger, gitspaceConfig.AIAgents)
+			},
+			StopOnFailure: true,
+		},
+		{
 			Name: "Setup IDE",
 			Execute: func(
 				ctx context.Context,
