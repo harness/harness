@@ -1,0 +1,68 @@
+/*
+ * Copyright 2024 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.container {
+  height: 56px;
+  border-bottom: 2px solid;
+  border-color: var(--primary-6);
+  width: 100% !important;
+  position: relative;
+  .harnessLogo {
+    svg {
+      height: 32px;
+    }
+  }
+
+  .link {
+    text-decoration: none;
+  }
+
+  .label {
+    line-height: var(--spacing-5) !important;
+    font-weight: 600 !important;
+  }
+
+  .subtitle {
+    position: relative;
+    bottom: 4px;
+    left: 24px;
+  }
+
+  &.admin {
+    border-color: var(--purple-400) !important;
+    .subtitle {
+      color: var(--purple-400);
+    }
+  }
+
+  &.dashboards {
+    border-color: var(--teal-800) !important;
+    .subtitle {
+      color: var(--teal-800);
+    }
+  }
+  .newTag {
+    position: absolute;
+    top: -7px;
+    left: 0px;
+    padding: var(--spacing-1) var(--spacing-2);
+    border-radius: 0px 4px;
+  }
+}
+
+.width100 {
+  width: 100% !important;
+}

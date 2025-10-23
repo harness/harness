@@ -1,0 +1,105 @@
+/*
+ * Copyright 2023 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.pluginDetailsPanel {
+  height: 100%;
+  border-top: 1px solid var(--grey-100);
+}
+
+.pluginIcon {
+  padding: var(--spacing-small) var(--spacing-3) var(--spacing-small) var(--spacing-3) !important;
+  background: var(--grey-100) !important;
+  border-radius: 5px;
+}
+
+.pluginCategoryCard {
+  margin: var(--spacing-medium) 0;
+  padding: var(--spacing-medium) !important;
+}
+
+.cursor {
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+.form {
+  height: calc(100% - var(--spacing-large) - var(--spacing-xxlarge));
+  width: 100%;
+  :global {
+    [class*='FormikForm--main'] {
+      height: 100%;
+      & > div {
+        height: 100%;
+      }
+    }
+  }
+}
+
+.formHeightWithSyncToolbar {
+  height: calc(100% - 5 * var(--spacing-large) - var(--spacing-xxlarge));
+}
+
+.arrow {
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+.plugins {
+  max-height: calc(100vh - var(--header-height) - var(--generate-pipeline-header));
+  overflow-y: scroll;
+}
+
+.pluginInfo {
+  width: calc(100% - var(--spacing-xxxlarge)) !important;
+}
+
+.pluginDesc {
+  width: 100%;
+}
+
+.formFields {
+  height: calc(100% - var(--spacing-xlarge));
+  overflow-y: scroll;
+
+  .toggle {
+    margin-left: var(--spacing-1) !important;
+  }
+}
+
+.search {
+  width: 50%;
+  height: 35px;
+}
+
+.configForm {
+  height: calc(100% - var(--spacing-medium));
+}
+
+.configFormWithSyncToolbar {
+  height: calc(100% - 2 * var(--spacing-medium));
+}
+
+.fontWeight600 {
+  font-weight: 600 !important;
+}
+
+.breadCrumbs {
+  overflow: hidden;
+  white-space: nowrap !important;
+  text-overflow: ellipsis;
+}

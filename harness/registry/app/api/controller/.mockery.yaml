@@ -1,0 +1,29 @@
+packages:
+  github.com/harness/gitness/registry/app/store:
+    config:
+      inpackage: false
+    interfaces:
+      ArtifactRepository:
+        config:
+          filename: "artifact_repository.go"
+          dir: "./mocks"
+      DownloadStatRepository:
+        config:
+          filename: "download_stat_repository.go"
+          dir: "./mocks"
+      QuarantineArtifactRepository:
+        config:
+          filename: "quarantine_artifact_repository.go"
+          dir: "./mocks"
+      TagRepository:
+        config:
+          filename: "tag_repository.go"
+          dir: "./mocks"
+  github.com/harness/gitness/registry/app/api/interfaces:
+    config:
+      inpackage: false
+    interfaces:
+      PackageWrapper:
+        config:
+          filename: "package_wrapper.go"
+          dir: "./mocks"

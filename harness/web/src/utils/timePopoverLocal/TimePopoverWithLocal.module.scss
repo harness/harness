@@ -1,0 +1,17 @@
+.timeWrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+
+  .timezone {
+    width: 15%;
+    margin-right: var(--spacing-1);
+  }
+  .time {
+    padding-left: var(--spacing-1);
+  }
+}
+
+.noWrap {
+  white-space: nowrap !important;
+}

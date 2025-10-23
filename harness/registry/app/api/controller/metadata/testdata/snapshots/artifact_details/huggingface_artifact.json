@@ -1,0 +1,15 @@
+{
+  "createdAt": "1704067200000",
+  "downloadCount": 100,
+  "isQuarantined": false,
+  "metadata": {
+    "description": "Test artifact for HUGGINGFACE",
+    "name": "test-artifact",
+    "version": "v1.0.0"
+  },
+  "modifiedAt": "1704067200000",
+  "name": "test-artifact",
+  "packageType": "HUGGINGFACE",
+  "size": "0.00B",
+  "version": "v1.0.0"
+}

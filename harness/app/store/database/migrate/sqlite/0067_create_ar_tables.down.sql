@@ -1,0 +1,13 @@
+DROP TABLE IF EXISTS artifact_stats;
+DROP TABLE IF EXISTS artifacts;
+DROP TABLE IF EXISTS cleanup_policy_prefix_mappings;
+DROP TABLE IF EXISTS cleanup_policies;
+DROP TABLE IF EXISTS layers;
+DROP TABLE IF EXISTS manifest_references;
+DROP TABLE IF EXISTS registry_blobs;
+DROP TABLE IF EXISTS tags;
+DROP TABLE IF EXISTS manifests;
+DROP TABLE IF EXISTS blobs;
+DROP TABLE IF EXISTS media_types;
+DROP TABLE IF EXISTS upstream_proxy_configs;
+DROP TABLE IF EXISTS registries;

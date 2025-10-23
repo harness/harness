@@ -1,0 +1,66 @@
+/*
+ * Copyright 2024 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.combinedListSelector {
+  min-width: 300px;
+  max-width: 500px;
+}
+
+.searchInputContainer {
+  padding: var(--spacing-small) var(--spacing-medium) !important;
+  .searchInput {
+    margin: 0;
+    & input {
+      padding: var(--pading-small) 0;
+    }
+  }
+}
+
+.tabsContainer {
+  max-height: 500px;
+  overflow-y: auto;
+  :global(.bp3-tab-list) {
+    box-shadow: none;
+    padding: 0 var(--spacing-medium);
+  }
+}
+
+.versionSelector {
+  --background-color: var(--grey-50) !important;
+  --border: 1px solid var(--grey-200) !important;
+  min-width: 200px;
+  max-width: 300px;
+  justify-content: space-between;
+  .versionSelectorText {
+    --intent-color: var(--grey-900);
+    --typography-size: 13px;
+    --typography-weight: 400;
+  }
+}
+
+.menuContainer {
+  padding: var(--spacing-small) 0;
+  .menuItem {
+    padding: var(--spacing-small) var(--spacing-medium);
+    & .menuItemText {
+      --intent-color: var(--grey-900) !important;
+    }
+    &:hover .menuItemText,
+    &:global(.bp3-active) .menuItemText {
+      --intent-color: var(--white) !important;
+    }
+  }
+}

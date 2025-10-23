@@ -1,0 +1,227 @@
+/*
+ * Copyright 2023 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.main {
+  min-height: var(--page-height);
+  background-color: var(--primary-bg) !important;
+
+  div[class*='NoDataCard'] {
+    img + p {
+      margin-top: var(--spacing-xlarge) !important;
+    }
+
+    img + p + div {
+      margin-top: 0 !important;
+      padding-top: var(--spacing-medium);
+    }
+  }
+
+  .layout {
+    align-items: center;
+  }
+
+  .input {
+    span[data-icon],
+    span[icon] {
+      margin-top: 10px !important;
+    }
+  }
+
+  .spinner {
+    height: 100vh;
+  }
+}
+
+.withError {
+  display: grid;
+}
+
+.table {
+  margin-top: var(--spacing-medium);
+
+  [class*='TableV2--header'] [class*='variation-table-headers'] {
+    text-transform: uppercase;
+    color: var(--grey-900);
+    font-weight: 600;
+    font-size: 11px;
+  }
+
+  .row {
+    height: 80px;
+    overflow: hidden;
+
+    &.noDesc > div {
+      height: 44px;
+    }
+  }
+  .rowDisable {
+    background-color: var(--grey-50) !important;
+    cursor: auto !important;
+    .repoName {
+      color: var(--grey-400) !important;
+    }
+    .desc {
+      color: var(--grey-300) !important;
+    }
+  }
+  .rowDisable:hover {
+    box-shadow: 0px 0px 1px rgba(40, 41, 61, 0.08), 0px 0.5px 2px rgba(96, 97, 112, 0.16) !important;
+    border: unset !important;
+  }
+}
+
+.nameContainer {
+  position: relative;
+
+  .name {
+    flex-grow: 1;
+    align-items: baseline !important;
+    width: calc(100% - 100px) !important;
+
+    > span {
+      width: 100%;
+      > span {
+        width: 100%;
+      }
+    }
+
+    & + span:last-of-type {
+      align-self: center;
+    }
+  }
+
+  .pinned {
+    transform: rotate(-90deg);
+    position: absolute;
+    top: 7px;
+    left: -43px;
+    font-size: var(--font-size-xsmall) !important;
+    padding: 6px 14px;
+  }
+
+  .repoName {
+    font-weight: 600 !important;
+    font-size: 16px !important;
+    line-height: 24px !important;
+    color: var(--grey-800);
+
+    .repoScope {
+      color: var(--grey-400);
+      padding: 2px 6px;
+      font-size: var(--font-size-xsmall) !important;
+      border-radius: 4px;
+      border: 1px solid var(--grey-200);
+      display: inline-block;
+      margin-left: var(--spacing-medium);
+      text-transform: uppercase;
+      line-height: 16px;
+    }
+  }
+
+  .desc {
+    color: var(--grey-500);
+    font-size: 13px;
+    padding-top: var(--spacing-xsmall) !important;
+  }
+}
+
+.progressBar {
+  opacity: 0.7;
+}
+
+.featureContainer {
+  --srm-background: #f6f1ff;
+  background-color: var(--grey-0) !important;
+  border-left: 1px solid var(--grey-200) !important;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  .featureText {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+  }
+  .iconContainer {
+    padding-top: var(--spacing-small) !important;
+    padding-bottom: var(--spacing-small) !important;
+    padding-right: var(--spacing-tiny) !important;
+    padding-left: 2px !important;
+  }
+  .featureTitle {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    padding-bottom: var(--spacing-small) !important;
+    display: flex !important;
+  }
+  .featureContent {
+    font-size: 10px !important;
+    font-weight: 400 !important;
+    color: var(--grey-400) !important;
+  }
+  .tagText {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    max-height: 19px !important;
+  }
+  .comingSoonContainer {
+    .iconContainer {
+      color: var(--purple-600) !important;
+    }
+    .tagBackground {
+      background: var(--srm-background) !important;
+      border-radius: 4px !important;
+
+      .tagText {
+        color: var(--purple-600) !important;
+      }
+    }
+  }
+  .releasedContainer {
+    .iconContainer {
+      color: var(--green-800) !important;
+    }
+    .tagBackground {
+      background: var(--green-50) !important;
+      border-radius: 4px !important;
+
+      .tagText {
+        color: var(--green-800) !important;
+      }
+    }
+  }
+}
+.repoListingContainer {
+  width: 100% !important;
+}
+
+.launchIcon {
+  padding-bottom: 1px !important;
+}
+
+.row {
+  .favorite {
+    visibility: hidden;
+  }
+  .favoriteActive {
+    visibility: visible;
+  }
+
+  &:hover {
+    .favorite {
+      visibility: visible;
+    }
+  }
+}

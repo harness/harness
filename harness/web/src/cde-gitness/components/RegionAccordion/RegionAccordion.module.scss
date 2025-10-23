@@ -1,0 +1,87 @@
+.infraProviderCard {
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--primary-7);
+  }
+
+  &.selected {
+    border-color: var(--primary-7);
+    background: var(--primary-1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.regionHeader {
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: var(--grey-50);
+}
+
+.regionCheckbox {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.regionHeaderDetails {
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.machinesCountTag {
+  background-color: var(--primary-1);
+  border-radius: var(--spacing-medium);
+  padding: var(--spacing-xsmall) var(--spacing-small);
+  border: 1px solid var(--primary-2);
+  margin-right: var(--spacing-small);
+}
+
+.accordionPanel {
+  padding: 0 !important;
+}
+
+.accordionSummary {
+  justify-content: space-between;
+  div:first-child {
+    flex: 1;
+  }
+}
+
+.accordionDetails {
+  background: var(--grey-50);
+  padding: var(--spacing-small) !important;
+  padding-top: var(--spacing-medium) !important;
+  border-radius: var(--spacing-xsmall);
+  margin-top: var(--spacing-small) !important;
+}
+
+.machineTypesContainer {
+  padding: var(--spacing-large);
+  background: var(--grey-50);
+}
+
+.machineTypesTitle {
+  margin-bottom: var(--spacing-large);
+  color: var(--grey-800);
+}
+
+.selectAllContainer {
+  align-items: center;
+  gap: var(--spacing-small);
+  margin-bottom: var(--spacing-medium) !important;
+  padding: 0 12px !important;
+  margin-top: var(--spacing-large) !important;
+}
+
+.selectAllCheckbox {
+  flex: 0 0 auto;
+}
+
+.machineTypesList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-small);
+}

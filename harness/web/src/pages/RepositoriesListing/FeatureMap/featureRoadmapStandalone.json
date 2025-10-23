@@ -1,0 +1,37 @@
+[
+  {
+    "type": "released",
+    "typeText": "released",
+    "color": "green",
+    "title": "Image support in Pull Requests",
+    "content": "Support to upload images in pull request descriptions",
+    "link": "https://ideas.harness.io/gitness/p/image-support-in-pr-description"
+  },
+
+  {
+    "type": "released",
+    "typeText": "released",
+    "color": "green",
+    "title": "Notifications",
+    "content": "Email notifications for pull request changes",
+    "link": "https://ideas.harness.io/gitness/p/email-notifications"
+  },
+
+  {
+    "type": "released",
+    "typeText": "released",
+    "color": "green",
+    "title": "Code Owners",
+    "content": "Configure codeowners files to assign ownership to areas of the codebase, and automatically add as reviewers for pull requests with changes to those files",
+    "link": "https://ideas.harness.io/admin/roadmap/gitness-roadmap/p/code-owners"
+  },
+
+  {
+    "type": "released",
+    "typeText": "released",
+    "color": "green",
+    "title": "Branch Rules",
+    "content": "Define branch rules to enforce process and prevent unwanted changes on protected branches",
+    "link": "https://ideas.harness.io/admin/roadmap/gitness-roadmap/p/branch-rules-merge-checks"
+  }
+]
