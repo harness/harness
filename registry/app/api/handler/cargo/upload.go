@@ -38,6 +38,7 @@ func (h *handler) UploadPackage(w http.ResponseWriter, r *http.Request) {
 	metadata, fileReader, err := h.parseDataFromPayload(r.Body)
 	if err != nil {
 		h.handleCargoPackageAPIError(w, r, fmt.Errorf("failed to parse data from payload: %w", err))
+		return
 	}
 
 	info.Image = metadata.Name
