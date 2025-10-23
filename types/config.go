@@ -376,6 +376,10 @@ type Config struct {
 		NumWorkers  int           `envconfig:"GITNESS_REPO_SIZE_NUM_WORKERS" default:"5"`
 	}
 
+	Githook struct {
+		DisableAuth bool `envconfig:"GITNESS_GITHOOK_DISABLE_AUTH" default:"false"`
+	}
+
 	CodeOwners struct {
 		FilePaths []string `envconfig:"GITNESS_CODEOWNERS_FILEPATH" default:"CODEOWNERS,.harness/CODEOWNERS"`
 	}
