@@ -19,6 +19,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/harness/gitness/app/api/controller/limiter"
@@ -44,6 +45,22 @@ type CreateForkInput struct {
 	IsPublic   *bool  `json:"is_public"`
 }
 
+func (in *CreateForkInput) sanitize() error {
+	in.ParentRef = strings.TrimSpace(in.ParentRef)
+	in.Identifier = strings.TrimSpace(in.Identifier)
+	in.ForkBranch = strings.TrimSpace(in.ForkBranch)
+
+	if in.ParentRef == "" {
+		return errors.InvalidArgument("Parent space is mandatory.")
+	}
+
+	if in.Identifier == "" {
+		return errors.InvalidArgument("Identifier is mandatory.")
+	}
+
+	return nil
+}
+
 //nolint:gocognit
 func (c *Controller) CreateFork(
 	ctx context.Context,
@@ -53,6 +70,10 @@ func (c *Controller) CreateFork(
 ) (*RepositoryOutput, error) {
 	repoUpstreamCore, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := in.sanitize(); err != nil {
 		return nil, err
 	}
 
