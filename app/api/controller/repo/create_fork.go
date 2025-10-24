@@ -209,10 +209,9 @@ func (c *Controller) CreateFork(
 			return fmt.Errorf("failed to create fork repository: %w", err)
 		}
 
-		repoUpstream.NumForks++
-		err = c.repoStore.Update(ctx, repoUpstream)
+		err = c.repoStore.UpdateNumForks(ctx, repoUpstream.ID, 1)
 		if err != nil {
-			return fmt.Errorf("failed to update upstream repository: %w", err)
+			return fmt.Errorf("failed to increment number of forks in upstream repository: %w", err)
 		}
 
 		return nil

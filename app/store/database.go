@@ -315,6 +315,12 @@ type (
 
 		// ListSizeInfos returns a list of all active repo sizes.
 		ListSizeInfos(ctx context.Context) ([]*types.RepositorySizeInfo, error)
+
+		// UpdateNumForks increases or decreases number of forks of the repository.
+		UpdateNumForks(ctx context.Context, repoID int64, delta int64) error
+
+		// ClearForkID clears fork ID of all repositories that have this fork ID.
+		ClearForkID(ctx context.Context, repoUpstreamID int64) error
 	}
 
 	// SettingsStore defines the settings storage.

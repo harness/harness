@@ -26,7 +26,9 @@ import (
 	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/events"
+	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/stream"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -556,13 +558,17 @@ func fillPullReqProps(
 		return nil, fmt.Errorf("failed to fill repo data for target repo: %w", err)
 	}
 
-	if pr.SourceRepoID != pr.TargetRepoID {
-		sourceRepo, err := repoFinder.FindByID(ctx, pr.SourceRepoID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to find source repo: %w", err)
-		}
+	var sourceRepo *types.RepositoryCore
 
-		props[prSourceRepoID] = pr.SourceRepoID
+	if pr.SourceRepoID != nil && *pr.SourceRepoID != pr.TargetRepoID {
+		sourceRepo, err = repoFinder.FindByID(ctx, *pr.SourceRepoID)
+		if err != nil && !errors.Is(err, gitness_store.ErrResourceNotFound) {
+			return nil, fmt.Errorf("failed to get source repo by id: %w", err)
+		}
+	}
+
+	if sourceRepo != nil {
+		props[prSourceRepoID] = sourceRepo.ID
 		props[prSourceRepoName] = sourceRepo.Identifier
 		props[prSourceRepoPath] = sourceRepo.Path
 	}

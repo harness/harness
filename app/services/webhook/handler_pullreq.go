@@ -48,7 +48,7 @@ func (s *Service) handleEventPullReqCreated(
 	return s.triggerForEventWithPullReq(ctx, enum.WebhookTriggerPullReqCreated,
 		event.ID, event.Payload.PrincipalID, event.Payload.PullReqID,
 		func(principal *types.Principal, pr *types.PullReq, targetRepo, sourceRepo *types.Repository) (any, error) {
-			commitInfo, err := s.fetchCommitInfoForEvent(ctx, sourceRepo.GitUID, sourceRepo.Path,
+			commitInfo, err := s.fetchCommitInfoForEvent(ctx, targetRepo.GitUID, targetRepo.Path,
 				event.Payload.SourceSHA, s.urlProvider)
 			if err != nil {
 				return nil, err

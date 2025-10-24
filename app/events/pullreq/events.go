@@ -15,9 +15,9 @@
 package events
 
 type Base struct {
-	PullReqID    int64 `json:"pullreq_id"`
-	SourceRepoID int64 `json:"source_repo_id"`
-	TargetRepoID int64 `json:"repo_id"`
-	PrincipalID  int64 `json:"principal_id"`
-	Number       int64 `json:"number"`
+	PullReqID    int64  `json:"pullreq_id"`
+	SourceRepoID *int64 `json:"source_repo_id"`
+	TargetRepoID int64  `json:"repo_id"`
+	PrincipalID  int64  `json:"principal_id"`
+	Number       int64  `json:"number"`
 }

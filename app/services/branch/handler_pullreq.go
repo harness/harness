@@ -39,13 +39,17 @@ func (s *Service) handleEventPullReqCreated(
 	sourceBranch := payload.SourceBranch
 	pullReqID := payload.PullReqID
 
+	if sourceRepoID == nil {
+		return events.NewDiscardEventErrorf("pullreq %d event missing sourceRepoID", pullReqID)
+	}
+
 	logger := log.Ctx(ctx).With().
-		Int64("source_repo_id", sourceRepoID).
+		Int64("source_repo_id", *sourceRepoID).
 		Str("source_branch", sourceBranch).
 		Int64("pullreq_id", pullReqID).
 		Logger()
 
-	err := s.branchStore.UpdateLastPR(ctx, sourceRepoID, sourceBranch, &pullReqID)
+	err := s.branchStore.UpdateLastPR(ctx, *sourceRepoID, sourceBranch, &pullReqID)
 	if err != nil {
 		return fmt.Errorf("failed to update last PR: %w", err)
 	}
@@ -63,8 +67,13 @@ func (s *Service) handleEventPullReqClosed(
 	if payload == nil {
 		return fmt.Errorf("payload is nil")
 	}
+
+	if payload.SourceRepoID == nil {
+		return events.NewDiscardEventErrorf("pullreq %d event missing sourceRepoID", payload.PullReqID)
+	}
+
 	logger := log.Ctx(ctx).With().
-		Int64("source_repo_id", payload.SourceRepoID).
+		Int64("source_repo_id", *payload.SourceRepoID).
 		Int64("pullreq_id", payload.PullReqID).
 		Str("source_branch", payload.SourceBranch).
 		Logger()
@@ -72,7 +81,7 @@ func (s *Service) handleEventPullReqClosed(
 	sourceRepoID := payload.SourceRepoID
 	sourceBranch := payload.SourceBranch
 
-	err := s.branchStore.UpdateLastPR(ctx, sourceRepoID, sourceBranch, nil)
+	err := s.branchStore.UpdateLastPR(ctx, *sourceRepoID, sourceBranch, nil)
 	if err != nil {
 		return fmt.Errorf("failed to update last PR: %w", err)
 	}
@@ -90,8 +99,13 @@ func (s *Service) handleEventPullReqReopened(
 	if payload == nil {
 		return fmt.Errorf("payload is nil")
 	}
+
+	if payload.SourceRepoID == nil {
+		return events.NewDiscardEventErrorf("pullreq %d event missing sourceRepoID", payload.PullReqID)
+	}
+
 	logger := log.Ctx(ctx).With().
-		Int64("source_repo_id", payload.SourceRepoID).
+		Int64("source_repo_id", *payload.SourceRepoID).
 		Int64("pullreq_id", payload.PullReqID).
 		Str("source_branch", payload.SourceBranch).
 		Logger()
@@ -100,7 +114,7 @@ func (s *Service) handleEventPullReqReopened(
 	sourceBranch := payload.SourceBranch
 	pullReqID := payload.PullReqID
 
-	err := s.branchStore.UpdateLastPR(ctx, sourceRepoID, sourceBranch, &pullReqID)
+	err := s.branchStore.UpdateLastPR(ctx, *sourceRepoID, sourceBranch, &pullReqID)
 	if err != nil {
 		return fmt.Errorf("failed to update last PR: %w", err)
 	}

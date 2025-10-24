@@ -252,7 +252,7 @@ func (c *Controller) reportTagEvent(
 // TODO: If it is a new branch, or an update on a branch without any PR, it also sends out an SSE for pr creation.
 func (c *Controller) handlePRMessaging(
 	ctx context.Context,
-	repo *types.Repository,
+	sourceRepo *types.Repository,
 	in hook.PostReceiveInput,
 	out *hook.Output,
 ) {
@@ -266,14 +266,14 @@ func (c *Controller) handlePRMessaging(
 	// for now we only care about first branch that was pushed.
 	branchName := in.RefUpdates[0].Ref[len(gitReferenceNamePrefixBranch):]
 
-	c.suggestPullRequest(ctx, repo, branchName, out)
+	c.suggestPullRequest(ctx, sourceRepo, branchName, out)
 
 	// TODO: store latest pushed branch for user in cache and send out SSE
 }
 
 func (c *Controller) suggestPullRequest(
 	ctx context.Context,
-	repo *types.Repository,
+	sourceRepo *types.Repository,
 	branchName string,
 	out *hook.Output,
 ) {
@@ -281,7 +281,7 @@ func (c *Controller) suggestPullRequest(
 	prs, err := c.pullreqStore.List(ctx, &types.PullReqFilter{
 		Page:         1,
 		Size:         10,
-		SourceRepoID: repo.ID,
+		SourceRepoID: sourceRepo.ID,
 		SourceBranch: branchName,
 		// we only care about open PRs - merged/closed will lead to "create new PR" message
 		States: []enum.PullReqState{enum.PullReqStateOpen},
@@ -294,7 +294,7 @@ func (c *Controller) suggestPullRequest(
 		log.Ctx(ctx).Warn().Err(err).Msgf(
 			"failed to find pullrequests for branch '%s' originating from repo '%s'",
 			branchName,
-			repo.Path,
+			sourceRepo.Path,
 		)
 		return
 	}
@@ -302,7 +302,7 @@ func (c *Controller) suggestPullRequest(
 	slices.Reverse(prs) // Use ascending order for message output.
 
 	// For already existing PRs, print them to users terminal for easier access.
-	msgs, err := c.getOpenPRsMessages(ctx, repo, branchName, prs)
+	msgs, err := c.getOpenPRsMessages(ctx, sourceRepo, branchName, prs)
 	if err != nil {
 		log.Ctx(ctx).Warn().Err(err).Msg("failed to get messages for open pull request")
 		return
@@ -312,7 +312,7 @@ func (c *Controller) suggestPullRequest(
 		return
 	}
 
-	if branchName == repo.DefaultBranch {
+	if branchName == sourceRepo.DefaultBranch {
 		// Don't suggest a pull request if this is a push to the default branch.
 		return
 	}
@@ -320,13 +320,13 @@ func (c *Controller) suggestPullRequest(
 	// This is a new PR!
 	out.Messages = append(out.Messages,
 		fmt.Sprintf("Create a pull request for %q by visiting:", branchName),
-		"  "+c.urlProvider.GenerateUICompareURL(ctx, repo.Path, repo.DefaultBranch, branchName),
+		"  "+c.urlProvider.GenerateUICompareURL(ctx, sourceRepo.Path, sourceRepo.DefaultBranch, branchName),
 	)
 }
 
 func (c *Controller) getOpenPRsMessages(
 	ctx context.Context,
-	repo *types.Repository,
+	sourceRepo *types.Repository,
 	branchName string,
 	prs []*types.PullReq,
 ) ([]string, error) {
@@ -343,8 +343,8 @@ func (c *Controller) getOpenPRsMessages(
 	}
 
 	for i, pr := range prs {
-		path := repo.Path
-		if pr.TargetRepoID != pr.SourceRepoID {
+		path := sourceRepo.Path
+		if pr.TargetRepoID != *pr.SourceRepoID {
 			targetRepo, err := c.repoFinder.FindByID(ctx, pr.TargetRepoID)
 			if err != nil {
 				return nil, fmt.Errorf("failed to find target repo by ID: %w", err)

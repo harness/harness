@@ -77,7 +77,24 @@ func (c *Controller) PurgeNoAuth(
 		}
 	}
 
-	if err := c.repoStore.Purge(ctx, repo.ID, repo.Deleted); err != nil {
+	err := c.tx.WithTx(ctx, func(ctx context.Context) error {
+		if err := c.repoStore.ClearForkID(ctx, repo.ID); err != nil {
+			return fmt.Errorf("failed to clear fork ID of forks: %w", err)
+		}
+
+		if repo.ForkID != 0 {
+			if err := c.repoStore.UpdateNumForks(ctx, repo.ForkID, -1); err != nil {
+				return fmt.Errorf("failed to decrement number of forks of the upstream repository: %w", err)
+			}
+		}
+
+		if err := c.repoStore.Purge(ctx, repo.ID, repo.Deleted); err != nil {
+			return fmt.Errorf("failed to delete repo from db: %w", err)
+		}
+
+		return nil
+	})
+	if err != nil {
 		return fmt.Errorf("failed to delete repo from db: %w", err)
 	}
 

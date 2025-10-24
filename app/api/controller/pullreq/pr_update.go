@@ -22,6 +22,8 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
+	"github.com/harness/gitness/errors"
+	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -66,15 +68,17 @@ func (c *Controller) Update(ctx context.Context,
 		return nil, fmt.Errorf("failed to get pull request by number: %w", err)
 	}
 
-	if pr.SourceRepoID != pr.TargetRepoID {
-		var sourceRepo *types.RepositoryCore
+	var sourceRepo *types.RepositoryCore
 
-		sourceRepo, err = c.repoFinder.FindByID(ctx, pr.SourceRepoID)
-		if err != nil {
+	if pr.SourceRepoID != nil && *pr.SourceRepoID != pr.TargetRepoID {
+		sourceRepo, err = c.repoFinder.FindByID(ctx, *pr.SourceRepoID)
+		if err != nil && !errors.Is(err, gitness_store.ErrResourceNotFound) {
 			return nil, fmt.Errorf("failed to get source repo by id: %w", err)
 		}
+	}
 
-		if err = apiauth.CheckRepo(ctx, c.authorizer, session, sourceRepo, enum.PermissionRepoView); err != nil {
+	if sourceRepo != nil {
+		if err = apiauth.CheckRepo(ctx, c.authorizer, session, sourceRepo, enum.PermissionRepoPush); err != nil {
 			return nil, fmt.Errorf("failed to acquire access to source repo: %w", err)
 		}
 	} else if err = apiauth.CheckRepo(ctx, c.authorizer, session, targetRepo, enum.PermissionRepoPush); err != nil {

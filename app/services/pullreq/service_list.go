@@ -384,9 +384,13 @@ func (c *ListService) BackfillMetadata(
 	options types.PullReqMetadataOptions,
 ) error {
 	for _, entry := range list {
-		if entry.PullRequest.SourceRepoID != entry.PullRequest.TargetRepoID {
-			sourceRepo, err := c.repoFinder.FindByID(ctx, entry.PullRequest.SourceRepoID)
-			if err != nil {
+		if entry.PullRequest.SourceRepoID == nil {
+			entry.PullRequest.SourceRepo = deletedSourceRepo
+		} else if *entry.PullRequest.SourceRepoID != entry.PullRequest.TargetRepoID {
+			sourceRepo, err := c.repoFinder.FindByID(ctx, *entry.PullRequest.SourceRepoID)
+			if errors.Is(err, gitness_store.ErrResourceNotFound) {
+				sourceRepo = deletedSourceRepo
+			} else if err != nil {
 				return fmt.Errorf("failed to fetch source repository: %w", err)
 			}
 
@@ -446,4 +450,9 @@ func (c *ListService) BackfillMetadataForPullReq(
 	}}
 
 	return c.BackfillMetadata(ctx, list, options)
+}
+
+var deletedSourceRepo = &types.RepositoryCore{
+	Identifier: "<deleted-repo>",
+	Path:       "<deleted-repo>",
 }

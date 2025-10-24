@@ -35,6 +35,7 @@ import (
 	"github.com/harness/gitness/git"
 	gitenum "github.com/harness/gitness/git/enum"
 	"github.com/harness/gitness/git/sha"
+	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -204,18 +205,28 @@ func (c *Controller) Merge(
 		return nil, nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}
 
-	sourceRepo := targetRepo
-	sourceWriteParams := targetWriteParams
-	if pr.SourceRepoID != pr.TargetRepoID {
-		sourceWriteParams, err = controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, sourceRepo)
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to create RPC write params: %w", err)
-		}
+	var sourceRepo *types.RepositoryCore
+	var sourceWriteParams git.WriteParams
 
-		sourceRepo, err = c.repoFinder.FindByID(ctx, pr.SourceRepoID)
-		if err != nil {
+	switch {
+	case pr.SourceRepoID == nil:
+		// the source repo is purged
+	case *pr.SourceRepoID != pr.TargetRepoID:
+		// if the source repo is nil, it's soft deleted
+		sourceRepo, err = c.repoFinder.FindByID(ctx, *pr.SourceRepoID)
+		if err != nil && !errors.Is(err, gitness_store.ErrResourceNotFound) {
 			return nil, nil, fmt.Errorf("failed to get source repository: %w", err)
 		}
+
+		if sourceRepo != nil {
+			sourceWriteParams, err = controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, sourceRepo)
+			if err != nil {
+				return nil, nil, fmt.Errorf("failed to create RPC write params: %w", err)
+			}
+		}
+	default:
+		sourceRepo = targetRepo
+		sourceWriteParams = targetWriteParams
 	}
 
 	getHeadRef, err := c.git.GetRef(ctx, git.GetRefParams{
@@ -243,7 +254,7 @@ func (c *Controller) Merge(
 		return nil, nil, fmt.Errorf("failed to list status checks: %w", err)
 	}
 
-	codeOwnerWithApproval, err := c.codeOwners.Evaluate(ctx, sourceRepo, pr, reviewers)
+	codeOwnerWithApproval, err := c.codeOwners.Evaluate(ctx, targetRepo, pr, reviewers)
 	// check for error and ignore if it is codeowners file not found else throw error
 	if err != nil && !errors.Is(err, codeowners.ErrNotFound) {
 		return nil, nil, fmt.Errorf("CODEOWNERS evaluation failed: %w", err)
@@ -267,7 +278,9 @@ func (c *Controller) Merge(
 		return nil, nil, fmt.Errorf("failed to verify protection rules: %w", err)
 	}
 
-	deleteSourceBranch := pr.TargetRepoID == pr.SourceRepoID && (in.DeleteSourceBranch || ruleOut.DeleteSourceBranch)
+	// only delete the source branch if it's the source repository is the same as the target repository.
+	deleteSourceBranch := pr.SourceRepoID != nil && pr.TargetRepoID == *pr.SourceRepoID &&
+		(in.DeleteSourceBranch || ruleOut.DeleteSourceBranch)
 
 	if in.DryRunRules {
 		err := c.backfillApprovalInfo(ctx, ruleOut.DefaultReviewerApprovals)
@@ -472,7 +485,13 @@ func (c *Controller) Merge(
 	if in.Title == "" {
 		switch in.Method {
 		case enum.MergeMethodMerge:
-			in.Title = fmt.Sprintf("Merge branch '%s' of %s (#%d)", pr.SourceBranch, sourceRepo.Path, pr.Number)
+			if sourceRepo == nil {
+				in.Title = fmt.Sprintf("Merge branch '%s' of unknown repository (#%d)",
+					pr.SourceBranch, pr.Number)
+			} else {
+				in.Title = fmt.Sprintf("Merge branch '%s' of %s (#%d)", pr.SourceBranch,
+					sourceRepo.Path, pr.Number)
+			}
 		case enum.MergeMethodSquash:
 			in.Title = fmt.Sprintf("%s (#%d)", pr.Title, pr.Number)
 		case enum.MergeMethodRebase, enum.MergeMethodFastForward:
@@ -681,9 +700,9 @@ func (c *Controller) Merge(
 			session.Principal,
 			audit.NewResource(
 				audit.ResourceTypeRepository,
-				sourceRepo.Identifier,
+				targetRepo.Identifier,
 				audit.RepoPath,
-				sourceRepo.Path,
+				targetRepo.Path,
 				audit.BypassedResourceType,
 				audit.BypassedResourceTypePullRequest,
 				audit.BypassedResourceName,
@@ -691,17 +710,17 @@ func (c *Controller) Merge(
 				audit.ResourceName,
 				fmt.Sprintf(
 					audit.BypassPullReqLabelFormat,
-					sourceRepo.Identifier,
+					targetRepo.Identifier,
 					strconv.FormatInt(pr.Number, 10),
 				),
 				audit.BypassAction,
 				audit.BypassActionMerged,
 			),
 			audit.ActionBypassed,
-			paths.Parent(sourceRepo.Path),
+			paths.Parent(targetRepo.Path),
 			audit.WithNewObject(audit.PullRequestObject{
 				PullReq:        *pr,
-				RepoPath:       sourceRepo.Path,
+				RepoPath:       targetRepo.Path,
 				RuleViolations: violations,
 			}),
 		)
@@ -713,10 +732,10 @@ func (c *Controller) Merge(
 	err = c.instrumentation.Track(ctx, instrument.Event{
 		Type:      instrument.EventTypeMergePullRequest,
 		Principal: session.Principal.ToPrincipalInfo(),
-		Path:      sourceRepo.Path,
+		Path:      targetRepo.Path,
 		Properties: map[instrument.Property]any{
-			instrument.PropertyRepositoryID:   sourceRepo.ID,
-			instrument.PropertyRepositoryName: sourceRepo.Identifier,
+			instrument.PropertyRepositoryID:   targetRepo.ID,
+			instrument.PropertyRepositoryName: targetRepo.Identifier,
 			instrument.PropertyPullRequestID:  pr.Number,
 			instrument.PropertyMergeStrategy:  in.Method,
 		},

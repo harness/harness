@@ -138,6 +138,9 @@ func (r RepositoryInfo) MarshalJSON() ([]byte, error) {
 
 // repositoryInfoFrom gets the RepositoryInfo from a types.Repository.
 func repositoryInfoFrom(ctx context.Context, repo *types.Repository, urlProvider url.Provider) RepositoryInfo {
+	if repo == nil {
+		return RepositoryInfo{}
+	}
 	return RepositoryInfo{
 		ID:            repo.ID,
 		Path:          repo.Path,
@@ -158,7 +161,7 @@ type PullReqInfo struct {
 	IsDraft       bool              `json:"is_draft"`
 	Title         string            `json:"title"`
 	Description   string            `json:"description"`
-	SourceRepoID  int64             `json:"source_repo_id"`
+	SourceRepoID  *int64            `json:"source_repo_id"`
 	SourceBranch  string            `json:"source_branch"`
 	TargetRepoID  int64             `json:"target_repo_id"`
 	TargetBranch  string            `json:"target_branch"`

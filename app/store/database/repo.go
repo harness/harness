@@ -303,7 +303,6 @@ func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 			,repo_description = :repo_description
 			,repo_default_branch = :repo_default_branch
 			,repo_pullreq_seq = :repo_pullreq_seq
-			,repo_num_forks = :repo_num_forks
 			,repo_num_pulls = :repo_num_pulls
 			,repo_num_closed_pulls = :repo_num_closed_pulls
 			,repo_num_open_pulls = :repo_num_open_pulls
@@ -811,6 +810,35 @@ func (s *RepoStore) ListAll(
 	}
 
 	return s.mapToRepos(ctx, dst)
+}
+
+func (s *RepoStore) UpdateNumForks(ctx context.Context, repoID int64, delta int64) error {
+	query := "UPDATE repositories SET repo_num_forks = repo_num_forks + $1 WHERE repo_id = $2"
+
+	if _, err := dbtx.GetAccessor(ctx, s.db).ExecContext(ctx, query, delta, repoID); err != nil {
+		return database.ProcessSQLErrorf(ctx, err, "failed updating number of forks")
+	}
+
+	return nil
+}
+
+func (s *RepoStore) ClearForkID(ctx context.Context, repoUpstreamID int64) error {
+	stmt := database.Builder.Update("repositories").
+		Set("repo_fork_id", nil).
+		Where("repo_fork_id = ?", repoUpstreamID)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return errors.Wrap(err, "failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+	_, err = db.ExecContext(ctx, sql, args...)
+	if err != nil {
+		return database.ProcessSQLErrorf(ctx, err, "failed to clear fork ID")
+	}
+
+	return nil
 }
 
 func (s *RepoStore) mapToRepo(

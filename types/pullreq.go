@@ -41,7 +41,7 @@ type PullReq struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 
-	SourceRepoID int64  `json:"source_repo_id"`
+	SourceRepoID *int64 `json:"source_repo_id"`
 	SourceBranch string `json:"source_branch"`
 	SourceSHA    string `json:"source_sha"`
 	TargetRepoID int64  `json:"target_repo_id"`

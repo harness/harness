@@ -74,11 +74,11 @@ type pullReq struct {
 	Title       string `db:"pullreq_title"`
 	Description string `db:"pullreq_description"`
 
-	SourceRepoID int64  `db:"pullreq_source_repo_id"`
-	SourceBranch string `db:"pullreq_source_branch"`
-	SourceSHA    string `db:"pullreq_source_sha"`
-	TargetRepoID int64  `db:"pullreq_target_repo_id"`
-	TargetBranch string `db:"pullreq_target_branch"`
+	SourceRepoID null.Int `db:"pullreq_source_repo_id"`
+	SourceBranch string   `db:"pullreq_source_branch"`
+	SourceSHA    string   `db:"pullreq_source_sha"`
+	TargetRepoID int64    `db:"pullreq_target_repo_id"`
+	TargetBranch string   `db:"pullreq_target_branch"`
 
 	ActivitySeq int64 `db:"pullreq_activity_seq"`
 
@@ -868,7 +868,7 @@ func mapPullReq(pr *pullReq) *types.PullReq {
 		UnresolvedCount:         pr.UnresolvedCount,
 		Title:                   pr.Title,
 		Description:             pr.Description,
-		SourceRepoID:            pr.SourceRepoID,
+		SourceRepoID:            pr.SourceRepoID.Ptr(),
 		SourceBranch:            pr.SourceBranch,
 		SourceSHA:               pr.SourceSHA,
 		TargetRepoID:            pr.TargetRepoID,
@@ -918,7 +918,7 @@ func mapInternalPullReq(pr *types.PullReq) *pullReq {
 		UnresolvedCount:         pr.UnresolvedCount,
 		Title:                   pr.Title,
 		Description:             pr.Description,
-		SourceRepoID:            pr.SourceRepoID,
+		SourceRepoID:            null.IntFromPtr(pr.SourceRepoID),
 		SourceBranch:            pr.SourceBranch,
 		SourceSHA:               pr.SourceSHA,
 		TargetRepoID:            pr.TargetRepoID,

@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/git"
 	gitenum "github.com/harness/gitness/git/enum"
 	"github.com/harness/gitness/git/sha"
+	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -115,9 +116,15 @@ func (s *Service) updatePullReqOnBranchUpdate(ctx context.Context,
 
 		// Pull git objects from the source repo into the target repo if this is a cross repo pull request.
 
-		if pr.SourceRepoID != pr.TargetRepoID {
-			sourceRepo, err := s.repoFinder.FindByID(ctx, pr.SourceRepoID)
-			if err != nil {
+		if pr.SourceRepoID == nil {
+			return events.NewDiscardEventError(fmt.Errorf("pull request ID=%d has no source repo ID", pr.ID))
+		}
+
+		if *pr.SourceRepoID != pr.TargetRepoID {
+			sourceRepo, err := s.repoFinder.FindByID(ctx, *pr.SourceRepoID)
+			if errors.Is(err, gitness_store.ErrResourceNotFound) {
+				return events.NewDiscardEventError(fmt.Errorf("pull request ID=%d source repo not found ID", pr.ID))
+			} else if err != nil {
 				return fmt.Errorf("failed to get source repo git info: %w", err)
 			}
 

@@ -317,7 +317,7 @@ func (c *Controller) Create(
 			IsDraft:           in.IsDraft,
 			Title:             in.Title,
 			Description:       in.Description,
-			SourceRepoID:      sourceRepo.ID,
+			SourceRepoID:      &sourceRepo.ID,
 			SourceBranch:      in.SourceBranch,
 			SourceSHA:         sourceSHA.String(),
 			TargetRepoID:      targetRepo.ID,

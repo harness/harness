@@ -37,7 +37,7 @@ func (s *Service) handleEventPullReqCreated(ctx context.Context,
 	if err != nil {
 		return fmt.Errorf("could not augment pull request info: %w", err)
 	}
-	return s.trigger(ctx, event.Payload.SourceRepoID, enum.TriggerActionPullReqCreated, hook)
+	return s.trigger(ctx, event.Payload.TargetRepoID, enum.TriggerActionPullReqCreated, hook)
 }
 
 func (s *Service) handleEventPullReqReopened(ctx context.Context,
@@ -52,7 +52,7 @@ func (s *Service) handleEventPullReqReopened(ctx context.Context,
 	if err != nil {
 		return fmt.Errorf("could not augment pull request info: %w", err)
 	}
-	return s.trigger(ctx, event.Payload.SourceRepoID, enum.TriggerActionPullReqReopened, hook)
+	return s.trigger(ctx, event.Payload.TargetRepoID, enum.TriggerActionPullReqReopened, hook)
 }
 
 func (s *Service) handleEventPullReqBranchUpdated(ctx context.Context,
@@ -67,7 +67,7 @@ func (s *Service) handleEventPullReqBranchUpdated(ctx context.Context,
 	if err != nil {
 		return fmt.Errorf("could not augment pull request info: %w", err)
 	}
-	return s.trigger(ctx, event.Payload.SourceRepoID, enum.TriggerActionPullReqBranchUpdated, hook)
+	return s.trigger(ctx, event.Payload.TargetRepoID, enum.TriggerActionPullReqBranchUpdated, hook)
 }
 
 func (s *Service) handleEventPullReqClosed(ctx context.Context,
@@ -82,7 +82,7 @@ func (s *Service) handleEventPullReqClosed(ctx context.Context,
 	if err != nil {
 		return fmt.Errorf("could not augment pull request info: %w", err)
 	}
-	return s.trigger(ctx, event.Payload.SourceRepoID, enum.TriggerActionPullReqClosed, hook)
+	return s.trigger(ctx, event.Payload.TargetRepoID, enum.TriggerActionPullReqClosed, hook)
 }
 
 func (s *Service) handleEventPullReqMerged(
@@ -99,7 +99,7 @@ func (s *Service) handleEventPullReqMerged(
 	if err != nil {
 		return fmt.Errorf("could not augment pull request info: %w", err)
 	}
-	return s.trigger(ctx, event.Payload.SourceRepoID, enum.TriggerActionPullReqMerged, hook)
+	return s.trigger(ctx, event.Payload.TargetRepoID, enum.TriggerActionPullReqMerged, hook)
 }
 
 // augmentPullReqInfo adds in information into the hook pertaining to the pull request

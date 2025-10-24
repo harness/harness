@@ -316,7 +316,7 @@ func (r *repoImportState) convertPullReq(
 		UnresolvedCount: 0,
 		Title:           extPullReq.Title,
 		Description:     extPullReq.Body,
-		SourceRepoID:    repo.ID,
+		SourceRepoID:    &repo.ID,
 		SourceBranch:    extPullReq.Head.Name,
 		SourceSHA:       extPullReq.Head.SHA,
 		TargetRepoID:    repo.ID,
