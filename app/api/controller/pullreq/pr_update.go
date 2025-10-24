@@ -68,21 +68,25 @@ func (c *Controller) Update(ctx context.Context,
 		return nil, fmt.Errorf("failed to get pull request by number: %w", err)
 	}
 
-	var sourceRepo *types.RepositoryCore
-
-	if pr.SourceRepoID != nil && *pr.SourceRepoID != pr.TargetRepoID {
-		sourceRepo, err = c.repoFinder.FindByID(ctx, *pr.SourceRepoID)
+	switch {
+	case pr.SourceRepoID == nil:
+		// the source repo is purged
+	case *pr.SourceRepoID != pr.TargetRepoID:
+		// if the source repo is nil, it's soft deleted
+		sourceRepo, err := c.repoFinder.FindByID(ctx, *pr.SourceRepoID)
 		if err != nil && !errors.Is(err, gitness_store.ErrResourceNotFound) {
 			return nil, fmt.Errorf("failed to get source repo by id: %w", err)
 		}
-	}
 
-	if sourceRepo != nil {
-		if err = apiauth.CheckRepo(ctx, c.authorizer, session, sourceRepo, enum.PermissionRepoPush); err != nil {
-			return nil, fmt.Errorf("failed to acquire access to source repo: %w", err)
+		if sourceRepo != nil {
+			if err = apiauth.CheckRepo(ctx, c.authorizer, session, sourceRepo, enum.PermissionRepoPush); err != nil {
+				return nil, fmt.Errorf("failed to acquire access to source repo: %w", err)
+			}
 		}
-	} else if err = apiauth.CheckRepo(ctx, c.authorizer, session, targetRepo, enum.PermissionRepoPush); err != nil {
-		return nil, fmt.Errorf("failed to acquire access to target repo: %w", err)
+	default:
+		if err = apiauth.CheckRepo(ctx, c.authorizer, session, targetRepo, enum.PermissionRepoPush); err != nil {
+			return nil, fmt.Errorf("failed to acquire access to target repo: %w", err)
+		}
 	}
 
 	titleOld := pr.Title

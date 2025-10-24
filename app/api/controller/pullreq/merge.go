@@ -486,7 +486,7 @@ func (c *Controller) Merge(
 		switch in.Method {
 		case enum.MergeMethodMerge:
 			if sourceRepo == nil {
-				in.Title = fmt.Sprintf("Merge branch '%s' of unknown repository (#%d)",
+				in.Title = fmt.Sprintf("Merge branch '%s' of deleted fork (#%d)",
 					pr.SourceBranch, pr.Number)
 			} else {
 				in.Title = fmt.Sprintf("Merge branch '%s' of %s (#%d)", pr.SourceBranch,

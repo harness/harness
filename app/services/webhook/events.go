@@ -103,6 +103,9 @@ func (s *Service) triggerForEventWithPullReq(
 	sourceRepo := targetRepo
 	if *pr.SourceRepoID != pr.TargetRepoID {
 		sourceRepo, err = s.findRepositoryForEvent(ctx, *pr.SourceRepoID)
+		if errors.Is(err, store.ErrResourceNotFound) {
+			return events.NewDiscardEventErrorf("source repo for PR id '%d' doesn't exist anymore", pr.ID)
+		}
 		if err != nil {
 			return fmt.Errorf("failed to get pr source repo: %w", err)
 		}

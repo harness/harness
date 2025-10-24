@@ -78,31 +78,40 @@ func (c *Controller) State(ctx context.Context,
 		return nil, fmt.Errorf("failed to get pull request by number: %w", err)
 	}
 
-	id := pr.ID
-
-	var sourceRepo *types.RepositoryCore
-
-	if pr.SourceRepoID != nil && *pr.SourceRepoID != pr.TargetRepoID {
-		sourceRepo, err = c.repoFinder.FindByID(ctx, *pr.SourceRepoID)
-		if err != nil && !errors.Is(err, gitness_store.ErrResourceNotFound) {
-			return nil, fmt.Errorf("failed to get source repo by id: %w", err)
-		}
-	}
-
-	if sourceRepo != nil {
-		if err = apiauth.CheckRepo(ctx, c.authorizer, session, sourceRepo, enum.PermissionRepoPush); err != nil {
-			return nil, fmt.Errorf("failed to acquire access to source repo: %w", err)
-		}
-	} else if err = apiauth.CheckRepo(ctx, c.authorizer, session, targetRepo, enum.PermissionRepoPush); err != nil {
-		return nil, fmt.Errorf("failed to acquire access to target repo: %w", err)
-	}
-
 	if pr.State == enum.PullReqStateMerged {
 		return nil, usererror.BadRequest("Merged pull requests can't be modified.")
 	}
 
 	if pr.State == in.State && in.IsDraft == pr.IsDraft {
 		return pr, nil // no changes are necessary: state is the same and is_draft hasn't change
+	}
+
+	id := pr.ID
+
+	var sourceRepo *types.RepositoryCore
+
+	switch {
+	case pr.SourceRepoID == nil:
+		// the source repo is purged
+		sourceRepo = nil
+	case *pr.SourceRepoID != pr.TargetRepoID:
+		// if the source repo is nil, it's soft deleted
+		sourceRepo, err = c.repoFinder.FindByID(ctx, *pr.SourceRepoID)
+		if err != nil && !errors.Is(err, gitness_store.ErrResourceNotFound) {
+			return nil, fmt.Errorf("failed to get source repo by id: %w", err)
+		}
+
+		if sourceRepo != nil {
+			if err = apiauth.CheckRepo(ctx, c.authorizer, session, sourceRepo, enum.PermissionRepoPush); err != nil {
+				return nil, fmt.Errorf("failed to acquire access to target repo: %w", err)
+			}
+		}
+	default:
+		sourceRepo = targetRepo
+
+		if err = apiauth.CheckRepo(ctx, c.authorizer, session, targetRepo, enum.PermissionRepoPush); err != nil {
+			return nil, fmt.Errorf("failed to acquire access to source repo: %w", err)
+		}
 	}
 
 	targetWriteParams, err := controller.CreateRPCSystemReferencesWriteParams(ctx, c.urlProvider, session, targetRepo)
@@ -127,7 +136,7 @@ func (c *Controller) State(ctx context.Context,
 	//nolint:nestif // refactor if needed
 	if pr.State != enum.PullReqStateOpen && in.State == enum.PullReqStateOpen {
 		if sourceRepo == nil {
-			return nil, usererror.BadRequest("Source repository doesn't exists.")
+			return nil, usererror.BadRequest("Forked repository doesn't exist anymore.")
 		}
 
 		if sourceSHA, err = c.verifyBranchExistence(ctx, sourceRepo, pr.SourceBranch); err != nil {
