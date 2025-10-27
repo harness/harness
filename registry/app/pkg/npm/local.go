@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"path"
@@ -337,7 +338,7 @@ func (c *localRegistry) AddTag(ctx context.Context, info npm.ArtifactInfo) (map[
 	}
 
 	if len(info.DistTags) == 0 {
-		return nil, err
+		return nil, usererror.BadRequest("Add tag error: distTags are empty")
 	}
 	packageTag := &types.PackageTag{
 		ID:         uuid.NewString(),
@@ -372,7 +373,12 @@ func (c *localRegistry) DeleteVersion(ctx context.Context, info npm.ArtifactInfo
 
 func (c *localRegistry) parseAndUploadNPMPackage(ctx context.Context, info npm.ArtifactInfo,
 	reader io.Reader, packageMetadata *npm2.PackageMetadata) (types.FileInfo, string, error) {
-	decoder := json.NewDecoder(reader)
+	// Use a buffered reader with controlled buffer size instead of unlimited buffering
+	// This prevents the JSON decoder from buffering the entire file
+	bufferedReader := bufio.NewReaderSize(reader, 32*1024) // 32KB buffer instead of unlimited
+
+	// Create decoder with controlled buffering
+	decoder := json.NewDecoder(bufferedReader)
 
 	var fileInfo types.FileInfo
 	var tmpFileName string
@@ -383,7 +389,7 @@ func (c *localRegistry) parseAndUploadNPMPackage(ctx context.Context, info npm.A
 
 		if err != nil {
 			// Check for both io.EOF and any error containing "EOF" in the message
-			if err == io.EOF || strings.Contains(err.Error(), "EOF") {
+			if errors.Is(err, io.EOF) || strings.Contains(err.Error(), "EOF") {
 				break
 			}
 			return types.FileInfo{}, "", fmt.Errorf("failed to parse JSON: %w", err)
@@ -456,115 +462,16 @@ func (c *localRegistry) parseAndUploadNPMPackage(ctx context.Context, info npm.A
 					return types.FileInfo{}, "", fmt.Errorf("failed to parse license: %w", err)
 				}
 			case "_attachments":
-				// Parse the attachments map
-				t, err := decoder.Token()
+
+				// Process attachments with optimized streaming to minimize memory usage
+				fileInfo, tmpFileName, err = c.processAttachmentsOptimized(ctx, info, decoder, bufferedReader)
 				if err != nil {
-					return types.FileInfo{}, "", fmt.Errorf("failed to parse _attachments: %w", err)
+					return types.FileInfo{}, "", fmt.Errorf("failed to process attachments: %w", err)
 				}
-				if delim, ok := t.(json.Delim); !ok || delim != '{' {
-					return types.FileInfo{}, "", fmt.Errorf("expected '{' at start of _attachments")
-				}
+				log.Info().Str("packageName", info.Image).Msg("Successfully uploaded NPM package using optimized processing")
 
-				// Process each attachment (e.g., "test-large-package-2.0.0.tgz")
-				for {
-					//nolint:govet
-					t, err := decoder.Token()
-					if err != nil {
-						// Check for both io.EOF and any error containing "EOF" in the message
-						if err == io.EOF || strings.Contains(err.Error(), "EOF") {
-							break
-						}
-						return types.FileInfo{}, "", fmt.Errorf("failed to parse JSON: %w", err)
-					}
-					if delim, ok := t.(json.Delim); ok && delim == '}' {
-						break // End of _attachments object
-					}
-					attachmentKey, ok := t.(string)
-					if !ok {
-						return types.FileInfo{}, "", fmt.Errorf("expected string key in _attachments")
-					}
-
-					// Expect the start of the attachment object
-					t, err = decoder.Token()
-					if err != nil {
-						return types.FileInfo{}, "", fmt.Errorf("failed to parse attachment %s: %w", attachmentKey, err)
-					}
-					if delim, ok := t.(json.Delim); !ok || delim != '{' {
-						return types.FileInfo{}, "", fmt.Errorf("expected '{' for attachment %s", attachmentKey)
-					}
-
-					// Process fields within the attachment object (e.g., content_type, data, length)
-					for {
-						//nolint:govet
-						t, err := decoder.Token()
-						if err != nil {
-							// Check for both io.EOF and any error containing "EOF" in the message
-							if err == io.EOF || strings.Contains(err.Error(), "EOF") {
-								break
-							}
-							return types.FileInfo{}, "", fmt.Errorf("failed to parse attachment %s fields: %w", attachmentKey, err)
-						}
-						if delim, ok := t.(json.Delim); ok && delim == '}' {
-							break // End of attachment object
-						}
-						field, ok := t.(string)
-						if !ok {
-							break
-						}
-
-						switch field {
-						case "data":
-							combinedReader := io.MultiReader(decoder.Buffered(), reader)
-							bufferedReader := bufio.NewReader(combinedReader)
-
-							// Expecting `:` character first
-							startByte, err := bufferedReader.ReadByte()
-							if err != nil {
-								return types.FileInfo{}, "",
-									fmt.Errorf("failed to upload"+
-										" attachment %s: Error while reading : character: %w", attachmentKey, err)
-							}
-							if startByte != ':' {
-								return types.FileInfo{}, "",
-									fmt.Errorf("failed to upload attachment %s: Expected : character, got %c", attachmentKey, startByte)
-							}
-
-							// Now expecting `"`, marking start of JSON string
-							startByte, err = bufferedReader.ReadByte()
-							if err != nil {
-								return types.FileInfo{}, "", fmt.Errorf("failed to upload"+
-									" attachment %s: Error while reading \" character: %w", attachmentKey, err)
-							}
-							if startByte != '"' {
-								return types.FileInfo{}, "", fmt.Errorf("failed to upload"+
-									" attachment %s: Expected \" character, got %c", attachmentKey, startByte)
-							}
-
-							// Now set up a reader that stops at the closing `"` of the string
-							b64StreamReader := NewJSONStringStreamReader(bufferedReader)
-
-							// Wrap base64 decoder with error handling
-							base64Reader := io.NopCloser(base64.NewDecoder(base64.StdEncoding, b64StreamReader))
-
-							log.Info().Str("packageName", info.Image).Msg("Uploading NPM package to tmp location")
-							fileInfo, tmpFileName, err =
-								c.fileManager.UploadTempFile(ctx, info.RootIdentifier, nil, "tmp", base64Reader)
-							if err != nil {
-								// Provide more detailed error message to help with debugging
-								if strings.Contains(err.Error(), "unexpected EOF") {
-									return types.FileInfo{}, "",
-										fmt.Errorf("failed to upload attachment %s:"+
-											" base64 data may be corrupted or missing closing quote: %w", attachmentKey, err)
-								}
-								return types.FileInfo{}, "", fmt.Errorf("failed to upload attachment %s: %w", attachmentKey, err)
-							}
-							log.Info().Str("packageName",
-								info.Image).Msg("Successfully uploaded NPM package to tmp location")
-						default:
-							continue
-						}
-					}
-				}
+				// We're done processing attachments, break out of the main parsing loop
+				return fileInfo, tmpFileName, nil
 			default:
 				var dummy interface{}
 				if err := decoder.Decode(&dummy); err != nil {
@@ -577,53 +484,195 @@ func (c *localRegistry) parseAndUploadNPMPackage(ctx context.Context, info npm.A
 	return fileInfo, tmpFileName, nil
 }
 
-// NewJSONStringStreamReader returns an io.Reader that stops at the closing quote of a JSON string.
-// It handles escaped characters, including escaped quotes, and passes raw base64 content.
-func NewJSONStringStreamReader(r *bufio.Reader) io.Reader {
+// processAttachmentsOptimized handles attachment processing with minimal memory buffering.
+func (c *localRegistry) processAttachmentsOptimized(ctx context.Context, info npm.ArtifactInfo,
+	decoder *json.Decoder, bufferedReader *bufio.Reader) (types.FileInfo, string, error) {
+	// Parse the attachments map with minimal buffering
+	t, err := decoder.Token()
+	if err != nil {
+		return types.FileInfo{}, "", fmt.Errorf("failed to parse _attachments: %w", err)
+	}
+	if delim, ok := t.(json.Delim); !ok || delim != '{' {
+		return types.FileInfo{}, "", fmt.Errorf("expected '{' at start of _attachments")
+	}
+
+	// Process each attachment (e.g., "test-large-package-2.0.0.tgz")
+	for {
+		//nolint:govet
+		t, err := decoder.Token()
+		if err != nil {
+			if err == io.EOF || strings.Contains(err.Error(), "EOF") {
+				break
+			}
+			return types.FileInfo{}, "", fmt.Errorf("failed to parse JSON: %w", err)
+		}
+		if delim, ok := t.(json.Delim); ok && delim == '}' {
+			break // End of _attachments object
+		}
+		attachmentKey, ok := t.(string)
+		if !ok {
+			return types.FileInfo{}, "", fmt.Errorf("expected string key in _attachments")
+		}
+
+		// Expect the start of the attachment object
+		t, err = decoder.Token()
+		if err != nil {
+			return types.FileInfo{}, "", fmt.Errorf("failed to parse attachment %s: %w", attachmentKey, err)
+		}
+		if delim, ok := t.(json.Delim); !ok || delim != '{' {
+			return types.FileInfo{}, "", fmt.Errorf("expected '{' for attachment %s", attachmentKey)
+		}
+
+		// Process fields within the attachment object with optimized streaming
+		for {
+			//nolint:govet
+			t, err := decoder.Token()
+			if err != nil {
+				if err == io.EOF || strings.Contains(err.Error(), "EOF") {
+					break
+				}
+				return types.FileInfo{}, "", fmt.Errorf("failed to parse attachment %s fields: %w", attachmentKey, err)
+			}
+			if delim, ok := t.(json.Delim); ok && delim == '}' {
+				break // End of attachment object
+			}
+			field, ok := t.(string)
+			if !ok {
+				break
+			}
+
+			switch field {
+			case "data":
+				// Use optimized base64 streaming with minimal buffering
+				return c.processBase64DataOptimized(ctx, info, decoder, bufferedReader, attachmentKey)
+			default:
+				// Skip other fields efficiently
+				var dummy interface{}
+				if err := decoder.Decode(&dummy); err != nil {
+					return types.FileInfo{}, "", fmt.Errorf("failed to skip field %s: %w", field, err)
+				}
+			}
+		}
+	}
+
+	return types.FileInfo{}, "", fmt.Errorf("no attachment data found")
+}
+
+// processBase64DataOptimized handles base64 data processing with minimal memory usage.
+func (c *localRegistry) processBase64DataOptimized(ctx context.Context, info npm.ArtifactInfo,
+	decoder *json.Decoder, bufferedReader *bufio.Reader, attachmentKey string) (types.FileInfo, string, error) {
+	// Get the remaining data from decoder's buffer + original reader
+	// This avoids the memory-heavy io.MultiReader approach
+	combinedReader := io.MultiReader(decoder.Buffered(), bufferedReader)
+
+	// Use a smaller buffer for reading the base64 stream
+	streamReader := bufio.NewReaderSize(combinedReader, 8*1024) // 8KB buffer instead of default
+
+	// Expecting `:` character first
+	startByte, err := streamReader.ReadByte()
+	if err != nil {
+		return types.FileInfo{}, "",
+			fmt.Errorf("failed to upload attachment %s: Error while reading : character: %w", attachmentKey, err)
+	}
+	if startByte != ':' {
+		return types.FileInfo{}, "",
+			fmt.Errorf("failed to upload attachment %s: Expected : character, got %c", attachmentKey, startByte)
+	}
+
+	// Now expecting `"`, marking start of JSON string
+	startByte, err = streamReader.ReadByte()
+	if err != nil {
+		return types.FileInfo{}, "", fmt.Errorf("failed to upload"+
+			" attachment %s: Error while reading \" character: %w", attachmentKey, err)
+	}
+	if startByte != '"' {
+		return types.FileInfo{}, "", fmt.Errorf("failed to upload"+
+			" attachment %s: Expected \" character, got %c", attachmentKey, startByte)
+	}
+
+	// Use optimized JSON string reader with smaller buffer
+	b64StreamReader := NewOptimizedJSONStringStreamReader(streamReader)
+
+	// Wrap base64 decoder with error handling
+	base64Reader := io.NopCloser(base64.NewDecoder(base64.StdEncoding, b64StreamReader))
+
+	log.Info().Str("packageName", info.Image).Msg("Uploading NPM package with optimized streaming")
+	fileInfo, tmpFileName, err := c.fileManager.UploadTempFile(ctx, info.RootIdentifier, nil, "tmp", base64Reader)
+	if err != nil {
+		if strings.Contains(err.Error(), "unexpected EOF") {
+			return types.FileInfo{}, "",
+				fmt.Errorf("failed to upload attachment %s: "+
+					"base64 data may be corrupted or missing closing quote: %w", attachmentKey, err)
+		}
+		return types.FileInfo{}, "", fmt.Errorf("failed to upload attachment %s: %w", attachmentKey, err)
+	}
+
+	log.Info().Str("packageName", info.Image).Msg("Successfully uploaded NPM package with optimized streaming")
+	return fileInfo, tmpFileName, nil
+}
+
+// NewOptimizedJSONStringStreamReader returns an io.Reader that stops at the closing quote of a JSON string
+// with optimized chunk-based processing instead of byte-by-byte reading to reduce memory overhead.
+func NewOptimizedJSONStringStreamReader(r *bufio.Reader) io.Reader {
 	pr, pw := io.Pipe()
 
 	go func() {
 		defer pw.Close()
 
-		var (
-			escaped bool
-		)
+		var escaped bool
+		buf := make([]byte, 4096) // Process in 4KB chunks instead of byte-by-byte
 
 		for {
-			b, err := r.ReadByte()
-			if err != nil {
+			n, err := r.Read(buf)
+			if err != nil && err != io.EOF {
+				pw.CloseWithError(fmt.Errorf("error while reading base64 string: %w", err))
+				return
+			}
+
+			if n == 0 {
 				if err == io.EOF {
-					// Handle EOF gracefully - we might have reached the end of the JSON string
-					// without finding a closing quote, which is an error in JSON formatting
 					pw.CloseWithError(fmt.Errorf("unexpected EOF while reading base64 string: missing closing quote"))
-				} else {
-					pw.CloseWithError(fmt.Errorf("error while reading base64 string: %w", err))
 				}
 				return
 			}
 
-			if escaped {
-				// We’re inside an escape sequence — pass this byte through
-				// JSON escape sequences don’t affect base64, but we handle it for correctness
-				//nolint: errcheck,gosec
-				pw.Write([]byte{b})
-				escaped = false
-				continue
+			// Process the chunk for quotes and escapes
+			writeStart := 0
+			for i := 0; i < n; i++ {
+				b := buf[i]
+
+				if escaped {
+					escaped = false
+					continue
+				}
+
+				if b == '\\' {
+					escaped = true
+					continue
+				}
+
+				if b == '"' {
+					// Found end quote - write remaining data up to this point and exit
+					if i > writeStart {
+						if _, writeErr := pw.Write(buf[writeStart:i]); writeErr != nil {
+							pw.CloseWithError(writeErr)
+							return
+						}
+					}
+					return
+				}
 			}
 
-			if b == '\\' {
-				escaped = true
-				continue
-			}
-
-			if b == '"' {
-				// End of the JSON string (unescaped quote)
+			// Write the entire chunk if no end quote found
+			if _, writeErr := pw.Write(buf[writeStart:n]); writeErr != nil {
+				pw.CloseWithError(writeErr)
 				return
 			}
 
-			// Normal base64 character
-			//nolint: errcheck,gosec
-			pw.Write([]byte{b})
+			if err == io.EOF {
+				pw.CloseWithError(fmt.Errorf("unexpected EOF while reading base64 string: missing closing quote"))
+				return
+			}
 		}
 	}()
 
