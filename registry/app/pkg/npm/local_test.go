@@ -70,7 +70,7 @@ func TestParseAndUploadNPMPackage_WithAttachment_UploadsData(t *testing.T) {
 	if err != nil {
 		t.Fatalf("storage service init failed: %v", err)
 	}
-	fm := filemanager.NewFileManager(nil, nil, nil, nil, nil, nil, svc)
+	fm := filemanager.NewFileManager(nil, nil, nil, nil, nil, nil, svc, nil)
 
 	// Wire local registry with a real file manager
 	lr := newLocalForTests(&mockLocalBase{}, nil, nil, nil, nil)
@@ -232,6 +232,12 @@ type mockArtifactDAO struct {
 	searchLatestByName      func(ctx context.Context,
 		regID int64, name string, limit int, offset int) (*[]types.Artifact, error)
 	countLatestByName func(ctx context.Context, regID int64, name string) (int64, error)
+}
+
+func (m *mockArtifactDAO) GetLatestArtifactsByRepo(_ context.Context,
+	_ int64, _ int, _ int64) (*[]types.ArtifactMetadata, error) {
+	// TODO implement me
+	panic("implement me")
 }
 
 func (m *mockArtifactDAO) GetByName(ctx context.Context,
