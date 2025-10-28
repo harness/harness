@@ -24,13 +24,6 @@ import (
 type PackageHelper interface {
 	GetPackageType() string
 	GetPathPackageType() string
-	GetDownloadFileCommand(
-		regURL string,
-		artifactName string,
-		version string,
-		isAnonymous bool,
-	) string
-	GetPullCommand(registryURL string, image string, version string) string
 	GetPackageURL(ctx context.Context,
 		rootIdentifier string,
 		registryIdentifier string,

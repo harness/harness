@@ -57,6 +57,11 @@ type RegistryHelper interface {
 		packageTypePathParam string,
 	) string
 
+	GetHostName(
+		ctx context.Context,
+		rootSpace string,
+	) string
+
 	GetArtifactMetadata(
 		artifact types.ArtifactMetadata,
 		pullCommand string,

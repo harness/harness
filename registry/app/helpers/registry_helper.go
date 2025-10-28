@@ -185,6 +185,13 @@ func (r *registryHelper) GetPackageURL(
 	return r.URLProvider.PackageURL(ctx, rootIdentifier+"/"+registryIdentifier, packageTypePathParam)
 }
 
+func (r *registryHelper) GetHostName(
+	ctx context.Context,
+	rootSpace string,
+) string {
+	return common.TrimURLScheme(r.URLProvider.RegistryURL(ctx, rootSpace))
+}
+
 func (r *registryHelper) GetArtifactMetadata(
 	artifact types.ArtifactMetadata,
 	pullCommand string,
