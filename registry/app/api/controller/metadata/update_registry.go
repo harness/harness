@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -278,7 +279,7 @@ func (c *APIController) updateRegistryWithAudit(
 	ctx context.Context, oldRegistry *types.Registry,
 	newRegistry *types.Registry, principal types2.Principal, parentRef string,
 ) error {
-	err := c.updatePublicAccess(ctx, parentRef, newRegistry)
+	err := c.updatePublicAccess(ctx, parentRef, newRegistry, oldRegistry)
 	if err != nil {
 		return err
 	}
@@ -307,6 +308,7 @@ func (c *APIController) updatePublicAccess(
 	ctx context.Context,
 	parentRef string,
 	newRegistry *types.Registry,
+	oldRegistry *types.Registry,
 ) error {
 	space, err := c.SpaceFinder.FindByRef(ctx, parentRef)
 	if err != nil {
@@ -338,18 +340,17 @@ func (c *APIController) updatePublicAccess(
 				return err
 			}
 		}
-		if newRegistry.Type == artifact.RegistryTypeVIRTUAL &&
-			newRegistry.IsPublic &&
-			len(newRegistry.UpstreamProxies) > 0 {
-			err := c.checkIfVirtualHasPrivateUpstreams(ctx, newRegistry.Name, newRegistry.UpstreamProxies)
-			if err != nil {
-				return err
-			}
-		}
 
 		if err = c.PublicAccess.Set(ctx,
 			gitnessenum.PublicResourceTypeRegistry, ref, newRegistry.IsPublic); err != nil {
 			return fmt.Errorf("failed to update artiafct registry public access: %w", err)
+		}
+	}
+	if newRegistry.Type == artifact.RegistryTypeVIRTUAL &&
+		newRegistry.IsPublic && !reflect.DeepEqual(newRegistry.UpstreamProxies, oldRegistry.UpstreamProxies) {
+		err := c.checkIfVirtualHasPrivateUpstreams(ctx, newRegistry.Name, newRegistry.UpstreamProxies)
+		if err != nil {
+			return err
 		}
 	}
 

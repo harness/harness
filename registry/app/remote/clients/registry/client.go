@@ -883,7 +883,7 @@ func (c *client) HeadFile(ctx context.Context, filePath string) (*commons.Respon
 }
 
 func buildFileURL(endpoint, filePath string) string {
-	return fmt.Sprintf("%s/%s", endpoint, filePath)
+	return fmt.Sprintf("%s/%s", strings.TrimSuffix(endpoint, "/"), strings.TrimPrefix(filePath, "/"))
 }
 
 func (c *client) GetURL(_ context.Context, filePath string) string {
