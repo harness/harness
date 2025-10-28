@@ -18,6 +18,7 @@ package rpm
 import (
 	"fmt"
 	"io"
+	"reflect"
 	"strings"
 
 	rpmmetadata "github.com/harness/gitness/registry/app/metadata/rpm"
@@ -46,6 +47,20 @@ func ParsePackage(r io.Reader) (*rpmtypes.Package, error) {
 	nevra, err := rpm.Header.GetNEVRA()
 	if err != nil {
 		return nil, err
+	}
+
+	isSourceRpm := false
+	if rpm.Header != nil {
+		if headerValue := reflect.ValueOf(rpm.Header).Elem(); headerValue.Kind() == reflect.Struct {
+			isSourceField := headerValue.FieldByName("isSource")
+			if isSourceField.IsValid() && isSourceField.Kind() == reflect.Bool {
+				isSourceRpm = isSourceField.Bool()
+			}
+		}
+	}
+
+	if isSourceRpm {
+		nevra.Arch = "src"
 	}
 
 	version := fmt.Sprintf("%s-%s", nevra.Version, nevra.Release)
