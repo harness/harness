@@ -61,5 +61,9 @@ export const UpstreamURLSourceConfig: Record<UpstreamRepositoryURLInputSource, R
   [UpstreamRepositoryURLInputSource.HuggingFace]: {
     label: 'upstreamProxyDetails.createForm.source.huggingface',
     value: UpstreamRepositoryURLInputSource.HuggingFace
+  },
+  [UpstreamRepositoryURLInputSource.Anaconda]: {
+    label: 'upstreamProxyDetails.createForm.source.anaconda',
+    value: UpstreamRepositoryURLInputSource.Anaconda
   }
 }

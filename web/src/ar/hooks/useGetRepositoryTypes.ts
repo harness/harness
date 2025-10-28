@@ -15,10 +15,13 @@
  */
 
 import type { IconName } from '@harnessio/icons'
-import type { FeatureFlags } from '@ar/MFEAppTypes'
+
+import { FeatureFlags } from '@ar/MFEAppTypes'
 import type { StringsMap } from '@ar/frameworks/strings'
-import { RepositoryPackageType } from '@ar/common/types'
+import { Parent, RepositoryPackageType } from '@ar/common/types'
 import { ThumbnailTagEnum } from '@ar/components/Tag/ThumbnailTags'
+
+import { useAppStore } from './useAppStore'
 import { useFeatureFlags } from './useFeatureFlag'
 
 export interface RepositoryTypeListItem {
@@ -29,10 +32,12 @@ export interface RepositoryTypeListItem {
   tooltip?: string
   featureFlag?: FeatureFlags
   tag?: ThumbnailTagEnum
+  parent?: Parent
 }
 
 export const useGetRepositoryTypes = (): RepositoryTypeListItem[] => {
   const featureFlags = useFeatureFlags()
+  const { parent } = useAppStore()
 
   return RepositoryTypes.map(repo => {
     if (repo.disabled && repo.featureFlag && featureFlags[repo.featureFlag]) {
@@ -44,7 +49,7 @@ export const useGetRepositoryTypes = (): RepositoryTypeListItem[] => {
       }
     }
     return repo
-  })
+  }).filter(each => (each.parent ? each.parent === parent : true))
 }
 
 const RepositoryTypes: RepositoryTypeListItem[] = [
@@ -105,6 +110,16 @@ const RepositoryTypes: RepositoryTypeListItem[] = [
     value: RepositoryPackageType.HUGGINGFACE,
     icon: 'huggingface',
     tag: ThumbnailTagEnum.Beta
+  },
+  {
+    label: 'repositoryTypes.conda',
+    value: RepositoryPackageType.CONDA,
+    icon: 'conda-icon',
+    tooltip: 'Coming Soon!',
+    disabled: true,
+    tag: ThumbnailTagEnum.ComingSoon,
+    featureFlag: FeatureFlags.HAR_CONDA_PACKAGE_TYPE,
+    parent: Parent.Enterprise
   },
   {
     label: 'repositoryTypes.debian',

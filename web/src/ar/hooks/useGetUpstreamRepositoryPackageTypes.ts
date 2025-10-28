@@ -16,11 +16,13 @@
 
 import type { IconName } from '@harnessio/icons'
 
-import type { FeatureFlags } from '@ar/MFEAppTypes'
+import { Parent } from '@ar/common/types'
+import { FeatureFlags } from '@ar/MFEAppTypes'
 import type { StringsMap } from '@ar/frameworks/strings'
 import { ThumbnailTagEnum } from '@ar/components/Tag/ThumbnailTags'
 import { UpstreamProxyPackageType } from '@ar/pages/upstream-proxy-details/types'
 
+import { useAppStore } from './useAppStore'
 import { useFeatureFlags } from './useFeatureFlag'
 
 export interface UpstreamRepositoryPackageTypeListItem {
@@ -31,10 +33,12 @@ export interface UpstreamRepositoryPackageTypeListItem {
   tooltip?: string
   featureFlag?: FeatureFlags
   tag?: ThumbnailTagEnum
+  parent?: Parent
 }
 
 export const useGetUpstreamRepositoryPackageTypes = (): UpstreamRepositoryPackageTypeListItem[] => {
   const featureFlags = useFeatureFlags()
+  const { parent } = useAppStore()
 
   return UpstreamProxyPackageTypeList.map(repo => {
     if (repo.disabled && repo.featureFlag && featureFlags[repo.featureFlag]) {
@@ -46,7 +50,7 @@ export const useGetUpstreamRepositoryPackageTypes = (): UpstreamRepositoryPackag
       }
     }
     return repo
-  })
+  }).filter(each => (each.parent ? each.parent === parent : true))
 }
 
 export const UpstreamProxyPackageTypeList: UpstreamRepositoryPackageTypeListItem[] = [
@@ -108,6 +112,16 @@ export const UpstreamProxyPackageTypeList: UpstreamRepositoryPackageTypeListItem
     value: UpstreamProxyPackageType.HUGGINGFACE,
     icon: 'huggingface',
     tag: ThumbnailTagEnum.Beta
+  },
+  {
+    label: 'repositoryTypes.conda',
+    value: UpstreamProxyPackageType.CONDA,
+    icon: 'conda-icon',
+    tooltip: 'Coming Soon!',
+    disabled: true,
+    tag: ThumbnailTagEnum.ComingSoon,
+    featureFlag: FeatureFlags.HAR_CONDA_PACKAGE_TYPE,
+    parent: Parent.Enterprise
   },
   {
     label: 'repositoryTypes.debian',

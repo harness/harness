@@ -26,6 +26,7 @@ import { RPMRepositoryType } from './RPMRepository/RPMRepositoryType'
 import { CargoRepositoryType } from './CargoRepository/CargoRepositoryType'
 import { GoRepositoryType } from './GoRepository/GoRepositoryType'
 import { HuggingfaceRepositoryType } from './HuggingfaceRepositoryType/HuggingfaceRepositoryType'
+import { CondaRepositoryType } from './CondaRepository/CondaRepositoryType'
 
 repositoryFactory.registerStep(new DockerRepositoryType())
 repositoryFactory.registerStep(new HelmRepositoryType())
@@ -38,3 +39,4 @@ repositoryFactory.registerStep(new RPMRepositoryType())
 repositoryFactory.registerStep(new CargoRepositoryType())
 repositoryFactory.registerStep(new GoRepositoryType())
 repositoryFactory.registerStep(new HuggingfaceRepositoryType())
+repositoryFactory.registerStep(new CondaRepositoryType())

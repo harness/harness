@@ -125,7 +125,8 @@ export function getFormattedFormDataForAuthType(
         UpstreamRepositoryURLInputSource.NpmJS,
         UpstreamRepositoryURLInputSource.NugetOrg,
         UpstreamRepositoryURLInputSource.PyPi,
-        UpstreamRepositoryURLInputSource.GoProxy
+        UpstreamRepositoryURLInputSource.GoProxy,
+        UpstreamRepositoryURLInputSource.Anaconda
       ].includes(draft.config.source as UpstreamRepositoryURLInputSource)
     ) {
       set(draft, 'config.url', '')

@@ -202,6 +202,7 @@ export interface StringsMap {
   'upstreamProxyDetails.createForm.create': string
   'upstreamProxyDetails.createForm.key': string
   'upstreamProxyDetails.createForm.packageType': string
+  'upstreamProxyDetails.createForm.source.anaconda': string
   'upstreamProxyDetails.createForm.source.crates': string
   'upstreamProxyDetails.createForm.source.custom': string
   'upstreamProxyDetails.createForm.source.dockerHub': string
@@ -464,6 +465,7 @@ export interface StringsMap {
   nonProdCount: string
   optionalField: string
   'packageTypes.cargoPackage': string
+  'packageTypes.condaPackage': string
   'packageTypes.dockerPackage': string
   'packageTypes.genericPackage': string
   'packageTypes.goPackage': string
@@ -482,6 +484,7 @@ export interface StringsMap {
   'publicAccess.tryOtherOptions': string
   'repositoryTypes.alpine': string
   'repositoryTypes.cargo': string
+  'repositoryTypes.conda': string
   'repositoryTypes.debian': string
   'repositoryTypes.docker': string
   'repositoryTypes.generic': string

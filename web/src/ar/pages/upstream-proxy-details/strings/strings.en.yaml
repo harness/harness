@@ -19,6 +19,7 @@ createForm:
     crates: Crates.io
     goproxy: GoProxy
     huggingface: Huggingface
+    anaconda: Anaconda
   authentication:
     title: Authentication
     userNameAndPassword: Username and Password

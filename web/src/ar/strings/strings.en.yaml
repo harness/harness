@@ -89,6 +89,7 @@ packageTypes:
   cargoPackage: Cargo Package
   goPackage: Go Package
   huggingfacePackage: Huggingface Package
+  condaPackage: Conda Package
 repositoryTypes:
   docker: Docker
   helm: Helm
@@ -104,6 +105,7 @@ repositoryTypes:
   cargo: Cargo
   alpine: Alpine
   huggingface: Huggingface
+  conda: Conda
 sideNav:
   repositories: '{{ $.repositoryList.pageHeading }}'
   artifacts: '{{ $.artifactList.pageHeading }}'
