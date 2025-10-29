@@ -18,7 +18,7 @@ CREATE TABLE ai_tasks (
                               ON UPDATE NO ACTION
                               ON DELETE CASCADE,
                           CONSTRAINT fk_ai_tasks_gitspace_instance FOREIGN KEY (aitask_gitspace_instance_id)
-                              REFERENCES gitspace_instances (gits_id) MATCH SIMPLE
+                              REFERENCES gitspaces (gits_id) MATCH SIMPLE
                               ON UPDATE NO ACTION
                               ON DELETE CASCADE,
                           CONSTRAINT fk_ai_tasks_space FOREIGN KEY (aitask_space_id)
