@@ -97,11 +97,9 @@ func (s *Service) Create(ctx context.Context,
 	}
 
 	var err error
-	in.Definition, err = s.protectionManager.SanitizeJSON(
-		in.Type, in.Definition,
-	)
+	in.Definition, err = s.protectionManager.SanitizeJSON(in.Type, in.Definition)
 	if err != nil {
-		return nil, usererror.BadRequestf("Invalid rule definition: %s", err.Error())
+		return nil, fmt.Errorf("invalid rule definition: %w", err)
 	}
 
 	scope := ruleScopeRepo

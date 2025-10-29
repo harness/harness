@@ -17,11 +17,11 @@ package protection
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/harness/gitness/app/services/codeowners"
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -402,13 +402,13 @@ type DefApprovals struct {
 
 func (v *DefApprovals) Sanitize() error {
 	if v.RequireMinimumCount < 0 {
-		return errors.New("minimum count must be zero or a positive integer")
+		return errors.InvalidArgument("Require minimum count must be zero or a positive integer.")
 	}
 
 	if v.RequireLatestCommit && !v.RequireCodeOwners &&
 		v.RequireMinimumCount == 0 && v.RequireMinimumDefaultReviewerCount == 0 {
-		return errors.New("require latest commit can only be used with require code owners, " +
-			"require minimum count or require default reviewer minimum count")
+		return errors.InvalidArgument("Require latest commit can only be used with require code owners, " +
+			"require minimum count or require default reviewer minimum count.")
 	}
 
 	return nil
@@ -479,11 +479,11 @@ func (v *DefMerge) Sanitize() error {
 	m := make(map[enum.MergeMethod]struct{}, 0)
 	for _, strategy := range v.StrategiesAllowed {
 		if _, ok := strategy.Sanitize(); !ok {
-			return fmt.Errorf("unrecognized merge strategy: %s", strategy)
+			return errors.InvalidArgumentf("Unrecognized merge strategy: %q.", strategy)
 		}
 
 		if _, ok := m[strategy]; ok {
-			return fmt.Errorf("duplicate entry in merge strategy list: %s", strategy)
+			return errors.InvalidArgumentf("Duplicate entry in merge strategy list: %q.", strategy)
 		}
 
 		m[strategy] = struct{}{}
@@ -498,6 +498,18 @@ type DefReviewers struct {
 	RequestCodeOwners           bool    `json:"request_code_owners,omitempty"`
 	DefaultReviewerIDs          []int64 `json:"default_reviewer_ids,omitempty"`
 	DefaultUserGroupReviewerIDs []int64 `json:"default_user_group_reviewer_ids,omitempty"`
+}
+
+func (v *DefReviewers) Sanitize() error {
+	if err := validateIDSlice(v.DefaultReviewerIDs); err != nil {
+		return fmt.Errorf("default reviewer IDs error: %w", err)
+	}
+
+	if err := validateIDSlice(v.DefaultUserGroupReviewerIDs); err != nil {
+		return fmt.Errorf("default user group reviewer IDs error: %w", err)
+	}
+
+	return nil
 }
 
 type DefPullReq struct {
@@ -523,6 +535,10 @@ func (v *DefPullReq) Sanitize() error {
 
 	if err := v.Merge.Sanitize(); err != nil {
 		return fmt.Errorf("merge: %w", err)
+	}
+
+	if err := v.Reviewers.Sanitize(); err != nil {
+		return fmt.Errorf("reviewers: %w", err)
 	}
 
 	return nil

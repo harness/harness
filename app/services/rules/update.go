@@ -136,7 +136,7 @@ func (s *Service) Update(ctx context.Context,
 	if in.Definition != nil {
 		rule.Definition, err = s.protectionManager.SanitizeJSON(rule.Type, *in.Definition)
 		if err != nil {
-			return nil, usererror.BadRequestf("Invalid rule definition: %s", err.Error())
+			return nil, fmt.Errorf("invalid rule definition: %w", err)
 		}
 	}
 
