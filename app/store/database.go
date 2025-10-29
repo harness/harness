@@ -1496,4 +1496,12 @@ type (
 		) (map[int64]bool, error)
 		Delete(ctx context.Context, principalID int64, in *types.FavoriteResource) error
 	}
+
+	AITaskStore interface {
+		Create(ctx context.Context, in *types.AITask) error
+		Update(ctx context.Context, in *types.AITask) error
+		Find(ctx context.Context, id int64) (*types.AITask, error)
+		FindByIdentifier(ctx context.Context, identifier string) (*types.AITask, error)
+		List(ctx context.Context, filter *types.AITaskFilter) ([]*types.AITask, error)
+	}
 )
