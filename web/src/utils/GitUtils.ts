@@ -423,19 +423,31 @@ export const diffRefsToRefs = (diffRefs: string) => {
   }
 }
 
-export const decodeGitContent = (content = '') => {
+const isValidBase64 = (str: string): boolean => {
+  // Check if string contains only valid base64 characters
+  const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/
+  if (!base64Regex.test(str)) return false
+
+  // Check if string length is a multiple of 4 (with padding)
+  if (str.length % 4 !== 0) return false
+
+  return true
+}
+
+export const decodeGitContent = (content = ''): string => {
+  if (!content) return ''
+
+  if (!isValidBase64(content)) return content
+
   try {
-    // Decode base64 content for text file
-    return decodeURIComponent(escape(window.atob(content)))
-  } catch (_exception) {
-    try {
-      // Return original base64 content for binary file
-      return content
-    } catch (exception) {
-      console.error(exception) // eslint-disable-line no-console
-    }
+    const binary = atob(content)
+    const bytes = Uint8Array.from(binary, c => c.charCodeAt(0))
+    return new TextDecoder('utf-8').decode(bytes)
+  } catch (error) {
+    // If base64 decoding fails, return the original content
+    // This handles cases where content is not valid base64
+    return content
   }
-  return ''
 }
 
 // Check if gitRef is a git commit hash (https://github.com/diegohaz/is-git-rev, MIT © Diego Haz)
