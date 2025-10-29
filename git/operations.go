@@ -42,8 +42,8 @@ const (
 	PatchTextAction FileAction = "PATCH_TEXT"
 )
 
-func (FileAction) Enum() []interface{} {
-	return []interface{}{CreateAction, UpdateAction, DeleteAction, MoveAction, PatchTextAction}
+func (FileAction) Enum() []any {
+	return []any{CreateAction, UpdateAction, DeleteAction, MoveAction, PatchTextAction}
 }
 
 // CommitFileAction holds file operation data.
@@ -279,7 +279,7 @@ func (s *Service) prepareTree(
 		}
 
 		if modifiedPaths[modifiedPath] {
-			return nil, errors.InvalidArgument("More than one conflicting actions are modifying file %q.", modifiedPath)
+			return nil, errors.InvalidArgumentf("More than one conflicting actions are modifying file %q.", modifiedPath)
 		}
 
 		fileRefs = append(fileRefs, FileReference{
@@ -302,7 +302,7 @@ func (s *Service) prepareTree(
 
 			// there can only be one file sha for a given path and commit.
 			if !act.SHA.IsEmpty() && !fileSHA.Equal(act.SHA) {
-				return nil, errors.InvalidArgument(
+				return nil, errors.InvalidArgumentf(
 					"patch text actions for %q contain different SHAs %q and %q",
 					filePath,
 					act.SHA,
@@ -317,7 +317,7 @@ func (s *Service) prepareTree(
 		}
 
 		if modifiedPaths[filePath] {
-			return nil, errors.InvalidArgument("More than one conflicting action are modifying file %q.", filePath)
+			return nil, errors.InvalidArgumentf("More than one conflicting action are modifying file %q.", filePath)
 		}
 
 		fileRefs = append(fileRefs, FileReference{
@@ -349,7 +349,7 @@ func (s *Service) prepareTreeEmptyRepo(
 
 		objectSHA, err := r.CreateFile(ctx, sha.None, filePath, filePermissionDefault, action.Payload)
 		if err != nil {
-			return nil, errors.Internal(err, "failed to create file '%s'", action.Path)
+			return nil, errors.Internalf(err, "failed to create file '%s'", action.Path)
 		}
 
 		fileRefs = append(fileRefs, FileReference{
@@ -398,7 +398,7 @@ func (s *Service) validateAndPrepareCommitFilesHeader(
 	if params.Branch != params.NewBranch {
 		existingBranch, err := s.git.GetBranch(ctx, repoPath, params.NewBranch)
 		if existingBranch != nil {
-			return nil, errors.Conflict("branch %s already exists", existingBranch.Name)
+			return nil, errors.Conflictf("branch %s already exists", existingBranch.Name)
 		}
 		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("failed to create new branch '%s': %w", params.NewBranch, err)

@@ -50,7 +50,7 @@ func NewWindsurfService(config *WindsurfConfig) *Windsurf {
 func (w *Windsurf) Setup(
 	ctx context.Context,
 	exec *devcontainer.Exec,
-	_ map[gitspaceTypes.IDEArg]interface{},
+	_ map[gitspaceTypes.IDEArg]any,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	gitspaceLogger.Info("Installing ssh-server inside container...")
@@ -67,7 +67,7 @@ func (w *Windsurf) Setup(
 func (w *Windsurf) Run(
 	ctx context.Context,
 	exec *devcontainer.Exec,
-	_ map[gitspaceTypes.IDEArg]interface{},
+	_ map[gitspaceTypes.IDEArg]any,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	gitspaceLogger.Info("Starting ssh-server...")

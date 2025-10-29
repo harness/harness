@@ -46,11 +46,11 @@ type PackageMetadata struct {
 	Time           map[string]time.Time               `json:"time,omitempty"`
 	Homepage       string                             `json:"homepage,omitempty"`
 	Keywords       []string                           `json:"keywords,omitempty"`
-	Repository     interface{}                        `json:"repository,omitempty"`
-	Author         interface{}                        `json:"author"`
+	Repository     any                                `json:"repository,omitempty"`
+	Author         any                                `json:"author"`
 	ReadmeFilename string                             `json:"readmeFilename,omitempty"`
 	Users          map[string]bool                    `json:"users,omitempty"`
-	License        interface{}                        `json:"license,omitempty"`
+	License        any                                `json:"license,omitempty"`
 }
 
 // PackageMetadataVersion documentation:
@@ -62,21 +62,21 @@ type PackageMetadataVersion struct {
 	ID                   string              `json:"_id"`
 	Name                 string              `json:"name"`
 	Version              string              `json:"version"`
-	Description          interface{}         `json:"description"`
-	Author               interface{}         `json:"author"`
-	Homepage             interface{}         `json:"homepage,omitempty"`
-	License              interface{}         `json:"license,omitempty"`
-	Repository           interface{}         `json:"repository,omitempty"`
-	Keywords             interface{}         `json:"keywords,omitempty"`
+	Description          any                 `json:"description"`
+	Author               any                 `json:"author"`
+	Homepage             any                 `json:"homepage,omitempty"`
+	License              any                 `json:"license,omitempty"`
+	Repository           any                 `json:"repository,omitempty"`
+	Keywords             any                 `json:"keywords,omitempty"`
 	Dependencies         map[string]string   `json:"dependencies,omitempty"`
-	BundleDependencies   interface{}         `json:"bundleDependencies,omitempty"`
-	DevDependencies      interface{}         `json:"devDependencies,omitempty"`
-	PeerDependencies     interface{}         `json:"peerDependencies,omitempty"`
-	Bin                  interface{}         `json:"bin,omitempty"`
-	OptionalDependencies interface{}         `json:"optionalDependencies,omitempty"`
+	BundleDependencies   any                 `json:"bundleDependencies,omitempty"`
+	DevDependencies      any                 `json:"devDependencies,omitempty"`
+	PeerDependencies     any                 `json:"peerDependencies,omitempty"`
+	Bin                  any                 `json:"bin,omitempty"`
+	OptionalDependencies any                 `json:"optionalDependencies,omitempty"`
 	Readme               string              `json:"readme,omitempty"`
 	Dist                 PackageDistribution `json:"dist"`
-	Maintainers          interface{}         `json:"maintainers,omitempty"`
+	Maintainers          any                 `json:"maintainers,omitempty"`
 }
 
 // Repository https://github.com/npm/registry/blob/master/docs/REGISTRY-API.md#version
@@ -110,12 +110,12 @@ type PackageSearchPackage struct {
 	Scope       string                     `json:"scope"`
 	Name        string                     `json:"name"`
 	Version     string                     `json:"version"`
-	Date        interface{}                `json:"date"`
-	Description interface{}                `json:"description"`
-	Author      interface{}                `json:"author"`
-	Publisher   interface{}                `json:"publisher"`
-	Maintainers interface{}                `json:"maintainers"`
-	Keywords    interface{}                `json:"keywords,omitempty"`
+	Date        any                        `json:"date"`
+	Description any                        `json:"description"`
+	Author      any                        `json:"author"`
+	Publisher   any                        `json:"publisher"`
+	Maintainers any                        `json:"maintainers"`
+	Keywords    any                        `json:"keywords,omitempty"`
 	Links       *PackageSearchPackageLinks `json:"links"`
 }
 

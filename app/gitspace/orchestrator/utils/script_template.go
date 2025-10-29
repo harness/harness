@@ -64,7 +64,7 @@ func LoadTemplates() error {
 	return nil
 }
 
-func GenerateScriptFromTemplate(name string, data interface{}) (string, error) {
+func GenerateScriptFromTemplate(name string, data any) (string, error) {
 	if scriptTemplates[name] == nil {
 		return "", fmt.Errorf("no script template found for %s", name)
 	}

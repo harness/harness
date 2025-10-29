@@ -57,7 +57,7 @@ func buildAccount(reflector *openapi3.Reflector) {
 	onLogin := openapi3.Operation{}
 	onLogin.WithTags("account")
 	onLogin.WithParameters(queryParameterIncludeCookie)
-	onLogin.WithMapOfAnything(map[string]interface{}{"operationId": "onLogin"})
+	onLogin.WithMapOfAnything(map[string]any{"operationId": "onLogin"})
 	_ = reflector.SetRequest(&onLogin, new(loginRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&onLogin, new(types.TokenResponse), http.StatusOK)
 	_ = reflector.SetJSONResponse(&onLogin, new(usererror.Error), http.StatusBadRequest)
@@ -67,7 +67,7 @@ func buildAccount(reflector *openapi3.Reflector) {
 
 	opLogout := openapi3.Operation{}
 	opLogout.WithTags("account")
-	opLogout.WithMapOfAnything(map[string]interface{}{"operationId": "opLogout"})
+	opLogout.WithMapOfAnything(map[string]any{"operationId": "opLogout"})
 	_ = reflector.SetRequest(&opLogout, nil, http.MethodPost)
 	_ = reflector.SetJSONResponse(&opLogout, nil, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opLogout, new(usererror.Error), http.StatusBadRequest)
@@ -78,7 +78,7 @@ func buildAccount(reflector *openapi3.Reflector) {
 	onRegister := openapi3.Operation{}
 	onRegister.WithTags("account")
 	onRegister.WithParameters(queryParameterIncludeCookie)
-	onRegister.WithMapOfAnything(map[string]interface{}{"operationId": "onRegister"})
+	onRegister.WithMapOfAnything(map[string]any{"operationId": "onRegister"})
 	_ = reflector.SetRequest(&onRegister, new(registerRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&onRegister, new(types.TokenResponse), http.StatusOK)
 	_ = reflector.SetJSONResponse(&onRegister, new(usererror.Error), http.StatusInternalServerError)

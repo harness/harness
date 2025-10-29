@@ -16,7 +16,7 @@ package enum
 
 type GitspaceEntityType string
 
-func (GitspaceEntityType) Enum() []interface{} { return toInterfaceSlice(gitspaceEntityTypes) }
+func (GitspaceEntityType) Enum() []any { return toInterfaceSlice(gitspaceEntityTypes) }
 
 var gitspaceEntityTypes = []GitspaceEntityType{
 	GitspaceEntityTypeGitspaceConfig,

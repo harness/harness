@@ -144,7 +144,7 @@ func (c *APIController) GetArtifactDetails(
 		}
 		artifactDetails = GetGenericArtifactDetail(img, art, metadata)
 	case artifact.PackageTypePYTHON:
-		var result map[string]interface{}
+		var result map[string]any
 		err := json.Unmarshal(art.Metadata, &result)
 		if err != nil {
 			return artifact.GetArtifactDetails500JSONResponse{
@@ -156,7 +156,7 @@ func (c *APIController) GetArtifactDetails(
 		artifactDetails = GetPythonArtifactDetail(img, art, result)
 
 	case artifact.PackageTypeNPM:
-		var result map[string]interface{}
+		var result map[string]any
 		err := json.Unmarshal(art.Metadata, &result)
 		if err != nil {
 			return artifact.GetArtifactDetails500JSONResponse{
@@ -167,7 +167,7 @@ func (c *APIController) GetArtifactDetails(
 		}
 		artifactDetails = GetNPMArtifactDetail(img, art, result, downloadCount)
 	case artifact.PackageTypeRPM:
-		var result map[string]interface{}
+		var result map[string]any
 		err := json.Unmarshal(art.Metadata, &result)
 		if err != nil {
 			return artifact.GetArtifactDetails500JSONResponse{
@@ -178,7 +178,7 @@ func (c *APIController) GetArtifactDetails(
 		}
 		artifactDetails = GetRPMArtifactDetail(img, art, result, downloadCount)
 	case artifact.PackageTypeNUGET:
-		var result map[string]interface{}
+		var result map[string]any
 		err := json.Unmarshal(art.Metadata, &result)
 		if err != nil {
 			return artifact.GetArtifactDetails500JSONResponse{
@@ -189,7 +189,7 @@ func (c *APIController) GetArtifactDetails(
 		}
 		artifactDetails = GetNugetArtifactDetail(img, art, result, downloadCount)
 	case artifact.PackageTypeHUGGINGFACE:
-		var result map[string]interface{}
+		var result map[string]any
 		err := json.Unmarshal(art.Metadata, &result)
 		if err != nil {
 			return artifact.GetArtifactDetails500JSONResponse{
@@ -200,7 +200,7 @@ func (c *APIController) GetArtifactDetails(
 		}
 		artifactDetails = GetHFArtifactDetail(img, art, result, downloadCount)
 	case artifact.PackageTypeGO:
-		var result map[string]interface{}
+		var result map[string]any
 		err := json.Unmarshal(art.Metadata, &result)
 		if err != nil {
 			return artifact.GetArtifactDetails500JSONResponse{

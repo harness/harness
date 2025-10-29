@@ -67,14 +67,14 @@ func StringToInt64ArrByDelimiter(s string, delimiter string) []int64 {
 	if utils.IsEmpty(s) {
 		return arr
 	}
-	for _, i := range strings.Split(s, delimiter) {
+	for i := range strings.SplitSeq(s, delimiter) {
 		j, _ := strconv.ParseInt(i, 10, 64)
 		arr = append(arr, j)
 	}
 	return arr
 }
 
-func GetSetDBKeys(s interface{}, ignoreKeys ...string) string {
+func GetSetDBKeys(s any, ignoreKeys ...string) string {
 	keys := GetDBTagsFromStruct(s)
 	filteredKeys := make([]string, 0)
 
@@ -90,7 +90,7 @@ keysLoop:
 	return strings.Join(filteredKeys, ", ")
 }
 
-func GetDBTagsFromStruct(s interface{}) []string {
+func GetDBTagsFromStruct(s any) []string {
 	var tags []string
 	rt := reflect.TypeOf(s)
 

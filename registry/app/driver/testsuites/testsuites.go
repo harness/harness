@@ -623,7 +623,7 @@ func (suite *DriverSuite) TestList() {
 	}
 	parentDirectory := rootDirectory + "/" + randomFilename(c1.Int64())
 	childFiles := make([]string, 50)
-	for i := 0; i < len(childFiles); i++ {
+	for i := range childFiles {
 		c2, e2 := crand.Int(crand.Reader, big.NewInt(int64(100)))
 		if e2 != nil {
 			log.Warn().Msgf("Error in securing random no: %s", e2)
@@ -1042,7 +1042,7 @@ func (suite *DriverSuite) TestConcurrentStreamReads() {
 	}
 
 	wg.Add(10)
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		go readContents()
 	}
 	wg.Wait()
@@ -1130,7 +1130,7 @@ func (s *DriverBenchmarkSuite) benchmarkPutGetFiles(b *testing.B, size int64) {
 		s.StorageDriver.Delete(s.ctx, firstPart(parentDir))
 	}()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		filename := path.Join(parentDir, randomPath(32))
 		err := s.StorageDriver.PutContent(s.ctx, filename, randomContents(size))
 		s.Suite.Require().NoError(err)
@@ -1169,7 +1169,7 @@ func (s *DriverBenchmarkSuite) benchmarkStreamFiles(b *testing.B, size int64) {
 		s.StorageDriver.Delete(s.ctx, firstPart(parentDir))
 	}()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		filename := path.Join(parentDir, randomPath(32))
 		writer, err := s.StorageDriver.Writer(s.ctx, filename, false)
 		s.Suite.Require().NoError(err)
@@ -1206,13 +1206,12 @@ func (s *DriverBenchmarkSuite) benchmarkListFiles(b *testing.B, numFiles int64) 
 		s.StorageDriver.Delete(s.ctx, firstPart(parentDir))
 	}()
 
-	for i := int64(0); i < numFiles; i++ {
+	for range numFiles {
 		err := s.StorageDriver.PutContent(s.ctx, path.Join(parentDir, randomPath(32)), nil)
 		s.Suite.Require().NoError(err)
 	}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		files, err := s.StorageDriver.List(s.ctx, parentDir)
 		s.Suite.Require().NoError(err)
 		s.Suite.Require().Equal(numFiles, int64(len(files)))
@@ -1230,12 +1229,12 @@ func (s *DriverBenchmarkSuite) BenchmarkDelete50Files(b *testing.B) {
 }
 
 func (s *DriverBenchmarkSuite) benchmarkDeleteFiles(b *testing.B, numFiles int64) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		parentDir := randomPath(8)
 		defer s.deletePath(firstPart(parentDir))
 
 		b.StopTimer()
-		for j := int64(0); j < numFiles; j++ {
+		for range numFiles {
 			err := s.StorageDriver.PutContent(s.ctx, path.Join(parentDir, randomPath(32)), nil)
 			s.Suite.Require().NoError(err)
 		}
@@ -1387,10 +1386,7 @@ func (rr *randReader) Read(p []byte) (n int, err error) {
 	rr.m.Lock()
 	defer rr.m.Unlock()
 
-	toread := int64(len(p))
-	if toread > rr.r {
-		toread = rr.r
-	}
+	toread := min(int64(len(p)), rr.r)
 	n = copy(p, randomContents(toread))
 	rr.r -= int64(n)
 

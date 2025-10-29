@@ -17,6 +17,7 @@ package keywordsearch
 import (
 	"context"
 	"fmt"
+	"maps"
 	"math"
 
 	"github.com/harness/gitness/app/api/usererror"
@@ -51,9 +52,7 @@ func (c *Controller) Search(
 		return types.SearchResult{}, fmt.Errorf("failed to search repos by space path: %w", err)
 	}
 
-	for repoID, repoPath := range spaceRepoIDToPathMap {
-		repoIDToPathMap[repoID] = repoPath
-	}
+	maps.Copy(repoIDToPathMap, spaceRepoIDToPathMap)
 
 	if len(repoIDToPathMap) == 0 {
 		return types.SearchResult{}, usererror.NotFound("No repositories found")
@@ -119,9 +118,7 @@ func (c *Controller) getReposBySpacePaths(
 			return nil, fmt.Errorf("failed to search repos by space path: %w", err)
 		}
 
-		for repoID, repoPath := range m {
-			repoIDToPathMap[repoID] = repoPath
-		}
+		maps.Copy(repoIDToPathMap, m)
 	}
 	return repoIDToPathMap, nil
 }

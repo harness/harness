@@ -17,7 +17,7 @@ package enum
 // ScmType defines the different SCM types supported for CI.
 type ScmType string
 
-func (ScmType) Enum() []interface{} { return toInterfaceSlice(scmTypes) }
+func (ScmType) Enum() []any { return toInterfaceSlice(scmTypes) }
 
 var scmTypes = ([]ScmType{
 	ScmTypeGitness,

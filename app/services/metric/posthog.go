@@ -227,10 +227,10 @@ type logger struct {
 	zerolog.Logger
 }
 
-func (l *logger) Logf(format string, args ...interface{}) {
+func (l *logger) Logf(format string, args ...any) {
 	l.Info().Msgf(format, args...)
 }
 
-func (l *logger) Errorf(format string, args ...interface{}) {
+func (l *logger) Errorf(format string, args ...any) {
 	l.Error().Msgf(format, args...)
 }

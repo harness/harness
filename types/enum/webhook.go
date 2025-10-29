@@ -84,7 +84,7 @@ func (a WebhookAttr) String() string {
 // WebhookParent defines different types of parents of a webhook.
 type WebhookParent string
 
-func (WebhookParent) Enum() []interface{} { return toInterfaceSlice(webhookParents) }
+func (WebhookParent) Enum() []any { return toInterfaceSlice(webhookParents) }
 
 const (
 	// WebhookParentRepo describes a repo as webhook owner.
@@ -106,7 +106,7 @@ var webhookParents = sortEnum([]WebhookParent{
 // WebhookExecutionResult defines the different results of a webhook execution.
 type WebhookExecutionResult string
 
-func (WebhookExecutionResult) Enum() []interface{} { return toInterfaceSlice(webhookExecutionResults) }
+func (WebhookExecutionResult) Enum() []any { return toInterfaceSlice(webhookExecutionResults) }
 
 const (
 	// WebhookExecutionResultSuccess describes a webhook execution result that succeeded.
@@ -128,7 +128,7 @@ var webhookExecutionResults = sortEnum([]WebhookExecutionResult{
 // WebhookType defines different types of a webhook.
 type WebhookType int
 
-func (WebhookType) Enum() []interface{} { return toInterfaceSlice(webhookTypes) }
+func (WebhookType) Enum() []any { return toInterfaceSlice(webhookTypes) }
 
 const (
 	// WebhookTypeExternal describes a webhook url pointing to external source.
@@ -150,7 +150,7 @@ var webhookTypes = sortEnum([]WebhookType{
 // WebhookTrigger defines the different types of webhook triggers available.
 type WebhookTrigger string
 
-func (WebhookTrigger) Enum() []interface{}                { return toInterfaceSlice(webhookTriggers) }
+func (WebhookTrigger) Enum() []any                        { return toInterfaceSlice(webhookTriggers) }
 func (s WebhookTrigger) Sanitize() (WebhookTrigger, bool) { return Sanitize(s, GetAllWebhookTriggers) }
 
 func GetAllWebhookTriggers() ([]WebhookTrigger, WebhookTrigger) {

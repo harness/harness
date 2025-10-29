@@ -54,66 +54,66 @@ func (w *wrapZerolog) WithError(err error) logger.Logger {
 	return &wrapZerolog{inner: w.inner, err: err}
 }
 
-func (w *wrapZerolog) WithField(key string, value interface{}) logger.Logger {
+func (w *wrapZerolog) WithField(key string, value any) logger.Logger {
 	return &wrapZerolog{inner: w.inner.With().Str(key, fmt.Sprint(value)).Logger(), err: w.err}
 }
 
-func (w *wrapZerolog) Debug(args ...interface{}) {
+func (w *wrapZerolog) Debug(args ...any) {
 	w.inner.Debug().Err(w.err).Msg(fmt.Sprint(args...))
 }
 
-func (w *wrapZerolog) Debugf(format string, args ...interface{}) {
+func (w *wrapZerolog) Debugf(format string, args ...any) {
 	w.inner.Debug().Err(w.err).Msgf(format, args...)
 }
 
-func (w *wrapZerolog) Debugln(args ...interface{}) {
+func (w *wrapZerolog) Debugln(args ...any) {
 	w.inner.Debug().Err(w.err).Msg(fmt.Sprintln(args...))
 }
 
-func (w *wrapZerolog) Error(args ...interface{}) {
+func (w *wrapZerolog) Error(args ...any) {
 	w.inner.Error().Err(w.err).Msg(fmt.Sprint(args...))
 }
 
-func (w *wrapZerolog) Errorf(format string, args ...interface{}) {
+func (w *wrapZerolog) Errorf(format string, args ...any) {
 	w.inner.Error().Err(w.err).Msgf(format, args...)
 }
 
-func (w *wrapZerolog) Errorln(args ...interface{}) {
+func (w *wrapZerolog) Errorln(args ...any) {
 	w.inner.Error().Err(w.err).Msg(fmt.Sprintln(args...))
 }
 
-func (w *wrapZerolog) Info(args ...interface{}) {
+func (w *wrapZerolog) Info(args ...any) {
 	w.inner.Info().Err(w.err).Msg(fmt.Sprint(args...))
 }
 
-func (w *wrapZerolog) Infof(format string, args ...interface{}) {
+func (w *wrapZerolog) Infof(format string, args ...any) {
 	w.inner.Info().Err(w.err).Msgf(format, args...)
 }
 
-func (w *wrapZerolog) Infoln(args ...interface{}) {
+func (w *wrapZerolog) Infoln(args ...any) {
 	w.inner.Info().Err(w.err).Msg(fmt.Sprintln(args...))
 }
 
-func (w *wrapZerolog) Trace(args ...interface{}) {
+func (w *wrapZerolog) Trace(args ...any) {
 	w.inner.Trace().Err(w.err).Msg(fmt.Sprint(args...))
 }
 
-func (w *wrapZerolog) Tracef(format string, args ...interface{}) {
+func (w *wrapZerolog) Tracef(format string, args ...any) {
 	w.inner.Trace().Err(w.err).Msgf(format, args...)
 }
 
-func (w *wrapZerolog) Traceln(args ...interface{}) {
+func (w *wrapZerolog) Traceln(args ...any) {
 	w.inner.Trace().Err(w.err).Msg(fmt.Sprintln(args...))
 }
 
-func (w *wrapZerolog) Warn(args ...interface{}) {
+func (w *wrapZerolog) Warn(args ...any) {
 	w.inner.Warn().Err(w.err).Msg(fmt.Sprint(args...))
 }
 
-func (w *wrapZerolog) Warnf(format string, args ...interface{}) {
+func (w *wrapZerolog) Warnf(format string, args ...any) {
 	w.inner.Warn().Err(w.err).Msgf(format, args...)
 }
 
-func (w *wrapZerolog) Warnln(args ...interface{}) {
+func (w *wrapZerolog) Warnln(args ...any) {
 	w.inner.Warn().Err(w.err).Msg(fmt.Sprintln(args...))
 }

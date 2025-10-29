@@ -54,24 +54,24 @@ func downloadPackageFilePath(imageName string, version string) string {
 
 type cargoManifest struct {
 	Package struct {
-		Name          string      `toml:"name"`
-		Version       string      `toml:"version"`
-		Description   string      `toml:"description"`
-		Edition       string      `toml:"edition"`
-		License       string      `toml:"license"`
-		Keywords      []string    `toml:"keywords"`
-		Repository    string      `toml:"repository"`
-		Documentation string      `toml:"documentation"`
-		Readme        interface{} `toml:"readme"` // value can be bool or string. so normalising this later in the code
+		Name          string   `toml:"name"`
+		Version       string   `toml:"version"`
+		Description   string   `toml:"description"`
+		Edition       string   `toml:"edition"`
+		License       string   `toml:"license"`
+		Keywords      []string `toml:"keywords"`
+		Repository    string   `toml:"repository"`
+		Documentation string   `toml:"documentation"`
+		Readme        any      `toml:"readme"` // value can be bool or string. so normalising this later in the code
 		ReadmeContent string
 	} `toml:"package"`
 
-	Dependencies      map[string]interface{} `toml:"dependencies"`
-	DevDependencies   map[string]interface{} `toml:"dev-dependencies"`
-	BuildDependencies map[string]interface{} `toml:"build-dependencies"`
+	Dependencies      map[string]any `toml:"dependencies"`
+	DevDependencies   map[string]any `toml:"dev-dependencies"`
+	BuildDependencies map[string]any `toml:"build-dependencies"`
 }
 
-func getReadmePath(val interface{}) string {
+func getReadmePath(val any) string {
 	switch v := val.(type) {
 	case string:
 		return v
@@ -197,7 +197,7 @@ func parseDependencies(manifest *cargoManifest) *[]cargometadata.VersionDependen
 }
 
 func parseDependency(
-	name string, raw interface{}, kind cargometadata.DependencyKindType,
+	name string, raw any, kind cargometadata.DependencyKindType,
 	target string,
 ) cargometadata.VersionDependency {
 	dep := cargometadata.VersionDependency{
@@ -215,11 +215,11 @@ func parseDependency(
 	case string:
 		// Simple version
 		dep.VersionRequired = val
-	case map[string]interface{}:
+	case map[string]any:
 		if version, ok := val["version"].(string); ok {
 			dep.VersionRequired = version
 		}
-		if features, ok := val["features"].([]interface{}); ok {
+		if features, ok := val["features"].([]any); ok {
 			for _, f := range features {
 				dep.Features = append(dep.Features, fmt.Sprint(f))
 			}

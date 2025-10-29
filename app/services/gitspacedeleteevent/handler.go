@@ -40,7 +40,7 @@ func (s *Service) handleGitspaceDeleteEvent(
 	err = s.gitspaceSvc.RemoveGitspace(ctx, *gitspaceConfig, true)
 	if err != nil {
 		// NOTE: No need to retry from the event handler. The background job will take care.
-		log.Debug().Err(err).Msgf("unable to delete gitspace: " + gitspaceConfigIdentifier)
+		log.Debug().Err(err).Msgf("unable to delete gitspace: %s", gitspaceConfigIdentifier)
 	}
 
 	log.Debug().Msgf("handled gitspace delete event with payload: %+v", event.Payload)

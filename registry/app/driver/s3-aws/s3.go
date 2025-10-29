@@ -153,7 +153,7 @@ func init() {
 	}
 
 	// Add the default Cloudflare R2 regions
-	for _, region := range strings.Split(r2Regions, ",") {
+	for region := range strings.SplitSeq(r2Regions, ",") {
 		validRegions[strings.TrimSpace(region)] = struct{}{}
 	}
 	for _, objectACL := range []string{
@@ -180,7 +180,7 @@ func Register() {
 // s3DriverFactory implements the factory.StorageDriverFactory interface.
 type s3DriverFactory struct{}
 
-func (factory *s3DriverFactory) Create(parameters map[string]interface{}) (storagedriver.StorageDriver, error) {
+func (factory *s3DriverFactory) Create(parameters map[string]any) (storagedriver.StorageDriver, error) {
 	return FromParameters(parameters)
 }
 
@@ -286,7 +286,7 @@ type Driver struct {
 // - encrypt.
 //
 //nolint:gocognit
-func FromParameters(parameters map[string]interface{}) (*Driver, error) {
+func FromParameters(parameters map[string]any) (*Driver, error) {
 	// Providing no values for these is valid in case the user is authenticating
 	// with an IAM on an ec2 instance (in which case the instance credentials will
 	// be summoned when GetAuth is called).
@@ -577,7 +577,7 @@ func FromParameters(parameters map[string]interface{}) (*Driver, error) {
 	return New(params)
 }
 
-func getS3LogLevelFromParam(param interface{}) aws.LogLevelType {
+func getS3LogLevelFromParam(param any) aws.LogLevelType {
 	if param == nil {
 		return aws.LogOff
 	}
@@ -610,7 +610,7 @@ func getS3LogLevelFromParam(param interface{}) aws.LogLevelType {
 // getParameterAsInt64 converts parameters[name] to an int64 value (using
 // defaultt if nil), verifies it is no smaller than min, and returns it.
 func getParameterAsInt64(
-	parameters map[string]interface{},
+	parameters map[string]any,
 	name string,
 	defaultt int64,
 	minSize int64,
@@ -723,7 +723,7 @@ func New(params DriverParameters) (*Driver, error) {
 		StorageClass:                params.StorageClass,
 		ObjectACL:                   params.ObjectACL,
 		pool: &sync.Pool{
-			New: func() interface{} {
+			New: func() any {
 				return &buffer{
 					data: make([]byte, 0, params.ChunkSize),
 				}

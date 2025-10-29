@@ -26,7 +26,7 @@ import (
 
 // fillFromForm uses reflection to fill fields of 'data' from r.FormValue.
 // It looks for a 'json' struct tag and uses that as the key in FormValue.
-func FillFromForm(r *http.Request, data interface{}) error {
+func FillFromForm(r *http.Request, data any) error {
 	// Make sure form data is parsed
 	if err := r.ParseForm(); err != nil {
 		return err

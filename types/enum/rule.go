@@ -34,7 +34,7 @@ var ruleTypes = sortEnum([]RuleType{
 	RuleTypePush,
 })
 
-func (RuleType) Enum() []interface{} { return toInterfaceSlice(ruleTypes) }
+func (RuleType) Enum() []any { return toInterfaceSlice(ruleTypes) }
 func (s RuleType) Sanitize() (RuleType, bool) {
 	return Sanitize(s, GetAllRuleTypes)
 }
@@ -58,7 +58,7 @@ var ruleStates = sortEnum([]RuleState{
 	RuleStateDisabled,
 })
 
-func (RuleState) Enum() []interface{} { return toInterfaceSlice(ruleStates) }
+func (RuleState) Enum() []any { return toInterfaceSlice(ruleStates) }
 func (s RuleState) Sanitize() (RuleState, bool) {
 	return Sanitize(s, GetAllRuleStates)
 }
@@ -85,7 +85,7 @@ var ruleSorts = sortEnum([]RuleSort{
 	RuleSortUpdated,
 })
 
-func (RuleSort) Enum() []interface{} { return toInterfaceSlice(ruleSorts) }
+func (RuleSort) Enum() []any { return toInterfaceSlice(ruleSorts) }
 func (s RuleSort) Sanitize() (RuleSort, bool) {
 	return Sanitize(s, GetAllRuleSorts)
 }
@@ -111,7 +111,7 @@ func ParseRuleSortAttr(s string) RuleSort {
 // RuleParent defines different types of parents of a rule.
 type RuleParent string
 
-func (RuleParent) Enum() []interface{} { return toInterfaceSlice(RuleParents) }
+func (RuleParent) Enum() []any { return toInterfaceSlice(RuleParents) }
 
 const (
 	// RuleParentRepo describes a repo as Rule owner.

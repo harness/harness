@@ -148,37 +148,37 @@ func TestOrderType(t *testing.T) {
 
 // Benchmark tests.
 func BenchmarkParseOrder(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		ParseOrder("asc")
 	}
 }
 
 func BenchmarkParseOrderDesc(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		ParseOrder("desc")
 	}
 }
 
 func BenchmarkParseOrderInvalid(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		ParseOrder("invalid")
 	}
 }
 
 func BenchmarkOrderString(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_ = OrderAsc.String()
 	}
 }
 
 func BenchmarkOrderStringDesc(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_ = OrderDesc.String()
 	}
 }
 
 func BenchmarkOrderStringDefault(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_ = OrderDefault.String()
 	}
 }

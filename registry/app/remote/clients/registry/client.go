@@ -747,7 +747,6 @@ func (c *client) do(req *http.Request) (*http.Response, error) {
 		if err != nil {
 			return nil, err
 		}
-		message := fmt.Sprintf("http status code: %d, body: %s", resp.StatusCode, string(body))
 		code := errors.GeneralCode
 		switch resp.StatusCode {
 		case http.StatusUnauthorized:
@@ -760,7 +759,7 @@ func (c *client) do(req *http.Request) (*http.Response, error) {
 			code = errors.RateLimitCode
 		}
 		return nil, errors.New(nil).WithCode(code).
-			WithMessage(message)
+			WithMessage("http status code: %d, body: %s", resp.StatusCode, string(body))
 	}
 	return resp, nil
 }

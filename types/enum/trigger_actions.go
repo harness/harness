@@ -42,7 +42,7 @@ const (
 	TriggerActionPullReqMerged TriggerAction = "pullreq_merged"
 )
 
-func (TriggerAction) Enum() []interface{}               { return toInterfaceSlice(triggerActions) }
+func (TriggerAction) Enum() []any                       { return toInterfaceSlice(triggerActions) }
 func (t TriggerAction) Sanitize() (TriggerAction, bool) { return Sanitize(t, GetAllTriggerActions) }
 func (t TriggerAction) GetTriggerEvent() TriggerEvent {
 	if t == TriggerActionPullReqCreated ||

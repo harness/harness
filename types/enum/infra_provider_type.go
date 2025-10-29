@@ -21,7 +21,7 @@ import (
 
 type InfraProviderType string
 
-func (p InfraProviderType) Enum() []interface{} {
+func (p InfraProviderType) Enum() []any {
 	return toInterfaceSlice(providerTypes)
 }
 

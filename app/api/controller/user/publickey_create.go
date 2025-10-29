@@ -82,7 +82,7 @@ func (c *Controller) CreatePublicKey(
 	}
 
 	if in.Scheme != "" && key.Scheme() != in.Scheme {
-		return nil, errors.InvalidArgument("key is not a valid %s key", in.Scheme)
+		return nil, errors.InvalidArgumentf("key is not a valid %s key", in.Scheme)
 	}
 
 	switch key.Scheme() {

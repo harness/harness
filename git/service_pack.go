@@ -80,7 +80,7 @@ func (s *Service) ServicePack(ctx context.Context, params *ServicePackParams) er
 		params.Env = append(params.Env, CreateEnvironmentForPush(ctx, *params.WriteParams)...)
 		repoPath = getFullPathForRepo(s.reposRoot, params.WriteParams.RepoUID)
 	default:
-		return errors.InvalidArgument("unsupported service provided: %s", params.Service)
+		return errors.InvalidArgumentf("unsupported service provided: %s", params.Service)
 	}
 
 	err := s.git.ServicePack(ctx, repoPath, params.ServicePackOptions)

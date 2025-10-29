@@ -642,7 +642,7 @@ func (l *localBase) CheckIfFileAlreadyExist(
 
 	for _, file := range metadata.GetFiles() {
 		if file.Filename == fileName && l.Exists(ctx, info, path) {
-			return errors.Conflict("file: [%s] for Artifact: [%s], Version: [%s] and registry: [%s] already exist",
+			return errors.Conflictf("file: [%s] for Artifact: [%s], Version: [%s] and registry: [%s] already exist",
 				fileName, info.Image, version, info.RegIdentifier)
 		}
 	}

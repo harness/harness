@@ -279,7 +279,7 @@ func (n NodeDao) mapToNode(_ context.Context, dst *Nodes) (*types.Node, error) {
 	}, nil
 }
 
-func (n NodeDao) mapToInternalNode(node *types.Node) interface{} {
+func (n NodeDao) mapToInternalNode(node *types.Node) any {
 	if node.CreatedAt.IsZero() {
 		node.CreatedAt = time.Now()
 	}

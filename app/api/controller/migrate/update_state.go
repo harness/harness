@@ -17,6 +17,7 @@ package migrate
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
@@ -78,10 +79,8 @@ func stateTransitionValid(
 	newState enum.RepoState,
 	force bool,
 ) bool {
-	for _, validState := range validTransitions[currentState] {
-		if validState == newState {
-			return true
-		}
+	if slices.Contains(validTransitions[currentState], newState) {
+		return true
 	}
 
 	if force {

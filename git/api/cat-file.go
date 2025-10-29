@@ -118,18 +118,18 @@ func ReadBatchHeaderLine(rd *bufio.Reader) (*BatchHeaderResponse, error) {
 	}
 	idx := strings.IndexByte(line, ' ')
 	if idx < 0 {
-		return nil, errors.NotFound("missing space char for: %s", line)
+		return nil, errors.NotFoundf("missing space char for: %s", line)
 	}
 	id := line[:idx]
 	objType := line[idx+1:]
 
 	if objType == "missing" {
-		return nil, errors.NotFound("sha '%s' not found", id)
+		return nil, errors.NotFoundf("sha '%s' not found", id)
 	}
 
 	idx = strings.IndexByte(objType, ' ')
 	if idx < 0 {
-		return nil, errors.NotFound("sha '%s' not found", id)
+		return nil, errors.NotFoundf("sha '%s' not found", id)
 	}
 
 	sizeStr := objType[idx+1 : len(objType)-1]

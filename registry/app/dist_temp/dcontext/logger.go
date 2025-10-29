@@ -26,7 +26,7 @@ import (
 
 // Logger provides a leveled-logging interface.
 type Logger interface {
-	Msgf(format string, v ...interface{})
+	Msgf(format string, v ...any)
 
 	Msg(msg string)
 }
@@ -43,7 +43,7 @@ func WithLogger(ctx context.Context, logger Logger) context.Context {
 // the context.
 func GetLoggerWithFields(
 	ctx context.Context, log *zerolog.Event,
-	fields map[interface{}]interface{}, keys ...interface{},
+	fields map[any]any, keys ...any,
 ) Logger {
 	logger := getZerologLogger(ctx, log, keys...)
 	for key, value := range fields {
@@ -59,7 +59,7 @@ func GetLoggerWithFields(
 // argument passed to GetLogger will be passed to fmt.Sprint when expanded as
 // a logging key field. If context keys are integer constants, for example,
 // its recommended that a String method is implemented.
-func GetLogger(ctx context.Context, l *zerolog.Event, keys ...interface{}) Logger {
+func GetLogger(ctx context.Context, l *zerolog.Event, keys ...any) Logger {
 	return getZerologLogger(ctx, l, keys...)
 }
 
@@ -67,7 +67,7 @@ func GetLogger(ctx context.Context, l *zerolog.Event, keys ...interface{}) Logge
 // are provided, they will be resolved on the context and included in the
 // logger. Only use this function if specific zerolog functionality is
 // required.
-func getZerologLogger(ctx context.Context, l *zerolog.Event, keys ...interface{}) *zerolog.Event {
+func getZerologLogger(ctx context.Context, l *zerolog.Event, keys ...any) *zerolog.Event {
 	var logger *zerolog.Event
 
 	// Get a logger, if it is present.

@@ -69,7 +69,7 @@ func (e *Error) MarshalJSON() ([]byte, error) {
 }
 
 // WithMessage ...
-func (e *Error) WithMessage(format string, v ...interface{}) *Error {
+func (e *Error) WithMessage(format string, v ...any) *Error {
 	e.Message = fmt.Sprintf(format, v...)
 	return e
 }
@@ -132,7 +132,7 @@ func NewErrs(err error) Errors {
 }
 
 // New ...
-func New(in interface{}) *Error {
+func New(in any) *Error {
 	var err error
 	switch in := in.(type) {
 	case error:
@@ -161,7 +161,7 @@ func Wrap(err error, message string) *Error {
 }
 
 // Wrapf ...
-func Wrapf(err error, format string, args ...interface{}) *Error {
+func Wrapf(err error, format string, args ...any) *Error {
 	if err == nil {
 		return nil
 	}
@@ -174,7 +174,7 @@ func Wrapf(err error, format string, args ...interface{}) *Error {
 }
 
 // Errorf ...
-func Errorf(format string, args ...interface{}) *Error {
+func Errorf(format string, args ...any) *Error {
 	return &Error{
 		Message: fmt.Sprintf(format, args...),
 		Stack:   newStack(),

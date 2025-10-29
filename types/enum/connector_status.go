@@ -43,7 +43,7 @@ var connectorStatus = sortEnum([]ConnectorStatus{
 	ConnectorStatusFailed,
 })
 
-func (ConnectorStatus) Enum() []interface{} { return toInterfaceSlice(connectorStatus) }
+func (ConnectorStatus) Enum() []any { return toInterfaceSlice(connectorStatus) }
 func (s ConnectorStatus) Sanitize() (ConnectorStatus, bool) {
 	return Sanitize(s, GetAllConnectorStatus)
 }

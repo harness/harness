@@ -119,7 +119,7 @@ func (app *App) configureSecret(configuration *types.Config) {
 
 // context constructs the context object for the application. This only be
 // called once per request.
-func (app *App) GetBlobsContext(c context.Context, info pkg.RegistryInfo, blobID interface{}) *Context {
+func (app *App) GetBlobsContext(c context.Context, info pkg.RegistryInfo, blobID any) *Context {
 	ctx := &Context{
 		App:          app,
 		Context:      c,

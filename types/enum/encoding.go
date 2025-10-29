@@ -25,7 +25,7 @@ const (
 	ContentEncodingTypeBase64 ContentEncodingType = "base64"
 )
 
-func (ContentEncodingType) Enum() []interface{} { return toInterfaceSlice(contentEncodingTypes) }
+func (ContentEncodingType) Enum() []any { return toInterfaceSlice(contentEncodingTypes) }
 
 var contentEncodingTypes = sortEnum([]ContentEncodingType{
 	ContentEncodingTypeUTF8,

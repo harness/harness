@@ -320,10 +320,10 @@ func TestStreamer_ConcurrentAccess(t *testing.T) {
 	numWriters := 10
 	linesPerWriter := 100
 
-	for i := 0; i < numWriters; i++ {
+	for i := range numWriters {
 		go func(writerID int) {
 			defer func() { done <- true }()
-			for j := 0; j < linesPerWriter; j++ {
+			for j := range linesPerWriter {
 				line := &Line{
 					Number:    writerID*linesPerWriter + j,
 					Message:   "concurrent message",
@@ -338,7 +338,7 @@ func TestStreamer_ConcurrentAccess(t *testing.T) {
 	}
 
 	// Wait for all writers to complete
-	for i := 0; i < numWriters; i++ {
+	for range numWriters {
 		<-done
 	}
 

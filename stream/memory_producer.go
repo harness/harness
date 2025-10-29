@@ -35,7 +35,7 @@ func NewMemoryProducer(broker *MemoryBroker, namespace string) *MemoryProducer {
 
 // Send sends information to the Broker.
 // Returns the message ID in case of success.
-func (p *MemoryProducer) Send(_ context.Context, streamID string, payload map[string]interface{}) (string, error) {
+func (p *MemoryProducer) Send(_ context.Context, streamID string, payload map[string]any) (string, error) {
 	// ensure we transpose streamID using the key namespace
 	transposedStreamID := transposeStreamID(p.namespace, streamID)
 

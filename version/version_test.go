@@ -212,13 +212,13 @@ func TestVersionWithBothPrereleaseAndMetadata(t *testing.T) {
 
 // Benchmark tests.
 func BenchmarkParseVersionNumber(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		parseVersionNumber("123")
 	}
 }
 
 func BenchmarkVersionString(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_ = Version.String()
 	}
 }

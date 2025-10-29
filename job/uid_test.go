@@ -56,7 +56,7 @@ func TestUIDUniqueness(t *testing.T) {
 	const numUIDs = 1000
 	uids := make(map[string]bool)
 
-	for i := 0; i < numUIDs; i++ {
+	for i := range numUIDs {
 		uid, err := UID()
 		if err != nil {
 			t.Fatalf("UID() returned error on iteration %d: %v", i, err)
@@ -79,7 +79,7 @@ func TestUIDConsistentLength(t *testing.T) {
 	const numUIDs = 100
 	expectedLength := 16
 
-	for i := 0; i < numUIDs; i++ {
+	for i := range numUIDs {
 		uid, err := UID()
 		if err != nil {
 			t.Fatalf("UID() returned error on iteration %d: %v", i, err)
@@ -113,7 +113,7 @@ func TestUIDNoPadding(t *testing.T) {
 	// (10 bytes encodes to exactly 16 characters without padding)
 	const numUIDs = 100
 
-	for i := 0; i < numUIDs; i++ {
+	for i := range numUIDs {
 		uid, err := UID()
 		if err != nil {
 			t.Fatalf("UID() returned error on iteration %d: %v", i, err)
@@ -129,7 +129,7 @@ func TestUIDNoPadding(t *testing.T) {
 }
 
 func BenchmarkUID(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, err := UID()
 		if err != nil {
 			b.Fatalf("UID() returned error: %v", err)

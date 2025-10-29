@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"net/http"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/harness/gitness/registry/app/pkg"
@@ -79,12 +80,7 @@ func GetFilePath(info pkg.MavenArtifactInfo) string {
 func IsMainArtifactFile(info pkg.MavenArtifactInfo) bool {
 	filePath := GetFilePath(info)
 	fileExtension := strings.ToLower(filepath.Ext(filePath))
-	for _, ext := range MainArtifactFileExtensions {
-		if ext == fileExtension {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(MainArtifactFileExtensions, fileExtension)
 }
 
 func IsMetadataFile(filename string) bool {

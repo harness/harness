@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"slices"
 	"sort"
 	"strings"
 
@@ -30,29 +31,29 @@ type GitspaceSettingsFilter struct {
 
 type CriteriaKey string
 type SettingsData struct {
-	Data     map[string]interface{}   `json:"data,omitempty"`     // generic, user-defined
+	Data     map[string]any           `json:"data,omitempty"`     // generic, user-defined
 	Criteria GitspaceSettingsCriteria `json:"criteria,omitempty"` // criteria for the settings
 }
 
 type GitspaceSettings struct {
 	ID           int64                     `json:"-"`
-	Settings     SettingsData              `json:"settings,omitempty"`
+	Settings     SettingsData              `json:"settings"`
 	SettingsType enum.GitspaceSettingsType `json:"settings_type,omitempty"`
 	CriteriaKey  CriteriaKey               `json:"criteria_key,omitempty"`
 	SpaceID      int64                     `json:"-"`
 	Created      int64                     `json:"created,omitempty"`
 	Updated      int64                     `json:"updated,omitempty"`
 }
-type GitspaceSettingsCriteria map[string]interface{}
+type GitspaceSettingsCriteria map[string]any
 
 var ApplyAlwaysToSpaceCriteria = GitspaceSettingsCriteria{}
 
-func flattenCriteria(prefix string, input map[string]interface{}, out map[string]string) {
+func flattenCriteria(prefix string, input map[string]any, out map[string]string) {
 	const maxDepth = 10 // Add depth protection
 	flattenCriteriaWithDepth(prefix, input, out, 0, maxDepth)
 }
 
-func flattenCriteriaWithDepth(prefix string, input map[string]interface{}, out map[string]string, depth, maxDepth int) {
+func flattenCriteriaWithDepth(prefix string, input map[string]any, out map[string]string, depth, maxDepth int) {
 	if depth > maxDepth {
 		return
 	}
@@ -62,7 +63,7 @@ func flattenCriteriaWithDepth(prefix string, input map[string]interface{}, out m
 			key = prefix + "." + k
 		}
 		switch child := v.(type) {
-		case map[string]interface{}:
+		case map[string]any:
 			flattenCriteriaWithDepth(key, child, out, depth+1, maxDepth)
 		default:
 			out[key] = fmt.Sprintf("%v", v)
@@ -106,13 +107,7 @@ func (a *AccessList[T]) IsAllowed(item T) bool {
 	if a == nil || len(a.List) == 0 {
 		return true // If no list, assume unrestricted
 	}
-	found := false
-	for _, entry := range a.List {
-		if entry == item {
-			found = true
-			break
-		}
-	}
+	found := slices.Contains(a.List, item)
 	if a.Mode == ListModeAllow {
 		return found
 	}
@@ -145,7 +140,7 @@ type SCMProviderSettings struct {
 }
 
 type DevcontainerSettings struct {
-	DevcontainerImage DevcontainerImage `json:"devcontainer_image,omitempty"` // Devcontainer image settings
+	DevcontainerImage DevcontainerImage `json:"devcontainer_image"` // Devcontainer image settings
 }
 
 type DevcontainerImage struct {
@@ -155,9 +150,9 @@ type DevcontainerImage struct {
 }
 
 type GitspaceConfigSettings struct {
-	IDEs         IDESettings          `json:"ide,omitempty"`          // allow list of IDEs
-	SCMProviders SCMProviderSettings  `json:"scm,omitempty"`          // allow list of SCMs
-	Devcontainer DevcontainerSettings `json:"devcontainer,omitempty"` // allow list of devcontainer images
+	IDEs         IDESettings          `json:"ide"`          // allow list of IDEs
+	SCMProviders SCMProviderSettings  `json:"scm"`          // allow list of SCMs
+	Devcontainer DevcontainerSettings `json:"devcontainer"` // allow list of devcontainer images
 }
 type InfraProviderSettings struct {
 	AccessList             *AccessList[string]    `json:"access_list,omitempty"`

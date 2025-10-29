@@ -109,14 +109,14 @@ func compareOverriddenOptions(a, b map[string]any) int {
 	keysA, valuesA := getSortedOptions(a)
 	keysB, valuesB := getSortedOptions(b)
 
-	for i := 0; i < len(keysA); i++ {
+	for i := range keysA {
 		if keysA[i] == keysB[i] {
 			continue
 		}
 		return strings.Compare(keysA[i], keysB[i])
 	}
 
-	for i := 0; i < len(valuesA); i++ {
+	for i := range valuesA {
 		if valuesA[i] == valuesB[i] {
 			continue
 		}

@@ -45,7 +45,7 @@ func TestCreateWebhook(t *testing.T) {
 		name          string
 		setupMocks    func(*metadata.APIController)
 		request       api.CreateWebhookRequestObject
-		expectedResp  interface{}
+		expectedResp  any
 		expectedError error
 	}{
 		{

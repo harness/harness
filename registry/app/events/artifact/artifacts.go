@@ -83,7 +83,7 @@ type ArtifactInfo struct {
 	Type     artifact.PackageType `json:"type"`
 	Name     string               `json:"name"`
 	Version  string               `json:"version"`
-	Artifact interface{}          `json:"artifact"`
+	Artifact any                  `json:"artifact"`
 }
 
 func (r *Reporter) ArtifactCreated(ctx context.Context, payload *ArtifactCreatedPayload) {

@@ -310,7 +310,7 @@ func (c *RedisConsumer) reader(ctx context.Context) {
 					c.pushInfo("completed scan of history")
 
 					// Update stream args to read latest messages for all streams
-					for j := 0; j < streamLen; j++ {
+					for j := range streamLen {
 						streamsArg[streamLen+j] = ">"
 					}
 

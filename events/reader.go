@@ -143,7 +143,7 @@ type Reader interface {
 	Configure(opts ...ReaderOption)
 }
 
-type HandlerFunc[T interface{}] func(context.Context, *Event[T]) error
+type HandlerFunc[T any] func(context.Context, *Event[T]) error
 
 // GenericReader represents an event reader that supports registering type safe handlers
 // for an arbitrary set of custom events within a given event category using the ReaderRegisterEvent method.
@@ -157,13 +157,13 @@ type GenericReader struct {
 // ReaderRegisterEvent registers a type safe handler function on the reader for a specific event.
 // This method allows to register type safe handlers without the need of handling the raw stream payload.
 // NOTE: Generic arguments are not allowed for struct methods, hence pass the reader as input parameter.
-func ReaderRegisterEvent[T interface{}](reader *GenericReader,
+func ReaderRegisterEvent[T any](reader *GenericReader,
 	eventType EventType, fn HandlerFunc[T], opts ...HandlerOption) error {
 	streamID := getStreamID(reader.category, eventType)
 
 	// register handler for event specific stream.
 	return reader.streamConsumer.Register(streamID,
-		func(ctx context.Context, messageID string, streamPayload map[string]interface{}) error {
+		func(ctx context.Context, messageID string, streamPayload map[string]any) error {
 			if streamPayload == nil {
 				return fmt.Errorf("stream payload is nil for message '%s'", messageID)
 			}

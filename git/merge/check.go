@@ -48,7 +48,7 @@ func FindConflicts(
 		command.WithStdout(stdout))
 
 	if err != nil {
-		return false, "", nil, errors.Internal(err, "Failed to find conflicts between %s and %s", base, head)
+		return false, "", nil, errors.Internalf(err, "Failed to find conflicts between %s and %s", base, head)
 	}
 
 	output := strings.TrimSpace(stdout.String())
@@ -57,19 +57,19 @@ func FindConflicts(
 	lines := strings.Split(output, "\000")
 	if len(lines) < 2 {
 		log.Ctx(ctx).Error().Str("output", output).Msg("Unexpected merge-tree output")
-		return false, "", nil, errors.Internal(nil,
+		return false, "", nil, errors.Internalf(nil,
 			"Failed to find conflicts between %s and %s: Unexpected git output", base, head)
 	}
 
 	status, err := strconv.Atoi(lines[0])
 	if err != nil {
 		log.Ctx(ctx).Err(err).Str("output", output).Msg("Unexpected merge status")
-		return false, "", nil, errors.Internal(nil,
+		return false, "", nil, errors.Internalf(nil,
 			"Failed to find conflicts between %s and %s: Unexpected merge status", base, head)
 	}
 
 	if status < 0 {
-		return false, "", nil, errors.Internal(nil,
+		return false, "", nil, errors.Internalf(nil,
 			"Failed to find conflicts between %s and %s: Operation blocked. Status=%d", base, head, status)
 	}
 

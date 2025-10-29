@@ -93,7 +93,7 @@ func proxyInternal(
 		for _, registry := range skipped {
 			skippedRegNames = append(skippedRegNames, registry.Name)
 		}
-		return r, errors.InvalidArgument("no matching artifacts found in registry %s, skipped registries: [%s] "+
+		return r, errors.InvalidArgumentf("no matching artifacts found in registry %s, skipped registries: [%s] "+
 			"due to allowed/blocked policies",
 			requestRepoKey, pkg.JoinWithSeparator(", ", skippedRegNames...))
 	}
@@ -102,7 +102,7 @@ func proxyInternal(
 		return r, lastError
 	}
 
-	return r, errors.NotFound("no matching artifacts found in registry %s", requestRepoKey)
+	return r, errors.NotFoundf("no matching artifacts found in registry %s", requestRepoKey)
 }
 
 func factory(key string) pkg.Artifact {
@@ -159,7 +159,7 @@ func GetOrderedRepos(
 	var result []registrytypes.Registry
 	registry, err := registryDao.GetByParentIDAndName(ctx, parentID, repoKey)
 	if err != nil {
-		return result, errors.NotFound("registry %s not found", repoKey)
+		return result, errors.NotFoundf("registry %s not found", repoKey)
 	}
 	result = append(result, *registry)
 	if !upstream {
@@ -189,11 +189,11 @@ func SearchPackagesProxyWrapper(
 	ctx context.Context,
 	registryDao store.RegistryRepository,
 	f func(registry registrytypes.Registry, a pkg.Artifact, limit, offset int) response.Response,
-	extractResponseDataFunc func(searchResponse response.Response) ([]interface{}, int64),
+	extractResponseDataFunc func(searchResponse response.Response) ([]any, int64),
 	info pkg.PackageArtifactInfo,
 	limit int,
 	offset int,
-) ([]interface{}, int64, error) {
+) ([]any, int64, error) {
 	requestRepoKey := info.BaseArtifactInfo().RegIdentifier
 
 	// Get all registries (local + proxies) - Z = [x, p1, p2, p3...]
@@ -203,7 +203,7 @@ func SearchPackagesProxyWrapper(
 	}
 
 	// Pre-allocate slice for aggregated results (generic interface{})
-	var aggregatedResults []interface{}
+	var aggregatedResults []any
 	var totalCount int64
 
 	currentOffset := offset

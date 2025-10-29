@@ -183,32 +183,32 @@ func (e testValueError) Error() string { return "value receiver" }
 // Benchmark tests.
 func BenchmarkIsTypeValueError(b *testing.B) {
 	err := testValueError{}
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+
+	for b.Loop() {
 		IsType[testValueError](err)
 	}
 }
 
 func BenchmarkIsTypeCustomError(b *testing.B) {
 	err := customError{msg: "test"}
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+
+	for b.Loop() {
 		IsType[customError](err)
 	}
 }
 
 func BenchmarkIsTypeStandardError(b *testing.B) {
 	err := errors.New("standard error")
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+
+	for b.Loop() {
 		IsType[error](err)
 	}
 }
 
 func BenchmarkIsTypeWrappedError(b *testing.B) {
 	err := fmt.Errorf("wrapped: %w", testValueError{})
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+
+	for b.Loop() {
 		IsType[testValueError](err)
 	}
 }

@@ -71,7 +71,7 @@ func TestWithRequestID(t *testing.T) {
 			logger.Info().Msg("test message")
 
 			// Parse the log output
-			var logEntry map[string]interface{}
+			var logEntry map[string]any
 			err := json.Unmarshal(buf.Bytes(), &logEntry)
 			if err != nil {
 				t.Fatalf("Failed to parse log output: %v", err)
@@ -104,7 +104,7 @@ func TestUpdateContext(t *testing.T) {
 	zerolog.Ctx(ctx).Info().Msg("test message")
 
 	// Parse the log output
-	var logEntry map[string]interface{}
+	var logEntry map[string]any
 	err := json.Unmarshal(buf.Bytes(), &logEntry)
 	if err != nil {
 		t.Fatalf("Failed to parse log output: %v", err)
@@ -144,7 +144,7 @@ func TestUpdateContextMultipleOptions(t *testing.T) {
 	zerolog.Ctx(ctx).Info().Msg("test message")
 
 	// Parse the log output
-	var logEntry map[string]interface{}
+	var logEntry map[string]any
 	err := json.Unmarshal(buf.Bytes(), &logEntry)
 	if err != nil {
 		t.Fatalf("Failed to parse log output: %v", err)
@@ -179,7 +179,7 @@ func TestNewContext(t *testing.T) {
 	// Parse the parent log output
 	lines := strings.Split(strings.TrimSpace(buf.String()), "\n")
 	if len(lines) > 0 {
-		var parentLogEntry map[string]interface{}
+		var parentLogEntry map[string]any
 		err := json.Unmarshal([]byte(lines[0]), &parentLogEntry)
 		if err != nil {
 			t.Fatalf("Failed to parse parent log output: %v", err)
@@ -198,7 +198,7 @@ func TestNewContext(t *testing.T) {
 	zerolog.Ctx(childCtx).Info().Msg("child message")
 
 	// Parse the child log output
-	var childLogEntry map[string]interface{}
+	var childLogEntry map[string]any
 	err := json.Unmarshal(buf.Bytes(), &childLogEntry)
 	if err != nil {
 		t.Fatalf("Failed to parse child log output: %v", err)
@@ -234,7 +234,7 @@ func TestNewContextMultipleOptions(t *testing.T) {
 	zerolog.Ctx(childCtx).Info().Msg("test message")
 
 	// Parse the log output
-	var logEntry map[string]interface{}
+	var logEntry map[string]any
 	err := json.Unmarshal(buf.Bytes(), &logEntry)
 	if err != nil {
 		t.Fatalf("Failed to parse log output: %v", err)
@@ -269,7 +269,7 @@ func TestNewContextIsolation(t *testing.T) {
 
 	// Parse child1 log
 	lines := strings.Split(strings.TrimSpace(buf.String()), "\n")
-	var child1LogEntry map[string]interface{}
+	var child1LogEntry map[string]any
 	err := json.Unmarshal([]byte(lines[0]), &child1LogEntry)
 	if err != nil {
 		t.Fatalf("Failed to parse child1 log output: %v", err)
@@ -286,7 +286,7 @@ func TestNewContextIsolation(t *testing.T) {
 	zerolog.Ctx(child2Ctx).Info().Msg("child2 message")
 
 	// Parse child2 log
-	var child2LogEntry map[string]interface{}
+	var child2LogEntry map[string]any
 	err = json.Unmarshal(buf.Bytes(), &child2LogEntry)
 	if err != nil {
 		t.Fatalf("Failed to parse child2 log output: %v", err)
@@ -317,7 +317,7 @@ func TestCustomOption(t *testing.T) {
 	zerolog.Ctx(newCtx).Info().Msg("test message")
 
 	// Parse the log output
-	var logEntry map[string]interface{}
+	var logEntry map[string]any
 	err := json.Unmarshal(buf.Bytes(), &logEntry)
 	if err != nil {
 		t.Fatalf("Failed to parse log output: %v", err)
@@ -361,8 +361,7 @@ func TestEmptyOptions(t *testing.T) {
 func BenchmarkWithRequestID(b *testing.B) {
 	logger := zerolog.New(bytes.NewBuffer(nil))
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		option := WithRequestID("benchmark-req-123")
 		logCtx := logger.With()
 		_ = option(logCtx)
@@ -373,8 +372,7 @@ func BenchmarkUpdateContext(b *testing.B) {
 	logger := zerolog.New(bytes.NewBuffer(nil))
 	ctx := logger.WithContext(context.Background())
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		UpdateContext(ctx, WithRequestID("benchmark-req-123"))
 	}
 }
@@ -383,8 +381,7 @@ func BenchmarkNewContext(b *testing.B) {
 	logger := zerolog.New(bytes.NewBuffer(nil))
 	ctx := logger.WithContext(context.Background())
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		NewContext(ctx, WithRequestID("benchmark-req-123"))
 	}
 }

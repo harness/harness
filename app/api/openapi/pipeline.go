@@ -147,7 +147,7 @@ var queryParameterBranch = openapi3.ParameterOrRef{
 func pipelineOperations(reflector *openapi3.Reflector) {
 	opCreate := openapi3.Operation{}
 	opCreate.WithTags("pipeline")
-	opCreate.WithMapOfAnything(map[string]interface{}{"operationId": "createPipeline"})
+	opCreate.WithMapOfAnything(map[string]any{"operationId": "createPipeline"})
 	_ = reflector.SetRequest(&opCreate, new(createPipelineRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&opCreate, new(types.Pipeline), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opCreate, new(usererror.Error), http.StatusBadRequest)
@@ -158,7 +158,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 
 	opPipelines := openapi3.Operation{}
 	opPipelines.WithTags("pipeline")
-	opPipelines.WithMapOfAnything(map[string]interface{}{"operationId": "listPipelines"})
+	opPipelines.WithMapOfAnything(map[string]any{"operationId": "listPipelines"})
 	opPipelines.WithParameters(queryParameterQueryPipeline, QueryParameterPage,
 		QueryParameterLimit, queryParameterLatest, queryParameterLastExecutions)
 	_ = reflector.SetRequest(&opPipelines, new(repoRequest), http.MethodGet)
@@ -171,7 +171,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 
 	opFind := openapi3.Operation{}
 	opFind.WithTags("pipeline")
-	opFind.WithMapOfAnything(map[string]interface{}{"operationId": "findPipeline"})
+	opFind.WithMapOfAnything(map[string]any{"operationId": "findPipeline"})
 	_ = reflector.SetRequest(&opFind, new(getPipelineRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opFind, new(types.Pipeline), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opFind, new(usererror.Error), http.StatusInternalServerError)
@@ -182,7 +182,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 
 	opDelete := openapi3.Operation{}
 	opDelete.WithTags("pipeline")
-	opDelete.WithMapOfAnything(map[string]interface{}{"operationId": "deletePipeline"})
+	opDelete.WithMapOfAnything(map[string]any{"operationId": "deletePipeline"})
 	_ = reflector.SetRequest(&opDelete, new(getPipelineRequest), http.MethodDelete)
 	_ = reflector.SetJSONResponse(&opDelete, nil, http.StatusNoContent)
 	_ = reflector.SetJSONResponse(&opDelete, new(usererror.Error), http.StatusInternalServerError)
@@ -193,7 +193,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 
 	opUpdate := openapi3.Operation{}
 	opUpdate.WithTags("pipeline")
-	opUpdate.WithMapOfAnything(map[string]interface{}{"operationId": "updatePipeline"})
+	opUpdate.WithMapOfAnything(map[string]any{"operationId": "updatePipeline"})
 	_ = reflector.SetRequest(&opUpdate, new(updatePipelineRequest), http.MethodPatch)
 	_ = reflector.SetJSONResponse(&opUpdate, new(types.Pipeline), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusBadRequest)
@@ -207,7 +207,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	executionCreate := openapi3.Operation{}
 	executionCreate.WithTags("pipeline")
 	executionCreate.WithParameters(queryParameterBranch)
-	executionCreate.WithMapOfAnything(map[string]interface{}{"operationId": "createExecution"})
+	executionCreate.WithMapOfAnything(map[string]any{"operationId": "createExecution"})
 	_ = reflector.SetRequest(&executionCreate, new(createExecutionRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&executionCreate, new(types.Execution), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&executionCreate, new(usererror.Error), http.StatusBadRequest)
@@ -219,7 +219,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 
 	executionFind := openapi3.Operation{}
 	executionFind.WithTags("pipeline")
-	executionFind.WithMapOfAnything(map[string]interface{}{"operationId": "findExecution"})
+	executionFind.WithMapOfAnything(map[string]any{"operationId": "findExecution"})
 	_ = reflector.SetRequest(&executionFind, new(getExecutionRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&executionFind, new(types.Execution), http.StatusOK)
 	_ = reflector.SetJSONResponse(&executionFind, new(usererror.Error), http.StatusInternalServerError)
@@ -231,7 +231,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 
 	executionCancel := openapi3.Operation{}
 	executionCancel.WithTags("pipeline")
-	executionCancel.WithMapOfAnything(map[string]interface{}{"operationId": "cancelExecution"})
+	executionCancel.WithMapOfAnything(map[string]any{"operationId": "cancelExecution"})
 	_ = reflector.SetRequest(&executionCancel, new(getExecutionRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&executionCancel, new(types.Execution), http.StatusOK)
 	_ = reflector.SetJSONResponse(&executionCancel, new(usererror.Error), http.StatusInternalServerError)
@@ -243,7 +243,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 
 	executionDelete := openapi3.Operation{}
 	executionDelete.WithTags("pipeline")
-	executionDelete.WithMapOfAnything(map[string]interface{}{"operationId": "deleteExecution"})
+	executionDelete.WithMapOfAnything(map[string]any{"operationId": "deleteExecution"})
 	_ = reflector.SetRequest(&executionDelete, new(getExecutionRequest), http.MethodDelete)
 	_ = reflector.SetJSONResponse(&executionDelete, nil, http.StatusNoContent)
 	_ = reflector.SetJSONResponse(&executionDelete, new(usererror.Error), http.StatusInternalServerError)
@@ -255,7 +255,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 
 	executionList := openapi3.Operation{}
 	executionList.WithTags("pipeline")
-	executionList.WithMapOfAnything(map[string]interface{}{"operationId": "listExecutions"})
+	executionList.WithMapOfAnything(map[string]any{"operationId": "listExecutions"})
 	executionList.WithParameters(QueryParameterPage, QueryParameterLimit)
 	_ = reflector.SetRequest(&executionList, new(pipelineRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&executionList, []types.Execution{}, http.StatusOK)
@@ -268,7 +268,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 
 	triggerCreate := openapi3.Operation{}
 	triggerCreate.WithTags("pipeline")
-	triggerCreate.WithMapOfAnything(map[string]interface{}{"operationId": "createTrigger"})
+	triggerCreate.WithMapOfAnything(map[string]any{"operationId": "createTrigger"})
 	_ = reflector.SetRequest(&triggerCreate, new(createTriggerRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&triggerCreate, new(types.Trigger), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&triggerCreate, new(usererror.Error), http.StatusBadRequest)
@@ -280,7 +280,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 
 	triggerFind := openapi3.Operation{}
 	triggerFind.WithTags("pipeline")
-	triggerFind.WithMapOfAnything(map[string]interface{}{"operationId": "findTrigger"})
+	triggerFind.WithMapOfAnything(map[string]any{"operationId": "findTrigger"})
 	_ = reflector.SetRequest(&triggerFind, new(getTriggerRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&triggerFind, new(types.Trigger), http.StatusOK)
 	_ = reflector.SetJSONResponse(&triggerFind, new(usererror.Error), http.StatusInternalServerError)
@@ -292,7 +292,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 
 	triggerDelete := openapi3.Operation{}
 	triggerDelete.WithTags("pipeline")
-	triggerDelete.WithMapOfAnything(map[string]interface{}{"operationId": "deleteTrigger"})
+	triggerDelete.WithMapOfAnything(map[string]any{"operationId": "deleteTrigger"})
 	_ = reflector.SetRequest(&triggerDelete, new(getTriggerRequest), http.MethodDelete)
 	_ = reflector.SetJSONResponse(&triggerDelete, nil, http.StatusNoContent)
 	_ = reflector.SetJSONResponse(&triggerDelete, new(usererror.Error), http.StatusInternalServerError)
@@ -304,7 +304,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 
 	triggerUpdate := openapi3.Operation{}
 	triggerUpdate.WithTags("pipeline")
-	triggerUpdate.WithMapOfAnything(map[string]interface{}{"operationId": "updateTrigger"})
+	triggerUpdate.WithMapOfAnything(map[string]any{"operationId": "updateTrigger"})
 	_ = reflector.SetRequest(&triggerUpdate, new(updateTriggerRequest), http.MethodPatch)
 	_ = reflector.SetJSONResponse(&triggerUpdate, new(types.Trigger), http.StatusOK)
 	_ = reflector.SetJSONResponse(&triggerUpdate, new(usererror.Error), http.StatusBadRequest)
@@ -317,7 +317,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 
 	triggerList := openapi3.Operation{}
 	triggerList.WithTags("pipeline")
-	triggerList.WithMapOfAnything(map[string]interface{}{"operationId": "listTriggers"})
+	triggerList.WithMapOfAnything(map[string]any{"operationId": "listTriggers"})
 	triggerList.WithParameters(queryParameterQueryRepo, QueryParameterPage, QueryParameterLimit)
 	_ = reflector.SetRequest(&triggerList, new(pipelineRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&triggerList, []types.Trigger{}, http.StatusOK)
@@ -330,7 +330,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 
 	logView := openapi3.Operation{}
 	logView.WithTags("pipeline")
-	logView.WithMapOfAnything(map[string]interface{}{"operationId": "viewLogs"})
+	logView.WithMapOfAnything(map[string]any{"operationId": "viewLogs"})
 	_ = reflector.SetRequest(&logView, new(logRequest), http.MethodGet)
 	_ = reflector.SetStringResponse(&logView, http.StatusOK, "application/json")
 	_ = reflector.SetJSONResponse(&logView, []*livelog.Line{}, http.StatusOK)

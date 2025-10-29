@@ -168,7 +168,7 @@ func ProvideBucketService(_ OciBlobStoreFactory) BucketService {
 type noOpBucketService struct{}
 
 func (n *noOpBucketService) GetBlobStore(_ context.Context, _ string, _ string,
-	_ interface{}, _ string) *BlobStore {
+	_ any, _ string) *BlobStore {
 	return nil
 }
 

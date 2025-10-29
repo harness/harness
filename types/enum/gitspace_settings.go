@@ -20,7 +20,7 @@ var gitspaceSettingsTypes = []GitspaceSettingsType{
 	SettingsTypeGitspaceConfig, SettingsTypeInfraProvider,
 }
 
-func (GitspaceSettingsType) Enum() []interface{} {
+func (GitspaceSettingsType) Enum() []any {
 	return toInterfaceSlice(gitspaceSettingsTypes)
 }
 

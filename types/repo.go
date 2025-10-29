@@ -188,7 +188,7 @@ func sanitizeRepoTag(tag *string, typ TagPartType) error {
 	}
 
 	if strings.Contains(*tag, ":") {
-		return errors.InvalidArgument("tag %s cannot contain colon [:]", typ)
+		return errors.InvalidArgumentf("tag %s cannot contain colon [:]", typ)
 	}
 
 	return SanitizeTag(tag, typ, false)

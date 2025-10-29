@@ -366,7 +366,7 @@ func (b *strCircBuf) lines() []string {
 	}
 
 	res := make([]string, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		idx := (b.head + 1 + i) % n
 		res[i] = b.entries[idx]
 	}

@@ -546,7 +546,7 @@ func (s *RuleStore) mapToRules(
 	rules []rule,
 ) []types.Rule {
 	res := make([]types.Rule, len(rules))
-	for i := 0; i < len(rules); i++ {
+	for i := range rules {
 		res[i] = s.mapToRule(ctx, &rules[i])
 	}
 	return res
@@ -592,7 +592,7 @@ func (s *RuleStore) mapToRuleInfos(
 	ruleInfos []ruleInfo,
 ) []types.RuleInfoInternal {
 	res := make([]types.RuleInfoInternal, len(ruleInfos))
-	for i := 0; i < len(ruleInfos); i++ {
+	for i := range ruleInfos {
 		res[i] = s.mapToRuleInfo(&ruleInfos[i])
 	}
 	return res

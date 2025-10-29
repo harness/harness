@@ -62,7 +62,7 @@ func TestParseAndUploadNPMPackage_WithAttachment_UploadsData(t *testing.T) {
 
 	// Prepare a temp filesystem-backed storage service
 	tmpDir := t.TempDir()
-	drv, err := filesystem.FromParameters(map[string]interface{}{"rootdirectory": tmpDir})
+	drv, err := filesystem.FromParameters(map[string]any{"rootdirectory": tmpDir})
 	if err != nil {
 		t.Fatalf("filesystem driver init failed: %v", err)
 	}

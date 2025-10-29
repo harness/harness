@@ -95,7 +95,7 @@ func (ec CodeError) WithMessage(message string) Error {
 
 // WithDetail creates a new Error struct based on the passed-in info and
 // set the Detail property appropriately.
-func (ec CodeError) WithDetail(detail interface{}) Error {
+func (ec CodeError) WithDetail(detail any) Error {
 	return Error{
 		Code:    ec,
 		Message: ec.Message(),
@@ -103,7 +103,7 @@ func (ec CodeError) WithDetail(detail interface{}) Error {
 }
 
 // WithArgs creates a new Error struct and sets the Args slice.
-func (ec CodeError) WithArgs(args ...interface{}) Error {
+func (ec CodeError) WithArgs(args ...any) Error {
 	return Error{
 		Code:    ec,
 		Message: ec.Message(),
@@ -112,9 +112,9 @@ func (ec CodeError) WithArgs(args ...interface{}) Error {
 
 // Error provides a wrapper around ErrorCode with extra Details provided.
 type Error struct {
-	Code    CodeError   `json:"code"`
-	Message string      `json:"message"`
-	Detail  interface{} `json:"detail,omitempty"`
+	Code    CodeError `json:"code"`
+	Message string    `json:"message"`
+	Detail  any       `json:"detail,omitempty"`
 }
 
 var _ error = Error{}
@@ -131,7 +131,7 @@ func (e Error) Error() string {
 
 // WithDetail will return a new Error, based on the current one, but with
 // some Detail info added.
-func (e Error) WithDetail(detail interface{}) Error {
+func (e Error) WithDetail(detail any) Error {
 	return Error{
 		Code:    e.Code,
 		Message: e.Message,
@@ -141,7 +141,7 @@ func (e Error) WithDetail(detail interface{}) Error {
 
 // WithArgs uses the passed-in list of interface{} as the substitution
 // variables in the Error's Message string, but returns a new Error.
-func (e Error) WithArgs(args ...interface{}) Error {
+func (e Error) WithArgs(args ...any) Error {
 	return Error{
 		Code:    e.Code,
 		Message: fmt.Sprintf(e.Code.Message(), args...),

@@ -53,7 +53,7 @@ func GetAllConnectorAuthTypes() []ConnectorAuthType {
 	}
 }
 
-func (ConnectorAuthType) Enum() []interface{} { return toInterfaceSlice(GetAllConnectorAuthTypes()) }
+func (ConnectorAuthType) Enum() []any { return toInterfaceSlice(GetAllConnectorAuthTypes()) }
 func (t ConnectorAuthType) Sanitize() (ConnectorAuthType, bool) {
 	return Sanitize(t, func() ([]ConnectorAuthType, ConnectorAuthType) {
 		return GetAllConnectorAuthTypes(), ""

@@ -21,7 +21,7 @@ type VersionMetadata struct {
 	Name         string       `json:"Name"`
 	Version      string       `json:"Version"`
 	Time         string       `json:"Time"`
-	Origin       Origin       `json:"Origin,omitempty"`
+	Origin       Origin       `json:"Origin"`
 	Dependencies []Dependency `json:"Dependencies,omitempty"`
 	Readme       string       `json:"Readme,omitempty"`
 }

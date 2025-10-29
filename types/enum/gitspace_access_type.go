@@ -16,7 +16,7 @@ package enum
 
 type GitspaceAccessType string
 
-func (GitspaceAccessType) Enum() []interface{} { return toInterfaceSlice(gitspaceAccessTypes) }
+func (GitspaceAccessType) Enum() []any { return toInterfaceSlice(gitspaceAccessTypes) }
 
 var gitspaceAccessTypes = []GitspaceAccessType{
 	GitspaceAccessTypeJWTToken, GitspaceAccessTypeUserCredentials, GitspaceAccessTypeSSHKey,

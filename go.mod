@@ -1,8 +1,6 @@
 module github.com/harness/gitness
 
-go 1.23.0
-
-toolchain go1.23.10
+go 1.24.9
 
 require (
 	cloud.google.com/go/storage v1.43.0
@@ -56,6 +54,7 @@ require (
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/joho/godotenv v1.5.1
 	github.com/kelseyhightower/envconfig v1.4.0
+	github.com/klauspost/compress v1.17.8
 	github.com/lib/pq v1.10.9
 	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/maragudk/migrate v0.4.3
@@ -82,6 +81,7 @@ require (
 	github.com/swaggo/http-swagger v1.3.4
 	github.com/swaggo/swag v1.16.2
 	github.com/tidwall/jsonc v0.3.2
+	github.com/ulikunitz/xz v0.5.12
 	github.com/unrolled/secure v1.15.0
 	github.com/zricethezav/gitleaks/v8 v8.18.5-0.20240912004812-e93a7c0d2604
 	go.starlark.net v0.0.0-20231121155337-90ade8b19d09
@@ -142,7 +142,6 @@ require (
 	github.com/jackc/pgservicefile v0.0.0-20231201235250-de7065d80cb9 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
-	github.com/klauspost/compress v1.17.8 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
@@ -170,7 +169,6 @@ require (
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/swaggo/files v0.0.0-20220728132757-551d4a08d97a // indirect
-	github.com/ulikunitz/xz v0.5.12 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.49.0 // indirect

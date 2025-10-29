@@ -41,7 +41,7 @@ type Context struct {
 
 // Value overrides context.Context.Value to ensure that calls are routed to
 // correct context.
-func (ctx *Context) Value(key interface{}) interface{} {
+func (ctx *Context) Value(key any) any {
 	return ctx.Context.Value(key)
 }
 

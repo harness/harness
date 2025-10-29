@@ -25,7 +25,7 @@ var publicKeySchemes = sortEnum([]PublicKeyScheme{
 	PublicKeySchemeSSH, PublicKeySchemePGP,
 })
 
-func (PublicKeyScheme) Enum() []interface{} { return toInterfaceSlice(publicKeySchemes) }
+func (PublicKeyScheme) Enum() []any { return toInterfaceSlice(publicKeySchemes) }
 func (s PublicKeyScheme) Sanitize() (PublicKeyScheme, bool) {
 	return Sanitize(s, GetAllPublicKeySchemes)
 }
@@ -47,7 +47,7 @@ var publicKeyTypes = sortEnum([]PublicKeyUsage{
 	PublicKeyUsageAuth, PublicKeyUsageSign, PublicKeyUsageAuthSign,
 })
 
-func (PublicKeyUsage) Enum() []interface{} { return toInterfaceSlice(publicKeyTypes) }
+func (PublicKeyUsage) Enum() []any { return toInterfaceSlice(publicKeyTypes) }
 func (s PublicKeyUsage) Sanitize() (PublicKeyUsage, bool) {
 	return Sanitize(s, GetAllPublicKeyUsages)
 }
@@ -69,7 +69,7 @@ var publicKeySorts = sortEnum([]PublicKeySort{
 	PublicKeySortIdentifier,
 })
 
-func (PublicKeySort) Enum() []interface{}               { return toInterfaceSlice(publicKeySorts) }
+func (PublicKeySort) Enum() []any                       { return toInterfaceSlice(publicKeySorts) }
 func (s PublicKeySort) Sanitize() (PublicKeySort, bool) { return Sanitize(s, GetAllPublicKeySorts) }
 func GetAllPublicKeySorts() ([]PublicKeySort, PublicKeySort) {
 	return publicKeySorts, PublicKeySortCreated
@@ -93,7 +93,7 @@ var revocationReasons = sortEnum([]RevocationReason{
 	RevocationReasonCompromised,
 })
 
-func (RevocationReason) Enum() []interface{} { return toInterfaceSlice(revocationReasons) }
+func (RevocationReason) Enum() []any { return toInterfaceSlice(revocationReasons) }
 func (s RevocationReason) Sanitize() (RevocationReason, bool) {
 	return Sanitize(s, GetAllRevocationReasons)
 }
@@ -142,6 +142,6 @@ var gitSignatureResults = sortEnum([]GitSignatureResult{
 	GitSignatureRevoked,
 })
 
-func (GitSignatureResult) Enum() []interface{} {
+func (GitSignatureResult) Enum() []any {
 	return toInterfaceSlice(gitSignatureResults)
 }

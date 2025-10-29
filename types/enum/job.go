@@ -34,7 +34,7 @@ var jobStates = sortEnum([]JobState{
 	JobStateCanceled,
 })
 
-func (JobState) Enum() []interface{} { return toInterfaceSlice(jobStates) }
+func (JobState) Enum() []any { return toInterfaceSlice(jobStates) }
 func (s JobState) Sanitize() (JobState, bool) {
 	return Sanitize(s, GetAllJobStates)
 }

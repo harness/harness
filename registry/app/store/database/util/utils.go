@@ -36,7 +36,7 @@ func GetEmptySQLInt64(i int64) sql.NullInt64 {
 	return sql.NullInt64{Int64: i, Valid: true}
 }
 
-func ConstructQuery(query string, args []interface{}) string {
+func ConstructQuery(query string, args []any) string {
 	var builder strings.Builder
 	argIndex := 0
 
@@ -68,7 +68,7 @@ func ConstructQuery(query string, args []interface{}) string {
 }
 
 // FormatQuery is a helper function to interpolate parameters into the query.
-func FormatQuery(query string, params []interface{}) string {
+func FormatQuery(query string, params []any) string {
 	for i, param := range params {
 		placeholder := fmt.Sprintf("$%d", i+1)
 		var value string

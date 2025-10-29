@@ -408,7 +408,7 @@ func (s *Service) createRepositoryInternal(
 	log := log.Ctx(ctx)
 	repoPath := getFullPathForRepo(s.reposRoot, base.RepoUID)
 	if _, err := os.Stat(repoPath); !errors.Is(err, fs.ErrNotExist) {
-		return errors.Conflict("repository already exists at path %q", repoPath)
+		return errors.Conflictf("repository already exists at path %q", repoPath)
 	}
 
 	// create repository in repos folder
@@ -468,7 +468,7 @@ func (s *Service) createRepositoryInternal(
 			break
 		}
 		if err != nil {
-			return errors.Internal(err, "failed to receive file %s", file)
+			return errors.Internalf(err, "failed to receive file %s", file)
 		}
 
 		filePaths = append(filePaths, filePath)
@@ -504,7 +504,7 @@ func (s *Service) createRepositoryInternal(
 		hookPath := path.Join(repoPath, gitHooksDir, hook)
 		err = os.Symlink(s.gitHookPath, hookPath)
 		if err != nil {
-			return errors.Internal(err, "failed to setup symlink for hook '%s' ('%s' -> '%s')",
+			return errors.Internalf(err, "failed to setup symlink for hook '%s' ('%s' -> '%s')",
 				hook, hookPath, s.gitHookPath)
 		}
 	}

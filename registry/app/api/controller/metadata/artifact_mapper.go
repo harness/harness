@@ -621,7 +621,7 @@ func GetGenericArtifactDetail(
 
 func GetPythonArtifactDetail(
 	image *types.Image, artifact *types.Artifact,
-	metadata map[string]interface{},
+	metadata map[string]any,
 ) artifactapi.ArtifactDetail {
 	createdAt := GetTimeInMs(artifact.CreatedAt)
 	modifiedAt := GetTimeInMs(artifact.UpdatedAt)
@@ -642,7 +642,7 @@ func GetPythonArtifactDetail(
 
 func GetNugetArtifactDetail(
 	image *types.Image, artifact *types.Artifact,
-	metadata map[string]interface{},
+	metadata map[string]any,
 	downloadCount int64,
 ) artifactapi.ArtifactDetail {
 	createdAt := GetTimeInMs(artifact.CreatedAt)
@@ -672,7 +672,7 @@ func GetNugetArtifactDetail(
 
 func GetHFArtifactDetail(
 	image *types.Image, artifact *types.Artifact,
-	metadata map[string]interface{},
+	metadata map[string]any,
 	downloadCount int64,
 ) artifactapi.ArtifactDetail {
 	createdAt := GetTimeInMs(artifact.CreatedAt)
@@ -703,7 +703,7 @@ func GetHFArtifactDetail(
 
 func GetGoArtifactDetail(
 	image *types.Image, artifact *types.Artifact,
-	metadata map[string]interface{},
+	metadata map[string]any,
 	downloadCount int64,
 ) artifactapi.ArtifactDetail {
 	createdAt := GetTimeInMs(artifact.CreatedAt)
@@ -733,7 +733,7 @@ func GetGoArtifactDetail(
 
 func GetNPMArtifactDetail(
 	image *types.Image, artifact *types.Artifact,
-	metadata map[string]interface{},
+	metadata map[string]any,
 	downloadCount int64,
 ) artifactapi.ArtifactDetail {
 	createdAt := GetTimeInMs(artifact.CreatedAt)
@@ -766,7 +766,7 @@ func GetNPMArtifactDetail(
 
 func GetRPMArtifactDetail(
 	image *types.Image, artifact *types.Artifact,
-	metadata map[string]interface{},
+	metadata map[string]any,
 	downloadCount int64,
 ) artifactapi.ArtifactDetail {
 	createdAt := GetTimeInMs(artifact.CreatedAt)
@@ -775,7 +775,7 @@ func GetRPMArtifactDetail(
 	if !ok {
 		log.Error().Msg("failed to get size from RPM metadata")
 	}
-	fileMetadata, ok := metadata["file_metadata"].(map[string]interface{})
+	fileMetadata, ok := metadata["file_metadata"].(map[string]any)
 	if ok {
 		delete(fileMetadata, "files")
 		delete(fileMetadata, "changelogs")

@@ -37,7 +37,7 @@ type GenericReporter struct {
 // NOTE: This call is blocking until the event was send (not until it was processed).
 //
 //nolint:revive // emphasize that this is meant to be an operation on *GenericReporter
-func ReporterSendEvent[T interface{}](reporter *GenericReporter, ctx context.Context,
+func ReporterSendEvent[T any](reporter *GenericReporter, ctx context.Context,
 	eventType EventType, payload T) (string, error) {
 	streamID := getStreamID(reporter.category, eventType)
 	event := Event[T]{
@@ -56,7 +56,7 @@ func ReporterSendEvent[T interface{}](reporter *GenericReporter, ctx context.Con
 		return "", fmt.Errorf("failed to encode payload: %w", err)
 	}
 
-	streamPayload := map[string]interface{}{
+	streamPayload := map[string]any{
 		streamPayloadKey: buff.Bytes(),
 	}
 

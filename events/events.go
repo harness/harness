@@ -25,7 +25,7 @@ const (
 	streamPayloadKey = "event"
 )
 
-type Event[T interface{}] struct {
+type Event[T any] struct {
 	ID        string    `json:"id"`
 	Timestamp time.Time `json:"timestamp"`
 	Payload   T         `json:"payload"`

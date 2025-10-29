@@ -16,6 +16,7 @@ package usererror
 
 import (
 	"fmt"
+	"maps"
 	"net/http"
 )
 
@@ -129,9 +130,7 @@ func NewWithPayload(status int, message string, valueMaps ...map[string]any) *Er
 			values = valueMap
 			continue
 		}
-		for k, v := range valueMap {
-			values[k] = v
-		}
+		maps.Copy(values, valueMap)
 	}
 	return &Error{Status: status, Message: message, Values: values}
 }

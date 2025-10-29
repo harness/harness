@@ -147,8 +147,8 @@ type CommitRevisionResponse struct {
 }
 
 type CommitEntry struct {
-	Key   string      `json:"key"`
-	Value interface{} `json:"value"` // Value can be HeaderInfo or LFSFileInfo
+	Key   string `json:"key"`
+	Value any    `json:"value"` // Value can be HeaderInfo or LFSFileInfo
 }
 
 type HeaderInfo struct {

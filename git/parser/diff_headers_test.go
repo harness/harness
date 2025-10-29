@@ -159,15 +159,15 @@ func TestReadLinePrefix(t *testing.T) {
 		{
 			name: "too-long",
 			wf: func(w io.Writer) {
-				for i := 0; i < maxLen; i++ {
+				for range maxLen {
 					_, _ = w.Write([]byte("a"))
 				}
 				_, _ = w.Write([]byte("\n"))
-				for i := 0; i < maxLen*2; i++ {
+				for range maxLen * 2 {
 					_, _ = w.Write([]byte("b"))
 				}
 				_, _ = w.Write([]byte("\n"))
-				for i := 0; i < maxLen/2; i++ {
+				for range maxLen / 2 {
 					_, _ = w.Write([]byte("c"))
 				}
 				_, _ = w.Write([]byte("\n"))
@@ -177,15 +177,15 @@ func TestReadLinePrefix(t *testing.T) {
 		{
 			name: "overflow-buffer",
 			wf: func(w io.Writer) {
-				for i := 0; i < bufio.MaxScanTokenSize+1; i++ {
+				for range bufio.MaxScanTokenSize + 1 {
 					_, _ = w.Write([]byte("a"))
 				}
 				_, _ = w.Write([]byte("\n"))
-				for i := 0; i < bufio.MaxScanTokenSize*2; i++ {
+				for range bufio.MaxScanTokenSize * 2 {
 					_, _ = w.Write([]byte("b"))
 				}
 				_, _ = w.Write([]byte("\n"))
-				for i := 0; i < bufio.MaxScanTokenSize; i++ {
+				for range bufio.MaxScanTokenSize {
 					_, _ = w.Write([]byte("c"))
 				}
 			},

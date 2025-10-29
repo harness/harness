@@ -878,7 +878,7 @@ func (a ArtifactDao) GetAllVersionsByRepoAndImage(ctx context.Context, regID int
 		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
 	}
 
-	artifactIDs := make([]interface{}, 0, len(dst))
+	artifactIDs := make([]any, 0, len(dst))
 	for _, art := range dst {
 		artifactIDs = append(artifactIDs, art.ID)
 	}
@@ -890,7 +890,7 @@ func (a ArtifactDao) GetAllVersionsByRepoAndImage(ctx context.Context, regID int
 }
 
 func (a ArtifactDao) fetchDownloadStatsForArtifacts(ctx context.Context,
-	artifactIDs []interface{}, dst []*nonOCIArtifactMetadataDB, sortByDownloadCount bool, sortOrder string) error {
+	artifactIDs []any, dst []*nonOCIArtifactMetadataDB, sortByDownloadCount bool, sortOrder string) error {
 	if len(artifactIDs) == 0 {
 		return nil
 	}

@@ -24,7 +24,7 @@ import (
 // Since looks up key, which should be a time.Time, and returns the duration
 // since that time. If the key is not found, the value returned will be zero.
 // This is helpful when inferring metrics related to context execution times.
-func Since(ctx context.Context, key interface{}) time.Duration {
+func Since(ctx context.Context, key any) time.Duration {
 	if startedAt, ok := ctx.Value(key).(time.Time); ok {
 		return time.Since(startedAt)
 	}
@@ -33,7 +33,7 @@ func Since(ctx context.Context, key interface{}) time.Duration {
 
 // GetStringValue returns a string value from the context. The empty string
 // will be returned if not found.
-func GetStringValue(ctx context.Context, key interface{}) (value string) {
+func GetStringValue(ctx context.Context, key any) (value string) {
 	if valuev, ok := ctx.Value(key).(string); ok {
 		value = valuev
 	}

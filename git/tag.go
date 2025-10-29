@@ -235,7 +235,7 @@ func (s *Service) CreateCommitTag(ctx context.Context, params *CreateCommitTagPa
 
 	targetCommit, err := s.git.GetCommitFromRev(ctx, repoPath, params.Target)
 	if errors.IsNotFound(err) {
-		return nil, errors.NotFound("target '%s' doesn't exist", params.Target)
+		return nil, errors.NotFoundf("target '%s' doesn't exist", params.Target)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("CreateCommitTag: failed to get commit id for target '%s': %w", params.Target, err)
@@ -251,7 +251,7 @@ func (s *Service) CreateCommitTag(ctx context.Context, params *CreateCommitTagPa
 		return nil, fmt.Errorf("CreateCommitTag: failed to verify tag existence: %w", err)
 	}
 	if err == nil && !commitSHA.IsEmpty() {
-		return nil, errors.Conflict("tag '%s' already exists", tagName)
+		return nil, errors.Conflictf("tag '%s' already exists", tagName)
 	}
 
 	// create tag request
@@ -353,7 +353,7 @@ func (s *Service) DeleteTag(ctx context.Context, params *DeleteTagParams) error 
 
 	err = refUpdater.DoOne(ctx, tagRef, sha.None, sha.Nil) // delete whatever is there
 	if errors.IsNotFound(err) {
-		return errors.NotFound("tag %q does not exist", params.Name)
+		return errors.NotFoundf("tag %q does not exist", params.Name)
 	}
 	if err != nil {
 		return fmt.Errorf("failed to init ref updater: %w", err)
@@ -376,7 +376,7 @@ func (s *Service) listCommitTagsLoadReferenceData(
 		params.PageSize,
 	)
 	if err != nil {
-		return nil, errors.InvalidArgument("invalid pagination details: %v", err)
+		return nil, errors.InvalidArgumentf("invalid pagination details: %v", err)
 	}
 
 	opts := &api.WalkReferencesOptions{

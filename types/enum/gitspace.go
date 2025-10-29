@@ -34,7 +34,7 @@ var GitspaceSorts = sortEnum([]GitspaceSort{
 	GitspaceSortLastActivated,
 })
 
-func (GitspaceSort) Enum() []interface{} { return toInterfaceSlice(GitspaceSorts) }
+func (GitspaceSort) Enum() []any { return toInterfaceSlice(GitspaceSorts) }
 
 // ParseGitspaceSort parses the gitspace sort attribute string
 // and returns the equivalent enumeration.
@@ -63,7 +63,7 @@ const (
 	GitspaceOwnerAll  GitspaceOwner = "all"
 )
 
-func (GitspaceOwner) Enum() []interface{} { return toInterfaceSlice(GitspaceOwners) }
+func (GitspaceOwner) Enum() []any { return toInterfaceSlice(GitspaceOwners) }
 
 // ParseGitspaceSort parses the gitspace sort attribute string
 // and returns the equivalent enumeration.
@@ -80,7 +80,7 @@ func ParseGitspaceOwner(s string) GitspaceOwner {
 
 type GitspaceFilterState string
 
-func (GitspaceFilterState) Enum() []interface{} { return toInterfaceSlice(GitspaceFilterStates) }
+func (GitspaceFilterState) Enum() []any { return toInterfaceSlice(GitspaceFilterStates) }
 func (s GitspaceFilterState) Sanitize() (GitspaceFilterState, bool) {
 	return Sanitize(s, GetAllGitspaceFilterState)
 }

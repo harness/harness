@@ -59,5 +59,5 @@ var connectorTypes = sortEnum([]ConnectorType{
 	ConnectorTypeGithub,
 })
 
-func (ConnectorType) Enum() []interface{}               { return toInterfaceSlice(connectorTypes) }
+func (ConnectorType) Enum() []any                       { return toInterfaceSlice(connectorTypes) }
 func (t ConnectorType) Sanitize() (ConnectorType, bool) { return Sanitize(t, GetAllConnectorTypes) }

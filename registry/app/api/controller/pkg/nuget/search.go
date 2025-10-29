@@ -84,8 +84,8 @@ func (c *controller) SearchPackage(
 	}
 }
 
-func extractResponseData(searchResponse response.Response) ([]interface{}, int64) {
-	var nativeResults []interface{}
+func extractResponseData(searchResponse response.Response) ([]any, int64) {
+	var nativeResults []any
 	var totalHits int64
 
 	if searchResp, ok := searchResponse.(*SearchPackageResponse); ok && searchResp.SearchResponse != nil {

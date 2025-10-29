@@ -52,7 +52,7 @@ func ParseArchiveFormat(format string) (ArchiveFormat, error) {
 	case "tgz":
 		return ArchiveFormatTgz, nil
 	default:
-		return "", errors.InvalidArgument("failed to parse file format '%s' is invalid", format)
+		return "", errors.InvalidArgumentf("failed to parse file format '%s' is invalid", format)
 	}
 }
 
@@ -61,7 +61,7 @@ func (f ArchiveFormat) Validate() error {
 	case ArchiveFormatTar, ArchiveFormatZip, ArchiveFormatTarGz, ArchiveFormatTgz:
 		return nil
 	default:
-		return errors.InvalidArgument("git archive flag format '%s' is invalid", f)
+		return errors.InvalidArgumentf("git archive flag format '%s' is invalid", f)
 	}
 }
 
@@ -174,7 +174,7 @@ func (g *Git) Archive(ctx context.Context, repoPath string, params ArchiveParams
 		case ArchiveFormatZip:
 			// zip accepts values digit 0-9
 			if *params.Compression < 0 || *params.Compression > 9 {
-				return errors.InvalidArgument("compression level argument '%d' not supported for format 'zip'",
+				return errors.InvalidArgumentf("compression level argument '%d' not supported for format 'zip'",
 					*params.Compression)
 			}
 			cmd.Add(command.WithArg(fmt.Sprintf("-%d", *params.Compression)))

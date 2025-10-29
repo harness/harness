@@ -18,7 +18,7 @@ func NewReporter() *Reporter {
 }
 
 // Report provides a mock function
-func (m *Reporter) Report(ctx context.Context, event interface{}) error {
+func (m *Reporter) Report(ctx context.Context, event any) error {
 	args := m.Called(ctx, event)
 	return args.Error(0)
 }

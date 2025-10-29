@@ -85,7 +85,7 @@ type CommitFileStats struct {
 }
 
 type CommitStats struct {
-	Total ChangeStats       `json:"total,omitempty"`
+	Total ChangeStats       `json:"total"`
 	Files []CommitFileStats `json:"files,omitempty"`
 }
 

@@ -120,7 +120,7 @@ func AsError(err error) (e *Error) {
 }
 
 // Format is a helper function to return an Error with a given status and formatted message.
-func Format(code Status, format string, args ...interface{}) *Error {
+func Format(code Status, format string, args ...any) *Error {
 	msg := fmt.Sprintf(format, args...)
 	return &Error{
 		Status:  code,
@@ -129,51 +129,125 @@ func Format(code Status, format string, args ...interface{}) *Error {
 }
 
 // NotFound is a helper function to return an not found Error.
-func NotFound(format string, args ...interface{}) *Error {
+func NotFound(msg string) *Error {
+	return &Error{
+		Status:  StatusNotFound,
+		Message: msg,
+	}
+}
+
+// NotFoundf is a helper function to return an not found Error.
+func NotFoundf(format string, args ...any) *Error {
 	return Format(StatusNotFound, format, args...)
 }
 
 // InvalidArgument is a helper function to return an invalid argument Error.
-func InvalidArgument(format string, args ...interface{}) *Error {
+func InvalidArgument(msg string) *Error {
+	return &Error{
+		Status:  StatusInvalidArgument,
+		Message: msg,
+	}
+}
+
+// InvalidArgumentf is a helper function to return an invalid argument Error.
+func InvalidArgumentf(format string, args ...any) *Error {
 	return Format(StatusInvalidArgument, format, args...)
 }
 
 // Internal is a helper function to return an internal Error.
-func Internal(err error, format string, args ...interface{}) *Error {
+func Internal(err error, msg string) *Error {
+	return &Error{
+		Status:  StatusInternal,
+		Message: msg,
+		Err:     err,
+	}
+}
+
+// Internalf is a helper function to return an internal Error.
+func Internalf(err error, format string, args ...any) *Error {
 	msg := fmt.Sprintf(format, args...)
-	return Format(StatusInternal, msg).SetErr(
+	return Format(StatusInternal, format, args...).SetErr(
 		fmt.Errorf("%s: %w", msg, err),
 	)
 }
 
 // Conflict is a helper function to return an conflict Error.
-func Conflict(format string, args ...interface{}) *Error {
+func Conflict(msg string) *Error {
+	return &Error{
+		Status:  StatusConflict,
+		Message: msg,
+	}
+}
+
+// Conflictf is a helper function to return a conflict Error.
+func Conflictf(format string, args ...any) *Error {
 	return Format(StatusConflict, format, args...)
 }
 
-// PreconditionFailed is a helper function to return an precondition
+// PreconditionFailed is a helper function to return a precondition
 // failed error.
-func PreconditionFailed(format string, args ...interface{}) *Error {
+func PreconditionFailed(msg string) *Error {
+	return &Error{
+		Status:  StatusPreconditionFailed,
+		Message: msg,
+	}
+}
+
+// PreconditionFailedf is a helper function to return a precondition
+// failed error.
+func PreconditionFailedf(format string, args ...any) *Error {
 	return Format(StatusPreconditionFailed, format, args...)
 }
 
 // Unauthorized is a helper function to return an unauthorized error.
-func Unauthorized(format string, args ...interface{}) *Error {
+func Unauthorized(msg string) *Error {
+	return &Error{
+		Status:  StatusUnauthorized,
+		Message: msg,
+	}
+}
+
+// Unauthorizedf is a helper function to return an unauthorized error.
+func Unauthorizedf(format string, args ...any) *Error {
 	return Format(StatusUnauthorized, format, args...)
 }
 
 // Forbidden is a helper function to return a forbidden error.
-func Forbidden(format string, args ...interface{}) *Error {
+func Forbidden(msg string) *Error {
+	return &Error{
+		Status:  StatusForbidden,
+		Message: msg,
+	}
+}
+
+// Forbiddenf is a helper function to return a forbidden error.
+func Forbiddenf(format string, args ...any) *Error {
 	return Format(StatusForbidden, format, args...)
 }
 
 // Failed is a helper function to return failed error status.
-func Failed(format string, args ...interface{}) *Error {
+func Failed(msg string) *Error {
+	return &Error{
+		Status:  StatusFailed,
+		Message: msg,
+	}
+}
+
+// Failedf is a helper function to return failed error status.
+func Failedf(format string, args ...any) *Error {
 	return Format(StatusFailed, format, args...)
 }
 
 // Aborted is a helper function to return aborted error status.
-func Aborted(format string, args ...interface{}) *Error {
+func Aborted(msg string) *Error {
+	return &Error{
+		Status:  StatusAborted,
+		Message: msg,
+	}
+}
+
+// Abortedf is a helper function to return aborted error status.
+func Abortedf(format string, args ...any) *Error {
 	return Format(StatusAborted, format, args...)
 }
 

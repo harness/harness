@@ -59,7 +59,7 @@ func checkOperations(reflector *openapi3.Reflector) {
 
 	reportStatusCheckResults := openapi3.Operation{}
 	reportStatusCheckResults.WithTags(tag)
-	reportStatusCheckResults.WithMapOfAnything(map[string]interface{}{"operationId": "reportStatusCheckResults"})
+	reportStatusCheckResults.WithMapOfAnything(map[string]any{"operationId": "reportStatusCheckResults"})
 	_ = reflector.SetRequest(&reportStatusCheckResults, struct {
 		repoRequest
 		CommitSHA string `path:"commit_sha"`
@@ -77,7 +77,7 @@ func checkOperations(reflector *openapi3.Reflector) {
 	listStatusCheckResults.WithTags(tag)
 	listStatusCheckResults.WithParameters(
 		QueryParameterPage, QueryParameterLimit, queryParameterStatusCheckQuery)
-	listStatusCheckResults.WithMapOfAnything(map[string]interface{}{"operationId": "listStatusCheckResults"})
+	listStatusCheckResults.WithMapOfAnything(map[string]any{"operationId": "listStatusCheckResults"})
 	_ = reflector.SetRequest(&listStatusCheckResults, struct {
 		repoRequest
 		CommitSHA string `path:"commit_sha"`
@@ -94,7 +94,7 @@ func checkOperations(reflector *openapi3.Reflector) {
 	listStatusCheckRecent.WithTags(tag)
 	listStatusCheckRecent.WithParameters(
 		queryParameterStatusCheckQuery, queryParameterStatusCheckSince)
-	listStatusCheckRecent.WithMapOfAnything(map[string]interface{}{"operationId": "listStatusCheckRecent"})
+	listStatusCheckRecent.WithMapOfAnything(map[string]any{"operationId": "listStatusCheckRecent"})
 	_ = reflector.SetRequest(&listStatusCheckRecent, struct {
 		repoRequest
 		Since int
@@ -111,7 +111,7 @@ func checkOperations(reflector *openapi3.Reflector) {
 	listStatusCheckRecentSpace.WithTags(tag)
 	listStatusCheckRecentSpace.WithParameters(
 		queryParameterStatusCheckQuery, queryParameterStatusCheckSince, QueryParameterRecursive)
-	listStatusCheckRecentSpace.WithMapOfAnything(map[string]interface{}{"operationId": "listStatusCheckRecentSpace"})
+	listStatusCheckRecentSpace.WithMapOfAnything(map[string]any{"operationId": "listStatusCheckRecentSpace"})
 	_ = reflector.SetRequest(&listStatusCheckRecentSpace, struct {
 		spaceRequest
 		Since int

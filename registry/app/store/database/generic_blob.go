@@ -163,7 +163,7 @@ func (g GenericBlobDao) mapToGenericBlob(_ context.Context, dst *GenericBlob) (*
 	}, nil
 }
 
-func (g GenericBlobDao) mapToInternalGenericBlob(gb *types.GenericBlob) interface{} {
+func (g GenericBlobDao) mapToInternalGenericBlob(gb *types.GenericBlob) any {
 	if gb.CreatedAt.IsZero() {
 		gb.CreatedAt = time.Now()
 	}

@@ -39,7 +39,7 @@ type regulator struct {
 // concurrent calls given a minimum limit and default.
 //
 // If the parameter supplied is of an invalid type this returns an error.
-func GetLimitFromParameter(param interface{}, mn, def uint64) (uint64, error) {
+func GetLimitFromParameter(param any, mn, def uint64) (uint64, error) {
 	limit := def
 
 	switch v := param.(type) {

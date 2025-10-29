@@ -16,7 +16,7 @@ package enum
 
 type InfraProvisioningType string
 
-func (InfraProvisioningType) Enum() []interface{} { return toInterfaceSlice(provisioningTypes) }
+func (InfraProvisioningType) Enum() []any { return toInterfaceSlice(provisioningTypes) }
 
 var provisioningTypes = []InfraProvisioningType{
 	InfraProvisioningTypeExisting, InfraProvisioningTypeNew,

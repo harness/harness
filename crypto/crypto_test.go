@@ -319,8 +319,7 @@ func BenchmarkGenerateHMACSHA256(b *testing.B) {
 	data := []byte("benchmark data")
 	key := []byte("benchmark key")
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, err := GenerateHMACSHA256(data, key)
 		if err != nil {
 			b.Fatal(err)
@@ -332,8 +331,7 @@ func BenchmarkGenerateHMACSHA256LargeData(b *testing.B) {
 	data := []byte(strings.Repeat("a", 10000))
 	key := []byte("benchmark key")
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, err := GenerateHMACSHA256(data, key)
 		if err != nil {
 			b.Fatal(err)
@@ -345,8 +343,7 @@ func BenchmarkIsShaEqual(b *testing.B) {
 	key1 := "benchmark string for comparison"
 	key2 := "benchmark string for comparison"
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		IsShaEqual(key1, key2)
 	}
 }
@@ -355,8 +352,7 @@ func BenchmarkIsShaEqualLarge(b *testing.B) {
 	key1 := strings.Repeat("a", 1000)
 	key2 := strings.Repeat("a", 1000)
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		IsShaEqual(key1, key2)
 	}
 }

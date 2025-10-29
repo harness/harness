@@ -44,7 +44,7 @@ type updateConnectorRequest struct {
 func connectorOperations(reflector *openapi3.Reflector) {
 	opCreate := openapi3.Operation{}
 	opCreate.WithTags("connector")
-	opCreate.WithMapOfAnything(map[string]interface{}{"operationId": "createConnector"})
+	opCreate.WithMapOfAnything(map[string]any{"operationId": "createConnector"})
 	_ = reflector.SetRequest(&opCreate, new(createConnectorRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&opCreate, new(types.Connector), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opCreate, new(usererror.Error), http.StatusBadRequest)
@@ -55,7 +55,7 @@ func connectorOperations(reflector *openapi3.Reflector) {
 
 	opFind := openapi3.Operation{}
 	opFind.WithTags("connector")
-	opFind.WithMapOfAnything(map[string]interface{}{"operationId": "findConnector"})
+	opFind.WithMapOfAnything(map[string]any{"operationId": "findConnector"})
 	_ = reflector.SetRequest(&opFind, new(getConnectorRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opFind, new(types.Connector), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opFind, new(usererror.Error), http.StatusInternalServerError)
@@ -66,7 +66,7 @@ func connectorOperations(reflector *openapi3.Reflector) {
 
 	opDelete := openapi3.Operation{}
 	opDelete.WithTags("connector")
-	opDelete.WithMapOfAnything(map[string]interface{}{"operationId": "deleteConnector"})
+	opDelete.WithMapOfAnything(map[string]any{"operationId": "deleteConnector"})
 	_ = reflector.SetRequest(&opDelete, new(getConnectorRequest), http.MethodDelete)
 	_ = reflector.SetJSONResponse(&opDelete, nil, http.StatusNoContent)
 	_ = reflector.SetJSONResponse(&opDelete, new(usererror.Error), http.StatusInternalServerError)
@@ -77,7 +77,7 @@ func connectorOperations(reflector *openapi3.Reflector) {
 
 	opUpdate := openapi3.Operation{}
 	opUpdate.WithTags("connector")
-	opUpdate.WithMapOfAnything(map[string]interface{}{"operationId": "updateConnector"})
+	opUpdate.WithMapOfAnything(map[string]any{"operationId": "updateConnector"})
 	_ = reflector.SetRequest(&opUpdate, new(updateConnectorRequest), http.MethodPatch)
 	_ = reflector.SetJSONResponse(&opUpdate, new(types.Connector), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusBadRequest)
@@ -89,7 +89,7 @@ func connectorOperations(reflector *openapi3.Reflector) {
 
 	opTest := openapi3.Operation{}
 	opTest.WithTags("connector")
-	opTest.WithMapOfAnything(map[string]interface{}{"operationId": "testConnector"})
+	opTest.WithMapOfAnything(map[string]any{"operationId": "testConnector"})
 	_ = reflector.SetRequest(&opTest, nil, http.MethodPost)
 	_ = reflector.SetJSONResponse(&opTest, new(types.ConnectorTestResponse), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opTest, new(usererror.Error), http.StatusBadRequest)

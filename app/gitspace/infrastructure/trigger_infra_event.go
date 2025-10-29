@@ -359,5 +359,5 @@ func (i InfraProvisioner) useRoutingKey(
 
 func (i InfraProvisioner) getRoutingKey(spacePath string, gitspaceConfigIdentifier string) string {
 	return uuid.NewSHA1(uuid.NameSpaceURL,
-		[]byte(fmt.Sprintf("%s%s", spacePath, gitspaceConfigIdentifier))).String()
+		fmt.Appendf(nil, "%s%s", spacePath, gitspaceConfigIdentifier)).String()
 }

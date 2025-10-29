@@ -56,7 +56,7 @@ func NewVsCodeService(config *VSCodeConfig) *VSCode {
 func (v *VSCode) Setup(
 	ctx context.Context,
 	exec *devcontainer.Exec,
-	args map[gitspaceTypes.IDEArg]interface{},
+	args map[gitspaceTypes.IDEArg]any,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	gitspaceLogger.Info("Installing ssh-server inside container...")
@@ -80,7 +80,7 @@ func (v *VSCode) Setup(
 func (v *VSCode) setupVSCodeExtensions(
 	ctx context.Context,
 	exec *devcontainer.Exec,
-	args map[gitspaceTypes.IDEArg]interface{},
+	args map[gitspaceTypes.IDEArg]any,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	payload := gitspaceTypes.SetupVSCodeExtensionsPayload{
@@ -113,7 +113,7 @@ func (v *VSCode) setupVSCodeExtensions(
 func (v *VSCode) Run(
 	ctx context.Context,
 	exec *devcontainer.Exec,
-	_ map[gitspaceTypes.IDEArg]interface{},
+	_ map[gitspaceTypes.IDEArg]any,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	gitspaceLogger.Info("Running ssh-server...")
@@ -139,7 +139,7 @@ func (v *VSCode) Type() enum.IDEType {
 }
 
 func (v *VSCode) updateVSCodeSetupPayload(
-	args map[gitspaceTypes.IDEArg]interface{},
+	args map[gitspaceTypes.IDEArg]any,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 	payload *gitspaceTypes.SetupVSCodeExtensionsPayload,
 ) error {
@@ -164,7 +164,7 @@ func (v *VSCode) updateVSCodeSetupPayload(
 }
 
 func (v *VSCode) handleVSCodeCustomization(
-	args map[gitspaceTypes.IDEArg]interface{},
+	args map[gitspaceTypes.IDEArg]any,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 	payload *gitspaceTypes.SetupVSCodeExtensionsPayload,
 ) error {

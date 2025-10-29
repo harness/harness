@@ -50,7 +50,7 @@ func TestGetArtifactDetails(t *testing.T) {
 		name         string
 		packageType  artifact.PackageType
 		setupMocks   func() *metadata.APIController
-		expectedResp interface{}
+		expectedResp any
 	}{
 		{
 			name:        "maven_artifact_success",
@@ -237,7 +237,7 @@ func setupBasicController(_ *testing.T) *metadata.APIController {
 		UpdatedAt:  time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC),
 	}
 
-	metadataBytes, _ := json.Marshal(map[string]interface{}{
+	metadataBytes, _ := json.Marshal(map[string]any{
 		"name":        "test-artifact",
 		"version":     "v1.0.0",
 		"description": "Test artifact",
@@ -434,14 +434,14 @@ func setupSnapshotController(_ *testing.T, packageType artifact.PackageType) *me
 	var metadataBytes []byte
 	switch packageType { //nolint:exhaustive // Only testing specific package types
 	case artifact.PackageTypeMAVEN:
-		metadataBytes, _ = json.Marshal(map[string]interface{}{
+		metadataBytes, _ = json.Marshal(map[string]any{
 			"groupId":    "com.example",
 			"artifactId": "test-artifact",
 			"version":    "v1.0.0",
 		})
 	case artifact.PackageTypeGENERIC:
-		metadataBytes, _ = json.Marshal(map[string]interface{}{
-			"files": []map[string]interface{}{
+		metadataBytes, _ = json.Marshal(map[string]any{
+			"files": []map[string]any{
 				{
 					"name": "test-file.txt",
 					"size": 1024,
@@ -451,7 +451,7 @@ func setupSnapshotController(_ *testing.T, packageType artifact.PackageType) *me
 			"size":       1024,
 		})
 	default:
-		metadataBytes, _ = json.Marshal(map[string]interface{}{
+		metadataBytes, _ = json.Marshal(map[string]any{
 			"name":        "test-artifact",
 			"version":     "v1.0.0",
 			"description": "Test artifact for " + string(packageType),
@@ -521,7 +521,7 @@ func verifyArtifactSnapshot(t *testing.T, name string, actual artifact.ArtifactD
 	require.NoError(t, err, "Failed to read snapshot file")
 
 	// Compare JSON
-	var expected, actualParsed interface{}
+	var expected, actualParsed any
 	require.NoError(t, json.Unmarshal(expectedJSON, &expected), "Failed to unmarshal expected JSON")
 	require.NoError(t, json.Unmarshal(actualJSON, &actualParsed), "Failed to unmarshal actual JSON")
 

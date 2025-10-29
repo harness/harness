@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"os/exec"
 	"regexp"
 	"sync"
@@ -100,9 +101,7 @@ func (c *Command) Clone() *Command {
 	copy(postSepArgs, c.Flags)
 
 	envs := make(Envs, len(c.Envs))
-	for key, val := range c.Envs {
-		envs[key] = val
-	}
+	maps.Copy(envs, c.Envs)
 
 	return &Command{
 		Name:             c.Name,

@@ -238,7 +238,7 @@ func (g *Git) GetRef(
 	err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(output))
 	if cErr := command.AsError(err); cErr != nil {
 		if cErr.IsExitCode(128) && cErr.IsInvalidRefErr() {
-			return sha.None, errors.NotFound("reference %q not found", ref)
+			return sha.None, errors.NotFoundf("reference %q not found", ref)
 		}
 	}
 

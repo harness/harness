@@ -95,7 +95,7 @@ func TestContentEncodingTypeEnum(t *testing.T) {
 	}
 
 	// Check that the values are correct
-	expectedValues := []interface{}{
+	expectedValues := []any{
 		ContentEncodingTypeBase64, // sorted order: base64 comes before utf8
 		ContentEncodingTypeUTF8,
 	}
@@ -222,16 +222,16 @@ func TestContentEncodingTypeInvalidValues(t *testing.T) {
 // Benchmark tests.
 func BenchmarkContentEncodingTypeString(b *testing.B) {
 	encoding := ContentEncodingTypeUTF8
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+
+	for b.Loop() {
 		_ = string(encoding)
 	}
 }
 
 func BenchmarkContentEncodingTypeEnum(b *testing.B) {
 	encoding := ContentEncodingTypeUTF8
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+
+	for b.Loop() {
 		_ = encoding.Enum()
 	}
 }
@@ -239,8 +239,8 @@ func BenchmarkContentEncodingTypeEnum(b *testing.B) {
 func BenchmarkContentEncodingTypeComparison(b *testing.B) {
 	encoding1 := ContentEncodingTypeUTF8
 	encoding2 := ContentEncodingTypeBase64
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+
+	for b.Loop() {
 		_ = encoding1 == encoding2
 	}
 }

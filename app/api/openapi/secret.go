@@ -44,7 +44,7 @@ type updateSecretRequest struct {
 func secretOperations(reflector *openapi3.Reflector) {
 	opCreate := openapi3.Operation{}
 	opCreate.WithTags("secret")
-	opCreate.WithMapOfAnything(map[string]interface{}{"operationId": "createSecret"})
+	opCreate.WithMapOfAnything(map[string]any{"operationId": "createSecret"})
 	_ = reflector.SetRequest(&opCreate, new(createSecretRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&opCreate, new(types.Secret), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opCreate, new(usererror.Error), http.StatusBadRequest)
@@ -55,7 +55,7 @@ func secretOperations(reflector *openapi3.Reflector) {
 
 	opFind := openapi3.Operation{}
 	opFind.WithTags("secret")
-	opFind.WithMapOfAnything(map[string]interface{}{"operationId": "findSecret"})
+	opFind.WithMapOfAnything(map[string]any{"operationId": "findSecret"})
 	_ = reflector.SetRequest(&opFind, new(getSecretRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opFind, new(types.Secret), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opFind, new(usererror.Error), http.StatusInternalServerError)
@@ -66,7 +66,7 @@ func secretOperations(reflector *openapi3.Reflector) {
 
 	opDelete := openapi3.Operation{}
 	opDelete.WithTags("secret")
-	opDelete.WithMapOfAnything(map[string]interface{}{"operationId": "deleteSecret"})
+	opDelete.WithMapOfAnything(map[string]any{"operationId": "deleteSecret"})
 	_ = reflector.SetRequest(&opDelete, new(getSecretRequest), http.MethodDelete)
 	_ = reflector.SetJSONResponse(&opDelete, nil, http.StatusNoContent)
 	_ = reflector.SetJSONResponse(&opDelete, new(usererror.Error), http.StatusInternalServerError)
@@ -77,7 +77,7 @@ func secretOperations(reflector *openapi3.Reflector) {
 
 	opUpdate := openapi3.Operation{}
 	opUpdate.WithTags("secret")
-	opUpdate.WithMapOfAnything(map[string]interface{}{"operationId": "updateSecret"})
+	opUpdate.WithMapOfAnything(map[string]any{"operationId": "updateSecret"})
 	_ = reflector.SetRequest(&opUpdate, new(updateSecretRequest), http.MethodPatch)
 	_ = reflector.SetJSONResponse(&opUpdate, new(types.Secret), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusBadRequest)

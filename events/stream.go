@@ -22,7 +22,7 @@ import (
 
 // StreamProducer is an abstraction of a producer from the streams package.
 type StreamProducer interface {
-	Send(ctx context.Context, streamID string, payload map[string]interface{}) (string, error)
+	Send(ctx context.Context, streamID string, payload map[string]any) (string, error)
 }
 
 // StreamConsumer is an abstraction of a consumer from the streams package.

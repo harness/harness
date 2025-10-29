@@ -525,7 +525,7 @@ func (g *Git) GetCommitFromRev(
 
 	commitSHA, err := g.ResolveRev(ctx, repoPath, rev+"^{commit}")
 	if errors.IsInvalidArgument(err) {
-		return nil, errors.NotFound("revision %q not found", rev)
+		return nil, errors.NotFoundf("revision %q not found", rev)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve revision %q: %w", rev, err)
@@ -581,14 +581,14 @@ func GetLatestCommit(
 	err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(output))
 	if err != nil {
 		if strings.Contains(err.Error(), "ambiguous argument") {
-			return nil, errors.NotFound("revision %q not found", rev)
+			return nil, errors.NotFoundf("revision %q not found", rev)
 		}
 		return nil, fmt.Errorf("failed to run git to get commit data: %w", err)
 	}
 
 	commitLine := strings.TrimSpace(output.String())
 	if commitLine == "" {
-		return nil, errors.InvalidArgument("path %q not found in %s", path, rev)
+		return nil, errors.InvalidArgumentf("path %q not found in %s", path, rev)
 	}
 
 	commitSHA := sha.Must(commitLine)

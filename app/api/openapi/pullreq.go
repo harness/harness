@@ -494,7 +494,7 @@ var queryParameterMentionedID = openapi3.ParameterOrRef{
 func pullReqOperations(reflector *openapi3.Reflector) {
 	createPullReq := openapi3.Operation{}
 	createPullReq.WithTags("pullreq")
-	createPullReq.WithMapOfAnything(map[string]interface{}{"operationId": "createPullReq"})
+	createPullReq.WithMapOfAnything(map[string]any{"operationId": "createPullReq"})
 	_ = reflector.SetRequest(&createPullReq, new(createPullReqRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&createPullReq, new(types.PullReq), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&createPullReq, new(usererror.Error), http.StatusBadRequest)
@@ -505,7 +505,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	listPullReq := openapi3.Operation{}
 	listPullReq.WithTags("pullreq")
-	listPullReq.WithMapOfAnything(map[string]interface{}{"operationId": "listPullReq"})
+	listPullReq.WithMapOfAnything(map[string]any{"operationId": "listPullReq"})
 	listPullReq.WithParameters(
 		queryParameterStatePullRequest, queryParameterSourceRepoRefPullRequest,
 		queryParameterSourceBranchPullRequest, queryParameterTargetBranchPullRequest,
@@ -528,7 +528,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	getPullReq := openapi3.Operation{}
 	getPullReq.WithTags("pullreq")
-	getPullReq.WithMapOfAnything(map[string]interface{}{"operationId": "getPullReq"})
+	getPullReq.WithMapOfAnything(map[string]any{"operationId": "getPullReq"})
 	getPullReq.WithParameters(queryParameterIncludeChecks, queryParameterIncludeRules)
 	_ = reflector.SetRequest(&getPullReq, new(getPullReqRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&getPullReq, new(types.PullReq), http.StatusOK)
@@ -540,7 +540,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	getPullReqByBranches := openapi3.Operation{}
 	getPullReqByBranches.WithTags("pullreq")
-	getPullReqByBranches.WithMapOfAnything(map[string]interface{}{"operationId": "getPullReqByBranches"})
+	getPullReqByBranches.WithMapOfAnything(map[string]any{"operationId": "getPullReqByBranches"})
 	getPullReqByBranches.WithParameters(queryParameterSourceRepoRefPullRequest,
 		queryParameterIncludeChecks, queryParameterIncludeRules)
 	_ = reflector.SetRequest(&getPullReqByBranches, new(getPullReqByBranchesRequest), http.MethodGet)
@@ -555,7 +555,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	putPullReq := openapi3.Operation{}
 	putPullReq.WithTags("pullreq")
-	putPullReq.WithMapOfAnything(map[string]interface{}{"operationId": "updatePullReq"})
+	putPullReq.WithMapOfAnything(map[string]any{"operationId": "updatePullReq"})
 	_ = reflector.SetRequest(&putPullReq, new(updatePullReqRequest), http.MethodPatch)
 	_ = reflector.SetJSONResponse(&putPullReq, new(types.PullReq), http.StatusOK)
 	_ = reflector.SetJSONResponse(&putPullReq, new(usererror.Error), http.StatusBadRequest)
@@ -566,7 +566,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	statePullReq := openapi3.Operation{}
 	statePullReq.WithTags("pullreq")
-	statePullReq.WithMapOfAnything(map[string]interface{}{"operationId": "statePullReq"})
+	statePullReq.WithMapOfAnything(map[string]any{"operationId": "statePullReq"})
 	_ = reflector.SetRequest(&statePullReq, new(statePullReqRequest), http.MethodPatch)
 	_ = reflector.SetJSONResponse(&statePullReq, new(types.PullReq), http.StatusOK)
 	_ = reflector.SetJSONResponse(&statePullReq, new(usererror.Error), http.StatusBadRequest)
@@ -577,7 +577,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	listPullReqActivities := openapi3.Operation{}
 	listPullReqActivities.WithTags("pullreq")
-	listPullReqActivities.WithMapOfAnything(map[string]interface{}{"operationId": "listPullReqActivities"})
+	listPullReqActivities.WithMapOfAnything(map[string]any{"operationId": "listPullReqActivities"})
 	listPullReqActivities.WithParameters(
 		queryParameterKindPullRequestActivity, queryParameterTypePullRequestActivity,
 		queryParameterAfter, queryParameterBeforePullRequestActivity, QueryParameterLimit)
@@ -592,7 +592,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	commentCreatePullReq := openapi3.Operation{}
 	commentCreatePullReq.WithTags("pullreq")
-	commentCreatePullReq.WithMapOfAnything(map[string]interface{}{"operationId": "commentCreatePullReq"})
+	commentCreatePullReq.WithMapOfAnything(map[string]any{"operationId": "commentCreatePullReq"})
 	_ = reflector.SetRequest(&commentCreatePullReq, new(commentCreatePullReqRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&commentCreatePullReq, new(types.PullReqActivity), http.StatusOK)
 	_ = reflector.SetJSONResponse(&commentCreatePullReq, new(usererror.Error), http.StatusBadRequest)
@@ -604,7 +604,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	commentUpdatePullReq := openapi3.Operation{}
 	commentUpdatePullReq.WithTags("pullreq")
-	commentUpdatePullReq.WithMapOfAnything(map[string]interface{}{"operationId": "commentUpdatePullReq"})
+	commentUpdatePullReq.WithMapOfAnything(map[string]any{"operationId": "commentUpdatePullReq"})
 	_ = reflector.SetRequest(&commentUpdatePullReq, new(commentUpdatePullReqRequest), http.MethodPatch)
 	_ = reflector.SetJSONResponse(&commentUpdatePullReq, new(types.PullReqActivity), http.StatusOK)
 	_ = reflector.SetJSONResponse(&commentUpdatePullReq, new(usererror.Error), http.StatusBadRequest)
@@ -616,7 +616,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	commentDeletePullReq := openapi3.Operation{}
 	commentDeletePullReq.WithTags("pullreq")
-	commentDeletePullReq.WithMapOfAnything(map[string]interface{}{"operationId": "commentDeletePullReq"})
+	commentDeletePullReq.WithMapOfAnything(map[string]any{"operationId": "commentDeletePullReq"})
 	_ = reflector.SetRequest(&commentDeletePullReq, new(commentDeletePullReqRequest), http.MethodDelete)
 	_ = reflector.SetJSONResponse(&commentDeletePullReq, nil, http.StatusNoContent)
 	_ = reflector.SetJSONResponse(&commentDeletePullReq, new(usererror.Error), http.StatusBadRequest)
@@ -628,7 +628,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	commentStatusPullReq := openapi3.Operation{}
 	commentStatusPullReq.WithTags("pullreq")
-	commentStatusPullReq.WithMapOfAnything(map[string]interface{}{"operationId": "commentStatusPullReq"})
+	commentStatusPullReq.WithMapOfAnything(map[string]any{"operationId": "commentStatusPullReq"})
 	_ = reflector.SetRequest(&commentStatusPullReq, new(commentStatusPullReqRequest), http.MethodPut)
 	_ = reflector.SetJSONResponse(&commentStatusPullReq, new(types.PullReqActivity), http.StatusOK)
 	_ = reflector.SetJSONResponse(&commentStatusPullReq, new(usererror.Error), http.StatusBadRequest)
@@ -640,7 +640,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	commentApplySuggestions := openapi3.Operation{}
 	commentApplySuggestions.WithTags("pullreq")
-	commentApplySuggestions.WithMapOfAnything(map[string]interface{}{"operationId": "commentApplySuggestions"})
+	commentApplySuggestions.WithMapOfAnything(map[string]any{"operationId": "commentApplySuggestions"})
 	_ = reflector.SetRequest(&commentApplySuggestions, new(commentApplySuggestionstRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&commentApplySuggestions, new(pullreq.CommentApplySuggestionsOutput), http.StatusOK)
 	_ = reflector.SetJSONResponse(&commentApplySuggestions, new(usererror.Error), http.StatusBadRequest)
@@ -653,7 +653,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	reviewerAdd := openapi3.Operation{}
 	reviewerAdd.WithTags("pullreq")
-	reviewerAdd.WithMapOfAnything(map[string]interface{}{"operationId": "reviewerAddPullReq"})
+	reviewerAdd.WithMapOfAnything(map[string]any{"operationId": "reviewerAddPullReq"})
 	_ = reflector.SetRequest(&reviewerAdd, new(reviewerAddPullReqRequest), http.MethodPut)
 	_ = reflector.SetJSONResponse(&reviewerAdd, new(types.PullReqReviewer), http.StatusOK)
 	_ = reflector.SetJSONResponse(&reviewerAdd, new(usererror.Error), http.StatusBadRequest)
@@ -665,7 +665,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	reviewerList := openapi3.Operation{}
 	reviewerList.WithTags("pullreq")
-	reviewerList.WithMapOfAnything(map[string]interface{}{"operationId": "reviewerListPullReq"})
+	reviewerList.WithMapOfAnything(map[string]any{"operationId": "reviewerListPullReq"})
 	_ = reflector.SetRequest(&reviewerList, new(reviewerListPullReqRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&reviewerList, new([]*types.PullReqReviewer), http.StatusOK)
 	_ = reflector.SetJSONResponse(&reviewerList, new(usererror.Error), http.StatusBadRequest)
@@ -677,7 +677,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	reviewerDelete := openapi3.Operation{}
 	reviewerDelete.WithTags("pullreq")
-	reviewerDelete.WithMapOfAnything(map[string]interface{}{"operationId": "reviewerDeletePullReq"})
+	reviewerDelete.WithMapOfAnything(map[string]any{"operationId": "reviewerDeletePullReq"})
 	_ = reflector.SetRequest(&reviewerDelete, new(reviewerDeletePullReqRequest), http.MethodDelete)
 	_ = reflector.SetJSONResponse(&reviewerDelete, nil, http.StatusNoContent)
 	_ = reflector.SetJSONResponse(&reviewerDelete, new(usererror.Error), http.StatusBadRequest)
@@ -689,7 +689,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	reviewSubmit := openapi3.Operation{}
 	reviewSubmit.WithTags("pullreq")
-	reviewSubmit.WithMapOfAnything(map[string]interface{}{"operationId": "reviewSubmitPullReq"})
+	reviewSubmit.WithMapOfAnything(map[string]any{"operationId": "reviewSubmitPullReq"})
 	_ = reflector.SetRequest(&reviewSubmit, new(reviewSubmitPullReqRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&reviewSubmit, nil, http.StatusNoContent)
 	_ = reflector.SetJSONResponse(&reviewSubmit, new(usererror.Error), http.StatusBadRequest)
@@ -701,7 +701,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	userGroupReviewerAdd := openapi3.Operation{}
 	userGroupReviewerAdd.WithTags("pullreq")
-	userGroupReviewerAdd.WithMapOfAnything(map[string]interface{}{"operationId": "userGroupReviewerAddPullReq"})
+	userGroupReviewerAdd.WithMapOfAnything(map[string]any{"operationId": "userGroupReviewerAddPullReq"})
 	_ = reflector.SetRequest(&userGroupReviewerAdd, new(userGroupReviewerAddRequest), http.MethodPut)
 	_ = reflector.SetJSONResponse(&userGroupReviewerAdd, new(types.UserGroupReviewer), http.StatusOK)
 	_ = reflector.SetJSONResponse(&userGroupReviewerAdd, new(usererror.Error), http.StatusBadRequest)
@@ -713,7 +713,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	userGroupReviewerDelete := openapi3.Operation{}
 	userGroupReviewerDelete.WithTags("pullreq")
-	userGroupReviewerDelete.WithMapOfAnything(map[string]interface{}{"operationId": "userGroupReviewerDeletePullReq"})
+	userGroupReviewerDelete.WithMapOfAnything(map[string]any{"operationId": "userGroupReviewerDeletePullReq"})
 	_ = reflector.SetRequest(&userGroupReviewerDelete, new(userGroupReviewerDeleteRequest), http.MethodDelete)
 	_ = reflector.SetJSONResponse(&userGroupReviewerDelete, nil, http.StatusNoContent)
 	_ = reflector.SetJSONResponse(&userGroupReviewerDelete, new(usererror.Error), http.StatusBadRequest)
@@ -725,7 +725,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	combinedReviewerList := openapi3.Operation{}
 	combinedReviewerList.WithTags("pullreq")
-	combinedReviewerList.WithMapOfAnything(map[string]interface{}{"operationId": "reviewerCombinedListPullReq"})
+	combinedReviewerList.WithMapOfAnything(map[string]any{"operationId": "reviewerCombinedListPullReq"})
 	_ = reflector.SetRequest(&combinedReviewerList, new(pullReqRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&combinedReviewerList, new(pullreq.CombinedListResponse), http.StatusOK)
 	_ = reflector.SetJSONResponse(&combinedReviewerList, new(usererror.Error), http.StatusBadRequest)
@@ -737,7 +737,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	mergePullReqOp := openapi3.Operation{}
 	mergePullReqOp.WithTags("pullreq")
-	mergePullReqOp.WithMapOfAnything(map[string]interface{}{"operationId": "mergePullReqOp"})
+	mergePullReqOp.WithMapOfAnything(map[string]any{"operationId": "mergePullReqOp"})
 	_ = reflector.SetRequest(&mergePullReqOp, new(mergePullReq), http.MethodPost)
 	_ = reflector.SetJSONResponse(&mergePullReqOp, new(types.MergeResponse), http.StatusOK)
 	_ = reflector.SetJSONResponse(&mergePullReqOp, new(usererror.Error), http.StatusBadRequest)
@@ -752,7 +752,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	revertPullReqOp := openapi3.Operation{}
 	revertPullReqOp.WithTags("pullreq")
-	revertPullReqOp.WithMapOfAnything(map[string]interface{}{"operationId": "revertPullReqOp"})
+	revertPullReqOp.WithMapOfAnything(map[string]any{"operationId": "revertPullReqOp"})
 	_ = reflector.SetRequest(&revertPullReqOp, &struct {
 		pullReqRequest
 		pullreq.RevertInput
@@ -768,7 +768,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	opListCommits := openapi3.Operation{}
 	opListCommits.WithTags("pullreq")
-	opListCommits.WithMapOfAnything(map[string]interface{}{"operationId": "listPullReqCommits"})
+	opListCommits.WithMapOfAnything(map[string]any{"operationId": "listPullReqCommits"})
 	opListCommits.WithParameters(QueryParameterPage, QueryParameterLimit)
 	_ = reflector.SetRequest(&opListCommits, new(pullReqRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opListCommits, []types.Commit{}, http.StatusOK)
@@ -780,7 +780,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	opMetaData := openapi3.Operation{}
 	opMetaData.WithTags("pullreq")
-	opMetaData.WithMapOfAnything(map[string]interface{}{"operationId": "pullReqMetaData"})
+	opMetaData.WithMapOfAnything(map[string]any{"operationId": "pullReqMetaData"})
 	_ = reflector.SetRequest(&opMetaData, new(pullReqRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opMetaData, new(types.PullReqStats), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opMetaData, new(usererror.Error), http.StatusInternalServerError)
@@ -791,7 +791,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	opRestoreBranch := openapi3.Operation{}
 	opRestoreBranch.WithTags("pullreq")
-	opRestoreBranch.WithMapOfAnything(map[string]interface{}{"operationId": "restorePullReqSourceBranch"})
+	opRestoreBranch.WithMapOfAnything(map[string]any{"operationId": "restorePullReqSourceBranch"})
 	_ = reflector.SetRequest(&opRestoreBranch, struct {
 		pullReqRequest
 		pullreq.RestoreBranchInput
@@ -808,7 +808,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	opDeleteBranch := openapi3.Operation{}
 	opDeleteBranch.WithTags("pullreq")
-	opDeleteBranch.WithMapOfAnything(map[string]interface{}{"operationId": "deletePullReqSourceBranch"})
+	opDeleteBranch.WithMapOfAnything(map[string]any{"operationId": "deletePullReqSourceBranch"})
 	opDeleteBranch.WithParameters(queryParameterBypassRules, queryParameterDryRunRules)
 	_ = reflector.SetRequest(&opDeleteBranch, new(pullReqRequest), http.MethodDelete)
 	_ = reflector.SetJSONResponse(&opDeleteBranch, new(types.DeleteBranchOutput), http.StatusOK)
@@ -822,7 +822,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	opChangeTargetBranch := openapi3.Operation{}
 	opChangeTargetBranch.WithTags("pullreq")
-	opChangeTargetBranch.WithMapOfAnything(map[string]interface{}{"operationId": "changeTargetBranch"})
+	opChangeTargetBranch.WithMapOfAnything(map[string]any{"operationId": "changeTargetBranch"})
 	_ = reflector.SetRequest(&opChangeTargetBranch, struct {
 		pullReqRequest
 		pullreq.ChangeTargetBranchInput
@@ -837,7 +837,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	fileViewAdd := openapi3.Operation{}
 	fileViewAdd.WithTags("pullreq")
-	fileViewAdd.WithMapOfAnything(map[string]interface{}{"operationId": "fileViewAddPullReq"})
+	fileViewAdd.WithMapOfAnything(map[string]any{"operationId": "fileViewAddPullReq"})
 	_ = reflector.SetRequest(&fileViewAdd, new(fileViewAddPullReqRequest), http.MethodPut)
 	_ = reflector.SetJSONResponse(&fileViewAdd, new(types.PullReqFileView), http.StatusOK)
 	_ = reflector.SetJSONResponse(&fileViewAdd, new(usererror.Error), http.StatusBadRequest)
@@ -849,7 +849,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	fileViewList := openapi3.Operation{}
 	fileViewList.WithTags("pullreq")
-	fileViewList.WithMapOfAnything(map[string]interface{}{"operationId": "fileViewListPullReq"})
+	fileViewList.WithMapOfAnything(map[string]any{"operationId": "fileViewListPullReq"})
 	_ = reflector.SetRequest(&fileViewList, new(fileViewListPullReqRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&fileViewList, []types.PullReqFileView{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&fileViewList, new(usererror.Error), http.StatusBadRequest)
@@ -861,7 +861,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	fileViewDelete := openapi3.Operation{}
 	fileViewDelete.WithTags("pullreq")
-	fileViewDelete.WithMapOfAnything(map[string]interface{}{"operationId": "fileViewDeletePullReq"})
+	fileViewDelete.WithMapOfAnything(map[string]any{"operationId": "fileViewDeletePullReq"})
 	_ = reflector.SetRequest(&fileViewDelete, new(fileViewDeletePullReqRequest), http.MethodDelete)
 	_ = reflector.SetJSONResponse(&fileViewDelete, nil, http.StatusNoContent)
 	_ = reflector.SetJSONResponse(&fileViewDelete, new(usererror.Error), http.StatusBadRequest)
@@ -873,7 +873,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	codeOwners := openapi3.Operation{}
 	codeOwners.WithTags("pullreq")
-	codeOwners.WithMapOfAnything(map[string]interface{}{"operationId": "codeownersPullReq"})
+	codeOwners.WithMapOfAnything(map[string]any{"operationId": "codeownersPullReq"})
 	_ = reflector.SetRequest(&codeOwners, new(pullReqRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&codeOwners, types.CodeOwnerEvaluation{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&codeOwners, new(usererror.Error), http.StatusUnprocessableEntity)
@@ -887,7 +887,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	opDiff := openapi3.Operation{}
 	opDiff.WithTags("pullreq")
-	opDiff.WithMapOfAnything(map[string]interface{}{"operationId": "diffPullReq"})
+	opDiff.WithMapOfAnything(map[string]any{"operationId": "diffPullReq"})
 	panicOnErr(reflector.SetRequest(&opDiff, new(getRawPRDiffRequest), http.MethodGet))
 	panicOnErr(reflector.SetStringResponse(&opDiff, http.StatusOK, "text/plain"))
 	panicOnErr(reflector.SetJSONResponse(&opDiff, new([]git.FileDiff), http.StatusOK))
@@ -899,7 +899,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	opPostDiff := openapi3.Operation{}
 	opPostDiff.WithTags("pullreq")
-	opPostDiff.WithMapOfAnything(map[string]interface{}{"operationId": "diffPullReqPost"})
+	opPostDiff.WithMapOfAnything(map[string]any{"operationId": "diffPullReqPost"})
 	panicOnErr(reflector.SetRequest(&opPostDiff, new(postRawPRDiffRequest), http.MethodPost))
 	panicOnErr(reflector.SetStringResponse(&opPostDiff, http.StatusOK, "text/plain"))
 	panicOnErr(reflector.SetJSONResponse(&opPostDiff, new([]git.FileDiff), http.StatusOK))
@@ -911,7 +911,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	opChecks := openapi3.Operation{}
 	opChecks.WithTags("pullreq")
-	opChecks.WithMapOfAnything(map[string]interface{}{"operationId": "checksPullReq"})
+	opChecks.WithMapOfAnything(map[string]any{"operationId": "checksPullReq"})
 	_ = reflector.SetRequest(&opChecks, new(getPullReqChecksRequest), http.MethodGet)
 	panicOnErr(reflector.SetJSONResponse(&opChecks, new(types.PullReqChecks), http.StatusOK))
 	panicOnErr(reflector.SetJSONResponse(&opChecks, new(usererror.Error), http.StatusInternalServerError))
@@ -922,7 +922,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	opAssignLabel := openapi3.Operation{}
 	opAssignLabel.WithTags("pullreq")
-	opAssignLabel.WithMapOfAnything(map[string]interface{}{"operationId": "assignLabel"})
+	opAssignLabel.WithMapOfAnything(map[string]any{"operationId": "assignLabel"})
 	_ = reflector.SetRequest(&opAssignLabel, new(pullReqAssignLabelInput), http.MethodPut)
 	_ = reflector.SetJSONResponse(&opAssignLabel, new(types.PullReqLabel), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opAssignLabel, new(usererror.Error), http.StatusBadRequest)
@@ -934,7 +934,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	opListLabels := openapi3.Operation{}
 	opListLabels.WithTags("pullreq")
-	opListLabels.WithMapOfAnything(map[string]interface{}{"operationId": "listLabels"})
+	opListLabels.WithMapOfAnything(map[string]any{"operationId": "listLabels"})
 	opListLabels.WithParameters(
 		QueryParameterPage, QueryParameterLimit, QueryParameterAssignable, QueryParameterQueryLabel)
 	_ = reflector.SetRequest(&opListLabels, new(pullReqRequest), http.MethodGet)
@@ -948,7 +948,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	opUnassignLabel := openapi3.Operation{}
 	opUnassignLabel.WithTags("pullreq")
-	opUnassignLabel.WithMapOfAnything(map[string]interface{}{"operationId": "unassignLabel"})
+	opUnassignLabel.WithMapOfAnything(map[string]any{"operationId": "unassignLabel"})
 	_ = reflector.SetRequest(&opUnassignLabel, struct {
 		pullReqRequest
 		LabelID int64 `path:"label_id"`
@@ -963,7 +963,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	opPRCandidates := openapi3.Operation{}
 	opPRCandidates.WithTags("pullreq")
-	opPRCandidates.WithMapOfAnything(map[string]interface{}{"operationId": "prCandidates"})
+	opPRCandidates.WithMapOfAnything(map[string]any{"operationId": "prCandidates"})
 	opPRCandidates.WithParameters(QueryParameterLimit)
 	_ = reflector.SetRequest(&opPRCandidates, new(repoRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opPRCandidates, new([]types.BranchTable), http.StatusOK)

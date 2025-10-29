@@ -16,7 +16,7 @@ package enum
 
 type GitspaceInstanceStateType string
 
-func (GitspaceInstanceStateType) Enum() []interface{} {
+func (GitspaceInstanceStateType) Enum() []any {
 	return toInterfaceSlice(gitspaceInstanceStateTypes)
 }
 

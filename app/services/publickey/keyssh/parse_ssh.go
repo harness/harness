@@ -38,19 +38,19 @@ func FromSSH(key gossh.PublicKey) KeyInfo {
 func Parse(keyData []byte) (KeyInfo, error) {
 	publicKey, comment, _, _, err := gossh.ParseAuthorizedKey(keyData)
 	if err != nil {
-		return KeyInfo{}, errors.InvalidArgument("invalid SSH key data: %s" + err.Error())
+		return KeyInfo{}, errors.InvalidArgumentf("invalid SSH key data: %s", err.Error())
 	}
 
 	keyType := publicKey.Type()
 
 	// explicitly disallowed
 	if slices.Contains(DisallowedTypes, keyType) {
-		return KeyInfo{}, errors.InvalidArgument("keys of type %s are not allowed", keyType)
+		return KeyInfo{}, errors.InvalidArgumentf("keys of type %s are not allowed", keyType)
 	}
 
 	// only allowed
 	if !slices.Contains(AllowedTypes, keyType) {
-		return KeyInfo{}, errors.InvalidArgument("allowed key types are %v", AllowedTypes)
+		return KeyInfo{}, errors.InvalidArgumentf("allowed key types are %v", AllowedTypes)
 	}
 
 	return KeyInfo{

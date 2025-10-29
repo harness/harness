@@ -17,7 +17,7 @@ package cache
 import (
 	"context"
 	"fmt"
-	"sort"
+	"slices"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -230,7 +230,7 @@ func Deduplicate[V constraints.Ordered](slice []V) []V {
 		return slice
 	}
 
-	sort.Slice(slice, func(i, j int) bool { return slice[i] < slice[j] })
+	slices.Sort(slice)
 
 	pointer := 0
 	for i := 1; i < len(slice); i++ {

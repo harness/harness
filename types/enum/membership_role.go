@@ -19,7 +19,7 @@ import "golang.org/x/exp/slices"
 // MembershipRole represents the different level of space memberships (permission set).
 type MembershipRole string
 
-func (MembershipRole) Enum() []interface{}                      { return toInterfaceSlice(MembershipRoles) }
+func (MembershipRole) Enum() []any                              { return toInterfaceSlice(MembershipRoles) }
 func (m MembershipRole) Sanitize() (MembershipRole, bool)       { return Sanitize(m, GetAllMembershipRoles) }
 func GetAllMembershipRoles() ([]MembershipRole, MembershipRole) { return MembershipRoles, "" }
 

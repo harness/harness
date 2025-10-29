@@ -67,7 +67,7 @@ func (c *Controller) ChangeTargetBranch(ctx context.Context,
 
 	if pr.SourceRepoID != nil && pr.TargetRepoID == *pr.SourceRepoID && pr.SourceBranch == in.BranchName {
 		return nil,
-			errors.InvalidArgument("Source branch %q is same as new target branch", pr.SourceBranch)
+			errors.InvalidArgumentf("Source branch %q is same as new target branch", pr.SourceBranch)
 	}
 
 	readParams := git.CreateReadParams(repo)

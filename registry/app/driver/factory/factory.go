@@ -39,7 +39,7 @@ type StorageDriverFactory interface {
 	// Create returns a new storagedriver.StorageDriver with the given parameters
 	// Parameters will vary by driver and may be ignored
 	// Each parameter key must only consist of lowercase letters and numbers
-	Create(parameters map[string]interface{}) (driver.StorageDriver, error)
+	Create(parameters map[string]any) (driver.StorageDriver, error)
 }
 
 // Register makes a storage driver available by the provided name.
@@ -62,7 +62,7 @@ func Register(name string, factory StorageDriverFactory) {
 // parameters. To use a driver, the StorageDriverFactory must first be
 // registered with the given name. If no drivers are found, an
 // InvalidStorageDriverError is returned.
-func Create(name string, parameters map[string]interface{}) (driver.StorageDriver, error) {
+func Create(name string, parameters map[string]any) (driver.StorageDriver, error) {
 	driverFactory, ok := driverFactories[name]
 	if !ok {
 		return nil, InvalidStorageDriverError{name}

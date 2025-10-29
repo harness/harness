@@ -198,8 +198,8 @@ func ExtractLifecycleCommands(actionType PostAction, devcontainerConfig types.De
 func AddIDECustomizationsArg(
 	ideService ide.IDE,
 	devcontainerConfig types.DevcontainerConfig,
-	args map[gitspaceTypes.IDEArg]interface{},
-) map[gitspaceTypes.IDEArg]interface{} {
+	args map[gitspaceTypes.IDEArg]any,
+) map[gitspaceTypes.IDEArg]any {
 	switch ideService.Type() {
 	case enum.IDETypeVSCodeWeb, enum.IDETypeVSCode, enum.IDETypeWindsurf, enum.IDETypeCursor:
 		// Cursor and Windsurf is a VSCode-based IDE, so it also uses the same customization
@@ -222,8 +222,8 @@ func AddIDECustomizationsArg(
 
 func AddIDEDownloadURLArg(
 	ideService ide.IDE,
-	args map[gitspaceTypes.IDEArg]interface{},
-) map[gitspaceTypes.IDEArg]interface{} {
+	args map[gitspaceTypes.IDEArg]any,
+) map[gitspaceTypes.IDEArg]any {
 	if !enum.IsJetBrainsIDE(ideService.Type()) {
 		// currently download url is only need for jetbrains IDEs
 		return args
@@ -243,8 +243,8 @@ func AddIDEDownloadURLArg(
 
 func AddIDEDirNameArg(
 	ideService ide.IDE,
-	args map[gitspaceTypes.IDEArg]interface{},
-) map[gitspaceTypes.IDEArg]interface{} {
+	args map[gitspaceTypes.IDEArg]any,
+) map[gitspaceTypes.IDEArg]any {
 	if !enum.IsJetBrainsIDE(ideService.Type()) {
 		// currently dirname is only need for jetbrains IDEs
 		return args

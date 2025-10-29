@@ -22,7 +22,7 @@ import (
 )
 
 func getIDEDownloadURL(
-	args map[gitspaceTypes.IDEArg]interface{},
+	args map[gitspaceTypes.IDEArg]any,
 ) (types.IDEDownloadURLs, error) {
 	downloadURL, exists := args[gitspaceTypes.IDEDownloadURLArg]
 	if !exists {
@@ -37,7 +37,7 @@ func getIDEDownloadURL(
 	return downloadURLs, nil
 }
 
-func getIDEDirName(args map[gitspaceTypes.IDEArg]interface{}) (string, error) {
+func getIDEDirName(args map[gitspaceTypes.IDEArg]any) (string, error) {
 	dirName, exists := args[gitspaceTypes.IDEDIRNameArg]
 	if !exists {
 		return "", fmt.Errorf("ide dirname not found")
@@ -52,7 +52,7 @@ func getIDEDirName(args map[gitspaceTypes.IDEArg]interface{}) (string, error) {
 }
 
 func getRepoName(
-	args map[gitspaceTypes.IDEArg]interface{},
+	args map[gitspaceTypes.IDEArg]any,
 ) (string, error) {
 	repoName, exists := args[gitspaceTypes.IDERepoNameArg]
 	if !exists {

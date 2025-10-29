@@ -75,7 +75,7 @@ type Event struct {
 	Category   string               `json:"category"`
 	Principal  *types.PrincipalInfo `json:"user_id,omitempty"`
 	GroupID    string               `json:"group_id,omitempty"`
-	Timestamp  time.Time            `json:"timestamp,omitempty"`
+	Timestamp  time.Time            `json:"timestamp"`
 	Path       string               `json:"path"`
 	RemoteAddr string               `json:"remote_addr"`
 	Properties map[Property]any     `json:"properties,omitempty"`

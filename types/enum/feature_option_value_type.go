@@ -16,7 +16,7 @@ package enum
 
 type FeatureOptionValueType string
 
-func (FeatureOptionValueType) Enum() []interface{} { return toInterfaceSlice(featureOptionValueTypes) }
+func (FeatureOptionValueType) Enum() []any { return toInterfaceSlice(featureOptionValueTypes) }
 
 const (
 	FeatureOptionValueTypeString  = "string"

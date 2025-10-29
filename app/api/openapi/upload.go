@@ -27,7 +27,7 @@ import (
 func uploadOperations(reflector *openapi3.Reflector) {
 	opUpload := openapi3.Operation{}
 	opUpload.WithTags("upload")
-	opUpload.WithMapOfAnything(map[string]interface{}{"operationId": "repoArtifactUpload"})
+	opUpload.WithMapOfAnything(map[string]any{"operationId": "repoArtifactUpload"})
 	opUpload.WithRequestBody(openapi3.RequestBodyOrRef{
 		RequestBody: &openapi3.RequestBody{
 			Description: ptr.String("Binary file to upload"),
@@ -49,7 +49,7 @@ func uploadOperations(reflector *openapi3.Reflector) {
 
 	downloadOp := openapi3.Operation{}
 	downloadOp.WithTags("upload")
-	downloadOp.WithMapOfAnything(map[string]interface{}{"operationId": "repoArtifactDownload"})
+	downloadOp.WithMapOfAnything(map[string]any{"operationId": "repoArtifactDownload"})
 	_ = reflector.SetRequest(&downloadOp, struct {
 		repoRequest
 		FilePathRef string `path:"file_ref"`

@@ -117,9 +117,9 @@ func (err *MoreThanOneError) Error() string {
 // Logs the error and message, returns either the provided message or a git equivalent if possible.
 // Always logs the full message with error as warning.
 // Note: git errors should be processed in command package, this will probably be removed in the future.
-func processGitErrorf(err error, format string, args ...interface{}) error {
+func processGitErrorf(err error, format string, args ...any) error {
 	// create fallback error returned if we can't map it
-	fallbackErr := errors.Internal(err, format, args...)
+	fallbackErr := errors.Internalf(err, format, args...)
 
 	// always log internal error together with message.
 	log.Warn().Msgf("%v: [GIT] %v", fallbackErr, err)

@@ -29,7 +29,7 @@ const (
 	CodeOwnerViolationCodeUserPatternInvalid CodeOwnerViolationCode = "user_pattern_invalid"
 )
 
-func (CodeOwnerViolationCode) Enum() []interface{} { return toInterfaceSlice(codeOwnerViolationCodes) }
+func (CodeOwnerViolationCode) Enum() []any { return toInterfaceSlice(codeOwnerViolationCodes) }
 
 var codeOwnerViolationCodes = sortEnum([]CodeOwnerViolationCode{
 	CodeOwnerViolationCodeUserNotFound,

@@ -45,7 +45,7 @@ type getPluginsRequest struct {
 func pluginOperations(reflector *openapi3.Reflector) {
 	opPlugins := openapi3.Operation{}
 	opPlugins.WithTags("plugins")
-	opPlugins.WithMapOfAnything(map[string]interface{}{"operationId": "listPlugins"})
+	opPlugins.WithMapOfAnything(map[string]any{"operationId": "listPlugins"})
 	opPlugins.WithParameters(QueryParameterPage, QueryParameterLimit, queryParameterQueryPlugin)
 	_ = reflector.SetRequest(&opPlugins, new(getPluginsRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opPlugins, []types.Plugin{}, http.StatusOK)

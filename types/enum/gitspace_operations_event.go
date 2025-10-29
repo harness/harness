@@ -16,7 +16,7 @@ package enum
 
 type GitspaceOperationsEvent string
 
-func (GitspaceOperationsEvent) Enum() []interface{} {
+func (GitspaceOperationsEvent) Enum() []any {
 	return toInterfaceSlice(gitspaceOperationsEvent)
 }
 

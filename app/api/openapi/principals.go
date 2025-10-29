@@ -69,7 +69,7 @@ var QueryParameterPrincipalTypes = openapi3.ParameterOrRef{
 func buildPrincipals(reflector *openapi3.Reflector) {
 	opList := openapi3.Operation{}
 	opList.WithTags("principals")
-	opList.WithMapOfAnything(map[string]interface{}{"operationId": "listPrincipals"})
+	opList.WithMapOfAnything(map[string]any{"operationId": "listPrincipals"})
 	opList.WithParameters(QueryParameterQueryPrincipals, QueryParameterPage,
 		QueryParameterLimit, QueryParameterPrincipalTypes)
 	_ = reflector.SetRequest(&opList, nil, http.MethodGet)
@@ -81,7 +81,7 @@ func buildPrincipals(reflector *openapi3.Reflector) {
 
 	getPrincipal := openapi3.Operation{}
 	getPrincipal.WithTags("principals")
-	getPrincipal.WithMapOfAnything(map[string]interface{}{"operationId": "getPrincipal"})
+	getPrincipal.WithMapOfAnything(map[string]any{"operationId": "getPrincipal"})
 	_ = reflector.SetRequest(&getPrincipal, new(principalInfoRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&getPrincipal, new(types.PrincipalInfo), http.StatusOK)
 	_ = reflector.SetJSONResponse(&getPrincipal, new(usererror.Error), http.StatusBadRequest)

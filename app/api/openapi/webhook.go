@@ -122,7 +122,7 @@ var queryParameterSortWebhook = openapi3.ParameterOrRef{
 			Schema: &openapi3.Schema{
 				Type:    ptrSchemaType(openapi3.SchemaTypeString),
 				Default: ptrptr(enum.WebhookAttrIdentifier.String()),
-				Enum: []interface{}{
+				Enum: []any{
 					// TODO [CODE-1364]: Remove once UID/Identifier migration is completed.
 					ptr.String(enum.WebhookAttrID.String()),
 					ptr.String(enum.WebhookAttrUID.String()),
@@ -156,7 +156,7 @@ func webhookOperations(reflector *openapi3.Reflector) {
 
 	createSpaceWebhook := openapi3.Operation{}
 	createSpaceWebhook.WithTags("webhook")
-	createSpaceWebhook.WithMapOfAnything(map[string]interface{}{"operationId": "createSpaceWebhook"})
+	createSpaceWebhook.WithMapOfAnything(map[string]any{"operationId": "createSpaceWebhook"})
 	_ = reflector.SetRequest(&createSpaceWebhook, new(createSpaceWebhookRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&createSpaceWebhook, new(webhookType), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&createSpaceWebhook, new(usererror.Error), http.StatusBadRequest)
@@ -167,7 +167,7 @@ func webhookOperations(reflector *openapi3.Reflector) {
 
 	listSpaceWebhooks := openapi3.Operation{}
 	listSpaceWebhooks.WithTags("webhook")
-	listSpaceWebhooks.WithMapOfAnything(map[string]interface{}{"operationId": "listSpaceWebhooks"})
+	listSpaceWebhooks.WithMapOfAnything(map[string]any{"operationId": "listSpaceWebhooks"})
 	listSpaceWebhooks.WithParameters(queryParameterQueryWebhook, queryParameterSortWebhook, queryParameterOrder,
 		QueryParameterPage, QueryParameterLimit)
 	_ = reflector.SetRequest(&listSpaceWebhooks, new(listSpaceWebhooksRequest), http.MethodGet)
@@ -180,7 +180,7 @@ func webhookOperations(reflector *openapi3.Reflector) {
 
 	getSpaceWebhook := openapi3.Operation{}
 	getSpaceWebhook.WithTags("webhook")
-	getSpaceWebhook.WithMapOfAnything(map[string]interface{}{"operationId": "getSpaceWebhook"})
+	getSpaceWebhook.WithMapOfAnything(map[string]any{"operationId": "getSpaceWebhook"})
 	_ = reflector.SetRequest(&getSpaceWebhook, new(getSpaceWebhookRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&getSpaceWebhook, new(webhookType), http.StatusOK)
 	_ = reflector.SetJSONResponse(&getSpaceWebhook, new(usererror.Error), http.StatusBadRequest)
@@ -191,7 +191,7 @@ func webhookOperations(reflector *openapi3.Reflector) {
 
 	updateSpaceWebhook := openapi3.Operation{}
 	updateSpaceWebhook.WithTags("webhook")
-	updateSpaceWebhook.WithMapOfAnything(map[string]interface{}{"operationId": "updateWebhook"})
+	updateSpaceWebhook.WithMapOfAnything(map[string]any{"operationId": "updateWebhook"})
 	_ = reflector.SetRequest(&updateSpaceWebhook, new(updateSpaceWebhookRequest), http.MethodPatch)
 	_ = reflector.SetJSONResponse(&updateSpaceWebhook, new(webhookType), http.StatusOK)
 	_ = reflector.SetJSONResponse(&updateSpaceWebhook, new(usererror.Error), http.StatusBadRequest)
@@ -204,7 +204,7 @@ func webhookOperations(reflector *openapi3.Reflector) {
 
 	deleteSpaceWebhook := openapi3.Operation{}
 	deleteSpaceWebhook.WithTags("webhook")
-	deleteSpaceWebhook.WithMapOfAnything(map[string]interface{}{"operationId": "deleteWebhook"})
+	deleteSpaceWebhook.WithMapOfAnything(map[string]any{"operationId": "deleteWebhook"})
 	_ = reflector.SetRequest(&deleteSpaceWebhook, new(deleteSpaceWebhookRequest), http.MethodDelete)
 	_ = reflector.SetJSONResponse(&deleteSpaceWebhook, nil, http.StatusNoContent)
 	_ = reflector.SetJSONResponse(&deleteSpaceWebhook, new(usererror.Error), http.StatusBadRequest)
@@ -217,7 +217,7 @@ func webhookOperations(reflector *openapi3.Reflector) {
 
 	listSpaceWebhookExecutions := openapi3.Operation{}
 	listSpaceWebhookExecutions.WithTags("webhook")
-	listSpaceWebhookExecutions.WithMapOfAnything(map[string]interface{}{"operationId": "listSpaceWebhookExecutions"})
+	listSpaceWebhookExecutions.WithMapOfAnything(map[string]any{"operationId": "listSpaceWebhookExecutions"})
 	listSpaceWebhookExecutions.WithParameters(QueryParameterPage, QueryParameterLimit)
 	_ = reflector.SetRequest(&listSpaceWebhookExecutions, new(listSpaceWebhookExecutionsRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&listSpaceWebhookExecutions, new([]types.WebhookExecution), http.StatusOK)
@@ -230,7 +230,7 @@ func webhookOperations(reflector *openapi3.Reflector) {
 
 	getSpaceWebhookExecution := openapi3.Operation{}
 	getSpaceWebhookExecution.WithTags("webhook")
-	getSpaceWebhookExecution.WithMapOfAnything(map[string]interface{}{"operationId": "getSpaceWebhookExecution"})
+	getSpaceWebhookExecution.WithMapOfAnything(map[string]any{"operationId": "getSpaceWebhookExecution"})
 	getSpaceWebhookExecution.WithParameters(QueryParameterPage, QueryParameterLimit)
 	_ = reflector.SetRequest(&getSpaceWebhookExecution, new(getSpaceWebhookExecutionRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&getSpaceWebhookExecution, new(types.WebhookExecution), http.StatusOK)
@@ -246,7 +246,7 @@ func webhookOperations(reflector *openapi3.Reflector) {
 	retriggerSpaceWebhookExecution := openapi3.Operation{}
 	retriggerSpaceWebhookExecution.WithTags("webhook")
 	retriggerSpaceWebhookExecution.WithMapOfAnything(
-		map[string]interface{}{"operationId": "retriggerSpaceWebhookExecution"},
+		map[string]any{"operationId": "retriggerSpaceWebhookExecution"},
 	)
 	_ = reflector.SetRequest(&retriggerSpaceWebhookExecution, new(spaceWebhookExecutionRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&retriggerSpaceWebhookExecution, new(types.WebhookExecution), http.StatusOK)
@@ -263,7 +263,7 @@ func webhookOperations(reflector *openapi3.Reflector) {
 
 	createRepoWebhook := openapi3.Operation{}
 	createRepoWebhook.WithTags("webhook")
-	createRepoWebhook.WithMapOfAnything(map[string]interface{}{"operationId": "createRepoWebhook"})
+	createRepoWebhook.WithMapOfAnything(map[string]any{"operationId": "createRepoWebhook"})
 	_ = reflector.SetRequest(&createRepoWebhook, new(createRepoWebhookRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&createRepoWebhook, new(webhookType), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&createRepoWebhook, new(usererror.Error), http.StatusBadRequest)
@@ -274,7 +274,7 @@ func webhookOperations(reflector *openapi3.Reflector) {
 
 	listRepoWebhooks := openapi3.Operation{}
 	listRepoWebhooks.WithTags("webhook")
-	listRepoWebhooks.WithMapOfAnything(map[string]interface{}{"operationId": "listRepoWebhooks"})
+	listRepoWebhooks.WithMapOfAnything(map[string]any{"operationId": "listRepoWebhooks"})
 	listRepoWebhooks.WithParameters(queryParameterQueryWebhook, queryParameterSortWebhook, queryParameterOrder,
 		QueryParameterPage, QueryParameterLimit)
 	_ = reflector.SetRequest(&listRepoWebhooks, new(listRepoWebhooksRequest), http.MethodGet)
@@ -287,7 +287,7 @@ func webhookOperations(reflector *openapi3.Reflector) {
 
 	getRepoWebhook := openapi3.Operation{}
 	getRepoWebhook.WithTags("webhook")
-	getRepoWebhook.WithMapOfAnything(map[string]interface{}{"operationId": "getRepoWebhook"})
+	getRepoWebhook.WithMapOfAnything(map[string]any{"operationId": "getRepoWebhook"})
 	_ = reflector.SetRequest(&getRepoWebhook, new(getRepoWebhookRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&getRepoWebhook, new(webhookType), http.StatusOK)
 	_ = reflector.SetJSONResponse(&getRepoWebhook, new(usererror.Error), http.StatusBadRequest)
@@ -298,7 +298,7 @@ func webhookOperations(reflector *openapi3.Reflector) {
 
 	updateRepoWebhook := openapi3.Operation{}
 	updateRepoWebhook.WithTags("webhook")
-	updateRepoWebhook.WithMapOfAnything(map[string]interface{}{"operationId": "updateRepoWebhook"})
+	updateRepoWebhook.WithMapOfAnything(map[string]any{"operationId": "updateRepoWebhook"})
 	_ = reflector.SetRequest(&updateRepoWebhook, new(updateRepoWebhookRequest), http.MethodPatch)
 	_ = reflector.SetJSONResponse(&updateRepoWebhook, new(webhookType), http.StatusOK)
 	_ = reflector.SetJSONResponse(&updateRepoWebhook, new(usererror.Error), http.StatusBadRequest)
@@ -309,7 +309,7 @@ func webhookOperations(reflector *openapi3.Reflector) {
 
 	deleteRepoWebhook := openapi3.Operation{}
 	deleteRepoWebhook.WithTags("webhook")
-	deleteRepoWebhook.WithMapOfAnything(map[string]interface{}{"operationId": "deleteRepoWebhook"})
+	deleteRepoWebhook.WithMapOfAnything(map[string]any{"operationId": "deleteRepoWebhook"})
 	_ = reflector.SetRequest(&deleteRepoWebhook, new(deleteRepoWebhookRequest), http.MethodDelete)
 	_ = reflector.SetJSONResponse(&deleteRepoWebhook, nil, http.StatusNoContent)
 	_ = reflector.SetJSONResponse(&deleteRepoWebhook, new(usererror.Error), http.StatusBadRequest)
@@ -322,7 +322,7 @@ func webhookOperations(reflector *openapi3.Reflector) {
 
 	listRepoWebhookExecutions := openapi3.Operation{}
 	listRepoWebhookExecutions.WithTags("webhook")
-	listRepoWebhookExecutions.WithMapOfAnything(map[string]interface{}{"operationId": "listRepoWebhookExecutions"})
+	listRepoWebhookExecutions.WithMapOfAnything(map[string]any{"operationId": "listRepoWebhookExecutions"})
 	listRepoWebhookExecutions.WithParameters(QueryParameterPage, QueryParameterLimit)
 	_ = reflector.SetRequest(&listRepoWebhookExecutions, new(listRepoWebhookExecutionsRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&listRepoWebhookExecutions, new([]types.WebhookExecution), http.StatusOK)
@@ -335,7 +335,7 @@ func webhookOperations(reflector *openapi3.Reflector) {
 
 	getRepoWebhookExecution := openapi3.Operation{}
 	getRepoWebhookExecution.WithTags("webhook")
-	getRepoWebhookExecution.WithMapOfAnything(map[string]interface{}{"operationId": "getRepoWebhookExecution"})
+	getRepoWebhookExecution.WithMapOfAnything(map[string]any{"operationId": "getRepoWebhookExecution"})
 	getRepoWebhookExecution.WithParameters(QueryParameterPage, QueryParameterLimit)
 	_ = reflector.SetRequest(&getRepoWebhookExecution, new(getRepoWebhookExecutionRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&getRepoWebhookExecution, new(types.WebhookExecution), http.StatusOK)
@@ -348,7 +348,7 @@ func webhookOperations(reflector *openapi3.Reflector) {
 
 	retriggerRepoWebhookExecution := openapi3.Operation{}
 	retriggerRepoWebhookExecution.WithTags("webhook")
-	retriggerRepoWebhookExecution.WithMapOfAnything(map[string]interface{}{"operationId": "retriggerRepoWebhookExecution"})
+	retriggerRepoWebhookExecution.WithMapOfAnything(map[string]any{"operationId": "retriggerRepoWebhookExecution"})
 	_ = reflector.SetRequest(&retriggerRepoWebhookExecution, new(repoWebhookExecutionRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&retriggerRepoWebhookExecution, new(types.WebhookExecution), http.StatusOK)
 	_ = reflector.SetJSONResponse(&retriggerRepoWebhookExecution, new(usererror.Error), http.StatusBadRequest)

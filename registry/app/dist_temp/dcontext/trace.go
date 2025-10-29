@@ -56,7 +56,7 @@ import (
 //
 // Notice that the function name is automatically resolved, along with the
 // package and a trace id is emitted that can be linked with parent ids.
-func WithTrace(ctx context.Context) (context.Context, func(format string, a ...interface{})) {
+func WithTrace(ctx context.Context) (context.Context, func(format string, a ...any)) {
 	if ctx == nil {
 		ctx = Background()
 	}
@@ -73,7 +73,7 @@ func WithTrace(ctx context.Context) (context.Context, func(format string, a ...i
 		line:    line,
 	}
 
-	return ctx, func(format string, a ...interface{}) {
+	return ctx, func(format string, a ...any) {
 		GetLogger(
 			ctx, log.Info(),
 			"trace.duration",
@@ -100,7 +100,7 @@ type traced struct {
 	line   int
 }
 
-func (ts *traced) Value(key interface{}) interface{} {
+func (ts *traced) Value(key any) any {
 	switch key {
 	case "trace.start":
 		return ts.start

@@ -118,6 +118,10 @@ format: tools # Format go code and error if any changes are made
 	@gci write --skip-generated --custom-order -s standard -s "prefix(github.com/harness/gitness)" -s default -s blank -s dot .
 	@echo "Formatting complete"
 
+modernize:
+	@echo "Modernizing ..."
+	@go run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -fix -test ./...
+
 sec:
 	@echo "Vulnerability detection $(1)"
 	@govulncheck ./...

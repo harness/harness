@@ -16,7 +16,7 @@ package enum
 
 type InfraEvent string
 
-func (InfraEvent) Enum() []interface{} {
+func (InfraEvent) Enum() []any {
 	return toInterfaceSlice(infraEvents)
 }
 

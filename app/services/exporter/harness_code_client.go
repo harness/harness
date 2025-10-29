@@ -200,7 +200,7 @@ func addAuthHeader(req *http.Request, token string) {
 	req.Header.Add(headerAPIKey, token)
 }
 
-func unmarshalResponse(resp *http.Response, data interface{}) error {
+func unmarshalResponse(resp *http.Response, data any) error {
 	if resp == nil {
 		return fmt.Errorf("http response is empty")
 	}

@@ -88,10 +88,7 @@ func (t *schedulerTimer) rescheduleEarlier(now, next time.Time) time.Duration {
 		return 0
 
 	default:
-		dur = next.Sub(now)
-		if dur < timerMinDur {
-			dur = timerMinDur
-		}
+		dur = max(next.Sub(now), timerMinDur)
 	}
 
 	next = now.Add(dur)

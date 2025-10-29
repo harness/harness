@@ -385,8 +385,7 @@ func BenchmarkSanitizeString(b *testing.B) {
 		return []string{"apple", "banana", "cherry"}, "apple"
 	}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		Sanitize("banana", allValues)
 	}
 }
@@ -396,8 +395,7 @@ func BenchmarkSanitizeInt(b *testing.B) {
 		return []int{1, 3, 5, 7, 9}, 1
 	}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		Sanitize(5, allValues)
 	}
 }
@@ -405,8 +403,7 @@ func BenchmarkSanitizeInt(b *testing.B) {
 func BenchmarkToInterfaceSlice(b *testing.B) {
 	stringSlice := []string{"a", "b", "c", "d", "e"}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		toInterfaceSlice(stringSlice)
 	}
 }
@@ -414,8 +411,7 @@ func BenchmarkToInterfaceSlice(b *testing.B) {
 func BenchmarkSortEnum(b *testing.B) {
 	stringSlice := []string{"zebra", "apple", "banana", "cherry", "date"}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		sortEnum(stringSlice)
 	}
 }

@@ -92,7 +92,7 @@ func TestStream_Write_BufferLimit(t *testing.T) {
 
 	// Write more lines than buffer size
 	numLines := bufferSize + 100
-	for i := 0; i < numLines; i++ {
+	for i := range numLines {
 		line := &Line{
 			Number:    i,
 			Message:   "test message",
@@ -248,7 +248,7 @@ func TestStream_Close(t *testing.T) {
 
 	// Add some subscribers
 	numSubscribers := 3
-	for i := 0; i < numSubscribers; i++ {
+	for range numSubscribers {
 		s.subscribe(ctx)
 	}
 
@@ -277,7 +277,7 @@ func TestStream_MultipleSubscribers(t *testing.T) {
 	numSubscribers := 5
 	channels := make([]<-chan *Line, numSubscribers)
 
-	for i := 0; i < numSubscribers; i++ {
+	for i := range numSubscribers {
 		lineChan, _ := s.subscribe(ctx)
 		channels[i] = lineChan
 	}

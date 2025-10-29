@@ -64,7 +64,7 @@ type EntityMetadata struct {
 func Parse(r io.Reader, principal *types.Principal) (KeyInfo, error) {
 	keyRing, err := openpgp.ReadArmoredKeyRing(r)
 	if err != nil {
-		return KeyInfo{}, errors.InvalidArgument("failed to read PGP key ring: %s", err.Error())
+		return KeyInfo{}, errors.InvalidArgumentf("failed to read PGP key ring: %s", err.Error())
 	}
 
 	if len(keyRing) == 0 {

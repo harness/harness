@@ -49,7 +49,7 @@ type Request struct {
 	method  string
 	path    string
 	headers map[string]string
-	body    interface{}
+	body    any
 }
 
 // Response represents an HTTP response.
@@ -74,7 +74,7 @@ func (r *Request) SetHeader(key, value string) {
 }
 
 // SetBody sets the request body.
-func (r *Request) SetBody(body interface{}) {
+func (r *Request) SetBody(body any) {
 	r.body = body
 }
 

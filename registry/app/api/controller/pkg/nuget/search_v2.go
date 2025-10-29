@@ -123,8 +123,8 @@ func (c *controller) SearchPackageV2(
 	}
 }
 
-func extractResponseDataV2(searchResponse response.Response) ([]interface{}, int64) {
-	var nativeResults []interface{}
+func extractResponseDataV2(searchResponse response.Response) ([]any, int64) {
+	var nativeResults []any
 	var totalHits int64
 
 	// Handle v2 response

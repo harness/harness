@@ -33,7 +33,7 @@ const (
 
 type (
 	GitspaceInfraEventPayload struct {
-		Infra types.Infrastructure `json:"infra,omitempty"`
+		Infra types.Infrastructure `json:"infra,omitzero"`
 		Type  enum.InfraEvent      `json:"type"`
 	}
 )

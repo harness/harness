@@ -169,7 +169,7 @@ func TestAs(t *testing.T) {
 	tests := []struct {
 		name     string
 		err      error
-		target   interface{}
+		target   any
 		expected bool
 	}{
 		{
@@ -244,7 +244,7 @@ func TestAsWithValues(t *testing.T) {
 
 // Benchmark tests.
 func BenchmarkNew(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_ = New("benchmark error")
 	}
 }
@@ -253,8 +253,7 @@ func BenchmarkIs(b *testing.B) {
 	err1 := New("error 1")
 	err2 := New("error 2")
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		Is(err1, err2)
 	}
 }
@@ -263,8 +262,7 @@ func BenchmarkAs(b *testing.B) {
 	err := customError{msg: "test"}
 	var target customError
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		As(err, &target)
 	}
 }

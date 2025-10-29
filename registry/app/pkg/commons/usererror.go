@@ -25,9 +25,9 @@ var (
 
 // Error represents a json-encoded API error.
 type Error struct {
-	Status  int         `json:"-"`
-	Message string      `json:"message"`
-	Detail  interface{} `json:"detail,omitempty"`
+	Status  int    `json:"-"`
+	Message string `json:"message"`
+	Detail  any    `json:"detail,omitempty"`
 }
 
 func (e *Error) Error() string {
@@ -35,11 +35,11 @@ func (e *Error) Error() string {
 }
 
 // New returns a new user facing error.
-func New(status int, message string, detail interface{}) *Error {
+func New(status int, message string, detail any) *Error {
 	return &Error{Status: status, Message: message, Detail: detail}
 }
 
 // NotFoundError returns a new user facing not found error.
-func NotFoundError(message string, detail interface{}) *Error {
+func NotFoundError(message string, detail any) *Error {
 	return New(http.StatusNotFound, message, detail)
 }

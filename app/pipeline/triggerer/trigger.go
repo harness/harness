@@ -430,7 +430,7 @@ func parseV1Stages(
 		return nil, fmt.Errorf("could not check repo public access: %w", err)
 	}
 
-	inputParams := map[string]interface{}{}
+	inputParams := map[string]any{}
 	inputParams["repo"] = inputs.Repo(manager.ConvertToDroneRepo(repo, repoIsPublic))
 	inputParams["build"] = inputs.Build(manager.ConvertToDroneBuild(execution))
 

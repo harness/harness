@@ -82,7 +82,7 @@ type RegistryHelper interface {
 	GetArtifactDetail(
 		img *types.Image,
 		art *types.Artifact,
-		metadata map[string]interface{},
+		metadata map[string]any,
 		downloadCount int64,
 	) *artifact.ArtifactDetail
 

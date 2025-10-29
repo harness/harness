@@ -97,7 +97,7 @@ func migrateAfter_0042_alter_table_rules(
 			break
 		}
 
-		for i := 0; i < n; i++ {
+		for i := range n {
 			r := buffer[i]
 
 			log.Info().Msgf(

@@ -31,7 +31,7 @@ type runnerDB struct {
 
 var _ AccessorTx = runnerDB{}
 
-func (r runnerDB) WithTx(ctx context.Context, txFn func(context.Context) error, opts ...interface{}) error {
+func (r runnerDB) WithTx(ctx context.Context, txFn func(context.Context) error, opts ...any) error {
 	var txOpts *sql.TxOptions
 	for _, opt := range opts {
 		if v, ok := opt.(*sql.TxOptions); ok {
@@ -95,31 +95,31 @@ func (r runnerDB) Rebind(query string) string {
 	return r.db.Rebind(query)
 }
 
-func (r runnerDB) BindNamed(query string, arg interface{}) (string, []interface{}, error) {
+func (r runnerDB) BindNamed(query string, arg any) (string, []any, error) {
 	return r.db.BindNamed(query, arg)
 }
 
-func (r runnerDB) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+func (r runnerDB) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 	//nolint:sqlclosecheck
 	return r.db.QueryContext(ctx, query, args...)
 }
 
-func (r runnerDB) QueryxContext(ctx context.Context, query string, args ...interface{}) (*sqlx.Rows, error) {
+func (r runnerDB) QueryxContext(ctx context.Context, query string, args ...any) (*sqlx.Rows, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 	//nolint:sqlclosecheck
 	return r.db.QueryxContext(ctx, query, args...)
 }
 
-func (r runnerDB) QueryRowxContext(ctx context.Context, query string, args ...interface{}) *sqlx.Row {
+func (r runnerDB) QueryRowxContext(ctx context.Context, query string, args ...any) *sqlx.Row {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 	return r.db.QueryRowxContext(ctx, query, args...)
 }
 
-func (r runnerDB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+func (r runnerDB) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 	return r.db.ExecContext(ctx, query, args...)
@@ -152,13 +152,13 @@ func (r runnerDB) PrepareNamedContext(ctx context.Context, query string) (*sqlx.
 	return r.db.PrepareNamedContext(ctx, query)
 }
 
-func (r runnerDB) GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
+func (r runnerDB) GetContext(ctx context.Context, dest any, query string, args ...any) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 	return r.db.GetContext(ctx, dest, query, args...)
 }
 
-func (r runnerDB) SelectContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
+func (r runnerDB) SelectContext(ctx context.Context, dest any, query string, args ...any) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 	return r.db.SelectContext(ctx, dest, query, args...)

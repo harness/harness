@@ -32,14 +32,14 @@ func TestRegulatorEnterExit(t *testing.T) {
 		return
 	}
 
-	for try := 0; try < 50; try++ {
+	for range 50 {
 		run := make(chan struct{})
 
 		var firstGroupReady sync.WaitGroup
 		var firstGroupDone sync.WaitGroup
 		firstGroupReady.Add(limit)
 		firstGroupDone.Add(limit)
-		for i := 0; i < limit; i++ {
+		for range limit {
 			go func() {
 				r.enter()
 				firstGroupReady.Done()
@@ -53,7 +53,7 @@ func TestRegulatorEnterExit(t *testing.T) {
 		// now we exhausted all the limit, let's run a little bit more
 		var secondGroupReady sync.WaitGroup
 		var secondGroupDone sync.WaitGroup
-		for i := 0; i < 50; i++ {
+		for range 50 {
 			secondGroupReady.Add(1)
 			secondGroupDone.Add(1)
 			go func() {
@@ -89,7 +89,7 @@ func TestRegulatorEnterExit(t *testing.T) {
 
 func TestGetLimitFromParameter(t *testing.T) {
 	tests := []struct {
-		Input    interface{}
+		Input    any
 		Expected uint64
 		Min      uint64
 		Default  uint64

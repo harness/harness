@@ -55,7 +55,7 @@ func (c *Controller) RestoreBranch(ctx context.Context,
 		return types.CreateBranchOutput{}, nil, fmt.Errorf("failed to get pull request by number: %w", err)
 	}
 	if pr.State == enum.PullReqStateOpen {
-		return types.CreateBranchOutput{}, nil, errors.Conflict("source branch %q already exists", pr.SourceBranch)
+		return types.CreateBranchOutput{}, nil, errors.Conflictf("source branch %q already exists", pr.SourceBranch)
 	}
 
 	rules, isRepoOwner, err := c.fetchRules(ctx, session, repo)

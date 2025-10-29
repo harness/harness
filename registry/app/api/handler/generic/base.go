@@ -409,8 +409,8 @@ func validateFilePath(filePath string) error {
 		return fmt.Errorf("relative segments not allowed in file path: %q", filePath)
 	}
 
-	parts := strings.Split(filePath, "/")
-	for _, e := range parts {
+	parts := strings.SplitSeq(filePath, "/")
+	for e := range parts {
 		if e == "" || e == "." || e == ".." || filepath.IsAbs(e) {
 			return fmt.Errorf("unsafe path element: %q", e)
 		}

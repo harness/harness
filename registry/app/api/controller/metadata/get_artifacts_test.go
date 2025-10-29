@@ -45,7 +45,7 @@ func TestGetAllArtifacts(t *testing.T) {
 	tests := []struct {
 		name         string
 		setupMocks   func() *metadata.APIController
-		expectedResp interface{}
+		expectedResp any
 	}{
 		{
 			name: errorTypeSpaceNotFound,
@@ -398,7 +398,7 @@ func verifyArtifactsSnapshot(t *testing.T, name string, actual artifact.ListArti
 	require.NoError(t, err, "Failed to read snapshot file")
 
 	// Compare JSON
-	var expected, actualParsed interface{}
+	var expected, actualParsed any
 	require.NoError(t, json.Unmarshal(expectedJSON, &expected), "Failed to unmarshal expected JSON")
 	require.NoError(t, json.Unmarshal(actualJSON, &actualParsed), "Failed to unmarshal actual JSON")
 

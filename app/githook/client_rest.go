@@ -115,7 +115,7 @@ func (c *RestClient) PostReceive(
 }
 
 // githook executes the requested githook type using the provided input.
-func (c *RestClient) githook(ctx context.Context, githookType string, payload interface{}) (hook.Output, error) {
+func (c *RestClient) githook(ctx context.Context, githookType string, payload any) (hook.Output, error) {
 	uri := c.baseURL + "/" + githookType
 	bodyBytes, err := json.Marshal(payload)
 	if err != nil {

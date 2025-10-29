@@ -93,7 +93,7 @@ func (jb *JetBrainsIDE) port() int {
 func (jb *JetBrainsIDE) Setup(
 	ctx context.Context,
 	exec *devcontainer.Exec,
-	args map[gitspaceTypes.IDEArg]interface{},
+	args map[gitspaceTypes.IDEArg]any,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	gitspaceLogger.Info("Installing ssh-server inside container...")
@@ -126,7 +126,7 @@ func (jb *JetBrainsIDE) Setup(
 func (jb *JetBrainsIDE) setupJetbrainsIDE(
 	ctx context.Context,
 	exec *devcontainer.Exec,
-	args map[gitspaceTypes.IDEArg]interface{},
+	args map[gitspaceTypes.IDEArg]any,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	payload := gitspaceTypes.SetupJetBrainsIDEPayload{
@@ -170,7 +170,7 @@ func (jb *JetBrainsIDE) setupJetbrainsIDE(
 func (jb *JetBrainsIDE) setupJetbrainsPlugins(
 	ctx context.Context,
 	exec *devcontainer.Exec,
-	args map[gitspaceTypes.IDEArg]interface{},
+	args map[gitspaceTypes.IDEArg]any,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	payload := gitspaceTypes.SetupJetBrainsPluginPayload{
@@ -223,7 +223,7 @@ func (jb *JetBrainsIDE) setupJetbrainsPlugins(
 func (jb *JetBrainsIDE) Run(
 	ctx context.Context,
 	exec *devcontainer.Exec,
-	args map[gitspaceTypes.IDEArg]interface{},
+	args map[gitspaceTypes.IDEArg]any,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	gitspaceLogger.Info("Running ssh-server...")
@@ -245,7 +245,7 @@ func (jb *JetBrainsIDE) Run(
 func (jb *JetBrainsIDE) runRemoteIDE(
 	ctx context.Context,
 	exec *devcontainer.Exec,
-	args map[gitspaceTypes.IDEArg]interface{},
+	args map[gitspaceTypes.IDEArg]any,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	payload := gitspaceTypes.RunIntellijIDEPayload{

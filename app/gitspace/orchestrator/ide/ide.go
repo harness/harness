@@ -38,7 +38,7 @@ type IDE interface {
 	Setup(
 		ctx context.Context,
 		exec *devcontainer.Exec,
-		args map[gitspaceTypes.IDEArg]interface{},
+		args map[gitspaceTypes.IDEArg]any,
 		gitspaceLogger gitspaceTypes.GitspaceLogger,
 	) error
 
@@ -46,7 +46,7 @@ type IDE interface {
 	Run(
 		ctx context.Context,
 		exec *devcontainer.Exec,
-		args map[gitspaceTypes.IDEArg]interface{},
+		args map[gitspaceTypes.IDEArg]any,
 		gitspaceLogger gitspaceTypes.GitspaceLogger,
 	) error
 

@@ -148,17 +148,17 @@ func (c *HTTPClient) UserDelete(ctx context.Context, key string) error {
 //
 
 // helper function for making an http GET request.
-func (c *HTTPClient) get(ctx context.Context, rawurl string, out interface{}) error {
+func (c *HTTPClient) get(ctx context.Context, rawurl string, out any) error {
 	return c.do(ctx, rawurl, "GET", false, nil, out)
 }
 
 // helper function for making an http POST request.
-func (c *HTTPClient) post(ctx context.Context, rawurl string, noToken bool, in, out interface{}) error {
+func (c *HTTPClient) post(ctx context.Context, rawurl string, noToken bool, in, out any) error {
 	return c.do(ctx, rawurl, "POST", noToken, in, out)
 }
 
 // helper function for making an http PATCH request.
-func (c *HTTPClient) patch(ctx context.Context, rawurl string, in, out interface{}) error {
+func (c *HTTPClient) patch(ctx context.Context, rawurl string, in, out any) error {
 	return c.do(ctx, rawurl, "PATCH", false, in, out)
 }
 
@@ -168,7 +168,7 @@ func (c *HTTPClient) delete(ctx context.Context, rawurl string) error {
 }
 
 // helper function to make an http request.
-func (c *HTTPClient) do(ctx context.Context, rawurl, method string, noToken bool, in, out interface{}) error {
+func (c *HTTPClient) do(ctx context.Context, rawurl, method string, noToken bool, in, out any) error {
 	// executes the http request and returns the body as
 	// and io.ReadCloser
 	body, err := c.stream(ctx, rawurl, method, noToken, in, out)
@@ -191,7 +191,7 @@ func (c *HTTPClient) do(ctx context.Context, rawurl, method string, noToken bool
 
 // helper function to stream a http request.
 func (c *HTTPClient) stream(ctx context.Context, rawurl, method string, noToken bool,
-	in, _ interface{}) (io.ReadCloser, error) {
+	in, _ any) (io.ReadCloser, error) {
 	uri, err := url.Parse(rawurl)
 	if err != nil {
 		return nil, err

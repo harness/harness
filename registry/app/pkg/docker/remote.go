@@ -130,7 +130,7 @@ func proxyManifestHead(
 			art.Digest = desc.Digest.String()
 
 			var count = 0
-			for i := 0; i < ensureTagMaxRetry; i++ {
+			for range ensureTagMaxRetry {
 				time.Sleep(ensureTagInterval)
 				count++
 				log.Ctx(ctx2).Info().Msgf("Tag %s for image: %s, retry: %d", tag,

@@ -17,7 +17,7 @@ package enum
 // PrincipalType defines the supported types of principals.
 type PrincipalType string
 
-func (PrincipalType) Enum() []interface{}                    { return toInterfaceSlice(principalTypes) }
+func (PrincipalType) Enum() []any                            { return toInterfaceSlice(principalTypes) }
 func (s PrincipalType) Sanitize() (PrincipalType, bool)      { return Sanitize(s, GetAllPrincipalTypes) }
 func GetAllPrincipalTypes() ([]PrincipalType, PrincipalType) { return principalTypes, "" }
 

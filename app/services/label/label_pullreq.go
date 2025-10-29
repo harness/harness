@@ -474,7 +474,7 @@ func (s *Service) checkPullreqLabelInScope(
 	label *types.Label,
 ) error {
 	if label.RepoID != nil && *label.RepoID != repoID {
-		return errors.InvalidArgument("label %d is not defined in current repo", label.ID)
+		return errors.InvalidArgumentf("label %d is not defined in current repo", label.ID)
 	}
 
 	if label.SpaceID != nil {
@@ -483,7 +483,7 @@ func (s *Service) checkPullreqLabelInScope(
 			return fmt.Errorf("failed to get parent space ids: %w", err)
 		}
 		if ok := slices.Contains(spaceIDs, *label.SpaceID); !ok {
-			return errors.InvalidArgument("label %d is not defined in current space tree path", label.ID)
+			return errors.InvalidArgumentf("label %d is not defined in current space tree path", label.ID)
 		}
 	}
 

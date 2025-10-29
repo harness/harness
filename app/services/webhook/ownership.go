@@ -33,7 +33,7 @@ func (s *Service) Find(
 ) (*types.Webhook, error) {
 	hook, err := s.GetWebhookVerifyOwnership(ctx, parentID, parentType, webhookIdentifier)
 	if err != nil {
-		return nil, errors.NotFound("failed to find webhook %s: %q", webhookIdentifier, err)
+		return nil, errors.NotFoundf("failed to find webhook %s: %q", webhookIdentifier, err)
 	}
 
 	return hook, nil
@@ -66,7 +66,7 @@ func (s *Service) GetWebhookVerifyOwnership(
 
 	// ensure the webhook actually belongs to the repo
 	if webhook.ParentType != parentType || webhook.ParentID != parentID {
-		return nil, errors.NotFound("webhook doesn't belong to requested %s.", parentType)
+		return nil, errors.NotFoundf("webhook doesn't belong to requested %s.", parentType)
 	}
 
 	return webhook, nil

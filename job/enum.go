@@ -39,7 +39,7 @@ var jobStates = sortEnum([]State{
 	JobStateCanceled,
 })
 
-func (State) Enum() []interface{} { return toInterfaceSlice(jobStates) }
+func (State) Enum() []any { return toInterfaceSlice(jobStates) }
 
 func (s State) Sanitize() (State, bool) {
 	return Sanitize(s, GetAllJobStates)
@@ -67,8 +67,8 @@ func sortEnum[T constraints.Ordered](slice []T) []T {
 	return slice
 }
 
-func toInterfaceSlice[T interface{}](vals []T) []interface{} {
-	res := make([]interface{}, len(vals))
+func toInterfaceSlice[T any](vals []T) []any {
+	res := make([]any, len(vals))
 	for i := range vals {
 		res[i] = vals[i]
 	}

@@ -120,7 +120,7 @@ func (c *localRegistry) GetPackageMetadata(
 	}
 
 	if len(*artifacts) == 0 {
-		return packageMetadata, errors.NotFound("no artifacts found for registry %s and image %s", info.RegIdentifier,
+		return packageMetadata, errors.NotFoundf("no artifacts found for registry %s and image %s", info.RegIdentifier,
 			info.Image)
 	}
 

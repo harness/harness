@@ -52,7 +52,7 @@ func Offset(page, size int) uint64 {
 // Always logs the full message with error as warning.
 //
 //nolint:unparam // revisit error processing
-func ProcessSQLErrorf(ctx context.Context, err error, format string, args ...interface{}) error {
+func ProcessSQLErrorf(ctx context.Context, err error, format string, args ...any) error {
 	// If it's a known error, return converted error instead.
 	translatedError := err
 	switch {

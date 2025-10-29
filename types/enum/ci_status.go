@@ -37,7 +37,7 @@ const (
 )
 
 // Enum returns all possible CIStatus values.
-func (CIStatus) Enum() []interface{} {
+func (CIStatus) Enum() []any {
 	return toInterfaceSlice(ciStatuses)
 }
 

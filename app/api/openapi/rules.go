@@ -31,15 +31,15 @@ import (
 // RuleType is a plugin for types.RuleType to allow using oneof.
 type RuleType string
 
-func (RuleType) Enum() []interface{} {
-	return []interface{}{protection.TypeBranch, protection.TypeTag, protection.TypePush}
+func (RuleType) Enum() []any {
+	return []any{protection.TypeBranch, protection.TypeTag, protection.TypePush}
 }
 
 // RuleDefinition is a plugin for types.Rule Definition to allow using oneof.
 type RuleDefinition struct{}
 
-func (RuleDefinition) JSONSchemaOneOf() []interface{} {
-	return []interface{}{protection.Branch{}, protection.Tag{}, protection.Push{}}
+func (RuleDefinition) JSONSchemaOneOf() []any {
+	return []any{protection.Branch{}, protection.Tag{}, protection.Push{}}
 }
 
 type Rule struct {
@@ -111,7 +111,7 @@ var queryParameterSortRuleList = openapi3.ParameterOrRef{
 func rulesOperations(reflector *openapi3.Reflector) {
 	opSpaceRuleAdd := openapi3.Operation{}
 	opSpaceRuleAdd.WithTags("space")
-	opSpaceRuleAdd.WithMapOfAnything(map[string]interface{}{"operationId": "spaceRuleAdd"})
+	opSpaceRuleAdd.WithMapOfAnything(map[string]any{"operationId": "spaceRuleAdd"})
 	_ = reflector.SetRequest(&opSpaceRuleAdd, struct {
 		spaceRequest
 		rules.CreateInput
@@ -129,7 +129,7 @@ func rulesOperations(reflector *openapi3.Reflector) {
 
 	opSpaceRuleDelete := openapi3.Operation{}
 	opSpaceRuleDelete.WithTags("space")
-	opSpaceRuleDelete.WithMapOfAnything(map[string]interface{}{"operationId": "spaceRuleDelete"})
+	opSpaceRuleDelete.WithMapOfAnything(map[string]any{"operationId": "spaceRuleDelete"})
 	_ = reflector.SetRequest(&opSpaceRuleDelete, struct {
 		spaceRequest
 		RuleIdentifier string `path:"rule_identifier"`
@@ -143,7 +143,7 @@ func rulesOperations(reflector *openapi3.Reflector) {
 
 	opSpaceRuleUpdate := openapi3.Operation{}
 	opSpaceRuleUpdate.WithTags("space")
-	opSpaceRuleUpdate.WithMapOfAnything(map[string]interface{}{"operationId": "spaceRuleUpdate"})
+	opSpaceRuleUpdate.WithMapOfAnything(map[string]any{"operationId": "spaceRuleUpdate"})
 	_ = reflector.SetRequest(&opSpaceRuleUpdate, &struct {
 		spaceRequest
 		Identifier string `path:"rule_identifier"`
@@ -162,7 +162,7 @@ func rulesOperations(reflector *openapi3.Reflector) {
 
 	opSpaceRuleList := openapi3.Operation{}
 	opSpaceRuleList.WithTags("space")
-	opSpaceRuleList.WithMapOfAnything(map[string]interface{}{"operationId": "spaceRuleList"})
+	opSpaceRuleList.WithMapOfAnything(map[string]any{"operationId": "spaceRuleList"})
 	opSpaceRuleList.WithParameters(
 		queryParameterQueryRuleList, QueryParameterRuleTypes,
 		queryParameterOrder, queryParameterSortRuleList,
@@ -179,7 +179,7 @@ func rulesOperations(reflector *openapi3.Reflector) {
 
 	opSpaceRuleGet := openapi3.Operation{}
 	opSpaceRuleGet.WithTags("space")
-	opSpaceRuleGet.WithMapOfAnything(map[string]interface{}{"operationId": "spaceRuleGet"})
+	opSpaceRuleGet.WithMapOfAnything(map[string]any{"operationId": "spaceRuleGet"})
 	_ = reflector.SetRequest(&opSpaceRuleGet, &struct {
 		spaceRequest
 		Identifier string `path:"rule_identifier"`
@@ -193,7 +193,7 @@ func rulesOperations(reflector *openapi3.Reflector) {
 
 	opRepoRuleAdd := openapi3.Operation{}
 	opRepoRuleAdd.WithTags("repository")
-	opRepoRuleAdd.WithMapOfAnything(map[string]interface{}{"operationId": "repoRuleAdd"})
+	opRepoRuleAdd.WithMapOfAnything(map[string]any{"operationId": "repoRuleAdd"})
 	_ = reflector.SetRequest(&opRepoRuleAdd, struct {
 		repoRequest
 		rules.CreateInput
@@ -211,7 +211,7 @@ func rulesOperations(reflector *openapi3.Reflector) {
 
 	opRepoRuleDelete := openapi3.Operation{}
 	opRepoRuleDelete.WithTags("repository")
-	opRepoRuleDelete.WithMapOfAnything(map[string]interface{}{"operationId": "repoRuleDelete"})
+	opRepoRuleDelete.WithMapOfAnything(map[string]any{"operationId": "repoRuleDelete"})
 	_ = reflector.SetRequest(&opRepoRuleDelete, struct {
 		repoRequest
 		RuleIdentifier string `path:"rule_identifier"`
@@ -225,7 +225,7 @@ func rulesOperations(reflector *openapi3.Reflector) {
 
 	opRepoRuleUpdate := openapi3.Operation{}
 	opRepoRuleUpdate.WithTags("repository")
-	opRepoRuleUpdate.WithMapOfAnything(map[string]interface{}{"operationId": "repoRuleUpdate"})
+	opRepoRuleUpdate.WithMapOfAnything(map[string]any{"operationId": "repoRuleUpdate"})
 	_ = reflector.SetRequest(&opRepoRuleUpdate, &struct {
 		repoRequest
 		Identifier string `path:"rule_identifier"`
@@ -244,7 +244,7 @@ func rulesOperations(reflector *openapi3.Reflector) {
 
 	opRepoRuleList := openapi3.Operation{}
 	opRepoRuleList.WithTags("repository")
-	opRepoRuleList.WithMapOfAnything(map[string]interface{}{"operationId": "repoRuleList"})
+	opRepoRuleList.WithMapOfAnything(map[string]any{"operationId": "repoRuleList"})
 	opRepoRuleList.WithParameters(
 		queryParameterQueryRuleList, QueryParameterRuleTypes,
 		queryParameterOrder, queryParameterSortRuleList,
@@ -261,7 +261,7 @@ func rulesOperations(reflector *openapi3.Reflector) {
 
 	opRepoRuleGet := openapi3.Operation{}
 	opRepoRuleGet.WithTags("repository")
-	opRepoRuleGet.WithMapOfAnything(map[string]interface{}{"operationId": "repoRuleGet"})
+	opRepoRuleGet.WithMapOfAnything(map[string]any{"operationId": "repoRuleGet"})
 	_ = reflector.SetRequest(&opRepoRuleGet, &struct {
 		repoRequest
 		Identifier string `path:"rule_identifier"`

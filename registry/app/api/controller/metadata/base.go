@@ -275,7 +275,7 @@ type manifestConfig struct {
 	ModifiedAt *string        `json:"modified,omitempty"`
 	Os         string         `json:"os"`
 	Arch       string         `json:"architecture,omitempty"`
-	RootFS     rootFS         `json:"rootfs,omitempty"`
+	RootFS     rootFS         `json:"rootfs"`
 }
 
 type historyEntry struct {

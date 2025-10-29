@@ -93,7 +93,7 @@ func TestCommandContextTimeout(t *testing.T) {
 
 	go func() {
 		defer pw.Close()
-		for i := 0; i < 3; i++ {
+		for range 3 {
 			_, _ = pw.Write(outbuffer.Bytes())
 			time.Sleep(1 * time.Second)
 		}

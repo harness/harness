@@ -52,25 +52,25 @@ type IndexDependency struct {
 }
 
 type VersionMetadata struct {
-	Name             string                 `json:"name"`
-	Version          string                 `json:"vers"`
-	ReadmeFile       string                 `json:"readme_file,omitempty"`
-	Keywords         []string               `json:"keywords,omitempty"`
-	License          string                 `json:"license,omitempty"`
-	LicenseFile      string                 `json:"license_file,omitempty"`
-	Links            []string               `json:"links,omitempty"`
-	Dependencies     []VersionDependency    `json:"deps,omitempty"`
-	Authors          []string               `json:"authors,omitempty"`
-	Description      string                 `json:"description,omitempty"`
-	Categories       []string               `json:"categories,omitempty"`
-	RepositoryURL    string                 `json:"repository,omitempty"`
-	Badges           map[string]interface{} `json:"badges,omitempty"`
-	Features         map[string][]string    `json:"features,omitempty"`
-	DocumentationURL string                 `json:"documentation,omitempty"`
-	HomepageURL      string                 `json:"homepage,omitempty"`
-	Readme           string                 `json:"readme,omitempty"`
-	RustVersion      string                 `json:"rust_version,omitempty"`
-	Yanked           bool                   `json:"yanked"`
+	Name             string              `json:"name"`
+	Version          string              `json:"vers"`
+	ReadmeFile       string              `json:"readme_file,omitempty"`
+	Keywords         []string            `json:"keywords,omitempty"`
+	License          string              `json:"license,omitempty"`
+	LicenseFile      string              `json:"license_file,omitempty"`
+	Links            []string            `json:"links,omitempty"`
+	Dependencies     []VersionDependency `json:"deps,omitempty"`
+	Authors          []string            `json:"authors,omitempty"`
+	Description      string              `json:"description,omitempty"`
+	Categories       []string            `json:"categories,omitempty"`
+	RepositoryURL    string              `json:"repository,omitempty"`
+	Badges           map[string]any      `json:"badges,omitempty"`
+	Features         map[string][]string `json:"features,omitempty"`
+	DocumentationURL string              `json:"documentation,omitempty"`
+	HomepageURL      string              `json:"homepage,omitempty"`
+	Readme           string              `json:"readme,omitempty"`
+	RustVersion      string              `json:"rust_version,omitempty"`
+	Yanked           bool                `json:"yanked"`
 }
 
 type IndexMetadata struct {

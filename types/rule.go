@@ -68,7 +68,7 @@ func (r Rule) MarshalJSON() ([]byte, error) {
 	})
 }
 
-func (r Rule) MarshalYAML() (interface{}, error) {
+func (r Rule) MarshalYAML() (any, error) {
 	// yaml cannot marshal json.RawMessage
 	pattern := make(map[string]any)
 	err := yaml.Unmarshal(r.Pattern, pattern)

@@ -44,7 +44,7 @@ type updateTemplateRequest struct {
 func templateOperations(reflector *openapi3.Reflector) {
 	opCreate := openapi3.Operation{}
 	opCreate.WithTags("template")
-	opCreate.WithMapOfAnything(map[string]interface{}{"operationId": "createTemplate"})
+	opCreate.WithMapOfAnything(map[string]any{"operationId": "createTemplate"})
 	_ = reflector.SetRequest(&opCreate, new(createTemplateRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&opCreate, new(types.Template), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opCreate, new(usererror.Error), http.StatusBadRequest)
@@ -55,7 +55,7 @@ func templateOperations(reflector *openapi3.Reflector) {
 
 	opFind := openapi3.Operation{}
 	opFind.WithTags("template")
-	opFind.WithMapOfAnything(map[string]interface{}{"operationId": "findTemplate"})
+	opFind.WithMapOfAnything(map[string]any{"operationId": "findTemplate"})
 	_ = reflector.SetRequest(&opFind, new(getTemplateRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opFind, new(types.Template), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opFind, new(usererror.Error), http.StatusInternalServerError)
@@ -66,7 +66,7 @@ func templateOperations(reflector *openapi3.Reflector) {
 
 	opDelete := openapi3.Operation{}
 	opDelete.WithTags("template")
-	opDelete.WithMapOfAnything(map[string]interface{}{"operationId": "deleteTemplate"})
+	opDelete.WithMapOfAnything(map[string]any{"operationId": "deleteTemplate"})
 	_ = reflector.SetRequest(&opDelete, new(getTemplateRequest), http.MethodDelete)
 	_ = reflector.SetJSONResponse(&opDelete, nil, http.StatusNoContent)
 	_ = reflector.SetJSONResponse(&opDelete, new(usererror.Error), http.StatusInternalServerError)
@@ -77,7 +77,7 @@ func templateOperations(reflector *openapi3.Reflector) {
 
 	opUpdate := openapi3.Operation{}
 	opUpdate.WithTags("template")
-	opUpdate.WithMapOfAnything(map[string]interface{}{"operationId": "updateTemplate"})
+	opUpdate.WithMapOfAnything(map[string]any{"operationId": "updateTemplate"})
 	_ = reflector.SetRequest(&opUpdate, new(updateTemplateRequest), http.MethodPatch)
 	_ = reflector.SetJSONResponse(&opUpdate, new(types.Template), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusBadRequest)

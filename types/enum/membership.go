@@ -32,7 +32,7 @@ var membershipUserSorts = sortEnum([]MembershipUserSort{
 	MembershipUserSortCreated,
 })
 
-func (MembershipUserSort) Enum() []interface{} { return toInterfaceSlice(membershipUserSorts) }
+func (MembershipUserSort) Enum() []any { return toInterfaceSlice(membershipUserSorts) }
 func (s MembershipUserSort) Sanitize() (MembershipUserSort, bool) {
 	return Sanitize(s, GetAllMembershipUserSorts)
 }
@@ -83,7 +83,7 @@ var membershipSpaceSorts = sortEnum([]MembershipSpaceSort{
 	MembershipSpaceSortCreated,
 })
 
-func (MembershipSpaceSort) Enum() []interface{} { return toInterfaceSlice(membershipSpaceSorts) }
+func (MembershipSpaceSort) Enum() []any { return toInterfaceSlice(membershipSpaceSorts) }
 func (s MembershipSpaceSort) Sanitize() (MembershipSpaceSort, bool) {
 	return Sanitize(s, GetAllMembershipSpaceSorts)
 }

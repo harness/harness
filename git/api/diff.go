@@ -84,8 +84,8 @@ func modifyHeader(hunk parser.HunkHeader, startLine, endLine int) []byte {
 		}
 	}
 
-	return []byte(fmt.Sprintf("@@ -%d,%d +%d,%d @@",
-		oldStartLine, oldSpan, newStartLine, newSpan))
+	return fmt.Appendf(nil, "@@ -%d,%d +%d,%d @@",
+		oldStartLine, oldSpan, newStartLine, newSpan)
 }
 
 // cutLinesFromFullFileDiff reads from r and writes to w headers and between

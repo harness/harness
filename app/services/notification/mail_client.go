@@ -177,7 +177,7 @@ func GetSubjectPullRequest(
 	return fmt.Sprintf(subjectPullReqEvent, repoIdentifier, prTitle, prNum)
 }
 
-func GetHTMLBody(templateName string, data interface{}) ([]byte, error) {
+func GetHTMLBody(templateName string, data any) ([]byte, error) {
 	tmpl := htmlTemplates[templateName]
 	tmplOutput := bytes.Buffer{}
 	err := tmpl.Execute(&tmplOutput, data)
@@ -192,7 +192,7 @@ func GenerateEmailFromPayload(
 	templateName string,
 	recipients []*types.PrincipalInfo,
 	base *BasePullReqPayload,
-	payload interface{},
+	payload any,
 ) (*mailer.Payload, error) {
 	subject := GetSubjectPullRequest(base.Repo.Identifier, base.PullReq.Number,
 		base.PullReq.Title)

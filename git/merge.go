@@ -152,7 +152,7 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 
 	mergeMethod, ok := params.Method.Sanitize()
 	if !ok && params.Method != "" {
-		return MergeOutput{}, errors.InvalidArgument("Unsupported merge method: %q", params.Method)
+		return MergeOutput{}, errors.InvalidArgumentf("Unsupported merge method: %q", params.Method)
 	}
 
 	var mergeFunc merge.Func
@@ -189,7 +189,7 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 		}
 
 		if !params.HeadBranchExpectedSHA.IsEmpty() && !params.HeadBranchExpectedSHA.Equal(headCommitSHA) {
-			return MergeOutput{}, errors.PreconditionFailed(
+			return MergeOutput{}, errors.PreconditionFailedf(
 				"head branch '%s' is on SHA '%s' which doesn't match expected SHA '%s'.",
 				params.HeadBranch,
 				headCommitSHA,
@@ -218,7 +218,7 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 		false,
 	)
 	if err != nil {
-		return MergeOutput{}, errors.Internal(err,
+		return MergeOutput{}, errors.Internalf(err,
 			"failed to find short stat between %s and %s", baseCommitSHA, headCommitSHA)
 	}
 

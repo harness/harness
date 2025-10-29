@@ -17,7 +17,7 @@ package enum
 // ExecutionSort defines execution attribute that can be used for sorting.
 type ExecutionSort string
 
-func (ExecutionSort) Enum() []interface{}               { return toInterfaceSlice(executionSorts) }
+func (ExecutionSort) Enum() []any                       { return toInterfaceSlice(executionSorts) }
 func (s ExecutionSort) Sanitize() (ExecutionSort, bool) { return Sanitize(s, GetAllExecutionSorts) }
 func GetAllExecutionSorts() ([]ExecutionSort, ExecutionSort) {
 	return executionSorts, ExecutionSortStarted

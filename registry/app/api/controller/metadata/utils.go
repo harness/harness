@@ -21,6 +21,7 @@ import (
 	"math"
 	"net/url"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -133,11 +134,9 @@ func ValidateAndGetArtifactType(packageType a.PackageType, artifactTypeParam str
 	if !ok {
 		return nil, errors.New("invalid package type")
 	}
-	for _, t := range validTypes {
-		if t == artifactTypeParam {
-			at := a.ArtifactType(artifactTypeParam)
-			return &at, nil
-		}
+	if slices.Contains(validTypes, artifactTypeParam) {
+		at := a.ArtifactType(artifactTypeParam)
+		return &at, nil
 	}
 	return nil, errors.New("invalid artifact type for package type")
 }
@@ -194,12 +193,7 @@ func ValidateUpstream(
 }
 
 func IsScopeValid(scope string) bool {
-	for _, item := range validScopes {
-		if item == scope {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(validScopes, scope)
 }
 
 func GetTimeInMs(t time.Time) string {

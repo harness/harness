@@ -35,7 +35,7 @@ func NewValidationError(msg string) *ValidationError {
 	}
 }
 
-func NewValidationErrorf(format string, args ...interface{}) *ValidationError {
+func NewValidationErrorf(format string, args ...any) *ValidationError {
 	return &ValidationError{
 		msg: fmt.Sprintf(format, args...),
 	}

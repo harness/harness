@@ -51,7 +51,7 @@ func (c *Controller) ListAllGitspaces( // nolint:gocognit
 		}
 
 		var spacesMap = make(map[int64]string)
-		for idx := 0; idx < len(allGitspaceConfigs); idx++ {
+		for idx := range allGitspaceConfigs {
 			if spacesMap[allGitspaceConfigs[idx].SpaceID] == "" {
 				space, findSpaceErr := c.spaceFinder.FindByRef(ctx, allGitspaceConfigs[idx].SpacePath)
 				if findSpaceErr != nil {
@@ -116,7 +116,7 @@ func (c *Controller) getAuthorizedGitspaceConfigs(
 	authorizedSpaceIDs map[int64]bool,
 ) []*types.GitspaceConfig {
 	var authorizedGitspaceConfigs = make([]*types.GitspaceConfig, 0)
-	for idx := 0; idx < len(allGitspaceConfigs); idx++ {
+	for idx := range allGitspaceConfigs {
 		if authorizedSpaceIDs[allGitspaceConfigs[idx].SpaceID] {
 			authorizedGitspaceConfigs = append(authorizedGitspaceConfigs, allGitspaceConfigs[idx])
 		}

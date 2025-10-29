@@ -27,6 +27,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"mime"
 	"net/http"
 	"net/url"
@@ -100,8 +101,7 @@ type CatalogAPIResponse struct {
 	Repositories []string `json:"repositories"`
 }
 
-type S3Store interface {
-}
+type S3Store any
 
 var errInvalidSecret = fmt.Errorf("invalid secret")
 
@@ -323,7 +323,7 @@ func copyFullPayload(
 			// responseWriter.WriteHeader(499)
 
 			dcontext.GetLoggerWithFields(
-				ctx, log.Error(), map[interface{}]interface{}{
+				ctx, log.Error(), map[any]any{
 					"error":         err,
 					"copied":        copied,
 					"contentLength": length,
@@ -413,9 +413,7 @@ func (r *LocalRegistry) fetchBlobInternal(
 		return responseHeaders, nil, -1, nil, redirectURL, errs
 	}
 
-	for key, value := range headers {
-		responseHeaders.Headers[key] = value
-	}
+	maps.Copy(responseHeaders.Headers, headers)
 
 	return responseHeaders, fileReader, size, nil, "", errs
 }
@@ -601,7 +599,7 @@ func (r *LocalRegistry) getSupportsList(acceptHeaders []string) [4]bool {
 		// we need to split each header value on "," to get the full
 		// list of "Accept" values (per RFC 2616)
 		// https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.1
-		for _, mediaType := range strings.Split(acceptHeader, ",") {
+		for mediaType := range strings.SplitSeq(acceptHeader, ",") {
 			mediaType = strings.TrimSpace(mediaType)
 			if _, _, err := mime.ParseMediaType(mediaType); err != nil {
 				continue

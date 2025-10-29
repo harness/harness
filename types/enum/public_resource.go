@@ -17,7 +17,7 @@ package enum
 // PublicResourceType defines the type of the public resource.
 type PublicResourceType string
 
-func (PublicResourceType) Enum() []interface{} {
+func (PublicResourceType) Enum() []any {
 	return toInterfaceSlice(GetAllPublicResourceTypes())
 }
 

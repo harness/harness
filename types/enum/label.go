@@ -16,7 +16,7 @@ package enum
 
 type LabelType string
 
-func (LabelType) Enum() []interface{}            { return toInterfaceSlice(LabelTypes) }
+func (LabelType) Enum() []any                    { return toInterfaceSlice(LabelTypes) }
 func (t LabelType) Sanitize() (LabelType, bool)  { return Sanitize(t, GetAllLabelTypes) }
 func GetAllLabelTypes() ([]LabelType, LabelType) { return LabelTypes, LabelTypeStatic }
 
@@ -32,7 +32,7 @@ var LabelTypes = sortEnum([]LabelType{
 
 type LabelColor string
 
-func (LabelColor) Enum() []interface{}              { return toInterfaceSlice(LabelColors) }
+func (LabelColor) Enum() []any                      { return toInterfaceSlice(LabelColors) }
 func (t LabelColor) Sanitize() (LabelColor, bool)   { return Sanitize(t, GetAllLabelColors) }
 func GetAllLabelColors() ([]LabelColor, LabelColor) { return LabelColors, LabelColorBlue }
 

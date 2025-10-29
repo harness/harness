@@ -31,7 +31,7 @@ type ResponseHeaders struct {
 	Code    int
 }
 
-func IsEmpty(slice interface{}) bool {
+func IsEmpty(slice any) bool {
 	if slice == nil {
 		return true
 	}

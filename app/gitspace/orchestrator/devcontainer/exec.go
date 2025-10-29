@@ -305,9 +305,9 @@ func (e *Exec) streamStdErr(stderr io.Reader, outputCh chan []byte, wg *sync.Wai
 
 func handleOutputChannel(output []byte, verbose bool, gitspaceLogger types.GitspaceLogger) (bool, error) {
 	// Handle the exit status first
-	if strings.HasPrefix(string(output), ChannelExitStatus) {
+	if after, ok := strings.CutPrefix(string(output), ChannelExitStatus); ok {
 		// Extract the exit code from the message
-		exitCodeStr := strings.TrimPrefix(string(output), ChannelExitStatus)
+		exitCodeStr := after
 		exitCode, err := strconv.Atoi(exitCodeStr)
 		if err != nil {
 			return true, fmt.Errorf("invalid exit status format: %w", err)

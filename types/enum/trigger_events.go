@@ -27,7 +27,7 @@ const (
 )
 
 // Enum returns all possible TriggerEvent values.
-func (TriggerEvent) Enum() []interface{} {
+func (TriggerEvent) Enum() []any {
 	return toInterfaceSlice(triggerEvents)
 }
 

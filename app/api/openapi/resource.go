@@ -25,7 +25,7 @@ import (
 func resourceOperations(reflector *openapi3.Reflector) {
 	opListGitignore := openapi3.Operation{}
 	opListGitignore.WithTags("resource")
-	opListGitignore.WithMapOfAnything(map[string]interface{}{"operationId": "listGitignore"})
+	opListGitignore.WithMapOfAnything(map[string]any{"operationId": "listGitignore"})
 	_ = reflector.SetRequest(&opListGitignore, new(gitignoreRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opListGitignore, []string{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opListGitignore, new(usererror.Error), http.StatusInternalServerError)
@@ -35,7 +35,7 @@ func resourceOperations(reflector *openapi3.Reflector) {
 
 	opListLicenses := openapi3.Operation{}
 	opListLicenses.WithTags("resource")
-	opListLicenses.WithMapOfAnything(map[string]interface{}{"operationId": "listLicenses"})
+	opListLicenses.WithMapOfAnything(map[string]any{"operationId": "listLicenses"})
 	_ = reflector.SetRequest(&opListLicenses, new(licenseRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opListLicenses, []struct {
 		Label string `json:"label"`

@@ -16,7 +16,7 @@ package enum
 
 type AITaskState string
 
-func (AITaskState) Enum() []interface{} {
+func (AITaskState) Enum() []any {
 	return toInterfaceSlice(aiTaskStateTypes)
 }
 

@@ -124,6 +124,6 @@ func generateLink(
 // EncodeFilter base64 encode by concatenating the published_at value with the tagName using an encodingSeparator.
 func EncodeFilter(publishedAt, tagName string) (v string) {
 	return base64.StdEncoding.EncodeToString(
-		[]byte(fmt.Sprintf("%s%s%s", publishedAt, encodingSeparator, tagName)),
+		fmt.Appendf(nil, "%s%s%s", publishedAt, encodingSeparator, tagName),
 	)
 }

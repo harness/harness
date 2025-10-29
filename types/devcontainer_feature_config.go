@@ -37,8 +37,8 @@ type DevcontainerFeatureConfig struct {
 	Entrypoint        string            `json:"entrypoint,omitempty"`
 	InstallsAfter     []string          `json:"installsAfter,omitempty"`
 	Mounts            []*Mount          `json:"mounts,omitempty"`
-	PostCreateCommand LifecycleCommand  `json:"postCreateCommand,omitempty"`
-	PostStartCommand  LifecycleCommand  `json:"postStartCommand,omitempty"`
+	PostCreateCommand LifecycleCommand  `json:"postCreateCommand"`
+	PostStartCommand  LifecycleCommand  `json:"postStartCommand"`
 }
 
 type Options map[string]*OptionDefinition

@@ -35,7 +35,7 @@ func NewDiscardEventError(inner error) error {
 	}
 }
 
-func NewDiscardEventErrorf(format string, args ...interface{}) error {
+func NewDiscardEventErrorf(format string, args ...any) error {
 	return &discardEventError{
 		inner: fmt.Errorf(format, args...),
 	}

@@ -16,7 +16,7 @@ package enum
 
 type InfraStatus string
 
-func (InfraStatus) Enum() []interface{} {
+func (InfraStatus) Enum() []any {
 	return toInterfaceSlice(infraStatuses)
 }
 

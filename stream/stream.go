@@ -55,7 +55,7 @@ type HandlerConfig struct {
 }
 
 // HandlerFunc defines the signature of a function handling stream messages.
-type HandlerFunc func(ctx context.Context, messageID string, payload map[string]interface{}) error
+type HandlerFunc func(ctx context.Context, messageID string, payload map[string]any) error
 
 // handler defines a handler of a single stream.
 type handler struct {
@@ -67,7 +67,7 @@ type handler struct {
 type message struct {
 	streamID string
 	id       string
-	values   map[string]interface{}
+	values   map[string]any
 }
 
 // transposeStreamID transposes the provided streamID based on the namespace.

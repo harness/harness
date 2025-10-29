@@ -113,7 +113,7 @@ func CheckRepoState(
 
 	defaultAllowedPermissions := permissionsAllowedPerRepoState[repo.State]
 	if !slices.Contains(defaultAllowedPermissions, reqPermission) {
-		return errors.PreconditionFailed("Operation is not allowed for repository in state %s", repo.State)
+		return errors.PreconditionFailedf("Operation is not allowed for repository in state %s", repo.State)
 	}
 
 	return nil

@@ -113,7 +113,7 @@ func (g *Git) SetDefaultBranch(
 			return fmt.Errorf("failed to check if branch exists: %w", err)
 		}
 		if !exist {
-			return errors.NotFound("branch %q does not exist", defaultBranch)
+			return errors.NotFoundf("branch %q does not exist", defaultBranch)
 		}
 	}
 
@@ -489,9 +489,9 @@ func parseGitCountObjectsOutput(ctx context.Context, output string) ObjectCount 
 	info := ObjectCount{}
 
 	output = strings.TrimSpace(output)
-	lines := strings.Split(output, "\n")
+	lines := strings.SplitSeq(output, "\n")
 
-	for _, line := range lines {
+	for line := range lines {
 		fields := strings.Fields(line)
 
 		switch fields[0] {

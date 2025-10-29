@@ -21,7 +21,7 @@ import (
 
 type AIAgent string
 
-func (a AIAgent) Enum() []interface{} {
+func (a AIAgent) Enum() []any {
 	return toInterfaceSlice(aiAgentTypes)
 }
 

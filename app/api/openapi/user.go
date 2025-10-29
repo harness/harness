@@ -156,7 +156,7 @@ var QueryParameterResourceType = openapi3.ParameterOrRef{
 func buildUser(reflector *openapi3.Reflector) {
 	opFind := openapi3.Operation{}
 	opFind.WithTags("user")
-	opFind.WithMapOfAnything(map[string]interface{}{"operationId": "getUser"})
+	opFind.WithMapOfAnything(map[string]any{"operationId": "getUser"})
 	_ = reflector.SetRequest(&opFind, nil, http.MethodGet)
 	_ = reflector.SetJSONResponse(&opFind, new(types.User), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opFind, new(usererror.Error), http.StatusInternalServerError)
@@ -164,7 +164,7 @@ func buildUser(reflector *openapi3.Reflector) {
 
 	opUpdate := openapi3.Operation{}
 	opUpdate.WithTags("user")
-	opUpdate.WithMapOfAnything(map[string]interface{}{"operationId": "updateUser"})
+	opUpdate.WithMapOfAnything(map[string]any{"operationId": "updateUser"})
 	_ = reflector.SetRequest(&opUpdate, new(user.UpdateInput), http.MethodPatch)
 	_ = reflector.SetJSONResponse(&opUpdate, new(types.User), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusInternalServerError)
@@ -172,7 +172,7 @@ func buildUser(reflector *openapi3.Reflector) {
 
 	opMemberSpaces := openapi3.Operation{}
 	opMemberSpaces.WithTags("user")
-	opMemberSpaces.WithMapOfAnything(map[string]interface{}{"operationId": "membershipSpaces"})
+	opMemberSpaces.WithMapOfAnything(map[string]any{"operationId": "membershipSpaces"})
 	opMemberSpaces.WithParameters(
 		queryParameterMembershipSpaces,
 		queryParameterOrder, queryParameterSortMembershipSpaces,
@@ -184,7 +184,7 @@ func buildUser(reflector *openapi3.Reflector) {
 
 	opKeyCreate := openapi3.Operation{}
 	opKeyCreate.WithTags("user")
-	opKeyCreate.WithMapOfAnything(map[string]interface{}{"operationId": "createPublicKey"})
+	opKeyCreate.WithMapOfAnything(map[string]any{"operationId": "createPublicKey"})
 	_ = reflector.SetRequest(&opKeyCreate, new(user.CreatePublicKeyInput), http.MethodPost)
 	_ = reflector.SetJSONResponse(&opKeyCreate, new(types.PublicKey), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opKeyCreate, new(usererror.Error), http.StatusBadRequest)
@@ -193,7 +193,7 @@ func buildUser(reflector *openapi3.Reflector) {
 
 	opKeyDelete := openapi3.Operation{}
 	opKeyDelete.WithTags("user")
-	opKeyDelete.WithMapOfAnything(map[string]interface{}{"operationId": "deletePublicKey"})
+	opKeyDelete.WithMapOfAnything(map[string]any{"operationId": "deletePublicKey"})
 	_ = reflector.SetRequest(&opKeyDelete, struct {
 		ID string `path:"public_key_identifier"`
 	}{}, http.MethodDelete)
@@ -204,7 +204,7 @@ func buildUser(reflector *openapi3.Reflector) {
 
 	opKeyUpdate := openapi3.Operation{}
 	opKeyUpdate.WithTags("user")
-	opKeyUpdate.WithMapOfAnything(map[string]interface{}{"operationId": "updatePublicKey"})
+	opKeyUpdate.WithMapOfAnything(map[string]any{"operationId": "updatePublicKey"})
 	_ = reflector.SetRequest(&opKeyUpdate, struct {
 		ID string `path:"public_key_identifier"`
 	}{}, http.MethodPatch)
@@ -216,7 +216,7 @@ func buildUser(reflector *openapi3.Reflector) {
 
 	opKeyList := openapi3.Operation{}
 	opKeyList.WithTags("user")
-	opKeyList.WithMapOfAnything(map[string]interface{}{"operationId": "listPublicKey"})
+	opKeyList.WithMapOfAnything(map[string]any{"operationId": "listPublicKey"})
 	opKeyList.WithParameters(QueryParameterPage, QueryParameterLimit,
 		queryParameterQueryPublicKey, queryParameterSortPublicKey, queryParameterOrder,
 		queryParameterUsagePublicKey, queryParameterSchemePublicKey,
@@ -229,7 +229,7 @@ func buildUser(reflector *openapi3.Reflector) {
 
 	opListTokens := openapi3.Operation{}
 	opListTokens.WithTags("user")
-	opListTokens.WithMapOfAnything(map[string]interface{}{"operationId": "listTokens"})
+	opListTokens.WithMapOfAnything(map[string]any{"operationId": "listTokens"})
 	_ = reflector.SetRequest(&opListTokens, nil, http.MethodGet)
 	_ = reflector.SetJSONResponse(&opListTokens, new([]types.Token), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opListTokens, new(usererror.Error), http.StatusUnauthorized)
@@ -239,7 +239,7 @@ func buildUser(reflector *openapi3.Reflector) {
 
 	opCreateToken := openapi3.Operation{}
 	opCreateToken.WithTags("user")
-	opCreateToken.WithMapOfAnything(map[string]interface{}{"operationId": "createToken"})
+	opCreateToken.WithMapOfAnything(map[string]any{"operationId": "createToken"})
 	_ = reflector.SetRequest(&opCreateToken, new(user.CreateTokenInput), http.MethodPost)
 	_ = reflector.SetJSONResponse(&opCreateToken, new(types.TokenResponse), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opCreateToken, new(usererror.Error), http.StatusUnauthorized)
@@ -249,7 +249,7 @@ func buildUser(reflector *openapi3.Reflector) {
 
 	opDeleteToken := openapi3.Operation{}
 	opDeleteToken.WithTags("user")
-	opDeleteToken.WithMapOfAnything(map[string]interface{}{"operationId": "deleteToken"})
+	opDeleteToken.WithMapOfAnything(map[string]any{"operationId": "deleteToken"})
 	_ = reflector.SetRequest(&opDeleteToken, new(tokensRequest), http.MethodDelete)
 	_ = reflector.SetJSONResponse(&opDeleteToken, nil, http.StatusNoContent)
 	_ = reflector.SetJSONResponse(&opDeleteToken, new(usererror.Error), http.StatusNotFound)
@@ -260,7 +260,7 @@ func buildUser(reflector *openapi3.Reflector) {
 
 	opCreateFavorite := openapi3.Operation{}
 	opCreateFavorite.WithTags("user")
-	opCreateFavorite.WithMapOfAnything(map[string]interface{}{"operationId": "createFavorite"})
+	opCreateFavorite.WithMapOfAnything(map[string]any{"operationId": "createFavorite"})
 	_ = reflector.SetRequest(&opCreateFavorite, new(types.FavoriteResource), http.MethodPost)
 	_ = reflector.SetJSONResponse(&opCreateFavorite, new(types.FavoriteResource), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opCreateFavorite, new(usererror.Error), http.StatusUnauthorized)
@@ -270,7 +270,7 @@ func buildUser(reflector *openapi3.Reflector) {
 
 	opDeleteFavorite := openapi3.Operation{}
 	opDeleteFavorite.WithTags("user")
-	opDeleteFavorite.WithMapOfAnything(map[string]interface{}{"operationId": "deleteFavorite"})
+	opDeleteFavorite.WithMapOfAnything(map[string]any{"operationId": "deleteFavorite"})
 	opDeleteFavorite.WithParameters(QueryParameterResourceType)
 	_ = reflector.SetRequest(&opDeleteFavorite, new(favoriteRequest), http.MethodDelete)
 	_ = reflector.SetJSONResponse(&opDeleteFavorite, nil, http.StatusNoContent)

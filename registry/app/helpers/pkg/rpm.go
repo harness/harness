@@ -17,6 +17,7 @@ package pkg
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/harness/gitness/registry/app/api/interfaces"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
@@ -67,21 +68,11 @@ func (c *rpmPackageType) GetPathPackageType() string {
 }
 
 func (c *rpmPackageType) IsValidRepoType(repoType string) bool {
-	for _, validRepoType := range c.validRepoTypes {
-		if validRepoType == repoType {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(c.validRepoTypes, repoType)
 }
 
 func (c *rpmPackageType) IsValidUpstreamSource(upstreamSource string) bool {
-	for _, validUpstreamSource := range c.validUpstreamSources {
-		if validUpstreamSource == upstreamSource {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(c.validUpstreamSources, upstreamSource)
 }
 
 func (c *rpmPackageType) IsURLRequiredForUpstreamSource(upstreamSource string) bool {

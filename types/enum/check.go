@@ -19,7 +19,7 @@ import "golang.org/x/exp/slices"
 // CheckStatus defines status check status.
 type CheckStatus string
 
-func (CheckStatus) Enum() []interface{}                 { return toInterfaceSlice(checkStatuses) }
+func (CheckStatus) Enum() []any                         { return toInterfaceSlice(checkStatuses) }
 func (s CheckStatus) Sanitize() (CheckStatus, bool)     { return Sanitize(s, GetAllCheckStatuses) }
 func GetAllCheckStatuses() ([]CheckStatus, CheckStatus) { return checkStatuses, "" }
 
@@ -50,7 +50,7 @@ var successCheckStatuses = []CheckStatus{CheckStatusSuccess, CheckStatusFailureI
 // CheckPayloadKind defines status payload type.
 type CheckPayloadKind string
 
-func (CheckPayloadKind) Enum() []interface{} { return toInterfaceSlice(checkPayloadTypes) }
+func (CheckPayloadKind) Enum() []any { return toInterfaceSlice(checkPayloadTypes) }
 func (s CheckPayloadKind) Sanitize() (CheckPayloadKind, bool) {
 	return Sanitize(s, GetAllCheckPayloadTypes)
 }

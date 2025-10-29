@@ -170,7 +170,7 @@ func (r *SharedRepo) LsFiles(
 	}
 
 	files := make([]string, 0)
-	for _, line := range bytes.Split(stdout.Bytes(), []byte{'\000'}) {
+	for line := range bytes.SplitSeq(stdout.Bytes(), []byte{'\000'}) {
 		files = append(files, string(line))
 	}
 
@@ -242,7 +242,7 @@ func (r *SharedRepo) GetTreeSHA(
 	)
 	if err != nil {
 		if command.AsError(err).IsAmbiguousArgErr() {
-			return sha.None, errors.NotFound("could not resolve git revision %q", rev)
+			return sha.None, errors.NotFoundf("could not resolve git revision %q", rev)
 		}
 		return sha.None, fmt.Errorf("failed to get tree sha: %w", err)
 	}
@@ -282,7 +282,7 @@ func (r *SharedRepo) AddObjectToIndex(
 
 	if err := cmd.Run(ctx, command.WithDir(r.repoPath)); err != nil {
 		if matched, _ := regexp.MatchString(".*Invalid path '.*", err.Error()); matched {
-			return errors.InvalidArgument("invalid path '%s'", objectPath)
+			return errors.InvalidArgumentf("invalid path '%s'", objectPath)
 		}
 		return fmt.Errorf("failed to add object to index in shared repo (path=%s): %w", objectPath, err)
 	}
@@ -612,7 +612,7 @@ func (r *SharedRepo) DeleteFile(ctx context.Context, filePath string) error {
 		return fmt.Errorf("deleteFile: listing files error: %w", err)
 	}
 	if !slices.Contains(filesInIndex, filePath) {
-		return errors.NotFound("file path %s not found", filePath)
+		return errors.NotFoundf("file path %s not found", filePath)
 	}
 
 	if err = r.RemoveFilesFromIndex(ctx, filePath); err != nil {
@@ -693,7 +693,7 @@ func patchTextFileWritePatchedFile(
 			break
 		}
 		if replacements[i].OmitFrom < replacements[i-1].ContinueFrom {
-			return errors.InvalidArgument(
+			return errors.InvalidArgumentf(
 				"Patch actions have conflicting ranges [%s,%s)x[%s,%s)",
 				replacements[i-1].OmitFrom, replacements[i-1].ContinueFrom,
 				replacements[i].OmitFrom, replacements[i].ContinueFrom,
@@ -805,7 +805,7 @@ func patchTextFileWritePatchedFile(
 
 		// ensure replacement range isn't out of bounds
 		if replacements[i].OmitFrom > ln || replacements[i].ContinueFrom > ln {
-			return errors.InvalidArgument(
+			return errors.InvalidArgumentf(
 				"Patch action for [%s,%s) is exceeding end of file with %d line(s).",
 				originalOmitFrom, originalContinueFrom, ln-1,
 			)
@@ -814,7 +814,7 @@ func patchTextFileWritePatchedFile(
 		// ensure no overlap with next element
 		if i+1 < len(replacements) &&
 			replacements[i+1].OmitFrom < replacements[i].ContinueFrom {
-			return errors.InvalidArgument(
+			return errors.InvalidArgumentf(
 				"Patch actions have conflicting ranges [%s,%s)x[%s,%s) for file with %d line(s).",
 				originalOmitFrom, originalContinueFrom,
 				replacements[i+1].OmitFrom, replacements[i+1].ContinueFrom,
@@ -847,7 +847,7 @@ func (r *SharedRepo) getFileEntry(
 ) (*api.TreeNode, error) {
 	entry, err := api.GetTreeNode(ctx, r.repoPath, treeishSHA.String(), path, false)
 	if errors.IsNotFound(err) {
-		return nil, errors.NotFound("path %s not found", path)
+		return nil, errors.NotFoundf("path %s not found", path)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("getFileEntry: failed to get tree for path %s: %w", path, err)
@@ -855,7 +855,7 @@ func (r *SharedRepo) getFileEntry(
 
 	// If a SHA was given and the SHA given doesn't match the SHA of the fromTreePath, throw error
 	if !objectSHA.IsEmpty() && !objectSHA.Equal(entry.SHA) {
-		return nil, errors.InvalidArgument("sha does not match for path %s [given: %s, expected: %s]",
+		return nil, errors.InvalidArgumentf("sha does not match for path %s [given: %s, expected: %s]",
 			path, objectSHA, entry.SHA)
 	}
 
@@ -891,17 +891,17 @@ func (r *SharedRepo) checkPathAvailability(
 		switch {
 		case index < len(parts)-1:
 			if !entry.IsDir() {
-				return errors.Conflict("a file already exists where you're trying to create a subdirectory [path: %s]",
+				return errors.Conflictf("a file already exists where you're trying to create a subdirectory [path: %s]",
 					subTreePath)
 			}
 		case entry.IsLink():
-			return errors.Conflict("a symbolic link already exist where you're trying to create a subdirectory [path: %s]",
+			return errors.Conflictf("a symbolic link already exist where you're trying to create a subdirectory [path: %s]",
 				subTreePath)
 		case entry.IsDir():
-			return errors.Conflict("a directory already exists where you're trying to create a subdirectory [path: %s]",
+			return errors.Conflictf("a directory already exists where you're trying to create a subdirectory [path: %s]",
 				subTreePath)
 		case filePath != "" || isNewFile:
-			return errors.Conflict("file path %s already exists", filePath)
+			return errors.Conflictf("file path %s already exists", filePath)
 		}
 	}
 	return nil
@@ -1108,11 +1108,11 @@ func parsePatchTextFilePayload(payloadRaw []byte) (patchTextFileReplacement, err
 
 	start, err := parseLineNumber(startBytes)
 	if err != nil {
-		return patchTextFileReplacement{}, errors.InvalidArgument("Payload start line number is invalid: %s", err)
+		return patchTextFileReplacement{}, errors.InvalidArgumentf("Payload start line number is invalid: %s", err)
 	}
 	end, err := parseLineNumber(endBytes)
 	if err != nil {
-		return patchTextFileReplacement{}, errors.InvalidArgument("Payload end line number is invalid: %s", err)
+		return patchTextFileReplacement{}, errors.InvalidArgumentf("Payload end line number is invalid: %s", err)
 	}
 
 	if end < start {

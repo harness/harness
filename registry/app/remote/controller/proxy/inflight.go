@@ -20,11 +20,11 @@ import "sync"
 
 type inflightRequest struct {
 	mu     sync.Mutex
-	reqMap map[string]interface{}
+	reqMap map[string]any
 }
 
 var inflightChecker = &inflightRequest{
-	reqMap: make(map[string]interface{}),
+	reqMap: make(map[string]any),
 }
 
 // addRequest if the artifact already exist in the inflightRequest, return false

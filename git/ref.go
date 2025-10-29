@@ -123,7 +123,7 @@ func GetRefPath(refName string, refType enum.RefType) (string, error) {
 	case enum.RefTypePullReqMerge:
 		return refPullReqPrefix + refName + refPullReqMergeSuffix, nil
 	default:
-		return "", errors.InvalidArgument("provided reference type '%s' is invalid", refType)
+		return "", errors.InvalidArgumentf("provided reference type '%s' is invalid", refType)
 	}
 }
 

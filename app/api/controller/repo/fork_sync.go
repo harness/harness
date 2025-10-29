@@ -83,7 +83,7 @@ func (c *Controller) ForkSync(
 	}
 
 	if !branchForkInfo.SHA.Equal(in.BranchCommitSHA) {
-		return nil, errors.InvalidArgument("The commit %s isn't the latest commit on the branch %s",
+		return nil, errors.InvalidArgumentf("The commit %s isn't the latest commit on the branch %s",
 			in.BranchCommitSHA, in.Branch)
 	}
 

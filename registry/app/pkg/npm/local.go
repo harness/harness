@@ -270,7 +270,7 @@ func mapToPackageSearch(metadata types.Artifact, registryURL string) (*npm2.Pack
 	return &npm2.PackageSearchObject{}, fmt.Errorf("no version found in the metadata for image:[%s]", art.Name)
 }
 
-func getValueOrDefault(value interface{}, defaultValue interface{}) interface{} {
+func getValueOrDefault(value any, defaultValue any) any {
 	if value != nil {
 		return value
 	}
@@ -473,7 +473,7 @@ func (c *localRegistry) parseAndUploadNPMPackage(ctx context.Context, info npm.A
 				// We're done processing attachments, break out of the main parsing loop
 				return fileInfo, tmpFileName, nil
 			default:
-				var dummy interface{}
+				var dummy any
 				if err := decoder.Decode(&dummy); err != nil {
 					return types.FileInfo{}, "", fmt.Errorf("failed to parse field %s: %w", token, err)
 				}
@@ -547,7 +547,7 @@ func (c *localRegistry) processAttachmentsOptimized(ctx context.Context, info np
 				return c.processBase64DataOptimized(ctx, info, decoder, bufferedReader, attachmentKey)
 			default:
 				// Skip other fields efficiently
-				var dummy interface{}
+				var dummy any
 				if err := decoder.Decode(&dummy); err != nil {
 					return types.FileInfo{}, "", fmt.Errorf("failed to skip field %s: %w", field, err)
 				}
@@ -638,7 +638,7 @@ func NewOptimizedJSONStringStreamReader(r *bufio.Reader) io.Reader {
 
 			// Process the chunk for quotes and escapes
 			writeStart := 0
-			for i := 0; i < n; i++ {
+			for i := range n {
 				b := buf[i]
 
 				if escaped {

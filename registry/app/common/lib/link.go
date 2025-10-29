@@ -57,11 +57,11 @@ func (l Links) String() string {
 // title="previous chapter" , <http://example.com/TheBook/chapter4>; rel="next"; title="next chapter".
 func ParseLinks(str string) Links {
 	var links Links
-	for _, lk := range strings.Split(str, ",") {
+	for lk := range strings.SplitSeq(str, ",") {
 		link := &Link{
 			Attrs: map[string]string{},
 		}
-		for _, attr := range strings.Split(lk, ";") {
+		for attr := range strings.SplitSeq(lk, ";") {
 			attr = strings.TrimSpace(attr)
 			if len(attr) == 0 {
 				continue

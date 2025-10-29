@@ -21,7 +21,7 @@ import (
 
 type IDEType string
 
-func (i IDEType) Enum() []interface{} {
+func (i IDEType) Enum() []any {
 	return toInterfaceSlice(ideTypes)
 }
 

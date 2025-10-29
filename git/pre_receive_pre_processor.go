@@ -225,9 +225,9 @@ func findCommitterMismatch(
 		if err != nil {
 			return nil, fmt.Errorf("failed to read: %w", err)
 		}
-		text := strings.Split(string(data), "\n")
+		text := strings.SplitSeq(string(data), "\n")
 
-		for _, line := range text {
+		for line := range text {
 			if !strings.HasPrefix(line, "committer ") {
 				continue
 			}

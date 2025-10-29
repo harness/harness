@@ -68,7 +68,7 @@ func NewVsCodeWebService(config *VSCodeWebConfig, urlScheme string) *VSCodeWeb {
 func (v *VSCodeWeb) Setup(
 	ctx context.Context,
 	exec *devcontainer.Exec,
-	args map[gitspaceTypes.IDEArg]interface{},
+	args map[gitspaceTypes.IDEArg]any,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	gitspaceLogger.Info("Installing VSCode Web inside container...")
@@ -125,7 +125,7 @@ func (v *VSCodeWeb) updateMediaContent(ctx context.Context, exec *devcontainer.E
 func (v *VSCodeWeb) Run(
 	ctx context.Context,
 	exec *devcontainer.Exec,
-	args map[gitspaceTypes.IDEArg]interface{},
+	args map[gitspaceTypes.IDEArg]any,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	payload := gitspaceTypes.RunVSCodeWebPayload{
@@ -160,7 +160,7 @@ func (v *VSCodeWeb) Run(
 }
 
 func updateSetupPayloadFromArgs(
-	args map[gitspaceTypes.IDEArg]interface{},
+	args map[gitspaceTypes.IDEArg]any,
 	payload *gitspaceTypes.SetupVSCodeWebPayload,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {

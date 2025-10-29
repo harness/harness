@@ -298,21 +298,21 @@ func (l *lockerCounter) RUnlock() { l.RUnlocks++ }
 
 type dbMockNop struct{}
 
-func (dbMockNop) DriverName() string                                           { return "" }
-func (dbMockNop) Rebind(string) string                                         { return "" }
-func (dbMockNop) BindNamed(string, interface{}) (string, []interface{}, error) { return "", nil, nil }
+func (dbMockNop) DriverName() string                           { return "" }
+func (dbMockNop) Rebind(string) string                         { return "" }
+func (dbMockNop) BindNamed(string, any) (string, []any, error) { return "", nil, nil }
 
 //nolint:nilnil // it's a mock
-func (dbMockNop) QueryContext(context.Context, string, ...interface{}) (*sql.Rows, error) {
+func (dbMockNop) QueryContext(context.Context, string, ...any) (*sql.Rows, error) {
 	return nil, nil
 }
 
 //nolint:nilnil // it's a mock
-func (dbMockNop) QueryxContext(context.Context, string, ...interface{}) (*sqlx.Rows, error) {
+func (dbMockNop) QueryxContext(context.Context, string, ...any) (*sqlx.Rows, error) {
 	return nil, nil
 }
-func (dbMockNop) QueryRowxContext(context.Context, string, ...interface{}) *sqlx.Row { return nil }
-func (dbMockNop) ExecContext(context.Context, string, ...interface{}) (sql.Result, error) {
+func (dbMockNop) QueryRowxContext(context.Context, string, ...any) *sqlx.Row { return nil }
+func (dbMockNop) ExecContext(context.Context, string, ...any) (sql.Result, error) {
 	//nolint:nilnil
 	return nil, nil
 }
@@ -334,10 +334,10 @@ func (dbMockNop) PreparexContext(context.Context, string) (*sqlx.Stmt, error) {
 func (dbMockNop) PrepareNamedContext(context.Context, string) (*sqlx.NamedStmt, error) {
 	return nil, nil
 }
-func (dbMockNop) GetContext(context.Context, interface{}, string, ...interface{}) error {
+func (dbMockNop) GetContext(context.Context, any, string, ...any) error {
 	return nil
 }
-func (dbMockNop) SelectContext(context.Context, interface{}, string, ...interface{}) error {
+func (dbMockNop) SelectContext(context.Context, any, string, ...any) error {
 	return nil
 }
 

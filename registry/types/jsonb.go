@@ -23,7 +23,7 @@ import (
 type JSONB map[string]string
 
 // Scan implements the sql.Scanner interface for JSONB.
-func (j *JSONB) Scan(value interface{}) error {
+func (j *JSONB) Scan(value any) error {
 	if value == nil {
 		*j = nil
 		return nil

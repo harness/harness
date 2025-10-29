@@ -28,7 +28,7 @@ import (
 func buildSystem(reflector *openapi3.Reflector) {
 	opGetConfig := openapi3.Operation{}
 	opGetConfig.WithTags("system")
-	opGetConfig.WithMapOfAnything(map[string]interface{}{"operationId": "getSystemConfig"})
+	opGetConfig.WithMapOfAnything(map[string]any{"operationId": "getSystemConfig"})
 	_ = reflector.SetRequest(&opGetConfig, nil, http.MethodGet)
 	_ = reflector.SetJSONResponse(&opGetConfig, new(system.ConfigOutput), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opGetConfig, new(usererror.Error), http.StatusInternalServerError)

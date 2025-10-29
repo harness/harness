@@ -126,7 +126,7 @@ func TestNoCacheWithMultipleRequests(t *testing.T) {
 	middleware := NoCache(handler)
 
 	// Make multiple requests to ensure middleware is reusable
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		req := httptest.NewRequest(http.MethodGet, "/test", nil)
 		rec := httptest.NewRecorder()
 

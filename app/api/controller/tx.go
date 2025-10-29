@@ -36,7 +36,7 @@ type TxOptionResetFunc func()
 func TxOptLock(ctx context.Context,
 	tx dbtx.Transactor,
 	txFn func(ctx context.Context) error,
-	opts ...interface{},
+	opts ...any,
 ) (err error) {
 	tries := 5
 	var resetFuncs []func()

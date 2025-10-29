@@ -18,7 +18,7 @@ RUN yarn && yarn build && yarn cache clean
 # ---------------------------------------------------------#
 #                   Build Harness image                    #
 # ---------------------------------------------------------#
-FROM --platform=$BUILDPLATFORM golang:1.23.10-alpine3.22 as builder
+FROM --platform=$BUILDPLATFORM golang:1.24.9-alpine3.22 as builder
 
 RUN apk update \
     && apk add --no-cache protoc build-base git

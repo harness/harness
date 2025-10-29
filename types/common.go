@@ -37,17 +37,17 @@ func SanitizeTag(text *string, typ TagPartType, requireNonEmpty bool) error {
 	*text = strings.TrimSpace(*text)
 
 	if requireNonEmpty && len(*text) == 0 {
-		return errors.InvalidArgument("%s must be a non-empty string", typ)
+		return errors.InvalidArgumentf("%s must be a non-empty string", typ)
 	}
 
 	const maxTagLength = 50
 	if utf8.RuneCountInString(*text) > maxTagLength {
-		return errors.InvalidArgument("%s can have at most %d characters", typ, maxTagLength)
+		return errors.InvalidArgumentf("%s can have at most %d characters", typ, maxTagLength)
 	}
 
 	for _, ch := range *text {
 		if unicode.IsControl(ch) {
-			return errors.InvalidArgument("%s cannot contain control characters", typ)
+			return errors.InvalidArgumentf("%s cannot contain control characters", typ)
 		}
 	}
 

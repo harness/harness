@@ -34,5 +34,5 @@ type BucketService interface {
 	// blobID can be int64 for OCI blobs or string for generic blobs.
 	// If no suitable bucket is found, returns nil and the caller should fall back to using their default blob store.
 	GetBlobStore(ctx context.Context, repoKey string, rootIdentifier string,
-		blobID interface{}, digest string) *BlobStore
+		blobID any, digest string) *BlobStore
 }

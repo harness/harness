@@ -252,7 +252,7 @@ func (r *registryHelper) GetFileMetadata(
 func (r *registryHelper) GetArtifactDetail(
 	img *types.Image,
 	art *types.Artifact,
-	metadata map[string]interface{},
+	metadata map[string]any,
 	downloadCount int64,
 ) *artifactapi.ArtifactDetail {
 	createdAt := GetTimeInMs(art.CreatedAt)

@@ -17,6 +17,7 @@ package check
 import (
 	"fmt"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/harness/gitness/app/auth"
@@ -185,10 +186,8 @@ func SpaceIdentifierDefault(identifier string, isRoot bool) error {
 			return ErrIllegalRootSpaceIdentifierNumber
 		}
 
-		for _, p := range illegalRootSpaceIdentifiers {
-			if p == identifierLower {
-				return ErrIllegalRootSpaceIdentifier
-			}
+		if slices.Contains(illegalRootSpaceIdentifiers, identifierLower) {
+			return ErrIllegalRootSpaceIdentifier
 		}
 	}
 

@@ -62,7 +62,7 @@ type (
 func buildAdmin(reflector *openapi3.Reflector) {
 	opFind := openapi3.Operation{}
 	opFind.WithTags("admin")
-	opFind.WithMapOfAnything(map[string]interface{}{"operationId": "adminGetUser"})
+	opFind.WithMapOfAnything(map[string]any{"operationId": "adminGetUser"})
 	_ = reflector.SetRequest(&opFind, new(adminUsersRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opFind, new(types.User), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opFind, new(usererror.Error), http.StatusBadRequest)
@@ -72,7 +72,7 @@ func buildAdmin(reflector *openapi3.Reflector) {
 
 	opList := openapi3.Operation{}
 	opList.WithTags("admin")
-	opList.WithMapOfAnything(map[string]interface{}{"operationId": "adminListUsers"})
+	opList.WithMapOfAnything(map[string]any{"operationId": "adminListUsers"})
 	_ = reflector.SetRequest(&opList, new(adminUserListRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opList, new([]*types.User), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opList, new(usererror.Error), http.StatusBadRequest)
@@ -82,7 +82,7 @@ func buildAdmin(reflector *openapi3.Reflector) {
 
 	opCreate := openapi3.Operation{}
 	opCreate.WithTags("admin")
-	opCreate.WithMapOfAnything(map[string]interface{}{"operationId": "adminCreateUser"})
+	opCreate.WithMapOfAnything(map[string]any{"operationId": "adminCreateUser"})
 	_ = reflector.SetRequest(&opCreate, new(adminUsersCreateRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&opCreate, new(types.User), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opCreate, new(usererror.Error), http.StatusBadRequest)
@@ -92,7 +92,7 @@ func buildAdmin(reflector *openapi3.Reflector) {
 
 	opUpdate := openapi3.Operation{}
 	opUpdate.WithTags("admin")
-	opUpdate.WithMapOfAnything(map[string]interface{}{"operationId": "adminUpdateUser"})
+	opUpdate.WithMapOfAnything(map[string]any{"operationId": "adminUpdateUser"})
 	_ = reflector.SetRequest(&opUpdate, new(adminUsersUpdateRequest), http.MethodPatch)
 	_ = reflector.SetJSONResponse(&opUpdate, new(types.User), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusBadRequest)
@@ -102,7 +102,7 @@ func buildAdmin(reflector *openapi3.Reflector) {
 
 	opUpdateAdmin := openapi3.Operation{}
 	opUpdateAdmin.WithTags("admin")
-	opUpdateAdmin.WithMapOfAnything(map[string]interface{}{"operationId": "updateUserAdmin"})
+	opUpdateAdmin.WithMapOfAnything(map[string]any{"operationId": "updateUserAdmin"})
 	_ = reflector.SetRequest(&opUpdateAdmin, new(updateAdminRequest), http.MethodPatch)
 	_ = reflector.SetJSONResponse(&opUpdateAdmin, new(types.User), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opUpdateAdmin, new(usererror.Error), http.StatusNotFound)
@@ -111,7 +111,7 @@ func buildAdmin(reflector *openapi3.Reflector) {
 
 	opDelete := openapi3.Operation{}
 	opDelete.WithTags("admin")
-	opDelete.WithMapOfAnything(map[string]interface{}{"operationId": "adminDeleteUser"})
+	opDelete.WithMapOfAnything(map[string]any{"operationId": "adminDeleteUser"})
 	_ = reflector.SetRequest(&opDelete, new(adminUsersRequest), http.MethodDelete)
 	_ = reflector.SetJSONResponse(&opDelete, nil, http.StatusNoContent)
 	_ = reflector.SetJSONResponse(&opDelete, new(usererror.Error), http.StatusInternalServerError)

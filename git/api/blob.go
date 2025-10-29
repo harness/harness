@@ -61,7 +61,7 @@ func GetBlob(
 	}
 	if output.Type != GitObjectTypeBlob {
 		cancel()
-		return nil, errors.InvalidArgument(
+		return nil, errors.InvalidArgumentf(
 			"cat-file returned object type '%s' but expected '%s'", output.Type, GitObjectTypeBlob)
 	}
 

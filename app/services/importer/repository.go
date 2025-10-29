@@ -147,7 +147,7 @@ func (r *Repository) RunMany(
 	n := len(repoIDs)
 	defs := make([]job.Definition, n)
 
-	for k := 0; k < n; k++ {
+	for k := range n {
 		repoID := repoIDs[k]
 		cloneURL := cloneURLs[k]
 

@@ -145,7 +145,7 @@ func getIndexFilePathFromImageName(imageName string) string {
 
 func getPackageIndexContentFromText(text string) ([]packageIndexMetadata, error) {
 	result := []packageIndexMetadata{}
-	for _, line := range strings.Split(text, "\n") {
+	for line := range strings.SplitSeq(text, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue

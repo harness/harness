@@ -32,7 +32,7 @@ const (
 	ResourceTypeRegistry       ResourceType = "REGISTRY"
 )
 
-func (ResourceType) Enum() []interface{} {
+func (ResourceType) Enum() []any {
 	return toInterfaceSlice(resourceTypes)
 }
 func (r ResourceType) Sanitize() (ResourceType, bool) { return Sanitize(r, GetAllResourceTypes) }
@@ -59,7 +59,7 @@ var resourceTypes = sortEnum([]ResourceType{
 // ParentResourceType defines the different types of parent resources.
 type ParentResourceType string
 
-func (ParentResourceType) Enum() []interface{} {
+func (ParentResourceType) Enum() []any {
 	return toInterfaceSlice(GetAllParentResourceTypes())
 }
 

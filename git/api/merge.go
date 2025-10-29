@@ -85,7 +85,7 @@ func (g *Git) GetMergeBase(
 	mergeBase := strings.TrimSpace(stdout.String())
 	if count := strings.Count(mergeBase, "\n") + 1; count > 1 {
 		return sha.None, "",
-			errors.InvalidArgument("The commits %s and %s have %d merge bases. This is not supported.",
+			errors.InvalidArgumentf("The commits %s and %s have %d merge bases. This is not supported.",
 				base, head, count)
 	}
 

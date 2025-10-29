@@ -23,6 +23,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"slices"
 	"time"
 
 	gitnessstore "github.com/harness/gitness/app/store"
@@ -130,13 +131,7 @@ func (w *WebhookExecutor) triggerWebhooks(
 		}
 
 		// check if webhook is registered for trigger (empty list => all triggers are registered)
-		triggerRegistered := len(webhook.Triggers) == 0
-		for _, trigger := range webhook.Triggers {
-			if trigger == triggerType {
-				triggerRegistered = true
-				break
-			}
-		}
+		triggerRegistered := slices.Contains(webhook.Triggers, triggerType)
 		if !triggerRegistered {
 			continue
 		}
@@ -426,10 +421,7 @@ func handleWebhookResponse(execution *types.WebhookExecutionCore, resp *http.Res
 		return tErr
 	}
 	// limit the total number of bytes we store in headers
-	headerLength := hBuff.Len()
-	if headerLength > responseHeadersBytesLimit {
-		headerLength = responseHeadersBytesLimit
-	}
+	headerLength := min(hBuff.Len(), responseHeadersBytesLimit)
 	execution.Response.Headers = string(hBuff.Bytes()[0:headerLength])
 
 	// handle body (if exists)

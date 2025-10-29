@@ -88,7 +88,7 @@ func (c *Controller) Revert(
 		return nil, fmt.Errorf("failed to get revert branch: %w", err)
 	}
 	if err == nil {
-		return nil, errors.InvalidArgument("Branch %q already exists.", revertBranch)
+		return nil, errors.InvalidArgumentf("Branch %q already exists.", revertBranch)
 	}
 
 	title := in.Title

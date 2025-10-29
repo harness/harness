@@ -75,7 +75,7 @@ var queryParameterSortRepo = openapi3.ParameterOrRef{
 			Schema: &openapi3.Schema{
 				Type:    ptrSchemaType(openapi3.SchemaTypeString),
 				Default: ptrptr(enum.RepoAttrIdentifier.String()),
-				Enum: []interface{}{
+				Enum: []any{
 					ptr.String(enum.RepoAttrIdentifier.String()),
 					ptr.String(enum.RepoAttrCreated.String()),
 					ptr.String(enum.RepoAttrUpdated.String()),
@@ -111,7 +111,7 @@ var queryParameterSortSpace = openapi3.ParameterOrRef{
 			Schema: &openapi3.Schema{
 				Type:    ptrSchemaType(openapi3.SchemaTypeString),
 				Default: ptrptr(enum.SpaceAttrIdentifier.String()),
-				Enum: []interface{}{
+				Enum: []any{
 					ptr.String(enum.SpaceAttrIdentifier.String()),
 					ptr.String(enum.SpaceAttrCreated.String()),
 					ptr.String(enum.SpaceAttrUpdated.String()),
@@ -242,7 +242,7 @@ var QueryParameterQueryUsergroup = openapi3.ParameterOrRef{
 func spaceOperations(reflector *openapi3.Reflector) {
 	opCreate := openapi3.Operation{}
 	opCreate.WithTags("space")
-	opCreate.WithMapOfAnything(map[string]interface{}{"operationId": "createSpace"})
+	opCreate.WithMapOfAnything(map[string]any{"operationId": "createSpace"})
 	_ = reflector.SetRequest(&opCreate, new(createSpaceRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&opCreate, new(space.SpaceOutput), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opCreate, new(usererror.Error), http.StatusBadRequest)
@@ -253,7 +253,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 
 	opImport := openapi3.Operation{}
 	opImport.WithTags("space")
-	opImport.WithMapOfAnything(map[string]interface{}{"operationId": "importSpace"})
+	opImport.WithMapOfAnything(map[string]any{"operationId": "importSpace"})
 	_ = reflector.SetRequest(&opImport, new(space.ImportInput), http.MethodPost)
 	_ = reflector.SetJSONResponse(&opImport, new(space.SpaceOutput), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opImport, new(usererror.Error), http.StatusBadRequest)
@@ -264,7 +264,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 
 	opImportRepositories := openapi3.Operation{}
 	opImportRepositories.WithTags("space")
-	opImportRepositories.WithMapOfAnything(map[string]interface{}{"operationId": "importSpaceRepositories"})
+	opImportRepositories.WithMapOfAnything(map[string]any{"operationId": "importSpaceRepositories"})
 	_ = reflector.SetRequest(&opImportRepositories, new(importRepositoriesRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&opImportRepositories, new(space.ImportRepositoriesOutput), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opImportRepositories, new(usererror.Error), http.StatusBadRequest)
@@ -275,7 +275,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 
 	opExport := openapi3.Operation{}
 	opExport.WithTags("space")
-	opExport.WithMapOfAnything(map[string]interface{}{"operationId": "exportSpace"})
+	opExport.WithMapOfAnything(map[string]any{"operationId": "exportSpace"})
 	_ = reflector.SetRequest(&opExport, new(exportSpaceRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&opExport, nil, http.StatusAccepted)
 	_ = reflector.SetJSONResponse(&opExport, new(usererror.Error), http.StatusBadRequest)
@@ -286,7 +286,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 
 	opExportProgress := openapi3.Operation{}
 	opExportProgress.WithTags("space")
-	opExportProgress.WithMapOfAnything(map[string]interface{}{"operationId": "exportProgressSpace"})
+	opExportProgress.WithMapOfAnything(map[string]any{"operationId": "exportProgressSpace"})
 	_ = reflector.SetRequest(&opExportProgress, new(spaceRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opExportProgress, new(space.ExportProgressOutput), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opExportProgress, new(usererror.Error), http.StatusBadRequest)
@@ -297,7 +297,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 
 	opGet := openapi3.Operation{}
 	opGet.WithTags("space")
-	opGet.WithMapOfAnything(map[string]interface{}{"operationId": "getSpace"})
+	opGet.WithMapOfAnything(map[string]any{"operationId": "getSpace"})
 	_ = reflector.SetRequest(&opGet, new(spaceRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opGet, new(space.SpaceOutput), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opGet, new(usererror.Error), http.StatusInternalServerError)
@@ -308,7 +308,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 
 	opUpdate := openapi3.Operation{}
 	opUpdate.WithTags("space")
-	opUpdate.WithMapOfAnything(map[string]interface{}{"operationId": "updateSpace"})
+	opUpdate.WithMapOfAnything(map[string]any{"operationId": "updateSpace"})
 	_ = reflector.SetRequest(&opUpdate, new(updateSpaceRequest), http.MethodPatch)
 	_ = reflector.SetJSONResponse(&opUpdate, new(space.SpaceOutput), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusBadRequest)
@@ -321,7 +321,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opUpdatePublicAccess := openapi3.Operation{}
 	opUpdatePublicAccess.WithTags("space")
 	opUpdatePublicAccess.WithMapOfAnything(
-		map[string]interface{}{"operationId": "updateSpacePublicAccess"})
+		map[string]any{"operationId": "updateSpacePublicAccess"})
 	_ = reflector.SetRequest(
 		&opUpdatePublicAccess, new(updateSpacePublicAccessRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&opUpdatePublicAccess, new(space.SpaceOutput), http.StatusOK)
@@ -335,7 +335,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 
 	opDelete := openapi3.Operation{}
 	opDelete.WithTags("space")
-	opDelete.WithMapOfAnything(map[string]interface{}{"operationId": "deleteSpace"})
+	opDelete.WithMapOfAnything(map[string]any{"operationId": "deleteSpace"})
 	_ = reflector.SetRequest(&opDelete, new(spaceRequest), http.MethodDelete)
 	_ = reflector.SetJSONResponse(&opDelete, new(space.SoftDeleteResponse), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opDelete, new(usererror.Error), http.StatusInternalServerError)
@@ -346,7 +346,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 
 	opPurge := openapi3.Operation{}
 	opPurge.WithTags("space")
-	opPurge.WithMapOfAnything(map[string]interface{}{"operationId": "purgeSpace"})
+	opPurge.WithMapOfAnything(map[string]any{"operationId": "purgeSpace"})
 	opPurge.WithParameters(queryParameterDeletedAt)
 	_ = reflector.SetRequest(&opPurge, new(spaceRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&opPurge, nil, http.StatusNoContent)
@@ -358,7 +358,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 
 	opRestore := openapi3.Operation{}
 	opRestore.WithTags("space")
-	opRestore.WithMapOfAnything(map[string]interface{}{"operationId": "restoreSpace"})
+	opRestore.WithMapOfAnything(map[string]any{"operationId": "restoreSpace"})
 	opRestore.WithParameters(queryParameterDeletedAt)
 	_ = reflector.SetRequest(&opRestore, new(restoreSpaceRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&opRestore, new(space.SpaceOutput), http.StatusOK)
@@ -371,7 +371,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 
 	opMove := openapi3.Operation{}
 	opMove.WithTags("space")
-	opMove.WithMapOfAnything(map[string]interface{}{"operationId": "moveSpace"})
+	opMove.WithMapOfAnything(map[string]any{"operationId": "moveSpace"})
 	_ = reflector.SetRequest(&opMove, new(moveSpaceRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&opMove, new(space.SpaceOutput), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opMove, new(usererror.Error), http.StatusBadRequest)
@@ -382,7 +382,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 
 	opSpaces := openapi3.Operation{}
 	opSpaces.WithTags("space")
-	opSpaces.WithMapOfAnything(map[string]interface{}{"operationId": "listSpaces"})
+	opSpaces.WithMapOfAnything(map[string]any{"operationId": "listSpaces"})
 	opSpaces.WithParameters(QueryParameterPage, QueryParameterLimit)
 	opSpaces.WithParameters(queryParameterQuerySpace, queryParameterSortSpace, queryParameterOrder,
 		QueryParameterPage, QueryParameterLimit)
@@ -396,7 +396,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 
 	opRepos := openapi3.Operation{}
 	opRepos.WithTags("space")
-	opRepos.WithMapOfAnything(map[string]interface{}{"operationId": "listRepos"})
+	opRepos.WithMapOfAnything(map[string]any{"operationId": "listRepos"})
 	opRepos.WithParameters(queryParameterQueryRepo, queryParameterSortRepo, queryParameterOrder,
 		QueryParameterPage, QueryParameterLimit, QueryParameterRecursive, queryParameterOnlyFavorites)
 	_ = reflector.SetRequest(&opRepos, new(spaceRequest), http.MethodGet)
@@ -409,7 +409,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 
 	opPipelines := openapi3.Operation{}
 	opPipelines.WithTags("space")
-	opPipelines.WithMapOfAnything(map[string]interface{}{"operationId": "listSpacePipelines"})
+	opPipelines.WithMapOfAnything(map[string]any{"operationId": "listSpacePipelines"})
 	opPipelines.WithParameters(queryParameterQueryPipeline, QueryParameterPage,
 		QueryParameterLimit, queryParameterLastExecutions)
 	_ = reflector.SetRequest(&opPipelines, new(spaceRequest), http.MethodGet)
@@ -422,7 +422,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 
 	opExecutions := openapi3.Operation{}
 	opExecutions.WithTags("space")
-	opExecutions.WithMapOfAnything(map[string]interface{}{"operationId": "listSpaceExecutions"})
+	opExecutions.WithMapOfAnything(map[string]any{"operationId": "listSpaceExecutions"})
 	opExecutions.WithParameters(queryParameterQueryExecution, QueryParameterPage, QueryParameterLimit,
 		queryParameterSortExecution, queryParameterOrder, queryParameterPipelineIdentifier)
 	_ = reflector.SetRequest(&opExecutions, new(spaceRequest), http.MethodGet)
@@ -435,7 +435,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 
 	opTemplates := openapi3.Operation{}
 	opTemplates.WithTags("space")
-	opTemplates.WithMapOfAnything(map[string]interface{}{"operationId": "listTemplates"})
+	opTemplates.WithMapOfAnything(map[string]any{"operationId": "listTemplates"})
 	opTemplates.WithParameters(queryParameterQueryRepo, QueryParameterPage, QueryParameterLimit)
 	_ = reflector.SetRequest(&opTemplates, new(spaceRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opTemplates, []types.Template{}, http.StatusOK)
@@ -447,7 +447,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 
 	opConnectors := openapi3.Operation{}
 	opConnectors.WithTags("space")
-	opConnectors.WithMapOfAnything(map[string]interface{}{"operationId": "listConnectors"})
+	opConnectors.WithMapOfAnything(map[string]any{"operationId": "listConnectors"})
 	opConnectors.WithParameters(queryParameterQueryRepo, QueryParameterPage, QueryParameterLimit)
 	_ = reflector.SetRequest(&opConnectors, new(spaceRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opConnectors, []types.Connector{}, http.StatusOK)
@@ -459,7 +459,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 
 	opSecrets := openapi3.Operation{}
 	opSecrets.WithTags("space")
-	opSecrets.WithMapOfAnything(map[string]interface{}{"operationId": "listSecrets"})
+	opSecrets.WithMapOfAnything(map[string]any{"operationId": "listSecrets"})
 	opSecrets.WithParameters(queryParameterQueryRepo, QueryParameterPage, QueryParameterLimit)
 	_ = reflector.SetRequest(&opSecrets, new(spaceRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opSecrets, []types.Secret{}, http.StatusOK)
@@ -471,7 +471,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 
 	opServiceAccounts := openapi3.Operation{}
 	opServiceAccounts.WithTags("space")
-	opServiceAccounts.WithMapOfAnything(map[string]interface{}{"operationId": "listServiceAccounts"})
+	opServiceAccounts.WithMapOfAnything(map[string]any{"operationId": "listServiceAccounts"})
 	_ = reflector.SetRequest(&opServiceAccounts, new(spaceRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opServiceAccounts, []types.ServiceAccount{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opServiceAccounts, new(usererror.Error), http.StatusInternalServerError)
@@ -482,7 +482,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 
 	opMembershipAdd := openapi3.Operation{}
 	opMembershipAdd.WithTags("space")
-	opMembershipAdd.WithMapOfAnything(map[string]interface{}{"operationId": "membershipAdd"})
+	opMembershipAdd.WithMapOfAnything(map[string]any{"operationId": "membershipAdd"})
 	_ = reflector.SetRequest(&opMembershipAdd, struct {
 		spaceRequest
 		space.MembershipAddInput
@@ -496,7 +496,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 
 	opMembershipDelete := openapi3.Operation{}
 	opMembershipDelete.WithTags("space")
-	opMembershipDelete.WithMapOfAnything(map[string]interface{}{"operationId": "membershipDelete"})
+	opMembershipDelete.WithMapOfAnything(map[string]any{"operationId": "membershipDelete"})
 	_ = reflector.SetRequest(&opMembershipDelete, struct {
 		spaceRequest
 		UserUID string `path:"user_uid"`
@@ -510,7 +510,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 
 	opMembershipUpdate := openapi3.Operation{}
 	opMembershipUpdate.WithTags("space")
-	opMembershipUpdate.WithMapOfAnything(map[string]interface{}{"operationId": "membershipUpdate"})
+	opMembershipUpdate.WithMapOfAnything(map[string]any{"operationId": "membershipUpdate"})
 	_ = reflector.SetRequest(&opMembershipUpdate, &struct {
 		spaceRequest
 		UserUID string `path:"user_uid"`
@@ -525,7 +525,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 
 	opMembershipList := openapi3.Operation{}
 	opMembershipList.WithTags("space")
-	opMembershipList.WithMapOfAnything(map[string]interface{}{"operationId": "membershipList"})
+	opMembershipList.WithMapOfAnything(map[string]any{"operationId": "membershipList"})
 	opMembershipList.WithParameters(
 		queryParameterMembershipUsers,
 		queryParameterOrder, queryParameterSortMembershipUsers,
@@ -543,7 +543,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opDefineLabel := openapi3.Operation{}
 	opDefineLabel.WithTags("space")
 	opDefineLabel.WithMapOfAnything(
-		map[string]interface{}{"operationId": "defineSpaceLabel"})
+		map[string]any{"operationId": "defineSpaceLabel"})
 	_ = reflector.SetRequest(&opDefineLabel, &struct {
 		spaceRequest
 		LabelRequest
@@ -559,7 +559,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opSaveLabel := openapi3.Operation{}
 	opSaveLabel.WithTags("space")
 	opSaveLabel.WithMapOfAnything(
-		map[string]interface{}{"operationId": "saveSpaceLabel"})
+		map[string]any{"operationId": "saveSpaceLabel"})
 	_ = reflector.SetRequest(&opSaveLabel, &struct {
 		spaceRequest
 		types.SaveInput
@@ -575,7 +575,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opListLabels := openapi3.Operation{}
 	opListLabels.WithTags("space")
 	opListLabels.WithMapOfAnything(
-		map[string]interface{}{"operationId": "listSpaceLabels"})
+		map[string]any{"operationId": "listSpaceLabels"})
 	opListLabels.WithParameters(
 		QueryParameterPage, QueryParameterLimit, QueryParameterInherited, QueryParameterQueryLabel)
 	_ = reflector.SetRequest(&opListLabels, new(spaceRequest), http.MethodGet)
@@ -589,7 +589,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 
 	opFindLabel := openapi3.Operation{}
 	opFindLabel.WithTags("space")
-	opFindLabel.WithMapOfAnything(map[string]interface{}{"operationId": "findSpaceLabel"})
+	opFindLabel.WithMapOfAnything(map[string]any{"operationId": "findSpaceLabel"})
 	opFindLabel.WithParameters(queryParameterIncludeValues)
 	_ = reflector.SetRequest(&opFindLabel, &struct {
 		spaceRequest
@@ -606,7 +606,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opDeleteLabel := openapi3.Operation{}
 	opDeleteLabel.WithTags("space")
 	opDeleteLabel.WithMapOfAnything(
-		map[string]interface{}{"operationId": "deleteSpaceLabel"})
+		map[string]any{"operationId": "deleteSpaceLabel"})
 	_ = reflector.SetRequest(&opDeleteLabel, &struct {
 		spaceRequest
 		Key string `path:"key"`
@@ -623,7 +623,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opUpdateLabel := openapi3.Operation{}
 	opUpdateLabel.WithTags("space")
 	opUpdateLabel.WithMapOfAnything(
-		map[string]interface{}{"operationId": "updateSpaceLabel"})
+		map[string]any{"operationId": "updateSpaceLabel"})
 	_ = reflector.SetRequest(&opUpdateLabel, &struct {
 		spaceRequest
 		LabelRequest
@@ -641,7 +641,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opDefineLabelValue := openapi3.Operation{}
 	opDefineLabelValue.WithTags("space")
 	opDefineLabelValue.WithMapOfAnything(
-		map[string]interface{}{"operationId": "defineSpaceLabelValue"})
+		map[string]any{"operationId": "defineSpaceLabelValue"})
 	_ = reflector.SetRequest(&opDefineLabelValue, &struct {
 		spaceRequest
 		LabelValueRequest
@@ -659,7 +659,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opListLabelValues := openapi3.Operation{}
 	opListLabelValues.WithTags("space")
 	opListLabelValues.WithMapOfAnything(
-		map[string]interface{}{"operationId": "listSpaceLabelValues"})
+		map[string]any{"operationId": "listSpaceLabelValues"})
 	_ = reflector.SetRequest(&opListLabelValues, &struct {
 		spaceRequest
 		Key string `path:"key"`
@@ -676,7 +676,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opDeleteLabelValue := openapi3.Operation{}
 	opDeleteLabelValue.WithTags("space")
 	opDeleteLabelValue.WithMapOfAnything(
-		map[string]interface{}{"operationId": "deleteSpaceLabelValue"})
+		map[string]any{"operationId": "deleteSpaceLabelValue"})
 	_ = reflector.SetRequest(&opDeleteLabelValue, &struct {
 		spaceRequest
 		Key   string `path:"key"`
@@ -694,7 +694,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opUpdateLabelValue := openapi3.Operation{}
 	opUpdateLabelValue.WithTags("space")
 	opUpdateLabelValue.WithMapOfAnything(
-		map[string]interface{}{"operationId": "updateSpaceLabelValue"})
+		map[string]any{"operationId": "updateSpaceLabelValue"})
 	_ = reflector.SetRequest(&opUpdateLabelValue, &struct {
 		spaceRequest
 		LabelValueRequest
@@ -712,7 +712,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 
 	countPullReq := openapi3.Operation{}
 	countPullReq.WithTags("space")
-	countPullReq.WithMapOfAnything(map[string]interface{}{"operationId": "countSpacePullReq"})
+	countPullReq.WithMapOfAnything(map[string]any{"operationId": "countSpacePullReq"})
 	countPullReq.WithParameters(
 		queryParameterStatePullRequest, queryParameterSourceRepoRefPullRequest,
 		queryParameterSourceBranchPullRequest, queryParameterTargetBranchPullRequest,
@@ -732,7 +732,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 
 	listPullReq := openapi3.Operation{}
 	listPullReq.WithTags("space")
-	listPullReq.WithMapOfAnything(map[string]interface{}{"operationId": "listSpacePullReq"})
+	listPullReq.WithMapOfAnything(map[string]any{"operationId": "listSpacePullReq"})
 	listPullReq.WithParameters(
 		queryParameterStatePullRequest, queryParameterSourceRepoRefPullRequest,
 		queryParameterSourceBranchPullRequest, queryParameterTargetBranchPullRequest,
@@ -754,7 +754,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 
 	opGetUsageMetrics := openapi3.Operation{}
 	opGetUsageMetrics.WithTags("space")
-	opGetUsageMetrics.WithMapOfAnything(map[string]interface{}{"operationId": "getSpaceUsageMetric"})
+	opGetUsageMetrics.WithMapOfAnything(map[string]any{"operationId": "getSpaceUsageMetric"})
 	_ = reflector.SetRequest(&opGetUsageMetrics, new(spaceRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opGetUsageMetrics, new(types.UsageMetric), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opGetUsageMetrics, new(usererror.Error), http.StatusInternalServerError)
@@ -764,7 +764,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 
 	opUsergroups := openapi3.Operation{}
 	opUsergroups.WithTags("space")
-	opUsergroups.WithMapOfAnything(map[string]interface{}{"operationId": "listUsergroups"})
+	opUsergroups.WithMapOfAnything(map[string]any{"operationId": "listUsergroups"})
 	opUsergroups.WithParameters(QueryParameterQueryUsergroup, QueryParameterPage, QueryParameterLimit)
 	_ = reflector.SetRequest(&opUsergroups, new(spaceRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opUsergroups, new([]*types.UserGroupInfo), http.StatusOK)

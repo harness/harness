@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"os/exec"
 	"path/filepath"
 	"strconv"
@@ -608,9 +609,7 @@ func ExtractImageData(
 			return &imageData, fmt.Errorf("error while unmarshalling metadata: %w", err)
 		}
 		for _, values := range dst {
-			for k, v := range values {
-				metadataMap[k] = v
-			}
+			maps.Copy(metadataMap, values)
 		}
 	}
 	imageData.Metadata = metadataMap
@@ -853,7 +852,7 @@ func processImagePullResponse(pullResponse io.ReadCloser, gitspaceLogger gitspac
 	layerStatus := make(map[string]string) // Track last status of each layer
 
 	for {
-		var pullEvent map[string]interface{}
+		var pullEvent map[string]any
 		if err := decoder.Decode(&pullEvent); err != nil {
 			if errors.Is(err, io.EOF) {
 				break

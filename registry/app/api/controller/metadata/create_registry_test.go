@@ -63,7 +63,7 @@ func TestCreateRegistry(t *testing.T) {
 	producer := &mocks.StreamProducer{}
 
 	// Set up producer expectations.
-	producer.On("Send", mock.Anything, "registry", mock.MatchedBy(func(payload map[string]interface{}) bool {
+	producer.On("Send", mock.Anything, "registry", mock.MatchedBy(func(payload map[string]any) bool {
 		return payload["action"] == "registry.create" &&
 			payload["registry_id"] == int64(1) &&
 			payload["registry_name"] == testRegistryName
@@ -92,7 +92,7 @@ func TestCreateRegistry(t *testing.T) {
 		name         string
 		request      api.CreateRegistryRequestObject
 		setupMocks   func() *metadata.APIController
-		expectedResp interface{}
+		expectedResp any
 	}{
 		{
 			name: "create_virtual_registry_success",

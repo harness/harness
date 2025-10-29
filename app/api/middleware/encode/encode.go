@@ -85,7 +85,7 @@ func processGitRequest(r *http.Request) (bool, error) {
 		if strings.HasSuffix(urlPath, infoRefsPath) && r.URL.Query().Has(serviceParam) {
 			service := r.URL.Query().Get(serviceParam)
 			if !slices.Contains(allowedServices, service) {
-				return false, errors.InvalidArgument("git request allows only %v service, got: %s",
+				return false, errors.InvalidArgumentf("git request allows only %v service, got: %s",
 					allowedServices, service)
 			}
 			return pathTerminatedWithMarkerAndURL(r, "", infoRefsPath, infoRefsPath, urlPath)

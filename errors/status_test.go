@@ -303,7 +303,7 @@ func TestFormat(t *testing.T) {
 		name     string
 		status   Status
 		format   string
-		args     []interface{}
+		args     []any
 		expected *Error
 	}{
 		{
@@ -317,14 +317,14 @@ func TestFormat(t *testing.T) {
 			name:     "format with args",
 			status:   StatusInvalidArgument,
 			format:   "invalid user ID: %d",
-			args:     []interface{}{123},
+			args:     []any{123},
 			expected: &Error{Status: StatusInvalidArgument, Message: "invalid user ID: 123"},
 		},
 		{
 			name:     "format with multiple args",
 			status:   StatusConflict,
 			format:   "user %s already exists with email %s",
-			args:     []interface{}{"john", "john@example.com"},
+			args:     []any{"john", "john@example.com"},
 			expected: &Error{Status: StatusConflict, Message: "user john already exists with email john@example.com"},
 		},
 	}
@@ -345,21 +345,21 @@ func TestFormat(t *testing.T) {
 func TestHelperFunctions(t *testing.T) {
 	tests := []struct {
 		name     string
-		fn       func(string, ...interface{}) *Error
+		fn       func(string, ...any) *Error
 		status   Status
 		format   string
-		args     []interface{}
+		args     []any
 		expected string
 	}{
-		{"NotFound", NotFound, StatusNotFound, "user %d not found", []interface{}{123}, "user 123 not found"},
-		{"InvalidArgument", InvalidArgument, StatusInvalidArgument,
-			"invalid email: %s", []interface{}{"invalid"}, "invalid email: invalid"},
-		{"Conflict", Conflict, StatusConflict, "user %s exists", []interface{}{"john"}, "user john exists"},
-		{"PreconditionFailed", PreconditionFailed, StatusPreconditionFailed, "version mismatch", nil, "version mismatch"},
-		{"Unauthorized", Unauthorized, StatusUnauthorized, "invalid token", nil, "invalid token"},
-		{"Forbidden", Forbidden, StatusForbidden, "access denied", nil, "access denied"},
-		{"Failed", Failed, StatusFailed, "operation failed", nil, "operation failed"},
-		{"Aborted", Aborted, StatusAborted, "operation aborted", nil, "operation aborted"},
+		{"NotFound", NotFoundf, StatusNotFound, "user %d not found", []any{123}, "user 123 not found"},
+		{"InvalidArgument", InvalidArgumentf, StatusInvalidArgument,
+			"invalid email: %s", []any{"invalid"}, "invalid email: invalid"},
+		{"Conflict", Conflictf, StatusConflict, "user %s exists", []any{"john"}, "user john exists"},
+		{"PreconditionFailed", PreconditionFailedf, StatusPreconditionFailed, "version mismatch", nil, "version mismatch"},
+		{"Unauthorized", Unauthorizedf, StatusUnauthorized, "invalid token", nil, "invalid token"},
+		{"Forbidden", Forbiddenf, StatusForbidden, "access denied", nil, "access denied"},
+		{"Failed", Failedf, StatusFailed, "operation failed", nil, "operation failed"},
+		{"Aborted", Abortedf, StatusAborted, "operation aborted", nil, "operation aborted"},
 	}
 
 	for _, tt := range tests {
@@ -377,7 +377,7 @@ func TestHelperFunctions(t *testing.T) {
 
 func TestInternal(t *testing.T) {
 	underlyingErr := errors.New("database connection failed")
-	result := Internal(underlyingErr, "failed to get user %d", 123)
+	result := Internalf(underlyingErr, "failed to get user %d", 123)
 
 	if result.Status != StatusInternal {
 		t.Errorf("Expected status %q, got %q", StatusInternal, result.Status)
@@ -510,8 +510,7 @@ func BenchmarkErrorError(b *testing.B) {
 		Err:     errors.New("underlying error"),
 	}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_ = err.Error()
 	}
 }
@@ -519,15 +518,13 @@ func BenchmarkErrorError(b *testing.B) {
 func BenchmarkAsStatus(b *testing.B) {
 	err := &Error{Status: StatusNotFound, Message: "not found"}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		AsStatus(err)
 	}
 }
 
 func BenchmarkFormat(b *testing.B) {
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_ = Format(StatusNotFound, "user %d not found", 123)
 	}
 }
@@ -535,8 +532,7 @@ func BenchmarkFormat(b *testing.B) {
 func BenchmarkIsNotFound(b *testing.B) {
 	err := &Error{Status: StatusNotFound, Message: "not found"}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		IsNotFound(err)
 	}
 }

@@ -30,8 +30,8 @@ type Accessor interface {
 	PreparexContext(ctx context.Context, query string) (*sqlx.Stmt, error)
 	PrepareNamedContext(ctx context.Context, query string) (*sqlx.NamedStmt, error)
 
-	GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error
-	SelectContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error
+	GetContext(ctx context.Context, dest any, query string, args ...any) error
+	SelectContext(ctx context.Context, dest any, query string, args ...any) error
 }
 
 // Transaction is the Go's standard sql transaction interface.
@@ -41,7 +41,7 @@ type Transaction interface {
 }
 
 type Transactor interface {
-	WithTx(ctx context.Context, txFn func(ctx context.Context) error, opts ...interface{}) error
+	WithTx(ctx context.Context, txFn func(ctx context.Context) error, opts ...any) error
 }
 
 // AccessorTx is used to access the database. It combines Accessor interface

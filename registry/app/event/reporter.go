@@ -47,7 +47,7 @@ type ReplicationDetails struct {
 	BlobID        int64           `json:"blob_id,omitempty"`
 	GenericBlobID string          `json:"generic_blob_id,omitempty"`
 	Path          string          `json:"path,omitempty"`
-	Source        CloudLocation   `json:"source,omitempty"`
+	Source        CloudLocation   `json:"source"`
 	Destinations  []CloudLocation `json:"destinations,omitempty"`
 }
 
@@ -96,13 +96,13 @@ func GetPackageTypeFromString(value string) (PackageType, error) {
 
 type Reporter interface {
 	ReportEvent(
-		ctx context.Context, payload interface{}, spacePath string,
+		ctx context.Context, payload any, spacePath string,
 	) // format of spacePath = acctID/orgID/projectID
 }
 
 type Noop struct {
 }
 
-func (*Noop) ReportEvent(_ context.Context, _ interface{}, _ string) {
+func (*Noop) ReportEvent(_ context.Context, _ any, _ string) {
 	// no implementation
 }

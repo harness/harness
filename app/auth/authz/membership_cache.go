@@ -71,7 +71,7 @@ func (g permissionCacheGetter) Find(ctx context.Context, key PermissionCacheKey)
 	// limit the depth to be safe (e.g. root/space1/space2 => maxDepth of 3)
 	maxDepth := len(paths.Segments(spaceRef))
 
-	for depth := 0; depth < maxDepth; depth++ {
+	for range maxDepth {
 		// Find the membership in the current space.
 		membership, err := g.membershipStore.Find(ctx, types.MembershipKey{
 			SpaceID:     space.ID,

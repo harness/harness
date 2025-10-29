@@ -36,8 +36,8 @@ func GetModuleNameFromModFile(modBytes io.Reader) (string, error) {
 	scanner := bufio.NewScanner(modBytes)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		if strings.HasPrefix(line, "module ") {
-			moduleName = strings.TrimSpace(strings.TrimPrefix(line, "module "))
+		if after, ok := strings.CutPrefix(line, "module "); ok {
+			moduleName = strings.TrimSpace(after)
 			break
 		}
 	}

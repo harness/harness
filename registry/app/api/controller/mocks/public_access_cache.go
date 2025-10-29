@@ -72,7 +72,7 @@ func (m *MockPublicAccess) MarkChanged(
 
 // ExpectGet sets up an expectation for the Get method.
 func (m *MockPublicAccess) ExpectGet(
-	ctx interface{},
+	ctx any,
 	resourceType enum.PublicResourceType,
 	resourcePath string,
 	isPublic bool,
@@ -83,7 +83,7 @@ func (m *MockPublicAccess) ExpectGet(
 
 // ExpectSet sets up an expectation for the Set method.
 func (m *MockPublicAccess) ExpectSet(
-	ctx interface{},
+	ctx any,
 	resourceType enum.PublicResourceType,
 	resourcePath string,
 	enable bool,
@@ -94,7 +94,7 @@ func (m *MockPublicAccess) ExpectSet(
 
 // ExpectDelete sets up an expectation for the Delete method.
 func (m *MockPublicAccess) ExpectDelete(
-	ctx interface{},
+	ctx any,
 	resourceType enum.PublicResourceType,
 	resourcePath string,
 	err error,
@@ -104,7 +104,7 @@ func (m *MockPublicAccess) ExpectDelete(
 
 // ExpectIsPublicAccessSupported sets up an expectation for the IsPublicAccessSupported method.
 func (m *MockPublicAccess) ExpectIsPublicAccessSupported(
-	ctx interface{},
+	ctx any,
 	resourceType enum.PublicResourceType,
 	parentSpacePath string,
 	supported bool,
@@ -115,7 +115,7 @@ func (m *MockPublicAccess) ExpectIsPublicAccessSupported(
 
 // ExpectMarkChanged sets up an expectation for the MarkChanged method.
 func (m *MockPublicAccess) ExpectMarkChanged(
-	ctx interface{},
+	ctx any,
 	publicAccessCacheKey *publicaccess.CacheKey,
 ) *mock.Call {
 	return m.On("MarkChanged", ctx, publicAccessCacheKey)

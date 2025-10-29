@@ -16,8 +16,8 @@ package config
 
 import "github.com/harness/gitness/types"
 
-func GetS3StorageParameters(c *types.Config) map[string]interface{} {
-	s3Properties := make(map[string]interface{})
+func GetS3StorageParameters(c *types.Config) map[string]any {
+	s3Properties := make(map[string]any)
 	s3Properties["accesskey"] = c.Registry.Storage.S3Storage.AccessKey
 	s3Properties["secretkey"] = c.Registry.Storage.S3Storage.SecretKey
 	s3Properties["region"] = c.Registry.Storage.S3Storage.Region
@@ -39,8 +39,8 @@ func GetS3StorageParameters(c *types.Config) map[string]interface{} {
 	return s3Properties
 }
 
-func GetFilesystemParams(c *types.Config) map[string]interface{} {
-	props := make(map[string]interface{})
+func GetFilesystemParams(c *types.Config) map[string]any {
+	props := make(map[string]any)
 	props["maxthreads"] = c.Registry.Storage.FileSystemStorage.MaxThreads
 	props["rootdirectory"] = c.Registry.Storage.FileSystemStorage.RootDirectory
 	return props

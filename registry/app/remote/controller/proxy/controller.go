@@ -234,7 +234,7 @@ func (c *controller) ProxyManifest(
 		ctx2 = context.WithoutCancel(ctx2)
 		ctx2 = context.WithValue(ctx2, cfg.GoRoutineKey, "UpdateManifest")
 		var count = 0
-		for n := 0; n < maxManifestWait; n++ {
+		for range maxManifestWait {
 			time.Sleep(sleepIntervalSec * time.Second)
 			count++
 			log.Ctx(ctx2).Info().Msgf("Current retry=%v artifact: %v:%v, digest: %s",
@@ -446,7 +446,7 @@ func (m *ManifestCache) CacheContent(
 		return errs[0]
 	}
 
-	for n := 0; n < maxManifestMappingWait; n++ {
+	for range maxManifestMappingWait {
 		time.Sleep(maxManifestMappingIntervalSec * time.Second)
 		err = m.localManifestRegistry.AddManifestAssociation(ctx, art.RegIdentifier, digest.Digest(art.Digest), art)
 		if err != nil {

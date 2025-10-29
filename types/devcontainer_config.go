@@ -32,8 +32,8 @@ const FeatureDefaultTag = "latest"
 //nolint:tagliatelle
 type DevcontainerConfig struct {
 	Image                       string                           `json:"image,omitempty"`
-	PostCreateCommand           LifecycleCommand                 `json:"postCreateCommand,omitempty"`
-	PostStartCommand            LifecycleCommand                 `json:"postStartCommand,omitempty"`
+	PostCreateCommand           LifecycleCommand                 `json:"postCreateCommand"`
+	PostStartCommand            LifecycleCommand                 `json:"postStartCommand"`
 	ForwardPorts                []json.Number                    `json:"forwardPorts,omitempty"`
 	ContainerEnv                map[string]string                `json:"containerEnv,omitempty"`
 	Customizations              DevContainerConfigCustomizations `json:"customizations,omitempty"`
@@ -88,7 +88,7 @@ func (lc *LifecycleCommand) UnmarshalJSON(data []byte) error {
 			switch v := value.(type) {
 			case string:
 				// Valid string value
-			case []interface{}:
+			case []any:
 				// Convert []interface{} to []string
 				var strArray []string
 				for _, item := range v {

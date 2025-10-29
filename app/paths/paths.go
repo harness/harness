@@ -73,7 +73,7 @@ func Concatenate(paths ...string) string {
 	}
 
 	sb := strings.Builder{}
-	for i := 0; i < len(paths); i++ {
+	for i := range paths {
 		// remove all leading, trailing, and consecutive '/'
 		var nextRune *rune
 		for _, r := range paths[i] {

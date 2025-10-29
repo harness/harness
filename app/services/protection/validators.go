@@ -14,7 +14,10 @@
 
 package protection
 
-import "errors"
+import (
+	"errors"
+	"slices"
+)
 
 const maxElements = 100
 
@@ -37,10 +40,8 @@ func validateIdentifierSlice(identifiers []string) error {
 		return errors.New("too many Identifiers provided")
 	}
 
-	for _, identifier := range identifiers {
-		if identifier == "" {
-			return errors.New("identifier mustn't be an empty string")
-		}
+	if slices.Contains(identifiers, "") {
+		return errors.New("identifier mustn't be an empty string")
 	}
 
 	return nil

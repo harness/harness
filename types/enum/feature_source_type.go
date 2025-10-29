@@ -16,7 +16,7 @@ package enum
 
 type FeatureSourceType string
 
-func (FeatureSourceType) Enum() []interface{} { return toInterfaceSlice(featureSourceTypes) }
+func (FeatureSourceType) Enum() []any { return toInterfaceSlice(featureSourceTypes) }
 
 const (
 	FeatureSourceTypeOCI     = "oci"

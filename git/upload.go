@@ -106,7 +106,7 @@ func (s *Service) handleFileUploadIfAvailable(
 	log.Info().Msgf("saving file at path %s", fullPath)
 	_, err := s.store.Save(fullPath, bytes.NewReader(file.Content))
 	if err != nil {
-		return "", errors.Internal(err, "cannot save file to the store: %s", fullPath)
+		return "", errors.Internalf(err, "cannot save file to the store: %s", fullPath)
 	}
 
 	return fullPath, nil

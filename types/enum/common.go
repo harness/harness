@@ -61,8 +61,8 @@ const (
 	lastGITPush   = "last_git_push"
 )
 
-func toInterfaceSlice[T interface{}](vals []T) []interface{} {
-	res := make([]interface{}, len(vals))
+func toInterfaceSlice[T any](vals []T) []any {
+	res := make([]any, len(vals))
 	for i := range vals {
 		res[i] = vals[i]
 	}

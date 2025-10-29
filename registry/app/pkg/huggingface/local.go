@@ -94,7 +94,7 @@ func (c *localRegistry) ValidateYaml(_ context.Context, _ huggingfacetype.Artifa
 	}
 
 	// Parse YAML
-	var meta map[string]interface{}
+	var meta map[string]any
 	if err = yaml.Unmarshal([]byte(frontMatterRE.FindStringSubmatch(*req.Content)[1]), &meta); err != nil {
 		errMsg := stringPtr(fmt.Sprintf("Invalid YAML: %v", err))
 		errors := &[]huggingfacetype.Debug{
@@ -112,7 +112,7 @@ func (c *localRegistry) ValidateYaml(_ context.Context, _ huggingfacetype.Artifa
 	// Create a slice of validations to perform
 	validations := []struct {
 		field    string
-		validate func(map[string]interface{}, string) (*huggingfacetype.ValidateYamlResponse, bool)
+		validate func(map[string]any, string) (*huggingfacetype.ValidateYamlResponse, bool)
 	}{
 		{"pipeline_tag", validateString},
 		{"tags", validateSlice},
@@ -541,7 +541,7 @@ func lfsAction(blobURL, oid, token string) huggingfacetype.LfsAction {
 	}
 }
 
-func validateSlice(meta map[string]interface{}, metaKey string) (*huggingfacetype.ValidateYamlResponse, bool) {
+func validateSlice(meta map[string]any, metaKey string) (*huggingfacetype.ValidateYamlResponse, bool) {
 	if v, ok := meta[metaKey]; ok && !isSlice(v) {
 		msg := stringPtr(fmt.Sprintf(`"%s" must be an array`, metaKey))
 		warnings := &[]huggingfacetype.Debug{
@@ -559,7 +559,7 @@ func getTmpFilePath(info *pkg.ArtifactInfo, fileInfo *types.FileInfo) string {
 	return info.RootIdentifier + "/" + info.RegIdentifier + "/" + info.Image + "/" + "/upload/" + fileInfo.Sha256
 }
 
-func validateString(meta map[string]interface{}, metaKey string) (*huggingfacetype.ValidateYamlResponse, bool) {
+func validateString(meta map[string]any, metaKey string) (*huggingfacetype.ValidateYamlResponse, bool) {
 	if v, ok := meta[metaKey]; ok && !isString(v) {
 		msg := stringPtr(fmt.Sprintf(`"%s" must be a string`, metaKey))
 		warnings := &[]huggingfacetype.Debug{
@@ -607,9 +607,9 @@ func (c *localRegistry) GetPackageTypes() []apicontract.PackageType {
 	return []apicontract.PackageType{apicontract.PackageTypeHUGGINGFACE}
 }
 
-func isSlice(v interface{}) bool { _, ok := v.([]interface{}); return ok }
+func isSlice(v any) bool { _, ok := v.([]any); return ok }
 
-func isString(v interface{}) bool { _, ok := v.(string); return ok }
+func isString(v any) bool { _, ok := v.(string); return ok }
 
 // stringPtr returns a pointer to the given string.
 func stringPtr(s string) *string {

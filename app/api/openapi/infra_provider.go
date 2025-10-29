@@ -36,7 +36,7 @@ func infraProviderOperations(reflector *openapi3.Reflector) {
 	opFind := openapi3.Operation{}
 	opFind.WithTags("infraproviders")
 	opFind.WithSummary("Get infraProviderConfig")
-	opFind.WithMapOfAnything(map[string]interface{}{"operationId": "getInfraProvider"})
+	opFind.WithMapOfAnything(map[string]any{"operationId": "getInfraProvider"})
 	_ = reflector.SetRequest(&opFind, new(getInfraProviderRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opFind, new(types.InfraProviderConfig), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opFind, new(usererror.Error), http.StatusBadRequest)
@@ -48,7 +48,7 @@ func infraProviderOperations(reflector *openapi3.Reflector) {
 	opCreate := openapi3.Operation{}
 	opCreate.WithTags("infraproviders")
 	opCreate.WithSummary("Create infraProvider config")
-	opCreate.WithMapOfAnything(map[string]interface{}{"operationId": "createInfraProvider"})
+	opCreate.WithMapOfAnything(map[string]any{"operationId": "createInfraProvider"})
 	_ = reflector.SetRequest(&opCreate, new(createInfraProviderConfigRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&opCreate, new(types.InfraProviderConfig), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opCreate, new(usererror.Error), http.StatusBadRequest)

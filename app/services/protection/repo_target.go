@@ -26,8 +26,8 @@ type RepoTargetFilter struct {
 }
 
 type RepoTarget struct {
-	Include RepoTargetFilter `json:"include,omitempty"`
-	Exclude RepoTargetFilter `json:"exclude,omitempty"`
+	Include RepoTargetFilter `json:"include"`
+	Exclude RepoTargetFilter `json:"exclude"`
 }
 
 func (p *RepoTarget) JSON() json.RawMessage {

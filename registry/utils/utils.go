@@ -48,7 +48,7 @@ func SafeUint64(n int) uint64 {
 	return uint64(n)
 }
 
-func IsEmpty(slice interface{}) bool {
+func IsEmpty(slice any) bool {
 	if slice == nil {
 		return true
 	}

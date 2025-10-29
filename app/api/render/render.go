@@ -49,7 +49,7 @@ func DeleteSuccessful(w http.ResponseWriter) {
 
 // JSON writes the json-encoded value to the response
 // with the provides status.
-func JSON(w http.ResponseWriter, code int, v interface{}) {
+func JSON(w http.ResponseWriter, code int, v any) {
 	setCommonHeaders(w)
 	w.WriteHeader(code)
 	writeJSON(w, v)

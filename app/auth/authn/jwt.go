@@ -107,7 +107,7 @@ func (a *JWTAuthenticator) Authenticate(r *http.Request) (*auth.Session, error) 
 		parsedToken, err := gojwt.ParseWithClaims(
 			str,
 			verifiedClaims,
-			func(_ *gojwt.Token) (interface{}, error) {
+			func(_ *gojwt.Token) (any, error) {
 				return []byte(salt), nil
 			},
 		)

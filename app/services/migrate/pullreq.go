@@ -154,7 +154,7 @@ func (migrate PullReq) Import(
 		extPullReq := &extPullReqData.PullRequest
 
 		if _, exists := pullReqUnique[extPullReq.Number]; exists {
-			return nil, errors.Conflict("duplicate pull request number %d", extPullReq.Number)
+			return nil, errors.Conflictf("duplicate pull request number %d", extPullReq.Number)
 		}
 		pullReqUnique[extPullReq.Number] = *extPullReqData
 
@@ -510,7 +510,7 @@ func (r *repoImportState) createComment(
 		// a code comment must have a valid HunkHeader and must not be a reply
 		hunkHeader, ok := parser.ParseDiffHunkHeader(cc.HunkHeader)
 		if !ok {
-			return nil, errors.InvalidArgument("Invalid hunk header for code comment: %s", cc.HunkHeader)
+			return nil, errors.InvalidArgumentf("Invalid hunk header for code comment: %s", cc.HunkHeader)
 		}
 
 		comment.Kind = enum.PullReqActivityKindChangeComment

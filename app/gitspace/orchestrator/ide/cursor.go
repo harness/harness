@@ -50,7 +50,7 @@ func NewCursorService(config *CursorConfig) *Cursor {
 func (c *Cursor) Setup(
 	ctx context.Context,
 	exec *devcontainer.Exec,
-	_ map[gitspaceTypes.IDEArg]interface{},
+	_ map[gitspaceTypes.IDEArg]any,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	gitspaceLogger.Info("Installing ssh-server inside container...")
@@ -67,7 +67,7 @@ func (c *Cursor) Setup(
 func (c *Cursor) Run(
 	ctx context.Context,
 	exec *devcontainer.Exec,
-	_ map[gitspaceTypes.IDEArg]interface{},
+	_ map[gitspaceTypes.IDEArg]any,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	gitspaceLogger.Info("Starting ssh-server...")

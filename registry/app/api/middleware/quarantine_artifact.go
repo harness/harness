@@ -83,7 +83,7 @@ func CheckQuarantineStatusOCI(h *oci.Handler) func(http.Handler) http.Handler {
 				err = dbQuarantineStatusOCI(ctx, h.Controller, info)
 				if err != nil {
 					if errors.Is(err, errcode.ErrCodeManifestQuarantined) {
-						render.Forbiddenf(ctx, w, err.Error())
+						render.Forbiddenf(ctx, w, "%s", err.Error())
 						return
 					}
 					log.Ctx(ctx).Error().Stack().Str("middleware",

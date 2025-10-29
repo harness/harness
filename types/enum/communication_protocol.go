@@ -16,7 +16,7 @@ package enum
 
 type CommunicationProtocol string
 
-func (CommunicationProtocol) Enum() []interface{} { return toInterfaceSlice(communicationProtocols) }
+func (CommunicationProtocol) Enum() []any { return toInterfaceSlice(communicationProtocols) }
 
 var communicationProtocols = []CommunicationProtocol{
 	CommunicationProtocolHTTP, CommunicationProtocolSSH,

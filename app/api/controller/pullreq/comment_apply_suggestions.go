@@ -256,12 +256,12 @@ func (c *Controller) CommentApplySuggestions(
 				Action: git.PatchTextAction,
 				Path:   cc.Path,
 				SHA:    fileSHA,
-				Payload: []byte(fmt.Sprintf(
+				Payload: fmt.Appendf(nil,
 					"%d:%d\u0000%s",
 					cc.LineNew,
 					cc.LineNew+cc.SpanNew,
 					suggestionToApply.code,
-				)),
+				),
 			})
 
 		activityUpdates[activity.ID] = activityUpdate{

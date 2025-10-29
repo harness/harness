@@ -249,10 +249,10 @@ func TestSubscriber_ConcurrentPublish(t *testing.T) {
 	linesPerGoroutine := 100
 	done := make(chan bool, numGoroutines)
 
-	for i := 0; i < numGoroutines; i++ {
+	for i := range numGoroutines {
 		go func(id int) {
 			defer func() { done <- true }()
-			for j := 0; j < linesPerGoroutine; j++ {
+			for j := range linesPerGoroutine {
 				line := &Line{
 					Number:    id*linesPerGoroutine + j,
 					Message:   "concurrent message",
@@ -264,7 +264,7 @@ func TestSubscriber_ConcurrentPublish(t *testing.T) {
 	}
 
 	// Wait for all goroutines to complete
-	for i := 0; i < numGoroutines; i++ {
+	for range numGoroutines {
 		<-done
 	}
 

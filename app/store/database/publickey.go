@@ -490,7 +490,7 @@ func mapToPublicKeys(
 	keys []publicKey,
 ) []types.PublicKey {
 	res := make([]types.PublicKey, len(keys))
-	for i := 0; i < len(keys); i++ {
+	for i := range keys {
 		res[i] = mapToPublicKey(&keys[i])
 	}
 	return res

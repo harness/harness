@@ -19,8 +19,8 @@ import "github.com/harness/gitness/registry/app/metadata"
 var _ metadata.Metadata = (*RpmMetadata)(nil)
 
 type Metadata struct {
-	VersionMetadata VersionMetadata `json:"version_metadata,omitempty"`
-	FileMetadata    FileMetadata    `json:"file_metadata,omitempty"`
+	VersionMetadata VersionMetadata `json:"version_metadata"`
+	FileMetadata    FileMetadata    `json:"file_metadata"`
 }
 
 type VersionMetadata struct {

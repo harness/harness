@@ -21,7 +21,7 @@ import (
 
 type GitspaceCodeRepoType string
 
-func (p GitspaceCodeRepoType) Enum() []interface{} {
+func (p GitspaceCodeRepoType) Enum() []any {
 	return toInterfaceSlice(codeRepoTypes)
 }
 

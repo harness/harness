@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	gitevents "github.com/harness/gitness/app/events/git"
@@ -157,11 +158,8 @@ func (s *Service) trigger(ctx context.Context, repoID int64,
 	validTriggers := []*types.Trigger{}
 	// Check which triggers are eligible to be fired
 	for _, t := range ret {
-		for _, a := range t.Actions {
-			if a == action {
-				validTriggers = append(validTriggers, t)
-				break
-			}
+		if slices.Contains(t.Actions, action) {
+			validTriggers = append(validTriggers, t)
 		}
 	}
 

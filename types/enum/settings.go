@@ -17,7 +17,7 @@ package enum
 // SettingsScope defines the different scopes of a setting.
 type SettingsScope string
 
-func (SettingsScope) Enum() []interface{} {
+func (SettingsScope) Enum() []any {
 	return toInterfaceSlice(GetAllSettingsScopes())
 }
 

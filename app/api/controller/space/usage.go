@@ -35,7 +35,7 @@ func (c *Controller) GetUsageMetrics(
 ) (*types.UsageMetric, error) {
 	rootSpaceRef, sub, err := paths.DisectRoot(spaceRef)
 	if sub != "" {
-		return nil, errors.InvalidArgument(
+		return nil, errors.InvalidArgumentf(
 			"metric api can be used only within %q space: please remove %q part",
 			rootSpaceRef, sub,
 		)

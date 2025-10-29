@@ -230,7 +230,7 @@ func (r *BlameReader) NextPart() (*BlamePart, error) {
 		case blamePorcelainOutOfRangeErrorRE.MatchString(line):
 			return nil, errors.InvalidArgument(line)
 		default:
-			return nil, errors.Internal(nil, "failed to get next part: %s", line)
+			return nil, errors.Internalf(nil, "failed to get next part: %s", line)
 		}
 	}
 

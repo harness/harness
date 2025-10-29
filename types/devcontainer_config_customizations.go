@@ -36,7 +36,7 @@ func (ck CustomizationsKey) String() string {
 
 // DevContainerConfigCustomizations implements various Extract* function to extract out custom field defines in
 // customization field in devcontainer.json.
-type DevContainerConfigCustomizations map[string]interface{}
+type DevContainerConfigCustomizations map[string]any
 
 // VSCodeCustomizationSpecs contains details about vscode customization.
 // eg:
@@ -53,8 +53,8 @@ type DevContainerConfigCustomizations map[string]interface{}
 //			}
 //		}
 type VSCodeCustomizationSpecs struct {
-	Extensions []string               `json:"extensions"`
-	Settings   map[string]interface{} `json:"settings"`
+	Extensions []string       `json:"extensions"`
+	Settings   map[string]any `json:"settings"`
 }
 
 // GitspaceCustomizationSpecs contains details about harness platform connectors.
@@ -170,7 +170,7 @@ func (dcc DevContainerConfigCustomizations) ExtractVSCodeSpec() *VSCodeCustomiza
 		return nil
 	}
 
-	data, ok := val.(map[string]interface{})
+	data, ok := val.(map[string]any)
 	if !ok {
 		// Log the type mismatch and return nil
 		log.Warn().Msgf("Unexpected data type for key %q, expected map[string]interface{}, but got %T",

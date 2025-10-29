@@ -102,7 +102,7 @@ func migrateAfter_0039_alter_table_webhooks_uid(ctx context.Context, dbtx *sql.T
 			break
 		}
 
-		for i := 0; i < n; i++ {
+		for i := range n {
 			wh := buffer[i]
 
 			// concatenate repoID + spaceID to get unique parent id (only used to identify same parents)
@@ -127,7 +127,7 @@ func migrateAfter_0039_alter_table_webhooks_uid(ctx context.Context, dbtx *sql.T
 			}
 
 			// try to generate unique id (adds random suffix if deterministic identifier derived from display name isn't unique)
-			for try := 0; try < 5; try++ {
+			for try := range 5 {
 				randomize := try > 0
 				newIdentifier, err := WebhookDisplayNameToIdentifier(wh.displayName, randomize)
 				if err != nil {
