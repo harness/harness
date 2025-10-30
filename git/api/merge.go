@@ -36,6 +36,7 @@ func (g *Git) GetMergeBase(
 	remote string,
 	base string,
 	head string,
+	allowMultipleMergeBases bool,
 ) (sha.SHA, string, error) {
 	if repoPath == "" {
 		return sha.None, "", ErrRepositoryPathEmpty
@@ -60,8 +61,14 @@ func (g *Git) GetMergeBase(
 
 	cmd := command.New("merge-base",
 		command.WithArg(base, head),
-		command.WithFlag("--all"),
 	)
+
+	// If the two commits (base and head) have more than one merge-base (a very rare case):
+	// * If allowMultipleMergeBases=true only the first merge base would be returned.
+	// * If allowMultipleMergeBases=false an invalid argument error would be returned.
+	if !allowMultipleMergeBases {
+		cmd = cmd.Add(command.WithFlag("--all"))
+	}
 
 	stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
 	err := cmd.Run(ctx,

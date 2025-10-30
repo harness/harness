@@ -288,7 +288,8 @@ func (s *Service) DiffCut(ctx context.Context, params *DiffCutParams) (DiffCutOu
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
-	mergeBaseSHA, _, err := s.git.GetMergeBase(ctx, repoPath, "", params.TargetCommitSHA, params.SourceCommitSHA)
+	mergeBaseSHA, _, err := s.git.GetMergeBase(ctx, repoPath, "",
+		params.TargetCommitSHA, params.SourceCommitSHA, false)
 	if err != nil {
 		return DiffCutOutput{}, fmt.Errorf("failed to find merge base: %w", err)
 	}

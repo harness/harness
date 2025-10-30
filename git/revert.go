@@ -96,7 +96,7 @@ func (s *Service) Revert(ctx context.Context, params *RevertParams) (RevertOutpu
 	}
 
 	mergeBaseCommitSHA, _, err := s.git.GetMergeBase(ctx, repoPath, "origin",
-		params.FromCommitSHA.String(), params.ToCommitSHA.String())
+		params.FromCommitSHA.String(), params.ToCommitSHA.String(), false)
 	if err != nil {
 		return RevertOutput{}, fmt.Errorf("failed to get merge base: %w", err)
 	}

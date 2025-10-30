@@ -182,15 +182,20 @@ func (g *Git) RawDiff(
 		headRef = headTag.TargetSHA.String()
 	}
 
+	if mergeBase {
+		mergeBaseSHA, _, err := g.GetMergeBase(ctx, repoPath, "", baseRef, headRef, true)
+		if err != nil {
+			return fmt.Errorf("failed to get merge base for %s and %s: %w", baseRef, headRef, err)
+		}
+
+		baseRef = mergeBaseSHA.String()
+	}
+
 	cmd := command.New("diff",
 		command.WithFlag("-M"),
 		command.WithFlag("--full-index"),
 		command.WithAlternateObjectDirs(alternates...),
 	)
-	if mergeBase {
-		cmd.Add(command.WithFlag("--merge-base"))
-	}
-
 	if ignoreWhitespace {
 		// Ignore whitespace when comparing lines.
 		cmd.Add(command.WithFlag("-w"))

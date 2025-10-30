@@ -198,7 +198,7 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 	}
 
 	mergeBaseCommitSHA, _, err := s.git.GetMergeBase(ctx, repoPath, "origin",
-		baseCommitSHA.String(), headCommitSHA.String())
+		baseCommitSHA.String(), headCommitSHA.String(), false)
 	if err != nil {
 		return MergeOutput{}, fmt.Errorf("failed to get merge base: %w", err)
 	}
@@ -377,7 +377,7 @@ func (s *Service) MergeBase(
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
-	result, _, err := s.git.GetMergeBase(ctx, repoPath, "", params.Ref1, params.Ref2)
+	result, _, err := s.git.GetMergeBase(ctx, repoPath, "", params.Ref1, params.Ref2, false)
 	if err != nil {
 		return MergeBaseOutput{}, err
 	}
