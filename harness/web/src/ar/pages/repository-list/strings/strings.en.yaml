@@ -1,0 +1,38 @@
+pageHeading: Artifact Registries
+newRepository: New Artifact Registry
+newRegistry: New Registry
+registryCount: 'Total {{count}} Registries'
+artifactRegistry:
+  label: Artifact Registry
+  subLabel: Manage internal packages and external dependencies through a unified registry.
+upstreamProxy:
+  label: Upstream Proxy
+  subLabel: Connect to an external registry to access additional packages and dependencies.
+selectEnvironments: Environments
+selectPackageTypes: Package Types
+selectRegistryType: Registry Type
+selectScope: Scope
+scope:
+  accountOnly: Account Only
+  orgOnly: Organization Only
+  accountRecursive: Account, Organizations, and Projects
+  orgRecursive: Organization and Projects
+selectLabels: '{{ $.artifactList.table.columns.tags }}'
+compact: Compact View
+deleteModal:
+  title: '{{ $.artifactList.table.actions.deleteRepository }}'
+  contentText: Are you sure you want to delete the registry?
+table:
+  noRepositoriesTitle: There are no registries available.
+  columns:
+    nameAndEnvironment: '{{ $.artifactList.table.columns.name }}'
+    lastModified: Last Modified
+    url: URL
+    size: '{{ $.digestList.table.columns.size }}'
+    artifacts: '{{ $.artifactList.pageHeading }}'
+    upstreamProxies: '{{ $.repositoryDetails.repositoryForm.upstreamProxiesTitle }}'
+    downloads: Downloads
+    type: Type
+  copyUrl: Copy URL
+  copyRegistryUrl: Copy Registry URL
+  copyUpstreamUrl: Copy Proxy URL

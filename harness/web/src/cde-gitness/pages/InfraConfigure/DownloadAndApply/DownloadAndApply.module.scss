@@ -1,0 +1,56 @@
+.main {
+  padding: var(--spacing-11) 264px !important;
+}
+
+.pageTitle {
+  font-size: var(--spacing-medium) !important;
+  font-weight: 600 !important;
+}
+
+.bodyContainer {
+  background-color: var(--grey-0) !important;
+  border-radius: var(--spacing-xsmall) !important;
+  border: 1px solid var(--grey-100) !important;
+  padding: var(--spacing-xlarge) !important;
+  margin-bottom: var(--spacing-large) !important;
+}
+
+.formFooter {
+  padding: var(--spacing-medium) 0 !important;
+  width: 100% !important;
+  display: flex;
+  justify-content: space-between !important;
+}
+
+.listTitle {
+  font-size: var(--font-size-normal) !important;
+  font-weight: 400 !important;
+
+  img {
+    margin-right: var(--spacing-small) !important;
+  }
+}
+
+.buttonStyle {
+  width: fit-content !important;
+  margin-top: var(--spacing-medium) !important;
+  margin-bottom: var(--spacing-xlarge) !important;
+  margin-left: var(--spacing-xlarge) !important;
+}
+
+.codeBlockContainer {
+  padding-left: var(--spacing-xlarge) !important;
+
+  [class*='CodeBlock'] {
+    width: 70% !important;
+    min-width: 350px !important;
+    border-radius: var(--spacing-small) !important;
+    background-color: var(--grey-1000) !important;
+    color: var(--grey-0) !important;
+
+    pre {
+      font-size: var(--font-size-normal) !important;
+      padding-left: var(--spacing-small) !important;
+    }
+  }
+}

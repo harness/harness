@@ -1,0 +1,75 @@
+/*
+ * Copyright 2024 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.subHeader {
+  position: sticky;
+  top: var(--har-repository-list-page-header-height);
+  z-index: 3;
+  border: none;
+  box-shadow: var(--elevation-2);
+
+  .subHeaderItems {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--spacing-medium);
+    width: 100%;
+  }
+}
+
+.pageBody {
+  --page-header-height: 190px;
+  background-color: var(--primary-bg) !important;
+}
+
+.table {
+  --typography-size: 12px;
+  --typography-weight: 400;
+  --line-height: 20px;
+  padding: var(--spacing-large);
+
+  [role='cell'],
+  [role='columnheader'] {
+    width: auto !important;
+    padding-right: var(--spacing-small);
+  }
+
+  div[class*='TableV2--cells'],
+  div[class*='TableV2--header'] {
+    display: grid !important;
+    grid-template-columns: 50px minmax(var(--har-table-name-column-min-width), 1fr) 1fr 2fr 1fr 50px;
+  }
+}
+
+.tableRow {
+  position: relative;
+}
+
+.tableRowSubComponent {
+  position: relative;
+  margin-left: 50px !important;
+  margin-top: 0 !important;
+  padding-top: var(--spacing-medium) !important;
+  border-top: 1px solid var(--grey-200);
+}
+
+.activeRow {
+  border-color: var(--primary-7) !important;
+  :global(.TableV2--cells) {
+    background-color: var(--primary-1) !important;
+    border: 1px solid var(--primary-2) !important;
+  }
+}

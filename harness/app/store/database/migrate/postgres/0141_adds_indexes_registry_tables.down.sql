@@ -1,0 +1,2 @@
+drop index if exists idx_registries_parent_id_package_type;
+drop index if exists idx_tags_registry_id_image_name_updated_at;

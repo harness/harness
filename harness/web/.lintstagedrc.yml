@@ -1,0 +1,8 @@
+# Apply checks for artifact registry (ar) code
+'src/ar/**/*': 'sh src/ar/scripts/license/stamp.sh'
+'src/ar/**/*.{ts,tsx,p1}': 'prettier --check'
+'src/ar/**/*.{ts,tsx,p2}': 'eslint --rulesdir src/ar/scripts/eslint-rules'
+'src/ar/**/*.{ts,tsx,p3}': 'sh src/ar/scripts/typecheck-staged.sh'
+'src/ar/**/*.scss,p1': 'stylelint --max-warnings 0'
+'src/ar/**/*.scss,p2': 'prettier --check'
+'src/ar/**/*.i18n.ts': 'exit 1'

@@ -1,0 +1,90 @@
+.textInputWrapper {
+  margin-bottom: 0;
+  width: 100% !important;
+
+  .iconClass {
+    margin-top: 11px !important;
+  }
+
+  .rightIconClass {
+    width: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 32px;
+  }
+}
+
+.dropDownContainer {
+  min-width: var(--select-dropdown-width) !important;
+
+  .popover {
+    & :global(.bp3-popover-target) {
+      width: 100% !important;
+    }
+  }
+  .popoverHeight {
+    max-height: 400px;
+    min-width: var(--select-dropdown-width) !important; /* Make the popover match the input width */
+  }
+}
+
+:global {
+  /* Target the popover and menu to set max-width */
+  /* Prevent horizontal scrolling in menu */
+  .bp3-menu {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  .bp3-menu > div {
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+
+  .bp3-menu > div:hover {
+    background: var(--grey-100) !important;
+    color: var(--grey-1000) !important;
+    cursor: pointer;
+  }
+
+  .activeMenuItem {
+    background-color: var(--primary-2) !important;
+    color: var(--grey-1000) !important;
+  }
+
+  .bp3-menu > div.bp3-active,
+  .bp3-menu > div[aria-selected='true'] {
+    background: var(--primary-2) !important;
+    color: var(--grey-1000) !important;
+    outline: none !important;
+  }
+}
+
+.avatar {
+  padding: var(--spacing-small) 0;
+  font-size: medium;
+}
+
+.icon {
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  cursor: pointer;
+}
+
+.ugicon {
+  background-color: var(--yellow-700) !important;
+  color: var(--grey-0) !important;
+  padding: 1px 2px 3px 3px !important;
+  margin: 10px 6px !important;
+  border-radius: var(--spacing-xsmall);
+}
+
+.saicon {
+  background-color: var(--grey-200) !important;
+  color: var(--grey-700) !important;
+  padding: 2px !important;
+  margin: 10px 7px !important;
+  border-radius: 50%;
+}

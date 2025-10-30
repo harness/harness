@@ -1,0 +1,83 @@
+/*
+ * Copyright 2023 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.searchCtn {
+  position: relative;
+  width: 100%;
+
+  input {
+    background-color: transparent !important;
+    color: transparent !important;
+    caret-color: var(--black);
+  }
+
+  > div:nth-child(2),
+  > div:nth-child(2) > div,
+  > div:nth-child(2) > div > div {
+    width: 100%;
+  }
+
+  > div:nth-child(2) > div > div {
+    padding-left: 0 !important;
+  }
+
+  .textCtn {
+    position: absolute;
+    left: 31px;
+    top: 8px;
+    color: black;
+    font-size: 13px;
+  }
+
+  .highltedText {
+    background-color: var(--primary-1);
+    border-radius: 4px;
+    color: var(--primary-7);
+  }
+
+  .andOr {
+    color: var(--red-700);
+  }
+
+  .toggleSearch {
+    position: absolute;
+    right: 14px;
+    top: 6px;
+    z-index: 1;
+  }
+
+  .toggleTitle {
+    position: absolute;
+    right: 53px;
+    top: 9px;
+  }
+  .toggleRegexIconContainer {
+    position: absolute;
+    right: 30px !important;
+    top: 4.5px !important;
+    cursor: pointer !important;
+    z-index: 1;
+  }
+  .toggleRegexIconContainer:hover {
+    fill: var(--primary-7) !important;
+  }
+}
+
+.popover {
+  z-index: 2;
+  position: relative;
+  right: 5px !important;
+}

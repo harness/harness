@@ -1,0 +1,91 @@
+/*
+ * Copyright 2023 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+.imageModal {
+  width: 100% !important;
+  background: unset !important;
+
+  .content {
+    width: 100% !important;
+    max-width: 100vw;
+    height: auto;
+    background: unset !important;
+    overflow: hidden;
+
+    .image {
+      padding: var(--spacing-small);
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto;
+    }
+  }
+
+  :global {
+    .bp3-dialog-header {
+      background: unset !important;
+      position: absolute !important;
+      top: -2%;
+      left: 1.5%;
+
+      .bp3-heading {
+        font-size: 13px;
+        color: var(--grey-500) !important;
+        position: absolute !important;
+        top: -2%;
+        left: 1.5%;
+      }
+    }
+
+    [class*='Dialog--children'],
+    [class*='Carousel--carouselItem'] {
+      justify-content: center !important;
+      align-items: center;
+    }
+
+    [class*='Dialog--close'] {
+      fill: var(--primary-bg) !important;
+      --intent-color: var(--primary-bg) !important;
+      position: absolute !important;
+      top: -2%;
+    }
+  }
+}
+
+.vertical {
+  position: absolute !important;
+  bottom: -2.5%;
+  right: 0.75%;
+
+  :global {
+    [class*='Button--variation'][class*='Button--variation-tertiary'] {
+      --background-color: unset !important;
+      .bp3-icon {
+        padding-right: unset !important;
+      }
+    }
+  }
+}
+
+.portalContainer {
+  background: blue !important;
+
+  :global {
+    .bp3-overlay-backdrop {
+      background-color: rgba(16, 22, 26, 1) !important;
+    }
+  }
+}

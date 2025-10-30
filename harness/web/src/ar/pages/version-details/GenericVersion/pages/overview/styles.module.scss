@@ -1,0 +1,22 @@
+.gridContainer {
+  align-items: center;
+  display: grid;
+  grid-template-columns: max-content auto;
+  row-gap: var(--spacing-medium);
+  column-gap: 30px;
+
+  & :global(.StyledProps--font-variation-small-bold) {
+    font-size: 13px !important;
+  }
+
+  & :global(.StyledProps--font-variation-small) {
+    font-size: 13px !important;
+  }
+
+  & :global(.CopyToClipboard--copyIcon) {
+    & > svg {
+      height: 16px;
+      width: 16px;
+    }
+  }
+}

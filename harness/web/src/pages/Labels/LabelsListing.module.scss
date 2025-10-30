@@ -1,0 +1,54 @@
+/*
+ * Copyright 2023 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.main {
+  .table {
+    .row {
+      height: fit-content !important;
+      display: flex;
+      justify-content: center;
+    }
+    .toggleAccordion {
+      padding: var(--spacing-large) var(--spacing-medium) !important;
+    }
+
+    .labelCtn {
+      max-width: 55%;
+    }
+
+    div[class*='TableV2--row'] {
+      padding: 3px var(--spacing-medium);
+      justify-content: center;
+      min-height: 48px;
+    }
+
+    div[class*='TableV2--rowSubComponent'] {
+      border-top: 1px solid var(--grey-100);
+      padding: 14px var(--spacing-xsmall) 14px 4.7%;
+      margin-top: var(--spacing-tiny);
+    }
+  }
+}
+
+.optionItem {
+  display: flex;
+  align-items: center;
+  svg {
+    path {
+      fill: var(--white) !important;
+    }
+  }
+}

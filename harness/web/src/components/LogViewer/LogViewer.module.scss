@@ -1,0 +1,207 @@
+/*
+ * Copyright 2023 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@import 'src/utils/utils';
+
+.main {
+  flex-shrink: 0;
+}
+.line {
+  margin: 0;
+  padding: 0;
+  cursor: text;
+  min-height: 20px;
+  display: block;
+
+  @include mono-font;
+  color: var(--white);
+
+  word-wrap: break-word !important;
+  white-space: pre-wrap !important;
+}
+
+.pipelineSteps {
+  padding: 10px 20px 0 !important;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  &::before {
+    content: '';
+    height: 10px;
+    width: 100%;
+    background-color: var(--black);
+    position: absolute;
+    top: 64px;
+    z-index: 1;
+  }
+
+  .stepContainer {
+    display: flex;
+    flex-direction: column;
+    word-break: break-all;
+  }
+
+  .stepHeader {
+    display: flex;
+    align-items: center;
+    min-height: 34px;
+    border-radius: 6px;
+    padding: 0 10px 0 6px;
+    position: sticky;
+    top: 74px;
+    z-index: 2;
+    background-color: var(--black);
+
+    &.expanded {
+      .chevron {
+        transform: rotate(90deg);
+      }
+    }
+
+    .chevron {
+      transition: transform 0.2s ease;
+    }
+
+    &:hover {
+      background-color: #22222aa9;
+    }
+
+    &.selected {
+      background-color: #22222a;
+    }
+
+    &.selected .name {
+      color: var(--primary-7) !important;
+      font-weight: 600 !important;
+    }
+
+    .name {
+      color: #b0b1c3 !important;
+      font-weight: 400 !important;
+      font-size: 14px !important;
+      font-family: var(--font-family-mono);
+    }
+  }
+
+  .stepLogContainer {
+    padding: 15px 10px 15px 36px;
+    flex-shrink: 0;
+
+    .consoleLine {
+      color: var(--white);
+
+      @include mono-font;
+
+      word-wrap: break-word !important;
+      white-space: pre-wrap !important;
+      cursor: text;
+      margin: 0;
+      padding: 0;
+
+      &:empty {
+        display: inline-block;
+        min-height: 20px;
+      }
+    }
+  }
+}
+
+.status {
+  align-self: center;
+
+  &.invert {
+    filter: invert(100%);
+  }
+}
+
+.noShrink {
+  flex-shrink: inherit;
+}
+
+.content {
+  background-color: var(--black);
+  overflow: auto;
+
+  &.markdown {
+    :global {
+      .wmde-markdown {
+        background-color: transparent !important;
+      }
+    }
+
+    padding: 0 var(--spacing-large) var(--spacing-medium);
+  }
+
+  &.terminal {
+    .header {
+      padding: var(--spacing-medium) var(--spacing-large) 0;
+    }
+
+    span[data-icon='execution-success'] svg {
+      circle {
+        color: transparent !important;
+      }
+    }
+  }
+
+  .header {
+    padding-top: var(--spacing-medium);
+    position: sticky;
+    top: 0;
+    background-color: var(--black);
+    height: var(--log-content-header-height);
+    z-index: 3;
+
+    .headerLayout {
+      border-bottom: 1px solid var(--grey-800);
+      padding-bottom: var(--spacing-medium);
+      align-items: center;
+    }
+  }
+
+  .markdownContainer {
+    padding-top: var(--spacing-medium);
+    padding-left: var(--spacing-small);
+  }
+
+  .logViewer {
+    padding: var(--spacing-medium) var(--spacing-medium) var(--spacing-medium) var(--spacing-xxlarge);
+  }
+}
+
+.scrollDownBtn {
+  position: absolute;
+  padding: 8px !important;
+  bottom: 7px;
+  right: 30px;
+
+  & > :global(.bp3-icon) {
+    padding: 0 !important;
+  }
+
+  & > :global(.bp3-button-text) {
+    width: 0;
+    padding-left: 0;
+    overflow: hidden;
+    display: inline-block;
+  }
+
+  &:hover > :global(.bp3-button-text) {
+    width: auto;
+    padding-left: 4px;
+  }
+}

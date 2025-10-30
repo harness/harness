@@ -1,0 +1,11 @@
+.donut-chart {
+  position: relative;
+  border-radius: 50%;
+}
+
+.donut-inner {
+  position: absolute;
+  background-color: white;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}

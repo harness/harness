@@ -1,0 +1,32 @@
+.main {
+  --block-height: auto;
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-medium);
+  box-sizing: border-box;
+  visibility: visible;
+
+  height: auto;
+  min-height: 48px;
+
+  &.hidden {
+    height: var(--block-height);
+    visibility: hidden;
+    content-visibility: auto;
+    contain-intrinsic-size: auto var(--block-height);
+
+    > * {
+      visibility: hidden !important;
+
+      > * {
+        display: none !important;
+      }
+    }
+  }
+
+  &:has([data-comment-editor-shown='true']) {
+    height: auto !important;
+    min-height: auto !important;
+  }
+}
