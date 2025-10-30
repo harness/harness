@@ -249,7 +249,9 @@ func (s *Service) handleBuildRegistryIndex(ctx context.Context, task *types.Task
 		}
 	default:
 		err := s.packageWrapper.BuildRegistryIndexAsync(ctx, payload)
-		processingErr = fmt.Errorf("failed to build registry index for registry [%d]: %w", payload.RegistryID, err)
+		if err != nil {
+			processingErr = fmt.Errorf("failed to build registry index for registry [%d]: %w", payload.RegistryID, err)
+		}
 	}
 	return processingErr
 }
@@ -284,7 +286,9 @@ func (s *Service) handleBuildPackageIndex(
 		}
 	default:
 		err := s.packageWrapper.BuildPackageIndexAsync(ctx, payload)
-		processingErr = fmt.Errorf("failed to build registry index for registry [%d]: %w", payload.RegistryID, err)
+		if err != nil {
+			processingErr = fmt.Errorf("failed to build package index for registry [%d]: %w", payload.RegistryID, err)
+		}
 	}
 	return processingErr
 }
@@ -326,7 +330,9 @@ func (s *Service) handleBuildPackageMetadata(
 		}
 	default:
 		err := s.packageWrapper.BuildPackageMetadataAsync(ctx, payload)
-		processingErr = fmt.Errorf("failed to build registry index for registry [%d]: %w", payload.RegistryID, err)
+		if err != nil {
+			processingErr = fmt.Errorf("failed to build package metadata for registry [%d]: %w", payload.RegistryID, err)
+		}
 	}
 	return processingErr
 }
