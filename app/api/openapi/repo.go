@@ -1506,4 +1506,36 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opSquashBranch, new(types.MergeViolations), http.StatusUnprocessableEntity)
 	_ = reflector.Spec.AddOperation(http.MethodPost,
 		"/repos/{repo_ref}/squash", opSquashBranch)
+
+	opForkCreate := openapi3.Operation{}
+	opForkCreate.WithTags("repository")
+	opForkCreate.WithMapOfAnything(
+		map[string]any{"operationId": "forkCreate"})
+	_ = reflector.SetRequest(&opForkCreate, &struct {
+		repoRequest
+		repo.CreateForkInput
+	}{}, http.MethodPost)
+	_ = reflector.SetJSONResponse(&opForkCreate, new(repo.RepositoryOutput), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opForkCreate, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opForkCreate, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opForkCreate, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opForkCreate, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opForkCreate, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/fork", opForkCreate)
+
+	opForkSyncBranch := openapi3.Operation{}
+	opForkSyncBranch.WithTags("repository")
+	opForkSyncBranch.WithMapOfAnything(
+		map[string]any{"operationId": "forkSyncBranch"})
+	_ = reflector.SetRequest(&opForkSyncBranch, &struct {
+		repoRequest
+		repo.ForkSyncInput
+	}{}, http.MethodPost)
+	_ = reflector.SetJSONResponse(&opForkSyncBranch, new(types.ForkSyncOutput), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opForkSyncBranch, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opForkSyncBranch, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opForkSyncBranch, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opForkSyncBranch, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opForkSyncBranch, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/fork-sync", opForkSyncBranch)
 }
