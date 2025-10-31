@@ -24,12 +24,18 @@ import (
 
 type RegistryHelper interface {
 	GetAuthHeaderPrefix() string
+	DeleteFileNode(ctx context.Context,
+		regInfo *types.RegistryRequestBaseInfo,
+		filePath string,
+	) error
 	// DeleteVersion deletes the version
 	DeleteVersion(ctx context.Context,
 		regInfo *types.RegistryRequestBaseInfo,
 		imageInfo *types.Image,
 		artifactName string,
-		versionName string) error
+		versionName string,
+		filePath string,
+	) error
 
 	// DeleteArtifact deletes the artifact
 	DeleteGenericImage(ctx context.Context,

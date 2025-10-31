@@ -25,7 +25,6 @@ import (
 	localurlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/api/interfaces"
 	artifactapi "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
-	"github.com/harness/gitness/registry/app/api/utils"
 	"github.com/harness/gitness/registry/app/common"
 	registryevents "github.com/harness/gitness/registry/app/events/artifact"
 	registrypostprocessingevents "github.com/harness/gitness/registry/app/events/asyncprocessing"
@@ -76,20 +75,26 @@ func (r *registryHelper) GetAuthHeaderPrefix() string {
 	return r.SetupDetailsAuthHeaderPrefix
 }
 
+func (r *registryHelper) DeleteFileNode(ctx context.Context,
+	regInfo *types.RegistryRequestBaseInfo,
+	filePath string,
+) error {
+	err := r.FileManager.DeleteNode(ctx, regInfo.RegistryID, filePath)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r *registryHelper) DeleteVersion(ctx context.Context,
 	regInfo *types.RegistryRequestBaseInfo,
 	imageInfo *types.Image,
 	artifactName string,
-	versionName string) error {
+	versionName string,
+	filePath string) error {
 	_, err := r.ArtifactStore.GetByName(ctx, imageInfo.ID, versionName)
 	if err != nil {
 		return fmt.Errorf("version doesn't exist with for image %v: %w", imageInfo.Name, err)
-	}
-
-	// get the file path based on package type
-	filePath, err := utils.GetFilePath(regInfo.PackageType, artifactName, versionName)
-	if err != nil {
-		return fmt.Errorf("failed to get file path: %w", err)
 	}
 
 	err = r.tx.WithTx(

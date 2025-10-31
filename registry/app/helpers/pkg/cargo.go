@@ -151,7 +151,10 @@ func (c *cargoPackageType) DeleteVersion(ctx context.Context,
 	artifactName string,
 	versionName string,
 ) error {
-	err := c.registryHelper.DeleteVersion(ctx, regInfo, imageInfo, artifactName, versionName)
+	err := c.registryHelper.DeleteVersion(
+		ctx, regInfo, imageInfo, artifactName, versionName,
+		c.GetFilePath(artifactName, versionName),
+	)
 	if err != nil {
 		return fmt.Errorf("failed to delete cargo artifact version: %w", err)
 	}
