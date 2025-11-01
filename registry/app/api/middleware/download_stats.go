@@ -300,7 +300,9 @@ func TrackDownloadStats(
 				ctx := context.WithoutCancel(r.Context())
 				sw := &StatusWriter{ResponseWriter: w}
 				next.ServeHTTP(sw, r)
-				if sw.StatusCode != http.StatusOK && sw.StatusCode != http.StatusTemporaryRedirect {
+				if sw.StatusCode != http.StatusOK &&
+					sw.StatusCode != http.StatusTemporaryRedirect &&
+					sw.StatusCode != http.StatusFound {
 					return
 				}
 				err := packageHandler.TrackDownloadStats(ctx, r)
