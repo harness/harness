@@ -1183,7 +1183,7 @@ func (_c *MockPackageWrapper_ValidateUpstreamSource_Call) RunAndReturn(run func(
 	return _c
 }
 
-// BuildRegistryIndexAsync provides a mock function
+// BuildRegistryIndexAsync provides a mock function for the type MockPackageWrapper
 func (_mock *MockPackageWrapper) BuildRegistryIndexAsync(ctx context.Context, payload types.BuildRegistryIndexTaskPayload) error {
 	ret := _mock.Called(ctx, payload)
 
@@ -1192,16 +1192,55 @@ func (_mock *MockPackageWrapper) BuildRegistryIndexAsync(ctx context.Context, pa
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.BuildRegistryIndexTaskPayload) error); ok {
-		r0 = rf(ctx, payload)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, types.BuildRegistryIndexTaskPayload) error); ok {
+		r0 = returnFunc(ctx, payload)
 	} else {
 		r0 = ret.Error(0)
 	}
-
 	return r0
 }
 
-// BuildPackageIndexAsync provides a mock function
+// MockPackageWrapper_BuildRegistryIndexAsync_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'BuildRegistryIndexAsync'
+type MockPackageWrapper_BuildRegistryIndexAsync_Call struct {
+	*mock.Call
+}
+
+// BuildRegistryIndexAsync is a helper method to define mock.On call
+//   - ctx context.Context
+//   - payload types.BuildRegistryIndexTaskPayload
+func (_e *MockPackageWrapper_Expecter) BuildRegistryIndexAsync(ctx interface{}, payload interface{}) *MockPackageWrapper_BuildRegistryIndexAsync_Call {
+	return &MockPackageWrapper_BuildRegistryIndexAsync_Call{Call: _e.mock.On("BuildRegistryIndexAsync", ctx, payload)}
+}
+
+func (_c *MockPackageWrapper_BuildRegistryIndexAsync_Call) Run(run func(ctx context.Context, payload types.BuildRegistryIndexTaskPayload)) *MockPackageWrapper_BuildRegistryIndexAsync_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 types.BuildRegistryIndexTaskPayload
+		if args[1] != nil {
+			arg1 = args[1].(types.BuildRegistryIndexTaskPayload)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockPackageWrapper_BuildRegistryIndexAsync_Call) Return(err error) *MockPackageWrapper_BuildRegistryIndexAsync_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockPackageWrapper_BuildRegistryIndexAsync_Call) RunAndReturn(run func(ctx context.Context, payload types.BuildRegistryIndexTaskPayload) error) *MockPackageWrapper_BuildRegistryIndexAsync_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// BuildPackageIndexAsync provides a mock function for the type MockPackageWrapper
 func (_mock *MockPackageWrapper) BuildPackageIndexAsync(ctx context.Context, payload types.BuildPackageIndexTaskPayload) error {
 	ret := _mock.Called(ctx, payload)
 
@@ -1210,16 +1249,55 @@ func (_mock *MockPackageWrapper) BuildPackageIndexAsync(ctx context.Context, pay
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.BuildPackageIndexTaskPayload) error); ok {
-		r0 = rf(ctx, payload)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, types.BuildPackageIndexTaskPayload) error); ok {
+		r0 = returnFunc(ctx, payload)
 	} else {
 		r0 = ret.Error(0)
 	}
-
 	return r0
 }
 
-// BuildPackageMetadataAsync provides a mock function
+// MockPackageWrapper_BuildPackageIndexAsync_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'BuildPackageIndexAsync'
+type MockPackageWrapper_BuildPackageIndexAsync_Call struct {
+	*mock.Call
+}
+
+// BuildPackageIndexAsync is a helper method to define mock.On call
+//   - ctx context.Context
+//   - payload types.BuildPackageIndexTaskPayload
+func (_e *MockPackageWrapper_Expecter) BuildPackageIndexAsync(ctx interface{}, payload interface{}) *MockPackageWrapper_BuildPackageIndexAsync_Call {
+	return &MockPackageWrapper_BuildPackageIndexAsync_Call{Call: _e.mock.On("BuildPackageIndexAsync", ctx, payload)}
+}
+
+func (_c *MockPackageWrapper_BuildPackageIndexAsync_Call) Run(run func(ctx context.Context, payload types.BuildPackageIndexTaskPayload)) *MockPackageWrapper_BuildPackageIndexAsync_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 types.BuildPackageIndexTaskPayload
+		if args[1] != nil {
+			arg1 = args[1].(types.BuildPackageIndexTaskPayload)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockPackageWrapper_BuildPackageIndexAsync_Call) Return(err error) *MockPackageWrapper_BuildPackageIndexAsync_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockPackageWrapper_BuildPackageIndexAsync_Call) RunAndReturn(run func(ctx context.Context, payload types.BuildPackageIndexTaskPayload) error) *MockPackageWrapper_BuildPackageIndexAsync_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// BuildPackageMetadataAsync provides a mock function for the type MockPackageWrapper
 func (_mock *MockPackageWrapper) BuildPackageMetadataAsync(ctx context.Context, payload types.BuildPackageMetadataTaskPayload) error {
 	ret := _mock.Called(ctx, payload)
 
@@ -1228,16 +1306,55 @@ func (_mock *MockPackageWrapper) BuildPackageMetadataAsync(ctx context.Context, 
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.BuildPackageMetadataTaskPayload) error); ok {
-		r0 = rf(ctx, payload)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, types.BuildPackageMetadataTaskPayload) error); ok {
+		r0 = returnFunc(ctx, payload)
 	} else {
 		r0 = ret.Error(0)
 	}
-
 	return r0
 }
 
-// GetPackageTypeFromPathPackageType provides a mock function
+// MockPackageWrapper_BuildPackageMetadataAsync_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'BuildPackageMetadataAsync'
+type MockPackageWrapper_BuildPackageMetadataAsync_Call struct {
+	*mock.Call
+}
+
+// BuildPackageMetadataAsync is a helper method to define mock.On call
+//   - ctx context.Context
+//   - payload types.BuildPackageMetadataTaskPayload
+func (_e *MockPackageWrapper_Expecter) BuildPackageMetadataAsync(ctx interface{}, payload interface{}) *MockPackageWrapper_BuildPackageMetadataAsync_Call {
+	return &MockPackageWrapper_BuildPackageMetadataAsync_Call{Call: _e.mock.On("BuildPackageMetadataAsync", ctx, payload)}
+}
+
+func (_c *MockPackageWrapper_BuildPackageMetadataAsync_Call) Run(run func(ctx context.Context, payload types.BuildPackageMetadataTaskPayload)) *MockPackageWrapper_BuildPackageMetadataAsync_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 types.BuildPackageMetadataTaskPayload
+		if args[1] != nil {
+			arg1 = args[1].(types.BuildPackageMetadataTaskPayload)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockPackageWrapper_BuildPackageMetadataAsync_Call) Return(err error) *MockPackageWrapper_BuildPackageMetadataAsync_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockPackageWrapper_BuildPackageMetadataAsync_Call) RunAndReturn(run func(ctx context.Context, payload types.BuildPackageMetadataTaskPayload) error) *MockPackageWrapper_BuildPackageMetadataAsync_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetPackageTypeFromPathPackageType provides a mock function for the type MockPackageWrapper
 func (_mock *MockPackageWrapper) GetPackageTypeFromPathPackageType(pathPackageType string) (string, error) {
 	ret := _mock.Called(pathPackageType)
 
@@ -1247,20 +1364,247 @@ func (_mock *MockPackageWrapper) GetPackageTypeFromPathPackageType(pathPackageTy
 
 	var r0 string
 	var r1 error
-	if rf, ok := ret.Get(0).(func(string) (string, error)); ok {
-		return rf(pathPackageType)
+	if returnFunc, ok := ret.Get(0).(func(string) (string, error)); ok {
+		return returnFunc(pathPackageType)
 	}
-	if rf, ok := ret.Get(0).(func(string) string); ok {
-		r0 = rf(pathPackageType)
+	if returnFunc, ok := ret.Get(0).(func(string) string); ok {
+		r0 = returnFunc(pathPackageType)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
-
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(pathPackageType)
+	if returnFunc, ok := ret.Get(1).(func(string) error); ok {
+		r1 = returnFunc(pathPackageType)
 	} else {
 		r1 = ret.Error(1)
 	}
-
 	return r0, r1
+}
+
+// MockPackageWrapper_GetPackageTypeFromPathPackageType_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetPackageTypeFromPathPackageType'
+type MockPackageWrapper_GetPackageTypeFromPathPackageType_Call struct {
+	*mock.Call
+}
+
+// GetPackageTypeFromPathPackageType is a helper method to define mock.On call
+//   - pathPackageType string
+func (_e *MockPackageWrapper_Expecter) GetPackageTypeFromPathPackageType(pathPackageType interface{}) *MockPackageWrapper_GetPackageTypeFromPathPackageType_Call {
+	return &MockPackageWrapper_GetPackageTypeFromPathPackageType_Call{Call: _e.mock.On("GetPackageTypeFromPathPackageType", pathPackageType)}
+}
+
+func (_c *MockPackageWrapper_GetPackageTypeFromPathPackageType_Call) Run(run func(pathPackageType string)) *MockPackageWrapper_GetPackageTypeFromPathPackageType_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockPackageWrapper_GetPackageTypeFromPathPackageType_Call) Return(s string, err error) *MockPackageWrapper_GetPackageTypeFromPathPackageType_Call {
+	_c.Call.Return(s, err)
+	return _c
+}
+
+func (_c *MockPackageWrapper_GetPackageTypeFromPathPackageType_Call) RunAndReturn(run func(pathPackageType string) (string, error)) *MockPackageWrapper_GetPackageTypeFromPathPackageType_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ReportDeleteVersionEvent provides a mock function for the type MockPackageWrapper
+func (_mock *MockPackageWrapper) ReportDeleteVersionEvent(ctx context.Context, registryID int64, artifactName string, versionName string) error {
+	ret := _mock.Called(ctx, registryID, artifactName, versionName)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ReportDeleteVersionEvent")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, string, string) error); ok {
+		r0 = returnFunc(ctx, registryID, artifactName, versionName)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockPackageWrapper_ReportDeleteVersionEvent_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ReportDeleteVersionEvent'
+type MockPackageWrapper_ReportDeleteVersionEvent_Call struct {
+	*mock.Call
+}
+
+// ReportDeleteVersionEvent is a helper method to define mock.On call
+//   - ctx context.Context
+//   - registryID int64
+//   - artifactName string
+//   - versionName string
+func (_e *MockPackageWrapper_Expecter) ReportDeleteVersionEvent(ctx interface{}, registryID interface{}, artifactName interface{}, versionName interface{}) *MockPackageWrapper_ReportDeleteVersionEvent_Call {
+	return &MockPackageWrapper_ReportDeleteVersionEvent_Call{Call: _e.mock.On("ReportDeleteVersionEvent", ctx, registryID, artifactName, versionName)}
+}
+
+func (_c *MockPackageWrapper_ReportDeleteVersionEvent_Call) Run(run func(ctx context.Context, registryID int64, artifactName string, versionName string)) *MockPackageWrapper_ReportDeleteVersionEvent_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int64
+		if args[1] != nil {
+			arg1 = args[1].(int64)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
+	})
+	return _c
+}
+
+func (_c *MockPackageWrapper_ReportDeleteVersionEvent_Call) Return(err error) *MockPackageWrapper_ReportDeleteVersionEvent_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockPackageWrapper_ReportDeleteVersionEvent_Call) RunAndReturn(run func(ctx context.Context, registryID int64, artifactName string, versionName string) error) *MockPackageWrapper_ReportDeleteVersionEvent_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ReportBuildPackageIndexEvent provides a mock function for the type MockPackageWrapper
+func (_mock *MockPackageWrapper) ReportBuildPackageIndexEvent(ctx context.Context, registryID int64, artifactName string) error {
+	ret := _mock.Called(ctx, registryID, artifactName)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ReportBuildPackageIndexEvent")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, string) error); ok {
+		r0 = returnFunc(ctx, registryID, artifactName)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockPackageWrapper_ReportBuildPackageIndexEvent_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ReportBuildPackageIndexEvent'
+type MockPackageWrapper_ReportBuildPackageIndexEvent_Call struct {
+	*mock.Call
+}
+
+// ReportBuildPackageIndexEvent is a helper method to define mock.On call
+//   - ctx context.Context
+//   - registryID int64
+//   - artifactName string
+func (_e *MockPackageWrapper_Expecter) ReportBuildPackageIndexEvent(ctx interface{}, registryID interface{}, artifactName interface{}) *MockPackageWrapper_ReportBuildPackageIndexEvent_Call {
+	return &MockPackageWrapper_ReportBuildPackageIndexEvent_Call{Call: _e.mock.On("ReportBuildPackageIndexEvent", ctx, registryID, artifactName)}
+}
+
+func (_c *MockPackageWrapper_ReportBuildPackageIndexEvent_Call) Run(run func(ctx context.Context, registryID int64, artifactName string)) *MockPackageWrapper_ReportBuildPackageIndexEvent_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int64
+		if args[1] != nil {
+			arg1 = args[1].(int64)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockPackageWrapper_ReportBuildPackageIndexEvent_Call) Return(err error) *MockPackageWrapper_ReportBuildPackageIndexEvent_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockPackageWrapper_ReportBuildPackageIndexEvent_Call) RunAndReturn(run func(ctx context.Context, registryID int64, artifactName string) error) *MockPackageWrapper_ReportBuildPackageIndexEvent_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ReportBuildRegistryIndexEvent provides a mock function for the type MockPackageWrapper
+func (_mock *MockPackageWrapper) ReportBuildRegistryIndexEvent(ctx context.Context, registryID int64, sourceRefs []types.SourceRef) error {
+	ret := _mock.Called(ctx, registryID, sourceRefs)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ReportBuildRegistryIndexEvent")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, []types.SourceRef) error); ok {
+		r0 = returnFunc(ctx, registryID, sourceRefs)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockPackageWrapper_ReportBuildRegistryIndexEvent_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ReportBuildRegistryIndexEvent'
+type MockPackageWrapper_ReportBuildRegistryIndexEvent_Call struct {
+	*mock.Call
+}
+
+// ReportBuildRegistryIndexEvent is a helper method to define mock.On call
+//   - ctx context.Context
+//   - registryID int64
+//   - sourceRefs []types.SourceRef
+func (_e *MockPackageWrapper_Expecter) ReportBuildRegistryIndexEvent(ctx interface{}, registryID interface{}, sourceRefs interface{}) *MockPackageWrapper_ReportBuildRegistryIndexEvent_Call {
+	return &MockPackageWrapper_ReportBuildRegistryIndexEvent_Call{Call: _e.mock.On("ReportBuildRegistryIndexEvent", ctx, registryID, sourceRefs)}
+}
+
+func (_c *MockPackageWrapper_ReportBuildRegistryIndexEvent_Call) Run(run func(ctx context.Context, registryID int64, sourceRefs []types.SourceRef)) *MockPackageWrapper_ReportBuildRegistryIndexEvent_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int64
+		if args[1] != nil {
+			arg1 = args[1].(int64)
+		}
+		var arg2 []types.SourceRef
+		if args[2] != nil {
+			arg2 = args[2].([]types.SourceRef)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockPackageWrapper_ReportBuildRegistryIndexEvent_Call) Return(err error) *MockPackageWrapper_ReportBuildRegistryIndexEvent_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockPackageWrapper_ReportBuildRegistryIndexEvent_Call) RunAndReturn(run func(ctx context.Context, registryID int64, sourceRefs []types.SourceRef) error) *MockPackageWrapper_ReportBuildRegistryIndexEvent_Call {
+	_c.Call.Return(run)
+	return _c
 }

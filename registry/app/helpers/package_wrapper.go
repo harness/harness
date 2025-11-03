@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/registry/app/api/interfaces"
 	artifactapi "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/factory"
@@ -149,13 +150,74 @@ func (p *packageWrapper) DeleteArtifactVersion(
 	if pkg == nil {
 		return fmt.Errorf("unsupported package type: %s", regInfo.PackageType)
 	}
-	err := pkg.DeleteVersion(ctx, regInfo, imageInfo, artifactName, versionName)
-	if err != nil {
+	if err := pkg.DeleteVersion(ctx, regInfo, imageInfo, artifactName, versionName); err != nil {
 		return fmt.Errorf("failed to delete version: %w", err)
 	}
-	pkg.ReportDeleteVersionEvent(ctx, regInfo.RegistryID, imageInfo.ID, artifactName, versionName)
-	pkg.ReportBuildPackageIndexEvent(ctx, regInfo.RegistryID, artifactName)
-	pkg.ReportBuildRegistryIndexEvent(ctx, regInfo.RegistryID, make([]types.SourceRef, 0))
+	if err := p.ReportDeleteVersionEvent(ctx, regInfo.RegistryID, artifactName, versionName); err != nil {
+		return fmt.Errorf("failed to report delete version event: %w", err)
+	}
+	if err := p.ReportBuildPackageIndexEvent(ctx, regInfo.RegistryID, artifactName); err != nil {
+		return fmt.Errorf("failed to report build package index event: %w", err)
+	}
+	if err := p.ReportBuildRegistryIndexEvent(ctx, regInfo.RegistryID, make([]types.SourceRef, 0)); err != nil {
+		return fmt.Errorf("failed to report build registry index event: %w", err)
+	}
+	return nil
+}
+
+func (p *packageWrapper) ReportDeleteVersionEvent(
+	ctx context.Context,
+	registryID int64,
+	artifactName string,
+	versionName string,
+) error {
+	session, ok := request.AuthSessionFrom(ctx)
+	if !ok {
+		return fmt.Errorf("failed to get auth session")
+	}
+	registry, err := p.regFinder.FindByID(ctx, registryID)
+	if err != nil {
+		return fmt.Errorf("failed to find registry: %w", err)
+	}
+	pkg := p.GetPackage(string(registry.PackageType))
+	if pkg == nil {
+		return fmt.Errorf("unsupported package type: %s", registry.PackageType)
+	}
+	pkg.ReportDeleteVersionEvent(ctx, session.Principal.ID, registry.ID, artifactName, versionName)
+	return nil
+}
+
+func (p *packageWrapper) ReportBuildPackageIndexEvent(
+	ctx context.Context,
+	registryID int64,
+	artifactName string,
+) error {
+	registry, err := p.regFinder.FindByID(ctx, registryID)
+	if err != nil {
+		return fmt.Errorf("failed to find registry: %w", err)
+	}
+	pkg := p.GetPackage(string(registry.PackageType))
+	if pkg == nil {
+		return fmt.Errorf("unsupported package type: %s", registry.PackageType)
+	}
+	pkg.ReportBuildPackageIndexEvent(ctx, registry.ID, artifactName)
+	return nil
+}
+
+func (p *packageWrapper) ReportBuildRegistryIndexEvent(
+	ctx context.Context,
+	registryID int64,
+	sourceRefs []types.SourceRef,
+) error {
+	registry, err := p.regFinder.FindByID(ctx, registryID)
+	if err != nil {
+		return fmt.Errorf("failed to find registry: %w", err)
+	}
+	pkg := p.GetPackage(string(registry.PackageType))
+	if pkg == nil {
+		return fmt.Errorf("unsupported package type: %s", registry.PackageType)
+	}
+	pkg.ReportBuildRegistryIndexEvent(ctx, registry.ID, sourceRefs)
 	return nil
 }
 
@@ -168,11 +230,12 @@ func (p *packageWrapper) DeleteArtifact(
 	if pkg == nil {
 		return fmt.Errorf("unsupported package type: %s", regInfo.PackageType)
 	}
-	err := pkg.DeleteArtifact(ctx, regInfo, artifactName)
-	if err != nil {
+	if err := pkg.DeleteArtifact(ctx, regInfo, artifactName); err != nil {
 		return fmt.Errorf("failed to delete artifact: %w", err)
 	}
-	pkg.ReportBuildRegistryIndexEvent(ctx, regInfo.RegistryID, make([]types.SourceRef, 0))
+	if err := p.ReportBuildRegistryIndexEvent(ctx, regInfo.RegistryID, make([]types.SourceRef, 0)); err != nil {
+		return fmt.Errorf("failed to report build registry index event: %w", err)
+	}
 	return nil
 }
 

@@ -139,6 +139,9 @@ func (c *APIController) CreateRegistry(
 
 	if registry.PackageType == artifact.PackageTypeRPM {
 		c.PostProcessingReporter.BuildRegistryIndex(ctx, registry.ID, make([]registrytypes.SourceRef, 0))
+	} else {
+		err = c.PackageWrapper.ReportBuildRegistryIndexEvent(ctx, registry.ID, make([]registrytypes.SourceRef, 0))
+		log.Error().Err(err).Msg("failed to report build registry index event")
 	}
 
 	ref := space.Path + "/" + upstreamproxyEntity.RepoKey

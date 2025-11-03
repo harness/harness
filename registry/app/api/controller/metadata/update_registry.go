@@ -135,6 +135,9 @@ func (c *APIController) ModifyRegistry(
 	}
 	if registry.PackageType == artifact.PackageTypeRPM {
 		c.PostProcessingReporter.BuildRegistryIndex(ctx, registry.ID, make([]types.SourceRef, 0))
+	} else {
+		err = c.PackageWrapper.ReportBuildRegistryIndexEvent(ctx, registry.ID, make([]types.SourceRef, 0))
+		log.Error().Err(err).Msg("failed to report build registry index event")
 	}
 	ref := space.Path + "/" + upstreamproxyEntity.RepoKey
 	jsonResponse, err := c.CreateUpstreamProxyResponseJSONResponse(ctx, modifiedRepoEntity, ref)
@@ -185,6 +188,9 @@ func (c *APIController) updateVirtualRegistry(
 	}
 	if registry.PackageType == artifact.PackageTypeRPM {
 		c.PostProcessingReporter.BuildRegistryIndex(ctx, registry.ID, make([]types.SourceRef, 0))
+	} else {
+		err = c.PackageWrapper.ReportBuildRegistryIndexEvent(ctx, registry.ID, make([]types.SourceRef, 0))
+		log.Error().Err(err).Msg("failed to report build registry index event")
 	}
 	err = c.updateRegistryWithAudit(ctx, repoEntity, registry, session.Principal, regInfo.ParentRef)
 

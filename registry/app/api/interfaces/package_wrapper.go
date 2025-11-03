@@ -98,4 +98,20 @@ type PackageWrapper interface {
 		ctx context.Context,
 		payload types.BuildPackageMetadataTaskPayload,
 	) error
+	ReportDeleteVersionEvent(
+		ctx context.Context,
+		registryID int64,
+		artifactName string,
+		versionName string,
+	) error
+	ReportBuildPackageIndexEvent(
+		ctx context.Context,
+		registryID int64,
+		artifactName string,
+	) error
+	ReportBuildRegistryIndexEvent(
+		ctx context.Context,
+		registryID int64,
+		sourceRefs []types.SourceRef,
+	) error
 }
