@@ -77,7 +77,7 @@ export class CondaVersionType extends VersionStep<ArtifactVersionSummary> {
     VersionAction.Quarantine
   ]
 
-  protected allowedActionsOnVersionDetailsPage = [VersionAction.Delete]
+  protected allowedActionsOnVersionDetailsPage = [VersionAction.Delete, VersionAction.Quarantine]
 
   renderVersionListTable(props: VersionListTableProps): JSX.Element {
     return <VersionListTable {...props} columnConfigs={this.versionListTableColumnConfig} />

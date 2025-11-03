@@ -73,6 +73,27 @@ export default function CondaVersionGeneralInfo(props: CondaVersionGeneralInfoPr
                 type={LabelValueTypeEnum.Text}
               />
             )}
+            {metadata?.doc_url && (
+              <LabelValueContent
+                label={getString('versionDetails.overview.generalInformation.documentation')}
+                value={metadata.doc_url}
+                type={LabelValueTypeEnum.Link}
+              />
+            )}
+            {metadata?.dev_url && (
+              <LabelValueContent
+                label={getString('versionDetails.overview.generalInformation.projectUrl')}
+                value={metadata.dev_url}
+                type={LabelValueTypeEnum.Link}
+              />
+            )}
+            {metadata?.home && (
+              <LabelValueContent
+                label={getString('versionDetails.overview.generalInformation.homepage')}
+                value={metadata.home}
+                type={LabelValueTypeEnum.Link}
+              />
+            )}
             {metadata?.summary && (
               <LabelValueContent
                 label={getString('versionDetails.overview.generalInformation.description')}

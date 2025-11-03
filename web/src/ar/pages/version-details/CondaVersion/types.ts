@@ -36,6 +36,9 @@ export type LocalCondaArtifactDetailConfig = {
       license: string
       summary: string
       depends: string[]
+      dev_url?: string
+      doc_url?: string
+      home?: string
     }
   }
 }
