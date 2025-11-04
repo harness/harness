@@ -202,7 +202,7 @@ export interface StringsMap {
   'upstreamProxyDetails.createForm.create': string
   'upstreamProxyDetails.createForm.key': string
   'upstreamProxyDetails.createForm.packageType': string
-  'upstreamProxyDetails.createForm.source.anaconda': string
+  'upstreamProxyDetails.createForm.source.bioconda': string
   'upstreamProxyDetails.createForm.source.crates': string
   'upstreamProxyDetails.createForm.source.custom': string
   'upstreamProxyDetails.createForm.source.dockerHub': string
