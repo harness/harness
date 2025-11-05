@@ -337,6 +337,15 @@ func (c *APIController) updatePublicAccess(
 	if err != nil {
 		return fmt.Errorf("failed to check current public access status: %w", err)
 	}
+
+	if newRegistry.Type == artifact.RegistryTypeVIRTUAL &&
+		newRegistry.IsPublic && !reflect.DeepEqual(newRegistry.UpstreamProxies, oldRegistry.UpstreamProxies) {
+		err := c.checkIfVirtualHasPrivateUpstreams(ctx, newRegistry.Name, newRegistry.UpstreamProxies)
+		if err != nil {
+			return err
+		}
+	}
+
 	//nolint:nestif
 	if isPublic != newRegistry.IsPublic {
 		if !newRegistry.IsPublic {
@@ -345,18 +354,16 @@ func (c *APIController) updatePublicAccess(
 			if err != nil {
 				return err
 			}
+		} else if newRegistry.Type == artifact.RegistryTypeVIRTUAL {
+			err := c.checkIfVirtualHasPrivateUpstreams(ctx, newRegistry.Name, newRegistry.UpstreamProxies)
+			if err != nil {
+				return err
+			}
 		}
 
 		if err = c.PublicAccess.Set(ctx,
 			gitnessenum.PublicResourceTypeRegistry, ref, newRegistry.IsPublic); err != nil {
 			return fmt.Errorf("failed to update artiafct registry public access: %w", err)
-		}
-	}
-	if newRegistry.Type == artifact.RegistryTypeVIRTUAL &&
-		newRegistry.IsPublic && !reflect.DeepEqual(newRegistry.UpstreamProxies, oldRegistry.UpstreamProxies) {
-		err := c.checkIfVirtualHasPrivateUpstreams(ctx, newRegistry.Name, newRegistry.UpstreamProxies)
-		if err != nil {
-			return err
 		}
 	}
 
