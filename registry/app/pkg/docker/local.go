@@ -872,11 +872,16 @@ func (r *LocalRegistry) InitBlobUpload(
 		Code:    0,
 	}
 	digest := digest.Digest(mountDigest)
+	//nolint:nestif
 	if mountDigest != "" && fromRepo != "" {
 		err := r.dbMountBlob(blobCtx, fromRepo, artInfo.RegIdentifier, digest, artInfo) //nolint:contextcheck
 		if err != nil {
 			e := fmt.Errorf("failed to mount blob in database: %w", err)
-			errList = append(errList, errcode.FromUnknownError(e))
+			if errors.Is(err, store2.ErrResourceNotFound) {
+				errList = append(errList, errcode.ErrCodeRegNotFound.WithDetail(e))
+			} else {
+				errList = append(errList, errcode.FromUnknownError(e))
+			}
 		}
 		if err = writeBlobCreatedHeaders(
 			blobCtx, digest,
@@ -1703,7 +1708,7 @@ func (r *LocalRegistry) dbMountBlob(
 		)
 	}
 
-	sourceRepo, err := r.registryDao.GetByParentIDAndName(ctx, info.ParentID, fromRepo)
+	sourceRepo, err := r.registryDao.GetByRootParentIDAndName(ctx, info.RootParentID, fromRepo)
 	if err != nil {
 		return err
 	}
