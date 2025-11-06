@@ -64,7 +64,7 @@ const (
 	// DefaultHTTPClientTimeout is the default timeout for registry http client.
 	DefaultHTTPClientTimeout = 30 * time.Minute
 	// MediaTypeManifest specifies the mediaType for the current version. Note
-	// that for schema version 1, the the media is optionally "application/json".
+	// that for schema version 1, the media is optionally "application/json".
 	MediaTypeManifest = "application/vnd.docker.distribution.manifest.v1+json"
 	// MediaTypeSignedManifest specifies the mediatype for current SignedManifest version.
 	MediaTypeSignedManifest = "application/vnd.docker.distribution.manifest.v1+prettyjws"
