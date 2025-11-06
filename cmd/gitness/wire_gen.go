@@ -271,7 +271,6 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	triggerStore := database.ProvideTriggerStore(db)
 	encrypter, err := encrypt.ProvideEncrypter(config)
 	if err != nil {
 		return nil, err
@@ -285,6 +284,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
+	triggerStore := database.ProvideTriggerStore(db)
 	streamer := sse.ProvideEventsStreaming(pubSub)
 	localIndexSearcher := keywordsearch.ProvideLocalIndexSearcher()
 	indexer := keywordsearch.ProvideIndexer(localIndexSearcher)
@@ -293,11 +293,12 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	auditService := audit.ProvideAuditService()
-	repository, err := importer.ProvideRepoImporter(config, provider, gitInterface, transactor, repoStore, pipelineStore, triggerStore, repoFinder, encrypter, jobScheduler, executor, streamer, indexer, publicaccessService, eventsReporter, auditService, settingsService)
+	importerImporter := importer.ProvideImporter(config, provider, gitInterface, transactor, repoStore, pipelineStore, triggerStore, repoFinder, streamer, indexer, publicaccessService, eventsReporter, auditService, settingsService)
+	jobRepository, err := importer.ProvideJobRepository(encrypter, jobScheduler, executor, importerImporter)
 	if err != nil {
 		return nil, err
 	}
-	referenceSync, err := importer.ProvideReferenceSync(config, provider, gitInterface, repoStore, repoFinder, jobScheduler, executor, indexer, eventsReporter)
+	jobReferenceSync, err := importer.ProvideJobReferenceSync(config, provider, gitInterface, repoStore, repoFinder, jobScheduler, executor, indexer, eventsReporter)
 	if err != nil {
 		return nil, err
 	}
@@ -337,7 +338,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	lfsController := lfs.ProvideController(authorizer, repoFinder, repoStore, principalStore, lfsObjectStore, blobStore, remoteauthService, provider, settingsService)
 	keyfetcherService := keyfetcher.ProvideService(publicKeyStore)
 	signatureVerifyService := publickey.ProvideSignatureVerifyService(principalStore, keyfetcherService, gitSignatureResultStore)
-	repoController := repo.ProvideController(config, transactor, provider, authorizer, repoStore, spaceStore, pipelineStore, principalStore, executionStore, ruleStore, checkStore, pullReqStore, settingsService, principalInfoCache, protectionManager, gitInterface, spaceFinder, repoFinder, repository, referenceSync, codeownersService, eventsReporter, indexer, resourceLimiter, lockerLocker, auditService, mutexManager, repoIdentifier, repoCheck, publicaccessService, labelService, instrumentService, userGroupStore, usergroupService, rulesService, streamer, lfsController, favoriteStore, signatureVerifyService)
+	repoController := repo.ProvideController(config, transactor, provider, authorizer, repoStore, spaceStore, pipelineStore, principalStore, executionStore, ruleStore, checkStore, pullReqStore, settingsService, principalInfoCache, protectionManager, gitInterface, spaceFinder, repoFinder, jobRepository, jobReferenceSync, codeownersService, eventsReporter, indexer, resourceLimiter, lockerLocker, auditService, mutexManager, repoIdentifier, repoCheck, publicaccessService, labelService, instrumentService, userGroupStore, usergroupService, rulesService, streamer, lfsController, favoriteStore, signatureVerifyService)
 	reposettingsController := reposettings.ProvideController(authorizer, repoFinder, settingsService, auditService)
 	stageStore := database.ProvideStageStore(db)
 	schedulerScheduler, err := scheduler.ProvideScheduler(stageStore, mutexManager)
@@ -360,7 +361,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	secretStore := database.ProvideSecretStore(db)
 	connectorStore := database.ProvideConnectorStore(db, secretStore)
 	listService := pullreq.ProvideListService(transactor, gitInterface, authorizer, spaceStore, pullReqStore, checkStore, repoFinder, labelService, protectionManager)
-	exporterRepository, err := exporter.ProvideSpaceExporter(provider, gitInterface, repoStore, jobScheduler, executor, encrypter, streamer)
+	repository, err := exporter.ProvideSpaceExporter(provider, gitInterface, repoStore, jobScheduler, executor, encrypter, streamer)
 	if err != nil {
 		return nil, err
 	}
@@ -440,7 +441,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	tokenGenerator := tokengenerator.ProvideTokenGenerator()
 	gitspaceService := gitspace.ProvideGitspace(transactor, gitspaceConfigStore, gitspaceInstanceStore, reporter3, gitspaceEventStore, spaceFinder, infraproviderService, orchestratorOrchestrator, scmSCM, config, reporter6, ideFactory, spaceStore, tokenGenerator)
 	usageMetricStore := database.ProvideUsageMetricStore(db)
-	spaceController := space.ProvideController(config, transactor, provider, streamer, spaceIdentifier, authorizer, spacePathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, listService, spaceFinder, repository, exporterRepository, resourceLimiter, publicaccessService, auditService, gitspaceService, labelService, instrumentService, executionStore, rulesService, usageMetricStore, repoIdentifier, infraproviderService, favoriteStore)
+	spaceController := space.ProvideController(config, transactor, provider, streamer, spaceIdentifier, authorizer, spacePathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, listService, spaceFinder, jobRepository, repository, resourceLimiter, publicaccessService, auditService, gitspaceService, labelService, instrumentService, executionStore, rulesService, usageMetricStore, repoIdentifier, infraproviderService, favoriteStore)
 	reporter7, err := events9.ProvideReporter(eventsSystem)
 	if err != nil {
 		return nil, err

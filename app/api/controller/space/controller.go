@@ -92,7 +92,7 @@ type Controller struct {
 	membershipStore     store.MembershipStore
 	prListService       *pullreq.ListService
 	spaceFinder         refcache.SpaceFinder
-	importer            *importer.Repository
+	importer            *importer.JobRepository
 	exporter            *exporter.Repository
 	resourceLimiter     limiter.ResourceLimiter
 	publicAccess        publicaccess.Service
@@ -115,7 +115,7 @@ func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Pro
 	repoStore store.RepoStore, principalStore store.PrincipalStore, repoCtrl *repo.Controller,
 	membershipStore store.MembershipStore, prListService *pullreq.ListService,
 	spaceFinder refcache.SpaceFinder,
-	importer *importer.Repository, exporter *exporter.Repository,
+	importer *importer.JobRepository, exporter *exporter.Repository,
 	limiter limiter.ResourceLimiter, publicAccess publicaccess.Service, auditService audit.Service,
 	gitspaceSvc *gitspace.Service, labelSvc *label.Service,
 	instrumentation instrument.Service, executionStore store.ExecutionStore,

@@ -16,10 +16,9 @@ package importer
 
 import (
 	"context"
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"net/url"
+	"path"
 	"strings"
 	"time"
 
@@ -35,29 +34,22 @@ import (
 	"github.com/harness/gitness/app/store"
 	gitnessurl "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/audit"
-	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
-	"github.com/harness/gitness/job"
-	gitness_store "github.com/harness/gitness/store"
+	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/drone/go-convert/convert/bitbucket"
+	"github.com/drone/go-convert/convert/circle"
+	"github.com/drone/go-convert/convert/drone"
+	"github.com/drone/go-convert/convert/github"
+	"github.com/drone/go-convert/convert/gitlab"
 	"github.com/rs/zerolog/log"
 )
 
-const (
-	importJobMaxRetries  = 0
-	importJobMaxDuration = 45 * time.Minute
-)
-
-var (
-	// ErrNotFound is returned if no import data was found.
-	ErrNotFound = errors.New("import not found")
-)
-
-type Repository struct {
+type Importer struct {
 	defaultBranch string
 	urlProvider   gitnessurl.Provider
 	git           git.Interface
@@ -66,8 +58,6 @@ type Repository struct {
 	pipelineStore store.PipelineStore
 	triggerStore  store.TriggerStore
 	repoFinder    refcache.RepoFinder
-	encrypter     encrypt.Encrypter
-	scheduler     *job.Scheduler
 	sseStreamer   sse.Streamer
 	indexer       keywordsearch.Indexer
 	publicAccess  publicaccess.Service
@@ -76,7 +66,39 @@ type Repository struct {
 	settings      *settings.Service
 }
 
-var _ job.Handler = (*Repository)(nil)
+func NewImporter(
+	defaultBranch string,
+	urlProvider gitnessurl.Provider,
+	git git.Interface,
+	tx dbtx.Transactor,
+	repoStore store.RepoStore,
+	pipelineStore store.PipelineStore,
+	triggerStore store.TriggerStore,
+	repoFinder refcache.RepoFinder,
+	sseStreamer sse.Streamer,
+	indexer keywordsearch.Indexer,
+	publicAccess publicaccess.Service,
+	eventReporter *repoevents.Reporter,
+	auditService audit.Service,
+	settings *settings.Service,
+) *Importer {
+	return &Importer{
+		defaultBranch: defaultBranch,
+		urlProvider:   urlProvider,
+		git:           git,
+		tx:            tx,
+		repoStore:     repoStore,
+		pipelineStore: pipelineStore,
+		triggerStore:  triggerStore,
+		repoFinder:    repoFinder,
+		sseStreamer:   sseStreamer,
+		indexer:       indexer,
+		publicAccess:  publicAccess,
+		eventReporter: eventReporter,
+		auditService:  auditService,
+		settings:      settings,
+	}
+}
 
 // PipelineOption defines the supported pipeline import options for repository import.
 type PipelineOption string
@@ -99,142 +121,16 @@ type Input struct {
 	Pipelines PipelineOption `json:"pipelines"`
 }
 
-const jobType = "repository_import"
-
-func (r *Repository) Register(executor *job.Executor) error {
-	return executor.Register(jobType, r)
-}
-
-// Run starts a background job that imports the provided repository from the provided clone URL.
-func (r *Repository) Run(
-	ctx context.Context,
-	provider Provider,
-	repo *types.Repository,
-	public bool,
-	cloneURL string,
-	pipelines PipelineOption,
-) error {
-	jobDef, err := r.getJobDef(JobIDFromRepoID(repo.ID), Input{
-		RepoID:    repo.ID,
-		Public:    public,
-		GitUser:   provider.Username,
-		GitPass:   provider.Password,
-		CloneURL:  cloneURL,
-		Pipelines: pipelines,
-	})
-	if err != nil {
-		return err
-	}
-
-	return r.scheduler.RunJob(ctx, jobDef)
-}
-
-// RunMany starts background jobs that import the provided repositories from the provided clone URLs.
-func (r *Repository) RunMany(
-	ctx context.Context,
-	groupID string,
-	provider Provider,
-	repoIDs []int64,
-	publics []bool,
-	cloneURLs []string,
-	pipelines PipelineOption,
-) error {
-	if len(repoIDs) != len(cloneURLs) {
-		return fmt.Errorf("slice length mismatch: have %d repositories and %d clone URLs",
-			len(repoIDs), len(cloneURLs))
-	}
-
-	n := len(repoIDs)
-	defs := make([]job.Definition, n)
-
-	for k := range n {
-		repoID := repoIDs[k]
-		cloneURL := cloneURLs[k]
-
-		jobDef, err := r.getJobDef(JobIDFromRepoID(repoID), Input{
-			RepoID:    repoID,
-			Public:    publics[k],
-			GitUser:   provider.Username,
-			GitPass:   provider.Password,
-			CloneURL:  cloneURL,
-			Pipelines: pipelines,
-		})
-		if err != nil {
-			return err
-		}
-
-		defs[k] = jobDef
-	}
-
-	err := r.scheduler.RunJobs(ctx, groupID, defs)
-	if err != nil {
-		return fmt.Errorf("failed to run jobs: %w", err)
-	}
-
-	return nil
-}
-
-func (r *Repository) getJobDef(jobUID string, input Input) (job.Definition, error) {
-	data, err := json.Marshal(input)
-	if err != nil {
-		return job.Definition{}, fmt.Errorf("failed to marshal job input json: %w", err)
-	}
-
-	strData := strings.TrimSpace(string(data))
-
-	encryptedData, err := r.encrypter.Encrypt(strData)
-	if err != nil {
-		return job.Definition{}, fmt.Errorf("failed to encrypt job input: %w", err)
-	}
-
-	return job.Definition{
-		UID:        jobUID,
-		Type:       jobType,
-		MaxRetries: importJobMaxRetries,
-		Timeout:    importJobMaxDuration,
-		Data:       base64.StdEncoding.EncodeToString(encryptedData),
-	}, nil
-}
-
-func (r *Repository) getJobInput(data string) (Input, error) {
-	encrypted, err := base64.StdEncoding.DecodeString(data)
-	if err != nil {
-		return Input{}, fmt.Errorf("failed to base64 decode job input: %w", err)
-	}
-
-	decrypted, err := r.encrypter.Decrypt(encrypted)
-	if err != nil {
-		return Input{}, fmt.Errorf("failed to decrypt job input: %w", err)
-	}
-
-	var input Input
-
-	err = json.NewDecoder(strings.NewReader(decrypted)).Decode(&input)
-	if err != nil {
-		return Input{}, fmt.Errorf("failed to unmarshal job input json: %w", err)
-	}
-
-	return input, nil
-}
-
-// Handle is repository import background job handler.
-//
-//nolint:gocognit // refactor if needed.
-func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressReporter) (string, error) {
+func (r *Importer) Import(ctx context.Context, input Input) error {
 	systemPrincipal := bootstrap.NewSystemServiceSession().Principal
 
-	input, err := r.getJobInput(data)
-	if err != nil {
-		return "", err
-	}
-
 	if input.CloneURL == "" {
-		return "", errors.New("missing git repository clone URL")
+		return errors.InvalidArgument("missing git repository clone URL")
 	}
 
 	repoURL, err := url.Parse(input.CloneURL)
 	if err != nil {
-		return "", fmt.Errorf("failed to parse git clone URL: %w", err)
+		return fmt.Errorf("failed to parse git clone URL: %w", err)
 	}
 
 	repoURL.User = url.UserPassword(input.GitUser, input.GitPass)
@@ -242,11 +138,11 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 
 	repo, err := r.repoStore.Find(ctx, input.RepoID)
 	if err != nil {
-		return "", fmt.Errorf("failed to find repo by id: %w", err)
+		return fmt.Errorf("failed to find repo by id: %w", err)
 	}
 
 	if repo.State != enum.RepoStateGitImport {
-		return "", fmt.Errorf("repository %s is not being imported", repo.Identifier)
+		return errors.InvalidArgumentf("repository %s is not being imported", repo.Identifier)
 	}
 
 	log := log.Ctx(ctx).With().
@@ -258,11 +154,11 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 
 	parentPath, _, err := paths.DisectLeaf(repo.Path)
 	if err != nil {
-		return "", fmt.Errorf("failed to disect path %q: %w", repo.Path, err)
+		return fmt.Errorf("failed to disect path %q: %w", repo.Path, err)
 	}
 	isPublicAccessSupported, err := r.publicAccess.IsPublicAccessSupported(ctx, enum.PublicResourceTypeRepo, parentPath)
 	if err != nil {
-		return "", fmt.Errorf(
+		return fmt.Errorf(
 			"failed to check if public access is supported for parent space %q: %w",
 			parentPath,
 			err,
@@ -275,7 +171,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 	}
 	err = r.publicAccess.Set(ctx, enum.PublicResourceTypeRepo, repo.Path, isRepoPublic)
 	if err != nil {
-		return "", fmt.Errorf("failed to set repo access mode: %w", err)
+		return fmt.Errorf("failed to set repo access mode: %w", err)
 	}
 
 	if isRepoPublic {
@@ -307,7 +203,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 
 	gitUID, err := r.createGitRepository(ctx, &systemPrincipal, repo.ID)
 	if err != nil {
-		return "", fmt.Errorf("failed to create empty git repository: %w", err)
+		return fmt.Errorf("failed to create empty git repository: %w", err)
 	}
 
 	log.Info().Msgf("successfully created git repository with git_uid '%s'", gitUID)
@@ -375,7 +271,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 				Msg("failed to delete git repository after failed import")
 		}
 
-		return "", fmt.Errorf("failed to import repository: %w", err)
+		return fmt.Errorf("failed to import repository: %w", err)
 	}
 
 	r.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypeRepositoryImportCompleted, repo)
@@ -396,50 +292,10 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 
 	log.Info().Msg("completed repository import")
 
-	return "", nil
-}
-
-func (r *Repository) GetProgress(ctx context.Context, repo *types.RepositoryCore) (job.Progress, error) {
-	progress, err := r.scheduler.GetJobProgress(ctx, JobIDFromRepoID(repo.ID))
-	if errors.Is(err, gitness_store.ErrResourceNotFound) {
-		if repo.State == enum.RepoStateGitImport {
-			// if the job is not found but repo is marked as importing, return state=failed
-			return job.FailProgress(), nil
-		}
-
-		// if repo is importing through the migrator cli there is no job created for it, return state=progress
-		if repo.State == enum.RepoStateMigrateDataImport ||
-			repo.State == enum.RepoStateMigrateGitPush {
-			return job.Progress{
-				State:    job.JobStateRunning,
-				Progress: job.ProgressMin,
-			}, nil
-		}
-
-		// otherwise there either was no import, or it completed a long time ago (job cleaned up by now)
-		return job.Progress{}, ErrNotFound
-	}
-	if err != nil {
-		return job.Progress{}, fmt.Errorf("failed to get job progress: %w", err)
-	}
-
-	return progress, nil
-}
-
-func (r *Repository) Cancel(ctx context.Context, repo *types.Repository) error {
-	if repo.State != enum.RepoStateGitImport {
-		return nil
-	}
-
-	err := r.scheduler.CancelJob(ctx, JobIDFromRepoID(repo.ID))
-	if err != nil {
-		return fmt.Errorf("failed to cancel job: %w", err)
-	}
-
 	return nil
 }
 
-func (r *Repository) createGitRepository(
+func (r *Importer) createGitRepository(
 	ctx context.Context,
 	principal *types.Principal,
 	repoID int64,
@@ -477,7 +333,7 @@ func (r *Repository) createGitRepository(
 	return resp.UID, nil
 }
 
-func (r *Repository) syncGitRepository(
+func (r *Importer) syncGitRepository(
 	ctx context.Context,
 	principal *types.Principal,
 	repo *types.Repository,
@@ -502,7 +358,7 @@ func (r *Repository) syncGitRepository(
 	return nil
 }
 
-func (r *Repository) deleteGitRepository(
+func (r *Importer) deleteGitRepository(
 	ctx context.Context,
 	principal *types.Principal,
 	repo *types.Repository,
@@ -522,7 +378,7 @@ func (r *Repository) deleteGitRepository(
 	return nil
 }
 
-func (r *Repository) matchFiles(
+func (r *Importer) matchFiles(
 	ctx context.Context,
 	repo *types.Repository,
 	ref string,
@@ -554,7 +410,7 @@ func (r *Repository) matchFiles(
 	return pipelines, nil
 }
 
-func (r *Repository) createRPCWriteParams(
+func (r *Importer) createRPCWriteParams(
 	ctx context.Context,
 	principal *types.Principal,
 	repo *types.Repository,
@@ -574,7 +430,7 @@ func (r *Repository) createRPCWriteParams(
 	}, nil
 }
 
-func (r *Repository) createEnvVars(
+func (r *Importer) createEnvVars(
 	ctx context.Context,
 	principal *types.Principal,
 	repoID int64,
@@ -592,4 +448,214 @@ func (r *Repository) createEnvVars(
 	}
 
 	return envVars, nil
+}
+
+type pipelineFile struct {
+	Name          string
+	OriginalPath  string
+	ConvertedPath string
+	Content       []byte
+}
+
+func (r *Importer) processPipelines(ctx context.Context,
+	principal *types.Principal,
+	repo *types.Repository,
+	commitMessage string,
+) error {
+	writeParams, err := r.createRPCWriteParams(ctx, principal, repo)
+	if err != nil {
+		return err
+	}
+
+	pipelineFiles := r.convertPipelines(ctx, repo)
+	if len(pipelineFiles) == 0 {
+		return nil
+	}
+
+	actions := make([]git.CommitFileAction, len(pipelineFiles))
+	for i, file := range pipelineFiles {
+		actions[i] = git.CommitFileAction{
+			Action:  git.CreateAction,
+			Path:    file.ConvertedPath,
+			Payload: file.Content,
+			SHA:     sha.None,
+		}
+	}
+
+	now := time.Now()
+	identity := &git.Identity{
+		Name:  principal.DisplayName,
+		Email: principal.Email,
+	}
+
+	_, err = r.git.CommitFiles(ctx, &git.CommitFilesParams{
+		WriteParams:   writeParams,
+		Message:       commitMessage,
+		Branch:        repo.DefaultBranch,
+		NewBranch:     repo.DefaultBranch,
+		Actions:       actions,
+		Committer:     identity,
+		CommitterDate: &now,
+		Author:        identity,
+		AuthorDate:    &now,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to commit converted pipeline files: %w", err)
+	}
+
+	nowMilli := now.UnixMilli()
+
+	err = r.tx.WithTx(ctx, func(ctx context.Context) error {
+		for _, p := range pipelineFiles {
+			pipeline := &types.Pipeline{
+				Description:   "",
+				RepoID:        repo.ID,
+				Identifier:    p.Name,
+				CreatedBy:     principal.ID,
+				Seq:           0,
+				DefaultBranch: repo.DefaultBranch,
+				ConfigPath:    p.ConvertedPath,
+				Created:       nowMilli,
+				Updated:       nowMilli,
+				Version:       0,
+			}
+
+			err = r.pipelineStore.Create(ctx, pipeline)
+			if err != nil {
+				return fmt.Errorf("pipeline creation failed: %w", err)
+			}
+
+			// Try to create a default trigger on pipeline creation.
+			// Default trigger operations are set on pull request created, reopened or updated.
+			// We log an error on failure but don't fail the op.
+			trigger := &types.Trigger{
+				Description: "auto-created trigger on pipeline conversion",
+				Created:     nowMilli,
+				Updated:     nowMilli,
+				PipelineID:  pipeline.ID,
+				RepoID:      pipeline.RepoID,
+				CreatedBy:   principal.ID,
+				Identifier:  "default",
+				Actions: []enum.TriggerAction{enum.TriggerActionPullReqCreated,
+					enum.TriggerActionPullReqReopened, enum.TriggerActionPullReqBranchUpdated},
+				Disabled: false,
+				Version:  0,
+			}
+			err = r.triggerStore.Create(ctx, trigger)
+			if err != nil {
+				return fmt.Errorf("failed to create auto trigger on pipeline creation: %w", err)
+			}
+		}
+
+		return nil
+	}, dbtx.TxDefault)
+	if err != nil {
+		return fmt.Errorf("failed to insert pipelines and triggers: %w", err)
+	}
+
+	return nil
+}
+
+// convertPipelines converts pipelines found in the repository.
+// Note: For GitHub actions, there can be multiple.
+func (r *Importer) convertPipelines(ctx context.Context,
+	repo *types.Repository,
+) []pipelineFile {
+	const maxSize = 65536
+
+	match := func(dirPath, regExpDef string) []pipelineFile {
+		files, err := r.matchFiles(ctx, repo, repo.DefaultBranch, dirPath, regExpDef, maxSize)
+		if err != nil {
+			log.Ctx(ctx).Warn().Err(err).Msgf("failed to find pipeline file(s) '%s' in '%s'",
+				regExpDef, dirPath)
+			return nil
+		}
+		return files
+	}
+
+	if files := match("", ".drone.yml"); len(files) > 0 {
+		converted := convertPipelineFiles(ctx, files, func() pipelineConverter { return drone.New() })
+		if len(converted) > 0 {
+			return converted
+		}
+	}
+
+	if files := match("", "bitbucket-pipelines.yml"); len(files) > 0 {
+		converted := convertPipelineFiles(ctx, files, func() pipelineConverter { return bitbucket.New() })
+		if len(converted) > 0 {
+			return converted
+		}
+	}
+
+	if files := match("", ".gitlab-ci.yml"); len(files) > 0 {
+		converted := convertPipelineFiles(ctx, files, func() pipelineConverter { return gitlab.New() })
+		if len(converted) > 0 {
+			return converted
+		}
+	}
+
+	if files := match(".circleci", "config.yml"); len(files) > 0 {
+		converted := convertPipelineFiles(ctx, files, func() pipelineConverter { return circle.New() })
+		if len(converted) > 0 {
+			return converted
+		}
+	}
+
+	filesYML := match(".github/workflows", "*.yml")
+	filesYAML := match(".github/workflows", "*.yaml")
+	//nolint:gocritic // intended usage
+	files := append(filesYML, filesYAML...)
+	converted := convertPipelineFiles(ctx, files, func() pipelineConverter { return github.New() })
+	if len(converted) > 0 {
+		return converted
+	}
+
+	return nil
+}
+
+type pipelineConverter interface {
+	ConvertBytes([]byte) ([]byte, error)
+}
+
+func convertPipelineFiles(ctx context.Context,
+	files []pipelineFile,
+	gen func() pipelineConverter,
+) []pipelineFile {
+	const (
+		harnessPipelineName     = "pipeline"
+		harnessPipelineNameOnly = "default-" + harnessPipelineName
+		harnessPipelineDir      = ".harness"
+		harnessPipelineFileOnly = harnessPipelineDir + "/pipeline.yaml"
+	)
+
+	result := make([]pipelineFile, 0, len(files))
+	for _, file := range files {
+		data, err := gen().ConvertBytes(file.Content)
+		if err != nil {
+			log.Ctx(ctx).Warn().Err(err).Msgf("failed to convert pipeline file %s", file.OriginalPath)
+			continue
+		}
+
+		var pipelineName string
+		var pipelinePath string
+
+		if len(files) == 1 {
+			pipelineName = harnessPipelineNameOnly
+			pipelinePath = harnessPipelineFileOnly
+		} else {
+			base := path.Base(file.OriginalPath)
+			base = strings.TrimSuffix(base, path.Ext(base))
+			pipelineName = harnessPipelineName + "-" + base
+			pipelinePath = harnessPipelineDir + "/" + base + ".yaml"
+		}
+
+		result = append(result, pipelineFile{
+			Name:          pipelineName,
+			OriginalPath:  file.OriginalPath,
+			ConvertedPath: pipelinePath,
+			Content:       data,
+		})
+	}
+
+	return result
 }

@@ -34,11 +34,12 @@ import (
 )
 
 var WireSet = wire.NewSet(
-	ProvideRepoImporter,
-	ProvideReferenceSync,
+	ProvideImporter,
+	ProvideJobRepository,
+	ProvideJobReferenceSync,
 )
 
-func ProvideRepoImporter(
+func ProvideImporter(
 	config *types.Config,
 	urlProvider url.Provider,
 	git git.Interface,
@@ -47,44 +48,52 @@ func ProvideRepoImporter(
 	pipelineStore store.PipelineStore,
 	triggerStore store.TriggerStore,
 	repoFinder refcache.RepoFinder,
-	encrypter encrypt.Encrypter,
-	scheduler *job.Scheduler,
-	executor *job.Executor,
 	sseStreamer sse.Streamer,
 	indexer keywordsearch.Indexer,
 	publicAccess publicaccess.Service,
 	eventReporter *repoevents.Reporter,
 	auditService audit.Service,
 	settings *settings.Service,
-) (*Repository, error) {
-	importer := &Repository{
-		defaultBranch: config.Git.DefaultBranch,
-		urlProvider:   urlProvider,
-		git:           git,
-		tx:            tx,
-		repoStore:     repoStore,
-		pipelineStore: pipelineStore,
-		triggerStore:  triggerStore,
-		repoFinder:    repoFinder,
-		encrypter:     encrypter,
-		scheduler:     scheduler,
-		sseStreamer:   sseStreamer,
-		indexer:       indexer,
-		publicAccess:  publicAccess,
-		eventReporter: eventReporter,
-		auditService:  auditService,
-		settings:      settings,
+) *Importer {
+	return NewImporter(
+		config.Git.DefaultBranch,
+		urlProvider,
+		git,
+		tx,
+		repoStore,
+		pipelineStore,
+		triggerStore,
+		repoFinder,
+		sseStreamer,
+		indexer,
+		publicAccess,
+		eventReporter,
+		auditService,
+		settings,
+	)
+}
+
+func ProvideJobRepository(
+	encrypter encrypt.Encrypter,
+	scheduler *job.Scheduler,
+	executor *job.Executor,
+	importer *Importer,
+) (*JobRepository, error) {
+	j := &JobRepository{
+		encrypter: encrypter,
+		scheduler: scheduler,
+		importer:  importer,
 	}
 
-	err := executor.Register(jobType, importer)
+	err := executor.Register(jobRepositoryType, j)
 	if err != nil {
 		return nil, err
 	}
 
-	return importer, nil
+	return j, nil
 }
 
-func ProvideReferenceSync(
+func ProvideJobReferenceSync(
 	config *types.Config,
 	urlProvider url.Provider,
 	git git.Interface,
@@ -94,8 +103,8 @@ func ProvideReferenceSync(
 	executor *job.Executor,
 	indexer keywordsearch.Indexer,
 	eventReporter *repoevents.Reporter,
-) (*ReferenceSync, error) {
-	importer := &ReferenceSync{
+) (*JobReferenceSync, error) {
+	importer := &JobReferenceSync{
 		defaultBranch: config.Git.DefaultBranch,
 		urlProvider:   urlProvider,
 		git:           git,

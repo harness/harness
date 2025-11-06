@@ -102,8 +102,8 @@ type Controller struct {
 	git                    git.Interface
 	spaceFinder            refcache.SpaceFinder
 	repoFinder             refcache.RepoFinder
-	importer               *importer.Repository
-	referenceSync          *importer.ReferenceSync
+	importer               *importer.JobRepository
+	referenceSync          *importer.JobReferenceSync
 	codeOwners             *codeowners.Service
 	eventReporter          *repoevents.Reporter
 	indexer                keywordsearch.Indexer
@@ -142,8 +142,8 @@ func NewController(
 	git git.Interface,
 	spaceFinder refcache.SpaceFinder,
 	repoFinder refcache.RepoFinder,
-	importer *importer.Repository,
-	referenceSync *importer.ReferenceSync,
+	importer *importer.JobRepository,
+	referenceSync *importer.JobReferenceSync,
 	codeOwners *codeowners.Service,
 	eventReporter *repoevents.Reporter,
 	indexer keywordsearch.Indexer,

@@ -47,7 +47,7 @@ const (
 	refSyncJobType        = "reference_sync"
 )
 
-type ReferenceSync struct {
+type JobReferenceSync struct {
 	defaultBranch string
 	urlProvider   gitnessurl.Provider
 	git           git.Interface
@@ -58,7 +58,7 @@ type ReferenceSync struct {
 	eventReporter *repoevents.Reporter
 }
 
-var _ job.Handler = (*ReferenceSync)(nil)
+var _ job.Handler = (*JobReferenceSync)(nil)
 
 type RefSpecType string
 
@@ -77,12 +77,12 @@ type ReferenceSyncInput struct {
 	TargetRef    string      `json:"target_ref"`
 }
 
-func (r *ReferenceSync) Register(executor *job.Executor) error {
+func (r *JobReferenceSync) Register(executor *job.Executor) error {
 	return executor.Register(refSyncJobType, r)
 }
 
 // Run starts a background job that imports the provided repository from the provided clone URL.
-func (r *ReferenceSync) Run(
+func (r *JobReferenceSync) Run(
 	ctx context.Context,
 	sourceRepoID, targetRepoID int64,
 	refSpecType RefSpecType,
@@ -109,7 +109,7 @@ func (r *ReferenceSync) Run(
 	return r.scheduler.RunJob(ctx, jobDef)
 }
 
-func (r *ReferenceSync) getJobDef(jobUID string, input ReferenceSyncInput) (job.Definition, error) {
+func (r *JobReferenceSync) getJobDef(jobUID string, input ReferenceSyncInput) (job.Definition, error) {
 	data, err := json.Marshal(input)
 	if err != nil {
 		return job.Definition{}, fmt.Errorf("failed to marshal repository sync job input json: %w", err)
@@ -126,7 +126,7 @@ func (r *ReferenceSync) getJobDef(jobUID string, input ReferenceSyncInput) (job.
 	}, nil
 }
 
-func (r *ReferenceSync) getJobInput(data string) (ReferenceSyncInput, error) {
+func (r *JobReferenceSync) getJobInput(data string) (ReferenceSyncInput, error) {
 	var input ReferenceSyncInput
 
 	err := json.NewDecoder(strings.NewReader(data)).Decode(&input)
@@ -140,7 +140,7 @@ func (r *ReferenceSync) getJobInput(data string) (ReferenceSyncInput, error) {
 // Handle is repository import background job handler.
 //
 //nolint:gocognit // refactor if needed.
-func (r *ReferenceSync) Handle(ctx context.Context, data string, _ job.ProgressReporter) (string, error) {
+func (r *JobReferenceSync) Handle(ctx context.Context, data string, _ job.ProgressReporter) (string, error) {
 	systemPrincipal := bootstrap.NewSystemServiceSession().Principal
 
 	input, err := r.getJobInput(data)
@@ -237,7 +237,7 @@ func (r *ReferenceSync) Handle(ctx context.Context, data string, _ job.ProgressR
 	return "", nil
 }
 
-func (r *ReferenceSync) createRPCWriteParams(
+func (r *JobReferenceSync) createRPCWriteParams(
 	ctx context.Context,
 	principal types.Principal,
 	repoID int64,
