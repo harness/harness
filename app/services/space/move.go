@@ -39,8 +39,8 @@ const (
 var _ job.Handler = (*Service)(nil)
 
 type Input struct {
-	SourceSpaceIdentifier      string `json:"source_space_identifier"`
-	DestinationSpaceIdentifier string `json:"destination_space_identifier"`
+	SourceSpacePath      string `json:"source_space_path"`
+	DestinationSpacePath string `json:"destination_space_path"`
 }
 
 func (s *Service) Register(executor *job.Executor) error {
@@ -52,9 +52,9 @@ func (s *Service) Run(
 	srcIdentifier string,
 	dstIdentifier string,
 ) error {
-	jobDef, err := s.getJobDef(s.JobIDFromSpaceIdentifier(srcIdentifier), Input{
-		SourceSpaceIdentifier:      srcIdentifier,
-		DestinationSpaceIdentifier: dstIdentifier,
+	jobDef, err := s.getJobDef(s.JobUIDFromSpacePath(srcIdentifier), Input{
+		SourceSpacePath:      srcIdentifier,
+		DestinationSpacePath: dstIdentifier,
 	})
 	if err != nil {
 		return err
@@ -74,31 +74,31 @@ func (s *Service) Handle(
 		return "", err
 	}
 
-	if input.SourceSpaceIdentifier == "" {
-		return "", fmt.Errorf("source space identifier is required")
+	if input.SourceSpacePath == "" {
+		return "", fmt.Errorf("source space path is required")
 	}
 
-	if input.DestinationSpaceIdentifier == "" {
-		return "", fmt.Errorf("destination space identifier is required")
+	if input.DestinationSpacePath == "" {
+		return "", fmt.Errorf("destination space path is required")
 	}
 
 	log.Ctx(ctx).Debug().Msgf("space move job started for source space '%s' to destination space '%s'",
-		input.SourceSpaceIdentifier, input.DestinationSpaceIdentifier)
+		input.SourceSpacePath, input.DestinationSpacePath)
 
-	srcSpace, err := s.spaceStore.FindByRef(ctx, input.SourceSpaceIdentifier)
+	srcSpace, err := s.spaceStore.FindByRef(ctx, input.SourceSpacePath)
 	if errors.Is(err, gitness_store.ErrResourceNotFound) {
-		log.Ctx(ctx).Info().Str("space.path", input.SourceSpaceIdentifier).
+		log.Ctx(ctx).Info().Str("space.path", input.SourceSpacePath).
 			Msg("source space not found, nothing to move")
 		return "", nil
 	}
 	if err != nil {
-		return "", fmt.Errorf("failed to find source space '%s': %w", input.SourceSpaceIdentifier, err)
+		return "", fmt.Errorf("failed to find source space '%s': %w", input.SourceSpacePath, err)
 	}
 
-	dstSpace, err := s.spaceStore.FindByRef(ctx, input.DestinationSpaceIdentifier)
+	dstSpace, err := s.spaceStore.FindByRef(ctx, input.DestinationSpacePath)
 	// if dstSpace doesn't exist, update the srcSpace parent to match the dstSpace path
 	if errors.Is(err, gitness_store.ErrResourceNotFound) {
-		parentSpace, _, err := paths.DisectLeaf(input.DestinationSpaceIdentifier)
+		parentSpace, _, err := paths.DisectLeaf(input.DestinationSpacePath)
 		if err != nil {
 			return "", fmt.Errorf("failed to disect destination space path: %w", err)
 		}

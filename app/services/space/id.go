@@ -23,7 +23,7 @@ import (
 	"github.com/harness/gitness/job"
 )
 
-const jobIDPrefix = "space-move-"
+const jobUIDPrefix = "space-move-"
 
 func (s *Service) getJobDef(jobUID string, input Input) (job.Definition, error) {
 	data, err := json.Marshal(input)
@@ -68,6 +68,6 @@ func (s *Service) getJobInput(data string) (Input, error) {
 	return input, nil
 }
 
-func (s *Service) JobIDFromSpaceIdentifier(srcSpaceIdentifier string) string {
-	return jobIDPrefix + srcSpaceIdentifier
+func (s *Service) JobUIDFromSpacePath(srcSpacePath string) string {
+	return jobUIDPrefix + srcSpacePath
 }
