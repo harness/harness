@@ -12,22 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gitspaceservice
+package enum
 
-import (
-	"github.com/harness/gitness/app/services/aitaskevent"
-	"github.com/harness/gitness/app/services/gitspace"
-	"github.com/harness/gitness/app/services/gitspaceinfraevent"
-	"github.com/harness/gitness/app/services/gitspaceoperationsevent"
-	"github.com/harness/gitness/app/services/infraprovider"
+type AITaskEvent string
 
-	"github.com/google/wire"
-)
+func (AITaskEvent) Enum() []any {
+	return toInterfaceSlice(aiTaskEvent)
+}
 
-var WireSet = wire.NewSet(
-	gitspace.WireSet,
-	gitspaceinfraevent.WireSet,
-	infraprovider.WireSet,
-	gitspaceoperationsevent.WireSet,
-	aitaskevent.WireSet,
+var aiTaskEvent = []AITaskEvent{
+	AITaskEventStart, AITaskEventStop,
+}
+
+const (
+	AITaskEventStart AITaskEvent = "start"
+	AITaskEventStop  AITaskEvent = "stop"
 )

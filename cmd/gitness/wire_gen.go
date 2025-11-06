@@ -42,6 +42,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/bootstrap"
 	"github.com/harness/gitness/app/connector"
+	events13 "github.com/harness/gitness/app/events/aitask"
 	events12 "github.com/harness/gitness/app/events/check"
 	events11 "github.com/harness/gitness/app/events/git"
 	events5 "github.com/harness/gitness/app/events/gitspace"
@@ -60,6 +61,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
 	"github.com/harness/gitness/app/gitspace/orchestrator/runarg"
 	"github.com/harness/gitness/app/gitspace/platformconnector"
+	"github.com/harness/gitness/app/gitspace/platformsecret"
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/app/gitspace/secret"
 	"github.com/harness/gitness/app/pipeline/canceler"
@@ -74,6 +76,7 @@ import (
 	router2 "github.com/harness/gitness/app/router"
 	server2 "github.com/harness/gitness/app/server"
 	"github.com/harness/gitness/app/services"
+	"github.com/harness/gitness/app/services/aitaskevent"
 	"github.com/harness/gitness/app/services/branch"
 	"github.com/harness/gitness/app/services/cleanup"
 	"github.com/harness/gitness/app/services/codecomments"
@@ -391,6 +394,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	scmFactory := scm.ProvideFactory(gitnessSCM, genericSCM)
 	scmSCM := scm.ProvideSCM(scmFactory)
 	platformConnector := platformconnector.ProvideGitnessPlatformConnector()
+	platformSecret := platformsecret.ProvideGitnessPlatformSecret()
 	infraProvisionedStore := database.ProvideInfraProvisionedStore(db)
 	infrastructureConfig := server.ProvideGitspaceInfraProvisionerConfig(config)
 	infraProvisioner := infrastructure.ProvideInfraProvisionerService(infraProviderConfigStore, infraProviderResourceStore, factory, infraProviderTemplateStore, infraProvisionedStore, infrastructureConfig)
@@ -428,7 +432,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	orchestratorOrchestrator := orchestrator.ProvideOrchestrator(scmSCM, platformConnector, infraProvisioner, containerFactory, reporter3, orchestratorConfig, ideFactory, resolverFactory, gitspaceInstanceStore, gitspaceConfigStore, gitspacesettingsService, spaceStore, infraproviderService)
+	orchestratorOrchestrator := orchestrator.ProvideOrchestrator(scmSCM, platformConnector, platformSecret, infraProvisioner, containerFactory, reporter3, orchestratorConfig, ideFactory, resolverFactory, gitspaceInstanceStore, gitspaceConfigStore, gitspacesettingsService, spaceStore, infraproviderService)
 	reporter6, err := events8.ProvideReporter(eventsSystem)
 	if err != nil {
 		return nil, err
@@ -745,7 +749,16 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	gitspaceServices := services.ProvideGitspaceServices(gitspaceeventService, gitspacedeleteeventService, infraproviderService, gitspaceService, gitspaceinfraeventService, gitspaceoperationseventService)
+	readerFactory10, err := events13.ProvideReaderFactory(eventsSystem)
+	if err != nil {
+		return nil, err
+	}
+	aiTaskStore := database.ProvideAITaskStore(db)
+	aitaskeventService, err := aitaskevent.ProvideService(ctx, gitspaceeventConfig, readerFactory10, orchestratorOrchestrator, gitspaceService, aiTaskStore)
+	if err != nil {
+		return nil, err
+	}
+	gitspaceServices := services.ProvideGitspaceServices(gitspaceeventService, gitspacedeleteeventService, infraproviderService, gitspaceService, gitspaceinfraeventService, gitspaceoperationseventService, aitaskeventService)
 	consumer, err := instrument.ProvideGitConsumer(ctx, config, readerFactory, repoStore, principalInfoCache, instrumentService)
 	if err != nil {
 		return nil, err
@@ -761,12 +774,12 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	rpmHelper := asyncprocessing2.ProvideRpmHelper(fileManager, artifactRepository, upstreamProxyConfigRepository, spaceFinder, secretService, registryRepository)
 	gopackageRegistryHelper := gopackage3.LocalRegistryHelperProvider(fileManager, artifactRepository, spaceFinder, registryFinder)
-	readerFactory10, err := asyncprocessing.ProvideReaderFactory(eventsSystem)
+	readerFactory11, err := asyncprocessing.ProvideReaderFactory(eventsSystem)
 	if err != nil {
 		return nil, err
 	}
 	asyncprocessingConfig := asyncprocessing2.ProvideRegistryPostProcessingConfig(config)
-	asyncprocessingService, err := asyncprocessing2.ProvideService(ctx, transactor, rpmHelper, registryHelper, gopackageRegistryHelper, lockerLocker, readerFactory10, asyncprocessingConfig, registryRepository, taskRepository, taskSourceRepository, taskEventRepository, eventsSystem, asyncprocessingReporter, packageWrapper)
+	asyncprocessingService, err := asyncprocessing2.ProvideService(ctx, transactor, rpmHelper, registryHelper, gopackageRegistryHelper, lockerLocker, readerFactory11, asyncprocessingConfig, registryRepository, taskRepository, taskSourceRepository, taskEventRepository, eventsSystem, asyncprocessingReporter, packageWrapper)
 	if err != nil {
 		return nil, err
 	}

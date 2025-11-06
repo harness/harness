@@ -23,25 +23,26 @@ import (
 const emptyGitspaceInstanceState = ""
 
 type GitspaceConfig struct {
-	ID                    int64                  `json:"-"`
-	Identifier            string                 `json:"identifier"`
-	Name                  string                 `json:"name"`
-	IDE                   enum.IDEType           `json:"ide"`
-	State                 enum.GitspaceStateType `json:"state"`
-	SpaceID               int64                  `json:"-"`
-	IsDeleted             bool                   `json:"-"`
-	IsMarkedForDeletion   bool                   `json:"-"`
-	IsMarkedForReset      bool                   `json:"is_marked_for_reset"`
-	IsMarkedForInfraReset bool                   `json:"is_marked_for_infra_reset"`
-	GitspaceInstance      *GitspaceInstance      `json:"instance"`
-	SpacePath             string                 `json:"space_path"`
-	Created               int64                  `json:"created"`
-	Updated               int64                  `json:"updated"`
-	SSHTokenIdentifier    string                 `json:"ssh_token_identifier"`
-	InfraProviderResource InfraProviderResource  `json:"resource"`
-	LogKey                string                 `json:"log_key"`
-	InitializeLogKey      string                 `json:"initialize_log_key"`
-	AIAgents              []enum.AIAgent         `json:"ai_agents,omitempty"`
+	ID                    int64                        `json:"-"`
+	Identifier            string                       `json:"identifier"`
+	Name                  string                       `json:"name"`
+	IDE                   enum.IDEType                 `json:"ide"`
+	State                 enum.GitspaceStateType       `json:"state"`
+	SpaceID               int64                        `json:"-"`
+	IsDeleted             bool                         `json:"-"`
+	IsMarkedForDeletion   bool                         `json:"-"`
+	IsMarkedForReset      bool                         `json:"is_marked_for_reset"`
+	IsMarkedForInfraReset bool                         `json:"is_marked_for_infra_reset"`
+	GitspaceInstance      *GitspaceInstance            `json:"instance"`
+	SpacePath             string                       `json:"space_path"`
+	Created               int64                        `json:"created"`
+	Updated               int64                        `json:"updated"`
+	SSHTokenIdentifier    string                       `json:"ssh_token_identifier"`
+	InfraProviderResource InfraProviderResource        `json:"resource"`
+	LogKey                string                       `json:"log_key"`
+	InitializeLogKey      string                       `json:"initialize_log_key"`
+	AIAgents              []enum.AIAgent               `json:"ai_agents,omitempty"`
+	AIAuth                map[enum.AIAgent]AIAgentAuth `json:"-"`
 	CodeRepo
 	GitspaceUser
 	Connectors []PlatformConnector `json:"-"`

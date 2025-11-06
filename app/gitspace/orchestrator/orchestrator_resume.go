@@ -16,6 +16,7 @@ package orchestrator
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -30,6 +31,14 @@ import (
 
 	"github.com/gotidy/ptr"
 	"github.com/rs/zerolog/log"
+)
+
+// todo: take anthropic api key from admin setting. Currently this key is stored in harness secret at project level
+// nolint:gosec //Not a secret, only reference to harness secret
+const AnthropicAPIKeySecretRef = "ANTHROPIC_API_KEY"
+
+var (
+	ErrEmptyResource = errors.New("resource is empty")
 )
 
 // ResumeStartGitspace saves the provisioned infra, resolves the code repo details & creates the Gitspace container.
@@ -121,6 +130,14 @@ func (o Orchestrator) ResumeStartGitspace(
 		}
 		gitspaceConfig.Connectors = connectors
 	}
+
+	aiAgentAuth, err := o.decryptAIAuth(ctx, gitspaceConfig.SpacePath)
+	if err != nil {
+		return *gitspaceInstance, newGitspaceError(
+			fmt.Errorf("failed to decrypt AI agent auth: %w", err),
+		)
+	}
+	gitspaceConfig.AIAuth = aiAgentAuth
 
 	gitspaceConfig.GitspaceUser.Identifier = harnessUser
 
@@ -396,6 +413,22 @@ func (o Orchestrator) ResumeCleanupInstanceResources(
 	instanceState = enum.GitspaceInstanceStateCleaned
 
 	return instanceState, nil
+}
+
+func (o Orchestrator) decryptAIAuth(ctx context.Context, spacePath string) (map[enum.AIAgent]types.AIAgentAuth, error) {
+	apiKey, err := o.platformSecret.FetchSecret(ctx, AnthropicAPIKeySecretRef, spacePath)
+	if err != nil {
+		return nil, err
+	}
+
+	return map[enum.AIAgent]types.AIAgentAuth{
+		enum.AIAgentClaudeCode: {
+			AuthType: enum.AnthropicAPIKeyAuth,
+			APIKey: types.APIKey{
+				Value: apiKey,
+			},
+		},
+	}, nil
 }
 
 func getConnectorRefs(specs *types.GitspaceCustomizationSpecs) []string {

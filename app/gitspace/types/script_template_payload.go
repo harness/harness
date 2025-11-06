@@ -102,3 +102,7 @@ type RunIntellijIDEPayload struct {
 type SetupClaudeCodePayload struct {
 	OSInfoScript string
 }
+
+type ConfigureClaudeCodePayload struct {
+	AnthropicAPIKey string
+}

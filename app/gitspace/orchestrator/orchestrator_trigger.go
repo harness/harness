@@ -25,6 +25,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/orchestrator/container/response"
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
 	"github.com/harness/gitness/app/gitspace/platformconnector"
+	"github.com/harness/gitness/app/gitspace/platformsecret"
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/app/gitspace/secret"
 	"github.com/harness/gitness/app/services/gitspacesettings"
@@ -47,6 +48,7 @@ type Config struct {
 type Orchestrator struct {
 	scm                          *scm.SCM
 	platformConnector            platformconnector.PlatformConnector
+	platformSecret               platformsecret.PlatformSecret
 	infraProvisioner             infrastructure.InfraProvisioner
 	containerOrchestratorFactory container.Factory
 	eventReporter                *events.Reporter
@@ -63,6 +65,7 @@ type Orchestrator struct {
 func NewOrchestrator(
 	scm *scm.SCM,
 	platformConnector platformconnector.PlatformConnector,
+	platformSecret platformsecret.PlatformSecret,
 	infraProvisioner infrastructure.InfraProvisioner,
 	containerOrchestratorFactory container.Factory,
 	eventReporter *events.Reporter,
@@ -78,6 +81,7 @@ func NewOrchestrator(
 	return Orchestrator{
 		scm:                          scm,
 		platformConnector:            platformConnector,
+		platformSecret:               platformSecret,
 		infraProvisioner:             infraProvisioner,
 		containerOrchestratorFactory: containerOrchestratorFactory,
 		eventReporter:                eventReporter,

@@ -12,22 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gitspaceservice
+package platformsecret
 
 import (
-	"github.com/harness/gitness/app/services/aitaskevent"
-	"github.com/harness/gitness/app/services/gitspace"
-	"github.com/harness/gitness/app/services/gitspaceinfraevent"
-	"github.com/harness/gitness/app/services/gitspaceoperationsevent"
-	"github.com/harness/gitness/app/services/infraprovider"
-
 	"github.com/google/wire"
 )
 
+// WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
-	gitspace.WireSet,
-	gitspaceinfraevent.WireSet,
-	infraprovider.WireSet,
-	gitspaceoperationsevent.WireSet,
-	aitaskevent.WireSet,
+	ProvideGitnessPlatformSecret,
 )
+
+func ProvideGitnessPlatformSecret() PlatformSecret {
+	return NewGitnessPlatformSecret()
+}

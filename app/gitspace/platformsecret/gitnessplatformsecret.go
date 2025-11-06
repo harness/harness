@@ -12,22 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gitspaceservice
+package platformsecret
 
 import (
-	"github.com/harness/gitness/app/services/aitaskevent"
-	"github.com/harness/gitness/app/services/gitspace"
-	"github.com/harness/gitness/app/services/gitspaceinfraevent"
-	"github.com/harness/gitness/app/services/gitspaceoperationsevent"
-	"github.com/harness/gitness/app/services/infraprovider"
+	"context"
 
-	"github.com/google/wire"
+	"github.com/harness/gitness/types"
 )
 
-var WireSet = wire.NewSet(
-	gitspace.WireSet,
-	gitspaceinfraevent.WireSet,
-	infraprovider.WireSet,
-	gitspaceoperationsevent.WireSet,
-	aitaskevent.WireSet,
-)
+var _ PlatformSecret = (*GitnessPlatformSecret)(nil)
+
+type GitnessPlatformSecret struct{}
+
+func NewGitnessPlatformSecret() *GitnessPlatformSecret {
+	return &GitnessPlatformSecret{}
+}
+
+func (g *GitnessPlatformSecret) FetchSecret(
+	_ context.Context,
+	secret string,
+	_ string,
+) (*types.MaskSecret, error) {
+	maskedVal := types.NewMaskSecret(secret)
+	return &maskedVal, nil
+}

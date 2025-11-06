@@ -12,22 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gitspaceservice
+package types
 
-import (
-	"github.com/harness/gitness/app/services/aitaskevent"
-	"github.com/harness/gitness/app/services/gitspace"
-	"github.com/harness/gitness/app/services/gitspaceinfraevent"
-	"github.com/harness/gitness/app/services/gitspaceoperationsevent"
-	"github.com/harness/gitness/app/services/infraprovider"
+import "github.com/harness/gitness/types/enum"
 
-	"github.com/google/wire"
-)
+type AIAgentAuth struct {
+	AuthType enum.AIAgentAuth `json:"type"`
+	APIKey   APIKey           `json:"api_key,omitempty"`
+}
 
-var WireSet = wire.NewSet(
-	gitspace.WireSet,
-	gitspaceinfraevent.WireSet,
-	infraprovider.WireSet,
-	gitspaceoperationsevent.WireSet,
-	aitaskevent.WireSet,
-)
+type APIKey struct {
+	Value *MaskSecret `json:"value"`
+}
