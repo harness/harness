@@ -397,6 +397,34 @@ func (s *labelStore) CountInScopes(
 	return count, nil
 }
 
+func (s *labelStore) UpdateParentSpace(
+	ctx context.Context,
+	srcParentSpaceID int64,
+	targetParentSpaceID int64,
+) (int64, error) {
+	stmt := database.Builder.Update("labels").
+		Set("label_space_id", targetParentSpaceID).
+		Where("label_space_id = ?", srcParentSpaceID)
+
+	db := dbtx.GetAccessor(ctx, s.db)
+	query, args, err := stmt.ToSql()
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "failed to bind query")
+	}
+
+	result, err := db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "failed to update label")
+	}
+
+	count, err := result.RowsAffected()
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "failed to get number of updated rows")
+	}
+
+	return count, nil
+}
+
 func mapLabel(lbl *label) *types.Label {
 	return &types.Label{
 		ID:          lbl.ID,

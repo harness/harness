@@ -321,6 +321,9 @@ type (
 
 		// ClearForkID clears fork ID of all repositories that have this fork ID.
 		ClearForkID(ctx context.Context, repoUpstreamID int64) error
+
+		// UpdateParent updates parent_id for all repos with currentParentID to newParentID.
+		UpdateParent(ctx context.Context, currentParentID, newParentID int64) (int64, error)
 	}
 
 	// SettingsStore defines the settings storage.
@@ -611,6 +614,9 @@ type (
 			repoID int64,
 			ruleTypes ...enum.RuleType,
 		) ([]types.RuleInfoInternal, error)
+
+		// UpdateParentSpace updates the parent space of rules.
+		UpdateParentSpace(ctx context.Context, srcParentSpaceID int64, targetParentSpaceID int64) (int64, error)
 	}
 
 	// WebhookStore defines the webhook data storage.
@@ -657,6 +663,9 @@ type (
 			parents []types.WebhookParentInfo,
 			opts *types.WebhookFilter,
 		) ([]*types.Webhook, error)
+
+		// UpdateParentSpace updates the parent space of webhooks.
+		UpdateParentSpace(ctx context.Context, srcParentSpaceID int64, targetParentSpaceID int64) (int64, error)
 	}
 
 	// WebhookExecutionStore defines the webhook execution data storage.
@@ -1321,6 +1330,9 @@ type (
 			spaceIDs []int64,
 			filter *types.LabelFilter,
 		) (int64, error)
+
+		// UpdateParentSpace updates the parent space of labels.
+		UpdateParentSpace(ctx context.Context, srcParentSpaceID int64, targetParentSpaceID int64) (int64, error)
 	}
 
 	LabelValueStore interface {

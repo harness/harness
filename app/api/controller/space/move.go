@@ -17,7 +17,6 @@ package space
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
@@ -29,10 +28,20 @@ type MoveInput struct {
 	// TODO [CODE-1363]: remove after identifier migration.
 	UID        *string `json:"uid" deprecated:"true"`
 	Identifier *string `json:"identifier"`
+	// ParentRef can be either a space ID or space path
+	ParentRef *string `json:"parent_ref"`
 }
 
-func (i *MoveInput) hasChanges(space *types.Space) bool {
+func (i *MoveInput) hasChanges(
+	space *types.Space,
+	currentParentSpace *types.SpaceCore,
+	targetParentSpace *types.SpaceCore,
+) bool {
 	if i.Identifier != nil && *i.Identifier != space.Identifier {
+		return true
+	}
+
+	if i.ParentRef != nil && targetParentSpace.ID != currentParentSpace.ID {
 		return true
 	}
 
@@ -40,7 +49,6 @@ func (i *MoveInput) hasChanges(space *types.Space) bool {
 }
 
 // Move moves a space to a new identifier.
-// TODO: Add support for moving to other parents and alias.
 //
 //nolint:gocognit // refactor if needed
 func (c *Controller) Move(
@@ -63,16 +71,30 @@ func (c *Controller) Move(
 		return nil, fmt.Errorf("failed to find space by ID: %w", err)
 	}
 
+	currentParentSpace, err := c.spaceFinder.FindByID(ctx, space.ParentID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find current parent space: %w", err)
+	}
+
+	targetParentSpace := currentParentSpace
+	if in.ParentRef != nil {
+		targetParentSpace, err = c.getSpaceCheckAuthSpaceCreation(ctx, session, *in.ParentRef)
+		if err != nil {
+			return nil, fmt.Errorf("failed to access target parent space: %w", err)
+		}
+	}
+
 	// exit early if there are no changes
-	if !in.hasChanges(space) {
+	if !in.hasChanges(space, currentParentSpace, targetParentSpace) {
 		return GetSpaceOutput(ctx, c.publicAccess, space)
 	}
 
-	if err = c.moveInner(
+	if err = c.spaceSvc.MoveNoAuth(
 		ctx,
 		session,
 		space,
 		in.Identifier,
+		targetParentSpace.Path,
 	); err != nil {
 		return nil, err
 	}
@@ -92,50 +114,4 @@ func (c *Controller) sanitizeMoveInput(in *MoveInput, isRoot bool) error {
 	}
 
 	return nil
-}
-
-func (c *Controller) moveInner(
-	ctx context.Context,
-	session *auth.Session,
-	space *types.Space,
-	inIdentifier *string,
-) error {
-	return c.tx.WithTx(ctx, func(ctx context.Context) error {
-		// delete old primary segment
-		err := c.spacePathStore.DeletePrimarySegment(ctx, space.ID)
-		if err != nil {
-			return fmt.Errorf("failed to delete primary path segment: %w", err)
-		}
-
-		// update space with move inputs
-		if inIdentifier != nil {
-			space.Identifier = *inIdentifier
-		}
-
-		// add new primary segment using updated space data
-		now := time.Now().UnixMilli()
-		newPrimarySegment := &types.SpacePathSegment{
-			ParentID:   space.ParentID,
-			Identifier: space.Identifier,
-			SpaceID:    space.ID,
-			IsPrimary:  true,
-			CreatedBy:  session.Principal.ID,
-			Created:    now,
-			Updated:    now,
-		}
-		err = c.spacePathStore.InsertSegment(ctx, newPrimarySegment)
-		if err != nil {
-			return fmt.Errorf("failed to create new primary path segment: %w", err)
-		}
-
-		// update space itself
-		err = c.spaceStore.Update(ctx, space)
-		if err != nil {
-			return fmt.Errorf("failed to update the space in the db: %w", err)
-		}
-
-		c.spaceFinder.MarkChanged(ctx, space.Core())
-
-		return nil
-	})
 }

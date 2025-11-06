@@ -32,6 +32,7 @@ import (
 	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 )
 
 var _ store.RepoStore = (*RepoStore)(nil)
@@ -437,7 +438,7 @@ func (s *RepoStore) UpdateOptLock(
 	)
 }
 
-// UpdateDeletedOptLock updates a deleted repository using the optimistic locking mechanism.
+// updateDeletedOptLock updates a deleted repository using the optimistic locking mechanism.
 func (s *RepoStore) updateDeletedOptLock(ctx context.Context,
 	repo *types.Repository,
 	mutateFn func(repository *types.Repository) error,
@@ -475,6 +476,11 @@ func (s *RepoStore) updateOptLock(
 		if !errors.Is(err, gitness_store.ErrVersionConflict) {
 			return nil, err
 		}
+
+		log.Ctx(ctx).Warn().
+			Int64("repo.id", repo.ID).
+			Err(err).
+			Msg("optimistic lock conflict ABOUT TO FIND DELETED")
 
 		repo, err = s.FindDeleted(ctx, repo.ID, repo.Deleted)
 		if err != nil {
@@ -839,6 +845,31 @@ func (s *RepoStore) ClearForkID(ctx context.Context, repoUpstreamID int64) error
 	}
 
 	return nil
+}
+
+func (s *RepoStore) UpdateParent(ctx context.Context, currentParentID, newParentID int64) (int64, error) {
+	stmt := database.Builder.Update("repositories").
+		Set("repo_parent_id", newParentID).
+		Set("repo_updated", time.Now().UnixMilli()).
+		Where("repo_parent_id = ?", currentParentID)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+	result, err := db.ExecContext(ctx, sql, args...)
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "failed to update parent ID for repos")
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "failed to get number of updated rows")
+	}
+
+	return rows, nil
 }
 
 func (s *RepoStore) mapToRepo(

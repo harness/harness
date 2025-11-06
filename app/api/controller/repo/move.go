@@ -89,6 +89,28 @@ func (c *Controller) Move(ctx context.Context,
 		return GetRepoOutput(ctx, c.publicAccess, repo)
 	}
 
+	movedRepo, err := c.MoveNoAuth(ctx, repo, in.Identifier, targetParentSpace.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to move repo: %w", err)
+	}
+
+	movedRepo.GitURL = c.urlProvider.GenerateGITCloneURL(ctx, movedRepo.Path)
+	movedRepo.GitSSHURL = c.urlProvider.GenerateGITCloneSSHURL(ctx, movedRepo.Path)
+
+	// TODO: add audit log
+	log.Ctx(ctx).Info().Msgf(
+		"Moved repository %s to %s operation performed by %s",
+		repo.Path, movedRepo.Path, session.Principal.Email)
+
+	return GetRepoOutput(ctx, c.publicAccess, movedRepo)
+}
+
+func (c *Controller) MoveNoAuth(
+	ctx context.Context,
+	repo *types.Repository,
+	newIdentifier *string,
+	targetParentSpaceID int64,
+) (*types.Repository, error) {
 	isPublic, err := c.publicAccess.Get(ctx, enum.PublicResourceTypeRepo, repo.Path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get repo public access: %w", err)
@@ -105,11 +127,11 @@ func (c *Controller) Move(ctx context.Context,
 
 	// TODO add a repo level lock here to avoid racing condition or partial repo update w/o setting repo public access
 	movedRepo, err := c.repoStore.UpdateOptLock(ctx, repo, func(r *types.Repository) error {
-		if in.Identifier != nil {
-			r.Identifier = *in.Identifier
+		if newIdentifier != nil {
+			r.Identifier = *newIdentifier
 		}
-		if targetParentSpace.ID != r.ParentID {
-			r.ParentID = targetParentSpace.ID
+		if targetParentSpaceID != r.ParentID {
+			r.ParentID = targetParentSpaceID
 		}
 		return nil
 	})
@@ -157,15 +179,7 @@ func (c *Controller) Move(ctx context.Context,
 		return nil, fmt.Errorf("failed to set repo public access for new path (cleanup successful): %w", err)
 	}
 
-	movedRepo.GitURL = c.urlProvider.GenerateGITCloneURL(ctx, movedRepo.Path)
-	movedRepo.GitSSHURL = c.urlProvider.GenerateGITCloneSSHURL(ctx, movedRepo.Path)
-
-	// TODO: add audit log
-	log.Ctx(ctx).Info().Msgf(
-		"Moved repository %s to %s operation perofrmed by %s",
-		repo.Path, movedRepo.Path, session.Principal.Email)
-
-	return GetRepoOutput(ctx, c.publicAccess, movedRepo)
+	return movedRepo, nil
 }
 
 func (c *Controller) sanitizeMoveInput(in *MoveInput, session *auth.Session) error {

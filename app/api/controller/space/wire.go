@@ -28,6 +28,7 @@ import (
 	"github.com/harness/gitness/app/services/pullreq"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/services/rules"
+	"github.com/harness/gitness/app/services/space"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
@@ -56,7 +57,7 @@ func ProvideController(config *types.Config, tx dbtx.Transactor, urlProvider url
 	auditService audit.Service, gitspaceService *gitspace.Service,
 	labelSvc *label.Service, instrumentation instrument.Service, executionStore store.ExecutionStore,
 	rulesSvc *rules.Service, usageMetricStore store.UsageMetricStore, repoIdentifierCheck check.RepoIdentifier,
-	infraProviderSvc *infraprovider2.Service, favoriteStore store.FavoriteStore,
+	infraProviderSvc *infraprovider2.Service, favoriteStore store.FavoriteStore, spaceSvc *space.Service,
 ) *Controller {
 	return NewController(config, tx, urlProvider,
 		sseStreamer, identifierCheck, authorizer,
@@ -69,6 +70,6 @@ func ProvideController(config *types.Config, tx dbtx.Transactor, urlProvider url
 		auditService, gitspaceService,
 		labelSvc, instrumentation, executionStore,
 		rulesSvc, usageMetricStore, repoIdentifierCheck,
-		infraProviderSvc, favoriteStore,
+		infraProviderSvc, favoriteStore, spaceSvc,
 	)
 }

@@ -116,6 +116,7 @@ import (
 	"github.com/harness/gitness/app/services/rules"
 	secretservice "github.com/harness/gitness/app/services/secret"
 	"github.com/harness/gitness/app/services/settings"
+	spaceSvc "github.com/harness/gitness/app/services/space"
 	"github.com/harness/gitness/app/services/tokengenerator"
 	"github.com/harness/gitness/app/services/trigger"
 	"github.com/harness/gitness/app/services/usage"
@@ -177,6 +178,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		services.ProvideGitspaceServices,
 		server.WireSet,
 		url.WireSet,
+		spaceSvc.WireSet,
 		space.WireSet,
 		limiter.WireSet,
 		publicaccess.WireSet,

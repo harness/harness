@@ -442,6 +442,36 @@ func (s *WebhookStore) List(
 	return res, nil
 }
 
+func (s *WebhookStore) UpdateParentSpace(
+	ctx context.Context,
+	srcParentSpaceID int64,
+	targetParentSpaceID int64,
+) (int64, error) {
+	stmt := database.Builder.
+		Update("webhooks").
+		Set("webhook_space_id", targetParentSpaceID).
+		Where("webhook_space_id = ?", srcParentSpaceID)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return 0, fmt.Errorf("failed to convert query to sql: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	result, err := db.ExecContext(ctx, sql, args...)
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "the update query failed")
+	}
+
+	count, err := result.RowsAffected()
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "failed to get number of updated rows")
+	}
+
+	return count, nil
+}
+
 func mapToWebhook(hook *webhook) (*types.Webhook, error) {
 	res := &types.Webhook{
 		ID:         hook.ID,

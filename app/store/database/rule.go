@@ -466,6 +466,34 @@ func (s *RuleStore) ListAllRepoRules(
 	return s.mapToRuleInfos(result), nil
 }
 
+func (s *RuleStore) UpdateParentSpace(
+	ctx context.Context,
+	srcParentSpaceID int64,
+	targetParentSpaceID int64,
+) (int64, error) {
+	stmt := database.Builder.Update("rules").
+		Set("rule_space_id", targetParentSpaceID).
+		Where("rule_space_id = ?", srcParentSpaceID)
+
+	db := dbtx.GetAccessor(ctx, s.db)
+	query, args, err := stmt.ToSql()
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "failed to bind query")
+	}
+
+	result, err := db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "failed to update rule")
+	}
+
+	count, err := result.RowsAffected()
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "failed to get number of updated rows")
+	}
+
+	return count, nil
+}
+
 func ruleTypeQuery(ruleTypes ...enum.RuleType) string {
 	var b strings.Builder
 	b.WriteString(`AND rule_type IN (`)
