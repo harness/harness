@@ -44,7 +44,8 @@ const (
 		aitask_updated,
 		aitask_api_url,
 		aitask_ai_agent,
-		aitask_state`
+		aitask_state,
+		aitask_output`
 	aiTaskSelectColumns = "aitask_id," + aiTaskInsertColumns
 )
 
@@ -62,6 +63,7 @@ type aiTask struct {
 	APIURL             null.String      `db:"aitask_api_url"`
 	AgentType          enum.AIAgent     `db:"aitask_ai_agent"`
 	State              enum.AITaskState `db:"aitask_state"`
+	Output             null.String      `db:"aitask_output"`
 }
 
 var _ store.AITaskStore = (*aiTaskStore)(nil)
@@ -94,6 +96,7 @@ func (s aiTaskStore) Create(ctx context.Context, aiTask *types.AITask) error {
 			aiTask.APIURL,
 			aiTask.AIAgent,
 			aiTask.State,
+			aiTask.Output,
 		).
 		Suffix("RETURNING aitask_id")
 	sql, args, err := stmt.ToSql()
@@ -114,6 +117,7 @@ func (s aiTaskStore) Update(ctx context.Context, aiTask *types.AITask) error {
 		Set("aitask_updated", aiTask.Updated).
 		Set("aitask_api_url", aiTask.APIURL).
 		Set("aitask_state", aiTask.State).
+		Set("aitask_output", aiTask.Output).
 		Where("aitask_id = ?", aiTask.ID)
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -216,6 +220,7 @@ func (s aiTaskStore) mapDBToAITask(in *aiTask) *types.AITask {
 		APIURL:             in.APIURL.Ptr(),
 		AIAgent:            in.AgentType,
 		State:              in.State,
+		Output:             in.Output.Ptr(),
 	}
 }
 func (s aiTaskStore) mapToAITasks(aiTasks []*aiTask) []*types.AITask {

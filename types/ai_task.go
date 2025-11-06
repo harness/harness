@@ -30,6 +30,7 @@ type AITask struct {
 	APIURL             *string          `json:"api_url,omitempty"`
 	AIAgent            enum.AIAgent     `json:"ai_agent"`
 	State              enum.AITaskState `json:"state"`
+	Output             *string          `json:"output,omitempty"`
 }
 type AITaskFilter struct {
 	ListQueryFilter
