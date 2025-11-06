@@ -131,7 +131,7 @@ func (w *WebhookExecutor) triggerWebhooks(
 		}
 
 		// check if webhook is registered for trigger (empty list => all triggers are registered)
-		triggerRegistered := slices.Contains(webhook.Triggers, triggerType)
+		triggerRegistered := len(webhook.Triggers) == 0 || slices.Contains(webhook.Triggers, triggerType)
 		if !triggerRegistered {
 			continue
 		}
