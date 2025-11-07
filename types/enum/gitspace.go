@@ -65,7 +65,7 @@ const (
 
 func (GitspaceOwner) Enum() []any { return toInterfaceSlice(GitspaceOwners) }
 
-// ParseGitspaceSort parses the gitspace sort attribute string
+// ParseGitspaceOwner parses the gitspace owner attribute string
 // and returns the equivalent enumeration.
 func ParseGitspaceOwner(s string) GitspaceOwner {
 	switch strings.ToLower(s) {
