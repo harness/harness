@@ -961,17 +961,14 @@ func (r *repoImportState) createReviews(
 
 		decision := enum.PullReqReviewDecision(extReview.Decision)
 
-		submittedAt := time.Now().UnixMilli()
-		if !extReview.Updated.IsZero() {
-			submittedAt = extReview.Updated.UnixMilli()
-		} else if !extReview.Created.IsZero() {
-			submittedAt = extReview.Created.UnixMilli()
-		}
+		now := time.Now().UnixMilli()
+		createdAt := timestampMillis(extReview.Created, now)
+		updatedAt := timestampMillis(extReview.Updated, now)
 
 		prReview := &types.PullReqReview{
 			CreatedBy: reviewer.ID,
-			Created:   submittedAt,
-			Updated:   submittedAt,
+			Created:   createdAt,
+			Updated:   updatedAt,
 			PullReqID: pullReq.ID,
 			Decision:  decision,
 			SHA:       extReview.SHA,
@@ -990,8 +987,8 @@ func (r *repoImportState) createReviews(
 				PullReqID:      pullReq.ID,
 				PrincipalID:    reviewer.ID,
 				CreatedBy:      r.migrator.ID,
-				Created:        submittedAt, // Use review submission time
-				Updated:        submittedAt,
+				Created:        createdAt,
+				Updated:        updatedAt,
 				RepoID:         repo.ID,
 				Type:           enum.PullReqReviewerTypeSelfAssigned,
 				LatestReviewID: &prReview.ID,
@@ -1010,7 +1007,7 @@ func (r *repoImportState) createReviews(
 			// Update existing reviewer with latest review
 			existingReviewer.LatestReviewID = &prReview.ID
 			existingReviewer.ReviewDecision = decision
-			existingReviewer.Updated = submittedAt
+			existingReviewer.Updated = updatedAt
 			if err := r.pullReqReviewerStore.Update(ctx, existingReviewer); err != nil {
 				log.Warn().Err(err).Msg("failed to update reviewer with latest review")
 			}
@@ -1040,13 +1037,12 @@ func (r *repoImportState) createReviewerActivity(
 		return
 	}
 
-	// Increment ActivitySeq in database and update pullReq object
 	updatedPR, err := r.pullReqStore.UpdateActivitySeq(ctx, pullReq)
 	if err != nil {
 		log.Ctx(ctx).Err(err).Msg("failed to increment pull request activity sequence for reviewer activity")
 		return
 	}
-	*pullReq = *updatedPR // Update the in-memory object
+	*pullReq = *updatedPR
 
 	payload := &types.PullRequestActivityPayloadReviewerAdd{
 		ReviewerType: reviewerType,
@@ -1057,9 +1053,25 @@ func (r *repoImportState) createReviewerActivity(
 		Mentions: &types.PullReqActivityMentionsMetadata{IDs: reviewerIDs},
 	}
 
-	if _, err := r.pullReqActivityStore.CreateWithPayload(
-		ctx, pullReq, r.migrator.ID, payload, metadata,
-	); err != nil {
+	activity := &types.PullReqActivity{
+		CreatedBy: r.migrator.ID,
+		Created:   pullReq.Created,
+		Updated:   pullReq.Updated,
+		Edited:    pullReq.Updated,
+		RepoID:    pullReq.TargetRepoID,
+		PullReqID: pullReq.ID,
+		Order:     pullReq.ActivitySeq,
+		SubOrder:  0,
+		ReplySeq:  0,
+		Type:      enum.PullReqActivityTypeReviewerAdd,
+		Kind:      enum.PullReqActivityKindSystem,
+		Text:      "",
+		Metadata:  metadata,
+	}
+
+	_ = activity.SetPayload(payload)
+
+	if err := r.pullReqActivityStore.Create(ctx, activity); err != nil {
 		log.Ctx(ctx).Err(err).Msgf(
 			"failed to write create %s reviewer pull req activity", reviewerType,
 		)
@@ -1084,9 +1096,25 @@ func (r *repoImportState) createReviewSubmitActivity(
 		Decision:  review.Decision,
 	}
 
-	if _, err := r.pullReqActivityStore.CreateWithPayload(
-		ctx, pullReq, review.CreatedBy, payload, nil,
-	); err != nil {
+	activity := &types.PullReqActivity{
+		CreatedBy: review.CreatedBy,
+		Created:   review.Created,
+		Updated:   review.Updated,
+		Edited:    review.Updated,
+		RepoID:    pullReq.TargetRepoID,
+		PullReqID: pullReq.ID,
+		Order:     pullReq.ActivitySeq,
+		SubOrder:  0,
+		ReplySeq:  0,
+		Type:      enum.PullReqActivityTypeReviewSubmit,
+		Kind:      enum.PullReqActivityKindSystem,
+		Text:      "",
+		Metadata:  nil,
+	}
+
+	_ = activity.SetPayload(payload)
+
+	if err := r.pullReqActivityStore.Create(ctx, activity); err != nil {
 		log.Ctx(ctx).Err(err).Msgf(
 			"failed to write review submit pull req activity for review ID %d", review.ID,
 		)
