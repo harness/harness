@@ -210,7 +210,7 @@ func setupVersionsController(_ *testing.T, packageType artifact.PackageType) *me
 	mockSpaceFinder := new(mocks.SpaceFinder)
 	mockAuthorizer := new(mocks.Authorizer)
 	mockImageStore := new(mocks.ImageRepository)
-	mockArtifactStore := new(mocks.MockArtifactRepository)
+	mockArtifactStore := new(mocks.ArtifactRepository)
 	mockURLProvider := new(mocks.Provider)
 
 	space := &coretypes.SpaceCore{

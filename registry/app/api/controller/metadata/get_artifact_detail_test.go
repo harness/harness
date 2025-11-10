@@ -206,7 +206,7 @@ func setupBasicController(_ *testing.T) *metadata.APIController {
 	mockSpaceFinder := new(mocks.SpaceFinder)
 	mockAuthorizer := new(mocks.Authorizer)
 	mockImageStore := new(mocks.ImageRepository)
-	mockArtifactStore := new(mocks.MockArtifactRepository)
+	mockArtifactStore := new(mocks.ArtifactRepository)
 	mockDownloadStatRepo := new(mocks.MockDownloadStatRepository)
 	mockQuarantineRepo := new(mocks.MockQuarantineArtifactRepository)
 
@@ -390,7 +390,7 @@ func setupSnapshotController(_ *testing.T, packageType artifact.PackageType) *me
 	mockSpaceFinder := new(mocks.SpaceFinder)
 	mockAuthorizer := new(mocks.Authorizer)
 	mockImageStore := new(mocks.ImageRepository)
-	mockArtifactStore := new(mocks.MockArtifactRepository)
+	mockArtifactStore := new(mocks.ArtifactRepository)
 	mockDownloadStatRepo := new(mocks.MockDownloadStatRepository)
 	mockQuarantineRepo := new(mocks.MockQuarantineArtifactRepository)
 

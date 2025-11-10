@@ -368,6 +368,25 @@ func (i ImageDao) UpdateStatus(ctx context.Context, image *types.Image) (err err
 	return nil
 }
 
+func (i ImageDao) DuplicateImage(ctx context.Context, sourceImage *types.Image, targetRegistryID int64) (
+	*types.Image,
+	error,
+) {
+	targetImage := &types.Image{
+		Name:         sourceImage.Name,
+		ArtifactType: sourceImage.ArtifactType,
+		RegistryID:   targetRegistryID,
+		Enabled:      sourceImage.Enabled,
+	}
+
+	err := i.CreateOrUpdate(ctx, targetImage)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to duplicate image")
+	}
+
+	return targetImage, nil
+}
+
 func (i ImageDao) mapToInternalImage(ctx context.Context, in *types.Image) *imageDB {
 	session, _ := request.AuthSessionFrom(ctx)
 

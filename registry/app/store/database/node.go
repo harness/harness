@@ -257,6 +257,39 @@ func (n NodeDao) DeleteByLeafNodePathAndRegistryID(ctx context.Context, nodePath
 	return nil
 }
 
+func (n NodeDao) GetAllFileNodesByPathPrefixAndRegistryID(
+	ctx context.Context, registryID int64, pathPrefix string,
+) (*[]types.Node, error) {
+	q := databaseg.Builder.
+		Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(Nodes{}), ",")).
+		From("nodes").
+		Where("node_registry_id = ? AND node_is_file AND (node_path = ? OR node_path LIKE ?)",
+			registryID, pathPrefix, pathPrefix+"/%")
+
+	db := dbtx.GetAccessor(ctx, n.sqlDB)
+
+	sql, args, err := q.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	dst := []*Nodes{}
+	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to find nodes with registry id %d and path prefix %s",
+			registryID, pathPrefix)
+	}
+
+	nodes := make([]types.Node, 0, len(dst))
+	for _, d := range dst {
+		node, err := n.mapToNode(ctx, d)
+		if err != nil {
+			return nil, err
+		}
+		nodes = append(nodes, *node)
+	}
+	return &nodes, nil
+}
+
 func (n NodeDao) mapToNode(_ context.Context, dst *Nodes) (*types.Node, error) {
 	var blobID, parentNodeID string
 	if dst.BlobID != nil {

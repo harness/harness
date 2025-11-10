@@ -117,12 +117,15 @@ func (f *FileManager) UploadFile(
 
 // GetBlobsContext context constructs the context object for the application. This only be
 // called once per request.
-func (f *FileManager) GetBlobsContext(c context.Context, registryIdentifier,
-	rootIdentifier, blobID, sha256 string) *Context {
+func (f *FileManager) GetBlobsContext(
+	c context.Context, registryIdentifier,
+	rootIdentifier, blobID, sha256 string,
+) *Context {
 	ctx := &Context{Context: c}
 
 	if f.bucketService != nil && blobID != "" {
-		if result := f.bucketService.GetBlobStore(c, registryIdentifier, rootIdentifier, blobID, sha256); result != nil {
+		if result := f.bucketService.GetBlobStore(c, registryIdentifier, rootIdentifier, blobID,
+			sha256); result != nil {
 			ctx.genericBlobStore = result.GenericStore
 			return ctx
 		}
@@ -192,19 +195,27 @@ func (f *FileManager) SaveNodes(
 			" in db with sha256 : %s, err: %w", sha256, err)
 	}
 	// Saving the nodes
-	err = f.tx.WithTx(ctx, func(ctx context.Context) error {
-		err = f.createNodes(ctx, filePath, gb.ID, regID, createdBy)
-		if err != nil {
-			return err
-		}
-		return nil
-	})
+	err = f.createNodes(ctx, filePath, gb.ID, regID, createdBy)
+
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("failed to save nodes for file with "+
 			"path : %s, err: %s", filePath, err)
 		return fmt.Errorf("failed to save nodes for file with path : %s, err: %w", filePath, err)
 	}
 	return nil
+}
+
+func (f *FileManager) SaveNodesTx(
+	ctx context.Context,
+	filePath string,
+	regID int64,
+	rootParentID int64,
+	createdBy int64,
+	sha256 string,
+) error {
+	return f.tx.WithTx(ctx, func(ctx context.Context) error {
+		return f.SaveNodes(ctx, filePath, regID, rootParentID, createdBy, sha256)
+	})
 }
 
 func (f *FileManager) moveFile(
@@ -286,6 +297,32 @@ func (f *FileManager) SaveNode(
 			"for path := %s, %w", segment, filePath, err)
 	}
 	return node.ID, nil
+}
+
+func (f *FileManager) CopyNodes(
+	ctx context.Context,
+	rootParentID int64,
+	sourceRegistryID int64,
+	targetRegistryID int64,
+	sourcePathPrefix string,
+) error {
+	nodes, err := f.nodesDao.GetAllFileNodesByPathPrefixAndRegistryID(ctx, sourceRegistryID, sourcePathPrefix)
+	if err != nil || nodes == nil || len(*nodes) == 0 {
+		return fmt.Errorf("failed to get nodes from source registry: %w", err)
+	}
+
+	// FIXME: Optimize this flow
+	for _, node := range *nodes {
+		blob, err := f.genericBlobDao.FindByID(ctx, node.BlobID)
+		if err != nil {
+			return fmt.Errorf("failed to get blob: %s, %w", node.BlobID, err)
+		}
+		err = f.SaveNodes(ctx, node.NodePath, targetRegistryID, rootParentID, node.CreatedBy, blob.Sha256)
+		if err != nil {
+			return fmt.Errorf("failed to save nodes: %w", err)
+		}
+	}
+	return nil
 }
 
 func (f *FileManager) DownloadFile(
@@ -409,8 +446,10 @@ func (f *FileManager) HeadSHA256(
 	return node.NodePath, nil
 }
 
-func (f *FileManager) FindLatestFilePath(ctx context.Context, registryID int64,
-	filepathPrefix, filename string) (string, error) {
+func (f *FileManager) FindLatestFilePath(
+	ctx context.Context, registryID int64,
+	filepathPrefix, filename string,
+) (string, error) {
 	fileNode, err := f.nodesDao.FindByPathAndRegistryID(ctx, registryID, filepathPrefix, filename)
 	if err != nil {
 		return "", fmt.Errorf("failed to get the node for path: %s, file name: %s, with registry id: %d,"+

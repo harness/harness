@@ -47,13 +47,17 @@ import (
 
 type mockLocalBase struct {
 	checkIfVersionExists func(ctx context.Context, info pkg.PackageArtifactInfo) (bool, error)
-	download             func(ctx context.Context,
-		info pkg.ArtifactInfo, version, filename string) (*commons.ResponseHeaders, *storage.FileReader, string, error)
+	download             func(
+		ctx context.Context,
+		info pkg.ArtifactInfo, version, filename string,
+	) (*commons.ResponseHeaders, *storage.FileReader, string, error)
 	deletePackage     func(ctx context.Context, info pkg.PackageArtifactInfo) error
 	deleteVersion     func(ctx context.Context, info pkg.PackageArtifactInfo) error
-	moveTempAndCreate func(ctx context.Context, info pkg.ArtifactInfo,
+	moveTempAndCreate func(
+		ctx context.Context, info pkg.ArtifactInfo,
 		tmp, version, path string,
-		md metadata.Metadata, fi types.FileInfo) (*commons.ResponseHeaders, string, int64, bool, error)
+		md metadata.Metadata, fi types.FileInfo,
+	) (*commons.ResponseHeaders, string, int64, bool, error)
 }
 
 func TestParseAndUploadNPMPackage_WithAttachment_UploadsData(t *testing.T) {
@@ -132,26 +136,34 @@ func TestParseAndUploadNPMPackage_WithAttachment_UploadsData(t *testing.T) {
 }
 
 // Satisfy base.LocalBase interface with exact signatures.
-func (m *mockLocalBase) UploadFile(context.Context,
+func (m *mockLocalBase) UploadFile(
+	context.Context,
 	pkg.ArtifactInfo, string, string, string,
-	multipart.File, metadata.Metadata) (*commons.ResponseHeaders, string, error) {
+	multipart.File, metadata.Metadata,
+) (*commons.ResponseHeaders, string, error) {
 	panic("not implemented in tests")
 }
 
-func (m *mockLocalBase) Upload(context.Context,
+func (m *mockLocalBase) Upload(
+	context.Context,
 	pkg.ArtifactInfo, string, string,
-	string, io.ReadCloser, metadata.Metadata) (*commons.ResponseHeaders, string, error) {
+	string, io.ReadCloser, metadata.Metadata,
+) (*commons.ResponseHeaders, string, error) {
 	panic("not implemented in tests")
 }
 
-func (m *mockLocalBase) MoveTempFileAndCreateArtifact(ctx context.Context,
+func (m *mockLocalBase) MoveTempFileAndCreateArtifact(
+	ctx context.Context,
 	info pkg.ArtifactInfo, tmp,
-	version, p string, md metadata.Metadata, fi types.FileInfo) (*commons.ResponseHeaders, string, int64, bool, error) {
+	version, p string, md metadata.Metadata, fi types.FileInfo,
+) (*commons.ResponseHeaders, string, int64, bool, error) {
 	return m.moveTempAndCreate(ctx, info, tmp, version, p, md, fi)
 }
 
-func (m *mockLocalBase) Download(ctx context.Context,
-	info pkg.ArtifactInfo, version, filename string) (*commons.ResponseHeaders, *storage.FileReader, string, error) {
+func (m *mockLocalBase) Download(
+	ctx context.Context,
+	info pkg.ArtifactInfo, version, filename string,
+) (*commons.ResponseHeaders, *storage.FileReader, string, error) {
 	return m.download(ctx, info, version, filename)
 }
 
@@ -174,9 +186,11 @@ func (m *mockLocalBase) DeletePackage(ctx context.Context, info pkg.PackageArtif
 func (m *mockLocalBase) DeleteVersion(ctx context.Context, info pkg.PackageArtifactInfo) error {
 	return m.deleteVersion(ctx, info)
 }
-func (m *mockLocalBase) MoveMultipleTempFilesAndCreateArtifact(context.Context,
+func (m *mockLocalBase) MoveMultipleTempFilesAndCreateArtifact(
+	context.Context,
 	*pkg.ArtifactInfo, string, metadata.Metadata,
-	*[]types.FileInfo, func(info *pkg.ArtifactInfo, fileInfo *types.FileInfo) string, string) error {
+	*[]types.FileInfo, func(info *pkg.ArtifactInfo, fileInfo *types.FileInfo) string, string,
+) error {
 	return nil
 }
 
@@ -186,8 +200,10 @@ type mockTagsDAO struct {
 	deleteByTagAndImageName func(ctx context.Context, tag string, image string, regID int64) error
 }
 
-func (m *mockTagsDAO) FindByImageNameAndRegID(ctx context.Context,
-	image string, regID int64) ([]*types.PackageTagMetadata, error) {
+func (m *mockTagsDAO) FindByImageNameAndRegID(
+	ctx context.Context,
+	image string, regID int64,
+) ([]*types.PackageTagMetadata, error) {
 	return m.findByImageNameAndRegID(ctx, image, regID)
 }
 func (m *mockTagsDAO) Create(ctx context.Context, tag *types.PackageTag) (string, error) {
@@ -200,6 +216,14 @@ func (m *mockTagsDAO) DeleteByImageNameAndRegID(context.Context, string, int64) 
 
 type mockImageDAO struct {
 	getByRepoAndName func(ctx context.Context, parentID int64, repo, name string) (*types.Image, error)
+}
+
+func (m *mockImageDAO) DuplicateImage(
+	_ context.Context,
+	_ *types.Image,
+	_ int64,
+) (*types.Image, error) {
+	return nil, nil //nolint:nilnil
 }
 
 func (m *mockImageDAO) Get(context.Context, int64) (*types.Image, error) { return nil, nil } //nolint:nilnil
@@ -229,36 +253,56 @@ func (m *mockImageDAO) DeleteByImageNameIfNoLinkedArtifacts(context.Context, int
 type mockArtifactDAO struct {
 	getByName               func(ctx context.Context, imageID int64, version string) (*types.Artifact, error)
 	getByRegistryIDAndImage func(ctx context.Context, registryID int64, image string) (*[]types.Artifact, error)
-	searchLatestByName      func(ctx context.Context,
-		regID int64, name string, limit int, offset int) (*[]types.Artifact, error)
+	searchLatestByName      func(
+		ctx context.Context,
+		regID int64, name string, limit int, offset int,
+	) (*[]types.Artifact, error)
 	countLatestByName func(ctx context.Context, regID int64, name string) (int64, error)
 }
 
-func (m *mockArtifactDAO) GetLatestArtifactsByRepo(_ context.Context,
-	_ int64, _ int, _ int64) (*[]types.ArtifactMetadata, error) {
+func (m *mockArtifactDAO) DuplicateArtifact(
+	_ context.Context,
+	_ *types.Artifact,
+	_ int64,
+) (*types.Artifact, error) {
+	return nil, nil //nolint:nilnil
+}
+
+func (m *mockArtifactDAO) GetLatestArtifactsByRepo(
+	_ context.Context,
+	_ int64, _ int, _ int64,
+) (*[]types.ArtifactMetadata, error) {
 	// TODO implement me
 	panic("implement me")
 }
 
-func (m *mockArtifactDAO) GetByName(ctx context.Context,
-	imageID int64, version string) (*types.Artifact, error) {
+func (m *mockArtifactDAO) GetByName(
+	ctx context.Context,
+	imageID int64, version string,
+) (*types.Artifact, error) {
 	return m.getByName(ctx, imageID, version)
 }
-func (m *mockArtifactDAO) GetByRegistryImageAndVersion(context.Context,
-	int64, string, string) (*types.Artifact, error) {
+func (m *mockArtifactDAO) GetByRegistryImageAndVersion(
+	context.Context,
+	int64, string, string,
+) (*types.Artifact, error) {
 	return nil, nil //nolint:nilnil
 }
 func (m *mockArtifactDAO) CreateOrUpdate(context.Context, *types.Artifact) (int64, error) {
 	return 0, nil
 }
 func (m *mockArtifactDAO) Count(context.Context) (int64, error) { return 0, nil }
-func (m *mockArtifactDAO) GetAllArtifactsByParentID(context.Context,
+func (m *mockArtifactDAO) GetAllArtifactsByParentID(
+	context.Context,
 	int64, *[]string, string, string, int, int,
-	string, bool, []string) (*[]types.ArtifactMetadata, error) {
+	string, bool, []string,
+) (*[]types.ArtifactMetadata, error) {
 	return &[]types.ArtifactMetadata{}, nil
 }
-func (m *mockArtifactDAO) CountAllArtifactsByParentID(context.Context,
-	int64, *[]string, string, bool, []string) (int64, error) {
+func (m *mockArtifactDAO) CountAllArtifactsByParentID(
+	context.Context,
+	int64, *[]string, string, bool, []string,
+) (int64, error) {
 	return 0, nil
 }
 func (m *mockArtifactDAO) GetArtifactsByRepo(
@@ -268,12 +312,16 @@ func (m *mockArtifactDAO) GetArtifactsByRepo(
 ) (*[]types.ArtifactMetadata, error) {
 	return &[]types.ArtifactMetadata{}, nil
 }
-func (m *mockArtifactDAO) CountArtifactsByRepo(context.Context,
-	int64, string, string, []string, *artifact.ArtifactType) (int64, error) {
+func (m *mockArtifactDAO) CountArtifactsByRepo(
+	context.Context,
+	int64, string, string, []string, *artifact.ArtifactType,
+) (int64, error) {
 	return 0, nil
 }
-func (m *mockArtifactDAO) GetLatestArtifactMetadata(context.Context,
-	int64, string, string) (*types.ArtifactMetadata, error) {
+func (m *mockArtifactDAO) GetLatestArtifactMetadata(
+	context.Context,
+	int64, string, string,
+) (*types.ArtifactMetadata, error) {
 	return &types.ArtifactMetadata{}, nil
 }
 func (m *mockArtifactDAO) GetAllVersionsByRepoAndImage(
@@ -283,19 +331,25 @@ func (m *mockArtifactDAO) GetAllVersionsByRepoAndImage(
 ) (*[]types.NonOCIArtifactMetadata, error) {
 	return &[]types.NonOCIArtifactMetadata{}, nil
 }
-func (m *mockArtifactDAO) CountAllVersionsByRepoAndImage(context.Context,
-	int64, string, string, string, *artifact.ArtifactType) (int64, error) {
+func (m *mockArtifactDAO) CountAllVersionsByRepoAndImage(
+	context.Context,
+	int64, string, string, string, *artifact.ArtifactType,
+) (int64, error) {
 	return 0, nil
 }
-func (m *mockArtifactDAO) GetArtifactMetadata(context.Context,
-	int64, string, string, string, *artifact.ArtifactType) (*types.ArtifactMetadata, error) {
+func (m *mockArtifactDAO) GetArtifactMetadata(
+	context.Context,
+	int64, string, string, string, *artifact.ArtifactType,
+) (*types.ArtifactMetadata, error) {
 	return &types.ArtifactMetadata{}, nil
 }
 func (m *mockArtifactDAO) UpdateArtifactMetadata(context.Context, json.RawMessage, int64) error {
 	return nil //nolint:nilnil
 }
-func (m *mockArtifactDAO) GetByRegistryIDAndImage(ctx context.Context,
-	registryID int64, image string) (*[]types.Artifact, error) {
+func (m *mockArtifactDAO) GetByRegistryIDAndImage(
+	ctx context.Context,
+	registryID int64, image string,
+) (*[]types.Artifact, error) {
 	return m.getByRegistryIDAndImage(ctx, registryID, image)
 }
 func (m *mockArtifactDAO) DeleteByImageNameAndRegistryID(context.Context, int64, string) error {
@@ -307,24 +361,34 @@ func (m *mockArtifactDAO) DeleteByVersionAndImageName(context.Context, string, s
 func (m *mockArtifactDAO) GetLatestByImageID(context.Context, int64) (*types.Artifact, error) {
 	return nil, nil //nolint:nilnil
 }
-func (m *mockArtifactDAO) GetAllArtifactsByRepo(context.Context,
-	int64, int, int64) (*[]types.ArtifactMetadata, error) {
+func (m *mockArtifactDAO) GetAllArtifactsByRepo(
+	context.Context,
+	int64, int, int64,
+) (*[]types.ArtifactMetadata, error) {
 	return nil, nil //nolint:nilnil
 }
-func (m *mockArtifactDAO) GetArtifactsByRepoAndImageBatch(context.Context,
-	int64, string, int, int64) (*[]types.ArtifactMetadata, error) {
+func (m *mockArtifactDAO) GetArtifactsByRepoAndImageBatch(
+	context.Context,
+	int64, string, int, int64,
+) (*[]types.ArtifactMetadata, error) {
 	return &[]types.ArtifactMetadata{}, nil
 }
-func (m *mockArtifactDAO) SearchLatestByName(ctx context.Context,
-	regID int64, name string, limit int, offset int) (*[]types.Artifact, error) {
+func (m *mockArtifactDAO) SearchLatestByName(
+	ctx context.Context,
+	regID int64, name string, limit int, offset int,
+) (*[]types.Artifact, error) {
 	return m.searchLatestByName(ctx, regID, name, limit, offset)
 }
-func (m *mockArtifactDAO) CountLatestByName(ctx context.Context,
-	regID int64, name string) (int64, error) {
+func (m *mockArtifactDAO) CountLatestByName(
+	ctx context.Context,
+	regID int64, name string,
+) (int64, error) {
 	return m.countLatestByName(ctx, regID, name)
 }
-func (m *mockArtifactDAO) SearchByImageName(context.Context,
-	int64, string, int, int) (*[]types.ArtifactMetadata, error) {
+func (m *mockArtifactDAO) SearchByImageName(
+	context.Context,
+	int64, string, int, int,
+) (*[]types.ArtifactMetadata, error) {
 	return &[]types.ArtifactMetadata{}, nil
 }
 func (m *mockArtifactDAO) CountByImageName(context.Context, int64, string) (int64, error) {
@@ -375,9 +439,11 @@ func (m *mockURLProvider) GenerateUIRegistryURL(_ context.Context, _ string, _ s
 // Helpers
 // -----------------------
 
-func newLocalForTests(lb base.LocalBase,
+func newLocalForTests(
+	lb base.LocalBase,
 	tags store.PackageTagRepository,
-	img store.ImageRepository, art store.ArtifactRepository, urlp urlprovider.Provider) *localRegistry {
+	img store.ImageRepository, art store.ArtifactRepository, urlp urlprovider.Provider,
+) *localRegistry {
 	return &localRegistry{
 		localBase:   lb,
 		fileManager: filemanager.FileManager{},
@@ -422,8 +488,10 @@ func TestHeadAndDownloadAndDeleteDelegation(t *testing.T) {
 
 	lb := &mockLocalBase{
 		checkIfVersionExists: func(_ context.Context, _ pkg.PackageArtifactInfo) (bool, error) { return true, nil },
-		download: func(_ context.Context,
-			_ pkg.ArtifactInfo, _, _ string) (*commons.ResponseHeaders, *storage.FileReader, string, error) {
+		download: func(
+			_ context.Context,
+			_ pkg.ArtifactInfo, _, _ string,
+		) (*commons.ResponseHeaders, *storage.FileReader, string, error) {
 			return &commons.ResponseHeaders{Code: 200}, &storage.FileReader{}, "", nil
 		},
 		deletePackage: func(context.Context, pkg.PackageArtifactInfo) error { return nil },
@@ -464,16 +532,22 @@ func TestAddTag_Success(t *testing.T) {
 	ctx := context.Background()
 	info := sampleArtifactInfo()
 	info.DistTags = []string{"latest"}
-	imgDAO := &mockImageDAO{getByRepoAndName: func(_ context.Context, _ int64, _, _ string) (*types.Image, error) {
-		return &types.Image{ID: 5}, nil
-	}}
-	artDAO := &mockArtifactDAO{getByName: func(_ context.Context, _ int64, version string) (*types.Artifact, error) {
-		return &types.Artifact{ID: 7, Version: version}, nil
-	}}
+	imgDAO := &mockImageDAO{
+		getByRepoAndName: func(_ context.Context, _ int64, _, _ string) (*types.Image, error) {
+			return &types.Image{ID: 5}, nil
+		},
+	}
+	artDAO := &mockArtifactDAO{
+		getByName: func(_ context.Context, _ int64, version string) (*types.Artifact, error) {
+			return &types.Artifact{ID: 7, Version: version}, nil
+		},
+	}
 	created := false
 	tdao := &mockTagsDAO{
-		create: func(_ context.Context,
-			tag *types.PackageTag) (string, error) {
+		create: func(
+			_ context.Context,
+			tag *types.PackageTag,
+		) (string, error) {
 			created = true
 			return tag.ID, nil
 		},
@@ -491,12 +565,16 @@ func TestAddTag_Success(t *testing.T) {
 func TestAddTag_NoDistTags(t *testing.T) {
 	ctx := context.Background()
 	info := sampleArtifactInfo()
-	imgDAO := &mockImageDAO{getByRepoAndName: func(_ context.Context, _ int64, _, _ string) (*types.Image, error) {
-		return &types.Image{ID: 5}, nil
-	}}
-	artDAO := &mockArtifactDAO{getByName: func(_ context.Context, _ int64, version string) (*types.Artifact, error) {
-		return &types.Artifact{ID: 7, Version: version}, nil
-	}}
+	imgDAO := &mockImageDAO{
+		getByRepoAndName: func(_ context.Context, _ int64, _, _ string) (*types.Image, error) {
+			return &types.Image{ID: 5}, nil
+		},
+	}
+	artDAO := &mockArtifactDAO{
+		getByName: func(_ context.Context, _ int64, version string) (*types.Artifact, error) {
+			return &types.Artifact{ID: 7, Version: version}, nil
+		},
+	}
 	lr := newLocalForTests(nil, &mockTagsDAO{}, imgDAO, artDAO, nil)
 	_, err := lr.AddTag(ctx, info)
 	assert.Error(t, err)
@@ -508,7 +586,15 @@ func TestDeleteTag_Success(t *testing.T) {
 	info.DistTags = []string{"beta"}
 	deleted := false
 	tdao := &mockTagsDAO{
-		deleteByTagAndImageName: func(_ context.Context, _ string, _ string, _ int64) error { deleted = true; return nil },
+		deleteByTagAndImageName: func(
+			_ context.Context,
+			_ string,
+			_ string,
+			_ int64,
+		) error {
+			deleted = true
+			return nil
+		},
 		findByImageNameAndRegID: func(_ context.Context, _ string, _ int64) ([]*types.PackageTagMetadata, error) {
 			return []*types.PackageTagMetadata{}, nil
 		},
@@ -525,10 +611,12 @@ func TestGetPackageMetadata_Success(t *testing.T) {
 	info := sampleArtifactInfo()
 	// Prepare artifact with npm metadata
 	meta := &npmmeta.NpmMetadata{
-		PackageMetadata: npmmeta.PackageMetadata{Name: "pkg",
+		PackageMetadata: npmmeta.PackageMetadata{
+			Name: "pkg",
 			Versions: map[string]*npmmeta.PackageMetadataVersion{
 				"1.0.0": {Name: "pkg", Version: "1.0.0", Dist: npmmeta.PackageDistribution{}},
-			}},
+			},
+		},
 	}
 	metaBytes, _ := json.Marshal(meta)
 	arts := []types.Artifact{{Version: "1.0.0", Metadata: metaBytes}}
@@ -542,9 +630,11 @@ func TestGetPackageMetadata_Success(t *testing.T) {
 			return []*types.PackageTagMetadata{{Name: "latest", Version: "1.0.0"}}, nil
 		},
 	}
-	urlp := &mockURLProvider{pkgURL: func(_ context.Context, _ string, _ string, _ ...string) string {
-		return "http://example.local/registry"
-	}}
+	urlp := &mockURLProvider{
+		pkgURL: func(_ context.Context, _ string, _ string, _ ...string) string {
+			return "http://example.local/registry"
+		},
+	}
 	lr := newLocalForTests(nil, tdao, nil, artDAO, urlp)
 	pm, err := lr.GetPackageMetadata(ctx, info)
 	assert.NoError(t, err)
@@ -557,10 +647,12 @@ func TestSearchPackage_Success(t *testing.T) {
 	ctx := context.Background()
 	info := sampleArtifactInfo()
 	verMeta := &npmmeta.PackageMetadataVersion{Name: "pkg", Version: "1.2.3"}
-	artMeta := &npmmeta.NpmMetadata{PackageMetadata: npmmeta.PackageMetadata{
-		Name:     "pkg",
-		Versions: map[string]*npmmeta.PackageMetadataVersion{"1.2.3": verMeta},
-	}}
+	artMeta := &npmmeta.NpmMetadata{
+		PackageMetadata: npmmeta.PackageMetadata{
+			Name:     "pkg",
+			Versions: map[string]*npmmeta.PackageMetadataVersion{"1.2.3": verMeta},
+		},
+	}
 	artBytes, _ := json.Marshal(artMeta)
 	list := []types.Artifact{{Metadata: artBytes}}
 	artDAO := &mockArtifactDAO{
@@ -569,9 +661,11 @@ func TestSearchPackage_Success(t *testing.T) {
 		},
 		countLatestByName: func(_ context.Context, _ int64, _ string) (int64, error) { return 1, nil },
 	}
-	urlp := &mockURLProvider{pkgURL: func(_ context.Context, _ string, _ string, _ ...string) string {
-		return "http://example.local/r"
-	}}
+	urlp := &mockURLProvider{
+		pkgURL: func(_ context.Context, _ string, _ string, _ ...string) string {
+			return "http://example.local/r"
+		},
+	}
 	lr := newLocalForTests(nil, nil, nil, artDAO, urlp)
 	res, err := lr.SearchPackage(ctx, info, 10, 0)
 	assert.NoError(t, err)
@@ -610,8 +704,10 @@ func TestParseAndUploadNPMPackage_ParseOnly_NoAttachments(t *testing.T) {
 		"_id":  "pkg",
 		"name": "pkg",
 		"versions": map[string]any{
-			"1.0.0": map[string]any{"name": "pkg",
-				"version": "1.0.0", "dist": map[string]any{"shasum": "abc", "integrity": "xyz"}},
+			"1.0.0": map[string]any{
+				"name":    "pkg",
+				"version": "1.0.0", "dist": map[string]any{"shasum": "abc", "integrity": "xyz"},
+			},
 		},
 		"dist-tags": map[string]string{"latest": "1.0.0"},
 	}
