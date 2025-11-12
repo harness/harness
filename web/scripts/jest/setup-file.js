@@ -83,3 +83,11 @@ Object.defineProperty(global, 'IntersectionObserver', {
   configurable: true,
   value: MockIntersectionObserver
 })
+
+Object.defineProperty(window, 'getApiBaseUrl', {
+  writable: true,
+  configurable: true,
+  value: jest.fn().mockImplementation(query => {
+    return '/'
+  })
+})

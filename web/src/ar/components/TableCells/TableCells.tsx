@@ -109,6 +109,7 @@ export const CopyTextCell: FC<PropsWithChildren<CopyTextCellProps>> = ({
       setOpenTooltip(false)
     }, 1000)
   }
+  if (!value) return <TextCell value={getString('na')} />
   return (
     <Button
       className={css.copyButton}
@@ -124,6 +125,30 @@ export const CopyTextCell: FC<PropsWithChildren<CopyTextCellProps>> = ({
       }}
       tooltip={openTooltip ? getString('copied') : undefined}
       tooltipProps={{ isOpen: openTooltip, isDark: true }}
+      {...rest}>
+      {children}
+    </Button>
+  )
+}
+
+interface DownloadCellProps extends ButtonProps {
+  icon?: IconName
+}
+
+export const DownloadCell: FC<PropsWithChildren<DownloadCellProps>> = ({
+  icon,
+  iconProps,
+  children,
+  ...rest
+}): JSX.Element => {
+  return (
+    <Button
+      className={css.copyButton}
+      intent="primary"
+      minimal
+      variation={ButtonVariation.LINK}
+      rightIcon={defaultTo(icon, 'main-download')}
+      iconProps={iconProps}
       {...rest}>
       {children}
     </Button>
@@ -329,5 +354,6 @@ export default {
   ToggleAccordionCell,
   RepositoryLocationBadgeCell,
   VulnerabilityCell,
-  QuarantineIcon
+  QuarantineIcon,
+  DownloadCell
 }

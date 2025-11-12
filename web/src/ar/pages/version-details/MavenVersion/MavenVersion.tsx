@@ -44,7 +44,6 @@ import VersionTreeNode from '../components/VersionTreeNode/VersionTreeNode'
 import { VersionDetailsTab } from '../components/VersionDetailsTabs/constants'
 import MavenArtifactOverviewPage from './pages/overview/MavenArtifactOverviewPage'
 import VersionDetailsTabs from '../components/VersionDetailsTabs/VersionDetailsTabs'
-import MavenArtifactDetailsPage from './pages/artifact-details/MavenArtifactDetailsPage'
 import ArtifactFilesContent from '../components/ArtifactFileListTable/ArtifactFilesContent'
 import VersionDetailsHeaderContent from '../components/VersionDetailsHeaderContent/VersionDetailsHeaderContent'
 import VersionActions from '../components/VersionActions/VersionActions'
@@ -88,7 +87,11 @@ export class MavenVersionType extends VersionStep<ArtifactVersionSummary> {
       case VersionDetailsTab.OVERVIEW:
         return <MavenArtifactOverviewPage />
       case VersionDetailsTab.ARTIFACT_DETAILS:
-        return <MavenArtifactDetailsPage />
+        return (
+          <VersionFilesProvider>
+            <ArtifactFilesContent />
+          </VersionFilesProvider>
+        )
       case VersionDetailsTab.OSS:
         return <OSSContentPage />
       default:

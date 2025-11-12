@@ -80,8 +80,7 @@ export default function ArtifactFileListTable(props: ArtifactFileListTableProps)
         Header: getString('versionDetails.artifactFiles.table.columns.name'),
         accessor: 'name',
         Cell: FileNameCell,
-        serverSortProps: getServerSortProps('name'),
-        width: ''
+        serverSortProps: getServerSortProps('name')
       },
       {
         Header: getString('versionDetails.artifactFiles.table.columns.size'),
@@ -97,7 +96,7 @@ export default function ArtifactFileListTable(props: ArtifactFileListTableProps)
       },
       {
         Header: getString('versionDetails.artifactFiles.table.columns.downloadCommand'),
-        accessor: 'downloadCommand',
+        accessor: 'path',
         Cell: FileDownloadCommandCell,
         disableSortBy: true
       },

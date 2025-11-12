@@ -41,7 +41,6 @@ import GenericOverviewPage from './pages/overview/OverviewPage'
 import OSSContentPage from './pages/oss-details/OSSContentPage'
 import VersionTreeNode from '../components/VersionTreeNode/VersionTreeNode'
 import VersionDetailsTabs from '../components/VersionDetailsTabs/VersionDetailsTabs'
-import GenericArtifactDetailsPage from './pages/artifact-details/GenericArtifactDetailsPage'
 import VersionDetailsHeaderContent from '../components/VersionDetailsHeaderContent/VersionDetailsHeaderContent'
 import VersionFilesProvider from '../context/VersionFilesProvider'
 import ArtifactFilesContent from '../components/ArtifactFileListTable/ArtifactFilesContent'
@@ -86,7 +85,11 @@ export class GenericVersionType extends VersionStep<ArtifactVersionSummary> {
       case VersionDetailsTab.OVERVIEW:
         return <GenericOverviewPage />
       case VersionDetailsTab.ARTIFACT_DETAILS:
-        return <GenericArtifactDetailsPage />
+        return (
+          <VersionFilesProvider>
+            <ArtifactFilesContent />
+          </VersionFilesProvider>
+        )
       case VersionDetailsTab.OSS:
         return <OSSContentPage />
       default:

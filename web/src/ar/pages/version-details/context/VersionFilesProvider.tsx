@@ -36,6 +36,10 @@ interface VersionFilesProviderProps {
   queryParams: Partial<ArtifactFileListPageQueryParams>
   refetch: () => void
   sort: string[]
+  repositoryIdentifier: string
+  artifactIdentifier: string
+  versionIdentifier: string
+  artifactType: LocalArtifactType
 }
 
 export const VersionFilesContext = createContext<VersionFilesProviderProps>({} as VersionFilesProviderProps)
@@ -99,7 +103,11 @@ const VersionFilesProvider = (props: PropsWithChildren<IVersionFilesProviderProp
             refetch,
             updateQueryParams: shouldUseLocalParams ? setLocalParams : updateQueryParams,
             queryParams: shouldUseLocalParams ? localParams : queryParams,
-            sort: sort || []
+            sort: sort || [],
+            repositoryIdentifier: repositoryIdentifier ?? pathParams.repositoryIdentifier,
+            artifactIdentifier: artifactIdentifier ?? pathParams.artifactIdentifier,
+            versionIdentifier: versionIdentifier ?? pathParams.versionIdentifier,
+            artifactType: artifactType ?? pathParams.artifactType
           }}>
           {props.children}
         </VersionFilesContext.Provider>
