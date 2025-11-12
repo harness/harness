@@ -251,6 +251,7 @@ func (r *registryHelper) GetFileMetadata(
 		CreatedAt:       fmt.Sprint(file.CreatedAt),
 		Name:            filename,
 		DownloadCommand: downloadCommand,
+		Path:            file.Path,
 	}
 }
 

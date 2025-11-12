@@ -2787,12 +2787,15 @@ components:
           type: string
         createdAt:
           type: string
+        path:
+          type: string
       required:
         - name
         - size
         - checksums
         - downloadCommand
         - createdAt
+        - path
     HelmArtifactDetail:
       type: object
       description: Helm Artifact Detail

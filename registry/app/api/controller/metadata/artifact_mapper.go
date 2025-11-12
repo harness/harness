@@ -344,6 +344,7 @@ func GetArtifactFilesMetadata(
 			CreatedAt:       fmt.Sprint(file.CreatedAt),
 			Name:            filename,
 			DownloadCommand: downloadCommand,
+			Path:            file.Path,
 		})
 	}
 	return files
