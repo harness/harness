@@ -94,7 +94,12 @@ const (
 const (
 	ReferrersSchemaVersion    = 2
 	ReferrersMediaType        = "application/vnd.oci.image.index.v1+json"
-	ArtifactTypeLocalRegistry = "Local Registry"
+	HeaderCacheControl        = "Cache-Control"
+	HeaderContentLength       = "Content-Length"
+	HeaderContentType         = "Content-Type"
+	HeaderDockerContentDigest = "Docker-Content-Digest"
+	HeaderEtag                = "Etag"
+	blobCacheControlMaxAge    = 365 * 24 * time.Hour
 )
 
 type CatalogAPIResponse struct {
@@ -346,10 +351,9 @@ func (r *LocalRegistry) HeadBlob(
 	ctx2 context.Context,
 	artInfo pkg.RegistryInfo,
 ) (
-	responseHeaders *commons.ResponseHeaders, fr *storage.FileReader, size int64, readCloser io.ReadCloser,
-	redirectURL string, errs []error,
+	responseHeaders *commons.ResponseHeaders, errs []error,
 ) {
-	return r.fetchBlobInternal(ctx2, http.MethodHead, artInfo)
+	return r.headBlobInternal(ctx2, artInfo)
 }
 
 func (r *LocalRegistry) GetBlob(
@@ -416,6 +420,42 @@ func (r *LocalRegistry) fetchBlobInternal(
 	maps.Copy(responseHeaders.Headers, headers)
 
 	return responseHeaders, fileReader, size, nil, "", errs
+}
+
+func (r *LocalRegistry) headBlobInternal(
+	ctx context.Context,
+	info pkg.RegistryInfo,
+) (*commons.ResponseHeaders, []error) {
+	responseHeaders := &commons.ResponseHeaders{
+		Code:    0,
+		Headers: make(map[string]string),
+	}
+	errs := make([]error, 0)
+
+	dgst := digest.Digest(info.Digest)
+	blobID, err := r.dbBlobLinkExists(ctx, dgst, info)
+	if err != nil {
+		errs = append(errs, errcode.FromUnknownError(err))
+		return responseHeaders, errs
+	}
+
+	blob, err := r.blobRepo.FindByID(ctx, blobID)
+	if err != nil {
+		errs = append(errs, errcode.FromUnknownError(err))
+		return responseHeaders, errs
+	}
+
+	responseHeaders.Headers[HeaderEtag] = fmt.Sprintf(`"%s"`, dgst)
+	responseHeaders.Headers[HeaderCacheControl] = fmt.Sprintf(
+		"max-age=%.f",
+		blobCacheControlMaxAge.Seconds(),
+	)
+
+	responseHeaders.Headers[HeaderDockerContentDigest] = dgst.String()
+	responseHeaders.Headers[HeaderContentType] = "application/octet-stream"
+	responseHeaders.Headers[HeaderContentLength] = fmt.Sprint(blob.Size)
+
+	return responseHeaders, errs
 }
 
 func (r *LocalRegistry) PullManifest(

@@ -326,13 +326,14 @@ func (r *RemoteRegistry) PullManifest(
 }
 
 func (r *RemoteRegistry) HeadBlob(
-	ctx2 context.Context,
-	artInfo pkg.RegistryInfo,
+	ctx context.Context,
+	_ pkg.RegistryInfo,
 ) (
-	responseHeaders *commons.ResponseHeaders, fr *storage.FileReader, size int64,
-	readCloser io.ReadCloser, redirectURL string, errs []error,
+	responseHeaders *commons.ResponseHeaders, errs []error,
 ) {
-	return r.fetchBlobInternal(ctx2, artInfo.RegIdentifier, http.MethodHead, artInfo)
+	log.Ctx(ctx).Warn().Msgf("HeadBlob for proxy not implemented")
+	errs = append(errs, errors.New("not implemented"))
+	return nil, errs
 }
 
 // TODO (Arvind): There is a known issue where if the remote itself
@@ -373,9 +374,6 @@ func (r *RemoteRegistry) fetchBlobInternal(
 		switch method {
 		case http.MethodGet:
 			headers, reader, s, closer, url, e := r.local.GetBlob(ctx, info)
-			return headers, reader, s, closer, url, e
-		case http.MethodHead:
-			headers, reader, s, closer, url, e := r.local.HeadBlob(ctx, info)
 			return headers, reader, s, closer, url, e
 		default:
 			errs = append(errs, errors.New("Method not supported"))

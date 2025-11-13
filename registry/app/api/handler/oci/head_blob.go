@@ -26,22 +26,9 @@ func (h *Handler) HeadBlob(w http.ResponseWriter, r *http.Request) {
 		handleErrors(r.Context(), []error{err}, w)
 		return
 	}
-	headers, body, _, readCloser, redirectURL, errs := h.Controller.HeadBlob(r.Context(), info)
-	defer func() {
-		if body != nil {
-			body.Close()
-		}
-		if readCloser != nil {
-			readCloser.Close()
-		}
-	}()
+	headers, errs := h.Controller.HeadBlob(r.Context(), info)
 
 	if commons.IsEmpty(errs) {
-		if redirectURL != "" {
-			http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
-			return
-		}
-
 		headers.WriteHeadersToResponse(w)
 	}
 	handleErrors(r.Context(), errs, w)

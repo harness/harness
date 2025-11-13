@@ -267,13 +267,12 @@ func (c *Controller) HeadBlob(
 	ctx context.Context,
 	info pkg.RegistryInfo,
 ) (
-	responseHeaders *commons.ResponseHeaders, fr *storage.FileReader, size int64, readCloser io.ReadCloser,
-	redirectURL string, errs []error,
+	responseHeaders *commons.ResponseHeaders, errs []error,
 ) {
 	err := pkg.GetRegistryCheckAccess(ctx, c.authorizer, c.SpaceFinder, info.ParentID, *info.ArtifactInfo,
 		enum.PermissionArtifactsDownload)
 	if err != nil {
-		return nil, nil, 0, nil, "", []error{errcode.ErrCodeDenied}
+		return nil, []error{errcode.ErrCodeDenied}
 	}
 	return c.local.HeadBlob(ctx, info)
 }

@@ -71,8 +71,7 @@ type Registry interface {
 		ctx2 context.Context,
 		artInfo pkg.RegistryInfo,
 	) (
-		responseHeaders *commons.ResponseHeaders, fr *storage.FileReader, size int64,
-		readCloser io.ReadCloser, redirectURL string, errs []error,
+		responseHeaders *commons.ResponseHeaders, errs []error,
 	)
 	GetBlob(
 		ctx2 context.Context,
