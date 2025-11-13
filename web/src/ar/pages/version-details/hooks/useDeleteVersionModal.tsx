@@ -62,6 +62,8 @@ export default function useDeleteVersionModal(props: useDeleteVersionModalProps)
       } finally {
         setSubmitting(false)
       }
+    } else {
+      closeDialog()
     }
   }
 
