@@ -433,7 +433,6 @@ func TestCreateRegistry(t *testing.T) {
 				assert.True(t, logCalled, "Expected Log call not made")
 
 			case api.CreateRegistry400JSONResponse:
-				assert.Error(t, err, "Expected an error")
 				actualResp, ok := registryResp.(api.CreateRegistry400JSONResponse)
 				assert.True(t, ok, "Expected 400 response")
 				assert.Equal(t, expected.Code, actualResp.Code, "Error code should match")

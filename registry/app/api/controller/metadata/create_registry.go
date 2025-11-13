@@ -42,34 +42,44 @@ func (c *APIController) CreateRegistry(
 
 	regInfo, err := c.RegistryMetadataHelper.GetRegistryRequestBaseInfo(ctx, string(parentRef), "")
 	if err != nil {
+		//nolint:nilerr
 		return artifact.CreateRegistry400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
 				*GetErrorResponse(http.StatusBadRequest, err.Error()),
 			),
-		}, err
+		}, nil
 	}
 
 	space, err := c.SpaceFinder.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
+		//nolint:nilerr
 		return artifact.CreateRegistry400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
 				*GetErrorResponse(http.StatusBadRequest, err.Error()),
 			),
-		}, err
+		}, nil
 	}
 
 	if registryRequest.IsPublic {
 		isPublicAccessSupported, err := c.PublicAccess.
 			IsPublicAccessSupported(ctx, gitnessenum.PublicResourceTypeRegistry, space.Path)
 		if err != nil {
-			return nil, fmt.Errorf(
-				"failed to check if public access is supported for parent space %q: %w",
-				space.Path,
-				err,
-			)
+			return artifact.CreateRegistry400JSONResponse{
+				BadRequestJSONResponse: artifact.BadRequestJSONResponse(
+					*GetErrorResponse(http.StatusBadRequest, fmt.Errorf(
+						"failed to check if public access is supported for parent space %q: %w",
+						space.Path,
+						err,
+					).Error()),
+				),
+			}, nil
 		}
 		if !isPublicAccessSupported {
-			return nil, errPublicArtifactRegistryCreationDisabled
+			return artifact.CreateRegistry400JSONResponse{
+				BadRequestJSONResponse: artifact.BadRequestJSONResponse(
+					*GetErrorResponse(http.StatusBadRequest, errPublicArtifactRegistryCreationDisabled.Error()),
+				),
+			}, nil
 		}
 	}
 
@@ -82,11 +92,12 @@ func (c *APIController) CreateRegistry(
 		gitnessenum.ResourceTypeRegistry,
 		gitnessenum.PermissionRegistryEdit,
 	); err != nil {
+		//nolint:nilerr
 		return artifact.CreateRegistry403JSONResponse{
 			UnauthorizedJSONResponse: artifact.UnauthorizedJSONResponse(
 				*GetErrorResponse(http.StatusForbidden, err.Error()),
 			),
-		}, err
+		}, nil
 	}
 
 	if registryRequest.Config.Type == artifact.RegistryTypeVIRTUAL {
@@ -99,7 +110,8 @@ func (c *APIController) CreateRegistry(
 	)
 	var registryID int64
 	if err != nil {
-		return throwCreateRegistry400Error(err), err
+		//nolint:nilerr
+		return throwCreateRegistry400Error(err), nil
 	}
 
 	err = c.tx.WithTx(
