@@ -39,7 +39,7 @@ func NewMavenHandler(handler *maven.Handler) Handler {
 	}
 
 	r.Route("/maven", func(r chi.Router) {
-		r.Use(middleware.StoreOriginalURL)
+		r.Use(middleware.StoreOriginalPath)
 		r.Use(middleware.CheckAuthHeader())
 		r.Use(middlewareauthn.Attempt(handler.Authenticator))
 		r.Use(middleware.CheckAuthWithChallenge(handler))

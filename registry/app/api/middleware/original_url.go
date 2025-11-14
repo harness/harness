@@ -20,10 +20,10 @@ import (
 	"github.com/harness/gitness/registry/request"
 )
 
-// StoreOriginalURL stores the original URL in the context.
-func StoreOriginalURL(next http.Handler) http.Handler {
+// StoreOriginalPath stores the original URL path in the context.
+func StoreOriginalPath(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := request.WithOriginalURL(r.Context(), r.URL.Path)
+		ctx := request.WithOriginalPath(r.Context(), r.URL.Path)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

@@ -60,7 +60,7 @@ func NewRouter(
 	r := chi.NewRouter()
 
 	r.Route("/{rootIdentifier}/{registryIdentifier}", func(r chi.Router) {
-		r.Use(middleware.StoreOriginalURL)
+		r.Use(middleware.StoreOriginalPath)
 
 		r.Route("/maven", func(r chi.Router) {
 			r.Use(middleware.CheckAuthHeader())

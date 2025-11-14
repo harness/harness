@@ -21,6 +21,7 @@ import (
 
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/pkg/docker"
+	"github.com/harness/gitness/registry/request"
 
 	"github.com/rs/zerolog/log"
 )
@@ -52,7 +53,13 @@ func (h *Handler) GetTags(w http.ResponseWriter, r *http.Request) {
 		maxEntries = docker.DefaultMaximumReturnedEntries
 	}
 
-	rs, tags, err := h.Controller.GetTags(ctx, lastEntry, maxEntries, r.URL.String(), info)
+	// Use original full URL from context if available, fallback to current URL
+	origURL := request.OriginalURLFrom(ctx)
+	if origURL == "" {
+		origURL = r.URL.String()
+	}
+
+	rs, tags, err := h.Controller.GetTags(ctx, lastEntry, maxEntries, origURL, info)
 	log.Ctx(ctx).Debug().Msgf("GetTags: %v %s", rs, tags)
 
 	if err != nil {

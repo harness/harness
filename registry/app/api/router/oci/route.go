@@ -73,7 +73,7 @@ func NewOCIHandler(handlerV2 *oci.Handler) RegistryOCIHandler {
 	}
 
 	r.Route("/v2", func(r chi.Router) {
-		r.Use(middleware.StoreOriginalURL)
+		r.Use(middleware.StoreOriginalPath)
 		r.Use(middlewareauthn.Attempt(handlerV2.Authenticator))
 		r.Get("/token", func(w http.ResponseWriter, req *http.Request) {
 			handlerV2.GetToken(w, req)

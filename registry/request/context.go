@@ -24,9 +24,24 @@ import (
 
 type contextKey string
 
+const OriginalPathKey contextKey = "originalPath"
 const OriginalURLKey contextKey = "originalURL"
 const ArtifactInfoKey contextKey = "artifactInfo"
 
+// Functions for original PATH.
+func OriginalPathFrom(ctx context.Context) string {
+	originalPath, ok := ctx.Value(OriginalPathKey).(string)
+	if !ok {
+		log.Ctx(ctx).Warn().Msg("Original path not found in context")
+	}
+	return originalPath
+}
+
+func WithOriginalPath(parent context.Context, originalPath string) context.Context {
+	return context.WithValue(parent, OriginalPathKey, originalPath)
+}
+
+// Functions for original FULL URL.
 func OriginalURLFrom(ctx context.Context) string {
 	originalURL, ok := ctx.Value(OriginalURLKey).(string)
 	if !ok {

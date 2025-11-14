@@ -202,7 +202,7 @@ func ExtractPathVars(path string) (rootIdentifier, registry, groupID, artifactID
 }
 
 func getPathRoot(ctx context.Context) string {
-	originalURL := request.OriginalURLFrom(ctx)
+	originalURL := request.OriginalPathFrom(ctx)
 	pathRoot := ""
 	if originalURL != "" {
 		originalURL = strings.Trim(originalURL, "/")
