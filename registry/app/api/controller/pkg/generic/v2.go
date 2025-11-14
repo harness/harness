@@ -54,7 +54,7 @@ func (c Controller) DownloadFile(
 		}
 	}
 
-	result, err := base.ProxyWrapper(ctx, c.DBStore.RegistryDao, f, info)
+	result, err := base.ProxyWrapper(ctx, c.DBStore.RegistryDao, c.quarantineFinder, f, info, true)
 	if err != nil {
 		return &GetArtifactResponse{
 			BaseResponse: BaseResponse{
@@ -97,7 +97,7 @@ func (c Controller) HeadFile(
 		}
 	}
 
-	result, err := base.ProxyWrapper(ctx, c.DBStore.RegistryDao, f, info)
+	result, err := base.ProxyWrapper(ctx, c.DBStore.RegistryDao, c.quarantineFinder, f, info, false)
 	if err != nil {
 		return &HeadArtifactResponse{
 			BaseResponse: BaseResponse{

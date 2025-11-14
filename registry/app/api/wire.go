@@ -58,6 +58,7 @@ import (
 	npm22 "github.com/harness/gitness/registry/app/pkg/npm"
 	"github.com/harness/gitness/registry/app/pkg/nuget"
 	"github.com/harness/gitness/registry/app/pkg/python"
+	"github.com/harness/gitness/registry/app/pkg/quarantine"
 	rpmregistry "github.com/harness/gitness/registry/app/pkg/rpm"
 	publicaccess2 "github.com/harness/gitness/registry/app/services/publicaccess"
 	refcache2 "github.com/harness/gitness/registry/app/services/refcache"
@@ -153,7 +154,7 @@ func NewPackageHandlerProvider(
 	userCtrl *usercontroller.Controller, authenticator authn.Authenticator,
 	urlProvider urlprovider.Provider, authorizer authz.Authorizer, spaceFinder refcache.SpaceFinder,
 	regFinder refcache2.RegistryFinder,
-	fileManager filemanager.FileManager, quarantineArtifactDao store.QuarantineArtifactRepository,
+	fileManager filemanager.FileManager, quarantineFinder quarantine.Finder,
 	packageWrapper interfaces.PackageWrapper,
 ) packages.Handler {
 	return packages.NewHandler(
@@ -169,7 +170,7 @@ func NewPackageHandlerProvider(
 		spaceFinder,
 		regFinder,
 		fileManager,
-		quarantineArtifactDao,
+		quarantineFinder,
 		packageWrapper,
 	)
 }
@@ -254,6 +255,7 @@ var WireSet = wire.NewSet(
 	pkg.WireSet,
 	docker.OpenSourceWireSet,
 	filemanager.WireSet,
+	quarantine.WireSet,
 	maven.WireSet,
 	nuget.WireSet,
 	python.WireSet,

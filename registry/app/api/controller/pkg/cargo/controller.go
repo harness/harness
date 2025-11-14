@@ -24,6 +24,7 @@ import (
 	cargometadata "github.com/harness/gitness/registry/app/metadata/cargo"
 	"github.com/harness/gitness/registry/app/pkg/cargo"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
+	"github.com/harness/gitness/registry/app/pkg/quarantine"
 	cargotype "github.com/harness/gitness/registry/app/pkg/types/cargo"
 	"github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/store"
@@ -69,6 +70,7 @@ type controller struct {
 	proxy               cargo.Proxy
 	publicAccessService publicaccess.Service
 	spaceFinder         refcache2.SpaceFinder
+	quarantineFinder    quarantine.Finder
 }
 
 // NewController creates a new Cargo controller.
@@ -85,6 +87,7 @@ func NewController(
 	proxy cargo.Proxy,
 	publicAccessService publicaccess.Service,
 	spaceFinder refcache2.SpaceFinder,
+	quarantineFinder quarantine.Finder,
 ) Controller {
 	return &controller{
 		proxyStore:          proxyStore,
@@ -99,5 +102,6 @@ func NewController(
 		proxy:               proxy,
 		publicAccessService: publicAccessService,
 		spaceFinder:         spaceFinder,
+		quarantineFinder:    quarantineFinder,
 	}
 }

@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/registry/app/pkg/quarantine"
 	store2 "github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/types"
 
@@ -34,12 +35,14 @@ const (
 var TypeRegistry = map[ArtifactType]Artifact{}
 
 type CoreController struct {
-	RegistryDao store2.RegistryRepository
+	RegistryDao      store2.RegistryRepository
+	QuarantineFinder quarantine.Finder
 }
 
-func NewCoreController(registryDao store2.RegistryRepository) *CoreController {
+func NewCoreController(registryDao store2.RegistryRepository, quarantineFinder quarantine.Finder) *CoreController {
 	return &CoreController{
-		RegistryDao: registryDao,
+		RegistryDao:      registryDao,
+		QuarantineFinder: quarantineFinder,
 	}
 }
 

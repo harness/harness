@@ -342,7 +342,7 @@ func setupFilesController(_ *testing.T, packageType artifact.PackageType) *metad
 		mockRegistryRepo, mockFileManager, nil, mockGenericBlobRepo, nil, nil, nil, nil, mockImageStore, nil,
 		mockSpaceFinder, nil, mockURLProvider, mockAuthorizer, nil, mockArtifactStore, nil, nil,
 		mockRegistryMetadataHelper, nil, eventReporter, nil, "",
-		nil, nil, nil, nil, nil, nil, nil,
+		nil, nil, nil, nil, nil, nil, nil, nil,
 		func(_ context.Context) bool { return false },
 		mockPackageWrapper, nil,
 	)
@@ -389,7 +389,7 @@ func setupFilesControllerWithError(_ *testing.T, errorType string) *metadata.API
 		nil, fileManager, nil, nil, nil, nil, nil, nil, nil, nil,
 		mockSpaceFinder, nil, nil, mockAuthorizer, nil, nil, nil, nil,
 		mockRegistryMetadataHelper, nil, eventReporter, nil, "",
-		nil, nil, nil, nil, nil, nil, nil,
+		nil, nil, nil, nil, nil, nil, nil, nil,
 		func(_ context.Context) bool { return false },
 		nil, nil,
 	)

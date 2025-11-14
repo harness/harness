@@ -36,6 +36,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/generic"
+	"github.com/harness/gitness/registry/app/pkg/quarantine"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/types"
@@ -44,14 +45,15 @@ import (
 )
 
 type Controller struct {
-	SpaceStore  corestore.SpaceStore
-	Authorizer  authz.Authorizer
-	DBStore     *DBStore
-	fileManager filemanager.FileManager
-	tx          dbtx.Transactor
-	spaceFinder refcache.SpaceFinder
-	local       generic.LocalRegistry
-	proxy       generic.Proxy
+	SpaceStore       corestore.SpaceStore
+	Authorizer       authz.Authorizer
+	DBStore          *DBStore
+	fileManager      filemanager.FileManager
+	tx               dbtx.Transactor
+	spaceFinder      refcache.SpaceFinder
+	local            generic.LocalRegistry
+	proxy            generic.Proxy
+	quarantineFinder quarantine.Finder
 }
 
 type DBStore struct {
@@ -72,16 +74,18 @@ func NewController(
 	spaceFinder refcache.SpaceFinder,
 	local generic.LocalRegistry,
 	proxy generic.Proxy,
+	quarantineFinder quarantine.Finder,
 ) *Controller {
 	return &Controller{
-		SpaceStore:  spaceStore,
-		Authorizer:  authorizer,
-		fileManager: fileManager,
-		DBStore:     dBStore,
-		tx:          tx,
-		spaceFinder: spaceFinder,
-		local:       local,
-		proxy:       proxy,
+		SpaceStore:       spaceStore,
+		Authorizer:       authorizer,
+		fileManager:      fileManager,
+		DBStore:          dBStore,
+		tx:               tx,
+		spaceFinder:      spaceFinder,
+		local:            local,
+		proxy:            proxy,
+		quarantineFinder: quarantineFinder,
 	}
 }
 
@@ -102,7 +106,7 @@ func NewDBStore(
 }
 
 func (c Controller) UploadArtifact(
-	ctx context.Context, info pkg.GenericArtifactInfo,
+	ctx context.Context, info pkg.GenericArtifactInfo, //nolint:staticcheck
 	r *http.Request,
 ) (*commons.ResponseHeaders, string, errcode.Error) {
 	responseHeaders := &commons.ResponseHeaders{
@@ -186,7 +190,7 @@ func (c Controller) UploadArtifact(
 
 func (c Controller) updateMetadata(
 	dbArtifact *types.Artifact, metadataInput *metadata.GenericMetadata,
-	info pkg.GenericArtifactInfo, fileInfo types.FileInfo,
+	info pkg.GenericArtifactInfo, fileInfo types.FileInfo, //nolint:staticcheck
 ) error {
 	var files []metadata.File
 	if dbArtifact != nil {
@@ -223,7 +227,7 @@ func (c Controller) updateMetadata(
 	return nil
 }
 
-func (c Controller) PullArtifact(ctx context.Context, info pkg.GenericArtifactInfo) (
+func (c Controller) PullArtifact(ctx context.Context, info pkg.GenericArtifactInfo) ( //nolint:staticcheck
 	*commons.ResponseHeaders,
 	*storage.FileReader, string, errcode.Error,
 ) {
@@ -247,7 +251,8 @@ func (c Controller) PullArtifact(ctx context.Context, info pkg.GenericArtifactIn
 	return responseHeaders, fileReader, redirectURL, errcode.Error{}
 }
 
-func (c Controller) CheckIfFileAlreadyExist(ctx context.Context, info pkg.GenericArtifactInfo) error {
+func (c Controller) CheckIfFileAlreadyExist(ctx context.Context,
+	info pkg.GenericArtifactInfo) error { //nolint:staticcheck
 	image, err := c.DBStore.ImageDao.GetByName(ctx, info.RegistryID, info.Image)
 	if err != nil && !strings.Contains(err.Error(), "resource not found") {
 		return fmt.Errorf("failed to fetch the image for artifact : [%s] with "+
@@ -285,7 +290,7 @@ func (c Controller) CheckIfFileAlreadyExist(ctx context.Context, info pkg.Generi
 
 func (c Controller) ParseAndUploadToTmp(
 	ctx context.Context, reader *multipart.Reader,
-	info pkg.GenericArtifactInfo, fileToFind string,
+	info pkg.GenericArtifactInfo, fileToFind string, //nolint:staticcheck
 	formKeys []string,
 ) (types.FileInfo, string, map[string]string, error) {
 	formValues := make(map[string]string)
@@ -363,7 +368,7 @@ func (c Controller) ParseAndUploadToTmp(
 
 func (c Controller) UploadFile(
 	ctx context.Context, reader *multipart.Reader,
-	info *pkg.GenericArtifactInfo,
+	info *pkg.GenericArtifactInfo, //nolint:staticcheck
 ) (types.FileInfo, error) {
 	fileInfo, tmpFileName, formValues, err :=
 		c.ParseAndUploadToTmp(ctx, reader, *info, "file", []string{"filename", "description"})

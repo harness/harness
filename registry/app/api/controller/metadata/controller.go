@@ -29,6 +29,7 @@ import (
 	registryevents "github.com/harness/gitness/registry/app/events/artifact"
 	registrypostprocessingevents "github.com/harness/gitness/registry/app/events/asyncprocessing"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
+	"github.com/harness/gitness/registry/app/pkg/quarantine"
 	"github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/app/utils/cargo"
@@ -72,6 +73,7 @@ type APIController struct {
 	CargoRegistryHelper          cargo.RegistryHelper
 	SpaceController              *spacecontroller.Controller
 	QuarantineArtifactRepository store.QuarantineArtifactRepository
+	QuarantineFinder             quarantine.Finder
 	SpaceStore                   gstore.SpaceStore
 	UntaggedImagesEnabled        func(ctx context.Context) bool
 	PackageWrapper               interfaces.PackageWrapper
@@ -108,6 +110,7 @@ func NewAPIController(
 	cargoRegistryHelper cargo.RegistryHelper,
 	spaceController *spacecontroller.Controller,
 	quarantineArtifactRepository store.QuarantineArtifactRepository,
+	quarantineFinder quarantine.Finder,
 	spaceStore gstore.SpaceStore,
 	untaggedImagesEnabled func(ctx context.Context) bool,
 	packageWrapper interfaces.PackageWrapper,
@@ -143,6 +146,7 @@ func NewAPIController(
 		CargoRegistryHelper:          cargoRegistryHelper,
 		SpaceController:              spaceController,
 		QuarantineArtifactRepository: quarantineArtifactRepository,
+		QuarantineFinder:             quarantineFinder,
 		SpaceStore:                   spaceStore,
 		UntaggedImagesEnabled:        untaggedImagesEnabled,
 		PackageWrapper:               packageWrapper,

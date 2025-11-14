@@ -18,6 +18,7 @@ import (
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/gopackage"
+	"github.com/harness/gitness/registry/app/pkg/quarantine"
 	"github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -36,10 +37,11 @@ func ControllerProvider(
 	urlProvider urlprovider.Provider,
 	local gopackage.LocalRegistry,
 	proxy gopackage.Proxy,
+	quarantineFinder quarantine.Finder,
 ) Controller {
 	return NewController(
 		proxyStore, registryDao, registryFinder, imageDao, artifactDao,
-		fileManager, tx, urlProvider, local, proxy,
+		fileManager, tx, urlProvider, local, proxy, quarantineFinder,
 	)
 }
 

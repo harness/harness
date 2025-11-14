@@ -18,6 +18,7 @@ import (
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/python"
+	"github.com/harness/gitness/registry/app/pkg/quarantine"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
 
@@ -34,8 +35,10 @@ func ControllerProvider(
 	urlProvider urlprovider.Provider,
 	local python.LocalRegistry,
 	proxy python.Proxy,
+	quarantineFinder quarantine.Finder,
 ) Controller {
-	return NewController(proxyStore, registryDao, imageDao, artifactDao, fileManager, tx, urlProvider, local, proxy)
+	return NewController(proxyStore, registryDao,
+		imageDao, artifactDao, fileManager, tx, urlProvider, local, proxy, quarantineFinder)
 }
 
 var ControllerSet = wire.NewSet(ControllerProvider)

@@ -17,11 +17,14 @@ package base
 import (
 	"context"
 
+	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/registry/app/api/handler/utils"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/pkg"
+	"github.com/harness/gitness/registry/app/pkg/quarantine"
 	"github.com/harness/gitness/registry/app/pkg/response"
+	huggingfacetypes "github.com/harness/gitness/registry/app/pkg/types/huggingface"
 	"github.com/harness/gitness/registry/app/store"
 	registrytypes "github.com/harness/gitness/registry/types"
 
@@ -46,24 +49,28 @@ func NoProxyWrapper(
 	f func(registry registrytypes.Registry, a pkg.Artifact) response.Response,
 	info pkg.PackageArtifactInfo,
 ) (response.Response, error) {
-	return proxyInternal(ctx, registryDao, f, info, false)
+	return proxyInternal(ctx, registryDao, nil, f, info, false, false)
 }
 
 func ProxyWrapper(
 	ctx context.Context,
 	registryDao store.RegistryRepository,
+	quarantineFinder quarantine.Finder,
 	f func(registry registrytypes.Registry, a pkg.Artifact) response.Response,
 	info pkg.PackageArtifactInfo,
+	checkQuarantine bool,
 ) (response.Response, error) {
-	return proxyInternal(ctx, registryDao, f, info, true)
+	return proxyInternal(ctx, registryDao, quarantineFinder, f, info, true, checkQuarantine)
 }
 
 func proxyInternal(
 	ctx context.Context,
 	registryDao store.RegistryRepository,
+	quarantineFinder quarantine.Finder,
 	f func(registry registrytypes.Registry, a pkg.Artifact) response.Response,
 	info pkg.PackageArtifactInfo,
 	useUpstream bool,
+	checkQuarantine bool,
 ) (response.Response, error) {
 	var r response.Response
 	requestRepoKey := info.BaseArtifactInfo().RegIdentifier
@@ -77,7 +84,28 @@ func proxyInternal(
 	for _, registry := range registries {
 		log.Ctx(ctx).Info().Msgf("Using Registry: %s, Type: %s", registry.Name, registry.Type)
 		art := GetArtifactRegistry(registry)
-		if art != nil {
+		if art != nil { //nolint:nestif
+			// Check quarantine status if enabled
+			if checkQuarantine && quarantineFinder != nil {
+				version := info.GetVersion()
+				image := info.BaseArtifactInfo().Image
+				var artifactType *artifact.ArtifactType
+				// Extract artifact type from package-specific info (valid for only HuggingFace RepoType)
+				if hfInfo, ok := info.(huggingfacetypes.ArtifactInfo); ok {
+					artifactType = &hfInfo.RepoType
+				}
+				err := quarantineFinder.CheckArtifactQuarantineStatus(ctx, registry.ID, image, version, artifactType)
+				if err != nil {
+					if errors.Is(err, usererror.ErrQuarantinedArtifact) {
+						return r, usererror.ErrQuarantinedArtifact
+					}
+					log.Ctx(ctx).Error().Stack().Err(err).Msgf("error"+
+						" while checking the quarantine status of artifact: [%s], version: [%s]",
+						image, version)
+					return r, err
+				}
+			}
+
 			r = f(registry, art)
 			if r.GetError() == nil {
 				return r, nil

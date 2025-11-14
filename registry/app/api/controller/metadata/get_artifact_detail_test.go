@@ -267,7 +267,7 @@ func setupBasicController(_ *testing.T) *metadata.APIController {
 		Return(art, nil)
 	mockDownloadStatRepo.On("GetTotalDownloadsForArtifactID", mock.Anything, int64(1)).
 		Return(int64(100), nil)
-	mockQuarantineRepo.On("GetByFilePath", mock.Anything, "", int64(1), "test-artifact", "v1.0.0").
+	mockQuarantineRepo.On("GetByFilePath", mock.Anything, "", int64(1), "test-artifact", "v1.0.0", mock.Anything).
 		Return([]*types.QuarantineArtifact{}, nil)
 
 	fileManager := createFileManager()
@@ -277,7 +277,7 @@ func setupBasicController(_ *testing.T) *metadata.APIController {
 		mockRegistryRepo, fileManager, nil, nil, nil, nil, nil, nil, mockImageStore, nil,
 		mockSpaceFinder, nil, nil, mockAuthorizer, nil, mockArtifactStore, nil, nil,
 		mockRegistryMetadataHelper, nil, eventReporter, mockDownloadStatRepo, "",
-		nil, nil, nil, nil, nil, mockQuarantineRepo, nil,
+		nil, nil, nil, nil, nil, mockQuarantineRepo, nil, nil,
 		func(_ context.Context) bool { return false },
 		nil, nil,
 	)
@@ -324,7 +324,7 @@ func setupControllerWithError(_ *testing.T, errorType string) *metadata.APIContr
 		nil, fileManager, nil, nil, nil, nil, nil, nil, nil, nil,
 		mockSpaceFinder, nil, nil, mockAuthorizer, nil, nil, nil, nil,
 		mockRegistryMetadataHelper, nil, eventReporter, nil, "",
-		nil, nil, nil, nil, nil, nil, nil,
+		nil, nil, nil, nil, nil, nil, nil, nil,
 		func(_ context.Context) bool { return false },
 		nil, nil,
 	)
@@ -473,7 +473,7 @@ func setupSnapshotController(_ *testing.T, packageType artifact.PackageType) *me
 		Return(art, nil)
 	mockDownloadStatRepo.On("GetTotalDownloadsForArtifactID", mock.Anything, int64(1)).
 		Return(int64(100), nil)
-	mockQuarantineRepo.On("GetByFilePath", mock.Anything, "", int64(1), "test-artifact", "v1.0.0").
+	mockQuarantineRepo.On("GetByFilePath", mock.Anything, "", int64(1), "test-artifact", "v1.0.0", mock.Anything).
 		Return([]*types.QuarantineArtifact{}, nil)
 
 	fileManager := createFileManager()
@@ -483,7 +483,7 @@ func setupSnapshotController(_ *testing.T, packageType artifact.PackageType) *me
 		mockRegistryRepo, fileManager, nil, nil, nil, nil, nil, nil, mockImageStore, nil,
 		mockSpaceFinder, nil, nil, mockAuthorizer, nil, mockArtifactStore, nil, nil,
 		mockRegistryMetadataHelper, nil, eventReporter, mockDownloadStatRepo, "",
-		nil, nil, nil, nil, nil, mockQuarantineRepo, nil,
+		nil, nil, nil, nil, nil, mockQuarantineRepo, nil, nil,
 		func(_ context.Context) bool { return false },
 		nil, nil,
 	)

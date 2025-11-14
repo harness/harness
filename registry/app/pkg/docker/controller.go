@@ -27,6 +27,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/refcache"
 	corestore "github.com/harness/gitness/app/store"
@@ -156,7 +157,7 @@ func (c *Controller) ProxyWrapper(
 	if response != nil && !pkg.IsEmpty(response.GetErrors()) {
 		switch resourceType {
 		case ResourceTypeManifest:
-			if errors.Is(response.GetErrors()[0], errcode.ErrCodeManifestQuarantined) {
+			if errors.Is(response.GetErrors()[0], usererror.ErrQuarantinedArtifact) {
 				response.SetError(errcode.ErrCodeManifestQuarantined)
 			} else {
 				response.SetError(errcode.ErrCodeManifestUnknown)
@@ -221,8 +222,14 @@ func (c *Controller) PullManifest(
 		art.UpdateRegistryInfo(registry)
 		// Need to reassign original imageName to art because we are updating image name based on upstream proxy source inside
 		art.Image = imageName
-		//nolint:errcheck
-		headers, desc, man, e := a.(Registry).PullManifest(ctx, art, acceptHeaders, ifNoneMatchHeader)
+
+		// Check quarantine status using the finder
+		err := c.QuarantineFinder.CheckOCIManifestQuarantineStatus(ctx, art.RegistryID, art.Image, art.Tag, art.Digest)
+		if err != nil {
+			return handleQuarantineError(ctx, err, art.Image, art.Tag, art.Digest)
+		}
+
+		headers, desc, man, e := a.(Registry).PullManifest(ctx, art, acceptHeaders, ifNoneMatchHeader) //nolint:errcheck
 		response := &GetManifestResponse{e, headers, desc, man}
 		return response
 	}
@@ -540,4 +547,22 @@ func (secret hmacKey) unpackUploadState(token string) (BlobUploadState, error) {
 	}
 
 	return state, nil
+}
+
+// handleQuarantineError handles quarantine check errors and returns an appropriate response.
+func handleQuarantineError(ctx context.Context, err error, image, tag, digest string) *GetManifestResponse {
+	if errors.Is(err, usererror.ErrQuarantinedArtifact) {
+		log.Ctx(ctx).Warn().Stack().Err(err).Msgf("artifact"+
+			" is quarantined with name: [%s], tag: [%s], digest: [%s]",
+			image, tag, digest)
+		return &GetManifestResponse{
+			Errors: []error{err},
+		}
+	}
+	log.Ctx(ctx).Warn().Stack().Err(err).Msgf("error"+
+		" while checking the quarantine status of artifact: [%s], tag: [%s], digest: [%s]",
+		image, tag, digest)
+	return &GetManifestResponse{
+		Errors: []error{err},
+	}
 }

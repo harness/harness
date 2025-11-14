@@ -126,7 +126,7 @@ func dbQuarantineStatusOCI(
 		return err
 	}
 	digestVal := typesDigest.String()
-	quarantineArtifacts, err := c.DBStore.QuarantineDao.GetByFilePath(ctx, "", registry.ID, info.Image, digestVal)
+	quarantineArtifacts, err := c.DBStore.QuarantineDao.GetByFilePath(ctx, "", registry.ID, info.Image, digestVal, nil)
 	if err != nil {
 		return err
 	}

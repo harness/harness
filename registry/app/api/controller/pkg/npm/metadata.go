@@ -54,7 +54,7 @@ func (c *controller) GetPackageMetadata(
 		}
 	}
 
-	result, err := base.ProxyWrapper(ctx, c.registryDao, f, info)
+	result, err := base.ProxyWrapper(ctx, c.registryDao, c.quarantineFinder, f, info, false)
 	if !commons.IsEmpty(err) {
 		return &GetMetadataResponse{
 			BaseResponse: BaseResponse{Error: err},

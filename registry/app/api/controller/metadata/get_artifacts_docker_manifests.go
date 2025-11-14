@@ -169,7 +169,7 @@ func (c *APIController) getManifestDetails(
 	}
 
 	quarantinedArtifacts, err := c.QuarantineArtifactRepository.GetByFilePath(ctx, "",
-		m.RegistryID, image.Name, dgst.String())
+		m.RegistryID, image.Name, dgst.String(), nil)
 	if err != nil {
 		return artifact.DockerManifestDetails{}, err
 	}

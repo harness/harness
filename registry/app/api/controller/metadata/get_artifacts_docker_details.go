@@ -103,7 +103,7 @@ func (c *APIController) GetDockerArtifactDetails(
 	}
 
 	quarantineArtifacts, err := c.QuarantineArtifactRepository.GetByFilePath(ctx, "",
-		regInfo.RegistryID, image, dgst.String())
+		regInfo.RegistryID, image, dgst.String(), nil)
 	if err != nil {
 		return getArtifactDetailsErrResponse(ctx, err)
 	}

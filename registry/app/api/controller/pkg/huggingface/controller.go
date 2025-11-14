@@ -21,6 +21,7 @@ import (
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/huggingface"
+	"github.com/harness/gitness/registry/app/pkg/quarantine"
 	hftype "github.com/harness/gitness/registry/app/pkg/types/huggingface"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -41,14 +42,15 @@ type Controller interface {
 
 // controller implements the Controller interface.
 type controller struct {
-	fileManager filemanager.FileManager
-	proxyStore  store.UpstreamProxyConfigRepository
-	tx          dbtx.Transactor
-	registryDao store.RegistryRepository
-	imageDao    store.ImageRepository
-	artifactDao store.ArtifactRepository
-	urlProvider urlprovider.Provider
-	local       huggingface.LocalRegistry
+	fileManager      filemanager.FileManager
+	proxyStore       store.UpstreamProxyConfigRepository
+	tx               dbtx.Transactor
+	registryDao      store.RegistryRepository
+	imageDao         store.ImageRepository
+	artifactDao      store.ArtifactRepository
+	urlProvider      urlprovider.Provider
+	local            huggingface.LocalRegistry
+	quarantineFinder quarantine.Finder
 }
 
 // NewController creates a new Huggingface controller.
@@ -61,15 +63,17 @@ func NewController(
 	tx dbtx.Transactor,
 	urlProvider urlprovider.Provider,
 	local huggingface.LocalRegistry,
+	quarantineFinder quarantine.Finder,
 ) Controller {
 	return &controller{
-		proxyStore:  proxyStore,
-		registryDao: registryDao,
-		imageDao:    imageDao,
-		artifactDao: artifactDao,
-		fileManager: fileManager,
-		tx:          tx,
-		urlProvider: urlProvider,
-		local:       local,
+		proxyStore:       proxyStore,
+		registryDao:      registryDao,
+		imageDao:         imageDao,
+		artifactDao:      artifactDao,
+		fileManager:      fileManager,
+		tx:               tx,
+		urlProvider:      urlProvider,
+		local:            local,
+		quarantineFinder: quarantineFinder,
 	}
 }

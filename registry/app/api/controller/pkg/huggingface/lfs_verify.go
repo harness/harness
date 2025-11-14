@@ -48,7 +48,7 @@ func (c *controller) LfsVerify(ctx context.Context, info hftype.ArtifactInfo, bo
 		}
 	}
 
-	result, err := base.ProxyWrapper(ctx, c.registryDao, f, info)
+	result, err := base.ProxyWrapper(ctx, c.registryDao, c.quarantineFinder, f, info, false)
 
 	if err != nil {
 		return &LfsVerifyResponse{

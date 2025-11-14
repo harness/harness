@@ -807,7 +807,6 @@ type TaskSourceRepository interface {
 
 	UpdateSourceStatus(ctx context.Context, runID string, status types.TaskStatus, errMsg string) error
 }
-
 type TaskEventRepository interface {
 	LogTaskEvent(ctx context.Context, key string, event string, payload []byte) error
 }
@@ -819,6 +818,7 @@ type QuarantineArtifactRepository interface {
 		registryID int64,
 		artifact string,
 		version string,
+		artifactType *artifact.ArtifactType,
 	) ([]*types.QuarantineArtifact, error)
 	DeleteByRegistryIDArtifactAndFilePath(
 		ctx context.Context, registryID int64,

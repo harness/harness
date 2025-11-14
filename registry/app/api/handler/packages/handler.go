@@ -37,6 +37,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
+	"github.com/harness/gitness/registry/app/pkg/quarantine"
 	commons2 "github.com/harness/gitness/registry/app/pkg/types/commons"
 	refcache2 "github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/storage"
@@ -55,42 +56,42 @@ func NewHandler(
 	userCtrl *usercontroller.Controller, authenticator authn.Authenticator,
 	urlProvider urlprovider.Provider, authorizer authz.Authorizer, spaceFinder refcache.SpaceFinder,
 	regFinder refcache2.RegistryFinder,
-	fileManager filemanager.FileManager, quarantineArtifactDao store.QuarantineArtifactRepository,
+	fileManager filemanager.FileManager, quarantineFinder quarantine.Finder,
 	packageWrapper interfaces.PackageWrapper,
 ) Handler {
 	return &handler{
-		RegistryDao:           registryDao,
-		DownloadStatDao:       downloadStatDao,
-		BandwidthStatDao:      bandwidthStatDao,
-		SpaceStore:            spaceStore,
-		TokenStore:            tokenStore,
-		UserCtrl:              userCtrl,
-		Authenticator:         authenticator,
-		URLProvider:           urlProvider,
-		Authorizer:            authorizer,
-		SpaceFinder:           spaceFinder,
-		RegFinder:             regFinder,
-		fileManager:           fileManager,
-		QuarantineArtifactDao: quarantineArtifactDao,
-		PackageWrapper:        packageWrapper,
+		RegistryDao:      registryDao,
+		DownloadStatDao:  downloadStatDao,
+		BandwidthStatDao: bandwidthStatDao,
+		SpaceStore:       spaceStore,
+		TokenStore:       tokenStore,
+		UserCtrl:         userCtrl,
+		Authenticator:    authenticator,
+		URLProvider:      urlProvider,
+		Authorizer:       authorizer,
+		SpaceFinder:      spaceFinder,
+		RegFinder:        regFinder,
+		fileManager:      fileManager,
+		quarantineFinder: quarantineFinder,
+		PackageWrapper:   packageWrapper,
 	}
 }
 
 type handler struct {
-	RegistryDao           store.RegistryRepository
-	DownloadStatDao       store.DownloadStatRepository
-	BandwidthStatDao      store.BandwidthStatRepository
-	SpaceStore            corestore.SpaceStore
-	TokenStore            corestore.TokenStore
-	UserCtrl              *usercontroller.Controller
-	Authenticator         authn.Authenticator
-	URLProvider           urlprovider.Provider
-	Authorizer            authz.Authorizer
-	SpaceFinder           refcache.SpaceFinder
-	RegFinder             refcache2.RegistryFinder
-	fileManager           filemanager.FileManager
-	QuarantineArtifactDao store.QuarantineArtifactRepository
-	PackageWrapper        interfaces.PackageWrapper
+	RegistryDao      store.RegistryRepository
+	DownloadStatDao  store.DownloadStatRepository
+	BandwidthStatDao store.BandwidthStatRepository
+	SpaceStore       corestore.SpaceStore
+	TokenStore       corestore.TokenStore
+	UserCtrl         *usercontroller.Controller
+	Authenticator    authn.Authenticator
+	URLProvider      urlprovider.Provider
+	Authorizer       authz.Authorizer
+	SpaceFinder      refcache.SpaceFinder
+	RegFinder        refcache2.RegistryFinder
+	fileManager      filemanager.FileManager
+	quarantineFinder quarantine.Finder
+	PackageWrapper   interfaces.PackageWrapper
 }
 
 type Handler interface {
@@ -162,19 +163,25 @@ func (h *handler) CheckQuarantineStatus(
 	ctx context.Context,
 ) error {
 	info := request.ArtifactInfoFrom(ctx)
-	paths, err := h.QuarantineArtifactDao.GetByFilePath(ctx, "",
-		info.BaseArtifactInfo().RegistryID, info.BaseArtifactInfo().Image, info.GetVersion())
+	err := h.quarantineFinder.CheckArtifactQuarantineStatus(
+		ctx,
+		info.BaseArtifactInfo().RegistryID,
+		info.BaseArtifactInfo().Image,
+		info.GetVersion(),
+		nil,
+	)
 	if err != nil {
-		log.Ctx(ctx).Error().Msgf("failed to find the qurantine paths for artifact: [%s], "+
-			"version: [%s] with registryID: [%d] with error: %v",
-			info.BaseArtifactInfo().Image, info.GetVersion(), info.BaseArtifactInfo().RegistryID, err.Error())
-		return usererror.ErrInternal
-	}
-	if len(paths) != 0 {
-		log.Ctx(ctx).Error().Msgf("Requested artifact: [%s] with "+
-			"version: [%s] and filename: [%s] with registryID: [%d] is quarantined",
-			info.BaseArtifactInfo().Image, info.GetVersion(), info.GetFileName(), info.BaseArtifactInfo().RegistryID)
-		return usererror.ErrQuarantinedArtifact
+		if errors.Is(err, usererror.ErrQuarantinedArtifact) {
+			log.Ctx(ctx).Error().Msgf("Requested artifact: [%s] with "+
+				"version: [%s] and filename: [%s] with registryID: [%d] is quarantined or check failed: %v",
+				info.BaseArtifactInfo().Image, info.GetVersion(), info.GetFileName(),
+				info.BaseArtifactInfo().RegistryID, err)
+			return err
+		}
+		log.Ctx(ctx).Error().Msgf("Failed to check quarantine status for artifact: [%s] with "+
+			"version: [%s] and filename: [%s] with registryID: [%d] with error: %v",
+			info.BaseArtifactInfo().Image, info.GetVersion(), info.GetFileName(),
+			info.BaseArtifactInfo().RegistryID, err)
 	}
 	return nil
 }

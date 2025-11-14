@@ -15,13 +15,17 @@
 package pkg
 
 import (
+	"github.com/harness/gitness/registry/app/pkg/quarantine"
 	"github.com/harness/gitness/registry/app/store"
 
 	"github.com/google/wire"
 )
 
-func CoreControllerProvider(registryDao store.RegistryRepository) *CoreController {
-	return NewCoreController(registryDao)
+func CoreControllerProvider(
+	registryDao store.RegistryRepository,
+	quarantineFinder quarantine.Finder,
+) *CoreController {
+	return NewCoreController(registryDao, quarantineFinder)
 }
 
 var WireSet = wire.NewSet(CoreControllerProvider)

@@ -20,6 +20,7 @@ import (
 	gitnessstore "github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/generic"
+	"github.com/harness/gitness/registry/app/pkg/quarantine"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
 
@@ -45,8 +46,9 @@ func ControllerProvider(
 	spaceFinder refcache.SpaceFinder,
 	local generic.LocalRegistry,
 	proxy generic.Proxy,
+	quarantineFinder quarantine.Finder,
 ) *Controller {
-	return NewController(spaceStore, authorizer, fileManager, dBStore, tx, spaceFinder, local, proxy)
+	return NewController(spaceStore, authorizer, fileManager, dBStore, tx, spaceFinder, local, proxy, quarantineFinder)
 }
 
 var DBStoreSet = wire.NewSet(DBStoreProvider)

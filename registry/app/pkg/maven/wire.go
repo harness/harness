@@ -20,6 +20,7 @@ import (
 	corestore "github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/registry/app/pkg/base"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
+	"github.com/harness/gitness/registry/app/pkg/quarantine"
 	"github.com/harness/gitness/registry/app/remote/controller/proxy/maven"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/secret"
@@ -58,8 +59,9 @@ func ControllerProvider(
 	authorizer authz.Authorizer,
 	dBStore *DBStore,
 	spaceFinder refcache.SpaceFinder,
+	quarantineFinder quarantine.Finder,
 ) *Controller {
-	return NewController(local, remote, authorizer, dBStore, spaceFinder)
+	return NewController(local, remote, authorizer, dBStore, spaceFinder, quarantineFinder)
 }
 
 func DBStoreProvider(

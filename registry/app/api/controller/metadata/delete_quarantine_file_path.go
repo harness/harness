@@ -73,7 +73,12 @@ func (c *APIController) DeleteQuarantineFilePath(
 	version := r.Params.Version
 	filePath := r.Params.FilePath
 
-	img, err := c.ImageStore.GetByName(ctx, regInfo.RegistryID, string(*artifactName))
+	var artifactType *artifact.ArtifactType
+	if r.Params.ArtifactType != nil {
+		at := artifact.ArtifactType(*r.Params.ArtifactType)
+		artifactType = &at
+	}
+	img, err := c.ImageStore.GetByNameAndType(ctx, regInfo.RegistryID, string(*artifactName), artifactType)
 
 	if err != nil {
 		return artifact.DeleteQuarantineFilePath500JSONResponse{
@@ -85,6 +90,7 @@ func (c *APIController) DeleteQuarantineFilePath(
 
 	var versionID *int64
 	var rootPath string
+	var art *types.Artifact
 	if version != nil { //nolint:nestif
 		var parsedVersion = string(*version)
 		if regInfo.PackageType == artifact.PackageTypeDOCKER || regInfo.PackageType == artifact.PackageTypeHELM {
@@ -109,7 +115,7 @@ func (c *APIController) DeleteQuarantineFilePath(
 			digestVal := typesDigest.String()
 			parsedVersion = digestVal
 		}
-		art, err := c.ArtifactStore.GetByName(ctx, img.ID, parsedVersion)
+		art, err = c.ArtifactStore.GetByName(ctx, img.ID, parsedVersion)
 		if err != nil {
 			return artifact.DeleteQuarantineFilePath500JSONResponse{
 				InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
@@ -151,6 +157,12 @@ func (c *APIController) DeleteQuarantineFilePath(
 			),
 		}, nil
 	}
+
+	// Evict cache after deleting quarantine entry
+	if version != nil {
+		c.QuarantineFinder.EvictCache(ctx, regInfo.RegistryID, string(*artifactName), art.Version, artifactType)
+	}
+
 	return artifact.DeleteQuarantineFilePath200JSONResponse{
 		SuccessJSONResponse: artifact.SuccessJSONResponse(*GetSuccessResponse()),
 	}, nil

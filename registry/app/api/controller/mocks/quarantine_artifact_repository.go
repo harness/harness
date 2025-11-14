@@ -7,6 +7,7 @@ package mocks
 import (
 	"context"
 
+	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/types"
 	mock "github.com/stretchr/testify/mock"
 )
@@ -171,7 +172,7 @@ func (_c *MockQuarantineArtifactRepository_DeleteByRegistryIDArtifactAndFilePath
 }
 
 // GetByFilePath provides a mock function for the type MockQuarantineArtifactRepository
-func (_mock *MockQuarantineArtifactRepository) GetByFilePath(ctx context.Context, filePath string, registryID int64, artifact string, version string) ([]*types.QuarantineArtifact, error) {
+func (_mock *MockQuarantineArtifactRepository) GetByFilePath(ctx context.Context, filePath string, registryID int64, artifact string, version string, artifactType *artifact.ArtifactType) ([]*types.QuarantineArtifact, error) {
 	ret := _mock.Called(ctx, filePath, registryID, artifact, version)
 
 	if len(ret) == 0 {

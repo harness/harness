@@ -1195,6 +1195,7 @@ paths:
         - $ref: "#/components/parameters/artifactParam"
         - $ref: "#/components/parameters/versionParam"
         - $ref: "#/components/parameters/filePathParam"
+        - $ref: "#/components/parameters/artifactTypeParam"
       responses:
         200:
           $ref:  "#/components/responses/Success"
@@ -3209,6 +3210,8 @@ components:
         version:
           type: string
         reason:
+          type: string
+        artifactType:
           type: string
       required:
         - artifact

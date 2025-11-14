@@ -34,6 +34,7 @@ import (
 	registryevents "github.com/harness/gitness/registry/app/events/artifact"
 	registrypostprocessingevents "github.com/harness/gitness/registry/app/events/asyncprocessing"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
+	"github.com/harness/gitness/registry/app/pkg/quarantine"
 	"github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/app/utils/cargo"
@@ -93,6 +94,7 @@ func NewAPIHandler(
 	spaceStore corestore.SpaceStore,
 	packageWrapper interfaces.PackageWrapper,
 	publicAccess publicaccess.Service,
+	quarantineFinder quarantine.Finder,
 ) APIHandler {
 	r := chi.NewRouter()
 	r.Use(audit.Middleware())
@@ -129,6 +131,7 @@ func NewAPIHandler(
 		cargoRegistryHelper,
 		spaceController,
 		quarantineArtifactRepository,
+		quarantineFinder,
 		spaceStore,
 		func(_ context.Context) bool {
 			return true

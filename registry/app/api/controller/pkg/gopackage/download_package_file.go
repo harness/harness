@@ -54,7 +54,7 @@ func (c *controller) DownloadPackageFile(
 		}
 	}
 
-	result, err := base.ProxyWrapper(ctx, c.registryDao, f, info)
+	result, err := base.ProxyWrapper(ctx, c.registryDao, c.quarantineFinder, f, info, true)
 	if err != nil {
 		return c.getDownloadPackageFileErrorResponse(
 			err,

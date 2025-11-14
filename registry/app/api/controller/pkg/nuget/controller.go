@@ -21,6 +21,7 @@ import (
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/nuget"
+	"github.com/harness/gitness/registry/app/pkg/quarantine"
 	nugettype "github.com/harness/gitness/registry/app/pkg/types/nuget"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -75,15 +76,16 @@ type Controller interface {
 
 // Controller handles Python package operations.
 type controller struct {
-	fileManager filemanager.FileManager
-	proxyStore  store.UpstreamProxyConfigRepository
-	tx          dbtx.Transactor
-	registryDao store.RegistryRepository
-	imageDao    store.ImageRepository
-	artifactDao store.ArtifactRepository
-	urlProvider urlprovider.Provider
-	local       nuget.LocalRegistry
-	proxy       nuget.Proxy
+	fileManager      filemanager.FileManager
+	proxyStore       store.UpstreamProxyConfigRepository
+	tx               dbtx.Transactor
+	registryDao      store.RegistryRepository
+	imageDao         store.ImageRepository
+	artifactDao      store.ArtifactRepository
+	urlProvider      urlprovider.Provider
+	local            nuget.LocalRegistry
+	proxy            nuget.Proxy
+	quarantineFinder quarantine.Finder
 }
 
 // NewController creates a new Python controller.
@@ -97,16 +99,18 @@ func NewController(
 	urlProvider urlprovider.Provider,
 	local nuget.LocalRegistry,
 	proxy nuget.Proxy,
+	quarantineFinder quarantine.Finder,
 ) Controller {
 	return &controller{
-		proxyStore:  proxyStore,
-		registryDao: registryDao,
-		imageDao:    imageDao,
-		artifactDao: artifactDao,
-		fileManager: fileManager,
-		tx:          tx,
-		urlProvider: urlProvider,
-		local:       local,
-		proxy:       proxy,
+		proxyStore:       proxyStore,
+		registryDao:      registryDao,
+		imageDao:         imageDao,
+		artifactDao:      artifactDao,
+		fileManager:      fileManager,
+		tx:               tx,
+		urlProvider:      urlProvider,
+		local:            local,
+		proxy:            proxy,
+		quarantineFinder: quarantineFinder,
 	}
 }

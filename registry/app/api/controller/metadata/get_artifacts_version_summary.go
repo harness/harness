@@ -94,8 +94,16 @@ func (c *APIController) FetchArtifactSummary(
 		return "", "", "", false, "", nil, err
 	}
 
+	var artifactType *artifact.ArtifactType
+	if r.Params.ArtifactType != nil {
+		artifactType, err = ValidateAndGetArtifactType(registry.PackageType, string(*r.Params.ArtifactType))
+		if err != nil {
+			return "", "", "", false, "", nil, err
+		}
+	}
+
 	quarantinePath, err := c.QuarantineArtifactRepository.GetByFilePath(ctx,
-		"", regInfo.RegistryID, image, artifactVersion)
+		"", regInfo.RegistryID, image, artifactVersion, artifactType)
 
 	if err != nil {
 		log.Ctx(ctx).Err(err).Msg("failed to get quarantine path")
@@ -106,13 +114,6 @@ func (c *APIController) FetchArtifactSummary(
 	if len(quarantinePath) > 0 {
 		isQuarantined = true
 		quarantineReason = quarantinePath[0].Reason
-	}
-	var artifactType *artifact.ArtifactType
-	if r.Params.ArtifactType != nil {
-		artifactType, err = ValidateAndGetArtifactType(registry.PackageType, string(*r.Params.ArtifactType))
-		if err != nil {
-			return "", "", "", false, "", nil, err
-		}
 	}
 
 	//nolint:nestif

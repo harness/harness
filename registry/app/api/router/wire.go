@@ -44,6 +44,7 @@ import (
 	registryevents "github.com/harness/gitness/registry/app/events/artifact"
 	registrypostprocessingevents "github.com/harness/gitness/registry/app/events/asyncprocessing"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
+	"github.com/harness/gitness/registry/app/pkg/quarantine"
 	"github.com/harness/gitness/registry/app/services/publicaccess"
 	refcache2 "github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/store"
@@ -97,6 +98,7 @@ func APIHandlerProvider(
 	spaceStore corestore.SpaceStore,
 	packageWrapper interfaces.PackageWrapper,
 	publicAccess publicaccess.CacheService,
+	quarantineFinder quarantine.Finder,
 ) harness.APIHandler {
 	return harness.NewAPIHandler(
 		repoDao,
@@ -131,6 +133,7 @@ func APIHandlerProvider(
 		spaceStore,
 		packageWrapper,
 		publicAccess,
+		quarantineFinder,
 	)
 }
 

@@ -21,6 +21,7 @@ import (
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/python"
+	"github.com/harness/gitness/registry/app/pkg/quarantine"
 	pythontype "github.com/harness/gitness/registry/app/pkg/types/python"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -49,8 +50,9 @@ type controller struct {
 	artifactDao store.ArtifactRepository
 	urlProvider urlprovider.Provider
 	// TODO: Cleanup and initiate at other place
-	local python.LocalRegistry
-	proxy python.Proxy
+	local            python.LocalRegistry
+	proxy            python.Proxy
+	quarantineFinder quarantine.Finder
 }
 
 // NewController creates a new Python controller.
@@ -64,16 +66,18 @@ func NewController(
 	urlProvider urlprovider.Provider,
 	local python.LocalRegistry,
 	proxy python.Proxy,
+	quarantineFinder quarantine.Finder,
 ) Controller {
 	return &controller{
-		proxyStore:  proxyStore,
-		registryDao: registryDao,
-		imageDao:    imageDao,
-		artifactDao: artifactDao,
-		fileManager: fileManager,
-		tx:          tx,
-		urlProvider: urlProvider,
-		local:       local,
-		proxy:       proxy,
+		proxyStore:       proxyStore,
+		registryDao:      registryDao,
+		imageDao:         imageDao,
+		artifactDao:      artifactDao,
+		fileManager:      fileManager,
+		tx:               tx,
+		urlProvider:      urlProvider,
+		local:            local,
+		proxy:            proxy,
+		quarantineFinder: quarantineFinder,
 	}
 }

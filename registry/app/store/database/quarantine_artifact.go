@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/api/request"
+	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/store/database/util"
 	"github.com/harness/gitness/registry/types"
 	databaseg "github.com/harness/gitness/store/database"
@@ -53,7 +54,7 @@ type QuarantineArtifactDB struct {
 
 func (q QuarantineArtifactDao) GetByFilePath(ctx context.Context,
 	filePath string, registryID int64,
-	artifact string, version string) ([]*types.QuarantineArtifact, error) {
+	artifact string, version string, artifactType *artifact.ArtifactType) ([]*types.QuarantineArtifact, error) {
 	// First, get all quarantine artifacts for this registry
 	stmtBuilder := databaseg.Builder.
 		Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(QuarantineArtifactDB{}), ",")).
@@ -62,6 +63,11 @@ func (q QuarantineArtifactDao) GetByFilePath(ctx context.Context,
 		LeftJoin("images as i ON quarantined_path_image_id = i.image_id").
 		LeftJoin("nodes as nd ON quarantined_path_node_id = nd.node_id").
 		Where("quarantined_path_registry_id = ? AND  i.image_name = ?", registryID, artifact)
+
+	// Add artifact type condition if provided
+	if artifactType != nil {
+		stmtBuilder = stmtBuilder.Where("i.image_type = ?", string(*artifactType))
+	}
 
 	// Add version condition with proper parentheses for correct operator precedence
 	stmtBuilder = stmtBuilder.Where(

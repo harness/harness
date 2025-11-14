@@ -21,6 +21,7 @@ import (
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	npm2 "github.com/harness/gitness/registry/app/pkg/npm"
+	"github.com/harness/gitness/registry/app/pkg/quarantine"
 	"github.com/harness/gitness/registry/app/pkg/types/npm"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -28,16 +29,17 @@ import (
 
 // Controller handles PyPI package operations.
 type controller struct {
-	fileManager  filemanager.FileManager
-	proxyStore   store.UpstreamProxyConfigRepository
-	tx           dbtx.Transactor
-	registryDao  store.RegistryRepository
-	imageDao     store.ImageRepository
-	artifactDao  store.ArtifactRepository
-	urlProvider  urlprovider.Provider
-	downloadStat store.DownloadStatRepository
-	local        npm2.LocalRegistry
-	proxy        npm2.Proxy
+	fileManager      filemanager.FileManager
+	proxyStore       store.UpstreamProxyConfigRepository
+	tx               dbtx.Transactor
+	registryDao      store.RegistryRepository
+	imageDao         store.ImageRepository
+	artifactDao      store.ArtifactRepository
+	urlProvider      urlprovider.Provider
+	downloadStat     store.DownloadStatRepository
+	local            npm2.LocalRegistry
+	proxy            npm2.Proxy
+	quarantineFinder quarantine.Finder
 }
 
 type Controller interface {
@@ -100,17 +102,19 @@ func NewController(
 	urlProvider urlprovider.Provider,
 	local npm2.LocalRegistry,
 	proxy npm2.Proxy,
+	quarantineFinder quarantine.Finder,
 ) Controller {
 	return &controller{
-		proxyStore:   proxyStore,
-		registryDao:  registryDao,
-		imageDao:     imageDao,
-		artifactDao:  artifactDao,
-		downloadStat: downloadStatsDao,
-		fileManager:  fileManager,
-		tx:           tx,
-		urlProvider:  urlProvider,
-		local:        local,
-		proxy:        proxy,
+		proxyStore:       proxyStore,
+		registryDao:      registryDao,
+		imageDao:         imageDao,
+		artifactDao:      artifactDao,
+		downloadStat:     downloadStatsDao,
+		fileManager:      fileManager,
+		tx:               tx,
+		urlProvider:      urlProvider,
+		local:            local,
+		proxy:            proxy,
+		quarantineFinder: quarantineFinder,
 	}
 }

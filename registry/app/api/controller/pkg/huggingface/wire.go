@@ -18,6 +18,7 @@ import (
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/huggingface"
+	"github.com/harness/gitness/registry/app/pkg/quarantine"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
 
@@ -39,6 +40,7 @@ func ProvideController(
 	tx dbtx.Transactor,
 	urlProvider urlprovider.Provider,
 	local huggingface.LocalRegistry,
+	quarantineFinder quarantine.Finder,
 ) Controller {
 	return NewController(
 		proxyStore,
@@ -49,5 +51,6 @@ func ProvideController(
 		tx,
 		urlProvider,
 		local,
+		quarantineFinder,
 	)
 }

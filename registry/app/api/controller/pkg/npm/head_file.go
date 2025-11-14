@@ -50,7 +50,7 @@ func (c *controller) HeadPackageFileByName(
 			Exists: exist}
 	}
 
-	result, err := base.ProxyWrapper(ctx, c.registryDao, f, info)
+	result, err := base.ProxyWrapper(ctx, c.registryDao, c.quarantineFinder, f, info, false)
 	if !commons2.IsEmpty(err) {
 		return &HeadMetadataResponse{
 			BaseResponse: BaseResponse{Error: err},

@@ -79,7 +79,13 @@ func (c *APIController) QuarantineFilePath(
 	}
 	reason := r.Body.Reason
 
-	img, err := c.ImageStore.GetByName(ctx, regInfo.RegistryID, artifactName)
+	var artifactType *artifact.ArtifactType
+	if r.Body.ArtifactType != nil {
+		at := artifact.ArtifactType(*r.Body.ArtifactType)
+		artifactType = &at
+	}
+
+	img, err := c.ImageStore.GetByNameAndType(ctx, regInfo.RegistryID, artifactName, artifactType)
 	if err != nil {
 		if errors.Is(err, store.ErrResourceNotFound) {
 			return artifact.QuarantineFilePath400JSONResponse{
@@ -191,6 +197,12 @@ func (c *APIController) QuarantineFilePath(
 			),
 		}, nil
 	}
+
+	// Evict cache after creating quarantine entry
+	if version != nil {
+		c.QuarantineFinder.EvictCache(ctx, regInfo.RegistryID, artifactName, *version, artifactType)
+	}
+
 	return artifact.QuarantineFilePath200JSONResponse{
 		QuarantinePathResponseJSONResponse: *GetQuarantinePathJSONResponse(
 			quarantineArtifact.ID, regInfo.RegistryID,

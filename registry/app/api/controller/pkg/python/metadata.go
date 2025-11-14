@@ -51,7 +51,7 @@ func (c *controller) GetPackageMetadata(ctx context.Context, info pythontype.Art
 		}
 	}
 
-	result, err := base.ProxyWrapper(ctx, c.registryDao, f, info)
+	result, err := base.ProxyWrapper(ctx, c.registryDao, c.quarantineFinder, f, info, false)
 	metadataResponse, ok := result.(*GetMetadataResponse)
 	if !ok {
 		return &GetMetadataResponse{

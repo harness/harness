@@ -21,6 +21,7 @@ import (
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/gopackage"
+	"github.com/harness/gitness/registry/app/pkg/quarantine"
 	gopackagetype "github.com/harness/gitness/registry/app/pkg/types/gopackage"
 	"github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/store"
@@ -47,16 +48,17 @@ type Controller interface {
 }
 
 type controller struct {
-	fileManager    filemanager.FileManager
-	proxyStore     store.UpstreamProxyConfigRepository
-	tx             dbtx.Transactor
-	registryDao    store.RegistryRepository
-	registryFinder refcache.RegistryFinder
-	imageDao       store.ImageRepository
-	artifactDao    store.ArtifactRepository
-	urlProvider    urlprovider.Provider
-	local          gopackage.LocalRegistry
-	proxy          gopackage.Proxy
+	fileManager      filemanager.FileManager
+	proxyStore       store.UpstreamProxyConfigRepository
+	tx               dbtx.Transactor
+	registryDao      store.RegistryRepository
+	registryFinder   refcache.RegistryFinder
+	imageDao         store.ImageRepository
+	artifactDao      store.ArtifactRepository
+	urlProvider      urlprovider.Provider
+	local            gopackage.LocalRegistry
+	proxy            gopackage.Proxy
+	quarantineFinder quarantine.Finder
 }
 
 // NewController creates a new Go Package controller.
@@ -71,17 +73,19 @@ func NewController(
 	urlProvider urlprovider.Provider,
 	local gopackage.LocalRegistry,
 	proxy gopackage.Proxy,
+	quarantineFinder quarantine.Finder,
 ) Controller {
 	return &controller{
-		proxyStore:     proxyStore,
-		registryDao:    registryDao,
-		registryFinder: registryFinder,
-		imageDao:       imageDao,
-		artifactDao:    artifactDao,
-		fileManager:    fileManager,
-		tx:             tx,
-		urlProvider:    urlProvider,
-		local:          local,
-		proxy:          proxy,
+		proxyStore:       proxyStore,
+		registryDao:      registryDao,
+		registryFinder:   registryFinder,
+		imageDao:         imageDao,
+		artifactDao:      artifactDao,
+		fileManager:      fileManager,
+		tx:               tx,
+		urlProvider:      urlProvider,
+		local:            local,
+		proxy:            proxy,
+		quarantineFinder: quarantineFinder,
 	}
 }

@@ -226,7 +226,8 @@ func (c *APIController) GetArtifactDetails(
 		}
 	}
 
-	quarantinedArtifacts, err := c.QuarantineArtifactRepository.GetByFilePath(ctx, "", regInfo.RegistryID, image, version)
+	quarantinedArtifacts, err := c.QuarantineArtifactRepository.GetByFilePath(ctx,
+		"", regInfo.RegistryID, image, version, artifactType)
 	if err != nil {
 		return artifact.GetArtifactDetails500JSONResponse{
 			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(

@@ -50,7 +50,7 @@ func (c *controller) GetPackageMetadata(
 		}
 	}
 
-	result, err := base.ProxyWrapper(ctx, c.registryDao, f, info)
+	result, err := base.ProxyWrapper(ctx, c.registryDao, c.quarantineFinder, f, info, false)
 
 	if err != nil {
 		return &GetPackageMetadataResponse{
