@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"strings"
 
 	"github.com/harness/gitness/registry/app/api/interfaces"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
@@ -213,4 +214,27 @@ func (c *rpmPackageType) BuildPackageMetadataAsync(
 	_ types.BuildPackageMetadataTaskPayload,
 ) error {
 	return fmt.Errorf("not implemented")
+}
+
+func (c *rpmPackageType) GetNodePathsForImage(
+	_ *string,
+	packageName string,
+) []string {
+	return []string{"/" + packageName}
+}
+
+func (c *rpmPackageType) GetNodePathsForArtifact(
+	_ *string,
+	packageName string,
+	version string,
+) []string {
+	paths := c.GetNodePathsForImage(nil, packageName)
+	result := make([]string, len(paths))
+	for i, path := range paths {
+		lastDotIndex := strings.LastIndex(version, ".")
+		rpmVersion := version[:lastDotIndex]
+		rpmArch := version[lastDotIndex+1:]
+		result[i] = path + "/" + rpmVersion + "/" + rpmArch
+	}
+	return result
 }

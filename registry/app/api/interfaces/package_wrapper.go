@@ -114,4 +114,15 @@ type PackageWrapper interface {
 		registryID int64,
 		sourceRefs []types.SourceRef,
 	) error
+	GetNodePathsForImage(
+		packageType string,
+		artifactType *string,
+		packageName string,
+	) []string
+	GetNodePathsForArtifact(
+		packageType string,
+		artifactType *string,
+		packageName string,
+		version string,
+	) []string
 }

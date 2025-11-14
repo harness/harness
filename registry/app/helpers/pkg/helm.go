@@ -214,3 +214,23 @@ func (c *helmPackageType) BuildPackageMetadataAsync(
 ) error {
 	return fmt.Errorf("not implemented")
 }
+
+func (c *helmPackageType) GetNodePathsForImage(
+	_ *string,
+	packageName string,
+) []string {
+	return []string{"/" + packageName}
+}
+
+func (c *helmPackageType) GetNodePathsForArtifact(
+	_ *string,
+	packageName string,
+	version string,
+) []string {
+	paths := c.GetNodePathsForImage(nil, packageName)
+	result := make([]string, len(paths))
+	for i, path := range paths {
+		result[i] = path + "/" + version
+	}
+	return result
+}

@@ -93,4 +93,14 @@ type PackageHelper interface {
 		registry *types.Registry,
 		payload types.BuildPackageMetadataTaskPayload,
 	) error
+
+	GetNodePathsForImage(
+		artifactType *string,
+		packageName string,
+	) []string
+	GetNodePathsForArtifact(
+		artifactType *string,
+		packageName string,
+		version string,
+	) []string
 }

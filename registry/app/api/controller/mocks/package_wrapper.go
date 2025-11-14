@@ -1608,3 +1608,139 @@ func (_c *MockPackageWrapper_ReportBuildRegistryIndexEvent_Call) RunAndReturn(ru
 	_c.Call.Return(run)
 	return _c
 }
+
+// GetNodePathsForImage provides a mock function for the type MockPackageWrapper
+func (_mock *MockPackageWrapper) GetNodePathsForImage(packageType string, artifactType *string, packageName string) []string {
+	ret := _mock.Called(packageType, artifactType, packageName)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetNodePathsForImage")
+	}
+
+	var r0 []string
+	if returnFunc, ok := ret.Get(0).(func(string, *string, string) []string); ok {
+		r0 = returnFunc(packageType, artifactType, packageName)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]string)
+		}
+	}
+	return r0
+}
+
+// MockPackageWrapper_GetNodePathsForImage_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetNodePathsForImage'
+type MockPackageWrapper_GetNodePathsForImage_Call struct {
+	*mock.Call
+}
+
+// GetNodePathsForImage is a helper method to define mock.On call
+//   - packageType string
+//   - artifactType *string
+//   - packageName string
+func (_e *MockPackageWrapper_Expecter) GetNodePathsForImage(packageType interface{}, artifactType interface{}, packageName interface{}) *MockPackageWrapper_GetNodePathsForImage_Call {
+	return &MockPackageWrapper_GetNodePathsForImage_Call{Call: _e.mock.On("GetNodePathsForImage", packageType, artifactType, packageName)}
+}
+
+func (_c *MockPackageWrapper_GetNodePathsForImage_Call) Run(run func(packageType string, artifactType *string, packageName string)) *MockPackageWrapper_GetNodePathsForImage_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		var arg1 *string
+		if args[1] != nil {
+			arg1 = args[1].(*string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockPackageWrapper_GetNodePathsForImage_Call) Return(s []string) *MockPackageWrapper_GetNodePathsForImage_Call {
+	_c.Call.Return(s)
+	return _c
+}
+
+func (_c *MockPackageWrapper_GetNodePathsForImage_Call) RunAndReturn(run func(packageType string, artifactType *string, packageName string) []string) *MockPackageWrapper_GetNodePathsForImage_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetNodePathsForArtifact provides a mock function for the type MockPackageWrapper
+func (_mock *MockPackageWrapper) GetNodePathsForArtifact(packageType string, artifactType *string, packageName string, version string) []string {
+	ret := _mock.Called(packageType, artifactType, packageName, version)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetNodePathsForArtifact")
+	}
+
+	var r0 []string
+	if returnFunc, ok := ret.Get(0).(func(string, *string, string, string) []string); ok {
+		r0 = returnFunc(packageType, artifactType, packageName, version)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]string)
+		}
+	}
+	return r0
+}
+
+// MockPackageWrapper_GetNodePathsForArtifact_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetNodePathsForArtifact'
+type MockPackageWrapper_GetNodePathsForArtifact_Call struct {
+	*mock.Call
+}
+
+// GetNodePathsForArtifact is a helper method to define mock.On call
+//   - packageType string
+//   - artifactType *string
+//   - packageName string
+//   - version string
+func (_e *MockPackageWrapper_Expecter) GetNodePathsForArtifact(packageType interface{}, artifactType interface{}, packageName interface{}, version interface{}) *MockPackageWrapper_GetNodePathsForArtifact_Call {
+	return &MockPackageWrapper_GetNodePathsForArtifact_Call{Call: _e.mock.On("GetNodePathsForArtifact", packageType, artifactType, packageName, version)}
+}
+
+func (_c *MockPackageWrapper_GetNodePathsForArtifact_Call) Run(run func(packageType string, artifactType *string, packageName string, version string)) *MockPackageWrapper_GetNodePathsForArtifact_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		var arg1 *string
+		if args[1] != nil {
+			arg1 = args[1].(*string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
+	})
+	return _c
+}
+
+func (_c *MockPackageWrapper_GetNodePathsForArtifact_Call) Return(s []string) *MockPackageWrapper_GetNodePathsForArtifact_Call {
+	_c.Call.Return(s)
+	return _c
+}
+
+func (_c *MockPackageWrapper_GetNodePathsForArtifact_Call) RunAndReturn(run func(packageType string, artifactType *string, packageName string, version string) []string) *MockPackageWrapper_GetNodePathsForArtifact_Call {
+	_c.Call.Return(run)
+	return _c
+}

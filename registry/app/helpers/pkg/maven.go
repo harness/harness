@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"strings"
 
 	"github.com/harness/gitness/registry/app/api/interfaces"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
@@ -217,4 +218,30 @@ func (c *mavenPackageType) BuildPackageMetadataAsync(
 	_ types.BuildPackageMetadataTaskPayload,
 ) error {
 	return fmt.Errorf("not implemented")
+}
+
+func (c *mavenPackageType) GetNodePathsForImage(
+	_ *string,
+	packageName string,
+) []string {
+	parts := strings.SplitN(packageName, ":", 2)
+	path := ""
+	if len(parts) == 2 {
+		groupID := strings.ReplaceAll(parts[0], ".", "/")
+		path = groupID + "/" + parts[1]
+	}
+	return []string{"/" + path}
+}
+
+func (c *mavenPackageType) GetNodePathsForArtifact(
+	_ *string,
+	packageName string,
+	version string,
+) []string {
+	paths := c.GetNodePathsForImage(nil, packageName)
+	result := make([]string, len(paths))
+	for i, path := range paths {
+		result[i] = path + "/" + version
+	}
+	return result
 }

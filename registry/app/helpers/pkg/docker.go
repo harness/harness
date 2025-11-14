@@ -218,3 +218,23 @@ func (c *dockerPackageType) BuildPackageMetadataAsync(
 ) error {
 	return fmt.Errorf("not implemented")
 }
+
+func (c *dockerPackageType) GetNodePathsForImage(
+	_ *string,
+	packageName string,
+) []string {
+	return []string{"/" + packageName}
+}
+
+func (c *dockerPackageType) GetNodePathsForArtifact(
+	_ *string,
+	packageName string,
+	version string,
+) []string {
+	paths := c.GetNodePathsForImage(nil, packageName)
+	result := make([]string, len(paths))
+	for i, path := range paths {
+		result[i] = path + "/" + version
+	}
+	return result
+}
