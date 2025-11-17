@@ -96,14 +96,12 @@ const RepositoryTypes: RepositoryTypeListItem[] = [
   {
     label: 'repositoryTypes.cargo',
     value: RepositoryPackageType.CARGO,
-    icon: 'rust-logo',
-    tag: ThumbnailTagEnum.Beta
+    icon: 'rust-logo'
   },
   {
     label: 'repositoryTypes.go',
     value: RepositoryPackageType.GO,
-    icon: 'go-logo',
-    tag: ThumbnailTagEnum.Beta
+    icon: 'go-logo'
   },
   {
     label: 'repositoryTypes.huggingface',

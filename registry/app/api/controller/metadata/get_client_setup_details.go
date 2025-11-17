@@ -2361,7 +2361,7 @@ func (c *APIController) getGoClientSetupDetails(
 				Type: &staticStepType,
 				Commands: &[]artifact.ClientSetupStepCommand{
 					{
-						Value: utils.StringPtr("hns ar push go <REGISTRY_NAME> <ARTIFACT_VERSION> --pkg-url <LOGIN_HOSTNAME>"),
+						Value: utils.StringPtr("hc artifact push go <REGISTRY_NAME> <ARTIFACT_VERSION> --pkg-url <LOGIN_HOSTNAME>"),
 					},
 				},
 			},
