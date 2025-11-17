@@ -19,6 +19,7 @@ import { useFormikContext } from 'formik'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { CardSelect, CardSelectType, Layout, Text } from '@harnessio/uicore'
 
+import { useAppStore } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import { RepositoryVisibility } from '@ar/common/types'
 import CollapseContainer from '@ar/components/CollapseContainer/CollapseContainer'
@@ -35,8 +36,10 @@ interface RepositoryVisibilityContentProps {
 export default function RepositoryVisibilityContent(props: RepositoryVisibilityContentProps) {
   const { disabled } = props
   const { values, setFieldValue } = useFormikContext<VirtualRegistryRequest | UpstreamRegistryRequest>()
+  const { isPublicAccessEnabledOnResources } = useAppStore()
   const { getString } = useStrings()
   const isPublic = !!values.isPublic
+  if (!isPublicAccessEnabledOnResources) return null
   return (
     <CollapseContainer
       titleClassName={css.visibilityTitle}
