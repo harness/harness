@@ -160,12 +160,16 @@ func (r *proxy) GetPackageMetadata(
 
 	var files []pythontype.File
 	for _, file := range result.Packages {
+		pkgURL := r.urlProvider.PackageURL(
+			ctx,
+			info.RootIdentifier+"/"+info.RegIdentifier,
+			"python",
+		)
 		files = append(files, pythontype.File{
 			Name: file.Name,
-			FileURL: r.urlProvider.RegistryURL(ctx) + fmt.Sprintf(
-				"/pkg/%s/%s/python/files/%s/%s/%s",
-				info.RootIdentifier,
-				info.RegIdentifier,
+			FileURL: fmt.Sprintf(
+				"%s/files/%s/%s/%s",
+				pkgURL,
 				info.Image,
 				file.Version(),
 				file.Name),
