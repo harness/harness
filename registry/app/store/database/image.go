@@ -306,7 +306,7 @@ func (i ImageDao) GetByRepoAndName(
 }
 
 func (i ImageDao) Update(ctx context.Context, image *types.Image) (err error) {
-	var sqlQuery = " UPDATE images SET " + util.GetSetDBKeys(imageDB{}, "image_id") +
+	var sqlQuery = " UPDATE images SET " + util.GetSetDBKeys(imageDB{}, "image_id", "image_uuid") +
 		" WHERE image_id = :image_id "
 
 	dbImage := i.mapToInternalImage(ctx, image)

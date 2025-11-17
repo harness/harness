@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"strings"
 
 	"github.com/harness/gitness/registry/app/api/interfaces"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
@@ -218,19 +219,26 @@ func (c *helmPackageType) BuildPackageMetadataAsync(
 func (c *helmPackageType) GetNodePathsForImage(
 	_ *string,
 	packageName string,
-) []string {
-	return []string{"/" + packageName}
+) ([]string, error) {
+	return []string{"/" + packageName}, nil
 }
 
 func (c *helmPackageType) GetNodePathsForArtifact(
 	_ *string,
 	packageName string,
 	version string,
-) []string {
-	paths := c.GetNodePathsForImage(nil, packageName)
+) ([]string, error) {
+	parsedDigest, err := types.Digest(strings.ToLower(version)).Parse()
+	if err != nil {
+		return nil, err
+	}
+	paths, err := c.GetNodePathsForImage(nil, packageName)
+	if err != nil {
+		return nil, err
+	}
 	result := make([]string, len(paths))
 	for i, path := range paths {
-		result[i] = path + "/" + version
+		result[i] = path + "/" + parsedDigest.String()
 	}
-	return result
+	return result, nil
 }

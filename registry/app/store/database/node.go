@@ -27,6 +27,7 @@ import (
 	databaseg "github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
@@ -55,6 +56,26 @@ func (n NodeDao) GetByPathAndRegistryID(ctx context.Context, registryID int64, p
 	}
 
 	return n.mapToNode(ctx, dst)
+}
+
+func (n NodeDao) FindByPathsAndRegistryID(ctx context.Context, paths []string, registryID int64) (*[]string, error) {
+	query := databaseg.Builder.
+		Select("node_id").
+		From("nodes").
+		Where(squirrel.Eq{"node_registry_id": registryID}).
+		Where(squirrel.Eq{"node_path": paths})
+
+	sql, args, err := query.ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("failed to build query: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, n.sqlDB)
+	var nodes []string
+	if err = db.SelectContext(ctx, &nodes, sql, args...); err != nil {
+		return nil, fmt.Errorf("failed to query nodes: %w", err)
+	}
+	return &nodes, nil
 }
 
 func (n NodeDao) Get(ctx context.Context, id int64) (*types.Node, error) {

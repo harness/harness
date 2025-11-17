@@ -49,7 +49,8 @@ func TestCargoPackageType_GetNodePathsForImage_Updated(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			paths := cargoPackage.GetNodePathsForImage(nil, tt.packageName)
+			paths, err := cargoPackage.GetNodePathsForImage(nil, tt.packageName)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedPaths, paths)
 		})
 	}
@@ -86,7 +87,8 @@ func TestCargoPackageType_GetNodePathsForArtifact_Updated(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			paths := cargoPackage.GetNodePathsForArtifact(nil, tt.packageName, tt.version)
+			paths, err := cargoPackage.GetNodePathsForArtifact(nil, tt.packageName, tt.version)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedPaths, paths)
 		})
 	}
@@ -119,7 +121,8 @@ func TestDockerPackageType_GetNodePathsForImage_Updated(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			paths := dockerPackage.GetNodePathsForImage(nil, tt.packageName)
+			paths, err := dockerPackage.GetNodePathsForImage(nil, tt.packageName)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedPaths, paths)
 		})
 	}
@@ -135,28 +138,29 @@ func TestDockerPackageType_GetNodePathsForArtifact_Updated(t *testing.T) {
 		expectedPaths []string
 	}{
 		{
-			name:          "simple image with tag",
+			name:          "simple image with digest",
 			packageName:   "nginx",
-			version:       "1.21",
-			expectedPaths: []string{"/nginx/1.21"},
+			version:       "0154ac4961ea10df8ceb1301f46d213f26d397fbd17f190b797d221f79dd7abc12",
+			expectedPaths: []string{"/nginx/sha256:54ac4961ea10df8ceb1301f46d213f26d397fbd17f190b797d221f79dd7abc12"},
 		},
 		{
-			name:          "image with latest tag",
+			name:          "image with different digest",
 			packageName:   "alpine",
-			version:       "latest",
-			expectedPaths: []string{"/alpine/latest"},
+			version:       "011a9ec845ee94c202b2d5da74a24f0ed2058318bfa9879fa541efaecba272e86b",
+			expectedPaths: []string{"/alpine/sha256:1a9ec845ee94c202b2d5da74a24f0ed2058318bfa9879fa541efaecba272e86b"},
 		},
 		{
-			name:          "namespaced image with version",
+			name:          "namespaced image with digest",
 			packageName:   "library/postgres",
-			version:       "13.4",
-			expectedPaths: []string{"/library/postgres/13.4"},
+			version:       "0162d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b",
+			expectedPaths: []string{"/library/postgres/sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b"},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			paths := dockerPackage.GetNodePathsForArtifact(nil, tt.packageName, tt.version)
+			paths, err := dockerPackage.GetNodePathsForArtifact(nil, tt.packageName, tt.version)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedPaths, paths)
 		})
 	}
@@ -194,7 +198,8 @@ func TestMavenPackageType_GetNodePathsForImage_Updated(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			paths := mavenPackage.GetNodePathsForImage(nil, tt.packageName)
+			paths, err := mavenPackage.GetNodePathsForImage(nil, tt.packageName)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedPaths, paths)
 		})
 	}
@@ -231,7 +236,8 @@ func TestMavenPackageType_GetNodePathsForArtifact_Updated(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			paths := mavenPackage.GetNodePathsForArtifact(nil, tt.packageName, tt.version)
+			paths, err := mavenPackage.GetNodePathsForArtifact(nil, tt.packageName, tt.version)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedPaths, paths)
 		})
 	}
@@ -264,7 +270,8 @@ func TestGoPackageType_GetNodePathsForImage_Updated(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			paths := goPackage.GetNodePathsForImage(nil, tt.packageName)
+			paths, err := goPackage.GetNodePathsForImage(nil, tt.packageName)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedPaths, paths)
 		})
 	}
@@ -301,7 +308,8 @@ func TestGoPackageType_GetNodePathsForArtifact_Updated(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			paths := goPackage.GetNodePathsForArtifact(nil, tt.packageName, tt.version)
+			paths, err := goPackage.GetNodePathsForArtifact(nil, tt.packageName, tt.version)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedPaths, paths)
 		})
 	}
@@ -334,7 +342,8 @@ func TestRpmPackageType_GetNodePathsForImage_Updated(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			paths := rpmPackage.GetNodePathsForImage(nil, tt.packageName)
+			paths, err := rpmPackage.GetNodePathsForImage(nil, tt.packageName)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedPaths, paths)
 		})
 	}
@@ -371,7 +380,8 @@ func TestRpmPackageType_GetNodePathsForArtifact_Updated(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			paths := rpmPackage.GetNodePathsForArtifact(nil, tt.packageName, tt.version)
+			paths, err := rpmPackage.GetNodePathsForArtifact(nil, tt.packageName, tt.version)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedPaths, paths)
 		})
 	}
@@ -404,7 +414,8 @@ func TestNpmPackageType_GetNodePathsForImage_Updated(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			paths := npmPackage.GetNodePathsForImage(nil, tt.packageName)
+			paths, err := npmPackage.GetNodePathsForImage(nil, tt.packageName)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedPaths, paths)
 		})
 	}
@@ -441,7 +452,8 @@ func TestNpmPackageType_GetNodePathsForArtifact_Updated(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			paths := npmPackage.GetNodePathsForArtifact(nil, tt.packageName, tt.version)
+			paths, err := npmPackage.GetNodePathsForArtifact(nil, tt.packageName, tt.version)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedPaths, paths)
 		})
 	}
@@ -474,7 +486,8 @@ func TestHelmPackageType_GetNodePathsForImage_Updated(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			paths := helmPackage.GetNodePathsForImage(nil, tt.packageName)
+			paths, err := helmPackage.GetNodePathsForImage(nil, tt.packageName)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedPaths, paths)
 		})
 	}
@@ -490,28 +503,29 @@ func TestHelmPackageType_GetNodePathsForArtifact_Updated(t *testing.T) {
 		expectedPaths []string
 	}{
 		{
-			name:          "simple chart with version",
+			name:          "simple chart with digest",
 			packageName:   "nginx",
-			version:       "1.0.0",
-			expectedPaths: []string{"/nginx/1.0.0"},
+			version:       "0154ac4961ea10df8ceb1301f46d213f26d397fbd17f190b797d221f79dd7abc12",
+			expectedPaths: []string{"/nginx/sha256:54ac4961ea10df8ceb1301f46d213f26d397fbd17f190b797d221f79dd7abc12"},
 		},
 		{
-			name:          "chart with semantic version",
+			name:          "chart with different digest",
 			packageName:   "prometheus",
-			version:       "15.10.1",
-			expectedPaths: []string{"/prometheus/15.10.1"},
+			version:       "011a9ec845ee94c202b2d5da74a24f0ed2058318bfa9879fa541efaecba272e86b",
+			expectedPaths: []string{"/prometheus/sha256:1a9ec845ee94c202b2d5da74a24f0ed2058318bfa9879fa541efaecba272e86b"},
 		},
 		{
-			name:          "chart with pre-release version",
+			name:          "chart with sha256 digest",
 			packageName:   "grafana",
-			version:       "6.32.0-beta.1",
-			expectedPaths: []string{"/grafana/6.32.0-beta.1"},
+			version:       "0162d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b",
+			expectedPaths: []string{"/grafana/sha256:62d8908bee94c202b2d35224a221aaa2058318bfa9879fa541efaecba272331b"},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			paths := helmPackage.GetNodePathsForArtifact(nil, tt.packageName, tt.version)
+			paths, err := helmPackage.GetNodePathsForArtifact(nil, tt.packageName, tt.version)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedPaths, paths)
 		})
 	}
@@ -544,7 +558,8 @@ func TestGenericPackageType_GetNodePathsForImage_Updated(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			paths := genericPackage.GetNodePathsForImage(nil, tt.packageName)
+			paths, err := genericPackage.GetNodePathsForImage(nil, tt.packageName)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedPaths, paths)
 		})
 	}
@@ -581,7 +596,8 @@ func TestGenericPackageType_GetNodePathsForArtifact_Updated(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			paths := genericPackage.GetNodePathsForArtifact(nil, tt.packageName, tt.version)
+			paths, err := genericPackage.GetNodePathsForArtifact(nil, tt.packageName, tt.version)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedPaths, paths)
 		})
 	}
@@ -614,7 +630,8 @@ func TestNugetPackageType_GetNodePathsForImage_Updated(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			paths := nugetPackage.GetNodePathsForImage(nil, tt.packageName)
+			paths, err := nugetPackage.GetNodePathsForImage(nil, tt.packageName)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedPaths, paths)
 		})
 	}
@@ -651,7 +668,8 @@ func TestNugetPackageType_GetNodePathsForArtifact_Updated(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			paths := nugetPackage.GetNodePathsForArtifact(nil, tt.packageName, tt.version)
+			paths, err := nugetPackage.GetNodePathsForArtifact(nil, tt.packageName, tt.version)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedPaths, paths)
 		})
 	}
@@ -684,7 +702,8 @@ func TestPythonPackageType_GetNodePathsForImage_Updated(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			paths := pythonPackage.GetNodePathsForImage(nil, tt.packageName)
+			paths, err := pythonPackage.GetNodePathsForImage(nil, tt.packageName)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedPaths, paths)
 		})
 	}
@@ -721,7 +740,8 @@ func TestPythonPackageType_GetNodePathsForArtifact_Updated(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			paths := pythonPackage.GetNodePathsForArtifact(nil, tt.packageName, tt.version)
+			paths, err := pythonPackage.GetNodePathsForArtifact(nil, tt.packageName, tt.version)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedPaths, paths)
 		})
 	}
@@ -754,7 +774,8 @@ func TestHuggingFacePackageType_GetNodePathsForImage_Updated(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			paths := huggingFacePackage.GetNodePathsForImage(nil, tt.packageName)
+			paths, err := huggingFacePackage.GetNodePathsForImage(nil, tt.packageName)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedPaths, paths)
 		})
 	}
@@ -791,7 +812,8 @@ func TestHuggingFacePackageType_GetNodePathsForArtifact_Updated(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			paths := huggingFacePackage.GetNodePathsForArtifact(nil, tt.packageName, tt.version)
+			paths, err := huggingFacePackage.GetNodePathsForArtifact(nil, tt.packageName, tt.version)
+			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedPaths, paths)
 		})
 	}

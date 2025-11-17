@@ -9,6 +9,7 @@ import (
 
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/types"
+
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -1610,7 +1611,7 @@ func (_c *MockPackageWrapper_ReportBuildRegistryIndexEvent_Call) RunAndReturn(ru
 }
 
 // GetNodePathsForImage provides a mock function for the type MockPackageWrapper
-func (_mock *MockPackageWrapper) GetNodePathsForImage(packageType string, artifactType *string, packageName string) []string {
+func (_mock *MockPackageWrapper) GetNodePathsForImage(packageType string, artifactType *string, packageName string) ([]string, error) {
 	ret := _mock.Called(packageType, artifactType, packageName)
 
 	if len(ret) == 0 {
@@ -1618,6 +1619,10 @@ func (_mock *MockPackageWrapper) GetNodePathsForImage(packageType string, artifa
 	}
 
 	var r0 []string
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(string, *string, string) ([]string, error)); ok {
+		return returnFunc(packageType, artifactType, packageName)
+	}
 	if returnFunc, ok := ret.Get(0).(func(string, *string, string) []string); ok {
 		r0 = returnFunc(packageType, artifactType, packageName)
 	} else {
@@ -1625,7 +1630,14 @@ func (_mock *MockPackageWrapper) GetNodePathsForImage(packageType string, artifa
 			r0 = ret.Get(0).([]string)
 		}
 	}
-	return r0
+
+	if returnFunc, ok := ret.Get(1).(func(string, *string, string) error); ok {
+		r1 = returnFunc(packageType, artifactType, packageName)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // MockPackageWrapper_GetNodePathsForImage_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetNodePathsForImage'
@@ -1664,18 +1676,18 @@ func (_c *MockPackageWrapper_GetNodePathsForImage_Call) Run(run func(packageType
 	return _c
 }
 
-func (_c *MockPackageWrapper_GetNodePathsForImage_Call) Return(s []string) *MockPackageWrapper_GetNodePathsForImage_Call {
-	_c.Call.Return(s)
+func (_c *MockPackageWrapper_GetNodePathsForImage_Call) Return(s []string, err error) *MockPackageWrapper_GetNodePathsForImage_Call {
+	_c.Call.Return(s, err)
 	return _c
 }
 
-func (_c *MockPackageWrapper_GetNodePathsForImage_Call) RunAndReturn(run func(packageType string, artifactType *string, packageName string) []string) *MockPackageWrapper_GetNodePathsForImage_Call {
+func (_c *MockPackageWrapper_GetNodePathsForImage_Call) RunAndReturn(run func(packageType string, artifactType *string, packageName string) ([]string, error)) *MockPackageWrapper_GetNodePathsForImage_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // GetNodePathsForArtifact provides a mock function for the type MockPackageWrapper
-func (_mock *MockPackageWrapper) GetNodePathsForArtifact(packageType string, artifactType *string, packageName string, version string) []string {
+func (_mock *MockPackageWrapper) GetNodePathsForArtifact(packageType string, artifactType *string, packageName string, version string) ([]string, error) {
 	ret := _mock.Called(packageType, artifactType, packageName, version)
 
 	if len(ret) == 0 {
@@ -1683,6 +1695,10 @@ func (_mock *MockPackageWrapper) GetNodePathsForArtifact(packageType string, art
 	}
 
 	var r0 []string
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(string, *string, string, string) ([]string, error)); ok {
+		return returnFunc(packageType, artifactType, packageName, version)
+	}
 	if returnFunc, ok := ret.Get(0).(func(string, *string, string, string) []string); ok {
 		r0 = returnFunc(packageType, artifactType, packageName, version)
 	} else {
@@ -1690,7 +1706,14 @@ func (_mock *MockPackageWrapper) GetNodePathsForArtifact(packageType string, art
 			r0 = ret.Get(0).([]string)
 		}
 	}
-	return r0
+
+	if returnFunc, ok := ret.Get(1).(func(string, *string, string, string) error); ok {
+		r1 = returnFunc(packageType, artifactType, packageName, version)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // MockPackageWrapper_GetNodePathsForArtifact_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetNodePathsForArtifact'
@@ -1735,12 +1758,12 @@ func (_c *MockPackageWrapper_GetNodePathsForArtifact_Call) Run(run func(packageT
 	return _c
 }
 
-func (_c *MockPackageWrapper_GetNodePathsForArtifact_Call) Return(s []string) *MockPackageWrapper_GetNodePathsForArtifact_Call {
-	_c.Call.Return(s)
+func (_c *MockPackageWrapper_GetNodePathsForArtifact_Call) Return(s []string, err error) *MockPackageWrapper_GetNodePathsForArtifact_Call {
+	_c.Call.Return(s, err)
 	return _c
 }
 
-func (_c *MockPackageWrapper_GetNodePathsForArtifact_Call) RunAndReturn(run func(packageType string, artifactType *string, packageName string, version string) []string) *MockPackageWrapper_GetNodePathsForArtifact_Call {
+func (_c *MockPackageWrapper_GetNodePathsForArtifact_Call) RunAndReturn(run func(packageType string, artifactType *string, packageName string, version string) ([]string, error)) *MockPackageWrapper_GetNodePathsForArtifact_Call {
 	_c.Call.Return(run)
 	return _c
 }

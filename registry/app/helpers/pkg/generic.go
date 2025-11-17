@@ -218,19 +218,22 @@ func (c *genericPackageType) BuildPackageMetadataAsync(
 func (c *genericPackageType) GetNodePathsForImage(
 	_ *string,
 	packageName string,
-) []string {
-	return []string{"/" + packageName}
+) ([]string, error) {
+	return []string{"/" + packageName}, nil
 }
 
 func (c *genericPackageType) GetNodePathsForArtifact(
 	_ *string,
 	packageName string,
 	version string,
-) []string {
-	paths := c.GetNodePathsForImage(nil, packageName)
+) ([]string, error) {
+	paths, err := c.GetNodePathsForImage(nil, packageName)
+	if err != nil {
+		return nil, err
+	}
 	result := make([]string, len(paths))
 	for i, path := range paths {
 		result[i] = path + "/" + version
 	}
-	return result
+	return result, nil
 }

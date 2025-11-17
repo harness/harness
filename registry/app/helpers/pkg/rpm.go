@@ -219,16 +219,19 @@ func (c *rpmPackageType) BuildPackageMetadataAsync(
 func (c *rpmPackageType) GetNodePathsForImage(
 	_ *string,
 	packageName string,
-) []string {
-	return []string{"/" + packageName}
+) ([]string, error) {
+	return []string{"/" + packageName}, nil
 }
 
 func (c *rpmPackageType) GetNodePathsForArtifact(
 	_ *string,
 	packageName string,
 	version string,
-) []string {
-	paths := c.GetNodePathsForImage(nil, packageName)
+) ([]string, error) {
+	paths, err := c.GetNodePathsForImage(nil, packageName)
+	if err != nil {
+		return nil, err
+	}
 	result := make([]string, len(paths))
 	for i, path := range paths {
 		lastDotIndex := strings.LastIndex(version, ".")
@@ -236,5 +239,5 @@ func (c *rpmPackageType) GetNodePathsForArtifact(
 		rpmArch := version[lastDotIndex+1:]
 		result[i] = path + "/" + rpmVersion + "/" + rpmArch
 	}
-	return result
+	return result, nil
 }

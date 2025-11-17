@@ -223,25 +223,28 @@ func (c *mavenPackageType) BuildPackageMetadataAsync(
 func (c *mavenPackageType) GetNodePathsForImage(
 	_ *string,
 	packageName string,
-) []string {
+) ([]string, error) {
 	parts := strings.SplitN(packageName, ":", 2)
 	path := ""
 	if len(parts) == 2 {
 		groupID := strings.ReplaceAll(parts[0], ".", "/")
 		path = groupID + "/" + parts[1]
 	}
-	return []string{"/" + path}
+	return []string{"/" + path}, nil
 }
 
 func (c *mavenPackageType) GetNodePathsForArtifact(
 	_ *string,
 	packageName string,
 	version string,
-) []string {
-	paths := c.GetNodePathsForImage(nil, packageName)
+) ([]string, error) {
+	paths, err := c.GetNodePathsForImage(nil, packageName)
+	if err != nil {
+		return nil, err
+	}
 	result := make([]string, len(paths))
 	for i, path := range paths {
 		result[i] = path + "/" + version
 	}
-	return result
+	return result, nil
 }

@@ -669,6 +669,8 @@ type NodesRepository interface {
 		ctx context.Context, registryID int64, pathPrefix string, filename string,
 	) (*types.Node, error)
 
+	FindByPathsAndRegistryID(ctx context.Context, paths []string, registryID int64) (*[]string, error)
+
 	CountByPathAndRegistryID(
 		ctx context.Context, registryID int64, path string,
 	) (int64, error)

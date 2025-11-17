@@ -218,6 +218,38 @@ func (f *FileManager) SaveNodesTx(
 	})
 }
 
+func (f *FileManager) CreateNodesWithoutFileNode(
+	ctx context.Context,
+	path string,
+	regID int64,
+	principalID int64,
+) error {
+	segments := strings.Split(path, rootPathString)
+	parentID := ""
+	// Start with root (-1)
+	// Iterate through segments and create Node objects
+	nodePath := ""
+	for i, segment := range segments {
+		if i >= nodeLimit { // Stop after 1000 iterations
+			break
+		}
+		if segment == "" {
+			continue // Skip empty segments
+		}
+		var nodeID string
+		var err error
+		nodePath += rootPathString + segment
+
+		nodeID, err = f.SaveNode(ctx, path, "", regID, segment,
+			parentID, nodePath, false, principalID)
+		if err != nil {
+			return err
+		}
+		parentID = nodeID
+	}
+	return nil
+}
+
 func (f *FileManager) moveFile(
 	ctx context.Context,
 	rootIdentifier string,

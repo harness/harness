@@ -386,10 +386,10 @@ func (p *packageWrapper) GetNodePathsForImage(
 	packageType string,
 	artifactType *string,
 	packageName string,
-) []string {
+) ([]string, error) {
 	pkg := p.GetPackage(packageType)
 	if pkg == nil {
-		return []string{}
+		return []string{}, nil
 	}
 	return pkg.GetNodePathsForImage(artifactType, packageName)
 }
@@ -399,10 +399,10 @@ func (p *packageWrapper) GetNodePathsForArtifact(
 	artifactType *string,
 	packageName string,
 	version string,
-) []string {
+) ([]string, error) {
 	pkg := p.GetPackage(packageType)
 	if pkg == nil {
-		return []string{}
+		return []string{}, nil
 	}
 	return pkg.GetNodePathsForArtifact(artifactType, packageName, version)
 }

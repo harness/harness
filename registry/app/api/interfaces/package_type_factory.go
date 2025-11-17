@@ -97,10 +97,10 @@ type PackageHelper interface {
 	GetNodePathsForImage(
 		artifactType *string,
 		packageName string,
-	) []string
+	) ([]string, error)
 	GetNodePathsForArtifact(
 		artifactType *string,
 		packageName string,
 		version string,
-	) []string
+	) ([]string, error)
 }

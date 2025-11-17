@@ -118,11 +118,11 @@ type PackageWrapper interface {
 		packageType string,
 		artifactType *string,
 		packageName string,
-	) []string
+	) ([]string, error)
 	GetNodePathsForArtifact(
 		packageType string,
 		artifactType *string,
 		packageName string,
 		version string,
-	) []string
+	) ([]string, error)
 }
