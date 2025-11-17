@@ -35,6 +35,9 @@ module.exports = {
     './GitspaceList': './src/cde-gitness/pages/GitspaceListing/GitspaceListing.tsx',
     './GitspaceInfra': './src/cde-gitness/pages/GitspaceInfra/GitspaceInfraHomePage.tsx',
     './UsageDashboard': './src/cde-gitness/pages/UsageDashboard/UsageDashboardPage.tsx',
+    './AITasks': './src/cde-gitness/pages/AITaskCreate/AITaskCreate.tsx',
+    './AITaskList': './src/cde-gitness/pages/AITaskListing/AITaskListing.tsx',
+    './AITaskDetail': './src/cde-gitness/pages/AITaskDetails/AITaskDetails.tsx',
     './GitspaceInfraDetail': './src/cde-gitness/pages/InfraConfigure/InfraConfigure.tsx',
     './GitspaceAdminSettings': './src/cde-gitness/pages/AdminSettings/AdminSettings.tsx'
   },

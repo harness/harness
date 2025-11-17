@@ -339,7 +339,7 @@ create:
   gitspaceNameHelpertext1: Great Gitspace names are short and memorable. Need some inspiration?
   gitspaceNameHelpertext2: 'Try this:'
   sshKey: SSH Key
-  gitspaceSSHAddNote : There are no keys configured. Please add an SSH key.
+  gitspaceSSHAddNote: There are no keys configured. Please add an SSH key.
   gitspaceSSHhelpertext1: By default we will create the SSH key used to login to the Gitspace.
   gitspaceSSHhelpertext2: You can add keys under Preferences in User Settings.
   gitspaceCreateSuccess: Gitspace created successfully
@@ -348,21 +348,21 @@ create:
   infraProviderFailed: Gitspace Infrastructure creation failed
   machineCreateSuccess: Machine created successfully
   machineCreateFailed: Machine creation failed
-  gitprovider : Git Provider
-  infraProviderType : Infra Provider Type
-  infraProviderTypeText : Your Gitspace will run on the selected infra provider type
-  machineType : Machine Type
-  region : Region
-  regionText : Your Gitspace will run in the selected region
+  gitprovider: Git Provider
+  infraProviderType: Infra Provider Type
+  infraProviderTypeText: Your Gitspace will run on the selected infra provider type
+  machineType: Machine Type
+  region: Region
+  regionText: Your Gitspace will run in the selected region
   machineTypeNote: Resources for your Gitspace
-  scmEmpty : All SCM options are disabled
-  ideEmpty : All IDEs disabled
-  selectGitProvider : Select a Git Provider
-  githubOauthhelpertext2 : Configure the OAuth in Profile
-  githubOauthhelpertext3 : Visit the User Profile Settings.
-  githubOauthhelpertext5 : After configuring return back to this page to connect the private repositories
-  ideNote : Your Gitspace will open in the selected IDE to code
-  selectIde : Select an IDE
+  scmEmpty: All SCM options are disabled
+  ideEmpty: All IDEs disabled
+  selectGitProvider: Select a Git Provider
+  githubOauthhelpertext2: Configure the OAuth in Profile
+  githubOauthhelpertext3: Visit the User Profile Settings.
+  githubOauthhelpertext5: After configuring return back to this page to connect the private repositories
+  ideNote: Your Gitspace will open in the selected IDE to code
+  selectIde: Select an IDE
 
   subtext: Start Coding, no setup required. Dedicated cloud development environments with your favorite editor.
   importWarning:
@@ -376,31 +376,50 @@ update:
   infraProviderSuccess: Gitspace Infrastructure updated successfully
   editGitspace: Edit Gitspace
   updateGitspace: Update Gitspace
-  gitspaceUpdateSuccess : 'Gitspace updated successfully'
-  gitspaceUpdateFailed : Failed to update gitspace
-  allMachineDisabled : All machines disabled
-  errorChosenIDE : Chosen IDE has been disabled by the admin. Please choose a different one.
-  errorAllIDE : All IDEs have been disabled by the admin. Cannot update the gitspace.
+  gitspaceUpdateSuccess: 'Gitspace updated successfully'
+  gitspaceUpdateFailed: Failed to update gitspace
+  allMachineDisabled: All machines disabled
+  errorChosenIDE: Chosen IDE has been disabled by the admin. Please choose a different one.
+  errorAllIDE: All IDEs have been disabled by the admin. Cannot update the gitspace.
   errorAllResources: Admin has disabled all available machine resources for this gitspace. Cannot update the gitspace.
-  gitspaceUpdateNote : Your changes won't be lost by updating the IDE or machine type. Your Gitspace has to be restarted after the update.
+  gitspaceUpdateNote: Your changes won't be lost by updating the IDE or machine type. Your Gitspace has to be restarted after the update.
 usageDashboard:
-  title: "Usage Dashboard"
-  usageTab: "Usage"
-  gitspacesTab: "Gitspaces"
-  comingSoon: "Coming Soon"
-  searchOrgPlaceholder: "Search Organizations..."
-  searchProjectPlaceholder: "Search Projects..."
-  searchPlaceholder: "Search Gitspaces..."
-  projects: "Projects"
-  organizations: "Organizations"
-  loadMore: "Load More"
-  clearAll: "Clear All"
-  allProjects: "All Projects"
-  noResultsFound: "No Results Found"
-  tryDifferentKeywords: "Try different keywords"
-  loading: "Loading..."
+  title: 'Usage Dashboard'
+  usageTab: 'Usage'
+  gitspacesTab: 'Gitspaces'
+  comingSoon: 'Coming Soon'
+  searchOrgPlaceholder: 'Search Organizations...'
+  searchProjectPlaceholder: 'Search Projects...'
+  searchPlaceholder: 'Search Gitspaces...'
+  projects: 'Projects'
+  organizations: 'Organizations'
+  loadMore: 'Load More'
+  clearAll: 'Clear All'
+  allProjects: 'All Projects'
+  noResultsFound: 'No Results Found'
+  tryDifferentKeywords: 'Try different keywords'
+  loading: 'Loading...'
   sortBy: Sort By
   total: Total
+aiTasks:
+  tasks: Tasks
+  create:
+    createTask: Create Task
+    welcome: 'Hello {{userName}}, What are we coding next?'
+    selectedGitspace: Selected Gitspace
+    addContext: Add Context
+    selectActiveGitspace: Select an active Gitspace
+    createTaskNote: 'Tackle bugs, small feature request, and any other software engineering tasks, with direct export to any Git tool'
+    selectContext: Select Context
+    runTask: Run Task
+    startWithActiveGitspace: Start with an active Gitspace
+    loadingGitspaces: Loading Gitspaces
+    promptPlaceholder: 'Enter the initial prompt ...'
+    aiTaskCreateSuccess: 'AI task created successfully'
+    aiTaskCreateFailed: 'Failed to create AI task'
+    noGitspacesFound: No active Gitspaces found
+    claudeAI: Claude AI
+    selectAIAgent: Select AI agent
 details:
   actions: More Actions
   openCursor: Open Cursor
@@ -428,15 +447,15 @@ details:
 
 sshDetails:
   connectWithSSH: Connect with SSH
-  connectViaSSH : Connect via SSH
+  connectViaSSH: Connect via SSH
   congratsText: 🎉 Congratulations — your Gitspace is now active! To start using it, connect it with your SSH
-  step1 : Open Terminal
-  step2 : Copy and execute the command
-  step3 : Wait for few minutes while the IDE gets connected to the Gitspace
+  step1: Open Terminal
+  step2: Copy and execute the command
+  step3: Wait for few minutes while the IDE gets connected to the Gitspace
   sshDisabledText: Connect with SSH has been disabled by your administrator
-  sshDisabledVSCodeWeb1 : Connect With SSH is unavailable for VSCode Web
-  sshDisabledVSCodeWeb2 : To enable SSH, edit your Gitspace and
-  sshDisabledVSCodeWeb3 : Select a different IDE.
+  sshDisabledVSCodeWeb1: Connect With SSH is unavailable for VSCode Web
+  sshDisabledVSCodeWeb2: To enable SSH, edit your Gitspace and
+  sshDisabledVSCodeWeb3: Select a different IDE.
 repository:
   repo: Repository
   selectRepository: Select Repository
@@ -467,7 +486,7 @@ ide:
   vsCode: VS Code
   openVSCode: Open in VS Code Desktop
   openBrowser: Open in Browser
-  errorEmptyURL : Base URL not set, refresh and try again
+  errorEmptyURL: Base URL not set, refresh and try again
 regionMachineType: Region & Machine Type
 infraProvider: Infra Provider
 minuteUsage: Minute Usage

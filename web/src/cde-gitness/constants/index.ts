@@ -347,3 +347,7 @@ export const getStringDropdownOptions = (value: string) => {
 
 export const OS_OPTIONS = ['linux']
 export const ARCHITECTURE_OPTIONS = ['amd64', 'arm64']
+
+export enum AIAgentEnum {
+  CLAUDE_CODE = 'claude-code'
+}

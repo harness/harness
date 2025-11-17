@@ -1,0 +1,82 @@
+.contextTitle {
+  padding: var(--spacing-medium) var(--spacing-xlarge) !important;
+  border-bottom: 1px solid var(--grey-200) !important;
+}
+
+.contextBody {
+  padding: var(--spacing-large) !important;
+}
+.contextFooter {
+  border-top: 1px solid var(--grey-200) !important;
+  padding: 16px 24px !important;
+}
+
+.dialogContainer {
+  border-radius: var(--spacing-4) !important;
+  padding-bottom: 0 !important;
+}
+
+.card {
+  position: relative;
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--grey-200);
+  background: var(--white);
+  transition: border-color 0.2s ease-in-out, background-color 0.2s ease-in-out;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.card:hover {
+  border: 1px solid var(--primary-7);
+}
+
+.selectedCardBorder {
+  border: 1px solid var(--primary) !important;
+  background: var(--primary-1) !important;
+}
+
+.selectedCard {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 30px;
+  height: 30px;
+  pointer-events: none;
+}
+
+.selectedCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  border-top: 30px solid var(--primary);
+  border-left: 30px solid transparent;
+}
+
+.selectedCard [data-icon],
+.selectedCard [icon],
+.selectedCard svg {
+  position: absolute;
+  top: 1px;
+  right: 2px;
+  width: 13px;
+  height: 13px;
+}
+
+.listScroll {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.renderCardContainer {
+  margin-bottom: var(--spacing-small) !important;
+}
+
+.paginationContainer {
+  margin-top: var(--spacing-small) !important;
+}
+
+.noGitspacesFound {
+  min-height: 160px !important;
+}

@@ -38,6 +38,7 @@ interface SearchInputWithSpinnerProps {
   readOnly?: boolean
   disabled?: boolean
   type?: string
+  fullWidth?: boolean
 }
 
 export const SearchInputWithSpinner: React.FC<SearchInputWithSpinnerProps> = ({
@@ -54,24 +55,28 @@ export const SearchInputWithSpinner: React.FC<SearchInputWithSpinnerProps> = ({
   onKeyDown,
   readOnly,
   disabled,
-  type = 'search'
+  type = 'search',
+  fullWidth = false
 }) => {
   const { getString } = useStrings()
   const spinner = <Icon name={spinnerIcon as IconName} color={Color.PRIMARY_7} />
   const spinnerOnRight = spinnerPosition === 'right'
 
   return (
-    <Container className={css.main}>
-      <Layout.Horizontal className={css.layout}>
+    <Container className={cx(css.main, { [css.fullWidth]: fullWidth })}>
+      <Layout.Horizontal className={css.layout} style={{ width: fullWidth ? '100%' : undefined }}>
         <Render when={loading && !spinnerOnRight}>{spinner}</Render>
         <TextInput
           type={type}
           value={query}
-          wrapperClassName={cx(css.wrapper, { [css.spinnerOnRight]: spinnerOnRight })}
+          wrapperClassName={cx(css.wrapper, {
+            [css.spinnerOnRight]: spinnerOnRight,
+            [css.fullWidth]: fullWidth
+          })}
           className={css.input}
           placeholder={placeholder || getString('search')}
           leftIcon={icon as IconName}
-          style={{ width, height }}
+          style={{ width: fullWidth ? '100%' : width, height }}
           autoFocus={!readOnly && !disabled}
           onFocus={event => event.target.select()}
           onInput={event => {

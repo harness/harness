@@ -20,6 +20,7 @@ export interface CDEProps {
   accountId?: string
   infraprovider_identifier?: string
   provider?: string
+  aitaskId?: string
 }
 
 export const pathProps: Readonly<Required<CDEProps>> = {
@@ -27,14 +28,18 @@ export const pathProps: Readonly<Required<CDEProps>> = {
   gitspaceId: ':gitspaceId',
   accountId: ':accountId',
   infraprovider_identifier: ':infraprovider_identifier',
-  provider: ':provider'
+  provider: ':provider',
+  aitaskId: ':taskId'
 }
 
 export interface CDERoutes {
   toCDEGitspaces: (args: Required<Pick<CDEProps, 'space'>>) => string
+  toCDEAITasks: (args: Required<Pick<CDEProps, 'space'>>) => string
   toCDEGitspaceDetail: (args: Required<Pick<CDEProps, 'space' | 'gitspaceId'>>) => string
   toCDEGitspacesCreate: (args: Required<Pick<CDEProps, 'space'>>) => string
+  toCDEAITaskCreate: (args: Required<Pick<CDEProps, 'space'>>) => string
   toCDEGitspacesEdit: (args: Required<Pick<CDEProps, 'space' | 'gitspaceId'>>) => string
+  toCDEAITaskDetail: (args: Required<Pick<CDEProps, 'space' | 'aitaskId'>>) => string
   toCDEGitspaceInfra: (args: Required<Pick<CDEProps, 'accountId'>>) => string
   toCDEUsageDashboard: (args: Required<Pick<CDEProps, 'accountId'>>) => string
   toCDEInfraConfigure: (args: Required<Pick<CDEProps, 'accountId' | 'provider'>>) => string
@@ -49,8 +54,11 @@ export interface CDERoutes {
 
 export const routes: CDERoutes = {
   toCDEGitspaces: ({ space }) => `/${space}/gitspaces`,
+  toCDEAITasks: ({ space }) => `/${space}/aitasks`,
   toCDEGitspaceDetail: ({ space, gitspaceId }) => `/${space}/gitspaces/${gitspaceId}`,
+  toCDEAITaskDetail: ({ space, aitaskId }) => `/${space}/aitasks/${aitaskId}`,
   toCDEGitspacesCreate: ({ space }) => `/${space}/gitspaces/create`,
+  toCDEAITaskCreate: ({ space }) => `/${space}/aitasks/create`,
   toCDEGitspacesEdit: ({ space, gitspaceId }) => `/${space}/gitspaces/edit/${gitspaceId}`,
   toCDEGitspaceInfra: ({ accountId }) => `/account/${accountId}/module/cde/gitspace-infrastructure`,
   toCDEUsageDashboard: ({ accountId }) => `/account/${accountId}/module/cde/usage-dashboard`,

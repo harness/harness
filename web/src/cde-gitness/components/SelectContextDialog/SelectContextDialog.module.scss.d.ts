@@ -16,9 +16,14 @@
 
 /* eslint-disable */
 // This is an auto-generated file
-export declare const fullWidth: string
-export declare const input: string
-export declare const layout: string
-export declare const main: string
-export declare const spinnerOnRight: string
-export declare const wrapper: string
+export declare const card: string
+export declare const contextBody: string
+export declare const contextFooter: string
+export declare const contextTitle: string
+export declare const dialogContainer: string
+export declare const listScroll: string
+export declare const noGitspacesFound: string
+export declare const paginationContainer: string
+export declare const renderCardContainer: string
+export declare const selectedCard: string
+export declare const selectedCardBorder: string

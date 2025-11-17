@@ -1337,6 +1337,23 @@ export interface StringsMap {
   'cde.Aws.singleRegionRestriction': string
   'cde.Aws.title': string
   'cde.account': string
+  'cde.aiTasks.create.addContext': string
+  'cde.aiTasks.create.aiTaskCreateFailed': string
+  'cde.aiTasks.create.aiTaskCreateSuccess': string
+  'cde.aiTasks.create.claudeAI': string
+  'cde.aiTasks.create.createTask': string
+  'cde.aiTasks.create.createTaskNote': string
+  'cde.aiTasks.create.loadingGitspaces': string
+  'cde.aiTasks.create.noGitspacesFound': string
+  'cde.aiTasks.create.promptPlaceholder': string
+  'cde.aiTasks.create.runTask': string
+  'cde.aiTasks.create.selectAIAgent': string
+  'cde.aiTasks.create.selectActiveGitspace': string
+  'cde.aiTasks.create.selectContext': string
+  'cde.aiTasks.create.selectedGitspace': string
+  'cde.aiTasks.create.startWithActiveGitspace': string
+  'cde.aiTasks.create.welcome': string
+  'cde.aiTasks.tasks': string
   'cde.allRegionDisabled': string
   'cde.atleastOneRegion': string
   'cde.awsInfrastructure': string

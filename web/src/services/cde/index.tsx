@@ -5,6 +5,19 @@ import { Get, GetProps, useGet, UseGetProps, Mutate, MutateProps, useMutate, Use
 
 import { getConfig } from '../config'
 export const SPEC_VERSION = '0.0.0'
+export interface AitaskCreateInput {
+  ai_agent?: EnumAIAgent
+  gitspace_config_id?: string
+  identifier?: string
+  initial_prompt?: string
+  name?: string
+  space_ref?: string
+}
+
+export type EnumAIAgent = 'claude-code'
+
+export type EnumAITaskState = 'uninitialized' | 'running' | 'completed' | 'error'
+
 export type EnumGitspaceAccessType = 'jwt_token' | 'user_credentials' | 'ssh_key'
 
 export type EnumGitspaceActionType = 'start' | 'stop' | 'reset'
@@ -75,6 +88,7 @@ export type EnumGitspaceInstanceStateType =
   | 'cleaning'
   | 'cleaned'
   | 'resetting'
+  | 'pending_cleanup'
 
 export type EnumGitspaceOwner = 'all' | 'self'
 
@@ -92,6 +106,8 @@ export type EnumGitspaceStateType =
 export type EnumIDEType =
   | 'vs_code'
   | 'vs_code_web'
+  | 'cursor'
+  | 'windsurf'
   | 'intellij'
   | 'pycharm'
   | 'goland'
@@ -100,12 +116,11 @@ export type EnumIDEType =
   | 'phpstorm'
   | 'rubymine'
   | 'rider'
-  | 'windsurf'
-  | 'cursor'
 
 export type EnumInfraProviderType = 'docker' | 'harness_gcp' | 'harness_cloud' | 'hybrid_vm_gcp' | 'hybrid_vm_aws'
 
 export interface OpenapiCreateGitspaceRequest {
+  ai_agents?: EnumAIAgent[] | null
   branch?: string
   code_repo_ref?: string | null
   code_repo_type?: EnumGitspaceCodeRepoType
@@ -193,6 +208,23 @@ export interface ScmCodeRepositoryResponse {
   url?: string
 }
 
+export interface TypesAITask {
+  ai_agent?: EnumAIAgent
+  api_url?: string | null
+  created?: number
+  display_name?: string
+  gitspace_config_id?: number
+  gitspace_instance_id?: number
+  id?: number
+  identifier?: string
+  initial_prompt?: string
+  output?: string | null
+  space_id?: number
+  state?: EnumAITaskState
+  updated?: number
+  user_uid?: string
+}
+
 export interface TypesAccessListGithubComHarnessGitnessTypesEnumGitspaceCodeRepoType {
   list?: EnumGitspaceCodeRepoType[] | null
   mode?: TypesListMode
@@ -246,6 +278,7 @@ export interface TypesDevcontainerSettings {
 }
 
 export interface TypesGitspaceConfig {
+  ai_agents?: EnumAIAgent[]
   branch?: string
   branch_url?: string
   code_repo_is_private?: boolean
@@ -301,14 +334,14 @@ export type TypesGitspaceInstance = {
   last_heartbeat?: number | null
   last_used?: number | null
   machine_user?: string | null
+  plugin_url?: string | null
   resource_usage?: string | null
   space_path?: string
+  ssh_command?: string | null
   state?: EnumGitspaceInstanceStateType
   total_time_used?: number
   updated?: number
   url?: string | null
-  plugin_url?: string | null
-  ssh_command?: string | null
 } | null
 
 export interface TypesGitspaceRegionMachines {
@@ -1362,6 +1395,173 @@ export const useUpdateInfraProviderTemplate = ({
     {
       base: getConfig('cde/api/v1'),
       pathParams: { accountIdentifier, infraprovider_identifier, template_identifier },
+      ...props
+    }
+  )
+
+export interface ListAITasksPathParams {
+  /**
+   * account identifier.
+   */
+  accountIdentifier: string
+  /**
+   * org identifier.
+   */
+  orgIdentifier: string
+  /**
+   * project identifier.
+   */
+  projectIdentifier: string
+}
+
+export type ListAITasksProps = Omit<GetProps<TypesAITask[], UsererrorError, void, ListAITasksPathParams>, 'path'> &
+  ListAITasksPathParams
+
+/**
+ * List AI tasks for a given space
+ */
+export const ListAITasks = ({ accountIdentifier, orgIdentifier, projectIdentifier, ...props }: ListAITasksProps) => (
+  <Get<TypesAITask[], UsererrorError, void, ListAITasksPathParams>
+    path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/aitasks`}
+    base={getConfig('cde/api/v1')}
+    {...props}
+  />
+)
+
+export type UseListAITasksProps = Omit<
+  UseGetProps<TypesAITask[], UsererrorError, void, ListAITasksPathParams>,
+  'path'
+> &
+  ListAITasksPathParams
+
+/**
+ * List AI tasks for a given space
+ */
+export const useListAITasks = ({
+  accountIdentifier,
+  orgIdentifier,
+  projectIdentifier,
+  ...props
+}: UseListAITasksProps) =>
+  useGet<TypesAITask[], UsererrorError, void, ListAITasksPathParams>(
+    (paramsInPath: ListAITasksPathParams) =>
+      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/aitasks`,
+    { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier, orgIdentifier, projectIdentifier }, ...props }
+  )
+
+export interface CreateAITaskPathParams {
+  /**
+   * account identifier.
+   */
+  accountIdentifier: string
+  /**
+   * org identifier.
+   */
+  orgIdentifier: string
+  /**
+   * project identifier.
+   */
+  projectIdentifier: string
+}
+
+export type CreateAITaskProps = Omit<
+  MutateProps<TypesAITask, UsererrorError, void, AitaskCreateInput, CreateAITaskPathParams>,
+  'path' | 'verb'
+> &
+  CreateAITaskPathParams
+
+/**
+ * Create an AI task
+ */
+export const CreateAITask = ({ accountIdentifier, orgIdentifier, projectIdentifier, ...props }: CreateAITaskProps) => (
+  <Mutate<TypesAITask, UsererrorError, void, AitaskCreateInput, CreateAITaskPathParams>
+    verb="POST"
+    path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/aitasks`}
+    base={getConfig('cde/api/v1')}
+    {...props}
+  />
+)
+
+export type UseCreateAITaskProps = Omit<
+  UseMutateProps<TypesAITask, UsererrorError, void, AitaskCreateInput, CreateAITaskPathParams>,
+  'path' | 'verb'
+> &
+  CreateAITaskPathParams
+
+/**
+ * Create an AI task
+ */
+export const useCreateAITask = ({
+  accountIdentifier,
+  orgIdentifier,
+  projectIdentifier,
+  ...props
+}: UseCreateAITaskProps) =>
+  useMutate<TypesAITask, UsererrorError, void, AitaskCreateInput, CreateAITaskPathParams>(
+    'POST',
+    (paramsInPath: CreateAITaskPathParams) =>
+      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/aitasks`,
+    { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier, orgIdentifier, projectIdentifier }, ...props }
+  )
+
+export interface FindAITaskPathParams {
+  /**
+   * account identifier.
+   */
+  accountIdentifier: string
+  /**
+   * org identifier.
+   */
+  orgIdentifier: string
+  /**
+   * project identifier.
+   */
+  projectIdentifier: string
+  /**
+   * AI task identifier.
+   */
+  aitask_identifier: string
+}
+
+export type FindAITaskProps = Omit<GetProps<TypesAITask, UsererrorError, void, FindAITaskPathParams>, 'path'> &
+  FindAITaskPathParams
+
+/**
+ * Get an AI task by identifier
+ */
+export const FindAITask = ({
+  accountIdentifier,
+  orgIdentifier,
+  projectIdentifier,
+  aitask_identifier,
+  ...props
+}: FindAITaskProps) => (
+  <Get<TypesAITask, UsererrorError, void, FindAITaskPathParams>
+    path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/aitasks/${aitask_identifier}`}
+    base={getConfig('cde/api/v1')}
+    {...props}
+  />
+)
+
+export type UseFindAITaskProps = Omit<UseGetProps<TypesAITask, UsererrorError, void, FindAITaskPathParams>, 'path'> &
+  FindAITaskPathParams
+
+/**
+ * Get an AI task by identifier
+ */
+export const useFindAITask = ({
+  accountIdentifier,
+  orgIdentifier,
+  projectIdentifier,
+  aitask_identifier,
+  ...props
+}: UseFindAITaskProps) =>
+  useGet<TypesAITask, UsererrorError, void, FindAITaskPathParams>(
+    (paramsInPath: FindAITaskPathParams) =>
+      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/aitasks/${paramsInPath.aitask_identifier}`,
+    {
+      base: getConfig('cde/api/v1'),
+      pathParams: { accountIdentifier, orgIdentifier, projectIdentifier, aitask_identifier },
       ...props
     }
   )

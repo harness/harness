@@ -1,0 +1,204 @@
+/*
+ * Copyright 2023 Harness, Inc.
+ *
+ * Licensed under the the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.pageContainer {
+  width: 100% !important;
+  display: grid;
+  grid-template-columns: repeat(17, 1fr);
+  padding: 80px !important;
+}
+
+.fomikForm {
+  width: 100% !important;
+}
+
+.contentContainer {
+  grid-column: 3 / span 13 !important;
+  width: 100%;
+  max-width: 1200px;
+  min-width: 1000px;
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  flex-direction: column;
+}
+
+.titleContainer {
+  width: 100% !important;
+  margin-bottom: var(--spacing-xxxlarge) !important;
+}
+
+.cardContainer {
+  height: 480px !important;
+  width: 100%;
+  border-radius: var(--spacing-4) !important;
+  border: 1px solid var(--ai-purple-700) !important;
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.contextContainer {
+  margin: var(--spacing-small) !important;
+}
+
+.contextRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 69px;
+  border: 1px solid var(--grey-200);
+  border-radius: var(--spacing-xsmall) !important;
+  padding: var(--spacing-4) var(--spacing-xlarge) var(--spacing-4) var(--spacing-medium) !important;
+  background: var(--grey-50) !important;
+
+  &:hover {
+    border-color: var(--grey-300);
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.02);
+  }
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-small);
+}
+
+.title {
+  margin-left: var(--spacing-small);
+}
+
+.subtitle {
+  margin-left: var(--spacing-xsmall);
+}
+
+.rightIcon {
+  color: var(--grey-400);
+}
+
+.cardHeader {
+  padding: var(--spacing-small) !important;
+}
+
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--spacing-small);
+  padding: var(--spacing-4) var(--spacing-medium) !important;
+  background: var(--grey-50) !important;
+  border-top: 1px solid var(--grey-200);
+  border-bottom-left-radius: var(--spacing-4);
+  border-bottom-right-radius: var(--spacing-4);
+}
+
+.footerRight {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-small);
+}
+
+.aiSelect {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--grey-50) !important;
+  border-radius: 6px !important;
+  padding: var(--spacing-small) var(--spacing-4) !important;
+  cursor: pointer;
+
+  &:hover,
+  &:active,
+  &:focus {
+    background-color: var(--grey-50) !important;
+    border-color: var(--grey-200) !important;
+    box-shadow: none !important;
+  }
+}
+
+.aiChevron {
+  margin-left: var(--spacing-small);
+  color: var(--grey-500);
+}
+
+.aiMenuContainer {
+  > div[class*='popover-arrow'] {
+    display: none;
+  }
+  min-height: 20px !important;
+  overflow-y: auto;
+
+  :global {
+    .bp3-menu {
+      li {
+        padding: var(--spacing-xsmall) !important;
+      }
+    }
+
+    a.bp3-menu-item:hover,
+    .bp3-active {
+      background: var(--primary-1) !important;
+      color: var(--black) !important;
+    }
+  }
+}
+
+.formInput {
+  margin: 0 !important;
+}
+
+.cardBody {
+  padding: var(--spacing-small) !important;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+}
+
+.promptInput {
+  width: 100%;
+  min-height: 100%;
+  flex: 1;
+  resize: none;
+
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+
+  &:focus,
+  &:active,
+  &:hover {
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+  }
+}
+
+.footerErrors {
+  display: flex;
+  flex: 1 1 auto;
+  gap: var(--spacing-small);
+  align-items: center;
+  min-height: 20px;
+}
+
+.selectAgentIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 24px;
+}
