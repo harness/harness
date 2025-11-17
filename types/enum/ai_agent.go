@@ -56,3 +56,11 @@ func (a *AIAgent) UnmarshalJSON(data []byte) error {
 
 	return fmt.Errorf("invalid AI agent type: %s", str)
 }
+
+func (a AIAgent) Sanitize() (AIAgent, bool) {
+	return Sanitize(a, GetAllAIAgents)
+}
+
+func GetAllAIAgents() ([]AIAgent, AIAgent) {
+	return aiAgentTypes, ""
+}

@@ -17,15 +17,15 @@ package enum
 type AITaskState string
 
 func (AITaskState) Enum() []any {
-	return toInterfaceSlice(aiTaskStateTypes)
+	return toInterfaceSlice(AITaskStateTypes)
 }
 
-var aiTaskStateTypes = []AITaskState{
+var AITaskStateTypes = sortEnum([]AITaskState{
 	AITaskStateUninitialized,
 	AITaskStateRunning,
 	AITaskStateCompleted,
 	AITaskStateError,
-}
+})
 
 const (
 	AITaskStateUninitialized AITaskState = "uninitialized"
@@ -53,4 +53,12 @@ func (a AITaskState) IsActiveStatus() bool {
 	default:
 		return false
 	}
+}
+
+func (a AITaskState) Sanitize() (AITaskState, bool) {
+	return Sanitize(a, GetAllAITaskState)
+}
+
+func GetAllAITaskState() ([]AITaskState, AITaskState) {
+	return AITaskStateTypes, ""
 }

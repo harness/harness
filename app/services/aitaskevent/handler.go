@@ -37,7 +37,11 @@ func (s *Service) handleAITaskEvent(
 	ctxWithTimeOut, cancel := context.WithTimeout(ctx, time.Duration(s.config.TimeoutInMins)*time.Minute)
 	defer cancel()
 
-	aiTask, err := s.aiTaskStore.FindByIdentifier(ctxWithTimeOut, event.Payload.AITask.Identifier)
+	aiTask, err := s.aiTaskStore.FindByIdentifier(
+		ctxWithTimeOut,
+		event.Payload.AITask.SpaceID,
+		event.Payload.AITask.Identifier,
+	)
 	if err != nil {
 		return fmt.Errorf("failed to get AI task: %w", err)
 	}

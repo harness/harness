@@ -1513,7 +1513,8 @@ type (
 		Create(ctx context.Context, in *types.AITask) error
 		Update(ctx context.Context, in *types.AITask) error
 		Find(ctx context.Context, id int64) (*types.AITask, error)
-		FindByIdentifier(ctx context.Context, identifier string) (*types.AITask, error)
+		FindByIdentifier(ctx context.Context, spaceID int64, identifier string) (*types.AITask, error)
 		List(ctx context.Context, filter *types.AITaskFilter) ([]*types.AITask, error)
+		Count(ctx context.Context, filter *types.AITaskFilter) (int64, error)
 	}
 )
