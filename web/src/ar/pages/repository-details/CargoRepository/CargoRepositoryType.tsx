@@ -53,6 +53,7 @@ export class CargoRepositoryType extends RepositoryStep<VirtualRegistryRequest> 
   protected repositoryIcon: IconName = 'rust-logo'
   protected supportedScanners = []
   protected supportsUpstreamProxy = true
+  protected isWebhookSupported = true
   protected supportedUpstreamURLSources = [
     UpstreamRepositoryURLInputSource.Crates,
     UpstreamRepositoryURLInputSource.Custom

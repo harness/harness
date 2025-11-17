@@ -54,6 +54,7 @@ export class GenericRepositoryType extends RepositoryStep<VirtualRegistryRequest
   protected repositoryIcon: IconName = 'generic-repository-type'
   protected supportedScanners = []
   protected supportsUpstreamProxy = true
+  protected isWebhookSupported = false
   protected supportedUpstreamURLSources = [UpstreamRepositoryURLInputSource.Custom]
   enterpriseAdvancedOptionSubTitle: StringKeys =
     'repositoryDetails.repositoryForm.enterpriseAdvancedWithoutUpstreamOptionsSubTitle'

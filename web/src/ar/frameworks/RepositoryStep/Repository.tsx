@@ -66,6 +66,7 @@ export abstract class RepositoryStep<T, U = unknown> {
   protected repositoryIconSize?: number
   protected supportedScanners?: Scanners[]
   protected supportedUpstreamURLSources?: UpstreamRepositoryURLInputSource[]
+  protected isWebhookSupported?: boolean
   supportedRepositoryTabs?: RepositoryDetailsTab[]
   supportedArtifactTypes?: LocalArtifactType[]
   enterpriseAdvancedOptionSubTitle?: StringKeys
@@ -141,6 +142,10 @@ export abstract class RepositoryStep<T, U = unknown> {
 
   processUpstreamProxyFormData(values: T): T {
     return values
+  }
+
+  getIsWebhookSupported(): boolean {
+    return this.isWebhookSupported ?? false
   }
 
   abstract renderCreateForm(props: CreateRepositoryFormProps): JSX.Element

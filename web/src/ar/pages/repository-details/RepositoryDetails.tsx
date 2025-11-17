@@ -64,6 +64,7 @@ export default function RepositoryDetails(): JSX.Element | null {
     const tabs = repositoryType?.getSupportedRepositoryTabs() || []
     return RepositoryDetailsTabs.filter(each => tabs.includes(each.value))
       .filter(each => !each.featureFlag || featureFlags[each.featureFlag])
+      .filter(each => (each.value === RepositoryDetailsTab.WEBHOOKS ? repositoryType?.getIsWebhookSupported() : true))
       .filter(each => !each.type || each.type === data?.config.type)
       .filter(each => !each.mode || each.mode === repositoryListViewType)
       .filter(each => (isCurrentSessionPublic ? each.isSupportedInPublicView : true))

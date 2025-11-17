@@ -53,6 +53,7 @@ export class MavenRepositoryType extends RepositoryStep<VirtualRegistryRequest> 
   protected repositoryIcon: IconName = 'maven-repository-type'
   protected supportedScanners = []
   protected supportsUpstreamProxy = true
+  protected isWebhookSupported = false
   protected supportedUpstreamURLSources = [
     UpstreamRepositoryURLInputSource.MavenCentral,
     UpstreamRepositoryURLInputSource.Custom

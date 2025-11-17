@@ -53,6 +53,7 @@ export class GoRepositoryType extends RepositoryStep<VirtualRegistryRequest> {
   protected repositoryIcon: IconName = 'go-logo'
   protected supportedScanners = []
   protected supportsUpstreamProxy = true
+  protected isWebhookSupported = true
   protected supportedUpstreamURLSources = [
     UpstreamRepositoryURLInputSource.GoProxy,
     UpstreamRepositoryURLInputSource.Custom

@@ -54,6 +54,7 @@ export class HelmRepositoryType extends RepositoryStep<VirtualRegistryRequest> {
   protected repositoryIcon: IconName = 'service-helm'
   protected supportedScanners = []
   protected supportsUpstreamProxy = true
+  protected isWebhookSupported = true
   protected supportedUpstreamURLSources = [
     UpstreamRepositoryURLInputSource.AwsEcr,
     UpstreamRepositoryURLInputSource.Custom
