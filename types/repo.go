@@ -130,6 +130,8 @@ type RepoFilter struct {
 	Tags             map[string][]string
 	Recursive        bool
 	OnlyFavoritesFor *int64
+
+	Identifiers []string `json:"-"`
 }
 
 type RepoCacheKey struct {
