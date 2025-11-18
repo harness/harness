@@ -143,6 +143,7 @@ import (
 	"github.com/harness/gitness/pubsub"
 	registryevents "github.com/harness/gitness/registry/app/events/artifact"
 	registrypostporcessingevents "github.com/harness/gitness/registry/app/events/asyncprocessing"
+	replicationevents "github.com/harness/gitness/registry/app/events/replication"
 	registryhelpers "github.com/harness/gitness/registry/app/helpers"
 	"github.com/harness/gitness/registry/app/pkg/docker"
 	cargoutils "github.com/harness/gitness/registry/app/utils/cargo"
@@ -323,6 +324,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		registrypostporcessingevents.ProvideReaderFactory,
 		checkevents.WireSet,
 		registryhelpers.WireSet,
+		replicationevents.ProvideNoOpReplicationReporter,
 	)
 	return &cliserver.System{}, nil
 }

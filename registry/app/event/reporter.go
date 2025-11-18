@@ -22,8 +22,6 @@ import (
 )
 
 type PackageType int32
-type BlobAction int32
-type Provider int32
 
 type ArtifactDetails struct {
 	RegistryID   int64       `json:"registry_id,omitempty"`
@@ -31,24 +29,6 @@ type ArtifactDetails struct {
 	ImagePath    string      `json:"image_path,omitempty"` // format = image:tag
 	PackageType  PackageType `json:"package_type,omitempty"`
 	ManifestID   int64       `json:"manifest_id,omitempty"`
-}
-
-type CloudLocation struct {
-	Provider Provider `json:"provider,omitempty"`
-	Endpoint string   `json:"endpoint,omitempty"`
-	Region   string   `json:"region,omitempty"`
-	Bucket   string   `json:"bucket,omitempty"`
-}
-
-// ReplicationDetails represents the ReplicationDetails message from the proto file.
-type ReplicationDetails struct {
-	AccountID     string          `json:"account_id,omitempty"`
-	Action        BlobAction      `json:"action,omitempty"`
-	BlobID        int64           `json:"blob_id,omitempty"`
-	GenericBlobID string          `json:"generic_blob_id,omitempty"`
-	Path          string          `json:"path,omitempty"`
-	Source        CloudLocation   `json:"source"`
-	Destinations  []CloudLocation `json:"destinations,omitempty"`
 }
 
 // PackageType constants using iota.
@@ -59,31 +39,11 @@ const (
 	PackageTypeMAVEN
 )
 
-const (
-	BlobCreate BlobAction = 0
-	BlobDelete BlobAction = 1
-)
-
-const (
-	CLOUDFLARE Provider = 0
-	GCS        Provider = 1
-)
-
 var PackageTypeValue = map[string]PackageType{
 	string(artifact.PackageTypeDOCKER):  PackageTypeDOCKER,
 	string(artifact.PackageTypeGENERIC): PackageTypeGENERIC,
 	string(artifact.PackageTypeHELM):    PackageTypeHELM,
 	string(artifact.PackageTypeMAVEN):   PackageTypeMAVEN,
-}
-
-var BlobActionValue = map[string]BlobAction{
-	"BlobCreate": BlobCreate,
-	"BlobDelete": BlobDelete,
-}
-
-var ProviderValue = map[string]Provider{
-	"CLOUDFLARE": CLOUDFLARE,
-	"GCS":        GCS,
 }
 
 // GetPackageTypeFromString returns the PackageType constant corresponding to the given string value.

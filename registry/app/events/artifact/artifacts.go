@@ -103,16 +103,6 @@ func (r *Reader) RegisterArtifactCreated(
 	return events.ReaderRegisterEvent(r.innerReader, ArtifactCreatedEvent, fn, opts...)
 }
 
-type DockerArtifactChange struct {
-	Old DockerArtifact
-	New DockerArtifact
-}
-
-type HelmArtifactChange struct {
-	Old HelmArtifact
-	New HelmArtifact
-}
-
 //nolint:revive
 type ArtifactDeletedPayload struct {
 	RegistryID   int64                `json:"registry_id"`

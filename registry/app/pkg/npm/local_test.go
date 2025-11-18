@@ -74,7 +74,7 @@ func TestParseAndUploadNPMPackage_WithAttachment_UploadsData(t *testing.T) {
 	if err != nil {
 		t.Fatalf("storage service init failed: %v", err)
 	}
-	fm := filemanager.NewFileManager(nil, nil, nil, nil, nil, nil, svc, nil)
+	fm := filemanager.NewFileManager(nil, nil, nil, nil, nil, svc, nil, nil)
 
 	// Wire local registry with a real file manager
 	lr := newLocalForTests(&mockLocalBase{}, nil, nil, nil, nil)

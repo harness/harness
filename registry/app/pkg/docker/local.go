@@ -39,7 +39,7 @@ import (
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/dist_temp/dcontext"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
-	"github.com/harness/gitness/registry/app/event"
+	"github.com/harness/gitness/registry/app/events/replication"
 	"github.com/harness/gitness/registry/app/manifest"
 	"github.com/harness/gitness/registry/app/manifest/manifestlist"
 	"github.com/harness/gitness/registry/app/manifest/ocischema"
@@ -118,8 +118,8 @@ func NewLocalRegistry(
 	blobRepo store.BlobRepository, mtRepository store.MediaTypesRepository,
 	tagDao store.TagRepository, imageDao store.ImageRepository, artifactDao store.ArtifactRepository,
 	bandwidthStatDao store.BandwidthStatRepository, downloadStatDao store.DownloadStatRepository,
-	gcService gc.Service, tx dbtx.Transactor, reporter event.Reporter,
-	quarantineArtifactDao store.QuarantineArtifactRepository, bucketService BucketService,
+	gcService gc.Service, tx dbtx.Transactor, quarantineArtifactDao store.QuarantineArtifactRepository,
+	bucketService BucketService, replicationReporter replication.Reporter,
 ) Registry {
 	return &LocalRegistry{
 		App:                   app,
@@ -136,9 +136,9 @@ func NewLocalRegistry(
 		downloadStatDao:       downloadStatDao,
 		gcService:             gcService,
 		tx:                    tx,
-		reporter:              reporter,
 		quarantineArtifactDao: quarantineArtifactDao,
 		bucketService:         bucketService,
+		replicationReporter:   replicationReporter,
 	}
 }
 
@@ -157,9 +157,9 @@ type LocalRegistry struct {
 	downloadStatDao       store.DownloadStatRepository
 	gcService             gc.Service
 	tx                    dbtx.Transactor
-	reporter              event.Reporter
 	quarantineArtifactDao store.QuarantineArtifactRepository
 	bucketService         BucketService
+	replicationReporter   replication.Reporter
 }
 
 func (r *LocalRegistry) Base() error {
@@ -1642,9 +1642,8 @@ func (r *LocalRegistry) dbPutBlobUploadComplete(
 
 	// Emit blob create event
 	if created {
-		destinations := []event.CloudLocation{}
-		event.ReportEventAsync(ctx.Context, ctx.OciBlobStore.Path(),
-			r.reporter, event.BlobCreate, storedBlob.ID,
+		destinations := []replication.CloudLocation{}
+		r.replicationReporter.ReportEventAsync(ctx.Context, ctx.OciBlobStore.Path(), replication.BlobCreate, storedBlob.ID,
 			"", digestVal, r.App.Config, destinations)
 	}
 	return nil

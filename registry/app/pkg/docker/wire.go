@@ -24,6 +24,7 @@ import (
 	storagedriver "github.com/harness/gitness/registry/app/driver"
 	"github.com/harness/gitness/registry/app/event"
 	registryevents "github.com/harness/gitness/registry/app/events/artifact"
+	"github.com/harness/gitness/registry/app/events/replication"
 	"github.com/harness/gitness/registry/app/manifest/manifestlist"
 	"github.com/harness/gitness/registry/app/manifest/schema2"
 	"github.com/harness/gitness/registry/app/pkg"
@@ -46,14 +47,14 @@ func LocalRegistryProvider(
 	mtRepository store.MediaTypesRepository,
 	tagDao store.TagRepository, imageDao store.ImageRepository, artifactDao store.ArtifactRepository,
 	bandwidthStatDao store.BandwidthStatRepository, downloadStatDao store.DownloadStatRepository,
-	gcService gc.Service, tx dbtx.Transactor, reporter event.Reporter,
-	quarantineArtifactDao store.QuarantineArtifactRepository,
+	gcService gc.Service, tx dbtx.Transactor, quarantineArtifactDao store.QuarantineArtifactRepository,
+	replicationReporter replication.Reporter,
 	bucketService BucketService,
 ) *LocalRegistry {
 	registry, ok := NewLocalRegistry(
 		app, ms, manifestDao, registryDao, registryBlobDao, blobRepo,
 		mtRepository, tagDao, imageDao, artifactDao, bandwidthStatDao, downloadStatDao,
-		gcService, tx, reporter, quarantineArtifactDao, bucketService,
+		gcService, tx, quarantineArtifactDao, bucketService, replicationReporter,
 	).(*LocalRegistry)
 	if !ok {
 		return nil
@@ -167,8 +168,10 @@ func ProvideBucketService(_ OciBlobStoreFactory) BucketService {
 // noOpBucketService is a no-op implementation for open-source version.
 type noOpBucketService struct{}
 
-func (n *noOpBucketService) GetBlobStore(_ context.Context, _ string, _ string,
-	_ any, _ string) *BlobStore {
+func (n *noOpBucketService) GetBlobStore(
+	_ context.Context, _ string, _ string,
+	_ any, _ string,
+) *BlobStore {
 	return nil
 }
 

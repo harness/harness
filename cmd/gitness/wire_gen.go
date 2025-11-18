@@ -147,6 +147,7 @@ import (
 	"github.com/harness/gitness/registry/app/api/router"
 	"github.com/harness/gitness/registry/app/events/artifact"
 	"github.com/harness/gitness/registry/app/events/asyncprocessing"
+	"github.com/harness/gitness/registry/app/events/replication"
 	"github.com/harness/gitness/registry/app/helpers"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/base"
@@ -563,7 +564,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	bandwidthStatRepository := database2.ProvideBandwidthStatDao(db)
 	downloadStatRepository := database2.ProvideDownloadStatDao(db)
 	quarantineArtifactRepository := database2.ProvideQuarantineArtifactDao(db)
-	localRegistry := docker.LocalRegistryProvider(app, manifestService, blobRepository, registryRepository, manifestRepository, registryBlobRepository, mediaTypesRepository, tagRepository, imageRepository, artifactRepository, bandwidthStatRepository, downloadStatRepository, gcService, transactor, eventReporter, quarantineArtifactRepository, bucketService)
+	replicationReporter, err := replication.ProvideNoOpReplicationReporter()
+	if err != nil {
+		return nil, err
+	}
+	localRegistry := docker.LocalRegistryProvider(app, manifestService, blobRepository, registryRepository, manifestRepository, registryBlobRepository, mediaTypesRepository, tagRepository, imageRepository, artifactRepository, bandwidthStatRepository, downloadStatRepository, gcService, transactor, quarantineArtifactRepository, replicationReporter, bucketService)
 	upstreamProxyConfigRepository := database2.ProvideUpstreamDao(db, registryRepository, spaceFinder)
 	proxyController := docker.ProvideProxyController(localRegistry, manifestService, secretService, spaceFinder)
 	remoteRegistry := docker.RemoteRegistryProvider(localRegistry, app, upstreamProxyConfigRepository, spaceFinder, secretService, proxyController)
@@ -580,7 +585,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	registryOCIHandler := router.OCIHandlerProvider(handler)
 	genericBlobRepository := database2.ProvideGenericBlobDao(db)
 	nodesRepository := database2.ProvideNodeDao(db)
-	fileManager := filemanager.Provider(registryRepository, genericBlobRepository, nodesRepository, transactor, eventReporter, config, storageService, bucketService)
+	fileManager := filemanager.Provider(registryRepository, genericBlobRepository, nodesRepository, transactor, config, storageService, bucketService, replicationReporter)
 	cleanupPolicyRepository := database2.ProvideCleanupPolicyDao(db, transactor)
 	webhooksRepository := database2.ProvideWebhookDao(db)
 	webhooksExecutionRepository := database2.ProvideWebhookExecutionDao(db)

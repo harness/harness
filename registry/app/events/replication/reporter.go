@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package event
+package replication
 
 import (
 	"context"
 	"errors"
 	"strings"
 
+	"github.com/harness/gitness/events"
 	a "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	s "github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/types"
@@ -26,10 +27,41 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func ReportEventAsync(
+const RegistryBlobsReplication = "registry-blobs-replication"
+
+type Reporter interface {
+	ReportEventAsync(
+		ctx context.Context,
+		accountID string,
+		action BlobAction,
+		blobID int64,
+		genericBlobID string,
+		sha256 string,
+		conf *types.Config,
+		destinationBuckets []CloudLocation,
+	)
+}
+
+type reporter struct {
+	innerReporter *events.GenericReporter
+}
+
+func NewReporter(
+	eventsSystem *events.System,
+) (Reporter, error) {
+	innerReporter, err := events.NewReporter(eventsSystem, RegistryBlobsReplication)
+	if err != nil {
+		return nil, errors.New("failed to create new GenericReporter for registry blobs replication from event system")
+	}
+
+	return &reporter{
+		innerReporter: innerReporter,
+	}, nil
+}
+
+func (r reporter) ReportEventAsync(
 	ctx context.Context,
 	accountID string,
-	reporter Reporter,
 	action BlobAction,
 	blobID int64,
 	genericBlobID string,
@@ -70,13 +102,28 @@ func ReportEventAsync(
 		return
 	}
 
-	go reporter.ReportEvent(ctx, &ReplicationDetails{
-		AccountID:     accountID,
-		Action:        action,
-		BlobID:        blobID,
-		GenericBlobID: genericBlobID,
-		Path:          path,
-		Source:        source,
-		Destinations:  destinations,
-	}, "")
+	go func() {
+		eventID, err := events.ReporterSendEvent(r.innerReporter, ctx, RegistryBlobCreatedEvent, &ReplicationDetails{
+			AccountID:     accountID,
+			Action:        action,
+			BlobID:        blobID,
+			GenericBlobID: genericBlobID,
+			Path:          path,
+			Source:        source,
+			Destinations:  destinations,
+		})
+		if err != nil {
+			log.Ctx(ctx).Err(err).Msgf("failed to send blob replication created event")
+			return
+		}
+		log.Ctx(ctx).Debug().Msgf("reported blob replication event with id '%s'", eventID)
+	}()
+}
+
+type Noop struct {
+}
+
+func (*Noop) ReportEventAsync(
+	_ context.Context, _ string, _ BlobAction, _ int64, _ string, _ string, _ *types.Config, _ []CloudLocation,
+) {
 }

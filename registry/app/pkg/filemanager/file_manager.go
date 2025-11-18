@@ -23,7 +23,7 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/app/api/usererror"
-	"github.com/harness/gitness/registry/app/event"
+	"github.com/harness/gitness/registry/app/events/replication"
 	"github.com/harness/gitness/registry/app/pkg/docker"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
@@ -48,31 +48,30 @@ const (
 func NewFileManager(
 	registryDao store.RegistryRepository, genericBlobDao store.GenericBlobRepository,
 	nodesDao store.NodesRepository, tx dbtx.Transactor,
-	reporter event.Reporter, config *gitnesstypes.Config,
-	storageService *storage.Service,
-	bucketService docker.BucketService,
+	config *gitnesstypes.Config, storageService *storage.Service,
+	bucketService docker.BucketService, replicationReporter replication.Reporter,
 ) FileManager {
 	return FileManager{
-		registryDao:    registryDao,
-		genericBlobDao: genericBlobDao,
-		nodesDao:       nodesDao,
-		tx:             tx,
-		reporter:       reporter,
-		config:         config,
-		storageService: storageService,
-		bucketService:  bucketService,
+		registryDao:         registryDao,
+		genericBlobDao:      genericBlobDao,
+		nodesDao:            nodesDao,
+		tx:                  tx,
+		config:              config,
+		storageService:      storageService,
+		bucketService:       bucketService,
+		replicationReporter: replicationReporter,
 	}
 }
 
 type FileManager struct {
-	config         *gitnesstypes.Config
-	storageService *storage.Service
-	registryDao    store.RegistryRepository
-	genericBlobDao store.GenericBlobRepository
-	nodesDao       store.NodesRepository
-	tx             dbtx.Transactor
-	reporter       event.Reporter
-	bucketService  docker.BucketService
+	config              *gitnesstypes.Config
+	storageService      *storage.Service
+	registryDao         store.RegistryRepository
+	genericBlobDao      store.GenericBlobRepository
+	nodesDao            store.NodesRepository
+	tx                  dbtx.Transactor
+	bucketService       docker.BucketService
+	replicationReporter replication.Reporter
 }
 
 func (f *FileManager) UploadFile(
@@ -108,8 +107,8 @@ func (f *FileManager) UploadFile(
 
 	// Emit blob create event
 	if created {
-		destinations := []event.CloudLocation{}
-		event.ReportEventAsync(ctx, rootIdentifier, f.reporter, event.BlobCreate, 0, blobID, fileInfo.Sha256,
+		destinations := []replication.CloudLocation{}
+		f.replicationReporter.ReportEventAsync(ctx, rootIdentifier, replication.BlobCreate, 0, blobID, fileInfo.Sha256,
 			f.config, destinations)
 	}
 	return fileInfo, nil
@@ -690,8 +689,8 @@ func (f *FileManager) MoveTempFile(
 
 	// Emit blob create event
 	if created {
-		destinations := []event.CloudLocation{}
-		event.ReportEventAsync(ctx, rootIdentifier, f.reporter, event.BlobCreate, 0, blobID, fileInfo.Sha256,
+		destinations := []replication.CloudLocation{}
+		f.replicationReporter.ReportEventAsync(ctx, rootIdentifier, replication.BlobCreate, 0, blobID, fileInfo.Sha256,
 			f.config, destinations)
 	}
 	return nil
