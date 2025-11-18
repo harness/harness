@@ -27,7 +27,6 @@ import (
 const (
 	templateClaudeCodeInstallScript   = "install_claude_code.sh"
 	templateClaudeCodeConfigureScript = "configure_claude_code.sh"
-	templateAgentAPISetupScript       = "setup_agent_api.sh"
 )
 
 type (
@@ -90,29 +89,6 @@ func ConfigureAIAgent(ctx context.Context,
 	}
 
 	gitspaceLogger.Info("Successfully configured ai agents")
-	return nil
-}
-
-func SetupAgentAPI(ctx context.Context,
-	exec *devcontainer.Exec,
-	gitspaceLogger types.GitspaceLogger,
-) error {
-	script, err := GenerateScriptFromTemplate(
-		templateAgentAPISetupScript, &types.SetupClaudeCodePayload{
-			OSInfoScript: GetOSInfoScript(),
-		})
-	if err != nil {
-		return fmt.Errorf(
-			"failed to generate script to setup agentapi from template %s: %w",
-			templateClaudeCodeInstallScript, err)
-	}
-	gitspaceLogger.Info("Installing agentapi output...")
-	gitspaceLogger.Info("Installing agentapi inside container")
-	err = exec.ExecuteCommandInHomeDirAndLog(ctx, script, false, gitspaceLogger, true)
-	if err != nil {
-		return fmt.Errorf("failed to install agentapi : %w", err)
-	}
-	gitspaceLogger.Info("Successfully Installed agentapi")
 	return nil
 }
 

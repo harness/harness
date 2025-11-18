@@ -54,4 +54,11 @@ type Orchestrator interface {
 
 	// StreamLogs is used to fetch gitspace's start/stop logs from the container orchestrator.
 	StreamLogs(ctx context.Context, gitspaceConfig types.GitspaceConfig, infra types.Infrastructure) (string, error)
+
+	StartAITask(
+		ctx context.Context,
+		gitspaceConfig types.GitspaceConfig,
+		infra types.Infrastructure,
+		aiTask types.AITask,
+	) error
 }

@@ -529,3 +529,23 @@ func (o Orchestrator) getProvisionedInfra(
 
 	return infra, nil
 }
+
+// TriggerAITask triggers ai task by sending the details to gitspace agent.
+func (o Orchestrator) TriggerAITask(
+	ctx context.Context,
+	aiTask types.AITask,
+	gitspaceConfig types.GitspaceConfig,
+) error {
+	infra, err := o.getProvisionedInfra(ctx, gitspaceConfig,
+		[]enum.InfraStatus{enum.InfraStatusProvisioned})
+	if err != nil {
+		return fmt.Errorf("cannot find the provisioned infra: %w", err)
+	}
+	containerOrchestrator, err := o.containerOrchestratorFactory.GetContainerOrchestrator(infra.ProviderType)
+	if err != nil {
+		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentConnectFailed)
+		return fmt.Errorf("couldn't get the container orchestrator: %w", err)
+	}
+
+	return containerOrchestrator.StartAITask(ctx, gitspaceConfig, *infra, aiTask)
+}

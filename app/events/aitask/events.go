@@ -19,7 +19,6 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/events"
-	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
@@ -31,8 +30,9 @@ const (
 
 type (
 	AITaskEventPayload struct {
-		Type   enum.AITaskEvent `json:"type"`
-		AITask types.AITask     `json:"ai_task"`
+		Type             enum.AITaskEvent `json:"type"`
+		AITaskIdentifier string           `json:"ai_task_identifier"`
+		AITaskSpaceID    int64            `json:"ai_task_space_id"`
 	}
 )
 

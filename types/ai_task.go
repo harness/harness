@@ -32,6 +32,7 @@ type AITask struct {
 	AIAgent            enum.AIAgent     `json:"ai_agent"`
 	State              enum.AITaskState `json:"state"`
 	Output             *string          `json:"output,omitempty"`
+	ErrorMessage       *string          `json:"error_message,omitempty"`
 }
 type AITaskFilter struct {
 	QueryFilter    ListQueryFilter

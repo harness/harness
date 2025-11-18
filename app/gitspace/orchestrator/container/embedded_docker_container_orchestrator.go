@@ -358,6 +358,12 @@ func (e *EmbeddedDockerOrchestrator) Status(_ context.Context, _ types.Infrastru
 	return nil
 }
 
+// StartAITask is NOOP for EmbeddedDockerOrchestrator as this feature is not present in embedded docker.
+func (e *EmbeddedDockerOrchestrator) StartAITask(
+	_ context.Context, _ types.GitspaceConfig, _ types.Infrastructure, _ types.AITask) error {
+	return nil
+}
+
 // RemoveGitspace force removes the container and the operation is idempotent.
 // If the container is already removed, it returns.
 func (e *EmbeddedDockerOrchestrator) RemoveGitspace(
