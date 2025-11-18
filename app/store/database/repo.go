@@ -1007,7 +1007,7 @@ func applyQueryFilter(
 		for i, id := range filter.Identifiers {
 			lowerIdentifiers[i] = strings.ToLower(id)
 		}
-		stmt = stmt.Where("LOWER(repo_uid) IN (?)", lowerIdentifiers)
+		stmt = stmt.Where("LOWER(repo_uid) IN (?)", strings.Join(lowerIdentifiers, ","))
 	}
 
 	if filter.Query != "" {
