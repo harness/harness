@@ -124,6 +124,16 @@ export const UpstreamProxyPackageTypeList: UpstreamRepositoryPackageTypeListItem
     parent: Parent.Enterprise
   },
   {
+    label: 'repositoryTypes.dart',
+    value: UpstreamProxyPackageType.DART,
+    icon: 'dart-icon',
+    tooltip: 'Coming Soon!',
+    disabled: true,
+    tag: ThumbnailTagEnum.ComingSoon,
+    featureFlag: FeatureFlags.HAR_DART_PACKAGE_TYPE,
+    parent: Parent.Enterprise
+  },
+  {
     label: 'repositoryTypes.debian',
     value: UpstreamProxyPackageType.DEBIAN,
     icon: 'debian-logo',

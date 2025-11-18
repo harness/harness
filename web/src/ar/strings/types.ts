@@ -212,6 +212,7 @@ export interface StringsMap {
   'upstreamProxyDetails.createForm.source.mavenCentral': string
   'upstreamProxyDetails.createForm.source.npmjs': string
   'upstreamProxyDetails.createForm.source.nugetOrg': string
+  'upstreamProxyDetails.createForm.source.pubdev': string
   'upstreamProxyDetails.createForm.source.pypi': string
   'upstreamProxyDetails.createForm.source.title': string
   'upstreamProxyDetails.createForm.title': string
@@ -466,6 +467,7 @@ export interface StringsMap {
   optionalField: string
   'packageTypes.cargoPackage': string
   'packageTypes.condaPackage': string
+  'packageTypes.dartPackage': string
   'packageTypes.dockerPackage': string
   'packageTypes.genericPackage': string
   'packageTypes.goPackage': string
@@ -485,6 +487,7 @@ export interface StringsMap {
   'repositoryTypes.alpine': string
   'repositoryTypes.cargo': string
   'repositoryTypes.conda': string
+  'repositoryTypes.dart': string
   'repositoryTypes.debian': string
   'repositoryTypes.docker': string
   'repositoryTypes.generic': string

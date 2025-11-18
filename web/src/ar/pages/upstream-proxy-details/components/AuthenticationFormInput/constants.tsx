@@ -86,5 +86,9 @@ export const URLSourceToSupportedAuthTypesMapping: Record<
   [UpstreamRepositoryURLInputSource.Anaconda]: [
     UpstreamProxyAuthenticationMode.USER_NAME_AND_PASSWORD,
     UpstreamProxyAuthenticationMode.ANONYMOUS
+  ],
+  [UpstreamRepositoryURLInputSource.Pubdev]: [
+    UpstreamProxyAuthenticationMode.USER_NAME_AND_PASSWORD,
+    UpstreamProxyAuthenticationMode.ANONYMOUS
   ]
 }

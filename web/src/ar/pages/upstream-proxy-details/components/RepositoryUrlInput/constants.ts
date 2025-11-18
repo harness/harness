@@ -65,5 +65,9 @@ export const UpstreamURLSourceConfig: Record<UpstreamRepositoryURLInputSource, R
   [UpstreamRepositoryURLInputSource.Anaconda]: {
     label: 'upstreamProxyDetails.createForm.source.bioconda',
     value: UpstreamRepositoryURLInputSource.Anaconda
+  },
+  [UpstreamRepositoryURLInputSource.Pubdev]: {
+    label: 'upstreamProxyDetails.createForm.source.pubdev',
+    value: UpstreamRepositoryURLInputSource.Pubdev
   }
 }

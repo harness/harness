@@ -133,7 +133,8 @@ export const mockGenericArtifactFiles: FileDetailResponseResponse = {
         downloadCommand:
           "curl --location 'https://pkg.qa.harness.io/generic/iWnhltqOT7GFt7R-F_zP7Q/generic-registry/artifact:v1:image.png' --header 'Authorization: Bearer \u003cAPI_KEY\u003e' -J -O",
         name: 'image.png',
-        size: '170.18KB'
+        size: '170.18KB',
+        path: 'image.png'
       },
       {
         createdAt: '1738085520008',

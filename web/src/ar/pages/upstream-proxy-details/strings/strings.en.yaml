@@ -20,6 +20,7 @@ createForm:
     goproxy: GoProxy
     huggingface: Huggingface
     bioconda: Bioconda
+    pubdev: Pub.dev
   authentication:
     title: Authentication
     userNameAndPassword: Username and Password

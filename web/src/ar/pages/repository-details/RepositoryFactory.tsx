@@ -27,6 +27,7 @@ import { CargoRepositoryType } from './CargoRepository/CargoRepositoryType'
 import { GoRepositoryType } from './GoRepository/GoRepositoryType'
 import { HuggingfaceRepositoryType } from './HuggingfaceRepositoryType/HuggingfaceRepositoryType'
 import { CondaRepositoryType } from './CondaRepository/CondaRepositoryType'
+import { DartRepositoryType } from './DartRepository/DartRepositoryType'
 
 repositoryFactory.registerStep(new DockerRepositoryType())
 repositoryFactory.registerStep(new HelmRepositoryType())
@@ -40,3 +41,4 @@ repositoryFactory.registerStep(new CargoRepositoryType())
 repositoryFactory.registerStep(new GoRepositoryType())
 repositoryFactory.registerStep(new HuggingfaceRepositoryType())
 repositoryFactory.registerStep(new CondaRepositoryType())
+repositoryFactory.registerStep(new DartRepositoryType())

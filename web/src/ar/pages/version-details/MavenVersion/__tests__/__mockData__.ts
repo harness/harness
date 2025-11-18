@@ -133,7 +133,8 @@ export const mockMavenArtifactFiles: FileDetailResponseResponse = {
         downloadCommand:
           "curl --location 'https://pkg.qa.harness.io/maven/iWnhltqOT7GFt7R-F_zP7Q/maven-up-1/junit/junit/3.8.1/junit-3.8.1.jar.sha1' --header 'x-api-key: \u003cIDENTITY_TOKEN\u003e' -O",
         name: 'junit-3.8.1.jar.sha1',
-        size: '40.00B'
+        size: '40.00B',
+        path: 'junit-3.8.1.jar.sha1'
       },
       {
         checksums: [
@@ -146,7 +147,8 @@ export const mockMavenArtifactFiles: FileDetailResponseResponse = {
         downloadCommand:
           "curl --location 'https://pkg.qa.harness.io/maven/iWnhltqOT7GFt7R-F_zP7Q/maven-up-1/junit/junit/3.8.1/junit-3.8.1.pom.sha1' --header 'x-api-key: \u003cIDENTITY_TOKEN\u003e' -O",
         name: 'junit-3.8.1.pom.sha1',
-        size: '58.00B'
+        size: '58.00B',
+        path: 'junit-3.8.1.pom.sha1'
       },
       {
         checksums: [
@@ -159,7 +161,8 @@ export const mockMavenArtifactFiles: FileDetailResponseResponse = {
         downloadCommand:
           "curl --location 'https://pkg.qa.harness.io/maven/iWnhltqOT7GFt7R-F_zP7Q/maven-up-1/junit/junit/3.8.1/junit-3.8.1.jar' --header 'x-api-key: \u003cIDENTITY_TOKEN\u003e' -O",
         name: 'junit-3.8.1.jar',
-        size: '118.23KB'
+        size: '118.23KB',
+        path: 'junit-3.8.1.jar'
       },
       {
         checksums: [
@@ -172,7 +175,8 @@ export const mockMavenArtifactFiles: FileDetailResponseResponse = {
         downloadCommand:
           "curl --location 'https://pkg.qa.harness.io/maven/iWnhltqOT7GFt7R-F_zP7Q/maven-up-1/junit/junit/3.8.1/junit-3.8.1.pom' --header 'x-api-key: \u003cIDENTITY_TOKEN\u003e' -O",
         name: 'junit-3.8.1.pom',
-        size: '998.00B'
+        size: '998.00B',
+        path: 'junit-3.8.1.pom'
       }
     ],
     itemCount: 4,

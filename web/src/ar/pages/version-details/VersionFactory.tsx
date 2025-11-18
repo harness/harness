@@ -27,6 +27,7 @@ import { CargoVersionType } from './CargoVersion/CargoVersionType'
 import { GoVersionType } from './GoVersion/GoVersionType'
 import { HuggingfaceVersionType } from './HuggingfaceVersion/HuggingfaceVersionType'
 import { CondaVersionType } from './CondaVersion/CondaVersionType'
+import { DartVersionType } from './DartVersion/DartVersionType'
 
 versionFactory.registerStep(new DockerVersionType())
 versionFactory.registerStep(new HelmVersionType())
@@ -40,3 +41,4 @@ versionFactory.registerStep(new CargoVersionType())
 versionFactory.registerStep(new GoVersionType())
 versionFactory.registerStep(new HuggingfaceVersionType())
 versionFactory.registerStep(new CondaVersionType())
+versionFactory.registerStep(new DartVersionType())

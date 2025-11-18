@@ -90,6 +90,7 @@ packageTypes:
   goPackage: Go Package
   huggingfacePackage: Huggingface Package
   condaPackage: Conda Package
+  dartPackage: Dart Package
 repositoryTypes:
   docker: Docker
   helm: Helm
@@ -106,6 +107,7 @@ repositoryTypes:
   alpine: Alpine
   huggingface: Huggingface
   conda: Conda
+  dart: Dart
 sideNav:
   repositories: '{{ $.repositoryList.pageHeading }}'
   artifacts: '{{ $.artifactList.pageHeading }}'

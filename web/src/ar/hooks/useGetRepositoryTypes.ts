@@ -120,6 +120,16 @@ const RepositoryTypes: RepositoryTypeListItem[] = [
     parent: Parent.Enterprise
   },
   {
+    label: 'repositoryTypes.dart',
+    value: RepositoryPackageType.DART,
+    icon: 'dart-icon',
+    tooltip: 'Coming Soon!',
+    disabled: true,
+    tag: ThumbnailTagEnum.ComingSoon,
+    featureFlag: FeatureFlags.HAR_DART_PACKAGE_TYPE,
+    parent: Parent.Enterprise
+  },
+  {
     label: 'repositoryTypes.debian',
     value: RepositoryPackageType.DEBIAN,
     icon: 'debian-logo',
