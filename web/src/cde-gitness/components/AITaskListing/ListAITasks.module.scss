@@ -1,0 +1,55 @@
+.cdeTable {
+  margin-top: var(--spacing-small) !important;
+  div[class*='TableV2--cell'] {
+    width: auto !important;
+  }
+
+  div[class*='TableV2--cells'],
+  div[class*='TableV2--header'] {
+    display: grid !important;
+    grid-template-columns: 2.8fr 0.6fr 1.3fr 0.8fr 0.9fr !important;
+  }
+
+  div[class*='TableV2--body'] {
+    max-height: 69vh !important;
+    overflow-y: auto !important;
+  }
+}
+
+.aiAgentIcon {
+  margin-right: 1px !important;
+  display: inline-block;
+  height: var(--spacing-medium) !important;
+  width: var(--spacing-medium) !important;
+}
+
+.gitspaceIcon {
+  margin-right: var(--spacing-xsmall) !important;
+  display: inline-block;
+  height: var(--spacing-medium) !important;
+  width: var(--spacing-medium) !important;
+}
+
+.taskCellContainer {
+  [class*='Layout--horizontal'] {
+    margin-top: 0 !important;
+  }
+}
+
+.copyBtn {
+  padding: 0 !important;
+}
+
+.seperator {
+  width: 1px !important;
+  height: 14px !important;
+  background-color: var(--grey-200) !important;
+}
+
+.ownerCreatedAt {
+  margin-left: var(--spacing-small) !important;
+}
+
+.isUrl {
+  cursor: pointer !important;
+}

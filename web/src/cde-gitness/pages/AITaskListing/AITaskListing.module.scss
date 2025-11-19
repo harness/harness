@@ -1,0 +1,15 @@
+.totalItems {
+  font-size: var(--font-size-normal) !important;
+  font-weight: bold !important;
+  color: black !important;
+}
+
+.authorDropdownItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-small);
+}
+
+.main {
+  margin: var(--spacing-xxlarge) !important;
+}

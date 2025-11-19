@@ -420,6 +420,12 @@ aiTasks:
     noGitspacesFound: No active Gitspaces found
     claudeAI: Claude AI
     selectAIAgent: Select AI agent
+  listing:
+    contextDetails: Context Details
+    noTasksFound: No Tasks Found
+    aiAgents: AI Agents
+    aiAgent: AI Agent
+    newTask: New Task
 details:
   actions: More Actions
   openCursor: Open Cursor

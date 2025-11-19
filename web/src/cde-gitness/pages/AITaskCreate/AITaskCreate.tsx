@@ -41,9 +41,8 @@ import SelectContextDialog from 'cde-gitness/components/SelectContextDialog/Sele
 import type { TypesGitspaceConfig } from 'services/cde'
 import { useCreateAITask, type EnumAIAgent } from 'services/cde'
 import { getIconByRepoType, getRepoNameFromURL } from 'cde-gitness/utils/SelectRepository.utils'
-import { AIAgentEnum } from 'cde-gitness/constants/index'
+import { AIAgentEnum, getIconByAgentType } from 'cde-gitness/constants/index'
 import codeSandboxLogo from 'cde-gitness/assests/codeSandboxLogo.svg?url'
-import claudeIcon from 'cde-gitness/assests/claude.svg?url'
 import { getErrorMessage } from 'utils/Utils'
 import css from './AITaskCreate.module.scss'
 
@@ -305,7 +304,11 @@ const AITaskCreate = () => {
                                             }
                                             icon={
                                               <div className={css.selectAgentIcon}>
-                                                <img src={claudeIcon} height={16} width={16} />
+                                                <img
+                                                  src={getIconByAgentType(AIAgentEnum.CLAUDE_CODE)}
+                                                  height={16}
+                                                  width={16}
+                                                />
                                               </div>
                                             }
                                             onClick={e => {
@@ -321,7 +324,13 @@ const AITaskCreate = () => {
                                       <Layout.Horizontal
                                         spacing="xsmall"
                                         flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
-                                        {formik.values.ai_agent && <img src={claudeIcon} height={16} width={16} />}
+                                        {formik.values.ai_agent && (
+                                          <img
+                                            src={getIconByAgentType(formik.values.ai_agent)}
+                                            height={16}
+                                            width={16}
+                                          />
+                                        )}
                                         <Text font={'normal'}>
                                           {formik.values.ai_agent
                                             ? getString('cde.aiTasks.create.claudeAI')

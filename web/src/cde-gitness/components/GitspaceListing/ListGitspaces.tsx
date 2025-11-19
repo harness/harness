@@ -23,7 +23,8 @@ import {
   useToaster,
   Button,
   ButtonVariation,
-  Avatar
+  Avatar,
+  Utils
 } from '@harnessio/uicore'
 import React, { useEffect, useState } from 'react'
 import { Color } from '@harnessio/design-system'
@@ -66,18 +67,18 @@ import css from './ListGitspaces.module.scss'
 export const getStatusColor = (status?: EnumGitspaceStateType) => {
   switch (status) {
     case GitspaceStatus.RUNNING:
-      return '#42AB45'
+      return Utils.getRealCSSColor(Color.SUCCESS)
     case GitspaceStatus.CLEANING:
     case GitspaceStatus.STOPPING:
-      return '#FF832B'
+      return Utils.getRealCSSColor(Color.WARNING)
     case GitspaceStatus.STOPPED:
-      return '#D0D0D9'
+      return Utils.getRealCSSColor(Color.GREY_200)
     case GitspaceStatus.UNINITIALIZED:
-      return '#000000'
+      return Utils.getRealCSSColor(Color.BLACK)
     case GitspaceStatus.ERROR:
-      return '#FF0000'
+      return Utils.getRealCSSColor(Color.ERROR)
     default:
-      return '#000000'
+      return Utils.getRealCSSColor(Color.BLACK)
   }
 }
 

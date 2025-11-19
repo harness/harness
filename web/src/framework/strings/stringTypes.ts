@@ -1353,6 +1353,11 @@ export interface StringsMap {
   'cde.aiTasks.create.selectedGitspace': string
   'cde.aiTasks.create.startWithActiveGitspace': string
   'cde.aiTasks.create.welcome': string
+  'cde.aiTasks.listing.aiAgent': string
+  'cde.aiTasks.listing.aiAgents': string
+  'cde.aiTasks.listing.contextDetails': string
+  'cde.aiTasks.listing.newTask': string
+  'cde.aiTasks.listing.noTasksFound': string
   'cde.aiTasks.tasks': string
   'cde.allRegionDisabled': string
   'cde.atleastOneRegion': string

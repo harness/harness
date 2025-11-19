@@ -26,6 +26,7 @@ import goLandIcon from 'cde-gitness/assests/goLand.svg?url'
 import riderIcon from 'cde-gitness/assests/rider.svg?url'
 import windsurfIcon from 'cde-gitness/assests/windsurf.svg?url'
 import cursorIcon from 'cde-gitness/assests/cursor.svg?url'
+import claudeIcon from 'cde-gitness/assests/claude.svg?url'
 import type { StringsMap } from 'framework/strings/stringTypes'
 import type { TypesInfraProviderResource } from 'services/cde'
 
@@ -243,6 +244,13 @@ export enum GitspaceStatus {
   CLEANING = 'cleaning'
 }
 
+export enum TaskStatus {
+  RUNNING = 'running',
+  ERROR = 'error',
+  UNINITIALIZED = 'uninitialized',
+  COMPLETED = 'completed'
+}
+
 export interface GitspaceStatusTypesListItem {
   label: string
   value: GitspaceStatus
@@ -350,4 +358,13 @@ export const ARCHITECTURE_OPTIONS = ['amd64', 'arm64']
 
 export enum AIAgentEnum {
   CLAUDE_CODE = 'claude-code'
+}
+
+export const getIconByAgentType = (agent?: string): string | undefined => {
+  switch (agent) {
+    case AIAgentEnum.CLAUDE_CODE:
+      return claudeIcon
+    default:
+      return undefined
+  }
 }

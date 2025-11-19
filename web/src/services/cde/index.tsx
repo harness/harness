@@ -213,8 +213,7 @@ export interface TypesAITask {
   api_url?: string | null
   created?: number
   display_name?: string
-  gitspace_config_id?: number
-  gitspace_instance_id?: number
+  gitspace_config?: TypesGitspaceConfig
   id?: number
   identifier?: string
   initial_prompt?: string
@@ -1399,6 +1398,23 @@ export const useUpdateInfraProviderTemplate = ({
     }
   )
 
+export interface ListAITasksQueryParams {
+  /**
+   * The page to return.
+   */
+  page?: number
+  /**
+   * The maximum number of results to return.
+   */
+  limit?: number
+  /**
+   * The substring which is used to filter the ai tasks by their name or idenitifer.
+   */
+  query?: string
+  aitask_states?: EnumAITaskState[]
+  aitask_agents?: EnumAIAgent[]
+}
+
 export interface ListAITasksPathParams {
   /**
    * account identifier.
@@ -1414,14 +1430,17 @@ export interface ListAITasksPathParams {
   projectIdentifier: string
 }
 
-export type ListAITasksProps = Omit<GetProps<TypesAITask[], UsererrorError, void, ListAITasksPathParams>, 'path'> &
+export type ListAITasksProps = Omit<
+  GetProps<TypesAITask[], UsererrorError, ListAITasksQueryParams, ListAITasksPathParams>,
+  'path'
+> &
   ListAITasksPathParams
 
 /**
  * List AI tasks for a given space
  */
 export const ListAITasks = ({ accountIdentifier, orgIdentifier, projectIdentifier, ...props }: ListAITasksProps) => (
-  <Get<TypesAITask[], UsererrorError, void, ListAITasksPathParams>
+  <Get<TypesAITask[], UsererrorError, ListAITasksQueryParams, ListAITasksPathParams>
     path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/aitasks`}
     base={getConfig('cde/api/v1')}
     {...props}
@@ -1429,7 +1448,7 @@ export const ListAITasks = ({ accountIdentifier, orgIdentifier, projectIdentifie
 )
 
 export type UseListAITasksProps = Omit<
-  UseGetProps<TypesAITask[], UsererrorError, void, ListAITasksPathParams>,
+  UseGetProps<TypesAITask[], UsererrorError, ListAITasksQueryParams, ListAITasksPathParams>,
   'path'
 > &
   ListAITasksPathParams
@@ -1443,7 +1462,7 @@ export const useListAITasks = ({
   projectIdentifier,
   ...props
 }: UseListAITasksProps) =>
-  useGet<TypesAITask[], UsererrorError, void, ListAITasksPathParams>(
+  useGet<TypesAITask[], UsererrorError, ListAITasksQueryParams, ListAITasksPathParams>(
     (paramsInPath: ListAITasksPathParams) =>
       `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/aitasks`,
     { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier, orgIdentifier, projectIdentifier }, ...props }

@@ -474,7 +474,7 @@ paths:
           required: true
           schema:
             type: string
-        - description: delete bug.
+        - description: infra Provider Resource Identifier.
           in: path
           name: delete_bug
           required: true
@@ -620,6 +620,42 @@ paths:
           required: true
           schema:
             type: string
+        - description: The page to return.
+          in: query
+          name: page
+          required: false
+          schema:
+            default: 1
+            minimum: 1
+            type: integer
+        - description: The maximum number of results to return.
+          in: query
+          name: limit
+          required: false
+          schema:
+            default: 30
+            maximum: 100
+            minimum: 1
+            type: integer
+        - description: The substring which is used to filter the ai tasks by their name
+            or idenitifer.
+          in: query
+          name: query
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: aitask_states
+          schema:
+            items:
+              $ref: '#/components/schemas/EnumAITaskState'
+            type: array
+        - in: query
+          name: aitask_agents
+          schema:
+            items:
+              $ref: '#/components/schemas/EnumAIAgent'
+            type: array
       responses:
         "200":
           content:
@@ -1808,10 +1844,8 @@ components:
           type: integer
         display_name:
           type: string
-        gitspace_config_id:
-          type: integer
-        gitspace_instance_id:
-          type: integer
+        gitspace_config:
+          $ref: '#/components/schemas/TypesGitspaceConfig'
         id:
           type: integer
         identifier:
