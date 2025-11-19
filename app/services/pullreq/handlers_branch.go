@@ -16,15 +16,16 @@ package pullreq
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 
 	gitevents "github.com/harness/gitness/app/events/git"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/git"
+	gitapi "github.com/harness/gitness/git/api"
 	gitenum "github.com/harness/gitness/git/enum"
 	"github.com/harness/gitness/git/sha"
 	gitness_store "github.com/harness/gitness/store"
@@ -169,6 +170,20 @@ func (s *Service) updatePullReqOnBranchUpdate(ctx context.Context,
 			Ref1:       event.Payload.NewSHA,
 			Ref2:       targetSHA.String(),
 		})
+		if errors.IsInvalidArgument(err) || gitapi.IsUnrelatedHistoriesError(err) {
+			in := NonUniqueMergeBaseInput{
+				PullReqStore:      s.pullreqStore,
+				ActivityStore:     s.activityStore,
+				PullReqEvReporter: s.pullreqEvReporter,
+				SSEStreamer:       s.sseStreamer,
+			}
+			err = CloseBecauseNonUniqueMergeBase(ctx, in, targetSHA, newSHA, pr)
+			if err != nil {
+				return fmt.Errorf("failed to close pull request after non-unique merge base: %w", err)
+			}
+
+			return nil
+		}
 		if err != nil {
 			return fmt.Errorf("failed to get merge base after branch update to=%s for PR=%d: %w",
 				event.Payload.NewSHA, pr.Number, err)

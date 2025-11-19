@@ -29,10 +29,12 @@ import (
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/protection"
+	"github.com/harness/gitness/app/services/pullreq"
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/contextutil"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
+	gitapi "github.com/harness/gitness/git/api"
 	gitenum "github.com/harness/gitness/git/enum"
 	"github.com/harness/gitness/git/sha"
 	gitness_store "github.com/harness/gitness/store"
@@ -304,6 +306,16 @@ func (c *Controller) Merge(
 		}, nil, nil
 	}
 
+	targetBranch, err := c.git.GetBranch(ctx, &git.GetBranchParams{
+		ReadParams: git.ReadParams{RepoUID: targetRepo.GitUID},
+		BranchName: pr.TargetBranch,
+	})
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get pull request target branch: %w", err)
+	}
+
+	targetSHA := targetBranch.Branch.SHA
+
 	// we want to complete the merge independent of request cancel - start with new, time restricted context.
 	// TODO: This is a small change to reduce likelihood of dirty state.
 	// We still require a proper solution to handle an application crash or very slow execution times
@@ -357,11 +369,28 @@ func (c *Controller) Merge(
 
 			mergeOutput, err = c.git.Merge(ctx, &git.MergeParams{
 				WriteParams: writeParams,
-				BaseBranch:  pr.TargetBranch,
+				BaseSHA:     targetSHA,
 				HeadSHA:     sourceSHA,
 				Refs:        nil, // update no refs -> no commit will be created
 				Method:      gitenum.MergeMethod(in.Method),
 			})
+			if errors.IsInvalidArgument(err) || gitapi.IsUnrelatedHistoriesError(err) {
+				inClose := pullreq.NonUniqueMergeBaseInput{
+					PullReqStore:      c.pullreqStore,
+					ActivityStore:     c.activityStore,
+					PullReqEvReporter: c.eventReporter,
+					SSEStreamer:       c.sseStreamer,
+				}
+
+				errClose := pullreq.CloseBecauseNonUniqueMergeBase(ctx, inClose, targetSHA, sourceSHA, pr)
+				if errClose != nil {
+					return nil, nil,
+						fmt.Errorf("failed to close pull request after non-unique merge base: %w", errClose)
+				}
+
+				return nil, nil, err
+			}
+
 			if err != nil {
 				return nil, nil, fmt.Errorf("failed merge check with method=%s: %w", in.Method, err)
 			}
@@ -530,7 +559,7 @@ func (c *Controller) Merge(
 	// Update the target branch to the result of the merge.
 	refUpdates = append(refUpdates, git.RefUpdate{
 		Name: refTargetBranch,
-		Old:  sha.SHA{}, // don't care about the current commit SHA of the target branch.
+		Old:  targetSHA,
 		New:  sha.SHA{}, // update to the result of the merge.
 	})
 
@@ -551,7 +580,7 @@ func (c *Controller) Merge(
 	now := time.Now()
 	mergeOutput, err := c.git.Merge(ctx, &git.MergeParams{
 		WriteParams:   targetWriteParams,
-		BaseBranch:    pr.TargetBranch,
+		BaseSHA:       targetSHA,
 		HeadSHA:       sourceSHA,
 		Message:       git.CommitMessage(in.Title, in.Message),
 		Committer:     committer,
@@ -561,6 +590,22 @@ func (c *Controller) Merge(
 		Refs:          refUpdates,
 		Method:        gitenum.MergeMethod(in.Method),
 	})
+	if errors.IsInvalidArgument(err) || gitapi.IsUnrelatedHistoriesError(err) {
+		inClose := pullreq.NonUniqueMergeBaseInput{
+			PullReqStore:      c.pullreqStore,
+			ActivityStore:     c.activityStore,
+			PullReqEvReporter: c.eventReporter,
+			SSEStreamer:       c.sseStreamer,
+		}
+
+		errClose := pullreq.CloseBecauseNonUniqueMergeBase(ctx, inClose, targetSHA, sourceSHA, pr)
+		if errClose != nil {
+			return nil, nil,
+				fmt.Errorf("failed to close pull request after non-unique merge base: %w", errClose)
+		}
+
+		return nil, nil, err
+	}
 	if err != nil {
 		return nil, nil, fmt.Errorf("merge execution failed: %w", err)
 	}

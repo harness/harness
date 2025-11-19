@@ -93,6 +93,7 @@ const (
 	PullReqActivityTypeTargetBranchChange      PullReqActivityType = "target-branch-change"
 	PullReqActivityTypeMerge                   PullReqActivityType = "merge"
 	PullReqActivityTypeLabelModify             PullReqActivityType = "label-modify"
+	PullReqActivityTypeNonUniqueMergeBase      PullReqActivityType = "non-unique-merge-base"
 )
 
 var pullReqActivityTypes = sortEnum([]PullReqActivityType{

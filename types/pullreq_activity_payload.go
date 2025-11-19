@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -231,4 +232,13 @@ type PullRequestActivityLabels struct {
 
 func (a *PullRequestActivityLabels) ActivityType() enum.PullReqActivityType {
 	return enum.PullReqActivityTypeLabelModify
+}
+
+type PullRequestActivityPayloadNonUniqueMergeBase struct {
+	TargetSHA sha.SHA `json:"target_sha"`
+	SourceSHA sha.SHA `json:"source_sha"`
+}
+
+func (a *PullRequestActivityPayloadNonUniqueMergeBase) ActivityType() enum.PullReqActivityType {
+	return enum.PullReqActivityTypeNonUniqueMergeBase
 }
