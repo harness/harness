@@ -426,6 +426,24 @@ aiTasks:
     aiAgents: AI Agents
     aiAgent: AI Agent
     newTask: New Task
+  errorCard:
+    title: There has been an error in running the task
+  details:
+    claudeAgentLabel: Claude Agent
+    waitingForAgent: Waiting for agent response
+    responseError: An error occurred while generating the response
+    errorFallback: Task failed during agent execution. Please check the Gitspace logs for details.
+    openIde: Open IDE
+    ideTooltip:
+      taskError: '{{ide}} can’t be opened because the task encountered an error.'
+      gitspaceInactive: '{{ide}} can’t be opened because the Gitspace isn’t active. Start the Gitspace and try again.'
+      taskWaiting: 'Setting things up. {{ide}} will be available once the task finishes.'
+    aiUsageMetrics : AI Usage Metrics
+    duration : Duration (seconds)
+    totalCost : Total Cost (USD)
+    inputTokens : Input Tokens
+    outputTokens : Output Tokens
+    llmModels : LLM Models
 details:
   actions: More Actions
   openCursor: Open Cursor

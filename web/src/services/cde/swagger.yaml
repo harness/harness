@@ -1535,10 +1535,10 @@ components:
       type: string
     EnumAITaskState:
       enum:
-        - uninitialized
-        - running
         - completed
         - error
+        - running
+        - uninitialized
       type: string
     EnumGitspaceAccessType:
       enum:
@@ -1837,12 +1837,17 @@ components:
       properties:
         ai_agent:
           $ref: '#/components/schemas/EnumAIAgent'
+        ai_usage_metric:
+          $ref: '#/components/schemas/TypesAIUsageMetric'
         api_url:
           nullable: true
           type: string
         created:
           type: integer
         display_name:
+          type: string
+        error_message:
+          nullable: true
           type: string
         gitspace_config:
           $ref: '#/components/schemas/TypesGitspaceConfig'
@@ -1863,6 +1868,22 @@ components:
           type: integer
         user_uid:
           type: string
+      type: object
+    TypesAIUsageMetric:
+      properties:
+        duration_ms:
+          type: integer
+        llm_models:
+          items:
+            type: string
+          nullable: true
+          type: array
+        total_cost_usd:
+          type: number
+        total_input_tokens:
+          type: integer
+        total_output_tokens:
+          type: integer
       type: object
     TypesAccessList[Github.Com/Harness/Gitness/Types/Enum.GitspaceCodeRepoType]:
       properties:

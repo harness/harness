@@ -7,7 +7,7 @@
   div[class*='TableV2--cells'],
   div[class*='TableV2--header'] {
     display: grid !important;
-    grid-template-columns: 2.8fr 0.6fr 1.3fr 0.8fr 0.9fr !important;
+    grid-template-columns: 2.8fr 0.6fr 1.5fr 0.7fr 0.9fr !important;
   }
 
   div[class*='TableV2--body'] {
@@ -52,4 +52,14 @@
 
 .isUrl {
   cursor: pointer !important;
+}
+
+.repoCell {
+  max-width: 240px !important;
+  text-overflow: ellipsis !important;
+}
+
+.branchCell {
+  max-width: 100px !important;
+  text-overflow: ellipsis !important;
 }

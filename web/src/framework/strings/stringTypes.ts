@@ -1353,6 +1353,21 @@ export interface StringsMap {
   'cde.aiTasks.create.selectedGitspace': string
   'cde.aiTasks.create.startWithActiveGitspace': string
   'cde.aiTasks.create.welcome': string
+  'cde.aiTasks.details.aiUsageMetrics': string
+  'cde.aiTasks.details.claudeAgentLabel': string
+  'cde.aiTasks.details.duration': string
+  'cde.aiTasks.details.errorFallback': string
+  'cde.aiTasks.details.ideTooltip.gitspaceInactive': string
+  'cde.aiTasks.details.ideTooltip.taskError': string
+  'cde.aiTasks.details.ideTooltip.taskWaiting': string
+  'cde.aiTasks.details.inputTokens': string
+  'cde.aiTasks.details.llmModels': string
+  'cde.aiTasks.details.openIde': string
+  'cde.aiTasks.details.outputTokens': string
+  'cde.aiTasks.details.responseError': string
+  'cde.aiTasks.details.totalCost': string
+  'cde.aiTasks.details.waitingForAgent': string
+  'cde.aiTasks.errorCard.title': string
   'cde.aiTasks.listing.aiAgent': string
   'cde.aiTasks.listing.aiAgents': string
   'cde.aiTasks.listing.contextDetails': string

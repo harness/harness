@@ -1,0 +1,281 @@
+/*
+ * Copyright 2024 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+@import 'src/utils/utils';
+
+.customSubheader {
+  height: 10vh;
+}
+
+.pageMain {
+  margin: var(--spacing-xxlarge) !important;
+}
+
+.cardContainer {
+  margin-top: var(--spacing-xxlarge) !important;
+  width: 100% !important;
+
+  &:first-child {
+    margin-top: 0px !important;
+  }
+}
+
+.gitspaceIdContainer [class*='Layout--horizontal'] {
+  margin-top: 0 !important;
+}
+
+.gitspaceIdContainer [class*='bp3-popover-wrapper'] {
+  margin-left: 0 !important;
+}
+
+.gitspaceIcon {
+  margin: auto var(--spacing-small) auto 0 !important;
+}
+
+.marginLeftContainer {
+  margin-left: 7px !important;
+}
+
+.copyBtn {
+  padding: 0 !important;
+  min-height: var(--spacing-medium) !important;
+  height: var(--spacing-medium) !important;
+}
+
+.copyBtn:hover {
+  box-shadow: none !important;
+}
+
+.customBreadcumbStyles {
+  [class*='Layout--horizontal']:last-child > span[class*='bp3-icon'] {
+    display: none !important;
+  }
+}
+
+.chatCardBody {
+  width: 100%;
+  padding: var(--spacing-large) !important;
+  background-color: var(--grey-100) !important;
+  border-radius: 8px;
+  max-height: 800px !important;
+  overflow-y: auto !important;
+}
+
+.message {
+  width: 100% !important;
+  padding: var(--spacing-small) var(--spacing-medium) !important;
+  border-radius: 12px !important;
+
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  box-sizing: border-box;
+  margin-bottom: var(--spacing-small) !important;
+}
+
+.messageHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xxsmall) !important;
+  margin-bottom: var(--spacing-xsmall);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--grey-600);
+}
+
+.aiIcon {
+  width: 22px;
+  height: 22px;
+  margin-right: var(--spacing-xsmall) !important;
+}
+
+.systemMessageContainer {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  max-width: 70% !important;
+  width: fit-content !important;
+  margin: var(--spacing-small) 0 !important;
+  margin-right: auto !important;
+
+  .message {
+    background-color: var(--white) !important;
+    border: 1px solid var(--grey-200);
+    border-top-left-radius: 0px !important;
+  }
+}
+
+.userMessageContainer {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  width: fit-content !important;
+  max-width: 70% !important;
+  margin: var(--spacing-small) 0 !important;
+  margin-left: auto !important;
+
+  .message {
+    background-color: var(--ai-purple-600) !important;
+    border-top-right-radius: 0 !important;
+  }
+
+  .messageHeader {
+    justify-content: flex-end;
+  }
+}
+
+.markdown {
+  white-space: normal;
+
+  .section {
+    overflow-x: scroll;
+  }
+
+  :global {
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      margin-top: var(--spacing-small) !important;
+      margin-bottom: var(--spacing-small) !important;
+      font-weight: 600 !important;
+    }
+
+    h1 {
+      font-size: var(--font-size-large);
+    }
+
+    h2 {
+      font-size: var(--font-size-medium);
+    }
+
+    h3,
+    h4,
+    h5,
+    h6 {
+      font-size: var(--font-size-normal);
+    }
+
+    p {
+      margin-bottom: var(--spacing-small);
+    }
+
+    /* ensure bullets and numbers show */
+    ol {
+      list-style-type: decimal !important;
+      list-style-position: outside !important;
+      margin: 0 0 var(--spacing-xsmall) 0 !important;
+      padding-left: var(--spacing-large) !important;
+    }
+
+    ul {
+      list-style-type: disc !important;
+      list-style-position: outside !important;
+      margin: 0 0 var(--spacing-xsmall) 0 !important;
+      padding-left: var(--spacing-large) !important;
+    }
+
+    li {
+      margin-bottom: 2px;
+    }
+
+    code {
+      font-family: monospace;
+      background-color: rgba(0, 0, 0, 0.05);
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+
+    pre {
+      background-color: rgba(0, 0, 0, 0.05);
+      padding: var(--spacing-small);
+      border-radius: 4px;
+      overflow-x: auto;
+      margin-bottom: var(--spacing-xsmall);
+
+      code {
+        background-color: transparent;
+        padding: 0;
+      }
+    }
+
+    a {
+      color: var(--primary-7);
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    blockquote {
+      border-left: 3px solid var(--grey-300);
+      padding-left: var(--spacing-small);
+      margin-left: var(--spacing-small);
+      color: var(--grey-600);
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-bottom: var(--spacing-small);
+
+      th,
+      td {
+        border: 1px solid var(--grey-300);
+        padding: var(--spacing-xsmall);
+      }
+
+      th {
+        background-color: var(--grey-100);
+      }
+    }
+  }
+}
+
+/* Normalize text in bubbles similar to reference */
+.text {
+  white-space: pre-line;
+  text-wrap: pretty;
+}
+
+.popover {
+  > div[class*='popover-arrow'] {
+    display: none;
+  }
+
+  .listContainer {
+    border-radius: 20px !important;
+    :global {
+      a.bp3-menu-item:hover,
+      .bp3-active {
+        background: var(--primary-1) !important;
+        color: var(--grey-1000) !important;
+      }
+    }
+  }
+}
+
+.errorMessage {
+  display: flex !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+}
+
+.optionsMenu {
+  cursor: pointer !important;
+}

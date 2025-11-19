@@ -1,0 +1,103 @@
+.rowHeaders {
+  font-size: var(--font-size-small) !important;
+}
+
+.detailsContainer {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  grid-template-rows: repeat(2, auto) !important;
+  column-gap: 20px;
+  row-gap: 30px;
+
+  > div {
+    margin-bottom: 10px;
+  }
+}
+
+.marginLeftContainer {
+  margin-left: var(--layout-spacing) !important;
+}
+
+.providerText {
+  color: var(--grey-500) !important;
+  font-size: var(--font-size-normal) !important;
+  text-align: left !important;
+}
+
+.modelTagsContainer {
+  border: none;
+  background-color: transparent;
+  padding: var(--spacing-small) 0 !important;
+  min-height: 30px;
+  width: 100%;
+  cursor: default;
+}
+
+.modelTagsWrapper {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.modelTag {
+  background-color: var(--grey-100) !important;
+  border: 1px solid var(--grey-200);
+  border-radius: var(--spacing-medium) !important;
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 var(--spacing-small);
+  cursor: default;
+  white-space: nowrap;
+}
+
+.modelTagText {
+  font-size: var(--font-size-small);
+  color: #0a3364 !important;
+  line-height: 15px;
+  font-weight: 500 !important;
+}
+
+.modelTagExtra {
+  background-color: #effbff !important;
+  border-radius: var(--spacing-medium) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 8px !important;
+  cursor: default;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.modelTagExtraText {
+  font-size: var(--font-size-small) !important;
+  color: #3399ff !important;
+  line-height: 15px !important;
+  font-weight: 500 !important;
+}
+
+.noModelsMessage {
+  color: var(--grey-400) !important;
+  font-size: var(--font-size-small) !important;
+}
+
+.modelTooltipContent {
+  padding: var(--spacing-small) var(--spacing-4) !important;
+  font-size: var(--font-size-small) !important;
+  color: var(--grey-900) !important;
+  max-width: 300px !important;
+  background-color: var(--white) !important;
+  border-radius: var(--spacing-2) !important;
+  box-shadow: 0 var(--spacing-1) var(--spacing-small) rgba(0, 0, 0, 0.2) !important;
+  max-height: 90px !important;
+  overflow-y: auto !important;
+
+  div {
+    margin: var(--spacing-2) 0 !important;
+    padding: var(--spacing-1) 0 !important;
+    white-space: nowrap !important;
+  }
+}

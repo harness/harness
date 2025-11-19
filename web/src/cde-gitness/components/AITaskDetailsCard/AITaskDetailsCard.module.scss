@@ -1,0 +1,51 @@
+.rowHeaders {
+  font-size: var(--font-size-small) !important;
+}
+
+.detailsContainer {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  grid-template-rows: repeat(2, auto) !important;
+  column-gap: 20px;
+  row-gap: 30px;
+
+  > div {
+    margin-bottom: 10px;
+  }
+}
+
+.marginLeftContainer {
+  margin-left: var(--layout-spacing) !important;
+}
+
+.clickableText {
+  cursor: pointer !important;
+  color: var(--primary-7) !important;
+  font-size: var(--font-size-normal) !important;
+  text-align: left !important;
+  margin-left: var(--spacing-small) !important;
+}
+
+.standardIcon {
+  height: var(--spacing-large) !important;
+  width: var(--spacing-large) !important;
+  margin-right: 1px !important;
+}
+
+.statusText {
+  color: var(--black) !important;
+  font-size: var(--font-size-normal) !important;
+  font-weight: 600 !important;
+  text-align: left !important;
+}
+
+.providerText {
+  color: var(--grey-500) !important;
+  font-size: var(--font-size-normal) !important;
+  text-align: left !important;
+}
+
+.metricsText {
+  color: var(--grey-500) !important;
+  font-size: var(--font-size-small) !important;
+}

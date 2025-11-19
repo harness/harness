@@ -16,7 +16,7 @@ export interface AitaskCreateInput {
 
 export type EnumAIAgent = 'claude-code'
 
-export type EnumAITaskState = 'uninitialized' | 'running' | 'completed' | 'error'
+export type EnumAITaskState = 'completed' | 'error' | 'running' | 'uninitialized'
 
 export type EnumGitspaceAccessType = 'jwt_token' | 'user_credentials' | 'ssh_key'
 
@@ -210,9 +210,11 @@ export interface ScmCodeRepositoryResponse {
 
 export interface TypesAITask {
   ai_agent?: EnumAIAgent
+  ai_usage_metric?: TypesAIUsageMetric
   api_url?: string | null
   created?: number
   display_name?: string
+  error_message?: string | null
   gitspace_config?: TypesGitspaceConfig
   id?: number
   identifier?: string
@@ -222,6 +224,14 @@ export interface TypesAITask {
   state?: EnumAITaskState
   updated?: number
   user_uid?: string
+}
+
+export interface TypesAIUsageMetric {
+  duration_ms?: number
+  llm_models?: string[] | null
+  total_cost_usd?: number
+  total_input_tokens?: number
+  total_output_tokens?: number
 }
 
 export interface TypesAccessListGithubComHarnessGitnessTypesEnumGitspaceCodeRepoType {

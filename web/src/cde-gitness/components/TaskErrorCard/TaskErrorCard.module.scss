@@ -1,0 +1,67 @@
+.cardContainer {
+  background-color: white;
+  padding: 0 !important;
+  width: 100% !important;
+  box-shadow: 0 var(--spacing-1) var(--spacing-xsmall) rgba(0, 0, 0, 0.1);
+  border-radius: var(--spacing-small) !important;
+}
+
+.errorCard {
+  background-color: var(--red-50) !important;
+  border: 1px solid var(--red-50);
+  border-radius: var(--spacing-small) !important;
+  padding: 1.25rem !important;
+  width: 100% !important;
+  color: var(--grey-800);
+}
+
+.errorTitle {
+  color: var(--black) !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  margin: auto 0 !important;
+  padding-left: 10px !important;
+}
+
+.preClass {
+  background-color: var(--white) !important;
+  border: 1px solid var(--red-200) !important;
+  border-radius: var(--spacing-xsmall) !important;
+  padding: 10px !important;
+  margin-bottom: var(--spacing-medium) !important;
+}
+
+.errorMessage {
+  font-size: 13px !important;
+  color: var(--grey-600) !important;
+  overflow-x: auto;
+}
+
+.errorBody {
+  width: 100% !important;
+  padding-left: 3.125rem !important;
+}
+
+.resolveText {
+  font-size: var(--font-size-small);
+}
+
+.linkButton {
+  cursor: pointer;
+  padding-left: var(--spacing-medium) !important;
+  padding-right: var(--spacing-medium) !important;
+  font-size: var(--font-size-normal) !important;
+}
+
+.contactBtn {
+  cursor: pointer;
+  font-size: var(--font-size-normal) !important;
+}
+
+.iconContainer {
+  background-color: var(--white) !important;
+  height: var(--spacing-xxxlarge) !important;
+  width: var(--spacing-xxxlarge) !important;
+  padding: 10px !important;
+  border-radius: 3.125rem !important;
+}

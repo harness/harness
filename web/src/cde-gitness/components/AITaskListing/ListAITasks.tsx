@@ -49,12 +49,9 @@ const RenderTaskName: Renderer<CellProps<TypesAITask>> = ({ row }) => {
   const original = row.original
   const { display_name, identifier, id } = original
   const taskId = identifier || String(id)
-  const MAX_TITLE_LENGTH = 100
   const MAX_PROMPT_LENGTH = 60
 
   const baseTitle = display_name || original?.initial_prompt
-  const titleText =
-    baseTitle && baseTitle.length >= MAX_TITLE_LENGTH ? `${baseTitle.slice(0, MAX_TITLE_LENGTH)}...` : baseTitle
   const initialPrompt = original?.initial_prompt
   const initialPromptText =
     initialPrompt && initialPrompt.length >= MAX_PROMPT_LENGTH
@@ -68,7 +65,7 @@ const RenderTaskName: Renderer<CellProps<TypesAITask>> = ({ row }) => {
         lineClamp={1}
         title={baseTitle}
         font={{ align: 'left', size: 'normal', weight: 'semi-bold' }}>
-        {titleText}
+        {baseTitle}
       </Text>
 
       <Layout.Horizontal spacing="small" flex={{ alignItems: 'center', justifyContent: 'start' }}>
@@ -133,7 +130,7 @@ const RenderContextDetails: Renderer<CellProps<TypesAITask>> = ({ row }) => {
         <Layout.Horizontal
           spacing="small"
           flex={{ alignItems: 'center', justifyContent: 'start' }}
-          className={cx({ [css.isUrl]: !!repoURL })}
+          className={cx(css.repoCell, { [css.isUrl]: !!repoURL })}
           onClick={e => {
             if (!repoURL) return
             e.preventDefault()
@@ -155,7 +152,7 @@ const RenderContextDetails: Renderer<CellProps<TypesAITask>> = ({ row }) => {
         <Layout.Horizontal
           spacing="small"
           flex={{ alignItems: 'center', justifyContent: 'start' }}
-          className={cx({ [css.isUrl]: !!repoURL })}
+          className={cx(css.branchCell, { [css.isUrl]: !!branchURL })}
           onClick={e => {
             if (!branchURL) return
             e.preventDefault()

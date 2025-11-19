@@ -16,13 +16,15 @@
 
 /* eslint-disable */
 // This is an auto-generated file
-export declare const aiAgentIcon: string
-export declare const branchCell: string
-export declare const cdeTable: string
-export declare const copyBtn: string
-export declare const gitspaceIcon: string
-export declare const isUrl: string
-export declare const ownerCreatedAt: string
-export declare const repoCell: string
-export declare const seperator: string
-export declare const taskCellContainer: string
+export declare const detailsContainer: string
+export declare const marginLeftContainer: string
+export declare const modelTag: string
+export declare const modelTagExtra: string
+export declare const modelTagExtraText: string
+export declare const modelTagsContainer: string
+export declare const modelTagsWrapper: string
+export declare const modelTagText: string
+export declare const modelTooltipContent: string
+export declare const noModelsMessage: string
+export declare const providerText: string
+export declare const rowHeaders: string

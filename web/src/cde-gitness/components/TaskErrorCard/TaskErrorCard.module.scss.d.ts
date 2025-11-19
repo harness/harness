@@ -16,13 +16,13 @@
 
 /* eslint-disable */
 // This is an auto-generated file
-export declare const aiAgentIcon: string
-export declare const branchCell: string
-export declare const cdeTable: string
-export declare const copyBtn: string
-export declare const gitspaceIcon: string
-export declare const isUrl: string
-export declare const ownerCreatedAt: string
-export declare const repoCell: string
-export declare const seperator: string
-export declare const taskCellContainer: string
+export declare const cardContainer: string
+export declare const contactBtn: string
+export declare const errorBody: string
+export declare const errorCard: string
+export declare const errorMessage: string
+export declare const errorTitle: string
+export declare const iconContainer: string
+export declare const linkButton: string
+export declare const preClass: string
+export declare const resolveText: string
