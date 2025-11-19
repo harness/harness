@@ -1003,11 +1003,11 @@ func applyQueryFilter(
 	driverName string,
 ) squirrel.SelectBuilder {
 	if len(filter.Identifiers) > 0 {
-		lowerIdentifiers := make([]string, len(filter.Identifiers))
+		identifiers := make([]string, len(filter.Identifiers))
 		for i, id := range filter.Identifiers {
-			lowerIdentifiers[i] = strings.ToLower(id)
+			identifiers[i] = strings.ToLower(id)
 		}
-		stmt = stmt.Where("LOWER(repo_uid) IN (?)", strings.Join(lowerIdentifiers, ","))
+		stmt = stmt.Where(squirrel.Eq{"LOWER(repo_uid)": identifiers})
 	}
 
 	if filter.Query != "" {
