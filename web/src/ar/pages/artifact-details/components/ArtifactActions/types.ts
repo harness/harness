@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import type { ArtifactSummary, RegistryArtifactMetadata } from '@harnessio/react-har-service-client'
+import type { ArtifactSummary } from '@harnessio/react-har-service-client'
+import type { PackageMetadata } from '@harnessio/react-har-service-v2-client'
 import type { PageType } from '@ar/common/types'
 
 export enum ArtifactActionsEnum {
@@ -23,7 +24,7 @@ export enum ArtifactActionsEnum {
 }
 
 export interface ArtifactActionProps {
-  data: ArtifactSummary | RegistryArtifactMetadata
+  data: ArtifactSummary | PackageMetadata
   artifactKey: string
   repoKey: string
   pageType: PageType

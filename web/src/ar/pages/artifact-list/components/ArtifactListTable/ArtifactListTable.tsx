@@ -18,7 +18,7 @@ import React, { useCallback } from 'react'
 import classNames from 'classnames'
 import type { Column, Row } from 'react-table'
 import { Container, PaginationProps, TableV2 } from '@harnessio/uicore'
-import type { ArtifactMetadata, ListArtifact } from '@harnessio/react-har-service-client'
+import type { ArtifactMetadata, ListArtifact } from '@harnessio/react-har-service-v2-client'
 
 import { useParentHooks } from '@ar/hooks'
 import { killEvent } from '@ar/common/utils'
@@ -61,7 +61,7 @@ export default function ArtifactListTable(props: ArtifactListTableProps): JSX.El
   const { getString } = useStrings()
 
   const getRowId = (rowData: ArtifactMetadata) => {
-    return `${rowData.registryIdentifier}/${rowData.name}:${rowData.version}`
+    return `${rowData.registryIdentifier}/${rowData.package}:${rowData.version}`
   }
 
   const onToggleRow = useCallback((rowData: ArtifactMetadata): void => {
@@ -107,9 +107,9 @@ export default function ArtifactListTable(props: ArtifactListTableProps): JSX.El
       },
       {
         Header: getString('artifactList.table.columns.artifactName'),
-        accessor: 'name',
+        accessor: 'package',
         Cell: ArtifactNameCell,
-        serverSortProps: getServerSortProps('name'),
+        serverSortProps: getServerSortProps('package'),
         width: '200%'
       },
       {
@@ -149,9 +149,9 @@ export default function ArtifactListTable(props: ArtifactListTableProps): JSX.El
       },
       {
         Header: getString('artifactList.table.columns.lastUpdated'),
-        accessor: 'lastUpdated',
+        accessor: 'lastModified',
         Cell: LatestArtifactCell,
-        serverSortProps: getServerSortProps('lastUpdated'),
+        serverSortProps: getServerSortProps('lastModified'),
         width: '100%'
       },
       {

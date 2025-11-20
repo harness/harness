@@ -119,7 +119,7 @@ describe('Verify Maven Artifact Version Artifact Details Tab', () => {
 
     expect(useGetArtifactFilesQuery).toHaveBeenLastCalledWith({
       artifact: '1/+',
-      queryParams: { page: 0, size: 50, sort_field: 'updatedAt', sort_order: 'DESC' },
+      queryParams: { page: 0, size: 50, sort_field: 'createdAt', sort_order: 'DESC' },
       registry_ref: 'undefined/1/+',
       version: '1'
     })
@@ -130,7 +130,7 @@ describe('Verify Maven Artifact Version Artifact Details Tab', () => {
 
     expect(useGetArtifactFilesQuery).toHaveBeenLastCalledWith({
       artifact: '1/+',
-      queryParams: { page: 0, size: 50, sort_field: 'updatedAt', sort_order: 'DESC' },
+      queryParams: { page: 0, size: 50, sort_field: 'createdAt', sort_order: 'DESC' },
       registry_ref: 'undefined/1/+',
       version: '1'
     })

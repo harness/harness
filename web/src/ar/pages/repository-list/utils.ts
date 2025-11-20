@@ -17,7 +17,7 @@
 import { useMemo } from 'react'
 
 import { useParentHooks } from '@ar/hooks'
-import { DEFAULT_PAGE_INDEX, DEFAULT_PAGE_SIZE, DEFAULT_PIPELINE_LIST_TABLE_SORT } from '@ar/constants'
+import { DEFAULT_PAGE_INDEX, DEFAULT_PAGE_SIZE, DEFAULT_REPOSITORY_LIST_TABLE_SORT } from '@ar/constants'
 import { RepositoryConfigType, RepositoryPackageType, RepositoryScopeType } from '@ar/common/types'
 import type { UseQueryParamsOptions } from '@ar/__mocks__/hooks'
 
@@ -49,7 +49,7 @@ export const useArtifactRepositoriesQueryParamOptions =
       {
         page: DEFAULT_PAGE_INDEX,
         size: DEFAULT_PAGE_SIZE,
-        sort: DEFAULT_PIPELINE_LIST_TABLE_SORT,
+        sort: DEFAULT_REPOSITORY_LIST_TABLE_SORT,
         scope: RepositoryScopeType.NONE,
         repositoryTypes: [],
         compact: false
@@ -77,7 +77,7 @@ export const useTreeViewRepositoriesQueryParamOptions = (): UseQueryParamsOption
     {
       page: DEFAULT_PAGE_INDEX,
       size: DEFAULT_PAGE_SIZE,
-      sort: DEFAULT_PIPELINE_LIST_TABLE_SORT.join(','),
+      sort: DEFAULT_REPOSITORY_LIST_TABLE_SORT.join(','),
       compact: false
     },
     { ignoreEmptyString: false }

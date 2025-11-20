@@ -17,7 +17,7 @@
 import { useMemo } from 'react'
 
 import { useParentHooks } from '@ar/hooks'
-import { DEFAULT_PAGE_INDEX, DEFAULT_PAGE_SIZE, DEFAULT_PIPELINE_LIST_TABLE_SORT } from '@ar/constants'
+import { DEFAULT_PAGE_INDEX, DEFAULT_PAGE_SIZE, DEFAULT_FILE_LIST_TABLE_SORT } from '@ar/constants'
 import type { UseQueryParamsOptions } from '@ar/__mocks__/hooks'
 
 export type ArtifactFileListPageQueryParams = {
@@ -33,7 +33,7 @@ export const useArtifactFileListQueryParamOptions = (): UseQueryParamsOptions<Ar
     {
       page: DEFAULT_PAGE_INDEX,
       size: DEFAULT_PAGE_SIZE,
-      sort: DEFAULT_PIPELINE_LIST_TABLE_SORT
+      sort: DEFAULT_FILE_LIST_TABLE_SORT
     },
     { ignoreEmptyString: false }
   )

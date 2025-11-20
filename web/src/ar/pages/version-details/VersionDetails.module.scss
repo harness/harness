@@ -42,3 +42,11 @@
     padding: 0 !important;
   }
 }
+
+.cardContainer {
+  width: 60% !important;
+  min-width: 1040px;
+  padding: var(--spacing-7) !important;
+  background-color: var(--white);
+  margin: var(--spacing-large);
+}

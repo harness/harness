@@ -20,6 +20,7 @@ import type { ManageRegistriesDetailsTab } from '@ar/pages/manage-registries/con
 import type { LocalArtifactType, RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
 import type { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
 import type { WebhookDetailsTab } from '@ar/pages/webhook-details/constants'
+import type { ArtifactDetailsTab } from '@ar/pages/artifact-details/constants'
 
 export interface ManageRegistriesTabPathParams {
   tab: ManageRegistriesDetailsTab
@@ -36,6 +37,10 @@ export interface RepositoryDetailsTabPathParams extends RepositoryDetailsPathPar
 export interface ArtifactDetailsPathParams extends RepositoryDetailsPathParams {
   artifactIdentifier: string
   artifactType: LocalArtifactType
+}
+
+export interface ArtifactDetailsTabPathParams extends ArtifactDetailsPathParams {
+  tab: ArtifactDetailsTab
 }
 
 export interface VersionDetailsPathParams extends ArtifactDetailsPathParams {

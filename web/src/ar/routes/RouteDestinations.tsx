@@ -37,13 +37,11 @@ import type {
 } from './types'
 
 const RepositoryListPage = React.lazy(() => import('@ar/pages/repository-list/RepositoryListPage'))
-const ManageRegistriesPage = React.lazy(() => import('@ar/pages/manage-registries/ManageRegistriesPage'))
 const RepositoryListTreeViewPage = React.lazy(() => import('@ar/pages/repository-list/RepositoryListTreeViewPage'))
 const RepositoryDetailsPage = React.lazy(() => import('@ar/pages/repository-details/RepositoryDetailsPage'))
 const ArtifactListPage = React.lazy(() => import('@ar/pages/artifact-list/ArtifactListPage'))
 const ArtifactDetailsPage = React.lazy(() => import('@ar/pages/artifact-details/ArtifactDetailsPage'))
 const VersionDetailsPage = React.lazy(() => import('@ar/pages/version-details/VersionDetailsPage'))
-const OSSVersionDetailsPage = React.lazy(() => import('@ar/pages/version-details/OSSVersionDetailsPage'))
 const RouteProvider = React.lazy(() => import('@ar/components/RouteProvider/RouteProvider'))
 const WebhookDetailsPage = React.lazy(() => import('@ar/pages/webhook-details/WebhookDetailsPage'))
 
@@ -126,9 +124,6 @@ const RouteDestinations = (): JSX.Element => {
       <RouteProvider exact path={routes.toARArtifacts()}>
         <ArtifactListPage />
       </RouteProvider>
-      <RouteProvider path={routes.toARManageRegistries()}>
-        <ManageRegistriesPage />
-      </RouteProvider>
       {repositoryListViewType === RepositoryListViewTypeEnum.DIRECTORY && (
         <RouteProvider path={routes.toARRepositories()}>
           <RepositoryListTreeViewPage />
@@ -201,17 +196,12 @@ const RouteDestinations = (): JSX.Element => {
       <RouteProvider
         isPublic
         exact={shouldUseSeperateVersionDetailsRoute}
-        path={routes.toARArtifactDetails({ ...artifactDetailsPathProps })}>
-        <>
-          <ArtifactDetailsPage />
-          {parent === Parent.OSS && (
-            <Switch>
-              <RouteProvider isPublic path={routes.toARVersionDetails({ ...versionDetailsPathParams })}>
-                <OSSVersionDetailsPage />
-              </RouteProvider>
-            </Switch>
-          )}
-        </>
+        path={[
+          routes.toARArtifactVersions({ ...artifactDetailsPathProps }),
+          routes.toARArtifactProperties({ ...artifactDetailsPathProps }),
+          routes.toARArtifactDetails({ ...artifactDetailsPathProps })
+        ]}>
+        <ArtifactDetailsPage />
       </RouteProvider>
     </Switch>
   )

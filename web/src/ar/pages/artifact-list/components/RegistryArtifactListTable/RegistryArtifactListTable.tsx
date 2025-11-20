@@ -18,10 +18,11 @@ import React from 'react'
 import classNames from 'classnames'
 import type { Column } from 'react-table'
 import { PaginationProps, TableV2 } from '@harnessio/uicore'
-import type { ListRegistryArtifact, RegistryArtifactMetadata } from '@harnessio/react-har-service-client'
+import type { ListPackage, PackageMetadata } from '@harnessio/react-har-service-v2-client'
 
 import { useStrings } from '@ar/frameworks/strings'
 import { useParentHooks } from '@ar/hooks'
+
 import {
   RegistryArtifactActionsCell,
   RegistryArtifactDownloadsCell,
@@ -35,7 +36,7 @@ export interface RegistryArtifactListColumnActions {
   refetchList?: () => void
 }
 export interface RegistryArtifactListTableProps extends RegistryArtifactListColumnActions {
-  data: ListRegistryArtifact
+  data: ListPackage
   gotoPage: (pageNumber: number) => void
   onPageSizeChange?: PaginationProps['onPageSizeChange']
   setSortBy: (sortBy: string[]) => void
@@ -49,7 +50,7 @@ export default function RegistryArtifactListTable(props: RegistryArtifactListTab
   const { useDefaultPaginationProps } = useParentHooks()
   const { getString } = useStrings()
 
-  const { artifacts = [], itemCount = 0, pageCount = 0, pageIndex, pageSize = 0 } = data || {}
+  const { packages = [], itemCount = 0, pageCount = 0, pageIndex, pageSize = 0 } = data || {}
   const paginationProps = useDefaultPaginationProps({
     itemCount,
     pageSize,
@@ -60,7 +61,7 @@ export default function RegistryArtifactListTable(props: RegistryArtifactListTab
   })
   const [currentSort, currentOrder] = sortBy
 
-  const columns: Column<RegistryArtifactMetadata>[] = React.useMemo(() => {
+  const columns: Column<PackageMetadata>[] = React.useMemo(() => {
     const getServerSortProps = (id: string) => {
       return {
         enableServerSort: true,
@@ -74,9 +75,9 @@ export default function RegistryArtifactListTable(props: RegistryArtifactListTab
     return [
       {
         Header: getString('artifactList.table.columns.name'),
-        accessor: 'name',
+        accessor: 'package',
         Cell: RegistryArtifactNameCell,
-        serverSortProps: getServerSortProps('name'),
+        serverSortProps: getServerSortProps('package'),
         onClickLabel
       },
       {
@@ -93,9 +94,9 @@ export default function RegistryArtifactListTable(props: RegistryArtifactListTab
       },
       {
         Header: getString('artifactList.table.columns.latestVersion'),
-        accessor: 'latestVersion',
+        accessor: 'lastModified',
         Cell: RegistryArtifactLatestUpdatedCell,
-        serverSortProps: getServerSortProps('latestVersion')
+        serverSortProps: getServerSortProps('lastModified')
       },
       {
         Header: '',
@@ -103,14 +104,14 @@ export default function RegistryArtifactListTable(props: RegistryArtifactListTab
         Cell: RegistryArtifactActionsCell,
         disableSortBy: true
       }
-    ].filter(Boolean) as unknown as Column<RegistryArtifactMetadata>[]
+    ].filter(Boolean) as unknown as Column<PackageMetadata>[]
   }, [currentOrder, currentSort, getString, onClickLabel])
 
   return (
-    <TableV2<RegistryArtifactMetadata>
+    <TableV2<PackageMetadata>
       className={classNames(css.table)}
       columns={columns}
-      data={artifacts}
+      data={packages}
       pagination={paginationProps}
       sortable
       getRowClassName={() => css.tableRow}

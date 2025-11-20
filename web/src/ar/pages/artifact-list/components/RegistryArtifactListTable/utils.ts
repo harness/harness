@@ -18,7 +18,7 @@ import { useMemo } from 'react'
 
 import { useParentHooks } from '@ar/hooks'
 import type { RepositoryPackageType } from '@ar/common/types'
-import { DEFAULT_PAGE_INDEX, DEFAULT_PAGE_SIZE, DEFAULT_PIPELINE_LIST_TABLE_SORT } from '@ar/constants'
+import { DEFAULT_PACKAGE_LIST_TABLE_SORT, DEFAULT_PAGE_INDEX, DEFAULT_PAGE_SIZE } from '@ar/constants'
 import type { UseQueryParamsOptions } from '@ar/__mocks__/hooks'
 
 export type RegistryArtifactListPageQueryParams = {
@@ -40,7 +40,7 @@ export const useRegistryArtifactListQueryParamOptions =
       {
         page: DEFAULT_PAGE_INDEX,
         size: DEFAULT_PAGE_SIZE,
-        sort: DEFAULT_PIPELINE_LIST_TABLE_SORT,
+        sort: DEFAULT_PACKAGE_LIST_TABLE_SORT,
         isDeployedArtifacts: false,
         packageTypes: [],
         labels: []

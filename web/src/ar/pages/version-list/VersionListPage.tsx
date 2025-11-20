@@ -18,18 +18,20 @@ import React, { useMemo, useRef } from 'react'
 import { flushSync } from 'react-dom'
 import { Expander } from '@blueprintjs/core'
 import { Button, ButtonVariation, ExpandingSearchInput, ExpandingSearchInputHandle, Page } from '@harnessio/uicore'
-import { PackageType, useGetAllArtifactVersionsQuery } from '@harnessio/react-har-service-client'
+import type { PackageType } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
-import { encodeRef } from '@ar/hooks/useGetSpaceRef'
-import { useParentHooks, useDecodedParams, useGetSpaceRef, useAppStore } from '@ar/hooks'
-import type { RepositoryPackageType } from '@ar/common/types'
+import { useParentHooks, useDecodedParams, useAppStore, useFeatureFlags } from '@ar/hooks'
+import { Parent, type RepositoryPackageType } from '@ar/common/types'
 import type { ArtifactDetailsPathParams } from '@ar/routes/types'
 import { DEFAULT_PAGE_INDEX, PreferenceScope } from '@ar/constants'
 import VersionListTableWidget from '@ar/frameworks/Version/VersionListTableWidget'
+import MetadataFilterSelector from '@ar/components/MetadataFilterSelector/MetadataFilterSelector'
+import useMetadatadataFilterFromQuery from '@ar/components/MetadataFilterSelector/useMetadataFilterFromQuery'
 
 import { LocalArtifactType } from '../repository-details/constants'
 import { VersionListPageQueryParams, useVersionListQueryParamOptions } from './utils'
+import useLocalGetAllArtifactVersionsQuery from './hooks/useLocalGetAllArtifactVersionsQuery'
 
 import css from './VersionListPage.module.scss'
 
@@ -42,12 +44,15 @@ function VersionListPage(props: VersionListPageProps): JSX.Element {
   const pathParams = useDecodedParams<ArtifactDetailsPathParams>()
   const { useQueryParams, useUpdateQueryParams, usePreferenceStore } = useParentHooks()
   const searchRef = useRef({} as ExpandingSearchInputHandle)
-  const { updateQueryParams } = useUpdateQueryParams<Partial<VersionListPageQueryParams>>()
+  const { updateQueryParams, replaceQueryParams } = useUpdateQueryParams<Partial<VersionListPageQueryParams>>()
   const queryParams = useQueryParams<VersionListPageQueryParams>(useVersionListQueryParamOptions())
   const { searchTerm, isDeployedArtifacts, page, size } = queryParams
   const { getString } = useStrings()
-  const spaceRef = useGetSpaceRef()
   const { parent } = useAppStore()
+  const { HAR_CUSTOM_METADATA_ENABLED } = useFeatureFlags()
+
+  const { getValue, updateValue } = useMetadatadataFilterFromQuery()
+  const metadataFilter = getValue()
 
   const { preference: sortingPreference, setPreference: setSortingPreference } = usePreferenceStore<string | undefined>(
     PreferenceScope.USER,
@@ -65,32 +70,25 @@ function VersionListPage(props: VersionListPageProps): JSX.Element {
     refetch,
     isFetching: loading,
     error
-  } = useGetAllArtifactVersionsQuery({
-    registry_ref: spaceRef,
-    artifact: encodeRef(pathParams.artifactIdentifier),
-    queryParams: {
-      page,
-      size,
-      sort_field: sortField,
-      sort_order: sortOrder,
-      search_term: searchTerm,
-      artifact_type: pathParams.artifactType === LocalArtifactType.ARTIFACTS ? undefined : pathParams.artifactType
-    },
-    stringifyQueryParamsOptions: {
-      arrayFormat: 'repeat'
-    }
+  } = useLocalGetAllArtifactVersionsQuery({
+    page,
+    size,
+    sort_field: sortField,
+    sort_order: sortOrder,
+    search_term: searchTerm,
+    artifact_type: pathParams.artifactType === LocalArtifactType.ARTIFACTS ? undefined : pathParams.artifactType
   })
 
   const handleClearAllFilters = (): void => {
     flushSync(searchRef.current.clear)
-    updateQueryParams({
+    replaceQueryParams({
       page: 0,
       searchTerm: '',
       isDeployedArtifacts: false
     })
   }
 
-  const hasFilter = !!searchTerm || isDeployedArtifacts
+  const hasFilter = !!searchTerm || isDeployedArtifacts || metadataFilter.length
 
   const responseData = data?.content.data
 
@@ -107,6 +105,17 @@ function VersionListPage(props: VersionListPageProps): JSX.Element {
               updateQueryParams({ isDeployedArtifacts: val, page: DEFAULT_PAGE_INDEX })
             }}
           /> */}
+          {HAR_CUSTOM_METADATA_ENABLED && parent === Parent.Enterprise && (
+            <MetadataFilterSelector
+              value={metadataFilter}
+              onSubmit={val => {
+                updateValue(val)
+                updateQueryParams({
+                  page: DEFAULT_PAGE_INDEX
+                })
+              }}
+            />
+          )}
           <Expander />
           <ExpandingSearchInput
             alwaysExpanded
@@ -127,7 +136,7 @@ function VersionListPage(props: VersionListPageProps): JSX.Element {
         error={error?.message}
         retryOnError={() => refetch()}
         noData={{
-          when: () => !responseData?.artifactVersions?.length,
+          when: () => !responseData?.artifacts?.length,
           // image: getEmptyStateIllustration(hasFilter, module),
           messageTitle: hasFilter ? getString('noResultsFound') : getString('versionList.table.noVersionsTitle'),
           button: hasFilter ? (

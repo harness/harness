@@ -33,42 +33,49 @@ interface VersionDetailsTabListItem {
   disabled?: boolean
   parent?: Parent
   isSupportedInPublicView?: boolean
+  supportActions?: boolean
 }
 
 export const VersionDetailsTabList: VersionDetailsTabListItem[] = [
   {
     label: 'versionDetails.tabs.overview',
     value: VersionDetailsTab.OVERVIEW,
-    isSupportedInPublicView: true
+    isSupportedInPublicView: true,
+    supportActions: true
   },
   {
     label: 'versionDetails.tabs.artifactDetails',
     value: VersionDetailsTab.ARTIFACT_DETAILS,
-    isSupportedInPublicView: true
+    isSupportedInPublicView: true,
+    supportActions: false
   },
   {
     label: 'versionDetails.tabs.supplyChain',
     value: VersionDetailsTab.SUPPLY_CHAIN,
     parent: Parent.Enterprise,
-    isSupportedInPublicView: false
+    isSupportedInPublicView: false,
+    supportActions: false
   },
   {
     label: 'versionDetails.tabs.securityTests',
     value: VersionDetailsTab.SECURITY_TESTS,
     parent: Parent.Enterprise,
-    isSupportedInPublicView: false
+    isSupportedInPublicView: false,
+    supportActions: false
   },
   {
     label: 'versionDetails.tabs.deployments',
     value: VersionDetailsTab.DEPLOYMENTS,
     parent: Parent.Enterprise,
-    isSupportedInPublicView: false
+    isSupportedInPublicView: false,
+    supportActions: false
   },
   {
     label: 'versionDetails.tabs.code',
     value: VersionDetailsTab.CODE,
     disabled: true,
     parent: Parent.Enterprise,
-    isSupportedInPublicView: false
+    isSupportedInPublicView: false,
+    supportActions: false
   }
 ]

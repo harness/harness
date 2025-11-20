@@ -21,7 +21,7 @@ import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance, Use
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Icon } from '@harnessio/icons'
 import { Layout, Text } from '@harnessio/uicore'
-import type { ArtifactVersionMetadata } from '@harnessio/react-har-service-client'
+import type { ArtifactMetadata } from '@harnessio/react-har-service-v2-client'
 
 import { killEvent } from '@ar/common/utils'
 import { useStrings } from '@ar/frameworks/strings'
@@ -45,11 +45,11 @@ type CellTypeWithActions<D extends Record<string, any>, V = any> = TableInstance
   value: CellValue<V>
 }
 
-type CellType = Renderer<CellTypeWithActions<ArtifactVersionMetadata>>
+type CellType = Renderer<CellTypeWithActions<ArtifactMetadata>>
 
 export const ToggleAccordionCell: Renderer<{
-  row: UseExpandedRowProps<ArtifactVersionMetadata> & Row<ArtifactVersionMetadata>
-  column: ColumnInstance<ArtifactVersionMetadata> & VersionListExpandedColumnProps
+  row: UseExpandedRowProps<ArtifactMetadata> & Row<ArtifactMetadata>
+  column: ColumnInstance<ArtifactMetadata> & VersionListExpandedColumnProps
 }> = ({ row, column }) => {
   const { expandedRows, setExpandedRows } = column
   const data = row.original
@@ -57,7 +57,7 @@ export const ToggleAccordionCell: Renderer<{
     <TableCells.ToggleAccordionCell
       expandedRows={expandedRows}
       setExpandedRows={setExpandedRows}
-      value={data.name}
+      value={data.version}
       initialIsExpanded={row.isExpanded}
       getToggleRowExpandedProps={row.getToggleRowExpandedProps}
       onToggleRowExpanded={row.toggleRowExpanded}
@@ -132,6 +132,7 @@ export const VersionPublishedAtCell: CellType = ({ value }) => {
 export const VersionActionsCell: CellType = ({ row }) => {
   const { original } = row
   const { artifactIdentifier, repositoryIdentifier } = useDecodedParams<ArtifactDetailsPathParams>()
+
   return (
     <VersionActionsWidget
       data={original}
@@ -139,7 +140,7 @@ export const VersionActionsCell: CellType = ({ row }) => {
       pageType={PageType.Table}
       repoKey={repositoryIdentifier}
       artifactKey={artifactIdentifier}
-      versionKey={original.name}
+      versionKey={original.version}
       digestCount={original.digestCount}
     />
   )
@@ -149,7 +150,7 @@ export const DigestNameCell: CellType = ({ value, row }) => {
   const label = getShortDigest(value)
   const routes = useRoutes()
   const { original } = row
-  const { packageType, artifactType, name, isQuarantined, quarantineReason } = original
+  const { packageType, artifactType, version, isQuarantined, quarantineReason } = original
   const params = useDecodedParams<ArtifactDetailsPathParams>()
   return (
     <Layout.Horizontal spacing="small">
@@ -166,7 +167,7 @@ export const DigestNameCell: CellType = ({ value, row }) => {
           packageType: packageType as RepositoryPackageType,
           registryId: params.repositoryIdentifier,
           artifactId: params.artifactIdentifier,
-          versionId: name,
+          versionId: version,
           versionDetailsTab: VersionDetailsTab.OVERVIEW,
           artifactType
         })}
@@ -201,7 +202,7 @@ export const OCITags = ({ tags, onClick }: OCITagsProps) => {
 
 export const OCITagsCell: CellType = ({ row }) => {
   const data = row.original
-  const { metadata, name, packageType, artifactType } = data
+  const { metadata, version, packageType, artifactType } = data
   const { tags } = metadata || {}
   const params = useDecodedParams<ArtifactDetailsPathParams>()
   const routes = useRoutes()
@@ -213,7 +214,7 @@ export const OCITagsCell: CellType = ({ row }) => {
         packageType: packageType as RepositoryPackageType,
         registryId: params.repositoryIdentifier,
         artifactId: params.artifactIdentifier,
-        versionId: name,
+        versionId: version,
         versionDetailsTab: VersionDetailsTab.OVERVIEW,
         artifactType,
         tag

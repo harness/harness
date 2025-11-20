@@ -1952,6 +1952,13 @@
   dependencies:
     "@harnessio/oats-cli" "^3.0.0"
 
+"@harnessio/react-har-service-v2-client@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@harnessio/react-har-service-v2-client/-/react-har-service-v2-client-0.2.0.tgz#9c17c2bd9625e01d00411b74db7bac27eee5c023"
+  integrity sha512-pFEloyqrLsBEYUNlSlvTEzSqbnY5RdJ4PPR69nWaVtXFbJnZX87sxv4oWp+Ia4a6E5qmYvWG6/KyM/2oRhKhMg==
+  dependencies:
+    "@harnessio/oats-cli" "^3.0.0"
+
 "@harnessio/react-ng-manager-client@^1.40.0":
   version "1.40.0"
   resolved "https://registry.yarnpkg.com/@harnessio/react-ng-manager-client/-/react-ng-manager-client-1.40.0.tgz#e874e9afe1b2358d85364d5e23aabe9f6157bae8"

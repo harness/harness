@@ -19,12 +19,16 @@ import classNames from 'classnames'
 import { flushSync } from 'react-dom'
 import { Expander } from '@blueprintjs/core'
 import { ExpandingSearchInput, Page, type ExpandingSearchInputHandle, Button, ButtonVariation } from '@harnessio/uicore'
-import { type ArtifactType, useGetAllArtifactsByRegistryQuery } from '@harnessio/react-har-service-client'
+import type { ArtifactType } from '@harnessio/react-har-service-client'
 
+import { Parent } from '@ar/common/types'
 import { useStrings } from '@ar/frameworks/strings'
 import { DEFAULT_PAGE_INDEX, PreferenceScope } from '@ar/constants'
-import { useGetSpaceRef, useParentHooks } from '@ar/hooks'
+import { useAppStore, useFeatureFlags, useParentHooks } from '@ar/hooks'
+import MetadataFilterSelector from '@ar/components/MetadataFilterSelector/MetadataFilterSelector'
+import useMetadatadataFilterFromQuery from '@ar/components/MetadataFilterSelector/useMetadataFilterFromQuery'
 
+import useLocalGetAllArtifactsByRegistryQuery from './hooks/useLocalGetAllArtifactsByRegistryQuery'
 import RegistryArtifactListTable from './components/RegistryArtifactListTable/RegistryArtifactListTable'
 import {
   useRegistryArtifactListQueryParamOptions,
@@ -40,16 +44,20 @@ interface RegistryArtifactListPageProps {
 
 function RegistryArtifactListPage({ pageBodyClassName, artifactType }: RegistryArtifactListPageProps): JSX.Element {
   const { getString } = useStrings()
+  const { parent } = useAppStore()
+  const { HAR_CUSTOM_METADATA_ENABLED } = useFeatureFlags()
   const { useQueryParams, useUpdateQueryParams, usePreferenceStore } = useParentHooks()
   const searchRef = useRef({} as ExpandingSearchInputHandle)
-  const { updateQueryParams } = useUpdateQueryParams<Partial<RegistryArtifactListPageQueryParams>>()
+  const { updateQueryParams, replaceQueryParams } = useUpdateQueryParams<Partial<RegistryArtifactListPageQueryParams>>()
   const queryParams = useQueryParams<RegistryArtifactListPageQueryParams>(useRegistryArtifactListQueryParamOptions())
   const { searchTerm, isDeployedArtifacts, packageTypes, page, size, labels } = queryParams
-  const registryRef = useGetSpaceRef()
+
+  const { getValue, updateValue } = useMetadatadataFilterFromQuery()
+  const metadataFilter = getValue()
 
   const { preference: sortingPreference, setPreference: setSortingPreference } = usePreferenceStore<string | undefined>(
     PreferenceScope.USER,
-    'ArtifactRepositorySortingPreference'
+    'RegistryImageListSortingPreference'
   )
   const sort = useMemo(
     () => (sortingPreference ? JSON.parse(sortingPreference) : queryParams.sort),
@@ -63,24 +71,18 @@ function RegistryArtifactListPage({ pageBodyClassName, artifactType }: RegistryA
     refetch,
     isFetching: loading,
     error
-  } = useGetAllArtifactsByRegistryQuery({
-    registry_ref: registryRef,
-    queryParams: {
-      page,
-      size,
-      search_term: searchTerm,
-      sort_field: sortField,
-      sort_order: sortOrder,
-      artifact_type: artifactType
-    },
-    stringifyQueryParamsOptions: {
-      arrayFormat: 'repeat'
-    }
+  } = useLocalGetAllArtifactsByRegistryQuery({
+    page,
+    size,
+    search_term: searchTerm,
+    sort_field: sortField,
+    sort_order: sortOrder,
+    artifact_type: artifactType
   })
 
   const handleClearAllFilters = (): void => {
     flushSync(searchRef.current.clear)
-    updateQueryParams({
+    replaceQueryParams({
       page: undefined,
       searchTerm: undefined,
       packageTypes: undefined,
@@ -99,20 +101,24 @@ function RegistryArtifactListPage({ pageBodyClassName, artifactType }: RegistryA
     [labels]
   )
 
-  const hasFilter = !!searchTerm || packageTypes?.length || isDeployedArtifacts
+  const hasFilter = !!searchTerm || packageTypes?.length || isDeployedArtifacts || metadataFilter.length
   const responseData = data?.content?.data
 
   return (
     <>
       <Page.SubHeader className={css.subHeader}>
         <div className={css.subHeaderItems}>
-          {/* TODO: remove for beta release. but support in future */}
-          {/* <LabelsSelector
-            value={labels}
-            onChange={val => {
-              updateQueryParams({ labels: val, page: DEFAULT_PAGE_INDEX })
-            }}
-          /> */}
+          {HAR_CUSTOM_METADATA_ENABLED && parent === Parent.Enterprise && (
+            <MetadataFilterSelector
+              value={metadataFilter}
+              onSubmit={val => {
+                updateValue(val)
+                updateQueryParams({
+                  page: DEFAULT_PAGE_INDEX
+                })
+              }}
+            />
+          )}
           <Expander />
           <ExpandingSearchInput
             alwaysExpanded
@@ -132,7 +138,7 @@ function RegistryArtifactListPage({ pageBodyClassName, artifactType }: RegistryA
         error={error?.message}
         retryOnError={() => refetch()}
         noData={{
-          when: () => !responseData?.artifacts?.length,
+          when: () => !responseData?.packages?.length,
           // image: getEmptyStateIllustration(hasFilter, module),
           icon: 'store-artifact-bundle',
           messageTitle: hasFilter ? getString('noResultsFound') : getString('artifactList.table.noArtifactsTitle'),

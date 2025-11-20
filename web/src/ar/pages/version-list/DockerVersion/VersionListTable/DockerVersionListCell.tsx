@@ -17,7 +17,7 @@
 import React from 'react'
 import { Icon } from '@harnessio/icons'
 import { Layout } from '@harnessio/uicore'
-import type { ArtifactVersionMetadata } from '@harnessio/react-har-service-client'
+import type { ArtifactMetadata } from '@harnessio/react-har-service-v2-client'
 import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance, UseExpandedRowProps } from 'react-table'
 
 import TableCells from '@ar/components/TableCells/TableCells'
@@ -29,7 +29,7 @@ type CellTypeWithActions<D extends Record<string, any>, V = any> = TableInstance
   value: CellValue<V>
 }
 
-type CellType = Renderer<CellTypeWithActions<ArtifactVersionMetadata>>
+type CellType = Renderer<CellTypeWithActions<ArtifactMetadata>>
 
 export const DockerVersionNameCell: CellType = ({ value }) => {
   return (
@@ -46,8 +46,8 @@ export interface VersionListExpandedColumnProps {
 }
 
 export const DockerDigestToggleAccordionCell: Renderer<{
-  row: UseExpandedRowProps<ArtifactVersionMetadata> & Row<ArtifactVersionMetadata>
-  column: ColumnInstance<ArtifactVersionMetadata> & VersionListExpandedColumnProps
+  row: UseExpandedRowProps<ArtifactMetadata> & Row<ArtifactMetadata>
+  column: ColumnInstance<ArtifactMetadata> & VersionListExpandedColumnProps
 }> = ({ row, column }) => {
   const { expandedRows, setExpandedRows } = column
   const data = row.original
@@ -57,7 +57,7 @@ export const DockerDigestToggleAccordionCell: Renderer<{
     <TableCells.ToggleAccordionCell
       expandedRows={expandedRows}
       setExpandedRows={setExpandedRows}
-      value={data.name}
+      value={data.version}
       initialIsExpanded={row.isExpanded}
       getToggleRowExpandedProps={row.getToggleRowExpandedProps}
       onToggleRowExpanded={row.toggleRowExpanded}

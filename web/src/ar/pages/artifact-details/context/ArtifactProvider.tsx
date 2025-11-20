@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { createContext, type FC, type PropsWithChildren } from 'react'
+import React, { createContext, useState, type FC, type PropsWithChildren } from 'react'
 import { ArtifactSummary, useGetArtifactSummaryQuery } from '@harnessio/react-har-service-client'
 import { PageError, PageSpinner } from '@harnessio/uicore'
 
@@ -27,6 +27,12 @@ export interface ArtifactProviderProps {
   data: ArtifactSummary | undefined
   isReadonly: boolean
   refetch: () => void
+  isDirty: boolean
+  isUpdating: boolean
+  isLoading: boolean
+  setIsDirty: (val: boolean) => void
+  setIsLoading: (val: boolean) => void
+  setIsUpdating: (val: boolean) => void
 }
 
 export const ArtifactProviderContext = createContext<ArtifactProviderProps>({} as ArtifactProviderProps)
@@ -36,6 +42,9 @@ const ArtifactProvider: FC<PropsWithChildren<{ repoKey?: string; artifact?: stri
   repoKey,
   artifact
 }): JSX.Element => {
+  const [isDirty, setIsDirty] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false)
   const { repositoryIdentifier, artifactIdentifier, artifactType } = useDecodedParams<ArtifactDetailsPathParams>()
   const spaceRef = useGetSpaceRef(repoKey ?? repositoryIdentifier)
   const {
@@ -53,10 +62,21 @@ const ArtifactProvider: FC<PropsWithChildren<{ repoKey?: string; artifact?: stri
 
   const responseData = data?.content?.data
   return (
-    <ArtifactProviderContext.Provider value={{ data: responseData, isReadonly: false, refetch }}>
+    <ArtifactProviderContext.Provider
+      value={{
+        data: responseData,
+        isReadonly: false,
+        refetch,
+        isDirty,
+        isUpdating,
+        isLoading,
+        setIsDirty,
+        setIsUpdating,
+        setIsLoading
+      }}>
       {loading ? <PageSpinner /> : null}
       {error && !loading ? <PageError message={error.message} onClick={() => refetch()} /> : null}
-      {!error && !loading ? children : null}
+      {!error && !loading && responseData ? children : null}
     </ArtifactProviderContext.Provider>
   )
 }

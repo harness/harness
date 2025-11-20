@@ -84,6 +84,7 @@ export abstract class RepositoryStep<T, U = unknown> {
       this.supportedRepositoryTabs ?? [
         RepositoryDetailsTab.PACKAGES,
         RepositoryDetailsTab.CONFIGURATION,
+        RepositoryDetailsTab.METADATA,
         RepositoryDetailsTab.WEBHOOKS
       ]
     )

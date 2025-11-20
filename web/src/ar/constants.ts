@@ -20,8 +20,13 @@ export const DEFAULT_PAGE_INDEX = 0
 export const DEFAULT_PAGE_SIZE = 50
 export const PAGE_SIZE_OPTIONS = [10, 20, 50, 100]
 export const DEFAULT_PIPELINE_LIST_TABLE_SORT = ['updatedAt', 'DESC']
-export const DEFAULT_ARTIFACT_LIST_TABLE_SORT = ['updatedAt', 'DESC']
-export const DEFAULT_UPSTREAM_PROXY_LIST_TABLE_SORT = ['updatedAt', 'DESC']
+export const DEFAULT_FILE_LIST_TABLE_SORT = ['createdAt', 'DESC']
+export const DEFAULT_GLOBAL_ARTIFACT_LIST_TABLE_SORT = ['lastModified', 'DESC']
+export const DEFAULT_PACKAGE_LIST_TABLE_SORT = ['lastModified', 'DESC']
+export const DEFAULT_REPOSITORY_LIST_TABLE_SORT = ['lastModified', 'DESC']
+export const DEFAULT_ARTIFACT_LIST_TABLE_SORT = ['lastModified', 'DESC']
+export const DEFAULT_UPSTREAM_PROXY_LIST_TABLE_SORT = ['lastModified', 'DESC']
+export const DEFAULT_DEPLOYMENTS_LIST_TABLE_SORT = ['lastDeployedAt', 'DESC']
 
 export const DEFAULT_DATE_FORMAT = 'MMM DD, YYYY'
 export const DEFAULT_TIME_FORMAT = 'hh:mm a'

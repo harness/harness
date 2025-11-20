@@ -19,13 +19,15 @@ import React from 'react'
 import { useDecodedParams } from '@ar/hooks'
 import type { ArtifactDetailsPathParams } from '@ar/routes/types'
 
-import ArtifactProvider from './context/ArtifactProvider'
 import ArtifactDetails from './ArtifactDetails'
+import ArtifactProvider from './context/ArtifactProvider'
+import ArtifactDetailsHeader from './components/ArtifactDetailsHeader/ArtifactDetailsHeader'
 
 function ArtifactDetailsPage(): JSX.Element {
   const pathParams = useDecodedParams<ArtifactDetailsPathParams>()
   return (
     <ArtifactProvider repoKey={pathParams.repositoryIdentifier} artifact={pathParams.artifactIdentifier}>
+      <ArtifactDetailsHeader />
       <ArtifactDetails />
     </ArtifactProvider>
   )

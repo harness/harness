@@ -7,3 +7,6 @@ artifactDeleted: Artifact deleted successfully!
 deleteArtifactModal:
   title: Delete Artifact
   contentText: Are you sure you want to delete the artifact?
+tabs:
+  versions: Versions
+  properties: Properties

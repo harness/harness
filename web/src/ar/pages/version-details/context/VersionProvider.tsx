@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { FC, PropsWithChildren, createContext } from 'react'
+import React, { FC, PropsWithChildren, createContext, useState } from 'react'
 import { PageError, PageSpinner } from '@harnessio/uicore'
 import { ArtifactVersionSummary, useGetArtifactVersionSummaryQuery } from '@harnessio/react-har-service-client'
 
@@ -29,6 +29,10 @@ interface VersionProviderProps {
   data: ArtifactVersionSummary | undefined
   isReadonly: boolean
   refetch: () => void
+  isDirty?: boolean
+  isUpdating?: boolean
+  setIsDirty: (value: boolean) => void
+  setIsUpdating: (value: boolean) => void
 }
 
 export const VersionProviderContext = createContext<VersionProviderProps>({} as VersionProviderProps)
@@ -45,6 +49,8 @@ const VersionProvider: FC<PropsWithChildren<VersionProviderSpcs>> = ({
   artifactKey,
   versionKey
 }): JSX.Element => {
+  const [isDirty, setIsDirty] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false)
   const { useQueryParams } = useParentHooks()
   const { digest } = useQueryParams<DockerVersionDetailsQueryParams>()
   const { repositoryIdentifier, artifactIdentifier, versionIdentifier, artifactType } =
@@ -69,7 +75,8 @@ const VersionProvider: FC<PropsWithChildren<VersionProviderSpcs>> = ({
   const responseData = data?.content?.data
 
   return (
-    <VersionProviderContext.Provider value={{ data: responseData, isReadonly: false, refetch }}>
+    <VersionProviderContext.Provider
+      value={{ data: responseData, isReadonly: false, refetch, isDirty, isUpdating, setIsDirty, setIsUpdating }}>
       {loading ? <PageSpinner /> : null}
       {error && !loading ? <PageError message={error.message} onClick={() => refetch()} /> : null}
       {!error && !loading ? children : null}

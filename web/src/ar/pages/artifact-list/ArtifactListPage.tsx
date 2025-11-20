@@ -26,38 +26,41 @@ import {
   ExpandingSearchInput,
   ExpandingSearchInputHandle
 } from '@harnessio/uicore'
-import {
-  GetAllHarnessArtifactsQueryQueryParams,
-  useGetAllHarnessArtifactsQuery
-} from '@harnessio/react-har-service-client'
 
+import { Parent } from '@ar/common/types'
 import { useStrings } from '@ar/frameworks/strings'
 import Breadcrumbs from '@ar/components/Breadcrumbs/Breadcrumbs'
 import { DEFAULT_PAGE_INDEX, PreferenceScope } from '@ar/constants'
 import { ButtonTab, ButtonTabs } from '@ar/components/ButtonTabs/ButtonTabs'
-import { useGetSpaceRef, useParentHooks } from '@ar/hooks'
+import { useAppStore, useFeatureFlags, useParentHooks } from '@ar/hooks'
 import PackageTypeSelector from '@ar/components/PackageTypeSelector/PackageTypeSelector'
+import MetadataFilterSelector from '@ar/components/MetadataFilterSelector/MetadataFilterSelector'
+import useMetadatadataFilterFromQuery from '@ar/components/MetadataFilterSelector/useMetadataFilterFromQuery'
 
 import { ArtifactListVersionFilter } from './constants'
 import ArtifactListTable from './components/ArtifactListTable/ArtifactListTable'
 import RepositorySelector from './components/RepositorySelector/RepositorySelector'
 import { useArtifactListQueryParamOptions, type ArtifactListPageQueryParams } from './utils'
+import useLocalGetAllHarnessArtifactsQuery from './hooks/useLocalGetAllHarnessArtifactsQuery'
 
 import css from './ArtifactListPage.module.scss'
 
 function ArtifactListPage(): JSX.Element {
   const { getString } = useStrings()
+  const { parent } = useAppStore()
+  const { HAR_CUSTOM_METADATA_ENABLED } = useFeatureFlags()
   const { useQueryParams, useUpdateQueryParams, usePreferenceStore } = useParentHooks()
-  const { updateQueryParams } = useUpdateQueryParams<Partial<ArtifactListPageQueryParams>>()
+  const { updateQueryParams, replaceQueryParams } = useUpdateQueryParams<Partial<ArtifactListPageQueryParams>>()
   const queryParams = useQueryParams<ArtifactListPageQueryParams>(useArtifactListQueryParamOptions())
-  const { searchTerm, isDeployedArtifacts, repositoryKey, page, size, latestVersion, packageTypes, labels } =
-    queryParams
-  const spaceRef = useGetSpaceRef('')
+  const { searchTerm, isDeployedArtifacts, repositoryKey, page, size, latestVersion, packageTypes } = queryParams
   const searchRef = useRef({} as ExpandingSearchInputHandle)
+
+  const { getValue, updateValue } = useMetadatadataFilterFromQuery()
+  const metadataFilter = getValue()
 
   const { preference: sortingPreference, setPreference: setSortingPreference } = usePreferenceStore<string | undefined>(
     PreferenceScope.USER,
-    'ArtifactRepositorySortingPreference'
+    'ArtifactListSortingPreference'
   )
   const sort = useMemo(
     () => (sortingPreference ? JSON.parse(sortingPreference) : queryParams.sort),
@@ -71,28 +74,21 @@ function ArtifactListPage(): JSX.Element {
     refetch,
     isFetching: loading,
     error
-  } = useGetAllHarnessArtifactsQuery({
-    space_ref: spaceRef,
-    queryParams: {
-      page,
-      size,
-      search_term: searchTerm,
-      sort_field: sortField,
-      sort_order: sortOrder,
-      reg_identifier: repositoryKey,
-      latest_version: latestVersion,
-      deployed_artifact: isDeployedArtifacts,
-      package_type: packageTypes,
-      label: labels
-    } as GetAllHarnessArtifactsQueryQueryParams,
-    stringifyQueryParamsOptions: {
-      arrayFormat: 'repeat'
-    }
+  } = useLocalGetAllHarnessArtifactsQuery({
+    page,
+    size,
+    search_term: searchTerm,
+    sort_field: sortField,
+    sort_order: sortOrder,
+    reg_identifier: repositoryKey,
+    latest_version: latestVersion,
+    deployed_artifact: isDeployedArtifacts,
+    package_type: packageTypes
   })
 
   const handleClearAllFilters = (): void => {
     flushSync(searchRef.current.clear)
-    updateQueryParams({
+    replaceQueryParams({
       page: undefined,
       searchTerm: undefined,
       isDeployedArtifacts: undefined,
@@ -103,7 +99,12 @@ function ArtifactListPage(): JSX.Element {
   }
 
   const hasFilter =
-    !!searchTerm || isDeployedArtifacts || latestVersion || repositoryKey?.length || packageTypes?.length
+    !!searchTerm ||
+    isDeployedArtifacts ||
+    latestVersion ||
+    repositoryKey?.length ||
+    packageTypes?.length ||
+    metadataFilter?.length
   const responseData = data?.content?.data
 
   return (
@@ -150,42 +151,48 @@ function ArtifactListPage(): JSX.Element {
               updateQueryParams({ packageTypes: val, page: DEFAULT_PAGE_INDEX })
             }}
           />
-          {/* TODO: remove for beta release. but support in future */}
-          {/* <LabelsSelector
-            value={labels}
-            onChange={val => {
-              updateQueryParams({ labels: val, page: DEFAULT_PAGE_INDEX })
-            }}
-          /> */}
+          {HAR_CUSTOM_METADATA_ENABLED && parent === Parent.Enterprise && (
+            <MetadataFilterSelector
+              value={metadataFilter}
+              onSubmit={val => {
+                updateValue(val)
+                updateQueryParams({
+                  page: DEFAULT_PAGE_INDEX
+                })
+              }}
+            />
+          )}
           <Expander />
-          <ButtonTabs
-            className={css.filterTabContainer}
-            small
-            bold
-            selectedTabId={
-              latestVersion ? ArtifactListVersionFilter.LATEST_VERSION : ArtifactListVersionFilter.ALL_VERSION
-            }
-            onChange={newTab => {
-              updateQueryParams({
-                latestVersion: newTab === ArtifactListVersionFilter.LATEST_VERSION,
-                page: DEFAULT_PAGE_INDEX
-              })
-            }}>
-            <ButtonTab
-              id={ArtifactListVersionFilter.LATEST_VERSION}
-              icon="layers"
-              iconProps={{ size: 12 }}
-              panel={<></>}
-              title={getString('artifactList.table.latestVersions')}
-            />
-            <ButtonTab
-              id={ArtifactListVersionFilter.ALL_VERSION}
-              icon="document"
-              iconProps={{ size: 12 }}
-              panel={<></>}
-              title={getString('artifactList.table.allVersions')}
-            />
-          </ButtonTabs>
+          {!HAR_CUSTOM_METADATA_ENABLED && (
+            <ButtonTabs
+              className={css.filterTabContainer}
+              small
+              bold
+              selectedTabId={
+                latestVersion ? ArtifactListVersionFilter.LATEST_VERSION : ArtifactListVersionFilter.ALL_VERSION
+              }
+              onChange={newTab => {
+                updateQueryParams({
+                  latestVersion: newTab === ArtifactListVersionFilter.LATEST_VERSION,
+                  page: DEFAULT_PAGE_INDEX
+                })
+              }}>
+              <ButtonTab
+                id={ArtifactListVersionFilter.LATEST_VERSION}
+                icon="layers"
+                iconProps={{ size: 12 }}
+                panel={<></>}
+                title={getString('artifactList.table.latestVersions')}
+              />
+              <ButtonTab
+                id={ArtifactListVersionFilter.ALL_VERSION}
+                icon="document"
+                iconProps={{ size: 12 }}
+                panel={<></>}
+                title={getString('artifactList.table.allVersions')}
+              />
+            </ButtonTabs>
+          )}
         </div>
       </Page.SubHeader>
       <Page.Body

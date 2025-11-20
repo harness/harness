@@ -22,6 +22,7 @@ import type { StringKeys } from '@ar/frameworks/strings'
 import { RepositoryListViewTypeEnum } from '@ar/contexts/AppStoreContext'
 import {
   CardSelectOption,
+  Parent,
   RepositoryConfigType,
   RepositoryPackageType,
   RepositoryVisibility,
@@ -36,6 +37,7 @@ export enum RepositoryDetailsTab {
   DATASETS = 'datasets',
   MODELS = 'models',
   CONFIGURATION = 'configuration',
+  METADATA = 'metadata',
   WEBHOOKS = 'webhooks'
 }
 
@@ -74,6 +76,8 @@ interface RepositoryDetailsTabSpec {
   mode?: RepositoryListViewTypeEnum
   featureFlag?: FeatureFlags
   isSupportedInPublicView?: boolean
+  supportActions?: boolean
+  parent?: Parent
 }
 
 export const RepositoryDetailsTabs: RepositoryDetailsTabSpec[] = [
@@ -101,7 +105,8 @@ export const RepositoryDetailsTabs: RepositoryDetailsTabSpec[] = [
   {
     label: 'repositoryDetails.tabs.configuration',
     value: RepositoryDetailsTab.CONFIGURATION,
-    isSupportedInPublicView: false
+    isSupportedInPublicView: false,
+    supportActions: true
   },
   {
     label: 'repositoryDetails.tabs.webhooks',
@@ -109,6 +114,13 @@ export const RepositoryDetailsTabs: RepositoryDetailsTabSpec[] = [
     featureFlag: FeatureFlags.HAR_TRIGGERS,
     type: RepositoryConfigType.VIRTUAL,
     isSupportedInPublicView: false
+  },
+  {
+    label: 'metadata',
+    value: RepositoryDetailsTab.METADATA,
+    supportActions: true,
+    featureFlag: FeatureFlags.HAR_CUSTOM_METADATA_ENABLED,
+    parent: Parent.Enterprise
   }
 ]
 

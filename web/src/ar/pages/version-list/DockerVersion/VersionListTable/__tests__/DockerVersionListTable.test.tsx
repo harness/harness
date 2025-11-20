@@ -16,9 +16,10 @@
 
 import React from 'react'
 import {
-  ArtifactVersionMetadata,
-  useGetDockerArtifactManifestsQuery as _useGetDockerArtifactManifestsQuery
+  useGetDockerArtifactManifestsQuery as _useGetDockerArtifactManifestsQuery,
+  ListArtifactVersion
 } from '@harnessio/react-har-service-client'
+import type { ArtifactMetadata, ListArtifact } from '@harnessio/react-har-service-v2-client'
 import { getByText, queryByText, render } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import copy from 'clipboard-copy'
@@ -52,6 +53,20 @@ jest.mock('@ar/components/TableCells/utils', () => ({
   })
 }))
 
+const convertResponseToV2 = (response: ListArtifactVersion): ListArtifact => {
+  return {
+    artifacts:
+      response.artifactVersions?.map(
+        each =>
+          ({
+            ...each,
+            version: each.name,
+            package: ''
+          } as ArtifactMetadata)
+      ) || [],
+    ...response
+  }
+}
 describe('Verify Version List Table', () => {
   beforeAll(() => {
     repositoryFactory.registerStep(new DockerRepositoryType())
@@ -69,7 +84,7 @@ describe('Verify Version List Table', () => {
     const { container, getByTestId } = render(
       <ArTestWrapper>
         <DockerVersionListTable
-          data={mockDockerLatestVersionListTableData}
+          data={convertResponseToV2(mockDockerLatestVersionListTableData)}
           gotoPage={jest.fn()}
           setSortBy={jest.fn()}
           sortBy={['name', 'DESC']}
@@ -81,20 +96,20 @@ describe('Verify Version List Table', () => {
 
     const getFirstRowColumn = (col: number) => getTableColumn(1, col) as HTMLElement
 
-    const artifact = mockDockerLatestVersionListTableData.artifactVersions?.[0] as ArtifactVersionMetadata
-    const name = getByText(getFirstRowColumn(2), artifact.name as string)
+    const artifact = mockDockerLatestVersionListTableData.artifactVersions?.[0]
+    const name = getByText(getFirstRowColumn(2), artifact?.name as string)
     expect(name).toBeInTheDocument()
 
     const nonProdDep = getByTestId('nonProdDeployments')
     const prodDep = getByTestId('prodDeployments')
 
-    expect(getByText(nonProdDep, artifact.deploymentMetadata?.nonProdEnvCount as number)).toBeInTheDocument()
+    expect(getByText(nonProdDep, artifact?.deploymentMetadata?.nonProdEnvCount as number)).toBeInTheDocument()
     expect(getByText(nonProdDep, 'nonProd')).toBeInTheDocument()
 
-    expect(getByText(prodDep, artifact.deploymentMetadata?.prodEnvCount as number)).toBeInTheDocument()
+    expect(getByText(prodDep, artifact?.deploymentMetadata?.prodEnvCount as number)).toBeInTheDocument()
     expect(getByText(prodDep, 'prod')).toBeInTheDocument()
 
-    const digestValue = getByText(getFirstRowColumn(4), artifact.digestCount as number)
+    const digestValue = getByText(getFirstRowColumn(4), artifact?.digestCount as number)
     expect(digestValue).toBeInTheDocument()
 
     const curlColumn = getFirstRowColumn(6)
@@ -109,14 +124,14 @@ describe('Verify Version List Table', () => {
     expect(expandIcon).toBeInTheDocument()
 
     await userEvent.click(rows[0])
-    expect(handleToggleExpandableRow).toHaveBeenCalledWith(artifact.name)
+    expect(handleToggleExpandableRow).toHaveBeenCalledWith(artifact?.name)
   })
 
   test("Should show na if pull command doesn't exist", async () => {
     render(
       <ArTestWrapper>
         <DockerVersionListTable
-          data={mockDockerNoPullCmdVersionListTableData}
+          data={convertResponseToV2(mockDockerNoPullCmdVersionListTableData)}
           gotoPage={jest.fn()}
           setSortBy={jest.fn()}
           sortBy={['name', 'DESC']}
@@ -136,10 +151,10 @@ describe('Verify Version List Table', () => {
     render(
       <ArTestWrapper>
         <DockerVersionListTable
-          data={mockDockerOldVersionListTableData}
+          data={convertResponseToV2(mockDockerOldVersionListTableData)}
           gotoPage={jest.fn()}
           setSortBy={jest.fn()}
-          sortBy={['name', 'DESC']}
+          sortBy={['version', 'DESC']}
         />
       </ArTestWrapper>
     )
@@ -172,7 +187,7 @@ describe('Verify Version List Table', () => {
     const { container } = render(
       <ArTestWrapper>
         <DockerVersionListTable
-          data={mockDockerOldVersionListTableData}
+          data={convertResponseToV2(mockDockerOldVersionListTableData)}
           gotoPage={jest.fn()}
           setSortBy={setSortBy}
           sortBy={['name', 'DESC']}
@@ -182,6 +197,6 @@ describe('Verify Version List Table', () => {
     const artifactNameSortIcon = getByText(container, 'versionList.table.columns.version').nextSibling
       ?.firstChild as HTMLElement
     await userEvent.click(artifactNameSortIcon)
-    expect(setSortBy).toHaveBeenCalledWith(['name', 'ASC'])
+    expect(setSortBy).toHaveBeenCalledWith(['version', 'ASC'])
   })
 })

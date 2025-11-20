@@ -17,3 +17,18 @@
 .tabsContainer {
   --tab-container-page-header-height: var(--har-version-details-page-header-height);
 }
+
+.btnContainer {
+  position: absolute !important;
+  top: 6px;
+  right: var(--spacing-xlarge);
+  .saveButton {
+    width: 70px !important;
+    height: 24px !important;
+    border-radius: 4px;
+    font-size: 13px !important;
+  }
+  .discardBtn {
+    margin-left: var(--spacing-3) !important;
+  }
+}

@@ -18,7 +18,7 @@ import React, { useCallback } from 'react'
 import classNames from 'classnames'
 import type { Column, Row } from 'react-table'
 import { Container, TableV2 } from '@harnessio/uicore'
-import type { ArtifactVersionMetadata } from '@harnessio/react-har-service-client'
+import type { ArtifactMetadata } from '@harnessio/react-har-service-v2-client'
 
 import { Parent } from '@ar/common/types'
 import { killEvent } from '@ar/common/utils'
@@ -50,7 +50,7 @@ function DockerTagListTable(props: DockerVersionListTableProps): JSX.Element {
   const { getString } = useStrings()
   const [expandedRows, setExpandedRows] = React.useState<Set<string>>(new Set())
 
-  const { artifactVersions = [], itemCount = 0, pageCount = 0, pageIndex = 0, pageSize = 0 } = data || {}
+  const { artifacts = [], itemCount = 0, pageCount = 0, pageIndex = 0, pageSize = 0 } = data || {}
   const paginationProps = useDefaultPaginationProps({
     itemCount,
     pageSize,
@@ -61,12 +61,12 @@ function DockerTagListTable(props: DockerVersionListTableProps): JSX.Element {
   })
   const [currentSort, currentOrder] = sortBy
 
-  const onToggleRow = useCallback((rowData: ArtifactVersionMetadata): void => {
-    const value = rowData.name
+  const onToggleRow = useCallback((rowData: ArtifactMetadata): void => {
+    const value = rowData.version
     setExpandedRows(handleToggleExpandableRow(value))
   }, [])
 
-  const columns: Column<ArtifactVersionMetadata>[] = React.useMemo(() => {
+  const columns: Column<ArtifactMetadata>[] = React.useMemo(() => {
     const getServerSortProps = (id: string) => {
       return {
         enableServerSort: true,
@@ -91,7 +91,7 @@ function DockerTagListTable(props: DockerVersionListTableProps): JSX.Element {
       {
         Header: getString('versionList.table.columns.version'),
         width: '100%',
-        accessor: 'name',
+        accessor: 'version',
         Cell: DockerVersionNameCell,
         serverSortProps: getServerSortProps('name')
       },
@@ -133,16 +133,16 @@ function DockerTagListTable(props: DockerVersionListTableProps): JSX.Element {
       }
     ]
       .filter(Boolean)
-      .filter(each => !each.hidden) as unknown as Column<ArtifactVersionMetadata>[]
+      .filter(each => !each.hidden) as unknown as Column<ArtifactMetadata>[]
   }, [currentOrder, currentSort, getString, expandedRows])
 
   const renderRowSubComponent = React.useCallback(
-    ({ row }: { row: Row<ArtifactVersionMetadata> }) => (
+    ({ row }: { row: Row<ArtifactMetadata> }) => (
       <Container className={css.rowSubComponent} onClick={killEvent}>
         <DigestListPage
           repoKey={pathParams.repositoryIdentifier}
           artifact={pathParams.artifactIdentifier}
-          version={row.original.name}
+          version={row.original.version}
         />
       </Container>
     ),
@@ -150,14 +150,14 @@ function DockerTagListTable(props: DockerVersionListTableProps): JSX.Element {
   )
 
   return (
-    <TableV2<ArtifactVersionMetadata>
+    <TableV2<ArtifactMetadata>
       className={classNames(css.table)}
       columns={columns}
-      data={artifactVersions}
+      data={artifacts}
       pagination={paginationProps}
       sortable
       renderRowSubComponent={renderRowSubComponent}
-      getRowClassName={row => (expandedRows.has(row.original.name) ? css.activeRow : '')}
+      getRowClassName={row => (expandedRows.has(row.original.version) ? css.activeRow : '')}
       onRowClick={onToggleRow}
       autoResetExpanded={false}
     />

@@ -17,7 +17,7 @@
 import React, { useCallback } from 'react'
 import type { Column } from 'react-table'
 import { PaginationProps, TableV2 } from '@harnessio/uicore'
-import type { ArtifactVersionMetadata, ListArtifactVersion } from '@harnessio/react-har-service-client'
+import type { ArtifactMetadata, ListArtifact } from '@harnessio/react-har-service-v2-client'
 
 import { useParentHooks } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
@@ -31,7 +31,7 @@ export interface ArtifactVersionListColumnActions {
   refetchList?: () => void
 }
 export interface CommonVersionListTableProps extends ArtifactVersionListColumnActions {
-  data: ListArtifactVersion
+  data: ListArtifact
   gotoPage: (pageNumber: number) => void
   onPageSizeChange?: PaginationProps['onPageSizeChange']
   setSortBy: (sortBy: SortByType) => void
@@ -45,7 +45,7 @@ function VersionListTable(props: CommonVersionListTableProps): JSX.Element {
   const { useDefaultPaginationProps } = useParentHooks()
   const { getString } = useStrings()
 
-  const { artifactVersions = [], itemCount = 0, pageCount = 0, pageIndex, pageSize = 0 } = data || {}
+  const { artifacts = [], itemCount = 0, pageCount = 0, pageIndex, pageSize = 0 } = data || {}
   const paginationProps = useDefaultPaginationProps({
     itemCount,
     pageSize,
@@ -70,19 +70,15 @@ function VersionListTable(props: CommonVersionListTableProps): JSX.Element {
     [currentOrder, currentSort]
   )
 
-  const columns: Column<ArtifactVersionMetadata>[] = React.useMemo(() => {
-    return getVersionListTableCellConfigs(
-      columnConfigs,
-      getServerSortProps,
-      getString
-    ) as Column<ArtifactVersionMetadata>[]
+  const columns: Column<ArtifactMetadata>[] = React.useMemo(() => {
+    return getVersionListTableCellConfigs(columnConfigs, getServerSortProps, getString) as Column<ArtifactMetadata>[]
   }, [getServerSortProps, columnConfigs, getString])
 
   return (
-    <TableV2<ArtifactVersionMetadata>
+    <TableV2<ArtifactMetadata>
       className={css.table}
       columns={columns}
-      data={artifactVersions}
+      data={artifacts}
       pagination={paginationProps}
       sortable
     />

@@ -47,6 +47,12 @@ export default function getARRouteDefinitions(routeParams: Record<string, string
     toARArtifactDetails: routeDefinitionWithMode(
       params => `/${params?.repositoryIdentifier}/${params?.artifactType}/${params?.artifactIdentifier}`
     ),
+    toARArtifactVersions: routeDefinitionWithMode(
+      params => `/${params?.repositoryIdentifier}/${params?.artifactType}/${params?.artifactIdentifier}/versions`
+    ),
+    toARArtifactProperties: routeDefinitionWithMode(
+      params => `/${params?.repositoryIdentifier}/${params?.artifactType}/${params?.artifactIdentifier}/properties`
+    ),
     toARVersionDetails: routeDefinitionWithMode(params => {
       const queryParams = new URLSearchParams()
       if (params.tag) queryParams.append('tag', params.tag)

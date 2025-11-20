@@ -52,6 +52,7 @@
     "@harnessio/design-system": "^2.1.1",
     "@harnessio/icons": "^2.1.17",
     "@harnessio/react-har-service-client": "^0.31.0",
+    "@harnessio/react-har-service-v2-client": "^0.2.0",
     "@harnessio/react-ng-manager-client": "^1.40.0",
     "@harnessio/react-ssca-manager-client": "^0.65.0",
     "@harnessio/uicore": "^4.3.4",

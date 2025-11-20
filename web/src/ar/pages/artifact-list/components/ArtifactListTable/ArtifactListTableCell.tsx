@@ -17,10 +17,9 @@
 import React from 'react'
 import { defaultTo } from 'lodash-es'
 import { Link, useHistory } from 'react-router-dom'
-import { Position } from '@blueprintjs/core'
 import { Color } from '@harnessio/design-system'
 import { Layout, Text } from '@harnessio/uicore'
-import type { ArtifactMetadata } from '@harnessio/react-har-service-client'
+import type { ArtifactMetadata } from '@harnessio/react-har-service-v2-client'
 import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance, UseExpandedRowProps } from 'react-table'
 
 import { useGetVersionDisplayName, useRoutes } from '@ar/hooks'
@@ -28,7 +27,6 @@ import { useStrings } from '@ar/frameworks/strings'
 import TableCells from '@ar/components/TableCells/TableCells'
 import versionFactory from '@ar/frameworks/Version/VersionFactory'
 import { PageType, RepositoryPackageType } from '@ar/common/types'
-import LabelsPopover from '@ar/components/LabelsPopover/LabelsPopover'
 import { useGetRepositoryTypes } from '@ar/hooks/useGetRepositoryTypes'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import VersionActionsWidget from '@ar/frameworks/Version/VersionActionsWidget'
@@ -44,10 +42,6 @@ type CellTypeWithActions<D extends Record<string, any>, V = any> = TableInstance
 }
 
 type CellType = Renderer<CellTypeWithActions<ArtifactMetadata>>
-
-type ArtifactNameCellActionProps = {
-  onClickLabel: (val: string) => void
-}
 
 export type ArtifactListExpandedColumnProps = {
   expandedRows: Set<string>
@@ -75,15 +69,11 @@ export const ToggleAccordionCell: Renderer<{
   )
 }
 
-export const ArtifactNameCell: Renderer<{
-  row: Row<ArtifactMetadata>
-  column: ColumnInstance<ArtifactMetadata> & ArtifactNameCellActionProps
-}> = ({ row, column }) => {
+export const ArtifactNameCell: CellType = ({ row }) => {
   const { original } = row
-  const { onClickLabel } = column
   const routes = useRoutes()
   const {
-    name: value,
+    package: packageName,
     version,
     packageType,
     registryIdentifier,
@@ -109,29 +99,13 @@ export const ArtifactNameCell: Renderer<{
         linkTo={routes.toARRedirect({
           packageType: packageType as RepositoryPackageType,
           registryId: registryIdentifier,
-          artifactId: value,
+          artifactId: packageName,
           versionId: version,
           versionDetailsTab: VersionDetailsTab.OVERVIEW,
           artifactType
         })}
-        label={value}
+        label={packageName}
         subLabel={isOCIPackageType ? versionDisplayName : undefined}
-        postfix={
-          <LabelsPopover
-            popoverProps={{
-              position: Position.RIGHT
-            }}
-            labels={defaultTo(original.labels, [])}
-            tagProps={{
-              interactive: true,
-              onClick: e => {
-                if (typeof onClickLabel === 'function') {
-                  onClickLabel(e.currentTarget.ariaValueText as string)
-                }
-              }
-            }}
-          />
-        }
       />
     </Layout.Vertical>
   )
@@ -139,7 +113,7 @@ export const ArtifactNameCell: Renderer<{
 
 export const ArtifactVersionCell: CellType = props => {
   const { original } = props.row
-  const { name: value, version, packageType, registryIdentifier, artifactType, metadata } = original
+  const { package: value, version, packageType, registryIdentifier, artifactType, metadata } = original
   const routes = useRoutes()
   const history = useHistory()
 
@@ -216,7 +190,7 @@ export const ArtifactListPullCommandCell: CellType = ({ value, row }) => {
         <TableCells.LinkCell
           linkTo={routes.toARVersionDetailsTab({
             repositoryIdentifier: original.registryIdentifier,
-            artifactIdentifier: original.name,
+            artifactIdentifier: original.package,
             versionIdentifier: original.version as string,
             versionTab: VersionDetailsTab.ARTIFACT_DETAILS,
             artifactType: (artifactType ?? LocalArtifactType.ARTIFACTS) as LocalArtifactType
@@ -232,11 +206,11 @@ export const ArtifactListPullCommandCell: CellType = ({ value, row }) => {
 export const ScanStatusCell: CellType = ({ row }) => {
   const { original } = row
   const router = useRoutes()
-  const { version = '', name, registryIdentifier, artifactType } = original
+  const { version = '', package: packageName, registryIdentifier, artifactType } = original
   const { getString } = useStrings()
   const linkTo = router.toARVersionDetailsTab({
     repositoryIdentifier: registryIdentifier,
-    artifactIdentifier: name,
+    artifactIdentifier: packageName,
     versionIdentifier: version,
     versionTab: VersionDetailsTab.OVERVIEW,
     artifactType: (artifactType ?? LocalArtifactType.ARTIFACTS) as LocalArtifactType
@@ -257,15 +231,13 @@ export const LatestArtifactCell: CellType = ({ row }) => {
 
 export const ArtifactVersionActions: CellType = ({ row }) => {
   const { original } = row
-  const { packageType } = original
-  // TODO: update once BE support this in response
-  const digestCount = packageType === RepositoryPackageType.DOCKER ? 2 : 0
+  const { digestCount = 0 } = original
   return (
     <VersionActionsWidget
       pageType={PageType.GlobalList}
       data={original}
       repoKey={original.registryIdentifier}
-      artifactKey={original.name}
+      artifactKey={original.package}
       versionKey={original.version}
       packageType={original.packageType as RepositoryPackageType}
       digestCount={digestCount}

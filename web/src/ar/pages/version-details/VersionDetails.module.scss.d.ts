@@ -16,6 +16,7 @@
 
 /* eslint-disable */
 // This is an auto-generated file
+export declare const cardContainer: string
 export declare const closeBtn: string
 export declare const ossVersionDetailsContainer: string
 export declare const ossVersionDetailsHeader: string

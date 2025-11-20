@@ -17,6 +17,8 @@ export interface StringsMap {
   'artifactDetails.downloadsThisWeek': string
   'artifactDetails.labelsUpdated': string
   'artifactDetails.page': string
+  'artifactDetails.tabs.properties': string
+  'artifactDetails.tabs.versions': string
   'artifactDetails.totalDownloads': string
   'artifactList.deployedArtifacts': string
   'artifactList.page': string
@@ -144,6 +146,7 @@ export interface StringsMap {
   'repositoryDetails.tabs.datasets': string
   'repositoryDetails.tabs.models': string
   'repositoryDetails.tabs.packages': string
+  'repositoryDetails.tabs.properties': string
   'repositoryDetails.tabs.webhooks': string
   'repositoryDetails.upstream': string
   'repositoryDetails.upstreamProxiesSelectList.addUpstreamProxies': string
@@ -403,7 +406,9 @@ export interface StringsMap {
   'actions.scan': string
   'actions.setupClient': string
   add: string
+  addProperty: string
   all: string
+  apply: string
   'badges.accountScope': string
   'badges.artifactRegistry': string
   'badges.orgScope': string
@@ -430,6 +435,7 @@ export interface StringsMap {
   copied: string
   copy: string
   createdAt: string
+  customMetadata: string
   dateLabel: string
   delete: string
   description: string
@@ -444,6 +450,7 @@ export interface StringsMap {
   harLabel: string
   harnessAI: string
   id: string
+  key: string
   'labels.addLabel': string
   'labels.addNewValue': string
   'labels.addNewValueDynamic': string
@@ -454,6 +461,7 @@ export interface StringsMap {
   lastUpdated: string
   loadMore: string
   loading: string
+  metadata: string
   modifiedAt: string
   moduleName: string
   na: string
@@ -482,6 +490,7 @@ export interface StringsMap {
   plusNewName: string
   prod: string
   prodCount: string
+  properties: string
   'publicAccess.oopsPageNotPublic': string
   'publicAccess.tryOtherOptions': string
   'repositoryTypes.alpine': string
@@ -534,6 +543,7 @@ export interface StringsMap {
   'validationMessages.urlPattern': string
   'validationMessages.urlRequired': string
   'validationMessages.userNameRequired': string
+  value: string
   view: string
   'vulnerabilityStatus.critical': string
   'vulnerabilityStatus.high': string

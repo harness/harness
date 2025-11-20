@@ -2,6 +2,7 @@ moduleName: '{{ $.repositoryList.artifactRegistry.label }}'
 add: Add
 clearFilters: Clear Filters
 save: Save
+apply: Apply
 discard: Discard
 delete: Delete
 prod: Prod
@@ -11,14 +12,20 @@ prodCount: '{{count}} Prod'
 nonProdCount: '{{count}} Non-Prod'
 copy: Copy
 view: View
+metadata: Metadata
+customMetadata: Custom Metadata
 loadMore: Load More
 noMatchingFilterData: No results found matching the filter criteria
 stepNotFound: Step not found
 tabNotFound: Tab not found
+key: Key
+value: Value
+properties: Properties
 search: Search
 copied: Copied
 download: Download
 loading: Loading...
+addProperty: Add Property
 dateLabel: Date
 timeLabel: Time
 harnessAI: Harness AI

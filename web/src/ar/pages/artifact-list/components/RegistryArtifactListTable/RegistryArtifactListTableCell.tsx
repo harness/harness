@@ -16,17 +16,15 @@
 
 import React from 'react'
 import { defaultTo } from 'lodash-es'
-import { Position } from '@blueprintjs/core'
 import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance } from 'react-table'
 import { Layout, Text } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
-import type { RegistryArtifactMetadata } from '@harnessio/react-har-service-client'
+import type { PackageMetadata } from '@harnessio/react-har-service-v2-client'
 
 import { useRoutes } from '@ar/hooks'
 import Tag from '@ar/components/Tag/Tag'
 import { useStrings } from '@ar/frameworks/strings'
 import TableCells from '@ar/components/TableCells/TableCells'
-import LabelsPopover from '@ar/components/LabelsPopover/LabelsPopover'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import { PageType, type RepositoryPackageType } from '@ar/common/types'
 import { LocalArtifactType } from '@ar/pages/repository-details/constants'
@@ -40,20 +38,11 @@ type CellTypeWithActions<D extends Record<string, any>, V = any> = TableInstance
   value: CellValue<V>
 }
 
-type CellType = Renderer<CellTypeWithActions<RegistryArtifactMetadata>>
+type CellType = Renderer<CellTypeWithActions<PackageMetadata>>
 
-type RegistryArtifactNameCellActionProps = {
-  onClickLabel: (val: string) => void
-}
-
-export const RegistryArtifactNameCell: Renderer<{
-  row: Row<RegistryArtifactMetadata>
-  column: ColumnInstance<RegistryArtifactMetadata> & RegistryArtifactNameCellActionProps
-}> = ({ row, column }) => {
+export const RegistryArtifactNameCell: CellType = ({ row, value }) => {
   const { original } = row
-  const { onClickLabel } = column
   const routes = useRoutes()
-  const value = original.name
   return (
     <TableCells.LinkCell
       prefix={
@@ -69,18 +58,6 @@ export const RegistryArtifactNameCell: Renderer<{
         artifactType: (original.artifactType ?? LocalArtifactType.ARTIFACTS) as LocalArtifactType
       })}
       label={value}
-      postfix={
-        <LabelsPopover
-          popoverProps={{
-            position: Position.RIGHT
-          }}
-          labels={defaultTo(original.labels, [])}
-          tagProps={{
-            interactive: true,
-            onClick: e => onClickLabel(e.currentTarget.ariaValueText as string)
-          }}
-        />
-      }
     />
   )
 }
@@ -140,7 +117,7 @@ export const RegistryArtifactLatestUpdatedCell: CellType = ({ row }) => {
         linkTo={routes.toARRedirect({
           registryId: original.registryIdentifier,
           packageType: original.packageType as RepositoryPackageType,
-          artifactId: original.name,
+          artifactId: original.package,
           versionId: latestVersion,
           versionDetailsTab: VersionDetailsTab.OVERVIEW
         })}
@@ -159,7 +136,7 @@ export const RegistryArtifactActionsCell: CellType = ({ row }) => {
       pageType={PageType.Table}
       data={original}
       repoKey={original.registryIdentifier}
-      artifactKey={original.name}
+      artifactKey={original.package}
     />
   )
 }

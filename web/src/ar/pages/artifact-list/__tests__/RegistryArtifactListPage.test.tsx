@@ -108,31 +108,37 @@ describe('Test Registry Artifact List Page', () => {
 
     fireEvent.change(searchInput, { target: { value: 'pod' } })
     await waitFor(() =>
-      expect(useGetAllArtifactsByRegistryQuery).toHaveBeenLastCalledWith({
-        registry_ref: 'undefined/abcd/+',
-        queryParams: {
-          page: 0,
-          size: 50,
-          search_term: 'pod',
-          sort_field: 'updatedAt',
-          sort_order: 'DESC'
+      expect(useGetAllArtifactsByRegistryQuery).toHaveBeenLastCalledWith(
+        {
+          registry_ref: 'undefined/abcd/+',
+          queryParams: {
+            page: 0,
+            size: 50,
+            search_term: 'pod',
+            sort_field: 'lastModified',
+            sort_order: 'DESC'
+          },
+          stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
         },
-        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-      })
+        { enabled: true }
+      )
     )
 
     const clearAllFiltersBtn = getByText('clearFilters')
     await userEvent.click(clearAllFiltersBtn)
-    expect(useGetAllArtifactsByRegistryQuery).toHaveBeenLastCalledWith({
-      registry_ref: 'undefined/abcd/+',
-      queryParams: {
-        page: 0,
-        size: 50,
-        sort_field: 'updatedAt',
-        sort_order: 'DESC'
+    expect(useGetAllArtifactsByRegistryQuery).toHaveBeenLastCalledWith(
+      {
+        registry_ref: 'undefined/abcd/+',
+        queryParams: {
+          page: 0,
+          size: 50,
+          sort_field: 'lastModified',
+          sort_order: 'DESC'
+        },
+        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
       },
-      stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-    })
+      { enabled: true }
+    )
   })
 
   test('Sorting should work', async () => {
@@ -145,59 +151,71 @@ describe('Test Registry Artifact List Page', () => {
     const artifactNameSortIcon = getByText('artifactList.table.columns.name').nextSibling?.firstChild as HTMLElement
     await userEvent.click(artifactNameSortIcon)
 
-    expect(useGetAllArtifactsByRegistryQuery).toHaveBeenLastCalledWith({
-      registry_ref: 'undefined/abcd/+',
-      queryParams: {
-        page: 0,
-        size: 50,
-        sort_field: 'name',
-        sort_order: 'ASC'
+    expect(useGetAllArtifactsByRegistryQuery).toHaveBeenLastCalledWith(
+      {
+        registry_ref: 'undefined/abcd/+',
+        queryParams: {
+          page: 0,
+          size: 50,
+          sort_field: 'name',
+          sort_order: 'ASC'
+        },
+        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
       },
-      stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-    })
+      { enabled: true }
+    )
 
     const repositorySortIcon = getByText('artifactList.table.columns.repository').nextSibling?.firstChild as HTMLElement
     await userEvent.click(repositorySortIcon)
 
-    expect(useGetAllArtifactsByRegistryQuery).toHaveBeenLastCalledWith({
-      registry_ref: 'undefined/abcd/+',
-      queryParams: {
-        page: 0,
-        size: 50,
-        sort_field: 'registryIdentifier',
-        sort_order: 'DESC'
+    expect(useGetAllArtifactsByRegistryQuery).toHaveBeenLastCalledWith(
+      {
+        registry_ref: 'undefined/abcd/+',
+        queryParams: {
+          page: 0,
+          size: 50,
+          sort_field: 'registryIdentifier',
+          sort_order: 'DESC'
+        },
+        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
       },
-      stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-    })
+      { enabled: true }
+    )
 
     const downloadsSortIcon = getByText('artifactList.table.columns.downloads').nextSibling?.firstChild as HTMLElement
     await userEvent.click(downloadsSortIcon)
 
-    expect(useGetAllArtifactsByRegistryQuery).toHaveBeenLastCalledWith({
-      registry_ref: 'undefined/abcd/+',
-      queryParams: {
-        page: 0,
-        size: 50,
-        sort_field: 'downloadsCount',
-        sort_order: 'ASC'
+    expect(useGetAllArtifactsByRegistryQuery).toHaveBeenLastCalledWith(
+      {
+        registry_ref: 'undefined/abcd/+',
+        queryParams: {
+          page: 0,
+          size: 50,
+          sort_field: 'downloadsCount',
+          sort_order: 'ASC'
+        },
+        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
       },
-      stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-    })
+      { enabled: true }
+    )
 
     const lastUpdatedSortIcon = getByText('artifactList.table.columns.latestVersion').nextSibling
       ?.firstChild as HTMLElement
     await userEvent.click(lastUpdatedSortIcon)
 
-    expect(useGetAllArtifactsByRegistryQuery).toHaveBeenLastCalledWith({
-      registry_ref: 'undefined/abcd/+',
-      queryParams: {
-        page: 0,
-        size: 50,
-        sort_field: 'latestVersion',
-        sort_order: 'DESC'
+    expect(useGetAllArtifactsByRegistryQuery).toHaveBeenLastCalledWith(
+      {
+        registry_ref: 'undefined/abcd/+',
+        queryParams: {
+          page: 0,
+          size: 50,
+          sort_field: 'lastModified',
+          sort_order: 'DESC'
+        },
+        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
       },
-      stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-    })
+      { enabled: true }
+    )
   })
 
   test('Pagination should work', async () => {
@@ -210,31 +228,37 @@ describe('Test Registry Artifact List Page', () => {
     const nextPageBtn = getByText('Next')
     await userEvent.click(nextPageBtn)
 
-    expect(useGetAllArtifactsByRegistryQuery).toHaveBeenLastCalledWith({
-      registry_ref: 'undefined/abcd/+',
-      queryParams: {
-        page: 1,
-        size: 50,
-        sort_field: 'updatedAt',
-        sort_order: 'DESC'
+    expect(useGetAllArtifactsByRegistryQuery).toHaveBeenLastCalledWith(
+      {
+        registry_ref: 'undefined/abcd/+',
+        queryParams: {
+          page: 1,
+          size: 50,
+          sort_field: 'lastModified',
+          sort_order: 'DESC'
+        },
+        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
       },
-      stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-    })
+      { enabled: true }
+    )
 
     const pageSizeSelect = getByTestId('dropdown-button')
     await userEvent.click(pageSizeSelect)
     const pageSize20option = getByText('20')
     await userEvent.click(pageSize20option)
 
-    expect(useGetAllArtifactsByRegistryQuery).toHaveBeenLastCalledWith({
-      registry_ref: 'undefined/abcd/+',
-      queryParams: {
-        page: 0,
-        size: 20,
-        sort_field: 'updatedAt',
-        sort_order: 'DESC'
+    expect(useGetAllArtifactsByRegistryQuery).toHaveBeenLastCalledWith(
+      {
+        registry_ref: 'undefined/abcd/+',
+        queryParams: {
+          page: 0,
+          size: 20,
+          sort_field: 'lastModified',
+          sort_order: 'DESC'
+        },
+        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
       },
-      stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-    })
+      { enabled: true }
+    )
   })
 })

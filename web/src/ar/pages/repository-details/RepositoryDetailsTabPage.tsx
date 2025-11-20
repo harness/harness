@@ -16,22 +16,23 @@
 
 import React, { useContext } from 'react'
 import { useEffect } from 'react'
-import { Layout, Text } from '@harnessio/uicore'
+import { Container, Text } from '@harnessio/uicore'
 import type { FormikProps } from 'formik'
 
-import { useDecodedParams, useFeatureFlags } from '@ar/hooks'
+import { useDecodedParams } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import type { RepositoryDetailsTabPathParams } from '@ar/routes/types'
 import type { RepositoryConfigType, RepositoryPackageType } from '@ar/common/types'
+import PropertiesFormContent from '@ar/components/PropertiesForm/PropertiesFormContent'
 import RepositoryConfigurationFormWidget from '@ar/frameworks/RepositoryStep/RepositoryConfigurationFormWidget'
 
 import { LocalArtifactType, RepositoryDetailsTab } from './constants'
 import WebhookListPage from '../webhook-list/WebhookListPage'
 import { RepositoryProviderContext } from './context/RepositoryProvider'
 import RegistryArtifactListPage from '../artifact-list/RegistryArtifactListPage'
-import ManageRepositoryMetadata from './components/ManageRepositoryMetadata/ManageRepositoryMetadata'
 
 import css from './RepositoryDetailsPage.module.scss'
+import formContent from './components/FormContent/FormContent.module.scss'
 
 interface RepositoryDetailsTabPageProps {
   onInit: (tab: RepositoryDetailsTab) => void
@@ -42,8 +43,7 @@ export default function RepositoryDetailsTabPage(props: RepositoryDetailsTabPage
   const { onInit, stepRef } = props
   const { getString } = useStrings()
   const { tab } = useDecodedParams<RepositoryDetailsTabPathParams>()
-  const { data, isReadonly } = useContext(RepositoryProviderContext)
-  const { HAR_CUSTOM_METADATA_ENABLED } = useFeatureFlags()
+  const { data, isReadonly, setIsDirty, setIsUpdating } = useContext(RepositoryProviderContext)
 
   useEffect(() => {
     onInit(tab)
@@ -62,18 +62,27 @@ export default function RepositoryDetailsTabPage(props: RepositoryDetailsTabPage
       )
     case RepositoryDetailsTab.CONFIGURATION:
       return (
-        <Layout.Horizontal
-          padding="xlarge"
-          spacing="medium"
-          flex={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <Container padding="xlarge">
           <RepositoryConfigurationFormWidget
             packageType={data?.packageType as RepositoryPackageType}
             type={data?.config.type as RepositoryConfigType}
             ref={stepRef}
             readonly={isReadonly}
           />
-          {HAR_CUSTOM_METADATA_ENABLED && <ManageRepositoryMetadata />}
-        </Layout.Horizontal>
+        </Container>
+      )
+    case RepositoryDetailsTab.METADATA:
+      return (
+        <Container padding="xlarge">
+          <PropertiesFormContent
+            ref={stepRef}
+            readonly={isReadonly}
+            setIsDirty={setIsDirty}
+            setIsUpdating={setIsUpdating}
+            repositoryIdentifier={data?.identifier as string}
+            className={formContent.cardContainer}
+          />
+        </Container>
       )
     case RepositoryDetailsTab.WEBHOOKS:
       return <WebhookListPage />

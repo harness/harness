@@ -39,6 +39,8 @@ export interface ARRouteDefinitionsReturn {
   toARRepositoryDetailsTab: (params: RepositoryDetailsTabPathParams, options?: IRouteOptions) => string
   toARArtifacts: (_?: unknown, options?: IRouteOptions) => string
   toARArtifactDetails: (params: ArtifactDetailsPathParams, options?: IRouteOptions) => string
+  toARArtifactVersions: (params: ArtifactDetailsPathParams, options?: IRouteOptions) => string
+  toARArtifactProperties: (params: ArtifactDetailsPathParams, options?: IRouteOptions) => string
   toARVersionDetails: (params: VersionDetailsPathParams, options?: IRouteOptions) => string
   toARVersionDetailsTab: (params: VersionDetailsTabPathParams, options?: IRouteOptions) => string
   toARRepositoryWebhookDetails: (params: RepositoryWebhookDetailsPathParams, options?: IRouteOptions) => string
@@ -72,6 +74,14 @@ export const routeDefinitions: ARRouteDefinitionsReturn = {
   toARArtifacts: routeDefinitionWithMode(() => '/artifacts'),
   toARArtifactDetails: routeDefinitionWithMode(
     params => `/registries/${params?.repositoryIdentifier}/${params?.artifactType}/${params?.artifactIdentifier}`
+  ),
+  toARArtifactVersions: routeDefinitionWithMode(
+    params =>
+      `/registries/${params?.repositoryIdentifier}/${params?.artifactType}/${params?.artifactIdentifier}/versions`
+  ),
+  toARArtifactProperties: routeDefinitionWithMode(
+    params =>
+      `/registries/${params?.repositoryIdentifier}/${params?.artifactType}/${params?.artifactIdentifier}/properties`
   ),
   toARVersionDetails: routeDefinitionWithMode(params => {
     const queryParams = new URLSearchParams()

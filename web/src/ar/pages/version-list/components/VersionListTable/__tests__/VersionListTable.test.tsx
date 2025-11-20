@@ -18,6 +18,9 @@ import React from 'react'
 import { getByText, render } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import copy from 'clipboard-copy'
+import type { ListArtifactVersion } from '@harnessio/react-har-service-client'
+import type { ArtifactMetadata, ListArtifact } from '@harnessio/react-har-service-v2-client'
+
 import repositoryFactory from '@ar/frameworks/RepositoryStep/RepositoryFactory'
 import {
   mockHelmLatestVersionListTableData,
@@ -29,6 +32,21 @@ import ArTestWrapper from '@ar/utils/testUtils/ArTestWrapper'
 import { getTableColumn } from '@ar/utils/testUtils/utils'
 import VersionListTable from '../VersionListTable'
 import { VersionListColumnEnum } from '../types'
+
+const convertResponseToV2 = (response: ListArtifactVersion): ListArtifact => {
+  return {
+    artifacts:
+      response.artifactVersions?.map(
+        each =>
+          ({
+            ...each,
+            version: each.name,
+            package: ''
+          } as ArtifactMetadata)
+      ) || [],
+    ...response
+  }
+}
 
 jest.mock('clipboard-copy', () => ({
   __esModule: true,
@@ -55,7 +73,7 @@ describe('Verify Version List Table', () => {
     const { container } = render(
       <ArTestWrapper>
         <VersionListTable
-          data={mockHelmLatestVersionListTableData}
+          data={convertResponseToV2(mockHelmLatestVersionListTableData)}
           gotoPage={jest.fn()}
           setSortBy={jest.fn()}
           sortBy={['name', 'DESC']}
@@ -89,7 +107,7 @@ describe('Verify Version List Table', () => {
     render(
       <ArTestWrapper>
         <VersionListTable
-          data={mockHelmNoPullCmdVersionListTableData}
+          data={convertResponseToV2(mockHelmNoPullCmdVersionListTableData)}
           gotoPage={jest.fn()}
           setSortBy={jest.fn()}
           sortBy={['name', 'DESC']}
@@ -131,7 +149,7 @@ describe('Verify Version List Table', () => {
     const { container } = render(
       <ArTestWrapper>
         <VersionListTable
-          data={mockHelmOldVersionListTableData}
+          data={convertResponseToV2(mockHelmOldVersionListTableData)}
           gotoPage={jest.fn()}
           setSortBy={setSortBy}
           sortBy={['name', 'DESC']}
@@ -142,6 +160,6 @@ describe('Verify Version List Table', () => {
     const artifactNameSortIcon = getByText(container, 'versionList.table.columns.version').nextSibling
       ?.firstChild as HTMLElement
     await userEvent.click(artifactNameSortIcon)
-    expect(setSortBy).toHaveBeenCalledWith(['name', 'ASC'])
+    expect(setSortBy).toHaveBeenCalledWith(['version', 'ASC'])
   })
 })

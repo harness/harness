@@ -30,12 +30,12 @@ import { type IVersionListTableColumnConfigType, VersionListColumnEnum } from '.
 export const VERSION_LIST_TABLE_CELL_CONFIG: Record<VersionListColumnEnum, IVersionListTableColumnConfigType> = {
   [VersionListColumnEnum.Name]: {
     Header: 'versionList.table.columns.version',
-    accessor: 'name',
+    accessor: 'version',
     Cell: VersionNameCell
   },
   [VersionListColumnEnum.Digest]: {
     Header: 'versionList.table.columns.version',
-    accessor: 'name',
+    accessor: 'version',
     Cell: DigestNameCell,
     disableSortBy: true
   },

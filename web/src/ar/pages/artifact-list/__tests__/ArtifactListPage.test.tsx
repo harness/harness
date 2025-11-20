@@ -120,81 +120,89 @@ describe('Test Artifact List Page', () => {
       </ArTestWrapper>
     )
 
-    expect(useGetAllHarnessArtifactsQuery).toHaveBeenLastCalledWith({
-      space_ref: 'undefined/+',
-      queryParams: {
-        page: 0,
-        size: 50,
-        sort_field: 'updatedAt',
-        sort_order: 'DESC',
-        reg_identifier: [],
-        latest_version: false,
-        deployed_artifact: false,
-        package_type: [],
-        label: []
+    expect(useGetAllHarnessArtifactsQuery).toHaveBeenLastCalledWith(
+      {
+        space_ref: 'undefined/+',
+        queryParams: {
+          page: 0,
+          size: 50,
+          sort_field: 'lastModified',
+          sort_order: 'DESC',
+          reg_identifier: [],
+          latest_version: false,
+          deployed_artifact: false,
+          package_type: []
+        },
+        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
       },
-      stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-    })
+      { enabled: true }
+    )
 
     const registriesSelect = getByTestId('regitry-select')
     await testMultiSelectChange(registriesSelect, 'repo1', '')
 
-    expect(useGetAllHarnessArtifactsQuery).toHaveBeenLastCalledWith({
-      space_ref: 'undefined/+',
-      queryParams: {
-        page: 0,
-        size: 50,
-        sort_field: 'updatedAt',
-        sort_order: 'DESC',
-        reg_identifier: ['repo1'],
-        latest_version: false,
-        deployed_artifact: false,
-        package_type: [],
-        label: []
+    expect(useGetAllHarnessArtifactsQuery).toHaveBeenLastCalledWith(
+      {
+        space_ref: 'undefined/+',
+        queryParams: {
+          page: 0,
+          size: 50,
+          sort_field: 'lastModified',
+          sort_order: 'DESC',
+          reg_identifier: ['repo1'],
+          latest_version: false,
+          deployed_artifact: false,
+          package_type: []
+        },
+        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
       },
-      stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-    })
+      { enabled: true }
+    )
 
     const packageTypeSelector = getByTestId('package-type-select')
     expect(packageTypeSelector).toBeInTheDocument()
     await testMultiSelectChange(packageTypeSelector, 'repositoryTypes.docker')
 
-    expect(useGetAllHarnessArtifactsQuery).toHaveBeenLastCalledWith({
-      space_ref: 'undefined/+',
-      queryParams: {
-        page: 0,
-        size: 50,
-        sort_field: 'updatedAt',
-        sort_order: 'DESC',
-        reg_identifier: ['repo1'],
-        latest_version: false,
-        deployed_artifact: false,
-        package_type: ['DOCKER'],
-        label: []
+    expect(useGetAllHarnessArtifactsQuery).toHaveBeenLastCalledWith(
+      {
+        space_ref: 'undefined/+',
+        queryParams: {
+          page: 0,
+          size: 50,
+          sort_field: 'lastModified',
+          sort_order: 'DESC',
+          reg_identifier: ['repo1'],
+          latest_version: false,
+          deployed_artifact: false,
+          package_type: ['DOCKER']
+        },
+        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
       },
-      stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-    })
+      { enabled: true }
+    )
 
     const searchInput = getByPlaceholderText('search')
     expect(searchInput).toBeInTheDocument()
     fireEvent.change(searchInput!, { target: { value: '1234' } })
     await waitFor(() =>
-      expect(useGetAllHarnessArtifactsQuery).toHaveBeenLastCalledWith({
-        space_ref: 'undefined/+',
-        queryParams: {
-          page: 0,
-          size: 50,
-          sort_field: 'updatedAt',
-          sort_order: 'DESC',
-          reg_identifier: ['repo1'],
-          latest_version: false,
-          deployed_artifact: false,
-          package_type: ['DOCKER'],
-          search_term: '1234',
-          label: []
+      expect(useGetAllHarnessArtifactsQuery).toHaveBeenLastCalledWith(
+        {
+          space_ref: 'undefined/+',
+          queryParams: {
+            page: 0,
+            size: 50,
+            sort_field: 'lastModified',
+            sort_order: 'DESC',
+            reg_identifier: ['repo1'],
+            latest_version: false,
+            deployed_artifact: false,
+            package_type: ['DOCKER'],
+            search_term: '1234'
+          },
+          stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
         },
-        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-      })
+        { enabled: true }
+      )
     )
 
     useGetAllHarnessArtifactsQuery.mockImplementationOnce(() => mockEmptyUseGetAllHarnessArtifactsQueryResponse)
@@ -202,40 +210,44 @@ describe('Test Artifact List Page', () => {
 
     const latestVersionTab = getByText('artifactList.table.latestVersions')
     await userEvent.click(latestVersionTab)
-    expect(useGetAllHarnessArtifactsQuery).toHaveBeenLastCalledWith({
-      space_ref: 'undefined/+',
-      queryParams: {
-        page: 0,
-        size: 50,
-        sort_field: 'updatedAt',
-        sort_order: 'DESC',
-        reg_identifier: ['repo1'],
-        latest_version: true,
-        deployed_artifact: false,
-        package_type: ['DOCKER'],
-        search_term: '1234',
-        label: []
+    expect(useGetAllHarnessArtifactsQuery).toHaveBeenLastCalledWith(
+      {
+        space_ref: 'undefined/+',
+        queryParams: {
+          page: 0,
+          size: 50,
+          sort_field: 'lastModified',
+          sort_order: 'DESC',
+          reg_identifier: ['repo1'],
+          latest_version: true,
+          deployed_artifact: false,
+          package_type: ['DOCKER'],
+          search_term: '1234'
+        },
+        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
       },
-      stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-    })
+      { enabled: true }
+    )
 
     const clearAllFiltersBtn = getByText('clearFilters')
     await userEvent.click(clearAllFiltersBtn)
-    expect(useGetAllHarnessArtifactsQuery).toHaveBeenLastCalledWith({
-      space_ref: 'undefined/+',
-      queryParams: {
-        page: 0,
-        size: 50,
-        sort_field: 'updatedAt',
-        sort_order: 'DESC',
-        reg_identifier: [],
-        latest_version: false,
-        deployed_artifact: false,
-        package_type: [],
-        label: []
+    expect(useGetAllHarnessArtifactsQuery).toHaveBeenLastCalledWith(
+      {
+        space_ref: 'undefined/+',
+        queryParams: {
+          page: 0,
+          size: 50,
+          sort_field: 'lastModified',
+          sort_order: 'DESC',
+          reg_identifier: [],
+          latest_version: false,
+          deployed_artifact: false,
+          package_type: []
+        },
+        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
       },
-      stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-    })
+      { enabled: true }
+    )
   })
 
   test('Sorting should work', async () => {
@@ -249,60 +261,66 @@ describe('Test Artifact List Page', () => {
       ?.firstChild as HTMLElement
     await userEvent.click(artifactNameSortIcon)
 
-    expect(useGetAllHarnessArtifactsQuery).toHaveBeenLastCalledWith({
-      space_ref: 'undefined/+',
-      queryParams: {
-        page: 0,
-        size: 50,
-        sort_field: 'name',
-        sort_order: 'ASC',
-        reg_identifier: [],
-        latest_version: false,
-        deployed_artifact: false,
-        package_type: [],
-        label: []
+    expect(useGetAllHarnessArtifactsQuery).toHaveBeenLastCalledWith(
+      {
+        space_ref: 'undefined/+',
+        queryParams: {
+          page: 0,
+          size: 50,
+          sort_field: 'name',
+          sort_order: 'ASC',
+          reg_identifier: [],
+          latest_version: false,
+          deployed_artifact: false,
+          package_type: []
+        },
+        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
       },
-      stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-    })
+      { enabled: true }
+    )
 
     const downloadsSortIcon = getByText('artifactList.table.columns.downloads').nextSibling?.firstChild as HTMLElement
     await userEvent.click(downloadsSortIcon)
 
-    expect(useGetAllHarnessArtifactsQuery).toHaveBeenLastCalledWith({
-      space_ref: 'undefined/+',
-      queryParams: {
-        page: 0,
-        size: 50,
-        sort_field: 'downloadsCount',
-        sort_order: 'DESC',
-        reg_identifier: [],
-        latest_version: false,
-        deployed_artifact: false,
-        package_type: [],
-        label: []
+    expect(useGetAllHarnessArtifactsQuery).toHaveBeenLastCalledWith(
+      {
+        space_ref: 'undefined/+',
+        queryParams: {
+          page: 0,
+          size: 50,
+          sort_field: 'downloadsCount',
+          sort_order: 'DESC',
+          reg_identifier: [],
+          latest_version: false,
+          deployed_artifact: false,
+          package_type: []
+        },
+        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
       },
-      stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-    })
+      { enabled: true }
+    )
 
     const lastUpdatedSortIcon = getByText('artifactList.table.columns.lastUpdated').nextSibling
       ?.firstChild as HTMLElement
     await userEvent.click(lastUpdatedSortIcon)
 
-    expect(useGetAllHarnessArtifactsQuery).toHaveBeenLastCalledWith({
-      space_ref: 'undefined/+',
-      queryParams: {
-        page: 0,
-        size: 50,
-        sort_field: 'lastUpdated',
-        sort_order: 'ASC',
-        reg_identifier: [],
-        latest_version: false,
-        deployed_artifact: false,
-        package_type: [],
-        label: []
+    expect(useGetAllHarnessArtifactsQuery).toHaveBeenLastCalledWith(
+      {
+        space_ref: 'undefined/+',
+        queryParams: {
+          page: 0,
+          size: 50,
+          sort_field: 'lastModified',
+          sort_order: 'ASC',
+          reg_identifier: [],
+          latest_version: false,
+          deployed_artifact: false,
+          package_type: []
+        },
+        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
       },
-      stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-    })
+      { enabled: true }
+    )
   })
 
   test('Pagination should work', async () => {
@@ -315,41 +333,45 @@ describe('Test Artifact List Page', () => {
     const nextPageBtn = getByText('Next')
     await userEvent.click(nextPageBtn)
 
-    expect(useGetAllHarnessArtifactsQuery).toHaveBeenLastCalledWith({
-      space_ref: 'undefined/+',
-      queryParams: {
-        page: 1,
-        size: 50,
-        sort_field: 'updatedAt',
-        sort_order: 'DESC',
-        reg_identifier: [],
-        latest_version: false,
-        deployed_artifact: false,
-        package_type: [],
-        label: []
+    expect(useGetAllHarnessArtifactsQuery).toHaveBeenLastCalledWith(
+      {
+        space_ref: 'undefined/+',
+        queryParams: {
+          page: 1,
+          size: 50,
+          sort_field: 'lastModified',
+          sort_order: 'DESC',
+          reg_identifier: [],
+          latest_version: false,
+          deployed_artifact: false,
+          package_type: []
+        },
+        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
       },
-      stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-    })
+      { enabled: true }
+    )
 
     const pageSizeSelect = getByTestId('dropdown-button')
     await userEvent.click(pageSizeSelect)
     const pageSize20option = getByText('20')
     await userEvent.click(pageSize20option)
 
-    expect(useGetAllHarnessArtifactsQuery).toHaveBeenLastCalledWith({
-      space_ref: 'undefined/+',
-      queryParams: {
-        page: 0,
-        size: 20,
-        sort_field: 'updatedAt',
-        sort_order: 'DESC',
-        reg_identifier: [],
-        latest_version: false,
-        deployed_artifact: false,
-        package_type: [],
-        label: []
+    expect(useGetAllHarnessArtifactsQuery).toHaveBeenLastCalledWith(
+      {
+        space_ref: 'undefined/+',
+        queryParams: {
+          page: 0,
+          size: 20,
+          sort_field: 'lastModified',
+          sort_order: 'DESC',
+          reg_identifier: [],
+          latest_version: false,
+          deployed_artifact: false,
+          package_type: []
+        },
+        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
       },
-      stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-    })
+      { enabled: true }
+    )
   })
 })

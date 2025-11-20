@@ -1,0 +1,120 @@
+/*
+ * Copyright 2024 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { useMemo } from 'react'
+import { useParams } from 'react-router-dom'
+import type { UseQueryResult } from '@tanstack/react-query'
+import {
+  GetAllArtifactsByRegistryQueryQueryParams,
+  useGetAllArtifactsByRegistryQuery
+} from '@harnessio/react-har-service-client'
+import {
+  type ListPackagesOkResponse,
+  type ListPackagesQueryQueryParams,
+  type PackageMetadata,
+  useListPackagesQuery
+} from '@harnessio/react-har-service-v2-client'
+
+import { useAppStore, useGetSpaceRef, useV2Apis } from '@ar/hooks'
+import type { RepositoryDetailsPathParams } from '@ar/routes/types'
+import useMetadatadataFilterFromQuery from '@ar/components/MetadataFilterSelector/useMetadataFilterFromQuery'
+
+interface UseLocalGetAllArtifactsByRegistryQueryProps extends GetAllArtifactsByRegistryQueryQueryParams {
+  metadata?: string[]
+}
+
+export const COLUMN_NAME_MAPPING_FROM_V2_TO_V1: Record<string, string> = {
+  package: 'name'
+}
+
+export default function useLocalGetAllArtifactsByRegistryQuery(props: UseLocalGetAllArtifactsByRegistryQueryProps) {
+  const registryRef = useGetSpaceRef()
+  const { scope } = useAppStore()
+  const { repositoryIdentifier } = useParams<RepositoryDetailsPathParams>()
+  const { getValueForAPI } = useMetadatadataFilterFromQuery()
+  const shouldUseV2Apis = useV2Apis()
+
+  const v1Response = useGetAllArtifactsByRegistryQuery(
+    {
+      registry_ref: registryRef,
+      queryParams: {
+        ...props,
+        sort_field: props.sort_field
+          ? COLUMN_NAME_MAPPING_FROM_V2_TO_V1[props.sort_field] ?? props.sort_field
+          : undefined
+      },
+      stringifyQueryParamsOptions: {
+        arrayFormat: 'repeat'
+      }
+    },
+    {
+      enabled: !shouldUseV2Apis
+    }
+  )
+
+  const v2Response = useListPackagesQuery(
+    {
+      queryParams: {
+        ...props,
+        account_identifier: scope.accountId as string,
+        org_identifier: scope.orgIdentifier,
+        project_identifier: scope.projectIdentifier,
+        registry_identifier: [repositoryIdentifier],
+        sort_order: props.sort_order as ListPackagesQueryQueryParams['sort_order'],
+        metadata: getValueForAPI()
+      },
+      stringifyQueryParamsOptions: {
+        arrayFormat: 'repeat'
+      }
+    },
+    {
+      enabled: shouldUseV2Apis
+    }
+  )
+
+  const convertedV1ResponseToV2: UseQueryResult<ListPackagesOkResponse, Error> = useMemo(() => {
+    if (!v1Response.data?.content?.data) {
+      return v1Response as UseQueryResult<ListPackagesOkResponse, Error>
+    }
+    const v1Data = v1Response.data.content.data
+    const convertedData: ListPackagesOkResponse = {
+      content: {
+        data: {
+          packages:
+            v1Data.artifacts?.map(artifact => {
+              const { name, ...rest } = artifact
+              return {
+                ...rest,
+                package: name
+              } as PackageMetadata
+            }) || [],
+          itemCount: v1Data.itemCount,
+          pageCount: v1Data.pageCount,
+          pageIndex: v1Data.pageIndex,
+          pageSize: v1Data.pageSize
+        },
+        status: v1Response.data.content.status
+      }
+    }
+
+    return {
+      ...v1Response,
+      data: convertedData
+    } as UseQueryResult<ListPackagesOkResponse, Error>
+  }, [v1Response])
+
+  return shouldUseV2Apis ? v2Response : convertedV1ResponseToV2
+}

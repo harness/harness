@@ -55,6 +55,7 @@ tabs:
   datasets: Datasets
   models: Models
   webhooks: Webhooks
+  properties: Metadata
 upstreamProxiesSelectList:
   selectList:
     Title: Available {{type}} ({{count}})

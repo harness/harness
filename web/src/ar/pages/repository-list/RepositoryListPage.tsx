@@ -27,21 +27,23 @@ import {
   Views
 } from '@harnessio/uicore'
 import type { ExpandingSearchInputHandle } from '@harnessio/uicore'
-import { useGetAllRegistriesQuery } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
 import { DEFAULT_PAGE_INDEX, PreferenceScope } from '@ar/constants'
 import { RepositoryListViewTypeEnum } from '@ar/contexts/AppStoreContext'
 import { EntityScope, Parent, RepositoryScopeType } from '@ar/common/types'
 import useGetPageScope from '@ar/hooks/useGetPageScope'
-import { useParentHooks, useGetSpaceRef, useAppStore, useGetRepositoryListViewType } from '@ar/hooks'
+import { useParentHooks, useAppStore, useGetRepositoryListViewType, useFeatureFlags } from '@ar/hooks'
 import Breadcrumbs from '@ar/components/Breadcrumbs/Breadcrumbs'
 import PackageTypeSelector from '@ar/components/PackageTypeSelector/PackageTypeSelector'
+import MetadataFilterSelector from '@ar/components/MetadataFilterSelector/MetadataFilterSelector'
+import useMetadatadataFilterFromQuery from '@ar/components/MetadataFilterSelector/useMetadataFilterFromQuery'
 
 import { CreateRepository } from './components/CreateRepository/CreateRepository'
 import { RepositoryListTable } from './components/RepositoryListTable'
 import { useArtifactRepositoriesQueryParamOptions } from './utils'
 import type { ArtifactRepositoryListPageQueryParams } from './utils'
+import useLocalGetRegistriesQuery from './hooks/useLocalGetRegistriesQuery'
 import RepositoryTypeSelector from './components/RepositoryTypeSelector/RepositoryTypeSelector'
 import RepositoryScopeSelector from './components/RepositoryScopeSelector/RepositoryScopeSelector'
 
@@ -51,11 +53,14 @@ function RepositoryListPage(): JSX.Element {
   const searchRef = useRef({} as ExpandingSearchInputHandle)
   const { getString } = useStrings()
   const { useQueryParams, useUpdateQueryParams, usePreferenceStore } = useParentHooks()
-  const { updateQueryParams } = useUpdateQueryParams<Partial<ArtifactRepositoryListPageQueryParams>>()
+  const { updateQueryParams, replaceQueryParams } =
+    useUpdateQueryParams<Partial<ArtifactRepositoryListPageQueryParams>>()
   const { setRepositoryListViewType, parent } = useAppStore()
+  const { getValue, updateValue } = useMetadatadataFilterFromQuery()
+  const metadataFilter = getValue()
   const repositoryListViewType = useGetRepositoryListViewType()
+  const { HAR_CUSTOM_METADATA_ENABLED } = useFeatureFlags()
 
-  const spaceRef = useGetSpaceRef()
   const queryParamOptions = useArtifactRepositoriesQueryParamOptions()
   const queryParams = useQueryParams<ArtifactRepositoryListPageQueryParams>(queryParamOptions)
   const { searchTerm, page, size, repositoryTypes, configType, scope } = queryParams
@@ -64,7 +69,7 @@ function RepositoryListPage(): JSX.Element {
 
   const { preference: sortingPreference, setPreference: setSortingPreference } = usePreferenceStore<string | undefined>(
     PreferenceScope.USER,
-    'ArtifactRepositorySortingPreference'
+    'RegistryListSortingPreference'
   )
   const sort = useMemo(
     () => (sortingPreference ? JSON.parse(sortingPreference) : queryParams.sort),
@@ -78,26 +83,20 @@ function RepositoryListPage(): JSX.Element {
     refetch,
     isFetching: loading,
     error
-  } = useGetAllRegistriesQuery({
-    space_ref: spaceRef,
-    queryParams: {
-      page,
-      size,
-      sort_field: sortField,
-      sort_order: sortOrder,
-      package_type: repositoryTypes,
-      search_term: searchTerm,
-      type: configType,
-      scope: scope
-    },
-    stringifyQueryParamsOptions: {
-      arrayFormat: 'repeat'
-    }
+  } = useLocalGetRegistriesQuery({
+    page,
+    size,
+    sort_field: sortField,
+    sort_order: sortOrder,
+    package_type: repositoryTypes,
+    search_term: searchTerm,
+    type: configType,
+    scope: scope
   })
 
   const handleClearFilters = (): void => {
     flushSync(searchRef.current.clear)
-    updateQueryParams({
+    replaceQueryParams({
       page: undefined,
       searchTerm: undefined,
       repositoryTypes: undefined,
@@ -106,7 +105,7 @@ function RepositoryListPage(): JSX.Element {
     })
   }
 
-  const hasFilter = !!searchTerm || repositoryTypes?.length || configType?.length
+  const hasFilter = !!searchTerm || repositoryTypes?.length || configType?.length || metadataFilter.length
 
   const responseData = data?.content.data
 
@@ -144,6 +143,17 @@ function RepositoryListPage(): JSX.Element {
               onChange={val => {
                 updateQueryParams({
                   scope: val,
+                  page: DEFAULT_PAGE_INDEX
+                })
+              }}
+            />
+          )}
+          {HAR_CUSTOM_METADATA_ENABLED && parent === Parent.Enterprise && (
+            <MetadataFilterSelector
+              value={metadataFilter}
+              onSubmit={val => {
+                updateValue(val)
+                updateQueryParams({
                   page: DEFAULT_PAGE_INDEX
                 })
               }}

@@ -15,12 +15,12 @@
  */
 
 import type { PaginationProps } from '@harnessio/uicore'
-import type { ListArtifactVersion } from '@harnessio/react-har-service-client'
+import type { ListArtifact } from '@harnessio/react-har-service-v2-client'
 
 import type { SortByType } from '@ar/frameworks/Version/Version'
 
 export interface DockerVersionListTableProps {
-  data: ListArtifactVersion
+  data: ListArtifact
   gotoPage: (pageNumber: number) => void
   onPageSizeChange?: PaginationProps['onPageSizeChange']
   setSortBy: (sortBy: SortByType) => void

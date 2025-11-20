@@ -29,9 +29,9 @@ export const mockHelmLatestVersionListTableData: ListArtifactVersion = {
       packageType: 'HELM',
       pullCommand: 'helm pull oci://pkg.qa.harness.io/iwnq/helm-repo-1/harness-delegate-ng:1.0.15',
       registryIdentifier: '',
-      registryPath: '',
       size: '8.63KB',
-      downloadsCount: 0
+      downloadsCount: 0,
+      registryPath: ''
     }
   ],
   itemCount: 55,

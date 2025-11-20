@@ -18,6 +18,7 @@ import { useRef } from 'react'
 import { HARServiceAPIClient } from '@harnessio/react-har-service-client'
 import { SSCAManagerAPIClient } from '@harnessio/react-ssca-manager-client'
 import { NGManagerServiceAPIClient } from '@harnessio/react-ng-manager-client'
+import { HARServiceV2APIClient } from '@harnessio/react-har-service-v2-client'
 
 import type { CustomUtils } from '@ar/MFEAppTypes'
 
@@ -49,7 +50,21 @@ export default function useOpenApiClient({ on401, customUtils }: useOpenApiClien
       responseInterceptor,
       requestInterceptor,
       urlInterceptor: (url: string) => {
-        return customUtils.getApiBaseUrl(url)
+        // TODO: remove this once we release new version of ngui
+        const apiPrefix = customUtils.getApiBaseUrl('').replace(/\/api\/v1\/?$/, '')
+        return `${apiPrefix}/api/v1${url}`
+      }
+    })
+  )
+
+  useRef<HARServiceV2APIClient>(
+    new HARServiceV2APIClient({
+      responseInterceptor,
+      requestInterceptor,
+      urlInterceptor: (url: string) => {
+        // TODO: remove this once we release new version of ngui
+        const apiPrefix = customUtils.getApiBaseUrl('').replace(/\/api\/v1\/?$/, '')
+        return `${apiPrefix}/api/v2${url}`
       }
     })
   )

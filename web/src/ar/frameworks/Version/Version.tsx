@@ -16,15 +16,20 @@
 
 import type { PaginationProps } from '@harnessio/uicore'
 import type {
-  ArtifactMetadata,
   ArtifactSummary,
   ArtifactVersionMetadata,
   ArtifactVersionSummary,
-  ListArtifactVersion,
   RegistryArtifactMetadata
 } from '@harnessio/react-har-service-client'
+import type {
+  ListArtifact,
+  PackageMetadata,
+  ArtifactMetadata as ArtifactMetadataV2
+} from '@harnessio/react-har-service-v2-client'
+
 import type { PageType, Parent, RepositoryPackageType } from '@ar/common/types'
 import type { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
+import { ArtifactDetailsTab } from '@ar/pages/artifact-details/constants'
 
 export interface VersionDetailsHeaderProps<T> {
   data: T
@@ -37,7 +42,7 @@ export interface VersionDetailsTabProps {
 export type SortByType = [string, 'ASC' | 'DESC']
 
 export interface VersionListTableProps {
-  data: ListArtifactVersion
+  data: ListArtifact
   gotoPage: (pageNumber: number) => void
   onPageSizeChange?: PaginationProps['onPageSizeChange']
   setSortBy: (sortBy: SortByType) => void
@@ -47,7 +52,7 @@ export interface VersionListTableProps {
 }
 
 export interface ArtifactActionProps {
-  data: RegistryArtifactMetadata | ArtifactSummary
+  data: PackageMetadata | ArtifactSummary
   pageType: PageType
   repoKey: string
   artifactKey: string
@@ -56,7 +61,7 @@ export interface ArtifactActionProps {
 }
 
 export interface VersionActionProps {
-  data: ArtifactVersionMetadata | ArtifactVersionSummary
+  data: ArtifactMetadataV2 | ArtifactVersionSummary
   pageType: PageType
   repoKey: string
   artifactKey: string
@@ -68,7 +73,7 @@ export interface VersionActionProps {
 }
 
 export interface ArtifactRowSubComponentProps {
-  data: ArtifactMetadata
+  data: ArtifactMetadataV2
 }
 
 export interface ArtifactTreeNodeViewProps {
@@ -87,6 +92,7 @@ export abstract class VersionStep<T> {
   protected abstract packageType: RepositoryPackageType
   protected abstract allowedVersionDetailsTabs: VersionDetailsTab[]
   protected abstract hasArtifactRowSubComponent: boolean
+  supportedArtifactTabs?: ArtifactDetailsTab[]
 
   getPackageType(): string {
     return this.packageType
@@ -98,6 +104,10 @@ export abstract class VersionStep<T> {
 
   getHasArtifactRowSubComponent(): boolean {
     return this.hasArtifactRowSubComponent
+  }
+
+  getSupportedArtifactTabs(): ArtifactDetailsTab[] {
+    return this.supportedArtifactTabs ?? [ArtifactDetailsTab.VERSIONS, ArtifactDetailsTab.METADATA]
   }
 
   abstract renderVersionListTable(props: VersionListTableProps): JSX.Element

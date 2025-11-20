@@ -115,7 +115,11 @@ export class DockerVersionType extends VersionStep<ArtifactVersionSummary> {
 
   renderArtifactRowSubComponent(props: ArtifactRowSubComponentProps): JSX.Element {
     return (
-      <DigestListPage repoKey={props.data.registryIdentifier} artifact={props.data.name} version={props.data.version} />
+      <DigestListPage
+        repoKey={props.data.registryIdentifier}
+        artifact={props.data.package}
+        version={props.data.version}
+      />
     )
   }
 

@@ -51,7 +51,7 @@ export default function RepositoryDetails(): JSX.Element | null {
   const stepRef = React.useRef<FormikProps<unknown> | null>(null)
 
   const routeDefinitions = useRoutes(true)
-  const { isCurrentSessionPublic } = useAppStore()
+  const { isCurrentSessionPublic, parent } = useAppStore()
   const history = useHistory()
   const routes = useRoutes()
   const repositoryListViewType = useGetRepositoryListViewType()
@@ -68,7 +68,13 @@ export default function RepositoryDetails(): JSX.Element | null {
       .filter(each => !each.type || each.type === data?.config.type)
       .filter(each => !each.mode || each.mode === repositoryListViewType)
       .filter(each => (isCurrentSessionPublic ? each.isSupportedInPublicView : true))
-  }, [data, featureFlags, repositoryListViewType, isCurrentSessionPublic])
+      .filter(each => !each.parent || each.parent === parent)
+  }, [data, featureFlags, repositoryListViewType, isCurrentSessionPublic, parent])
+
+  const activeTabConfig = useMemo(
+    () => repositoryTabs.find(each => each.value === activeTab),
+    [repositoryTabs, activeTab]
+  )
 
   const handleTabChange = (nextTab: RepositoryDetailsTab): void => {
     setActiveTab(nextTab)
@@ -126,7 +132,7 @@ export default function RepositoryDetails(): JSX.Element | null {
             <Tab key={each.value} id={each.value} title={getString(each.label)} />
           ))}
           <Expander />
-          {activeTab === RepositoryDetailsTab.CONFIGURATION && renderActionBtns()}
+          {activeTabConfig?.supportActions && renderActionBtns()}
         </Tabs>
       </TabsContainer>
       <Switch>

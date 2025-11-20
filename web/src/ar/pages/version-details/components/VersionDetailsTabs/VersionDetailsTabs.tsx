@@ -15,14 +15,17 @@
  */
 
 import React, { useCallback, useContext, useMemo, useState } from 'react'
+import type { FormikProps } from 'formik'
+import { Expander } from '@blueprintjs/core'
 import { Redirect, Switch, useHistory } from 'react-router-dom'
-import { Tab, Tabs } from '@harnessio/uicore'
+import { Button, ButtonVariation, Layout, Tab, Tabs } from '@harnessio/uicore'
 
 import { useStrings } from '@ar/frameworks/strings'
 import { useQueryParams } from '@ar/__mocks__/hooks'
 import { DEFAULT_ORG, DEFAULT_PROJECT } from '@ar/constants'
-import { useAppStore, useDecodedParams, useRoutes } from '@ar/hooks'
-import type { RepositoryPackageType } from '@ar/common/types'
+import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
+import { useAppStore, useDecodedParams, useFeatureFlags, useParentComponents, useRoutes } from '@ar/hooks'
+import { Parent, type RepositoryPackageType } from '@ar/common/types'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 import versionFactory from '@ar/frameworks/Version/VersionFactory'
 import RouteProvider from '@ar/components/RouteProvider/RouteProvider'
@@ -37,9 +40,12 @@ import {
   versionDetailsTabWithSSCADetailsPathParams
 } from '@ar/routes/RouteDestinations'
 import TabsContainer from '@ar/components/TabsContainer/TabsContainer'
+import PropertiesFormContent from '@ar/components/PropertiesForm/PropertiesFormContent'
 
 import { VersionDetailsTab, VersionDetailsTabList } from './constants'
+
 import css from './VersionDetailsTab.module.scss'
+import formContent from '@ar/pages/version-details/VersionDetails.module.scss'
 
 export default function VersionDetailsTabs(): JSX.Element {
   const [tab, setTab] = useState('')
@@ -50,10 +56,13 @@ export default function VersionDetailsTabs(): JSX.Element {
   const { getString } = useStrings()
   const routeDefinitions = useRoutes(true)
   const { parent, isCurrentSessionPublic } = useAppStore()
-  const { data } = useContext(VersionProviderContext)
+  const { data, isDirty, isUpdating, isReadonly, setIsDirty, setIsUpdating } = useContext(VersionProviderContext)
+  const { RbacButton } = useParentComponents()
   const pathParams = useDecodedParams<VersionDetailsPathParams>()
   const queryParams = useQueryParams<Record<string, string>>()
   const { orgIdentifier, projectIdentifier } = scope
+  const formRef = React.useRef<FormikProps<unknown> | null>(null)
+  const featureFlags = useFeatureFlags()
 
   const tabList = useMemo(() => {
     const versionType = versionFactory?.getVersionType(data?.packageType)
@@ -118,6 +127,45 @@ export default function VersionDetailsTabs(): JSX.Element {
     [queryParams]
   )
 
+  const handleSubmitForm = (): void => {
+    formRef.current?.submitForm()
+  }
+
+  const handleResetForm = (): void => {
+    formRef.current?.resetForm()
+  }
+
+  const activeTabConfig = useMemo(() => tabList.find(each => each.value === tab), [tabList, tab])
+
+  const shouldShowPropertiesFormSection =
+    parent === Parent.Enterprise && featureFlags.HAR_CUSTOM_METADATA_ENABLED && tab === VersionDetailsTab.OVERVIEW
+
+  const renderActionBtns = (): JSX.Element => (
+    <Layout.Horizontal className={css.btnContainer}>
+      <RbacButton
+        text={getString('save')}
+        className={css.saveButton}
+        variation={ButtonVariation.PRIMARY}
+        onClick={handleSubmitForm}
+        disabled={!isDirty || isUpdating}
+        permission={{
+          permission: PermissionIdentifier.EDIT_ARTIFACT_REGISTRY,
+          resource: {
+            resourceType: ResourceType.ARTIFACT_REGISTRY,
+            resourceIdentifier: pathParams.repositoryIdentifier
+          }
+        }}
+      />
+      <Button
+        className={css.discardBtn}
+        variation={ButtonVariation.SECONDARY}
+        text={getString('discard')}
+        onClick={handleResetForm}
+        disabled={!isDirty}
+      />
+    </Layout.Horizontal>
+  )
+
   if (!data) return <></>
   return (
     <>
@@ -126,6 +174,8 @@ export default function VersionDetailsTabs(): JSX.Element {
           {tabList.map(each => (
             <Tab key={each.value} id={each.value} disabled={each.disabled} title={getString(each.label)} />
           ))}
+          <Expander />
+          {activeTabConfig?.supportActions && renderActionBtns()}
         </Tabs>
       </TabsContainer>
       <Switch>
@@ -186,6 +236,18 @@ export default function VersionDetailsTabs(): JSX.Element {
             packageType={data.packageType as RepositoryPackageType}
             tab={tab as VersionDetailsTab}
           />
+          {shouldShowPropertiesFormSection && (
+            <PropertiesFormContent
+              readonly={isReadonly}
+              ref={formRef}
+              setIsDirty={setIsDirty}
+              setIsUpdating={setIsUpdating}
+              repositoryIdentifier={pathParams.repositoryIdentifier}
+              artifactIdentifier={pathParams.artifactIdentifier}
+              versionIdentifier={pathParams.versionIdentifier}
+              className={formContent.cardContainer}
+            />
+          )}
         </RouteProvider>
       </Switch>
     </>

@@ -132,18 +132,21 @@ describe('Test Registry List Page', () => {
     expect(clearFilterBtn).toBeInTheDocument()
     await userEvent.click(clearFilterBtn!)
     await waitFor(() => {
-      expect(useGetAllRegistriesQuery).toHaveBeenLastCalledWith({
-        queryParams: {
-          package_type: [],
-          page: 0,
-          size: 50,
-          sort_field: 'updatedAt',
-          sort_order: 'DESC',
-          scope: 'none'
+      expect(useGetAllRegistriesQuery).toHaveBeenLastCalledWith(
+        {
+          queryParams: {
+            package_type: [],
+            page: 0,
+            size: 50,
+            sort_field: 'lastModified',
+            sort_order: 'DESC',
+            scope: 'none'
+          },
+          space_ref: 'undefined/+',
+          stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
         },
-        space_ref: 'undefined/+',
-        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-      })
+        { enabled: true }
+      )
     })
   })
 
@@ -162,56 +165,65 @@ describe('Test Registry List Page', () => {
     )
 
     await waitFor(() => {
-      expect(useGetAllRegistriesQuery).toHaveBeenLastCalledWith({
-        queryParams: {
-          package_type: [],
-          page: 0,
-          size: 50,
-          sort_field: 'updatedAt',
-          sort_order: 'DESC',
-          scope: 'none'
+      expect(useGetAllRegistriesQuery).toHaveBeenLastCalledWith(
+        {
+          queryParams: {
+            package_type: [],
+            page: 0,
+            size: 50,
+            sort_field: 'lastModified',
+            sort_order: 'DESC',
+            scope: 'none'
+          },
+          space_ref: 'undefined/+',
+          stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
         },
-        space_ref: 'undefined/+',
-        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-      })
+        { enabled: true }
+      )
     })
 
     const registryTypeSelector = getByTestId(container, 'registry-type-select')
     expect(registryTypeSelector).toBeInTheDocument()
     await testSelectChange(registryTypeSelector, 'repositoryList.artifactRegistry.label')
     await waitFor(() => {
-      expect(useGetAllRegistriesQuery).toHaveBeenLastCalledWith({
-        queryParams: {
-          package_type: [],
-          page: 0,
-          size: 50,
-          sort_field: 'updatedAt',
-          sort_order: 'DESC',
-          type: 'VIRTUAL',
-          scope: 'none'
+      expect(useGetAllRegistriesQuery).toHaveBeenLastCalledWith(
+        {
+          queryParams: {
+            package_type: [],
+            page: 0,
+            size: 50,
+            sort_field: 'lastModified',
+            sort_order: 'DESC',
+            type: 'VIRTUAL',
+            scope: 'none'
+          },
+          space_ref: 'undefined/+',
+          stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
         },
-        space_ref: 'undefined/+',
-        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-      })
+        { enabled: true }
+      )
     })
 
     const packageTypeSelector = getByTestId(container, 'package-type-select')
     expect(packageTypeSelector).toBeInTheDocument()
     await testMultiSelectChange(packageTypeSelector, 'repositoryTypes.docker')
     await waitFor(() => {
-      expect(useGetAllRegistriesQuery).toHaveBeenLastCalledWith({
-        queryParams: {
-          package_type: ['DOCKER'],
-          page: 0,
-          size: 50,
-          sort_field: 'updatedAt',
-          sort_order: 'DESC',
-          type: 'VIRTUAL',
-          scope: 'none'
+      expect(useGetAllRegistriesQuery).toHaveBeenLastCalledWith(
+        {
+          queryParams: {
+            package_type: ['DOCKER'],
+            page: 0,
+            size: 50,
+            sort_field: 'lastModified',
+            sort_order: 'DESC',
+            type: 'VIRTUAL',
+            scope: 'none'
+          },
+          space_ref: 'undefined/+',
+          stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
         },
-        space_ref: 'undefined/+',
-        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-      })
+        { enabled: true }
+      )
     })
 
     const searchInput = getByPlaceholderText(container, 'search')
@@ -219,60 +231,69 @@ describe('Test Registry List Page', () => {
     fireEvent.change(searchInput!, { target: { value: '1234' } })
 
     await waitFor(() => {
-      expect(useGetAllRegistriesQuery).toHaveBeenLastCalledWith({
-        queryParams: {
-          package_type: ['DOCKER'],
-          page: 0,
-          size: 50,
-          sort_field: 'updatedAt',
-          sort_order: 'DESC',
-          type: 'VIRTUAL',
-          search_term: '1234',
-          scope: 'none'
+      expect(useGetAllRegistriesQuery).toHaveBeenLastCalledWith(
+        {
+          queryParams: {
+            package_type: ['DOCKER'],
+            page: 0,
+            size: 50,
+            sort_field: 'lastModified',
+            sort_order: 'DESC',
+            type: 'VIRTUAL',
+            search_term: '1234',
+            scope: 'none'
+          },
+          space_ref: 'undefined/+',
+          stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
         },
-        space_ref: 'undefined/+',
-        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-      })
+        { enabled: true }
+      )
     })
 
     // should call an api onchange on sort
     const nameHeader = getTableHeaderColumn(1)
     await userEvent.click(nameHeader!)
     await waitFor(() => {
-      expect(useGetAllRegistriesQuery).toHaveBeenLastCalledWith({
-        queryParams: {
-          package_type: ['DOCKER'],
-          page: 0,
-          size: 50,
-          sort_field: 'identifier',
-          sort_order: 'ASC',
-          type: 'VIRTUAL',
-          search_term: '1234',
-          scope: 'none'
+      expect(useGetAllRegistriesQuery).toHaveBeenLastCalledWith(
+        {
+          queryParams: {
+            package_type: ['DOCKER'],
+            page: 0,
+            size: 50,
+            sort_field: 'identifier',
+            sort_order: 'ASC',
+            type: 'VIRTUAL',
+            search_term: '1234',
+            scope: 'none'
+          },
+          space_ref: 'undefined/+',
+          stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
         },
-        space_ref: 'undefined/+',
-        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-      })
+        { enabled: true }
+      )
     })
 
     // should call api on page change
     const nextPageBtn = container.querySelector('button[aria-label="Next"]')
     await userEvent.click(nextPageBtn!)
     await waitFor(() => {
-      expect(useGetAllRegistriesQuery).toHaveBeenLastCalledWith({
-        queryParams: {
-          package_type: ['DOCKER'],
-          page: 1,
-          size: 50,
-          sort_field: 'identifier',
-          sort_order: 'ASC',
-          type: 'VIRTUAL',
-          search_term: '1234',
-          scope: 'none'
+      expect(useGetAllRegistriesQuery).toHaveBeenLastCalledWith(
+        {
+          queryParams: {
+            package_type: ['DOCKER'],
+            page: 1,
+            size: 50,
+            sort_field: 'identifier',
+            sort_order: 'ASC',
+            type: 'VIRTUAL',
+            search_term: '1234',
+            scope: 'none'
+          },
+          space_ref: 'undefined/+',
+          stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
         },
-        space_ref: 'undefined/+',
-        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-      })
+        { enabled: true }
+      )
     })
 
     //should call api on page size change
@@ -280,20 +301,23 @@ describe('Test Registry List Page', () => {
     expect(pageSizeSelector).toBeInTheDocument()
     await testSelectChange(pageSizeSelector, '10')
     await waitFor(() => {
-      expect(useGetAllRegistriesQuery).toHaveBeenLastCalledWith({
-        queryParams: {
-          package_type: ['DOCKER'],
-          page: 0,
-          size: 10,
-          sort_field: 'identifier',
-          sort_order: 'ASC',
-          type: 'VIRTUAL',
-          search_term: '1234',
-          scope: 'none'
+      expect(useGetAllRegistriesQuery).toHaveBeenLastCalledWith(
+        {
+          queryParams: {
+            package_type: ['DOCKER'],
+            page: 0,
+            size: 10,
+            sort_field: 'identifier',
+            sort_order: 'ASC',
+            type: 'VIRTUAL',
+            search_term: '1234',
+            scope: 'none'
+          },
+          space_ref: 'undefined/+',
+          stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
         },
-        space_ref: 'undefined/+',
-        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-      })
+        { enabled: true }
+      )
     })
   })
 })

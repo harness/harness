@@ -208,7 +208,7 @@ describe('Verify docker deployments tab', () => {
         page: 1,
         search_term: undefined,
         size: 50,
-        sort_field: 'updatedAt',
+        sort_field: 'lastDeployedAt',
         sort_order: 'DESC',
         version_type: 'TAG'
       },
@@ -228,7 +228,7 @@ describe('Verify docker deployments tab', () => {
         page: 0,
         search_term: undefined,
         size: 20,
-        sort_field: 'updatedAt',
+        sort_field: 'lastDeployedAt',
         sort_order: 'DESC',
         version_type: 'TAG'
       },
@@ -261,7 +261,7 @@ describe('Verify docker deployments tab', () => {
         page: 0,
         search_term: undefined,
         size: 50,
-        sort_field: 'updatedAt',
+        sort_field: 'lastDeployedAt',
         sort_order: 'DESC',
         version_type: 'TAG'
       },
@@ -289,7 +289,7 @@ describe('Verify docker deployments tab', () => {
           page: 0,
           search_term: '1234',
           size: 50,
-          sort_field: 'updatedAt',
+          sort_field: 'lastDeployedAt',
           sort_order: 'DESC',
           version_type: 'TAG'
         },
@@ -308,7 +308,7 @@ describe('Verify docker deployments tab', () => {
         search_term: '',
         page: 0,
         size: 50,
-        sort_field: 'updatedAt',
+        sort_field: 'lastDeployedAt',
         sort_order: 'DESC',
         version_type: 'TAG'
       },

@@ -18,7 +18,7 @@ import { useMemo } from 'react'
 import { useParentHooks } from '@ar/hooks'
 import type { EnvironmentType } from '@ar/common/types'
 import type { UseQueryParamsOptions } from '@ar/__mocks__/hooks'
-import { DEFAULT_PAGE_INDEX, DEFAULT_PAGE_SIZE, DEFAULT_PIPELINE_LIST_TABLE_SORT } from '@ar/constants'
+import { DEFAULT_DEPLOYMENTS_LIST_TABLE_SORT, DEFAULT_PAGE_INDEX, DEFAULT_PAGE_SIZE } from '@ar/constants'
 
 export type ArtifactVersionDeploymentsTableQueryParams = {
   page: number
@@ -35,7 +35,7 @@ export const useArtifactVersionDeploymentsTableQueryParamOptions =
       {
         page: DEFAULT_PAGE_INDEX,
         size: DEFAULT_PAGE_SIZE,
-        sort: DEFAULT_PIPELINE_LIST_TABLE_SORT,
+        sort: DEFAULT_DEPLOYMENTS_LIST_TABLE_SORT,
         environmentTypes: []
       },
       { ignoreEmptyString: false }

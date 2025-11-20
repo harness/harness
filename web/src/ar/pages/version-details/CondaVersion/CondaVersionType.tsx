@@ -134,7 +134,7 @@ export class CondaVersionType extends VersionStep<ArtifactVersionSummary> {
     return (
       <VersionFilesProvider
         repositoryIdentifier={props.data.registryIdentifier}
-        artifactIdentifier={props.data.name}
+        artifactIdentifier={props.data.package}
         versionIdentifier={props.data.version}
         shouldUseLocalParams>
         <ArtifactFilesContent minimal />

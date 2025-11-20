@@ -19,8 +19,9 @@ import copy from 'clipboard-copy'
 import { fireEvent, getByText, render, waitFor } from '@testing-library/react'
 import {
   useGetAllArtifactVersionsQuery as _useGetAllArtifactVersionsQuery,
-  ArtifactVersionMetadata
+  type ArtifactVersionMetadata
 } from '@harnessio/react-har-service-client'
+
 import userEvent from '@testing-library/user-event'
 import repositoryFactory from '@ar/frameworks/RepositoryStep/RepositoryFactory'
 import { HelmRepositoryType } from '@ar/pages/repository-details/HelmRepository/HelmRepositoryType'
@@ -115,24 +116,30 @@ describe('Verify Version List Page', () => {
     const nextPageBtn = getByTextLocal('Next')
     await userEvent.click(nextPageBtn)
 
-    expect(useGetAllArtifactVersionsQuery).toHaveBeenLastCalledWith({
-      artifact: 'undefined/+',
-      queryParams: { page: 1, search_term: '', size: 50, sort_field: 'updatedAt', sort_order: 'DESC' },
-      registry_ref: 'undefined/+',
-      stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-    })
+    expect(useGetAllArtifactVersionsQuery).toHaveBeenLastCalledWith(
+      {
+        artifact: 'undefined/+',
+        queryParams: { page: 1, search_term: '', size: 50, sort_field: 'lastModified', sort_order: 'DESC' },
+        registry_ref: 'undefined/+',
+        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
+      },
+      { enabled: true }
+    )
 
     const pageSizeSelect = getByTestId('dropdown-button')
     await userEvent.click(pageSizeSelect)
     const pageSize20option = getByTextLocal('20')
     await userEvent.click(pageSize20option)
 
-    expect(useGetAllArtifactVersionsQuery).toHaveBeenLastCalledWith({
-      artifact: 'undefined/+',
-      queryParams: { page: 0, search_term: '', size: 20, sort_field: 'updatedAt', sort_order: 'DESC' },
-      registry_ref: 'undefined/+',
-      stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-    })
+    expect(useGetAllArtifactVersionsQuery).toHaveBeenLastCalledWith(
+      {
+        artifact: 'undefined/+',
+        queryParams: { page: 0, search_term: '', size: 20, sort_field: 'lastModified', sort_order: 'DESC' },
+        registry_ref: 'undefined/+',
+        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
+      },
+      { enabled: true }
+    )
   })
 
   test('Filter should work', async () => {
@@ -142,12 +149,15 @@ describe('Verify Version List Page', () => {
       </ArTestWrapper>
     )
 
-    expect(useGetAllArtifactVersionsQuery).toHaveBeenLastCalledWith({
-      artifact: 'undefined/+',
-      queryParams: { page: 0, search_term: '', size: 50, sort_field: 'updatedAt', sort_order: 'DESC' },
-      registry_ref: 'undefined/+',
-      stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-    })
+    expect(useGetAllArtifactVersionsQuery).toHaveBeenLastCalledWith(
+      {
+        artifact: 'undefined/+',
+        queryParams: { page: 0, search_term: '', size: 50, sort_field: 'lastModified', sort_order: 'DESC' },
+        registry_ref: 'undefined/+',
+        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
+      },
+      { enabled: true }
+    )
 
     useGetAllArtifactVersionsQuery.mockImplementationOnce(() => {
       return mockEmptyUseGetAllArtifactVersionsQueryResponse
@@ -158,23 +168,29 @@ describe('Verify Version List Page', () => {
     fireEvent.change(searchInput, { target: { value: '1234' } })
 
     await waitFor(async () => {
-      expect(useGetAllArtifactVersionsQuery).toHaveBeenLastCalledWith({
-        artifact: 'undefined/+',
-        queryParams: { page: 0, search_term: '1234', size: 50, sort_field: 'updatedAt', sort_order: 'DESC' },
-        registry_ref: 'undefined/+',
-        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-      })
+      expect(useGetAllArtifactVersionsQuery).toHaveBeenLastCalledWith(
+        {
+          artifact: 'undefined/+',
+          queryParams: { page: 0, search_term: '1234', size: 50, sort_field: 'lastModified', sort_order: 'DESC' },
+          registry_ref: 'undefined/+',
+          stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
+        },
+        { enabled: true }
+      )
     })
 
     const clearAllFiltersBtn = getByTextLocal('clearFilters')
     await userEvent.click(clearAllFiltersBtn)
 
-    expect(useGetAllArtifactVersionsQuery).toHaveBeenLastCalledWith({
-      artifact: 'undefined/+',
-      queryParams: { page: 0, search_term: '', size: 50, sort_field: 'updatedAt', sort_order: 'DESC' },
-      registry_ref: 'undefined/+',
-      stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-    })
+    expect(useGetAllArtifactVersionsQuery).toHaveBeenLastCalledWith(
+      {
+        artifact: 'undefined/+',
+        queryParams: { page: 0, search_term: '', size: 50, sort_field: 'lastModified', sort_order: 'DESC' },
+        registry_ref: 'undefined/+',
+        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
+      },
+      { enabled: true }
+    )
   })
 
   test('Sorting should work', async () => {
@@ -187,12 +203,15 @@ describe('Verify Version List Page', () => {
     const artifactNameSortIcon = getByTextLocal('versionList.table.columns.version').nextSibling
       ?.firstChild as HTMLElement
     await userEvent.click(artifactNameSortIcon)
-    expect(useGetAllArtifactVersionsQuery).toHaveBeenLastCalledWith({
-      artifact: 'undefined/+',
-      queryParams: { page: 0, search_term: '', size: 50, sort_field: 'name', sort_order: 'ASC' },
-      registry_ref: 'undefined/+',
-      stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-    })
+    expect(useGetAllArtifactVersionsQuery).toHaveBeenLastCalledWith(
+      {
+        artifact: 'undefined/+',
+        queryParams: { page: 0, search_term: '', size: 50, sort_field: 'name', sort_order: 'ASC' },
+        registry_ref: 'undefined/+',
+        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
+      },
+      { enabled: true }
+    )
   })
 
   test('Should show error message with which listing api fails', async () => {
