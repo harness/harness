@@ -45,7 +45,9 @@ const (
 		aitask_api_url,
 		aitask_ai_agent,
 		aitask_state,
-		aitask_output`
+		aitask_output,
+		aitask_output_metadata,
+		aitask_error_message`
 	aiTaskSelectColumns = "aitask_id," + aiTaskInsertColumns
 )
 
@@ -64,6 +66,8 @@ type aiTask struct {
 	AgentType          enum.AIAgent     `db:"aitask_ai_agent"`
 	State              enum.AITaskState `db:"aitask_state"`
 	Output             null.String      `db:"aitask_output"`
+	OutputMetadata     []byte           `db:"aitask_output_metadata"`
+	ErrorMessage       null.String      `db:"aitask_error_message"`
 }
 
 var _ store.AITaskStore = (*aiTaskStore)(nil)
@@ -97,6 +101,8 @@ func (s aiTaskStore) Create(ctx context.Context, aiTask *types.AITask) error {
 			aiTask.AIAgent,
 			aiTask.State,
 			aiTask.Output,
+			aiTask.OutputMetadata,
+			aiTask.ErrorMessage,
 		).
 		Suffix("RETURNING aitask_id")
 	sql, args, err := stmt.ToSql()
@@ -118,7 +124,10 @@ func (s aiTaskStore) Update(ctx context.Context, aiTask *types.AITask) error {
 		Set("aitask_api_url", aiTask.APIURL).
 		Set("aitask_state", aiTask.State).
 		Set("aitask_output", aiTask.Output).
+		Set("aitask_error_message", aiTask.ErrorMessage).
+		Set("aitask_output_metadata", aiTask.OutputMetadata).
 		Where("aitask_id = ?", aiTask.ID)
+
 	sql, args, err := stmt.ToSql()
 	if err != nil {
 		return errors.Wrap(err, "Failed to convert squirrel builder to sql")
@@ -235,6 +244,8 @@ func (s aiTaskStore) mapDBToAITask(in *aiTask) *types.AITask {
 		AIAgent:            in.AgentType,
 		State:              in.State,
 		Output:             in.Output.Ptr(),
+		OutputMetadata:     in.OutputMetadata,
+		ErrorMessage:       in.ErrorMessage.Ptr(),
 	}
 }
 func (s aiTaskStore) mapToAITasks(aiTasks []*aiTask) []*types.AITask {

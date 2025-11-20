@@ -48,9 +48,11 @@ func (s *Service) handleAITaskEvent(
 		event.Payload.AITaskIdentifier,
 	)
 	if err != nil {
+		logr.Error().Err(err).Msgf("failed to find AI task: %s", aiTask.Identifier)
 		return fmt.Errorf("failed to get AI task: %w", err)
 	}
 	if aiTask == nil {
+		logr.Error().Msg("failed to find AI task: ai task is nil")
 		return fmt.Errorf("failed to find ai task: %w", ErrNilResource)
 	}
 
