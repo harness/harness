@@ -165,6 +165,30 @@ func TestNoCache_Evict(t *testing.T) {
 	})
 }
 
+func TestNoCache_EvictAll(t *testing.T) {
+	t.Run("evictAll does nothing", func(t *testing.T) {
+		getter := &mockGetter{
+			findFunc: func(ctx context.Context, key string) (string, error) {
+				return testValue, nil
+			},
+		}
+
+		cache := NewNoCache[string, string](getter)
+
+		// EvictAll should not panic or cause any issues
+		cache.EvictAll(context.Background())
+
+		// Verify we can still get values after evictAll
+		value, err := cache.Get(context.Background(), "key")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if value != "value" {
+			t.Errorf("expected value to be 'value', got '%s'", value)
+		}
+	})
+}
+
 func TestNoCache_WithIntegerTypes(t *testing.T) {
 	getter := &mockGetter{}
 

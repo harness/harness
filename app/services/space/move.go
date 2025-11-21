@@ -16,6 +16,7 @@ package space
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -23,9 +24,11 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/bootstrap"
 	"github.com/harness/gitness/app/paths"
+	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/job"
 	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
 )
@@ -117,6 +120,7 @@ func (s *Service) Handle(
 		log.Ctx(ctx).Info().
 			Msgf("space %s moved to %s", srcSpace.Identifier, parentSpace)
 
+		s.spaceFinder.MarkChanged(ctx, srcSpace.Core())
 		return "", nil
 	}
 	if err != nil {
@@ -168,6 +172,8 @@ func (s *Service) MoveNoAuth(
 			space.Identifier = *inIdentifier
 		}
 
+		space.ParentID = parentSpace.ID
+
 		// add new primary segment using updated space data
 		now := time.Now().UnixMilli()
 		newPrimarySegment := &types.SpacePathSegment{
@@ -184,13 +190,15 @@ func (s *Service) MoveNoAuth(
 			return fmt.Errorf("failed to create new primary path segment: %w", err)
 		}
 
+		if err := s.cleanUpStaleSpaceResources(ctx, space); err != nil {
+			return fmt.Errorf("failed to clean up stale space resources: %w", err)
+		}
+
 		// update space itself
 		err = s.spaceStore.Update(ctx, space)
 		if err != nil {
 			return fmt.Errorf("failed to update the space in the db: %w", err)
 		}
-
-		s.spaceFinder.MarkChanged(ctx, space.Core())
 
 		return nil
 	})
@@ -249,6 +257,10 @@ func (s *Service) moveSpaceResourcesInTx(
 			return fmt.Errorf("failed to update webhooks: %w", err)
 		}
 
+		if err := s.cleanUpStaleSpaceResources(ctx, sourceSpace); err != nil {
+			return fmt.Errorf("failed to clean up parent space resources: %w", err)
+		}
+
 		if err := s.SoftDeleteInner(
 			ctx,
 			bootstrap.NewSystemServiceSession(),
@@ -263,5 +275,142 @@ func (s *Service) moveSpaceResourcesInTx(
 		return output, err
 	}
 
+	s.spaceFinder.MarkChanged(ctx, sourceSpace.Core())
+	s.repoFinder.Flush(ctx)
+
 	return output, nil
+}
+
+// cleanUpStaleSpaceResources removes the resources of the parent space that will be moved.
+func (s *Service) cleanUpStaleSpaceResources(ctx context.Context, space *types.Space) error {
+	ancestors, err := s.spaceStore.GetAncestors(ctx, space.ID)
+	if err != nil {
+		return fmt.Errorf("failed to get ancestors: %w", err)
+	}
+
+	// exclude the root space from cleanup
+	rootSpace, err := s.spaceStore.GetRootSpace(ctx, space.ID)
+	if err != nil {
+		return fmt.Errorf("failed to get root space: %w", err)
+	}
+
+	descendantSpaceIDs, err := s.spaceStore.GetDescendantsIDs(ctx, space.ID)
+	if err != nil {
+		return fmt.Errorf("failed to get descendant space IDs: %w", err)
+	}
+
+	descendantSpaceIDs = append(descendantSpaceIDs, space.ID)
+
+	descendantSpaceIDSet := make(map[int64]struct{}, len(descendantSpaceIDs))
+	for _, id := range descendantSpaceIDs {
+		descendantSpaceIDSet[id] = struct{}{}
+	}
+
+	for _, ancestor := range ancestors {
+		if ancestor.ID == rootSpace.ID || ancestor.ID == space.ID {
+			continue
+		}
+
+		rules, err := s.rulesStore.List(ctx, []types.RuleParentInfo{
+			{
+				Type: enum.RuleParentSpace,
+				ID:   ancestor.ID,
+			},
+		}, &types.RuleFilter{})
+		if err != nil {
+			return fmt.Errorf("failed to list rules for space %d: %w", ancestor.ID, err)
+		}
+
+		for _, rule := range rules {
+			modified, err := s.cleanUpRuleRepoTargets(ctx, &rule, descendantSpaceIDSet)
+			if err != nil {
+				return fmt.Errorf("failed to clean up rule %d: %w", rule.ID, err)
+			}
+
+			if modified {
+				log.Ctx(ctx).Info().Msgf("cleaning up rule %d target repos due to moving space %d", rule.ID, space.ID)
+				if err := s.rulesStore.Update(ctx, &rule); err != nil {
+					return fmt.Errorf("failed to update rule %d: %w", rule.ID, err)
+				}
+				log.Ctx(ctx).Info().Msgf("updated rule %d target repos due to moving space %d", rule.ID, space.ID)
+			}
+		}
+	}
+
+	return nil
+}
+
+// cleanUpRuleRepoTargets removes repository IDs from a rule's RepoTarget if they belong to descendant spaces.
+func (s *Service) cleanUpRuleRepoTargets(
+	ctx context.Context,
+	rule *types.Rule,
+	descendantSpaceIDSet map[int64]struct{},
+) (bool, error) {
+	if len(rule.RepoTarget) == 0 {
+		return false, nil
+	}
+
+	var repoTarget protection.RepoTarget
+	if err := json.Unmarshal(rule.RepoTarget, &repoTarget); err != nil {
+		return false, fmt.Errorf("failed to unmarshal repo target: %w", err)
+	}
+
+	modified := false
+
+	if len(repoTarget.Include.IDs) > 0 {
+		filteredIncludeIDs, err := s.filterRepoIDs(ctx, repoTarget.Include.IDs, descendantSpaceIDSet)
+		if err != nil {
+			return false, fmt.Errorf("failed to filter include repo IDs: %w", err)
+		}
+		if len(filteredIncludeIDs) != len(repoTarget.Include.IDs) {
+			repoTarget.Include.IDs = filteredIncludeIDs
+			modified = true
+		}
+	}
+
+	if len(repoTarget.Exclude.IDs) > 0 {
+		filteredExcludeIDs, err := s.filterRepoIDs(ctx, repoTarget.Exclude.IDs, descendantSpaceIDSet)
+		if err != nil {
+			return false, fmt.Errorf("failed to filter exclude repo IDs: %w", err)
+		}
+		if len(filteredExcludeIDs) != len(repoTarget.Exclude.IDs) {
+			repoTarget.Exclude.IDs = filteredExcludeIDs
+			modified = true
+		}
+	}
+
+	if modified {
+		newRepoTarget, err := json.Marshal(repoTarget)
+		if err != nil {
+			return false, fmt.Errorf("failed to marshal updated repo target: %w", err)
+		}
+		rule.RepoTarget = newRepoTarget
+	}
+
+	return modified, nil
+}
+
+// filterRepoIDs filters out repository IDs that belong to descendant spaces.
+func (s *Service) filterRepoIDs(
+	ctx context.Context,
+	repoIDs []int64,
+	descendantSpaceIDSet map[int64]struct{},
+) ([]int64, error) {
+	filtered := make([]int64, 0, len(repoIDs))
+
+	for _, repoID := range repoIDs {
+		repo, err := s.repoStore.Find(ctx, repoID)
+		if err != nil {
+			if errors.Is(err, gitness_store.ErrResourceNotFound) {
+				continue
+			}
+			return nil, fmt.Errorf("failed to find repository %d: %w", repoID, err)
+		}
+
+		if _, isDescendant := descendantSpaceIDSet[repo.ParentID]; !isDescendant {
+			filtered = append(filtered, repoID)
+		}
+	}
+
+	return filtered, nil
 }

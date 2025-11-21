@@ -36,6 +36,7 @@ type Service struct {
 	rulesStore       store.RuleStore
 	webhookStore     store.WebhookStore
 	spaceFinder      refcache.SpaceFinder
+	repoFinder       refcache.RepoFinder
 	gitspaceSvs      *gitspace.Service
 	infraProviderSvc *infraprovider.Service
 	repoCtrl         *repo.Controller
@@ -52,6 +53,7 @@ func NewService(
 	rulesStore store.RuleStore,
 	webhookStore store.WebhookStore,
 	spaceFinder refcache.SpaceFinder,
+	repoFinder refcache.RepoFinder,
 	gitspaceSvs *gitspace.Service,
 	infraProviderSvc *infraprovider.Service,
 	repoCtrl *repo.Controller,
@@ -67,6 +69,7 @@ func NewService(
 		rulesStore:       rulesStore,
 		webhookStore:     webhookStore,
 		spaceFinder:      spaceFinder,
+		repoFinder:       repoFinder,
 		gitspaceSvs:      gitspaceSvs,
 		infraProviderSvc: infraProviderSvc,
 		repoCtrl:         repoCtrl,

@@ -37,3 +37,5 @@ func (c NoCache[K, V]) Get(ctx context.Context, key K) (V, error) {
 }
 
 func (c NoCache[K, V]) Evict(context.Context, K) {}
+
+func (c NoCache[K, V]) EvictAll(context.Context) {}

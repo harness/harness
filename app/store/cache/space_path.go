@@ -87,3 +87,7 @@ func (c spacePathCache) Stats() (int64, int64) {
 func (c spacePathCache) Evict(ctx context.Context, key string) {
 	c.inner.Evict(ctx, key)
 }
+
+func (c spacePathCache) EvictAll(ctx context.Context) {
+	c.inner.EvictAll(ctx)
+}
