@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <% if (__DEV__) { %>
+    <link id="favicon-x-icon" rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link id="favicon-png" rel="icon" type="image/png" href="/favicon.png" />
+    <link id="favicon-apple-touch" rel="apple-touch-icon" href="/favicon.png" />
+    <% } %>
+    <title>Artifact Registry</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;700&display=swap" rel="stylesheet" />
+    <script type="text/javascript">
+      window.getApiBaseUrl = str => {
+        return window.apiUrl ? `${window.apiUrl}/${str}` : window.location.origin + str
+      }
+    </script>
+    <% if (__DEV__) { %>
+    <script>
+      window.harnessNameSpace = ''
+      window.harPathPrefix = '/har/api'
+    </script>
+    <% } %>
+  </head>
+  <body>
+    <div id="react-root"></div>
+  </body>
+</html>

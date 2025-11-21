@@ -1,0 +1,29 @@
+.dialogContainer {
+  width: 650px;
+}
+
+.accessTypeButton {
+  flex: 1;
+  justify-content: flex-start;
+
+  :global(.bp3-button-text) {
+    margin-left: var(--spacing-small);
+  }
+}
+
+.registrySelectWrapper {
+  display: flex;
+  gap: 20px;
+
+  & > :first-child {
+    flex: 1;
+    & > div {
+      justify-content: flex-start !important;
+    }
+  }
+}
+
+.buttonContainer {
+  margin-top: var(--spacing-xlarge);
+  justify-content: flex-start;
+}

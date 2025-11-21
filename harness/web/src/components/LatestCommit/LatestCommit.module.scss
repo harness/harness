@@ -1,0 +1,87 @@
+/*
+ * Copyright 2023 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.latestCommit {
+  display: flex;
+  background-color: var(--primary-1) !important;
+  justify-items: center;
+  padding: var(--spacing-small) var(--spacing-large) var(--spacing-small) var(--spacing-medium) !important;
+  box-shadow: var(--elevation-3);
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+
+  > div[class*='Avatar'] {
+    margin: 0 !important;
+    cursor: default !important;
+  }
+
+  &.standalone {
+    box-shadow: 0px 0px 1px rgba(40, 41, 61, 0.08), 0px 0.5px 2px rgba(96, 97, 112, 0.16);
+    border-radius: 4px;
+  }
+
+  &.forFile {
+    padding-right: var(--spacing-small) !important;
+  }
+
+  .shaBtn span {
+    font-size: 13px !important;
+  }
+
+  .link {
+    font-weight: 500 !important;
+    font-size: 13px !important;
+    color: var(--primary-7);
+  }
+
+  .tag {
+    padding: 3px 6px !important;
+    font-weight: 400 !important;
+    font-size: 12px !important;
+    font-family: var(--font-family-inter) !important;
+    background-color: #c6eefa !important;
+    color: var(--primary-7) !important;
+    border: none;
+  }
+
+  .noWrap {
+    white-space: nowrap !important;
+  }
+
+  .border {
+    border-bottom: 1px solid #d0f4fe;
+  }
+
+  .time {
+    flex-shrink: inherit;
+  }
+
+  .commitIcon {
+    width: 24px;
+    height: 24px;
+    margin: 0px 5px;
+  }
+}
+
+.popover {
+  :global {
+    .bp3-popover-content {
+      padding: var(--spacing-medium);
+      max-width: 700px;
+      word-break: break-all;
+    }
+  }
+}

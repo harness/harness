@@ -1,0 +1,250 @@
+{
+  "mainHeader": "Maven Client Setup",
+  "secHeader": "Follow these instructions to install/use Maven artifacts or compatible packages.",
+  "sections": [
+    {
+      "header": "1. Generate Identity Token",
+      "secHeader": "An identity token will serve as the password for uploading and downloading artifacts.",
+      "steps": [
+        {
+          "header": "Generate an identity token",
+          "type": "GenerateToken"
+        }
+      ],
+      "type": "INLINE"
+    },
+    {
+      "tabs": [
+        {
+          "header": "Maven",
+          "sections": [
+            {
+              "header": "2. Pull a Maven Package",
+              "secHeader": "Set default repository in your pom.xml file.",
+              "steps": [
+                {
+                  "commands": [
+                    {
+                      "value": "\u003crepositories\u003e\n  \u003crepository\u003e\n    \u003cid\u003emaven-dev\u003c/id\u003e\n    \u003curl\u003ehttp://example.com/registry/test-registry/MAVEN\u003c/url\u003e\n    \u003creleases\u003e\n      \u003cenabled\u003etrue\u003c/enabled\u003e\n      \u003cupdatePolicy\u003ealways\u003c/updatePolicy\u003e\n    \u003c/releases\u003e\n    \u003csnapshots\u003e\n      \u003cenabled\u003etrue\u003c/enabled\u003e\n      \u003cupdatePolicy\u003ealways\u003c/updatePolicy\u003e\n    \u003c/snapshots\u003e\n  \u003c/repository\u003e\n\u003c/repositories\u003e"
+                    }
+                  ],
+                  "header": "To set default registry in your pom.xml file by adding the following:",
+                  "type": "Static"
+                },
+                {
+                  "commands": [
+                    {
+                      "value": "\u003csettings\u003e\n  \u003cservers\u003e\n    \u003cserver\u003e\n      \u003cid\u003emaven-dev\u003c/id\u003e\n      \u003cusername\u003etest@example.com\u003c/username\u003e\n      \u003cpassword\u003eidentity-token\u003c/password\u003e\n    \u003c/server\u003e\n  \u003c/servers\u003e\n\u003c/settings\u003e"
+                    }
+                  ],
+                  "header": "Copy the following your ~/ .m2/settings.xml file for MacOs, or $USERPROFILE$\\ .m2\\settings.xml for Windows to authenticate with token to pull from your Maven registry.",
+                  "type": "Static"
+                },
+                {
+                  "commands": [
+                    {
+                      "value": "\u003cdependency\u003e\n  \u003cgroupId\u003e\u003cGROUP_ID\u003e\u003c/groupId\u003e\n  \u003cartifactId\u003etest-artifact\u003c/artifactId\u003e\n  \u003cversion\u003ev1.0.0\u003c/version\u003e\n\u003c/dependency\u003e"
+                    }
+                  ],
+                  "header": "Add a dependency to the project's pom.xml (replace \u003cGROUP_ID\u003e, \u003cARTIFACT_ID\u003e \u0026 \u003cVERSION\u003e with your own):",
+                  "type": "Static"
+                },
+                {
+                  "commands": [
+                    {
+                      "value": "mvn install"
+                    }
+                  ],
+                  "header": "Install dependencies in pom.xml file",
+                  "type": "Static"
+                }
+              ],
+              "type": "INLINE"
+            },
+            {
+              "header": "3. Push a Maven Package",
+              "secHeader": "Set default repository in your pom.xml file.",
+              "steps": [
+                {
+                  "commands": [
+                    {
+                      "value": "\u003cdistributionManagement\u003e\n  \u003csnapshotRepository\u003e\n    \u003cid\u003emaven-dev\u003c/id\u003e\n    \u003curl\u003ehttp://example.com/registry/test-registry/MAVEN\u003c/url\u003e\n  \u003c/snapshotRepository\u003e\n  \u003crepository\u003e\n    \u003cid\u003emaven-dev\u003c/id\u003e\n    \u003curl\u003ehttp://example.com/registry/test-registry/MAVEN\u003c/url\u003e\n  \u003c/repository\u003e\n\u003c/distributionManagement\u003e"
+                    }
+                  ],
+                  "header": "To set default registry in your pom.xml file by adding the following:",
+                  "type": "Static"
+                },
+                {
+                  "commands": [
+                    {
+                      "value": "\u003csettings\u003e\n  \u003cservers\u003e\n    \u003cserver\u003e\n      \u003cid\u003emaven-dev\u003c/id\u003e\n      \u003cusername\u003etest@example.com\u003c/username\u003e\n      \u003cpassword\u003eidentity-token\u003c/password\u003e\n    \u003c/server\u003e\n  \u003c/servers\u003e\n\u003c/settings\u003e"
+                    }
+                  ],
+                  "header": "Copy the following your ~/ .m2/setting.xml file for MacOs, or $USERPROFILE$\\ .m2\\settings.xml for Windows to authenticate with token to push to your Maven registry.",
+                  "type": "Static"
+                },
+                {
+                  "commands": [
+                    {
+                      "value": "mvn deploy"
+                    }
+                  ],
+                  "header": "Publish package to your Maven registry.",
+                  "type": "Static"
+                }
+              ],
+              "type": "INLINE"
+            }
+          ]
+        },
+        {
+          "header": "Gradle",
+          "sections": [
+            {
+              "header": "2. Pull a Gradle Package",
+              "secHeader": "Set default repository in your build.gradle file.",
+              "steps": [
+                {
+                  "commands": [
+                    {
+                      "value": "repositories{\n    maven{\n      url \"http://example.com/registry/test-registry/MAVEN\"\n\n      credentials {\n         username \"test@example.com\"\n         password \"identity-token\"\n      }\n   }\n}"
+                    }
+                  ],
+                  "header": "Set the default registry in your project’s build.gradle by adding the following:",
+                  "type": "Static"
+                },
+                {
+                  "commands": [
+                    {
+                      "value": "repositoryUser=test@example.com\nrepositoryPassword={{identity-token}}"
+                    }
+                  ],
+                  "header": "As this is a private registry, you’ll need to authenticate. Create or add to the ~/.gradle/gradle.properties file with the following:",
+                  "type": "Static"
+                },
+                {
+                  "commands": [
+                    {
+                      "value": "dependencies {\n  implementation '\u003cGROUP_ID\u003e:test-artifact:v1.0.0'\n}"
+                    }
+                  ],
+                  "header": "Add a dependency to the project’s build.gradle",
+                  "type": "Static"
+                },
+                {
+                  "commands": [
+                    {
+                      "value": "gradlew build     // Linux or OSX\n gradlew.bat build  // Windows"
+                    }
+                  ],
+                  "header": "Install dependencies in build.gradle file",
+                  "type": "Static"
+                }
+              ],
+              "type": "INLINE"
+            },
+            {
+              "header": "3. Push a Gradle Package",
+              "secHeader": "Set default repository in your build.gradle file.",
+              "steps": [
+                {
+                  "commands": [
+                    {
+                      "value": "publishing {\n    publications {\n        maven(MavenPublication) {\n            groupId = 'GROUP_ID'\n            artifactId = 'ARTIFACT_ID'\n            version = 'VERSION'\n\n            from components.java\n        }\n    }\n}"
+                    }
+                  ],
+                  "header": "Add a maven publish plugin configuration to the project's build.gradle.",
+                  "type": "Static"
+                },
+                {
+                  "commands": [
+                    {
+                      "value": "gradlew publish"
+                    }
+                  ],
+                  "header": "Publish package to your Maven registry.",
+                  "type": "Static"
+                }
+              ],
+              "type": "INLINE"
+            }
+          ]
+        },
+        {
+          "header": "Sbt/Scala",
+          "sections": [
+            {
+              "header": "2. Pull a Sbt/Scala Package",
+              "secHeader": "Set default repository in your build.sbt file.",
+              "steps": [
+                {
+                  "commands": [
+                    {
+                      "value": "resolver += \"Harness Registry\" at \"http://example.com/registry/test-registry/MAVEN\"\ncredentials += Credentials(Path.userHome / \".sbt\" / \".Credentials\")"
+                    }
+                  ],
+                  "header": "Set the default registry in your project’s build.sbt by adding the following:",
+                  "type": "Static"
+                },
+                {
+                  "commands": [
+                    {
+                      "value": "realm=Harness Registry\nhost=example.com\nuser=test@example.com\npassword={{identity-token}}"
+                    }
+                  ],
+                  "header": "As this is a private registry, you’ll need to authenticate. Create or add to the ~/.sbt/.credentials file with the following:",
+                  "type": "Static"
+                },
+                {
+                  "commands": [
+                    {
+                      "value": "libraryDependencies += \"\u003cGROUP_ID\u003e\" % \"test-artifact\" % \"v1.0.0\""
+                    }
+                  ],
+                  "header": "Add a dependency to the project’s build.sbt",
+                  "type": "Static"
+                },
+                {
+                  "commands": [
+                    {
+                      "value": "sbt update"
+                    }
+                  ],
+                  "header": "Install dependencies in build.sbt file",
+                  "type": "Static"
+                }
+              ],
+              "type": "INLINE"
+            },
+            {
+              "header": "3. Push a Sbt/Scala Package",
+              "secHeader": "Set default repository in your build.sbt file.",
+              "steps": [
+                {
+                  "commands": [
+                    {
+                      "value": "publishTo := Some(\"Harness Registry\" at \"http://example.com/registry/test-registry/MAVEN\")"
+                    }
+                  ],
+                  "header": "Add publish configuration to the project’s build.sbt.",
+                  "type": "Static"
+                },
+                {
+                  "commands": [
+                    {
+                      "value": "sbt publish"
+                    }
+                  ],
+                  "header": "Publish package to your Maven registry.",
+                  "type": "Static"
+                }
+              ],
+              "type": "INLINE"
+            }
+          ]
+        }
+      ],
+      "type": "TABS"
+    }
+  ]
+}

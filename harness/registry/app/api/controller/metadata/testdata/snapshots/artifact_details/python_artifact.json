@@ -1,0 +1,13 @@
+{
+  "createdAt": "1704067200000",
+  "isQuarantined": false,
+  "metadata": {
+    "description": "Test artifact for PYTHON",
+    "name": "test-artifact",
+    "version": "v1.0.0"
+  },
+  "modifiedAt": "1704067200000",
+  "name": "test-artifact",
+  "packageType": "PYTHON",
+  "version": "v1.0.0"
+}

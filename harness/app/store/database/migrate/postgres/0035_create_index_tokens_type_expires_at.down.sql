@@ -1,0 +1,1 @@
+DROP INDEX tokens_type_expires_at;

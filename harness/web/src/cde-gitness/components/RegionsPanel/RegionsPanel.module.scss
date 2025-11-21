@@ -1,0 +1,18 @@
+.rightPanel {
+  flex: 1;
+  padding: var(--spacing-xxlarge) !important;
+}
+
+.panelSubtitle {
+  margin-bottom: 20px !important;
+}
+
+.regionsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.headerWithIcon {
+  align-items: center;
+}

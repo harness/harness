@@ -1,0 +1,144 @@
+/*
+ * Copyright 2024 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.modalDialog {
+  width: 66vw !important;
+  :global(.bp3-dialog) {
+    border-radius: 8px;
+  }
+
+  :global(.bp3-dialog-header) {
+    padding: 24px 24px 16px 24px !important;
+    border-bottom: 1px solid var(--grey-200);
+  }
+}
+
+.innerContainer {
+  width: 60vw !important;
+}
+
+.dialogContainer {
+  padding: 10px !important;
+  overflow-x: hidden !important;
+}
+
+.contentCard {
+  border: none !important;
+  box-shadow: none !important;
+  margin: var(--spacing-small) !important;
+  padding: 24px !important;
+  background: var(--grey-50);
+  margin-bottom: var(--spacing-large) !important;
+}
+
+.congratsText {
+  line-height: 20px;
+  margin-bottom: var(--spacing-medium) !important;
+  font-size: 14px !important;
+}
+.step1,
+.step2 {
+  width: 100% !important;
+  max-width: inherit !important;
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: var(--spacing-medium) !important;
+  overflow: hidden !important;
+}
+.step1 {
+  align-items: center;
+}
+
+.step2 {
+  align-items: flex-start;
+}
+
+.stepNumber {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50% !important;
+  background-color: var(--grey-100) !important;
+  color: var(--grey-400);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.stepContent {
+  font-size: 14px !important;
+  color: var(--grey-500) !important;
+  overflow-wrap: break-word !important;
+}
+
+.codeBlockContainer {
+  width: 50vw !important;
+  pre {
+    margin: 0px !important;
+    padding: 8px !important;
+    background: transparent !important;
+    border: none !important;
+    font-size: 14px !important;
+    color: var(--grey-900) !important;
+    line-height: 1.8 !important;
+    text-overflow: ellipsis !important;
+    overflow-x: hidden !important;
+    white-space: nowrap !important;
+  }
+
+  :global(.bp3-button.bp3-minimal) {
+    transition: transform 0.1s ease, color 0.2s ease !important;
+
+    &:hover {
+      color: var(--primary-7) !important;
+    }
+
+    &:active {
+      transform: scale(1.1) !important;
+    }
+  }
+  svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+  button {
+    min-width: 50px !important;
+  }
+}
+
+.buttonContainer {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 8px;
+
+  button {
+    min-width: 80px;
+    height: 36px;
+  }
+}
+
+.highlightText {
+  color: black !important;
+}
+
+.marginBottomTitle {
+  margin-bottom: var(--spacing-medium) !important;
+}
+
+.innerLayout {
+  width: 53vw !important;
+}

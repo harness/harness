@@ -1,0 +1,1 @@
+ALTER TABLE repositories ADD COLUMN repo_is_empty BOOLEAN NOT NULL DEFAULT false;

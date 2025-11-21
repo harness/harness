@@ -1,0 +1,9 @@
+.registrySelectWrapper {
+  display: flex;
+  gap: 20px;
+
+  div {
+    flex: 1;
+    justify-content: flex-start !important;
+  }
+}

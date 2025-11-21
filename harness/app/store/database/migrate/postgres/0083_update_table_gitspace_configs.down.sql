@@ -1,0 +1,2 @@
+UPDATE gitspace_configs
+SET gconf_is_marked_for_deletion = gconf_is_deleted;
