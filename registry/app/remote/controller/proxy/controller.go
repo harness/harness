@@ -167,7 +167,8 @@ func (c *controller) UseLocalManifest(
 	}
 
 	remoteRepo := getRemoteRepo(art)
-	exist, desc, err := remote.ManifestExist(ctx, remoteRepo, getReference(art)) // HEAD.
+	reference := getReference(art)
+	exist, desc, err := remote.ManifestExist(ctx, remoteRepo, reference) // HEAD.
 	// TODO: Check for rate limit error.
 	if err != nil {
 		if errors.IsRateLimitError(err) { // if rate limit, use localRegistry if it exists, otherwise return error.
@@ -177,7 +178,6 @@ func (c *controller) UseLocalManifest(
 		log.Ctx(ctx).Warn().Msgf("Error in checking remote manifest exist: %v", err)
 		return false, nil, err
 	}
-	log.Ctx(ctx).Info().Msgf("Manifest exist: %t %s %d %s", exist, desc.Digest.String(), desc.Size, desc.MediaType)
 
 	// TODO: Delete if does not exist on remote. Validate this
 	if !exist || desc == nil {
@@ -186,6 +186,7 @@ func (c *controller) UseLocalManifest(
 		}()
 		return false, nil, errors.NotFoundError(fmt.Errorf("registry %v, tag %v not found", art.RegIdentifier, art.Tag))
 	}
+	log.Ctx(ctx).Info().Msgf("Manifest exist: %t %s %d %s", exist, desc.Digest.String(), desc.Size, desc.MediaType)
 
 	log.Ctx(ctx).Info().Msgf("Manifest: %s", getReference(art))
 	mediaType, payload, _ := man.Payload()
