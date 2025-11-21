@@ -15,12 +15,13 @@
  */
 
 import React from 'react'
-import { Layout, Page } from '@harnessio/uicore'
+import { Layout } from '@harnessio/uicore'
 import { useGetArtifactDetailsQuery } from '@harnessio/react-har-service-client'
 
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import { useDecodedParams, useGetSpaceRef } from '@ar/hooks'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
+import PageContent from '@ar/components/PageContent/PageContent'
 
 import type { GenericArtifactDetails } from '../../types'
 import GeneralInformationCard from './GeneralInformationCard'
@@ -46,16 +47,12 @@ export default function GenericOverviewPage() {
   const response = data?.content?.data as GenericArtifactDetails
 
   return (
-    <Page.Body
-      className={genericStyles.pageBody}
-      loading={loading}
-      error={error?.message || error}
-      retryOnError={() => refetch()}>
+    <PageContent loading={loading} error={error} refetch={refetch}>
       {response && (
         <Layout.Vertical className={genericStyles.cardContainer} spacing="medium">
           <GeneralInformationCard data={response} />
         </Layout.Vertical>
       )}
-    </Page.Body>
+    </PageContent>
   )
 }

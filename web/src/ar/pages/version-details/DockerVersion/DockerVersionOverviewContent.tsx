@@ -16,7 +16,7 @@
 
 import React from 'react'
 import { FontVariation } from '@harnessio/design-system'
-import { Card, Container, Layout, Page, Text } from '@harnessio/uicore'
+import { Card, Container, Layout, Text } from '@harnessio/uicore'
 import { useGetDockerArtifactDetailsQuery } from '@harnessio/react-har-service-client'
 
 import { Parent } from '@ar/common/types'
@@ -25,6 +25,7 @@ import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import { DEFAULT_DATE_TIME_FORMAT } from '@ar/constants'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 import { getReadableDateTime } from '@ar/common/dateUtils'
+import PageContent from '@ar/components/PageContent/PageContent'
 import { useAppStore, useDecodedParams, useGetSpaceRef } from '@ar/hooks'
 
 import useGetOCIVersionParams from '../hooks/useGetOCIVersionParams'
@@ -66,11 +67,7 @@ export default function DockerVersionOverviewContent(): JSX.Element {
   const response = data?.content?.data
 
   return (
-    <Page.Body
-      className={css.pageBody}
-      loading={loading || !digest}
-      error={error?.message}
-      retryOnError={() => refetch()}>
+    <PageContent loading={loading || !digest} error={error} refetch={refetch}>
       {response && (
         <Layout.Vertical className={css.cardContainer} spacing="medium" flex={{ alignItems: 'flex-start' }}>
           {parent === Parent.Enterprise && (
@@ -150,6 +147,6 @@ export default function DockerVersionOverviewContent(): JSX.Element {
           </Card>
         </Layout.Vertical>
       )}
-    </Page.Body>
+    </PageContent>
   )
 }

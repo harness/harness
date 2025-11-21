@@ -17,7 +17,7 @@
 import React from 'react'
 import { defaultTo } from 'lodash-es'
 import { FontVariation } from '@harnessio/design-system'
-import { Card, Container, Layout, Page, Text } from '@harnessio/uicore'
+import { Card, Container, Layout, Text } from '@harnessio/uicore'
 import { useGetHelmArtifactDetailsQuery } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
@@ -26,6 +26,7 @@ import { DEFAULT_DATE_TIME_FORMAT } from '@ar/constants'
 import { getReadableDateTime } from '@ar/common/dateUtils'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 import { useDecodedParams, useGetSpaceRef } from '@ar/hooks'
+import PageContent from '@ar/components/PageContent/PageContent'
 
 import useGetOCIVersionParams from '../hooks/useGetOCIVersionParams'
 import { LabelValueTypeEnum } from '../components/LabelValueContent/type'
@@ -57,7 +58,7 @@ export default function HelmVersionOverviewContent(): JSX.Element {
   const response = data?.content?.data
 
   return (
-    <Page.Body className={css.pageBody} loading={loading} error={error?.message} retryOnError={() => refetch()}>
+    <PageContent loading={loading} error={error} refetch={refetch}>
       {response && (
         <Layout.Vertical data-testid="general-information-card" className={css.cardContainer} spacing="medium">
           <Card title="General Information">
@@ -116,6 +117,6 @@ export default function HelmVersionOverviewContent(): JSX.Element {
           </Card>
         </Layout.Vertical>
       )}
-    </Page.Body>
+    </PageContent>
   )
 }

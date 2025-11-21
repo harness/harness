@@ -15,12 +15,13 @@
  */
 
 import React from 'react'
-import { Layout, Page } from '@harnessio/uicore'
+import { Layout } from '@harnessio/uicore'
 import { type ArtifactDetail, useGetArtifactDetailsQuery } from '@harnessio/react-har-service-client'
 
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import { useDecodedParams, useGetSpaceRef } from '@ar/hooks'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
+import PageContent from '@ar/components/PageContent/PageContent'
 import { LocalArtifactType } from '@ar/pages/repository-details/constants'
 
 import MavnGeneralInformationCard from './MavnGeneralInformationCard'
@@ -48,16 +49,12 @@ export default function MavenArtifactOverviewPage() {
   const response = data?.content?.data as ArtifactDetail
 
   return (
-    <Page.Body
-      className={genericStyles.pageBody}
-      loading={loading}
-      error={error?.message || error}
-      retryOnError={() => refetch()}>
+    <PageContent loading={loading} error={error} refetch={refetch}>
       {response && (
         <Layout.Vertical className={genericStyles.cardContainer} spacing="medium">
           <MavnGeneralInformationCard data={response} />
         </Layout.Vertical>
       )}
-    </Page.Body>
+    </PageContent>
   )
 }
