@@ -24,6 +24,7 @@ import (
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
+	"github.com/harness/gitness/registry/app/metadata/python"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
@@ -189,8 +190,7 @@ func (r *proxy) putFileToLocal(ctx context.Context, pkg string, filename string,
 	version := pypi.GetPyPIVersion(filename)
 	metadata, err := remote.GetJSON(ctx, pkg, version)
 	if err != nil {
-		log.Ctx(ctx).Error().Stack().Err(err).Msgf("fetching metadata for %s failed, %v", filename, err)
-		return err
+		log.Ctx(ctx).Warn().Stack().Err(err).Msgf("fetching metadata for %s failed, %v", filename, err)
 	}
 	file, err := remote.GetFile(ctx, pkg, filename)
 	if err != nil {
@@ -202,6 +202,11 @@ func (r *proxy) putFileToLocal(ctx context.Context, pkg string, filename string,
 	if !ok {
 		log.Ctx(ctx).Error().Msgf("failed to cast artifact info to python artifact info")
 		return errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("failed to cast artifact info to python artifact info"))
+	}
+	if metadata == nil {
+		metadata = &python.Metadata{
+			Version: version,
+		}
 	}
 	info.Metadata = *metadata
 	info.Filename = filename

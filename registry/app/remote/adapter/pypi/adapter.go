@@ -19,6 +19,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"path"
+	"strings"
 
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
@@ -84,10 +86,13 @@ func init() {
 }
 
 func (a *adapter) GetMetadata(ctx context.Context, pkg string) (*pypi.SimpleMetadata, error) {
-	filePath := "simple/" + pkg
-	if a.registry.RepoURL != PyPiURL {
-		filePath += "/index.html"
+	basePath := "simple"
+	if a.registry.Config != nil && a.registry.Config.RemoteUrlSuffix != "" {
+		basePath = strings.Trim(a.registry.Config.RemoteUrlSuffix, "/")
 	}
+
+	filePath := path.Join(basePath, pkg) + "/"
+
 	_, readCloser, err := a.GetFile(ctx, filePath)
 	if err != nil {
 		return nil, err

@@ -368,6 +368,16 @@ func (c *APIController) CreateUpstreamProxyEntity(
 	if e != nil {
 		return nil, nil, e
 	}
+	config, e := dto.Config.AsUpstreamConfig()
+	if e != nil {
+		return nil, nil, e
+	}
+
+	registryConfig := &registrytypes.RegistryConfig{}
+	if config.RemoteUrlSuffix != nil {
+		registryConfig.RemoteUrlSuffix = *config.RemoteUrlSuffix
+	}
+
 	repoEntity := &registrytypes.Registry{
 		Name:           dto.Identifier,
 		ParentID:       parentID,
@@ -377,11 +387,7 @@ func (c *APIController) CreateUpstreamProxyEntity(
 		PackageType:    dto.PackageType,
 		Type:           artifact.RegistryTypeUPSTREAM,
 		IsPublic:       dto.IsPublic,
-	}
-
-	config, e := dto.Config.AsUpstreamConfig()
-	if e != nil {
-		return nil, nil, e
+		Config:         registryConfig,
 	}
 	CleanURLPath(config.Url)
 	upstreamProxyConfigEntity := &registrytypes.UpstreamProxyConfig{

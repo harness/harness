@@ -48,6 +48,7 @@ type UpstreamProxy struct {
 	PackageType              artifact.PackageType
 	AllowedPattern           []string
 	BlockedPattern           []string
+	Config                   *RegistryConfig
 	Source                   string
 	RepoURL                  string
 	RepoAuthType             string

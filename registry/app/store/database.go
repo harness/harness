@@ -391,6 +391,7 @@ type RegistryMetadata struct {
 	LastModified  time.Time
 	URL           string
 	Labels        pq.StringArray
+	Config        *types.RegistryConfig
 	ArtifactCount int64
 	DownloadCount int64
 	Size          int64

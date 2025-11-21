@@ -17,6 +17,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -69,6 +70,7 @@ type registryDB struct {
 	AllowedPattern  sql.NullString        `db:"registry_allowed_pattern"`
 	BlockedPattern  sql.NullString        `db:"registry_blocked_pattern"`
 	Labels          sql.NullString        `db:"registry_labels"`
+	Config          sql.NullString        `db:"registry_config"`
 	CreatedAt       int64                 `db:"registry_created_at"`
 	UpdatedAt       int64                 `db:"registry_updated_at"`
 	CreatedBy       int64                 `db:"registry_created_by"`
@@ -249,6 +251,7 @@ type RegistryMetadataDB struct {
 	DownloadCount int64                 `db:"download_count"`
 	Size          int64                 `db:"size"`
 	Labels        sql.NullString        `db:"registry_labels"`
+	Config        sql.NullString        `db:"registry_config"`
 }
 
 func (r registryDao) GetAll(
@@ -280,6 +283,7 @@ func (r registryDao) GetAll(
 			ELSE COALESCE(blob_sizes.total_size, 0)
 		END AS size,
 		r.registry_labels,
+		r.registry_config,
 		COALESCE(download_stats.download_count, 0) AS download_count
 	`
 
@@ -431,6 +435,7 @@ func (r registryDao) Create(ctx context.Context, registry *types.Registry) (id i
 			,registry_created_by
 			,registry_updated_by
 			,registry_labels
+			,registry_config
 			,registry_uuid
 		) VALUES (
 			:registry_name
@@ -447,6 +452,7 @@ func (r registryDao) Create(ctx context.Context, registry *types.Registry) (id i
 			,:registry_created_by
 			,:registry_updated_by
 			,:registry_labels
+			,:registry_config
 			,:registry_uuid
 		) RETURNING registry_id`
 
@@ -478,6 +484,17 @@ func mapToInternalRegistry(ctx context.Context, in *types.Registry) *registryDB 
 		in.UUID = uuid.NewString()
 	}
 
+	// Serialize config to JSON
+	var configStr string
+	if in.Config != nil {
+		configBytes, err := json.Marshal(in.Config)
+		if err != nil {
+			log.Ctx(ctx).Error().Err(err).Msg("Failed to marshal registry config")
+		} else {
+			configStr = string(configBytes)
+		}
+	}
+
 	return &registryDB{
 		ID:              in.ID,
 		UUID:            in.UUID,
@@ -491,6 +508,7 @@ func mapToInternalRegistry(ctx context.Context, in *types.Registry) *registryDB 
 		AllowedPattern:  util.GetEmptySQLString(util.ArrToString(in.AllowedPattern)),
 		BlockedPattern:  util.GetEmptySQLString(util.ArrToString(in.BlockedPattern)),
 		Labels:          util.GetEmptySQLString(util.ArrToString(in.Labels)),
+		Config:          util.GetEmptySQLString(configStr),
 		CreatedAt:       in.CreatedAt.UnixMilli(),
 		UpdatedAt:       in.UpdatedAt.UnixMilli(),
 		CreatedBy:       in.CreatedBy,
@@ -623,7 +641,17 @@ func (r registryDao) mapToRegistries(ctx context.Context, dst []*registryDB) (*[
 	return &registries, nil
 }
 
-func (r registryDao) mapToRegistry(_ context.Context, dst *registryDB) (*types.Registry, error) {
+func (r registryDao) mapToRegistry(ctx context.Context, dst *registryDB) (*types.Registry, error) {
+	// Deserialize config from JSON
+	var config *types.RegistryConfig
+	if dst.Config.String != "" {
+		config = &types.RegistryConfig{}
+		if err := json.Unmarshal([]byte(dst.Config.String), config); err != nil {
+			log.Ctx(ctx).Error().Err(err).Msg("Failed to unmarshal registry config")
+			config = nil
+		}
+	}
+
 	return &types.Registry{
 		ID:              dst.ID,
 		UUID:            dst.UUID,
@@ -637,6 +665,7 @@ func (r registryDao) mapToRegistry(_ context.Context, dst *registryDB) (*types.R
 		AllowedPattern:  util.StringToArr(dst.AllowedPattern.String),
 		BlockedPattern:  util.StringToArr(dst.BlockedPattern.String),
 		Labels:          util.StringToArr(dst.Labels.String),
+		Config:          config,
 		CreatedAt:       time.UnixMilli(dst.CreatedAt),
 		UpdatedAt:       time.UnixMilli(dst.UpdatedAt),
 		CreatedBy:       dst.CreatedBy,
@@ -656,7 +685,17 @@ func (r registryDao) mapToRegistryMetadataList(
 	return &repos, nil
 }
 
-func (r registryDao) mapToRegistryMetadata(_ context.Context, dst *RegistryMetadataDB) *store.RegistryMetadata {
+func (r registryDao) mapToRegistryMetadata(ctx context.Context, dst *RegistryMetadataDB) *store.RegistryMetadata {
+	// Deserialize config from JSON
+	var config *types.RegistryConfig
+	if dst.Config.String != "" {
+		config = &types.RegistryConfig{}
+		if err := json.Unmarshal([]byte(dst.Config.String), config); err != nil {
+			log.Ctx(ctx).Error().Err(err).Msg("Failed to unmarshal registry config in metadata")
+			config = nil
+		}
+	}
+
 	return &store.RegistryMetadata{
 		RegID:         dst.RegID,
 		ParentID:      dst.ParentID,
@@ -670,5 +709,6 @@ func (r registryDao) mapToRegistryMetadata(_ context.Context, dst *RegistryMetad
 		DownloadCount: dst.DownloadCount,
 		Size:          dst.Size,
 		Labels:        util.StringToArr(dst.Labels.String),
+		Config:        config,
 	}
 }

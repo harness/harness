@@ -428,6 +428,9 @@ func UpdateRepoEntity(
 	return entity, nil
 }
 
+// UpdateUpstreamProxyEntity TODO: update_registry and create_registry both share almost same logic to
+// create UpdateUpstreamProxyEntity
+//
 //nolint:gocognit,cyclop
 func (c *APIController) UpdateUpstreamProxyEntity(
 	ctx context.Context, dto artifact.RegistryRequest, parentID int64, rootParentID int64, u *types.UpstreamProxy,
@@ -448,6 +451,13 @@ func (c *APIController) UpdateUpstreamProxyEntity(
 	if e != nil {
 		return nil, nil, e
 	}
+	config, _ := dto.Config.AsUpstreamConfig()
+
+	registryConfig := &types.RegistryConfig{}
+	if config.RemoteUrlSuffix != nil {
+		registryConfig.RemoteUrlSuffix = *config.RemoteUrlSuffix
+	}
+
 	repoEntity := &types.Registry{
 		ID:             u.RegistryID,
 		Name:           dto.Identifier,
@@ -459,8 +469,8 @@ func (c *APIController) UpdateUpstreamProxyEntity(
 		Type:           artifact.RegistryTypeUPSTREAM,
 		CreatedAt:      u.CreatedAt,
 		IsPublic:       dto.IsPublic,
+		Config:         registryConfig,
 	}
-	config, _ := dto.Config.AsUpstreamConfig()
 	CleanURLPath(config.Url)
 	upstreamProxyConfigEntity := &types.UpstreamProxyConfig{
 		URL:        *config.Url,

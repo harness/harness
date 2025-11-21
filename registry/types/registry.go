@@ -20,6 +20,13 @@ import (
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 )
 
+// RegistryConfig holds configuration settings for a registry.
+type RegistryConfig struct {
+	// RemoteUrlSuffix is the suffix to append to remote URLs for this registry
+	// keeping it Url instead of URL coz body param with Url is cleaner
+	RemoteUrlSuffix string `json:"remoteUrlSuffix,omitempty"` //nolint:staticcheck,revive,tagliatelle
+}
+
 // Registry DTO object.
 type Registry struct {
 	ID              int64
@@ -34,6 +41,7 @@ type Registry struct {
 	AllowedPattern  []string
 	BlockedPattern  []string
 	Labels          []string
+	Config          *RegistryConfig
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 	CreatedBy       int64

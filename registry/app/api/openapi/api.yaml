@@ -3004,6 +3004,13 @@ components:
             - Crates
             - GoProxy
             - HuggingFace
+        remoteUrlSuffix:
+          type: string
+          description: >
+            Optional path suffix appended to the remote URL for this registry. For
+            Python upstreams, this allows overriding the default `/simple` path used
+            for PyPI-compatible indexes. Leading and trailing slashes are not required
+            and will be normalized.
       x-discriminator-value: UPSTREAM
       required:
         - authType

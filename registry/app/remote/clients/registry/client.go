@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -882,7 +883,21 @@ func (c *client) HeadFile(ctx context.Context, filePath string) (*commons.Respon
 }
 
 func buildFileURL(endpoint, filePath string) string {
-	return fmt.Sprintf("%s/%s", strings.TrimSuffix(endpoint, "/"), strings.TrimPrefix(filePath, "/"))
+	base, err := url.Parse(endpoint)
+	if err != nil {
+		log.Warn().Err(err).Msgf("Failed to parse endpoint %s %s", endpoint, filePath)
+		return fmt.Sprintf("%s/%s", strings.TrimSuffix(endpoint, "/"), strings.TrimPrefix(filePath, "/"))
+	}
+
+	hasTrailingSlash := strings.HasSuffix(filePath, "/") && filePath != "/"
+	base.Path = path.Clean(path.Join(base.Path, filePath))
+
+	// Restore trailing slash if it was present in the original filePath
+	if hasTrailingSlash && !strings.HasSuffix(base.Path, "/") {
+		base.Path += "/"
+	}
+
+	return base.String()
 }
 
 func (c *client) GetURL(_ context.Context, filePath string) string {

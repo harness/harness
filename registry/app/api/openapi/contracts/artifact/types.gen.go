@@ -962,9 +962,12 @@ type UpstreamConfig struct {
 	Auth *UpstreamConfig_Auth `json:"auth,omitempty"`
 
 	// AuthType Authentication type
-	AuthType AuthType              `json:"authType"`
-	Source   *UpstreamConfigSource `json:"source,omitempty"`
-	Url      *string               `json:"url,omitempty"`
+	AuthType AuthType `json:"authType"`
+
+	// RemoteUrlSuffix Optional path suffix appended to the remote URL for this registry. For Python upstreams, this allows overriding the default `/simple` path used for PyPI-compatible indexes. Leading and trailing slashes are not required and will be normalized.
+	RemoteUrlSuffix *string               `json:"remoteUrlSuffix,omitempty"`
+	Source          *UpstreamConfigSource `json:"source,omitempty"`
+	Url             *string               `json:"url,omitempty"`
 }
 
 // UpstreamConfig_Auth defines model for UpstreamConfig.Auth.

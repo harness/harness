@@ -232,13 +232,17 @@ func (c *APIController) setUpstreamProxyIDs(
 	return nil
 }
 
-func (c *APIController) assertNoCycleOnAdd(ctx context.Context,
-	registryID int64, newUpstreamID int64, registryName string) error {
+func (c *APIController) assertNoCycleOnAdd(
+	ctx context.Context,
+	registryID int64, newUpstreamID int64, registryName string,
+) error {
 	return c.assertNoCycleOnAddHelper(ctx, registryID, newUpstreamID, registryName)
 }
 
-func (c *APIController) assertNoCycleOnAddHelper(ctx context.Context,
-	rootRegistryID int64, newUpstreamID int64, registryName string) error {
+func (c *APIController) assertNoCycleOnAddHelper(
+	ctx context.Context,
+	rootRegistryID int64, newUpstreamID int64, registryName string,
+) error {
 	if newUpstreamID == rootRegistryID {
 		return fmt.Errorf("cycle detected while setting up the upstream proxy for registry: [%s]", registryName)
 	}
@@ -280,14 +284,14 @@ type manifestConfig struct {
 
 type historyEntry struct {
 	Created    string `json:"created"`
-	CreatedBy  string `json:"created_by"`
-	EmptyLayer bool   `json:"empty_layer"`
+	CreatedBy  string `json:"created_by"`  //nolint:tagliatelle
+	EmptyLayer bool   `json:"empty_layer"` //nolint:tagliatelle
 	Comment    string `json:"comment,omitempty"`
 }
 
 type rootFS struct {
 	RootFsType string   `json:"type"`
-	DiffIDs    []string `json:"diff_ids"`
+	DiffIDs    []string `json:"diff_ids"` //nolint:tagliatelle
 }
 
 func getRepoEntityFields(dto api.RegistryRequest) ([]string, []string, string, []string) {
@@ -392,6 +396,11 @@ func (c *APIController) CreateUpstreamProxyResponseJSONResponse(
 		Source:   &source,
 		Url:      &upstreamproxy.RepoURL,
 	}
+
+	if upstreamproxy.Config != nil && upstreamproxy.Config.RemoteUrlSuffix != "" {
+		config.RemoteUrlSuffix = &upstreamproxy.Config.RemoteUrlSuffix
+	}
+
 	registryConfig := &api.RegistryConfig{}
 	_ = registryConfig.FromUpstreamConfig(config)
 

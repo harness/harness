@@ -17,6 +17,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -33,6 +34,7 @@ import (
 	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -83,6 +85,7 @@ type upstreamProxyDB struct {
 	PackageType              artifact.PackageType `db:"package_type"`
 	AllowedPattern           sql.NullString       `db:"allowed_pattern"`
 	BlockedPattern           sql.NullString       `db:"blocked_pattern"`
+	Config                   sql.NullString       `db:"registry_config"`
 	Source                   string               `db:"source"`
 	RepoURL                  string               `db:"repo_url"`
 	RepoAuthType             string               `db:"repo_auth_type"`
@@ -107,6 +110,7 @@ func getUpstreamProxyQuery() squirrel.SelectBuilder {
 			" r.registry_package_type as package_type," +
 			" r.registry_allowed_pattern as allowed_pattern," +
 			" r.registry_blocked_pattern as blocked_pattern," +
+			" r.registry_config as registry_config," +
 			" u.upstream_proxy_config_url as repo_url," +
 			" u.upstream_proxy_config_source as source," +
 			" u.upstream_proxy_config_auth_type as repo_auth_type," +
@@ -429,6 +433,16 @@ func (r UpstreamproxyDao) mapToUpstreamProxy(
 		userNameSecretSpacePath = primary.Path
 	}
 
+	// Deserialize config from JSON
+	var config *types.RegistryConfig
+	if dst.Config.String != "" {
+		config = &types.RegistryConfig{}
+		if err := json.Unmarshal([]byte(dst.Config.String), config); err != nil {
+			log.Ctx(ctx).Error().Err(err).Msg("Failed to unmarshal registry config in upstream proxy")
+			config = nil
+		}
+	}
+
 	return &types.UpstreamProxy{
 		ID:                       dst.ID,
 		RegistryID:               dst.RegistryID,
@@ -437,6 +451,7 @@ func (r UpstreamproxyDao) mapToUpstreamProxy(
 		PackageType:              dst.PackageType,
 		AllowedPattern:           util.StringToArr(dst.AllowedPattern.String),
 		BlockedPattern:           util.StringToArr(dst.BlockedPattern.String),
+		Config:                   config,
 		Source:                   dst.Source,
 		RepoURL:                  dst.RepoURL,
 		RepoAuthType:             dst.RepoAuthType,
