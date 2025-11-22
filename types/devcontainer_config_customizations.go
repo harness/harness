@@ -57,7 +57,7 @@ type VSCodeCustomizationSpecs struct {
 	Settings   map[string]any `json:"settings"`
 }
 
-// GitspaceCustomizationSpecs contains details about harness platform connectors.
+// GitspaceCustomizationSpecs contains details about harness platform connectors and AI agent configuration.
 // eg:
 //
 //	"customizations": {
@@ -71,7 +71,12 @@ type VSCodeCustomizationSpecs struct {
 //	        "type": "Artifactory",
 //	        "identifier": "testartifactoryconnector"
 //	      }
-//	    ]
+//	    ],
+//	    "ai-agent": {
+//	      "type": "claude-code",
+//	      "auth": "API-Key",
+//	      "secret-ref": "secretref"
+//	    }
 //	  }
 //	}
 type GitspaceCustomizationSpecs struct {
@@ -79,6 +84,11 @@ type GitspaceCustomizationSpecs struct {
 		Type string `json:"type"`
 		ID   string `json:"identifier"`
 	} `json:"connectors"`
+	AIAgent *struct {
+		Type      string `json:"type"`
+		Auth      string `json:"auth"`
+		SecretRef string `json:"secret_ref"`
+	} `json:"ai_agent,omitempty"`
 }
 
 type JetBrainsBackend string

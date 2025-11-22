@@ -22,6 +22,7 @@ import (
 
 	aitaskevents "github.com/harness/gitness/app/events/aitask"
 	"github.com/harness/gitness/events"
+	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -42,10 +43,10 @@ func (s *Service) handleAITaskEvent(
 	ctxWithTimeOut, cancel := context.WithTimeout(ctx, time.Duration(s.config.TimeoutInMins)*time.Minute)
 	defer cancel()
 
-	aiTask, err := s.aiTaskStore.FindByIdentifier(
+	aiTask, err := s.fetchWithRetry(
 		ctxWithTimeOut,
-		event.Payload.AITaskSpaceID,
 		event.Payload.AITaskIdentifier,
+		event.Payload.AITaskSpaceID,
 	)
 	if err != nil {
 		logr.Error().Err(err).Msgf("failed to find AI task: %s", aiTask.Identifier)
@@ -54,6 +55,13 @@ func (s *Service) handleAITaskEvent(
 	if aiTask == nil {
 		logr.Error().Msg("failed to find AI task: ai task is nil")
 		return fmt.Errorf("failed to find ai task: %w", ErrNilResource)
+	}
+
+	// mark ai task as running
+	aiTask.State = enum.AITaskStateRunning
+	err = s.aiTaskStore.Update(ctx, aiTask)
+	if err != nil {
+		return fmt.Errorf("failed to update aiTask state: %w", err)
 	}
 
 	gitspaceConfig, err := s.gitspaceSvc.FindWithLatestInstanceByID(ctx, aiTask.GitspaceConfigID, false)
@@ -95,6 +103,23 @@ func (s *Service) handleAITaskEvent(
 	return nil
 }
 
+// fetchWithRetry trys to fetch ai task from db with retry only for case where AI task is not found.
+func (s *Service) fetchWithRetry(ctx context.Context, aiTaskID string, spaceID int64) (*types.AITask, error) {
+	for i := 0; i < 3; i++ {
+		aiTask, err := s.aiTaskStore.FindByIdentifier(ctx, spaceID, aiTaskID)
+		if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
+			// if error is not resource not found, return error
+			return nil, err
+		}
+		if err == nil {
+			return aiTask, nil
+		}
+
+		time.Sleep(3 * time.Second)
+	}
+	return nil, fmt.Errorf("failed to find ai task: %w", ErrNilResource)
+}
+
 func (s *Service) handleStartEvent(
 	ctx context.Context,
 	aiTask types.AITask,
@@ -102,19 +127,13 @@ func (s *Service) handleStartEvent(
 	logr zerolog.Logger,
 ) error {
 	switch aiTask.State {
-	case enum.AITaskStateUninitialized:
+	case enum.AITaskStateUninitialized, enum.AITaskStateRunning, enum.AITaskStateError:
 		logr.Debug().Msgf("ai task: %s is starting from %s state", aiTask.Identifier,
-			enum.AITaskStateUninitialized)
+			aiTask.State)
 		// continue
 	case enum.AITaskStateCompleted:
 		logr.Debug().Msgf("ai task: %s already completed", aiTask.Identifier)
 		return nil
-	case enum.AITaskStateRunning:
-		logr.Debug().Msgf("ai task: %s is running", aiTask.Identifier)
-		return fmt.Errorf("ai task: %s is running", aiTask.Identifier)
-	case enum.AITaskStateError:
-		logr.Debug().Msgf("ai task: %s already error", aiTask.Identifier)
-		return fmt.Errorf("ai task: %s is in error", aiTask.Identifier)
 	default:
 		logr.Debug().Msgf("ai task: %s in invalid state %s", aiTask.Identifier, aiTask.State)
 		return fmt.Errorf("ai task: %s in invalid state %s", aiTask.Identifier, aiTask.State)
