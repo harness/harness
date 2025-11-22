@@ -445,7 +445,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	gitspaceService := gitspace.ProvideGitspace(transactor, gitspaceConfigStore, gitspaceInstanceStore, reporter3, gitspaceEventStore, spaceFinder, infraproviderService, orchestratorOrchestrator, scmSCM, config, reporter6, ideFactory, spaceStore, tokenGenerator)
 	usageMetricStore := database.ProvideUsageMetricStore(db)
 	webhookStore := database.ProvideWebhookStore(db)
-	spaceService, err := space.ProvideService(transactor, jobScheduler, executor, encrypter, repoStore, spaceStore, spacePathStore, labelStore, ruleStore, webhookStore, spaceFinder, repoFinder, gitspaceService, infraproviderService, repoController)
+	spaceService, err := space.ProvideService(transactor, jobScheduler, executor, encrypter, repoStore, spaceStore, spacePathStore, labelStore, ruleStore, webhookStore, spaceFinder, gitspaceService, infraproviderService, repoController)
 	if err != nil {
 		return nil, err
 	}

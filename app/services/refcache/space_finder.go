@@ -48,11 +48,6 @@ func (s SpaceFinder) MarkChanged(ctx context.Context, spaceCore *types.SpaceCore
 	s.evictor.Evict(ctx, spaceCore)
 }
 
-func (s SpaceFinder) Flush(ctx context.Context) {
-	s.spaceIDCache.EvictAll(ctx)
-	s.spacePathCache.EvictAll(ctx)
-}
-
 func (s SpaceFinder) FindByID(ctx context.Context, spaceID int64) (*types.SpaceCore, error) {
 	spaceCore, err := s.spaceIDCache.Get(ctx, spaceID)
 	if err != nil {

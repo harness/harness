@@ -53,12 +53,6 @@ func (r RepoFinder) MarkChanged(ctx context.Context, repoCore *types.RepositoryC
 	r.evictor.Evict(ctx, repoCore)
 }
 
-func (r RepoFinder) Flush(ctx context.Context) {
-	r.repoIDCache.EvictAll(ctx)
-	r.repoRefCache.EvictAll(ctx)
-	r.spacePathCache.EvictAll(ctx)
-}
-
 func (r RepoFinder) FindByID(ctx context.Context, repoID int64) (*types.RepositoryCore, error) {
 	return r.repoIDCache.Get(ctx, repoID)
 }

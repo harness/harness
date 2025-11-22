@@ -276,7 +276,6 @@ func (s *Service) moveSpaceResourcesInTx(
 	}
 
 	s.spaceFinder.MarkChanged(ctx, sourceSpace.Core())
-	s.repoFinder.Flush(ctx)
 
 	return output, nil
 }

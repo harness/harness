@@ -112,10 +112,3 @@ func (c *Redis[K, V]) Evict(ctx context.Context, key K) {
 		c.logErrFn(ctx, err)
 	}
 }
-
-func (c *Redis[K, V]) EvictAll(ctx context.Context) {
-	err := c.client.FlushDB(ctx).Err()
-	if err != nil && c.logErrFn != nil {
-		c.logErrFn(ctx, err)
-	}
-}
