@@ -21,9 +21,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/harness/gitness/app/api/request"
+	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/refcache"
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
@@ -125,6 +127,13 @@ type ManifestService interface {
 		ctx context.Context, desc manifest.Descriptor, repoID int64, imageName string,
 	) (*types.Blob, error)
 	UpsertImage(ctx context.Context, info pkg.RegistryInfo) error
+	AddTagsToManifest(
+		ctx context.Context,
+		dgst digest.Digest,
+		tags []string,
+		imageName string,
+		info pkg.RegistryInfo,
+	) error
 }
 
 func (l *manifestService) DBTag(
@@ -197,7 +206,77 @@ func (l *manifestService) dbTagManifest(
 	if err != nil {
 		return formatFailedToTagErr(err)
 	}
-	err = l.tx.WithTx(ctx, func(ctx context.Context) error {
+	err = l.addTagsWithTx(ctx, dbRegistry, dbManifest, []string{tagName}, imageName)
+	if err != nil {
+		return formatFailedToTagErr(err)
+	}
+	spacePath, packageType, err := l.getSpacePathAndPackageType(ctx, &dbRegistry)
+	if err == nil {
+		session, _ := request.AuthSessionFrom(ctx)
+		l.reportEvents(ctx, dgst, info, imageName, tagName, packageType, spacePath, dbManifest, session)
+	} else {
+		log.Ctx(ctx).Err(err).Msg("Failed to find spacePath, not publishing event")
+	}
+
+	return nil
+}
+
+func (l *manifestService) AddTagsToManifest(
+	ctx context.Context,
+	dgst digest.Digest,
+	tags []string, imageName string,
+	info pkg.RegistryInfo,
+) error {
+	dbRegistry := info.Registry
+	digest, err := types.NewDigest(dgst)
+	if err != nil {
+		return formatFailedToTagErr(err)
+	}
+	dbManifest, err := l.manifestDao.FindManifestByDigest(ctx, dbRegistry.ID, info.Image, digest)
+	if errors.Is(err, gitnessstore.ErrResourceNotFound) {
+		return fmt.Errorf("manifest %s not found in database", dgst)
+	}
+	if err != nil {
+		return formatFailedToTagErr(err)
+	}
+	var newTags []string
+	existingTags, err := l.tagDao.GetTagsByManifestID(ctx, dbManifest.ID)
+	if err != nil {
+		return formatFailedToTagErr(err)
+	}
+	for _, t := range tags {
+		if !slices.Contains(*existingTags, t) {
+			newTags = append(newTags, t)
+		} else {
+			log.Info().Ctx(ctx).Msgf("tag: %s is already assigned to manifest: %s", t, digest.String())
+		}
+	}
+
+	err = l.addTagsWithTx(ctx, dbRegistry, dbManifest, newTags, imageName)
+	if err != nil {
+		return formatFailedToTagErr(err)
+	}
+	spacePath, packageType, err := l.getSpacePathAndPackageType(ctx, &dbRegistry)
+	if err != nil {
+		log.Ctx(ctx).Err(err).Msg("Failed to find spacePath, not publishing event")
+	}
+
+	session, _ := request.AuthSessionFrom(ctx)
+	for _, tag := range newTags {
+		l.reportEvents(ctx, dgst, info, imageName, tag, packageType, spacePath, dbManifest, session)
+	}
+
+	return nil
+}
+
+func (l *manifestService) addTagsWithTx(
+	ctx context.Context,
+	dbRegistry types.Registry,
+	dbManifest *types.Manifest,
+	tags []string,
+	imageName string,
+) error {
+	err := l.tx.WithTx(ctx, func(ctx context.Context) error {
 		// Prevent long running transactions by setting an upper limit of manifestTagGCLockTimeout. If the GC is holding
 		// the lock of a related review record, the processing there should be fast enough to avoid this. Regardless, we
 		// should not let transactions open (and clients waiting) for too long. If this sensible timeout is exceeded, abort
@@ -211,35 +290,38 @@ func (l *manifestService) dbTagManifest(
 			return formatFailedToTagErr(err)
 		}
 
-		// Create or update artifact and tag records
-		if err := l.upsertTag(ctx, dbRegistry.ID, dbManifest.ID, imageName, tagName); err != nil {
-			return formatFailedToTagErr(err)
+		for _, tag := range tags {
+			if err := l.upsertTag(ctx, dbRegistry.ID, dbManifest.ID, imageName, tag); err != nil {
+				return formatFailedToTagErr(err)
+			}
 		}
-
 		return nil
 	})
+	return err
+}
 
-	if err != nil {
-		return formatFailedToTagErr(err)
-	}
-	spacePath, packageType, err := l.getSpacePathAndPackageType(ctx, &dbRegistry)
-	if err == nil {
-		reg := info.Registry
-		if !l.untaggedImagesEnabled(ctx) {
-			l.reportEventAsync(
-				ctx, reg.ID, info.RegIdentifier, imageName, tagName, packageType,
-				spacePath, dbManifest.ID,
-			)
-		}
-		session, _ := request.AuthSessionFrom(ctx)
-		createPayload := webhook.GetArtifactCreatedPayload(ctx, info, session.Principal.ID,
-			reg.ID, reg.Name, tagName, dgst.String(), l.urlProvider)
-		l.artifactEventReporter.ArtifactCreated(ctx, &createPayload)
-	} else {
-		log.Ctx(ctx).Err(err).Msg("Failed to find spacePath, not publishing event")
+func (l *manifestService) reportEvents(
+	ctx context.Context,
+	dgst digest.Digest,
+	info pkg.RegistryInfo,
+	imageName string,
+	tag string,
+	packageType event.PackageType,
+	spacePath string,
+	dbManifest *types.Manifest,
+	session *auth.Session,
+) {
+	reg := info.Registry
+	if !l.untaggedImagesEnabled(ctx) {
+		l.reportEventAsync(
+			ctx, reg.ID, info.RegIdentifier, imageName, tag, packageType,
+			spacePath, dbManifest.ID,
+		)
 	}
 
-	return nil
+	createPayload := webhook.GetArtifactCreatedPayload(ctx, info, session.Principal.ID,
+		reg.ID, reg.Name, tag, dgst.String(), l.urlProvider)
+	l.artifactEventReporter.ArtifactCreated(ctx, &createPayload)
 }
 
 func formatFailedToTagErr(err error) error {
