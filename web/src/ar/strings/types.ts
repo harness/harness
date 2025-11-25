@@ -406,6 +406,7 @@ export interface StringsMap {
   'actions.scan': string
   'actions.setupClient': string
   add: string
+  addMetadata: string
   addProperty: string
   all: string
   apply: string

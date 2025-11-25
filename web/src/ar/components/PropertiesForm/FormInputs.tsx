@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import React, { useState } from 'react'
-import { get } from 'lodash-es'
+import React, { useCallback, useMemo, useState } from 'react'
+import { debounce, get } from 'lodash-es'
 import { useFormikContext } from 'formik'
 import { MenuItem } from '@blueprintjs/core'
 import { FormInput, getErrorInfoFromErrorObject, SelectOption } from '@harnessio/uicore'
@@ -26,6 +26,8 @@ import { useStrings } from '@ar/frameworks/strings'
 import { DEFAULT_PAGE_INDEX, DEFAULT_PAGE_SIZE } from '@ar/constants'
 
 import type { PropertiesFormValues } from './types'
+
+const DEBOUNCE_DELAY = 500
 
 interface KeyInputProps {
   name: string
@@ -41,25 +43,30 @@ function KeyInput(props: KeyInputProps): JSX.Element {
   const value = get(formik.values, name)
   const { getString } = useStrings()
   const { scope } = useAppStore()
+  const { accountId, orgIdentifier, projectIdentifier } = scope
 
-  const fetchItems = async (query: string) => {
-    try {
-      setItems([{ label: getString('loading'), value: '' }])
-      const response = await getMetadataKeys({
-        queryParams: {
-          account_identifier: scope.accountId as string,
-          org_identifier: scope.orgIdentifier,
-          project_identifier: scope.projectIdentifier,
-          size: DEFAULT_PAGE_SIZE,
-          page: DEFAULT_PAGE_INDEX,
-          search_term: query
-        }
-      })
-      setItems(response.content?.data?.map((item: string) => ({ label: item, value: item })) || [])
-    } catch (e: any) {
-      setItems([{ label: getErrorInfoFromErrorObject(e) ?? getString('failedToLoadData'), value: '' }])
-    }
-  }
+  const fetchItems = useCallback(
+    async (query: string) => {
+      try {
+        setItems([{ label: getString('loading'), value: '' }])
+        const response = await getMetadataKeys({
+          queryParams: {
+            account_identifier: accountId as string,
+            org_identifier: orgIdentifier,
+            project_identifier: projectIdentifier,
+            size: DEFAULT_PAGE_SIZE,
+            page: DEFAULT_PAGE_INDEX,
+            search_term: query
+          }
+        })
+        setItems(response.content?.data?.map((item: string) => ({ label: item, value: item })) || [])
+      } catch (e: any) {
+        setItems([{ label: getErrorInfoFromErrorObject(e) ?? getString('failedToLoadData'), value: '' }])
+      }
+    },
+    [accountId, orgIdentifier, projectIdentifier, getString]
+  )
+  const debouncedFetchItems = useMemo(() => debounce(fetchItems, DEBOUNCE_DELAY), [fetchItems])
 
   if (!supportQuery) {
     return <FormInput.Text name={name} placeholder={placeholder} disabled={disabled} />
@@ -80,7 +87,7 @@ function KeyInput(props: KeyInputProps): JSX.Element {
       }}
       name={name}
       disabled={disabled}
-      onQueryChange={query => fetchItems(query)}
+      onQueryChange={query => debouncedFetchItems(query)}
     />
   )
 }
@@ -100,26 +107,32 @@ function ValueInput(props: ValueInputProps): JSX.Element {
   const value = get(formik.values, name)
   const { getString } = useStrings()
   const { scope } = useAppStore()
+  const { accountId, orgIdentifier, projectIdentifier } = scope
 
-  const fetchItems = async (query: string) => {
-    try {
-      setItems([{ label: getString('loading'), value: '' }])
-      const response = await getMetadataValues({
-        queryParams: {
-          account_identifier: scope.accountId as string,
-          org_identifier: scope.orgIdentifier,
-          project_identifier: scope.projectIdentifier,
-          size: DEFAULT_PAGE_SIZE,
-          page: DEFAULT_PAGE_INDEX,
-          search_term: query,
-          key: propertyKey
-        }
-      })
-      setItems(response.content?.data?.map((item: string) => ({ label: item, value: item })) || [])
-    } catch (e: any) {
-      setItems([{ label: getErrorInfoFromErrorObject(e) ?? getString('failedToLoadData'), value: '' }])
-    }
-  }
+  const fetchItems = useCallback(
+    async (query: string) => {
+      try {
+        setItems([{ label: getString('loading'), value: '' }])
+        const response = await getMetadataValues({
+          queryParams: {
+            account_identifier: accountId as string,
+            org_identifier: orgIdentifier,
+            project_identifier: projectIdentifier,
+            size: DEFAULT_PAGE_SIZE,
+            page: DEFAULT_PAGE_INDEX,
+            search_term: query,
+            key: propertyKey
+          }
+        })
+        setItems(response.content?.data?.map((item: string) => ({ label: item, value: item })) || [])
+      } catch (e: any) {
+        setItems([{ label: getErrorInfoFromErrorObject(e) ?? getString('failedToLoadData'), value: '' }])
+      }
+    },
+    [accountId, orgIdentifier, projectIdentifier, propertyKey, getString]
+  )
+
+  const debouncedFetchItems = useMemo(() => debounce(fetchItems, DEBOUNCE_DELAY), [fetchItems])
 
   if (!supportQuery) {
     return <FormInput.Text name={name} placeholder={placeholder} disabled={disabled} />
@@ -140,7 +153,7 @@ function ValueInput(props: ValueInputProps): JSX.Element {
       }}
       name={name}
       disabled={disabled}
-      onQueryChange={query => fetchItems(query)}
+      onQueryChange={query => debouncedFetchItems(query)}
     />
   )
 }

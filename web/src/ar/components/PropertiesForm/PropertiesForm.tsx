@@ -63,7 +63,7 @@ function PropertiesFormContent(props: PropertiesFormContentProps) {
             onRemove={remove}
             onAdd={() => push(DEFAULT_VALUE)}
             disabled={readonly}
-            addButtonLabel={getString('addProperty')}
+            addButtonLabel={getString('addMetadata')}
             supportQuery={supportQuery}
           />
         )

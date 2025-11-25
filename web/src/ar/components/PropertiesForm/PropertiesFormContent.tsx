@@ -18,12 +18,14 @@ import React, { forwardRef } from 'react'
 import { Card, getErrorInfoFromErrorObject, useToaster } from '@harnessio/uicore'
 import { useGetMetadataQuery, useUpdateMetadataMutation } from '@harnessio/react-har-service-v2-client'
 
-import { useAppStore } from '@ar/hooks'
+import { useAppStore, useParentHooks } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import { queryClient } from '@ar/utils/queryClient'
 import type { FormikFowardRef } from '@ar/common/types'
 import PageContent from '@ar/components/PageContent/PageContent'
 import PropertiesForm from '@ar/components/PropertiesForm/PropertiesForm'
+import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
+
 import type { PropertiesFormValues } from './types'
 
 interface PropertiesFormContentProps {
@@ -47,12 +49,30 @@ function PropertiesFormContent(props: PropertiesFormContentProps, formikRef: For
     versionIdentifier
   } = props
   const { scope } = useAppStore()
+  const { accountId, orgIdentifier, projectIdentifier } = scope
+  const { usePermission } = useParentHooks()
   const { showSuccess, showError, clear } = useToaster()
   const { getString } = useStrings()
 
+  const [isEdit] = usePermission(
+    {
+      resourceScope: {
+        accountIdentifier: accountId,
+        orgIdentifier,
+        projectIdentifier
+      },
+      resource: {
+        resourceType: ResourceType.ARTIFACT_REGISTRY,
+        resourceIdentifier: repositoryIdentifier
+      },
+      permissions: [PermissionIdentifier.EDIT_ARTIFACT_REGISTRY]
+    },
+    [accountId, projectIdentifier, orgIdentifier, repositoryIdentifier]
+  )
+
   const { data, isFetching, error, refetch } = useGetMetadataQuery({
     queryParams: {
-      account_identifier: scope.accountId as string,
+      account_identifier: accountId as string,
       registry_identifier: repositoryIdentifier,
       package: artifactIdentifier,
       version: versionIdentifier
@@ -65,9 +85,10 @@ function PropertiesFormContent(props: PropertiesFormContentProps, formikRef: For
   const handleUpdateMetadata = async (values: PropertiesFormValues) => {
     try {
       setIsUpdating(true)
+      const metadataValues = values.value.filter(each => each.key !== '' && each.value !== '')
       const response = await updateMetadata({
         body: {
-          metadata: values.value,
+          metadata: metadataValues,
           registryIdentifier: repositoryIdentifier,
           package: artifactIdentifier,
           version: versionIdentifier
@@ -92,7 +113,7 @@ function PropertiesFormContent(props: PropertiesFormContentProps, formikRef: For
     <PageContent loading={isFetching} error={error} refetch={refetch}>
       <Card className={className}>
         <PropertiesForm
-          readonly={readonly}
+          readonly={readonly || !isEdit}
           value={{ value: initialValue }}
           ref={formikRef}
           onChangeDirty={setIsDirty}
