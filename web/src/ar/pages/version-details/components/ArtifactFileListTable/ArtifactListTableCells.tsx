@@ -21,7 +21,7 @@ import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance } fr
 
 import { Parent } from '@ar/common/types'
 import { useStrings } from '@ar/frameworks/strings'
-import { useAppStore, useGetDownloadFileURL } from '@ar/hooks'
+import { useAppStore, useDownloadArtifactFile } from '@ar/hooks'
 import TableCells from '@ar/components/TableCells/TableCells'
 
 import { VersionFilesContext } from '../../context/VersionFilesProvider'
@@ -83,17 +83,13 @@ export const FileDownloadCommandCell: CellType = ({ value, row }) => {
   const { parent } = useAppStore()
   const { repositoryIdentifier } = useContext(VersionFilesContext)
 
-  const downloadURL = useGetDownloadFileURL({
-    repositoryIdentifier,
-    path: value,
-    fileName: name
-  })
+  const { downloadFile } = useDownloadArtifactFile()
 
   return (
     <Layout.Horizontal spacing="medium">
       <TableCells.CopyTextCell value={downloadCommand}>{getString('copy')}</TableCells.CopyTextCell>
       {parent === Parent.Enterprise && (
-        <TableCells.DownloadCell href={downloadURL} target="_blank">
+        <TableCells.DownloadCell onClick={() => downloadFile(repositoryIdentifier, value, name)}>
           {getString('download')}
         </TableCells.DownloadCell>
       )}
