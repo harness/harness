@@ -472,10 +472,16 @@ func (l *manifestService) dbPutManifest(
 		return l.upsertImageAndArtifact(ctx, d, info)
 	case *manifestlist.DeserializedManifestList:
 		log.Ctx(ctx).Debug().Msgf("Putting manifestlist manifest %s to database", d.String())
-		return l.dbPutManifestList(ctx, reqManifest, payload, d, headers, info)
+		if err := l.dbPutManifestList(ctx, reqManifest, payload, d, headers, info); err != nil {
+			return err
+		}
+		return l.upsertImageAndArtifact(ctx, d, info)
 	case *ocischema.DeserializedImageIndex:
 		log.Ctx(ctx).Debug().Msgf("Putting ocischema image index %s to database", d.String())
-		return l.dbPutImageIndex(ctx, reqManifest, payload, d, headers, info)
+		if err := l.dbPutImageIndex(ctx, reqManifest, payload, d, headers, info); err != nil {
+			return err
+		}
+		return l.upsertImageAndArtifact(ctx, d, info)
 	default:
 		log.Ctx(ctx).Info().Msgf("Invalid manifest type: %T", reqManifest)
 		return errcode.ErrorCodeManifestInvalid.WithDetail("manifest type unsupported")

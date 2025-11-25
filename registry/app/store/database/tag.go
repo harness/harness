@@ -618,7 +618,7 @@ func (t tagDao) getArtifactEnrichmentData(ctx context.Context, artifactIDs []int
 
 	// Build placeholders for the 3 IN clauses
 	var placeholders1, placeholders2, placeholders3 string
-	args := make([]any, 0, len(artifactIDs)*3)
+	args := make([]interface{}, 0, len(artifactIDs)*3)
 	const placeholderSeparator = ", ?"
 
 	// nolint:nestif
@@ -678,7 +678,15 @@ func (t tagDao) getArtifactEnrichmentData(ctx context.Context, artifactIDs []int
 	}
 
 	query := fmt.Sprintf(`
-    WITH download_counts AS (
+    WITH oci_artifacts AS (
+    SELECT a.artifact_image_id, a.artifact_id, a.artifact_version 
+    FROM artifacts a 
+		join images i ON a.artifact_image_id = i.image_id
+		join registries r ON r.registry_id = i.image_registry_id
+		where r.registry_package_type IN ('DOCKER','HELM')
+        and artifact_id IN (%s)
+	),
+    download_counts AS (
         SELECT 
             ds.download_stat_artifact_id AS artifact_id,
             COUNT(ds.download_stat_id) AS download_count
@@ -690,7 +698,7 @@ func (t tagDao) getArtifactEnrichmentData(ctx context.Context, artifactIDs []int
         SELECT 
             ar.artifact_id,
             %s AS tags
-        FROM artifacts ar
+        FROM oci_artifacts ar
         JOIN images i ON i.image_id = ar.artifact_image_id
         JOIN manifests m ON m.manifest_registry_id = i.image_registry_id 
                          AND m.manifest_image_name = i.image_name
@@ -707,7 +715,7 @@ func (t tagDao) getArtifactEnrichmentData(ctx context.Context, artifactIDs []int
     LEFT JOIN download_counts dc ON dc.artifact_id = ar.artifact_id
     LEFT JOIN tag_lists tl ON tl.artifact_id = ar.artifact_id
     WHERE ar.artifact_id IN (%s);
-    `, placeholders1, tagAggExpr, decodeFunction, placeholders2, placeholders3)
+    `, placeholders3, placeholders1, tagAggExpr, decodeFunction, placeholders2, placeholders3)
 
 	type enrichmentRow struct {
 		ArtifactID    int64  `db:"artifact_id"`
