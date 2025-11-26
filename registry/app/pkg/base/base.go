@@ -77,6 +77,7 @@ type LocalBase interface {
 		path string,
 		metadata metadata.Metadata,
 		fileInfo types.FileInfo,
+		failOnConflict bool,
 	) (*commons.ResponseHeaders, string, int64, bool, error)
 	Download(ctx context.Context, info pkg.ArtifactInfo, version string, fileName string) (
 		*commons.ResponseHeaders,
@@ -178,6 +179,7 @@ func (l *localBase) MoveTempFileAndCreateArtifact(
 	path string,
 	metadata metadata.Metadata,
 	fileInfo types.FileInfo,
+	failOnConflict bool,
 ) (response *commons.ResponseHeaders, sha256 string, artifactID int64, isExistent bool, err error) {
 	responseHeaders := &commons.ResponseHeaders{
 		Headers: make(map[string]string),
@@ -188,6 +190,12 @@ func (l *localBase) MoveTempFileAndCreateArtifact(
 	if err != nil {
 		if !errors.IsConflict(err) {
 			return nil, "", 0, false, err
+		}
+		if failOnConflict {
+			responseHeaders.Code = http.StatusConflict
+			return responseHeaders, "", 0, true,
+				usererror.Conflict(fmt.Sprintf("File with name:[%s],"+
+					" package:[%s], version:[%s] already exist", fileInfo.Filename, info.Image, version))
 		}
 		_, fileSha256, err2 := l.GetSHA256ByPath(ctx, info.RegistryID, path)
 		if err2 != nil {

@@ -94,7 +94,7 @@ func (c *registryHelper) UploadPackage(
 		tempFileName, info.Version, path,
 		&rpmmetadata.RpmMetadata{
 			Metadata: info.Metadata,
-		}, fileInfo)
+		}, fileInfo, false)
 
 	if err != nil {
 		return nil, "", err

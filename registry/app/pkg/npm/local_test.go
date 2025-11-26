@@ -56,7 +56,7 @@ type mockLocalBase struct {
 	moveTempAndCreate func(
 		ctx context.Context, info pkg.ArtifactInfo,
 		tmp, version, path string,
-		md metadata.Metadata, fi types.FileInfo,
+		md metadata.Metadata, fi types.FileInfo, failOnConflict bool,
 	) (*commons.ResponseHeaders, string, int64, bool, error)
 }
 
@@ -155,9 +155,9 @@ func (m *mockLocalBase) Upload(
 func (m *mockLocalBase) MoveTempFileAndCreateArtifact(
 	ctx context.Context,
 	info pkg.ArtifactInfo, tmp,
-	version, p string, md metadata.Metadata, fi types.FileInfo,
+	version, p string, md metadata.Metadata, fi types.FileInfo, foC bool,
 ) (*commons.ResponseHeaders, string, int64, bool, error) {
-	return m.moveTempAndCreate(ctx, info, tmp, version, p, md, fi)
+	return m.moveTempAndCreate(ctx, info, tmp, version, p, md, fi, foC)
 }
 
 func (m *mockLocalBase) Download(

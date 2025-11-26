@@ -141,7 +141,7 @@ func (c *localRegistry) UploadPackageFile(
 		tempFileName, info.Version, filePath,
 		&npm2.NpmMetadata{
 			PackageMetadata: info.Metadata,
-		}, fileInfo)
+		}, fileInfo, false)
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("failed to move npm package: %v", err)
 		return nil, "", err

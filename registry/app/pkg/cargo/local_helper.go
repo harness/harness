@@ -84,5 +84,5 @@ func (h *localRegistryHelper) MoveTempFile(
 		getCrateFilePath(info.Image, info.Version),
 		&cargometadata.VersionMetadataDB{
 			VersionMetadata: *metadata,
-		}, fileInfo)
+		}, fileInfo, false)
 }

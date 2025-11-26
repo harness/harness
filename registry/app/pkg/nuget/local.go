@@ -302,7 +302,7 @@ func (c *localRegistry) UploadPackage(
 		tempFileName, info.Version, path,
 		&nugetmetadata.NugetMetadata{
 			Metadata: info.Metadata,
-		}, fileInfo)
+		}, fileInfo, false)
 	return h, checkSum, err
 }
 

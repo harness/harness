@@ -114,6 +114,7 @@ func (m *MockLocalBase) MoveTempFileAndCreateArtifact(
 	_, _, _ string,
 	_ metadata.Metadata,
 	_ types.FileInfo,
+	_ bool,
 ) (*commons.ResponseHeaders, string, int64, bool, error) {
 	// TODO implement me
 	panic("implement me")
