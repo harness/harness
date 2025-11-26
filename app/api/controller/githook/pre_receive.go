@@ -97,17 +97,20 @@ func (c *Controller) PreReceive(
 		)
 	}
 
-	var ruleViolations []types.RuleViolations
 	var principal *types.Principal
-	var isRepoOwner bool
-	// For internal calls - through the application interface (API) - no need to verify protection rules.
-	if !in.Internal && repo.State == enum.RepoStateActive {
+	repoActive := repo.State == enum.RepoStateActive
+	if repoActive {
 		// TODO: use store.PrincipalInfoCache once we abstracted principals.
 		principal, err = c.principalStore.Find(ctx, in.PrincipalID)
 		if err != nil {
 			return hook.Output{}, fmt.Errorf("failed to find inner principal with id %d: %w", in.PrincipalID, err)
 		}
+	}
 
+	var ruleViolations []types.RuleViolations
+	var isRepoOwner bool
+	// For internal calls - through the application interface (API) - no need to verify protection rules.
+	if !in.Internal && repoActive {
 		dummySession := &auth.Session{Principal: *principal, Metadata: nil}
 		isRepoOwner, err = apiauth.IsRepoOwner(ctx, c.authorizer, dummySession, repo)
 		if err != nil {
@@ -133,7 +136,7 @@ func (c *Controller) PreReceive(
 		return output, nil
 	}
 
-	if repo.State == enum.RepoStateActive {
+	if repoActive {
 		// check secret scanning apart from push rules as it is enabled in repository settings.
 		err = c.scanSecrets(ctx, rgit, repo, false, nil, in, &output)
 		if err != nil {
