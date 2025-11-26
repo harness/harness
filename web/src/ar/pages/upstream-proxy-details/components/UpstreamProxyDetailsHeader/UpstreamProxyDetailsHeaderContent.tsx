@@ -20,14 +20,16 @@ import { Expander, Position } from '@blueprintjs/core'
 import { Color } from '@harnessio/design-system'
 import { Container, Layout, Text } from '@harnessio/uicore'
 
+import { useAppStore } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
-import { DEFAULT_DATE_TIME_FORMAT } from '@ar/constants'
 import HeaderTitle from '@ar/components/Header/Title'
+import { DEFAULT_DATE_TIME_FORMAT } from '@ar/constants'
 import { getReadableDateTime } from '@ar/common/dateUtils'
 import type { Repository } from '@ar/pages/repository-details/types'
 import LabelsPopover from '@ar/components/LabelsPopover/LabelsPopover'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import RepositoryLocationBadge from '@ar/components/Badge/RepositoryLocationBadge'
+import SetupClientButton from '@ar/components/SetupClientButton/SetupClientButton'
 import RepositoryVisibilityBadge from '@ar/components/Badge/RepositoryVisibilityBadge'
 import RepositoryActionsWidget from '@ar/frameworks/RepositoryStep/RepositoryActionsWidget'
 import { PageType, RepositoryConfigType, RepositoryPackageType, RepositoryVisibility } from '@ar/common/types'
@@ -43,6 +45,8 @@ export default function UpstreamProxyDetailsHeaderContent(props: UpstreamProxyDe
   const { data, iconSize = 40 } = props
   const { identifier, modifiedAt, packageType, labels, description, isPublic } = data
   const { getString } = useStrings()
+  const { isCurrentSessionPublic } = useAppStore()
+
   return (
     <Container>
       <Layout.Horizontal
@@ -85,13 +89,18 @@ export default function UpstreamProxyDetailsHeaderContent(props: UpstreamProxyDe
           </Layout.Horizontal>
         </Layout.Vertical>
         <Expander />
-        <RepositoryActionsWidget
-          type={RepositoryConfigType.UPSTREAM}
-          packageType={data.packageType as RepositoryPackageType}
-          data={data}
-          readonly={false}
-          pageType={PageType.Details}
-        />
+        <Layout.Horizontal>
+          <SetupClientButton repositoryIdentifier={identifier} packageType={packageType as RepositoryPackageType} />
+          {!isCurrentSessionPublic && (
+            <RepositoryActionsWidget
+              type={RepositoryConfigType.UPSTREAM}
+              packageType={data.packageType as RepositoryPackageType}
+              data={data}
+              readonly={false}
+              pageType={PageType.Details}
+            />
+          )}
+        </Layout.Horizontal>
       </Layout.Horizontal>
     </Container>
   )

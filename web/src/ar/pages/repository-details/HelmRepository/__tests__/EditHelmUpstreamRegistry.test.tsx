@@ -128,7 +128,7 @@ describe('Verify header section for docker artifact registry', () => {
     )
     const pageHeader = getByTestId(container, 'upstream-registry-header-container')
     const setupClientBtn = pageHeader.querySelector('button[aria-label="actions.setupClient"]')
-    expect(setupClientBtn).not.toBeInTheDocument()
+    expect(setupClientBtn).toBeInTheDocument()
   })
 
   test('Verify other registry actions', async () => {
