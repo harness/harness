@@ -106,6 +106,7 @@ func (r *proxy) DownloadPackageFile(
 	if err == nil {
 		return headers, fileReader, readcloser, redirect, err
 	}
+	log.Warn().Ctx(ctx).Msgf("failed to download from local, err: %v", err)
 
 	if info.PackagePath == "" {
 		log.Ctx(ctx).Error().Msgf("Package path is empty for registry %s", info.RegIdentifier)
