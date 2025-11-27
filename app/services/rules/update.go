@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/audit"
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
@@ -136,7 +137,7 @@ func (s *Service) Update(ctx context.Context,
 	if in.Definition != nil {
 		rule.Definition, err = s.protectionManager.SanitizeJSON(rule.Type, *in.Definition)
 		if err != nil {
-			return nil, fmt.Errorf("invalid rule definition: %w", err)
+			return nil, errors.InvalidArgument("Invalid rule definition.")
 		}
 	}
 

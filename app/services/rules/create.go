@@ -26,6 +26,7 @@ import (
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/audit"
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
@@ -99,7 +100,7 @@ func (s *Service) Create(ctx context.Context,
 	var err error
 	in.Definition, err = s.protectionManager.SanitizeJSON(in.Type, in.Definition)
 	if err != nil {
-		return nil, fmt.Errorf("invalid rule definition: %w", err)
+		return nil, errors.InvalidArgument("Invalid rule definition.")
 	}
 
 	scope := ruleScopeRepo
