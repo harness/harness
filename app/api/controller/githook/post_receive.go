@@ -28,7 +28,12 @@ import (
 	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/audit"
+	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/git"
+	gitapi "github.com/harness/gitness/git/api"
+	gitenum "github.com/harness/gitness/git/enum"
 	"github.com/harness/gitness/git/hook"
+	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -87,7 +92,7 @@ func (c *Controller) PostReceive(
 	}
 
 	// handle branch updates related to PRs - best effort
-	c.handlePRMessaging(ctx, repo, in.PostReceiveInput, &out)
+	c.handlePRMessaging(ctx, rgit, repo, in.PostReceiveInput, &out)
 
 	err = c.postReceiveExtender.Extend(ctx, rgit, session, repo.Core(), in, &out)
 	if err != nil {
@@ -252,6 +257,7 @@ func (c *Controller) reportTagEvent(
 // TODO: If it is a new branch, or an update on a branch without any PR, it also sends out an SSE for pr creation.
 func (c *Controller) handlePRMessaging(
 	ctx context.Context,
+	rgit RestrictedGIT,
 	sourceRepo *types.Repository,
 	in hook.PostReceiveInput,
 	out *hook.Output,
@@ -264,17 +270,22 @@ func (c *Controller) handlePRMessaging(
 	}
 
 	// for now we only care about first branch that was pushed.
-	branchName := in.RefUpdates[0].Ref[len(gitReferenceNamePrefixBranch):]
+	refUpdate := in.RefUpdates[0]
 
-	c.suggestPullRequest(ctx, sourceRepo, branchName, out)
+	branchName := refUpdate.Ref[len(gitReferenceNamePrefixBranch):]
+	newSHA := refUpdate.New
+
+	c.suggestPullRequest(ctx, rgit, sourceRepo, branchName, newSHA, out)
 
 	// TODO: store latest pushed branch for user in cache and send out SSE
 }
 
 func (c *Controller) suggestPullRequest(
 	ctx context.Context,
+	rgit RestrictedGIT,
 	sourceRepo *types.Repository,
 	branchName string,
+	newSHA sha.SHA,
 	out *hook.Output,
 ) {
 	// Find the most recent few open PRs created from this branch.
@@ -301,8 +312,55 @@ func (c *Controller) suggestPullRequest(
 
 	slices.Reverse(prs) // Use ascending order for message output.
 
+	// For already existing PRs, check if the merge base is still unique and if there are PR with non-unique merge base
+	// print them to users terminal to inform about pending closure.
+	var prsNonUniqueMergeBase []*types.PullReq
+	for _, pr := range prs {
+		if pr.SourceRepoID == nil || *pr.SourceRepoID != pr.TargetRepoID {
+			continue
+		}
+
+		var targetBranch string
+		targetBranch, err = git.GetRefPath(pr.TargetBranch, gitenum.RefTypeBranch)
+		if err != nil {
+			log.Ctx(ctx).Warn().Err(err).Msgf(
+				"failed to create target reference from target branch'%s' originating from repo '%s'",
+				pr.TargetBranch,
+				sourceRepo.Path,
+			)
+			continue
+		}
+
+		_, err = rgit.MergeBase(ctx, git.MergeBaseParams{
+			ReadParams: git.ReadParams{RepoUID: sourceRepo.GitUID},
+			Ref1:       targetBranch,
+			Ref2:       newSHA.String(),
+		})
+		if errors.IsInvalidArgument(err) || gitapi.IsUnrelatedHistoriesError(err) {
+			prsNonUniqueMergeBase = append(prsNonUniqueMergeBase, pr)
+			continue
+		}
+		if err != nil {
+			log.Ctx(ctx).Warn().Err(err).Msgf(
+				"failed to find merge base for PR #%d originating from repo '%s'",
+				pr.Number,
+				sourceRepo.Path,
+			)
+			continue
+		}
+	}
+	msgs, err := c.getNonUniqueMergeBasePRsMessages(ctx, sourceRepo, branchName, prsNonUniqueMergeBase)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("failed to get messages for open pull request")
+		return
+	}
+	if len(msgs) > 0 {
+		out.Messages = append(out.Messages, msgs...)
+		return
+	}
+
 	// For already existing PRs, print them to users terminal for easier access.
-	msgs, err := c.getOpenPRsMessages(ctx, sourceRepo, branchName, prs)
+	msgs, err = c.getOpenPRsMessages(ctx, sourceRepo, branchName, prs)
 	if err != nil {
 		log.Ctx(ctx).Warn().Err(err).Msg("failed to get messages for open pull request")
 		return
@@ -334,15 +392,57 @@ func (c *Controller) getOpenPRsMessages(
 		return nil, nil
 	}
 
-	msgs := make([]string, 2*len(prs)+1)
+	msgs := make([]string, 0, 2*len(prs)+1)
 
 	if len(prs) == 1 {
-		msgs[0] = fmt.Sprintf("Branch %q has an open PR:", branchName)
+		msgs = append(msgs, fmt.Sprintf("Branch %q has an open PR:", branchName))
 	} else {
-		msgs[0] = fmt.Sprintf("Branch %q has open PRs:", branchName)
+		msgs = append(msgs, fmt.Sprintf("Branch %q has open PRs:", branchName))
 	}
 
-	for i, pr := range prs {
+	msgs, err := c.appendPRs(ctx, prs, sourceRepo, msgs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to append PRs: %w", err)
+	}
+
+	return msgs, nil
+}
+
+func (c *Controller) getNonUniqueMergeBasePRsMessages(
+	ctx context.Context,
+	sourceRepo *types.Repository,
+	branchName string,
+	prs []*types.PullReq,
+) ([]string, error) {
+	if len(prs) == 0 {
+		return nil, nil
+	}
+
+	msgs := make([]string, 0, 2*len(prs)+1)
+
+	if len(prs) == 1 {
+		msgs = append(msgs,
+			fmt.Sprintf("Branch %q has an open PR that would be closed because non-unique merge base:", branchName))
+	} else {
+		msgs = append(msgs,
+			fmt.Sprintf("Branch %q has open PRs that would be closed because non-unique merge base:", branchName))
+	}
+
+	msgs, err := c.appendPRs(ctx, prs, sourceRepo, msgs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to append PRs: %w", err)
+	}
+
+	return msgs, nil
+}
+
+func (c *Controller) appendPRs(
+	ctx context.Context,
+	prs []*types.PullReq,
+	sourceRepo *types.Repository,
+	msgs []string,
+) ([]string, error) {
+	for _, pr := range prs {
 		path := sourceRepo.Path
 		if pr.TargetRepoID != *pr.SourceRepoID {
 			targetRepo, err := c.repoFinder.FindByID(ctx, pr.TargetRepoID)
@@ -353,8 +453,8 @@ func (c *Controller) getOpenPRsMessages(
 			path = targetRepo.Path
 		}
 
-		msgs[2*i+1] = fmt.Sprintf("  (#%d) %s", pr.Number, pr.Title)
-		msgs[2*i+2] = "    " + c.urlProvider.GenerateUIPRURL(ctx, path, pr.Number)
+		msgs = append(msgs, fmt.Sprintf("  (#%d) %s", pr.Number, pr.Title))
+		msgs = append(msgs, "    "+c.urlProvider.GenerateUIPRURL(ctx, path, pr.Number))
 	}
 
 	return msgs, nil

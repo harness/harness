@@ -36,4 +36,5 @@ type RestrictedGIT interface {
 		ctx context.Context,
 		params git.ProcessPreReceiveObjectsParams,
 	) (git.ProcessPreReceiveObjectsOutput, error)
+	MergeBase(ctx context.Context, params git.MergeBaseParams) (git.MergeBaseOutput, error)
 }
