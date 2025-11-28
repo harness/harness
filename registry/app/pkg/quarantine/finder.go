@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/app/api/usererror"
+	cache2 "github.com/harness/gitness/app/store/cache"
 	"github.com/harness/gitness/cache"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/types"
@@ -68,16 +69,19 @@ type Finder interface {
 type finder struct {
 	service         *Service
 	quarantineCache cache.Cache[CacheKey, bool]
+	evictor         cache2.Evictor[*CacheKey]
 }
 
 // NewFinder creates a new quarantine finder that handles caching.
 func NewFinder(
 	service *Service,
 	quarantineCache cache.Cache[CacheKey, bool],
+	evictor cache2.Evictor[*CacheKey],
 ) Finder {
 	return &finder{
 		service:         service,
 		quarantineCache: quarantineCache,
+		evictor:         evictor,
 	}
 }
 
@@ -141,6 +145,7 @@ func (f *finder) CheckOCIManifestQuarantineStatus(
 
 // EvictCache evicts the cache entry for a specific artifact.
 // This should be called when quarantine status changes.
+// It uses the evictor to both evict the cache and publish events.
 func (f *finder) EvictCache(
 	ctx context.Context,
 	registryID int64,
@@ -154,7 +159,8 @@ func (f *finder) EvictCache(
 		Version:      version,
 		artifactType: artifactType,
 	}
-	f.quarantineCache.Evict(ctx, cacheKey)
+	// Use evictor to evict cache and publish event
+	f.evictor.Evict(ctx, &cacheKey)
 }
 
 // quarantineCacheGetter implements the cache getter interface.

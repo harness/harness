@@ -18,14 +18,18 @@ import (
 	"context"
 	"time"
 
+	cache2 "github.com/harness/gitness/app/store/cache"
 	"github.com/harness/gitness/cache"
+	"github.com/harness/gitness/pubsub"
 	"github.com/harness/gitness/registry/app/store"
 
 	"github.com/google/wire"
 )
 
 const (
-	quarantineCacheDuration = 5 * time.Minute
+	quarantineCacheDuration     = 5 * time.Minute
+	pubsubNamespace             = "cache-evictor"
+	pubsubTopicQuarantineUpdate = "artifact-quarantine-update"
 )
 
 // WireSet provides the quarantine service and finder.
@@ -33,7 +37,12 @@ var WireSet = wire.NewSet(
 	ProvideService,
 	ProvideQuarantineCache,
 	ProvideFinder,
+	ProvideEvictorQuarantine,
 )
+
+func ProvideEvictorQuarantine(pubsub pubsub.PubSub) cache2.Evictor[*CacheKey] {
+	return cache2.NewEvictor[*CacheKey](pubsubNamespace, pubsubTopicQuarantineUpdate, pubsub)
+}
 
 // ProvideService provides the quarantine service (repository layer only).
 func ProvideService(
@@ -45,17 +54,25 @@ func ProvideService(
 
 // ProvideQuarantineCache provides the quarantine cache.
 func ProvideQuarantineCache(
-	_ context.Context,
+	appCtx context.Context,
 	service *Service,
+	evictor cache2.Evictor[*CacheKey],
 ) cache.Cache[CacheKey, bool] {
 	getter := quarantineCacheGetter{service: service}
-	return cache.New[CacheKey, bool](getter, quarantineCacheDuration)
+	c := cache.New[CacheKey, bool](getter, quarantineCacheDuration)
+
+	evictor.Subscribe(appCtx, func(key *CacheKey) error {
+		c.Evict(appCtx, *key)
+		return nil
+	})
+	return c
 }
 
 // ProvideFinder provides the quarantine finder (with caching).
 func ProvideFinder(
 	service *Service,
 	quarantineCache cache.Cache[CacheKey, bool],
+	evictor cache2.Evictor[*CacheKey],
 ) Finder {
-	return NewFinder(service, quarantineCache)
+	return NewFinder(service, quarantineCache, evictor)
 }
