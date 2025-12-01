@@ -160,6 +160,8 @@ func PackageHandlerProvider(
 	cargoHandler cargo.Handler,
 	gopackageHandler gopackage.Handler,
 	huggingfaceHandler huggingface.Handler,
+	spaceFinder refcache.SpaceFinder,
+	publicAccessService publicaccess.CacheService,
 ) packagerrouter.Handler {
 	return packagerrouter.NewRouter(
 		handler,
@@ -172,6 +174,8 @@ func PackageHandlerProvider(
 		cargoHandler,
 		gopackageHandler,
 		huggingfaceHandler,
+		spaceFinder,
+		publicAccessService,
 	)
 }
 

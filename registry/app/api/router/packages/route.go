@@ -19,6 +19,8 @@ import (
 	"net/http"
 
 	middlewareauthn "github.com/harness/gitness/app/api/middleware/authn"
+	"github.com/harness/gitness/app/services/publicaccess"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/registry/app/api/handler/cargo"
 	"github.com/harness/gitness/registry/app/api/handler/generic"
 	"github.com/harness/gitness/registry/app/api/handler/gopackage"
@@ -56,6 +58,8 @@ func NewRouter(
 	cargoHandler cargo.Handler,
 	gopackageHandler gopackage.Handler,
 	huggingfaceHandler huggingface.Handler,
+	spaceFinder refcache.SpaceFinder,
+	publicAccessService publicaccess.Service,
 ) Handler {
 	r := chi.NewRouter()
 
@@ -65,7 +69,7 @@ func NewRouter(
 		r.Route("/maven", func(r chi.Router) {
 			r.Use(middleware.CheckAuthHeader())
 			r.Use(middlewareauthn.Attempt(packageHandler.GetAuthenticator()))
-			r.Use(middleware.CheckAuthWithChallenge(mavenHandler))
+			r.Use(middleware.CheckAuthWithChallenge(mavenHandler, spaceFinder, publicAccessService))
 			r.Use(middleware.TrackDownloadStatForMavenArtifact(mavenHandler))
 			r.Use(middleware.TrackBandwidthStatForMavenArtifacts(mavenHandler))
 			r.Get("/*", mavenHandler.GetArtifact)

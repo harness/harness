@@ -659,7 +659,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	huggingfaceLocalRegistry := huggingface.LocalRegistryProvider(localBase, fileManager, upstreamProxyConfigRepository, transactor, registryRepository, imageRepository, artifactRepository, provider)
 	huggingfaceController := huggingface2.ProvideController(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, huggingfaceLocalRegistry, finder)
 	huggingfaceHandler := huggingface3.ProvideHandler(huggingfaceController, packagesHandler)
-	handler4 := router.PackageHandlerProvider(packagesHandler, mavenHandler, genericHandler, pythonHandler, nugetHandler, npmHandler, rpmHandler, cargoHandler, gopackageHandler, huggingfaceHandler)
+	handler4 := router.PackageHandlerProvider(packagesHandler, mavenHandler, genericHandler, pythonHandler, nugetHandler, npmHandler, rpmHandler, cargoHandler, gopackageHandler, huggingfaceHandler, spaceFinder, cacheService)
 	appRouter := router.AppRouterProvider(registryOCIHandler, apiHandler, handler2, handler3, handler4)
 	readerFactory3, err := events3.ProvideReaderFactory(eventsSystem)
 	if err != nil {

@@ -24,11 +24,13 @@ import (
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/jwt"
+	"github.com/harness/gitness/app/services/publicaccess"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/url"
-	"github.com/harness/gitness/registry/app/api/handler/maven"
 	"github.com/harness/gitness/registry/app/api/handler/oci"
 	registryauth "github.com/harness/gitness/registry/app/auth"
 	"github.com/harness/gitness/registry/app/common"
+	"github.com/harness/gitness/registry/app/pkg"
 	gitnessenum "github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
@@ -131,14 +133,18 @@ func CheckSig() func(http.Handler) http.Handler {
 	}
 }
 
-func CheckAuthWithChallenge(h *maven.Handler) func(http.Handler) http.Handler {
+func CheckAuthWithChallenge(
+	p pkg.ArtifactInfoProvider,
+	spaceFinder refcache.SpaceFinder,
+	publicAccessService publicaccess.Service,
+) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(
 			func(w http.ResponseWriter, r *http.Request) {
 				ctx := r.Context()
 				session, _ := request.AuthSessionFrom(ctx)
 				if auth.IsAnonymousSession(session) {
-					info, err := h.GetArtifactInfo(r, true)
+					info, err := p.GetPackageArtifactInfo(r)
 					if err != nil {
 						log.Ctx(ctx).Error().Stack().Str("middleware",
 							"CheckAuthWithChallenge").Err(err).Msgf("error while fetching the artifact info: %v",
@@ -147,19 +153,20 @@ func CheckAuthWithChallenge(h *maven.Handler) func(http.Handler) http.Handler {
 						render.Unauthorized(ctx, w)
 						return
 					}
-					space, err := h.SpaceFinder.FindByID(ctx, info.ParentID)
+					space, err := spaceFinder.FindByID(ctx, info.BaseArtifactInfo().ParentID)
 					if err != nil {
 						log.Ctx(ctx).Error().Stack().Str("middleware",
 							"CheckAuthWithChallenge").Err(err).
-							Msgf("error while fetching the space with ID: %d err: %v", info.ParentID,
+							Msgf("error while fetching the space with ID: %d err: %v",
+								info.BaseArtifactInfo().ParentID,
 								err)
 						setAuthenticateHeader(w)
 						render.Unauthorized(ctx, w)
 						return
 					}
 
-					isPublic, err := h.PublicAccessService.Get(ctx,
-						gitnessenum.PublicResourceTypeRegistry, space.Path+"/"+info.RegIdentifier)
+					isPublic, err := publicAccessService.Get(ctx,
+						gitnessenum.PublicResourceTypeRegistry, space.Path+"/"+info.BaseArtifactInfo().RegIdentifier)
 					if !isPublic || err != nil {
 						setAuthenticateHeader(w)
 						render.Unauthorized(ctx, w)
