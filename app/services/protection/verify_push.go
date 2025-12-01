@@ -33,6 +33,7 @@ type (
 		Actor              *types.Principal
 		IsRepoOwner        bool
 		RepoID             int64
+		RepoIdentifier     string
 	}
 
 	PushViolationsInput struct {

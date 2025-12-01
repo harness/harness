@@ -180,10 +180,16 @@ func (c *Controller) processPushProtection(
 			Actor:              principal,
 			IsRepoOwner:        isRepoOwner,
 			RepoID:             repo.ID,
+			RepoIdentifier:     repo.Identifier,
 		},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to verify git objects: %w", err)
+	}
+
+	if len(out.Protections) == 0 {
+		// No push protections to verify.
+		return []types.RuleViolations{}, nil
 	}
 
 	violationsInput := &protection.PushViolationsInput{
