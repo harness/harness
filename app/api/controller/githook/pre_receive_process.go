@@ -101,7 +101,7 @@ func (c *Controller) processObjects(
 		}
 	}
 
-	if principalCommitterMatch && principal != nil {
+	if principalCommitterMatch && principal != nil && !in.Internal {
 		preReceiveObjsIn.FindCommitterMismatchParams = &git.FindCommitterMismatchParams{
 			PrincipalEmail: principal.Email,
 		}
