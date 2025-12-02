@@ -98,5 +98,10 @@ func (c *Controller) RestoreNoAuth(
 	}
 
 	// Repos restored as private since public access data has been deleted upon deletion.
-	return GetRepoOutputWithAccess(ctx, false, repo), nil
+	repoOutput, err := GetRepoOutputWithAccess(ctx, c.repoFinder, false, repo)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get repo output: %w", err)
+	}
+
+	return repoOutput, nil
 }

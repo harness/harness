@@ -104,7 +104,7 @@ func (c *Controller) UpdateDefaultBranch(
 
 	c.repoFinder.MarkChanged(ctx, repo)
 
-	repoOutput, err := GetRepoOutput(ctx, c.publicAccess, repoFull)
+	repoOutput, err := GetRepoOutput(ctx, c.publicAccess, c.repoFinder, repoFull)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get repo output: %w", err)
 	}

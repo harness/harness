@@ -128,7 +128,13 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 	if err != nil {
 		log.Ctx(ctx).Warn().Msgf("failed to insert instrumentation record for import repository operation: %s", err)
 	}
-	return GetRepoOutputWithAccess(ctx, false, repo), nil
+
+	repoOutput, err := GetRepoOutputWithAccess(ctx, c.repoFinder, false, repo)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get repo output: %w", err)
+	}
+
+	return repoOutput, nil
 }
 
 func (c *Controller) sanitizeImportInput(in *ImportInput, session *auth.Session) error {

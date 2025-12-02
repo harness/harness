@@ -85,7 +85,7 @@ func (c *Controller) Update(ctx context.Context,
 	}
 
 	if !in.hasChanges(repo) {
-		return GetRepoOutput(ctx, c.publicAccess, repo)
+		return GetRepoOutput(ctx, c.publicAccess, c.repoFinder, repo)
 	}
 
 	if err = c.repoCheck.LifecycleRestriction(ctx, session, repoCore); err != nil {
@@ -147,7 +147,7 @@ func (c *Controller) Update(ctx context.Context,
 		})
 	}
 
-	return GetRepoOutput(ctx, c.publicAccess, repo)
+	return GetRepoOutput(ctx, c.publicAccess, c.repoFinder, repo)
 }
 
 func (in *UpdateInput) hasChanges(repo *types.Repository) bool {

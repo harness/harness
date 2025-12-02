@@ -113,6 +113,7 @@ func GetSpaceCheckAuthRepoCreation(
 func GetRepoOutput(
 	ctx context.Context,
 	publicAccess publicaccess.Service,
+	repoFinder refcache.RepoFinder,
 	repo *types.Repository,
 ) (*RepositoryOutput, error) {
 	isPublic, err := publicAccess.Get(ctx, enum.PublicResourceTypeRepo, repo.Path)
@@ -120,25 +121,46 @@ func GetRepoOutput(
 		return nil, fmt.Errorf("failed to check if repo is public: %w", err)
 	}
 
+	var upstreamRepo *types.RepositoryCore
+	if repo.ForkID != 0 {
+		upstreamRepo, err = repoFinder.FindByID(ctx, repo.ForkID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to find repo fork %d: %w", repo.ForkID, err)
+		}
+	}
+
 	return &RepositoryOutput{
 		Repository: *repo,
 		IsPublic:   isPublic,
 		Importing:  slices.Contains(importingStates, repo.State),
 		Archived:   repo.State == enum.RepoStateArchived,
+		Upstream:   upstreamRepo,
 	}, nil
 }
 
 func GetRepoOutputWithAccess(
-	_ context.Context,
+	ctx context.Context,
+	repoFinder refcache.RepoFinder,
 	isPublic bool,
 	repo *types.Repository,
-) *RepositoryOutput {
+) (*RepositoryOutput, error) {
+	var upstreamRepo *types.RepositoryCore
+	if repo.ForkID != 0 {
+		var err error
+
+		upstreamRepo, err = repoFinder.FindByID(ctx, repo.ForkID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to find repo fork %d: %w", repo.ForkID, err)
+		}
+	}
+
 	return &RepositoryOutput{
 		Repository: *repo,
 		IsPublic:   isPublic,
 		Importing:  slices.Contains(importingStates, repo.State),
 		Archived:   repo.State == enum.RepoStateArchived,
-	}
+		Upstream:   upstreamRepo,
+	}, nil
 }
 
 // GetRepoCheckServiceAccountAccess fetches a repo with option to enforce repo state check

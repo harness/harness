@@ -247,7 +247,10 @@ func (c *Controller) CreateFork(
 	repoFork.GitURL = c.urlProvider.GenerateGITCloneURL(ctx, repoFork.Path)
 	repoFork.GitSSHURL = c.urlProvider.GenerateGITCloneSSHURL(ctx, repoFork.Path)
 
-	repoOutput := GetRepoOutputWithAccess(ctx, isForkPublic, repoFork)
+	repoOutput, err := GetRepoOutputWithAccess(ctx, c.repoFinder, isForkPublic, repoFork)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get repo output: %w", err)
+	}
 
 	err = c.auditService.Log(ctx,
 		session.Principal,

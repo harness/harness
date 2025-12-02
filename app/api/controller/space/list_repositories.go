@@ -102,13 +102,13 @@ func (c *Controller) ListRepositoriesNoAuth(
 		}
 	}
 
-	reposOut := make([]*repoCtrl.RepositoryOutput, 0, len(repos))
-	for _, repo := range repos {
+	reposOut := make([]*repoCtrl.RepositoryOutput, len(repos))
+	for idx, repo := range repos {
 		// backfill URLs
 		repo.GitURL = c.urlProvider.GenerateGITCloneURL(ctx, repo.Path)
 		repo.GitSSHURL = c.urlProvider.GenerateGITCloneSSHURL(ctx, repo.Path)
 
-		repoOut, err := repoCtrl.GetRepoOutput(ctx, c.publicAccess, repo)
+		repoOut, err := repoCtrl.GetRepoOutput(ctx, c.publicAccess, c.repoFinder, repo)
 		if err != nil {
 			return nil, 0, fmt.Errorf("failed to get repo %q output: %w", repo.Path, err)
 		}
@@ -117,7 +117,7 @@ func (c *Controller) ListRepositoriesNoAuth(
 		// otherwise take the value out from the favoritesMap.
 		repoOut.IsFavorite = filter.OnlyFavoritesFor != nil || favoritesMap[repo.ID]
 
-		reposOut = append(reposOut, repoOut)
+		reposOut[idx] = repoOut
 	}
 
 	return reposOut, count, nil

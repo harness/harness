@@ -44,7 +44,7 @@ func (c *Controller) Find(ctx context.Context, session *auth.Session, repoRef st
 	repo.GitURL = c.urlProvider.GenerateGITCloneURL(ctx, repo.Path)
 	repo.GitSSHURL = c.urlProvider.GenerateGITCloneSSHURL(ctx, repo.Path)
 
-	repoOut, err := GetRepoOutput(ctx, c.publicAccess, repo)
+	repoOut, err := GetRepoOutput(ctx, c.publicAccess, c.repoFinder, repo)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get repo output for repo %q: %w", repo.Path, err)
 	}

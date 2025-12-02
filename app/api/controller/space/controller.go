@@ -93,6 +93,7 @@ type Controller struct {
 	membershipStore     store.MembershipStore
 	prListService       *pullreq.ListService
 	spaceFinder         refcache.SpaceFinder
+	repoFinder          refcache.RepoFinder
 	importer            *importer.JobRepository
 	exporter            *exporter.Repository
 	resourceLimiter     limiter.ResourceLimiter
@@ -116,7 +117,7 @@ func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Pro
 	connectorStore store.ConnectorStore, templateStore store.TemplateStore, spaceStore store.SpaceStore,
 	repoStore store.RepoStore, principalStore store.PrincipalStore, repoCtrl *repo.Controller,
 	membershipStore store.MembershipStore, prListService *pullreq.ListService,
-	spaceFinder refcache.SpaceFinder,
+	spaceFinder refcache.SpaceFinder, repoFinder refcache.RepoFinder,
 	importer *importer.JobRepository, exporter *exporter.Repository,
 	limiter limiter.ResourceLimiter, publicAccess publicaccess.Service, auditService audit.Service,
 	gitspaceSvc *gitspace.Service, labelSvc *label.Service,
@@ -143,6 +144,7 @@ func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Pro
 		membershipStore:     membershipStore,
 		prListService:       prListService,
 		spaceFinder:         spaceFinder,
+		repoFinder:          repoFinder,
 		importer:            importer,
 		exporter:            exporter,
 		resourceLimiter:     limiter,

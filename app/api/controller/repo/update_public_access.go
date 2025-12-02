@@ -71,7 +71,12 @@ func (c *Controller) UpdatePublicAccess(
 
 	// no op
 	if isPublic == in.IsPublic {
-		return GetRepoOutputWithAccess(ctx, isPublic, repo), nil
+		repoOutput, err := GetRepoOutputWithAccess(ctx, c.repoFinder, isPublic, repo)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get repo output: %w", err)
+		}
+
+		return repoOutput, nil
 	}
 
 	if err = c.publicAccess.Set(ctx, enum.PublicResourceTypeRepo, repo.Path, in.IsPublic); err != nil {
@@ -106,5 +111,10 @@ func (c *Controller) UpdatePublicAccess(
 		NewIsPublic: in.IsPublic,
 	})
 
-	return GetRepoOutputWithAccess(ctx, in.IsPublic, repo), nil
+	repoOutput, err := GetRepoOutputWithAccess(ctx, c.repoFinder, in.IsPublic, repo)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get repo output: %w", err)
+	}
+
+	return repoOutput, nil
 }

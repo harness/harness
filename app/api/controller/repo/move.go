@@ -86,7 +86,7 @@ func (c *Controller) Move(ctx context.Context,
 	}
 
 	if !in.hasChanges(repo, currentParentSpace, targetParentSpace) {
-		return GetRepoOutput(ctx, c.publicAccess, repo)
+		return GetRepoOutput(ctx, c.publicAccess, c.repoFinder, repo)
 	}
 
 	movedRepo, err := c.MoveNoAuth(ctx, repo, in.Identifier, targetParentSpace.ID)
@@ -102,7 +102,7 @@ func (c *Controller) Move(ctx context.Context,
 		"Moved repository %s to %s operation performed by %s",
 		repo.Path, movedRepo.Path, session.Principal.Email)
 
-	return GetRepoOutput(ctx, c.publicAccess, movedRepo)
+	return GetRepoOutput(ctx, c.publicAccess, c.repoFinder, movedRepo)
 }
 
 func (c *Controller) MoveNoAuth(

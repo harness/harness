@@ -136,7 +136,10 @@ func (c *Controller) ImportRepositories(
 
 	reposOut := make([]*repoctrl.RepositoryOutput, len(repos))
 	for i, repo := range repos {
-		reposOut[i] = repoctrl.GetRepoOutputWithAccess(ctx, false, repo)
+		reposOut[i], err = repoctrl.GetRepoOutputWithAccess(ctx, c.repoFinder, false, repo)
+		if err != nil {
+			return ImportRepositoriesOutput{}, fmt.Errorf("failed to get repo output: %w", err)
+		}
 
 		err = c.auditService.Log(ctx,
 			session.Principal,
