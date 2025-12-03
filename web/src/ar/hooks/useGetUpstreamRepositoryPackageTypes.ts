@@ -17,7 +17,7 @@
 import type { IconName } from '@harnessio/icons'
 
 import { Parent } from '@ar/common/types'
-import { FeatureFlags } from '@ar/MFEAppTypes'
+import type { FeatureFlags } from '@ar/MFEAppTypes'
 import type { StringsMap } from '@ar/frameworks/strings'
 import { ThumbnailTagEnum } from '@ar/components/Tag/ThumbnailTags'
 import { UpstreamProxyPackageType } from '@ar/pages/upstream-proxy-details/types'
@@ -67,8 +67,7 @@ export const UpstreamProxyPackageTypeList: UpstreamRepositoryPackageTypeListItem
   {
     label: 'repositoryTypes.generic',
     value: UpstreamProxyPackageType.GENERIC,
-    icon: 'generic-repository-type',
-    tag: ThumbnailTagEnum.Beta
+    icon: 'generic-repository-type'
   },
   {
     label: 'repositoryTypes.maven',
@@ -98,39 +97,29 @@ export const UpstreamProxyPackageTypeList: UpstreamRepositoryPackageTypeListItem
   {
     label: 'repositoryTypes.cargo',
     value: UpstreamProxyPackageType.CARGO,
-    icon: 'rust-logo',
-    tag: ThumbnailTagEnum.Beta
+    icon: 'rust-logo'
   },
   {
     label: 'repositoryTypes.go',
     value: UpstreamProxyPackageType.GO,
-    icon: 'go-logo',
-    tag: ThumbnailTagEnum.Beta
+    icon: 'go-logo'
   },
   {
     label: 'repositoryTypes.huggingface',
     value: UpstreamProxyPackageType.HUGGINGFACE,
-    icon: 'huggingface',
-    tag: ThumbnailTagEnum.Beta
+    icon: 'huggingface'
   },
   {
     label: 'repositoryTypes.conda',
     value: UpstreamProxyPackageType.CONDA,
     icon: 'conda-icon',
-    tooltip: 'Coming Soon!',
-    disabled: true,
-    tag: ThumbnailTagEnum.ComingSoon,
-    featureFlag: FeatureFlags.HAR_CONDA_PACKAGE_TYPE,
     parent: Parent.Enterprise
   },
   {
     label: 'repositoryTypes.dart',
     value: UpstreamProxyPackageType.DART,
     icon: 'dart-icon',
-    tooltip: 'Coming Soon!',
-    disabled: true,
-    tag: ThumbnailTagEnum.ComingSoon,
-    featureFlag: FeatureFlags.HAR_DART_PACKAGE_TYPE,
+    tag: ThumbnailTagEnum.Beta,
     parent: Parent.Enterprise
   },
   {

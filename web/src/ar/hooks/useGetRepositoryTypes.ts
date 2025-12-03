@@ -16,7 +16,7 @@
 
 import type { IconName } from '@harnessio/icons'
 
-import { FeatureFlags } from '@ar/MFEAppTypes'
+import type { FeatureFlags } from '@ar/MFEAppTypes'
 import type { StringsMap } from '@ar/frameworks/strings'
 import { Parent, RepositoryPackageType } from '@ar/common/types'
 import { ThumbnailTagEnum } from '@ar/components/Tag/ThumbnailTags'
@@ -106,27 +106,19 @@ const RepositoryTypes: RepositoryTypeListItem[] = [
   {
     label: 'repositoryTypes.huggingface',
     value: RepositoryPackageType.HUGGINGFACE,
-    icon: 'huggingface',
-    tag: ThumbnailTagEnum.Beta
+    icon: 'huggingface'
   },
   {
     label: 'repositoryTypes.conda',
     value: RepositoryPackageType.CONDA,
     icon: 'conda-icon',
-    tooltip: 'Coming Soon!',
-    disabled: true,
-    tag: ThumbnailTagEnum.ComingSoon,
-    featureFlag: FeatureFlags.HAR_CONDA_PACKAGE_TYPE,
     parent: Parent.Enterprise
   },
   {
     label: 'repositoryTypes.dart',
     value: RepositoryPackageType.DART,
     icon: 'dart-icon',
-    tooltip: 'Coming Soon!',
-    disabled: true,
-    tag: ThumbnailTagEnum.ComingSoon,
-    featureFlag: FeatureFlags.HAR_DART_PACKAGE_TYPE,
+    tag: ThumbnailTagEnum.Beta,
     parent: Parent.Enterprise
   },
   {
